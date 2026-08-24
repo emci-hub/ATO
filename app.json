@@ -33,6 +33,13 @@
           "imageWidth": 76
         }
       ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "ATO uses the camera to scan a friend's QR so you can open Circle.",
+          "recordAudioAndroid": false
+        }
+      ],
       "expo-font",
       "expo-web-browser",
       "expo-secure-store"

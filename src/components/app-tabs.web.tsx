@@ -12,8 +12,13 @@ import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
 import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useCircle } from '@/hooks/use-circle';
+import { useSession } from '@/hooks/use-session';
 
 export default function AppTabs() {
+  const { session } = useSession();
+  const { hasCircle } = useCircle(session?.user.id);
+
   return (
     <Tabs>
       <TabSlot style={{ height: '100%' }} />
@@ -25,6 +30,12 @@ export default function AppTabs() {
           <TabTrigger name="sage" href="/sage" asChild>
             <TabButton>Sage</TabButton>
           </TabTrigger>
+          {/* Circle does not exist until a scan — not hidden, not present. */}
+          {hasCircle ? (
+            <TabTrigger name="circle" href="/circle" asChild>
+              <TabButton>Circle</TabButton>
+            </TabTrigger>
+          ) : null}
           <TabTrigger name="you" href="/you" asChild>
             <TabButton>You</TabButton>
           </TabTrigger>

@@ -1,7 +1,10 @@
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScanSheet } from '@/components/scan-sheet';
+import { SharePoster } from '@/components/share-poster';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -9,14 +12,23 @@ import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { useMe } from '@/hooks/use-me';
 import { accentFromShowUp } from '@/lib/color';
+import { addPeerByHandle } from '@/lib/circle';
+import { copyLink, sharePoster } from '@/lib/share';
 import { supabase } from '@/lib/supabase';
 
 export default function YouScreen() {
   const theme = useTheme();
+  const { width: windowWidth } = useWindowDimensions();
   const { session } = useSession();
   const { me } = useMe(session?.user.id);
   const accent = accentFromShowUp(me?.show_up);
   const [signingOut, setSigningOut] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const posterRef = useRef<View | null>(null);
+  // Screen padding (2x24) + card padding (2x16) + margin for safety.
+  const posterWidth = Math.min(320, windowWidth - 96);
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -27,6 +39,24 @@ export default function YouScreen() {
     setSigningOut(false);
     // The session guard in the root layout flips isAuthed to false on
     // SIGNOUT and declaratively routes back to /auth.
+  }
+
+  async function handleShare() {
+    if (!me || sharing) return;
+    setSharing(true);
+    try {
+      const outcome = await sharePoster(posterRef, me.handle);
+      if (outcome.fellBackToCopy) setCopied(true);
+    } finally {
+      setSharing(false);
+    }
+  }
+
+  async function handleCopyLink() {
+    if (!me) return;
+    await copyLink(me.handle);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   const initials = me?.name
@@ -47,6 +77,60 @@ export default function YouScreen() {
 
           {me ? (
             <>
+              <ThemedView type="backgroundElement" style={styles.shareCard}>
+                <View style={styles.posterRow}>
+                  <SharePoster ref={posterRef} me={me} width={posterWidth} />
+                </View>
+
+                <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
+                  Hold the poster or tap Share to send your ATO.
+                </ThemedText>
+
+                <View style={styles.actionRow}>
+                  <Pressable
+                    disabled={sharing}
+                    onPress={handleShare}
+                    onLongPress={handleShare}
+                    style={({ pressed }) => [
+                      styles.shareButton,
+                      { backgroundColor: '#3c87f7' },
+                      pressed && styles.pressed,
+                      sharing && styles.disabled,
+                    ]}>
+                    <MaterialCommunityIcons name="share-variant" size={18} color="#ffffff" />
+                    <ThemedText type="smallBold" style={styles.shareButtonText}>
+                      {sharing ? 'Sharing…' : 'Share'}
+                    </ThemedText>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={handleCopyLink}
+                    style={({ pressed }) => [
+                      styles.secondaryButton,
+                      { borderColor: theme.backgroundSelected },
+                      pressed && styles.pressed,
+                    ]}>
+                    <MaterialCommunityIcons name="link-variant" size={18} color={theme.text} />
+                    <ThemedText type="smallBold">{copied ? 'Copied' : 'Copy link'}</ThemedText>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => setScanning(true)}
+                    style={({ pressed }) => [
+                      styles.secondaryButton,
+                      { borderColor: theme.backgroundSelected },
+                      pressed && styles.pressed,
+                    ]}>
+                    <MaterialCommunityIcons name="qrcode-scan" size={18} color={theme.text} />
+                    <ThemedText type="smallBold">Scan a QR</ThemedText>
+                  </Pressable>
+                </View>
+
+                <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
+                  @{me.handle} is your public link. Scanning yours adds you to their Circle.
+                </ThemedText>
+              </ThemedView>
+
               <ThemedView type="backgroundElement" style={styles.profileCard}>
                 <View style={[styles.avatar, { backgroundColor: accent.light }]}>
                   <ThemedText type="smallBold" style={styles.avatarText}>
@@ -92,6 +176,8 @@ export default function YouScreen() {
           </Pressable>
         </ScrollView>
       </SafeAreaView>
+
+      <ScanSheet visible={scanning} onClose={() => setScanning(false)} onAdd={addPeerByHandle} />
     </ThemedView>
   );
 }
@@ -124,6 +210,45 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     paddingTop: Spacing.four,
     paddingBottom: BottomTabInset + Spacing.four,
+  },
+  shareCard: {
+    borderRadius: Spacing.four,
+    padding: Spacing.three,
+    gap: Spacing.three,
+    alignItems: 'center',
+  },
+  posterRow: {
+    alignItems: 'center',
+  },
+  centerText: {
+    textAlign: 'center',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignSelf: 'stretch',
+    gap: Spacing.two,
+  },
+  shareButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.one,
+    borderRadius: Spacing.three,
+    paddingVertical: Spacing.two,
+  },
+  shareButtonText: {
+    color: '#ffffff',
+  },
+  secondaryButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.one,
+    borderRadius: Spacing.three,
+    borderWidth: 1,
+    paddingVertical: Spacing.two,
   },
   profileCard: {
     borderRadius: Spacing.four,
