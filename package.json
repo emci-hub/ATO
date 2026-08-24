@@ -46,7 +46,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "sync:voice": "node ./scripts/sync-voice-content.mjs",
-    "check:voice": "tsx ./scripts/voice-router-check.ts"
+    "check:voice": "tsx ./scripts/voice-router-check.ts",
+    "check:crisis-live": "tsx ./scripts/crisis-live-check.ts"
   },
   "private": true
 }
