@@ -7,9 +7,11 @@ export class GeminiProviderError extends Error {}
 /**
  * Gemini 3.x models always think to some degree and bill thinking tokens
  * against maxOutputTokens, so these budgets carry both the reasoning and the
- * card/reply. 'low' keeps latency down for what are short, simple generations.
- * temperature is deliberately unset: 3.x is tuned for its default sampling and
- * no longer recommends pinning it.
+ * card/reply. 'low' keeps latency down for what are short, simple generations,
+ * and it is also the least thinking every 3.x text model accepts —
+ * gemini-3.7-flash rejects 'minimal' with a 400. temperature is deliberately
+ * unset: 3.x is tuned for its default sampling and no longer recommends
+ * pinning it.
  */
 const MAX_OUTPUT_TOKENS = 1024;
 const THINKING = { thinkingLevel: 'low' } as const;

@@ -21,15 +21,24 @@ const CLASSIFIER_SYSTEM =
   'Flag genuine, current risk. Do not flag ordinary sadness, frustration, or venting without ' +
   'self-harm intent. When uncertain, lean toward flagging.';
 
-const DEFAULT_TIMEOUT_MS = 4000;
+export const DEFAULT_TIMEOUT_MS = 4000;
 
 /**
  * The answer itself is a handful of tokens, but Gemini 3.x models always think
  * to some degree and bill thinking tokens against this same budget. A tight cap
  * gets spent on reasoning and returns no text at all, which would look like a
- * broken classifier and silently hand every message to the keyword net.
+ * broken classifier and silently hand every message to the keyword net. This is
+ * a ceiling, not a reservation, so the headroom is free unless it gets used.
  */
-const CLASSIFIER_MAX_OUTPUT_TOKENS = 512;
+const CLASSIFIER_MAX_OUTPUT_TOKENS = 1024;
+
+/**
+ * 'low' rather than 'minimal': gemini-3.7-flash rejects 'minimal' outright with
+ * a 400, and 'low' is the least thinking every 3.x text model accepts. Getting
+ * this wrong is quiet — every call would fail and every message would silently
+ * fall through to the keyword net.
+ */
+const CLASSIFIER_THINKING_LEVEL = 'low';
 
 export function buildClassifierUrl(model: string): string {
   return `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
@@ -92,11 +101,9 @@ export async function classifyCrisis(
         systemInstruction: { parts: [{ text: CLASSIFIER_SYSTEM }] },
         contents: [{ role: 'user', parts: [{ text: message }] }],
         generationConfig: {
-          // 'minimal' is the closest 3.x gets to thinking-off, which is what a
-          // one-boolean decision needs to land inside the timeout. temperature
-          // is deliberately unset: Gemini 3.x is tuned for its default
-          // sampling and no longer recommends pinning it.
-          thinkingConfig: { thinkingLevel: 'minimal' },
+          // temperature is deliberately unset: Gemini 3.x is tuned for its
+          // default sampling and no longer recommends pinning it.
+          thinkingConfig: { thinkingLevel: CLASSIFIER_THINKING_LEVEL },
           maxOutputTokens: CLASSIFIER_MAX_OUTPUT_TOKENS,
           responseMimeType: 'application/json',
         },
