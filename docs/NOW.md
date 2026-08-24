@@ -6,7 +6,7 @@
 **Live AI + model:** Cursor, `deepseek-v4-flash` (default volume) — crisis/safety-critical work always routes to Claude Opus 5 regardless of Home/Away, Expo SDK 54
 
 ## On
-Wave 1, Stage 6 — Share + Circle. Next: open box.
+Wave 1, Stage 6 — Share + Circle. Code built, committed (`d6d2d05`), verified in isolation. Next: on-device pass (see Done note below), then Stage 7.
 
 ## Done
 - Stage 1 (Home shell) — screenshot verified: 3 tabs (Home, Sage, You), no Circle tab, fake card, fake poster
@@ -20,8 +20,11 @@ Wave 1, Stage 6 — Share + Circle. Next: open box.
   - **Model pinned deliberately to `gemini-3.7-flash` (versioned), not `gemini-flash-latest`.** The unversioned `-latest` alias is Google's experimental tier and can hot-swap with only 2 weeks' notice — not acceptable for a safety-critical classifier whose exact behavior was just verified. Manual quarterly check for new stable Gemini flash releases, re-run `scripts/crisis-live-check.ts` before ever bumping the pin.
   - `scripts/crisis-live-check.ts` added — reusable live harness (spy-provider + redacted request/response logging) for any future model-pin bump.
 
+- **Stage 6 (Share + Circle) — built and committed, verified in isolation. On-device pass still open.** Share: Stories-size poster (real pixel, name, `@handle`, `show_up`, QR) via view-shot → native Share sheet; copy-link; public `/@handle` page (no auth) resolves through a security-definer `public_profile` function that only exposes poster fields. Circle: new `connections` table, one gate — a scan or pasted link inserts A→B, a DB trigger mirrors B→A, Realtime pushes the tab to both devices without a manual refresh. Circle tab is conditionally rendered (`hasCircle`) — before any scan, tab bar is still exactly Home/Sage/You. Circle screen shows each peer's real pixel + honest card (name, handle, show_up, latest check) straight from `me`/`checks`, nothing synthesized, no chat touched. Verified: RLS + mirror trigger via rollback-transaction tests (pre-connect reads blocked, one insert creates both directions, anon only reaches `public_profile`), `tsc --noEmit` clean, 23/23 voice suite, stage6 scanner/link-parsing checks pass, 0 lint errors on new files, web export resolves `/circle` + `/[handle]`.
+  - **Open:** the actual done-bar signal — two real accounts, real camera, A scans B's QR → 4th tab appears on both devices without a manual refresh. Everything up to this point is code-correctness proof, not the on-device confirmation. Same category as the Stage 4 consent-prompt UI item.
+
 ## Left
-Stages 6–8, Wave 1
+Stage 6 on-device pass, Stages 7–8, Wave 1
 
 ## Backlog (Stage 8 — polish pass, before TestFlight)
 - Fantasy UI Borders pack (Kenney) — UI chrome/panels/buttons, separate visual system from character art
@@ -59,4 +62,4 @@ Early on there's not much data on someone yet. Games give tokens; tokens unlock 
 - EXPO_PUBLIC_GEMINI_API_KEY set and live-verified. Model pinned to `gemini-3.7-flash` (not `-latest`) — see rationale under Stage 5 Done.
 
 ## Next 15 min
-Open Stage 6 box: share, circle. Update this file when it starts.
+On-device pass for Stage 6: two real accounts/devices, A scans B's QR, confirm Circle tab appears on both without a manual refresh (Realtime should push it). Once confirmed, open Stage 7 box: chat, report.
