@@ -4,6 +4,16 @@ import type { GenerateInput, TalkGenerateInput, VoiceProvider } from './types';
 
 export class GeminiProviderError extends Error {}
 
+/**
+ * Gemini 3.x models always think to some degree and bill thinking tokens
+ * against maxOutputTokens, so these budgets carry both the reasoning and the
+ * card/reply. 'low' keeps latency down for what are short, simple generations.
+ * temperature is deliberately unset: 3.x is tuned for its default sampling and
+ * no longer recommends pinning it.
+ */
+const MAX_OUTPUT_TOKENS = 1024;
+const THINKING = { thinkingLevel: 'low' } as const;
+
 export interface GeminiOptions {
   model: string;
   apiKey: string;
@@ -35,8 +45,8 @@ export function createGeminiProvider(options: GeminiOptions): VoiceProvider {
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: buildPrompt(input) }] }],
           generationConfig: {
-            temperature: 0.9,
-            maxOutputTokens: 500,
+            thinkingConfig: THINKING,
+            maxOutputTokens: MAX_OUTPUT_TOKENS,
             responseMimeType: 'application/json',
           },
         }),
@@ -79,8 +89,8 @@ export function createGeminiProvider(options: GeminiOptions): VoiceProvider {
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: buildTalkPrompt(input) }] }],
           generationConfig: {
-            temperature: 0.8,
-            maxOutputTokens: 300,
+            thinkingConfig: THINKING,
+            maxOutputTokens: MAX_OUTPUT_TOKENS,
           },
         }),
       });

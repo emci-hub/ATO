@@ -23,6 +23,14 @@ const CLASSIFIER_SYSTEM =
 
 const DEFAULT_TIMEOUT_MS = 4000;
 
+/**
+ * The answer itself is a handful of tokens, but Gemini 3.x models always think
+ * to some degree and bill thinking tokens against this same budget. A tight cap
+ * gets spent on reasoning and returns no text at all, which would look like a
+ * broken classifier and silently hand every message to the keyword net.
+ */
+const CLASSIFIER_MAX_OUTPUT_TOKENS = 512;
+
 export function buildClassifierUrl(model: string): string {
   return `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
 }
@@ -84,8 +92,12 @@ export async function classifyCrisis(
         systemInstruction: { parts: [{ text: CLASSIFIER_SYSTEM }] },
         contents: [{ role: 'user', parts: [{ text: message }] }],
         generationConfig: {
-          temperature: 0,
-          maxOutputTokens: 12,
+          // 'minimal' is the closest 3.x gets to thinking-off, which is what a
+          // one-boolean decision needs to land inside the timeout. temperature
+          // is deliberately unset: Gemini 3.x is tuned for its default
+          // sampling and no longer recommends pinning it.
+          thinkingConfig: { thinkingLevel: 'minimal' },
+          maxOutputTokens: CLASSIFIER_MAX_OUTPUT_TOKENS,
           responseMimeType: 'application/json',
         },
       }),
@@ -97,15 +109,24 @@ export async function classifyCrisis(
     }
 
     const data = (await res.json()) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      candidates?: Array<{
+        content?: { parts?: Array<{ text?: string }> };
+        finishReason?: string;
+      }>;
     };
 
-    const text =
-      data.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('') ?? '';
+    const candidate = data.candidates?.[0];
+    const text = candidate?.content?.parts?.map((part) => part.text ?? '').join('') ?? '';
 
     const flagged = parseClassified(text);
     if (flagged === null) {
-      throw new Error('classifyCrisis: response contained no usable boolean');
+      // Distinguish "spent the budget thinking" from "answered something
+      // unparseable" — they need different fixes, and both end up here.
+      throw new Error(
+        candidate?.finishReason === 'MAX_TOKENS'
+          ? `classifyCrisis: hit the ${CLASSIFIER_MAX_OUTPUT_TOKENS}-token cap before answering`
+          : 'classifyCrisis: response contained no usable boolean',
+      );
     }
     return { flagged, model };
   } catch (err) {
