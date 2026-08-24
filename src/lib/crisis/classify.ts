@@ -81,8 +81,13 @@ export async function classifyCrisis(
         contents: [{ role: 'user', parts: [{ text: message }] }],
         generationConfig: {
           temperature: 0,
-          maxOutputTokens: 12,
+          maxOutputTokens: 100,
           responseMimeType: 'application/json',
+          // gemini-3.x are thinking models: without an explicit level, the
+          // model burns its whole (tiny) output budget on thinking and returns
+          // no JSON. thinkingConfig nests under generationConfig. The budget
+          // must leave room for thinking + the {"flagged": ...} answer.
+          thinkingConfig: { thinkingLevel: 'low' },
         },
       }),
     });
