@@ -6,7 +6,7 @@
 **Live AI + model:** Cursor, `deepseek-v4-flash`, Expo SDK 54
 
 ## On
-Wave 1, Stage 5 — Talk (built + verified 23/23). Next: live-classifier check once a Gemini key is set, then Stage 6.
+Wave 1, Stage 5 — Talk (built + verified 25/25). Live-classifier check harness is built (`npm run check:crisis-live`) and its offline legs pass; the two live legs are blocked on a real Gemini key. Then Stage 6.
 
 ## Done
 - Stage 1 (Home shell) — screenshot verified: 3 tabs (Home, Sage, You), no Circle tab, fake card, fake poster
@@ -52,7 +52,15 @@ Early on there's not much data on someone yet. Games give tokens; tokens unlock 
 
 ## Housekeeping
 - docs/ATO_PLAN_v2.md, docs/ME.md, docs/NOW.md all live in the repo now — Cursor maintains these directly going forward
-- Set EXPO_PUBLIC_GEMINI_API_KEY in .env.local when ready for real model generation (currently on local fallback)
+- `.env.local` exists with `EXPO_PUBLIC_GEMINI_API_KEY=` declared but empty, and `.env.example` documents the three model vars. Paste the real key into `.env.local` for live model generation + live classifier (currently on local/keyword fallback)
+
+## Live classifier verification
+`npm run check:crisis-live` is the end-to-end harness. It proves the live legs the stub-based `check:voice` cannot:
+- flags a crisis message the keyword net provably cannot catch, so a `flagged` verdict can only have come from the live model
+- records outbound requests, so "live call fired" is observed rather than assumed
+- asserts exactly one Gemini request on a flagged message — the classifier, with no main-router call behind it
+
+Offline legs pass today: a hung classifier and an HTTP-rejected classifier both fall back to the keyword net (risk still flagged, benign still cleared), and `generateTalk` stays at zero calls on a flagged message. Egress to `generativelanguage.googleapis.com` is confirmed reachable — an invalid key returns a structured Gemini 400, so the URL, headers and body shape are right. The two live legs exit non-zero until a real key is set, so a missing key can never read as a pass.
 
 ## Next 15 min
-Set EXPO_PUBLIC_GEMINI_API_KEY and confirm the live classifier path end-to-end (currently on keyword fallback). Then walk Stage 6 (first box from the plan) — update this file when it starts.
+Paste the real key into `.env.local`, run `npm run check:crisis-live`, and confirm the live legs pass. Then walk Stage 6 (first box from the plan) — update this file when it starts.
