@@ -38,14 +38,38 @@ export interface CrisisDetection {
   flagged: boolean;
   /** How the decision was reached. */
   method: 'classifier' | 'keyword-fallback';
+  /** Time spent in the classifier attempt, whether it answered or failed. */
+  latencyMs: number;
+  /** The model that answered. Absent whenever the keyword net decided. */
+  model?: string;
   /** Present when the classifier failed and the keyword net caught it. */
   error?: string;
 }
 
 export interface DetectCrisisOptions {
   /** Injectable for tests; defaults to the real Gemini classifier call. */
-  classify?: (message: string, options?: ClassifyOptions) => Promise<{ flagged: boolean }>;
+  classify?: (
+    message: string,
+    options?: ClassifyOptions,
+  ) => Promise<{ flagged: boolean; model?: string }>;
   classifyOptions?: ClassifyOptions;
+}
+
+const IS_DEV = typeof __DEV__ === 'boolean' ? __DEV__ : false;
+
+/**
+ * Dev-only trace of which path decided. Deliberately carries no message text:
+ * the crisis spec allows the flag, never the content.
+ */
+function traceDetection(detection: CrisisDetection): void {
+  if (!IS_DEV) return;
+  const where =
+    detection.method === 'classifier'
+      ? `classifier(${detection.model ?? 'unknown model'})`
+      : `keyword-fallback after "${detection.error ?? 'unknown error'}"`;
+  console.log(
+    `[crisis] flagged=${detection.flagged} via ${where} in ${detection.latencyMs}ms`,
+  );
 }
 
 /**
@@ -58,13 +82,27 @@ export async function detectCrisis(
   options: DetectCrisisOptions = {},
 ): Promise<CrisisDetection> {
   const classify = options.classify ?? classifyCrisis;
+  const startedAt = Date.now();
 
   try {
-    const { flagged } = await classify(message, options.classifyOptions);
-    return { flagged, method: 'classifier' };
+    const { flagged, model } = await classify(message, options.classifyOptions);
+    const detection: CrisisDetection = {
+      flagged,
+      method: 'classifier',
+      latencyMs: Date.now() - startedAt,
+      model,
+    };
+    traceDetection(detection);
+    return detection;
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
-    const flagged = keywordDetect(message);
-    return { flagged, method: 'keyword-fallback', error };
+    const detection: CrisisDetection = {
+      flagged: keywordDetect(message),
+      method: 'keyword-fallback',
+      latencyMs: Date.now() - startedAt,
+      error,
+    };
+    traceDetection(detection);
+    return detection;
   }
 }

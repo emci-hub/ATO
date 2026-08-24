@@ -48,14 +48,14 @@ export function parseClassified(raw: string): boolean | null {
 }
 
 /**
- * Runs the narrow classifier. Returns { flagged } on success, or throws on
- * failure/timeout so the caller can fall back to the keyword list. Never
- * silently skips detection.
+ * Runs the narrow classifier. Returns { flagged } plus the model that answered
+ * on success, or throws on failure/timeout so the caller can fall back to the
+ * keyword list. Never silently skips detection.
  */
 export async function classifyCrisis(
   message: string,
   options: ClassifyOptions = {},
-): Promise<{ flagged: boolean }> {
+): Promise<{ flagged: boolean; model: string }> {
   const model = options.model ?? VOICE_CONFIG.geminiModel;
   const apiKey = options.apiKey ?? VOICE_CONFIG.geminiApiKey;
   const fetchImpl = options.fetchImpl ?? fetch;
@@ -66,7 +66,11 @@ export async function classifyCrisis(
   }
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
 
   try {
     const res = await fetchImpl(buildClassifierUrl(model), {
@@ -103,7 +107,14 @@ export async function classifyCrisis(
     if (flagged === null) {
       throw new Error('classifyCrisis: response contained no usable boolean');
     }
-    return { flagged };
+    return { flagged, model };
+  } catch (err) {
+    // An abort surfaces as a bare "operation was aborted" DOMException, which
+    // reads as a mystery failure in the fallback log. Name the real cause.
+    if (timedOut) {
+      throw new Error(`classifyCrisis: timed out after ${timeoutMs}ms`);
+    }
+    throw err;
   } finally {
     clearTimeout(timer);
   }
