@@ -6,7 +6,7 @@
 **Live AI + model:** Cursor, `deepseek-v4-flash`, Expo SDK 54
 
 ## On
-Wave 1, Stage 5 — Talk (crisis architecture decided, build in progress)
+Wave 1, Stage 5 — Talk (built + verified 23/23). Next: live-classifier check once a Gemini key is set, then Stage 6.
 
 ## Done
 - Stage 1 (Home shell) — screenshot verified: 3 tabs (Home, Sage, You), no Circle tab, fake card, fake poster
@@ -15,7 +15,7 @@ Wave 1, Stage 5 — Talk (crisis architecture decided, build in progress)
 - Stage 4 (Dawn + Router) — fully verified: sage.txt + first_cards.md live, bank/model routing proven (Day 1 screenshot live on real account), filters (repeats/vague/cruel/no-cut-after-crisis/no-two-cuts), back button added, AI consent gate enforced at router level (Apple 5.1.2) — null/true/false stored on ME row, asked once, denial = permanent bank-only + Talk off. 16/16 automated checks pass. Only untested-live piece: the actual consent prompt UI (needs check_count>=3, will confirm naturally in a few days of real use).
 - docs/ATO_PLAN_v2.md added to repo (byte-verified copy)
 - Crisis module (card, logging, dormant detection hook, router short-circuit) built and verified 18/18 checks
-- Crisis classifier + keyword fallback + Talk box — in progress, this is the current active task
+- Crisis classifier + keyword fallback + Talk box — built and verified 23/23: separate narrow Gemini classifier call (boolean JSON, 4s timeout, zero temperature) that MUST complete before the main router call; on classifier failure/timeout → user-approved keyword list + regex net (never silently skips); flagged message → static crisis card, crisis_flags logged (user+timestamp only), zero main-router `generateTalk` calls (proven with spy provider); Talk router consent gate (denied → off, pending → prompt); two talk_style users get visibly different tone on the same prompt (verified in talk-lab); Sage tab rebuilt as chat UI with today/this week/something else chips + More (I need support), persistent lifebuoy support button opening the crisis card, and auto-shown card with one-tap dismiss — no confirmation gate, no lockout. Only untested-live pieces: Talk UI clicks behind the OTP auth guard, and the live classifier path (no EXPO_PUBLIC_GEMINI_API_KEY set yet → keyword fallback is active, which is the intended safety net)
 
 ## Left
 Stages 5–8, Wave 1
@@ -55,4 +55,4 @@ Early on there's not much data on someone yet. Games give tokens; tokens unlock 
 - Set EXPO_PUBLIC_GEMINI_API_KEY in .env.local when ready for real model generation (currently on local fallback)
 
 ## Next 15 min
-Finish the crisis classifier + fallback + Talk box build (architecture decided above). Bring back: crisis-lab confirmation of classifier + fallback paths, two-tone-style Talk screenshots.
+Set EXPO_PUBLIC_GEMINI_API_KEY and confirm the live classifier path end-to-end (currently on keyword fallback). Then walk Stage 6 (first box from the plan) — update this file when it starts.
