@@ -5,7 +5,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { ThemedText } from '@/components/themed-text';
 import { PixelFace } from '@/components/pixel-face';
 import { accentFromShowUp } from '@/lib/color';
-import { normalizeRecipe } from '@/lib/recipe';
+import { normalizeRecipe } from '@/lib/kenney/registry';
 import { publicLink } from '@/lib/share-codec';
 
 /**
@@ -39,7 +39,7 @@ export const SharePoster = forwardRef<View, { me: PosterPerson; width?: number }
   return (
     <View ref={ref} collapsable={false} style={[styles.poster, { width }]}>
       <View style={styles.faceRow}>
-        <PixelFace recipe={recipe} size={200} showUp={me.show_up} />
+        <PixelFace recipe={recipe} size={200} showUp={me.show_up} animated={false} />
       </View>
 
       <View style={styles.identity}>

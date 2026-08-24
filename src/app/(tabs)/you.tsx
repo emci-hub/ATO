@@ -13,6 +13,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useMe } from '@/hooks/use-me';
 import { accentFromShowUp } from '@/lib/color';
 import { addPeerByHandle } from '@/lib/circle';
+import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { copyLink, sharePoster } from '@/lib/share';
 import { supabase } from '@/lib/supabase';
 
@@ -47,6 +48,7 @@ export default function YouScreen() {
     try {
       const outcome = await sharePoster(posterRef, me.handle);
       if (outcome.fellBackToCopy) setCopied(true);
+      if (outcome.shared) triggerGesture('posterShared');
     } finally {
       setSharing(false);
     }
@@ -177,7 +179,12 @@ export default function YouScreen() {
         </ScrollView>
       </SafeAreaView>
 
-      <ScanSheet visible={scanning} onClose={() => setScanning(false)} onAdd={addPeerByHandle} />
+      <ScanSheet
+        visible={scanning}
+        onClose={() => setScanning(false)}
+        onAdd={addPeerByHandle}
+        onConnected={() => triggerGesture('circleConnected')}
+      />
     </ThemedView>
   );
 }

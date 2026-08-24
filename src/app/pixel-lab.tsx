@@ -5,15 +5,17 @@ import { PixelFace } from '@/components/pixel-face';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
-import { LOOKS, SHAPE_BASE_IDS, ShapeRecipe } from '@/lib/recipe';
-import { SHAPE_CANVAS } from '@/lib/skeleton';
+import { SHAPE_MANIFEST } from '@/lib/kenney/manifests/shape';
+import { DEFAULT_RECIPE } from '@/lib/kenney/registry';
 
 /**
- * Dev harness for the face skeleton. Not linked from the app: open /pixel-lab
- * directly. The crosshair marks the face anchor, so a face that lands in the
- * same relative spot on every body shape lines up with it in every cell.
+ * Dev harness for the Kenney pipeline. Not linked from the app: open
+ * /pixel-lab directly. Shows one face across every body shape, then every look
+ * on one body — driven entirely by the Shape Characters manifest.
  */
 const SIZE = 72;
+const BODY_STATES = Object.keys(SHAPE_MANIFEST.parts.find((p) => p.id === 'body')!.states);
+const LOOKS = Object.keys(SHAPE_MANIFEST.parts.find((p) => p.id === 'face')!.states);
 
 export default function PixelLabScreen() {
   if (!__DEV__) {
@@ -41,8 +43,12 @@ export default function PixelLabScreen() {
             one face · four bodies
           </ThemedText>
           <View style={styles.row}>
-            {SHAPE_BASE_IDS.map((base) => (
-              <Cell key={base} label={base} recipe={{ source: 'shape', base, top: 'even', hair: null, palette: null }} />
+            {BODY_STATES.map((body) => (
+              <Cell
+                key={body}
+                label={body}
+                recipe={{ ...DEFAULT_RECIPE, parts: { ...DEFAULT_RECIPE.parts, body } }}
+              />
             ))}
           </View>
 
@@ -54,7 +60,7 @@ export default function PixelLabScreen() {
               <Cell
                 key={look}
                 label={look}
-                recipe={{ source: 'shape', base: 'squircle', top: look, hair: null, palette: null }}
+                recipe={{ ...DEFAULT_RECIPE, parts: { ...DEFAULT_RECIPE.parts, face: look } }}
               />
             ))}
           </View>
@@ -64,13 +70,11 @@ export default function PixelLabScreen() {
   );
 }
 
-function Cell({ label, recipe }: { label: string; recipe: ShapeRecipe }) {
+function Cell({ label, recipe }: { label: string; recipe: typeof DEFAULT_RECIPE }) {
   return (
     <View style={styles.cell}>
-      <View style={{ width: SIZE * SHAPE_CANVAS.w, height: SIZE * SHAPE_CANVAS.h }}>
-        <PixelFace recipe={recipe} size={SIZE} showUp="lab" />
-        <View style={[styles.guide, styles.guideVertical]} />
-        <View style={[styles.guide, styles.guideHorizontal]} />
+      <View style={{ width: SIZE * SHAPE_MANIFEST.canvas.w, height: SIZE * SHAPE_MANIFEST.canvas.h }}>
+        <PixelFace recipe={recipe} size={SIZE} animated={false} />
       </View>
       <ThemedText type="code" themeColor="textSecondary">
         {label}
@@ -108,21 +112,5 @@ const styles = StyleSheet.create({
   cell: {
     alignItems: 'center',
     gap: Spacing.half,
-  },
-  guide: {
-    position: 'absolute',
-    backgroundColor: '#00e5ff',
-  },
-  guideVertical: {
-    top: 0,
-    bottom: 0,
-    left: '50%',
-    width: 1,
-  },
-  guideHorizontal: {
-    left: 0,
-    right: 0,
-    top: '50%',
-    height: 1,
   },
 });

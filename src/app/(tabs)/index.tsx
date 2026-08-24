@@ -9,7 +9,7 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useMe } from '@/hooks/use-me';
 import { accentFromShowUp } from '@/lib/color';
-import { normalizeRecipe } from '@/lib/recipe';
+import { normalizeRecipe } from '@/lib/kenney/registry';
 import { useSession } from '@/hooks/use-session';
 
 export default function HomeScreen() {
@@ -32,7 +32,7 @@ export default function HomeScreen() {
 
           <ThemedView type="backgroundElement" style={styles.faceCard}>
             <ThemedText type="code" themeColor="textSecondary">
-              face · {recipe.source} · {recipe.base} · {recipe.top}
+              face · {recipe.source} · {recipe.parts.body} · {recipe.parts.face}
             </ThemedText>
             <PixelFace recipe={recipe} size={88} showUp={me?.show_up} />
           </ThemedView>

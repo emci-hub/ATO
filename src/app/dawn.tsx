@@ -12,6 +12,7 @@ import { useMe } from '@/hooks/use-me';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { checksToHistory, fetchChecks, recordCheck, type Check } from '@/lib/checks';
+import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { aiConsentFor, setAiConsent } from '@/lib/me';
 import { routeVoiceCard } from '@/lib/voice/router';
 import type { VoiceCardResult } from '@/lib/voice/types';
@@ -117,6 +118,11 @@ export default function DawnScreen() {
         status,
       });
       await reloadChecks();
+      // Check marked "did" → thumb gesture. "Skip" deliberately stays silent
+      // (hands stay hidden) — skipping isn't celebrated.
+      if (status === 'done') {
+        triggerGesture('checkDone');
+      }
     } catch (err) {
       console.log('[dawn] recordCheck error:', err);
       setError('Couldn\u2019t save your check. Try again.');

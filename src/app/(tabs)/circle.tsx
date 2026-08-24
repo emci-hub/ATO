@@ -10,7 +10,7 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useCircleContext } from '@/lib/circle-context';
 import { useTheme } from '@/hooks/use-theme';
 import { fetchPeerState, type PeerState } from '@/lib/circle';
-import { normalizeRecipe } from '@/lib/recipe';
+import { normalizeRecipe } from '@/lib/kenney/registry';
 
 /**
  * Circle. Appears only after a scan/paste connected two accounts. Each card

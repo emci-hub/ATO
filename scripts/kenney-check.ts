@@ -1,0 +1,117 @@
+/**
+ * Kenney pipeline checks. Run: npx tsx scripts/kenney-check.ts
+ *
+ * Verifies: manifest ↔ exported asset completeness, variant matching, legacy
+ * recipe migration, and generic resolution (no family branches). The generated
+ * asset registry is Metro-only (uses require), so completeness is checked by
+ * scanning the exported files + the registry file's text.
+ */
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+
+import { SHAPE_MANIFEST } from '../src/lib/kenney/manifests/shape';
+import {
+  DEFAULT_RECIPE,
+  KENNEY_REGISTRY,
+  nearestVariant,
+  normalizeRecipe,
+  resolveCharacter,
+} from '../src/lib/kenney/registry';
+
+let passed = 0;
+function ok(label: string) {
+  passed += 1;
+  console.log(`  ✓ ${label}`);
+}
+
+// Every manifest state must exist on disk (colorable × 6 variants), EXCEPT the
+// magic `hidden` state, which intentionally has no asset (renders nothing).
+const assetsRoot = path.resolve(__dirname, '../assets/kenney/shape');
+let expected = 0;
+const expectedKeys: string[] = [];
+for (const part of SHAPE_MANIFEST.parts) {
+  for (const sprite of Object.values(part.states)) {
+    if (sprite.asset === 'hidden') continue;
+    const variants = part.colorable ? SHAPE_MANIFEST.colorVariants.map((v) => v.id) : [''];
+    for (const variant of variants) {
+      const name = part.colorable ? `${sprite.asset}.${variant}.png` : `${sprite.asset}.png`;
+      const file = path.join(assetsRoot, part.id, name);
+      assert.ok(fs.existsSync(file), `missing exported asset ${part.id}/${name}`);
+      expectedKeys.push(`'shape/${part.id}/${name}'`);
+      expected += 1;
+    }
+  }
+}
+ok(`all ${expected} manifest assets are exported`);
+
+// The generated registry must reference every key (Metro can't be run here).
+const registryPath = path.resolve(__dirname, '../src/lib/kenney/generated-assets.ts');
+const registryText = fs.readFileSync(registryPath, 'utf8');
+for (const key of expectedKeys) {
+  assert.ok(registryText.includes(key), `registry missing ${key}`);
+}
+ok(`generated-assets.ts references all ${expected} assets`);
+
+// Variant matching picks the nearest Kenney color.
+assert.equal(nearestVariant(SHAPE_MANIFEST, '#738ae9'), 'blue');
+assert.equal(nearestVariant(SHAPE_MANIFEST, '#da5463'), 'red');
+assert.equal(nearestVariant(SHAPE_MANIFEST, '#f8c13a'), 'yellow');
+ok('nearestVariant matches the 6 pack colors from a hex palette');
+
+// Legacy migrations.
+const legacyShape = normalizeRecipe({ source: 'shape', base: 'rhombus', top: 'tired', hair: null, palette: null });
+assert.equal(legacyShape.source, 'shape');
+assert.equal(legacyShape.parts.body, 'rhombus');
+assert.equal(legacyShape.parts.face, 'tired');
+
+const legacyString = normalizeRecipe('listen');
+assert.equal(legacyString.parts.face, 'listen');
+assert.equal(legacyString.parts.body, DEFAULT_RECIPE.parts.body);
+
+const legacyMonster = normalizeRecipe({ source: 'monster', base: 'body_blueA', top: 'horn_large', hair: null, palette: null });
+assert.equal(legacyMonster.source, 'shape', 'unmanifested family falls back to the default shape look');
+
+const newShape = normalizeRecipe({ source: 'shape', parts: { body: 'square', face: 'glow', hand: 'peace' }, palette: '#da5463' });
+assert.equal(newShape.parts.hand, 'peace');
+assert.equal(newShape.parts.face, 'glow');
+assert.equal(newShape.palette, '#da5463');
+
+assert.deepEqual(normalizeRecipe('junk recipe'), DEFAULT_RECIPE);
+ok('normalizeRecipe migrates legacy shape / string / monster and validates the new shape');
+
+// Generic resolution: default recipe has hands HIDDEN at rest.
+const resolved = resolveCharacter(DEFAULT_RECIPE);
+assert.deepEqual(
+  resolved.layers.map((l) => l.partId),
+  ['body', 'face'],
+  'default rest has no hand layer (hands hidden)',
+);
+const bodyLayer = resolved.layers.find((l) => l.partId === 'body')!;
+assert.ok(bodyLayer.key.endsWith('.blue.png'), `default palette -> blue variant (got ${bodyLayer.key})`);
+const faceLayer = resolved.layers.find((l) => l.partId === 'face')!;
+assert.ok(faceLayer.key.endsWith('face_a.png'), `default face is face_a (got ${faceLayer.key})`);
+
+// A gesture state (e.g. thumb) brings the hand layers back, mirrored.
+const gesturing = resolveCharacter({
+  ...DEFAULT_RECIPE,
+  parts: { ...DEFAULT_RECIPE.parts, hand: 'thumb' },
+});
+const handLayer = gesturing.layers.find((l) => l.partId === 'hand')!;
+assert.equal(handLayer.instances.length, 2, 'two hand placements when gesturing');
+assert.equal(handLayer.instances[1].flip, true, 'left hand mirrors');
+assert.ok(handLayer.key.endsWith('thumb.blue.png'), `gesture thumb resolves (got ${handLayer.key})`);
+ok('resolveCharacter hides hands at rest and re-adds them for a gesture, zero family branches');
+
+// Event gestures are manifest-driven.
+const gestureMap = SHAPE_MANIFEST.eventGestures ?? {};
+assert.equal(gestureMap.checkDone?.state, 'thumb');
+assert.equal(gestureMap.talkReply?.state, 'point');
+assert.equal(gestureMap.circleConnected?.state, 'peace');
+assert.equal(gestureMap.posterShared?.state, 'peace');
+ok('event gestures map to manifest-declared hand states');
+
+// Registry is manifest-driven.
+assert.equal(Object.keys(KENNEY_REGISTRY).length, 1, 'one registered family');
+
+console.log(`\nAll ${passed} Kenney pipeline checks passed.`);

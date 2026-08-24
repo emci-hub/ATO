@@ -18,10 +18,12 @@ export function ScanSheet({
   visible,
   onClose,
   onAdd,
+  onConnected,
 }: {
   visible: boolean;
   onClose: () => void;
   onAdd: (raw: string) => Promise<AddPeerResult>;
+  onConnected?: () => void;
 }) {
   const theme = useTheme();
   const [permission, requestPermission] = useCameraPermissions();
@@ -47,6 +49,7 @@ export function ScanSheet({
     if (result.ok) {
       setNotice({ tone: 'ok', text: `Added ${result.peer.name} — Circle is open.` });
       handledRef.current = true;
+      onConnected?.();
       setTimeout(onClose, 1200);
     } else {
       setNotice({ tone: 'err', text: result.message });

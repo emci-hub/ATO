@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -11,14 +12,23 @@ import {
   CRISIS_INTRO,
   CRISIS_NOTE,
 } from '@/lib/crisis/copy';
+import { setCrisisActive } from '@/lib/kenney/gesture-actions';
 
 /**
  * Static crisis card. Shown in place of any AI content when a message is
  * crisis-flagged. onDismiss ("I'm okay, keep going") returns the user to the
  * normal flow — nothing is logged or recorded.
+ *
+ * While this card is mounted, event gestures are hard-disabled (hands stay
+ * hidden, no pose, no exception). That is intentional, not a missed case.
  */
 export function CrisisCard({ onDismiss }: { onDismiss?: () => void }) {
   const theme = useTheme();
+
+  useEffect(() => {
+    setCrisisActive(true);
+    return () => setCrisisActive(false);
+  }, []);
 
   return (
     <ThemedView type="backgroundElement" style={styles.card}>

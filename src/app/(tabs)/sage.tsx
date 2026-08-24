@@ -22,6 +22,7 @@ import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { checksToHistory, fetchChecks, type Check } from '@/lib/checks';
 import { logCrisisFlag } from '@/lib/crisis/log';
+import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { aiConsentFor, setAiConsent } from '@/lib/me';
 import { routeTalkReply } from '@/lib/voice/talk';
 import { routeVoiceCard } from '@/lib/voice/router';
@@ -152,9 +153,12 @@ export default function SageScreen() {
 
       if (result.kind === 'crisis') {
         // No confirmation step — the static card shows automatically.
+        // CRISIS HARD RULE: no gesture. Hands stay hidden — never celebrated,
+        // never acknowledged with a pose. No exception.
         addMessage({ role: 'sage', text: '', crisis: true });
       } else if (result.kind === 'reply' && result.reply) {
         addMessage({ role: 'sage', text: result.reply });
+        triggerGesture('talkReply');
       }
     } catch (err) {
       console.log('[talk] routeTalkReply error:', err);
