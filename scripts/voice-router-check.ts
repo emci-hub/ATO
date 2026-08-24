@@ -14,6 +14,7 @@
 import assert from 'node:assert/strict';
 
 import { bankCard, parseBank } from '../src/lib/voice/bank';
+import { classifyCrisis } from '../src/lib/crisis/classify';
 import { buildVoiceConfig } from '../src/lib/voice/config';
 import { BANK_MARKDOWN } from '../src/lib/voice/content.generated';
 import { detectCrisis, keywordDetect, normalizeCrisis, type CrisisDetection } from '../src/lib/crisis/detect';
@@ -262,6 +263,59 @@ assert.equal(noKey.method, 'keyword-fallback');
 assert.equal(noKey.flagged, true);
 assert.ok(noKey.error?.includes('no Gemini API key'));
 ok('no Gemini key → keyword net fallback, detection still runs');
+
+// ---------------------------------------------------------------------------
+console.log('Classifier wire format (Gemini 3.x)');
+
+assert.equal(buildVoiceConfig({}).geminiModel, 'gemini-3.6-flash', 'default model is current');
+ok('default gemini model is gemini-3.6-flash');
+
+interface CapturedConfig {
+  thinkingConfig?: { thinkingLevel?: string };
+  maxOutputTokens?: number;
+  temperature?: number;
+  responseMimeType?: string;
+}
+let capturedUrl = '';
+let capturedConfig: CapturedConfig = {};
+const captureFetch = (async (url: RequestInfo | URL, init?: RequestInit) => {
+  capturedUrl = String(url);
+  capturedConfig = (JSON.parse(String(init?.body)) as { generationConfig: CapturedConfig })
+    .generationConfig;
+  return new Response(
+    JSON.stringify({ candidates: [{ content: { parts: [{ text: '{"flagged":true}' }] } }] }),
+    { status: 200 },
+  );
+}) as typeof fetch;
+
+const shaped = await classifyCrisis('some message', {
+  apiKey: 'test-key',
+  model: 'gemini-3.6-flash',
+  fetchImpl: captureFetch,
+});
+assert.equal(shaped.flagged, true);
+assert.equal(shaped.model, 'gemini-3.6-flash');
+assert.ok(capturedUrl.includes('gemini-3.6-flash:generateContent'), 'model is in the URL path');
+// 3.x always thinks and bills it against maxOutputTokens, so the classifier
+// must ask for the least thinking and still leave room to answer.
+assert.equal(capturedConfig.thinkingConfig?.thinkingLevel, 'minimal');
+assert.ok((capturedConfig.maxOutputTokens ?? 0) >= 256, 'output budget has thinking headroom');
+assert.equal(capturedConfig.temperature, undefined, '3.x no longer recommends pinning temperature');
+assert.equal(capturedConfig.responseMimeType, 'application/json');
+ok('classifier asks for minimal thinking, JSON out, and room to answer');
+
+// Budget spent on thinking must name itself rather than look like a bad answer.
+const starvedFetch = (async () =>
+  new Response(JSON.stringify({ candidates: [{ finishReason: 'MAX_TOKENS', content: { parts: [] } }] }), {
+    status: 200,
+  })) as typeof fetch;
+const starved = await detectCrisis('I want to kill myself', {
+  classifyOptions: { apiKey: 'test-key', fetchImpl: starvedFetch },
+});
+assert.equal(starved.method, 'keyword-fallback');
+assert.equal(starved.flagged, true);
+assert.ok(starved.error?.includes('cap before answering'), 'the cap is named in the error');
+ok('classifier that spends its budget thinking → named cap error → keyword net');
 
 // Router short-circuit (Dawn path) still wired.
 const crisisResult = await routeVoiceCard(input(3, d1, { aiConsent: true, crisisDetected: true }), { config: localConfig, ...dev });
