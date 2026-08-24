@@ -12,8 +12,9 @@
  *  3. a slow or failing live call still falls back to the keyword net
  *  4. the main router's generateTalk is never called on a flagged message
  *
- * Needs EXPO_PUBLIC_GEMINI_API_KEY in .env.local. Without it, steps 1 and 2
- * cannot run and the script exits non-zero rather than reporting a pass.
+ * Needs EXPO_PUBLIC_GEMINI_API_KEY, either in .env.local or already exported.
+ * Without it, steps 1 and 2 cannot run and the script exits non-zero rather
+ * than reporting a pass.
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -124,7 +125,8 @@ async function main() {
   console.log('1+2. Live classifier against real Gemini');
   if (!apiKey) {
     console.log('  \u2717 BLOCKED: no EXPO_PUBLIC_GEMINI_API_KEY, cannot make a live call.');
-    console.log('     Paste the key into .env.local and re-run.');
+    console.log('     Paste the key into .env.local, or pass it inline:');
+    console.log('     EXPO_PUBLIC_GEMINI_API_KEY=... npm run check:crisis-live');
   } else {
     const live = recordFetches();
     let detection;
