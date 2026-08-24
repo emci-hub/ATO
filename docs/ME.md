@@ -4,7 +4,7 @@
 **Twin:** Drake
 
 ## This week
-Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–5 done (Home shell, Sign-in/ME/Theme, Pixel, Dawn+Router, Talk+crisis — live-verified). Stage 6 (Share + Circle) code built, committed, verified in isolation — on-device scan pass still needed before moving to Stage 7.
+Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–6 done and on-device verified (Home shell, Sign-in/ME/Theme, Pixel, Dawn+Router, Talk+crisis, Share+Circle). Opening Stage 7 (Chat + Report). Kenney import-pipeline work queued in backlog (see NOW.md) — not yet started.
 
 ## App
 - **Category:** Hybrid — AI-native (Sage/router) + Social (Circle/Chat) + Health/finance/kids (crisis spec, coaching tone)
@@ -15,7 +15,7 @@ Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–5 done (Home shell, S
 
 ## Roster
 - Assistant (Drake) — active
-- Builder (Cursor) — active, Stages 1–6 shipped (Stage 6 pending on-device confirmation), owns docs/ME.md and docs/NOW.md directly
+- Builder (Cursor) — active, Stages 1–6 shipped and on-device verified, owns docs/ME.md and docs/NOW.md directly
 
 ## Live AI + model
 - Cursor, `deepseek-v4-flash` (default volume, spec already written) — crisis/safety-critical work always routes to Claude Opus 5 (fixed lane), regardless of Home/Away

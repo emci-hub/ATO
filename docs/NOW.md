@@ -6,7 +6,7 @@
 **Live AI + model:** Cursor, `deepseek-v4-flash` (default volume) — crisis/safety-critical work always routes to Claude Opus 5 regardless of Home/Away, Expo SDK 54
 
 ## On
-Wave 1, Stage 6 — Share + Circle. Code built, committed (`d6d2d05`), verified in isolation. Next: on-device pass (see Done note below), then Stage 7.
+Wave 1, Stage 7 — Chat + Report. Next: open box.
 
 ## Done
 - Stage 1 (Home shell) — screenshot verified: 3 tabs (Home, Sage, You), no Circle tab, fake card, fake poster
@@ -20,11 +20,17 @@ Wave 1, Stage 6 — Share + Circle. Code built, committed (`d6d2d05`), verified 
   - **Model pinned deliberately to `gemini-3.7-flash` (versioned), not `gemini-flash-latest`.** The unversioned `-latest` alias is Google's experimental tier and can hot-swap with only 2 weeks' notice — not acceptable for a safety-critical classifier whose exact behavior was just verified. Manual quarterly check for new stable Gemini flash releases, re-run `scripts/crisis-live-check.ts` before ever bumping the pin.
   - `scripts/crisis-live-check.ts` added — reusable live harness (spy-provider + redacted request/response logging) for any future model-pin bump.
 
-- **Stage 6 (Share + Circle) — built and committed, verified in isolation. On-device pass still open.** Share: Stories-size poster (real pixel, name, `@handle`, `show_up`, QR) via view-shot → native Share sheet; copy-link; public `/@handle` page (no auth) resolves through a security-definer `public_profile` function that only exposes poster fields. Circle: new `connections` table, one gate — a scan or pasted link inserts A→B, a DB trigger mirrors B→A, Realtime pushes the tab to both devices without a manual refresh. Circle tab is conditionally rendered (`hasCircle`) — before any scan, tab bar is still exactly Home/Sage/You. Circle screen shows each peer's real pixel + honest card (name, handle, show_up, latest check) straight from `me`/`checks`, nothing synthesized, no chat touched. Verified: RLS + mirror trigger via rollback-transaction tests (pre-connect reads blocked, one insert creates both directions, anon only reaches `public_profile`), `tsc --noEmit` clean, 23/23 voice suite, stage6 scanner/link-parsing checks pass, 0 lint errors on new files, web export resolves `/circle` + `/[handle]`.
-  - **Open:** the actual done-bar signal — two real accounts, real camera, A scans B's QR → 4th tab appears on both devices without a manual refresh. Everything up to this point is code-correctness proof, not the on-device confirmation. Same category as the Stage 4 consent-prompt UI item.
+- **Stage 6 (Share + Circle) — fully closed, on-device verified.** Share: Stories-size poster (real pixel, name, `@handle`, `show_up`, QR) via view-shot → native Share sheet; copy-link; public `/@handle` page (no auth) resolves through a security-definer `public_profile` function that only exposes poster fields. Circle: `connections` table, one gate — a scan or pasted link inserts A→B, a DB trigger mirrors B→A, Realtime pushes the tab to both devices without a manual refresh. Circle screen shows each peer's real pixel + honest card (name, handle, show_up, latest check) straight from `me`/`checks`, nothing synthesized, no chat touched. Added **Unfriend**: deletes the connection both directions (mirror-delete trigger, no orphan rows), tab disappears live on both sides at 0 connections.
+  - On-device pass confirmed clean: fresh/never-scanned account shows exactly 3 tabs; unfriend → refriend cycle works both directions; scanned peer's card shows real data, not placeholder; Home-bounce after a successful scan (see below) felt fine in practice, no polish needed.
+  - Two bugs found and fixed during on-device testing (code-correctness checks alone hadn't caught either):
+    1. **Realtime double-subscription** — `useCircle` was called independently from 3 places (both tab bars + the Circle screen), each opening a channel on the same topic name, causing `cannot add 'postgres_changes' callbacks ... after 'subscribe()'` on login for any account with an existing connection. Fixed by consolidating into a single `CircleProvider` (`src/lib/circle-context.tsx`) wrapping the tab layout; all consumers read from context now, zero duplicate channels.
+    2. **Dynamic tab trigger warning** — expo-router's native-tabs explicitly does not support dynamically adding/removing `<Trigger>` children at runtime (confirmed in their docs); toggling the Circle trigger in/out of the JSX tree on `hasCircle` caused `Layout children must be of type Screen...` and would have broken state on the flip. Fixed by keeping the Circle `<Trigger>` **statically present** always, using the documented `hidden={!hasCircle}` prop to gate visibility/navigability instead — "not present, not hidden-in-the-bar" rule still holds, just implemented the way the framework actually supports. **Note for Stage 7+: any future conditional tab (if one ever comes up) should use this same static-trigger + `hidden` pattern from the start, not a conditional JSX child.**
+  - Verified: RLS + mirror trigger + unfriend mirror-delete via rollback-transaction tests, `tsc --noEmit` clean, 23/23 voice suite, stage6 scanner/link-parsing checks pass, 0 lint errors, web export resolves `/circle` + `/[handle]`.
+  - Known side effect, accepted as fine: per expo-router's `hidden` docs, toggling it remounts the navigator, so the app lands back on Home right after a successful scan. Confirmed on-device this reads as fine, not jarring — no fix needed.
+  - Commits: `d6d2d05` (Stage 6 build) → `32d948c` (subscription fix + unfriend + static-trigger fix, squashed from `10aa389`).
 
 ## Left
-Stage 6 on-device pass, Stages 7–8, Wave 1
+Stages 7–8, Wave 1
 
 ## Backlog (Stage 8 — polish pass, before TestFlight)
 - Fantasy UI Borders pack (Kenney) — UI chrome/panels/buttons, separate visual system from character art
@@ -62,4 +68,14 @@ Early on there's not much data on someone yet. Games give tokens; tokens unlock 
 - EXPO_PUBLIC_GEMINI_API_KEY set and live-verified. Model pinned to `gemini-3.7-flash` (not `-latest`) — see rationale under Stage 5 Done.
 
 ## Next 15 min
-On-device pass for Stage 6: two real accounts/devices, A scans B's QR, confirm Circle tab appears on both without a manual refresh (Realtime should push it). Once confirmed, open Stage 7 box: chat, report.
+Open Stage 7 box: chat, report.
+
+## Backlog addition — Kenney import pipeline (queued after Stage 6 close)
+Plan to build a generalized, family-agnostic Kenney asset pipeline rather than a one-off Pixel fix, since more Kenney packs are coming:
+- One-time asset-prep script: re-export any pack's native PNGs to one fixed target resolution (derived from the largest actual render context — e.g. the Share poster — not picked arbitrarily), so the app never touches a pack's raw native size directly.
+- Per-family manifest (`assets/kenney/<family>/manifest.ts`): declares part slots, anchor offsets ("skeleton," measured like Stage 3's original anchors), color variants, discrete swap-states (blink/gesture/mouth) — different packs can have different skeletons, just a different manifest.
+- One generic renderer component reading `recipe + manifest`, family-agnostic — adding a new pack later means "manifest + prep script run," not new rendering code.
+- One generic animation layer: discrete state swaps per the manifest's declared states, plus procedural transforms (breathe/bob/tilt/squash) via Reanimated applied to the composed group — doesn't care which family is active.
+- `docs/KENNEY_IMPORT.md` — repeatable checklist capturing the above so future packs don't require re-deriving the approach.
+- Also: confirm whether current Pixel rendering is tinting a neutral asset at runtime (likely root cause of the "flat/plain" look) vs. selecting pre-colored files — check this before assuming a resolution-only fix is needed.
+- Shape Characters pack (`kenney_shape-characters.zip`) is the first candidate to migrate through this pipeline once it's built.
