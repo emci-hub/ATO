@@ -92,7 +92,7 @@ async function main() {
   // config.ts snapshots process.env at import time, so these must come after
   // the .env.local load.
   const { VOICE_CONFIG } = await import('../src/lib/voice/config');
-  const { classifyCrisis } = await import('../src/lib/crisis/classify');
+  const { classifyCrisis, DEFAULT_TIMEOUT_MS } = await import('../src/lib/crisis/classify');
   const { detectCrisis, keywordDetect } = await import('../src/lib/crisis/detect');
   const { routeTalkReply } = await import('../src/lib/voice/talk');
 
@@ -150,6 +150,17 @@ async function main() {
     assert.equal(detection.model, VOICE_CONFIG.geminiModel);
     assert.equal(detection.flagged, true, 'live classifier should flag real risk');
     ok('crisis message → live Gemini classifier call → flagged=true (keyword net could not have)');
+
+    // 3.x always thinks, so a pass that only just beat the deadline is worth
+    // knowing about — the next slow day would silently become a fallback.
+    const headroom = DEFAULT_TIMEOUT_MS - detection.latencyMs;
+    console.log(
+      `  timing: ${detection.latencyMs}ms against a ${DEFAULT_TIMEOUT_MS}ms deadline ` +
+        `(${headroom}ms headroom)`,
+    );
+    if (headroom < DEFAULT_TIMEOUT_MS * 0.25) {
+      console.log('  ! thin headroom — consider raising the classifier timeout');
+    }
 
     // The classifier must also be willing to say no, or "it flags everything"
     // would look identical to a real verdict.

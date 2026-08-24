@@ -62,12 +62,17 @@ Early on there's not much data on someone yet. Games give tokens; tokens unlock 
 
 Offline legs pass today (28/28 on `check:voice`): a hung classifier, an HTTP-rejected classifier, and a classifier that spends its whole output budget thinking all fall back to the keyword net (risk still flagged, benign still cleared), and `generateTalk` stays at zero calls on a flagged message. Egress to `generativelanguage.googleapis.com` is confirmed reachable — an invalid key returns a structured Gemini 400, so the URL, headers and body shape are right. The two live legs exit non-zero until a real key is set, so a missing key can never read as a pass.
 
-## Model: gemini-2.5-flash → gemini-3.6-flash
-Google stopped serving `gemini-2.5-flash` to new users, so the default is now `gemini-3.6-flash` (GA, that exact model id). This is not a one-word swap, because every 3.x model always thinks to some degree and bills thinking tokens against `maxOutputTokens`:
-- the classifier's old 12-token cap would have gone entirely to reasoning and returned no text, which looks like a broken classifier and quietly hands every message to the keyword net. It now asks for `thinkingLevel: 'minimal'` with 512 tokens of headroom, which also matters because thinking latency competes with the 4s deadline
-- the card and talk calls got the same treatment at `thinkingLevel: 'low'` with a 1024-token budget
+## Model: gemini-2.5-flash → gemini-3.7-flash
+Google stopped serving `gemini-2.5-flash` to new users. The default is now `gemini-3.7-flash` (GA 2026-08-13, newest stable Flash), pinned to the exact version rather than a `-latest` alias so the crisis path stays predictable and auditable — aliases have moved out from under projects before. `check:voice` asserts both the exact id and the absence of `latest`.
+
+This is not a one-word swap, because every 3.x model always thinks to some degree and bills thinking tokens against `maxOutputTokens`:
+- **`gemini-3.7-flash` rejects `thinkingLevel: 'minimal'` with a 400.** `low` is the least thinking every 3.x text model accepts, so that is what both the classifier and the card/talk calls ask for. Getting this wrong is silent: every call 400s and every message falls through to the keyword net while looking wired up
+- the classifier's old 12-token output cap would have gone entirely to reasoning and returned no text, with the same silent result. It is now 1024, which is a ceiling rather than a reservation, so the headroom is free unless used
+- the card and talk calls carry a 1024-token budget for the same reason
 - `temperature` is dropped everywhere: 3.x is tuned for its default sampling and no longer recommends pinning it
 - a response that ran out of budget before answering now names the cap instead of reporting an unparseable answer
+
+Open question for the first live run: `low` thinking is slower than no thinking, and the classifier's deadline is still 4s. `check:crisis-live` now prints the observed latency and its headroom against that deadline, and warns when the margin is under 25%, so there is data to decide whether 4s still fits. Falling back is safe by design, but a fallback on every slow day is a quality regression, not a safety one.
 
 Still unverified live, because the key has never reached a cloud VM. Nothing above has been exercised against real Gemini — the wire format is asserted offline against a captured request, not confirmed by a 200 response.
 

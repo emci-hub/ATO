@@ -267,8 +267,11 @@ ok('no Gemini key → keyword net fallback, detection still runs');
 // ---------------------------------------------------------------------------
 console.log('Classifier wire format (Gemini 3.x)');
 
-assert.equal(buildVoiceConfig({}).geminiModel, 'gemini-3.6-flash', 'default model is current');
-ok('default gemini model is gemini-3.6-flash');
+// Pinned to an exact version, never a -latest alias: aliases move underneath
+// projects, and this is the crisis path.
+assert.equal(buildVoiceConfig({}).geminiModel, 'gemini-3.7-flash', 'default model is current');
+assert.ok(!buildVoiceConfig({}).geminiModel.includes('latest'), 'default model is not an alias');
+ok('default gemini model is pinned to gemini-3.7-flash, not a -latest alias');
 
 interface CapturedConfig {
   thinkingConfig?: { thinkingLevel?: string };
@@ -290,19 +293,22 @@ const captureFetch = (async (url: RequestInfo | URL, init?: RequestInit) => {
 
 const shaped = await classifyCrisis('some message', {
   apiKey: 'test-key',
-  model: 'gemini-3.6-flash',
+  model: 'gemini-3.7-flash',
   fetchImpl: captureFetch,
 });
 assert.equal(shaped.flagged, true);
-assert.equal(shaped.model, 'gemini-3.6-flash');
-assert.ok(capturedUrl.includes('gemini-3.6-flash:generateContent'), 'model is in the URL path');
+assert.equal(shaped.model, 'gemini-3.7-flash');
+assert.ok(capturedUrl.includes('gemini-3.7-flash:generateContent'), 'model is in the URL path');
 // 3.x always thinks and bills it against maxOutputTokens, so the classifier
-// must ask for the least thinking and still leave room to answer.
-assert.equal(capturedConfig.thinkingConfig?.thinkingLevel, 'minimal');
+// must ask for little thinking and still leave room to answer. It must NOT ask
+// for 'minimal', which gemini-3.7-flash rejects with a 400 — that would fail
+// every call and quietly route every message to the keyword net.
+assert.equal(capturedConfig.thinkingConfig?.thinkingLevel, 'low');
+assert.notEqual(capturedConfig.thinkingConfig?.thinkingLevel, 'minimal');
 assert.ok((capturedConfig.maxOutputTokens ?? 0) >= 256, 'output budget has thinking headroom');
 assert.equal(capturedConfig.temperature, undefined, '3.x no longer recommends pinning temperature');
 assert.equal(capturedConfig.responseMimeType, 'application/json');
-ok('classifier asks for minimal thinking, JSON out, and room to answer');
+ok('classifier asks 3.7-flash for low thinking, JSON out, and room to answer');
 
 // Budget spent on thinking must name itself rather than look like a bad answer.
 const starvedFetch = (async () =>
