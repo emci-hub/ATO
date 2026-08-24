@@ -211,8 +211,8 @@ assert.equal(keywordDetect('I am so tired of this project'), false, 'frustration
 ok('keyword net: user-approved list + regex, benign messages pass');
 
 // Classifier-first orchestration.
-const trueClassifier = async (): Promise<CrisisDetection> => ({ flagged: true, method: 'classifier' });
-const falseClassifier = async (): Promise<CrisisDetection> => ({ flagged: false, method: 'classifier' });
+const trueClassifier = async (): Promise<CrisisDetection> => ({ flagged: true, method: 'classifier', latencyMs: 0 });
+const falseClassifier = async (): Promise<CrisisDetection> => ({ flagged: false, method: 'classifier', latencyMs: 0 });
 const deadClassifier = async (): Promise<CrisisDetection> => {
   throw new Error('classifier timed out (4000ms)');
 };
@@ -235,6 +235,33 @@ const viaNetClear = await detectCrisis('how was your day', { classify: deadClass
 assert.equal(viaNetClear.flagged, false);
 assert.equal(viaNetClear.method, 'keyword-fallback');
 ok('classifier failure/timeout → keyword net fallback, never skips detection');
+
+// A real abort must report itself as a timeout, not as a bare "operation was
+// aborted" — otherwise the fallback log can't tell slow from broken.
+const hangingFetch = ((_url: RequestInfo | URL, init?: RequestInit) =>
+  new Promise<Response>((_resolve, reject) => {
+    init?.signal?.addEventListener('abort', () =>
+      reject(new DOMException('The operation was aborted.', 'AbortError')),
+    );
+  })) as typeof fetch;
+
+const realTimeout = await detectCrisis('I want to kill myself', {
+  classifyOptions: { apiKey: 'test-key', timeoutMs: 50, fetchImpl: hangingFetch },
+});
+assert.equal(realTimeout.method, 'keyword-fallback');
+assert.equal(realTimeout.flagged, true);
+assert.ok(realTimeout.error?.includes('timed out after 50ms'), 'abort is reported as a timeout');
+assert.ok(realTimeout.latencyMs >= 50, 'the classifier was actually awaited, not skipped');
+ok('real classifier abort → named timeout error → keyword net fallback');
+
+// No key configured is a classifier failure like any other, not a skip.
+// Empty string rather than undefined, so an exported key can't turn this into
+// a live call.
+const noKey = await detectCrisis('I want to kill myself', { classifyOptions: { apiKey: '' } });
+assert.equal(noKey.method, 'keyword-fallback');
+assert.equal(noKey.flagged, true);
+assert.ok(noKey.error?.includes('no Gemini API key'));
+ok('no Gemini key → keyword net fallback, detection still runs');
 
 // Router short-circuit (Dawn path) still wired.
 const crisisResult = await routeVoiceCard(input(3, d1, { aiConsent: true, crisisDetected: true }), { config: localConfig, ...dev });
