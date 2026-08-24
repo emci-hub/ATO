@@ -28,7 +28,7 @@ export function buildVoiceConfig(env: VoiceEnv): VoiceConfig {
   const provider: ProviderId = raw === 'local' ? 'local' : 'gemini';
   return {
     provider,
-    geminiModel: env.GEMINI_MODEL || 'gemini-2.5-flash',
+    geminiModel: env.GEMINI_MODEL || 'gemini-3.7-flash',
     geminiApiKey: env.GEMINI_API_KEY || undefined,
   };
 }

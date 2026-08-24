@@ -14,6 +14,7 @@
 import assert from 'node:assert/strict';
 
 import { bankCard, parseBank } from '../src/lib/voice/bank';
+import { classifyCrisis } from '../src/lib/crisis/classify';
 import { buildVoiceConfig } from '../src/lib/voice/config';
 import { BANK_MARKDOWN } from '../src/lib/voice/content.generated';
 import { detectCrisis, keywordDetect, normalizeCrisis, type CrisisDetection } from '../src/lib/crisis/detect';
@@ -211,8 +212,8 @@ assert.equal(keywordDetect('I am so tired of this project'), false, 'frustration
 ok('keyword net: user-approved list + regex, benign messages pass');
 
 // Classifier-first orchestration.
-const trueClassifier = async (): Promise<CrisisDetection> => ({ flagged: true, method: 'classifier' });
-const falseClassifier = async (): Promise<CrisisDetection> => ({ flagged: false, method: 'classifier' });
+const trueClassifier = async (): Promise<CrisisDetection> => ({ flagged: true, method: 'classifier', latencyMs: 0 });
+const falseClassifier = async (): Promise<CrisisDetection> => ({ flagged: false, method: 'classifier', latencyMs: 0 });
 const deadClassifier = async (): Promise<CrisisDetection> => {
   throw new Error('classifier timed out (4000ms)');
 };
@@ -235,6 +236,92 @@ const viaNetClear = await detectCrisis('how was your day', { classify: deadClass
 assert.equal(viaNetClear.flagged, false);
 assert.equal(viaNetClear.method, 'keyword-fallback');
 ok('classifier failure/timeout → keyword net fallback, never skips detection');
+
+// A real abort must report itself as a timeout, not as a bare "operation was
+// aborted" — otherwise the fallback log can't tell slow from broken.
+const hangingFetch = ((_url: RequestInfo | URL, init?: RequestInit) =>
+  new Promise<Response>((_resolve, reject) => {
+    init?.signal?.addEventListener('abort', () =>
+      reject(new DOMException('The operation was aborted.', 'AbortError')),
+    );
+  })) as typeof fetch;
+
+const realTimeout = await detectCrisis('I want to kill myself', {
+  classifyOptions: { apiKey: 'test-key', timeoutMs: 50, fetchImpl: hangingFetch },
+});
+assert.equal(realTimeout.method, 'keyword-fallback');
+assert.equal(realTimeout.flagged, true);
+assert.ok(realTimeout.error?.includes('timed out after 50ms'), 'abort is reported as a timeout');
+assert.ok(realTimeout.latencyMs >= 50, 'the classifier was actually awaited, not skipped');
+ok('real classifier abort → named timeout error → keyword net fallback');
+
+// No key configured is a classifier failure like any other, not a skip.
+// Empty string rather than undefined, so an exported key can't turn this into
+// a live call.
+const noKey = await detectCrisis('I want to kill myself', { classifyOptions: { apiKey: '' } });
+assert.equal(noKey.method, 'keyword-fallback');
+assert.equal(noKey.flagged, true);
+assert.ok(noKey.error?.includes('no Gemini API key'));
+ok('no Gemini key → keyword net fallback, detection still runs');
+
+// ---------------------------------------------------------------------------
+console.log('Classifier wire format (Gemini 3.x)');
+
+// Pinned to an exact version, never a -latest alias: aliases move underneath
+// projects, and this is the crisis path.
+assert.equal(buildVoiceConfig({}).geminiModel, 'gemini-3.7-flash', 'default model is current');
+assert.ok(!buildVoiceConfig({}).geminiModel.includes('latest'), 'default model is not an alias');
+ok('default gemini model is pinned to gemini-3.7-flash, not a -latest alias');
+
+interface CapturedConfig {
+  thinkingConfig?: { thinkingLevel?: string };
+  maxOutputTokens?: number;
+  temperature?: number;
+  responseMimeType?: string;
+}
+let capturedUrl = '';
+let capturedConfig: CapturedConfig = {};
+const captureFetch = (async (url: RequestInfo | URL, init?: RequestInit) => {
+  capturedUrl = String(url);
+  capturedConfig = (JSON.parse(String(init?.body)) as { generationConfig: CapturedConfig })
+    .generationConfig;
+  return new Response(
+    JSON.stringify({ candidates: [{ content: { parts: [{ text: '{"flagged":true}' }] } }] }),
+    { status: 200 },
+  );
+}) as typeof fetch;
+
+const shaped = await classifyCrisis('some message', {
+  apiKey: 'test-key',
+  model: 'gemini-3.7-flash',
+  fetchImpl: captureFetch,
+});
+assert.equal(shaped.flagged, true);
+assert.equal(shaped.model, 'gemini-3.7-flash');
+assert.ok(capturedUrl.includes('gemini-3.7-flash:generateContent'), 'model is in the URL path');
+// 3.x always thinks and bills it against maxOutputTokens, so the classifier
+// must ask for little thinking and still leave room to answer. It must NOT ask
+// for 'minimal', which gemini-3.7-flash rejects with a 400 — that would fail
+// every call and quietly route every message to the keyword net.
+assert.equal(capturedConfig.thinkingConfig?.thinkingLevel, 'low');
+assert.notEqual(capturedConfig.thinkingConfig?.thinkingLevel, 'minimal');
+assert.ok((capturedConfig.maxOutputTokens ?? 0) >= 256, 'output budget has thinking headroom');
+assert.equal(capturedConfig.temperature, undefined, '3.x no longer recommends pinning temperature');
+assert.equal(capturedConfig.responseMimeType, 'application/json');
+ok('classifier asks 3.7-flash for low thinking, JSON out, and room to answer');
+
+// Budget spent on thinking must name itself rather than look like a bad answer.
+const starvedFetch = (async () =>
+  new Response(JSON.stringify({ candidates: [{ finishReason: 'MAX_TOKENS', content: { parts: [] } }] }), {
+    status: 200,
+  })) as typeof fetch;
+const starved = await detectCrisis('I want to kill myself', {
+  classifyOptions: { apiKey: 'test-key', fetchImpl: starvedFetch },
+});
+assert.equal(starved.method, 'keyword-fallback');
+assert.equal(starved.flagged, true);
+assert.ok(starved.error?.includes('cap before answering'), 'the cap is named in the error');
+ok('classifier that spends its budget thinking → named cap error → keyword net');
 
 // Router short-circuit (Dawn path) still wired.
 const crisisResult = await routeVoiceCard(input(3, d1, { aiConsent: true, crisisDetected: true }), { config: localConfig, ...dev });

@@ -21,7 +21,24 @@ const CLASSIFIER_SYSTEM =
   'Flag genuine, current risk. Do not flag ordinary sadness, frustration, or venting without ' +
   'self-harm intent. When uncertain, lean toward flagging.';
 
-const DEFAULT_TIMEOUT_MS = 4000;
+export const DEFAULT_TIMEOUT_MS = 4000;
+
+/**
+ * The answer itself is a handful of tokens, but Gemini 3.x models always think
+ * to some degree and bill thinking tokens against this same budget. A tight cap
+ * gets spent on reasoning and returns no text at all, which would look like a
+ * broken classifier and silently hand every message to the keyword net. This is
+ * a ceiling, not a reservation, so the headroom is free unless it gets used.
+ */
+const CLASSIFIER_MAX_OUTPUT_TOKENS = 1024;
+
+/**
+ * 'low' rather than 'minimal': gemini-3.7-flash rejects 'minimal' outright with
+ * a 400, and 'low' is the least thinking every 3.x text model accepts. Getting
+ * this wrong is quiet — every call would fail and every message would silently
+ * fall through to the keyword net.
+ */
+const CLASSIFIER_THINKING_LEVEL = 'low';
 
 export function buildClassifierUrl(model: string): string {
   return `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
@@ -48,14 +65,14 @@ export function parseClassified(raw: string): boolean | null {
 }
 
 /**
- * Runs the narrow classifier. Returns { flagged } on success, or throws on
- * failure/timeout so the caller can fall back to the keyword list. Never
- * silently skips detection.
+ * Runs the narrow classifier. Returns { flagged } plus the model that answered
+ * on success, or throws on failure/timeout so the caller can fall back to the
+ * keyword list. Never silently skips detection.
  */
 export async function classifyCrisis(
   message: string,
   options: ClassifyOptions = {},
-): Promise<{ flagged: boolean }> {
+): Promise<{ flagged: boolean; model: string }> {
   const model = options.model ?? VOICE_CONFIG.geminiModel;
   const apiKey = options.apiKey ?? VOICE_CONFIG.geminiApiKey;
   const fetchImpl = options.fetchImpl ?? fetch;
@@ -66,7 +83,11 @@ export async function classifyCrisis(
   }
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
 
   try {
     const res = await fetchImpl(buildClassifierUrl(model), {
@@ -80,8 +101,10 @@ export async function classifyCrisis(
         systemInstruction: { parts: [{ text: CLASSIFIER_SYSTEM }] },
         contents: [{ role: 'user', parts: [{ text: message }] }],
         generationConfig: {
-          temperature: 0,
-          maxOutputTokens: 12,
+          // temperature is deliberately unset: Gemini 3.x is tuned for its
+          // default sampling and no longer recommends pinning it.
+          thinkingConfig: { thinkingLevel: CLASSIFIER_THINKING_LEVEL },
+          maxOutputTokens: CLASSIFIER_MAX_OUTPUT_TOKENS,
           responseMimeType: 'application/json',
         },
       }),
@@ -93,17 +116,33 @@ export async function classifyCrisis(
     }
 
     const data = (await res.json()) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      candidates?: Array<{
+        content?: { parts?: Array<{ text?: string }> };
+        finishReason?: string;
+      }>;
     };
 
-    const text =
-      data.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('') ?? '';
+    const candidate = data.candidates?.[0];
+    const text = candidate?.content?.parts?.map((part) => part.text ?? '').join('') ?? '';
 
     const flagged = parseClassified(text);
     if (flagged === null) {
-      throw new Error('classifyCrisis: response contained no usable boolean');
+      // Distinguish "spent the budget thinking" from "answered something
+      // unparseable" — they need different fixes, and both end up here.
+      throw new Error(
+        candidate?.finishReason === 'MAX_TOKENS'
+          ? `classifyCrisis: hit the ${CLASSIFIER_MAX_OUTPUT_TOKENS}-token cap before answering`
+          : 'classifyCrisis: response contained no usable boolean',
+      );
     }
-    return { flagged };
+    return { flagged, model };
+  } catch (err) {
+    // An abort surfaces as a bare "operation was aborted" DOMException, which
+    // reads as a mystery failure in the fallback log. Name the real cause.
+    if (timedOut) {
+      throw new Error(`classifyCrisis: timed out after ${timeoutMs}ms`);
+    }
+    throw err;
   } finally {
     clearTimeout(timer);
   }
