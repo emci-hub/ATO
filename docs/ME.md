@@ -4,7 +4,7 @@
 **Twin:** Drake
 
 ## This week
-Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–4 done (Home shell, Sign-in/ME/Theme, Pixel, Dawn+Router). On Stage 5 (Talk + crisis spec).
+Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–5 done (Home shell, Sign-in/ME/Theme, Pixel, Dawn+Router, Talk+crisis — live classifier confirmed). On Stage 6.
 
 ## App
 - **Category:** Hybrid — AI-native (Sage/router) + Social (Circle/Chat) + Health/finance/kids (crisis spec, coaching tone)
@@ -15,8 +15,8 @@ Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–4 done (Home shell, S
 
 ## Roster
 - Assistant (Drake) — active
-- Builder (Cursor) — active, Stages 1–4 shipped, now owns docs/ME.md and docs/NOW.md directly
+- Builder (Cursor) — active, Stages 1–5 shipped, now owns docs/ME.md and docs/NOW.md directly
 
 ## Live AI + model
-- Cursor, `deepseek-v4-flash` (volume, spec already written)
-- App's own router: Gemini (`MODEL_PROVIDER=gemini`), local-provider fallback until a real API key is set
+- Cursor: `deepseek-v4-flash` (Home, volume) / `deepseek-v4-pro` (Home, hard volume) / Cursor Grok 4.6 (second opinion, both lanes) / Claude Opus 5 (flagship, safety-critical, fixed lane both lanes). Away (no Deepseek): GPT-5.6 Sol/Terra (volume equivalent) / Gemini 3.7 Flash (long/visual). Auto never used.
+- App's own router: Gemini `gemini-3.7-flash` (`MODEL_PROVIDER=gemini`) — live, confirmed working with a real key. Pinned explicit version, not a `-latest` alias.
