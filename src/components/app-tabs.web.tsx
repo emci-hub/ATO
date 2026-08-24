@@ -12,12 +12,10 @@ import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
 import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useCircle } from '@/hooks/use-circle';
-import { useSession } from '@/hooks/use-session';
+import { useCircleContext } from '@/lib/circle-context';
 
 export default function AppTabs() {
-  const { session } = useSession();
-  const { hasCircle } = useCircle(session?.user.id);
+  const { hasCircle } = useCircleContext();
 
   return (
     <Tabs>

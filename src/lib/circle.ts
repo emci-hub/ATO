@@ -97,3 +97,17 @@ export async function fetchPeerState(peerId: string): Promise<PeerState | null> 
     return null;
   }
 }
+
+/**
+ * Unfriend: deletes the caller's edge to the peer. The DB's mirror-delete
+ * trigger removes the reverse edge too, so neither side is left with a
+ * one-way orphan row. Only the connection is removed — nothing else.
+ */
+export async function removePeer(userId: string, peerId: string): Promise<void> {
+  const { error } = await supabase
+    .from('connections')
+    .delete()
+    .eq('user_id', userId)
+    .eq('peer_id', peerId);
+  if (error) throw error;
+}

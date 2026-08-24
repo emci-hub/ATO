@@ -1,14 +1,13 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PixelFace } from '@/components/pixel-face';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useCircle } from '@/hooks/use-circle';
-import { useSession } from '@/hooks/use-session';
+import { useCircleContext } from '@/lib/circle-context';
 import { useTheme } from '@/hooks/use-theme';
 import { fetchPeerState, type PeerState } from '@/lib/circle';
 import { normalizeRecipe } from '@/lib/recipe';
@@ -21,20 +20,18 @@ import { normalizeRecipe } from '@/lib/recipe';
  */
 export default function CircleScreen() {
   const theme = useTheme();
-  const { session } = useSession();
-  const userId = session?.user.id;
-  const { connections, loading, refresh } = useCircle(userId);
+  const { connections, loading, refresh, unfriend } = useCircleContext();
   const [peers, setPeers] = useState<PeerState[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadPeers = useCallback(async () => {
-    if (!userId || connections.length === 0) {
+    if (connections.length === 0) {
       setPeers([]);
       return;
     }
     const states = await Promise.all(connections.map((c) => fetchPeerState(c.peer_id)));
     setPeers(states.filter((state): state is PeerState => state != null));
-  }, [userId, connections]);
+  }, [connections]);
 
   useEffect(() => {
     loadPeers().catch(() => {});
@@ -93,7 +90,7 @@ export default function CircleScreen() {
                 </ThemedText>
               )
             }
-            renderItem={({ item }) => <PeerCard peer={item} />}
+            renderItem={({ item }) => <PeerCard peer={item} onUnfriend={unfriend} />}
           />
         )}
       </SafeAreaView>
@@ -101,10 +98,34 @@ export default function CircleScreen() {
   );
 }
 
-function PeerCard({ peer }: { peer: PeerState }) {
+function PeerCard({
+  peer,
+  onUnfriend,
+}: {
+  peer: PeerState;
+  onUnfriend: (peerId: string) => Promise<void>;
+}) {
+  const theme = useTheme();
   const { me, checks } = peer;
   const recipe = normalizeRecipe(me.recipe);
   const latest = checks[checks.length - 1];
+  const [confirming, setConfirming] = useState(false);
+  const [working, setWorking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function unfriend() {
+    if (working) return;
+    setWorking(true);
+    setError(null);
+    try {
+      await onUnfriend(me.id);
+      // on success the connection is gone — the tab (and this card) disappear.
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Couldn\u2019t unfriend. Try again.');
+      setConfirming(false);
+      setWorking(false);
+    }
+  }
 
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
@@ -145,6 +166,58 @@ function PeerCard({ peer }: { peer: PeerState }) {
           </ThemedText>
         )}
       </View>
+
+      {confirming ? (
+        <ThemedView type="backgroundElement" style={[styles.confirmBox, { borderColor: theme.backgroundSelected }]}>
+          <ThemedText type="small" themeColor="textSecondary" style={styles.confirmText}>
+            Unfriend {me.name}? You&apos;ll need to scan their QR again to reconnect.
+          </ThemedText>
+          {error ? (
+            <ThemedText type="small" style={[styles.errorText, { color: '#E5484D' }]}>
+              {error}
+            </ThemedText>
+          ) : null}
+          <View style={styles.confirmActions}>
+            <Pressable
+              disabled={working}
+              onPress={() => setConfirming(false)}
+              style={({ pressed }) => [
+                styles.confirmButton,
+                { borderColor: theme.backgroundSelected },
+                pressed && styles.pressed,
+              ]}>
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                Keep
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              disabled={working}
+              onPress={unfriend}
+              style={({ pressed }) => [
+                styles.confirmButton,
+                { backgroundColor: '#E5484D' },
+                pressed && styles.pressed,
+                working && styles.disabled,
+              ]}>
+              <ThemedText type="smallBold" style={styles.unfriendConfirmText}>
+                {working ? 'Unfriending…' : 'Unfriend'}
+              </ThemedText>
+            </Pressable>
+          </View>
+        </ThemedView>
+      ) : (
+        <Pressable
+          onPress={() => setConfirming(true)}
+          style={({ pressed }) => [
+            styles.unfriendLink,
+            { borderColor: theme.backgroundSelected },
+            pressed && styles.pressed,
+          ]}>
+          <ThemedText type="smallBold" style={[styles.unfriendText, { color: '#E5484D' }]}>
+            Unfriend
+          </ThemedText>
+        </Pressable>
+      )}
     </ThemedView>
   );
 }
@@ -217,5 +290,48 @@ const styles = StyleSheet.create({
   },
   doText: {
     lineHeight: 18,
+  },
+  unfriendLink: {
+    alignSelf: 'flex-start',
+    borderRadius: Spacing.two,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+  },
+  unfriendText: {
+    fontSize: 13,
+  },
+  confirmBox: {
+    borderRadius: Spacing.three,
+    borderWidth: 1,
+    padding: Spacing.three,
+    gap: Spacing.two,
+  },
+  confirmText: {
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  confirmActions: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  confirmButton: {
+    flex: 1,
+    borderRadius: Spacing.two,
+    borderWidth: 1,
+    paddingVertical: Spacing.two,
+    alignItems: 'center',
+  },
+  unfriendConfirmText: {
+    color: '#ffffff',
+  },
+  errorText: {
+    textAlign: 'center',
+  },
+  pressed: {
+    opacity: 0.8,
+  },
+  disabled: {
+    opacity: 0.6,
   },
 });

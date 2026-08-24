@@ -2,15 +2,13 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Icon, Label, NativeTabs, VectorIcon } from 'expo-router/unstable-native-tabs';
 import { useColorScheme } from 'react-native';
 
-import { useCircle } from '@/hooks/use-circle';
-import { useSession } from '@/hooks/use-session';
+import { useCircleContext } from '@/lib/circle-context';
 import { Colors } from '@/constants/theme';
 
 export default function AppTabs() {
   const scheme = useColorScheme();
   const colors = Colors[scheme ?? 'light'];
-  const { session } = useSession();
-  const { hasCircle } = useCircle(session?.user.id);
+  const { hasCircle } = useCircleContext();
 
   return (
     <NativeTabs
@@ -27,13 +25,14 @@ export default function AppTabs() {
         <Icon src={<VectorIcon family={MaterialCommunityIcons} name="creation" />} />
       </NativeTabs.Trigger>
 
-      {/* Circle does not exist until a scan — not hidden, not present. */}
-      {hasCircle ? (
-        <NativeTabs.Trigger name="circle">
-          <Label>Circle</Label>
-          <Icon src={<VectorIcon family={MaterialCommunityIcons} name="account-group" />} />
-        </NativeTabs.Trigger>
-      ) : null}
+      {/* Circle does not exist until a scan. The Trigger stays statically in
+          the layout (expo-router rejects dynamically added/removed triggers);
+          `hidden` excludes the route from the navigator until a connection
+          exists — functionally "not present, not hidden-in-the-bar". */}
+      <NativeTabs.Trigger name="circle" hidden={!hasCircle}>
+        <Label>Circle</Label>
+        <Icon src={<VectorIcon family={MaterialCommunityIcons} name="account-group" />} />
+      </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="you">
         <Label>You</Label>

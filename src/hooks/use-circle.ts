@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { fetchConnections, type Connection } from '@/lib/circle';
+import { fetchConnections, removePeer, type Connection } from '@/lib/circle';
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -27,6 +27,15 @@ export function useCircle(userId: string | undefined) {
     }
   }, [userId]);
 
+  const unfriend = useCallback(
+    async (peerId: string) => {
+      if (!userId) return;
+      await removePeer(userId, peerId);
+      await refresh();
+    },
+    [userId, refresh],
+  );
+
   useEffect(() => {
     if (!userId) {
       setConnections([]);
@@ -34,15 +43,13 @@ export function useCircle(userId: string | undefined) {
     }
 
     let cancelled = false;
-    fetchConnections(userId)
-      .then((rows) => {
-        if (!cancelled) setConnections(rows);
-      })
-      .catch(() => {
-        if (!cancelled) setConnections([]);
-      });
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    const channel = supabase
+    // Build the channel once with all postgres_changes callbacks registered
+    // BEFORE subscribe() — never add callbacks to an already-subscribed channel.
+    // The cleanup below removes it on unmount / userId change, so a re-render
+    // tears down the old subscription instead of re-subscribing the same one.
+    channel = supabase
       .channel(`circle:${userId}`)
       .on(
         'postgres_changes',
@@ -55,13 +62,34 @@ export function useCircle(userId: string | undefined) {
             .catch(() => {});
         },
       )
-      .subscribe();
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'connections', filter: `user_id=eq.${userId}` },
+        () => {
+          fetchConnections(userId)
+            .then((rows) => {
+              if (!cancelled) setConnections(rows);
+            })
+            .catch(() => {});
+        },
+      );
+    channel.subscribe();
+
+    fetchConnections(userId)
+      .then((rows) => {
+        if (!cancelled) setConnections(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setConnections([]);
+      });
 
     return () => {
       cancelled = true;
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [userId]);
 
-  return { connections, hasCircle: connections.length > 0, loading, refresh };
+  return { connections, hasCircle: connections.length > 0, loading, refresh, unfriend };
 }
