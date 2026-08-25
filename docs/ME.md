@@ -4,7 +4,7 @@
 **Twin:** Drake
 
 ## This week
-Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–6 done and on-device verified (Home shell, Sign-in/ME/Theme, Pixel, Dawn+Router, Talk+crisis, Share+Circle). Kenney pipeline (generic asset pipeline + hidden-at-rest hands with event gestures) built and committed. Two live-test bugs in active fix: Circle re-add access, hand/body color mismatch. Stage 7 (Chat + Report) queued behind that.
+Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–6 done and on-device verified. Side-quest work (Kenney pipeline, persistent header avatar, Sage identity, growth tiers, neon glow, several real navigation/realtime bugs) all closed and on-device confirmed. Opening Stage 7 (Chat + Report) next — the plan's own hard Apple submission blocker, not optional.
 
 ## App
 - **Category:** Hybrid — AI-native (Sage/router) + Social (Circle/Chat) + Health/finance/kids (crisis spec, coaching tone)
@@ -17,8 +17,8 @@ Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–6 done and on-device 
 
 ## Roster
 - Assistant (Drake) — active
-- Builder (Cursor) — active, Stages 1–6 shipped and on-device verified, Kenney pipeline + gesture work committed, owns docs/ME.md and docs/NOW.md directly
+- Builder (Cursor) — active, Stages 1–6 shipped and on-device verified, owns docs/ME.md and docs/NOW.md directly
 
 ## Live AI + model
 - Cursor, `deepseek-v4-flash` (default volume, spec already written) — crisis/safety-critical work always routes to Claude Opus 5 (fixed lane), regardless of Home/Away
-- App's own router: Gemini (`MODEL_PROVIDER=gemini`), live-verified, pinned to `gemini-3.7-flash` (not `-latest` — see NOW.md rationale). `thinkingConfig: { thinkingLevel: 'low' }` set on the main Talk/card provider; Talk budget 1024 (live-probed — `low` still burns ~490-560 thoughts tokens before visible text, so 300/512 both truncated mid-sentence). Crisis detection is keyword-list only (no model call — the Gemini crisis classifier was reverted, see NOW.md).
+- App's own router: Gemini (`MODEL_PROVIDER=gemini`), live-verified, pinned to `gemini-3.7-flash` (not `-latest` — see NOW.md rationale)
