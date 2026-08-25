@@ -26,6 +26,13 @@ export interface KenneyAnimation {
    * override mechanism the blink loop uses — no new infrastructure.
    */
   gesture: (state: string) => void;
+  /**
+   * One-time milestone celebration: a louder burst (bigger scale pulse +
+   * glow-ring flash) layered on top of the normal idle motion. Uses the same
+   * shared values / withSequence as the daily gestures — just bigger and
+   * rarer. Call when a presence milestone (7/21) first crosses.
+   */
+  celebrate: () => void;
 }
 
 const DEFAULT_OVERRIDES: Record<string, string> = {};
@@ -170,5 +177,32 @@ export function useKenneyAnimation(
     [squashScaleY],
   );
 
-  return { style, overrides, squash, gesture };
+  // Milestone celebration: a louder, rarer burst than the daily gestures.
+  // Reuses scale/squash shared values + a hand override — no new machinery.
+  const celebrate = useMemo(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const run = () => {
+      if (!enabled) return;
+      if (timer) clearTimeout(timer);
+      // Bigger, punchier scale pulse.
+      scale.value = withSequence(
+        withTiming(1.25, { duration: 160, easing: Easing.out(Easing.quad) }),
+        withTiming(0.92, { duration: 140, easing: Easing.inOut(Easing.sin) }),
+        withTiming(1.08, { duration: 160, easing: Easing.out(Easing.quad) }),
+        withTiming(1, { duration: 220, easing: Easing.out(Easing.quad) }),
+      );
+      // Both hands up (peace) for the celebration, then back to hidden.
+      setOverrides((prev) => ({ ...prev, hand: 'peace' }));
+      timer = setTimeout(() => {
+        setOverrides((prev) => {
+          const next = { ...prev };
+          delete next.hand;
+          return next;
+        });
+      }, 1600);
+    };
+    return run;
+  }, [enabled, scale, setOverrides]);
+
+  return { style, overrides, squash, gesture, celebrate };
 }

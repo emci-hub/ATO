@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, type RefObject } from 'react';
 
-import { accentFromShowUp } from '@/lib/color';
+import { resolveFacePalette } from '@/lib/color';
 import { AnimatedKenneyCharacter, KenneyCharacter } from '@/components/kenney-character';
 import type { KenneyRecipe } from '@/lib/kenney/types';
 
@@ -12,6 +12,8 @@ interface PixelFaceProps {
   showUp?: string | null;
   /** Set false for deterministic stills (e.g. the captured Share poster). */
   animated?: boolean;
+  /** Receives the milestone celebration callback when animated. */
+  celebrateRef?: RefObject<(() => void) | null>;
 }
 
 /**
@@ -19,16 +21,16 @@ interface PixelFaceProps {
  * Kenney pipeline — the recipe is family-agnostic and the manifest does the
  * rest. The old per-family renderers are gone.
  */
-export function PixelFace({ recipe, size = 96, showUp, animated = true }: PixelFaceProps) {
+export function PixelFace({ recipe, size = 96, showUp, animated = true, celebrateRef }: PixelFaceProps) {
   // Memoize so the animation layer's effect deps stay stable across parent
   // re-renders (otherwise the blink/gesture timers would keep resetting).
   const effective = useMemo(() => {
-    const palette = recipe.palette ?? (showUp ? accentFromShowUp(showUp).light : null);
+    const palette = resolveFacePalette(recipe.palette, showUp);
     return palette && palette !== recipe.palette ? { ...recipe, palette } : recipe;
   }, [recipe, showUp]);
 
   return animated ? (
-    <AnimatedKenneyCharacter recipe={effective} size={size} />
+    <AnimatedKenneyCharacter recipe={effective} size={size} celebrateRef={celebrateRef} />
   ) : (
     <KenneyCharacter recipe={effective} size={size} />
   );

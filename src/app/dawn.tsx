@@ -12,6 +12,7 @@ import { useMe } from '@/hooks/use-me';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { checksToHistory, fetchChecks, recordCheck, type Check } from '@/lib/checks';
+import { emitChecksChanged } from '@/lib/checks-events';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { aiConsentFor, setAiConsent } from '@/lib/me';
 import { routeVoiceCard } from '@/lib/voice/router';
@@ -118,6 +119,8 @@ export default function DawnScreen() {
         status,
       });
       await reloadChecks();
+      // Notify the growth system (header avatar tiers + milestone check).
+      emitChecksChanged();
       // Check marked "did" → thumb gesture. "Skip" deliberately stays silent
       // (hands stay hidden) — skipping isn't celebrated.
       if (status === 'done') {

@@ -61,7 +61,8 @@
     "prep:kenney": "tsx ./scripts/kenney-prep.ts",
     "check:talk-live": "tsx ./scripts/talk-live-check.ts",
     "check:card-live": "tsx ./scripts/card-live-check.ts",
-    "check:crisis-live": "tsx ./scripts/crisis-live-check.ts"
+    "check:crisis-live": "tsx ./scripts/crisis-live-check.ts",
+    "check:growth": "tsx ./scripts/growth-check.ts"
   },
   "private": true
 }

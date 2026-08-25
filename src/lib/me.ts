@@ -15,13 +15,17 @@ export interface Me {
   ai_consent: boolean | null;
   /** Raw jsonb; run it through normalizeRecipe before rendering. */
   recipe: unknown;
+  /** Facts the user has told Sage (one string per fact). Depth-axis input. */
+  facts: string[];
+  /** Map of presence-milestone key -> ISO timestamp when its one-time celebration fired. */
+  milestones_celebrated: Record<string, string>;
   created_at: string;
   updated_at: string;
 }
 
 export type MeInsert = Omit<
   Me,
-  'id' | 'ai_consent' | 'recipe' | 'created_at' | 'updated_at'
+  'id' | 'ai_consent' | 'recipe' | 'facts' | 'milestones_celebrated' | 'created_at' | 'updated_at'
 >;
 
 export type AiConsent = 'granted' | 'denied' | 'pending';
@@ -82,6 +86,64 @@ export async function setAiConsent(userId: string, consent: boolean): Promise<Me
   const { data, error } = await supabase
     .from('me')
     .update({ ai_consent: consent })
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Marks a presence milestone (e.g. "7" or "21") as celebrated with the current
+ * timestamp. Idempotent per milestone: returns the refreshed row. Called only
+ * when a milestone celebration fires, so each threshold shows exactly once.
+ */
+export async function markMilestoneCelebrated(
+  userId: string,
+  milestone: string,
+): Promise<Me> {
+  const { data: current } = await supabase
+    .from('me')
+    .select('milestones_celebrated')
+    .eq('id', userId)
+    .single();
+  const celebrated: Record<string, string> =
+    current?.milestones_celebrated && typeof current.milestones_celebrated === 'object'
+      ? (current.milestones_celebrated as Record<string, string>)
+      : {};
+  celebrated[milestone] = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from('me')
+    .update({ milestones_celebrated: celebrated })
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Appends a fact the user told Sage. Depth-axis input; Stage 7's "Teach Sage
+ * this" will call this. Idempotent by exact string.
+ */
+export async function addFact(userId: string, fact: string): Promise<Me> {
+  const trimmed = fact.trim();
+  if (!trimmed) throw new Error('Fact cannot be empty');
+
+  const { data: current } = await supabase
+    .from('me')
+    .select('facts')
+    .eq('id', userId)
+    .single();
+  const facts = Array.isArray(current?.facts) ? (current.facts as string[]) : [];
+  if (!facts.includes(trimmed)) facts.push(trimmed);
+
+  const { data, error } = await supabase
+    .from('me')
+    .update({ facts })
     .eq('id', userId)
     .select()
     .single();

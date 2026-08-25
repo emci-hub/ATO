@@ -93,6 +93,19 @@ export default function HomeScreen() {
                 <ThemedText themeColor="textSecondary">›</ThemedText>
               </Pressable>
             ) : null}
+            {__DEV__ ? (
+              <Pressable
+                onPress={() => router.push('/pixel-lab')}
+                style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
+                <View style={styles.boxRowText}>
+                  <ThemedText type="smallBold">Pixel lab</ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Dev: faces + growth tiers
+                  </ThemedText>
+                </View>
+                <ThemedText themeColor="textSecondary">›</ThemedText>
+              </Pressable>
+            ) : null}
           </ThemedView>
 
           <ThemedView type="backgroundElement" style={[styles.poster, { backgroundColor: accent.light }]}>

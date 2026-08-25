@@ -64,9 +64,17 @@ export function KenneyCharacter({ recipe, size }: KenneyCharacterProps) {
  * the procedural idle transforms (breathe/bob/tilt) to the composed group, and
  * a squash on tap. It only sees the assembled result — it never knows which
  * family is active.
+ *
+ * `celebrateRef` (optional) receives the milestone `celebrate()` callback so a
+ * parent (e.g. the header avatar) can fire the one-time louder animation on a
+ * milestone crossing without the wrapper needing to know why.
  */
-export function AnimatedKenneyCharacter({ recipe, size }: KenneyCharacterProps) {
-  const { style, overrides, squash, gesture } = useKenneyAnimation(recipe);
+export function AnimatedKenneyCharacter({
+  recipe,
+  size,
+  celebrateRef,
+}: KenneyCharacterProps & { celebrateRef?: React.RefObject<(() => void) | null> }) {
+  const { style, overrides, squash, gesture, celebrate } = useKenneyAnimation(recipe);
   const effective = overrides
     ? { ...recipe, parts: { ...recipe.parts, ...overrides } }
     : recipe;
@@ -74,6 +82,11 @@ export function AnimatedKenneyCharacter({ recipe, size }: KenneyCharacterProps) 
   // Register this face as a recipient of event gestures (check/talk/circle/
   // share). Unmount unregisters.
   useEffect(() => registerGestureHandler(gesture), [gesture]);
+
+  // Expose the celebration callback to the parent once available.
+  useEffect(() => {
+    if (celebrateRef) celebrateRef.current = celebrate;
+  }, [celebrateRef, celebrate]);
 
   return (
     <Pressable onPress={squash} hitSlop={6}>

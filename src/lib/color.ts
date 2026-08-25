@@ -27,3 +27,16 @@ export function accentFromShowUp(showUp: string | null | undefined): AccentColor
     dark: `hsl(${hue}, 70%, 62%)`,
   };
 }
+
+/**
+ * The palette a pixel face actually renders with: the recipe's explicit hex
+ * palette, or the stable accent derived from `show_up`. Single source of truth
+ * so the growth glow uses the exact same color as the character underneath.
+ */
+export function resolveFacePalette(
+  recipePalette: string | null | undefined,
+  showUp: string | null | undefined,
+): string {
+  if (recipePalette) return recipePalette;
+  return accentFromShowUp(showUp).light;
+}
