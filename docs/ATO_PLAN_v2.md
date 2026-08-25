@@ -21,6 +21,8 @@ If a field isn't defined here, don't guess its shape — ask.
 | Check | row `{user_id, do_id, date, outcome}` | `outcome` is `did` or `skip`. One per day max. No partial state in v1 — keep it binary. |
 | `check_count` | integer, derived | Count of all-time Checks. Gates bank-vs-model content and the paywall (7). |
 | `host` | boolean on ME | You flip this manually (admin). Not self-serve in v1. |
+| `referred_by` | uuid, nullable, FK → ME | Which ME row invited this user. Hidden field. See Referral spec. |
+| `signup_mode` | config value: `invite_only`/`public` | Global switch gating whether a valid invite code is required to create an account. See Referral spec. |
 
 ---
 
@@ -78,7 +80,7 @@ Honest empty: "nothing this weekend" / "wall opens when the night does" / "no AT
 
 ```
 app/contracts/
-app/boxes/home auth me theme pixel dawn router talk share circle chat report
+app/boxes/home auth me theme pixel dawn router talk share circle chat report invite
          around wallet   ← empty until that wave
 app/voice/sage.txt           BEFORE STAGE 4
 app/copy/first_cards.md      BEFORE STAGE 4
@@ -105,8 +107,9 @@ Write those two copy files first. 3 styles × 3 valences. 3 mornings × 3 styles
 | Circle | me + them | hidden until first scan |
 | Chat | from, to, words | thread |
 | Report | from, target (message_id or user_id), reason | row in Reports table, visible to admin only |
+| Invite | signup attempt + code | account created (or rejected) + code consumed |
 
-**ME fields:** name, handle, timezone, `this_week`, `morning_cue`, `show_up`, `knocks_you_off`, `talk_style`, color, `recipe`, theme_id, facts they've told Sage, all-time Checks, `check_count`, last_7_card_ids, `show` (visibility toggle), `allow_search`, `host` (admin-flipped).
+**ME fields:** name, handle, timezone, `this_week`, `morning_cue`, `show_up`, `knocks_you_off`, `talk_style`, color, `recipe`, theme_id, facts they've told Sage, all-time Checks, `check_count`, last_7_card_ids, `show` (visibility toggle), `allow_search`, `host` (admin-flipped), `referred_by` (hidden, nullable).
 
 **ME never stores:** guessed vibes, raw chat logs, raw HealthKit data, a model's freeform narrative about the user.
 
@@ -133,6 +136,27 @@ Minimal, not a dashboard:
 - Block: sets a `blocked_by/blocked_user` pair; blocked user's messages stop rendering for the blocker, both directions stop sending.
 - Mute: local to the muter, no notification to the muted.
 - No admin UI needed for Wave 1 — query the Reports table directly in Supabase. Build a real admin view only if report volume makes that painful.
+
+---
+
+## Referral spec (new — added post-Wave-1, before public App Store release)
+
+**Purpose:** control who can create an account while testing, and give you a cheap way to cut off bad actors as a cluster rather than one account at a time.
+
+**Not the same gate as TestFlight.** TestFlight already restricts installs to testers you've added — this spec matters starting at the point you submit for public App Store review, not before. Build it whenever; it does not block Stage 8.
+
+1. **Mode**: one config value, `signup_mode: invite_only | public`. Default `invite_only`. Flipping it later is the entire "go public" switch — no rebuild, no fork.
+2. **Codes**: `invite_codes` table — `code, owner_id, max_uses, uses_count, status, created_at`. Every ME row gets a small default allotment (3–5) issued automatically on account creation. You (root) seed manually, no `referred_by`.
+3. **ME addition**: `referred_by` — nullable, hidden field, FK to another ME row. Not shown publicly. A user *may* see their own list of who they referred (their choice to show it or not) — never who referred *them* beyond their own account, never anyone else's tree.
+4. **Signup enforcement**: Auth box — if `signup_mode = invite_only`, a valid unused code is required to create an account; code is consumed on success.
+5. **Moderation** (no admin UI — same discipline as the Report spec, query Supabase directly):
+   - `pause_branch(user_id)` — recursive walk down `referred_by`, disables login for that user and every descendant. Reversible. Use first.
+   - `delete_branch(user_id)` — same walk, hard delete, cascades. Only after a paused branch has actually been reviewed.
+6. **Disclaimer**: one line added to the privacy policy: referral relationships are tracked only for abuse prevention, not shared or used elsewhere.
+
+**Done:** invite-only signup rejects a missing/used/invalid code. A seeded test tree (you → A → B, C) can be paused as one action and B/C both lose access without touching A's or your own account. Flipping `signup_mode` to `public` allows signup with no code, no other change required.
+
+**Where it fits:** own box (`invite`), touching Auth + ME only. Sequence right after the Apple Sign-In/delete-account handoff in Stage 8 (both are Auth-box work). Required before public App Store submission — not required before TestFlight.
 
 ---
 
@@ -212,6 +236,29 @@ Floor requirements (non-negotiable, not features):
 ### Gate
 You + friends, one real week, real devices. Home stayed new day to day. Dos were actually doable. Sage's tone fit each tester. Circle stayed hidden until a scan for everyone who didn't scan. The widget brought people back into the app at least once.
 **Only after that gate passes** → Wave 2.
+
+---
+
+## Public App Store readiness (do before flipping `signup_mode` to `public` / submitting for public review)
+
+TestFlight ≠ public. TestFlight already gates installs via Apple's own tester list — none of this blocks Stage 8 or the TestFlight gate above. This checklist is the bar for the *next* step: open App Store listing, anyone can download.
+
+**Account & rights:**
+- [ ] Apple Developer account type decided: Individual (personal legal name as seller, no entity needed) or Organization (requires a real registered legal entity + D-U-N-S number, cannot convert from Individual later — decide once, decide early if there's any chance you'll want it). Not legally required to be Organization for ATO's current scope (no payment handling in-app, no licensed health service) — this is a branding/liability call, not a compliance one.
+- [ ] Trademark search on ATO / AsTrollOGs closed out (flagged in Wave 0 — confirm it actually got done, not just planned).
+- [ ] Kenney asset attribution page live (already in backlog) — confirms CC0 compliance, not just "we used free assets."
+- [ ] No other third-party IP in the build (fonts, sounds, icons) without a checked license.
+
+**Referral/access:**
+- [ ] Referral spec built and tested (`signup_mode` flag, invite codes, `pause_branch`/`delete_branch`).
+- [ ] Conscious decision made on when to flip `signup_mode` from `invite_only` to `public` — this doesn't have to happen at App Store submission; you can ship publicly-listed but still invite-gated if you want a slower ramp.
+
+**Legal/compliance:**
+- [ ] Privacy policy + terms finalized (lawyer pass on the crisis disclaimer specifically — already flagged as outstanding in the Crisis spec).
+- [ ] App Store Connect tax/banking info filled out (required before a public listing can go live, separate from the developer account itself).
+- [ ] All Wave 1 TestFlight floor requirements still hold at public scale (rate limiting, Sentry, privacy labels) — a bigger user base stresses these differently than a friends-only test group did.
+
+**Done:** every box above checked, not assumed. This list gets reviewed once, deliberately — not folded silently into a Cursor handoff.
 
 ---
 
