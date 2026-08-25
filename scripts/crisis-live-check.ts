@@ -1,91 +1,33 @@
 /**
- * LIVE end-to-end check of the Talk crisis-classifier path.
+ * LIVE end-to-end check of the Talk crisis-keyword path.
  *
- * Requires a real Gemini key in .env.local (EXPO_PUBLIC_GEMINI_API_KEY). The
- * key is read from .env.local into process.env before the app modules import,
- * and is never printed — logging redacts the x-goog-api-key header.
- *
- * Exercises the SAME router path the app uses (routeTalkReply → real
- * classifyCrisis via detectCrisis), with a spy provider standing in for the
- * main router so we can count generateTalk calls exactly like the 23/23
- * offline verification did.
+ * Confirms a real keyword-flagged message short-circuits BEFORE any Gemini
+ * call on the actual Talk pipeline (routeTalkReply → the default keyword-only
+ * detector → main router), and that the main router never fires. Uses a spy
+ * provider for the main router and a fetch wrapper that counts every Gemini
+ * HTTP request, so "zero model calls on a flag" is proven by counting actual
+ * requests — not just by which provider was selected.
  *
  * Run: npx tsx scripts/crisis-live-check.ts
  */
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
 
 import type { VoiceProvider } from '../src/lib/voice/providers/types';
 import type { CheckHistory, VoiceMe } from '../src/lib/voice/types';
 
-// ---- Load .env.local into process.env BEFORE importing the app modules ----
-// The app reads EXPO_PUBLIC_* at module import time, so env must be set first.
-const envRaw = fs.readFileSync(path.resolve(__dirname, '../.env.local'), 'utf8');
-for (const line of envRaw.split(/\r?\n/)) {
-  const t = line.trim();
-  if (!t || t.startsWith('#')) continue;
-  const eq = t.indexOf('=');
-  if (eq === -1) continue;
-  process.env[t.slice(0, eq).trim()] = t.slice(eq + 1).trim();
+interface RequestCount {
+  gemini: number;
 }
-if (!process.env.EXPO_PUBLIC_GEMINI_API_KEY) {
-  console.error('FATAL: EXPO_PUBLIC_GEMINI_API_KEY is not set in .env.local');
-  process.exit(2);
-}
+const requests: RequestCount = { gemini: 0 };
 
-interface LoggedCall {
-  url: string;
-  requestHeaders: Record<string, unknown>;
-  requestBody: string;
-  status: number;
-  responseBody: string;
-  elapsedMs: number;
-}
-const calls: LoggedCall[] = [];
+const realFetch = globalThis.fetch;
 
-/** Mirrors classify.ts: extract the model's text from the Gemini envelope. */
-function modelText(responseBody: string): string {
-  try {
-    const data = JSON.parse(responseBody) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-    };
-    return data.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('') ?? '';
-  } catch {
-    return '';
+/** Global fetch patch that counts any request to the Gemini API. */
+function countingFetch(input: string | URL, init?: RequestInit): Promise<Response> {
+  if (String(input).includes('generativelanguage.googleapis.com')) {
+    requests.gemini += 1;
   }
-}
-
-/** fetch wrapper that logs the raw request/response with the API key redacted. */
-function loggingFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  const started = Date.now();
-  const entry: LoggedCall = {
-    url: String(input),
-    requestHeaders: {},
-    requestBody: String(init?.body ?? ''),
-    status: 0,
-    responseBody: '',
-    elapsedMs: 0,
-  };
-  for (const [k, v] of Object.entries((init?.headers ?? {}) as Record<string, string>)) {
-    entry.requestHeaders[k] = k.toLowerCase() === 'x-goog-api-key' ? 'REDACTED' : v;
-  }
-  return fetch(input, init)
-    .then(async (res) => {
-      const text = await res.text();
-      entry.status = res.status;
-      entry.responseBody = text;
-      entry.elapsedMs = Date.now() - started;
-      calls.push(entry);
-      return new Response(text, { status: res.status, headers: res.headers });
-    })
-    .catch((err) => {
-      entry.status = -1;
-      entry.responseBody = `(fetch error: ${err instanceof Error ? err.message : String(err)})`;
-      entry.elapsedMs = Date.now() - started;
-      calls.push(entry);
-      throw err;
-    });
+  return realFetch(input, init);
 }
 
 interface Outcome {
@@ -105,21 +47,28 @@ function run(check: string, fn: () => void) {
     fn();
     record(check, true, 'ok');
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    record(check, false, msg);
+    record(check, false, err instanceof Error ? err.message : String(err));
   }
 }
 
 async function main() {
+  // Patch global fetch for the whole test so ANY Gemini request is counted —
+  // a regression that re-adds a classifier or a main call would be caught.
+  globalThis.fetch = countingFetch as typeof fetch;
+  try {
+    await execute();
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+}
+
+async function execute() {
   const { routeTalkReply } = await import('../src/lib/voice/talk');
-  const { detectCrisis, keywordDetect } = await import('../src/lib/crisis/detect');
-  const { classifyCrisis, parseClassified } = await import('../src/lib/crisis/classify');
   const { buildVoiceConfig } = await import('../src/lib/voice/config');
+  const { detectCrisis, keywordDetect } = await import('../src/lib/crisis/detect');
 
   const config = buildVoiceConfig({
-    MODEL_PROVIDER: 'gemini',
-    GEMINI_MODEL: process.env.EXPO_PUBLIC_GEMINI_MODEL,
-    GEMINI_API_KEY: process.env.EXPO_PUBLIC_GEMINI_API_KEY,
+    MODEL_PROVIDER: 'local', // main router uses the deterministic local provider
   });
 
   const ME: VoiceMe = {
@@ -136,10 +85,10 @@ async function main() {
     { day: 4, status: 'done' },
   ];
 
-  console.log(`\nLive crisis classifier check — model: ${config.geminiModel}`);
-  console.log('Key source: .env.local (redacted in all output).');
+  console.log('\nLive crisis-keyword check — keyword-only detection on the real Talk pipeline');
+  console.log('Detection: static keyword list (user-reviewed). No classifier, no Gemini call.');
 
-  // Spy provider — same generateTalk counter method as the 23/23 verification.
+  // Spy main-router provider, so any main-router call is counted separately.
   let mainCalls = 0;
   const spyProvider: VoiceProvider = {
     id: 'local',
@@ -151,26 +100,18 @@ async function main() {
     },
   };
 
-  // Real detection, but with the classifier wrapped in the logging fetch.
+  // Real keyword-only detection, with Gemini requests counted at the fetch layer.
   let flagLogged = 0;
-  let lastDetection: { flagged: boolean; method: string } | null = null;
-  const detectReal = async (message: string) => {
-    const r = await detectCrisis(message, {
-      classify: (m) => classifyCrisis(m, { fetchImpl: loggingFetch }),
-    });
-    lastDetection = r;
-    return r;
-  };
+  const detectReal = async (message: string) => detectCrisis(message);
 
   // -------------------------------------------------------------------------
-  console.log('\n[1] Crisis message through Talk (real classifier)');
+  console.log('\n[1] Keyword-flagged message through Talk');
   const CRISIS_MESSAGE = "I've been thinking about suicide all day.";
-  assert.equal(keywordDetect(CRISIS_MESSAGE), true, 'test message is from the approved keyword set');
+  assert.equal(keywordDetect(CRISIS_MESSAGE), true, 'test message is from the user-approved keyword set');
 
-  calls.length = 0;
+  requests.gemini = 0;
   mainCalls = 0;
   flagLogged = 0;
-  lastDetection = null;
 
   const crisisResult = await routeTalkReply(
     {
@@ -179,7 +120,7 @@ async function main() {
       checkCount: 4,
       history: HISTORY,
       aiConsent: true,
-      userId: 'live-check-u1',
+      userId: 'live-keyword-u1',
     },
     {
       config,
@@ -192,53 +133,33 @@ async function main() {
     },
   );
 
-  run('crisis message → kind === "crisis" (static card branch)', () => {
+  run('keyword-flagged message → kind === "crisis" (static card branch)', () => {
     assert.equal(crisisResult.kind, 'crisis');
     assert.equal(crisisResult.crisis?.flagged, true);
     assert.equal(crisisResult.reply, undefined, 'no AI reply produced for a flagged message');
   });
 
-  run('classifier fired, NOT keyword fallback', () => {
-    assert.equal(crisisResult.crisis?.method, 'classifier', 'method must be classifier, not keyword-fallback');
+  run('detection method is "keyword" (classifier fully out of the loop)', () => {
+    assert.equal(crisisResult.crisis?.method, 'keyword');
   });
 
-  run('raw Gemini classifier request logged (URL + body, key redacted)', () => {
-    assert.equal(calls.length, 1, 'exactly one Gemini request for the flagged path');
-    const call = calls[0];
-    assert.ok(call.url.includes(':generateContent'), `unexpected URL: ${call.url}`);
-    assert.equal(call.requestHeaders['x-goog-api-key'], 'REDACTED');
-    assert.ok(call.requestBody.includes('systemInstruction'), 'classifier system instruction present');
-  });
-
-  run('response is boolean JSON at zero temperature inside 4s', () => {
-    const call = calls[0];
-    assert.equal(call.status, 200, `Gemini returned HTTP ${call.status}`);
-    const requestBody = JSON.parse(call.requestBody) as {
-      generationConfig?: { temperature?: number; responseMimeType?: string; thinkingConfig?: { thinkingLevel?: string } };
-    };
-    assert.equal(requestBody.generationConfig?.temperature, 0, 'temperature must be 0');
-    assert.equal(requestBody.generationConfig?.responseMimeType, 'application/json', 'boolean JSON response mime');
-    assert.equal(parseClassified(modelText(call.responseBody)), true, 'response parses to boolean true');
-    assert.ok(call.elapsedMs < 4000, `classifier took ${call.elapsedMs}ms (>= 4000ms timeout)`);
-  });
-
-  run('flagged → static card, flag logged, zero main-router generateTalk calls', () => {
+  run('flagged → flag logged, zero main-router generateTalk calls', () => {
     assert.equal(flagLogged, 1, 'crisis flag must be logged');
     assert.equal(mainCalls, 0, 'spy prove: generateTalk must NOT have fired');
-    assert.equal(calls.length, 1, 'exactly 1 total Gemini request (the classifier, nothing else)');
   });
 
-  const crisisCall = calls[0] ?? null;
+  run('flagged → ZERO Gemini HTTP requests (no classifier, no main call)', () => {
+    assert.equal(requests.gemini, 0, `expected 0 Gemini requests, saw ${requests.gemini}`);
+  });
 
   // -------------------------------------------------------------------------
   console.log('\n[2] Benign message through the same path');
   const BENIGN_MESSAGE = "How's my week going?";
   assert.equal(keywordDetect(BENIGN_MESSAGE), false, 'benign test message is not in the keyword set');
 
-  calls.length = 0;
+  requests.gemini = 0;
   mainCalls = 0;
   flagLogged = 0;
-  lastDetection = null;
 
   const benignResult = await routeTalkReply(
     {
@@ -247,7 +168,7 @@ async function main() {
       checkCount: 4,
       history: HISTORY,
       aiConsent: true,
-      userId: 'live-check-u2',
+      userId: 'live-keyword-u2',
     },
     {
       config,
@@ -257,37 +178,18 @@ async function main() {
     },
   );
 
-  run('benign message → classifier returns false', () => {
-    assert.ok(lastDetection, 'classifier ran');
-    assert.equal(lastDetection?.flagged, false);
-    assert.equal(lastDetection?.method, 'classifier');
-    const call = calls[0];
-    assert.equal(call.status, 200);
-    assert.equal(parseClassified(modelText(call.responseBody)), false, 'response parses to boolean false');
-    assert.ok(call.elapsedMs < 4000);
+  run('benign message → keyword detection returns false', () => {
+    assert.equal(benignResult.kind, 'reply');
   });
 
   run('benign message → Talk proceeds to the main router (generateTalk fires)', () => {
-    assert.equal(benignResult.kind, 'reply');
     assert.equal(benignResult.reply, 'SPY-SHOULD-NOT-APPEAR', 'reply came from the main router call');
     assert.equal(mainCalls, 1, 'exactly one main-router generateTalk call');
-    assert.equal(calls.length, 1, 'exactly 1 total Gemini request (the classifier, nothing else)');
   });
 
-  // -------------------------------------------------------------------------
-  const call = crisisCall;
-  console.log('\n--- raw Gemini classifier request (key redacted) ---');
-  if (call) {
-    console.log(`URL: ${call.url}`);
-    console.log(`Headers: ${JSON.stringify(call.requestHeaders, null, 2)}`);
-    try {
-      console.log(`Body: ${JSON.stringify(JSON.parse(call.requestBody), null, 2)}`);
-    } catch {
-      console.log(`Body: ${call.requestBody}`);
-    }
-    console.log(`Status: ${call.status} · elapsed: ${call.elapsedMs}ms`);
-    console.log(`Raw response body: ${call.responseBody}`);
-  }
+  run('benign path fires no Gemini requests either (local spy provider)', () => {
+    assert.equal(requests.gemini, 0, `expected 0 Gemini requests, saw ${requests.gemini}`);
+  });
 
   const failed = outcomes.filter((o) => !o.pass);
   console.log(`\n${outcomes.length - failed.length}/${outcomes.length} live checks passed.`);

@@ -27,7 +27,7 @@ export interface TalkReplyDeps {
   providers?: Record<ProviderId, VoiceProvider>;
   /** Overrides __DEV__ for tests. */
   isDev?: boolean;
-  /** Injectable for tests; defaults to classifier + keyword net. */
+  /** Injectable for tests; defaults to the keyword-list detector. */
   detectCrisis?: (message: string) => Promise<CrisisDetection>;  /** Injectable for tests; defaults to a no-op (screen wires the real logger). */
   logCrisisFlag?: (userId: string) => Promise<void>;
 }
@@ -49,9 +49,9 @@ const noOpLog = async () => {};
 /**
  * Routes a Talk message:
  * 1. Consent gate — Talk stays off unless AI consent was granted.
- * 2. Crisis check runs BEFORE any main router call — classifier first, keyword
- *    net on classifier failure. Flagged → static crisis result, zero main
- *    router calls, flag logged (never the message).
+ * 2. Crisis check runs BEFORE any main router call — static keyword/phrase
+ *    list, no model call. Flagged → static crisis result, zero main router
+ *    calls, flag logged (never the message).
  * 3. Otherwise generate the reply via the configured provider in sage.txt's
  *    register, differentiated by talk_style.
  */
@@ -75,7 +75,7 @@ export async function routeTalkReply(
     return { kind: 'consent-pending', provider: null, dev: trace(false, 'consent-pending') };
   }
 
-  // ---- Crisis check (classifier → keyword net) --------------------------
+  // ---- Crisis check (keyword list, no model call) ------------------------
   const detect = deps.detectCrisis ?? defaultDetectCrisis;
   const crisis = await detect(input.message);
 

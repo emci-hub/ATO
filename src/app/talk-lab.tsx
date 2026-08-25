@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react';
  * Dev harness for the Talk router. Not linked in production: open /talk-lab
  * directly. Shows: two users with different talk_style on the SAME prompt get
  * visibly different tone, and a crisis-flagged message returns the static card
- * via the classifier (or keyword net) with zero main-router calls.
+ * via the keyword list with zero main-router calls.
  */
 
 const CUE = 'making coffee';

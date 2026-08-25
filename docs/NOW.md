@@ -6,7 +6,7 @@
 **Live AI + model:** Cursor, `deepseek-v4-flash` (default volume) — crisis/safety-critical work always routes to Claude Opus 5 regardless of Home/Away, Expo SDK 54
 
 ## On
-Wave 1, Stage 7 — Chat + Report. Next: open box.
+Kenney pipeline + gesture work (side quest off the Wave 1 stage sequence). Crisis detection being reverted from AI-classifier to keyword-only (Cursor working, Opus 5 — token/latency cost on the classifier no longer justified the catch-rate gain). Two bugs also still open: Circle re-add access issue, hand/body color mismatch. Stage 7 (Chat + Report) is queued behind all of this — not started.
 
 ## Done
 - Stage 1 (Home shell) — screenshot verified: 3 tabs (Home, Sage, You), no Circle tab, fake card, fake poster
@@ -45,8 +45,10 @@ Stages 7–8, Wave 1
 - SecureStore warning: "Value being stored is larger than 2048 bytes" — minor, not urgent, but could throw in a future SDK version
 - Quarterly: re-check for new stable Gemini flash releases, re-run crisis-live-check.ts before bumping the pinned model version
 
-## Crisis detection — final architecture (decided after extended discussion)
-AI-judged (separate lightweight Gemini classification call, not the main Sage reply) with keyword-list fallback if the classifier call fails/times out. No confirmation gate before showing the card — shows automatically, one-tap dismiss, no lockout. Persistent subtle support button in Talk UI regardless of detection. Explicitly considered and rejected: confirm-before-showing popup (real risk of people minimizing when asked directly, which delays access exactly when it matters); button-only with no passive detection (misses the person who isn't self-navigating to look for help, which is the core case this exists for). Legal disclaimer draft in crisis-disclaimer.md — still needs a lawyer's pass before real users.
+## Crisis detection — final architecture (revised — reverted to keyword-only)
+**Current:** static keyword/phrase-list detection only, checked against the user's message before it reaches the router — matching the plan's original spec. No AI classifier call.
+**Prior approach (superseded):** AI-judged (separate lightweight Gemini classification call) with keyword-list fallback if the classifier failed/timed out. Live-verified working (7/7 checks) as of Stage 5, but reverted after measuring real cost: the classifier call burned 487–561 invisible thinking tokens on **every single Talk message**, before the main reply even generated — real recurring token cost and latency for a catch-rate benefit judged not worth it once the actual numbers were known. Reverting returns to the plan's original design ("static keyword/phrase list... No sentiment model in v1 — keyword match is auditable and fails safe"), not a new invention.
+**Unchanged by this reversal:** no confirmation gate before showing the card — shows automatically, one-tap dismiss, no lockout. Persistent subtle support button in Talk UI regardless of detection. Static resource card, logging (flag + timestamp only), router short-circuit (no model call on a flagged message) — all identical to before, only the trigger mechanism changed. Legal disclaimer draft in crisis-disclaimer.md — still needs a lawyer's pass before real users.
 
 ## Idea parking lot — Wave 3 expansion (gated: only after Wave 2 has real nights happening)
 Plan already specs items 1/2/5 below ("weekly Read, 30-day trail, more Talk" after 7 Checks). These extend that:
@@ -67,8 +69,20 @@ Early on there's not much data on someone yet. Games give tokens; tokens unlock 
 - docs/ATO_PLAN_v2.md, docs/ME.md, docs/NOW.md all live in the repo now — Cursor maintains these directly going forward
 - EXPO_PUBLIC_GEMINI_API_KEY set and live-verified. Model pinned to `gemini-3.7-flash` (not `-latest`) — see rationale under Stage 5 Done.
 
+## Backlog addition — persistent pixel avatar + growth tiers (queued after current bug fixes)
+Two related, not-yet-built ideas, both stemming from the Kenney gesture work:
+- **Persistent pixel placement:** small (~26px) circle avatar, header-right, present on every screen — shows current recipe + whatever event gesture is active (thumb/point/peace/hidden). Chosen over a tab-bar-icon placement (too small to read a gesture clearly) and a floating bubble (fixed-position overlay, worse fit for the nav chrome). Not yet built — this is the resting-state placement Home's face already has a version of; this extends it app-wide.
+- **Sage tab icon → pixel face, aspirational variant:** replaces the current sparkle icon. Same character as Home's pixel, marked with a subtle glow/shine tell so it reads as "the version you're working toward," not current-you. See ME.md's "Sage/Pixel relationship" note for the full reasoning — this is a real redefinition of what Sage represents (aspirational-you, not a separate coach character), not just an icon swap.
+- **Growth tiers (the mechanic behind the glow):** milestone-based, not continuous — reuses `check_count` (already on ME) and the plan's existing 7-Check unlock threshold, no new number invented.
+  - Tier 0 (`check_count < 3`): Sage's pixel barely distinguished from Home's — app hasn't learned the person yet.
+  - Tier 1 (`check_count ≥ 3`): subtle glow/shine tell begins.
+  - Tier 2 (`check_count ≥ 7`, same moment deeper features unlock): shine intensifies.
+  - Tier 3 (threshold TBD — likely tied to facts-learned count): most distinct version, decide later.
+  - Mechanically: a `growth_tier` modifier layer (glow opacity / small sparkle) on top of the existing Kenney-pipeline pixel render — not a new asset per tier, not a live "distinctiveness" score. Deliberately separate from the daily `look` system (even/tired/set/listen/glow) — different signal, different timescale, don't conflate them.
+- Not started. Sequenced after: current Talk/Circle/hand-color bug fixes → on-device gesture pass closes out → then this.
+
 ## Next 15 min
-Open Stage 7 box: chat, report.
+Waiting on Cursor: (1) gemini.ts thinkingConfig fix for Talk (truncation bug) + sage.tsx composer padding fix, (2) still open from prior pass — Circle re-add bug (unfriend → re-scan leaves one side without Circle access) and hand/body color mismatch. Once those land, run the full on-device gesture checklist, then decide on persistent-avatar + growth-tier build order.
 
 ## Backlog addition — Kenney import pipeline (queued after Stage 6 close)
 Plan to build a generalized, family-agnostic Kenney asset pipeline rather than a one-off Pixel fix, since more Kenney packs are coming:

@@ -8,7 +8,7 @@
  *  - Day 4 read/do are NOT string-identical to Day 3's
  *  - repeats / vague Dos / cruel cuts are dropped before showing
  *  - AI consent gate (Apple 5.1.2)
- *  - crisis: classifier-first + keyword-net fallback; zero main calls on flag
+ *  - crisis: keyword-list detection; zero main calls on flag
  *  - Talk: consent gate, crisis short-circuit, style-differentiated tone
  */
 import assert from 'node:assert/strict';
@@ -16,7 +16,7 @@ import assert from 'node:assert/strict';
 import { bankCard, parseBank } from '../src/lib/voice/bank';
 import { buildVoiceConfig } from '../src/lib/voice/config';
 import { BANK_MARKDOWN } from '../src/lib/voice/content.generated';
-import { detectCrisis, keywordDetect, normalizeCrisis, type CrisisDetection } from '../src/lib/crisis/detect';
+import { detectCrisis, keywordDetect, normalizeCrisis } from '../src/lib/crisis/detect';
 import { filterCard, hasCut, isCruelCut, isVagueDo } from '../src/lib/voice/filters';
 import { localProvider } from '../src/lib/voice/providers/local';
 import type { VoiceProvider } from '../src/lib/voice/providers/types';
@@ -196,9 +196,9 @@ assert.ok(dropped.dropped.length > 0);
 ok('all candidates dropped → card is null (nothing shown)');
 
 // ---------------------------------------------------------------------------
-console.log('Crisis detection: classifier + keyword net');
+console.log('Crisis detection: keyword list only');
 
-// Keyword net (user-approved list + regex) works standalone, no network.
+// The user-approved keyword list + regex is the SOLE detection mechanism.
 assert.equal(normalizeCrisis('I want to END this.'), 'i want to end this');
 assert.equal(keywordDetect('thinking about suicide all day'), true, 'keyword: suicide');
 assert.equal(keywordDetect('I want to kill myself'), true, 'keyword: kill myself');
@@ -208,33 +208,17 @@ assert.equal(keywordDetect('I had an overdose last night'), true, 'regex: overdo
 assert.equal(keywordDetect('I might self-harm'), true, 'regex: self-harm');
 assert.equal(keywordDetect('how was your day'), false, 'benign message not flagged');
 assert.equal(keywordDetect('I am so tired of this project'), false, 'frustration not flagged');
-ok('keyword net: user-approved list + regex, benign messages pass');
+ok('keyword list: user-approved phrases + regex, benign messages pass');
 
-// Classifier-first orchestration.
-const trueClassifier = async (): Promise<CrisisDetection> => ({ flagged: true, method: 'classifier' });
-const falseClassifier = async (): Promise<CrisisDetection> => ({ flagged: false, method: 'classifier' });
-const deadClassifier = async (): Promise<CrisisDetection> => {
-  throw new Error('classifier timed out (4000ms)');
-};
+// detectCrisis is pure keyword now — no model, no fallback path, never throws.
+const viaKeywordTrue = await detectCrisis('thinking about suicide all day');
+assert.equal(viaKeywordTrue.flagged, true);
+assert.equal(viaKeywordTrue.method, 'keyword');
 
-const viaClassifierTrue = await detectCrisis('some message', { classify: trueClassifier });
-assert.equal(viaClassifierTrue.flagged, true);
-assert.equal(viaClassifierTrue.method, 'classifier');
-
-const viaClassifierFalse = await detectCrisis('some message', { classify: falseClassifier });
-assert.equal(viaClassifierFalse.flagged, false);
-assert.equal(viaClassifierFalse.method, 'classifier');
-
-// Classifier failure → keyword net catches it; benign message still passes.
-const viaNetFlagged = await detectCrisis('I want to kill myself', { classify: deadClassifier });
-assert.equal(viaNetFlagged.flagged, true, 'fallback catches flagged message');
-assert.equal(viaNetFlagged.method, 'keyword-fallback');
-assert.ok(viaNetFlagged.error?.includes('timed out'));
-
-const viaNetClear = await detectCrisis('how was your day', { classify: deadClassifier });
-assert.equal(viaNetClear.flagged, false);
-assert.equal(viaNetClear.method, 'keyword-fallback');
-ok('classifier failure/timeout → keyword net fallback, never skips detection');
+const viaKeywordFalse = await detectCrisis('how was your day');
+assert.equal(viaKeywordFalse.flagged, false);
+assert.equal(viaKeywordFalse.method, 'keyword');
+ok('detectCrisis is keyword-only (method always "keyword", no model involved)');
 
 // Router short-circuit (Dawn path) still wired.
 const crisisResult = await routeVoiceCard(input(3, d1, { aiConsent: true, crisisDetected: true }), { config: localConfig, ...dev });
@@ -284,7 +268,6 @@ const flaggedTalk = await routeTalkReply(
   {
     config: localConfig,
     providers: { gemini: spyProvider, local: spyProvider },
-    detectCrisis: trueClassifier,
     logCrisisFlag: async () => {
       flagLogged += 1;
     },
@@ -292,15 +275,15 @@ const flaggedTalk = await routeTalkReply(
   },
 );
 assert.equal(flaggedTalk.kind, 'crisis');
-assert.equal(flaggedTalk.crisis?.method, 'classifier');
+assert.equal(flaggedTalk.crisis?.method, 'keyword');
 assert.equal(flagLogged, 1, 'crisis flag logged');
 assert.equal(mainCalls, 0, 'zero main-router model calls on a flagged message');
-ok('flagged message → static crisis result, flag logged, zero main-router calls');
+ok('flagged message → static crisis result via keyword list, flag logged, zero main-router calls');
 
 // Not flagged → reply generated (main call happens).
 const clearTalk = await routeTalkReply(
   { me: makeTalkMe('even', 'Riley'), message: 'How\u2019s my week going?', checkCount: 4, history: d1, aiConsent: true },
-  { config: localConfig, providers: { gemini: spyProvider, local: spyProvider }, detectCrisis: falseClassifier, ...dev },
+  { config: localConfig, providers: { gemini: spyProvider, local: spyProvider }, ...dev },
 );
 assert.equal(clearTalk.kind, 'reply');
 assert.ok(clearTalk.reply && clearTalk.reply.length > 0);

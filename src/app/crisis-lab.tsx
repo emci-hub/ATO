@@ -9,8 +9,8 @@ import { CRISIS_KEYWORDS } from '@/lib/crisis/detect';
 
 /**
  * Dev harness for the static crisis card. Not linked in production: open
- * /crisis-lab directly. Detection is classifier-first with a keyword-list
- * safety net (plan: crisis spec, upgraded per user direction).
+ * /crisis-lab directly. Detection is the user-reviewed keyword/phrase list
+ * (plan's original spec — no sentiment model in v1).
  */
 export default function CrisisLabScreen() {
   if (!__DEV__) {
@@ -34,8 +34,7 @@ export default function CrisisLabScreen() {
               message is crisis-flagged. Flags log timestamp + user only.
             </ThemedText>
             <ThemedText type="code" themeColor="textSecondary">
-              detection: classifier-first · keyword net: {CRISIS_KEYWORDS.length} phrases +
-              regex fallback
+              detection: keyword list · {CRISIS_KEYWORDS.length} phrases + regex · no model call
             </ThemedText>
           </View>
 
