@@ -49,6 +49,7 @@ function RootNavigator() {
           <Stack.Protected guard={isAuthed && hasMe}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="dawn" />
+            <Stack.Screen name="chat" />
           </Stack.Protected>
         </Stack>
       )}

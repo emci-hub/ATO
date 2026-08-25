@@ -1,5 +1,5 @@
 import type { Check } from '@/lib/checks';
-import { fetchMe, type Me } from '@/lib/me';
+import type { Me } from '@/lib/me';
 import { handleFromScannedText } from '@/lib/share-codec';
 import { supabase } from '@/lib/supabase';
 
@@ -15,8 +15,18 @@ export interface Connection {
   created_at: string;
 }
 
+/** The poster fields a connected peer may read (peer_profile RPC). */
+export interface PeerMe {
+  id: string;
+  name: string;
+  handle: string;
+  show_up: string;
+  talk_style: Me['talk_style'];
+  recipe: unknown;
+}
+
 export interface PeerState {
-  me: Me;
+  me: PeerMe;
   /** The peer's checks, oldest first (latest is last). */
   checks: Check[];
 }
@@ -81,18 +91,20 @@ export async function addPeerByHandle(raw: string): Promise<AddPeerResult> {
   return { ok: true, peer: { id: profile.id, name: profile.name, handle: profile.handle } };
 }
 
-/** Fetches a peer's me row + checks. Requires an existing connection (RLS). */
+/** Fetches a peer's poster + checks. Requires an existing connection (RLS). */
 export async function fetchPeerState(peerId: string): Promise<PeerState | null> {
   try {
-    const me = await fetchMe(peerId);
+    const { data, error } = await supabase.rpc('peer_profile', { p_user_id: peerId });
+    if (error) throw error;
+    const me = (data ?? [])[0] as PeerMe | undefined;
     if (!me) return null;
-    const { data, error } = await supabase
+    const { data: checkRows, error: checkError } = await supabase
       .from('checks')
       .select('*')
       .eq('user_id', peerId)
       .order('day', { ascending: true });
-    if (error) throw error;
-    return { me, checks: (data ?? []) as Check[] };
+    if (checkError) throw checkError;
+    return { me, checks: (checkRows ?? []) as Check[] };
   } catch {
     return null;
   }

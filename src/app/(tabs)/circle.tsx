@@ -1,28 +1,63 @@
 import { useFocusEffect } from '@react-navigation/native';
+import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ActionMenu } from '@/components/action-menu';
 import { PixelFace } from '@/components/pixel-face';
+import { ReportSheet } from '@/components/report-sheet';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useCircleContext } from '@/lib/circle-context';
+import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { fetchPeerState, type PeerState } from '@/lib/circle';
 import { normalizeRecipe } from '@/lib/kenney/registry';
+import {
+  blockUser,
+  fetchMyBlocks,
+  fetchMyMutes,
+  muteUser,
+  unblockUser,
+  unmuteUser,
+  type BlockRow,
+  type MuteRow,
+} from '@/lib/moderation';
 
 /**
  * Circle. Appears only after a scan/paste connected two accounts. Each card
  * surfaces what is ALREADY on the other person's me row and checks — their
- * real pixel and their honest current check. Nothing is synthesized, and no
- * chat inbox lives here (that's Stage 7).
+ * real pixel and their honest current check. Nothing is synthesized.
+ *
+ * Tapping a card opens the one thread for that connection (Stage 7 chat). The
+ * overflow menu holds mute (local to you, silent), block (both directions),
+ * and report user; unfriend stays at the bottom of the card.
  */
 export default function CircleScreen() {
   const theme = useTheme();
+  const { session } = useSession();
+  const userId = session?.user.id;
   const { connections, loading, refresh, unfriend } = useCircleContext();
   const [peers, setPeers] = useState<PeerState[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [blocks, setBlocks] = useState<BlockRow[]>([]);
+  const [mutes, setMutes] = useState<MuteRow[]>([]);
+
+  const reloadModeration = useCallback(async () => {
+    try {
+      const [b, m] = await Promise.all([fetchMyBlocks(), fetchMyMutes()]);
+      setBlocks(b);
+      setMutes(m);
+    } catch {
+      // Non-fatal — the menus just show default labels.
+    }
+  }, []);
+
+  useEffect(() => {
+    reloadModeration();
+  }, [reloadModeration, userId]);
 
   const loadPeers = useCallback(async () => {
     if (connections.length === 0) {
@@ -48,6 +83,7 @@ export default function CircleScreen() {
     try {
       await refresh();
       await loadPeers();
+      await reloadModeration();
     } finally {
       setRefreshing(false);
     }
@@ -90,7 +126,15 @@ export default function CircleScreen() {
                 </ThemedText>
               )
             }
-            renderItem={({ item }) => <PeerCard peer={item} onUnfriend={unfriend} />}
+            renderItem={({ item }) => (
+              <PeerCard
+                peer={item}
+                blocks={blocks}
+                mutes={mutes}
+                onUnfriend={unfriend}
+                onModerationChanged={reloadModeration}
+              />
+            )}
           />
         )}
       </SafeAreaView>
@@ -100,18 +144,47 @@ export default function CircleScreen() {
 
 function PeerCard({
   peer,
+  blocks,
+  mutes,
   onUnfriend,
+  onModerationChanged,
 }: {
   peer: PeerState;
+  blocks: BlockRow[];
+  mutes: MuteRow[];
   onUnfriend: (peerId: string) => Promise<void>;
+  onModerationChanged: () => Promise<void>;
 }) {
   const theme = useTheme();
+  const { session } = useSession();
+  const userId = session?.user.id;
   const { me, checks } = peer;
   const recipe = normalizeRecipe(me.recipe);
   const latest = checks[checks.length - 1];
   const [confirming, setConfirming] = useState(false);
   const [working, setWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+
+  const iBlockedPeer = blocks.some((b) => b.blocked_by === userId && b.blocked_user === me.id);
+  const iMutedPeer = mutes.some((m) => m.muter === userId && m.muted_user === me.id);
+
+  function openChat() {
+    router.push({ pathname: '/chat', params: { peer: me.id } });
+  }
+
+  async function runModeration(op: () => Promise<void>) {
+    setWorking(true);
+    try {
+      await op();
+      await onModerationChanged();
+    } catch (err) {
+      console.log('[circle] moderation error:', err);
+    } finally {
+      setWorking(false);
+    }
+  }
 
   async function unfriend() {
     if (working) return;
@@ -129,43 +202,59 @@ function PeerCard({
 
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
-      <View style={styles.cardTop}>
-        <PixelFace recipe={recipe} size={72} showUp={me.show_up} animated={false} />
-        <View style={styles.cardIdentity}>
-          <ThemedText type="smallBold" style={styles.nameText}>
-            {me.name}
-          </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            @{me.handle}
-          </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
-            {me.show_up}
-          </ThemedText>
+      <View style={styles.cardTopRow}>
+        <View style={styles.cardTop}>
+          <PixelFace recipe={recipe} size={72} showUp={me.show_up} animated={false} />
+          <View style={styles.cardIdentity}>
+            <ThemedText type="smallBold" style={styles.nameText}>
+              {me.name}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              @{me.handle}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
+              {me.show_up}
+            </ThemedText>
+          </View>
         </View>
+        <Pressable
+          onPress={() => setMenuOpen(true)}
+          hitSlop={12}
+          accessibilityLabel={`More options for ${me.name}`}
+          style={({ pressed }) => [styles.moreButton, pressed && styles.pressed]}>
+          <ThemedText type="smallBold" themeColor="textSecondary" style={styles.moreDots}>
+            ···
+          </ThemedText>
+        </Pressable>
       </View>
 
-      <View style={styles.honestCard}>
-        {latest ? (
-          <>
-            <View style={styles.honestHeader}>
-              <ThemedText type="smallBold">Their latest check</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                Day {latest.day} · {latest.status === 'done' ? 'showed up' : 'skipped'}
+      <Pressable onPress={openChat} style={({ pressed }) => [pressed && styles.pressed]}>
+        <ThemedView style={styles.honestCard}>
+          {latest ? (
+            <>
+              <View style={styles.honestHeader}>
+                <ThemedText type="smallBold">Their latest check</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Day {latest.day} · {latest.status === 'done' ? 'showed up' : 'skipped'}
+                </ThemedText>
+              </View>
+              <ThemedText type="small" style={styles.readText}>
+                {latest.read_text}
               </ThemedText>
-            </View>
-            <ThemedText type="small" style={styles.readText}>
-              {latest.read_text}
+              <ThemedText type="small" themeColor="textSecondary" style={styles.doText}>
+                {latest.do_text}
+              </ThemedText>
+            </>
+          ) : (
+            <ThemedText type="small" themeColor="textSecondary">
+              {me.name} hasn&apos;t done a check yet.
             </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary" style={styles.doText}>
-              {latest.do_text}
-            </ThemedText>
-          </>
-        ) : (
-          <ThemedText type="small" themeColor="textSecondary">
-            {me.name} hasn&apos;t done a check yet.
-          </ThemedText>
-        )}
-      </View>
+          )}
+        </ThemedView>
+        <ThemedText type="smallBold" style={styles.chatLinkText}>
+          Message {me.name.split(' ')[0]} ›
+        </ThemedText>
+      </Pressable>
 
       {confirming ? (
         <ThemedView type="backgroundElement" style={[styles.confirmBox, { borderColor: theme.backgroundSelected }]}>
@@ -218,6 +307,35 @@ function PeerCard({
           </ThemedText>
         </Pressable>
       )}
+
+      {/* Overflow menu: chat, mute (local), block (both ways), report user. */}
+      <ActionMenu
+        visible={menuOpen}
+        title={me.name}
+        options={[
+          { label: 'Message', onPress: openChat },
+          {
+            label: iMutedPeer ? 'Unmute' : 'Mute',
+            onPress: () =>
+              runModeration(() => (iMutedPeer ? unmuteUser(me.id) : muteUser(me.id))),
+          },
+          {
+            label: iBlockedPeer ? 'Unblock' : 'Block',
+            destructive: !iBlockedPeer,
+            onPress: () =>
+              runModeration(() => (iBlockedPeer ? unblockUser(me.id) : blockUser(me.id))),
+          },
+          { label: 'Report user', onPress: () => setReportOpen(true) },
+        ]}
+        onClose={() => setMenuOpen(false)}
+      />
+
+      <ReportSheet
+        visible={reportOpen}
+        target={{ kind: 'user', userId: me.id }}
+        title={`Report ${me.name}`}
+        onClose={() => setReportOpen(false)}
+      />
     </ThemedView>
   );
 }
@@ -260,7 +378,13 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     gap: Spacing.three,
   },
+  cardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.two,
+  },
   cardTop: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
@@ -271,6 +395,14 @@ const styles = StyleSheet.create({
   },
   nameText: {
     fontSize: 17,
+  },
+  moreButton: {
+    padding: Spacing.one,
+  },
+  moreDots: {
+    fontSize: 18,
+    lineHeight: 22,
+    letterSpacing: 1,
   },
   honestCard: {
     borderRadius: Spacing.three,
@@ -290,6 +422,11 @@ const styles = StyleSheet.create({
   },
   doText: {
     lineHeight: 18,
+  },
+  chatLinkText: {
+    color: '#3c87f7',
+    paddingTop: Spacing.two,
+    paddingHorizontal: Spacing.one,
   },
   unfriendLink: {
     alignSelf: 'flex-start',

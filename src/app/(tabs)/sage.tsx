@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AiConsentCard } from '@/components/ai-consent-card';
 import { CrisisCard } from '@/components/crisis-card';
+import { ReportSheet } from '@/components/report-sheet';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -24,6 +25,7 @@ import { checksToHistory, fetchChecks, type Check } from '@/lib/checks';
 import { logCrisisFlag } from '@/lib/crisis/log';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { aiConsentFor, setAiConsent } from '@/lib/me';
+import { addSageMessage, fetchSageMessages } from '@/lib/sage-messages';
 import { routeTalkReply } from '@/lib/voice/talk';
 import { routeVoiceCard } from '@/lib/voice/router';
 
@@ -32,6 +34,8 @@ interface ChatMessage {
   role: 'user' | 'sage';
   text: string;
   crisis?: boolean;
+  /** True when this row is persisted in sage_messages and therefore reportable. */
+  reportable?: boolean;
 }
 
 const CHIPS = [
@@ -61,6 +65,7 @@ export default function SageScreen() {
   const [error, setError] = useState<string | null>(null);
   const [showSupport, setShowSupport] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [reportMessage, setReportMessage] = useState<ChatMessage | null>(null);
 
   const reloadChecks = useCallback(async () => {
     if (!userId) return;
@@ -74,6 +79,29 @@ export default function SageScreen() {
   useEffect(() => {
     reloadChecks();
   }, [reloadChecks]);
+
+  // Load prior Sage history (persisted per exchange so responses are
+  // reportable and the thread survives restarts).
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    fetchSageMessages()
+      .then((rows) => {
+        if (cancelled) return;
+        setMessages(
+          rows.map((row) => ({
+            id: row.id,
+            role: row.role,
+            text: row.text,
+            reportable: true,
+          })),
+        );
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   // Load today's card for context (Talk replies can reference it).
   useEffect(() => {
@@ -119,8 +147,20 @@ export default function SageScreen() {
     }
   }
 
-  function addMessage(message: Omit<ChatMessage, 'id'>) {
+  function addLocal(message: Omit<ChatMessage, 'id'>) {
     setMessages((prev) => [...prev, { ...message, id: `m${nextMessageId++}` }]);
+  }
+
+  /** Appends a row and, when persistence succeeds, swaps it in so reports get a real id. */
+  async function persistAndSwap(localId: string, role: 'user' | 'sage', text: string) {
+    try {
+      const row = await addSageMessage(role, text);
+      setMessages((prev) =>
+        prev.map((m) => (m.id === localId ? { id: row.id, role, text: row.text, reportable: true } : m)),
+      );
+    } catch (err) {
+      console.log('[talk] addSageMessage error:', err);
+    }
   }
 
   async function send(text: string) {
@@ -128,8 +168,11 @@ export default function SageScreen() {
     if (!me || !userId || busy || trimmed.length === 0) return;
     setBusy('send');
     setError(null);
-    addMessage({ role: 'user', text: trimmed });
+    const localUserId = `m${nextMessageId++}`;
+    setMessages((prev) => [...prev, { id: localUserId, role: 'user', text: trimmed }]);
     setInput('');
+    // Persist the user's line immediately so it gets a reportable id.
+    void persistAndSwap(localUserId, 'user', trimmed);
 
     try {
       const result = await routeTalkReply(
@@ -154,10 +197,14 @@ export default function SageScreen() {
       if (result.kind === 'crisis') {
         // No confirmation step — the static card shows automatically.
         // CRISIS HARD RULE: no gesture. Hands stay hidden — never celebrated,
-        // never acknowledged with a pose. No exception.
-        addMessage({ role: 'sage', text: '', crisis: true });
+        // never acknowledged with a pose. No exception. The static card is not
+        // a Sage response and is not persisted/reportable.
+        addLocal({ role: 'sage', text: '', crisis: true });
       } else if (result.kind === 'reply' && result.reply) {
-        addMessage({ role: 'sage', text: result.reply });
+        const reply = result.reply;
+        const localSageId = `m${nextMessageId++}`;
+        setMessages((prev) => [...prev, { id: localSageId, role: 'sage', text: reply }]);
+        void persistAndSwap(localSageId, 'sage', reply);
         triggerGesture('talkReply');
       }
     } catch (err) {
@@ -251,11 +298,17 @@ export default function SageScreen() {
                       <CrisisCard onDismiss={() => dismissCrisis(message.id)} />
                     </View>
                   ) : (
-                    <View
+                    <Pressable
                       key={message.id}
-                      style={[styles.bubble, { backgroundColor: theme.backgroundElement }]}>
+                      onLongPress={() => message.reportable && setReportMessage(message)}
+                      delayLongPress={250}
+                      style={({ pressed }) => [
+                        styles.bubble,
+                        { backgroundColor: theme.backgroundElement },
+                        pressed && styles.pressed,
+                      ]}>
                       <ThemedText style={styles.bubbleText}>{message.text}</ThemedText>
-                    </View>
+                    </Pressable>
                   ),
                 )
               )}
@@ -362,6 +415,16 @@ export default function SageScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Floor requirement: a Sage response can be reported too. */}
+      <ReportSheet
+        visible={reportMessage !== null}
+        target={
+          reportMessage ? { kind: 'message', messageId: reportMessage.id } : { kind: 'user', userId: userId ?? '' }
+        }
+        title="Report this Sage reply"
+        onClose={() => setReportMessage(null)}
+      />
     </ThemedView>
   );
 }
