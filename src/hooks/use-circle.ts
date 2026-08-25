@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 
 import { fetchConnections, removePeer, type Connection } from '@/lib/circle';
@@ -25,10 +25,7 @@ export function useCircle(userId: string | undefined) {
     }
     setLoading(true);
     try {
-      const rows = await fetchConnections(userId);
-      // TEMP-DIAG: log hasCircle transition
-      console.log(`[circle-diag] refresh(${userId}) → ${rows.length} conn(s)`);
-      setConnections(rows);
+      setConnections(await fetchConnections(userId));
     } catch {
       setConnections([]);
     } finally {
@@ -57,8 +54,6 @@ export function useCircle(userId: string | undefined) {
     const load = () =>
       fetchConnections(userId)
         .then((rows) => {
-          // TEMP-DIAG: log realtime-triggered loads distinctly
-          console.log(`[circle-diag] realtime/init load(${userId}) → ${rows.length} conn(s)`);
           if (!cancelled) setConnections(rows);
         })
         .catch(() => {});
@@ -72,20 +67,12 @@ export function useCircle(userId: string | undefined) {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'connections', filter: `user_id=eq.${userId}` },
-        (payload) => {
-          // TEMP-DIAG: log the realtime INSERT event
-          console.log('[circle-diag] REALTIME INSERT event', JSON.stringify(payload.new));
-          load();
-        },
+        load,
       )
       .on(
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'connections', filter: `user_id=eq.${userId}` },
-        (payload) => {
-          // TEMP-DIAG: log the realtime DELETE event
-          console.log('[circle-diag] REALTIME DELETE event', JSON.stringify(payload.old));
-          load();
-        },
+        load,
       );
     channel.subscribe();
 
@@ -108,15 +95,5 @@ export function useCircle(userId: string | undefined) {
     };
   }, [userId]);
 
-  const hasCircle = connections.length > 0;
-  // TEMP-DIAG: log hasCircle transitions
-  const prev = useRef(hasCircle);
-  useEffect(() => {
-    if (prev.current !== hasCircle) {
-      console.log(`[circle-diag] hasCircle ${prev.current} → ${hasCircle}`);
-      prev.current = hasCircle;
-    }
-  }, [hasCircle]);
-
-  return { connections, hasCircle, loading, refresh, unfriend };
+  return { connections, hasCircle: connections.length > 0, loading, refresh, unfriend };
 }

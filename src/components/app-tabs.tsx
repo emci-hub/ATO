@@ -16,10 +16,6 @@ export default function AppTabs() {
   const colors = Colors[scheme ?? 'light'];
   const { hasCircle } = useCircleContext();
 
-  // TEMP-DIAG: log the navigator key so we can see remounts when hasCircle flips
-  const navKey = hasCircle ? 'circle-on' : 'circle-off';
-  console.log(`[circle-diag] AppTabs render → hasCircle=${hasCircle} key=${navKey}`);
-
   // Keying the navigator by hasCircle forces a clean, atomic remount when the
   // Circle tab appears/disappears. Toggling the trigger's `hidden` prop alone
   // is documented-unsupported at runtime: it remounts the navigator but the
@@ -28,7 +24,7 @@ export default function AppTabs() {
   // one commit, so a tap always finds a live route.
   return (
     <NativeTabs
-      key={navKey}
+      key={hasCircle ? 'circle-on' : 'circle-off'}
       backgroundColor={colors.background}
       indicatorColor={colors.backgroundElement}
       labelStyle={{ selected: { color: colors.text } }}>
