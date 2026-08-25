@@ -11,12 +11,12 @@ This runs parallel to the technical Stages/Waves in ATO_PLAN_v2.md. It does not 
 ### M0 — Right now (building, no revenue, no public users)
 - **Status:** sole proprietor by default. Operating under your own legal name. No registration required.
 - **Do today:** start keeping every AI subscription and tool receipt (Claude, Cursor, Perplexity, Supabase, Resend, Expo/EAS, domain) in one folder or spreadsheet. Even before anything is "official," these become expense records once there's a business to attach them to — ask an accountant later how far back pre-registration costs can be claimed, don't assume.
-- **Apple Developer account:** not needed yet — enroll only when Stage 8 (EAS/TestFlight submission) actually starts.
+- **Apple Developer account:** enrolled (Team ID `Q2UF7F6N36`). Individual vs Organization is still an open decision — see log below. Stage 8 has started: Apple Sign-In credentials exist (Key ID `3JKLGRJ586`, Services ID `com.emgens.ato.signin`); next is the iOS EAS development-client build, then TestFlight.
 - **Trademark:** the search flagged in Wave 0 — do it now if not already done. Free, fast. Don't file yet.
 
 ### M1 — TestFlight (Stage 8, friends-only testing)
 - **Trigger:** ready to submit a build to TestFlight.
-- **Do:** enroll in the Apple Developer Program. Individual account — your personal legal name as seller, no entity required. $99 USD/yr.
+- **Do:** Apple Developer Program is already enrolled (see M0). Remaining: Individual vs Organization still open; submit the TestFlight build when the development-client verification is done. $99 USD/yr already in play.
 - Trade name, GST/HST, incorporation: still not required. Not public yet, no real revenue.
 - Reserve social handles for "ATO" / "AsTrollOGs" / "What's your ATO?" across any platform you might use later (X, Instagram, TikTok). Free, five minutes, stops someone else from squatting the name before you're visible — same logic a streamer uses locking a handle before they blow up.
 

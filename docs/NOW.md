@@ -99,7 +99,7 @@ Guardrail already respected by all of these: never paywall Home, More, Check, cr
 Early on there's not much data on someone yet. Games give tokens; tokens unlock "refresh about themselves" (re-visiting/updating profile questions). Accuracy meter on profile shows how well-known their profile is. Multiplayer games = 2x tokens, explicitly parked (depends on Circle/Around existing first). Needs scoping later: which games, how "accuracy" is actually measured, keeping it feeling like a fun mechanic not manipulative data-extraction.
 
 ## Housekeeping
-- docs/ATO_PLAN_v2.md, docs/ME.md, docs/NOW.md all live in the repo now — Cursor maintains these directly going forward. BUSINESS.md added alongside (legal/brand/cost roadmap, runs parallel to the stages)
+- docs/ATO_PLAN_v2.md, docs/ME.md, docs/NOW.md, docs/BUSINESS.md — Cursor maintains these directly. **When updating any of them, keep all four in sync, commit them together, and `git push` immediately. Never leave a docs commit sitting local-only.**
 - ATO_PLAN_v2.md updated with the Referral spec (post-Wave-1, pre-public-launch) — treat it as a locked addition, not a deviation to flag
 - ATO_PLAN_v2.md updated with the "Public App Store readiness" checklist (account type, trademark, referral flip, legal, App Store Connect tax/banking) — applies before public listing, not before TestFlight. Not a Cursor task, this is on emci.
 - **Open decision (emci's, not technical):** Apple Developer account type — Individual (personal legal name as seller, no entity needed) vs Organization (requires registered LLC/Corp + D-U-N-S, can't convert from Individual later). Not legally required to be Organization for ATO's current scope. Revisit before public submission — cheaper to decide before enrolling than after.

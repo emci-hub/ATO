@@ -1,0 +1,17 @@
+---
+description: Always commit and push the four tracked docs together; never leave those commits local-only.
+globs: docs/{NOW,ME,ATO_PLAN_v2,BUSINESS}.md
+alwaysApply: true
+---
+
+# Tracked docs — commit and push together
+
+The four tracked docs are `docs/NOW.md`, `docs/ME.md`, `docs/ATO_PLAN_v2.md`, and `docs/BUSINESS.md`.
+
+When you update **any** of them:
+
+1. Check the other three for overlapping facts (bundle ID, Stage 8 status, Apple/EAS, account type, what's next). Sync them in the **same** change — do not update only NOW.md.
+2. Commit those doc updates together (with related code if this is the same unit of work).
+3. **`git push` to origin immediately.** Never leave a commit that touches these docs sitting local-only.
+
+This standing instruction overrides the default "don't push unless asked" rule for these four files only.
