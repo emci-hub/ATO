@@ -16,5 +16,12 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "supabase/functions",
+    "scripts/apple-revoke-check.ts",
+    "scripts/apple-endpoint-probe.ts"
   ]
 }

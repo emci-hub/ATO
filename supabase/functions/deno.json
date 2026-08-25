@@ -1,0 +1,10 @@
+{
+  "//": "Edge functions run on Deno, not the React Native TS config. The app's tsconfig.json excludes this directory; type checking here happens via `deno check` or `supabase functions serve`.",
+  "imports": {
+    "@supabase/supabase-js": "jsr:@supabase/supabase-js@2"
+  },
+  "compilerOptions": {
+    "strict": true,
+    "lib": ["deno.window", "esnext"]
+  }
+}

@@ -8,7 +8,9 @@
     "scheme": "ato",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.emgens.ato",
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -42,7 +44,8 @@
       ],
       "expo-font",
       "expo-web-browser",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true,

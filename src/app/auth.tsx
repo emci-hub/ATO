@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -14,6 +15,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { isAppleSignInAvailable, signInWithApple } from '@/lib/auth-apple';
 import { supabase } from '@/lib/supabase';
 
 export default function AuthScreen() {
@@ -24,8 +26,39 @@ export default function AuthScreen() {
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [appleAvailable, setAppleAvailable] = useState(false);
 
   const normalizedEmail = email.trim().toLowerCase();
+
+  useEffect(() => {
+    let active = true;
+    isAppleSignInAvailable().then((available) => {
+      if (active) setAppleAvailable(available);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function handleApple() {
+    setBusy(true);
+    setError(null);
+    const outcome = await signInWithApple();
+    setBusy(false);
+
+    if (outcome.status === 'error') {
+      setError(outcome.message);
+      return;
+    }
+    if (outcome.status === 'signed-in' && !outcome.linkedForRevocation) {
+      // Sign-in worked but the Apple token was not stored, which means a later
+      // account deletion could not revoke at Apple. Worth a log line now rather
+      // than a surprise at delete time.
+      console.log('[auth] Apple sign-in succeeded without storing a revocation token');
+    }
+    // 'cancelled' and 'unavailable' need no message. On success the session
+    // guard in the root layout routes declaratively — same as verifyCode.
+  }
 
   async function sendCode() {
     if (!normalizedEmail) {
@@ -141,6 +174,39 @@ export default function AuthScreen() {
                     </ThemedText>
                   </Pressable>
                 </ThemedView>
+
+                {appleAvailable ? (
+                  <>
+                    <View style={styles.dividerRow}>
+                      <View
+                        style={[styles.dividerLine, { backgroundColor: theme.backgroundSelected }]}
+                      />
+                      <ThemedText type="small" themeColor="textSecondary">
+                        or
+                      </ThemedText>
+                      <View
+                        style={[styles.dividerLine, { backgroundColor: theme.backgroundSelected }]}
+                      />
+                    </View>
+
+                    {/* Apple requires their own button component, not a custom one. */}
+                    <AppleAuthentication.AppleAuthenticationButton
+                      buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                      buttonStyle={
+                        theme.background === '#ffffff'
+                          ? AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+                          : AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                      }
+                      cornerRadius={Spacing.three}
+                      style={styles.appleButton}
+                      onPress={handleApple}
+                    />
+
+                    <ThemedText type="small" themeColor="textSecondary" style={styles.appleNote}>
+                      You can hide your email — ATO works the same either way.
+                    </ThemedText>
+                  </>
+                ) : null}
               </>
             ) : (
               <>
@@ -266,6 +332,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  appleButton: {
+    height: 48,
+    width: '100%',
+  },
+  appleNote: {
+    textAlign: 'center',
   },
   pressed: {
     opacity: 0.8,

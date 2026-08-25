@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DeleteAccountSheet } from '@/components/delete-account-sheet';
 import { ScanSheet } from '@/components/scan-sheet';
 import { SharePoster } from '@/components/share-poster';
 import { ThemedText } from '@/components/themed-text';
@@ -27,11 +28,15 @@ export default function YouScreen() {
   const { refresh: refreshCircle } = useCircleContext();
   const [signingOut, setSigningOut] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
   const posterRef = useRef<View | null>(null);
   // Screen padding (2x24) + card padding (2x16) + margin for safety.
   const posterWidth = Math.min(320, windowWidth - 96);
+  const hasAppleIdentity = !!session?.user.identities?.some(
+    (identity) => identity.provider === 'apple',
+  );
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -178,8 +183,24 @@ export default function YouScreen() {
               {signingOut ? 'Signing out…' : 'Sign out'}
             </ThemedText>
           </Pressable>
+
+          {/* Deletion lives below sign-out and opens a confirmation sheet — it
+              never deletes on this tap. */}
+          <Pressable
+            onPress={() => setDeleting(true)}
+            style={({ pressed }) => [styles.deleteLink, pressed && styles.pressed]}>
+            <ThemedText type="small" themeColor="textSecondary" style={styles.deleteLinkText}>
+              Delete account
+            </ThemedText>
+          </Pressable>
         </ScrollView>
       </SafeAreaView>
+
+      <DeleteAccountSheet
+        visible={deleting}
+        onClose={() => setDeleting(false)}
+        hasAppleIdentity={hasAppleIdentity}
+      />
 
       <ScanSheet
         visible={scanning}
@@ -313,6 +334,13 @@ const styles = StyleSheet.create({
   },
   signOutText: {
     fontSize: 16,
+  },
+  deleteLink: {
+    alignItems: 'center',
+    paddingVertical: Spacing.two,
+  },
+  deleteLinkText: {
+    textDecorationLine: 'underline',
   },
   pressed: {
     opacity: 0.8,
