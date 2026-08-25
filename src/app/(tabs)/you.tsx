@@ -186,6 +186,8 @@ export default function YouScreen() {
         onClose={() => setScanning(false)}
         onAdd={addPeerByHandle}
         onConnected={() => {
+          // TEMP-DIAG: log the scan completion
+          console.log('[circle-diag] ScanSheet onConnected (scan succeeded)');
           triggerGesture('circleConnected');
           // Don't rely only on the realtime INSERT landing (it can be missed
           // during a navigator remount); refresh the shared circle truth so

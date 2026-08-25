@@ -34,7 +34,9 @@ export default function HomeScreen() {
             <ThemedText type="code" themeColor="textSecondary">
               face · {recipe.source} · {recipe.parts.body} · {recipe.parts.face}
             </ThemedText>
-            <PixelFace recipe={recipe} size={88} showUp={me?.show_up} />
+            {/* Static display face — the header avatar is the app's one
+                always-mounted animated/gesture instance, so this stays still. */}
+            <PixelFace recipe={recipe} size={88} showUp={me?.show_up} animated={false} />
           </ThemedView>
 
           <ThemedView type="backgroundElement" style={styles.boxCard}>

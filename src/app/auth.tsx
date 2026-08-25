@@ -1,4 +1,3 @@
-import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -18,7 +17,6 @@ import { useTheme } from '@/hooks/use-theme';
 import { supabase } from '@/lib/supabase';
 
 export default function AuthScreen() {
-  const router = useRouter();
   const theme = useTheme();
 
   const [email, setEmail] = useState('');
@@ -79,7 +77,12 @@ export default function AuthScreen() {
       setError(error.message);
       return;
     }
-    router.replace('/');
+
+    // No imperative router.replace('/') here: on AUTHENTICATED, the session
+    // guard in the root layout flips isAuthed and declaratively routes to
+    // (tabs) (or onboarding if there's no ME row yet). Calling router.replace
+    // here races that state flip — the REPLACE can fire before (tabs) is
+    // mounted, producing "was not handled by any navigator".
   }
 
   return (

@@ -24,12 +24,19 @@ export default function CircleScreen() {
   const [peers, setPeers] = useState<PeerState[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
+  // TEMP-DIAG: does the Circle screen ever mount (i.e. does the tab tap navigate)?
+  useEffect(() => {
+    console.log(`[circle-diag] CircleScreen MOUNTED, connections=${connections.length}`);
+  }, [connections.length]);
+
   const loadPeers = useCallback(async () => {
     if (connections.length === 0) {
       setPeers([]);
       return;
     }
     const states = await Promise.all(connections.map((c) => fetchPeerState(c.peer_id)));
+    // TEMP-DIAG: log how many peers resolved
+    console.log(`[circle-diag] loadPeers → ${states.filter(Boolean).length}/${connections.length} peers resolved`);
     setPeers(states.filter((state): state is PeerState => state != null));
   }, [connections]);
 
@@ -39,6 +46,8 @@ export default function CircleScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      // TEMP-DIAG: log focus so we know the screen became active
+      console.log('[circle-diag] CircleScreen FOCUSED');
       refresh().catch(() => {});
     }, [refresh]),
   );
@@ -118,6 +127,8 @@ function PeerCard({
     setWorking(true);
     setError(null);
     try {
+      // TEMP-DIAG: log the unfriend action
+      console.log(`[circle-diag] Unfriending peer ${me.id}`);
       await onUnfriend(me.id);
       // on success the connection is gone — the tab (and this card) disappear.
     } catch (err) {
@@ -130,7 +141,7 @@ function PeerCard({
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
       <View style={styles.cardTop}>
-        <PixelFace recipe={recipe} size={72} showUp={me.show_up} />
+        <PixelFace recipe={recipe} size={72} showUp={me.show_up} animated={false} />
         <View style={styles.cardIdentity}>
           <ThemedText type="smallBold" style={styles.nameText}>
             {me.name}

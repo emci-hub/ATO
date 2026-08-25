@@ -6,7 +6,7 @@
 **Live AI + model:** Cursor, `deepseek-v4-flash` (default volume) — crisis/safety-critical work always routes to Claude Opus 5 regardless of Home/Away, Expo SDK 54
 
 ## On
-Kenney pipeline + gesture work (side quest off the Wave 1 stage sequence). Crisis detection being reverted from AI-classifier to keyword-only (Cursor working, Opus 5 — token/latency cost on the classifier no longer justified the catch-rate gain). Two bugs also still open: Circle re-add access issue, hand/body color mismatch. Stage 7 (Chat + Report) is queued behind all of this — not started.
+Persistent header-right pixel avatar (queued idea, now starting) + Sage tab icon → aspirational pixel. Stage 7 (Chat + Report) still queued behind this.
 
 ## Done
 - Stage 1 (Home shell) — screenshot verified: 3 tabs (Home, Sage, You), no Circle tab, fake card, fake poster
@@ -29,8 +29,12 @@ Kenney pipeline + gesture work (side quest off the Wave 1 stage sequence). Crisi
   - Known side effect, accepted as fine: per expo-router's `hidden` docs, toggling it remounts the navigator, so the app lands back on Home right after a successful scan. Confirmed on-device this reads as fine, not jarring — no fix needed.
   - Commits: `d6d2d05` (Stage 6 build) → `32d948c` (subscription fix + unfriend + static-trigger fix, squashed from `10aa389`).
 
+- **Kenney pipeline + gesture + crisis-revert side-quest — fully closed, on-device verified.** Summary of everything that landed (see prior Done bullets for full detail on each piece): generalized family-agnostic Kenney asset pipeline built (prep script, per-family manifest, generic renderer, generic animation layer, `docs/KENNEY_IMPORT.md`); Shape Characters migrated as the first pack, replacing the old Pixel family entirely; hands hidden at rest, event-driven gestures (thumb/point/peace) wired to real app moments with a hard crisis-silence rule; SecureStore oversized-session bug fixed (split adapter); Talk reply truncation fixed (thinkingConfig on the main Gemini provider, same class of bug the classifier had); Sage composer tab-bar clearance fixed; crisis detection reverted from AI-classifier back to keyword-only (487–561 invisible thinking tokens per message on the classifier wasn't worth the catch-rate gain — see architecture section below); hand/body color mismatch fixed (raw-override scoping bug); Circle re-add stale-state bug fixed (foreground refetch + post-scan refresh, belt-and-suspenders self-healing). On-device pass confirmed all of it clean: crisis card fires instantly on keyword match, Talk replies come back full, hand colors match body, Circle re-add works both sides immediately, all five gesture triggers fire correctly, hands stay hidden during crisis, blink feels natural.
+  - Commits: `d6d2d05`→`32d948c` (Circle/Share) → `b758e20` (Kenney pipeline + gestures + SecureStore) → `984e756` (Talk truncation + composer) → `b0de1af` (crisis revert) → `a389229` (hand color + Circle self-healing). All pushed, `master` in sync with `origin/master`.
+- **Login REPLACE-not-handled error — fixed.** `The action 'REPLACE' with payload {"name":"(tabs)",...} was not handled by any navigator` appeared around login on device (recurring — first seen after the SecureStore fix). Root cause: `auth.tsx` called `router.replace('/')` synchronously right after `verifyOtp` resolved, racing the root layout's auth guard. The guard flips `isAuthed` → `hasMe` on the next React commit and declaratively mounts `(tabs)` (or onboarding); the imperative REPLACE could fire before `(tabs)` was in the navigator → unhandled action. **Predates the tab/Circle work** (present since the initial commit); the recent key-based navigator remount likely just widened the race window. Fix: removed the redundant `router.replace('/')` + unused `useRouter` import — login now routes purely via the guard, matching the onboarding pattern (`refresh()` → guard flips). Sign-out already used the declarative pattern.
+
 ## Left
-Stages 7–8, Wave 1
+Stages 7–8, Wave 1 (paused for persistent-avatar work — see On)
 
 ## Backlog (Stage 8 — polish pass, before TestFlight)
 - Fantasy UI Borders pack (Kenney) — UI chrome/panels/buttons, separate visual system from character art
@@ -44,6 +48,7 @@ Stages 7–8, Wave 1
 - Crisis: relational-safety/abuse category (separate from self-harm) — needs its own resource number, parked separately
 - SecureStore warning: "Value being stored is larger than 2048 bytes" — minor, not urgent, but could throw in a future SDK version
 - Quarterly: re-check for new stable Gemini flash releases, re-run crisis-live-check.ts before bumping the pinned model version
+- **Gentle re-engagement nudge (researched, not yet designed):** separate from the scheduled morning/evening/Sunday pushes already spec'd for Stage 8 — a one-off warm nudge after ~2-3 days of no opens, not a scheduled recurring push. Tone matters more than mechanism here: per the plan's existing anti-manipulation stance (no fake urgency, no guilt), this should read as "we noticed, we're here" — never "you're falling behind" or streak-loss framing. Design the actual copy carefully when this gets built; don't default to generic "come back!" push copy.
 
 ## Crisis detection — final architecture (revised — reverted to keyword-only)
 **Current:** static keyword/phrase-list detection only, checked against the user's message before it reaches the router — matching the plan's original spec. No AI classifier call.
@@ -73,16 +78,16 @@ Early on there's not much data on someone yet. Games give tokens; tokens unlock 
 Two related, not-yet-built ideas, both stemming from the Kenney gesture work:
 - **Persistent pixel placement:** small (~26px) circle avatar, header-right, present on every screen — shows current recipe + whatever event gesture is active (thumb/point/peace/hidden). Chosen over a tab-bar-icon placement (too small to read a gesture clearly) and a floating bubble (fixed-position overlay, worse fit for the nav chrome). Not yet built — this is the resting-state placement Home's face already has a version of; this extends it app-wide.
 - **Sage tab icon → pixel face, aspirational variant:** replaces the current sparkle icon. Same character as Home's pixel, marked with a subtle glow/shine tell so it reads as "the version you're working toward," not current-you. See ME.md's "Sage/Pixel relationship" note for the full reasoning — this is a real redefinition of what Sage represents (aspirational-you, not a separate coach character), not just an icon swap.
-- **Growth tiers (the mechanic behind the glow):** milestone-based, not continuous — reuses `check_count` (already on ME) and the plan's existing 7-Check unlock threshold, no new number invented.
-  - Tier 0 (`check_count < 3`): Sage's pixel barely distinguished from Home's — app hasn't learned the person yet.
-  - Tier 1 (`check_count ≥ 3`): subtle glow/shine tell begins.
-  - Tier 2 (`check_count ≥ 7`, same moment deeper features unlock): shine intensifies.
-  - Tier 3 (threshold TBD — likely tied to facts-learned count): most distinct version, decide later.
-  - Mechanically: a `growth_tier` modifier layer (glow opacity / small sparkle) on top of the existing Kenney-pipeline pixel render — not a new asset per tier, not a live "distinctiveness" score. Deliberately separate from the daily `look` system (even/tired/set/listen/glow) — different signal, different timescale, don't conflate them.
-- Not started. Sequenced after: current Talk/Circle/hand-color bug fixes → on-device gesture pass closes out → then this.
+- **Growth tiers — dual-axis design (researched, not yet built):** two separate signals, deliberately kept distinct rather than blended into one score, per standard progression-design practice (vertical "showed up" axis + horizontal "known deeply" axis, shown as separate visual channels so each stays legible on its own):
+  - **Presence axis** (drives glow intensity on Sage's pixel): tier 0 `check_count < 3` (matches Home's plain look) → tier 1 `≥ 3` (subtle glow, current stub) → tier 2 `≥ 7` (existing plan unlock threshold, glow intensifies) → tier 3 `≥ 21` (~3 weeks, most distinct).
+  - **Depth axis** (drives a separate small sparkle/spark marker, distinct from the glow so the two signals don't blend): tier 0 = 0 facts known → tier 1 = a few facts known (~3+) → tier 2 = meaningfully known (~8+).
+  - Both derived live from existing ME fields (`check_count`, facts list length) — no new storage, no continuous scoring to maintain.
+  - **Hard rule, confirmed against 2026 retention research:** tiers only ever go up, never down. Missing days doesn't demote a tier — matches the plan's existing "no cut after crisis" / "cut = habit, not worth" philosophy, and matches the current move away from punishing streak mechanics industry-wide.
+  - **Milestone celebration (new, folds into this same mechanic):** a separate, louder celebration moment (not just the daily thumb gesture) at the same presence-tier thresholds (7, 21 days) — bigger animation, one-time moment rather than a permanent state change, layered on top of the daily gesture payoff rather than replacing it. Reuses the exact same `check_count` trigger points as the presence axis, no new thresholds to invent.
+  - Not started. Sequenced after: current Circle tap-bug fix confirmed on-device.
 
 ## Next 15 min
-Waiting on Cursor: (1) gemini.ts thinkingConfig fix for Talk (truncation bug) + sage.tsx composer padding fix, (2) still open from prior pass — Circle re-add bug (unfriend → re-scan leaves one side without Circle access) and hand/body color mismatch. Once those land, run the full on-device gesture checklist, then decide on persistent-avatar + growth-tier build order.
+Build the persistent header-right pixel avatar (~26px, every screen) and swap Sage's tab icon for the aspirational-tier pixel. See Backlog section above for the full spec (placement decision, growth-tier mechanic) — growth tiers are the harder part; may want to scope the header avatar + static Sage-icon swap first, growth-tier modifier as a fast-follow.
 
 ## Backlog addition — Kenney import pipeline (queued after Stage 6 close)
 Plan to build a generalized, family-agnostic Kenney asset pipeline rather than a one-off Pixel fix, since more Kenney packs are coming:
