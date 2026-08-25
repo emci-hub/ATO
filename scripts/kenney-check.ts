@@ -111,6 +111,44 @@ assert.equal(gestureMap.circleConnected?.state, 'peace');
 assert.equal(gestureMap.posterShared?.state, 'peace');
 ok('event gestures map to manifest-declared hand states');
 
+// Hand/body color consistency: every exported hand variant's dominant color
+// must match its body variant. Guards the raw-name-override regression where
+// all hands were exported as the yellow file.
+import { PNG } from 'pngjs';
+function dominantColor(file: string): string | null {
+  const png = PNG.sync.read(fs.readFileSync(file));
+  const counts = new Map<string, number>();
+  for (let i = 0; i < png.data.length; i += 4) {
+    const a = png.data[i + 3];
+    if (a < 200) continue;
+    const r = png.data[i], g = png.data[i + 1], b = png.data[i + 2];
+    if (r === g && g === b) continue;
+    const key = `${r},${g},${b}`;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  const top = [...counts.entries()].sort((x, y) => y[1] - x[1])[0];
+  return top ? top[0] : null;
+}
+const variants = SHAPE_MANIFEST.colorVariants.map((v) => v.id);
+const handStates = Object.keys(
+  SHAPE_MANIFEST.parts.find((p) => p.id === 'hand')!.states,
+).filter((s) => s !== 'hidden');
+let colorChecks = 0;
+for (const variant of variants) {
+  const body = dominantColor(path.join(assetsRoot, 'body', `circle.${variant}.png`));
+  assert.ok(body, `no body color for ${variant}`);
+  const [br, bg, bb] = body.split(',').map(Number);
+  for (const state of handStates) {
+    const hand = dominantColor(path.join(assetsRoot, 'hand', `${state}.${variant}.png`));
+    assert.ok(hand, `no hand color for ${variant}/${state}`);
+    const [hr, hg, hb] = hand.split(',').map(Number);
+    const dist = (br - hr) ** 2 + (bg - hg) ** 2 + (bb - hb) ** 2;
+    assert.ok(dist < 500, `${state}.${variant} hand ${hand} vs body ${body} (dist ${dist})`);
+    colorChecks += 1;
+  }
+}
+ok(`all ${colorChecks} hand assets match their body variant's color (no all-yellow regression)`);
+
 // Registry is manifest-driven.
 assert.equal(Object.keys(KENNEY_REGISTRY).length, 1, 'one registered family');
 

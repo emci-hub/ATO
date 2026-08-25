@@ -13,6 +13,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useMe } from '@/hooks/use-me';
 import { accentFromShowUp } from '@/lib/color';
 import { addPeerByHandle } from '@/lib/circle';
+import { useCircleContext } from '@/lib/circle-context';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { copyLink, sharePoster } from '@/lib/share';
 import { supabase } from '@/lib/supabase';
@@ -23,6 +24,7 @@ export default function YouScreen() {
   const { session } = useSession();
   const { me } = useMe(session?.user.id);
   const accent = accentFromShowUp(me?.show_up);
+  const { refresh: refreshCircle } = useCircleContext();
   const [signingOut, setSigningOut] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -183,7 +185,13 @@ export default function YouScreen() {
         visible={scanning}
         onClose={() => setScanning(false)}
         onAdd={addPeerByHandle}
-        onConnected={() => triggerGesture('circleConnected')}
+        onConnected={() => {
+          triggerGesture('circleConnected');
+          // Don't rely only on the realtime INSERT landing (it can be missed
+          // during a navigator remount); refresh the shared circle truth so
+          // the scanner's own Circle tab appears immediately.
+          refreshCircle().catch(() => {});
+        }}
       />
     </ThemedView>
   );

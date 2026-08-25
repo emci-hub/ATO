@@ -62,10 +62,21 @@ function scaleNearest(src: PNG, scale: number): PNG {
   return out;
 }
 
-/** Raw filename for a part state: colorable = <variant>_<pattern>_<asset>. */
-function rawFileName(part: KenneyPart, stateId: string, sprite: { asset: string; raw?: string }, variant: string): string {
-  if (sprite.raw) return `${sprite.raw}.png`;
-  if (part.colorable) return `${variant}_${part.sourcePattern}_${sprite.asset}.png`;
+/**
+ * Raw filename for a part state. The normal name for a colorable part is
+ * `<variant>_<pattern>_<asset>.png` (e.g. `blue_hand_open.png`). The sprite's
+ * `raw` override is ONLY a fallback for when that normal file doesn't exist in
+ * the pack — e.g. Shape Characters names yellow hands `hand_yellow_*` instead
+ * of `yellow_hand_*`. The override must NOT apply to every variant, or every
+ * hand would come out yellow (the hand/body color-mismatch bug).
+ */
+function rawFileName(part: KenneyPart, stateId: string, sprite: { asset: string; raw?: string }, variant: string, source: string): string {
+  if (part.colorable) {
+    const normal = `${variant}_${part.sourcePattern}_${sprite.asset}.png`;
+    if (fs.existsSync(path.join(source, normal))) return normal;
+    if (sprite.raw) return `${sprite.raw}.png`;
+    return normal; // will throw a clear "missing raw asset" below
+  }
   return `${sprite.asset}.png`;
 }
 
@@ -86,6 +97,8 @@ function generateAssetRegistry(family: string, parts: KenneyPart[], variants: st
   lines.push('export const KENNEY_ASSETS: Record<string, ImageSourcePropType> = {');
   for (const part of parts) {
     for (const [, sprite] of Object.entries(part.states)) {
+      // `hidden` is a magic rest state with no asset — skip it in the registry too.
+      if (sprite.asset === 'hidden') continue;
       const variantsForPart = part.colorable ? variants : [''];
       for (const variant of variantsForPart) {
         const name = outFileName(part, sprite, variant);
@@ -119,7 +132,7 @@ function main() {
       if (sprite.asset === 'hidden') continue;
       const variantsForPart = part.colorable ? variants : [''];
       for (const variant of variantsForPart) {
-        const rawName = rawFileName(part, stateId, sprite, variant);
+        const rawName = rawFileName(part, stateId, sprite, variant, source);
         const rawPath = path.join(source, rawName);
         if (!fs.existsSync(rawPath)) {
           throw new Error(`Missing raw asset: ${rawPath} (declared by ${family}/${part.id}.${stateId})`);

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { AppState } from 'react-native';
 
 import { fetchConnections, removePeer, type Connection } from '@/lib/circle';
 import { supabase } from '@/lib/supabase';
@@ -7,6 +8,11 @@ import { supabase } from '@/lib/supabase';
  * The user's circle. Drives the conditional Circle tab: it appears only once a
  * connection exists (a scan or pasted link — one gate). Subscribes to realtime
  * so the tab appears on the other device without a manual refresh.
+ *
+ * Realtime is the fast path, but not the only one: a missed INSERT during a
+ * remount (the `hidden` tab toggle remounts the navigator) or a dropped
+ * websocket would leave `hasCircle` stale. So we also refetch on app
+ * foreground, and callers refetch after a successful add/unfriend.
  */
 export function useCircle(userId: string | undefined) {
   const [connections, setConnections] = useState<Connection[]>([]);
@@ -45,6 +51,13 @@ export function useCircle(userId: string | undefined) {
     let cancelled = false;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
+    const load = () =>
+      fetchConnections(userId)
+        .then((rows) => {
+          if (!cancelled) setConnections(rows);
+        })
+        .catch(() => {});
+
     // Build the channel once with all postgres_changes callbacks registered
     // BEFORE subscribe() — never add callbacks to an already-subscribed channel.
     // The cleanup below removes it on unmount / userId change, so a re-render
@@ -54,37 +67,28 @@ export function useCircle(userId: string | undefined) {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'connections', filter: `user_id=eq.${userId}` },
-        () => {
-          fetchConnections(userId)
-            .then((rows) => {
-              if (!cancelled) setConnections(rows);
-            })
-            .catch(() => {});
-        },
+        load,
       )
       .on(
         'postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'connections', filter: `user_id=eq.${userId}` },
-        () => {
-          fetchConnections(userId)
-            .then((rows) => {
-              if (!cancelled) setConnections(rows);
-            })
-            .catch(() => {});
-        },
+        load,
       );
     channel.subscribe();
 
-    fetchConnections(userId)
-      .then((rows) => {
-        if (!cancelled) setConnections(rows);
-      })
-      .catch(() => {
-        if (!cancelled) setConnections([]);
-      });
+    // Initial fetch.
+    load();
+
+    // Refetch on app foreground: realtime websockets can drop or the channel
+    // can re-create during a remount; a foreground refetch self-heals a stale
+    // `hasCircle` (e.g. a re-add that happened while the app was backgrounded).
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') load();
+    });
 
     return () => {
       cancelled = true;
+      sub.remove();
       if (channel) {
         supabase.removeChannel(channel);
       }
