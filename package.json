@@ -58,7 +58,9 @@
     "check:voice": "tsx ./scripts/voice-router-check.ts",
     "check:stage6": "tsx ./scripts/stage6-helper-check.ts",
     "check:kenney": "tsx ./scripts/kenney-check.ts",
-    "prep:kenney": "tsx ./scripts/kenney-prep.ts"
+    "prep:kenney": "tsx ./scripts/kenney-prep.ts",
+    "check:talk-live": "tsx ./scripts/talk-live-check.ts",
+    "check:card-live": "tsx ./scripts/card-live-check.ts"
   },
   "private": true
 }

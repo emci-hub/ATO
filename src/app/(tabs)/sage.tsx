@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
   },
   composer: {
     paddingTop: Spacing.two,
-    paddingBottom: Spacing.two,
+    paddingBottom: BottomTabInset + Spacing.two,
     gap: Spacing.two,
   },
   chips: {

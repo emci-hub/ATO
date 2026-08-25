@@ -38,6 +38,9 @@ export function createGeminiProvider(options: GeminiOptions): VoiceProvider {
             temperature: 0.9,
             maxOutputTokens: 500,
             responseMimeType: 'application/json',
+            // gemini-3.x are thinking models: without an explicit level the
+            // model spends output budget on thinking before any visible text.
+            thinkingConfig: { thinkingLevel: 'low' },
           },
         }),
       });
@@ -80,7 +83,11 @@ export function createGeminiProvider(options: GeminiOptions): VoiceProvider {
           contents: [{ role: 'user', parts: [{ text: buildTalkPrompt(input) }] }],
           generationConfig: {
             temperature: 0.8,
-            maxOutputTokens: 300,
+            maxOutputTokens: 1024,
+            // Thinking models burn output budget on thinking first. Live-probed:
+            // `low` still spends ~490-560 thoughts tokens, so a 4-sentence reply
+            // (~200 visible tokens) needs 1024 to never be starved mid-sentence.
+            thinkingConfig: { thinkingLevel: 'low' },
           },
         }),
       });
