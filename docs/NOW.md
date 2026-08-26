@@ -37,6 +37,7 @@ Stage 8 (TestFlight) — sequencing as tight handoffs:
 - **Self-reported date of birth (Stage 2 ME box)** — `me.born_on` date, not a frozen age or 16+/18+ boolean. Onboarding Q1 is YYYY/MM/DD (same input pattern as the other text fields). Under 16: inline error "ATO is for people 16 and older." — blocked client-side before `createMe` and server-side in `complete_signup` before invite consume. 16/17 allowed; `is_at_least_age(born_on, 18)` stays false for Wave 2 going. Verified: `npm run check:age` 8/8; live under-16 RPC raises `age_under_16` with no ME row and invite unused; live 17-year-old stored `born_on = 2009-08-26`, `age_years = 17`, going helper false. Existing pre-field rows (`emci`, `yeezy`) stay NULL.
 - **Kenney credits on You-tab Settings** — static Credits card lists only packs in `KENNEY_REGISTRY` (Shape Characters). Kenney, kenney.nl, pack page, CC0 line. Modular / Toon / 1-Bit / Animal Remastered / Fantasy UI Borders / Monster Builder are not bundled and are not listed.
 - **SecureStore 2048-byte warning** — cause was the full Supabase session JSON written to Keychain under `sb-aijzsmupaaaxjctfgwpl-auth-token` (~2364 bytes for an Apple session; email-only was ~1898 and under the ceiling). Access JWT ~782–1199 bytes, refresh token 12 bytes — both fit. Adapter now keeps tokens in SecureStore (`ato.auth.access_token` / `ato.auth.refresh_token`) and the rest of the session in AsyncStorage; leftover oversized Keychain items migrate on next read. Verified: `npm run check:auth-storage` 6/6. Native Metro sign-in not reproduced here (Windows host, SecureStore is iOS/Android only).
+- **Font/spacing consistency pass** — no new theme file; used existing `Spacing` + `ThemedText` types. Circle names 17→18 (match You), Unfriend 13→14 (`smallBold`), Sign out 16→14 (`smallBold` like other full-width buttons), inline errors `small`+600 → `smallBold`, Circle lede dropped cramped lineHeight 18 (match Home/Sage default), Sage message list bottom inset aligned to other tabs (`BottomTabInset + Spacing.four`).
 
 ## Left
 - Stage 8 item 5 loose ends (not blockers for the sweep, but open before public/App Store submission):
@@ -49,7 +50,6 @@ Stage 8 (TestFlight) — sequencing as tight handoffs:
 
 ## Backlog (Stage 8 — polish pass, before TestFlight)
 - Fantasy UI Borders pack (Kenney) — UI chrome/panels/buttons
-- Universal font/spacing consistency pass
 - Monster Builder Pack — parked, needs eyes/mouth slots added to recipe before usable
 - Make show_up / knocks_you_off / morning_cue editable in Settings, not just talk_style
 - Revisit onboarding question wording if it still feels off after a fresh look

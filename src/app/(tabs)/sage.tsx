@@ -335,7 +335,7 @@ export default function SageScreen() {
                 </View>
               ) : null}
               {error ? (
-                <ThemedText type="small" style={[styles.error, { color: '#E5484D' }]}>
+                <ThemedText type="smallBold" style={[styles.error, { color: '#E5484D' }]}>
                   {error}
                 </ThemedText>
               ) : null}
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
   messages: {
     gap: Spacing.two,
     paddingVertical: Spacing.two,
-    paddingBottom: BottomTabInset + Spacing.three,
+    paddingBottom: BottomTabInset + Spacing.four,
   },
   bubble: {
     maxWidth: '85%',
@@ -510,7 +510,6 @@ const styles = StyleSheet.create({
   },
   error: {
     alignSelf: 'center',
-    fontWeight: 600,
   },
   composer: {
     paddingTop: Spacing.two,

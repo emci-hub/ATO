@@ -226,7 +226,7 @@ export default function AuthScreen() {
                   />
 
                   {error ? (
-                    <ThemedText type="small" style={[styles.error, { color: '#E5484D' }]}>
+                    <ThemedText type="smallBold" style={{ color: '#E5484D' }}>
                       {error}
                     </ThemedText>
                   ) : null}
@@ -307,7 +307,7 @@ export default function AuthScreen() {
                   />
 
                   {error ? (
-                    <ThemedText type="small" style={[styles.error, { color: '#E5484D' }]}>
+                    <ThemedText type="smallBold" style={{ color: '#E5484D' }}>
                       {error}
                     </ThemedText>
                   ) : null}
@@ -395,9 +395,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#ffffff',
-  },
-  error: {
-    fontWeight: 600,
   },
   codeLinks: {
     flexDirection: 'row',

@@ -377,7 +377,7 @@ export default function OnboardingScreen() {
             </Field>
 
             {formError ? (
-              <ThemedText type="small" style={[styles.formError, { color: '#E5484D' }]}>
+              <ThemedText type="smallBold" style={{ color: '#E5484D' }}>
                 {formError}
               </ThemedText>
             ) : null}
@@ -430,7 +430,7 @@ function Field({
         </ThemedText>
       ) : null}
       {error ? (
-        <ThemedText type="small" style={[styles.error, { color: '#E5484D' }]}>
+        <ThemedText type="smallBold" style={{ color: '#E5484D' }}>
           {error}
         </ThemedText>
       ) : null}
@@ -508,12 +508,6 @@ const styles = StyleSheet.create({
   },
   hint: {
     lineHeight: 18,
-  },
-  error: {
-    fontWeight: 600,
-  },
-  formError: {
-    fontWeight: 600,
   },
   submitButton: {
     borderRadius: Spacing.three,

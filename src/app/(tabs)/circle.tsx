@@ -94,7 +94,7 @@ export default function CircleScreen() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <ThemedText type="subtitle">Circle</ThemedText>
-          <ThemedText themeColor="textSecondary" style={styles.lede}>
+          <ThemedText themeColor="textSecondary">
             People who scanned your ATO. Their honest card, their real face.
           </ThemedText>
         </View>
@@ -262,7 +262,7 @@ function PeerCard({
             Unfriend {me.name}? You&apos;ll need to scan their QR again to reconnect.
           </ThemedText>
           {error ? (
-            <ThemedText type="small" style={[styles.errorText, { color: '#E5484D' }]}>
+            <ThemedText type="smallBold" style={[styles.errorText, { color: '#E5484D' }]}>
               {error}
             </ThemedText>
           ) : null}
@@ -302,7 +302,7 @@ function PeerCard({
             { borderColor: theme.backgroundSelected },
             pressed && styles.pressed,
           ]}>
-          <ThemedText type="smallBold" style={[styles.unfriendText, { color: '#E5484D' }]}>
+          <ThemedText type="smallBold" style={{ color: '#E5484D' }}>
             Unfriend
           </ThemedText>
         </Pressable>
@@ -356,9 +356,6 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.four,
     paddingBottom: Spacing.two,
   },
-  lede: {
-    lineHeight: 18,
-  },
   emptyCard: {
     borderRadius: Spacing.four,
     padding: Spacing.four,
@@ -394,7 +391,7 @@ const styles = StyleSheet.create({
     gap: Spacing.half,
   },
   nameText: {
-    fontSize: 17,
+    fontSize: 18,
   },
   moreButton: {
     padding: Spacing.one,
@@ -434,9 +431,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.one,
-  },
-  unfriendText: {
-    fontSize: 13,
   },
   confirmBox: {
     borderRadius: Spacing.three,

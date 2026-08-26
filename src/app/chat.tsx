@@ -260,7 +260,7 @@ export default function ChatScreen() {
         </View>
 
         {error ? (
-          <ThemedText type="small" style={[styles.error, { color: '#E5484D' }]}>
+            <ThemedText type="smallBold" style={[styles.error, { color: '#E5484D' }]}>
             {error}
           </ThemedText>
         ) : null}
@@ -556,7 +556,6 @@ const styles = StyleSheet.create({
   },
   error: {
     alignSelf: 'center',
-    fontWeight: 600,
     marginBottom: Spacing.one,
   },
   messages: {

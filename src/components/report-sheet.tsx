@@ -106,7 +106,7 @@ export function ReportSheet({ visible, target, title, onClose }: ReportSheetProp
                   ]}
                 />
                 {error ? (
-                  <ThemedText type="small" style={[styles.error, { color: '#E5484D' }]}>
+                  <ThemedText type="smallBold" style={[styles.error, { color: '#E5484D' }]}>
                     {error}
                   </ThemedText>
                 ) : null}
@@ -163,7 +163,7 @@ export function ReportSheet({ visible, target, title, onClose }: ReportSheetProp
                   </Pressable>
                 ))}
                 {error ? (
-                  <ThemedText type="small" style={[styles.error, { color: '#E5484D' }]}>
+                  <ThemedText type="smallBold" style={[styles.error, { color: '#E5484D' }]}>
                     {error}
                   </ThemedText>
                 ) : null}
@@ -251,7 +251,6 @@ const styles = StyleSheet.create({
   },
   error: {
     textAlign: 'center',
-    fontWeight: 600,
   },
   pressed: {
     opacity: 0.8,

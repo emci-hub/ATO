@@ -271,7 +271,7 @@ export default function YouScreen() {
               pressed && styles.pressed,
               signingOut && styles.disabled,
             ]}>
-            <ThemedText type="smallBold" style={[styles.signOutText, { color: '#E5484D' }]}>
+            <ThemedText type="smallBold" style={{ color: '#E5484D' }}>
               {signingOut ? 'Signing out…' : 'Sign out'}
             </ThemedText>
           </Pressable>
@@ -443,9 +443,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingVertical: Spacing.three,
     alignItems: 'center',
-  },
-  signOutText: {
-    fontSize: 16,
   },
   deleteLink: {
     alignItems: 'center',
