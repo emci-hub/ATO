@@ -15,6 +15,7 @@ import { checksToHistory, fetchChecks, recordCheck, type Check } from '@/lib/che
 import { emitChecksChanged } from '@/lib/checks-events';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { aiConsentFor, setAiConsent } from '@/lib/me';
+import { persistRoutedCard } from '@/lib/today-card';
 import { routeVoiceCard } from '@/lib/voice/router';
 import type { VoiceCardResult } from '@/lib/voice/types';
 
@@ -89,7 +90,11 @@ export default function DawnScreen() {
       aiConsent: me.ai_consent,
     })
       .then((next) => {
-        if (!cancelled) setResult(next);
+        if (cancelled) return;
+        setResult(next);
+        persistRoutedCard(next).catch((err) => {
+          console.log('[dawn] persistRoutedCard error:', err);
+        });
       })
       .catch((err) => {
         if (!cancelled) {

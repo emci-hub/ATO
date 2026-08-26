@@ -10,7 +10,11 @@
     "ios": {
       "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.emgens.ato",
+      "appleTeamId": "Q2UF7F6N36",
       "usesAppleSignIn": true,
+      "entitlements": {
+        "com.apple.security.application-groups": ["group.com.emgens.ato"]
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -33,6 +37,15 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-notifications",
+        {
+          "color": "#208AEF",
+          "defaultChannel": "ato-default",
+          "enableBackgroundRemoteNotifications": false
+        }
+      ],
+      "@bacons/apple-targets",
       [
         "expo-splash-screen",
         {

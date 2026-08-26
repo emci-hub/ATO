@@ -9,7 +9,7 @@
 Stage 8 (TestFlight) — sequencing as tight handoffs rather than one big box:
 1. ✅ **Apple Sign-In + delete-account/token revoke — DONE, verified on real device.** Real Sign in with Apple confirmed working end-to-end (App ID `com.emgens.ato`, Services ID `com.emgens.ato.signin`, EAS dev-client build on real iPhone). Delete-account confirmed both ways: ME row genuinely gone from Supabase, and `confirmRevoked()` returned true (real Apple token revocation, not just a 200 response) after the four Edge Function secrets were correctly set. Session-validation bug found and fixed along the way (stale local session after server-side delete → now force-signs-out locally with a "Wrong account? Sign out" escape hatch on onboarding).
 2. ✅ **Invite/referral gate (Auth + ME) — DONE.** `signup_mode` defaults to `invite_only`. Invite-only signup rejects missing/used/invalid codes (atomic consume). Seeded tree emci → A → B, C: `pause_branch(A)` takes down A+B+C without touching emci; `pause_branch(B)` does not walk up to A or over to sibling C. Flipping `signup_mode` to `public` allows signup with no code. `unpause_branch` reverses a pause; `delete_branch` hard-deletes a paused cluster. Privacy line added.
-3. Push notifications + widget (Read/Do/Check/Sunday recap, deep links)
+3. ✅ **Push notifications + widget — DONE.** Morning = the day's Read → Home. Evening = "Check today" → Home (`/?focus=check`). Sunday = this-week recap + "you showed up N" (N = checks in the recap week, not all-time) → `/week`. Permission is asked exactly once, only after `check_count >= 1`, never at onboarding; a "no" is stored and never re-prompted, and the rest of the app is unchanged. Widget shows the same Read + Do Home uses (honest empty if none yet) and reloads when Dawn generates a new card. Tap opens Home. `npx tsx scripts/push-check.ts` 11/11. **Needs a new native EAS build** (notifications + WidgetKit + App Group `group.com.emgens.ato`) before it can be confirmed on a home screen.
 4. Floor requirements sweep — Sentry, privacy labels, PrivacyInfo.xcprivacy, "coach" labeling, rate limiting
 5. Legal + landing copy — drafted here directly, not a Cursor job
 6. EAS build → TestFlight submission
@@ -28,6 +28,7 @@ Stage 8 (TestFlight) — sequencing as tight handoffs rather than one big box:
 - Stage 6 (Share + Circle) — built + verified per plan done-bar
 - Stage 7 (Chat + Report) — built + verified per plan done-bar; `master` in sync, both commits pushed
 - Stage 8 handoff #2 (Invite/referral) — built + verified: invite-only rejects missing/used/invalid codes; pause_branch on a seeded you→A→B,C tree takes down B/C (and A, the named user) without touching emci; public flip allows no-code signup; `npx tsx scripts/invite-check.ts` 7/7 client checks pass
+- Stage 8 handoff #3 (Push + widget) — built: morning/evening/Sunday copy + deep links, once-only permission after first Check, Home + widget share today's Read/Do, honest empty widget, `npx tsx scripts/push-check.ts` 11/11. Device confirmation (permission dialog, widget on home screen, tap-through) waits on the next EAS native build.
 
 ## Left
 Stage 8 (TestFlight) — see sequenced list under On
@@ -76,4 +77,4 @@ Early on there's not much data on someone yet. Games give tokens; tokens unlock 
 - **Gap surfaced during age-rating research:** plan says age is self-reported at onboarding, but Stage 2 has no literal age question — close in Stage 8 floor-requirements sweep (item 4).
 
 ## Next 15 min
-Stage 8 handoff #3: push notifications + widget (Read/Do/Check/Sunday recap, deep links). Invite/referral gate is live — `signup_mode` is `invite_only`. Your 4 invite codes are on the You tab. Query `pause_branch` / `unpause_branch` / `delete_branch` in the Supabase SQL editor (no admin UI).
+Stage 8 handoff #4: floor-requirements sweep (Sentry, privacy labels, PrivacyInfo.xcprivacy, "coach" labeling, rate limiting). Push + widget is in the JS; confirm it on-device after the next EAS build — You tab has Morning / Evening / Sunday test fires once notifications are allowed. If EAS complains about App Groups, create `group.com.emgens.ato` on App ID `com.emgens.ato` in Apple Developer.

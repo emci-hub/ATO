@@ -1,6 +1,7 @@
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 import { PixelFace } from '@/components/pixel-face';
 import { ThemedText } from '@/components/themed-text';
@@ -8,16 +9,85 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useMe } from '@/hooks/use-me';
+import { useTodayCard } from '@/hooks/use-today-card';
 import { accentFromShowUp } from '@/lib/color';
+import { checksToHistory, fetchChecks, recordCheck, type Check } from '@/lib/checks';
+import { emitChecksChanged, onChecksChanged } from '@/lib/checks-events';
+import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { normalizeRecipe } from '@/lib/kenney/registry';
+import { aiConsentFor } from '@/lib/me';
+import { persistRoutedCard } from '@/lib/today-card';
+import { routeVoiceCard } from '@/lib/voice/router';
 import { useSession } from '@/hooks/use-session';
 
 export default function HomeScreen() {
   const theme = useTheme();
   const { session } = useSession();
-  const { me } = useMe(session?.user.id);
+  const userId = session?.user.id;
+  const { me } = useMe(userId);
+  const { card, reload: reloadCard } = useTodayCard();
   const accent = accentFromShowUp(me?.show_up);
   const recipe = normalizeRecipe(me?.recipe);
+  const params = useLocalSearchParams<{ focus?: string }>();
+  const [checks, setChecks] = useState<Check[]>([]);
+  const [busy, setBusy] = useState<'log' | 'skip' | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const reloadChecks = useCallback(async () => {
+    if (!userId) return;
+    try {
+      setChecks(await fetchChecks(userId));
+    } catch (err) {
+      console.log('[home] fetchChecks error:', err);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    reloadChecks();
+    return onChecksChanged(() => {
+      reloadChecks();
+    });
+  }, [reloadChecks]);
+
+  const alreadyLogged = card != null && checks.some((check) => check.day === card.day);
+
+  async function log(status: 'done' | 'skipped') {
+    if (!userId || !me || !card || busy || alreadyLogged) return;
+    setBusy(status === 'done' ? 'log' : 'skip');
+    setError(null);
+    try {
+      await recordCheck(userId, {
+        day: card.day,
+        card: { read: card.read, do: card.do },
+        source: card.source,
+        status,
+      });
+      const nextChecks = await fetchChecks(userId);
+      setChecks(nextChecks);
+      emitChecksChanged();
+      if (status === 'done') triggerGesture('checkDone');
+      const next = await routeVoiceCard({
+        me: {
+          name: me.name,
+          show_up: me.show_up,
+          talk_style: me.talk_style,
+          knocks_you_off: me.knocks_you_off,
+          morning_cue: me.morning_cue,
+        },
+        checkCount: nextChecks.length,
+        history: checksToHistory(nextChecks),
+        crisisToday: false,
+        aiConsent: me.ai_consent,
+      });
+      await persistRoutedCard(next);
+      await reloadCard();
+    } catch (err) {
+      console.log('[home] recordCheck error:', err);
+      setError('Couldn\u2019t save your check. Try again.');
+    } finally {
+      setBusy(null);
+    }
+  }
 
   return (
     <ThemedView style={styles.container}>
@@ -27,8 +97,79 @@ export default function HomeScreen() {
           contentInsetAdjustmentBehavior="automatic">
           <View style={styles.header}>
             <ThemedText type="subtitle">Home</ThemedText>
-            <ThemedText themeColor="textSecondary">Fake card. Fake poster.</ThemedText>
+            <ThemedText themeColor="textSecondary">
+              {params.focus === 'check' ? 'Check today.' : 'Today\u2019s Read and Do.'}
+            </ThemedText>
           </View>
+
+          {card ? (
+            <>
+              <ThemedView type="backgroundElement" style={styles.todayCard}>
+                <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
+                  read
+                </ThemedText>
+                <ThemedText style={styles.cardText}>{card.read}</ThemedText>
+              </ThemedView>
+              <ThemedView type="backgroundElement" style={styles.todayCard}>
+                <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
+                  do
+                </ThemedText>
+                <ThemedText style={styles.cardText}>{card.do}</ThemedText>
+              </ThemedView>
+              {error ? (
+                <ThemedText themeColor="textSecondary">{error}</ThemedText>
+              ) : null}
+              {alreadyLogged ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  Logged for day {card.day}.
+                </ThemedText>
+              ) : me && aiConsentFor(me) === 'pending' && checks.length >= 3 ? (
+                <Pressable
+                  onPress={() => router.push('/dawn')}
+                  style={({ pressed }) => [pressed && styles.pressed]}>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Open Dawn to continue.
+                  </ThemedText>
+                </Pressable>
+              ) : (
+                <View style={styles.checkRow}>
+                  <Pressable
+                    onPress={() => log('done')}
+                    disabled={busy !== null}
+                    style={({ pressed }) => [
+                      styles.primaryButton,
+                      { backgroundColor: '#3c87f7' },
+                      pressed && styles.pressed,
+                      busy !== null && styles.disabled,
+                    ]}>
+                    <ThemedText type="smallBold" style={styles.primaryText}>
+                      {busy === 'log' ? 'Saving\u2026' : 'Logged it'}
+                    </ThemedText>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => log('skipped')}
+                    disabled={busy !== null}
+                    style={({ pressed }) => [
+                      styles.secondaryButton,
+                      { borderColor: theme.backgroundSelected },
+                      pressed && styles.pressed,
+                      busy !== null && styles.disabled,
+                    ]}>
+                    <ThemedText type="smallBold" themeColor="textSecondary">
+                      {busy === 'skip' ? 'Saving\u2026' : 'Skip today'}
+                    </ThemedText>
+                  </Pressable>
+                </View>
+              )}
+            </>
+          ) : (
+            <ThemedView type="backgroundElement" style={styles.todayCard}>
+              <ThemedText type="smallBold">No card yet</ThemedText>
+              <ThemedText themeColor="textSecondary">
+                Open Dawn when you&apos;re ready. Nothing is made up in the meantime.
+              </ThemedText>
+            </ThemedView>
+          )}
 
           <ThemedView type="backgroundElement" style={styles.faceCard}>
             <ThemedText type="code" themeColor="textSecondary">
@@ -50,6 +191,17 @@ export default function HomeScreen() {
                 <ThemedText type="smallBold">Dawn</ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
                   Today&apos;s read + do
+                </ThemedText>
+              </View>
+              <ThemedText themeColor="textSecondary">›</ThemedText>
+            </Pressable>
+            <Pressable
+              onPress={() => router.push('/week')}
+              style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
+              <View style={styles.boxRowText}>
+                <ThemedText type="smallBold">This week</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Recap + you showed up
                 </ThemedText>
               </View>
               <ThemedText themeColor="textSecondary">›</ThemedText>
@@ -169,6 +321,37 @@ const styles = StyleSheet.create({
   header: {
     gap: Spacing.half,
     paddingBottom: Spacing.two,
+  },
+  todayCard: {
+    borderRadius: Spacing.four,
+    padding: Spacing.four,
+    gap: Spacing.two,
+  },
+  kicker: {
+    textTransform: 'uppercase',
+  },
+  cardText: {
+    lineHeight: 26,
+  },
+  checkRow: {
+    gap: Spacing.two,
+  },
+  primaryButton: {
+    borderRadius: Spacing.three,
+    paddingVertical: Spacing.three,
+    alignItems: 'center',
+  },
+  primaryText: {
+    color: '#ffffff',
+  },
+  secondaryButton: {
+    borderRadius: Spacing.three,
+    borderWidth: 1,
+    paddingVertical: Spacing.three,
+    alignItems: 'center',
+  },
+  disabled: {
+    opacity: 0.6,
   },
   faceCard: {
     borderRadius: Spacing.four,

@@ -4,7 +4,7 @@
 **Twin:** Drake
 
 ## This week
-Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–7 done and on-device verified. Stage 8 handoff #1 (**Apple Sign-In + delete-account/token revoke**) **DONE and verified on a real device** — `confirmRevoked()` returned true. Stage 8 handoff #2 (**invite/referral gate**) **DONE** — invite-only default, atomic consume, pause/delete_branch verified. Next: push notifications + widget. Understanding / Intake spec designed (plan packets list `intake`), parked as its own future box after Stage 8 wraps.
+Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–7 done and on-device verified. Stage 8 handoff #1 (**Apple Sign-In + delete-account/token revoke**) **DONE and verified on a real device** — `confirmRevoked()` returned true. Stage 8 handoff #2 (**invite/referral gate**) **DONE**. Stage 8 handoff #3 (**push + widget**) **DONE in JS** (`npx tsx scripts/push-check.ts` 11/11); on-device widget/permission confirmation waits on the next EAS native build (App Group `group.com.emgens.ato`). Next: floor-requirements sweep. Understanding / Intake spec designed (plan packets list `intake`), parked as its own future box after Stage 8 wraps.
 
 ## App
 - **Category:** Hybrid — AI-native (Sage/router) + Social (Circle/Chat) + Health/finance/kids (crisis spec, coaching tone)
@@ -17,7 +17,7 @@ Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–7 done and on-device 
 
 ## Roster
 - Assistant (Drake) — active
-- Builder (Cursor) — active, Stages 1–7 + Stage 8 Apple handoff + invite/referral gate shipped; owns docs/ME.md, docs/NOW.md, docs/ATO_PLAN_v2.md, and docs/BUSINESS.md. Updates to any of those four are committed **and pushed** together — never left local-only.
+- Builder (Cursor) — active, Stages 1–7 + Stage 8 Apple handoff + invite/referral + push/widget shipped; owns docs/ME.md, docs/NOW.md, docs/ATO_PLAN_v2.md, and docs/BUSINESS.md. Updates to any of those four are committed **and pushed** together — never left local-only.
 
 ## Live AI + model
 - Cursor, `deepseek-v4-flash` (default volume) — crisis/safety-critical work always routes to Claude Opus 5 (fixed lane), regardless of Home/Away

@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DeleteAccountSheet } from '@/components/delete-account-sheet';
 import { ScanSheet } from '@/components/scan-sheet';
 import { SharePoster } from '@/components/share-poster';
+import { PushTestCard } from '@/components/push-test-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -194,6 +195,8 @@ export default function YouScreen() {
                 <DetailRow label="Morning cue" value={me.morning_cue} />
                 <DetailRow label="Timezone" value={me.timezone} />
               </ThemedView>
+
+              <PushTestCard />
 
               <ThemedView type="backgroundElement" style={styles.detailCard}>
                 <ThemedText type="smallBold" style={styles.inviteHeading}>

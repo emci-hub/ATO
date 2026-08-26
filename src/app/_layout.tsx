@@ -4,6 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { PushRuntime } from '@/components/push-runtime';
 import { useTheme } from '@/hooks/use-theme';
 import { MeProvider, useMeContext } from '@/lib/me-context';
 import { useSession } from '@/hooks/use-session';
@@ -37,21 +38,25 @@ function RootNavigator() {
       {resolving ? (
         <View style={[styles.blank, { backgroundColor: theme.background }]} />
       ) : (
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Protected guard={!isAuthed}>
-            <Stack.Screen name="auth" />
-          </Stack.Protected>
+        <>
+          {isAuthed && hasMe ? <PushRuntime /> : null}
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Protected guard={!isAuthed}>
+              <Stack.Screen name="auth" />
+            </Stack.Protected>
 
-          <Stack.Protected guard={isAuthed && !hasMe}>
-            <Stack.Screen name="onboarding" />
-          </Stack.Protected>
+            <Stack.Protected guard={isAuthed && !hasMe}>
+              <Stack.Screen name="onboarding" />
+            </Stack.Protected>
 
-          <Stack.Protected guard={isAuthed && hasMe}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="dawn" />
-            <Stack.Screen name="chat" />
-          </Stack.Protected>
-        </Stack>
+            <Stack.Protected guard={isAuthed && hasMe}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="dawn" />
+              <Stack.Screen name="week" />
+              <Stack.Screen name="chat" />
+            </Stack.Protected>
+          </Stack>
+        </>
       )}
     </>
   );
