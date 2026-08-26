@@ -304,7 +304,7 @@ Chat opens only from a Circle card — never build a chat inbox that can be empt
 
 ### 8 TestFlight
 **Open box: polish, push, legal, EAS, landing.**
-Widget = Read + Do. Morning push = Read. Evening push = Check today. Sunday push = `this_week` recap + "you showed up N." Deep links from push into the right screen. **Push + widget is built and device-verified** (local morning/evening/Sunday, iOS WidgetKit Read+Do, App Group `group.com.emgens.ato`). **Floor requirements in this box are built:** Sentry wired, App Privacy nutrition labels + `PrivacyInfo.xcprivacy` filled and cross-checked, Sage labeled coach in the UI, router Talk path rate-limited per user server-side. Remaining in this box: legal/landing (not Cursor), then TestFlight submit.
+Widget = Read + Do. Morning push = Read. Evening push = Check today. Sunday push = `this_week` recap + "you showed up N." Deep links from push into the right screen. **Push + widget is built and device-verified** (local morning/evening/Sunday, iOS WidgetKit Read+Do, App Group `group.com.emgens.ato`). **Floor requirements in this box are built** (pushed `f244a03`): Sentry wired, App Privacy nutrition labels + `PrivacyInfo.xcprivacy` filled and cross-checked, Sage labeled coach in the UI, router Talk path rate-limited per user server-side. Sentry DSN is emci's to connect (not a Cursor job). Remaining in this box: legal/landing (not Cursor), then TestFlight submit.
 Delete account **in-app** + revoke Sign in with Apple token. Ask about notifications once, after the user's first card exists — app works fully if they say no.
 Landing page: ATO name, "What's your ATO?" tagline, working support email, privacy policy, terms, © AsTrollOGs, Kenney asset credits. Same footer on the You tab.
 Apple Sign In: hide-my-email maps to exactly one user, no fork. Bundle ID `com.emgens.ato` (App ID) / `com.emgens.ato.signin` (Services ID). Edge Function `APPLE_CLIENT_ID` for native code exchange must be the **bundle ID** (`com.emgens.ato`), not the Services ID.
@@ -348,6 +348,8 @@ TestFlight ≠ public. TestFlight already gates installs via Apple's own tester 
 - [ ] Privacy policy + terms finalized (lawyer pass on the crisis disclaimer specifically — already flagged as outstanding in the Crisis spec).
 - [ ] App Store Connect tax/banking info filled out (required before a public listing can go live, separate from the developer account itself).
 - [ ] All Wave 1 TestFlight floor requirements still hold at public scale (rate limiting, Sentry, privacy labels) — a bigger user base stresses these differently than a friends-only test group did.
+- [ ] Sentry DSN connected (`EXPO_PUBLIC_SENTRY_DSN` in `.env.local` and EAS) and a test JS error confirmed in Issues. Wired in handoff #4; dashboard landing is emci's.
+- [ ] Gemini API key moved off the client (Edge Function) so a patched client cannot skip `claim_ai_call()` and hit Gemini directly. Not a TestFlight blocker; required before flipping `signup_mode` to `public`.
 
 **Done:** every box above checked, not assumed. This list gets reviewed once, deliberately — not folded silently into a Cursor handoff.
 
