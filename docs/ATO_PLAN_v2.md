@@ -331,6 +331,44 @@ You + friends, one real week, real devices. Home stayed new day to day. Dos were
 
 ---
 
+## Wave 1.5 — Understanding & Delight (Stages 9-14, after Wave 1 Gate)
+
+Not blocked on public App Store readiness — can build during friends-only TestFlight testing. Full spec detail lives in "Understanding spec" above; this section is sequencing only.
+
+### 9 Intake core
+**Open box: intake, me.**
+Schema + UI for the 9 required tappable onboarding fields (talk_style, show_up, knocks_you_off, morning_cue, evening wind-down, energy pattern, recovery style, support style, current focus). Replaces the 3 existing free-text fields. Self-report only, translates into the trait-backbone structure per Understanding spec.
+**Done:** all 9 fields save to ME, one question per screen with progress indicator, no raw psychological labels shown publicly.
+
+### 10 Day 1 payoff
+**Open box: intake, dawn.**
+Wire new answers into check_count < 3 bank-card selection — real morning_cue phrase inserted into if-then Do text, card selection driven by energy-pattern/support-style instead of fixed sequence. No live model call needed.
+**Done:** two different onboarding answer sets produce visibly different Day 1 card content from the same bank file.
+
+### 11 Optional fast-entry
+**Open box: intake.**
+Skippable MBTI/Big Five/attachment/conflict-style layer, up to 4 extra questions, fully optional. All translate into the same backbone fields as core intake — no raw diagnostic labels stored.
+**Done:** a user can complete onboarding fully skipping this section with no broken state; a user who fills it in produces the same backbone field shape as one who didn't.
+
+### 12 Sage's coaching content
+**Open box: talk, router.**
+Ground Sage's system prompt in Gottman conflict/repair research and NVC's four-part structure. Prompt-engineering only, not new data collection. Sequenced after Stage 9 so Sage has real trait data to calibrate against.
+**Done:** Sage's Talk responses reflect grounded communication-framework language on a test conflict-scenario prompt, verified by a human read, not just an automated check.
+
+### 13 Delight mechanics (single-player)
+**Open box: intake, dawn.**
+Reveal card (real content only, no randomized-value mechanic), milestone badges, "Does Sage know you?" active-learning loop, forced-ranking sort, scenario reaction cards with light time pressure.
+**Done:** each mechanic ships with real trait/fact data behind it, not placeholder content; no randomized-outcome mechanic exists anywhere in this box.
+
+### 14 Multiplayer (friend-guessing)
+**Open box: circle, intake.**
+"Guess how your friend answered" — Circle-dependent, two-account testing surface.
+**Done:** two connected Circle accounts can complete a guess-round and see accuracy compared.
+
+Not in this sequence: AI capacity hardening (multi-provider fallback + quota) stays a separate public-launch backlog item, not part of Wave 1.5.
+
+---
+
 ## Public App Store readiness (do before flipping `signup_mode` to `public` / submitting for public review)
 
 TestFlight ≠ public. TestFlight already gates installs via Apple's own tester list — none of this blocks Stage 8 or the TestFlight gate above. This checklist is the bar for the *next* step: open App Store listing, anyone can download.

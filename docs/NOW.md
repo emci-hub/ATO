@@ -14,6 +14,8 @@ Stage 8 (TestFlight) — sequencing as tight handoffs:
 5. Legal + landing copy — privacy.md/terms.md drafted in Claude, committed to `app/legal/` (`57abf5e`); landing page live at `ato.emgens.com`. Remaining public-launch items (ASC privacy-label paste, `support@asstrollogs.com` inbox, lawyer pass) are parked below — **do not start until public launch is imminent.**
 6. ✅ **EAS build → TestFlight — done.** Build 6 shipped, installed on a real device. Beta App Review submitted for the Friends external testing group — **pending as of Aug 26, 2026.**
 
+Once Stage 8's remaining four floor-verification items close (build 7: app icon swap, age-field rollout, Sentry source-map confirmation; plus Friends Beta App Review), **Stage 9 (intake core)** is next up. Wave 1.5 (Stages 9–14, Understanding & Delight) is sequenced in ATO_PLAN_v2.md after the Wave 1 Gate; not blocked on public App Store readiness. AI capacity hardening stays a separate public-launch backlog item, not Wave 1.5.
+
 ## Done
 - Stage 1 (Home shell) — screenshot verified: 3 tabs (Home, Sage, You), no Circle tab, fake card, fake poster
 - Stage 2 (Sign-in + ME + Theme) — fully verified
@@ -61,7 +63,7 @@ These are real, but they are not TestFlight work and they are not next. Leave th
 - Make show_up / knocks_you_off / morning_cue editable in Settings, not just talk_style
 - Revisit onboarding question wording if it still feels off after a fresh look
 - Crisis: relational-safety/abuse category, own resource number, parked separately
-- **Understanding spec** (see ATO_PLAN_v2.md → Understanding spec) — own future box (`intake`), sequenced after Stage 8 wraps
+- **Wave 1.5 (Stages 9–14)** — sequenced in ATO_PLAN_v2.md after the Wave 1 Gate. Stage 9 (intake core) is next up once Stage 8's four floor-verification items close. Spec detail stays in Understanding spec; this is sequencing only.
 - **AI capacity hardening** — close the client-embedded-key bypass noted above before public launch (server-side proxy or equivalent), fold into public-readiness checklist rather than TestFlight
 - Slack — parked as future ops tooling, bring up again if/when the app scales
 
@@ -75,4 +77,4 @@ These are real, but they are not TestFlight work and they are not next. Leave th
 - Landing page live at `ato.emgens.com` — social handle decided as `@whatsyourato` (primary), fallback `emgensato`/`atoapp`/`heyato` per-platform if taken. Not yet confirmed reserved on any platform.
 
 ## Next 15 min
-Waiting on Apple: Beta App Review for the Friends external testing group (build 6). Do not start public-release items. Next binary is **build 7** (not yet cut): app icon swap, age-field rollout, confirm Sentry source maps landed.
+Waiting on Apple: Beta App Review for the Friends external testing group (build 6). Do not start public-release items. Next binary is **build 7** (not yet cut): app icon swap, age-field rollout, confirm Sentry source maps landed. Once those four Stage 8 floor-verification items close, **Stage 9 (intake core)** is next.
