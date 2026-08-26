@@ -160,6 +160,96 @@ Minimal, not a dashboard:
 
 ---
 
+## Understanding spec (new — designed post-Wave-1, own future box, not part of Stage 8)
+
+**Purpose:** replace the current 3 vague free-text fields (`show_up`, `knocks_you_off`, `morning_cue`) with a tighter, tappable intake that genuinely drives personalization — and give Sage a real trait backbone to calibrate tone and coaching against, instead of just `talk_style` alone.
+
+**Why now, scoped separately from Stage 8:** this is a real schema + UI + Sage-prompting change, not a wording tweak. Doesn't block TestFlight. Sequence as its own box after Stage 8 wraps.
+
+### The trait backbone
+
+Big Five (OCEAN) is the scientific backbone — of every framework considered, it has the strongest test-retest reliability, the broadest cross-cultural validation, and the only one with real predictive validity for relationship outcomes. MBTI and attachment style aren't redundant with it, though — they fill it in through different, faster doors:
+
+- **MBTI → OCEAN**, when known (published correlations, McCrae & Costa 1989): Introversion↔Extraversion (r=-0.74), Intuition↔Openness (r=0.72), Feeling↔Agreeableness (r=0.44), Perceiving↔Conscientiousness (r=-0.49). **MBTI has no Neuroticism equivalent — this is a known, real gap.**
+- **Attachment style fills that exact gap.** Anxious attachment tracks closely with high Neuroticism; avoidant attachment tracks with lower Extraversion/Agreeableness. Also adds relationship-specific behavioral nuance beyond trait level.
+- **Conflict style** (collaborative / compromising / competitive / avoidant / accommodating) adds situational specificity for disagreement scenarios — the actual "help me talk to my coworker" use case.
+
+None of these get stored as raw labels. Every path — MBTI tap, attachment tap, conflict-style tap, or the plain-language guided questions — translates into the same underlying trait structure. A person who types nothing technical and one who taps "INFJ" end up feeding the same fields.
+
+**Data sources — free, public domain, no licensing needed:**
+- **IPIP** (International Personality Item Pool, Oregon Research Institute) — the public-domain item bank most Big Five tools are quietly built on.
+- **TIPI** (Ten-Item Personality Inventory) — the standard short-form Big Five measure, ~10 items, ~1 minute, free and validated. Use this, not the 120/300-item research versions.
+- **ECR** (Experiences in Close Relationships) — standard free instrument for attachment style.
+- Open-source scoring implementations already exist (IPIP-NEO Python libraries on GitHub) — reference/adapt rather than build scoring math from scratch.
+- No paid API needed for v1. (Sentino exists as a paid commercial option covering IPIP/MBTI/DISC via one API call, noted for later if ever wanted — not required.)
+
+### Intake structure
+
+**Required (unchanged):** name, handle, timezone (auto, not asked).
+
+**Core tappable — 9 total, each chip-based, each feeding something real, each phrased in plain language with the "why" baked into the wording rather than a separate explainer:**
+1. `talk_style` (quiet/even/loud) — existing.
+2. `show_up` — chips (color-seed vibe).
+3. `knocks_you_off` — multi-select chips (sleep / workload / people/conflict / health / money / something else).
+4. `morning_cue` — chips, single concrete anchor, not a routine ("After I make coffee" not "what do you do every morning").
+5. Evening wind-down — same shape as morning_cue, times the evening Check push.
+6. Energy pattern — morning/afternoon/evening/night owl, times push notifications.
+7. Recovery style — what pulls you back when you're off track (movement/sleep/talking to someone/alone time/music).
+8. Support style — nudge to keep going / space to sit with it / someone to listen / a plan to fix it. Sharper signal than `talk_style` alone.
+9. Current focus — "right now you're mostly trying to..." (build a habit / get through something hard / feel more like yourself / just show up).
+
+**Optional fast-entry, fully skippable, for people who already know themselves — up to 4 more:** MBTI type (16-grid tap), or Big Five sliders if they know their scores, attachment style (secure/anxious/avoidant/fearful-avoidant), conflict style. All translate into the same backbone fields, none stored as raw diagnostic labels. "Love language" reframed platonic (not the romantic-coded original) as a lower-priority optional add — how someone feels a friend's "got their back," not literal Chapman categories, to stay consistent with ATO not being a dating graph.
+
+One question per screen, tappable, with a visible progress indicator ("3 of 9").
+
+### Day 1 payoff — the part that actually matters more than question count
+
+None of this delivers a "wow" unless Day 1's card visibly reflects it. Currently, `check_count < 3` shows fixed bank content (`first_cards.md`) regardless of onboarding answers. Fix required alongside the intake redesign: insert the person's own `morning_cue` phrase directly into the if-then Do text, and select which bank card shows based on energy-pattern/support-style answers rather than a fixed sequence. Still no live model call needed for `check_count < 3` — just templating/selection logic over the existing bank content.
+
+### Progressive depth — games, later, ties to the existing Wave 3 parking lot
+
+Extends the already-parked "games give tokens, tokens unlock refresh-about-themselves" idea (see Wave 3 idea parking lot below) — bring a lightweight version of it forward, tied to `check_count` milestones rather than waiting for full Wave 3:
+- **Single-player:** swipe-deck "this or that" through short scenario statements (forced-choice format, itself a legitimate psychometric technique); scenario cards ("someone snaps at you, what's your first instinct") feeding conflict-style/attachment signal without ever naming the framework.
+- **Multiplayer, once Circle exists:** "guess how your friend answered" — proven fun mechanic (Jackbox/Psych!-style), and genuinely more than fun: research shows peer-ratings often predict real-world behavior as well as or better than self-report. A second, more valid data source layered on top of self-report, only possible once friends are in the loop.
+
+### Sage's coaching content — separate work from the intake
+
+The trait backbone shapes *tone* (who Sage is talking to). The actual coaching quality — helping someone navigate a hard conversation with a colleague or family member — needs Sage's system prompt grounded in real, publicly-known communication frameworks: Gottman's conflict/repair research (specific complaints vs. criticism, repair attempts), Nonviolent Communication's four-part structure (observation → feeling → need → request). Not reproducing any copyrighted text — applying the concepts through prompting. This is prompt-engineering work, not a data-acquisition task, and is what actually delivers on "help them understand other people," not the intake alone.
+
+### Guardrails (non-negotiable, carries the same weight as the Crisis spec's review discipline)
+
+- Self-report only. Never framed as the app diagnosing or clinically assessing anyone.
+- Attachment style especially: treat as a soft, adjustable starting point, not a fixed lifetime label — attachment patterns are understood to shift over time, and later real behavior (Checks, valence, chat patterns) should be able to quietly refine the starting picture.
+- No raw psychological labels shown publicly, ever — consistent with the existing rule that only a derived color (not raw answer text) appears on the You tab poster.
+- Same extra-care review discipline that applies to the Crisis spec applies here before shipping — this touches real psychological categories, not just cosmetic personalization.
+- "MBTI" branding avoided in UI copy (trademarked by the Myers-Briggs Company) — use generic phrasing like "your type" or "16 personality types," same approach 16Personalities uses.
+
+**Where this fits:** own future box (`intake`, touching ME schema + Auth/onboarding UI + Sage prompting), sequenced after Stage 8 wraps. Add to NOW.md backlog now so it's tracked.
+
+### Delight & engagement mechanics (red-teamed this session)
+
+**The reveal mechanic — the actual "brain rot" answer, built honestly.** A daily/recurring reveal moment, visually satisfying to open (an unlock/tumble animation is fine), where the surprise is in *what* you get, never in *whether* it's worth anything. Every open delivers something real: a specific observation Sage noticed, a stored fact reflected back, a growth-tier milestone. **Explicitly rejected: a literal randomized-value mechanic (slot machine / loot box style) where outcomes vary in worth, including token-only versions with no real money attached.** Reasoning on record: (1) variable-ratio reinforcement — reward decoupled from real value, sometimes nothing — is the specific mechanism that makes gambling compulsive, not a metaphor for it; (2) Apple's App Store guidelines (3.1.1) require odds disclosure for randomized-reward mechanisms, and this category has drawn real legislative attention aimed at minors specifically (ATO's 16+ floor sits close to that population); (3) it would directly contradict the plan's own existing "no fake urgency, honest empty states" principle. The reveal mechanic keeps the excitement without the "sometimes empty" mechanism that causes the harm.
+
+**Badges** — fully fine, no reservation. Tied to real accomplished milestones (7 Checks, first "Teach Sage this" fact, a full week without a cut) — deterministic recognition of something that actually happened, not randomized chance. Different mechanism entirely from the rejected slot-machine idea.
+
+**Game mechanics — fun and useful as the same action, not fun wrapped around a form:**
+- **"Does Sage know you?"** — Sage guesses something about the user based on what it's learned so far, user confirms or corrects. Active-learning loop — corrections are higher-quality signal than static quiz answers, and this is the recurring, self-improving version of the "it gets me" payoff.
+- **Forced-ranking sort** — drag 4-5 short statements into order from "most me" to "least me." Legitimate ranking-format technique, satisfying drag interaction, surfaces relative preference better than isolated taps.
+- **Scenario reaction cards, light time pressure** — quick scenario, 3-4 tap options, mild timer. Gut reactions under light time pressure tend to be more revealing than slowly deliberated ones.
+- **Friend-guessing game (Circle, once it exists)** — real market precedent for this exact "who knows you best" category. A friend guesses how you'd answer, you see if they're right. Where self-report and a friend's guess *disagree* is often the most interesting signal of all — worth Sage noticing and reflecting back.
+
+### Honest-feedback delivery (valence/cut refinement)
+
+The app was never meant to be pure positivity — `valence`'s existing `cut` state already handles this. The opportunity is refining *delivery*, not adding negativity that doesn't exist: keep cuts specific and behavior-focused ("you've skipped 3 mornings" not "you're not trying"), always paired with a smaller next step (existing Do-shrinking rule already does this), never framed as judgment of the person. Same information, healthier delivery.
+
+### AI capacity — multi-provider fallback + per-user quota (fold into Stage 8 floor-requirements sweep)
+
+- `ai_usage` table: log calls per user per day.
+- Config-driven per-user daily/monthly cap.
+- Fallback chain across providers (router is already provider-agnostic via `MODEL_PROVIDER`) — primary fails or user hits quota → try a second provider → if all fail, honest in-app message ("Sage's out of things to say for today, back tomorrow"), never a silent break. Same "honest empty state" principle as the rest of the Dies-if list, applied to AI capacity instead of an empty Around wall.
+
+---
+
 ## Wave 0 — before code
 
 Apple developer account: have it. Still need: Kenney zips, one model API key (`MODEL_PROVIDER` decided), a support email you'll actually answer, domain pointed at the new build (astrollogs.com — DNS only, nothing else reused), trademark search on ATO / AsTrollOGs (do this now, not after launch — the domain being live doesn't mean the name is clear).
@@ -216,7 +306,7 @@ Chat opens only from a Circle card — never build a chat inbox that can be empt
 Widget = Read + Do. Morning push = Read. Evening push = Check today. Sunday push = `this_week` recap + "you showed up N." Deep links from push into the right screen.
 Delete account **in-app** + revoke Sign in with Apple token. Ask about notifications once, after the user's first card exists — app works fully if they say no.
 Landing page: ATO name, "What's your ATO?" tagline, working support email, privacy policy, terms, © AsTrollOGs, Kenney asset credits. Same footer on the You tab.
-Apple Sign In: hide-my-email maps to exactly one user, no fork. Bundle ID `com.emgens.ato` (App ID) / `com.emgens.ato.signin` (Services ID) — confirmed; permanent once submitted.
+Apple Sign In: hide-my-email maps to exactly one user, no fork. Bundle ID `com.emgens.ato` (App ID) / `com.emgens.ato.signin` (Services ID). Edge Function `APPLE_CLIENT_ID` for native code exchange must be the **bundle ID** (`com.emgens.ato`), not the Services ID.
 
 Floor requirements (non-negotiable, not features):
 - Privacy policy names Supabase and the model provider by name.
