@@ -118,6 +118,7 @@ assert.match(sentryLib, /enableNativeCrashHandling:\s*Platform\.OS !== 'web'/);
 assert.match(sentryLib, /nativeCrash/);
 const plugins = JSON.stringify(appJson.expo.plugins);
 assert.match(plugins, /@sentry\/react-native\/expo/);
+assert.match(plugins, /ato-app/);
 assert.match(read('src/app/_layout.tsx'), /Sentry\.wrap/);
 ok('Sentry JS init + native crash handling + Expo plugin + wrap are wired');
 
