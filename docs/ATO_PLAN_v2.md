@@ -73,7 +73,7 @@ Honest empty: "nothing this weekend" / "wall opens when the night does" / "no AT
 - Chat: TLS + RLS. History stays. No homemade crypto. Sage reads chat only when the user taps "Teach Sage this" on a specific message — never ambient access.
 - You tab = poster (pixel, @handle, **their color named**, QR, Share). Settings / credits / human-contact info below the fold.
 - Share = hold or tap. Stories-size image. Caption: "What's your ATO?"
-- Colors: Ink / Paper / Steel / Bloom. (No fifth color named "Void" — that word is reserved for the "not Void" competitor callout above, kept out of the palette so the two don't collide in copy.)
+- Appearance: five user-selectable modes in Settings — Soft (default) / Zen / Quest / Neon / Anime. Replaces the discarded Ink / Paper / Steel / Bloom named palette. Spec lives in `src/constants/appearance.ts`. "Void" stays reserved for the competitor callout, not a mode name.
 - Assets: Kenney CC0, same-family sets only (Modular / Toon / 1-Bit / Animal Remastered — don't mix families in one recipe). No AI-generated faces, no scraped art.
 - Age: 16+ to use the app. 18+ required to be marked "going" on a night. Self-reported date of birth (`me.born_on`) is collected at onboarding; age is computed from that date so the 18+ gate can recompute later. Verification beyond self-report is accepted MVP risk — don't try to "solve" it inside a Wave 1 stage; if it needs solving, that's its own ticket.
 - Model provider: the router box reads one env var (`MODEL_PROVIDER=gemini` or `groq`) — pick one before Stage 4, but build the router so switching providers is a config change, not a rewrite. Don't hardcode a provider name into Dawn or Talk directly.
@@ -99,7 +99,7 @@ Write those two copy files first. 3 styles × 3 valences. 3 mornings × 3 styles
 | Home | card + pixel | Check **today** (did/skip) + result strip |
 | Auth | Apple (TestFlight). Email before. | user_id (link, don't fork) |
 | ME | user_id + onboarding answers | ME row |
-| Theme | `show_up` | Ink / Paper / Steel / Bloom |
+| Theme | Settings picker (local) | Soft / Zen / Quest / Neon / Anime |
 | Pixel | form + vibe + Check | `recipe` + look |
 | Dawn | ME + yesterday + last 7 Checks | valence, read, if-then Do. Must differ from last 7 |
 | Router | job + packet | text, capped length, model-provider-agnostic. Asks AI consent first, once |

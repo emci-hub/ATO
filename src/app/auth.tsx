@@ -236,7 +236,7 @@ export default function AuthScreen() {
                     disabled={busy}
                     style={({ pressed }) => [
                       styles.button,
-                      { backgroundColor: '#3c87f7' },
+                      { backgroundColor: theme.accentFill },
                       pressed && styles.pressed,
                       busy && styles.disabled,
                     ]}>
@@ -264,7 +264,7 @@ export default function AuthScreen() {
                     <AppleAuthentication.AppleAuthenticationButton
                       buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
                       buttonStyle={
-                        theme.background === '#ffffff'
+                        theme.scheme === 'light'
                           ? AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
                           : AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
                       }
@@ -317,7 +317,7 @@ export default function AuthScreen() {
                     disabled={busy}
                     style={({ pressed }) => [
                       styles.button,
-                      { backgroundColor: '#3c87f7' },
+                      { backgroundColor: theme.accentFill },
                       pressed && styles.pressed,
                       busy && styles.disabled,
                     ]}>

@@ -6,14 +6,15 @@ import {
   TabTriggerSlotProps,
   TabListProps,
 } from 'expo-router/ui';
-import { Pressable, useColorScheme, View, StyleSheet } from 'react-native';
+import { Pressable, View, StyleSheet } from 'react-native';
 
 import { SageTabIcon } from './sage-tab-icon';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
-import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
+import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useCircleContext } from '@/lib/circle-context';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function AppTabs() {
   const { hasCircle } = useCircleContext();
@@ -60,12 +61,11 @@ export function TabButton({ children, isFocused, icon, ...props }: TabTriggerSlo
 }
 
 export function CustomTabList(props: TabListProps) {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme ?? 'light'];
+  const theme = useTheme();
 
   return (
     <View {...props} style={styles.tabListContainer}>
-      <ThemedView type="backgroundElement" style={[styles.innerContainer, { borderColor: colors.backgroundSelected }]}>
+      <ThemedView type="backgroundElement" style={[styles.innerContainer, { borderColor: theme.border === 'transparent' ? theme.backgroundSelected : theme.border }]}>
         <ThemedText type="smallBold" style={styles.brandText}>
           ATO
         </ThemedText>

@@ -41,6 +41,7 @@ Once Stage 8's remaining four floor-verification items close (build 7: app icon 
 - **Crisis card region-detection** — auto from device locale/timezone at launch (`expo-localization`), stored locally. Settings picker on You (Auto / United States / Canada / Other region). US → `988 Suicide & Crisis Lifeline`, Canada → `988 Suicide Crisis Helpline` (call or text 988). Any other region → honest fallback, no guessed number. Verified: `npm run check:crisis-region`.
 - **SecureStore 2048-byte warning** — cause was the full Supabase session JSON written to Keychain under `sb-aijzsmupaaaxjctfgwpl-auth-token` (~2364 bytes for an Apple session; email-only was ~1898 and under the ceiling). Access JWT ~782–1199 bytes, refresh token 12 bytes — both fit. Adapter now keeps tokens in SecureStore (`ato.auth.access_token` / `ato.auth.refresh_token`) and the rest of the session in AsyncStorage; leftover oversized Keychain items migrate on next read. Verified: `npm run check:auth-storage` 6/6. Native Metro sign-in not reproduced here (Windows host, SecureStore is iOS/Android only).
 - **Font/spacing consistency pass** — no new theme file; used existing `Spacing` + `ThemedText` types. Circle names 17→18 (match You), Unfriend 13→14 (`smallBold`), Sign out 16→14 (`smallBold` like other full-width buttons), inline errors `small`+600 → `smallBold`, Circle lede dropped cramped lineHeight 18 (match Home/Sage default), Sage message list bottom inset aligned to other tabs (`BottomTabInset + Spacing.four`).
+- **Five-mode appearance system** — Soft (default) / Zen / Quest / Neon / Anime. Replaces Ink/Paper/Steel/Bloom entirely. Picker on You, stored locally. Verified: `npm run check:appearance`.
 - **Stage 8 handoff #6 (EAS → TestFlight)** — build 6 shipped and installed on a real device. Beta App Review submitted for the Friends external testing group (pending as of Aug 26, 2026).
 
 ## Left
@@ -75,6 +76,7 @@ These are real, but they are not TestFlight work and they are not next. Leave th
 - Apple client_secret JWT minted Aug 25, 2026, expires Feb 24, 2027 07:24 UTC. Regenerate around late Jan 2027. Not automated.
 - Email sending on `noreply@asstrollogs.com` (Resend-verified). `support@asstrollogs.com` used as the public contact address in legal/landing copy — inbox confirmation is parked under Public release readiness, not active work.
 - Landing page live at `ato.emgens.com` — social handle decided as `@whatsyourato` (primary), fallback `emgensato`/`atoapp`/`heyato` per-platform if taken. Not yet confirmed reserved on any platform.
+- **Intentional deviation:** the locked Ink / Paper / Steel / Bloom palette in ATO_PLAN_v2.md is discarded. Appearance is now five modes (Soft / Zen / Quest / Neon / Anime). Not a bug — the plan line was updated in the same change.
 
 ## Next 15 min
 Waiting on Apple: Beta App Review for the Friends external testing group (build 6). Do not start public-release items. Next binary is **build 7** (not yet cut): app icon swap, age-field rollout, confirm Sentry source maps landed. Once those four Stage 8 floor-verification items close, **Stage 9 (intake core)** is next.

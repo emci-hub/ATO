@@ -57,7 +57,7 @@ This runs parallel to the technical Stages/Waves in ATO_PLAN_v2.md. It does not 
 Streamers build a recognizable brand by locking one consistent identity early and reusing it everywhere before they're big — name, colors, voice, tagline — so recognition compounds instead of resetting every time they show up somewhere new. You already have the actual pieces, just spread across the plan:
 
 - **Name/tagline:** ATO — "What's your ATO?" — already set.
-- **Palette:** Ink / Paper / Steel / Bloom — already locked in `ATO_PLAN_v2.md`.
+- **Palette:** five appearance modes — Soft (default) / Zen / Quest / Neon / Anime — selected in You-tab Settings, stored on-device. Replaces the discarded Ink / Paper / Steel / Bloom named palette (intentional plan deviation; see NOW.md housekeeping).
 - **Voice:** Sage (in-app), Drake (this collaboration) — already named.
 - **Social handle:** `@whatsyourato` — decided, see M1 above. Reserve across X, Instagram, TikTok now, before public launch increases squatting risk.
 - **Landing page:** `ato.emgens.com` — live.

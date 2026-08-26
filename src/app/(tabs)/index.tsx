@@ -4,12 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { PixelFace } from '@/components/pixel-face';
+import { QuestGrowthBars } from '@/components/quest-growth-bars';
+import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useMe } from '@/hooks/use-me';
-import { useTodayCard } from '@/hooks/use-today-card';
+import { useGrowth } from '@/hooks/use-growth';
 import { accentFromShowUp } from '@/lib/color';
 import { checksToHistory, fetchChecks, recordCheck, type Check } from '@/lib/checks';
 import { emitChecksChanged, onChecksChanged } from '@/lib/checks-events';
@@ -27,6 +29,7 @@ export default function HomeScreen() {
   const userId = session?.user.id;
   const { me } = useMe(userId);
   const { card, reload: reloadCard } = useTodayCard();
+  const { state: growth } = useGrowth();
   const accent = accentFromShowUp(me?.show_up);
   const recipe = normalizeRecipe(me?.recipe);
   const params = useLocalSearchParams<{ focus?: string }>();
@@ -134,32 +137,30 @@ export default function HomeScreen() {
                 </Pressable>
               ) : (
                 <View style={styles.checkRow}>
-                  <Pressable
+                  <ThemedPressable
                     onPress={() => log('done')}
                     disabled={busy !== null}
-                    style={({ pressed }) => [
+                    filled
+                    style={[
                       styles.primaryButton,
-                      { backgroundColor: '#3c87f7' },
-                      pressed && styles.pressed,
                       busy !== null && styles.disabled,
                     ]}>
-                    <ThemedText type="smallBold" style={styles.primaryText}>
+                    <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
                       {busy === 'log' ? 'Saving\u2026' : 'Logged it'}
                     </ThemedText>
-                  </Pressable>
-                  <Pressable
+                  </ThemedPressable>
+                  <ThemedPressable
                     onPress={() => log('skipped')}
                     disabled={busy !== null}
-                    style={({ pressed }) => [
+                    style={[
                       styles.secondaryButton,
-                      { borderColor: theme.backgroundSelected },
-                      pressed && styles.pressed,
+                      { borderColor: theme.border === 'transparent' ? theme.backgroundSelected : theme.border },
                       busy !== null && styles.disabled,
                     ]}>
                     <ThemedText type="smallBold" themeColor="textSecondary">
                       {busy === 'skip' ? 'Saving\u2026' : 'Skip today'}
                     </ThemedText>
-                  </Pressable>
+                  </ThemedPressable>
                 </View>
               )}
             </>
@@ -179,6 +180,7 @@ export default function HomeScreen() {
             {/* Static display face — the header avatar is the app's one
                 always-mounted animated/gesture instance, so this stays still. */}
             <PixelFace recipe={recipe} size={88} showUp={me?.show_up} animated={false} />
+            <QuestGrowthBars presence={growth.presence} depth={growth.depth} />
           </ThemedView>
 
           <ThemedView type="backgroundElement" style={styles.boxCard}>
@@ -262,14 +264,14 @@ export default function HomeScreen() {
           </ThemedView>
 
           <ThemedView type="backgroundElement" style={[styles.poster, { backgroundColor: accent.light }]}>
-            <ThemedText type="code" style={styles.posterKicker}>
+            <ThemedText type="code" style={[styles.posterKicker, { color: theme.onAccent }]}>
               fake poster
             </ThemedText>
-            <ThemedText style={styles.posterTitle}>Something is coming</ThemedText>
-            <ThemedText themeColor="textSecondary" style={styles.posterBody}>
+            <ThemedText style={[styles.posterTitle, { color: theme.onAccent }]}>Something is coming</ThemedText>
+            <ThemedText style={[styles.posterBody, { color: theme.onAccent }]}>
               This is placeholder poster art. Real artwork lands here later.
             </ThemedText>
-            <ThemedText type="code" style={styles.posterMeta}>
+            <ThemedText type="code" style={[styles.posterMeta, { color: theme.onAccent }]}>
               fake · aug 2026
             </ThemedText>
           </ThemedView>

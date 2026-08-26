@@ -1,30 +1,29 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
 import '@/global.css';
 
 import { Platform } from 'react-native';
 
+import { APPEARANCES } from '@/constants/appearance';
+
+export type { ThemeColor } from '@/constants/appearance';
+export { APPEARANCES, APPEARANCE_IDS, APPEARANCE_LABELS } from '@/constants/appearance';
+
+/** @deprecated System light/dark is superseded by the five appearance modes. Soft/Quest kept as aliases for any leftover scheme reads. */
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: APPEARANCES.soft.text,
+    background: APPEARANCES.soft.background,
+    backgroundElement: APPEARANCES.soft.backgroundElement,
+    backgroundSelected: APPEARANCES.soft.backgroundSelected,
+    textSecondary: APPEARANCES.soft.textSecondary,
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: APPEARANCES.quest.text,
+    background: APPEARANCES.quest.background,
+    backgroundElement: APPEARANCES.quest.backgroundElement,
+    backgroundSelected: APPEARANCES.quest.backgroundSelected,
+    textSecondary: APPEARANCES.quest.textSecondary,
   },
 } as const;
-
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 export const Fonts = Platform.select({
   ios: {

@@ -1,12 +1,14 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
-import { StyleSheet, useColorScheme, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { PushRuntime } from '@/components/push-runtime';
 import { useTheme } from '@/hooks/use-theme';
 import { CrisisRegionProvider } from '@/lib/crisis/region-context';
+import { AppearanceProvider } from '@/lib/theme/context';
 import { MeProvider, useMeContext } from '@/lib/me-context';
 import { initSentry, Sentry } from '@/lib/sentry';
 import { useSession } from '@/hooks/use-session';
@@ -15,12 +17,21 @@ initSentry();
 SplashScreen.preventAutoHideAsync();
 
 function RootLayout() {
-  const colorScheme = useColorScheme();
+  return (
+    <AppearanceProvider>
+      <RootThemeBridge />
+    </AppearanceProvider>
+  );
+}
+
+function RootThemeBridge() {
+  const theme = useTheme();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={theme.scheme === 'dark' ? DarkTheme : DefaultTheme}>
       <MeProvider>
         <CrisisRegionProvider>
+          <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
           <RootNavigator />
         </CrisisRegionProvider>
       </MeProvider>
@@ -46,6 +57,7 @@ function RootNavigator() {
         <>
           {isAuthed && hasMe ? <PushRuntime /> : null}
           <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="theme-lab" />
             <Stack.Protected guard={!isAuthed}>
               <Stack.Screen name="auth" />
             </Stack.Protected>

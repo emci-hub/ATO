@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DeleteAccountSheet } from '@/components/delete-account-sheet';
 import { ScanSheet } from '@/components/scan-sheet';
 import { SharePoster } from '@/components/share-poster';
+import { AppearancePicker } from '@/components/appearance-picker';
 import { CrisisRegionPicker } from '@/components/crisis-region-picker';
 import { KenneyCreditsCard } from '@/components/kenney-credits-card';
 import { PushTestCard } from '@/components/push-test-card';
@@ -137,12 +138,12 @@ export default function YouScreen() {
                     onLongPress={handleShare}
                     style={({ pressed }) => [
                       styles.shareButton,
-                      { backgroundColor: '#3c87f7' },
+                      { backgroundColor: theme.accentFill },
                       pressed && styles.pressed,
                       sharing && styles.disabled,
                     ]}>
-                    <MaterialCommunityIcons name="share-variant" size={18} color="#ffffff" />
-                    <ThemedText type="smallBold" style={styles.shareButtonText}>
+                    <MaterialCommunityIcons name="share-variant" size={18} color={theme.onAccent} />
+                    <ThemedText type="smallBold" style={[styles.shareButtonText, { color: theme.onAccent }]}>
                       {sharing ? 'Sharing…' : 'Share'}
                     </ThemedText>
                   </Pressable>
@@ -198,6 +199,8 @@ export default function YouScreen() {
                 <DetailRow label="Morning cue" value={me.morning_cue} />
                 <DetailRow label="Timezone" value={me.timezone} />
               </ThemedView>
+
+              <AppearancePicker />
 
               <CrisisRegionPicker />
 

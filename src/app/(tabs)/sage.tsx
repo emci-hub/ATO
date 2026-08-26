@@ -303,8 +303,8 @@ export default function SageScreen() {
               ) : (
                 messages.map((message) =>
                   message.role === 'user' ? (
-                    <View key={message.id} style={[styles.bubble, styles.userBubble]}>
-                      <ThemedText style={[styles.bubbleText, styles.userBubbleText]}>
+                    <View key={message.id} style={[styles.bubble, styles.userBubble, { backgroundColor: theme.accentFill }]}>
+                      <ThemedText style={[styles.bubbleText, { color: theme.onAccent }]}>
                         {message.text}
                       </ThemedText>
                     </View>
@@ -400,11 +400,11 @@ export default function SageScreen() {
                   disabled={busy !== null || input.trim().length === 0}
                   style={({ pressed }) => [
                     styles.sendButton,
-                    { backgroundColor: '#3c87f7' },
+                    { backgroundColor: theme.accentFill },
                     pressed && styles.pressed,
                     (busy !== null || input.trim().length === 0) && styles.disabled,
                   ]}>
-                  <MaterialCommunityIcons name="send" size={18} color="#ffffff" />
+                  <MaterialCommunityIcons name="send" size={18} color={theme.onAccent} />
                 </Pressable>
               </View>
             </View>
@@ -497,10 +497,6 @@ const styles = StyleSheet.create({
   },
   userBubble: {
     alignSelf: 'flex-end',
-    backgroundColor: '#3c87f7',
-  },
-  userBubbleText: {
-    color: '#ffffff',
   },
   bubbleText: {
     lineHeight: 22,
