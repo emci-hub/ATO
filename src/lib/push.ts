@@ -54,7 +54,14 @@ export async function notificationsAreGranted(): Promise<boolean> {
   if (Platform.OS === 'web') return false;
   try {
     const settings = await Notifications.getPermissionsAsync();
-    return settings.granted === true;
+    const iosStatus = settings.ios?.status;
+    // iOS: trust ios.status, not the root `granted` flag (Expo docs).
+    return (
+      settings.granted === true ||
+      iosStatus === Notifications.IosAuthorizationStatus.AUTHORIZED ||
+      iosStatus === Notifications.IosAuthorizationStatus.PROVISIONAL ||
+      iosStatus === Notifications.IosAuthorizationStatus.EPHEMERAL
+    );
   } catch {
     return false;
   }

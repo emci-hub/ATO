@@ -196,7 +196,7 @@ export default function YouScreen() {
                 <DetailRow label="Timezone" value={me.timezone} />
               </ThemedView>
 
-              <PushTestCard />
+              <PushTestCard timeZone={me.timezone || 'UTC'} />
 
               <ThemedView type="backgroundElement" style={styles.detailCard}>
                 <ThemedText type="smallBold" style={styles.inviteHeading}>

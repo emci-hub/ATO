@@ -1,40 +1,36 @@
-import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { AppState, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { useMe } from '@/hooks/use-me';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { fetchChecks, type Check } from '@/lib/checks';
-import { fireTestPush, getAskedForNotifications, notificationsAreGranted } from '@/lib/push';
+import { fireTestPush, notificationsAreGranted } from '@/lib/push';
 import type { PushKind } from '@/lib/push-copy';
 
 /**
  * Manual fire for the three pushes so a tester can tap each deep link without
- * waiting for 7am / 8pm / Sunday. Hidden entirely if they declined — no nag.
+ * waiting for 7am / 8pm / Sunday. Always on You — TestFlight needs it. A
+ * decline is not nagged; the buttons just say they're off.
  */
-export function PushTestCard() {
+export function PushTestCard({ timeZone }: { timeZone: string }) {
   const theme = useTheme();
   const { session } = useSession();
   const userId = session?.user.id;
-  const { me } = useMe(userId);
   const [granted, setGranted] = useState(false);
-  const [asked, setAsked] = useState(false);
   const [checks, setChecks] = useState<Check[]>([]);
   const [firing, setFiring] = useState<PushKind | null>(null);
   const [note, setNote] = useState<string | null>(null);
 
+  const refreshGranted = useCallback(async () => {
+    setGranted(await notificationsAreGranted());
+  }, []);
+
   useEffect(() => {
     let active = true;
-    Promise.all([notificationsAreGranted(), getAskedForNotifications()]).then(
-      ([isGranted, wasAsked]) => {
-        if (!active) return;
-        setGranted(isGranted);
-        setAsked(wasAsked);
-      },
-    );
+    refreshGranted().catch(() => {});
     if (userId) {
       fetchChecks(userId)
         .then((rows) => {
@@ -42,14 +38,14 @@ export function PushTestCard() {
         })
         .catch(() => {});
     }
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next === 'active') refreshGranted().catch(() => {});
+    });
     return () => {
       active = false;
+      sub.remove();
     };
-  }, [userId]);
-
-  if (!asked || !granted || !me) return null;
-
-  const timeZone = me.timezone || 'UTC';
+  }, [userId, refreshGranted]);
 
   async function fire(kind: PushKind) {
     if (firing) return;
@@ -60,7 +56,11 @@ export function PushTestCard() {
       setNote(`${kind} arrives in a few seconds. Tap it to open the right screen.`);
     } catch (err) {
       console.log('[push] test fire error:', err);
-      setNote('Couldn\u2019t schedule that one.');
+      const on = await notificationsAreGranted();
+      setGranted(on);
+      setNote(
+        on ? "Couldn't schedule that one." : 'Notifications are off. Everything else still works.',
+      );
     } finally {
       setFiring(null);
     }
@@ -72,7 +72,9 @@ export function PushTestCard() {
         Test notifications
       </ThemedText>
       <ThemedText type="small" themeColor="textSecondary" style={styles.hint}>
-        Fires the real morning, evening, and Sunday copy so you can check the deep link.
+        {granted
+          ? 'Fires the real morning, evening, and Sunday copy so you can check the deep link.'
+          : 'Notifications are off. Everything else still works.'}
       </ThemedText>
       <View style={styles.row}>
         <TestButton

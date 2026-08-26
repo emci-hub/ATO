@@ -304,7 +304,7 @@ Chat opens only from a Circle card — never build a chat inbox that can be empt
 
 ### 8 TestFlight
 **Open box: polish, push, legal, EAS, landing.**
-Widget = Read + Do. Morning push = Read. Evening push = Check today. Sunday push = `this_week` recap + "you showed up N." Deep links from push into the right screen.
+Widget = Read + Do. Morning push = Read. Evening push = Check today. Sunday push = `this_week` recap + "you showed up N." Deep links from push into the right screen. **Push + widget is built and device-verified** (local morning/evening/Sunday, iOS WidgetKit Read+Do, App Group `group.com.emgens.ato`). Remaining in this box: floor requirements, legal/landing, TestFlight submit.
 Delete account **in-app** + revoke Sign in with Apple token. Ask about notifications once, after the user's first card exists — app works fully if they say no.
 Landing page: ATO name, "What's your ATO?" tagline, working support email, privacy policy, terms, © AsTrollOGs, Kenney asset credits. Same footer on the You tab.
 Apple Sign In: hide-my-email maps to exactly one user, no fork. Bundle ID `com.emgens.ato` (App ID) / `com.emgens.ato.signin` (Services ID). Edge Function `APPLE_CLIENT_ID` for native code exchange must be the **bundle ID** (`com.emgens.ato`), not the Services ID.
