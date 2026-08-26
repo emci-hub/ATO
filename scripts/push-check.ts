@@ -35,6 +35,7 @@ ok('permission asked only after first check, and only once');
 
 const morning = morningPush('The kettle is already on. Sit with it.');
 assert.equal(morning.url, PUSH_PATHS.morning);
+assert.equal(morning.title, 'Sage · coach');
 assert.equal(morning.body, 'The kettle is already on. Sit with it.');
 assert.equal(copyHasFakeUrgency(morning.body), false);
 assert.equal(copyHasFakeUrgency(morning.title), false);

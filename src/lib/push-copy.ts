@@ -23,7 +23,7 @@ export function morningPush(read: string): PushPayload {
   const body = read.trim();
   return {
     kind: 'morning',
-    title: 'Read',
+    title: 'Sage · coach',
     body: body.length > 0 ? body : 'Your Read is ready.',
     url: PUSH_PATHS.morning,
   };

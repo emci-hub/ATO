@@ -16,6 +16,7 @@ import { emitChecksChanged, onChecksChanged } from '@/lib/checks-events';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { normalizeRecipe } from '@/lib/kenney/registry';
 import { aiConsentFor } from '@/lib/me';
+import { HOME_SAGE_LEDE, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { persistRoutedCard } from '@/lib/today-card';
 import { routeVoiceCard } from '@/lib/voice/router';
 import { useSession } from '@/hooks/use-session';
@@ -98,7 +99,7 @@ export default function HomeScreen() {
           <View style={styles.header}>
             <ThemedText type="subtitle">Home</ThemedText>
             <ThemedText themeColor="textSecondary">
-              {params.focus === 'check' ? 'Check today.' : 'Today\u2019s Read and Do.'}
+              {params.focus === 'check' ? 'Check today.' : HOME_SAGE_LEDE}
             </ThemedText>
           </View>
 
@@ -106,7 +107,7 @@ export default function HomeScreen() {
             <>
               <ThemedView type="backgroundElement" style={styles.todayCard}>
                 <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
-                  read
+                  {SAGE_COACH_LABEL} · read
                 </ThemedText>
                 <ThemedText style={styles.cardText}>{card.read}</ThemedText>
               </ThemedView>

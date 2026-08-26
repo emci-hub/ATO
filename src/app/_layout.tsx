@@ -7,11 +7,13 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { PushRuntime } from '@/components/push-runtime';
 import { useTheme } from '@/hooks/use-theme';
 import { MeProvider, useMeContext } from '@/lib/me-context';
+import { initSentry, Sentry } from '@/lib/sentry';
 import { useSession } from '@/hooks/use-session';
 
+initSentry();
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
@@ -67,3 +69,5 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+
+export default Sentry.wrap(RootLayout);

@@ -2,6 +2,7 @@ import { detectCrisis as defaultDetectCrisis, type CrisisDetection } from '@/lib
 
 import { VOICE_CONFIG, type VoiceConfig } from './config';
 import { buildProviders } from './providers';
+import type { QuotaDecision } from './quota';
 import type { VoiceProvider } from './providers/types';
 import type { CheckHistory, DevTrace, ProviderId, VoiceCard, VoiceMe } from './types';
 
@@ -28,11 +29,18 @@ export interface TalkReplyDeps {
   /** Overrides __DEV__ for tests. */
   isDev?: boolean;
   /** Injectable for tests; defaults to the keyword-list detector. */
-  detectCrisis?: (message: string) => Promise<CrisisDetection>;  /** Injectable for tests; defaults to a no-op (screen wires the real logger). */
+  detectCrisis?: (message: string) => Promise<CrisisDetection>;
+  /** Injectable for tests; defaults to a no-op (screen wires the real logger). */
   logCrisisFlag?: (userId: string) => Promise<void>;
+  /**
+   * Server-side per-user cap. Production Talk UI passes claimAiCall from
+   * quota-server. Tests inject allow/deny. Omitted = allow so existing unit
+   * checks stay provider-only.
+   */
+  claimAiCall?: () => Promise<QuotaDecision>;
 }
 
-export type TalkReplyKind = 'consent-pending' | 'consent-denied' | 'crisis' | 'reply';
+export type TalkReplyKind = 'consent-pending' | 'consent-denied' | 'crisis' | 'reply' | 'quota';
 
 export interface TalkReplyResult {
   kind: TalkReplyKind;
@@ -90,6 +98,12 @@ export async function routeTalkReply(
       provider: null,
       dev: trace(false, `crisis (${crisis.method})`),
     };
+  }
+
+  // ---- Per-user cap (server-side; floor requirement) ---------------------
+  const claim = deps.claimAiCall ? await deps.claimAiCall() : { ok: true as const };
+  if (!claim.ok) {
+    return { kind: 'quota', provider: null, dev: trace(false, 'quota') };
   }
 
   // ---- Main router reply call -------------------------------------------

@@ -290,6 +290,31 @@ assert.ok(clearTalk.reply && clearTalk.reply.length > 0);
 assert.equal(mainCalls, 1, 'main call happened for a clear message');
 ok('clear message → reply generated via the main router call');
 
+// Cap hit → honest empty, zero generateTalk calls.
+let quotaCalls = 0;
+const quotaSpy: VoiceProvider = {
+  id: 'local',
+  label: 'quota-spy',
+  generate: async () => ({ read: 'x', do: 'y' }),
+  generateTalk: async () => {
+    quotaCalls += 1;
+    return { reply: 'should never happen' };
+  },
+};
+const quotaTalk = await routeTalkReply(
+  { me: ME, message: 'How\u2019s my week going?', checkCount: 4, history: d1, aiConsent: true },
+  {
+    config: localConfig,
+    providers: { gemini: quotaSpy, local: quotaSpy },
+    claimAiCall: async () => ({ ok: false, reason: 'quota' }),
+    ...dev,
+  },
+);
+assert.equal(quotaTalk.kind, 'quota');
+assert.equal(quotaTalk.reply, undefined);
+assert.equal(quotaCalls, 0, 'quota must not call generateTalk');
+ok('server deny → quota kind, no model call, no raw error');
+
 // Two users, different talk_style, SAME prompt → visibly different tone.
 const quietReply = await routeTalkReply(
   { me: makeTalkMe('quiet', 'Mia'), message: 'How\u2019s my week going?', checkCount: 4, history: d1, aiConsent: true },

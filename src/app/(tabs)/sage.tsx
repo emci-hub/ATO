@@ -26,6 +26,9 @@ import { logCrisisFlag } from '@/lib/crisis/log';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { aiConsentFor, setAiConsent } from '@/lib/me';
 import { addSageMessage, fetchSageMessages } from '@/lib/sage-messages';
+import { TALK_EMPTY, TALK_LEDE } from '@/lib/sage-copy';
+import { QUOTA_EMPTY_MESSAGE } from '@/lib/voice/quota';
+import { claimAiCall } from '@/lib/voice/quota-server';
 import { routeTalkReply } from '@/lib/voice/talk';
 import { routeVoiceCard } from '@/lib/voice/router';
 
@@ -63,6 +66,7 @@ export default function SageScreen() {
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState<'send' | 'consent' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [quotaEmpty, setQuotaEmpty] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportMessage, setReportMessage] = useState<ChatMessage | null>(null);
@@ -168,6 +172,7 @@ export default function SageScreen() {
     if (!me || !userId || busy || trimmed.length === 0) return;
     setBusy('send');
     setError(null);
+    setQuotaEmpty(false);
     const localUserId = `m${nextMessageId++}`;
     setMessages((prev) => [...prev, { id: localUserId, role: 'user', text: trimmed }]);
     setInput('');
@@ -191,7 +196,7 @@ export default function SageScreen() {
           aiConsent: me.ai_consent,
           userId,
         },
-        { logCrisisFlag: (id) => logCrisisFlag(id) },
+        { logCrisisFlag: (id) => logCrisisFlag(id), claimAiCall },
       );
 
       if (result.kind === 'crisis') {
@@ -200,6 +205,8 @@ export default function SageScreen() {
         // never acknowledged with a pose. No exception. The static card is not
         // a Sage response and is not persisted/reportable.
         addLocal({ role: 'sage', text: '', crisis: true });
+      } else if (result.kind === 'quota') {
+        setQuotaEmpty(true);
       } else if (result.kind === 'reply' && result.reply) {
         const reply = result.reply;
         const localSageId = `m${nextMessageId++}`;
@@ -237,7 +244,7 @@ export default function SageScreen() {
           <View>
             <ThemedText type="subtitle">Sage</ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.lede}>
-              Talk it out. Sage listens, then replies.
+              {TALK_LEDE}
             </ThemedText>
           </View>
           <Pressable
@@ -279,10 +286,18 @@ export default function SageScreen() {
             <ScrollView
               contentContainerStyle={styles.messages}
               keyboardShouldPersistTaps="handled">
-              {messages.length === 0 ? (
+              {quotaEmpty ? (
+                <ThemedView type="backgroundElement" style={styles.emptyCard}>
+                  <ThemedText type="smallBold">That&apos;s all for today</ThemedText>
+                  <ThemedText themeColor="textSecondary" style={styles.centerText}>
+                    {QUOTA_EMPTY_MESSAGE}
+                  </ThemedText>
+                </ThemedView>
+              ) : null}
+              {messages.length === 0 && !quotaEmpty ? (
                 <ThemedView type="backgroundElement" style={styles.emptyCard}>
                   <ThemedText themeColor="textSecondary" style={styles.centerText}>
-                    Say hi, or tap a chip to get started. Sage stays on your side.
+                    {TALK_EMPTY}
                   </ThemedText>
                 </ThemedView>
               ) : (
