@@ -74,6 +74,7 @@ async function main() {
     p_morning_cue: 'no',
     p_timezone: 'UTC',
     p_invite_code: null,
+    p_born_on: '2000-01-15',
   });
   assert.ok(unauthedSignup.error, 'anon complete_signup must fail');
   ok('anon cannot complete_signup', { message: unauthedSignup.error?.message });

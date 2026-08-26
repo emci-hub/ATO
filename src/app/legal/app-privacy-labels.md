@@ -12,6 +12,7 @@ Copy these answers into App Store Connect → App Privacy. They must match `Priv
 |---|---|---|---|---|---|
 | Email Address | Yes | Linked | No | App Functionality | Supabase Auth email (OTP via Resend) and Apple Hide My Email relay address |
 | Name | Yes | Linked | No | App Functionality, Product Personalization | `me.name` |
+| Date of Birth | Yes | Linked | No | App Functionality | `me.born_on` (self-reported at onboarding). Age is computed from the date — 16+ to create an account, 18+ later for Wave 2 "going". Not a frozen age or boolean. |
 | User ID | Yes | Linked | No | App Functionality | Auth UUID, `@handle`, Apple `sub`, invite `referred_by` (abuse prevention only; never shown publicly) |
 | Other User Content | Yes | Linked | No | App Functionality, Product Personalization | Chat messages; Sage messages; ME free text (`show_up`, `knocks_you_off`, `morning_cue`, `talk_style`, `facts`, IANA `timezone`); pixel `recipe`; Check read/do text. Gemini receives a prompt derived from ME + recent checks, not the full chat history. |
 | Customer Support | Yes | Linked | No | App Functionality | `reports` (reason + target) on Chat and Sage |
@@ -25,6 +26,7 @@ Copy these answers into App Store Connect → App Privacy. They must match `Priv
 
 NSPrivacyCollectedDataTypeEmailAddress
 NSPrivacyCollectedDataTypeName
+NSPrivacyCollectedDataTypeDateOfBirth
 NSPrivacyCollectedDataTypeUserID
 NSPrivacyCollectedDataTypeOtherUserContent
 NSPrivacyCollectedDataTypeCustomerSupport
@@ -39,8 +41,6 @@ NSPrivacyCollectedDataTypeDeviceID
 Health, Fitness, Location (precise or coarse), Photos or Videos (camera is on-device QR scan only — nothing is uploaded), Contacts, Browsing History, Search History, Purchases, Advertising Data, Sensitive Info, Payment Info, Phone Number.
 
 Timezone is an IANA string on `me` for local day/pushes — not GPS, so not Location.
-
-Age is mentioned in `privacy.md` as self-reported at sign-up, but the app does not currently collect an age field (open gap, not a collected type). Do not declare Sensitive Info until that question exists.
 
 Push notification token: `privacy.md` says we collect one if notifications are enabled. v1 schedules **local** notifications only and does not upload an APNs/Expo token to our servers. Device ID above is the Sentry installation id, not a push token. Revisit this row if remote push is added.
 

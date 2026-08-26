@@ -75,6 +75,7 @@ ok('NSPrivacyTracking is false in app.json, app PrivacyInfo, and widget PrivacyI
 const EXPECTED_TYPES = [
   'NSPrivacyCollectedDataTypeEmailAddress',
   'NSPrivacyCollectedDataTypeName',
+  'NSPrivacyCollectedDataTypeDateOfBirth',
   'NSPrivacyCollectedDataTypeUserID',
   'NSPrivacyCollectedDataTypeOtherUserContent',
   'NSPrivacyCollectedDataTypeCustomerSupport',

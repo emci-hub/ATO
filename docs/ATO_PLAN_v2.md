@@ -22,6 +22,7 @@ If a field isn't defined here, don't guess its shape — ask.
 | `check_count` | integer, derived | Count of all-time Checks. Gates bank-vs-model content and the paywall (7). |
 | `host` | boolean on ME | You flip this manually (admin). Not self-serve in v1. |
 | `referred_by` | uuid, nullable, FK → ME | Which ME row invited this user. Hidden field. See Referral spec. |
+| `born_on` | date, self-reported, nullable only on pre-field accounts | Date of birth. Required at new signup. Age is computed from this — 16+ to create an account, 18+ later for Wave 2 going. Never stored as a number or boolean. |
 | `signup_mode` | config value: `invite_only`/`public` | Global switch gating whether a valid invite code is required to create an account. See Referral spec. |
 
 ---
@@ -74,7 +75,7 @@ Honest empty: "nothing this weekend" / "wall opens when the night does" / "no AT
 - Share = hold or tap. Stories-size image. Caption: "What's your ATO?"
 - Colors: Ink / Paper / Steel / Bloom. (No fifth color named "Void" — that word is reserved for the "not Void" competitor callout above, kept out of the palette so the two don't collide in copy.)
 - Assets: Kenney CC0, same-family sets only (Modular / Toon / 1-Bit / Animal Remastered — don't mix families in one recipe). No AI-generated faces, no scraped art.
-- Age: 16+ to use the app. 18+ required to be marked "going" on a night. Both are self-reported at onboarding — accepted MVP risk, not a build task. Don't try to "solve" verification inside a Wave 1 stage; if it needs solving, that's its own ticket.
+- Age: 16+ to use the app. 18+ required to be marked "going" on a night. Self-reported date of birth (`me.born_on`) is collected at onboarding; age is computed from that date so the 18+ gate can recompute later. Verification beyond self-report is accepted MVP risk — don't try to "solve" it inside a Wave 1 stage; if it needs solving, that's its own ticket.
 - Model provider: the router box reads one env var (`MODEL_PROVIDER=gemini` or `groq`) — pick one before Stage 4, but build the router so switching providers is a config change, not a rewrite. Don't hardcode a provider name into Dawn or Talk directly.
 - One box per stage. First line of a build message: `Open box: …`. Two stages requested in one turn → undo the second, finish the first.
 
@@ -110,7 +111,7 @@ Write those two copy files first. 3 styles × 3 valences. 3 mornings × 3 styles
 | Invite | signup attempt + code | account created (or rejected) + code consumed |
 | Intake | onboarding taps + optional fast-entry | trait backbone fields on ME (see Understanding spec) |
 
-**ME fields:** name, handle, timezone, `this_week`, `morning_cue`, `show_up`, `knocks_you_off`, `talk_style`, color, `recipe`, theme_id, facts they've told Sage, all-time Checks, `check_count`, last_7_card_ids, `show` (visibility toggle), `allow_search`, `host` (admin-flipped), `referred_by` (hidden, nullable).
+**ME fields:** name, handle, timezone, `born_on` (self-reported date of birth; age computed, never stored as a number/boolean), `this_week`, `morning_cue`, `show_up`, `knocks_you_off`, `talk_style`, color, `recipe`, theme_id, facts they've told Sage, all-time Checks, `check_count`, last_7_card_ids, `show` (visibility toggle), `allow_search`, `host` (admin-flipped), `referred_by` (hidden, nullable).
 
 **ME never stores:** guessed vibes, raw chat logs, raw HealthKit data, a model's freeform narrative about the user.
 
@@ -304,7 +305,7 @@ Chat opens only from a Circle card — never build a chat inbox that can be empt
 
 ### 8 TestFlight
 **Open box: polish, push, legal, EAS, landing.**
-Widget = Read + Do. Morning push = Read. Evening push = Check today. Sunday push = `this_week` recap + "you showed up N." Deep links from push into the right screen. **Push + widget is built and device-verified** (local morning/evening/Sunday, iOS WidgetKit Read+Do, App Group `group.com.emgens.ato`). **Floor requirements in this box are built and re-verified** (pushed `ea2b4f3`): Sentry wired (`ato-app`; live JS ingest; native crash still needs the next EAS build), App Privacy nutrition labels aligned with `privacy.md` + `PrivacyInfo.xcprivacy` (10 types, `NSPrivacyTracking = false`), Sage labeled coach in the UI (Talk/Home/Dawn/consent/crisis/morning push/widget/Teach Sage), Talk router rate-limited per user server-side (`claim_ai_call`, live 20/day 200/month). Privacy/terms are in `src/app/legal/`; landing is live at `ato.emgens.com`. Remaining in this box: EAS build → TestFlight. Legal loose ends (App Store Connect paste, `support@asstrollogs.com` inbox, lawyer pass, age field) are tracked in NOW.md Left — not TestFlight blockers except the native Sentry crash check on that binary.
+Widget = Read + Do. Morning push = Read. Evening push = Check today. Sunday push = `this_week` recap + "you showed up N." Deep links from push into the right screen. **Push + widget is built and device-verified** (local morning/evening/Sunday, iOS WidgetKit Read+Do, App Group `group.com.emgens.ato`). **Floor requirements in this box are built and re-verified** (pushed `ea2b4f3`): Sentry wired (`ato-app`; live JS ingest; native crash still needs the next EAS build), App Privacy nutrition labels aligned with `privacy.md` + `PrivacyInfo.xcprivacy` (11 types including Date of Birth, `NSPrivacyTracking = false`), Sage labeled coach in the UI (Talk/Home/Dawn/consent/crisis/morning push/widget/Teach Sage), Talk router rate-limited per user server-side (`claim_ai_call`, live 20/day 200/month). Privacy/terms are in `src/app/legal/`; landing is live at `ato.emgens.com`. Remaining in this box: EAS build → TestFlight. Legal loose ends (App Store Connect paste, `support@asstrollogs.com` inbox, lawyer pass) are tracked in NOW.md Left — not TestFlight blockers except the native Sentry crash check on that binary.
 Delete account **in-app** + revoke Sign in with Apple token. Ask about notifications once, after the user's first card exists — app works fully if they say no.
 Landing page: ATO name, "What's your ATO?" tagline, support email (`support@asstrollogs.com` — used in copy, inbox not yet confirmed monitored), privacy policy, terms, © AsTrollOGs, Kenney asset credits. Same footer on the You tab.
 Apple Sign In: hide-my-email maps to exactly one user, no fork. Bundle ID `com.emgens.ato` (App ID) / `com.emgens.ato.signin` (Services ID). Edge Function `APPLE_CLIENT_ID` for native code exchange must be the **bundle ID** (`com.emgens.ato`), not the Services ID.
@@ -365,7 +366,7 @@ TestFlight ≠ public. TestFlight already gates installs via Apple's own tester 
 - Colors on a show: shown once ≥3 people of that color are going; hidden below that. No raw counts displayed. Heat map = venue blobs, not pins.
 - Phone fetches a static `/around/{city}/weekend.json`. Adding Edmonton later = new JSON file, same code — don't hardcode Calgary logic.
 - 0 shows that weekend → honest empty state, never a fabricated map.
-- 18+ enforcement here specifically: don't let a user marked 16/17 show as "going" on an 18+ night.
+- 18+ enforcement here specifically: `is_at_least_age(me.born_on, 18)` — don't let a user who is 16/17 today show as "going" on an 18+ night. The date is already on ME; this wave only has to call the helper.
 
 **Admin (you) sees:** opens, Checks, shares, new friend connections. Not chat message bodies. Later: on/off toggles for plugs and hosts.
 

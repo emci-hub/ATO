@@ -89,6 +89,7 @@ async function main() {
     p_morning_cue: 'coffee',
     p_timezone: 'America/Edmonton',
     p_invite_code: env.ATO_INVITE_CODE ?? null,
+    p_born_on: '2000-01-15',
   });
   if (meError) throw new Error(`me insert failed: ${meError.message}`);
 

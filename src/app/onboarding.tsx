@@ -14,6 +14,11 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import {
+  bornOnFromParts,
+  signupAgeMessage,
+  UNDER_16_MESSAGE,
+} from '@/lib/age';
 import { createMe, errorMessageForHandle, TalkStyle } from '@/lib/me';
 import { useMeContext } from '@/lib/me-context';
 import {
@@ -38,6 +43,9 @@ export default function OnboardingScreen() {
 
   const [name, setName] = useState('');
   const [handle, setHandle] = useState('');
+  const [birthYear, setBirthYear] = useState('');
+  const [birthMonth, setBirthMonth] = useState('');
+  const [birthDay, setBirthDay] = useState('');
   const [showUp, setShowUp] = useState('');
   const [talkStyle, setTalkStyle] = useState<TalkStyle | null>(null);
   const [knocksYouOff, setKnocksYouOff] = useState('');
@@ -46,6 +54,7 @@ export default function OnboardingScreen() {
   const [signupMode, setSignupMode] = useState<SignupMode>('invite_only');
 
   const [handleError, setHandleError] = useState<string | null>(null);
+  const [ageError, setAgeError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -82,6 +91,19 @@ export default function OnboardingScreen() {
     const trimmedKnocks = knocksYouOff.trim();
     const trimmedCue = morningCue.trim();
 
+    const parsedBornOn = bornOnFromParts(birthYear, birthMonth, birthDay);
+    if (!parsedBornOn.ok) {
+      setAgeError(parsedBornOn.message);
+      setFormError(null);
+      return;
+    }
+    const ageBlock = signupAgeMessage(parsedBornOn.bornOn);
+    if (ageBlock) {
+      setAgeError(ageBlock);
+      setFormError(null);
+      return;
+    }
+
     if (!trimmedName) {
       setFormError('Tell us what to call you.');
       return;
@@ -113,6 +135,7 @@ export default function OnboardingScreen() {
 
     setFormError(null);
     setHandleError(null);
+    setAgeError(null);
     if (busy) return; // prevent double-tap while a save is in flight
     setBusy(true);
     console.log('[onboarding] submit start');
@@ -128,6 +151,7 @@ export default function OnboardingScreen() {
           morning_cue: trimmedCue,
           timezone,
           invite_code: inviteCode,
+          born_on: parsedBornOn.bornOn,
         }),
         15000,
         'createMe',
@@ -146,6 +170,8 @@ export default function OnboardingScreen() {
       const message = errorMessageForHandle(err);
       if (message.startsWith('That handle')) {
         setHandleError(message);
+      } else if (message === UNDER_16_MESSAGE || message.startsWith('When were you born') || message.includes('real date')) {
+        setAgeError(message);
       } else {
         setFormError(message);
       }
@@ -172,7 +198,7 @@ export default function OnboardingScreen() {
             keyboardShouldPersistTaps="handled">
             <ThemedText type="subtitle">Introduce yourself</ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.lede}>
-              Six quick questions, then ATO knows how to talk to you.
+              Seven quick questions, then ATO knows how to talk to you.
             </ThemedText>
 
             {signupMode === 'invite_only' ? (
@@ -209,7 +235,55 @@ export default function OnboardingScreen() {
               </ThemedText>
             </Pressable>
 
-            <Field label="1. What should we call you?" required>
+            <Field
+              label="1. When were you born?"
+              required
+              error={ageError}
+              hint="Day, month, and year. ATO is for people 16 and older.">
+              <View style={styles.dateRow}>
+                <TextInput
+                  value={birthYear}
+                  onChangeText={(text) => {
+                    setBirthYear(text.replace(/\D/g, '').slice(0, 4));
+                    setAgeError(null);
+                  }}
+                  placeholder="YYYY"
+                  placeholderTextColor={theme.textSecondary}
+                  keyboardType="number-pad"
+                  maxLength={4}
+                  editable={!busy}
+                  style={[styles.input, styles.dateYear, { color: theme.text, backgroundColor: theme.backgroundSelected }]}
+                />
+                <TextInput
+                  value={birthMonth}
+                  onChangeText={(text) => {
+                    setBirthMonth(text.replace(/\D/g, '').slice(0, 2));
+                    setAgeError(null);
+                  }}
+                  placeholder="MM"
+                  placeholderTextColor={theme.textSecondary}
+                  keyboardType="number-pad"
+                  maxLength={2}
+                  editable={!busy}
+                  style={[styles.input, styles.datePart, { color: theme.text, backgroundColor: theme.backgroundSelected }]}
+                />
+                <TextInput
+                  value={birthDay}
+                  onChangeText={(text) => {
+                    setBirthDay(text.replace(/\D/g, '').slice(0, 2));
+                    setAgeError(null);
+                  }}
+                  placeholder="DD"
+                  placeholderTextColor={theme.textSecondary}
+                  keyboardType="number-pad"
+                  maxLength={2}
+                  editable={!busy}
+                  style={[styles.input, styles.datePart, { color: theme.text, backgroundColor: theme.backgroundSelected }]}
+                />
+              </View>
+            </Field>
+
+            <Field label="2. What should we call you?" required>
               <TextInput
                 value={name}
                 onChangeText={setName}
@@ -221,7 +295,7 @@ export default function OnboardingScreen() {
             </Field>
 
             <Field
-              label="2. Unique @handle"
+              label="3. Unique @handle"
               required
               error={handleError}
               hint="Letters and numbers only. Reserved: ato, sage, admin, support, you, astrollogs.">
@@ -247,7 +321,7 @@ export default function OnboardingScreen() {
               </View>
             </Field>
 
-            <Field label="3. What are you in this week?" required>
+            <Field label="4. What are you in this week?" required>
               <TextInput
                 value={showUp}
                 onChangeText={setShowUp}
@@ -258,7 +332,7 @@ export default function OnboardingScreen() {
               />
             </Field>
 
-            <Field label="4. Talk style" required>
+            <Field label="5. Talk style" required>
               <View style={[styles.segmented, { backgroundColor: theme.backgroundElement }]}>
                 {TALK_STYLES.map((option) => {
                   const selected = talkStyle === option.value;
@@ -280,7 +354,7 @@ export default function OnboardingScreen() {
               </View>
             </Field>
 
-            <Field label="5. What usually knocks you off?" required>
+            <Field label="6. What usually knocks you off?" required>
               <TextInput
                 value={knocksYouOff}
                 onChangeText={setKnocksYouOff}
@@ -291,7 +365,7 @@ export default function OnboardingScreen() {
               />
             </Field>
 
-            <Field label="6. What do you already do every morning?" required>
+            <Field label="7. What do you already do every morning?" required>
               <TextInput
                 value={morningCue}
                 onChangeText={setMorningCue}
@@ -397,6 +471,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontSize: 16,
+  },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  dateYear: {
+    flex: 1.2,
+  },
+  datePart: {
+    flex: 1,
   },
   handleRow: {
     flexDirection: 'row',

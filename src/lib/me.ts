@@ -1,3 +1,4 @@
+import { errorMessageForAge } from '@/lib/age';
 import { clearPendingInviteCode, errorMessageForInvite } from '@/lib/invite';
 import { supabase } from '@/lib/supabase';
 
@@ -12,6 +13,11 @@ export interface Me {
   knocks_you_off: string;
   morning_cue: string;
   timezone: string;
+  /**
+   * Self-reported date of birth (`YYYY-MM-DD`). Age is computed from this.
+   * Null only on accounts created before the field existed.
+   */
+  born_on: string | null;
   /** AI consent gate (Apple 5.1.2). null = never asked, true = granted, false = denied. */
   ai_consent: boolean | null;
   /** Raw jsonb; run it through normalizeRecipe before rendering. */
@@ -34,10 +40,13 @@ export type MeInsert = Omit<
   | 'facts'
   | 'milestones_celebrated'
   | 'referred_by'
+  | 'born_on'
   | 'created_at'
   | 'updated_at'
 > & {
   invite_code?: string;
+  /** Required for a new ME row. YYYY-MM-DD. */
+  born_on: string;
 };
 
 export type AiConsent = 'granted' | 'denied' | 'pending';
@@ -83,6 +92,7 @@ export async function createMe(row: MeInsert): Promise<Me> {
       p_morning_cue: profile.morning_cue,
       p_timezone: profile.timezone,
       p_invite_code: invite_code?.trim() ? invite_code.trim() : null,
+      p_born_on: profile.born_on,
     })
     .maybeSingle();
 
@@ -95,6 +105,8 @@ export async function createMe(row: MeInsert): Promise<Me> {
 export function errorMessageForHandle(error: unknown): string {
   const inviteMessage = errorMessageForInvite(error);
   if (inviteMessage) return inviteMessage;
+  const ageMessage = errorMessageForAge(error);
+  if (ageMessage) return ageMessage;
   const code = (error as { code?: string })?.code;
   if (code === '23505') return 'That handle is already taken';
   if (code === '23514') return 'That handle is reserved';
