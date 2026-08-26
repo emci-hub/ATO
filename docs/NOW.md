@@ -11,8 +11,8 @@ Stage 8 (TestFlight) — sequencing as tight handoffs:
 2. ✅ Invite/referral gate (Auth + ME) — done.
 3. ✅ Push notifications + widget — done.
 4. ✅ **Floor requirements sweep — DONE, pushed `master` `57abf5e` → `ea2b4f3`.** See Done section for the five sub-items and commits.
-5. Legal + landing copy — privacy.md/terms.md drafted in Claude, committed to `app/legal/` (`57abf5e`); landing page live at `ato.emgens.com`. **Loose ends still open, tracked below under Left.**
-6. EAS build → TestFlight submission — next up.
+5. Legal + landing copy — privacy.md/terms.md drafted in Claude, committed to `app/legal/` (`57abf5e`); landing page live at `ato.emgens.com`. Remaining public-launch items (ASC privacy-label paste, `support@asstrollogs.com` inbox, lawyer pass) are parked below — **do not start until public launch is imminent.**
+6. ✅ **EAS build → TestFlight — done.** Build 6 shipped, installed on a real device. Beta App Review submitted for the Friends external testing group — **pending as of Aug 26, 2026.**
 
 ## Done
 - Stage 1 (Home shell) — screenshot verified: 3 tabs (Home, Sage, You), no Circle tab, fake card, fake poster
@@ -27,7 +27,7 @@ Stage 8 (TestFlight) — sequencing as tight handoffs:
 - Stage 8 handoff #2 (Invite/referral gate) — done, 7/7 automated checks + seeded tree pause test passed
 - Stage 8 handoff #3 (Push notifications + widget) — done, all four device-test steps verified on real iPhone
 - **Stage 8 handoff #4 (Floor-requirements sweep) — done, pushed `ea2b4f3`:**
-  - **Sentry** (`e5c5a0f`) — already wired (init/wrap, native crash handling, You-tab test buttons). Added `npm run check:sentry`, plugin project set to `ato-app`. Verified: live JS error ingested, event id `600436b1001945eca54f84c5e67a6df7`. Native crash on TestFlight build 6 is expected **unsymbolicated** (upload was disabled for that binary). **EAS production source-map auto-upload is now on:** `SENTRY_AUTH_TOKEN` (sensitive), `SENTRY_DISABLE_AUTO_UPLOAD=false`, `SENTRY_ORG=emgens`, `SENTRY_PROJECT=ato-app`. Next production build should upload maps; no build triggered in this box.
+  - **Sentry** (`e5c5a0f`) — already wired (init/wrap, native crash handling, You-tab test buttons). Added `npm run check:sentry`, plugin project set to `ato-app`. Verified: live JS error ingested, event id `600436b1001945eca54f84c5e67a6df7`. Native crash on TestFlight build 6 is expected **unsymbolicated** (upload was disabled for that binary). **EAS production source-map auto-upload is now on:** `SENTRY_AUTH_TOKEN` (sensitive), `SENTRY_DISABLE_AUTO_UPLOAD=false`, `SENTRY_ORG=emgens`, `SENTRY_PROJECT=ato-app`. Confirm maps on **build 7** (not yet cut).
   - **Privacy labels** (`22b242b`) — `src/app/legal/app-privacy-labels.md`, the App Store Connect paste sheet, aligned with `privacy.md`. Originally ten data types; **Date of Birth added** with the Stage 2 age field (now 11 types, still no tracking). Names Supabase, Gemini, Resend, Apple, Sentry. Push token intentionally not declared (v1 has none). Answers are ready to paste into App Store Connect — **not yet submitted there.**
   - **PrivacyInfo.xcprivacy** (`211e101`) — app + widget manifests already matched actual collection/required-reason APIs; locked types + API reasons into `floor-check`. Verified: `npx tsx ./scripts/floor-check.ts` 9/9 (Date of Birth added later with the age field; assertion count unchanged).
   - **Coach labeling** (`668424e`) — fixed gaps (Dawn lede, Talk title, composer placeholder, Teach Sage copy) so the UI itself, not just policy docs, labels Sage as a coach. Verified: floor-check coach assertions pass, no "Sage listens" language remains.
@@ -39,17 +39,23 @@ Stage 8 (TestFlight) — sequencing as tight handoffs:
 - **Crisis card region-detection** — auto from device locale/timezone at launch (`expo-localization`), stored locally. Settings picker on You (Auto / United States / Canada / Other region). US → `988 Suicide & Crisis Lifeline`, Canada → `988 Suicide Crisis Helpline` (call or text 988). Any other region → honest fallback, no guessed number. Verified: `npm run check:crisis-region`.
 - **SecureStore 2048-byte warning** — cause was the full Supabase session JSON written to Keychain under `sb-aijzsmupaaaxjctfgwpl-auth-token` (~2364 bytes for an Apple session; email-only was ~1898 and under the ceiling). Access JWT ~782–1199 bytes, refresh token 12 bytes — both fit. Adapter now keeps tokens in SecureStore (`ato.auth.access_token` / `ato.auth.refresh_token`) and the rest of the session in AsyncStorage; leftover oversized Keychain items migrate on next read. Verified: `npm run check:auth-storage` 6/6. Native Metro sign-in not reproduced here (Windows host, SecureStore is iOS/Android only).
 - **Font/spacing consistency pass** — no new theme file; used existing `Spacing` + `ThemedText` types. Circle names 17→18 (match You), Unfriend 13→14 (`smallBold`), Sign out 16→14 (`smallBold` like other full-width buttons), inline errors `small`+600 → `smallBold`, Circle lede dropped cramped lineHeight 18 (match Home/Sage default), Sage message list bottom inset aligned to other tabs (`BottomTabInset + Spacing.four`).
+- **Stage 8 handoff #6 (EAS → TestFlight)** — build 6 shipped and installed on a real device. Beta App Review submitted for the Friends external testing group (pending as of Aug 26, 2026).
 
 ## Left
-- Stage 8 item 5 loose ends (not blockers for the sweep, but open before public/App Store submission):
-  - App Store Connect privacy labels: answers ready in `app-privacy-labels.md` (now includes Date of Birth), not yet pasted into App Store Connect itself
-  - `support@asstrollogs.com` — used across privacy.md/terms.md/landing footer as the contact address; **not yet confirmed as a real, monitored inbox**
-  - Terms §13 (governing law/dispute resolution) and the crisis disclaimer both still need a lawyer's pass before public launch
-  - Sentry native crash path — JS ingest verified; TestFlight build 6 native frames expected unsymbolicated. Next EAS production build should upload source maps (`SENTRY_AUTH_TOKEN` on EAS, auto-upload re-enabled). Confirm a native event in `ato-app` after that binary.
-- Stage 8 item 6: EAS build → TestFlight submission — next up
+- **Queued for EAS build 7** (not yet cut):
+  - App icon swap — real icon, not the Expo default
+  - Age-field rollout — `me.born_on` is in code/onboarding; this binary is what ships it to TestFlight testers (build 6 predates that)
+  - Sentry source-map upload confirmation — auto-upload is on for production; build 6 was cut with upload disabled so that binary stays unsymbolicated. Confirm maps (and a native event) in `ato-app` after build 7
+- Friends external testing group: Beta App Review for build 6 is **pending** — no action until Apple responds
 - **Known, accepted, non-blocking for TestFlight:** a patched client could skip `claim_ai_call()` and call Gemini directly using the client-embedded key. Public-launch item, not a TestFlight blocker — added to backlog below.
 
-## Backlog (Stage 8 — polish pass, before TestFlight)
+## Public release readiness — do not start until public launch is imminent
+These are real, but they are not TestFlight work and they are not next. Leave them parked.
+- App Store Connect privacy labels: answers ready in `app-privacy-labels.md` (11 types including Date of Birth), not yet pasted into App Store Connect itself
+- `support@asstrollogs.com` — used across privacy.md/terms.md/landing footer as the contact address; **not yet confirmed as a real, monitored inbox**
+- Terms §13 (governing law/dispute resolution) and the crisis disclaimer both still need a lawyer's pass
+
+## Backlog (Stage 8 polish — not blocking the Friends TestFlight group)
 - Fantasy UI Borders pack (Kenney) — UI chrome/panels/buttons
 - Monster Builder Pack — parked, needs eyes/mouth slots added to recipe before usable
 - Make show_up / knocks_you_off / morning_cue editable in Settings, not just talk_style
@@ -65,8 +71,8 @@ Stage 8 (TestFlight) — sequencing as tight handoffs:
 - **Open decision (emci's, not technical):** Apple Developer account type — Individual vs Organization. Revisit before public submission.
 - Bundle ID `com.emgens.ato` (App ID) / `com.emgens.ato.signin` (Services ID) confirmed.
 - Apple client_secret JWT minted Aug 25, 2026, expires Feb 24, 2027 07:24 UTC. Regenerate around late Jan 2027. Not automated.
-- Email sending on `noreply@asstrollogs.com` (Resend-verified). `support@asstrollogs.com` used as the public contact address in legal/landing copy — needs confirmation as a real monitored inbox before it's live-facing.
+- Email sending on `noreply@asstrollogs.com` (Resend-verified). `support@asstrollogs.com` used as the public contact address in legal/landing copy — inbox confirmation is parked under Public release readiness, not active work.
 - Landing page live at `ato.emgens.com` — social handle decided as `@whatsyourato` (primary), fallback `emgensato`/`atoapp`/`heyato` per-platform if taken. Not yet confirmed reserved on any platform.
 
 ## Next 15 min
-Stage 8 item 6: EAS build → TestFlight submission. Before starting on device: confirm current EAS/Expo project config is still valid (`eas build:configure` check), and use the floor-requirements-sweep build to also verify the Sentry native crash path that's still outstanding.
+Waiting on Apple: Beta App Review for the Friends external testing group (build 6). Do not start public-release items. Next binary is **build 7** (not yet cut): app icon swap, age-field rollout, confirm Sentry source maps landed.
