@@ -3,86 +3,70 @@
 **Category:** Hybrid — AI-native + Social + Health/finance/kids
 **Gates:** A ✓ (non-goals in ATO_PLAN_v2.md) · B ✓ (iOS/Expo, Supabase, Apple Sign-in+email) · C in progress · D not started
 **Modules on:** report/block (Social), crisis static-card + privacy pass (Health/finance/kids) — both required, in progress
-**Live AI + model:** Cursor, `deepseek-v4-flash` (default), Grok 4.6 confirmed reachable again as of handoff #4 — Expo SDK 54
+**Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
 
 ## On
-Stage 8 (TestFlight) — sequencing as tight handoffs rather than one big box:
-1. ✅ Apple Sign-In + delete-account/token revoke — DONE, verified on real device.
-2. ✅ Invite/referral gate (Auth + ME) — DONE, pushed.
-3. ✅ Push notifications + widget — DONE, verified on real device.
-4. ✅ Floor-requirements sweep — DONE, re-verified this session (five separate commits, then this docs push). Sentry JS test event ingested (`600436b1001945eca54f84c5e67a6df7`). Native crash still needs the next EAS build.
-5. Legal + landing copy — privacy.md + terms.md are in `src/app/legal/`; landing copy still outside this repo. Nutrition labels now match the policy. **next up:** landing polish if needed, then TestFlight
-6. EAS build → TestFlight submission
-
-**Handoff #4 — fully closed, re-verified.** Sentry project `ato-app`: DSN in `.env.local` and EAS development; live JS test error ingested this session (event id `600436b1001945eca54f84c5e67a6df7`, `npm run check:sentry`). Native crash test still needs the *next* EAS build (current dev client predates the native Sentry module) — hold that check until the Stage 8 EAS build in handoff #6. App Privacy nutrition labels match `privacy.md` + `PrivacyInfo.xcprivacy` (10 types, no tracking). Sage labeled coach on Talk, Home, Dawn, consent, crisis, morning push, widget, and Teach Sage. Talk router rate-limited per user: live `app_config` is **20/day, 200/month**, enforced in `claim_ai_call()` (SECURITY DEFINER, `auth.uid()`, advisory lock); `quota-check` 5/5, `voice-router-check` 24/24, `floor-check` 9/9.
-
-**Side effect fixed along the way (unrelated to Sentry itself):** Node 24 broke Metro config loading (`ERR_UNSUPPORTED_ESM_URL_SCHEME` on Windows) and then a metro-file-map/Expo CLI event-shape mismatch (`events is not iterable`). Fixed by pinning `metro@0.83.3` as a direct dep and `overrides.metro-config@0.83.5` — keeps Windows-safe `pathToFileURL` support without hitting the newer event-shape break `@expo/cli@54.0.27` doesn't understand yet. Committed `3b9fd34`. Node stays on v24.18.0, no downgrade needed.
-
-**Also designed this session, not yet started, own future box after Stage 8 wraps:** Understanding spec (see ATO_PLAN_v2.md) — full onboarding/personalization redesign, backlog item below.
+Stage 8 (TestFlight) — sequencing as tight handoffs:
+1. ✅ Apple Sign-In + delete-account/token revoke — done, verified on real device.
+2. ✅ Invite/referral gate (Auth + ME) — done.
+3. ✅ Push notifications + widget — done.
+4. ✅ **Floor requirements sweep — DONE, pushed `master` `57abf5e` → `ea2b4f3`.** See Done section for the five sub-items and commits.
+5. Legal + landing copy — privacy.md/terms.md drafted in Claude, committed to `app/legal/` (`57abf5e`); landing page live at `ato.emgens.com`. **Loose ends still open, tracked below under Left.**
+6. EAS build → TestFlight submission — next up.
 
 ## Done
 - Stage 1 (Home shell) — screenshot verified: 3 tabs (Home, Sage, You), no Circle tab, fake card, fake poster
-- Stage 2 (Sign-in + ME + Theme) — fully verified: OTP email auth, ME row saves, sign-out, duplicate/reserved handle errors
-- Stage 3 (Pixel) — fully verified: composable recipe, measured skeleton anchors, hands correct both sides, 5 looks swap cleanly
-- Stage 4 (Dawn + Router) — fully verified: sage.txt + first_cards.md live, bank/model routing proven, filters, AI consent gate enforced at router level. 16/16 automated checks pass.
-- Crisis module + classifier + keyword fallback + Talk box — built and verified 23/23 (see prior NOW.md detail); Sage tab rebuilt as chat UI, persistent lifebuoy support button, auto-shown card, one-tap dismiss
-- Stage 5 (Talk) — built + verified 23/23
-- Stage 6 (Share + Circle) — built + verified per plan done-bar
-- Stage 7 (Chat + Report) — built + verified per plan done-bar
-- Stage 8, handoff #1 (Apple Sign-In + delete/revoke) — device-verified, `confirmRevoked()` true
-- Stage 8, handoff #2 (invite/referral gate) — `signup_mode: invite_only`, auto-issued invite codes, `referred_by`, recursive moderation functions; 7/7 automated + seeded tree pause test passed; committed `33aec7f`, pushed
-- Stage 8, handoff #3 (push notifications + widget) — `expo-notifications`, WidgetKit native SwiftUI; all four device-test steps verified on real iPhone; committed `252960d` → `9826610`, pushed
-- Stage 8, handoff #4 (floor-requirements sweep) — originally `f244a03`; re-verified this session as five separate commits:
-  - Sentry wired (native crash handling on, Expo plugin `project: ato-app`, Metro Debug IDs, Test crash reporting card on You). DSN in `.env.local` + EAS development. Live JS test error ingested this session (event id `600436b1001945eca54f84c5e67a6df7`, `npm run check:sentry`). Native crash path still needs the next EAS build.
-  - App Privacy nutrition labels in `src/app/legal/app-privacy-labels.md` aligned with `privacy.md` (names Supabase, Gemini, Resend, Apple, Sentry). 10 collected types, no tracking — ready to paste into App Store Connect at submission, not yet typed there. Push token is **not** declared: v1 uses local notifications only. Age is in the policy draft but not collected in-app yet.
-  - `PrivacyInfo.xcprivacy` present for app + widget target, `NSPrivacyTracking = false`, required-reason API codes filled (UserDefaults, file timestamp, system boot time incl. Sentry + widget App Group)
-  - "Coach" labeling audited across Talk tab (title is `Sage · coach`), Home card, Dawn lede, morning push, widget, consent cards, crisis card, and Teach Sage — "Sage is a coach... not a person" language live in UI copy itself, not just policy doc. Evening/Sunday pushes untouched (not Sage-speaking surfaces).
-  - Rate limiting: server-side `claim_ai_call()` (SECURITY DEFINER, advisory-locked, keyed on `auth.uid()`), `app_config.ai_daily_cap`/`ai_monthly_cap` **live 20/200**, configurable without rebuild, `ai_usage` client-readable/not-writable, deny path shows "Sage's out of things to say for today, back tomorrow" not a raw error. Re-verified live on `ato`; `quota-check` 5/5, `voice-router-check` 24/24 (spy `generateTalk` not called on deny). Daily-card generation is not claimed (Dawn remounts would burn the cap); Talk is the rate-limited router path.
+- Stage 2 (Sign-in + ME + Theme) — fully verified
+- Stage 3 (Pixel) — fully verified
+- Stage 4 (Dawn + Router) — fully verified, 16/16 automated checks pass
+- Crisis module + classifier + Talk box — built and verified 23/23
+- Stage 5 (Talk) — built + verified
+- Stage 6 (Share + Circle) — built + verified
+- Stage 7 (Chat + Report) — built + verified, `master` in sync
+- Stage 8 handoff #1 (Apple Sign-In + delete/revoke) — done, `confirmRevoked()` true on real device
+- Stage 8 handoff #2 (Invite/referral gate) — done, 7/7 automated checks + seeded tree pause test passed
+- Stage 8 handoff #3 (Push notifications + widget) — done, all four device-test steps verified on real iPhone
+- **Stage 8 handoff #4 (Floor-requirements sweep) — done, pushed `ea2b4f3`:**
+  - **Sentry** (`e5c5a0f`) — already wired (init/wrap, native crash handling, You-tab test buttons). Added `npm run check:sentry`, plugin project set to `ato-app`. Verified: live JS error ingested, event id `600436b1001945eca54f84c5e67a6df7`. Native crash confirmation still needs the next EAS binary.
+  - **Privacy labels** (`22b242b`) — `src/app/legal/app-privacy-labels.md`, the App Store Connect paste sheet, aligned with `privacy.md`. Ten data types, no tracking. Names Supabase, Gemini, Resend, Apple, Sentry. Push token and age intentionally not declared (v1 has neither). Answers are ready to paste into App Store Connect — **not yet submitted there.**
+  - **PrivacyInfo.xcprivacy** (`211e101`) — app + widget manifests already matched actual collection/required-reason APIs; locked 10 types + API reasons into `floor-check`. Verified: `npx tsx ./scripts/floor-check.ts` 9/9.
+  - **Coach labeling** (`668424e`) — fixed gaps (Dawn lede, Talk title, composer placeholder, Teach Sage copy) so the UI itself, not just policy docs, labels Sage as a coach. Verified: floor-check coach assertions pass, no "Sage listens" language remains.
+  - **Rate limiting** (`0f30625`) — live cap on project `ato`: **20 model calls/UTC day, 200/UTC month** (`app_config.ai_daily_cap`/`ai_monthly_cap`). Enforced via Postgres `claim_ai_call()` (SECURITY DEFINER, advisory lock), called from Talk UI before `generateTalk`. Deny copy: "Sage's out of things to say for today, back tomorrow." Daily-card generation intentionally not claimed (remounting Dawn would burn the cap). Verified: live SQL caps 20/200; `quota-check` 5/5; `voice-router-check` 24/24.
+- Legal + landing copy drafted directly in Claude: `app/legal/privacy.md`, `app/legal/terms.md` (committed `57abf5e`), landing page live at `ato.emgens.com` (Vercel project `ato`, team `em-gens`, not yet linked to a git repo)
+- `docs/BUSINESS.md` updated with finalized social handle decision (`@whatsyourato`, committed `57abf5e`)
 
 ## Left
-Stage 8 (TestFlight) — landing polish if needed, then EAS build → TestFlight submission
+- Stage 8 item 5 loose ends (not blockers for the sweep, but open before public/App Store submission):
+  - App Store Connect privacy labels: answers ready in `app-privacy-labels.md`, not yet pasted into App Store Connect itself
+  - Age field gap: no in-app age question exists yet despite plan/policy referencing self-reported age — still needs a Stage 2 addition (flagged previously, not yet closed)
+  - `support@asstrollogs.com` — used across privacy.md/terms.md/landing footer as the contact address; **not yet confirmed as a real, monitored inbox**
+  - Terms §13 (governing law/dispute resolution) and the crisis disclaimer both still need a lawyer's pass before public launch
+  - Sentry native crash path unverified — needs confirmation on the next EAS binary, not just the JS test event
+- Stage 8 item 6: EAS build → TestFlight submission — next up
+- **Known, accepted, non-blocking for TestFlight:** a patched client could skip `claim_ai_call()` and call Gemini directly using the client-embedded key. Public-launch item, not a TestFlight blocker — added to backlog below.
 
 ## Backlog (Stage 8 — polish pass, before TestFlight)
-- Fantasy UI Borders pack (Kenney) — UI chrome/panels/buttons, separate visual system from character art
-- Universal font/spacing consistency pass — cross-cutting, do once near the end
+- Fantasy UI Borders pack (Kenney) — UI chrome/panels/buttons
+- Universal font/spacing consistency pass
 - Kenney credits/disclaimer page — bundle into You tab settings area
 - Monster Builder Pack — parked, needs eyes/mouth slots added to recipe before usable
 - Make show_up / knocks_you_off / morning_cue editable in Settings, not just talk_style
 - Revisit onboarding question wording if it still feels off after a fresh look
-- Crisis card: region-detection (currently hardcoded to Canada/988) — needs a real approach
-- Crisis: relational-safety/abuse category (separate from self-harm) — needs its own resource number
-- SecureStore warning: "Value being stored is larger than 2048 bytes" — minor, not urgent
-- **Gemini key exposure gap (new, flagged by Grok in handoff #4):** rate limiting is enforced server-side for the app's own Talk flow, but a patched client could skip the `claim_ai_call()` RPC entirely and hit Gemini directly using the existing `EXPO_PUBLIC_GEMINI_API_KEY`, since it's a client-embedded key. Real fix is moving the Gemini call behind an Edge Function so the key never ships to the client — that's Router-box work, not floor-sweep work, so it was correctly left out of handoff #4. Needs its own small box before or shortly after public launch; not a TestFlight blocker (friends-only, low abuse surface) but should not be forgotten before `signup_mode` flips to `public`.
+- Crisis card: region-detection (currently hardcoded to Canada/988)
+- Crisis: relational-safety/abuse category, own resource number, parked separately
+- SecureStore warning: "Value being stored is larger than 2048 bytes" — minor
 - **Understanding spec** (see ATO_PLAN_v2.md → Understanding spec) — own future box (`intake`), sequenced after Stage 8 wraps
-- Slack — parked as future ops tooling, raise proactively only if/when app scales
-
-## Crisis detection — final architecture (decided after extended discussion)
-AI-judged (separate lightweight Gemini classification call) with keyword-list fallback if the classifier fails/times out. No confirmation gate before showing the card. Persistent subtle support button in Talk UI regardless of detection. Legal disclaimer draft in crisis-disclaimer.md — still needs a lawyer's pass before real users.
-
-## Idea parking lot — Wave 3 expansion (gated: only after Wave 2 has real nights happening)
-1. Weekly Read — Sunday depth, title + one true line free, body locked
-2. Last 30 days of cards
-3. Weekly archive
-4. Deeper Circle — model grid + "how you two talked this week," unlocks when both hit 7 Checks
-5. More Talk — higher cap + can ask Sage about this week's Read
-6. Mid-week note
-7. Shareable weekly card
-8. Interest news, second voice, extra pixel looks, custom pixel
-
-## Idea parking lot — games/tokens/accuracy (single-player first, multiplayer parked further out)
-Games give tokens; tokens unlock "refresh about themselves." Accuracy meter shows how well-known their profile is. Multiplayer games = 2x tokens, parked until Circle/Around exist.
+- **AI capacity hardening** — close the client-embedded-key bypass noted above before public launch (server-side proxy or equivalent), fold into public-readiness checklist rather than TestFlight
+- Slack — parked as future ops tooling, bring up again if/when the app scales
 
 ## Housekeeping
 - docs/ATO_PLAN_v2.md, docs/ME.md, docs/NOW.md, docs/BUSINESS.md — Cursor maintains these directly. Commit together, `git push` immediately, never left local-only.
-- EXPO_PUBLIC_GEMINI_API_KEY set and live-verified. Model pinned to `gemini-3.7-flash` (not `-latest`).
-- ATO_PLAN_v2.md updated with Referral spec + Understanding spec (future `intake` box, also listed in packets) + Public App Store readiness checklist — treat locked additions as locked, not deviations to flag.
+- EXPO_PUBLIC_GEMINI_API_KEY set and live-verified. Model pinned to `gemini-3.7-flash`.
 - **Open decision (emci's, not technical):** Apple Developer account type — Individual vs Organization. Revisit before public submission.
-- Bundle ID `com.emgens.ato` (App ID) / `com.emgens.ato.signin` (Services ID). Edge Function secret `APPLE_CLIENT_ID` = bundle ID.
-- Apple client_secret JWT minted Aug 25, 2026. **Expires Feb 24, 2027 07:24 UTC.** Team ID `Q2UF7F6N36`, Key ID `3JKLGRJ586`. Regenerate late Jan 2027 — not automated.
-- Email sending on `noreply@asstrollogs.com` (Resend-verified). Later: `mail.emgens.com` as verified Resend domain + Apple Email Sources list.
-- Age gap (self-reported age question missing from Stage 2) — still needs closing; wasn't part of handoff #4's five items, re-flag before legal/landing pass since privacy labels now reference age-gating.
-- **signup_mode** is `invite_only` in production. Flip to `public` is a one-line SQL change — per plan, at App Store public-submission time, not TestFlight. Don't flip early.
-- First EAS dev-client build with native modules (`expo-notifications`, WidgetKit) succeeded after fixing two credential/build issues — see Stage 8 item 3. Future native-module additions may hit similar target/asset-catalog quirks; keep `ATOWidget` naming and the icon-inheritance prebuild plugin as the reference.
+- Bundle ID `com.emgens.ato` (App ID) / `com.emgens.ato.signin` (Services ID) confirmed.
+- Apple client_secret JWT minted Aug 25, 2026, expires Feb 24, 2027 07:24 UTC. Regenerate around late Jan 2027. Not automated.
+- Email sending on `noreply@asstrollogs.com` (Resend-verified). `support@asstrollogs.com` used as the public contact address in legal/landing copy — needs confirmation as a real monitored inbox before it's live-facing.
+- Landing page live at `ato.emgens.com` — social handle decided as `@whatsyourato` (primary), fallback `emgensato`/`atoapp`/`heyato` per-platform if taken. Not yet confirmed reserved on any platform.
 
 ## Next 15 min
-Stage 8: landing page polish if anything is still outstanding, then EAS build → TestFlight.
+Stage 8 item 6: EAS build → TestFlight submission. Before starting on device: confirm current EAS/Expo project config is still valid (`eas build:configure` check), and use the floor-requirements-sweep build to also verify the Sentry native crash path that's still outstanding.

@@ -11,13 +11,13 @@ This runs parallel to the technical Stages/Waves in ATO_PLAN_v2.md. It does not 
 ### M0 — Right now (building, no revenue, no public users)
 - **Status:** sole proprietor by default. Operating under your own legal name. No registration required.
 - **Do today:** start keeping every AI subscription and tool receipt (Claude, Cursor, Perplexity, Supabase, Resend, Expo/EAS, domain) in one folder or spreadsheet. Even before anything is "official," these become expense records once there's a business to attach them to — ask an accountant later how far back pre-registration costs can be claimed, don't assume.
-- **Apple Developer account:** enrolled (Team ID `Q2UF7F6N36`). Individual vs Organization still open — see log below. Stage 8 Apple Sign-In + delete/revoke is **verified on a real device** (Key ID `3JKLGRJ586`; Edge Function `APPLE_CLIENT_ID` = App ID `com.emgens.ato`; Services ID `com.emgens.ato.signin` stays for Supabase Auth / web). Invite/referral gate, push + widget, and floor-requirements sweep are **done** (Sentry JS ingest re-confirmed; nutrition labels match privacy.md; Talk cap live 20/day 200/month). Handoff #5: privacy.md + terms.md are in `src/app/legal/`; landing still at `ato.emgens.com`. Next Stage 8 work: TestFlight submit. Gemini key stays client-embedded until a later Edge Function box — not a TestFlight blocker, required before `signup_mode` flips to `public`.
+- **Apple Developer account:** enrolled (Team ID `Q2UF7F6N36`). Individual vs Organization still open — see log below. Stage 8 Apple Sign-In + delete/revoke is **verified on a real device** (Key ID `3JKLGRJ586`; Edge Function `APPLE_CLIENT_ID` = App ID `com.emgens.ato`; Services ID `com.emgens.ato.signin` stays for Supabase Auth / web). Invite/referral gate, push + widget, and floor-requirements sweep are **done** (pushed `ea2b4f3`; Sentry JS ingest re-confirmed; nutrition labels match privacy.md; Talk cap live 20/day 200/month). Legal + landing drafted and mostly live (`src/app/legal/` + `ato.emgens.com`); loose ends in NOW.md Left. Next Stage 8 work: EAS build → TestFlight submit. Gemini key stays client-embedded until a later Edge Function box — not a TestFlight blocker, required before `signup_mode` flips to `public`.
 - **Trademark:** the search flagged in Wave 0 — do it now if not already done. Free, fast. Don't file yet.
 - **Landing page:** live at `ato.emgens.com` (Vercel project `ato` under the `em-gens` team, not yet connected to a git repo — updates go through manual redeploy until linked).
 
 ### M1 — TestFlight (Stage 8, friends-only testing)
 - **Trigger:** ready to submit a build to TestFlight.
-- **Do:** Apple Developer Program already enrolled (see M0). Remaining: Individual vs Organization still open; landing polish if needed, then submit the TestFlight build (native Sentry crash check lands on that binary). $99 USD/yr already in play.
+- **Do:** Apple Developer Program already enrolled (see M0). Remaining: Individual vs Organization still open; submit the TestFlight build (native Sentry crash check lands on that binary). $99 USD/yr already in play.
 - Trade name, GST/HST, incorporation: still not required. Not public yet, no real revenue.
 - **Social handles — decided:** primary handle across X, Instagram, and TikTok is **`@whatsyourato`** (the tagline, not the bare acronym). The bare `@ato` is effectively unavailable everywhere and collides semantically with unrelated orgs (e.g. the Australian Taxation Office already operates under "ATO" on X). Per-platform fallback, only where `@whatsyourato` is actually taken: `emgensato`, `atoapp`, or `heyato` — cross-link accounts in each bio if handles end up inconsistent across platforms. Reserve these now, before public visibility increases squatting risk.
 
@@ -78,4 +78,5 @@ General principle (not a final answer — confirm with an accountant): a cost is
 - [ ] Whether/when to incorporate
 - [x] Social handle across platforms — `@whatsyourato`, decided
 - [ ] Confirm `@whatsyourato` actually secured on X, Instagram, TikTok (per-platform fallback: `emgensato` / `atoapp` / `heyato`)
+- [ ] Confirm `support@asstrollogs.com` is a real, monitored inbox (used in privacy.md / terms.md / landing footer)
 - [ ] Link `ato.emgens.com` Vercel project to a git repo, if Cursor needs to touch the landing page directly
