@@ -73,3 +73,21 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false,
   },
 });
+
+/**
+ * Drop every locally cached auth artifact. Used after account deletion and when
+ * a restored session points at a user that no longer exists on the server.
+ * `scope: 'local'` is required when the remote user/session is already gone —
+ * a global sign-out would 403 and leave the cache in place if we relied on it.
+ */
+export async function clearLocalSession(): Promise<void> {
+  const { error } = await supabase.auth.signOut({ scope: 'local' });
+  if (error) {
+    // Belt-and-suspenders: if gotrue's signOut path glitched, still wipe the
+    // mirrored token keys the SplitStorageAdapter owns.
+    if (Platform.OS !== 'web') {
+      await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY).catch(() => {});
+      await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY).catch(() => {});
+    }
+  }
+}

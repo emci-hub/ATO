@@ -16,6 +16,7 @@ import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { createMe, errorMessageForHandle, TalkStyle } from '@/lib/me';
 import { useMeContext } from '@/lib/me-context';
+import { clearLocalSession } from '@/lib/supabase';
 import { withTimeout } from '@/lib/timeout';
 
 const RESERVED_HANDLES = ['ato', 'sage', 'admin', 'support', 'you', 'astrollogs'];
@@ -40,6 +41,7 @@ export default function OnboardingScreen() {
   const [handleError, setHandleError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const timezone =
     (typeof Intl !== 'undefined' &&
@@ -128,6 +130,13 @@ export default function OnboardingScreen() {
     }
   }
 
+  async function handleSignOut() {
+    if (signingOut || busy) return;
+    setSigningOut(true);
+    await clearLocalSession();
+    setSigningOut(false);
+  }
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -141,6 +150,19 @@ export default function OnboardingScreen() {
             <ThemedText themeColor="textSecondary" style={styles.lede}>
               Six quick questions, then ATO knows how to talk to you.
             </ThemedText>
+
+            <Pressable
+              onPress={handleSignOut}
+              disabled={signingOut || busy}
+              style={({ pressed }) => [
+                styles.signOutLink,
+                pressed && styles.pressed,
+                (signingOut || busy) && styles.disabled,
+              ]}>
+              <ThemedText type="small" themeColor="textSecondary">
+                {signingOut ? 'Signing out…' : 'Wrong account? Sign out'}
+              </ThemedText>
+            </Pressable>
 
             <Field label="1. What should we call you?" required>
               <TextInput
@@ -317,6 +339,10 @@ const styles = StyleSheet.create({
   },
   lede: {
     paddingBottom: Spacing.two,
+  },
+  signOutLink: {
+    alignSelf: 'flex-start',
+    paddingVertical: Spacing.one,
   },
   field: {
     gap: Spacing.two,

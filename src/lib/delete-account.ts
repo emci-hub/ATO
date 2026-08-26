@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { clearLocalSession, supabase } from '@/lib/supabase';
 
 /**
  * In-app account deletion. Irreversible.
@@ -51,9 +51,9 @@ export async function deleteAccount(): Promise<DeleteAccountResult> {
   }
 
   // The server-side user is gone; drop the local session so the root guard
-  // routes back to /auth. scope 'local' because the remote session no longer
-  // exists to revoke.
-  await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+  // routes back to /auth — not onboarding. A leftover JWT with no ME row is
+  // exactly the `isAuthed && !hasMe` trap.
+  await clearLocalSession();
 
   return {
     deleted: true,
