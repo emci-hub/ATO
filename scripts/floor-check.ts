@@ -166,6 +166,17 @@ const quota = read('src/lib/voice/quota.ts');
 assert.match(quota, /Sage's out of things to say for today, back tomorrow/);
 assert.match(sage, /QUOTA_EMPTY_MESSAGE/);
 assert.match(sage, /kind === 'quota'/);
-ok('quota honest-empty copy is wired to Talk, not a raw error');
+assert.match(sage, /claimAiCall/);
+assert.match(read('src/lib/voice/talk.ts'), /const claim = deps\.claimAiCall/);
+assert.match(read('src/lib/voice/quota-server.ts'), /claim_ai_call/);
+assert.match(
+  read('supabase/migrations/stage8_ai_quota.sql'),
+  /ai_daily_cap int not null default 20/,
+);
+assert.match(
+  read('supabase/migrations/stage8_ai_quota.sql'),
+  /ai_monthly_cap int not null default 200/,
+);
+ok('Talk router is rate-limited per user via claim_ai_call (20/day, 200/month)');
 
 console.log(`\n${passed} checks passed`);
