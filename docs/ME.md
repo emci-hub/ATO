@@ -4,7 +4,7 @@
 **Twin:** Drake
 
 ## This week
-Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–7 done and on-device verified. Stage 8 handoff #1 (**Apple Sign-In + delete-account/token revoke**) **DONE and verified on a real device** — `confirmRevoked()` returned true. Next: invite/referral gate (Auth + ME). Understanding spec designed, parked as its own future box after Stage 8 wraps.
+Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–7 done and on-device verified. Stage 8 handoff #1 (**Apple Sign-In + delete-account/token revoke**) **DONE and verified on a real device** — `confirmRevoked()` returned true. Next: invite/referral gate (Auth + ME). Understanding / Intake spec designed (plan packets list `intake`), parked as its own future box after Stage 8 wraps.
 
 ## App
 - **Category:** Hybrid — AI-native (Sage/router) + Social (Circle/Chat) + Health/finance/kids (crisis spec, coaching tone)

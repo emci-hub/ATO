@@ -80,7 +80,7 @@ Honest empty: "nothing this weekend" / "wall opens when the night does" / "no AT
 
 ```
 app/contracts/
-app/boxes/home auth me theme pixel dawn router talk share circle chat report invite
+app/boxes/home auth me theme pixel dawn router talk share circle chat report invite intake
          around wallet   ← empty until that wave
 app/voice/sage.txt           BEFORE STAGE 4
 app/copy/first_cards.md      BEFORE STAGE 4
@@ -108,6 +108,7 @@ Write those two copy files first. 3 styles × 3 valences. 3 mornings × 3 styles
 | Chat | from, to, words | thread |
 | Report | from, target (message_id or user_id), reason | row in Reports table, visible to admin only |
 | Invite | signup attempt + code | account created (or rejected) + code consumed |
+| Intake | onboarding taps + optional fast-entry | trait backbone fields on ME (see Understanding spec) |
 
 **ME fields:** name, handle, timezone, `this_week`, `morning_cue`, `show_up`, `knocks_you_off`, `talk_style`, color, `recipe`, theme_id, facts they've told Sage, all-time Checks, `check_count`, last_7_card_ids, `show` (visibility toggle), `allow_search`, `host` (admin-flipped), `referred_by` (hidden, nullable).
 

@@ -67,7 +67,7 @@ Early on there's not much data on someone yet. Games give tokens; tokens unlock 
 ## Housekeeping
 - docs/ATO_PLAN_v2.md, docs/ME.md, docs/NOW.md, docs/BUSINESS.md — Cursor maintains these directly. **When updating any of them, keep all four in sync, commit them together, and `git push` immediately. Never leave a docs commit sitting local-only.**
 - EXPO_PUBLIC_GEMINI_API_KEY set and live-verified. Model pinned to `gemini-3.7-flash` (not `-latest`).
-- ATO_PLAN_v2.md updated with Referral spec + Understanding spec (future `understand` box) + Public App Store readiness checklist — treat locked additions as locked, not deviations to flag.
+- ATO_PLAN_v2.md updated with Referral spec + Understanding spec (future `intake` box, also listed in packets) + Public App Store readiness checklist — treat locked additions as locked, not deviations to flag.
 - **Open decision (emci's, not technical):** Apple Developer account type — Individual vs Organization. Revisit before public submission.
 - **Confirmed:** Bundle ID `com.emgens.ato` (App ID) / `com.emgens.ato.signin` (Services ID). Edge Function secret `APPLE_CLIENT_ID` must be the **bundle ID** for native authorization-code exchange. Supabase Auth Apple provider Client IDs can still include the Services ID for web.
 - **Apple client_secret JWT minted Aug 25, 2026** via `createClientSecret` (ES256, Apple's 180-day max). **Expires Feb 24, 2027 07:24 UTC.** Identifiers: Team ID `Q2UF7F6N36`, Key ID `3JKLGRJ586`. **Regenerate and update in Supabase around late Jan 2027.** Not automated.
