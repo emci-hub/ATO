@@ -26,7 +26,7 @@ import { logCrisisFlag } from '@/lib/crisis/log';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { aiConsentFor, setAiConsent } from '@/lib/me';
 import { addSageMessage, fetchSageMessages } from '@/lib/sage-messages';
-import { TALK_EMPTY, TALK_LEDE } from '@/lib/sage-copy';
+import { TALK_COMPOSER_PLACEHOLDER, TALK_EMPTY, TALK_LEDE, TALK_WRITING, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { QUOTA_EMPTY_MESSAGE } from '@/lib/voice/quota';
 import { claimAiCall } from '@/lib/voice/quota-server';
 import { routeTalkReply } from '@/lib/voice/talk';
@@ -242,7 +242,7 @@ export default function SageScreen() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <View>
-            <ThemedText type="subtitle">Sage</ThemedText>
+            <ThemedText type="subtitle">{SAGE_COACH_LABEL}</ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.lede}>
               {TALK_LEDE}
             </ThemedText>
@@ -330,7 +330,7 @@ export default function SageScreen() {
               {busy === 'send' ? (
                 <View style={[styles.bubble, { backgroundColor: theme.backgroundElement }]}>
                   <ThemedText type="small" themeColor="textSecondary">
-                    Sage is writing…
+                    {TALK_WRITING}
                   </ThemedText>
                 </View>
               ) : null}
@@ -384,7 +384,7 @@ export default function SageScreen() {
                 <TextInput
                   value={input}
                   onChangeText={setInput}
-                  placeholder="Ask Sage anything…"
+                  placeholder={TALK_COMPOSER_PLACEHOLDER}
                   placeholderTextColor={theme.textSecondary}
                   editable={busy === null}
                   onSubmitEditing={() => send(input)}

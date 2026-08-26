@@ -18,6 +18,7 @@ import { aiConsentFor, setAiConsent } from '@/lib/me';
 import { persistRoutedCard } from '@/lib/today-card';
 import { routeVoiceCard } from '@/lib/voice/router';
 import type { VoiceCardResult } from '@/lib/voice/types';
+import { DAWN_SAGE_LEDE } from '@/lib/sage-copy';
 
 const TONE_LABEL: Record<string, string> = {
   lift: 'lift',
@@ -190,7 +191,7 @@ export default function DawnScreen() {
 
           <ThemedText type="subtitle">Dawn</ThemedText>
           <ThemedText themeColor="textSecondary" style={styles.lede}>
-            Sage&apos;s read for today, plus one thing to do before the day gets loud.
+            {DAWN_SAGE_LEDE}
           </ThemedText>
 
           {needsConsentPrompt ? (

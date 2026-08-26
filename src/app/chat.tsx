@@ -433,7 +433,7 @@ export default function ChatScreen() {
                 <View style={styles.modalCenter}>
                   <ThemedText type="smallBold">Saved to Sage</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-                    Sage remembers this one fact about you.
+                    Saved as one fact. Sage is a coach — it only learns from these taps.
                   </ThemedText>
                   <Pressable
                     onPress={closeTeach}
@@ -451,7 +451,7 @@ export default function ChatScreen() {
                 <View style={styles.modalCenter}>
                   <ThemedText type="smallBold">Teach Sage this</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-                    Exactly one fact, in your words. Sage only ever learns from these taps.
+                    Exactly one fact, in your words. Sage is a coach, and only learns from these taps.
                   </ThemedText>
                   <TextInput
                     value={fact}
