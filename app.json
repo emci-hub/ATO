@@ -73,7 +73,22 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "03d53c8c-91ae-4993-aba9-edf0b2eefd1e"
+        "projectId": "03d53c8c-91ae-4993-aba9-edf0b2eefd1e",
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "targetName": "ATOWidget",
+                  "bundleIdentifier": "com.emgens.ato.widget",
+                  "entitlements": {
+                    "com.apple.security.application-groups": ["group.com.emgens.ato"]
+                  }
+                }
+              ]
+            }
+          }
+        }
       }
     }
   }
