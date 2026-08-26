@@ -46,6 +46,7 @@
         }
       ],
       "@bacons/apple-targets",
+      "./plugins/with-widget-appicon-scope",
       [
         "expo-splash-screen",
         {
