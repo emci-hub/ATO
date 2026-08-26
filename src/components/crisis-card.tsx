@@ -5,13 +5,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import {
-  CRISIS_ACTIONS,
-  CRISIS_BODY,
-  CRISIS_DISMISS,
-  CRISIS_INTRO,
-  CRISIS_NOTE,
-} from '@/lib/crisis/copy';
+import { crisisCardContent } from '@/lib/crisis/copy';
+import { useCrisisRegion } from '@/lib/crisis/region-context';
 import { setCrisisActive } from '@/lib/kenney/gesture-actions';
 
 /**
@@ -24,6 +19,8 @@ import { setCrisisActive } from '@/lib/kenney/gesture-actions';
  */
 export function CrisisCard({ onDismiss }: { onDismiss?: () => void }) {
   const theme = useTheme();
+  const { region } = useCrisisRegion();
+  const content = crisisCardContent(region);
 
   useEffect(() => {
     setCrisisActive(true);
@@ -33,23 +30,29 @@ export function CrisisCard({ onDismiss }: { onDismiss?: () => void }) {
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
       <ThemedText type="smallBold" style={styles.intro}>
-        {CRISIS_INTRO}
+        {content.intro}
       </ThemedText>
 
-      <ThemedText style={styles.body}>{CRISIS_BODY}</ThemedText>
+      <ThemedText style={styles.body}>{content.body}</ThemedText>
 
-      <View style={styles.actions}>
-        {CRISIS_ACTIONS.map((action) => (
-          <View key={action.label} style={styles.actionRow}>
-            <ThemedText style={styles.actionIcon}>{action.icon}</ThemedText>
-            <ThemedText type="smallBold">{action.label}</ThemedText>
-          </View>
-        ))}
-      </View>
+      {content.fallback ? (
+        <ThemedText style={styles.body}>{content.fallback}</ThemedText>
+      ) : (
+        <View style={styles.actions}>
+          {content.actions.map((action) => (
+            <View key={action.label} style={styles.actionRow}>
+              <ThemedText style={styles.actionIcon}>{action.icon}</ThemedText>
+              <ThemedText type="smallBold">{action.label}</ThemedText>
+            </View>
+          ))}
+        </View>
+      )}
 
-      <ThemedText type="small" themeColor="textSecondary" style={styles.note}>
-        {CRISIS_NOTE}
-      </ThemedText>
+      {content.note ? (
+        <ThemedText type="small" themeColor="textSecondary" style={styles.note}>
+          {content.note}
+        </ThemedText>
+      ) : null}
 
       {onDismiss ? (
         <Pressable
@@ -60,7 +63,7 @@ export function CrisisCard({ onDismiss }: { onDismiss?: () => void }) {
             pressed && styles.pressed,
           ]}>
           <ThemedText type="smallBold" themeColor="textSecondary">
-            {CRISIS_DISMISS}
+            {content.dismiss}
           </ThemedText>
         </Pressable>
       ) : null}

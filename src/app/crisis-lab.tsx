@@ -6,6 +6,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { CRISIS_KEYWORDS } from '@/lib/crisis/detect';
+import { useCrisisRegion } from '@/lib/crisis/region-context';
 
 /**
  * Dev harness for the static crisis card. Not linked in production: open
@@ -13,6 +14,8 @@ import { CRISIS_KEYWORDS } from '@/lib/crisis/detect';
  * (plan's original spec — no sentiment model in v1).
  */
 export default function CrisisLabScreen() {
+  const { region, autoRegion, override } = useCrisisRegion();
+
   if (!__DEV__) {
     return (
       <ThemedView style={styles.container}>
@@ -35,6 +38,9 @@ export default function CrisisLabScreen() {
             </ThemedText>
             <ThemedText type="code" themeColor="textSecondary">
               detection: keyword list · {CRISIS_KEYWORDS.length} phrases + regex · no model call
+            </ThemedText>
+            <ThemedText type="code" themeColor="textSecondary">
+              region: {region} · auto: {autoRegion} · override: {override ?? 'auto'}
             </ThemedText>
           </View>
 

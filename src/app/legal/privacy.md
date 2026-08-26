@@ -49,7 +49,7 @@ Sage is an AI feature, not a human, and not a licensed therapist or counselor. S
 
 ## Crisis support
 
-If a message you send contains language associated with a safety crisis, ATO shows you a static support card with a crisis line for your region (for example, 988 in Canada) instead of sending your message to Sage. That flag (that a message was flagged, and when) is logged so we can improve detection — the content of the message itself is not stored for this purpose, and this logging is not used to moderate or monitor you generally.
+If a message you send contains language associated with a safety crisis, ATO shows you a static support card instead of sending your message to Sage. In the United States and Canada that card includes 988. If we don't have a confirmed local crisis line for your region, the card says so — we do not invent a number. That flag (that a message was flagged, and when) is logged so we can improve detection — the content of the message itself is not stored for this purpose, and this logging is not used to moderate or monitor you generally.
 
 **If you are in immediate danger or crisis, please contact local emergency services or a crisis line directly — ATO is not equipped to respond to emergencies.**
 

@@ -6,6 +6,7 @@ import { StyleSheet, useColorScheme, View } from 'react-native';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { PushRuntime } from '@/components/push-runtime';
 import { useTheme } from '@/hooks/use-theme';
+import { CrisisRegionProvider } from '@/lib/crisis/region-context';
 import { MeProvider, useMeContext } from '@/lib/me-context';
 import { initSentry, Sentry } from '@/lib/sentry';
 import { useSession } from '@/hooks/use-session';
@@ -19,7 +20,9 @@ function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <MeProvider>
-        <RootNavigator />
+        <CrisisRegionProvider>
+          <RootNavigator />
+        </CrisisRegionProvider>
       </MeProvider>
     </ThemeProvider>
   );

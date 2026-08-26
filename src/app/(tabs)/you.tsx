@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DeleteAccountSheet } from '@/components/delete-account-sheet';
 import { ScanSheet } from '@/components/scan-sheet';
 import { SharePoster } from '@/components/share-poster';
+import { CrisisRegionPicker } from '@/components/crisis-region-picker';
 import { KenneyCreditsCard } from '@/components/kenney-credits-card';
 import { PushTestCard } from '@/components/push-test-card';
 import { SentryTestCard } from '@/components/sentry-test-card';
@@ -197,6 +198,8 @@ export default function YouScreen() {
                 <DetailRow label="Morning cue" value={me.morning_cue} />
                 <DetailRow label="Timezone" value={me.timezone} />
               </ThemedView>
+
+              <CrisisRegionPicker />
 
               <PushTestCard timeZone={me.timezone || 'UTC'} />
               <SentryTestCard />
