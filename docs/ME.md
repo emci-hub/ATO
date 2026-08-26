@@ -4,7 +4,7 @@
 **Twin:** Drake
 
 ## This week
-Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–7 done and on-device verified. Stage 8 handoffs #1–#4 done (Apple Sign-In+delete, invite/referral gate, push+widget, floor-requirements sweep — pushed `f244a03`). One manual loose end from #4: Sentry DSN needs to be connected by emci directly (not Cursor) — see NOW.md. Next: Stage 8 handoff #5, legal + landing copy, drafted directly in this chat.
+Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–7 done and on-device verified. Stage 8 handoffs #1–#4 fully done, including the Sentry DSN connection (live-confirmed in Sentry Issues) and an unrelated Metro/Node 24 compatibility fix hit along the way (`3b9fd34`). Next: Stage 8 handoff #5, legal + landing copy, drafted directly in this chat.
 
 ## App
 - **Category:** Hybrid — AI-native (Sage/router) + Social (Circle/Chat) + Health/finance/kids (crisis spec, coaching tone)
@@ -16,7 +16,7 @@ Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–7 done and on-device 
 - **Growth tiers (built, live):** dual-axis from real ME data — presence (`me.check_count` → tier 0-3) and depth (`me.facts` → tier 0-2).
 - **Access control (built, live):** `signup_mode` (invite_only/public) on `app_config`. Every ME row auto-issues 4 one-use invite codes on creation. `referred_by` hidden, never shown publicly. `pause_branch`/`unpause_branch`/`delete_branch` recursive moderation functions, queried directly via Supabase SQL editor — no admin UI, per plan discipline.
 - **Push + widget (built, device-verified):** morning/evening/Sunday local pushes in phone timezone, no streak-pressure copy, permission asked once after `check_count >= 1`, decline leaves app fully usable. iOS widget shows Read + Do via App Group `group.com.emgens.ato`, honest empty state, updates live on new Dawn card. Widget is a separate native (SwiftUI/WidgetKit) surface — does not auto-inherit main-app UI restyles; left intentionally unsynced for now.
-- **Floor requirements (built):** Sentry JS+native SDK in the app (You-tab test buttons). App Privacy nutrition labels + `PrivacyInfo.xcprivacy` match (`NSPrivacyTracking = false`). Sage labeled coach on Talk/Home/morning push/widget. Talk model calls rate-limited per user server-side (`claim_ai_call`, 20/day 200/month). Sentry DSN still emci's to paste; native crash lands after the next EAS build.
+- **Floor requirements (built):** Sentry JS+native SDK in the app (You-tab test buttons). DSN connected; JS test error live-confirmed in Sentry Issues. Native crash lands after the next EAS build. App Privacy nutrition labels + `PrivacyInfo.xcprivacy` match (`NSPrivacyTracking = false`). Sage labeled coach on Talk/Home/morning push/widget. Talk model calls rate-limited per user server-side (`claim_ai_call`, 20/day 200/month).
 
 ## Roster
 - Assistant (Drake) — active

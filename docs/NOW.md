@@ -10,11 +10,13 @@ Stage 8 (TestFlight) — sequencing as tight handoffs rather than one big box:
 1. ✅ Apple Sign-In + delete-account/token revoke — DONE, verified on real device.
 2. ✅ Invite/referral gate (Auth + ME) — DONE, pushed.
 3. ✅ Push notifications + widget — DONE, verified on real device.
-4. ✅ Floor-requirements sweep — DONE, pushed `f244a03`. One manual loose end (below).
+4. ✅ Floor-requirements sweep — DONE, pushed `f244a03`. Sentry DSN live-confirmed (below).
 5. Legal + landing copy — drafted here directly, not a Cursor job — **next up**
 6. EAS build → TestFlight submission
 
-**Handoff #4 loose end (yours, not Cursor's):** Sentry is wired (`floor-check` 8/8 on init/plugin/wrap assertions) but not DSN-connected — no `EXPO_PUBLIC_SENTRY_DSN` in `.env.local` or EAS env yet, so nothing has landed in a dashboard. Create a free Sentry project, add the DSN in both places, reload, tap **Test crash reporting → JS error** on the You tab, confirm it shows up in Sentry Issues. Native crash test needs the *next* EAS build (current dev client predates the native module) — hold that check until the Stage 8 EAS build in handoff #6.
+**Handoff #4 — fully closed.** Sentry project `ato-app` created, DSN added to `.env.local` and EAS env (development/preview/production), JS test error confirmed live in Sentry Issues ("ATO floor-requirements Sentry test", `sendFloorTestError`). Native crash test still needs the *next* EAS build (current dev client predates the native Sentry module) — hold that check until the Stage 8 EAS build in handoff #6.
+
+**Side effect fixed along the way (unrelated to Sentry itself):** Node 24 broke Metro config loading (`ERR_UNSUPPORTED_ESM_URL_SCHEME` on Windows) and then a metro-file-map/Expo CLI event-shape mismatch (`events is not iterable`). Fixed by pinning `metro@0.83.3` as a direct dep and `overrides.metro-config@0.83.5` — keeps Windows-safe `pathToFileURL` support without hitting the newer event-shape break `@expo/cli@54.0.27` doesn't understand yet. Committed `3b9fd34`. Node stays on v24.18.0, no downgrade needed.
 
 **Also designed this session, not yet started, own future box after Stage 8 wraps:** Understanding spec (see ATO_PLAN_v2.md) — full onboarding/personalization redesign, backlog item below.
 
@@ -31,7 +33,7 @@ Stage 8 (TestFlight) — sequencing as tight handoffs rather than one big box:
 - Stage 8, handoff #2 (invite/referral gate) — `signup_mode: invite_only`, auto-issued invite codes, `referred_by`, recursive moderation functions; 7/7 automated + seeded tree pause test passed; committed `33aec7f`, pushed
 - Stage 8, handoff #3 (push notifications + widget) — `expo-notifications`, WidgetKit native SwiftUI; all four device-test steps verified on real iPhone; committed `252960d` → `9826610`, pushed
 - Stage 8, handoff #4 (floor-requirements sweep) — committed and pushed `f244a03`:
-  - Sentry wired (native crash handling on, Expo plugin, Metro Debug IDs, Test crash reporting card on You) — **DSN not yet connected, see loose end above**
+  - Sentry wired (native crash handling on, Expo plugin, Metro Debug IDs, Test crash reporting card on You) — DSN connected and live-confirmed in Sentry Issues (JS error path). Native crash path still needs the next EAS build.
   - App Privacy nutrition labels drafted in `src/app/legal/app-privacy-labels.md`, cross-checked against `PrivacyInfo.xcprivacy` and `app.json` (10 collected types, no tracking) — ready to paste into App Store Connect at submission, not yet typed there
   - `PrivacyInfo.xcprivacy` present for app + widget target, `NSPrivacyTracking = false`, required-reason API codes filled (UserDefaults, file timestamp, system boot time incl. Sentry + widget App Group)
   - "Coach" labeling audited across Talk tab, Home card, morning push, widget, consent cards — "Sage is a coach... not a person" language live in UI copy itself, not just policy doc. Chat and evening/Sunday pushes untouched (not Sage-speaking surfaces).
@@ -83,4 +85,4 @@ Games give tokens; tokens unlock "refresh about themselves." Accuracy meter show
 - First EAS dev-client build with native modules (`expo-notifications`, WidgetKit) succeeded after fixing two credential/build issues — see Stage 8 item 3. Future native-module additions may hit similar target/asset-catalog quirks; keep `ATOWidget` naming and the icon-inheritance prebuild plugin as the reference.
 
 ## Next 15 min
-Your action item: create the free Sentry project, add `EXPO_PUBLIC_SENTRY_DSN` to `.env.local` and EAS env, reload, tap **Test crash reporting → JS error** on the You tab, confirm it lands in Sentry Issues. Then start Stage 8 handoff #5: legal + landing copy — drafted directly in this chat, not a Cursor job.
+Stage 8 handoff #5: legal + landing copy — drafted directly in this chat, not a Cursor job.
