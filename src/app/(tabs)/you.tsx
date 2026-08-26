@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DeleteAccountSheet } from '@/components/delete-account-sheet';
 import { ScanSheet } from '@/components/scan-sheet';
 import { SharePoster } from '@/components/share-poster';
+import { KenneyCreditsCard } from '@/components/kenney-credits-card';
 import { PushTestCard } from '@/components/push-test-card';
 import { SentryTestCard } from '@/components/sentry-test-card';
 import { ThemedText } from '@/components/themed-text';
@@ -252,6 +253,8 @@ export default function YouScreen() {
                   ))
                 )}
               </ThemedView>
+
+              <KenneyCreditsCard />
             </>
           ) : (
             <ThemedText themeColor="textSecondary">

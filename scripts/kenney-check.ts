@@ -11,6 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { SHAPE_MANIFEST } from '../src/lib/kenney/manifests/shape';
+import { kenneyCredits, KENNEY_SITE_URL } from '../src/lib/kenney/credits';
 import {
   DEFAULT_RECIPE,
   KENNEY_REGISTRY,
@@ -18,6 +19,7 @@ import {
   normalizeRecipe,
   resolveCharacter,
 } from '../src/lib/kenney/registry';
+import { PNG } from 'pngjs';
 
 let passed = 0;
 function ok(label: string) {
@@ -114,7 +116,6 @@ ok('event gestures map to manifest-declared hand states');
 // Hand/body color consistency: every exported hand variant's dominant color
 // must match its body variant. Guards the raw-name-override regression where
 // all hands were exported as the yellow file.
-import { PNG } from 'pngjs';
 function dominantColor(file: string): string | null {
   const png = PNG.sync.read(fs.readFileSync(file));
   const counts = new Map<string, number>();
@@ -151,5 +152,19 @@ ok(`all ${colorChecks} hand assets match their body variant's color (no all-yell
 
 // Registry is manifest-driven.
 assert.equal(Object.keys(KENNEY_REGISTRY).length, 1, 'one registered family');
+
+const credits = kenneyCredits();
+assert.equal(credits.length, Object.keys(KENNEY_REGISTRY).length);
+assert.equal(credits.length, 1);
+assert.equal(credits[0].pack, 'Shape Characters');
+assert.equal(credits[0].creator, 'Kenney');
+assert.equal(credits[0].siteUrl, KENNEY_SITE_URL);
+assert.equal(credits[0].packUrl, 'https://kenney.nl/assets/shape-characters');
+assert.ok(fs.existsSync(path.join(assetsRoot, '..', credits[0].family)));
+assert.equal(fs.existsSync(path.resolve(__dirname, '../assets/kenney/monster')), false);
+const youTab = fs.readFileSync(path.resolve(__dirname, '../src/app/(tabs)/you.tsx'), 'utf8');
+assert.match(youTab, /KenneyCreditsCard/);
+assert.doesNotMatch(youTab, /Fantasy UI|Modular Characters|1-Bit|Animal Remastered|Monster Builder/);
+ok('credits list only the registered Shape Characters pack and is wired on You');
 
 console.log(`\nAll ${passed} Kenney pipeline checks passed.`);

@@ -35,6 +35,7 @@ Stage 8 (TestFlight) — sequencing as tight handoffs:
 - Legal + landing copy drafted directly in Claude: `app/legal/privacy.md`, `app/legal/terms.md` (committed `57abf5e`), landing page live at `ato.emgens.com` (Vercel project `ato`, team `em-gens`, not yet linked to a git repo)
 - `docs/BUSINESS.md` updated with finalized social handle decision (`@whatsyourato`, committed `57abf5e`)
 - **Self-reported date of birth (Stage 2 ME box)** — `me.born_on` date, not a frozen age or 16+/18+ boolean. Onboarding Q1 is YYYY/MM/DD (same input pattern as the other text fields). Under 16: inline error "ATO is for people 16 and older." — blocked client-side before `createMe` and server-side in `complete_signup` before invite consume. 16/17 allowed; `is_at_least_age(born_on, 18)` stays false for Wave 2 going. Verified: `npm run check:age` 8/8; live under-16 RPC raises `age_under_16` with no ME row and invite unused; live 17-year-old stored `born_on = 2009-08-26`, `age_years = 17`, going helper false. Existing pre-field rows (`emci`, `yeezy`) stay NULL.
+- **Kenney credits on You-tab Settings** — static Credits card lists only packs in `KENNEY_REGISTRY` (Shape Characters). Kenney, kenney.nl, pack page, CC0 line. Modular / Toon / 1-Bit / Animal Remastered / Fantasy UI Borders / Monster Builder are not bundled and are not listed.
 
 ## Left
 - Stage 8 item 5 loose ends (not blockers for the sweep, but open before public/App Store submission):
@@ -48,7 +49,6 @@ Stage 8 (TestFlight) — sequencing as tight handoffs:
 ## Backlog (Stage 8 — polish pass, before TestFlight)
 - Fantasy UI Borders pack (Kenney) — UI chrome/panels/buttons
 - Universal font/spacing consistency pass
-- Kenney credits/disclaimer page — bundle into You tab settings area
 - Monster Builder Pack — parked, needs eyes/mouth slots added to recipe before usable
 - Make show_up / knocks_you_off / morning_cue editable in Settings, not just talk_style
 - Revisit onboarding question wording if it still feels off after a fresh look

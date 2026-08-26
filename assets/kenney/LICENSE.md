@@ -12,13 +12,15 @@ appreciated but not mandatory).
 - Shape Characters — https://kenney.nl/assets/shape-characters
   - `shape/body/` — character body shapes (circle, rhombus, square, squircle)
   - `shape/face/` — complete faces
-  - `shape/eye/`, `shape/mouth/`, `shape/eyebrow/` — facial feature parts
-- Monster Builder Pack — https://kenney.nl/assets/monster-builder-pack
-  - `monster/body/` — monster bodies
-  - `monster/detail/` — head details (horns, antennae, ears)
-  - `monster/eye/`, `monster/mouth/`, `monster/eyebrow/` — facial feature parts
+  - `shape/hand/` — gesture hands
+  - `shape/tab/` — Sage tab mask derived from the same pack
 
-Each top-level folder (`shape/`, `monster/`) is one source. A recipe in the
+Only packs whose sprites are exported under `assets/kenney/<family>/` and
+registered in `KENNEY_REGISTRY` are in use. Other Kenney families mentioned in
+the plan (Modular, Toon, 1-Bit, Animal Remastered, Fantasy UI Borders, Monster
+Builder) are not bundled yet and must not appear in in-app credits.
+
+Each family folder under `assets/kenney/` is one source. A recipe in the
 app composes its layers from exactly one source and never mixes sources within
 a single composite.
 

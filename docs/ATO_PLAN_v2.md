@@ -338,7 +338,7 @@ TestFlight ≠ public. TestFlight already gates installs via Apple's own tester 
 **Account & rights:**
 - [ ] Apple Developer account type decided: Individual (personal legal name as seller, no entity needed) or Organization (requires a real registered legal entity + D-U-N-S number, cannot convert from Individual later — decide once, decide early if there's any chance you'll want it). Not legally required to be Organization for ATO's current scope (no payment handling in-app, no licensed health service) — this is a branding/liability call, not a compliance one.
 - [ ] Trademark search on ATO / AsTrollOGs closed out (flagged in Wave 0 — confirm it actually got done, not just planned).
-- [ ] Kenney asset attribution page live (already in backlog) — confirms CC0 compliance, not just "we used free assets."
+- [x] Kenney asset attribution page live — You-tab Settings Credits card, generated from `KENNEY_REGISTRY`. Currently Shape Characters only (the bundled pack). CC0 noted; kenney.nl + pack page linked. Other plan-allowed families are not listed until they are actually imported.
 - [ ] No other third-party IP in the build (fonts, sounds, icons) without a checked license.
 
 **Referral/access:**

@@ -67,6 +67,7 @@ npm run prep:kenney -- --family <family> --source <path-to-raw-pack>
 ## 4. Register the family
 
 - Add the manifest to `KENNEY_REGISTRY` in `src/lib/kenney/registry.ts`.
+- Add the pack page URL to `PACK_PAGES` in `src/lib/kenney/credits.ts`. You-tab Credits is generated from the registry; a registered family with no URL throws.
 - Add `check:kenney` verification coverage if the pack adds new behavior.
 
 ## 5. Done
