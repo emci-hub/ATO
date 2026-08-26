@@ -10,11 +10,11 @@ Stage 8 (TestFlight) — sequencing as tight handoffs rather than one big box:
 1. ✅ Apple Sign-In + delete-account/token revoke — DONE, verified on real device.
 2. ✅ Invite/referral gate (Auth + ME) — DONE, pushed.
 3. ✅ Push notifications + widget — DONE, verified on real device.
-4. ✅ Floor-requirements sweep — DONE, pushed `f244a03`. Sentry DSN live-confirmed (below).
-5. Legal + landing copy — drafted here directly, not a Cursor job — **next up**
+4. ✅ Floor-requirements sweep — DONE, re-verified this session (five separate commits, then this docs push). Sentry JS test event ingested (`600436b1001945eca54f84c5e67a6df7`). Native crash still needs the next EAS build.
+5. Legal + landing copy — privacy.md + terms.md are in `src/app/legal/`; landing copy still outside this repo. Nutrition labels now match the policy. **next up:** landing polish if needed, then TestFlight
 6. EAS build → TestFlight submission
 
-**Handoff #4 — fully closed.** Sentry project `ato-app` created, DSN added to `.env.local` and EAS env (development/preview/production), JS test error confirmed live in Sentry Issues ("ATO floor-requirements Sentry test", `sendFloorTestError`). Native crash test still needs the *next* EAS build (current dev client predates the native Sentry module) — hold that check until the Stage 8 EAS build in handoff #6.
+**Handoff #4 — fully closed, re-verified.** Sentry project `ato-app`: DSN in `.env.local` and EAS development; live JS test error ingested this session (event id `600436b1001945eca54f84c5e67a6df7`, `npm run check:sentry`). Native crash test still needs the *next* EAS build (current dev client predates the native Sentry module) — hold that check until the Stage 8 EAS build in handoff #6. App Privacy nutrition labels match `privacy.md` + `PrivacyInfo.xcprivacy` (10 types, no tracking). Sage labeled coach on Talk, Home, Dawn, consent, crisis, morning push, widget, and Teach Sage. Talk router rate-limited per user: live `app_config` is **20/day, 200/month**, enforced in `claim_ai_call()` (SECURITY DEFINER, `auth.uid()`, advisory lock); `quota-check` 5/5, `voice-router-check` 24/24, `floor-check` 9/9.
 
 **Side effect fixed along the way (unrelated to Sentry itself):** Node 24 broke Metro config loading (`ERR_UNSUPPORTED_ESM_URL_SCHEME` on Windows) and then a metro-file-map/Expo CLI event-shape mismatch (`events is not iterable`). Fixed by pinning `metro@0.83.3` as a direct dep and `overrides.metro-config@0.83.5` — keeps Windows-safe `pathToFileURL` support without hitting the newer event-shape break `@expo/cli@54.0.27` doesn't understand yet. Committed `3b9fd34`. Node stays on v24.18.0, no downgrade needed.
 
@@ -32,15 +32,15 @@ Stage 8 (TestFlight) — sequencing as tight handoffs rather than one big box:
 - Stage 8, handoff #1 (Apple Sign-In + delete/revoke) — device-verified, `confirmRevoked()` true
 - Stage 8, handoff #2 (invite/referral gate) — `signup_mode: invite_only`, auto-issued invite codes, `referred_by`, recursive moderation functions; 7/7 automated + seeded tree pause test passed; committed `33aec7f`, pushed
 - Stage 8, handoff #3 (push notifications + widget) — `expo-notifications`, WidgetKit native SwiftUI; all four device-test steps verified on real iPhone; committed `252960d` → `9826610`, pushed
-- Stage 8, handoff #4 (floor-requirements sweep) — committed and pushed `f244a03`:
-  - Sentry wired (native crash handling on, Expo plugin, Metro Debug IDs, Test crash reporting card on You) — DSN connected and live-confirmed in Sentry Issues (JS error path). Native crash path still needs the next EAS build.
-  - App Privacy nutrition labels drafted in `src/app/legal/app-privacy-labels.md`, cross-checked against `PrivacyInfo.xcprivacy` and `app.json` (10 collected types, no tracking) — ready to paste into App Store Connect at submission, not yet typed there
+- Stage 8, handoff #4 (floor-requirements sweep) — originally `f244a03`; re-verified this session as five separate commits:
+  - Sentry wired (native crash handling on, Expo plugin `project: ato-app`, Metro Debug IDs, Test crash reporting card on You). DSN in `.env.local` + EAS development. Live JS test error ingested this session (event id `600436b1001945eca54f84c5e67a6df7`, `npm run check:sentry`). Native crash path still needs the next EAS build.
+  - App Privacy nutrition labels in `src/app/legal/app-privacy-labels.md` aligned with `privacy.md` (names Supabase, Gemini, Resend, Apple, Sentry). 10 collected types, no tracking — ready to paste into App Store Connect at submission, not yet typed there. Push token is **not** declared: v1 uses local notifications only. Age is in the policy draft but not collected in-app yet.
   - `PrivacyInfo.xcprivacy` present for app + widget target, `NSPrivacyTracking = false`, required-reason API codes filled (UserDefaults, file timestamp, system boot time incl. Sentry + widget App Group)
-  - "Coach" labeling audited across Talk tab, Home card, morning push, widget, consent cards — "Sage is a coach... not a person" language live in UI copy itself, not just policy doc. Chat and evening/Sunday pushes untouched (not Sage-speaking surfaces).
-  - Rate limiting: server-side `claim_ai_call()` (SECURITY DEFINER, advisory-locked, keyed on `auth.uid()`), `app_config.ai_daily_cap`/`ai_monthly_cap` (20/200) configurable without rebuild, `ai_usage` client-readable/not-writable, deny path shows "Sage's out of things to say for today, back tomorrow" not a raw error. Verified live on `ato` with a temporarily-lowered cap; `quota-check` 5/5, `voice-router-check` 24/24 (spy `generateTalk` not called on deny).
+  - "Coach" labeling audited across Talk tab (title is `Sage · coach`), Home card, Dawn lede, morning push, widget, consent cards, crisis card, and Teach Sage — "Sage is a coach... not a person" language live in UI copy itself, not just policy doc. Evening/Sunday pushes untouched (not Sage-speaking surfaces).
+  - Rate limiting: server-side `claim_ai_call()` (SECURITY DEFINER, advisory-locked, keyed on `auth.uid()`), `app_config.ai_daily_cap`/`ai_monthly_cap` **live 20/200**, configurable without rebuild, `ai_usage` client-readable/not-writable, deny path shows "Sage's out of things to say for today, back tomorrow" not a raw error. Re-verified live on `ato`; `quota-check` 5/5, `voice-router-check` 24/24 (spy `generateTalk` not called on deny). Daily-card generation is not claimed (Dawn remounts would burn the cap); Talk is the rate-limited router path.
 
 ## Left
-Stage 8 (TestFlight) — legal + landing copy, then EAS build → TestFlight submission
+Stage 8 (TestFlight) — landing polish if needed, then EAS build → TestFlight submission
 
 ## Backlog (Stage 8 — polish pass, before TestFlight)
 - Fantasy UI Borders pack (Kenney) — UI chrome/panels/buttons, separate visual system from character art
@@ -85,4 +85,4 @@ Games give tokens; tokens unlock "refresh about themselves." Accuracy meter show
 - First EAS dev-client build with native modules (`expo-notifications`, WidgetKit) succeeded after fixing two credential/build issues — see Stage 8 item 3. Future native-module additions may hit similar target/asset-catalog quirks; keep `ATOWidget` naming and the icon-inheritance prebuild plugin as the reference.
 
 ## Next 15 min
-Stage 8 handoff #5: legal + landing copy — drafted directly in this chat, not a Cursor job.
+Stage 8: landing page polish if anything is still outstanding, then EAS build → TestFlight.
