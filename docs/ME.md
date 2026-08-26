@@ -14,7 +14,7 @@ Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–7 done and on-device 
 - **First 60 seconds:** open app → Home shows yesterday's Check as a pixel face, one line in their talk_style (lift/even/cut), one finishable if-then Do.
 - **Sage/Pixel relationship:** pixel is one character — current-you on Home, aspirational-you (glow/shine) on Sage.
 - **Growth tiers (built, live):** dual-axis — presence (`me.check_count` → tier 0-3) and depth (`me.facts` → tier 0-2).
-- **Floor requirements (done):** Sentry wired and JS-verified (native crash pending next EAS build), App Store Connect privacy label answers drafted (11 types including Date of Birth), `PrivacyInfo.xcprivacy` locked and verified 9/9, Sage labeled "coach" throughout the live UI, AI router rate-limited server-side (20/day, 200/month per user via Postgres `claim_ai_call()`). Self-reported `me.born_on` collected at onboarding; 16+ enforced at signup; 18+ going helper ready for Wave 2.
+- **Floor requirements (done):** Sentry wired and JS-verified (native crash on build 6 expected unsymbolicated; EAS production auto-upload is now enabled for the next build — org `emgens`, project `ato-app`), App Store Connect privacy label answers drafted (11 types including Date of Birth), `PrivacyInfo.xcprivacy` locked and verified 9/9, Sage labeled "coach" throughout the live UI, AI router rate-limited server-side (20/day, 200/month per user via Postgres `claim_ai_call()`). Self-reported `me.born_on` collected at onboarding; 16+ enforced at signup; 18+ going helper ready for Wave 2.
 
 ## Roster
 - Assistant (Drake) — active

@@ -167,7 +167,7 @@
         "@sentry/react-native/expo",
         {
           "url": "https://sentry.io/",
-          "organization": "4511977954738176",
+          "organization": "emgens",
           "project": "ato-app"
         }
       ]

@@ -27,7 +27,7 @@ Stage 8 (TestFlight) — sequencing as tight handoffs:
 - Stage 8 handoff #2 (Invite/referral gate) — done, 7/7 automated checks + seeded tree pause test passed
 - Stage 8 handoff #3 (Push notifications + widget) — done, all four device-test steps verified on real iPhone
 - **Stage 8 handoff #4 (Floor-requirements sweep) — done, pushed `ea2b4f3`:**
-  - **Sentry** (`e5c5a0f`) — already wired (init/wrap, native crash handling, You-tab test buttons). Added `npm run check:sentry`, plugin project set to `ato-app`. Verified: live JS error ingested, event id `600436b1001945eca54f84c5e67a6df7`. Native crash confirmation still needs the next EAS binary.
+  - **Sentry** (`e5c5a0f`) — already wired (init/wrap, native crash handling, You-tab test buttons). Added `npm run check:sentry`, plugin project set to `ato-app`. Verified: live JS error ingested, event id `600436b1001945eca54f84c5e67a6df7`. Native crash on TestFlight build 6 is expected **unsymbolicated** (upload was disabled for that binary). **EAS production source-map auto-upload is now on:** `SENTRY_AUTH_TOKEN` (sensitive), `SENTRY_DISABLE_AUTO_UPLOAD=false`, `SENTRY_ORG=emgens`, `SENTRY_PROJECT=ato-app`. Next production build should upload maps; no build triggered in this box.
   - **Privacy labels** (`22b242b`) — `src/app/legal/app-privacy-labels.md`, the App Store Connect paste sheet, aligned with `privacy.md`. Originally ten data types; **Date of Birth added** with the Stage 2 age field (now 11 types, still no tracking). Names Supabase, Gemini, Resend, Apple, Sentry. Push token intentionally not declared (v1 has none). Answers are ready to paste into App Store Connect — **not yet submitted there.**
   - **PrivacyInfo.xcprivacy** (`211e101`) — app + widget manifests already matched actual collection/required-reason APIs; locked types + API reasons into `floor-check`. Verified: `npx tsx ./scripts/floor-check.ts` 9/9 (Date of Birth added later with the age field; assertion count unchanged).
   - **Coach labeling** (`668424e`) — fixed gaps (Dawn lede, Talk title, composer placeholder, Teach Sage copy) so the UI itself, not just policy docs, labels Sage as a coach. Verified: floor-check coach assertions pass, no "Sage listens" language remains.
@@ -41,7 +41,7 @@ Stage 8 (TestFlight) — sequencing as tight handoffs:
   - App Store Connect privacy labels: answers ready in `app-privacy-labels.md` (now includes Date of Birth), not yet pasted into App Store Connect itself
   - `support@asstrollogs.com` — used across privacy.md/terms.md/landing footer as the contact address; **not yet confirmed as a real, monitored inbox**
   - Terms §13 (governing law/dispute resolution) and the crisis disclaimer both still need a lawyer's pass before public launch
-  - Sentry native crash path unverified — needs confirmation on the next EAS binary, not just the JS test event
+  - Sentry native crash path — JS ingest verified; TestFlight build 6 native frames expected unsymbolicated. Next EAS production build should upload source maps (`SENTRY_AUTH_TOKEN` on EAS, auto-upload re-enabled). Confirm a native event in `ato-app` after that binary.
 - Stage 8 item 6: EAS build → TestFlight submission — next up
 - **Known, accepted, non-blocking for TestFlight:** a patched client could skip `claim_ai_call()` and call Gemini directly using the client-embedded key. Public-launch item, not a TestFlight blocker — added to backlog below.
 
