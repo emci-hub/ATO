@@ -3,14 +3,14 @@
 **Category:** Hybrid — AI-native + Social + Health/finance/kids
 **Gates:** A ✓ (non-goals in ATO_PLAN_v2.md) · B ✓ (iOS/Expo, Supabase, Apple Sign-in+email) · C in progress · D not started
 **Modules on:** report/block (Social), crisis static-card + privacy pass (Health/finance/kids) — both required, in progress
-**Live AI + model:** Cursor, `deepseek-v4-flash`, Expo SDK 54
+**Live AI + model:** Cursor, `Cursor Grok 4.6 High` (this session), Expo SDK 54
 
 ## On
 Stage 8 (TestFlight) — sequencing as tight handoffs rather than one big box:
 1. ✅ **Apple Sign-In + delete-account/token revoke — DONE, verified on real device.** Real Sign in with Apple confirmed working end-to-end (App ID `com.emgens.ato`, Services ID `com.emgens.ato.signin`, EAS dev-client build on real iPhone). Delete-account confirmed both ways: ME row genuinely gone from Supabase, and `confirmRevoked()` returned true (real Apple token revocation, not just a 200 response) after the four Edge Function secrets were correctly set. Session-validation bug found and fixed along the way (stale local session after server-side delete → now force-signs-out locally with a "Wrong account? Sign out" escape hatch on onboarding).
-2. ✅ **Invite/referral gate (Auth + ME) — DONE.** `signup_mode` defaults to `invite_only`. Invite-only signup rejects missing/used/invalid codes (atomic consume). Seeded tree emci → A → B, C: `pause_branch(A)` takes down A+B+C without touching emci; `pause_branch(B)` does not walk up to A or over to sibling C. Flipping `signup_mode` to `public` allows signup with no code. `unpause_branch` reverses a pause; `delete_branch` hard-deletes a paused cluster. Privacy line added.
-3. ✅ **Push notifications + widget — DONE.** Morning = the day's Read → Home. Evening = "Check today" → Home (`/?focus=check`). Sunday = this-week recap + "you showed up N" (N = checks in the recap week, not all-time) → `/week`. Permission is asked exactly once, only after `check_count >= 1`, never at onboarding; a "no" is stored and never re-prompted, and the rest of the app is unchanged. Widget shows the same Read + Do Home uses (honest empty if none yet) and reloads when Dawn generates a new card. Tap opens Home. `npx tsx scripts/push-check.ts` 11/11. **Needs a new native EAS build** (notifications + WidgetKit + App Group `group.com.emgens.ato`) before it can be confirmed on a home screen.
-4. Floor requirements sweep — Sentry, privacy labels, PrivacyInfo.xcprivacy, "coach" labeling, rate limiting
+2. ✅ **Invite/referral gate (Auth + ME) — DONE.** `npx tsx scripts/invite-check.ts` 7/7. `signup_mode` defaults to `invite_only`. Invite-only signup rejects missing/used/invalid codes (atomic consume via `complete_signup`). Seeded tree emci → A → B, C: `pause_branch(A)` takes down A+B+C without touching emci; `pause_branch(B)` does not walk up to A or over to sibling C. `unpause_branch` reverses; `delete_branch` hard-deletes a paused cluster only. Every new ME row auto-issues 4 one-use invite codes; emci/yeezy backfilled; emci `referred_by` stays null. You tab shows your codes + "People you invited"; `referred_by` never shown publicly. Privacy line added. Moderation is SQL-editor only — no admin UI.
+3. 🔶 **Push notifications + widget — BUILT, NOT YET DEVICE-VERIFIED.** `npx tsx scripts/push-check.ts` 11/11, pushed as `252960d`. Morning (7:00 local) = Read → Home. Evening (20:00) = "Check today… either one counts" → Home (`/?focus=check`). Sunday (10:00) = this-week recap + "you showed up N" (N = checks in that recap week, not all-time) → `/week`. No streak/urgency copy. Permission asked once, only after `check_count >= 1`; a no is remembered and changes nothing else. Widget shows the same Read + Do Home uses, or an honest empty; tap opens Home (`ato:///`); reloads via App Group `group.com.emgens.ato` when Dawn writes a new card. **Needs a new EAS native build** (`expo-notifications` + WidgetKit) before the permission dialog, widget, and deep-link taps can be confirmed on a real device. Test once built: (1) log one Check, decline on a fresh account, rest of app still works; (2) allow, You → Test notifications, morning/evening → Home, Sunday → `/week`; (3) add widget, open Dawn, confirm it refreshes. If EAS errors on App Groups, create `group.com.emgens.ato` on App ID `com.emgens.ato`.
+4. Floor requirements sweep — Sentry, privacy labels, PrivacyInfo.xcprivacy, "coach" labeling, rate limiting — **after push/widget is device-verified**
 5. Legal + landing copy — drafted here directly, not a Cursor job
 6. EAS build → TestFlight submission
 
@@ -27,11 +27,12 @@ Stage 8 (TestFlight) — sequencing as tight handoffs rather than one big box:
 - Stage 5 (Talk) — built + verified 23/23 (see crisis classifier entry above)
 - Stage 6 (Share + Circle) — built + verified per plan done-bar
 - Stage 7 (Chat + Report) — built + verified per plan done-bar; `master` in sync, both commits pushed
-- Stage 8 handoff #2 (Invite/referral) — built + verified: invite-only rejects missing/used/invalid codes; pause_branch on a seeded you→A→B,C tree takes down B/C (and A, the named user) without touching emci; public flip allows no-code signup; `npx tsx scripts/invite-check.ts` 7/7 client checks pass
-- Stage 8 handoff #3 (Push + widget) — built: morning/evening/Sunday copy + deep links, once-only permission after first Check, Home + widget share today's Read/Do, honest empty widget, `npx tsx scripts/push-check.ts` 11/11. Device confirmation (permission dialog, widget on home screen, tap-through) waits on the next EAS native build.
+- Stage 8 handoff #1 (Apple Sign-In + delete/revoke) — done, device-verified, `confirmRevoked()` true
+- Stage 8 handoff #2 (Invite/referral) — built + verified: invite-only rejects missing/used/invalid codes; pause_branch on a seeded you→A→B,C tree takes down B/C (and A) without touching emci; public flip allows no-code signup; `npx tsx scripts/invite-check.ts` 7/7
+- Stage 8 handoff #3 (Push + widget) — built, 11/11 JS checks, `252960d`. Device confirmation waits on the next EAS native build (see On, item 3).
 
 ## Left
-Stage 8 (TestFlight) — see sequenced list under On
+Stage 8 (TestFlight) — handoffs 3–6, see sequenced list under On
 
 ## Backlog (Stage 8 — polish pass, before TestFlight)
 - Fantasy UI Borders pack (Kenney) — UI chrome/panels/buttons, separate visual system from character art
@@ -75,6 +76,8 @@ Early on there's not much data on someone yet. Games give tokens; tokens unlock 
 - **Apple client_secret JWT minted Aug 25, 2026** via `createClientSecret` (ES256, Apple's 180-day max). **Expires Feb 24, 2027 07:24 UTC.** Identifiers: Team ID `Q2UF7F6N36`, Key ID `3JKLGRJ586`. **Regenerate and update in Supabase around late Jan 2027.** Not automated.
 - Email sending currently on `noreply@asstrollogs.com` (Resend-verified). **Later:** `mail.emgens.com` as verified Resend domain + Apple Email Sources list.
 - **Gap surfaced during age-rating research:** plan says age is self-reported at onboarding, but Stage 2 has no literal age question — close in Stage 8 floor-requirements sweep (item 4).
+- **signup_mode** is `invite_only` in production. Flip to `public` is a one-line SQL change — per plan, at App Store public-submission time, not TestFlight. Don't flip early.
+- **deepseek-v4-pro** currently disabled in Cursor to conserve remaining balance. Cursor Grok 4.6 High is the working pick; don't re-enable deepseek pro unless a task genuinely needs it.
 
 ## Next 15 min
-Stage 8 handoff #4: floor-requirements sweep (Sentry, privacy labels, PrivacyInfo.xcprivacy, "coach" labeling, rate limiting). Push + widget is in the JS; confirm it on-device after the next EAS build — You tab has Morning / Evening / Sunday test fires once notifications are allowed. If EAS complains about App Groups, create `group.com.emgens.ato` on App ID `com.emgens.ato` in Apple Developer.
+Run the EAS native build for push + widget (`expo-notifications` + WidgetKit). If it errors on App Groups, create `group.com.emgens.ato` on App ID `com.emgens.ato` first. Then the 3-step device test: (1) log one Check, decline permission on a fresh account, confirm the rest of the app works; (2) allow, You → Test notifications, morning/evening → Home, Sunday → `/week`; (3) add widget to the home screen, open Dawn, confirm it refreshes. Once verified, Stage 8 handoff #4: floor-requirements sweep.
