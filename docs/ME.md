@@ -4,7 +4,7 @@
 **Twin:** Drake
 
 ## This week
-Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–7 done and on-device verified. Stage 8: Apple Sign-In (done), invite/referral gate (done), push+widget (done), floor-requirements sweep (**done**, pushed `ea2b4f3`), legal+landing copy (drafted, mostly live, loose ends open — see NOW.md → Left), self-reported date of birth on ME (**done**), Kenney credits on You-tab Settings (**done** — Shape Characters only, the bundled pack). Next: EAS build → TestFlight submission.
+Ship ATO — Wave 1. Spec: docs/ATO_PLAN_v2.md. Stages 1–7 done and on-device verified. Stage 8: Apple Sign-In (done), invite/referral gate (done), push+widget (done), floor-requirements sweep (**done**, pushed `ea2b4f3`), legal+landing copy (drafted, mostly live, loose ends open — see NOW.md → Left), self-reported date of birth on ME (**done**), Kenney credits on You-tab Settings (**done** — Shape Characters only, the bundled pack), SecureStore 2048-byte warning (**done** — session cache in AsyncStorage, tokens in Keychain). Next: EAS build → TestFlight submission.
 
 ## App
 - **Category:** Hybrid — AI-native (Sage/router) + Social (Circle/Chat) + Health/finance/kids (crisis spec, coaching tone)

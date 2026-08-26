@@ -80,6 +80,7 @@
     "check:push": "tsx ./scripts/push-check.ts",
     "check:floor": "tsx ./scripts/floor-check.ts",
     "check:sentry": "tsx ./scripts/sentry-check.ts",
+    "check:auth-storage": "tsx ./scripts/auth-storage-check.ts",
     "check:quota": "tsx ./scripts/quota-check.ts",
     "probe:apple-endpoint": "tsx ./scripts/apple-endpoint-probe.ts"
   },

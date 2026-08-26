@@ -36,6 +36,7 @@ Stage 8 (TestFlight) — sequencing as tight handoffs:
 - `docs/BUSINESS.md` updated with finalized social handle decision (`@whatsyourato`, committed `57abf5e`)
 - **Self-reported date of birth (Stage 2 ME box)** — `me.born_on` date, not a frozen age or 16+/18+ boolean. Onboarding Q1 is YYYY/MM/DD (same input pattern as the other text fields). Under 16: inline error "ATO is for people 16 and older." — blocked client-side before `createMe` and server-side in `complete_signup` before invite consume. 16/17 allowed; `is_at_least_age(born_on, 18)` stays false for Wave 2 going. Verified: `npm run check:age` 8/8; live under-16 RPC raises `age_under_16` with no ME row and invite unused; live 17-year-old stored `born_on = 2009-08-26`, `age_years = 17`, going helper false. Existing pre-field rows (`emci`, `yeezy`) stay NULL.
 - **Kenney credits on You-tab Settings** — static Credits card lists only packs in `KENNEY_REGISTRY` (Shape Characters). Kenney, kenney.nl, pack page, CC0 line. Modular / Toon / 1-Bit / Animal Remastered / Fantasy UI Borders / Monster Builder are not bundled and are not listed.
+- **SecureStore 2048-byte warning** — cause was the full Supabase session JSON written to Keychain under `sb-aijzsmupaaaxjctfgwpl-auth-token` (~2364 bytes for an Apple session; email-only was ~1898 and under the ceiling). Access JWT ~782–1199 bytes, refresh token 12 bytes — both fit. Adapter now keeps tokens in SecureStore (`ato.auth.access_token` / `ato.auth.refresh_token`) and the rest of the session in AsyncStorage; leftover oversized Keychain items migrate on next read. Verified: `npm run check:auth-storage` 6/6. Native Metro sign-in not reproduced here (Windows host, SecureStore is iOS/Android only).
 
 ## Left
 - Stage 8 item 5 loose ends (not blockers for the sweep, but open before public/App Store submission):
@@ -54,7 +55,6 @@ Stage 8 (TestFlight) — sequencing as tight handoffs:
 - Revisit onboarding question wording if it still feels off after a fresh look
 - Crisis card: region-detection (currently hardcoded to Canada/988)
 - Crisis: relational-safety/abuse category, own resource number, parked separately
-- SecureStore warning: "Value being stored is larger than 2048 bytes" — minor
 - **Understanding spec** (see ATO_PLAN_v2.md → Understanding spec) — own future box (`intake`), sequenced after Stage 8 wraps
 - **AI capacity hardening** — close the client-embedded-key bypass noted above before public launch (server-side proxy or equivalent), fold into public-readiness checklist rather than TestFlight
 - Slack — parked as future ops tooling, bring up again if/when the app scales
