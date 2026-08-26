@@ -11,14 +11,15 @@ This runs parallel to the technical Stages/Waves in ATO_PLAN_v2.md. It does not 
 ### M0 — Right now (building, no revenue, no public users)
 - **Status:** sole proprietor by default. Operating under your own legal name. No registration required.
 - **Do today:** start keeping every AI subscription and tool receipt (Claude, Cursor, Perplexity, Supabase, Resend, Expo/EAS, domain) in one folder or spreadsheet. Even before anything is "official," these become expense records once there's a business to attach them to — ask an accountant later how far back pre-registration costs can be claimed, don't assume.
-- **Apple Developer account:** enrolled (Team ID `Q2UF7F6N36`). Individual vs Organization still open — see log below. Stage 8 Apple Sign-In + delete/revoke is **verified on a real device** (Key ID `3JKLGRJ586`; Edge Function `APPLE_CLIENT_ID` = App ID `com.emgens.ato`; Services ID `com.emgens.ato.signin` stays for Supabase Auth / web). Invite/referral gate is **built** (`signup_mode` = `invite_only`). Push + widget is **built and device-verified** (App Group `group.com.emgens.ato`, widget target `ATOWidget` / `com.emgens.ato.widget`). Floor-requirements sweep is **built** (pushed `f244a03`: Sentry, privacy labels + PrivacyInfo.xcprivacy, coach labeling, server-side Talk quota). Sentry DSN is connected (`ato-app`); JS test error live-confirmed in Issues. Native crash still needs the next EAS build. Next Stage 8 work: legal + landing copy, then TestFlight submit. Gemini key stays client-embedded until a later Edge Function box — not a TestFlight blocker, required before `signup_mode` flips to `public`.
+- **Apple Developer account:** enrolled (Team ID `Q2UF7F6N36`). Individual vs Organization still open — see log below. Stage 8 Apple Sign-In + delete/revoke is **verified on a real device** (Key ID `3JKLGRJ586`; Edge Function `APPLE_CLIENT_ID` = App ID `com.emgens.ato`; Services ID `com.emgens.ato.signin` stays for Supabase Auth / web). Stage 8 handoff #2 (invite/referral gate) and #3 (push + widget) done. Handoff #4 (floor-requirements sweep) next; handoff #5 (legal + landing copy) drafted.
 - **Trademark:** the search flagged in Wave 0 — do it now if not already done. Free, fast. Don't file yet.
+- **Landing page:** live at `ato.emgens.com` (Vercel project `ato` under the `em-gens` team, not yet connected to a git repo — updates go through manual redeploy until linked).
 
 ### M1 — TestFlight (Stage 8, friends-only testing)
 - **Trigger:** ready to submit a build to TestFlight.
-- **Do:** Apple Developer Program already enrolled (see M0). Remaining: Individual vs Organization still open; Stage 8 item 5 (legal + landing copy, not Cursor); then submit the TestFlight build (native Sentry crash check lands on that binary). $99 USD/yr already in play.
+- **Do:** Apple Developer Program already enrolled (see M0). Remaining: Individual vs Organization still open; finish Stage 8 floor-requirements sweep and legal/landing polish, then submit the TestFlight build. $99 USD/yr already in play.
 - Trade name, GST/HST, incorporation: still not required. Not public yet, no real revenue.
-- Reserve social handles for "ATO" / "AsTrollOGs" / "What's your ATO?" across any platform you might use later (X, Instagram, TikTok). Free, five minutes, stops someone else from squatting the name before you're visible — same logic a streamer uses locking a handle before they blow up.
+- **Social handles — decided:** primary handle across X, Instagram, and TikTok is **`@whatsyourato`** (the tagline, not the bare acronym). The bare `@ato` is effectively unavailable everywhere and collides semantically with unrelated orgs (e.g. the Australian Taxation Office already operates under "ATO" on X). Per-platform fallback, only where `@whatsyourato` is actually taken: `emgensato`, `atoapp`, or `heyato` — cross-link accounts in each bio if handles end up inconsistent across platforms. Reserve these now, before public visibility increases squatting risk.
 
 ### M2 — Going public (App Store, real users, no revenue yet)
 - **Trigger:** Wave 1 gate passed, ready to move `signup_mode` toward public.
@@ -44,6 +45,7 @@ This runs parallel to the technical Stages/Waves in ATO_PLAN_v2.md. It does not 
 | GST/HST registration | Free | Mandatory once revenue > $30k/yr, voluntary before |
 | Alberta incorporation, if/when | ~$275 govt fee + NUANS report + ~$53/yr annual return | Only once real revenue + liability protection matters |
 | Domain (astrollogs.com) | ~$15–20/yr | Already have it |
+| Subdomain (ato.emgens.com) | $0 — uses existing emgens.com Vercel/DNS | Already live |
 | Supabase / Resend / Sentry / EAS | Free tiers cover early testing; paid tiers scale with usage | Check current pricing on each site before assuming a number |
 
 ---
@@ -55,8 +57,10 @@ Streamers build a recognizable brand by locking one consistent identity early an
 - **Name/tagline:** ATO — "What's your ATO?" — already set.
 - **Palette:** Ink / Paper / Steel / Bloom — already locked in `ATO_PLAN_v2.md`.
 - **Voice:** Sage (in-app), Drake (this collaboration) — already named.
+- **Social handle:** `@whatsyourato` — decided, see M1 above. Reserve across X, Instagram, TikTok now, before public launch increases squatting risk.
+- **Landing page:** `ato.emgens.com` — live.
 
-Nothing new to invent. The only thing left is applying that same name/palette/voice consistently anywhere outside the app too — social handles, landing page, any early marketing. The earlier that starts, the more it compounds. Costs nothing but consistency.
+Nothing new to invent. The only thing left is applying that same name/palette/voice/handle consistently anywhere outside the app too — landing page, any early marketing. The earlier that starts, the more it compounds. Costs nothing but consistency.
 
 ---
 
@@ -72,3 +76,6 @@ General principle (not a final answer — confirm with an accountant): a cost is
 - [ ] Operate under "AsTrollOGs" as a registered trade name, or just your own legal name
 - [ ] When to file the CIPO trademark application
 - [ ] Whether/when to incorporate
+- [x] Social handle across platforms — `@whatsyourato`, decided
+- [ ] Confirm `@whatsyourato` actually secured on X, Instagram, TikTok (per-platform fallback: `emgensato` / `atoapp` / `heyato`)
+- [ ] Link `ato.emgens.com` Vercel project to a git repo, if Cursor needs to touch the landing page directly
