@@ -8,6 +8,7 @@
 	<array/>
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array/>
+	<!-- Widget only reads App Group UserDefaults (C56D.1). No collected data, no tracking. -->
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
 		<dict>

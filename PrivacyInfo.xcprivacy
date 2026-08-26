@@ -6,6 +6,7 @@
 	<false/>
 	<key>NSPrivacyTrackingDomains</key>
 	<array/>
+	<!-- Collected types match privacy.md and App Store nutrition labels. Camera QR is on-device only. No ATT. -->
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array>
 		<dict>
@@ -132,6 +133,7 @@
 			</array>
 		</dict>
 	</array>
+	<!-- UserDefaults CA92.1 (app) + C56D.1 (widget App Group). File timestamp 3B52.1 (container) + C617.1 (Sentry). Boot time 35F9.1 (Sentry). -->
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
 		<dict>

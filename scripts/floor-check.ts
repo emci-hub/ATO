@@ -72,9 +72,23 @@ assert.match(privacyPlist, /<key>NSPrivacyTracking<\/key>\s*<false\/>/);
 assert.match(widgetPlist, /<key>NSPrivacyTracking<\/key>\s*<false\/>/);
 ok('NSPrivacyTracking is false in app.json, app PrivacyInfo, and widget PrivacyInfo');
 
+const EXPECTED_TYPES = [
+  'NSPrivacyCollectedDataTypeEmailAddress',
+  'NSPrivacyCollectedDataTypeName',
+  'NSPrivacyCollectedDataTypeUserID',
+  'NSPrivacyCollectedDataTypeOtherUserContent',
+  'NSPrivacyCollectedDataTypeCustomerSupport',
+  'NSPrivacyCollectedDataTypeProductInteraction',
+  'NSPrivacyCollectedDataTypeOtherUsageData',
+  'NSPrivacyCollectedDataTypeCrashData',
+  'NSPrivacyCollectedDataTypeOtherDiagnosticData',
+  'NSPrivacyCollectedDataTypeDeviceID',
+];
 const jsonTypes = manifests.NSPrivacyCollectedDataTypes.map((t) => t.NSPrivacyCollectedDataType);
 const plistTypes = collectedTypesFromPlist(privacyPlist);
+assert.deepEqual(jsonTypes, EXPECTED_TYPES);
 assert.deepEqual(plistTypes, jsonTypes);
+assert.equal(collectedTypesFromPlist(widgetPlist).length, 0);
 for (const type of jsonTypes) {
   assert.match(labels, new RegExp(type.replace('NSPrivacyCollectedDataType', '')));
 }
@@ -105,6 +119,7 @@ assert.ok(plistApis.NSPrivacyAccessedAPICategoryUserDefaults?.includes('CA92.1')
 assert.ok(plistApis.NSPrivacyAccessedAPICategoryUserDefaults?.includes('C56D.1'));
 assert.ok(plistApis.NSPrivacyAccessedAPICategoryFileTimestamp?.includes('3B52.1'));
 assert.ok(plistApis.NSPrivacyAccessedAPICategorySystemBootTime?.includes('35F9.1'));
+assert.deepEqual(plistApis.NSPrivacyAccessedAPICategoryFileTimestamp, ['3B52.1', 'C617.1']);
 ok('required-reason API codes match, including App Group UserDefaults C56D.1');
 
 assert.match(widgetPlist, /C56D\.1/);
