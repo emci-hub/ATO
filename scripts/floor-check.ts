@@ -64,6 +64,7 @@ const appJson = JSON.parse(read('app.json')) as {
 const manifests = appJson.expo.ios.privacyManifests;
 const privacyPlist = read('PrivacyInfo.xcprivacy');
 const labels = read('src/app/legal/app-privacy-labels.md');
+const policy = read('src/app/legal/privacy.md');
 const widgetPlist = read('targets/widget/PrivacyInfo.xcprivacy');
 
 assert.equal(manifests.NSPrivacyTracking, false);
@@ -78,6 +79,17 @@ for (const type of jsonTypes) {
   assert.match(labels, new RegExp(type.replace('NSPrivacyCollectedDataType', '')));
 }
 ok('collected data types match across PrivacyInfo.xcprivacy, app.json, and nutrition-label doc');
+
+assert.match(policy, /Supabase/);
+assert.match(policy, /Gemini/);
+assert.match(policy, /Resend/);
+assert.match(policy, /not end-to-end encrypted/i);
+assert.match(labels, /Supabase/);
+assert.match(labels, /Gemini/);
+assert.match(labels, /Resend/);
+assert.match(labels, /Apple/);
+assert.match(labels, /Sentry/);
+ok('privacy.md and nutrition labels name the third parties');
 
 assert.equal(
   manifests.NSPrivacyCollectedDataTypes.every((t) => t.NSPrivacyCollectedDataTypeTracking === false),
