@@ -1,5 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useRef, useState } from 'react';
+import * as Clipboard from 'expo-clipboard';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -15,6 +16,12 @@ import { useMe } from '@/hooks/use-me';
 import { accentFromShowUp } from '@/lib/color';
 import { addPeerByHandle } from '@/lib/circle';
 import { useCircleContext } from '@/lib/circle-context';
+import {
+  fetchMyInviteCodes,
+  fetchMyReferrals,
+  type InviteCode,
+  type Referral,
+} from '@/lib/invite';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { copyLink, sharePoster } from '@/lib/share';
 import { supabase } from '@/lib/supabase';
@@ -31,12 +38,30 @@ export default function YouScreen() {
   const [deleting, setDeleting] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [inviteCodes, setInviteCodes] = useState<InviteCode[]>([]);
+  const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [copiedInvite, setCopiedInvite] = useState<string | null>(null);
   const posterRef = useRef<View | null>(null);
   // Screen padding (2x24) + card padding (2x16) + margin for safety.
   const posterWidth = Math.min(320, windowWidth - 96);
   const hasAppleIdentity = !!session?.user.identities?.some(
     (identity) => identity.provider === 'apple',
   );
+
+  useEffect(() => {
+    if (!me) return;
+    let active = true;
+    Promise.all([fetchMyInviteCodes(), fetchMyReferrals()])
+      .then(([codes, people]) => {
+        if (!active) return;
+        setInviteCodes(codes);
+        setReferrals(people);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [me?.id]);
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -66,6 +91,12 @@ export default function YouScreen() {
     await copyLink(me.handle);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleCopyInvite(code: string) {
+    await Clipboard.setStringAsync(code);
+    setCopiedInvite(code);
+    setTimeout(() => setCopiedInvite(null), 2000);
   }
 
   const initials = me?.name
@@ -162,6 +193,59 @@ export default function YouScreen() {
                 <DetailRow label="Knocks you off" value={me.knocks_you_off} />
                 <DetailRow label="Morning cue" value={me.morning_cue} />
                 <DetailRow label="Timezone" value={me.timezone} />
+              </ThemedView>
+
+              <ThemedView type="backgroundElement" style={styles.detailCard}>
+                <ThemedText type="smallBold" style={styles.inviteHeading}>
+                  Invite codes
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary" style={styles.inviteHint}>
+                  Share a code to invite someone. Each code works once.
+                </ThemedText>
+                {inviteCodes.length === 0 ? (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    No codes yet.
+                  </ThemedText>
+                ) : (
+                  inviteCodes.map((invite) => {
+                    const remaining = Math.max(0, invite.max_uses - invite.uses_count);
+                    const usable = invite.status === 'active' && remaining > 0;
+                    return (
+                      <View key={invite.code} style={styles.inviteRow}>
+                        <View style={styles.inviteInfo}>
+                          <ThemedText type="smallBold">{invite.code}</ThemedText>
+                          <ThemedText type="small" themeColor="textSecondary">
+                            {usable ? `${remaining} left` : 'used'}
+                          </ThemedText>
+                        </View>
+                        {usable ? (
+                          <Pressable
+                            onPress={() => handleCopyInvite(invite.code)}
+                            style={({ pressed }) => [pressed && styles.pressed]}>
+                            <ThemedText type="link">
+                              {copiedInvite === invite.code ? 'Copied' : 'Copy'}
+                            </ThemedText>
+                          </Pressable>
+                        ) : null}
+                      </View>
+                    );
+                  })
+                )}
+              </ThemedView>
+
+              <ThemedView type="backgroundElement" style={styles.detailCard}>
+                <ThemedText type="smallBold" style={styles.inviteHeading}>
+                  People you invited
+                </ThemedText>
+                {referrals.length === 0 ? (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Nobody yet. Only you can see this list.
+                  </ThemedText>
+                ) : (
+                  referrals.map((person) => (
+                    <DetailRow key={person.id} label={person.name} value={`@${person.handle}`} />
+                  ))
+                )}
               </ThemedView>
             </>
           ) : (
@@ -325,6 +409,26 @@ const styles = StyleSheet.create({
   detailValue: {
     flex: 1,
     textAlign: 'right',
+  },
+  inviteHeading: {
+    paddingHorizontal: Spacing.three,
+    paddingTop: Spacing.two,
+  },
+  inviteHint: {
+    paddingHorizontal: Spacing.three,
+    paddingBottom: Spacing.one,
+  },
+  inviteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+  },
+  inviteInfo: {
+    gap: Spacing.half,
+    flex: 1,
   },
   signOutButton: {
     borderRadius: Spacing.three,

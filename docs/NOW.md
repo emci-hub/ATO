@@ -8,7 +8,7 @@
 ## On
 Stage 8 (TestFlight) — sequencing as tight handoffs rather than one big box:
 1. ✅ **Apple Sign-In + delete-account/token revoke — DONE, verified on real device.** Real Sign in with Apple confirmed working end-to-end (App ID `com.emgens.ato`, Services ID `com.emgens.ato.signin`, EAS dev-client build on real iPhone). Delete-account confirmed both ways: ME row genuinely gone from Supabase, and `confirmRevoked()` returned true (real Apple token revocation, not just a 200 response) after the four Edge Function secrets were correctly set. Session-validation bug found and fixed along the way (stale local session after server-side delete → now force-signs-out locally with a "Wrong account? Sign out" escape hatch on onboarding).
-2. Invite/referral gate (Auth + ME) — see ATO_PLAN_v2.md → Referral spec. Required before public App Store submission, NOT before TestFlight (TestFlight already gates via Apple's own tester invites) — next up
+2. ✅ **Invite/referral gate (Auth + ME) — DONE.** `signup_mode` defaults to `invite_only`. Invite-only signup rejects missing/used/invalid codes (atomic consume). Seeded tree emci → A → B, C: `pause_branch(A)` takes down A+B+C without touching emci; `pause_branch(B)` does not walk up to A or over to sibling C. Flipping `signup_mode` to `public` allows signup with no code. `unpause_branch` reverses a pause; `delete_branch` hard-deletes a paused cluster. Privacy line added.
 3. Push notifications + widget (Read/Do/Check/Sunday recap, deep links)
 4. Floor requirements sweep — Sentry, privacy labels, PrivacyInfo.xcprivacy, "coach" labeling, rate limiting
 5. Legal + landing copy — drafted here directly, not a Cursor job
@@ -27,6 +27,7 @@ Stage 8 (TestFlight) — sequencing as tight handoffs rather than one big box:
 - Stage 5 (Talk) — built + verified 23/23 (see crisis classifier entry above)
 - Stage 6 (Share + Circle) — built + verified per plan done-bar
 - Stage 7 (Chat + Report) — built + verified per plan done-bar; `master` in sync, both commits pushed
+- Stage 8 handoff #2 (Invite/referral) — built + verified: invite-only rejects missing/used/invalid codes; pause_branch on a seeded you→A→B,C tree takes down B/C (and A, the named user) without touching emci; public flip allows no-code signup; `npx tsx scripts/invite-check.ts` 7/7 client checks pass
 
 ## Left
 Stage 8 (TestFlight) — see sequenced list under On
@@ -42,7 +43,7 @@ Stage 8 (TestFlight) — see sequenced list under On
 - Crisis card: region-detection (currently hardcoded to Canada/988) — needs a real approach, timezone alone isn't reliable enough
 - Crisis: relational-safety/abuse category (separate from self-harm) — needs its own resource number, parked separately
 - SecureStore warning: "Value being stored is larger than 2048 bytes" — minor, not urgent, but could throw in a future SDK version
-- **Referral/invite-gate system** (see ATO_PLAN_v2.md → Referral spec) — own box (`invite`), touching Auth + ME only. Sequence right after Apple Sign-In/delete-account handoff. Required before public App Store submission, not before TestFlight.
+- **Referral/invite-gate system** (see ATO_PLAN_v2.md → Referral spec) — ~~own box (`invite`), touching Auth + ME only~~ — done in Stage 8 handoff #2. Required before public App Store submission, not before TestFlight. Flip `signup_mode` to `public` when you decide to open signup.
 - **Understanding spec** (see ATO_PLAN_v2.md → Understanding spec) — replaces the 3 vague free-text onboarding fields with a 9-question tappable core + optional MBTI/Big-Five/attachment/conflict-style fast-entry, backed by free/public-domain instruments (IPIP, TIPI, ECR). Includes red-teamed delight mechanics (honest reveal card, milestone badges, 4 game types), AI multi-provider fallback + per-user quota design, and honest-feedback delivery refinement. Explicitly rejected: randomized-value/slot-machine mechanics — reasoning on record in the plan doc. Own future box (`intake`), touching ME schema + onboarding UI + Sage prompting + Stage 8's floor-requirements sweep (AI quota piece only). Sequenced after Stage 8 wraps — not started, needs the same extra-care review discipline as the Crisis spec before shipping given it touches real psychological categories.
 - Slack — parked as future ops tooling (Sentry/Reports/infra alerts) for if/when the app scales up. Bring up again as a bounce-off suggestion at that point, not before.
 
@@ -75,4 +76,4 @@ Early on there's not much data on someone yet. Games give tokens; tokens unlock 
 - **Gap surfaced during age-rating research:** plan says age is self-reported at onboarding, but Stage 2 has no literal age question — close in Stage 8 floor-requirements sweep (item 4).
 
 ## Next 15 min
-Stage 8 handoff #2: invite/referral gate (Auth + ME) — see ATO_PLAN_v2.md → Referral spec. On device after the last delete: Reload (or **Wrong account? Sign out**) so any stale local session is cleared before the next Apple sign-in.
+Stage 8 handoff #3: push notifications + widget (Read/Do/Check/Sunday recap, deep links). Invite/referral gate is live — `signup_mode` is `invite_only`. Your 4 invite codes are on the You tab. Query `pause_branch` / `unpause_branch` / `delete_branch` in the Supabase SQL editor (no admin UI).

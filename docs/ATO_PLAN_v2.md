@@ -341,7 +341,7 @@ TestFlight ≠ public. TestFlight already gates installs via Apple's own tester 
 - [ ] No other third-party IP in the build (fonts, sounds, icons) without a checked license.
 
 **Referral/access:**
-- [ ] Referral spec built and tested (`signup_mode` flag, invite codes, `pause_branch`/`delete_branch`).
+- [x] Referral spec built and tested (`signup_mode` flag, invite codes, `pause_branch`/`delete_branch`).
 - [ ] Conscious decision made on when to flip `signup_mode` from `invite_only` to `public` — this doesn't have to happen at App Store submission; you can ship publicly-listed but still invite-gated if you want a slower ramp.
 
 **Legal/compliance:**

@@ -16,6 +16,13 @@ import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { isAppleSignInAvailable, signInWithApple } from '@/lib/auth-apple';
+import {
+  assertInviteUsable,
+  errorMessageForInvite,
+  fetchSignupMode,
+  setPendingInviteCode,
+  type SignupMode,
+} from '@/lib/invite';
 import { supabase } from '@/lib/supabase';
 
 export default function AuthScreen() {
@@ -23,6 +30,8 @@ export default function AuthScreen() {
 
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
+  const [signupMode, setSignupMode] = useState<SignupMode>('invite_only');
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -35,14 +44,50 @@ export default function AuthScreen() {
     isAppleSignInAvailable().then((available) => {
       if (active) setAppleAvailable(available);
     });
+    fetchSignupMode()
+      .then((mode) => {
+        if (active) setSignupMode(mode);
+      })
+      .catch(() => {
+        // Fail closed: keep invite_only so a config fetch error cannot open signup.
+      });
     return () => {
       active = false;
     };
   }, []);
 
+  async function stashInviteIfNeeded(): Promise<boolean> {
+    if (signupMode !== 'invite_only') {
+      await setPendingInviteCode('');
+      return true;
+    }
+    const trimmed = inviteCode.trim();
+    if (!trimmed) {
+      // Returning users sign in without a code. New accounts are rejected at
+      // complete_signup if they still have none.
+      await setPendingInviteCode('');
+      return true;
+    }
+    try {
+      await assertInviteUsable(trimmed);
+    } catch (err) {
+      setError(
+        errorMessageForInvite(err) ??
+          'That invite code is missing, already used, or invalid.',
+      );
+      return false;
+    }
+    await setPendingInviteCode(trimmed);
+    return true;
+  }
+
   async function handleApple() {
     setBusy(true);
     setError(null);
+    if (!(await stashInviteIfNeeded())) {
+      setBusy(false);
+      return;
+    }
     const outcome = await signInWithApple();
     setBusy(false);
 
@@ -68,6 +113,10 @@ export default function AuthScreen() {
 
     setBusy(true);
     setError(null);
+    if (!(await stashInviteIfNeeded())) {
+      setBusy(false);
+      return;
+    }
     const { error } = await supabase.auth.signInWithOtp({
       email: normalizedEmail,
       options: {
@@ -132,9 +181,31 @@ export default function AuthScreen() {
                 <ThemedText type="subtitle">Sign in</ThemedText>
                 <ThemedText themeColor="textSecondary" style={styles.lede}>
                   Enter your email and we&apos;ll send you a code. No password needed.
+                  {signupMode === 'invite_only'
+                    ? ' New accounts need an invite code.'
+                    : ''}
                 </ThemedText>
 
                 <ThemedView type="backgroundElement" style={styles.card}>
+                  {signupMode === 'invite_only' ? (
+                    <TextInput
+                      value={inviteCode}
+                      onChangeText={(text) => {
+                        setInviteCode(text);
+                        setError(null);
+                      }}
+                      placeholder="Invite code (new accounts)"
+                      placeholderTextColor={theme.textSecondary}
+                      autoCapitalize="characters"
+                      autoCorrect={false}
+                      editable={!busy}
+                      style={[
+                        styles.input,
+                        { color: theme.text, backgroundColor: theme.backgroundSelected },
+                      ]}
+                    />
+                  ) : null}
+
                   <TextInput
                     value={email}
                     onChangeText={(text) => {

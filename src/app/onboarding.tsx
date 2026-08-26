@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -16,6 +16,11 @@ import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { createMe, errorMessageForHandle, TalkStyle } from '@/lib/me';
 import { useMeContext } from '@/lib/me-context';
+import {
+  fetchSignupMode,
+  getPendingInviteCode,
+  type SignupMode,
+} from '@/lib/invite';
 import { clearLocalSession } from '@/lib/supabase';
 import { withTimeout } from '@/lib/timeout';
 
@@ -37,6 +42,8 @@ export default function OnboardingScreen() {
   const [talkStyle, setTalkStyle] = useState<TalkStyle | null>(null);
   const [knocksYouOff, setKnocksYouOff] = useState('');
   const [morningCue, setMorningCue] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
+  const [signupMode, setSignupMode] = useState<SignupMode>('invite_only');
 
   const [handleError, setHandleError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -47,6 +54,22 @@ export default function OnboardingScreen() {
     (typeof Intl !== 'undefined' &&
       Intl.DateTimeFormat().resolvedOptions().timeZone) ||
     'UTC';
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([fetchSignupMode(), getPendingInviteCode()])
+      .then(([mode, pending]) => {
+        if (!active) return;
+        setSignupMode(mode);
+        if (pending) setInviteCode(pending);
+      })
+      .catch(() => {
+        // Fail closed on mode; invite field stays visible via default.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function normalizeHandle(raw: string): string {
     return raw.replace(/[^a-z0-9]/gi, '').toLowerCase().slice(0, 20);
@@ -104,6 +127,7 @@ export default function OnboardingScreen() {
           knocks_you_off: trimmedKnocks,
           morning_cue: trimmedCue,
           timezone,
+          invite_code: inviteCode,
         }),
         15000,
         'createMe',
@@ -150,6 +174,27 @@ export default function OnboardingScreen() {
             <ThemedText themeColor="textSecondary" style={styles.lede}>
               Six quick questions, then ATO knows how to talk to you.
             </ThemedText>
+
+            {signupMode === 'invite_only' ? (
+              <Field
+                label="Invite code"
+                required
+                hint="Required for a new account. Returning sign-in does not need one.">
+                <TextInput
+                  value={inviteCode}
+                  onChangeText={setInviteCode}
+                  placeholder="Invite code"
+                  placeholderTextColor={theme.textSecondary}
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  editable={!busy}
+                  style={[
+                    styles.input,
+                    { color: theme.text, backgroundColor: theme.backgroundSelected },
+                  ]}
+                />
+              </Field>
+            ) : null}
 
             <Pressable
               onPress={handleSignOut}

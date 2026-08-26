@@ -1,3 +1,4 @@
+import { clearPendingInviteCode, errorMessageForInvite } from '@/lib/invite';
 import { supabase } from '@/lib/supabase';
 
 export type TalkStyle = 'quiet' | 'even' | 'loud';
@@ -19,14 +20,25 @@ export interface Me {
   facts: string[];
   /** Map of presence-milestone key -> ISO timestamp when its one-time celebration fired. */
   milestones_celebrated: Record<string, string>;
+  /** Hidden. FK to the ME row that invited this user. Never shown publicly. */
+  referred_by: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export type MeInsert = Omit<
   Me,
-  'id' | 'ai_consent' | 'recipe' | 'facts' | 'milestones_celebrated' | 'created_at' | 'updated_at'
->;
+  | 'id'
+  | 'ai_consent'
+  | 'recipe'
+  | 'facts'
+  | 'milestones_celebrated'
+  | 'referred_by'
+  | 'created_at'
+  | 'updated_at'
+> & {
+  invite_code?: string;
+};
 
 export type AiConsent = 'granted' | 'denied' | 'pending';
 
@@ -49,11 +61,10 @@ export async function fetchMe(userId: string): Promise<Me | null> {
 }
 
 /**
- * Creates (or updates) the me row for the signed-in user. Uses upsert keyed on
- * the primary key so an existing row is updated instead of colliding. Handle
- * uniqueness is still enforced by the unique index + check constraint, so a
- * duplicate/reserved handle surfaces as a Postgres error instead of overwriting
- * another user's row.
+ * Creates (or updates) the me row for the signed-in user via complete_signup.
+ * In invite_only mode a valid unused code is required and consumed atomically
+ * with the insert — a handle collision rolls the consume back. Clients cannot
+ * set referred_by themselves.
  */
 export async function createMe(row: MeInsert): Promise<Me> {
   const {
@@ -61,17 +72,29 @@ export async function createMe(row: MeInsert): Promise<Me> {
   } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
+  const { invite_code, ...profile } = row;
   const { data, error } = await supabase
-    .from('me')
-    .upsert({ ...row, id: user.id }, { onConflict: 'id' })
-    .select()
-    .single();
+    .rpc('complete_signup', {
+      p_name: profile.name,
+      p_handle: profile.handle,
+      p_show_up: profile.show_up,
+      p_talk_style: profile.talk_style,
+      p_knocks_you_off: profile.knocks_you_off,
+      p_morning_cue: profile.morning_cue,
+      p_timezone: profile.timezone,
+      p_invite_code: invite_code?.trim() ? invite_code.trim() : null,
+    })
+    .maybeSingle();
 
   if (error) throw error;
-  return data;
+  if (!data) throw new Error('Not authenticated');
+  await clearPendingInviteCode();
+  return data as Me;
 }
 
 export function errorMessageForHandle(error: unknown): string {
+  const inviteMessage = errorMessageForInvite(error);
+  if (inviteMessage) return inviteMessage;
   const code = (error as { code?: string })?.code;
   if (code === '23505') return 'That handle is already taken';
   if (code === '23514') return 'That handle is reserved';

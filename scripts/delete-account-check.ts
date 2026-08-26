@@ -75,16 +75,20 @@ async function main() {
     global: { headers: { Authorization: `Bearer ${session.access_token}` } },
   });
 
-  // 2. Give it real owned rows via RLS (exactly as the app would).
-  const { error: meError } = await authed.from('me').insert({
-    id: userId,
-    name: 'Delete Check',
-    handle: `zdel${stamp}`.slice(0, 20),
-    show_up: 'verifying deletes',
-    talk_style: 'even',
-    knocks_you_off: 'nothing',
-    morning_cue: 'coffee',
-    timezone: 'America/Edmonton',
+  // 2. Give it real owned rows the same way the app does (complete_signup).
+  //    Direct inserts are rejected in invite_only. Seed a one-use code owned
+  //    by emci if ATO_INVITE_CODE is not set:
+  //      insert into invite_codes (code, owner_id)
+  //      select 'DELCHECK1', id from me where handle = 'emci';
+  const { error: meError } = await authed.rpc('complete_signup', {
+    p_name: 'Delete Check',
+    p_handle: `zdel${stamp}`.slice(0, 20),
+    p_show_up: 'verifying deletes',
+    p_talk_style: 'even',
+    p_knocks_you_off: 'nothing',
+    p_morning_cue: 'coffee',
+    p_timezone: 'America/Edmonton',
+    p_invite_code: env.ATO_INVITE_CODE ?? null,
   });
   if (meError) throw new Error(`me insert failed: ${meError.message}`);
 

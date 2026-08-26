@@ -68,6 +68,7 @@
     "check:growth": "tsx ./scripts/growth-check.ts",
     "check:apple-revoke": "tsx ./scripts/apple-revoke-check.ts",
     "check:delete-account": "tsx ./scripts/delete-account-check.ts",
+    "check:invite": "tsx ./scripts/invite-check.ts",
     "probe:apple-endpoint": "tsx ./scripts/apple-endpoint-probe.ts"
   },
   "private": true
