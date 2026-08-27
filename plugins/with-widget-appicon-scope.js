@@ -1,10 +1,10 @@
 const { withXcodeProject } = require('expo/config-plugins');
 
 /**
- * Expo SDK 54 writes ASSETCATALOG_COMPILER_APPICON_NAME ("expo", from
- * ios.icon = "./assets/expo.icon") onto the *project* build settings, not
+ * Expo SDK 54 writes ASSETCATALOG_COMPILER_APPICON_NAME ("AppIcon", from
+ * ios.icon = "./assets/AppIcon.icon") onto the *project* build settings, not
  * only the main app target. Every extension then inherits it, and actool
- * fails because the widget catalog has no icon set named "expo".
+ * fails because the widget catalog has no icon set named "AppIcon".
  *
  * Widgets do not need an app icon. Strip the project-level setting so only
  * targets that actually define PRODUCT_BUNDLE_IDENTIFIER + their own catalog

@@ -8,7 +8,7 @@
     "scheme": "ato",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/AppIcon.icon",
       "bundleIdentifier": "com.emgens.ato",
       "appleTeamId": "Q2UF7F6N36",
       "usesAppleSignIn": true,
