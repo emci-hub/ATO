@@ -12,6 +12,8 @@
  *  - Talk: consent gate, crisis short-circuit, style-differentiated tone
  */
 import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 import { bankCard, parseBank } from '../src/lib/voice/bank';
 import { buildVoiceConfig } from '../src/lib/voice/config';
@@ -239,17 +241,42 @@ ok('all candidates dropped → card is null (nothing shown)');
 // ---------------------------------------------------------------------------
 console.log('Crisis detection: keyword list only');
 
+const repoRoot = resolve(__dirname, '..');
+const detectSrc = readFileSync(resolve(repoRoot, 'src/lib/crisis/detect.ts'), 'utf8');
+assert.equal(existsSync(resolve(repoRoot, 'src/lib/crisis/classify.ts')), false);
+assert.doesNotMatch(detectSrc, /classifyCrisis|from ['"]\.\/classify['"]/);
+assert.match(detectSrc, /never reaches out to a model/);
+ok('classifier stays removed (no classify.ts, detectCrisis is keyword-only)');
+
+const sageSrc = readFileSync(resolve(repoRoot, 'src/app/(tabs)/sage.tsx'), 'utf8');
+assert.match(sageSrc, /No confirmation step — the static card shows automatically/);
+assert.match(sageSrc, /result\.kind === 'crisis'/);
+ok('flagged message still auto-shows the crisis card (no confirm gate)');
+
 // The user-approved keyword list + regex is the SOLE detection mechanism.
 assert.equal(normalizeCrisis('I want to END this.'), 'i want to end this');
-assert.equal(keywordDetect('thinking about suicide all day'), true, 'keyword: suicide');
-assert.equal(keywordDetect('I want to kill myself'), true, 'keyword: kill myself');
+assert.equal(keywordDetect('thinking about suicide all day'), true, 'must flag: suicide');
+assert.equal(keywordDetect('I feel suicidal'), true, 'must flag: suicidal prefix');
+assert.equal(keywordDetect('I want to die'), true, 'must flag: want to die');
+assert.equal(keywordDetect('I want to kill myself'), true, 'must flag: kill myself');
+assert.equal(keywordDetect('killing myself'), true, 'must flag: killing myself');
+assert.equal(keywordDetect('hurt myself'), true, 'must flag: hurt myself');
+assert.equal(keywordDetect('end my life'), true, 'must flag: end my life');
+assert.equal(keywordDetect("I don't want to be alive"), true, 'must flag: don\'t want to be alive');
 assert.equal(keywordDetect('cutting myself again'), true, 'keyword: cutting myself');
 assert.equal(keywordDetect('thinking about ending my life'), true, 'keyword: ending my life');
 assert.equal(keywordDetect('I had an overdose last night'), true, 'regex: overdose');
 assert.equal(keywordDetect('I might self-harm'), true, 'regex: self-harm');
-assert.equal(keywordDetect('how was your day'), false, 'benign message not flagged');
-assert.equal(keywordDetect('I am so tired of this project'), false, 'frustration not flagged');
-ok('keyword list: user-approved phrases + regex, benign messages pass');
+assert.equal(keywordDetect('how was your day'), false, 'must not flag: how was your day');
+assert.equal(keywordDetect('this project is killing me'), false, 'must not flag: killing me');
+assert.equal(keywordDetect('I am so tired of this project'), false, 'must not flag: tired of project');
+assert.equal(keywordDetect('that joke killed me'), false, 'must not flag: killed me');
+assert.equal(keywordDetect('I cut my finger cooking'), false, 'must not flag: cut my finger');
+assert.equal(keywordDetect("I don't want to die"), false, 'must not flag: don\'t want to die');
+assert.equal(keywordDetect('get it off myself'), false, 'must not flag: get it off myself');
+assert.equal(keywordDetect('offing myself'), true, 'inflection: offing myself');
+assert.equal(keywordDetect('ended my life'), true, 'inflection: ended my life');
+ok('keyword list v2: required flag / not-flag cases pass');
 
 // detectCrisis is pure keyword now — no model, no fallback path, never throws.
 const viaKeywordTrue = await detectCrisis('thinking about suicide all day');
