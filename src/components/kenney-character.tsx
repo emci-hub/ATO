@@ -66,7 +66,7 @@ export function KenneyCharacter({ recipe, size }: KenneyCharacterProps) {
  * family is active.
  *
  * `celebrateRef` (optional) receives the milestone `celebrate()` callback so a
- * parent (e.g. Home's live face) can fire the one-time louder animation on a
+ * parent (the nav companion) can fire the one-time louder animation on a
  * milestone crossing without the wrapper needing to know why.
  */
 export function AnimatedKenneyCharacter({

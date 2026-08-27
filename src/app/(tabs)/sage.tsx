@@ -18,6 +18,7 @@ import { ReportSheet } from '@/components/report-sheet';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { useMe } from '@/hooks/use-me';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
@@ -453,6 +454,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: Spacing.four,
     paddingBottom: Spacing.two,
+    paddingRight: NAV_PIXEL_HEADER_INSET,
   },
   lede: {
     paddingTop: Spacing.half,

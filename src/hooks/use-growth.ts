@@ -19,8 +19,8 @@ import {
  * of all-time Checks per the plan). Tiers are pure functions of live counts,
  * so they only ever increase and never need reconciling.
  *
- * `celebration` exposes the pending milestone (if any) so Home's live face can
- * fire its one-time louder animation, then call `markCelebrated` to record it.
+ * `celebration` exposes the pending milestone (if any) so the nav companion
+ * can fire its one-time louder animation, then call `markCelebrated` to record it.
  */
 export function useGrowth() {
   const { session } = useSession();

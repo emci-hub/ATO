@@ -17,7 +17,7 @@ This runs parallel to the technical Stages/Waves in ATO_PLAN_v2.md. It does not 
 - **Kenney CC0:** in-app Credits on You lists Shape Characters only (the pack actually bundled). Attribution is not legally required; credited anyway. Other Kenney families stay off the list until imported.
 - **Crisis card:** region from device locale/timezone (manual override in Settings). Confirmed number is 988 for US and Canada only; unconfirmed regions get an honest fallback, never a guessed hotline.
 - **Around (Wave 2):** city is typed at setup, not GPS. Stage 1: weekend shows from Edmtrain into a static JSON file; tickets open on Edmtrain / RA / Shotgun / DICE; no in-app checkout. Live refresh waits on an Edmtrain API key. Stage 2: "I'm going" + friend colors (≥3 of a hue, no counts, 18+ gate) is in. Type `fixture` as city for seeded test shows.
-- **Home:** Stage 1 fake poster / fake card / "open box" chrome is off the production Home route. No card → honest empty, not fixture copy.
+- **Home:** Stage 1 fake poster / fake card / "open box" chrome is off the production Home route. No card → honest empty, not fixture copy. Live pixel is the small top-right nav companion, not a large centered face. You-tab poster still has its own larger pixel.
 
 ### M1 — TestFlight (Stage 8, friends-only testing)
 - **Trigger:** ready to submit a build to TestFlight. **Met** — build 6 is in TestFlight, installed on a real device; Beta App Review for the Friends external testing group is pending (as of Aug 26, 2026).

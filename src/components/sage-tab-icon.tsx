@@ -12,7 +12,7 @@ import { resolveFacePalette } from '@/lib/color';
  * Sage tab icon: a small instance of the same pixel character, real color,
  * with growth-tier markers (presence glow + depth sparkle).
  *
- * Rendered STATIC on purpose: Home's full-size face is the app's live /
+ * Rendered STATIC on purpose: the nav companion is the app's live /
  * gesture-registering instance. At tab-bar size a second animated face would
  * be visual noise and would re-register a competing gesture handler.
  *

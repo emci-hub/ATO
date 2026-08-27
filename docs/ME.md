@@ -4,7 +4,7 @@
 **Twin:** Drake
 
 ## This week
-Wave 2 Stage 2 shipped — "I'm going" + friend colors (≥3 of a hue, no raw counts, 18+ gate, faces honor `me.visible`). Type `fixture` as city for seeded test shows; Calgary stays honest-empty until Edmtrain. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Next Wave 1.5 box: Stage 11 optional fast-entry. Night wall is unblocked for Wave 3 now that going exists.
+Pixel placement shipped — small live pixel fixed top-right on all tabs (shell-mounted, does not scroll). Home no longer has a large centered face; You-tab poster still has its own larger pixel. Wave 2 Stage 2 ("I'm going" + friend colors) and Stage 9 first pass are in. Next Wave 1.5 box: Stage 11 optional fast-entry. Night wall is unblocked for Wave 3 now that going exists.
 
 Stage 8 still has three loose ends only: submit/confirm EAS binary 10 (OTA + real app icon) on a real device, re-check Sentry native symbolication once that's on-device, and wait on Apple's Beta App Review for the Friends TestFlight group. Everything else in Stage 8 is done.
 
@@ -19,8 +19,8 @@ Stage 8 still has three loose ends only: submit/confirm EAS binary 10 (OTA + rea
 - **Landmine modules kept:** Social (report/block required) + Health/finance/kids (privacy pass, crisis static-card required, Grok critique before code on sensitive pieces)
 - **A proof (APP.md w/ non-goals):** satisfied by ATO_PLAN_v2.md.
 - **B proof (3 decisions):** satisfied — platform = iOS/Expo → TestFlight → Apple; data lives in Supabase (project `ato`); accounts = yes (email OTP via Resend + Sign in with Apple on device).
-- **First 60 seconds:** open app → Home shows yesterday's Check as a pixel face, one line in their talk_style (lift/even/cut), one finishable if-then Do.
-- **Sage/Pixel relationship:** pixel is one character — current-you on Home, aspirational-you (glow/shine) on Sage.
+- **First 60 seconds:** open app → Home shows today's Check (read + if-then Do) with the live pixel fixed top-right, not a large centered face.
+- **Sage/Pixel relationship:** pixel is one character — current-you (plain, idle) on Home/Around/You, aspirational-you (growth glow/shine) on Sage. Same shell-mounted instance; glow is a Sage overlay, not a second pixel. You-tab poster keeps a separate larger still.
 - **Growth tiers (built, live):** dual-axis — presence (`me.check_count` → tier 0-3) and depth (`me.facts` → tier 0-2).
 - **Floor requirements (done):** Sentry wired and JS-verified (native crash on build 6 expected unsymbolicated; binary 8 native crash event `e7bed112` ingested, symbolication **unconfirmed**; org `emgens`, project `ato-app`), App Store Connect privacy label answers drafted (11 types including Date of Birth; paste-in parked until public launch), `PrivacyInfo.xcprivacy` locked and verified 9/9, Sage labeled "coach" throughout the live UI, AI router rate-limited server-side (20/day, 200/month per user via Postgres `claim_ai_call()`). Self-reported `me.born_on` collected at onboarding; 16+ enforced at signup; 18+ going enforced in Around + `set_going`.
 

@@ -1,24 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 
-import { GrowthMarkers } from '@/components/growth-markers';
-import { PixelFace } from '@/components/pixel-face';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { useTheme } from '@/hooks/use-theme';
 import { useMe } from '@/hooks/use-me';
 import { useGrowth } from '@/hooks/use-growth';
 import { useTodayCard } from '@/hooks/use-today-card';
-import { resolveFacePalette } from '@/lib/color';
 import { checksToHistory, fetchChecks, recordCheck, type Check } from '@/lib/checks';
 import { emitChecksChanged, onChecksChanged } from '@/lib/checks-events';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
-import { normalizeRecipe } from '@/lib/kenney/registry';
 import { aiConsentFor } from '@/lib/me';
 import { voiceMeFrom } from '@/lib/intake';
 import { HOME_SAGE_LEDE, SAGE_COACH_LABEL } from '@/lib/sage-copy';
@@ -32,20 +29,11 @@ export default function HomeScreen() {
   const userId = session?.user.id;
   const { me } = useMe(userId);
   const { card, reload: reloadCard } = useTodayCard();
-  const { state: growth, pendingMilestone, markCelebrated } = useGrowth();
-  const recipe = normalizeRecipe(me?.recipe);
+  const { state: growth } = useGrowth();
   const params = useLocalSearchParams<{ focus?: string }>();
   const [checks, setChecks] = useState<Check[]>([]);
   const [busy, setBusy] = useState<'log' | 'skip' | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const celebrateRef = useRef<(() => void) | null>(null);
-
-  useEffect(() => {
-    if (pendingMilestone != null && celebrateRef.current) {
-      celebrateRef.current();
-      markCelebrated().catch(() => {});
-    }
-  }, [pendingMilestone, markCelebrated]);
 
   const reloadChecks = useCallback(async () => {
     if (!userId) return;
@@ -179,23 +167,7 @@ export default function HomeScreen() {
             </Pressable>
           )}
 
-          <ThemedView type="backgroundElement" style={styles.faceCard}>
-            <View style={styles.faceSlot}>
-              <GrowthMarkers
-                presence={growth.presence}
-                depth={growth.depth}
-                color={resolveFacePalette(recipe.palette, me?.show_up)}
-              />
-              <PixelFace
-                recipe={recipe}
-                size={88}
-                showUp={me?.show_up}
-                animated
-                celebrateRef={celebrateRef}
-              />
-            </View>
-            <QuestGrowthBars presence={growth.presence} depth={growth.depth} />
-          </ThemedView>
+          <QuestGrowthBars presence={growth.presence} depth={growth.depth} />
 
           <Pressable
             onPress={() => router.push('/week')}
@@ -285,6 +257,7 @@ const styles = StyleSheet.create({
   header: {
     gap: Spacing.half,
     paddingBottom: Spacing.two,
+    paddingRight: NAV_PIXEL_HEADER_INSET,
   },
   todayCard: {
     borderRadius: Spacing.four,
@@ -316,18 +289,6 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.6,
-  },
-  faceCard: {
-    borderRadius: Spacing.four,
-    padding: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-  },
-  faceSlot: {
-    width: 120,
-    height: 120,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   weekRow: {
     flexDirection: 'row',

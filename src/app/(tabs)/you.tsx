@@ -32,6 +32,7 @@ import {
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { copyLink, sharePoster } from '@/lib/share';
 import { setCity, setVisible } from '@/lib/me';
+import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import {
   CURRENT_FOCUS_CHIPS,
   ENERGY_PATTERN_CHIPS,
@@ -132,7 +133,7 @@ export default function YouScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <ThemedText type="subtitle">You</ThemedText>
+          <ThemedText type="subtitle" style={styles.title}>You</ThemedText>
 
           {me ? (
             <>
@@ -417,6 +418,9 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     paddingTop: Spacing.four,
     paddingBottom: BottomTabInset + Spacing.four,
+  },
+  title: {
+    paddingRight: NAV_PIXEL_HEADER_INSET,
   },
   shareCard: {
     borderRadius: Spacing.four,

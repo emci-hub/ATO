@@ -34,7 +34,7 @@ If a field isn't defined here, don't guess its shape — ask.
 
 ## Two jobs, never one screen
 
-**Spine (the app).** Learn about you. Home card + Sage + a pixel face. Alone: Home, Sage, You.
+**Spine (the app).** Learn about you. Home card + Sage + a pixel face (small, fixed top-right). Alone: Home, Sage, You.
 
 **Around (later).** Get out with people who match. Circle, then Calgary nights, then plugs. Never on Home.
 
@@ -76,7 +76,8 @@ Honest empty: "nothing this weekend" / "wall opens when the night does" / "no AT
 - Sage: reflect more than ask, ~4 sentences, coach not doctor. Crisis keyword hit → static resource card (see Crisis spec below), stop, no model call.
 - Home is solo. Friends never write the dawn line.
 - Chat: TLS + RLS. History stays. No homemade crypto. Sage reads chat only when the user taps "Teach Sage this" on a specific message — never ambient access.
-- You tab = poster (pixel, @handle, **their color named**, QR, Share). Settings / credits / human-contact info below the fold.
+- You tab = poster (pixel, @handle, **their color named**, QR, Share). Settings / credits / human-contact info below the fold. The poster's pixel is a larger still, separate from the small top-right nav companion on every tab.
+- Pixel companion: one small live face, fixed top-right at the tab shell (does not scroll or remount on tab switch). Current-you on Home/Around/You; aspirational glow on Sage.
 - Share = hold or tap. Stories-size image. Caption: "What's your ATO?"
 - Appearance: five user-selectable modes in Settings — Soft (default) / Zen / Quest / Neon / Anime. Replaces the discarded Ink / Paper / Steel / Bloom named palette. Spec lives in `src/constants/appearance.ts`. "Void" stays reserved for the competitor callout, not a mode name.
 - Assets: Kenney CC0, same-family sets only (Modular / Toon / 1-Bit / Animal Remastered — don't mix families in one recipe). No AI-generated faces, no scraped art.
@@ -101,7 +102,7 @@ Write those two copy files first. 3 styles × 3 valences. 3 mornings × 3 styles
 
 | Box | In | Out |
 |---|---|---|
-| Home | card + pixel | Check **today** (did/skip) + result strip |
+| Home | card | Check **today** (did/skip) + result strip. Pixel is the global nav companion, not inline on Home. |
 | Auth | Apple (TestFlight). Email before. | user_id (link, don't fork) |
 | ME | user_id + onboarding answers | ME row |
 | Theme | Settings picker (local) | Soft / Zen / Quest / Neon / Anime |

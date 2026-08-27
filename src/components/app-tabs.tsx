@@ -32,8 +32,7 @@ export default function AppTabs() {
       </NativeTabs.Trigger>
 
       {/* Sage uses the character silhouette mask (template-tinted like the
-          other tabs). The live pixel face lives in the web tab bar
-          (SageTabIcon) and on Home. */}
+          other tabs). The live pixel face is the nav companion, not the tab. */}
       <NativeTabs.Trigger name="sage">
         <Label>Sage</Label>
         <Icon src={SAGE_MASK_ICON} />

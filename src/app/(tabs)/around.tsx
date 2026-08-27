@@ -8,6 +8,7 @@ import { PixelFace } from '@/components/pixel-face';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { aroundCityBySlug, DEFAULT_AROUND_CITY } from '@/constants/around-cities';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
@@ -82,10 +83,12 @@ export default function AroundScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.scroll}>
-          <ThemedText type="subtitle">Around</ThemedText>
-          <ThemedText themeColor="textSecondary">
-            {me?.city ? label : 'Set your city in Settings — typed, not GPS.'}
-          </ThemedText>
+          <View style={styles.header}>
+            <ThemedText type="subtitle">Around</ThemedText>
+            <ThemedText themeColor="textSecondary">
+              {me?.city ? label : 'Set your city in Settings — typed, not GPS.'}
+            </ThemedText>
+          </View>
 
           {load == null ? (
             <ThemedText themeColor="textSecondary">Loading this weekend…</ThemedText>
@@ -268,6 +271,10 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     paddingTop: Spacing.four,
     paddingBottom: BottomTabInset + Spacing.four,
+  },
+  header: {
+    gap: Spacing.half,
+    paddingRight: NAV_PIXEL_HEADER_INSET,
   },
   card: {
     padding: Spacing.four,

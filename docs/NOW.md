@@ -6,7 +6,9 @@
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
 
 ## On
-**Wave 2 Stage 2 shipped — "I'm going" + friend colors.** Opt-in `going` row per user per show (`set_going` / `night_snapshot`). A color blob appears on a show only at ≥3 people of that `show_up` hue; raw counts never leave the RPC. Faces show only when the person is going, `me.visible` is true (plan field `show`; SHOW is reserved), and they are not blocked either way. Hidden faces still count toward colors. 18+ nights call `is_at_least_age(born_on, 18)` — a 16/17 account cannot mark going. City stays typed (not GPS). Calgary `weekend.json` is still honestly empty until Edmtrain; type `fixture` as city to see two seeded test shows (`ato:test-warehouse` all-ages, `ato:test-18plus` 18+). Live check: 2 same-hue going → no blob; 3rd → hue 94; 17yo on 18+ → `P0008`.
+**Pixel placement shipped — global nav companion.** The live pixel sits small and fixed top-right on all tabs (Home, Sage, Around, You), mounted at the tab shell so it does not remount on tab switch or scroll with content. Idle / gesture / milestone animation runs from that instance. Current-you (no growth glow) on Home/Around/You; aspirational-you (presence glow + depth sparkle) on Sage. Home no longer renders a large centered face. The You-tab poster still has its own larger still pixel.
+
+**Wave 2 Stage 2 is in — "I'm going" + friend colors.** Opt-in `going` row per user per show (`set_going` / `night_snapshot`). A color blob appears on a show only at ≥3 people of that `show_up` hue; raw counts never leave the RPC. Faces show only when the person is going, `me.visible` is true (plan field `show`; SHOW is reserved), and they are not blocked either way. Hidden faces still count toward colors. 18+ nights call `is_at_least_age(born_on, 18)`. City stays typed (not GPS). Calgary `weekend.json` is still honestly empty until Edmtrain; type `fixture` as city for seeded test shows.
 
 **Stage 9 first pass is in (intake core + Day 1 payoff wiring).** Fresh onboarding is identity, then 9 chip screens with a visible "N of 9". Five new ME columns (`evening_wind_down`, `energy_pattern`, `recovery_style`, `support_style`, `current_focus`) — existing `talk_style` / `show_up` / `knocks_you_off` / `morning_cue` names and types unchanged. Live row: handle `zintake9`.
 
@@ -15,7 +17,7 @@
 2. Sentry native crash symbolication — still **unconfirmed** from here. Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
 3. Friends external testing group — Beta App Review pending on Apple since Aug 26, 2026. No action, just waiting.
 
-**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ can receive this Stage 2 JS change via `eas update`. Devices on binary 8 or earlier cannot.
+**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ can receive this nav-pixel JS change via `eas update`. Devices on binary 8 or earlier cannot.
 
 **Decision (Aug 27, 2026): Wave 1.5 and Wave 3 both start now, in parallel — intentional deviation from plan sequencing.** Wave 2 Stage 2 ("I'm going") is now live, so Night wall is unblocked for Wave 3.
 
@@ -24,7 +26,7 @@
 - Wave 3 — Plugs (deal rows) + Night wall (going exists; wall can surface)
 
 ## Done
-See git history for the full Stage 1–8 build log. Wave 2 Stage 2 (this change): I'm going, color blobs at ≥3, 18+ gate, fixture city. Stage 9 first pass is already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
+See git history for the full Stage 1–8 build log. Nav companion (this change): small pixel fixed top-right at the tab shell. Wave 2 Stage 2 and Stage 9 first pass are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
 
 ## Left
 - Submit + confirm binary 10 on device (icon, OTA, everything from today). Do not submit 8 or 9.

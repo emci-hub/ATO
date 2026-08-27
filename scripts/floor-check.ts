@@ -155,7 +155,17 @@ ok('Talk, Home, Dawn, consent, crisis, push, widget, and Teach Sage label Sage a
 
 assert.match(home, /No card yet/);
 assert.doesNotMatch(home, /fake poster|Fake Person|open box|fake card media|fake ·/i);
+assert.doesNotMatch(home, /<PixelFace/);
 ok('Home has an honest empty card state and no Stage 1 fake fixtures');
+
+const tabsLayout = read('src/app/(tabs)/_layout.tsx');
+const navPixel = read('src/components/nav-pixel.tsx');
+const poster = read('src/components/share-poster.tsx');
+assert.match(tabsLayout, /<NavPixel/);
+assert.match(navPixel, /position: 'absolute'/);
+assert.match(navPixel, /insets\.top/);
+assert.match(poster, /size=\{200\}/);
+ok('nav companion is shell-mounted top-right; You poster keeps its own larger pixel');
 
 const sentryLib = read('src/lib/sentry.ts');
 assert.match(sentryLib, /enableNative:\s*Platform\.OS !== 'web'/);
