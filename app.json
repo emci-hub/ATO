@@ -3,6 +3,10 @@
     "name": "ATO",
     "slug": "ATO",
     "version": "1.0.0",
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/03d53c8c-91ae-4993-aba9-edf0b2eefd1e"
+    },
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "ato",
