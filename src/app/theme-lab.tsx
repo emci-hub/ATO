@@ -2,6 +2,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppearancePicker } from '@/components/appearance-picker';
+import { CheckMilestoneBadge } from '@/components/check-milestone-badge';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -36,6 +37,7 @@ export default function ThemeLabScreen() {
             <ThemedText themeColor="textSecondary">
               mode {id} · theme lab
             </ThemedText>
+            <CheckMilestoneBadge checkCount={11} presence={2} />
           </View>
 
           <ThemedView type="backgroundElement" style={styles.todayCard}>

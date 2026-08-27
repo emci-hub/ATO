@@ -22,6 +22,7 @@ import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { useMe } from '@/hooks/use-me';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
+import { checkWindowFor } from '@/lib/check-window';
 import { checksToHistory, fetchChecks, type Check } from '@/lib/checks';
 import { logCrisisFlag } from '@/lib/crisis/log';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
@@ -119,6 +120,10 @@ export default function SageScreen() {
       checkCount: checks.length,
       history: checksToHistory(checks),
       aiConsent: me.ai_consent,
+      day: checkWindowFor(
+        me,
+        checks.map((check) => check.day),
+      ).todayDay,
     })
       .then((result) => {
         if (!cancelled && result.card) {

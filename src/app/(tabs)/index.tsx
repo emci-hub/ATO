@@ -3,6 +3,8 @@ import { ScrollView, StyleSheet, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 
+import { CheckMilestoneBadge } from '@/components/check-milestone-badge';
+import { MissedCheckCard } from '@/components/missed-check-card';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
@@ -13,6 +15,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useMe } from '@/hooks/use-me';
 import { useGrowth } from '@/hooks/use-growth';
 import { useTodayCard } from '@/hooks/use-today-card';
+import { checkWindowFor } from '@/lib/check-window';
 import { checksToHistory, fetchChecks, recordCheck, type Check } from '@/lib/checks';
 import { emitChecksChanged, onChecksChanged } from '@/lib/checks-events';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
@@ -21,6 +24,7 @@ import { voiceMeFrom } from '@/lib/intake';
 import { HOME_SAGE_LEDE, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { persistRoutedCard } from '@/lib/today-card';
 import { routeVoiceCard } from '@/lib/voice/router';
+import type { VoiceCard, VoiceSource } from '@/lib/voice/types';
 import { useSession } from '@/hooks/use-session';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
@@ -52,35 +56,87 @@ export default function HomeScreen() {
     });
   }, [reloadChecks]);
 
-  const alreadyLogged = card != null && checks.some((check) => check.day === card.day);
+  const window = me
+    ? checkWindowFor(
+        me,
+        checks.map((check) => check.day),
+      )
+    : null;
+  const todayOpen = window?.open.find((slot) => slot.offset === 0) ?? null;
+  const missedOpen = window?.open.filter((slot) => slot.offset > 0) ?? [];
+  const alreadyLogged =
+    window != null && checks.some((check) => check.day === window.todayDay);
 
-  async function log(status: 'done' | 'skipped') {
-    if (!userId || !me || !card || busy || alreadyLogged) return;
+  useEffect(() => {
+    if (!me || !todayOpen) return;
+    if (card?.day === todayOpen.day) return;
+    let cancelled = false;
+    routeVoiceCard({
+      me: voiceMeFrom(me),
+      checkCount: checks.length,
+      history: checksToHistory(checks),
+      crisisToday: false,
+      aiConsent: me.ai_consent,
+      day: todayOpen.day,
+    })
+      .then(async (next) => {
+        if (cancelled || !next.card) return;
+        await persistRoutedCard(next);
+        await reloadCard();
+      })
+      .catch((err) => {
+        console.log('[home] route today card error:', err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [me, todayOpen?.day, card?.day, checks, reloadCard]);
+
+  async function logToday(status: 'done' | 'skipped') {
+    if (!userId || !me || !card || !todayOpen || busy || alreadyLogged) return;
+    await commitLog(status, todayOpen.day, todayOpen.ymd, {
+      read: card.read,
+      do: card.do,
+    }, card.source);
+  }
+
+  async function logMissed(
+    slotDay: number,
+    slotYmd: string,
+    status: 'done' | 'skipped',
+    voice: VoiceCard,
+    source: VoiceSource,
+  ) {
+    if (!userId || !me || busy) return;
+    await commitLog(status, slotDay, slotYmd, voice, source);
+  }
+
+  async function commitLog(
+    status: 'done' | 'skipped',
+    day: number,
+    loggedOn: string,
+    voice: VoiceCard,
+    source: VoiceSource,
+  ) {
+    if (!userId || !me || busy) return;
     setBusy(status === 'done' ? 'log' : 'skip');
     setError(null);
     try {
       await recordCheck(userId, {
-        day: card.day,
-        card: { read: card.read, do: card.do },
-        source: card.source,
+        day,
+        loggedOn,
+        card: voice,
+        source,
         status,
       });
       const nextChecks = await fetchChecks(userId);
       setChecks(nextChecks);
       emitChecksChanged();
       if (status === 'done') triggerGesture('checkDone');
-      const next = await routeVoiceCard({
-        me: voiceMeFrom(me),
-        checkCount: nextChecks.length,
-        history: checksToHistory(nextChecks),
-        crisisToday: false,
-        aiConsent: me.ai_consent,
-      });
-      await persistRoutedCard(next);
       await reloadCard();
     } catch (err) {
       console.log('[home] recordCheck error:', err);
-      setError('Couldn\u2019t save your check. Try again.');
+      setError(err instanceof Error ? err.message : 'Couldn\u2019t save your check. Try again.');
     } finally {
       setBusy(null);
     }
@@ -98,6 +154,7 @@ export default function HomeScreen() {
             <ThemedText themeColor="textSecondary">
               {params.focus === 'check' ? 'Check today.' : HOME_SAGE_LEDE}
             </ThemedText>
+            <CheckMilestoneBadge checkCount={growth.checkCount} presence={growth.presence} />
           </View>
 
           {card ? (
@@ -119,7 +176,11 @@ export default function HomeScreen() {
               ) : null}
               {alreadyLogged ? (
                 <ThemedText type="small" themeColor="textSecondary">
-                  Logged for day {card.day}.
+                  Logged for day {window?.todayDay ?? card.day}.
+                </ThemedText>
+              ) : !todayOpen ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  Today&apos;s Check is closed.
                 </ThemedText>
               ) : me && aiConsentFor(me) === 'pending' && checks.length >= 3 ? (
                 <Pressable
@@ -132,7 +193,7 @@ export default function HomeScreen() {
               ) : (
                 <View style={styles.checkRow}>
                   <ThemedPressable
-                    onPress={() => log('done')}
+                    onPress={() => logToday('done')}
                     disabled={busy !== null}
                     filled
                     style={[
@@ -144,7 +205,7 @@ export default function HomeScreen() {
                     </ThemedText>
                   </ThemedPressable>
                   <ThemedPressable
-                    onPress={() => log('skipped')}
+                    onPress={() => logToday('skipped')}
                     disabled={busy !== null}
                     style={[
                       styles.secondaryButton,
@@ -168,6 +229,31 @@ export default function HomeScreen() {
               </ThemedView>
             </Pressable>
           )}
+
+          {me && missedOpen.length > 0 ? (
+            <>
+              {error && !card ? (
+                <ThemedText themeColor="textSecondary">{error}</ThemedText>
+              ) : null}
+              {missedOpen.map((slot) => (
+                <MissedCheckCard
+                  key={slot.ymd}
+                  slot={slot}
+                  routeInput={{
+                    me: voiceMeFrom(me),
+                    checkCount: checks.length,
+                    history: checksToHistory(checks),
+                    crisisToday: false,
+                    aiConsent: me.ai_consent,
+                  }}
+                  busy={busy !== null}
+                  onLog={(status, voice, source) => {
+                    void logMissed(slot.day, slot.ymd, status, voice, source);
+                  }}
+                />
+              ))}
+            </>
+          ) : null}
 
           <QuestGrowthBars presence={growth.presence} depth={growth.depth} />
 

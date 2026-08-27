@@ -85,6 +85,14 @@ for (let checkCount = 0; checkCount < 3; checkCount += 1) {
 }
 ok('check_count 0/1/2 → bank file, dev flag fromBankFile=true / fromModel=false');
 
+const backfillDay = await routeVoiceCard(
+  { me: ME, checkCount: 0, history: [], day: 3 },
+  { config: localConfig, ...dev },
+);
+assert.equal(backfillDay.day, 3);
+assert.equal(backfillDay.card!.read, bankCard(3, ME.talk_style, CUE)!.read);
+ok('day override routes that journey day, not checkCount+1');
+
 console.log('Bank path: energy_pattern + support_style pick the slot');
 const cueOwn = 'make coffee';
 const nightSpace = {

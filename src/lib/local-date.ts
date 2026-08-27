@@ -31,3 +31,12 @@ export function addDaysYmd(ymd: string, days: number): string {
   const next = new Date(Date.UTC(year, month - 1, day + days));
   return next.toISOString().slice(0, 10);
 }
+
+/** Whole calendar days from `startYmd` to `endYmd` (negative if end is earlier). */
+export function daysBetweenYmd(startYmd: string, endYmd: string): number {
+  const [sy, sm, sd] = startYmd.split('-').map(Number);
+  const [ey, em, ed] = endYmd.split('-').map(Number);
+  const start = Date.UTC(sy, sm - 1, sd);
+  const end = Date.UTC(ey, em - 1, ed);
+  return Math.round((end - start) / 86_400_000);
+}

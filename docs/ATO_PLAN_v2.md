@@ -20,10 +20,10 @@ If a field isn't defined here, don't guess its shape — ask.
 | `recovery_style` | enum: `movement`/`sleep`/`talking`/`alone_time`/`music`, nullable on pre-intake rows | Self-report. Not a diagnosis. Never shown on the public poster. |
 | `support_style` | enum: `nudge`/`space`/`listen`/`plan`, nullable on pre-intake rows | Self-report. Helps pick the check_count < 3 bank card. Not a diagnosis. Never shown on the public poster. |
 | `current_focus` | enum: `habit`/`through_it`/`like_yourself`/`show_up`, nullable on pre-intake rows | Self-report. Not a diagnosis. Never shown on the public poster. |
-| `this_week` | string, free text, resets weekly | Sunday + Sage use only. Never a matching signal. |
+| `this_week` | string, free text, resets weekly | Plan field. Not a ME column in v1 — Sunday recap + Sage read the checks table (`logged_on` + status; Read/Do only while in the 7-day keep window). Never a matching signal. |
 | `recipe` | object `{base, hair, top, palette}` | Kenney asset selections that render the pixel. All 4 fields required once Pixel is built. |
 | `valence` | enum: `lift`/`even`/`cut` | Computed from last 7 Checks. See formula in Rules. |
-| Check | row `{user_id, do_id, date, outcome}` | `outcome` is `did` or `skip`. One per day max. No partial state in v1 — keep it binary. |
+| Check | row `{user_id, day, logged_on, outcome}` | `outcome` is `did` or `skip`. One per calendar day max. Log today or up to 2 days back; older days are closed. No partial state in v1 — keep it binary. Read/Do text kept for a rolling 7 days, then nulled; outcome stays. |
 | `check_count` | integer, derived | Count of all-time Checks. Gates bank-vs-model content and the paywall (7). |
 | `host` | boolean on ME | You flip this manually (admin). Not self-serve in v1. |
 | `referred_by` | uuid, nullable, FK → ME | Which ME row invited this user. Hidden field. See Referral spec. |
@@ -121,7 +121,7 @@ Write those two copy files first. 3 styles × 3 valences. 3 mornings × 3 styles
 
 **ME never stores:** guessed vibes, raw chat logs, raw HealthKit data, a model's freeform narrative about the user.
 
-`this_week` is for Sunday recap + Sage context only. It is **not** a dating graph. Matching (later) = same show both people tapped "going" on. Don't build interest-based matching — it's not in scope and nothing here asks for it.
+`this_week` is for Sunday recap + Sage context only. In v1 it is derived from the checks table (not a stored ME string). It is **not** a dating graph. Matching (later) = same show both people tapped "going" on. Don't build interest-based matching — it's not in scope and nothing here asks for it.
 
 ---
 

@@ -98,14 +98,21 @@ async function main() {
   });
   if (meError) throw new Error(`me insert failed: ${meError.message}`);
 
-  await authed.from('checks').insert({
-    user_id: userId,
-    day: 1,
-    read_text: 'read',
-    do_text: 'do',
-    source: 'bank',
-    status: 'done',
+  const loggedOn = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Edmonton',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+  const { error: checkInsertError } = await authed.rpc('record_check', {
+    p_day: 1,
+    p_logged_on: loggedOn,
+    p_read_text: 'read',
+    p_do_text: 'do',
+    p_source: 'bank',
+    p_status: 'done',
   });
+  if (checkInsertError) throw new Error(`check insert failed: ${checkInsertError.message}`);
   await authed.from('sage_messages').insert({ user_id: userId, role: 'user', text: 'hi' });
 
   const { count: meCountBefore } = await authed

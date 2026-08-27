@@ -1,3 +1,4 @@
+import { localYmd } from '@/lib/local-date';
 import { supabase } from '@/lib/supabase';
 import type { CheckHistory, CheckStatus, VoiceCard, VoiceSource } from '@/lib/voice/types';
 
@@ -5,8 +6,11 @@ export interface Check {
   id: string;
   user_id: string;
   day: number;
-  read_text: string;
-  do_text: string;
+  /** Calendar date this Check is for (YYYY-MM-DD). */
+  logged_on: string;
+  /** Null after the row rolls out of the 7-day Read/Do keep window. */
+  read_text: string | null;
+  do_text: string | null;
   source: VoiceSource;
   status: CheckStatus;
   created_at: string;
@@ -28,33 +32,59 @@ export function checksToHistory(checks: Check[]): CheckHistory[] {
   return checks.map((check) => ({
     day: check.day,
     status: check.status,
-    read: check.read_text,
-    do: check.do_text,
+    read: check.read_text ?? undefined,
+    do: check.do_text ?? undefined,
     source: check.source,
   }));
 }
 
+export function checkLoggedOnYmd(check: Pick<Check, 'logged_on' | 'created_at'>, timeZone: string): string {
+  if (check.logged_on) return check.logged_on;
+  return localYmd(new Date(check.created_at), timeZone);
+}
+
 export interface RecordCheckInput {
   day: number;
+  /** YYYY-MM-DD this Check is for, in the user's timezone. */
+  loggedOn: string;
   card: VoiceCard;
   source: VoiceSource;
   status: CheckStatus;
 }
 
-export async function recordCheck(userId: string, input: RecordCheckInput): Promise<Check> {
-  const { data, error } = await supabase
-    .from('checks')
-    .insert({
-      user_id: userId,
-      day: input.day,
-      read_text: input.card.read,
-      do_text: input.card.do,
-      source: input.source,
-      status: input.status,
-    })
-    .select()
-    .single();
+function messageForCheckError(error: { message?: string; code?: string }): string {
+  const raw = `${error.code ?? ''} ${error.message ?? ''}`.toLowerCase();
+  if (raw.includes('check_window') || raw.includes('p0017')) {
+    return 'That day has closed. You can log today or up to 2 days back.';
+  }
+  if (raw.includes('already_logged_on') || raw.includes('p0019') || raw.includes('23505')) {
+    return 'Already logged for that day.';
+  }
+  if (raw.includes('day_mismatch') || raw.includes('p0018')) {
+    return 'That card doesn\u2019t match the day you\u2019re logging.';
+  }
+  return 'Couldn\u2019t save your check. Try again.';
+}
 
-  if (error) throw error;
-  return data as Check;
+export async function recordCheck(_userId: string, input: RecordCheckInput): Promise<Check> {
+  const { data, error } = await supabase.rpc('record_check', {
+    p_day: input.day,
+    p_logged_on: input.loggedOn,
+    p_read_text: input.card.read,
+    p_do_text: input.card.do,
+    p_source: input.source,
+    p_status: input.status,
+  });
+
+  if (error) {
+    const wrapped = new Error(messageForCheckError(error));
+    (wrapped as Error & { cause?: unknown }).cause = error;
+    throw wrapped;
+  }
+
+  const row = (Array.isArray(data) ? data[0] : data) as Check | null;
+  if (!row) {
+    throw new Error('Couldn\u2019t save your check. Try again.');
+  }
+  return row;
 }

@@ -4,7 +4,7 @@
 **Twin:** Drake
 
 ## This week
-Pixel placement shipped — small live pixel fixed top-right on all tabs (shell-mounted, does not scroll). Tap plays a short coherent mood (wave / thumbs-up / happy bounce / hug); re-taps interrupt, never queue. Home no longer has a large centered face; You-tab poster is identity + QR (no large pixel). UI polish: crisis close is high-contrast, Soft-mode outline buttons have a visible hairline, Sage pinch-zoom is off. Wave 2 Stage 2 ("I'm going" + friend colors) and Stage 9 first pass are in. Next Wave 1.5 box: Stage 11 optional fast-entry. Night wall is unblocked for Wave 3 now that going exists.
+Check window + weekly recap cap + Home milestone badge are in. You can log today or up to 2 days back (one Check per calendar day); older days close. Read/Do text is kept for 7 rolling days then dropped; did/skip stays. Home shows a small all-time Checks chip in every appearance mode. Pixel tap moods and shell-mounted nav companion were already in. Next Wave 1.5 box: Stage 11 optional fast-entry. Night wall is unblocked for Wave 3 now that going exists.
 
 Stage 8 still has three loose ends only: submit/confirm EAS binary 10 (OTA + real app icon) on a real device, re-check Sentry native symbolication once that's on-device, and wait on Apple's Beta App Review for the Friends TestFlight group. Everything else in Stage 8 is done.
 
@@ -19,7 +19,7 @@ Stage 8 still has three loose ends only: submit/confirm EAS binary 10 (OTA + rea
 - **Landmine modules kept:** Social (report/block required) + Health/finance/kids (privacy pass, crisis static-card required, Grok critique before code on sensitive pieces)
 - **A proof (APP.md w/ non-goals):** satisfied by ATO_PLAN_v2.md.
 - **B proof (3 decisions):** satisfied — platform = iOS/Expo → TestFlight → Apple; data lives in Supabase (project `ato`); accounts = yes (email OTP via Resend + Sign in with Apple on device).
-- **First 60 seconds:** open app → Home shows today's Check (read + if-then Do) with the live pixel fixed top-right, not a large centered face.
+- **First 60 seconds:** open app → Home shows today's Check (read + if-then Do) with the live pixel fixed top-right, not a large centered face, plus a small all-time Checks chip.
 - **Sage/Pixel relationship:** pixel is one character — current-you (plain, idle) on Home/Around/You, aspirational-you (growth glow/shine) on Sage. Same shell-mounted instance; glow is a Sage overlay, not a second pixel. Tap moods play on that instance. You-tab poster is identity + QR, no larger still.
 - **Growth tiers (built, live):** dual-axis — presence (`me.check_count` → tier 0-3) and depth (`me.facts` → tier 0-2).
 - **Floor requirements (done):** Sentry wired and JS-verified (native crash on build 6 expected unsymbolicated; binary 8 native crash event `e7bed112` ingested, symbolication **unconfirmed**; org `emgens`, project `ato-app`), App Store Connect privacy label answers drafted (11 types including Date of Birth; paste-in parked until public launch), `PrivacyInfo.xcprivacy` locked and verified 9/9, Sage labeled "coach" throughout the live UI, AI router rate-limited server-side (20/day, 200/month per user via Postgres `claim_ai_call()`). Self-reported `me.born_on` collected at onboarding; 16+ enforced at signup; 18+ going enforced in Around + `set_going`.

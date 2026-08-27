@@ -34,17 +34,23 @@ export function ymdInWindow(ymd: string, window: WeekWindow): boolean {
 
 export interface WeekCheck {
   created_at: string;
-  read_text?: string;
+  /** Calendar date the Check is for. Preferred over created_at. */
+  logged_on?: string | null;
+  read_text?: string | null;
+  do_text?: string | null;
 }
 
-/** Checks whose local calendar date falls in the recap window. */
+function checkYmd(check: WeekCheck, timeZone: string): string {
+  if (check.logged_on) return check.logged_on;
+  return localYmd(new Date(check.created_at), timeZone);
+}
+
+/** Checks whose logged-on calendar date falls in the recap window. */
 export function checksInRecapWeek<T extends WeekCheck>(
   checks: T[],
   now: Date,
   timeZone: string,
 ): T[] {
   const window = recapWeekRange(now, timeZone);
-  return checks.filter((check) =>
-    ymdInWindow(localYmd(new Date(check.created_at), timeZone), window),
-  );
+  return checks.filter((check) => ymdInWindow(checkYmd(check, timeZone), window));
 }

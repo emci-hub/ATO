@@ -51,8 +51,10 @@ export function sundayPush(input: { showedUp: number; recap: string }): PushPayl
 }
 
 /** Honest recap line from this week's logged Reads. Empty is honest, not invented. */
-export function recapFromReads(reads: string[]): string {
-  const lines = reads.map((read) => read.trim()).filter((read) => read.length > 0);
+export function recapFromReads(reads: Array<string | null | undefined>): string {
+  const lines = reads
+    .map((read) => (read ?? '').trim())
+    .filter((read) => read.length > 0);
   if (lines.length === 0) return 'Nothing logged this week.';
   const latest = lines[lines.length - 1];
   if (lines.length === 1) return latest;

@@ -6,6 +6,8 @@
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
 
 ## On
+**Check window + weekly recap cap + Home milestone badge are in.** A Check is for a calendar day in the user's timezone (signup-local day 1). You can log today or up to 2 days back if that day is still empty — one Check per day, not extra Checks on the same day. Days 3+ back are permanently closed. `record_check` is the only write path (client inserts revoked). Read + Do text is kept for the rolling 7 calendar days (today through today-6); older text is nulled, did/skip stays forever for `check_count` and valence. Sunday recap still counts outcomes for the previous Sun–Sat; last Sunday's Read may already be pruned (today-7). `this_week` on ME was never implemented — recap reads the checks table. Home shows a small all-time Checks chip (presence-tier glow, all five appearance modes).
+
 **Nav pixel tap moods are in.** Tapping the top-right companion plays a short coherent gesture (wave, thumbs-up, happy bounce, or hug) with no startup delay. Rapid re-taps interrupt-and-restart — they do not queue. Sage weights bounce/wave a bit more; current-you uses the full set evenly. Crisis still hard-disables hands.
 
 **Pixel placement shipped — global nav companion.** The live pixel sits small and fixed top-right on all tabs (Home, Sage, Around, You), mounted at the tab shell so it does not remount on tab switch or scroll with content. Idle / gesture / milestone / tap-mood animation runs from that instance. Current-you (no growth glow) on Home/Around/You; aspirational-you (presence glow + depth sparkle) on Sage. Home no longer renders a large centered face. The You-tab poster is identity + QR only (no large pixel).
@@ -21,7 +23,7 @@
 2. Sentry native crash symbolication — still **unconfirmed** from here. Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
 3. Friends external testing group — Beta App Review pending on Apple since Aug 26, 2026. No action, just waiting.
 
-**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ can receive this nav-pixel tap JS change via `eas update`. Devices on binary 8 or earlier cannot.
+**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ can receive this check-window / recap / badge JS change via `eas update`. Devices on binary 8 or earlier cannot.
 
 **Decision (Aug 27, 2026): Wave 1.5 and Wave 3 both start now, in parallel — intentional deviation from plan sequencing.** Wave 2 Stage 2 ("I'm going") is now live, so Night wall is unblocked for Wave 3.
 
@@ -30,7 +32,7 @@
 - Wave 3 — Plugs (deal rows) + Night wall (going exists; wall can surface)
 
 ## Done
-See git history for the full Stage 1–8 build log. Nav tap moods (this change): short coherent gestures on the shell-mounted pixel, interrupt-and-restart. UI polish, Wave 2 Stage 2, and Stage 9 first pass are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
+See git history for the full Stage 1–8 build log. Check window + recap text cap + Home milestone badge (this change). Nav tap moods, UI polish, Wave 2 Stage 2, and Stage 9 first pass are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
 
 ## Left
 - Submit + confirm binary 10 on device (icon, OTA, everything from today). Do not submit 8 or 9.

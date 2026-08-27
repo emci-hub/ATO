@@ -75,7 +75,7 @@
     "check:card-live": "tsx ./scripts/card-live-check.ts",
     "check:crisis-live": "tsx ./scripts/crisis-live-check.ts",
     "check:crisis-region": "tsx ./scripts/crisis-region-check.ts",
-    "check:growth": "tsx ./scripts/growth-check.ts",
+    "check:window": "tsx ./scripts/check-window-check.ts",
     "check:apple-revoke": "tsx ./scripts/apple-revoke-check.ts",
     "check:delete-account": "tsx ./scripts/delete-account-check.ts",
     "check:invite": "tsx ./scripts/invite-check.ts",

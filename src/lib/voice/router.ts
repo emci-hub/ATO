@@ -53,7 +53,7 @@ export async function routeVoiceCard(
 ): Promise<VoiceCardResult> {
   const config = deps.config ?? VOICE_CONFIG;
   const dev = deps.isDev ?? IS_DEV;
-  const day = input.checkCount + 1;
+  const day = input.day ?? input.checkCount + 1;
   const tone = deriveTone(input.history);
   const consent = input.aiConsent ?? null;
 

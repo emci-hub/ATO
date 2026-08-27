@@ -12,6 +12,7 @@ import { useMe } from '@/hooks/use-me';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { checksToHistory, fetchChecks, recordCheck, type Check } from '@/lib/checks';
+import { checkWindowFor } from '@/lib/check-window';
 import { emitChecksChanged } from '@/lib/checks-events';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { aiConsentFor, setAiConsent } from '@/lib/me';
@@ -54,6 +55,15 @@ export default function DawnScreen() {
   }, [reloadChecks]);
 
   const checkCount = checks.length;
+  const window = me
+    ? checkWindowFor(
+        me,
+        checks.map((check) => check.day),
+      )
+    : null;
+  const todayOpen = window?.open.find((slot) => slot.offset === 0) ?? null;
+  const todayLogged =
+    window != null && checks.some((check) => check.day === window.todayDay);
 
   // Consent gate (Apple 5.1.2): ask exactly once, before the first moment a
   // model call could happen (check_count >= 3). Until the user answers, Dawn
@@ -61,13 +71,22 @@ export default function DawnScreen() {
   const consent = me ? aiConsentFor(me) : 'pending';
   const needsConsentPrompt = me != null && consent === 'pending' && checkCount >= 3;
 
-  // Route the card for today (day = checkCount + 1). Re-runs whenever checks
-  // change, so logging a check advances to the next day's card.
+  // Route the card for today's calendar day. Does not advance to a
+  // sequential stall-day after logging.
   useEffect(() => {
     if (!me) return;
     let cancelled = false;
 
     if (needsConsentPrompt) {
+      setRouting(false);
+      setResult(null);
+      setError(null);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (todayLogged || !todayOpen) {
       setRouting(false);
       setResult(null);
       setError(null);
@@ -85,6 +104,7 @@ export default function DawnScreen() {
       history: checksToHistory(checks),
       crisisToday: false,
       aiConsent: me.ai_consent,
+      day: todayOpen.day,
     })
       .then((next) => {
         if (cancelled) return;
@@ -107,15 +127,16 @@ export default function DawnScreen() {
     return () => {
       cancelled = true;
     };
-  }, [me, checks]);
+  }, [me, checks, needsConsentPrompt, todayLogged, todayOpen?.day]);
 
   async function log(status: 'done' | 'skipped') {
-    if (!userId || !me || !result?.card || busy) return;
+    if (!userId || !me || !result?.card || !todayOpen || busy) return;
     setBusy(status === 'done' ? 'log' : 'skip');
     setError(null);
     try {
       await recordCheck(userId, {
         day: result.day,
+        loggedOn: todayOpen.ymd,
         card: result.card,
         source: result.source,
         status,
@@ -130,7 +151,7 @@ export default function DawnScreen() {
       }
     } catch (err) {
       console.log('[dawn] recordCheck error:', err);
-      setError('Couldn\u2019t save your check. Try again.');
+      setError(err instanceof Error ? err.message : 'Couldn\u2019t save your check. Try again.');
     } finally {
       setBusy(null);
     }
@@ -197,6 +218,13 @@ export default function DawnScreen() {
               onGrant={() => saveConsent(true)}
               onDeny={() => saveConsent(false)}
             />
+          ) : todayLogged ? (
+            <ThemedView type="backgroundElement" style={styles.card}>
+              <ThemedText type="smallBold">Logged for day {window?.todayDay}</ThemedText>
+              <ThemedText themeColor="textSecondary" style={styles.centerText}>
+                One Check per day. Missed days from the last two still open on Home.
+              </ThemedText>
+            </ThemedView>
           ) : routing || !me ? (
             <ThemedView type="backgroundElement" style={styles.card}>
               <ThemedText themeColor="textSecondary">Writing today&apos;s card…</ThemedText>

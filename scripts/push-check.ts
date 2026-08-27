@@ -97,6 +97,15 @@ assert.equal(recapChecks[0].read_text, 'Mon');
 assert.equal(recapChecks[1].read_text, 'Sat');
 ok('Sunday N counts the week, not all-time, and not this Sunday morning');
 
+const backdated = checksInRecapWeek(
+  [{ created_at: '2026-08-27T18:00:00Z', logged_on: '2026-08-22', read_text: 'Sat via backdate' }],
+  sundayMorning,
+  tz,
+);
+assert.equal(backdated.length, 1);
+assert.equal(backdated[0].read_text, 'Sat via backdate');
+ok('recap uses logged_on so a late log still counts on the day it is for');
+
 assert.equal(addDaysYmd('2026-08-25', 1), '2026-08-26');
 ok('ymd day math');
 

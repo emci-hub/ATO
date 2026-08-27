@@ -240,12 +240,20 @@ function PeerCard({
                   Day {latest.day} · {latest.status === 'done' ? 'showed up' : 'skipped'}
                 </ThemedText>
               </View>
-              <ThemedText type="small" style={styles.readText}>
-                {latest.read_text}
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary" style={styles.doText}>
-                {latest.do_text}
-              </ThemedText>
+              {latest.read_text ? (
+                <ThemedText type="small" style={styles.readText}>
+                  {latest.read_text}
+                </ThemedText>
+              ) : (
+                <ThemedText type="small" themeColor="textSecondary" style={styles.readText}>
+                  Outcome kept. The Read for this day has rolled off.
+                </ThemedText>
+              )}
+              {latest.do_text ? (
+                <ThemedText type="small" themeColor="textSecondary" style={styles.doText}>
+                  {latest.do_text}
+                </ThemedText>
+              ) : null}
             </>
           ) : (
             <ThemedText type="small" themeColor="textSecondary">

@@ -78,7 +78,18 @@ export default function WeekScreen() {
                 <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
                   {check.status === 'done' ? 'did' : 'skip'} · day {check.day}
                 </ThemedText>
-                <ThemedText style={styles.body}>{check.read_text}</ThemedText>
+                {check.read_text ? (
+                  <ThemedText style={styles.body}>{check.read_text}</ThemedText>
+                ) : (
+                  <ThemedText themeColor="textSecondary" style={styles.body}>
+                    Outcome kept. Read rolled out of this week.
+                  </ThemedText>
+                )}
+                {check.do_text ? (
+                  <ThemedText themeColor="textSecondary" style={styles.body}>
+                    {check.do_text}
+                  </ThemedText>
+                ) : null}
               </ThemedView>
             ))
           )}

@@ -49,8 +49,14 @@ export interface VoiceMe {
 
 export interface RouteVoiceCardInput {
   me: VoiceMe;
-  /** Number of checks logged so far (done + skipped). Day = checkCount + 1. */
+  /** Number of checks logged so far (done + skipped). Day = checkCount + 1 unless `day` is set. */
   checkCount: number;
+  /**
+   * Calendar journey day this card is for. Defaults to checkCount + 1.
+   * Pass this when backfilling a missed day so the bank/generated copy
+   * matches that day, not the next sequential stall-day.
+   */
+  day?: number;
   /** Completed checks, oldest first. */
   history: CheckHistory[];
   /** If set, no cut may be shown today (Sage rule: no cut after crisis). */
