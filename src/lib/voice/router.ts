@@ -1,4 +1,4 @@
-import { bankCard } from './bank';
+import { bankCardForMe } from './bank';
 import {
   BANK_CARD_DAYS,
   GENERATED_MAX_ATTEMPTS,
@@ -55,7 +55,6 @@ export async function routeVoiceCard(
   const dev = deps.isDev ?? IS_DEV;
   const day = input.checkCount + 1;
   const tone = deriveTone(input.history);
-  const style = input.me.talk_style;
   const consent = input.aiConsent ?? null;
 
   const trace = (fromBankFile: boolean, fromModel: boolean, providerLabel: string): DevTrace | undefined =>
@@ -89,7 +88,7 @@ export async function routeVoiceCard(
   // Without consent this stays bank-only regardless of check_count — a denied
   // user never gets generated content, and Talk must stay off for them.
   if (input.checkCount < BANK_CARD_DAYS || !modelAllowed) {
-    const card = bankCard(day, style, input.me.morning_cue);
+    const card = bankCardForMe(day, input.me);
     return {
       kind: 'card',
       card,
@@ -124,7 +123,7 @@ export async function routeVoiceCard(
   // bank day is part of the "already shown" set.
   const priorBankDay = day - 1;
   if (priorBankDay >= 1 && priorBankDay <= BANK_CARD_DAYS) {
-    const prior = bankCard(priorBankDay, style, input.me.morning_cue);
+    const prior = bankCardForMe(priorBankDay, input.me);
     if (prior) shownCards.push(prior);
   }
 

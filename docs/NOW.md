@@ -6,23 +6,24 @@
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
 
 ## On
-**Stage 8 — nearly closed, three loose ends:**
-1. EAS binary 10 (`1d0d1041-9318-461f-b995-c589ac505dc2`, git `dc9ae77`) — OTA + real app icon cut. Needs `eas submit`, then install + confirm on a real device. **Do not submit binary 8 or 9.** Binary 8 (`d40e57a9`) **was already submitted and installed** (theme picker, Around, Home fix, age field verified on-device).
-2. Sentry native crash symbolication — upload is on (`SENTRY_AUTH_TOKEN`, `SENTRY_DISABLE_AUTO_UPLOAD=false`). Binary 8 native crash landed as event `e7bed112`; stack symbolication still **unconfirmed** from here (CI token cannot read event frames; no `com.emgens.ato@1.0.0+8` release). Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
+**Stage 9 first pass shipped (intake core + Day 1 payoff wiring).** Fresh onboarding is identity, then 9 chip screens with a visible "N of 9". Five new ME columns (`evening_wind_down`, `energy_pattern`, `recovery_style`, `support_style`, `current_focus`) — existing `talk_style` / `show_up` / `knocks_you_off` / `morning_cue` names and types unchanged. `check_count < 3` picks a `first_cards.md` slot from energy-pattern + support-style and inserts the person's own `morning_cue` phrase into the Do. Live row: handle `zintake9` has all 9 fields; Day 1 Do is `After you make coffee, sit for one minute before opening your phone.`
+
+**Stage 8 — nearly closed, three loose ends (unchanged):**
+1. EAS binary 10 (`1d0d1041-9318-461f-b995-c589ac505dc2`, git `dc9ae77`) — OTA + real app icon cut. Needs `eas submit`, then install + confirm on a real device. **Do not submit binary 8 or 9.** Binary 8 (`d40e57a9`) **was already submitted and installed**.
+2. Sentry native crash symbolication — still **unconfirmed** from here. Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
 3. Friends external testing group — Beta App Review pending on Apple since Aug 26, 2026. No action, just waiting.
 
-**EAS Update (OTA) is live as of binary 10.** `expo-updates` wired, fixed `runtimeVersion` `"1.0.0"`, production channel set. Any device on binary 10+ can receive JS/UI/backend-only changes via `eas update` — no new build, no Apple review. Devices still on binary 8 or earlier cannot receive OTA pushes and need a fresh TestFlight install of 10 first.
+**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ can receive this Stage 9 JS change via `eas update`. Devices on binary 8 or earlier cannot.
 
-**Decision (Aug 27, 2026): Wave 1.5 and Wave 3 both start now, in parallel — intentional deviation from plan sequencing.**
-ATO_PLAN_v2.md's Wave 3 spec gates the Night wall on Wave 2 Stage 2 ("I'm going" + friend colors) actually being live, specifically to avoid shipping an empty chat room nobody's in. That risk was flagged to emci directly and he chose to proceed anyway — noted here, not silently overridden. Practical mitigation: build Wave 3's Night wall logic/UI now, but its actual first real use will naturally wait until Wave 2 Stage 2 exists, since the wall only renders for a show people are marked "going" to. Sequence build order however is fastest; just don't advertise/surface the wall to real testers before Wave 2 Stage 2 ships.
+**Decision (Aug 27, 2026): Wave 1.5 and Wave 3 both start now, in parallel — intentional deviation from plan sequencing.** Night wall must not surface to real testers until Wave 2 Stage 2 ("I'm going") is live.
 
-**Next boxes, no build required (OTA-eligible) — Cursor takes these one at a time, one box per stage per plan discipline:**
-- Wave 1.5 Stage 9 — Intake core (see ATO_PLAN_v2.md → Understanding spec for full detail)
+**Next boxes, one at a time:**
+- Wave 1.5 Stage 11 — Optional fast-entry (Stage 10's bank-card wiring shipped with Stage 9; remaining Stage 10 visual two-account check is a confirm, not a build)
 - Wave 2 Stage 2 — "I'm going" + friend colors (needed before Wave 3's wall means anything)
 - Wave 3 — Plugs (deal rows) + Night wall
 
 ## Done
-See git history for the full Stage 1–8 build log (Home shell through floor-requirements sweep, EAS/TestFlight pipeline, five-mode appearance system, Around Stage 1 data layer, app icon, OTA wiring). Not repeated here — this file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
+See git history for the full Stage 1–8 build log. Stage 9 first pass (this change): 9 tappable core questions, ME schema, Day 1 cue insert + energy/support bank pick. Not repeated here — this file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
 
 ## Left
 - Submit + confirm binary 10 on device (icon, OTA, everything from today). Do not submit 8 or 9.
@@ -30,6 +31,7 @@ See git history for the full Stage 1–8 build log (Home shell through floor-req
 - Friends Beta App Review — waiting on Apple
 - Edmtrain live data — waiting on their key approval; Around stays honest-empty until then
 - Known, accepted, non-blocking: AI-quota client-bypass hardening — public-launch item, not now
+- Stage 9 follow-ups (not this box): evening/energy push timing; re-intake for pre-field accounts; "something else" free-text on knocks_you_off
 
 ## Public release readiness — do not start until public launch is imminent
 These are real, but they are not TestFlight work and they are not next. Leave them parked.
@@ -45,6 +47,7 @@ These are real, but they are not TestFlight work and they are not next. Leave th
 - Crisis: relational-safety/abuse category, own resource number, parked separately
 - **AI capacity hardening** — close the client-embedded-key bypass before public launch (server-side proxy or equivalent)
 - Slack — parked as future ops tooling, bring up again if/when the app scales
+- Push notification timing from `energy_pattern` / `evening_wind_down` (fields exist; not wired in Stage 9)
 
 ## Housekeeping
 - docs/ATO_PLAN_v2.md, docs/ME.md, docs/NOW.md, docs/BUSINESS.md — Cursor maintains these directly. Commit together, `git push` immediately, never left local-only.
@@ -59,4 +62,4 @@ These are real, but they are not TestFlight work and they are not next. Leave th
 - **Around refresh secrets (Wave 2):** Edge Function `refresh-around` is deployed (`verify_jwt: false`; auth is `AROUND_REFRESH_SECRET`). Needs `EDMTRAIN_CLIENT_KEY` (apply at edmtrain.com/developer-api while signed in) and `AROUND_REFRESH_SECRET`. Cron is not scheduled until both exist in Vault + function secrets. Phone never holds the Edmtrain key. ToS: displayed cache < 24h; unmodified event `link`; do not mix Edmtrain listings with another events feed (RA/Shotgun/DICE are ticket link-outs only).
 
 ## Next 15 min
-Open new Cursor chat. Confirm binary 10 submitted/installed if not already done. Then: Stage 9 (Intake core) — first box of the Wave 1.5 + Wave 3 parallel push, OTA-eligible, no build needed.
+Open new Cursor chat. Stage 11 (optional fast-entry) is the next Wave 1.5 box — skippable MBTI/Big Five/attachment/conflict layer, translating into the same backbone, no raw diagnostic labels stored. Confirm binary 10 submitted/installed if not already done.

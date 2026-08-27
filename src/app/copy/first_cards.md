@@ -2,6 +2,8 @@
 
 Used before there's enough history for the model to personalize (Day 1–3 only).
 `{morning_cue}` is substituted with the user's actual onboarding answer at render time.
+Which style slot (quiet / even / loud) is chosen from energy_pattern + support_style
+(see `bankStyleFor` in intake.ts), not from a fixed talk_style sequence.
 Do is always if-then, anchored to `{morning_cue}`. No placeholder lorem — this is real copy.
 
 ---

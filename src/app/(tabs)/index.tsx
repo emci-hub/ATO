@@ -20,6 +20,7 @@ import { emitChecksChanged, onChecksChanged } from '@/lib/checks-events';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { normalizeRecipe } from '@/lib/kenney/registry';
 import { aiConsentFor } from '@/lib/me';
+import { voiceMeFrom } from '@/lib/intake';
 import { HOME_SAGE_LEDE, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { persistRoutedCard } from '@/lib/today-card';
 import { routeVoiceCard } from '@/lib/voice/router';
@@ -80,13 +81,7 @@ export default function HomeScreen() {
       emitChecksChanged();
       if (status === 'done') triggerGesture('checkDone');
       const next = await routeVoiceCard({
-        me: {
-          name: me.name,
-          show_up: me.show_up,
-          talk_style: me.talk_style,
-          knocks_you_off: me.knocks_you_off,
-          morning_cue: me.morning_cue,
-        },
+        me: voiceMeFrom(me),
         checkCount: nextChecks.length,
         history: checksToHistory(nextChecks),
         crisisToday: false,

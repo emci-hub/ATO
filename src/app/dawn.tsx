@@ -15,6 +15,7 @@ import { checksToHistory, fetchChecks, recordCheck, type Check } from '@/lib/che
 import { emitChecksChanged } from '@/lib/checks-events';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { aiConsentFor, setAiConsent } from '@/lib/me';
+import { voiceMeFrom } from '@/lib/intake';
 import { persistRoutedCard } from '@/lib/today-card';
 import { routeVoiceCard } from '@/lib/voice/router';
 import type { VoiceCardResult } from '@/lib/voice/types';
@@ -78,13 +79,7 @@ export default function DawnScreen() {
     setError(null);
 
     routeVoiceCard({
-      me: {
-        name: me.name,
-        show_up: me.show_up,
-        talk_style: me.talk_style,
-        knocks_you_off: me.knocks_you_off,
-        morning_cue: me.morning_cue,
-      },
+      me: voiceMeFrom(me),
       checkCount: checks.length,
       history: checksToHistory(checks),
       crisisToday: false,

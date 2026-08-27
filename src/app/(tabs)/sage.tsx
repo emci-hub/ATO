@@ -25,6 +25,7 @@ import { checksToHistory, fetchChecks, type Check } from '@/lib/checks';
 import { logCrisisFlag } from '@/lib/crisis/log';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { aiConsentFor, setAiConsent } from '@/lib/me';
+import { voiceMeFrom } from '@/lib/intake';
 import { addSageMessage, fetchSageMessages } from '@/lib/sage-messages';
 import { TALK_COMPOSER_PLACEHOLDER, TALK_EMPTY, TALK_LEDE, TALK_WRITING, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { QUOTA_EMPTY_MESSAGE } from '@/lib/voice/quota';
@@ -112,13 +113,7 @@ export default function SageScreen() {
     if (!me) return;
     let cancelled = false;
     routeVoiceCard({
-      me: {
-        name: me.name,
-        show_up: me.show_up,
-        talk_style: me.talk_style,
-        knocks_you_off: me.knocks_you_off,
-        morning_cue: me.morning_cue,
-      },
+      me: voiceMeFrom(me),
       checkCount: checks.length,
       history: checksToHistory(checks),
       aiConsent: me.ai_consent,
@@ -182,13 +177,7 @@ export default function SageScreen() {
     try {
       const result = await routeTalkReply(
         {
-          me: {
-            name: me.name,
-            show_up: me.show_up,
-            talk_style: me.talk_style,
-            knocks_you_off: me.knocks_you_off,
-            morning_cue: me.morning_cue,
-          },
+          me: voiceMeFrom(me),
           message: trimmed,
           checkCount: checks.length,
           history: checksToHistory(checks),

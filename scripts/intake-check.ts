@@ -1,0 +1,151 @@
+/**
+ * Stage 9 intake core — unit checks.
+ * Run: npm run check:intake
+ */
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+import {
+  CORE_INTAKE_QUESTIONS,
+  CORE_INTAKE_TOTAL,
+  bankStyleFor,
+  intakeProgressLabel,
+  joinKnocks,
+  parseKnocks,
+  voiceMeFrom,
+} from '../src/lib/intake';
+import { bankCard, bankCardForMe } from '../src/lib/voice/bank';
+import { routeVoiceCard } from '../src/lib/voice/router';
+import { buildVoiceConfig } from '../src/lib/voice/config';
+
+let passed = 0;
+function ok(label: string) {
+  passed += 1;
+  console.log(`  ✓ ${label}`);
+}
+
+const localConfig = buildVoiceConfig({ MODEL_PROVIDER: 'local' });
+const dev = { isDev: true, config: localConfig };
+
+async function main() {
+  assert.equal(CORE_INTAKE_QUESTIONS.length, 9);
+  assert.equal(CORE_INTAKE_TOTAL, 9);
+  const fields = CORE_INTAKE_QUESTIONS.map((q) => q.field);
+  assert.deepEqual(fields, [
+    'talk_style',
+    'show_up',
+    'knocks_you_off',
+    'morning_cue',
+    'evening_wind_down',
+    'energy_pattern',
+    'recovery_style',
+    'support_style',
+    'current_focus',
+  ]);
+  CORE_INTAKE_QUESTIONS.forEach((q, i) => {
+    assert.equal(q.n, i + 1);
+    assert.ok(q.chips.length >= 3, `${q.field} needs chips`);
+    assert.ok(q.prompt.length > 0);
+  });
+  ok('9 core questions in spec order, one chip set each');
+
+  assert.equal(intakeProgressLabel(3), '3 of 9');
+  ok('progress label is "3 of 9"');
+
+  const onboarding = readFileSync(resolve(__dirname, '../src/app/onboarding.tsx'), 'utf8');
+  assert.match(onboarding, /intakeProgressLabel/);
+  assert.match(onboarding, /CORE_INTAKE_QUESTIONS/);
+  assert.match(onboarding, /phase === 'account'/);
+  assert.match(onboarding, /ChipGroup/);
+  ok('onboarding is a chip wizard with a visible progress label');
+
+  const joined = joinKnocks(['sleep', 'workload']);
+  assert.equal(joined, 'sleep, workload');
+  assert.deepEqual(parseKnocks(joined), ['sleep', 'workload']);
+  ok('knocks_you_off stays a string (joined chips)');
+
+  const copyBlob = [
+    onboarding,
+    readFileSync(resolve(__dirname, '../src/components/share-poster.tsx'), 'utf8'),
+  ].join('\n');
+  for (const banned of ['MBTI', 'Myers-Briggs', 'Big Five', 'OCEAN', 'attachment style', 'neuroticism', 'TIPI', 'ECR']) {
+    assert.equal(copyBlob.toLowerCase().includes(banned.toLowerCase()), false, `public/intake copy leaked "${banned}"`);
+  }
+  ok('no raw framework labels in intake UI or poster');
+
+  const poster = readFileSync(resolve(__dirname, '../src/components/share-poster.tsx'), 'utf8');
+  assert.doesNotMatch(poster, /energy_pattern|recovery_style|support_style|current_focus/);
+  ok('poster does not render psych-adjacent fields');
+
+  const fallback = bankStyleFor({ talk_style: 'even' });
+  assert.equal(fallback, 'even');
+  ok('pre-intake rows keep talk_style bank slots');
+
+  const quietPick = bankStyleFor({
+    talk_style: 'loud',
+    energy_pattern: 'night_owl',
+    support_style: 'space',
+  });
+  const loudPick = bankStyleFor({
+    talk_style: 'quiet',
+    energy_pattern: 'morning',
+    support_style: 'nudge',
+  });
+  assert.equal(quietPick, 'quiet');
+  assert.equal(loudPick, 'loud');
+  ok('energy_pattern + support_style pick different bank style slots');
+
+  const cue = 'make coffee';
+  const quietMe = voiceMeFrom({
+    name: 'A',
+    show_up: 'building something',
+    talk_style: 'loud',
+    knocks_you_off: 'sleep',
+    morning_cue: cue,
+    evening_wind_down: 'put my phone down',
+    energy_pattern: 'night_owl',
+    recovery_style: 'alone_time',
+    support_style: 'space',
+    current_focus: 'habit',
+  });
+  const loudMe = voiceMeFrom({
+    name: 'B',
+    show_up: 'running hot',
+    talk_style: 'quiet',
+    knocks_you_off: 'workload',
+    morning_cue: 'put on music',
+    evening_wind_down: 'get in bed',
+    energy_pattern: 'morning',
+    recovery_style: 'movement',
+    support_style: 'nudge',
+    current_focus: 'show_up',
+  });
+
+  const quietCard = bankCardForMe(1, quietMe)!;
+  const loudCard = bankCardForMe(1, loudMe)!;
+  assert.equal(quietCard.do, bankCard(1, 'quiet', cue)!.do);
+  assert.equal(loudCard.do, bankCard(1, 'loud', 'put on music')!.do);
+  assert.ok(quietCard.do.includes(cue), 'Do must contain the person\'s morning_cue phrase');
+  assert.ok(!quietCard.do.includes('{morning_cue}'));
+  assert.notEqual(quietCard.read, loudCard.read);
+  assert.notEqual(quietCard.do, loudCard.do);
+  ok('Day 1 Do inserts the user cue; two answer sets pick different bank cards');
+
+  const routed = await routeVoiceCard(
+    { me: quietMe, checkCount: 0, history: [] },
+    dev,
+  );
+  assert.equal(routed.source, 'bank');
+  assert.equal(routed.provider, null);
+  assert.equal(routed.dev?.fromModel, false);
+  assert.equal(routed.card?.do, quietCard.do);
+  ok('check_count < 3 still uses first_cards.md with no model call');
+
+  console.log(`\nAll ${passed} intake checks passed.`);
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

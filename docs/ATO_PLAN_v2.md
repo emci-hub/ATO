@@ -11,10 +11,15 @@ If a field isn't defined here, don't guess its shape — ask.
 | Term | Type | Meaning |
 |---|---|---|
 | `ME` | row (Supabase) | The user's profile. See fields below. |
-| `show_up` | string, free text | Answer to onboarding Q3: "What are you in this week?" One sentence, user's own words. |
-| `knocks_you_off` | string, free text | Answer to onboarding Q5. One sentence. |
-| `morning_cue` | string, free text | Answer to onboarding Q6: "What do you already do every morning?" Anchors the if-then Do. |
-| `talk_style` | enum: `quiet`/`even`/`loud` | Derived from onboarding Q4 + Q5. Set once at onboarding, editable later in Settings. |
+| `show_up` | string | Onboarding chip (color-seed vibe). Stored as the chip's phrase. Still seeds the Home/poster color. |
+| `knocks_you_off` | string | Multi-select chips joined with `", "` (sleep / workload / people/conflict / health / money / something else). |
+| `morning_cue` | string | Chip phrase that inserts into the if-then Do (`After you {morning_cue}, …`). |
+| `talk_style` | enum: `quiet`/`even`/`loud` | Direct onboarding tap. Set once at onboarding, editable later in Settings. |
+| `evening_wind_down` | string, nullable on pre-intake rows | Chip phrase. Times the evening Check push (wiring not in Stage 9). |
+| `energy_pattern` | enum: `morning`/`afternoon`/`evening`/`night_owl`, nullable on pre-intake rows | Self-report. Helps pick the check_count < 3 bank card. Not a diagnosis. |
+| `recovery_style` | enum: `movement`/`sleep`/`talking`/`alone_time`/`music`, nullable on pre-intake rows | Self-report. Not a diagnosis. Never shown on the public poster. |
+| `support_style` | enum: `nudge`/`space`/`listen`/`plan`, nullable on pre-intake rows | Self-report. Helps pick the check_count < 3 bank card. Not a diagnosis. Never shown on the public poster. |
+| `current_focus` | enum: `habit`/`through_it`/`like_yourself`/`show_up`, nullable on pre-intake rows | Self-report. Not a diagnosis. Never shown on the public poster. |
 | `this_week` | string, free text, resets weekly | Sunday + Sage use only. Never a matching signal. |
 | `recipe` | object `{base, hair, top, palette}` | Kenney asset selections that render the pixel. All 4 fields required once Pixel is built. |
 | `valence` | enum: `lift`/`even`/`cut` | Computed from last 7 Checks. See formula in Rules. |
@@ -111,7 +116,7 @@ Write those two copy files first. 3 styles × 3 valences. 3 mornings × 3 styles
 | Invite | signup attempt + code | account created (or rejected) + code consumed |
 | Intake | onboarding taps + optional fast-entry | trait backbone fields on ME (see Understanding spec) |
 
-**ME fields:** name, handle, timezone, `city` (typed slug for Around, never GPS; Wave 2 refreshes Calgary), `born_on` (self-reported date of birth; age computed, never stored as a number/boolean), `this_week`, `morning_cue`, `show_up`, `knocks_you_off`, `talk_style`, color, `recipe`, theme_id, facts they've told Sage, all-time Checks, `check_count`, last_7_card_ids, `show` (visibility toggle), `allow_search`, `host` (admin-flipped), `referred_by` (hidden, nullable).
+**ME fields:** name, handle, timezone, `city` (typed slug for Around, never GPS; Wave 2 refreshes Calgary), `born_on` (self-reported date of birth; age computed, never stored as a number/boolean), `this_week`, `morning_cue`, `show_up`, `knocks_you_off`, `talk_style`, `evening_wind_down`, `energy_pattern`, `recovery_style`, `support_style`, `current_focus` (last five: self-report chips from Stage 9; nullable on pre-intake rows; energy/recovery/support/focus never shown on the public poster), color, `recipe`, theme_id, facts they've told Sage, all-time Checks, `check_count`, last_7_card_ids, `show` (visibility toggle), `allow_search`, `host` (admin-flipped), `referred_by` (hidden, nullable).
 
 **ME never stores:** guessed vibes, raw chat logs, raw HealthKit data, a model's freeform narrative about the user.
 
@@ -333,12 +338,12 @@ You + friends, one real week, real devices. Home stayed new day to day. Dos were
 
 ## Wave 1.5 — Understanding & Delight (Stages 9-14)
 
-Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Next box is Stage 9 (intake core). Full spec detail lives in "Understanding spec" above; this section is sequencing only.
+Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Next Wave 1.5 box is Stage 11 (optional fast-entry). Full spec detail lives in "Understanding spec" above; this section is sequencing only.
 
 ### 9 Intake core
 **Open box: intake, me.**
 Schema + UI for the 9 required tappable onboarding fields (talk_style, show_up, knocks_you_off, morning_cue, evening wind-down, energy pattern, recovery style, support style, current focus). Replaces the 3 existing free-text fields. Self-report only, translates into the trait-backbone structure per Understanding spec.
-**Done:** all 9 fields save to ME, one question per screen with progress indicator, no raw psychological labels shown publicly.
+**Done:** all 9 fields save to ME, one question per screen with progress indicator, no raw psychological labels shown publicly. **First pass shipped (Aug 27, 2026):** 9 chip screens + 5 new ME columns + Day 1 bank selection from energy_pattern/support_style with the person's `morning_cue` phrase in the Do. Optional fast-entry and delight mechanics are still later stages.
 
 ### 10 Day 1 payoff
 **Open box: intake, dawn.**

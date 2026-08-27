@@ -40,6 +40,11 @@ export interface VoiceMe {
   talk_style: TalkStyle;
   knocks_you_off: string;
   morning_cue: string;
+  evening_wind_down?: string | null;
+  energy_pattern?: 'morning' | 'afternoon' | 'evening' | 'night_owl' | null;
+  recovery_style?: 'movement' | 'sleep' | 'talking' | 'alone_time' | 'music' | null;
+  support_style?: 'nudge' | 'space' | 'listen' | 'plan' | null;
+  current_focus?: 'habit' | 'through_it' | 'like_yourself' | 'show_up' | null;
 }
 
 export interface RouteVoiceCardInput {

@@ -85,6 +85,39 @@ for (let checkCount = 0; checkCount < 3; checkCount += 1) {
 }
 ok('check_count 0/1/2 → bank file, dev flag fromBankFile=true / fromModel=false');
 
+console.log('Bank path: energy_pattern + support_style pick the slot');
+const cueOwn = 'make coffee';
+const nightSpace = {
+  ...ME,
+  talk_style: 'loud' as const,
+  morning_cue: cueOwn,
+  energy_pattern: 'night_owl' as const,
+  support_style: 'space' as const,
+};
+const morningNudge = {
+  ...ME,
+  talk_style: 'quiet' as const,
+  morning_cue: 'put on music',
+  energy_pattern: 'morning' as const,
+  support_style: 'nudge' as const,
+};
+const nightCard = await routeVoiceCard(
+  { me: nightSpace, checkCount: 0, history: [] },
+  { config: localConfig, ...dev },
+);
+const nudgeCard = await routeVoiceCard(
+  { me: morningNudge, checkCount: 0, history: [] },
+  { config: localConfig, ...dev },
+);
+assert.equal(nightCard.source, 'bank');
+assert.equal(nightCard.dev!.fromModel, false);
+assert.ok(nightCard.card!.do.includes(cueOwn));
+assert.ok(!nightCard.card!.do.includes('{morning_cue}'));
+assert.equal(nightCard.card!.do, bankCard(1, 'quiet', cueOwn)!.do);
+assert.equal(nudgeCard.card!.do, bankCard(1, 'loud', 'put on music')!.do);
+assert.notEqual(nightCard.card!.read, nudgeCard.card!.read);
+ok('two intake answer sets → different Day 1 bank cards; cue phrase is in the Do');
+
 // ---------------------------------------------------------------------------
 console.log('Consent gate (Apple 5.1.2)');
 const d1 = mkHistory([{ day: 1, status: 'done' }, { day: 2, status: 'done' }, { day: 3, status: 'done' }]);

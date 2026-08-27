@@ -1,5 +1,7 @@
+import { bankStyleFor } from '@/lib/intake';
+
 import { BANK_MARKDOWN } from './content.generated';
-import type { TalkStyle, VoiceCard } from './types';
+import type { TalkStyle, VoiceCard, VoiceMe } from './types';
 
 /** bank[day][style] → card copy, still containing {morning_cue}. */
 export type Bank = Record<number, Partial<Record<TalkStyle, VoiceCard>>>;
@@ -44,4 +46,13 @@ export function bankCard(day: number, style: TalkStyle, morningCue: string): Voi
     read: substituteCue(card.read, morningCue),
     do: substituteCue(card.do, morningCue),
   };
+}
+
+/**
+ * check_count < 3: pick a first_cards.md slot from energy_pattern/support_style
+ * (falling back to talk_style) and insert the person's own morning_cue phrase.
+ * No model call.
+ */
+export function bankCardForMe(day: number, me: VoiceMe): VoiceCard | null {
+  return bankCard(day, bankStyleFor(me), me.morning_cue);
 }

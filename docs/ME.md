@@ -4,13 +4,15 @@
 **Twin:** Drake
 
 ## This week
-Stage 8 nearly closed — three loose ends only: submit/confirm EAS binary 10 (OTA + real app icon) on a real device, re-check Sentry native symbolication once that's on-device, and wait on Apple's Beta App Review for the Friends TestFlight group. Everything else in Stage 8 (Apple Sign-In, invite gate, push/widget, floor-requirements sweep, legal/landing copy, age field, appearance system, Around Stage 1 data layer) is done.
+Stage 9 first pass shipped — 9 tappable core onboarding questions (one per screen, "N of 9"), five new self-report ME columns, and Day 1 bank cards that insert the person's own `morning_cue` and pick a `first_cards.md` slot from energy-pattern + support-style. Live row `zintake9` confirmed in Supabase. Next Wave 1.5 box: Stage 11 optional fast-entry.
+
+Stage 8 still has three loose ends only: submit/confirm EAS binary 10 (OTA + real app icon) on a real device, re-check Sentry native symbolication once that's on-device, and wait on Apple's Beta App Review for the Friends TestFlight group. Everything else in Stage 8 is done.
 
 **EAS Update (OTA) is live** as of binary 10 — future JS/UI/backend-only work ships via `eas update`, no more build+Apple-review cycles for most changes. Native-only exceptions remain: icon, widget, permissions, new native modules. Devices still on binary 8 or earlier need a TestFlight install of 10 before they can receive OTA.
 
 **Binary 8** (`d40e57a9`) **was submitted and installed** — theme picker, Around, Home fix, and age field verified on-device. Native crash test landed as Sentry event `e7bed112`; stack symbolication is still **unconfirmed** from here (CI token cannot read event frames; no `com.emgens.ato@1.0.0+8` release). Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
 
-**Decision: Wave 1.5 and Wave 3 both start now, in parallel — deliberately not following the plan's original stage order.** Flagged the risk (Wave 3's Night wall is spec'd to depend on Wave 2 Stage 2 "I'm going" existing first, so nobody opens an empty room) and emci chose to proceed anyway. Building Wave 3's mechanics now is fine; just don't surface the Night wall to real testers until Wave 2 Stage 2 is live. Next box: Stage 9 (Intake core).
+**Decision: Wave 1.5 and Wave 3 both start now, in parallel — deliberately not following the plan's original stage order.** Flagged the risk (Wave 3's Night wall is spec'd to depend on Wave 2 Stage 2 "I'm going" existing first, so nobody opens an empty room) and emci chose to proceed anyway. Building Wave 3's mechanics now is fine; just don't surface the Night wall to real testers until Wave 2 Stage 2 is live. Stage 9 first pass is in; next box: Stage 11 (optional fast-entry).
 
 ## App
 - **Category:** Hybrid — AI-native (Sage/router) + Social (Circle/Chat) + Health/finance/kids (crisis spec, coaching tone)

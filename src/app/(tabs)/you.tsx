@@ -32,6 +32,16 @@ import {
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { copyLink, sharePoster } from '@/lib/share';
 import { setCity } from '@/lib/me';
+import {
+  CURRENT_FOCUS_CHIPS,
+  ENERGY_PATTERN_CHIPS,
+  EVENING_WIND_DOWN_CHIPS,
+  MORNING_CUE_CHIPS,
+  RECOVERY_STYLE_CHIPS,
+  SUPPORT_STYLE_CHIPS,
+  TALK_STYLE_CHIPS,
+  chipLabel,
+} from '@/lib/intake';
 import { supabase } from '@/lib/supabase';
 
 export default function YouScreen() {
@@ -198,9 +208,42 @@ export default function YouScreen() {
 
               <ThemedView type="backgroundElement" style={styles.detailCard}>
                 <DetailRow label="Show up" value={me.show_up} />
-                <DetailRow label="Talk style" value={me.talk_style} />
+                <DetailRow label="Talk style" value={chipLabel(TALK_STYLE_CHIPS, me.talk_style)} />
                 <DetailRow label="Knocks you off" value={me.knocks_you_off} />
-                <DetailRow label="Morning cue" value={me.morning_cue} />
+                <DetailRow
+                  label="Morning cue"
+                  value={chipLabel(MORNING_CUE_CHIPS, me.morning_cue) || me.morning_cue}
+                />
+                {me.evening_wind_down ? (
+                  <DetailRow
+                    label="Evening wind-down"
+                    value={chipLabel(EVENING_WIND_DOWN_CHIPS, me.evening_wind_down)}
+                  />
+                ) : null}
+                {me.energy_pattern ? (
+                  <DetailRow
+                    label="Most energy"
+                    value={chipLabel(ENERGY_PATTERN_CHIPS, me.energy_pattern)}
+                  />
+                ) : null}
+                {me.recovery_style ? (
+                  <DetailRow
+                    label="What pulls me back"
+                    value={chipLabel(RECOVERY_STYLE_CHIPS, me.recovery_style)}
+                  />
+                ) : null}
+                {me.support_style ? (
+                  <DetailRow
+                    label="What helps"
+                    value={chipLabel(SUPPORT_STYLE_CHIPS, me.support_style)}
+                  />
+                ) : null}
+                {me.current_focus ? (
+                  <DetailRow
+                    label="Right now"
+                    value={chipLabel(CURRENT_FOCUS_CHIPS, me.current_focus)}
+                  />
+                ) : null}
                 <DetailRow label="Timezone" value={me.timezone} />
               </ThemedView>
 

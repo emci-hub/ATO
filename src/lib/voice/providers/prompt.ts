@@ -1,5 +1,5 @@
 import { VOICE_REFERENCE } from '../voice-reference';
-import type { TalkStyle, Tone, VoiceCard } from '../types';
+import type { Tone, VoiceCard, VoiceMe } from '../types';
 import { TALK_STYLE_GUIDE, type GenerateInput, type TalkGenerateInput } from './types';
 
 function streakSummary(history: GenerateInput['history']): string {
@@ -9,6 +9,18 @@ function streakSummary(history: GenerateInput['history']): string {
     .map((h) => `- Day ${h.day}: ${h.status}${h.source ? ` (${h.source})` : ''}`)
     .join('\n');
   return recent;
+}
+
+/** Self-report intake lines. Not a diagnosis — they tapped these. */
+function intakeContext(me: VoiceMe): string {
+  const lines: string[] = [];
+  if (me.evening_wind_down) lines.push(`- Evening wind-down they named: ${me.evening_wind_down}`);
+  if (me.energy_pattern) lines.push(`- When they say they have the most in the tank: ${me.energy_pattern}`);
+  if (me.recovery_style) lines.push(`- What they say pulls them back: ${me.recovery_style}`);
+  if (me.support_style) lines.push(`- What they say helps: ${me.support_style}`);
+  if (me.current_focus) lines.push(`- What they're mostly trying to do right now: ${me.current_focus}`);
+  if (lines.length === 0) return '';
+  return `${lines.join('\n')}\n- Treat the lines above as self-report, never as a diagnosis.\n`;
 }
 
 /** Builds the single-turn prompt that asks Gemini for today's card. */
@@ -37,10 +49,10 @@ ${crisisToday ? '- CRISIS DAY: do NOT include any cut, no matter what.' : ''}
 ${previousHadCut ? '- Yesterday was already a cut. Do NOT cut again.' : ''}
 
 CONTEXT
-- What they're in this week: ${me.show_up}
+- How this week feels (self-report): ${me.show_up}
 - What knocks them off: ${me.knocks_you_off}
 - Their morning cue (anchor the Do to this): ${me.morning_cue}
-- Recent checks:
+${intakeContext(me)}- Recent checks:
 ${streakSummary(input.history)}
 
 RULES
@@ -100,10 +112,10 @@ ${VOICE_REFERENCE}
 USER
 - Name: ${me.name}
 - Talk style: ${styleGuide[me.talk_style]}
-- What they're in this week: ${me.show_up}
+- How this week feels (self-report): ${me.show_up}
 - What knocks them off: ${me.knocks_you_off}
 - Their morning cue: ${me.morning_cue}
-- Today is day ${day}${todayCard ? `.\n- Today's card:\n  read: ${todayCard.read}\n  do: ${todayCard.do}` : '.'}
+${intakeContext(me)}- Today is day ${day}${todayCard ? `.\n- Today's card:\n  read: ${todayCard.read}\n  do: ${todayCard.do}` : '.'}
 - Recent checks:
 ${streakSummary(history)}
 

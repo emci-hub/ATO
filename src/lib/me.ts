@@ -1,5 +1,11 @@
 import { errorMessageForAge } from '@/lib/age';
 import { slugifyCity } from '@/lib/around/slug';
+import type {
+  CurrentFocus,
+  EnergyPattern,
+  RecoveryStyle,
+  SupportStyle,
+} from '@/lib/intake';
 import { clearPendingInviteCode, errorMessageForInvite } from '@/lib/invite';
 import { supabase } from '@/lib/supabase';
 
@@ -13,6 +19,13 @@ export interface Me {
   talk_style: TalkStyle;
   knocks_you_off: string;
   morning_cue: string;
+  /** Chip phrase. Times the evening Check push (wiring later). Null on pre-intake rows. */
+  evening_wind_down: string | null;
+  /** Self-report. Null on pre-intake rows. Never a diagnosis. */
+  energy_pattern: EnergyPattern | null;
+  recovery_style: RecoveryStyle | null;
+  support_style: SupportStyle | null;
+  current_focus: CurrentFocus | null;
   timezone: string;
   /**
    * Typed city slug for Around (e.g. calgary). Never from GPS.
@@ -48,6 +61,11 @@ export type MeInsert = Omit<
   | 'referred_by'
     | 'born_on'
     | 'city'
+    | 'evening_wind_down'
+    | 'energy_pattern'
+    | 'recovery_style'
+    | 'support_style'
+    | 'current_focus'
     | 'created_at'
     | 'updated_at'
 > & {
@@ -56,6 +74,11 @@ export type MeInsert = Omit<
   born_on: string;
   /** Typed city slug. Saved after signup; not part of complete_signup. */
   city?: string | null;
+  evening_wind_down: string;
+  energy_pattern: EnergyPattern;
+  recovery_style: RecoveryStyle;
+  support_style: SupportStyle;
+  current_focus: CurrentFocus;
 };
 
 export type AiConsent = 'granted' | 'denied' | 'pending';
@@ -102,6 +125,11 @@ export async function createMe(row: MeInsert): Promise<Me> {
       p_timezone: profile.timezone,
       p_invite_code: invite_code?.trim() ? invite_code.trim() : null,
       p_born_on: profile.born_on,
+      p_evening_wind_down: profile.evening_wind_down,
+      p_energy_pattern: profile.energy_pattern,
+      p_recovery_style: profile.recovery_style,
+      p_support_style: profile.support_style,
+      p_current_focus: profile.current_focus,
     })
     .maybeSingle();
 
