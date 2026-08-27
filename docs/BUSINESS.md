@@ -16,6 +16,7 @@ This runs parallel to the technical Stages/Waves in ATO_PLAN_v2.md. It does not 
 - **Landing page:** live at `ato.emgens.com` (Vercel project `ato` under the `em-gens` team, not yet connected to a git repo — updates go through manual redeploy until linked).
 - **Kenney CC0:** in-app Credits on You lists Shape Characters only (the pack actually bundled). Attribution is not legally required; credited anyway. Other Kenney families stay off the list until imported.
 - **Crisis card:** region from device locale/timezone (manual override in Settings). Confirmed number is 988 for US and Canada only; unconfirmed regions get an honest fallback, never a guessed hotline.
+- **Around (Wave 2 Stage 1):** city is typed at setup, not GPS. Weekend shows come from Edmtrain into a static JSON file; tickets open on Edmtrain / RA / Shotgun / DICE. No in-app checkout. Live refresh waits on an Edmtrain API key (apply while signed in at edmtrain.com/developer-api).
 
 ### M1 — TestFlight (Stage 8, friends-only testing)
 - **Trigger:** ready to submit a build to TestFlight. **Met** — build 6 is in TestFlight, installed on a real device; Beta App Review for the Friends external testing group is pending (as of Aug 26, 2026).

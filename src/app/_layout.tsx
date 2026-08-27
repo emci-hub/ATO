@@ -58,6 +58,7 @@ function RootNavigator() {
           {isAuthed && hasMe ? <PushRuntime /> : null}
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="theme-lab" />
+            <Stack.Screen name="around-lab" />
             <Stack.Protected guard={!isAuthed}>
               <Stack.Screen name="auth" />
             </Stack.Protected>

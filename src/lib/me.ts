@@ -1,4 +1,5 @@
 import { errorMessageForAge } from '@/lib/age';
+import { slugifyCity } from '@/lib/around/slug';
 import { clearPendingInviteCode, errorMessageForInvite } from '@/lib/invite';
 import { supabase } from '@/lib/supabase';
 
@@ -13,6 +14,11 @@ export interface Me {
   knocks_you_off: string;
   morning_cue: string;
   timezone: string;
+  /**
+   * Typed city slug for Around (e.g. calgary). Never from GPS.
+   * Null on accounts created before the field existed.
+   */
+  city: string | null;
   /**
    * Self-reported date of birth (`YYYY-MM-DD`). Age is computed from this.
    * Null only on accounts created before the field existed.
@@ -40,13 +46,16 @@ export type MeInsert = Omit<
   | 'facts'
   | 'milestones_celebrated'
   | 'referred_by'
-  | 'born_on'
-  | 'created_at'
-  | 'updated_at'
+    | 'born_on'
+    | 'city'
+    | 'created_at'
+    | 'updated_at'
 > & {
   invite_code?: string;
   /** Required for a new ME row. YYYY-MM-DD. */
   born_on: string;
+  /** Typed city slug. Saved after signup; not part of complete_signup. */
+  city?: string | null;
 };
 
 export type AiConsent = 'granted' | 'denied' | 'pending';
@@ -99,7 +108,24 @@ export async function createMe(row: MeInsert): Promise<Me> {
   if (error) throw error;
   if (!data) throw new Error('Not authenticated');
   await clearPendingInviteCode();
-  return data as Me;
+  const created = data as Me;
+  const citySlug = profile.city?.trim() ? profile.city.trim() : null;
+  if (citySlug) return setCity(created.id, citySlug);
+  return created;
+}
+
+/** Typed city slug for Around. Null clears it. Never from GPS. */
+export async function setCity(userId: string, city: string | null): Promise<Me> {
+  const slug = city ? slugifyCity(city) : null;
+  const { data, error } = await supabase
+    .from('me')
+    .update({ city: slug })
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
 }
 
 export function errorMessageForHandle(error: unknown): string {

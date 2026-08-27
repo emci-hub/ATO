@@ -39,6 +39,11 @@ export default function AppTabs() {
         <Icon src={SAGE_MASK_ICON} />
       </NativeTabs.Trigger>
 
+      <NativeTabs.Trigger name="around">
+        <Label>Around</Label>
+        <Icon src={<VectorIcon family={MaterialCommunityIcons} name="map-marker-radius-outline" />} />
+      </NativeTabs.Trigger>
+
       {/* Circle does not exist until a scan. The Trigger stays statically in
           the layout (expo-router rejects dynamically added/removed triggers);
           `hidden` excludes the route from the navigator until a connection

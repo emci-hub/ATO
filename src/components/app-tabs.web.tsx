@@ -30,6 +30,9 @@ export default function AppTabs() {
           <TabTrigger name="sage" href="/sage" asChild>
             <TabButton icon={<SageTabIcon />}>Sage</TabButton>
           </TabTrigger>
+          <TabTrigger name="around" href="/around" asChild>
+            <TabButton>Around</TabButton>
+          </TabTrigger>
           {/* Circle does not exist until a scan — not hidden, not present. */}
           {hasCircle ? (
             <TabTrigger name="circle" href="/circle" asChild>

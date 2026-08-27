@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { CityPicker } from '@/components/city-picker';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -20,6 +21,8 @@ import {
   UNDER_16_MESSAGE,
 } from '@/lib/age';
 import { createMe, errorMessageForHandle, TalkStyle } from '@/lib/me';
+import { slugifyCity } from '@/lib/around/slug';
+import { DEFAULT_AROUND_CITY } from '@/constants/around-cities';
 import { useMeContext } from '@/lib/me-context';
 import {
   fetchSignupMode,
@@ -50,6 +53,7 @@ export default function OnboardingScreen() {
   const [talkStyle, setTalkStyle] = useState<TalkStyle | null>(null);
   const [knocksYouOff, setKnocksYouOff] = useState('');
   const [morningCue, setMorningCue] = useState('');
+  const [city, setCity] = useState(DEFAULT_AROUND_CITY.slug);
   const [inviteCode, setInviteCode] = useState('');
   const [signupMode, setSignupMode] = useState<SignupMode>('invite_only');
 
@@ -152,6 +156,7 @@ export default function OnboardingScreen() {
           timezone,
           invite_code: inviteCode,
           born_on: parsedBornOn.bornOn,
+          city: slugifyCity(city) ?? DEFAULT_AROUND_CITY.slug,
         }),
         15000,
         'createMe',
@@ -198,7 +203,7 @@ export default function OnboardingScreen() {
             keyboardShouldPersistTaps="handled">
             <ThemedText type="subtitle">Introduce yourself</ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.lede}>
-              Seven quick questions, then ATO knows how to talk to you.
+              A few quick questions, then ATO knows how to talk to you.
             </ThemedText>
 
             {signupMode === 'invite_only' ? (
@@ -374,6 +379,13 @@ export default function OnboardingScreen() {
                 editable={!busy}
                 style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundSelected }]}
               />
+            </Field>
+
+            <Field
+              label="8. What city do you go out in?"
+              required
+              hint="Typed, not GPS. Around uses this for the weekend list. Calgary is what we refresh today.">
+              <CityPicker compact value={city} onChange={(slug) => setCity(slug ?? DEFAULT_AROUND_CITY.slug)} />
             </Field>
 
             {formError ? (

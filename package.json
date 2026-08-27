@@ -83,6 +83,7 @@
     "check:floor": "tsx ./scripts/floor-check.ts",
     "check:sentry": "tsx ./scripts/sentry-check.ts",
     "check:appearance": "tsx ./scripts/appearance-check.ts",
+    "check:around": "tsx ./scripts/around-check.ts",
     "check:quota": "tsx ./scripts/quota-check.ts",
     "probe:apple-endpoint": "tsx ./scripts/apple-endpoint-probe.ts"
   },

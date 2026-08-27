@@ -8,6 +8,7 @@ import { DeleteAccountSheet } from '@/components/delete-account-sheet';
 import { ScanSheet } from '@/components/scan-sheet';
 import { SharePoster } from '@/components/share-poster';
 import { AppearancePicker } from '@/components/appearance-picker';
+import { CityPicker } from '@/components/city-picker';
 import { CrisisRegionPicker } from '@/components/crisis-region-picker';
 import { KenneyCreditsCard } from '@/components/kenney-credits-card';
 import { PushTestCard } from '@/components/push-test-card';
@@ -18,6 +19,7 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { useMe } from '@/hooks/use-me';
+import { useMeContext } from '@/lib/me-context';
 import { accentFromShowUp } from '@/lib/color';
 import { addPeerByHandle } from '@/lib/circle';
 import { useCircleContext } from '@/lib/circle-context';
@@ -29,13 +31,15 @@ import {
 } from '@/lib/invite';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { copyLink, sharePoster } from '@/lib/share';
+import { setCity } from '@/lib/me';
 import { supabase } from '@/lib/supabase';
 
 export default function YouScreen() {
   const theme = useTheme();
   const { width: windowWidth } = useWindowDimensions();
   const { session } = useSession();
-  const { me } = useMe(session?.user.id);
+  const { me, refresh } = useMe(session?.user.id);
+  const { refresh: refreshMe } = useMeContext();
   const accent = accentFromShowUp(me?.show_up);
   const { refresh: refreshCircle } = useCircleContext();
   const [signingOut, setSigningOut] = useState(false);
@@ -201,6 +205,13 @@ export default function YouScreen() {
               </ThemedView>
 
               <AppearancePicker />
+
+              <CityPicker
+                value={me.city}
+                onChange={(slug) => {
+                  void setCity(me.id, slug).then(() => Promise.all([refresh(), refreshMe()]));
+                }}
+              />
 
               <CrisisRegionPicker />
 

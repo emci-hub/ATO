@@ -111,7 +111,7 @@ Write those two copy files first. 3 styles × 3 valences. 3 mornings × 3 styles
 | Invite | signup attempt + code | account created (or rejected) + code consumed |
 | Intake | onboarding taps + optional fast-entry | trait backbone fields on ME (see Understanding spec) |
 
-**ME fields:** name, handle, timezone, `born_on` (self-reported date of birth; age computed, never stored as a number/boolean), `this_week`, `morning_cue`, `show_up`, `knocks_you_off`, `talk_style`, color, `recipe`, theme_id, facts they've told Sage, all-time Checks, `check_count`, last_7_card_ids, `show` (visibility toggle), `allow_search`, `host` (admin-flipped), `referred_by` (hidden, nullable).
+**ME fields:** name, handle, timezone, `city` (typed slug for Around, never GPS; Wave 2 refreshes Calgary), `born_on` (self-reported date of birth; age computed, never stored as a number/boolean), `this_week`, `morning_cue`, `show_up`, `knocks_you_off`, `talk_style`, color, `recipe`, theme_id, facts they've told Sage, all-time Checks, `check_count`, last_7_card_ids, `show` (visibility toggle), `allow_search`, `host` (admin-flipped), `referred_by` (hidden, nullable).
 
 **ME never stores:** guessed vibes, raw chat logs, raw HealthKit data, a model's freeform narrative about the user.
 
@@ -402,7 +402,8 @@ TestFlight ≠ public. TestFlight already gates installs via Apple's own tester 
 - edmtrain first. Link out to RA / Shotgun / DICE for tickets — no scraping, no unified calendar you maintain by hand.
 - "I'm going" is opt-in. Faces show only if they marked going and visibility allows it.
 - Colors on a show: shown once ≥3 people of that color are going; hidden below that. No raw counts displayed. Heat map = venue blobs, not pins.
-- Phone fetches a static `/around/{city}/weekend.json`. Adding Edmonton later = new JSON file, same code — don't hardcode Calgary logic.
+- Phone fetches a static `/around/{city}/weekend.json` (Supabase Storage public object). A backend job (`refresh-around` Edge Function, twice daily) pulls Edmtrain and writes that file — the phone never calls Edmtrain. Adding Edmonton later = new JSON file, same code — don't hardcode Calgary logic.
+- **Stage 1 (data layer):** city typed at onboarding/Settings, weekend JSON, Around tab list, honest empty. **Not in Stage 1:** "I'm going," friend-color display, heat map — those wait until this data layer works. Plumbing is in (`me.city`, `refresh-around`, public `around/{city}/weekend.json`). The first live Storage write waits on an Edmtrain client API key.
 - 0 shows that weekend → honest empty state, never a fabricated map.
 - 18+ enforcement here specifically: `is_at_least_age(me.born_on, 18)` — don't let a user who is 16/17 today show as "going" on an 18+ night. The date is already on ME; this wave only has to call the helper.
 

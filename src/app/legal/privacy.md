@@ -12,6 +12,7 @@ This is not a substitute for legal advice. This draft is intended for review by 
 
 **Account & profile**
 - Name, @handle, timezone (read from your device, not asked)
+- City for Around (you type it at setup or in Settings — we do not use GPS)
 - Date of birth (self-reported at sign-up). We store the date, not a frozen age, so we can confirm you're 16 or older to use the app and 18 or older before you can be marked "going" on an 18+ night
 - Onboarding answers: what you're in this week, what usually knocks you off, your morning anchor, your talk style
 - Your color and pixel appearance (derived from the above — not personal data on its own)
