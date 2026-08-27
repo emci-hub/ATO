@@ -6,7 +6,9 @@
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
 
 ## On
-**Check window + weekly recap cap + Home milestone badge are in.** A Check is for a calendar day in the user's timezone (signup-local day 1). You can log today or up to 2 days back if that day is still empty — one Check per day, not extra Checks on the same day. Days 3+ back are permanently closed. `record_check` is the only write path (client inserts revoked). Read + Do text is kept for the rolling 7 calendar days (today through today-6); older text is nulled, did/skip stays forever for `check_count` and valence. Sunday recap still counts outcomes for the previous Sun–Sat; last Sunday's Read may already be pruned (today-7). `this_week` on ME was never implemented — recap reads the checks table. Home shows a small all-time Checks chip (presence-tier glow, all five appearance modes).
+**Sage content model v2 is in.** Read/Do labels are unchanged on Home, Dawn, widget, push, and Circle — no ATOsophy/Sync. Cards stay per-user on the existing quota (20/day, 200/month); no shared pools, no refresh. Talk, Dawn, consent, crisis, morning push, and widget keep `Sage · coach` and the disclosure sentence. Home in Quest appearance only uses `Sage · npc` on the card (no disclosure on that card); Soft / Zen / Neon / Anime Home stay `Sage · coach`. Home can show a third daily category, **Nudge** (internal zGlitch): encouragement from a real recent signal only — never from `talk_style`. No signal → no card. Never Circle, widget, or morning push.
+
+**Check window + weekly recap cap + Home milestone badge are in.** A Check is for a calendar day in the user's timezone (signup-local day 1). You can log today or up to 2 days back if that day is still empty — one Check per day, not extra Checks on the same day. Days 3+ back are permanently closed. `record_check` is the only write path (client inserts revoked). Read + Do + Nudge text is kept for the rolling 7 calendar days (today through today-6); older text is nulled, did/skip stays forever for `check_count` and valence. Sunday recap still counts outcomes for the previous Sun–Sat; last Sunday's Read may already be pruned (today-7). `this_week` on ME was never implemented — recap reads the checks table. Home shows a small all-time Checks chip (presence-tier glow, all five appearance modes).
 
 **Nav pixel tap moods are in.** Tapping the top-right companion plays a short coherent gesture (wave, thumbs-up, happy bounce, or hug) with no startup delay. Rapid re-taps interrupt-and-restart — they do not queue. Sage weights bounce/wave a bit more; current-you uses the full set evenly. Crisis still hard-disables hands.
 
@@ -23,7 +25,7 @@
 2. Sentry native crash symbolication — still **unconfirmed** from here. Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
 3. Friends external testing group — Beta App Review pending on Apple since Aug 26, 2026. No action, just waiting.
 
-**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ can receive this check-window / recap / badge JS change via `eas update`. Devices on binary 8 or earlier cannot.
+**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ can receive this Sage content-model JS change via `eas update`. Devices on binary 8 or earlier cannot.
 
 **Decision (Aug 27, 2026): Wave 1.5 and Wave 3 both start now, in parallel — intentional deviation from plan sequencing.** Wave 2 Stage 2 ("I'm going") is now live, so Night wall is unblocked for Wave 3.
 
@@ -32,7 +34,7 @@
 - Wave 3 — Plugs (deal rows) + Night wall (going exists; wall can surface)
 
 ## Done
-See git history for the full Stage 1–8 build log. Check window + recap text cap + Home milestone badge (this change). Nav tap moods, UI polish, Wave 2 Stage 2, and Stage 9 first pass are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
+See git history for the full Stage 1–8 build log. Sage content model v2 (this change). Check window + recap text cap + Home milestone badge, nav tap moods, UI polish, Wave 2 Stage 2, and Stage 9 first pass are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
 
 ## Left
 - Submit + confirm binary 10 on device (icon, OTA, everything from today). Do not submit 8 or 9.

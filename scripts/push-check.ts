@@ -6,6 +6,8 @@
  * vs the weekly recap, and an empty widget payload is honest.
  */
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 import {
   copyHasFakeUrgency,
@@ -40,6 +42,13 @@ assert.equal(morning.body, 'The kettle is already on. Sit with it.');
 assert.equal(copyHasFakeUrgency(morning.body), false);
 assert.equal(copyHasFakeUrgency(morning.title), false);
 ok('morning push is the Read, no urgency');
+
+assert.doesNotMatch(morning.title, /npc|Nudge/i);
+assert.doesNotMatch(morning.body, /Nudge/);
+const widgetSwift = readFileSync(resolve(__dirname, '../targets/widget/widgets.swift'), 'utf8');
+assert.match(widgetSwift, /SAGE · COACH/);
+assert.doesNotMatch(widgetSwift, /[Nn]udge|npc/);
+ok('morning push and widget stay Sage · coach; no Nudge');
 
 const evening = eveningPush();
 assert.equal(evening.url, PUSH_PATHS.evening);

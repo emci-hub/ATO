@@ -14,6 +14,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { checksToHistory, fetchChecks, recordCheck, type Check } from '@/lib/checks';
 import { checkWindowFor } from '@/lib/check-window';
 import { emitChecksChanged } from '@/lib/checks-events';
+import { crisisFlagsForWindow } from '@/lib/crisis/days';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { aiConsentFor, setAiConsent } from '@/lib/me';
 import { voiceMeFrom } from '@/lib/intake';
@@ -40,6 +41,8 @@ export default function DawnScreen() {
   const [routing, setRouting] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<'log' | 'skip' | 'consent' | null>(null);
+  const [crisisToday, setCrisisToday] = useState(false);
+  const [crisisYesterday, setCrisisYesterday] = useState(false);
 
   const reloadChecks = useCallback(async () => {
     if (!userId) return;
@@ -53,6 +56,23 @@ export default function DawnScreen() {
   useEffect(() => {
     reloadChecks();
   }, [reloadChecks]);
+
+  useEffect(() => {
+    if (!userId || !me) return;
+    let cancelled = false;
+    crisisFlagsForWindow(userId, me.timezone)
+      .then((flags) => {
+        if (cancelled) return;
+        setCrisisToday(flags.crisisToday);
+        setCrisisYesterday(flags.crisisYesterday);
+      })
+      .catch((err) => {
+        console.log('[dawn] crisis flags error:', err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, me?.timezone]);
 
   const checkCount = checks.length;
   const window = me
@@ -102,7 +122,8 @@ export default function DawnScreen() {
       me: voiceMeFrom(me),
       checkCount: checks.length,
       history: checksToHistory(checks),
-      crisisToday: false,
+      crisisToday,
+      crisisYesterday,
       aiConsent: me.ai_consent,
       day: todayOpen.day,
     })
@@ -127,7 +148,7 @@ export default function DawnScreen() {
     return () => {
       cancelled = true;
     };
-  }, [me, checks, needsConsentPrompt, todayLogged, todayOpen?.day]);
+  }, [me, checks, needsConsentPrompt, todayLogged, todayOpen?.day, crisisToday, crisisYesterday]);
 
   async function log(status: 'done' | 'skipped') {
     if (!userId || !me || !result?.card || !todayOpen || busy) return;

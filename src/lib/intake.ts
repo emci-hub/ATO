@@ -297,6 +297,7 @@ export function voiceMeFrom(me: {
   recovery_style?: string | null;
   support_style?: string | null;
   current_focus?: string | null;
+  facts?: string[] | unknown;
 }): {
   name: string;
   show_up: string;
@@ -308,6 +309,7 @@ export function voiceMeFrom(me: {
   recovery_style: RecoveryStyle | null;
   support_style: SupportStyle | null;
   current_focus: CurrentFocus | null;
+  facts: string[];
 } {
   return {
     name: me.name,
@@ -320,5 +322,6 @@ export function voiceMeFrom(me: {
     recovery_style: isRecoveryStyle(me.recovery_style) ? me.recovery_style : null,
     support_style: isSupportStyle(me.support_style) ? me.support_style : null,
     current_focus: isCurrentFocus(me.current_focus) ? me.current_focus : null,
+    facts: Array.isArray(me.facts) ? me.facts.filter((fact): fact is string => typeof fact === 'string') : [],
   };
 }

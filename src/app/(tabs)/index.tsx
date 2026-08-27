@@ -18,10 +18,11 @@ import { useTodayCard } from '@/hooks/use-today-card';
 import { checkWindowFor } from '@/lib/check-window';
 import { checksToHistory, fetchChecks, recordCheck, type Check } from '@/lib/checks';
 import { emitChecksChanged, onChecksChanged } from '@/lib/checks-events';
+import { crisisFlagsForWindow } from '@/lib/crisis/days';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { aiConsentFor } from '@/lib/me';
 import { voiceMeFrom } from '@/lib/intake';
-import { HOME_SAGE_LEDE, SAGE_COACH_LABEL } from '@/lib/sage-copy';
+import { homeSageLabel, homeSageLede, NUDGE_LABEL, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { persistRoutedCard } from '@/lib/today-card';
 import { routeVoiceCard } from '@/lib/voice/router';
 import type { VoiceCard, VoiceSource } from '@/lib/voice/types';
@@ -39,6 +40,8 @@ export default function HomeScreen() {
   const [checks, setChecks] = useState<Check[]>([]);
   const [busy, setBusy] = useState<'log' | 'skip' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [crisisToday, setCrisisToday] = useState(false);
+  const [crisisYesterday, setCrisisYesterday] = useState(false);
 
   const reloadChecks = useCallback(async () => {
     if (!userId) return;
@@ -56,6 +59,23 @@ export default function HomeScreen() {
     });
   }, [reloadChecks]);
 
+  useEffect(() => {
+    if (!userId || !me) return;
+    let cancelled = false;
+    crisisFlagsForWindow(userId, me.timezone)
+      .then((flags) => {
+        if (cancelled) return;
+        setCrisisToday(flags.crisisToday);
+        setCrisisYesterday(flags.crisisYesterday);
+      })
+      .catch((err) => {
+        console.log('[home] crisis flags error:', err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, me?.timezone]);
+
   const window = me
     ? checkWindowFor(
         me,
@@ -69,13 +89,14 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (!me || !todayOpen) return;
-    if (card?.day === todayOpen.day) return;
+    if (card?.day === todayOpen.day && card.nudge !== undefined) return;
     let cancelled = false;
     routeVoiceCard({
       me: voiceMeFrom(me),
       checkCount: checks.length,
       history: checksToHistory(checks),
-      crisisToday: false,
+      crisisToday,
+      crisisYesterday,
       aiConsent: me.ai_consent,
       day: todayOpen.day,
     })
@@ -90,13 +111,14 @@ export default function HomeScreen() {
     return () => {
       cancelled = true;
     };
-  }, [me, todayOpen?.day, card?.day, checks, reloadCard]);
+  }, [me, todayOpen?.day, card?.day, checks, reloadCard, crisisToday, crisisYesterday]);
 
   async function logToday(status: 'done' | 'skipped') {
     if (!userId || !me || !card || !todayOpen || busy || alreadyLogged) return;
     await commitLog(status, todayOpen.day, todayOpen.ymd, {
       read: card.read,
       do: card.do,
+      nudge: card.nudge ?? null,
     }, card.source);
   }
 
@@ -108,7 +130,7 @@ export default function HomeScreen() {
     source: VoiceSource,
   ) {
     if (!userId || !me || busy) return;
-    await commitLog(status, slotDay, slotYmd, voice, source);
+    await commitLog(status, slotDay, slotYmd, { read: voice.read, do: voice.do }, source);
   }
 
   async function commitLog(
@@ -152,7 +174,7 @@ export default function HomeScreen() {
           <View style={styles.header}>
             <ThemedText type="subtitle">Home</ThemedText>
             <ThemedText themeColor="textSecondary">
-              {params.focus === 'check' ? 'Check today.' : HOME_SAGE_LEDE}
+              {params.focus === 'check' ? 'Check today.' : homeSageLede(theme.id)}
             </ThemedText>
             <CheckMilestoneBadge checkCount={growth.checkCount} presence={growth.presence} />
           </View>
@@ -160,8 +182,8 @@ export default function HomeScreen() {
           {card ? (
             <>
               <ThemedView type="backgroundElement" style={styles.todayCard}>
-                <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
-                  {SAGE_COACH_LABEL} · read
+                <ThemedText type="code" themeColor="textSecondary" style={styles.sageKicker}>
+                  {homeSageLabel(theme.id)} · read
                 </ThemedText>
                 <ThemedText style={styles.cardText}>{card.read}</ThemedText>
               </ThemedView>
@@ -171,6 +193,14 @@ export default function HomeScreen() {
                 </ThemedText>
                 <ThemedText style={styles.cardText}>{card.do}</ThemedText>
               </ThemedView>
+              {card.nudge && card.do.trim().length > 0 ? (
+                <ThemedView type="backgroundElement" style={styles.todayCard}>
+                  <ThemedText type="code" themeColor="textSecondary" style={styles.sageKicker}>
+                    {NUDGE_LABEL}
+                  </ThemedText>
+                  <ThemedText style={styles.cardText}>{card.nudge}</ThemedText>
+                </ThemedView>
+              ) : null}
               {error ? (
                 <ThemedText themeColor="textSecondary">{error}</ThemedText>
               ) : null}
@@ -243,7 +273,8 @@ export default function HomeScreen() {
                     me: voiceMeFrom(me),
                     checkCount: checks.length,
                     history: checksToHistory(checks),
-                    crisisToday: false,
+                    crisisToday,
+                    crisisYesterday,
                     aiConsent: me.ai_consent,
                   }}
                   busy={busy !== null}
@@ -354,6 +385,9 @@ const styles = StyleSheet.create({
   },
   kicker: {
     textTransform: 'uppercase',
+  },
+  sageKicker: {
+    textTransform: 'none',
   },
   cardText: {
     lineHeight: 26,

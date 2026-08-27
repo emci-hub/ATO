@@ -11,6 +11,8 @@ export interface Check {
   /** Null after the row rolls out of the 7-day Read/Do keep window. */
   read_text: string | null;
   do_text: string | null;
+  /** Home-only Nudge. Null when empty, gated, or pruned with Read/Do. */
+  nudge_text: string | null;
   source: VoiceSource;
   status: CheckStatus;
   created_at: string;
@@ -34,6 +36,7 @@ export function checksToHistory(checks: Check[]): CheckHistory[] {
     status: check.status,
     read: check.read_text ?? undefined,
     do: check.do_text ?? undefined,
+    nudge: check.nudge_text ?? undefined,
     source: check.source,
   }));
 }
@@ -74,6 +77,7 @@ export async function recordCheck(_userId: string, input: RecordCheckInput): Pro
     p_do_text: input.card.do,
     p_source: input.source,
     p_status: input.status,
+    p_nudge_text: input.card.nudge?.trim() ? input.card.nudge.trim() : null,
   });
 
   if (error) {

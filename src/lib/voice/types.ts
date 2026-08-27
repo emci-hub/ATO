@@ -21,6 +21,8 @@ export type DropReason =
 export interface VoiceCard {
   read: string;
   do: string;
+  /** Home-only Nudge. Null/absent when the slot is empty. Never sent to widget/push/Circle. */
+  nudge?: string | null;
 }
 
 /** A previously logged check, as the router sees it. Oldest first. */
@@ -30,6 +32,8 @@ export interface CheckHistory {
   read?: string;
   do?: string;
   source?: VoiceSource;
+  /** Yesterday's Nudge, for the two-days-in-a-row gate. */
+  nudge?: string;
 }
 
 /** The slice of `me` the router needs. Kept free of Supabase/RN imports so the
@@ -45,6 +49,8 @@ export interface VoiceMe {
   recovery_style?: 'movement' | 'sleep' | 'talking' | 'alone_time' | 'music' | null;
   support_style?: 'nudge' | 'space' | 'listen' | 'plan' | null;
   current_focus?: 'habit' | 'through_it' | 'like_yourself' | 'show_up' | null;
+  /** Facts they asked Sage to remember. Used for Nudge signal, never talk_style. */
+  facts?: string[];
 }
 
 export interface RouteVoiceCardInput {
@@ -73,6 +79,8 @@ export interface RouteVoiceCardInput {
    * via detectCrisis() before calling this router.
    */
   crisisDetected?: boolean;
+  /** Previous local calendar day logged a crisis flag — Nudge stays empty. */
+  crisisYesterday?: boolean;
 }
 
 /**
@@ -103,5 +111,7 @@ export interface VoiceCardResult {
    * must surface the consent prompt before any model call may happen.
    */
   consent: 'granted' | 'denied' | 'pending';
+  /** Home-only. Null when gates fail or there is no real signal. */
+  nudge: string | null;
   dev?: DevTrace;
 }

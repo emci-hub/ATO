@@ -6,6 +6,7 @@ import {
   type VoiceConfig,
 } from './config';
 import { filterCard, hasCut } from './filters';
+import { resolveNudge } from './nudge';
 import { buildProviders } from './providers';
 import type { VoiceProvider } from './providers/types';
 import type {
@@ -38,6 +39,23 @@ export interface RouteVoiceCardDeps {
   isDev?: boolean;
 }
 
+function withNudge(result: Omit<VoiceCardResult, 'nudge'>, input: RouteVoiceCardInput): VoiceCardResult {
+  if (result.kind !== 'card' || !result.card?.do.trim()) {
+    return { ...result, nudge: null };
+  }
+  const nudge = resolveNudge({
+    knocksYouOff: input.me.knocks_you_off,
+    facts: input.me.facts ?? [],
+    history: input.history,
+    hasDo: true,
+    crisisToday: !!input.crisisToday,
+    crisisDetected: !!input.crisisDetected,
+    crisisYesterday: !!input.crisisYesterday,
+  });
+  result.card.nudge = nudge;
+  return { ...result, nudge };
+}
+
 /**
  * Routes today's card:
  * - Consent gate first: never calls a model unless aiConsent === true.
@@ -46,6 +64,7 @@ export interface RouteVoiceCardDeps {
  * - check_count < 3 → first_cards.md bank (no model call).
  * - check_count >= 3 + consent → generate via the configured provider, in
  *   sage.txt's register, then drop repeats / vague Dos / cruel cuts.
+ * - Home-only Nudge is attached after a valid Read/Do card; never from talk_style.
  */
 export async function routeVoiceCard(
   input: RouteVoiceCardInput,
@@ -65,17 +84,20 @@ export async function routeVoiceCard(
   // detectCrisis() and passes the flag; this is the hard guarantee that the
   // router itself returns a static crisis result instead.
   if (input.crisisDetected) {
-    return {
-      kind: 'crisis',
-      card: null,
-      day,
-      tone,
-      source: 'crisis',
-      provider: null,
-      dropped: [],
-      consent: consent === true ? 'granted' : consent === false ? 'denied' : 'pending',
-      dev: trace(false, false, 'crisis-card (no model call)'),
-    };
+    return withNudge(
+      {
+        kind: 'crisis',
+        card: null,
+        day,
+        tone,
+        source: 'crisis',
+        provider: null,
+        dropped: [],
+        consent: consent === true ? 'granted' : consent === false ? 'denied' : 'pending',
+        dev: trace(false, false, 'crisis-card (no model call)'),
+      },
+      input,
+    );
   }
 
   // ---- Consent gate (Apple 5.1.2) ---------------------------------------
@@ -89,17 +111,20 @@ export async function routeVoiceCard(
   // user never gets generated content, and Talk must stay off for them.
   if (input.checkCount < BANK_CARD_DAYS || !modelAllowed) {
     const card = bankCardForMe(day, input.me);
-    return {
-      kind: 'card',
-      card,
-      day,
-      tone,
-      source: 'bank',
-      provider: null,
-      dropped: [],
-      consent: consent === false ? 'denied' : 'pending',
-      dev: trace(true, false, 'first_cards.md'),
-    };
+    return withNudge(
+      {
+        kind: 'card',
+        card,
+        day,
+        tone,
+        source: 'bank',
+        provider: null,
+        dropped: [],
+        consent: consent === false ? 'denied' : 'pending',
+        dev: trace(true, false, 'first_cards.md'),
+      },
+      input,
+    );
   }
 
   // ---- Generated path: check_count >= 3 --------------------------------
@@ -144,31 +169,37 @@ export async function routeVoiceCard(
     });
     const reason = filterCard(candidate, { shownCards, crisisToday, previousHadCut });
     if (!reason) {
-      return {
-        kind: 'card',
-        card: candidate,
-        day,
-        tone,
-        source: 'generated',
-        provider: provider.id,
-        dropped: [],
-        consent: 'granted',
-        dev: trace(false, true, providerLabel),
-      };
+      return withNudge(
+        {
+          kind: 'card',
+          card: candidate,
+          day,
+          tone,
+          source: 'generated',
+          provider: provider.id,
+          dropped: [],
+          consent: 'granted',
+          dev: trace(false, true, providerLabel),
+        },
+        input,
+      );
     }
     lastDropped = [reason];
   }
 
   // Everything got dropped — per spec, show nothing rather than bad content.
-  return {
-    kind: 'card',
-    card: null,
-    day,
-    tone,
-    source: 'generated',
-    provider: provider.id,
-    dropped: lastDropped,
-    consent: 'granted',
-    dev: trace(false, true, providerLabel),
-  };
+  return withNudge(
+    {
+      kind: 'card',
+      card: null,
+      day,
+      tone,
+      source: 'generated',
+      provider: provider.id,
+      dropped: lastDropped,
+      consent: 'granted',
+      dev: trace(false, true, providerLabel),
+    },
+    input,
+  );
 }

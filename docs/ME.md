@@ -4,7 +4,7 @@
 **Twin:** Drake
 
 ## This week
-Check window + weekly recap cap + Home milestone badge are in. You can log today or up to 2 days back (one Check per calendar day); older days close. Read/Do text is kept for 7 rolling days then dropped; did/skip stays. Home shows a small all-time Checks chip in every appearance mode. Pixel tap moods and shell-mounted nav companion were already in. Next Wave 1.5 box: Stage 11 optional fast-entry. Night wall is unblocked for Wave 3 now that going exists.
+Sage content model v2 is in. Read/Do labels unchanged (no ATOsophy/Sync). Generation stays per-user on the existing quota. Home in Quest uses `Sage · npc` on the card only; Talk/Dawn/widget/push and Home in the other four modes stay `Sage · coach`. Home-only Nudge from a real recent signal; empty when there isn't one. Check window + weekly recap cap + Home milestone badge were already in. Next Wave 1.5 box: Stage 11 optional fast-entry. Night wall is unblocked for Wave 3 now that going exists.
 
 Stage 8 still has three loose ends only: submit/confirm EAS binary 10 (OTA + real app icon) on a real device, re-check Sentry native symbolication once that's on-device, and wait on Apple's Beta App Review for the Friends TestFlight group. Everything else in Stage 8 is done.
 
@@ -22,7 +22,7 @@ Stage 8 still has three loose ends only: submit/confirm EAS binary 10 (OTA + rea
 - **First 60 seconds:** open app → Home shows today's Check (read + if-then Do) with the live pixel fixed top-right, not a large centered face, plus a small all-time Checks chip.
 - **Sage/Pixel relationship:** pixel is one character — current-you (plain, idle) on Home/Around/You, aspirational-you (growth glow/shine) on Sage. Same shell-mounted instance; glow is a Sage overlay, not a second pixel. Tap moods play on that instance. You-tab poster is identity + QR, no larger still.
 - **Growth tiers (built, live):** dual-axis — presence (`me.check_count` → tier 0-3) and depth (`me.facts` → tier 0-2).
-- **Floor requirements (done):** Sentry wired and JS-verified (native crash on build 6 expected unsymbolicated; binary 8 native crash event `e7bed112` ingested, symbolication **unconfirmed**; org `emgens`, project `ato-app`), App Store Connect privacy label answers drafted (11 types including Date of Birth; paste-in parked until public launch), `PrivacyInfo.xcprivacy` locked and verified 9/9, Sage labeled "coach" throughout the live UI, AI router rate-limited server-side (20/day, 200/month per user via Postgres `claim_ai_call()`). Self-reported `me.born_on` collected at onboarding; 16+ enforced at signup; 18+ going enforced in Around + `set_going`.
+- **Floor requirements (done):** Sentry wired and JS-verified (native crash on build 6 expected unsymbolicated; binary 8 native crash event `e7bed112` ingested, symbolication **unconfirmed**; org `emgens`, project `ato-app`), App Store Connect privacy label answers drafted (11 types including Date of Birth; paste-in parked until public launch), `PrivacyInfo.xcprivacy` locked and verified 9/9, Sage labeled "coach" throughout the live UI except Home in Quest (`Sage · npc` on that card only), AI router rate-limited server-side (20/day, 200/month per user via Postgres `claim_ai_call()`). Self-reported `me.born_on` collected at onboarding; 16+ enforced at signup; 18+ going enforced in Around + `set_going`.
 
 ## Roster
 - Assistant (Drake) — active

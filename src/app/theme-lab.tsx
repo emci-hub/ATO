@@ -9,6 +9,13 @@ import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useAppearance } from '@/lib/theme/context';
 import { useTheme } from '@/hooks/use-theme';
+import {
+  homeSageLabel,
+  homeSageLede,
+  NUDGE_LABEL,
+  SAGE_COACH_LABEL,
+  TALK_LEDE,
+} from '@/lib/sage-copy';
 
 /**
  * Dev harness for the five appearance modes. Mirrors Home card chrome so
@@ -35,22 +42,30 @@ export default function ThemeLabScreen() {
           <View style={styles.header}>
             <ThemedText type="subtitle">Home</ThemedText>
             <ThemedText themeColor="textSecondary">
-              mode {id} · theme lab
+              {homeSageLede(id)}
             </ThemedText>
             <CheckMilestoneBadge checkCount={11} presence={2} />
           </View>
 
           <ThemedView type="backgroundElement" style={styles.todayCard}>
-            <ThemedText type="code" themeColor="textSecondary">
-              SAGE · coach · read
+            <ThemedText type="code" themeColor="textSecondary" style={styles.sageKicker}>
+              {homeSageLabel(id)} · read
             </ThemedText>
             <ThemedText>First one logged. No pressure — just seeing what&apos;s actually true day to day.</ThemedText>
           </ThemedView>
           <ThemedView type="backgroundElement" style={styles.todayCard}>
-            <ThemedText type="code" themeColor="textSecondary">
+            <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
               do
             </ThemedText>
             <ThemedText>After you make coffee, sit for one minute before opening your phone.</ThemedText>
+          </ThemedView>
+          <ThemedView type="backgroundElement" style={styles.todayCard}>
+            <ThemedText type="code" themeColor="textSecondary" style={styles.sageKicker}>
+              {NUDGE_LABEL}
+            </ThemedText>
+            <ThemedText>
+              Sleep is what you said knocks you off, and it showed up in this week&apos;s Checks. Today&apos;s Do stays small so tomorrow is still reachable.
+            </ThemedText>
           </ThemedView>
           <Pressable
             style={[styles.primaryButton, { backgroundColor: theme.accentFill }]}>
@@ -69,8 +84,8 @@ export default function ThemeLabScreen() {
           <AppearancePicker />
 
           <View style={styles.header}>
-            <ThemedText type="subtitle">Talk</ThemedText>
-            <ThemedText themeColor="textSecondary">Sage composer chrome</ThemedText>
+            <ThemedText type="subtitle">{SAGE_COACH_LABEL}</ThemedText>
+            <ThemedText themeColor="textSecondary">{TALK_LEDE}</ThemedText>
           </View>
           <ThemedView type="backgroundElement" style={styles.todayCard}>
             <ThemedText>
@@ -117,6 +132,12 @@ const styles = StyleSheet.create({
   todayCard: {
     padding: Spacing.four,
     gap: Spacing.two,
+  },
+  kicker: {
+    textTransform: 'uppercase',
+  },
+  sageKicker: {
+    textTransform: 'none',
   },
   primaryButton: {
     borderRadius: Spacing.three,

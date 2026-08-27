@@ -14,6 +14,8 @@ export interface TodayCard {
   read: string;
   do: string;
   source: VoiceSource;
+  /** Home-only. Never written to the widget. */
+  nudge?: string | null;
 }
 
 function writeWidget(card: TodayCard | null) {
@@ -49,7 +51,7 @@ export async function loadTodayCard(): Promise<TodayCard | null> {
   }
 }
 
-/** Persist the current Read + Do for Home and the iOS widget. */
+/** Persist the current Read + Do for Home and the iOS widget. Nudge stays in-app. */
 export async function saveTodayCard(card: TodayCard | null): Promise<void> {
   if (card) {
     await AsyncStorage.setItem(TODAY_CARD_KEY, JSON.stringify(card));
@@ -68,5 +70,6 @@ export async function persistRoutedCard(result: VoiceCardResult): Promise<void> 
     read: result.card.read,
     do: result.card.do,
     source: result.source,
+    nudge: result.nudge ?? result.card.nudge ?? null,
   });
 }
