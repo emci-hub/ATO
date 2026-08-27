@@ -6,55 +6,30 @@
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
 
 ## On
-Stage 8 (TestFlight) — sequencing as tight handoffs:
-1. ✅ Apple Sign-In + delete-account/token revoke — done, verified on real device.
-2. ✅ Invite/referral gate (Auth + ME) — done.
-3. ✅ Push notifications + widget — done.
-4. ✅ **Floor requirements sweep — DONE, pushed `master` `57abf5e` → `ea2b4f3`.** See Done section for the five sub-items and commits.
-5. Legal + landing copy — privacy.md/terms.md drafted in Claude, committed to `app/legal/` (`57abf5e`); landing page live at `ato.emgens.com`. Remaining public-launch items (ASC privacy-label paste, `support@asstrollogs.com` inbox, lawyer pass) are parked below — **do not start until public launch is imminent.**
-6. ✅ **EAS build → TestFlight — done.** Build 6 shipped, installed on a real device. Beta App Review submitted for the Friends external testing group — **pending as of Aug 26, 2026.**
+**Stage 8 — nearly closed, three loose ends:**
+1. EAS binary 10 (`1d0d1041-9318-461f-b995-c589ac505dc2`, git `dc9ae77`) — OTA + real app icon cut. Needs `eas submit`, then install + confirm on a real device. **Do not submit binary 8 or 9.** Binary 8 (`d40e57a9`) **was already submitted and installed** (theme picker, Around, Home fix, age field verified on-device).
+2. Sentry native crash symbolication — upload is on (`SENTRY_AUTH_TOKEN`, `SENTRY_DISABLE_AUTO_UPLOAD=false`). Binary 8 native crash landed as event `e7bed112`; stack symbolication still **unconfirmed** from here (CI token cannot read event frames; no `com.emgens.ato@1.0.0+8` release). Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
+3. Friends external testing group — Beta App Review pending on Apple since Aug 26, 2026. No action, just waiting.
 
-Once Stage 8's remaining floor-verification items close (OTA + app icon are in **binary 10** — submit that IPA; Sentry native symbolication still **untested** on binary 8; Friends Beta App Review), **Stage 9 (intake core)** is next up. Wave 1.5 (Stages 9–14, Understanding & Delight) is sequenced in ATO_PLAN_v2.md after the Wave 1 Gate; not blocked on public App Store readiness. AI capacity hardening stays a separate public-launch backlog item, not Wave 1.5.
+**EAS Update (OTA) is live as of binary 10.** `expo-updates` wired, fixed `runtimeVersion` `"1.0.0"`, production channel set. Any device on binary 10+ can receive JS/UI/backend-only changes via `eas update` — no new build, no Apple review. Devices still on binary 8 or earlier cannot receive OTA pushes and need a fresh TestFlight install of 10 first.
+
+**Decision (Aug 27, 2026): Wave 1.5 and Wave 3 both start now, in parallel — intentional deviation from plan sequencing.**
+ATO_PLAN_v2.md's Wave 3 spec gates the Night wall on Wave 2 Stage 2 ("I'm going" + friend colors) actually being live, specifically to avoid shipping an empty chat room nobody's in. That risk was flagged to emci directly and he chose to proceed anyway — noted here, not silently overridden. Practical mitigation: build Wave 3's Night wall logic/UI now, but its actual first real use will naturally wait until Wave 2 Stage 2 exists, since the wall only renders for a show people are marked "going" to. Sequence build order however is fastest; just don't advertise/surface the wall to real testers before Wave 2 Stage 2 ships.
+
+**Next boxes, no build required (OTA-eligible) — Cursor takes these one at a time, one box per stage per plan discipline:**
+- Wave 1.5 Stage 9 — Intake core (see ATO_PLAN_v2.md → Understanding spec for full detail)
+- Wave 2 Stage 2 — "I'm going" + friend colors (needed before Wave 3's wall means anything)
+- Wave 3 — Plugs (deal rows) + Night wall
 
 ## Done
-- Stage 1 (Home shell) — screenshot verified: 3 tabs (Home, Sage, You), no Circle tab, fake card, fake poster
-- Stage 2 (Sign-in + ME + Theme) — fully verified
-- Stage 3 (Pixel) — fully verified
-- Stage 4 (Dawn + Router) — fully verified, 16/16 automated checks pass
-- Crisis module + classifier + Talk box — built and verified 23/23
-- Stage 5 (Talk) — built + verified
-- Stage 6 (Share + Circle) — built + verified
-- Stage 7 (Chat + Report) — built + verified, `master` in sync
-- Stage 8 handoff #1 (Apple Sign-In + delete/revoke) — done, `confirmRevoked()` true on real device
-- Stage 8 handoff #2 (Invite/referral gate) — done, 7/7 automated checks + seeded tree pause test passed
-- Stage 8 handoff #3 (Push notifications + widget) — done, all four device-test steps verified on real iPhone
-- **Stage 8 handoff #4 (Floor-requirements sweep) — done, pushed `ea2b4f3`:**
-  - **Sentry** (`e5c5a0f`) — already wired (init/wrap, native crash handling, You-tab test buttons). Added `npm run check:sentry`, plugin project set to `ato-app`. Verified: live JS error ingested, event id `600436b1001945eca54f84c5e67a6df7`. Native crash on TestFlight build 6 is expected **unsymbolicated** (upload was disabled for that binary). **EAS production source-map auto-upload is on:** `SENTRY_AUTH_TOKEN` (sensitive), `SENTRY_DISABLE_AUTO_UPLOAD=false`, `SENTRY_ORG=emgens`, `SENTRY_PROJECT=ato-app`. Build 8 (`d40e57a9`) was never submitted / not on a device. Sentry has no `com.emgens.ato@1.0.0+8` release and no crash events from that binary — **native symbolication untested**, not assumed fine. Known releases: `com.emgens.ato@1.0.0+6` and `ATO@1.0.0` (events from the build 6 window).
-  - **Privacy labels** (`22b242b`) — `src/app/legal/app-privacy-labels.md`, the App Store Connect paste sheet, aligned with `privacy.md`. Originally ten data types; **Date of Birth added** with the Stage 2 age field (now 11 types, still no tracking). Names Supabase, Gemini, Resend, Apple, Sentry. Push token intentionally not declared (v1 has none). Answers are ready to paste into App Store Connect — **not yet submitted there.**
-  - **PrivacyInfo.xcprivacy** (`211e101`) — app + widget manifests already matched actual collection/required-reason APIs; locked types + API reasons into `floor-check`. Verified: `npx tsx ./scripts/floor-check.ts` 9/9 (Date of Birth added later with the age field; assertion count unchanged).
-  - **Coach labeling** (`668424e`) — fixed gaps (Dawn lede, Talk title, composer placeholder, Teach Sage copy) so the UI itself, not just policy docs, labels Sage as a coach. Verified: floor-check coach assertions pass, no "Sage listens" language remains.
-  - **Rate limiting** (`0f30625`) — live cap on project `ato`: **20 model calls/UTC day, 200/UTC month** (`app_config.ai_daily_cap`/`ai_monthly_cap`). Enforced via Postgres `claim_ai_call()` (SECURITY DEFINER, advisory lock), called from Talk UI before `generateTalk`. Deny copy: "Sage's out of things to say for today, back tomorrow." Daily-card generation intentionally not claimed (remounting Dawn would burn the cap). Verified: live SQL caps 20/200; `quota-check` 5/5; `voice-router-check` 24/24.
-- Legal + landing copy drafted directly in Claude: `app/legal/privacy.md`, `app/legal/terms.md` (committed `57abf5e`), landing page live at `ato.emgens.com` (Vercel project `ato`, team `em-gens`, not yet linked to a git repo)
-- `docs/BUSINESS.md` updated with finalized social handle decision (`@whatsyourato`, committed `57abf5e`)
-- **Self-reported date of birth (Stage 2 ME box)** — `me.born_on` date, not a frozen age or 16+/18+ boolean. Onboarding Q1 is YYYY/MM/DD (same input pattern as the other text fields). Under 16: inline error "ATO is for people 16 and older." — blocked client-side before `createMe` and server-side in `complete_signup` before invite consume. 16/17 allowed; `is_at_least_age(born_on, 18)` stays false for Wave 2 going. Verified: `npm run check:age` 8/8; live under-16 RPC raises `age_under_16` with no ME row and invite unused; live 17-year-old stored `born_on = 2009-08-26`, `age_years = 17`, going helper false. Existing pre-field rows (`emci`, `yeezy`) stay NULL.
-- **Kenney credits on You-tab Settings** — static Credits card lists only packs in `KENNEY_REGISTRY` (Shape Characters). Kenney, kenney.nl, pack page, CC0 line. Modular / Toon / 1-Bit / Animal Remastered / Fantasy UI Borders / Monster Builder are not bundled and are not listed.
-- **Crisis card region-detection** — auto from device locale/timezone at launch (`expo-localization`), stored locally. Settings picker on You (Auto / United States / Canada / Other region). US → `988 Suicide & Crisis Lifeline`, Canada → `988 Suicide Crisis Helpline` (call or text 988). Any other region → honest fallback, no guessed number. Verified: `npm run check:crisis-region`.
-- **SecureStore 2048-byte warning** — cause was the full Supabase session JSON written to Keychain under `sb-aijzsmupaaaxjctfgwpl-auth-token` (~2364 bytes for an Apple session; email-only was ~1898 and under the ceiling). Access JWT ~782–1199 bytes, refresh token 12 bytes — both fit. Adapter now keeps tokens in SecureStore (`ato.auth.access_token` / `ato.auth.refresh_token`) and the rest of the session in AsyncStorage; leftover oversized Keychain items migrate on next read. Verified: `npm run check:auth-storage` 6/6. Native Metro sign-in not reproduced here (Windows host, SecureStore is iOS/Android only).
-- **Font/spacing consistency pass** — no new theme file; used existing `Spacing` + `ThemedText` types. Circle names 17→18 (match You), Unfriend 13→14 (`smallBold`), Sign out 16→14 (`smallBold` like other full-width buttons), inline errors `small`+600 → `smallBold`, Circle lede dropped cramped lineHeight 18 (match Home/Sage default), Sage message list bottom inset aligned to other tabs (`BottomTabInset + Spacing.four`).
-- **Five-mode appearance system** — Soft (default) / Zen / Quest / Neon / Anime. Replaces Ink/Paper/Steel/Bloom entirely. Picker on You, stored locally. Verified: `npm run check:appearance`.
-- **Wave 2 Stage 1 (Around data layer)** — typed `me.city` (not GPS), Around tab, static `around/{city}/weekend.json` from Edmtrain via `refresh-around`. No going / colors / heat map. Verified: `npm run check:around`. Calgary is a live Edmtrain city (`edmtrain.com/calgary-ab`); this weekend's public listing includes RIOT (Sat Aug 29, Palace Theatre). Storage write + cron wait on `EDMTRAIN_CLIENT_KEY` (apply at edmtrain.com/developer-api while signed in). Until that job runs, a missing file 404s into "nothing this weekend" — not fake shows.
-- **Home Stage 1 fixtures stripped** — fake poster / Fake Person / "open box" were hardcoded on the real Home route for every signed-in user (not an empty-data fallback). Removed. No card → "No card yet" / Open Dawn. Floating header avatar removed (not a tap target); pixel stays on the Home face and the You poster. Verified: `npm run check:floor`.
-- **Stage 8 handoff #6 (EAS → TestFlight)** — build 6 shipped and installed on a real device. Beta App Review submitted for the Friends external testing group (pending as of Aug 26, 2026). **EAS production binary 8** cut Aug 27 (`d40e57a9-c9c1-4db5-8912-0ae2403c40b0`, git `2a0732c`, message labeled "Build 7"; number 7 was consumed by a failed credential attempt). Includes appearance, Around, age field, Home fixture strip. **Not submitted to TestFlight** (skip — do not submit 8). App icon swap is not in this binary. Binary 9 (`96332ecb`, git `4b2c6f1`) was a docs-only cut the same morning — also skip.
-- **App icon swap — wired in code.** Pack was on the Desktop (`C:\Users\lil_e\Desktop\AppIcons`), not in the repo; copied `AppIcon.icon/` into `assets/`. `app.json` `ios.icon` is `./assets/AppIcon.icon` (SDK 54 Icon Composer / iOS 26). Same `.icon` format as the previous Expo template (`assets/expo.icon`), which already shipped TestFlight builds — no SDK incompatibility. Fallback if Icon Composer ever fails: point `ios.icon` (or top-level `icon`) at flattened RGB `assets/AppIcon-fallback-1024.png`. Not in binary 8; **included in binary 10**.
-- **EAS Update / OTA — wired and cut.** `expo-updates` `~29.0.20` installed. `eas update:configure` set `updates.url` = `https://u.expo.dev/03d53c8c-91ae-4993-aba9-edf0b2eefd1e`. Default `runtimeVersion` policy was `appVersion`; replaced with a **fixed string** `"1.0.0"` for explicit compatibility boundaries (bump this when native code changes). Production channel exists (`01a043c9-fde4-7000-87b5-c8263fae3d71`) and is set on the `production` build profile in `eas.json` (`"channel": "production"`). Preview and development channels created to match those profiles. **EAS production binary 10** finished (`1d0d1041-9318-461f-b995-c589ac505dc2`, git `dc9ae77`, version `1.0.0` (10), channel `production`, runtime `1.0.0`). Logs confirm `AppIcon.icon` + `ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon` and `EXUpdates` 29.0.20. After this binary, JS/UI/backend-only changes go out with `eas update`, not another native build. **Not submitted to TestFlight yet.**
+See git history for the full Stage 1–8 build log (Home shell through floor-requirements sweep, EAS/TestFlight pipeline, five-mode appearance system, Around Stage 1 data layer, app icon, OTA wiring). Not repeated here — this file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
 
 ## Left
-- **EAS binary 10 → TestFlight:** run `eas submit` for `1d0d1041-9318-461f-b995-c589ac505dc2` (not binary 8 or 9). Then install: real app icon, appearance, Around, age field, Home without fake chrome, OTA-capable runtime.
-- **Still queued:**
-  - Sentry native symbolication — **untested** on binary 8 (no crash events, no `1.0.0+8` release). Re-check on binary 10 after it is on a device.
-- Friends external testing group: Beta App Review for build 6 is **pending** — no action until Apple responds
-- **Wave 2 leftover (not TestFlight):** apply for an Edmtrain client API key (signed-in at edmtrain.com/developer-api), set Edge Function secrets `EDMTRAIN_CLIENT_KEY` + `AROUND_REFRESH_SECRET`, POST `refresh-around` once, then schedule twice-daily cron. Phone never holds the Edmtrain key.
-- **Known, accepted, non-blocking for TestFlight:** a patched client could skip `claim_ai_call()` and call Gemini directly using the client-embedded key. Public-launch item, not a TestFlight blocker — added to backlog below.
+- Submit + confirm binary 10 on device (icon, OTA, everything from today). Do not submit 8 or 9.
+- Re-check Sentry symbolication (event `e7bed112` on binary 8 is unconfirmed; re-check on binary 10 or in the dashboard)
+- Friends Beta App Review — waiting on Apple
+- Edmtrain live data — waiting on their key approval; Around stays honest-empty until then
+- Known, accepted, non-blocking: AI-quota client-bypass hardening — public-launch item, not now
 
 ## Public release readiness — do not start until public launch is imminent
 These are real, but they are not TestFlight work and they are not next. Leave them parked.
@@ -62,14 +37,13 @@ These are real, but they are not TestFlight work and they are not next. Leave th
 - `support@asstrollogs.com` — used across privacy.md/terms.md/landing footer as the contact address; **not yet confirmed as a real, monitored inbox**
 - Terms §13 (governing law/dispute resolution) and the crisis disclaimer both still need a lawyer's pass
 
-## Backlog (Stage 8 polish — not blocking the Friends TestFlight group)
+## Backlog (not blocking the Friends TestFlight group)
 - Fantasy UI Borders pack (Kenney) — UI chrome/panels/buttons
 - Monster Builder Pack — parked, needs eyes/mouth slots added to recipe before usable
 - Make show_up / knocks_you_off / morning_cue editable in Settings, not just talk_style
 - Revisit onboarding question wording if it still feels off after a fresh look
 - Crisis: relational-safety/abuse category, own resource number, parked separately
-- **Wave 1.5 (Stages 9–14)** — sequenced in ATO_PLAN_v2.md after the Wave 1 Gate. Stage 9 (intake core) is next up once Stage 8's four floor-verification items close. Spec detail stays in Understanding spec; this is sequencing only.
-- **AI capacity hardening** — close the client-embedded-key bypass noted above before public launch (server-side proxy or equivalent), fold into public-readiness checklist rather than TestFlight
+- **AI capacity hardening** — close the client-embedded-key bypass before public launch (server-side proxy or equivalent)
 - Slack — parked as future ops tooling, bring up again if/when the app scales
 
 ## Housekeeping
@@ -81,7 +55,8 @@ These are real, but they are not TestFlight work and they are not next. Leave th
 - Email sending on `noreply@asstrollogs.com` (Resend-verified). `support@asstrollogs.com` used as the public contact address in legal/landing copy — inbox confirmation is parked under Public release readiness, not active work.
 - Landing page live at `ato.emgens.com` — social handle decided as `@whatsyourato` (primary), fallback `emgensato`/`atoapp`/`heyato` per-platform if taken. Not yet confirmed reserved on any platform.
 - **Intentional deviation:** the locked Ink / Paper / Steel / Bloom palette in ATO_PLAN_v2.md is discarded. Appearance is now five modes (Soft / Zen / Quest / Neon / Anime). Not a bug — the plan line was updated in the same change.
+- **Intentional deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 start now in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Night wall must not surface to real testers until Wave 2 Stage 2 ("I'm going") is live.
 - **Around refresh secrets (Wave 2):** Edge Function `refresh-around` is deployed (`verify_jwt: false`; auth is `AROUND_REFRESH_SECRET`). Needs `EDMTRAIN_CLIENT_KEY` (apply at edmtrain.com/developer-api while signed in) and `AROUND_REFRESH_SECRET`. Cron is not scheduled until both exist in Vault + function secrets. Phone never holds the Edmtrain key. ToS: displayed cache < 24h; unmodified event `link`; do not mix Edmtrain listings with another events feed (RA/Shotgun/DICE are ticket link-outs only).
 
 ## Next 15 min
-Waiting on Apple: Beta App Review for the Friends external testing group (build 6). **Binary 10** (`1d0d1041`) is the OTA + icon IPA — submit that, not 8. Sentry native symbolication on build 8 is untested. Do not start public-release items. Once remaining Stage 8 floor items close, **Stage 9 (intake core)** is next.
+Open new Cursor chat. Confirm binary 10 submitted/installed if not already done. Then: Stage 9 (Intake core) — first box of the Wave 1.5 + Wave 3 parallel push, OTA-eligible, no build needed.

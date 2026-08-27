@@ -305,7 +305,7 @@ Chat opens only from a Circle card — never build a chat inbox that can be empt
 
 ### 8 TestFlight
 **Open box: polish, push, legal, EAS, landing.**
-Widget = Read + Do. Morning push = Read. Evening push = Check today. Sunday push = `this_week` recap + "you showed up N." Deep links from push into the right screen. **Push + widget is built and device-verified** (local morning/evening/Sunday, iOS WidgetKit Read+Do, App Group `group.com.emgens.ato`). **Floor requirements in this box are built and re-verified** (pushed `ea2b4f3`): Sentry wired (`ato-app`; live JS ingest; TestFlight build 6 native frames expected unsymbolicated; EAS production source maps config is on for production (`d40e57a9`); native symbolication on binary 8 is **untested** — no crash events), App Privacy nutrition labels aligned with `privacy.md` + `PrivacyInfo.xcprivacy` (11 types including Date of Birth, `NSPrivacyTracking = false`), Sage labeled coach in the UI (Talk/Home/Dawn/consent/crisis/morning push/widget/Teach Sage), Talk router rate-limited per user server-side (`claim_ai_call`, live 20/day 200/month). Crisis card is region-aware (device locale/timezone at launch, Settings override): 988 for US/Canada only, honest fallback otherwise — never a guessed number. Privacy/terms are in `src/app/legal/`; landing is live at `ato.emgens.com`. **TestFlight build 6 shipped**, installed on a real device; Beta App Review for the Friends external testing group is pending. **EAS production binary 8** cut (`d40e57a9`, git `2a0732c`) — appearance, Around, age field, Home fixture strip; not submitted to TestFlight. **Binary 10** (`1d0d1041`, git `dc9ae77`) ships the real app icon + EAS Update (`expo-updates`, fixed `runtimeVersion` `"1.0.0"`). Sentry native symbolication on binary 8 is **untested**. Legal loose ends (App Store Connect paste, `support@asstrollogs.com` inbox, lawyer pass) are parked in NOW.md **Public release readiness** — do not start until public launch is imminent.
+Widget = Read + Do. Morning push = Read. Evening push = Check today. Sunday push = `this_week` recap + "you showed up N." Deep links from push into the right screen. **Push + widget is built and device-verified** (local morning/evening/Sunday, iOS WidgetKit Read+Do, App Group `group.com.emgens.ato`). **Floor requirements in this box are built and re-verified** (pushed `ea2b4f3`): Sentry wired (`ato-app`; live JS ingest; TestFlight build 6 native frames expected unsymbolicated; EAS production source-map upload is on; binary 8 native crash event `e7bed112` ingested, stack symbolication **unconfirmed**), App Privacy nutrition labels aligned with `privacy.md` + `PrivacyInfo.xcprivacy` (11 types including Date of Birth, `NSPrivacyTracking = false`), Sage labeled coach in the UI (Talk/Home/Dawn/consent/crisis/morning push/widget/Teach Sage), Talk router rate-limited per user server-side (`claim_ai_call`, live 20/day 200/month). Crisis card is region-aware (device locale/timezone at launch, Settings override): 988 for US/Canada only, honest fallback otherwise — never a guessed number. Privacy/terms are in `src/app/legal/`; landing is live at `ato.emgens.com`. **TestFlight build 6 shipped**; Friends Beta App Review still pending. **Binary 8** (`d40e57a9`) was submitted and installed (theme / Around / Home fix / age field verified on-device). **Binary 10** (`1d0d1041`, git `dc9ae77`) is the OTA + real-icon cut — submit that IPA, not 8 or 9. Legal loose ends (App Store Connect paste, `support@asstrollogs.com` inbox, lawyer pass) are parked in NOW.md **Public release readiness** — do not start until public launch is imminent.
 Delete account **in-app** + revoke Sign in with Apple token. Ask about notifications once, after the user's first card exists — app works fully if they say no.
 Landing page: ATO name, "What's your ATO?" tagline, support email (`support@asstrollogs.com` — used in copy, inbox not yet confirmed monitored), privacy policy, terms, © AsTrollOGs, Kenney asset credits. Same footer on the You tab.
 Apple Sign In: hide-my-email maps to exactly one user, no fork. Bundle ID `com.emgens.ato` (App ID) / `com.emgens.ato.signin` (Services ID). Edge Function `APPLE_CLIENT_ID` for native code exchange must be the **bundle ID** (`com.emgens.ato`), not the Services ID.
@@ -331,9 +331,9 @@ You + friends, one real week, real devices. Home stayed new day to day. Dos were
 
 ---
 
-## Wave 1.5 — Understanding & Delight (Stages 9-14, after Wave 1 Gate)
+## Wave 1.5 — Understanding & Delight (Stages 9-14)
 
-Not blocked on public App Store readiness — can build during friends-only TestFlight testing. Full spec detail lives in "Understanding spec" above; this section is sequencing only.
+Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Next box is Stage 9 (intake core). Full spec detail lives in "Understanding spec" above; this section is sequencing only.
 
 ### 9 Intake core
 **Open box: intake, me.**
@@ -387,7 +387,7 @@ TestFlight ≠ public. TestFlight already gates installs via Apple's own tester 
 - [ ] Privacy policy + terms finalized (lawyer pass on the crisis disclaimer specifically — already flagged as outstanding in the Crisis spec).
 - [ ] App Store Connect tax/banking info filled out (required before a public listing can go live, separate from the developer account itself).
 - [ ] All Wave 1 TestFlight floor requirements still hold at public scale (rate limiting, Sentry, privacy labels) — a bigger user base stresses these differently than a friends-only test group did.
-- [x] Sentry DSN connected (`EXPO_PUBLIC_SENTRY_DSN` in `.env.local` and EAS) and a test JS error confirmed in Issues (`ato-app`). EAS production has `SENTRY_AUTH_TOKEN` (sensitive), `SENTRY_ORG=emgens`, `SENTRY_PROJECT=ato-app`, `SENTRY_DISABLE_AUTO_UPLOAD=false`. Binary 8 (`d40e57a9`) has no crash events and no `com.emgens.ato@1.0.0+8` release — native symbolication **untested**. TestFlight build 6 was built with upload disabled, so that binary stays unsymbolicated.
+- [x] Sentry DSN connected (`EXPO_PUBLIC_SENTRY_DSN` in `.env.local` and EAS) and a test JS error confirmed in Issues (`ato-app`). EAS production has `SENTRY_AUTH_TOKEN` (sensitive), `SENTRY_ORG=emgens`, `SENTRY_PROJECT=ato-app`, `SENTRY_DISABLE_AUTO_UPLOAD=false`. Binary 8 native crash event `e7bed112` ingested; stack symbolication **unconfirmed**. TestFlight build 6 was built with upload disabled, so that binary stays unsymbolicated.
 - [ ] Gemini API key moved off the client (Edge Function) so a patched client cannot skip `claim_ai_call()` and hit Gemini directly. Not a TestFlight blocker; required before flipping `signup_mode` to `public`.
 
 **Done:** every box above checked, not assumed. This list gets reviewed once, deliberately — not folded silently into a Cursor handoff.
@@ -413,7 +413,7 @@ Do not open plugs, hosts, or walls in this wave. City has to work while honestly
 
 ---
 
-## Wave 3 — plug (only if Wave 2 has real nights happening)
+## Wave 3 — plug (building in parallel with Wave 1.5; do not surface Night wall to testers until Wave 2 Stage 2 is live)
 
 **Paid tier.** Unlocks after 7 Checks: weekly Read, 30-day trail, more Talk. Never paywall Home, More, Check, crisis response, or the widget.
 
@@ -425,7 +425,7 @@ Affiliate disclosure: say you may earn a bit, generically, until a specific bran
 
 **Hosts.** You flip `host` on their ME row manually. Badge shows on their poster and Circle face. One editable note per poster (visible in Circle or on the public `/@handle` page). It overwrites, it's not a feed.
 
-**Night wall.** Only exists if that specific show has people marked going — don't render an empty wall button for a night nobody's going to. One thread per night. Writers = people going + hosts. Live from 24h before the show to 24h after, then **locks** (read-only). History stays. "Lost & found" becomes a pinned chip for +7 days, then goes read-only too. Sort by newest. No citywide wall — every wall is scoped to one specific night.
+**Night wall.** Only exists if that specific show has people marked going — don't render an empty wall button for a night nobody's going to. One thread per night. Writers = people going + hosts. Live from 24h before the show to 24h after, then **locks** (read-only). History stays. "Lost & found" becomes a pinned chip for +7 days, then goes read-only too. Sort by newest. No citywide wall — every wall is scoped to one specific night. **Build the mechanics now if sequenced that way; do not advertise or surface the wall to real testers until Wave 2 Stage 2 ("I'm going") is live.**
 
 ---
 
