@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,13 +8,15 @@ import { PixelFace } from '@/components/pixel-face';
 import { Spacing } from '@/constants/theme';
 import { useGrowth } from '@/hooks/use-growth';
 import { resolveFacePalette } from '@/lib/color';
+import { isCrisisActive } from '@/lib/kenney/gesture-actions';
 import { normalizeRecipe } from '@/lib/kenney/registry';
+import { pickTapMood, type TapMood, type TapMoodId } from '@/lib/kenney/tap-moods';
 import { useMeContext } from '@/lib/me-context';
 
 /** Face size of the nav companion (pt). Small on purpose — not a hero. */
 export const NAV_PIXEL_FACE = 28;
-/** Slot around the face so glow layers (scale 1.55) and the sparkle aren't clipped. */
-export const NAV_PIXEL_SLOT = 48;
+/** Slot around the face so glow (scale 1.55), sparkle, and tap-mood hands aren't clipped. */
+export const NAV_PIXEL_SLOT = 56;
 /** Trailing inset from the screen edge. */
 export const NAV_PIXEL_RIGHT = Spacing.three;
 /**
@@ -26,11 +28,12 @@ export const NAV_PIXEL_HEADER_INSET = NAV_PIXEL_SLOT;
 /**
  * Persistent nav companion: one small live pixel, fixed top-right over every
  * tab. Mounted at the tab shell so it does not remount on tab switches or
- * scroll. Idle / gesture / milestone animation all run here.
+ * scroll. Idle / event-gesture / milestone / tap-mood animation all run here.
  *
  * Current-you (Home, Around, You, Circle): recipe + idle, no growth glow.
  * Aspirational-you (Sage): same instance, presence glow + depth sparkle.
- * The You-tab poster keeps its own larger still pixel — not this component.
+ * Tap: a short coherent mood (wave / thumbs-up / happy bounce / hug). Rapid
+ * re-taps interrupt-and-restart so nothing queues.
  */
 export function NavPixel() {
   const insets = useSafeAreaInsets();
@@ -38,6 +41,8 @@ export function NavPixel() {
   const { me } = useMeContext();
   const { state, pendingMilestone, markCelebrated } = useGrowth();
   const celebrateRef = useRef<(() => void) | null>(null);
+  const tapMoodRef = useRef<((mood: TapMood) => void) | null>(null);
+  const lastMoodRef = useRef<TapMoodId | null>(null);
   const recipe = useMemo(() => normalizeRecipe(me?.recipe), [me]);
   const onSage = pathname === '/sage' || pathname.endsWith('/sage');
 
@@ -50,9 +55,16 @@ export function NavPixel() {
 
   if (!me) return null;
 
+  function onTap() {
+    // Same crisis hard rule as event gestures: no hands while the card is up.
+    if (isCrisisActive()) return;
+    const mood = pickTapMood(onSage, lastMoodRef.current);
+    lastMoodRef.current = mood.id;
+    tapMoodRef.current?.(mood);
+  }
+
   return (
     <View
-      pointerEvents="none"
       collapsable={false}
       style={[
         styles.wrap,
@@ -61,7 +73,12 @@ export function NavPixel() {
           right: Math.max(insets.right, NAV_PIXEL_RIGHT),
         },
       ]}>
-      <View style={styles.slot}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Your pixel"
+        onPress={onTap}
+        hitSlop={8}
+        style={styles.slot}>
         <GrowthMarkers
           presence={onSage ? state.presence : 0}
           depth={onSage ? state.depth : 0}
@@ -73,8 +90,10 @@ export function NavPixel() {
           showUp={me.show_up}
           animated
           celebrateRef={celebrateRef}
+          tapMoodRef={tapMoodRef}
+          pressable={false}
         />
-      </View>
+      </Pressable>
     </View>
   );
 }

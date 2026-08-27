@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ViewStyle } from 'react-native';
 import {
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -11,6 +12,7 @@ import {
 } from 'react-native-reanimated';
 
 import { manifestFor } from './registry';
+import type { TapMood } from './tap-moods';
 import type { KenneyRecipe } from './types';
 
 export interface KenneyAnimation {
@@ -33,6 +35,12 @@ export interface KenneyAnimation {
    * rarer. Call when a presence milestone (7/21) first crosses.
    */
   celebrate: () => void;
+  /**
+   * Nav-pixel tap mood: instant hand swap + a short matching motion (under
+   * ~1s). Re-calling interrupts the in-flight mood and starts the new one —
+   * no queue, no startup delay.
+   */
+  playTapMood: (mood: TapMood) => void;
 }
 
 const DEFAULT_OVERRIDES: Record<string, string> = {};
@@ -58,6 +66,34 @@ export function useKenneyAnimation(
   const translateY = useSharedValue(0);
   const rotate = useSharedValue(0);
   const squashScaleY = useSharedValue(1);
+  // Tap-mood overlay — composed on top of idle so a tap never has to wait
+  // for the breathe/bob loop, and unused channels can snap to rest without
+  // mixing one mood's motion into the next.
+  const tapScale = useSharedValue(1);
+  const tapY = useSharedValue(0);
+  const tapRotate = useSharedValue(0);
+  const handTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const holdHand = useCallback((state: string, ms: number) => {
+    if (handTimerRef.current) clearTimeout(handTimerRef.current);
+    setOverrides((prev) => ({ ...prev, hand: state }));
+    handTimerRef.current = setTimeout(() => {
+      handTimerRef.current = undefined;
+      setOverrides((prev) => {
+        if (!('hand' in prev)) return prev;
+        const next = { ...prev };
+        delete next.hand;
+        return next;
+      });
+    }, ms);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (handTimerRef.current) clearTimeout(handTimerRef.current);
+    },
+    [],
+  );
 
   // --- Discrete state swaps (blink / gesture) ------------------------------
   // The rest state is whatever the recipe declares (hands default to hidden).
@@ -109,22 +145,12 @@ export function useKenneyAnimation(
 
   // Event-driven gesture: hold the given state ~1.5–2s, then restore.
   const gesture = useMemo(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
     const trigger = (state: string) => {
       if (!enabled) return;
-      if (timer) clearTimeout(timer);
-      setOverrides((prev) => ({ ...prev, hand: state }));
-      timer = setTimeout(() => {
-        setOverrides((prev) => {
-          if (!('hand' in prev)) return prev;
-          const next = { ...prev };
-          delete next.hand;
-          return next;
-        });
-      }, 1750);
+      holdHand(state, 1750);
     };
     return trigger;
-  }, [enabled]);
+  }, [enabled, holdHand]);
 
   // --- Procedural transforms ------------------------------------------------
   useEffect(() => {
@@ -160,9 +186,9 @@ export function useKenneyAnimation(
 
   const style = useAnimatedStyle(() => ({
     transform: [
-      { translateY: translateY.value },
-      { rotate: `${rotate.value}deg` },
-      { scale: scale.value },
+      { translateY: translateY.value + tapY.value },
+      { rotate: `${rotate.value + tapRotate.value}deg` },
+      { scale: scale.value * tapScale.value },
       { scaleY: squashScaleY.value },
     ],
   }));
@@ -180,10 +206,8 @@ export function useKenneyAnimation(
   // Milestone celebration: a louder, rarer burst than the daily gestures.
   // Reuses scale/squash shared values + a hand override — no new machinery.
   const celebrate = useMemo(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
     const run = () => {
       if (!enabled) return;
-      if (timer) clearTimeout(timer);
       // Bigger, punchier scale pulse.
       scale.value = withSequence(
         withTiming(1.25, { duration: 160, easing: Easing.out(Easing.quad) }),
@@ -192,17 +216,73 @@ export function useKenneyAnimation(
         withTiming(1, { duration: 220, easing: Easing.out(Easing.quad) }),
       );
       // Both hands up (peace) for the celebration, then back to hidden.
-      setOverrides((prev) => ({ ...prev, hand: 'peace' }));
-      timer = setTimeout(() => {
-        setOverrides((prev) => {
-          const next = { ...prev };
-          delete next.hand;
-          return next;
-        });
-      }, 1600);
+      holdHand('peace', 1600);
     };
     return run;
-  }, [enabled, scale, setOverrides]);
+  }, [enabled, scale, holdHand]);
 
-  return { style, overrides, squash, gesture, celebrate };
+  const playTapMood = useMemo(() => {
+    const play = (mood: TapMood) => {
+      if (!enabled) return;
+      // Interrupt-and-restart: drop any in-flight tap motion so a rapid
+      // re-tap never queues or frankensteins two moods. Hands swap in the
+      // same tick — no delay before the gesture is visible.
+      cancelAnimation(tapScale);
+      cancelAnimation(tapY);
+      cancelAnimation(tapRotate);
+      tapScale.value = 1;
+      tapY.value = 0;
+      tapRotate.value = 0;
+
+      holdHand(mood.hand, mood.durationMs);
+
+      const ease = Easing.inOut(Easing.sin);
+      if (mood.id === 'wave') {
+        tapRotate.value = withSequence(
+          withTiming(12, { duration: 90, easing: Easing.out(Easing.quad) }),
+          withTiming(-12, { duration: 130, easing: ease }),
+          withTiming(9, { duration: 120, easing: ease }),
+          withTiming(-6, { duration: 120, easing: ease }),
+          withTiming(0, { duration: 140, easing: Easing.out(Easing.quad) }),
+        );
+      } else if (mood.id === 'thumbsUp') {
+        tapY.value = withSequence(
+          withTiming(-5, { duration: 140, easing: Easing.out(Easing.quad) }),
+          withTiming(-2, { duration: 200, easing: ease }),
+          withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) }),
+        );
+        tapScale.value = withSequence(
+          withTiming(1.1, { duration: 140, easing: Easing.out(Easing.quad) }),
+          withTiming(1, { duration: 280, easing: Easing.out(Easing.quad) }),
+        );
+      } else if (mood.id === 'happyBounce') {
+        tapY.value = withSequence(
+          withTiming(-7, { duration: 120, easing: Easing.out(Easing.quad) }),
+          withTiming(1, { duration: 110, easing: ease }),
+          withTiming(-4, { duration: 120, easing: Easing.out(Easing.quad) }),
+          withTiming(0, { duration: 160, easing: Easing.out(Easing.quad) }),
+        );
+        tapScale.value = withSequence(
+          withTiming(1.14, { duration: 120, easing: Easing.out(Easing.quad) }),
+          withTiming(0.96, { duration: 110, easing: ease }),
+          withTiming(1.06, { duration: 120, easing: Easing.out(Easing.quad) }),
+          withTiming(1, { duration: 180, easing: Easing.out(Easing.quad) }),
+        );
+      } else {
+        // hug: open hands + squeeze-in (the pack has no wrap-around pose).
+        tapScale.value = withSequence(
+          withTiming(0.88, { duration: 160, easing: Easing.out(Easing.quad) }),
+          withTiming(0.9, { duration: 220, easing: ease }),
+          withTiming(1, { duration: 240, easing: Easing.out(Easing.quad) }),
+        );
+        tapY.value = withSequence(
+          withTiming(2, { duration: 160, easing: ease }),
+          withTiming(0, { duration: 460, easing: Easing.out(Easing.quad) }),
+        );
+      }
+    };
+    return play;
+  }, [enabled, holdHand, tapScale, tapY, tapRotate]);
+
+  return { style, overrides, squash, gesture, celebrate, playTapMood };
 }

@@ -2,6 +2,7 @@ import { useMemo, type RefObject } from 'react';
 
 import { resolveFacePalette } from '@/lib/color';
 import { AnimatedKenneyCharacter, KenneyCharacter } from '@/components/kenney-character';
+import type { TapMood } from '@/lib/kenney/tap-moods';
 import type { KenneyRecipe } from '@/lib/kenney/types';
 
 interface PixelFaceProps {
@@ -14,6 +15,10 @@ interface PixelFaceProps {
   animated?: boolean;
   /** Receives the milestone celebration callback when animated. */
   celebrateRef?: RefObject<(() => void) | null>;
+  /** Receives playTapMood when animated (nav companion tap). */
+  tapMoodRef?: RefObject<((mood: TapMood) => void) | null>;
+  /** When false, the parent owns the press target. */
+  pressable?: boolean;
 }
 
 /**
@@ -21,7 +26,15 @@ interface PixelFaceProps {
  * Kenney pipeline — the recipe is family-agnostic and the manifest does the
  * rest. The old per-family renderers are gone.
  */
-export function PixelFace({ recipe, size = 96, showUp, animated = true, celebrateRef }: PixelFaceProps) {
+export function PixelFace({
+  recipe,
+  size = 96,
+  showUp,
+  animated = true,
+  celebrateRef,
+  tapMoodRef,
+  pressable,
+}: PixelFaceProps) {
   // Memoize so the animation layer's effect deps stay stable across parent
   // re-renders (otherwise the blink/gesture timers would keep resetting).
   const effective = useMemo(() => {
@@ -30,7 +43,13 @@ export function PixelFace({ recipe, size = 96, showUp, animated = true, celebrat
   }, [recipe, showUp]);
 
   return animated ? (
-    <AnimatedKenneyCharacter recipe={effective} size={size} celebrateRef={celebrateRef} />
+    <AnimatedKenneyCharacter
+      recipe={effective}
+      size={size}
+      celebrateRef={celebrateRef}
+      tapMoodRef={tapMoodRef}
+      pressable={pressable}
+    />
   ) : (
     <KenneyCharacter recipe={effective} size={size} />
   );

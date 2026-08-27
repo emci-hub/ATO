@@ -6,6 +6,7 @@ import Animated from 'react-native-reanimated';
 import { registerGestureHandler } from '@/lib/kenney/gesture-actions';
 import { isHiddenState, resolveCharacter } from '@/lib/kenney/registry';
 import { useKenneyAnimation } from '@/lib/kenney/use-kenney-animation';
+import type { TapMood } from '@/lib/kenney/tap-moods';
 import type { KenneyRecipe } from '@/lib/kenney/types';
 import { KENNEY_ASSETS } from '@/lib/kenney/generated-assets';
 
@@ -68,13 +69,21 @@ export function KenneyCharacter({ recipe, size }: KenneyCharacterProps) {
  * `celebrateRef` (optional) receives the milestone `celebrate()` callback so a
  * parent (the nav companion) can fire the one-time louder animation on a
  * milestone crossing without the wrapper needing to know why.
+ * `tapMoodRef` receives `playTapMood` for the nav companion's tap handler.
  */
 export function AnimatedKenneyCharacter({
   recipe,
   size,
   celebrateRef,
-}: KenneyCharacterProps & { celebrateRef?: React.RefObject<(() => void) | null> }) {
-  const { style, overrides, squash, gesture, celebrate } = useKenneyAnimation(recipe);
+  tapMoodRef,
+  pressable = true,
+}: KenneyCharacterProps & {
+  celebrateRef?: React.RefObject<(() => void) | null>;
+  tapMoodRef?: React.RefObject<((mood: TapMood) => void) | null>;
+  /** When false, the parent owns the press target (nav companion). */
+  pressable?: boolean;
+}) {
+  const { style, overrides, squash, gesture, celebrate, playTapMood } = useKenneyAnimation(recipe);
   const effective = overrides
     ? { ...recipe, parts: { ...recipe.parts, ...overrides } }
     : recipe;
@@ -88,11 +97,21 @@ export function AnimatedKenneyCharacter({
     if (celebrateRef) celebrateRef.current = celebrate;
   }, [celebrateRef, celebrate]);
 
+  useEffect(() => {
+    if (tapMoodRef) tapMoodRef.current = playTapMood;
+  }, [tapMoodRef, playTapMood]);
+
+  const body = (
+    <Animated.View style={style}>
+      <KenneyCharacter recipe={effective} size={size} />
+    </Animated.View>
+  );
+
+  if (!pressable) return body;
+
   return (
     <Pressable onPress={squash} hitSlop={6}>
-      <Animated.View style={style}>
-        <KenneyCharacter recipe={effective} size={size} />
-      </Animated.View>
+      {body}
     </Pressable>
   );
 }

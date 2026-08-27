@@ -6,7 +6,9 @@
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
 
 ## On
-**Pixel placement shipped — global nav companion.** The live pixel sits small and fixed top-right on all tabs (Home, Sage, Around, You), mounted at the tab shell so it does not remount on tab switch or scroll with content. Idle / gesture / milestone animation runs from that instance. Current-you (no growth glow) on Home/Around/You; aspirational-you (presence glow + depth sparkle) on Sage. Home no longer renders a large centered face. The You-tab poster is identity + QR only (no large pixel).
+**Nav pixel tap moods are in.** Tapping the top-right companion plays a short coherent gesture (wave, thumbs-up, happy bounce, or hug) with no startup delay. Rapid re-taps interrupt-and-restart — they do not queue. Sage weights bounce/wave a bit more; current-you uses the full set evenly. Crisis still hard-disables hands.
+
+**Pixel placement shipped — global nav companion.** The live pixel sits small and fixed top-right on all tabs (Home, Sage, Around, You), mounted at the tab shell so it does not remount on tab switch or scroll with content. Idle / gesture / milestone / tap-mood animation runs from that instance. Current-you (no growth glow) on Home/Around/You; aspirational-you (presence glow + depth sparkle) on Sage. Home no longer renders a large centered face. The You-tab poster is identity + QR only (no large pixel).
 
 **UI polish pass is in (poster, button borders, Sage zoom).** Poster redesigned on Ink / Paper / Steel / Bloom (shareable artifact only — app chrome stays Soft / Zen / Quest / Neon / Anime). Crisis "I'm okay, keep going" now has a 2px accent border. Soft-mode outline buttons used `theme.backgroundSelected` as a border (invisible on white); they now share `controlBorderColor`. Sage pinch-zoom is disabled on tab ScrollViews; tab chrome + SystemUI use the theme background so a zoom-out cannot flash native white.
 
@@ -19,7 +21,7 @@
 2. Sentry native crash symbolication — still **unconfirmed** from here. Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
 3. Friends external testing group — Beta App Review pending on Apple since Aug 26, 2026. No action, just waiting.
 
-**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ can receive this JS/UI polish via `eas update`. Devices on binary 8 or earlier cannot.
+**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ can receive this nav-pixel tap JS change via `eas update`. Devices on binary 8 or earlier cannot.
 
 **Decision (Aug 27, 2026): Wave 1.5 and Wave 3 both start now, in parallel — intentional deviation from plan sequencing.** Wave 2 Stage 2 ("I'm going") is now live, so Night wall is unblocked for Wave 3.
 
@@ -28,7 +30,7 @@
 - Wave 3 — Plugs (deal rows) + Night wall (going exists; wall can surface)
 
 ## Done
-See git history for the full Stage 1–8 build log. UI polish (this change): You poster redesigned with no large pixel; outline buttons share a visible hairline; Sage pinch-zoom is off. Nav companion, Wave 2 Stage 2, and Stage 9 first pass are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
+See git history for the full Stage 1–8 build log. Nav tap moods (this change): short coherent gestures on the shell-mounted pixel, interrupt-and-restart. UI polish, Wave 2 Stage 2, and Stage 9 first pass are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
 
 ## Left
 - Submit + confirm binary 10 on device (icon, OTA, everything from today). Do not submit 8 or 9.

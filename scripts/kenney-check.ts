@@ -19,6 +19,7 @@ import {
   normalizeRecipe,
   resolveCharacter,
 } from '../src/lib/kenney/registry';
+import { TAP_MOODS, pickTapMood } from '../src/lib/kenney/tap-moods';
 import { PNG } from 'pngjs';
 
 let passed = 0;
@@ -112,6 +113,20 @@ assert.equal(gestureMap.talkReply?.state, 'point');
 assert.equal(gestureMap.circleConnected?.state, 'peace');
 assert.equal(gestureMap.posterShared?.state, 'peace');
 ok('event gestures map to manifest-declared hand states');
+
+const handStateIds = Object.keys(SHAPE_MANIFEST.parts.find((p) => p.id === 'hand')!.states);
+for (const mood of Object.values(TAP_MOODS)) {
+  assert.ok(handStateIds.includes(mood.hand), `${mood.id} uses a real hand state`);
+  assert.ok(mood.durationMs <= 900, `${mood.id} stays under 1s (${mood.durationMs}ms)`);
+}
+assert.equal(TAP_MOODS.wave.hand, 'open');
+assert.equal(TAP_MOODS.thumbsUp.hand, 'thumb');
+assert.equal(TAP_MOODS.happyBounce.hand, 'peace');
+assert.equal(TAP_MOODS.hug.hand, 'open');
+const first = pickTapMood(false, null);
+const second = pickTapMood(false, first.id);
+assert.notEqual(second.id, first.id);
+ok('tap moods are complete coherent gestures under 1s, no last-id repeat');
 
 // Hand/body color consistency: every exported hand variant's dominant color
 // must match its body variant. Guards the raw-name-override regression where
