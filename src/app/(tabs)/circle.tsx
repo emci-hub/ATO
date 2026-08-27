@@ -14,6 +14,7 @@ import { useCircleContext } from '@/lib/circle-context';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { fetchPeerState, type PeerState } from '@/lib/circle';
+import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import { normalizeRecipe } from '@/lib/kenney/registry';
 import {
   blockUser,
@@ -109,6 +110,7 @@ export default function CircleScreen() {
           </ThemedView>
         ) : (
           <FlatList
+            {...NO_PINCH_ZOOM}
             data={peers}
             keyExtractor={(item) => item.me.id}
             contentContainerStyle={styles.listContent}
@@ -257,7 +259,7 @@ function PeerCard({
       </Pressable>
 
       {confirming ? (
-        <ThemedView type="backgroundElement" style={[styles.confirmBox, { borderColor: theme.backgroundSelected }]}>
+        <ThemedView type="backgroundElement" style={[styles.confirmBox, { borderColor: controlBorderColor(theme) }]}>
           <ThemedText type="small" themeColor="textSecondary" style={styles.confirmText}>
             Unfriend {me.name}? You&apos;ll need to scan their QR again to reconnect.
           </ThemedText>
@@ -272,7 +274,7 @@ function PeerCard({
               onPress={() => setConfirming(false)}
               style={({ pressed }) => [
                 styles.confirmButton,
-                { borderColor: theme.backgroundSelected },
+                { borderColor: controlBorderColor(theme) },
                 pressed && styles.pressed,
               ]}>
               <ThemedText type="smallBold" themeColor="textSecondary">
@@ -299,7 +301,7 @@ function PeerCard({
           onPress={() => setConfirming(true)}
           style={({ pressed }) => [
             styles.unfriendLink,
-            { borderColor: theme.backgroundSelected },
+            { borderColor: controlBorderColor(theme) },
             pressed && styles.pressed,
           ]}>
           <ThemedText type="smallBold" style={{ color: '#E5484D' }}>

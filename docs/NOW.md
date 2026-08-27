@@ -6,7 +6,9 @@
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
 
 ## On
-**Pixel placement shipped — global nav companion.** The live pixel sits small and fixed top-right on all tabs (Home, Sage, Around, You), mounted at the tab shell so it does not remount on tab switch or scroll with content. Idle / gesture / milestone animation runs from that instance. Current-you (no growth glow) on Home/Around/You; aspirational-you (presence glow + depth sparkle) on Sage. Home no longer renders a large centered face. The You-tab poster still has its own larger still pixel.
+**Pixel placement shipped — global nav companion.** The live pixel sits small and fixed top-right on all tabs (Home, Sage, Around, You), mounted at the tab shell so it does not remount on tab switch or scroll with content. Idle / gesture / milestone animation runs from that instance. Current-you (no growth glow) on Home/Around/You; aspirational-you (presence glow + depth sparkle) on Sage. Home no longer renders a large centered face. The You-tab poster is identity + QR only (no large pixel).
+
+**UI polish pass is in (poster, button borders, Sage zoom).** Poster redesigned on Ink / Paper / Steel / Bloom (shareable artifact only — app chrome stays Soft / Zen / Quest / Neon / Anime). Crisis "I'm okay, keep going" now has a 2px accent border. Soft-mode outline buttons used `theme.backgroundSelected` as a border (invisible on white); they now share `controlBorderColor`. Sage pinch-zoom is disabled on tab ScrollViews; tab chrome + SystemUI use the theme background so a zoom-out cannot flash native white.
 
 **Wave 2 Stage 2 is in — "I'm going" + friend colors.** Opt-in `going` row per user per show (`set_going` / `night_snapshot`). A color blob appears on a show only at ≥3 people of that `show_up` hue; raw counts never leave the RPC. Faces show only when the person is going, `me.visible` is true (plan field `show`; SHOW is reserved), and they are not blocked either way. Hidden faces still count toward colors. 18+ nights call `is_at_least_age(born_on, 18)`. City stays typed (not GPS). Calgary `weekend.json` is still honestly empty until Edmtrain; type `fixture` as city for seeded test shows.
 
@@ -17,7 +19,7 @@
 2. Sentry native crash symbolication — still **unconfirmed** from here. Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
 3. Friends external testing group — Beta App Review pending on Apple since Aug 26, 2026. No action, just waiting.
 
-**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ can receive this nav-pixel JS change via `eas update`. Devices on binary 8 or earlier cannot.
+**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ can receive this JS/UI polish via `eas update`. Devices on binary 8 or earlier cannot.
 
 **Decision (Aug 27, 2026): Wave 1.5 and Wave 3 both start now, in parallel — intentional deviation from plan sequencing.** Wave 2 Stage 2 ("I'm going") is now live, so Night wall is unblocked for Wave 3.
 
@@ -26,7 +28,7 @@
 - Wave 3 — Plugs (deal rows) + Night wall (going exists; wall can surface)
 
 ## Done
-See git history for the full Stage 1–8 build log. Nav companion (this change): small pixel fixed top-right at the tab shell. Wave 2 Stage 2 and Stage 9 first pass are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
+See git history for the full Stage 1–8 build log. UI polish (this change): You poster redesigned with no large pixel; outline buttons share a visible hairline; Sage pinch-zoom is off. Nav companion, Wave 2 Stage 2, and Stage 9 first pass are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
 
 ## Left
 - Submit + confirm binary 10 on device (icon, OTA, everything from today). Do not submit 8 or 9.
@@ -61,7 +63,7 @@ These are real, but they are not TestFlight work and they are not next. Leave th
 - Apple client_secret JWT minted Aug 25, 2026, expires Feb 24, 2027 07:24 UTC. Regenerate around late Jan 2027. Not automated.
 - Email sending on `noreply@asstrollogs.com` (Resend-verified). `support@asstrollogs.com` used as the public contact address in legal/landing copy — inbox confirmation is parked under Public release readiness, not active work.
 - Landing page live at `ato.emgens.com` — social handle decided as `@whatsyourato` (primary), fallback `emgensato`/`atoapp`/`heyato` per-platform if taken. Not yet confirmed reserved on any platform.
-- **Intentional deviation:** the locked Ink / Paper / Steel / Bloom palette in ATO_PLAN_v2.md is discarded. Appearance is now five modes (Soft / Zen / Quest / Neon / Anime). Not a bug — the plan line was updated in the same change.
+- **Intentional deviation:** the locked Ink / Paper / Steel / Bloom palette in ATO_PLAN_v2.md is discarded for app chrome. Appearance is five modes (Soft / Zen / Quest / Neon / Anime). The You-tab share poster still uses Ink / Paper / Steel / Bloom as a fixed shareable artifact. Not a bug — the plan line was updated in the same change.
 - **Intentional deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 start now in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Stage 2 ("I'm going") shipped; Night wall may surface with Wave 3.
 - **Around refresh secrets (Wave 2):** Edge Function `refresh-around` is deployed (`verify_jwt: false`; auth is `AROUND_REFRESH_SECRET`). Needs `EDMTRAIN_CLIENT_KEY` (apply at edmtrain.com/developer-api while signed in) and `AROUND_REFRESH_SECRET`. Cron is not scheduled until both exist in Vault + function secrets. Phone never holds the Edmtrain key. ToS: displayed cache < 24h; unmodified event `link`; do not mix Edmtrain listings with another events feed (RA/Shotgun/DICE are ticket link-outs only).
 

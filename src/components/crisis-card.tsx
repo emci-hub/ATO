@@ -59,10 +59,14 @@ export function CrisisCard({ onDismiss }: { onDismiss?: () => void }) {
           onPress={onDismiss}
           style={({ pressed }) => [
             styles.dismiss,
-            { borderColor: theme.backgroundSelected, borderWidth: 1 },
+            {
+              borderColor: theme.accent,
+              borderWidth: 2,
+              backgroundColor: theme.background,
+            },
             pressed && styles.pressed,
           ]}>
-          <ThemedText type="smallBold" themeColor="textSecondary">
+          <ThemedText type="smallBold" style={styles.dismissLabel}>
             {content.dismiss}
           </ThemedText>
         </Pressable>
@@ -108,7 +112,12 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     borderRadius: Spacing.three,
     paddingVertical: Spacing.three,
+    paddingHorizontal: Spacing.three,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dismissLabel: {
+    textAlign: 'center',
   },
   pressed: {
     opacity: 0.8,

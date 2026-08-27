@@ -164,8 +164,18 @@ const poster = read('src/components/share-poster.tsx');
 assert.match(tabsLayout, /<NavPixel/);
 assert.match(navPixel, /position: 'absolute'/);
 assert.match(navPixel, /insets\.top/);
-assert.match(poster, /size=\{200\}/);
-ok('nav companion is shell-mounted top-right; You poster keeps its own larger pixel');
+assert.doesNotMatch(poster, /PixelFace/);
+assert.match(poster, /const STEEL/);
+assert.match(poster, /const BLOOM/);
+ok('nav companion is shell-mounted top-right; You poster has no large pixel');
+
+const chrome = read('src/lib/theme/chrome.ts');
+const crisisSrc = read('src/components/crisis-card.tsx');
+assert.match(chrome, /controlBorderColor/);
+assert.match(crisisSrc, /borderColor: theme\.accent/);
+assert.match(sage, /NO_PINCH_ZOOM/);
+assert.match(read('src/components/app-tabs.tsx'), /disableTransparentOnScrollEdge/);
+ok('crisis dismiss uses accent border; outline controls share a visible hairline; Sage pinch-zoom is off');
 
 const sentryLib = read('src/lib/sentry.ts');
 assert.match(sentryLib, /enableNative:\s*Platform\.OS !== 'web'/);

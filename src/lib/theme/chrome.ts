@@ -2,6 +2,25 @@ import { Platform, type ViewStyle } from 'react-native';
 
 import type { AppearanceTokens } from '@/constants/appearance';
 
+/**
+ * Soft uses a transparent card border (shadow instead). Outline buttons still
+ * need a visible hairline — `theme.backgroundSelected` on white is invisible.
+ */
+export function controlBorderColor(theme: AppearanceTokens): string {
+  if (theme.border && theme.border !== 'transparent') return theme.border;
+  return 'rgba(31, 41, 55, 0.22)';
+}
+
+/**
+ * iOS ScrollView pinch is on by default. Even at maxZoomScale 1, a pinch can
+ * leave a transform that reveals the native white tab-screen behind themed
+ * chrome (Sage tab bar going white after zoom-out).
+ */
+export const NO_PINCH_ZOOM = {
+  pinchGestureEnabled: false,
+  bouncesZoom: false,
+} as const;
+
 export function surfaceShadow(theme: AppearanceTokens, reduceMotion: boolean): ViewStyle {
   if (theme.id === 'soft') {
     return Platform.select<ViewStyle>({

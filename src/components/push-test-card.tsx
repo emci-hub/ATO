@@ -9,6 +9,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { fetchChecks, type Check } from '@/lib/checks';
 import { fireTestPush, notificationsAreGranted } from '@/lib/push';
 import type { PushKind } from '@/lib/push-copy';
+import { controlBorderColor } from '@/lib/theme/chrome';
 
 /**
  * Manual fire for the three pushes so a tester can tap each deep link without
@@ -81,19 +82,19 @@ export function PushTestCard({ timeZone }: { timeZone: string }) {
           label={firing === 'morning' ? '…' : 'Morning'}
           disabled={firing !== null}
           onPress={() => fire('morning')}
-          borderColor={theme.backgroundSelected}
+          borderColor={controlBorderColor(theme)}
         />
         <TestButton
           label={firing === 'evening' ? '…' : 'Evening'}
           disabled={firing !== null}
           onPress={() => fire('evening')}
-          borderColor={theme.backgroundSelected}
+          borderColor={controlBorderColor(theme)}
         />
         <TestButton
           label={firing === 'sunday' ? '…' : 'Sunday'}
           disabled={firing !== null}
           onPress={() => fire('sunday')}
-          borderColor={theme.backgroundSelected}
+          borderColor={controlBorderColor(theme)}
         />
       </View>
       {note ? (

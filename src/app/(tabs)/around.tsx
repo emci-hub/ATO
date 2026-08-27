@@ -22,6 +22,7 @@ import type { AroundLoad, AroundShow, TicketKind } from '@/lib/around/types';
 import { hslForHue } from '@/lib/color';
 import { normalizeRecipe } from '@/lib/kenney/registry';
 import type { Me } from '@/lib/me';
+import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
 async function openUrl(url: string) {
   try {
@@ -82,7 +83,7 @@ export default function AroundScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ScrollView contentContainerStyle={styles.scroll}>
+        <ScrollView {...NO_PINCH_ZOOM} contentContainerStyle={styles.scroll}>
           <View style={styles.header}>
             <ThemedText type="subtitle">Around</ThemedText>
             <ThemedText themeColor="textSecondary">
@@ -195,7 +196,7 @@ function ShowCard({
           styles.goingChip,
           {
             backgroundColor: going ? theme.backgroundSelected : 'transparent',
-            borderColor: theme.border === 'transparent' ? theme.backgroundSelected : theme.border,
+            borderColor: controlBorderColor(theme),
           },
           pressed && styles.pressed,
           (busy || !me) && styles.disabled,
@@ -226,7 +227,11 @@ function ShowCard({
       ) : null}
 
       {faces.length > 0 ? (
-        <ScrollView horizontal contentContainerStyle={styles.faces} showsHorizontalScrollIndicator={false}>
+        <ScrollView
+          {...NO_PINCH_ZOOM}
+          horizontal
+          contentContainerStyle={styles.faces}
+          showsHorizontalScrollIndicator={false}>
           {faces.map((face) => (
             <View key={face.id} style={styles.face}>
               <PixelFace recipe={normalizeRecipe(face.recipe)} size={36} showUp={face.show_up} animated={false} />
@@ -245,7 +250,7 @@ function ShowCard({
             onPress={() => openUrl(link.url)}
             style={({ pressed }) => [
               styles.linkChip,
-              { borderColor: theme.border === 'transparent' ? theme.backgroundSelected : theme.border },
+              { borderColor: controlBorderColor(theme) },
               pressed && styles.pressed,
             ]}>
             <ThemedText type="smallBold">{ticketLabel(link.kind as TicketKind)}</ThemedText>

@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { controlBorderColor } from '@/lib/theme/chrome';
 import {
   sendFloorTestError,
   SENTRY_DSN,
@@ -63,7 +64,7 @@ export function SentryTestCard() {
           disabled={busy !== null}
           style={({ pressed }) => [
             styles.button,
-            { borderColor: theme.backgroundSelected },
+            { borderColor: controlBorderColor(theme) },
             pressed && styles.pressed,
             busy !== null && styles.disabled,
           ]}>
@@ -74,7 +75,7 @@ export function SentryTestCard() {
           disabled={busy !== null}
           style={({ pressed }) => [
             styles.button,
-            { borderColor: theme.backgroundSelected },
+            { borderColor: controlBorderColor(theme) },
             pressed && styles.pressed,
             busy !== null && styles.disabled,
           ]}>

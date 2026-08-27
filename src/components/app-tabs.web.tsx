@@ -15,6 +15,7 @@ import { ThemedView } from './themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useCircleContext } from '@/lib/circle-context';
 import { useTheme } from '@/hooks/use-theme';
+import { controlBorderColor } from '@/lib/theme/chrome';
 
 export default function AppTabs() {
   const { hasCircle } = useCircleContext();
@@ -68,7 +69,7 @@ export function CustomTabList(props: TabListProps) {
 
   return (
     <View {...props} style={styles.tabListContainer}>
-      <ThemedView type="backgroundElement" style={[styles.innerContainer, { borderColor: theme.border === 'transparent' ? theme.backgroundSelected : theme.border }]}>
+      <ThemedView type="backgroundElement" style={[styles.innerContainer, { borderColor: controlBorderColor(theme) }]}>
         <ThemedText type="smallBold" style={styles.brandText}>
           ATO
         </ThemedText>

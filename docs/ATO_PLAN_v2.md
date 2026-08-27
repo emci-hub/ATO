@@ -76,10 +76,10 @@ Honest empty: "nothing this weekend" / "wall opens when the night does" / "no AT
 - Sage: reflect more than ask, ~4 sentences, coach not doctor. Crisis keyword hit → static resource card (see Crisis spec below), stop, no model call.
 - Home is solo. Friends never write the dawn line.
 - Chat: TLS + RLS. History stays. No homemade crypto. Sage reads chat only when the user taps "Teach Sage this" on a specific message — never ambient access.
-- You tab = poster (pixel, @handle, **their color named**, QR, Share). Settings / credits / human-contact info below the fold. The poster's pixel is a larger still, separate from the small top-right nav companion on every tab.
+- You tab = poster (name, @handle, show_up visibility label, QR, Share — no large pixel; the live face is the nav companion). Settings / credits / human-contact info below the fold.
 - Pixel companion: one small live face, fixed top-right at the tab shell (does not scroll or remount on tab switch). Current-you on Home/Around/You; aspirational glow on Sage.
 - Share = hold or tap. Stories-size image. Caption: "What's your ATO?"
-- Appearance: five user-selectable modes in Settings — Soft (default) / Zen / Quest / Neon / Anime. Replaces the discarded Ink / Paper / Steel / Bloom named palette. Spec lives in `src/constants/appearance.ts`. "Void" stays reserved for the competitor callout, not a mode name.
+- Appearance: five user-selectable modes in Settings — Soft (default) / Zen / Quest / Neon / Anime. Replaces the discarded Ink / Paper / Steel / Bloom named palette for app chrome. The You-tab share poster still uses those four as a fixed shareable artifact. Spec lives in `src/constants/appearance.ts`. "Void" stays reserved for the competitor callout, not a mode name.
 - Assets: Kenney CC0, same-family sets only (Modular / Toon / 1-Bit / Animal Remastered — don't mix families in one recipe). No AI-generated faces, no scraped art.
 - Age: 16+ to use the app. 18+ required to be marked "going" on a night. Self-reported date of birth (`me.born_on`) is collected at onboarding; age is computed from that date so the 18+ gate can recompute later. Verification beyond self-report is accepted MVP risk — don't try to "solve" it inside a Wave 1 stage; if it needs solving, that's its own ticket.
 - Model provider: the router box reads one env var (`MODEL_PROVIDER=gemini` or `groq`) — pick one before Stage 4, but build the router so switching providers is a config change, not a rewrite. Don't hardcode a provider name into Dawn or Talk directly.

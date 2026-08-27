@@ -33,6 +33,7 @@ import { QUOTA_EMPTY_MESSAGE } from '@/lib/voice/quota';
 import { claimAiCall } from '@/lib/voice/quota-server';
 import { routeTalkReply } from '@/lib/voice/talk';
 import { routeVoiceCard } from '@/lib/voice/router';
+import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
 interface ChatMessage {
   id: string;
@@ -229,7 +230,7 @@ export default function SageScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
         <View style={styles.header}>
           <View>
             <ThemedText type="subtitle">{SAGE_COACH_LABEL}</ThemedText>
@@ -272,8 +273,10 @@ export default function SageScreen() {
         ) : (
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={styles.flex}>
+            style={[styles.flex, { backgroundColor: theme.background }]}>
             <ScrollView
+              {...NO_PINCH_ZOOM}
+              style={{ backgroundColor: theme.background }}
               contentContainerStyle={styles.messages}
               keyboardShouldPersistTaps="handled">
               {quotaEmpty ? (
@@ -331,8 +334,9 @@ export default function SageScreen() {
               ) : null}
             </ScrollView>
 
-            <View style={styles.composer}>
+            <View style={[styles.composer, { backgroundColor: theme.background }]}>
               <ScrollView
+                {...NO_PINCH_ZOOM}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.chips}>
@@ -343,7 +347,7 @@ export default function SageScreen() {
                     onPress={() => (chip.prompt ? onChip(chip.prompt) : setMoreOpen((open) => !open))}
                     style={({ pressed }) => [
                       styles.chip,
-                      { borderColor: theme.backgroundSelected },
+                      { borderColor: controlBorderColor(theme) },
                       pressed && styles.pressed,
                     ]}>
                     <ThemedText type="small" themeColor="textSecondary">
@@ -359,7 +363,7 @@ export default function SageScreen() {
                         onPress={() => onChip(chip.prompt, chip.support)}
                         style={({ pressed }) => [
                           styles.chip,
-                          { borderColor: theme.backgroundSelected },
+                          { borderColor: controlBorderColor(theme) },
                           pressed && styles.pressed,
                         ]}>
                         <ThemedText type="small" themeColor="textSecondary">
@@ -412,10 +416,12 @@ export default function SageScreen() {
             <CrisisCard onDismiss={() => setShowSupport(false)} />
             <Pressable
               onPress={() => setShowSupport(false)}
-              style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                Close
-              </ThemedText>
+              style={({ pressed }) => [
+                styles.closeButton,
+                { borderColor: controlBorderColor(theme) },
+                pressed && styles.pressed,
+              ]}>
+              <ThemedText type="smallBold">Close</ThemedText>
             </Pressable>
           </View>
         </View>
@@ -550,7 +556,10 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   closeButton: {
-    alignSelf: 'center',
-    padding: Spacing.two,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    borderRadius: Spacing.three,
+    borderWidth: 1,
+    paddingVertical: Spacing.three,
   },
 });

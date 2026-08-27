@@ -22,6 +22,7 @@ import { HOME_SAGE_LEDE, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { persistRoutedCard } from '@/lib/today-card';
 import { routeVoiceCard } from '@/lib/voice/router';
 import { useSession } from '@/hooks/use-session';
+import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -89,8 +90,9 @@ export default function HomeScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
+          {...NO_PINCH_ZOOM}
           contentContainerStyle={styles.scrollContent}
-          contentInsetAdjustmentBehavior="automatic">
+          contentInsetAdjustmentBehavior="never">
           <View style={styles.header}>
             <ThemedText type="subtitle">Home</ThemedText>
             <ThemedText themeColor="textSecondary">
@@ -146,7 +148,7 @@ export default function HomeScreen() {
                     disabled={busy !== null}
                     style={[
                       styles.secondaryButton,
-                      { borderColor: theme.border === 'transparent' ? theme.backgroundSelected : theme.border },
+                      { borderColor: controlBorderColor(theme) },
                       busy !== null && styles.disabled,
                     ]}>
                     <ThemedText type="smallBold" themeColor="textSecondary">

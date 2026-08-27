@@ -44,7 +44,7 @@ export default function CrisisLabScreen() {
             </ThemedText>
           </View>
 
-          <CrisisCard />
+          <CrisisCard onDismiss={() => {}} />
         </ScrollView>
       </SafeAreaView>
     </ThemedView>

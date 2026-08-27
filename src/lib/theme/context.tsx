@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react';
 import { AccessibilityInfo } from 'react-native';
+import * as SystemUI from 'expo-system-ui';
 
 import {
   APPEARANCES,
@@ -39,6 +40,10 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    void SystemUI.setBackgroundColorAsync(APPEARANCES[id].background);
+  }, [id]);
 
   useEffect(() => {
     let mounted = true;

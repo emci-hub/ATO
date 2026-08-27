@@ -6,6 +6,7 @@ import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { REPORT_REASONS, submitReport, type ReportTarget } from '@/lib/moderation';
+import { controlBorderColor } from '@/lib/theme/chrome';
 
 interface ReportSheetProps {
   visible: boolean;
@@ -116,7 +117,7 @@ export function ReportSheet({ visible, target, title, onClose }: ReportSheetProp
                     disabled={busy}
                     style={({ pressed }) => [
                       styles.secondaryButton,
-                      { borderColor: theme.backgroundSelected },
+                      { borderColor: controlBorderColor(theme) },
                       pressed && styles.pressed,
                     ]}>
                     <ThemedText type="smallBold" themeColor="textSecondary">

@@ -20,6 +20,7 @@ import { persistRoutedCard } from '@/lib/today-card';
 import { routeVoiceCard } from '@/lib/voice/router';
 import type { VoiceCardResult } from '@/lib/voice/types';
 import { DAWN_SAGE_LEDE } from '@/lib/sage-copy';
+import { controlBorderColor } from '@/lib/theme/chrome';
 
 const TONE_LABEL: Record<string, string> = {
   lift: 'lift',
@@ -209,7 +210,7 @@ export default function DawnScreen() {
                 onPress={() => reloadChecks()}
                 style={({ pressed }) => [
                   styles.secondaryButton,
-                  { borderColor: theme.backgroundSelected },
+                  { borderColor: controlBorderColor(theme) },
                   pressed && styles.pressed,
                 ]}>
                 <ThemedText type="smallBold">Try again</ThemedText>
@@ -238,7 +239,7 @@ export default function DawnScreen() {
                     onPress={() => reloadChecks()}
                     style={({ pressed }) => [
                       styles.secondaryButton,
-                      { borderColor: theme.backgroundSelected },
+                      { borderColor: controlBorderColor(theme) },
                       pressed && styles.pressed,
                     ]}>
                     <ThemedText type="smallBold">Try again</ThemedText>
@@ -296,7 +297,7 @@ export default function DawnScreen() {
                 disabled={busy !== null}
                 style={({ pressed }) => [
                   styles.secondaryButton,
-                  { borderColor: theme.backgroundSelected },
+                  { borderColor: controlBorderColor(theme) },
                   pressed && styles.pressed,
                   busy !== null && styles.disabled,
                 ]}>

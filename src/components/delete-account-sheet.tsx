@@ -17,6 +17,7 @@ import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { deleteAccount, DeleteAccountError } from '@/lib/delete-account';
+import { controlBorderColor } from '@/lib/theme/chrome';
 
 const DANGER = '#E5484D';
 
@@ -178,7 +179,7 @@ export function DeleteAccountSheet({
                 disabled={working}
                 style={({ pressed }) => [
                   styles.cancelButton,
-                  { borderColor: theme.backgroundSelected },
+                  { borderColor: controlBorderColor(theme) },
                   pressed && styles.pressed,
                   working && styles.disabled,
                 ]}>

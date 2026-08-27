@@ -80,5 +80,6 @@ npx expo export --platform web
 ```
 
 Then confirm on the three real render contexts (all three, not one):
-Home (`PixelFace size=88`), Circle card (`size=72`), Share poster
-(`size=200`, `animated={false}`) — crisp, correct color, no tint-flattening.
+nav companion (`PixelFace` in `nav-pixel.tsx`), Circle card (`size=72`), Around
+faces (`size=36`, `animated={false}`) — crisp, correct color, no tint-flattening.
+The You-tab poster is identity + QR only (no pixel).

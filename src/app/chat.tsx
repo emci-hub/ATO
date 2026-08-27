@@ -20,6 +20,7 @@ import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
+import { controlBorderColor } from '@/lib/theme/chrome';
 import {
   deleteMessageForMe,
   fetchThreadMessages,
@@ -471,7 +472,7 @@ export default function ChatScreen() {
                       disabled={teachBusy}
                       style={({ pressed }) => [
                         styles.secondaryButton,
-                        { borderColor: theme.backgroundSelected },
+                        { borderColor: controlBorderColor(theme) },
                         pressed && styles.pressed,
                       ]}>
                       <ThemedText type="smallBold" themeColor="textSecondary">

@@ -25,6 +25,8 @@ export default function AppTabs() {
       key={hasCircle ? 'circle-on' : 'circle-off'}
       backgroundColor={colors.background}
       indicatorColor={colors.backgroundElement}
+      disableTransparentOnScrollEdge
+      blurEffect={colors.scheme === 'dark' ? 'systemMaterialDark' : 'none'}
       labelStyle={{ selected: { color: colors.text } }}>
       <NativeTabs.Trigger name="index">
         <Label>Home</Label>

@@ -32,6 +32,7 @@ import {
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { copyLink, sharePoster } from '@/lib/share';
 import { setCity, setVisible } from '@/lib/me';
+import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import {
   CURRENT_FOCUS_CHIPS,
@@ -132,7 +133,7 @@ export default function YouScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView {...NO_PINCH_ZOOM} contentContainerStyle={styles.scrollContent}>
           <ThemedText type="subtitle" style={styles.title}>You</ThemedText>
 
           {me ? (
@@ -167,7 +168,7 @@ export default function YouScreen() {
                     onPress={handleCopyLink}
                     style={({ pressed }) => [
                       styles.secondaryButton,
-                      { borderColor: theme.backgroundSelected },
+                      { borderColor: controlBorderColor(theme) },
                       pressed && styles.pressed,
                     ]}>
                     <MaterialCommunityIcons name="link-variant" size={18} color={theme.text} />
@@ -178,7 +179,7 @@ export default function YouScreen() {
                     onPress={() => setScanning(true)}
                     style={({ pressed }) => [
                       styles.secondaryButton,
-                      { borderColor: theme.backgroundSelected },
+                      { borderColor: controlBorderColor(theme) },
                       pressed && styles.pressed,
                     ]}>
                     <MaterialCommunityIcons name="qrcode-scan" size={18} color={theme.text} />
@@ -347,7 +348,7 @@ export default function YouScreen() {
             disabled={signingOut}
             style={({ pressed }) => [
               styles.signOutButton,
-              { backgroundColor: theme.backgroundElement, borderColor: theme.backgroundSelected },
+              { backgroundColor: theme.backgroundElement, borderColor: controlBorderColor(theme) },
               pressed && styles.pressed,
               signingOut && styles.disabled,
             ]}>

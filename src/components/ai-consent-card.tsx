@@ -4,6 +4,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { controlBorderColor } from '@/lib/theme/chrome';
 
 export type ConsentContext = 'dawn' | 'talk';
 
@@ -66,7 +67,7 @@ export function AiConsentCard({
           disabled={busy}
           style={({ pressed }) => [
             styles.consentButton,
-            { borderColor: theme.backgroundSelected, borderWidth: 1 },
+            { borderColor: controlBorderColor(theme), borderWidth: 1 },
             pressed && styles.pressed,
             busy && styles.disabled,
           ]}>
