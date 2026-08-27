@@ -1,6 +1,6 @@
 /**
  * Tiny pub/sub for "the user logged a check." Dawn emits after a successful
- * recordCheck; useGrowth subscribes so the header avatar's growth tiers (and
+ * recordCheck; useGrowth subscribes so Home's growth tiers (and
  * any pending milestone celebration) refresh without a manual foreground/
  * navigation event. Deliberately framework-free.
  */

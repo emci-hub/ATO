@@ -464,8 +464,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: Spacing.four,
     paddingBottom: Spacing.two,
-    // Reserve room for the persistent header avatar at top-right.
-    paddingRight: Spacing.five,
   },
   lede: {
     paddingTop: Spacing.half,

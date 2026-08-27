@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 
+import { GrowthMarkers } from '@/components/growth-markers';
 import { PixelFace } from '@/components/pixel-face';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
 import { ThemedPressable } from '@/components/themed-pressable';
@@ -12,7 +13,8 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useMe } from '@/hooks/use-me';
 import { useGrowth } from '@/hooks/use-growth';
-import { accentFromShowUp } from '@/lib/color';
+import { useTodayCard } from '@/hooks/use-today-card';
+import { resolveFacePalette } from '@/lib/color';
 import { checksToHistory, fetchChecks, recordCheck, type Check } from '@/lib/checks';
 import { emitChecksChanged, onChecksChanged } from '@/lib/checks-events';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
@@ -29,13 +31,20 @@ export default function HomeScreen() {
   const userId = session?.user.id;
   const { me } = useMe(userId);
   const { card, reload: reloadCard } = useTodayCard();
-  const { state: growth } = useGrowth();
-  const accent = accentFromShowUp(me?.show_up);
+  const { state: growth, pendingMilestone, markCelebrated } = useGrowth();
   const recipe = normalizeRecipe(me?.recipe);
   const params = useLocalSearchParams<{ focus?: string }>();
   const [checks, setChecks] = useState<Check[]>([]);
   const [busy, setBusy] = useState<'log' | 'skip' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const celebrateRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    if (pendingMilestone != null && celebrateRef.current) {
+      celebrateRef.current();
+      markCelebrated().catch(() => {});
+    }
+  }, [pendingMilestone, markCelebrated]);
 
   const reloadChecks = useCallback(async () => {
     if (!userId) return;
@@ -165,51 +174,51 @@ export default function HomeScreen() {
               )}
             </>
           ) : (
-            <ThemedView type="backgroundElement" style={styles.todayCard}>
-              <ThemedText type="smallBold">No card yet</ThemedText>
-              <ThemedText themeColor="textSecondary">
-                Open Dawn when you&apos;re ready. Nothing is made up in the meantime.
-              </ThemedText>
-            </ThemedView>
+            <Pressable onPress={() => router.push('/dawn')} style={({ pressed }) => pressed && styles.pressed}>
+              <ThemedView type="backgroundElement" style={styles.todayCard}>
+                <ThemedText type="smallBold">No card yet</ThemedText>
+                <ThemedText themeColor="textSecondary">
+                  Open Dawn when you&apos;re ready. Nothing is made up in the meantime.
+                </ThemedText>
+              </ThemedView>
+            </Pressable>
           )}
 
           <ThemedView type="backgroundElement" style={styles.faceCard}>
-            <ThemedText type="code" themeColor="textSecondary">
-              face · {recipe.source} · {recipe.parts.body} · {recipe.parts.face}
-            </ThemedText>
-            {/* Static display face — the header avatar is the app's one
-                always-mounted animated/gesture instance, so this stays still. */}
-            <PixelFace recipe={recipe} size={88} showUp={me?.show_up} animated={false} />
+            <View style={styles.faceSlot}>
+              <GrowthMarkers
+                presence={growth.presence}
+                depth={growth.depth}
+                color={resolveFacePalette(recipe.palette, me?.show_up)}
+              />
+              <PixelFace
+                recipe={recipe}
+                size={88}
+                showUp={me?.show_up}
+                animated
+                celebrateRef={celebrateRef}
+              />
+            </View>
             <QuestGrowthBars presence={growth.presence} depth={growth.depth} />
           </ThemedView>
 
-          <ThemedView type="backgroundElement" style={styles.boxCard}>
-            <ThemedText type="code" themeColor="textSecondary" style={styles.boxKicker}>
-              open box
-            </ThemedText>
-            <Pressable
-              onPress={() => router.push('/dawn')}
-              style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
-              <View style={styles.boxRowText}>
-                <ThemedText type="smallBold">Dawn</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  Today&apos;s read + do
-                </ThemedText>
-              </View>
-              <ThemedText themeColor="textSecondary">›</ThemedText>
-            </Pressable>
-            <Pressable
-              onPress={() => router.push('/week')}
-              style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
-              <View style={styles.boxRowText}>
-                <ThemedText type="smallBold">This week</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  Recap + you showed up
-                </ThemedText>
-              </View>
-              <ThemedText themeColor="textSecondary">›</ThemedText>
-            </Pressable>
-            {__DEV__ ? (
+          <Pressable
+            onPress={() => router.push('/week')}
+            style={({ pressed }) => [styles.weekRow, pressed && styles.pressed]}>
+            <View>
+              <ThemedText type="smallBold">This week</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                Recap + you showed up
+              </ThemedText>
+            </View>
+            <ThemedText themeColor="textSecondary">›</ThemedText>
+          </Pressable>
+
+          {__DEV__ ? (
+            <ThemedView type="backgroundElement" style={styles.boxCard}>
+              <ThemedText type="code" themeColor="textSecondary" style={styles.boxKicker}>
+                dev
+              </ThemedText>
               <Pressable
                 onPress={() => router.push('/voice-lab')}
                 style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
@@ -221,8 +230,6 @@ export default function HomeScreen() {
                 </View>
                 <ThemedText themeColor="textSecondary">›</ThemedText>
               </Pressable>
-            ) : null}
-            {__DEV__ ? (
               <Pressable
                 onPress={() => router.push('/crisis-lab')}
                 style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
@@ -234,8 +241,6 @@ export default function HomeScreen() {
                 </View>
                 <ThemedText themeColor="textSecondary">›</ThemedText>
               </Pressable>
-            ) : null}
-            {__DEV__ ? (
               <Pressable
                 onPress={() => router.push('/talk-lab')}
                 style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
@@ -247,8 +252,6 @@ export default function HomeScreen() {
                 </View>
                 <ThemedText themeColor="textSecondary">›</ThemedText>
               </Pressable>
-            ) : null}
-            {__DEV__ ? (
               <Pressable
                 onPress={() => router.push('/pixel-lab')}
                 style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
@@ -260,45 +263,8 @@ export default function HomeScreen() {
                 </View>
                 <ThemedText themeColor="textSecondary">›</ThemedText>
               </Pressable>
-            ) : null}
-          </ThemedView>
-
-          <ThemedView type="backgroundElement" style={[styles.poster, { backgroundColor: accent.light }]}>
-            <ThemedText type="code" style={[styles.posterKicker, { color: theme.onAccent }]}>
-              fake poster
-            </ThemedText>
-            <ThemedText style={[styles.posterTitle, { color: theme.onAccent }]}>Something is coming</ThemedText>
-            <ThemedText style={[styles.posterBody, { color: theme.onAccent }]}>
-              This is placeholder poster art. Real artwork lands here later.
-            </ThemedText>
-            <ThemedText type="code" style={[styles.posterMeta, { color: theme.onAccent }]}>
-              fake · aug 2026
-            </ThemedText>
-          </ThemedView>
-
-          <ThemedView type="backgroundElement" style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.avatar, { backgroundColor: theme.backgroundSelected }]}>
-                <ThemedText type="smallBold" themeColor="textSecondary">
-                  FP
-                </ThemedText>
-              </View>
-              <View>
-                <ThemedText type="smallBold">Fake Person</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  @fake
-                </ThemedText>
-              </View>
-            </View>
-            <ThemedText style={styles.cardBody}>
-              This is a fake card with placeholder content. It has no real data behind it.
-            </ThemedText>
-            <View style={[styles.cardMedia, { backgroundColor: theme.backgroundSelected }]}>
-              <ThemedText type="code" themeColor="textSecondary">
-                fake card media
-              </ThemedText>
-            </View>
-          </ThemedView>
+            </ThemedView>
+          ) : null}
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -362,6 +328,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.three,
   },
+  faceSlot: {
+    width: 120,
+    height: 120,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  weekRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.one,
+  },
   boxCard: {
     borderRadius: Spacing.four,
     padding: Spacing.three,
@@ -384,54 +363,5 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
-  },
-  poster: {
-    borderRadius: Spacing.four,
-    padding: Spacing.four,
-    gap: Spacing.two,
-  },
-  posterKicker: {
-    color: 'rgba(255,255,255,0.8)',
-    textTransform: 'uppercase',
-  },
-  posterTitle: {
-    fontSize: 28,
-    lineHeight: 34,
-    fontWeight: 700,
-    color: '#ffffff',
-  },
-  posterBody: {
-    color: 'rgba(255,255,255,0.9)',
-  },
-  posterMeta: {
-    marginTop: Spacing.three,
-    color: 'rgba(255,255,255,0.8)',
-    textTransform: 'uppercase',
-  },
-  card: {
-    borderRadius: Spacing.four,
-    padding: Spacing.three,
-    gap: Spacing.three,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardBody: {
-    fontWeight: 400,
-  },
-  cardMedia: {
-    height: 120,
-    borderRadius: Spacing.three,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

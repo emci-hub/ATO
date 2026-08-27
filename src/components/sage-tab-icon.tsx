@@ -9,15 +9,12 @@ import { normalizeRecipe } from '@/lib/kenney/registry';
 import { resolveFacePalette } from '@/lib/color';
 
 /**
- * Sage tab icon: a small instance of the same pixel character used by the
- * header avatar, real color, with the growth-tier markers (presence glow +
- * depth sparkle) applied so it matches the header avatar's aspirational look.
+ * Sage tab icon: a small instance of the same pixel character, real color,
+ * with growth-tier markers (presence glow + depth sparkle).
  *
- * Rendered STATIC on purpose: the header avatar is the app's one live /
- * gesture-registering face, and at tab-bar size a second animated instance
- * would be visual noise AND would re-register a gesture handler (competing
- * with the header). A static face keeps the character identity + the markers
- * without that.
+ * Rendered STATIC on purpose: Home's full-size face is the app's live /
+ * gesture-registering instance. At tab-bar size a second animated face would
+ * be visual noise and would re-register a competing gesture handler.
  *
  * Native tabs cannot host a React component or untinted image (the native
  * UITabBar template-tints image sources), so this component is used in the web

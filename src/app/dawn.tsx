@@ -125,7 +125,7 @@ export default function DawnScreen() {
         status,
       });
       await reloadChecks();
-      // Notify the growth system (header avatar tiers + milestone check).
+      // Notify the growth system (Home face tiers + milestone check).
       emitChecksChanged();
       // Check marked "did" → thumb gesture. "Skip" deliberately stays silent
       // (hands stay hidden) — skipping isn't celebrated.

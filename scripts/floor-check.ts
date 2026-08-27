@@ -153,6 +153,10 @@ assert.doesNotMatch(dawn, /Sage listens/);
 assert.match(read('src/app/chat.tsx'), /Sage is a coach/);
 ok('Talk, Home, Dawn, consent, crisis, push, widget, and Teach Sage label Sage as a coach');
 
+assert.match(home, /No card yet/);
+assert.doesNotMatch(home, /fake poster|Fake Person|open box|fake card media|fake ·/i);
+ok('Home has an honest empty card state and no Stage 1 fake fixtures');
+
 const sentryLib = read('src/lib/sentry.ts');
 assert.match(sentryLib, /enableNative:\s*Platform\.OS !== 'web'/);
 assert.match(sentryLib, /enableNativeCrashHandling:\s*Platform\.OS !== 'web'/);
