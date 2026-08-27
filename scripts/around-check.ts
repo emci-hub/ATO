@@ -127,12 +127,12 @@ const refreshFn = fs.readFileSync(path.join(root, 'supabase/functions/refresh-ar
 const you = fs.readFileSync(path.join(root, 'src/app/(tabs)/you.tsx'), 'utf8');
 const onboarding = fs.readFileSync(path.join(root, 'src/app/onboarding.tsx'), 'utf8');
 assert.match(aroundScreen, /aroundEmptyCopy/);
-assert.doesNotMatch(aroundScreen, /I'm going|im going|heat map|heatmap/i);
+assert.doesNotMatch(aroundScreen, /heat map|heatmap/i);
 assert.match(refreshFn, /weekend\.json/);
 assert.match(refreshFn, /EDMTRAIN_CLIENT_KEY/);
 assert.match(you, /CityPicker/);
 assert.match(onboarding, /CityPicker/);
-ok('Around UI has no going/heatmap; city is typed at setup; job writes weekend.json');
+ok('Around keeps honest empty + no heatmap; city is typed at setup; job writes weekend.json');
 
 const fnCities = fs.readFileSync(path.join(root, 'supabase/functions/refresh-around/around.ts'), 'utf8');
 assert.match(fnCities, /edmtrainCity: 'Calgary'/);

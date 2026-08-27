@@ -47,6 +47,11 @@ export interface Me {
   milestones_celebrated: Record<string, string>;
   /** Hidden. FK to the ME row that invited this user. Never shown publicly. */
   referred_by: string | null;
+  /**
+   * Visibility for Around faces. Plan name `show`; column is `visible`
+   * because SHOW is reserved. Default true. Colors still count when false.
+   */
+  visible: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -58,7 +63,7 @@ export type MeInsert = Omit<
   | 'recipe'
   | 'facts'
   | 'milestones_celebrated'
-  | 'referred_by'
+    | 'referred_by'
     | 'born_on'
     | 'city'
     | 'evening_wind_down'
@@ -66,6 +71,7 @@ export type MeInsert = Omit<
     | 'recovery_style'
     | 'support_style'
     | 'current_focus'
+    | 'visible'
     | 'created_at'
     | 'updated_at'
 > & {
@@ -90,6 +96,10 @@ export function aiConsentFor(me: Pick<Me, 'ai_consent'>): AiConsent {
   return 'pending';
 }
 
+function withVisible(row: Me): Me {
+  return { ...row, visible: row.visible !== false };
+}
+
 export async function fetchMe(userId: string): Promise<Me | null> {
   const { data, error } = await supabase
     .from('me')
@@ -98,7 +108,7 @@ export async function fetchMe(userId: string): Promise<Me | null> {
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  return data ? withVisible(data as Me) : null;
 }
 
 /**
@@ -136,7 +146,7 @@ export async function createMe(row: MeInsert): Promise<Me> {
   if (error) throw error;
   if (!data) throw new Error('Not authenticated');
   await clearPendingInviteCode();
-  const created = data as Me;
+  const created = withVisible(data as Me);
   const citySlug = profile.city?.trim() ? profile.city.trim() : null;
   if (citySlug) return setCity(created.id, citySlug);
   return created;
@@ -153,7 +163,20 @@ export async function setCity(userId: string, city: string | null): Promise<Me> 
     .single();
 
   if (error) throw error;
-  return data;
+  return withVisible(data as Me);
+}
+
+/** Around face visibility. Colors still count when this is false. */
+export async function setVisible(userId: string, visible: boolean): Promise<Me> {
+  const { data, error } = await supabase
+    .from('me')
+    .update({ visible })
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return withVisible(data as Me);
 }
 
 export function errorMessageForHandle(error: unknown): string {

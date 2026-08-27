@@ -31,7 +31,7 @@ import {
 } from '@/lib/invite';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { copyLink, sharePoster } from '@/lib/share';
-import { setCity } from '@/lib/me';
+import { setCity, setVisible } from '@/lib/me';
 import {
   CURRENT_FOCUS_CHIPS,
   ENERGY_PATTERN_CHIPS,
@@ -255,6 +255,25 @@ export default function YouScreen() {
                   void setCity(me.id, slug).then(() => Promise.all([refresh(), refreshMe()]));
                 }}
               />
+
+              <ThemedView type="backgroundElement" style={styles.detailCard}>
+                <ThemedText type="smallBold" style={styles.inviteHeading}>
+                  Around
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary" style={styles.inviteHint}>
+                  When you mark going, your face can show on that night. Colors still
+                  count either way.
+                </ThemedText>
+                <Pressable
+                  onPress={() => {
+                    void setVisible(me.id, me.visible === false).then(() => Promise.all([refresh(), refreshMe()]));
+                  }}
+                  style={({ pressed }) => [styles.inviteRow, pressed && styles.pressed]}>
+                  <ThemedText type="smallBold">
+                    {me.visible !== false ? 'Face is visible when I go' : 'Face is hidden when I go'}
+                  </ThemedText>
+                </Pressable>
+              </ThemedView>
 
               <CrisisRegionPicker />
 

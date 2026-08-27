@@ -2,8 +2,8 @@
 export const MIN_APP_AGE_YEARS = 16;
 
 /**
- * Wave 2 "going" on an 18+ night. Not enforced in UI yet — the stored
- * `born_on` date is what that gate will recompute from.
+ * Wave 2 "going" on an 18+ night. Enforced in Around + set_going from
+ * `born_on`, never a stored 18+ boolean.
  */
 export const NIGHT_GOING_AGE_YEARS = 18;
 

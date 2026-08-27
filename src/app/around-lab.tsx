@@ -40,6 +40,9 @@ export default function AroundLabScreen() {
           <Pressable onPress={() => setCity('calgary')} style={styles.row}>
             <ThemedText type="smallBold">Calgary</ThemedText>
           </Pressable>
+          <Pressable onPress={() => setCity('fixture')} style={styles.row}>
+            <ThemedText type="smallBold">fixture (seeded test shows)</ThemedText>
+          </Pressable>
           <Pressable onPress={() => setCity('nowhere')} style={styles.row}>
             <ThemedText type="smallBold">nowhere (empty)</ThemedText>
           </Pressable>

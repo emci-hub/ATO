@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 
+import { PixelFace } from '@/components/pixel-face';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -11,9 +12,15 @@ import { aroundCityBySlug, DEFAULT_AROUND_CITY } from '@/constants/around-cities
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { useMe } from '@/hooks/use-me';
+import { NIGHT_GOING_AGE_YEARS, isAtLeastAge } from '@/lib/age';
+import { GOING_UNDER_18_MESSAGE, showRequires18 } from '@/lib/around/ages';
 import { aroundEmptyCopy, fetchWeekendJson } from '@/lib/around/fetch';
+import { fetchNight, setGoing, type NightSnapshot } from '@/lib/around/going';
 import { ticketLabel } from '@/lib/around/tickets';
 import type { AroundLoad, AroundShow, TicketKind } from '@/lib/around/types';
+import { hslForHue } from '@/lib/color';
+import { normalizeRecipe } from '@/lib/kenney/registry';
+import type { Me } from '@/lib/me';
 
 async function openUrl(url: string) {
   try {
@@ -28,6 +35,7 @@ export default function AroundScreen() {
   const { me } = useMe(session?.user.id);
   const city = me?.city ?? DEFAULT_AROUND_CITY.slug;
   const [load, setLoad] = useState<AroundLoad | null>(null);
+  const [nights, setNights] = useState<Record<string, NightSnapshot>>({});
 
   const reload = useCallback(() => {
     if (!city) {
@@ -41,6 +49,32 @@ export default function AroundScreen() {
   useEffect(() => {
     reload();
   }, [reload]);
+
+  useEffect(() => {
+    if (load?.status !== 'ok' || !session?.user.id) {
+      setNights({});
+      return;
+    }
+    let cancelled = false;
+    Promise.all(
+      load.payload.shows.map(async (show) => {
+        try {
+          const night = await fetchNight(show.id);
+          return [show.id, night] as const;
+        } catch {
+          return [show.id, { going: false, colors: [], faces: [] }] as const;
+        }
+      }),
+    ).then((rows) => {
+      if (cancelled) return;
+      const next: Record<string, NightSnapshot> = {};
+      for (const [id, night] of rows) next[id] = night;
+      setNights(next);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [load, session?.user.id]);
 
   const label = aroundCityBySlug(city)?.label ?? city;
 
@@ -73,7 +107,15 @@ export default function AroundScreen() {
           ) : null}
 
           {load?.status === 'ok'
-            ? load.payload.shows.map((show) => <ShowCard key={show.id} show={show} />)
+            ? load.payload.shows.map((show) => (
+                <ShowCard
+                  key={show.id}
+                  show={show}
+                  me={me}
+                  night={nights[show.id]}
+                  onNight={(next) => setNights((prev) => ({ ...prev, [show.id]: next }))}
+                />
+              ))
             : null}
 
           <ThemedText type="small" themeColor="textSecondary" style={styles.attr}>
@@ -86,8 +128,45 @@ export default function AroundScreen() {
   );
 }
 
-function ShowCard({ show }: { show: AroundShow }) {
+function ShowCard({
+  show,
+  me,
+  night,
+  onNight,
+}: {
+  show: AroundShow;
+  me: Me | null | undefined;
+  night: NightSnapshot | undefined;
+  onNight: (next: NightSnapshot) => void;
+}) {
   const theme = useTheme();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const gated = showRequires18(show.ages);
+  const oldEnough = me?.born_on ? isAtLeastAge(me.born_on, NIGHT_GOING_AGE_YEARS) : false;
+  const canGo = !gated || oldEnough;
+  const going = !!night?.going;
+  const colors = night?.colors ?? [];
+  const faces = night?.faces ?? [];
+
+  async function toggleGoing() {
+    if (!me || busy) return;
+    if (!canGo && !going) {
+      setError(GOING_UNDER_18_MESSAGE);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      onNight(await setGoing(show.id, show.ages, !going));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : GOING_UNDER_18_MESSAGE;
+      setError(message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
       <ThemedText type="code" themeColor="textSecondary">
@@ -103,6 +182,59 @@ function ShowCard({ show }: { show: AroundShow }) {
           {show.artists.join(', ')}
         </ThemedText>
       ) : null}
+
+      <Pressable
+        onPress={toggleGoing}
+        disabled={busy || !me || (!canGo && !going)}
+        accessibilityRole="button"
+        accessibilityState={{ selected: going, disabled: !canGo && !going }}
+        style={({ pressed }) => [
+          styles.goingChip,
+          {
+            backgroundColor: going ? theme.backgroundSelected : 'transparent',
+            borderColor: theme.border === 'transparent' ? theme.backgroundSelected : theme.border,
+          },
+          pressed && styles.pressed,
+          (busy || !me) && styles.disabled,
+        ]}>
+        <ThemedText type="smallBold">{going ? "You're going" : "I'm going"}</ThemedText>
+      </Pressable>
+      {error ? (
+        <ThemedText type="smallBold" style={{ color: '#E5484D' }}>
+          {error}
+        </ThemedText>
+      ) : null}
+      {!canGo && !going ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {GOING_UNDER_18_MESSAGE}
+        </ThemedText>
+      ) : null}
+
+      {colors.length > 0 ? (
+        <View style={styles.colorRow} accessibilityLabel="Colors on this night">
+          {colors.map((hue) => (
+            <View
+              key={hue}
+              accessibilityLabel="A color on this night"
+              style={[styles.colorBlob, { backgroundColor: hslForHue(hue) }]}
+            />
+          ))}
+        </View>
+      ) : null}
+
+      {faces.length > 0 ? (
+        <ScrollView horizontal contentContainerStyle={styles.faces} showsHorizontalScrollIndicator={false}>
+          {faces.map((face) => (
+            <View key={face.id} style={styles.face}>
+              <PixelFace recipe={normalizeRecipe(face.recipe)} size={36} showUp={face.show_up} animated={false} />
+              <ThemedText type="code" numberOfLines={1}>
+                @{face.handle}
+              </ThemedText>
+            </View>
+          ))}
+        </ScrollView>
+      ) : null}
+
       <View style={styles.links}>
         {show.links.map((link) => (
           <Pressable
@@ -141,6 +273,32 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     gap: Spacing.two,
   },
+  goingChip: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderRadius: Spacing.five,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+  },
+  colorRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
+  colorBlob: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+  },
+  faces: {
+    gap: Spacing.three,
+    paddingRight: Spacing.two,
+  },
+  face: {
+    width: 72,
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
   links: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -157,5 +315,8 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.8,
+  },
+  disabled: {
+    opacity: 0.6,
   },
 });

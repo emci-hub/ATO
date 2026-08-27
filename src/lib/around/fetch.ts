@@ -1,3 +1,4 @@
+import { FIXTURE_CITY, FIXTURE_WEEKEND } from '@/lib/around/fixture';
 import type { AroundLoad, WeekendJson } from '@/lib/around/types';
 
 const EMPTY_COPY = 'nothing this weekend';
@@ -13,6 +14,10 @@ export function aroundJsonUrl(citySlug: string): string {
 }
 
 export async function fetchWeekendJson(citySlug: string): Promise<AroundLoad> {
+  if (citySlug === FIXTURE_CITY) {
+    if (FIXTURE_WEEKEND.shows.length === 0) return { status: 'empty', city: citySlug };
+    return { status: 'ok', payload: FIXTURE_WEEKEND };
+  }
   const url = aroundJsonUrl(citySlug);
   try {
     const response = await fetch(url, { headers: { Accept: 'application/json' } });

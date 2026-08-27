@@ -15,16 +15,29 @@ function hashString(input: string): number {
 }
 
 /**
+ * Discrete hue 0–359 from `show_up`. Same phrase → same hue. Used for Around
+ * color blobs (≥3 going of that hue) and the poster accent.
+ */
+export function colorHueFromShowUp(showUp: string | null | undefined): number | null {
+  if (!showUp || !showUp.trim()) return null;
+  return hashString(showUp.trim().toLowerCase()) % 360;
+}
+
+export function hslForHue(hue: number, dark = false): string {
+  return dark ? `hsl(${hue}, 70%, 62%)` : `hsl(${hue}, 65%, 50%)`;
+}
+
+/**
  * Derives a stable accent color from the user's "show_up" answer.
  * Same answer always maps to the same hue.
  */
 export function accentFromShowUp(showUp: string | null | undefined): AccentColor {
-  if (!showUp || !showUp.trim()) return DEFAULT_ACCENT;
+  const hue = colorHueFromShowUp(showUp);
+  if (hue == null) return DEFAULT_ACCENT;
 
-  const hue = hashString(showUp.trim().toLowerCase()) % 360;
   return {
-    light: `hsl(${hue}, 65%, 50%)`,
-    dark: `hsl(${hue}, 70%, 62%)`,
+    light: hslForHue(hue, false),
+    dark: hslForHue(hue, true),
   };
 }
 

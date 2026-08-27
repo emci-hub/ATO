@@ -4,7 +4,7 @@
 **Twin:** Drake
 
 ## This week
-Stage 9 first pass shipped — 9 tappable core onboarding questions (one per screen, "N of 9"), five new self-report ME columns, and Day 1 bank cards that insert the person's own `morning_cue` and pick a `first_cards.md` slot from energy-pattern + support-style. Live row `zintake9` confirmed in Supabase. Next Wave 1.5 box: Stage 11 optional fast-entry.
+Wave 2 Stage 2 shipped — "I'm going" + friend colors (≥3 of a hue, no raw counts, 18+ gate, faces honor `me.visible`). Type `fixture` as city for seeded test shows; Calgary stays honest-empty until Edmtrain. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Next Wave 1.5 box: Stage 11 optional fast-entry. Night wall is unblocked for Wave 3 now that going exists.
 
 Stage 8 still has three loose ends only: submit/confirm EAS binary 10 (OTA + real app icon) on a real device, re-check Sentry native symbolication once that's on-device, and wait on Apple's Beta App Review for the Friends TestFlight group. Everything else in Stage 8 is done.
 
@@ -12,7 +12,7 @@ Stage 8 still has three loose ends only: submit/confirm EAS binary 10 (OTA + rea
 
 **Binary 8** (`d40e57a9`) **was submitted and installed** — theme picker, Around, Home fix, and age field verified on-device. Native crash test landed as Sentry event `e7bed112`; stack symbolication is still **unconfirmed** from here (CI token cannot read event frames; no `com.emgens.ato@1.0.0+8` release). Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
 
-**Decision: Wave 1.5 and Wave 3 both start now, in parallel — deliberately not following the plan's original stage order.** Flagged the risk (Wave 3's Night wall is spec'd to depend on Wave 2 Stage 2 "I'm going" existing first, so nobody opens an empty room) and emci chose to proceed anyway. Building Wave 3's mechanics now is fine; just don't surface the Night wall to real testers until Wave 2 Stage 2 is live. Stage 9 first pass is in; next box: Stage 11 (optional fast-entry).
+**Decision: Wave 1.5 and Wave 3 both start now, in parallel — deliberately not following the plan's original stage order.** Wave 2 Stage 2 ("I'm going") is now live, so Night wall is unblocked. Stage 9 first pass is in; next Wave 1.5 box: Stage 11 (optional fast-entry).
 
 ## App
 - **Category:** Hybrid — AI-native (Sage/router) + Social (Circle/Chat) + Health/finance/kids (crisis spec, coaching tone)
@@ -22,7 +22,7 @@ Stage 8 still has three loose ends only: submit/confirm EAS binary 10 (OTA + rea
 - **First 60 seconds:** open app → Home shows yesterday's Check as a pixel face, one line in their talk_style (lift/even/cut), one finishable if-then Do.
 - **Sage/Pixel relationship:** pixel is one character — current-you on Home, aspirational-you (glow/shine) on Sage.
 - **Growth tiers (built, live):** dual-axis — presence (`me.check_count` → tier 0-3) and depth (`me.facts` → tier 0-2).
-- **Floor requirements (done):** Sentry wired and JS-verified (native crash on build 6 expected unsymbolicated; binary 8 native crash event `e7bed112` ingested, symbolication **unconfirmed**; org `emgens`, project `ato-app`), App Store Connect privacy label answers drafted (11 types including Date of Birth; paste-in parked until public launch), `PrivacyInfo.xcprivacy` locked and verified 9/9, Sage labeled "coach" throughout the live UI, AI router rate-limited server-side (20/day, 200/month per user via Postgres `claim_ai_call()`). Self-reported `me.born_on` collected at onboarding; 16+ enforced at signup; 18+ going helper ready for Wave 2.
+- **Floor requirements (done):** Sentry wired and JS-verified (native crash on build 6 expected unsymbolicated; binary 8 native crash event `e7bed112` ingested, symbolication **unconfirmed**; org `emgens`, project `ato-app`), App Store Connect privacy label answers drafted (11 types including Date of Birth; paste-in parked until public launch), `PrivacyInfo.xcprivacy` locked and verified 9/9, Sage labeled "coach" throughout the live UI, AI router rate-limited server-side (20/day, 200/month per user via Postgres `claim_ai_call()`). Self-reported `me.born_on` collected at onboarding; 16+ enforced at signup; 18+ going enforced in Around + `set_going`.
 
 ## Roster
 - Assistant (Drake) — active

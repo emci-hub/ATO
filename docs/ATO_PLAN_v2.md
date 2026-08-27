@@ -116,7 +116,7 @@ Write those two copy files first. 3 styles × 3 valences. 3 mornings × 3 styles
 | Invite | signup attempt + code | account created (or rejected) + code consumed |
 | Intake | onboarding taps + optional fast-entry | trait backbone fields on ME (see Understanding spec) |
 
-**ME fields:** name, handle, timezone, `city` (typed slug for Around, never GPS; Wave 2 refreshes Calgary), `born_on` (self-reported date of birth; age computed, never stored as a number/boolean), `this_week`, `morning_cue`, `show_up`, `knocks_you_off`, `talk_style`, `evening_wind_down`, `energy_pattern`, `recovery_style`, `support_style`, `current_focus` (last five: self-report chips from Stage 9; nullable on pre-intake rows; energy/recovery/support/focus never shown on the public poster), color, `recipe`, theme_id, facts they've told Sage, all-time Checks, `check_count`, last_7_card_ids, `show` (visibility toggle), `allow_search`, `host` (admin-flipped), `referred_by` (hidden, nullable).
+**ME fields:** name, handle, timezone, `city` (typed slug for Around, never GPS; Wave 2 refreshes Calgary), `born_on` (self-reported date of birth; age computed, never stored as a number/boolean), `this_week`, `morning_cue`, `show_up`, `knocks_you_off`, `talk_style`, `evening_wind_down`, `energy_pattern`, `recovery_style`, `support_style`, `current_focus` (last five: self-report chips from Stage 9; nullable on pre-intake rows; energy/recovery/support/focus never shown on the public poster), color, `recipe`, theme_id, facts they've told Sage, all-time Checks, `check_count`, last_7_card_ids, `show` (visibility toggle; column is `me.visible` because SHOW is reserved), `allow_search`, `host` (admin-flipped), `referred_by` (hidden, nullable).
 
 **ME never stores:** guessed vibes, raw chat logs, raw HealthKit data, a model's freeform narrative about the user.
 
@@ -338,7 +338,7 @@ You + friends, one real week, real devices. Home stayed new day to day. Dos were
 
 ## Wave 1.5 — Understanding & Delight (Stages 9-14)
 
-Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Next Wave 1.5 box is Stage 11 (optional fast-entry). Full spec detail lives in "Understanding spec" above; this section is sequencing only.
+Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Wave 2 Stage 2 ("I'm going") is in. Next Wave 1.5 box is Stage 11 (optional fast-entry). Full spec detail lives in "Understanding spec" above; this section is sequencing only.
 
 ### 9 Intake core
 **Open box: intake, me.**
@@ -408,7 +408,8 @@ TestFlight ≠ public. TestFlight already gates installs via Apple's own tester 
 - "I'm going" is opt-in. Faces show only if they marked going and visibility allows it.
 - Colors on a show: shown once ≥3 people of that color are going; hidden below that. No raw counts displayed. Heat map = venue blobs, not pins.
 - Phone fetches a static `/around/{city}/weekend.json` (Supabase Storage public object). A backend job (`refresh-around` Edge Function, twice daily) pulls Edmtrain and writes that file — the phone never calls Edmtrain. Adding Edmonton later = new JSON file, same code — don't hardcode Calgary logic.
-- **Stage 1 (data layer):** city typed at onboarding/Settings, weekend JSON, Around tab list, honest empty. **Not in Stage 1:** "I'm going," friend-color display, heat map — those wait until this data layer works. Plumbing is in (`me.city`, `refresh-around`, public `around/{city}/weekend.json`). The first live Storage write waits on an Edmtrain client API key.
+- **Stage 1 (data layer):** city typed at onboarding/Settings, weekend JSON, Around tab list, honest empty. Plumbing is in (`me.city`, `refresh-around`, public `around/{city}/weekend.json`). The first live Storage write waits on an Edmtrain client API key. Heat map stays venue blobs, not pins — not opened in Stage 2.
+- **Stage 2 (I'm going + colors):** in. Opt-in `going` via `set_going`. Colors at ≥3 of a `show_up` hue; no raw counts. Faces when going + `me.visible` + not blocked. 18+ nights call `is_at_least_age(born_on, 18)`. Seeded tests use typed city `fixture` (not written to Calgary's JSON).
 - 0 shows that weekend → honest empty state, never a fabricated map.
 - 18+ enforcement here specifically: `is_at_least_age(me.born_on, 18)` — don't let a user who is 16/17 today show as "going" on an 18+ night. The date is already on ME; this wave only has to call the helper.
 
@@ -418,7 +419,7 @@ Do not open plugs, hosts, or walls in this wave. City has to work while honestly
 
 ---
 
-## Wave 3 — plug (building in parallel with Wave 1.5; do not surface Night wall to testers until Wave 2 Stage 2 is live)
+## Wave 3 — plug (building in parallel with Wave 1.5; Night wall unblocked — Wave 2 Stage 2 going is live)
 
 **Paid tier.** Unlocks after 7 Checks: weekly Read, 30-day trail, more Talk. Never paywall Home, More, Check, crisis response, or the widget.
 
@@ -430,7 +431,7 @@ Affiliate disclosure: say you may earn a bit, generically, until a specific bran
 
 **Hosts.** You flip `host` on their ME row manually. Badge shows on their poster and Circle face. One editable note per poster (visible in Circle or on the public `/@handle` page). It overwrites, it's not a feed.
 
-**Night wall.** Only exists if that specific show has people marked going — don't render an empty wall button for a night nobody's going to. One thread per night. Writers = people going + hosts. Live from 24h before the show to 24h after, then **locks** (read-only). History stays. "Lost & found" becomes a pinned chip for +7 days, then goes read-only too. Sort by newest. No citywide wall — every wall is scoped to one specific night. **Build the mechanics now if sequenced that way; do not advertise or surface the wall to real testers until Wave 2 Stage 2 ("I'm going") is live.**
+**Night wall.** Only exists if that specific show has people marked going — don't render an empty wall button for a night nobody's going to. One thread per night. Writers = people going + hosts. Live from 24h before the show to 24h after, then **locks** (read-only). History stays. "Lost & found" becomes a pinned chip for +7 days, then goes read-only too. Sort by newest. No citywide wall — every wall is scoped to one specific night. Wave 2 Stage 2 going is live, so the wall may surface with this wave.
 
 ---
 
