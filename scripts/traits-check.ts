@@ -25,6 +25,7 @@ import { filterCard } from '../src/lib/voice/filters';
 import {
   containsFrameworkTerm,
   FACT_FRAMEWORK_MESSAGE,
+  matchingFrameworkTerms,
   sanitizeFacts,
 } from '../src/lib/voice/framework-fence';
 import { resolveNudge } from '../src/lib/voice/nudge';
@@ -217,6 +218,8 @@ async function main() {
     ),
     null,
   );
+  assert.deepEqual(matchingFrameworkTerms('Your INFJ side is showing.'), ['INFJ']);
+  assert.equal(matchingFrameworkTerms('Day four is even.').length, 0);
   ok('runtime fence drops generated Read/Do that names a type');
 
   const echoProvider: VoiceProvider = {

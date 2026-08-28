@@ -94,6 +94,7 @@
     "check:quota": "tsx ./scripts/quota-check.ts",
     "check:ui-bundle": "tsx ./scripts/ui-bundle-check.ts",
     "check:sage-load": "tsx ./scripts/sage-load-check.ts",
+    "check:dev-lab": "tsx ./scripts/dev-lab-check.ts",
     "probe:apple-endpoint": "tsx ./scripts/apple-endpoint-probe.ts"
   },
   "private": true

@@ -306,6 +306,17 @@ export default function HomeScreen() {
                 dev
               </ThemedText>
               <Pressable
+                onPress={() => router.push('/dev-lab')}
+                style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
+                <View style={styles.boxRowText}>
+                  <ThemedText type="smallBold">Dev Tools Hub</ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Dev: cards, traits, quota, fence
+                  </ThemedText>
+                </View>
+                <ThemedText themeColor="textSecondary">›</ThemedText>
+              </Pressable>
+              <Pressable
                 onPress={() => router.push('/voice-lab')}
                 style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
                 <View style={styles.boxRowText}>

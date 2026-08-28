@@ -88,6 +88,7 @@ function RootNavigator() {
               <Stack.Screen name="pixel-lab" />
               <Stack.Screen name="crisis-lab" />
               <Stack.Screen name="voice-lab" />
+              <Stack.Screen name="dev-lab" />
             </Stack.Protected>
           </Stack>
         </>

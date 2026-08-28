@@ -67,6 +67,23 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/** Banned phrases / words / type codes that hit `text`. Order is list order. */
+export function matchingFrameworkTerms(text: string | null | undefined): string[] {
+  if (!text) return [];
+  const hits: string[] = [];
+  const lower = text.toLowerCase();
+  for (const phrase of PHRASES) {
+    if (lower.includes(phrase)) hits.push(phrase);
+  }
+  for (const word of WORDS) {
+    if (new RegExp(`\\b${word}\\b`, 'i').test(text)) hits.push(word);
+  }
+  for (const code of TYPE_CODES) {
+    if (new RegExp(`\\b${code}\\b`, 'i').test(text)) hits.push(code);
+  }
+  return hits;
+}
+
 /** True when generated copy or a stored fact names a framework / type / diagnostic category. */
 export function containsFrameworkTerm(text: string | null | undefined): boolean {
   if (!text) return false;
