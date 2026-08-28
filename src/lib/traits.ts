@@ -248,19 +248,24 @@ export function traitsFromDisagree(id: DisagreeId): Partial<Record<TraitAxis, nu
 }
 
 /**
- * Source-aware merge. Direct (slider / tap-form / Settings / confirm) is
- * sticky: a later inferred write (grid / situation / game) cannot overwrite
- * that axis. Among the same rank, last-write-wins. Incoming null/undefined
- * means "this door did not write that axis." A rejected inferred write does
- * not bump last_touched.
+ * Source-aware merge for numeric writes. Direct (slider / tap-form /
+ * Settings) is sticky: a later inferred write (grid / situation / game)
+ * cannot overwrite that axis. Among the same rank, last-write-wins.
+ * Incoming null/undefined means "this door did not write that axis." A
+ * rejected inferred write does not bump last_touched.
+ *
+ * Confirm-upgrade is not a numeric write — use `confirmTraitSource`.
  */
 export function mergeTraitWrite(
   current: TraitState,
   incoming: Partial<Record<TraitAxis, number | null>>,
-  source: TraitSource,
+  source: Exclude<TraitSource, 'self_confirm'>,
   allowed: readonly TraitAxis[],
   now: string = new Date().toISOString(),
 ): TraitState {
+  if ((source as TraitSource) === 'self_confirm') {
+    throw new Error('confirmTraitSource upgrades a source token; mergeTraitWrite cannot write a confirm');
+  }
   const values = { ...current.values };
   const sources = { ...current.sources };
   const touched = { ...current.touched };
@@ -270,6 +275,27 @@ export function mergeTraitWrite(
     if (isDirectTraitSource(current.sources[axis]) && !isDirectTraitSource(source)) continue;
     values[axis] = clamp01(raw);
     sources[axis] = source;
+    touched[axis] = now;
+  }
+  return { values, sources, touched };
+}
+
+/**
+ * Confirm-upgrade. Promotes listed axes to `self_confirm` and bumps
+ * last_touched. Never accepts a numeric value — the 0–1 number stays
+ * exactly as stored. Null axes are skipped (nothing to confirm).
+ */
+export function confirmTraitSource(
+  current: TraitState,
+  axes: readonly TraitAxis[],
+  now: string = new Date().toISOString(),
+): TraitState {
+  const values = { ...current.values };
+  const sources = { ...current.sources };
+  const touched = { ...current.touched };
+  for (const axis of axes) {
+    if (current.values[axis] == null) continue;
+    sources[axis] = 'self_confirm';
     touched[axis] = now;
   }
   return { values, sources, touched };
@@ -350,7 +376,7 @@ export function writeForOptionalScreen(input: {
   disagreeId: string | null;
 }): {
   incoming: Partial<Record<TraitAxis, number>>;
-  source: TraitSource;
+  source: Exclude<TraitSource, 'self_confirm'>;
   allowed: readonly TraitAxis[];
 } | null {
   if (input.screen === 0) {

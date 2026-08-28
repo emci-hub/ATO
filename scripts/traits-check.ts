@@ -13,6 +13,7 @@ import {
   GRID_AXES,
   SLIDER_AXES,
   TRAIT_AXES,
+  confirmTraitSource,
   emptyTraitState,
   isDirectTraitSource,
   mergeTraitWrite,
@@ -160,6 +161,31 @@ async function main() {
   assert.equal(patched.trait_touched_at.autonomy, undefined);
   assert.equal(patched.autonomy, null);
   ok('inferred can fill a null axis; null axes have no source or last_touched row');
+
+  const confirmed = confirmTraitSource(inferredFill, ['growth_mindset', 'autonomy'], t2);
+  assert.equal(confirmed.values.growth_mindset, 0.7);
+  assert.equal(confirmed.sources.growth_mindset, 'self_confirm');
+  assert.equal(confirmed.touched.growth_mindset, t2);
+  assert.equal(confirmed.values.autonomy, null);
+  assert.equal(confirmed.sources.autonomy, undefined);
+  assert.equal(confirmed.touched.autonomy, undefined);
+  assert.equal(confirmTraitSource.length, 2);
+  ok('confirmTraitSource upgrades source and last_touched; number stays; null axes stay empty');
+
+  assert.throws(
+    () =>
+      mergeTraitWrite(inferredFill, { growth_mindset: 0.1 }, 'self_confirm' as never, TRAIT_AXES),
+    /confirmTraitSource/,
+  );
+  assert.equal(inferredFill.values.growth_mindset, 0.7);
+  assert.equal(inferredFill.sources.growth_mindset, 'self_game');
+  ok('mergeTraitWrite rejects self_confirm so a sneaked number cannot move the axis');
+
+  const sliderThenConfirm = confirmTraitSource(sliderFirst, ['extraversion'], t2);
+  assert.equal(sliderThenConfirm.values.extraversion, 0.25);
+  assert.equal(sliderThenConfirm.sources.extraversion, 'self_confirm');
+  assert.equal(sliderThenConfirm.touched.extraversion, t2);
+  ok('confirm on an already-direct axis still does not change the number');
 
   const extra = read('supabase/migrations/wave15_extra_trait_axes.sql');
   for (const axis of EXTRA_AXES) {
@@ -343,7 +369,13 @@ async function main() {
   const addFact = read('src/lib/me.ts');
   assert.match(addFact, /containsFrameworkTerm/);
   assert.match(addFact, /FACT_FRAMEWORK_MESSAGE/);
+  assert.match(addFact, /export async function confirmTraits\(userId: string, axes: readonly TraitAxis\[\]\)/);
+  assert.doesNotMatch(
+    addFact.slice(addFact.indexOf('export async function confirmTraits'), addFact.indexOf('export function errorMessageForHandle')),
+    /incoming|number/,
+  );
   ok('addFact rejects a leaked phrase before it is persisted');
+  ok('confirmTraits persists source+timestamp only — no numeric incoming');
 
   const talkSrc = read('src/lib/voice/talk.ts');
   assert.match(talkSrc, /containsFrameworkTerm/);

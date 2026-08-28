@@ -41,7 +41,7 @@
 
 **Talk output fence is in.** Gemini Talk replies run `containsFrameworkTerm` before they are shown — same check as Read/Do/Nudge and Teach-Sage facts. A hit retries generate once on the same `claim_ai_call`; a second hit is honest-empty / try-again (`kind: 'empty'`), never the blocked line. Banned phrases now include growth/fixed mindset, locus of control, self-efficacy, and self-determination. `autonomy` / `competence` / `relatedness` are not banned as standalone words.
 
-**Fifteen axes + source rank + last_touched are in.** Direct write cannot be overwritten by a later inferred write on the same axis. Confirm-upgrade and Settings labels exist so later boxes can write them; those UIs are not built. Talk output fence already shipped.
+**Fifteen axes + source rank + last_touched are in (live on Postgres).** Direct write cannot be overwritten by a later inferred write on the same axis. Confirm-upgrade is a dedicated path (`confirmTraitSource` / `confirmTraits`) that only flips the source token and `last_touched` — it never accepts a new number; `mergeTraitWrite` rejects `self_confirm`. Does-Sage-know-you UI and Settings re-tap are not built. Talk output fence already shipped.
 
 **Decided Aug 28, 2026 (plan, not built — later boxes, not Stage 12):** Library expansion; Explore as a Home inner tab; intake three-path for extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with locks already closed. **Grok review locks are in ATO_PLAN_v2.md** (Explore 2–3 requires a recent signal + no three-agency combo + fence + 1 regen/day; Does-Sage-know-you confirm never moves the number; completeness is 9-complete vs 15-depth, not one % of a person; Talk fence retry is not a second quota charge; banned phrases for the new six, not autonomy/competence/relatedness as words; soft-ask budget of one). ATO_PLAN_v2.md is a working reference, not a locked spec — these are recorded there as current design.
 
@@ -71,7 +71,7 @@ These are real, but they are not TestFlight work and they are not next. Leave th
 - Fantasy UI Borders pack (Kenney) — UI chrome/panels/buttons
 - Monster Builder Pack — parked, needs eyes/mouth slots added to recipe before usable
 - Revisit onboarding question wording if it still feels off after a fresh look
-- **Decided, later Wave 1.5 boxes (see ATO_PLAN_v2 Understanding spec):** three-path extra-axis intake; Library; Explore + phrasing-only feedback; Does-Sage-know-you + 3-month Settings prompt; completeness indicator (9 complete / 15 depth); Dawn Reload. Six extra axes, source rank, `last_touched`, and Talk output fence shipped. Locks from the Aug 28 Grok review are in that spec (do not reopen in a later box).
+- **Decided, later Wave 1.5 boxes (see ATO_PLAN_v2 Understanding spec):** three-path extra-axis intake; Library; Explore + phrasing-only feedback; Does-Sage-know-you + 3-month Settings prompt; completeness indicator (9 complete / 15 depth); Dawn Reload. Six extra axes, source rank, `last_touched`, confirm-upgrade lock, and Talk output fence shipped. Locks from the Aug 28 Grok review are in that spec (do not reopen in a later box).
 - Crisis: relational-safety/abuse category, own resource number, parked separately
 - **AI capacity hardening** — close the client-embedded-key bypass before public launch (server-side proxy or equivalent)
 - Slack — parked as future ops tooling, bring up again if/when the app scales

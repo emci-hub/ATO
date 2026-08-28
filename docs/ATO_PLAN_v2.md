@@ -194,7 +194,7 @@ Minimal, not a dashboard:
 All nullable, all self-report / translate-and-discard. Raw label never stored. One canonical 0–1 scale. Per-axis `trait_sources`. Never on poster, `peer_profile`, `public_profile`, or `night_snapshot`.
 
 **Source rank (shipped):**
-- **Direct** (sticky — inferred cannot overwrite): slider (`self_slider`), tap-form (`self_tap`), Settings edit (`self_settings`), confirm-upgrade (`self_confirm`). Confirm upgrades source to direct but does **not** change the 0–1 number (Does-Sage-know-you box, not built).
+- **Direct** (sticky — inferred cannot overwrite): slider (`self_slider`), tap-form (`self_tap`), Settings edit (`self_settings`), confirm-upgrade (`self_confirm`). Confirm is `confirmTraitSource`: source token + `last_touched` only, never a new 0–1 number. `mergeTraitWrite` cannot take `self_confirm`. Does-Sage-know-you UI is not built.
 - **Inferred**: 16-grid (`self_grid`), situation tap (`self_situation`), game/swipe (`self_game`). Last-write among inferred is fine.
 - **Skip / null**: no source row, no `last_touched` key.
 
@@ -291,7 +291,7 @@ Never empty of extra-axis data: if only the 9 core onboarding fields exist, Expl
 Sage surfaces a guess about the user derived from an existing axis; the user confirms or corrects. This is the primary way traits stay adjustable starting points rather than frozen after onboarding. **Never inside Talk replies** — Talk answers the typed line first.
 
 Locks:
-- **Confirm never changes the 0–1 number.** Correct and Settings edit do, same self-report / write rules as today.
+- **Confirm never changes the 0–1 number.** Enforced by `confirmTraitSource` (no numeric argument). Correct and Settings edit do, same self-report / write rules as today.
 - Confidence, if tracked, stays **internal**: never shown, never allowed to make Sage's language more certain. The root line stays "maybes, not facts" at every confidence.
 - Axes **rotate**. Do not prefer high-confidence ones. Confirm does not make a value stickier against a later correct or Settings edit.
 - After **two confirms with no correction** on the same axis, the next surface is an edit-shaped "still feel right?" — not another yes/no.
@@ -344,7 +344,7 @@ The trait backbone shapes *tone* (who Sage is talking to). The actual coaching q
 - Same extra-care review discipline that applies to the Crisis spec applies here before shipping — this touches real psychological categories, not just cosmetic personalization.
 - "MBTI" branding avoided in UI copy (trademarked by the Myers-Briggs Company) — use generic phrasing like "your type" or "16 personality types," same approach 16Personalities uses.
 
-**Where this fits:** Stages 9 and 11 shipped the first layer. Talk output fence shipped. Fifteen axes, direct-vs-inferred `trait_sources`, and `last_touched` shipped. Remaining work is several later boxes (Library, Explore, feedback, Does-Sage-know-you, completeness, three-path extra-axis intake, Reload) — not one box, and not Stage 12. Locks from the Aug 28 Grok review live in the sections above.
+**Where this fits:** Stages 9 and 11 shipped the first layer. Talk output fence shipped. Fifteen axes, direct-vs-inferred `trait_sources`, `last_touched`, and confirm-upgrade lock shipped. Remaining work is several later boxes (Library, Explore, feedback, Does-Sage-know-you, completeness, three-path extra-axis intake, Reload) — not one box, and not Stage 12. Locks from the Aug 28 Grok review live in the sections above.
 
 ### Delight & engagement mechanics (red-teamed this session)
 
@@ -471,7 +471,7 @@ Wire new answers into check_count < 3 bank-card selection — real morning_cue p
 **Open box: intake.**
 Skippable 16-grid / slider / close-pattern / disagreement layer, up to 4 extra questions, fully optional. Writes the first 9 nullable 0–1 ME axes (not the 9 chips). No raw diagnostic labels stored. Runtime fence on Read/Do/Nudge + Teach-Sage facts. Three-path intake UI for the extra six axes is a later box (Understanding spec).
 **Done (Aug 27, 2026):** Skip after question 9 goes to Home with `complete_signup` already succeeded; optional is a separate `extra N of 4` phase; slider-sticky merge (a later type tap cannot overwrite a slider axis); untouched sliders stay null; `peer_profile` / poster / `night_snapshot` unchanged; generated cards that name a framework are dropped.
-**Done (Aug 28, 2026):** all 15 axes exist on ME with 0–1 CHECKs; `trait_sources` is direct vs inferred across those axes (`self_tap` / `self_confirm` / `self_settings` / `self_game` labels exist; three-path UI not built); `me.trait_touched_at` bumps on a successful write. A rejected inferred write does not bump it.
+**Done (Aug 28, 2026):** all 15 axes exist on live ME with 0–1 CHECKs; `trait_sources` is direct vs inferred across those axes (`self_tap` / `self_confirm` / `self_settings` / `self_game` labels exist; three-path UI not built); `me.trait_touched_at` bumps on a successful write. A rejected inferred write does not bump it. Confirm-upgrade is `confirmTraitSource` / `confirmTraits` (source + timestamp only; never a new number).
 
 ### 12 Sage's coaching content
 **Open box: talk, router.**

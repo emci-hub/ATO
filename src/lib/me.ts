@@ -10,6 +10,7 @@ import { clearPendingInviteCode, errorMessageForInvite } from '@/lib/invite';
 import { supabase } from '@/lib/supabase';
 import {
   mergeTraitWrite,
+  confirmTraitSource,
   traitPatch,
   traitStateFromRow,
   allowedAxesForSource,
@@ -263,18 +264,39 @@ export { FACT_FRAMEWORK_MESSAGE };
 /**
  * Optional-phase write. Source-aware merge: a later inferred write never
  * overwrites an axis already set by a direct source. Only `allowed` axes
- * are written. last_touched bumps on a successful write.
+ * are written. last_touched bumps on a successful write. Confirm-upgrade
+ * is `confirmTraits` — this path cannot take `self_confirm`.
  */
 export async function updateTraits(
   userId: string,
   incoming: Partial<Record<TraitAxis, number | null>>,
-  source: TraitSource,
+  source: Exclude<TraitSource, 'self_confirm'>,
   allowed: readonly TraitAxis[] = allowedAxesForSource(source),
 ): Promise<Me> {
   const current = await fetchMe(userId);
   if (!current) throw new Error('Not authenticated');
   const merged = mergeTraitWrite(traitStateFromRow(current), incoming, source, allowed);
   const patch = traitPatch(merged);
+  const { data, error } = await supabase
+    .from('me')
+    .update(patch)
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return withVisible(data as Me);
+}
+
+/**
+ * Confirm-upgrade persist. Source becomes `self_confirm` and last_touched
+ * bumps. The stored 0–1 number is never in this signature and never changes.
+ */
+export async function confirmTraits(userId: string, axes: readonly TraitAxis[]): Promise<Me> {
+  const current = await fetchMe(userId);
+  if (!current) throw new Error('Not authenticated');
+  const confirmed = confirmTraitSource(traitStateFromRow(current), axes);
+  const patch = traitPatch(confirmed);
   const { data, error } = await supabase
     .from('me')
     .update(patch)
