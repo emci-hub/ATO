@@ -95,13 +95,13 @@ export function findNudgeSignal(input: {
 function knockLine(chip: string): string {
   switch (chip) {
     case 'sleep':
-      return "Sleep is what you said knocks you off, and it showed up in this week's Checks. Today's Do stays small so tomorrow is still reachable.";
+      return "Sleep is what you said knocks you off, and it showed up in this week's Checks. Today's step stays small so bedtime is still reachable.";
     case 'workload':
-      return "Workload showed up in this week's Checks — the thing you already named. Today's Do is one small piece, not the whole pile.";
+      return "Workload showed up in this week's Checks — the thing you already named. Today's Do is one next piece, not the whole list.";
     case 'people/conflict':
-      return "People / conflict showed up in this week's Checks. Today's Do is a small next step, not a speech about anyone.";
+      return "People / conflict showed up in this week's Checks. Name the one moment that happened, not a global verdict on anyone.";
     case 'health':
-      return "Health is what you said knocks you off, and it showed up recently. Today's Do stays reachable — no heroics.";
+      return "Health is what you said knocks you off, and it showed up recently. One small repeat attached to something you already do — no heroics.";
     case 'money':
       return "Money is what you said knocks you off, and it showed up in this week's Checks. Today's Do is one concrete step, not the whole problem.";
     default:

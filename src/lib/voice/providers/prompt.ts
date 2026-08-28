@@ -1,5 +1,6 @@
 import { traitPromptLines } from '@/lib/traits';
 
+import { libraryGroundingBlock, selectLibraryEntries } from '../library';
 import { VOICE_REFERENCE } from '../voice-reference';
 import type { Tone, VoiceCard, VoiceMe } from '../types';
 import { TALK_STYLE_GUIDE, type GenerateInput, type TalkGenerateInput } from './types';
@@ -99,6 +100,7 @@ ${streakSummary(input.history)}
 
 AVAILABLE SIGNALS — pick ONE primary angle today. Do not default to the same knock or the same streak/baseline story two days in a row.
 ${signalPool(me)}
+${libraryGroundingBlock(selectLibraryEntries(me, { day, surface: 'card' }))}
 
 ALREADY SHOWN (do not reuse wording OR the same topic angle):
 ${alreadyShown(input.history)}
@@ -173,6 +175,7 @@ ${intakeContext(me)}- Today is day ${day}.
 ${streakSummary(history)}
 
 ${cardBlock}
+${libraryGroundingBlock(selectLibraryEntries(me, { day, surface: 'talk', message }))}
 ${threadTurns(input.recentTurns)}${
     input.retryHint
       ? `PREVIOUS DRAFT was dropped because it named a type or label. Write a different angle. Describe how they tend to move — never a type, score, or diagnosis.\n`
@@ -181,7 +184,7 @@ ${threadTurns(input.recentTurns)}${
 THEY JUST SAID:
 "${message}"
 
-Answer that first and directly. If they asked a question, give a straight answer to that question. Do not pivot to streaks, sleep, or the Home Read unless they brought those up. A short helpful nudge is fine after the answer. Never a diagnosis, never judgment of the person, never a type label. No more than 4 sentences. Plain text only, no quotes, no prefix.`;
+Answer that first and directly. If they asked a question, give a straight answer to that question. Do not pivot to streaks, sleep, or the Home Read unless they brought those up. Use any framing notes above only when they match what they just said. A short helpful nudge is fine after the answer. Never a diagnosis, never judgment of the person, never a type label. No more than 4 sentences. Plain text only, no quotes, no prefix.`;
 }
 
 export interface ParsedTalkReply {

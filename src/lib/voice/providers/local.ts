@@ -1,4 +1,5 @@
 import { hasCut } from '../filters';
+import { selectLibraryEntries, signalPoolFor, type LibraryEntryId } from '../library';
 import type { TalkStyle, Tone, VoiceCard, VoiceMe } from '../types';
 import type { GenerateInput, TalkGenerateInput, VoiceProvider } from './types';
 
@@ -9,15 +10,7 @@ import type { GenerateInput, TalkGenerateInput, VoiceProvider } from './types';
  */
 
 function angleFor(me: VoiceMe, day: number): string {
-  const knocks = me.knocks_you_off
-    .split(/,\s*/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-  const facts = (me.facts ?? []).map((fact) => fact.replace(/\.$/, '').trim()).filter(Boolean);
-  const extras = [me.show_up, me.current_focus, me.recovery_style].filter(
-    (item): item is string => !!item,
-  );
-  const pool = [...knocks, ...facts, ...extras];
+  const pool = signalPoolFor(me);
   if (pool.length === 0) return 'today';
   return pool[(day - 1) % pool.length];
 }
@@ -108,6 +101,92 @@ const DO_TEMPLATES: Record<TalkStyle, Record<Tone, (day: number, cue: string) =>
   },
 };
 
+function libraryIds(input: { me: VoiceMe; day: number; message?: string; surface: 'card' | 'talk' }): Set<LibraryEntryId> {
+  return new Set(selectLibraryEntries(input.me, input).map((entry) => entry.id));
+}
+
+function libraryShapedCard(input: GenerateInput, effectiveTone: Tone): VoiceCard | null {
+  const ids = libraryIds({ me: input.me, day: input.day, surface: 'card' });
+  const cue = input.me.morning_cue;
+  const d = input.day;
+  const slot = (d - 1) % 3;
+  if (ids.has('workload')) {
+    const reads: Record<Tone, string[]> = {
+      lift: [
+        `Day ${d} shown up. One next piece, not the whole list — that's the hold.`,
+        `Day ${d} in. The pile was around; one next piece, not the whole list.`,
+        `Day ${d}. You did the thing. One next piece, not the whole list.`,
+      ],
+      even: [
+        `Day ${d} is even. The pile is heavy — one next piece, not the whole list.`,
+        `Day ${d}. Ordinary mix. One next piece, not the whole list.`,
+        `Day ${d} logged without a surge. One next piece of the pile, not the whole list.`,
+      ],
+      cut: [
+        `Day ${d} skipped. The pile got in the way. Next time: one next piece, not the whole list.`,
+        `Day ${d} missed. Name the pile as the habit — one next piece, not the whole list.`,
+        `Day ${d}. Skip landed on the pile. One next piece, not the whole list.`,
+      ],
+    };
+    const dos: Record<Tone, string[]> = {
+      lift: [
+        `Right after you ${cue}, do one next piece, not the whole list.`,
+        `After you ${cue}, start one next piece — not the whole list — before you open your phone.`,
+        `Right after you ${cue}, knock out one next piece, not the whole list.`,
+      ],
+      even: [
+        `After you ${cue}, do one next piece, not the whole list.`,
+        `After you ${cue}, pick one next piece — not the whole list — and do it first.`,
+        `After you ${cue}, write down one next piece, not the whole list, and do just that.`,
+      ],
+      cut: [
+        `After you ${cue}, do one next piece, not the whole list — one minute is enough.`,
+        `Right after you ${cue}, one next piece of the pile, not the whole list.`,
+        `Right after you ${cue}, break the pattern: one next piece, not the whole list.`,
+      ],
+    };
+    return { read: reads[effectiveTone][slot]!, do: dos[effectiveTone][slot]! };
+  }
+  if (ids.has('sleep')) {
+    const reads: Record<Tone, string[]> = {
+      lift: [
+        `Day ${d}. You showed up. Today's step stays small so bedtime is still reachable.`,
+        `Day ${d} logged. Quiet hold — bedtime is still reachable.`,
+        `Day ${d}. No speech. Today's step stays small so bedtime is still reachable.`,
+      ],
+      even: [
+        `Day ${d}. Even day. Today's step stays small so bedtime is still reachable.`,
+        `Day ${d} is ordinary. Bedtime is still reachable if today's step stays small.`,
+        `Day ${d}. Mixed and quiet. Today's step stays small so bedtime is still reachable.`,
+      ],
+      cut: [
+        `Day ${d} skipped. Last night ran short. Today's step stays small so bedtime is still reachable.`,
+        `Day ${d} missed. Name last night as the habit — bedtime is still reachable.`,
+        `Day ${d}. The skip tracks to a short night. Today's step stays small so bedtime is still reachable.`,
+      ],
+    };
+    const dos: Record<Tone, string[]> = {
+      lift: [
+        `After you ${cue}, do one small piece, then stop so bedtime is still reachable.`,
+        `Right after you ${cue}, start one small piece — bedtime is still reachable.`,
+        `After you ${cue}, knock out one small piece so bedtime is still reachable.`,
+      ],
+      even: [
+        `After you ${cue}, do one small piece so bedtime is still reachable.`,
+        `After you ${cue}, pick one small piece and stop — bedtime is still reachable.`,
+        `After you ${cue}, write down one small piece so bedtime is still reachable.`,
+      ],
+      cut: [
+        `After you ${cue}, do the smallest version — bedtime is still reachable.`,
+        `Right after you ${cue}, one small piece so bedtime is still reachable.`,
+        `Right after you ${cue}, one minute is enough so bedtime is still reachable.`,
+      ],
+    };
+    return { read: reads[effectiveTone][slot]!, do: dos[effectiveTone][slot]! };
+  }
+  return null;
+}
+
 function localCard(input: GenerateInput): VoiceCard {
   const { me, day, tone, crisisToday, previousHadCut } = input;
   const style = me.talk_style;
@@ -115,8 +194,11 @@ function localCard(input: GenerateInput): VoiceCard {
   const effectiveTone: Tone =
     tone === 'cut' && (crisisToday || previousHadCut) ? 'even' : tone;
 
-  const frames = READ_FRAMES[style][effectiveTone];
   const angle = angleFor(me, day);
+  const grounded = libraryShapedCard(input, effectiveTone);
+  if (grounded) return grounded;
+
+  const frames = READ_FRAMES[style][effectiveTone];
   return {
     read: frames[(day - 1) % frames.length](day, angle),
     do: DO_TEMPLATES[style][effectiveTone](day, me.morning_cue),
@@ -135,11 +217,23 @@ export const localCardHasCut = (input: GenerateInput): boolean =>
   hasCut(localCard(input).read);
 
 function localTalk(input: TalkGenerateInput): { reply: string } {
-  const { me, message } = input;
+  const { me, message, day } = input;
   const style = me.talk_style;
   const asked = message.trim().length > 0;
   const isQuestion = message.includes('?');
   const clip = `${message.slice(0, 60)}${message.length > 60 ? '…' : ''}`;
+  const ids = libraryIds({ me, day, message, surface: 'talk' });
+
+  if (ids.has('workload')) {
+    const frame = 'The pile is heavy — one next piece, not the whole list.';
+    if (asked && isQuestion) {
+      return { reply: `You asked: "${clip}". ${frame}` };
+    }
+    if (asked) {
+      return { reply: `You said: "${clip}". ${frame}` };
+    }
+    return { reply: frame };
+  }
 
   if (asked && isQuestion) {
     switch (style) {

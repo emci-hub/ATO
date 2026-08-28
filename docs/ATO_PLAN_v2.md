@@ -36,7 +36,7 @@ If a field isn't defined here, don't guess its shape — ask.
 | Nudge | Home-only daily card | Third daily category (internal zGlitch). Real recent signal only — skip pattern, a knock that showed up in recent Read/Do, or a safe stored fact. Never from `talk_style` alone. Empty when there is no signal. Inherits cut's safety gates (not after a crisis-flagged day, not two days in a row, cruel-content filter, always with that day's Do); does not inherit cut's skip-streak valence trigger. |
 | Explore | Home inner tab | Periodic Sage observations (weekly, or on a meaningful trait/signal change) — not daily. Cached between regenerations. Existing per-user quota. Cap: **1 regeneration per calendar day**. Combines 2–3 traits only when at least one is tied to a recent signal (fact / knock / Check pattern); never the three agency axes (`growth_mindset`, `locus_of_control`, `self_efficacy`) together. Library-grounded. Same output fence as cards/Talk. Completeness is never an Explore input. Never empty of extra-axis data: the 9 core chips are enough. Separate from Read/Do/Nudge and from the You tab. Decided; later box. |
 | Reload | Home presentation | Cycles up to 3 pre-stored **paired** Read/Do variants for the same day. Cap 3 uses/day. No live model call. Same underlying truth (tone, shrink, signal) — presentation only. Locks in Understanding spec. Bank days 1–3: off. Decided; later box. |
-| Library | static copy | Written-once, reviewed, public-domain/academic grounding. Lives in `src/app/copy/library.md` (same pattern as `first_cards.md`). Domain entries shipped: Sleep, Workload, Conflict, Communication, Health, Money (aligned with `knocks_you_off`). Framework entries shipped: Self-Determination Theory (Deci & Ryan), growth mindset (Dweck), locus of control (Rotter), self-efficacy (Bandura). People may read Library, so framework names are allowed there. Sage must not quote the file — only the **For Sage** paraphrase lines, which stay fence-clean. Never per-user generated. Sage prompt is not wired yet. |
+| Library | static copy | Written-once, reviewed, public-domain/academic grounding. Lives in `src/app/copy/library.md` (same pattern as `first_cards.md`). Domain entries: Sleep, Workload, Conflict, Communication, Health, Money. Framework entries: Self-Determination Theory (Deci & Ryan), growth mindset (Dweck), locus of control (Rotter), self-efficacy (Bandura). People may read Library, so framework names are allowed there. Sage generation (Read/Do/Talk) may use only **For Sage** paraphrase lines, and only when a knock, filled trait, fact, or typed line connects — never teaching/source copy, never a visible "library" section. Output still runs `containsFrameworkTerm`. |
 | `check_count` | integer, derived | Count of all-time Checks. Gates bank-vs-model content and the paywall (7). |
 | `host` | boolean on ME | You flip this manually (admin). Not self-serve in v1. |
 | `referred_by` | uuid, nullable, FK → ME | Which ME row invited this user. Hidden field. See Referral spec. |
@@ -256,11 +256,13 @@ One question per screen, tappable, with a visible progress indicator ("3 of 9").
 
 ### Library
 
-Written once, public-domain/academic sourcing only, reviewed before publish, never per-user generated. Storage: `src/app/copy/library.md` (same written-once markdown pattern as `first_cards.md`). Sage must not quote the file; Sage may only use **For Sage** behavioral paraphrases (no framework names). People may read Library directly, so entry titles may name a framework. Sage-generated copy still must not.
+Written once, public-domain/academic sourcing only, reviewed before publish, never per-user generated. Storage: `src/app/copy/library.md`. Sage generation may use only **For Sage** paraphrase lines, and only when a knock, filled trait, fact, or (Talk) the typed line connects. Teaching/source copy never enters the prompt. No visible "library says" section. Output still runs `containsFrameworkTerm`. People may read Library directly, so entry titles may name a framework. Sage-generated copy still must not.
 
 **Domain entries (shipped; align with `knocks_you_off` chips):** Sleep (CDC/AASM sleep-hygiene basics); Workload (Karasek demand-control, Sonnentag recovery); Conflict (Gottman: specific complaint vs global attack, small bids to cool down); Communication (Rosenberg: what you saw → how it felt → what would help → one ask); Health (Wood/Lally: cue and small repeat); Money (Thaler mental buckets, Kahneman & Tversky losses-loom-larger, present-bias). No licensed instrument items.
 
-**Framework entries (shipped):** Self-Determination Theory (Deci & Ryan); growth mindset (Dweck); locus of control (Rotter); self-efficacy (Bandura). No licensed instrument items. Sage prompt not wired.
+**Framework entries (shipped):** Self-Determination Theory (Deci & Ryan); growth mindset (Dweck); locus of control (Rotter); self-efficacy (Bandura). No licensed instrument items.
+
+**Sage reads the Library (Stage 12, shipped):** `selectLibraryEntries` + `libraryGroundingBlock` on card and Talk prompts; local provider and Nudge use the same paraphrases when the day's signal matches. Existence in the file is not enough.
 
 ### Sage writing rule (root-level, inherited everywhere Sage writes)
 
@@ -332,7 +334,7 @@ The swipe-deck is now intake path (c) for the extra axes, not a Wave 3 token sin
 
 ### Sage's coaching content — separate work from the intake (Stage 12)
 
-The trait backbone shapes *tone* (who Sage is talking to). The actual coaching quality — helping someone navigate a hard conversation with a colleague or family member — needs Sage's system prompt grounded in real, publicly-known communication frameworks: Gottman's conflict/repair research (specific complaints vs. criticism, repair attempts), Nonviolent Communication's four-part structure (observation → feeling → need → request). Not reproducing any copyrighted text — applying the concepts through prompting. This is prompt-engineering work, not a data-acquisition task, and is what actually delivers on "help them understand other people," not the intake alone. **Do not fold the trait-expansion / Explore / Reload / Talk-fence boxes into Stage 12.**
+The trait backbone shapes *tone* (who Sage is talking to). Coaching quality is grounded by pulling relevant Library **For Sage** lines into generation (Gottman complaint-vs-attack and small bids; Rosenberg's saw → felt → would-help → one ask — never the teaching/source copy, never the names in Sage output). **Do not fold Explore / Reload into Stage 12.**
 
 ### Guardrails (**compliance-grounded** — same weight as the Crisis spec; not a style choice)
 
@@ -344,7 +346,7 @@ The trait backbone shapes *tone* (who Sage is talking to). The actual coaching q
 - Same extra-care review discipline that applies to the Crisis spec applies here before shipping — this touches real psychological categories, not just cosmetic personalization.
 - "MBTI" branding avoided in UI copy (trademarked by the Myers-Briggs Company) — use generic phrasing like "your type" or "16 personality types," same approach 16Personalities uses.
 
-**Where this fits:** Stages 9 and 11 shipped the first layer. Talk output fence shipped. Fifteen axes, direct-vs-inferred `trait_sources`, `last_touched`, confirm-upgrade lock, and Library copy (domain + framework) shipped. Remaining work is several later boxes (Explore, feedback, Does-Sage-know-you, completeness, three-path extra-axis intake, Reload) — not one box, and not Stage 12. Locks from the Aug 28 Grok review live in the sections above.
+**Where this fits:** Stages 9, 11, and 12 shipped (intake, axes, Library grounding). Talk output fence shipped. Remaining work is several later boxes (Explore, feedback, Does-Sage-know-you, completeness, three-path extra-axis intake, Reload) — not one box. Locks from the Aug 28 Grok review live in the sections above.
 
 ### Delight & engagement mechanics (red-teamed this session)
 
@@ -453,9 +455,9 @@ You + friends, one real week, real devices. Home stayed new day to day. Dos were
 
 ## Wave 1.5 — Understanding & Delight (Stages 9-14)
 
-Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Wave 2 Stage 2 ("I'm going") is in. Stage 11 optional fast-entry is in (all 15 trait axes; direct vs inferred; `last_touched`). Next Wave 1.5 box is Stage 12 (Sage coaching content). Full spec detail lives in "Understanding spec" above; this section is sequencing only.
+Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Wave 2 Stage 2 ("I'm going") is in. Stage 11 optional fast-entry is in (all 15 trait axes; direct vs inferred; `last_touched`). Stage 12 Library grounding is in. Next numbered Wave 1.5 box is Stage 13 (delight mechanics). Full spec detail lives in "Understanding spec" above; this section is sequencing only.
 
-**Decided Aug 28, 2026 — later boxes, not Stage 12, not one combined box:** Explore (Home inner tab) + phrasing-only feedback; "Does Sage know you?" + 3-month Settings prompt; intake three-path for the extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with the locks already closed. Talk output fence **shipped**. Six extra trait axes + direct-vs-inferred `trait_sources` + `last_touched` **shipped**. Library copy **shipped** (six domain + four framework entries in `src/app/copy/library.md`; Sage not wired). **Locks from the Aug 28 Grok review are in the Understanding spec** (Explore combine + regen cap + fence; Does-Sage-know-you confirm rules; completeness split; direct-vs-inferred `trait_sources`; Talk fence phrases + retry-is-not-quota; soft-ask budget). Do not fold remaining items into Stage 12.
+**Decided Aug 28, 2026 — later boxes, not Stage 12, not one combined box:** Explore (Home inner tab) + phrasing-only feedback; "Does Sage know you?" + 3-month Settings prompt; intake three-path for the extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with the locks already closed. Talk output fence **shipped**. Six extra trait axes + direct-vs-inferred `trait_sources` + `last_touched` **shipped**. Library copy **shipped**. Sage reads Library For Sage lines **shipped** (Stage 12). **Locks from the Aug 28 Grok review are in the Understanding spec** (Explore combine + regen cap + fence; Does-Sage-know-you confirm rules; completeness split; direct-vs-inferred `trait_sources`; Talk fence phrases + retry-is-not-quota; soft-ask budget). Do not fold remaining items into Stage 12.
 
 ### 9 Intake core
 **Open box: intake, me.**
@@ -475,8 +477,8 @@ Skippable 16-grid / slider / close-pattern / disagreement layer, up to 4 extra q
 
 ### 12 Sage's coaching content
 **Open box: talk, router.**
-Ground Sage's system prompt in Gottman conflict/repair research and NVC's four-part structure. Prompt-engineering only, not new data collection. Sequenced after Stage 9 so Sage has real trait data to calibrate against. Talk fence already shipped separately. **Not** the 15-axis expansion, Explore, or Reload.
-**Done:** Sage's Talk responses reflect grounded communication-framework language on a test conflict-scenario prompt, verified by a human read, not just an automated check.
+Ground Sage's system prompt in the Library's fence-clean **For Sage** lines (Gottman / NVC live in Conflict and Communication entries). Prompt-engineering only. Sequenced after Stage 9 so Sage has real trait data to calibrate against. Talk fence already shipped separately. **Not** Explore or Reload.
+**Done (Aug 28, 2026):** a workload-heavy generated card uses "one next piece, not the whole list"; Talk on "the pile at work never ends" does too; a flowers question does not pull Workload. Teaching/source copy never appears in the prompt or the card. `containsFrameworkTerm` still passes on Library-grounded output.
 
 ### 13 Delight mechanics (single-player)
 **Open box: intake, dawn.**

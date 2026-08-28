@@ -617,6 +617,44 @@ assert.match(retryPrompt, /PREVIOUS DRAFT was dropped/);
 assert.doesNotMatch(retryPrompt, /INFJ|attachment style|growth mindset|MBTI/i);
 ok('Talk retry prompt asks for a different angle without listing banned terms');
 
+console.log('Library grounding (For Sage only, when something real connects)');
+const pileMe: VoiceMe = {
+  name: 'Riley',
+  show_up: '',
+  talk_style: 'even',
+  knocks_you_off: 'workload',
+  morning_cue: CUE,
+};
+const pileCard = await routeVoiceCard(
+  { me: pileMe, checkCount: 3, history: [], aiConsent: true },
+  { config: localConfig, ...dev },
+);
+assert.ok(pileCard.card);
+assert.match(pileCard.card.read, /one next piece, not the whole list/);
+assert.match(pileCard.card.do, /one next piece, not the whole list/);
+assert.doesNotMatch(pileCard.card.read, /Karasek|Sonnentag|Maslach/);
+assert.doesNotMatch(pileCard.card.do, /Karasek|Sonnentag|Maslach/);
+assert.equal(containsFrameworkTerm(pileCard.card.read), false);
+assert.equal(containsFrameworkTerm(pileCard.card.do), false);
+ok('workload-heavy generated card uses Library paraphrase language; teaching copy and fence stay clean');
+
+const pileTalkPrompt = buildTalkPrompt({
+  me: pileMe,
+  message: 'The pile at work never ends.',
+  day: 4,
+  history: d1,
+});
+assert.match(pileTalkPrompt, /one next piece, not the whole list/);
+assert.doesNotMatch(pileTalkPrompt, /Karasek|Maslach/);
+const flowerTalkPrompt = buildTalkPrompt({
+  me: pileMe,
+  message: 'Should I get flowers today?',
+  day: 4,
+  history: d1,
+});
+assert.doesNotMatch(flowerTalkPrompt, /FRAMING NOTES/);
+ok('Talk prompt grounds from the typed line, not from a standing knock');
+
 // ---------------------------------------------------------------------------
 console.log('gemini default + no-key fallback');
 const geminiNoKey = buildVoiceConfig({ MODEL_PROVIDER: 'gemini' });
