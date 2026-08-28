@@ -1,8 +1,8 @@
 /**
- * Runtime reject for generated Read / Do / Nudge and for Teach-Sage facts.
- * Separate from scripts/intake-check.ts (that one is UI copy). This one runs
- * in the router and addFact so a model echo cannot reach Circle, widget, push,
- * or later cards via a stored fact.
+ * Runtime reject for generated Read / Do / Nudge / Talk and for Teach-Sage
+ * facts. Separate from scripts/intake-check.ts (that one is UI copy). This one
+ * runs in the router, Talk, and addFact so a model echo cannot reach Circle,
+ * widget, push, Talk, or later cards via a stored fact.
  *
  * Do not put this term list into the model prompt — listing them teaches the
  * tokens. The prompt paraphrases behavior; this fence is the backstop.
@@ -40,6 +40,13 @@ const PHRASES = [
   'fearful avoidant',
   'attachment style',
   'big five',
+  'growth mindset',
+  'fixed mindset',
+  'locus of control',
+  'self-efficacy',
+  'self efficacy',
+  'self-determination',
+  'self determination',
 ];
 
 const WORDS = [

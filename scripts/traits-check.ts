@@ -57,6 +57,11 @@ const BANNED = [
   'attachment style',
   'TKI',
   'Thomas-Kilmann',
+  'growth mindset',
+  'fixed mindset',
+  'locus of control',
+  'self-efficacy',
+  'self-determination',
 ];
 
 function meBase(over: Partial<VoiceMe> = {}): VoiceMe {
@@ -220,6 +225,10 @@ async function main() {
   );
   assert.deepEqual(matchingFrameworkTerms('Your INFJ side is showing.'), ['INFJ']);
   assert.equal(matchingFrameworkTerms('Day four is even.').length, 0);
+  assert.equal(containsFrameworkTerm('growth mindset'), true);
+  assert.equal(containsFrameworkTerm('locus of control'), true);
+  assert.equal(containsFrameworkTerm('self-efficacy'), true);
+  assert.equal(containsFrameworkTerm('They picked their own way through it.'), false);
   ok('runtime fence drops generated Read/Do that names a type');
 
   const echoProvider: VoiceProvider = {
@@ -270,6 +279,12 @@ async function main() {
   assert.match(addFact, /containsFrameworkTerm/);
   assert.match(addFact, /FACT_FRAMEWORK_MESSAGE/);
   ok('addFact rejects a leaked phrase before it is persisted');
+
+  const talkSrc = read('src/lib/voice/talk.ts');
+  assert.match(talkSrc, /containsFrameworkTerm/);
+  assert.match(talkSrc, /TALK_FENCE_ATTEMPTS = 2/);
+  assert.match(talkSrc, /kind: 'empty'/);
+  ok('Talk replies run the same framework fence; retry is one extra generate, then honest empty');
 
   console.log(`\nAll ${passed} trait checks passed.`);
 }

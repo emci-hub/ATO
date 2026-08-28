@@ -211,8 +211,11 @@ const quota = read('src/lib/voice/quota.ts');
 assert.match(quota, /Sage's out of things to say for today, back tomorrow/);
 assert.match(sage, /QUOTA_EMPTY_MESSAGE/);
 assert.match(sage, /kind === 'quota'/);
+assert.match(sage, /kind === 'empty'/);
 assert.match(sage, /claimAiCall/);
 assert.match(read('src/lib/voice/talk.ts'), /const claim = deps\.claimAiCall/);
+assert.match(read('src/lib/voice/talk.ts'), /containsFrameworkTerm/);
+assert.match(read('src/lib/voice/talk.ts'), /TALK_FENCE_ATTEMPTS = 2/);
 assert.match(read('src/lib/voice/quota-server.ts'), /claim_ai_call/);
 assert.match(
   read('supabase/migrations/stage8_ai_quota.sql'),

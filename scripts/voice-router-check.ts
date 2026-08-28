@@ -20,6 +20,7 @@ import { buildVoiceConfig } from '../src/lib/voice/config';
 import { BANK_MARKDOWN } from '../src/lib/voice/content.generated';
 import { detectCrisis, keywordDetect, normalizeCrisis } from '../src/lib/crisis/detect';
 import { filterCard, hasCut, isCruelCut, isTopicalRepeat, isVagueDo } from '../src/lib/voice/filters';
+import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
 import { localProvider } from '../src/lib/voice/providers/local';
 import { buildPrompt, buildTalkPrompt } from '../src/lib/voice/providers/prompt';
 import type { VoiceProvider } from '../src/lib/voice/providers/types';
@@ -537,6 +538,84 @@ assert.ok(!quietReply.reply!.includes('!'), 'quiet tone has no exclamation');
 assert.ok(loudReply.reply!.includes('!'), 'loud tone has an exclamation');
 assert.ok(loudReply.reply!.length > quietReply.reply!.length, 'loud is punchier');
 ok('two talk_style users → visibly different tone on the same prompt');
+
+// ---------------------------------------------------------------------------
+console.log('Talk output fence: banned term → retry once, never shown, one quota claim');
+
+const BANNED_TALK = 'Your INFJ attachment style is showing this week.';
+const CLEAN_TALK = 'Mixed days still count. Keep the next step small.';
+assert.equal(containsFrameworkTerm(BANNED_TALK), true);
+assert.equal(containsFrameworkTerm(CLEAN_TALK), false);
+
+let fenceTalks = 0;
+let fenceClaims = 0;
+const alwaysBanned: VoiceProvider = {
+  id: 'local',
+  label: 'always-banned',
+  generate: async () => ({ read: 'x', do: 'y' }),
+  generateTalk: async () => {
+    fenceTalks += 1;
+    return { reply: BANNED_TALK };
+  },
+};
+const blockedTalk = await routeTalkReply(
+  { me: ME, message: 'Tell me my type.', checkCount: 4, history: d1, aiConsent: true },
+  {
+    config: localConfig,
+    providers: { gemini: alwaysBanned, local: alwaysBanned },
+    claimAiCall: async () => {
+      fenceClaims += 1;
+      return { ok: true as const };
+    },
+    ...dev,
+  },
+);
+assert.equal(blockedTalk.kind, 'empty');
+assert.equal(blockedTalk.reply, undefined);
+assert.equal(fenceTalks, 2, 'fence retries generate once');
+assert.equal(fenceClaims, 1, 'retry is not a second quota claim');
+ok('always-banned Talk draft → honest empty after one retry; banned term never returned; quota claimed once');
+
+fenceTalks = 0;
+fenceClaims = 0;
+const recovers: VoiceProvider = {
+  id: 'local',
+  label: 'recovers',
+  generate: async () => ({ read: 'x', do: 'y' }),
+  generateTalk: async (input) => {
+    fenceTalks += 1;
+    return { reply: input.retryHint ? CLEAN_TALK : BANNED_TALK };
+  },
+};
+const recoveredTalk = await routeTalkReply(
+  { me: ME, message: 'Tell me my type.', checkCount: 4, history: d1, aiConsent: true },
+  {
+    config: localConfig,
+    providers: { gemini: recovers, local: recovers },
+    claimAiCall: async () => {
+      fenceClaims += 1;
+      return { ok: true as const };
+    },
+    ...dev,
+  },
+);
+assert.equal(recoveredTalk.kind, 'reply');
+assert.equal(recoveredTalk.reply, CLEAN_TALK);
+assert.equal(containsFrameworkTerm(recoveredTalk.reply), false);
+assert.equal(fenceTalks, 2);
+assert.equal(fenceClaims, 1);
+ok('banned first draft + clean retry → clean reply shown; quota claimed once');
+
+const retryPrompt = buildTalkPrompt({
+  me: ME,
+  message: 'How is the week going?',
+  day: 5,
+  history: d1,
+  retryHint: true,
+});
+assert.match(retryPrompt, /PREVIOUS DRAFT was dropped/);
+assert.doesNotMatch(retryPrompt, /INFJ|attachment style|growth mindset|MBTI/i);
+ok('Talk retry prompt asks for a different angle without listing banned terms');
 
 // ---------------------------------------------------------------------------
 console.log('gemini default + no-key fallback');

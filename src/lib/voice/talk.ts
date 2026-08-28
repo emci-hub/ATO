@@ -1,12 +1,16 @@
 import { detectCrisis as defaultDetectCrisis, type CrisisDetection } from '@/lib/crisis/detect';
 
 import { VOICE_CONFIG, type VoiceConfig } from './config';
+import { containsFrameworkTerm } from './framework-fence';
 import { buildProviders } from './providers';
 import type { QuotaDecision } from './quota';
 import type { VoiceProvider } from './providers/types';
 import type { CheckHistory, DevTrace, ProviderId, VoiceCard, VoiceMe } from './types';
 
 const IS_DEV = typeof __DEV__ === 'boolean' ? __DEV__ : false;
+
+/** First generate + one fence retry. Retry is a quality pass, not a second quota claim. */
+const TALK_FENCE_ATTEMPTS = 2;
 
 export interface TalkReplyInput {
   me: VoiceMe;
@@ -42,7 +46,13 @@ export interface TalkReplyDeps {
   claimAiCall?: () => Promise<QuotaDecision>;
 }
 
-export type TalkReplyKind = 'consent-pending' | 'consent-denied' | 'crisis' | 'reply' | 'quota';
+export type TalkReplyKind =
+  | 'consent-pending'
+  | 'consent-denied'
+  | 'crisis'
+  | 'reply'
+  | 'quota'
+  | 'empty';
 
 export interface TalkReplyResult {
   kind: TalkReplyKind;
@@ -62,8 +72,9 @@ const noOpLog = async () => {};
  * 2. Crisis check runs BEFORE any main router call — static keyword/phrase
  *    list, no model call. Flagged → static crisis result, zero main router
  *    calls, flag logged (never the message).
- * 3. Otherwise generate the reply via the configured provider in sage.txt's
- *    register, differentiated by talk_style.
+ * 3. Otherwise claim quota once, then generate. A banned framework term
+ *    retries generate once (same claim). Still banned → honest empty, never
+ *    shown.
  */
 export async function routeTalkReply(
   input: TalkReplyInput,
@@ -117,14 +128,29 @@ export async function routeTalkReply(
   const providerLabel = noGeminiKey ? 'local (no gemini key configured)' : provider.label;
   if (noGeminiKey) provider = providers.local;
 
-  const { reply } = await provider.generateTalk({
+  const talkInput = {
     me: input.me,
     message: input.message,
     day: input.checkCount + 1,
     history: input.history,
     todayCard: input.todayCard,
     recentTurns: input.recentTurns,
-  });
+  };
 
-  return { kind: 'reply', reply, provider: provider.id, dev: trace(true, providerLabel) };
+  for (let attempt = 1; attempt <= TALK_FENCE_ATTEMPTS; attempt += 1) {
+    const { reply } = await provider.generateTalk({
+      ...talkInput,
+      retryHint: attempt > 1,
+    });
+    if (!containsFrameworkTerm(reply)) {
+      return { kind: 'reply', reply, provider: provider.id, dev: trace(true, providerLabel) };
+    }
+  }
+
+  // Both drafts named a type/label — show nothing rather than a blocked line.
+  return {
+    kind: 'empty',
+    provider: provider.id,
+    dev: trace(true, `${providerLabel} (fence)`),
+  };
 }

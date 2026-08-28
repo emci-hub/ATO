@@ -43,4 +43,6 @@ export const TALK_COMPOSER_PLACEHOLDER = 'Talk it out\u2026';
 
 export const TALK_WRITING = 'Drafting a reply\u2026';
 
+export const TALK_TRY_AGAIN = 'Sage couldn\u2019t reply. Try again.';
+
 export const CONSENT_COACH_LINE = 'Sage is a coach in the app, not a person.';

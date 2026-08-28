@@ -79,6 +79,10 @@ ok('demo trait row shows slider-sticky O/C vs grid E/A');
 
 assert.deepEqual(matchingFrameworkTerms('Your INFJ side is showing.'), ['INFJ']);
 assert.ok(containsFrameworkTerm('attachment style'));
+assert.ok(containsFrameworkTerm('growth mindset'));
+assert.equal(containsFrameworkTerm('autonomy'), false);
+assert.equal(containsFrameworkTerm('competence'), false);
+assert.equal(containsFrameworkTerm('relatedness'), false);
 assert.equal(matchingFrameworkTerms('After you make coffee, write one line.').length, 0);
 ok('fence tester reports the banned term that matched');
 

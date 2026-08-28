@@ -90,7 +90,7 @@ Honest empty: "nothing this weekend" / "wall opens when the night does" / "no AT
 - Home is solo. Friends never write the dawn line.
 - Chat: TLS + RLS. History stays. No homemade crypto. Sage reads chat only when the user taps "Teach Sage this" on a specific message — never ambient access.
 - You tab = poster (name, @handle, show_up visibility label, QR, Share — no large pixel; the live face is the nav companion; name appears once, on the poster). Settings below the fold: the 9 identity chips are editable (same chip UI as onboarding), plus appearance / credits. Profile completeness (decided; later box) lives near those fields as **two separate things**: the 9 core chips are always complete (never shown as a percentage of a person); the 15 axes are a separate depth layer, invitation not deficit. No completeness signal on Home, Explore, Talk, widget, or push. Sage reply room is shown as `X of [limit]` (e.g. `6 of 20 today`) with no "AI" or "tokens" in the copy — compact on Sage, collapsed by default in Settings. The crisis-line region picker is a collapsible reference at the bottom of Settings, above credits; it is not the active Talk crisis card.
-- Sage Talk answers what the person typed; the day's Home Read/Do is light background, not the reply. Home Reads rotate among knocks / facts / focus instead of paraphrasing one story. Talk replies get the same framework-echo fence as cards (post-generation `containsFrameworkTerm`; retry once as a quality pass, **not** a second `claim_ai_call`; else honest empty) — decided, later box; prompt already paraphrases traits going in. "Does Sage know you?" never runs inside Talk replies.
+- Sage Talk answers what the person typed; the day's Home Read/Do is light background, not the reply. Home Reads rotate among knocks / facts / focus instead of paraphrasing one story. Talk replies get the same framework-echo fence as cards (post-generation `containsFrameworkTerm`; retry once as a quality pass, **not** a second `claim_ai_call`; else honest empty). Banned phrases include the new six-axis names; do not ban `autonomy` / `competence` / `relatedness` as standalone words. Prompt paraphrases traits going in. "Does Sage know you?" never runs inside Talk replies.
 - Home may show a third daily category, **Nudge**, from a real recent signal only. Empty when there isn't one. Never Circle, widget, or morning push. **Explore** is a separate inner tab on Home, not a fourth daily card and not on the You tab. Completeness is never an Explore input. Explore inherits the same output fence; regen cap is 1 per calendar day.
 - Pixel companion: one small live face, fixed top-right at the tab shell (does not scroll or remount on tab switch). Current-you on Home/Around/You; aspirational glow on Sage. Tap plays a short coherent mood (wave / thumbs-up / happy bounce / hug); re-taps interrupt-and-restart, never queue.
 - Share = hold or tap. Stories-size image. Caption: "What's your ATO?"
@@ -268,11 +268,13 @@ Written once, public-domain/academic sourcing only, reviewed before publish, nev
 
 Exception: **Explore** may combine up to 2–3 traits per entry, and only when at least one is tied to a recent signal. Never combine the three agency axes in one entry. Same no-framework-names and exploratory-language rules still apply. This replaces per-feature prompt instructions.
 
-### Talk output fence (decided; later box)
+### Talk output fence (shipped)
 
-Talk's prompt already includes trait-derived paraphrase lines (fenced going in). Add a post-generation check: `containsFrameworkTerm` on Gemini's reply before it is shown — the same check cards already use. On a match, retry once; if it still fails, fall back to honest-empty / try-again rather than showing a blocked line. The retry is a **quality pass**, not a second `claim_ai_call`. No new ME fetch — same shared row already in context. Read/Do/Nudge and Teach-Sage facts already have this fence. **Explore inherits it too** — do not ship a second unfenced Sage writer.
+Talk's prompt already includes trait-derived paraphrase lines (fenced going in). Post-generation: `containsFrameworkTerm` on Gemini's reply before it is shown — the same check cards already use. On a match, retry once; if it still fails, fall back to honest-empty / try-again (`kind: 'empty'`) rather than showing a blocked line. The retry is a **quality pass**, not a second `claim_ai_call`. No new ME fetch — same shared row already in context. Read/Do/Nudge and Teach-Sage facts already had this fence. **Explore inherits it too** when that box ships — do not add a second unfenced Sage writer.
 
-Expand banned **phrases** for the new six axes: `growth mindset`, `fixed mindset`, `locus of control`, `self-efficacy`, `self-determination`. Do **not** ban `autonomy` / `competence` / `relatedness` as standalone words — they are ordinary English and will false-positive.
+Banned **phrases** for the new six axes: `growth mindset`, `fixed mindset`, `locus of control`, `self-efficacy`, `self-determination`. Do **not** ban `autonomy` / `competence` / `relatedness` as standalone words — they are ordinary English and will false-positive.
+
+**Done:** a provider that always names a type returns `kind: 'empty'` after two generates and one quota claim; a provider that names a type then recovers returns the clean retry. Sage never persists the blocked line.
 
 ### Explore (new Home inner tab — decided; later box)
 
@@ -342,7 +344,7 @@ The trait backbone shapes *tone* (who Sage is talking to). The actual coaching q
 - Same extra-care review discipline that applies to the Crisis spec applies here before shipping — this touches real psychological categories, not just cosmetic personalization.
 - "MBTI" branding avoided in UI copy (trademarked by the Myers-Briggs Company) — use generic phrasing like "your type" or "16 personality types," same approach 16Personalities uses.
 
-**Where this fits:** Stages 9 and 11 shipped the first layer. Remaining work is several later boxes (axis expansion + generalized direct-vs-inferred sources + unpark `last_touched`, Library, Talk fence, Explore, feedback, Does-Sage-know-you, completeness, Reload) — not one box, and not Stage 12. Locks from the Aug 28 Grok review live in the sections above.
+**Where this fits:** Stages 9 and 11 shipped the first layer. Talk output fence shipped. Remaining work is several later boxes (axis expansion + generalized direct-vs-inferred sources + unpark `last_touched`, Library, Explore, feedback, Does-Sage-know-you, completeness, Reload) — not one box, and not Stage 12. Locks from the Aug 28 Grok review live in the sections above.
 
 ### Delight & engagement mechanics (red-teamed this session)
 
@@ -407,7 +409,7 @@ Home may also show a third daily category, **Nudge** (internal zGlitch): persona
 
 ### 5 Sage (Talk)
 **Open box: talk.**
-Chips: today / this week / something else. "More" surfaces the card. Crisis keyword hit → static card per Crisis spec, no model call. Talk output fence (`containsFrameworkTerm` after generate; retry once as a quality pass, not a second quota charge) is decided — later box; Stage 5 Done does not include it.
+Chips: today / this week / something else. "More" surfaces the card. Crisis keyword hit → static card per Crisis spec, no model call. Talk output fence (`containsFrameworkTerm` after generate; retry once as a quality pass, not a second quota charge) **shipped** — later than Stage 5 Done.
 **Done:** Two users with different `talk_style` get visibly different tone on the same prompt. A test message containing a crisis keyword returns the static resource card, verifiably without a router/model call firing (check logs).
 
 ### 6 Share + Circle
@@ -453,7 +455,7 @@ You + friends, one real week, real devices. Home stayed new day to day. Dos were
 
 Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Wave 2 Stage 2 ("I'm going") is in. Stage 11 optional fast-entry is in (first 9 trait axes). Next Wave 1.5 box is Stage 12 (Sage coaching content). Full spec detail lives in "Understanding spec" above; this section is sequencing only.
 
-**Decided Aug 28, 2026 — later boxes, not Stage 12, not one combined box:** 6 more trait axes (SDT, growth mindset, locus of control, self-efficacy); Library expansion; Talk output fence; Explore (Home inner tab) + phrasing-only feedback; "Does Sage know you?" + 3-month Settings prompt; intake three-path for the extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with the locks already closed. **Locks from the Aug 28 Grok review are in the Understanding spec** (Explore combine + regen cap + fence; Does-Sage-know-you confirm rules; completeness split; direct-vs-inferred `trait_sources`; Talk fence phrases + retry-is-not-quota; soft-ask budget; unpark `last_touched`). Do not fold these into Stage 12.
+**Decided Aug 28, 2026 — later boxes, not Stage 12, not one combined box:** 6 more trait axes (SDT, growth mindset, locus of control, self-efficacy); Library expansion; Explore (Home inner tab) + phrasing-only feedback; "Does Sage know you?" + 3-month Settings prompt; intake three-path for the extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with the locks already closed. Talk output fence **shipped**. **Locks from the Aug 28 Grok review are in the Understanding spec** (Explore combine + regen cap + fence; Does-Sage-know-you confirm rules; completeness split; direct-vs-inferred `trait_sources`; Talk fence phrases + retry-is-not-quota; soft-ask budget; unpark `last_touched`). Do not fold remaining items into Stage 12.
 
 ### 9 Intake core
 **Open box: intake, me.**
@@ -472,7 +474,7 @@ Skippable 16-grid / slider / close-pattern / disagreement layer, up to 4 extra q
 
 ### 12 Sage's coaching content
 **Open box: talk, router.**
-Ground Sage's system prompt in Gottman conflict/repair research and NVC's four-part structure. Prompt-engineering only, not new data collection. Sequenced after Stage 9 so Sage has real trait data to calibrate against. **Not** the 15-axis expansion, Explore, Reload, or Talk fence.
+Ground Sage's system prompt in Gottman conflict/repair research and NVC's four-part structure. Prompt-engineering only, not new data collection. Sequenced after Stage 9 so Sage has real trait data to calibrate against. Talk fence already shipped separately. **Not** the 15-axis expansion, Explore, or Reload.
 **Done:** Sage's Talk responses reflect grounded communication-framework language on a test conflict-scenario prompt, verified by a human read, not just an automated check.
 
 ### 13 Delight mechanics (single-player)

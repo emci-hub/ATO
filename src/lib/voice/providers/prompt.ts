@@ -173,7 +173,11 @@ ${intakeContext(me)}- Today is day ${day}.
 ${streakSummary(history)}
 
 ${cardBlock}
-${threadTurns(input.recentTurns)}
+${threadTurns(input.recentTurns)}${
+    input.retryHint
+      ? `PREVIOUS DRAFT was dropped because it named a type or label. Write a different angle. Describe how they tend to move — never a type, score, or diagnosis.\n`
+      : ''
+  }
 THEY JUST SAID:
 "${message}"
 

@@ -39,7 +39,7 @@ import {
   peekSageMessages,
   type SageMessage,
 } from '@/lib/sage-messages';
-import { TALK_COMPOSER_PLACEHOLDER, TALK_EMPTY, TALK_LEDE, TALK_WRITING, SAGE_COACH_LABEL } from '@/lib/sage-copy';
+import { TALK_COMPOSER_PLACEHOLDER, TALK_EMPTY, TALK_LEDE, TALK_TRY_AGAIN, TALK_WRITING, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { QUOTA_EMPTY_MESSAGE } from '@/lib/voice/quota';
 import { claimAiCall } from '@/lib/voice/quota-server';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
@@ -350,6 +350,9 @@ export default function SageScreen() {
       } else if (result.kind === 'quota') {
         setQuotaEmpty(true);
         setUsageRevision((n) => n + 1);
+      } else if (result.kind === 'empty') {
+        setError(TALK_TRY_AGAIN);
+        setUsageRevision((n) => n + 1);
       } else if (result.kind === 'reply' && result.reply) {
         const reply = result.reply;
         const localSageId = `m${nextMessageId++}`;
@@ -360,7 +363,7 @@ export default function SageScreen() {
       }
     } catch (err) {
       console.log('[talk] routeTalkReply error:', err);
-      setError('Sage couldn\u2019t reply. Try again.');
+      setError(TALK_TRY_AGAIN);
     } finally {
       setBusy(null);
     }

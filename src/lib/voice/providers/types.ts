@@ -24,6 +24,8 @@ export interface TalkGenerateInput {
   todayCard?: VoiceCard | null;
   /** Prior Sage thread turns (oldest first). Current user line is `message`. */
   recentTurns?: Array<{ role: 'user' | 'sage'; text: string }>;
+  /** True when the previous draft was dropped by the framework fence. */
+  retryHint?: boolean;
 }
 
 export interface TalkGenerateResult {
