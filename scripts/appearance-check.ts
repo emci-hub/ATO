@@ -72,6 +72,13 @@ const navTheme = fs.readFileSync(path.join(root, 'src/lib/theme/navigation.ts'),
 const ctx = fs.readFileSync(path.join(root, 'src/lib/theme/context.tsx'), 'utf8');
 
 assert.match(layout, /navigationTheme/);
+const tabsDecl = layout.indexOf('name="(tabs)"');
+const themeLabDecl = layout.indexOf('name="theme-lab"');
+assert.ok(tabsDecl > 0 && themeLabDecl > tabsDecl, 'theme-lab must not be the Stack cold-start screen');
+assert.match(layout, /<Stack\.Protected guard=\{__DEV__\}>[\s\S]*name="theme-lab"/);
+assert.match(fs.readFileSync(path.join(root, 'src/app/theme-lab.tsx'), 'utf8'), /if \(!__DEV__\)/);
+ok('theme-lab is a __DEV__ route, not the production initial screen');
+
 assert.match(navTheme, /card: theme\.background/);
 assert.match(tabs, /blurEffect="none"/);
 assert.match(tabBar, /backgroundColor: theme\.background/);
