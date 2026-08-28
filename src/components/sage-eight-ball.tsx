@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Animated, {
@@ -8,7 +8,6 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Circle, Ellipse, Text as SvgText } from 'react-native-svg';
 
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
@@ -16,13 +15,18 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAppearance } from '@/lib/theme/context';
-import { rollEightBall } from '@/lib/sage-eight-ball';
+import {
+  EIGHT_BALL_FLASH_DELAYS_MS,
+  pickEightBallFlashes,
+  rollEightBall,
+} from '@/lib/sage-eight-ball';
 import { controlBorderColor } from '@/lib/theme/chrome';
 
 /**
  * Original glazed orb — not Mattel's black ball / blue triangular window.
  * Kenney Shape Characters has a circle body, but that sprite is the pixel
- * companion, not an 8-ball, so this stays a tiny SVG instead.
+ * companion, not an 8-ball, so this stays a tiny View stack instead.
+ * Views (not SVG) so Sage's first paint does not parse react-native-svg.
  */
 function SageOrb({ size, spin, marked }: { size: number; spin: number; marked?: boolean }) {
   const theme = useTheme();
@@ -55,34 +59,42 @@ function SageOrb({ size, spin, marked }: { size: number; spin: number; marked?: 
     transform: [{ translateX: nudge.value }, { rotate: `${rotate.value}deg` }],
   }));
 
-  const glyph = 14;
-
   return (
     <Animated.View style={[{ width: size, height: size }, motion]}>
-      <Svg width={size} height={size} viewBox="0 0 32 32">
-        <Circle cx="16" cy="16" r="15" fill={theme.accentFill} />
-        <Ellipse cx="12" cy="11" rx="7" ry="4.2" fill={theme.onAccent} opacity="0.28" />
-        <Circle
-          cx="16"
-          cy="16"
-          r="15"
-          fill="none"
-          stroke={theme.text}
-          strokeOpacity="0.14"
-          strokeWidth="1"
+      <View
+        style={[
+          styles.orb,
+          {
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            backgroundColor: theme.accentFill,
+            borderColor: theme.text,
+          },
+        ]}>
+        <View
+          style={[
+            styles.orbShine,
+            {
+              left: size * 0.16,
+              top: size * 0.16,
+              width: size * 0.44,
+              height: size * 0.26,
+              borderRadius: size / 2,
+              backgroundColor: theme.onAccent,
+            },
+          ]}
         />
         {marked ? (
-          <SvgText
-            x="16"
-            y="21"
-            textAnchor="middle"
-            fontSize={glyph}
-            fontWeight="700"
-            fill={theme.onAccent}>
+          <ThemedText
+            style={[
+              styles.orbGlyph,
+              { color: theme.onAccent, fontSize: Math.round(size * 0.44) },
+            ]}>
             8
-          </SvgText>
+          </ThemedText>
         ) : null}
-      </Svg>
+      </View>
     </Animated.View>
   );
 }
@@ -93,13 +105,46 @@ function SageOrb({ size, spin, marked }: { size: number; spin: number; marked?: 
  */
 export function SageEightBall() {
   const theme = useTheme();
+  const { reduceMotion } = useAppearance();
   const [open, setOpen] = useState(false);
   const [answer, setAnswer] = useState<string | null>(null);
   const [spin, setSpin] = useState(0);
+  const [rolling, setRolling] = useState(false);
+  const rollingRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   function roll() {
-    setAnswer((prev) => rollEightBall(prev));
+    if (rollingRef.current) return;
+    const next = rollEightBall(answer);
     setSpin((n) => n + 1);
+    if (reduceMotion) {
+      setAnswer(next);
+      return;
+    }
+    rollingRef.current = true;
+    setRolling(true);
+    const flashes = pickEightBallFlashes(next, answer);
+    let i = 0;
+    const tick = () => {
+      if (i < flashes.length) {
+        setAnswer(flashes[i]!);
+        const delay = EIGHT_BALL_FLASH_DELAYS_MS[i] ?? 100;
+        i += 1;
+        timerRef.current = setTimeout(tick, delay);
+        return;
+      }
+      setAnswer(next);
+      rollingRef.current = false;
+      setRolling(false);
+      timerRef.current = null;
+    };
+    tick();
   }
 
   function toggle() {
@@ -134,8 +179,14 @@ export function SageEightBall() {
           <ThemedPressable
             accessibilityRole="button"
             accessibilityLabel="Ask again"
+            accessibilityState={{ disabled: rolling, busy: rolling }}
+            disabled={rolling}
             onPress={roll}
-            style={[styles.askAgain, { borderColor: controlBorderColor(theme) }]}>
+            style={[
+              styles.askAgain,
+              { borderColor: controlBorderColor(theme) },
+              rolling && styles.askAgainBusy,
+            ]}>
             <ThemedText type="smallBold">Ask again</ThemedText>
           </ThemedPressable>
         </View>
@@ -184,5 +235,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.one,
+  },
+  askAgainBusy: {
+    opacity: 0.5,
+  },
+  orb: {
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  orbShine: {
+    position: 'absolute',
+    opacity: 0.28,
+  },
+  orbGlyph: {
+    fontWeight: '700',
   },
 });

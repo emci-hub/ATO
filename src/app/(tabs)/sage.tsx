@@ -1,6 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -10,7 +11,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AiConsentCard } from '@/components/ai-consent-card';
 import { CrisisCard } from '@/components/crisis-card';
@@ -59,12 +60,52 @@ const MORE_CHIPS: ReadonlyArray<{ label: string; prompt: string | null; support?
 
 let nextMessageId = 1;
 
+/** Keyboard overlap under the composer. Android already resizes the window. */
+function useKeyboardLift() {
+  const insets = useSafeAreaInsets();
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const show = Keyboard.addListener(showEvent, (e) => {
+      setHeight(e.endCoordinates.height);
+    });
+    const hide = Keyboard.addListener(hideEvent, () => setHeight(0));
+
+    const visual =
+      Platform.OS === 'web' && typeof window !== 'undefined' ? window.visualViewport : null;
+    const onVisual = () => {
+      if (!visual) return;
+      const covered = Math.round(window.innerHeight - visual.height - visual.offsetTop);
+      setHeight(covered > 48 ? covered : 0);
+    };
+    visual?.addEventListener('resize', onVisual);
+    visual?.addEventListener('scroll', onVisual);
+
+    return () => {
+      show.remove();
+      hide.remove();
+      visual?.removeEventListener('resize', onVisual);
+      visual?.removeEventListener('scroll', onVisual);
+    };
+  }, []);
+
+  const open = height > 0;
+  // Android already resizes the window. iOS NativeTabs + web need an explicit lift
+  // so KeyboardAvoidingView is a layout wrapper, not the offset source.
+  const lift = Platform.OS === 'android' ? 0 : open ? Math.max(0, height - insets.bottom) : 0;
+  return { open, lift };
+}
+
 export default function SageScreen() {
   const theme = useTheme();
   const { session } = useSession();
   const userId = session?.user.id;
   const { me, refresh: refreshMe } = useMeContext();
   const { card: todayCard } = useTodayCard();
+  const { open: keyboardOpen, lift: keyboardLift } = useKeyboardLift();
+  const scrollRef = useRef<ScrollView>(null);
 
   const [checks, setChecks] = useState<Check[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -112,6 +153,14 @@ export default function SageScreen() {
       cancelled = true;
     };
   }, [userId]);
+
+  useEffect(() => {
+    if (!keyboardOpen) return;
+    const id = requestAnimationFrame(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [keyboardOpen, messages.length]);
 
   const consent = me ? aiConsentFor(me) : 'pending';
 
@@ -273,13 +322,25 @@ export default function SageScreen() {
           </ThemedView>
         ) : (
           <KeyboardAvoidingView
+            // Offset comes from useKeyboardLift (NativeTabs + web visualViewport).
+            // KAV's own padding double-counts inside this tab layout.
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={[styles.flex, { backgroundColor: theme.background }]}>
+            enabled={false}
+            keyboardVerticalOffset={0}
+            style={[
+              styles.flex,
+              { backgroundColor: theme.background, paddingBottom: keyboardLift },
+            ]}>
             <ScrollView
+              ref={scrollRef}
               {...NO_PINCH_ZOOM}
               style={{ backgroundColor: theme.background }}
               contentContainerStyle={styles.messages}
-              keyboardShouldPersistTaps="handled">
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
+              onContentSizeChange={() => {
+                scrollRef.current?.scrollToEnd({ animated: keyboardOpen });
+              }}>
               {quotaEmpty ? (
                 <ThemedView type="backgroundElement" style={styles.emptyCard}>
                   <ThemedText type="smallBold">That&apos;s all for today</ThemedText>
@@ -335,7 +396,14 @@ export default function SageScreen() {
               ) : null}
             </ScrollView>
 
-            <View style={[styles.composer, { backgroundColor: theme.background }]}>
+            <View
+              style={[
+                styles.composer,
+                {
+                  backgroundColor: theme.background,
+                  paddingBottom: keyboardOpen ? Spacing.two : BottomTabInset + Spacing.two,
+                },
+              ]}>
               <ScrollView
                 {...NO_PINCH_ZOOM}
                 horizontal
