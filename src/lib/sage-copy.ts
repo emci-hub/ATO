@@ -49,3 +49,9 @@ export const CONSENT_COACH_LINE = 'Sage is a coach in the app, not a person.';
 
 /** Recurring trait check-in. Own surface — never a Talk reply. */
 export const SAGE_KNOWS_LABEL = 'Does Sage know you?';
+
+/** Home-only daily tap-to-open. Never Circle, widget, or morning push. */
+export const REVEAL_LABEL = 'Note';
+
+/** Visible when the pool is empty — never a sealed object, never quota cadence. */
+export const REVEAL_EMPTY = 'Nothing extra to notice today.';

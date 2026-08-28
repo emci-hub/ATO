@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppearancePicker } from '@/components/appearance-picker';
 import { MilestoneBadges } from '@/components/check-milestone-badge';
+import { RevealCard } from '@/components/reveal-card';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
 import { ThemedTabBar } from '@/components/themed-tab-bar';
 import { ThemedText } from '@/components/themed-text';
@@ -19,6 +20,17 @@ import {
   SAGE_COACH_LABEL,
   TALK_LEDE,
 } from '@/lib/sage-copy';
+import type { RevealPick } from '@/lib/reveal';
+
+const THEME_REVEAL_WEEK: RevealPick = {
+  kind: 'week-pattern',
+  text: "You showed up on 3 Checks this week. The Dos stayed one-step sized.",
+};
+
+const THEME_REVEAL_FACT: RevealPick = {
+  kind: 'fact',
+  text: 'Still true: I finish work at four',
+};
 
 /**
  * Dev harness for the five appearance modes. Mirrors Home card chrome so
@@ -64,6 +76,15 @@ export default function ThemeLabScreen() {
               Sleep is what you said knocks you off, and it showed up in this week&apos;s Checks. Today&apos;s Do stays small so tomorrow is still reachable.
             </ThemedText>
           </ThemedView>
+
+          <ThemedText type="smallBold">Reveal · week pattern</ThemedText>
+          <RevealCard pick={THEME_REVEAL_WEEK} />
+          <ThemedText type="smallBold">Reveal · fact</ThemedText>
+          <RevealCard pick={THEME_REVEAL_FACT} />
+          <ThemedText type="smallBold">Reveal · Reduce Motion</ThemedText>
+          <RevealCard pick={THEME_REVEAL_WEEK} forceReduceMotion />
+          <ThemedText type="smallBold">Reveal · empty pool</ThemedText>
+          <RevealCard pick={null} />
           <Pressable
             style={[styles.primaryButton, { backgroundColor: theme.accentFill }]}>
             <ThemedText type="smallBold" style={{ color: theme.onAccent }}>

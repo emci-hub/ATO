@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -7,6 +7,7 @@ import { MilestoneBadges } from '@/components/check-milestone-badge';
 import { MissedCheckCard } from '@/components/missed-check-card';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
 import { SageKnowsCard } from '@/components/sage-knows-card';
+import { RevealCard } from '@/components/reveal-card';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -25,6 +26,7 @@ import { useMeContext } from '@/lib/me-context';
 import { voiceMeFrom } from '@/lib/intake';
 import { homeSageLabel, homeSageLede, NUDGE_LABEL, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { persistRoutedCard } from '@/lib/today-card';
+import { resolveReveal } from '@/lib/reveal';
 import { routeVoiceCard } from '@/lib/voice/router';
 import type { VoiceCard, VoiceSource } from '@/lib/voice/types';
 import { useSession } from '@/hooks/use-session';
@@ -87,6 +89,19 @@ export default function HomeScreen() {
   const missedOpen = window?.open.filter((slot) => slot.offset > 0) ?? [];
   const alreadyLogged =
     window != null && checks.some((check) => check.day === window.todayDay);
+
+  const reveal = useMemo(() => {
+    if (!me) return null;
+    return resolveReveal({
+      checks,
+      facts: me.facts ?? [],
+      checkCount: growth.checkCount,
+      factCount: growth.factCount,
+      timeZone: me.timezone || 'UTC',
+      crisisToday,
+      crisisYesterday,
+    });
+  }, [me, checks, crisisToday, crisisYesterday, growth.checkCount, growth.factCount]);
 
   useEffect(() => {
     if (!me || !todayOpen) return;
@@ -265,6 +280,10 @@ export default function HomeScreen() {
               </ThemedView>
             </Pressable>
           )}
+
+          {me ? (
+            <RevealCard pick={reveal} userId={userId} timeZone={me.timezone} />
+          ) : null}
 
           {me ? (
             <SageKnowsCard

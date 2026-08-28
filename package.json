@@ -85,6 +85,7 @@
     "check:sage-knows": "tsx ./scripts/sage-knows-check.ts",
     "check:library": "tsx ./scripts/library-check.ts",
     "check:badges": "tsx ./scripts/badges-check.ts",
+    "check:reveal": "tsx ./scripts/reveal-check.ts",
     "check:intake-live": "tsx ./scripts/intake-live-check.ts",
     "check:age": "tsx ./scripts/age-check.ts",
     "check:push": "tsx ./scripts/push-check.ts",
