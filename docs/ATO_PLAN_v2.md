@@ -36,7 +36,7 @@ If a field isn't defined here, don't guess its shape — ask.
 | Nudge | Home-only daily card | Third daily category (internal zGlitch). Real recent signal only — skip pattern, a knock that showed up in recent Read/Do, or a safe stored fact. Never from `talk_style` alone. Empty when there is no signal. Inherits cut's safety gates (not after a crisis-flagged day, not two days in a row, cruel-content filter, always with that day's Do); does not inherit cut's skip-streak valence trigger. |
 | Explore | Home inner tab | Periodic Sage observations (weekly, or on a meaningful trait/signal change) — not daily. Cached between regenerations. Existing per-user quota. Cap: **1 regeneration per calendar day**. Combines 2–3 traits only when at least one is tied to a recent signal (fact / knock / Check pattern); never the three agency axes (`growth_mindset`, `locus_of_control`, `self_efficacy`) together. Library-grounded. Same output fence as cards/Talk. Completeness is never an Explore input. Never empty of extra-axis data: the 9 core chips are enough. Separate from Read/Do/Nudge and from the You tab. Decided; later box. |
 | Reload | Home presentation | Cycles up to 3 pre-stored **paired** Read/Do variants for the same day. Cap 3 uses/day. No live model call. Same underlying truth (tone, shrink, signal) — presentation only. Locks in Understanding spec. Bank days 1–3: off. Decided; later box. |
-| Library | static copy | Written-once, reviewed, public-domain/academic grounding for Sage. Domain entries: Sleep, Workload, Conflict, Communication, Health, Money. Framework grounding (never named in user-facing copy): SDT, growth mindset, locus of control, self-efficacy. Never per-user generated. |
+| Library | static copy | Written-once, reviewed, public-domain/academic grounding. Lives in `src/app/copy/library.md` (same pattern as `first_cards.md`). Framework entries shipped: Self-Determination Theory (Deci & Ryan), growth mindset (Dweck), locus of control (Rotter), self-efficacy (Bandura). People may read Library, so those names are allowed there. Sage must not quote the file — only the **For Sage** paraphrase lines, which stay fence-clean. Domain entries (Sleep, Workload, Conflict, Communication, Health, Money) remain design, aligned with `knocks_you_off`. Never per-user generated. Sage prompt is not wired yet. |
 | `check_count` | integer, derived | Count of all-time Checks. Gates bank-vs-model content and the paywall (7). |
 | `host` | boolean on ME | You flip this manually (admin). Not self-serve in v1. |
 | `referred_by` | uuid, nullable, FK → ME | Which ME row invited this user. Hidden field. See Referral spec. |
@@ -209,7 +209,7 @@ Big Five (OCEAN) is the scientific backbone — of every framework considered, i
 - **MBTI → OCEAN**, when known (published correlations, McCrae & Costa 1989): Introversion↔Extraversion (r=-0.74), Intuition↔Openness (r=0.72), Feeling↔Agreeableness (r=0.44), Perceiving↔Conscientiousness (r=-0.49). **MBTI has no Neuroticism equivalent — this is a known, real gap.**
 - **Attachment style fills that exact gap.** Anxious attachment tracks closely with high Neuroticism; avoidant attachment tracks with lower Extraversion/Agreeableness. Also adds relationship-specific behavioral nuance beyond trait level.
 - **Conflict style** (collaborative / compromising / competitive / avoidant / accommodating) adds situational specificity for disagreement scenarios — the actual "help me talk to my coworker" use case.
-- **SDT / growth mindset / locus of control / self-efficacy** add how someone relates to agency, setbacks, and "can I do this" — coaching-relevant, still not a diagnosis. Framework names stay in the Library and in this spec; they never appear in user-facing copy or stored labels.
+- **SDT / growth mindset / locus of control / self-efficacy** add how someone relates to agency, setbacks, and "can I do this" — coaching-relevant, still not a diagnosis. Framework names stay in the Library (people may read those entries) and in this spec; they never appear in Sage-generated copy or stored labels.
 
 None of these get stored as raw labels. Every path — type tap, slider, situation tap, tap-form, or game choice — translates into the same underlying fields. A person who types nothing technical and one who taps "INFJ" end up feeding the same columns.
 
@@ -256,11 +256,11 @@ One question per screen, tappable, with a visible progress indicator ("3 of 9").
 
 ### Library
 
-Written once, public-domain/academic sourcing only, reviewed before publish, never per-user generated. Sage grounds copy in these entries; user-facing text still must not name the framework.
+Written once, public-domain/academic sourcing only, reviewed before publish, never per-user generated. Storage: `src/app/copy/library.md` (same written-once markdown pattern as `first_cards.md`). Sage must not quote the file; Sage may only use **For Sage** behavioral paraphrases (no framework names), matching how Gottman / NVC grounding will work. People may read Library directly, so the entry titles may name the framework. Sage-generated copy still must not.
 
-**Domain entries (exist as design; align with `knocks_you_off` chips):** Sleep, Workload, Conflict, Communication, Health, Money.
+**Domain entries (exist as design; align with `knocks_you_off` chips):** Sleep, Workload, Conflict, Communication, Health, Money. Not written in this file yet.
 
-**Add for the new axes (later box, same standard):** SDT, growth mindset, locus of control, self-efficacy.
+**Framework entries (shipped, this box):** Self-Determination Theory (Deci & Ryan); growth mindset (Dweck); locus of control (Rotter); self-efficacy (Bandura). No licensed instrument items. Sage prompt not wired in this box.
 
 ### Sage writing rule (root-level, inherited everywhere Sage writes)
 
@@ -344,7 +344,7 @@ The trait backbone shapes *tone* (who Sage is talking to). The actual coaching q
 - Same extra-care review discipline that applies to the Crisis spec applies here before shipping — this touches real psychological categories, not just cosmetic personalization.
 - "MBTI" branding avoided in UI copy (trademarked by the Myers-Briggs Company) — use generic phrasing like "your type" or "16 personality types," same approach 16Personalities uses.
 
-**Where this fits:** Stages 9 and 11 shipped the first layer. Talk output fence shipped. Fifteen axes, direct-vs-inferred `trait_sources`, `last_touched`, and confirm-upgrade lock shipped. Remaining work is several later boxes (Library, Explore, feedback, Does-Sage-know-you, completeness, three-path extra-axis intake, Reload) — not one box, and not Stage 12. Locks from the Aug 28 Grok review live in the sections above.
+**Where this fits:** Stages 9 and 11 shipped the first layer. Talk output fence shipped. Fifteen axes, direct-vs-inferred `trait_sources`, `last_touched`, confirm-upgrade lock, and Library framework copy shipped. Remaining work is several later boxes (Explore, feedback, Does-Sage-know-you, completeness, three-path extra-axis intake, Reload, domain Library entries) — not one box, and not Stage 12. Locks from the Aug 28 Grok review live in the sections above.
 
 ### Delight & engagement mechanics (red-teamed this session)
 
@@ -455,7 +455,7 @@ You + friends, one real week, real devices. Home stayed new day to day. Dos were
 
 Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Wave 2 Stage 2 ("I'm going") is in. Stage 11 optional fast-entry is in (all 15 trait axes; direct vs inferred; `last_touched`). Next Wave 1.5 box is Stage 12 (Sage coaching content). Full spec detail lives in "Understanding spec" above; this section is sequencing only.
 
-**Decided Aug 28, 2026 — later boxes, not Stage 12, not one combined box:** Library expansion; Explore (Home inner tab) + phrasing-only feedback; "Does Sage know you?" + 3-month Settings prompt; intake three-path for the extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with the locks already closed. Talk output fence **shipped**. Six extra trait axes + direct-vs-inferred `trait_sources` + `last_touched` **shipped**. **Locks from the Aug 28 Grok review are in the Understanding spec** (Explore combine + regen cap + fence; Does-Sage-know-you confirm rules; completeness split; direct-vs-inferred `trait_sources`; Talk fence phrases + retry-is-not-quota; soft-ask budget). Do not fold remaining items into Stage 12.
+**Decided Aug 28, 2026 — later boxes, not Stage 12, not one combined box:** Explore (Home inner tab) + phrasing-only feedback; "Does Sage know you?" + 3-month Settings prompt; intake three-path for the extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with the locks already closed. Talk output fence **shipped**. Six extra trait axes + direct-vs-inferred `trait_sources` + `last_touched` **shipped**. Library framework copy **shipped** (`src/app/copy/library.md`; Sage not wired). **Locks from the Aug 28 Grok review are in the Understanding spec** (Explore combine + regen cap + fence; Does-Sage-know-you confirm rules; completeness split; direct-vs-inferred `trait_sources`; Talk fence phrases + retry-is-not-quota; soft-ask budget). Do not fold remaining items into Stage 12.
 
 ### 9 Intake core
 **Open box: intake, me.**

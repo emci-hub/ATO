@@ -82,6 +82,7 @@
     "check:invite": "tsx ./scripts/invite-check.ts",
     "check:intake": "tsx ./scripts/intake-check.ts",
     "check:traits": "tsx ./scripts/traits-check.ts",
+    "check:library": "tsx ./scripts/library-check.ts",
     "check:intake-live": "tsx ./scripts/intake-live-check.ts",
     "check:age": "tsx ./scripts/age-check.ts",
     "check:push": "tsx ./scripts/push-check.ts",
