@@ -10,6 +10,7 @@ import { SharePoster } from '@/components/share-poster';
 import { AppearancePicker } from '@/components/appearance-picker';
 import { CityPicker } from '@/components/city-picker';
 import { CrisisRegionPicker } from '@/components/crisis-region-picker';
+import { IntakeSettings } from '@/components/intake-settings';
 import { KenneyCreditsCard } from '@/components/kenney-credits-card';
 import { PushTestCard } from '@/components/push-test-card';
 import { SentryTestCard } from '@/components/sentry-test-card';
@@ -18,7 +19,6 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
-import { useMe } from '@/hooks/use-me';
 import { useMeContext } from '@/lib/me-context';
 import { accentFromShowUp } from '@/lib/color';
 import { addPeerByHandle } from '@/lib/circle';
@@ -34,24 +34,13 @@ import { copyLink, sharePoster } from '@/lib/share';
 import { setCity, setVisible } from '@/lib/me';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
-import {
-  CURRENT_FOCUS_CHIPS,
-  ENERGY_PATTERN_CHIPS,
-  EVENING_WIND_DOWN_CHIPS,
-  MORNING_CUE_CHIPS,
-  RECOVERY_STYLE_CHIPS,
-  SUPPORT_STYLE_CHIPS,
-  TALK_STYLE_CHIPS,
-  chipLabel,
-} from '@/lib/intake';
 import { supabase } from '@/lib/supabase';
 
 export default function YouScreen() {
   const theme = useTheme();
   const { width: windowWidth } = useWindowDimensions();
   const { session } = useSession();
-  const { me, refresh } = useMe(session?.user.id);
-  const { refresh: refreshMe } = useMeContext();
+  const { me, refresh } = useMeContext();
   const accent = accentFromShowUp(me?.show_up);
   const { refresh: refreshCircle } = useCircleContext();
   const [signingOut, setSigningOut] = useState(false);
@@ -208,44 +197,12 @@ export default function YouScreen() {
                 </View>
               </ThemedView>
 
+              <IntakeSettings
+                me={me}
+                onUpdated={() => refresh()}
+              />
+
               <ThemedView type="backgroundElement" style={styles.detailCard}>
-                <DetailRow label="Show up" value={me.show_up} />
-                <DetailRow label="Talk style" value={chipLabel(TALK_STYLE_CHIPS, me.talk_style)} />
-                <DetailRow label="Knocks you off" value={me.knocks_you_off} />
-                <DetailRow
-                  label="Morning cue"
-                  value={chipLabel(MORNING_CUE_CHIPS, me.morning_cue) || me.morning_cue}
-                />
-                {me.evening_wind_down ? (
-                  <DetailRow
-                    label="Evening wind-down"
-                    value={chipLabel(EVENING_WIND_DOWN_CHIPS, me.evening_wind_down)}
-                  />
-                ) : null}
-                {me.energy_pattern ? (
-                  <DetailRow
-                    label="Most energy"
-                    value={chipLabel(ENERGY_PATTERN_CHIPS, me.energy_pattern)}
-                  />
-                ) : null}
-                {me.recovery_style ? (
-                  <DetailRow
-                    label="What pulls me back"
-                    value={chipLabel(RECOVERY_STYLE_CHIPS, me.recovery_style)}
-                  />
-                ) : null}
-                {me.support_style ? (
-                  <DetailRow
-                    label="What helps"
-                    value={chipLabel(SUPPORT_STYLE_CHIPS, me.support_style)}
-                  />
-                ) : null}
-                {me.current_focus ? (
-                  <DetailRow
-                    label="Right now"
-                    value={chipLabel(CURRENT_FOCUS_CHIPS, me.current_focus)}
-                  />
-                ) : null}
                 <DetailRow label="Timezone" value={me.timezone} />
               </ThemedView>
 
@@ -254,7 +211,7 @@ export default function YouScreen() {
               <CityPicker
                 value={me.city}
                 onChange={(slug) => {
-                  void setCity(me.id, slug).then(() => Promise.all([refresh(), refreshMe()]));
+                  void setCity(me.id, slug).then(() => refresh());
                 }}
               />
 
@@ -268,7 +225,7 @@ export default function YouScreen() {
                 </ThemedText>
                 <Pressable
                   onPress={() => {
-                    void setVisible(me.id, me.visible === false).then(() => Promise.all([refresh(), refreshMe()]));
+                    void setVisible(me.id, me.visible === false).then(() => refresh());
                   }}
                   style={({ pressed }) => [styles.inviteRow, pressed && styles.pressed]}>
                   <ThemedText type="smallBold">

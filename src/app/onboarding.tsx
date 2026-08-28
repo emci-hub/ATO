@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CityPicker } from '@/components/city-picker';
+import { ChipGroup } from '@/components/intake-chips';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -27,7 +28,6 @@ import {
   type CoreIntakeField,
   type CurrentFocus,
   type EnergyPattern,
-  type IntakeChip,
   type KnocksChip,
   type RecoveryStyle,
   type SupportStyle,
@@ -664,51 +664,6 @@ function IntakeStep({
   );
 }
 
-function ChipGroup({
-  chips,
-  selected,
-  multi,
-  disabled,
-  onSelect,
-}: {
-  chips: IntakeChip[];
-  selected: string[];
-  multi?: boolean;
-  disabled: boolean;
-  onSelect: (value: string) => void;
-}) {
-  const theme = useTheme();
-
-  return (
-    <View style={styles.chipWrap}>
-      {chips.map((chip) => {
-        const on = selected.includes(chip.value);
-        return (
-          <Pressable
-            key={chip.value}
-            onPress={() => onSelect(chip.value)}
-            disabled={disabled}
-            accessibilityRole={multi ? 'checkbox' : 'radio'}
-            accessibilityState={{ checked: on, selected: on }}
-            style={({ pressed }) => [
-              styles.chip,
-              {
-                backgroundColor: on ? theme.backgroundSelected : theme.backgroundElement,
-                borderColor: on ? theme.text : theme.backgroundElement,
-              },
-              pressed && styles.pressed,
-              disabled && styles.disabled,
-            ]}>
-            <ThemedText type="small" themeColor={on ? 'text' : 'textSecondary'}>
-              {chip.label}
-            </ThemedText>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
 function Field({
   label,
   required,
@@ -804,17 +759,6 @@ const styles = StyleSheet.create({
   },
   hint: {
     lineHeight: 18,
-  },
-  chipWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.two,
-  },
-  chip: {
-    borderRadius: Spacing.five,
-    borderWidth: 1,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
   },
   navRow: {
     flexDirection: 'row',

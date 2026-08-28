@@ -11,15 +11,15 @@ If a field isn't defined here, don't guess its shape — ask.
 | Term | Type | Meaning |
 |---|---|---|
 | `ME` | row (Supabase) | The user's profile. See fields below. |
-| `show_up` | string | Onboarding chip (color-seed vibe). Stored as the chip's phrase. Still seeds the Home/poster color. |
-| `knocks_you_off` | string | Multi-select chips joined with `", "` (sleep / workload / people/conflict / health / money / something else). |
-| `morning_cue` | string | Chip phrase that inserts into the if-then Do (`After you {morning_cue}, …`). |
-| `talk_style` | enum: `quiet`/`even`/`loud` | Direct onboarding tap. Set once at onboarding, editable later in Settings. |
-| `evening_wind_down` | string, nullable on pre-intake rows | Chip phrase. Times the evening Check push (wiring not in Stage 9). |
-| `energy_pattern` | enum: `morning`/`afternoon`/`evening`/`night_owl`, nullable on pre-intake rows | Self-report. Helps pick the check_count < 3 bank card. Not a diagnosis. |
-| `recovery_style` | enum: `movement`/`sleep`/`talking`/`alone_time`/`music`, nullable on pre-intake rows | Self-report. Not a diagnosis. Never shown on the public poster. |
-| `support_style` | enum: `nudge`/`space`/`listen`/`plan`, nullable on pre-intake rows | Self-report. Helps pick the check_count < 3 bank card. Not a diagnosis. Never shown on the public poster. |
-| `current_focus` | enum: `habit`/`through_it`/`like_yourself`/`show_up`, nullable on pre-intake rows | Self-report. Not a diagnosis. Never shown on the public poster. |
+| `show_up` | string | Onboarding chip (color-seed vibe). Stored as the chip's phrase. Still seeds the Home/poster color. Editable later in Settings. |
+| `knocks_you_off` | string | Multi-select chips joined with `", "` (sleep / workload / people/conflict / health / money / something else). Editable later in Settings. |
+| `morning_cue` | string | Chip phrase that inserts into the if-then Do (`After you {morning_cue}, …`). Editable later in Settings. |
+| `talk_style` | enum: `quiet`/`even`/`loud` | Direct onboarding tap. Editable later in Settings. |
+| `evening_wind_down` | string, nullable on pre-intake rows | Chip phrase. Times the evening Check push (wiring not in Stage 9). Editable later in Settings. |
+| `energy_pattern` | enum: `morning`/`afternoon`/`evening`/`night_owl`, nullable on pre-intake rows | Self-report. Helps pick the check_count < 3 bank card. Not a diagnosis. Editable later in Settings. |
+| `recovery_style` | enum: `movement`/`sleep`/`talking`/`alone_time`/`music`, nullable on pre-intake rows | Self-report. Not a diagnosis. Never shown on the public poster. Editable later in Settings. |
+| `support_style` | enum: `nudge`/`space`/`listen`/`plan`, nullable on pre-intake rows | Self-report. Helps pick the check_count < 3 bank card. Not a diagnosis. Never shown on the public poster. Editable later in Settings. |
+| `current_focus` | enum: `habit`/`through_it`/`like_yourself`/`show_up`, nullable on pre-intake rows | Self-report. Not a diagnosis. Never shown on the public poster. Editable later in Settings. |
 | `this_week` | string, free text, resets weekly | Plan field. Not a ME column in v1 — Sunday recap + Sage read the checks table (`logged_on` + status; Read/Do only while in the 7-day keep window). Never a matching signal. |
 | `recipe` | object `{base, hair, top, palette}` | Kenney asset selections that render the pixel. All 4 fields required once Pixel is built. |
 | `valence` | enum: `lift`/`even`/`cut` | Computed from last 7 Checks. See formula in Rules. |
@@ -76,7 +76,7 @@ Honest empty: "nothing this weekend" / "wall opens when the night does" / "no AT
 - Sage: reflect more than ask, ~4 sentences, coach not doctor. Crisis keyword hit → static resource card (see Crisis spec below), stop, no model call.
 - Home is solo. Friends never write the dawn line.
 - Chat: TLS + RLS. History stays. No homemade crypto. Sage reads chat only when the user taps "Teach Sage this" on a specific message — never ambient access.
-- You tab = poster (name, @handle, show_up visibility label, QR, Share — no large pixel; the live face is the nav companion). Settings / credits / human-contact info below the fold.
+- You tab = poster (name, @handle, show_up visibility label, QR, Share — no large pixel; the live face is the nav companion). Settings below the fold: the 9 identity chips are editable (same chip UI as onboarding), plus appearance / credits / human-contact info.
 - Pixel companion: one small live face, fixed top-right at the tab shell (does not scroll or remount on tab switch). Current-you on Home/Around/You; aspirational glow on Sage. Tap plays a short coherent mood (wave / thumbs-up / happy bounce / hug); re-taps interrupt-and-restart, never queue.
 - Share = hold or tap. Stories-size image. Caption: "What's your ATO?"
 - Appearance: five user-selectable modes in Settings — Soft (default) / Zen / Quest / Neon / Anime. Replaces the discarded Ink / Paper / Steel / Bloom named palette for app chrome. The You-tab share poster still uses those four as a fixed shareable artifact. Spec lives in `src/constants/appearance.ts`. "Void" stays reserved for the competitor callout, not a mode name.
@@ -346,7 +346,7 @@ Not blocked on public App Store readiness. **Intentional sequencing deviation (A
 ### 9 Intake core
 **Open box: intake, me.**
 Schema + UI for the 9 required tappable onboarding fields (talk_style, show_up, knocks_you_off, morning_cue, evening wind-down, energy pattern, recovery style, support style, current focus). Replaces the 3 existing free-text fields. Self-report only, translates into the trait-backbone structure per Understanding spec.
-**Done:** all 9 fields save to ME, one question per screen with progress indicator, no raw psychological labels shown publicly. **First pass shipped (Aug 27, 2026):** 9 chip screens + 5 new ME columns + Day 1 bank selection from energy_pattern/support_style with the person's `morning_cue` phrase in the Do. Optional fast-entry and delight mechanics are still later stages.
+**Done:** all 9 fields save to ME, one question per screen with progress indicator, no raw psychological labels shown publicly. **First pass shipped (Aug 27, 2026):** 9 chip screens + 5 new ME columns + Day 1 bank selection from energy_pattern/support_style with the person's `morning_cue` phrase in the Do. **Settings edit shipped:** all 9 chips are editable afterward from the You tab. Optional fast-entry and delight mechanics are still later stages.
 
 ### 10 Day 1 payoff
 **Open box: intake, dawn.**

@@ -9,10 +9,13 @@ import { resolve } from 'node:path';
 import {
   CORE_INTAKE_QUESTIONS,
   CORE_INTAKE_TOTAL,
+  INTAKE_SETTINGS_LABELS,
   bankStyleFor,
+  displayIntakeValue,
   intakeProgressLabel,
   joinKnocks,
   parseKnocks,
+  selectedIntakeValues,
   voiceMeFrom,
 } from '../src/lib/intake';
 import { bankCard, bankCardForMe } from '../src/lib/voice/bank';
@@ -60,13 +63,47 @@ async function main() {
   assert.match(onboarding, /ChipGroup/);
   ok('onboarding is a chip wizard with a visible progress label');
 
+  const chips = readFileSync(resolve(__dirname, '../src/components/intake-chips.tsx'), 'utf8');
+  const settings = readFileSync(resolve(__dirname, '../src/components/intake-settings.tsx'), 'utf8');
+  const you = readFileSync(resolve(__dirname, '../src/app/(tabs)/you.tsx'), 'utf8');
+  const sage = readFileSync(resolve(__dirname, '../src/app/(tabs)/sage.tsx'), 'utf8');
+  const meLib = readFileSync(resolve(__dirname, '../src/lib/me.ts'), 'utf8');
+  assert.match(chips, /accessibilityRole=\{multi \? 'checkbox' : 'radio'\}/);
+  assert.match(settings, /CORE_INTAKE_QUESTIONS/);
+  assert.match(settings, /updateIntake/);
+  assert.match(you, /IntakeSettings/);
+  assert.match(meLib, /export async function updateIntake/);
+  assert.match(sage, /useMeContext/);
+  ok('Settings edits the same 9 chips; Sage reads the shared ME row');
+
   const joined = joinKnocks(['sleep', 'workload']);
   assert.equal(joined, 'sleep, workload');
   assert.deepEqual(parseKnocks(joined), ['sleep', 'workload']);
   ok('knocks_you_off stays a string (joined chips)');
 
+  const sample = {
+    talk_style: 'even',
+    show_up: 'building something',
+    knocks_you_off: 'sleep, workload',
+    morning_cue: 'make coffee',
+    evening_wind_down: 'put my phone down',
+    energy_pattern: 'morning',
+    recovery_style: 'sleep',
+    support_style: 'nudge',
+    current_focus: 'habit',
+  };
+  assert.equal(CORE_INTAKE_QUESTIONS.every((q) => INTAKE_SETTINGS_LABELS[q.field]), true);
+  assert.equal(displayIntakeValue('talk_style', sample), 'Even');
+  assert.equal(displayIntakeValue('show_up', sample), 'Building something');
+  assert.equal(displayIntakeValue('knocks_you_off', sample), 'Sleep, Workload');
+  assert.deepEqual(selectedIntakeValues('knocks_you_off', sample), ['sleep', 'workload']);
+  ok('Settings labels and display values cover all 9 fields');
+
   const copyBlob = [
     onboarding,
+    chips,
+    settings,
+    you,
     readFileSync(resolve(__dirname, '../src/components/share-poster.tsx'), 'utf8'),
   ].join('\n');
   for (const banned of ['MBTI', 'Myers-Briggs', 'Big Five', 'OCEAN', 'attachment style', 'neuroticism', 'TIPI', 'ECR']) {

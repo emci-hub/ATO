@@ -78,14 +78,11 @@ export function MeProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     if (!userId) return;
-    setLoading(true);
     try {
       const row = await fetchMe(userId);
       setMe(row);
     } catch {
       setMe(null);
-    } finally {
-      setLoading(false);
     }
   }, [userId]);
 

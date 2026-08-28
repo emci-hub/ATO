@@ -14,6 +14,7 @@ import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 
 import { bankCardForMe } from '../src/lib/voice/bank';
+import { colorHueFromShowUp } from '../src/lib/color';
 import { voiceMeFrom } from '../src/lib/intake';
 
 function loadEnv(): Record<string, string> {
@@ -97,13 +98,55 @@ async function main() {
   assert.equal(row.support_style, ANSWERS.support_style);
   assert.equal(row.current_focus, ANSWERS.current_focus);
 
+  const EDITED = {
+    talk_style: 'loud',
+    show_up: 'running hot',
+    knocks_you_off: 'health, money',
+    morning_cue: 'put on music',
+    evening_wind_down: 'get in bed',
+    energy_pattern: 'morning',
+    recovery_style: 'movement',
+    support_style: 'nudge',
+    current_focus: 'show_up',
+  } as const;
+
+  try {
+    const { error: editError } = await authed
+      .from('me')
+      .update(EDITED)
+      .eq('id', session.user.id);
+    if (editError) throw new Error(`intake edit failed: ${editError.message}`);
+
+    const { data: edited, error: editedReadError } = await authed
+      .from('me')
+      .select(
+        'talk_style, show_up, knocks_you_off, morning_cue, evening_wind_down, energy_pattern, recovery_style, support_style, current_focus',
+      )
+      .eq('id', session.user.id)
+      .single();
+    if (editedReadError) throw new Error(`edited row read failed: ${editedReadError.message}`);
+    assert.equal(edited.talk_style, EDITED.talk_style);
+    assert.equal(edited.show_up, EDITED.show_up);
+    assert.equal(edited.knocks_you_off, EDITED.knocks_you_off);
+    assert.equal(edited.morning_cue, EDITED.morning_cue);
+    assert.equal(edited.evening_wind_down, EDITED.evening_wind_down);
+    assert.equal(edited.energy_pattern, EDITED.energy_pattern);
+    assert.equal(edited.recovery_style, EDITED.recovery_style);
+    assert.equal(edited.support_style, EDITED.support_style);
+    assert.equal(edited.current_focus, EDITED.current_focus);
+    assert.notEqual(colorHueFromShowUp(edited.show_up), colorHueFromShowUp(ANSWERS.show_up));
+  } finally {
+    const { error: restoreError } = await authed.from('me').update(ANSWERS).eq('id', session.user.id);
+    if (restoreError) throw new Error(`intake restore failed: ${restoreError.message}`);
+  }
+
   const day1 = bankCardForMe(1, voiceMeFrom({ name: 'Intake Check', ...row }));
   assert.ok(day1?.do.includes(ANSWERS.morning_cue), `Do missing cue: ${day1?.do}`);
   assert.ok(!day1?.do.includes('{morning_cue}'));
 
   console.log('ME row:', row);
   console.log('Day 1 Do:', day1?.do);
-  console.log('\nLive intake row check PASSED — all 9 fields on ME, cue in Day 1 Do.');
+  console.log('\nLive intake row check PASSED — all 9 fields on ME, cue in Day 1 Do, Settings-path edit round-trips.');
   void data;
 }
 

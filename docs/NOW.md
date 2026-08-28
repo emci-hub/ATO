@@ -18,7 +18,7 @@
 
 **Wave 2 Stage 2 is in — "I'm going" + friend colors.** Opt-in `going` row per user per show (`set_going` / `night_snapshot`). A color blob appears on a show only at ≥3 people of that `show_up` hue; raw counts never leave the RPC. Faces show only when the person is going, `me.visible` is true (plan field `show`; SHOW is reserved), and they are not blocked either way. Hidden faces still count toward colors. 18+ nights call `is_at_least_age(born_on, 18)`. City stays typed (not GPS). Calgary `weekend.json` is still honestly empty until Edmtrain; type `fixture` as city for seeded test shows.
 
-**Stage 9 first pass is in (intake core + Day 1 payoff wiring).** Fresh onboarding is identity, then 9 chip screens with a visible "N of 9". Five new ME columns (`evening_wind_down`, `energy_pattern`, `recovery_style`, `support_style`, `current_focus`) — existing `talk_style` / `show_up` / `knocks_you_off` / `morning_cue` names and types unchanged. Live row: handle `zintake9`.
+**Stage 9 first pass is in (intake core + Day 1 payoff wiring).** Fresh onboarding is identity, then 9 chip screens with a visible "N of 9". Five new ME columns (`evening_wind_down`, `energy_pattern`, `recovery_style`, `support_style`, `current_focus`) — existing `talk_style` / `show_up` / `knocks_you_off` / `morning_cue` names and types unchanged. Live row: handle `zintake9`. All 9 chips are editable afterward from the You tab / Settings (same chip UI; `show_up` still seeds color; `talk_style` still seeds Sage's tone).
 
 **Stage 8 — nearly closed, three loose ends (unchanged):**
 1. EAS binary 10 (`1d0d1041-9318-461f-b995-c589ac505dc2`, git `dc9ae77`) — OTA + real app icon cut. Needs `eas submit`, then install + confirm on a real device. **Do not submit binary 8 or 9.** Binary 8 (`d40e57a9`) **was already submitted and installed**.
@@ -34,7 +34,7 @@
 - Wave 3 — Plugs (deal rows) + Night wall (going exists; wall can surface)
 
 ## Done
-See git history for the full Stage 1–8 build log. Sage content model v2 (this change). Check window + recap text cap + Home milestone badge, nav tap moods, UI polish, Wave 2 Stage 2, and Stage 9 first pass are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
+See git history for the full Stage 1–8 build log. Sage content model v2, Check window + recap text cap + Home milestone badge, nav tap moods, UI polish, Wave 2 Stage 2, Stage 9 first pass, and Settings identity-chip editing are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
 
 ## Left
 - Submit + confirm binary 10 on device (icon, OTA, everything from today). Do not submit 8 or 9.
@@ -54,7 +54,6 @@ These are real, but they are not TestFlight work and they are not next. Leave th
 ## Backlog (not blocking the Friends TestFlight group)
 - Fantasy UI Borders pack (Kenney) — UI chrome/panels/buttons
 - Monster Builder Pack — parked, needs eyes/mouth slots added to recipe before usable
-- Make show_up / knocks_you_off / morning_cue editable in Settings, not just talk_style
 - Revisit onboarding question wording if it still feels off after a fresh look
 - Crisis: relational-safety/abuse category, own resource number, parked separately
 - **AI capacity hardening** — close the client-embedded-key bypass before public launch (server-side proxy or equivalent)

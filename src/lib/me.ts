@@ -179,6 +179,31 @@ export async function setVisible(userId: string, visible: boolean): Promise<Me> 
   return withVisible(data as Me);
 }
 
+/** Post-onboarding edit of the 9 core intake fields. Same chip values as signup. */
+export type IntakePatch = Partial<{
+  talk_style: TalkStyle;
+  show_up: string;
+  knocks_you_off: string;
+  morning_cue: string;
+  evening_wind_down: string;
+  energy_pattern: EnergyPattern;
+  recovery_style: RecoveryStyle;
+  support_style: SupportStyle;
+  current_focus: CurrentFocus;
+}>;
+
+export async function updateIntake(userId: string, patch: IntakePatch): Promise<Me> {
+  const { data, error } = await supabase
+    .from('me')
+    .update(patch)
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return withVisible(data as Me);
+}
+
 export function errorMessageForHandle(error: unknown): string {
   const inviteMessage = errorMessageForInvite(error);
   if (inviteMessage) return inviteMessage;

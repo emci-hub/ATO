@@ -227,6 +227,67 @@ export function chipLabel(chips: IntakeChip[], value: string | null | undefined)
   return chips.find((c) => c.value === value)?.label ?? value;
 }
 
+/** You-tab labels. Same 9 fields as onboarding, shorter than the prompt. */
+export const INTAKE_SETTINGS_LABELS: Record<CoreIntakeField, string> = {
+  talk_style: 'Talk style',
+  show_up: 'Show up',
+  knocks_you_off: 'Knocks you off',
+  morning_cue: 'Morning cue',
+  evening_wind_down: 'Evening wind-down',
+  energy_pattern: 'Most energy',
+  recovery_style: 'What pulls me back',
+  support_style: 'What helps',
+  current_focus: 'Right now',
+};
+
+type IntakeMeSlice = {
+  talk_style: string;
+  show_up: string;
+  knocks_you_off: string;
+  morning_cue: string;
+  evening_wind_down?: string | null;
+  energy_pattern?: string | null;
+  recovery_style?: string | null;
+  support_style?: string | null;
+  current_focus?: string | null;
+};
+
+export function selectedIntakeValues(field: CoreIntakeField, me: IntakeMeSlice): string[] {
+  switch (field) {
+    case 'talk_style':
+      return me.talk_style ? [me.talk_style] : [];
+    case 'show_up':
+      return me.show_up ? [me.show_up] : [];
+    case 'knocks_you_off':
+      return parseKnocks(me.knocks_you_off);
+    case 'morning_cue':
+      return me.morning_cue ? [me.morning_cue] : [];
+    case 'evening_wind_down':
+      return me.evening_wind_down ? [me.evening_wind_down] : [];
+    case 'energy_pattern':
+      return me.energy_pattern ? [me.energy_pattern] : [];
+    case 'recovery_style':
+      return me.recovery_style ? [me.recovery_style] : [];
+    case 'support_style':
+      return me.support_style ? [me.support_style] : [];
+    case 'current_focus':
+      return me.current_focus ? [me.current_focus] : [];
+  }
+}
+
+export function displayIntakeValue(field: CoreIntakeField, me: IntakeMeSlice): string {
+  const question = CORE_INTAKE_QUESTIONS.find((q) => q.field === field);
+  if (!question) return '';
+  if (field === 'knocks_you_off') {
+    const selected = parseKnocks(me.knocks_you_off);
+    if (selected.length === 0) return me.knocks_you_off || '—';
+    return selected.map((value) => chipLabel(question.chips, value)).join(', ');
+  }
+  const raw = me[field];
+  if (!raw) return '—';
+  return chipLabel(question.chips, raw);
+}
+
 export function intakeProgressLabel(n: number, total = CORE_INTAKE_TOTAL): string {
   return `${n} of ${total}`;
 }

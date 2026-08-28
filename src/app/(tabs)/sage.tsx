@@ -19,7 +19,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
-import { useMe } from '@/hooks/use-me';
+import { useMeContext } from '@/lib/me-context';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { checkWindowFor } from '@/lib/check-window';
@@ -62,7 +62,7 @@ export default function SageScreen() {
   const theme = useTheme();
   const { session } = useSession();
   const userId = session?.user.id;
-  const { me, refresh: refreshMe } = useMe(userId);
+  const { me, refresh: refreshMe } = useMeContext();
 
   const [checks, setChecks] = useState<Check[]>([]);
   const [todayCard, setTodayCard] = useState<{ read: string; do: string } | null>(null);
