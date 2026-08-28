@@ -55,3 +55,12 @@ export const REVEAL_LABEL = 'Note';
 
 /** Visible when the pool is empty — never a sealed object, never quota cadence. */
 export const REVEAL_EMPTY = 'Nothing extra to notice today.';
+
+/** Optional-depth forced ranking. One axis, most-me to least-me. */
+export const RANKING_LABEL = 'Most me';
+
+export const RANKING_LEDE = 'Drag into order. Most you at the top.';
+
+export const RANKING_SAVE = "That's me";
+
+export const RANKING_SKIP = 'Not this week';

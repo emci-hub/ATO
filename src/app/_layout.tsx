@@ -1,3 +1,4 @@
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -19,9 +20,11 @@ SplashScreen.preventAutoHideAsync();
 
 function RootLayout() {
   return (
-    <AppearanceProvider>
-      <RootThemeBridge />
-    </AppearanceProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AppearanceProvider>
+        <RootThemeBridge />
+      </AppearanceProvider>
+    </GestureHandlerRootView>
   );
 }
 

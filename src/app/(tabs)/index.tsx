@@ -7,6 +7,7 @@ import { MilestoneBadges } from '@/components/check-milestone-badge';
 import { MissedCheckCard } from '@/components/missed-check-card';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
 import { SageKnowsCard } from '@/components/sage-knows-card';
+import { RankingCard } from '@/components/ranking-card';
 import { RevealCard } from '@/components/reveal-card';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
@@ -292,6 +293,8 @@ export default function HomeScreen() {
               onUpdated={refreshMe}
             />
           ) : null}
+
+          {me ? <RankingCard me={me} onUpdated={refreshMe} /> : null}
 
           {me && missedOpen.length > 0 ? (
             <>

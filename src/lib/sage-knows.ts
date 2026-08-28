@@ -24,7 +24,7 @@ export const SAGE_KNOWS_COOLDOWN_DAYS = 14;
 export const SAGE_KNOWS_GRADUATE_STREAK = 2;
 export const SAGE_KNOWS_THREE_MONTH_DAYS = 90;
 
-export type SageKnowsWeekSlot = 'sage_knows' | 'game_invite';
+export type SageKnowsWeekSlot = 'sage_knows' | 'game_invite' | 'ranking';
 export type SageKnowsWeekDone = 'dismissed' | 'answered';
 export type YouTabSoftAsk = 'completeness' | 'three_month';
 
@@ -33,6 +33,9 @@ export interface SageKnowsState {
   week_key: string | null;
   week_slot: SageKnowsWeekSlot | null;
   week_done: SageKnowsWeekDone | null;
+  ranking_last_axis: TraitAxis | null;
+  you_week_key: string | null;
+  you_slot: YouTabSoftAsk | null;
   streaks: Partial<Record<TraitAxis, number>>;
   graduated: Partial<Record<TraitAxis, string>>;
 }
@@ -124,6 +127,9 @@ export function emptySageKnowsState(): SageKnowsState {
     week_key: null,
     week_slot: null,
     week_done: null,
+    ranking_last_axis: null,
+    you_week_key: null,
+    you_slot: null,
     streaks: {},
     graduated: {},
   };
@@ -140,8 +146,17 @@ export function parseSageKnowsState(raw: unknown): SageKnowsState {
   const last = isTraitAxis(row.last_axis) ? row.last_axis : null;
   const week_key = typeof row.week_key === 'string' && row.week_key.length > 0 ? row.week_key : null;
   const week_slot =
-    row.week_slot === 'sage_knows' || row.week_slot === 'game_invite' ? row.week_slot : null;
+    row.week_slot === 'sage_knows' ||
+    row.week_slot === 'game_invite' ||
+    row.week_slot === 'ranking'
+      ? row.week_slot
+      : null;
   const week_done = row.week_done === 'dismissed' || row.week_done === 'answered' ? row.week_done : null;
+  const ranking_last_axis = isTraitAxis(row.ranking_last_axis) ? row.ranking_last_axis : null;
+  const you_week_key =
+    typeof row.you_week_key === 'string' && row.you_week_key.length > 0 ? row.you_week_key : null;
+  const you_slot =
+    row.you_slot === 'completeness' || row.you_slot === 'three_month' ? row.you_slot : null;
   const streaks: SageKnowsState['streaks'] = {};
   if (row.streaks && typeof row.streaks === 'object' && !Array.isArray(row.streaks)) {
     const rawStreaks = row.streaks as Record<string, unknown>;
@@ -158,7 +173,17 @@ export function parseSageKnowsState(raw: unknown): SageKnowsState {
       if (typeof at === 'string' && at.trim().length > 0) graduated[axis] = at;
     }
   }
-  return { last_axis: last, week_key, week_slot, week_done, streaks, graduated };
+  return {
+    last_axis: last,
+    week_key,
+    week_slot,
+    week_done,
+    ranking_last_axis,
+    you_week_key,
+    you_slot,
+    streaks,
+    graduated,
+  };
 }
 
 /** Sunday (recap week) that contains `ymd`. */
@@ -319,8 +344,23 @@ export function weekSlotTaken(
 ): SageKnowsWeekSlot | SageKnowsWeekDone | null {
   if (knows.week_key !== weekKey) return null;
   if (knows.week_slot === 'game_invite') return 'game_invite';
+  if (knows.week_slot === 'ranking') return 'ranking';
   if (knows.week_done === 'dismissed' || knows.week_done === 'answered') return knows.week_done;
   return null;
+}
+
+/** You/Settings claim. Completeness UI later; ranking yields when this is set. */
+export function youTabSlotTaken(knows: SageKnowsState, weekKey: string): YouTabSoftAsk | null {
+  if (knows.you_week_key !== weekKey) return null;
+  return knows.you_slot;
+}
+
+export function applyCompletenessWeek(state: SageKnowsState, weekKey: string): SageKnowsState {
+  return {
+    ...state,
+    you_week_key: weekKey,
+    you_slot: 'completeness',
+  };
 }
 
 export function resolveSageKnows(input: {
@@ -422,6 +462,22 @@ export function applyGameInviteWeek(state: SageKnowsState, weekKey: string): Sag
     week_key: weekKey,
     week_slot: 'game_invite',
     week_done: 'answered',
+  };
+}
+
+/** Ranking claims the Home/Sage week. Same budget as Does-Sage-know-you. */
+export function applyRankingWeek(
+  state: SageKnowsState,
+  axis: TraitAxis,
+  weekKey: string,
+  done: SageKnowsWeekDone,
+): SageKnowsState {
+  return {
+    ...state,
+    week_key: weekKey,
+    week_slot: 'ranking',
+    week_done: done,
+    ranking_last_axis: axis,
   };
 }
 

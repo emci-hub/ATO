@@ -13,10 +13,12 @@ import {
   applySageKnowsDismiss,
   applySageKnowsNotQuite,
   applySageKnowsStillFits,
+  applyRankingWeek,
   parseSageKnowsState,
   sageKnowsWeekKey,
   type SageKnowsState,
 } from '@/lib/sage-knows';
+import { applyRankingWrite } from '@/lib/ranking';
 import {
   mergeTraitWrite,
   confirmTraitSource,
@@ -386,6 +388,43 @@ export async function recordSageKnowsDismiss(userId: string, axis: TraitAxis): P
     parseSageKnowsState(current.sage_knows),
     axis,
     weekKeyFor(current),
+  );
+  return persistMe(userId, { sage_knows: knows });
+}
+
+/** Ranking save — `self_tap` on one axis + claims this week's Home/Sage slot. */
+export async function recordRanking(
+  userId: string,
+  axis: TraitAxis,
+  order: readonly string[],
+): Promise<Me> {
+  const current = await fetchMe(userId);
+  if (!current) throw new Error('Not authenticated');
+  const now = new Date();
+  const merged = applyRankingWrite(
+    traitStateFromRow(current),
+    axis,
+    order,
+    now.toISOString(),
+  );
+  const knows = applyRankingWeek(
+    parseSageKnowsState(current.sage_knows),
+    axis,
+    weekKeyFor(current, now),
+    'answered',
+  );
+  return persistMe(userId, { ...traitPatch(merged), sage_knows: knows });
+}
+
+/** Ranking dismiss ends this week's turn. Does not write an axis. */
+export async function recordRankingDismiss(userId: string, axis: TraitAxis): Promise<Me> {
+  const current = await fetchMe(userId);
+  if (!current) throw new Error('Not authenticated');
+  const knows = applyRankingWeek(
+    parseSageKnowsState(current.sage_knows),
+    axis,
+    weekKeyFor(current),
+    'dismissed',
   );
   return persistMe(userId, { sage_knows: knows });
 }

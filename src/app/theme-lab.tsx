@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppearancePicker } from '@/components/appearance-picker';
 import { MilestoneBadges } from '@/components/check-milestone-badge';
 import { RevealCard } from '@/components/reveal-card';
+import { RankingCard } from '@/components/ranking-card';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
 import { ThemedTabBar } from '@/components/themed-tab-bar';
 import { ThemedText } from '@/components/themed-text';
@@ -21,6 +22,7 @@ import {
   TALK_LEDE,
 } from '@/lib/sage-copy';
 import type { RevealPick } from '@/lib/reveal';
+import { RANKING_ROUNDS, type RankingPrompt } from '@/lib/ranking';
 
 const THEME_REVEAL_WEEK: RevealPick = {
   kind: 'week-pattern',
@@ -30,6 +32,13 @@ const THEME_REVEAL_WEEK: RevealPick = {
 const THEME_REVEAL_FACT: RevealPick = {
   kind: 'fact',
   text: 'Still true: I finish work at four',
+};
+
+const THEME_RANKING: RankingPrompt = {
+  axis: 'extraversion',
+  items: RANKING_ROUNDS.extraversion,
+  order: RANKING_ROUNDS.extraversion.map((item) => item.id),
+  weekKey: '2026-08-23',
 };
 
 /**
@@ -85,6 +94,8 @@ export default function ThemeLabScreen() {
           <RevealCard pick={THEME_REVEAL_WEEK} forceReduceMotion />
           <ThemedText type="smallBold">Reveal · empty pool</ThemedText>
           <RevealCard pick={null} />
+          <ThemedText type="smallBold">Ranking · extraversion</ThemedText>
+          <RankingCard forcePick={THEME_RANKING} />
           <Pressable
             style={[styles.primaryButton, { backgroundColor: theme.accentFill }]}>
             <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
