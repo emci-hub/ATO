@@ -1,5 +1,5 @@
 /**
- * Library copy — four framework entries, fence-safe For Sage lines.
+ * Library copy — domain + framework entries, fence-safe For Sage lines.
  * Run: npm run check:library
  */
 import assert from 'node:assert/strict';
@@ -26,24 +26,36 @@ function ok(label: string) {
 
 const headings = [...library.matchAll(/^## (.+)$/gm)].map((m) => m[1]);
 assert.deepEqual(headings, [
+  'Sleep',
+  'Workload',
+  'Conflict',
+  'Communication',
+  'Health',
+  'Money',
   'Self-Determination Theory',
   'Growth mindset',
   'Locus of control',
   'Self-efficacy',
 ]);
-ok('four framework entries exist under the expected headings');
+ok('six domain entries and four framework entries exist under the expected headings');
 
+assert.match(library, /CDC \/ AASM/);
+assert.match(library, /Karasek; Sonnentag/);
+assert.match(library, /John Gottman/);
+assert.match(library, /Marshall Rosenberg/);
+assert.match(library, /Wood; Lally/);
+assert.match(library, /Thaler on mental buckets/);
 assert.match(library, /Deci and Richard M\. Ryan/);
 assert.match(library, /Carol S\. Dweck/);
 assert.match(library, /Julian B\. Rotter/);
 assert.match(library, /Albert Bandura/);
-assert.doesNotMatch(library, /16personalities|myers.?briggs|Mindset Works quiz|GSES item|I-E item \d/i);
+assert.doesNotMatch(library, /16personalities|myers.?briggs|Mindset Works quiz|GSES item|I-E item \d|Maslach item/i);
 ok('academic sources named; no commercial-platform or licensed-item copy');
 
 const forSageBlocks = [...library.matchAll(/### For Sage\n\n([\s\S]*?)(?=\n---|\n## |$)/g)].map(
   (m) => m[1].trim(),
 );
-assert.equal(forSageBlocks.length, 4);
+assert.equal(forSageBlocks.length, 10);
 for (const block of forSageBlocks) {
   const hits = matchingFrameworkTerms(block);
   assert.deepEqual(hits, [], `For Sage should be fence-clean, got ${hits.join(', ')}:\n${block}`);
