@@ -17,7 +17,7 @@ import { useEffect, useState } from 'react';
  * via the keyword list with zero main-router calls.
  */
 
-const CUE = 'making coffee';
+const CUE = 'make coffee';
 
 function makeMe(style: VoiceMe['talk_style'], name: string): VoiceMe {
   return {

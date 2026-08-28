@@ -1,5 +1,6 @@
 import { bankStyleFor } from '@/lib/intake';
 
+import { cueAfterYou } from './cue';
 import { BANK_MARKDOWN } from './content.generated';
 import type { TalkStyle, VoiceCard, VoiceMe } from './types';
 
@@ -35,7 +36,7 @@ export function parseBank(markdown: string): Bank {
 export const BANK: Bank = parseBank(BANK_MARKDOWN);
 
 function substituteCue(text: string, morningCue: string): string {
-  return text.split('{morning_cue}').join(morningCue);
+  return text.split('{morning_cue}').join(cueAfterYou(morningCue));
 }
 
 /** Pulls the bank card for a day+style with {morning_cue} substituted. */

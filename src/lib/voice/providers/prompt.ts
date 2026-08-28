@@ -1,5 +1,6 @@
 import { traitPromptLines } from '@/lib/traits';
 
+import { cueAfterYou } from '../cue';
 import { libraryGroundingBlock, selectLibraryEntries } from '../library';
 import { VOICE_REFERENCE } from '../voice-reference';
 import type { Tone, VoiceCard, VoiceMe } from '../types';
@@ -107,9 +108,10 @@ ${alreadyShown(input.history)}
 
 RULES
 1. Read: 1–4 sentences. General reflection on today/the pattern, from a signal that recent Reads did not already use.
-2. Do: exactly ONE if-then action, anchored to the morning cue, e.g. "After you ${me.morning_cue}, <specific concrete action>." Specific enough that they could start it in under 10 minutes. The action should fit today's angle, not copy yesterday's Do with new adjectives.
+2. Do: exactly ONE if-then action, anchored to the morning cue, e.g. "After you ${cueAfterYou(me.morning_cue)}, <specific concrete action>." Use the infinitive ("make coffee" not "making coffee"). Specific enough that they could start it in under 10 minutes. The action should fit today's angle, not copy yesterday's Do with new adjectives.
 3. No repetition of content shown before — paraphrases of the same sleep/streak/baseline story still count as repetition.
 4. Describe how they tend to move, never label them. No type codes, no scores-as-identity, no diagnosis.
+5. FRAMING NOTES are concepts, not copy. Restate each idea in Sage's own words, the way daily Read/Do already varies. Never paste a framing-note sentence. Read and Do must not share a clause.
 
 Respond with JSON only, no prose, in this shape:
 {"read": "<the read text>", "do": "<the do text>"}`;
@@ -184,7 +186,7 @@ ${threadTurns(input.recentTurns)}${
 THEY JUST SAID:
 "${message}"
 
-Answer that first and directly. If they asked a question, give a straight answer to that question. Do not pivot to streaks, sleep, or the Home Read unless they brought those up. Use any framing notes above only when they match what they just said. A short helpful nudge is fine after the answer. Never a diagnosis, never judgment of the person, never a type label. No more than 4 sentences. Plain text only, no quotes, no prefix.`;
+Answer that first and directly. If they asked a question, give a straight answer to that question. Do not pivot to streaks, sleep, or the Home Read unless they brought those up. Use any framing notes above only when they match what they just said — restate the idea in new words; never paste a framing-note sentence; do not reuse today's Home Read or Do wording. A short helpful nudge is fine after the answer. Never a diagnosis, never judgment of the person, never a type label. No more than 4 sentences. Plain text only, no quotes, no prefix.`;
 }
 
 export interface ParsedTalkReply {

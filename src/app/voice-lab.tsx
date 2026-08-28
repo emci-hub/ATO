@@ -17,7 +17,7 @@ import type { CheckHistory, VoiceCardResult, VoiceMe } from '@/lib/voice/types';
  * (check_count >= 3), and that Day 4's card is not Day 3's copy.
  */
 
-const CUE = 'making coffee';
+const CUE = 'make coffee';
 
 const LAB_ME: VoiceMe = {
   name: 'Riley',

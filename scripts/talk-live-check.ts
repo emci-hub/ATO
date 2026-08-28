@@ -43,7 +43,7 @@ async function main() {
     show_up: 'finishing my resume',
     talk_style: 'even' as const,
     knocks_you_off: 'bad sleep',
-    morning_cue: 'making coffee',
+    morning_cue: 'make coffee',
   };
   const history = [
     { day: 1, status: 'done' as const },
@@ -92,7 +92,7 @@ async function main() {
 
   const homeCard = {
     read: 'Sleep disrupted the streak. Protect the baseline with one sticky-note step.',
-    do: 'After you making coffee, write one sticky note and keep it visible.',
+    do: 'After you make coffee, write one sticky note and keep it visible.',
   };
   const direct = await routeTalkReply(
     {

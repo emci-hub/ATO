@@ -28,7 +28,7 @@ import { deriveTone, routeVoiceCard } from '../src/lib/voice/router';
 import { routeTalkReply } from '../src/lib/voice/talk';
 import type { CheckHistory, RouteVoiceCardInput, VoiceCard, VoiceMe } from '../src/lib/voice/types';
 
-const CUE = 'making coffee';
+const CUE = 'make coffee';
 
 const ME: VoiceMe = {
   name: 'Riley',
@@ -70,6 +70,7 @@ ok('all 9 bank cards parse (days 1–3 × quiet/even/loud)');
 const day1Even = bankCard(1, 'even', CUE)!;
 assert.equal(day1Even.do, `After you ${CUE}, write down one thing you're walking into today.`);
 assert.ok(!day1Even.do.includes('{morning_cue}') && !day1Even.read.includes('{morning_cue}'));
+assert.equal(bankCard(1, 'even', 'making coffee')!.do, day1Even.do);
 ok('bank card substitutes {morning_cue} at render time');
 
 // ---------------------------------------------------------------------------
@@ -630,13 +631,14 @@ const pileCard = await routeVoiceCard(
   { config: localConfig, ...dev },
 );
 assert.ok(pileCard.card);
-assert.match(pileCard.card.read, /one next piece, not the whole list/);
-assert.match(pileCard.card.do, /one next piece, not the whole list/);
+assert.doesNotMatch(pileCard.card.read, /one next piece, not the whole list/);
+assert.doesNotMatch(pileCard.card.do, /one next piece, not the whole list/);
+assert.match(pileCard.card.do, /After you make coffee/);
 assert.doesNotMatch(pileCard.card.read, /Karasek|Sonnentag|Maslach/);
 assert.doesNotMatch(pileCard.card.do, /Karasek|Sonnentag|Maslach/);
 assert.equal(containsFrameworkTerm(pileCard.card.read), false);
 assert.equal(containsFrameworkTerm(pileCard.card.do), false);
-ok('workload-heavy generated card uses Library paraphrase language; teaching copy and fence stay clean');
+ok('workload-heavy generated card paraphrases Library ideas; teaching copy and fence stay clean');
 
 const pileTalkPrompt = buildTalkPrompt({
   me: pileMe,
@@ -645,6 +647,7 @@ const pileTalkPrompt = buildTalkPrompt({
   history: d1,
 });
 assert.match(pileTalkPrompt, /one next piece, not the whole list/);
+assert.match(pileTalkPrompt, /own words|Never paste|new words/i);
 assert.doesNotMatch(pileTalkPrompt, /Karasek|Maslach/);
 const flowerTalkPrompt = buildTalkPrompt({
   me: pileMe,

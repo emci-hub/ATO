@@ -262,7 +262,7 @@ Written once, public-domain/academic sourcing only, reviewed before publish, nev
 
 **Framework entries (shipped):** Self-Determination Theory (Deci & Ryan); growth mindset (Dweck); locus of control (Rotter); self-efficacy (Bandura). No licensed instrument items.
 
-**Sage reads the Library (Stage 12, shipped):** `selectLibraryEntries` + `libraryGroundingBlock` on card and Talk prompts; local provider and Nudge use the same paraphrases when the day's signal matches. Existence in the file is not enough.
+**Sage reads the Library (Stage 12, shipped):** `selectLibraryEntries` + `libraryGroundingBlock` on card and Talk prompts; local provider and Nudge paraphrase those concepts in Sage's own words when the day's signal matches (never paste a For Sage sentence into Read, Do, and Talk). Existence in the file is not enough.
 
 ### Sage writing rule (root-level, inherited everywhere Sage writes)
 
@@ -478,7 +478,7 @@ Skippable 16-grid / slider / close-pattern / disagreement layer, up to 4 extra q
 ### 12 Sage's coaching content
 **Open box: talk, router.**
 Ground Sage's system prompt in the Library's fence-clean **For Sage** lines (Gottman / NVC live in Conflict and Communication entries). Prompt-engineering only. Sequenced after Stage 9 so Sage has real trait data to calibrate against. Talk fence already shipped separately. **Not** Explore or Reload.
-**Done (Aug 28, 2026):** a workload-heavy generated card uses "one next piece, not the whole list"; Talk on "the pile at work never ends" does too; a flowers question does not pull Workload. Teaching/source copy never appears in the prompt or the card. `containsFrameworkTerm` still passes on Library-grounded output.
+**Done (Aug 28, 2026):** a workload-heavy generated card is shaped by Workload For Sage, but Read, Do, and Talk each restate the idea in different words — they do not share a stock Library sentence. Talk on "the pile at work never ends" is grounded the same way; a flowers question does not pull Workload. Teaching/source copy never appears in the prompt or the card. `containsFrameworkTerm` still passes on Library-grounded output.
 
 ### 13 Delight mechanics (single-player)
 **Open box: intake, dawn.**

@@ -206,7 +206,7 @@ export function libraryGroundingBlock(entries: LibraryEntry[]): string {
     .flatMap((entry) => entry.paraphrases)
     .map((line) => `- ${line}`)
     .join('\n');
-  return `FRAMING NOTES — shape phrasing and framing only. Do not quote these lines as a block. Do not name a theory, inventory, or "library". Do not add a visible library section to the card or reply.
+  return `FRAMING NOTES — concepts only, not copy. Restate the idea in Sage's own words, varying phrasing the way daily Read/Do already varies. Never paste a note's sentence. Never reuse the same clause in Read and Do, or in a Talk reply. Do not name a theory, inventory, or "library". Do not add a visible library section.
 ${bullets}`;
 }
 

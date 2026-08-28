@@ -45,7 +45,7 @@ const LAB_ME: VoiceMe = {
   show_up: 'finishing my resume',
   talk_style: 'even',
   knocks_you_off: 'sleep',
-  morning_cue: 'making coffee',
+  morning_cue: 'make coffee',
   facts: ['I finish work at four'],
 };
 

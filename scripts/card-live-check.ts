@@ -36,7 +36,7 @@ async function main() {
     show_up: 'finishing my resume',
     talk_style: 'even' as const,
     knocks_you_off: 'sleep, workload, people/conflict',
-    morning_cue: 'making coffee',
+    morning_cue: 'make coffee',
     facts: ['I finish work at four', 'Tuesday is the heavy meeting day'],
     current_focus: 'habit' as const,
   };

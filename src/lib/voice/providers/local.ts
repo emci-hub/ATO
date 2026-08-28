@@ -1,3 +1,4 @@
+import { cueAfterYou } from '../cue';
 import { hasCut } from '../filters';
 import { selectLibraryEntries, signalPoolFor, type LibraryEntryId } from '../library';
 import type { TalkStyle, Tone, VoiceCard, VoiceMe } from '../types';
@@ -107,42 +108,42 @@ function libraryIds(input: { me: VoiceMe; day: number; message?: string; surface
 
 function libraryShapedCard(input: GenerateInput, effectiveTone: Tone): VoiceCard | null {
   const ids = libraryIds({ me: input.me, day: input.day, surface: 'card' });
-  const cue = input.me.morning_cue;
+  const cue = cueAfterYou(input.me.morning_cue);
   const d = input.day;
   const slot = (d - 1) % 3;
   if (ids.has('workload')) {
     const reads: Record<Tone, string[]> = {
       lift: [
-        `Day ${d} shown up. One next piece, not the whole list — that's the hold.`,
-        `Day ${d} in. The pile was around; one next piece, not the whole list.`,
-        `Day ${d}. You did the thing. One next piece, not the whole list.`,
+        `Day ${d} shown up. The stack can wait — today's hold is a smaller unit, not clearing the board.`,
+        `Day ${d} in. Work piled up and you still logged it. Finish a job-sized bite; the rest stays.`,
+        `Day ${d}. You did the thing. A slice of the stack is enough; emptying it is not today's job.`,
       ],
       even: [
-        `Day ${d} is even. The pile is heavy — one next piece, not the whole list.`,
-        `Day ${d}. Ordinary mix. One next piece, not the whole list.`,
-        `Day ${d} logged without a surge. One next piece of the pile, not the whole list.`,
+        `Day ${d} is even. Work is loud; finish a job-sized bite and leave the rest on the desk.`,
+        `Day ${d}. Ordinary mix. The board does not need to go empty — one real unit is the day.`,
+        `Day ${d} logged without a surge. Glance at the stack, take a slice, then let it sit.`,
       ],
       cut: [
-        `Day ${d} skipped. The pile got in the way. Next time: one next piece, not the whole list.`,
-        `Day ${d} missed. Name the pile as the habit — one next piece, not the whole list.`,
-        `Day ${d}. Skip landed on the pile. One next piece, not the whole list.`,
+        `Day ${d} skipped. The stack got in the way. Next time: a smaller unit with a stop you can see.`,
+        `Day ${d} missed. Name the pile as the habit — a bite, then stop, not a hero clear-out.`,
+        `Day ${d}. Skip landed on a stacked day. Call the habit: pace it, don't empty it.`,
       ],
     };
     const dos: Record<Tone, string[]> = {
       lift: [
-        `Right after you ${cue}, do one next piece, not the whole list.`,
-        `After you ${cue}, start one next piece — not the whole list — before you open your phone.`,
-        `Right after you ${cue}, knock out one next piece, not the whole list.`,
+        `Right after you ${cue}, start one slice of the stack before you open your phone.`,
+        `After you ${cue}, knock out the first bite of the pile and close the rest.`,
+        `Right after you ${cue}, do one real unit of the week's load and walk away.`,
       ],
       even: [
-        `After you ${cue}, do one next piece, not the whole list.`,
-        `After you ${cue}, pick one next piece — not the whole list — and do it first.`,
-        `After you ${cue}, write down one next piece, not the whole list, and do just that.`,
+        `After you ${cue}, start one slice of the stack and put a lid on it.`,
+        `After you ${cue}, pick the first bite of the pile and stop when that bite is done.`,
+        `After you ${cue}, write down one unit of the load and do just that — then close it.`,
       ],
       cut: [
-        `After you ${cue}, do one next piece, not the whole list — one minute is enough.`,
-        `Right after you ${cue}, one next piece of the pile, not the whole list.`,
-        `Right after you ${cue}, break the pattern: one next piece, not the whole list.`,
+        `After you ${cue}, do the smallest slice of the stack — one minute is enough.`,
+        `Right after you ${cue}, name one bite of the pile and finish only that.`,
+        `Right after you ${cue}, break the loop: one unit of the load, then a stop.`,
       ],
     };
     return { read: reads[effectiveTone][slot]!, do: dos[effectiveTone][slot]! };
@@ -150,36 +151,36 @@ function libraryShapedCard(input: GenerateInput, effectiveTone: Tone): VoiceCard
   if (ids.has('sleep')) {
     const reads: Record<Tone, string[]> = {
       lift: [
-        `Day ${d}. You showed up. Today's step stays small so bedtime is still reachable.`,
-        `Day ${d} logged. Quiet hold — bedtime is still reachable.`,
-        `Day ${d}. No speech. Today's step stays small so bedtime is still reachable.`,
+        `Day ${d}. You showed up. Keep today's ask tiny so tonight can still start on time.`,
+        `Day ${d} logged. Quiet hold — last night ran short, so today's step stays small.`,
+        `Day ${d}. No speech. Protect tonight by shrinking what you try today.`,
       ],
       even: [
-        `Day ${d}. Even day. Today's step stays small so bedtime is still reachable.`,
-        `Day ${d} is ordinary. Bedtime is still reachable if today's step stays small.`,
-        `Day ${d}. Mixed and quiet. Today's step stays small so bedtime is still reachable.`,
+        `Day ${d}. Even day. Last night ran short — keep today's ask tiny so tonight can still start on time.`,
+        `Day ${d} is ordinary. A smaller step today leaves room for a dim last hour.`,
+        `Day ${d}. Mixed and quiet. Don't spend the evening catching up on a short night.`,
       ],
       cut: [
-        `Day ${d} skipped. Last night ran short. Today's step stays small so bedtime is still reachable.`,
-        `Day ${d} missed. Name last night as the habit — bedtime is still reachable.`,
-        `Day ${d}. The skip tracks to a short night. Today's step stays small so bedtime is still reachable.`,
+        `Day ${d} skipped. Last night ran short. Shrink today's ask so tonight is still possible.`,
+        `Day ${d} missed. Name last night as the habit — keep the next step small.`,
+        `Day ${d}. The skip tracks to a short night. Tiny today beats a heroic catch-up.`,
       ],
     };
     const dos: Record<Tone, string[]> = {
       lift: [
-        `After you ${cue}, do one small piece, then stop so bedtime is still reachable.`,
-        `Right after you ${cue}, start one small piece — bedtime is still reachable.`,
-        `After you ${cue}, knock out one small piece so bedtime is still reachable.`,
+        `After you ${cue}, do one small piece and stop before the evening fills up.`,
+        `Right after you ${cue}, start one small piece, then leave tonight alone.`,
+        `After you ${cue}, knock out one small piece and protect the last hour.`,
       ],
       even: [
-        `After you ${cue}, do one small piece so bedtime is still reachable.`,
-        `After you ${cue}, pick one small piece and stop — bedtime is still reachable.`,
-        `After you ${cue}, write down one small piece so bedtime is still reachable.`,
+        `After you ${cue}, do one small piece, then close the day so tonight has a start.`,
+        `After you ${cue}, pick one small piece and leave the rest for another morning.`,
+        `After you ${cue}, write down one small piece and stop when it's done.`,
       ],
       cut: [
-        `After you ${cue}, do the smallest version — bedtime is still reachable.`,
-        `Right after you ${cue}, one small piece so bedtime is still reachable.`,
-        `Right after you ${cue}, one minute is enough so bedtime is still reachable.`,
+        `After you ${cue}, do the smallest version — then actually stop.`,
+        `Right after you ${cue}, one small piece, then protect the last hour.`,
+        `Right after you ${cue}, one minute is enough; don't spend the night catching up.`,
       ],
     };
     return { read: reads[effectiveTone][slot]!, do: dos[effectiveTone][slot]! };
@@ -201,7 +202,7 @@ function localCard(input: GenerateInput): VoiceCard {
   const frames = READ_FRAMES[style][effectiveTone];
   return {
     read: frames[(day - 1) % frames.length](day, angle),
-    do: DO_TEMPLATES[style][effectiveTone](day, me.morning_cue),
+    do: DO_TEMPLATES[style][effectiveTone](day, cueAfterYou(me.morning_cue)),
   };
 }
 
@@ -225,7 +226,12 @@ function localTalk(input: TalkGenerateInput): { reply: string } {
   const ids = libraryIds({ me, day, message, surface: 'talk' });
 
   if (ids.has('workload')) {
-    const frame = 'The pile is heavy — one next piece, not the whole list.';
+    const frames = [
+      'Chasing just-one-more is how the evening goes. Pick the next chunk, then a visible stop.',
+      'A lid you can see beats finishing the leftover. Name one chunk and leave the rest.',
+      'The board never empties. Pace one unit, then actually stop — that is the move.',
+    ];
+    const frame = frames[(day - 1) % frames.length]!;
     if (asked && isQuestion) {
       return { reply: `You asked: "${clip}". ${frame}` };
     }

@@ -70,7 +70,7 @@ export const KNOCKS_CHIPS: IntakeChip<KnocksChip>[] = [
 ];
 
 /**
- * Gerund phrases that drop into first_cards.md: "After you {morning_cue}, …"
+ * Infinitive phrases that drop into first_cards.md: "After you {morning_cue}, …"
  * Chip label is the "After I …" shape from the spec; stored value is the cue.
  */
 export const MORNING_CUE_CHIPS: IntakeChip[] = [
