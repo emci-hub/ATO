@@ -6,6 +6,7 @@ import { AppearancePicker } from '@/components/appearance-picker';
 import { MilestoneBadges } from '@/components/check-milestone-badge';
 import { RevealCard } from '@/components/reveal-card';
 import { RankingCard } from '@/components/ranking-card';
+import { ScenarioCard } from '@/components/scenario-card';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
 import { ThemedTabBar } from '@/components/themed-tab-bar';
 import { ThemedText } from '@/components/themed-text';
@@ -23,6 +24,7 @@ import {
 } from '@/lib/sage-copy';
 import type { RevealPick } from '@/lib/reveal';
 import { RANKING_ROUNDS, type RankingPrompt } from '@/lib/ranking';
+import { SCENARIO_DECK, type ScenarioPrompt } from '@/lib/scenario';
 
 const THEME_REVEAL_WEEK: RevealPick = {
   kind: 'week-pattern',
@@ -38,6 +40,18 @@ const THEME_RANKING: RankingPrompt = {
   axis: 'extraversion',
   items: RANKING_ROUNDS.extraversion,
   order: RANKING_ROUNDS.extraversion.map((item) => item.id),
+  weekKey: '2026-08-23',
+};
+
+const THEME_SCENARIO_LOCUS: ScenarioPrompt = {
+  axis: 'locus_of_control',
+  def: SCENARIO_DECK.locus_of_control,
+  weekKey: '2026-08-23',
+};
+
+const THEME_SCENARIO_AUTONOMY: ScenarioPrompt = {
+  axis: 'autonomy',
+  def: SCENARIO_DECK.autonomy,
   weekKey: '2026-08-23',
 };
 
@@ -96,6 +110,10 @@ export default function ThemeLabScreen() {
           <RevealCard pick={null} />
           <ThemedText type="smallBold">Ranking · extraversion</ThemedText>
           <RankingCard forcePick={THEME_RANKING} />
+          <ThemedText type="smallBold">Scenario · first thought</ThemedText>
+          <ScenarioCard forcePick={THEME_SCENARIO_LOCUS} />
+          <ThemedText type="smallBold">Scenario · my way</ThemedText>
+          <ScenarioCard forcePick={THEME_SCENARIO_AUTONOMY} />
           <Pressable
             style={[styles.primaryButton, { backgroundColor: theme.accentFill }]}>
             <ThemedText type="smallBold" style={{ color: theme.onAccent }}>

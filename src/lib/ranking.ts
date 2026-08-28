@@ -2,7 +2,7 @@
  * Forced-ranking sort. Optional-depth, one trait axis per round.
  * Drag order is an explicit self-report → `self_tap` (direct, sticky).
  * Soft-ask: yields if Does-Sage-know-you or a completeness claim already
- * has this week's slot. No model call, no framework names.
+ * has this week's slot. Extra six axes are the scenario swipe-deck.
  */
 import { localYmd } from '@/lib/local-date';
 import {
@@ -15,6 +15,7 @@ import {
   type SageKnowsState,
 } from '@/lib/sage-knows';
 import {
+  EXTRA_AXES,
   TRAIT_AXES,
   emptyTraitState,
   mergeTraitWrite,
@@ -231,7 +232,9 @@ export function scoreRankingOrder(round: RankingItem[], order: readonly string[]
 }
 
 export function pickRankingAxis(values: TraitValues, last: TraitAxis | null): TraitAxis | null {
-  const unfilled = TRAIT_AXES.filter((axis) => values[axis] == null);
+  const unfilled = TRAIT_AXES.filter(
+    (axis) => values[axis] == null && !(EXTRA_AXES as readonly string[]).includes(axis),
+  );
   if (unfilled.length === 0) return null;
   if (last == null) return unfilled[0] ?? null;
   const start = TRAIT_AXES.indexOf(last);

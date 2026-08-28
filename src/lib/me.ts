@@ -14,11 +14,13 @@ import {
   applySageKnowsNotQuite,
   applySageKnowsStillFits,
   applyRankingWeek,
+  applyScenarioWeek,
   parseSageKnowsState,
   sageKnowsWeekKey,
   type SageKnowsState,
 } from '@/lib/sage-knows';
 import { applyRankingWrite } from '@/lib/ranking';
+import { applyScenarioWrite, type ExtraAxis, type ScenarioPole } from '@/lib/scenario';
 import {
   mergeTraitWrite,
   confirmTraitSource,
@@ -421,6 +423,43 @@ export async function recordRankingDismiss(userId: string, axis: TraitAxis): Pro
   const current = await fetchMe(userId);
   if (!current) throw new Error('Not authenticated');
   const knows = applyRankingWeek(
+    parseSageKnowsState(current.sage_knows),
+    axis,
+    weekKeyFor(current),
+    'dismissed',
+  );
+  return persistMe(userId, { sage_knows: knows });
+}
+
+/** Scenario pick — `self_game` on one extra axis + claims the game-invite week. */
+export async function recordScenario(
+  userId: string,
+  axis: ExtraAxis,
+  pole: ScenarioPole,
+): Promise<Me> {
+  const current = await fetchMe(userId);
+  if (!current) throw new Error('Not authenticated');
+  const now = new Date();
+  const merged = applyScenarioWrite(
+    traitStateFromRow(current),
+    axis,
+    pole,
+    now.toISOString(),
+  );
+  const knows = applyScenarioWeek(
+    parseSageKnowsState(current.sage_knows),
+    axis,
+    weekKeyFor(current, now),
+    'answered',
+  );
+  return persistMe(userId, { ...traitPatch(merged), sage_knows: knows });
+}
+
+/** Scenario dismiss ends this week's turn. Does not write an axis. */
+export async function recordScenarioDismiss(userId: string, axis: ExtraAxis): Promise<Me> {
+  const current = await fetchMe(userId);
+  if (!current) throw new Error('Not authenticated');
+  const knows = applyScenarioWeek(
     parseSageKnowsState(current.sage_knows),
     axis,
     weekKeyFor(current),

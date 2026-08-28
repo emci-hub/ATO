@@ -244,11 +244,7 @@ One question per screen, tappable, with a visible progress indicator ("3 of 9").
 2. **Three-path (decided; supersedes treating the new frameworks as onboarding or as a single extra quiz).** SDT / growth mindset / locus of control / self-efficacy are never part of the required 9. User's choice, no pressure. Soft-ask budget applies to path (b) resurfacing (see below).
    - **(a) Answer directly** — simple tap-form, plain language, no clinical/framework terms. Writes as **direct** (`self_tap`; sticky, same rank as slider).
    - **(b) Skip now** — resurfaces occasionally later without pressure. Not a push notification, not urgent framing. Null stays null, no source row.
-   - **(c) Play instead** — scenario swipe-deck, forced-choice "implicit trait policy" (same UI pattern as the original swipe-deck idea). Each scenario signals one axis without naming it. Writes as **inferred** (`self_game`; same rank as grid/situation — below a later direct answer on that axis). Sample formats:
-     - Locus of control: "A project falls apart. First thought: 'I could've done something differently' vs 'that was bound to happen.'"
-     - Growth mindset: "You bomb a presentation. Gut reaction: 'guess I'm not good at this' vs 'let me figure out what went wrong.'"
-     - Self-efficacy: "Big task, tight deadline. You feel: 'I've got this' vs 'not sure I can pull this off.'"
-     - SDT: "Best day at work is one where: 'I did it my way' / 'I nailed something hard' / 'I actually connected with people.'"
+   - **(c) Play instead** — shipped (Stage 13). Scenario swipe-deck, forced-choice, one axis per card (SDT is three cards, never a three-way pick). Writes as **inferred** (`self_game`; same rank as grid/situation — below a later direct answer on that axis).
 
 ### Day 1 payoff — shipped with Stage 9/10
 
@@ -353,7 +349,7 @@ The trait backbone shapes *tone* (who Sage is talking to). Coaching quality is g
 - Same extra-care review discipline that applies to the Crisis spec applies here before shipping — this touches real psychological categories, not just cosmetic personalization.
 - "MBTI" branding avoided in UI copy (trademarked by the Myers-Briggs Company) — use generic phrasing like "your type" or "16 personality types," same approach 16Personalities uses.
 
-**Where this fits:** Stages 9, 11, and 12 shipped (intake, axes, Library grounding). Talk output fence shipped. Stage 13 badges, Does-Sage-know-you, reveal, and ranking shipped. Remaining work is several later boxes (Explore, feedback, 3-month Settings prompt, completeness, three-path extra-axis intake, Reload, scenarios) — not one box. Locks from the Aug 28 Grok review live in the sections above.
+**Where this fits:** Stages 9, 11, and 12 shipped (intake, axes, Library grounding). Talk output fence shipped. Stage 13 badges, Does-Sage-know-you, reveal, ranking, and scenarios shipped. Remaining work is several later boxes (Explore, feedback, 3-month Settings prompt, completeness, three-path extra-axis intake chooser, Reload) — not one box. Locks from the Aug 28 Grok review live in the sections above.
 
 ### Delight & engagement mechanics (red-teamed this session)
 
@@ -363,8 +359,8 @@ The trait backbone shapes *tone* (who Sage is talking to). Coaching quality is g
 
 **Game mechanics — fun and useful as the same action, not fun wrapped around a form:**
 - **"Does Sage know you?"** — shipped. Sage checks in from an existing axis; user taps Still fits or Not quite (confirm does not change the number; correct / Settings edit does). Recurring, self-improving "it gets me" payoff — not a one-shot quiz, not inside Talk replies. Two Still fits on the same axis graduates it. Untouched 3+ months → passive Settings prompt (later), not a push. Locks in Understanding spec.
-- **Forced-ranking sort** — shipped. Drag 4–5 short statements into order from "most me" to "least me." One axis per round, plain behavioral lines, `self_tap` write. Same optional-depth surfaces as the later swipe-deck. Soft-ask: yields if Does-Sage-know-you or completeness already has the week.
-- **Scenario reaction cards, light time pressure** — quick scenario, 3-4 tap options, mild timer. Gut reactions under light time pressure tend to be more revealing than slowly deliberated ones.
+- **Forced-ranking sort** — shipped. Drag 4–5 short statements into order from "most me" to "least me." One axis per round (first nine), plain behavioral lines, `self_tap` write. Soft-ask: yields if Does-Sage-know-you or completeness already has the week; extra-axis gaps go to scenarios.
+- **Scenario reaction cards** — shipped. Swipe or tap, two options, one extra axis per card. SDT is three cards, never a three-way pick. Writes `self_game`. Same weekly slot.
 - **Friend-guessing game (Circle, once it exists)** — real market precedent for this exact "who knows you best" category. A friend guesses how you'd answer, you see if they're right. Where self-report and a friend's guess *disagree* is often the most interesting signal of all — worth Sage noticing and reflecting back.
 
 ### Honest-feedback delivery (valence/cut refinement)
@@ -462,9 +458,9 @@ You + friends, one real week, real devices. Home stayed new day to day. Dos were
 
 ## Wave 1.5 — Understanding & Delight (Stages 9-14)
 
-Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Wave 2 Stage 2 ("I'm going") is in. Stage 11 optional fast-entry is in (all 15 trait axes; direct vs inferred; `last_touched`). Stage 12 Library grounding is in. Stage 13 badges (part 1), Does-Sage-know-you (part 2), reveal (part 3), and ranking (part 4) are in. Remaining Stage 13: scenarios. Full spec detail lives in "Understanding spec" above; this section is sequencing only.
+Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Wave 2 Stage 2 ("I'm going") is in. Stage 11 optional fast-entry is in (all 15 trait axes; direct vs inferred; `last_touched`). Stage 12 Library grounding is in. Stage 13 badges (part 1), Does-Sage-know-you (part 2), reveal (part 3), ranking (part 4), and scenarios (part 5) are in. Full spec detail lives in "Understanding spec" above; this section is sequencing only.
 
-**Decided Aug 28, 2026 — later boxes, not Stage 12, not one combined box:** Explore (Home inner tab) + phrasing-only feedback; 3-month Settings prompt; intake three-path for the extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with the locks already closed. Talk output fence **shipped**. Six extra trait axes + direct-vs-inferred `trait_sources` + `last_touched` **shipped**. Library copy **shipped**. Sage reads Library For Sage lines **shipped** (Stage 12). Stage 13 badges **shipped** (7 Checks / first fact / week without a cut). Does-Sage-know-you **shipped** (banked check-in). Home reveal **shipped**. Forced ranking **shipped**. **Locks from the Aug 28 Grok review are in the Understanding spec** (Explore combine + regen cap + fence; Does-Sage-know-you confirm rules; completeness split; direct-vs-inferred `trait_sources`; Talk fence phrases + retry-is-not-quota; soft-ask budget). Do not fold remaining items into Stage 12.
+**Decided Aug 28, 2026 — later boxes, not Stage 12, not one combined box:** Explore (Home inner tab) + phrasing-only feedback; 3-month Settings prompt; intake three-path for the extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with the locks already closed. Talk output fence **shipped**. Six extra trait axes + direct-vs-inferred `trait_sources` + `last_touched` **shipped**. Library copy **shipped**. Sage reads Library For Sage lines **shipped** (Stage 12). Stage 13 badges **shipped** (7 Checks / first fact / week without a cut). Does-Sage-know-you **shipped** (banked check-in). Home reveal **shipped**. Forced ranking **shipped**. Scenario swipe-deck **shipped**. **Locks from the Aug 28 Grok review are in the Understanding spec** (Explore combine + regen cap + fence; Does-Sage-know-you confirm rules; completeness split; direct-vs-inferred `trait_sources`; Talk fence phrases + retry-is-not-quota; soft-ask budget). Do not fold remaining items into Stage 12.
 
 ### 9 Intake core
 **Open box: intake, me.**
@@ -493,7 +489,8 @@ Reveal card (real content only, no randomized-value mechanic), milestone badges,
 **Done (Aug 28, 2026, badges):** Home check-count chip is a collapsible milestone strip for 7 Checks, first Teach-Sage fact, and 7 consecutive calendar days without a cut. Deterministic from logged Checks and stored facts — no chance mechanic, no popup.
 **Done (Aug 28, 2026, Does Sage know you?):** Home/Sage check-in from banked high/low trait lines, zero quota. Still fits / Not quite. Weekly; yields while any axis is null; cruel/mid/fresh axes excluded; two Still fits graduates that axis. 3-month Settings prompt remains later.
 **Done (Aug 28, 2026, reveal):** Home tap-to-open Note. Week pattern / fact / badge-proximity, Nudge-style priority. One 300ms unfold, same motion for every kind. Reduce Motion skips to copy. Empty days are a plain line, no sealed object.
-**Done (Aug 28, 2026, ranking):** Home/Sage/You drag sort, 4–5 lines, one unfilled axis. `self_tap` write. Yields if Does-Sage-know-you or a completeness claim already has the week. Scenarios remain later.
+**Done (Aug 28, 2026, ranking):** Home/Sage/You drag sort, 4–5 lines, one unfilled first-nine axis. `self_tap` write. Yields if Does-Sage-know-you or a completeness claim already has the week.
+**Done (Aug 28, 2026, scenarios):** Gut call swipe/tap. Six extra axes, two options, `self_game`. SDT is three cards. Soft-ask shared with ranking and Does-Sage-know-you.
 
 ### 14 Multiplayer (friend-guessing)
 **Open box: circle, intake.**

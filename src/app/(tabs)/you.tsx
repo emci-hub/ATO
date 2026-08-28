@@ -12,6 +12,7 @@ import { CityPicker } from '@/components/city-picker';
 import { CrisisRegionPicker } from '@/components/crisis-region-picker';
 import { IntakeSettings } from '@/components/intake-settings';
 import { RankingCard } from '@/components/ranking-card';
+import { ScenarioCard } from '@/components/scenario-card';
 import { KenneyCreditsCard } from '@/components/kenney-credits-card';
 import { PushTestCard } from '@/components/push-test-card';
 import { SageUsageFold } from '@/components/sage-usage';
@@ -172,6 +173,7 @@ export default function YouScreen() {
               </ThemedView>
 
               <RankingCard me={me} onUpdated={() => refresh()} />
+              <ScenarioCard me={me} onUpdated={() => refresh()} />
 
               <IntakeSettings
                 me={me}

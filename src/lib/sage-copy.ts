@@ -64,3 +64,8 @@ export const RANKING_LEDE = 'Drag into order. Most you at the top.';
 export const RANKING_SAVE = "That's me";
 
 export const RANKING_SKIP = 'Not this week';
+
+/** Optional-depth scenario swipe. One extra axis, inferred self_game. */
+export const SCENARIO_LABEL = 'Gut call';
+
+export const SCENARIO_LEDE = 'Swipe or tap. One pick.';

@@ -30,6 +30,7 @@ import {
 } from '../src/lib/sage-knows';
 import {
   TRAIT_AXES,
+  EXTRA_AXES,
   emptyTraitState,
   emptyTraitValues,
   mergeTraitWrite,
@@ -111,7 +112,21 @@ ok('self_tap is sticky; a later inferred write cannot overwrite it');
 assert.equal(pickRankingAxis(gapValues(), null), 'openness');
 assert.equal(pickRankingAxis(gapValues({ openness: 0.8 }), 'openness'), 'conscientiousness');
 assert.equal(pickRankingAxis(filled(), null), null);
-ok('round prefers an unfilled axis; all-filled yields');
+const extraOnly = emptyTraitValues();
+for (const axis of TRAIT_AXES) {
+  if (!(EXTRA_AXES as readonly string[]).includes(axis)) extraOnly[axis] = 0.8;
+}
+assert.equal(pickRankingAxis(extraOnly, null), null);
+assert.equal(
+  resolveRanking({
+    values: extraOnly,
+    knows: emptySageKnowsState(),
+    now: NOW,
+    timeZone: TZ,
+  }),
+  null,
+);
+ok('round prefers an unfilled axis; extra-only gaps yield so the swipe-deck can take that slot');
 
 const shown = resolveRanking({
   values: gapValues(),

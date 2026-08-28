@@ -34,6 +34,7 @@ export interface SageKnowsState {
   week_slot: SageKnowsWeekSlot | null;
   week_done: SageKnowsWeekDone | null;
   ranking_last_axis: TraitAxis | null;
+  scenario_last_axis: TraitAxis | null;
   you_week_key: string | null;
   you_slot: YouTabSoftAsk | null;
   streaks: Partial<Record<TraitAxis, number>>;
@@ -128,6 +129,7 @@ export function emptySageKnowsState(): SageKnowsState {
     week_slot: null,
     week_done: null,
     ranking_last_axis: null,
+    scenario_last_axis: null,
     you_week_key: null,
     you_slot: null,
     streaks: {},
@@ -153,6 +155,7 @@ export function parseSageKnowsState(raw: unknown): SageKnowsState {
       : null;
   const week_done = row.week_done === 'dismissed' || row.week_done === 'answered' ? row.week_done : null;
   const ranking_last_axis = isTraitAxis(row.ranking_last_axis) ? row.ranking_last_axis : null;
+  const scenario_last_axis = isTraitAxis(row.scenario_last_axis) ? row.scenario_last_axis : null;
   const you_week_key =
     typeof row.you_week_key === 'string' && row.you_week_key.length > 0 ? row.you_week_key : null;
   const you_slot =
@@ -179,6 +182,7 @@ export function parseSageKnowsState(raw: unknown): SageKnowsState {
     week_slot,
     week_done,
     ranking_last_axis,
+    scenario_last_axis,
     you_week_key,
     you_slot,
     streaks,
@@ -462,6 +466,22 @@ export function applyGameInviteWeek(state: SageKnowsState, weekKey: string): Sag
     week_key: weekKey,
     week_slot: 'game_invite',
     week_done: 'answered',
+  };
+}
+
+/** Scenario swipe-deck claims the Home/Sage week (game invite slot). */
+export function applyScenarioWeek(
+  state: SageKnowsState,
+  axis: TraitAxis,
+  weekKey: string,
+  done: SageKnowsWeekDone,
+): SageKnowsState {
+  return {
+    ...state,
+    week_key: weekKey,
+    week_slot: 'game_invite',
+    week_done: done,
+    scenario_last_axis: axis,
   };
 }
 
