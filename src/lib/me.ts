@@ -93,6 +93,11 @@ export interface Me {
   /** Hidden. FK to the ME row that invited this user. Never shown publicly. */
   referred_by: string | null;
   /**
+   * Cosmetic Founder badge on You. Default false. Flipped by root only —
+   * not Dev/Admin, no extra app access.
+   */
+  is_founder: boolean;
+  /**
    * Visibility for Around faces. Plan name `show`; column is `visible`
    * because SHOW is reserved. Default true. Colors still count when false.
    */
@@ -109,6 +114,7 @@ export type MeInsert = Omit<
   | 'facts'
   | 'milestones_celebrated'
     | 'referred_by'
+    | 'is_founder'
     | 'born_on'
     | 'city'
     | 'evening_wind_down'
@@ -171,6 +177,7 @@ function withVisible(row: Me): Me {
   return {
     ...row,
     visible: row.visible !== false,
+    is_founder: row.is_founder === true,
     trait_sources: sources,
     trait_touched_at: touched,
     sage_knows: parseSageKnowsState(row.sage_knows),

@@ -22,6 +22,7 @@ This is not a substitute for legal advice. This draft is intended for review by 
 - Facts you've explicitly asked Sage to remember ("Teach Sage this") — nothing else from your conversations is stored as a fact
 - Messages you send in Chat with people in your Circle
 - Referral relationships (who invited you, who you've invited) — used only to prevent abuse, never shown publicly, never shared
+- Email address if you request an invite from the public landing page (ato.emgens.com), stored until the request is reviewed
 
 **Device**
 - Push notification token, if you enable notifications
@@ -37,7 +38,7 @@ We use a small number of service providers to run ATO. We don't sell your data t
 
 - **Supabase** — hosts our database and handles authentication. Your profile, Checks, chat messages, and facts live here.
 - **Google (Gemini API)** — powers Sage, the in-app AI coach. When you talk to Sage or receive a daily card, relevant context is sent to Gemini: ME, recent Checks, and for Talk a short window of recent Sage turns so a follow-up can be answered (not the full thread). Google's own privacy terms govern how they process that request.
-- **Resend** — sends the one-time login codes to your email.
+- **Resend** — sends the one-time login codes to your email, and invite codes when a landing-page access request is approved.
 - **Apple** — if you sign in with Apple, Apple may relay a private email address instead of your real one. We only see whatever Apple gives us.
 
 None of these providers are permitted to use your data for their own purposes beyond providing the service to us.

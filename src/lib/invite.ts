@@ -6,10 +6,23 @@ export type SignupMode = 'invite_only' | 'public';
 
 export interface InviteCode {
   code: string;
-  max_uses: number;
+  /** Null means unlimited (founder codes). */
+  max_uses: number | null;
   uses_count: number;
   status: 'active' | 'used' | 'revoked';
   created_at: string;
+}
+
+/** Remaining uses, or null when the code has no cap. */
+export function inviteRemaining(invite: InviteCode): number | null {
+  if (invite.max_uses == null) return null;
+  return Math.max(0, invite.max_uses - invite.uses_count);
+}
+
+export function inviteUsable(invite: InviteCode): boolean {
+  if (invite.status !== 'active') return false;
+  const remaining = inviteRemaining(invite);
+  return remaining == null || remaining > 0;
 }
 
 export interface Referral {

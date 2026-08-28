@@ -28,6 +28,8 @@ import { useCircleContext } from '@/lib/circle-context';
 import {
   fetchMyInviteCodes,
   fetchMyReferrals,
+  inviteRemaining,
+  inviteUsable,
   type InviteCode,
   type Referral,
 } from '@/lib/invite';
@@ -114,7 +116,16 @@ export default function YouScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView {...NO_PINCH_ZOOM} contentContainerStyle={styles.scrollContent}>
-          <ThemedText type="subtitle" style={styles.title}>You</ThemedText>
+          <View style={styles.titleRow}>
+            <ThemedText type="subtitle" style={styles.title}>You</ThemedText>
+            {me?.is_founder ? (
+              <View style={[styles.founderBadge, { backgroundColor: theme.accentFill }]}>
+                <ThemedText type="code" style={{ color: theme.onAccent }}>
+                  Founder
+                </ThemedText>
+              </View>
+            ) : null}
+          </View>
 
           {me ? (
             <>
@@ -220,7 +231,7 @@ export default function YouScreen() {
                   Invite codes
                 </ThemedText>
                 <ThemedText type="small" themeColor="textSecondary" style={styles.inviteHint}>
-                  Share a code to invite someone. Each code works once.
+                  Share a code to invite someone.
                 </ThemedText>
                 {inviteCodes.length === 0 ? (
                   <ThemedText type="small" themeColor="textSecondary">
@@ -228,14 +239,16 @@ export default function YouScreen() {
                   </ThemedText>
                 ) : (
                   inviteCodes.map((invite) => {
-                    const remaining = Math.max(0, invite.max_uses - invite.uses_count);
-                    const usable = invite.status === 'active' && remaining > 0;
+                    const remaining = inviteRemaining(invite);
+                    const usable = inviteUsable(invite);
+                    const leftover =
+                      remaining == null ? 'unlimited' : remaining > 0 ? `${remaining} left` : 'used';
                     return (
                       <View key={invite.code} style={styles.inviteRow}>
                         <View style={styles.inviteInfo}>
                           <ThemedText type="smallBold">{invite.code}</ThemedText>
                           <ThemedText type="small" themeColor="textSecondary">
-                            {usable ? `${remaining} left` : 'used'}
+                            {usable ? leftover : 'used'}
                           </ThemedText>
                         </View>
                         {usable ? (
@@ -355,8 +368,19 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.four,
     paddingBottom: BottomTabInset + Spacing.four,
   },
-  title: {
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
     paddingRight: NAV_PIXEL_HEADER_INSET,
+  },
+  title: {
+    flexShrink: 1,
+  },
+  founderBadge: {
+    borderRadius: Spacing.two,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 2,
   },
   shareCard: {
     borderRadius: Spacing.four,

@@ -39,6 +39,7 @@ If a field isn't defined here, don't guess its shape — ask.
 | Library | static copy | Written-once, reviewed, public-domain/academic grounding. Lives in `src/app/copy/library.md` (same pattern as `first_cards.md`). Domain entries: Sleep, Workload, Conflict, Communication, Health, Money. Framework entries: Self-Determination Theory (Deci & Ryan), growth mindset (Dweck), locus of control (Rotter), self-efficacy (Bandura). People may read Library, so framework names are allowed there. Sage generation (Read/Do/Talk) may use only **For Sage** paraphrase lines, and only when a knock, filled trait, fact, or typed line connects — never teaching/source copy, never a visible "library" section. Output still runs `containsFrameworkTerm`. |
 | `check_count` | integer, derived | Count of all-time Checks. Gates bank-vs-model content and the paywall (7). |
 | `host` | boolean on ME | You flip this manually (admin). Not self-serve in v1. |
+| `is_founder` | boolean on ME, default false | Root-flipped. Cosmetic Founder badge on You. Not Dev/Admin. Issues one unlimited invite code (`max_uses` null). |
 | `referred_by` | uuid, nullable, FK → ME | Which ME row invited this user. Hidden field. See Referral spec. |
 | `born_on` | date, self-reported, nullable only on pre-field accounts | Date of birth. Required at new signup. Age is computed from this — 16+ to create an account, 18+ later for Wave 2 going. Never stored as a number or boolean. |
 | `signup_mode` | config value: `invite_only`/`public` | Global switch gating whether a valid invite code is required to create an account. See Referral spec. |
@@ -132,7 +133,7 @@ Write those two copy files first. 3 styles × 3 valences. 3 mornings × 3 styles
 | Invite | signup attempt + code | account created (or rejected) + code consumed |
 | Intake | onboarding taps + optional extra axes (three-path for new axes; Stage 11 extra-4 for the first 9) | trait backbone fields on ME (see Understanding spec) |
 
-**ME fields:** name, handle, timezone, `city` (typed slug for Around, never GPS; Wave 2 refreshes Calgary), `born_on` (self-reported date of birth; age computed, never stored as a number/boolean), `this_week`, `morning_cue`, `show_up`, `knocks_you_off`, `talk_style`, `evening_wind_down`, `energy_pattern`, `recovery_style`, `support_style`, `current_focus` (last five: self-report chips from Stage 9; nullable on pre-intake rows; energy/recovery/support/focus never shown on the public poster), color, `recipe`, theme_id, facts they've told Sage, all-time Checks, `check_count`, last_7_card_ids, `show` (visibility toggle; column is `me.visible` because SHOW is reserved), `allow_search`, `host` (admin-flipped), `referred_by` (hidden, nullable).
+**ME fields:** name, handle, timezone, `city` (typed slug for Around, never GPS; Wave 2 refreshes Calgary), `born_on` (self-reported date of birth; age computed, never stored as a number/boolean), `this_week`, `morning_cue`, `show_up`, `knocks_you_off`, `talk_style`, `evening_wind_down`, `energy_pattern`, `recovery_style`, `support_style`, `current_focus` (last five: self-report chips from Stage 9; nullable on pre-intake rows; energy/recovery/support/focus never shown on the public poster), color, `recipe`, theme_id, facts they've told Sage, all-time Checks, `check_count`, last_7_card_ids, `show` (visibility toggle; column is `me.visible` because SHOW is reserved), `allow_search`, `host` (admin-flipped), `is_founder` (root-flipped; cosmetic You-tab badge + one unlimited invite code), `referred_by` (hidden, nullable).
 
 **ME never stores:** guessed vibes, raw chat logs, raw HealthKit data, a model's freeform narrative about the user. Explore "did this land?" reactions live in their own table — never a write path into trait scores.
 
@@ -169,15 +170,16 @@ Minimal, not a dashboard:
 **Not the same gate as TestFlight.** TestFlight already restricts installs to testers you've added — this spec matters starting at the point you submit for public App Store review, not before. Build it whenever; it does not block Stage 8.
 
 1. **Mode**: one config value, `signup_mode: invite_only | public`. Default `invite_only`. Flipping it later is the entire "go public" switch — no rebuild, no fork.
-2. **Codes**: `invite_codes` table — `code, owner_id, max_uses, uses_count, status, created_at`. Every ME row gets a small default allotment (3–5) issued automatically on account creation. You (root) seed manually, no `referred_by`.
-3. **ME addition**: `referred_by` — nullable, hidden field, FK to another ME row. Not shown publicly. A user *may* see their own list of who they referred (their choice to show it or not) — never who referred *them* beyond their own account, never anyone else's tree.
+2. **Codes**: `invite_codes` table — `code, owner_id, max_uses, uses_count, status, created_at`. `max_uses` null means unlimited. Every ME row gets a small default allotment (3–5) issued automatically on account creation (each `max_uses` 1). You (root) seed manually, no `referred_by`. Founder accounts (`is_founder`, root-flipped) get one additional owned code with unlimited uses. Cosmetic Founder badge on You — not Dev/Admin.
+3. **ME addition**: `referred_by` — nullable, hidden field, FK to another ME row. Not shown publicly. A user *may* see their own list of who they referred (their choice to show it or not) — never who referred *them* beyond their own account, never anyone else's tree. `is_founder` is separate and cosmetic.
 4. **Signup enforcement**: Auth box — if `signup_mode = invite_only`, a valid unused code is required to create an account; code is consumed on success.
 5. **Moderation** (no admin UI — same discipline as the Report spec, query Supabase directly):
    - `pause_branch(user_id)` — recursive walk down `referred_by`, disables login for that user and every descendant. Reversible. Use first.
    - `delete_branch(user_id)` — same walk, hard delete, cascades. Only after a paused branch has actually been reviewed.
 6. **Disclaimer**: one line added to the privacy policy: referral relationships are tracked only for abuse prevention, not shared or used elsewhere.
+7. **Access requests**: public landing form (email only) writes `access_requests`. Root reviews pending rows in `/dev-lab` (dev-gated). Approve generates a single-use code owned by root and emails it via Resend. Deny is silent.
 
-**Done:** invite-only signup rejects a missing/used/invalid code. A seeded test tree (you → A → B, C) can be paused as one action and B/C both lose access without touching A's or your own account. Flipping `signup_mode` to `public` allows signup with no code, no other change required.
+**Done:** invite-only signup rejects a missing/used/invalid code. A seeded test tree (you → A → B, C) can be paused as one action and B/C both lose access without touching A's or your own account. Flipping `signup_mode` to `public` allows signup with no code, no other change required. Founder unlimited codes set `referred_by` on signup without a use cap. Landing request form writes `access_requests`; approve/deny are root-only.
 
 **Where it fits:** own box (`invite`), touching Auth + ME only. Sequence right after the Apple Sign-In/delete-account handoff in Stage 8 (both are Auth-box work). Required before public App Store submission — not required before TestFlight.
 

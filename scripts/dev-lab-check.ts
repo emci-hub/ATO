@@ -89,6 +89,9 @@ ok('fence tester reports the banned term that matched');
 assert.match(hub, /fetchSageUsage/);
 assert.match(hub, /matchingFrameworkTerms/);
 assert.match(hub, /routeVoiceCard/);
-ok('hub sections call the live fence, usage snapshot, and card router');
+assert.match(hub, /listPendingAccessRequests/);
+assert.match(hub, /approveAccessRequest/);
+assert.match(hub, /denyAccessRequest/);
+ok('hub sections call the live fence, usage snapshot, card router, and access review');
 
 console.log(`\ndev-lab-check: ${passed}/${passed} passed`);

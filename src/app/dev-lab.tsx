@@ -11,6 +11,12 @@ import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { offsetLabel } from '@/lib/check-window';
 import {
+  approveAccessRequest,
+  denyAccessRequest,
+  listPendingAccessRequests,
+  type AccessRequest,
+} from '@/lib/access-requests';
+import {
   DEV_LAB_AXIS_ORDER,
   DEV_LAB_GAPS,
   DEV_LAB_PATTERNS,
@@ -31,13 +37,14 @@ import { fetchSageUsage } from '@/lib/voice/quota-server';
 import { routeVoiceCard } from '@/lib/voice/router';
 import type { VoiceCardResult, VoiceMe } from '@/lib/voice/types';
 
-type HubSection = 'card' | 'traits' | 'quota' | 'fence';
+type HubSection = 'card' | 'traits' | 'quota' | 'fence' | 'access';
 
 const SECTIONS: { id: HubSection; label: string }[] = [
   { id: 'card', label: 'Card' },
   { id: 'traits', label: 'Traits' },
   { id: 'quota', label: 'Quota' },
   { id: 'fence', label: 'Fence' },
+  { id: 'access', label: 'Access' },
 ];
 
 const LAB_ME: VoiceMe = {
@@ -93,6 +100,7 @@ function DevLab() {
           {section === 'traits' ? <TraitViewer /> : null}
           {section === 'quota' ? <QuotaDashboard /> : null}
           {section === 'fence' ? <FenceTester /> : null}
+          {section === 'access' ? <AccessReview /> : null}
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -457,6 +465,117 @@ function FenceTester() {
           </ThemedText>
         )}
       </ThemedView>
+    </View>
+  );
+}
+
+function AccessReview() {
+  const theme = useTheme();
+  const { session } = useSession();
+  const { me } = useMeContext();
+  const [rows, setRows] = useState<AccessRequest[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+
+  async function load() {
+    try {
+      const next = await listPendingAccessRequests();
+      setRows(next);
+      setError(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not load requests.';
+      setError(message === 'not_allowed' ? 'Root only — sign in as emci.' : message);
+      setRows([]);
+    }
+  }
+
+  useEffect(() => {
+    if (!session?.user.id) return;
+    void load();
+  }, [session?.user.id]);
+
+  async function act(id: string, action: 'approve' | 'deny') {
+    if (busyId) return;
+    setBusyId(id);
+    setNote(null);
+    try {
+      const result = action === 'approve' ? await approveAccessRequest(id) : await denyAccessRequest(id);
+      if (action === 'approve') {
+        const mailed = result.emailed ? 'emailed' : result.email_error ?? 'code generated, email did not send';
+        setNote(`${result.email} — ${result.invite_code ?? 'no code'} · ${mailed}`);
+      } else {
+        setNote(`${result.email} denied — no email sent.`);
+      }
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Review failed.');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Access requests</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Pending landing-page emails. Approve emails a single-use code owned by root. Deny is silent.
+        Root only — not Founder, not a public Admin screen.
+      </ThemedText>
+      <ThemedText type="code" themeColor="textSecondary">
+        {me?.handle ? `@${me.handle}` : 'signed out'}
+      </ThemedText>
+      {!session ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          Sign in as emci to review.
+        </ThemedText>
+      ) : null}
+      {error ? <ThemedText type="small">{error}</ThemedText> : null}
+      {note ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {note}
+        </ThemedText>
+      ) : null}
+      {rows.length === 0 && !error ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          No pending requests.
+        </ThemedText>
+      ) : (
+        rows.map((row) => (
+          <ThemedView key={row.id} type="backgroundElement" style={styles.card}>
+            <ThemedText type="smallBold">{row.email}</ThemedText>
+            <ThemedText type="code" themeColor="textSecondary">
+              {row.requested_at}
+            </ThemedText>
+            <View style={styles.tabs}>
+              <Pressable
+                disabled={busyId != null}
+                onPress={() => void act(row.id, 'approve')}
+                style={({ pressed }) => [
+                  styles.chip,
+                  { borderColor: controlBorderColor(theme), backgroundColor: theme.accentFill },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="small" style={{ color: theme.onAccent }}>
+                  {busyId === row.id ? '…' : 'Approve'}
+                </ThemedText>
+              </Pressable>
+              <Pressable
+                disabled={busyId != null}
+                onPress={() => void act(row.id, 'deny')}
+                style={({ pressed }) => [
+                  styles.chip,
+                  { borderColor: controlBorderColor(theme) },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Deny
+                </ThemedText>
+              </Pressable>
+            </View>
+          </ThemedView>
+        ))
+      )}
     </View>
   );
 }

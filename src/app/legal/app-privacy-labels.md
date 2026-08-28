@@ -10,7 +10,7 @@ Copy these answers into App Store Connect → App Privacy. They must match `Priv
 
 | Apple type | Collect? | Linked to identity | Tracking | Purposes | What ATO actually stores (privacy.md) |
 |---|---|---|---|---|---|
-| Email Address | Yes | Linked | No | App Functionality | Supabase Auth email (OTP via Resend) and Apple Hide My Email relay address |
+| Email Address | Yes | Linked | No | App Functionality | Supabase Auth email (OTP via Resend), Apple Hide My Email relay address, and landing-page access-request email |
 | Name | Yes | Linked | No | App Functionality, Product Personalization | `me.name` |
 | Date of Birth | Yes | Linked | No | App Functionality | `me.born_on` (self-reported at onboarding). Age is computed from the date — 16+ to create an account, 18+ later for Wave 2 "going". Not a frozen age or boolean. |
 | User ID | Yes | Linked | No | App Functionality | Auth UUID, `@handle`, Apple `sub`, invite `referred_by` (abuse prevention only; never shown publicly) |
@@ -48,7 +48,7 @@ Push notification token: `privacy.md` says we collect one if notifications are e
 
 - **Supabase** — database, auth, profile, Checks, chat, facts, reports, crisis-flag timestamps, referrals.
 - **Google (Gemini API)** — Sage coach replies and generated daily cards; relevant context only. Talk may include a short window of recent Sage turns, not the full thread.
-- **Resend** — one-time login codes to email.
+- **Resend** — one-time login codes to email, and invite codes when an access request is approved.
 - **Apple** — Sign in with Apple (may relay a private email); Hide My Email address is what we store.
 - **Sentry** — crash/diagnostic data, not linked to the ATO account.
 

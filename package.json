@@ -80,6 +80,7 @@
     "check:apple-revoke": "tsx ./scripts/apple-revoke-check.ts",
     "check:delete-account": "tsx ./scripts/delete-account-check.ts",
     "check:invite": "tsx ./scripts/invite-check.ts",
+    "check:founder-access": "tsx ./scripts/founder-access-check.ts",
     "check:intake": "tsx ./scripts/intake-check.ts",
     "check:traits": "tsx ./scripts/traits-check.ts",
     "check:sage-knows": "tsx ./scripts/sage-knows-check.ts",

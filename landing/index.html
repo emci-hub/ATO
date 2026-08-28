@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATO - What's your ATO?</title>
+<meta name="description" content="A daily check-in, a coach who knows your style, and a small circle of people who get it. Not a feed. Not therapy. Not another horoscope app.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <nav class="nav">
+    <a class="wordmark" href="/">ATO</a>
+    <span class="nav-tag">what's your ato?</span>
+  </nav>
+
+  <section class="hero">
+    <div>
+      <button class="face" id="face" aria-label="Toggle between current-you and Sage's view of you"></button>
+      <div class="face-caption">hover — that's the glow<br>Sage sees</div>
+    </div>
+    <div>
+      <h1>What's your ATO?</h1>
+      <p>A daily check-in, one honest line, one thing to actually try — and a coach that learns how you actually respond, not how a template thinks you should.</p>
+      <a class="cta" href="#request">Request an invite</a>
+    </div>
+  </section>
+
+  <section class="rhythm">
+    <h2>A normal day</h2>
+    <div class="beat">
+      <time>morning</time>
+      <div>
+        <h3>One card, thirty seconds</h3>
+        <p>Your read for the day, in your talk style, plus one thing to try — anchored to something you already do, not a routine you have to invent.</p>
+      </div>
+    </div>
+    <div class="beat">
+      <time>evening</time>
+      <div>
+        <h3>Check in</h3>
+        <p>Did it, or didn't. Your pixel moves either way. No streak to protect, no guilt trip — just an honest read on the week.</p>
+      </div>
+    </div>
+    <div class="beat">
+      <time>when ready</time>
+      <div>
+        <h3>Scan a friend in</h3>
+        <p>ATO stays just for you until you scan someone's code. After that: their honest card, a real thread, one circle — not a feed.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="isnt">
+    <h2>What ATO isn't</h2>
+    <ul>
+      <li>Not a feed you scroll</li>
+      <li>Not a therapist, and Sage says so itself</li>
+      <li>Not a dating app</li>
+      <li>Not a personality quiz that ends at the results screen</li>
+    </ul>
+  </section>
+
+  <section class="request" id="request">
+    <h2>Request an invite</h2>
+    <p>ATO is invite-only right now. Leave an email. If there's room, we'll send you a code.</p>
+    <form id="access-form">
+      <label class="sr-only" for="access-email">Email</label>
+      <input id="access-email" name="email" type="email" required autocomplete="email" placeholder="you@email.com">
+      <button type="submit">Request</button>
+    </form>
+    <p class="request-status" id="access-status" role="status"></p>
+  </section>
+
+  <footer>
+    <div class="flinks">
+      <a href="/privacy.html">Privacy Policy</a>
+      <a href="/terms.html">Terms of Service</a>
+      <a href="mailto:support@asstrollogs.com">Support</a>
+    </div>
+    <div>ATO, made by AsTrollOGs. Pixel assets by <a href="https://kenney.nl" style="color:inherit">Kenney.nl</a> (CC0). © AsTrollOGs.</div>
+  </footer>
+</div>
+
+<script>
+const pattern = [
+  '0011111100',
+  '0111111110',
+  '1111111111',
+  '1101111011',
+  '1101111011',
+  '1111111111',
+  '1111111111',
+  '1110110111',
+  '1111001111',
+  '0111111100'
+];
+const face = document.getElementById('face');
+pattern.forEach(row => {
+  [...row].forEach(bit => {
+    const cell = document.createElement('div');
+    cell.className = 'px' + (bit === '1' ? ' on' : '');
+    face.appendChild(cell);
+  });
+});
+face.addEventListener('click', () => face.classList.toggle('glow'));
+
+const SUPABASE_URL = 'https://aijzsmupaaaxjctfgwpl.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpanpzbXVwYWFheGpjdGZnd3BsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1MzA0NjQsImV4cCI6MjEwMzEwNjQ2NH0.2Brp11QZ3wMcpk2EgFDlxmNw_bomtBI6IaAbTwWqajE';
+
+const form = document.getElementById('access-form');
+const emailInput = document.getElementById('access-email');
+const statusEl = document.getElementById('access-status');
+
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const email = emailInput.value.trim();
+  if (!email) return;
+  statusEl.textContent = 'Sending…';
+  form.querySelector('button').disabled = true;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/access_requests`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify({ email }),
+    });
+    if (res.ok || res.status === 201) {
+      statusEl.textContent = 'Got it. If there is room, we will email you a code.';
+      form.reset();
+    } else if (res.status === 409) {
+      statusEl.textContent = 'That email is already on the list.';
+    } else {
+      statusEl.textContent = 'Could not send. Try again.';
+    }
+  } catch {
+    statusEl.textContent = 'Could not send. Try again.';
+  } finally {
+    form.querySelector('button').disabled = false;
+  }
+});
+</script>
+
+</body>
+</html>
