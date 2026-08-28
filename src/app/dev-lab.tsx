@@ -22,7 +22,7 @@ import {
 import { voiceMeFrom } from '@/lib/intake';
 import { localYmd } from '@/lib/local-date';
 import { supabase } from '@/lib/supabase';
-import { traitStateFromRow, type TraitSource } from '@/lib/traits';
+import { isDirectTraitSource, traitStateFromRow, type TraitSource } from '@/lib/traits';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { buildVoiceConfig } from '@/lib/voice/config';
 import { matchingFrameworkTerms } from '@/lib/voice/framework-fence';
@@ -50,9 +50,13 @@ const LAB_ME: VoiceMe = {
 };
 
 const SOURCE_NOTE: Record<TraitSource, string> = {
-  self_slider: 'sticky — later grid cannot overwrite',
-  self_grid: '16-grid inference',
-  self_situation: 'close-pattern / disagreement tap',
+  self_slider: 'direct — inferred cannot overwrite',
+  self_tap: 'direct — tap-form',
+  self_confirm: 'direct — Does Sage know you? confirm',
+  self_settings: 'direct — Settings edit',
+  self_grid: 'inferred — 16-grid',
+  self_situation: 'inferred — close-pattern / disagreement',
+  self_game: 'inferred — scenario swipe',
 };
 
 export default function DevLabScreen() {
@@ -327,10 +331,10 @@ function TraitViewer() {
             <ThemedText type="small" themeColor="textSecondary">
               {source ? `${source} — ${SOURCE_NOTE[source]}` : 'no write — skipped or never set'}
             </ThemedText>
-            {source === 'self_slider' ? (
+            {isDirectTraitSource(source) ? (
               <View style={[styles.sourceMark, { backgroundColor: theme.accentFill }]}>
                 <ThemedText type="code" style={{ color: theme.onAccent }}>
-                  slider sticky
+                  direct sticky
                 </ThemedText>
               </View>
             ) : null}

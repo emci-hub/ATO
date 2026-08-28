@@ -9,13 +9,15 @@ import { resolve } from 'node:path';
 import { writeForOptionalScreen } from '../src/lib/traits';
 import { voiceMeFrom } from '../src/lib/intake';
 import {
-  CLOSE_AXES,
-  DISAGREE_AXES,
+  EXTRA_AXES,
   GRID_AXES,
   SLIDER_AXES,
+  TRAIT_AXES,
   emptyTraitState,
+  isDirectTraitSource,
   mergeTraitWrite,
   optionalProgressLabel,
+  traitPatch,
   traitPromptLines,
   traitsFromClosePattern,
   traitsFromDisagree,
@@ -113,6 +115,62 @@ async function main() {
   assert.equal(afterGrid.sources.openness, 'self_grid');
   ok('slider extraversion is not overwritten by a later type tap that infers extraversion');
 
+  assert.equal(TRAIT_AXES.length, 15);
+  assert.deepEqual([...EXTRA_AXES], [
+    'autonomy',
+    'competence',
+    'relatedness',
+    'growth_mindset',
+    'locus_of_control',
+    'self_efficacy',
+  ]);
+  assert.equal(isDirectTraitSource('self_tap'), true);
+  assert.equal(isDirectTraitSource('self_confirm'), true);
+  assert.equal(isDirectTraitSource('self_settings'), true);
+  assert.equal(isDirectTraitSource('self_game'), false);
+  ok('six extra axes exist; confirm/tap/settings are direct; game is inferred');
+
+  const t1 = '2026-01-15T12:00:00.000Z';
+  const t2 = '2026-06-01T12:00:00.000Z';
+  const tapped = mergeTraitWrite(emptyTraitState(), { autonomy: 0.8 }, 'self_tap', TRAIT_AXES, t1);
+  assert.equal(tapped.values.autonomy, 0.8);
+  assert.equal(tapped.sources.autonomy, 'self_tap');
+  assert.equal(tapped.touched.autonomy, t1);
+  assert.equal(tapped.values.growth_mindset, null);
+  assert.equal(tapped.sources.growth_mindset, undefined);
+  assert.equal(tapped.touched.growth_mindset, undefined);
+  const gamed = mergeTraitWrite(tapped, { autonomy: 0.2 }, 'self_game', TRAIT_AXES, t2);
+  assert.equal(gamed.values.autonomy, 0.8);
+  assert.equal(gamed.sources.autonomy, 'self_tap');
+  assert.equal(gamed.touched.autonomy, t1);
+  ok('self_tap write is sticky; later self_game on the same axis is ignored and last_touched does not move');
+
+  const inferredFill = mergeTraitWrite(
+    emptyTraitState(),
+    { growth_mindset: 0.7 },
+    'self_game',
+    TRAIT_AXES,
+    t1,
+  );
+  assert.equal(inferredFill.values.growth_mindset, 0.7);
+  assert.equal(inferredFill.sources.growth_mindset, 'self_game');
+  assert.equal(inferredFill.touched.growth_mindset, t1);
+  const patched = traitPatch(inferredFill);
+  assert.equal(patched.trait_sources.autonomy, undefined);
+  assert.equal(patched.trait_touched_at.autonomy, undefined);
+  assert.equal(patched.autonomy, null);
+  ok('inferred can fill a null axis; null axes have no source or last_touched row');
+
+  const extra = read('supabase/migrations/wave15_extra_trait_axes.sql');
+  for (const axis of EXTRA_AXES) {
+    assert.match(extra, new RegExp(`add column if not exists ${axis} numeric`));
+    assert.match(extra, new RegExp(`me_${axis}_unit`));
+    assert.match(extra, new RegExp(`${axis} is null or \\(${axis} >= 0 and ${axis} <= 1\\)`));
+  }
+  assert.match(extra, /trait_touched_at jsonb not null default '\{\}'::jsonb/);
+  assert.doesNotMatch(extra, /create function public.complete_signup|alter function public.complete_signup/);
+  ok('six new columns exist with 0–1 CHECK constraints; complete_signup is untouched');
+
   const blankSliders = writeForOptionalScreen({
     screen: 1,
     typeCode: null,
@@ -163,7 +221,7 @@ async function main() {
   for (const banned of ['MBTI', 'Myers-Briggs', 'Big Five', 'OCEAN', 'attachment style', 'neuroticism', 'TIPI', 'ECR']) {
     assert.equal(copyBlob.toLowerCase().includes(banned.toLowerCase()), false, `UI leaked "${banned}"`);
   }
-  assert.doesNotMatch(read('src/app/(tabs)/you.tsx'), /openness|INFJ|attachment_anxiety|steadiness/);
+  assert.doesNotMatch(read('src/app/(tabs)/you.tsx'), /openness|INFJ|attachment_anxiety|steadiness|autonomy|growth_mindset|self_efficacy/);
   ok('no framework labels in intake UI, poster, or You-tab identity');
 
   const peer = read('supabase/migrations/stage7_chat_report.sql');
@@ -172,7 +230,10 @@ async function main() {
   const handlePage = read('src/app/[handle].tsx');
   const circle = read('src/lib/circle.ts');
   for (const source of [peer, night, poster, handlePage, circle]) {
-    assert.doesNotMatch(source, /openness|conscientiousness|attachment_anxiety|conflict_assertiveness|trait_sources/);
+    assert.doesNotMatch(
+      source,
+      /openness|conscientiousness|attachment_anxiety|conflict_assertiveness|trait_sources|autonomy|growth_mindset|self_efficacy|trait_touched_at/,
+    );
   }
   assert.match(peer, /returns table \(id uuid, name text, handle text, show_up text, talk_style text, recipe jsonb\)/);
   assert.match(night, /'id', m.id/);
@@ -205,8 +266,12 @@ async function main() {
     assert.equal(containsFrameworkTerm(banned), true, `${banned} should be a banned term`);
     assert.equal(prompt.toLowerCase().includes(banned.toLowerCase()), false, `prompt leaked ${banned}`);
   }
-  const omitted = traitPromptLines({ extraversion: null, openness: null });
+  const omitted = traitPromptLines({ extraversion: null, openness: null, autonomy: null, growth_mindset: null });
   assert.equal(omitted, '');
+  const extraLines = traitPromptLines({ autonomy: 0.9, growth_mindset: null, locus_of_control: null, self_efficacy: null });
+  assert.match(extraLines, /their own way/);
+  assert.doesNotMatch(extraLines, /growth mindset|locus of control|self-efficacy|self-determination/i);
+  assert.doesNotMatch(extraLines, /0\.9/);
   ok('Sage prompt omits null axes, paraphrases behavior, and names no framework');
 
   assert.equal(

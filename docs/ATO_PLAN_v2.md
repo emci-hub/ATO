@@ -28,7 +28,7 @@ If a field isn't defined here, don't guess its shape — ask.
 | `recovery_style` | enum: `movement`/`sleep`/`talking`/`alone_time`/`music`, nullable on pre-intake rows | Self-report. Not a diagnosis. Never shown on the public poster. Editable later in Settings. |
 | `support_style` | enum: `nudge`/`space`/`listen`/`plan`, nullable on pre-intake rows | Self-report. Helps pick the check_count < 3 bank card. Not a diagnosis. Never shown on the public poster. Editable later in Settings. |
 | `current_focus` | enum: `habit`/`through_it`/`like_yourself`/`show_up`, nullable on pre-intake rows | Self-report. Not a diagnosis. Never shown on the public poster. Editable later in Settings. |
-| Optional trait axes | numeric 0–1, all nullable | 15-axis backbone, separate from the 9 chips. Shipped (Stage 11): `openness`, `conscientiousness`, `extraversion`, `agreeableness`, `steadiness`; `attachment_anxiety`, `attachment_avoidance`; `conflict_assertiveness`, `conflict_cooperativeness`. Decided, later box: `autonomy`, `competence`, `relatedness` (SDT); `growth_mindset`; `locus_of_control`; `self_efficacy`. Plus `trait_sources`: **direct** (slider, tap-form, Settings edit, confirm-upgrade) is sticky and cannot be overwritten by **inferred** (grid, situation, game); skip/null has no source row. Per-axis `last_touched` is parked in `src/lib/traits.ts` — unpark before the 3-month re-ask. Raw labels discarded at write. Never on poster, `peer_profile`, `public_profile`, or `night_snapshot`. |
+| Optional trait axes | numeric 0–1, all nullable | 15-axis backbone, separate from the 9 chips. Shipped: `openness`, `conscientiousness`, `extraversion`, `agreeableness`, `steadiness`; `attachment_anxiety`, `attachment_avoidance`; `conflict_assertiveness`, `conflict_cooperativeness`; `autonomy`, `competence`, `relatedness`; `growth_mindset`; `locus_of_control`; `self_efficacy`. Plus `trait_sources`: **direct** (`self_slider`, `self_tap`, `self_confirm`, `self_settings`) is sticky and cannot be overwritten by **inferred** (`self_grid`, `self_situation`, `self_game`); skip/null has no source row. Per-axis `last_touched` lives in `trait_touched_at` (ISO, null axes have no key). Raw labels discarded at write. Never on poster, `peer_profile`, `public_profile`, or `night_snapshot`. |
 | `this_week` | string, free text, resets weekly | Plan field. Not a ME column in v1 — Sunday recap + Sage read the checks table (`logged_on` + status; Read/Do only while in the 7-day keep window). Never a matching signal. |
 | `recipe` | object `{base, hair, top, palette}` | Kenney asset selections that render the pixel. All 4 fields required once Pixel is built. |
 | `valence` | enum: `lift`/`even`/`cut` | Computed from last 7 Checks. See formula in Rules. |
@@ -193,16 +193,16 @@ Minimal, not a dashboard:
 
 All nullable, all self-report / translate-and-discard. Raw label never stored. One canonical 0–1 scale. Per-axis `trait_sources`. Never on poster, `peer_profile`, `public_profile`, or `night_snapshot`.
 
-**Source rank (decided — Stage 11 code is still `self_slider`-only sticky; later box generalizes to direct vs inferred):**
-- **Direct** (sticky — inferred cannot overwrite): slider (`self_slider`), tap-form (`self_tap`), Settings edit, confirm-upgrade of inferred data. Confirm upgrades source to direct but does **not** change the 0–1 number.
+**Source rank (shipped):**
+- **Direct** (sticky — inferred cannot overwrite): slider (`self_slider`), tap-form (`self_tap`), Settings edit (`self_settings`), confirm-upgrade (`self_confirm`). Confirm upgrades source to direct but does **not** change the 0–1 number (Does-Sage-know-you box, not built).
 - **Inferred**: 16-grid (`self_grid`), situation tap (`self_situation`), game/swipe (`self_game`). Last-write among inferred is fine.
-- **Skip / null**: no source row.
+- **Skip / null**: no source row, no `last_touched` key.
 
-**Shipped (Stage 11):** `openness`, `conscientiousness`, `extraversion`, `agreeableness`, `steadiness`; `attachment_anxiety`, `attachment_avoidance`; `conflict_assertiveness`, `conflict_cooperativeness`. Sources today: `self_grid` / `self_slider` / `self_situation`.
+**Shipped (Stage 11):** `openness`, `conscientiousness`, `extraversion`, `agreeableness`, `steadiness`; `attachment_anxiety`, `attachment_avoidance`; `conflict_assertiveness`, `conflict_cooperativeness`.
 
-**Decided, later box:** `autonomy`, `competence`, `relatedness` (Self-Determination Theory); `growth_mindset`; `locus_of_control`; `self_efficacy`. Game/scenario writes are inferred (same rank as grid/situation).
+**Shipped (this box):** `autonomy`, `competence`, `relatedness` (Self-Determination Theory); `growth_mindset`; `locus_of_control`; `self_efficacy`. Game/scenario writes are inferred (same rank as grid/situation). Three-path intake UI for these axes is still a later box.
 
-**Per-axis `last_touched`:** parked in `src/lib/traits.ts` as of Stage 11. **Unpark before the 3-month re-ask prompt can ship** — that prompt has no clock without it.
+**Per-axis `last_touched`:** shipped as `me.trait_touched_at` jsonb. Bumps on any successful write to that axis, regardless of source. A rejected inferred write does not bump it. Needed by the 3-month re-ask (later box).
 
 Big Five (OCEAN) is the scientific backbone — of every framework considered, it has the strongest test-retest reliability, the broadest cross-cultural validation, and the only one with real predictive validity for relationship outcomes. The other doors fill it in; they are not stored as themselves:
 
@@ -239,7 +239,7 @@ One question per screen, tappable, with a visible progress indicator ("3 of 9").
 
 **Optional extra axes — two layers:**
 
-1. **Shipped (Stage 11):** skippable `extra N of 4` after signup succeeds — 16-grid, sliders, close-pattern, disagreement. Writes the first 9 trait axes. Skip = those columns stay null. Today's merge is slider-sticky (a later grid inference cannot overwrite a slider axis). Later box generalizes that to **direct vs inferred** (tap-form and confirm-upgrades sit with slider). "Love language" reframed platonic remains a lower-priority optional add, not Chapman categories.
+1. **Shipped (Stage 11):** skippable `extra N of 4` after signup succeeds — 16-grid, sliders, close-pattern, disagreement. Writes the first 9 trait axes. Skip = those columns stay null. Merge is **direct vs inferred** (slider / tap / confirm / Settings sit in the direct rank). "Love language" reframed platonic remains a lower-priority optional add, not Chapman categories.
 
 2. **Three-path (decided; supersedes treating the new frameworks as onboarding or as a single extra quiz).** SDT / growth mindset / locus of control / self-efficacy are never part of the required 9. User's choice, no pressure. Soft-ask budget applies to path (b) resurfacing (see below).
    - **(a) Answer directly** — simple tap-form, plain language, no clinical/framework terms. Writes as **direct** (`self_tap`; sticky, same rank as slider).
@@ -296,7 +296,7 @@ Locks:
 - Axes **rotate**. Do not prefer high-confidence ones. Confirm does not make a value stickier against a later correct or Settings edit.
 - After **two confirms with no correction** on the same axis, the next surface is an edit-shaped "still feel right?" — not another yes/no.
 - Confirming **inferred** data upgrades its source to **direct** but does not move the number.
-- If an axis hasn't been touched (confirmed or edited) in 3+ months, surface a passive "still feel right?" prompt in Settings — not a push notification, not urgent framing. That clock needs per-axis `last_touched` (unpark in `src/lib/traits.ts` first). Confirm is a touch, not a lifetime lock — the 3-month prompt still fires after confirms.
+- If an axis hasn't been touched (confirmed or edited) in 3+ months, surface a passive "still feel right?" prompt in Settings — not a push notification, not urgent framing. That clock is `me.trait_touched_at` (shipped). Confirm is a touch, not a lifetime lock — the 3-month prompt still fires after confirms.
 
 ### Profile completeness indicator (You tab — decided; later box)
 
@@ -344,7 +344,7 @@ The trait backbone shapes *tone* (who Sage is talking to). The actual coaching q
 - Same extra-care review discipline that applies to the Crisis spec applies here before shipping — this touches real psychological categories, not just cosmetic personalization.
 - "MBTI" branding avoided in UI copy (trademarked by the Myers-Briggs Company) — use generic phrasing like "your type" or "16 personality types," same approach 16Personalities uses.
 
-**Where this fits:** Stages 9 and 11 shipped the first layer. Talk output fence shipped. Remaining work is several later boxes (axis expansion + generalized direct-vs-inferred sources + unpark `last_touched`, Library, Explore, feedback, Does-Sage-know-you, completeness, Reload) — not one box, and not Stage 12. Locks from the Aug 28 Grok review live in the sections above.
+**Where this fits:** Stages 9 and 11 shipped the first layer. Talk output fence shipped. Fifteen axes, direct-vs-inferred `trait_sources`, and `last_touched` shipped. Remaining work is several later boxes (Library, Explore, feedback, Does-Sage-know-you, completeness, three-path extra-axis intake, Reload) — not one box, and not Stage 12. Locks from the Aug 28 Grok review live in the sections above.
 
 ### Delight & engagement mechanics (red-teamed this session)
 
@@ -453,9 +453,9 @@ You + friends, one real week, real devices. Home stayed new day to day. Dos were
 
 ## Wave 1.5 — Understanding & Delight (Stages 9-14)
 
-Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Wave 2 Stage 2 ("I'm going") is in. Stage 11 optional fast-entry is in (first 9 trait axes). Next Wave 1.5 box is Stage 12 (Sage coaching content). Full spec detail lives in "Understanding spec" above; this section is sequencing only.
+Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Wave 2 Stage 2 ("I'm going") is in. Stage 11 optional fast-entry is in (all 15 trait axes; direct vs inferred; `last_touched`). Next Wave 1.5 box is Stage 12 (Sage coaching content). Full spec detail lives in "Understanding spec" above; this section is sequencing only.
 
-**Decided Aug 28, 2026 — later boxes, not Stage 12, not one combined box:** 6 more trait axes (SDT, growth mindset, locus of control, self-efficacy); Library expansion; Explore (Home inner tab) + phrasing-only feedback; "Does Sage know you?" + 3-month Settings prompt; intake three-path for the extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with the locks already closed. Talk output fence **shipped**. **Locks from the Aug 28 Grok review are in the Understanding spec** (Explore combine + regen cap + fence; Does-Sage-know-you confirm rules; completeness split; direct-vs-inferred `trait_sources`; Talk fence phrases + retry-is-not-quota; soft-ask budget; unpark `last_touched`). Do not fold remaining items into Stage 12.
+**Decided Aug 28, 2026 — later boxes, not Stage 12, not one combined box:** Library expansion; Explore (Home inner tab) + phrasing-only feedback; "Does Sage know you?" + 3-month Settings prompt; intake three-path for the extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with the locks already closed. Talk output fence **shipped**. Six extra trait axes + direct-vs-inferred `trait_sources` + `last_touched` **shipped**. **Locks from the Aug 28 Grok review are in the Understanding spec** (Explore combine + regen cap + fence; Does-Sage-know-you confirm rules; completeness split; direct-vs-inferred `trait_sources`; Talk fence phrases + retry-is-not-quota; soft-ask budget). Do not fold remaining items into Stage 12.
 
 ### 9 Intake core
 **Open box: intake, me.**
@@ -469,8 +469,9 @@ Wire new answers into check_count < 3 bank-card selection — real morning_cue p
 
 ### 11 Optional fast-entry
 **Open box: intake.**
-Skippable 16-grid / slider / close-pattern / disagreement layer, up to 4 extra questions, fully optional. Writes the first 9 nullable 0–1 ME axes (not the 9 chips). No raw diagnostic labels stored. Runtime fence on Read/Do/Nudge + Teach-Sage facts. Expansion to 15 axes + three-path intake for the new frameworks is a later box (Understanding spec).
-**Done (Aug 27, 2026):** Skip after question 9 goes to Home with `complete_signup` already succeeded; optional is a separate `extra N of 4` phase; slider-sticky merge (a later type tap cannot overwrite a slider axis); untouched sliders stay null; `peer_profile` / poster / `night_snapshot` unchanged; generated cards that name a framework are dropped. Later box generalizes sticky to direct vs inferred (tap-form + confirm-upgrade sit with slider). Per-axis `last_touched` stays parked until the 3-month re-ask box.
+Skippable 16-grid / slider / close-pattern / disagreement layer, up to 4 extra questions, fully optional. Writes the first 9 nullable 0–1 ME axes (not the 9 chips). No raw diagnostic labels stored. Runtime fence on Read/Do/Nudge + Teach-Sage facts. Three-path intake UI for the extra six axes is a later box (Understanding spec).
+**Done (Aug 27, 2026):** Skip after question 9 goes to Home with `complete_signup` already succeeded; optional is a separate `extra N of 4` phase; slider-sticky merge (a later type tap cannot overwrite a slider axis); untouched sliders stay null; `peer_profile` / poster / `night_snapshot` unchanged; generated cards that name a framework are dropped.
+**Done (Aug 28, 2026):** all 15 axes exist on ME with 0–1 CHECKs; `trait_sources` is direct vs inferred across those axes (`self_tap` / `self_confirm` / `self_settings` / `self_game` labels exist; three-path UI not built); `me.trait_touched_at` bumps on a successful write. A rejected inferred write does not bump it.
 
 ### 12 Sage's coaching content
 **Open box: talk, router.**

@@ -102,7 +102,7 @@ export function demoTraitState(): TraitState {
   write('attachment_avoidance', 0.2, 'self_situation');
   write('conflict_assertiveness', 0.8, 'self_situation');
   write('conflict_cooperativeness', 0.8, 'self_situation');
-  return { values, sources };
+  return { values, sources, touched: {} };
 }
 
 export const DEV_LAB_AXIS_ORDER: readonly TraitAxis[] = TRAIT_AXES;

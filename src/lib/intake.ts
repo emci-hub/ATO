@@ -369,6 +369,12 @@ export function voiceMeFrom(me: {
   attachment_avoidance?: number | null;
   conflict_assertiveness?: number | null;
   conflict_cooperativeness?: number | null;
+  autonomy?: number | null;
+  competence?: number | null;
+  relatedness?: number | null;
+  growth_mindset?: number | null;
+  locus_of_control?: number | null;
+  self_efficacy?: number | null;
   facts?: string[] | unknown;
 }): {
   name: string;
@@ -390,6 +396,12 @@ export function voiceMeFrom(me: {
   attachment_avoidance: number | null;
   conflict_assertiveness: number | null;
   conflict_cooperativeness: number | null;
+  autonomy: number | null;
+  competence: number | null;
+  relatedness: number | null;
+  growth_mindset: number | null;
+  locus_of_control: number | null;
+  self_efficacy: number | null;
   facts: string[];
 } {
   const num = (value: number | null | undefined): number | null =>
@@ -414,6 +426,12 @@ export function voiceMeFrom(me: {
     attachment_avoidance: num(me.attachment_avoidance),
     conflict_assertiveness: num(me.conflict_assertiveness),
     conflict_cooperativeness: num(me.conflict_cooperativeness),
+    autonomy: num(me.autonomy),
+    competence: num(me.competence),
+    relatedness: num(me.relatedness),
+    growth_mindset: num(me.growth_mindset),
+    locus_of_control: num(me.locus_of_control),
+    self_efficacy: num(me.self_efficacy),
     facts: sanitizeFacts(me.facts),
   };
 }

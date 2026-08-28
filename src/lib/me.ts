@@ -9,13 +9,10 @@ import type {
 import { clearPendingInviteCode, errorMessageForInvite } from '@/lib/invite';
 import { supabase } from '@/lib/supabase';
 import {
-  CLOSE_AXES,
-  DISAGREE_AXES,
-  GRID_AXES,
-  SLIDER_AXES,
   mergeTraitWrite,
   traitPatch,
   traitStateFromRow,
+  allowedAxesForSource,
   type TraitAxis,
   type TraitSource,
 } from '@/lib/traits';
@@ -48,8 +45,16 @@ export interface Me {
   attachment_avoidance: number | null;
   conflict_assertiveness: number | null;
   conflict_cooperativeness: number | null;
-  /** Per-axis write source. Sliders are sticky over a later grid inference. */
+  autonomy: number | null;
+  competence: number | null;
+  relatedness: number | null;
+  growth_mindset: number | null;
+  locus_of_control: number | null;
+  self_efficacy: number | null;
+  /** Per-axis write source. Direct is sticky over inferred. Null axes have no key. */
   trait_sources: Record<string, string>;
+  /** Per-axis ISO timestamp of last successful write. Null axes have no key. */
+  trait_touched_at: Record<string, string>;
   timezone: string;
   /**
    * Typed city slug for Around (e.g. calgary). Never from GPS.
@@ -104,7 +109,14 @@ export type MeInsert = Omit<
     | 'attachment_avoidance'
     | 'conflict_assertiveness'
     | 'conflict_cooperativeness'
+    | 'autonomy'
+    | 'competence'
+    | 'relatedness'
+    | 'growth_mindset'
+    | 'locus_of_control'
+    | 'self_efficacy'
     | 'trait_sources'
+    | 'trait_touched_at'
     | 'visible'
     | 'created_at'
     | 'updated_at'
@@ -135,7 +147,11 @@ function withVisible(row: Me): Me {
     row.trait_sources && typeof row.trait_sources === 'object' && !Array.isArray(row.trait_sources)
       ? row.trait_sources
       : {};
-  return { ...row, visible: row.visible !== false, trait_sources: sources };
+  const touched =
+    row.trait_touched_at && typeof row.trait_touched_at === 'object' && !Array.isArray(row.trait_touched_at)
+      ? row.trait_touched_at
+      : {};
+  return { ...row, visible: row.visible !== false, trait_sources: sources, trait_touched_at: touched };
 }
 
 export async function fetchMe(userId: string): Promise<Me | null> {
@@ -245,14 +261,15 @@ export async function updateIntake(userId: string, patch: IntakePatch): Promise<
 export { FACT_FRAMEWORK_MESSAGE };
 
 /**
- * Optional-phase write. Source-aware merge: a later grid inference never
- * overwrites an axis already set by a slider. Only `allowed` axes are written.
+ * Optional-phase write. Source-aware merge: a later inferred write never
+ * overwrites an axis already set by a direct source. Only `allowed` axes
+ * are written. last_touched bumps on a successful write.
  */
 export async function updateTraits(
   userId: string,
   incoming: Partial<Record<TraitAxis, number | null>>,
   source: TraitSource,
-  allowed: readonly TraitAxis[] = sourceAllowed(source),
+  allowed: readonly TraitAxis[] = allowedAxesForSource(source),
 ): Promise<Me> {
   const current = await fetchMe(userId);
   if (!current) throw new Error('Not authenticated');
@@ -267,12 +284,6 @@ export async function updateTraits(
 
   if (error) throw error;
   return withVisible(data as Me);
-}
-
-function sourceAllowed(source: TraitSource): readonly TraitAxis[] {
-  if (source === 'self_grid') return GRID_AXES;
-  if (source === 'self_slider') return SLIDER_AXES;
-  return [...CLOSE_AXES, ...DISAGREE_AXES];
 }
 
 export function errorMessageForHandle(error: unknown): string {

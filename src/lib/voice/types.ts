@@ -60,6 +60,12 @@ export interface VoiceMe {
   attachment_avoidance?: number | null;
   conflict_assertiveness?: number | null;
   conflict_cooperativeness?: number | null;
+  autonomy?: number | null;
+  competence?: number | null;
+  relatedness?: number | null;
+  growth_mindset?: number | null;
+  locus_of_control?: number | null;
+  self_efficacy?: number | null;
   /** Facts they asked Sage to remember. Nudge signal + optional Home-card angle. Never talk_style. */
   facts?: string[];
 }
