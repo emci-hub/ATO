@@ -51,7 +51,12 @@ const eightBallUi = read('src/components/sage-eight-ball.tsx');
 assert.match(eightBallUi, /accessibilityState=\{\{ expanded: open \}\}/);
 assert.match(eightBallUi, /Ask again/);
 assert.match(eightBallUi, /fontSize: 18/);
-ok('8-ball is collapsible and readable when open');
+assert.match(eightBallUi, /SageOrb/);
+assert.match(eightBallUi, /from 'react-native-svg'/);
+assert.match(eightBallUi, /withSequence/);
+assert.doesNotMatch(eightBallUi, /from '@\/lib\/kenney/);
+assert.doesNotMatch(eightBallUi, /numeric-8-circle/);
+ok('8-ball is collapsible, readable when open, and uses an original orb (not a Kenney sprite, not a toy 8-ball icon)');
 
 assert.equal(formatSageUsage(6, 20, 'today'), '6 of 20 today');
 assert.equal(formatSageUsage(12, 200, 'this month'), '12 of 200 this month');

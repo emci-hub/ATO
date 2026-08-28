@@ -22,7 +22,9 @@
 
 **Stage 11 optional fast-entry is in.** After the 9 chips, `complete_signup` succeeds, then an optional `extra N of 4` phase (16-grid, sliders, close-pattern, disagreement). Skip goes to Home. New nullable 0–1 ME axes, slider-sticky merge, runtime fence on Read/Do/Nudge and Teach-Sage facts. Not on poster / `peer_profile` / `night_snapshot`. Settings re-tap parked.
 
-**Sage/You UI-bug bundle is in.** Sage has a small collapsible 8-ball above Talk (fixed local answers, infinite rolls). Reply room shows as `X of 20 today` — no "AI" or "tokens" in the copy — on Sage and as a collapsed You-tab fold. The You-tab name lives on the poster only. The Settings crisis-line reference is a collapsible at the bottom, above credits; the active Talk crisis card is unchanged.
+**Sage/You UI-bug bundle is in.** Sage has a small collapsible 8-ball above Talk (fixed local answers, infinite rolls) with an original glazed orb (not Mattel trade dress, not a Kenney sprite) that shakes on Ask again. Reply room shows as `X of 20 today` — no "AI" or "tokens" in the copy — on Sage and as a collapsed You-tab fold. The You-tab name lives on the poster only. The Settings crisis-line reference is a collapsible at the bottom, above credits; the active Talk crisis card is unchanged.
+
+**Delete-account re-verified (Aug 28, 2026).** `auth.admin.deleteUser` hard-deletes `auth.users`; `me` has no soft-delete flag and cascades with it. Checks, facts (ME column), Stage 11 trait columns, invite codes they own, `ai_usage`, `going`, Circle, chat, Sage messages, crisis flags, Apple credentials all cascade. `account_deletions` is the one retained row (no FK, audit). Apple revocation is confirmed by using the refresh token after `/auth/revoke`, not by the 200 alone.
 
 **Stage 8 — nearly closed, three loose ends (unchanged):**
 1. EAS binary 10 (`1d0d1041-9318-461f-b995-c589ac505dc2`, git `dc9ae77`) — OTA + real app icon cut. Needs `eas submit`, then install + confirm on a real device. **Do not submit binary 8 or 9.** Binary 8 (`d40e57a9`) **was already submitted and installed**.
@@ -38,7 +40,7 @@
 - Wave 3 — Plugs (deal rows) + Night wall (going exists; wall can surface)
 
 ## Done
-See git history for the full Stage 1–8 build log. Sage content model v2, Check window + recap text cap + Home milestone badge, nav tap moods, UI polish, Wave 2 Stage 2, Stage 9 first pass, Settings identity-chip editing, Stage 11 optional fast-entry, and the Sage/You UI-bug bundle are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
+See git history for the full Stage 1–8 build log. Sage content model v2, Check window + recap text cap + Home milestone badge, nav tap moods, UI polish, Wave 2 Stage 2, Stage 9 first pass, Settings identity-chip editing, Stage 11 optional fast-entry, the Sage/You UI-bug bundle, and the original 8-ball orb are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
 
 ## Left
 - Submit + confirm binary 10 on device (icon, OTA, everything from today). Do not submit 8 or 9.
