@@ -1,5 +1,5 @@
-import type { Check } from '@/lib/checks';
 import type { Me } from '@/lib/me';
+import type { CheckStatus } from '@/lib/voice/types';
 import { handleFromScannedText } from '@/lib/share-codec';
 import { supabase } from '@/lib/supabase';
 
@@ -7,7 +7,8 @@ import { supabase } from '@/lib/supabase';
  * Circle data layer. A connection row is one user's half of a link; the DB
  * mirrors the reverse row on insert, so a single scan/paste (one gate) makes
  * Circle appear for BOTH accounts. Circle only surfaces what is already on the
- * me row and checks table — nothing new is synthesized or stored on ME.
+ * me row and the peer_checks RPC (Read/Do/status/day) — never the checks table
+ * itself, so nudge_text cannot appear in a peer response.
  */
 
 export interface Connection {
@@ -25,10 +26,18 @@ export interface PeerMe {
   recipe: unknown;
 }
 
+/** Columns peer_checks returns. No nudge_text, source, or logged_on. */
+export interface PeerCheck {
+  day: number;
+  status: CheckStatus;
+  read_text: string | null;
+  do_text: string | null;
+}
+
 export interface PeerState {
   me: PeerMe;
   /** The peer's checks, oldest first (latest is last). */
-  checks: Check[];
+  checks: PeerCheck[];
 }
 
 export async function fetchConnections(userId: string): Promise<Connection[]> {
@@ -91,20 +100,18 @@ export async function addPeerByHandle(raw: string): Promise<AddPeerResult> {
   return { ok: true, peer: { id: profile.id, name: profile.name, handle: profile.handle } };
 }
 
-/** Fetches a peer's poster + checks. Requires an existing connection (RLS). */
+/** Fetches a peer's poster + peer_checks. Requires an existing connection. */
 export async function fetchPeerState(peerId: string): Promise<PeerState | null> {
   try {
     const { data, error } = await supabase.rpc('peer_profile', { p_user_id: peerId });
     if (error) throw error;
     const me = (data ?? [])[0] as PeerMe | undefined;
     if (!me) return null;
-    const { data: checkRows, error: checkError } = await supabase
-      .from('checks')
-      .select('*')
-      .eq('user_id', peerId)
-      .order('day', { ascending: true });
+    const { data: checkRows, error: checkError } = await supabase.rpc('peer_checks', {
+      p_user_id: peerId,
+    });
     if (checkError) throw checkError;
-    return { me, checks: (checkRows ?? []) as Check[] };
+    return { me, checks: (checkRows ?? []) as PeerCheck[] };
   } catch {
     return null;
   }

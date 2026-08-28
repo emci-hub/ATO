@@ -170,6 +170,9 @@ ok('two days in a row is gated');
 
 const home = read('src/app/(tabs)/index.tsx');
 const circle = read('src/app/(tabs)/circle.tsx');
+const circleLib = read('src/lib/circle.ts');
+const checksLib = read('src/lib/checks.ts');
+const peerChecksSql = read('supabase/migrations/peer_checks.sql');
 const dawn = read('src/app/dawn.tsx');
 const sage = read('src/app/(tabs)/sage.tsx');
 const widget = read('targets/widget/widgets.swift');
@@ -192,5 +195,24 @@ assert.doesNotMatch(todayCard, /storage\.set\('nudge'/);
 assert.doesNotMatch(home + circle + dawn + sage + copy, /ATOsophy|Sync/);
 assert.doesNotMatch(nudgeSrc, /me\.talk_style|talk_style:/);
 ok('Nudge is Home-only; Circle/widget/push/Talk/Dawn have none; no ATOsophy/Sync; talk_style is not an input');
+
+const peerChecksSqlBody = peerChecksSql.replace(/--.*$/gm, '');
+const peerChecksSelect = peerChecksSqlBody.match(/as \$\$([\s\S]*?)\$\$/)?.[1] ?? '';
+assert.match(
+  peerChecksSqlBody,
+  /returns table \(\s*day integer,\s*status text,\s*read_text text,\s*do_text text\s*\)/,
+);
+assert.match(peerChecksSqlBody, /drop policy if exists checks_select_connected on public\.checks/);
+assert.match(peerChecksSelect, /c\.day, c\.status, c\.read_text, c\.do_text/);
+assert.doesNotMatch(peerChecksSelect, /nudge_text/);
+assert.doesNotMatch(peerChecksSqlBody, /revoke\s+select/i);
+ok('peer_checks returns day/status/Read/Do only; connected SELECT on checks is dropped; column SELECT on nudge_text is not revoked');
+
+assert.match(circleLib, /rpc\('peer_checks'/);
+assert.doesNotMatch(circleLib, /from\('checks'\)/);
+ok('Circle fetches peer_checks, not from(checks)');
+
+assert.match(checksLib, /from\('checks'\)[\s\S]*\.select\('\*'\)/);
+ok("owner Home path still select('*') on checks");
 
 console.log(`\n${passed} checks passed`);
