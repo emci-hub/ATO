@@ -22,7 +22,7 @@
 
 **Stage 9 first pass is in (intake core + Day 1 payoff wiring).** Fresh onboarding is identity, then 9 chip screens with a visible "N of 9". Five new ME columns (`evening_wind_down`, `energy_pattern`, `recovery_style`, `support_style`, `current_focus`) — existing `talk_style` / `show_up` / `knocks_you_off` / `morning_cue` names and types unchanged. Live row: handle `zintake9`. All 9 chips are editable afterward from the You tab / Settings (same chip UI; `show_up` still seeds color; `talk_style` still seeds Sage's tone).
 
-**Stage 11 optional fast-entry is in.** After the 9 chips, `complete_signup` succeeds, then an optional `extra N of 4` phase (16-grid, sliders, close-pattern, disagreement). Skip goes to Home. First 9 of a 15-axis nullable 0–1 backbone, slider-sticky merge, runtime fence on Read/Do/Nudge and Teach-Sage facts. Not on poster / `peer_profile` / `night_snapshot`. Settings re-tap parked. Six more axes + three-path intake are plan-only (later boxes).
+**Stage 11 optional fast-entry is in.** After the 9 chips, `complete_signup` succeeds, then an optional `extra N of 4` phase (16-grid, sliders, close-pattern, disagreement). Skip goes to Home. First 9 of a 15-axis nullable 0–1 backbone, slider-sticky merge (later box generalizes to direct vs inferred), runtime fence on Read/Do/Nudge and Teach-Sage facts. Not on poster / `peer_profile` / `night_snapshot`. Settings re-tap and per-axis `last_touched` parked (unpark `last_touched` before the 3-month re-ask). Six more axes + three-path intake are plan-only (later boxes).
 
 **Sage/You UI-bug bundle is in.** Sage has a small collapsible 8-ball above Talk (fixed local answers, infinite rolls) with an original glazed orb (not Mattel trade dress, not a Kenney sprite) that shakes on Ask again. Reply room shows as `X of 20 today` — no "AI" or "tokens" in the copy — on Sage and as a collapsed You-tab fold. The You-tab name lives on the poster only. The Settings crisis-line reference is a collapsible at the bottom, above credits; the active Talk crisis card is unchanged.
 
@@ -39,7 +39,7 @@
 
 **Decision (Aug 27, 2026): Wave 1.5 and Wave 3 both start now, in parallel — intentional deviation from plan sequencing.** Wave 2 Stage 2 ("I'm going") is now live, so Night wall is unblocked for Wave 3.
 
-**Decided Aug 28, 2026 (plan, not built — later boxes, not Stage 12):** trait backbone expands to 15 axes (6 new: SDT, growth mindset, locus of control, self-efficacy); Library expansion; Talk output fence; Explore as a Home inner tab; intake three-path for extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with locks already closed. ATO_PLAN_v2.md is a working reference, not a locked spec — these are recorded there as current design.
+**Decided Aug 28, 2026 (plan, not built — later boxes, not Stage 12):** trait backbone expands to 15 axes (6 new: SDT, growth mindset, locus of control, self-efficacy); Library expansion; Talk output fence; Explore as a Home inner tab; intake three-path for extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with locks already closed. **Grok review locks are now in ATO_PLAN_v2.md** (Explore 2–3 requires a recent signal + no three-agency combo + fence + 1 regen/day; Does-Sage-know-you confirm never moves the number; completeness is 9-complete vs 15-depth, not one % of a person; `trait_sources` generalizes to direct vs inferred; Talk fence retry is not a second quota charge; banned phrases for the new six, not autonomy/competence/relatedness as words; soft-ask budget of one; unpark `last_touched` before the 3-month prompt). ATO_PLAN_v2.md is a working reference, not a locked spec — these are recorded there as current design.
 
 **Next boxes, one at a time:**
 - Wave 1.5 Stage 12 — Sage coaching content (Gottman / NVC prompt grounding)
@@ -67,7 +67,7 @@ These are real, but they are not TestFlight work and they are not next. Leave th
 - Fantasy UI Borders pack (Kenney) — UI chrome/panels/buttons
 - Monster Builder Pack — parked, needs eyes/mouth slots added to recipe before usable
 - Revisit onboarding question wording if it still feels off after a fresh look
-- **Decided, later Wave 1.5 boxes (see ATO_PLAN_v2 Understanding spec):** 6 extra trait axes + three-path intake; Library; Talk fence; Explore + phrasing-only feedback; Does-Sage-know-you + 3-month Settings prompt; completeness indicator; Dawn Reload
+- **Decided, later Wave 1.5 boxes (see ATO_PLAN_v2 Understanding spec):** 6 extra trait axes + three-path intake; Library; Talk fence; Explore + phrasing-only feedback; Does-Sage-know-you + 3-month Settings prompt; completeness indicator (9 complete / 15 depth); Dawn Reload. Locks from the Aug 28 Grok review are in that spec (do not reopen in a later box).
 - Crisis: relational-safety/abuse category, own resource number, parked separately
 - **AI capacity hardening** — close the client-embedded-key bypass before public launch (server-side proxy or equivalent)
 - Slack — parked as future ops tooling, bring up again if/when the app scales

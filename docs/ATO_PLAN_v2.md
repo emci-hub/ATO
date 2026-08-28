@@ -28,13 +28,13 @@ If a field isn't defined here, don't guess its shape — ask.
 | `recovery_style` | enum: `movement`/`sleep`/`talking`/`alone_time`/`music`, nullable on pre-intake rows | Self-report. Not a diagnosis. Never shown on the public poster. Editable later in Settings. |
 | `support_style` | enum: `nudge`/`space`/`listen`/`plan`, nullable on pre-intake rows | Self-report. Helps pick the check_count < 3 bank card. Not a diagnosis. Never shown on the public poster. Editable later in Settings. |
 | `current_focus` | enum: `habit`/`through_it`/`like_yourself`/`show_up`, nullable on pre-intake rows | Self-report. Not a diagnosis. Never shown on the public poster. Editable later in Settings. |
-| Optional trait axes | numeric 0–1, all nullable | 15-axis backbone, separate from the 9 chips. Shipped (Stage 11): `openness`, `conscientiousness`, `extraversion`, `agreeableness`, `steadiness`; `attachment_anxiety`, `attachment_avoidance`; `conflict_assertiveness`, `conflict_cooperativeness`. Decided, later box: `autonomy`, `competence`, `relatedness` (SDT); `growth_mindset`; `locus_of_control`; `self_efficacy`. Plus `trait_sources` (direct slider/tap-form outranks inferred grid / situation / game on the same axis). Raw labels discarded at write. Never on poster, `peer_profile`, `public_profile`, or `night_snapshot`. |
+| Optional trait axes | numeric 0–1, all nullable | 15-axis backbone, separate from the 9 chips. Shipped (Stage 11): `openness`, `conscientiousness`, `extraversion`, `agreeableness`, `steadiness`; `attachment_anxiety`, `attachment_avoidance`; `conflict_assertiveness`, `conflict_cooperativeness`. Decided, later box: `autonomy`, `competence`, `relatedness` (SDT); `growth_mindset`; `locus_of_control`; `self_efficacy`. Plus `trait_sources`: **direct** (slider, tap-form, Settings edit, confirm-upgrade) is sticky and cannot be overwritten by **inferred** (grid, situation, game); skip/null has no source row. Per-axis `last_touched` is parked in `src/lib/traits.ts` — unpark before the 3-month re-ask. Raw labels discarded at write. Never on poster, `peer_profile`, `public_profile`, or `night_snapshot`. |
 | `this_week` | string, free text, resets weekly | Plan field. Not a ME column in v1 — Sunday recap + Sage read the checks table (`logged_on` + status; Read/Do only while in the 7-day keep window). Never a matching signal. |
 | `recipe` | object `{base, hair, top, palette}` | Kenney asset selections that render the pixel. All 4 fields required once Pixel is built. |
 | `valence` | enum: `lift`/`even`/`cut` | Computed from last 7 Checks. See formula in Rules. |
 | Check | row `{user_id, day, logged_on, outcome}` | `outcome` is `did` or `skip`. One per calendar day max. Log today or up to 2 days back; older days are closed. No partial state in v1 — keep it binary. Read/Do text kept for a rolling 7 days, then nulled; outcome stays. Home-only `nudge_text` (user-facing "Nudge", internal zGlitch) is pruned on the same 7-day window; never Circle, widget, or morning push. |
 | Nudge | Home-only daily card | Third daily category (internal zGlitch). Real recent signal only — skip pattern, a knock that showed up in recent Read/Do, or a safe stored fact. Never from `talk_style` alone. Empty when there is no signal. Inherits cut's safety gates (not after a crisis-flagged day, not two days in a row, cruel-content filter, always with that day's Do); does not inherit cut's skip-streak valence trigger. |
-| Explore | Home inner tab | Periodic Sage observations (weekly, or on a meaningful trait/signal change) — not daily. Cached between regenerations. Existing per-user quota. Combines 2–3 traits, Library-grounded. Never empty: the 9 core chips are enough. Separate from Read/Do/Nudge and from the You tab. Decided; later box. |
+| Explore | Home inner tab | Periodic Sage observations (weekly, or on a meaningful trait/signal change) — not daily. Cached between regenerations. Existing per-user quota. Cap: **1 regeneration per calendar day**. Combines 2–3 traits only when at least one is tied to a recent signal (fact / knock / Check pattern); never the three agency axes (`growth_mindset`, `locus_of_control`, `self_efficacy`) together. Library-grounded. Same output fence as cards/Talk. Completeness is never an Explore input. Never empty of extra-axis data: the 9 core chips are enough. Separate from Read/Do/Nudge and from the You tab. Decided; later box. |
 | Reload | Home presentation | Cycles up to 3 pre-stored **paired** Read/Do variants for the same day. Cap 3 uses/day. No live model call. Same underlying truth (tone, shrink, signal) — presentation only. Locks in Understanding spec. Bank days 1–3: off. Decided; later box. |
 | Library | static copy | Written-once, reviewed, public-domain/academic grounding for Sage. Domain entries: Sleep, Workload, Conflict, Communication, Health, Money. Framework grounding (never named in user-facing copy): SDT, growth mindset, locus of control, self-efficacy. Never per-user generated. |
 | `check_count` | integer, derived | Count of all-time Checks. Gates bank-vs-model content and the paywall (7). |
@@ -86,12 +86,12 @@ Honest empty: "nothing this weekend" / "wall opens when the night does" / "no AT
 - One dawn write per day (one pack). No live refresh luck. **Reload** (decided) cycles pre-stored variants of that same pack — not a new model call, not a new signal, not a softer Do. Shared content pools and live reroll stay rejected.
 - Do is if-then, anchored to `morning_cue`. Miss → smaller Do next time.
 - `talk_style` set at onboarding; editable later in Settings. Valence from Checks: 2+ `did` in last 7 → lift; mix → even; 2+ `skip` → one cut, then even. Cut = habit, not worth. No cut after crisis. No two cuts in a row.
-- Sage: reflect more than ask, ~4 sentences, coach not doctor. Root writing rule, inherited everywhere Sage writes: *Reflect patterns as maybes, not facts. No "you are." No framework names. One trait at a time. Notice, don't correct.* Explore may combine 2–3 traits per entry; the other clauses still apply. Crisis keyword hit → static resource card (see Crisis spec below), stop, no model call.
+- Sage: reflect more than ask, ~4 sentences, coach not doctor. Root writing rule, inherited everywhere Sage writes: *Reflect patterns as maybes, not facts. No "you are." No framework names. One trait at a time. Notice, don't correct.* Explore may combine 2–3 traits per entry **only when at least one is tied to a recent signal**; never combine `growth_mindset` + `locus_of_control` + `self_efficacy` in one entry; the other clauses still apply. Crisis keyword hit → static resource card (see Crisis spec below), stop, no model call.
 - Home is solo. Friends never write the dawn line.
 - Chat: TLS + RLS. History stays. No homemade crypto. Sage reads chat only when the user taps "Teach Sage this" on a specific message — never ambient access.
-- You tab = poster (name, @handle, show_up visibility label, QR, Share — no large pixel; the live face is the nav companion; name appears once, on the poster). Settings below the fold: the 9 identity chips are editable (same chip UI as onboarding), plus appearance / credits. Profile completeness % (decided; later box) lives near those fields — core 9 always counts complete; extra axes are depth, pressure-free. Sage reply room is shown as `X of [limit]` (e.g. `6 of 20 today`) with no "AI" or "tokens" in the copy — compact on Sage, collapsed by default in Settings. The crisis-line region picker is a collapsible reference at the bottom of Settings, above credits; it is not the active Talk crisis card.
-- Sage Talk answers what the person typed; the day's Home Read/Do is light background, not the reply. Home Reads rotate among knocks / facts / focus instead of paraphrasing one story. Talk replies get the same framework-echo fence as cards (post-generation `containsFrameworkTerm`; retry once; else honest empty) — decided, later box; prompt already paraphrases traits going in.
-- Home may show a third daily category, **Nudge**, from a real recent signal only. Empty when there isn't one. Never Circle, widget, or morning push. **Explore** is a separate inner tab on Home, not a fourth daily card and not on the You tab.
+- You tab = poster (name, @handle, show_up visibility label, QR, Share — no large pixel; the live face is the nav companion; name appears once, on the poster). Settings below the fold: the 9 identity chips are editable (same chip UI as onboarding), plus appearance / credits. Profile completeness (decided; later box) lives near those fields as **two separate things**: the 9 core chips are always complete (never shown as a percentage of a person); the 15 axes are a separate depth layer, invitation not deficit. No completeness signal on Home, Explore, Talk, widget, or push. Sage reply room is shown as `X of [limit]` (e.g. `6 of 20 today`) with no "AI" or "tokens" in the copy — compact on Sage, collapsed by default in Settings. The crisis-line region picker is a collapsible reference at the bottom of Settings, above credits; it is not the active Talk crisis card.
+- Sage Talk answers what the person typed; the day's Home Read/Do is light background, not the reply. Home Reads rotate among knocks / facts / focus instead of paraphrasing one story. Talk replies get the same framework-echo fence as cards (post-generation `containsFrameworkTerm`; retry once as a quality pass, **not** a second `claim_ai_call`; else honest empty) — decided, later box; prompt already paraphrases traits going in. "Does Sage know you?" never runs inside Talk replies.
+- Home may show a third daily category, **Nudge**, from a real recent signal only. Empty when there isn't one. Never Circle, widget, or morning push. **Explore** is a separate inner tab on Home, not a fourth daily card and not on the You tab. Completeness is never an Explore input. Explore inherits the same output fence; regen cap is 1 per calendar day.
 - Pixel companion: one small live face, fixed top-right at the tab shell (does not scroll or remount on tab switch). Current-you on Home/Around/You; aspirational glow on Sage. Tap plays a short coherent mood (wave / thumbs-up / happy bounce / hug); re-taps interrupt-and-restart, never queue.
 - Share = hold or tap. Stories-size image. Caption: "What's your ATO?"
 - Appearance: five user-selectable modes in Settings — Soft (default) / Zen / Quest / Neon / Anime. Replaces the discarded Ink / Paper / Steel / Bloom named palette for app chrome. Bottom tab bar uses the live appearance background in all five (opaque; no system material). The You-tab share poster still uses those four as a fixed shareable artifact. Spec lives in `src/constants/appearance.ts`. "Void" stays reserved for the competitor callout, not a mode name.
@@ -191,11 +191,18 @@ Minimal, not a dashboard:
 
 ### The trait backbone (15 axes)
 
-All nullable, all self-report / translate-and-discard. Raw label never stored. One canonical 0–1 scale. Per-axis `trait_sources`. Direct answers (slider or tap-form) always outrank inferred values (16-grid, situation tap, game choice) on the same axis. Never on poster, `peer_profile`, `public_profile`, or `night_snapshot`.
+All nullable, all self-report / translate-and-discard. Raw label never stored. One canonical 0–1 scale. Per-axis `trait_sources`. Never on poster, `peer_profile`, `public_profile`, or `night_snapshot`.
+
+**Source rank (decided — Stage 11 code is still `self_slider`-only sticky; later box generalizes to direct vs inferred):**
+- **Direct** (sticky — inferred cannot overwrite): slider (`self_slider`), tap-form (`self_tap`), Settings edit, confirm-upgrade of inferred data. Confirm upgrades source to direct but does **not** change the 0–1 number.
+- **Inferred**: 16-grid (`self_grid`), situation tap (`self_situation`), game/swipe (`self_game`). Last-write among inferred is fine.
+- **Skip / null**: no source row.
 
 **Shipped (Stage 11):** `openness`, `conscientiousness`, `extraversion`, `agreeableness`, `steadiness`; `attachment_anxiety`, `attachment_avoidance`; `conflict_assertiveness`, `conflict_cooperativeness`. Sources today: `self_grid` / `self_slider` / `self_situation`.
 
-**Decided, later box:** `autonomy`, `competence`, `relatedness` (Self-Determination Theory); `growth_mindset`; `locus_of_control`; `self_efficacy`. Game/scenario writes are inferred (same rank as grid/situation — below a direct slider or tap-form on that axis).
+**Decided, later box:** `autonomy`, `competence`, `relatedness` (Self-Determination Theory); `growth_mindset`; `locus_of_control`; `self_efficacy`. Game/scenario writes are inferred (same rank as grid/situation).
+
+**Per-axis `last_touched`:** parked in `src/lib/traits.ts` as of Stage 11. **Unpark before the 3-month re-ask prompt can ship** — that prompt has no clock without it.
 
 Big Five (OCEAN) is the scientific backbone — of every framework considered, it has the strongest test-retest reliability, the broadest cross-cultural validation, and the only one with real predictive validity for relationship outcomes. The other doors fill it in; they are not stored as themselves:
 
@@ -232,12 +239,12 @@ One question per screen, tappable, with a visible progress indicator ("3 of 9").
 
 **Optional extra axes — two layers:**
 
-1. **Shipped (Stage 11):** skippable `extra N of 4` after signup succeeds — 16-grid, sliders, close-pattern, disagreement. Writes the first 9 trait axes. Skip = those columns stay null. Slider-sticky: a later grid inference cannot overwrite a slider axis. "Love language" reframed platonic remains a lower-priority optional add, not Chapman categories.
+1. **Shipped (Stage 11):** skippable `extra N of 4` after signup succeeds — 16-grid, sliders, close-pattern, disagreement. Writes the first 9 trait axes. Skip = those columns stay null. Today's merge is slider-sticky (a later grid inference cannot overwrite a slider axis). Later box generalizes that to **direct vs inferred** (tap-form and confirm-upgrades sit with slider). "Love language" reframed platonic remains a lower-priority optional add, not Chapman categories.
 
-2. **Three-path (decided; supersedes treating the new frameworks as onboarding or as a single extra quiz).** SDT / growth mindset / locus of control / self-efficacy are never part of the required 9. User's choice, no pressure:
-   - **(a) Answer directly** — simple tap-form, plain language, no clinical/framework terms. Writes as direct self-report (outranks inferred).
-   - **(b) Skip now** — resurfaces occasionally later without pressure. Not a push notification, not urgent framing.
-   - **(c) Play instead** — scenario swipe-deck, forced-choice "implicit trait policy" (same UI pattern as the original swipe-deck idea). Each scenario signals one axis without naming it. Writes as inferred (below a later direct answer on that axis). Sample formats:
+2. **Three-path (decided; supersedes treating the new frameworks as onboarding or as a single extra quiz).** SDT / growth mindset / locus of control / self-efficacy are never part of the required 9. User's choice, no pressure. Soft-ask budget applies to path (b) resurfacing (see below).
+   - **(a) Answer directly** — simple tap-form, plain language, no clinical/framework terms. Writes as **direct** (`self_tap`; sticky, same rank as slider).
+   - **(b) Skip now** — resurfaces occasionally later without pressure. Not a push notification, not urgent framing. Null stays null, no source row.
+   - **(c) Play instead** — scenario swipe-deck, forced-choice "implicit trait policy" (same UI pattern as the original swipe-deck idea). Each scenario signals one axis without naming it. Writes as **inferred** (`self_game`; same rank as grid/situation — below a later direct answer on that axis). Sample formats:
      - Locus of control: "A project falls apart. First thought: 'I could've done something differently' vs 'that was bound to happen.'"
      - Growth mindset: "You bomb a presentation. Gut reaction: 'guess I'm not good at this' vs 'let me figure out what went wrong.'"
      - Self-efficacy: "Big task, tight deadline. You feel: 'I've got this' vs 'not sure I can pull this off.'"
@@ -259,31 +266,47 @@ Written once, public-domain/academic sourcing only, reviewed before publish, nev
 
 *Reflect patterns as maybes, not facts. No "you are." No framework names. One trait at a time. Notice, don't correct.*
 
-Exception: **Explore** may combine up to 2–3 traits per entry. Same no-framework-names and exploratory-language rules still apply. This replaces per-feature prompt instructions.
+Exception: **Explore** may combine up to 2–3 traits per entry, and only when at least one is tied to a recent signal. Never combine the three agency axes in one entry. Same no-framework-names and exploratory-language rules still apply. This replaces per-feature prompt instructions.
 
 ### Talk output fence (decided; later box)
 
-Talk's prompt already includes trait-derived paraphrase lines (fenced going in). Add a post-generation check: `containsFrameworkTerm` on Gemini's reply before it is shown. On a match, retry once; if it still fails, fall back to honest-empty / try-again rather than showing a blocked line. No new ME fetch — same shared row already in context. Read/Do/Nudge and Teach-Sage facts already have this fence.
+Talk's prompt already includes trait-derived paraphrase lines (fenced going in). Add a post-generation check: `containsFrameworkTerm` on Gemini's reply before it is shown — the same check cards already use. On a match, retry once; if it still fails, fall back to honest-empty / try-again rather than showing a blocked line. The retry is a **quality pass**, not a second `claim_ai_call`. No new ME fetch — same shared row already in context. Read/Do/Nudge and Teach-Sage facts already have this fence. **Explore inherits it too** — do not ship a second unfenced Sage writer.
+
+Expand banned **phrases** for the new six axes: `growth mindset`, `fixed mindset`, `locus of control`, `self-efficacy`, `self-determination`. Do **not** ban `autonomy` / `competence` / `relatedness` as standalone words — they are ordinary English and will false-positive.
 
 ### Explore (new Home inner tab — decided; later box)
 
-Not on the You tab. Separate from daily Read/Do/Nudge. Periodic generation only (weekly, or on a meaningful trait/signal change) — never daily. Cached between regenerations. Uses the existing per-user quota.
+Not on the You tab. Separate from daily Read/Do/Nudge. Periodic generation only (weekly, or on a meaningful trait/signal change) — never daily. Cached between regenerations. Uses the existing per-user quota. **Cap: 1 regeneration per calendar day** (a swipe-deck binge batches into one rebuild after the session, not one per axis).
 
-Combines 2–3 traits per entry (relaxed vs. Nudge's strict 1), grounded in the Library. Never empty by design: if only the 9 core onboarding fields exist, Explore still generates from that baseline and deepens as more axes fill in.
+Combines 2–3 traits per entry (relaxed vs. Nudge's strict 1), grounded in the Library, **only when at least one of those traits is tied to a recent signal** (a fresh fact, a knock that showed up, a Check pattern). No recent signal → stay at one trait, or generate from the 9 chips — do not manufacture a 2–3 combo from unused axes. **Never combine** `growth_mindset`, `locus_of_control`, and `self_efficacy` in one entry (they are one agency idea). Completeness is **never** an Explore input: no remaining-gap copy, no "richer because they filled the bar."
 
-Trait selection priority: always favor a trait connected to something that actually happened recently (a fresh fact, a recent knock pattern) over an abstract/unconnected trait.
+Never empty of extra-axis data: if only the 9 core onboarding fields exist, Explore still generates from that baseline and deepens as more axes fill in. Consent / quota / crisis still honest-empty (same gates as Talk). Same output fence as cards and Talk.
 
 **Feedback loop:** simple "did this land?" on Explore entries. May only influence future phrasing / angle-selection for that user. Must **never** adjust or reclassify a trait score. Log reactions in their own table — no shared write path with traits.
 
 ### "Does Sage know you?" (recurring engagement + profile update)
 
-Sage surfaces a guess about the user derived from an existing axis; the user confirms or corrects. Confirm reinforces that value's confidence; correct updates it — same self-report / write rules as Settings edits. This is the primary way traits stay adjustable starting points rather than frozen after onboarding.
+Sage surfaces a guess about the user derived from an existing axis; the user confirms or corrects. This is the primary way traits stay adjustable starting points rather than frozen after onboarding. **Never inside Talk replies** — Talk answers the typed line first.
 
-If an axis hasn't been touched (confirmed or edited) in 3+ months, surface a passive "still feel right?" prompt in Settings — not a push notification, not urgent framing.
+Locks:
+- **Confirm never changes the 0–1 number.** Correct and Settings edit do, same self-report / write rules as today.
+- Confidence, if tracked, stays **internal**: never shown, never allowed to make Sage's language more certain. The root line stays "maybes, not facts" at every confidence.
+- Axes **rotate**. Do not prefer high-confidence ones. Confirm does not make a value stickier against a later correct or Settings edit.
+- After **two confirms with no correction** on the same axis, the next surface is an edit-shaped "still feel right?" — not another yes/no.
+- Confirming **inferred** data upgrades its source to **direct** but does not move the number.
+- If an axis hasn't been touched (confirmed or edited) in 3+ months, surface a passive "still feel right?" prompt in Settings — not a push notification, not urgent framing. That clock needs per-axis `last_touched` (unpark in `src/lib/traits.ts` first). Confirm is a touch, not a lifetime lock — the 3-month prompt still fires after confirms.
 
 ### Profile completeness indicator (You tab — decided; later box)
 
-Shows % of full profile answered. Core 9 always counts as complete; the 15-axis layer is additional depth. Lives near the existing editable fields. Points to specific gaps in plain, non-clinical language (e.g. "we don't know much yet about how you handle setbacks" — never "locus of control"). Each gap tappable into the quick-answer form or a relevant scenario card. Pressure-free: deterministic like badges, no red/urgent framing, no streak mechanic, no guilt copy.
+**Two separate things, never one bar that measures a person:**
+- The 9 core chips are always **complete** after onboarding. Never shown as a percentage of a person. Never "37% profile."
+- The 15 axes are a separate **depth** layer, framed as invitation not deficit (e.g. "Sage can get more specific about how you handle setbacks" — never "we don't know much yet," never "locus of control"). Inferred-from-game data **counts as filled**.
+
+Lives on the You tab near the existing editable fields. Each depth gap is tappable into the quick-answer form or a relevant scenario card. Pressure-free: deterministic like badges, no red/urgent framing, no streak mechanic, no guilt copy. **No completeness signal on Home, Explore, Talk, widget, or push.** Do not wire it into pixel depth glow (`facts` stays that axis).
+
+### Soft-ask budget (decided; later box)
+
+At most **one** optional-depth prompt visible to a user at a time: game/path-(b) invite, 3-month re-ask, completeness gap, or "Does Sage know you?" Do not stack them.
 
 ### Reload (Dawn presentation — decided; locks are closed; later box)
 
@@ -312,14 +335,14 @@ The trait backbone shapes *tone* (who Sage is talking to). The actual coaching q
 ### Guardrails (**compliance-grounded** — same weight as the Crisis spec; not a style choice)
 
 - Self-report only. Never framed as the app diagnosing or clinically assessing anyone.
-- Attachment style especially: treat as a soft, adjustable starting point, not a fixed lifetime label — attachment patterns are understood to shift over time. "Does Sage know you?" confirm/correct is the intended update path. Confirming must not ossify a score into a lifetime label — confidence can rise; the value stays editable; the 3-month Settings prompt exists so silence is not treated as permanence.
-- Explore's 2–3 trait combine is still exploratory language ("maybe," "noticed"), never a type profile. Completeness % must not become a test-to-finish: core 9 is already complete; extra axes are depth, not a deficit.
+- Attachment style especially: treat as a soft, adjustable starting point, not a fixed lifetime label — attachment patterns are understood to shift over time. "Does Sage know you?" confirm/correct is the intended update path. Confirming must not ossify a score into a lifetime label — confirm never changes the number; confidence (if tracked) is internal and never affects language certainty; axes rotate; two confirms with no correct → edit-shaped re-ask; the 3-month Settings prompt still fires after confirms so silence is not treated as permanence.
+- Explore's 2–3 trait combine is still exploratory language ("maybe," "noticed"), never a type profile, and only when at least one trait is event-grounded. Completeness must not become a test-to-finish: the 9 chips are already complete (not a % of a person); extra axes are a separate depth layer, invitation not deficit.
 - Feedback on Explore never writes the trait table.
 - No raw psychological labels shown publicly, ever — consistent with the existing rule that only a derived color (not raw answer text) appears on the You tab poster.
 - Same extra-care review discipline that applies to the Crisis spec applies here before shipping — this touches real psychological categories, not just cosmetic personalization.
 - "MBTI" branding avoided in UI copy (trademarked by the Myers-Briggs Company) — use generic phrasing like "your type" or "16 personality types," same approach 16Personalities uses.
 
-**Where this fits:** Stages 9 and 11 shipped the first layer. Remaining work is several later boxes (axis expansion, Library, Talk fence, Explore, feedback, Does-Sage-know-you, completeness, Reload) — not one box, and not Stage 12.
+**Where this fits:** Stages 9 and 11 shipped the first layer. Remaining work is several later boxes (axis expansion + generalized direct-vs-inferred sources + unpark `last_touched`, Library, Talk fence, Explore, feedback, Does-Sage-know-you, completeness, Reload) — not one box, and not Stage 12. Locks from the Aug 28 Grok review live in the sections above.
 
 ### Delight & engagement mechanics (red-teamed this session)
 
@@ -328,7 +351,7 @@ The trait backbone shapes *tone* (who Sage is talking to). The actual coaching q
 **Badges** — fully fine, no reservation. Tied to real accomplished milestones (7 Checks, first "Teach Sage this" fact, a full week without a cut) — deterministic recognition of something that actually happened, not randomized chance. Different mechanism entirely from the rejected slot-machine idea.
 
 **Game mechanics — fun and useful as the same action, not fun wrapped around a form:**
-- **"Does Sage know you?"** — Sage guesses from an existing axis; user confirms or corrects (same write rules as Settings). Recurring, self-improving "it gets me" payoff — not a one-shot quiz. Untouched 3+ months → passive Settings prompt, not a push. See Understanding spec.
+- **"Does Sage know you?"** — Sage guesses from an existing axis; user confirms or corrects (confirm does not change the number; correct / Settings edit does). Recurring, self-improving "it gets me" payoff — not a one-shot quiz, not inside Talk replies. Untouched 3+ months → passive Settings prompt, not a push. Locks in Understanding spec.
 - **Forced-ranking sort** — drag 4-5 short statements into order from "most me" to "least me." Legitimate ranking-format technique, satisfying drag interaction, surfaces relative preference better than isolated taps.
 - **Scenario reaction cards, light time pressure** — quick scenario, 3-4 tap options, mild timer. Gut reactions under light time pressure tend to be more revealing than slowly deliberated ones.
 - **Friend-guessing game (Circle, once it exists)** — real market precedent for this exact "who knows you best" category. A friend guesses how you'd answer, you see if they're right. Where self-report and a friend's guess *disagree* is often the most interesting signal of all — worth Sage noticing and reflecting back.
@@ -384,7 +407,7 @@ Home may also show a third daily category, **Nudge** (internal zGlitch): persona
 
 ### 5 Sage (Talk)
 **Open box: talk.**
-Chips: today / this week / something else. "More" surfaces the card. Crisis keyword hit → static card per Crisis spec, no model call. Talk output fence (`containsFrameworkTerm` after generate) is decided — later box; Stage 5 Done does not include it.
+Chips: today / this week / something else. "More" surfaces the card. Crisis keyword hit → static card per Crisis spec, no model call. Talk output fence (`containsFrameworkTerm` after generate; retry once as a quality pass, not a second quota charge) is decided — later box; Stage 5 Done does not include it.
 **Done:** Two users with different `talk_style` get visibly different tone on the same prompt. A test message containing a crisis keyword returns the static resource card, verifiably without a router/model call firing (check logs).
 
 ### 6 Share + Circle
@@ -430,7 +453,7 @@ You + friends, one real week, real devices. Home stayed new day to day. Dos were
 
 Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Wave 2 Stage 2 ("I'm going") is in. Stage 11 optional fast-entry is in (first 9 trait axes). Next Wave 1.5 box is Stage 12 (Sage coaching content). Full spec detail lives in "Understanding spec" above; this section is sequencing only.
 
-**Decided Aug 28, 2026 — later boxes, not Stage 12, not one combined box:** 6 more trait axes (SDT, growth mindset, locus of control, self-efficacy); Library expansion; Talk output fence; Explore (Home inner tab) + phrasing-only feedback; "Does Sage know you?" + 3-month Settings prompt; intake three-path for the extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with the locks already closed. Do not fold these into Stage 12.
+**Decided Aug 28, 2026 — later boxes, not Stage 12, not one combined box:** 6 more trait axes (SDT, growth mindset, locus of control, self-efficacy); Library expansion; Talk output fence; Explore (Home inner tab) + phrasing-only feedback; "Does Sage know you?" + 3-month Settings prompt; intake three-path for the extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with the locks already closed. **Locks from the Aug 28 Grok review are in the Understanding spec** (Explore combine + regen cap + fence; Does-Sage-know-you confirm rules; completeness split; direct-vs-inferred `trait_sources`; Talk fence phrases + retry-is-not-quota; soft-ask budget; unpark `last_touched`). Do not fold these into Stage 12.
 
 ### 9 Intake core
 **Open box: intake, me.**
@@ -445,7 +468,7 @@ Wire new answers into check_count < 3 bank-card selection — real morning_cue p
 ### 11 Optional fast-entry
 **Open box: intake.**
 Skippable 16-grid / slider / close-pattern / disagreement layer, up to 4 extra questions, fully optional. Writes the first 9 nullable 0–1 ME axes (not the 9 chips). No raw diagnostic labels stored. Runtime fence on Read/Do/Nudge + Teach-Sage facts. Expansion to 15 axes + three-path intake for the new frameworks is a later box (Understanding spec).
-**Done (Aug 27, 2026):** Skip after question 9 goes to Home with `complete_signup` already succeeded; optional is a separate `extra N of 4` phase; slider-sticky merge (a later type tap cannot overwrite a slider axis); untouched sliders stay null; `peer_profile` / poster / `night_snapshot` unchanged; generated cards that name a framework are dropped.
+**Done (Aug 27, 2026):** Skip after question 9 goes to Home with `complete_signup` already succeeded; optional is a separate `extra N of 4` phase; slider-sticky merge (a later type tap cannot overwrite a slider axis); untouched sliders stay null; `peer_profile` / poster / `night_snapshot` unchanged; generated cards that name a framework are dropped. Later box generalizes sticky to direct vs inferred (tap-form + confirm-upgrade sit with slider). Per-axis `last_touched` stays parked until the 3-month re-ask box.
 
 ### 12 Sage's coaching content
 **Open box: talk, router.**
@@ -454,7 +477,7 @@ Ground Sage's system prompt in Gottman conflict/repair research and NVC's four-p
 
 ### 13 Delight mechanics (single-player)
 **Open box: intake, dawn.**
-Reveal card (real content only, no randomized-value mechanic), milestone badges, "Does Sage know you?" active-learning loop (confirm/correct + 3-month Settings prompt), forced-ranking sort, scenario reaction cards with light time pressure. Explore is a separate Home inner tab (Understanding spec), not this box's reveal card.
+Reveal card (real content only, no randomized-value mechanic), milestone badges, "Does Sage know you?" active-learning loop (confirm/correct + 3-month Settings prompt; locks in Understanding spec), forced-ranking sort, scenario reaction cards with light time pressure. Explore is a separate Home inner tab (Understanding spec), not this box's reveal card. Soft-ask budget: at most one optional-depth prompt visible at a time.
 **Done:** each mechanic ships with real trait/fact data behind it, not placeholder content; no randomized-outcome mechanic exists anywhere in this box.
 
 ### 14 Multiplayer (friend-guessing)
