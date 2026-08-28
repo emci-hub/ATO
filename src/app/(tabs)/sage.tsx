@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -26,16 +26,20 @@ import { useMeContext } from '@/lib/me-context';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { useTodayCard } from '@/hooks/use-today-card';
-import { checksToHistory, fetchChecks, type Check } from '@/lib/checks';
+import { checksToHistory, fetchTalkHistory, type Check } from '@/lib/checks';
 import { logCrisisFlag } from '@/lib/crisis/log';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { aiConsentFor, setAiConsent } from '@/lib/me';
 import { voiceMeFrom } from '@/lib/intake';
-import { addSageMessage, fetchSageMessages } from '@/lib/sage-messages';
+import {
+  addSageMessage,
+  fetchSageMessages,
+  peekSageMessages,
+  type SageMessage,
+} from '@/lib/sage-messages';
 import { TALK_COMPOSER_PLACEHOLDER, TALK_EMPTY, TALK_LEDE, TALK_WRITING, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { QUOTA_EMPTY_MESSAGE } from '@/lib/voice/quota';
 import { claimAiCall } from '@/lib/voice/quota-server';
-import { routeTalkReply } from '@/lib/voice/talk';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
 interface ChatMessage {
@@ -98,6 +102,15 @@ function useKeyboardLift() {
   return { open, lift };
 }
 
+function chatFromRows(rows: SageMessage[]): ChatMessage[] {
+  return rows.map((row) => ({
+    id: row.id,
+    role: row.role,
+    text: row.text,
+    reportable: true,
+  }));
+}
+
 export default function SageScreen() {
   const theme = useTheme();
   const { session } = useSession();
@@ -107,8 +120,14 @@ export default function SageScreen() {
   const { open: keyboardOpen, lift: keyboardLift } = useKeyboardLift();
   const scrollRef = useRef<ScrollView>(null);
 
+  const cachedRows = userId ? peekSageMessages(userId) : null;
   const [checks, setChecks] = useState<Check[]>([]);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [checkCount, setCheckCount] = useState(0);
+  const [talkReady, setTalkReady] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>(() =>
+    cachedRows ? chatFromRows(cachedRows) : [],
+  );
+  const [historyReady, setHistoryReady] = useState(cachedRows != null);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState<'send' | 'consent' | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -118,37 +137,44 @@ export default function SageScreen() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportMessage, setReportMessage] = useState<ChatMessage | null>(null);
 
-  const reloadChecks = useCallback(async () => {
-    if (!userId) return;
-    try {
-      setChecks(await fetchChecks(userId));
-    } catch (err) {
-      console.log('[talk] fetchChecks error:', err);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    reloadChecks();
-  }, [reloadChecks]);
-
-  // Load prior Sage history (persisted per exchange so responses are
-  // reportable and the thread survives restarts).
+  // History is the paint-critical fetch. Talk context (count + last 5 Checks)
+  // starts in parallel so a first send is ready, but it no longer pulls every
+  // all-time Check row the way Home still needs to.
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
-    fetchSageMessages()
+    const peeked = peekSageMessages(userId);
+    if (peeked) {
+      setMessages(chatFromRows(peeked));
+      setHistoryReady(true);
+    } else {
+      setHistoryReady(false);
+    }
+    setTalkReady(false);
+
+    fetchSageMessages(userId)
       .then((rows) => {
         if (cancelled) return;
-        setMessages(
-          rows.map((row) => ({
-            id: row.id,
-            role: row.role,
-            text: row.text,
-            reportable: true,
-          })),
-        );
+        setMessages(chatFromRows(rows));
+        setHistoryReady(true);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.log('[talk] fetchSageMessages error:', err);
+        if (!cancelled) setHistoryReady(true);
+      });
+
+    fetchTalkHistory(userId)
+      .then((next) => {
+        if (cancelled) return;
+        setChecks(next.checks);
+        setCheckCount(next.checkCount);
+        setTalkReady(true);
+      })
+      .catch((err) => {
+        console.log('[talk] fetchTalkHistory error:', err);
+        if (!cancelled) setTalkReady(true);
+      });
+
     return () => {
       cancelled = true;
     };
@@ -215,12 +241,23 @@ export default function SageScreen() {
     void persistAndSwap(localUserId, 'user', trimmed);
 
     try {
+      const [{ routeTalkReply }, talk] = await Promise.all([
+        import('@/lib/voice/talk'),
+        talkReady
+          ? Promise.resolve({ checks, checkCount })
+          : fetchTalkHistory(userId).then((next) => {
+              setChecks(next.checks);
+              setCheckCount(next.checkCount);
+              setTalkReady(true);
+              return next;
+            }),
+      ]);
       const result = await routeTalkReply(
         {
           me: voiceMeFrom(me),
           message: trimmed,
-          checkCount: checks.length,
-          history: checksToHistory(checks),
+          checkCount: talk.checkCount,
+          history: checksToHistory(talk.checks),
           todayCard: todayCard
             ? { read: todayCard.read, do: todayCard.do }
             : null,
@@ -294,12 +331,10 @@ export default function SageScreen() {
           </Pressable>
         </View>
 
-        {me ? (
-          <View style={styles.sageToys}>
-            <SageEightBall />
-            <SageUsageLine revision={usageRevision} />
-          </View>
-        ) : null}
+        <View style={styles.sageToys}>
+          <SageEightBall />
+          {me ? <SageUsageLine revision={usageRevision} /> : null}
+        </View>
 
         {!me ? (
           <ThemedView type="backgroundElement" style={styles.emptyCard}>
@@ -349,7 +384,11 @@ export default function SageScreen() {
                   </ThemedText>
                 </ThemedView>
               ) : null}
-              {messages.length === 0 && !quotaEmpty ? (
+              {!historyReady && messages.length === 0 && !quotaEmpty ? (
+                <ThemedView type="backgroundElement" style={styles.emptyCard}>
+                  <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+                </ThemedView>
+              ) : messages.length === 0 && !quotaEmpty ? (
                 <ThemedView type="backgroundElement" style={styles.emptyCard}>
                   <ThemedText themeColor="textSecondary" style={styles.centerText}>
                     {TALK_EMPTY}

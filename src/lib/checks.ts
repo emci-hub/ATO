@@ -29,6 +29,35 @@ export async function fetchChecks(userId: string): Promise<Check[]> {
   return (data ?? []) as Check[];
 }
 
+/**
+ * Talk only sends the last few Checks into the prompt (`streakSummary` in
+ * prompt.ts). Sage used to call `fetchChecks` (every row, all-time) on tab
+ * mount — that raced the history query and grew with every logged day.
+ * Count is a head request; recent rows are newest-first then reversed.
+ */
+export const TALK_RECENT_CHECKS = 5;
+
+export async function fetchTalkHistory(userId: string): Promise<{
+  checkCount: number;
+  checks: Check[];
+}> {
+  const [countRes, rowsRes] = await Promise.all([
+    supabase.from('checks').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+    supabase
+      .from('checks')
+      .select('*')
+      .eq('user_id', userId)
+      .order('day', { ascending: false })
+      .limit(TALK_RECENT_CHECKS),
+  ]);
+
+  if (countRes.error) throw countRes.error;
+  if (rowsRes.error) throw rowsRes.error;
+
+  const checks = ([...(rowsRes.data ?? [])] as Check[]).reverse();
+  return { checkCount: countRes.count ?? checks.length, checks };
+}
+
 /** The router's view of a user's check history, oldest first. */
 export function checksToHistory(checks: Check[]): CheckHistory[] {
   return checks.map((check) => ({
