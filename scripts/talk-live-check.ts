@@ -88,7 +88,42 @@ async function main() {
   console.log('provider :', result.provider);
   console.log('dev trace:', JSON.stringify(result.dev));
   console.log('reply    :', result.reply);
-  console.log('\nLive Talk exchange PASSED — full, untruncated reply from real Gemini path.');
+  console.log('\nLive Talk exchange 1 PASSED — full reply from real Gemini path.');
+
+  const homeCard = {
+    read: 'Sleep disrupted the streak. Protect the baseline with one sticky-note step.',
+    do: 'After you making coffee, write one sticky note and keep it visible.',
+  };
+  const direct = await routeTalkReply(
+    {
+      me,
+      message: 'Should my gf get flowers today or later this week?',
+      checkCount: 4,
+      history,
+      todayCard: homeCard,
+      recentTurns: [
+        { role: 'user', text: 'Yesterday was noisy.' },
+        { role: 'sage', text: 'A noisy day still counts if the check landed.' },
+      ],
+      aiConsent: true,
+    },
+    { config, providers, isDev: true },
+  );
+  assert.equal(direct.kind, 'reply');
+  assert.equal(direct.provider, 'gemini');
+  const answer = direct.reply!.toLowerCase();
+  assert.ok(
+    /flower|today|later|wait|week|gift|her/.test(answer),
+    `Talk must answer the flowers question, got: ${direct.reply}`,
+  );
+  assert.ok(
+    !/sticky-?note/.test(answer) && !/protect the baseline/.test(answer),
+    `Talk must not mirror the Home card, got: ${direct.reply}`,
+  );
+  console.log('Talk Q      :', 'Should my gf get flowers today or later this week?');
+  console.log('Home Read   :', homeCard.read);
+  console.log('Talk answer :', direct.reply);
+  console.log('\nLive Talk exchange 2 PASSED — direct answer, not a Home-card echo.');
 }
 
 main().catch((err) => {

@@ -17,6 +17,8 @@ export interface TalkReplyInput {
   history: CheckHistory[];
   /** Today's card (read/do) for context; may be null. */
   todayCard?: VoiceCard | null;
+  /** Prior Sage thread turns. Current line is `message`. */
+  recentTurns?: Array<{ role: 'user' | 'sage'; text: string }>;
   /** AI consent gate (Apple 5.1.2). Talk stays off unless granted. */
   aiConsent?: boolean | null;
   /** Needed only for crisis flag logging. */
@@ -121,6 +123,7 @@ export async function routeTalkReply(
     day: input.checkCount + 1,
     history: input.history,
     todayCard: input.todayCard,
+    recentTurns: input.recentTurns,
   });
 
   return { kind: 'reply', reply, provider: provider.id, dev: trace(true, providerLabel) };

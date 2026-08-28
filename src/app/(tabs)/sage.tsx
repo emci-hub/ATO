@@ -153,7 +153,14 @@ export default function SageScreen() {
     setError(null);
     setQuotaEmpty(false);
     const localUserId = `m${nextMessageId++}`;
-    setMessages((prev) => [...prev, { id: localUserId, role: 'user', text: trimmed }]);
+    let priorTurns: Array<{ role: 'user' | 'sage'; text: string }> = [];
+    setMessages((prev) => {
+      priorTurns = prev
+        .filter((row) => !row.crisis && row.text.trim().length > 0)
+        .slice(-6)
+        .map((row) => ({ role: row.role, text: row.text }));
+      return [...prev, { id: localUserId, role: 'user', text: trimmed }];
+    });
     setInput('');
     // Persist the user's line immediately so it gets a reportable id.
     void persistAndSwap(localUserId, 'user', trimmed);
@@ -168,6 +175,7 @@ export default function SageScreen() {
           todayCard: todayCard
             ? { read: todayCard.read, do: todayCard.do }
             : null,
+          recentTurns: priorTurns,
           aiConsent: me.ai_consent,
           userId,
         },

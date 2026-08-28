@@ -107,6 +107,51 @@ export function isRepeat(card: VoiceCard, shown: Array<{ read: string; do: strin
   );
 }
 
+const TOPIC_STOP = new Set([
+  'that', 'this', 'with', 'from', 'have', 'been', 'they', 'their', 'them',
+  'your', 'just', 'about', 'after', 'before', 'today', 'week', 'days',
+  'thing', 'things', 'still', 'really', 'into', 'when', 'what', 'then',
+  'than', 'also', 'some', 'most', 'more', 'only', 'even', 'over', 'once',
+  'like', 'make', 'made', 'does', 'doing', 'done', 'logged', 'nothing',
+  'something', 'pattern', 'worth', 'naming', 'plainly', 'honestly',
+  'those', 'these', 'here', 'there', 'were', 'will', 'would', 'could',
+  'should', 'again',
+]);
+
+/** Content words for topical compare. Short/function words dropped. */
+export function contentTokens(text: string): Set<string> {
+  return new Set(
+    normalizeForCompare(text)
+      .split(/\s+/)
+      .filter((word) => word.length >= 4 && !TOPIC_STOP.has(word)),
+  );
+}
+
+/** 0–1 overlap of content words (intersection / smaller set). */
+export function topicalOverlap(a: string, b: string): number {
+  const left = contentTokens(a);
+  const right = contentTokens(b);
+  if (left.size === 0 || right.size === 0) return 0;
+  let hit = 0;
+  for (const token of left) {
+    if (right.has(token)) hit += 1;
+  }
+  return hit / Math.min(left.size, right.size);
+}
+
+const TOPIC_REPEAT_THRESHOLD = 0.5;
+
+/**
+ * Same angle, different wording — the exact-string gate misses this.
+ * Compares Read only: Dos all share the morning-cue prefix.
+ */
+export function isTopicalRepeat(
+  card: VoiceCard,
+  shown: Array<{ read: string; do: string }>,
+): boolean {
+  return shown.some((prior) => topicalOverlap(card.read, prior.read) >= TOPIC_REPEAT_THRESHOLD);
+}
+
 export interface FilterContext {
   /** Cards already shown (previous checks + the prior bank day), to drop repeats. */
   shownCards: Array<{ read: string; do: string }>;
@@ -119,6 +164,7 @@ export interface FilterContext {
 /** Returns the reason a card must be dropped, or null if it's safe to show. */
 export function filterCard(card: VoiceCard, ctx: FilterContext): DropReason | null {
   if (isRepeat(card, ctx.shownCards)) return 'repeat';
+  if (isTopicalRepeat(card, ctx.shownCards)) return 'topic-repeat';
   if (isVagueDo(card.do)) return 'vague-do';
   if (isCruelCut(card.read)) return 'cruel-cut';
   if (ctx.crisisToday && hasCut(card.read)) return 'cut-after-crisis';

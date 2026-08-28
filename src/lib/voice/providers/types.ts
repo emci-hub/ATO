@@ -1,4 +1,4 @@
-import type { CheckHistory, TalkStyle, Tone, VoiceCard, VoiceMe } from '../types';
+import type { CheckHistory, DropReason, TalkStyle, Tone, VoiceCard, VoiceMe } from '../types';
 
 export interface GenerateInput {
   me: VoiceMe;
@@ -10,6 +10,8 @@ export interface GenerateInput {
   crisisToday: boolean;
   /** true when the last shown card was a cut — provider must not cut again. */
   previousHadCut: boolean;
+  /** Why the previous generate attempt was dropped, if any. */
+  retryHint?: DropReason | null;
 }
 
 /** Input for the Talk reply generator (the main Sage reply call). */
@@ -18,8 +20,10 @@ export interface TalkGenerateInput {
   message: string;
   day: number;
   history: CheckHistory[];
-  /** Today's card (read/do) for context; may be null. */
+  /** Today's Home card — light background only, never the reply itself. */
   todayCard?: VoiceCard | null;
+  /** Prior Sage thread turns (oldest first). Current user line is `message`. */
+  recentTurns?: Array<{ role: 'user' | 'sage'; text: string }>;
 }
 
 export interface TalkGenerateResult {

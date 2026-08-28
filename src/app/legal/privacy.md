@@ -36,7 +36,7 @@ This is not a substitute for legal advice. This draft is intended for review by 
 We use a small number of service providers to run ATO. We don't sell your data to anyone, ever.
 
 - **Supabase** — hosts our database and handles authentication. Your profile, Checks, chat messages, and facts live here.
-- **Google (Gemini API)** — powers Sage, the in-app AI coach. When you talk to Sage or receive a daily card, relevant context (not your full chat history) is sent to Gemini to generate a response. Google's own privacy terms govern how they process that request.
+- **Google (Gemini API)** — powers Sage, the in-app AI coach. When you talk to Sage or receive a daily card, relevant context is sent to Gemini: ME, recent Checks, and for Talk a short window of recent Sage turns so a follow-up can be answered (not the full thread). Google's own privacy terms govern how they process that request.
 - **Resend** — sends the one-time login codes to your email.
 - **Apple** — if you sign in with Apple, Apple may relay a private email address instead of your real one. We only see whatever Apple gives us.
 

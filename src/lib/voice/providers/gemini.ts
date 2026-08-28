@@ -35,7 +35,7 @@ export function createGeminiProvider(options: GeminiOptions): VoiceProvider {
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: buildPrompt(input) }] }],
           generationConfig: {
-            temperature: 0.9,
+            temperature: 1.0,
             maxOutputTokens: 500,
             responseMimeType: 'application/json',
             // gemini-3.x are thinking models: without an explicit level the

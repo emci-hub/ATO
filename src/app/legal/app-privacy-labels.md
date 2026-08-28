@@ -14,7 +14,7 @@ Copy these answers into App Store Connect → App Privacy. They must match `Priv
 | Name | Yes | Linked | No | App Functionality, Product Personalization | `me.name` |
 | Date of Birth | Yes | Linked | No | App Functionality | `me.born_on` (self-reported at onboarding). Age is computed from the date — 16+ to create an account, 18+ later for Wave 2 "going". Not a frozen age or boolean. |
 | User ID | Yes | Linked | No | App Functionality | Auth UUID, `@handle`, Apple `sub`, invite `referred_by` (abuse prevention only; never shown publicly) |
-| Other User Content | Yes | Linked | No | App Functionality, Product Personalization | Chat messages; Sage messages; ME free text (`show_up`, `knocks_you_off`, `morning_cue`, `talk_style`, `evening_wind_down`, `energy_pattern`, `recovery_style`, `support_style`, `current_focus`, `facts`, typed `city` for Around, IANA `timezone`); pixel `recipe`; Check read/do text. Gemini receives a prompt derived from ME + recent checks, not the full chat history. |
+| Other User Content | Yes | Linked | No | App Functionality, Product Personalization | Chat messages; Sage messages; ME free text (`show_up`, `knocks_you_off`, `morning_cue`, `talk_style`, `evening_wind_down`, `energy_pattern`, `recovery_style`, `support_style`, `current_focus`, `facts`, typed `city` for Around, IANA `timezone`); pixel `recipe`; Check read/do text. Gemini receives ME + recent checks +, for Talk, a short window of recent Sage turns — not the full thread. |
 | Customer Support | Yes | Linked | No | App Functionality | `reports` (reason + target) on Chat and Sage |
 | Product Interaction | Yes | Linked | No | App Functionality, Product Personalization | Checks (`did`/`skip`), AI consent, invite-code uses, `ai_usage` counts |
 | Other Usage Data | Yes | Linked | No | App Functionality | `crisis_flags` (user + timestamp only, never the message) |
@@ -47,7 +47,7 @@ Push notification token: `privacy.md` says we collect one if notifications are e
 ## Third parties (named in privacy.md)
 
 - **Supabase** — database, auth, profile, Checks, chat, facts, reports, crisis-flag timestamps, referrals.
-- **Google (Gemini API)** — Sage coach replies and generated daily cards; relevant context only, not full chat history.
+- **Google (Gemini API)** — Sage coach replies and generated daily cards; relevant context only. Talk may include a short window of recent Sage turns, not the full thread.
 - **Resend** — one-time login codes to email.
 - **Apple** — Sign in with Apple (may relay a private email); Hide My Email address is what we store.
 - **Sentry** — crash/diagnostic data, not linked to the ATO account.

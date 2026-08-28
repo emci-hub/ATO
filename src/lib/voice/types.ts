@@ -13,6 +13,7 @@ export type CheckStatus = 'done' | 'skipped';
 /** Why a generated card was dropped before it could be shown. */
 export type DropReason =
   | 'repeat'
+  | 'topic-repeat'
   | 'vague-do'
   | 'cruel-cut'
   | 'cut-after-crisis'
@@ -59,7 +60,7 @@ export interface VoiceMe {
   attachment_avoidance?: number | null;
   conflict_assertiveness?: number | null;
   conflict_cooperativeness?: number | null;
-  /** Facts they asked Sage to remember. Used for Nudge signal, never talk_style. */
+  /** Facts they asked Sage to remember. Nudge signal + optional Home-card angle. Never talk_style. */
   facts?: string[];
 }
 

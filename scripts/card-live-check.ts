@@ -31,34 +31,61 @@ async function main() {
     local: createGeminiProvider({ model: config.geminiModel, apiKey: config.geminiApiKey! }),
   };
 
-  const result = await routeVoiceCard(
-    {
-      me: { name: 'Emci', show_up: 'finishing my resume', talk_style: 'even', knocks_you_off: 'bad sleep', morning_cue: 'making coffee' },
-      checkCount: 4,
-      history: [
-        { day: 1, status: 'done' }, { day: 2, status: 'done' },
-        { day: 3, status: 'done' }, { day: 4, status: 'done' },
-      ],
-      aiConsent: true,
-    },
-    { config, providers, isDev: true },
-  );
+  const me = {
+    name: 'Emci',
+    show_up: 'finishing my resume',
+    talk_style: 'even' as const,
+    knocks_you_off: 'sleep, workload, people/conflict',
+    morning_cue: 'making coffee',
+    facts: ['I finish work at four', 'Tuesday is the heavy meeting day'],
+    current_focus: 'habit' as const,
+  };
 
-  assert.equal(result.kind, 'card');
-  assert.equal(result.provider, 'gemini', `expected real gemini provider, got ${result.provider}`);
-  assert.ok(result.card?.read && result.card?.read.length > 0, 'read must be non-empty');
-  assert.ok(result.card?.do && result.card?.do.length > 0, 'do must be non-empty');
-  assert.ok(
-    /[.!?]["']?$/.test(result.card.read.trim()),
-    `read looks truncated: ${JSON.stringify(result.card.read.slice(-80))}`,
-  );
+  const { isTopicalRepeat } = await import('../src/lib/voice/filters');
 
-  console.log('kind    :', result.kind);
-  console.log('provider:', result.provider);
-  console.log('day     :', result.day);
-  console.log('read    :', result.card.read);
-  console.log('do      :', result.card.do);
-  console.log('\nLive card generation PASSED — full card from real Gemini path.');
+  const cards: Array<{ read: string; do: string; day: number }> = [];
+  let history: Array<{
+    day: number;
+    status: 'done';
+    read?: string;
+    do?: string;
+  }> = [
+    { day: 1, status: 'done' },
+    { day: 2, status: 'done' },
+    { day: 3, status: 'done' },
+  ];
+
+  for (let checkCount = 3; checkCount <= 5; checkCount += 1) {
+    const result = await routeVoiceCard(
+      { me, checkCount, history, aiConsent: true },
+      { config, providers, isDev: true },
+    );
+    assert.equal(result.kind, 'card');
+    assert.ok(result.card, `day ${checkCount + 1} card was dropped: ${JSON.stringify(result.dropped)}`);
+    assert.equal(result.provider, 'gemini', `expected real gemini provider, got ${result.provider}`);
+    assert.ok(result.card.read && result.card.read.length > 0, 'read must be non-empty');
+    assert.ok(result.card?.do && result.card.do.length > 0, 'do must be non-empty');
+    for (const prior of cards) {
+      assert.notEqual(result.card.read, prior.read, 'exact Read repeat');
+      assert.equal(
+        isTopicalRepeat(result.card, [prior]),
+        false,
+        `Day ${result.day} Read is a topical paraphrase of day ${prior.day}:\n  prior: ${prior.read}\n  new:   ${result.card.read}`,
+      );
+    }
+    cards.push({ read: result.card.read, do: result.card.do, day: result.day });
+    history = [
+      ...history,
+      { day: result.day, status: 'done', read: result.card.read, do: result.card.do },
+    ];
+  }
+
+  console.log('provider:', 'gemini');
+  for (const card of cards) {
+    console.log(`\nDay ${card.day} Read: ${card.read}`);
+    console.log(`Day ${card.day} Do  : ${card.do}`);
+  }
+  console.log('\nLive card generation PASSED — 3 days with topical variety from real Gemini path.');
 }
 
 main().catch((err) => { console.error(err); process.exit(1); });

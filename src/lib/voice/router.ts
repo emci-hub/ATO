@@ -187,6 +187,7 @@ export async function routeVoiceCard(
       history: input.history,
       crisisToday,
       previousHadCut,
+      retryHint: lastDropped[0] ?? null,
     });
     const reason = filterCard(candidate, { shownCards, crisisToday, previousHadCut });
     if (!reason) {

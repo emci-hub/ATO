@@ -19,8 +19,9 @@ import { bankCard, parseBank } from '../src/lib/voice/bank';
 import { buildVoiceConfig } from '../src/lib/voice/config';
 import { BANK_MARKDOWN } from '../src/lib/voice/content.generated';
 import { detectCrisis, keywordDetect, normalizeCrisis } from '../src/lib/crisis/detect';
-import { filterCard, hasCut, isCruelCut, isVagueDo } from '../src/lib/voice/filters';
+import { filterCard, hasCut, isCruelCut, isTopicalRepeat, isVagueDo } from '../src/lib/voice/filters';
 import { localProvider } from '../src/lib/voice/providers/local';
+import { buildPrompt, buildTalkPrompt } from '../src/lib/voice/providers/prompt';
 import type { VoiceProvider } from '../src/lib/voice/providers/types';
 import { deriveTone, routeVoiceCard } from '../src/lib/voice/router';
 import { routeTalkReply } from '../src/lib/voice/talk';
@@ -187,6 +188,143 @@ const day5 = await routeVoiceCard(input(4, mkHistory([
 assert.notEqual(day5.card!.read, day4.card!.read);
 assert.notEqual(day5.card!.do, day4.card!.do);
 ok('consecutive generated days do not repeat');
+
+const sleepStreak = {
+  read: 'Sleep disrupted the streak. Protect the baseline. One sticky-note step.',
+  do: 'After you making coffee, write one sticky note and keep it.',
+};
+const sleepParaphrase = {
+  read: 'Sleep knocked the streak again. Hold the baseline with one small sticky step.',
+  do: 'After you making coffee, put a sticky note on the desk and start.',
+};
+assert.equal(isTopicalRepeat(sleepParaphrase, [sleepStreak]), true);
+assert.equal(
+  filterCard(sleepParaphrase, {
+    shownCards: [sleepStreak],
+    crisisToday: false,
+    previousHadCut: false,
+  }),
+  'topic-repeat',
+);
+const workloadRead = {
+  read: 'Workload ate the afternoon — that is the knock today, not a character flaw.',
+  do: 'After you making coffee, send the one email you have been parking.',
+};
+assert.equal(isTopicalRepeat(workloadRead, [sleepStreak]), false);
+ok('paraphrased sleep/streak Reads are topical repeats; a different knock is not');
+
+const varietyMe: VoiceMe = {
+  ...ME,
+  knocks_you_off: 'sleep, workload, people/conflict',
+  facts: ['I finish work at four', 'Tuesday is the heavy meeting day'],
+  current_focus: 'habit',
+};
+const priorSleep = await routeVoiceCard(
+  { me: varietyMe, checkCount: 3, history: d1, aiConsent: true },
+  { config: localConfig, ...dev },
+);
+const dayAfter = await routeVoiceCard(
+  {
+    me: varietyMe,
+    checkCount: 4,
+    history: mkHistory([
+      { day: 1, status: 'done' },
+      { day: 2, status: 'done' },
+      { day: 3, status: 'done' },
+      {
+        day: 4,
+        status: 'done',
+        read: priorSleep.card!.read,
+        do: priorSleep.card!.do,
+      },
+    ]),
+    aiConsent: true,
+  },
+  { config: localConfig, ...dev },
+);
+assert.ok(dayAfter.card);
+assert.notEqual(dayAfter.card!.read, priorSleep.card!.read);
+assert.equal(isTopicalRepeat(dayAfter.card!, [priorSleep.card!]), false);
+ok('next generated day with prior Read in history is a different topic, not a paraphrase');
+
+const cardPrompt = buildPrompt({
+  me: varietyMe,
+  day: 5,
+  tone: 'even',
+  history: mkHistory([
+    { day: 4, status: 'done', read: sleepStreak.read, do: sleepStreak.do },
+  ]),
+  crisisToday: false,
+  previousHadCut: false,
+});
+assert.match(cardPrompt, /ALREADY SHOWN/);
+assert.match(cardPrompt, /Sleep disrupted the streak/);
+assert.match(cardPrompt, /AVAILABLE SIGNALS/);
+assert.match(cardPrompt, /finish work at four/);
+ok('card prompt lists prior Reads and rotatable signals, not status-only history');
+
+const talkPrompt = buildTalkPrompt({
+  me: ME,
+  message: 'Should my gf get X today or later?',
+  day: 5,
+  history: d1,
+  todayCard: {
+    read: 'Sleep disrupted the streak. Protect the baseline.',
+    do: 'After you making coffee, write one sticky note.',
+  },
+  recentTurns: [
+    { role: 'user', text: 'I slept badly.' },
+    { role: 'sage', text: 'Sleep is loud tonight. Keep the check small.' },
+  ],
+});
+assert.match(talkPrompt, /THEY JUST SAID/);
+assert.match(talkPrompt, /Should my gf get X today or later\?/);
+assert.match(talkPrompt, /OPTIONAL BACKGROUND/);
+assert.match(talkPrompt, /Do not restate/);
+assert.match(talkPrompt, /RECENT TURNS IN THIS THREAD/);
+assert.match(talkPrompt, /I slept badly/);
+assert.doesNotMatch(talkPrompt, /Today's card:\n {2}read:/);
+ok('Talk prompt answers the typed line first; Home card is demoted; thread turns are included');
+
+let capturedTalk: { message?: string; recentTurns?: Array<{ role: string; text: string }>; todayCard?: unknown } | null = null;
+const captureTalk: VoiceProvider = {
+  id: 'local',
+  label: 'capture-talk',
+  generate: async () => ({ read: 'x', do: 'y' }),
+  generateTalk: async (input) => {
+    capturedTalk = {
+      message: input.message,
+      recentTurns: input.recentTurns,
+      todayCard: input.todayCard,
+    };
+    return localProvider.generateTalk(input);
+  },
+};
+const flowersTalk = await routeTalkReply(
+  {
+    me: ME,
+    message: 'Should my gf get flowers today or later this week?',
+    checkCount: 4,
+    history: d1,
+    todayCard: {
+      read: 'Sleep disrupted the streak. Protect the baseline.',
+      do: 'After you making coffee, write one sticky note.',
+    },
+    recentTurns: [
+      { role: 'user', text: 'Yesterday was noisy.' },
+      { role: 'sage', text: 'A noisy day still counts if the check landed.' },
+    ],
+    aiConsent: true,
+  },
+  { config: localConfig, providers: { gemini: captureTalk, local: captureTalk }, ...dev },
+);
+assert.equal(flowersTalk.kind, 'reply');
+assert.equal(capturedTalk?.message, 'Should my gf get flowers today or later this week?');
+assert.equal(capturedTalk?.recentTurns?.length, 2);
+assert.equal(capturedTalk?.recentTurns?.[0]?.text, 'Yesterday was noisy.');
+assert.match(flowersTalk.reply ?? '', /flower|today|later|wait/i);
+assert.doesNotMatch(flowersTalk.reply ?? '', /sticky-?note|protect the baseline/i);
+ok('Talk router forwards the typed line plus prior turns; local reply does not mirror the Home card');
 
 // ---------------------------------------------------------------------------
 console.log('Filters');

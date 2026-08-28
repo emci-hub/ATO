@@ -4,13 +4,53 @@ import { VOICE_REFERENCE } from '../voice-reference';
 import type { Tone, VoiceCard, VoiceMe } from '../types';
 import { TALK_STYLE_GUIDE, type GenerateInput, type TalkGenerateInput } from './types';
 
+/** Keep in sync with `TALK_RECENT_CHECKS` in checks.ts (Sage's talk fetch). */
+export const TALK_PROMPT_HISTORY = 5;
+
 function streakSummary(history: GenerateInput['history']): string {
   if (history.length === 0) return 'No checks logged yet.';
   const recent = history
-    .slice(-5)
+    .slice(-TALK_PROMPT_HISTORY)
     .map((h) => `- Day ${h.day}: ${h.status}${h.source ? ` (${h.source})` : ''}`)
     .join('\n');
   return recent;
+}
+
+function alreadyShown(history: GenerateInput['history']): string {
+  const cards = history.filter((h) => h.read && h.do).slice(-7);
+  if (cards.length === 0) return 'None yet.';
+  return cards
+    .map((h) => `- Day ${h.day} Read: ${h.read}\n  Do: ${h.do}`)
+    .join('\n');
+}
+
+function signalPool(me: VoiceMe): string {
+  const knocks = me.knocks_you_off
+    .split(/,\s*/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const facts = (me.facts ?? []).filter((fact) => fact.trim().length > 0).slice(0, 8);
+  const lines: string[] = [];
+  if (knocks.length > 0) {
+    lines.push(`- Knocks they named (rotate; do not default to the first one every day): ${knocks.join('; ')}`);
+  }
+  if (facts.length > 0) {
+    lines.push(`- Remembered facts (optional; pick a different one than recent Reads used): ${facts.join('; ')}`);
+  }
+  if (me.current_focus) lines.push(`- Current focus chip: ${me.current_focus}`);
+  if (me.show_up) lines.push(`- How this week feels: ${me.show_up}`);
+  if (me.recovery_style) lines.push(`- What they say pulls them back: ${me.recovery_style}`);
+  return lines.length === 0 ? '- (no extra signals)' : lines.join('\n');
+}
+
+function threadTurns(turns: TalkGenerateInput['recentTurns']): string {
+  if (!turns || turns.length === 0) return '';
+  const lines = turns
+    .filter((turn) => turn.text.trim().length > 0)
+    .slice(-6)
+    .map((turn) => `${turn.role}: ${turn.text.trim().slice(0, 400)}`);
+  if (lines.length === 0) return '';
+  return `\nRECENT TURNS IN THIS THREAD (oldest first; the new line is below, not listed here):\n${lines.join('\n')}\n`;
 }
 
 /** Self-report intake lines. Not a diagnosis — they tapped these. */
@@ -50,18 +90,23 @@ TODAY
 - Tone: ${toneNote[tone]}
 ${crisisToday ? '- CRISIS DAY: do NOT include any cut, no matter what.' : ''}
 ${previousHadCut ? '- Yesterday was already a cut. Do NOT cut again.' : ''}
+${input.retryHint ? `- Previous draft was dropped (${input.retryHint}). Write a different angle, not a rephrase.` : ''}
 
 CONTEXT
-- How this week feels (self-report): ${me.show_up}
-- What knocks them off: ${me.knocks_you_off}
-- Their morning cue (anchor the Do to this): ${me.morning_cue}
+- Morning cue (anchor the Do to this): ${me.morning_cue}
 ${intakeContext(me)}- Recent checks:
 ${streakSummary(input.history)}
 
+AVAILABLE SIGNALS — pick ONE primary angle today. Do not default to the same knock or the same streak/baseline story two days in a row.
+${signalPool(me)}
+
+ALREADY SHOWN (do not reuse wording OR the same topic angle):
+${alreadyShown(input.history)}
+
 RULES
-1. Read: 1–4 sentences in the voice above. If a cut, name the habit/skip plainly — never the person's worth.
-2. Do: exactly ONE if-then action, anchored to the morning cue, e.g. "After you ${me.morning_cue}, <specific concrete action>." Specific enough that they could start it in under 10 minutes.
-3. No repetition of content shown before.
+1. Read: 1–4 sentences. General reflection on today/the pattern, from a signal that recent Reads did not already use.
+2. Do: exactly ONE if-then action, anchored to the morning cue, e.g. "After you ${me.morning_cue}, <specific concrete action>." Specific enough that they could start it in under 10 minutes. The action should fit today's angle, not copy yesterday's Do with new adjectives.
+3. No repetition of content shown before — paraphrases of the same sleep/streak/baseline story still count as repetition.
 4. Describe how they tend to move, never label them. No type codes, no scores-as-identity, no diagnosis.
 
 Respond with JSON only, no prose, in this shape:
@@ -103,30 +148,36 @@ export function isUsableCard(card: ParsedCard | null): card is VoiceCard {
 
 // --- Talk reply -----------------------------------------------------------
 
-/** Builds the single-turn prompt that asks Gemini for a Talk reply. */
+/** Builds the Talk prompt. Card is background only; the typed line is the job. */
 export function buildTalkPrompt(input: TalkGenerateInput): string {
   const { me, message, day, history, todayCard } = input;
   const styleGuide = TALK_STYLE_GUIDE;
+  const cardBlock = todayCard
+    ? `OPTIONAL BACKGROUND — today's Home card. Do not restate, paraphrase, or answer as if they asked about this unless they did.
+- Home Read: ${todayCard.read}
+- Home Do: ${todayCard.do}`
+    : 'OPTIONAL BACKGROUND: no Home card today.';
 
-  return `You are Sage, the coach inside the ATO app. You reflect more than you ask. Coach, not doctor. Reply in ~4 sentences max, in the user's talk style.
+  return `You are Sage, the coach inside the ATO app. Coach, not doctor. This is a conversation, not a daily card.
 
-VOICE REFERENCE (write in this register — do NOT reuse these lines verbatim):
-${VOICE_REFERENCE}
+VOICE NOTE: write in Sage's register (reflect more than ask) but do NOT recycle the Home-card voice-reference lines as the reply.
 
-USER
+WHO THEY ARE (tone only — not the topic unless they bring it up)
 - Name: ${me.name}
 - Talk style: ${styleGuide[me.talk_style]}
 - How this week feels (self-report): ${me.show_up}
 - What knocks them off: ${me.knocks_you_off}
-- Their morning cue: ${me.morning_cue}
-${intakeContext(me)}- Today is day ${day}${todayCard ? `.\n- Today's card:\n  read: ${todayCard.read}\n  do: ${todayCard.do}` : '.'}
+- Morning cue: ${me.morning_cue}
+${intakeContext(me)}- Today is day ${day}.
 - Recent checks:
 ${streakSummary(history)}
 
-THE USER WROTE:
+${cardBlock}
+${threadTurns(input.recentTurns)}
+THEY JUST SAID:
 "${message}"
 
-Reply as Sage, in the voice above and the talk style above. Reflect what they said, then a short helpful nudge. Never a diagnosis, never judgment of the person, never a type label. No more than 4 sentences. Respond with plain text only, no quotes, no prefix.`;
+Answer that first and directly. If they asked a question, give a straight answer to that question. Do not pivot to streaks, sleep, or the Home Read unless they brought those up. A short helpful nudge is fine after the answer. Never a diagnosis, never judgment of the person, never a type label. No more than 4 sentences. Plain text only, no quotes, no prefix.`;
 }
 
 export interface ParsedTalkReply {
