@@ -40,7 +40,7 @@ export interface RouteVoiceCardDeps {
 }
 
 function withNudge(result: Omit<VoiceCardResult, 'nudge'>, input: RouteVoiceCardInput): VoiceCardResult {
-  if (result.kind !== 'card' || !result.card?.do.trim()) {
+  if (result.kind !== 'card' || !result.card?.do?.trim()) {
     return { ...result, nudge: null };
   }
   const nudge = resolveNudge({

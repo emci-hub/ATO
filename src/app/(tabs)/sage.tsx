@@ -22,7 +22,7 @@ import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { useMeContext } from '@/lib/me-context';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
-import { checkWindowFor } from '@/lib/check-window';
+import { useTodayCard } from '@/hooks/use-today-card';
 import { checksToHistory, fetchChecks, type Check } from '@/lib/checks';
 import { logCrisisFlag } from '@/lib/crisis/log';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
@@ -33,7 +33,6 @@ import { TALK_COMPOSER_PLACEHOLDER, TALK_EMPTY, TALK_LEDE, TALK_WRITING, SAGE_CO
 import { QUOTA_EMPTY_MESSAGE } from '@/lib/voice/quota';
 import { claimAiCall } from '@/lib/voice/quota-server';
 import { routeTalkReply } from '@/lib/voice/talk';
-import { routeVoiceCard } from '@/lib/voice/router';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
 interface ChatMessage {
@@ -63,9 +62,9 @@ export default function SageScreen() {
   const { session } = useSession();
   const userId = session?.user.id;
   const { me, refresh: refreshMe } = useMeContext();
+  const { card: todayCard } = useTodayCard();
 
   const [checks, setChecks] = useState<Check[]>([]);
-  const [todayCard, setTodayCard] = useState<{ read: string; do: string } | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState<'send' | 'consent' | null>(null);
@@ -110,31 +109,6 @@ export default function SageScreen() {
       cancelled = true;
     };
   }, [userId]);
-
-  // Load today's card for context (Talk replies can reference it).
-  useEffect(() => {
-    if (!me) return;
-    let cancelled = false;
-    routeVoiceCard({
-      me: voiceMeFrom(me),
-      checkCount: checks.length,
-      history: checksToHistory(checks),
-      aiConsent: me.ai_consent,
-      day: checkWindowFor(
-        me,
-        checks.map((check) => check.day),
-      ).todayDay,
-    })
-      .then((result) => {
-        if (!cancelled && result.card) {
-          setTodayCard(result.card);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [me, checks]);
 
   const consent = me ? aiConsentFor(me) : 'pending';
 
@@ -188,7 +162,9 @@ export default function SageScreen() {
           message: trimmed,
           checkCount: checks.length,
           history: checksToHistory(checks),
-          todayCard,
+          todayCard: todayCard
+            ? { read: todayCard.read, do: todayCard.do }
+            : null,
           aiConsent: me.ai_consent,
           userId,
         },
