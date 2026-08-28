@@ -8,7 +8,7 @@
 ## On
 **Nav bar appearance is in.** Bottom tab chrome uses the live appearance background in all five modes (opaque). Same family as the Sage zoom white-flash: native/system white behind the bar. The earlier `disableTransparentOnScrollEdge` + dark system material left the bar sampling white; tabs also mounted as Soft before storage loaded, so a saved dark/Zen mode kept a white bar. Navigation theme `card`/`background`, `blurEffect="none"`, hydrate-before-mount, and the web bar all use `theme.background` (not Soft-white card surface or translucent Anime).
 
-**Sage content model v2 is in.** Read/Do labels are unchanged on Home, Dawn, widget, push, and Circle — no ATOsophy/Sync. Cards stay per-user on the existing quota (20/day, 200/month); no shared pools, no refresh. Talk, Dawn, consent, crisis, morning push, and widget keep `Sage · coach` and the disclosure sentence. Home in Quest appearance only uses `Sage · npc` on the card (no disclosure on that card); Soft / Zen / Neon / Anime Home stay `Sage · coach`. Home can show a third daily category, **Nudge** (internal zGlitch): encouragement from a real recent signal only — never from `talk_style`. No signal → no card. Never Circle, widget, or morning push.
+**Sage content model v2 is in.** Read/Do labels are unchanged on Home, Dawn, widget, push, and Circle — no ATOsophy/Sync. Cards stay per-user on the existing quota (20/day, 200/month); no shared pools, no live reroll. Reload (cycle stored same-truth variants) is decided in ATO_PLAN_v2.md, not built. Talk, Dawn, consent, crisis, morning push, and widget keep `Sage · coach` and the disclosure sentence. Home in Quest appearance only uses `Sage · npc` on the card (no disclosure on that card); Soft / Zen / Neon / Anime Home stay `Sage · coach`. Home can show a third daily category, **Nudge** (internal zGlitch): encouragement from a real recent signal only — never from `talk_style`. No signal → no card. Never Circle, widget, or morning push.
 
 **Check window + weekly recap cap + Home milestone badge are in.** A Check is for a calendar day in the user's timezone (signup-local day 1). You can log today or up to 2 days back if that day is still empty — one Check per day, not extra Checks on the same day. Days 3+ back are permanently closed. `record_check` is the only write path (client inserts revoked). Read + Do + Nudge text is kept for the rolling 7 calendar days (today through today-6); older text is nulled, did/skip stays forever for `check_count` and valence. Sunday recap still counts outcomes for the previous Sun–Sat; last Sunday's Read may already be pruned (today-7). `this_week` on ME was never implemented — recap reads the checks table. Home shows a small all-time Checks chip (presence-tier glow, all five appearance modes).
 
@@ -22,7 +22,7 @@
 
 **Stage 9 first pass is in (intake core + Day 1 payoff wiring).** Fresh onboarding is identity, then 9 chip screens with a visible "N of 9". Five new ME columns (`evening_wind_down`, `energy_pattern`, `recovery_style`, `support_style`, `current_focus`) — existing `talk_style` / `show_up` / `knocks_you_off` / `morning_cue` names and types unchanged. Live row: handle `zintake9`. All 9 chips are editable afterward from the You tab / Settings (same chip UI; `show_up` still seeds color; `talk_style` still seeds Sage's tone).
 
-**Stage 11 optional fast-entry is in.** After the 9 chips, `complete_signup` succeeds, then an optional `extra N of 4` phase (16-grid, sliders, close-pattern, disagreement). Skip goes to Home. New nullable 0–1 ME axes, slider-sticky merge, runtime fence on Read/Do/Nudge and Teach-Sage facts. Not on poster / `peer_profile` / `night_snapshot`. Settings re-tap parked.
+**Stage 11 optional fast-entry is in.** After the 9 chips, `complete_signup` succeeds, then an optional `extra N of 4` phase (16-grid, sliders, close-pattern, disagreement). Skip goes to Home. First 9 of a 15-axis nullable 0–1 backbone, slider-sticky merge, runtime fence on Read/Do/Nudge and Teach-Sage facts. Not on poster / `peer_profile` / `night_snapshot`. Settings re-tap parked. Six more axes + three-path intake are plan-only (later boxes).
 
 **Sage/You UI-bug bundle is in.** Sage has a small collapsible 8-ball above Talk (fixed local answers, infinite rolls) with an original glazed orb (not Mattel trade dress, not a Kenney sprite) that shakes on Ask again. Reply room shows as `X of 20 today` — no "AI" or "tokens" in the copy — on Sage and as a collapsed You-tab fold. The You-tab name lives on the poster only. The Settings crisis-line reference is a collapsible at the bottom, above credits; the active Talk crisis card is unchanged.
 
@@ -38,6 +38,8 @@
 **EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ can receive this Sage content-model JS change via `eas update`. Devices on binary 8 or earlier cannot.
 
 **Decision (Aug 27, 2026): Wave 1.5 and Wave 3 both start now, in parallel — intentional deviation from plan sequencing.** Wave 2 Stage 2 ("I'm going") is now live, so Night wall is unblocked for Wave 3.
+
+**Decided Aug 28, 2026 (plan, not built — later boxes, not Stage 12):** trait backbone expands to 15 axes (6 new: SDT, growth mindset, locus of control, self-efficacy); Library expansion; Talk output fence; Explore as a Home inner tab; intake three-path for extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with locks already closed. ATO_PLAN_v2.md is a working reference, not a locked spec — these are recorded there as current design.
 
 **Next boxes, one at a time:**
 - Wave 1.5 Stage 12 — Sage coaching content (Gottman / NVC prompt grounding)
@@ -65,13 +67,14 @@ These are real, but they are not TestFlight work and they are not next. Leave th
 - Fantasy UI Borders pack (Kenney) — UI chrome/panels/buttons
 - Monster Builder Pack — parked, needs eyes/mouth slots added to recipe before usable
 - Revisit onboarding question wording if it still feels off after a fresh look
+- **Decided, later Wave 1.5 boxes (see ATO_PLAN_v2 Understanding spec):** 6 extra trait axes + three-path intake; Library; Talk fence; Explore + phrasing-only feedback; Does-Sage-know-you + 3-month Settings prompt; completeness indicator; Dawn Reload
 - Crisis: relational-safety/abuse category, own resource number, parked separately
 - **AI capacity hardening** — close the client-embedded-key bypass before public launch (server-side proxy or equivalent)
 - Slack — parked as future ops tooling, bring up again if/when the app scales
 - Push notification timing from `energy_pattern` / `evening_wind_down` (fields exist; not wired in Stage 9)
 
 ## Housekeeping
-- docs/ATO_PLAN_v2.md, docs/ME.md, docs/NOW.md, docs/BUSINESS.md — Cursor maintains these directly. Commit together, `git push` immediately, never left local-only.
+- docs/ATO_PLAN_v2.md, docs/ME.md, docs/NOW.md, docs/BUSINESS.md — Cursor maintains these directly. Commit together, `git push` immediately, never left local-only. ATO_PLAN_v2.md is a **working reference**, not a locked spec: it changes as design evolves; significant deviations are noted here or in that file, not treated as violations. Crisis / coach-label / diagnosis-avoidance / App Store floor sections in the plan are compliance-grounded and are not casually revised.
 - EXPO_PUBLIC_GEMINI_API_KEY set and live-verified. Model pinned to `gemini-3.7-flash`.
 - **Open decision (emci's, not technical):** Apple Developer account type — Individual vs Organization. Revisit before public submission.
 - Bundle ID `com.emgens.ato` (App ID) / `com.emgens.ato.signin` (Services ID) confirmed.
