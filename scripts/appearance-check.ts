@@ -77,6 +77,8 @@ const themeLabDecl = layout.indexOf('name="theme-lab"');
 assert.ok(tabsDecl > 0 && themeLabDecl > tabsDecl, 'theme-lab must not be the Stack cold-start screen');
 assert.match(layout, /<Stack\.Protected guard=\{__DEV__\}>[\s\S]*name="theme-lab"/);
 assert.match(fs.readFileSync(path.join(root, 'src/app/theme-lab.tsx'), 'utf8'), /if \(!__DEV__\)/);
+assert.match(fs.readFileSync(path.join(root, 'src/app/theme-lab.tsx'), 'utf8'), /Redirect href="\/"/);
+assert.doesNotMatch(fs.readFileSync(path.join(root, 'src/app/theme-lab.tsx'), 'utf8'), /Dev only/);
 ok('theme-lab is a __DEV__ route, not the production initial screen');
 
 assert.match(navTheme, /card: theme\.background/);

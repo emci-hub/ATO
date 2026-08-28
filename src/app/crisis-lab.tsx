@@ -1,3 +1,4 @@
+import { Redirect } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -17,13 +18,7 @@ export default function CrisisLabScreen() {
   const { region, autoRegion, override } = useCrisisRegion();
 
   if (!__DEV__) {
-    return (
-      <ThemedView style={styles.container}>
-        <SafeAreaView style={styles.safeArea}>
-          <ThemedText>Dev only.</ThemedText>
-        </SafeAreaView>
-      </ThemedView>
-    );
+    return <Redirect href="/" />;
   }
 
   return (

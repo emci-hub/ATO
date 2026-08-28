@@ -15,5 +15,6 @@ export function redirectSystemPath({ path }: { path: string; initial: boolean })
     // Native module missing (web / Expo Go).
   }
   if (path === 'home' || path === '/home') return '/';
+  if (/(?:^|\/)(?:theme|around|talk|pixel|crisis|voice)-lab\/?$/.test(path)) return '/';
   return path;
 }

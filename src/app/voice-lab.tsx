@@ -1,3 +1,4 @@
+import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -95,13 +96,7 @@ const SCENARIOS: Scenario[] = [
 
 export default function VoiceLabScreen() {
   if (!__DEV__) {
-    return (
-      <ThemedView style={styles.container}>
-        <SafeAreaView style={styles.safeArea}>
-          <ThemedText>Dev only.</ThemedText>
-        </SafeAreaView>
-      </ThemedView>
-    );
+    return <Redirect href="/" />;
   }
   return <VoiceLab />;
 }

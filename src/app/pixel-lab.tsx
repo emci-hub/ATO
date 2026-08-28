@@ -1,3 +1,4 @@
+import { Redirect } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,13 +25,7 @@ const LOOKS = Object.keys(SHAPE_MANIFEST.parts.find((p) => p.id === 'face')!.sta
 
 export default function PixelLabScreen() {
   if (!__DEV__) {
-    return (
-      <ThemedView style={styles.container}>
-        <SafeAreaView style={styles.safeArea}>
-          <ThemedText>Dev only.</ThemedText>
-        </SafeAreaView>
-      </ThemedView>
-    );
+    return <Redirect href="/" />;
   }
 
   return <PixelLab />;

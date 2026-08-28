@@ -1,3 +1,4 @@
+import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,13 +23,7 @@ export default function AroundLabScreen() {
   }, [city]);
 
   if (!__DEV__) {
-    return (
-      <ThemedView style={styles.container}>
-        <SafeAreaView style={styles.safeArea}>
-          <ThemedText>Dev only.</ThemedText>
-        </SafeAreaView>
-      </ThemedView>
-    );
+    return <Redirect href="/" />;
   }
 
   return (
