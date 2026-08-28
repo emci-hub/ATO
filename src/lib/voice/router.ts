@@ -6,6 +6,7 @@ import {
   type VoiceConfig,
 } from './config';
 import { filterCard, hasCut } from './filters';
+import { containsFrameworkTerm } from './framework-fence';
 import { resolveNudge } from './nudge';
 import { buildProviders } from './providers';
 import type { VoiceProvider } from './providers/types';
@@ -52,8 +53,9 @@ function withNudge(result: Omit<VoiceCardResult, 'nudge'>, input: RouteVoiceCard
     crisisDetected: !!input.crisisDetected,
     crisisYesterday: !!input.crisisYesterday,
   });
-  result.card.nudge = nudge;
-  return { ...result, nudge };
+  const safe = nudge && !containsFrameworkTerm(nudge) ? nudge : null;
+  result.card.nudge = safe;
+  return { ...result, nudge: safe };
 }
 
 /**
@@ -111,6 +113,25 @@ export async function routeVoiceCard(
   // user never gets generated content, and Talk must stay off for them.
   if (input.checkCount < BANK_CARD_DAYS || !modelAllowed) {
     const card = bankCardForMe(day, input.me);
+    const bankReason = card
+      ? filterCard(card, { shownCards: [], crisisToday: !!input.crisisToday, previousHadCut: false })
+      : null;
+    if (bankReason) {
+      return withNudge(
+        {
+          kind: 'card',
+          card: null,
+          day,
+          tone,
+          source: 'bank',
+          provider: null,
+          dropped: [bankReason],
+          consent: consent === false ? 'denied' : 'pending',
+          dev: trace(true, false, 'first_cards.md'),
+        },
+        input,
+      );
+    }
     return withNudge(
       {
         kind: 'card',

@@ -20,6 +20,8 @@
 
 **Stage 9 first pass is in (intake core + Day 1 payoff wiring).** Fresh onboarding is identity, then 9 chip screens with a visible "N of 9". Five new ME columns (`evening_wind_down`, `energy_pattern`, `recovery_style`, `support_style`, `current_focus`) — existing `talk_style` / `show_up` / `knocks_you_off` / `morning_cue` names and types unchanged. Live row: handle `zintake9`. All 9 chips are editable afterward from the You tab / Settings (same chip UI; `show_up` still seeds color; `talk_style` still seeds Sage's tone).
 
+**Stage 11 optional fast-entry is in.** After the 9 chips, `complete_signup` succeeds, then an optional `extra N of 4` phase (16-grid, sliders, close-pattern, disagreement). Skip goes to Home. New nullable 0–1 ME axes, slider-sticky merge, runtime fence on Read/Do/Nudge and Teach-Sage facts. Not on poster / `peer_profile` / `night_snapshot`. Settings re-tap parked.
+
 **Stage 8 — nearly closed, three loose ends (unchanged):**
 1. EAS binary 10 (`1d0d1041-9318-461f-b995-c589ac505dc2`, git `dc9ae77`) — OTA + real app icon cut. Needs `eas submit`, then install + confirm on a real device. **Do not submit binary 8 or 9.** Binary 8 (`d40e57a9`) **was already submitted and installed**.
 2. Sentry native crash symbolication — still **unconfirmed** from here. Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
@@ -30,11 +32,11 @@
 **Decision (Aug 27, 2026): Wave 1.5 and Wave 3 both start now, in parallel — intentional deviation from plan sequencing.** Wave 2 Stage 2 ("I'm going") is now live, so Night wall is unblocked for Wave 3.
 
 **Next boxes, one at a time:**
-- Wave 1.5 Stage 11 — Optional fast-entry (Stage 10's bank-card wiring shipped with Stage 9; remaining Stage 10 visual two-account check is a confirm, not a build)
+- Wave 1.5 Stage 12 — Sage coaching content (Gottman / NVC prompt grounding)
 - Wave 3 — Plugs (deal rows) + Night wall (going exists; wall can surface)
 
 ## Done
-See git history for the full Stage 1–8 build log. Sage content model v2, Check window + recap text cap + Home milestone badge, nav tap moods, UI polish, Wave 2 Stage 2, Stage 9 first pass, and Settings identity-chip editing are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
+See git history for the full Stage 1–8 build log. Sage content model v2, Check window + recap text cap + Home milestone badge, nav tap moods, UI polish, Wave 2 Stage 2, Stage 9 first pass, Settings identity-chip editing, and Stage 11 optional fast-entry are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
 
 ## Left
 - Submit + confirm binary 10 on device (icon, OTA, everything from today). Do not submit 8 or 9.
@@ -73,4 +75,4 @@ These are real, but they are not TestFlight work and they are not next. Leave th
 - **Around refresh secrets (Wave 2):** Edge Function `refresh-around` is deployed (`verify_jwt: false`; auth is `AROUND_REFRESH_SECRET`). Needs `EDMTRAIN_CLIENT_KEY` (apply at edmtrain.com/developer-api while signed in) and `AROUND_REFRESH_SECRET`. Cron is not scheduled until both exist in Vault + function secrets. Phone never holds the Edmtrain key. ToS: displayed cache < 24h; unmodified event `link`; do not mix Edmtrain listings with another events feed (RA/Shotgun/DICE are ticket link-outs only).
 
 ## Next 15 min
-Open new Cursor chat. Stage 11 (optional fast-entry) is the next Wave 1.5 box — skippable MBTI/Big Five/attachment/conflict layer, translating into the same backbone, no raw diagnostic labels stored. Wave 3 (plugs + Night wall) is unblocked now that going exists. Confirm binary 10 submitted/installed if not already done.
+Open new Cursor chat. Stage 12 (Sage coaching content — Gottman / NVC prompt grounding) is the next Wave 1.5 box. Wave 3 (plugs + Night wall) is unblocked now that going exists. Confirm binary 10 submitted/installed if not already done.

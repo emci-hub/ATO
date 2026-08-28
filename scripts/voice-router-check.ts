@@ -204,7 +204,8 @@ assert.equal(filterCard({ read: 'Nice work.', do: 'Just be productive.' }, { sho
 assert.equal(filterCard({ read: 'You are a failure.', do: 'After you making coffee, write one line.' }, { shownCards: [], crisisToday: false, previousHadCut: false }), 'cruel-cut');
 assert.equal(filterCard({ read: 'The skips are piling up again.', do: 'After you making coffee, do one thing.' }, { shownCards: [], crisisToday: true, previousHadCut: false }), 'cut-after-crisis');
 assert.equal(filterCard({ read: 'The skips are piling up again.', do: 'After you making coffee, do one thing.' }, { shownCards: [], crisisToday: false, previousHadCut: true }), 'cut-streak');
-ok('repeat / vague-do / cruel-cut / cut-after-crisis / cut-streak all drop');
+assert.equal(filterCard({ read: 'Your INFJ side is showing.', do: 'After you making coffee, write one line.' }, { shownCards: [], crisisToday: false, previousHadCut: false }), 'framework-echo');
+ok('repeat / vague-do / cruel-cut / cut-after-crisis / cut-streak / framework-echo all drop');
 
 // ---------------------------------------------------------------------------
 console.log('Voice rules through the router');

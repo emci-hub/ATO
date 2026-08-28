@@ -60,6 +60,7 @@ async function main() {
   assert.match(onboarding, /intakeProgressLabel/);
   assert.match(onboarding, /CORE_INTAKE_QUESTIONS/);
   assert.match(onboarding, /phase === 'account'/);
+  assert.match(onboarding, /phase === 'optional-gate'/);
   assert.match(onboarding, /ChipGroup/);
   ok('onboarding is a chip wizard with a visible progress label');
 
@@ -105,6 +106,8 @@ async function main() {
     settings,
     you,
     readFileSync(resolve(__dirname, '../src/components/share-poster.tsx'), 'utf8'),
+    readFileSync(resolve(__dirname, '../src/components/optional-intake.tsx'), 'utf8'),
+    readFileSync(resolve(__dirname, '../src/components/axis-taps.tsx'), 'utf8'),
   ].join('\n');
   for (const banned of ['MBTI', 'Myers-Briggs', 'Big Five', 'OCEAN', 'attachment style', 'neuroticism', 'TIPI', 'ECR']) {
     assert.equal(copyBlob.toLowerCase().includes(banned.toLowerCase()), false, `public/intake copy leaked "${banned}"`);

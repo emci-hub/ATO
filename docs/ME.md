@@ -4,7 +4,7 @@
 **Twin:** Drake
 
 ## This week
-Sage content model v2 is in. Read/Do labels unchanged (no ATOsophy/Sync). Generation stays per-user on the existing quota. Home in Quest uses `Sage · npc` on the card only; Talk/Dawn/widget/push and Home in the other four modes stay `Sage · coach`. Home-only Nudge from a real recent signal; empty when there isn't one. The 9 onboarding identity chips are now editable from the You tab / Settings. Next Wave 1.5 box: Stage 11 optional fast-entry. Night wall is unblocked for Wave 3 now that going exists.
+Sage content model v2 is in. Read/Do labels unchanged (no ATOsophy/Sync). Generation stays per-user on the existing quota. Home in Quest uses `Sage · npc` on the card only; Talk/Dawn/widget/push and Home in the other four modes stay `Sage · coach`. Home-only Nudge from a real recent signal; empty when there isn't one. The 9 onboarding identity chips are now editable from the You tab / Settings. Stage 11 optional fast-entry is in (new 0–1 axes, skippable, slider-sticky). Next Wave 1.5 box: Stage 12 Sage coaching content. Night wall is unblocked for Wave 3 now that going exists.
 
 Stage 8 still has three loose ends only: submit/confirm EAS binary 10 (OTA + real app icon) on a real device, re-check Sentry native symbolication once that's on-device, and wait on Apple's Beta App Review for the Friends TestFlight group. Everything else in Stage 8 is done.
 
@@ -12,7 +12,7 @@ Stage 8 still has three loose ends only: submit/confirm EAS binary 10 (OTA + rea
 
 **Binary 8** (`d40e57a9`) **was submitted and installed** — theme picker, Around, Home fix, and age field verified on-device. Native crash test landed as Sentry event `e7bed112`; stack symbolication is still **unconfirmed** from here (CI token cannot read event frames; no `com.emgens.ato@1.0.0+8` release). Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
 
-**Decision: Wave 1.5 and Wave 3 both start now, in parallel — deliberately not following the plan's original stage order.** Wave 2 Stage 2 ("I'm going") is now live, so Night wall is unblocked. Stage 9 first pass is in; identity chips are editable in Settings; next Wave 1.5 box: Stage 11 (optional fast-entry).
+**Decision: Wave 1.5 and Wave 3 both start now, in parallel — deliberately not following the plan's original stage order.** Wave 2 Stage 2 ("I'm going") is now live, so Night wall is unblocked. Stage 9 first pass is in; identity chips are editable in Settings; Stage 11 optional fast-entry is in; next Wave 1.5 box: Stage 12 (Sage coaching content).
 
 ## App
 - **Category:** Hybrid — AI-native (Sage/router) + Social (Circle/Chat) + Health/finance/kids (crisis spec, coaching tone)

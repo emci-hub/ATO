@@ -220,7 +220,8 @@ export default function ChatScreen() {
       setTeachDone(true);
     } catch (err) {
       console.log('[chat] addFact error:', err);
-      setError('Couldn\u2019t save that fact. Try again.');
+      const message = err instanceof Error ? err.message : '';
+      setError(message.startsWith('That line names a type') ? message : 'Couldn\u2019t save that fact. Try again.');
     } finally {
       setTeachBusy(false);
     }

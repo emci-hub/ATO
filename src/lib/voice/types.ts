@@ -16,7 +16,8 @@ export type DropReason =
   | 'vague-do'
   | 'cruel-cut'
   | 'cut-after-crisis'
-  | 'cut-streak';
+  | 'cut-streak'
+  | 'framework-echo';
 
 export interface VoiceCard {
   read: string;
@@ -49,6 +50,15 @@ export interface VoiceMe {
   recovery_style?: 'movement' | 'sleep' | 'talking' | 'alone_time' | 'music' | null;
   support_style?: 'nudge' | 'space' | 'listen' | 'plan' | null;
   current_focus?: 'habit' | 'through_it' | 'like_yourself' | 'show_up' | null;
+  openness?: number | null;
+  conscientiousness?: number | null;
+  extraversion?: number | null;
+  agreeableness?: number | null;
+  steadiness?: number | null;
+  attachment_anxiety?: number | null;
+  attachment_avoidance?: number | null;
+  conflict_assertiveness?: number | null;
+  conflict_cooperativeness?: number | null;
   /** Facts they asked Sage to remember. Used for Nudge signal, never talk_style. */
   facts?: string[];
 }

@@ -8,6 +8,18 @@ import type {
 } from '@/lib/intake';
 import { clearPendingInviteCode, errorMessageForInvite } from '@/lib/invite';
 import { supabase } from '@/lib/supabase';
+import {
+  CLOSE_AXES,
+  DISAGREE_AXES,
+  GRID_AXES,
+  SLIDER_AXES,
+  mergeTraitWrite,
+  traitPatch,
+  traitStateFromRow,
+  type TraitAxis,
+  type TraitSource,
+} from '@/lib/traits';
+import { containsFrameworkTerm, FACT_FRAMEWORK_MESSAGE } from '@/lib/voice/framework-fence';
 
 export type TalkStyle = 'quiet' | 'even' | 'loud';
 
@@ -26,6 +38,18 @@ export interface Me {
   recovery_style: RecoveryStyle | null;
   support_style: SupportStyle | null;
   current_focus: CurrentFocus | null;
+  /** Optional 0–1 self-report. Null when skipped. Never a diagnosis. */
+  openness: number | null;
+  conscientiousness: number | null;
+  extraversion: number | null;
+  agreeableness: number | null;
+  steadiness: number | null;
+  attachment_anxiety: number | null;
+  attachment_avoidance: number | null;
+  conflict_assertiveness: number | null;
+  conflict_cooperativeness: number | null;
+  /** Per-axis write source. Sliders are sticky over a later grid inference. */
+  trait_sources: Record<string, string>;
   timezone: string;
   /**
    * Typed city slug for Around (e.g. calgary). Never from GPS.
@@ -71,6 +95,16 @@ export type MeInsert = Omit<
     | 'recovery_style'
     | 'support_style'
     | 'current_focus'
+    | 'openness'
+    | 'conscientiousness'
+    | 'extraversion'
+    | 'agreeableness'
+    | 'steadiness'
+    | 'attachment_anxiety'
+    | 'attachment_avoidance'
+    | 'conflict_assertiveness'
+    | 'conflict_cooperativeness'
+    | 'trait_sources'
     | 'visible'
     | 'created_at'
     | 'updated_at'
@@ -97,7 +131,11 @@ export function aiConsentFor(me: Pick<Me, 'ai_consent'>): AiConsent {
 }
 
 function withVisible(row: Me): Me {
-  return { ...row, visible: row.visible !== false };
+  const sources =
+    row.trait_sources && typeof row.trait_sources === 'object' && !Array.isArray(row.trait_sources)
+      ? row.trait_sources
+      : {};
+  return { ...row, visible: row.visible !== false, trait_sources: sources };
 }
 
 export async function fetchMe(userId: string): Promise<Me | null> {
@@ -204,6 +242,39 @@ export async function updateIntake(userId: string, patch: IntakePatch): Promise<
   return withVisible(data as Me);
 }
 
+export { FACT_FRAMEWORK_MESSAGE };
+
+/**
+ * Optional-phase write. Source-aware merge: a later grid inference never
+ * overwrites an axis already set by a slider. Only `allowed` axes are written.
+ */
+export async function updateTraits(
+  userId: string,
+  incoming: Partial<Record<TraitAxis, number | null>>,
+  source: TraitSource,
+  allowed: readonly TraitAxis[] = sourceAllowed(source),
+): Promise<Me> {
+  const current = await fetchMe(userId);
+  if (!current) throw new Error('Not authenticated');
+  const merged = mergeTraitWrite(traitStateFromRow(current), incoming, source, allowed);
+  const patch = traitPatch(merged);
+  const { data, error } = await supabase
+    .from('me')
+    .update(patch)
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return withVisible(data as Me);
+}
+
+function sourceAllowed(source: TraitSource): readonly TraitAxis[] {
+  if (source === 'self_grid') return GRID_AXES;
+  if (source === 'self_slider') return SLIDER_AXES;
+  return [...CLOSE_AXES, ...DISAGREE_AXES];
+}
+
 export function errorMessageForHandle(error: unknown): string {
   const inviteMessage = errorMessageForInvite(error);
   if (inviteMessage) return inviteMessage;
@@ -269,6 +340,7 @@ export async function markMilestoneCelebrated(
 export async function addFact(userId: string, fact: string): Promise<Me> {
   const trimmed = fact.trim();
   if (!trimmed) throw new Error('Fact cannot be empty');
+  if (containsFrameworkTerm(trimmed)) throw new Error(FACT_FRAMEWORK_MESSAGE);
 
   const { data: current } = await supabase
     .from('me')

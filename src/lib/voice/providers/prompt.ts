@@ -1,3 +1,5 @@
+import { traitPromptLines } from '@/lib/traits';
+
 import { VOICE_REFERENCE } from '../voice-reference';
 import type { Tone, VoiceCard, VoiceMe } from '../types';
 import { TALK_STYLE_GUIDE, type GenerateInput, type TalkGenerateInput } from './types';
@@ -19,8 +21,9 @@ function intakeContext(me: VoiceMe): string {
   if (me.recovery_style) lines.push(`- What they say pulls them back: ${me.recovery_style}`);
   if (me.support_style) lines.push(`- What they say helps: ${me.support_style}`);
   if (me.current_focus) lines.push(`- What they're mostly trying to do right now: ${me.current_focus}`);
-  if (lines.length === 0) return '';
-  return `${lines.join('\n')}\n- Treat the lines above as self-report, never as a diagnosis.\n`;
+  const traits = traitPromptLines(me);
+  const intake = lines.length === 0 ? '' : `${lines.join('\n')}\n- Treat the lines above as self-report, never as a diagnosis.\n`;
+  return `${intake}${traits}`;
 }
 
 /** Builds the single-turn prompt that asks Gemini for today's card. */
@@ -59,6 +62,7 @@ RULES
 1. Read: 1–4 sentences in the voice above. If a cut, name the habit/skip plainly — never the person's worth.
 2. Do: exactly ONE if-then action, anchored to the morning cue, e.g. "After you ${me.morning_cue}, <specific concrete action>." Specific enough that they could start it in under 10 minutes.
 3. No repetition of content shown before.
+4. Describe how they tend to move, never label them. No type codes, no scores-as-identity, no diagnosis.
 
 Respond with JSON only, no prose, in this shape:
 {"read": "<the read text>", "do": "<the do text>"}`;
@@ -122,7 +126,7 @@ ${streakSummary(history)}
 THE USER WROTE:
 "${message}"
 
-Reply as Sage, in the voice above and the talk style above. Reflect what they said, then a short helpful nudge. Never a diagnosis, never judgment of the person. No more than 4 sentences. Respond with plain text only, no quotes, no prefix.`;
+Reply as Sage, in the voice above and the talk style above. Reflect what they said, then a short helpful nudge. Never a diagnosis, never judgment of the person, never a type label. No more than 4 sentences. Respond with plain text only, no quotes, no prefix.`;
 }
 
 export interface ParsedTalkReply {

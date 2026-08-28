@@ -9,6 +9,8 @@
  * current_focus).
  */
 
+import { sanitizeFacts } from '@/lib/voice/framework-fence';
+
 type TalkStyle = 'quiet' | 'even' | 'loud';
 
 export type EnergyPattern = 'morning' | 'afternoon' | 'evening' | 'night_owl';
@@ -358,6 +360,15 @@ export function voiceMeFrom(me: {
   recovery_style?: string | null;
   support_style?: string | null;
   current_focus?: string | null;
+  openness?: number | null;
+  conscientiousness?: number | null;
+  extraversion?: number | null;
+  agreeableness?: number | null;
+  steadiness?: number | null;
+  attachment_anxiety?: number | null;
+  attachment_avoidance?: number | null;
+  conflict_assertiveness?: number | null;
+  conflict_cooperativeness?: number | null;
   facts?: string[] | unknown;
 }): {
   name: string;
@@ -370,8 +381,19 @@ export function voiceMeFrom(me: {
   recovery_style: RecoveryStyle | null;
   support_style: SupportStyle | null;
   current_focus: CurrentFocus | null;
+  openness: number | null;
+  conscientiousness: number | null;
+  extraversion: number | null;
+  agreeableness: number | null;
+  steadiness: number | null;
+  attachment_anxiety: number | null;
+  attachment_avoidance: number | null;
+  conflict_assertiveness: number | null;
+  conflict_cooperativeness: number | null;
   facts: string[];
 } {
+  const num = (value: number | null | undefined): number | null =>
+    typeof value === 'number' && Number.isFinite(value) ? value : null;
   return {
     name: me.name,
     show_up: me.show_up,
@@ -383,6 +405,15 @@ export function voiceMeFrom(me: {
     recovery_style: isRecoveryStyle(me.recovery_style) ? me.recovery_style : null,
     support_style: isSupportStyle(me.support_style) ? me.support_style : null,
     current_focus: isCurrentFocus(me.current_focus) ? me.current_focus : null,
-    facts: Array.isArray(me.facts) ? me.facts.filter((fact): fact is string => typeof fact === 'string') : [],
+    openness: num(me.openness),
+    conscientiousness: num(me.conscientiousness),
+    extraversion: num(me.extraversion),
+    agreeableness: num(me.agreeableness),
+    steadiness: num(me.steadiness),
+    attachment_anxiety: num(me.attachment_anxiety),
+    attachment_avoidance: num(me.attachment_avoidance),
+    conflict_assertiveness: num(me.conflict_assertiveness),
+    conflict_cooperativeness: num(me.conflict_cooperativeness),
+    facts: sanitizeFacts(me.facts),
   };
 }

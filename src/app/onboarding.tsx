@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CityPicker } from '@/components/city-picker';
 import { ChipGroup } from '@/components/intake-chips';
+import { OptionalGate, OptionalStep } from '@/components/optional-intake';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -33,7 +34,8 @@ import {
   type SupportStyle,
   intakeProgressLabel,
 } from '@/lib/intake';
-import { createMe, errorMessageForHandle, TalkStyle } from '@/lib/me';
+import { createMe, errorMessageForHandle, TalkStyle, updateTraits } from '@/lib/me';
+import { SLIDER_AXES, writeForOptionalScreen } from '@/lib/traits';
 import { slugifyCity } from '@/lib/around/slug';
 import { DEFAULT_AROUND_CITY } from '@/constants/around-cities';
 import { useMeContext } from '@/lib/me-context';
@@ -47,7 +49,7 @@ import { withTimeout } from '@/lib/timeout';
 
 const RESERVED_HANDLES = ['ato', 'sage', 'admin', 'support', 'you', 'astrollogs'];
 
-type Phase = 'account' | 'intake';
+type Phase = 'account' | 'intake' | 'optional-gate' | 'optional';
 
 export default function OnboardingScreen() {
   const theme = useTheme();
@@ -55,6 +57,12 @@ export default function OnboardingScreen() {
 
   const [phase, setPhase] = useState<Phase>('account');
   const [intakeIndex, setIntakeIndex] = useState(0);
+  const [optionalIndex, setOptionalIndex] = useState(0);
+  const [createdUserId, setCreatedUserId] = useState<string | null>(null);
+  const [typeCode, setTypeCode] = useState<string | null>(null);
+  const [sliderValues, setSliderValues] = useState<Partial<Record<(typeof SLIDER_AXES)[number], number>>>({});
+  const [closeId, setCloseId] = useState<string | null>(null);
+  const [disagreeId, setDisagreeId] = useState<string | null>(null);
 
   const [name, setName] = useState('');
   const [handle, setHandle] = useState('');
@@ -269,7 +277,7 @@ export default function OnboardingScreen() {
     console.log('[onboarding] submit start');
 
     try {
-      await withTimeout(
+      const created = await withTimeout(
         createMe({
           name: name.trim(),
           handle: normalizeHandle(handle),
@@ -291,8 +299,8 @@ export default function OnboardingScreen() {
         'createMe',
       );
       console.log('[onboarding] createMe succeeded');
-      await withTimeout(refresh(), 15000, 'refresh');
-      console.log('[onboarding] refresh done');
+      setCreatedUserId(created.id);
+      setPhase('optional-gate');
     } catch (err) {
       const e = err as { message?: string; code?: string; details?: string; hint?: string };
       console.log('[onboarding] createMe raw error:', JSON.stringify(e));
@@ -307,6 +315,51 @@ export default function OnboardingScreen() {
       } else {
         setFormError(message);
       }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function goHome() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await withTimeout(refresh(), 15000, 'refresh');
+    } catch (err) {
+      console.log('[onboarding] refresh error:', err);
+      setFormError('Saved. Open the app again if Home does not show yet.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function persistOptionalThen(next: 'advance' | 'home') {
+    if (!createdUserId || busy) return;
+    const write = writeForOptionalScreen({
+      screen: optionalIndex as 0 | 1 | 2 | 3,
+      typeCode,
+      sliderValues,
+      closeId,
+      disagreeId,
+    });
+    setBusy(true);
+    setFormError(null);
+    try {
+      if (write) {
+        await withTimeout(
+          updateTraits(createdUserId, write.incoming, write.source, write.allowed),
+          15000,
+          'updateTraits',
+        );
+      }
+      if (next === 'home' || optionalIndex >= 3) {
+        await withTimeout(refresh(), 15000, 'refresh');
+        return;
+      }
+      setOptionalIndex((i) => i + 1);
+    } catch (err) {
+      console.log('[onboarding] updateTraits error:', err);
+      setFormError('Couldn\u2019t save that extra bit. Skip or try again.');
     } finally {
       setBusy(false);
     }
@@ -364,7 +417,7 @@ export default function OnboardingScreen() {
                   setIntakeIndex(0);
                 }}
               />
-            ) : question ? (
+            ) : phase === 'intake' && question ? (
               <IntakeStep
                 question={question}
                 selected={selectedValues(question.field)}
@@ -384,6 +437,47 @@ export default function OnboardingScreen() {
                 }}
                 onContinue={goNextIntake}
               />
+            ) : phase === 'optional-gate' ? (
+              <OptionalGate
+                busy={busy}
+                onSkip={() => void goHome()}
+                onAdd={() => {
+                  setFormError(null);
+                  setOptionalIndex(0);
+                  setPhase('optional');
+                }}
+              />
+            ) : phase === 'optional' ? (
+              <>
+                <OptionalStep
+                  screen={optionalIndex as 0 | 1 | 2 | 3}
+                  busy={busy}
+                  typeCode={typeCode}
+                  sliderValues={sliderValues}
+                  closeId={closeId}
+                  disagreeId={disagreeId}
+                  onType={setTypeCode}
+                  onSlider={(axis, value) => {
+                    setSliderValues((prev) => ({ ...prev, [axis]: value }));
+                  }}
+                  onClose={setCloseId}
+                  onDisagree={setDisagreeId}
+                  onSkipThis={() => {
+                    if (optionalIndex >= 3) {
+                      void goHome();
+                      return;
+                    }
+                    setOptionalIndex((i) => i + 1);
+                  }}
+                  onSkipRest={() => void goHome()}
+                  onContinue={() => void persistOptionalThen('advance')}
+                />
+                {formError ? (
+                  <ThemedText type="smallBold" style={{ color: '#E5484D' }}>
+                    {formError}
+                  </ThemedText>
+                ) : null}
+              </>
             ) : null}
           </ScrollView>
         </KeyboardAvoidingView>

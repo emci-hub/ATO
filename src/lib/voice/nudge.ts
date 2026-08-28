@@ -1,5 +1,6 @@
 import { keywordDetect } from '@/lib/crisis/detect';
 import { isCruelCut } from '@/lib/voice/filters';
+import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import type { CheckHistory } from '@/lib/voice/types';
 
 /** Lookback for skip-pattern and knock-in-text. Same window as last-7 valence. */
@@ -83,6 +84,7 @@ export function findNudgeSignal(input: {
     const fact = facts[i];
     if (keywordDetect(fact)) continue;
     if (isCruelCut(fact)) continue;
+    if (containsFrameworkTerm(fact)) continue;
     const clipped = fact.length > 80 ? `${fact.slice(0, 77)}…` : fact;
     return { kind: 'fact', detail: clipped };
   }
@@ -132,5 +134,6 @@ export function resolveNudge(input: ResolveNudgeInput): string | null {
   const text = composeNudge(signal).trim();
   if (text.length === 0) return null;
   if (isCruelCut(text)) return null;
+  if (containsFrameworkTerm(text)) return null;
   return text;
 }

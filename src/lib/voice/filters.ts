@@ -1,3 +1,4 @@
+import { containsFrameworkTerm } from './framework-fence';
 import type { DropReason, VoiceCard } from './types';
 
 const VAGUE_DO_PHRASES = [
@@ -122,5 +123,8 @@ export function filterCard(card: VoiceCard, ctx: FilterContext): DropReason | nu
   if (isCruelCut(card.read)) return 'cruel-cut';
   if (ctx.crisisToday && hasCut(card.read)) return 'cut-after-crisis';
   if (ctx.previousHadCut && hasCut(card.read)) return 'cut-streak';
+  if (containsFrameworkTerm(card.read) || containsFrameworkTerm(card.do) || containsFrameworkTerm(card.nudge)) {
+    return 'framework-echo';
+  }
   return null;
 }

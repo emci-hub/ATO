@@ -20,6 +20,7 @@ If a field isn't defined here, don't guess its shape — ask.
 | `recovery_style` | enum: `movement`/`sleep`/`talking`/`alone_time`/`music`, nullable on pre-intake rows | Self-report. Not a diagnosis. Never shown on the public poster. Editable later in Settings. |
 | `support_style` | enum: `nudge`/`space`/`listen`/`plan`, nullable on pre-intake rows | Self-report. Helps pick the check_count < 3 bank card. Not a diagnosis. Never shown on the public poster. Editable later in Settings. |
 | `current_focus` | enum: `habit`/`through_it`/`like_yourself`/`show_up`, nullable on pre-intake rows | Self-report. Not a diagnosis. Never shown on the public poster. Editable later in Settings. |
+| Optional trait axes | numeric 0–1, all nullable | Stage 11 backbone, separate from the 9 chips: `openness`, `conscientiousness`, `extraversion`, `agreeableness`, `steadiness`; `attachment_anxiety`, `attachment_avoidance`; `conflict_assertiveness`, `conflict_cooperativeness`. Plus `trait_sources` (`self_grid` / `self_slider` / `self_situation`). Raw type/category taps are discarded at write. Never on poster, `peer_profile`, `public_profile`, or `night_snapshot`. Settings re-tap parked. |
 | `this_week` | string, free text, resets weekly | Plan field. Not a ME column in v1 — Sunday recap + Sage read the checks table (`logged_on` + status; Read/Do only while in the 7-day keep window). Never a matching signal. |
 | `recipe` | object `{base, hair, top, palette}` | Kenney asset selections that render the pixel. All 4 fields required once Pixel is built. |
 | `valence` | enum: `lift`/`even`/`cut` | Computed from last 7 Checks. See formula in Rules. |
@@ -206,7 +207,7 @@ None of these get stored as raw labels. Every path — MBTI tap, attachment tap,
 8. Support style — nudge to keep going / space to sit with it / someone to listen / a plan to fix it. Sharper signal than `talk_style` alone.
 9. Current focus — "right now you're mostly trying to..." (build a habit / get through something hard / feel more like yourself / just show up).
 
-**Optional fast-entry, fully skippable, for people who already know themselves — up to 4 more:** MBTI type (16-grid tap), or Big Five sliders if they know their scores, attachment style (secure/anxious/avoidant/fearful-avoidant), conflict style. All translate into the same backbone fields, none stored as raw diagnostic labels. "Love language" reframed platonic (not the romantic-coded original) as a lower-priority optional add — how someone feels a friend's "got their back," not literal Chapman categories, to stay consistent with ATO not being a dating graph.
+**Optional fast-entry, fully skippable, for people who already know themselves — up to 4 more:** 16-grid type tap, known-score sliders, close-pattern tap, disagreement tap. These write **new** nullable 0–1 axes (not the 9 Stage 9 chips). Raw labels are discarded at write. Skip = all new columns stay null. "Love language" reframed platonic (not the romantic-coded original) as a lower-priority optional add — how someone feels a friend's "got their back," not literal Chapman categories, to stay consistent with ATO not being a dating graph.
 
 One question per screen, tappable, with a visible progress indicator ("3 of 9").
 
@@ -341,12 +342,12 @@ You + friends, one real week, real devices. Home stayed new day to day. Dos were
 
 ## Wave 1.5 — Understanding & Delight (Stages 9-14)
 
-Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Wave 2 Stage 2 ("I'm going") is in. Next Wave 1.5 box is Stage 11 (optional fast-entry). Full spec detail lives in "Understanding spec" above; this section is sequencing only.
+Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Wave 2 Stage 2 ("I'm going") is in. Stage 11 optional fast-entry is in. Next Wave 1.5 box is Stage 12 (Sage coaching content). Full spec detail lives in "Understanding spec" above; this section is sequencing only.
 
 ### 9 Intake core
 **Open box: intake, me.**
 Schema + UI for the 9 required tappable onboarding fields (talk_style, show_up, knocks_you_off, morning_cue, evening wind-down, energy pattern, recovery style, support style, current focus). Replaces the 3 existing free-text fields. Self-report only, translates into the trait-backbone structure per Understanding spec.
-**Done:** all 9 fields save to ME, one question per screen with progress indicator, no raw psychological labels shown publicly. **First pass shipped (Aug 27, 2026):** 9 chip screens + 5 new ME columns + Day 1 bank selection from energy_pattern/support_style with the person's `morning_cue` phrase in the Do. **Settings edit shipped:** all 9 chips are editable afterward from the You tab. Optional fast-entry and delight mechanics are still later stages.
+**Done:** all 9 fields save to ME, one question per screen with progress indicator, no raw psychological labels shown publicly. **First pass shipped (Aug 27, 2026):** 9 chip screens + 5 new ME columns + Day 1 bank selection from energy_pattern/support_style with the person's `morning_cue` phrase in the Do. **Settings edit shipped:** all 9 chips are editable afterward from the You tab. Delight mechanics are still later stages.
 
 ### 10 Day 1 payoff
 **Open box: intake, dawn.**
@@ -355,8 +356,8 @@ Wire new answers into check_count < 3 bank-card selection — real morning_cue p
 
 ### 11 Optional fast-entry
 **Open box: intake.**
-Skippable MBTI/Big Five/attachment/conflict-style layer, up to 4 extra questions, fully optional. All translate into the same backbone fields as core intake — no raw diagnostic labels stored.
-**Done:** a user can complete onboarding fully skipping this section with no broken state; a user who fills it in produces the same backbone field shape as one who didn't.
+Skippable 16-grid / slider / close-pattern / disagreement layer, up to 4 extra questions, fully optional. Writes new nullable 0–1 ME axes (not the 9 chips). No raw diagnostic labels stored. Runtime fence on Read/Do/Nudge + Teach-Sage facts.
+**Done (Aug 27, 2026):** Skip after question 9 goes to Home with `complete_signup` already succeeded; optional is a separate `extra N of 4` phase; slider-sticky merge (a later type tap cannot overwrite a slider axis); untouched sliders stay null; `peer_profile` / poster / `night_snapshot` unchanged; generated cards that name a framework are dropped.
 
 ### 12 Sage's coaching content
 **Open box: talk, router.**
