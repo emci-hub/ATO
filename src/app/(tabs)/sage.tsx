@@ -19,6 +19,7 @@ import { AiConsentCard } from '@/components/ai-consent-card';
 import { CrisisCard } from '@/components/crisis-card';
 import { ReportSheet } from '@/components/report-sheet';
 import { SageEightBall } from '@/components/sage-eight-ball';
+import { SageKnowsCard } from '@/components/sage-knows-card';
 import { SageUsageLine } from '@/components/sage-usage';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -413,6 +414,13 @@ export default function SageScreen() {
         </View>
 
         <View style={styles.sageToys}>
+          {me ? (
+            <SageKnowsCard
+              me={me}
+              history={checksToHistory(checks)}
+              onUpdated={refreshMe}
+            />
+          ) : null}
           <SageEightBall />
           {me ? <SageUsageLine revision={usageRevision} /> : null}
         </View>

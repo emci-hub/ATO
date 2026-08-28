@@ -194,7 +194,7 @@ Minimal, not a dashboard:
 All nullable, all self-report / translate-and-discard. Raw label never stored. One canonical 0–1 scale. Per-axis `trait_sources`. Never on poster, `peer_profile`, `public_profile`, or `night_snapshot`.
 
 **Source rank (shipped):**
-- **Direct** (sticky — inferred cannot overwrite): slider (`self_slider`), tap-form (`self_tap`), Settings edit (`self_settings`), confirm-upgrade (`self_confirm`). Confirm is `confirmTraitSource`: source token + `last_touched` only, never a new 0–1 number. `mergeTraitWrite` cannot take `self_confirm`. Does-Sage-know-you UI is not built.
+- **Direct** (sticky — inferred cannot overwrite): slider (`self_slider`), tap-form (`self_tap`), Settings edit (`self_settings`), confirm-upgrade (`self_confirm`). Confirm is `confirmTraitSource`: source token + `last_touched` only, never a new 0–1 number. `mergeTraitWrite` cannot take `self_confirm`. Does-Sage-know-you UI is shipped (Stage 13 part 2).
 - **Inferred**: 16-grid (`self_grid`), situation tap (`self_situation`), game/swipe (`self_game`). Last-write among inferred is fine.
 - **Skip / null**: no source row, no `last_touched` key.
 
@@ -288,17 +288,20 @@ Never empty of extra-axis data: if only the 9 core onboarding fields exist, Expl
 
 **Feedback loop:** simple "did this land?" on Explore entries. May only influence future phrasing / angle-selection for that user. Must **never** adjust or reclassify a trait score. Log reactions in their own table — no shared write path with traits.
 
-### "Does Sage know you?" (recurring engagement + profile update)
+### "Does Sage know you?" (recurring engagement + profile update — shipped Stage 13 part 2)
 
-Sage surfaces a guess about the user derived from an existing axis; the user confirms or corrects. This is the primary way traits stay adjustable starting points rather than frozen after onboarding. **Never inside Talk replies** — Talk answers the typed line first.
+Sage checks in on one filled axis. The user taps **Still fits** or **Not quite**. Never inside Talk replies — Talk answers the typed line first. Home and Sage toys only.
 
-Locks:
-- **Confirm never changes the 0–1 number.** Enforced by `confirmTraitSource` (no numeric argument). Correct and Settings edit do, same self-report / write rules as today.
-- Confidence, if tracked, stays **internal**: never shown, never allowed to make Sage's language more certain. The root line stays "maybes, not facts" at every confidence.
-- Axes **rotate**. Do not prefer high-confidence ones. Confirm does not make a value stickier against a later correct or Settings edit.
-- After **two confirms with no correction** on the same axis, the next surface is an edit-shaped "still feel right?" — not another yes/no.
+Shipped:
+- **Banked copy only.** High/low lines from `TRAIT_POLE_LINES` / `traitPromptLines`. No live Gemini call, no quota. A recent Nudge signal (skip pattern, knock in recent Read/Do, fact) can flavor the line as this-week; no signal → plain check-in, not a discovery.
+- **Still fits** calls `confirmTraitSource` (source + `last_touched` only; number unchanged). **Not quite** is a single-axis Settings write (`self_settings`).
+- **Eligible:** non-null, past 14-day cooldown, not mid-band (0.33–0.67), not a cruel pole (low `self_efficacy` / `growth_mindset` / `competence`, high `attachment_anxiety`), not the last axis shown. Round-robin among eligible; inferred and direct sit in the same pool. Oldest `last_touched` is a first-pick tiebreak only.
+- **At most one per week.** Yields while any of the 15 axes is still null (completeness / game invite win). Dismiss ends that week; does not deal another axis. Home/Sage: this OR a game invite, never both the same week (`me.sage_knows.week_slot`).
+- **Per-axis streak:** two consecutive Still fits on the same axis graduates it off this surface until the 3-month Settings re-ask (later). A correction resets that axis's streak.
 - Confirming **inferred** data upgrades its source to **direct** but does not move the number.
-- If an axis hasn't been touched (confirmed or edited) in 3+ months, surface a passive "still feel right?" prompt in Settings — not a push notification, not urgent framing. That clock is `me.trait_touched_at` (shipped). Confirm is a touch, not a lifetime lock — the 3-month prompt still fires after confirms.
+- Confidence, if tracked, stays **internal**: never shown, never allowed to make the language more certain.
+
+Still later: the 3-month Settings "still feel right?" prompt. Clock is `me.trait_touched_at` (shipped). Confirm is a touch, not a lifetime lock.
 
 ### Profile completeness indicator (You tab — decided; later box)
 
@@ -308,9 +311,13 @@ Locks:
 
 Lives on the You tab near the existing editable fields. Each depth gap is tappable into the quick-answer form or a relevant scenario card. Pressure-free: deterministic like badges, no red/urgent framing, no streak mechanic, no guilt copy. **No completeness signal on Home, Explore, Talk, widget, or push.** Do not wire it into pixel depth glow (`facts` stays that axis).
 
-### Soft-ask budget (decided; later box)
+### Soft-ask budget (shipped split; completeness / 3-month / game invite UIs later)
 
-At most **one** optional-depth prompt visible to a user at a time: game/path-(b) invite, 3-month re-ask, completeness gap, or "Does Sage know you?" Do not stack them.
+At most **one** optional-depth prompt visible to a user at a time. Split:
+- **Home/Sage:** Does-Sage-know-you OR a game invite, never both the same week.
+- **You/Settings:** completeness gap OR the 3-month re-ask, never both. Completeness wins while any axis is null.
+
+Does-Sage-know-you yields entirely while any of the 15 axes is still null.
 
 ### Reload (Dawn presentation — decided; locks are closed; later box)
 
@@ -339,14 +346,14 @@ The trait backbone shapes *tone* (who Sage is talking to). Coaching quality is g
 ### Guardrails (**compliance-grounded** — same weight as the Crisis spec; not a style choice)
 
 - Self-report only. Never framed as the app diagnosing or clinically assessing anyone.
-- Attachment style especially: treat as a soft, adjustable starting point, not a fixed lifetime label — attachment patterns are understood to shift over time. "Does Sage know you?" confirm/correct is the intended update path. Confirming must not ossify a score into a lifetime label — confirm never changes the number; confidence (if tracked) is internal and never affects language certainty; axes rotate; two confirms with no correct → edit-shaped re-ask; the 3-month Settings prompt still fires after confirms so silence is not treated as permanence.
+- Attachment style especially: treat as a soft, adjustable starting point, not a fixed lifetime label — attachment patterns are understood to shift over time. "Does Sage know you?" confirm/correct is the intended update path. Confirming must not ossify a score into a lifetime label — confirm never changes the number; confidence (if tracked) is internal and never affects language certainty; axes rotate; two consecutive Still fits on the same axis graduates it until the 3-month Settings prompt; that prompt still fires after confirms so silence is not treated as permanence.
 - Explore's 2–3 trait combine is still exploratory language ("maybe," "noticed"), never a type profile, and only when at least one trait is event-grounded. Completeness must not become a test-to-finish: the 9 chips are already complete (not a % of a person); extra axes are a separate depth layer, invitation not deficit.
 - Feedback on Explore never writes the trait table.
 - No raw psychological labels shown publicly, ever — consistent with the existing rule that only a derived color (not raw answer text) appears on the You tab poster.
 - Same extra-care review discipline that applies to the Crisis spec applies here before shipping — this touches real psychological categories, not just cosmetic personalization.
 - "MBTI" branding avoided in UI copy (trademarked by the Myers-Briggs Company) — use generic phrasing like "your type" or "16 personality types," same approach 16Personalities uses.
 
-**Where this fits:** Stages 9, 11, and 12 shipped (intake, axes, Library grounding). Talk output fence shipped. Remaining work is several later boxes (Explore, feedback, Does-Sage-know-you, completeness, three-path extra-axis intake, Reload) — not one box. Locks from the Aug 28 Grok review live in the sections above.
+**Where this fits:** Stages 9, 11, and 12 shipped (intake, axes, Library grounding). Talk output fence shipped. Stage 13 badges and Does-Sage-know-you shipped. Remaining work is several later boxes (Explore, feedback, 3-month Settings prompt, completeness, three-path extra-axis intake, Reload) — not one box. Locks from the Aug 28 Grok review live in the sections above.
 
 ### Delight & engagement mechanics (red-teamed this session)
 
@@ -355,7 +362,7 @@ The trait backbone shapes *tone* (who Sage is talking to). Coaching quality is g
 **Badges** — fully fine, no reservation. Tied to real accomplished milestones (7 Checks, first "Teach Sage this" fact, a full week without a cut) — deterministic recognition of something that actually happened, not randomized chance. Different mechanism entirely from the rejected slot-machine idea.
 
 **Game mechanics — fun and useful as the same action, not fun wrapped around a form:**
-- **"Does Sage know you?"** — Sage guesses from an existing axis; user confirms or corrects (confirm does not change the number; correct / Settings edit does). Recurring, self-improving "it gets me" payoff — not a one-shot quiz, not inside Talk replies. Untouched 3+ months → passive Settings prompt, not a push. Locks in Understanding spec.
+- **"Does Sage know you?"** — shipped. Sage checks in from an existing axis; user taps Still fits or Not quite (confirm does not change the number; correct / Settings edit does). Recurring, self-improving "it gets me" payoff — not a one-shot quiz, not inside Talk replies. Two Still fits on the same axis graduates it. Untouched 3+ months → passive Settings prompt (later), not a push. Locks in Understanding spec.
 - **Forced-ranking sort** — drag 4-5 short statements into order from "most me" to "least me." Legitimate ranking-format technique, satisfying drag interaction, surfaces relative preference better than isolated taps.
 - **Scenario reaction cards, light time pressure** — quick scenario, 3-4 tap options, mild timer. Gut reactions under light time pressure tend to be more revealing than slowly deliberated ones.
 - **Friend-guessing game (Circle, once it exists)** — real market precedent for this exact "who knows you best" category. A friend guesses how you'd answer, you see if they're right. Where self-report and a friend's guess *disagree* is often the most interesting signal of all — worth Sage noticing and reflecting back.
@@ -455,9 +462,9 @@ You + friends, one real week, real devices. Home stayed new day to day. Dos were
 
 ## Wave 1.5 — Understanding & Delight (Stages 9-14)
 
-Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Wave 2 Stage 2 ("I'm going") is in. Stage 11 optional fast-entry is in (all 15 trait axes; direct vs inferred; `last_touched`). Stage 12 Library grounding is in. Stage 13 badges (part 1) are in. Remaining Stage 13: reveal, Does-Sage-know-you, ranking, scenarios. Full spec detail lives in "Understanding spec" above; this section is sequencing only.
+Not blocked on public App Store readiness. **Intentional sequencing deviation (Aug 27, 2026):** Wave 1.5 and Wave 3 both start now, in parallel, instead of waiting for the Wave 1 Gate then Wave 2 Stage 2. Stage 9 first pass is in (9 chip questions + Day 1 bank wiring). Wave 2 Stage 2 ("I'm going") is in. Stage 11 optional fast-entry is in (all 15 trait axes; direct vs inferred; `last_touched`). Stage 12 Library grounding is in. Stage 13 badges (part 1) and Does-Sage-know-you (part 2) are in. Remaining Stage 13: reveal, ranking, scenarios. Full spec detail lives in "Understanding spec" above; this section is sequencing only.
 
-**Decided Aug 28, 2026 — later boxes, not Stage 12, not one combined box:** Explore (Home inner tab) + phrasing-only feedback; "Does Sage know you?" + 3-month Settings prompt; intake three-path for the extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with the locks already closed. Talk output fence **shipped**. Six extra trait axes + direct-vs-inferred `trait_sources` + `last_touched` **shipped**. Library copy **shipped**. Sage reads Library For Sage lines **shipped** (Stage 12). Stage 13 badges **shipped** (7 Checks / first fact / week without a cut). **Locks from the Aug 28 Grok review are in the Understanding spec** (Explore combine + regen cap + fence; Does-Sage-know-you confirm rules; completeness split; direct-vs-inferred `trait_sources`; Talk fence phrases + retry-is-not-quota; soft-ask budget). Do not fold remaining items into Stage 12.
+**Decided Aug 28, 2026 — later boxes, not Stage 12, not one combined box:** Explore (Home inner tab) + phrasing-only feedback; 3-month Settings prompt; intake three-path for the extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with the locks already closed. Talk output fence **shipped**. Six extra trait axes + direct-vs-inferred `trait_sources` + `last_touched` **shipped**. Library copy **shipped**. Sage reads Library For Sage lines **shipped** (Stage 12). Stage 13 badges **shipped** (7 Checks / first fact / week without a cut). Does-Sage-know-you **shipped** (banked check-in). **Locks from the Aug 28 Grok review are in the Understanding spec** (Explore combine + regen cap + fence; Does-Sage-know-you confirm rules; completeness split; direct-vs-inferred `trait_sources`; Talk fence phrases + retry-is-not-quota; soft-ask budget). Do not fold remaining items into Stage 12.
 
 ### 9 Intake core
 **Open box: intake, me.**
@@ -483,7 +490,8 @@ Ground Sage's system prompt in the Library's fence-clean **For Sage** lines (Got
 ### 13 Delight mechanics (single-player)
 **Open box: intake, dawn.**
 Reveal card (real content only, no randomized-value mechanic), milestone badges, "Does Sage know you?" active-learning loop (confirm/correct + 3-month Settings prompt; locks in Understanding spec), forced-ranking sort, scenario reaction cards with light time pressure. Explore is a separate Home inner tab (Understanding spec), not this box's reveal card. Soft-ask budget: at most one optional-depth prompt visible at a time.
-**Done (Aug 28, 2026, badges):** Home check-count chip is a collapsible milestone strip for 7 Checks, first Teach-Sage fact, and 7 consecutive calendar days without a cut. Deterministic from logged Checks and stored facts — no chance mechanic, no popup. Reveal / Does-Sage-know-you / ranking / scenarios are later parts of this stage.
+**Done (Aug 28, 2026, badges):** Home check-count chip is a collapsible milestone strip for 7 Checks, first Teach-Sage fact, and 7 consecutive calendar days without a cut. Deterministic from logged Checks and stored facts — no chance mechanic, no popup.
+**Done (Aug 28, 2026, Does Sage know you?):** Home/Sage check-in from banked high/low trait lines, zero quota. Still fits / Not quite. Weekly; yields while any axis is null; cruel/mid/fresh axes excluded; two Still fits graduates that axis. 3-month Settings prompt, reveal, ranking, and scenarios are later parts of this stage.
 
 ### 14 Multiplayer (friend-guessing)
 **Open box: circle, intake.**

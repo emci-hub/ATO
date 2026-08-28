@@ -6,13 +6,13 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { MilestoneBadges } from '@/components/check-milestone-badge';
 import { MissedCheckCard } from '@/components/missed-check-card';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
+import { SageKnowsCard } from '@/components/sage-knows-card';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { useTheme } from '@/hooks/use-theme';
-import { useMe } from '@/hooks/use-me';
 import { useGrowth } from '@/hooks/use-growth';
 import { useTodayCard } from '@/hooks/use-today-card';
 import { checkWindowFor } from '@/lib/check-window';
@@ -21,6 +21,7 @@ import { emitChecksChanged, onChecksChanged } from '@/lib/checks-events';
 import { crisisFlagsForWindow } from '@/lib/crisis/days';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { aiConsentFor } from '@/lib/me';
+import { useMeContext } from '@/lib/me-context';
 import { voiceMeFrom } from '@/lib/intake';
 import { homeSageLabel, homeSageLede, NUDGE_LABEL, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { persistRoutedCard } from '@/lib/today-card';
@@ -33,7 +34,7 @@ export default function HomeScreen() {
   const theme = useTheme();
   const { session } = useSession();
   const userId = session?.user.id;
-  const { me } = useMe(userId);
+  const { me, refresh: refreshMe } = useMeContext();
   const { card, reload: reloadCard } = useTodayCard();
   const { state: growth } = useGrowth();
   const params = useLocalSearchParams<{ focus?: string }>();
@@ -264,6 +265,14 @@ export default function HomeScreen() {
               </ThemedView>
             </Pressable>
           )}
+
+          {me ? (
+            <SageKnowsCard
+              me={me}
+              history={checksToHistory(checks)}
+              onUpdated={refreshMe}
+            />
+          ) : null}
 
           {me && missedOpen.length > 0 ? (
             <>

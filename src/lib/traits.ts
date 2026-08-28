@@ -403,11 +403,108 @@ export function writeForOptionalScreen(input: {
   };
 }
 
-function band(value: number | null | undefined): 'low' | 'mid' | 'high' | null {
+export type TraitBand = 'low' | 'mid' | 'high';
+
+export function traitBand(value: number | null | undefined): TraitBand | null {
   if (value == null) return null;
   if (value <= 0.33) return 'low';
   if (value >= 0.67) return 'high';
   return 'mid';
+}
+
+/**
+ * High/low behavioral paraphrases. Sage prompts and Does-Sage-know-you
+ * both read from this bank — never a live model call for the check-in.
+ * Mid-band lines stay in traitPromptLines only; the check-in surface skips mid.
+ */
+export const TRAIT_POLE_LINES: Record<TraitAxis, { low: string; high: string }> = {
+  extraversion: {
+    high: 'They tend to get energy from being around people.',
+    low: 'They tend to get energy from quieter time.',
+  },
+  openness: {
+    high: 'They tend to like new ideas and untried paths.',
+    low: 'They tend to prefer the known path over a new one.',
+  },
+  conscientiousness: {
+    high: 'They tend to follow a plan through.',
+    low: 'They tend to keep plans loose and change them as they go.',
+  },
+  agreeableness: {
+    high: 'They tend to go along when it keeps things easy.',
+    low: 'They tend to hold their own view even when it rubs.',
+  },
+  steadiness: {
+    high: 'They tend to stay even when things wobble.',
+    low: 'They tend to feel it strongly when things wobble.',
+  },
+  attachment_anxiety: {
+    high: 'They tend to worry people will pull away.',
+    low: 'They tend not to spend much time worrying people will leave.',
+  },
+  attachment_avoidance: {
+    high: 'They tend to keep some distance even with people they like.',
+    low: 'They tend to stay close once they are in.',
+  },
+  conflict_assertiveness: {
+    high: 'In a disagreement they tend to put their own point on the table.',
+    low: 'In a disagreement they tend to step back rather than push.',
+  },
+  conflict_cooperativeness: {
+    high: 'In a disagreement they tend to look for something the other person can live with.',
+    low: 'In a disagreement they tend to protect their own outcome first.',
+  },
+  autonomy: {
+    high: 'They tend to want to do things their own way.',
+    low: 'They tend to be fine following a path someone else already set.',
+  },
+  competence: {
+    high: 'They tend to feel they can handle a hard thing.',
+    low: 'They tend to doubt they can pull a hard thing off.',
+  },
+  relatedness: {
+    high: 'They tend to need a real connection with people for a day to land.',
+    low: 'They tend to feel a day landed without needing much connection.',
+  },
+  growth_mindset: {
+    high: 'After a miss they tend to look for what went wrong so they can try again.',
+    low: 'After a miss they tend to treat it as a sign they are not good at that thing.',
+  },
+  locus_of_control: {
+    high: 'When something falls apart, first thought tends to go to what they might have done differently.',
+    low: 'When something falls apart, first thought tends to go to how it was bound to happen.',
+  },
+  self_efficacy: {
+    high: 'Facing a big task they tend to feel they can pull it off.',
+    low: 'Facing a big task they tend to feel unsure they can pull it off.',
+  },
+};
+
+const TRAIT_MID_LINES: Partial<Record<TraitAxis, string>> = {
+  extraversion: 'They sit somewhere in the middle on people-time versus quiet time.',
+  openness: 'They mix familiar routines with the occasional new idea.',
+  conscientiousness: 'They plan some things and leave others open.',
+  agreeableness: 'They weigh going along against holding their ground.',
+  steadiness: 'Some wobble lands, some they shake off.',
+  attachment_anxiety: 'Closeness sometimes brings a worry that people will pull away.',
+  attachment_avoidance: 'They mix closeness with a bit of distance.',
+  conflict_assertiveness: 'In a disagreement they sometimes push and sometimes wait.',
+  conflict_cooperativeness:
+    'In a disagreement they split attention between their outcome and the other person.',
+  autonomy: 'They mix doing it their way with following a path that is already there.',
+  competence: 'Some hard things they feel they can handle, some they do not.',
+  relatedness: 'Some days they want connection, some they do not need it.',
+  growth_mindset: 'After a miss they sometimes look for what to change and sometimes take it as closed.',
+  locus_of_control:
+    'When something falls apart they sometimes look at what they might change and sometimes at what was out of their hands.',
+  self_efficacy: 'Facing a big task they sometimes feel they can pull it off and sometimes do not.',
+};
+
+/** High/low bank line, or null when the axis is empty or mid-band. */
+export function traitPoleLine(axis: TraitAxis, value: number | null | undefined): string | null {
+  const pole = traitBand(value);
+  if (pole !== 'low' && pole !== 'high') return null;
+  return TRAIT_POLE_LINES[axis][pole];
 }
 
 /**
@@ -416,80 +513,11 @@ function band(value: number | null | undefined): 'low' | 'mid' | 'high' | null {
  */
 export function traitPromptLines(me: Partial<TraitValues>): string {
   const lines: string[] = [];
-  const extraversion = band(me.extraversion);
-  if (extraversion === 'high') lines.push('They tend to get energy from being around people.');
-  else if (extraversion === 'low') lines.push('They tend to get energy from quieter time.');
-  else if (extraversion === 'mid') lines.push('They sit somewhere in the middle on people-time versus quiet time.');
-
-  const openness = band(me.openness);
-  if (openness === 'high') lines.push('They tend to like new ideas and untried paths.');
-  else if (openness === 'low') lines.push('They tend to prefer the known path over a new one.');
-  else if (openness === 'mid') lines.push('They mix familiar routines with the occasional new idea.');
-
-  const conscientiousness = band(me.conscientiousness);
-  if (conscientiousness === 'high') lines.push('They tend to follow a plan through.');
-  else if (conscientiousness === 'low') lines.push('They tend to keep plans loose and change them as they go.');
-  else if (conscientiousness === 'mid') lines.push('They plan some things and leave others open.');
-
-  const agreeableness = band(me.agreeableness);
-  if (agreeableness === 'high') lines.push('They tend to go along when it keeps things easy.');
-  else if (agreeableness === 'low') lines.push('They tend to hold their own view even when it rubs.');
-  else if (agreeableness === 'mid') lines.push('They weigh going along against holding their ground.');
-
-  const steadiness = band(me.steadiness);
-  if (steadiness === 'high') lines.push('They tend to stay even when things wobble.');
-  else if (steadiness === 'low') lines.push('They tend to feel it strongly when things wobble.');
-  else if (steadiness === 'mid') lines.push('Some wobble lands, some they shake off.');
-
-  const anxiety = band(me.attachment_anxiety);
-  if (anxiety === 'high') lines.push('They tend to worry people will pull away.');
-  else if (anxiety === 'low') lines.push('They tend not to spend much time worrying people will leave.');
-  else if (anxiety === 'mid') lines.push('Closeness sometimes brings a worry that people will pull away.');
-
-  const avoidance = band(me.attachment_avoidance);
-  if (avoidance === 'high') lines.push('They tend to keep some distance even with people they like.');
-  else if (avoidance === 'low') lines.push('They tend to stay close once they are in.');
-  else if (avoidance === 'mid') lines.push('They mix closeness with a bit of distance.');
-
-  const assertiveness = band(me.conflict_assertiveness);
-  if (assertiveness === 'high') lines.push('In a disagreement they tend to put their own point on the table.');
-  else if (assertiveness === 'low') lines.push('In a disagreement they tend to step back rather than push.');
-  else if (assertiveness === 'mid') lines.push('In a disagreement they sometimes push and sometimes wait.');
-
-  const coop = band(me.conflict_cooperativeness);
-  if (coop === 'high') lines.push('In a disagreement they tend to look for something the other person can live with.');
-  else if (coop === 'low') lines.push('In a disagreement they tend to protect their own outcome first.');
-  else if (coop === 'mid') lines.push('In a disagreement they split attention between their outcome and the other person.');
-
-  const autonomy = band(me.autonomy);
-  if (autonomy === 'high') lines.push('They tend to want to do things their own way.');
-  else if (autonomy === 'low') lines.push('They tend to be fine following a path someone else already set.');
-  else if (autonomy === 'mid') lines.push('They mix doing it their way with following a path that is already there.');
-
-  const competence = band(me.competence);
-  if (competence === 'high') lines.push('They tend to feel they can handle a hard thing.');
-  else if (competence === 'low') lines.push('They tend to doubt they can pull a hard thing off.');
-  else if (competence === 'mid') lines.push('Some hard things they feel they can handle, some they do not.');
-
-  const relatedness = band(me.relatedness);
-  if (relatedness === 'high') lines.push('They tend to need a real connection with people for a day to land.');
-  else if (relatedness === 'low') lines.push('They tend to feel a day landed without needing much connection.');
-  else if (relatedness === 'mid') lines.push('Some days they want connection, some they do not need it.');
-
-  const growth = band(me.growth_mindset);
-  if (growth === 'high') lines.push('After a miss they tend to look for what went wrong so they can try again.');
-  else if (growth === 'low') lines.push('After a miss they tend to treat it as a sign they are not good at that thing.');
-  else if (growth === 'mid') lines.push('After a miss they sometimes look for what to change and sometimes take it as closed.');
-
-  const locus = band(me.locus_of_control);
-  if (locus === 'high') lines.push('When something falls apart, first thought tends to go to what they might have done differently.');
-  else if (locus === 'low') lines.push('When something falls apart, first thought tends to go to how it was bound to happen.');
-  else if (locus === 'mid') lines.push('When something falls apart they sometimes look at what they might change and sometimes at what was out of their hands.');
-
-  const efficacy = band(me.self_efficacy);
-  if (efficacy === 'high') lines.push('Facing a big task they tend to feel they can pull it off.');
-  else if (efficacy === 'low') lines.push('Facing a big task they tend to feel unsure they can pull it off.');
-  else if (efficacy === 'mid') lines.push('Facing a big task they sometimes feel they can pull it off and sometimes do not.');
+  for (const axis of TRAIT_AXES) {
+    const pole = traitBand(me[axis]);
+    if (pole === 'high' || pole === 'low') lines.push(TRAIT_POLE_LINES[axis][pole]);
+    else if (pole === 'mid' && TRAIT_MID_LINES[axis]) lines.push(TRAIT_MID_LINES[axis]);
+  }
 
   const kept = lines.filter((line) => !containsFrameworkTerm(line));
   if (kept.length === 0) return '';

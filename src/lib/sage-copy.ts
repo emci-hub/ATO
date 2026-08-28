@@ -46,3 +46,6 @@ export const TALK_WRITING = 'Drafting a reply\u2026';
 export const TALK_TRY_AGAIN = 'Sage couldn\u2019t reply. Try again.';
 
 export const CONSENT_COACH_LINE = 'Sage is a coach in the app, not a person.';
+
+/** Recurring trait check-in. Own surface — never a Talk reply. */
+export const SAGE_KNOWS_LABEL = 'Does Sage know you?';

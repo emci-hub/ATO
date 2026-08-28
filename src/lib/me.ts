@@ -8,6 +8,15 @@ import type {
 } from '@/lib/intake';
 import { clearPendingInviteCode, errorMessageForInvite } from '@/lib/invite';
 import { supabase } from '@/lib/supabase';
+import { localYmd } from '@/lib/local-date';
+import {
+  applySageKnowsDismiss,
+  applySageKnowsNotQuite,
+  applySageKnowsStillFits,
+  parseSageKnowsState,
+  sageKnowsWeekKey,
+  type SageKnowsState,
+} from '@/lib/sage-knows';
 import {
   mergeTraitWrite,
   confirmTraitSource,
@@ -56,6 +65,8 @@ export interface Me {
   trait_sources: Record<string, string>;
   /** Per-axis ISO timestamp of last successful write. Null axes have no key. */
   trait_touched_at: Record<string, string>;
+  /** Rotation, weekly slot, and per-axis streak for Does Sage know you? */
+  sage_knows: SageKnowsState;
   timezone: string;
   /**
    * Typed city slug for Around (e.g. calgary). Never from GPS.
@@ -118,6 +129,7 @@ export type MeInsert = Omit<
     | 'self_efficacy'
     | 'trait_sources'
     | 'trait_touched_at'
+    | 'sage_knows'
     | 'visible'
     | 'created_at'
     | 'updated_at'
@@ -152,7 +164,17 @@ function withVisible(row: Me): Me {
     row.trait_touched_at && typeof row.trait_touched_at === 'object' && !Array.isArray(row.trait_touched_at)
       ? row.trait_touched_at
       : {};
-  return { ...row, visible: row.visible !== false, trait_sources: sources, trait_touched_at: touched };
+  return {
+    ...row,
+    visible: row.visible !== false,
+    trait_sources: sources,
+    trait_touched_at: touched,
+    sage_knows: parseSageKnowsState(row.sage_knows),
+  };
+}
+
+function weekKeyFor(me: Pick<Me, 'timezone'>, now: Date = new Date()): string {
+  return sageKnowsWeekKey(localYmd(now, me.timezone || 'UTC'));
 }
 
 export async function fetchMe(userId: string): Promise<Me | null> {
@@ -306,6 +328,66 @@ export async function confirmTraits(userId: string, axes: readonly TraitAxis[]):
 
   if (error) throw error;
   return withVisible(data as Me);
+}
+
+async function persistMe(
+  userId: string,
+  patch: Record<string, unknown>,
+): Promise<Me> {
+  const { data, error } = await supabase.from('me').update(patch).eq('id', userId).select().single();
+  if (error) throw error;
+  return withVisible(data as Me);
+}
+
+/** Still fits — confirm-upgrade + streak. Number does not move. */
+export async function recordSageKnowsFits(userId: string, axis: TraitAxis): Promise<Me> {
+  const current = await fetchMe(userId);
+  if (!current) throw new Error('Not authenticated');
+  const now = new Date();
+  const confirmed = confirmTraitSource(traitStateFromRow(current), [axis], now.toISOString());
+  const knows = applySageKnowsStillFits(
+    parseSageKnowsState(current.sage_knows),
+    axis,
+    weekKeyFor(current, now),
+    now.toISOString(),
+  );
+  return persistMe(userId, { ...traitPatch(confirmed), sage_knows: knows });
+}
+
+/** Not quite — Settings write on one axis + streak reset. */
+export async function recordSageKnowsCorrection(
+  userId: string,
+  axis: TraitAxis,
+  value: number,
+): Promise<Me> {
+  const current = await fetchMe(userId);
+  if (!current) throw new Error('Not authenticated');
+  const now = new Date();
+  const merged = mergeTraitWrite(
+    traitStateFromRow(current),
+    { [axis]: value },
+    'self_settings',
+    [axis],
+    now.toISOString(),
+  );
+  const knows = applySageKnowsNotQuite(
+    parseSageKnowsState(current.sage_knows),
+    axis,
+    weekKeyFor(current, now),
+  );
+  return persistMe(userId, { ...traitPatch(merged), sage_knows: knows });
+}
+
+/** Dismiss ends this week's turn. Does not deal another axis. */
+export async function recordSageKnowsDismiss(userId: string, axis: TraitAxis): Promise<Me> {
+  const current = await fetchMe(userId);
+  if (!current) throw new Error('Not authenticated');
+  const knows = applySageKnowsDismiss(
+    parseSageKnowsState(current.sage_knows),
+    axis,
+    weekKeyFor(current),
+  );
+  return persistMe(userId, { sage_knows: knows });
 }
 
 export function errorMessageForHandle(error: unknown): string {

@@ -371,7 +371,10 @@ async function main() {
   assert.match(addFact, /FACT_FRAMEWORK_MESSAGE/);
   assert.match(addFact, /export async function confirmTraits\(userId: string, axes: readonly TraitAxis\[\]\)/);
   assert.doesNotMatch(
-    addFact.slice(addFact.indexOf('export async function confirmTraits'), addFact.indexOf('export function errorMessageForHandle')),
+    addFact.slice(
+      addFact.indexOf('export async function confirmTraits'),
+      addFact.indexOf('export async function recordSageKnowsFits'),
+    ),
     /incoming|number/,
   );
   ok('addFact rejects a leaked phrase before it is persisted');
