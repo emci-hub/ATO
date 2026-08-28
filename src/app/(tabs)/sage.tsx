@@ -1,8 +1,9 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import {
+  Dimensions,
   Keyboard,
-  KeyboardAvoidingView,
+  LayoutAnimation,
   Modal,
   Platform,
   Pressable,
@@ -10,8 +11,9 @@ import {
   StyleSheet,
   TextInput,
   View,
+  type KeyboardEvent,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AiConsentCard } from '@/components/ai-consent-card';
 import { CrisisCard } from '@/components/crisis-card';
@@ -64,18 +66,83 @@ const MORE_CHIPS: ReadonlyArray<{ label: string; prompt: string | null; support?
 
 let nextMessageId = 1;
 
-/** Keyboard overlap under the composer. Android already resizes the window. */
-function useKeyboardLift() {
-  const insets = useSafeAreaInsets();
+function keyboardFallbackLift(e: KeyboardEvent): number {
+  return Math.max(0, Math.round(e.endCoordinates.height) - BottomTabInset);
+}
+
+function syncKeyboardAnimation(e: KeyboardEvent) {
+  if (Platform.OS !== 'ios') return;
+  LayoutAnimation.configureNext({
+    duration: e.duration > 0 ? e.duration : 250,
+    update: { type: LayoutAnimation.Types.keyboard },
+  });
+}
+
+/**
+ * NativeTabs does not resize its child for the software keyboard, and
+ * KeyboardAvoidingView is a no-op inside that native controller. Lift is
+ * padding on the screen: keyboard height minus the tab inset already in the
+ * layout. Do not subtract safe-area bottom — on iOS that inset grows to the
+ * keyboard and zeroes the lift (the 5111b78 device miss).
+ *
+ * measureInWindow runs once while the composer is still at rest. Remeasuring
+ * after the pad is applied would read leftover 0 and collapse the lift.
+ */
+function useKeyboardLift(targetRef: RefObject<View | null>) {
   const [height, setHeight] = useState(0);
+  const appliedRef = useRef(false);
+  const kbHeightRef = useRef(0);
 
   useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const show = Keyboard.addListener(showEvent, (e) => {
-      setHeight(e.endCoordinates.height);
-    });
-    const hide = Keyboard.addListener(hideEvent, () => setHeight(0));
+    const apply = (e: KeyboardEvent) => {
+      const keyboardTop = e.endCoordinates.screenY;
+      const kbHeight = Math.round(e.endCoordinates.height);
+      if (keyboardTop >= Dimensions.get('window').height - 24) {
+        appliedRef.current = false;
+        kbHeightRef.current = 0;
+        setHeight(0);
+        return;
+      }
+
+      syncKeyboardAnimation(e);
+      const fallback = keyboardFallbackLift(e);
+
+      if (appliedRef.current) {
+        if (kbHeight === kbHeightRef.current) return;
+        kbHeightRef.current = kbHeight;
+        setHeight(fallback);
+        return;
+      }
+
+      kbHeightRef.current = kbHeight;
+      const commit = (next: number) => {
+        appliedRef.current = next > 0;
+        setHeight(Math.min(kbHeight, next));
+      };
+
+      const node = targetRef.current;
+      if (!node || typeof node.measureInWindow !== 'function') {
+        commit(fallback);
+        return;
+      }
+      node.measureInWindow((_x, y, _w, h) => {
+        const overlap = Math.max(0, Math.round(y + h - keyboardTop));
+        commit(overlap > 8 ? overlap : fallback);
+      });
+    };
+    const clear = (e: KeyboardEvent) => {
+      syncKeyboardAnimation(e);
+      appliedRef.current = false;
+      kbHeightRef.current = 0;
+      setHeight(0);
+    };
+    const subs = [
+      Keyboard.addListener('keyboardWillShow', apply),
+      Keyboard.addListener('keyboardDidShow', apply),
+      Keyboard.addListener('keyboardWillChangeFrame', apply),
+      Keyboard.addListener('keyboardWillHide', clear),
+      Keyboard.addListener('keyboardDidHide', clear),
+    ];
 
     const visual =
       Platform.OS === 'web' && typeof window !== 'undefined' ? window.visualViewport : null;
@@ -88,17 +155,14 @@ function useKeyboardLift() {
     visual?.addEventListener('scroll', onVisual);
 
     return () => {
-      show.remove();
-      hide.remove();
+      subs.forEach((sub) => sub.remove());
       visual?.removeEventListener('resize', onVisual);
       visual?.removeEventListener('scroll', onVisual);
     };
-  }, []);
+  }, [targetRef]);
 
   const open = height > 0;
-  // Android already resizes the window. iOS NativeTabs + web need an explicit lift
-  // so KeyboardAvoidingView is a layout wrapper, not the offset source.
-  const lift = Platform.OS === 'android' ? 0 : open ? Math.max(0, height - insets.bottom) : 0;
+  const lift = Platform.OS === 'android' ? 0 : height;
   return { open, lift };
 }
 
@@ -117,8 +181,17 @@ export default function SageScreen() {
   const userId = session?.user.id;
   const { me, refresh: refreshMe } = useMeContext();
   const { card: todayCard } = useTodayCard();
-  const { open: keyboardOpen, lift: keyboardLift } = useKeyboardLift();
+  const composerRef = useRef<View>(null);
+  const { open: keyboardOpen, lift: keyboardLift } = useKeyboardLift(composerRef);
   const scrollRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    if (!keyboardOpen) return;
+    const id = requestAnimationFrame(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [keyboardOpen]);
 
   const cachedRows = userId ? peekSageMessages(userId) : null;
   const [checks, setChecks] = useState<Check[]>([]);
@@ -306,12 +379,17 @@ export default function SageScreen() {
     if (prompt) send(prompt);
   }
 
-  const canChat = me != null && consent === 'granted';
-
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
-        <View style={styles.header}>
+      <SafeAreaView
+        edges={['top', 'left', 'right']}
+        style={[styles.safeArea, { backgroundColor: theme.background }]}>
+        <View
+          style={[
+            styles.flex,
+            { backgroundColor: theme.background, paddingBottom: keyboardLift },
+          ]}>
+          <View style={styles.header}>
           <View>
             <ThemedText type="subtitle">{SAGE_COACH_LABEL}</ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.lede}>
@@ -356,16 +434,7 @@ export default function SageScreen() {
             </ThemedText>
           </ThemedView>
         ) : (
-          <KeyboardAvoidingView
-            // Offset comes from useKeyboardLift (NativeTabs + web visualViewport).
-            // KAV's own padding double-counts inside this tab layout.
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            enabled={false}
-            keyboardVerticalOffset={0}
-            style={[
-              styles.flex,
-              { backgroundColor: theme.background, paddingBottom: keyboardLift },
-            ]}>
+          <View style={[styles.flex, { backgroundColor: theme.background }]}>
             <ScrollView
               ref={scrollRef}
               {...NO_PINCH_ZOOM}
@@ -436,6 +505,8 @@ export default function SageScreen() {
             </ScrollView>
 
             <View
+              ref={composerRef}
+              collapsable={false}
               style={[
                 styles.composer,
                 {
@@ -492,6 +563,11 @@ export default function SageScreen() {
                   onSubmitEditing={() => send(input)}
                   returnKeyType="send"
                   multiline
+                  onFocus={() => {
+                    requestAnimationFrame(() => {
+                      scrollRef.current?.scrollToEnd({ animated: true });
+                    });
+                  }}
                   style={[
                     styles.input,
                     { color: theme.text, backgroundColor: theme.backgroundSelected },
@@ -510,8 +586,9 @@ export default function SageScreen() {
                 </Pressable>
               </View>
             </View>
-          </KeyboardAvoidingView>
+          </View>
         )}
+        </View>
       </SafeAreaView>
 
       <Modal

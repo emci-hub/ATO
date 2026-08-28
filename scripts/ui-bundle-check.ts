@@ -60,6 +60,11 @@ assert.match(sage, /useKeyboardLift/);
 assert.match(sage, /visualViewport/);
 assert.match(sage, /scrollToEnd/);
 assert.match(sage, /keyboardOpen/);
+assert.match(sage, /measureInWindow/);
+assert.match(sage, /paddingBottom: keyboardLift/);
+assert.match(sage, /keyboardFallbackLift/);
+assert.doesNotMatch(sage, /enabled=\{false\}/);
+assert.doesNotMatch(sage, /useSafeAreaInsets/);
 ok('Sage mounts the 8-ball above chat and does not import the card router');
 ok('Sage composer lifts with the keyboard and scrolls the latest message into view');
 
