@@ -217,4 +217,9 @@ assert.match(
 );
 ok('Talk router is rate-limited per user via claim_ai_call (20/day, 200/month)');
 
+assert.match(read('src/lib/voice/quota.ts'), /formatSageUsage/);
+assert.match(read('src/lib/voice/quota-server.ts'), /fetchSageUsage/);
+assert.match(sage, /SageUsageLine/);
+ok('Talk usage is readable as a count of the cap, without claiming extra calls');
+
 console.log(`\n${passed} checks passed`);

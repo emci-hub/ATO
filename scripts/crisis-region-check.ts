@@ -113,6 +113,8 @@ assert.match(card, /crisisCardContent/);
 assert.match(card, /useCrisisRegion/);
 assert.match(layout, /CrisisRegionProvider/);
 assert.match(you, /CrisisRegionPicker/);
+assert.ok(you.indexOf('<CrisisRegionPicker') < you.indexOf('<KenneyCreditsCard'));
+assert.match(picker, /SettingsFold title="Crisis line"/);
 assert.match(picker, /United States/);
 assert.match(picker, /Canada/);
 assert.match(picker, /Other region/);

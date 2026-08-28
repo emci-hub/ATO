@@ -4,7 +4,7 @@
 **Twin:** Drake
 
 ## This week
-Sage content model v2 is in. Read/Do labels unchanged (no ATOsophy/Sync). Generation stays per-user on the existing quota. Home in Quest uses `Sage · npc` on the card only; Talk/Dawn/widget/push and Home in the other four modes stay `Sage · coach`. Home-only Nudge from a real recent signal; empty when there isn't one. The 9 onboarding identity chips are now editable from the You tab / Settings. Stage 11 optional fast-entry is in (new 0–1 axes, skippable, slider-sticky). Next Wave 1.5 box: Stage 12 Sage coaching content. Night wall is unblocked for Wave 3 now that going exists.
+Sage content model v2 is in. Read/Do labels unchanged (no ATOsophy/Sync). Generation stays per-user on the existing quota. Home in Quest uses `Sage · npc` on the card only; Talk/Dawn/widget/push and Home in the other four modes stay `Sage · coach`. Home-only Nudge from a real recent signal; empty when there isn't one. The 9 onboarding identity chips are now editable from the You tab / Settings. Stage 11 optional fast-entry is in (new 0–1 axes, skippable, slider-sticky). Sage has a collapsible 8-ball; reply room shows as `X of 20 today` (no "AI"/"tokens"); You-tab name is on the poster only; Settings crisis line is a collapsible above credits. Next Wave 1.5 box: Stage 12 Sage coaching content. Night wall is unblocked for Wave 3 now that going exists.
 
 Stage 8 still has three loose ends only: submit/confirm EAS binary 10 (OTA + real app icon) on a real device, re-check Sentry native symbolication once that's on-device, and wait on Apple's Beta App Review for the Friends TestFlight group. Everything else in Stage 8 is done.
 

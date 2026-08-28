@@ -13,6 +13,7 @@ import { CrisisRegionPicker } from '@/components/crisis-region-picker';
 import { IntakeSettings } from '@/components/intake-settings';
 import { KenneyCreditsCard } from '@/components/kenney-credits-card';
 import { PushTestCard } from '@/components/push-test-card';
+import { SageUsageFold } from '@/components/sage-usage';
 import { SentryTestCard } from '@/components/sentry-test-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -20,7 +21,6 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { useMeContext } from '@/lib/me-context';
-import { accentFromShowUp } from '@/lib/color';
 import { addPeerByHandle } from '@/lib/circle';
 import { useCircleContext } from '@/lib/circle-context';
 import {
@@ -41,7 +41,6 @@ export default function YouScreen() {
   const { width: windowWidth } = useWindowDimensions();
   const { session } = useSession();
   const { me, refresh } = useMeContext();
-  const accent = accentFromShowUp(me?.show_up);
   const { refresh: refreshCircle } = useCircleContext();
   const [signingOut, setSigningOut] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -109,16 +108,6 @@ export default function YouScreen() {
     setTimeout(() => setCopiedInvite(null), 2000);
   }
 
-  const initials = me?.name
-    ? me.name
-        .trim()
-        .split(/\s+/)
-        .map((part) => part[0]?.toUpperCase())
-        .filter(Boolean)
-        .slice(0, 2)
-        .join('') || '?'
-    : '?';
-
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -181,22 +170,6 @@ export default function YouScreen() {
                 </ThemedText>
               </ThemedView>
 
-              <ThemedView type="backgroundElement" style={styles.profileCard}>
-                <View style={[styles.avatar, { backgroundColor: accent.light }]}>
-                  <ThemedText type="smallBold" style={styles.avatarText}>
-                    {initials}
-                  </ThemedText>
-                </View>
-                <View style={styles.profileInfo}>
-                  <ThemedText type="smallBold" style={styles.nameText}>
-                    {me.name}
-                  </ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    @{me.handle}
-                  </ThemedText>
-                </View>
-              </ThemedView>
-
               <IntakeSettings
                 me={me}
                 onUpdated={() => refresh()}
@@ -233,8 +206,6 @@ export default function YouScreen() {
                   </ThemedText>
                 </Pressable>
               </ThemedView>
-
-              <CrisisRegionPicker />
 
               <PushTestCard timeZone={me.timezone || 'UTC'} />
               <SentryTestCard />
@@ -292,6 +263,8 @@ export default function YouScreen() {
                 )}
               </ThemedView>
 
+              <CrisisRegionPicker />
+              <SageUsageFold />
               <KenneyCreditsCard />
             </>
           ) : (
@@ -418,30 +391,6 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.three,
     borderWidth: 1,
     paddingVertical: Spacing.two,
-  },
-  profileCard: {
-    borderRadius: Spacing.four,
-    padding: Spacing.three,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    color: '#ffffff',
-  },
-  profileInfo: {
-    gap: Spacing.half,
-    flex: 1,
-  },
-  nameText: {
-    fontSize: 18,
   },
   detailCard: {
     borderRadius: Spacing.four,

@@ -7,6 +7,23 @@
 
 export const QUOTA_EMPTY_MESSAGE = "Sage's out of things to say for today, back tomorrow";
 
+/** Read-only usage snapshot. Caps come from app_config; counts from ai_usage. */
+export type SageUsageSnapshot = {
+  daily: number;
+  dailyCap: number;
+  monthly: number;
+  monthlyCap: number;
+};
+
+/** User-facing usage line. Never say "AI" or "tokens" in this copy. */
+export function formatSageUsage(
+  used: number,
+  cap: number,
+  period: 'today' | 'this month',
+): string {
+  return `${used} of ${cap} ${period}`;
+}
+
 export type QuotaDecision = { ok: true } | { ok: false; reason: 'quota' };
 
 export function decisionFromClaim(data: unknown): QuotaDecision {

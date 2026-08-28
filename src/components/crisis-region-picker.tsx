@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useCrisisRegion } from '@/lib/crisis/region-context';
@@ -17,8 +17,8 @@ const OPTIONS: { value: PickerValue; label: string }[] = [
 ];
 
 /**
- * Visible Settings picker for the crisis resource card region.
- * Auto uses the stored device locale/timezone; US/Canada/other are overrides.
+ * Passive Settings reference for the crisis resource card region.
+ * Collapsed by default. Does not render the active Talk crisis card.
  */
 export function CrisisRegionPicker() {
   const theme = useTheme();
@@ -26,10 +26,7 @@ export function CrisisRegionPicker() {
   const selected: PickerValue = override ?? 'auto';
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
-      <ThemedText type="smallBold" style={styles.heading}>
-        Crisis line
-      </ThemedText>
+    <SettingsFold title="Crisis line">
       <ThemedText type="small" themeColor="textSecondary" style={styles.lede}>
         Auto uses this device&apos;s locale and timezone. Only the United States
         and Canada have a confirmed number.
@@ -60,19 +57,11 @@ export function CrisisRegionPicker() {
           </Pressable>
         );
       })}
-    </ThemedView>
+    </SettingsFold>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: Spacing.four,
-    padding: Spacing.two,
-  },
-  heading: {
-    paddingHorizontal: Spacing.three,
-    paddingTop: Spacing.two,
-  },
   lede: {
     paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.one,

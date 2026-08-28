@@ -92,6 +92,7 @@
     "check:around-going": "tsx ./scripts/around-going-check.ts",
     "check:around-going-live": "tsx ./scripts/around-going-live-check.ts",
     "check:quota": "tsx ./scripts/quota-check.ts",
+    "check:ui-bundle": "tsx ./scripts/ui-bundle-check.ts",
     "probe:apple-endpoint": "tsx ./scripts/apple-endpoint-probe.ts"
   },
   "private": true

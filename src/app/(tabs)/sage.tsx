@@ -15,6 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AiConsentCard } from '@/components/ai-consent-card';
 import { CrisisCard } from '@/components/crisis-card';
 import { ReportSheet } from '@/components/report-sheet';
+import { SageEightBall } from '@/components/sage-eight-ball';
+import { SageUsageLine } from '@/components/sage-usage';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -70,6 +72,7 @@ export default function SageScreen() {
   const [busy, setBusy] = useState<'send' | 'consent' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [quotaEmpty, setQuotaEmpty] = useState(false);
+  const [usageRevision, setUsageRevision] = useState(0);
   const [showSupport, setShowSupport] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [reportMessage, setReportMessage] = useState<ChatMessage | null>(null);
@@ -179,12 +182,14 @@ export default function SageScreen() {
         addLocal({ role: 'sage', text: '', crisis: true });
       } else if (result.kind === 'quota') {
         setQuotaEmpty(true);
+        setUsageRevision((n) => n + 1);
       } else if (result.kind === 'reply' && result.reply) {
         const reply = result.reply;
         const localSageId = `m${nextMessageId++}`;
         setMessages((prev) => [...prev, { id: localSageId, role: 'sage', text: reply }]);
         void persistAndSwap(localSageId, 'sage', reply);
         triggerGesture('talkReply');
+        setUsageRevision((n) => n + 1);
       }
     } catch (err) {
       console.log('[talk] routeTalkReply error:', err);
@@ -231,6 +236,13 @@ export default function SageScreen() {
             />
           </Pressable>
         </View>
+
+        {me ? (
+          <View style={styles.sageToys}>
+            <SageEightBall />
+            <SageUsageLine revision={usageRevision} />
+          </View>
+        ) : null}
 
         {!me ? (
           <ThemedView type="backgroundElement" style={styles.emptyCard}>
@@ -445,6 +457,10 @@ const styles = StyleSheet.create({
   },
   lede: {
     paddingTop: Spacing.half,
+  },
+  sageToys: {
+    gap: Spacing.one,
+    paddingBottom: Spacing.one,
   },
   supportButton: {
     padding: Spacing.two,
