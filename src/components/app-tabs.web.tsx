@@ -6,16 +6,15 @@ import {
   TabTriggerSlotProps,
   TabListProps,
 } from 'expo-router/ui';
-import { Pressable, View, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { SageTabIcon } from './sage-tab-icon';
+import { ThemedTabBar } from './themed-tab-bar';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useCircleContext } from '@/lib/circle-context';
-import { useTheme } from '@/hooks/use-theme';
-import { controlBorderColor } from '@/lib/theme/chrome';
 
 export default function AppTabs() {
   const { hasCircle } = useCircleContext();
@@ -53,7 +52,7 @@ export function TabButton({ children, isFocused, icon, ...props }: TabTriggerSlo
   return (
     <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
       <ThemedView
-        type={isFocused ? 'backgroundSelected' : 'backgroundElement'}
+        type={isFocused ? 'backgroundSelected' : 'background'}
         style={styles.tabButtonView}>
         {icon}
         <ThemedText type="small" themeColor={isFocused ? 'text' : 'textSecondary'}>
@@ -65,44 +64,10 @@ export function TabButton({ children, isFocused, icon, ...props }: TabTriggerSlo
 }
 
 export function CustomTabList(props: TabListProps) {
-  const theme = useTheme();
-
-  return (
-    <View {...props} style={styles.tabListContainer}>
-      <ThemedView type="backgroundElement" style={[styles.innerContainer, { borderColor: controlBorderColor(theme) }]}>
-        <ThemedText type="smallBold" style={styles.brandText}>
-          ATO
-        </ThemedText>
-
-        {props.children}
-      </ThemedView>
-    </View>
-  );
+  return <ThemedTabBar {...props}>{props.children}</ThemedTabBar>;
 }
 
 const styles = StyleSheet.create({
-  tabListContainer: {
-    position: 'absolute',
-    width: '100%',
-    padding: Spacing.three,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-  innerContainer: {
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.five,
-    borderRadius: Spacing.five,
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexGrow: 1,
-    gap: Spacing.two,
-    maxWidth: MaxContentWidth,
-    borderWidth: 1,
-  },
-  brandText: {
-    marginRight: 'auto',
-  },
   pressed: {
     opacity: 0.7,
   },

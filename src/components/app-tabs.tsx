@@ -26,8 +26,15 @@ export default function AppTabs() {
       backgroundColor={colors.background}
       indicatorColor={colors.backgroundElement}
       disableTransparentOnScrollEdge
-      blurEffect={colors.scheme === 'dark' ? 'systemMaterialDark' : 'none'}
-      labelStyle={{ selected: { color: colors.text } }}>
+      blurEffect="none"
+      minimizeBehavior="never"
+      shadowColor="transparent"
+      tintColor={colors.text}
+      iconColor={{ default: colors.textSecondary, selected: colors.text }}
+      labelStyle={{
+        default: { color: colors.textSecondary },
+        selected: { color: colors.text },
+      }}>
       <NativeTabs.Trigger name="index">
         <Label>Home</Label>
         <Icon src={<VectorIcon family={MaterialCommunityIcons} name="home" />} />

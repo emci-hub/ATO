@@ -1,4 +1,4 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -8,7 +8,8 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { PushRuntime } from '@/components/push-runtime';
 import { useTheme } from '@/hooks/use-theme';
 import { CrisisRegionProvider } from '@/lib/crisis/region-context';
-import { AppearanceProvider } from '@/lib/theme/context';
+import { AppearanceProvider, useAppearance } from '@/lib/theme/context';
+import { navigationTheme } from '@/lib/theme/navigation';
 import { MeProvider, useMeContext } from '@/lib/me-context';
 import { initSentry, Sentry } from '@/lib/sentry';
 import { useSession } from '@/hooks/use-session';
@@ -28,7 +29,7 @@ function RootThemeBridge() {
   const theme = useTheme();
 
   return (
-    <ThemeProvider value={theme.scheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={navigationTheme(theme)}>
       <MeProvider>
         <CrisisRegionProvider>
           <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
@@ -43,10 +44,11 @@ function RootNavigator() {
   const theme = useTheme();
   const { session, loading: sessionLoading } = useSession();
   const { me, loading: meLoading } = useMeContext();
+  const { ready: appearanceReady } = useAppearance();
 
   const isAuthed = !!session;
   const hasMe = !!me;
-  const resolving = sessionLoading || (isAuthed && meLoading);
+  const resolving = sessionLoading || (isAuthed && meLoading) || !appearanceReady;
 
   return (
     <>

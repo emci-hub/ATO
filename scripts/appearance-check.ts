@@ -66,4 +66,18 @@ assert.doesNotMatch(plan, /Colors: Ink \/ Paper \/ Steel \/ Bloom/);
 assert.match(now, /intentional deviation/i);
 ok('You picker, launch provider, and docs are wired');
 
+const tabs = fs.readFileSync(path.join(root, 'src/components/app-tabs.tsx'), 'utf8');
+const tabBar = fs.readFileSync(path.join(root, 'src/components/themed-tab-bar.tsx'), 'utf8');
+const navTheme = fs.readFileSync(path.join(root, 'src/lib/theme/navigation.ts'), 'utf8');
+const ctx = fs.readFileSync(path.join(root, 'src/lib/theme/context.tsx'), 'utf8');
+
+assert.match(layout, /navigationTheme/);
+assert.match(navTheme, /card: theme\.background/);
+assert.match(tabs, /blurEffect="none"/);
+assert.match(tabBar, /backgroundColor: theme\.background/);
+assert.doesNotMatch(tabBar, /backgroundElement/);
+assert.match(ctx, /typeof Appearance\.setColorScheme === 'function'/);
+assert.match(ctx, /ready: boolean/);
+ok('tab bar chrome uses appearance background (opaque, not DefaultTheme white)');
+
 console.log(`\nappearance-check: ${passed}/${passed} passed`);

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppearancePicker } from '@/components/appearance-picker';
 import { CheckMilestoneBadge } from '@/components/check-milestone-badge';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
+import { ThemedTabBar } from '@/components/themed-tab-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -107,6 +108,18 @@ export default function ThemeLabScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
+      <ThemedTabBar pointerEvents="none">
+        {(['Home', 'Sage', 'Around', 'You'] as const).map((label, i) => (
+          <ThemedView
+            key={label}
+            type={i === 0 ? 'backgroundSelected' : 'background'}
+            style={styles.tabPreview}>
+            <ThemedText type="small" themeColor={i === 0 ? 'text' : 'textSecondary'}>
+              {label}
+            </ThemedText>
+          </ThemedView>
+        ))}
+      </ThemedTabBar>
     </ThemedView>
   );
 }
@@ -124,7 +137,15 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     gap: Spacing.three,
-    paddingVertical: Spacing.four,
+    paddingTop: Spacing.four,
+    paddingBottom: 96,
+  },
+  tabPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.one,
+    paddingHorizontal: Spacing.three,
+    borderRadius: Spacing.three,
   },
   header: {
     gap: Spacing.half,

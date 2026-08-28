@@ -7,7 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { AccessibilityInfo } from 'react-native';
+import { AccessibilityInfo, Appearance, Platform } from 'react-native';
 import * as SystemUI from 'expo-system-ui';
 
 import {
@@ -22,28 +22,51 @@ type AppearanceContextValue = {
   id: AppearanceId;
   tokens: AppearanceTokens;
   reduceMotion: boolean;
+  /** False until the on-device mode is read. Tabs must not mount as Soft first. */
+  ready: boolean;
   setAppearance: (id: AppearanceId) => Promise<void>;
 };
+
+function applyNativeChrome(id: AppearanceId) {
+  const tokens = APPEARANCES[id];
+  if (Platform.OS !== 'web' && typeof Appearance.setColorScheme === 'function') {
+    Appearance.setColorScheme(tokens.scheme);
+  }
+  void SystemUI.setBackgroundColorAsync(tokens.background);
+  if (Platform.OS === 'web' && typeof document !== 'undefined') {
+    document.documentElement.style.backgroundColor = tokens.background;
+    document.documentElement.style.colorScheme = tokens.scheme;
+    document.body.style.backgroundColor = tokens.background;
+  }
+}
 
 const AppearanceContext = createContext<AppearanceContextValue | null>(null);
 
 export function AppearanceProvider({ children }: { children: ReactNode }) {
   const [id, setId] = useState<AppearanceId>(DEFAULT_APPEARANCE);
+  const [ready, setReady] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     loadAppearanceId().then((stored) => {
-      if (!cancelled) setId(stored);
+      if (cancelled) return;
+      setId(stored);
+      applyNativeChrome(stored);
+      setReady(true);
     });
     return () => {
       cancelled = true;
+      if (Platform.OS !== 'web' && typeof Appearance.setColorScheme === 'function') {
+        Appearance.setColorScheme(null);
+      }
     };
   }, []);
 
   useEffect(() => {
-    void SystemUI.setBackgroundColorAsync(APPEARANCES[id].background);
-  }, [id]);
+    if (!ready) return;
+    applyNativeChrome(id);
+  }, [id, ready]);
 
   useEffect(() => {
     let mounted = true;
@@ -71,9 +94,10 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
       id,
       tokens: APPEARANCES[id],
       reduceMotion,
+      ready,
       setAppearance,
     }),
-    [id, reduceMotion, setAppearance],
+    [id, reduceMotion, ready, setAppearance],
   );
 
   return <AppearanceContext.Provider value={value}>{children}</AppearanceContext.Provider>;
@@ -86,6 +110,7 @@ export function useAppearance(): AppearanceContextValue {
       id: DEFAULT_APPEARANCE,
       tokens: APPEARANCES[DEFAULT_APPEARANCE],
       reduceMotion: false,
+      ready: true,
       setAppearance: async () => {},
     };
   }

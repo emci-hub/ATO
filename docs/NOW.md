@@ -6,6 +6,8 @@
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
 
 ## On
+**Nav bar appearance is in.** Bottom tab chrome uses the live appearance background in all five modes (opaque). Same family as the Sage zoom white-flash: native/system white behind the bar. The earlier `disableTransparentOnScrollEdge` + dark system material left the bar sampling white; tabs also mounted as Soft before storage loaded, so a saved dark/Zen mode kept a white bar. Navigation theme `card`/`background`, `blurEffect="none"`, hydrate-before-mount, and the web bar all use `theme.background` (not Soft-white card surface or translucent Anime).
+
 **Sage content model v2 is in.** Read/Do labels are unchanged on Home, Dawn, widget, push, and Circle — no ATOsophy/Sync. Cards stay per-user on the existing quota (20/day, 200/month); no shared pools, no refresh. Talk, Dawn, consent, crisis, morning push, and widget keep `Sage · coach` and the disclosure sentence. Home in Quest appearance only uses `Sage · npc` on the card (no disclosure on that card); Soft / Zen / Neon / Anime Home stay `Sage · coach`. Home can show a third daily category, **Nudge** (internal zGlitch): encouragement from a real recent signal only — never from `talk_style`. No signal → no card. Never Circle, widget, or morning push.
 
 **Check window + weekly recap cap + Home milestone badge are in.** A Check is for a calendar day in the user's timezone (signup-local day 1). You can log today or up to 2 days back if that day is still empty — one Check per day, not extra Checks on the same day. Days 3+ back are permanently closed. `record_check` is the only write path (client inserts revoked). Read + Do + Nudge text is kept for the rolling 7 calendar days (today through today-6); older text is nulled, did/skip stays forever for `check_count` and valence. Sunday recap still counts outcomes for the previous Sun–Sat; last Sunday's Read may already be pruned (today-7). `this_week` on ME was never implemented — recap reads the checks table. Home shows a small all-time Checks chip (presence-tier glow, all five appearance modes).
@@ -42,7 +44,7 @@
 - Wave 3 — Plugs (deal rows) + Night wall (going exists; wall can surface)
 
 ## Done
-See git history for the full Stage 1–8 build log. Sage content model v2, Check window + recap text cap + Home milestone badge, nav tap moods, UI polish, Wave 2 Stage 2, Stage 9 first pass, Settings identity-chip editing, Stage 11 optional fast-entry, the Sage/You UI-bug bundle, the original 8-ball orb, and Home/Talk content quality are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
+See git history for the full Stage 1–8 build log. Sage content model v2, Check window + recap text cap + Home milestone badge, nav tap moods, UI polish, Wave 2 Stage 2, Stage 9 first pass, Settings identity-chip editing, Stage 11 optional fast-entry, the Sage/You UI-bug bundle, the original 8-ball orb, Home/Talk content quality, and nav-bar appearance theming are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
 
 ## Left
 - Submit + confirm binary 10 on device (icon, OTA, everything from today). Do not submit 8 or 9.

@@ -15,6 +15,9 @@ export function controlBorderColor(theme: AppearanceTokens): string {
  * iOS ScrollView pinch is on by default. Even at maxZoomScale 1, a pinch can
  * leave a transform that reveals the native white tab-screen behind themed
  * chrome (Sage tab bar going white after zoom-out).
+ *
+ * Related: NativeTabs must stay opaque (`blurEffect="none"` + themed
+ * `backgroundColor`). A system material samples that same native white.
  */
 export const NO_PINCH_ZOOM = {
   pinchGestureEnabled: false,
