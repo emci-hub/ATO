@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 
-import { CheckMilestoneBadge } from '@/components/check-milestone-badge';
+import { MilestoneBadges } from '@/components/check-milestone-badge';
 import { MissedCheckCard } from '@/components/missed-check-card';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
 import { ThemedPressable } from '@/components/themed-pressable';
@@ -176,7 +176,12 @@ export default function HomeScreen() {
             <ThemedText themeColor="textSecondary">
               {params.focus === 'check' ? 'Check today.' : homeSageLede(theme.id)}
             </ThemedText>
-            <CheckMilestoneBadge checkCount={growth.checkCount} presence={growth.presence} />
+            <MilestoneBadges
+              checkCount={growth.checkCount}
+              factCount={growth.factCount}
+              checks={checks}
+              timeZone={me?.timezone ?? 'UTC'}
+            />
           </View>
 
           {card ? (

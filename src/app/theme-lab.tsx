@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppearancePicker } from '@/components/appearance-picker';
-import { CheckMilestoneBadge } from '@/components/check-milestone-badge';
+import { MilestoneBadges } from '@/components/check-milestone-badge';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
 import { ThemedTabBar } from '@/components/themed-tab-bar';
 import { ThemedText } from '@/components/themed-text';
@@ -11,6 +11,7 @@ import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useAppearance } from '@/lib/theme/context';
 import { useTheme } from '@/hooks/use-theme';
+import { unlockedBadgeFixture } from '@/lib/badges';
 import {
   homeSageLabel,
   homeSageLede,
@@ -40,7 +41,7 @@ export default function ThemeLabScreen() {
             <ThemedText themeColor="textSecondary">
               {homeSageLede(id)}
             </ThemedText>
-            <CheckMilestoneBadge checkCount={11} presence={2} />
+            <MilestoneBadges defaultOpen {...unlockedBadgeFixture()} />
           </View>
 
           <ThemedView type="backgroundElement" style={styles.todayCard}>
