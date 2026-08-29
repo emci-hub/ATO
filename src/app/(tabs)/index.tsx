@@ -139,7 +139,7 @@ export default function HomeScreen() {
       crisisYesterday,
       aiConsent: me.ai_consent,
       day: todayOpen.day,
-    }, { logJargonHit: logJargonGuard, recordTrace: recordOwnDevTrace, traceSurface: 'sage' })
+    }, { logJargonHit: logJargonGuard, recordTrace: recordOwnDevTrace, traceSurface: 'dawn' })
       .then(async (next) => {
         if (cancelled || !next.card) return;
         await persistRoutedCard(next);

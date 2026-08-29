@@ -26,6 +26,7 @@ import { buildPrompt, buildTalkPrompt } from '../src/lib/voice/providers/prompt'
 import type { VoiceProvider } from '../src/lib/voice/providers/types';
 import { deriveTone, routeVoiceCard } from '../src/lib/voice/router';
 import { routeTalkReply } from '../src/lib/voice/talk';
+import type { DevTraceRecordInput } from '../src/lib/dev-trace';
 import type { CheckHistory, RouteVoiceCardInput, VoiceCard, VoiceMe } from '../src/lib/voice/types';
 
 const CUE = 'make coffee';
@@ -657,6 +658,44 @@ const flowerTalkPrompt = buildTalkPrompt({
 });
 assert.doesNotMatch(flowerTalkPrompt, /FRAMING NOTES/);
 ok('Talk prompt grounds from the typed line, not from a standing knock');
+
+console.log('Dawn pipeline steps (generic schema)');
+const dawnBank: DevTraceRecordInput[] = [];
+await routeVoiceCard(input(0, []), {
+  config: localConfig,
+  ...dev,
+  recordTrace: async (row) => {
+    dawnBank.push(row);
+  },
+  traceSurface: 'dawn',
+});
+assert.equal(dawnBank.length, 1);
+assert.equal(dawnBank[0].surface, 'dawn');
+assert.deepEqual(
+  dawnBank[0].steps?.map((step) => step.step_type),
+  ['context_gather', 'model_call', 'guard_check', 'output'],
+);
+assert.equal(dawnBank[0].steps?.[0].step_order, 1);
+assert.equal(dawnBank[0].steps?.[0].label, 'ME + last 7 checks');
+assert.equal(dawnBank[0].steps?.[1].label, 'Bank card (no model)');
+ok('Dawn bank path logs ordered context → model → guard → output');
+
+const dawnGen: DevTraceRecordInput[] = [];
+await routeVoiceCard(input(3, d1, { aiConsent: true }), {
+  config: localConfig,
+  ...dev,
+  recordTrace: async (row) => {
+    dawnGen.push(row);
+  },
+  traceSurface: 'dawn',
+});
+assert.equal(dawnGen[0]?.surface, 'dawn');
+assert.deepEqual(
+  dawnGen[0]?.steps?.map((step) => step.step_type),
+  ['context_gather', 'model_call', 'guard_check', 'output'],
+);
+assert.match(dawnGen[0]?.steps?.[1].label ?? '', /Router/);
+ok('Dawn generated path logs the same generic step sequence');
 
 // ---------------------------------------------------------------------------
 console.log('gemini default + no-key fallback');

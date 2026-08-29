@@ -1,4 +1,15 @@
-import { libraryLinesFor, traitSignalsFromMe, type DevTraceRecordInput } from '@/lib/dev-trace';
+import {
+  appendTraceStep,
+  libraryLinesFor,
+  summarizeChecks,
+  summarizeLibrary,
+  summarizeMe,
+  traitSignalsFromMe,
+  traceGuardResult,
+  type DevTraceRecordInput,
+  type DevTraceStep,
+  type DevTraceStepStatus,
+} from '@/lib/dev-trace';
 
 import { bankCardForMe } from './bank';
 import {
@@ -49,7 +60,7 @@ export interface RouteVoiceCardDeps {
    * recordOwnDevTrace. Tests and the local simulator omit.
    */
   recordTrace?: (input: DevTraceRecordInput) => Promise<void>;
-  /** Home/Talk catch-up = sage. Dawn passes dawn. */
+  /** Read/Do/Nudge pipeline is Dawn — Home, Dawn, and catch-up pass dawn. */
   traceSurface?: 'sage' | 'dawn';
 }
 
@@ -76,23 +87,71 @@ function cardBlob(card: VoiceCard | null | undefined): string | null {
   return JSON.stringify({ read: card.read, do: card.do, nudge: card.nudge ?? null });
 }
 
+function startCardSteps(input: RouteVoiceCardInput, day: number): {
+  steps: DevTraceStep[];
+  library: ReturnType<typeof libraryLinesFor>;
+} {
+  const library = libraryLinesFor(input.me, { day, surface: 'card' });
+  const steps: DevTraceStep[] = [];
+  appendTraceStep(steps, {
+    step_type: 'context_gather',
+    label: 'ME + last 7 checks',
+    input_summary: summarizeMe(input.me),
+    output_summary: `${summarizeChecks(input.history, 7)} · ${summarizeLibrary(library)}`,
+    status: 'ok',
+  });
+  return { steps, library };
+}
+
+function finishCardSteps(
+  steps: DevTraceStep[],
+  model: {
+    label: string;
+    input_summary: string;
+    output_summary: string;
+    status: DevTraceStepStatus;
+  },
+  guardHits: Array<string | null | undefined>,
+  guardInput: string,
+  output: { input_summary: string; output_summary: string; status: DevTraceStepStatus },
+): { steps: DevTraceStep[]; guardFired: string | null } {
+  appendTraceStep(steps, { step_type: 'model_call', ...model });
+  const guard = traceGuardResult(guardHits);
+  appendTraceStep(steps, {
+    step_type: 'guard_check',
+    label: 'Jargon / phrase',
+    input_summary: guardInput,
+    output_summary: guard.output_summary,
+    status: guard.status,
+  });
+  appendTraceStep(steps, {
+    step_type: 'output',
+    label: 'Read / Do / Nudge',
+    ...output,
+  });
+  return { steps, guardFired: guard.guardFired };
+}
+
 async function emitCardTrace(
   deps: RouteVoiceCardDeps,
   input: RouteVoiceCardInput,
   day: number,
   result: VoiceCardResult,
   rawBefore: string | null,
+  steps: DevTraceStep[],
   guardFired: string | null,
 ): Promise<VoiceCardResult> {
   if (!deps.recordTrace) return result;
+  const library = libraryLinesFor(input.me, { day, surface: 'card' });
   await deps
     .recordTrace({
-      surface: deps.traceSurface ?? 'sage',
-      libraryLines: libraryLinesFor(input.me, { day, surface: 'card' }),
+      surface: deps.traceSurface ?? 'dawn',
+      libraryLines: library,
       traitSignals: traitSignalsFromMe(input.me),
       rawBefore,
       rawAfter: cardBlob(result.card),
       guardFired,
+      steps,
     })
     .catch(() => {});
   return result;
@@ -147,6 +206,7 @@ export async function routeVoiceCard(
   // null → pending (the caller must surface the one-time prompt), false →
   // bank content only, forever.
   const modelAllowed = consent === true;
+  const { steps } = startCardSteps(input, day);
 
   // ---- Bank path: check_count < 3, OR consent not granted ---------------
   // Without consent this stays bank-only regardless of check_count — a denied
@@ -156,50 +216,39 @@ export async function routeVoiceCard(
     const bankReason = card
       ? filterCard(card, { shownCards: [], crisisToday: !!input.crisisToday, previousHadCut: false })
       : null;
-    if (bankReason) {
-      return emitCardTrace(
-        deps,
-        input,
+    const raw = cardBlob(card);
+    const shown = !bankReason && card ? card : null;
+    const result = withNudge(
+      {
+        kind: 'card',
+        card: shown,
         day,
-        withNudge(
-          {
-            kind: 'card',
-            card: null,
-            day,
-            tone,
-            source: 'bank',
-            provider: null,
-            dropped: [bankReason],
-            consent: consent === false ? 'denied' : 'pending',
-            dev: trace(true, false, 'first_cards.md'),
-          },
-          input,
-        ),
-        cardBlob(card),
-        bankReason,
-      );
-    }
-    return emitCardTrace(
-      deps,
+        tone,
+        source: 'bank',
+        provider: null,
+        dropped: bankReason ? [bankReason] : [],
+        consent: consent === false ? 'denied' : 'pending',
+        dev: trace(true, false, 'first_cards.md'),
+      },
       input,
-      day,
-      withNudge(
-        {
-          kind: 'card',
-          card,
-          day,
-          tone,
-          source: 'bank',
-          provider: null,
-          dropped: [],
-          consent: consent === false ? 'denied' : 'pending',
-          dev: trace(true, false, 'first_cards.md'),
-        },
-        input,
-      ),
-      cardBlob(card),
-      null,
     );
+    const finished = finishCardSteps(
+      steps,
+      {
+        label: 'Bank card (no model)',
+        input_summary: `day ${day} · talk_style=${input.me.talk_style} · bank`,
+        output_summary: raw ?? 'no bank card',
+        status: card ? 'ok' : 'failed',
+      },
+      bankReason === 'framework-echo' ? [bankReason] : [],
+      raw ?? '—',
+      {
+        input_summary: raw ?? '—',
+        output_summary: result.card ? cardBlob(result.card) ?? '—' : 'nothing shown',
+        status: result.card ? 'ok' : 'failed',
+      },
+    );
+    return emitCardTrace(deps, input, day, result, raw, finished.steps, finished.guardFired);
   }
 
   // ---- Generated path: check_count >= 3 --------------------------------
@@ -252,51 +301,73 @@ export async function routeVoiceCard(
       if (flag) {
         await deps.logJargonHit?.(flag).catch(() => {});
       }
-      return emitCardTrace(
-        deps,
+      const result = withNudge(
+        {
+          kind: 'card',
+          card,
+          day,
+          tone,
+          source: 'generated',
+          provider: provider.id,
+          dropped: [],
+          consent: 'granted',
+          dev: trace(false, true, providerLabel),
+        },
         input,
-        day,
-        withNudge(
-          {
-            kind: 'card',
-            card,
-            day,
-            tone,
-            source: 'generated',
-            provider: provider.id,
-            dropped: [],
-            consent: 'granted',
-            dev: trace(false, true, providerLabel),
-          },
-          input,
-        ),
-        cardBlob(candidate),
-        flag,
       );
+      const raw = cardBlob(candidate);
+      const finished = finishCardSteps(
+        steps,
+        {
+          label: `Router · ${providerLabel}`,
+          input_summary: `day ${day} · tone=${tone} · attempt ${attempt}`,
+          output_summary: raw ?? 'empty draft',
+          status: candidate ? 'ok' : 'failed',
+        },
+        [flag],
+        raw ?? '—',
+        {
+          input_summary: raw ?? '—',
+          output_summary: result.card ? cardBlob(result.card) ?? '—' : 'nothing shown',
+          status: result.card ? 'ok' : 'failed',
+        },
+      );
+      return emitCardTrace(deps, input, day, result, raw, finished.steps, finished.guardFired);
     }
     lastDropped = [reason];
   }
 
   // Everything got dropped — per spec, show nothing rather than bad content.
-  return emitCardTrace(
-    deps,
+  const result = withNudge(
+    {
+      kind: 'card',
+      card: null,
+      day,
+      tone,
+      source: 'generated',
+      provider: provider.id,
+      dropped: lastDropped,
+      consent: 'granted',
+      dev: trace(false, true, providerLabel),
+    },
     input,
-    day,
-    withNudge(
-      {
-        kind: 'card',
-        card: null,
-        day,
-        tone,
-        source: 'generated',
-        provider: provider.id,
-        dropped: lastDropped,
-        consent: 'granted',
-        dev: trace(false, true, providerLabel),
-      },
-      input,
-    ),
-    cardBlob(lastCandidate),
-    lastDropped[0] ?? null,
   );
+  const raw = cardBlob(lastCandidate);
+  const finished = finishCardSteps(
+    steps,
+    {
+      label: `Router · ${providerLabel}`,
+      input_summary: `day ${day} · tone=${tone} · ${GENERATED_MAX_ATTEMPTS} attempts`,
+      output_summary: raw ?? 'no candidate',
+      status: lastCandidate ? 'ok' : 'failed',
+    },
+    lastDropped.filter((reason) => reason === 'framework-echo'),
+    raw ?? '—',
+    {
+      input_summary: raw ?? '—',
+      output_summary: lastDropped[0] ? `dropped: ${lastDropped[0]}` : 'nothing shown',
+      status: 'failed',
+    },
+  );
+  return emitCardTrace(deps, input, day, result, raw, finished.steps, finished.guardFired);
 }

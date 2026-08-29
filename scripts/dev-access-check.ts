@@ -88,11 +88,11 @@ assert.match(home, /canSeeDevLab/);
 assert.match(home, /router\.push\('\/dev-lab'\)/);
 ok('Home Dev Tools Hub row uses the same root/grant gate');
 
-assert.match(read('src/app/(tabs)/index.tsx'), /recordOwnDevTrace/);
+assert.match(read('src/app/(tabs)/index.tsx'), /traceSurface: 'dawn'/);
 assert.match(read('src/app/dawn.tsx'), /traceSurface: 'dawn'/);
 assert.match(read('src/app/(tabs)/sage.tsx'), /recordOwnDevTrace/);
 assert.match(read('src/components/explore-panel.tsx'), /recordOwnDevTrace/);
-assert.match(read('src/components/missed-check-card.tsx'), /recordOwnDevTrace/);
+assert.match(read('src/components/missed-check-card.tsx'), /traceSurface: 'dawn'/);
 assert.match(read('src/lib/voice/router.ts'), /recordTrace/);
 assert.match(read('src/lib/voice/talk.ts'), /recordTrace/);
 assert.match(read('src/lib/explore/route.ts'), /recordTrace/);

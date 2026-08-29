@@ -30,7 +30,7 @@ export function MissedCheckCard({
 
   useEffect(() => {
     let cancelled = false;
-    routeVoiceCard({ ...routeInput, day: slot.day }, { logJargonHit: logJargonGuard, recordTrace: recordOwnDevTrace, traceSurface: 'sage' })
+    routeVoiceCard({ ...routeInput, day: slot.day }, { logJargonHit: logJargonGuard, recordTrace: recordOwnDevTrace, traceSurface: 'dawn' })
       .then((result) => {
         if (cancelled) return;
         if (result.card) {
