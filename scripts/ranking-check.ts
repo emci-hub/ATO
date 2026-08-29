@@ -231,12 +231,12 @@ assert.match(card, /self_tap|recordRanking/);
 assert.match(meSrc, /recordRanking/);
 assert.match(meSrc, /self_tap/);
 assert.match(homeTab, /RankingCard/);
-assert.match(sageTab, /RankingCard/);
 assert.match(youTab, /RankingCard/);
+assert.doesNotMatch(sageTab, /RankingCard/);
 assert.doesNotMatch(talkSrc, /resolveRanking|RankingCard/);
 assert.match(themeLab, /RankingCard/);
 assert.match(themeLab, /forcePick/);
-ok('drag surface lives on Home, Sage, and You; never inside Talk');
+ok('drag surface lives on Home and You; never Sage or Talk');
 
 const logic = read('src/lib/ranking.ts');
 assert.doesNotMatch(logic, /Math\.random|claimAiCall|gemini|self_game/);

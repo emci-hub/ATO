@@ -13,6 +13,7 @@ import { CrisisRegionPicker } from '@/components/crisis-region-picker';
 import { IntakeSettings } from '@/components/intake-settings';
 import { VoicePresetPicker } from '@/components/voice-preset-picker';
 import { RankingCard } from '@/components/ranking-card';
+import { RunningUpdateLine } from '@/components/running-update-line';
 import { TraitBandsFold } from '@/components/trait-bands-fold';
 import { KenneyCreditsCard } from '@/components/kenney-credits-card';
 import { SageUsageFold } from '@/components/sage-usage';
@@ -196,6 +197,8 @@ export default function YouScreen() {
               <ThemedView type="backgroundElement" style={styles.detailCard}>
                 <DetailRow label="Timezone" value={me.timezone} />
               </ThemedView>
+
+              <RunningUpdateLine />
 
               <AppearancePicker />
 

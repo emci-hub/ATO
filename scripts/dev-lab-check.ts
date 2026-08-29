@@ -98,12 +98,14 @@ ok('fence tester reports the banned term that matched');
 assert.match(hub, /fetchSageUsage/);
 assert.match(hub, /matchingFrameworkTerms/);
 assert.match(hub, /routeVoiceCard/);
+assert.match(hub, /RunningUpdateLine/);
 assert.match(hub, /listPendingAccessRequests/);
 assert.match(hub, /approveAccessRequest/);
 assert.match(hub, /denyAccessRequest/);
 ok('hub sections call the live fence, usage snapshot, card router, and access review');
 
 const you = read('src/app/(tabs)/you.tsx');
+assert.match(you, /RunningUpdateLine/);
 assert.doesNotMatch(you, /from '@\/components\/sentry-test-card'/);
 assert.doesNotMatch(you, /from '@\/components\/push-test-card'/);
 assert.match(you, /if \(__DEV__\) \{/);

@@ -24,7 +24,9 @@
 
 **Home milestone badges are in (Stage 13, part 1).** The existing all-time Checks chip is now a collapsible milestone strip: 7 Checks, first fact taught to Sage, and a full week (7 consecutive calendar days) without a cut. Each one is a pure read of already-logged Checks / stored facts — no randomness, no chance, no popup. Glow only after the milestone is true. Same chip language, contained in its own surface, all five appearance modes.
 
-**Home ranking is in (Stage 13, part 4).** Optional-depth forced ranking: drag 4–5 plain behavioral lines, most-you at the top, one trait axis per round (first nine axes). Writes `self_tap` (direct, sticky merge). Soft-ask: yields if Does-Sage-know-you or a completeness claim already has that week's slot; extra-axis gaps go to the scenario swipe-deck.
+**Home ranking is in (Stage 13, part 4).** Optional-depth forced ranking on Home and You (not Sage): drag 4–5 plain behavioral lines, most-you at the top, one trait axis per round (first nine axes). Writes `self_tap` (direct, sticky merge). Soft-ask: yields if Does-Sage-know-you or a completeness claim already has that week's slot; extra-axis gaps go to the scenario swipe-deck.
+
+**Build line is in.** You Settings and `/dev-lab` show what this phone is actually running: EAS update group id when the manifest has it, otherwise the short `expo-updates` UUID, or `embedded` / `local`. Tap copies the full id.
 
 **Scenario swipe-deck is in (Stage 13, part 5).** Gut call on Home only (not Sage or You). Six extra axes, one card each, two forced choices. SDT is three separate cards, never a three-way pick. Writes `self_game` (inferred; cannot overwrite a direct answer). Same weekly slot as ranking and Does-Sage-know-you.
 

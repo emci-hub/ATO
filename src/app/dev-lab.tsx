@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { RunningUpdateLine } from '@/components/running-update-line';
 import { TracePipelineViewer } from '@/components/trace-pipeline';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useMeContext } from '@/lib/me-context';
@@ -148,6 +149,7 @@ function DevLab() {
               Root and granted testers in TestFlight. Local __DEV__ always opens it.
               Access, grants, and profile pause/delete stay root-only.
             </ThemedText>
+            <RunningUpdateLine />
           </View>
           <View style={styles.tabs}>
             {visible.map((tab) => (

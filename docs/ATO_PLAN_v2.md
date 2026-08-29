@@ -492,8 +492,9 @@ Reveal card (real content only, no randomized-value mechanic), milestone badges,
 **Done (Aug 28, 2026, badges):** Home check-count chip is a collapsible milestone strip for 7 Checks, first Teach-Sage fact, and 7 consecutive calendar days without a cut. Deterministic from logged Checks and stored facts — no chance mechanic, no popup.
 **Done (Aug 28, 2026, Does Sage know you?):** Home/Sage check-in from banked high/low trait lines, zero quota. Still fits / Not quite. Weekly; yields while any axis is null; cruel/mid/fresh axes excluded; two Still fits graduates that axis. 3-month Settings prompt remains later.
 **Done (Aug 28, 2026, reveal):** Home tap-to-open Note. Week pattern / fact / badge-proximity, Nudge-style priority. One 300ms unfold, same motion for every kind. Reduce Motion skips to copy. Empty days are a plain line, no sealed object.
-**Done (Aug 28, 2026, ranking):** Home/Sage/You drag sort, 4–5 lines, one unfilled first-nine axis. `self_tap` write. Yields if Does-Sage-know-you or a completeness claim already has the week.
+**Done (Aug 28, 2026, ranking):** Home/You drag sort, 4–5 lines, one unfilled first-nine axis. `self_tap` write. Yields if Does-Sage-know-you or a completeness claim already has the week. Not on Sage.
 **Done (Aug 29, 2026, ranking copy):** axis labels (except steadiness / closeness) and lede are plain-language; six near-duplicate low-pole lines differentiated.
+**Done (Aug 29, 2026, ranking surfaces):** Most me removed from Sage so it no longer triples with Home and You.
 **Done (Aug 28, 2026, scenarios):** Gut call swipe/tap on Home only (not Sage or You). Six extra axes, two options, `self_game`. SDT is three cards. Soft-ask shared with ranking and Does-Sage-know-you.
 **Done (Aug 29, 2026, scenarios copy):** competence and relatedness stems no longer share "Best day at work"; autonomy stem unchanged.
 
