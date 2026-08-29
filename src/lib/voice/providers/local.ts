@@ -1,3 +1,5 @@
+import { phraseForStoredChip } from '@/lib/intake';
+
 import { cueAfterYou } from '../cue';
 import { hasCut } from '../filters';
 import { selectLibraryEntries, signalPoolFor, type LibraryEntryId } from '../library';
@@ -13,7 +15,7 @@ import type { GenerateInput, TalkGenerateInput, VoiceProvider } from './types';
 function angleFor(me: VoiceMe, day: number): string {
   const pool = signalPoolFor(me);
   if (pool.length === 0) return 'today';
-  return pool[(day - 1) % pool.length];
+  return phraseForStoredChip(pool[(day - 1) % pool.length]);
 }
 
 type ReadWriter = (day: number, angle: string) => string;

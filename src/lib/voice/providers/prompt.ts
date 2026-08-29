@@ -1,3 +1,4 @@
+import { phraseForStoredChip } from '@/lib/intake';
 import { traitPromptLines } from '@/lib/traits';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '../preset';
 
@@ -31,7 +32,8 @@ function signalPool(me: VoiceMe): string {
   const knocks = me.knocks_you_off
     .split(/,\s*/)
     .map((item) => item.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .map((item) => phraseForStoredChip(item));
   const facts = (me.facts ?? []).filter((fact) => fact.trim().length > 0).slice(0, 8);
   const lines: string[] = [];
   if (knocks.length > 0) {
@@ -40,9 +42,13 @@ function signalPool(me: VoiceMe): string {
   if (facts.length > 0) {
     lines.push(`- Remembered facts (optional; pick a different one than recent Reads used): ${facts.join('; ')}`);
   }
-  if (me.current_focus) lines.push(`- Current focus chip: ${me.current_focus}`);
-  if (me.show_up) lines.push(`- How this week feels: ${me.show_up}`);
-  if (me.recovery_style) lines.push(`- What they say pulls them back: ${me.recovery_style}`);
+  if (me.current_focus) {
+    lines.push(`- Current focus chip: ${phraseForStoredChip(me.current_focus)}`);
+  }
+  if (me.show_up) lines.push(`- How this week feels: ${phraseForStoredChip(me.show_up)}`);
+  if (me.recovery_style) {
+    lines.push(`- What they say pulls them back: ${phraseForStoredChip(me.recovery_style)}`);
+  }
   return lines.length === 0 ? '- (no extra signals)' : lines.join('\n');
 }
 
@@ -60,10 +66,16 @@ function threadTurns(turns: TalkGenerateInput['recentTurns']): string {
 function intakeContext(me: VoiceMe): string {
   const lines: string[] = [];
   if (me.evening_wind_down) lines.push(`- Evening wind-down they named: ${me.evening_wind_down}`);
-  if (me.energy_pattern) lines.push(`- When they say they have the most in the tank: ${me.energy_pattern}`);
-  if (me.recovery_style) lines.push(`- What they say pulls them back: ${me.recovery_style}`);
-  if (me.support_style) lines.push(`- What they say helps: ${me.support_style}`);
-  if (me.current_focus) lines.push(`- What they're mostly trying to do right now: ${me.current_focus}`);
+  if (me.energy_pattern) {
+    lines.push(`- When they say they have the most energy: ${phraseForStoredChip(me.energy_pattern)}`);
+  }
+  if (me.recovery_style) {
+    lines.push(`- What they say pulls them back: ${phraseForStoredChip(me.recovery_style)}`);
+  }
+  if (me.support_style) lines.push(`- What they say helps: ${phraseForStoredChip(me.support_style)}`);
+  if (me.current_focus) {
+    lines.push(`- What they're mostly trying to do right now: ${phraseForStoredChip(me.current_focus)}`);
+  }
   const traits = traitPromptLines(me);
   const intake = lines.length === 0 ? '' : `${lines.join('\n')}\n- Treat the lines above as self-report, never as a diagnosis.\n`;
   return `${intake}${traits}`;

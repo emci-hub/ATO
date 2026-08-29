@@ -1,3 +1,4 @@
+import { phraseForStoredChip } from '@/lib/intake';
 import { libraryGroundingBlock, selectLibraryEntries } from '@/lib/voice/library';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '@/lib/voice/preset';
@@ -27,7 +28,15 @@ function chipLines(me: ExploreMeSlice, chips: ExploreFocus['chips']): string {
   for (const chip of chips) {
     const value = me[chip];
     if (typeof value === 'string' && value.trim()) {
-      lines.push(`- ${chip}: ${value}`);
+      const display =
+        chip === 'knocks_you_off'
+          ? value
+              .split(/,\s*/)
+              .map((part) => phraseForStoredChip(part.trim()))
+              .filter(Boolean)
+              .join(', ')
+          : phraseForStoredChip(value);
+      lines.push(`- ${chip}: ${display}`);
     }
   }
   return lines.length === 0 ? '- (none named)' : lines.join('\n');

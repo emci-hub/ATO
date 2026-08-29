@@ -15,6 +15,7 @@ import {
   intakeProgressLabel,
   joinKnocks,
   parseKnocks,
+  phraseForStoredChip,
   selectedIntakeValues,
   voiceMeFrom,
 } from '../src/lib/intake';
@@ -104,6 +105,13 @@ async function main() {
   assert.equal(joined, 'sleep, workload');
   assert.deepEqual(parseKnocks(joined), ['sleep', 'workload']);
   ok('knocks_you_off stays a string (joined chips)');
+
+  assert.equal(phraseForStoredChip('through_it'), 'Get through something hard');
+  assert.equal(phraseForStoredChip('night_owl'), 'Night owl');
+  assert.equal(phraseForStoredChip('alone_time'), 'Alone time');
+  assert.equal(phraseForStoredChip('people/conflict'), 'People / conflict');
+  assert.equal(phraseForStoredChip('make coffee'), 'make coffee');
+  ok('stored chip ids map to chip labels; cue phrases pass through');
 
   const sample = {
     talk_style: 'even',

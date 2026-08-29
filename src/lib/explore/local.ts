@@ -1,3 +1,4 @@
+import { phraseForStoredChip } from '@/lib/intake';
 import { TRAIT_POLE_LINES, traitBand, type TraitAxis } from '@/lib/traits';
 
 import type { ExploreDraft, ExploreFocus, ExploreMeSlice } from './types';
@@ -16,7 +17,7 @@ export function composeLocalExplore(me: ExploreMeSlice, focus: ExploreFocus): Ex
   const signal = focus.signal;
   const traits = focus.traits.slice(0, 3);
   const chipCue = me.morning_cue?.trim() || 'getting up';
-  const focusChip = me.current_focus ?? 'show_up';
+  const focusChip = phraseForStoredChip(me.current_focus ?? 'show_up');
 
   let body: string;
   if (traits.length >= 2) {

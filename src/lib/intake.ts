@@ -128,6 +128,31 @@ export const SUPPORT_STYLE_VALUES: SupportStyle[] = SUPPORT_STYLE_CHIPS.map((c) 
 export const CURRENT_FOCUS_VALUES: CurrentFocus[] = CURRENT_FOCUS_CHIPS.map((c) => c.value);
 export const KNOCKS_CHIP_VALUES: KnocksChip[] = KNOCKS_CHIPS.map((c) => c.value);
 
+/**
+ * Chip ids that must never appear in Sage copy or model prompts as snake_case.
+ * Morning/evening cues stay out — their stored values are already phrases
+ * ("make coffee"), and the chip labels are "After I …" / "When I …" shapes
+ * that do not drop into a Read sentence.
+ */
+const SIGNAL_PHRASE_BY_VALUE: Record<string, string> = Object.fromEntries(
+  [
+    ...TALK_STYLE_CHIPS,
+    ...SHOW_UP_CHIPS,
+    ...KNOCKS_CHIPS,
+    ...ENERGY_PATTERN_CHIPS,
+    ...RECOVERY_STYLE_CHIPS,
+    ...SUPPORT_STYLE_CHIPS,
+    ...CURRENT_FOCUS_CHIPS,
+  ].map((chip) => [chip.value, chip.label]),
+);
+
+/** Map a stored chip id to the words on the chip. Facts / custom cues pass through. */
+export function phraseForStoredChip(value: string | null | undefined): string {
+  if (!value) return '';
+  const trimmed = value.trim();
+  return SIGNAL_PHRASE_BY_VALUE[trimmed] ?? trimmed;
+}
+
 export type CoreIntakeField =
   | 'talk_style'
   | 'show_up'

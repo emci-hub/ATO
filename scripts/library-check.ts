@@ -244,6 +244,42 @@ async function main() {
   assert.equal(LIBRARY_TEACHING_LEAK.test(talk), false);
   assert.equal(containsFrameworkTerm(talk), false);
 
+  const leakMe: VoiceMe = {
+    name: 'Riley',
+    show_up: 'building something',
+    talk_style: 'loud',
+    knocks_you_off: '',
+    morning_cue: 'make coffee',
+    current_focus: 'through_it',
+    recovery_style: 'alone_time',
+    energy_pattern: 'night_owl',
+  };
+  const leakCard = await localProvider.generate({
+    me: leakMe,
+    day: 5,
+    tone: 'lift',
+    history: [],
+    crisisToday: false,
+    previousHadCut: false,
+  });
+  assert.equal(
+    leakCard.read,
+    'Day 5 in the books. Point at it. Get through something hard can wait.',
+  );
+  assert.doesNotMatch(leakCard.read, /through_it|alone_time|night_owl|like_yourself/);
+  const leakPrompt = buildPrompt({
+    me: leakMe,
+    day: 5,
+    tone: 'lift',
+    history: [],
+    crisisToday: false,
+    previousHadCut: false,
+  });
+  assert.match(leakPrompt, /Get through something hard/);
+  assert.match(leakPrompt, /Night owl/);
+  assert.doesNotMatch(leakPrompt, /through_it|alone_time|night_owl/);
+  ok('local Reads and Gemini prompts use chip labels, never stored ids like through_it');
+
   const readDo = sharedWindow(pileCard.card.read, pileCard.card.do);
   const readTalk = sharedWindow(pileCard.card.read, talk);
   const doTalk = sharedWindow(pileCard.card.do, talk);
