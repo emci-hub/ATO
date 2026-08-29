@@ -17,6 +17,7 @@ import { EXPLORE_GUARD_FALLBACK, EXPLORE_LABEL } from '../src/lib/explore/copy';
 import { EXPLORE_FEW_SHOTS, buildExplorePrompt } from '../src/lib/explore/prompt';
 import { routeExplore } from '../src/lib/explore/route';
 import type { ExploreMeSlice, ExplorePackRow } from '../src/lib/explore/types';
+import type { DevTraceRecordInput } from '../src/lib/dev-trace';
 import {
   matchingPhrasePattern,
   PHRASE_FLAG_CLOSING,
@@ -240,6 +241,52 @@ const phraseOnly = await routeExplore(
 assert.equal(phraseOnly.pack?.entries[0]?.body, EXPLORE_GUARD_FALLBACK);
 assert.equal(phraseLogged, PHRASE_FLAG_CLOSING);
 ok('phrase-pattern miss logs phrase_flag, not jargon_flag');
+
+const explorePipe: DevTraceRecordInput[] = [];
+const localExplored = await routeExplore(
+  {
+    me: { ...chipsOnly, extraversion: 0.8 },
+    history: knockHistory,
+    aiConsent: true,
+    now: new Date('2026-08-29T15:00:00Z'),
+  },
+  {
+    useLocal: true,
+    recordTrace: async (row) => {
+      explorePipe.push(row);
+    },
+  },
+);
+assert.equal(localExplored.kind, 'pack');
+assert.ok(explorePipe.length >= 1);
+assert.equal(explorePipe[0].surface, 'explore');
+assert.deepEqual(
+  explorePipe[0].steps?.map((step) => step.step_type),
+  ['context_gather', 'model_call', 'guard_check', 'output'],
+);
+assert.equal(explorePipe[0].steps?.[0].label, 'Traits + signal + Library');
+ok('Explore logs ordered context → model → guard → output on the generic step schema');
+
+const flaggedPipe: DevTraceRecordInput[] = [];
+await routeExplore(
+  {
+    me: { ...chipsOnly, extraversion: 0.8 },
+    history: [],
+    aiConsent: true,
+    now: new Date('2026-08-29T15:00:00Z'),
+  },
+  {
+    useLocal: false,
+    generateBody: async () => 'You showed up. That is just how you are built.',
+    claimAiCall: async () => ({ ok: true as const }),
+    recordTrace: async (row) => {
+      flaggedPipe.push(row);
+    },
+  },
+);
+const guardStep = flaggedPipe[0]?.steps?.find((step) => step.step_type === 'guard_check');
+assert.equal(guardStep?.status, 'flagged');
+ok('Explore guard_check is flagged when phrase/jargon fires');
 
 const cached = await routeExplore(
   {
