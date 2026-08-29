@@ -16,6 +16,7 @@ import { RankingCard } from '@/components/ranking-card';
 import { RunningUpdateLine } from '@/components/running-update-line';
 import { TraitBandsFold } from '@/components/trait-bands-fold';
 import { KenneyCreditsCard } from '@/components/kenney-credits-card';
+import { PasswordSettingsFold } from '@/components/password-settings-fold';
 import { SageUsageFold } from '@/components/sage-usage';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -290,6 +291,7 @@ export default function YouScreen() {
 
               <CrisisRegionPicker />
               <SageUsageFold />
+              <PasswordSettingsFold />
               <KenneyCreditsCard />
             </>
           ) : (

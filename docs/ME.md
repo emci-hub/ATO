@@ -4,7 +4,7 @@
 **Twin:** Drake
 
 ## This week
-Password sign-in is a secondary auth path for App Review (`signInWithPassword` under Send code). OTP and Apple stay primary. You-tab crash/push probes are compile-time `__DEV__` only (Metro production stub) — Native crash is not on TestFlight You. Home hydrates today's Read/Do/Nudge from the Check row when a fresh install has no on-device card. `/dev-lab` is root + granted testers in TestFlight (always in local `__DEV__`); You probes stay `__DEV__`-only.
+Sign up (OTP + Apple, no password) and Log in (Apple, optional password, OTP fallback) are separate screens. Password is set in You Settings after the first OTP/Apple login; GoTrue hashes it. OTP stays for password-less users. You-tab crash/push probes are compile-time `__DEV__` only (Metro production stub) — Native crash is not on TestFlight You. Home hydrates today's Read/Do/Nudge from the Check row when a fresh install has no on-device card. `/dev-lab` is root + granted testers in TestFlight (always in local `__DEV__`); You probes stay `__DEV__`-only.
 
 Founder codes + access requests are in. `is_founder` is a root-flipped ME flag (emci is on). One unlimited invite code per founder; You shows a cosmetic Founder badge, not tied to Dev/Admin. Landing request form writes `access_requests`; `/dev-lab` Access approves (Resend single-use root code, emails live) or denies (no email). Dev Tools Hub is visible to root, to testers with a `dev_access_grants` row, and in local `__DEV__`. Card/traits/quota/fence/trace are grantable; pause, delete, and access review are not. Trace (own-account, 30 min / 20 events / 7-day expire) stores Dawn, Talk, and Explore as an ordered step sequence; one generic viewer reads any registered section.
 
@@ -22,7 +22,7 @@ Stage 8 still has three loose ends only: submit/confirm EAS binary 10 (OTA + rea
 - **Category:** Hybrid — AI-native (Sage/router) + Social (Circle/Chat) + Health/finance/kids (crisis spec, coaching tone)
 - **Landmine modules kept:** Social (report/block required) + Health/finance/kids (privacy pass, crisis static-card required, Grok critique before code on sensitive pieces)
 - **A proof (APP.md w/ non-goals):** satisfied by ATO_PLAN_v2.md.
-- **B proof (3 decisions):** satisfied — platform = iOS/Expo → TestFlight → Apple; data lives in Supabase (project `ato`); accounts = yes (email OTP via Resend + Sign in with Apple on device; password is a secondary path for the App Review demo account).
+- **B proof (3 decisions):** satisfied — platform = iOS/Expo → TestFlight → Apple; data lives in Supabase (project `ato`); accounts = yes (email OTP via Resend + Sign in with Apple on device; optional password after first login via Settings, hashed by GoTrue).
 - **First 60 seconds:** open app → Home shows today's Check (read + if-then Do) with the live pixel fixed top-right, not a large centered face, plus a small all-time Checks chip.
 - **Sage/Pixel relationship:** pixel is one character — current-you (plain, idle) on Home/Around/You, aspirational-you (growth glow/shine) on Sage. Same shell-mounted instance; glow is a Sage overlay, not a second pixel. Tap moods play on that instance. You-tab poster is identity + QR, no larger still. Shape is one of 6 hashed recipes per account; color still from `show_up`.
 - **Growth tiers (built, live):** dual-axis — presence (`me.check_count` → tier 0-3) and depth (`me.facts` → tier 0-2).

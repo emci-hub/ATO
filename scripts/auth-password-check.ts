@@ -1,10 +1,9 @@
 /**
- * Password sign-in is a secondary auth path for App Review.
+ * Split Sign up / Log in + optional Settings password.
  * Run: npm run check:auth-password
  *
- * Live password uses ATO_REVIEW_PASSWORD (not committed). OTP/Apple are
- * source-asserted as the unchanged primary paths; OTP is also pinged with
- * shouldCreateUser:false so no mail is sent.
+ * Live password uses ATO_REVIEW_PASSWORD (not committed). OTP/Apple stay
+ * primary; OTP is pinged with shouldCreateUser:false so no mail is sent.
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -28,26 +27,45 @@ function loadEnv(): Record<string, string> {
 }
 
 async function main() {
-  const auth = readFileSync(resolve(__dirname, '../src/app/auth.tsx'), 'utf8');
-  assert.match(auth, /onPress=\{sendCode\}/);
-  assert.match(auth, /supabase\.auth\.signInWithOtp/);
-  assert.match(auth, /shouldCreateUser: true/);
-  assert.match(auth, /onPress=\{handleApple\}/);
-  assert.match(auth, /signInWithApple/);
-  assert.match(auth, /Send code/);
-  ok('Send code still calls signInWithOtp; Apple button still calls handleApple');
+  const signup = readFileSync(resolve(__dirname, '../src/app/auth/index.tsx'), 'utf8');
+  const login = readFileSync(resolve(__dirname, '../src/app/auth/login.tsx'), 'utf8');
+  const settings = readFileSync(
+    resolve(__dirname, '../src/components/password-settings-fold.tsx'),
+    'utf8',
+  );
+  const you = readFileSync(resolve(__dirname, '../src/app/(tabs)/you.tsx'), 'utf8');
+  const passwordLib = readFileSync(resolve(__dirname, '../src/lib/auth-password.ts'), 'utf8');
+  const otpLib = readFileSync(resolve(__dirname, '../src/lib/auth-otp.ts'), 'utf8');
 
-  assert.match(auth, /handlePasswordSignIn/);
-  assert.match(auth, /supabase\.auth\.signInWithPassword/);
-  assert.match(auth, /Sign in with password/);
-  assert.match(auth, /secureTextEntry/);
-  assert.doesNotMatch(auth, /No password needed/);
-  ok('password is a secondary field, not the primary Send-code flow');
+  assert.match(signup, /Sign up/);
+  assert.match(signup, /sendEmailOtp\(normalizedEmail, true\)/);
+  assert.match(signup, /signInWithApple/);
+  assert.match(signup, /Send code/);
+  assert.doesNotMatch(signup, /signInWithPassword/);
+  assert.doesNotMatch(signup, /secureTextEntry/);
+  assert.doesNotMatch(signup, /placeholder="Password"/);
+  assert.doesNotMatch(signup, /handlePasswordSignIn/);
+  ok('Sign up is OTP + Apple only — no password field');
 
-  const sendCodeLabel = auth.indexOf("{busy ? 'Sending…' : 'Send code'}");
-  const passwordLabel = auth.indexOf("{busy ? 'Signing in…' : 'Sign in with password'}");
-  assert.ok(sendCodeLabel > 0 && passwordLabel > sendCodeLabel);
-  ok('Send code stays the filled primary button; password is the link below it');
+  assert.match(login, /Log in/);
+  assert.match(login, /handlePasswordSignIn/);
+  assert.match(login, /signInWithPassword/);
+  assert.match(login, /secureTextEntry/);
+  assert.match(login, /sendEmailOtp\(email, false\)/);
+  assert.match(login, /signInWithApple/);
+  assert.match(login, /Email me a code instead/);
+  assert.match(login, /LOGIN_PASSWORD_HINT/);
+  ok('Log in has Apple, optional password, and OTP fallback that does not create users');
+
+  assert.match(you, /PasswordSettingsFold/);
+  assert.match(settings, /setAuthPassword/);
+  assert.match(settings, /changeAuthPassword/);
+  assert.match(settings, /Confirm password/);
+  assert.match(passwordLib, /updateUser\(\{ password \}\)/);
+  assert.doesNotMatch(passwordLib, /console\.(log|info|debug|warn|error)\([^)]*password/);
+  assert.doesNotMatch(settings, /recordOwnDevTrace|recordTrace/);
+  assert.match(otpLib, /signInWithOtp/);
+  ok('Settings set/change uses GoTrue updateUser; password is not logged or traced');
 
   const env = loadEnv();
   const url = env.EXPO_PUBLIC_SUPABASE_URL;
@@ -58,9 +76,15 @@ async function main() {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const reviewEmail = process.env.ATO_REVIEW_EMAIL ?? 'ato.review@asstrollogs.com';
-  const reviewPassword = process.env.ATO_REVIEW_PASSWORD;
-  assert.ok(reviewPassword, 'ATO_REVIEW_PASSWORD must be set for the live demo sign-in check');
+  const reviewEmail = process.env.ATO_REVIEW_EMAIL ?? env.ATO_REVIEW_EMAIL ?? 'ato.review@asstrollogs.com';
+  const reviewPassword = process.env.ATO_REVIEW_PASSWORD ?? env.ATO_REVIEW_PASSWORD;
+
+  const { data: mapped, error: mapError } = await supabase.rpc('login_email_for_identifier', {
+    p_identifier: 'riley',
+  });
+  assert.equal(mapError, null, mapError?.message ?? 'handle lookup failed');
+  assert.equal(mapped, reviewEmail);
+  ok('login identifier @riley maps to the review email');
 
   const bad = await supabase.auth.signInWithPassword({
     email: reviewEmail,
@@ -70,25 +94,33 @@ async function main() {
   assert.equal(bad.data.session, null);
   ok('wrong password is rejected');
 
-  const good = await supabase.auth.signInWithPassword({
-    email: reviewEmail,
-    password: reviewPassword,
-  });
-  assert.equal(good.error, null, good.error?.message ?? 'password sign-in failed');
-  assert.ok(good.data.session, 'password sign-in must return a session');
-  assert.equal(good.data.user?.email, reviewEmail);
-  const { data: me, error: meError } = await supabase.from('me').select('handle').single();
-  assert.equal(meError, null, meError?.message ?? 'me fetch failed');
-  assert.equal(me?.handle, 'riley');
-  ok('ato.review@asstrollogs.com signInWithPassword returns a session for @riley');
-  await supabase.auth.signOut();
+  if (!reviewPassword) {
+    console.log('  ⚠ ATO_REVIEW_PASSWORD unset — skipping live password sign-in');
+  } else {
+    const good = await supabase.auth.signInWithPassword({
+      email: reviewEmail,
+      password: reviewPassword,
+    });
+    assert.equal(good.error, null, good.error?.message ?? 'password sign-in failed');
+    assert.ok(good.data.session, 'password sign-in must return a session');
+    assert.equal(good.data.user?.email, reviewEmail);
+    const { data: me, error: meError } = await supabase.from('me').select('handle').single();
+    assert.equal(meError, null, meError?.message ?? 'me fetch failed');
+    assert.equal(me?.handle, 'riley');
+
+    const { data: hasPw, error: hasPwError } = await supabase.rpc('auth_has_password');
+    assert.equal(hasPwError, null, hasPwError?.message ?? 'auth_has_password failed');
+    assert.equal(hasPw, true, 'review account must report a stored password hash');
+    ok('ato.review@asstrollogs.com signInWithPassword returns a session for @riley');
+    await supabase.auth.signOut();
+  }
 
   const otpPing = await supabase.auth.signInWithOtp({
     email: `otp-unaffected-check-${Date.now()}@asstrollogs.com`,
     options: { shouldCreateUser: false },
   });
   assert.ok(otpPing.error, 'unknown email with shouldCreateUser false must not create a user');
-  ok('OTP endpoint still answers; Send-code path is unchanged (no mail sent)');
+  ok('OTP endpoint still answers; login Send-code path does not create users');
 
   console.log(`\nauth-password-check: ${passed}/${passed} passed`);
 }

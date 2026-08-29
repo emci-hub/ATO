@@ -6,7 +6,7 @@
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
 
 ## On
-**Password sign-in is a secondary auth path for App Review.** Email + Send code (OTP) and Apple Sign-In stay the primary flows. The auth screen has a password field and a "Sign in with password" link under Send code so the seeded `ato.review@asstrollogs.com` demo account can use `signInWithPassword`. JS-only — same OTA channel, no new native module.
+**Sign up and Log in are separate screens.** Sign up is email OTP (`shouldCreateUser: true`) plus Apple — no password field. Log in is Apple, optional email/@handle + password (`signInWithPassword`), and email OTP fallback (`shouldCreateUser: false`). Password is optional: set or change it in You Settings after OTP or Apple; GoTrue bcrypt-hashes on `auth.users.encrypted_password`. OTP keeps working if they never set one. JS-only — same OTA channel, no new native module.
 
 **You-tab crash/push probes are off TestFlight.** "Test crash reporting" / Native crash and "Test notifications" never render in production. Compile-time `__DEV__` cut (`Stack.Protected` + in-file gate + Metro production stub). You does not statically import those cards. `triggerNativeTestCrash` is a no-op when `__DEV__` is false. `/dev-lab` is a different gate — see Founder/dev-access below.
 
@@ -82,6 +82,8 @@
 - Wave 3 — Plugs (deal rows) + Night wall (going exists; wall can surface)
 
 ## Done
+**Sign up / Log in split is in.** Separate screens: Sign up is OTP + Apple with no password field; Log in is Apple, optional password, and OTP fallback. You Settings set/change password via `supabase.auth.updateUser` (GoTrue hash). OTP still works if they never set one.
+
 **Pipeline-blueprint Trace is in** (commits `f6a43f5`, `558f2fe`, `1ae6105`, `dcc8f8b`, `52ff462`). Dawn, Talk, and Explore log an ordered step sequence (context → model → guard → output) into the existing own-account capture; Around is not wired. One generic viewer over the section registry. **OTA update published — Aug 29, 2026.**
 
 See git history for the full Stage 1–8 build log. Sage content model v2, Check window + recap text cap, Home milestone badges (Stage 13 part 1), Does Sage know you (Stage 13 part 2), Home reveal (part 3), forced ranking (part 4), scenario swipe-deck (part 5), Explore (Home inner tab + feedback table + phrase-pattern guard), nav tap moods, UI polish, Wave 2 Stage 2, Stage 9 first pass, Settings identity-chip editing, Stage 11 optional fast-entry, Sage voice pass (`sage.txt`, `voice_preset`, jargon guard), the Sage/You UI-bug bundle, the original 8-ball orb, Home/Talk content quality, nav-bar appearance theming, the Talk output fence, the six extra trait axes + direct-vs-inferred sources + `last_touched`, Library copy, and Stage 12 Library grounding are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
