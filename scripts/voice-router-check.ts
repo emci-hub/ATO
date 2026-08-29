@@ -500,6 +500,34 @@ assert.ok(clearTalk.reply && clearTalk.reply.length > 0);
 assert.equal(mainCalls, 1, 'main call happened for a clear message');
 ok('clear message → reply generated via the main router call');
 
+const talkPipe: DevTraceRecordInput[] = [];
+const talkTraced = await routeTalkReply(
+  {
+    me: ME,
+    message: 'How\u2019s my week going?',
+    checkCount: 4,
+    history: d1,
+    aiConsent: true,
+    todayCard: { read: 'Keep it small.', do: 'After coffee, sit one minute.' },
+  },
+  {
+    config: localConfig,
+    ...dev,
+    recordTrace: async (row) => {
+      talkPipe.push(row);
+    },
+  },
+);
+assert.equal(talkTraced.kind, 'reply');
+assert.equal(talkPipe[0]?.surface, 'talk');
+assert.deepEqual(
+  talkPipe[0]?.steps?.map((step) => step.step_type),
+  ['context_gather', 'model_call', 'guard_check', 'output'],
+);
+assert.equal(talkPipe[0]?.steps?.[0].label, 'ME + card + sage.txt');
+assert.equal(talkPipe[0]?.steps?.[3].status, 'ok');
+ok('Talk generation logs ordered context → model → guard → output on surface talk');
+
 // Cap hit → honest empty, zero generateTalk calls.
 let quotaCalls = 0;
 const quotaSpy: VoiceProvider = {

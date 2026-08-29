@@ -1,5 +1,15 @@
 import { detectCrisis as defaultDetectCrisis, type CrisisDetection } from '@/lib/crisis/detect';
-import { libraryLinesFor, traitSignalsFromMe, type DevTraceRecordInput } from '@/lib/dev-trace';
+import {
+  appendTraceStep,
+  clipTraceText,
+  libraryLinesFor,
+  summarizeLibrary,
+  summarizeMe,
+  traitSignalsFromMe,
+  traceGuardResult,
+  type DevTraceRecordInput,
+  type DevTraceStep,
+} from '@/lib/dev-trace';
 
 import { VOICE_CONFIG, type VoiceConfig } from './config';
 import { containsFrameworkTerm } from './framework-fence';
@@ -132,6 +142,23 @@ export async function routeTalkReply(
   const providerLabel = noGeminiKey ? 'local (no gemini key configured)' : provider.label;
   if (noGeminiKey) provider = providers.local;
 
+  const library = libraryLinesFor(input.me, {
+    day: input.checkCount + 1,
+    surface: 'talk',
+    message: input.message,
+  });
+  const steps: DevTraceStep[] = [];
+  const cardSummary = input.todayCard
+    ? `Read: ${clipTraceText(input.todayCard.read, 80)} · Do: ${clipTraceText(input.todayCard.do, 80)}`
+    : 'no today card';
+  appendTraceStep(steps, {
+    step_type: 'context_gather',
+    label: 'ME + card + sage.txt',
+    input_summary: `${summarizeMe(input.me)} · message="${clipTraceText(input.message, 120)}"`,
+    output_summary: `${cardSummary} · sage.txt register · ${summarizeLibrary(library)}`,
+    status: 'ok',
+  });
+
   const talkInput = {
     me: input.me,
     message: input.message,
@@ -160,7 +187,7 @@ export async function routeTalkReply(
           provider: provider.id,
           dev: trace(true, `${providerLabel} (jargon)`),
         };
-        await emitTalkTrace(deps, input, lastRaw, JARGON_FALLBACK_TALK, flag);
+        await emitTalkTrace(deps, input, library, steps, providerLabel, lastRaw, JARGON_FALLBACK_TALK, flag);
         return result;
       }
       const result: TalkReplyResult = {
@@ -169,14 +196,14 @@ export async function routeTalkReply(
         provider: provider.id,
         dev: trace(true, providerLabel),
       };
-      await emitTalkTrace(deps, input, lastRaw, reply, null);
+      await emitTalkTrace(deps, input, library, steps, providerLabel, lastRaw, reply, null);
       return result;
     }
     lastGuard = 'framework-echo';
   }
 
   // Both drafts named a type/label — show nothing rather than a blocked line.
-  await emitTalkTrace(deps, input, lastRaw, null, lastGuard);
+  await emitTalkTrace(deps, input, library, steps, providerLabel, lastRaw, null, lastGuard);
   return {
     kind: 'empty',
     provider: provider.id,
@@ -187,23 +214,45 @@ export async function routeTalkReply(
 async function emitTalkTrace(
   deps: TalkReplyDeps,
   input: TalkReplyInput,
+  library: ReturnType<typeof libraryLinesFor>,
+  steps: DevTraceStep[],
+  providerLabel: string,
   rawBefore: string | null,
   rawAfter: string | null,
   guardFired: string | null,
 ): Promise<void> {
   if (!deps.recordTrace) return;
+  appendTraceStep(steps, {
+    step_type: 'model_call',
+    label: `Talk · ${providerLabel}`,
+    input_summary: `message="${clipTraceText(input.message, 120)}" · sage.txt`,
+    output_summary: rawBefore ?? 'empty draft',
+    status: rawBefore ? 'ok' : 'failed',
+  });
+  const guard = traceGuardResult([guardFired]);
+  appendTraceStep(steps, {
+    step_type: 'guard_check',
+    label: 'Fence / jargon',
+    input_summary: rawBefore ?? '—',
+    output_summary: guard.output_summary,
+    status: guard.status,
+  });
+  appendTraceStep(steps, {
+    step_type: 'output',
+    label: 'Talk reply',
+    input_summary: rawBefore ?? '—',
+    output_summary: rawAfter ?? 'nothing shown',
+    status: rawAfter ? 'ok' : 'failed',
+  });
   await deps
     .recordTrace({
-      surface: 'sage',
-      libraryLines: libraryLinesFor(input.me, {
-        day: input.checkCount + 1,
-        surface: 'talk',
-        message: input.message,
-      }),
+      surface: 'talk',
+      libraryLines: library,
       traitSignals: traitSignalsFromMe(input.me),
       rawBefore,
       rawAfter,
-      guardFired,
+      guardFired: guard.guardFired,
+      steps,
     })
     .catch(() => {});
 }
