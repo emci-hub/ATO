@@ -2,8 +2,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 
+import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { KENNEY_CC0_LINE, kenneyCredits } from '@/lib/kenney/credits';
 
@@ -15,15 +15,12 @@ async function openUrl(url: string) {
   }
 }
 
-/** Static Kenney attribution for the You-tab settings area. */
+/** Collapsed-by-default Kenney attribution, same fold as Sage today. */
 export function KenneyCreditsCard() {
   const packs = kenneyCredits();
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
-      <ThemedText type="smallBold" style={styles.heading}>
-        Credits
-      </ThemedText>
+    <SettingsFold title="Credits">
       <ThemedText type="small" themeColor="textSecondary" style={styles.lede}>
         Pixel art in ATO is from Kenney asset packs actually bundled in the app.
       </ThemedText>
@@ -48,19 +45,11 @@ export function KenneyCreditsCard() {
           </ThemedText>
         </View>
       ))}
-    </ThemedView>
+    </SettingsFold>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: Spacing.four,
-    padding: Spacing.two,
-  },
-  heading: {
-    paddingHorizontal: Spacing.three,
-    paddingTop: Spacing.two,
-  },
   lede: {
     paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.one,

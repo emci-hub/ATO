@@ -93,6 +93,7 @@ export function OptionalStep({
   onSlider,
   onClose,
   onDisagree,
+  onBack,
   onSkipThis,
   onSkipRest,
   onContinue,
@@ -107,6 +108,7 @@ export function OptionalStep({
   onSlider: (axis: (typeof SLIDER_AXES)[number], value: number) => void;
   onClose: (value: string) => void;
   onDisagree: (value: string) => void;
+  onBack: () => void;
   onSkipThis: () => void;
   onSkipRest: () => void;
   onContinue: () => void;
@@ -181,6 +183,12 @@ export function OptionalStep({
 
       <View style={styles.navRow}>
         <Pressable
+          onPress={onBack}
+          disabled={busy}
+          style={({ pressed }) => [styles.backButton, pressed && styles.pressed, busy && styles.disabled]}>
+          <ThemedText type="smallBold">Back</ThemedText>
+        </Pressable>
+        <Pressable
           onPress={onContinue}
           disabled={busy}
           style={({ pressed }) => [
@@ -224,6 +232,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.two,
     marginTop: Spacing.two,
+  },
+  backButton: {
+    paddingVertical: Spacing.three,
+    paddingHorizontal: Spacing.three,
   },
   submitButton: {
     borderRadius: Spacing.three,

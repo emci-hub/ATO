@@ -210,8 +210,9 @@ export default function YouScreen() {
                   Around
                 </ThemedText>
                 <ThemedText type="small" themeColor="textSecondary" style={styles.inviteHint}>
-                  When you mark going, your face can show on that night. Colors still
-                  count either way.
+                  When you mark yourself as going to a show, people there can see your
+                  face. Your color still counts either way, whether or not you show your
+                  face.
                 </ThemedText>
                 <Pressable
                   onPress={() => {
@@ -219,7 +220,9 @@ export default function YouScreen() {
                   }}
                   style={({ pressed }) => [styles.inviteRow, pressed && styles.pressed]}>
                   <ThemedText type="smallBold">
-                    {me.visible !== false ? 'Face is visible when I go' : 'Face is hidden when I go'}
+                    {me.visible !== false
+                      ? "Show my face on nights I'm going"
+                      : "Don't show my face on nights I'm going"}
                   </ThemedText>
                 </Pressable>
               </ThemedView>

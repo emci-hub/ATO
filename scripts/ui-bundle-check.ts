@@ -107,6 +107,11 @@ const fetchFn = quotaServer.slice(quotaServer.indexOf('export async function fet
 assert.doesNotMatch(fetchFn, /claim_ai_call/);
 ok('You-tab usage fold is collapsed by default and reads without claiming');
 
+const creditsUi = read('src/components/kenney-credits-card.tsx');
+assert.match(creditsUi, /SettingsFold title="Credits"/);
+assert.doesNotMatch(creditsUi, /defaultOpen=\{true\}/);
+ok('Credits uses the same collapsed SettingsFold as Sage today');
+
 const you = read('src/app/(tabs)/you.tsx');
 assert.doesNotMatch(you, /\{me\.name\}/);
 assert.doesNotMatch(you, /profileCard/);

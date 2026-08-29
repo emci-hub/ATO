@@ -169,6 +169,8 @@ export interface CoreIntakeQuestion {
   /** 1-based index in the 9. */
   n: number;
   prompt: string;
+  /** Optional second line under the question. */
+  helper?: string;
   multi?: boolean;
   chips: IntakeChip[];
 }
@@ -214,7 +216,8 @@ export const CORE_INTAKE_QUESTIONS: CoreIntakeQuestion[] = [
   {
     field: 'energy_pattern',
     n: 6,
-    prompt: 'When do you usually have the most in the tank? This times when ATO nudges you.',
+    prompt: 'When do you have the most energy during the day?',
+    helper: 'Helps us pick a good time to check in with you.',
     chips: ENERGY_PATTERN_CHIPS,
   },
   {

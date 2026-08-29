@@ -484,6 +484,14 @@ export default function OnboardingScreen() {
                   }}
                   onClose={optionalIndex === 7 ? setCloseSecondId : setCloseId}
                   onDisagree={setDisagreeId}
+                  onBack={() => {
+                    setFormError(null);
+                    if (optionalIndex === 0) {
+                      setPhase('optional-gate');
+                      return;
+                    }
+                    setOptionalIndex((i) => i - 1);
+                  }}
                   onSkipThis={() => {
                     if (optionalIndex >= OPTIONAL_INTAKE_TOTAL - 1) {
                       void goHome();
@@ -735,20 +743,24 @@ function IntakeStep({
 }) {
   const last = question.n === CORE_INTAKE_TOTAL;
   const canContinue = selected.length > 0;
+  const title =
+    question.field === 'knocks_you_off' || question.helper
+      ? question.prompt
+      : INTAKE_SETTINGS_LABELS[question.field];
+  const lede =
+    question.field === 'knocks_you_off' ? null : (question.helper ?? question.prompt);
 
   return (
     <>
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.progress}>
         {intakeProgressLabel(question.n)}
       </ThemedText>
-      <ThemedText type="subtitle">
-        {question.field === 'knocks_you_off' ? question.prompt : INTAKE_SETTINGS_LABELS[question.field]}
-      </ThemedText>
-      {question.field === 'knocks_you_off' ? null : (
+      <ThemedText type="subtitle">{title}</ThemedText>
+      {lede ? (
         <ThemedText themeColor="textSecondary" style={styles.lede}>
-          {question.prompt}
+          {lede}
         </ThemedText>
-      )}
+      ) : null}
 
       <ChipGroup
         chips={question.chips}

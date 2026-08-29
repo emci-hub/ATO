@@ -227,12 +227,15 @@ function CardSimulator() {
     <View style={styles.section}>
       <ThemedText type="smallBold">Card simulator</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        Local generator, consent granted. Streak is check_count (bank below 3). Gap is days
-        since the last Check — 7 days leaves 3–6 closed.
+        Local generator, consent granted. Use this to preview a Read/Do/Nudge without
+        spending a real quota. Streak below 3 uses the written bank, not the generator.
       </ThemedText>
 
       <ThemedText type="code" themeColor="textSecondary">
-        streak
+        streak — Checks already logged (journey length)
+      </ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Not a consecutive-days streak. 0–2 stay on the Day 1–3 bank; 3+ generate.
       </ThemedText>
       <View style={styles.tabs}>
         {DEV_LAB_STREAKS.map((n) => (
@@ -241,7 +244,7 @@ function CardSimulator() {
       </View>
 
       <ThemedText type="code" themeColor="textSecondary">
-        recent log / skip
+        recent log / skip — last few days of the fake history
       </ThemedText>
       <View style={styles.tabs}>
         {DEV_LAB_PATTERNS.map((row) => (
@@ -255,7 +258,11 @@ function CardSimulator() {
       </View>
 
       <ThemedText type="code" themeColor="textSecondary">
-        days since last open
+        gap — calendar days since the last Check
+      </ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        1–2 still leave yesterday (and 2-days-ago) loggable. 7 closes days 3–6; only
+        today and the 2-day window stay open.
       </ThemedText>
       <View style={styles.tabs}>
         {DEV_LAB_GAPS.map((n) => (
@@ -270,7 +277,11 @@ function CardSimulator() {
 
       <ThemedView type="backgroundElement" style={styles.card}>
         <ThemedText type="code" themeColor="textSecondary">
-          window · today is journey day {window.todayDay}
+          window — days that can still take a Check
+        </ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          Journey day {window.todayDay} is today&apos;s number since signup day 1, not a
+          streak count.
         </ThemedText>
         <ThemedText type="small">
           Open: {window.open.length === 0 ? 'none' : window.open.map((slot) => offsetLabel(slot.offset)).join(', ')}

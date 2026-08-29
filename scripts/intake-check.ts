@@ -67,6 +67,24 @@ async function main() {
   assert.match(onboarding, /ChipGroup/);
   ok('onboarding is a chip wizard with a visible progress label');
 
+  const energyQ = CORE_INTAKE_QUESTIONS.find((q) => q.field === 'energy_pattern');
+  assert.equal(energyQ?.prompt, 'When do you have the most energy during the day?');
+  assert.equal(energyQ?.helper, 'Helps us pick a good time to check in with you.');
+  ok('Q6 energy-pattern question and helper match the locked copy');
+
+  const intakeStep = onboarding.slice(
+    onboarding.indexOf('function IntakeStep('),
+    onboarding.indexOf('function Field('),
+  );
+  assert.match(intakeStep, />Back</);
+  assert.match(onboarding, /setIntakeIndex\(\(i\) => i - 1\)/);
+  const onBackFn = onboarding.slice(
+    onboarding.indexOf('onBack={() => {'),
+    onboarding.indexOf('onContinue={goNextIntake}'),
+  );
+  assert.doesNotMatch(onBackFn, /setTalkStyle|setEnergyPattern|setCurrentFocus/);
+  ok('each core intake screen has Back; going back does not clear answers');
+
   assert.match(meLib, /export const RESERVED_HANDLES/);
   assert.match(meLib, /'ato'/);
   assert.match(meLib, /'astrollogs'/);

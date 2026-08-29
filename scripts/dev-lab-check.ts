@@ -48,6 +48,12 @@ assert.deepEqual([...DEV_LAB_GAPS], [1, 2, 3, 7]);
 assert.ok(DEV_LAB_PATTERNS.some((row) => row.id === 'two-skips'));
 ok('simulator exposes streak, pattern, and gap controls');
 
+assert.match(hub, /streak — Checks already logged/);
+assert.match(hub, /gap — calendar days since the last Check/);
+assert.match(hub, /Journey day/);
+assert.match(hub, /window — days that can still take a Check/);
+ok('card simulator labels say what streak, gap, window, and journey day mean');
+
 const history = buildSimHistory(7, ['done', 'skipped', 'done', 'skipped']);
 assert.equal(history.length, 7);
 assert.equal(history.filter((row) => row.status === 'done').length, 5);
