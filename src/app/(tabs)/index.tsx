@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { MilestoneBadges } from '@/components/check-milestone-badge';
+import { ExplorePanel } from '@/components/explore-panel';
+import { HomeInnerTabs, type HomeInnerTab } from '@/components/home-inner-tabs';
 import { MissedCheckCard } from '@/components/missed-check-card';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
 import { SageKnowsCard } from '@/components/sage-knows-card';
@@ -29,6 +31,7 @@ import { voiceMeFrom } from '@/lib/intake';
 import { homeSageLabel, homeSageLede, NUDGE_LABEL, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { persistRoutedCard, saveTodayCard, todayCardFromCheck } from '@/lib/today-card';
 import { resolveReveal } from '@/lib/reveal';
+import { EXPLORE_LEDE } from '@/lib/explore/copy';
 import { routeVoiceCard } from '@/lib/voice/router';
 import { logJargonGuard } from '@/lib/voice/quota-server';
 import type { VoiceCard, VoiceSource } from '@/lib/voice/types';
@@ -48,6 +51,7 @@ export default function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
   const [crisisToday, setCrisisToday] = useState(false);
   const [crisisYesterday, setCrisisYesterday] = useState(false);
+  const [homeTab, setHomeTab] = useState<HomeInnerTab>('today');
 
   const reloadChecks = useCallback(async () => {
     if (!userId) return;
@@ -207,7 +211,11 @@ export default function HomeScreen() {
           <View style={styles.header}>
             <ThemedText type="subtitle">Home</ThemedText>
             <ThemedText themeColor="textSecondary">
-              {params.focus === 'check' ? 'Check today.' : homeSageLede(theme.id)}
+              {homeTab === 'explore'
+                ? EXPLORE_LEDE
+                : params.focus === 'check'
+                  ? 'Check today.'
+                  : homeSageLede(theme.id)}
             </ThemedText>
             <MilestoneBadges
               checkCount={growth.checkCount}
@@ -215,8 +223,19 @@ export default function HomeScreen() {
               checks={checks}
               timeZone={me?.timezone ?? 'UTC'}
             />
+            <HomeInnerTabs value={homeTab} onChange={setHomeTab} />
           </View>
 
+          {homeTab === 'explore' && me ? (
+            <ExplorePanel
+              me={me}
+              history={checksToHistory(checks)}
+              crisisToday={crisisToday}
+            />
+          ) : null}
+
+          {homeTab === 'today' ? (
+            <>
           {card ? (
             <>
               <ThemedView type="backgroundElement" style={styles.todayCard}>
@@ -414,6 +433,8 @@ export default function HomeScreen() {
                 <ThemedText themeColor="textSecondary">›</ThemedText>
               </Pressable>
             </ThemedView>
+          ) : null}
+            </>
           ) : null}
         </ScrollView>
       </SafeAreaView>

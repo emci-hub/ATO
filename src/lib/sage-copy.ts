@@ -69,3 +69,6 @@ export const RANKING_SKIP = 'Not this week';
 export const SCENARIO_LABEL = 'Gut call';
 
 export const SCENARIO_LEDE = 'Swipe or tap. One pick.';
+
+/** Home inner tab — periodic Sage observations. Not a daily card. */
+export { EXPLORE_LABEL, TODAY_LABEL } from '@/lib/explore/copy';

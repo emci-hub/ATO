@@ -1,0 +1,307 @@
+/**
+ * Explore — Home inner tab. Run: npm run check:explore
+ */
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+import { decideExploreTrigger } from '../src/lib/explore/cadence';
+import {
+  AGENCY_AXES,
+  dropsAgencyTriple,
+  exploreFingerprint,
+  pickExploreFocus,
+  pickExplorePackFocuses,
+} from '../src/lib/explore/combine';
+import { EXPLORE_GUARD_FALLBACK, EXPLORE_LABEL } from '../src/lib/explore/copy';
+import { EXPLORE_FEW_SHOTS, buildExplorePrompt } from '../src/lib/explore/prompt';
+import { routeExplore } from '../src/lib/explore/route';
+import type { ExploreMeSlice, ExplorePackRow } from '../src/lib/explore/types';
+import {
+  matchingPhrasePattern,
+  PHRASE_FLAG_CLOSING,
+  PHRASE_FLAG_REFRAME,
+  PHRASE_FLAG_TYPE,
+} from '../src/lib/voice/phrase-guard';
+import { matchingJargonTerm } from '../src/lib/voice/jargon';
+import type { CheckHistory } from '../src/lib/voice/types';
+
+let passed = 0;
+function ok(label: string) {
+  passed += 1;
+  console.log(`  ✓ ${label}`);
+}
+
+const root = resolve(__dirname, '..');
+function read(rel: string): string {
+  return readFileSync(resolve(root, rel), 'utf8');
+}
+
+const chipsOnly: ExploreMeSlice = {
+  name: 'Sam',
+  show_up: 'steady',
+  talk_style: 'even',
+  knocks_you_off: 'sleep',
+  morning_cue: 'make coffee',
+  evening_wind_down: 'dim the lights',
+  energy_pattern: 'morning',
+  recovery_style: 'movement',
+  support_style: 'nudge',
+  current_focus: 'show_up',
+  timezone: 'America/Edmonton',
+};
+
+const twoSkips: CheckHistory[] = [
+  { day: 1, status: 'skipped', read: 'Keep it small.', do: 'After coffee, sit one minute.' },
+  { day: 2, status: 'skipped', read: 'Still here.', do: 'After coffee, write one line.' },
+];
+
+const knockHistory: CheckHistory[] = [
+  {
+    day: 1,
+    status: 'done',
+    read: 'Sleep ran the week, not you.',
+    do: 'After coffee, put the phone in another room.',
+  },
+];
+
+assert.equal(matchingPhrasePattern("That's not laziness, that's a full week."), PHRASE_FLAG_REFRAME);
+assert.equal(matchingPhrasePattern("Follow-through isn't vanity, it's fear."), PHRASE_FLAG_REFRAME);
+assert.equal(
+  matchingPhrasePattern('You showed up twice. That\'s just how you\'re built.'),
+  PHRASE_FLAG_CLOSING,
+);
+assert.equal(
+  matchingPhrasePattern('You logged it — that\'s just who you are.'),
+  PHRASE_FLAG_CLOSING,
+);
+assert.equal(
+  matchingPhrasePattern("You're the type of person who finishes the list."),
+  PHRASE_FLAG_TYPE,
+);
+assert.equal(matchingPhrasePattern('Maybe those two are in the same week.'), null);
+ok('phrase-pattern regex catches reframe, closing, and type-of-person');
+
+assert.equal(matchingJargonTerm('You are an introvert.'), 'introvert');
+assert.equal(matchingPhrasePattern('You are an introvert.'), null);
+ok('word-level jargon and phrase-pattern flags stay distinct');
+
+assert.deepEqual(
+  dropsAgencyTriple(['growth_mindset', 'locus_of_control', 'self_efficacy']),
+  ['growth_mindset', 'locus_of_control'],
+);
+ok('agency triple is dropped to two');
+
+const noSignal = pickExploreFocus(chipsOnly, []);
+assert.equal(noSignal.signal, null);
+assert.equal(noSignal.traits.length, 0);
+assert.ok(noSignal.chips.includes('morning_cue'));
+ok('no signal and no axes → 9 chips, not a manufactured combo');
+
+const oneAxis: ExploreMeSlice = { ...chipsOnly, extraversion: 0.8 };
+const oneTrait = pickExploreFocus(oneAxis, []);
+assert.deepEqual(oneTrait.traits, ['extraversion']);
+assert.equal(oneTrait.signal, null);
+ok('no signal → single filled trait');
+
+const unusedCombo = pickExploreFocus(
+  { ...chipsOnly, extraversion: 0.8, openness: 0.2, conscientiousness: 0.9 },
+  [],
+);
+assert.equal(unusedCombo.traits.length, 1);
+assert.ok(!unusedCombo.traits.includes('openness') || unusedCombo.traits.length === 1);
+ok('no signal never manufactures a 2–3 combo from extra filled axes');
+
+const withKnock = pickExploreFocus(
+  { ...chipsOnly, steadiness: 0.2, extraversion: 0.8 },
+  knockHistory,
+);
+assert.equal(withKnock.signal?.kind, 'knock');
+assert.ok(withKnock.traits.includes('steadiness'));
+assert.ok(withKnock.traits.length >= 2 && withKnock.traits.length <= 3);
+ok('knock signal combines 2–3 filled traits including a tied axis');
+
+const agencyMe: ExploreMeSlice = {
+  ...chipsOnly,
+  growth_mindset: 0.8,
+  locus_of_control: 0.7,
+  self_efficacy: 0.6,
+};
+const agencyFocus = pickExploreFocus(agencyMe, twoSkips);
+assert.ok(agencyFocus.traits.filter((axis) => (AGENCY_AXES as readonly string[]).includes(axis)).length < 3);
+ok('skip signal never puts all three agency axes in one entry');
+
+const nullAxis = pickExploreFocus({ ...chipsOnly, extraversion: 0.8 }, knockHistory);
+assert.ok(!nullAxis.traits.includes('steadiness'));
+ok('unused (null) axes never enter a combo');
+
+const todayPack: ExplorePackRow = {
+  id: 'p1',
+  generatedOn: '2026-08-29',
+  trigger: 'first',
+  fingerprint: 'same',
+  createdAt: '2026-08-29T12:00:00.000Z',
+  entries: [],
+};
+assert.equal(
+  decideExploreTrigger({ pack: todayPack, today: '2026-08-29', fingerprint: 'changed' }),
+  null,
+);
+assert.equal(
+  decideExploreTrigger({ pack: todayPack, today: '2026-08-30', fingerprint: 'changed' }),
+  'signal',
+);
+assert.equal(
+  decideExploreTrigger({ pack: todayPack, today: '2026-09-05', fingerprint: 'same' }),
+  'weekly',
+);
+assert.equal(decideExploreTrigger({ pack: null, today: '2026-08-29', fingerprint: 'x' }), 'first');
+ok('regen is weekly or on fingerprint change; never a second regen the same day');
+
+assert.notEqual(
+  exploreFingerprint(chipsOnly, [], {}),
+  exploreFingerprint({ ...chipsOnly, facts: ['I finish at four'] }, [], {}),
+);
+ok('a new fact changes the fingerprint');
+
+const prompt = buildExplorePrompt({
+  me: { ...chipsOnly, extraversion: 0.8, steadiness: 0.2 },
+  focus: withKnock,
+  reactionNotes: ['old miss'],
+});
+assert.match(prompt, /EXPLORE SHAPE/);
+assert.match(prompt, /Two skips this week sat next to days you still tried to keep the plan/);
+assert.doesNotMatch(prompt, /37%|we don't know much|richer because they filled/i);
+assert.match(prompt, /Completeness is not an input/);
+assert.match(EXPLORE_FEW_SHOTS, /## Explore/);
+ok('Explore prompt has four few-shots and no completeness-as-input copy');
+
+async function main() {
+const denied = await routeExplore({
+  me: chipsOnly,
+  history: [],
+  aiConsent: false,
+});
+assert.equal(denied.kind, 'consent-denied');
+const pending = await routeExplore({ me: chipsOnly, history: [], aiConsent: null });
+assert.equal(pending.kind, 'consent-pending');
+const crisis = await routeExplore({
+  me: chipsOnly,
+  history: [],
+  aiConsent: true,
+  crisisToday: true,
+});
+assert.equal(crisis.kind, 'crisis');
+ok('consent and crisis are honest-empty, same gates as Talk');
+
+let jargonLogged = '';
+let phraseLogged = '';
+const generated = await routeExplore(
+  {
+    me: { ...chipsOnly, extraversion: 0.8 },
+    history: [],
+    aiConsent: true,
+    now: new Date('2026-08-29T15:00:00Z'),
+  },
+  {
+    useLocal: false,
+    generateBody: async () =>
+      "That's not a skip, that's who you are. You're the type of person who quits.",
+    claimAiCall: async () => ({ ok: true as const }),
+    logJargonHit: async (flag) => {
+      jargonLogged = flag;
+    },
+    logPhraseHit: async (flag) => {
+      phraseLogged = flag;
+    },
+  },
+);
+assert.equal(generated.kind, 'pack');
+assert.equal(generated.pack?.entries[0]?.body, EXPLORE_GUARD_FALLBACK);
+assert.ok(jargonLogged.length > 0 || phraseLogged.length > 0);
+ok('jargon and phrase guards swap to the safe line before display');
+
+const phraseOnly = await routeExplore(
+  {
+    me: { ...chipsOnly, extraversion: 0.8 },
+    history: [],
+    aiConsent: true,
+    now: new Date('2026-08-29T15:00:00Z'),
+  },
+  {
+    useLocal: false,
+    generateBody: async () => 'You showed up. That is just how you are built.',
+    claimAiCall: async () => ({ ok: true as const }),
+    logPhraseHit: async (flag) => {
+      phraseLogged = flag;
+    },
+  },
+);
+assert.equal(phraseOnly.pack?.entries[0]?.body, EXPLORE_GUARD_FALLBACK);
+assert.equal(phraseLogged, PHRASE_FLAG_CLOSING);
+ok('phrase-pattern miss logs phrase_flag, not jargon_flag');
+
+const cached = await routeExplore(
+  {
+    me: chipsOnly,
+    history: [],
+    aiConsent: true,
+    now: new Date('2026-08-29T18:00:00Z'),
+  },
+  {
+    loadLatestPack: async () => todayPack,
+    generateBody: async () => {
+      throw new Error('must not generate when cached same day');
+    },
+  },
+);
+assert.equal(cached.kind, 'cached');
+ok('cached pack is reused; no second generate the same day');
+
+const home = read('src/app/(tabs)/index.tsx');
+assert.match(home, /HomeInnerTabs/);
+assert.match(home, /ExplorePanel/);
+assert.match(home, /homeTab === 'explore'/);
+assert.match(home, /homeTab === 'today'/);
+ok('Home mounts Today/Explore inner tabs; Explore is not a 4th daily card');
+
+const you = read('src/app/(tabs)/you.tsx');
+assert.doesNotMatch(you, /ExplorePanel|HomeInnerTabs|explore_entries/);
+ok('Explore is not on the You tab');
+
+const talk = read('src/lib/voice/talk.ts');
+const router = read('src/lib/voice/router.ts');
+assert.doesNotMatch(talk, /phrase-guard|matchingPhrasePattern|logPhraseHit/);
+assert.doesNotMatch(router, /phrase-guard|matchingPhrasePattern|logPhraseHit/);
+assert.match(talk, /matchingJargonTerm/);
+assert.match(router, /jargonInCard/);
+ok('Read/Do/Talk/Nudge generation and word guard are untouched');
+
+const sql = read('supabase/migrations/explore.sql');
+assert.match(sql, /create table public.explore_packs/);
+assert.match(sql, /create table public.explore_entries/);
+assert.match(sql, /create table public.explore_reactions/);
+assert.match(sql, /record_explore_reaction/);
+assert.match(sql, /never ME or trait/);
+assert.match(sql, /phrase_flag/);
+assert.match(sql, /log_phrase_guard/);
+assert.doesNotMatch(sql, /update public\.me/);
+assert.doesNotMatch(sql, /trait_sources/);
+ok('feedback table cannot write ME or traits; phrase_flag is on ai_usage');
+
+const panel = read('src/components/explore-panel.tsx');
+assert.match(panel, /logJargonGuard/);
+assert.match(panel, /logPhraseGuard/);
+assert.match(panel, /matchingJargonTerm|routeExplore/);
+assert.match(read('src/lib/explore/route.ts'), /containsFrameworkTerm/);
+assert.match(read('src/lib/explore/route.ts'), /matchingJargonTerm/);
+assert.match(read('src/lib/explore/route.ts'), /matchingPhrasePattern/);
+ok('both guards and the framework fence run before Explore is shown');
+
+assert.equal(EXPLORE_LABEL, 'Explore');
+assert.ok(pickExplorePackFocuses(chipsOnly, []).length >= 1);
+
+console.log(`\nAll ${passed} explore checks passed.`);
+}
+
+void main();

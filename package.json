@@ -89,6 +89,7 @@
     "check:badges": "tsx ./scripts/badges-check.ts",
     "check:reveal": "tsx ./scripts/reveal-check.ts",
     "check:jargon": "tsx ./scripts/jargon-check.ts",
+    "check:explore": "tsx ./scripts/explore-check.ts",
     "check:scenario": "tsx ./scripts/scenario-check.ts",
     "check:intake-live": "tsx ./scripts/intake-live-check.ts",
     "check:age": "tsx ./scripts/age-check.ts",

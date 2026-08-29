@@ -13,6 +13,13 @@ export async function logJargonGuard(flag: string): Promise<void> {
   if (error) console.log('[jargon] log error:', error.message);
 }
 
+export async function logPhraseGuard(flag: string): Promise<void> {
+  const trimmed = flag.trim();
+  if (!trimmed) return;
+  const { error } = await supabase.rpc('log_phrase_guard', { p_flag: trimmed });
+  if (error) console.log('[phrase] log error:', error.message);
+}
+
 /**
  * Server-side claim. RLS blocks client writes to ai_usage; this RPC is the
  * only increment path, keyed on auth.uid().
