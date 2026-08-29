@@ -14,9 +14,7 @@ import { IntakeSettings } from '@/components/intake-settings';
 import { RankingCard } from '@/components/ranking-card';
 import { ScenarioCard } from '@/components/scenario-card';
 import { KenneyCreditsCard } from '@/components/kenney-credits-card';
-import { PushTestCard } from '@/components/push-test-card';
 import { SageUsageFold } from '@/components/sage-usage';
-import { SentryTestCard } from '@/components/sentry-test-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -223,8 +221,7 @@ export default function YouScreen() {
                 </Pressable>
               </ThemedView>
 
-              <PushTestCard timeZone={me.timezone || 'UTC'} />
-              <SentryTestCard />
+              <YouDevToolsSlot timeZone={me.timezone || 'UTC'} />
 
               <ThemedView type="backgroundElement" style={styles.detailCard}>
                 <ThemedText type="smallBold" style={styles.inviteHeading}>
@@ -337,6 +334,19 @@ export default function YouScreen() {
       />
     </ThemedView>
   );
+}
+
+/**
+ * Crash/push probes live behind the same compile-time `__DEV__` cut as
+ * Stack.Protected labs. Production Metro also resolves the probe modules
+ * to a null stub, so TestFlight never even contains the controls.
+ */
+function YouDevToolsSlot({ timeZone }: { timeZone: string }) {
+  if (__DEV__) {
+    const { YouDevTools } = require('@/components/you-dev-tools') as typeof import('@/components/you-dev-tools');
+    return <YouDevTools timeZone={timeZone} />;
+  }
+  return null;
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {

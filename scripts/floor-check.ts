@@ -207,6 +207,19 @@ assert.match(plugins, /ato-app/);
 assert.match(read('src/app/_layout.tsx'), /Sentry\.wrap/);
 ok('Sentry JS init + native crash handling + Expo plugin + wrap are wired');
 
+const youTab = read('src/app/(tabs)/you.tsx');
+assert.doesNotMatch(youTab, /from '@\/components\/sentry-test-card'/);
+assert.doesNotMatch(youTab, /from '@\/components\/push-test-card'/);
+assert.match(youTab, /if \(__DEV__\) \{/);
+assert.match(youTab, /require\('@\/components\/you-dev-tools'\)/);
+assert.match(read('metro.config.js'), /NODE_ENV === 'production'/);
+assert.match(sentryLib, /if \(!__DEV__\) return;/);
+ok('You-tab crash/push probes are compile-time __DEV__ + Metro production stub, not a runtime hide');
+
+assert.match(home, /todayCardFromCheck/);
+assert.match(read('src/lib/today-card.ts'), /export function todayCardFromCheck/);
+ok('Home hydrates today\'s card from the Check row when on-device storage is empty');
+
 const quota = read('src/lib/voice/quota.ts');
 assert.match(quota, /Sage's out of things to say for today, back tomorrow/);
 assert.match(sage, /QUOTA_EMPTY_MESSAGE/);

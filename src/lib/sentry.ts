@@ -32,8 +32,9 @@ export async function sendFloorTestError(): Promise<string> {
   return eventId;
 }
 
-/** Native crash. Only works in a binary that includes the Sentry native SDK. */
+/** Native crash. Dev-only — production/TestFlight compile this out. */
 export function triggerNativeTestCrash(): void {
+  if (!__DEV__) return;
   Sentry.nativeCrash();
 }
 

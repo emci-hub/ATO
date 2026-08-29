@@ -94,4 +94,16 @@ assert.match(hub, /approveAccessRequest/);
 assert.match(hub, /denyAccessRequest/);
 ok('hub sections call the live fence, usage snapshot, card router, and access review');
 
+const you = read('src/app/(tabs)/you.tsx');
+assert.doesNotMatch(you, /from '@\/components\/sentry-test-card'/);
+assert.doesNotMatch(you, /from '@\/components\/push-test-card'/);
+assert.match(you, /if \(__DEV__\) \{/);
+assert.match(you, /require\('@\/components\/you-dev-tools'\)/);
+assert.match(read('src/components/you-dev-tools.tsx'), /if \(!__DEV__\) return null;/);
+assert.match(read('src/components/sentry-test-card.tsx'), /if \(!__DEV__\) return null;/);
+assert.match(read('src/components/push-test-card.tsx'), /if \(!__DEV__\) return null;/);
+assert.match(read('metro.config.js'), /NODE_ENV === 'production'/);
+assert.match(read('metro.config.js'), /PROBE_STUB/);
+ok('You crash/push probes are __DEV__-required, not static production imports');
+
 console.log(`\ndev-lab-check: ${passed}/${passed} passed`);

@@ -13,10 +13,15 @@ import {
 } from '@/lib/sentry';
 
 /**
- * Floor-requirements Sentry probe. Same shape as Test notifications: always
- * on You so a TestFlight build can prove events land without a debugger.
+ * Floor-requirements Sentry probe. Dev-only — TestFlight / production
+ * must not ship a Native crash button on You.
  */
 export function SentryTestCard() {
+  if (!__DEV__) return null;
+  return <SentryTestCardInner />;
+}
+
+function SentryTestCardInner() {
   const theme = useTheme();
   const [busy, setBusy] = useState<'js' | 'native' | null>(null);
   const [note, setNote] = useState<string | null>(null);

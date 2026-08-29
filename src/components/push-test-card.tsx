@@ -12,11 +12,14 @@ import type { PushKind } from '@/lib/push-copy';
 import { controlBorderColor } from '@/lib/theme/chrome';
 
 /**
- * Manual fire for the three pushes so a tester can tap each deep link without
- * waiting for 7am / 8pm / Sunday. Always on You — TestFlight needs it. A
- * decline is not nagged; the buttons just say they're off.
+ * Manual fire for the three pushes. Dev-only — not on TestFlight You.
  */
 export function PushTestCard({ timeZone }: { timeZone: string }) {
+  if (!__DEV__) return null;
+  return <PushTestCardInner timeZone={timeZone} />;
+}
+
+function PushTestCardInner({ timeZone }: { timeZone: string }) {
   const theme = useTheme();
   const { session } = useSession();
   const userId = session?.user.id;

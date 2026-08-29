@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ExtensionStorage } from '@bacons/apple-targets';
 import { Platform } from 'react-native';
 
+import type { Check } from '@/lib/checks';
 import { emitTodayCardChanged } from '@/lib/today-card-events';
 import type { VoiceCardResult, VoiceSource } from '@/lib/voice/types';
 
@@ -35,6 +36,26 @@ function writeWidget(card: TodayCard | null) {
   } catch (err) {
     console.log('[widget] native write skipped:', err);
   }
+}
+
+/**
+ * Home card from an already-logged Check. Fresh installs have empty
+ * AsyncStorage, so this is the path that shows today's Read/Do/Nudge
+ * without waiting for Dawn.
+ */
+export function todayCardFromCheck(
+  check: Pick<Check, 'day' | 'read_text' | 'do_text' | 'source' | 'nudge_text'>,
+): TodayCard | null {
+  const read = check.read_text?.trim() ?? '';
+  const doText = check.do_text?.trim() ?? '';
+  if (!read || !doText) return null;
+  return {
+    day: check.day,
+    read,
+    do: doText,
+    source: check.source,
+    nudge: check.nudge_text,
+  };
 }
 
 export async function loadTodayCard(): Promise<TodayCard | null> {

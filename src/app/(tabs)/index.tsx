@@ -27,7 +27,7 @@ import { aiConsentFor } from '@/lib/me';
 import { useMeContext } from '@/lib/me-context';
 import { voiceMeFrom } from '@/lib/intake';
 import { homeSageLabel, homeSageLede, NUDGE_LABEL, SAGE_COACH_LABEL } from '@/lib/sage-copy';
-import { persistRoutedCard } from '@/lib/today-card';
+import { persistRoutedCard, saveTodayCard, todayCardFromCheck } from '@/lib/today-card';
 import { resolveReveal } from '@/lib/reveal';
 import { routeVoiceCard } from '@/lib/voice/router';
 import type { VoiceCard, VoiceSource } from '@/lib/voice/types';
@@ -104,6 +104,20 @@ export default function HomeScreen() {
       crisisYesterday,
     });
   }, [me, checks, crisisToday, crisisYesterday, growth.checkCount, growth.factCount]);
+
+  useEffect(() => {
+    if (card || !window) return;
+    const todayCheck = checks.find((row) => row.day === window.todayDay);
+    const hydrated = todayCheck ? todayCardFromCheck(todayCheck) : null;
+    if (!hydrated) return;
+    let cancelled = false;
+    void saveTodayCard(hydrated).then(() => {
+      if (!cancelled) return reloadCard();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [card, window?.todayDay, checks, reloadCard]);
 
   useEffect(() => {
     if (!me || !todayOpen) return;
