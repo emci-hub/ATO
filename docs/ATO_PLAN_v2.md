@@ -241,7 +241,7 @@ One question per screen, tappable, with a visible progress indicator ("3 of 9").
 
 **Optional extra axes — two layers:**
 
-1. **Shipped (Stage 11):** skippable `extra N of 4` after signup succeeds — 16-grid, sliders, close-pattern, disagreement. Writes the first 9 trait axes. Skip = those columns stay null. Merge is **direct vs inferred** (slider / tap / confirm / Settings sit in the direct rank). "Love language" reframed platonic remains a lower-priority optional add, not Chapman categories.
+1. **Shipped (Stage 11):** skippable `extra N of 9` after signup succeeds — type grid + 8 vibe-check scenarios (same nine trait axes as the old grid/slider/close/disagree layer). Skip = those columns stay null. Merge is **direct vs inferred** (slider / tap / confirm / Settings sit in the direct rank). "Love language" reframed platonic remains a lower-priority optional add, not Chapman categories.
 
 2. **Three-path (decided; supersedes treating the new frameworks as onboarding or as a single extra quiz).** SDT / growth mindset / locus of control / self-efficacy are never part of the required 9. User's choice, no pressure. Soft-ask budget applies to path (b) resurfacing (see below).
    - **(a) Answer directly** — simple tap-form, plain language, no clinical/framework terms. Writes as **direct** (`self_tap`; sticky, same rank as slider).
@@ -476,9 +476,9 @@ Wire new answers into check_count < 3 bank-card selection — real morning_cue p
 
 ### 11 Optional fast-entry
 **Open box: intake.**
-Skippable 16-grid / slider / close-pattern / disagreement layer, up to 4 extra questions, fully optional. Writes the first 9 nullable 0–1 ME axes (not the 9 chips). No raw diagnostic labels stored. Runtime fence on Read/Do/Nudge + Teach-Sage facts. Three-path intake UI for the extra six axes is a later box (Understanding spec).
-**Done (Aug 27, 2026):** Skip after question 9 goes to Home with `complete_signup` already succeeded; optional is a separate `extra N of 4` phase; slider-sticky merge (a later type tap cannot overwrite a slider axis); untouched sliders stay null; `peer_profile` / poster / `night_snapshot` unchanged; generated cards that name a framework are dropped.
-**Done (Aug 28, 2026):** all 15 axes exist on live ME with 0–1 CHECKs; `trait_sources` is direct vs inferred across those axes (`self_tap` / `self_confirm` / `self_settings` / `self_game` labels exist; three-path UI not built); `me.trait_touched_at` bumps on a successful write. A rejected inferred write does not bump it. Confirm-upgrade is `confirmTraitSource` / `confirmTraits` (source + timestamp only; never a new number).
+Skippable type-grid + 8 vibe-check scenarios, fully optional. Writes the first 9 nullable 0–1 ME axes (not the 9 chips). No raw diagnostic labels stored. Runtime fence on Read/Do/Nudge + Teach-Sage facts. Three-path intake UI for the extra six axes is a later box (Understanding spec).
+**Done (Aug 27, 2026):** Skip after question 9 goes to Home with `complete_signup` already succeeded; optional is a separate extra phase; slider-sticky merge (a later type tap cannot overwrite a slider axis); untouched sliders stay null; `peer_profile` / poster / `night_snapshot` unchanged; generated cards that name a framework are dropped.
+**Done (Aug 28, 2026):** all 15 axes exist on live ME with 0–1 CHECKs; `trait_sources` is direct vs inferred across those axes (`self_tap` / `self_confirm` / `self_settings` / `self_game` labels exist; three-path UI not built); `me.trait_touched_at` bumps on a successful write. A rejected inferred write does not bump it. Confirm-upgrade is `confirmTraitSource` / `confirmTraits` (source + timestamp only; never a new number). Copy pass 1: vibe-check questions replace the old slider/close/disagree wording; type-grid framing only.
 
 ### 12 Sage's coaching content
 **Open box: talk, router.**

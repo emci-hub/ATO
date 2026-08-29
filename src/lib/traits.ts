@@ -99,7 +99,18 @@ export interface TraitState {
   touched: TraitTouched;
 }
 
-export const OPTIONAL_INTAKE_TOTAL = 4;
+/** Type grid + 8 vibe-check questions. */
+export const OPTIONAL_INTAKE_TOTAL = 9;
+
+export type OptionalScreen = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
+const SLIDER_SCREEN_AXIS: Partial<Record<OptionalScreen, (typeof SLIDER_AXES)[number]>> = {
+  1: 'openness',
+  2: 'conscientiousness',
+  3: 'extraversion',
+  4: 'agreeableness',
+  5: 'steadiness',
+};
 
 export const TYPE_CODES = [
   'INTJ',
@@ -369,10 +380,11 @@ export function optionalProgressLabel(n: number): string {
 }
 
 export function writeForOptionalScreen(input: {
-  screen: 0 | 1 | 2 | 3;
+  screen: OptionalScreen;
   typeCode: string | null;
   sliderValues: Partial<Record<(typeof SLIDER_AXES)[number], number>>;
   closeId: string | null;
+  closeSecondId?: string | null;
   disagreeId: string | null;
 }): {
   incoming: Partial<Record<TraitAxis, number>>;
@@ -383,11 +395,13 @@ export function writeForOptionalScreen(input: {
     if (!input.typeCode || !isTypeCode(input.typeCode)) return null;
     return { incoming: traitsFromTypeCode(input.typeCode), source: 'self_grid', allowed: GRID_AXES };
   }
-  if (input.screen === 1) {
-    if (Object.keys(input.sliderValues).length === 0) return null;
-    return { incoming: input.sliderValues, source: 'self_slider', allowed: SLIDER_AXES };
+  const sliderAxis = SLIDER_SCREEN_AXIS[input.screen];
+  if (sliderAxis) {
+    const value = input.sliderValues[sliderAxis];
+    if (typeof value !== 'number') return null;
+    return { incoming: { [sliderAxis]: value }, source: 'self_slider', allowed: SLIDER_AXES };
   }
-  if (input.screen === 2) {
+  if (input.screen === 6) {
     if (!input.closeId || !isClosePatternId(input.closeId)) return null;
     return {
       incoming: traitsFromClosePattern(input.closeId),
@@ -395,7 +409,16 @@ export function writeForOptionalScreen(input: {
       allowed: CLOSE_AXES,
     };
   }
-  if (!input.disagreeId || !isDisagreeId(input.disagreeId)) return null;
+  if (input.screen === 7) {
+    const second = input.closeSecondId ?? null;
+    if (!second || !isClosePatternId(second)) return null;
+    return {
+      incoming: traitsFromClosePattern(second),
+      source: 'self_situation',
+      allowed: CLOSE_AXES,
+    };
+  }
+  if (input.screen !== 8 || !input.disagreeId || !isDisagreeId(input.disagreeId)) return null;
   return {
     incoming: traitsFromDisagree(input.disagreeId),
     source: 'self_situation',

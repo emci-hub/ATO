@@ -8,9 +8,11 @@ import { resolve } from 'node:path';
 
 import { writeForOptionalScreen } from '../src/lib/traits';
 import { voiceMeFrom } from '../src/lib/intake';
+import { VIBE_QUESTIONS } from '../src/lib/vibe-check';
 import {
   EXTRA_AXES,
   GRID_AXES,
+  OPTIONAL_INTAKE_TOTAL,
   SLIDER_AXES,
   TRAIT_AXES,
   confirmTraitSource,
@@ -207,7 +209,31 @@ async function main() {
   assert.equal(blankSliders, null);
   ok('slider screen with no taps produces no write');
 
-  assert.equal(optionalProgressLabel(1), 'extra 1 of 4');
+  const opennessWrite = writeForOptionalScreen({
+    screen: 1,
+    typeCode: null,
+    sliderValues: { openness: 1 },
+    closeId: null,
+    disagreeId: null,
+  });
+  assert.deepEqual(opennessWrite?.incoming, { openness: 1 });
+  assert.equal(opennessWrite?.source, 'self_slider');
+  ok('openness vibe-check writes only that axis');
+
+  const closeWrite = writeForOptionalScreen({
+    screen: 6,
+    typeCode: null,
+    sliderValues: {},
+    closeId: 'close_steady',
+    disagreeId: null,
+  });
+  assert.deepEqual(closeWrite?.incoming, traitsFromClosePattern('close_steady'));
+  ok('first closeness vibe-check still uses close-pattern ids');
+
+  assert.equal(OPTIONAL_INTAKE_TOTAL, 1 + VIBE_QUESTIONS.length);
+  assert.equal(VIBE_QUESTIONS.length, 8);
+  ok('optional phase is type grid plus 8 vibe-check questions');
+  assert.equal(optionalProgressLabel(1), 'extra 1 of 9');
   assert.notEqual(optionalProgressLabel(1), '10 of 13');
   ok('optional progress is its own counter');
 
@@ -243,6 +269,7 @@ async function main() {
     read('src/components/intake-settings.tsx'),
     read('src/app/(tabs)/you.tsx'),
     read('src/components/share-poster.tsx'),
+    read('src/lib/vibe-check.ts'),
   ].join('\n');
   for (const banned of ['MBTI', 'Myers-Briggs', 'Big Five', 'OCEAN', 'attachment style', 'neuroticism', 'TIPI', 'ECR']) {
     assert.equal(copyBlob.toLowerCase().includes(banned.toLowerCase()), false, `UI leaked "${banned}"`);

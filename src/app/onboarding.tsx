@@ -25,6 +25,7 @@ import {
 import {
   CORE_INTAKE_QUESTIONS,
   CORE_INTAKE_TOTAL,
+  INTAKE_SETTINGS_LABELS,
   joinKnocks,
   type CoreIntakeField,
   type CurrentFocus,
@@ -35,7 +36,7 @@ import {
   intakeProgressLabel,
 } from '@/lib/intake';
 import { createMe, errorMessageForHandle, TalkStyle, updateTraits } from '@/lib/me';
-import { SLIDER_AXES, writeForOptionalScreen } from '@/lib/traits';
+import { OPTIONAL_INTAKE_TOTAL, SLIDER_AXES, writeForOptionalScreen, type OptionalScreen } from '@/lib/traits';
 import { slugifyCity } from '@/lib/around/slug';
 import { DEFAULT_AROUND_CITY } from '@/constants/around-cities';
 import { useMeContext } from '@/lib/me-context';
@@ -62,6 +63,7 @@ export default function OnboardingScreen() {
   const [typeCode, setTypeCode] = useState<string | null>(null);
   const [sliderValues, setSliderValues] = useState<Partial<Record<(typeof SLIDER_AXES)[number], number>>>({});
   const [closeId, setCloseId] = useState<string | null>(null);
+  const [closeSecondId, setCloseSecondId] = useState<string | null>(null);
   const [disagreeId, setDisagreeId] = useState<string | null>(null);
 
   const [name, setName] = useState('');
@@ -336,10 +338,11 @@ export default function OnboardingScreen() {
   async function persistOptionalThen(next: 'advance' | 'home') {
     if (!createdUserId || busy) return;
     const write = writeForOptionalScreen({
-      screen: optionalIndex as 0 | 1 | 2 | 3,
+      screen: optionalIndex as OptionalScreen,
       typeCode,
       sliderValues,
       closeId,
+      closeSecondId,
       disagreeId,
     });
     setBusy(true);
@@ -352,7 +355,7 @@ export default function OnboardingScreen() {
           'updateTraits',
         );
       }
-      if (next === 'home' || optionalIndex >= 3) {
+      if (next === 'home' || optionalIndex >= OPTIONAL_INTAKE_TOTAL - 1) {
         await withTimeout(refresh(), 15000, 'refresh');
         return;
       }
@@ -450,20 +453,20 @@ export default function OnboardingScreen() {
             ) : phase === 'optional' ? (
               <>
                 <OptionalStep
-                  screen={optionalIndex as 0 | 1 | 2 | 3}
+                  screen={optionalIndex as OptionalScreen}
                   busy={busy}
                   typeCode={typeCode}
                   sliderValues={sliderValues}
-                  closeId={closeId}
+                  closeId={optionalIndex === 7 ? closeSecondId : closeId}
                   disagreeId={disagreeId}
                   onType={setTypeCode}
                   onSlider={(axis, value) => {
                     setSliderValues((prev) => ({ ...prev, [axis]: value }));
                   }}
-                  onClose={setCloseId}
+                  onClose={optionalIndex === 7 ? setCloseSecondId : setCloseId}
                   onDisagree={setDisagreeId}
                   onSkipThis={() => {
-                    if (optionalIndex >= 3) {
+                    if (optionalIndex >= OPTIONAL_INTAKE_TOTAL - 1) {
                       void goHome();
                       return;
                     }
@@ -716,7 +719,10 @@ function IntakeStep({
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.progress}>
         {intakeProgressLabel(question.n)}
       </ThemedText>
-      <ThemedText type="subtitle">{question.prompt}</ThemedText>
+      <ThemedText type="subtitle">{INTAKE_SETTINGS_LABELS[question.field]}</ThemedText>
+      <ThemedText themeColor="textSecondary" style={styles.lede}>
+        {question.prompt}
+      </ThemedText>
 
       <ChipGroup
         chips={question.chips}

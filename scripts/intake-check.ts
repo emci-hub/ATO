@@ -18,6 +18,7 @@ import {
   selectedIntakeValues,
   voiceMeFrom,
 } from '../src/lib/intake';
+import { VIBE_QUESTIONS, TYPE_COPY, EVEN_KEEL_COPY, CLOSENESS_COPY } from '../src/lib/vibe-check';
 import { bankCard, bankCardForMe } from '../src/lib/voice/bank';
 import { routeVoiceCard } from '../src/lib/voice/router';
 import { buildVoiceConfig } from '../src/lib/voice/config';
@@ -98,7 +99,20 @@ async function main() {
   assert.equal(displayIntakeValue('show_up', sample), 'Building something');
   assert.equal(displayIntakeValue('knocks_you_off', sample), 'Sleep, Workload');
   assert.deepEqual(selectedIntakeValues('knocks_you_off', sample), ['sleep', 'workload']);
+  assert.equal(INTAKE_SETTINGS_LABELS.talk_style, 'How Sage talks to you');
+  assert.equal(INTAKE_SETTINGS_LABELS.morning_cue, 'Your morning anchor');
+  assert.equal(INTAKE_SETTINGS_LABELS.knocks_you_off, 'What actually throws off your day');
   ok('Settings labels and display values cover all 9 fields');
+
+  assert.equal(VIBE_QUESTIONS.length, 8);
+  assert.equal(
+    VIBE_QUESTIONS[0]?.prompt,
+    'Someone in the group chat finds a spot that looks kinda sketchy but also kinda cool. Zero reviews.',
+  );
+  assert.equal(TYPE_COPY.label, 'If you already know your type');
+  assert.equal(EVEN_KEEL_COPY.label, 'How rattled a bad day gets you');
+  assert.equal(CLOSENESS_COPY.label, 'How you handle getting close to people');
+  ok('vibe-check prompts and field labels match the locked pass-1 copy');
 
   const copyBlob = [
     onboarding,
@@ -107,6 +121,7 @@ async function main() {
     you,
     readFileSync(resolve(__dirname, '../src/components/share-poster.tsx'), 'utf8'),
     readFileSync(resolve(__dirname, '../src/components/optional-intake.tsx'), 'utf8'),
+    readFileSync(resolve(__dirname, '../src/lib/vibe-check.ts'), 'utf8'),
     readFileSync(resolve(__dirname, '../src/components/axis-taps.tsx'), 'utf8'),
   ].join('\n');
   for (const banned of ['MBTI', 'Myers-Briggs', 'Big Five', 'OCEAN', 'attachment style', 'neuroticism', 'TIPI', 'ECR']) {

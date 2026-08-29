@@ -157,7 +157,7 @@ export const CORE_INTAKE_QUESTIONS: CoreIntakeQuestion[] = [
   {
     field: 'talk_style',
     n: 1,
-    prompt: 'How should Sage talk to you? Sage matches this — quiet, even, or loud.',
+    prompt: 'Quiet, even, or a bit more direct — you already picked this, editable anytime.',
     chips: TALK_STYLE_CHIPS,
   },
   {
@@ -169,14 +169,14 @@ export const CORE_INTAKE_QUESTIONS: CoreIntakeQuestion[] = [
   {
     field: 'knocks_you_off',
     n: 3,
-    prompt: 'What usually knocks you off? Pick every one that actually does.',
+    prompt: "The stuff that really gets in the way — pick everything that's true, not just one.",
     multi: true,
     chips: KNOCKS_CHIPS,
   },
   {
     field: 'morning_cue',
     n: 4,
-    prompt: 'What do you already do every morning? The daily Do hangs off this one thing, not a whole routine.',
+    prompt: 'The one thing you already do every morning — your daily nudge hangs off this.',
     chips: MORNING_CUE_CHIPS,
   },
   {
@@ -231,10 +231,10 @@ export function chipLabel(chips: IntakeChip[], value: string | null | undefined)
 
 /** You-tab labels. Same 9 fields as onboarding, shorter than the prompt. */
 export const INTAKE_SETTINGS_LABELS: Record<CoreIntakeField, string> = {
-  talk_style: 'Talk style',
+  talk_style: 'How Sage talks to you',
   show_up: 'Show up',
-  knocks_you_off: 'Knocks you off',
-  morning_cue: 'Morning cue',
+  knocks_you_off: 'What actually throws off your day',
+  morning_cue: 'Your morning anchor',
   evening_wind_down: 'Evening wind-down',
   energy_pattern: 'Most energy',
   recovery_style: 'What pulls me back',

@@ -77,12 +77,12 @@ export const AXIS_EDITOR_COPY: Record<TraitAxis, { label: string; hint: string }
     hint: 'Left = hold my ground. Right = keep things easy.',
   },
   steadiness: {
-    label: 'Even keel',
-    hint: 'Left = I feel it when things wobble. Right = I stay even.',
+    label: 'How rattled a bad day gets you',
+    hint: 'Some people shake it off fast, some carry it longer — no wrong answer here.',
   },
   attachment_anxiety: {
-    label: 'Closeness worry',
-    hint: 'Left = I do not spend time on it. Right = I worry people will pull away.',
+    label: 'How you handle getting close to people',
+    hint: "Everyone's a little different here — this just helps Sage read the room right.",
   },
   attachment_avoidance: {
     label: 'A bit of distance',
