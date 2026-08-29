@@ -9,7 +9,7 @@ import { Spacing } from '@/constants/theme';
 import { useGrowth } from '@/hooks/use-growth';
 import { resolveFacePalette } from '@/lib/color';
 import { isCrisisActive } from '@/lib/kenney/gesture-actions';
-import { normalizeRecipe } from '@/lib/kenney/registry';
+import { recipeForAccount } from '@/lib/kenney/registry';
 import { pickTapMood, type TapMood, type TapMoodId } from '@/lib/kenney/tap-moods';
 import { useMeContext } from '@/lib/me-context';
 
@@ -43,7 +43,7 @@ export function NavPixel() {
   const celebrateRef = useRef<(() => void) | null>(null);
   const tapMoodRef = useRef<((mood: TapMood) => void) | null>(null);
   const lastMoodRef = useRef<TapMoodId | null>(null);
-  const recipe = useMemo(() => normalizeRecipe(me?.recipe), [me]);
+  const recipe = useMemo(() => recipeForAccount(me?.id, me?.recipe), [me]);
   const onSage = pathname === '/sage' || pathname.endsWith('/sage');
 
   useEffect(() => {

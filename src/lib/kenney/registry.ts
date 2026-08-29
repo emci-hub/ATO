@@ -217,4 +217,56 @@ export function normalizeRecipe(raw: unknown): KenneyRecipe {
   return DEFAULT_RECIPE;
 }
 
+/**
+ * Six shape-family recipes. One Kenney family, never mixed. Hands stay
+ * hidden at rest so event gestures still overlay. Index 0 matches
+ * DEFAULT_RECIPE so the unassigned fallback stays a member of the set.
+ * Must stay in lockstep with `recipe_from_account_id` in SQL.
+ */
+export const ACCOUNT_RECIPES: readonly KenneyRecipe[] = [
+  { source: SHAPE_MANIFEST.family, parts: { body: 'circle', face: 'even', hand: 'hidden' }, palette: null },
+  { source: SHAPE_MANIFEST.family, parts: { body: 'rhombus', face: 'tired', hand: 'hidden' }, palette: null },
+  { source: SHAPE_MANIFEST.family, parts: { body: 'square', face: 'set', hand: 'hidden' }, palette: null },
+  { source: SHAPE_MANIFEST.family, parts: { body: 'squircle', face: 'listen', hand: 'hidden' }, palette: null },
+  { source: SHAPE_MANIFEST.family, parts: { body: 'circle', face: 'glow', hand: 'hidden' }, palette: null },
+  { source: SHAPE_MANIFEST.family, parts: { body: 'rhombus', face: 'set', hand: 'hidden' }, palette: null },
+];
+
+/** First 8 hex digits of the uuid — same as `recipe_from_account_id` in SQL. */
+export function accountRecipeIndex(userId: string): number {
+  const hex = userId.replace(/-/g, '').slice(0, 8);
+  const n = Number.parseInt(hex, 16);
+  if (!Number.isFinite(n)) return 0;
+  return n % ACCOUNT_RECIPES.length;
+}
+
+export function recipeFromAccountId(userId: string): KenneyRecipe {
+  return ACCOUNT_RECIPES[accountRecipeIndex(userId)] ?? DEFAULT_RECIPE;
+}
+
+function recipePartsMatch(a: KenneyRecipe, b: KenneyRecipe): boolean {
+  return (
+    a.source === b.source &&
+    a.parts.body === b.parts.body &&
+    a.parts.face === b.parts.face &&
+    a.parts.hand === b.parts.hand
+  );
+}
+
+/** Null, junk, or the legacy/default circle+even look — not a chosen recipe. */
+export function isUnassignedRecipe(raw: unknown): boolean {
+  if (raw == null) return true;
+  return recipePartsMatch(normalizeRecipe(raw), DEFAULT_RECIPE);
+}
+
+/**
+ * Stored recipe if the account already has a non-default look; otherwise the
+ * stable hash of user_id. Palette stays null here — hue still comes from
+ * show_up at render.
+ */
+export function recipeForAccount(userId: string | null | undefined, stored: unknown): KenneyRecipe {
+  if (userId && isUnassignedRecipe(stored)) return recipeFromAccountId(userId);
+  return normalizeRecipe(stored);
+}
+
 export type { KenneyRecipe, KenneyPartInstance, ImageSourcePropType };

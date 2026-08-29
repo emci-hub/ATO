@@ -30,7 +30,7 @@ If a field isn't defined here, don't guess its shape — ask.
 | `current_focus` | enum: `habit`/`through_it`/`like_yourself`/`show_up`, nullable on pre-intake rows | Self-report. Not a diagnosis. Never shown on the public poster. Editable later in Settings. |
 | Optional trait axes | numeric 0–1, all nullable | 15-axis backbone, separate from the 9 chips. Shipped: `openness`, `conscientiousness`, `extraversion`, `agreeableness`, `steadiness`; `attachment_anxiety`, `attachment_avoidance`; `conflict_assertiveness`, `conflict_cooperativeness`; `autonomy`, `competence`, `relatedness`; `growth_mindset`; `locus_of_control`; `self_efficacy`. Plus `trait_sources`: **direct** (`self_slider`, `self_tap`, `self_confirm`, `self_settings`) is sticky and cannot be overwritten by **inferred** (`self_grid`, `self_situation`, `self_game`); skip/null has no source row. Per-axis `last_touched` lives in `trait_touched_at` (ISO, null axes have no key). Raw labels discarded at write. Never on poster, `peer_profile`, `public_profile`, or `night_snapshot`. |
 | `this_week` | string, free text, resets weekly | Plan field. Not a ME column in v1 — Sunday recap + Sage read the checks table (`logged_on` + status; Read/Do only while in the 7-day keep window). Never a matching signal. |
-| `recipe` | object `{base, hair, top, palette}` | Kenney asset selections that render the pixel. All 4 fields required once Pixel is built. |
+| `recipe` | object `{source, parts, palette}` | Kenney asset selections that render the pixel. Assigned at signup from a stable hash of `user_id` into one of 6 shape-family recipes (body + face; hands hidden at rest; never mixed families). `palette` stays null — hue comes from `show_up` at render. |
 | `valence` | enum: `lift`/`even`/`cut` | Computed from last 7 Checks. See formula in Rules. |
 | Check | row `{user_id, day, logged_on, outcome}` | `outcome` is `did` or `skip`. One per calendar day max. Log today or up to 2 days back; older days are closed. No partial state in v1 — keep it binary. Read/Do text kept for a rolling 7 days, then nulled; outcome stays. Home-only `nudge_text` (user-facing "Nudge", internal zGlitch) is pruned on the same 7-day window; never Circle, widget, or morning push. Peer reads go through `peer_checks` (day, status, `read_text`, `do_text`); `checks_select_connected` is dropped so `nudge_text` cannot appear in a peer response. Owner Home still selects own `checks` rows. |
 | Nudge | Home-only daily card | Third daily category (internal zGlitch). Real recent signal only — skip pattern, a knock that showed up in recent Read/Do, or a safe stored fact. Never from `talk_style` alone. Empty when there is no signal. Inherits cut's safety gates (not after a crisis-flagged day, not two days in a row, cruel-content filter, always with that day's Do); does not inherit cut's skip-streak valence trigger. |
@@ -404,7 +404,7 @@ Three tabs: Home, Sage, You. Fake card. Fake poster. No Circle tab at all — no
 ### 3 Pixel
 **Open box: pixel.**
 Kenney Modular / Toon / 1-Bit / Animal Remastered — one family per recipe, never mixed. 6 recipes. Looks: even, tired, set, listen, glow.
-**Done:** Face renders on Home from `ME.recipe`. Card is still fake data.
+**Done:** Face renders from `ME.recipe`. At signup, `complete_signup` stores one of the 6 shape-family recipes from a hash of `user_id` (same account always the same shape; color still from `show_up`). Card is still fake data.
 
 ### 4 Dawn + Router
 **Open box: dawn, router.**

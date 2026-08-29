@@ -13,10 +13,14 @@ import path from 'node:path';
 import { SHAPE_MANIFEST } from '../src/lib/kenney/manifests/shape';
 import { kenneyCredits, KENNEY_SITE_URL } from '../src/lib/kenney/credits';
 import {
+  ACCOUNT_RECIPES,
   DEFAULT_RECIPE,
   KENNEY_REGISTRY,
+  accountRecipeIndex,
   nearestVariant,
   normalizeRecipe,
+  recipeForAccount,
+  recipeFromAccountId,
   resolveCharacter,
 } from '../src/lib/kenney/registry';
 import { TAP_MOODS, pickTapMood } from '../src/lib/kenney/tap-moods';
@@ -181,5 +185,32 @@ const youTab = fs.readFileSync(path.resolve(__dirname, '../src/app/(tabs)/you.ts
 assert.match(youTab, /KenneyCreditsCard/);
 assert.doesNotMatch(youTab, /Fantasy UI|Modular Characters|1-Bit|Animal Remastered|Monster Builder/);
 ok('credits list only the registered Shape Characters pack and is wired on You');
+
+assert.equal(ACCOUNT_RECIPES.length, 6);
+assert.equal(ACCOUNT_RECIPES[0]?.parts.body, DEFAULT_RECIPE.parts.body);
+assert.equal(ACCOUNT_RECIPES[0]?.parts.face, DEFAULT_RECIPE.parts.face);
+const pairs = new Set<string>();
+for (const recipe of ACCOUNT_RECIPES) {
+  assert.equal(recipe.source, 'shape');
+  assert.equal(recipe.parts.hand, 'hidden');
+  assert.equal(recipe.palette, null);
+  const pair = `${recipe.parts.body}/${recipe.parts.face}`;
+  assert.equal(pairs.has(pair), false, `duplicate recipe ${pair}`);
+  pairs.add(pair);
+  assert.ok(resolveCharacter(recipe).layers.length >= 2, `recipe ${pair} should resolve body+face`);
+}
+const seedA = '00000000-0000-4000-8000-000000000001';
+const seedB = '00000001-0000-4000-8000-000000000001';
+const seedC = '00000002-0000-4000-8000-000000000001';
+assert.equal(accountRecipeIndex(seedA), 0);
+assert.equal(accountRecipeIndex(seedB), 1);
+assert.equal(accountRecipeIndex(seedC), 2);
+assert.deepEqual(recipeFromAccountId(seedA), recipeFromAccountId(seedA));
+assert.notEqual(recipeFromAccountId(seedA).parts.body + recipeFromAccountId(seedA).parts.face, recipeFromAccountId(seedB).parts.body + recipeFromAccountId(seedB).parts.face);
+assert.notEqual(recipeFromAccountId(seedB).parts.face, recipeFromAccountId(seedC).parts.face);
+const legacyDefault = { source: 'shape', base: 'circle', top: 'even', hair: null, palette: null };
+assert.deepEqual(recipeForAccount(seedB, legacyDefault), recipeFromAccountId(seedB));
+assert.deepEqual(recipeForAccount(seedB, ACCOUNT_RECIPES[3]), ACCOUNT_RECIPES[3]);
+ok('six hashed recipes are shape-only, stable per account, and distinct across seeds');
 
 console.log(`\nAll ${passed} Kenney pipeline checks passed.`);

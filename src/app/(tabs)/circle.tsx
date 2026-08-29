@@ -15,7 +15,7 @@ import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { fetchPeerState, type PeerState } from '@/lib/circle';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
-import { normalizeRecipe } from '@/lib/kenney/registry';
+import { recipeForAccount } from '@/lib/kenney/registry';
 import {
   blockUser,
   fetchMyBlocks,
@@ -161,7 +161,7 @@ function PeerCard({
   const { session } = useSession();
   const userId = session?.user.id;
   const { me, checks } = peer;
-  const recipe = normalizeRecipe(me.recipe);
+  const recipe = recipeForAccount(me.id, me.recipe);
   const latest = checks[checks.length - 1];
   const [confirming, setConfirming] = useState(false);
   const [working, setWorking] = useState(false);

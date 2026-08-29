@@ -20,7 +20,7 @@ import { fetchNight, setGoing, type NightSnapshot } from '@/lib/around/going';
 import { ticketLabel } from '@/lib/around/tickets';
 import type { AroundLoad, AroundShow, TicketKind } from '@/lib/around/types';
 import { hslForHue } from '@/lib/color';
-import { normalizeRecipe } from '@/lib/kenney/registry';
+import { recipeForAccount } from '@/lib/kenney/registry';
 import type { Me } from '@/lib/me';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
@@ -234,7 +234,7 @@ function ShowCard({
           showsHorizontalScrollIndicator={false}>
           {faces.map((face) => (
             <View key={face.id} style={styles.face}>
-              <PixelFace recipe={normalizeRecipe(face.recipe)} size={36} showUp={face.show_up} animated={false} />
+              <PixelFace recipe={recipeForAccount(face.id, face.recipe)} size={36} showUp={face.show_up} animated={false} />
               <ThemedText type="code" numberOfLines={1}>
                 @{face.handle}
               </ThemedText>

@@ -5,7 +5,7 @@ import { GrowthMarkers } from '@/components/growth-markers';
 import { PixelFace } from '@/components/pixel-face';
 import { useGrowth } from '@/hooks/use-growth';
 import { useMeContext } from '@/lib/me-context';
-import { normalizeRecipe } from '@/lib/kenney/registry';
+import { recipeForAccount } from '@/lib/kenney/registry';
 import { resolveFacePalette } from '@/lib/color';
 
 /**
@@ -23,7 +23,7 @@ import { resolveFacePalette } from '@/lib/color';
 export function SageTabIcon() {
   const { me } = useMeContext();
   const { state } = useGrowth();
-  const recipe = useMemo(() => normalizeRecipe(me?.recipe), [me]);
+  const recipe = useMemo(() => recipeForAccount(me?.id, me?.recipe), [me]);
 
   if (!me) return null;
 
