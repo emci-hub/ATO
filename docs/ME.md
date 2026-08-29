@@ -12,7 +12,7 @@ Sage content model v2 is in. Read/Do labels unchanged (no ATOsophy/Sync). Genera
 
 Stage 8 still has three loose ends only: submit/confirm EAS binary 10 (OTA + real app icon) on a real device, re-check Sentry native symbolication once that's on-device, and wait on Apple's Beta App Review for the Friends TestFlight group. Everything else in Stage 8 is done.
 
-**EAS Update (OTA) is live** as of binary 10 — future JS/UI/backend-only work ships via `eas update`, no more build+Apple-review cycles for most changes. Native-only exceptions remain: icon, widget, permissions, new native modules. Devices still on binary 8 or earlier need a TestFlight install of 10 before they can receive OTA. Latest JS OTA: pipeline-blueprint Trace viewer, published Aug 29, 2026. Open items: Gut Call regression, Live Talk failure.
+**EAS Update (OTA) is live** as of binary 10 — future JS/UI/backend-only work ships via `eas update`, no more build+Apple-review cycles for most changes. Native-only exceptions remain: icon, widget, permissions, new native modules. Devices still on binary 8 or earlier need a TestFlight install of 10 before they can receive OTA. Latest JS OTA: group `21e0b8a8-4e61-47d7-b0fd-29e5b98090ab` (`07611bb`, Build line on You/dev-lab + Most me off Sage). Open items: Gut Call regression, Live Talk failure.
 
 **Binary 8** (`d40e57a9`) **was submitted and installed** — theme picker, Around, Home fix, and age field verified on-device. Native crash test landed as Sentry event `e7bed112`; stack symbolication is still **unconfirmed** from here (CI token cannot read event frames; no `com.emgens.ato@1.0.0+8` release). Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
 

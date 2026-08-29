@@ -63,7 +63,7 @@
 2. Sentry native crash symbolication — still **unconfirmed** from here. Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
 3. Friends external testing group — Beta App Review pending on Apple since Aug 26, 2026. No action, just waiting.
 
-**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ can receive this Sage content-model JS change via `eas update`. Devices on binary 8 or earlier cannot.
+**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ can receive this Sage content-model JS change via `eas update`. Devices on binary 8 or earlier cannot. Latest production JS: group `21e0b8a8-4e61-47d7-b0fd-29e5b98090ab` (`07611bb`, Build line + Most me off Sage).
 
 **Decision (Aug 27, 2026): Wave 1.5 and Wave 3 both start now, in parallel — intentional deviation from plan sequencing.** Wave 2 Stage 2 ("I'm going") is now live, so Night wall is unblocked for Wave 3.
 
