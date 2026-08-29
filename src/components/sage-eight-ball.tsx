@@ -41,17 +41,17 @@ function SageOrb({ size, spin, marked }: { size: number; spin: number; marked?: 
     rotate.value = 0;
     nudge.value = 0;
     rotate.value = withSequence(
-      withTiming(16, { duration: 60 }),
-      withTiming(-14, { duration: 70 }),
-      withTiming(10, { duration: 70 }),
-      withTiming(-6, { duration: 60 }),
-      withTiming(0, { duration: 80 }),
+      withTiming(16, { duration: 150 }),
+      withTiming(-14, { duration: 175 }),
+      withTiming(10, { duration: 175 }),
+      withTiming(-6, { duration: 150 }),
+      withTiming(0, { duration: 200 }),
     );
     nudge.value = withSequence(
-      withTiming(2.5, { duration: 50 }),
-      withTiming(-2.5, { duration: 50 }),
-      withTiming(1.5, { duration: 50 }),
-      withTiming(0, { duration: 60 }),
+      withTiming(2.5, { duration: 125 }),
+      withTiming(-2.5, { duration: 125 }),
+      withTiming(1.5, { duration: 125 }),
+      withTiming(0, { duration: 150 }),
     );
   }, [spin, reduceMotion, rotate, nudge]);
 
@@ -148,7 +148,6 @@ export function SageEightBall() {
   }
 
   function toggle() {
-    if (!open && answer == null) roll();
     setOpen((value) => !value);
   }
 
@@ -174,11 +173,15 @@ export function SageEightBall() {
         <View style={styles.body}>
           <View style={styles.answerRow}>
             <SageOrb size={28} spin={spin} marked />
-            <ThemedText style={styles.answer}>{answer}</ThemedText>
+            <ThemedText
+              style={styles.answer}
+              themeColor={answer ? undefined : 'textSecondary'}>
+              {answer ?? 'Tap Ask to shake.'}
+            </ThemedText>
           </View>
           <ThemedPressable
             accessibilityRole="button"
-            accessibilityLabel="Ask again"
+            accessibilityLabel={answer ? 'Ask again' : 'Ask'}
             accessibilityState={{ disabled: rolling, busy: rolling }}
             disabled={rolling}
             onPress={roll}
@@ -187,7 +190,7 @@ export function SageEightBall() {
               { borderColor: controlBorderColor(theme) },
               rolling && styles.askAgainBusy,
             ]}>
-            <ThemedText type="smallBold">Ask again</ThemedText>
+            <ThemedText type="smallBold">{answer ? 'Ask again' : 'Ask'}</ThemedText>
           </ThemedPressable>
         </View>
       ) : null}

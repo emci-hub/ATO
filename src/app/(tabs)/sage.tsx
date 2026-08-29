@@ -70,6 +70,9 @@ const MORE_CHIPS: ReadonlyArray<{ label: string; prompt: string | null; support?
 
 let nextMessageId = 1;
 
+/** Native tab bar (~50pt) plus the home-indicator band it sits on (~34pt). */
+const COMPOSER_REST_PAD = BottomTabInset + (Platform.OS === 'ios' ? 34 : 0) + Spacing.two;
+
 function keyboardFallbackLift(e: KeyboardEvent): number {
   return Math.max(0, Math.round(e.endCoordinates.height) - BottomTabInset);
 }
@@ -416,110 +419,116 @@ export default function SageScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.sageToys}>
-          {me ? (
-            <SageKnowsCard
-              me={me}
-              history={checksToHistory(checks)}
-              onUpdated={refreshMe}
-            />
-          ) : null}
-          {me ? <RankingCard me={me} onUpdated={refreshMe} /> : null}
-          {me ? <ScenarioCard me={me} onUpdated={refreshMe} /> : null}
-          <SageEightBall />
-          {me ? <SageUsageLine revision={usageRevision} /> : null}
-        </View>
-
-        {!me ? (
-          <ThemedView type="backgroundElement" style={styles.emptyCard}>
-            <ThemedText themeColor="textSecondary">Loading…</ThemedText>
-          </ThemedView>
-        ) : consent === 'pending' ? (
-          <AiConsentCard
-            context="talk"
-            busy={busy === 'consent'}
-            onGrant={() => saveConsent(true)}
-            onDeny={() => saveConsent(false)}
-          />
-        ) : consent === 'denied' ? (
-          <ThemedView type="backgroundElement" style={styles.emptyCard}>
-            <ThemedText type="smallBold">Talk is off</ThemedText>
-            <ThemedText themeColor="textSecondary" style={styles.centerText}>
-              You chose to keep Sage off AI, so Sage can&apos;t reply here. Your daily
-              cards keep working.
-            </ThemedText>
-          </ThemedView>
-        ) : (
-          <View style={[styles.flex, { backgroundColor: theme.background }]}>
-            <ScrollView
-              ref={scrollRef}
-              {...NO_PINCH_ZOOM}
-              style={{ backgroundColor: theme.background }}
-              contentContainerStyle={styles.messages}
-              keyboardShouldPersistTaps="handled"
-              keyboardDismissMode="interactive"
-              onContentSizeChange={() => {
+        <View style={styles.chatColumn}>
+          <ScrollView
+            ref={scrollRef}
+            {...NO_PINCH_ZOOM}
+            style={[styles.thread, { backgroundColor: theme.background }]}
+            contentContainerStyle={styles.messages}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            onContentSizeChange={() => {
+              if (consent === 'granted') {
                 scrollRef.current?.scrollToEnd({ animated: keyboardOpen });
-              }}>
-              {quotaEmpty ? (
-                <ThemedView type="backgroundElement" style={styles.emptyCard}>
-                  <ThemedText type="smallBold">That&apos;s all for today</ThemedText>
-                  <ThemedText themeColor="textSecondary" style={styles.centerText}>
-                    {QUOTA_EMPTY_MESSAGE}
-                  </ThemedText>
-                </ThemedView>
+              }
+            }}>
+            <View style={styles.sageToys}>
+              {me ? (
+                <SageKnowsCard
+                  me={me}
+                  history={checksToHistory(checks)}
+                  onUpdated={refreshMe}
+                />
               ) : null}
-              {!historyReady && messages.length === 0 && !quotaEmpty ? (
-                <ThemedView type="backgroundElement" style={styles.emptyCard}>
-                  <ThemedText themeColor="textSecondary">Loading…</ThemedText>
-                </ThemedView>
-              ) : messages.length === 0 && !quotaEmpty ? (
-                <ThemedView type="backgroundElement" style={styles.emptyCard}>
-                  <ThemedText themeColor="textSecondary" style={styles.centerText}>
-                    {TALK_EMPTY}
-                  </ThemedText>
-                </ThemedView>
-              ) : (
-                messages.map((message) =>
-                  message.role === 'user' ? (
-                    <View key={message.id} style={[styles.bubble, styles.userBubble, { backgroundColor: theme.accentFill }]}>
-                      <ThemedText style={[styles.bubbleText, { color: theme.onAccent }]}>
-                        {message.text}
-                      </ThemedText>
-                    </View>
-                  ) : message.crisis ? (
-                    <View key={message.id} style={styles.crisisBubble}>
-                      <CrisisCard onDismiss={() => dismissCrisis(message.id)} />
-                    </View>
-                  ) : (
-                    <Pressable
-                      key={message.id}
-                      onLongPress={() => message.reportable && setReportMessage(message)}
-                      delayLongPress={250}
-                      style={({ pressed }) => [
-                        styles.bubble,
-                        { backgroundColor: theme.backgroundElement },
-                        pressed && styles.pressed,
-                      ]}>
-                      <ThemedText style={styles.bubbleText}>{message.text}</ThemedText>
-                    </Pressable>
-                  ),
-                )
-              )}
-              {busy === 'send' ? (
-                <View style={[styles.bubble, { backgroundColor: theme.backgroundElement }]}>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {TALK_WRITING}
-                  </ThemedText>
-                </View>
-              ) : null}
-              {error ? (
-                <ThemedText type="smallBold" style={[styles.error, { color: '#E5484D' }]}>
-                  {error}
-                </ThemedText>
-              ) : null}
-            </ScrollView>
+              {me ? <RankingCard me={me} onUpdated={refreshMe} /> : null}
+              {me ? <ScenarioCard me={me} onUpdated={refreshMe} /> : null}
+              <SageEightBall />
+              {me ? <SageUsageLine revision={usageRevision} /> : null}
+            </View>
 
+            {!me ? (
+              <ThemedView type="backgroundElement" style={styles.emptyCard}>
+                <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+              </ThemedView>
+            ) : consent === 'pending' ? (
+              <AiConsentCard
+                context="talk"
+                busy={busy === 'consent'}
+                onGrant={() => saveConsent(true)}
+                onDeny={() => saveConsent(false)}
+              />
+            ) : consent === 'denied' ? (
+              <ThemedView type="backgroundElement" style={styles.emptyCard}>
+                <ThemedText type="smallBold">Talk is off</ThemedText>
+                <ThemedText themeColor="textSecondary" style={styles.centerText}>
+                  You chose to keep Sage off AI, so Sage can&apos;t reply here. Your daily
+                  cards keep working.
+                </ThemedText>
+              </ThemedView>
+            ) : (
+              <>
+                {quotaEmpty ? (
+                  <ThemedView type="backgroundElement" style={styles.emptyCard}>
+                    <ThemedText type="smallBold">That&apos;s all for today</ThemedText>
+                    <ThemedText themeColor="textSecondary" style={styles.centerText}>
+                      {QUOTA_EMPTY_MESSAGE}
+                    </ThemedText>
+                  </ThemedView>
+                ) : null}
+                {!historyReady && messages.length === 0 && !quotaEmpty ? (
+                  <ThemedView type="backgroundElement" style={styles.emptyCard}>
+                    <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+                  </ThemedView>
+                ) : messages.length === 0 && !quotaEmpty ? (
+                  <ThemedView type="backgroundElement" style={styles.emptyCard}>
+                    <ThemedText themeColor="textSecondary" style={styles.centerText}>
+                      {TALK_EMPTY}
+                    </ThemedText>
+                  </ThemedView>
+                ) : (
+                  messages.map((message) =>
+                    message.role === 'user' ? (
+                      <View key={message.id} style={[styles.bubble, styles.userBubble, { backgroundColor: theme.accentFill }]}>
+                        <ThemedText style={[styles.bubbleText, { color: theme.onAccent }]}>
+                          {message.text}
+                        </ThemedText>
+                      </View>
+                    ) : message.crisis ? (
+                      <View key={message.id} style={styles.crisisBubble}>
+                        <CrisisCard onDismiss={() => dismissCrisis(message.id)} />
+                      </View>
+                    ) : (
+                      <Pressable
+                        key={message.id}
+                        onLongPress={() => message.reportable && setReportMessage(message)}
+                        delayLongPress={250}
+                        style={({ pressed }) => [
+                          styles.bubble,
+                          { backgroundColor: theme.backgroundElement },
+                          pressed && styles.pressed,
+                        ]}>
+                        <ThemedText style={styles.bubbleText}>{message.text}</ThemedText>
+                      </Pressable>
+                    ),
+                  )
+                )}
+                {busy === 'send' ? (
+                  <View style={[styles.bubble, { backgroundColor: theme.backgroundElement }]}>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {TALK_WRITING}
+                    </ThemedText>
+                  </View>
+                ) : null}
+                {error ? (
+                  <ThemedText type="smallBold" style={[styles.error, { color: '#E5484D' }]}>
+                    {error}
+                  </ThemedText>
+                ) : null}
+              </>
+            )}
+          </ScrollView>
+
+          {me && consent === 'granted' ? (
             <View
               ref={composerRef}
               collapsable={false}
@@ -527,7 +536,7 @@ export default function SageScreen() {
                 styles.composer,
                 {
                   backgroundColor: theme.background,
-                  paddingBottom: keyboardOpen ? Spacing.two : BottomTabInset + Spacing.two,
+                  paddingBottom: keyboardOpen ? Spacing.two : COMPOSER_REST_PAD,
                 },
               ]}>
               <ScrollView
@@ -602,8 +611,8 @@ export default function SageScreen() {
                 </Pressable>
               </View>
             </View>
-          </View>
-        )}
+          ) : null}
+        </View>
         </View>
       </SafeAreaView>
 
@@ -655,6 +664,14 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
+  chatColumn: {
+    flex: 1,
+    minHeight: 0,
+  },
+  thread: {
+    flex: 1,
+    minHeight: 0,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -687,7 +704,8 @@ const styles = StyleSheet.create({
   messages: {
     gap: Spacing.two,
     paddingVertical: Spacing.two,
-    paddingBottom: BottomTabInset + Spacing.four,
+    paddingBottom: Spacing.two,
+    flexGrow: 1,
   },
   bubble: {
     maxWidth: '85%',
@@ -708,6 +726,9 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   composer: {
+    flexShrink: 0,
+    zIndex: 2,
+    elevation: 4,
     paddingTop: Spacing.two,
     paddingBottom: BottomTabInset + Spacing.two,
     gap: Spacing.two,

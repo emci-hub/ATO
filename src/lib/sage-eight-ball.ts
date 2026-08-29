@@ -40,10 +40,10 @@ export function rollEightBall(previous?: string | null): EightBallAnswer {
 }
 
 /**
- * Slot-machine flash delays before the real answer lands. Sum stays well
- * under 1.5s so repeated taps still feel snappy.
+ * Slot-machine flash delays before the real answer lands. Sum is about 2s so
+ * a shake reads as a roll, not a flicker.
  */
-export const EIGHT_BALL_FLASH_DELAYS_MS = [70, 80, 95, 120, 155, 200] as const;
+export const EIGHT_BALL_FLASH_DELAYS_MS = [180, 220, 280, 360, 460, 600] as const;
 
 export function eightBallRollMs(): number {
   return EIGHT_BALL_FLASH_DELAYS_MS.reduce((sum, ms) => sum + ms, 0);

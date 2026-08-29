@@ -40,7 +40,7 @@ for (let i = 0; i < 80; i += 1) {
 assert.ok(rolled.size >= 8);
 ok('rolls stay inside the fixed set and do not get stuck on one line');
 
-assert.ok(eightBallRollMs() > 400 && eightBallRollMs() <= 1500);
+assert.ok(eightBallRollMs() > 1500 && eightBallRollMs() <= 2500);
 const landed = rollEightBall('Yes.');
 const flashes = pickEightBallFlashes(landed, 'Yes.');
 assert.equal(flashes.length, 6);
@@ -49,12 +49,14 @@ for (const line of flashes) {
   assert.notEqual(line, landed);
   assert.notEqual(line, 'Yes.');
 }
-ok('slot reel flashes other answers and finishes in under 1.5s');
+ok('slot reel flashes other answers and finishes in under 2.5s');
 
 const sage = read('src/app/(tabs)/sage.tsx');
 assert.match(sage, /SageEightBall/);
 assert.match(sage, /SageUsageLine/);
 assert.match(sage, /styles\.sageToys/);
+assert.match(sage, /styles\.chatColumn/);
+assert.match(sage, /COMPOSER_REST_PAD/);
 assert.doesNotMatch(sage, /routeVoiceCard/);
 assert.match(sage, /useKeyboardLift/);
 assert.match(sage, /visualViewport/);
@@ -71,6 +73,7 @@ ok('Sage composer lifts with the keyboard and scrolls the latest message into vi
 const eightBallUi = read('src/components/sage-eight-ball.tsx');
 assert.match(eightBallUi, /accessibilityState=\{\{ expanded: open \}\}/);
 assert.match(eightBallUi, /Ask again/);
+assert.doesNotMatch(eightBallUi, /if \(!open && answer == null\) roll/);
 assert.match(eightBallUi, /fontSize: 18/);
 assert.match(eightBallUi, /SageOrb/);
 assert.doesNotMatch(eightBallUi, /from 'react-native-svg'/);
