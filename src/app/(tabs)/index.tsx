@@ -451,6 +451,8 @@ export default function HomeScreen() {
               ) : null}
             </ThemedView>
           ) : null}
+            </>
+          ) : null}
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
