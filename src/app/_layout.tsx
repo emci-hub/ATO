@@ -63,11 +63,10 @@ function RootNavigator() {
           {isAuthed && hasMe ? <PushRuntime /> : null}
           <Stack screenOptions={{ headerShown: false }}>
             {/*
-              First available screen is the cold-start route. Labs used to sit
-              unprotected at the top of this Stack, so production landed on
-              theme-lab and the file's `if (!__DEV__)` gate painted "Dev only."
-              Keep labs last and behind __DEV__ — the in-file gate stays as a
-              second lock if someone deep-links the URL.
+              First available screen is the cold-start route. Theme/talk/pixel
+              labs stay behind __DEV__. /dev-lab is on the authed stack so
+              TestFlight root + granted testers can open it; the screen still
+              Redirects anyone else.
             */}
             <Stack.Protected guard={!isAuthed}>
               <Stack.Screen name="auth" />
@@ -82,6 +81,7 @@ function RootNavigator() {
               <Stack.Screen name="dawn" />
               <Stack.Screen name="week" />
               <Stack.Screen name="chat" />
+              <Stack.Screen name="dev-lab" />
             </Stack.Protected>
 
             <Stack.Protected guard={__DEV__}>
@@ -91,7 +91,6 @@ function RootNavigator() {
               <Stack.Screen name="pixel-lab" />
               <Stack.Screen name="crisis-lab" />
               <Stack.Screen name="voice-lab" />
-              <Stack.Screen name="dev-lab" />
             </Stack.Protected>
           </Stack>
         </>

@@ -1,6 +1,6 @@
 /**
- * Pure helpers for the Dev Tools Hub. The screen is __DEV__-only; these
- * stay free of React Native so check:dev-lab can pin a calendar.
+ * Pure helpers for the Dev Tools Hub. Visibility is root / grant / __DEV__;
+ * these stay free of React Native so check:dev-lab can pin a calendar.
  */
 
 import { BACKDATE_DAYS, journeyDay, openLogDays, type OpenLogDay } from '@/lib/check-window';

@@ -31,6 +31,7 @@ import type { Me } from '@/lib/me';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { VOICE_CONFIG } from '@/lib/voice/config';
 import { claimAiCall, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
+import { recordOwnDevTrace } from '@/lib/dev-trace-server';
 import type { CheckHistory } from '@/lib/voice/types';
 
 function emptyCopy(kind: RouteExploreResult['kind']): string | null {
@@ -84,6 +85,7 @@ export function ExplorePanel({
         logPhraseHit: logPhraseGuard,
         generateBody: generateExploreBody,
         useLocal: VOICE_CONFIG.provider === 'local' || !VOICE_CONFIG.geminiApiKey,
+        recordTrace: recordOwnDevTrace,
       },
     );
     setResult(next);

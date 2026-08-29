@@ -30,15 +30,18 @@ const layout = read('src/app/_layout.tsx');
 const intent = read('src/app/+native-intent.ts');
 const hub = read('src/app/dev-lab.tsx');
 
-assert.match(layout, /<Stack\.Protected guard=\{__DEV__\}>[\s\S]*name="dev-lab"/);
+assert.match(layout, /<Stack\.Protected guard=\{isAuthed && hasMe\}>[\s\S]*name="dev-lab"/);
+assert.doesNotMatch(layout, /<Stack\.Protected guard=\{__DEV__\}>[\s\S]*name="dev-lab"/);
 const tabsDecl = layout.indexOf('name="(tabs)"');
 const hubDecl = layout.indexOf('name="dev-lab"');
 assert.ok(tabsDecl > 0 && hubDecl > tabsDecl, 'dev-lab must not be the Stack cold-start screen');
-assert.match(hub, /if \(!__DEV__\)/);
+assert.match(hub, /canSeeDevLab/);
 assert.match(hub, /Redirect href="\/"/);
+assert.doesNotMatch(hub, /if \(!__DEV__\)/);
 assert.doesNotMatch(hub, /Dev only/);
-assert.match(intent, /voice\|dev\)-lab/);
-ok('dev-lab is a __DEV__ route behind Stack.Protected, not a production screen');
+assert.match(intent, /theme\|around\|talk\|pixel\|crisis\|voice\)-lab/);
+assert.doesNotMatch(intent, /voice\|dev\)-lab/);
+ok('dev-lab is on the authed stack behind root/grants, not a __DEV__-only route');
 
 assert.deepEqual([...DEV_LAB_STREAKS], [0, 1, 2, 3, 4, 7]);
 assert.deepEqual([...DEV_LAB_GAPS], [1, 2, 3, 7]);

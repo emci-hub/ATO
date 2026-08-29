@@ -10,6 +10,7 @@ import { fallbackCatchUpCard, offsetLabel, type OpenLogDay } from '@/lib/check-w
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { routeVoiceCard } from '@/lib/voice/router';
 import { logJargonGuard } from '@/lib/voice/quota-server';
+import { recordOwnDevTrace } from '@/lib/dev-trace-server';
 import type { RouteVoiceCardInput, VoiceCard, VoiceSource } from '@/lib/voice/types';
 
 export function MissedCheckCard({
@@ -29,7 +30,7 @@ export function MissedCheckCard({
 
   useEffect(() => {
     let cancelled = false;
-    routeVoiceCard({ ...routeInput, day: slot.day }, { logJargonHit: logJargonGuard })
+    routeVoiceCard({ ...routeInput, day: slot.day }, { logJargonHit: logJargonGuard, recordTrace: recordOwnDevTrace, traceSurface: 'sage' })
       .then((result) => {
         if (cancelled) return;
         if (result.card) {

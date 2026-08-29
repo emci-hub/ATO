@@ -2,6 +2,7 @@ import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import { matchingJargonTerm } from '@/lib/voice/jargon';
 import { matchingPhrasePattern } from '@/lib/voice/phrase-guard';
 import type { QuotaDecision } from '@/lib/voice/quota';
+import { libraryLinesFor, traitSignalsFromMe, type DevTraceRecordInput } from '@/lib/dev-trace';
 
 import { decideExploreTrigger, exploreToday } from './cadence';
 import { exploreFingerprint, pickExplorePackFocuses } from './combine';
@@ -10,6 +11,7 @@ import { composeLocalExplore } from './local';
 import { buildExplorePrompt } from './prompt';
 import type {
   ExploreDraft,
+  ExploreFocus,
   ExplorePackRow,
   RouteExploreInput,
   RouteExploreResult,
@@ -32,6 +34,7 @@ export interface RouteExploreDeps {
   generateBody?: (prompt: string) => Promise<string | null>;
   /** Tests / no-key: skip the model. */
   useLocal?: boolean;
+  recordTrace?: (input: DevTraceRecordInput) => Promise<void>;
 }
 
 function applyOutputGuards(body: string): {
@@ -95,11 +98,15 @@ export async function routeExplore(
   const drafts: ExploreDraft[] = [];
   for (const focus of focuses) {
     if (useLocal || !deps.generateBody) {
-      drafts.push(composeLocalExplore(input.me, focus));
+      const local = composeLocalExplore(input.me, focus);
+      drafts.push(local);
+      await emitExploreTrace(deps, input, focus, local.body, local.body, null);
       continue;
     }
 
     let body: string | null = null;
+    let rawBefore: string | null = null;
+    let guardFired: string | null = null;
     for (let attempt = 1; attempt <= FENCE_ATTEMPTS; attempt += 1) {
       const prompt = buildExplorePrompt({
         me: input.me,
@@ -109,10 +116,20 @@ export async function routeExplore(
       });
       const candidate = await deps.generateBody(prompt);
       if (!candidate) break;
-      if (containsFrameworkTerm(candidate)) continue;
+      rawBefore = candidate;
+      if (containsFrameworkTerm(candidate)) {
+        guardFired = 'framework-echo';
+        continue;
+      }
       const guarded = applyOutputGuards(candidate);
-      if (guarded.jargon) await deps.logJargonHit?.(guarded.jargon).catch(() => {});
-      if (guarded.phrase) await deps.logPhraseHit?.(guarded.phrase).catch(() => {});
+      if (guarded.jargon) {
+        await deps.logJargonHit?.(guarded.jargon).catch(() => {});
+        guardFired = guarded.jargon;
+      }
+      if (guarded.phrase) {
+        await deps.logPhraseHit?.(guarded.phrase).catch(() => {});
+        guardFired = guarded.phrase;
+      }
       body = guarded.body;
       break;
     }
@@ -123,6 +140,7 @@ export async function routeExplore(
         chips: focus.chips,
         signalKind: focus.signal?.kind ?? null,
       });
+      await emitExploreTrace(deps, input, focus, rawBefore, body, guardFired);
     }
   }
 
@@ -161,4 +179,30 @@ export async function routeExplore(
     drafts,
   });
   return { kind: 'pack', pack, trigger };
+}
+
+async function emitExploreTrace(
+  deps: RouteExploreDeps,
+  input: RouteExploreInput,
+  focus: ExploreFocus,
+  rawBefore: string | null,
+  rawAfter: string | null,
+  guardFired: string | null,
+): Promise<void> {
+  if (!deps.recordTrace) return;
+  await deps
+    .recordTrace({
+      surface: 'explore',
+      libraryLines: libraryLinesFor(input.me, { day: 1, surface: 'card' }),
+      traitSignals: {
+        axes: traitSignalsFromMe(input.me),
+        focusTraits: focus.traits,
+        chips: focus.chips,
+        signal: focus.signal,
+      },
+      rawBefore,
+      rawAfter,
+      guardFired,
+    })
+    .catch(() => {});
 }

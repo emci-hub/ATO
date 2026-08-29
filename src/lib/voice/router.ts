@@ -1,3 +1,5 @@
+import { libraryLinesFor, traitSignalsFromMe, type DevTraceRecordInput } from '@/lib/dev-trace';
+
 import { bankCardForMe } from './bank';
 import {
   BANK_CARD_DAYS,
@@ -17,6 +19,7 @@ import type {
   ProviderId,
   RouteVoiceCardInput,
   Tone,
+  VoiceCard,
   VoiceCardResult,
 } from './types';
 
@@ -41,6 +44,13 @@ export interface RouteVoiceCardDeps {
   isDev?: boolean;
   /** Jargon-guard log. Production screens pass logJargonGuard. Tests omit. */
   logJargonHit?: (flag: string) => Promise<void>;
+  /**
+   * Own-account session capture. Production Home/Dawn/catch-up pass
+   * recordOwnDevTrace. Tests and the local simulator omit.
+   */
+  recordTrace?: (input: DevTraceRecordInput) => Promise<void>;
+  /** Home/Talk catch-up = sage. Dawn passes dawn. */
+  traceSurface?: 'sage' | 'dawn';
 }
 
 function withNudge(result: Omit<VoiceCardResult, 'nudge'>, input: RouteVoiceCardInput): VoiceCardResult {
@@ -59,6 +69,33 @@ function withNudge(result: Omit<VoiceCardResult, 'nudge'>, input: RouteVoiceCard
   const safe = nudge && !containsFrameworkTerm(nudge) ? nudge : null;
   result.card.nudge = safe;
   return { ...result, nudge: safe };
+}
+
+function cardBlob(card: VoiceCard | null | undefined): string | null {
+  if (!card) return null;
+  return JSON.stringify({ read: card.read, do: card.do, nudge: card.nudge ?? null });
+}
+
+async function emitCardTrace(
+  deps: RouteVoiceCardDeps,
+  input: RouteVoiceCardInput,
+  day: number,
+  result: VoiceCardResult,
+  rawBefore: string | null,
+  guardFired: string | null,
+): Promise<VoiceCardResult> {
+  if (!deps.recordTrace) return result;
+  await deps
+    .recordTrace({
+      surface: deps.traceSurface ?? 'sage',
+      libraryLines: libraryLinesFor(input.me, { day, surface: 'card' }),
+      traitSignals: traitSignalsFromMe(input.me),
+      rawBefore,
+      rawAfter: cardBlob(result.card),
+      guardFired,
+    })
+    .catch(() => {});
+  return result;
 }
 
 /**
@@ -120,34 +157,48 @@ export async function routeVoiceCard(
       ? filterCard(card, { shownCards: [], crisisToday: !!input.crisisToday, previousHadCut: false })
       : null;
     if (bankReason) {
-      return withNudge(
+      return emitCardTrace(
+        deps,
+        input,
+        day,
+        withNudge(
+          {
+            kind: 'card',
+            card: null,
+            day,
+            tone,
+            source: 'bank',
+            provider: null,
+            dropped: [bankReason],
+            consent: consent === false ? 'denied' : 'pending',
+            dev: trace(true, false, 'first_cards.md'),
+          },
+          input,
+        ),
+        cardBlob(card),
+        bankReason,
+      );
+    }
+    return emitCardTrace(
+      deps,
+      input,
+      day,
+      withNudge(
         {
           kind: 'card',
-          card: null,
+          card,
           day,
           tone,
           source: 'bank',
           provider: null,
-          dropped: [bankReason],
+          dropped: [],
           consent: consent === false ? 'denied' : 'pending',
           dev: trace(true, false, 'first_cards.md'),
         },
         input,
-      );
-    }
-    return withNudge(
-      {
-        kind: 'card',
-        card,
-        day,
-        tone,
-        source: 'bank',
-        provider: null,
-        dropped: [],
-        consent: consent === false ? 'denied' : 'pending',
-        dev: trace(true, false, 'first_cards.md'),
-      },
-      input,
+      ),
+      cardBlob(card),
+      null,
     );
   }
 
@@ -181,6 +232,7 @@ export async function routeVoiceCard(
   const crisisToday = !!input.crisisToday;
 
   let lastDropped: VoiceCardResult['dropped'] = [];
+  let lastCandidate: VoiceCard | null = null;
 
   for (let attempt = 1; attempt <= GENERATED_MAX_ATTEMPTS; attempt += 1) {
     const candidate = await provider.generate({
@@ -192,6 +244,7 @@ export async function routeVoiceCard(
       previousHadCut,
       retryHint: lastDropped[0] ?? null,
     });
+    lastCandidate = candidate;
     const reason = filterCard(candidate, { shownCards, crisisToday, previousHadCut });
     if (!reason) {
       const flag = jargonInCard(candidate);
@@ -199,37 +252,51 @@ export async function routeVoiceCard(
       if (flag) {
         await deps.logJargonHit?.(flag).catch(() => {});
       }
-      return withNudge(
-        {
-          kind: 'card',
-          card,
-          day,
-          tone,
-          source: 'generated',
-          provider: provider.id,
-          dropped: [],
-          consent: 'granted',
-          dev: trace(false, true, providerLabel),
-        },
+      return emitCardTrace(
+        deps,
         input,
+        day,
+        withNudge(
+          {
+            kind: 'card',
+            card,
+            day,
+            tone,
+            source: 'generated',
+            provider: provider.id,
+            dropped: [],
+            consent: 'granted',
+            dev: trace(false, true, providerLabel),
+          },
+          input,
+        ),
+        cardBlob(candidate),
+        flag,
       );
     }
     lastDropped = [reason];
   }
 
   // Everything got dropped — per spec, show nothing rather than bad content.
-  return withNudge(
-    {
-      kind: 'card',
-      card: null,
-      day,
-      tone,
-      source: 'generated',
-      provider: provider.id,
-      dropped: lastDropped,
-      consent: 'granted',
-      dev: trace(false, true, providerLabel),
-    },
+  return emitCardTrace(
+    deps,
     input,
+    day,
+    withNudge(
+      {
+        kind: 'card',
+        card: null,
+        day,
+        tone,
+        source: 'generated',
+        provider: provider.id,
+        dropped: lastDropped,
+        consent: 'granted',
+        dev: trace(false, true, providerLabel),
+      },
+      input,
+    ),
+    cardBlob(lastCandidate),
+    lastDropped[0] ?? null,
   );
 }

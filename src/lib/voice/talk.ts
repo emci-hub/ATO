@@ -1,4 +1,5 @@
 import { detectCrisis as defaultDetectCrisis, type CrisisDetection } from '@/lib/crisis/detect';
+import { libraryLinesFor, traitSignalsFromMe, type DevTraceRecordInput } from '@/lib/dev-trace';
 
 import { VOICE_CONFIG, type VoiceConfig } from './config';
 import { containsFrameworkTerm } from './framework-fence';
@@ -46,6 +47,7 @@ export interface TalkReplyDeps {
    */
   claimAiCall?: () => Promise<QuotaDecision>;
   logJargonHit?: (flag: string) => Promise<void>;
+  recordTrace?: (input: DevTraceRecordInput) => Promise<void>;
 }
 
 export type TalkReplyKind =
@@ -139,30 +141,69 @@ export async function routeTalkReply(
     recentTurns: input.recentTurns,
   };
 
+  let lastRaw: string | null = null;
+  let lastGuard: string | null = 'framework-echo';
+
   for (let attempt = 1; attempt <= TALK_FENCE_ATTEMPTS; attempt += 1) {
     const { reply } = await provider.generateTalk({
       ...talkInput,
       retryHint: attempt > 1,
     });
+    lastRaw = reply;
     if (!containsFrameworkTerm(reply)) {
       const flag = matchingJargonTerm(reply);
       if (flag) {
         await deps.logJargonHit?.(flag).catch(() => {});
-        return {
+        const result: TalkReplyResult = {
           kind: 'reply',
           reply: JARGON_FALLBACK_TALK,
           provider: provider.id,
           dev: trace(true, `${providerLabel} (jargon)`),
         };
+        await emitTalkTrace(deps, input, lastRaw, JARGON_FALLBACK_TALK, flag);
+        return result;
       }
-      return { kind: 'reply', reply, provider: provider.id, dev: trace(true, providerLabel) };
+      const result: TalkReplyResult = {
+        kind: 'reply',
+        reply,
+        provider: provider.id,
+        dev: trace(true, providerLabel),
+      };
+      await emitTalkTrace(deps, input, lastRaw, reply, null);
+      return result;
     }
+    lastGuard = 'framework-echo';
   }
 
   // Both drafts named a type/label — show nothing rather than a blocked line.
+  await emitTalkTrace(deps, input, lastRaw, null, lastGuard);
   return {
     kind: 'empty',
     provider: provider.id,
     dev: trace(true, `${providerLabel} (fence)`),
   };
+}
+
+async function emitTalkTrace(
+  deps: TalkReplyDeps,
+  input: TalkReplyInput,
+  rawBefore: string | null,
+  rawAfter: string | null,
+  guardFired: string | null,
+): Promise<void> {
+  if (!deps.recordTrace) return;
+  await deps
+    .recordTrace({
+      surface: 'sage',
+      libraryLines: libraryLinesFor(input.me, {
+        day: input.checkCount + 1,
+        surface: 'talk',
+        message: input.message,
+      }),
+      traitSignals: traitSignalsFromMe(input.me),
+      rawBefore,
+      rawAfter,
+      guardFired,
+    })
+    .catch(() => {});
 }

@@ -34,6 +34,8 @@ import { resolveReveal } from '@/lib/reveal';
 import { EXPLORE_LEDE } from '@/lib/explore/copy';
 import { routeVoiceCard } from '@/lib/voice/router';
 import { logJargonGuard } from '@/lib/voice/quota-server';
+import { canSeeDevLab } from '@/lib/dev-access';
+import { recordOwnDevTrace } from '@/lib/dev-trace-server';
 import type { VoiceCard, VoiceSource } from '@/lib/voice/types';
 import { useSession } from '@/hooks/use-session';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
@@ -42,7 +44,7 @@ export default function HomeScreen() {
   const theme = useTheme();
   const { session } = useSession();
   const userId = session?.user.id;
-  const { me, refresh: refreshMe } = useMeContext();
+  const { me, refresh: refreshMe, devAccess } = useMeContext();
   const { card, reload: reloadCard } = useTodayCard();
   const { state: growth } = useGrowth();
   const params = useLocalSearchParams<{ focus?: string }>();
@@ -136,7 +138,7 @@ export default function HomeScreen() {
       crisisYesterday,
       aiConsent: me.ai_consent,
       day: todayOpen.day,
-    }, { logJargonHit: logJargonGuard })
+    }, { logJargonHit: logJargonGuard, recordTrace: recordOwnDevTrace, traceSurface: 'sage' })
       .then(async (next) => {
         if (cancelled || !next.card) return;
         await persistRoutedCard(next);
@@ -372,22 +374,35 @@ export default function HomeScreen() {
             <ThemedText themeColor="textSecondary">›</ThemedText>
           </Pressable>
 
-          {__DEV__ ? (
+          {(canSeeDevLab({
+            isDev: __DEV__,
+            isRoot: devAccess.isRoot,
+            capabilities: devAccess.capabilities,
+          }) ||
+            __DEV__) ? (
             <ThemedView type="backgroundElement" style={styles.boxCard}>
               <ThemedText type="code" themeColor="textSecondary" style={styles.boxKicker}>
                 dev
               </ThemedText>
+              {canSeeDevLab({
+                isDev: __DEV__,
+                isRoot: devAccess.isRoot,
+                capabilities: devAccess.capabilities,
+              }) ? (
               <Pressable
                 onPress={() => router.push('/dev-lab')}
                 style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
                 <View style={styles.boxRowText}>
                   <ThemedText type="smallBold">Dev Tools Hub</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
-                    Dev: cards, traits, quota, fence
+                    Cards, traits, quota, fence, trace
                   </ThemedText>
                 </View>
                 <ThemedText themeColor="textSecondary">›</ThemedText>
               </Pressable>
+              ) : null}
+              {__DEV__ ? (
+                <>
               <Pressable
                 onPress={() => router.push('/voice-lab')}
                 style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
@@ -432,9 +447,9 @@ export default function HomeScreen() {
                 </View>
                 <ThemedText themeColor="textSecondary">›</ThemedText>
               </Pressable>
+                </>
+              ) : null}
             </ThemedView>
-          ) : null}
-            </>
           ) : null}
         </ScrollView>
       </SafeAreaView>

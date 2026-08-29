@@ -174,10 +174,10 @@ Minimal, not a dashboard:
 3. **ME addition**: `referred_by` — nullable, hidden field, FK to another ME row. Not shown publicly. A user *may* see their own list of who they referred (their choice to show it or not) — never who referred *them* beyond their own account, never anyone else's tree. `is_founder` is separate and cosmetic.
 4. **Signup enforcement**: Auth box — if `signup_mode = invite_only`, a valid unused code is required to create an account; code is consumed on success.
 5. **Moderation** (no admin UI — same discipline as the Report spec, query Supabase directly):
-   - `pause_branch(user_id)` — recursive walk down `referred_by`, disables login for that user and every descendant. Reversible. Use first.
-   - `delete_branch(user_id)` — same walk, hard delete, cascades. Only after a paused branch has actually been reviewed.
+   - `pause_branch(user_id)` — recursive walk down `referred_by`, disables login for that user and every descendant. Reversible. Use first. Root can also run this from `/dev-lab` Profiles (`root_pause_profile`); not grantable.
+   - `delete_branch(user_id)` — same walk, hard delete, cascades. Only after a paused branch has actually been reviewed. Root can also run this from `/dev-lab` Profiles (`root_delete_profile`, type-the-handle confirm); not grantable.
 6. **Disclaimer**: one line added to the privacy policy: referral relationships are tracked only for abuse prevention, not shared or used elsewhere.
-7. **Access requests**: public landing form (email only) writes `access_requests`. Root reviews pending rows in `/dev-lab` (dev-gated). Approve generates a single-use code owned by root and emails it via Resend. Deny is silent.
+7. **Access requests**: public landing form (email only) writes `access_requests`. Root reviews pending rows in `/dev-lab` Access (root-only RPC, not grantable). Approve generates a single-use code owned by root and emails it via Resend. Deny is silent. `/dev-lab` itself is visible to root, granted testers (card/traits/quota/fence/trace), and local `__DEV__`.
 
 **Done:** invite-only signup rejects a missing/used/invalid code. A seeded test tree (you → A → B, C) can be paused as one action and B/C both lose access without touching A's or your own account. Flipping `signup_mode` to `public` allows signup with no code, no other change required. Founder unlimited codes set `referred_by` on signup without a use cap. Landing request form writes `access_requests`; approve/deny are root-only.
 

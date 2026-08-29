@@ -8,12 +8,17 @@ import {
   useState,
 } from 'react';
 
+import { fetchMyDevAccess, type DevAccessSnapshot } from '@/lib/dev-access-server';
 import { fetchMe, Me } from '@/lib/me';
 import { supabase } from '@/lib/supabase';
+
+const EMPTY_DEV_ACCESS: DevAccessSnapshot = { isRoot: false, capabilities: [] };
 
 interface MeContextValue {
   me: Me | null;
   loading: boolean;
+  devAccess: DevAccessSnapshot;
+  devAccessLoading: boolean;
   /** Re-fetches the current user's me row and updates the shared state so the
    *  root guard re-evaluates (e.g. right after onboarding creates the row). */
   refresh: () => Promise<void>;
@@ -22,12 +27,16 @@ interface MeContextValue {
 const MeContext = createContext<MeContextValue>({
   me: null,
   loading: false,
+  devAccess: EMPTY_DEV_ACCESS,
+  devAccessLoading: false,
   refresh: async () => {},
 });
 
 export function MeProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
   const [loading, setLoading] = useState(false);
+  const [devAccess, setDevAccess] = useState<DevAccessSnapshot>(EMPTY_DEV_ACCESS);
+  const [devAccessLoading, setDevAccessLoading] = useState(false);
   const [userId, setUserId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
@@ -42,7 +51,10 @@ export function MeProvider({ children }: { children: ReactNode }) {
       // Only reset when the user actually changes or signs out — not on
       // token refresh events, which would briefly flip the guard.
       setUserId((prev) => {
-        if (prev !== nextId) setMe(null);
+        if (prev !== nextId) {
+          setMe(null);
+          setDevAccess(EMPTY_DEV_ACCESS);
+        }
         return nextId;
       });
     });
@@ -54,11 +66,14 @@ export function MeProvider({ children }: { children: ReactNode }) {
     if (!userId) {
       setMe(null);
       setLoading(false);
+      setDevAccess(EMPTY_DEV_ACCESS);
+      setDevAccessLoading(false);
       return;
     }
 
     let cancelled = false;
     setLoading(true);
+    setDevAccessLoading(true);
 
     fetchMe(userId)
       .then((row) => {
@@ -69,6 +84,17 @@ export function MeProvider({ children }: { children: ReactNode }) {
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
+      });
+
+    fetchMyDevAccess()
+      .then((next) => {
+        if (!cancelled) setDevAccess(next);
+      })
+      .catch(() => {
+        if (!cancelled) setDevAccess(EMPTY_DEV_ACCESS);
+      })
+      .finally(() => {
+        if (!cancelled) setDevAccessLoading(false);
       });
 
     return () => {
@@ -84,9 +110,18 @@ export function MeProvider({ children }: { children: ReactNode }) {
     } catch {
       setMe(null);
     }
+    try {
+      setDevAccess(await fetchMyDevAccess());
+    } catch {
+      setDevAccess(EMPTY_DEV_ACCESS);
+    }
   }, [userId]);
 
-  return <MeContext.Provider value={{ me, loading, refresh }}>{children}</MeContext.Provider>;
+  return (
+    <MeContext.Provider value={{ me, loading, devAccess, devAccessLoading, refresh }}>
+      {children}
+    </MeContext.Provider>
+  );
 }
 
 export function useMeContext() {

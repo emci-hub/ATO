@@ -17,6 +17,24 @@ import {
   type AccessRequest,
 } from '@/lib/access-requests';
 import {
+  GRANTABLE_CAPABILITIES,
+  GRANTABLE_DESCRIPTIONS,
+  NEVER_GRANTABLE,
+  ROOT_ONLY_DESCRIPTIONS,
+  canSeeDevLab,
+  canSeeHubSection,
+  type HubSection,
+} from '@/lib/dev-access';
+import {
+  deleteProfile,
+  listDevAccessGrants,
+  pauseProfile,
+  saveDevAccessGrants,
+  searchMeAccounts,
+  unpauseProfile,
+  type MeSearchRow,
+} from '@/lib/dev-access-server';
+import {
   DEV_LAB_AXIS_ORDER,
   DEV_LAB_GAPS,
   DEV_LAB_PATTERNS,
@@ -25,6 +43,13 @@ import {
   demoTraitState,
   simulateGapWindow,
 } from '@/lib/dev-lab';
+import {
+  fetchDevTraceSession,
+  listOwnDevTraceEvents,
+  startDevTrace,
+  stopDevTrace,
+} from '@/lib/dev-trace-server';
+import type { DevTraceEvent, DevTraceSession } from '@/lib/dev-trace';
 import { voiceMeFrom } from '@/lib/intake';
 import { localYmd } from '@/lib/local-date';
 import { supabase } from '@/lib/supabase';
@@ -37,14 +62,15 @@ import { fetchSageUsage } from '@/lib/voice/quota-server';
 import { routeVoiceCard } from '@/lib/voice/router';
 import type { VoiceCardResult, VoiceMe } from '@/lib/voice/types';
 
-type HubSection = 'card' | 'traits' | 'quota' | 'fence' | 'access';
-
 const SECTIONS: { id: HubSection; label: string }[] = [
   { id: 'card', label: 'Card' },
   { id: 'traits', label: 'Traits' },
   { id: 'quota', label: 'Quota' },
   { id: 'fence', label: 'Fence' },
+  { id: 'trace', label: 'Trace' },
   { id: 'access', label: 'Access' },
+  { id: 'grants', label: 'Grants' },
+  { id: 'profiles', label: 'Profiles' },
 ];
 
 const LAB_ME: VoiceMe = {
@@ -67,14 +93,49 @@ const SOURCE_NOTE: Record<TraitSource, string> = {
 };
 
 export default function DevLabScreen() {
-  if (!__DEV__) {
+  const { devAccess, devAccessLoading } = useMeContext();
+  if (devAccessLoading) {
+    return (
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
+          <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+        </SafeAreaView>
+      </ThemedView>
+    );
+  }
+  if (
+    !canSeeDevLab({
+      isDev: __DEV__,
+      isRoot: devAccess.isRoot,
+      capabilities: devAccess.capabilities,
+    })
+  ) {
     return <Redirect href="/" />;
   }
   return <DevLab />;
 }
 
 function DevLab() {
-  const [section, setSection] = useState<HubSection>('card');
+  const { devAccess } = useMeContext();
+  const gate = useMemo(
+    () => ({
+      isDev: __DEV__,
+      isRoot: devAccess.isRoot,
+      capabilities: devAccess.capabilities,
+    }),
+    [devAccess.isRoot, devAccess.capabilities],
+  );
+  const visible = useMemo(
+    () => SECTIONS.filter((tab) => canSeeHubSection(tab.id, gate)),
+    [gate],
+  );
+  const [section, setSection] = useState<HubSection>(visible[0]?.id ?? 'card');
+
+  useEffect(() => {
+    if (!visible.some((tab) => tab.id === section)) {
+      setSection(visible[0]?.id ?? 'card');
+    }
+  }, [section, visible]);
 
   return (
     <ThemedView style={styles.container}>
@@ -83,11 +144,12 @@ function DevLab() {
           <View style={styles.header}>
             <ThemedText type="subtitle">Dev Tools Hub</ThemedText>
             <ThemedText themeColor="textSecondary">
-              Dev-only. Same gates as the other labs — not in the production navigator.
+              Root and granted testers in TestFlight. Local __DEV__ always opens it.
+              Access, grants, and profile pause/delete stay root-only.
             </ThemedText>
           </View>
           <View style={styles.tabs}>
-            {SECTIONS.map((tab) => (
+            {visible.map((tab) => (
               <Chip
                 key={tab.id}
                 label={tab.label}
@@ -100,7 +162,10 @@ function DevLab() {
           {section === 'traits' ? <TraitViewer /> : null}
           {section === 'quota' ? <QuotaDashboard /> : null}
           {section === 'fence' ? <FenceTester /> : null}
+          {section === 'trace' ? <TraceCapture /> : null}
           {section === 'access' ? <AccessReview /> : null}
+          {section === 'grants' ? <GrantsPanel /> : null}
+          {section === 'profiles' ? <ProfilesPanel /> : null}
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -469,6 +534,434 @@ function FenceTester() {
   );
 }
 
+function TraceCapture() {
+  const theme = useTheme();
+  const [session, setSession] = useState<DevTraceSession | null>(null);
+  const [events, setEvents] = useState<DevTraceEvent[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function load() {
+    try {
+      const [nextSession, nextEvents] = await Promise.all([
+        fetchDevTraceSession(),
+        listOwnDevTraceEvents(),
+      ]);
+      setSession(nextSession);
+      setEvents(nextEvents);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load traces.');
+    }
+  }
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  async function toggle() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      if (session?.active) await stopDevTrace();
+      else await startDevTrace();
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not toggle capture.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Trace / debug</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Capture your own next Sage, Explore, and Dawn generations — Library lines,
+        trait signals, raw text before/after the fence. 30 minutes or 20
+        interactions, then off. Rows delete after 7 days. Never another account.
+      </ThemedText>
+      <Pressable
+        disabled={busy}
+        onPress={() => void toggle()}
+        style={({ pressed }) => [
+          styles.chip,
+          { borderColor: controlBorderColor(theme) },
+          session?.active && { backgroundColor: theme.accentFill },
+          pressed && styles.pressed,
+        ]}>
+        <ThemedText
+          type="small"
+          style={session?.active ? { color: theme.onAccent } : undefined}
+          themeColor={session?.active ? undefined : 'text'}>
+          {busy ? '…' : session?.active ? 'Capture on — tap to stop' : 'Capture my next interactions'}
+        </ThemedText>
+      </Pressable>
+      {session?.active ? (
+        <ThemedText type="code" themeColor="textSecondary">
+          {session.remaining} left · until {session.expiresAt ?? '—'}
+        </ThemedText>
+      ) : null}
+      {error ? <ThemedText type="small">{error}</ThemedText> : null}
+      {events.length === 0 ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          No captured rows yet.
+        </ThemedText>
+      ) : (
+        events.map((row) => (
+          <ThemedView key={row.id} type="backgroundElement" style={styles.card}>
+            <ThemedText type="code" themeColor="textSecondary">
+              {row.surface} · {row.createdAt}
+            </ThemedText>
+            <ThemedText type="smallBold">
+              {row.guardFired ? `guard: ${row.guardFired}` : 'no guard'}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              library: {JSON.stringify(row.libraryLines)}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              traits: {JSON.stringify(row.traitSignals)}
+            </ThemedText>
+            <ThemedText type="small">before: {row.rawBefore ?? '—'}</ThemedText>
+            <ThemedText type="small">after: {row.rawAfter ?? '—'}</ThemedText>
+          </ThemedView>
+        ))
+      )}
+    </View>
+  );
+}
+
+function GrantsPanel() {
+  const theme = useTheme();
+  const [query, setQuery] = useState('');
+  const [hits, setHits] = useState<MeSearchRow[]>([]);
+  const [selected, setSelected] = useState<MeSearchRow | null>(null);
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [error, setError] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function lookup() {
+    setBusy(true);
+    setNote(null);
+    try {
+      const next = await searchMeAccounts(query);
+      setHits(next);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Search failed.');
+      setHits([]);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function pick(row: MeSearchRow) {
+    setSelected(row);
+    setNote(null);
+    try {
+      const grants = await listDevAccessGrants(row.handle);
+      const next: Record<string, boolean> = {};
+      for (const cap of GRANTABLE_CAPABILITIES) next[cap] = grants.some((g) => g.capability === cap);
+      setChecked(next);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load grants.');
+    }
+  }
+
+  async function save() {
+    if (!selected || busy) return;
+    setBusy(true);
+    try {
+      const caps = GRANTABLE_CAPABILITIES.filter((cap) => checked[cap]);
+      await saveDevAccessGrants(selected.handle, caps);
+      setNote(`Saved @${selected.handle}`);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Save failed.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Grant capabilities</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Root only. Tester must already have a ME row. Pause, delete, and access
+        review cannot be granted — those stay on this account.
+      </ThemedText>
+      <TextInput
+        value={query}
+        onChangeText={setQuery}
+        placeholder="Search handle…"
+        placeholderTextColor={theme.textSecondary}
+        autoCapitalize="none"
+        autoCorrect={false}
+        style={[
+          styles.input,
+          styles.searchInput,
+          { color: theme.text, backgroundColor: theme.backgroundSelected, borderColor: controlBorderColor(theme) },
+        ]}
+      />
+      <Pressable
+        disabled={busy}
+        onPress={() => void lookup()}
+        style={({ pressed }) => [
+          styles.chip,
+          { borderColor: controlBorderColor(theme), backgroundColor: theme.accentFill },
+          pressed && styles.pressed,
+        ]}>
+        <ThemedText type="small" style={{ color: theme.onAccent }}>
+          {busy ? '…' : 'Look up'}
+        </ThemedText>
+      </Pressable>
+      {error ? <ThemedText type="small">{error}</ThemedText> : null}
+      {note ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {note}
+        </ThemedText>
+      ) : null}
+      <View style={styles.tabs}>
+        {hits.map((row) => (
+          <Chip
+            key={row.id}
+            label={`@${row.handle}`}
+            selected={selected?.id === row.id}
+            onPress={() => void pick(row)}
+          />
+        ))}
+      </View>
+      {selected ? (
+        <>
+          {GRANTABLE_CAPABILITIES.map((cap) => (
+            <Pressable
+              key={cap}
+              onPress={() => setChecked((prev) => ({ ...prev, [cap]: !prev[cap] }))}
+              style={({ pressed }) => [styles.axisRow, { borderWidth: 1, borderColor: controlBorderColor(theme) }, pressed && styles.pressed]}>
+              <ThemedText type="smallBold">
+                {checked[cap] ? '☑' : '☐'} {cap}
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {GRANTABLE_DESCRIPTIONS[cap]}
+              </ThemedText>
+            </Pressable>
+          ))}
+          {NEVER_GRANTABLE.map((action) => (
+            <ThemedView key={action} type="backgroundElement" style={styles.axisRow}>
+              <ThemedText type="smallBold">{action} — root only</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {ROOT_ONLY_DESCRIPTIONS[action]} Never grantable.
+              </ThemedText>
+            </ThemedView>
+          ))}
+          <Pressable
+            disabled={busy}
+            onPress={() => void save()}
+            style={({ pressed }) => [
+              styles.chip,
+              { borderColor: controlBorderColor(theme), backgroundColor: theme.accentFill },
+              pressed && styles.pressed,
+            ]}>
+            <ThemedText type="small" style={{ color: theme.onAccent }}>
+              Save grants
+            </ThemedText>
+          </Pressable>
+        </>
+      ) : null}
+    </View>
+  );
+}
+
+function ProfilesPanel() {
+  const theme = useTheme();
+  const [query, setQuery] = useState('');
+  const [hits, setHits] = useState<MeSearchRow[]>([]);
+  const [selected, setSelected] = useState<MeSearchRow | null>(null);
+  const [confirm, setConfirm] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function lookup() {
+    setBusy(true);
+    setNote(null);
+    try {
+      const next = await searchMeAccounts(query);
+      setHits(next);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Search failed.');
+      setHits([]);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function refreshSelected(handle: string) {
+    const next = await searchMeAccounts(handle);
+    const match = next.find((row) => row.handle === handle) ?? null;
+    setSelected(match);
+    setHits(next);
+  }
+
+  async function pause() {
+    if (!selected || busy) return;
+    setBusy(true);
+    try {
+      await pauseProfile(selected.handle);
+      setNote(`Paused @${selected.handle} (and referral descendants).`);
+      await refreshSelected(selected.handle);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Pause failed.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function unpause() {
+    if (!selected || busy) return;
+    setBusy(true);
+    try {
+      await unpauseProfile(selected.handle);
+      setNote(`Unpaused @${selected.handle}.`);
+      await refreshSelected(selected.handle);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unpause failed.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove() {
+    if (!selected || busy) return;
+    setBusy(true);
+    try {
+      await deleteProfile(selected.handle, confirm);
+      setNote(`Deleted @${selected.handle}.`);
+      setSelected(null);
+      setConfirm('');
+      setHits([]);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Delete failed.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Pause / delete</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Root only. Pause first (reversible, same as pause_branch). Delete is a
+        separate hard cascade — type the handle to confirm. Not grantable.
+      </ThemedText>
+      <TextInput
+        value={query}
+        onChangeText={setQuery}
+        placeholder="Search handle…"
+        placeholderTextColor={theme.textSecondary}
+        autoCapitalize="none"
+        autoCorrect={false}
+        style={[
+          styles.input,
+          styles.searchInput,
+          { color: theme.text, backgroundColor: theme.backgroundSelected, borderColor: controlBorderColor(theme) },
+        ]}
+      />
+      <Pressable
+        disabled={busy}
+        onPress={() => void lookup()}
+        style={({ pressed }) => [
+          styles.chip,
+          { borderColor: controlBorderColor(theme), backgroundColor: theme.accentFill },
+          pressed && styles.pressed,
+        ]}>
+        <ThemedText type="small" style={{ color: theme.onAccent }}>
+          {busy ? '…' : 'Look up'}
+        </ThemedText>
+      </Pressable>
+      {error ? <ThemedText type="small">{error}</ThemedText> : null}
+      {note ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {note}
+        </ThemedText>
+      ) : null}
+      <View style={styles.tabs}>
+        {hits.map((row) => (
+          <Chip
+            key={row.id}
+            label={`@${row.handle}${row.paused ? ' · paused' : ''}`}
+            selected={selected?.id === row.id}
+            onPress={() => {
+              setSelected(row);
+              setConfirm('');
+            }}
+          />
+        ))}
+      </View>
+      {selected ? (
+        <>
+          <ThemedText type="smallBold">
+            @{selected.handle} {selected.paused ? '(paused)' : ''}
+          </ThemedText>
+          <View style={styles.tabs}>
+            <Pressable
+              disabled={busy}
+              onPress={() => void pause()}
+              style={({ pressed }) => [
+                styles.chip,
+                { borderColor: controlBorderColor(theme) },
+                pressed && styles.pressed,
+              ]}>
+              <ThemedText type="small">Pause</ThemedText>
+            </Pressable>
+            <Pressable
+              disabled={busy}
+              onPress={() => void unpause()}
+              style={({ pressed }) => [
+                styles.chip,
+                { borderColor: controlBorderColor(theme) },
+                pressed && styles.pressed,
+              ]}>
+              <ThemedText type="small">Unpause</ThemedText>
+            </Pressable>
+          </View>
+          <ThemedText type="small" themeColor="textSecondary">
+            Type {selected.handle} to confirm hard delete.
+          </ThemedText>
+          <TextInput
+            value={confirm}
+            onChangeText={setConfirm}
+            autoCapitalize="none"
+            autoCorrect={false}
+            style={[
+              styles.input,
+              styles.searchInput,
+              { color: theme.text, backgroundColor: theme.backgroundSelected, borderColor: controlBorderColor(theme) },
+            ]}
+          />
+          <Pressable
+            disabled={busy || confirm !== selected.handle}
+            onPress={() => void remove()}
+            style={({ pressed }) => [
+              styles.chip,
+              { borderColor: controlBorderColor(theme) },
+              (busy || confirm !== selected.handle) && { opacity: 0.4 },
+              pressed && styles.pressed,
+            ]}>
+            <ThemedText type="small">Delete</ThemedText>
+          </Pressable>
+        </>
+      ) : null}
+    </View>
+  );
+}
+
 function AccessReview() {
   const theme = useTheme();
   const { session } = useSession();
@@ -707,6 +1200,10 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     fontSize: 16,
     textAlignVertical: 'top',
+  },
+  searchInput: {
+    minHeight: 44,
+    textAlignVertical: 'center',
   },
   meterTrack: {
     height: 8,
