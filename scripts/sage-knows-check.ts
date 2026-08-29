@@ -298,6 +298,10 @@ for (const axis of TRAIT_AXES) {
 }
 ok('editor copy is plain language; banked lines convert They → You');
 
+assert.equal(AXIS_EDITOR_COPY.openness.label, 'How you feel about trying something new');
+assert.equal(AXIS_EDITOR_COPY.steadiness.label, 'How rattled a bad day gets you');
+assert.equal(AXIS_EDITOR_COPY.attachment_anxiety.label, 'How you handle getting close to people');
+
 const migration = read('supabase/migrations/wave15_sage_knows.sql');
 assert.match(migration, /add column if not exists sage_knows jsonb/);
 assert.doesNotMatch(migration, /create function public.complete_signup|alter function public.complete_signup/);

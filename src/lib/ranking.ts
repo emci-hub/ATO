@@ -98,14 +98,14 @@ export const RANKING_ROUNDS: Record<TraitAxis, RankingItem[]> = {
     ['Closeness sometimes brings a worry they will leave', 0.75],
     ['Sometimes I worry about that, sometimes I do not', 0.5],
     ['I do not spend much time on whether people will leave', 0.25],
-    ['I do not spend time worrying people will pull away', 0],
+    ["Whether people stick around just isn't something I think about", 0],
   ]),
   attachment_avoidance: items('attachment_avoidance', [
     ['I keep some distance even with people I like', 1],
     ['I like a bit of space once things get close', 0.75],
     ['I mix closeness with a bit of distance', 0.5],
     ['I stay close once I am in, with a little room', 0.25],
-    ['I stay close once I am in', 0],
+    ["Once someone's in, I don't hold back at all", 0],
   ]),
   conflict_assertiveness: items('conflict_assertiveness', [
     ['In a disagreement I put my own point on the table', 1],
@@ -119,14 +119,14 @@ export const RANKING_ROUNDS: Record<TraitAxis, RankingItem[]> = {
     ['I try to leave them a way through', 0.75],
     ['I split attention between my outcome and theirs', 0.5],
     ['I protect my outcome first, then see what is left', 0.25],
-    ['I protect my own outcome first', 0],
+    ['Getting my outcome comes first, plain and simple', 0],
   ]),
   autonomy: items('autonomy', [
     ['I want to do it my own way', 1],
     ['I would rather pick the path than be handed one', 0.75],
     ['I mix doing it my way with a path that is already there', 0.5],
     ['A path someone else set is usually fine', 0.25],
-    ['A path already set is fine with me', 0],
+    ["I don't mind following someone else's plan at all", 0],
   ]),
   competence: items('competence', [
     ['I feel I can handle a hard thing', 1],
@@ -140,7 +140,7 @@ export const RANKING_ROUNDS: Record<TraitAxis, RankingItem[]> = {
     ['I want a real check-in with someone most days', 0.75],
     ['Some days I want connection, some I do not need it', 0.5],
     ['A day can land without much of it', 0.25],
-    ['A day can land without needing much connection', 0],
+    ["A day's fine on its own, connection or not", 0],
   ]),
   growth_mindset: items('growth_mindset', [
     ['After a miss I look for what to change so I can try again', 1],
@@ -161,7 +161,7 @@ export const RANKING_ROUNDS: Record<TraitAxis, RankingItem[]> = {
     ['A big task is usually something I can do', 0.75],
     ['Facing a big task I sometimes feel I can pull it off and sometimes do not', 0.5],
     ['A big task makes me unsure', 0.25],
-    ['Facing a big task I feel unsure I can pull it off', 0],
+    ['A big task leaves me genuinely unsure I can do it', 0],
   ]),
 };
 

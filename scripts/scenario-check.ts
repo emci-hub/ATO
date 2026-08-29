@@ -211,6 +211,9 @@ assert.doesNotMatch(logic, /Math\.random|claimAiCall|gemini/);
 assert.match(logic, /self_game/);
 assert.match(read('src/lib/me.ts'), /applyScenarioWrite/);
 assert.doesNotMatch(logic, /Best day at work is one where: 'I did it my way' \/ 'I nailed/);
+assert.equal(SCENARIO_DECK.autonomy.setup, 'Best day at work is one where:');
+assert.equal(SCENARIO_DECK.competence.setup, 'The work day that sticks with you most is one where:');
+assert.equal(SCENARIO_DECK.relatedness.setup, 'A day at work actually feels good when:');
 ok('swipe surface on Home, Sage, You; never Talk; SDT is not a three-way pick');
 
 console.log(`\n${passed} scenario checks passed`);

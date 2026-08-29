@@ -20,6 +20,7 @@ import { aiConsentFor, setAiConsent } from '@/lib/me';
 import { voiceMeFrom } from '@/lib/intake';
 import { persistRoutedCard } from '@/lib/today-card';
 import { routeVoiceCard } from '@/lib/voice/router';
+import { logJargonGuard } from '@/lib/voice/quota-server';
 import type { VoiceCardResult } from '@/lib/voice/types';
 import { DAWN_SAGE_LEDE } from '@/lib/sage-copy';
 import { controlBorderColor } from '@/lib/theme/chrome';
@@ -126,7 +127,7 @@ export default function DawnScreen() {
       crisisYesterday,
       aiConsent: me.ai_consent,
       day: todayOpen.day,
-    })
+    }, { logJargonHit: logJargonGuard })
       .then((next) => {
         if (cancelled) return;
         setResult(next);

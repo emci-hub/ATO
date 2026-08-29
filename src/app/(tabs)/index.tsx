@@ -30,6 +30,7 @@ import { homeSageLabel, homeSageLede, NUDGE_LABEL, SAGE_COACH_LABEL } from '@/li
 import { persistRoutedCard, saveTodayCard, todayCardFromCheck } from '@/lib/today-card';
 import { resolveReveal } from '@/lib/reveal';
 import { routeVoiceCard } from '@/lib/voice/router';
+import { logJargonGuard } from '@/lib/voice/quota-server';
 import type { VoiceCard, VoiceSource } from '@/lib/voice/types';
 import { useSession } from '@/hooks/use-session';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
@@ -131,7 +132,7 @@ export default function HomeScreen() {
       crisisYesterday,
       aiConsent: me.ai_consent,
       day: todayOpen.day,
-    })
+    }, { logJargonHit: logJargonGuard })
       .then(async (next) => {
         if (cancelled || !next.card) return;
         await persistRoutedCard(next);

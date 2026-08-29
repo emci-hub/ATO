@@ -10,6 +10,7 @@
  */
 
 import { sanitizeFacts } from '@/lib/voice/framework-fence';
+import { voicePresetOf, type VoicePreset } from '@/lib/voice/preset';
 
 type TalkStyle = 'quiet' | 'even' | 'loud';
 
@@ -169,7 +170,7 @@ export const CORE_INTAKE_QUESTIONS: CoreIntakeQuestion[] = [
   {
     field: 'knocks_you_off',
     n: 3,
-    prompt: "The stuff that really gets in the way — pick everything that's true, not just one.",
+    prompt: "What actually gets in the way of a good day? Pick everything that's true, not just one.",
     multi: true,
     chips: KNOCKS_CHIPS,
   },
@@ -376,6 +377,7 @@ export function voiceMeFrom(me: {
   locus_of_control?: number | null;
   self_efficacy?: number | null;
   facts?: string[] | unknown;
+  voice_preset?: string | null;
 }): {
   name: string;
   show_up: string;
@@ -387,6 +389,7 @@ export function voiceMeFrom(me: {
   recovery_style: RecoveryStyle | null;
   support_style: SupportStyle | null;
   current_focus: CurrentFocus | null;
+  voice_preset: VoicePreset;
   openness: number | null;
   conscientiousness: number | null;
   extraversion: number | null;
@@ -417,6 +420,7 @@ export function voiceMeFrom(me: {
     recovery_style: isRecoveryStyle(me.recovery_style) ? me.recovery_style : null,
     support_style: isSupportStyle(me.support_style) ? me.support_style : null,
     current_focus: isCurrentFocus(me.current_focus) ? me.current_focus : null,
+    voice_preset: voicePresetOf(me.voice_preset),
     openness: num(me.openness),
     conscientiousness: num(me.conscientiousness),
     extraversion: num(me.extraversion),

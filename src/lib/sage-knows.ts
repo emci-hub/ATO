@@ -61,19 +61,19 @@ export const CRUEL_CHECKIN_POLES: ReadonlyArray<{ axis: TraitAxis; band: TraitBa
 /** Plain-language editor copy. No framework names. */
 export const AXIS_EDITOR_COPY: Record<TraitAxis, { label: string; hint: string }> = {
   openness: {
-    label: 'New ideas',
+    label: 'How you feel about trying something new',
     hint: 'Left = stick with what I know. Right = try the untried path.',
   },
   conscientiousness: {
-    label: 'Follow-through',
+    label: 'How you handle sticking to a plan',
     hint: 'Left = keep plans loose. Right = see a plan through.',
   },
   extraversion: {
-    label: 'People time',
+    label: 'How much people time you actually need',
     hint: 'Left = quieter time. Right = energy from people.',
   },
   agreeableness: {
-    label: 'Going along',
+    label: 'How much you go along to keep things easy',
     hint: 'Left = hold my ground. Right = keep things easy.',
   },
   steadiness: {
@@ -85,39 +85,39 @@ export const AXIS_EDITOR_COPY: Record<TraitAxis, { label: string; hint: string }
     hint: "Everyone's a little different here — this just helps Sage read the room right.",
   },
   attachment_avoidance: {
-    label: 'A bit of distance',
+    label: "How much space you like, even with people you're close to",
     hint: 'Left = I stay close once I am in. Right = I keep some distance.',
   },
   conflict_assertiveness: {
-    label: 'In a disagreement',
+    label: 'How you show up in a disagreement',
     hint: 'Left = I step back. Right = I put my own point on the table.',
   },
   conflict_cooperativeness: {
-    label: 'Room for the other person',
+    label: 'How much room you leave for the other person',
     hint: 'Left = I protect my outcome first. Right = I look for something they can live with.',
   },
   autonomy: {
-    label: 'My own way',
+    label: 'How much you like doing it your own way',
     hint: 'Left = a path already set is fine. Right = I want to do it my way.',
   },
   competence: {
-    label: 'Hard things',
+    label: 'How you feel about tackling something hard',
     hint: 'Left = I doubt I can pull it off. Right = I feel I can handle it.',
   },
   relatedness: {
-    label: 'Connection',
+    label: 'How much real connection you need day to day',
     hint: 'Left = a day can land without much of it. Right = I need a real connection.',
   },
   growth_mindset: {
-    label: 'After a miss',
+    label: 'What happens after you miss the mark',
     hint: 'Left = maybe I am not good at that. Right = I look for what to change.',
   },
   locus_of_control: {
-    label: 'When it falls apart',
+    label: 'What you tell yourself when something falls apart',
     hint: 'Left = it was bound to happen. Right = what might I have done differently.',
   },
   self_efficacy: {
-    label: 'A big task',
+    label: 'How you feel facing something big',
     hint: 'Left = not sure I can pull this off. Right = I have got this.',
   },
 };

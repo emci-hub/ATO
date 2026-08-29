@@ -484,6 +484,7 @@ Skippable type-grid + 8 vibe-check scenarios, fully optional. Writes the first 9
 **Open box: talk, router.**
 Ground Sage's system prompt in the Library's fence-clean **For Sage** lines (Gottman / NVC live in Conflict and Communication entries). Prompt-engineering only. Sequenced after Stage 9 so Sage has real trait data to calibrate against. Talk fence already shipped separately. **Not** Explore or Reload.
 **Done (Aug 28, 2026):** a workload-heavy generated card is shaped by Workload For Sage, but Read, Do, and Talk each restate the idea in different words — they do not share a stock Library sentence. Talk on "the pile at work never ends" is grounded the same way; a flowers question does not pull Workload. Teaching/source copy never appears in the prompt or the card. `containsFrameworkTerm` still passes on Library-grounded output.
+**Done (Aug 29, 2026):** sage.txt is behavior + five few-shots (no supportive-coach role). Voice preset on ME (`close_friend` default). Jargon keyword guard on generated Read/Talk; fallback line + `ai_usage` flag/timestamp. Ranking/scenario chrome copy pass. Does-Sage-know-you bank and crisis card unchanged.
 
 ### 13 Delight mechanics (single-player)
 **Open box: intake, dawn.**
@@ -492,7 +493,9 @@ Reveal card (real content only, no randomized-value mechanic), milestone badges,
 **Done (Aug 28, 2026, Does Sage know you?):** Home/Sage check-in from banked high/low trait lines, zero quota. Still fits / Not quite. Weekly; yields while any axis is null; cruel/mid/fresh axes excluded; two Still fits graduates that axis. 3-month Settings prompt remains later.
 **Done (Aug 28, 2026, reveal):** Home tap-to-open Note. Week pattern / fact / badge-proximity, Nudge-style priority. One 300ms unfold, same motion for every kind. Reduce Motion skips to copy. Empty days are a plain line, no sealed object.
 **Done (Aug 28, 2026, ranking):** Home/Sage/You drag sort, 4–5 lines, one unfilled first-nine axis. `self_tap` write. Yields if Does-Sage-know-you or a completeness claim already has the week.
+**Done (Aug 29, 2026, ranking copy):** axis labels (except steadiness / closeness) and lede are plain-language; six near-duplicate low-pole lines differentiated.
 **Done (Aug 28, 2026, scenarios):** Gut call swipe/tap. Six extra axes, two options, `self_game`. SDT is three cards. Soft-ask shared with ranking and Does-Sage-know-you.
+**Done (Aug 29, 2026, scenarios copy):** competence and relatedness stems no longer share "Best day at work"; autonomy stem unchanged.
 
 ### 14 Multiplayer (friend-guessing)
 **Open box: circle, intake.**

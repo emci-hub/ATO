@@ -101,7 +101,10 @@ async function main() {
   assert.deepEqual(selectedIntakeValues('knocks_you_off', sample), ['sleep', 'workload']);
   assert.equal(INTAKE_SETTINGS_LABELS.talk_style, 'How Sage talks to you');
   assert.equal(INTAKE_SETTINGS_LABELS.morning_cue, 'Your morning anchor');
-  assert.equal(INTAKE_SETTINGS_LABELS.knocks_you_off, 'What actually throws off your day');
+  assert.equal(
+    CORE_INTAKE_QUESTIONS.find((q) => q.field === 'knocks_you_off')?.prompt,
+    "What actually gets in the way of a good day? Pick everything that's true, not just one.",
+  );
   ok('Settings labels and display values cover all 9 fields');
 
   assert.equal(VIBE_QUESTIONS.length, 8);

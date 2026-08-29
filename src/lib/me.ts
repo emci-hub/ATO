@@ -31,6 +31,7 @@ import {
   type TraitSource,
 } from '@/lib/traits';
 import { containsFrameworkTerm, FACT_FRAMEWORK_MESSAGE } from '@/lib/voice/framework-fence';
+import { voicePresetOf, type VoicePreset } from '@/lib/voice/preset';
 
 export type TalkStyle = 'quiet' | 'even' | 'loud';
 
@@ -102,6 +103,8 @@ export interface Me {
    * because SHOW is reserved. Default true. Colors still count when false.
    */
   visible: boolean;
+  /** Sage voice. Defaults to close_friend when the column is missing. */
+  voice_preset: VoicePreset;
   created_at: string;
   updated_at: string;
 }
@@ -181,6 +184,7 @@ function withVisible(row: Me): Me {
     trait_sources: sources,
     trait_touched_at: touched,
     sage_knows: parseSageKnowsState(row.sage_knows),
+    voice_preset: voicePresetOf(row.voice_preset),
   };
 }
 
@@ -246,6 +250,19 @@ export async function setCity(userId: string, city: string | null): Promise<Me> 
   const { data, error } = await supabase
     .from('me')
     .update({ city: slug })
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return withVisible(data as Me);
+}
+
+/** Sage voice. close_friend is the default. Does not bypass sage.txt rules. */
+export async function setVoicePreset(userId: string, voicePreset: VoicePreset): Promise<Me> {
+  const { data, error } = await supabase
+    .from('me')
+    .update({ voice_preset: voicePreset })
     .eq('id', userId)
     .select()
     .single();

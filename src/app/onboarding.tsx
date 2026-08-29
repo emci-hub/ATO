@@ -719,10 +719,14 @@ function IntakeStep({
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.progress}>
         {intakeProgressLabel(question.n)}
       </ThemedText>
-      <ThemedText type="subtitle">{INTAKE_SETTINGS_LABELS[question.field]}</ThemedText>
-      <ThemedText themeColor="textSecondary" style={styles.lede}>
-        {question.prompt}
+      <ThemedText type="subtitle">
+        {question.field === 'knocks_you_off' ? question.prompt : INTAKE_SETTINGS_LABELS[question.field]}
       </ThemedText>
+      {question.field === 'knocks_you_off' ? null : (
+        <ThemedText themeColor="textSecondary" style={styles.lede}>
+          {question.prompt}
+        </ThemedText>
+      )}
 
       <ChipGroup
         chips={question.chips}

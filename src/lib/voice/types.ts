@@ -1,3 +1,5 @@
+import type { VoicePreset } from './preset';
+
 export type TalkStyle = 'quiet' | 'even' | 'loud';
 
 /** How today reads, in Sage's register: a win, a nothing-day, or a skipped habit. */
@@ -51,6 +53,7 @@ export interface VoiceMe {
   recovery_style?: 'movement' | 'sleep' | 'talking' | 'alone_time' | 'music' | null;
   support_style?: 'nudge' | 'space' | 'listen' | 'plan' | null;
   current_focus?: 'habit' | 'through_it' | 'like_yourself' | 'show_up' | null;
+  voice_preset?: VoicePreset | null;
   openness?: number | null;
   conscientiousness?: number | null;
   extraversion?: number | null;

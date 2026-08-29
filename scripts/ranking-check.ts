@@ -211,8 +211,12 @@ assert.notDeepEqual(shuffled, RANKING_ROUNDS.openness.map((item) => item.id));
 ok('presentation shuffle is stable in a week, not a chance mechanic for the score');
 
 assert.equal(RANKING_LABEL, 'Most me');
-assert.match(RANKING_LEDE, /Drag/);
+assert.equal(RANKING_LEDE, "Drag these into order — the one that's most you goes on top.");
 assert.equal(RANKING_SAVE, "That's me");
+assert.equal(
+  RANKING_ROUNDS.attachment_anxiety[RANKING_ROUNDS.attachment_anxiety.length - 1]?.text,
+  "Whether people stick around just isn't something I think about",
+);
 
 const card = read('src/components/ranking-card.tsx');
 const meSrc = read('src/lib/me.ts');

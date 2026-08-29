@@ -2,6 +2,7 @@ import { detectCrisis as defaultDetectCrisis, type CrisisDetection } from '@/lib
 
 import { VOICE_CONFIG, type VoiceConfig } from './config';
 import { containsFrameworkTerm } from './framework-fence';
+import { JARGON_FALLBACK_TALK, matchingJargonTerm } from './jargon';
 import { buildProviders } from './providers';
 import type { QuotaDecision } from './quota';
 import type { VoiceProvider } from './providers/types';
@@ -44,6 +45,7 @@ export interface TalkReplyDeps {
    * checks stay provider-only.
    */
   claimAiCall?: () => Promise<QuotaDecision>;
+  logJargonHit?: (flag: string) => Promise<void>;
 }
 
 export type TalkReplyKind =
@@ -143,6 +145,16 @@ export async function routeTalkReply(
       retryHint: attempt > 1,
     });
     if (!containsFrameworkTerm(reply)) {
+      const flag = matchingJargonTerm(reply);
+      if (flag) {
+        await deps.logJargonHit?.(flag).catch(() => {});
+        return {
+          kind: 'reply',
+          reply: JARGON_FALLBACK_TALK,
+          provider: provider.id,
+          dev: trace(true, `${providerLabel} (jargon)`),
+        };
+      }
       return { kind: 'reply', reply, provider: provider.id, dev: trace(true, providerLabel) };
     }
   }

@@ -11,6 +11,7 @@ import { AppearancePicker } from '@/components/appearance-picker';
 import { CityPicker } from '@/components/city-picker';
 import { CrisisRegionPicker } from '@/components/crisis-region-picker';
 import { IntakeSettings } from '@/components/intake-settings';
+import { VoicePresetPicker } from '@/components/voice-preset-picker';
 import { RankingCard } from '@/components/ranking-card';
 import { ScenarioCard } from '@/components/scenario-card';
 import { KenneyCreditsCard } from '@/components/kenney-credits-card';
@@ -188,6 +189,8 @@ export default function YouScreen() {
                 me={me}
                 onUpdated={() => refresh()}
               />
+
+              <VoicePresetPicker me={me} onUpdated={() => refresh()} />
 
               <ThemedView type="backgroundElement" style={styles.detailCard}>
                 <DetailRow label="Timezone" value={me.timezone} />

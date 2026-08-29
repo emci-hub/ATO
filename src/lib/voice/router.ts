@@ -7,6 +7,7 @@ import {
 } from './config';
 import { filterCard, hasCut } from './filters';
 import { containsFrameworkTerm } from './framework-fence';
+import { applyJargonFallback, jargonInCard } from './jargon';
 import { resolveNudge } from './nudge';
 import { buildProviders } from './providers';
 import type { VoiceProvider } from './providers/types';
@@ -38,6 +39,8 @@ export interface RouteVoiceCardDeps {
   providers?: Record<ProviderId, VoiceProvider>;
   /** Overrides __DEV__ for tests. */
   isDev?: boolean;
+  /** Jargon-guard log. Production screens pass logJargonGuard. Tests omit. */
+  logJargonHit?: (flag: string) => Promise<void>;
 }
 
 function withNudge(result: Omit<VoiceCardResult, 'nudge'>, input: RouteVoiceCardInput): VoiceCardResult {
@@ -191,10 +194,15 @@ export async function routeVoiceCard(
     });
     const reason = filterCard(candidate, { shownCards, crisisToday, previousHadCut });
     if (!reason) {
+      const flag = jargonInCard(candidate);
+      const card = flag ? applyJargonFallback(candidate) : candidate;
+      if (flag) {
+        await deps.logJargonHit?.(flag).catch(() => {});
+      }
       return withNudge(
         {
           kind: 'card',
-          card: candidate,
+          card,
           day,
           tone,
           source: 'generated',

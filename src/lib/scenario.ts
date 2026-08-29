@@ -87,13 +87,13 @@ export const SCENARIO_DECK: Record<ExtraAxis, ScenarioDef> = {
   },
   competence: {
     axis: 'competence',
-    setup: 'Best day at work is one where:',
+    setup: 'The work day that sticks with you most is one where:',
     high: choice('high', 'I nailed something hard'),
     low: choice('low', 'I got through the day fine'),
   },
   relatedness: {
     axis: 'relatedness',
-    setup: 'Best day at work is one where:',
+    setup: 'A day at work actually feels good when:',
     high: choice('high', 'I connected with people'),
     low: choice('low', 'I got a lot done on my own'),
   },

@@ -44,7 +44,7 @@ import {
 } from '@/lib/sage-messages';
 import { TALK_COMPOSER_PLACEHOLDER, TALK_EMPTY, TALK_LEDE, TALK_TRY_AGAIN, TALK_WRITING, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { QUOTA_EMPTY_MESSAGE } from '@/lib/voice/quota';
-import { claimAiCall } from '@/lib/voice/quota-server';
+import { claimAiCall, logJargonGuard } from '@/lib/voice/quota-server';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
 interface ChatMessage {
@@ -341,7 +341,7 @@ export default function SageScreen() {
           aiConsent: me.ai_consent,
           userId,
         },
-        { logCrisisFlag: (id) => logCrisisFlag(id), claimAiCall },
+        { logCrisisFlag: (id) => logCrisisFlag(id), claimAiCall, logJargonHit: logJargonGuard },
       );
 
       if (result.kind === 'crisis') {
