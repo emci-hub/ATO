@@ -13,6 +13,7 @@ import { CrisisRegionPicker } from '@/components/crisis-region-picker';
 import { IntakeSettings } from '@/components/intake-settings';
 import { VoicePresetPicker } from '@/components/voice-preset-picker';
 import { RankingCard } from '@/components/ranking-card';
+import { TraitBandsFold } from '@/components/trait-bands-fold';
 import { KenneyCreditsCard } from '@/components/kenney-credits-card';
 import { SageUsageFold } from '@/components/sage-usage';
 import { ThemedText } from '@/components/themed-text';
@@ -187,6 +188,8 @@ export default function YouScreen() {
                 me={me}
                 onUpdated={() => refresh()}
               />
+
+              <TraitBandsFold me={me} />
 
               <VoicePresetPicker me={me} onUpdated={() => refresh()} />
 
