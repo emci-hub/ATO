@@ -71,6 +71,8 @@ assert.match(hub, /canSeeDevLab/);
 assert.match(hub, /function GrantsPanel/);
 assert.match(hub, /function ProfilesPanel/);
 assert.match(hub, /function TraceCapture/);
+assert.match(hub, /TracePipelineViewer/);
+assert.match(hub, /TRACE_SECTIONS/);
 assert.match(hub, /NEVER_GRANTABLE/);
 assert.match(hub, /Never grantable/);
 assert.match(hub, /deleteProfile/);
@@ -165,5 +167,15 @@ const sample: DevTraceEvent[] = [
 assert.equal(eventsForSection(sample, 'dawn').length, 1);
 assert.equal(eventsForSection(sample, 'talk')[0].id, '2');
 ok('generic step helper orders steps and filters by registered section id');
+
+const pipeline = read('src/components/trace-pipeline.tsx');
+assert.match(pipeline, /export function TracePipelineViewer/);
+assert.match(pipeline, /sections = TRACE_SECTIONS/);
+assert.match(pipeline, /eventsForSection/);
+assert.match(pipeline, /step_order/);
+assert.match(pipeline, /step\.status/);
+assert.doesNotMatch(pipeline, /function DawnTrace|function TalkTrace|function ExploreTrace/);
+assert.doesNotMatch(hub, /function DawnTrace|function TalkTrace|function ExploreTrace/);
+ok('Trace viewer is one generic pipeline reader, not a screen per section');
 
 console.log(`\ndev-access-check: ${passed}/${passed} passed`);

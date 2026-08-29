@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { TracePipelineViewer } from '@/components/trace-pipeline';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useMeContext } from '@/lib/me-context';
 import { useSession } from '@/hooks/use-session';
@@ -49,7 +50,7 @@ import {
   startDevTrace,
   stopDevTrace,
 } from '@/lib/dev-trace-server';
-import type { DevTraceEvent, DevTraceSession } from '@/lib/dev-trace';
+import { TRACE_SECTIONS, type DevTraceEvent, type DevTraceSession } from '@/lib/dev-trace';
 import { voiceMeFrom } from '@/lib/intake';
 import { localYmd } from '@/lib/local-date';
 import { supabase } from '@/lib/supabase';
@@ -565,6 +566,7 @@ function TraceCapture() {
   const theme = useTheme();
   const [session, setSession] = useState<DevTraceSession | null>(null);
   const [events, setEvents] = useState<DevTraceEvent[]>([]);
+  const [sectionId, setSectionId] = useState<string>(TRACE_SECTIONS[0].id);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -604,8 +606,8 @@ function TraceCapture() {
     <View style={styles.section}>
       <ThemedText type="smallBold">Trace / debug</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        Capture your own next Sage, Explore, and Dawn generations — Library lines,
-        trait signals, raw text before/after the fence. 30 minutes or 20
+        Capture your own next Dawn, Talk, and Explore generations as an ordered
+        pipeline — context, model, guards, output. 30 minutes or 20
         interactions, then off. Rows delete after 7 days. Never another account.
       </ThemedText>
       <Pressable
@@ -630,30 +632,7 @@ function TraceCapture() {
         </ThemedText>
       ) : null}
       {error ? <ThemedText type="small">{error}</ThemedText> : null}
-      {events.length === 0 ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          No captured rows yet.
-        </ThemedText>
-      ) : (
-        events.map((row) => (
-          <ThemedView key={row.id} type="backgroundElement" style={styles.card}>
-            <ThemedText type="code" themeColor="textSecondary">
-              {row.surface} · {row.createdAt}
-            </ThemedText>
-            <ThemedText type="smallBold">
-              {row.guardFired ? `guard: ${row.guardFired}` : 'no guard'}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              library: {JSON.stringify(row.libraryLines)}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              traits: {JSON.stringify(row.traitSignals)}
-            </ThemedText>
-            <ThemedText type="small">before: {row.rawBefore ?? '—'}</ThemedText>
-            <ThemedText type="small">after: {row.rawAfter ?? '—'}</ThemedText>
-          </ThemedView>
-        ))
-      )}
+      <TracePipelineViewer events={events} selectedId={sectionId} onSelect={setSectionId} />
     </View>
   );
 }
