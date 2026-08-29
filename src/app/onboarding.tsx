@@ -35,7 +35,7 @@ import {
   type SupportStyle,
   intakeProgressLabel,
 } from '@/lib/intake';
-import { createMe, errorMessageForHandle, TalkStyle, updateTraits } from '@/lib/me';
+import { createMe, errorMessageForHandle, TalkStyle, updateTraits, checkHandleAvailable, handleFormatError, normalizeHandle } from '@/lib/me';
 import { OPTIONAL_INTAKE_TOTAL, SLIDER_AXES, writeForOptionalScreen, type OptionalScreen } from '@/lib/traits';
 import { slugifyCity } from '@/lib/around/slug';
 import { DEFAULT_AROUND_CITY } from '@/constants/around-cities';
@@ -47,8 +47,6 @@ import {
 } from '@/lib/invite';
 import { clearLocalSession } from '@/lib/supabase';
 import { withTimeout } from '@/lib/timeout';
-
-const RESERVED_HANDLES = ['ato', 'sage', 'admin', 'support', 'you', 'astrollogs'];
 
 type Phase = 'account' | 'intake' | 'optional-gate' | 'optional';
 
@@ -112,13 +110,8 @@ export default function OnboardingScreen() {
     };
   }, []);
 
-  function normalizeHandle(raw: string): string {
-    return raw.replace(/[^a-z0-9]/gi, '').toLowerCase().slice(0, 20);
-  }
-
   function validateAccount(): boolean {
     const trimmedName = name.trim();
-    const normalizedHandle = normalizeHandle(handle);
 
     const parsedBornOn = bornOnFromParts(birthYear, birthMonth, birthDay);
     if (!parsedBornOn.ok) {
@@ -137,12 +130,9 @@ export default function OnboardingScreen() {
       setFormError('Tell us what to call you.');
       return false;
     }
-    if (!normalizedHandle) {
-      setHandleError('Pick a handle.');
-      return false;
-    }
-    if (RESERVED_HANDLES.includes(normalizedHandle)) {
-      setHandleError('That handle is reserved.');
+    const handleMsg = handleFormatError(handle);
+    if (handleMsg) {
+      setHandleError(handleMsg);
       return false;
     }
 
@@ -150,6 +140,34 @@ export default function OnboardingScreen() {
     setHandleError(null);
     setAgeError(null);
     return true;
+  }
+
+  async function continueFromAccount() {
+    if (!validateAccount()) return;
+    if (busy) return;
+    setBusy(true);
+    try {
+      const result = await checkHandleAvailable(handle);
+      if (!result.ok) {
+        setHandleError(result.message);
+        return;
+      }
+      setFormError(null);
+      setHandleError(null);
+      setPhase('intake');
+      setIntakeIndex(0);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onHandleBlur() {
+    const snapshot = normalizeHandle(handle);
+    if (!snapshot) return;
+    const result = await checkHandleAvailable(snapshot);
+    if (normalizeHandle(handle) !== snapshot) return;
+    if (!result.ok) setHandleError(result.message);
+    else setHandleError(null);
   }
 
   function intakeAnswered(field: CoreIntakeField): boolean {
@@ -414,10 +432,11 @@ export default function OnboardingScreen() {
                 signingOut={signingOut}
                 onSignOut={handleSignOut}
                 formError={formError}
+                onHandleBlur={() => {
+                  void onHandleBlur();
+                }}
                 onContinue={() => {
-                  if (!validateAccount()) return;
-                  setPhase('intake');
-                  setIntakeIndex(0);
+                  void continueFromAccount();
                 }}
               />
             ) : phase === 'intake' && question ? (
@@ -513,6 +532,7 @@ function AccountStep({
   signingOut,
   onSignOut,
   formError,
+  onHandleBlur,
   onContinue,
 }: {
   theme: { text: string; textSecondary: string; backgroundSelected: string };
@@ -538,6 +558,7 @@ function AccountStep({
   signingOut: boolean;
   onSignOut: () => void;
   formError: string | null;
+  onHandleBlur: () => void;
   onContinue: () => void;
 }) {
   return (
@@ -649,6 +670,7 @@ function AccountStep({
           <TextInput
             value={handle}
             onChangeText={setHandle}
+            onBlur={onHandleBlur}
             placeholder="yourhandle"
             placeholderTextColor={theme.textSecondary}
             autoCapitalize="none"

@@ -492,6 +492,45 @@ export async function recordScenarioDismiss(userId: string, axis: ExtraAxis): Pr
   return persistMe(userId, { sage_knows: knows });
 }
 
+export const RESERVED_HANDLES = [
+  'ato',
+  'sage',
+  'admin',
+  'support',
+  'you',
+  'astrollogs',
+] as const;
+
+export function normalizeHandle(raw: string): string {
+  return raw.replace(/[^a-z0-9]/gi, '').toLowerCase().slice(0, 20);
+}
+
+export function handleFormatError(raw: string): string | null {
+  const handle = normalizeHandle(raw);
+  if (!handle) return 'Pick a handle.';
+  if ((RESERVED_HANDLES as readonly string[]).includes(handle)) {
+    return 'That handle is reserved.';
+  }
+  return null;
+}
+
+/**
+ * Live uniqueness check for the account step. Reserved names fail here too.
+ * createMe still enforces unique/reserved at insert (race after this check).
+ */
+export async function checkHandleAvailable(
+  raw: string,
+): Promise<{ ok: true; handle: string } | { ok: false; message: string }> {
+  const format = handleFormatError(raw);
+  if (format) return { ok: false, message: format };
+  const handle = normalizeHandle(raw);
+  const { data, error } = await supabase.rpc('public_profile', { p_handle: handle });
+  if (error) return { ok: false, message: "Couldn't check that handle. Try again." };
+  const rows = Array.isArray(data) ? data : data ? [data] : [];
+  if (rows.length > 0) return { ok: false, message: 'That handle is already taken' };
+  return { ok: true, handle };
+}
+
 export function errorMessageForHandle(error: unknown): string {
   const inviteMessage = errorMessageForInvite(error);
   if (inviteMessage) return inviteMessage;

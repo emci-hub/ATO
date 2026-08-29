@@ -58,6 +58,7 @@ async function main() {
   ok('progress label is "3 of 9"');
 
   const onboarding = readFileSync(resolve(__dirname, '../src/app/onboarding.tsx'), 'utf8');
+  const meLib = readFileSync(resolve(__dirname, '../src/lib/me.ts'), 'utf8');
   assert.match(onboarding, /intakeProgressLabel/);
   assert.match(onboarding, /CORE_INTAKE_QUESTIONS/);
   assert.match(onboarding, /phase === 'account'/);
@@ -65,11 +66,32 @@ async function main() {
   assert.match(onboarding, /ChipGroup/);
   ok('onboarding is a chip wizard with a visible progress label');
 
+  assert.match(meLib, /export const RESERVED_HANDLES/);
+  assert.match(meLib, /'ato'/);
+  assert.match(meLib, /'astrollogs'/);
+  assert.match(meLib, /export function handleFormatError/);
+  assert.match(meLib, /That handle is reserved/);
+  assert.match(meLib, /export async function checkHandleAvailable/);
+  assert.match(meLib, /public_profile/);
+  assert.match(onboarding, /checkHandleAvailable/);
+  assert.match(onboarding, /continueFromAccount/);
+  assert.match(onboarding, /onHandleBlur/);
+  const continueFn = onboarding.slice(
+    onboarding.indexOf('async function continueFromAccount()'),
+    onboarding.indexOf('async function onHandleBlur()'),
+  );
+  assert.match(continueFn, /checkHandleAvailable/);
+  assert.match(continueFn, /setPhase\('intake'\)/);
+  assert.doesNotMatch(
+    onboarding.slice(onboarding.indexOf('async function submit()'), onboarding.indexOf('async function goHome()')),
+    /setPhase\('intake'\)/,
+  );
+  ok('handle reserved + uniqueness run on the account step, before intake questions');
+
   const chips = readFileSync(resolve(__dirname, '../src/components/intake-chips.tsx'), 'utf8');
   const settings = readFileSync(resolve(__dirname, '../src/components/intake-settings.tsx'), 'utf8');
   const you = readFileSync(resolve(__dirname, '../src/app/(tabs)/you.tsx'), 'utf8');
   const sage = readFileSync(resolve(__dirname, '../src/app/(tabs)/sage.tsx'), 'utf8');
-  const meLib = readFileSync(resolve(__dirname, '../src/lib/me.ts'), 'utf8');
   assert.match(chips, /accessibilityRole=\{multi \? 'checkbox' : 'radio'\}/);
   assert.match(settings, /CORE_INTAKE_QUESTIONS/);
   assert.match(settings, /updateIntake/);
