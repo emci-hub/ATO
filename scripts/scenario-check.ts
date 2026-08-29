@@ -9,6 +9,7 @@ import { resolve } from 'node:path';
 
 import {
   EXTRA_AXES,
+  blendInferredTrait,
   emptyTraitState,
   emptyTraitValues,
   mergeTraitWrite,
@@ -68,17 +69,28 @@ for (const axis of EXTRA_AXES) {
 ok('six one-axis cards; two poles; no framework terms');
 
 const afterAutonomy = applyScenarioWrite(emptyTraitState(), 'autonomy', 'high', NOW.toISOString());
-assert.equal(afterAutonomy.values.autonomy, SCENARIO_HIGH);
+assert.equal(afterAutonomy.values.autonomy, blendInferredTrait(SCENARIO_HIGH, null));
+assert.notEqual(afterAutonomy.values.autonomy, SCENARIO_HIGH);
 assert.equal(afterAutonomy.sources.autonomy, 'self_game');
 assert.equal(afterAutonomy.values.competence, null);
 assert.equal(afterAutonomy.values.relatedness, null);
 assert.equal(afterAutonomy.sources.competence, undefined);
 assert.equal(afterAutonomy.sources.relatedness, undefined);
 const afterCompetence = applyScenarioWrite(afterAutonomy, 'competence', 'low', NOW.toISOString());
-assert.equal(afterCompetence.values.autonomy, SCENARIO_HIGH);
-assert.equal(afterCompetence.values.competence, SCENARIO_LOW);
+assert.equal(afterCompetence.values.autonomy, afterAutonomy.values.autonomy);
+assert.equal(afterCompetence.values.competence, blendInferredTrait(SCENARIO_LOW, null));
+assert.notEqual(afterCompetence.values.competence, SCENARIO_LOW);
 assert.equal(afterCompetence.values.relatedness, null);
 ok('each SDT axis writes independently; picking one does not fill the other two');
+
+let repeated = emptyTraitState();
+for (let i = 0; i < 5; i += 1) {
+  repeated = applyScenarioWrite(repeated, 'autonomy', 'high', NOW.toISOString());
+}
+assert.ok((repeated.values.autonomy ?? 0) > blendInferredTrait(SCENARIO_HIGH, null));
+assert.ok((repeated.values.autonomy ?? 1) < SCENARIO_HIGH);
+assert.notEqual(repeated.values.autonomy, SCENARIO_HIGH);
+ok('same Gut Call answer 5x approaches the pole but does not hit it');
 
 const direct = mergeTraitWrite(
   emptyTraitState(),

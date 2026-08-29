@@ -17,7 +17,9 @@ import {
   TRAIT_AXES,
   confirmTraitSource,
   emptyTraitState,
+  blendInferredTrait,
   isDirectTraitSource,
+  isInferredTraitSource,
   mergeTraitWrite,
   optionalProgressLabel,
   traitPatch,
@@ -131,6 +133,8 @@ async function main() {
   assert.equal(isDirectTraitSource('self_confirm'), true);
   assert.equal(isDirectTraitSource('self_settings'), true);
   assert.equal(isDirectTraitSource('self_game'), false);
+  assert.equal(isInferredTraitSource('self_game'), true);
+  assert.equal(isInferredTraitSource('self_slider'), false);
   ok('six extra axes exist; confirm/tap/settings are direct; game is inferred');
 
   const t1 = '2026-01-15T12:00:00.000Z';
@@ -155,7 +159,9 @@ async function main() {
     TRAIT_AXES,
     t1,
   );
-  assert.equal(inferredFill.values.growth_mindset, 0.7);
+  const inferredFirst = blendInferredTrait(0.7, null);
+  assert.equal(inferredFill.values.growth_mindset, inferredFirst);
+  assert.notEqual(inferredFill.values.growth_mindset, 0.7);
   assert.equal(inferredFill.sources.growth_mindset, 'self_game');
   assert.equal(inferredFill.touched.growth_mindset, t1);
   const patched = traitPatch(inferredFill);
@@ -165,7 +171,7 @@ async function main() {
   ok('inferred can fill a null axis; null axes have no source or last_touched row');
 
   const confirmed = confirmTraitSource(inferredFill, ['growth_mindset', 'autonomy'], t2);
-  assert.equal(confirmed.values.growth_mindset, 0.7);
+  assert.equal(confirmed.values.growth_mindset, inferredFirst);
   assert.equal(confirmed.sources.growth_mindset, 'self_confirm');
   assert.equal(confirmed.touched.growth_mindset, t2);
   assert.equal(confirmed.values.autonomy, null);
@@ -179,7 +185,7 @@ async function main() {
       mergeTraitWrite(inferredFill, { growth_mindset: 0.1 }, 'self_confirm' as never, TRAIT_AXES),
     /confirmTraitSource/,
   );
-  assert.equal(inferredFill.values.growth_mindset, 0.7);
+  assert.equal(inferredFill.values.growth_mindset, inferredFirst);
   assert.equal(inferredFill.sources.growth_mindset, 'self_game');
   ok('mergeTraitWrite rejects self_confirm so a sneaked number cannot move the axis');
 

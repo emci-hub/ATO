@@ -66,6 +66,10 @@ export function isDirectTraitSource(value: unknown): value is DirectTraitSource 
   return typeof value === 'string' && (DIRECT_TRAIT_SOURCES as readonly string[]).includes(value);
 }
 
+export function isInferredTraitSource(value: unknown): value is InferredTraitSource {
+  return typeof value === 'string' && (INFERRED_TRAIT_SOURCES as readonly string[]).includes(value);
+}
+
 export const GRID_AXES = [
   'openness',
   'conscientiousness',
@@ -172,6 +176,18 @@ function clamp01(value: number): number {
   return Math.round(n * 100) / 100;
 }
 
+/** Inferred writes mix the new signal into the stored number instead of replacing it. */
+export const INFERRED_SIGNAL_WEIGHT = 0.12;
+export const INFERRED_PRIOR_WEIGHT = 0.88;
+/** Neutral prior when the axis is still null. */
+export const INFERRED_UNSET_PRIOR = 0.5;
+
+export function blendInferredTrait(signal: number, oldValue: number | null | undefined): number {
+  const prior =
+    oldValue == null || !Number.isFinite(oldValue) ? INFERRED_UNSET_PRIOR : oldValue;
+  return clamp01(INFERRED_SIGNAL_WEIGHT * signal + INFERRED_PRIOR_WEIGHT * prior);
+}
+
 function pole(high: boolean, r: number): number {
   return clamp01(0.5 + (high ? 1 : -1) * (r / 2));
 }
@@ -261,9 +277,12 @@ export function traitsFromDisagree(id: DisagreeId): Partial<Record<TraitAxis, nu
 /**
  * Source-aware merge for numeric writes. Direct (slider / tap-form /
  * Settings) is sticky: a later inferred write (grid / situation / game)
- * cannot overwrite that axis. Among the same rank, last-write-wins.
- * Incoming null/undefined means "this door did not write that axis." A
- * rejected inferred write does not bump last_touched.
+ * cannot overwrite that axis. Direct sources full-replace the 0–1 number.
+ * Inferred sources damp toward the signal:
+ * `0.12 * signal + 0.88 * old` (null old uses 0.5). Among the same rank,
+ * last-write-wins the source token. Incoming null/undefined means "this
+ * door did not write that axis." A rejected inferred write does not bump
+ * last_touched.
  *
  * Confirm-upgrade is not a numeric write — use `confirmTraitSource`.
  */
@@ -284,7 +303,9 @@ export function mergeTraitWrite(
     const raw = incoming[axis];
     if (raw == null || !Number.isFinite(raw)) continue;
     if (isDirectTraitSource(current.sources[axis]) && !isDirectTraitSource(source)) continue;
-    values[axis] = clamp01(raw);
+    values[axis] = isInferredTraitSource(source)
+      ? blendInferredTrait(raw, values[axis])
+      : clamp01(raw);
     sources[axis] = source;
     touched[axis] = now;
   }
