@@ -1,0 +1,148 @@
+/**
+ * Infinite Questions core. Run: npm run check:questions
+ *
+ * Cached batches of 5, self_situation damped write, own regen quota tag.
+ */
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+import { QUESTIONS_BANK, QUESTIONS_FEW_SHOTS } from '../src/lib/questions/bank';
+import { pickQuestionGrounding } from '../src/lib/questions/context';
+import { QUESTIONS_LABEL } from '../src/lib/questions/copy';
+import { composeLocalQuestionBatch } from '../src/lib/questions/local';
+import { parseQuestionBatch } from '../src/lib/questions/parse';
+import { buildQuestionsPrompt } from '../src/lib/questions/prompt';
+import { nextUnansweredItem, routeQuestions } from '../src/lib/questions/route';
+import { QUESTIONS_BATCH_SIZE, QUESTIONS_CALL_TYPE } from '../src/lib/questions/types';
+import { emptySageKnowsState } from '../src/lib/sage-knows';
+import { emptyTraitState, mergeTraitWrite } from '../src/lib/traits';
+import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
+
+let passed = 0;
+function ok(label: string) {
+  passed += 1;
+  console.log(`  ✓ ${label}`);
+}
+
+const root = resolve(__dirname, '..');
+function read(rel: string): string {
+  return readFileSync(resolve(root, rel), 'utf8');
+}
+
+assert.equal(QUESTIONS_BATCH_SIZE, 5);
+assert.equal(QUESTIONS_CALL_TYPE, 'questions');
+assert.equal(QUESTIONS_BANK.length, 6);
+assert.match(QUESTIONS_FEW_SHOTS, /Your Do today was writing down one thing you're walking into/);
+assert.match(QUESTIONS_FEW_SHOTS, /A friend cancels same-day, no real reason given/);
+assert.match(QUESTIONS_FEW_SHOTS, /Everyone at the table already knows their order/);
+ok('locked few-shot set is used verbatim');
+
+const local = composeLocalQuestionBatch();
+assert.equal(local.length, 5);
+assert.equal(local[0]?.axis, 'openness');
+for (const draft of local) {
+  assert.ok(draft.options.length >= 2 && draft.options.length <= 3);
+  assert.equal(containsFrameworkTerm(draft.prompt), false, draft.prompt);
+  for (const option of draft.options) {
+    assert.equal(containsFrameworkTerm(option.text), false, option.text);
+  }
+}
+ok('local batch is 5 multiple-choice items with no framework terms');
+
+const parsed = parseQuestionBatch(
+  JSON.stringify({
+    questions: [
+      {
+        axis: 'autonomy',
+        prompt: 'You already picked the path this morning.',
+        options: [
+          { text: 'Mine', value: 0.8 },
+          { text: 'Theirs', value: 0.2 },
+        ],
+      },
+    ],
+  }),
+);
+assert.equal(parsed[0]?.axis, 'autonomy');
+ok('JSON batch parse keeps axis + option values');
+
+const skippedOnly = pickQuestionGrounding(
+  { sage_knows: emptySageKnowsState(), facts: [] },
+  [{ day: 1, status: 'skipped', read: 'a skip read', do: 'a skip do' }],
+);
+assert.equal(skippedOnly.kind, 'none');
+const fromDo = pickQuestionGrounding(
+  { sage_knows: emptySageKnowsState(), facts: [] },
+  [{ day: 1, status: 'done', do: 'Write one line.' }],
+);
+assert.equal(fromDo.kind, 'do');
+assert.equal(fromDo.detail, 'Write one line.');
+ok('grounding uses a done Do and never a skipped Check');
+
+const first = mergeTraitWrite(emptyTraitState(), { relatedness: 0.8 }, 'self_situation', ['relatedness']);
+assert.notEqual(first.values.relatedness, 0.8);
+assert.equal(first.sources.relatedness, 'self_situation');
+ok('answers reuse the damped self_situation mergeTraitWrite path');
+
+const prompt = buildQuestionsPrompt({
+  me: { name: 'Riley', talk_style: 'even', voice_preset: 'close_friend' },
+  grounding: { kind: 'do', detail: 'Write one line.' },
+});
+assert.match(prompt, /LOCKED EXAMPLES/);
+assert.match(prompt, /The different one, easily/);
+assert.match(prompt, /Never ask for free text/);
+assert.doesNotMatch(prompt, /TextInput/);
+ok('prompt is multiple-choice, includes the locked few-shots');
+
+async function main() {
+const routed = await routeQuestions(
+  {
+    me: {
+      name: 'Riley',
+      timezone: 'UTC',
+      talk_style: 'even',
+      voice_preset: 'close_friend',
+      sage_knows: emptySageKnowsState(),
+      facts: [],
+      ai_consent: true,
+    },
+    history: [],
+    aiConsent: true,
+  },
+  { useLocal: true },
+);
+assert.ok(routed.item);
+assert.equal(routed.pack?.items.length, 5);
+assert.equal(nextUnansweredItem(routed.pack)?.id, routed.item?.id);
+ok('opening with local deps serves a cached-shape batch of 5');
+
+const sql = read('supabase/migrations/wave17_infinite_questions.sql');
+assert.match(sql, /create table public.question_packs/);
+assert.match(sql, /create table public.question_items/);
+assert.match(sql, /claim_questions_batch/);
+assert.match(sql, /by_type/);
+assert.match(sql, /questions_daily_cap/);
+assert.match(sql, /Does not increment Sage\/Explore calls/);
+ok('schema has packs/items and a separate questions regen claim');
+
+const home = read('src/app/(tabs)/index.tsx');
+const you = read('src/app/(tabs)/you.tsx');
+const sage = read('src/app/(tabs)/sage.tsx');
+assert.match(home, /QuestionsFold/);
+assert.match(home, /homeTab === 'today'/);
+assert.doesNotMatch(you, /QuestionsFold/);
+assert.doesNotMatch(sage, /QuestionsFold/);
+assert.equal(QUESTIONS_LABEL, 'A few questions');
+const fold = read('src/components/questions-fold.tsx');
+assert.match(fold, /updateTraits/);
+assert.match(fold, /self_situation/);
+assert.doesNotMatch(fold, /TextInput/);
+assert.match(fold, /claimQuestionsBatch/);
+assert.match(read('src/components/explore-panel.tsx'), /claimAiCall\('explore'\)/);
+ok('Home-only collapsible; writes self_situation; Explore tagged separately');
+
+console.log(`\n${passed} question checks passed`);
+}
+
+void main();

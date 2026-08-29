@@ -45,17 +45,22 @@ async function main() {
 
   const { data: config, error: configError } = await supabase
     .from('app_config')
-    .select('ai_daily_cap, ai_monthly_cap')
+    .select('ai_daily_cap, ai_monthly_cap, questions_daily_cap')
     .eq('id', 1)
     .single();
   if (configError) throw configError;
   assert.ok((config.ai_daily_cap as number) >= 1);
   assert.ok((config.ai_monthly_cap as number) >= (config.ai_daily_cap as number));
   ok('app_config exposes daily/monthly caps', config);
+  assert.ok((config.questions_daily_cap as number) >= 1);
 
   const claim = await supabase.rpc('claim_ai_call');
   assert.ok(claim.error, 'anon claim_ai_call must fail');
   ok('anon cannot claim a model call', { message: claim.error?.message });
+
+  const questionsClaim = await supabase.rpc('claim_questions_batch');
+  assert.ok(questionsClaim.error, 'anon claim_questions_batch must fail');
+  ok('anon cannot claim a questions batch', { message: questionsClaim.error?.message });
 
   const leaked = await supabase.from('ai_usage').select('user_id, day, calls');
   assert.equal(leaked.data?.length ?? 0, 0, 'anon must not read ai_usage');

@@ -72,3 +72,4 @@ export const SCENARIO_LEDE = 'Swipe or tap. One pick.';
 
 /** Home inner tab — periodic Sage observations. Not a daily card. */
 export { EXPLORE_LABEL, TODAY_LABEL } from '@/lib/explore/copy';
+export { QUESTIONS_LABEL } from '@/lib/questions/copy';

@@ -13,6 +13,10 @@ export type SageUsageSnapshot = {
   dailyCap: number;
   monthly: number;
   monthlyCap: number;
+  /** Per-surface counts from ai_usage.by_type for today. */
+  byType: Record<string, number>;
+  questionsDaily: number;
+  questionsCap: number;
 };
 
 /** User-facing usage line. Never say "AI" or "tokens" in this copy. */

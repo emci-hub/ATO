@@ -80,7 +80,7 @@ export function ExplorePanel({
         loadLatestPack: fetchLatestExplorePack,
         savePack: saveExplorePack,
         loadMissNotes: fetchExploreMissNotes,
-        claimAiCall,
+        claimAiCall: () => claimAiCall('explore'),
         logJargonHit: logJargonGuard,
         logPhraseHit: logPhraseGuard,
         generateBody: generateExploreBody,

@@ -16,13 +16,23 @@ export function SettingsFold({
   title,
   children,
   defaultOpen = false,
+  onOpen,
 }: {
   title: string;
   children: ReactNode;
   defaultOpen?: boolean;
+  onOpen?: () => void;
 }) {
   const theme = useTheme();
   const [open, setOpen] = useState(defaultOpen);
+
+  function toggle() {
+    setOpen((value) => {
+      const next = !value;
+      if (next) onOpen?.();
+      return next;
+    });
+  }
 
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
@@ -30,7 +40,7 @@ export function SettingsFold({
         accessibilityRole="button"
         accessibilityLabel={title}
         accessibilityState={{ expanded: open }}
-        onPress={() => setOpen((value) => !value)}
+        onPress={toggle}
         style={styles.header}>
         <ThemedText type="smallBold" style={styles.title}>
           {title}

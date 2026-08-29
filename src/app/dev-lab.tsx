@@ -457,6 +457,9 @@ function QuotaDashboard() {
             dailyCap: Number(data?.ai_daily_cap) || 20,
             monthly: 0,
             monthlyCap: Number(data?.ai_monthly_cap) || 200,
+            byType: {},
+            questionsDaily: 0,
+            questionsCap: 3,
           });
         }
       } catch (err) {
@@ -499,6 +502,19 @@ function QuotaDashboard() {
             remaining={monthlyLeft}
             fill={theme.accentFill}
           />
+          <UsageMeter
+            label="questions today"
+            used={snap.questionsDaily}
+            cap={snap.questionsCap}
+            remaining={Math.max(0, snap.questionsCap - snap.questionsDaily)}
+            fill={theme.accentTertiary ?? theme.accentFill}
+          />
+          {snap.byType.sage != null || snap.byType.explore != null ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              Surfaces today: Sage {snap.byType.sage ?? 0}, Explore {snap.byType.explore ?? 0},
+              questions {snap.questionsDaily}
+            </ThemedText>
+          ) : null}
         </>
       ) : (
         <ThemedText themeColor="textSecondary">Loading…</ThemedText>
