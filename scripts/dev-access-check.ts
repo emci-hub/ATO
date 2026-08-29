@@ -11,6 +11,15 @@ import {
   GRANTABLE_CAPABILITIES,
   NEVER_GRANTABLE,
 } from '../src/lib/dev-access';
+import {
+  TRACE_SECTIONS,
+  TRACE_STEP_TYPES,
+  appendTraceStep,
+  eventsForSection,
+  parseDevTraceSteps,
+  type DevTraceEvent,
+  type DevTraceStep,
+} from '../src/lib/dev-trace';
 
 let passed = 0;
 function ok(label: string) {
@@ -93,5 +102,68 @@ const recordFn = read('supabase/migrations/dev_access.sql');
 assert.match(recordFn, /user_id = uid/);
 assert.doesNotMatch(recordFn.slice(recordFn.indexOf('create function public.record_dev_trace')), /p_user_id/);
 ok('record_dev_trace has no target user_id argument');
+
+const stepsSql = read('supabase/migrations/dev_trace_steps.sql');
+assert.match(stepsSql, /add column if not exists steps jsonb/);
+assert.match(stepsSql, /step_type \(context_gather\|model_call\|guard_check\|output\)/);
+assert.match(stepsSql, /p_steps jsonb default/);
+assert.match(stepsSql, /surface in \('sage', 'explore', 'dawn', 'talk'\)/);
+assert.match(stepsSql, /Never accepts a target user_id/);
+assert.doesNotMatch(stepsSql, /p_user_id/);
+assert.match(recordFn, /interval '30 minutes'/);
+assert.match(recordFn, /remaining = 20/);
+assert.match(recordFn, /interval '7 days'/);
+ok('steps column + p_steps keep own-account Trace; talk is an allowed surface');
+
+assert.deepEqual(
+  TRACE_SECTIONS.map((row) => row.id),
+  ['dawn', 'talk', 'explore'],
+);
+assert.deepEqual([...TRACE_STEP_TYPES], ['context_gather', 'model_call', 'guard_check', 'output']);
+const built: DevTraceStep[] = [];
+appendTraceStep(built, {
+  step_type: 'context_gather',
+  label: 'ME',
+  input_summary: 'name=Riley',
+  output_summary: 'checks=2',
+  status: 'ok',
+});
+appendTraceStep(built, {
+  step_type: 'guard_check',
+  label: 'jargon',
+  input_summary: 'draft',
+  output_summary: 'flagged: introvert',
+  status: 'flagged',
+});
+assert.equal(built[0].step_order, 1);
+assert.equal(built[1].step_order, 2);
+assert.equal(parseDevTraceSteps(built).length, 2);
+const sample: DevTraceEvent[] = [
+  {
+    id: '1',
+    createdAt: '',
+    surface: 'dawn',
+    libraryLines: [],
+    traitSignals: {},
+    rawBefore: null,
+    rawAfter: null,
+    guardFired: null,
+    steps: built,
+  },
+  {
+    id: '2',
+    createdAt: '',
+    surface: 'talk',
+    libraryLines: [],
+    traitSignals: {},
+    rawBefore: null,
+    rawAfter: null,
+    guardFired: null,
+    steps: [],
+  },
+];
+assert.equal(eventsForSection(sample, 'dawn').length, 1);
+assert.equal(eventsForSection(sample, 'talk')[0].id, '2');
+ok('generic step helper orders steps and filters by registered section id');
 
 console.log(`\ndev-access-check: ${passed}/${passed} passed`);
