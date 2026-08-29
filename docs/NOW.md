@@ -6,6 +6,8 @@
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
 
 ## On
+**Password sign-in is a secondary auth path for App Review.** Email + Send code (OTP) and Apple Sign-In stay the primary flows. The auth screen has a password field and a "Sign in with password" link under Send code so the seeded `ato.review@asstrollogs.com` demo account can use `signInWithPassword`. JS-only — same OTA channel, no new native module.
+
 **You-tab crash/push probes are off TestFlight.** "Test crash reporting" / Native crash and "Test notifications" never render in production. Same compile-time `__DEV__` cut as `/dev-lab` (`Stack.Protected` + in-file gate). You does not statically import those cards; production Metro resolves the probe modules to a null stub so the controls are absent from the JS bundle, not hidden by a runtime flag. `triggerNativeTestCrash` is a no-op when `__DEV__` is false.
 
 **Home hydrates today's card on a fresh install.** If on-device `today-card` storage is empty and today's Check already exists, Home writes Read/Do/Nudge from that row instead of showing "No card yet".

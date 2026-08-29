@@ -29,6 +29,7 @@ export default function AuthScreen() {
   const theme = useTheme();
 
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [signupMode, setSignupMode] = useState<SignupMode>('invite_only');
@@ -103,6 +104,34 @@ export default function AuthScreen() {
     }
     // 'cancelled' and 'unavailable' need no message. On success the session
     // guard in the root layout routes declaratively — same as verifyCode.
+  }
+
+  async function handlePasswordSignIn() {
+    if (!normalizedEmail) {
+      setError('Enter your email first.');
+      return;
+    }
+    const trimmedPassword = password.trim();
+    if (!trimmedPassword) {
+      setError('Enter your password.');
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+    if (!(await stashInviteIfNeeded())) {
+      setBusy(false);
+      return;
+    }
+    const { error } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password: trimmedPassword,
+    });
+    setBusy(false);
+
+    if (error) {
+      setError(error.message);
+    }
   }
 
   async function sendCode() {
@@ -180,7 +209,7 @@ export default function AuthScreen() {
               <>
                 <ThemedText type="subtitle">Sign in</ThemedText>
                 <ThemedText themeColor="textSecondary" style={styles.lede}>
-                  Enter your email and we&apos;ll send you a code. No password needed.
+                  Enter your email and we&apos;ll send you a code.
                   {signupMode === 'invite_only'
                     ? ' New accounts need an invite code.'
                     : ''}
@@ -242,6 +271,34 @@ export default function AuthScreen() {
                     ]}>
                     <ThemedText type="smallBold" style={styles.buttonText}>
                       {busy ? 'Sending…' : 'Send code'}
+                    </ThemedText>
+                  </Pressable>
+
+                  <TextInput
+                    value={password}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      setError(null);
+                    }}
+                    placeholder="Password"
+                    placeholderTextColor={theme.textSecondary}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    secureTextEntry
+                    textContentType="password"
+                    autoComplete="password"
+                    editable={!busy}
+                    style={[
+                      styles.input,
+                      { color: theme.text, backgroundColor: theme.backgroundSelected },
+                    ]}
+                  />
+                  <Pressable
+                    onPress={handlePasswordSignIn}
+                    disabled={busy}
+                    style={({ pressed }) => [styles.passwordLink, pressed && styles.pressed]}>
+                    <ThemedText type="link">
+                      {busy ? 'Signing in…' : 'Sign in with password'}
                     </ThemedText>
                   </Pressable>
                 </ThemedView>
@@ -416,6 +473,10 @@ const styles = StyleSheet.create({
   },
   appleNote: {
     textAlign: 'center',
+  },
+  passwordLink: {
+    alignItems: 'center',
+    paddingVertical: Spacing.one,
   },
   pressed: {
     opacity: 0.8,
