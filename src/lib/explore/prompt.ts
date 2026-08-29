@@ -11,16 +11,16 @@ import type { ExploreFocus, ExploreMeSlice } from './types';
  * voice. Examples to match, not templates to paste.
  */
 export const EXPLORE_FEW_SHOTS = `## Explore
-Two skips this week sat next to days you still tried to keep the plan. Maybe the people-time you usually want is harder to hold when the list is already full.
+You skipped twice this week, both times when your plate was already full. Maybe that's less about not wanting people time, and more about just not having room for it.
 
 ## Explore
 Sleep showed up in this week's Reads, and you also said a short reset is what pulls you back. Noticing those together — maybe the reset is doing the job sleep didn't.
 
 ## Explore
-You told Sage unanswered texts sit wrong, and you also tend to leave a little space. Might be both: wanting the thread to move, and not wanting to be the one who has to push it.
+You mentioned it bothers you when a text goes unanswered for a while — but you're also someone who tends to leave people a little space. Might be both: wanting things to keep moving, but not wanting to be the one pushing.
 
 ## Explore
-After coffee is when you said you have the most in the tank, and what you're mostly trying to do right now is show up. Noticing that the same window is being asked to do both.`;
+Your best energy shows up right after coffee, and lately you're mostly just trying to show up. That's a lot to ask of one small window in your day.`;
 
 function chipLines(me: ExploreMeSlice, chips: ExploreFocus['chips']): string {
   const lines: string[] = [];

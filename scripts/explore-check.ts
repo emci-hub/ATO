@@ -170,7 +170,7 @@ const prompt = buildExplorePrompt({
   reactionNotes: ['old miss'],
 });
 assert.match(prompt, /EXPLORE SHAPE/);
-assert.match(prompt, /Two skips this week sat next to days you still tried to keep the plan/);
+assert.match(prompt, /You skipped twice this week, both times when your plate was already full/);
 assert.doesNotMatch(prompt, /37%|we don't know much|richer because they filled/i);
 assert.match(prompt, /Completeness is not an input/);
 assert.match(EXPLORE_FEW_SHOTS, /## Explore/);
