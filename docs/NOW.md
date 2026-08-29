@@ -26,7 +26,7 @@
 
 **Home ranking is in (Stage 13, part 4).** Optional-depth forced ranking: drag 4–5 plain behavioral lines, most-you at the top, one trait axis per round (first nine axes). Writes `self_tap` (direct, sticky merge). Soft-ask: yields if Does-Sage-know-you or a completeness claim already has that week's slot; extra-axis gaps go to the scenario swipe-deck.
 
-**Scenario swipe-deck is in (Stage 13, part 5).** Gut call on Home/Sage/You. Six extra axes, one card each, two forced choices. SDT is three separate cards, never a three-way pick. Writes `self_game` (inferred; cannot overwrite a direct answer). Same weekly slot as ranking and Does-Sage-know-you.
+**Scenario swipe-deck is in (Stage 13, part 5).** Gut call on Home only (not Sage or You). Six extra axes, one card each, two forced choices. SDT is three separate cards, never a three-way pick. Writes `self_game` (inferred; cannot overwrite a direct answer). Same weekly slot as ranking and Does-Sage-know-you.
 
 **Home reveal is in (Stage 13, part 3).** Daily tap-to-open on Home. Pool is a fresh angle on this week's actual Read/Do pattern, a stored fact reflected back, or badge-proximity (1–3 remaining on 7-Checks or a week without a cut). Priority-pick like Nudge — first real signal wins, no filler. Content is selected before render. One short unfold (300ms) for every kind, one short haptic, Reduce Motion skips to the copy. Empty days show a plain calm line (`Nothing extra to notice today.`) with no sealed object.
 

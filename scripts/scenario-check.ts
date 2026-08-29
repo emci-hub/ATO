@@ -202,8 +202,8 @@ assert.match(card, /Gesture|Pan/);
 assert.match(meSrc, /recordScenario/);
 assert.match(meSrc, /self_game/);
 assert.match(homeTab, /ScenarioCard/);
-assert.match(sageTab, /ScenarioCard/);
-assert.match(youTab, /ScenarioCard/);
+assert.doesNotMatch(sageTab, /ScenarioCard/);
+assert.doesNotMatch(youTab, /ScenarioCard/);
 assert.doesNotMatch(talkSrc, /resolveScenario|ScenarioCard/);
 assert.match(themeLab, /THEME_SCENARIO_LOCUS/);
 assert.match(themeLab, /THEME_SCENARIO_AUTONOMY/);
@@ -214,6 +214,6 @@ assert.doesNotMatch(logic, /Best day at work is one where: 'I did it my way' \/ 
 assert.equal(SCENARIO_DECK.autonomy.setup, 'Best day at work is one where:');
 assert.equal(SCENARIO_DECK.competence.setup, 'The work day that sticks with you most is one where:');
 assert.equal(SCENARIO_DECK.relatedness.setup, 'A day at work actually feels good when:');
-ok('swipe surface on Home, Sage, You; never Talk; SDT is not a three-way pick');
+ok('swipe surface on Home only; never Sage, You, or Talk; SDT is not a three-way pick');
 
 console.log(`\n${passed} scenario checks passed`);

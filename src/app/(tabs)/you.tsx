@@ -13,7 +13,6 @@ import { CrisisRegionPicker } from '@/components/crisis-region-picker';
 import { IntakeSettings } from '@/components/intake-settings';
 import { VoicePresetPicker } from '@/components/voice-preset-picker';
 import { RankingCard } from '@/components/ranking-card';
-import { ScenarioCard } from '@/components/scenario-card';
 import { KenneyCreditsCard } from '@/components/kenney-credits-card';
 import { SageUsageFold } from '@/components/sage-usage';
 import { ThemedText } from '@/components/themed-text';
@@ -183,7 +182,6 @@ export default function YouScreen() {
               </ThemedView>
 
               <RankingCard me={me} onUpdated={() => refresh()} />
-              <ScenarioCard me={me} onUpdated={() => refresh()} />
 
               <IntakeSettings
                 me={me}

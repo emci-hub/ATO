@@ -21,7 +21,6 @@ import { ReportSheet } from '@/components/report-sheet';
 import { SageEightBall } from '@/components/sage-eight-ball';
 import { SageKnowsCard } from '@/components/sage-knows-card';
 import { RankingCard } from '@/components/ranking-card';
-import { ScenarioCard } from '@/components/scenario-card';
 import { SageUsageLine } from '@/components/sage-usage';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -441,7 +440,6 @@ export default function SageScreen() {
                 />
               ) : null}
               {me ? <RankingCard me={me} onUpdated={refreshMe} /> : null}
-              {me ? <ScenarioCard me={me} onUpdated={refreshMe} /> : null}
               <SageEightBall />
               {me ? <SageUsageLine revision={usageRevision} /> : null}
             </View>
