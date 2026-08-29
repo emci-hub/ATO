@@ -9,15 +9,25 @@ import { resolve } from 'node:path';
 
 import { QUESTIONS_BANK, QUESTIONS_FEW_SHOTS } from '../src/lib/questions/bank';
 import { pickQuestionGrounding } from '../src/lib/questions/context';
-import { QUESTIONS_LABEL } from '../src/lib/questions/copy';
+import {
+  QUESTIONS_CHECKPOINT,
+  QUESTIONS_KEEP_GOING,
+  QUESTIONS_LABEL,
+  QUESTIONS_SKIP_REST,
+  QUESTIONS_SKIP_THIS,
+} from '../src/lib/questions/copy';
+import { questionDraftGuardHit } from '../src/lib/questions/guards';
 import { composeLocalQuestionBatch } from '../src/lib/questions/local';
 import { parseQuestionBatch } from '../src/lib/questions/parse';
 import { buildQuestionsPrompt } from '../src/lib/questions/prompt';
+import { preferFreshAxes, recentAskedAxes } from '../src/lib/questions/rotation';
 import { nextUnansweredItem, routeQuestions } from '../src/lib/questions/route';
 import { QUESTIONS_BATCH_SIZE, QUESTIONS_CALL_TYPE } from '../src/lib/questions/types';
+import type { QuestionDraft } from '../src/lib/questions/types';
 import { emptySageKnowsState } from '../src/lib/sage-knows';
 import { emptyTraitState, mergeTraitWrite } from '../src/lib/traits';
 import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
+import { PHRASE_FLAG_TYPE } from '../src/lib/voice/phrase-guard';
 
 let passed = 0;
 function ok(label: string) {
@@ -92,8 +102,48 @@ const prompt = buildQuestionsPrompt({
 assert.match(prompt, /LOCKED EXAMPLES/);
 assert.match(prompt, /The different one, easily/);
 assert.match(prompt, /Never ask for free text/);
+assert.match(prompt, /Never a hypothetical/);
+assert.match(prompt, /Never double-barrel/);
+assert.match(prompt, /socially-desirable/);
+assert.match(prompt, /Mix stakes/);
+assert.match(prompt, /same sentence shape/);
+assert.match(prompt, /you mentioned to Sage/);
 assert.doesNotMatch(prompt, /TextInput/);
 ok('prompt is multiple-choice, includes the locked few-shots');
+
+const jargonOption: QuestionDraft = {
+  axis: 'openness',
+  prompt: 'You already picked the path this morning.',
+  options: [
+    { text: 'You are an introvert.', value: 0.2 },
+    { text: 'The other way', value: 0.8 },
+  ],
+};
+assert.equal(questionDraftGuardHit(jargonOption), 'introvert');
+const phraseOption: QuestionDraft = {
+  axis: 'relatedness',
+  prompt: 'A friend cancels same-day.',
+  options: [
+    { text: "You're the type of person who needs a reason.", value: 0.8 },
+    { text: "I'd let it go.", value: 0.2 },
+  ],
+};
+assert.equal(questionDraftGuardHit(phraseOption), PHRASE_FLAG_TYPE);
+const cleanDraft: QuestionDraft = {
+  axis: 'autonomy',
+  prompt: 'You already picked the path this morning.',
+  options: [
+    { text: 'Mine', value: 0.8 },
+    { text: 'Theirs', value: 0.2 },
+  ],
+};
+assert.equal(questionDraftGuardHit(cleanDraft), null);
+ok('guards run on question text and every option');
+
+const rotated = composeLocalQuestionBatch(['openness', 'relatedness', 'growth_mindset']);
+assert.equal(rotated[0]?.axis, 'attachment_avoidance');
+assert.ok(!preferFreshAxes(composeLocalQuestionBatch(), ['openness']).slice(0, 1).some((row) => row.axis === 'openness'));
+ok('soft axis rotation prefers axes outside the last 2–3');
 
 async function main() {
 const routed = await routeQuestions(
@@ -117,6 +167,76 @@ assert.equal(routed.pack?.items.length, 5);
 assert.equal(nextUnansweredItem(routed.pack)?.id, routed.item?.id);
 ok('opening with local deps serves a cached-shape batch of 5');
 
+let generateCalls = 0;
+const dirtyThenClean = await routeQuestions(
+  {
+    me: {
+      name: 'Riley',
+      timezone: 'UTC',
+      talk_style: 'even',
+      voice_preset: 'close_friend',
+      sage_knows: emptySageKnowsState(),
+      facts: [],
+      ai_consent: true,
+    },
+    history: [],
+    aiConsent: true,
+  },
+  {
+    claimBatch: async () => ({ ok: true }),
+    generateBatch: async () => {
+      generateCalls += 1;
+      if (generateCalls === 1) {
+        return [jargonOption, phraseOption, ...composeLocalQuestionBatch().slice(0, 3)];
+      }
+      return composeLocalQuestionBatch();
+    },
+  },
+);
+assert.equal(generateCalls, 2);
+assert.ok(dirtyThenClean.pack);
+assert.equal(
+  dirtyThenClean.pack.items.some((item) => questionDraftGuardHit(item) != null),
+  false,
+);
+ok('guard failure retries once, then skips the dirty question');
+
+const asked = recentAskedAxes({
+  id: 'p',
+  generatedOn: '2026-08-29',
+  createdAt: '2026-08-29T12:00:00.000Z',
+  items: [
+    {
+      id: 'a',
+      packId: 'p',
+      sortIndex: 0,
+      axis: 'openness',
+      prompt: 'One.',
+      options: [
+        { text: 'A', value: 0.8 },
+        { text: 'B', value: 0.2 },
+      ],
+      answeredOption: 0,
+      skippedAt: null,
+    },
+    {
+      id: 'b',
+      packId: 'p',
+      sortIndex: 1,
+      axis: 'relatedness',
+      prompt: 'Two.',
+      options: [
+        { text: 'A', value: 0.8 },
+        { text: 'B', value: 0.2 },
+      ],
+      answeredOption: null,
+      skippedAt: '2026-08-29T12:01:00.000Z',
+    },
+  ],
+});
+assert.deepEqual(asked, ['openness', 'relatedness']);
+ok('recent axes include answers and skips, not open items');
+
 const sql = read('supabase/migrations/wave17_infinite_questions.sql');
 assert.match(sql, /create table public.question_packs/);
 assert.match(sql, /create table public.question_items/);
@@ -124,7 +244,11 @@ assert.match(sql, /claim_questions_batch/);
 assert.match(sql, /by_type/);
 assert.match(sql, /questions_daily_cap/);
 assert.match(sql, /Does not increment Sage\/Explore calls/);
-ok('schema has packs/items and a separate questions regen claim');
+const skipSql = read('supabase/migrations/wave18_question_skip.sql');
+assert.match(skipSql, /skipped_at/);
+assert.match(skipSql, /skip_question_item/);
+assert.match(skipSql, /skip_rest_question_pack/);
+ok('schema has packs/items, a separate questions regen claim, and skip RPCs');
 
 const home = read('src/app/(tabs)/index.tsx');
 const you = read('src/app/(tabs)/you.tsx');
@@ -139,6 +263,16 @@ assert.match(fold, /updateTraits/);
 assert.match(fold, /self_situation/);
 assert.doesNotMatch(fold, /TextInput/);
 assert.match(fold, /claimQuestionsBatch/);
+assert.match(fold, /QUESTIONS_SKIP_THIS/);
+assert.match(fold, /QUESTIONS_SKIP_REST/);
+assert.match(fold, /QUESTIONS_CHECKPOINT/);
+assert.match(fold, /QUESTIONS_KEEP_GOING/);
+assert.match(fold, /logJargonGuard/);
+assert.match(fold, /logPhraseGuard/);
+assert.equal(QUESTIONS_SKIP_THIS, 'Skip this one');
+assert.equal(QUESTIONS_SKIP_REST, 'Skip the rest');
+assert.equal(QUESTIONS_CHECKPOINT, "That's plenty for now — come back anytime");
+assert.equal(QUESTIONS_KEEP_GOING, 'Keep going');
 assert.match(read('src/components/explore-panel.tsx'), /claimAiCall\('explore'\)/);
 ok('Home-only collapsible; writes self_situation; Explore tagged separately');
 

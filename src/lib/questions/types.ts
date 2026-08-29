@@ -23,6 +23,7 @@ export interface QuestionItemRow {
   prompt: string;
   options: QuestionOption[];
   answeredOption: number | null;
+  skippedAt: string | null;
 }
 
 export interface QuestionPackRow {
@@ -64,7 +65,8 @@ export type QuestionsKind =
   | 'consent-denied'
   | 'crisis'
   | 'quota'
-  | 'empty';
+  | 'empty'
+  | 'paused';
 
 export interface RouteQuestionsResult {
   kind: QuestionsKind;

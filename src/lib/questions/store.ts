@@ -17,6 +17,7 @@ interface ItemRow {
   prompt: string;
   options: unknown;
   answered_option: number | null;
+  skipped_at: string | null;
 }
 
 function ymd(value: string): string {
@@ -61,6 +62,7 @@ function mapPack(pack: PackRow, items: ItemRow[]): QuestionPackRow {
           prompt: row.prompt,
           options,
           answeredOption: row.answered_option,
+          skippedAt: row.skipped_at,
         };
         return [mapped];
       }),
@@ -79,7 +81,7 @@ export async function fetchLatestQuestionPack(): Promise<QuestionPackRow | null>
 
   const { data: items, error: itemError } = await supabase
     .from('question_items')
-    .select('id, pack_id, sort_index, axis, prompt, options, answered_option')
+    .select('id, pack_id, sort_index, axis, prompt, options, answered_option, skipped_at')
     .eq('pack_id', pack.id)
     .order('sort_index', { ascending: true });
   if (itemError) throw itemError;
@@ -112,6 +114,20 @@ export async function answerQuestionItem(itemId: string, optionIndex: number): P
   const { error } = await supabase.rpc('answer_question_item', {
     p_item_id: itemId,
     p_option_index: optionIndex,
+  });
+  if (error) throw error;
+}
+
+export async function skipQuestionItem(itemId: string): Promise<void> {
+  const { error } = await supabase.rpc('skip_question_item', {
+    p_item_id: itemId,
+  });
+  if (error) throw error;
+}
+
+export async function skipRestOfQuestionPack(packId: string): Promise<void> {
+  const { error } = await supabase.rpc('skip_rest_question_pack', {
+    p_pack_id: packId,
   });
   if (error) throw error;
 }

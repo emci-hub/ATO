@@ -17,3 +17,15 @@ export const QUESTIONS_EMPTY_QUOTA =
 
 export const QUESTIONS_EMPTY_TRY =
   "Couldn't land a batch. Try again later.";
+
+export const QUESTIONS_SKIP_THIS = 'Skip this one';
+
+export const QUESTIONS_SKIP_REST = 'Skip the rest';
+
+export const QUESTIONS_CHECKPOINT =
+  "That's plenty for now — come back anytime";
+
+export const QUESTIONS_KEEP_GOING = 'Keep going';
+
+/** Soft sitting pause — not a hard stop. */
+export const QUESTIONS_CHECKPOINT_AFTER = 8;
