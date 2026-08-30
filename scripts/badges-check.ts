@@ -170,6 +170,7 @@ assert.doesNotMatch(src, /Math\.random|Math\.floor\(\s*Math\.random|shuffle|loot
 assert.doesNotMatch(ui, /Math\.random|Math\.floor\(\s*Math\.random/i);
 assert.match(src, /hasCut/);
 assert.doesNotMatch(readFileSync(resolve('src/app/(tabs)/index.tsx'), 'utf8'), /MilestoneBadges/);
-ok('unlock path has no randomness; badges are not mounted on Home');
+assert.match(readFileSync(resolve('src/app/(tabs)/you.tsx'), 'utf8'), /MilestoneBadges/);
+ok('unlock path has no randomness; badges are mounted on You, not Home');
 
 console.log(`\nAll ${passed} badge checks passed.`);

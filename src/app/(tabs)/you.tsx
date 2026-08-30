@@ -1,9 +1,11 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { DeleteAccountSheet } from '@/components/delete-account-sheet';
 import { ScanSheet } from '@/components/scan-sheet';
@@ -11,10 +13,13 @@ import { SharePoster } from '@/components/share-poster';
 import { AppearancePicker } from '@/components/appearance-picker';
 import { CityPicker } from '@/components/city-picker';
 import { CrisisRegionPicker } from '@/components/crisis-region-picker';
-import { IntakeSettings } from '@/components/intake-settings';
+import { MilestoneBadges } from '@/components/check-milestone-badge';
+import { IntakeSettings, TalkStylePicker } from '@/components/intake-settings';
+import { QuestGrowthBars } from '@/components/quest-growth-bars';
 import { VoicePresetPicker } from '@/components/voice-preset-picker';
 import { SageFactsCard } from '@/components/sage-facts';
 import { RunningUpdateLine } from '@/components/running-update-line';
+import { SettingsFold } from '@/components/settings-fold';
 import { TraitBandsFold } from '@/components/trait-bands-fold';
 import { KenneyCreditsCard } from '@/components/kenney-credits-card';
 import { PasswordSettingsFold } from '@/components/password-settings-fold';
@@ -22,8 +27,12 @@ import { SageUsageFold } from '@/components/sage-usage';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useGrowth } from '@/hooks/use-growth';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
+import { fetchChecks, type Check } from '@/lib/checks';
+import { onChecksChanged } from '@/lib/checks-events';
+import { depthTier, presenceTier } from '@/lib/growth';
 import { useMeContext } from '@/lib/me-context';
 import { addPeerByHandle } from '@/lib/circle';
 import { useCircleContext } from '@/lib/circle-context';
@@ -42,12 +51,43 @@ import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { supabase } from '@/lib/supabase';
 
+const GROWTH_PREVIEW_KEY = 'ato.dev.growth-preview.v1';
+
+export type GrowthPreview = { checkCount: number; factCount: number };
+
+export async function readGrowthPreview(): Promise<GrowthPreview | null> {
+  if (!__DEV__) return null;
+  const raw = await AsyncStorage.getItem(GROWTH_PREVIEW_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as GrowthPreview;
+    if (typeof parsed.checkCount !== 'number' || typeof parsed.factCount !== 'number') return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export async function writeGrowthPreview(next: GrowthPreview): Promise<void> {
+  if (!__DEV__) return;
+  await AsyncStorage.setItem(GROWTH_PREVIEW_KEY, JSON.stringify(next));
+}
+
+export async function clearGrowthPreview(): Promise<void> {
+  if (!__DEV__) return;
+  await AsyncStorage.removeItem(GROWTH_PREVIEW_KEY);
+}
+
 export default function YouScreen() {
   const theme = useTheme();
   const { width: windowWidth } = useWindowDimensions();
   const { session } = useSession();
+  const userId = session?.user.id;
   const { me, refresh } = useMeContext();
+  const { state: growth } = useGrowth();
   const { refresh: refreshCircle } = useCircleContext();
+  const [checks, setChecks] = useState<Check[]>([]);
+  const [growthPreview, setGrowthPreview] = useState<GrowthPreview | null>(null);
   const [signingOut, setSigningOut] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -64,6 +104,39 @@ export default function YouScreen() {
   );
 
   useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    const load = () => {
+      fetchChecks(userId)
+        .then((rows) => {
+          if (!cancelled) setChecks(rows);
+        })
+        .catch((err) => {
+          console.log('[you] fetchChecks error:', err);
+        });
+    };
+    load();
+    const unsub = onChecksChanged(load);
+    return () => {
+      cancelled = true;
+      unsub();
+    };
+  }, [userId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!__DEV__) return;
+      let cancelled = false;
+      void readGrowthPreview().then((next) => {
+        if (!cancelled) setGrowthPreview(next);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, []),
+  );
+
+  useEffect(() => {
     if (!me) return;
     let active = true;
     Promise.all([fetchMyInviteCodes(), fetchMyReferrals()])
@@ -77,6 +150,11 @@ export default function YouScreen() {
       active = false;
     };
   }, [me?.id]);
+
+  const checkCount = growthPreview?.checkCount ?? growth.checkCount;
+  const factCount = growthPreview?.factCount ?? growth.factCount;
+  const presence = growthPreview ? presenceTier(growthPreview.checkCount) : growth.presence;
+  const depth = growthPreview ? depthTier(growthPreview.factCount) : growth.depth;
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -185,10 +263,28 @@ export default function YouScreen() {
                 </ThemedText>
               </ThemedView>
 
+              <MilestoneBadges
+                checkCount={checkCount}
+                factCount={factCount}
+                checks={checks}
+                timeZone={me.timezone || 'UTC'}
+                defaultOpen={false}
+              />
+
+              <QuestGrowthBars presence={presence} depth={depth} />
+
               <IntakeSettings
                 me={me}
                 onUpdated={() => refresh()}
               />
+
+              <ThemedView type="backgroundElement" style={styles.detailCard}>
+                <ThemedText type="smallBold" style={styles.inviteHeading}>
+                  How Sage sounds
+                </ThemedText>
+                <TalkStylePicker me={me} onUpdated={() => refresh()} />
+                <VoicePresetPicker me={me} onUpdated={() => refresh()} />
+              </ThemedView>
 
               <SageFactsCard me={me} onUpdated={() => refresh()} />
 
@@ -202,12 +298,6 @@ export default function YouScreen() {
               </ThemedView>
 
               <TraitBandsFold me={me} />
-
-              <VoicePresetPicker me={me} onUpdated={() => refresh()} />
-
-              <ThemedView type="backgroundElement" style={styles.detailCard}>
-                <DetailRow label="Timezone" value={me.timezone} />
-              </ThemedView>
 
               <RunningUpdateLine />
 
@@ -303,6 +393,10 @@ export default function YouScreen() {
               <SageUsageFold />
               <PasswordSettingsFold />
               <KenneyCreditsCard />
+
+              <SettingsFold title="Account">
+                <DetailRow label="Timezone" value={me.timezone} />
+              </SettingsFold>
             </>
           ) : (
             <ThemedText themeColor="textSecondary">

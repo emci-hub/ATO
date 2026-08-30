@@ -47,6 +47,15 @@ assert.doesNotMatch(hub, /label: 'Card'/);
 assert.doesNotMatch(hub, /section === 'card'/);
 ok('Today slot and Ask kind overrides render under Home, not a Card section');
 
+const youBlock = hub.slice(youHeading, systemHeading);
+assert.match(youBlock, /<TraitViewer \/>/);
+assert.match(youBlock, /<GrowthPreview \/>/);
+assert.match(hub, /Growth preview/);
+assert.match(hub, /check_count/);
+assert.match(hub, /fact count/);
+assert.doesNotMatch(youBlock, /recordCheck|addFact/);
+ok('Growth preview sits under You alongside the trait viewer and does not write Checks or facts');
+
 assert.equal((hub.match(/<ForceTestError /g) ?? []).length, 4);
 assert.match(hub, /Force test error/);
 assert.match(hub, /Dev Lab test error — Home/);

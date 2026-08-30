@@ -20,9 +20,91 @@ import {
 } from '@/lib/intake';
 import { updateIntake, type IntakePatch, type Me, type TalkStyle } from '@/lib/me';
 
+const IDENTITY_QUESTIONS = CORE_INTAKE_QUESTIONS.filter((question) => question.field !== 'talk_style');
+const TALK_STYLE_QUESTION = CORE_INTAKE_QUESTIONS.find((question) => question.field === 'talk_style')!;
+
 /**
- * You-tab editor for the 9 onboarding identity chips. Same chip sets as
- * signup. show_up still seeds color; talk_style still seeds Sage's tone.
+ * talk_style row. Same picker, preview, and updateIntake write as when it
+ * lived as chip 1 of How you show up. Mounted in How Sage sounds on You.
+ */
+export function TalkStylePicker({
+  me,
+  onUpdated,
+}: {
+  me: Me;
+  onUpdated: () => Promise<void>;
+}) {
+  const theme = useTheme();
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [previewTalk, setPreviewTalk] = useState<TalkStyle | null>(null);
+
+  async function save(patch: IntakePatch) {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await updateIntake(me.id, patch);
+      await onUpdated();
+    } catch (err) {
+      console.log('[intake-settings] save error:', err);
+      setPreviewTalk(me.talk_style);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function onSelect(value: string) {
+    setPreviewTalk(value as TalkStyle);
+    if (me.talk_style === value) return;
+    void save({ talk_style: value } as IntakePatch);
+  }
+
+  return (
+    <View>
+      <ThemedPressable
+        accessibilityRole="button"
+        accessibilityLabel={INTAKE_SETTINGS_LABELS.talk_style}
+        accessibilityState={{ expanded: open }}
+        onPress={() => {
+          if (open) {
+            setOpen(false);
+            return;
+          }
+          setOpen(true);
+          setPreviewTalk(me.talk_style);
+        }}
+        style={[styles.row, open && { backgroundColor: theme.backgroundSelected }]}>
+        <ThemedText type="small" themeColor="textSecondary">
+          {INTAKE_SETTINGS_LABELS.talk_style}
+        </ThemedText>
+        <ThemedText type="small" style={styles.value}>
+          {displayIntakeValue('talk_style', me)}
+        </ThemedText>
+      </ThemedPressable>
+      {open ? (
+        <View style={styles.chips}>
+          <ThemedText type="small" themeColor="textSecondary">
+            {TALK_STYLE_QUESTION.prompt}
+          </ThemedText>
+          <ChipGroup
+            chips={TALK_STYLE_QUESTION.chips}
+            selected={[previewTalk ?? me.talk_style]}
+            disabled={saving}
+            inset
+            onSelect={onSelect}
+          />
+          <ThemedText type="small" themeColor="textSecondary" style={styles.preview}>
+            {TALK_STYLE_PREVIEWS[previewTalk ?? me.talk_style]}
+          </ThemedText>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+/**
+ * You-tab editor for the 8 onboarding identity chips (talk_style lives in
+ * How Sage sounds). Same chip sets as signup. show_up still seeds color.
  */
 export function IntakeSettings({
   me,
@@ -34,7 +116,6 @@ export function IntakeSettings({
   const theme = useTheme();
   const [open, setOpen] = useState<CoreIntakeField | null>(null);
   const [saving, setSaving] = useState<CoreIntakeField | null>(null);
-  const [previewTalk, setPreviewTalk] = useState<TalkStyle | null>(null);
 
   async function save(field: CoreIntakeField, patch: IntakePatch) {
     if (saving) return;
@@ -42,10 +123,9 @@ export function IntakeSettings({
     try {
       await updateIntake(me.id, patch);
       await onUpdated();
-      if (field !== 'knocks_you_off' && field !== 'talk_style') setOpen(null);
+      if (field !== 'knocks_you_off') setOpen(null);
     } catch (err) {
       console.log('[intake-settings] save error:', err);
-      if (field === 'talk_style') setPreviewTalk(me.talk_style);
     } finally {
       setSaving(null);
     }
@@ -60,12 +140,6 @@ export function IntakeSettings({
         : [...current, chip];
       if (next.length === 0) return;
       void save(field, { knocks_you_off: joinKnocks(next) });
-      return;
-    }
-    if (field === 'talk_style') {
-      setPreviewTalk(value as TalkStyle);
-      if (me.talk_style === value) return;
-      void save(field, { talk_style: value } as IntakePatch);
       return;
     }
     if (selectedIntakeValues(field, me)[0] === value) {
@@ -83,7 +157,7 @@ export function IntakeSettings({
       <ThemedText type="small" themeColor="textSecondary" style={styles.lede}>
         Tap a row to change it. Same answers as when you signed up.
       </ThemedText>
-      {CORE_INTAKE_QUESTIONS.map((question) => {
+      {IDENTITY_QUESTIONS.map((question) => {
         const selected = selectedIntakeValues(question.field, me);
         const expanded = open === question.field;
         const busy = saving === question.field;
@@ -99,7 +173,6 @@ export function IntakeSettings({
                   return;
                 }
                 setOpen(question.field);
-                if (question.field === 'talk_style') setPreviewTalk(me.talk_style);
               }}
               style={[styles.row, expanded && { backgroundColor: theme.backgroundSelected }]}>
               <ThemedText type="small" themeColor="textSecondary">
@@ -116,21 +189,12 @@ export function IntakeSettings({
                 </ThemedText>
                 <ChipGroup
                   chips={question.chips}
-                  selected={
-                    question.field === 'talk_style'
-                      ? [previewTalk ?? me.talk_style]
-                      : selected
-                  }
+                  selected={selected}
                   multi={question.multi}
                   disabled={busy || saving != null}
                   inset
                   onSelect={(value) => onSelect(question.field, value)}
                 />
-                {question.field === 'talk_style' ? (
-                  <ThemedText type="small" themeColor="textSecondary" style={styles.preview}>
-                    {TALK_STYLE_PREVIEWS[previewTalk ?? me.talk_style]}
-                  </ThemedText>
-                ) : null}
               </View>
             ) : null}
           </View>

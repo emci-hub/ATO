@@ -91,6 +91,11 @@ import { resolveAsk, type AskPick } from '@/lib/ask';
 import { resolveReveal } from '@/lib/reveal';
 import { parseSageKnowsState } from '@/lib/sage-knows';
 import { resolveTodaySlot, type TodaySlot } from '@/lib/today-slot';
+import {
+  clearGrowthPreview,
+  readGrowthPreview,
+  writeGrowthPreview,
+} from '@/app/(tabs)/you';
 
 const LAB_ME: VoiceMe = {
   name: 'Riley',
@@ -179,6 +184,7 @@ function DevLab() {
           <View style={styles.section}>
             <ThemedText type="smallBold">You</ThemedText>
             {canSeeHubSection('traits', gate) ? <TraitViewer /> : null}
+            <GrowthPreview />
             <ForceTestError message="Dev Lab test error — You" />
           </View>
 
@@ -714,6 +720,89 @@ function TraitViewer() {
           </ThemedView>
         );
       })}
+    </View>
+  );
+}
+
+function GrowthPreview() {
+  const theme = useTheme();
+  const [checkCount, setCheckCount] = useState('7');
+  const [factCount, setFactCount] = useState('1');
+  const [stored, setStored] = useState<{ checkCount: number; factCount: number } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void readGrowthPreview().then((next) => {
+      if (cancelled) return;
+      setStored(next);
+      if (next) {
+        setCheckCount(String(next.checkCount));
+        setFactCount(String(next.factCount));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function apply() {
+    const next = {
+      checkCount: Math.max(0, Number.parseInt(checkCount, 10) || 0),
+      factCount: Math.max(0, Number.parseInt(factCount, 10) || 0),
+    };
+    await writeGrowthPreview(next);
+    setStored(next);
+  }
+
+  async function off() {
+    await clearGrowthPreview();
+    setStored(null);
+  }
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Growth preview</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Forces check_count and fact count on You for MilestoneBadges and QuestGrowthBars.
+        Preview-only. Does not write Checks or facts.
+      </ThemedText>
+      <ThemedText type="code" themeColor="textSecondary">
+        stored: {stored ? `check_count ${stored.checkCount} · fact count ${stored.factCount}` : 'off'}
+      </ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        check_count
+      </ThemedText>
+      <TextInput
+        value={checkCount}
+        onChangeText={setCheckCount}
+        keyboardType="number-pad"
+        placeholder="0"
+        placeholderTextColor={theme.textSecondary}
+        style={[
+          styles.input,
+          styles.searchInput,
+          { color: theme.text, backgroundColor: theme.backgroundSelected, borderColor: controlBorderColor(theme) },
+        ]}
+      />
+      <ThemedText type="small" themeColor="textSecondary">
+        fact count
+      </ThemedText>
+      <TextInput
+        value={factCount}
+        onChangeText={setFactCount}
+        keyboardType="number-pad"
+        placeholder="0"
+        placeholderTextColor={theme.textSecondary}
+        style={[
+          styles.input,
+          styles.searchInput,
+          { color: theme.text, backgroundColor: theme.backgroundSelected, borderColor: controlBorderColor(theme) },
+        ]}
+      />
+      <View style={styles.tabs}>
+        <Chip label="apply preview" selected={stored != null} onPress={() => void apply()} />
+        <Chip label="off" selected={stored == null} onPress={() => void off()} />
+      </View>
     </View>
   );
 }
