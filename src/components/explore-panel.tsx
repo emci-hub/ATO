@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
@@ -16,6 +22,7 @@ import {
   EXPLORE_LAND_NO,
   EXPLORE_LAND_Q,
   EXPLORE_LAND_YES,
+  EXPLORE_NOTED,
 } from '@/lib/explore/copy';
 import { generateExploreBody } from '@/lib/explore/generate';
 import { routeExplore } from '@/lib/explore/route';
@@ -28,6 +35,7 @@ import {
 import type { ExploreEntryRow, ExplorePackRow, RouteExploreResult } from '@/lib/explore/types';
 import { voiceMeFrom } from '@/lib/intake';
 import type { Me } from '@/lib/me';
+import { useAppearance } from '@/lib/theme/context';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { VOICE_CONFIG } from '@/lib/voice/config';
 import { claimAiCall, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
@@ -51,6 +59,49 @@ function emptyCopy(kind: RouteExploreResult['kind']): string | null {
   }
 }
 
+function NotedAck({
+  bump,
+  reduceMotion,
+  onFill,
+}: {
+  bump: number;
+  reduceMotion: boolean;
+  onFill: boolean;
+}) {
+  const theme = useTheme();
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    opacity.value = 1;
+    if (reduceMotion) {
+      const hide = setTimeout(() => {
+        opacity.value = 0;
+      }, 900);
+      return () => clearTimeout(hide);
+    }
+    opacity.value = withSequence(
+      withTiming(1, { duration: 400 }),
+      withTiming(0, { duration: 700 }),
+    );
+  }, [bump, reduceMotion, opacity]);
+
+  const fade = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      accessibilityLiveRegion="polite"
+      style={[styles.noted, fade]}>
+      <ThemedText
+        type="small"
+        themeColor={onFill ? undefined : 'textSecondary'}
+        style={onFill ? { color: theme.onAccent } : undefined}>
+        {EXPLORE_NOTED}
+      </ThemedText>
+    </Animated.View>
+  );
+}
+
 export function ExplorePanel({
   me,
   history,
@@ -61,8 +112,14 @@ export function ExplorePanel({
   crisisToday: boolean;
 }) {
   const theme = useTheme();
+  const { reduceMotion } = useAppearance();
   const [result, setResult] = useState<RouteExploreResult | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [noted, setNoted] = useState<{
+    entryId: string;
+    landed: boolean;
+    bump: number;
+  } | null>(null);
 
   const load = useCallback(async () => {
     const next = await routeExplore(
@@ -105,6 +162,7 @@ export function ExplorePanel({
 
   async function react(entry: ExploreEntryRow, landed: boolean) {
     if (busyId || entry.id.startsWith('local-')) return;
+    setNoted({ entryId: entry.id, landed, bump: Date.now() });
     setBusyId(entry.id);
     try {
       await recordExploreReaction(entry.id, landed);
@@ -151,34 +209,52 @@ export function ExplorePanel({
             {EXPLORE_LAND_Q}
           </ThemedText>
           <View style={styles.actions}>
-            <ThemedPressable
-              filled={entry.landed === true}
-              onPress={() => void react(entry, true)}
-              disabled={busyId !== null}
-              style={[
-                styles.primary,
-                busyId !== null && styles.disabled,
-              ]}>
-              <ThemedText
-                type="smallBold"
-                style={entry.landed === true ? { color: theme.onAccent } : undefined}
-                themeColor={entry.landed === true ? undefined : 'textSecondary'}>
-                {EXPLORE_LAND_YES}
-              </ThemedText>
-            </ThemedPressable>
-            <ThemedPressable
-              onPress={() => void react(entry, false)}
-              disabled={busyId !== null}
-              style={[
-                styles.secondary,
-                { borderColor: controlBorderColor(theme) },
-                entry.landed === false && styles.missed,
-                busyId !== null && styles.disabled,
-              ]}>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                {EXPLORE_LAND_NO}
-              </ThemedText>
-            </ThemedPressable>
+            <View style={styles.actionSlot}>
+              <ThemedPressable
+                filled={entry.landed === true}
+                onPress={() => void react(entry, true)}
+                disabled={busyId !== null}
+                style={[
+                  styles.primary,
+                  busyId !== null && styles.disabled,
+                ]}>
+                <ThemedText
+                  type="smallBold"
+                  style={entry.landed === true ? { color: theme.onAccent } : undefined}
+                  themeColor={entry.landed === true ? undefined : 'textSecondary'}>
+                  {EXPLORE_LAND_YES}
+                </ThemedText>
+              </ThemedPressable>
+              {noted?.entryId === entry.id && noted.landed === true ? (
+                <NotedAck
+                  bump={noted.bump}
+                  reduceMotion={reduceMotion}
+                  onFill={entry.landed === true}
+                />
+              ) : null}
+            </View>
+            <View style={styles.actionSlot}>
+              <ThemedPressable
+                onPress={() => void react(entry, false)}
+                disabled={busyId !== null}
+                style={[
+                  styles.secondary,
+                  { borderColor: controlBorderColor(theme) },
+                  entry.landed === false && styles.missed,
+                  busyId !== null && styles.disabled,
+                ]}>
+                <ThemedText type="smallBold" themeColor="textSecondary">
+                  {EXPLORE_LAND_NO}
+                </ThemedText>
+              </ThemedPressable>
+              {noted?.entryId === entry.id && noted.landed === false ? (
+                <NotedAck
+                  bump={noted.bump}
+                  reduceMotion={reduceMotion}
+                  onFill={false}
+                />
+              ) : null}
+            </View>
           </View>
         </ThemedView>
       ))}
@@ -204,6 +280,9 @@ const styles = StyleSheet.create({
   actions: {
     gap: Spacing.two,
   },
+  actionSlot: {
+    position: 'relative',
+  },
   primary: {
     borderRadius: Spacing.three,
     paddingVertical: Spacing.three,
@@ -214,6 +293,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingVertical: Spacing.three,
     alignItems: 'center',
+  },
+  noted: {
+    position: 'absolute',
+    right: Spacing.three,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
   },
   missed: {
     opacity: 0.85,

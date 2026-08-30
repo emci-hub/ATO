@@ -25,6 +25,15 @@ export const VOICE_PRESET_LABELS: Record<VoicePreset, string> = {
   motivational_coach: 'Motivational coach',
 };
 
+/** Cosmetic sample under the selected You-tab preset. Static local strings — never a model call. */
+export const VOICE_PRESET_PREVIEWS: Record<VoicePreset, string> = {
+  neutral: 'Three days logged. Steady pattern so far.',
+  close_friend: "Three days in — that's actually something.",
+  hyperactive_friend: "THREE DAYS?! Okay you're actually doing this.",
+  parent: 'Three days. Good. Keep going.',
+  motivational_coach: "Three days down. You're building something real here.",
+};
+
 /** Prompt-facing notes. Ids stay internal; the model sees this sentence. */
 export const VOICE_PRESET_GUIDE: Record<VoicePreset, string> = {
   neutral:

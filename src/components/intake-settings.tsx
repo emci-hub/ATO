@@ -10,6 +10,7 @@ import { useTheme } from '@/hooks/use-theme';
 import {
   CORE_INTAKE_QUESTIONS,
   INTAKE_SETTINGS_LABELS,
+  TALK_STYLE_PREVIEWS,
   displayIntakeValue,
   joinKnocks,
   parseKnocks,
@@ -17,7 +18,7 @@ import {
   type CoreIntakeField,
   type KnocksChip,
 } from '@/lib/intake';
-import { updateIntake, type IntakePatch, type Me } from '@/lib/me';
+import { updateIntake, type IntakePatch, type Me, type TalkStyle } from '@/lib/me';
 
 /**
  * You-tab editor for the 9 onboarding identity chips. Same chip sets as
@@ -33,6 +34,7 @@ export function IntakeSettings({
   const theme = useTheme();
   const [open, setOpen] = useState<CoreIntakeField | null>(null);
   const [saving, setSaving] = useState<CoreIntakeField | null>(null);
+  const [previewTalk, setPreviewTalk] = useState<TalkStyle | null>(null);
 
   async function save(field: CoreIntakeField, patch: IntakePatch) {
     if (saving) return;
@@ -40,9 +42,10 @@ export function IntakeSettings({
     try {
       await updateIntake(me.id, patch);
       await onUpdated();
-      if (field !== 'knocks_you_off') setOpen(null);
+      if (field !== 'knocks_you_off' && field !== 'talk_style') setOpen(null);
     } catch (err) {
       console.log('[intake-settings] save error:', err);
+      if (field === 'talk_style') setPreviewTalk(me.talk_style);
     } finally {
       setSaving(null);
     }
@@ -57,6 +60,12 @@ export function IntakeSettings({
         : [...current, chip];
       if (next.length === 0) return;
       void save(field, { knocks_you_off: joinKnocks(next) });
+      return;
+    }
+    if (field === 'talk_style') {
+      setPreviewTalk(value as TalkStyle);
+      if (me.talk_style === value) return;
+      void save(field, { talk_style: value } as IntakePatch);
       return;
     }
     if (selectedIntakeValues(field, me)[0] === value) {
@@ -84,7 +93,14 @@ export function IntakeSettings({
               accessibilityRole="button"
               accessibilityLabel={INTAKE_SETTINGS_LABELS[question.field]}
               accessibilityState={{ expanded }}
-              onPress={() => setOpen(expanded ? null : question.field)}
+              onPress={() => {
+                if (expanded) {
+                  setOpen(null);
+                  return;
+                }
+                setOpen(question.field);
+                if (question.field === 'talk_style') setPreviewTalk(me.talk_style);
+              }}
               style={[styles.row, expanded && { backgroundColor: theme.backgroundSelected }]}>
               <ThemedText type="small" themeColor="textSecondary">
                 {INTAKE_SETTINGS_LABELS[question.field]}
@@ -100,12 +116,21 @@ export function IntakeSettings({
                 </ThemedText>
                 <ChipGroup
                   chips={question.chips}
-                  selected={selected}
+                  selected={
+                    question.field === 'talk_style'
+                      ? [previewTalk ?? me.talk_style]
+                      : selected
+                  }
                   multi={question.multi}
                   disabled={busy || saving != null}
                   inset
                   onSelect={(value) => onSelect(question.field, value)}
                 />
+                {question.field === 'talk_style' ? (
+                  <ThemedText type="small" themeColor="textSecondary" style={styles.preview}>
+                    {TALK_STYLE_PREVIEWS[previewTalk ?? me.talk_style]}
+                  </ThemedText>
+                ) : null}
               </View>
             ) : null}
           </View>
@@ -145,5 +170,8 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.two,
+  },
+  preview: {
+    lineHeight: 20,
   },
 });

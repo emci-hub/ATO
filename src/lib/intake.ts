@@ -51,6 +51,13 @@ export const TALK_STYLE_CHIPS: IntakeChip<TalkStyle>[] = [
   { value: 'loud', label: 'Loud' },
 ];
 
+/** Cosmetic sample under the You-tab picker. Static local strings — never a model call. */
+export const TALK_STYLE_PREVIEWS: Record<TalkStyle, string> = {
+  quiet: 'Three days now. Not loud about it, just there.',
+  even: "Three days in a row. That's a start worth noticing.",
+  loud: "Three days! That's the kind of streak worth bragging about.",
+};
+
 /** Color-seed vibes. Stored on existing `show_up` (still a string). */
 export const SHOW_UP_CHIPS: IntakeChip[] = [
   { value: 'building something', label: 'Building something' },

@@ -12,7 +12,11 @@ import {
   applyJargonFallback,
   matchingJargonTerm,
 } from '../src/lib/voice/jargon';
-import { DEFAULT_VOICE_PRESET, voicePresetOf } from '../src/lib/voice/preset';
+import {
+  DEFAULT_VOICE_PRESET,
+  VOICE_PRESET_PREVIEWS,
+  voicePresetOf,
+} from '../src/lib/voice/preset';
 
 let passed = 0;
 function ok(label: string) {
@@ -46,6 +50,23 @@ assert.equal(voicePresetOf(null), DEFAULT_VOICE_PRESET);
 assert.equal(voicePresetOf('parent'), 'parent');
 assert.equal(voicePresetOf('nope'), DEFAULT_VOICE_PRESET);
 ok('unknown preset falls back to close_friend');
+
+assert.equal(VOICE_PRESET_PREVIEWS.neutral, 'Three days logged. Steady pattern so far.');
+assert.equal(VOICE_PRESET_PREVIEWS.close_friend, "Three days in — that's actually something.");
+assert.equal(
+  VOICE_PRESET_PREVIEWS.hyperactive_friend,
+  "THREE DAYS?! Okay you're actually doing this.",
+);
+assert.equal(VOICE_PRESET_PREVIEWS.parent, 'Three days. Good. Keep going.');
+assert.equal(
+  VOICE_PRESET_PREVIEWS.motivational_coach,
+  "Three days down. You're building something real here.",
+);
+const picker = read('src/components/voice-preset-picker.tsx');
+assert.match(picker, /VOICE_PRESET_PREVIEWS/);
+assert.match(picker, /setVoicePreset/);
+assert.doesNotMatch(picker, /generate|claimAiCall|gemini/i);
+ok('voice_preset picker preview is static local copy, no model call');
 
 const sage = read('src/app/voice/sage.txt');
 assert.doesNotMatch(sage, /supportive coach/i);

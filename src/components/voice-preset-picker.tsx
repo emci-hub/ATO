@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { ThemedPressable } from '@/components/themed-pressable';
@@ -9,6 +10,7 @@ import { setVoicePreset, type Me } from '@/lib/me';
 import {
   VOICE_PRESETS,
   VOICE_PRESET_LABELS,
+  VOICE_PRESET_PREVIEWS,
   type VoicePreset,
 } from '@/lib/voice/preset';
 
@@ -20,14 +22,18 @@ export function VoicePresetPicker({
   onUpdated: () => Promise<void>;
 }) {
   const theme = useTheme();
+  const [pending, setPending] = useState<VoicePreset | null>(null);
+  const highlighted = pending ?? me.voice_preset;
 
   async function pick(preset: VoicePreset) {
+    setPending(preset);
     if (preset === me.voice_preset) return;
     try {
       await setVoicePreset(me.id, preset);
       await onUpdated();
     } catch (err) {
       console.log('[voice-preset] save error:', err);
+      setPending(null);
     }
   }
 
@@ -40,7 +46,7 @@ export function VoicePresetPicker({
         Close friend is the default. A livelier pick adds energy, not a different set of rules.
       </ThemedText>
       {VOICE_PRESETS.map((option) => {
-        const selected = me.voice_preset === option;
+        const selected = highlighted === option;
         return (
           <ThemedPressable
             key={option}
@@ -52,6 +58,11 @@ export function VoicePresetPicker({
             }}
             style={[styles.row, selected && { backgroundColor: theme.backgroundSelected }]}>
             <ThemedText type="smallBold">{VOICE_PRESET_LABELS[option]}</ThemedText>
+            {selected ? (
+              <ThemedText type="small" themeColor="textSecondary" style={styles.preview}>
+                {VOICE_PRESET_PREVIEWS[option]}
+              </ThemedText>
+            ) : null}
           </ThemedPressable>
         );
       })}
@@ -75,5 +86,9 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.two,
     paddingVertical: Spacing.two,
     paddingHorizontal: Spacing.three,
+    gap: Spacing.half,
+  },
+  preview: {
+    lineHeight: 20,
   },
 });

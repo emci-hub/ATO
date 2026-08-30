@@ -10,6 +10,7 @@ import {
   CORE_INTAKE_QUESTIONS,
   CORE_INTAKE_TOTAL,
   INTAKE_SETTINGS_LABELS,
+  TALK_STYLE_PREVIEWS,
   bankStyleFor,
   displayIntakeValue,
   intakeProgressLabel,
@@ -148,6 +149,19 @@ async function main() {
   assert.equal(displayIntakeValue('knocks_you_off', sample), 'Sleep, Workload');
   assert.deepEqual(selectedIntakeValues('knocks_you_off', sample), ['sleep', 'workload']);
   assert.equal(INTAKE_SETTINGS_LABELS.talk_style, 'How Sage talks to you');
+  assert.equal(TALK_STYLE_PREVIEWS.quiet, 'Three days now. Not loud about it, just there.');
+  assert.equal(
+    TALK_STYLE_PREVIEWS.even,
+    "Three days in a row. That's a start worth noticing.",
+  );
+  assert.equal(
+    TALK_STYLE_PREVIEWS.loud,
+    "Three days! That's the kind of streak worth bragging about.",
+  );
+  assert.match(settings, /TALK_STYLE_PREVIEWS/);
+  assert.match(settings, /setPreviewTalk/);
+  assert.doesNotMatch(settings, /generate|claimAiCall|gemini/i);
+  ok('talk_style picker preview is static local copy, no model call');
   assert.equal(INTAKE_SETTINGS_LABELS.morning_cue, 'Your morning anchor');
   assert.equal(
     CORE_INTAKE_QUESTIONS.find((q) => q.field === 'knocks_you_off')?.prompt,

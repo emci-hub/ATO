@@ -13,7 +13,7 @@ import {
   pickExploreFocus,
   pickExplorePackFocuses,
 } from '../src/lib/explore/combine';
-import { EXPLORE_GUARD_FALLBACK, EXPLORE_LABEL } from '../src/lib/explore/copy';
+import { EXPLORE_GUARD_FALLBACK, EXPLORE_LABEL, EXPLORE_NOTED } from '../src/lib/explore/copy';
 import { EXPLORE_FEW_SHOTS, buildExplorePrompt } from '../src/lib/explore/prompt';
 import { routeExplore } from '../src/lib/explore/route';
 import type { ExploreMeSlice, ExplorePackRow } from '../src/lib/explore/types';
@@ -344,6 +344,18 @@ assert.match(read('src/lib/explore/route.ts'), /containsFrameworkTerm/);
 assert.match(read('src/lib/explore/route.ts'), /matchingJargonTerm/);
 assert.match(read('src/lib/explore/route.ts'), /matchingPhrasePattern/);
 ok('both guards and the framework fence run before Explore is shown');
+
+assert.equal(EXPLORE_NOTED, 'Noted.');
+assert.match(panel, /EXPLORE_NOTED/);
+assert.match(panel, /withTiming/);
+const reactFn = panel.slice(
+  panel.indexOf('async function react'),
+  panel.indexOf('const message'),
+);
+assert.match(reactFn, /recordExploreReaction/);
+assert.match(reactFn, /setNoted/);
+assert.doesNotMatch(reactFn, /generateExploreBody|claimAiCall|gemini/i);
+ok('reaction tap shows a local Noted fade and does not call the model');
 
 assert.equal(EXPLORE_LABEL, 'Explore');
 assert.ok(pickExplorePackFocuses(chipsOnly, []).length >= 1);
