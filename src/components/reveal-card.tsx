@@ -28,6 +28,20 @@ function oneShortHaptic() {
   Vibration.vibrate(10);
 }
 
+export async function isRevealOpenedToday(
+  userId: string,
+  timeZone: string,
+  now?: Date,
+): Promise<boolean> {
+  const todayYmd = localYmd(now ?? new Date(), timeZone || 'UTC');
+  try {
+    const raw = await AsyncStorage.getItem(revealOpenedStorageKey(userId));
+    return raw === todayYmd;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Home reveal surface. Content is passed in already picked. One unfold
  * for every pool item — no worth-signaling chrome. Empty days are a plain line.
@@ -61,10 +75,10 @@ export function RevealCard({
     }
     if (!userId || !pick) return;
     let cancelled = false;
-    AsyncStorage.getItem(revealOpenedStorageKey(userId))
-      .then((raw) => {
+    isRevealOpenedToday(userId, timeZone || 'UTC', now)
+      .then((openedToday) => {
         if (cancelled) return;
-        if (raw === todayYmd) {
+        if (openedToday) {
           setOpened(true);
           progress.value = 1;
         }

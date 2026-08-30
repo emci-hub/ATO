@@ -2,12 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 
-import { MilestoneBadges } from '@/components/check-milestone-badge';
 import { MissedCheckCard } from '@/components/missed-check-card';
 import AskSheet from '@/components/ask-sheet';
-import { QuestGrowthBars } from '@/components/quest-growth-bars';
-import { RevealCard } from '@/components/reveal-card';
+import { CrisisCard } from '@/components/crisis-card';
+import { RevealCard, isRevealOpenedToday } from '@/components/reveal-card';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -25,13 +25,15 @@ import { aiConsentFor } from '@/lib/me';
 import { useMeContext } from '@/lib/me-context';
 import { voiceMeFrom } from '@/lib/intake';
 import { resolveAsk, type AskPick } from '@/lib/ask';
-import { readAskOverride } from '@/lib/dev-overrides';
+import { readAskOverride, readSlotOverride } from '@/lib/dev-overrides';
+import { weekdayInZone } from '@/lib/local-date';
 import { homeSageLabel, homeSageLede, NUDGE_LABEL, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { persistRoutedCard, saveTodayCard, todayCardFromCheck } from '@/lib/today-card';
 import { resolveReveal } from '@/lib/reveal';
 import { RANKING_ROUNDS } from '@/lib/ranking';
 import { composeSageKnowsLine, parseSageKnowsState } from '@/lib/sage-knows';
 import { SCENARIO_DECK } from '@/lib/scenario';
+import { resolveTodaySlot, type TodaySlot } from '@/lib/today-slot';
 import { traitStateFromRow, TRAIT_POLE_LINES } from '@/lib/traits';
 import { routeVoiceCard } from '@/lib/voice/router';
 import { logJargonGuard } from '@/lib/voice/quota-server';
@@ -86,6 +88,8 @@ export default function HomeScreen() {
   const [crisisToday, setCrisisToday] = useState(false);
   const [crisisYesterday, setCrisisYesterday] = useState(false);
   const [askOverride, setAskOverride] = useState<AskPick['kind'] | null>(null);
+  const [slotOverride, setSlotOverride] = useState<TodaySlot['kind'] | null>(null);
+  const [noteOpenedToday, setNoteOpenedToday] = useState(false);
 
   const reloadChecks = useCallback(async () => {
     if (!userId) return;
@@ -128,6 +132,7 @@ export default function HomeScreen() {
     : null;
   const todayOpen = window?.open.find((slot) => slot.offset === 0) ?? null;
   const missedOpen = window?.open.filter((slot) => slot.offset > 0) ?? [];
+  const oldestMissed = missedOpen[0] ?? null;
   const alreadyLogged =
     window != null && checks.some((check) => check.day === window.todayDay);
 
@@ -147,16 +152,33 @@ export default function HomeScreen() {
   useEffect(() => {
     if (!__DEV__) return;
     let cancelled = false;
-    void readAskOverride().then((kind) => {
-      if (!cancelled) setAskOverride(kind);
+    void Promise.all([readAskOverride(), readSlotOverride()]).then(([askKind, nextSlot]) => {
+      if (cancelled) return;
+      setAskOverride(askKind);
+      setSlotOverride(nextSlot);
     });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const askPick = useMemo(() => {
-    if (askOverride) return fixtureAskPick(askOverride);
+  useFocusEffect(
+    useCallback(() => {
+      if (!userId || !me) {
+        setNoteOpenedToday(false);
+        return;
+      }
+      let cancelled = false;
+      void isRevealOpenedToday(userId, me.timezone || 'UTC').then((opened) => {
+        if (!cancelled) setNoteOpenedToday(opened);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [userId, me]),
+  );
+
+  const liveAsk = useMemo(() => {
     if (!me) return null;
     const traits = traitStateFromRow(me);
     return resolveAsk({
@@ -169,7 +191,30 @@ export default function HomeScreen() {
       now: new Date(),
       timeZone: me.timezone || 'UTC',
     });
-  }, [askOverride, me, checks]);
+  }, [me, checks]);
+
+  const askPick = askOverride ? fixtureAskPick(askOverride) : liveAsk;
+
+  const slotKind = useMemo(() => {
+    const resolved = resolveTodaySlot({
+      crisisActive: crisisToday,
+      missedCheck: missedOpen.length > 0,
+      noteAvailable: reveal !== null,
+      noteOpenedToday,
+      askPending: liveAsk !== null,
+      isSunday: weekdayInZone(new Date(), me?.timezone || 'UTC') === 0,
+    }).kind;
+    if (__DEV__ && slotOverride) return slotOverride;
+    return resolved;
+  }, [
+    crisisToday,
+    missedOpen.length,
+    reveal,
+    noteOpenedToday,
+    liveAsk,
+    me?.timezone,
+    slotOverride,
+  ]);
 
   useEffect(() => {
     if (card || !window) return;
@@ -274,12 +319,6 @@ export default function HomeScreen() {
             <ThemedText themeColor="textSecondary">
               {params.focus === 'check' ? 'Check today.' : homeSageLede(theme.id)}
             </ThemedText>
-            <MilestoneBadges
-              checkCount={growth.checkCount}
-              factCount={growth.factCount}
-              checks={checks}
-              timeZone={me?.timezone ?? 'UTC'}
-            />
           </View>
 
           {card ? (
@@ -296,7 +335,7 @@ export default function HomeScreen() {
                 </ThemedText>
                 <ThemedText style={styles.cardText}>{card.do}</ThemedText>
               </ThemedView>
-              {card.nudge && card.do.trim().length > 0 ? (
+              {card.nudge ? (
                 <ThemedView type="backgroundElement" style={styles.todayCard}>
                   <ThemedText type="code" themeColor="textSecondary" style={styles.sageKicker}>
                     {NUDGE_LABEL}
@@ -363,53 +402,42 @@ export default function HomeScreen() {
             </Pressable>
           )}
 
-          {me ? (
-            <RevealCard pick={reveal} userId={userId} timeZone={me.timezone} />
-          ) : null}
-
-          {me && askPick ? (
-            <AskSheet pick={askPick} me={me} onUpdated={() => { void refreshMe(); }} />
-          ) : null}
-
-          {me && missedOpen.length > 0 ? (
+          {slotKind === 'crisis' ? (
+            <CrisisCard />
+          ) : slotKind === 'missed_check' && me && oldestMissed ? (
             <>
               {error && !card ? (
                 <ThemedText themeColor="textSecondary">{error}</ThemedText>
               ) : null}
-              {missedOpen.map((slot) => (
-                <MissedCheckCard
-                  key={slot.ymd}
-                  slot={slot}
-                  routeInput={{
-                    me: voiceMeFrom(me),
-                    checkCount: checks.length,
-                    history: checksToHistory(checks),
-                    crisisToday,
-                    crisisYesterday,
-                    aiConsent: me.ai_consent,
-                  }}
-                  busy={busy !== null}
-                  onLog={(status, voice, source) => {
-                    void logMissed(slot.day, slot.ymd, status, voice, source);
-                  }}
-                />
-              ))}
+              <MissedCheckCard
+                key={oldestMissed.ymd}
+                slot={oldestMissed}
+                routeInput={{
+                  me: voiceMeFrom(me),
+                  checkCount: checks.length,
+                  history: checksToHistory(checks),
+                  crisisToday,
+                  crisisYesterday,
+                  aiConsent: me.ai_consent,
+                }}
+                busy={busy !== null}
+                onLog={(status, voice, source) => {
+                  void logMissed(oldestMissed.day, oldestMissed.ymd, status, voice, source);
+                }}
+              />
             </>
+          ) : slotKind === 'note' && me ? (
+            <RevealCard pick={reveal} userId={userId} timeZone={me.timezone} />
+          ) : slotKind === 'ask' && me && askPick ? (
+            <AskSheet pick={askPick} me={me} onUpdated={() => { void refreshMe(); }} />
+          ) : slotKind === 'week' ? (
+            <Pressable
+              onPress={() => router.push('/week')}
+              style={({ pressed }) => [styles.weekRow, pressed && styles.pressed]}>
+              <ThemedText type="smallBold">Your week.</ThemedText>
+              <ThemedText themeColor="textSecondary">›</ThemedText>
+            </Pressable>
           ) : null}
-
-          <QuestGrowthBars presence={growth.presence} depth={growth.depth} />
-
-          <Pressable
-            onPress={() => router.push('/week')}
-            style={({ pressed }) => [styles.weekRow, pressed && styles.pressed]}>
-            <View>
-              <ThemedText type="smallBold">This week</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                Recap + you showed up
-              </ThemedText>
-            </View>
-            <ThemedText themeColor="textSecondary">›</ThemedText>
-          </Pressable>
 
           {(canSeeDevLab({
             isDev: __DEV__,

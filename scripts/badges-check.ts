@@ -169,7 +169,7 @@ const ui = readFileSync(resolve('src/components/check-milestone-badge.tsx'), 'ut
 assert.doesNotMatch(src, /Math\.random|Math\.floor\(\s*Math\.random|shuffle|loot|odds|chance mechanic/i);
 assert.doesNotMatch(ui, /Math\.random|Math\.floor\(\s*Math\.random/i);
 assert.match(src, /hasCut/);
-assert.match(readFileSync(resolve('src/app/(tabs)/index.tsx'), 'utf8'), /MilestoneBadges/);
-ok('unlock path has no randomness; Home uses the same resolver');
+assert.doesNotMatch(readFileSync(resolve('src/app/(tabs)/index.tsx'), 'utf8'), /MilestoneBadges/);
+ok('unlock path has no randomness; badges are not mounted on Home');
 
 console.log(`\nAll ${passed} badge checks passed.`);

@@ -1,7 +1,7 @@
 /**
  * Dev-lab Home overrides. Run: npm run check:dev-overrides
  *
- * Keys live in one module. Readers no-op in production. Home reads ask override.
+ * Keys live in one module. Readers no-op in production. Home reads slot and ask overrides.
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -41,7 +41,8 @@ ok('both reader functions contain a __DEV__ guard');
 assert.doesNotMatch(home, /ato\.dev\.slot-override\.v1/);
 assert.doesNotMatch(home, /ato\.dev\.ask-override\.v1/);
 assert.match(home, /readAskOverride/);
-assert.doesNotMatch(home, /readSlotOverride|SLOT_OVERRIDE_KEY|ASK_OVERRIDE_KEY/);
-ok('Home reads ask override without storing key strings');
+assert.match(home, /readSlotOverride/);
+assert.doesNotMatch(home, /SLOT_OVERRIDE_KEY|ASK_OVERRIDE_KEY/);
+ok('Home reads slot and ask overrides without storing key strings');
 
 console.log(`\nAll ${passed} dev-overrides checks passed.`);

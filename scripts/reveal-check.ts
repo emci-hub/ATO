@@ -231,16 +231,21 @@ assert.match(card, /reduceMotion|forceReduceMotion/);
 assert.match(card, /REVEAL_EMPTY/);
 assert.match(card, /testID="reveal-empty"/);
 assert.match(card, /testID="reveal-sealed"/);
+assert.match(card, /export async function isRevealOpenedToday/);
+assert.match(card, /revealOpenedStorageKey/);
 ok('one unfold, one short haptic, no kind-based chrome');
 
 const home = read('src/app/(tabs)/index.tsx');
+assert.match(home, /isRevealOpenedToday/);
+assert.match(home, /resolveTodaySlot/);
 assert.match(home, /RevealCard/);
+assert.match(home, /slotKind === 'note'/);
 assert.doesNotMatch(read('src/app/(tabs)/circle.tsx'), /RevealCard|REVEAL_LABEL/);
 assert.doesNotMatch(read('src/app/dawn.tsx'), /RevealCard/);
 assert.doesNotMatch(read('targets/widget/widgets.swift'), /RevealCard|REVEAL_/);
 assert.doesNotMatch(read('src/lib/push-copy.ts'), /REVEAL_|RevealCard/);
 assert.doesNotMatch(read('src/lib/today-card.ts'), /reveal/);
-ok('Reveal is Home-only; widget/push/Circle/Dawn stay closed');
+ok('Reveal is Home-only, only as the note slot; widget/push/Circle/Dawn stay closed');
 
 const lab = read('src/app/theme-lab.tsx');
 assert.match(lab, /THEME_REVEAL_WEEK/);

@@ -14,11 +14,13 @@ import { ThemedView } from '@/components/themed-view';
 import { RunningUpdateLine } from '@/components/running-update-line';
 import { TracePipelineViewer } from '@/components/trace-pipeline';
 import { YouDevTools } from '@/components/you-dev-tools';
+import { isRevealOpenedToday } from '@/components/reveal-card';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useMeContext } from '@/lib/me-context';
 import { useSession } from '@/hooks/use-session';
+import { useGrowth } from '@/hooks/use-growth';
 import { useTheme } from '@/hooks/use-theme';
-import { offsetLabel } from '@/lib/check-window';
+import { checkWindowFor, offsetLabel } from '@/lib/check-window';
 import { checksToHistory, fetchChecks } from '@/lib/checks';
 import { crisisFlagsForWindow } from '@/lib/crisis/days';
 import {
@@ -65,7 +67,7 @@ import { routeExplore } from '@/lib/explore/route';
 import { fetchExploreMissNotes } from '@/lib/explore/store';
 import type { RouteExploreResult } from '@/lib/explore/types';
 import { voiceMeFrom } from '@/lib/intake';
-import { localYmd } from '@/lib/local-date';
+import { localYmd, weekdayInZone } from '@/lib/local-date';
 import { supabase } from '@/lib/supabase';
 import { isDirectTraitSource, traitStateFromRow, type TraitSource } from '@/lib/traits';
 import { controlBorderColor } from '@/lib/theme/chrome';
@@ -85,8 +87,10 @@ import {
 } from '@/lib/dev-overrides';
 import { routeVoiceCard } from '@/lib/voice/router';
 import type { VoiceCardResult, VoiceMe } from '@/lib/voice/types';
-import type { AskPick } from '@/lib/ask';
-import type { TodaySlot } from '@/lib/today-slot';
+import { resolveAsk, type AskPick } from '@/lib/ask';
+import { resolveReveal } from '@/lib/reveal';
+import { parseSageKnowsState } from '@/lib/sage-knows';
+import { resolveTodaySlot, type TodaySlot } from '@/lib/today-slot';
 
 const LAB_ME: VoiceMe = {
   name: 'Riley',
@@ -346,6 +350,7 @@ function HomeOverrides() {
         ))}
       </View>
       <Chip label="clear override" selected={false} onPress={() => void pickSlot('off')} />
+      {slot === 'off' ? <SlotReadout /> : null}
 
       <ThemedText type="smallBold">Ask kind override</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
@@ -362,6 +367,97 @@ function HomeOverrides() {
       </View>
       <Chip label="clear override" selected={false} onPress={() => void pickAsk('off')} />
     </View>
+  );
+}
+
+function SlotReadout() {
+  const { me } = useMeContext();
+  const { session } = useSession();
+  const { state: growth } = useGrowth();
+  const userId = session?.user.id;
+  const [lines, setLines] = useState<string>('…');
+
+  useEffect(() => {
+    if (!me || !userId) {
+      setLines('No signed-in account.');
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const checks = await fetchChecks(userId);
+        const flags = await crisisFlagsForWindow(userId, me.timezone);
+        const window = checkWindowFor(
+          me,
+          checks.map((check) => check.day),
+        );
+        const missedCheck = window.open.some((slot) => slot.offset > 0);
+        const noteAvailable =
+          resolveReveal({
+            checks,
+            facts: me.facts ?? [],
+            checkCount: growth.checkCount,
+            factCount: growth.factCount,
+            timeZone: me.timezone || 'UTC',
+            crisisToday: flags.crisisToday,
+            crisisYesterday: flags.crisisYesterday,
+          }) !== null;
+        const noteOpenedToday = await isRevealOpenedToday(userId, me.timezone || 'UTC');
+        const traits = traitStateFromRow(me);
+        const askPending =
+          resolveAsk({
+            values: traits.values,
+            touched: traits.touched,
+            knows: parseSageKnowsState(me.sage_knows),
+            knocksYouOff: me.knocks_you_off,
+            facts: me.facts ?? [],
+            history: checksToHistory(checks),
+            now: new Date(),
+            timeZone: me.timezone || 'UTC',
+          }) !== null;
+        const isSunday = weekdayInZone(new Date(), me.timezone || 'UTC') === 0;
+        const input = {
+          crisisActive: flags.crisisToday,
+          missedCheck,
+          noteAvailable,
+          noteOpenedToday,
+          askPending,
+          isSunday,
+        };
+        const kind = resolveTodaySlot(input).kind;
+        if (cancelled) return;
+        setLines(
+          [
+            `crisisActive: ${input.crisisActive}`,
+            `missedCheck: ${input.missedCheck}`,
+            `noteAvailable: ${input.noteAvailable}`,
+            `noteOpenedToday: ${input.noteOpenedToday}`,
+            `askPending: ${input.askPending}`,
+            `isSunday: ${input.isSunday}`,
+            `kind: ${kind}`,
+          ].join('\n'),
+        );
+      } catch (err) {
+        if (!cancelled) {
+          setLines(err instanceof Error ? err.message : 'Could not resolve today slot.');
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [me, userId, growth.checkCount, growth.factCount]);
+
+  return (
+    <>
+      <ThemedText type="smallBold">Today slot inputs</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Live resolveTodaySlot for this account. Shown when the override is off.
+      </ThemedText>
+      <ThemedText type="code" themeColor="textSecondary">
+        {lines}
+      </ThemedText>
+    </>
   );
 }
 
