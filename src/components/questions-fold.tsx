@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { SettingsFold } from '@/components/settings-fold';
@@ -84,11 +84,13 @@ export function QuestionsFold({
   history,
   crisisToday,
   onUpdated,
+  alwaysOpen = false,
 }: {
   me: Me;
   history: CheckHistory[];
   crisisToday: boolean;
   onUpdated: () => Promise<void>;
+  alwaysOpen?: boolean;
 }) {
   const theme = useTheme();
   const [result, setResult] = useState<RouteQuestionsResult | null>(null);
@@ -127,6 +129,13 @@ export function QuestionsFold({
       setResult({ kind: 'empty', pack: null, item: null });
     });
   }
+
+  useEffect(() => {
+    if (!alwaysOpen) return;
+    handleOpen();
+    // One session when the screen mounts. Answering already calls load().
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only session
+  }, [alwaysOpen]);
 
   function handleKeepGoing() {
     setKeptGoing(true);
@@ -214,84 +223,90 @@ export function QuestionsFold({
   const empty = result ? emptyCopy(result.kind) : null;
   const item = checkpoint ? null : (result?.item ?? null);
 
+  const body = (
+    <View style={styles.body}>
+      <ThemedText type="small" themeColor="textSecondary">
+        {QUESTIONS_LEDE}
+      </ThemedText>
+      {checkpoint ? (
+        <>
+          <ThemedText>{QUESTIONS_CHECKPOINT}</ThemedText>
+          <ThemedPressable
+            disabled={busy}
+            onPress={handleKeepGoing}
+            style={[styles.option, { borderColor: controlBorderColor(theme) }]}>
+            <ThemedText type="smallBold">{QUESTIONS_KEEP_GOING}</ThemedText>
+          </ThemedPressable>
+          <View style={styles.skipRow}>
+            <View />
+            <Pressable
+              onPress={() => void skipRest()}
+              disabled={busy}
+              style={({ pressed }) => [
+                styles.skipLink,
+                pressed && styles.pressed,
+                busy && styles.disabled,
+              ]}>
+              <ThemedText type="smallBold">{QUESTIONS_SKIP_REST}</ThemedText>
+            </Pressable>
+          </View>
+        </>
+      ) : empty ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {empty}
+        </ThemedText>
+      ) : item ? (
+        <>
+          <ThemedText>{item.prompt}</ThemedText>
+          <View style={styles.options}>
+            {item.options.map((option, index) => (
+              <ThemedPressable
+                key={`${item.id}-${index}`}
+                disabled={busy}
+                onPress={() => void pick(item, index)}
+                style={[
+                  styles.option,
+                  { borderColor: controlBorderColor(theme) },
+                  busy && styles.disabled,
+                ]}>
+                <ThemedText type="smallBold">{option.text}</ThemedText>
+              </ThemedPressable>
+            ))}
+          </View>
+          <View style={styles.skipRow}>
+            <Pressable
+              onPress={() => void skipThis(item)}
+              disabled={busy}
+              style={({ pressed }) => [
+                styles.skipLink,
+                pressed && styles.pressed,
+                busy && styles.disabled,
+              ]}>
+              <ThemedText type="smallBold">{QUESTIONS_SKIP_THIS}</ThemedText>
+            </Pressable>
+            <Pressable
+              onPress={() => void skipRest()}
+              disabled={busy}
+              style={({ pressed }) => [
+                styles.skipLink,
+                pressed && styles.pressed,
+                busy && styles.disabled,
+              ]}>
+              <ThemedText type="smallBold">{QUESTIONS_SKIP_REST}</ThemedText>
+            </Pressable>
+          </View>
+        </>
+      ) : (
+        <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+      )}
+    </View>
+  );
+
+  if (alwaysOpen) return body;
+
   return (
     <SettingsFold title={QUESTIONS_LABEL} onOpen={handleOpen}>
-      <View style={styles.body}>
-        <ThemedText type="small" themeColor="textSecondary">
-          {QUESTIONS_LEDE}
-        </ThemedText>
-        {checkpoint ? (
-          <>
-            <ThemedText>{QUESTIONS_CHECKPOINT}</ThemedText>
-            <ThemedPressable
-              disabled={busy}
-              onPress={handleKeepGoing}
-              style={[styles.option, { borderColor: controlBorderColor(theme) }]}>
-              <ThemedText type="smallBold">{QUESTIONS_KEEP_GOING}</ThemedText>
-            </ThemedPressable>
-            <View style={styles.skipRow}>
-              <View />
-              <Pressable
-                onPress={() => void skipRest()}
-                disabled={busy}
-                style={({ pressed }) => [
-                  styles.skipLink,
-                  pressed && styles.pressed,
-                  busy && styles.disabled,
-                ]}>
-                <ThemedText type="smallBold">{QUESTIONS_SKIP_REST}</ThemedText>
-              </Pressable>
-            </View>
-          </>
-        ) : empty ? (
-          <ThemedText type="small" themeColor="textSecondary">
-            {empty}
-          </ThemedText>
-        ) : item ? (
-          <>
-            <ThemedText>{item.prompt}</ThemedText>
-            <View style={styles.options}>
-              {item.options.map((option, index) => (
-                <ThemedPressable
-                  key={`${item.id}-${index}`}
-                  disabled={busy}
-                  onPress={() => void pick(item, index)}
-                  style={[
-                    styles.option,
-                    { borderColor: controlBorderColor(theme) },
-                    busy && styles.disabled,
-                  ]}>
-                  <ThemedText type="smallBold">{option.text}</ThemedText>
-                </ThemedPressable>
-              ))}
-            </View>
-            <View style={styles.skipRow}>
-              <Pressable
-                onPress={() => void skipThis(item)}
-                disabled={busy}
-                style={({ pressed }) => [
-                  styles.skipLink,
-                  pressed && styles.pressed,
-                  busy && styles.disabled,
-                ]}>
-                <ThemedText type="smallBold">{QUESTIONS_SKIP_THIS}</ThemedText>
-              </Pressable>
-              <Pressable
-                onPress={() => void skipRest()}
-                disabled={busy}
-                style={({ pressed }) => [
-                  styles.skipLink,
-                  pressed && styles.pressed,
-                  busy && styles.disabled,
-                ]}>
-                <ThemedText type="smallBold">{QUESTIONS_SKIP_REST}</ThemedText>
-              </Pressable>
-            </View>
-          </>
-        ) : (
-          <ThemedText themeColor="textSecondary">Loading…</ThemedText>
-        )}
-      </View>
+      {body}
     </SettingsFold>
   );
 }

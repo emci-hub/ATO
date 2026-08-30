@@ -80,6 +80,7 @@ function RootNavigator() {
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="dawn" />
               <Stack.Screen name="week" />
+              <Stack.Screen name="questions" />
               <Stack.Screen name="chat" />
               <Stack.Screen name="dev-lab" />
             </Stack.Protected>

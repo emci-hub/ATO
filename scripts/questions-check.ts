@@ -253,10 +253,13 @@ ok('schema has packs/items, a separate questions regen claim, and skip RPCs');
 const home = read('src/app/(tabs)/index.tsx');
 const you = read('src/app/(tabs)/you.tsx');
 const sage = read('src/app/(tabs)/sage.tsx');
-assert.match(home, /QuestionsFold/);
+const questionsScreen = read('src/app/questions.tsx');
+assert.doesNotMatch(home, /QuestionsFold/);
 assert.match(home, /homeTab === 'today'/);
 assert.doesNotMatch(you, /QuestionsFold/);
 assert.doesNotMatch(sage, /QuestionsFold/);
+assert.match(questionsScreen, /QuestionsFold/);
+assert.match(you, /\/questions/);
 assert.equal(QUESTIONS_LABEL, 'A few questions');
 const fold = read('src/components/questions-fold.tsx');
 assert.match(fold, /updateTraits/);
@@ -274,7 +277,7 @@ assert.equal(QUESTIONS_SKIP_REST, 'Skip the rest');
 assert.equal(QUESTIONS_CHECKPOINT, "That's plenty for now — come back anytime");
 assert.equal(QUESTIONS_KEEP_GOING, 'Keep going');
 assert.match(read('src/components/explore-panel.tsx'), /claimAiCall\('explore'\)/);
-ok('Home-only collapsible; writes self_situation; Explore tagged separately');
+ok('own screen from You; writes self_situation; Explore tagged separately');
 
 console.log(`\n${passed} question checks passed`);
 }

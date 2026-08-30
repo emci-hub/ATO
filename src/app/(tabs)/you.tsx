@@ -3,6 +3,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 
 import { DeleteAccountSheet } from '@/components/delete-account-sheet';
 import { ScanSheet } from '@/components/scan-sheet';
@@ -190,6 +191,15 @@ export default function YouScreen() {
               />
 
               <SageFactsCard me={me} onUpdated={() => refresh()} />
+
+              <ThemedView type="backgroundElement" style={styles.detailCard}>
+                <Pressable
+                  onPress={() => router.push('/questions')}
+                  style={({ pressed }) => [styles.inviteRow, pressed && styles.pressed]}>
+                  <ThemedText type="smallBold">Tell Sage more</ThemedText>
+                  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
+                </Pressable>
+              </ThemedView>
 
               <TraitBandsFold me={me} />
 

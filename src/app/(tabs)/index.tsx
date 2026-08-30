@@ -9,7 +9,6 @@ import { HomeInnerTabs, type HomeInnerTab } from '@/components/home-inner-tabs';
 import { MissedCheckCard } from '@/components/missed-check-card';
 import AskSheet from '@/components/ask-sheet';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
-import { QuestionsFold } from '@/components/questions-fold';
 import { RevealCard } from '@/components/reveal-card';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
@@ -389,15 +388,6 @@ export default function HomeScreen() {
 
           {me && askPick ? (
             <AskSheet pick={askPick} me={me} onUpdated={() => { void refreshMe(); }} />
-          ) : null}
-
-          {me ? (
-            <QuestionsFold
-              me={me}
-              history={checksToHistory(checks)}
-              crisisToday={crisisToday}
-              onUpdated={refreshMe}
-            />
           ) : null}
 
           {me && missedOpen.length > 0 ? (
