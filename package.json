@@ -111,6 +111,7 @@
     "check:ui-bundle": "tsx ./scripts/ui-bundle-check.ts",
     "check:sage-load": "tsx ./scripts/sage-load-check.ts",
     "check:dev-lab": "tsx ./scripts/dev-lab-check.ts",
+    "check:dev-lab-sections": "tsx ./scripts/dev-lab-sections-check.ts",
     "check:dev-overrides": "tsx ./scripts/dev-overrides-check.ts",
     "check:dev-access": "tsx ./scripts/dev-access-check.ts",
     "check:home-hydrate": "tsx ./scripts/home-hydrate-check.ts",

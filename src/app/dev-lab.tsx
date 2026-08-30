@@ -1,3 +1,9 @@
+/**
+ * Dev Tools Hub.
+ *
+ * New dev/test tools for a given screen go in that screen's section
+ * (Home, Sage, You, System), not in a shared catch-all.
+ */
 import { Redirect } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
@@ -7,6 +13,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { RunningUpdateLine } from '@/components/running-update-line';
 import { TracePipelineViewer } from '@/components/trace-pipeline';
+import { YouDevTools } from '@/components/you-dev-tools';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useMeContext } from '@/lib/me-context';
 import { useSession } from '@/hooks/use-session';
@@ -25,7 +32,6 @@ import {
   ROOT_ONLY_DESCRIPTIONS,
   canSeeDevLab,
   canSeeHubSection,
-  type HubSection,
 } from '@/lib/dev-access';
 import {
   deleteProfile,
@@ -76,17 +82,6 @@ import type { VoiceCardResult, VoiceMe } from '@/lib/voice/types';
 import type { AskPick } from '@/lib/ask';
 import type { TodaySlot } from '@/lib/today-slot';
 
-const SECTIONS: { id: HubSection; label: string }[] = [
-  { id: 'card', label: 'Card' },
-  { id: 'traits', label: 'Traits' },
-  { id: 'quota', label: 'Quota' },
-  { id: 'fence', label: 'Fence' },
-  { id: 'trace', label: 'Trace' },
-  { id: 'access', label: 'Access' },
-  { id: 'grants', label: 'Grants' },
-  { id: 'profiles', label: 'Profiles' },
-];
-
 const LAB_ME: VoiceMe = {
   name: 'Riley',
   show_up: 'finishing my resume',
@@ -130,7 +125,7 @@ export default function DevLabScreen() {
 }
 
 function DevLab() {
-  const { devAccess } = useMeContext();
+  const { devAccess, me } = useMeContext();
   const gate = useMemo(
     () => ({
       isDev: __DEV__,
@@ -139,17 +134,6 @@ function DevLab() {
     }),
     [devAccess.isRoot, devAccess.capabilities],
   );
-  const visible = useMemo(
-    () => SECTIONS.filter((tab) => canSeeHubSection(tab.id, gate)),
-    [gate],
-  );
-  const [section, setSection] = useState<HubSection>(visible[0]?.id ?? 'card');
-
-  useEffect(() => {
-    if (!visible.some((tab) => tab.id === section)) {
-      setSection(visible[0]?.id ?? 'card');
-    }
-  }, [section, visible]);
 
   return (
     <ThemedView style={styles.container}>
@@ -163,32 +147,60 @@ function DevLab() {
             </ThemedText>
             <RunningUpdateLine />
           </View>
-          <View style={styles.tabs}>
-            {visible.map((tab) => (
-              <Chip
-                key={tab.id}
-                label={tab.label}
-                selected={section === tab.id}
-                onPress={() => setSection(tab.id)}
-              />
-            ))}
+
+          <View style={styles.section}>
+            <ThemedText type="smallBold">Home</ThemedText>
+            {canSeeHubSection('card', gate) ? (
+              <>
+                <HomeOverrides />
+                <CardSimulator />
+              </>
+            ) : null}
+            <ForceTestError message="Dev Lab test error — Home" />
           </View>
-          {section === 'card' ? (
-            <>
-              <HomeOverrides />
-              <CardSimulator />
-            </>
-          ) : null}
-          {section === 'traits' ? <TraitViewer /> : null}
-          {section === 'quota' ? <QuotaDashboard /> : null}
-          {section === 'fence' ? <FenceTester /> : null}
-          {section === 'trace' ? <TraceCapture /> : null}
-          {section === 'access' ? <AccessReview /> : null}
-          {section === 'grants' ? <GrantsPanel /> : null}
-          {section === 'profiles' ? <ProfilesPanel /> : null}
+
+          <View style={styles.section}>
+            <ThemedText type="smallBold">Sage</ThemedText>
+            {canSeeHubSection('quota', gate) ? <QuotaDashboard /> : null}
+            <ForceTestError message="Dev Lab test error — Sage" />
+          </View>
+
+          <View style={styles.section}>
+            <ThemedText type="smallBold">You</ThemedText>
+            {canSeeHubSection('traits', gate) ? <TraitViewer /> : null}
+            <ForceTestError message="Dev Lab test error — You" />
+          </View>
+
+          <View style={styles.section}>
+            <ThemedText type="smallBold">System</ThemedText>
+            {canSeeHubSection('fence', gate) ? <FenceTester /> : null}
+            {canSeeHubSection('trace', gate) ? <TraceCapture /> : null}
+            {canSeeHubSection('access', gate) ? <AccessReview /> : null}
+            {canSeeHubSection('grants', gate) ? <GrantsPanel /> : null}
+            {canSeeHubSection('profiles', gate) ? <ProfilesPanel /> : null}
+            {me ? <YouDevTools timeZone={me.timezone || 'UTC'} /> : null}
+            <ForceTestError message="Dev Lab test error — System" />
+          </View>
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
+  );
+}
+
+function ForceTestError({ message }: { message: string }) {
+  const theme = useTheme();
+  return (
+    <Pressable
+      onPress={() => {
+        throw new Error(message);
+      }}
+      style={({ pressed }) => [
+        styles.chip,
+        { borderColor: controlBorderColor(theme) },
+        pressed && styles.pressed,
+      ]}>
+      <ThemedText type="smallBold">Force test error</ThemedText>
+    </Pressable>
   );
 }
 
