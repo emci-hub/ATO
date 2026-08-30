@@ -14,6 +14,7 @@ import { ThemedView } from '@/components/themed-view';
 import { RunningUpdateLine } from '@/components/running-update-line';
 import { TracePipelineViewer } from '@/components/trace-pipeline';
 import { YouDevTools } from '@/components/you-dev-tools';
+import { CrisisCard } from '@/components/crisis-card';
 import { isRevealOpenedToday } from '@/components/reveal-card';
 import { TraitBandDetail } from '@/components/trait-bands-fold';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -200,6 +201,7 @@ function DevLab() {
             {canSeeHubSection('profiles', gate) ? <ProfilesPanel /> : null}
             {me ? <YouDevTools timeZone={me.timezone || 'UTC'} /> : null}
             <ResetAiConsent />
+            {__DEV__ ? <CrisisCardPreview /> : null}
             <ForceTestError message="Dev Lab test error — System" />
           </View>
         </ScrollView>
@@ -898,6 +900,24 @@ function ResetAiConsent() {
         selected={false}
         onPress={() => void reset()}
       />
+    </View>
+  );
+}
+
+function CrisisCardPreview() {
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Preview crisis card</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Renders CrisisCard inline. Does not run detection and does not write a flag.
+      </ThemedText>
+      <Chip
+        label="Preview crisis card."
+        selected={open}
+        onPress={() => setOpen(true)}
+      />
+      {open ? <CrisisCard onDismiss={() => setOpen(false)} /> : null}
     </View>
   );
 }

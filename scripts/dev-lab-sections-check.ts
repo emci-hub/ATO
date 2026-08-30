@@ -80,6 +80,31 @@ assert.doesNotMatch(sageBlock, /ResetAiConsent/);
 assert.doesNotMatch(youBlock, /ResetAiConsent/);
 ok('Reset AI consent lives under System and writes ai_consent back to null');
 
+assert.match(systemBlock, /__DEV__ \? <CrisisCardPreview \/>/);
+assert.match(systemBlock, /Preview crisis card\./);
+assert.match(hub, /function CrisisCardPreview/);
+assert.match(hub, /<CrisisCard onDismiss=/);
+assert.doesNotMatch(homeBlock, /CrisisCardPreview/);
+assert.doesNotMatch(sageBlock, /CrisisCardPreview/);
+assert.doesNotMatch(youBlock, /CrisisCardPreview/);
+const previewFn = hub.slice(
+  hub.indexOf('function CrisisCardPreview'),
+  hub.indexOf('function QuotaDashboard'),
+);
+assert.doesNotMatch(previewFn, /detectCrisis/);
+assert.doesNotMatch(previewFn, /logCrisisFlag/);
+assert.doesNotMatch(previewFn, /crisis_flags/);
+assert.doesNotMatch(previewFn, /routeTalkReply|from '@\/lib\/voice\/talk'/);
+assert.doesNotMatch(previewFn, /from '@\/lib\/crisis\/detect'/);
+assert.doesNotMatch(previewFn, /from '@\/lib\/crisis\/log'/);
+const dawn = read('src/app/dawn.tsx');
+const sage = read('src/app/(tabs)/sage.tsx');
+assert.doesNotMatch(dawn, /CrisisCardPreview/);
+assert.doesNotMatch(dawn, /Preview crisis card/);
+assert.doesNotMatch(sage, /CrisisCardPreview/);
+assert.doesNotMatch(sage, /Preview crisis card/);
+ok('System crisis-card preview is fenced to /dev-lab and absent from Dawn and Sage');
+
 assert.match(
   hub,
   /!canSeeDevLab\(\{\s*isDev: __DEV__,\s*isRoot: devAccess\.isRoot,\s*capabilities: devAccess\.capabilities,\s*\}\)/,
