@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -80,8 +80,9 @@ export function DeleteAccountSheet({
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={working ? undefined : onClose}>
-      <ThemedView style={styles.container}>
-        <SafeAreaView style={styles.safe}>
+      <SafeAreaProvider style={styles.provider}>
+        <ThemedView style={styles.container}>
+          <SafeAreaView style={styles.safe}>
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={styles.flex}>
@@ -189,11 +190,15 @@ export function DeleteAccountSheet({
           </KeyboardAvoidingView>
         </SafeAreaView>
       </ThemedView>
+      </SafeAreaProvider>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  provider: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     flexDirection: 'row',

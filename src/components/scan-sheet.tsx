@@ -2,7 +2,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -62,8 +62,9 @@ export function ScanSheet({
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <ThemedView style={styles.container}>
-        <SafeAreaView style={styles.safe}>
+      <SafeAreaProvider style={styles.provider}>
+        <ThemedView style={styles.container}>
+          <SafeAreaView style={styles.safe}>
           <View style={styles.header}>
             <ThemedText type="subtitle">Add a friend</ThemedText>
             <Pressable onPress={onClose} hitSlop={12} style={({ pressed }) => pressed && styles.pressed}>
@@ -158,11 +159,15 @@ export function ScanSheet({
           </ThemedView>
         </SafeAreaView>
       </ThemedView>
+      </SafeAreaProvider>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  provider: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },

@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
@@ -96,8 +96,9 @@ function SageFactsSheet({
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <ThemedView style={styles.sheet}>
-        <SafeAreaView style={styles.safe}>
+      <SafeAreaProvider style={styles.provider}>
+        <ThemedView style={styles.sheet}>
+          <SafeAreaView style={styles.safe}>
           <View style={styles.header}>
             <ThemedText type="subtitle" style={styles.title}>
               {FACTS_SCREEN_TITLE}
@@ -169,8 +170,9 @@ function SageFactsSheet({
               })
             )}
           </ScrollView>
-        </SafeAreaView>
-      </ThemedView>
+          </SafeAreaView>
+        </ThemedView>
+      </SafeAreaProvider>
     </Modal>
   );
 }
@@ -191,6 +193,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
   summaryText: {
+    flex: 1,
+  },
+  provider: {
     flex: 1,
   },
   sheet: {
