@@ -1,4 +1,4 @@
-import { errorMessageForAge } from '@/lib/age';
+import { bornOnFromParts, errorMessageForAge, signupAgeMessage } from '@/lib/age';
 import { slugifyCity } from '@/lib/around/slug';
 import type {
   CurrentFocus,
@@ -243,6 +243,32 @@ export async function createMe(row: MeInsert): Promise<Me> {
   const citySlug = profile.city?.trim() ? profile.city.trim() : null;
   if (citySlug) return setCity(created.id, citySlug);
   return created;
+}
+
+/**
+ * Post-onboarding write of `born_on`. Re-runs the same parse + 16+ check
+ * onboarding uses. The Around 18+ gate still reads the stored date.
+ */
+export async function setBornOn(userId: string, bornOn: string): Promise<Me> {
+  const [year = '', month = '', day = ''] = bornOn.split('-');
+  const parsed = bornOnFromParts(year, month, day);
+  if (!parsed.ok) {
+    throw Object.assign(new Error(parsed.message), { code: 'P0004' });
+  }
+  const blocked = signupAgeMessage(parsed.bornOn);
+  if (blocked) {
+    throw Object.assign(new Error(blocked), { code: 'P0005' });
+  }
+
+  const { data, error } = await supabase
+    .from('me')
+    .update({ born_on: parsed.bornOn })
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return withVisible(data as Me);
 }
 
 /** Typed city slug for Around. Null clears it. Never from GPS. */

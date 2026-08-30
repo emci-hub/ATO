@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BornOnFields } from '@/components/born-on-fields';
 import { CityPicker } from '@/components/city-picker';
 import { ChipGroup } from '@/components/intake-chips';
 import { OptionalGate, OptionalStep } from '@/components/optional-intake';
@@ -615,47 +616,24 @@ function AccountStep({
         required
         error={ageError}
         hint="Day, month, and year. ATO is for people 16 and older.">
-        <View style={styles.dateRow}>
-          <TextInput
-            value={birthYear}
-            onChangeText={(text) => {
-              setBirthYear(text.replace(/\D/g, '').slice(0, 4));
-              setAgeError(null);
-            }}
-            placeholder="YYYY"
-            placeholderTextColor={theme.textSecondary}
-            keyboardType="number-pad"
-            maxLength={4}
-            editable={!busy}
-            style={[styles.input, styles.dateYear, { color: theme.text, backgroundColor: theme.backgroundSelected }]}
-          />
-          <TextInput
-            value={birthMonth}
-            onChangeText={(text) => {
-              setBirthMonth(text.replace(/\D/g, '').slice(0, 2));
-              setAgeError(null);
-            }}
-            placeholder="MM"
-            placeholderTextColor={theme.textSecondary}
-            keyboardType="number-pad"
-            maxLength={2}
-            editable={!busy}
-            style={[styles.input, styles.datePart, { color: theme.text, backgroundColor: theme.backgroundSelected }]}
-          />
-          <TextInput
-            value={birthDay}
-            onChangeText={(text) => {
-              setBirthDay(text.replace(/\D/g, '').slice(0, 2));
-              setAgeError(null);
-            }}
-            placeholder="DD"
-            placeholderTextColor={theme.textSecondary}
-            keyboardType="number-pad"
-            maxLength={2}
-            editable={!busy}
-            style={[styles.input, styles.datePart, { color: theme.text, backgroundColor: theme.backgroundSelected }]}
-          />
-        </View>
+        <BornOnFields
+          year={birthYear}
+          month={birthMonth}
+          day={birthDay}
+          onYearChange={(text) => {
+            setBirthYear(text);
+            setAgeError(null);
+          }}
+          onMonthChange={(text) => {
+            setBirthMonth(text);
+            setAgeError(null);
+          }}
+          onDayChange={(text) => {
+            setBirthDay(text);
+            setAgeError(null);
+          }}
+          editable={!busy}
+        />
       </Field>
 
       <Field label="What should we call you?" required>
@@ -872,17 +850,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontSize: 16,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  dateYear: {
-    flex: 1.2,
-  },
-  datePart: {
-    flex: 1,
   },
   handleRow: {
     flexDirection: 'row',

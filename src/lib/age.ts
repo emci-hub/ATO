@@ -86,3 +86,31 @@ export function errorMessageForAge(error: unknown): string | null {
   if (code === 'P0004' || message.includes('age_invalid')) return AGE_INVALID_MESSAGE;
   return null;
 }
+
+const MONTH_SHORT = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+] as const;
+
+/** Human display for a stored `YYYY-MM-DD`. Falls back to the raw string. */
+export function formatBornOnDisplay(bornOn: string): string {
+  const [year, month, day] = bornOn.split('-').map(Number);
+  const label = MONTH_SHORT[(month ?? 0) - 1];
+  if (!year || !label || !day) return bornOn;
+  return `${day} ${label} ${year}`;
+}
+
+export function partsFromBornOn(bornOn: string): { year: string; month: string; day: string } {
+  const [year = '', month = '', day = ''] = bornOn.split('-');
+  return { year, month, day };
+}

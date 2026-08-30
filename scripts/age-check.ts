@@ -103,6 +103,48 @@ function main() {
   assert.match(me, /born_on: string \| null/);
   ok('createMe sends born_on through complete_signup; ME stores the date');
 
+  const you = readFileSync(resolve(__dirname, '../src/app/(tabs)/you.tsx'), 'utf8');
+  const accountStart = you.indexOf('<SettingsFold title="Account">');
+  const accountEnd = you.indexOf('</SettingsFold>', accountStart);
+  assert.ok(accountStart >= 0 && accountEnd > accountStart, 'Account fold is on You');
+  const account = you.slice(accountStart, accountEnd);
+  const tzIdx = account.indexOf('label="Timezone"');
+  const birthdayIdx = account.indexOf('<BirthdayRow');
+  assert.ok(tzIdx >= 0, 'Timezone row is in Account');
+  assert.ok(birthdayIdx > tzIdx, 'Birthday row sits directly below Timezone in Account');
+  ok('You Account fold has Birthday directly below Timezone');
+
+  const birthdayRow = readFileSync(resolve(__dirname, '../src/components/birthday-row.tsx'), 'utf8');
+  const bornOnFields = readFileSync(resolve(__dirname, '../src/components/born-on-fields.tsx'), 'utf8');
+  assert.match(birthdayRow, /Birthday/);
+  assert.match(birthdayRow, /edit/);
+  assert.match(birthdayRow, /Are you sure you want to change your birthday\?/);
+  assert.match(birthdayRow, /NULL_CHIP = '—'/);
+  assert.match(birthdayRow, /bornOnFromParts/);
+  assert.match(birthdayRow, /signupAgeMessage/);
+  assert.match(birthdayRow, /setBornOn/);
+  assert.match(birthdayRow, /BornOnFields/);
+  assert.match(onboarding, /BornOnFields/);
+  assert.match(bornOnFields, /placeholder="YYYY"/);
+  ok('Birthday row reuses onboarding BornOnFields; null uses the intake em dash; set dates confirm before edit');
+
+  const setBornOnFn = me.slice(
+    me.indexOf('export async function setBornOn'),
+    me.indexOf('export async function setCity'),
+  );
+  assert.match(setBornOnFn, /bornOnFromParts/);
+  assert.match(setBornOnFn, /signupAgeMessage/);
+  assert.doesNotMatch(setBornOnFn, /NIGHT_GOING_AGE_YEARS/);
+  assert.equal(signupAgeMessage(parsedUnder.bornOn), UNDER_16_MESSAGE);
+  ok('setBornOn re-runs the same onboarding 16+ check; underage dates stay blocked');
+
+  const around = readFileSync(resolve(__dirname, '../src/app/(tabs)/around.tsx'), 'utf8');
+  assert.match(
+    around,
+    /const oldEnough = me\?\.born_on \? isAtLeastAge\(me\.born_on, NIGHT_GOING_AGE_YEARS\) : false/,
+  );
+  ok('Around 18+ gate is unchanged — missing born_on still fails closed');
+
   console.log(`\nAll ${passed} age client checks passed.`);
 }
 

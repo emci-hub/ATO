@@ -12,6 +12,7 @@ import { DeleteAccountSheet } from '@/components/delete-account-sheet';
 import { ScanSheet } from '@/components/scan-sheet';
 import { SharePoster } from '@/components/share-poster';
 import { AppearancePicker } from '@/components/appearance-picker';
+import { BirthdayRow } from '@/components/birthday-row';
 import { CityPicker } from '@/components/city-picker';
 import { CrisisRegionPicker } from '@/components/crisis-region-picker';
 import { MilestoneBadges } from '@/components/check-milestone-badge';
@@ -458,6 +459,7 @@ export default function YouScreen() {
 
               <SettingsFold title="Account">
                 <DetailRow label="Timezone" value={me.timezone} />
+                <BirthdayRow me={me} onUpdated={() => refresh()} />
                 <Pressable
                   onPress={() => {
                     if (aiConsentFor(me) === 'pending') {
