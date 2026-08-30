@@ -268,7 +268,7 @@ export default function HomeScreen() {
   async function logToday(status: 'done' | 'skipped') {
     if (!userId || !me || !todayOpen || busy || alreadyLogged) return;
     if (consentOffEmpty) {
-      await commitLog(status, todayOpen.day, todayOpen.ymd, { read: '', do: '' }, 'bank');
+      await commitLog(status, todayOpen.day, todayOpen.ymd, { read: '', do: '' }, 'bank', true);
       return;
     }
     if (!card) return;
@@ -296,6 +296,7 @@ export default function HomeScreen() {
     loggedOn: string,
     voice: VoiceCard,
     source: VoiceSource,
+    noCard = false,
   ) {
     if (!userId || !me || busy) return;
     setBusy(status === 'done' ? 'log' : 'skip');
@@ -307,6 +308,7 @@ export default function HomeScreen() {
         card: voice,
         source,
         status,
+        noCard,
       });
       const nextChecks = await fetchChecks(userId);
       setChecks(nextChecks);

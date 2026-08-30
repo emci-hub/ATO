@@ -82,6 +82,8 @@ export interface RecordCheckInput {
   card: VoiceCard;
   source: VoiceSource;
   status: CheckStatus;
+  /** Honest-empty Today: store null Read/Do. Real cards must omit this. */
+  noCard?: boolean;
 }
 
 function messageForCheckError(error: { message?: string; code?: string }): string {
@@ -99,14 +101,16 @@ function messageForCheckError(error: { message?: string; code?: string }): strin
 }
 
 export async function recordCheck(_userId: string, input: RecordCheckInput): Promise<Check> {
+  const noCard = input.noCard === true;
   const { data, error } = await supabase.rpc('record_check', {
     p_day: input.day,
     p_logged_on: input.loggedOn,
-    p_read_text: input.card.read,
-    p_do_text: input.card.do,
+    p_read_text: noCard ? null : input.card.read,
+    p_do_text: noCard ? null : input.card.do,
     p_source: input.source,
     p_status: input.status,
-    p_nudge_text: input.card.nudge?.trim() ? input.card.nudge.trim() : null,
+    p_nudge_text: noCard ? null : input.card.nudge?.trim() ? input.card.nudge.trim() : null,
+    p_no_card: noCard,
   });
 
   if (error) {
