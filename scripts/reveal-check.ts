@@ -89,6 +89,28 @@ assert.equal(factPick?.kind, 'fact');
 assert.match(factPick?.text ?? '', /Still true: I finish work at four/);
 ok('one Check is not a week pattern; latest safe fact is next');
 
+const afterFactDeleted = resolveReveal({
+  checks: oneCheck,
+  facts: [],
+  checkCount: 4,
+  factCount: 0,
+  timeZone: tz,
+  now,
+});
+assert.equal(afterFactDeleted?.kind, 'badge-proximity');
+ok('deleting the last fact drops the Reveal fact branch; next real signal still wins');
+
+const afterFactDeletedEmpty = resolveReveal({
+  checks: oneCheck,
+  facts: [],
+  checkCount: 0,
+  factCount: 0,
+  timeZone: tz,
+  now,
+});
+assert.equal(afterFactDeletedEmpty, null);
+ok('deleting the last fact with no other signal is empty, not a stale fact line');
+
 const badgePick = resolveReveal({
   checks: oneCheck,
   facts: [],

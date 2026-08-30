@@ -77,6 +77,7 @@
     "check:crisis-region": "tsx ./scripts/crisis-region-check.ts",
     "check:window": "tsx ./scripts/check-window-check.ts",
     "check:nudge": "tsx ./scripts/nudge-check.ts",
+    "check:facts": "tsx ./scripts/facts-check.ts",
     "check:apple-revoke": "tsx ./scripts/apple-revoke-check.ts",
     "check:delete-account": "tsx ./scripts/delete-account-check.ts",
     "check:invite": "tsx ./scripts/invite-check.ts",

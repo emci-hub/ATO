@@ -2,9 +2,12 @@
  * Growth tiers on Sage's pixel — two independent visual axes, derived LIVE from
  * existing ME fields (no cached "current tier" that could need reconciling).
  *
- * Tiers only ever increase by construction: each axis is a pure function of a
- * monotonically-increasing count, so there is no demotion logic to write and no
- * decay.
+ * Presence only ever increases: check count is monotonically increasing, so
+ * there is no demotion logic to write and no decay.
+ *
+ * Depth is a live function of `me.facts.length`. Teaching a fact can raise it;
+ * deleting a fact can drop it, including back to 0. There is no sticky
+ * "once-true" cache.
  */
 
 // --- Presence axis (drives glow intensity) --------------------------------

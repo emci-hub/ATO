@@ -1,9 +1,9 @@
 /**
  * Growth-tier checks. Run: npx tsx scripts/growth-check.ts
  *
- * Verifies: presence/depth tier boundaries, monotonic-by-construction (no
- * demotion possible), milestone once-only gating, and the live derivation from
- * counts (no cached tier).
+ * Verifies: presence/depth tier boundaries, presence monotonic-by-construction,
+ * depth live from facts.length (including back to 0 after a delete), milestone
+ * once-only gating, and the live derivation from counts (no cached tier).
  */
 import assert from 'node:assert/strict';
 
@@ -65,6 +65,12 @@ assert.equal(state.depth, 1);
 assert.equal(state.checkCount, 7);
 assert.equal(state.factCount, 3);
 ok('growthState derives both axes live from counts');
+
+const afterDelete = growthState({ facts: [] }, 7);
+assert.equal(afterDelete.depth, 0);
+assert.equal(afterDelete.factCount, 0);
+assert.equal(hasDepthSparkle(afterDelete.depth), false);
+ok('deleting the last fact drops depth to 0 — no sticky sparkle');
 
 // Monotonic by construction: a higher count can never lower a tier.
 for (let count = 0; count < 50; count += 1) {

@@ -16,8 +16,9 @@ import {
 /**
  * Live growth state for the current user. check_count is derived from the
  * checks table each render (the app has no stored check_count — it's the count
- * of all-time Checks per the plan). Tiers are pure functions of live counts,
- * so they only ever increase and never need reconciling.
+ * of all-time Checks per the plan). Presence is a pure function of that count
+ * (monotonic). Depth is a live function of `me.facts.length` and can drop
+ * back to 0 if the last fact is deleted.
  *
  * `celebration` exposes the pending milestone (if any) so the nav companion
  * can fire its one-time louder animation, then call `markCelebrated` to record it.

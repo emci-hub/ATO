@@ -87,14 +87,23 @@ assert.equal(
 );
 ok('having a knock chip without it showing up in recent text is not a signal');
 
+const oneDone: CheckHistory[] = [
+  { day: 1, status: 'done', read: 'One day.', do: 'After coffee, sit one minute.' },
+];
 const factNudge = resolveNudge({
   knocksYouOff: '',
   facts: ['I finish work at four'],
-  history: [{ day: 1, status: 'done', read: 'One day.', do: 'After coffee, sit one minute.' }],
+  history: oneDone,
   hasDo: true,
 });
 assert.ok(factNudge && factNudge.includes('I finish work at four'));
 ok('stored safe fact is a real signal');
+
+assert.equal(
+  findNudgeSignal({ knocksYouOff: '', facts: [], history: oneDone }),
+  null,
+);
+ok('deleting the last fact drops the Nudge fact branch; no skip/knock → empty');
 
 assert.equal(
   findNudgeSignal({

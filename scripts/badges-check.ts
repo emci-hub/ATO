@@ -56,6 +56,12 @@ assert.equal(hasFirstFact(0), false);
 assert.equal(hasFirstFact(1), true);
 ok('first fact unlocks only when a Teach-Sage fact is stored');
 
+const unlockedThenGone = resolveBadges({ checkCount: 0, factCount: 1, checks: [] });
+assert.equal(unlockedThenGone.find((badge) => badge.id === 'first-fact')?.unlocked, true);
+const afterLastFactDeleted = resolveBadges({ checkCount: 0, factCount: 0, checks: [] });
+assert.equal(afterLastFactDeleted.find((badge) => badge.id === 'first-fact')?.unlocked, false);
+ok('first-fact re-locks when the last stored fact is deleted');
+
 assert.equal(hasWeekWithoutCut(streak('2026-08-01', 6)), false);
 assert.equal(hasWeekWithoutCut(streak('2026-08-01', 7)), true);
 ok('week-without-cut needs 7 consecutive calendar days, each logged, none a cut');

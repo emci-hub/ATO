@@ -30,6 +30,7 @@ import {
   type TraitAxis,
   type TraitSource,
 } from '@/lib/traits';
+import { withoutFactAt } from '@/lib/facts';
 import { containsFrameworkTerm, FACT_FRAMEWORK_MESSAGE } from '@/lib/voice/framework-fence';
 import { voicePresetOf, type VoicePreset } from '@/lib/voice/preset';
 
@@ -605,6 +606,29 @@ export async function addFact(userId: string, fact: string): Promise<Me> {
     .single();
   const facts = Array.isArray(current?.facts) ? (current.facts as string[]) : [];
   if (!facts.includes(trimmed)) facts.push(trimmed);
+
+  const { data, error } = await supabase
+    .from('me')
+    .update({ facts })
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Removes one stored fact by index. Same ME update as addFact — no new
+ * write channel. Empty `facts` after the last delete is valid.
+ */
+export async function removeFact(userId: string, index: number): Promise<Me> {
+  const { data: current } = await supabase
+    .from('me')
+    .select('facts')
+    .eq('id', userId)
+    .single();
+  const facts = withoutFactAt(current?.facts, index);
 
   const { data, error } = await supabase
     .from('me')
