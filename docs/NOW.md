@@ -50,7 +50,7 @@
 
 **You-tab facts list is in.** Summary row next to "How you show up": "Sage remembers N things" or "Nothing yet". Tap opens "What Sage remembers" — one row per stored `me.facts` entry, delete with "Forget this?". No edit and no new write path. Teaching is still only "Teach Sage this" in Chat. Display is the stored string (fence stays write-time only). Depth glow, first-fact badge, Nudge, and Reveal re-read `facts.length` live, including back to zero after a delete.
 
-**Talk-style, voice-preset, and Explore reaction previews are in.** You-tab talk_style and voice_preset rows show a local sample line (never a model call). Explore "Not this" acks with "Noted." on-device only — not persisted, not a model call.
+**Talk-style, voice-preset, and Explore reaction previews are in.** You-tab talk_style and voice_preset rows show a local sample line (never a model call). Explore reaction taps ack with "Noted." on-device only — not persisted, not a model call.
 
 **Infinite Questions core is in.** Home collapsible ("A few questions"), not a daily card. Opens a cached batch of 5 multiple-choice items mapped to the existing 15 axes. Regen is 3/UTC-day via `claim_questions_batch` (`ai_usage.by_type.questions`); answering cache is free and does not touch the Sage/Explore 20/day `calls` cap. Answers write `self_situation` through `mergeTraitWrite` (damped). Explore claims now tag `by_type.explore`. Same Explore guards (framework fence, word-level jargon, phrase-pattern) run on question text and every option — retry once, then skip that item. Skip this one / Skip the rest (same as onboarding). Soft checkpoint after 8 in a sitting.
 

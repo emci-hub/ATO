@@ -44,6 +44,3 @@ example
 
 # Supabase CLI scratch
 supabase/.temp/
-
-# supabase CLI
-supabase/.temp/
