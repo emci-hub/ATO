@@ -2,7 +2,7 @@
  * Explore — Sage thread observations. Run: npm run check:explore
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { decideExploreTrigger } from '../src/lib/explore/cadence';
@@ -174,8 +174,59 @@ assert.match(prompt, /EXPLORE SHAPE/);
 assert.match(prompt, /You skipped twice this week, both times when your plate was already full/);
 assert.doesNotMatch(prompt, /37%|we don't know much|richer because they filled/i);
 assert.match(prompt, /Completeness is not an input/);
+assert.match(prompt, /AXIS GROUNDING/);
+assert.match(prompt, /extraversion: energy from people and activity vs energy from quiet and solitude/);
+assert.match(prompt, /steadiness: emotional evenness under pressure vs feeling things sharply/);
+assert.doesNotMatch(prompt, /37%|we don't know much|richer because they filled/i);
 assert.match(EXPLORE_FEW_SHOTS, /## Explore/);
 ok('Explore prompt has four few-shots and no completeness-as-input copy');
+
+const promptSrc = read('src/lib/explore/prompt.ts');
+const GROUNDING_LINES = [
+  'openness: curiosity about ideas, new experiences, trying something unfamiliar',
+  'conscientiousness: follow-through, structure, planning ahead vs staying loose',
+  'extraversion: energy from people and activity vs energy from quiet and solitude',
+  'agreeableness: how they move through disagreement — softening it or naming it',
+  'steadiness: emotional evenness under pressure vs feeling things sharply',
+  'attachment_anxiety: needing reassurance, worrying where they stand with someone',
+  'attachment_avoidance: pulling back or staying self-reliant as closeness increases',
+  'conflict_assertiveness: saying the hard thing directly, or letting it sit',
+  'conflict_cooperativeness: looking for a shared fix, or holding their ground',
+  'autonomy: wanting to choose their own path vs wanting guidance',
+  'competence: confidence in their own follow-through and capability',
+  'relatedness: how connected they feel to the people around them right now',
+  'growth_mindset: whether setbacks read as fixed or as something that can shift',
+  'locus_of_control: outcomes feeling steered by them, or happening to them',
+  "self_efficacy: belief they can actually do the thing they're setting out to do",
+] as const;
+assert.equal(GROUNDING_LINES.length, 15);
+for (const line of GROUNDING_LINES) {
+  assert.ok(promptSrc.includes(line), `prompt source missing grounding: ${line}`);
+}
+const chipsOnlyPrompt = buildExplorePrompt({
+  me: chipsOnly,
+  focus: { traits: [], chips: ['morning_cue'], signal: null },
+  reactionNotes: [],
+});
+assert.doesNotMatch(chipsOnlyPrompt, /AXIS GROUNDING/);
+ok('grounding line content exists for all fifteen axes; chips-only prompts skip it');
+
+function walkComponents(dir: string): string[] {
+  const out: string[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const next = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) out.push(...walkComponents(next));
+    else if (/\.(tsx|ts)$/.test(entry.name)) out.push(next);
+  }
+  return out;
+}
+for (const file of walkComponents(resolve(root, 'src/components'))) {
+  const src = readFileSync(file, 'utf8');
+  for (const line of GROUNDING_LINES) {
+    assert.ok(!src.includes(line), `${file} must not contain prompt grounding`);
+  }
+}
+ok('none of the fifteen grounding strings appear in any component file');
 
 async function main() {
 const denied = await routeExplore({

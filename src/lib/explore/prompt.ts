@@ -3,9 +3,46 @@ import { libraryGroundingBlock, selectLibraryEntries } from '@/lib/voice/library
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '@/lib/voice/preset';
 import { TALK_STYLE_GUIDE } from '@/lib/voice/providers/types';
-import { traitPromptLines } from '@/lib/traits';
+import { traitPromptLines, type TraitAxis } from '@/lib/traits';
 
 import type { ExploreFocus, ExploreMeSlice } from './types';
+
+/**
+ * Internal prompt scaffolding only. Never render, never log as a user-facing
+ * label. Exact lines — do not rephrase.
+ */
+export const EXPLORE_AXIS_GROUNDING_LINES = [
+  'openness: curiosity about ideas, new experiences, trying something unfamiliar',
+  'conscientiousness: follow-through, structure, planning ahead vs staying loose',
+  'extraversion: energy from people and activity vs energy from quiet and solitude',
+  'agreeableness: how they move through disagreement — softening it or naming it',
+  'steadiness: emotional evenness under pressure vs feeling things sharply',
+  'attachment_anxiety: needing reassurance, worrying where they stand with someone',
+  'attachment_avoidance: pulling back or staying self-reliant as closeness increases',
+  'conflict_assertiveness: saying the hard thing directly, or letting it sit',
+  'conflict_cooperativeness: looking for a shared fix, or holding their ground',
+  'autonomy: wanting to choose their own path vs wanting guidance',
+  'competence: confidence in their own follow-through and capability',
+  'relatedness: how connected they feel to the people around them right now',
+  'growth_mindset: whether setbacks read as fixed or as something that can shift',
+  'locus_of_control: outcomes feeling steered by them, or happening to them',
+  "self_efficacy: belief they can actually do the thing they're setting out to do",
+] as const;
+
+export const EXPLORE_AXIS_GROUNDING: Record<TraitAxis, string> = Object.fromEntries(
+  EXPLORE_AXIS_GROUNDING_LINES.map((line) => {
+    const split = line.indexOf(': ');
+    return [line.slice(0, split), line.slice(split + 2)];
+  }),
+) as Record<TraitAxis, string>;
+
+function axisGroundingBlock(traits: ExploreFocus['traits']): string {
+  if (traits.length === 0) return '';
+  const lines = traits.map((axis) => `${axis}: ${EXPLORE_AXIS_GROUNDING[axis]}`);
+  return `AXIS GROUNDING (internal only — write from this meaning. Never name the axis, never paste this line, never say "you are." Chips and signals are texture around this, not a different topic.)
+${lines.join('\n')}
+`;
+}
 
 /**
  * Explore few-shots — deeper than Read, may combine 2–3 traits, same root
@@ -69,6 +106,12 @@ export function buildExplorePrompt(input: {
     ? `ANGLES THAT DID NOT LAND for this person (do not reuse; never treat as a trait score):\n${input.reactionNotes.map((note) => `- ${note}`).join('\n')}`
     : 'No prior Explore reactions.';
 
+  const groundingPresent = focus.traits.length > 0;
+  const lengthRule = groundingPresent
+    ? `7. AXIS GROUNDING is internal. Write the observation from that meaning. Do not quote it. Do not let a chip or signal (sleep, coffee, recovery) replace the tagged axis.
+8. 2–4 sentences. Deeper than a daily Read. Plain text.`
+    : '7. 2–4 sentences. Deeper than a daily Read. Plain text.';
+
   return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. This is Explore — a deeper observation, not a daily Read/Do.
 
 VOICE REFERENCE (write in this register — do NOT reuse these lines verbatim):
@@ -84,7 +127,7 @@ TODAY
 ${input.retryHint ? '- Previous draft was dropped because it named a type or label. Write a different angle.\n' : ''}
 CONTEXT
 ${traitLines(me, focus.traits)}
-CHIPS they already named:
+${axisGroundingBlock(focus.traits)}CHIPS they already named:
 ${chipLines(me, focus.chips.length > 0 ? focus.chips : ['morning_cue', 'show_up', 'current_focus', 'recovery_style'])}
 ${signalLine}
 ${libraryGroundingBlock(selectLibraryEntries(me, { day: 1, surface: 'card' }))}
@@ -94,11 +137,11 @@ ${missed}
 RULES
 1. ${combineRule}
 2. Never combine growth_mindset, locus_of_control, and self_efficacy in one entry.
-3. Reflect patterns as maybes, not facts. No "you are." No framework names. Notice, don't correct.
+3. Reflect patterns as maybes, not facts. No "you are." No framework names (MBTI, Big Five, attachment, and the rest). Never name the axis. Notice, don't correct.
 4. Hedge lives inside the sentence. No bolted-on closing after a dash or period.
 5. Completeness is not an input. Do not mention leftover axes, a fuller profile, or that more answers would help.
 6. FRAMING NOTES are concepts, not copy. Restate in Sage's own words. Never paste a note.
-7. 2–4 sentences. Deeper than a daily Read. Plain text.
+${lengthRule}
 
 Respond with JSON only, no prose, in this shape:
 {"body": "<the observation>"}`;
