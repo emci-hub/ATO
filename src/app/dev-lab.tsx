@@ -199,6 +199,7 @@ function DevLab() {
             {canSeeHubSection('grants', gate) ? <GrantsPanel /> : null}
             {canSeeHubSection('profiles', gate) ? <ProfilesPanel /> : null}
             {me ? <YouDevTools timeZone={me.timezone || 'UTC'} /> : null}
+            <ResetAiConsent />
             <ForceTestError message="Dev Lab test error — System" />
           </View>
         </ScrollView>
@@ -850,6 +851,53 @@ function BandDetailStepper() {
           No filled bands on this account.
         </ThemedText>
       )}
+    </View>
+  );
+}
+
+function ResetAiConsent() {
+  const { me, refresh } = useMeContext();
+  const { session } = useSession();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const stored =
+    me?.ai_consent === true ? 'true' : me?.ai_consent === false ? 'false' : 'null';
+
+  async function reset() {
+    const userId = session?.user.id;
+    if (!userId || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const { error: updateError } = await supabase
+        .from('me')
+        .update({ ai_consent: null })
+        .eq('id', userId);
+      if (updateError) throw updateError;
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not reset ai_consent.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Reset AI consent</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Sets ai_consent to null on this account so the interstitial asks again.
+        Does not write a real consent choice and does not need a fresh account.
+      </ThemedText>
+      <ThemedText type="code" themeColor="textSecondary">
+        stored: {stored}
+      </ThemedText>
+      {error ? <ThemedText type="small">{error}</ThemedText> : null}
+      <Chip
+        label={busy ? 'resetting…' : 'reset to null'}
+        selected={false}
+        onPress={() => void reset()}
+      />
     </View>
   );
 }

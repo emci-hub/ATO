@@ -70,6 +70,16 @@ assert.match(hub, /Dev Lab test error — You/);
 assert.match(hub, /Dev Lab test error — System/);
 ok('four Force test error triggers, one distinct message per section');
 
+const sageBlock = hub.slice(sageHeading, youHeading);
+const systemBlock = hub.slice(systemHeading);
+assert.match(systemBlock, /<ResetAiConsent \/>/);
+assert.match(hub, /reset to null/);
+assert.match(hub, /\.update\(\{ ai_consent: null \}\)/);
+assert.doesNotMatch(homeBlock, /ResetAiConsent/);
+assert.doesNotMatch(sageBlock, /ResetAiConsent/);
+assert.doesNotMatch(youBlock, /ResetAiConsent/);
+ok('Reset AI consent lives under System and writes ai_consent back to null');
+
 assert.match(
   hub,
   /!canSeeDevLab\(\{\s*isDev: __DEV__,\s*isRoot: devAccess\.isRoot,\s*capabilities: devAccess\.capabilities,\s*\}\)/,

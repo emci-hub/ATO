@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
@@ -234,14 +234,7 @@ export default function DawnScreen() {
             {DAWN_SAGE_LEDE}
           </ThemedText>
 
-          {needsConsentPrompt ? (
-            <AiConsentCard
-              context="dawn"
-              busy={busy === 'consent'}
-              onGrant={() => saveConsent(true)}
-              onDeny={() => saveConsent(false)}
-            />
-          ) : todayLogged ? (
+          {todayLogged ? (
             <ThemedView type="backgroundElement" style={styles.card}>
               <ThemedText type="smallBold">Logged for day {window?.todayDay}</ThemedText>
               <ThemedText themeColor="textSecondary" style={styles.centerText}>
@@ -360,6 +353,23 @@ export default function DawnScreen() {
           ) : null}
         </ScrollView>
       </SafeAreaView>
+
+      <Modal
+        visible={needsConsentPrompt}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {}}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalContent}>
+            <AiConsentCard
+              context="dawn"
+              busy={busy === 'consent'}
+              onGrant={() => saveConsent(true)}
+              onDeny={() => saveConsent(false)}
+            />
+          </View>
+        </View>
+      </Modal>
     </ThemedView>
   );
 }
@@ -438,5 +448,17 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.6,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.four,
+  },
+  modalContent: {
+    alignSelf: 'stretch',
+    maxWidth: MaxContentWidth - Spacing.five,
+    gap: Spacing.three,
   },
 });

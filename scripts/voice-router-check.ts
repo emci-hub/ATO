@@ -395,6 +395,23 @@ assert.match(sageSrc, /No confirmation step — the static card shows automatica
 assert.match(sageSrc, /result\.kind === 'crisis'/);
 ok('flagged message still auto-shows the crisis card (no confirm gate)');
 
+const dawnSrc = readFileSync(resolve(repoRoot, 'src/app/dawn.tsx'), 'utf8');
+assert.match(
+  dawnSrc,
+  /<Modal[\s\S]*visible=\{needsConsentPrompt\}[\s\S]*<AiConsentCard[\s\S]*context="dawn"/,
+);
+assert.match(dawnSrc, /transparent/);
+assert.match(dawnSrc, /animationType="fade"/);
+assert.match(
+  sageSrc,
+  /<Modal[\s\S]*visible=\{Boolean\(me\) && consent === 'pending'\}[\s\S]*<AiConsentCard[\s\S]*context="talk"/,
+);
+assert.match(sageSrc, /animationType="fade"/);
+assert.match(sageSrc, /Talk is off/);
+assert.match(dawnSrc, /setAiConsent/);
+assert.match(sageSrc, /setAiConsent/);
+ok('AiConsentCard mounts as a CrisisCard-style Modal interstitial on Dawn and Sage');
+
 // The user-approved keyword list + regex is the SOLE detection mechanism.
 assert.equal(normalizeCrisis('I want to END this.'), 'i want to end this');
 assert.equal(keywordDetect('thinking about suicide all day'), true, 'must flag: suicide');

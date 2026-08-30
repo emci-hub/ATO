@@ -712,13 +712,6 @@ export default function SageScreen() {
               <ThemedView type="backgroundElement" style={styles.emptyCard}>
                 <ThemedText themeColor="textSecondary">Loading…</ThemedText>
               </ThemedView>
-            ) : consent === 'pending' ? (
-              <AiConsentCard
-                context="talk"
-                busy={busy === 'consent'}
-                onGrant={() => saveConsent(true)}
-                onDeny={() => saveConsent(false)}
-              />
             ) : consent === 'denied' ? (
               <ThemedView type="backgroundElement" style={styles.emptyCard}>
                 <ThemedText type="smallBold">Talk is off</ThemedText>
@@ -877,6 +870,23 @@ export default function SageScreen() {
         </View>
         </View>
       </SafeAreaView>
+
+      <Modal
+        visible={Boolean(me) && consent === 'pending'}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {}}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalContent}>
+            <AiConsentCard
+              context="talk"
+              busy={busy === 'consent'}
+              onGrant={() => saveConsent(true)}
+              onDeny={() => saveConsent(false)}
+            />
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         visible={showSupport}

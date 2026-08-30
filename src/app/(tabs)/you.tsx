@@ -46,7 +46,7 @@ import {
 } from '@/lib/invite';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { copyLink, sharePoster } from '@/lib/share';
-import { setCity, setVisible } from '@/lib/me';
+import { setCity, setVisible, setAiConsent } from '@/lib/me';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { supabase } from '@/lib/supabase';
@@ -405,6 +405,22 @@ export default function YouScreen() {
 
               <SettingsFold title="Account">
                 <DetailRow label="Timezone" value={me.timezone} />
+                <Pressable
+                  onPress={() => {
+                    if (me.ai_consent == null) return;
+                    void setAiConsent(me.id, !me.ai_consent).then(() => refresh());
+                  }}
+                  style={({ pressed }) => [
+                    styles.detailRow,
+                    pressed && me.ai_consent != null && styles.pressed,
+                  ]}>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Sage's AI
+                  </ThemedText>
+                  <ThemedText type="small" style={styles.detailValue}>
+                    {me.ai_consent === true ? 'On' : me.ai_consent === false ? 'Off' : 'Not set yet'}
+                  </ThemedText>
+                </Pressable>
               </SettingsFold>
             </>
           ) : (

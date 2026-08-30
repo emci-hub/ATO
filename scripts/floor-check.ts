@@ -216,6 +216,26 @@ assert.match(read('metro.config.js'), /NODE_ENV === 'production'/);
 assert.match(sentryLib, /if \(!__DEV__\) return;/);
 ok('You-tab crash/push probes are compile-time __DEV__ + Metro production stub, not a runtime hide');
 
+assert.match(
+  dawn,
+  /<Modal[\s\S]*visible=\{needsConsentPrompt\}[\s\S]*<AiConsentCard[\s\S]*context="dawn"/,
+);
+assert.match(
+  sage,
+  /<Modal[\s\S]*visible=\{Boolean\(me\) && consent === 'pending'\}[\s\S]*<AiConsentCard[\s\S]*context="talk"/,
+);
+assert.doesNotMatch(dawn, /needsConsentPrompt \?\s*\([\s\S]*<AiConsentCard/);
+assert.doesNotMatch(sage, /consent === 'pending' \?\s*\([\s\S]*<AiConsentCard/);
+assert.match(sage, /Talk is off/);
+assert.match(dawn, /setAiConsent/);
+assert.match(sage, /setAiConsent/);
+assert.match(youTab, /Sage's AI/);
+assert.match(youTab, /'On'/);
+assert.match(youTab, /'Off'/);
+assert.match(youTab, /'Not set yet'/);
+assert.match(youTab, /SettingsFold title="Account"/);
+ok('AiConsentCard is a Modal interstitial on Dawn and Sage; You Account row is Sage\'s AI On/Off/Not set yet');
+
 assert.match(home, /todayCardFromCheck/);
 assert.match(read('src/lib/today-card.ts'), /export function todayCardFromCheck/);
 ok('Home hydrates today\'s card from the Check row when on-device storage is empty');
