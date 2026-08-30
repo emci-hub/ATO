@@ -97,6 +97,7 @@
     "check:scenario": "tsx ./scripts/scenario-check.ts",
     "check:today-slot": "tsx ./scripts/today-slot-check.ts",
     "check:ask": "tsx ./scripts/ask-check.ts",
+    "check:ask-sheet": "tsx ./scripts/ask-sheet-check.ts",
     "check:intake-live": "tsx ./scripts/intake-live-check.ts",
     "check:age": "tsx ./scripts/age-check.ts",
     "check:push": "tsx ./scripts/push-check.ts",

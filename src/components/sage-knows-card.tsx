@@ -17,6 +17,7 @@ import {
   AXIS_EDITOR_COPY,
   parseSageKnowsState,
   resolveSageKnows,
+  type SageKnowsPrompt,
 } from '@/lib/sage-knows';
 import { SAGE_KNOWS_LABEL } from '@/lib/sage-copy';
 import { traitStateFromRow } from '@/lib/traits';
@@ -36,10 +37,6 @@ export function SageKnowsCard({
   history: CheckHistory[];
   onUpdated: () => Promise<void>;
 }) {
-  const theme = useTheme();
-  const [busy, setBusy] = useState<'fits' | 'correct' | 'dismiss' | null>(null);
-  const [editing, setEditing] = useState(false);
-
   const traits = useMemo(() => traitStateFromRow(me), [me]);
   const prompt = useMemo(
     () =>
@@ -58,15 +55,45 @@ export function SageKnowsCard({
 
   if (!prompt) return null;
 
+  return (
+    <ThemedView type="backgroundElement" style={styles.card}>
+      <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
+        {SAGE_KNOWS_LABEL}
+      </ThemedText>
+      <SageKnowsBody
+        prompt={prompt}
+        userId={me.id}
+        current={traits.values[prompt.axis]}
+        onUpdated={onUpdated}
+      />
+    </ThemedView>
+  );
+}
+
+/** Question line + Still fits / Not quite. Frame and mechanic label stay on the card. */
+export function SageKnowsBody({
+  prompt,
+  userId,
+  current,
+  onUpdated,
+}: {
+  prompt: SageKnowsPrompt;
+  userId?: string;
+  current?: number | null;
+  onUpdated?: () => Promise<void>;
+}) {
+  const theme = useTheme();
+  const [busy, setBusy] = useState<'fits' | 'correct' | 'dismiss' | null>(null);
+  const [editing, setEditing] = useState(false);
   const copy = AXIS_EDITOR_COPY[prompt.axis];
-  const current = traits.values[prompt.axis];
+  const canSave = Boolean(userId);
 
   async function run(kind: 'fits' | 'correct' | 'dismiss', work: () => Promise<Me>) {
-    if (busy) return;
+    if (busy || !userId) return;
     setBusy(kind);
     try {
       await work();
-      await onUpdated();
+      if (onUpdated) await onUpdated();
       setEditing(false);
     } catch (err) {
       console.log('[sage-knows] save error:', err);
@@ -76,10 +103,7 @@ export function SageKnowsCard({
   }
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
-      <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
-        {SAGE_KNOWS_LABEL}
-      </ThemedText>
+    <>
       <ThemedText style={styles.line}>{prompt.line}</ThemedText>
       {editing ? (
         <View style={styles.editor}>
@@ -87,9 +111,10 @@ export function SageKnowsCard({
             label={copy.label}
             hint={copy.hint}
             value={typeof current === 'number' ? current : null}
-            disabled={busy !== null}
+            disabled={busy !== null || !canSave}
             onChange={(next) => {
-              void run('correct', () => recordSageKnowsCorrection(me.id, prompt.axis, next));
+              if (!userId) return;
+              void run('correct', () => recordSageKnowsCorrection(userId, prompt.axis, next));
             }}
           />
           <ThemedPressable
@@ -105,9 +130,12 @@ export function SageKnowsCard({
         <View style={styles.actions}>
           <ThemedPressable
             filled
-            onPress={() => run('fits', () => recordSageKnowsFits(me.id, prompt.axis))}
-            disabled={busy !== null}
-            style={[styles.primary, busy !== null && styles.disabled]}>
+            onPress={() => {
+              if (!userId) return;
+              void run('fits', () => recordSageKnowsFits(userId, prompt.axis));
+            }}
+            disabled={busy !== null || !canSave}
+            style={[styles.primary, (busy !== null || !canSave) && styles.disabled]}>
             <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
               {busy === 'fits' ? 'Saving\u2026' : 'Still fits'}
             </ThemedText>
@@ -125,8 +153,11 @@ export function SageKnowsCard({
             </ThemedText>
           </ThemedPressable>
           <ThemedPressable
-            onPress={() => run('dismiss', () => recordSageKnowsDismiss(me.id, prompt.axis))}
-            disabled={busy !== null}
+            onPress={() => {
+              if (!userId) return;
+              void run('dismiss', () => recordSageKnowsDismiss(userId, prompt.axis));
+            }}
+            disabled={busy !== null || !canSave}
             style={styles.quietButton}>
             <ThemedText type="small" themeColor="textSecondary">
               {busy === 'dismiss' ? 'Saving\u2026' : 'Not this week'}
@@ -134,7 +165,7 @@ export function SageKnowsCard({
           </ThemedPressable>
         </View>
       )}
-    </ThemedView>
+    </>
   );
 }
 

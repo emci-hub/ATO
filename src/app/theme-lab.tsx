@@ -2,6 +2,7 @@ import { Redirect } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AskSheet from '@/components/ask-sheet';
 import { AppearancePicker } from '@/components/appearance-picker';
 import { MilestoneBadges } from '@/components/check-milestone-badge';
 import { RevealCard } from '@/components/reveal-card';
@@ -22,9 +23,12 @@ import {
   SAGE_COACH_LABEL,
   TALK_LEDE,
 } from '@/lib/sage-copy';
+import type { AskPick } from '@/lib/ask';
 import type { RevealPick } from '@/lib/reveal';
 import { RANKING_ROUNDS, type RankingPrompt } from '@/lib/ranking';
+import { composeSageKnowsLine } from '@/lib/sage-knows';
 import { SCENARIO_DECK, type ScenarioPrompt } from '@/lib/scenario';
+import { TRAIT_POLE_LINES } from '@/lib/traits';
 
 const THEME_REVEAL_WEEK: RevealPick = {
   kind: 'week-pattern',
@@ -53,6 +57,24 @@ const THEME_SCENARIO_AUTONOMY: ScenarioPrompt = {
   axis: 'autonomy',
   def: SCENARIO_DECK.autonomy,
   weekKey: '2026-08-23',
+};
+
+const THEME_ASK_SAGE_KNOWS: AskPick = {
+  kind: 'sage_knows',
+  prompt: {
+    axis: 'extraversion',
+    ...composeSageKnowsLine(TRAIT_POLE_LINES.extraversion.high, null),
+  },
+};
+
+const THEME_ASK_RANKING: AskPick = {
+  kind: 'ranking',
+  prompt: THEME_RANKING,
+};
+
+const THEME_ASK_SCENARIO: AskPick = {
+  kind: 'scenario',
+  prompt: THEME_SCENARIO_LOCUS,
 };
 
 /**
@@ -114,6 +136,12 @@ export default function ThemeLabScreen() {
           <ScenarioCard forcePick={THEME_SCENARIO_LOCUS} />
           <ThemedText type="smallBold">Scenario · my way</ThemedText>
           <ScenarioCard forcePick={THEME_SCENARIO_AUTONOMY} />
+          <ThemedText type="smallBold">Ask sheet · sage_knows</ThemedText>
+          <AskSheet pick={THEME_ASK_SAGE_KNOWS} />
+          <ThemedText type="smallBold">Ask sheet · ranking</ThemedText>
+          <AskSheet pick={THEME_ASK_RANKING} />
+          <ThemedText type="smallBold">Ask sheet · scenario</ThemedText>
+          <AskSheet pick={THEME_ASK_SCENARIO} />
           <Pressable
             style={[styles.primaryButton, { backgroundColor: theme.accentFill }]}>
             <ThemedText type="smallBold" style={{ color: theme.onAccent }}>

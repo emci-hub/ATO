@@ -51,11 +51,21 @@ export function RankingCard({
   if (!prompt) return null;
 
   return (
-    <RankingCardInner prompt={prompt} userId={forcePick ? undefined : me?.id} onUpdated={onUpdated} />
+    <ThemedView type="backgroundElement" style={styles.card} testID="ranking-card">
+      <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
+        {RANKING_LABEL}
+      </ThemedText>
+      <RankingBody
+        prompt={prompt}
+        userId={forcePick ? undefined : me?.id}
+        onUpdated={onUpdated}
+      />
+    </ThemedView>
   );
 }
 
-function RankingCardInner({
+/** Drag-to-order interaction. Frame and mechanic label stay on the card. */
+export function RankingBody({
   prompt,
   userId,
   onUpdated,
@@ -87,10 +97,7 @@ function RankingCardInner({
   }
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card} testID="ranking-card">
-      <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
-        {RANKING_LABEL}
-      </ThemedText>
+    <>
       <ThemedText type="smallBold">{copy.label}</ThemedText>
       <ThemedText themeColor="textSecondary" style={styles.lede}>
         {RANKING_LEDE}
@@ -127,7 +134,7 @@ function RankingCardInner({
           {busy === 'skip' ? 'Saving\u2026' : RANKING_SKIP}
         </ThemedText>
       </ThemedPressable>
-    </ThemedView>
+    </>
   );
 }
 

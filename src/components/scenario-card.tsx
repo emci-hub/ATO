@@ -49,11 +49,21 @@ export function ScenarioCard({
   if (!prompt) return null;
 
   return (
-    <ScenarioCardInner prompt={prompt} userId={forcePick ? undefined : me?.id} onUpdated={onUpdated} />
+    <ThemedView type="backgroundElement" style={styles.card} testID="scenario-card">
+      <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
+        {SCENARIO_LABEL}
+      </ThemedText>
+      <ScenarioBody
+        prompt={prompt}
+        userId={forcePick ? undefined : me?.id}
+        onUpdated={onUpdated}
+      />
+    </ThemedView>
   );
 }
 
-function ScenarioCardInner({
+/** Stem and tap/swipe choices. Frame and mechanic label stay on the card. */
+export function ScenarioBody({
   prompt,
   userId,
   onUpdated,
@@ -116,10 +126,7 @@ function ScenarioCardInner({
   }));
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card} testID="scenario-card">
-      <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
-        {SCENARIO_LABEL}
-      </ThemedText>
+    <>
       <ThemedText themeColor="textSecondary">{SCENARIO_LEDE}</ThemedText>
       <GestureHandlerRootView>
         <GestureDetector gesture={gesture}>
@@ -161,7 +168,7 @@ function ScenarioCardInner({
           {busy === 'skip' ? 'Saving\u2026' : RANKING_SKIP}
         </ThemedText>
       </ThemedPressable>
-    </ThemedView>
+    </>
   );
 }
 
