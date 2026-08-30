@@ -213,10 +213,11 @@ const logic = read('src/lib/scenario.ts');
 assert.match(card, /Gesture|Pan/);
 assert.match(meSrc, /recordScenario/);
 assert.match(meSrc, /self_game/);
-assert.match(homeTab, /ScenarioCard/);
+assert.doesNotMatch(homeTab, /ScenarioCard/);
 assert.doesNotMatch(sageTab, /ScenarioCard/);
 assert.doesNotMatch(youTab, /ScenarioCard/);
 assert.doesNotMatch(talkSrc, /resolveScenario|ScenarioCard/);
+assert.match(read('src/components/ask-sheet.tsx'), /kind === 'scenario'/);
 assert.match(themeLab, /THEME_SCENARIO_LOCUS/);
 assert.match(themeLab, /THEME_SCENARIO_AUTONOMY/);
 assert.doesNotMatch(logic, /Math\.random|claimAiCall|gemini/);
@@ -226,6 +227,6 @@ assert.doesNotMatch(logic, /Best day at work is one where: 'I did it my way' \/ 
 assert.equal(SCENARIO_DECK.autonomy.setup, 'Best day at work is one where:');
 assert.equal(SCENARIO_DECK.competence.setup, 'The work day that sticks with you most is one where:');
 assert.equal(SCENARIO_DECK.relatedness.setup, 'A day at work actually feels good when:');
-ok('swipe surface on Home only; never Sage, You, or Talk; SDT is not a three-way pick');
+ok('ScenarioCard is not mounted on Home, Sage, or You; AskSheet handles kind scenario; SDT is not a three-way pick');
 
 console.log(`\n${passed} scenario checks passed`);

@@ -12,7 +12,6 @@ import { CityPicker } from '@/components/city-picker';
 import { CrisisRegionPicker } from '@/components/crisis-region-picker';
 import { IntakeSettings } from '@/components/intake-settings';
 import { VoicePresetPicker } from '@/components/voice-preset-picker';
-import { RankingCard } from '@/components/ranking-card';
 import { SageFactsCard } from '@/components/sage-facts';
 import { RunningUpdateLine } from '@/components/running-update-line';
 import { TraitBandsFold } from '@/components/trait-bands-fold';
@@ -184,8 +183,6 @@ export default function YouScreen() {
                   @{me.handle} is your public link. Scanning yours adds you to their Circle.
                 </ThemedText>
               </ThemedView>
-
-              <RankingCard me={me} onUpdated={() => refresh()} />
 
               <IntakeSettings
                 me={me}

@@ -275,11 +275,12 @@ assert.match(meSrc, /recordSageKnowsFits/);
 assert.match(meSrc, /self_settings/);
 assert.match(meSrc, /recordSageKnowsCorrection/);
 assert.doesNotMatch(talkSrc, /sage-knows|resolveSageKnows|SAGE_KNOWS/);
-assert.match(sageTab, /SageKnowsCard/);
-assert.match(homeTab, /SageKnowsCard/);
+assert.doesNotMatch(sageTab, /SageKnowsCard/);
+assert.doesNotMatch(homeTab, /SageKnowsCard/);
+assert.match(read('src/components/ask-sheet.tsx'), /kind === 'sage_knows'/);
 const talkBlock = sageTab.slice(sageTab.indexOf('messages.map'), sageTab.indexOf("busy === 'send'"));
 assert.doesNotMatch(talkBlock, /SageKnowsCard|resolveSageKnows/);
-ok('surface is on Home and Sage toys, never inside Talk replies');
+ok('SageKnowsCard is not mounted on Home or Sage; AskSheet handles kind sage_knows; never inside Talk replies');
 
 const composedCheckin = composeSageKnowsLine(TRAIT_POLE_LINES.extraversion.low, null);
 assert.match(composedCheckin.line, /quieter time/);

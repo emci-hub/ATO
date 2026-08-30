@@ -7,10 +7,8 @@ import { MilestoneBadges } from '@/components/check-milestone-badge';
 import { ExplorePanel } from '@/components/explore-panel';
 import { HomeInnerTabs, type HomeInnerTab } from '@/components/home-inner-tabs';
 import { MissedCheckCard } from '@/components/missed-check-card';
+import AskSheet from '@/components/ask-sheet';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
-import { SageKnowsCard } from '@/components/sage-knows-card';
-import { RankingCard } from '@/components/ranking-card';
-import { ScenarioCard } from '@/components/scenario-card';
 import { QuestionsFold } from '@/components/questions-fold';
 import { RevealCard } from '@/components/reveal-card';
 import { ThemedPressable } from '@/components/themed-pressable';
@@ -29,10 +27,16 @@ import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { aiConsentFor } from '@/lib/me';
 import { useMeContext } from '@/lib/me-context';
 import { voiceMeFrom } from '@/lib/intake';
+import { resolveAsk, type AskPick } from '@/lib/ask';
+import { readAskOverride } from '@/lib/dev-overrides';
 import { homeSageLabel, homeSageLede, NUDGE_LABEL, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { persistRoutedCard, saveTodayCard, todayCardFromCheck } from '@/lib/today-card';
 import { resolveReveal } from '@/lib/reveal';
+import { RANKING_ROUNDS } from '@/lib/ranking';
+import { composeSageKnowsLine, parseSageKnowsState } from '@/lib/sage-knows';
+import { SCENARIO_DECK } from '@/lib/scenario';
 import { EXPLORE_LEDE } from '@/lib/explore/copy';
+import { traitStateFromRow, TRAIT_POLE_LINES } from '@/lib/traits';
 import { routeVoiceCard } from '@/lib/voice/router';
 import { logJargonGuard } from '@/lib/voice/quota-server';
 import { canSeeDevLab } from '@/lib/dev-access';
@@ -40,6 +44,37 @@ import { recordOwnDevTrace } from '@/lib/dev-trace-server';
 import type { VoiceCard, VoiceSource } from '@/lib/voice/types';
 import { useSession } from '@/hooks/use-session';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
+
+function fixtureAskPick(kind: AskPick['kind']): AskPick {
+  if (kind === 'sage_knows') {
+    return {
+      kind: 'sage_knows',
+      prompt: {
+        axis: 'extraversion',
+        ...composeSageKnowsLine(TRAIT_POLE_LINES.extraversion.high, null),
+      },
+    };
+  }
+  if (kind === 'ranking') {
+    return {
+      kind: 'ranking',
+      prompt: {
+        axis: 'extraversion',
+        items: RANKING_ROUNDS.extraversion,
+        order: RANKING_ROUNDS.extraversion.map((item) => item.id),
+        weekKey: 'dev',
+      },
+    };
+  }
+  return {
+    kind: 'scenario',
+    prompt: {
+      axis: 'locus_of_control',
+      def: SCENARIO_DECK.locus_of_control,
+      weekKey: 'dev',
+    },
+  };
+}
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -55,6 +90,7 @@ export default function HomeScreen() {
   const [crisisToday, setCrisisToday] = useState(false);
   const [crisisYesterday, setCrisisYesterday] = useState(false);
   const [homeTab, setHomeTab] = useState<HomeInnerTab>('today');
+  const [askOverride, setAskOverride] = useState<AskPick['kind'] | null>(null);
 
   const reloadChecks = useCallback(async () => {
     if (!userId) return;
@@ -112,6 +148,33 @@ export default function HomeScreen() {
       crisisYesterday,
     });
   }, [me, checks, crisisToday, crisisYesterday, growth.checkCount, growth.factCount]);
+
+  useEffect(() => {
+    if (!__DEV__) return;
+    let cancelled = false;
+    void readAskOverride().then((kind) => {
+      if (!cancelled) setAskOverride(kind);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const askPick = useMemo(() => {
+    if (askOverride) return fixtureAskPick(askOverride);
+    if (!me) return null;
+    const traits = traitStateFromRow(me);
+    return resolveAsk({
+      values: traits.values,
+      touched: traits.touched,
+      knows: parseSageKnowsState(me.sage_knows),
+      knocksYouOff: me.knocks_you_off,
+      facts: me.facts ?? [],
+      history: checksToHistory(checks),
+      now: new Date(),
+      timeZone: me.timezone || 'UTC',
+    });
+  }, [askOverride, me, checks]);
 
   useEffect(() => {
     if (card || !window) return;
@@ -324,16 +387,10 @@ export default function HomeScreen() {
             <RevealCard pick={reveal} userId={userId} timeZone={me.timezone} />
           ) : null}
 
-          {me ? (
-            <SageKnowsCard
-              me={me}
-              history={checksToHistory(checks)}
-              onUpdated={refreshMe}
-            />
+          {me && askPick ? (
+            <AskSheet pick={askPick} me={me} onUpdated={() => { void refreshMe(); }} />
           ) : null}
 
-          {me ? <RankingCard me={me} onUpdated={refreshMe} /> : null}
-          {me ? <ScenarioCard me={me} onUpdated={refreshMe} /> : null}
           {me ? (
             <QuestionsFold
               me={me}
