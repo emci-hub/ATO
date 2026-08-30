@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ChipGroup } from '@/components/intake-chips';
+import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import type { IntakeChip } from '@/lib/intake';
+import { updateTraits, type Me } from '@/lib/me';
 import {
   TYPE_COPY,
   VIBE_QUESTIONS,
@@ -13,7 +16,10 @@ import {
   OPTIONAL_INTAKE_TOTAL,
   SLIDER_AXES,
   TYPE_CODES,
+  optionalFillWrite,
   optionalProgressLabel,
+  traitStateFromRow,
+  unansweredOptionalScreens,
   type OptionalScreen,
   type ClosePatternId,
   type DisagreeId,
@@ -207,6 +213,101 @@ export function OptionalStep({
   );
 }
 
+/**
+ * You-tab fill-later for skipped optional screens. Same OptionalStep UI as
+ * onboarding. Additive null-axis writes only — never claims the weekly Ask.
+ */
+export function OptionalIntakeFill({
+  me,
+  onUpdated,
+}: {
+  me: Me;
+  onUpdated: () => void | Promise<void>;
+}) {
+  const values = traitStateFromRow(me).values;
+  const unanswered = unansweredOptionalScreens(values);
+  const [sessionSkipped, setSessionSkipped] = useState<ReadonlySet<OptionalScreen>>(
+    () => new Set(),
+  );
+  const [cursor, setCursor] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [typeCode, setTypeCode] = useState<string | null>(null);
+  const [sliderValues, setSliderValues] = useState<
+    Partial<Record<(typeof SLIDER_AXES)[number], number>>
+  >({});
+  const [closeId, setCloseId] = useState<string | null>(null);
+  const [closeSecondId, setCloseSecondId] = useState<string | null>(null);
+  const [disagreeId, setDisagreeId] = useState<string | null>(null);
+
+  if (unanswered.length === 0) return null;
+
+  const remaining = unanswered.filter((screen) => !sessionSkipped.has(screen));
+  const index = remaining.length === 0 ? 0 : Math.min(cursor, remaining.length - 1);
+  const screen = remaining[index];
+
+  function skipScreens(screens: readonly OptionalScreen[]) {
+    setSessionSkipped((prev) => {
+      const next = new Set(prev);
+      for (const item of screens) next.add(item);
+      return next;
+    });
+  }
+
+  async function persistThenAdvance() {
+    if (busy || screen == null) return;
+    const write = optionalFillWrite(values, {
+      screen,
+      typeCode,
+      sliderValues,
+      closeId,
+      closeSecondId,
+      disagreeId,
+    });
+    setBusy(true);
+    try {
+      if (write) {
+        await updateTraits(me.id, write.incoming, write.source, write.allowed);
+        await onUpdated();
+      }
+      skipScreens([screen]);
+    } catch (err) {
+      console.log('[optional-intake] fill error:', err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <SettingsFold title="Want to add a bit more?">
+      <View style={styles.fillBody}>
+        {screen == null ? null : (
+          <OptionalStep
+            screen={screen}
+            busy={busy}
+            typeCode={typeCode}
+            sliderValues={sliderValues}
+            closeId={screen === 7 ? closeSecondId : closeId}
+            disagreeId={disagreeId}
+            onType={setTypeCode}
+            onSlider={(axis, value) => {
+              setSliderValues((prev) => ({ ...prev, [axis]: value }));
+            }}
+            onClose={screen === 7 ? setCloseSecondId : setCloseId}
+            onDisagree={setDisagreeId}
+            onBack={() => {
+              if (index <= 0) return;
+              setCursor(index - 1);
+            }}
+            onSkipThis={() => skipScreens([screen])}
+            onSkipRest={() => skipScreens(remaining)}
+            onContinue={() => void persistThenAdvance()}
+          />
+        )}
+      </View>
+    </SettingsFold>
+  );
+}
+
 const styles = StyleSheet.create({
   lede: {
     paddingBottom: Spacing.two,
@@ -255,5 +356,10 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.6,
+  },
+  fillBody: {
+    paddingHorizontal: Spacing.three,
+    paddingBottom: Spacing.two,
+    gap: Spacing.two,
   },
 });

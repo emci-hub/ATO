@@ -22,6 +22,7 @@ import { VoicePresetPicker } from '@/components/voice-preset-picker';
 import { SageFactsCard } from '@/components/sage-facts';
 import { RunningUpdateLine } from '@/components/running-update-line';
 import { SettingsFold } from '@/components/settings-fold';
+import { OptionalIntakeFill } from '@/components/optional-intake';
 import { TraitBandsFold } from '@/components/trait-bands-fold';
 import { KenneyCreditsCard } from '@/components/kenney-credits-card';
 import { PasswordSettingsFold } from '@/components/password-settings-fold';
@@ -354,6 +355,8 @@ export default function YouScreen() {
               <CrisisRegionPicker />
 
               <TraitBandsFold me={me} />
+
+              <OptionalIntakeFill me={me} onUpdated={() => refresh()} />
 
               <RunningUpdateLine />
 

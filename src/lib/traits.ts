@@ -116,6 +116,27 @@ const SLIDER_SCREEN_AXIS: Partial<Record<OptionalScreen, (typeof SLIDER_AXES)[nu
   5: 'steadiness',
 };
 
+/** Axes that optional screen `n` would write. Used to find skipped fill-later screens. */
+export function axesWrittenByOptionalScreen(screen: OptionalScreen): readonly TraitAxis[] {
+  if (screen === 0) return GRID_AXES;
+  const sliderAxis = SLIDER_SCREEN_AXIS[screen];
+  if (sliderAxis) return [sliderAxis];
+  if (screen === 6 || screen === 7) return CLOSE_AXES;
+  return DISAGREE_AXES;
+}
+
+/** Optional screens that still have at least one null axis they would write. */
+export function unansweredOptionalScreens(values: TraitValues): OptionalScreen[] {
+  const out: OptionalScreen[] = [];
+  for (let i = 0; i < OPTIONAL_INTAKE_TOTAL; i++) {
+    const screen = i as OptionalScreen;
+    if (axesWrittenByOptionalScreen(screen).some((axis) => values[axis] == null)) {
+      out.push(screen);
+    }
+  }
+  return out;
+}
+
 export const TYPE_CODES = [
   'INTJ',
   'INTP',
@@ -445,6 +466,32 @@ export function writeForOptionalScreen(input: {
     source: 'self_situation',
     allowed: DISAGREE_AXES,
   };
+}
+
+/**
+ * You-tab fill-later write. Same sources as onboarding (`writeForOptionalScreen`)
+ * then drops any axis that already has a stored number — additive only.
+ * Still meant to go through `mergeTraitWrite` / `updateTraits`.
+ */
+export function optionalFillWrite(
+  values: TraitValues,
+  input: Parameters<typeof writeForOptionalScreen>[0],
+): {
+  incoming: Partial<Record<TraitAxis, number>>;
+  source: Exclude<TraitSource, 'self_confirm'>;
+  allowed: readonly TraitAxis[];
+} | null {
+  const write = writeForOptionalScreen(input);
+  if (!write) return null;
+  const incoming: Partial<Record<TraitAxis, number>> = {};
+  for (const axis of write.allowed) {
+    const value = write.incoming[axis];
+    if (typeof value !== 'number' || !Number.isFinite(value)) continue;
+    if (values[axis] != null) continue;
+    incoming[axis] = value;
+  }
+  if (Object.keys(incoming).length === 0) return null;
+  return { incoming, source: write.source, allowed: write.allowed };
 }
 
 export type TraitBand = 'low' | 'mid' | 'high';
