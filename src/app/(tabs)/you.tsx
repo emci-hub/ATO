@@ -306,6 +306,8 @@ export default function YouScreen() {
                 </Pressable>
               </ThemedView>
 
+              <CrisisRegionPicker />
+
               <TraitBandsFold me={me} />
 
               <RunningUpdateLine />
@@ -398,7 +400,6 @@ export default function YouScreen() {
                 )}
               </ThemedView>
 
-              <CrisisRegionPicker />
               <SageUsageFold />
               <PasswordSettingsFold />
               <KenneyCreditsCard />

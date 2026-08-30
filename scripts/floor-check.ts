@@ -236,6 +236,16 @@ assert.match(youTab, /'Not set yet'/);
 assert.match(youTab, /SettingsFold title="Account"/);
 ok('AiConsentCard is a Modal interstitial on Dawn and Sage; You Account row is Sage\'s AI On/Off/Not set yet');
 
+const weeksIdx = youTab.indexOf('<ThemedText type="smallBold">Weeks</ThemedText>');
+const crisisPickerIdx = youTab.indexOf('<CrisisRegionPicker');
+const bandsIdx = youTab.indexOf('<TraitBandsFold');
+assert.ok(weeksIdx >= 0, 'Weeks row is present');
+assert.ok(
+  crisisPickerIdx > weeksIdx && bandsIdx > crisisPickerIdx,
+  'CrisisRegionPicker sits directly after Weeks and before TraitBandsFold',
+);
+ok('CrisisRegionPicker sits directly after Weeks and before TraitBandsFold');
+
 assert.match(home, /todayCardFromCheck/);
 assert.match(read('src/lib/today-card.ts'), /export function todayCardFromCheck/);
 ok('Home hydrates today\'s card from the Check row when on-device storage is empty');

@@ -26,7 +26,7 @@ export function CrisisRegionPicker() {
   const selected: PickerValue = override ?? 'auto';
 
   return (
-    <SettingsFold title="Crisis line">
+    <SettingsFold title="If you need someone now">
       <ThemedText type="small" themeColor="textSecondary" style={styles.lede}>
         Auto uses this device&apos;s locale and timezone. Only the United States
         and Canada have a confirmed number.
