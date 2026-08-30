@@ -95,6 +95,8 @@
     "check:explore": "tsx ./scripts/explore-check.ts",
     "check:questions": "tsx ./scripts/questions-check.ts",
     "check:scenario": "tsx ./scripts/scenario-check.ts",
+    "check:today-slot": "tsx ./scripts/today-slot-check.ts",
+    "check:ask": "tsx ./scripts/ask-check.ts",
     "check:intake-live": "tsx ./scripts/intake-live-check.ts",
     "check:age": "tsx ./scripts/age-check.ts",
     "check:push": "tsx ./scripts/push-check.ts",
