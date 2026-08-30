@@ -255,7 +255,10 @@ export async function setCity(userId: string, city: string | null): Promise<Me> 
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.log('[me] setCity error:', error);
+    throw error;
+  }
   return withVisible(data as Me);
 }
 
@@ -281,7 +284,10 @@ export async function setVisible(userId: string, visible: boolean): Promise<Me> 
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.log('[me] setVisible error:', error);
+    throw error;
+  }
   return withVisible(data as Me);
 }
 
@@ -555,7 +561,10 @@ export async function setAiConsent(userId: string, consent: boolean): Promise<Me
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.log('[me] setAiConsent error:', error);
+    throw error;
+  }
   return data;
 }
 

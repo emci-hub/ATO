@@ -2,11 +2,12 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 
+import { AiConsentCard } from '@/components/ai-consent-card';
 import { DeleteAccountSheet } from '@/components/delete-account-sheet';
 import { ScanSheet } from '@/components/scan-sheet';
 import { SharePoster } from '@/components/share-poster';
@@ -46,7 +47,7 @@ import {
 } from '@/lib/invite';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { copyLink, sharePoster } from '@/lib/share';
-import { setCity, setVisible, setAiConsent } from '@/lib/me';
+import { aiConsentFor, setCity, setVisible, setAiConsent } from '@/lib/me';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { supabase } from '@/lib/supabase';
@@ -96,6 +97,9 @@ export default function YouScreen() {
   const [inviteCodes, setInviteCodes] = useState<InviteCode[]>([]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [copiedInvite, setCopiedInvite] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [askingConsent, setAskingConsent] = useState(false);
+  const [consentBusy, setConsentBusy] = useState(false);
   const posterRef = useRef<View | null>(null);
   // Screen padding (2x24) + card padding (2x16) + margin for safety.
   const posterWidth = Math.min(320, windowWidth - 96);
@@ -190,6 +194,46 @@ export default function YouScreen() {
     await Clipboard.setStringAsync(code);
     setCopiedInvite(code);
     setTimeout(() => setCopiedInvite(null), 2000);
+  }
+
+  async function saveCity(slug: string | null) {
+    if (!me) return;
+    setError(null);
+    try {
+      await setCity(me.id, slug);
+      await refresh();
+    } catch (err) {
+      console.log('[you] setCity error:', err);
+      setError(err instanceof Error ? err.message : 'Couldn\u2019t save your city. Try again.');
+    }
+  }
+
+  async function saveVisible() {
+    if (!me) return;
+    setError(null);
+    try {
+      await setVisible(me.id, me.visible === false);
+      await refresh();
+    } catch (err) {
+      console.log('[you] setVisible error:', err);
+      setError(err instanceof Error ? err.message : 'Couldn\u2019t save that. Try again.');
+    }
+  }
+
+  async function saveAiConsent(value: boolean) {
+    if (!me || consentBusy) return;
+    setConsentBusy(true);
+    setError(null);
+    try {
+      await setAiConsent(me.id, value);
+      setAskingConsent(false);
+      await refresh();
+    } catch (err) {
+      console.log('[you] setAiConsent error:', err);
+      setError('Couldn\u2019t save your choice. Try again.');
+    } finally {
+      setConsentBusy(false);
+    }
   }
 
   return (
@@ -317,9 +361,12 @@ export default function YouScreen() {
               <CityPicker
                 value={me.city}
                 onChange={(slug) => {
-                  void setCity(me.id, slug).then(() => refresh());
+                  void saveCity(slug);
                 }}
               />
+              {error ? (
+                <ThemedText themeColor="textSecondary">{error}</ThemedText>
+              ) : null}
 
               <ThemedView type="backgroundElement" style={styles.detailCard}>
                 <ThemedText type="smallBold" style={styles.inviteHeading}>
@@ -332,7 +379,7 @@ export default function YouScreen() {
                 </ThemedText>
                 <Pressable
                   onPress={() => {
-                    void setVisible(me.id, me.visible === false).then(() => refresh());
+                    void saveVisible();
                   }}
                   style={({ pressed }) => [styles.inviteRow, pressed && styles.pressed]}>
                   <ThemedText type="smallBold">
@@ -341,6 +388,11 @@ export default function YouScreen() {
                       : "Don't show my face on nights I'm going"}
                   </ThemedText>
                 </Pressable>
+                {error ? (
+                  <ThemedText themeColor="textSecondary" style={styles.inviteHint}>
+                    {error}
+                  </ThemedText>
+                ) : null}
               </ThemedView>
 
               <YouDevToolsSlot timeZone={me.timezone || 'UTC'} />
@@ -408,12 +460,16 @@ export default function YouScreen() {
                 <DetailRow label="Timezone" value={me.timezone} />
                 <Pressable
                   onPress={() => {
-                    if (me.ai_consent == null) return;
-                    void setAiConsent(me.id, !me.ai_consent).then(() => refresh());
+                    if (aiConsentFor(me) === 'pending') {
+                      setError(null);
+                      setAskingConsent(true);
+                      return;
+                    }
+                    void saveAiConsent(!me.ai_consent);
                   }}
                   style={({ pressed }) => [
                     styles.detailRow,
-                    pressed && me.ai_consent != null && styles.pressed,
+                    pressed && styles.pressed,
                   ]}>
                   <ThemedText type="small" themeColor="textSecondary">
                     Sage's AI
@@ -422,6 +478,11 @@ export default function YouScreen() {
                     {me.ai_consent === true ? 'On' : me.ai_consent === false ? 'Off' : 'Not set yet'}
                   </ThemedText>
                 </Pressable>
+                {error ? (
+                  <ThemedText themeColor="textSecondary" style={styles.inviteHint}>
+                    {error}
+                  </ThemedText>
+                ) : null}
               </SettingsFold>
             </>
           ) : (
@@ -474,6 +535,26 @@ export default function YouScreen() {
           refreshCircle().catch(() => {});
         }}
       />
+
+      <Modal
+        visible={askingConsent}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {}}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalContent}>
+            <AiConsentCard
+              context="dawn"
+              busy={consentBusy}
+              onGrant={() => saveAiConsent(true)}
+              onDeny={() => saveAiConsent(false)}
+            />
+            {error ? (
+              <ThemedText themeColor="textSecondary">{error}</ThemedText>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
     </ThemedView>
   );
 }
@@ -627,5 +708,17 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.6,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.four,
+  },
+  modalContent: {
+    alignSelf: 'stretch',
+    maxWidth: MaxContentWidth - Spacing.five,
+    gap: Spacing.three,
   },
 });
