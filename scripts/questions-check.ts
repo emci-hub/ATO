@@ -255,7 +255,6 @@ const you = read('src/app/(tabs)/you.tsx');
 const sage = read('src/app/(tabs)/sage.tsx');
 const questionsScreen = read('src/app/questions.tsx');
 assert.doesNotMatch(home, /QuestionsFold/);
-assert.match(home, /homeTab === 'today'/);
 assert.doesNotMatch(you, /QuestionsFold/);
 assert.doesNotMatch(sage, /QuestionsFold/);
 assert.match(questionsScreen, /QuestionsFold/);

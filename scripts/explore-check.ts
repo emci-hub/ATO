@@ -1,5 +1,5 @@
 /**
- * Explore — Home inner tab. Run: npm run check:explore
+ * Explore — Sage thread observations. Run: npm run check:explore
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -306,11 +306,13 @@ assert.equal(cached.kind, 'cached');
 ok('cached pack is reused; no second generate the same day');
 
 const home = read('src/app/(tabs)/index.tsx');
-assert.match(home, /HomeInnerTabs/);
-assert.match(home, /ExplorePanel/);
-assert.match(home, /homeTab === 'explore'/);
-assert.match(home, /homeTab === 'today'/);
-ok('Home mounts Today/Explore inner tabs; Explore is not a 4th daily card');
+const sage = read('src/app/(tabs)/sage.tsx');
+assert.doesNotMatch(home, /ExplorePanel/);
+assert.doesNotMatch(home, /HomeInnerTabs/);
+assert.match(sage, /routeExplore/);
+assert.match(sage, /SageExploreObservations/);
+assert.doesNotMatch(sage, /EXPLORE_LEDE|EXPLORE_LABEL/);
+ok('Explore observations render on Sage; Home has no inner tabs');
 
 const you = read('src/app/(tabs)/you.tsx');
 assert.doesNotMatch(you, /ExplorePanel|HomeInnerTabs|explore_entries/);

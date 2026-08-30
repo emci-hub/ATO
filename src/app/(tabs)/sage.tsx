@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import {
   Dimensions,
   Keyboard,
@@ -13,6 +13,12 @@ import {
   View,
   type KeyboardEvent,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AiConsentCard } from '@/components/ai-consent-card';
@@ -20,6 +26,7 @@ import { CrisisCard } from '@/components/crisis-card';
 import { ReportSheet } from '@/components/report-sheet';
 import { SageEightBall } from '@/components/sage-eight-ball';
 import { SageUsageLine } from '@/components/sage-usage';
+import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -28,10 +35,11 @@ import { useMeContext } from '@/lib/me-context';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { useTodayCard } from '@/hooks/use-today-card';
-import { checksToHistory, fetchTalkHistory, type Check } from '@/lib/checks';
+import { checksToHistory, fetchChecks, fetchTalkHistory, type Check } from '@/lib/checks';
+import { crisisFlagsForWindow } from '@/lib/crisis/days';
 import { logCrisisFlag } from '@/lib/crisis/log';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
-import { aiConsentFor, setAiConsent } from '@/lib/me';
+import { aiConsentFor, setAiConsent, type Me } from '@/lib/me';
 import { voiceMeFrom } from '@/lib/intake';
 import {
   addSageMessage,
@@ -41,9 +49,32 @@ import {
 } from '@/lib/sage-messages';
 import { TALK_COMPOSER_PLACEHOLDER, TALK_EMPTY, TALK_LEDE, TALK_TRY_AGAIN, TALK_WRITING, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { QUOTA_EMPTY_MESSAGE } from '@/lib/voice/quota';
-import { claimAiCall, logJargonGuard } from '@/lib/voice/quota-server';
+import { claimAiCall, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
 import { recordOwnDevTrace } from '@/lib/dev-trace-server';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
+import { useAppearance } from '@/lib/theme/context';
+import {
+  EXPLORE_EMPTY_CONSENT,
+  EXPLORE_EMPTY_CRISIS,
+  EXPLORE_EMPTY_DENIED,
+  EXPLORE_EMPTY_QUOTA,
+  EXPLORE_EMPTY_TRY,
+  EXPLORE_LAND_NO,
+  EXPLORE_LAND_Q,
+  EXPLORE_LAND_YES,
+  EXPLORE_NOTED,
+} from '@/lib/explore/copy';
+import { generateExploreBody } from '@/lib/explore/generate';
+import { routeExplore } from '@/lib/explore/route';
+import {
+  fetchExploreMissNotes,
+  fetchLatestExplorePack,
+  recordExploreReaction,
+  saveExplorePack,
+} from '@/lib/explore/store';
+import type { ExploreEntryRow, RouteExploreResult } from '@/lib/explore/types';
+import { VOICE_CONFIG } from '@/lib/voice/config';
+import type { CheckHistory } from '@/lib/voice/types';
 
 interface ChatMessage {
   id: string;
@@ -179,6 +210,214 @@ function chatFromRows(rows: SageMessage[]): ChatMessage[] {
   }));
 }
 
+function emptyExploreCopy(kind: RouteExploreResult['kind']): string | null {
+  switch (kind) {
+    case 'consent-pending':
+      return EXPLORE_EMPTY_CONSENT;
+    case 'consent-denied':
+      return EXPLORE_EMPTY_DENIED;
+    case 'crisis':
+      return EXPLORE_EMPTY_CRISIS;
+    case 'quota':
+      return EXPLORE_EMPTY_QUOTA;
+    case 'empty':
+      return EXPLORE_EMPTY_TRY;
+    default:
+      return null;
+  }
+}
+
+function NotedAck({
+  bump,
+  reduceMotion,
+  onFill,
+}: {
+  bump: number;
+  reduceMotion: boolean;
+  onFill: boolean;
+}) {
+  const theme = useTheme();
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    opacity.value = 1;
+    if (reduceMotion) {
+      const hide = setTimeout(() => {
+        opacity.value = 0;
+      }, 900);
+      return () => clearTimeout(hide);
+    }
+    opacity.value = withSequence(
+      withTiming(1, { duration: 400 }),
+      withTiming(0, { duration: 700 }),
+    );
+  }, [bump, reduceMotion, opacity]);
+
+  const fade = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      accessibilityLiveRegion="polite"
+      style={[styles.noted, fade]}>
+      <ThemedText
+        type="small"
+        themeColor={onFill ? undefined : 'textSecondary'}
+        style={onFill ? { color: theme.onAccent } : undefined}>
+        {EXPLORE_NOTED}
+      </ThemedText>
+    </Animated.View>
+  );
+}
+
+function SageExploreObservations({
+  me,
+  history,
+  crisisToday,
+}: {
+  me: Me;
+  history: CheckHistory[];
+  crisisToday: boolean;
+}) {
+  const theme = useTheme();
+  const { reduceMotion } = useAppearance();
+  const [result, setResult] = useState<RouteExploreResult | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [noted, setNoted] = useState<{
+    entryId: string;
+    landed: boolean;
+    bump: number;
+  } | null>(null);
+
+  const load = useCallback(async () => {
+    const next = await routeExplore(
+      {
+        me: {
+          ...voiceMeFrom(me),
+          timezone: me.timezone,
+          traitTouchedAt: me.trait_touched_at,
+        },
+        history,
+        aiConsent: me.ai_consent,
+        crisisToday,
+      },
+      {
+        loadLatestPack: fetchLatestExplorePack,
+        savePack: saveExplorePack,
+        loadMissNotes: fetchExploreMissNotes,
+        claimAiCall: () => claimAiCall('explore'),
+        logJargonHit: logJargonGuard,
+        logPhraseHit: logPhraseGuard,
+        generateBody: generateExploreBody,
+        useLocal: VOICE_CONFIG.provider === 'local' || !VOICE_CONFIG.geminiApiKey,
+        recordTrace: recordOwnDevTrace,
+      },
+    );
+    setResult(next);
+  }, [me, history, crisisToday]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void load().catch((err) => {
+      console.log('[explore] route error:', err);
+      if (!cancelled) setResult({ kind: 'empty', pack: null });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [load]);
+
+  async function react(entry: ExploreEntryRow, landed: boolean) {
+    if (busyId || entry.id.startsWith('local-')) return;
+    setNoted({ entryId: entry.id, landed, bump: Date.now() });
+    setBusyId(entry.id);
+    try {
+      await recordExploreReaction(entry.id, landed);
+      setResult((current) => {
+        if (!current?.pack) return current;
+        return {
+          ...current,
+          pack: {
+            ...current.pack,
+            entries: current.pack.entries.map((row) =>
+              row.id === entry.id ? { ...row, landed } : row,
+            ),
+          },
+        };
+      });
+    } catch (err) {
+      console.log('[explore] reaction error:', err);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const message = result ? emptyExploreCopy(result.kind) : null;
+  const entries = result?.pack?.entries ?? [];
+  if (!message && entries.length === 0) return null;
+
+  return (
+    <View style={styles.exploreBlock}>
+      {message ? (
+        <View style={[styles.bubble, { backgroundColor: theme.backgroundElement }]}>
+          <ThemedText style={styles.bubbleText}>{message}</ThemedText>
+        </View>
+      ) : null}
+      {entries.map((entry) => (
+        <View key={entry.id} style={styles.exploreEntry}>
+          <View style={[styles.bubble, { backgroundColor: theme.backgroundElement }]}>
+            <ThemedText style={styles.bubbleText}>{entry.body}</ThemedText>
+          </View>
+          <ThemedText type="small" themeColor="textSecondary">
+            {EXPLORE_LAND_Q}
+          </ThemedText>
+          <View style={styles.exploreActions}>
+            <View style={styles.actionSlot}>
+              <ThemedPressable
+                filled={entry.landed === true}
+                onPress={() => void react(entry, true)}
+                disabled={busyId !== null}
+                style={[styles.exploreYes, busyId !== null && styles.disabled]}>
+                <ThemedText
+                  type="smallBold"
+                  style={entry.landed === true ? { color: theme.onAccent } : undefined}
+                  themeColor={entry.landed === true ? undefined : 'textSecondary'}>
+                  {EXPLORE_LAND_YES}
+                </ThemedText>
+              </ThemedPressable>
+              {noted?.entryId === entry.id && noted.landed === true ? (
+                <NotedAck
+                  bump={noted.bump}
+                  reduceMotion={reduceMotion}
+                  onFill={entry.landed === true}
+                />
+              ) : null}
+            </View>
+            <View style={styles.actionSlot}>
+              <ThemedPressable
+                onPress={() => void react(entry, false)}
+                disabled={busyId !== null}
+                style={[
+                  styles.exploreNo,
+                  { borderColor: controlBorderColor(theme) },
+                  entry.landed === false && styles.missed,
+                  busyId !== null && styles.disabled,
+                ]}>
+                <ThemedText type="smallBold" themeColor="textSecondary">
+                  {EXPLORE_LAND_NO}
+                </ThemedText>
+              </ThemedPressable>
+              {noted?.entryId === entry.id && noted.landed === false ? (
+                <NotedAck bump={noted.bump} reduceMotion={reduceMotion} onFill={false} />
+              ) : null}
+            </View>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export default function SageScreen() {
   const theme = useTheme();
   const { session } = useSession();
@@ -199,6 +438,8 @@ export default function SageScreen() {
 
   const cachedRows = userId ? peekSageMessages(userId) : null;
   const [checks, setChecks] = useState<Check[]>([]);
+  const [exploreChecks, setExploreChecks] = useState<Check[]>([]);
+  const [crisisToday, setCrisisToday] = useState(false);
   const [checkCount, setCheckCount] = useState(0);
   const [talkReady, setTalkReady] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
@@ -252,10 +493,35 @@ export default function SageScreen() {
         if (!cancelled) setTalkReady(true);
       });
 
+    fetchChecks(userId)
+      .then((rows) => {
+        if (cancelled) return;
+        setExploreChecks(rows);
+      })
+      .catch((err) => {
+        console.log('[explore] fetchChecks error:', err);
+      });
+
     return () => {
       cancelled = true;
     };
   }, [userId]);
+
+  useEffect(() => {
+    if (!userId || !me) return;
+    let cancelled = false;
+    crisisFlagsForWindow(userId, me.timezone)
+      .then((flags) => {
+        if (cancelled) return;
+        setCrisisToday(flags.crisisToday);
+      })
+      .catch((err) => {
+        console.log('[explore] crisis flags error:', err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, me?.timezone]);
 
   useEffect(() => {
     if (!keyboardOpen) return;
@@ -433,6 +699,14 @@ export default function SageScreen() {
               <SageEightBall />
               {me ? <SageUsageLine revision={usageRevision} /> : null}
             </View>
+
+            {me ? (
+              <SageExploreObservations
+                me={me}
+                history={checksToHistory(exploreChecks)}
+                crisisToday={crisisToday}
+              />
+            ) : null}
 
             {!me ? (
               <ThemedView type="backgroundElement" style={styles.emptyCard}>
@@ -674,6 +948,41 @@ const styles = StyleSheet.create({
   sageToys: {
     gap: Spacing.one,
     paddingBottom: Spacing.one,
+  },
+  exploreBlock: {
+    gap: Spacing.two,
+    paddingBottom: Spacing.two,
+  },
+  exploreEntry: {
+    gap: Spacing.two,
+  },
+  exploreActions: {
+    gap: Spacing.two,
+    maxWidth: '85%',
+  },
+  exploreYes: {
+    borderRadius: Spacing.three,
+    paddingVertical: Spacing.two,
+    alignItems: 'center',
+  },
+  exploreNo: {
+    borderRadius: Spacing.three,
+    borderWidth: 1,
+    paddingVertical: Spacing.two,
+    alignItems: 'center',
+  },
+  actionSlot: {
+    position: 'relative',
+  },
+  noted: {
+    position: 'absolute',
+    right: Spacing.three,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+  },
+  missed: {
+    opacity: 0.85,
   },
   supportButton: {
     padding: Spacing.two,

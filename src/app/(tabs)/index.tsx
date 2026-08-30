@@ -4,8 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { MilestoneBadges } from '@/components/check-milestone-badge';
-import { ExplorePanel } from '@/components/explore-panel';
-import { HomeInnerTabs, type HomeInnerTab } from '@/components/home-inner-tabs';
 import { MissedCheckCard } from '@/components/missed-check-card';
 import AskSheet from '@/components/ask-sheet';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
@@ -34,7 +32,6 @@ import { resolveReveal } from '@/lib/reveal';
 import { RANKING_ROUNDS } from '@/lib/ranking';
 import { composeSageKnowsLine, parseSageKnowsState } from '@/lib/sage-knows';
 import { SCENARIO_DECK } from '@/lib/scenario';
-import { EXPLORE_LEDE } from '@/lib/explore/copy';
 import { traitStateFromRow, TRAIT_POLE_LINES } from '@/lib/traits';
 import { routeVoiceCard } from '@/lib/voice/router';
 import { logJargonGuard } from '@/lib/voice/quota-server';
@@ -88,7 +85,6 @@ export default function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
   const [crisisToday, setCrisisToday] = useState(false);
   const [crisisYesterday, setCrisisYesterday] = useState(false);
-  const [homeTab, setHomeTab] = useState<HomeInnerTab>('today');
   const [askOverride, setAskOverride] = useState<AskPick['kind'] | null>(null);
 
   const reloadChecks = useCallback(async () => {
@@ -276,11 +272,7 @@ export default function HomeScreen() {
           <View style={styles.header}>
             <ThemedText type="subtitle">Home</ThemedText>
             <ThemedText themeColor="textSecondary">
-              {homeTab === 'explore'
-                ? EXPLORE_LEDE
-                : params.focus === 'check'
-                  ? 'Check today.'
-                  : homeSageLede(theme.id)}
+              {params.focus === 'check' ? 'Check today.' : homeSageLede(theme.id)}
             </ThemedText>
             <MilestoneBadges
               checkCount={growth.checkCount}
@@ -288,19 +280,8 @@ export default function HomeScreen() {
               checks={checks}
               timeZone={me?.timezone ?? 'UTC'}
             />
-            <HomeInnerTabs value={homeTab} onChange={setHomeTab} />
           </View>
 
-          {homeTab === 'explore' && me ? (
-            <ExplorePanel
-              me={me}
-              history={checksToHistory(checks)}
-              crisisToday={crisisToday}
-            />
-          ) : null}
-
-          {homeTab === 'today' ? (
-            <>
           {card ? (
             <>
               <ThemedView type="backgroundElement" style={styles.todayCard}>
@@ -506,8 +487,6 @@ export default function HomeScreen() {
                 </>
               ) : null}
             </ThemedView>
-          ) : null}
-            </>
           ) : null}
         </ScrollView>
       </SafeAreaView>

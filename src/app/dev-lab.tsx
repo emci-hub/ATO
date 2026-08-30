@@ -19,6 +19,8 @@ import { useMeContext } from '@/lib/me-context';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { offsetLabel } from '@/lib/check-window';
+import { checksToHistory, fetchChecks } from '@/lib/checks';
+import { crisisFlagsForWindow } from '@/lib/crisis/days';
 import {
   approveAccessRequest,
   denyAccessRequest,
@@ -58,15 +60,19 @@ import {
   stopDevTrace,
 } from '@/lib/dev-trace-server';
 import { TRACE_SECTIONS, type DevTraceEvent, type DevTraceSession } from '@/lib/dev-trace';
+import { generateExploreBody } from '@/lib/explore/generate';
+import { routeExplore } from '@/lib/explore/route';
+import { fetchExploreMissNotes } from '@/lib/explore/store';
+import type { RouteExploreResult } from '@/lib/explore/types';
 import { voiceMeFrom } from '@/lib/intake';
 import { localYmd } from '@/lib/local-date';
 import { supabase } from '@/lib/supabase';
 import { isDirectTraitSource, traitStateFromRow, type TraitSource } from '@/lib/traits';
 import { controlBorderColor } from '@/lib/theme/chrome';
-import { buildVoiceConfig } from '@/lib/voice/config';
+import { buildVoiceConfig, VOICE_CONFIG } from '@/lib/voice/config';
 import { matchingFrameworkTerms } from '@/lib/voice/framework-fence';
 import { type SageUsageSnapshot } from '@/lib/voice/quota';
-import { fetchSageUsage } from '@/lib/voice/quota-server';
+import { claimAiCall, fetchSageUsage, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
 import {
   ASK_OVERRIDE_KINDS,
   SLOT_OVERRIDE_KINDS,
@@ -162,6 +168,7 @@ function DevLab() {
           <View style={styles.section}>
             <ThemedText type="smallBold">Sage</ThemedText>
             {canSeeHubSection('quota', gate) ? <QuotaDashboard /> : null}
+            <ExploreRegen />
             <ForceTestError message="Dev Lab test error — Sage" />
           </View>
 
@@ -201,6 +208,97 @@ function ForceTestError({ message }: { message: string }) {
       ]}>
       <ThemedText type="smallBold">Force test error</ThemedText>
     </Pressable>
+  );
+}
+
+function ExploreRegen() {
+  const theme = useTheme();
+  const { session } = useSession();
+  const { me } = useMeContext();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<RouteExploreResult | null>(null);
+
+  async function run() {
+    if (!me || !session?.user.id || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const flags = await crisisFlagsForWindow(session.user.id, me.timezone);
+      const history = checksToHistory(await fetchChecks(session.user.id));
+      const next = await routeExplore(
+        {
+          me: {
+            ...voiceMeFrom(me),
+            timezone: me.timezone,
+            traitTouchedAt: me.trait_touched_at,
+          },
+          history,
+          aiConsent: me.ai_consent,
+          crisisToday: flags.crisisToday,
+        },
+        {
+          loadMissNotes: fetchExploreMissNotes,
+          claimAiCall: () => claimAiCall('explore'),
+          logJargonHit: logJargonGuard,
+          logPhraseHit: logPhraseGuard,
+          generateBody: generateExploreBody,
+          useLocal: VOICE_CONFIG.provider === 'local' || !VOICE_CONFIG.geminiApiKey,
+        },
+      );
+      setResult(next);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not regenerate Explore.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const entries = result?.pack?.entries ?? [];
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="small" themeColor="textSecondary">
+        Regenerates Explore without waiting for the weekly cycle. Axes are the
+        tagged traits on each observation. Nothing is written to ME.
+      </ThemedText>
+      <Pressable
+        disabled={busy || !me}
+        onPress={() => void run()}
+        style={({ pressed }) => [
+          styles.chip,
+          { borderColor: controlBorderColor(theme) },
+          pressed && styles.pressed,
+          (busy || !me) && { opacity: 0.5 },
+        ]}>
+        <ThemedText type="smallBold">Force regenerate Explore</ThemedText>
+      </Pressable>
+      {error ? <ThemedText type="small">{error}</ThemedText> : null}
+      {result ? (
+        <ThemedView type="backgroundElement" style={styles.card}>
+          <ThemedText type="code" themeColor="textSecondary">
+            kind {result.kind}
+            {result.trigger ? ` · ${result.trigger}` : ''}
+          </ThemedText>
+          {entries.length === 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              No entries.
+            </ThemedText>
+          ) : (
+            entries.map((entry) => (
+              <View key={entry.id} style={styles.axisRow}>
+                <ThemedText>{entry.body}</ThemedText>
+                <ThemedText type="code" themeColor="textSecondary">
+                  axis {entry.traits.length > 0 ? entry.traits.join(', ') : '(none)'}
+                  {entry.chips.length > 0 ? ` · chips ${entry.chips.join(', ')}` : ''}
+                  {entry.signalKind ? ` · signal ${entry.signalKind}` : ''}
+                </ThemedText>
+              </View>
+            ))
+          )}
+        </ThemedView>
+      ) : null}
+    </View>
   );
 }
 
