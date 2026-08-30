@@ -61,8 +61,20 @@ import { buildVoiceConfig } from '@/lib/voice/config';
 import { matchingFrameworkTerms } from '@/lib/voice/framework-fence';
 import { type SageUsageSnapshot } from '@/lib/voice/quota';
 import { fetchSageUsage } from '@/lib/voice/quota-server';
+import {
+  ASK_OVERRIDE_KINDS,
+  SLOT_OVERRIDE_KINDS,
+  clearAskOverride,
+  clearSlotOverride,
+  loadStoredAskOverride,
+  loadStoredSlotOverride,
+  writeAskOverride,
+  writeSlotOverride,
+} from '@/lib/dev-overrides';
 import { routeVoiceCard } from '@/lib/voice/router';
 import type { VoiceCardResult, VoiceMe } from '@/lib/voice/types';
+import type { AskPick } from '@/lib/ask';
+import type { TodaySlot } from '@/lib/today-slot';
 
 const SECTIONS: { id: HubSection; label: string }[] = [
   { id: 'card', label: 'Card' },
@@ -161,7 +173,12 @@ function DevLab() {
               />
             ))}
           </View>
-          {section === 'card' ? <CardSimulator /> : null}
+          {section === 'card' ? (
+            <>
+              <HomeOverrides />
+              <CardSimulator />
+            </>
+          ) : null}
           {section === 'traits' ? <TraitViewer /> : null}
           {section === 'quota' ? <QuotaDashboard /> : null}
           {section === 'fence' ? <FenceTester /> : null}
@@ -172,6 +189,69 @@ function DevLab() {
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
+  );
+}
+
+function HomeOverrides() {
+  const [slot, setSlot] = useState<TodaySlot['kind'] | 'off'>('off');
+  const [ask, setAsk] = useState<AskPick['kind'] | 'off'>('off');
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([loadStoredSlotOverride(), loadStoredAskOverride()]).then(([nextSlot, nextAsk]) => {
+      if (cancelled) return;
+      setSlot(nextSlot ?? 'off');
+      setAsk(nextAsk ?? 'off');
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function pickSlot(kind: TodaySlot['kind'] | 'off') {
+    if (kind === 'off') await clearSlotOverride();
+    else await writeSlotOverride(kind);
+    setSlot(kind);
+  }
+
+  async function pickAsk(kind: AskPick['kind'] | 'off') {
+    if (kind === 'off') await clearAskOverride();
+    else await writeAskOverride(kind);
+    setAsk(kind);
+  }
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Today slot override</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Forces the Home slot on the next boxes. Off is live resolve. Production never honours
+        this key.
+      </ThemedText>
+      <ThemedText type="code" themeColor="textSecondary">
+        stored: {slot}
+      </ThemedText>
+      <View style={styles.tabs}>
+        {(['off', ...SLOT_OVERRIDE_KINDS] as const).map((kind) => (
+          <Chip key={kind} label={kind} selected={slot === kind} onPress={() => void pickSlot(kind)} />
+        ))}
+      </View>
+      <Chip label="clear override" selected={false} onPress={() => void pickSlot('off')} />
+
+      <ThemedText type="smallBold">Ask kind override</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Forces which ask body the sheet would show. Off is live resolveAsk. Production never
+        honours this key.
+      </ThemedText>
+      <ThemedText type="code" themeColor="textSecondary">
+        stored: {ask}
+      </ThemedText>
+      <View style={styles.tabs}>
+        {(['off', ...ASK_OVERRIDE_KINDS] as const).map((kind) => (
+          <Chip key={kind} label={kind} selected={ask === kind} onPress={() => void pickAsk(kind)} />
+        ))}
+      </View>
+      <Chip label="clear override" selected={false} onPress={() => void pickAsk('off')} />
+    </View>
   );
 }
 
