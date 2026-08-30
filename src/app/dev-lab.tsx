@@ -15,6 +15,7 @@ import { RunningUpdateLine } from '@/components/running-update-line';
 import { TracePipelineViewer } from '@/components/trace-pipeline';
 import { YouDevTools } from '@/components/you-dev-tools';
 import { isRevealOpenedToday } from '@/components/reveal-card';
+import { TraitBandDetail } from '@/components/trait-bands-fold';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useMeContext } from '@/lib/me-context';
 import { useSession } from '@/hooks/use-session';
@@ -70,6 +71,7 @@ import { voiceMeFrom } from '@/lib/intake';
 import { localYmd, weekdayInZone } from '@/lib/local-date';
 import { supabase } from '@/lib/supabase';
 import { isDirectTraitSource, traitStateFromRow, type TraitSource } from '@/lib/traits';
+import { filledTraitBands } from '@/lib/trait-bands';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { buildVoiceConfig, VOICE_CONFIG } from '@/lib/voice/config';
 import { matchingFrameworkTerms } from '@/lib/voice/framework-fence';
@@ -185,6 +187,7 @@ function DevLab() {
             <ThemedText type="smallBold">You</ThemedText>
             {canSeeHubSection('traits', gate) ? <TraitViewer /> : null}
             <GrowthPreview />
+            <BandDetailStepper />
             <ForceTestError message="Dev Lab test error — You" />
           </View>
 
@@ -803,6 +806,50 @@ function GrowthPreview() {
         <Chip label="apply preview" selected={stored != null} onPress={() => void apply()} />
         <Chip label="off" selected={stored == null} onPress={() => void off()} />
       </View>
+    </View>
+  );
+}
+
+function BandDetailStepper() {
+  const { me } = useMeContext();
+  const bands = me ? filledTraitBands(me) : [];
+  const [index, setIndex] = useState(0);
+  const safeIndex = bands.length === 0 ? 0 : Math.min(index, bands.length - 1);
+  const band = bands[safeIndex] ?? null;
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Band detail</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Steps through filled bands on this account and opens the same detail as You.
+        Read-only. Does not write trait values.
+      </ThemedText>
+      {band ? (
+        <>
+          <ThemedText type="code" themeColor="textSecondary">
+            {safeIndex + 1} of {bands.length}
+          </ThemedText>
+          <View style={styles.tabs}>
+            <Chip
+              label="previous"
+              selected={false}
+              onPress={() => setIndex(Math.max(0, safeIndex - 1))}
+            />
+            <Chip
+              label="next"
+              selected={false}
+              onPress={() => setIndex(Math.min(bands.length - 1, safeIndex + 1))}
+            />
+          </View>
+          <ThemedView type="backgroundElement" style={styles.card}>
+            <TraitBandDetail band={band} />
+          </ThemedView>
+        </>
+      ) : (
+        <ThemedText type="small" themeColor="textSecondary">
+          No filled bands on this account.
+        </ThemedText>
+      )}
     </View>
   );
 }

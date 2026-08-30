@@ -297,6 +297,15 @@ export default function YouScreen() {
                 </Pressable>
               </ThemedView>
 
+              <ThemedView type="backgroundElement" style={styles.detailCard}>
+                <Pressable
+                  onPress={() => router.push('/week')}
+                  style={({ pressed }) => [styles.inviteRow, pressed && styles.pressed]}>
+                  <ThemedText type="smallBold">Weeks</ThemedText>
+                  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
+                </Pressable>
+              </ThemedView>
+
               <TraitBandsFold me={me} />
 
               <RunningUpdateLine />

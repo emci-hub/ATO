@@ -50,11 +50,17 @@ ok('Today slot and Ask kind overrides render under Home, not a Card section');
 const youBlock = hub.slice(youHeading, systemHeading);
 assert.match(youBlock, /<TraitViewer \/>/);
 assert.match(youBlock, /<GrowthPreview \/>/);
+assert.match(youBlock, /<BandDetailStepper \/>/);
 assert.match(hub, /Growth preview/);
 assert.match(hub, /check_count/);
 assert.match(hub, /fact count/);
+assert.match(hub, /Band detail/);
 assert.doesNotMatch(youBlock, /recordCheck|addFact/);
-ok('Growth preview sits under You alongside the trait viewer and does not write Checks or facts');
+assert.doesNotMatch(
+  hub.slice(hub.indexOf('function BandDetailStepper'), hub.indexOf('function QuotaDashboard')),
+  /mergeTraitWrite|updateIntake|traitPatch/,
+);
+ok('Growth preview and band detail stepper sit under You; neither writes Checks, facts, or traits');
 
 assert.equal((hub.match(/<ForceTestError /g) ?? []).length, 4);
 assert.match(hub, /Force test error/);

@@ -419,6 +419,27 @@ async function main() {
   assert.match(talkSrc, /kind: 'empty'/);
   ok('Talk replies run the same framework fence; retry is one extra generate, then honest empty');
 
+  const fold = read('src/components/trait-bands-fold.tsx');
+  const provenance = 'This came from a question you answered. It can change.';
+  assert.equal(
+    (fold.match(new RegExp(provenance.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) ?? []).length,
+    1,
+  );
+  for (const axis of TRAIT_AXES) {
+    assert.doesNotMatch(fold, new RegExp(axis));
+  }
+  for (const token of [
+    'self_slider',
+    'self_situation',
+    'self_game',
+    'self_tap',
+    'self_settings',
+  ] as const) {
+    assert.doesNotMatch(fold, new RegExp(token));
+  }
+  assert.match(read('src/app/(tabs)/you.tsx'), /router\.push\('\/week'\)/);
+  ok('band detail has the fixed provenance line once, no axis-name or source tokens; You links to /week');
+
   console.log(`\nAll ${passed} trait checks passed.`);
 }
 
