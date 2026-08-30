@@ -69,6 +69,7 @@ import { routeExplore } from '@/lib/explore/route';
 import { fetchExploreMissNotes } from '@/lib/explore/store';
 import type { RouteExploreResult } from '@/lib/explore/types';
 import { voiceMeFrom } from '@/lib/intake';
+import { bankCardForMe } from '@/lib/voice/bank';
 import { localYmd, weekdayInZone } from '@/lib/local-date';
 import { supabase } from '@/lib/supabase';
 import { isDirectTraitSource, traitStateFromRow, type TraitSource } from '@/lib/traits';
@@ -437,6 +438,10 @@ function SlotReadout() {
           isSunday,
         };
         const kind = resolveTodaySlot(input).kind;
+        const pastDay3 = window.todayDay > 3;
+        const consentNotTrue = me.ai_consent !== true;
+        const noBankCard = bankCardForMe(window.todayDay, voiceMeFrom(me)) === null;
+        const honestEmpty = pastDay3 && consentNotTrue && noBankCard;
         if (cancelled) return;
         setLines(
           [
@@ -447,6 +452,10 @@ function SlotReadout() {
             `askPending: ${input.askPending}`,
             `isSunday: ${input.isSunday}`,
             `kind: ${kind}`,
+            `pastDay3: ${pastDay3}`,
+            `consentNotTrue: ${consentNotTrue}`,
+            `noBankCard: ${noBankCard}`,
+            `honestEmpty: ${honestEmpty}`,
           ].join('\n'),
         );
       } catch (err) {

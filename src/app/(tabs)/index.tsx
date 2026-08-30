@@ -35,6 +35,7 @@ import { composeSageKnowsLine, parseSageKnowsState } from '@/lib/sage-knows';
 import { SCENARIO_DECK } from '@/lib/scenario';
 import { resolveTodaySlot, type TodaySlot } from '@/lib/today-slot';
 import { traitStateFromRow, TRAIT_POLE_LINES } from '@/lib/traits';
+import { bankCardForMe } from '@/lib/voice/bank';
 import { routeVoiceCard } from '@/lib/voice/router';
 import { logJargonGuard } from '@/lib/voice/quota-server';
 import { canSeeDevLab } from '@/lib/dev-access';
@@ -135,6 +136,14 @@ export default function HomeScreen() {
   const oldestMissed = missedOpen[0] ?? null;
   const alreadyLogged =
     window != null && checks.some((check) => check.day === window.todayDay);
+
+  const consentOffEmpty = Boolean(
+    me &&
+      window &&
+      window.todayDay > 3 &&
+      me.ai_consent !== true &&
+      bankCardForMe(window.todayDay, voiceMeFrom(me)) === null,
+  );
 
   const reveal = useMemo(() => {
     if (!me) return null;
@@ -257,7 +266,12 @@ export default function HomeScreen() {
   }, [me, todayOpen?.day, card?.day, checks, reloadCard, crisisToday, crisisYesterday]);
 
   async function logToday(status: 'done' | 'skipped') {
-    if (!userId || !me || !card || !todayOpen || busy || alreadyLogged) return;
+    if (!userId || !me || !todayOpen || busy || alreadyLogged) return;
+    if (consentOffEmpty) {
+      await commitLog(status, todayOpen.day, todayOpen.ymd, { read: '', do: '' }, 'bank');
+      return;
+    }
+    if (!card) return;
     await commitLog(status, todayOpen.day, todayOpen.ymd, {
       read: card.read,
       do: card.do,
@@ -321,7 +335,13 @@ export default function HomeScreen() {
             </ThemedText>
           </View>
 
-          {card ? (
+          {consentOffEmpty ? (
+            <ThemedView type="backgroundElement" style={styles.todayCard}>
+              <ThemedText themeColor="textSecondary">
+                No card today. Sage only writes these with your say-so — you can turn that on any time in You.
+              </ThemedText>
+            </ThemedView>
+          ) : card ? (
             <>
               <ThemedView type="backgroundElement" style={styles.todayCard}>
                 <ThemedText type="code" themeColor="textSecondary" style={styles.sageKicker}>
@@ -343,18 +363,32 @@ export default function HomeScreen() {
                   <ThemedText style={styles.cardText}>{card.nudge}</ThemedText>
                 </ThemedView>
               ) : null}
+            </>
+          ) : (
+            <Pressable onPress={() => router.push('/dawn')} style={({ pressed }) => pressed && styles.pressed}>
+              <ThemedView type="backgroundElement" style={styles.todayCard}>
+                <ThemedText type="smallBold">No card yet</ThemedText>
+                <ThemedText themeColor="textSecondary">
+                  Open Dawn when you&apos;re ready. Nothing is made up in the meantime.
+                </ThemedText>
+              </ThemedView>
+            </Pressable>
+          )}
+
+          {card || consentOffEmpty ? (
+            <>
               {error ? (
                 <ThemedText themeColor="textSecondary">{error}</ThemedText>
               ) : null}
               {alreadyLogged ? (
                 <ThemedText type="small" themeColor="textSecondary">
-                  Logged for day {window?.todayDay ?? card.day}.
+                  Logged for day {window?.todayDay ?? card?.day}.
                 </ThemedText>
               ) : !todayOpen ? (
                 <ThemedText type="small" themeColor="textSecondary">
                   Today&apos;s Check is closed.
                 </ThemedText>
-              ) : me && aiConsentFor(me) === 'pending' && checks.length >= 3 ? (
+              ) : me && !consentOffEmpty && aiConsentFor(me) === 'pending' && checks.length >= 3 ? (
                 <Pressable
                   onPress={() => router.push('/dawn')}
                   style={({ pressed }) => [pressed && styles.pressed]}>
@@ -391,16 +425,7 @@ export default function HomeScreen() {
                 </View>
               )}
             </>
-          ) : (
-            <Pressable onPress={() => router.push('/dawn')} style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="backgroundElement" style={styles.todayCard}>
-                <ThemedText type="smallBold">No card yet</ThemedText>
-                <ThemedText themeColor="textSecondary">
-                  Open Dawn when you&apos;re ready. Nothing is made up in the meantime.
-                </ThemedText>
-              </ThemedView>
-            </Pressable>
-          )}
+          ) : null}
 
           {slotKind === 'crisis' ? (
             <CrisisCard />

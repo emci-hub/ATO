@@ -6,6 +6,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import { bankCardForMe } from '../src/lib/voice/bank';
+import type { VoiceMe } from '../src/lib/voice/types';
+
 let passed = 0;
 function ok(label: string) {
   passed += 1;
@@ -83,5 +86,46 @@ assert.match(home, /saveTodayCard\(hydrated\)/);
 assert.match(home, /window\.todayDay/);
 assert.match(home, /if \(card \|\| !window\) return;/);
 ok('Home calls hydrate when local card is missing and today is already logged');
+
+const CONSENT_OFF_EMPTY =
+  'No card today. Sage only writes these with your say-so — you can turn that on any time in You.';
+
+function qualifiesConsentOffEmpty(
+  day: number,
+  aiConsent: boolean | null,
+  bankCard: { read: string; do: string } | null,
+): boolean {
+  return day > 3 && aiConsent !== true && bankCard === null;
+}
+
+assert.equal(qualifiesConsentOffEmpty(4, null, null), true);
+assert.equal(qualifiesConsentOffEmpty(4, false, null), true);
+assert.equal(qualifiesConsentOffEmpty(3, null, null), false);
+assert.equal(qualifiesConsentOffEmpty(4, true, null), false);
+assert.equal(qualifiesConsentOffEmpty(4, false, { read: 'a', do: 'b' }), false);
+
+const bankMe: VoiceMe = {
+  name: 'Riley',
+  show_up: 'finishing my resume',
+  talk_style: 'even',
+  knocks_you_off: 'sleep',
+  morning_cue: 'make coffee',
+};
+assert.equal(bankCardForMe(4, bankMe), null);
+assert.ok(bankCardForMe(1, bankMe));
+assert.equal(qualifiesConsentOffEmpty(4, null, bankCardForMe(4, bankMe)), true);
+assert.equal(qualifiesConsentOffEmpty(4, true, bankCardForMe(4, bankMe)), false);
+ok('honest-empty qualifies past day 3 with consent not true and a null bank card; not when consent is true');
+
+assert.ok(home.includes(CONSENT_OFF_EMPTY));
+assert.match(home, /window\.todayDay > 3/);
+assert.match(home, /me\.ai_consent !== true/);
+assert.match(home, /bankCardForMe\(window\.todayDay/);
+assert.match(home, /consentOffEmpty/);
+assert.doesNotMatch(
+  home.slice(home.indexOf('consentOffEmpty ?'), home.indexOf('No card yet')),
+  /persistRoutedCard|saveTodayCard|writeWidget/,
+);
+ok('Home shows the exact consent-off empty line in place of Read/Do; widget write is not on that branch');
 
 console.log(`\nhome-hydrate-check: ${passed}/${passed} passed`);
