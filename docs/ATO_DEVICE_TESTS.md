@@ -96,9 +96,11 @@ Compiled as each box lands. Same file in the repo at `docs/ATO_DEVICE_TESTS.md`.
 
 - [ ] On You, confirm the support fold now sits directly after "Weeks" and before the trait bands section — not buried near the bottom anymore.
 - [ ] Confirm the fold title reads exactly "If you need someone now."
-- [ ] Open it and confirm the region list and resource copy are byte-identical to before — nothing inside the card should look or read differently.
-- [ ] Confirm the Sage lifebuoy button still opens the crisis support modal correctly.
-- [ ] Trigger a real crisis keyword in Talk (using whatever your approved test phrase is) and confirm the interrupt card still appears and blocks a model call, unchanged from before this box.
+- [ ] Open it and confirm it is still the region picker (Auto / US / CA / Other) — it does not render the Talk crisis card.
+- [ ] On Sage, confirm a low-key Support tap (lifebuoy + "Support") sits under the composer and opens the same crisis support modal. No keyword or message required. Same copy, same numbers, same "I'm okay, keep going."
+- [ ] With Talk off (consent denied), confirm that Support tap is still visible at the bottom of Sage and still opens the same modal.
+- [ ] Confirm opening Support this way does NOT create a `crisis_flags` row (spot check Supabase).
+- [ ] Trigger a real crisis keyword in Talk (using whatever your approved test phrase is) and confirm the interrupt card still appears in the thread and blocks a model call, unchanged from before this box.
 - [ ] Confirm Dawn's crisis interrupt path still works the same way, unchanged.
 - [ ] Note: no dev-lab trigger exists for this yet — testing the crisis interrupt still requires using a real flagged phrase. Cursor flagged this as needing a deliberate fencing decision before building; not in scope for this box.
 

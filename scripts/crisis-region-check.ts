@@ -103,6 +103,8 @@ const copy = fs.readFileSync(path.join(root, 'src/lib/crisis/copy.ts'), 'utf8');
 const region = fs.readFileSync(path.join(root, 'src/lib/crisis/region.ts'), 'utf8');
 const card = fs.readFileSync(path.join(root, 'src/components/crisis-card.tsx'), 'utf8');
 const you = fs.readFileSync(path.join(root, 'src/app/(tabs)/you.tsx'), 'utf8');
+const sage = fs.readFileSync(path.join(root, 'src/app/(tabs)/sage.tsx'), 'utf8');
+const tabs = fs.readFileSync(path.join(root, 'src/components/app-tabs.tsx'), 'utf8');
 const layout = fs.readFileSync(path.join(root, 'src/app/_layout.tsx'), 'utf8');
 const picker = fs.readFileSync(
   path.join(root, 'src/components/crisis-region-picker.tsx'),
@@ -119,7 +121,26 @@ assert.match(picker, /United States/);
 assert.match(picker, /Canada/);
 assert.match(picker, /Other region/);
 assert.match(picker, /value: 'auto'/);
+assert.match(picker, /Does not render the active Talk crisis card/);
 ok('card, launch provider, and visible Settings picker are wired');
+
+assert.match(sage, /result\.kind === 'crisis'/);
+assert.match(sage, /<CrisisCard onDismiss=\{\(\) => dismissCrisis/);
+assert.match(sage, /function SageSupportTap/);
+assert.match(sage, /consent === 'denied'/);
+assert.match(sage, /consent === 'granted'/);
+assert.equal((sage.match(/<SageSupportTap /g) ?? []).length, 2);
+assert.match(sage, /visible=\{showSupport\}/);
+assert.match(sage, /<CrisisCard onDismiss=\{\(\) => setShowSupport\(false\)\} \/>/);
+assert.doesNotMatch(
+  sage.slice(sage.indexOf('function SageSupportTap'), sage.indexOf('function CategorySpotlightLine')),
+  /logCrisisFlag/,
+);
+ok('Sage Support tap opens the same card; keyword interrupt stays a separate path');
+
+assert.match(tabs, /<NativeTabs\.Trigger name="sage">/);
+assert.doesNotMatch(tabs, /Trigger name="sage"[^>]*hidden/);
+ok('Sage tab trigger is always present (not hideable)');
 
 const invented = /116\s*123|Samaritans|13\s*11\s*14|0800\s*689|IASP|befrienders/i;
 assert.doesNotMatch(copy, invented);

@@ -702,17 +702,6 @@ export default function SageScreen() {
               {TALK_LEDE}
             </ThemedText>
           </View>
-          <Pressable
-            onPress={() => setShowSupport(true)}
-            hitSlop={12}
-            accessibilityLabel="Open support card"
-            style={({ pressed }) => [styles.supportButton, pressed && styles.pressed]}>
-            <MaterialCommunityIcons
-              name="lifebuoy"
-              size={20}
-              color={theme.textSecondary}
-            />
-          </Pressable>
         </View>
 
         <View style={styles.chatColumn}>
@@ -832,6 +821,19 @@ export default function SageScreen() {
             )}
           </ScrollView>
 
+          {me && consent === 'denied' ? (
+            <View
+              style={[
+                styles.supportStrip,
+                {
+                  backgroundColor: theme.background,
+                  paddingBottom: COMPOSER_REST_PAD,
+                },
+              ]}>
+              <SageSupportTap onPress={() => setShowSupport(true)} />
+            </View>
+          ) : null}
+
           {me && consent === 'granted' ? (
             <View
               ref={composerRef}
@@ -914,6 +916,7 @@ export default function SageScreen() {
                   <MaterialCommunityIcons name="send" size={18} color={theme.onAccent} />
                 </Pressable>
               </View>
+              <SageSupportTap onPress={() => setShowSupport(true)} />
             </View>
           ) : null}
         </View>
@@ -968,6 +971,23 @@ export default function SageScreen() {
         onClose={() => setReportMessage(null)}
       />
     </ThemedView>
+  );
+}
+
+function SageSupportTap({ onPress }: { onPress: () => void }) {
+  const theme = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel="Open support card"
+      style={({ pressed }) => [styles.supportTap, pressed && styles.pressed]}>
+      <MaterialCommunityIcons name="lifebuoy" size={16} color={theme.textSecondary} />
+      <ThemedText type="small" themeColor="textSecondary">
+        Support
+      </ThemedText>
+    </Pressable>
   );
 }
 
@@ -1058,9 +1078,16 @@ const styles = StyleSheet.create({
   missed: {
     opacity: 0.85,
   },
-  supportButton: {
-    padding: Spacing.two,
-    borderRadius: Spacing.two,
+  supportTap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: Spacing.one,
+    paddingVertical: Spacing.one,
+  },
+  supportStrip: {
+    flexShrink: 0,
+    paddingTop: Spacing.one,
   },
   emptyCard: {
     borderRadius: Spacing.four,

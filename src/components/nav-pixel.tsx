@@ -20,8 +20,8 @@ export const NAV_PIXEL_SLOT = 56;
 /** Trailing inset from the screen edge. */
 export const NAV_PIXEL_RIGHT = Spacing.three;
 /**
- * Extra trailing space screens should leave in a top-right header control
- * so it doesn't sit under the companion (Sage's support button).
+ * Extra trailing space screens should leave in a top-right header
+ * so it doesn't sit under the companion.
  */
 export const NAV_PIXEL_HEADER_INSET = NAV_PIXEL_SLOT;
 
