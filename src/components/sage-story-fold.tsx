@@ -12,6 +12,7 @@ import {
   STORY_LABEL,
   STORY_LEDE,
   buildStoryPrompt,
+  formatStoryTensionNote,
   parseSageStory,
   storyFingerprint,
   storyNamesACategory,
@@ -20,7 +21,7 @@ import {
 } from '@/lib/sage-story';
 import { claimStoryGenerate, saveSageStory } from '@/lib/sage-story-store';
 import { readyCategories } from '@/lib/categories';
-import { formatDivergenceNote, divergingAxesFromTracks } from '@/lib/trait-history';
+import { divergingAxesFromTracks } from '@/lib/trait-history';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { VOICE_CONFIG } from '@/lib/voice/config';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
@@ -45,7 +46,7 @@ export function SageStoryFold({
   crisisToday: boolean;
 }) {
   const [story, setStory] = useState<SageStory | null>(() => parseSageStory(me.sage_story));
-  const divergenceNote = formatDivergenceNote(divergingAxesFromTracks(tracks));
+  const divergenceNote = formatStoryTensionNote(divergingAxesFromTracks(tracks));
   const fingerprint = storyFingerprint(tracks, divergenceNote);
 
   useEffect(() => {

@@ -12,13 +12,15 @@ import {
   type CategoryId,
 } from '@/lib/categories';
 import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
+import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
+import type { AxisDivergence } from '@/lib/trait-history';
 import { isThinProfile, settledCount, type TraitTrack } from '@/lib/trait-stability';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 
 export const STORY_COPY_REVIEWED = false;
 export const STORY_LABEL = 'The Story';
-export const STORY_LEDE = 'How this sits together right now.';
+export const STORY_LEDE = "How it's looking.";
 
 export interface SageStory {
   body: string;
@@ -40,7 +42,7 @@ export const STORY_SAMPLES: readonly StorySample[] = [
   {
     shape: 'settled follow-through + own path',
     body:
-      'The week tends to hold when a plan is on the table, even if the room stays small. Picking the path still matters more than taking the one already laid out. A real check-in with someone can be part of that, or the day can land without it — both have shown up. None of this is a type. It is just how the last stretch has been sitting.',
+      "You've been keeping the plan, even when you'd rather keep the room small. You'd rather pick the path yourself than take the one already sitting there. Sometimes a real check-in with someone is what makes the day land. Sometimes the day is fine without it. Both have shown up. Maybe it just depends on the week.",
   },
   {
     shape: 'thin — must not generate',
@@ -54,10 +56,23 @@ export const STORY_SAMPLES: readonly StorySample[] = [
  * live prompt as templates. Flag every line. Do not treat as shippable.
  */
 export const STORY_TENSION_SAMPLES: readonly string[] = [
-  'What they say about how a hard day lands, and what shows up when they play it out, don\'t quite sit in the same place — maybe both can be true for now.',
-  'The version they told us and the version that came out in a gut-call pull in slightly different directions. Not a verdict — just a gap worth leaving visible.',
-  'On paper they reach for one way of moving; when it is just a snap choice, another way shows up. Might be a real split, not a mistake in either reading.',
+  "You said one thing, but when it's not a big decision, you go a different way. Maybe you're just different depending on the moment — that's normal.",
+  "You talk about a hard day one way. Then when it's just a quick pick, you move another. Maybe both are true — it just depends on the moment.",
+  "When you had time to think, you went one way. When you didn't, you went another. Maybe you're just different depending on the moment — that's normal.",
 ];
+
+/** Story-only. Talk still uses formatDivergenceNote. */
+export function formatStoryTensionNote(rows: readonly AxisDivergence[]): string | null {
+  if (rows.length === 0) return null;
+  const first = rows[0]!;
+  const phrases = TRAIT_BAND_PHRASES[first.axis];
+  const told = first.report >= 0.5 ? phrases.high : phrases.low;
+  const played = first.game >= 0.5 ? phrases.high : phrases.low;
+  if (told === played) {
+    return "You said one thing, but when it's not a big decision, you go a different way. Maybe you're just different depending on the moment — that's normal.";
+  }
+  return `You said one thing (${told}), but when it's not a big decision you go a different way (${played}). Maybe you're just different depending on the moment — that's normal.`;
+}
 
 export function storyFingerprint(
   tracks: readonly TraitTrack[],
@@ -144,7 +159,7 @@ export function buildStoryPrompt(input: {
   }
 
   const tension = input.divergenceNote
-    ? `TOLD-VS-PLAYED (present — name it honestly, hedged, inside the prose. Not an accusation. Do not pick a winner. Do not smooth it away.)\n- ${input.divergenceNote}`
+    ? `TOLD-VS-PLAYED (present — name it like a friend would, inside the prose. Warm, second person. Not an accusation. Do not pick a winner. Do not explain yourself.)\n- ${input.divergenceNote}`
     : 'TOLD-VS-PLAYED: none on the current tracks. Do not invent a split.';
 
   return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. This is The Story — one cohesive narrative, not a stitched list of summaries.
@@ -153,6 +168,8 @@ VOICE REFERENCE (register only — do NOT reuse these lines):
 ${VOICE_REFERENCE}
 
 Job: rewrite the settled notes below into one holistic piece of prose. Same discipline as a title: generated, not looked up, not a concatenation of category lines. Fully prose. Never put a category name in the text.
+
+Write like a close friend noticing something. Warm, plain, second person. Not a system describing itself.
 
 SETTLED NOTES (internal — write from the meaning, never the label)
 ${lines.join('\n') || '- none'}
@@ -164,8 +181,8 @@ RULES
 2. Never Myers-Briggs, never a four-letter code, never "you are." Reflect as maybes, not facts.
 3. Do not name categories (not Steadiness, not Agency, not Drive, not the others). Do not name axes.
 4. Do not stitch the category summaries. Rewrite as one picture of how they tend to move.
-5. If told-vs-played tension is present, leave it visible with soft language. If it is not present, do not invent it.
-6. Hedge lives inside the sentence. No bolted-on closing after a dash or period.
+5. If told-vs-played tension is present, say it like a friend: they named one way of moving, and in a small snap choice they go another. Maybe they just move differently depending on the moment — that's normal. Do not explain the observation. Never "not a verdict", "gap", "leaving visible", "on paper", "told us", or "gut-call". If it is not present, do not invent it.
+6. Hedge lives inside the sentence. No bolted-on closing after a dash or period, except the "that's normal" shape above when tension is present.
 7. Completeness is not an input. Do not mention leftover notes or a fuller picture.
 
 Respond with JSON only:
