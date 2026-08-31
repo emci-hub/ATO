@@ -2,7 +2,7 @@
 
 Compiled as each box lands. Same file in the repo at `docs/ATO_DEVICE_TESTS.md`. Run this whole list on a real device before TestFlight, not per box. Ordered so earlier items don't depend on later ones.
 
-**JS for this checklist is on production OTA** group `8771f505-5cf5-4652-8d89-42f2ad57f05c` (`66149b6`, IA through Explore axis grounding), published Aug 30, 2026. Binary 10+ picks it up on launch. Devices on binary 8 or earlier cannot.
+**JS for this checklist is on production OTA** group `b82f1902-fce3-411e-8558-55dd464b3ef3` (`f76238c`, Sage Support tap; includes Wave 21 Playfulness + categories), published Aug 31, 2026. Binary 10+ picks it up on launch. Devices on binary 8 or earlier cannot.
 
 ---
 
