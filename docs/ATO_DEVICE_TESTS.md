@@ -2,7 +2,7 @@
 
 Compiled as each box lands. Same file in the repo at `docs/ATO_DEVICE_TESTS.md`. Run this whole list on a real device before TestFlight, not per box. Ordered so earlier items don't depend on later ones.
 
-**JS for this checklist is on production OTA** group `04c91f24-7c55-42d1-bbb0-a1f8a4859eeb` (`0f4dc3a`, Wave 22 + warmer Story copy; includes Dawn categories, Explore combine, Levity, The Story), published Aug 31, 2026. 100% of the production channel — no staged rollout. Binary 10+ picks it up on launch. Devices on binary 8 or earlier cannot.
+**JS for this checklist is on production OTA** group `9855305a-2d09-4184-8efb-bb1e8b741490` (`96f61b8`, friend-voice style checklist across Dawn Read, Explore, Title, Category, Story), published Aug 31, 2026. 100% of the production channel — no staged rollout. Binary 10+ picks it up on launch. Devices on binary 8 or earlier cannot.
 
 ---
 
