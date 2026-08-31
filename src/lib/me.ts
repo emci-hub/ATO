@@ -19,7 +19,7 @@ import {
   sageKnowsWeekKey,
   type SageKnowsState,
 } from '@/lib/sage-knows';
-import { applyRankingWrite } from '@/lib/ranking';
+import { applyForcedPickWrite, applyRankingWrite } from '@/lib/ranking';
 import { applyScenarioWrite, type ExtraAxis, type ScenarioPole } from '@/lib/scenario';
 import {
   mergeTraitWrite,
@@ -31,6 +31,9 @@ import {
   type TraitSource,
 } from '@/lib/traits';
 import { withoutFactAt } from '@/lib/facts';
+import { historyDiff } from '@/lib/trait-history';
+import { insertTraitHistory } from '@/lib/trait-history-store';
+import { earnTokensQuiet } from '@/lib/tokens-server';
 import { containsFrameworkTerm, FACT_FRAMEWORK_MESSAGE } from '@/lib/voice/framework-fence';
 import { voicePresetOf, type VoicePreset } from '@/lib/voice/preset';
 
@@ -106,6 +109,8 @@ export interface Me {
   visible: boolean;
   /** Sage voice. Defaults to close_friend when the column is missing. */
   voice_preset: VoicePreset;
+  /** Earned-only notes balance. Never purchased. */
+  tokens: number;
   created_at: string;
   updated_at: string;
 }
@@ -145,6 +150,7 @@ export type MeInsert = Omit<
     | 'trait_touched_at'
     | 'sage_knows'
     | 'visible'
+    | 'tokens'
     | 'created_at'
     | 'updated_at'
 > & {
@@ -186,6 +192,7 @@ function withVisible(row: Me): Me {
     trait_touched_at: touched,
     sage_knows: parseSageKnowsState(row.sage_knows),
     voice_preset: voicePresetOf(row.voice_preset),
+    tokens: typeof row.tokens === 'number' && Number.isFinite(row.tokens) ? Math.max(0, Math.floor(row.tokens)) : 0,
   };
 }
 
@@ -344,6 +351,26 @@ export async function updateIntake(userId: string, patch: IntakePatch): Promise<
 
 export { FACT_FRAMEWORK_MESSAGE };
 
+async function persistMergedTraits(
+  current: Me,
+  merged: ReturnType<typeof mergeTraitWrite>,
+  extra: Record<string, unknown> = {},
+): Promise<{ me: Me; wrote: boolean }> {
+  const previous = traitStateFromRow(current);
+  const rows = historyDiff(previous, merged);
+  if (rows.length === 0 && Object.keys(extra).length === 0) {
+    return { me: current, wrote: false };
+  }
+  const patch = { ...traitPatch(merged), ...extra };
+  const next = await persistMe(current.id, patch);
+  if (rows.length > 0) {
+    await insertTraitHistory(current.id, rows).catch((err) => {
+      console.log('[traits] history insert error:', err);
+    });
+  }
+  return { me: next, wrote: rows.length > 0 };
+}
+
 /**
  * Optional-phase write. Source-aware merge: a later inferred write never
  * overwrites an axis already set by a direct source. Only `allowed` axes
@@ -359,16 +386,7 @@ export async function updateTraits(
   const current = await fetchMe(userId);
   if (!current) throw new Error('Not authenticated');
   const merged = mergeTraitWrite(traitStateFromRow(current), incoming, source, allowed);
-  const patch = traitPatch(merged);
-  const { data, error } = await supabase
-    .from('me')
-    .update(patch)
-    .eq('id', userId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return withVisible(data as Me);
+  return (await persistMergedTraits(current, merged)).me;
 }
 
 /**
@@ -436,7 +454,7 @@ export async function recordSageKnowsCorrection(
     axis,
     weekKeyFor(current, now),
   );
-  return persistMe(userId, { ...traitPatch(merged), sage_knows: knows });
+  return (await persistMergedTraits(current, merged, { sage_knows: knows })).me;
 }
 
 /** Dismiss ends this week's turn. Does not deal another axis. */
@@ -472,7 +490,9 @@ export async function recordRanking(
     weekKeyFor(current, now),
     'answered',
   );
-  return persistMe(userId, { ...traitPatch(merged), sage_knows: knows });
+  const { me: next, wrote } = await persistMergedTraits(current, merged, { sage_knows: knows });
+  if (wrote) earnTokensQuiet('game_round');
+  return next;
 }
 
 /** Ranking dismiss ends this week's turn. Does not write an axis. */
@@ -509,7 +529,66 @@ export async function recordScenario(
     weekKeyFor(current, now),
     'answered',
   );
-  return persistMe(userId, { ...traitPatch(merged), sage_knows: knows });
+  const { me: next, wrote } = await persistMergedTraits(current, merged, { sage_knows: knows });
+  if (wrote) earnTokensQuiet('game_round');
+  return next;
+}
+
+/** Standalone ranking — same self_tap merge, does not claim the weekly Ask. */
+export async function recordStandaloneRanking(
+  userId: string,
+  axis: TraitAxis,
+  order: readonly string[],
+): Promise<Me> {
+  const current = await fetchMe(userId);
+  if (!current) throw new Error('Not authenticated');
+  const merged = applyRankingWrite(
+    traitStateFromRow(current),
+    axis,
+    order,
+    new Date().toISOString(),
+  );
+  const { me: next, wrote } = await persistMergedTraits(current, merged);
+  if (wrote) earnTokensQuiet('game_round');
+  return next;
+}
+
+/** Compare-two pick from RANKING_ROUNDS poles. self_tap. No weekly slot. */
+export async function recordForcedPick(
+  userId: string,
+  axis: TraitAxis,
+  pole: 'high' | 'low',
+): Promise<{ me: Me; wrote: boolean }> {
+  const current = await fetchMe(userId);
+  if (!current) throw new Error('Not authenticated');
+  const merged = applyForcedPickWrite(
+    traitStateFromRow(current),
+    axis,
+    pole,
+    new Date().toISOString(),
+  );
+  const result = await persistMergedTraits(current, merged);
+  if (result.wrote) earnTokensQuiet('game_round');
+  return result;
+}
+
+/** Standalone gut-call — same self_game merge, does not claim the weekly Ask. */
+export async function recordStandaloneScenario(
+  userId: string,
+  axis: ExtraAxis,
+  pole: ScenarioPole,
+): Promise<{ me: Me; wrote: boolean }> {
+  const current = await fetchMe(userId);
+  if (!current) throw new Error('Not authenticated');
+  const merged = applyScenarioWrite(
+    traitStateFromRow(current),
+    axis,
+    pole,
+    new Date().toISOString(),
+  );
+  const result = await persistMergedTraits(current, merged);
+  if (result.wrote) earnTokensQuiet('game_round');
+  return result;
 }
 
 /** Scenario dismiss ends this week's turn. Does not write an axis. */

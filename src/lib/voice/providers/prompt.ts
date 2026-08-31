@@ -1,5 +1,5 @@
 import { phraseForStoredChip } from '@/lib/intake';
-import { traitPromptLines } from '@/lib/traits';
+import { TRAIT_AXES, traitPromptLines } from '@/lib/traits';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '../preset';
 
 import { cueAfterYou } from '../cue';
@@ -177,6 +177,16 @@ export function buildTalkPrompt(input: TalkGenerateInput): string {
 - Home Do: ${todayCard.do}`
     : 'OPTIONAL BACKGROUND: no Home card today.';
 
+  const answered = input.answeredCount ?? 0;
+  const thin =
+    answered < 6
+      ? `PROFILE DEPTH: still thin (${answered} of ${TRAIT_AXES.length} answered). If you draw on how they tend to move, say plainly you don't have much yet and coach more generally. Do not invent specifics. Do not nag them to fill more.`
+      : `PROFILE DEPTH: ${answered} of ${TRAIT_AXES.length} answered. Draw on that when it matches what they just said.`;
+
+  const divergence = input.divergenceNote
+    ? `TENSION (conversational, optional): ${input.divergenceNote} You may note that it doesn't quite line up. Do not overwrite either reading. Never name a framework or a score.`
+    : '';
+
   return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. This is a conversation, not a daily card.
 
 VOICE NOTE: write in Sage's register (Talk: mix soft statements and real questions, roughly two reflections to one question; vary sentence shape; never the same shape twice in a row) but do NOT recycle the Home-card voice-reference lines as the reply.
@@ -191,6 +201,9 @@ WHO THEY ARE (tone only — not the topic unless they bring it up)
 ${intakeContext(me)}- Today is day ${day}.
 - Recent checks:
 ${streakSummary(history)}
+
+${thin}
+${divergence}
 
 ${cardBlock}
 ${libraryGroundingBlock(selectLibraryEntries(me, { day, surface: 'talk', message }))}

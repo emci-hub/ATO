@@ -25,6 +25,7 @@ import { SettingsFold } from '@/components/settings-fold';
 import { OptionalIntakeFill } from '@/components/optional-intake';
 import { FullProfileFold } from '@/components/full-profile-fold';
 import { TraitBandsFold } from '@/components/trait-bands-fold';
+import { TOKEN_LABEL, TOKEN_LEDE, tokenBalanceOf } from '@/lib/tokens';
 import { KenneyCreditsCard } from '@/components/kenney-credits-card';
 import { PasswordSettingsFold } from '@/components/password-settings-fold';
 import { SageUsageFold } from '@/components/sage-usage';
@@ -342,6 +343,12 @@ export default function YouScreen() {
                   <ThemedText type="smallBold">Tell Sage more</ThemedText>
                   <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
                 </Pressable>
+                <Pressable
+                  onPress={() => router.push('/intake-sweep')}
+                  style={({ pressed }) => [styles.inviteRow, pressed && styles.pressed]}>
+                  <ThemedText type="smallBold">A faster pass</ThemedText>
+                  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
+                </Pressable>
               </ThemedView>
 
               <ThemedView type="backgroundElement" style={styles.detailCard}>
@@ -356,6 +363,13 @@ export default function YouScreen() {
               <CrisisRegionPicker />
 
               <TraitBandsFold me={me} />
+
+              <ThemedView type="backgroundElement" style={styles.detailCard}>
+                <ThemedText type="smallBold">{TOKEN_LABEL}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {tokenBalanceOf(me)} · {TOKEN_LEDE}
+                </ThemedText>
+              </ThemedView>
 
               <FullProfileFold me={me} onUpdated={() => refresh()} />
 

@@ -249,6 +249,58 @@ export function rankingRoundFor(axis: TraitAxis): RankingItem[] {
   return RANKING_ROUNDS[axis];
 }
 
+/**
+ * Standalone ranking for one axis — no weekly Ask slot, no Home.
+ * Same RANKING_ROUNDS + self_tap merge as the weekly mechanic.
+ */
+export function rankingPromptForAxis(
+  axis: TraitAxis,
+  seed: string = 'standalone',
+): RankingPrompt | null {
+  const round = rankingRoundFor(axis);
+  if (round.length < RANKING_MIN_ITEMS || round.length > RANKING_MAX_ITEMS) return null;
+  if (round.some((item) => containsFrameworkTerm(item.text))) return null;
+  const order = shuffleIds(
+    round.map((item) => item.id),
+    `${seed}:${axis}`,
+  );
+  return { axis, items: round, order, weekKey: seed };
+}
+
+export interface ForcedPick {
+  axis: TraitAxis;
+  high: RankingItem;
+  low: RankingItem;
+}
+
+/**
+ * Compare-two, pick-one using the high and low poles of RANKING_ROUNDS.
+ * Writes self_tap. Not merged into Infinite Questions.
+ */
+export function forcedPickForAxis(axis: TraitAxis): ForcedPick | null {
+  const round = rankingRoundFor(axis);
+  const high = round.find((item) => item.loading === 1);
+  const low = round.find((item) => item.loading === 0);
+  if (!high || !low) return null;
+  if (containsFrameworkTerm(high.text) || containsFrameworkTerm(low.text)) return null;
+  return { axis, high, low };
+}
+
+export function scoreForcedPick(_pick: ForcedPick, pole: 'high' | 'low'): number {
+  return pole === 'high' ? 0.8 : 0.2;
+}
+
+export function applyForcedPickWrite(
+  current: TraitState,
+  axis: TraitAxis,
+  pole: 'high' | 'low',
+  nowIso: string = new Date().toISOString(),
+): TraitState {
+  const pick = forcedPickForAxis(axis);
+  if (!pick) return current;
+  return mergeTraitWrite(current, { [axis]: scoreForcedPick(pick, pole) }, 'self_tap', [axis], nowIso);
+}
+
 export function resolveRanking(input: {
   values: TraitValues;
   knows: SageKnowsState;

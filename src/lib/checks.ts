@@ -1,4 +1,4 @@
-import { localYmd } from '@/lib/local-date';
+import { earnTokensQuiet } from '@/lib/tokens-server';
 import { supabase } from '@/lib/supabase';
 import type { CheckHistory, CheckStatus, VoiceCard, VoiceSource } from '@/lib/voice/types';
 
@@ -123,5 +123,6 @@ export async function recordCheck(_userId: string, input: RecordCheckInput): Pro
   if (!row) {
     throw new Error('Couldn\u2019t save your check. Try again.');
   }
+  earnTokensQuiet('check_in');
   return row;
 }

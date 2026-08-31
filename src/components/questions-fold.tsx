@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { updateTraits, type Me } from '@/lib/me';
+import { earnTokensQuiet } from '@/lib/tokens-server';
 import {
   QUESTIONS_CHECKPOINT,
   QUESTIONS_CHECKPOINT_AFTER,
@@ -155,6 +156,7 @@ export function QuestionsFold({
         await answerQuestionItem(item.id, index);
       }
       await updateTraits(me.id, { [item.axis]: option.value }, 'self_situation', [item.axis]);
+      earnTokensQuiet('game_round');
       await onUpdated();
       const nextCount = sessionCount + 1;
       setSessionCount(nextCount);

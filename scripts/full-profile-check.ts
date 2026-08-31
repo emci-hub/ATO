@@ -150,10 +150,15 @@ for (const [name, source] of [
   ['push', push],
   ['explore', explore],
 ] as const) {
+  if (name === 'sage') {
+    assert.doesNotMatch(source, /FullProfileFold|How you're currently leaning/);
+    assert.doesNotMatch(source, /full-profile-fold/, `${name} must not mount Full Profile`);
+    continue;
+  }
   assert.doesNotMatch(source, /FullProfileFold|of 15 answered|How you're currently leaning/);
   assert.doesNotMatch(source, /full-profile/, `${name} must not import Full Profile`);
 }
-ok('completeness and Full Profile stay off Home, Sage, Talk, Explore, widget, push, poster, public handle');
+ok('completeness fold stays off Home, Talk, Explore, widget, push, poster, public handle; Sage reuses the N of 15 line');
 
 const meSrc = read('src/lib/me.ts');
 assert.match(meSrc, /export async function fetchMe/);

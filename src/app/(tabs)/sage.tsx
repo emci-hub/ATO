@@ -25,6 +25,7 @@ import { AiConsentCard } from '@/components/ai-consent-card';
 import { CrisisCard } from '@/components/crisis-card';
 import { ReportSheet } from '@/components/report-sheet';
 import { SageEightBall } from '@/components/sage-eight-ball';
+import { SageInsightSpend } from '@/components/sage-insight-spend';
 import { SageUsageLine } from '@/components/sage-usage';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
@@ -38,6 +39,7 @@ import { useTodayCard } from '@/hooks/use-today-card';
 import { checksToHistory, fetchChecks, fetchTalkHistory, type Check } from '@/lib/checks';
 import { crisisFlagsForWindow } from '@/lib/crisis/days';
 import { logCrisisFlag } from '@/lib/crisis/log';
+import { answeredAxisCount, answeredAxisLabel } from '@/lib/full-profile';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { aiConsentFor, setAiConsent, type Me } from '@/lib/me';
 import { voiceMeFrom } from '@/lib/intake';
@@ -48,6 +50,9 @@ import {
   type SageMessage,
 } from '@/lib/sage-messages';
 import { TALK_COMPOSER_PLACEHOLDER, TALK_EMPTY, TALK_LEDE, TALK_TRY_AGAIN, TALK_WRITING, SAGE_COACH_LABEL } from '@/lib/sage-copy';
+import { divergingAxes, formatDivergenceNote } from '@/lib/trait-history';
+import { fetchTraitHistory } from '@/lib/trait-history-store';
+import { traitStateFromRow } from '@/lib/traits';
 import { QUOTA_EMPTY_MESSAGE } from '@/lib/voice/quota';
 import { claimAiCall, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
 import { recordOwnDevTrace } from '@/lib/dev-trace-server';
@@ -584,7 +589,7 @@ export default function SageScreen() {
     void persistAndSwap(localUserId, 'user', trimmed);
 
     try {
-      const [{ routeTalkReply }, talk] = await Promise.all([
+      const [{ routeTalkReply }, talk, historyRows] = await Promise.all([
         import('@/lib/voice/talk'),
         talkReady
           ? Promise.resolve({ checks, checkCount })
@@ -594,6 +599,7 @@ export default function SageScreen() {
               setTalkReady(true);
               return next;
             }),
+        fetchTraitHistory(userId).catch(() => []),
       ]);
       const result = await routeTalkReply(
         {
@@ -607,6 +613,8 @@ export default function SageScreen() {
           recentTurns: priorTurns,
           aiConsent: me.ai_consent,
           userId,
+          answeredCount: answeredAxisCount(traitStateFromRow(me).values),
+          divergenceNote: formatDivergenceNote(divergingAxes(historyRows)),
         },
         { logCrisisFlag: (id) => logCrisisFlag(id), claimAiCall, logJargonHit: logJargonGuard, recordTrace: recordOwnDevTrace },
       );
@@ -698,6 +706,12 @@ export default function SageScreen() {
             <View style={styles.sageToys}>
               <SageEightBall />
               {me ? <SageUsageLine revision={usageRevision} /> : null}
+              {me ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {answeredAxisLabel(traitStateFromRow(me).values)}
+                </ThemedText>
+              ) : null}
+              {me ? <SageInsightSpend me={me} onUpdated={() => refreshMe()} /> : null}
             </View>
 
             {me ? (

@@ -99,6 +99,73 @@ export const SCENARIO_DECK: Record<ExtraAxis, ScenarioDef> = {
   },
 };
 
+/**
+ * Second stems for the six extra axes. UNREVIEWED — same copy discipline
+ * as crisis. Weekly Ask still uses SCENARIO_DECK only.
+ */
+export const SCENARIO_DECK_MORE: Record<ExtraAxis, ScenarioDef> = {
+  locus_of_control: {
+    axis: 'locus_of_control',
+    setup: 'The thing you were counting on does not happen.',
+    high: choice('high', 'What could I have set up differently'),
+    low: choice('low', "That's just how it goes sometimes"),
+  },
+  growth_mindset: {
+    axis: 'growth_mindset',
+    setup: 'You flub a thing you thought you were decent at.',
+    high: choice('high', 'Okay, what would I change next time'),
+    low: choice('low', "Maybe that just isn't my thing"),
+  },
+  self_efficacy: {
+    axis: 'self_efficacy',
+    setup: 'A bigger-than-usual ask lands in your lap.',
+    high: choice('high', 'I can figure this out'),
+    low: choice('low', "Not sure I'm the one for this"),
+  },
+  autonomy: {
+    axis: 'autonomy',
+    setup: 'A friend offers to plan the whole day for you.',
+    high: choice('high', "I'd rather pick it myself"),
+    low: choice('low', 'Sure, save me the deciding'),
+  },
+  competence: {
+    axis: 'competence',
+    setup: 'Someone asks you to take the hard part of a shared job.',
+    high: choice('high', 'Yeah, I can take that'),
+    low: choice('low', "I'd rather they keep it"),
+  },
+  relatedness: {
+    axis: 'relatedness',
+    setup: 'A quiet evening, phone in the other room.',
+    high: choice('high', "I'd rather have someone to check in with"),
+    low: choice('low', 'Quiet on my own is enough'),
+  },
+};
+
+export function isExtraAxis(axis: TraitAxis): axis is ExtraAxis {
+  return (EXTRA_AXES as readonly string[]).includes(axis);
+}
+
+export function scenarioDefsFor(axis: ExtraAxis): ScenarioDef[] {
+  return [SCENARIO_DECK[axis], SCENARIO_DECK_MORE[axis]];
+}
+
+/**
+ * Standalone gut-call for one extra axis — no weekly Ask slot, no Home.
+ * `preferAlt` uses the second stem when this axis already has a reading.
+ */
+export function scenarioForAxis(
+  axis: ExtraAxis,
+  preferAlt = false,
+  weekKey = 'standalone',
+): ScenarioPrompt | null {
+  const def = preferAlt ? SCENARIO_DECK_MORE[axis] : SCENARIO_DECK[axis];
+  if (!def) return null;
+  const copy = `${def.setup} ${def.high.label} ${def.low.label}`;
+  if (containsFrameworkTerm(copy)) return null;
+  return { axis, def, weekKey };
+}
+
 export function pickScenarioAxis(
   values: TraitValues,
   last: TraitAxis | null,

@@ -7,7 +7,7 @@
  * situation tap is still "you told us." Gut-call is the only inferred-from-
  * play source stored (`self_game`). Ranking writes `self_tap` (told).
  * Sage-knows correction writes `self_settings`; Still fits writes `self_confirm`.
- * Only the last source is stored — there is no per-axis history log.
+ * Last source is stored on ME; per-axis growth timeline lives in trait_history.
  */
 
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
@@ -41,6 +41,15 @@ const TOLD_LINE: Record<
   self_situation: 'You told us directly — a situation you picked.',
   self_tap: 'You told us directly — a ranking you sorted.',
 };
+
+export function traitValuesFromPartial(me: Partial<TraitValues>): TraitValues {
+  const values = emptyTraitValues();
+  for (const axis of TRAIT_AXES) {
+    const n = me[axis];
+    if (typeof n === 'number' && Number.isFinite(n)) values[axis] = n;
+  }
+  return values;
+}
 
 export function answeredAxisCount(values: TraitValues): number {
   let n = 0;

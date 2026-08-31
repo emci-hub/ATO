@@ -42,7 +42,7 @@ function read(rel: string): string {
 
 assert.equal(QUESTIONS_BATCH_SIZE, 5);
 assert.equal(QUESTIONS_CALL_TYPE, 'questions');
-assert.equal(QUESTIONS_BANK.length, 6);
+assert.equal(QUESTIONS_BANK.length, 15);
 assert.match(QUESTIONS_FEW_SHOTS, /Your Do today was writing down one thing you're walking into/);
 assert.match(QUESTIONS_FEW_SHOTS, /A friend cancels same-day, no real reason given/);
 assert.match(QUESTIONS_FEW_SHOTS, /Everyone at the table already knows their order/);

@@ -1,11 +1,14 @@
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { SLIDER_STOPS } from '@/lib/traits';
+import { TRAIT_UNDO_LABEL, TRAIT_UNDO_MS } from '@/lib/trait-history';
 
-/** Unset until the first tap. An untouched row stays null — never a midpoint default. */
+/** Unset until the first tap. An untouched row stays null — never a midpoint default.
+ *  Mis-tap safety: 8s undo window. onChange does not fire if undone in-window. */
 export function AxisTaps({
   label,
   hint,
@@ -20,6 +23,46 @@ export function AxisTaps({
   onChange: (next: number) => void;
 }) {
   const theme = useTheme();
+  const [pending, setPending] = useState<number | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingRef = useRef<number | null>(null);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
+  function clearTimer() {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }
+
+  function arm(next: number) {
+    clearTimer();
+    pendingRef.current = next;
+    setPending(next);
+    timerRef.current = setTimeout(() => {
+      const commit = pendingRef.current;
+      pendingRef.current = null;
+      setPending(null);
+      timerRef.current = null;
+      if (commit != null) onChangeRef.current(commit);
+    }, TRAIT_UNDO_MS);
+  }
+
+  function undo() {
+    clearTimer();
+    pendingRef.current = null;
+    setPending(null);
+  }
+
+  useEffect(() => {
+    return () => {
+      clearTimer();
+      pendingRef.current = null;
+    };
+  }, []);
+
+  const shown = pending ?? value;
 
   return (
     <View style={styles.block}>
@@ -29,11 +72,15 @@ export function AxisTaps({
       </ThemedText>
       <View style={styles.row}>
         {SLIDER_STOPS.map((stop) => {
-          const on = value === stop;
+          const on = shown === stop;
           return (
             <Pressable
               key={String(stop)}
-              onPress={() => onChange(stop)}
+              onPress={() => {
+                if (disabled) return;
+                if (stop === value && pending == null) return;
+                arm(stop);
+              }}
               disabled={disabled}
               accessibilityRole="radio"
               accessibilityState={{ checked: on, selected: on }}
@@ -56,6 +103,15 @@ export function AxisTaps({
           );
         })}
       </View>
+      {pending != null ? (
+        <Pressable
+          onPress={undo}
+          accessibilityRole="button"
+          accessibilityLabel={TRAIT_UNDO_LABEL}
+          style={({ pressed }) => [styles.undo, pressed && styles.pressed]}>
+          <ThemedText type="smallBold">{TRAIT_UNDO_LABEL}</ThemedText>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -86,5 +142,9 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.6,
+  },
+  undo: {
+    alignSelf: 'flex-start',
+    paddingVertical: Spacing.one,
   },
 });

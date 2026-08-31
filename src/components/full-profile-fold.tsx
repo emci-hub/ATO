@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { AxisCodeLabel } from '@/components/axis-code-label';
 import { AxisTaps } from '@/components/axis-taps';
+import { DepthDive } from '@/components/depth-dive';
 import { SettingsFold } from '@/components/settings-fold';
 import { TraitBandVisual } from '@/components/trait-bands-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
@@ -19,10 +21,19 @@ import { updateTraits, type Me } from '@/lib/me';
 import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
 import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
 import {
+  historyForAxis,
+  shiftLine,
+  TRAIT_SHIFT_EMPTY,
+  TRAIT_SHIFT_LABEL,
+  type TraitHistoryRow,
+} from '@/lib/trait-history';
+import { fetchTraitHistory } from '@/lib/trait-history-store';
+import {
   TRAIT_AXES,
   traitStateFromRow,
   type TraitAxis,
 } from '@/lib/traits';
+import { TOKEN_DEPTH_HINT, TOKEN_DEPTH_LABEL, TOKEN_NEED_MORE, TOKEN_PRICE, tokenBalanceOf } from '@/lib/tokens';
 
 /**
  * Private You-tab inventory of all 15 axes. Auth is the tab shell.
@@ -40,6 +51,23 @@ export function FullProfileFold({
   const state = traitStateFromRow(me);
   const [editing, setEditing] = useState<TraitAxis | null>(null);
   const [busy, setBusy] = useState(false);
+  const [openShift, setOpenShift] = useState<TraitAxis | null>(null);
+  const [history, setHistory] = useState<TraitHistoryRow[]>([]);
+  const [diving, setDiving] = useState<TraitAxis | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchTraitHistory(me.id)
+      .then((rows) => {
+        if (!cancelled) setHistory(rows);
+      })
+      .catch((err) => {
+        console.log('[full-profile] history error:', err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [me.id, me.updated_at]);
 
   async function save(axis: TraitAxis, value: number) {
     if (busy) return;
@@ -56,6 +84,9 @@ export function FullProfileFold({
     }
   }
 
+  const notes = tokenBalanceOf(me);
+  const canDepth = notes >= TOKEN_PRICE.profile_depth;
+
   return (
     <SettingsFold title={`${FULL_PROFILE_LABEL} · ${answeredAxisLabel(state.values)}`}>
       <View style={styles.body}>
@@ -70,9 +101,11 @@ export function FullProfileFold({
           const provenance = sourceProvenance(state.sources[axis]);
           const updated = formatTraitTouchedAt(state.touched[axis], me.timezone || 'UTC');
           const open = editing === axis;
+          const shifts = historyForAxis(history, axis);
+          const showingShift = openShift === axis;
           return (
             <View key={axis} style={styles.axis}>
-              <ThemedText type="smallBold">{copy.label}</ThemedText>
+              <AxisCodeLabel axis={axis} name={copy.label} />
               {filled ? (
                 <TraitBandVisual
                   band={{ axis, value, low: phrases.low, high: phrases.high }}
@@ -92,27 +125,57 @@ export function FullProfileFold({
                   {updated}
                 </ThemedText>
               ) : null}
-                  {open ? (
-                    <View>
-                      <AxisTaps
-                        label={copy.label}
-                        hint={copy.hint}
-                        value={filled ? value : null}
-                        disabled={busy}
-                        onChange={(next) => {
-                          void save(axis, next);
-                        }}
-                      />
-                      <ThemedPressable
-                        onPress={() => setEditing(null)}
-                        disabled={busy}
-                        style={styles.edit}>
-                        <ThemedText type="small" themeColor="textSecondary">
-                          Not now
-                        </ThemedText>
-                      </ThemedPressable>
-                    </View>
+              <ThemedPressable
+                accessibilityRole="button"
+                accessibilityLabel={TRAIT_SHIFT_LABEL}
+                onPress={() => setOpenShift(showingShift ? null : axis)}
+                style={styles.edit}>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {TRAIT_SHIFT_LABEL}
+                </ThemedText>
+              </ThemedPressable>
+              {showingShift ? (
+                <View style={styles.shift}>
+                  {shifts.length === 0 ? (
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {TRAIT_SHIFT_EMPTY}
+                    </ThemedText>
                   ) : (
+                    shifts.map((row, index) => {
+                      const prev = index === 0 ? null : shifts[index - 1]!.value;
+                      return (
+                        <ThemedText
+                          key={row.id}
+                          type="small"
+                          themeColor="textSecondary">
+                          {shiftLine(axis, prev, row.value, row.createdAt, me.timezone || 'UTC')}
+                        </ThemedText>
+                      );
+                    })
+                  )}
+                </View>
+              ) : null}
+              {open ? (
+                <View>
+                  <AxisTaps
+                    label={copy.label}
+                    hint={copy.hint}
+                    value={filled ? value : null}
+                    disabled={busy}
+                    onChange={(next) => {
+                      void save(axis, next);
+                    }}
+                  />
+                  <ThemedPressable
+                    onPress={() => setEditing(null)}
+                    disabled={busy}
+                    style={styles.edit}>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      Not now
+                    </ThemedText>
+                  </ThemedPressable>
+                </View>
+              ) : (
                 <ThemedPressable
                   accessibilityRole="button"
                   accessibilityLabel={filled ? 'Update how you are leaning' : 'Answer this one'}
@@ -124,6 +187,33 @@ export function FullProfileFold({
                   </ThemedText>
                 </ThemedPressable>
               )}
+              {diving === axis ? (
+                <DepthDive
+                  me={me}
+                  axis={axis}
+                  onClose={() => setDiving(null)}
+                  onUpdated={onUpdated}
+                />
+              ) : (
+                <ThemedPressable
+                  accessibilityRole="button"
+                  accessibilityLabel={TOKEN_DEPTH_LABEL}
+                  onPress={() => {
+                    if (!canDepth) return;
+                    setDiving(axis);
+                  }}
+                  disabled={busy || !canDepth}
+                  style={styles.edit}>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {canDepth
+                      ? `${TOKEN_DEPTH_LABEL} · ${TOKEN_PRICE.profile_depth}`
+                      : TOKEN_NEED_MORE}
+                  </ThemedText>
+                </ThemedPressable>
+              )}
+              <ThemedText type="code" themeColor="textSecondary">
+                {TOKEN_DEPTH_HINT}
+              </ThemedText>
             </View>
           );
         })}
@@ -147,5 +237,9 @@ const styles = StyleSheet.create({
   edit: {
     alignSelf: 'flex-start',
     paddingVertical: Spacing.one,
+  },
+  shift: {
+    gap: Spacing.one,
+    paddingLeft: Spacing.one,
   },
 });

@@ -39,6 +39,8 @@ export interface TalkReplyInput {
   aiConsent?: boolean | null;
   /** Needed only for crisis flag logging. */
   userId?: string;
+  answeredCount?: number;
+  divergenceNote?: string | null;
 }
 
 export interface TalkReplyDeps {
@@ -166,6 +168,8 @@ export async function routeTalkReply(
     history: input.history,
     todayCard: input.todayCard,
     recentTurns: input.recentTurns,
+    answeredCount: input.answeredCount,
+    divergenceNote: input.divergenceNote,
   };
 
   let lastRaw: string | null = null;
