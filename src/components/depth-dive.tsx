@@ -13,6 +13,8 @@ import { depthKindFor } from '@/lib/depth-dive';
 import { TOKEN_PRICE } from '@/lib/tokens';
 import { spendTokens } from '@/lib/tokens-server';
 import type { TraitAxis } from '@/lib/traits';
+import { DEPTH_COOLDOWN_HOURS, depthReady } from '@/lib/trait-stability';
+import { stampAxisDepth } from '@/lib/trait-tracks-store';
 import { controlBorderColor } from '@/lib/theme/chrome';
 
 /**
@@ -22,11 +24,13 @@ import { controlBorderColor } from '@/lib/theme/chrome';
 export function DepthDive({
   me,
   axis,
+  lastDepthAt,
   onClose,
   onUpdated,
 }: {
   me: Me;
   axis: TraitAxis;
+  lastDepthAt?: string | null;
   onClose: () => void;
   onUpdated: () => void | Promise<void>;
 }) {
@@ -35,8 +39,12 @@ export function DepthDive({
   const [error, setError] = useState<string | null>(null);
   const kind = depthKindFor(axis);
   const preferAlt = me.trait_sources[axis] === 'self_game';
+  const ready = depthReady(lastDepthAt ?? null);
 
   async function afterWrite() {
+    await stampAxisDepth(me.id, axis).catch((err) => {
+      console.log('[depth] stamp error:', err);
+    });
     const spent = await spendTokens('profile_depth');
     if (!spent.ok) {
       setError('Could not spend notes. The answer still saved.');
@@ -47,6 +55,10 @@ export function DepthDive({
 
   async function pickRanking(pole: 'high' | 'low') {
     if (busy) return;
+    if (!ready) {
+      setError(`Another pass on this one waits ${DEPTH_COOLDOWN_HOURS} hours.`);
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -66,6 +78,10 @@ export function DepthDive({
 
   async function pickScenario(pole: 'high' | 'low') {
     if (busy || !isExtraAxis(axis)) return;
+    if (!ready) {
+      setError(`Another pass on this one waits ${DEPTH_COOLDOWN_HOURS} hours.`);
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -91,7 +107,9 @@ export function DepthDive({
     <View style={styles.block} testID={`depth-dive-${axis}`}>
       <ThemedText type="smallBold">{copy.label}</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        {TOKEN_PRICE.profile_depth} notes if you pick. Skip costs nothing.
+        {ready
+          ? `${TOKEN_PRICE.profile_depth} notes if you pick. Skip costs nothing.`
+          : `Another pass on this one waits ${DEPTH_COOLDOWN_HOURS} hours. Skip costs nothing.`}
       </ThemedText>
       {ranking ? (
         <View style={styles.choices}>

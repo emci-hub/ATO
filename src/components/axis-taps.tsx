@@ -6,6 +6,7 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { SLIDER_STOPS } from '@/lib/traits';
 import { TRAIT_UNDO_LABEL, TRAIT_UNDO_MS } from '@/lib/trait-history';
+import { UNDO_SAME_AXIS_REPEAT_CAP } from '@/lib/trait-stability';
 
 /** Unset until the first tap. An untouched row stays null — never a midpoint default.
  *  Mis-tap safety: 8s undo window. onChange does not fire if undone in-window. */
@@ -14,13 +15,18 @@ export function AxisTaps({
   hint,
   value,
   disabled,
+  undoBlocked = false,
   onChange,
+  onUndo,
 }: {
   label: string;
   hint: string;
   value: number | null;
   disabled: boolean;
+  /** After one undo on this axis, the next pending tap cannot be undone. */
+  undoBlocked?: boolean;
   onChange: (next: number) => void;
+  onUndo?: () => void;
 }) {
   const theme = useTheme();
   const [pending, setPending] = useState<number | null>(null);
@@ -50,9 +56,12 @@ export function AxisTaps({
   }
 
   function undo() {
+    if (undoBlocked) return;
+    if (UNDO_SAME_AXIS_REPEAT_CAP < 1) return;
     clearTimer();
     pendingRef.current = null;
     setPending(null);
+    onUndo?.();
   }
 
   useEffect(() => {
@@ -103,7 +112,7 @@ export function AxisTaps({
           );
         })}
       </View>
-      {pending != null ? (
+      {pending != null && !undoBlocked ? (
         <Pressable
           onPress={undo}
           accessibilityRole="button"

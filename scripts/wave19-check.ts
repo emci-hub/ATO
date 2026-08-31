@@ -281,7 +281,7 @@ const talkFull = buildTalkPrompt({
   answeredCount: 12,
   divergenceNote: 'What they told us and a gut-call they played don\'t quite match.',
 });
-assert.match(talkFull, /12 of 15 answered/);
+assert.match(talkFull, /12 of 15 settled/);
 assert.match(talkFull, /TENSION/);
 ok('Talk prompt gets thin-profile honesty and optional divergence');
 
@@ -291,7 +291,7 @@ const widget = read('targets/widget/widgets.swift');
 assert.doesNotMatch(home, /IntakeSweep|trait_history|spendTokens|TOKEN_PRICE/);
 assert.doesNotMatch(crisis, /token|IntakeSweep|trait_history/);
 assert.doesNotMatch(widget, /token|IntakeSweep|trait_history/);
-assert.match(read('src/app/(tabs)/sage.tsx'), /answeredAxisLabel/);
+assert.match(read('src/app/(tabs)/sage.tsx'), /settledAxisLabel/);
 assert.match(read('src/app/(tabs)/sage.tsx'), /SageInsightSpend/);
 assert.match(read('src/components/axis-taps.tsx'), /TRAIT_UNDO/);
 assert.match(read('src/lib/me.ts'), /insertTraitHistory/);

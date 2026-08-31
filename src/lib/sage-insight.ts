@@ -3,8 +3,7 @@
  * Distinct from the daily Explore regen and from Talk quota handling:
  * spend happens only after a body lands.
  */
-import { answeredAxisCount } from '@/lib/full-profile';
-import { emptyTraitValues, traitPromptLines, type TraitAxis, TRAIT_AXES } from '@/lib/traits';
+import { traitPromptLines, type TraitAxis, TRAIT_AXES } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import type { VoiceMe } from '@/lib/voice/types';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
@@ -16,30 +15,12 @@ import { VOICE_CONFIG } from '@/lib/voice/config';
 export const SAGE_INSIGHT_THIN =
   "I don't have much to go on yet about how you tend to move, so this stays general.";
 
-export function buildSageInsightPrompt(me: VoiceMe): string {
-  const filled = answeredAxisCount({
-    ...emptyTraitValues(),
-    openness: me.openness ?? null,
-    conscientiousness: me.conscientiousness ?? null,
-    extraversion: me.extraversion ?? null,
-    agreeableness: me.agreeableness ?? null,
-    steadiness: me.steadiness ?? null,
-    attachment_anxiety: me.attachment_anxiety ?? null,
-    attachment_avoidance: me.attachment_avoidance ?? null,
-    conflict_assertiveness: me.conflict_assertiveness ?? null,
-    conflict_cooperativeness: me.conflict_cooperativeness ?? null,
-    autonomy: me.autonomy ?? null,
-    competence: me.competence ?? null,
-    relatedness: me.relatedness ?? null,
-    growth_mindset: me.growth_mindset ?? null,
-    locus_of_control: me.locus_of_control ?? null,
-    self_efficacy: me.self_efficacy ?? null,
-  });
+export function buildSageInsightPrompt(me: VoiceMe, settled = 0): string {
   const traits = traitPromptLines(me);
   const thin =
-    filled < 6
-      ? `Their profile is still thin (${filled} of ${TRAIT_AXES.length} answered). Say so plainly. Coach more generally. Do not invent specifics.`
-      : `They have ${filled} of ${TRAIT_AXES.length} answered. Draw on that depth when it matches.`;
+    settled < 6
+      ? `Their profile is still thin (${settled} of ${TRAIT_AXES.length} settled). Say so plainly. Coach more generally. Do not invent specifics.`
+      : `They have ${settled} of ${TRAIT_AXES.length} settled. Draw on that depth when it matches.`;
 
   return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. This is one extra observation they asked for — not a daily card, not a trait write.
 
@@ -64,20 +45,15 @@ Respond with JSON only, no prose, in this shape:
 {"body": "<the observation>"}`;
 }
 
-export async function generateSageInsight(me: VoiceMe): Promise<string | null> {
+export async function generateSageInsight(me: VoiceMe, settled = 0): Promise<string | null> {
   if (VOICE_CONFIG.provider === 'local' || !VOICE_CONFIG.geminiApiKey) {
-    const filled = answeredAxisCount({
-      ...emptyTraitValues(),
-      extraversion: me.extraversion ?? null,
-      openness: me.openness ?? null,
-    });
     const body =
-      filled < 6
+      settled < 6
         ? SAGE_INSIGHT_THIN
         : 'Noticing how you have been moving lately — nothing to fix, just the pattern as it is.';
     return containsFrameworkTerm(body) ? null : body;
   }
-  const body = await generateExploreBody(buildSageInsightPrompt(me));
+  const body = await generateExploreBody(buildSageInsightPrompt(me, settled));
   if (!body || containsFrameworkTerm(body)) return null;
   return body;
 }

@@ -3,13 +3,8 @@
  * Inserts go through the existing mergeTraitWrite persist path — no second writer.
  */
 import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
-import {
-  TRAIT_AXES,
-  isTraitSource,
-  type TraitAxis,
-  type TraitSource,
-  type TraitState,
-} from '@/lib/traits';
+import { TRAIT_AXES, isTraitSource, type TraitAxis, type TraitSource, type TraitState } from '@/lib/traits';
+import { trackFor, type TraitTrack } from '@/lib/trait-stability';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 
 export interface TraitHistoryRow {
@@ -72,6 +67,20 @@ export function formatDivergenceNote(rows: readonly AxisDivergence[]): string | 
   return `What they told us and a gut-call they played don't quite match on the stretch between "${phrases.low}" and "${phrases.high}".`;
 }
 
+export function divergingAxesFromTracks(rows: readonly TraitTrack[]): AxisDivergence[] {
+  const out: AxisDivergence[] = [];
+  for (const axis of TRAIT_AXES) {
+    const report = trackFor(rows, axis, 'report');
+    const game = trackFor(rows, axis, 'game');
+    if (!report || !game) continue;
+    if (report.answerCount < 1 || game.answerCount < 1) continue;
+    if (Math.abs(report.value - game.value) < 0.25) continue;
+    out.push({ axis, report: report.value, game: game.value });
+  }
+  return out;
+}
+
+/** Latest self-report vs latest gut-call in history. Prefer divergingAxesFromTracks. */
 export function divergingAxes(rows: readonly TraitHistoryRow[]): AxisDivergence[] {
   const out: AxisDivergence[] = [];
   for (const axis of TRAIT_AXES) {

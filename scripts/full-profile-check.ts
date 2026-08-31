@@ -1,8 +1,8 @@
 /**
  * You-tab Full Profile. Run: npm run check:full-profile
  *
- * Private 15-axis inventory. Completeness is "N of 15 answered" — never a
- * percent, never on Home / Explore / Talk / widget / push. Writes reuse
+ * Private 15-axis inventory. Completeness is "N of 15 settled" — never a
+ * percent, never on Home / Explore / widget / push. Writes reuse
  * updateTraits. Poster and public handle stay closed.
  */
 import assert from 'node:assert/strict';
@@ -53,7 +53,7 @@ assert.equal(answeredAxisCount(some.values), 2);
 assert.equal(answeredAxisLabel(some.values), '2 of 15 answered');
 const gamed = mergeTraitWrite(emptyTraitState(), { autonomy: 0.9 }, 'self_game', ['autonomy']);
 assert.equal(answeredAxisCount(gamed.values), 1);
-ok('inferred-from-game still counts as answered; empty is 0 of 15');
+ok('fill-count helper still counts inferred-from-game; empty is 0 of 15 answered');
 
 assert.equal(sourceProvenance(undefined), null);
 assert.equal(sourceProvenance('nope'), null);
@@ -118,6 +118,9 @@ assert.match(fold, /self_settings/);
 assert.match(fold, /AxisTaps/);
 assert.match(fold, /TraitBandVisual/);
 assert.match(fold, /AXIS_EDITOR_COPY/);
+assert.match(fold, /settledAxisLabel/);
+assert.match(fold, /AXIS_POLES/);
+assert.match(fold, /SageTitleCard/);
 assert.doesNotMatch(fold, /recordRanking|recordScenario|optionalFillWrite/);
 assert.doesNotMatch(fold, /applyRankingWeek|applyScenarioWeek|applyCompletenessWeek|you_slot|week_slot/);
 assert.doesNotMatch(fold, /toFixed|percent|%/);
@@ -155,16 +158,17 @@ for (const [name, source] of [
     assert.doesNotMatch(source, /full-profile-fold/, `${name} must not mount Full Profile`);
     continue;
   }
-  assert.doesNotMatch(source, /FullProfileFold|of 15 answered|How you're currently leaning/);
+  assert.doesNotMatch(source, /FullProfileFold|of 15 answered|of 15 settled|How you're currently leaning/);
   assert.doesNotMatch(source, /full-profile/, `${name} must not import Full Profile`);
 }
-ok('completeness fold stays off Home, Talk, Explore, widget, push, poster, public handle; Sage reuses the N of 15 line');
+ok('completeness fold stays off Home, Explore, widget, push, poster, public handle; Sage reuses the N of 15 settled line');
 
 const meSrc = read('src/lib/me.ts');
 assert.match(meSrc, /export async function fetchMe/);
 assert.match(meSrc, /export async function updateTraits/);
 assert.match(meSrc.slice(meSrc.indexOf('export async function fetchMe')), /\.eq\('id', userId\)/);
 assert.match(meSrc.slice(meSrc.indexOf('export async function updateTraits')), /\.eq\('id', userId\)/);
-ok('fetchMe / updateTraits still scope writes to the signed-in id; no new table');
+assert.match(meSrc, /upsertTraitTracks/);
+ok('fetchMe / updateTraits still scope writes to the signed-in id; tracks persist beside ME');
 
 console.log(`\n${passed} full-profile checks passed`);

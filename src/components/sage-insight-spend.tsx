@@ -23,9 +23,12 @@ import { controlBorderColor } from '@/lib/theme/chrome';
 /** Extra Sage observation. Conversational. No trait write. Spends after a body lands. */
 export function SageInsightSpend({
   me,
+  settled = 0,
   onUpdated,
 }: {
   me: Me;
+  /** Stability-weighted N of 15 settled. */
+  settled?: number;
   onUpdated: () => void | Promise<void>;
 }) {
   const theme = useTheme();
@@ -40,7 +43,7 @@ export function SageInsightSpend({
     setBusy(true);
     setError(null);
     try {
-      const next = await generateSageInsight(voiceMeFrom(me));
+      const next = await generateSageInsight(voiceMeFrom(me), settled);
       if (!next) {
         setError("Couldn't land that. Notes were not spent.");
         return;

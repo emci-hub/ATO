@@ -4,16 +4,17 @@ import { StyleSheet, View } from 'react-native';
 import { AxisCodeLabel } from '@/components/axis-code-label';
 import { AxisTaps } from '@/components/axis-taps';
 import { DepthDive } from '@/components/depth-dive';
+import { SageTitleCard } from '@/components/sage-title-card';
 import { SettingsFold } from '@/components/settings-fold';
 import { TraitBandVisual } from '@/components/trait-bands-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
+import { AXIS_POLES, POLE_COPY_REVIEWED } from '@/lib/axis-poles';
 import {
   FULL_PROFILE_LABEL,
   FULL_PROFILE_LEDE,
   NOT_ANSWERED_YET,
-  answeredAxisLabel,
   formatTraitTouchedAt,
   sourceProvenance,
 } from '@/lib/full-profile';
@@ -28,6 +29,8 @@ import {
   type TraitHistoryRow,
 } from '@/lib/trait-history';
 import { fetchTraitHistory } from '@/lib/trait-history-store';
+import { settledAxisLabel, STABILITY_FLOOR_N, trackFor, type TraitTrack } from '@/lib/trait-stability';
+import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import {
   TRAIT_AXES,
   traitStateFromRow,
@@ -35,12 +38,6 @@ import {
 } from '@/lib/traits';
 import { TOKEN_DEPTH_HINT, TOKEN_DEPTH_LABEL, TOKEN_NEED_MORE, TOKEN_PRICE, tokenBalanceOf } from '@/lib/tokens';
 
-/**
- * Private You-tab inventory of all 15 axes. Auth is the tab shell.
- * Writes go through `updateTraits` — tap-form for a first answer (`self_tap`),
- * Settings correction for a later edit (`self_settings`). Same merge as
- * OptionalIntakeFill / Not quite. Does not claim the weekly Ask slot.
- */
 export function FullProfileFold({
   me,
   onUpdated,
@@ -53,16 +50,23 @@ export function FullProfileFold({
   const [busy, setBusy] = useState(false);
   const [openShift, setOpenShift] = useState<TraitAxis | null>(null);
   const [history, setHistory] = useState<TraitHistoryRow[]>([]);
+  const [tracks, setTracks] = useState<TraitTrack[]>([]);
+  const [tracksReady, setTracksReady] = useState(false);
   const [diving, setDiving] = useState<TraitAxis | null>(null);
+  const [undoSpent, setUndoSpent] = useState<Partial<Record<TraitAxis, boolean>>>({});
 
   useEffect(() => {
     let cancelled = false;
-    fetchTraitHistory(me.id)
-      .then((rows) => {
-        if (!cancelled) setHistory(rows);
+    Promise.all([fetchTraitHistory(me.id), fetchTraitTracks(me.id)])
+      .then(([hist, nextTracks]) => {
+        if (cancelled) return;
+        setHistory(hist);
+        setTracks(nextTracks);
+        setTracksReady(true);
       })
       .catch((err) => {
-        console.log('[full-profile] history error:', err);
+        console.log('[full-profile] load error:', err);
+        if (!cancelled) setTracksReady(true);
       });
     return () => {
       cancelled = true;
@@ -75,6 +79,7 @@ export function FullProfileFold({
     try {
       const source = state.values[axis] == null ? 'self_tap' : 'self_settings';
       await updateTraits(me.id, { [axis]: value }, source, [axis]);
+      setUndoSpent((prev) => ({ ...prev, [axis]: false }));
       await onUpdated();
       setEditing(null);
     } catch (err) {
@@ -88,24 +93,45 @@ export function FullProfileFold({
   const canDepth = notes >= TOKEN_PRICE.profile_depth;
 
   return (
-    <SettingsFold title={`${FULL_PROFILE_LABEL} · ${answeredAxisLabel(state.values)}`}>
+    <SettingsFold title={`${FULL_PROFILE_LABEL} · ${settledAxisLabel(tracks)}`}>
       <View style={styles.body}>
         <ThemedText type="small" themeColor="textSecondary" style={styles.lede}>
           {FULL_PROFILE_LEDE}
         </ThemedText>
+        <SageTitleCard me={me} tracks={tracks} tracksReady={tracksReady} />
         {TRAIT_AXES.map((axis) => {
-          const value = state.values[axis];
+          const report = trackFor(tracks, axis, 'report');
+          const value = report?.value ?? state.values[axis];
           const filled = value != null && Number.isFinite(value);
           const copy = AXIS_EDITOR_COPY[axis];
           const phrases = TRAIT_BAND_PHRASES[axis];
+          const poles = AXIS_POLES[axis];
           const provenance = sourceProvenance(state.sources[axis]);
-          const updated = formatTraitTouchedAt(state.touched[axis], me.timezone || 'UTC');
+          const updated = formatTraitTouchedAt(
+            report?.lastTouched ?? state.touched[axis],
+            me.timezone || 'UTC',
+          );
           const open = editing === axis;
           const shifts = historyForAxis(history, axis);
           const showingShift = openShift === axis;
+          const lastDepth =
+            trackFor(tracks, axis, 'report')?.lastDepthAt ??
+            trackFor(tracks, axis, 'game')?.lastDepthAt ??
+            null;
           return (
             <View key={axis} style={styles.axis}>
               <AxisCodeLabel axis={axis} name={copy.label} />
+              <ThemedText type="small" themeColor="textSecondary">
+                Low: {poles.low}
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                High: {poles.high}
+              </ThemedText>
+              {!POLE_COPY_REVIEWED ? (
+                <ThemedText type="code" themeColor="textSecondary">
+                  Draft copy — waiting on emci review.
+                </ThemedText>
+              ) : null}
               {filled ? (
                 <TraitBandVisual
                   band={{ axis, value, low: phrases.low, high: phrases.high }}
@@ -115,6 +141,11 @@ export function FullProfileFold({
                   {NOT_ANSWERED_YET}
                 </ThemedText>
               )}
+              {report && report.answerCount < STABILITY_FLOOR_N ? (
+                <ThemedText type="code" themeColor="textSecondary">
+                  Still settling — {report.answerCount} of {STABILITY_FLOOR_N} reads.
+                </ThemedText>
+              ) : null}
               {provenance ? (
                 <ThemedText type="small" themeColor="textSecondary">
                   {provenance.line}
@@ -162,6 +193,8 @@ export function FullProfileFold({
                     hint={copy.hint}
                     value={filled ? value : null}
                     disabled={busy}
+                    undoBlocked={undoSpent[axis] === true}
+                    onUndo={() => setUndoSpent((prev) => ({ ...prev, [axis]: true }))}
                     onChange={(next) => {
                       void save(axis, next);
                     }}
@@ -191,6 +224,7 @@ export function FullProfileFold({
                 <DepthDive
                   me={me}
                   axis={axis}
+                  lastDepthAt={lastDepth}
                   onClose={() => setDiving(null)}
                   onUpdated={onUpdated}
                 />

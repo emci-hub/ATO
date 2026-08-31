@@ -26,7 +26,7 @@ export interface TalkGenerateInput {
   recentTurns?: Array<{ role: 'user' | 'sage'; text: string }>;
   /** True when the previous draft was dropped by the framework fence. */
   retryHint?: boolean;
-  /** N of 15 filled axes. Thin-profile coaching when low. */
+  /** Stability-weighted N of 15 settled. Thin-profile coaching when low. */
   answeredCount?: number;
   /**
    * Plain-language note when a self-report and a gut-call on the same axis

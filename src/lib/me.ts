@@ -33,6 +33,14 @@ import {
 import { withoutFactAt } from '@/lib/facts';
 import { historyDiff } from '@/lib/trait-history';
 import { insertTraitHistory } from '@/lib/trait-history-store';
+import {
+  applyEwmaAnswer,
+  shouldWriteReportTrack,
+  trackFor,
+  trackKindForSource,
+  type TraitTrack,
+} from '@/lib/trait-stability';
+import { fetchTraitTracks, upsertTraitTracks } from '@/lib/trait-tracks-store';
 import { earnTokensQuiet } from '@/lib/tokens-server';
 import { containsFrameworkTerm, FACT_FRAMEWORK_MESSAGE } from '@/lib/voice/framework-fence';
 import { voicePresetOf, type VoicePreset } from '@/lib/voice/preset';
@@ -111,6 +119,8 @@ export interface Me {
   voice_preset: VoicePreset;
   /** Earned-only notes balance. Never purchased. */
   tokens: number;
+  /** Cached Sage title from stable report-track axes. */
+  sage_title: unknown;
   created_at: string;
   updated_at: string;
 }
@@ -151,6 +161,7 @@ export type MeInsert = Omit<
     | 'sage_knows'
     | 'visible'
     | 'tokens'
+    | 'sage_title'
     | 'created_at'
     | 'updated_at'
 > & {
@@ -355,20 +366,103 @@ async function persistMergedTraits(
   current: Me,
   merged: ReturnType<typeof mergeTraitWrite>,
   extra: Record<string, unknown> = {},
+  answers: Array<{
+    axis: TraitAxis;
+    sample: number;
+    source: Exclude<TraitSource, 'self_confirm'>;
+  }> = [],
 ): Promise<{ me: Me; wrote: boolean }> {
   const previous = traitStateFromRow(current);
-  const rows = historyDiff(previous, merged);
-  if (rows.length === 0 && Object.keys(extra).length === 0) {
+  const nowIso = new Date().toISOString();
+  let nextMerged = merged;
+  const trackUpdates: TraitTrack[] = [];
+
+  if (answers.length > 0) {
+    const tracks = await fetchTraitTracks(current.id).catch(() => [] as TraitTrack[]);
+    for (const answer of answers) {
+      const kind = trackKindForSource(answer.source);
+      const prev = trackFor(tracks, answer.axis, kind);
+      const next = applyEwmaAnswer(prev, answer.axis, kind, answer.sample, nowIso);
+      trackUpdates.push(next);
+      if (kind === 'report') {
+        nextMerged = {
+          ...nextMerged,
+          values: { ...nextMerged.values, [answer.axis]: next.value },
+        };
+      }
+    }
+  }
+
+  const rows = historyDiff(previous, nextMerged);
+  for (const answer of answers) {
+    if (answer.source !== 'self_game') continue;
+    const updated = trackUpdates.find((row) => row.axis === answer.axis && row.track === 'game');
+    if (!updated) continue;
+    if (rows.some((row) => row.axis === answer.axis && row.source === 'self_game')) continue;
+    rows.push({ axis: answer.axis, value: updated.value, source: 'self_game' });
+  }
+
+  if (rows.length === 0 && trackUpdates.length === 0 && Object.keys(extra).length === 0) {
     return { me: current, wrote: false };
   }
-  const patch = { ...traitPatch(merged), ...extra };
-  const next = await persistMe(current.id, patch);
+
+  const patch = { ...traitPatch(nextMerged), ...extra };
+  const next =
+    rows.length > 0 || Object.keys(extra).length > 0
+      ? await persistMe(current.id, patch)
+      : current;
   if (rows.length > 0) {
     await insertTraitHistory(current.id, rows).catch((err) => {
       console.log('[traits] history insert error:', err);
     });
   }
-  return { me: next, wrote: rows.length > 0 };
+  if (trackUpdates.length > 0) {
+    await upsertTraitTracks(current.id, trackUpdates).catch((err) => {
+      console.log('[traits] track upsert error:', err);
+    });
+  }
+  return { me: next, wrote: rows.length > 0 || trackUpdates.length > 0 };
+}
+
+function reportSample(
+  merged: ReturnType<typeof mergeTraitWrite>,
+  axis: TraitAxis,
+  source: Exclude<TraitSource, 'self_confirm' | 'self_game'>,
+): Array<{ axis: TraitAxis; sample: number; source: Exclude<TraitSource, 'self_confirm'> }> {
+  const sample = merged.values[axis];
+  if (sample == null || !Number.isFinite(sample)) return [];
+  return [{ axis, sample, source }];
+}
+
+function gameSample(
+  axis: TraitAxis,
+  pole: ScenarioPole,
+): Array<{ axis: TraitAxis; sample: number; source: Exclude<TraitSource, 'self_confirm'> }> {
+  return [{ axis, sample: pole === 'high' ? 0.8 : 0.2, source: 'self_game' }];
+}
+
+function collectAnswers(
+  current: ReturnType<typeof traitStateFromRow>,
+  incoming: Partial<Record<TraitAxis, number | null>>,
+  source: Exclude<TraitSource, 'self_confirm'>,
+  allowed: readonly TraitAxis[],
+): Array<{ axis: TraitAxis; sample: number; source: Exclude<TraitSource, 'self_confirm'> }> {
+  const out: Array<{
+    axis: TraitAxis;
+    sample: number;
+    source: Exclude<TraitSource, 'self_confirm'>;
+  }> = [];
+  for (const axis of allowed) {
+    const raw = incoming[axis];
+    if (raw == null || !Number.isFinite(raw)) continue;
+    if (source === 'self_game') {
+      out.push({ axis, sample: raw, source });
+      continue;
+    }
+    if (!shouldWriteReportTrack(current.sources[axis], source)) continue;
+    out.push({ axis, sample: raw, source });
+  }
+  return out;
 }
 
 /**
@@ -385,8 +479,10 @@ export async function updateTraits(
 ): Promise<Me> {
   const current = await fetchMe(userId);
   if (!current) throw new Error('Not authenticated');
-  const merged = mergeTraitWrite(traitStateFromRow(current), incoming, source, allowed);
-  return (await persistMergedTraits(current, merged)).me;
+  const state = traitStateFromRow(current);
+  const merged = mergeTraitWrite(state, incoming, source, allowed);
+  const answers = collectAnswers(state, incoming, source, allowed);
+  return (await persistMergedTraits(current, merged, {}, answers)).me;
 }
 
 /**
@@ -442,8 +538,9 @@ export async function recordSageKnowsCorrection(
   const current = await fetchMe(userId);
   if (!current) throw new Error('Not authenticated');
   const now = new Date();
+  const state = traitStateFromRow(current);
   const merged = mergeTraitWrite(
-    traitStateFromRow(current),
+    state,
     { [axis]: value },
     'self_settings',
     [axis],
@@ -454,7 +551,9 @@ export async function recordSageKnowsCorrection(
     axis,
     weekKeyFor(current, now),
   );
-  return (await persistMergedTraits(current, merged, { sage_knows: knows })).me;
+  return (await persistMergedTraits(current, merged, { sage_knows: knows }, [
+    { axis, sample: value, source: 'self_settings' },
+  ])).me;
 }
 
 /** Dismiss ends this week's turn. Does not deal another axis. */
@@ -490,7 +589,12 @@ export async function recordRanking(
     weekKeyFor(current, now),
     'answered',
   );
-  const { me: next, wrote } = await persistMergedTraits(current, merged, { sage_knows: knows });
+  const { me: next, wrote } = await persistMergedTraits(
+    current,
+    merged,
+    { sage_knows: knows },
+    reportSample(merged, axis, 'self_tap'),
+  );
   if (wrote) earnTokensQuiet('game_round');
   return next;
 }
@@ -529,7 +633,12 @@ export async function recordScenario(
     weekKeyFor(current, now),
     'answered',
   );
-  const { me: next, wrote } = await persistMergedTraits(current, merged, { sage_knows: knows });
+  const { me: next, wrote } = await persistMergedTraits(
+    current,
+    merged,
+    { sage_knows: knows },
+    gameSample(axis, pole),
+  );
   if (wrote) earnTokensQuiet('game_round');
   return next;
 }
@@ -548,7 +657,12 @@ export async function recordStandaloneRanking(
     order,
     new Date().toISOString(),
   );
-  const { me: next, wrote } = await persistMergedTraits(current, merged);
+  const { me: next, wrote } = await persistMergedTraits(
+    current,
+    merged,
+    {},
+    reportSample(merged, axis, 'self_tap'),
+  );
   if (wrote) earnTokensQuiet('game_round');
   return next;
 }
@@ -567,12 +681,15 @@ export async function recordForcedPick(
     pole,
     new Date().toISOString(),
   );
-  const result = await persistMergedTraits(current, merged);
+  const result = await persistMergedTraits(
+    current,
+    merged,
+    {},
+    reportSample(merged, axis, 'self_tap'),
+  );
   if (result.wrote) earnTokensQuiet('game_round');
   return result;
 }
-
-/** Standalone gut-call — same self_game merge, does not claim the weekly Ask. */
 export async function recordStandaloneScenario(
   userId: string,
   axis: ExtraAxis,
@@ -586,7 +703,7 @@ export async function recordStandaloneScenario(
     pole,
     new Date().toISOString(),
   );
-  const result = await persistMergedTraits(current, merged);
+  const result = await persistMergedTraits(current, merged, {}, gameSample(axis, pole));
   if (result.wrote) earnTokensQuiet('game_round');
   return result;
 }

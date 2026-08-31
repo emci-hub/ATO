@@ -1,13 +1,7 @@
 /**
  * You-tab Full Profile. Private inventory of the 15 axes — invitation, not
- * a score of a person. Completeness is "N of 15 answered" only. Never a
- * percent. Never on Home, Explore, Talk, widget, or push.
- *
- * Display grouping is what the person did, not merge rank: a type-grid or
- * situation tap is still "you told us." Gut-call is the only inferred-from-
- * play source stored (`self_game`). Ranking writes `self_tap` (told).
- * Sage-knows correction writes `self_settings`; Still fits writes `self_confirm`.
- * Last source is stored on ME; per-axis growth timeline lives in trait_history.
+ * a score of a person. Completeness is stability-weighted "N of 15 settled".
+ * Never a percent of a person. Never on Home, widget, or push.
  */
 
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
@@ -100,7 +94,7 @@ export function profileCopyClean(): boolean {
     FULL_PROFILE_LABEL,
     FULL_PROFILE_LEDE,
     NOT_ANSWERED_YET,
-    answeredAxisLabel(emptyTraitValues()),
+    '0 of 15 settled',
     ...Object.values(TOLD_LINE),
     'Inferred from a gut-call you played.',
     'You corrected this after Sage checked in.',
