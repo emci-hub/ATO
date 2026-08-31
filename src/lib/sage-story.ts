@@ -16,6 +16,7 @@ import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
 import type { AxisDivergence } from '@/lib/trait-history';
 import { isThinProfile, settledCount, type TraitTrack } from '@/lib/trait-stability';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
+import { STYLE_BLOCK } from '@/lib/voice/style-checklist';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 
 export const STORY_COPY_REVIEWED = false;
@@ -169,7 +170,7 @@ ${VOICE_REFERENCE}
 
 Job: rewrite the settled notes below into one holistic piece of prose. Same discipline as a title: generated, not looked up, not a concatenation of category lines. Fully prose. Never put a category name in the text.
 
-Write like a close friend noticing something. Warm, plain, second person. Not a system describing itself.
+${STYLE_BLOCK}
 
 SETTLED NOTES (internal — write from the meaning, never the label)
 ${lines.join('\n') || '- none'}

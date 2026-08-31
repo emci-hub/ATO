@@ -20,6 +20,7 @@ import {
 } from '@/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
+import { STYLE_BLOCK } from '@/lib/voice/style-checklist';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 
 export const TITLE_COPY_REVIEWED = false;
@@ -191,6 +192,8 @@ export function buildTitlePrompt(tracks: readonly TraitTrack[], _today: string):
 
 VOICE REFERENCE (register only — do NOT reuse these lines):
 ${VOICE_REFERENCE}
+
+${STYLE_BLOCK}
 
 Job: a short title (2–5 words), one plain line about how this person tends to move, and a short summary for each READY category, from the settled notes only. Unsettled notes and unready categories are omitted on purpose. Do not invent them.
 

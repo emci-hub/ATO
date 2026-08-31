@@ -4,6 +4,7 @@ import { libraryGroundingBlock, selectLibraryEntries } from '@/lib/voice/library
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '@/lib/voice/preset';
 import { TALK_STYLE_GUIDE } from '@/lib/voice/providers/types';
+import { STYLE_BLOCK } from '@/lib/voice/style-checklist';
 import { traitPromptLines, type TraitAxis } from '@/lib/traits';
 
 import type { ExploreFocus, ExploreMeSlice } from './types';
@@ -159,6 +160,8 @@ export function buildExplorePrompt(input: {
 
 VOICE REFERENCE (write in this register — do NOT reuse these lines verbatim):
 ${VOICE_REFERENCE}
+
+${STYLE_BLOCK}
 
 EXPLORE SHAPE (examples to match, not templates to paste):
 ${EXPLORE_FEW_SHOTS}

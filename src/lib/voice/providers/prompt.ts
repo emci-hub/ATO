@@ -3,6 +3,7 @@ import { TRAIT_AXES, traitPromptLines } from '@/lib/traits';
 import { isThinProfile } from '@/lib/trait-stability';
 import { dawnCategoryPromptBlock } from '@/lib/dawn-category';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '../preset';
+import { STYLE_BLOCK } from '../style-checklist';
 
 import { cueAfterYou } from '../cue';
 import { libraryGroundingBlock, selectLibraryEntries } from '../library';
@@ -104,6 +105,8 @@ export function buildPrompt(input: GenerateInput): string {
 
 VOICE REFERENCE (write in this register — do NOT reuse these lines verbatim):
 ${VOICE_REFERENCE}
+
+${STYLE_BLOCK}
 
 TODAY
 - User: ${me.name}

@@ -327,8 +327,13 @@ async function main() {
     crisisToday: false,
     previousHadCut: false,
   });
-  assert.match(prompt, /quieter time/);
+  // Dawn Read dropped the 16-axis backbone, so the card prompt paraphrases no
+  // individual axis — only the raw value must never leak.
   assert.doesNotMatch(prompt, /0\.25/);
+  assert.doesNotMatch(prompt, /extraversion|openness/);
+  const extLines = traitPromptLines({ extraversion: 0.25 });
+  assert.match(extLines, /quieter time/);
+  assert.doesNotMatch(extLines, /0\.25/);
   for (const banned of BANNED) {
     assert.equal(containsFrameworkTerm(banned), true, `${banned} should be a banned term`);
     assert.equal(prompt.toLowerCase().includes(banned.toLowerCase()), false, `prompt leaked ${banned}`);
