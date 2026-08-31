@@ -1,6 +1,7 @@
 import { phraseForStoredChip } from '@/lib/intake';
 import { TRAIT_AXES, traitPromptLines } from '@/lib/traits';
 import { isThinProfile } from '@/lib/trait-stability';
+import { dawnCategoryPromptBlock } from '@/lib/dawn-category';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '../preset';
 
 import { cueAfterYou } from '../cue';
@@ -63,8 +64,8 @@ function threadTurns(turns: TalkGenerateInput['recentTurns']): string {
   return `\nRECENT TURNS IN THIS THREAD (oldest first; the new line is below, not listed here):\n${lines.join('\n')}\n`;
 }
 
-/** Self-report intake lines. Not a diagnosis — they tapped these. */
-function intakeContext(me: VoiceMe): string {
+/** Self-report intake chips. Not a diagnosis — they tapped these. */
+function chipIntakeContext(me: VoiceMe): string {
   const lines: string[] = [];
   if (me.evening_wind_down) lines.push(`- Evening wind-down they named: ${me.evening_wind_down}`);
   if (me.energy_pattern) {
@@ -77,9 +78,14 @@ function intakeContext(me: VoiceMe): string {
   if (me.current_focus) {
     lines.push(`- What they're mostly trying to do right now: ${phraseForStoredChip(me.current_focus)}`);
   }
-  const traits = traitPromptLines(me);
-  const intake = lines.length === 0 ? '' : `${lines.join('\n')}\n- Treat the lines above as self-report, never as a diagnosis.\n`;
-  return `${intake}${traits}`;
+  return lines.length === 0
+    ? ''
+    : `${lines.join('\n')}\n- Treat the lines above as self-report, never as a diagnosis.\n`;
+}
+
+/** Talk still reads every currently-defined filled axis. Dawn Read does not. */
+function talkIntakeContext(me: VoiceMe): string {
+  return `${chipIntakeContext(me)}${traitPromptLines(me)}`;
 }
 
 /** Builds the single-turn prompt that asks Gemini for today's card. */
@@ -111,10 +117,10 @@ ${input.retryHint ? `- Previous draft was dropped (${input.retryHint}). Write a 
 
 CONTEXT
 - Morning cue (anchor the Do to this): ${me.morning_cue}
-${intakeContext(me)}- Recent checks:
+${chipIntakeContext(me)}- Recent checks:
 ${streakSummary(input.history)}
 
-AVAILABLE SIGNALS — pick ONE primary angle today. Do not default to the same knock or the same streak/baseline story two days in a row.
+${dawnCategoryPromptBlock(input.dawnReadCategory ?? null)}AVAILABLE SIGNALS — pick ONE primary angle today. Do not default to the same knock or the same streak/baseline story two days in a row.
 ${signalPool(me)}
 ${libraryGroundingBlock(selectLibraryEntries(me, { day, surface: 'card' }))}
 
@@ -122,7 +128,11 @@ ALREADY SHOWN (do not reuse wording OR the same topic angle):
 ${alreadyShown(input.history)}
 
 RULES
-1. Read: 1–4 sentences. One short soft-hedge statement, no question. General reflection on today/the pattern, from a signal that recent Reads did not already use. State observed facts directly; hedge only the interpretation, inside the same sentence. No summary/wisdom line after it is said.
+1. Read: 1–4 sentences. One short soft-hedge statement, no question. General reflection on today/the pattern, from a signal that recent Reads did not already use. State observed facts directly; hedge only the interpretation, inside the same sentence. No summary/wisdom line after it is said.${
+    input.dawnReadCategory
+      ? ' If a DAWN CATEGORY block is present, Read may use that one merge OR a knock/fact/focus — one primary angle, not stacked, never other categories.'
+      : ''
+  }
 2. Do: exactly ONE if-then action, anchored to the morning cue, e.g. "After you ${cueAfterYou(me.morning_cue)}, <specific concrete action>." Use the infinitive ("make coffee" not "making coffee"). Specific enough that they could start it in under 10 minutes. The action should fit today's angle, not copy yesterday's Do with new adjectives. Plain instruction — not a reflection.
 3. No repetition of content shown before — paraphrases of the same sleep/streak/baseline story still count as repetition. Do not reuse the same sentence shape as the last Read.
 4. Describe how they tend to move, never label them. No type codes, no scores-as-identity, no diagnosis. Never "you are X".
@@ -198,7 +208,7 @@ WHO THEY ARE (tone only — not the topic unless they bring it up)
 - How this week feels (self-report): ${me.show_up}
 - What knocks them off: ${me.knocks_you_off}
 - Morning cue: ${me.morning_cue}
-${intakeContext(me)}- Today is day ${day}.
+${talkIntakeContext(me)}- Today is day ${day}.
 - Recent checks:
 ${streakSummary(history)}
 

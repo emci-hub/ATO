@@ -27,6 +27,8 @@ import { ReportSheet } from '@/components/report-sheet';
 import { SageEightBall } from '@/components/sage-eight-ball';
 import { SageInsightSpend } from '@/components/sage-insight-spend';
 import { SageTitleCard } from '@/components/sage-title-card';
+import { ExplorePinnedCategories } from '@/components/explore-pinned-categories';
+import { SageStoryFold } from '@/components/sage-story-fold';
 import { ConceptHint } from '@/components/concept-hint';
 import { SageUsageLine } from '@/components/sage-usage';
 import { ThemedPressable } from '@/components/themed-pressable';
@@ -58,6 +60,7 @@ import { categoryById, parseSpotlight } from '@/lib/categories';
 import { categoryConcept } from '@/lib/concept-explainers';
 import { sageKnowsWeekKey } from '@/lib/sage-knows';
 import { localYmd } from '@/lib/local-date';
+import { parseSageTitle, pinnedCategoryLines } from '@/lib/sage-title';
 import { QUOTA_EMPTY_MESSAGE } from '@/lib/voice/quota';
 import { claimAiCall, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
 import { recordOwnDevTrace } from '@/lib/dev-trace-server';
@@ -284,10 +287,12 @@ function SageExploreObservations({
   me,
   history,
   crisisToday,
+  tracks,
 }: {
   me: Me;
   history: CheckHistory[];
   crisisToday: boolean;
+  tracks: readonly TraitTrack[];
 }) {
   const theme = useTheme();
   const { reduceMotion } = useAppearance();
@@ -310,6 +315,8 @@ function SageExploreObservations({
         history,
         aiConsent: me.ai_consent,
         crisisToday,
+        tracks,
+        pinnedLines: pinnedCategoryLines(parseSageTitle(me.sage_title)),
       },
       {
         loadLatestPack: fetchLatestExplorePack,
@@ -324,7 +331,7 @@ function SageExploreObservations({
       },
     );
     setResult(next);
-  }, [me, history, crisisToday]);
+  }, [me, history, crisisToday, tracks]);
 
   useEffect(() => {
     let cancelled = false;
@@ -739,11 +746,21 @@ export default function SageScreen() {
             </View>
 
             {me ? (
-              <SageExploreObservations
-                me={me}
-                history={checksToHistory(exploreChecks)}
-                crisisToday={crisisToday}
-              />
+              <>
+                <ExplorePinnedCategories me={me} tracks={tracks} />
+                <SageStoryFold
+                  me={me}
+                  tracks={tracks}
+                  tracksReady={tracksReady}
+                  crisisToday={crisisToday}
+                />
+                <SageExploreObservations
+                  me={me}
+                  history={checksToHistory(exploreChecks)}
+                  crisisToday={crisisToday}
+                  tracks={tracks}
+                />
+              </>
             ) : null}
 
             {!me ? (

@@ -6,12 +6,14 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { decideExploreTrigger } from '../src/lib/explore/cadence';
+import { applyEwmaAnswer, type TraitTrack } from '../src/lib/trait-stability';
 import {
   AGENCY_AXES,
   dropsAgencyTriple,
   exploreFingerprint,
   pickExploreFocus,
   pickExplorePackFocuses,
+  repeatsPinnedCategories,
 } from '../src/lib/explore/combine';
 import { EXPLORE_GUARD_FALLBACK, EXPLORE_LABEL, EXPLORE_NOTED } from '../src/lib/explore/copy';
 import { EXPLORE_FEW_SHOTS, EXPLORE_AXIS_GROUNDING_LINES, buildExplorePrompt } from '../src/lib/explore/prompt';
@@ -118,16 +120,17 @@ const unusedCombo = pickExploreFocus(
 );
 assert.equal(unusedCombo.traits.length, 1);
 assert.ok(!unusedCombo.traits.includes('openness') || unusedCombo.traits.length === 1);
-ok('no signal never manufactures a 2–3 combo from extra filled axes');
+ok('no signal never manufactures a combo from extra filled axes');
 
 const withKnock = pickExploreFocus(
   { ...chipsOnly, steadiness: 0.2, extraversion: 0.8 },
   knockHistory,
 );
 assert.equal(withKnock.signal?.kind, 'knock');
-assert.ok(withKnock.traits.includes('steadiness'));
-assert.ok(withKnock.traits.length >= 2 && withKnock.traits.length <= 3);
-ok('knock signal combines 2–3 filled traits including a tied axis');
+assert.ok(withKnock.traits.includes('steadiness') || (withKnock.categories ?? []).length > 0);
+assert.ok((withKnock.categories ?? []).length <= 2);
+assert.ok(withKnock.traits.length <= 1);
+ok('knock without settled categories stays one trait, never a manufactured 2–3 combo');
 
 const agencyMe: ExploreMeSlice = {
   ...chipsOnly,
@@ -138,6 +141,75 @@ const agencyMe: ExploreMeSlice = {
 const agencyFocus = pickExploreFocus(agencyMe, twoSkips);
 assert.ok(agencyFocus.traits.filter((axis) => (AGENCY_AXES as readonly string[]).includes(axis)).length < 3);
 ok('skip signal never puts all three agency axes in one entry');
+
+function stableReport(axis: TraitTrack['axis'], value: number): TraitTrack {
+  const nowIso = '2026-08-31T12:00:00.000Z';
+  let row = applyEwmaAnswer(null, axis, 'report', value, nowIso);
+  row = applyEwmaAnswer(row, axis, 'report', value, nowIso);
+  row = applyEwmaAnswer(row, axis, 'report', value, nowIso);
+  return row;
+}
+
+const twoCatTracks: TraitTrack[] = [
+  stableReport('conscientiousness', 0.8),
+  stableReport('agreeableness', 0.7),
+  stableReport('steadiness', 0.4),
+  stableReport('growth_mindset', 0.8),
+  stableReport('locus_of_control', 0.7),
+  stableReport('self_efficacy', 0.6),
+];
+const twoCatMe: ExploreMeSlice = {
+  ...chipsOnly,
+  conscientiousness: 0.8,
+  agreeableness: 0.7,
+  steadiness: 0.4,
+  growth_mindset: 0.8,
+  locus_of_control: 0.7,
+  self_efficacy: 0.6,
+};
+const noSignalCats = pickExploreFocus(twoCatMe, [], { tracks: twoCatTracks });
+assert.equal((noSignalCats.categories ?? []).length, 1);
+assert.equal(noSignalCats.traits.length, 0);
+ok('no signal with ready categories stays one category — never a default two-category habit');
+
+const skipTwoCats = pickExploreFocus(twoCatMe, twoSkips, { tracks: twoCatTracks });
+assert.equal((skipTwoCats.categories ?? []).length, 2);
+assert.ok(skipTwoCats.categories?.includes('cat_agency'));
+assert.ok(skipTwoCats.categories?.includes('cat_steadiness'));
+assert.equal(skipTwoCats.traits.length, 0);
+assert.ok(
+  skipTwoCats.traits.filter((axis) => (AGENCY_AXES as readonly string[]).includes(axis)).length < 3,
+);
+ok('a real skip signal may combine at most two tied categories; agency triple stays out of traits');
+
+const pinnedPrompt = buildExplorePrompt({
+  me: twoCatMe,
+  focus: {
+    ...skipTwoCats,
+    pinnedLines: ['Sees a plan through and shakes a bad start off.'],
+  },
+  reactionNotes: [],
+});
+assert.match(pinnedPrompt, /CATEGORY GROUNDING/);
+assert.match(pinnedPrompt, /PINNED CATEGORIES CARD TODAY/);
+assert.match(pinnedPrompt, /Never combine growth_mindset, locus_of_control, and self_efficacy in one entry/);
+assert.doesNotMatch(pinnedPrompt, /AXIS GROUNDING/);
+ok('category Explore prompt grounds merges, lists the pinned card, and keeps the agency-triple fence');
+
+assert.equal(
+  repeatsPinnedCategories(
+    'Sees a plan through and shakes a bad start off when the week gets loud.',
+    ['Sees a plan through and shakes a bad start off.'],
+  ),
+  true,
+);
+assert.equal(
+  repeatsPinnedCategories('Coffee is still the first move of the day.', [
+    'Sees a plan through and shakes a bad start off.',
+  ]),
+  false,
+);
+ok('pinned Categories overlap gate fires on a restatement and misses an unrelated line');
 
 const nullAxis = pickExploreFocus({ ...chipsOnly, extraversion: 0.8 }, knockHistory);
 assert.ok(!nullAxis.traits.includes('steadiness'));
@@ -181,12 +253,9 @@ assert.match(prompt, /EXPLORE SHAPE/);
 assert.match(prompt, /You skipped twice this week, both times when your plate was already full/);
 assert.doesNotMatch(prompt, /37%|we don't know much|richer because they filled/i);
 assert.match(prompt, /Completeness is not an input/);
-assert.match(prompt, /AXIS GROUNDING/);
-assert.match(prompt, /extraversion: energy from people and activity vs energy from quiet and solitude/);
-assert.match(prompt, /steadiness: emotional evenness under pressure vs feeling things sharply/);
-assert.doesNotMatch(prompt, /37%|we don't know much|richer because they filled/i);
+assert.match(prompt, /Never combine growth_mindset, locus_of_control, and self_efficacy in one entry/);
 assert.match(EXPLORE_FEW_SHOTS, /## Explore/);
-ok('Explore prompt has four few-shots and no completeness-as-input copy');
+ok('Explore prompt has four few-shots, agency-triple rule, and no completeness-as-input copy');
 
 const promptSrc = read('src/lib/explore/prompt.ts');
 assert.equal(EXPLORE_AXIS_GROUNDING_LINES.length, TRAIT_AXES.length);
@@ -352,6 +421,8 @@ assert.doesNotMatch(home, /ExplorePanel/);
 assert.doesNotMatch(home, /HomeInnerTabs/);
 assert.match(sage, /routeExplore/);
 assert.match(sage, /SageExploreObservations/);
+assert.match(sage, /ExplorePinnedCategories/);
+assert.match(sage, /SageStoryFold/);
 assert.doesNotMatch(sage, /EXPLORE_LEDE|EXPLORE_LABEL/);
 ok('Explore observations render on Sage; Home has no inner tabs');
 

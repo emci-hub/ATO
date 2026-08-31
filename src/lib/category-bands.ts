@@ -59,6 +59,11 @@ export const CATEGORY_FALLBACK_BANDS: Record<CategoryId, readonly CategoryBand[]
     { min: 0.35, max: 0.65, lede: 'Own way some days, a real check-in on others.' },
     { min: 0.65, max: 1.01, lede: 'Would rather pick the path, and still needs a real connection for a day to land.' },
   ],
+  cat_levity: [
+    { min: 0, max: 0.35, lede: 'A disagreement is a job. Lightness can wait until it is over.' },
+    { min: 0.35, max: 0.65, lede: 'Sometimes they leave a little room in a hard talk. Sometimes they do not.' },
+    { min: 0.65, max: 1.01, lede: 'A hard talk can still have a bit of air in it — not a joke, just not only a job.' },
+  ],
 };
 
 export function fallbackBandFor(id: CategoryId, score: number): string {

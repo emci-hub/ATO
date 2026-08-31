@@ -24,6 +24,7 @@ import { applyJargonFallback, jargonInCard } from './jargon';
 import { resolveNudge } from './nudge';
 import { buildProviders } from './providers';
 import type { VoiceProvider } from './providers/types';
+import { pickDawnReadCategory } from '@/lib/dawn-category';
 import type {
   CheckHistory,
   DevTrace,
@@ -279,6 +280,7 @@ export async function routeVoiceCard(
   const lastCheck = input.history[input.history.length - 1];
   const previousHadCut = lastCheck ? hasCut(lastCheck.read ?? '') : false;
   const crisisToday = !!input.crisisToday;
+  const dawnReadCategory = pickDawnReadCategory(input.tracks, day);
 
   let lastDropped: VoiceCardResult['dropped'] = [];
   let lastCandidate: VoiceCard | null = null;
@@ -292,6 +294,7 @@ export async function routeVoiceCard(
       crisisToday,
       previousHadCut,
       retryHint: lastDropped[0] ?? null,
+      dawnReadCategory,
     });
     lastCandidate = candidate;
     const reason = filterCard(candidate, { shownCards, crisisToday, previousHadCut });

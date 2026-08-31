@@ -1,5 +1,6 @@
 import type { VoicePreset } from './preset';
 import type { TraitAxis } from '@/lib/traits';
+import type { TraitTrack } from '@/lib/trait-stability';
 
 export type TalkStyle = 'quiet' | 'even' | 'loud';
 
@@ -87,6 +88,12 @@ export interface RouteVoiceCardInput {
   crisisDetected?: boolean;
   /** Previous local calendar day logged a crisis flag — Nudge stays empty. */
   crisisYesterday?: boolean;
+  /**
+   * Report-track rows for Dawn Read category picking. Omit or empty =
+   * none of Steadiness / Agency / Drive are treated as settled; knock/fact/focus
+   * stays as today. Do is never selected from this.
+   */
+  tracks?: TraitTrack[];
 }
 
 /**

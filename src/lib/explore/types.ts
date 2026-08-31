@@ -1,4 +1,6 @@
+import type { CategoryId } from '@/lib/categories';
 import type { TraitAxis } from '@/lib/traits';
+import type { TraitTrack } from '@/lib/trait-stability';
 import type { CheckHistory, VoiceMe } from '@/lib/voice/types';
 
 export const EXPLORE_CORE_CHIPS = [
@@ -25,11 +27,15 @@ export interface ExploreSignal {
 }
 
 export interface ExploreFocus {
-  /** 1 trait with no signal; 2–3 only when a signal ties at least one. */
+  /** 1 trait with no signal when no category is ready. Empty when writing from categories. */
   traits: TraitAxis[];
-  /** 9-core chips when no filled axis is available. */
+  /** 9-core chips when no filled axis and no ready category. */
   chips: ExploreChip[];
+  /** 0, 1, or at most 2 ready categories. Two only when a recent signal ties both. */
+  categories?: CategoryId[];
   signal: ExploreSignal | null;
+  /** Pinned Categories-card lines already on this screen today. Do not restate. */
+  pinnedLines?: string[];
 }
 
 export interface ExploreDraft {
@@ -70,6 +76,8 @@ export interface RouteExploreInput {
   aiConsent?: boolean | null;
   crisisToday?: boolean;
   now?: Date;
+  tracks?: readonly TraitTrack[];
+  pinnedLines?: string[];
 }
 
 export type ExploreKind =

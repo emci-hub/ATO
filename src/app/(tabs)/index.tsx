@@ -38,6 +38,8 @@ import { resolveTodaySlot, canShowCategoryTeaser, type TodaySlot } from '@/lib/t
 import { traitStateFromRow, TRAIT_POLE_LINES } from '@/lib/traits';
 import { bankCardForMe } from '@/lib/voice/bank';
 import { routeVoiceCard } from '@/lib/voice/router';
+import { fetchTraitTracks } from '@/lib/trait-tracks-store';
+import type { TraitTrack } from '@/lib/trait-stability';
 import { logJargonGuard } from '@/lib/voice/quota-server';
 import { canSeeDevLab } from '@/lib/dev-access';
 import { recordOwnDevTrace } from '@/lib/dev-trace-server';
@@ -92,6 +94,7 @@ export default function HomeScreen() {
   const [askOverride, setAskOverride] = useState<AskPick['kind'] | null>(null);
   const [slotOverride, setSlotOverride] = useState<TodaySlot['kind'] | null>(null);
   const [noteOpenedToday, setNoteOpenedToday] = useState(false);
+  const [tracks, setTracks] = useState<TraitTrack[]>([]);
 
   const reloadChecks = useCallback(async () => {
     if (!userId) return;
@@ -108,6 +111,21 @@ export default function HomeScreen() {
       reloadChecks();
     });
   }, [reloadChecks]);
+
+  useEffect(() => {
+    if (!me) return;
+    let cancelled = false;
+    fetchTraitTracks(me.id)
+      .then((next) => {
+        if (!cancelled) setTracks(next);
+      })
+      .catch(() => {
+        if (!cancelled) setTracks([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [me?.id, me?.updated_at]);
 
   useEffect(() => {
     if (!userId || !me) return;
@@ -252,6 +270,7 @@ export default function HomeScreen() {
       crisisYesterday,
       aiConsent: me.ai_consent,
       day: todayOpen.day,
+      tracks,
     }, { logJargonHit: logJargonGuard, recordTrace: recordOwnDevTrace, traceSurface: 'dawn' })
       .then(async (next) => {
         if (cancelled || !next.card) return;
@@ -264,7 +283,7 @@ export default function HomeScreen() {
     return () => {
       cancelled = true;
     };
-  }, [me, todayOpen?.day, card?.day, checks, reloadCard, crisisToday, crisisYesterday]);
+  }, [me, todayOpen?.day, card?.day, checks, reloadCard, crisisToday, crisisYesterday, tracks]);
 
   async function logToday(status: 'done' | 'skipped') {
     if (!userId || !me || !todayOpen || busy || alreadyLogged) return;
@@ -447,6 +466,7 @@ export default function HomeScreen() {
                   crisisToday,
                   crisisYesterday,
                   aiConsent: me.ai_consent,
+                  tracks,
                 }}
                 busy={busy !== null}
                 onLog={(status, voice, source) => {

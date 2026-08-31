@@ -137,6 +137,18 @@ export function drivingAxisLines(axes: readonly TraitAxis[], tracks: readonly Tr
   });
 }
 
+export function pinnedCategoryLines(title: SageTitle | null | undefined): string[] {
+  if (!title?.categories) return [];
+  const out: string[] = [];
+  for (const id of CATEGORY_IDS) {
+    const copy = title.categories[id];
+    if (!copy) continue;
+    if (copy.line.trim()) out.push(copy.line.trim());
+    if (copy.full.trim() && copy.full.trim() !== copy.line.trim()) out.push(copy.full.trim());
+  }
+  return out;
+}
+
 export function combinedFingerprint(tracks: readonly TraitTrack[], now: Date = new Date()): string {
   return `${titleFingerprint(tracks, now)}#${categoriesFingerprint(tracks, now)}`;
 }

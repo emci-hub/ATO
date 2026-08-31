@@ -105,6 +105,8 @@ export type Me = {
   tokens: number;
   /** Cached Sage title from stable report-track axes. */
   sage_title: unknown;
+  /** Cached Sage Story from settled categories. Empty object when none. */
+  sage_story: unknown;
   /** Opt-in to the Close Friends category-share pool. Off by default. */
   close_friends_share: boolean;
   /** Weekly You/Sage category spotlight {weekKey, categoryId}. */
@@ -151,6 +153,7 @@ export type MeInsert = Omit<
     | 'visible'
     | 'tokens'
     | 'sage_title'
+    | 'sage_story'
     | 'close_friends_share'
     | 'category_spotlight'
     | 'created_at'
@@ -197,6 +200,7 @@ function withVisible(row: Me): Me {
     tokens: typeof row.tokens === 'number' && Number.isFinite(row.tokens) ? Math.max(0, Math.floor(row.tokens)) : 0,
     close_friends_share: row.close_friends_share === true,
     category_spotlight: row.category_spotlight ?? {},
+    sage_story: row.sage_story ?? {},
   };
 }
 

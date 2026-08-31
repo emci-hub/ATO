@@ -140,6 +140,19 @@ Compiled as each box lands. Same file in the repo at `docs/ATO_DEVICE_TESTS.md`.
 - [ ] If a regeneration ever comes back empty/null (this happened once during Cursor's own spot-check on `conscientiousness`), note it — not expected to block anything, but worth flagging if you see it repeat.
 - [ ] This closes F5. No further action expected unless a live mismatch turns up. JS is on OTA `8771f505-5cf5-4652-8d89-42f2ad57f05c` — regenerate on a binary 10+ device after it has pulled the update.
 
+## Box 22 — Dawn categories, Explore combine, Levity, The Story
+
+All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines as final.
+
+- [ ] On a thin/new account (none of Steadiness, Agency, Drive settled): open Dawn/Home generated Read. Confirm it still draws from knocks/facts/focus, not empty, and Do is still `After you {morning_cue}, …`.
+- [ ] On an account with Steadiness settled: confirm a generated Read may lean on that merge, still never names the category, and Do is unchanged.
+- [ ] Confirm a category-sourced Read still drops on topical-repeat / cut-after-crisis / two-cuts / cruel-cut / framework-echo the same as any other Read.
+- [ ] Open Sage. Confirm a pinned Categories summary sits above Explore observations. Confirm a generated Explore line does not paraphrase that pinned card.
+- [ ] Confirm Explore never combines more than two categories, and never pairs all three of growth_mindset + locus_of_control + self_efficacy as raw axes.
+- [ ] On You → Categories, confirm Levity appears as a **bar** (not a map) once playfulness + a conflict axis have settled. Love / closeness remains the only conflict-adjacent map.
+- [ ] Confirm The Story fold (collapsed) sits under the pinned Categories card. Open it only when Gemini actually wrote one. Confirm: no generic fallback paragraph when the model is unreachable; the fold is simply missing. Confirm the prose never names a category. If told-vs-played tension exists, confirm it is hedged, not an accusation, not smoothed away.
+- [ ] Flag every Story paragraph and every new Levity/Dawn/Explore line for emci before treating any of it as shippable.
+
 ---
 
-**All 15 boxes complete (0, 1, 2, 3, 4, 5, 6, 6.5, 7, 8, 9, 10, 11, 12, 12.5, 13, 13.1, 14).** This checklist is now the full end-to-end device pass — work through every section above in one sitting before TestFlight submission, not per-box.
+**All 15 boxes complete (0, 1, 2, 3, 4, 5, 6, 6.5, 7, 8, 9, 10, 11, 12, 12.5, 13, 13.1, 14) plus Wave 21/22 checks above.** This checklist is now the full end-to-end device pass — work through every section above in one sitting before TestFlight submission, not per-box.

@@ -15,7 +15,7 @@ import {
 } from '@/lib/dev-trace';
 
 import { decideExploreTrigger, exploreToday } from './cadence';
-import { exploreFingerprint, pickExplorePackFocuses } from './combine';
+import { exploreFingerprint, pickExplorePackFocuses, repeatsPinnedCategories } from './combine';
 import { EXPLORE_GUARD_FALLBACK } from './copy';
 import { composeLocalExplore } from './local';
 import { buildExplorePrompt } from './prompt';
@@ -80,11 +80,12 @@ export async function routeExplore(
   }
 
   const today = exploreToday(input.me.timezone, input.now);
-  const fingerprint = exploreFingerprint(
-    input.me,
-    input.history,
-    input.me.traitTouchedAt,
-  );
+    const fingerprint = exploreFingerprint(
+      input.me,
+      input.history,
+      input.me.traitTouchedAt,
+      input.tracks,
+    );
   const existing = deps.loadLatestPack ? await deps.loadLatestPack() : null;
   const trigger = decideExploreTrigger({ pack: existing, today, fingerprint });
 
@@ -92,7 +93,10 @@ export async function routeExplore(
     return { kind: 'cached', pack: existing };
   }
 
-  const focuses = pickExplorePackFocuses(input.me, input.history);
+  const focuses = pickExplorePackFocuses(input.me, input.history, {
+    tracks: input.tracks,
+    pinnedLines: input.pinnedLines ?? [],
+  });
   const notes = deps.loadMissNotes ? await deps.loadMissNotes() : [];
   const useLocal = deps.useLocal === true;
 
@@ -109,6 +113,9 @@ export async function routeExplore(
   for (const focus of focuses) {
     if (useLocal || !deps.generateBody) {
       const local = composeLocalExplore(input.me, focus);
+      if (repeatsPinnedCategories(local.body, focus.pinnedLines ?? [])) {
+        continue;
+      }
       drafts.push(local);
       await emitExploreTrace(deps, input, focus, {
         modelLabel: 'Local compose (no model)',
@@ -149,6 +156,14 @@ export async function routeExplore(
         await deps.logPhraseHit?.(guarded.phrase).catch(() => {});
       }
       body = guarded.body;
+      if (
+        body !== EXPLORE_GUARD_FALLBACK &&
+        repeatsPinnedCategories(body, focus.pinnedLines ?? [])
+      ) {
+        fenceHit = 'pinned-repeat';
+        body = null;
+        continue;
+      }
       break;
     }
     if (body) {

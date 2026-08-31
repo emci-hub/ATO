@@ -1,5 +1,8 @@
+import { categoriesFingerprint, categoryById, readyCategories, type CategoryId } from '@/lib/categories';
 import { findNudgeSignal } from '@/lib/voice/nudge';
+import { topicalOverlap } from '@/lib/voice/filters';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
+import type { TraitTrack } from '@/lib/trait-stability';
 import type { CheckHistory, VoiceMe } from '@/lib/voice/types';
 
 import {
@@ -100,66 +103,152 @@ function tiedToSignal(signal: ExploreSignal, filled: TraitAxis[]): TraitAxis[] {
   return hits;
 }
 
+function readyIds(tracks: readonly TraitTrack[] | undefined): CategoryId[] {
+  if (!tracks || tracks.length === 0) return [];
+  return readyCategories(tracks).map((row) => row.def.id);
+}
+
+function categoriesTiedToSignal(
+  signal: ExploreSignal,
+  filled: TraitAxis[],
+  ready: readonly CategoryId[],
+): CategoryId[] {
+  const tiedAxes = tiedToSignal(signal, filled);
+  const out: CategoryId[] = [];
+  for (const id of ready) {
+    const def = categoryById(id);
+    if (!def) continue;
+    if (def.axes.some((axis) => tiedAxes.includes(axis))) out.push(id);
+  }
+  return out;
+}
+
+function emptyFocus(
+  chips: ExploreChip[],
+  signal: ExploreSignal | null,
+  pinnedLines: string[],
+): ExploreFocus {
+  return { traits: [], chips, categories: [], signal, pinnedLines };
+}
+
+function categoryFocus(
+  categories: CategoryId[],
+  signal: ExploreSignal | null,
+  pinnedLines: string[],
+): ExploreFocus {
+  return { traits: [], chips: [], categories, signal, pinnedLines };
+}
+
 /**
- * 2–3 traits only when a recent signal ties at least one filled axis.
- * No signal → one filled trait, or the 9 chips. Never a combo from unused axes.
+ * Categories when any are ready. At most 2, and only when a recent signal
+ * ties both — never a default habit. No ready category → chips or one trait.
+ * Agency-triple (GM+LC+SE as three raw axes) is still dropped if traits leak.
  */
-export function pickExploreFocus(me: VoiceMe, history: CheckHistory[]): ExploreFocus {
+export function pickExploreFocus(
+  me: VoiceMe,
+  history: CheckHistory[],
+  input: { tracks?: readonly TraitTrack[]; pinnedLines?: string[] } = {},
+): ExploreFocus {
   const filled = filledAxes(me);
   const chips = namedChips(me);
+  const pinnedLines = input.pinnedLines ?? [];
+  const ready = readyIds(input.tracks);
   const signal = exploreSignalFromNudge({
     knocksYouOff: me.knocks_you_off,
     facts: me.facts ?? [],
     history,
   });
 
+  if (ready.length > 0) {
+    if (!signal) {
+      return categoryFocus([ready[0]!], null, pinnedLines);
+    }
+    const tied = categoriesTiedToSignal(signal, filled, ready);
+    if (tied.length >= 2) {
+      return categoryFocus(tied.slice(0, 2), signal, pinnedLines);
+    }
+    if (tied.length === 1) {
+      return categoryFocus([tied[0]!], signal, pinnedLines);
+    }
+    return categoryFocus([ready[0]!], signal, pinnedLines);
+  }
+
   if (!signal) {
-    if (filled.length > 0) return { traits: [filled[0]!], chips: [], signal: null };
-    return { traits: [], chips, signal: null };
+    if (filled.length > 0) {
+      return {
+        traits: dropsAgencyTriple([filled[0]!]),
+        chips: [],
+        categories: [],
+        signal: null,
+        pinnedLines,
+      };
+    }
+    return emptyFocus(chips, null, pinnedLines);
   }
 
   const tied = tiedToSignal(signal, filled);
   if (tied.length === 0) {
-    if (filled.length > 0) return { traits: [filled[0]!], chips: [], signal };
-    return { traits: [], chips, signal };
+    if (filled.length > 0) {
+      return {
+        traits: dropsAgencyTriple([filled[0]!]),
+        chips: [],
+        categories: [],
+        signal,
+        pinnedLines,
+      };
+    }
+    return emptyFocus(chips, signal, pinnedLines);
   }
 
-  const extras = filled.filter((axis) => !tied.includes(axis));
-  const combo = dropsAgencyTriple([...tied, ...extras]);
-  return { traits: combo, chips: [], signal };
+  return {
+    traits: dropsAgencyTriple([tied[0]!]),
+    chips: [],
+    categories: [],
+    signal,
+    pinnedLines,
+  };
 }
 
-/** Three focuses for one pack: rotate extras; each combo still signal-tied. */
-export function pickExplorePackFocuses(me: VoiceMe, history: CheckHistory[]): ExploreFocus[] {
-  const base = pickExploreFocus(me, history);
-  if (!base.signal || base.traits.length < 2) {
-    if (base.traits.length !== 1) return [base];
-    const singles: ExploreFocus[] = [base];
-    for (const axis of filledAxes(me)) {
-      if (axis === base.traits[0]) continue;
-      singles.push({ traits: [axis], chips: [], signal: null });
-      if (singles.length >= 3) break;
+/** Three focuses for one pack: rotate ready categories; each combo still signal-tied. */
+export function pickExplorePackFocuses(
+  me: VoiceMe,
+  history: CheckHistory[],
+  input: { tracks?: readonly TraitTrack[]; pinnedLines?: string[] } = {},
+): ExploreFocus[] {
+  const base = pickExploreFocus(me, history, input);
+  const ready = readyIds(input.tracks);
+  if (ready.length > 0) {
+    const used = new Set(base.categories);
+    const focuses: ExploreFocus[] = [base];
+    for (const id of ready) {
+      if (used.has(id)) continue;
+      focuses.push(categoryFocus([id], base.signal, input.pinnedLines ?? []));
+      if (focuses.length >= 3) break;
     }
-    return singles;
+    return focuses;
   }
 
-  const filled = filledAxes(me);
-  const tied = tiedToSignal(base.signal, filled);
-  const extras = filled.filter((axis) => !tied.includes(axis));
-  const focuses: ExploreFocus[] = [base];
-  for (let i = 0; i < extras.length && focuses.length < 3; i += 1) {
-    const combo = dropsAgencyTriple([tied[0]!, extras[i]!]);
-    if (combo.length >= 2) {
-      focuses.push({ traits: combo, chips: [], signal: base.signal });
-    }
+  if (base.traits.length !== 1) return [base];
+  const singles: ExploreFocus[] = [base];
+  for (const axis of filledAxes(me)) {
+    if (axis === base.traits[0]) continue;
+    singles.push({
+      traits: dropsAgencyTriple([axis]),
+      chips: [],
+      categories: [],
+      signal: null,
+      pinnedLines: input.pinnedLines ?? [],
+    });
+    if (singles.length >= 3) break;
   }
-  return focuses.slice(0, 3);
+  return singles;
 }
 
 export function exploreFingerprint(
   me: VoiceMe,
   history: CheckHistory[],
   traitTouchedAt?: Record<string, string>,
+  tracks?: readonly TraitTrack[],
 ): string {
   const facts = (me.facts ?? []).map((fact) => fact.trim()).filter(Boolean).join('|');
   const skips = history.slice(-7).filter((row) => row.status === 'skipped').length;
@@ -167,5 +256,14 @@ export function exploreFingerprint(
     .sort()
     .map((key) => `${key}:${traitTouchedAt?.[key] ?? ''}`)
     .join('|');
-  return `${facts}::${me.knocks_you_off}::${skips}::${touched}`;
+  const cats = tracks ? categoriesFingerprint(tracks) : '';
+  return `${facts}::${me.knocks_you_off}::${skips}::${touched}::${cats}`;
+}
+
+const PINNED_REPEAT_THRESHOLD = 0.5;
+
+/** True when the observation restates the pinned Categories card from today. */
+export function repeatsPinnedCategories(body: string, pinnedLines: readonly string[]): boolean {
+  if (!body.trim() || pinnedLines.length === 0) return false;
+  return pinnedLines.some((line) => line.trim() && topicalOverlap(body, line) >= PINNED_REPEAT_THRESHOLD);
 }

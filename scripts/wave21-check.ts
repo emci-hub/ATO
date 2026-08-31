@@ -62,12 +62,15 @@ assert.equal(AXIS_POLES.playfulness.low.length > 0, true);
 assert.equal(POLE_COPY_REVIEWED, false);
 ok('playfulness is the 16th axis: schema list, IQ, ranking, gut-call, depth, poles');
 
-assert.equal(CATEGORY_DEFS.length, 8);
+assert.equal(CATEGORY_DEFS.length, 9);
 assert.equal(CATEGORY_DEFS.filter((row) => row.shape === 'map').length, 2);
 const love = CATEGORY_DEFS.find((row) => row.id === 'cat_love')!;
 assert.deepEqual([...love.axes], ['attachment_anxiety', 'attachment_avoidance']);
 assert.deepEqual([...love.texture], ['conflict_assertiveness', 'conflict_cooperativeness']);
-ok('eight category defs; love map keeps conflict as texture');
+const levity = CATEGORY_DEFS.find((row) => row.id === 'cat_levity')!;
+assert.equal(levity.shape, 'bar');
+assert.deepEqual([...levity.axes], ['playfulness', 'conflict_assertiveness', 'conflict_cooperativeness']);
+ok('nine category defs; love map keeps conflict as texture; Levity is a bar');
 
 const social = CATEGORY_DEFS.find((row) => row.id === 'cat_social')!;
 const gameOnly: TraitTrack[] = [
@@ -126,7 +129,7 @@ assert.equal(combined1, combined2);
 ok('confirm-upgrade cannot change category fingerprint: same numbers, same hash');
 
 assert.equal(allCategoriesReady(reportSocial), false);
-ok('full picture stays locked until all eight categories are ready');
+ok('full picture stays locked until all live categories are ready');
 
 assert.equal(canShowCategoryTeaser('crisis'), false);
 assert.equal(canShowCategoryTeaser('missed_check'), false);
@@ -147,10 +150,10 @@ assert.equal(poleCopyClean(), true);
 assert.equal(titleCopyClean(), true);
 assert.equal(categoryBandCopyClean(), true);
 assert.equal(conceptCopyClean(), true);
-assert.equal(Object.keys(AXIS_CONCEPTS).length, 16);
-assert.equal(Object.keys(CATEGORY_CONCEPTS).length, 8);
+assert.equal(Object.keys(AXIS_CONCEPTS).length, TRAIT_AXES.length);
+assert.equal(Object.keys(CATEGORY_CONCEPTS).length, CATEGORY_DEFS.length);
 assert.ok(fallbackForReading(loveReady).length > 0);
-ok('24 concept explainers + poles + bands flagged unreviewed and fence-clean');
+ok(`${TRAIT_AXES.length + CATEGORY_DEFS.length} concept explainers + poles + bands flagged unreviewed and fence-clean`);
 
 assert.equal(parseCombinedBody('{"title":"INTJ Visionary","lede":"You are an INTJ."}'), null);
 const parsed = parseCombinedBody(

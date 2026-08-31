@@ -61,6 +61,8 @@ export const CATEGORY_CONCEPTS: Record<CategoryId, string> = {
     'A map of closeness: worry about people pulling away on one side, keeping some distance on the other. Conflict style sits under the map as texture, not as a score. Soft poles — this can shift.',
   cat_independence:
     'A map of doing it your way versus needing a real connection for a day to land. Two separate questions, plotted together.',
+  cat_levity:
+    'How much a hard talk can still have a little air in it — play in the day, plus how a disagreement gets named and left with a way through. A bar, not a map. This can shift.',
 };
 
 export function axisConcept(axis: TraitAxis): string {

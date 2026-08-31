@@ -1,3 +1,4 @@
+import type { DawnReadCategory } from '@/lib/dawn-category';
 import type { CheckHistory, DropReason, TalkStyle, Tone, VoiceCard, VoiceMe } from '../types';
 
 export interface GenerateInput {
@@ -12,6 +13,11 @@ export interface GenerateInput {
   previousHadCut: boolean;
   /** Why the previous generate attempt was dropped, if any. */
   retryHint?: DropReason | null;
+  /**
+   * At most one settled Dawn Read category (Steadiness / Agency / Drive).
+   * Null/absent = existing knock/fact/focus behavior. Never other categories.
+   */
+  dawnReadCategory?: DawnReadCategory | null;
 }
 
 /** Input for the Talk reply generator (the main Sage reply call). */

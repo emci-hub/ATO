@@ -14,7 +14,7 @@ import {
   resolveBadges,
   unlockedCount,
 } from '@/lib/badges';
-import { allCategoriesReady } from '@/lib/categories';
+import { allCategoriesReady, CATEGORY_DEFS } from '@/lib/categories';
 import { neonGlowColors, presenceGlowLayersForTier, PRESENCE_GLOW_LAYERS } from '@/lib/growth';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
@@ -130,9 +130,9 @@ const CHIP_COPY: Record<
   }),
   'full-picture': ({ unlocked }) => ({
     kicker: 'full picture',
-    value: unlocked ? 8 : '—',
+    value: unlocked ? CATEGORY_DEFS.length : '—',
     label: unlocked
-      ? 'Full picture, unlocked. All eight categories have settled.'
+      ? `Full picture, unlocked. All ${CATEGORY_DEFS.length} categories have settled.`
       : 'Full picture, locked. Not every category has settled yet.',
   }),
 };

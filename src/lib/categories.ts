@@ -1,7 +1,9 @@
 /**
- * Eight profile categories. Math reads the self-report track only.
+ * Named profile categories (live catalog — do not freeze a count).
+ * Math reads the self-report track only.
  * Gut-call never enters a bar or a map — Sage-divergence stays intact.
  * Confirm-upgrade does not change numbers, so it does not change category math.
+ * Love / closeness is the only map built from conflict-adjacent axes.
  */
 import {
   effectiveStability,
@@ -21,7 +23,8 @@ export type CategoryId =
   | 'cat_social'
   | 'cat_communication'
   | 'cat_love'
-  | 'cat_independence';
+  | 'cat_independence'
+  | 'cat_levity';
 
 export type CategoryShape = 'bar' | 'map';
 
@@ -107,6 +110,15 @@ export const CATEGORY_DEFS: readonly CategoryDef[] = [
     shape: 'map',
     axes: ['autonomy', 'relatedness'],
     weights: { autonomy: 1, relatedness: 1 },
+    minStable: 2,
+    texture: [],
+  },
+  {
+    id: 'cat_levity',
+    name: 'Levity',
+    shape: 'bar',
+    axes: ['playfulness', 'conflict_assertiveness', 'conflict_cooperativeness'],
+    weights: { playfulness: 1, conflict_assertiveness: 1, conflict_cooperativeness: 1 },
     minStable: 2,
     texture: [],
   },

@@ -1,4 +1,5 @@
 import { phraseForStoredChip } from '@/lib/intake';
+import { type CategoryId } from '@/lib/categories';
 import { libraryGroundingBlock, selectLibraryEntries } from '@/lib/voice/library';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '@/lib/voice/preset';
@@ -30,6 +31,37 @@ export const EXPLORE_AXIS_GROUNDING_LINES = [
   'playfulness: whether a bit of lightness is how a day lands, versus treating the day as a job',
 ] as const;
 
+/**
+ * Prompt-only category meaning. Never render. UNREVIEWED.
+ * Write from this merge — do not name the category.
+ */
+export const EXPLORE_CATEGORY_GROUNDING: Record<CategoryId, string> = {
+  cat_steadiness:
+    'how they hold a plan and a knock — follow-through, going along, how fast a bad start fades',
+  cat_openness: 'how open a day is to a different path and to people around them',
+  cat_drive:
+    'how they pick a path, handle a hard task, and whether a real connection is part of that',
+  cat_agency:
+    'what they tell themselves after a miss, and whether a bigger ask feels like theirs to figure out',
+  cat_social: 'everyday people-energy: rooms, going along, and whether the day wants a little play',
+  cat_communication:
+    'how they move in a disagreement — putting a point on the table, and leaving the other person a way through',
+  cat_love:
+    'closeness: worry about people pulling away on one side, keeping some distance on the other. Disagreement style is texture, not a second score',
+  cat_independence:
+    'doing it their way versus needing a real connection for a day to land — two separate questions sitting together',
+  cat_levity:
+    'whether a hard talk can still have a little air in it — lightness in the day, plus how a disagreement gets named and left with a way through',
+};
+
+function categoryGroundingBlock(categories: readonly CategoryId[]): string {
+  if (categories.length === 0) return '';
+  const lines = categories.map((id) => `${id}: ${EXPLORE_CATEGORY_GROUNDING[id]}`);
+  return `CATEGORY GROUNDING (internal only — write from this merge. Never name the category, never paste this line, never say "you are.")
+${lines.join('\n')}
+`;
+}
+
 export const EXPLORE_AXIS_GROUNDING: Record<TraitAxis, string> = Object.fromEntries(
   EXPLORE_AXIS_GROUNDING_LINES.map((line) => {
     const split = line.indexOf(': ');
@@ -46,8 +78,7 @@ ${lines.join('\n')}
 }
 
 /**
- * Explore few-shots — deeper than Read, may combine 2–3 traits, same root
- * voice. Examples to match, not templates to paste.
+ * Explore few-shots — deeper than Read. Examples to match, not templates to paste.
  */
 export const EXPLORE_FEW_SHOTS = `## Explore
 You skipped twice this week, both times when your plate was already full. Maybe that's less about not wanting people time, and more about just not having room for it.
@@ -94,22 +125,33 @@ export function buildExplorePrompt(input: {
   retryHint?: boolean;
 }): string {
   const { me, focus } = input;
+  const categories = focus.categories ?? [];
+  const pinnedLines = focus.pinnedLines ?? [];
   const signalLine = focus.signal
     ? `- Recent signal (${focus.signal.kind}): ${focus.signal.detail}`
-    : '- No recent signal. Stay at one trait, or write from the chips. Do not invent a 2–3 combo.';
+    : '- No recent signal. Stay at one category or one trait, or write from the chips. Do not invent a two-category combo.';
 
   const combineRule =
-    focus.traits.length >= 2
-      ? `Combine these ${focus.traits.length} traits in one observation. At least one is tied to the recent signal.`
-      : 'One trait or chips only. Do not manufacture a 2–3 combo.';
+    categories.length >= 2
+      ? `Combine these ${categories.length} categories in one observation. A recent signal ties them. Never a third. Never a default habit.`
+      : categories.length === 1
+        ? 'One category only. Do not manufacture a second.'
+        : focus.traits.length >= 2
+          ? `Combine these ${focus.traits.length} traits in one observation. At least one is tied to the recent signal.`
+          : 'One trait or chips only. Do not manufacture a combo.';
 
   const missed = input.reactionNotes.length
     ? `ANGLES THAT DID NOT LAND for this person (do not reuse; never treat as a trait score):\n${input.reactionNotes.map((note) => `- ${note}`).join('\n')}`
     : 'No prior Explore reactions.';
 
-  const groundingPresent = focus.traits.length > 0;
+  const pinned =
+    pinnedLines.length > 0
+      ? `PINNED CATEGORIES CARD TODAY (already on this screen — do not restate, paraphrase, or recycle this wording):\n${pinnedLines.map((line) => `- ${line}`).join('\n')}`
+      : 'No pinned Categories card copy today.';
+
+  const groundingPresent = focus.traits.length > 0 || categories.length > 0;
   const lengthRule = groundingPresent
-    ? `7. AXIS GROUNDING is internal. Write the observation from that meaning. Do not quote it. Do not let a chip or signal (sleep, coffee, recovery) replace the tagged axis.
+    ? `7. GROUNDING is internal. Write the observation from that meaning. Do not quote it. Do not let a chip or signal (sleep, coffee, recovery) replace the tagged merge.
 8. 2–4 sentences. Deeper than a daily Read. Plain text.`
     : '7. 2–4 sentences. Deeper than a daily Read. Plain text.';
 
@@ -128,17 +170,19 @@ TODAY
 ${input.retryHint ? '- Previous draft was dropped because it named a type or label. Write a different angle.\n' : ''}
 CONTEXT
 ${traitLines(me, focus.traits)}
-${axisGroundingBlock(focus.traits)}CHIPS they already named:
+${axisGroundingBlock(focus.traits)}${categoryGroundingBlock(categories)}CHIPS they already named:
 ${chipLines(me, focus.chips.length > 0 ? focus.chips : ['morning_cue', 'show_up', 'current_focus', 'recovery_style'])}
 ${signalLine}
 ${libraryGroundingBlock(selectLibraryEntries(me, { day: 1, surface: 'card' }))}
+
+${pinned}
 
 ${missed}
 
 RULES
 1. ${combineRule}
 2. Never combine growth_mindset, locus_of_control, and self_efficacy in one entry.
-3. Reflect patterns as maybes, not facts. No "you are." No framework names (MBTI, Big Five, attachment, and the rest). Never name the axis. Notice, don't correct.
+3. Reflect patterns as maybes, not facts. No "you are." No framework names (MBTI, Big Five, attachment, and the rest). Never name the axis or the category. Notice, don't correct.
 4. Hedge lives inside the sentence. No bolted-on closing after a dash or period.
 5. Completeness is not an input. Do not mention leftover axes, a fuller profile, or that more answers would help.
 6. FRAMING NOTES are concepts, not copy. Restate in Sage's own words. Never paste a note.

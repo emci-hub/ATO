@@ -23,7 +23,7 @@ export interface BadgeInput {
   factCount: number;
   checks: BadgeCheck[];
   timeZone?: string;
-  /** All 8 categories independently past the stability floor. */
+  /** All currently-defined categories independently past the stability floor. */
   fullPicture?: boolean;
 }
 

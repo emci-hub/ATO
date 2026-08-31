@@ -23,6 +23,12 @@ import { filterCard, hasCut, isCruelCut, isTopicalRepeat, isVagueDo } from '../s
 import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
 import { localProvider } from '../src/lib/voice/providers/local';
 import { buildPrompt, buildTalkPrompt } from '../src/lib/voice/providers/prompt';
+import {
+  DAWN_READ_CATEGORY_IDS,
+  dawnReadCategoriesAreBars,
+  pickDawnReadCategory,
+} from '../src/lib/dawn-category';
+import { applyEwmaAnswer, type TraitTrack } from '../src/lib/trait-stability';
 import type { VoiceProvider } from '../src/lib/voice/providers/types';
 import { deriveTone, routeVoiceCard } from '../src/lib/voice/router';
 import { routeTalkReply } from '../src/lib/voice/talk';
@@ -265,6 +271,60 @@ assert.match(cardPrompt, /Sleep disrupted the streak/);
 assert.match(cardPrompt, /AVAILABLE SIGNALS/);
 assert.match(cardPrompt, /finish work at four/);
 ok('card prompt lists prior Reads and rotatable signals, not status-only history');
+
+assert.doesNotMatch(cardPrompt, /DAWN CATEGORY/);
+assert.doesNotMatch(cardPrompt, /cat_steadiness|cat_agency|cat_drive/);
+const axisMe: VoiceMe = { ...varietyMe, extraversion: 0.9, openness: 0.2 };
+const axisPrompt = buildPrompt({
+  me: axisMe,
+  day: 5,
+  tone: 'even',
+  history: mkHistory([{ day: 4, status: 'done', read: sleepStreak.read, do: sleepStreak.do }]),
+  crisisToday: false,
+  previousHadCut: false,
+});
+assert.doesNotMatch(axisPrompt, /extraversion|openness/);
+assert.match(axisPrompt, /After you make coffee/);
+ok('Dawn Read without a settled category omits the 16-axis backbone and keeps the morning-cue Do');
+
+assert.equal(dawnReadCategoriesAreBars(), true);
+assert.deepEqual([...DAWN_READ_CATEGORY_IDS], ['cat_steadiness', 'cat_agency', 'cat_drive']);
+assert.equal(pickDawnReadCategory([], 4), null);
+
+function dawnStable(axis: TraitTrack['axis'], value: number): TraitTrack {
+  const nowIso = '2026-08-31T12:00:00.000Z';
+  let row = applyEwmaAnswer(null, axis, 'report', value, nowIso);
+  row = applyEwmaAnswer(row, axis, 'report', value, nowIso);
+  return applyEwmaAnswer(row, axis, 'report', value, nowIso);
+}
+const dawnTracks = [
+  dawnStable('conscientiousness', 0.8),
+  dawnStable('agreeableness', 0.7),
+  dawnStable('steadiness', 0.6),
+];
+const dawnPick = pickDawnReadCategory(dawnTracks, 4);
+assert.equal(dawnPick?.id, 'cat_steadiness');
+const dawnPrompt = buildPrompt({
+  me: axisMe,
+  day: 4,
+  tone: 'even',
+  history: mkHistory([{ day: 3, status: 'done', read: sleepStreak.read, do: sleepStreak.do }]),
+  crisisToday: false,
+  previousHadCut: false,
+  dawnReadCategory: dawnPick,
+});
+assert.match(dawnPrompt, /DAWN CATEGORY/);
+assert.match(dawnPrompt, /cat_steadiness/);
+assert.doesNotMatch(dawnPrompt, /cat_love|cat_openness|cat_social|cat_levity/);
+assert.match(dawnPrompt, /After you make coffee/);
+ok('Dawn Read may draw from one settled Steadiness/Agency/Drive merge; Do stays if-then');
+
+const routerSrc = readFileSync(resolve(__dirname, '../src/lib/voice/router.ts'), 'utf8');
+const filtersSrc = readFileSync(resolve(__dirname, '../src/lib/voice/filters.ts'), 'utf8');
+assert.match(routerSrc, /filterCard\(candidate/);
+assert.match(routerSrc, /pickDawnReadCategory/);
+assert.doesNotMatch(filtersSrc, /dawnReadCategory|pickDawnReadCategory|DAWN_READ/);
+ok('anti-repeat and cut/crisis gates still run on the generated card; Dawn category has no filter bypass');
 
 const talkPrompt = buildTalkPrompt({
   me: ME,

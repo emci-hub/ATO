@@ -20,6 +20,8 @@ import { aiConsentFor, setAiConsent } from '@/lib/me';
 import { voiceMeFrom } from '@/lib/intake';
 import { persistRoutedCard } from '@/lib/today-card';
 import { routeVoiceCard } from '@/lib/voice/router';
+import { fetchTraitTracks } from '@/lib/trait-tracks-store';
+import type { TraitTrack } from '@/lib/trait-stability';
 import { logJargonGuard } from '@/lib/voice/quota-server';
 import { recordOwnDevTrace } from '@/lib/dev-trace-server';
 import type { VoiceCardResult } from '@/lib/voice/types';
@@ -45,6 +47,7 @@ export default function DawnScreen() {
   const [busy, setBusy] = useState<'log' | 'skip' | 'consent' | null>(null);
   const [crisisToday, setCrisisToday] = useState(false);
   const [crisisYesterday, setCrisisYesterday] = useState(false);
+  const [tracks, setTracks] = useState<TraitTrack[]>([]);
 
   const reloadChecks = useCallback(async () => {
     if (!userId) return;
@@ -75,6 +78,21 @@ export default function DawnScreen() {
       cancelled = true;
     };
   }, [userId, me?.timezone]);
+
+  useEffect(() => {
+    if (!me) return;
+    let cancelled = false;
+    fetchTraitTracks(me.id)
+      .then((next) => {
+        if (!cancelled) setTracks(next);
+      })
+      .catch(() => {
+        if (!cancelled) setTracks([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [me?.id, me?.updated_at]);
 
   const checkCount = checks.length;
   const window = me
@@ -128,6 +146,7 @@ export default function DawnScreen() {
       crisisYesterday,
       aiConsent: me.ai_consent,
       day: todayOpen.day,
+      tracks,
     }, { logJargonHit: logJargonGuard, recordTrace: recordOwnDevTrace, traceSurface: 'dawn' })
       .then((next) => {
         if (cancelled) return;
@@ -150,7 +169,7 @@ export default function DawnScreen() {
     return () => {
       cancelled = true;
     };
-  }, [me, checks, needsConsentPrompt, todayLogged, todayOpen?.day, crisisToday, crisisYesterday]);
+  }, [me, checks, needsConsentPrompt, todayLogged, todayOpen?.day, crisisToday, crisisYesterday, tracks]);
 
   async function log(status: 'done' | 'skipped') {
     if (!userId || !me || !result?.card || !todayOpen || busy) return;
