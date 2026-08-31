@@ -14,7 +14,8 @@ import {
   pickExplorePackFocuses,
 } from '../src/lib/explore/combine';
 import { EXPLORE_GUARD_FALLBACK, EXPLORE_LABEL, EXPLORE_NOTED } from '../src/lib/explore/copy';
-import { EXPLORE_FEW_SHOTS, buildExplorePrompt } from '../src/lib/explore/prompt';
+import { EXPLORE_FEW_SHOTS, EXPLORE_AXIS_GROUNDING_LINES, buildExplorePrompt } from '../src/lib/explore/prompt';
+import { TRAIT_AXES } from '../src/lib/traits';
 import { routeExplore } from '../src/lib/explore/route';
 import type { ExploreMeSlice, ExplorePackRow } from '../src/lib/explore/types';
 import type { DevTraceRecordInput } from '../src/lib/dev-trace';
@@ -91,7 +92,13 @@ assert.deepEqual(
   dropsAgencyTriple(['growth_mindset', 'locus_of_control', 'self_efficacy']),
   ['growth_mindset', 'locus_of_control'],
 );
+assert.deepEqual([...AGENCY_AXES], ['growth_mindset', 'locus_of_control', 'self_efficacy']);
+assert.match(
+  read('src/lib/explore/prompt.ts'),
+  /Never combine growth_mindset, locus_of_control, and self_efficacy in one entry/,
+);
 ok('agency triple is dropped to two');
+ok('agency triple is which-three, not a function of total axis count');
 
 const noSignal = pickExploreFocus(chipsOnly, []);
 assert.equal(noSignal.signal, null);
@@ -182,26 +189,8 @@ assert.match(EXPLORE_FEW_SHOTS, /## Explore/);
 ok('Explore prompt has four few-shots and no completeness-as-input copy');
 
 const promptSrc = read('src/lib/explore/prompt.ts');
-const GROUNDING_LINES = [
-  'openness: curiosity about ideas, new experiences, trying something unfamiliar',
-  'conscientiousness: follow-through, structure, planning ahead vs staying loose',
-  'extraversion: energy from people and activity vs energy from quiet and solitude',
-  'agreeableness: how they move through disagreement — softening it or naming it',
-  'steadiness: emotional evenness under pressure vs feeling things sharply',
-  'attachment_anxiety: needing reassurance, worrying where they stand with someone',
-  'attachment_avoidance: pulling back or staying self-reliant as closeness increases',
-  'conflict_assertiveness: saying the hard thing directly, or letting it sit',
-  'conflict_cooperativeness: looking for a shared fix, or holding their ground',
-  'autonomy: wanting to choose their own path vs wanting guidance',
-  'competence: confidence in their own follow-through and capability',
-  'relatedness: how connected they feel to the people around them right now',
-  'growth_mindset: whether setbacks read as fixed or as something that can shift',
-  'locus_of_control: outcomes feeling steered by them, or happening to them',
-  "self_efficacy: belief they can actually do the thing they're setting out to do",
-  'playfulness: whether a bit of lightness is how a day lands, versus treating the day as a job',
-] as const;
-assert.equal(GROUNDING_LINES.length, 16);
-for (const line of GROUNDING_LINES) {
+assert.equal(EXPLORE_AXIS_GROUNDING_LINES.length, TRAIT_AXES.length);
+for (const line of EXPLORE_AXIS_GROUNDING_LINES) {
   assert.ok(promptSrc.includes(line), `prompt source missing grounding: ${line}`);
 }
 const chipsOnlyPrompt = buildExplorePrompt({
@@ -210,7 +199,7 @@ const chipsOnlyPrompt = buildExplorePrompt({
   reactionNotes: [],
 });
 assert.doesNotMatch(chipsOnlyPrompt, /AXIS GROUNDING/);
-ok('grounding line content exists for all sixteen axes; chips-only prompts skip it');
+ok(`grounding line content exists for all ${TRAIT_AXES.length} axes; chips-only prompts skip it`);
 
 function walkComponents(dir: string): string[] {
   const out: string[] = [];
@@ -223,11 +212,11 @@ function walkComponents(dir: string): string[] {
 }
 for (const file of walkComponents(resolve(root, 'src/components'))) {
   const src = readFileSync(file, 'utf8');
-  for (const line of GROUNDING_LINES) {
+  for (const line of EXPLORE_AXIS_GROUNDING_LINES) {
     assert.ok(!src.includes(line), `${file} must not contain prompt grounding`);
   }
 }
-ok('none of the fifteen grounding strings appear in any component file');
+ok('none of the axis grounding strings appear in any component file');
 
 async function main() {
 const denied = await routeExplore({

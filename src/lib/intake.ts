@@ -10,7 +10,9 @@
  */
 
 import { sanitizeFacts } from '@/lib/voice/framework-fence';
-import { voicePresetOf, type VoicePreset } from '@/lib/voice/preset';
+import { voicePresetOf } from '@/lib/voice/preset';
+import type { VoiceMe } from '@/lib/voice/types';
+import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
 type TalkStyle = 'quiet' | 'even' | 'loud';
 
@@ -385,66 +387,28 @@ export function isCurrentFocus(value: string | null | undefined): value is Curre
 }
 
 /** Slice of ME the router needs, including intake fields used for bank pick. */
-export function voiceMeFrom(me: {
-  name: string;
-  show_up: string;
-  talk_style: TalkStyle;
-  knocks_you_off: string;
-  morning_cue: string;
-  evening_wind_down?: string | null;
-  energy_pattern?: string | null;
-  recovery_style?: string | null;
-  support_style?: string | null;
-  current_focus?: string | null;
-  openness?: number | null;
-  conscientiousness?: number | null;
-  extraversion?: number | null;
-  agreeableness?: number | null;
-  steadiness?: number | null;
-  attachment_anxiety?: number | null;
-  attachment_avoidance?: number | null;
-  conflict_assertiveness?: number | null;
-  conflict_cooperativeness?: number | null;
-  autonomy?: number | null;
-  competence?: number | null;
-  relatedness?: number | null;
-  growth_mindset?: number | null;
-  locus_of_control?: number | null;
-  self_efficacy?: number | null;
-  facts?: string[] | unknown;
-  voice_preset?: string | null;
-}): {
-  name: string;
-  show_up: string;
-  talk_style: TalkStyle;
-  knocks_you_off: string;
-  morning_cue: string;
-  evening_wind_down: string | null;
-  energy_pattern: EnergyPattern | null;
-  recovery_style: RecoveryStyle | null;
-  support_style: SupportStyle | null;
-  current_focus: CurrentFocus | null;
-  voice_preset: VoicePreset;
-  openness: number | null;
-  conscientiousness: number | null;
-  extraversion: number | null;
-  agreeableness: number | null;
-  steadiness: number | null;
-  attachment_anxiety: number | null;
-  attachment_avoidance: number | null;
-  conflict_assertiveness: number | null;
-  conflict_cooperativeness: number | null;
-  autonomy: number | null;
-  competence: number | null;
-  relatedness: number | null;
-  growth_mindset: number | null;
-  locus_of_control: number | null;
-  self_efficacy: number | null;
-  playfulness: number | null;
-  facts: string[];
-} {
+export function voiceMeFrom(
+  me: {
+    name: string;
+    show_up: string;
+    talk_style: TalkStyle;
+    knocks_you_off: string;
+    morning_cue: string;
+    evening_wind_down?: string | null;
+    energy_pattern?: string | null;
+    recovery_style?: string | null;
+    support_style?: string | null;
+    current_focus?: string | null;
+    facts?: string[] | unknown;
+    voice_preset?: string | null;
+  } & Partial<Record<TraitAxis, number | null>>,
+): VoiceMe {
   const num = (value: number | null | undefined): number | null =>
     typeof value === 'number' && Number.isFinite(value) ? value : null;
+  const traits = {} as Partial<Record<TraitAxis, number | null>>;
+  for (const axis of TRAIT_AXES) {
+    traits[axis] = num(me[axis]);
+  }
   return {
     name: me.name,
     show_up: me.show_up,
@@ -457,22 +421,7 @@ export function voiceMeFrom(me: {
     support_style: isSupportStyle(me.support_style) ? me.support_style : null,
     current_focus: isCurrentFocus(me.current_focus) ? me.current_focus : null,
     voice_preset: voicePresetOf(me.voice_preset),
-    openness: num(me.openness),
-    conscientiousness: num(me.conscientiousness),
-    extraversion: num(me.extraversion),
-    agreeableness: num(me.agreeableness),
-    steadiness: num(me.steadiness),
-    attachment_anxiety: num(me.attachment_anxiety),
-    attachment_avoidance: num(me.attachment_avoidance),
-    conflict_assertiveness: num(me.conflict_assertiveness),
-    conflict_cooperativeness: num(me.conflict_cooperativeness),
-    autonomy: num(me.autonomy),
-    competence: num(me.competence),
-    relatedness: num(me.relatedness),
-    growth_mindset: num(me.growth_mindset),
-    locus_of_control: num(me.locus_of_control),
-    self_efficacy: num(me.self_efficacy),
-    playfulness: num(me.playfulness),
+    ...traits,
     facts: sanitizeFacts(me.facts),
   };
 }

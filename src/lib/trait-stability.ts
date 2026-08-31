@@ -136,7 +136,7 @@ export function trackFor(
 }
 
 /**
- * Sum of effective report-track stability / 15.
+ * Sum of effective report-track stability across every currently-defined axis.
  * Gut-call never counts. Below the answer-count floor an axis contributes 0.
  */
 export function settledScore(rows: readonly TraitTrack[], now: Date = new Date()): number {
@@ -149,6 +149,19 @@ export function settledScore(rows: readonly TraitTrack[], now: Date = new Date()
 
 export function settledCount(rows: readonly TraitTrack[], now: Date = new Date()): number {
   return Math.round(settledScore(rows, now));
+}
+
+/**
+ * Original thin floor was 6 of 15 settled. Stay a fraction of the live
+ * inventory so a 17th axis does not need a new literal.
+ */
+export const THIN_PROFILE_RATIO = 6 / 15;
+
+export function isThinProfile(
+  settled: number,
+  axisTotal: number = TRAIT_AXES.length,
+): boolean {
+  return axisTotal > 0 && settled / axisTotal < THIN_PROFILE_RATIO;
 }
 
 export const SETTLED_LABEL_SUFFIX = `of ${TRAIT_AXES.length} settled`;

@@ -216,24 +216,11 @@ function pole(high: boolean, r: number): number {
 }
 
 export function emptyTraitValues(): TraitValues {
-  return {
-    openness: null,
-    conscientiousness: null,
-    extraversion: null,
-    agreeableness: null,
-    steadiness: null,
-    attachment_anxiety: null,
-    attachment_avoidance: null,
-    conflict_assertiveness: null,
-    conflict_cooperativeness: null,
-    autonomy: null,
-    competence: null,
-    relatedness: null,
-    growth_mindset: null,
-    locus_of_control: null,
-    self_efficacy: null,
-    playfulness: null,
-  };
+  const values = {} as TraitValues;
+  for (const axis of TRAIT_AXES) {
+    values[axis] = null;
+  }
+  return values;
 }
 
 export function emptyTraitState(): TraitState {
@@ -357,26 +344,12 @@ export function confirmTraitSource(
   return { values, sources, touched };
 }
 
-export function traitStateFromRow(row: {
-  openness?: number | null;
-  conscientiousness?: number | null;
-  extraversion?: number | null;
-  agreeableness?: number | null;
-  steadiness?: number | null;
-  attachment_anxiety?: number | null;
-  attachment_avoidance?: number | null;
-  conflict_assertiveness?: number | null;
-  conflict_cooperativeness?: number | null;
-  autonomy?: number | null;
-  competence?: number | null;
-  relatedness?: number | null;
-  growth_mindset?: number | null;
-  locus_of_control?: number | null;
-  self_efficacy?: number | null;
-  playfulness?: number | null;
-  trait_sources?: unknown;
-  trait_touched_at?: unknown;
-}): TraitState {
+export function traitStateFromRow(
+  row: Partial<Record<TraitAxis, number | null>> & {
+    trait_sources?: unknown;
+    trait_touched_at?: unknown;
+  },
+): TraitState {
   const values = emptyTraitValues();
   for (const axis of TRAIT_AXES) {
     const n = row[axis];

@@ -1,6 +1,6 @@
 /**
  * Two-letter axis codes. Tap the code to reveal the full category name.
- * Never MBTI branding — these are internal shorthand for the 16 axes.
+ * Never MBTI branding — these are internal shorthand for TRAIT_AXES.
  */
 import type { TraitAxis } from '@/lib/traits';
 

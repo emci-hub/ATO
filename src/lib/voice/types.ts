@@ -1,4 +1,5 @@
 import type { VoicePreset } from './preset';
+import type { TraitAxis } from '@/lib/traits';
 
 export type TalkStyle = 'quiet' | 'even' | 'loud';
 
@@ -41,8 +42,8 @@ export interface CheckHistory {
 }
 
 /** The slice of `me` the router needs. Kept free of Supabase/RN imports so the
- *  router is unit-testable in Node. */
-export interface VoiceMe {
+ *  router is unit-testable in Node. Trait numbers come from TRAIT_AXES. */
+export type VoiceMe = {
   name: string;
   show_up: string;
   talk_style: TalkStyle;
@@ -54,25 +55,9 @@ export interface VoiceMe {
   support_style?: 'nudge' | 'space' | 'listen' | 'plan' | null;
   current_focus?: 'habit' | 'through_it' | 'like_yourself' | 'show_up' | null;
   voice_preset?: VoicePreset | null;
-  openness?: number | null;
-  conscientiousness?: number | null;
-  extraversion?: number | null;
-  agreeableness?: number | null;
-  steadiness?: number | null;
-  attachment_anxiety?: number | null;
-  attachment_avoidance?: number | null;
-  conflict_assertiveness?: number | null;
-  conflict_cooperativeness?: number | null;
-  autonomy?: number | null;
-  competence?: number | null;
-  relatedness?: number | null;
-  growth_mindset?: number | null;
-  locus_of_control?: number | null;
-  self_efficacy?: number | null;
-  playfulness?: number | null;
   /** Facts they asked Sage to remember. Nudge signal + optional Home-card angle. Never talk_style. */
   facts?: string[];
-}
+} & Partial<Record<TraitAxis, number | null>>;
 
 export interface RouteVoiceCardInput {
   me: VoiceMe;

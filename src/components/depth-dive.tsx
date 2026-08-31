@@ -18,7 +18,7 @@ import { stampAxisDepth } from '@/lib/trait-tracks-store';
 import { controlBorderColor } from '@/lib/theme/chrome';
 
 /**
- * Token-spent capture. Ranking pick for the first nine; gut-call for the extra six.
+ * Token-spent capture. Ranking pick for core axes; gut-call for EXTRA_AXES.
  * Spends only after a successful write. Skip spends nothing.
  */
 export function DepthDive({

@@ -1,5 +1,6 @@
 import { phraseForStoredChip } from '@/lib/intake';
 import { TRAIT_AXES, traitPromptLines } from '@/lib/traits';
+import { isThinProfile } from '@/lib/trait-stability';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '../preset';
 
 import { cueAfterYou } from '../cue';
@@ -178,10 +179,9 @@ export function buildTalkPrompt(input: TalkGenerateInput): string {
     : 'OPTIONAL BACKGROUND: no Home card today.';
 
   const answered = input.answeredCount ?? 0;
-  const thin =
-    answered < 6
-      ? `PROFILE DEPTH: still thin (${answered} of ${TRAIT_AXES.length} settled). If you draw on how they tend to move, say plainly you don't have much yet and coach more generally. Do not invent specifics. Do not nag them to fill more.`
-      : `PROFILE DEPTH: ${answered} of ${TRAIT_AXES.length} settled. Draw on that when it matches what they just said.`;
+  const thin = isThinProfile(answered)
+    ? `PROFILE DEPTH: still thin (${answered} of ${TRAIT_AXES.length} settled). If you draw on how they tend to move, say plainly you don't have much yet and coach more generally. Do not invent specifics. Do not nag them to fill more.`
+    : `PROFILE DEPTH: ${answered} of ${TRAIT_AXES.length} settled. Draw on that when it matches what they just said.`;
 
   const divergence = input.divergenceNote
     ? `TENSION (conversational, optional): ${input.divergenceNote} You may note that it doesn't quite line up. Do not overwrite either reading. Never name a framework or a score.`

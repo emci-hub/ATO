@@ -51,10 +51,9 @@ function stableReport(axis: TraitTrack['axis'], value: number): TraitTrack {
   return row;
 }
 
-assert.equal(TRAIT_AXES.length, 16);
 assert.ok((TRAIT_AXES as readonly string[]).includes('playfulness'));
 assert.ok((EXTRA_AXES as readonly string[]).includes('playfulness'));
-assert.equal(DEPTH_AXES.length, 16);
+assert.equal(DEPTH_AXES.length, TRAIT_AXES.length);
 assert.equal(depthKindFor('playfulness'), 'scenario');
 assert.ok(RANKING_ROUNDS.playfulness.length >= 5);
 assert.equal(SCENARIO_DECK.playfulness.axis, 'playfulness');

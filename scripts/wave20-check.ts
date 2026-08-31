@@ -33,6 +33,8 @@ import {
   settledAxisLabel,
   settledCount,
   settledScore,
+  THIN_PROFILE_RATIO,
+  isThinProfile,
   trackKindForSource,
   type TraitTrack,
 } from '../src/lib/trait-stability';
@@ -108,9 +110,16 @@ const reportStable: TraitTrack = {
   lastTouched: nowIso,
   lastDepthAt: null,
 };
-assert.equal(settledAxisLabel([reportStable]), '1 of 16 settled');
+assert.equal(settledAxisLabel([reportStable]), `1 of ${TRAIT_AXES.length} settled`);
 assert.equal(settledCount([]), 0);
-ok('completeness is stability-weighted N of 16 settled');
+assert.equal(THIN_PROFILE_RATIO, 6 / 15);
+assert.equal(isThinProfile(5, 15), true);
+assert.equal(isThinProfile(6, 15), false);
+assert.equal(isThinProfile(6, 17), true);
+assert.equal(isThinProfile(7, 17), false);
+assert.equal(isThinProfile(5), true);
+assert.equal(isThinProfile(TRAIT_AXES.length), false);
+ok(`completeness is stability-weighted N of ${TRAIT_AXES.length} settled; thin is a live fraction`);
 
 assert.equal(depthReady(null, now), true);
 assert.equal(depthReady('2026-08-30T00:00:00.000Z', now), false);
@@ -120,15 +129,18 @@ ok('Full Profile Depth is 48h per axis');
 const blendedDiv = divergingAxesFromTracks([
   { ...reportStable, axis: 'autonomy', value: 0.8 },
   { axis: 'autonomy', track: 'game', value: 0.2, stability: 0.5, answerCount: 3, lastTouched: nowIso, lastDepthAt: null },
+  { ...reportStable, axis: 'playfulness', value: 0.2 },
+  { axis: 'playfulness', track: 'game', value: 0.9, stability: 0.5, answerCount: 3, lastTouched: nowIso, lastDepthAt: null },
 ]);
-assert.equal(blendedDiv.length, 1);
-assert.equal(blendedDiv[0]!.axis, 'autonomy');
+assert.equal(blendedDiv.length, 2);
+assert.ok(blendedDiv.some((row) => row.axis === 'autonomy'));
+assert.ok(blendedDiv.some((row) => row.axis === 'playfulness'));
 const rawDiv = divergingAxes([
   { id: '1', axis: 'autonomy', value: 0.9, source: 'self_tap', createdAt: nowIso },
   { id: '2', axis: 'autonomy', value: 0.1, source: 'self_game', createdAt: nowIso },
 ]);
 assert.equal(rawDiv.length, 1);
-ok('divergence helper compares blended tracks; raw last-answer helper remains as fallback');
+ok('divergence helper walks every TRAIT_AXES entry, including Playfulness');
 
 assert.equal(POLE_COPY_REVIEWED, false);
 assert.equal(TITLE_COPY_REVIEWED, false);

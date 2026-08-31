@@ -3,7 +3,7 @@ import type { TraitAxis } from '@/lib/traits';
 import { QUESTIONS_BATCH_SIZE } from './types';
 import type { QuestionDraft, QuestionItemRow, QuestionPackRow } from './types';
 
-/** Soft memory — last 2–3 asked axes, not a round-robin through all 15. */
+/** Soft memory — last 2–3 asked axes, not a round-robin through the live inventory. */
 export const QUESTIONS_AXIS_MEMORY = 3;
 
 export function isOpenQuestionItem(item: QuestionItemRow): boolean {

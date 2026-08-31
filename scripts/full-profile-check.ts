@@ -1,7 +1,7 @@
 /**
  * You-tab Full Profile. Run: npm run check:full-profile
  *
- * Private 15-axis inventory. Completeness is "N of 15 settled" — never a
+ * Private TRAIT_AXES inventory. Completeness is "N of K settled" — never a
  * percent, never on Home / Explore / widget / push. Writes reuse
  * updateTraits. Poster and public handle stay closed.
  */
@@ -40,9 +40,9 @@ function read(rel: string): string {
   return readFileSync(resolve(root, rel), 'utf8');
 }
 
-assert.equal(TRAIT_AXIS_TOTAL, 16);
+assert.equal(TRAIT_AXIS_TOTAL, TRAIT_AXES.length);
 assert.equal(answeredAxisCount(emptyTraitValues()), 0);
-assert.equal(answeredAxisLabel(emptyTraitValues()), '0 of 16 answered');
+assert.equal(answeredAxisLabel(emptyTraitValues()), `0 of ${TRAIT_AXES.length} answered`);
 const some = mergeTraitWrite(
   emptyTraitState(),
   { extraversion: 0.2, growth_mindset: 0.8 },
@@ -50,10 +50,10 @@ const some = mergeTraitWrite(
   ['extraversion', 'growth_mindset'],
 );
 assert.equal(answeredAxisCount(some.values), 2);
-assert.equal(answeredAxisLabel(some.values), '2 of 16 answered');
+assert.equal(answeredAxisLabel(some.values), `2 of ${TRAIT_AXES.length} answered`);
 const gamed = mergeTraitWrite(emptyTraitState(), { autonomy: 0.9 }, 'self_game', ['autonomy']);
 assert.equal(answeredAxisCount(gamed.values), 1);
-ok('fill-count helper still counts inferred-from-game; empty is 0 of 16 answered');
+ok(`fill-count helper still counts inferred-from-game; empty is 0 of ${TRAIT_AXES.length} answered`);
 
 assert.equal(sourceProvenance(undefined), null);
 assert.equal(sourceProvenance('nope'), null);

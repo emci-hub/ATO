@@ -48,7 +48,7 @@ ${retry}AXES (exactly one question per axis, every axis, no extras, no repeats):
 ${TRAIT_AXES.join(', ')}
 
 RULES
-1. Return exactly 15 questions — one for each axis above, in that order.
+1. Return exactly ${TRAIT_AXES.length} questions — one for each axis above, in that order.
 2. Multiple-choice only. 2 or 3 options each. Never ask for free text.
 3. Each question maps to exactly one axis. Include the axis id in JSON.
 4. Options need a 0–1 value for that axis (high pole closer to 1).

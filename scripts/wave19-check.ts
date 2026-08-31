@@ -186,6 +186,8 @@ const qPrompt = buildQuestionsPrompt({
 });
 assert.match(qPrompt, /Return exactly 5 questions/);
 assert.doesNotMatch(qPrompt, /exactly 15/);
+assert.match(read('src/lib/questions/sweep.ts'), /Return exactly \$\{TRAIT_AXES\.length\} questions/);
+assert.doesNotMatch(read('src/lib/questions/sweep.ts'), /exactly 15 questions/);
 ok('existing IQ prompt is still a 5-item rotating batch');
 
 // --- ranking standalone ---------------------------------------------------
@@ -226,7 +228,7 @@ ok('depth spend skips a gut-call that cannot overwrite a told answer');
 assert.equal(depthKindFor('openness'), 'ranking');
 assert.equal(depthKindFor('autonomy'), 'scenario');
 assert.equal(depthKindFor('self_efficacy'), 'scenario');
-ok('token depth uses ranking for the first nine and scenario for the extra six');
+ok('token depth uses ranking vs EXTRA_AXES membership, not a frozen nine/six count');
 
 // --- tokens ---------------------------------------------------------------
 assert.ok(TOKEN_EARN.check_in > 0);
@@ -265,8 +267,10 @@ const talk = buildTalkPrompt({
   history: [],
   answeredCount: 2,
 });
-assert.match(talk, /PROFILE DEPTH: still thin/);
-assert.match(talk, /coach more generally/);
+assert.match(read('src/lib/voice/providers/prompt.ts'), /isThinProfile/);
+assert.doesNotMatch(read('src/lib/voice/providers/prompt.ts'), /answered < 6/);
+assert.match(read('src/lib/sage-insight.ts'), /isThinProfile/);
+assert.doesNotMatch(read('src/lib/sage-insight.ts'), /settled < 6/);
 const talkFull = buildTalkPrompt({
   me: {
     name: 'Riley',
@@ -281,8 +285,22 @@ const talkFull = buildTalkPrompt({
   answeredCount: 12,
   divergenceNote: 'What they told us and a gut-call they played don\'t quite match.',
 });
-assert.match(talkFull, /12 of 16 settled/);
+assert.match(talkFull, new RegExp(`12 of ${TRAIT_AXES.length} settled`));
 assert.match(talkFull, /TENSION/);
+const talkBoundary = buildTalkPrompt({
+  me: {
+    name: 'Riley',
+    show_up: 'steady',
+    talk_style: 'even',
+    knocks_you_off: 'late nights',
+    morning_cue: 'coffee',
+  },
+  message: 'How am I doing?',
+  day: 3,
+  history: [],
+  answeredCount: 6,
+});
+assert.match(talkBoundary, /PROFILE DEPTH: still thin/);
 ok('Talk prompt gets thin-profile honesty and optional divergence');
 
 const home = read('src/app/(tabs)/index.tsx');
@@ -300,7 +318,7 @@ assert.match(read('src/lib/me.ts'), /recordStandaloneScenario/);
 assert.match(read('src/lib/me.ts'), /recordForcedPick/);
 ok('Home, crisis card, and widget stay untouched; Sage gets progress + insight spend');
 
-assert.equal(answeredAxisLabel(traitValuesFromPartial({})), '0 of 16 answered');
+assert.equal(answeredAxisLabel(traitValuesFromPartial({})), `0 of ${TRAIT_AXES.length} answered`);
 assert.equal(answeredAxisCount(traitValuesFromPartial({ autonomy: 0.8 })), 1);
 
 const meSrc = read('src/lib/me.ts');

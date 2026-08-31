@@ -38,7 +38,7 @@ assert.equal(TRAIT_BAND_PHRASES.agreeableness.low, 'holds their ground');
 assert.equal(TRAIT_BAND_PHRASES.agreeableness.high, 'goes along to keep it easy');
 assert.equal(TRAIT_BAND_PHRASES.steadiness.low, 'feels a bad day longer');
 assert.equal(TRAIT_BAND_PHRASES.steadiness.high, 'shakes it off quickly');
-ok('all 15 axes have phrases; OCEAN matches the locked wording');
+ok('all currently-defined axes have phrases; OCEAN matches the locked wording');
 
 for (const axis of TRAIT_AXES) {
   const { low, high } = TRAIT_BAND_PHRASES[axis];

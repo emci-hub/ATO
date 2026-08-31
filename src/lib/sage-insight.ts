@@ -4,6 +4,7 @@
  * spend happens only after a body lands.
  */
 import { traitPromptLines, type TraitAxis, TRAIT_AXES } from '@/lib/traits';
+import { isThinProfile } from '@/lib/trait-stability';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import type { VoiceMe } from '@/lib/voice/types';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
@@ -17,10 +18,9 @@ export const SAGE_INSIGHT_THIN =
 
 export function buildSageInsightPrompt(me: VoiceMe, settled = 0): string {
   const traits = traitPromptLines(me);
-  const thin =
-    settled < 6
-      ? `Their profile is still thin (${settled} of ${TRAIT_AXES.length} settled). Say so plainly. Coach more generally. Do not invent specifics.`
-      : `They have ${settled} of ${TRAIT_AXES.length} settled. Draw on that depth when it matches.`;
+  const thin = isThinProfile(settled)
+    ? `Their profile is still thin (${settled} of ${TRAIT_AXES.length} settled). Say so plainly. Coach more generally. Do not invent specifics.`
+    : `They have ${settled} of ${TRAIT_AXES.length} settled. Draw on that depth when it matches.`;
 
   return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. This is one extra observation they asked for — not a daily card, not a trait write.
 
@@ -47,10 +47,9 @@ Respond with JSON only, no prose, in this shape:
 
 export async function generateSageInsight(me: VoiceMe, settled = 0): Promise<string | null> {
   if (VOICE_CONFIG.provider === 'local' || !VOICE_CONFIG.geminiApiKey) {
-    const body =
-      settled < 6
-        ? SAGE_INSIGHT_THIN
-        : 'Noticing how you have been moving lately — nothing to fix, just the pattern as it is.';
+    const body = isThinProfile(settled)
+      ? SAGE_INSIGHT_THIN
+      : 'Noticing how you have been moving lately — nothing to fix, just the pattern as it is.';
     return containsFrameworkTerm(body) ? null : body;
   }
   const body = await generateExploreBody(buildSageInsightPrompt(me, settled));

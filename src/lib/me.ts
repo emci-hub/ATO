@@ -47,7 +47,7 @@ import { voicePresetOf, type VoicePreset } from '@/lib/voice/preset';
 
 export type TalkStyle = 'quiet' | 'even' | 'loud';
 
-export interface Me {
+export type Me = {
   id: string;
   name: string;
   handle: string;
@@ -62,23 +62,6 @@ export interface Me {
   recovery_style: RecoveryStyle | null;
   support_style: SupportStyle | null;
   current_focus: CurrentFocus | null;
-  /** Optional 0–1 self-report. Null when skipped. Never a diagnosis. */
-  openness: number | null;
-  conscientiousness: number | null;
-  extraversion: number | null;
-  agreeableness: number | null;
-  steadiness: number | null;
-  attachment_anxiety: number | null;
-  attachment_avoidance: number | null;
-  conflict_assertiveness: number | null;
-  conflict_cooperativeness: number | null;
-  autonomy: number | null;
-  competence: number | null;
-  relatedness: number | null;
-  growth_mindset: number | null;
-  locus_of_control: number | null;
-  self_efficacy: number | null;
-  playfulness: number | null;
   /** Per-axis write source. Direct is sticky over inferred. Null axes have no key. */
   trait_sources: Record<string, string>;
   /** Per-axis ISO timestamp of last successful write. Null axes have no key. */
@@ -128,7 +111,7 @@ export interface Me {
   category_spotlight: unknown;
   created_at: string;
   updated_at: string;
-}
+} & Record<TraitAxis, number | null>;
 
 export type MeInsert = Omit<
   Me,

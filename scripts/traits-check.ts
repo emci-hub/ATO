@@ -120,7 +120,8 @@ async function main() {
   assert.equal(afterGrid.sources.openness, 'self_grid');
   ok('slider extraversion is not overwritten by a later type tap that infers extraversion');
 
-  assert.equal(TRAIT_AXES.length, 16);
+  assert.ok(TRAIT_AXES.includes('playfulness'));
+  assert.equal(new Set(TRAIT_AXES).size, TRAIT_AXES.length);
   assert.deepEqual([...EXTRA_AXES], [
     'autonomy',
     'competence',

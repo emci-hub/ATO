@@ -98,7 +98,7 @@ assert.equal(sage.kind, 'sage_knows');
 assert.ok(sage.prompt);
 notArray(sage);
 notArray(sage.prompt);
-ok('all 15 filled and week free -> sage_knows');
+ok('all axes filled and week free -> sage_knows');
 
 const rankingIn = input(firstNineGap());
 assert.equal(resolveSageKnows(rankingIn), null);

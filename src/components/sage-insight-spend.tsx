@@ -27,7 +27,7 @@ export function SageInsightSpend({
   onUpdated,
 }: {
   me: Me;
-  /** Stability-weighted N of TRAIT_AXES.length settled. */
+  /** Stability-weighted N of currently-defined axes settled. */
   settled?: number;
   onUpdated: () => void | Promise<void>;
 }) {
