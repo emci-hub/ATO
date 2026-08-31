@@ -440,6 +440,7 @@ export function voiceMeFrom(me: {
   growth_mindset: number | null;
   locus_of_control: number | null;
   self_efficacy: number | null;
+  playfulness: number | null;
   facts: string[];
 } {
   const num = (value: number | null | undefined): number | null =>
@@ -471,6 +472,7 @@ export function voiceMeFrom(me: {
     growth_mindset: num(me.growth_mindset),
     locus_of_control: num(me.locus_of_control),
     self_efficacy: num(me.self_efficacy),
+    playfulness: num(me.playfulness),
     facts: sanitizeFacts(me.facts),
   };
 }

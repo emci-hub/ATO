@@ -74,8 +74,8 @@ function read(rel: string): string {
 }
 
 // --- codes ----------------------------------------------------------------
-assert.equal(AXIS_CODE_ORDER.length, 15);
-assert.equal(Object.keys(AXIS_CODES).length, 15);
+assert.equal(AXIS_CODE_ORDER.length, TRAIT_AXES.length);
+assert.equal(Object.keys(AXIS_CODES).length, TRAIT_AXES.length);
 for (const axis of TRAIT_AXES) {
   const code = codeForAxis(axis);
   assert.equal(code.length, 2);
@@ -124,12 +124,12 @@ assert.ok(formatDivergenceNote(diverged)?.includes('gut-call'));
 ok('divergence notes self-report vs gut-call without overwriting');
 
 // --- IQ sweep -------------------------------------------------------------
-assert.equal(QUESTIONS_SWEEP_SIZE, 15);
+assert.equal(QUESTIONS_SWEEP_SIZE, TRAIT_AXES.length);
 assert.equal(INTAKE_SWEEP_COPY_REVIEWED, false);
-assert.equal(QUESTIONS_BANK.length, 15);
-assert.equal(bankByAxis().size, 15);
+assert.equal(QUESTIONS_BANK.length, TRAIT_AXES.length);
+assert.equal(bankByAxis().size, TRAIT_AXES.length);
 const sweep = composeLocalSweep();
-assert.equal(sweep.length, 15);
+assert.equal(sweep.length, TRAIT_AXES.length);
 assert.deepEqual(sweep.map((row) => row.axis), [...TRAIT_AXES]);
 for (const draft of sweep) {
   assert.ok(draft.options.length >= 2 && draft.options.length <= 3);
@@ -150,7 +150,7 @@ const rotated = preferFreshAxes(
   [],
 );
 assert.equal(rotated.length, 5);
-ok('fallback bank covers all 15; 5-item rotation still returns 5 starting at openness');
+ok('fallback bank covers all axes; 5-item rotation still returns 5 starting at openness');
 
 const parsed5 = parseQuestionBatch(
   JSON.stringify({
@@ -177,8 +177,8 @@ const parsed15 = parseQuestionSweep(
     })),
   }),
 );
-assert.equal(parsed15.length, 15);
-ok('batch parser still caps at 5; sweep parser keeps all 15, one per axis');
+assert.equal(parsed15.length, TRAIT_AXES.length);
+ok('batch parser still caps at 5; sweep parser keeps all axes, one per axis');
 
 const qPrompt = buildQuestionsPrompt({
   me: { name: 'Riley', talk_style: 'even', voice_preset: 'close_friend' },
@@ -281,7 +281,7 @@ const talkFull = buildTalkPrompt({
   answeredCount: 12,
   divergenceNote: 'What they told us and a gut-call they played don\'t quite match.',
 });
-assert.match(talkFull, /12 of 15 settled/);
+assert.match(talkFull, /12 of 16 settled/);
 assert.match(talkFull, /TENSION/);
 ok('Talk prompt gets thin-profile honesty and optional divergence');
 
@@ -300,7 +300,7 @@ assert.match(read('src/lib/me.ts'), /recordStandaloneScenario/);
 assert.match(read('src/lib/me.ts'), /recordForcedPick/);
 ok('Home, crisis card, and widget stay untouched; Sage gets progress + insight spend');
 
-assert.equal(answeredAxisLabel(traitValuesFromPartial({})), '0 of 15 answered');
+assert.equal(answeredAxisLabel(traitValuesFromPartial({})), '0 of 16 answered');
 assert.equal(answeredAxisCount(traitValuesFromPartial({ autonomy: 0.8 })), 1);
 
 const meSrc = read('src/lib/me.ts');

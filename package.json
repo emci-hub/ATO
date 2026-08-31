@@ -98,6 +98,7 @@
     "check:questions": "tsx ./scripts/questions-check.ts",
     "check:wave19": "tsx ./scripts/wave19-check.ts",
     "check:wave20": "tsx ./scripts/wave20-check.ts",
+    "check:wave21": "tsx ./scripts/wave21-check.ts",
     "check:scenario": "tsx ./scripts/scenario-check.ts",
     "check:today-slot": "tsx ./scripts/today-slot-check.ts",
     "check:ask": "tsx ./scripts/ask-check.ts",

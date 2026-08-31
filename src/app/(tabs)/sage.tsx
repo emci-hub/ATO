@@ -27,6 +27,7 @@ import { ReportSheet } from '@/components/report-sheet';
 import { SageEightBall } from '@/components/sage-eight-ball';
 import { SageInsightSpend } from '@/components/sage-insight-spend';
 import { SageTitleCard } from '@/components/sage-title-card';
+import { ConceptHint } from '@/components/concept-hint';
 import { SageUsageLine } from '@/components/sage-usage';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
@@ -53,6 +54,10 @@ import { TALK_COMPOSER_PLACEHOLDER, TALK_EMPTY, TALK_LEDE, TALK_TRY_AGAIN, TALK_
 import { divergingAxesFromTracks, formatDivergenceNote } from '@/lib/trait-history';
 import { settledAxisLabel, settledCount, type TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
+import { categoryById, parseSpotlight } from '@/lib/categories';
+import { categoryConcept } from '@/lib/concept-explainers';
+import { sageKnowsWeekKey } from '@/lib/sage-knows';
+import { localYmd } from '@/lib/local-date';
 import { QUOTA_EMPTY_MESSAGE } from '@/lib/voice/quota';
 import { claimAiCall, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
 import { recordOwnDevTrace } from '@/lib/dev-trace-server';
@@ -729,6 +734,7 @@ export default function SageScreen() {
               {me ? (
                 <SageTitleCard me={me} tracks={tracks} tracksReady={tracksReady} />
               ) : null}
+              {me ? <CategorySpotlightLine me={me} /> : null}
               {me ? (
                 <ThemedText type="small" themeColor="textSecondary">
                   {settledAxisLabel(tracks)}
@@ -962,6 +968,21 @@ export default function SageScreen() {
         onClose={() => setReportMessage(null)}
       />
     </ThemedView>
+  );
+}
+
+function CategorySpotlightLine({ me }: { me: Me }) {
+  const weekKey = sageKnowsWeekKey(localYmd(new Date(), me.timezone || 'UTC'));
+  const spotlight = parseSpotlight(me.category_spotlight);
+  if (!spotlight || spotlight.weekKey !== weekKey) return null;
+  const def = categoryById(spotlight.categoryId);
+  if (!def) return null;
+  return (
+    <ConceptHint explainer={categoryConcept(spotlight.categoryId)} label={def.name}>
+      <ThemedText type="small" themeColor="textSecondary">
+        This week&apos;s look · {def.name}
+      </ThemedText>
+    </ConceptHint>
   );
 }
 

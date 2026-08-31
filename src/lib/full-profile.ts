@@ -1,6 +1,6 @@
 /**
- * You-tab Full Profile. Private inventory of the 15 axes — invitation, not
- * a score of a person. Completeness is stability-weighted "N of 15 settled".
+ * You-tab Full Profile. Private inventory of the TRAIT_AXES — invitation, not
+ * a score of a person. Completeness is stability-weighted "N of K settled".
  * Never a percent of a person. Never on Home, widget, or push.
  */
 
@@ -94,7 +94,7 @@ export function profileCopyClean(): boolean {
     FULL_PROFILE_LABEL,
     FULL_PROFILE_LEDE,
     NOT_ANSWERED_YET,
-    '0 of 15 settled',
+    `0 of ${TRAIT_AXIS_TOTAL} settled`,
     ...Object.values(TOLD_LINE),
     'Inferred from a gut-call you played.',
     'You corrected this after Sage checked in.',

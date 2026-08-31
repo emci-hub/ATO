@@ -5,7 +5,7 @@
  */
 import assert from 'node:assert/strict';
 
-import { resolveTodaySlot, type TodaySlotInput } from '../src/lib/today-slot';
+import { canShowCategoryTeaser, resolveTodaySlot, type TodaySlotInput } from '../src/lib/today-slot';
 
 let passed = 0;
 function ok(label: string) {
@@ -85,5 +85,13 @@ assert.deepEqual(
   { kind: 'ask' },
 );
 ok('askPending wins over isSunday');
+
+assert.equal(canShowCategoryTeaser('crisis'), false);
+assert.equal(canShowCategoryTeaser('missed_check'), false);
+assert.equal(canShowCategoryTeaser('note'), true);
+assert.equal(canShowCategoryTeaser('ask'), true);
+assert.equal(canShowCategoryTeaser('week'), true);
+assert.equal(canShowCategoryTeaser('none'), true);
+ok('category teaser never shares with crisis or missed-check; may share with note/ask/week/none');
 
 console.log(`\nAll ${passed} today-slot checks passed.`);

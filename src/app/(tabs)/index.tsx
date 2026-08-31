@@ -7,6 +7,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { MissedCheckCard } from '@/components/missed-check-card';
 import AskSheet from '@/components/ask-sheet';
 import { CrisisCard } from '@/components/crisis-card';
+import { CategoryTeaser } from '@/components/category-teaser';
 import { RevealCard, isRevealOpenedToday } from '@/components/reveal-card';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
@@ -33,7 +34,7 @@ import { resolveReveal } from '@/lib/reveal';
 import { RANKING_ROUNDS } from '@/lib/ranking';
 import { composeSageKnowsLine, parseSageKnowsState } from '@/lib/sage-knows';
 import { SCENARIO_DECK } from '@/lib/scenario';
-import { resolveTodaySlot, type TodaySlot } from '@/lib/today-slot';
+import { resolveTodaySlot, canShowCategoryTeaser, type TodaySlot } from '@/lib/today-slot';
 import { traitStateFromRow, TRAIT_POLE_LINES } from '@/lib/traits';
 import { bankCardForMe } from '@/lib/voice/bank';
 import { routeVoiceCard } from '@/lib/voice/router';
@@ -465,6 +466,8 @@ export default function HomeScreen() {
               <ThemedText themeColor="textSecondary">›</ThemedText>
             </Pressable>
           ) : null}
+
+          {me && canShowCategoryTeaser(slotKind) ? <CategoryTeaser me={me} /> : null}
 
           {(canSeeDevLab({
             isDev: __DEV__,

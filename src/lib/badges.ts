@@ -6,7 +6,7 @@
 import { addDaysYmd, localYmd } from '@/lib/local-date';
 import { hasCut } from '@/lib/voice/filters';
 
-export const BADGE_IDS = ['checks-7', 'first-fact', 'week-no-cut'] as const;
+export const BADGE_IDS = ['checks-7', 'first-fact', 'week-no-cut', 'full-picture'] as const;
 export type BadgeId = (typeof BADGE_IDS)[number];
 
 export interface BadgeCheck {
@@ -23,6 +23,8 @@ export interface BadgeInput {
   factCount: number;
   checks: BadgeCheck[];
   timeZone?: string;
+  /** All 8 categories independently past the stability floor. */
+  fullPicture?: boolean;
 }
 
 export interface BadgeState {
@@ -99,6 +101,7 @@ export function resolveBadges(input: BadgeInput): BadgeState[] {
     { id: 'checks-7', unlocked: hasSevenChecks(input.checkCount) },
     { id: 'first-fact', unlocked: hasFirstFact(input.factCount) },
     { id: 'week-no-cut', unlocked: hasWeekWithoutCut(input.checks, timeZone) },
+    { id: 'full-picture', unlocked: input.fullPicture === true },
   ];
 }
 

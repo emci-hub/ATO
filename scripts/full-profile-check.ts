@@ -40,9 +40,9 @@ function read(rel: string): string {
   return readFileSync(resolve(root, rel), 'utf8');
 }
 
-assert.equal(TRAIT_AXIS_TOTAL, 15);
+assert.equal(TRAIT_AXIS_TOTAL, 16);
 assert.equal(answeredAxisCount(emptyTraitValues()), 0);
-assert.equal(answeredAxisLabel(emptyTraitValues()), '0 of 15 answered');
+assert.equal(answeredAxisLabel(emptyTraitValues()), '0 of 16 answered');
 const some = mergeTraitWrite(
   emptyTraitState(),
   { extraversion: 0.2, growth_mindset: 0.8 },
@@ -50,10 +50,10 @@ const some = mergeTraitWrite(
   ['extraversion', 'growth_mindset'],
 );
 assert.equal(answeredAxisCount(some.values), 2);
-assert.equal(answeredAxisLabel(some.values), '2 of 15 answered');
+assert.equal(answeredAxisLabel(some.values), '2 of 16 answered');
 const gamed = mergeTraitWrite(emptyTraitState(), { autonomy: 0.9 }, 'self_game', ['autonomy']);
 assert.equal(answeredAxisCount(gamed.values), 1);
-ok('fill-count helper still counts inferred-from-game; empty is 0 of 15 answered');
+ok('fill-count helper still counts inferred-from-game; empty is 0 of 16 answered');
 
 assert.equal(sourceProvenance(undefined), null);
 assert.equal(sourceProvenance('nope'), null);
@@ -158,10 +158,10 @@ for (const [name, source] of [
     assert.doesNotMatch(source, /full-profile-fold/, `${name} must not mount Full Profile`);
     continue;
   }
-  assert.doesNotMatch(source, /FullProfileFold|of 15 answered|of 15 settled|How you're currently leaning/);
+  assert.doesNotMatch(source, /FullProfileFold|of \d+ answered|of \d+ settled|How you're currently leaning/);
   assert.doesNotMatch(source, /full-profile/, `${name} must not import Full Profile`);
 }
-ok('completeness fold stays off Home, Explore, widget, push, poster, public handle; Sage reuses the N of 15 settled line');
+ok('completeness fold stays off Home, Explore, widget, push, poster, public handle; Sage reuses the settled line');
 
 const meSrc = read('src/lib/me.ts');
 assert.match(meSrc, /export async function fetchMe/);

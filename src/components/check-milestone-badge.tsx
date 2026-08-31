@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
@@ -8,13 +8,16 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
+  BADGE_IDS,
   type BadgeCheck,
   type BadgeId,
   resolveBadges,
   unlockedCount,
 } from '@/lib/badges';
+import { allCategoriesReady } from '@/lib/categories';
 import { neonGlowColors, presenceGlowLayersForTier, PRESENCE_GLOW_LAYERS } from '@/lib/growth';
 import { controlBorderColor } from '@/lib/theme/chrome';
+import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 
 const UNLOCK_GLOW = 2;
 
@@ -34,6 +37,7 @@ export function CheckMilestoneBadge({
   glow = UNLOCK_GLOW,
   accessibilityLabel,
   decorative = false,
+  capstone = false,
 }: {
   kicker: string;
   value: string | number;
@@ -41,6 +45,7 @@ export function CheckMilestoneBadge({
   glow?: number;
   accessibilityLabel: string;
   decorative?: boolean;
+  capstone?: boolean;
 }) {
   const theme = useTheme();
   const layers = presenceGlowLayersForTier(glowFor(unlocked, glow));
@@ -72,16 +77,23 @@ export function CheckMilestoneBadge({
       <View
         style={[
           styles.chip,
+          capstone && styles.capstone,
           {
-            backgroundColor: theme.backgroundElement,
-            borderColor: controlBorderColor(theme),
+            backgroundColor: capstone && unlocked ? theme.accent : theme.backgroundElement,
+            borderColor: capstone ? theme.accent : controlBorderColor(theme),
+            borderWidth: capstone ? 2 : 1,
           },
           chipShadow(theme.accent, glowFor(unlocked, glow)),
         ]}>
-        <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
+        <ThemedText
+          type="code"
+          themeColor={capstone && unlocked ? undefined : 'textSecondary'}
+          style={[styles.kicker, capstone && unlocked ? { color: theme.onAccent } : null]}>
           {kicker}
         </ThemedText>
-        <ThemedText type="smallBold">{value}</ThemedText>
+        <ThemedText type="smallBold" style={capstone && unlocked ? { color: theme.onAccent } : undefined}>
+          {value}
+        </ThemedText>
       </View>
     </View>
   );
@@ -116,6 +128,13 @@ const CHIP_COPY: Record<
       ? 'A full week without a cut, unlocked.'
       : 'A full week without a cut, locked.',
   }),
+  'full-picture': ({ unlocked }) => ({
+    kicker: 'full picture',
+    value: unlocked ? 8 : '—',
+    label: unlocked
+      ? 'Full picture, unlocked. All eight categories have settled.'
+      : 'Full picture, locked. Not every category has settled yet.',
+  }),
 };
 
 /**
@@ -128,17 +147,37 @@ export function MilestoneBadges({
   checks,
   timeZone = 'UTC',
   defaultOpen = false,
+  userId,
 }: {
   checkCount: number;
   factCount: number;
   checks: BadgeCheck[];
   timeZone?: string;
   defaultOpen?: boolean;
+  userId?: string;
 }) {
   const theme = useTheme();
   const [open, setOpen] = useState(defaultOpen);
-  const states = resolveBadges({ checkCount, factCount, checks, timeZone });
+  const [fullPicture, setFullPicture] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    fetchTraitTracks(userId)
+      .then((tracks) => {
+        if (!cancelled) setFullPicture(allCategoriesReady(tracks));
+      })
+      .catch(() => {
+        if (!cancelled) setFullPicture(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  const states = resolveBadges({ checkCount, factCount, checks, timeZone, fullPicture });
   const earned = unlockedCount(states);
+  const total = BADGE_IDS.length;
   const checksState = states.find((badge) => badge.id === 'checks-7')!;
   const checksGlow = checkCount >= 21 ? 3 : UNLOCK_GLOW;
 
@@ -148,7 +187,7 @@ export function MilestoneBadges({
       style={[styles.fold, { borderColor: controlBorderColor(theme) }]}>
       <ThemedPressable
         accessibilityRole="button"
-        accessibilityLabel={`Milestones, ${earned} of 3 unlocked. ${checkCount} checks.`}
+        accessibilityLabel={`Milestones, ${earned} of ${total} unlocked. ${checkCount} checks.`}
         accessibilityState={{ expanded: open }}
         onPress={() => setOpen((value) => !value)}
         style={styles.header}>
@@ -165,7 +204,7 @@ export function MilestoneBadges({
           }).label}
         />
         <ThemedText type="code" themeColor="textSecondary" style={styles.count}>
-          {earned}/3
+          {earned}/{total}
         </ThemedText>
         <MaterialCommunityIcons
           name={open ? 'chevron-up' : 'chevron-down'}
@@ -188,6 +227,7 @@ export function MilestoneBadges({
                 value={copy.value}
                 unlocked={badge.unlocked}
                 glow={badge.id === 'checks-7' ? checksGlow : UNLOCK_GLOW}
+                capstone={badge.id === 'full-picture'}
                 accessibilityLabel={copy.label}
               />
             );
@@ -266,6 +306,11 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: Spacing.two,
     zIndex: 4,
+  },
+  capstone: {
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: Spacing.two,
   },
   kicker: {
     textTransform: 'uppercase',

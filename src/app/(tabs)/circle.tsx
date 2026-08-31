@@ -14,6 +14,18 @@ import { useCircleContext } from '@/lib/circle-context';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { fetchPeerState, type PeerState } from '@/lib/circle';
+import { useMeContext } from '@/lib/me-context';
+import { setCloseFriendsShare } from '@/lib/me';
+import { CATEGORY_DEFS } from '@/lib/categories';
+import { parseSageTitle } from '@/lib/sage-title';
+import {
+  fetchCategoryShareStatus,
+  fetchPeerCategoryPack,
+  setCategoryShare,
+  type CategoryShareStatus,
+} from '@/lib/category-share-store';
+import { CategoryCompareRow } from '@/components/category-compare';
+import { ThemedPressable } from '@/components/themed-pressable';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import { recipeForAccount } from '@/lib/kenney/registry';
 import {
@@ -40,6 +52,7 @@ export default function CircleScreen() {
   const theme = useTheme();
   const { session } = useSession();
   const userId = session?.user.id;
+  const { me, refresh: refreshMe } = useMeContext();
   const { connections, loading, refresh, unfriend } = useCircleContext();
   const [peers, setPeers] = useState<PeerState[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -98,6 +111,20 @@ export default function CircleScreen() {
           <ThemedText themeColor="textSecondary">
             People who scanned your ATO. Their honest card, their real face.
           </ThemedText>
+          {me ? (
+            <ThemedPressable
+              onPress={() => {
+                void setCloseFriendsShare(me.id, !me.close_friends_share).then(() => refreshMe());
+              }}
+              style={styles.poolRow}>
+              <ThemedText type="smallBold">Close Friends</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {me.close_friends_share
+                  ? 'On — anyone else who opted in can see your category cards. Off by default.'
+                  : 'Off — share categories one friend at a time, or opt in here once.'}
+              </ThemedText>
+            </ThemedPressable>
+          ) : null}
         </View>
 
         {connections.length === 0 ? (
@@ -135,6 +162,7 @@ export default function CircleScreen() {
                 mutes={mutes}
                 onUnfriend={unfriend}
                 onModerationChanged={reloadModeration}
+                selfTitle={me ? parseSageTitle(me.sage_title) : null}
               />
             )}
           />
@@ -150,12 +178,14 @@ function PeerCard({
   mutes,
   onUnfriend,
   onModerationChanged,
+  selfTitle,
 }: {
   peer: PeerState;
   blocks: BlockRow[];
   mutes: MuteRow[];
   onUnfriend: (peerId: string) => Promise<void>;
   onModerationChanged: () => Promise<void>;
+  selfTitle: ReturnType<typeof parseSageTitle>;
 }) {
   const theme = useTheme();
   const { session } = useSession();
@@ -168,6 +198,23 @@ function PeerCard({
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [share, setShare] = useState<CategoryShareStatus | null>(null);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [theirTitle, setTheirTitle] = useState<ReturnType<typeof parseSageTitle>>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchCategoryShareStatus(me.id)
+      .then((row) => {
+        if (!cancelled) setShare(row);
+      })
+      .catch(() => {
+        if (!cancelled) setShare(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [me.id]);
 
   const iBlockedPeer = blocks.some((b) => b.blocked_by === userId && b.blocked_user === me.id);
   const iMutedPeer = mutes.some((m) => m.muter === userId && m.muted_user === me.id);
@@ -265,6 +312,65 @@ function PeerCard({
           Message {me.name.split(' ')[0]} ›
         </ThemedText>
       </Pressable>
+
+      <View style={styles.shareBlock}>
+        {share?.viaPool ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            Visible in Close Friends — no per-person toggle in this group.
+          </ThemedText>
+        ) : (
+          <Pressable
+            onPress={() => {
+              const next = !(share?.mine ?? false);
+              void setCategoryShare(me.id, next)
+                .then(() => fetchCategoryShareStatus(me.id))
+                .then(setShare)
+                .catch((err) => console.log('[circle] share error:', err));
+            }}
+            style={({ pressed }) => [pressed && styles.pressed]}>
+            <ThemedText type="smallBold">
+              {(share?.mine ?? false) ? 'Sharing categories with them' : 'Share categories with them'}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {(share?.mine ?? false)
+                ? share?.allowed
+                  ? 'You both opted in. Tap Compare to look side by side.'
+                  : 'Waiting for them to opt in too. Off by default on both sides.'
+                : 'Off. Both of you have to turn this on before either sees the other.'}
+            </ThemedText>
+          </Pressable>
+        )}
+        {share?.allowed ? (
+          <Pressable
+            onPress={() => {
+              if (compareOpen) {
+                setCompareOpen(false);
+                return;
+              }
+              void fetchPeerCategoryPack(me.id)
+                .then((raw) => {
+                  setTheirTitle(parseSageTitle(raw));
+                  setCompareOpen(true);
+                })
+                .catch((err) => console.log('[circle] pack error:', err));
+            }}
+            style={({ pressed }) => [pressed && styles.pressed]}>
+            <ThemedText type="smallBold">{compareOpen ? 'Hide compare' : 'Compare categories'}</ThemedText>
+          </Pressable>
+        ) : null}
+        {compareOpen ? (
+          <View style={styles.compareList}>
+            {CATEGORY_DEFS.map((def) => (
+              <CategoryCompareRow
+                key={def.id}
+                id={def.id}
+                mine={selfTitle?.categories[def.id]}
+                theirs={theirTitle?.categories[def.id]}
+              />
+            ))}
+          </View>
+        ) : null}
+      </View>
 
       {confirming ? (
         <ThemedView type="backgroundElement" style={[styles.confirmBox, { borderColor: controlBorderColor(theme) }]}>
@@ -434,6 +540,19 @@ const styles = StyleSheet.create({
     color: '#3c87f7',
     paddingTop: Spacing.two,
     paddingHorizontal: Spacing.one,
+  },
+  poolRow: {
+    gap: Spacing.half,
+    paddingTop: Spacing.two,
+    alignSelf: 'stretch',
+  },
+  shareBlock: {
+    gap: Spacing.one,
+    paddingTop: Spacing.two,
+  },
+  compareList: {
+    gap: Spacing.three,
+    paddingTop: Spacing.one,
   },
   unfriendLink: {
     alignSelf: 'flex-start',

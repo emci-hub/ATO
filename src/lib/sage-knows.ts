@@ -120,6 +120,10 @@ export const AXIS_EDITOR_COPY: Record<TraitAxis, { label: string; hint: string }
     label: 'How you feel facing something big',
     hint: 'Left = not sure I can pull this off. Right = I have got this.',
   },
+  playfulness: {
+    label: 'How much a day wants a little play',
+    hint: 'Left = treat the day as a job. Right = look for the lighter take.',
+  },
 };
 
 export function emptySageKnowsState(): SageKnowsState {

@@ -27,4 +27,5 @@ export const DEPTH_AXES: readonly TraitAxis[] = [
   'growth_mindset',
   'locus_of_control',
   'self_efficacy',
+  'playfulness',
 ];

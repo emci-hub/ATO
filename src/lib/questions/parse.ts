@@ -54,7 +54,7 @@ export function parseQuestionBatch(raw: string): QuestionDraft[] {
   return out;
 }
 
-/** Full sweep: one per axis, up to 15. Does not change the 5-item batch parser. */
+/** Full sweep: one per axis, up to TRAIT_AXES.length. Does not change the 5-item batch parser. */
 export function parseQuestionSweep(raw: string): QuestionDraft[] {
   const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
   let parsed: unknown;
@@ -75,7 +75,7 @@ export function parseQuestionSweep(raw: string): QuestionDraft[] {
     if (!draft || seen.has(draft.axis)) continue;
     seen.add(draft.axis);
     out.push(draft);
-    if (out.length >= 15) break;
+    if (out.length >= TRAIT_AXES.length) break;
   }
   return out;
 }

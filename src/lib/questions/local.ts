@@ -11,7 +11,7 @@ export const QUESTIONS_SWEEP_SIZE = TRAIT_AXES.length;
 
 /**
  * UNREVIEWED — same discipline as crisis card copy.
- * Flip to true only after emci signs off the 15-item set.
+ * Flip to true only after emci signs off the full-axis set.
  */
 export const INTAKE_SWEEP_COPY_REVIEWED = false;
 
@@ -34,7 +34,7 @@ export function composeLocalQuestionBatch(recentAxes: TraitAxis[] = []): Questio
   return rotated.slice(0, QUESTIONS_BATCH_SIZE);
 }
 
-/** One item per axis, all 15. Distinct from the 5-item rotation. */
+/** One item per axis, all TRAIT_AXES. Distinct from the 5-item rotation. */
 export function composeLocalSweep(): QuestionDraft[] {
   const byAxis = bankByAxis();
   const out: QuestionDraft[] = [];

@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
+import { fallbackCategoryCopies } from '@/lib/category-bands';
 import { generateExploreBody } from '@/lib/explore/generate';
 import { localYmd } from '@/lib/local-date';
 import type { Me } from '@/lib/me';
@@ -13,10 +14,10 @@ import {
   TITLE_PUSHBACK,
   TITLE_PUSHBACK_SAVED,
   buildTitlePrompt,
+  combinedFingerprint,
   drivingAxisLines,
+  parseCombinedBody,
   parseSageTitle,
-  parseTitleBody,
-  titleFingerprint,
   titleReady,
   type SageTitle,
 } from '@/lib/sage-title';
@@ -38,7 +39,7 @@ export function SageTitleCard({
   const [busy, setBusy] = useState(false);
   const [flagged, setFlagged] = useState(false);
   const [showAxes, setShowAxes] = useState(false);
-  const fingerprint = titleFingerprint(tracks);
+  const fingerprint = combinedFingerprint(tracks);
 
   useEffect(() => {
     setTitle(parseSageTitle(me.sage_title));
@@ -48,12 +49,14 @@ export function SageTitleCard({
     let cancelled = false;
     async function run() {
       if (!tracksReady) return;
+      const today = localYmd(new Date(), me.timezone || 'UTC');
+      const cached = parseSageTitle(me.sage_title);
+      const fallbackCats = fallbackCategoryCopies(tracks);
+
       if (!titleReady(tracks)) {
         if (!cancelled) setTitle(null);
         return;
       }
-      const today = localYmd(new Date(), me.timezone || 'UTC');
-      const cached = parseSageTitle(me.sage_title);
       if (cached?.generatedOn === today) {
         if (!cancelled) setTitle(cached);
         return;
@@ -63,7 +66,20 @@ export function SageTitleCard({
         return;
       }
       if (VOICE_CONFIG.provider === 'local' || !VOICE_CONFIG.geminiApiKey) {
-        if (!cancelled) setTitle(cached);
+        const local: SageTitle = {
+          title: cached?.title ?? TITLE_EMPTY,
+          lede: cached?.lede ?? TITLE_EMPTY,
+          fingerprint,
+          generatedOn: today,
+          axes: stableReportAxes(tracks),
+          categories: Object.keys(cached?.categories ?? {}).length > 0 ? cached!.categories : fallbackCats,
+        };
+        try {
+          await saveSageTitle(me.id, local);
+        } catch (err) {
+          console.log('[sage-title] local save error:', err);
+        }
+        if (!cancelled) setTitle(local);
         return;
       }
       setBusy(true);
@@ -74,7 +90,7 @@ export function SageTitleCard({
           return;
         }
         const raw = await generateExploreBody(buildTitlePrompt(tracks, today));
-        const parsed = raw ? parseTitleBody(raw) : null;
+        const parsed = raw ? parseCombinedBody(raw) : null;
         if (!parsed || containsFrameworkTerm(parsed.title) || containsFrameworkTerm(parsed.lede)) {
           if (!cancelled) setTitle(cached);
           return;
@@ -85,6 +101,7 @@ export function SageTitleCard({
           fingerprint,
           generatedOn: today,
           axes: stableReportAxes(tracks),
+          categories: Object.keys(parsed.categories).length > 0 ? parsed.categories : fallbackCats,
         };
         await saveSageTitle(me.id, next);
         if (!cancelled) setTitle(next);

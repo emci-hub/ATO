@@ -139,6 +139,15 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'It was bound to happen', value: 0.2 },
     ],
   },
+  {
+    axis: 'playfulness',
+    prompt: 'A dull stretch with nothing required of you.',
+    options: [
+      { text: "I'd mess around and see what happens", value: 0.8 },
+      { text: 'Either way, I am fine', value: 0.5 },
+      { text: "I'd rather just get through it", value: 0.2 },
+    ],
+  },
 ];
 
 export const QUESTIONS_FEW_SHOTS = `1. Openness, grounded in today's Do: "Your Do today was writing down one thing you're walking into. Was today's version the safe pick or the different one?" Options: "The different one, easily" / "Somewhere in between" / "The safe, familiar one"

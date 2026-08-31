@@ -28,6 +28,7 @@ export const TRAIT_AXES = [
   'growth_mindset',
   'locus_of_control',
   'self_efficacy',
+  'playfulness',
 ] as const;
 
 export type TraitAxis = (typeof TRAIT_AXES)[number];
@@ -39,6 +40,7 @@ export const EXTRA_AXES = [
   'growth_mindset',
   'locus_of_control',
   'self_efficacy',
+  'playfulness',
 ] as const;
 
 /** Direct writes are sticky: inferred sources cannot overwrite them. */
@@ -230,6 +232,7 @@ export function emptyTraitValues(): TraitValues {
     growth_mindset: null,
     locus_of_control: null,
     self_efficacy: null,
+    playfulness: null,
   };
 }
 
@@ -370,6 +373,7 @@ export function traitStateFromRow(row: {
   growth_mindset?: number | null;
   locus_of_control?: number | null;
   self_efficacy?: number | null;
+  playfulness?: number | null;
   trait_sources?: unknown;
   trait_touched_at?: unknown;
 }): TraitState {
@@ -569,6 +573,10 @@ export const TRAIT_POLE_LINES: Record<TraitAxis, { low: string; high: string }> 
     high: 'Facing a big task they tend to feel they can pull it off.',
     low: 'Facing a big task they tend to feel unsure they can pull it off.',
   },
+  playfulness: {
+    high: 'They tend to look for a lighter take. A bit of play is how a day lands.',
+    low: 'They tend to treat the day as a job to get through. Jokes can wait.',
+  },
 };
 
 const TRAIT_MID_LINES: Partial<Record<TraitAxis, string>> = {
@@ -589,6 +597,7 @@ const TRAIT_MID_LINES: Partial<Record<TraitAxis, string>> = {
   locus_of_control:
     'When something falls apart they sometimes look at what they might change and sometimes at what was out of their hands.',
   self_efficacy: 'Facing a big task they sometimes feel they can pull it off and sometimes do not.',
+  playfulness: 'Some days want a lighter take. Some days the day is just a job to get through.',
 };
 
 /** High/low bank line, or null when the axis is empty or mid-band. */

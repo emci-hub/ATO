@@ -163,6 +163,13 @@ export const RANKING_ROUNDS: Record<TraitAxis, RankingItem[]> = {
     ['A big task makes me unsure', 0.25],
     ['A big task leaves me genuinely unsure I can do it', 0],
   ]),
+  playfulness: items('playfulness', [
+    ['I look for a lighter take even on a dull stretch', 1],
+    ['A bit of play usually helps a day land', 0.75],
+    ['Some days I want play, some days I just get through it', 0.5],
+    ['I keep it mostly straight and save jokes for later', 0.25],
+    ['I treat the day as a job to get through', 0],
+  ]),
 };
 
 function clamp01(value: number): number {

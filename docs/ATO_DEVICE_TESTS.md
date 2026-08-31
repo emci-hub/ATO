@@ -45,16 +45,23 @@ Compiled as each box lands. Same file in the repo at `docs/ATO_DEVICE_TESTS.md`.
       **F5 check (known, deferred):** read the regenerated text against its tagged axis — does the prose actually match the axis name (e.g. does an `openness`-tagged entry read like openness, not like sleep/recovery)? This is not fixed yet (Box 14). Use this tool to gauge how bad it looks in the more-visible Sage thread now that it's moved.
 - [ ] Confirm a Talk message in Sage still behaves normally — reply quality/tone should be unchanged, since Talk still uses the narrower 5-check history, not the fuller Explore history.
 
-## Box 8 — Home strip-down, one slot
+## Box 8 — Home strip-down, two slots (deliberate override)
 
-- [ ] Open Home fresh. Confirm render order top to bottom: header, Read/Do/(Nudge), Did/Skip, then at most one thing below — never two, never a badge strip, never a growth bar.
+**Dated reversal (Aug 31, 2026):** Box 8 originally locked Home to **one thing** below Did/Skip. Wave 21 **deliberately** extends that to a second, small, collapsed category teaser. This is not drift. Crisis and missed-check stay alone — the teaser never sits next to those two safety slots.
+
+- [ ] Open Home fresh. Confirm render order top to bottom: header, Read/Do/(Nudge), Did/Skip, then the primary slot (crisis / missed_check / note / ask / week / none).
+- [ ] When the primary slot is **crisis** or **missed_check**, confirm **nothing else** renders below it — no category teaser, no second card. Those two stay full priority, alone.
+- [ ] When the primary slot is **note**, **ask**, **week**, or **none**, confirm a second small collapsed row can appear: category name + one line. It does not jump to Explore on first tap — tap peeks inline, then a clear path into Explore.
+- [ ] Confirm the teaser does **not** change on every app-open; it refreshes once per local day.
 - [ ] Confirm Nudge caps at one extra line — never a fourth line of text in the card block.
 - [ ] In `/dev-lab` → Home, with the slot override set to `off`, confirm the new inline readout shows the six raw inputs (crisisActive, missedCheck, noteAvailable, noteOpenedToday, askPending, isSunday) and the kind it resolved to. Use this to sanity-check *why* Home is showing what it's showing on your real test accounts.
-- [ ] Force each of the six slot kinds via the override one at a time (`crisis`, `missed_check`, `note`, `ask`, `week`, `none`) and confirm Home renders correctly for each, including `none` rendering literally nothing below Did/Skip.
+- [ ] Force each of the six slot kinds via the override one at a time (`crisis`, `missed_check`, `note`, `ask`, `week`, `none`) and confirm Home renders correctly for each, including `none` rendering nothing in the **primary** slot (the category teaser may still appear when it is allowed).
+- [ ] Force `crisis` and `missed_check` and confirm the category teaser is absent.
 - [ ] With two or more missed checks open on a test account, confirm only the single OLDEST one renders — not one card per missed day.
 - [ ] Confirm MilestoneBadges and QuestGrowthBars no longer appear anywhere on Home.
 - [ ] Confirm the old always-visible "This week" row is gone from Home — it should now only appear as the Sunday `'week'` slot, and only on Sunday (or via override), labeled exactly "Your week."
 - [ ] Confirm the Note ("reveal") still opens correctly from the slot and that reopening it same-day doesn't re-show it in the slot (falls through to the next slot kind instead).
+- [ ] Confirm the teaser name has a small "?" that explains the *concept* (not the person's data). Draft copy — unreviewed.
 
 ## Box 9 — You regroup: tone, badges, account
 

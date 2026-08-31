@@ -73,6 +73,10 @@ export const AXIS_POLES: Record<TraitAxis, AxisPoles> = {
     low: 'A bigger-than-usual ask can land as "not sure I am the one for this."',
     high: 'A bigger-than-usual ask lands as something they can figure out.',
   },
+  playfulness: {
+    low: 'Treats the day as a job to get through. Jokes can wait.',
+    high: 'Looks for the lighter take. A bit of play is how a day lands.',
+  },
 };
 
 export function poleCopyClean(): boolean {

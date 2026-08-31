@@ -1,6 +1,6 @@
 /**
  * Two-letter axis codes. Tap the code to reveal the full category name.
- * Never MBTI branding — these are internal shorthand for the 15 axes.
+ * Never MBTI branding — these are internal shorthand for the 16 axes.
  */
 import type { TraitAxis } from '@/lib/traits';
 
@@ -20,6 +20,7 @@ export const AXIS_CODES: Record<TraitAxis, string> = {
   growth_mindset: 'GM',
   locus_of_control: 'LC',
   self_efficacy: 'SE',
+  playfulness: 'PL',
 };
 
 export const AXIS_CODE_ORDER = [
@@ -38,6 +39,7 @@ export const AXIS_CODE_ORDER = [
   'GM',
   'LC',
   'SE',
+  'PL',
 ] as const;
 
 export type AxisCode = (typeof AXIS_CODE_ORDER)[number];

@@ -97,6 +97,12 @@ export const SCENARIO_DECK: Record<ExtraAxis, ScenarioDef> = {
     high: choice('high', 'I connected with people'),
     low: choice('low', 'I got a lot done on my own'),
   },
+  playfulness: {
+    axis: 'playfulness',
+    setup: 'A dull stretch in the afternoon. You:',
+    high: choice('high', 'Make it a little ridiculous on purpose'),
+    low: choice('low', 'Just get through it'),
+  },
 };
 
 /**
@@ -139,6 +145,12 @@ export const SCENARIO_DECK_MORE: Record<ExtraAxis, ScenarioDef> = {
     setup: 'A quiet evening, phone in the other room.',
     high: choice('high', "I'd rather have someone to check in with"),
     low: choice('low', 'Quiet on my own is enough'),
+  },
+  playfulness: {
+    axis: 'playfulness',
+    setup: 'The meeting could have been an email. You:',
+    high: choice('high', 'Crack something small just to keep it human'),
+    low: choice('low', 'Sit it out and get back to the work'),
   },
 };
 

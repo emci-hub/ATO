@@ -148,7 +148,7 @@ ok('pruned 7 consecutive dones with no prior skip still unlock');
 const none = resolveBadges({ checkCount: 0, factCount: 0, checks: [] });
 assert.deepEqual(
   none.map((badge) => badge.unlocked),
-  [false, false, false],
+  [false, false, false, false],
 );
 ok('empty account unlocks nothing');
 
@@ -159,10 +159,15 @@ assert.equal(fixture.factCount, 1);
 assert.equal(hasWeekWithoutCut(fixture.checks), true);
 assert.deepEqual(
   all.map((badge) => badge.unlocked),
-  [true, true, true],
+  [true, true, true, false],
 );
 assert.equal(unlockedCount(all), 3);
-ok('fixture of 11 consecutive dones + one fact unlocks all three');
+ok('fixture of 11 consecutive dones + one fact unlocks the three check/fact/week chips; full picture stays locked');
+
+const withPicture = resolveBadges({ ...fixture, fullPicture: true });
+assert.equal(withPicture.find((badge) => badge.id === 'full-picture')?.unlocked, true);
+assert.equal(unlockedCount(withPicture), 4);
+ok('full-picture capstone unlocks only when all categories are ready');
 
 const src = readFileSync(resolve('src/lib/badges.ts'), 'utf8');
 const ui = readFileSync(resolve('src/components/check-milestone-badge.tsx'), 'utf8');

@@ -69,6 +69,7 @@ export interface VoiceMe {
   growth_mindset?: number | null;
   locus_of_control?: number | null;
   self_efficacy?: number | null;
+  playfulness?: number | null;
   /** Facts they asked Sage to remember. Nudge signal + optional Home-card angle. Never talk_style. */
   facts?: string[];
 }

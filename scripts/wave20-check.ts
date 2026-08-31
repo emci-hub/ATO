@@ -108,9 +108,9 @@ const reportStable: TraitTrack = {
   lastTouched: nowIso,
   lastDepthAt: null,
 };
-assert.equal(settledAxisLabel([reportStable]), '1 of 15 settled');
+assert.equal(settledAxisLabel([reportStable]), '1 of 16 settled');
 assert.equal(settledCount([]), 0);
-ok('completeness is stability-weighted N of 15 settled');
+ok('completeness is stability-weighted N of 16 settled');
 
 assert.equal(depthReady(null, now), true);
 assert.equal(depthReady('2026-08-30T00:00:00.000Z', now), false);
@@ -195,8 +195,13 @@ for (const [name, source] of [
   ['crisis', crisis],
   ['widget', widget],
 ] as const) {
-  assert.doesNotMatch(source, /trait_tracks|SageTitleCard|AXIS_POLES|settledAxisLabel|sage_title_flags/);
-  assert.doesNotMatch(source, /of 15 settled/, `${name} must not show settled completeness`);
+  if (name === 'home') {
+    assert.doesNotMatch(source, /SageTitleCard|AXIS_POLES|settledAxisLabel|sage_title_flags/);
+    assert.doesNotMatch(source, /FullProfileFold/);
+  } else {
+    assert.doesNotMatch(source, /trait_tracks|SageTitleCard|AXIS_POLES|settledAxisLabel|sage_title_flags/);
+  }
+  assert.doesNotMatch(source, /of \d+ settled/, `${name} must not show settled completeness`);
 }
 ok('Home, crisis card, and widget stay untouched');
 

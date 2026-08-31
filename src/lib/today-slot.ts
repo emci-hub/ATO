@@ -28,3 +28,11 @@ export function resolveTodaySlot(input: TodaySlotInput): TodaySlot {
   if (input.isSunday) return { kind: 'week' };
   return { kind: 'none' };
 }
+
+/**
+ * Category teaser may share the page with note / ask / week / none.
+ * Crisis and missed-check stay alone — no teaser, no exceptions.
+ */
+export function canShowCategoryTeaser(kind: TodaySlot['kind'] | string): boolean {
+  return kind !== 'crisis' && kind !== 'missed_check';
+}

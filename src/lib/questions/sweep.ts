@@ -1,5 +1,5 @@
 /**
- * Full-sweep mode: one item per axis, all 15, one batch.
+ * Full-sweep mode: one item per axis, all TRAIT_AXES, one batch.
  * Distinct from the 5-item soft-rotation used by Tell Sage more.
  */
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
@@ -31,7 +31,7 @@ export function buildQuestionsSweepPrompt(input: {
     ? 'Previous draft had a blocked term or pattern. Write a different full set.\n'
     : '';
 
-  return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. This is a full-sweep of Infinite Questions — one multiple-choice item per axis, all 15, in a single batch.
+  return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. This is a full-sweep of Infinite Questions — one multiple-choice item per axis, all ${TRAIT_AXES.length}, in a single batch.
 
 VOICE REFERENCE (write in this register — do NOT reuse these lines verbatim):
 ${VOICE_REFERENCE}

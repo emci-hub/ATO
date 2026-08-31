@@ -19,8 +19,8 @@ export interface TraitBandPhrases {
 }
 
 /**
- * Endpoints for the 15 axes. OCEAN uses the locked You-tab wording.
- * The other ten follow the existing Settings left/right pairs, shortened
+ * Endpoints for every TRAIT_AXES item. OCEAN uses the locked You-tab wording.
+ * The other axes follow the existing Settings left/right pairs, shortened
  * to the same whole-phrase shape.
  */
 export const TRAIT_BAND_PHRASES: Record<TraitAxis, TraitBandPhrases> = {
@@ -83,6 +83,10 @@ export const TRAIT_BAND_PHRASES: Record<TraitAxis, TraitBandPhrases> = {
   self_efficacy: {
     low: 'not sure they can pull a big task off',
     high: 'feels they can pull a big task off',
+  },
+  playfulness: {
+    low: 'treats the day as a job to get through',
+    high: 'looks for a lighter take',
   },
 };
 

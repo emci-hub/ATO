@@ -151,7 +151,7 @@ export function settledCount(rows: readonly TraitTrack[], now: Date = new Date()
   return Math.round(settledScore(rows, now));
 }
 
-export const SETTLED_LABEL_SUFFIX = 'of 15 settled';
+export const SETTLED_LABEL_SUFFIX = `of ${TRAIT_AXES.length} settled`;
 
 export function settledAxisLabel(rows: readonly TraitTrack[], now: Date = new Date()): string {
   return `${settledCount(rows, now)} ${SETTLED_LABEL_SUFFIX}`;

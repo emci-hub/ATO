@@ -120,7 +120,7 @@ async function main() {
   assert.equal(afterGrid.sources.openness, 'self_grid');
   ok('slider extraversion is not overwritten by a later type tap that infers extraversion');
 
-  assert.equal(TRAIT_AXES.length, 15);
+  assert.equal(TRAIT_AXES.length, 16);
   assert.deepEqual([...EXTRA_AXES], [
     'autonomy',
     'competence',
@@ -128,6 +128,7 @@ async function main() {
     'growth_mindset',
     'locus_of_control',
     'self_efficacy',
+    'playfulness',
   ]);
   assert.equal(isDirectTraitSource('self_tap'), true);
   assert.equal(isDirectTraitSource('self_confirm'), true);
@@ -135,7 +136,7 @@ async function main() {
   assert.equal(isDirectTraitSource('self_game'), false);
   assert.equal(isInferredTraitSource('self_game'), true);
   assert.equal(isInferredTraitSource('self_slider'), false);
-  ok('six extra axes exist; confirm/tap/settings are direct; game is inferred');
+  ok('seven extra axes exist; confirm/tap/settings are direct; game is inferred');
 
   const t1 = '2026-01-15T12:00:00.000Z';
   const t2 = '2026-06-01T12:00:00.000Z';
@@ -196,14 +197,18 @@ async function main() {
   ok('confirm on an already-direct axis still does not change the number');
 
   const extra = read('supabase/migrations/wave15_extra_trait_axes.sql');
-  for (const axis of EXTRA_AXES) {
+  const extraFifteen = EXTRA_AXES.filter((axis) => axis !== 'playfulness');
+  for (const axis of extraFifteen) {
     assert.match(extra, new RegExp(`add column if not exists ${axis} numeric`));
     assert.match(extra, new RegExp(`me_${axis}_unit`));
     assert.match(extra, new RegExp(`${axis} is null or \\(${axis} >= 0 and ${axis} <= 1\\)`));
   }
   assert.match(extra, /trait_touched_at jsonb not null default '\{\}'::jsonb/);
   assert.doesNotMatch(extra, /create function public.complete_signup|alter function public.complete_signup/);
-  ok('six new columns exist with 0–1 CHECK constraints; complete_signup is untouched');
+  const playfulnessSql = read('supabase/migrations/wave21_playfulness_categories.sql');
+  assert.match(playfulnessSql, /add column if not exists playfulness numeric/);
+  assert.match(playfulnessSql, /me_playfulness_unit/);
+  ok('extra columns exist with 0–1 CHECK constraints; playfulness is in wave21; complete_signup is untouched');
 
   const blankSliders = writeForOptionalScreen({
     screen: 1,

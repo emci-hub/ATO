@@ -78,6 +78,7 @@ export interface Me {
   growth_mindset: number | null;
   locus_of_control: number | null;
   self_efficacy: number | null;
+  playfulness: number | null;
   /** Per-axis write source. Direct is sticky over inferred. Null axes have no key. */
   trait_sources: Record<string, string>;
   /** Per-axis ISO timestamp of last successful write. Null axes have no key. */
@@ -121,6 +122,10 @@ export interface Me {
   tokens: number;
   /** Cached Sage title from stable report-track axes. */
   sage_title: unknown;
+  /** Opt-in to the Close Friends category-share pool. Off by default. */
+  close_friends_share: boolean;
+  /** Weekly You/Sage category spotlight {weekKey, categoryId}. */
+  category_spotlight: unknown;
   created_at: string;
   updated_at: string;
 }
@@ -156,12 +161,15 @@ export type MeInsert = Omit<
     | 'growth_mindset'
     | 'locus_of_control'
     | 'self_efficacy'
+    | 'playfulness'
     | 'trait_sources'
     | 'trait_touched_at'
     | 'sage_knows'
     | 'visible'
     | 'tokens'
     | 'sage_title'
+    | 'close_friends_share'
+    | 'category_spotlight'
     | 'created_at'
     | 'updated_at'
 > & {
@@ -204,6 +212,8 @@ function withVisible(row: Me): Me {
     sage_knows: parseSageKnowsState(row.sage_knows),
     voice_preset: voicePresetOf(row.voice_preset),
     tokens: typeof row.tokens === 'number' && Number.isFinite(row.tokens) ? Math.max(0, Math.floor(row.tokens)) : 0,
+    close_friends_share: row.close_friends_share === true,
+    category_spotlight: row.category_spotlight ?? {},
   };
 }
 
@@ -332,6 +342,31 @@ export async function setVisible(userId: string, visible: boolean): Promise<Me> 
     console.log('[me] setVisible error:', error);
     throw error;
   }
+  return withVisible(data as Me);
+}
+
+export async function setCloseFriendsShare(userId: string, enabled: boolean): Promise<Me> {
+  const { data, error } = await supabase
+    .from('me')
+    .update({ close_friends_share: enabled })
+    .eq('id', userId)
+    .select()
+    .single();
+  if (error) throw error;
+  return withVisible(data as Me);
+}
+
+export async function saveCategorySpotlight(
+  userId: string,
+  spotlight: { weekKey: string; categoryId: string },
+): Promise<Me> {
+  const { data, error } = await supabase
+    .from('me')
+    .update({ category_spotlight: spotlight })
+    .eq('id', userId)
+    .select()
+    .single();
+  if (error) throw error;
   return withVisible(data as Me);
 }
 

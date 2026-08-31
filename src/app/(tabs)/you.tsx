@@ -24,6 +24,7 @@ import { RunningUpdateLine } from '@/components/running-update-line';
 import { SettingsFold } from '@/components/settings-fold';
 import { OptionalIntakeFill } from '@/components/optional-intake';
 import { FullProfileFold } from '@/components/full-profile-fold';
+import { CategoriesFold } from '@/components/categories-fold';
 import { TraitBandsFold } from '@/components/trait-bands-fold';
 import { TOKEN_LABEL, TOKEN_LEDE, tokenBalanceOf } from '@/lib/tokens';
 import { KenneyCreditsCard } from '@/components/kenney-credits-card';
@@ -317,6 +318,7 @@ export default function YouScreen() {
                 checks={checks}
                 timeZone={me.timezone || 'UTC'}
                 defaultOpen={false}
+                userId={me.id}
               />
 
               <QuestGrowthBars presence={presence} depth={depth} />
@@ -372,6 +374,8 @@ export default function YouScreen() {
               </ThemedView>
 
               <FullProfileFold me={me} onUpdated={() => refresh()} />
+
+              <CategoriesFold me={me} onUpdated={() => refresh()} />
 
               <OptionalIntakeFill me={me} onUpdated={() => refresh()} />
 

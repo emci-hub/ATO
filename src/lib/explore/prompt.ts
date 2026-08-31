@@ -27,6 +27,7 @@ export const EXPLORE_AXIS_GROUNDING_LINES = [
   'growth_mindset: whether setbacks read as fixed or as something that can shift',
   'locus_of_control: outcomes feeling steered by them, or happening to them',
   "self_efficacy: belief they can actually do the thing they're setting out to do",
+  'playfulness: whether a bit of lightness is how a day lands, versus treating the day as a job',
 ] as const;
 
 export const EXPLORE_AXIS_GROUNDING: Record<TraitAxis, string> = Object.fromEntries(

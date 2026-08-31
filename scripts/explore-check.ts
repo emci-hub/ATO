@@ -198,8 +198,9 @@ const GROUNDING_LINES = [
   'growth_mindset: whether setbacks read as fixed or as something that can shift',
   'locus_of_control: outcomes feeling steered by them, or happening to them',
   "self_efficacy: belief they can actually do the thing they're setting out to do",
+  'playfulness: whether a bit of lightness is how a day lands, versus treating the day as a job',
 ] as const;
-assert.equal(GROUNDING_LINES.length, 15);
+assert.equal(GROUNDING_LINES.length, 16);
 for (const line of GROUNDING_LINES) {
   assert.ok(promptSrc.includes(line), `prompt source missing grounding: ${line}`);
 }
@@ -209,7 +210,7 @@ const chipsOnlyPrompt = buildExplorePrompt({
   reactionNotes: [],
 });
 assert.doesNotMatch(chipsOnlyPrompt, /AXIS GROUNDING/);
-ok('grounding line content exists for all fifteen axes; chips-only prompts skip it');
+ok('grounding line content exists for all sixteen axes; chips-only prompts skip it');
 
 function walkComponents(dir: string): string[] {
   const out: string[] = [];
