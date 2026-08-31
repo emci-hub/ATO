@@ -73,7 +73,7 @@
 2. Sentry native crash symbolication — still **unconfirmed** from here. Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
 3. Friends external testing group — Beta App Review pending on Apple since Aug 26, 2026. No action, just waiting.
 
-**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ can receive this JS change via `eas update`. Devices on binary 8 or earlier cannot. Latest production JS: group `8cea6738-ffe6-4da3-ae95-ff6848f537d3` (`e815033`, trait tracks + settled completeness + Sage titles, includes Wave 19). **OTA published Aug 31, 2026.** Prior group `8771f505-5cf5-4652-8d89-42f2ad57f05c` (`66149b6`, IA reorganization through Explore axis grounding) is superseded.
+**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ can receive this JS change via `eas update`. Devices on binary 8 or earlier cannot. Latest production JS: group `8d89a42c-8852-4416-bfc6-581d4e1a656e` (`6d82c75`, Wave 21 Playfulness + categories + Home 2-slot teaser). **OTA published Aug 31, 2026.** Prior group `8cea6738-ffe6-4da3-ae95-ff6848f537d3` (`e815033`, trait tracks + Sage titles) is superseded.
 
 **Decision (Aug 27, 2026): Wave 1.5 and Wave 3 both start now, in parallel — intentional deviation from plan sequencing.** Wave 2 Stage 2 ("I'm going") is now live, so Night wall is unblocked for Wave 3.
 
@@ -100,12 +100,14 @@
 
 **IA reorganization through Explore axis grounding OTA** (commits `88e3fe9` … `66149b6`). Group `8771f505-5cf5-4652-8d89-42f2ad57f05c`. Home one-slot, weekly Ask, Tell Sage more, Explore in Sage with axis grounding, You regroup, consent interstitial, support promoted, honest-empty Today. **OTA published Aug 30, 2026.** Binary 10+ picks it up on launch.
 
-**Trait tracks + settled completeness + Sage titles OTA** (commits `98b2140`, `e815033`). Group `8cea6738-ffe6-4da3-ae95-ff6848f537d3`. EWMA report/game tracks, `N of 15 settled`, Full Profile poles (unreviewed), live Sage titles on a separate quota, title pushback capture. **OTA published Aug 31, 2026.** Binary 10+ picks it up on launch.
+**Wave 21 Playfulness + categories OTA** (commit `6d82c75`). Group `8d89a42c-8852-4416-bfc6-581d4e1a656e`. 16th axis, eight report-track categories, Home two-slot teaser (deliberate Box 8 override), Circle dual-opt-in compare. **OTA published Aug 31, 2026.** Binary 10+ picks it up on launch.
+
+**Trait tracks + settled completeness + Sage titles OTA** (commits `98b2140`, `e815033`). Group `8cea6738-ffe6-4da3-ae95-ff6848f537d3`. EWMA report/game tracks, `N of 16 settled`, Full Profile poles (unreviewed), live Sage titles on a separate quota, title pushback capture. **OTA published Aug 31, 2026.** Superseded by Wave 21.
 
 See git history for the full Stage 1–8 build log. Sage content model v2, Check window + recap text cap, Home milestone badges (Stage 13 part 1), Does Sage know you (Stage 13 part 2), Home reveal (part 3), forced ranking (part 4), scenario swipe-deck (part 5), Explore (Sage thread + feedback table + phrase-pattern guard + axis grounding), nav tap moods, UI polish, Wave 2 Stage 2, Stage 9 first pass, Settings identity-chip editing, Stage 11 optional fast-entry, You-tab Full Profile (`N of 15 settled`, AxisTaps → `updateTraits`), Sage voice pass (`sage.txt`, `voice_preset`, jargon guard), the Sage/You UI-bug bundle, the original 8-ball orb, Home/Talk content quality, nav-bar appearance theming, the Talk output fence, the six extra trait axes + direct-vs-inferred sources + `last_touched`, Library copy, Stage 12 Library grounding, the You-tab facts list (read/delete), and the Aug 30 IA reorganization (one Ask, Tell Sage more, Home one-slot, You regroup, consent interstitial, support promoted, honest-empty Today) are already in. This file's "On" section is the live edge of work; ATO_PLAN_v2.md and git history hold the full record.
 
 ## Left
-- Full device pass against `docs/ATO_DEVICE_TESTS.md` (binary 10+, OTA `8cea6738`)
+- Full device pass against `docs/ATO_DEVICE_TESTS.md` (binary 10+, OTA `8d89a42c`)
 - Gut Call regression — still open
 - Live Talk failure — still open
 - Submit + confirm binary 10 on device (icon, OTA, everything from today). Do not submit 8 or 9.
@@ -145,4 +147,4 @@ These are real, but they are not TestFlight work and they are not next. Leave th
 - **Around refresh secrets (Wave 2):** Edge Function `refresh-around` is deployed (`verify_jwt: false`; auth is `AROUND_REFRESH_SECRET`). Needs `EDMTRAIN_CLIENT_KEY` (apply at edmtrain.com/developer-api while signed in) and `AROUND_REFRESH_SECRET`. Cron is not scheduled until both exist in Vault + function secrets. Phone never holds the Edmtrain key. ToS: displayed cache < 24h; unmodified event `link`; do not mix Edmtrain listings with another events feed (RA/Shotgun/DICE are ticket link-outs only).
 
 ## Next 15 min
-Work through `docs/ATO_DEVICE_TESTS.md` in full on a real device (binary 10+ so it picks up OTA `8cea6738-ffe6-4da3-ae95-ff6848f537d3`). Every box's checklist, one sitting. Bring back anything that fails. Once that pass is clean, Stage 8 handoff #2: invite/referral gate (Auth + ME). Open items that are not the device pass: Gut Call regression, Live Talk failure, submit/confirm binary 10 if not already installed.
+Work through `docs/ATO_DEVICE_TESTS.md` in full on a real device (binary 10+ so it picks up OTA `8d89a42c-8852-4416-bfc6-581d4e1a656e`). Every box's checklist, one sitting. Bring back anything that fails. Once that pass is clean, Stage 8 handoff #2: invite/referral gate (Auth + ME). Open items that are not the device pass: Gut Call regression, Live Talk failure, submit/confirm binary 10 if not already installed.
