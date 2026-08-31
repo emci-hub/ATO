@@ -710,31 +710,53 @@ function TraitViewer() {
         </ThemedText>
       ) : null}
       {error ? <ThemedText type="small">{error}</ThemedText> : null}
-      <ThemedText type="code" themeColor="textSecondary">
-        {usingDemo ? 'demo · slider-sticky example' : `@${selected}`}
-      </ThemedText>
-      {DEV_LAB_AXIS_ORDER.map((axis) => {
-        const value = state.values[axis];
-        const source = state.sources[axis];
-        return (
-          <ThemedView key={axis} type="backgroundElement" style={styles.axisRow}>
-            <View style={styles.axisHead}>
-              <ThemedText type="smallBold">{axis}</ThemedText>
-              <ThemedText type="code">{value == null ? 'null' : value.toFixed(2)}</ThemedText>
-            </View>
-            <ThemedText type="small" themeColor="textSecondary">
-              {source ? `${source} — ${SOURCE_NOTE[source]}` : 'no write — skipped or never set'}
-            </ThemedText>
-            {isDirectTraitSource(source) ? (
-              <View style={[styles.sourceMark, { backgroundColor: theme.accentFill }]}>
-                <ThemedText type="code" style={{ color: theme.onAccent }}>
-                  direct sticky
-                </ThemedText>
+      {usingDemo ? (
+        <ThemedView
+          type="backgroundElement"
+          style={[
+            styles.fixtureBanner,
+            { borderColor: theme.accentFill, backgroundColor: theme.backgroundSelected },
+          ]}>
+          <ThemedText type="smallBold">FIXTURE — not a real account</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {selected !== 'demo' && selected !== me?.handle
+              ? `RLS only returns the signed-in row. This is hardcoded demo data, not @${selected}.`
+              : 'Hardcoded slider-sticky example. Not live ME.'}
+          </ThemedText>
+        </ThemedView>
+      ) : (
+        <ThemedText type="code" themeColor="textSecondary">
+          @{selected}
+        </ThemedText>
+      )}
+      <View style={usingDemo ? [styles.fixtureList, { borderColor: theme.accentFill }] : undefined}>
+        {DEV_LAB_AXIS_ORDER.map((axis) => {
+          const value = state.values[axis];
+          const source = state.sources[axis];
+          return (
+            <ThemedView key={axis} type="backgroundElement" style={styles.axisRow}>
+              <View style={styles.axisHead}>
+                <ThemedText type="smallBold">{axis}</ThemedText>
+                <ThemedText type="code">{value == null ? 'null' : value.toFixed(2)}</ThemedText>
               </View>
-            ) : null}
-          </ThemedView>
-        );
-      })}
+              <ThemedText type="small" themeColor="textSecondary">
+                {usingDemo
+                  ? `fixture · ${source ? `${source} — ${SOURCE_NOTE[source]}` : 'no write'}`
+                  : source
+                    ? `${source} — ${SOURCE_NOTE[source]}`
+                    : 'no write — skipped or never set'}
+              </ThemedText>
+              {isDirectTraitSource(source) ? (
+                <View style={[styles.sourceMark, { backgroundColor: theme.accentFill }]}>
+                  <ThemedText type="code" style={{ color: theme.onAccent }}>
+                    {usingDemo ? 'fixture · direct sticky' : 'direct sticky'}
+                  </ThemedText>
+                </View>
+              ) : null}
+            </ThemedView>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -1688,6 +1710,19 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.three,
     padding: Spacing.three,
     gap: Spacing.one,
+  },
+  fixtureBanner: {
+    borderRadius: Spacing.three,
+    borderWidth: 2,
+    padding: Spacing.three,
+    gap: Spacing.one,
+  },
+  fixtureList: {
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderRadius: Spacing.three,
+    padding: Spacing.two,
+    gap: Spacing.two,
   },
   axisHead: {
     flexDirection: 'row',

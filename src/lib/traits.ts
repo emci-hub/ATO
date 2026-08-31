@@ -5,9 +5,9 @@
  * Raw taps (type letters, category names, game choices) are translated here
  * and discarded.
  *
- * Parked, do not block this box: Settings re-tap UI so a close-pattern can be
- * updated later; privacy.md naming these fields as coaching self-report.
- * last_touched is live — unparked for the 3-month re-ask.
+ * Parked, do not block this box: privacy.md naming these fields as coaching
+ * self-report. Settings re-tap is the You-tab Full Profile fold (AxisTaps →
+ * updateTraits). last_touched is live — unparked for the 3-month re-ask.
  */
 
 import { containsFrameworkTerm, sanitizeFacts } from '@/lib/voice/framework-fence';

@@ -66,7 +66,7 @@ export function TraitBandsFold({ me }: { me: Me }) {
   );
 }
 
-function TraitBandVisual({ band }: { band: FilledTraitBand }) {
+export function TraitBandVisual({ band }: { band: FilledTraitBand }) {
   const theme = useTheme();
   const t = Math.min(1, Math.max(0, band.value));
   const leftFlex = Math.max(t, 0.001);

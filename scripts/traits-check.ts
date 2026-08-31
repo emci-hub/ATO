@@ -276,6 +276,8 @@ async function main() {
     read('src/app/(tabs)/you.tsx'),
     read('src/components/share-poster.tsx'),
     read('src/lib/vibe-check.ts'),
+    read('src/lib/full-profile.ts'),
+    read('src/components/full-profile-fold.tsx'),
   ].join('\n');
   for (const banned of ['MBTI', 'Myers-Briggs', 'Big Five', 'OCEAN', 'attachment style', 'neuroticism', 'TIPI', 'ECR']) {
     assert.equal(copyBlob.toLowerCase().includes(banned.toLowerCase()), false, `UI leaked "${banned}"`);

@@ -86,6 +86,15 @@ assert.equal(demo.sources.steadiness, 'self_slider');
 assert.equal(demo.sources.conflict_cooperativeness, 'self_situation');
 ok('demo trait row shows slider-sticky O/C vs grid E/A');
 
+assert.match(hub, /FIXTURE — not a real account/);
+assert.match(hub, /Hardcoded slider-sticky example\. Not live ME\./);
+assert.match(hub, /This is hardcoded demo data, not @/);
+assert.doesNotMatch(
+  hub.slice(hub.indexOf('function TraitViewer'), hub.indexOf('function GrowthPreview')),
+  /demo · slider-sticky example/,
+);
+ok('TraitViewer fixture chrome is unmistakable when live ME is not selected');
+
 assert.deepEqual(matchingFrameworkTerms('Your INFJ side is showing.'), ['INFJ']);
 assert.ok(containsFrameworkTerm('attachment style'));
 assert.ok(containsFrameworkTerm('growth mindset'));

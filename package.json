@@ -85,6 +85,7 @@
     "check:intake": "tsx ./scripts/intake-check.ts",
     "check:traits": "tsx ./scripts/traits-check.ts",
     "check:trait-bands": "tsx ./scripts/trait-bands-check.ts",
+    "check:full-profile": "tsx ./scripts/full-profile-check.ts",
     "check:optional-intake": "tsx ./scripts/optional-intake-check.ts",
     "check:sage-knows": "tsx ./scripts/sage-knows-check.ts",
     "check:ranking": "tsx ./scripts/ranking-check.ts",
