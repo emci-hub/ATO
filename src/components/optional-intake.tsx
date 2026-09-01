@@ -7,15 +7,10 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import type { IntakeChip } from '@/lib/intake';
 import { updateTraits, type Me } from '@/lib/me';
-import {
-  TYPE_COPY,
-  VIBE_QUESTIONS,
-  type VibeQuestion,
-} from '@/lib/vibe-check';
+import { VIBE_QUESTIONS, type VibeQuestion } from '@/lib/vibe-check';
 import {
   OPTIONAL_INTAKE_TOTAL,
   SLIDER_AXES,
-  TYPE_CODES,
   optionalFillWrite,
   optionalProgressLabel,
   traitStateFromRow,
@@ -24,8 +19,6 @@ import {
   type ClosePatternId,
   type DisagreeId,
 } from '@/lib/traits';
-
-const TYPE_CHIPS: IntakeChip[] = TYPE_CODES.map((code) => ({ value: code, label: code }));
 
 export type { OptionalScreen };
 
@@ -91,11 +84,9 @@ function selectedFor(
 export function OptionalStep({
   screen,
   busy,
-  typeCode,
   sliderValues,
   closeId,
   disagreeId,
-  onType,
   onSlider,
   onClose,
   onDisagree,
@@ -106,11 +97,9 @@ export function OptionalStep({
 }: {
   screen: OptionalScreen;
   busy: boolean;
-  typeCode: string | null;
   sliderValues: Partial<Record<(typeof SLIDER_AXES)[number], number>>;
   closeId: string | null;
   disagreeId: string | null;
-  onType: (value: string) => void;
   onSlider: (axis: (typeof SLIDER_AXES)[number], value: number) => void;
   onClose: (value: string) => void;
   onDisagree: (value: string) => void;
@@ -120,7 +109,7 @@ export function OptionalStep({
   onContinue: () => void;
 }) {
   const last = screen === OPTIONAL_INTAKE_TOTAL - 1;
-  const question = screen === 0 ? null : VIBE_QUESTIONS[screen - 1];
+  const question = VIBE_QUESTIONS[screen];
 
   function onVibeSelect(value: string) {
     if (!question) return;
@@ -141,15 +130,6 @@ export function OptionalStep({
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.progress}>
         {optionalProgressLabel(screen + 1)}
       </ThemedText>
-      {screen === 0 ? (
-        <>
-          <ThemedText type="subtitle">{TYPE_COPY.label}</ThemedText>
-          <ThemedText themeColor="textSecondary" style={styles.lede}>
-            {TYPE_COPY.description}
-          </ThemedText>
-          <ChipGroup chips={TYPE_CHIPS} selected={typeCode ? [typeCode] : []} disabled={busy} onSelect={onType} />
-        </>
-      ) : null}
       {question ? (
         <>
           {question.kind !== 'disagree' && question.fieldLabel ? (
@@ -231,7 +211,6 @@ export function OptionalIntakeFill({
   );
   const [cursor, setCursor] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [typeCode, setTypeCode] = useState<string | null>(null);
   const [sliderValues, setSliderValues] = useState<
     Partial<Record<(typeof SLIDER_AXES)[number], number>>
   >({});
@@ -257,7 +236,6 @@ export function OptionalIntakeFill({
     if (busy || screen == null) return;
     const write = optionalFillWrite(values, {
       screen,
-      typeCode,
       sliderValues,
       closeId,
       closeSecondId,
@@ -284,15 +262,13 @@ export function OptionalIntakeFill({
           <OptionalStep
             screen={screen}
             busy={busy}
-            typeCode={typeCode}
             sliderValues={sliderValues}
-            closeId={screen === 7 ? closeSecondId : closeId}
+            closeId={screen === 6 ? closeSecondId : closeId}
             disagreeId={disagreeId}
-            onType={setTypeCode}
             onSlider={(axis, value) => {
               setSliderValues((prev) => ({ ...prev, [axis]: value }));
             }}
-            onClose={screen === 7 ? setCloseSecondId : setCloseId}
+            onClose={screen === 6 ? setCloseSecondId : setCloseId}
             onDisagree={setDisagreeId}
             onBack={() => {
               if (index <= 0) return;

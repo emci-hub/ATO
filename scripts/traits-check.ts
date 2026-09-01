@@ -11,7 +11,6 @@ import { voiceMeFrom } from '../src/lib/intake';
 import { VIBE_QUESTIONS } from '../src/lib/vibe-check';
 import {
   EXTRA_AXES,
-  GRID_AXES,
   OPTIONAL_INTAKE_TOTAL,
   SLIDER_AXES,
   TRAIT_AXES,
@@ -26,7 +25,6 @@ import {
   traitPromptLines,
   traitsFromClosePattern,
   traitsFromDisagree,
-  traitsFromTypeCode,
 } from '../src/lib/traits';
 import { filterCard } from '../src/lib/voice/filters';
 import {
@@ -83,12 +81,6 @@ function meBase(over: Partial<VoiceMe> = {}): VoiceMe {
 }
 
 async function main() {
-  const inferred = traitsFromTypeCode('ENFP');
-  assert.ok(inferred.extraversion != null && inferred.extraversion > 0.5);
-  assert.ok(inferred.openness != null && inferred.openness > 0.5);
-  assert.equal(inferred.steadiness, undefined);
-  ok('16-grid writes O/C/E/A only, never steadiness');
-
   const close = traitsFromClosePattern('worry_pull_away');
   assert.equal(close.openness, undefined);
   assert.equal(close.extraversion, undefined);
@@ -112,13 +104,6 @@ async function main() {
   assert.equal(sliderFirst.values.openness, null);
   assert.equal(sliderFirst.values.steadiness, null);
   ok('untouched slider axes stay null, not 0.5');
-
-  const afterGrid = mergeTraitWrite(sliderFirst, inferred, 'self_grid', GRID_AXES);
-  assert.equal(afterGrid.values.extraversion, 0.25);
-  assert.equal(afterGrid.sources.extraversion, 'self_slider');
-  assert.ok(afterGrid.values.openness != null);
-  assert.equal(afterGrid.sources.openness, 'self_grid');
-  ok('slider extraversion is not overwritten by a later type tap that infers extraversion');
 
   assert.ok(TRAIT_AXES.includes('playfulness'));
   assert.equal(new Set(TRAIT_AXES).size, TRAIT_AXES.length);
@@ -212,8 +197,7 @@ async function main() {
   ok('extra columns exist with 0–1 CHECK constraints; playfulness is in wave21; complete_signup is untouched');
 
   const blankSliders = writeForOptionalScreen({
-    screen: 1,
-    typeCode: null,
+    screen: 0,
     sliderValues: {},
     closeId: null,
     disagreeId: null,
@@ -222,8 +206,7 @@ async function main() {
   ok('slider screen with no taps produces no write');
 
   const opennessWrite = writeForOptionalScreen({
-    screen: 1,
-    typeCode: null,
+    screen: 0,
     sliderValues: { openness: 1 },
     closeId: null,
     disagreeId: null,
@@ -233,8 +216,7 @@ async function main() {
   ok('openness vibe-check writes only that axis');
 
   const closeWrite = writeForOptionalScreen({
-    screen: 6,
-    typeCode: null,
+    screen: 5,
     sliderValues: {},
     closeId: 'close_steady',
     disagreeId: null,
@@ -242,10 +224,10 @@ async function main() {
   assert.deepEqual(closeWrite?.incoming, traitsFromClosePattern('close_steady'));
   ok('first closeness vibe-check still uses close-pattern ids');
 
-  assert.equal(OPTIONAL_INTAKE_TOTAL, 1 + VIBE_QUESTIONS.length);
+  assert.equal(OPTIONAL_INTAKE_TOTAL, VIBE_QUESTIONS.length);
   assert.equal(VIBE_QUESTIONS.length, 8);
-  ok('optional phase is type grid plus 8 vibe-check questions');
-  assert.equal(optionalProgressLabel(1), 'extra 1 of 9');
+  ok('optional phase is 8 vibe-check questions');
+  assert.equal(optionalProgressLabel(1), 'extra 1 of 8');
   assert.notEqual(optionalProgressLabel(1), '10 of 13');
   ok('optional progress is its own counter');
 
@@ -262,7 +244,7 @@ async function main() {
   assert.match(optionalUi, /Skip the rest/);
   assert.match(optionalUi, /Skip this one/);
   assert.doesNotMatch(optionalUi, /Pick one to keep going/);
-  assert.doesNotMatch(optionalUi, /of 9/);
+  assert.doesNotMatch(optionalUi, /of 8/);
   assert.doesNotMatch(submitFn, /'Pick one to keep going\.'/);
   ok('core 9 is skippable on one page; optional never requires; signup finishes before the extra phase');
 

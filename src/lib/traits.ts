@@ -105,25 +105,24 @@ export interface TraitState {
   touched: TraitTouched;
 }
 
-/** Type grid + 8 vibe-check questions. */
-export const OPTIONAL_INTAKE_TOTAL = 9;
+/** 8 vibe-check questions. */
+export const OPTIONAL_INTAKE_TOTAL = 8;
 
-export type OptionalScreen = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type OptionalScreen = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 const SLIDER_SCREEN_AXIS: Partial<Record<OptionalScreen, (typeof SLIDER_AXES)[number]>> = {
-  1: 'openness',
-  2: 'conscientiousness',
-  3: 'extraversion',
-  4: 'agreeableness',
-  5: 'steadiness',
+  0: 'openness',
+  1: 'conscientiousness',
+  2: 'extraversion',
+  3: 'agreeableness',
+  4: 'steadiness',
 };
 
 /** Axes that optional screen `n` would write. Used to find skipped fill-later screens. */
 export function axesWrittenByOptionalScreen(screen: OptionalScreen): readonly TraitAxis[] {
-  if (screen === 0) return GRID_AXES;
   const sliderAxis = SLIDER_SCREEN_AXIS[screen];
   if (sliderAxis) return [sliderAxis];
-  if (screen === 6 || screen === 7) return CLOSE_AXES;
+  if (screen === 5 || screen === 6) return CLOSE_AXES;
   return DISAGREE_AXES;
 }
 
@@ -138,27 +137,6 @@ export function unansweredOptionalScreens(values: TraitValues): OptionalScreen[]
   }
   return out;
 }
-
-export const TYPE_CODES = [
-  'INTJ',
-  'INTP',
-  'ENTJ',
-  'ENTP',
-  'INFJ',
-  'INFP',
-  'ENFJ',
-  'ENFP',
-  'ISTJ',
-  'ISFJ',
-  'ESTJ',
-  'ESFJ',
-  'ISTP',
-  'ISFP',
-  'ESTP',
-  'ESFP',
-] as const;
-
-export type TypeCode = (typeof TYPE_CODES)[number];
 
 /** Behavioral close-pattern ids. Internal only — never stored, never shown as labels. */
 export const CLOSE_PATTERN_IDS = [
@@ -183,17 +161,6 @@ export type DisagreeId = (typeof DISAGREE_IDS)[number];
 
 export const SLIDER_STOPS = [0, 0.25, 0.5, 0.75, 1] as const;
 
-/**
- * McCrae & Costa 1989 published |r| with the matching pole.
- * Grid writes only O/C/E/A — no steadiness (known gap).
- */
-const TYPE_R = {
-  extraversion: 0.74,
-  openness: 0.72,
-  agreeableness: 0.44,
-  conscientiousness: 0.49,
-} as const;
-
 function clamp01(value: number): number {
   const n = Math.min(1, Math.max(0, value));
   return Math.round(n * 100) / 100;
@@ -211,10 +178,6 @@ export function blendInferredTrait(signal: number, oldValue: number | null | und
   return clamp01(INFERRED_SIGNAL_WEIGHT * signal + INFERRED_PRIOR_WEIGHT * prior);
 }
 
-function pole(high: boolean, r: number): number {
-  return clamp01(0.5 + (high ? 1 : -1) * (r / 2));
-}
-
 export function emptyTraitValues(): TraitValues {
   const values = {} as TraitValues;
   for (const axis of TRAIT_AXES) {
@@ -227,30 +190,12 @@ export function emptyTraitState(): TraitState {
   return { values: emptyTraitValues(), sources: {}, touched: {} };
 }
 
-export function isTypeCode(value: string): value is TypeCode {
-  return (TYPE_CODES as readonly string[]).includes(value);
-}
-
 export function isClosePatternId(value: string): value is ClosePatternId {
   return (CLOSE_PATTERN_IDS as readonly string[]).includes(value);
 }
 
 export function isDisagreeId(value: string): value is DisagreeId {
   return (DISAGREE_IDS as readonly string[]).includes(value);
-}
-
-/** 16-grid → O/C/E/A only. Steadiness stays untouched. */
-export function traitsFromTypeCode(code: TypeCode): Partial<Record<TraitAxis, number>> {
-  const e = code[0] === 'E';
-  const n = code[1] === 'N';
-  const f = code[2] === 'F';
-  const j = code[3] === 'J';
-  return {
-    extraversion: pole(e, TYPE_R.extraversion),
-    openness: pole(n, TYPE_R.openness),
-    agreeableness: pole(f, TYPE_R.agreeableness),
-    conscientiousness: pole(j, TYPE_R.conscientiousness),
-  };
 }
 
 /** Close-pattern tap → anxiety/avoidance only. Never Big Five. */
@@ -400,7 +345,6 @@ export function optionalProgressLabel(n: number): string {
 
 export function writeForOptionalScreen(input: {
   screen: OptionalScreen;
-  typeCode: string | null;
   sliderValues: Partial<Record<(typeof SLIDER_AXES)[number], number>>;
   closeId: string | null;
   closeSecondId?: string | null;
@@ -410,17 +354,13 @@ export function writeForOptionalScreen(input: {
   source: Exclude<TraitSource, 'self_confirm'>;
   allowed: readonly TraitAxis[];
 } | null {
-  if (input.screen === 0) {
-    if (!input.typeCode || !isTypeCode(input.typeCode)) return null;
-    return { incoming: traitsFromTypeCode(input.typeCode), source: 'self_grid', allowed: GRID_AXES };
-  }
   const sliderAxis = SLIDER_SCREEN_AXIS[input.screen];
   if (sliderAxis) {
     const value = input.sliderValues[sliderAxis];
     if (typeof value !== 'number') return null;
     return { incoming: { [sliderAxis]: value }, source: 'self_slider', allowed: SLIDER_AXES };
   }
-  if (input.screen === 6) {
+  if (input.screen === 5) {
     if (!input.closeId || !isClosePatternId(input.closeId)) return null;
     return {
       incoming: traitsFromClosePattern(input.closeId),
@@ -428,7 +368,7 @@ export function writeForOptionalScreen(input: {
       allowed: CLOSE_AXES,
     };
   }
-  if (input.screen === 7) {
+  if (input.screen === 6) {
     const second = input.closeSecondId ?? null;
     if (!second || !isClosePatternId(second)) return null;
     return {
@@ -437,7 +377,7 @@ export function writeForOptionalScreen(input: {
       allowed: CLOSE_AXES,
     };
   }
-  if (input.screen !== 8 || !input.disagreeId || !isDisagreeId(input.disagreeId)) return null;
+  if (input.screen !== 7 || !input.disagreeId || !isDisagreeId(input.disagreeId)) return null;
   return {
     incoming: traitsFromDisagree(input.disagreeId),
     source: 'self_situation',

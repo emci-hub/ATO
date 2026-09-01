@@ -56,7 +56,6 @@ export default function OnboardingScreen() {
   const [optionalIndex, setOptionalIndex] = useState(0);
   const [createdUserId, setCreatedUserId] = useState<string | null>(null);
   const [meRow, setMeRow] = useState<Me | null>(null);
-  const [typeCode, setTypeCode] = useState<string | null>(null);
   const [sliderValues, setSliderValues] = useState<Partial<Record<(typeof SLIDER_AXES)[number], number>>>({});
   const [closeId, setCloseId] = useState<string | null>(null);
   const [closeSecondId, setCloseSecondId] = useState<string | null>(null);
@@ -303,7 +302,6 @@ export default function OnboardingScreen() {
     if (!createdUserId || busy) return;
     const write = writeForOptionalScreen({
       screen: optionalIndex as OptionalScreen,
-      typeCode,
       sliderValues,
       closeId,
       closeSecondId,
@@ -415,15 +413,13 @@ export default function OnboardingScreen() {
                 <OptionalStep
                   screen={optionalIndex as OptionalScreen}
                   busy={busy}
-                  typeCode={typeCode}
                   sliderValues={sliderValues}
-                  closeId={optionalIndex === 7 ? closeSecondId : closeId}
+                  closeId={optionalIndex === 6 ? closeSecondId : closeId}
                   disagreeId={disagreeId}
-                  onType={setTypeCode}
                   onSlider={(axis, value) => {
                     setSliderValues((prev) => ({ ...prev, [axis]: value }));
                   }}
-                  onClose={optionalIndex === 7 ? setCloseSecondId : setCloseId}
+                  onClose={optionalIndex === 6 ? setCloseSecondId : setCloseId}
                   onDisagree={setDisagreeId}
                   onBack={() => {
                     setFormError(null);

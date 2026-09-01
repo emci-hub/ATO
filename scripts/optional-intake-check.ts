@@ -15,7 +15,6 @@ import {
   emptyTraitValues,
   mergeTraitWrite,
   optionalFillWrite,
-  traitsFromTypeCode,
   unansweredOptionalScreens,
   writeForOptionalScreen,
 } from '../src/lib/traits';
@@ -32,15 +31,14 @@ function read(rel: string): string {
 }
 
 const blankInput = {
-  typeCode: null as string | null,
   sliderValues: {} as Record<string, number>,
   closeId: null as string | null,
   disagreeId: null as string | null,
 };
 
-assert.deepEqual(unansweredOptionalScreens(emptyTraitValues()), [0, 1, 2, 3, 4, 5, 6, 7, 8]);
-assert.equal(OPTIONAL_INTAKE_TOTAL, 9);
-ok('all 9 optional screens are unanswered when every axis is null');
+assert.deepEqual(unansweredOptionalScreens(emptyTraitValues()), [0, 1, 2, 3, 4, 5, 6, 7]);
+assert.equal(OPTIONAL_INTAKE_TOTAL, 8);
+ok('all 8 optional screens are unanswered when every axis is null');
 
 const you = read('src/app/(tabs)/you.tsx');
 const fillUi = read('src/components/optional-intake.tsx');
@@ -60,7 +58,7 @@ ok('section sits on You directly after TraitBandsFold and still renders when eve
 
 const gamed = mergeTraitWrite(emptyTraitState(), { openness: 0.8 }, 'self_game', ['openness']);
 const naive = writeForOptionalScreen({
-  screen: 1,
+  screen: 0,
   ...blankInput,
   sliderValues: { openness: 0 },
 });
@@ -69,38 +67,13 @@ const naiveMerged = mergeTraitWrite(gamed, naive.incoming, naive.source, naive.a
 assert.equal(naiveMerged.sources.openness, 'self_slider');
 assert.notEqual(naiveMerged.values.openness, gamed.values.openness);
 const guardedSlider = optionalFillWrite(gamed.values, {
-  screen: 1,
+  screen: 0,
   ...blankInput,
   sliderValues: { openness: 0 },
 });
 assert.equal(guardedSlider, null);
-assert.ok(!unansweredOptionalScreens(gamed.values).includes(1));
+assert.ok(!unansweredOptionalScreens(gamed.values).includes(0));
 ok('slider fill does not overwrite an axis that already has a non-null value from another source');
-
-const tapped = mergeTraitWrite(emptyTraitState(), { extraversion: 0.2 }, 'self_tap', [
-  'extraversion',
-]);
-const guardedGrid = optionalFillWrite(tapped.values, {
-  screen: 0,
-  ...blankInput,
-  typeCode: 'ENFP',
-});
-assert.ok(guardedGrid);
-assert.equal(guardedGrid.source, 'self_grid');
-assert.equal(guardedGrid.incoming.extraversion, undefined);
-const fromType = traitsFromTypeCode('ENFP');
-assert.equal(typeof guardedGrid.incoming.openness, 'number');
-assert.equal(guardedGrid.incoming.openness, fromType.openness);
-const mergedGrid = mergeTraitWrite(
-  tapped,
-  guardedGrid.incoming,
-  guardedGrid.source,
-  guardedGrid.allowed,
-);
-assert.equal(mergedGrid.values.extraversion, tapped.values.extraversion);
-assert.equal(mergedGrid.sources.extraversion, 'self_tap');
-assert.notEqual(mergedGrid.values.openness, null);
-ok('type-grid fill writes only still-null axes and leaves a filled extraversion from self_tap');
 
 const closeFilled = mergeTraitWrite(
   emptyTraitState(),
@@ -110,7 +83,7 @@ const closeFilled = mergeTraitWrite(
 );
 assert.equal(
   optionalFillWrite(closeFilled.values, {
-    screen: 6,
+    screen: 5,
     ...blankInput,
     closeId: 'want_and_pull',
   }),

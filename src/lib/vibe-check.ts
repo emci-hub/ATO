@@ -6,12 +6,6 @@ import type { IntakeChip } from '@/lib/intake';
 import type { ClosePatternId, DisagreeId } from '@/lib/traits';
 import { SLIDER_AXES } from '@/lib/traits';
 
-export const TYPE_COPY = {
-  label: 'If you already know your type',
-  description:
-    'Some people already know this about themselves from other quizzes — tap yours in if so, skip if not.',
-} as const;
-
 export const EVEN_KEEL_COPY = {
   label: 'How rattled a bad day gets you',
   description: 'Some people shake it off fast, some carry it longer — no wrong answer here.',
@@ -154,5 +148,3 @@ export const VIBE_QUESTIONS: readonly VibeQuestion[] = [
     ],
   },
 ];
-
-/** Screen 0 is the type grid; 1–8 are VIBE_QUESTIONS. */

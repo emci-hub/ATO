@@ -20,7 +20,7 @@ import {
   selectedIntakeValues,
   voiceMeFrom,
 } from '../src/lib/intake';
-import { VIBE_QUESTIONS, TYPE_COPY, EVEN_KEEL_COPY, CLOSENESS_COPY } from '../src/lib/vibe-check';
+import { VIBE_QUESTIONS, EVEN_KEEL_COPY, CLOSENESS_COPY } from '../src/lib/vibe-check';
 import { bankCard, bankCardForMe } from '../src/lib/voice/bank';
 import { routeVoiceCard } from '../src/lib/voice/router';
 import { buildVoiceConfig } from '../src/lib/voice/config';
@@ -175,7 +175,6 @@ async function main() {
     VIBE_QUESTIONS[0]?.prompt,
     'Someone in the group chat finds a spot that looks kinda sketchy but also kinda cool. Zero reviews.',
   );
-  assert.equal(TYPE_COPY.label, 'If you already know your type');
   assert.equal(EVEN_KEEL_COPY.label, 'How rattled a bad day gets you');
   assert.equal(CLOSENESS_COPY.label, 'How you handle getting close to people');
   ok('vibe-check prompts and field labels match the locked pass-1 copy');
