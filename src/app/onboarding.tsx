@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BornOnFields } from '@/components/born-on-fields';
 import { CityPicker } from '@/components/city-picker';
-import { ChipGroup } from '@/components/intake-chips';
+import { CoreIntakeSweep } from '@/components/core-intake-sweep';
 import { IntakeSweep } from '@/components/intake-sweep';
 import { OptionalGate, OptionalStep } from '@/components/optional-intake';
 import { ThemedText } from '@/components/themed-text';
@@ -25,9 +25,6 @@ import {
   UNDER_16_MESSAGE,
 } from '@/lib/age';
 import {
-  CORE_INTAKE_QUESTIONS,
-  CORE_INTAKE_TOTAL,
-  INTAKE_SETTINGS_LABELS,
   joinKnocks,
   type CoreIntakeField,
   type CurrentFocus,
@@ -35,7 +32,6 @@ import {
   type KnocksChip,
   type RecoveryStyle,
   type SupportStyle,
-  intakeProgressLabel,
 } from '@/lib/intake';
 import { createMe, errorMessageForHandle, fetchMe, TalkStyle, updateTraits, checkHandleAvailable, handleFormatError, normalizeHandle, type Me } from '@/lib/me';
 import { OPTIONAL_INTAKE_TOTAL, SLIDER_AXES, writeForOptionalScreen, type OptionalScreen } from '@/lib/traits';
@@ -57,7 +53,6 @@ export default function OnboardingScreen() {
   const { refresh } = useMeContext();
 
   const [phase, setPhase] = useState<Phase>('account');
-  const [intakeIndex, setIntakeIndex] = useState(0);
   const [optionalIndex, setOptionalIndex] = useState(0);
   const [createdUserId, setCreatedUserId] = useState<string | null>(null);
   const [meRow, setMeRow] = useState<Me | null>(null);
@@ -158,7 +153,6 @@ export default function OnboardingScreen() {
       setFormError(null);
       setHandleError(null);
       setPhase('intake');
-      setIntakeIndex(0);
     } finally {
       setBusy(false);
     }
@@ -171,29 +165,6 @@ export default function OnboardingScreen() {
     if (normalizeHandle(handle) !== snapshot) return;
     if (!result.ok) setHandleError(result.message);
     else setHandleError(null);
-  }
-
-  function intakeAnswered(field: CoreIntakeField): boolean {
-    switch (field) {
-      case 'talk_style':
-        return talkStyle != null;
-      case 'show_up':
-        return !!showUp;
-      case 'knocks_you_off':
-        return knocksYouOff.length > 0;
-      case 'morning_cue':
-        return !!morningCue;
-      case 'evening_wind_down':
-        return !!eveningWindDown;
-      case 'energy_pattern':
-        return energyPattern != null;
-      case 'recovery_style':
-        return recoveryStyle != null;
-      case 'support_style':
-        return supportStyle != null;
-      case 'current_focus':
-        return currentFocus != null;
-    }
   }
 
   function selectChip(field: CoreIntakeField, value: string) {
@@ -253,20 +224,6 @@ export default function OnboardingScreen() {
       case 'current_focus':
         return currentFocus ? [currentFocus] : [];
     }
-  }
-
-  function goNextIntake() {
-    const question = CORE_INTAKE_QUESTIONS[intakeIndex];
-    if (!question || !intakeAnswered(question.field)) {
-      setFormError('Pick one to keep going.');
-      return;
-    }
-    setFormError(null);
-    if (intakeIndex < CORE_INTAKE_TOTAL - 1) {
-      setIntakeIndex((i) => i + 1);
-      return;
-    }
-    void submit();
   }
 
   async function submit() {
@@ -398,8 +355,6 @@ export default function OnboardingScreen() {
     setSigningOut(false);
   }
 
-  const question = CORE_INTAKE_QUESTIONS[intakeIndex];
-
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -444,25 +399,20 @@ export default function OnboardingScreen() {
                   void continueFromAccount();
                 }}
               />
-            ) : phase === 'intake' && question ? (
-              <IntakeStep
-                question={question}
-                selected={selectedValues(question.field)}
-                onSelect={(value) => {
+            ) : phase === 'intake' ? (
+              <CoreIntakeSweep
+                selectedFor={selectedValues}
+                onSelect={(field, value) => {
                   setFormError(null);
-                  selectChip(question.field, value);
+                  selectChip(field, value);
                 }}
-                formError={formError}
                 busy={busy}
+                formError={formError}
+                onSubmit={() => void submit()}
                 onBack={() => {
                   setFormError(null);
-                  if (intakeIndex === 0) {
-                    setPhase('account');
-                    return;
-                  }
-                  setIntakeIndex((i) => i - 1);
+                  setPhase('account');
                 }}
-                onContinue={goNextIntake}
               />
             ) : phase === 'optional-gate' ? (
               <OptionalGate
@@ -720,84 +670,6 @@ function AccountStep({
   );
 }
 
-function IntakeStep({
-  question,
-  selected,
-  onSelect,
-  formError,
-  busy,
-  onBack,
-  onContinue,
-}: {
-  question: (typeof CORE_INTAKE_QUESTIONS)[number];
-  selected: string[];
-  onSelect: (value: string) => void;
-  formError: string | null;
-  busy: boolean;
-  onBack: () => void;
-  onContinue: () => void;
-}) {
-  const last = question.n === CORE_INTAKE_TOTAL;
-  const canContinue = selected.length > 0;
-  const title =
-    question.field === 'knocks_you_off' || question.helper
-      ? question.prompt
-      : INTAKE_SETTINGS_LABELS[question.field];
-  const lede =
-    question.field === 'knocks_you_off' ? null : (question.helper ?? question.prompt);
-
-  return (
-    <>
-      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.progress}>
-        {intakeProgressLabel(question.n)}
-      </ThemedText>
-      <ThemedText type="subtitle">{title}</ThemedText>
-      {lede ? (
-        <ThemedText themeColor="textSecondary" style={styles.lede}>
-          {lede}
-        </ThemedText>
-      ) : null}
-
-      <ChipGroup
-        chips={question.chips}
-        selected={selected}
-        multi={question.multi}
-        disabled={busy}
-        onSelect={onSelect}
-      />
-
-      {formError ? (
-        <ThemedText type="smallBold" style={{ color: '#E5484D' }}>
-          {formError}
-        </ThemedText>
-      ) : null}
-
-      <View style={styles.navRow}>
-        <Pressable
-          onPress={onBack}
-          disabled={busy}
-          style={({ pressed }) => [styles.backButton, pressed && styles.pressed, busy && styles.disabled]}>
-          <ThemedText type="smallBold">Back</ThemedText>
-        </Pressable>
-        <Pressable
-          onPress={onContinue}
-          disabled={busy || !canContinue}
-          style={({ pressed }) => [
-            styles.submitButton,
-            styles.nextButton,
-            { backgroundColor: '#3c87f7' },
-            pressed && styles.pressed,
-            (busy || !canContinue) && styles.disabled,
-          ]}>
-          <ThemedText type="smallBold" style={styles.submitText}>
-            {busy ? 'Saving…' : last ? 'Save' : 'Continue'}
-          </ThemedText>
-        </Pressable>
-      </View>
-    </>
-  );
-}
-
 function Field({
   label,
   required,
@@ -853,9 +725,6 @@ const styles = StyleSheet.create({
   lede: {
     paddingBottom: Spacing.two,
   },
-  progress: {
-    letterSpacing: 0.4,
-  },
   signOutLink: {
     alignSelf: 'flex-start',
     paddingVertical: Spacing.one,
@@ -883,25 +752,11 @@ const styles = StyleSheet.create({
   hint: {
     lineHeight: 18,
   },
-  navRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-    marginTop: Spacing.two,
-  },
-  backButton: {
-    paddingVertical: Spacing.three,
-    paddingHorizontal: Spacing.three,
-  },
   submitButton: {
     borderRadius: Spacing.three,
     paddingVertical: Spacing.three,
     alignItems: 'center',
     marginTop: Spacing.two,
-  },
-  nextButton: {
-    flex: 1,
-    marginTop: 0,
   },
   submitText: {
     color: '#ffffff',

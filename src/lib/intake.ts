@@ -328,8 +328,9 @@ export function displayIntakeValue(field: CoreIntakeField, me: IntakeMeSlice): s
   return chipLabel(question.chips, raw);
 }
 
-export function intakeProgressLabel(n: number, total = CORE_INTAKE_TOTAL): string {
-  return `${n} of ${total}`;
+/** One-page onboarding counter: "answered 3 of 9". */
+export function coreIntakeAnsweredLabel(answered: number, total = CORE_INTAKE_TOTAL): string {
+  return `answered ${answered} of ${total}`;
 }
 
 /**

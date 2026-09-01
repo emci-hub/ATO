@@ -12,8 +12,8 @@ import {
   INTAKE_SETTINGS_LABELS,
   TALK_STYLE_PREVIEWS,
   bankStyleFor,
+  coreIntakeAnsweredLabel,
   displayIntakeValue,
-  intakeProgressLabel,
   joinKnocks,
   parseKnocks,
   phraseForStoredChip,
@@ -56,35 +56,36 @@ async function main() {
   });
   ok('9 core questions in spec order, one chip set each');
 
-  assert.equal(intakeProgressLabel(3), '3 of 9');
-  ok('progress label is "3 of 9"');
+  assert.equal(coreIntakeAnsweredLabel(3), 'answered 3 of 9');
+  ok('progress label is "answered 3 of 9"');
 
   const onboarding = readFileSync(resolve(__dirname, '../src/app/onboarding.tsx'), 'utf8');
+  const coreSweep = readFileSync(resolve(__dirname, '../src/components/core-intake-sweep.tsx'), 'utf8');
   const meLib = readFileSync(resolve(__dirname, '../src/lib/me.ts'), 'utf8');
-  assert.match(onboarding, /intakeProgressLabel/);
-  assert.match(onboarding, /CORE_INTAKE_QUESTIONS/);
+  assert.match(onboarding, /CoreIntakeSweep/);
   assert.match(onboarding, /phase === 'account'/);
   assert.match(onboarding, /phase === 'optional-gate'/);
-  assert.match(onboarding, /ChipGroup/);
-  ok('onboarding is a chip wizard with a visible progress label');
+  assert.doesNotMatch(onboarding, /intakeIndex/);
+  assert.doesNotMatch(onboarding, /intakeProgressLabel/);
+  assert.match(coreSweep, /CORE_INTAKE_QUESTIONS/);
+  assert.match(coreSweep, /ChipGroup/);
+  assert.match(coreSweep, /coreIntakeAnsweredLabel/);
+  ok('core intake is one scrollable page reusing the sweep shape, with an answered counter');
 
   const energyQ = CORE_INTAKE_QUESTIONS.find((q) => q.field === 'energy_pattern');
   assert.equal(energyQ?.prompt, 'When do you have the most energy during the day?');
   assert.equal(energyQ?.helper, 'Helps us pick a good time to check in with you.');
   ok('Q6 energy-pattern question and helper match the locked copy');
 
-  const intakeStep = onboarding.slice(
-    onboarding.indexOf('function IntakeStep('),
-    onboarding.indexOf('function Field('),
+  const sweepUsage = onboarding.slice(
+    onboarding.indexOf('<CoreIntakeSweep'),
+    onboarding.indexOf('/>', onboarding.indexOf('<CoreIntakeSweep')) + 2,
   );
-  assert.match(intakeStep, />Back</);
-  assert.match(onboarding, /setIntakeIndex\(\(i\) => i - 1\)/);
-  const onBackFn = onboarding.slice(
-    onboarding.indexOf('onBack={() => {'),
-    onboarding.indexOf('onContinue={goNextIntake}'),
-  );
-  assert.doesNotMatch(onBackFn, /setTalkStyle|setEnergyPattern|setCurrentFocus/);
-  ok('each core intake screen has Back; going back does not clear answers');
+  assert.match(sweepUsage, /selectedFor=\{selectedValues\}/);
+  assert.match(sweepUsage, /onSubmit=\{\(\) => void submit\(\)\}/);
+  assert.match(sweepUsage, /setPhase\('account'\)/);
+  assert.doesNotMatch(sweepUsage, /setTalkStyle|setEnergyPattern|setCurrentFocus/);
+  ok('intake Back returns to the account step without clearing answers');
 
   assert.match(meLib, /export const RESERVED_HANDLES/);
   assert.match(meLib, /'ato'/);
@@ -181,6 +182,7 @@ async function main() {
 
   const copyBlob = [
     onboarding,
+    coreSweep,
     chips,
     settings,
     you,
