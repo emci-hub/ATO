@@ -27,13 +27,13 @@ export function NavMoreSheet({
   const theme = useTheme();
   const { startEditing } = useNavOrder();
 
-  if (!open) return null;
-
   return (
-    <Modal visible transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
       <SafeAreaProvider style={styles.provider}>
         <View style={styles.backdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        {/* Flex spacer above the sheet — not absoluteFill, so row taps never
+            hit the dismiss layer. */}
+        <Pressable style={styles.backdropDismiss} onPress={onClose} accessibilityLabel="Dismiss More" />
         <SafeAreaView
           edges={['bottom']}
           style={[styles.sheet, { backgroundColor: theme.background, borderColor: controlBorderColor(theme) }]}>
@@ -58,8 +58,10 @@ export function NavMoreSheet({
                   accessibilityRole="button"
                   accessibilityLabel={`Open ${NAV_TABS[id].label}`}
                   onPress={() => {
-                    onClose();
+                    // Push first so closing the Modal cannot unmount before
+                    // the tab navigator receives the route.
                     router.push(NAV_TABS[id].href as never);
+                    onClose();
                   }}
                   onLongPress={() => {
                     onClose();
@@ -96,6 +98,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
+  },
+  backdropDismiss: {
+    flex: 1,
   },
   sheet: {
     borderTopLeftRadius: Spacing.four,

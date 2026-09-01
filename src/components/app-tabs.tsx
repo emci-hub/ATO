@@ -12,7 +12,7 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useCircleContext } from '@/lib/circle-context';
 import { useNavOrder } from '@/lib/nav/nav-context';
-import { NAV_TABS, type ReorderableTabId } from '@/lib/nav/nav-order';
+import { isTabUnlocked, lockedTabIds, NAV_TABS, NAV_TAB_IDS } from '@/lib/nav/nav-order';
 import { controlBorderColor } from '@/lib/theme/chrome';
 
 /**
@@ -34,9 +34,10 @@ export default function AppTabs() {
   const { order, editing, startEditing } = useNavOrder();
   const [moreOpen, setMoreOpen] = useState(false);
 
-  const visible = (id: ReorderableTabId) => id !== 'circle' || hasCircle;
-  const mainIds = order.main.filter(visible);
-  const moreIds = order.more.filter(visible);
+  const unlockCtx = { hasCircle };
+  const lockedTabs = lockedTabIds(unlockCtx);
+  const mainIds = order.main.filter((id) => isTabUnlocked(id, unlockCtx));
+  const moreIds = order.more.filter((id) => isTabUnlocked(id, unlockCtx));
 
   const sageTrigger = (
     <TabTrigger name="sage" href="/sage" asChild>
@@ -91,10 +92,13 @@ export default function AppTabs() {
             </ThemedText>
           </Pressable>
         </TabList>
+        {NAV_TAB_IDS.filter((id) => !mainIds.includes(id) && isTabUnlocked(id, unlockCtx)).map((id) => (
+          <TabTrigger key={`hidden-${id}`} name={id} href={NAV_TABS[id].href} />
+        ))}
       </Tabs>
 
       <NavMoreSheet open={moreOpen} moreIds={moreIds} onClose={() => setMoreOpen(false)} />
-      {editing ? <NavEditOverlay /> : null}
+      {editing ? <NavEditOverlay lockedTabs={lockedTabs} /> : null}
     </>
   );
 }

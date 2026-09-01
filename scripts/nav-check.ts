@@ -11,6 +11,8 @@ import { resolve } from 'node:path';
 
 import {
   DEFAULT_NAV_ORDER,
+  isTabUnlocked,
+  lockedTabIds,
   NAV_TABS,
   NAV_TAB_IDS,
   normalizeNavOrder,
@@ -77,6 +79,14 @@ assert.equal(normalizeNavOrder({ homeFirst: 'yes' as never, main: [], more: [] }
 assert.equal(normalizeNavOrder(null).homeFirst, true);
 ok('homeFirst is a boolean, defaulting true; Home/Sage swap is the only pinned reorder');
 
+assert.deepEqual(lockedTabIds({ hasCircle: false }), ['circle']);
+assert.deepEqual(lockedTabIds({ hasCircle: true }), []);
+assert.equal(isTabUnlocked('explore', { hasCircle: false }), true);
+assert.equal(isTabUnlocked('circle', { hasCircle: false }), false);
+assert.equal(isTabUnlocked('circle', { hasCircle: true }), true);
+assert.equal(NAV_TABS.circle.unlockReason, 'Scan a friend to unlock Circle.');
+ok('Circle is locked until hasCircle; unlockReason explains why; other tabs stay open');
+
 // --- wiring ----------------------------------------------------------------
 
 const tabs = read('src/components/app-tabs.tsx');
@@ -87,6 +97,10 @@ assert.match(tabs, /NavMoreSheet/);
 assert.match(tabs, /NavEditOverlay/);
 assert.match(tabs, /startEditing/);
 assert.doesNotMatch(tabs, /unstable-native-tabs/);
+assert.match(tabs, /lockedTabs=\{lockedTabs\}/);
+assert.match(tabs, /isTabUnlocked/);
+assert.match(tabs, /hidden-\$\{id\}/);
+assert.doesNotMatch(tabs, /id !== 'circle'/);
 ok('tab bar is the custom JS bar driven by NavOrder, with More + edit mode');
 
 const overlay = read('src/components/nav-edit-overlay.tsx');
@@ -95,15 +109,20 @@ assert.match(overlay, /customHandle/);
 assert.match(overlay, /onDragEnd/);
 assert.match(overlay, /commitOrder/);
 assert.match(overlay, /MAIN_BAR_CAP/);
-assert.match(overlay, /draftMain\.length >= MAIN_BAR_CAP/);
 assert.match(overlay, /SafeAreaProvider/);
 assert.match(overlay, /The bar is full/);
+assert.match(overlay, /Not unlocked yet/);
+assert.match(overlay, /lockedTabs/);
+assert.match(overlay, /unlockReason/);
+assert.match(overlay, /filteredDraftMain\.length >= MAIN_BAR_CAP/);
+assert.doesNotMatch(overlay, /id !== 'circle'/);
 assert.doesNotMatch(overlay, /main\.push|more\.push/);
 ok('edit overlay drags via Sortable.Flex, caps the bar at 2, uses SafeAreaProvider, commits atomically');
 
 const sheet = read('src/components/nav-more-sheet.tsx');
 assert.match(sheet, /moreIds/);
-assert.match(sheet, /router\.push/);
+assert.match(sheet, /router\.push\(NAV_TABS\[id\]\.href[\s\S]*?onClose\(\)/);
+assert.match(sheet, /backdropDismiss/);
 assert.match(sheet, /SafeAreaProvider/);
 ok('More sheet lists more[] items, navigates on tap, and uses SafeAreaProvider');
 

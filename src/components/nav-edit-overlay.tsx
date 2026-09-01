@@ -21,7 +21,11 @@ import { controlBorderColor } from '@/lib/theme/chrome';
  */
 const MAIN_BAR_CAP = 2;
 
-export function NavEditOverlay() {
+export function NavEditOverlay({
+  lockedTabs = [],
+}: {
+  lockedTabs?: ReorderableTabId[];
+}) {
   const theme = useTheme();
   const { order, cancelEditing, commitOrder } = useNavOrder();
 
@@ -29,6 +33,10 @@ export function NavEditOverlay() {
   const [draftMain, setDraftMain] = useState<ReorderableTabId[]>(order.main);
   const [draftMore, setDraftMore] = useState<ReorderableTabId[]>(order.more);
   const [barFullNote, setBarFullNote] = useState(false);
+
+  const lockedSet = new Set(lockedTabs);
+  const filteredDraftMain = draftMain.filter((id) => !lockedSet.has(id));
+  const filteredDraftMore = draftMore.filter((id) => !lockedSet.has(id));
 
   function moveToMore(id: ReorderableTabId) {
     setDraftMain((main) => main.filter((item) => item !== id));
@@ -39,7 +47,8 @@ export function NavEditOverlay() {
     setDraftMore((more) => {
       if (!more.includes(id)) return more;
       setDraftMain((main) => {
-        if (main.length >= MAIN_BAR_CAP) {
+        const unlockedCount = main.filter((item) => !lockedSet.has(item)).length;
+        if (unlockedCount >= MAIN_BAR_CAP) {
           setBarFullNote(true);
           return main;
         }
@@ -95,7 +104,7 @@ export function NavEditOverlay() {
             </ThemedText>
           ) : null}
 
-          {draftMain.length === 0 ? (
+          {filteredDraftMain.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary">
               Nothing pinned to the bar. Move something here from More.
             </ThemedText>
@@ -106,9 +115,9 @@ export function NavEditOverlay() {
                 const next = indexToKey.filter(
                   (key): key is ReorderableTabId => key in NAV_TABS,
                 );
-                setDraftMain(next);
+                setDraftMain((prev) => [...next, ...prev.filter((id) => lockedSet.has(id))]);
               }}>
-              {draftMain.map((id) => (
+              {filteredDraftMain.map((id) => (
                 <View key={id} style={[styles.sortRow, { borderColor: controlBorderColor(theme) }]}>
                   <Sortable.Handle mode="draggable">
                     <MaterialCommunityIcons name="drag-vertical" size={22} color={theme.textSecondary} />
@@ -137,13 +146,13 @@ export function NavEditOverlay() {
             More is the fixed rightmost tab. Tap an item to move it onto the bar.
           </ThemedText>
 
-          {draftMore.length === 0 ? (
+          {filteredDraftMore.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary">
               More is empty.
             </ThemedText>
           ) : (
             <View style={styles.moreList}>
-              {draftMore.map((id) => (
+              {filteredDraftMore.map((id) => (
                 <View key={id} style={[styles.sortRow, { borderColor: controlBorderColor(theme) }]}>
                   <MaterialCommunityIcons name={NAV_TABS[id].icon as never} size={22} color={theme.text} />
                   <ThemedText type="small" style={styles.rowLabel}>
@@ -153,9 +162,9 @@ export function NavEditOverlay() {
                     accessibilityRole="button"
                     accessibilityLabel={`Move ${NAV_TABS[id].label} to bar`}
                     onPress={() => moveToBar(id)}
-                    disabled={draftMain.length >= MAIN_BAR_CAP}
+                    disabled={filteredDraftMain.length >= MAIN_BAR_CAP}
                     hitSlop={8}
-                    style={({ pressed }) => [pressed && styles.pressed, draftMain.length >= MAIN_BAR_CAP && styles.disabled]}>
+                    style={({ pressed }) => [pressed && styles.pressed, filteredDraftMain.length >= MAIN_BAR_CAP && styles.disabled]}>
                     <ThemedText type="small" themeColor="textSecondary">
                       Bar
                     </ThemedText>
@@ -164,6 +173,30 @@ export function NavEditOverlay() {
               ))}
             </View>
           )}
+
+          {lockedTabs.length > 0 ? (
+            <>
+              <ThemedText type="smallBold">Not unlocked yet</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                These stay off the bar until they're unlocked. No Bar or More toggle.
+              </ThemedText>
+              {lockedTabs.map((id) => (
+                <View key={id} style={[styles.lockedRow, { borderColor: controlBorderColor(theme) }]}>
+                  <MaterialCommunityIcons name="lock-outline" size={18} color={theme.textSecondary} />
+                  <View style={styles.lockedCopy}>
+                    <ThemedText type="small" style={styles.lockedLabel}>
+                      {NAV_TABS[id].label}
+                    </ThemedText>
+                    {NAV_TABS[id].unlockReason ? (
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {NAV_TABS[id].unlockReason}
+                      </ThemedText>
+                    ) : null}
+                  </View>
+                </View>
+              ))}
+            </>
+          ) : null}
         </ScrollView>
       </SafeAreaView>
       </SafeAreaProvider>
@@ -236,6 +269,23 @@ const styles = StyleSheet.create({
   },
   moreList: {
     gap: Spacing.half,
+  },
+  lockedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    borderWidth: 1,
+    borderRadius: Spacing.three,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.three,
+    opacity: 0.7,
+  },
+  lockedCopy: {
+    flex: 1,
+    gap: Spacing.half,
+  },
+  lockedLabel: {
+    flex: 0,
   },
   pressed: {
     opacity: 0.7,

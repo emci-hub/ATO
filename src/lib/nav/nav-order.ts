@@ -16,12 +16,25 @@ import type { Href } from 'expo-router';
 
 export type ReorderableTabId = 'explore' | 'around' | 'you' | 'circle';
 
+export interface NavUnlockContext {
+  /** True once this account has at least one Circle connection. */
+  hasCircle: boolean;
+}
+
 export interface NavTabMeta {
   label: string;
   /** expo-router href for the tab route (Home/Sage are handled separately). */
   href: Href;
   /** MaterialCommunityIcons glyph name. */
   icon: string;
+  /**
+   * Optional gate. When this returns false, the tab is omitted from the bar
+   * and More, and Edit Navigation shows it in "Not unlocked yet" — no Bar/More
+   * toggle. Omit for tabs that are always available.
+   */
+  isUnlocked?: (ctx: NavUnlockContext) => boolean;
+  /** Shown under the locked row. Required when `isUnlocked` is set. */
+  unlockReason?: string;
 }
 
 /** Registry of reorderable tabs. Adding a new tab = add an entry here. */
@@ -29,10 +42,29 @@ export const NAV_TABS: Record<ReorderableTabId, NavTabMeta> = {
   explore: { label: 'Explore', href: '/explore', icon: 'compass-outline' },
   around: { label: 'Around', href: '/around', icon: 'map-marker-radius-outline' },
   you: { label: 'You', href: '/you', icon: 'account' },
-  circle: { label: 'Circle', href: '/circle', icon: 'account-group' },
+  circle: {
+    label: 'Circle',
+    href: '/circle',
+    icon: 'account-group',
+    isUnlocked: (ctx) => ctx.hasCircle,
+    unlockReason: 'Scan a friend to unlock Circle.',
+  },
 };
 
 export const NAV_TAB_IDS = Object.keys(NAV_TABS) as ReorderableTabId[];
+
+/** Tabs whose `isUnlocked` check fails. Tabs without a check are always open. */
+export function lockedTabIds(ctx: NavUnlockContext): ReorderableTabId[] {
+  return NAV_TAB_IDS.filter((id) => {
+    const check = NAV_TABS[id].isUnlocked;
+    return check ? !check(ctx) : false;
+  });
+}
+
+export function isTabUnlocked(id: ReorderableTabId, ctx: NavUnlockContext): boolean {
+  const check = NAV_TABS[id].isUnlocked;
+  return check ? check(ctx) : true;
+}
 
 export interface NavOrder {
   /** true = [Home, Sage], false = [Sage, Home]. Home/Sage never leave the bar. */
