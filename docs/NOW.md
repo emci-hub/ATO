@@ -4,7 +4,7 @@
 **Gates:** A ✓ (non-goals in ATO_PLAN_v2.md) · B ✓ (iOS/Expo, Supabase, Apple Sign-in+email) · C in progress · D not started
 **Modules on:** report/block (Social), crisis static-card + privacy pass (Health/finance/kids) — both required, in progress
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
-**Latest production OTA:** `8c5c0070-da95-48bd-9672-6d3e4aa42d66` (commit `c0e186d`) — pixel color fix (show_up now drives the character color)
+**Latest production OTA:** `1ffc92b0-5d8f-4b87-a10d-5dc9eb8144e8` (commit `26c5781`) — customizable nav (drag-to-reorder, More overflow, Home/Sage pinned)
 
 ## On
 **Test-account wipe for clean retest (Aug 31, 2026).** All test accounts (riley, sam, yeezy, zintake9, lazyemci) hard-deleted via `auth.users` cascade (checks, trait_history, trait_tracks, token_events, ai_usage, going, sage_messages, explore_*, question_*, connections, messages, blocks, mutes, reports, invite_codes, apple_credentials all cascade; `account_deletions` audit rows written for each). Only **emci2** (`lil_emci@hotmail.com`, Apple) remains. **EMCIRETEST** is owned by emci2, unlimited (`max_uses NULL`), verified usable. **Known gap:** handle is `emci2`, not `emci`, so dev-root RPCs keyed on `handle='emci'` don't recognize it.
@@ -74,7 +74,7 @@
 2. Sentry native crash symbolication — still **unconfirmed** from here. Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
 3. Friends external testing group — Beta App Review pending on Apple since Aug 26, 2026. No action, just waiting.
 
-**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ receive JS via `eas update`. Devices on binary 8 or earlier cannot. Latest production JS: group `8c5c0070-da95-48bd-9672-6d3e4aa42d66` (`c0e186d`, pixel color fix). **OTA published Sep 1, 2026.** Prior group `af9b56ee-6022-4421-a1b4-d3b781ce149b` (`3c0aae7`, Explore is a real tab) is superseded.
+**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ receive JS via `eas update`. Devices on binary 8 or earlier cannot. Latest production JS: group `1ffc92b0-5d8f-4b87-a10d-5dc9eb8144e8` (`26c5781`, customizable nav). **OTA published Sep 1, 2026.** Prior group `8c5c0070-da95-48bd-9672-6d3e4aa42d66` (`c0e186d`, pixel color fix) is superseded.
 
 ## Done
 **Sign up / Log in split is in.** Separate screens: Sign up is OTP + Apple with no password field; Log in is Apple, optional password, and OTP fallback. Password set/change in You Settings via `supabase.auth.updateUser` (GoTrue hash).
@@ -112,7 +112,7 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 7. **Intake sweep copy** — `INTAKE_SWEEP_COPY_REVIEWED = false` (`questions/local.ts`).
 
 ## Left
-- Full device pass against `docs/ATO_DEVICE_TESTS.md` (binary 10+, OTA `8c5c0070`)
+- Full device pass against `docs/ATO_DEVICE_TESTS.md` (binary 10+, OTA `1ffc92b0`)
 - Get all testers onto binary 10 (they cannot receive OTA on binary 8)
 - Confirm binary 10 on a real device (icon, OTA, everything)
 - Gut Call regression — still open
@@ -150,4 +150,4 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 - **Around refresh secrets (Wave 2):** Edge Function `refresh-around` is deployed. Needs `EDMTRAIN_CLIENT_KEY` + `AROUND_REFRESH_SECRET`; cron not scheduled until both exist. Phone never holds the Edmtrain key.
 
 ## Next 15 min
-Work through `docs/ATO_DEVICE_TESTS.md` in full on a real device with **binary 10** installed (it pulls OTA `8c5c0070-da95-48bd-9672-6d3e4aa42d66`). Every box's checklist, one sitting. Bring back anything that fails. Once that pass is clean, Stage 8 handoff #2: invite/referral gate (Auth + ME). Open items that are not the device pass: Gut Call regression, Live Talk failure, closing the `emci2` root-handle gap.
+Work through `docs/ATO_DEVICE_TESTS.md` in full on a real device with **binary 10** installed (it pulls OTA `1ffc92b0-5d8f-4b87-a10d-5dc9eb8144e8`). Every box's checklist, one sitting. Bring back anything that fails. Once that pass is clean, Stage 8 handoff #2: invite/referral gate (Auth + ME). Open items that are not the device pass: Gut Call regression, Live Talk failure, closing the `emci2` root-handle gap.
