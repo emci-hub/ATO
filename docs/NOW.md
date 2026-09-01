@@ -4,7 +4,7 @@
 **Gates:** A ✓ (non-goals in ATO_PLAN_v2.md) · B ✓ (iOS/Expo, Supabase, Apple Sign-in+email) · C in progress · D not started
 **Modules on:** report/block (Social), crisis static-card + privacy pass (Health/finance/kids) — both required, in progress
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
-**Latest production OTA:** `4b669c70-ba79-433b-9f1e-2bde060ff656` (commit `0387ea9`) — nav default to 5 items (Around in More)
+**Latest production OTA:** `0028d5f5-3797-417e-b345-9005cb17ca5b` (commit `41fcec4`) — core intake as one scrollable page
 
 ## On
 **Test-account wipe for clean retest (Aug 31, 2026).** All test accounts (riley, sam, yeezy, zintake9, lazyemci) hard-deleted via `auth.users` cascade (checks, trait_history, trait_tracks, token_events, ai_usage, going, sage_messages, explore_*, question_*, connections, messages, blocks, mutes, reports, invite_codes, apple_credentials all cascade; `account_deletions` audit rows written for each). Only **emci2** (`lil_emci@hotmail.com`, Apple) remains. **EMCIRETEST** is owned by emci2, unlimited (`max_uses NULL`), verified usable. **Known gap:** handle is `emci2`, not `emci`, so dev-root RPCs keyed on `handle='emci'` don't recognize it.
@@ -74,7 +74,7 @@
 2. Sentry native crash symbolication — still **unconfirmed** from here. Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
 3. Friends external testing group — Beta App Review pending on Apple since Aug 26, 2026. No action, just waiting.
 
-**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ receive JS via `eas update`. Devices on binary 8 or earlier cannot. Latest production JS: group `4b669c70-ba79-433b-9f1e-2bde060ff656` (`0387ea9`, nav default 5 items). **OTA published Sep 1, 2026.** Prior group `1ffc92b0-5d8f-4b87-a10d-5dc9eb8144e8` (`26c5781`, customizable nav) is superseded.
+**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ receive JS via `eas update`. Devices on binary 8 or earlier cannot. Latest production JS: group `0028d5f5-3797-417e-b345-9005cb17ca5b` (`41fcec4`, core intake one page). **OTA published Sep 1, 2026.** Prior group `4b669c70-ba79-433b-9f1e-2bde060ff656` (`0387ea9`, nav default 5 items) is superseded.
 
 ## Done
 **Sign up / Log in split is in.** Separate screens: Sign up is OTP + Apple with no password field; Log in is Apple, optional password, and OTP fallback. Password set/change in You Settings via `supabase.auth.updateUser` (GoTrue hash).
@@ -112,7 +112,7 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 7. **Intake sweep copy** — `INTAKE_SWEEP_COPY_REVIEWED = false` (`questions/local.ts`).
 
 ## Left
-- Full device pass against `docs/ATO_DEVICE_TESTS.md` (binary 10+, OTA `4b669c70`)
+- Full device pass against `docs/ATO_DEVICE_TESTS.md` (binary 10+, OTA `0028d5f5`)
 - Get all testers onto binary 10 (they cannot receive OTA on binary 8)
 - Confirm binary 10 on a real device (icon, OTA, everything)
 - Gut Call regression — still open
@@ -132,6 +132,23 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 - Fantasy UI Borders pack (Kenney) — UI chrome/panels/buttons
 - Monster Builder Pack — parked, needs eyes/mouth slots added to recipe before usable
 - Revisit onboarding question wording if it still feels off after a fresh look
+- **`npx tsc --noEmit` pre-existing errors (16) — tracked cleanup, NOT fixed.** These are unrelated to the intake-sweep / nav / pixel work; the runtime check gates (`npm run check:*` via tsx) are the real gate. Full list:
+  1. `scripts/check-window-check.ts:83` — `.reason` on union `{ ok: true } | { ok: false; reason: ... }`
+  2. `scripts/founder-access-check.ts:94` — assert overload mismatch
+  3. `scripts/founder-access-check.ts:110` — `.length` on `never`
+  4. `scripts/founder-access-check.ts:121` — assert overload mismatch
+  5. `scripts/voice-router-check.ts:385` — `.message` on `never`
+  6. `scripts/voice-router-check.ts:386` — `.recentTurns` on `never`
+  7. `scripts/voice-router-check.ts:387` — `.recentTurns` on `never`
+  8. `src/app/(tabs)/around.tsx:73` — `NightSnapshot.colors` `readonly []` vs mutable `number[]`
+  9. `src/app/onboarding.tsx:261` — `createMe` call missing `voice_preset` (required by `MeInsert`)
+  10. `src/components/optional-intake.tsx:165` — `VibeQuestion.fieldLabel` doesn't exist on `VibeDisagreeQuestion`
+  11. `src/components/themed-pressable.tsx:43` — `StyleSheet` platform-specific overload (`default` key)
+  12. `src/lib/checks.ts:75` — `localYmd` not found
+  13. `src/lib/dev-access-server.ts:51` — `DevGrantRow.capability` string vs literal union
+  14. `src/lib/reveal.ts:167` — `RevealCheck`/`WeekCheck` `created_at` mismatch
+  15. `src/lib/reveal.ts:168` — `WeekCheck`/`RevealCheck` missing `day, status`
+  16. `src/lib/sentry.ts:28` — `Expected 0 arguments, but got 1`
 - **Decided, later Wave 1.5 boxes (see ATO_PLAN_v2 Understanding spec):** three-path extra-axis intake (play path shipped as scenarios); 3-month Settings prompt; You-tab weekly completeness slot; Dawn Reload. Locks from the Aug 28 Grok review are in that spec (do not reopen in a later box).
 - Crisis: relational-safety/abuse category, own resource number, parked separately
 - **AI capacity hardening** — close the client-embedded-key bypass before public launch
@@ -150,4 +167,4 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 - **Around refresh secrets (Wave 2):** Edge Function `refresh-around` is deployed. Needs `EDMTRAIN_CLIENT_KEY` + `AROUND_REFRESH_SECRET`; cron not scheduled until both exist. Phone never holds the Edmtrain key.
 
 ## Next 15 min
-Work through `docs/ATO_DEVICE_TESTS.md` in full on a real device with **binary 10** installed (it pulls OTA `4b669c70-ba79-433b-9f1e-2bde060ff656`). Every box's checklist, one sitting. Bring back anything that fails. Once that pass is clean, Stage 8 handoff #2: invite/referral gate (Auth + ME). Open items that are not the device pass: Gut Call regression, Live Talk failure, closing the `emci2` root-handle gap.
+Work through `docs/ATO_DEVICE_TESTS.md` in full on a real device with **binary 10** installed (it pulls OTA `0028d5f5-3797-417e-b345-9005cb17ca5b`). Every box's checklist, one sitting. Bring back anything that fails. Once that pass is clean, Stage 8 handoff #2: invite/referral gate (Auth + ME). Open items that are not the device pass: Gut Call regression, Live Talk failure, closing the `emci2` root-handle gap.
