@@ -4,12 +4,12 @@
 **Gates:** A ✓ (non-goals in ATO_PLAN_v2.md) · B ✓ (iOS/Expo, Supabase, Apple Sign-in+email) · C in progress · D not started
 **Modules on:** report/block (Social), crisis static-card + privacy pass (Health/finance/kids) — both required, in progress
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
-**Latest production OTA:** `5999d5d4-06a2-46e9-bc7e-5ab1938a8711` (commit `34f45a5`) — Explore is a real tab; Sage tab is clean chat
+**Latest production OTA:** `af9b56ee-6022-4421-a1b4-d3b781ce149b` (commit `3c0aae7`) — Explore is a real bottom tab; Sage tab is clean chat
 
 ## On
 **Test-account wipe for clean retest (Aug 31, 2026).** All test accounts (riley, sam, yeezy, zintake9, lazyemci) hard-deleted via `auth.users` cascade (checks, trait_history, trait_tracks, token_events, ai_usage, going, sage_messages, explore_*, question_*, connections, messages, blocks, mutes, reports, invite_codes, apple_credentials all cascade; `account_deletions` audit rows written for each). Only **emci2** (`lil_emci@hotmail.com`, Apple) remains. **EMCIRETEST** is owned by emci2, unlimited (`max_uses NULL`), verified usable. **Known gap:** handle is `emci2`, not `emci`, so dev-root RPCs keyed on `handle='emci'` don't recognize it.
 
-**"Dev only." on cold start = stale binary 8, not a live gate (confirmed).** Testers on binary 8 see a blank screen with "Dev only." — that is the **embedded bundle from before commits `2fdc278` + `5f1c86b` (Aug 28)** which (a) moved all `*-lab` screens out of the cold-start position behind `<Stack.Protected guard={__DEV__}>` and (b) replaced the `Dev only.` block in each lab with `<Redirect href="/" />`. The string no longer exists anywhere in `src` or the bundles. **Binary 8 cannot receive OTA** (no `expo-updates`). **Binary 10 is already submitted and processing in TestFlight** (build `1d0d1041`, submission `c0c6342d`, ASC app id `6805614731`, finished Aug 27) — the fix for all testers is **install binary 10**; the current production OTA `5999d5d4` then applies automatically.
+**"Dev only." on cold start = stale binary 8, not a live gate (confirmed).** Testers on binary 8 see a blank screen with "Dev only." — that is the **embedded bundle from before commits `2fdc278` + `5f1c86b` (Aug 28)** which (a) moved all `*-lab` screens out of the cold-start position behind `<Stack.Protected guard={__DEV__}>` and (b) replaced the `Dev only.` block in each lab with `<Redirect href="/" />`. The string no longer exists anywhere in `src` or the bundles. **Binary 8 cannot receive OTA** (no `expo-updates`). **Binary 10 is already submitted and processing in TestFlight** (build `1d0d1041`, submission `c0c6342d`, ASC app id `6805614731`, finished Aug 27) — the fix for all testers is **install binary 10**; the current production OTA `af9b56ee` then applies automatically.
 
 **Wave 22 — Dawn categories, Explore combine, Levity, The Story (Aug 31, 2026).** Dawn Read may draw from one settled category among Steadiness / Agency / Drive; new users with none of those three settled keep knock/fact/focus exactly; Do if-then is untouched; anti-repeat and cut/crisis gates still run on the generated card. Explore may generate from any live category, at most two per entry and only when a recent signal ties them, and must not restate the pinned Categories card on the same screen. Agency-triple (GM+LC+SE) and the output fence are unchanged. 9th category **Levity** is a bar (Playfulness + conflict assertiveness + cooperativeness) — Love/closeness stays the only conflict-adjacent map. **The Story** is a separate longer-form Gemini call on its own quota (`claim_story_generate`), fingerprint-gated, thin-profile gated, no offline fallback, on the **Explore tab**. **All new copy is unreviewed. The Story is diagnosis-adjacent — same bar as the Crisis spec. Not shippable without emci's direct read.**
 
@@ -74,16 +74,16 @@
 2. Sentry native crash symbolication — still **unconfirmed** from here. Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
 3. Friends external testing group — Beta App Review pending on Apple since Aug 26, 2026. No action, just waiting.
 
-**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ receive JS via `eas update`. Devices on binary 8 or earlier cannot. Latest production JS: group `5999d5d4-06a2-46e9-bc7e-5ab1938a8711` (`34f45a5`, Explore is a real tab). **OTA published Aug 31, 2026.** Prior group `9855305a-2d09-4184-8efb-bb1e8b741490` (`96f61b8`, friend-voice style checklist) is superseded.
+**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ receive JS via `eas update`. Devices on binary 8 or earlier cannot. Latest production JS: group `af9b56ee-6022-4421-a1b4-d3b781ce149b` (`3c0aae7`, Explore is a real tab). **OTA published Aug 31, 2026.** Prior group `5999d5d4-06a2-46e9-bc7e-5ab1938a8711` (`34f45a5`, Explore full screen) is superseded.
 
 ## Done
 **Sign up / Log in split is in.** Separate screens: Sign up is OTP + Apple with no password field; Log in is Apple, optional password, and OTP fallback. Password set/change in You Settings via `supabase.auth.updateUser` (GoTrue hash).
 
 **Pipeline-blueprint Trace is in** (commits `f6a43f5`, `558f2fe`, `1ae6105`, `dcc8f8b`, `52ff462`). Dawn, Talk, and Explore log context → model → guard → output; Around is not wired. One generic viewer over the section registry. **OTA published Aug 29, 2026.**
 
-**Explore as a real tab OTA** (commit `34f45a5`). Group `5999d5d4-06a2-46e9-bc7e-5ab1938a8711`. Explore became a real bottom tab (Home / Sage / Explore / Around / Circle / You); the Sage header "Explore ›" button was removed; the pushed `/explore` screen moved into the tab navigator holding the title card, Categories at full detail (`CategoriesFold`), The Story, Notes insight spend, and the observation bubbles. **OTA published Aug 31, 2026.** 100% production channel — no staged rollout. Binary 10+ picks it up on launch.
+**Explore as a real tab OTA** (commit `3c0aae7`). Group `af9b56ee-6022-4421-a1b4-d3b781ce149b`. Explore moved into the tab navigator as a native tab (Home / Sage / Explore / Around / Circle / You); the Sage header "Explore ›" button was removed; the pushed `/explore` screen became a tab holding the title card, Categories at full detail (`CategoriesFold`), The Story, Notes insight spend, and the observation bubbles. **OTA published Aug 31, 2026.** 100% production channel — no staged rollout. Binary 10+ picks it up on launch. Supersedes `5999d5d4`.
 
-**Friend-voice style checklist OTA** (commit `96f61b8`). Group `9855305a`. Shared six-rule style checklist + approved anchors across Dawn Read, Explore, Title, Category, Story. **OTA published Aug 31, 2026.** 100% production channel — no staged rollout. Superseded by `5999d5d4`.
+**Friend-voice style checklist OTA** (commit `96f61b8`). Group `9855305a`. Shared six-rule style checklist + approved anchors across Dawn Read, Explore, Title, Category, Story. **OTA published Aug 31, 2026.** 100% production channel — no staged rollout. Superseded by `af9b56ee`.
 
 **Wave 22 + warmer Story copy OTA** (commits `171dea4`, `0f4dc3a`). Group `04c91f24`. Dawn categories, Explore combine, Levity, The Story (own quota, no fallback); Story told-vs-played copy in friend voice. **OTA published Aug 31, 2026.** Superseded by `9855305a`.
 
@@ -112,7 +112,7 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 7. **Intake sweep copy** — `INTAKE_SWEEP_COPY_REVIEWED = false` (`questions/local.ts`).
 
 ## Left
-- Full device pass against `docs/ATO_DEVICE_TESTS.md` (binary 10+, OTA `5999d5d4`)
+- Full device pass against `docs/ATO_DEVICE_TESTS.md` (binary 10+, OTA `af9b56ee`)
 - Get all testers onto binary 10 (they cannot receive OTA on binary 8)
 - Confirm binary 10 on a real device (icon, OTA, everything)
 - Gut Call regression — still open
@@ -150,4 +150,4 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 - **Around refresh secrets (Wave 2):** Edge Function `refresh-around` is deployed. Needs `EDMTRAIN_CLIENT_KEY` + `AROUND_REFRESH_SECRET`; cron not scheduled until both exist. Phone never holds the Edmtrain key.
 
 ## Next 15 min
-Work through `docs/ATO_DEVICE_TESTS.md` in full on a real device with **binary 10** installed (it pulls OTA `5999d5d4-06a2-46e9-bc7e-5ab1938a8711`). Every box's checklist, one sitting. Bring back anything that fails. Once that pass is clean, Stage 8 handoff #2: invite/referral gate (Auth + ME). Open items that are not the device pass: Gut Call regression, Live Talk failure, closing the `emci2` root-handle gap.
+Work through `docs/ATO_DEVICE_TESTS.md` in full on a real device with **binary 10** installed (it pulls OTA `af9b56ee-6022-4421-a1b4-d3b781ce149b`). Every box's checklist, one sitting. Bring back anything that fails. Once that pass is clean, Stage 8 handoff #2: invite/referral gate (Auth + ME). Open items that are not the device pass: Gut Call regression, Live Talk failure, closing the `emci2` root-handle gap.

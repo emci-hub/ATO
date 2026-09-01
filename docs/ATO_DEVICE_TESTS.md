@@ -2,7 +2,7 @@
 
 Compiled as each box lands. Same file in the repo at `docs/ATO_DEVICE_TESTS.md`. Run this whole list on a real device before TestFlight, not per box. Ordered so earlier items don't depend on later ones.
 
-**JS for this checklist is on production OTA** group `5999d5d4-06a2-46e9-bc7e-5ab1938a8711` (`34f45a5`, Explore is a real tab; Sage tab clean chat), published Aug 31, 2026. 100% of the production channel — no staged rollout. **You must be on binary 10+** — binary 8 and earlier cannot receive OTA and will show the stale "Dev only." cold-start bug. Binary 10 is in TestFlight (build `1d0d1041`).
+**JS for this checklist is on production OTA** group `af9b56ee-6022-4421-a1b4-d3b781ce149b` (`3c0aae7`, Explore is a real tab; Sage tab clean chat), published Aug 31, 2026. 100% of the production channel — no staged rollout. **You must be on binary 10+** — binary 8 and earlier cannot receive OTA and will show the stale "Dev only." cold-start bug. Binary 10 is in TestFlight (build `1d0d1041`).
 
 ---
 
@@ -204,4 +204,4 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 
 ---
 
-**All boxes complete (0–14 plus 6.5, 12.5, 13.1, 21–27).** This checklist is now the full end-to-end device pass — work through every section above in one sitting on a **binary 10+** device (it pulls OTA `5999d5d4`), not per box.
+**All boxes complete (0–14 plus 6.5, 12.5, 13.1, 21–27).** This checklist is now the full end-to-end device pass — work through every section above in one sitting on a **binary 10+** device (it pulls OTA `af9b56ee`), not per box.
