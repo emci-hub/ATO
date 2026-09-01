@@ -23,8 +23,8 @@ import {
 } from '@/lib/sage-title';
 import { claimTitleGenerate, insertTitleFlag, saveSageTitle } from '@/lib/sage-title-store';
 import { stableReportAxes, type TraitTrack } from '@/lib/trait-stability';
-import { VOICE_CONFIG } from '@/lib/voice/config';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
+import { shouldUseLocalAi } from '@/lib/ai/override';
 
 export function SageTitleCard({
   me,
@@ -65,7 +65,7 @@ export function SageTitleCard({
         if (!cancelled) setTitle(cached);
         return;
       }
-      if (VOICE_CONFIG.provider === 'local' || !VOICE_CONFIG.geminiApiKey) {
+      if (await shouldUseLocalAi()) {
         const local: SageTitle = {
           title: cached?.title ?? TITLE_EMPTY,
           lede: cached?.lede ?? TITLE_EMPTY,

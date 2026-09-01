@@ -33,7 +33,7 @@ import {
 } from '@/lib/questions/store';
 import type { QuestionItemRow, QuestionPackRow, RouteQuestionsResult } from '@/lib/questions/types';
 import { controlBorderColor } from '@/lib/theme/chrome';
-import { VOICE_CONFIG } from '@/lib/voice/config';
+import { shouldUseLocalAi } from '@/lib/ai/override';
 import { claimQuestionsBatch, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
 import type { CheckHistory } from '@/lib/voice/types';
 
@@ -115,7 +115,7 @@ export function QuestionsFold({
         generateBatch: generateQuestionBatch,
         logJargonHit: logJargonGuard,
         logPhraseHit: logPhraseGuard,
-        useLocal: VOICE_CONFIG.provider === 'local' || !VOICE_CONFIG.geminiApiKey,
+        useLocal: await shouldUseLocalAi(),
       },
     );
     setResult(next);

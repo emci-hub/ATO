@@ -39,7 +39,7 @@ assert.match(hub, /canSeeDevLab/);
 assert.match(hub, /Redirect href="\/"/);
 assert.doesNotMatch(hub, /if \(!__DEV__\)/);
 assert.doesNotMatch(hub, /Dev only/);
-assert.match(intent, /theme\|around\|talk\|pixel\|crisis\|voice\)-lab/);
+assert.match(intent, /theme\|around\|talk\|pixel\|crisis\|voice\|ai\)-lab/);
 assert.doesNotMatch(intent, /voice\|dev\)-lab/);
 ok('dev-lab is on the authed stack behind root/grants, not a __DEV__-only route');
 

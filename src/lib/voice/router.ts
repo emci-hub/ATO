@@ -24,6 +24,7 @@ import { applyJargonFallback, jargonInCard } from './jargon';
 import { resolveNudge } from './nudge';
 import { buildProviders } from './providers';
 import type { VoiceProvider } from './providers/types';
+import { pickVoiceProvider } from './select-provider';
 import { pickDawnReadCategory } from '@/lib/dawn-category';
 import type {
   CheckHistory,
@@ -51,7 +52,7 @@ export function deriveTone(history: CheckHistory[]): Tone {
 
 export interface RouteVoiceCardDeps {
   config?: VoiceConfig;
-  providers?: Record<ProviderId, VoiceProvider>;
+  providers?: Partial<Record<ProviderId, VoiceProvider>>;
   /** Overrides __DEV__ for tests. */
   isDev?: boolean;
   /** Jargon-guard log. Production screens pass logJargonGuard. Tests omit. */
@@ -253,17 +254,10 @@ export async function routeVoiceCard(
   }
 
   // ---- Generated path: check_count >= 3 --------------------------------
-  const providers = deps.providers ?? buildProviders(config);
-  let provider = providers[config.provider];
-
-  // gemini without a key is unusable; fall back to the deterministic local
-  // provider so the app still works (dev stage, no secret in the bundle).
-  const noGeminiKey = config.provider === 'gemini' && !config.geminiApiKey;
-  const providerLabel = noGeminiKey
-    ? 'local (no gemini key configured)'
-    : provider.label;
-
-  if (noGeminiKey) provider = providers.local;
+  const providers = { ...buildProviders(config), ...deps.providers };
+  const picked = await pickVoiceProvider(config, providers, !deps.config);
+  const provider = picked.provider;
+  const providerLabel = picked.label;
 
   const shownCards: Array<{ read: string; do: string }> = input.history
     .filter((h) => h.read && h.do)

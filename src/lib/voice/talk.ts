@@ -17,6 +17,7 @@ import { JARGON_FALLBACK_TALK, matchingJargonTerm } from './jargon';
 import { buildProviders } from './providers';
 import type { QuotaDecision } from './quota';
 import type { VoiceProvider } from './providers/types';
+import { pickVoiceProvider } from './select-provider';
 import type { CheckHistory, DevTrace, ProviderId, VoiceCard, VoiceMe } from './types';
 
 const IS_DEV = typeof __DEV__ === 'boolean' ? __DEV__ : false;
@@ -45,7 +46,7 @@ export interface TalkReplyInput {
 
 export interface TalkReplyDeps {
   config?: VoiceConfig;
-  providers?: Record<ProviderId, VoiceProvider>;
+  providers?: Partial<Record<ProviderId, VoiceProvider>>;
   /** Overrides __DEV__ for tests. */
   isDev?: boolean;
   /** Injectable for tests; defaults to the keyword-list detector. */
@@ -137,12 +138,10 @@ export async function routeTalkReply(
 
   // ---- Main router reply call -------------------------------------------
   const config = deps.config ?? VOICE_CONFIG;
-  const providers = deps.providers ?? buildProviders(config);
-  let provider = providers[config.provider];
-
-  const noGeminiKey = config.provider === 'gemini' && !config.geminiApiKey;
-  const providerLabel = noGeminiKey ? 'local (no gemini key configured)' : provider.label;
-  if (noGeminiKey) provider = providers.local;
+  const providers = { ...buildProviders(config), ...deps.providers };
+  const picked = await pickVoiceProvider(config, providers, !deps.config);
+  const provider = picked.provider;
+  const providerLabel = picked.label;
 
   const library = libraryLinesFor(input.me, {
     day: input.checkCount + 1,

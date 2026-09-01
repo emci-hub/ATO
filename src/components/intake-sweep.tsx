@@ -11,7 +11,7 @@ import { routeQuestionSweep } from '@/lib/questions/sweep';
 import type { QuestionDraft } from '@/lib/questions/types';
 import { TRAIT_AXES, traitStateFromRow, type TraitAxis } from '@/lib/traits';
 import { earnTokensQuiet } from '@/lib/tokens-server';
-import { VOICE_CONFIG } from '@/lib/voice/config';
+import { shouldUseLocalAi } from '@/lib/ai/override';
 import { controlBorderColor } from '@/lib/theme/chrome';
 
 export const INTAKE_SWEEP_TITLE = 'A faster pass';
@@ -47,21 +47,22 @@ export function IntakeSweep({
 
   useEffect(() => {
     let cancelled = false;
-    routeQuestionSweep({
-      me: {
-        name: me.name,
-        talk_style: me.talk_style ?? 'even',
-        voice_preset: me.voice_preset,
-      },
-      useLocal: VOICE_CONFIG.provider === 'local' || !VOICE_CONFIG.geminiApiKey,
-    })
-      .then((next) => {
+    void (async () => {
+      try {
+        const next = await routeQuestionSweep({
+          me: {
+            name: me.name,
+            talk_style: me.talk_style ?? 'even',
+            voice_preset: me.voice_preset,
+          },
+          useLocal: await shouldUseLocalAi(),
+        });
         if (!cancelled) setDrafts(next);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.log('[intake-sweep] route error:', err);
         if (!cancelled) setDrafts([]);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };

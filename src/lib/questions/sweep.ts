@@ -11,7 +11,8 @@ import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '@/lib/voice/preset';
 import { TALK_STYLE_GUIDE } from '@/lib/voice/providers/types';
 import type { TalkStyle } from '@/lib/voice/types';
-import { VOICE_CONFIG } from '@/lib/voice/config';
+import { generateText } from '@/lib/ai/generate';
+import { shouldUseLocalAi } from '@/lib/ai/override';
 
 import type { QuestionDraft } from './types';
 
@@ -63,37 +64,13 @@ Respond with JSON only, no prose, in this shape:
 }
 
 export async function generateQuestionSweep(prompt: string): Promise<QuestionDraft[] | null> {
-  const key = VOICE_CONFIG.geminiApiKey;
-  if (!key || VOICE_CONFIG.provider === 'local') return null;
-
-  const url =
-    `https://generativelanguage.googleapis.com/v1beta/models/` +
-    `${encodeURIComponent(VOICE_CONFIG.geminiModel)}:generateContent`;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': key,
-    },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.8,
-        maxOutputTokens: 4096,
-        responseMimeType: 'application/json',
-        thinkingConfig: { thinkingLevel: 'low' },
-      },
-    }),
+  const text = await generateText({
+    prompt,
+    temperature: 0.8,
+    maxOutputTokens: 4096,
+    responseFormat: 'json',
   });
-
-  if (!res.ok) return null;
-
-  const data = (await res.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-  const text =
-    data.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('') ?? '';
+  if (!text) return null;
   const drafts = parseQuestionSweep(text);
   return drafts.length > 0 ? drafts : null;
 }
@@ -107,7 +84,7 @@ export async function routeQuestionSweep(input: {
   useLocal?: boolean;
 }): Promise<QuestionDraft[]> {
   const local = composeLocalSweep();
-  if (input.useLocal === true || !VOICE_CONFIG.geminiApiKey || VOICE_CONFIG.provider === 'local') {
+  if (input.useLocal === true || (await shouldUseLocalAi())) {
     return local;
   }
 

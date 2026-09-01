@@ -81,6 +81,7 @@ assert.match(hub, /RunningUpdateLine/);
 assert.match(line, /expo-updates/);
 assert.match(line, /Updates\.updateId/);
 assert.match(line, /Updates\.manifest/);
+assert.match(line, /\/ai-lab/);
 ok('You Settings and Dev Tools Hub both show the running-update line');
 
 console.log(`\n${passed} running-update checks passed`);

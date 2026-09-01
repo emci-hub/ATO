@@ -105,7 +105,7 @@ Honest empty: "nothing this weekend" / "wall opens when the night does" / "no AT
 - Appearance: five user-selectable modes in Settings — Soft (default) / Zen / Quest / Neon / Anime. Replaces the discarded Ink / Paper / Steel / Bloom named palette for app chrome. Bottom tab bar uses the live appearance background in all five (opaque; no system material). The You-tab share poster still uses those four as a fixed shareable artifact. Spec lives in `src/constants/appearance.ts`. "Void" stays reserved for the competitor callout, not a mode name.
 - Assets: Kenney CC0, same-family sets only (Modular / Toon / 1-Bit / Animal Remastered — don't mix families in one recipe). No AI-generated faces, no scraped art.
 - Age: 16+ to use the app. 18+ required to be marked "going" on a night. Self-reported date of birth (`me.born_on`) is collected at onboarding; age is computed from that date so the 18+ gate can recompute later. Verification beyond self-report is accepted MVP risk — don't try to "solve" it inside a Wave 1 stage; if it needs solving, that's its own ticket.
-- Model provider: the router box reads one env var (`MODEL_PROVIDER=gemini` or `groq`) — pick one before Stage 4, but build the router so switching providers is a config change, not a rewrite. Don't hardcode a provider name into Dawn or Talk directly.
+- Model provider: one env var (`EXPO_PUBLIC_AI_PROVIDER`) selects Gemini / NVIDIA / Perplexity / Claude / Grok / local. Claude and Grok are called from the `ai-generate` Edge Function so their keys never ship in the client. Don't hardcode a vendor name into Dawn or Talk.
 - One box per stage. First line of a build message: `Open box: …`. Two stages requested in one turn → undo the second, finish the first.
 
 ```

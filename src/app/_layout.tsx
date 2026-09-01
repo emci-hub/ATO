@@ -84,6 +84,7 @@ function RootNavigator() {
               <Stack.Screen name="intake-sweep" />
               <Stack.Screen name="chat" />
               <Stack.Screen name="dev-lab" />
+              <Stack.Screen name="ai-lab" />
             </Stack.Protected>
 
             <Stack.Protected guard={__DEV__}>

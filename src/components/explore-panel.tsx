@@ -37,7 +37,7 @@ import { voiceMeFrom } from '@/lib/intake';
 import type { Me } from '@/lib/me';
 import { useAppearance } from '@/lib/theme/context';
 import { controlBorderColor } from '@/lib/theme/chrome';
-import { VOICE_CONFIG } from '@/lib/voice/config';
+import { shouldUseLocalAi } from '@/lib/ai/override';
 import { claimAiCall, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
 import { recordOwnDevTrace } from '@/lib/dev-trace-server';
 import type { CheckHistory } from '@/lib/voice/types';
@@ -141,7 +141,7 @@ export function ExplorePanel({
         logJargonHit: logJargonGuard,
         logPhraseHit: logPhraseGuard,
         generateBody: generateExploreBody,
-        useLocal: VOICE_CONFIG.provider === 'local' || !VOICE_CONFIG.geminiApiKey,
+        useLocal: await shouldUseLocalAi(),
         recordTrace: recordOwnDevTrace,
       },
     );

@@ -68,6 +68,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "sync:voice": "node ./scripts/sync-voice-content.mjs",
+    "check:ai": "tsx ./scripts/ai-provider-check.ts",
     "check:voice": "tsx ./scripts/voice-router-check.ts",
     "check:stage6": "tsx ./scripts/stage6-helper-check.ts",
     "check:kenney": "tsx ./scripts/kenney-check.ts",

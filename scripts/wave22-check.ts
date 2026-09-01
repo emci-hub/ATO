@@ -169,7 +169,7 @@ ok('Story prompt is a separate holistic rewrite; fingerprint moves on told-vs-pl
 
 const fold = read('src/components/sage-story-fold.tsx');
 assert.match(fold, /if \(!story\?\.body\) return null/);
-assert.match(fold, /VOICE_CONFIG.provider === 'local'/);
+assert.match(fold, /shouldUseLocalAi/);
 assert.match(fold, /setStory\(null\)/);
 assert.doesNotMatch(fold, /fallbackBandFor|TITLE_EMPTY|composeLocal/);
 assert.match(fold, /formatStoryTensionNote/);

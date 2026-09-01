@@ -44,7 +44,7 @@ import { settledAxisLabel, settledCount, type TraitTrack } from '@/lib/trait-sta
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import { useAppearance } from '@/lib/theme/context';
-import { VOICE_CONFIG } from '@/lib/voice/config';
+import { shouldUseLocalAi } from '@/lib/ai/override';
 import { claimAiCall, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
 import type { CheckHistory } from '@/lib/voice/types';
 
@@ -261,7 +261,7 @@ function SageExploreObservations({
         logJargonHit: logJargonGuard,
         logPhraseHit: logPhraseGuard,
         generateBody: generateExploreBody,
-        useLocal: VOICE_CONFIG.provider === 'local' || !VOICE_CONFIG.geminiApiKey,
+        useLocal: await shouldUseLocalAi(),
         recordTrace: recordOwnDevTrace,
       },
     );

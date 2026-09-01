@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import { router } from 'expo-router';
 import * as Updates from 'expo-updates';
 
 import { ThemedText } from '@/components/themed-text';
@@ -42,6 +43,7 @@ export function RunningUpdateLine({ compact = false }: { compact?: boolean }) {
   const snap = useMemo(() => readRunningUpdate(), []);
   const label = formatRunningUpdate(snap);
   const copyValue = snap.groupId ?? snap.updateId ?? label.line;
+  const secret = useRef({ n: 0, at: 0 });
 
   return (
     <ThemedView
@@ -53,6 +55,14 @@ export function RunningUpdateLine({ compact = false }: { compact?: boolean }) {
         accessibilityLabel={`Build ${label.line}. Tap to copy.`}
         onPress={() => {
           void Clipboard.setStringAsync(copyValue);
+          const now = Date.now();
+          if (now - secret.current.at > 2500) secret.current.n = 0;
+          secret.current.at = now;
+          secret.current.n += 1;
+          if (secret.current.n >= 5) {
+            secret.current.n = 0;
+            router.push('/ai-lab');
+          }
         }}
         style={styles.row}>
         <ThemedText type="small" themeColor="textSecondary">

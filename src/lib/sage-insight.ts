@@ -11,7 +11,7 @@ import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '@/lib/voice/preset';
 import { TALK_STYLE_GUIDE } from '@/lib/voice/providers/types';
 import { generateExploreBody } from '@/lib/explore/generate';
-import { VOICE_CONFIG } from '@/lib/voice/config';
+import { shouldUseLocalAi } from '@/lib/ai/override';
 
 export const SAGE_INSIGHT_THIN =
   "I don't have much to go on yet about how you tend to move, so this stays general.";
@@ -46,7 +46,7 @@ Respond with JSON only, no prose, in this shape:
 }
 
 export async function generateSageInsight(me: VoiceMe, settled = 0): Promise<string | null> {
-  if (VOICE_CONFIG.provider === 'local' || !VOICE_CONFIG.geminiApiKey) {
+  if (await shouldUseLocalAi()) {
     const body = isThinProfile(settled)
       ? SAGE_INSIGHT_THIN
       : 'Noticing how you have been moving lately — nothing to fix, just the pattern as it is.';

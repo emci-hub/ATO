@@ -1,6 +1,7 @@
 import type { VoicePreset } from './preset';
 import type { TraitAxis } from '@/lib/traits';
 import type { TraitTrack } from '@/lib/trait-stability';
+import type { AiProviderId } from '@/lib/ai/types';
 
 export type TalkStyle = 'quiet' | 'even' | 'loud';
 
@@ -10,7 +11,7 @@ export type Tone = 'lift' | 'even' | 'cut';
 /** Where a card's content came from. 'crisis' is the static crisis card. */
 export type VoiceSource = 'bank' | 'generated' | 'crisis';
 
-export type ProviderId = 'gemini' | 'local';
+export type ProviderId = AiProviderId;
 
 export type CheckStatus = 'done' | 'skipped';
 

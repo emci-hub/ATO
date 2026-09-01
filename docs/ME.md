@@ -47,7 +47,7 @@
 ## Live AI + model
 
 - Cursor: Grok 4.6 (current) — crisis/safety-critical work always routes to Claude Opus 5 (fixed lane) regardless of Home/Away
-- App's own router: Gemini (`MODEL_PROVIDER=gemini`), pinned to `gemini-3.7-flash`, server-side rate-limited (20/day, 200/month per user)
+- App's own router: `EXPO_PUBLIC_AI_PROVIDER` (default `gemini`). Gemini / NVIDIA / Perplexity are client-side; Claude / Grok via the `ai-generate` Edge Function. `local` is the deterministic fallback. Server-side rate-limited (20/day, 200/month per user). On-device override (5-tap Build line) is AsyncStorage, not synced.
 
 ## Unreviewed copy — one list, waiting on emci (Aug 31, 2026)
 

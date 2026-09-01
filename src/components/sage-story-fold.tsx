@@ -23,9 +23,9 @@ import { claimStoryGenerate, saveSageStory } from '@/lib/sage-story-store';
 import { readyCategories } from '@/lib/categories';
 import { divergingAxesFromTracks } from '@/lib/trait-history';
 import type { TraitTrack } from '@/lib/trait-stability';
-import { VOICE_CONFIG } from '@/lib/voice/config';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import { matchingJargonTerm } from '@/lib/voice/jargon';
+import { shouldUseLocalAi } from '@/lib/ai/override';
 
 /**
  * Longer-form Story under pinned Categories on Explore.
@@ -73,7 +73,7 @@ export function SageStoryFold({
         return;
       }
 
-      if (VOICE_CONFIG.provider === 'local' || !VOICE_CONFIG.geminiApiKey) {
+      if (await shouldUseLocalAi()) {
         if (!cancelled) setStory(null);
         return;
       }

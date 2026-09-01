@@ -1,5 +1,5 @@
 import type { DawnReadCategory } from '@/lib/dawn-category';
-import type { CheckHistory, DropReason, TalkStyle, Tone, VoiceCard, VoiceMe } from '../types';
+import type { CheckHistory, DropReason, ProviderId, TalkStyle, Tone, VoiceCard, VoiceMe } from '../types';
 
 export interface GenerateInput {
   me: VoiceMe;
@@ -46,7 +46,7 @@ export interface TalkGenerateResult {
 }
 
 export interface VoiceProvider {
-  id: 'gemini' | 'local';
+  id: ProviderId;
   label: string;
   generate(input: GenerateInput): Promise<VoiceCard>;
   generateTalk(input: TalkGenerateInput): Promise<TalkGenerateResult>;

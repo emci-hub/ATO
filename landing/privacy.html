@@ -31,7 +31,7 @@
     <p>We use a small number of service providers to run ATO. We don't sell your data to anyone, ever.</p>
     <ul>
       <li><strong>Supabase</strong> — hosts our database and handles authentication. Your profile, Checks, chat messages, and facts live here.</li>
-      <li><strong>Google (Gemini API)</strong> — powers Sage, the in-app AI coach. Relevant context, not your full chat history, is sent to Gemini to generate a response.</li>
+      <li><strong>AI providers (Gemini, NVIDIA, Perplexity, Claude, Grok)</strong> — power Sage, the in-app AI coach. Relevant context, not your full chat history, is sent to the configured provider to generate a response. Claude and Grok are called through our server so their keys never sit on the phone.</li>
       <li><strong>Resend</strong> — sends one-time login codes to your email.</li>
       <li><strong>Apple</strong> — if you sign in with Apple, Apple may relay a private email address instead of your real one.</li>
     </ul>

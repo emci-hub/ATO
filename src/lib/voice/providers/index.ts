@@ -1,16 +1,20 @@
 import type { VoiceConfig } from '../config';
 import type { ProviderId } from '../types';
-import { createGeminiProvider } from './gemini';
+import { REMOTE_AI_PROVIDER_IDS } from '@/lib/ai/types';
 import { localProvider } from './local';
+import { createRemoteProvider } from './remote';
 import type { VoiceProvider } from './types';
 
 /**
- * Registry of all voice providers. Adding a future provider = implement it,
- * register it here, and the MODEL_PROVIDER config value selects it.
+ * Registry of all voice providers. The live vendor is AI_PROVIDER (plus the
+ * on-device override). local stays the deterministic fallback.
  */
-export function buildProviders(config: VoiceConfig): Record<ProviderId, VoiceProvider> {
+export function buildProviders(_config: VoiceConfig): Record<ProviderId, VoiceProvider> {
+  const remotes = Object.fromEntries(
+    REMOTE_AI_PROVIDER_IDS.map((id) => [id, createRemoteProvider(id)]),
+  ) as Record<Exclude<ProviderId, 'local'>, VoiceProvider>;
   return {
-    gemini: createGeminiProvider({ model: config.geminiModel, apiKey: config.geminiApiKey ?? '' }),
+    ...remotes,
     local: localProvider,
   };
 }

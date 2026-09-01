@@ -75,7 +75,8 @@ import { supabase } from '@/lib/supabase';
 import { isDirectTraitSource, traitStateFromRow, type TraitSource } from '@/lib/traits';
 import { filledTraitBands } from '@/lib/trait-bands';
 import { controlBorderColor } from '@/lib/theme/chrome';
-import { buildVoiceConfig, VOICE_CONFIG } from '@/lib/voice/config';
+import { shouldUseLocalAi } from '@/lib/ai/override';
+import { buildVoiceConfig } from '@/lib/voice/config';
 import { matchingFrameworkTerms } from '@/lib/voice/framework-fence';
 import { type SageUsageSnapshot } from '@/lib/voice/quota';
 import { claimAiCall, fetchSageUsage, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
@@ -260,7 +261,7 @@ function ExploreRegen() {
           logJargonHit: logJargonGuard,
           logPhraseHit: logPhraseGuard,
           generateBody: generateExploreBody,
-          useLocal: VOICE_CONFIG.provider === 'local' || !VOICE_CONFIG.geminiApiKey,
+          useLocal: await shouldUseLocalAi(),
         },
       );
       setResult(next);
