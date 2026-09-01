@@ -143,6 +143,24 @@ assert.match(sheet, /backdropDismiss/);
 assert.match(sheet, /SafeAreaProvider/);
 ok('More sheet lists more[] items, navigates on tap, and uses SafeAreaProvider');
 
+// Long-pressing a More row must not call onClose() and startEditing() in the
+// same tick — two sibling RN Modals toggling together desyncs the native
+// modal host until a screen focus event forces a resync (the "bar vanishes
+// until I leave and come back" bug). startEditing must be deferred.
+assert.doesNotMatch(
+  sheet,
+  /onClose\(\);\s*startEditing\(\);/,
+  'onLongPress must not call onClose() and startEditing() synchronously — defer startEditing so only one Modal transitions at a time'
+);
+assert.match(sheet, /onClose\(\);[\s\S]*?setTimeout\(startEditing/, 'startEditing must be deferred with setTimeout after onClose()');
+ok('More-row long-press defers startEditing so two Modals never toggle in the same tick');
+
+// Edit overlay must have a non-committing exit path — "Done" alone commits
+// the draft, so a stuck/hidden overlay had no way out without saving.
+assert.match(overlay, /cancelEditing/);
+assert.match(overlay, /Cancel/);
+ok('Edit navigation overlay has a Cancel path independent of Done');
+
 // The bar overlays the screen (like the native tab bar did), so screens keep
 // their existing BottomTabInset padding and no per-screen change was needed.
 assert.match(tabs, /position: 'absolute'/);

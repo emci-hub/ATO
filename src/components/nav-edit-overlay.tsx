@@ -68,8 +68,15 @@ export function NavEditOverlay({
       <SafeAreaProvider style={styles.provider}>
         <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.header}>
-          <ThemedText type="subtitle">Edit navigation</ThemedText>
-          <Pressable hitSlop={8} onPress={done}>
+          <Pressable style={styles.headerSide} hitSlop={8} onPress={cancelEditing}>
+            <ThemedText type="small" themeColor="textSecondary">
+              Cancel
+            </ThemedText>
+          </Pressable>
+          <ThemedText type="subtitle" style={styles.headerTitle}>
+            Edit navigation
+          </ThemedText>
+          <Pressable style={[styles.headerSide, styles.headerSideEnd]} hitSlop={8} onPress={done}>
             <ThemedText type="smallBold" style={{ color: theme.accentFill }}>
               Done
             </ThemedText>
@@ -222,8 +229,17 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     padding: Spacing.four,
+  },
+  headerSide: {
+    flex: 1,
+  },
+  headerSideEnd: {
+    alignItems: 'flex-end',
+  },
+  headerTitle: {
+    flex: 2,
+    textAlign: 'center',
   },
   body: {
     gap: Spacing.two,

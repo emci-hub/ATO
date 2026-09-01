@@ -15,6 +15,9 @@ import { controlBorderColor } from '@/lib/theme/chrome';
  * reorderable tabs currently parked in `more[]`. Tapping one navigates to it;
  * long-press opens edit mode so it can be moved back to the main bar.
  */
+// RN's default Modal `animationType="fade"` runs ~300ms on both platforms.
+const MODAL_FADE_MS = 300;
+
 export function NavMoreSheet({
   open,
   moreIds,
@@ -64,8 +67,14 @@ export function NavMoreSheet({
                     onClose();
                   }}
                   onLongPress={() => {
+                    // Close this Modal and wait for its fade-out to finish
+                    // before opening the edit overlay's Modal — two sibling
+                    // RN Modals toggling in the same tick (or mid-animation)
+                    // desyncs the native modal host until a screen focus
+                    // event forces a resync. Matches this Modal's fade
+                    // animationType duration.
                     onClose();
-                    startEditing();
+                    setTimeout(startEditing, MODAL_FADE_MS);
                   }}
                   style={({ pressed }) => [
                     styles.row,
