@@ -91,10 +91,11 @@ export default function AppTabs() {
               More
             </ThemedText>
           </Pressable>
+
+          {NAV_TAB_IDS.filter((id) => !mainIds.includes(id) && isTabUnlocked(id, unlockCtx)).map((id) => (
+            <TabTrigger key={`hidden-${id}`} name={id} href={NAV_TABS[id].href} style={styles.hidden} />
+          ))}
         </TabList>
-        {NAV_TAB_IDS.filter((id) => !mainIds.includes(id) && isTabUnlocked(id, unlockCtx)).map((id) => (
-          <TabTrigger key={`hidden-${id}`} name={id} href={NAV_TABS[id].href} />
-        ))}
       </Tabs>
 
       <NavMoreSheet open={moreOpen} moreIds={moreIds} onClose={() => setMoreOpen(false)} />
@@ -165,5 +166,10 @@ function NavTabButton({
   },
   pressed: {
     opacity: 0.7,
+  },
+  hidden: {
+    width: 0,
+    height: 0,
+    overflow: 'hidden',
   },
 });
