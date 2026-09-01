@@ -20,7 +20,7 @@ Do not commit `.env.local` or API keys. Do not change dependencies, schemas, aut
 
 ## Snapshot (Sep 1, 2026)
 
-- Branch: `master` @ `6e07fbc` plus this docs commit.
+- Branch: `master` @ `a5c0b22` — removed MBTI type-code chips + dead onboarding grid screen (see Decisions log).
 - Latest production OTA: `b84f0aa6-a668-4d59-8374-ea9c96e95f63` (provider layer + rotated Gemini key). Binary 10+ only.
 - Gemini key lives in gitignored `.env.local` and EAS production env (`eas env:set`). Classic `eas secret:list` is empty/deprecated.
 - Claude/Grok need Supabase secrets `ANTHROPIC_API_KEY` / `XAI_API_KEY` or those adapters 503.
@@ -29,3 +29,4 @@ Do not commit `.env.local` or API keys. Do not change dependencies, schemas, aut
 ## Decisions log
 
 - 2026-09-01: Unified AI provider layer shipped; Gemini key rotated; this file is a pointer, not a second source of truth.
+- 2026-09-01: Fixed — onboarding screen 0 (MBTI four-letter type-code chips) removed. It turned out to BE the "grid" screen inferring O/C/E/A; sliders on the following screens always overwrote those same axes, so it was dead weight plus an unnecessary trademark risk. Optional-intake screens renumbered 0-7 (was 0-8). `self_grid` trait-source token kept read-only for existing users' historical data.
