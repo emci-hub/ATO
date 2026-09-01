@@ -77,6 +77,8 @@
 **EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ receive JS via `eas update`. Devices on binary 8 or earlier cannot. Latest production JS: group `0028d5f5-3797-417e-b345-9005cb17ca5b` (`41fcec4`, core intake one page). **OTA published Sep 1, 2026.** Prior group `4b669c70-ba79-433b-9f1e-2bde060ff656` (`0387ea9`, nav default 5 items) is superseded.
 
 ## Done
+**Push timing keyed off `energy_pattern`.** Daily morning/evening windows shift with the chip — `morning` 6/19, `afternoon` 8/20, `evening` 9/21, `night_owl` 10/22; null keeps the fixed 7/20 default. Sunday stays fixed 10:00. Only the send time moves — content, deep links, and copy are untouched. `morning_cue` / `evening_wind_down` stay anchor phrases for card copy, never timing.
+
 **Sign up / Log in split is in.** Separate screens: Sign up is OTP + Apple with no password field; Log in is Apple, optional password, and OTP fallback. Password set/change in You Settings via `supabase.auth.updateUser` (GoTrue hash).
 
 **Pipeline-blueprint Trace is in** (commits `f6a43f5`, `558f2fe`, `1ae6105`, `dcc8f8b`, `52ff462`). Dawn, Talk, and Explore log context → model → guard → output; Around is not wired. One generic viewer over the section registry. **OTA published Aug 29, 2026.**
@@ -153,7 +155,6 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 - Crisis: relational-safety/abuse category, own resource number, parked separately
 - **AI capacity hardening** — close the client-embedded-key bypass before public launch
 - Slack — parked as future ops tooling
-- Push notification timing from `energy_pattern` / `evening_wind_down` (fields exist; not wired)
 
 ## Housekeeping
 - docs/ATO_PLAN_v2.md, docs/ME.md, docs/NOW.md, docs/BUSINESS.md — Cursor maintains these directly. Commit together, `git push` immediately, never left local-only. ATO_PLAN_v2.md is a **working reference**, not a locked spec. Crisis / coach-label / diagnosis-avoidance / App Store floor sections are compliance-grounded and not casually revised. Device pass lives in `docs/ATO_DEVICE_TESTS.md`.

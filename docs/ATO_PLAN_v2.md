@@ -23,8 +23,8 @@ If a field isn't defined here, don't guess its shape — ask.
 | `knocks_you_off` | string | Multi-select chips joined with `", "` (sleep / workload / people/conflict / health / money / something else). Editable later in Settings. |
 | `morning_cue` | string | Chip phrase that inserts into the if-then Do (`After you {morning_cue}, …`). Editable later in Settings. |
 | `talk_style` | enum: `quiet`/`even`/`loud` | Direct onboarding tap. Editable later in Settings. |
-| `evening_wind_down` | string, nullable on pre-intake rows | Chip phrase. Times the evening Check push (wiring not in Stage 9). Editable later in Settings. |
-| `energy_pattern` | enum: `morning`/`afternoon`/`evening`/`night_owl`, nullable on pre-intake rows | Self-report. Helps pick the check_count < 3 bank card. Not a diagnosis. Editable later in Settings. |
+| `evening_wind_down` | string, nullable on pre-intake rows | Chip phrase (anchor like `morning_cue`). Flavors generated card content. Never times pushes. Editable later in Settings. |
+| `energy_pattern` | enum: `morning`/`afternoon`/`evening`/`night_owl`, nullable on pre-intake rows | Self-report. Picks the check_count < 3 bank card and times the daily morning/evening push windows. Not a diagnosis. Editable later in Settings. |
 | `recovery_style` | enum: `movement`/`sleep`/`talking`/`alone_time`/`music`, nullable on pre-intake rows | Self-report. Not a diagnosis. Never shown on the public poster. Editable later in Settings. |
 | `support_style` | enum: `nudge`/`space`/`listen`/`plan`, nullable on pre-intake rows | Self-report. Helps pick the check_count < 3 bank card. Not a diagnosis. Never shown on the public poster. Editable later in Settings. |
 | `current_focus` | enum: `habit`/`through_it`/`like_yourself`/`show_up`, nullable on pre-intake rows | Self-report. Not a diagnosis. Never shown on the public poster. Editable later in Settings. |
@@ -238,8 +238,8 @@ None of these get stored as raw labels. Every path — type tap, slider, situati
 2. `show_up` — chips (color-seed vibe).
 3. `knocks_you_off` — multi-select chips (sleep / workload / people/conflict / health / money / something else).
 4. `morning_cue` — chips, single concrete anchor, not a routine ("After I make coffee" not "what do you do every morning").
-5. Evening wind-down — same shape as morning_cue, times the evening Check push.
-6. Energy pattern — morning/afternoon/evening/night owl, times push notifications.
+5. Evening wind-down — same shape as morning_cue (anchor phrase), flavors generated card content. Never timing.
+6. Energy pattern — morning/afternoon/evening/night owl, times the daily morning/evening push windows.
 7. Recovery style — what pulls you back when you're off track (movement/sleep/talking to someone/alone time/music).
 8. Support style — nudge to keep going / space to sit with it / someone to listen / a plan to fix it. Sharper signal than `talk_style` alone.
 9. Current focus — "right now you're mostly trying to..." (build a habit / get through something hard / feel more like yourself / just show up).
