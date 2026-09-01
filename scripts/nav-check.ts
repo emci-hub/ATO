@@ -37,8 +37,20 @@ for (const id of NAV_TAB_IDS) {
 }
 ok('Home and Sage are not reorderable ids — they can never enter main/more');
 
-assert.deepEqual(DEFAULT_NAV_ORDER, { homeFirst: true, main: ['explore', 'around', 'you'], more: ['circle'] });
-ok('default order: Explore/Around/You on the bar, Circle in More');
+assert.deepEqual(DEFAULT_NAV_ORDER, { homeFirst: true, main: ['explore', 'you'], more: ['around', 'circle'] });
+ok('default order: Explore/You on the bar; Around/Circle in More (bar = 5 items)');
+
+// Main bar renders 2 pinned (Home+Sage) + main.length + More. Default must be 5.
+assert.equal(2 + DEFAULT_NAV_ORDER.main.length + 1, 5);
+ok('default main bar is 5 items max, not 6');
+
+// A stored custom order is NOT reset by the default change: normalizing the
+// old-style 6-item order keeps around on the bar (it is only the DEFAULT for
+// new/unset accounts that changed, not any persisted order).
+const legacyStored = normalizeNavOrder({ homeFirst: true, main: ['explore', 'around', 'you'], more: ['circle'] });
+assert.equal(legacyStored.main.includes('around'), true);
+assert.equal(2 + legacyStored.main.length + 1, 6);
+ok('existing stored order is preserved — the default change only affects new/unset accounts');
 
 // Every tab appears exactly once in a normalized order.
 const norm = normalizeNavOrder(DEFAULT_NAV_ORDER);

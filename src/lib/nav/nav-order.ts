@@ -45,8 +45,10 @@ export interface NavOrder {
 
 export const DEFAULT_NAV_ORDER: NavOrder = {
   homeFirst: true,
-  main: ['explore', 'around', 'you'],
-  more: ['circle'],
+  // Main bar = Home + Sage + Explore + You + More (5 items). Around is a
+  // secondary "room opened on purpose", so it defaults into More.
+  main: ['explore', 'you'],
+  more: ['around', 'circle'],
 };
 
 const NAV_ORDER_KEY = 'ato.nav.order.v1';

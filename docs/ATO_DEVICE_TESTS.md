@@ -197,7 +197,7 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 
 ## Box 27 — Nav bar customization (edit mode)
 
-- [ ] Confirm the bottom bar shows, by default: **Home / Sage / Explore / Around / You / More** (Circle in More). Circle appears only after a connection; before that it is not shown anywhere.
+- [ ] Confirm the bottom bar shows, by default: **Home / Sage / Explore / You / More** — 5 items, not 6. Around and Circle are in More. Circle appears only after a connection; before that it is not shown anywhere, but Around still is.
 - [ ] Long-press a reorderable tab (Explore/Around/You) → "Edit navigation" opens full-screen. Confirm Home and Sage are shown as pinned and there is a **Swap** affordance, not a drag handle.
 - [ ] In edit mode, drag the grip on a tab and confirm it reorders live; tap **Done** and confirm the bar reflects the new order after leaving edit mode.
 - [ ] In edit mode, tap "More" on a bar item → it moves into More. Tap "Bar" on a More item → it moves back. Confirm Done persists both.
