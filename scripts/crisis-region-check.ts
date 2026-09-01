@@ -138,8 +138,8 @@ assert.doesNotMatch(
 );
 ok('Sage Support tap opens the same card; keyword interrupt stays a separate path');
 
-assert.match(tabs, /<NativeTabs\.Trigger name="sage">/);
-assert.doesNotMatch(tabs, /Trigger name="sage"[^>]*hidden/);
+assert.match(tabs, /name: 'sage'/);
+assert.doesNotMatch(tabs, /homeFirst: false[\s\S]*more: \['sage'\]/);
 ok('Sage tab trigger is always present (not hideable)');
 
 const invented = /116\s*123|Samaritans|13\s*11\s*14|0800\s*689|IASP|befrienders/i;

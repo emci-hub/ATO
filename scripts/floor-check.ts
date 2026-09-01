@@ -187,14 +187,13 @@ const crisisSrc = read('src/components/crisis-card.tsx');
 assert.match(chrome, /controlBorderColor/);
 assert.match(crisisSrc, /borderColor: theme\.accent/);
 assert.match(sage, /NO_PINCH_ZOOM/);
-assert.match(read('src/components/app-tabs.tsx'), /disableTransparentOnScrollEdge/);
-assert.match(read('src/components/app-tabs.tsx'), /blurEffect="none"/);
+assert.match(read('src/components/app-tabs.tsx'), /backgroundColor: theme\.background/);
+assert.match(read('src/components/app-tabs.tsx'), /useSafeAreaInsets/);
 assert.match(read('src/app/_layout.tsx'), /navigationTheme/);
 assert.match(read('src/lib/theme/context.tsx'), /typeof Appearance\.setColorScheme === 'function'/);
 assert.match(read('src/lib/theme/context.tsx'), /ready: boolean/);
 assert.match(read('src/components/themed-tab-bar.tsx'), /backgroundColor: theme\.background/);
 assert.doesNotMatch(read('src/components/themed-tab-bar.tsx'), /backgroundElement/);
-assert.match(read('src/components/app-tabs.web.tsx'), /ThemedTabBar/);
 ok('crisis dismiss uses accent border; outline controls share a visible hairline; Sage pinch-zoom is off; tab bar is opaque and appearance-themed');
 
 const sentryLib = read('src/lib/sentry.ts');

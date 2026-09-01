@@ -195,11 +195,16 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] Tap a filled axis to edit. Confirm 8s undo works (no persist/history if undone) and re-tapping the same axis immediately after loses undo.
 - [ ] Confirm Full Profile stays fully viewable at 0 Notes — spend only gates new depth/insight, never viewing.
 
-## Box 27 — Nav bar is fixed (no customization)
+## Box 27 — Nav bar customization (edit mode)
 
-- [ ] Confirm the tab bar shows Home / Sage / Explore / Around / You, and Circle only after a connection.
-- [ ] Confirm there is **no** tab reorder control, **no** "More" tab, and **no** nav customization UI anywhere (You settings, Home, dev-lab). This feature does not exist by design — the tab bar is a fixed `NativeTabs` list — do not test for behavior that isn't built.
-- [ ] Confirm Home and Sage are the first two tabs and cannot be hidden/removed from the tab bar.
+- [ ] Confirm the bottom bar shows, by default: **Home / Sage / Explore / Around / You / More** (Circle in More). Circle appears only after a connection; before that it is not shown anywhere.
+- [ ] Long-press a reorderable tab (Explore/Around/You) → "Edit navigation" opens full-screen. Confirm Home and Sage are shown as pinned and there is a **Swap** affordance, not a drag handle.
+- [ ] In edit mode, drag the grip on a tab and confirm it reorders live; tap **Done** and confirm the bar reflects the new order after leaving edit mode.
+- [ ] In edit mode, tap "More" on a bar item → it moves into More. Tap "Bar" on a More item → it moves back. Confirm Done persists both.
+- [ ] Confirm Home and Sage **cannot** be moved into More in edit mode — there is no affordance for it.
+- [ ] Confirm **More is always the rightmost** tab and cannot be reordered.
+- [ ] Kill the app and relaunch. Confirm the custom order survives the restart (persisted in AsyncStorage).
+- [ ] Unfriend the last peer (Circle disappears) then reconnect. Confirm Circle returns to its stored slot (in More by default), not a new random position.
 - [ ] Confirm the pixel nav companion stays fixed top-right on every tab and does not remount on tab switch.
 
 ---

@@ -88,7 +88,8 @@ ok('theme-lab is a __DEV__ route, not the production initial screen');
 ok('dev-lab is on the authed stack, gated by root/grants, not __DEV__-only');
 
 assert.match(navTheme, /card: theme\.background/);
-assert.match(tabs, /blurEffect="none"/);
+assert.match(tabs, /backgroundColor: theme\.background/);
+assert.match(tabs, /useSafeAreaInsets/);
 assert.match(tabBar, /backgroundColor: theme\.background/);
 assert.doesNotMatch(tabBar, /backgroundElement/);
 assert.match(ctx, /typeof Appearance\.setColorScheme === 'function'/);
