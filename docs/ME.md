@@ -18,7 +18,7 @@
 
 **Circle Explore is in.** Circle appears only after a QR scan / link paste connects two accounts. Category compare is **dual-opt-in** — per-friend (`category_share`) or the Close Friends pool (`close_friends_share`, on by default off). Both sides must opt in before either sees the other; `peer_category_pack` returns cached title+category summaries only, never Full Profile. Fully separate from Full Profile.
 
-**Binary 10 in TestFlight.** Latest JS OTA: group `1ffc92b0-5d8f-4b87-a10d-5dc9eb8144e8` (`26c5781`, customizable nav). Open items: device pass, then invite/referral; Gut Call regression; Live Talk failure; get all testers off binary 8 onto binary 10.
+**Binary 10 in TestFlight.** Latest JS OTA: group `4b669c70-ba79-433b-9f1e-2bde060ff656` (`0387ea9`, nav default 5 items). Open items: device pass, then invite/referral; Gut Call regression; Live Talk failure; get all testers off binary 8 onto binary 10.
 
 ## App
 
