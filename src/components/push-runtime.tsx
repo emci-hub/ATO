@@ -50,7 +50,11 @@ export function PushRuntime() {
       try {
         const checks = await fetchChecks(userId!);
         if (!active) return;
-        await syncPushSchedule({ checks, timeZone: me!.timezone || 'UTC' });
+        await syncPushSchedule({
+          checks,
+          timeZone: me!.timezone || 'UTC',
+          energyPattern: me!.energy_pattern,
+        });
       } catch (err) {
         console.log('[push] sync skipped:', err);
       }

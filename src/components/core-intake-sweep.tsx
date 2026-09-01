@@ -35,6 +35,7 @@ export function CoreIntakeSweep({
   busy,
   formError,
   onSubmit,
+  onSkip,
   onBack,
 }: {
   selectedFor: (field: CoreIntakeField) => string[];
@@ -42,6 +43,7 @@ export function CoreIntakeSweep({
   busy: boolean;
   formError: string | null;
   onSubmit: () => void;
+  onSkip: () => void;
   onBack: () => void;
 }) {
   const answered = CORE_INTAKE_QUESTIONS.filter(
@@ -64,6 +66,9 @@ export function CoreIntakeSweep({
       <ThemedText type="subtitle">{CORE_INTAKE_SWEEP_TITLE}</ThemedText>
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.progress}>
         {coreIntakeAnsweredLabel(answered)}
+      </ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Answer now or skip — you can add these anytime from You.
       </ThemedText>
 
       {CORE_INTAKE_QUESTIONS.map((question) => {
@@ -108,6 +113,15 @@ export function CoreIntakeSweep({
           {busy ? 'Saving…' : 'Save'}
         </ThemedText>
       </Pressable>
+
+      <Pressable
+        onPress={onSkip}
+        disabled={busy}
+        style={({ pressed }) => [styles.skipButton, pressed && styles.pressed, busy && styles.disabled]}>
+        <ThemedText type="smallBold" themeColor="textSecondary">
+          Skip for now
+        </ThemedText>
+      </Pressable>
     </View>
   );
 }
@@ -135,6 +149,11 @@ const styles = StyleSheet.create({
   },
   submitText: {
     color: '#ffffff',
+  },
+  skipButton: {
+    alignSelf: 'center',
+    paddingVertical: Spacing.three,
+    paddingHorizontal: Spacing.three,
   },
   pressed: {
     opacity: 0.8,

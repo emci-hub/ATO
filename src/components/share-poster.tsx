@@ -20,7 +20,7 @@ import { publicLink } from '@/lib/share-codec';
 export interface PosterPerson {
   name: string;
   handle: string;
-  show_up: string;
+  show_up: string | null;
   /** Kept so public_profile / You-tab callers can pass the row as-is. */
   recipe: unknown;
 }

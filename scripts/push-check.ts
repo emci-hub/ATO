@@ -18,7 +18,7 @@ import {
   recapFromReads,
   sundayPush,
 } from '../src/lib/push-copy';
-import { shouldAskNotificationPermission } from '../src/lib/push-policy';
+import { shouldAskNotificationPermission, pushWindowForEnergy } from '../src/lib/push-policy';
 import { addDaysYmd, localYmd, weekdayInZone } from '../src/lib/local-date';
 import { checksInRecapWeek, recapWeekRange } from '../src/lib/week-window';
 
@@ -34,6 +34,15 @@ assert.equal(shouldAskNotificationPermission({ checkCount: 1, alreadyAsked: fals
 assert.equal(shouldAskNotificationPermission({ checkCount: 8, alreadyAsked: false }), true);
 assert.equal(shouldAskNotificationPermission({ checkCount: 8, alreadyAsked: true }), false);
 ok('permission asked only after first check, and only once');
+
+assert.deepEqual(pushWindowForEnergy(null), { morningHour: 7, eveningHour: 20 });
+assert.deepEqual(pushWindowForEnergy(undefined), { morningHour: 7, eveningHour: 20 });
+assert.deepEqual(pushWindowForEnergy('unexpected'), { morningHour: 7, eveningHour: 20 });
+assert.deepEqual(pushWindowForEnergy('morning'), { morningHour: 6, eveningHour: 19 });
+assert.deepEqual(pushWindowForEnergy('afternoon'), { morningHour: 8, eveningHour: 20 });
+assert.deepEqual(pushWindowForEnergy('evening'), { morningHour: 9, eveningHour: 21 });
+assert.deepEqual(pushWindowForEnergy('night_owl'), { morningHour: 10, eveningHour: 22 });
+ok('push window maps energy_pattern to send hours; null keeps the fixed default');
 
 const morning = morningPush('The kettle is already on. Sit with it.');
 assert.equal(morning.url, PUSH_PATHS.morning);

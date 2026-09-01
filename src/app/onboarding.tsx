@@ -227,21 +227,6 @@ export default function OnboardingScreen() {
   }
 
   async function submit() {
-    if (
-      !talkStyle ||
-      !showUp ||
-      knocksYouOff.length === 0 ||
-      !morningCue ||
-      !eveningWindDown ||
-      !energyPattern ||
-      !recoveryStyle ||
-      !supportStyle ||
-      !currentFocus
-    ) {
-      setFormError('Pick one to keep going.');
-      return;
-    }
-
     const parsedBornOn = bornOnFromParts(birthYear, birthMonth, birthDay);
     if (!parsedBornOn.ok) {
       setPhase('account');
@@ -409,6 +394,7 @@ export default function OnboardingScreen() {
                 busy={busy}
                 formError={formError}
                 onSubmit={() => void submit()}
+                onSkip={() => void submit()}
                 onBack={() => {
                   setFormError(null);
                   setPhase('account');

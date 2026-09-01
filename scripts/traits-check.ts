@@ -263,8 +263,8 @@ async function main() {
   assert.match(optionalUi, /Skip this one/);
   assert.doesNotMatch(optionalUi, /Pick one to keep going/);
   assert.doesNotMatch(optionalUi, /of 9/);
-  assert.match(onboarding, /'Pick one to keep going\.'/);
-  ok('core 9 still requires a pick; optional never does; signup finishes before the extra phase');
+  assert.doesNotMatch(submitFn, /'Pick one to keep going\.'/);
+  ok('core 9 is skippable on one page; optional never requires; signup finishes before the extra phase');
 
   const signup = read('supabase/migrations/stage9_intake_core.sql');
   assert.doesNotMatch(signup, /openness|trait_sources|attachment_anxiety/);

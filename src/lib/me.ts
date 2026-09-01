@@ -51,11 +51,11 @@ export type Me = {
   id: string;
   name: string;
   handle: string;
-  show_up: string;
-  talk_style: TalkStyle;
-  knocks_you_off: string;
-  morning_cue: string;
-  /** Chip phrase. Times the evening Check push (wiring later). Null on pre-intake rows. */
+  show_up: string | null;
+  talk_style: TalkStyle | null;
+  knocks_you_off: string | null;
+  morning_cue: string | null;
+  /** Chip phrase. Times the evening Check push (wiring later). Null on skipped intake rows. */
   evening_wind_down: string | null;
   /** Self-report. Null on pre-intake rows. Never a diagnosis. */
   energy_pattern: EnergyPattern | null;
@@ -164,11 +164,11 @@ export type MeInsert = Omit<
   born_on: string;
   /** Typed city slug. Saved after signup; not part of complete_signup. */
   city?: string | null;
-  evening_wind_down: string;
-  energy_pattern: EnergyPattern;
-  recovery_style: RecoveryStyle;
-  support_style: SupportStyle;
-  current_focus: CurrentFocus;
+  evening_wind_down: string | null;
+  energy_pattern: EnergyPattern | null;
+  recovery_style: RecoveryStyle | null;
+  support_style: SupportStyle | null;
+  current_focus: CurrentFocus | null;
 };
 
 export type AiConsent = 'granted' | 'denied' | 'pending';

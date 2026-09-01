@@ -10,7 +10,7 @@ import {
   sundayPush,
   type PushPayload,
 } from '@/lib/push-copy';
-import { shouldAskNotificationPermission } from '@/lib/push-policy';
+import { shouldAskNotificationPermission, pushWindowForEnergy } from '@/lib/push-policy';
 import { loadTodayCard } from '@/lib/today-card';
 import { checksInRecapWeek } from '@/lib/week-window';
 
@@ -127,6 +127,7 @@ export function sundayPayloadFor(checks: Check[], now: Date, timeZone: string): 
 export async function syncPushSchedule(input: {
   checks: Check[];
   timeZone: string;
+  energyPattern?: string | null;
 }): Promise<void> {
   if (Platform.OS === 'web') return;
 
@@ -140,18 +141,19 @@ export async function syncPushSchedule(input: {
     await ensureAndroidChannel();
     const card = await loadTodayCard();
     const now = new Date();
+    const window = pushWindowForEnergy(input.energyPattern);
 
     if (card?.read.trim()) {
       await scheduleRepeating(PUSH_IDS.morning, morningPush(card.read), {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
         channelId: CHANNEL_ID,
-        hour: 7,
+        hour: window.morningHour,
         minute: 0,
       });
       await scheduleRepeating(PUSH_IDS.evening, eveningPush(), {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
         channelId: CHANNEL_ID,
-        hour: 20,
+        hour: window.eveningHour,
         minute: 0,
       });
     }

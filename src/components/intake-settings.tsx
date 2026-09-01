@@ -88,13 +88,13 @@ export function TalkStylePicker({
           </ThemedText>
           <ChipGroup
             chips={TALK_STYLE_QUESTION.chips}
-            selected={[previewTalk ?? me.talk_style]}
+            selected={[previewTalk ?? me.talk_style ?? 'even']}
             disabled={saving}
             inset
             onSelect={onSelect}
           />
           <ThemedText type="small" themeColor="textSecondary" style={styles.preview}>
-            {TALK_STYLE_PREVIEWS[previewTalk ?? me.talk_style]}
+            {TALK_STYLE_PREVIEWS[previewTalk ?? me.talk_style ?? 'even']}
           </ThemedText>
         </View>
       ) : null}

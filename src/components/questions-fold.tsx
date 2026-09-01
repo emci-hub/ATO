@@ -103,7 +103,7 @@ export function QuestionsFold({
   const load = useCallback(async () => {
     const next = await routeQuestions(
       {
-        me,
+        me: { ...me, talk_style: me.talk_style ?? 'even' },
         history,
         aiConsent: me.ai_consent,
         crisisToday,

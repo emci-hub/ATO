@@ -422,7 +422,7 @@ function SlotReadout() {
             values: traits.values,
             touched: traits.touched,
             knows: parseSageKnowsState(me.sage_knows),
-            knocksYouOff: me.knocks_you_off,
+            knocksYouOff: me.knocks_you_off ?? '',
             facts: me.facts ?? [],
             history: checksToHistory(checks),
             now: new Date(),

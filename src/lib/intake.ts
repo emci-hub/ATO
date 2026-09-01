@@ -281,10 +281,10 @@ export const INTAKE_SETTINGS_LABELS: Record<CoreIntakeField, string> = {
 };
 
 type IntakeMeSlice = {
-  talk_style: string;
-  show_up: string;
-  knocks_you_off: string;
-  morning_cue: string;
+  talk_style: string | null;
+  show_up: string | null;
+  knocks_you_off: string | null;
+  morning_cue: string | null;
   evening_wind_down?: string | null;
   energy_pattern?: string | null;
   recovery_style?: string | null;
@@ -387,14 +387,18 @@ export function isCurrentFocus(value: string | null | undefined): value is Curre
   return !!value && (CURRENT_FOCUS_VALUES as string[]).includes(value);
 }
 
+/** Neutral fallbacks so a skipped intake field never renders as broken copy. */
+const DEFAULT_TALK_STYLE: TalkStyle = 'even';
+const DEFAULT_MORNING_CUE = 'getting up';
+
 /** Slice of ME the router needs, including intake fields used for bank pick. */
 export function voiceMeFrom(
   me: {
     name: string;
-    show_up: string;
-    talk_style: TalkStyle;
-    knocks_you_off: string;
-    morning_cue: string;
+    show_up: string | null;
+    talk_style: TalkStyle | null;
+    knocks_you_off: string | null;
+    morning_cue: string | null;
     evening_wind_down?: string | null;
     energy_pattern?: string | null;
     recovery_style?: string | null;
@@ -412,10 +416,10 @@ export function voiceMeFrom(
   }
   return {
     name: me.name,
-    show_up: me.show_up,
-    talk_style: me.talk_style,
-    knocks_you_off: me.knocks_you_off,
-    morning_cue: me.morning_cue,
+    show_up: me.show_up ?? '',
+    talk_style: me.talk_style ?? DEFAULT_TALK_STYLE,
+    knocks_you_off: me.knocks_you_off ?? '',
+    morning_cue: (me.morning_cue && me.morning_cue.trim()) || DEFAULT_MORNING_CUE,
     evening_wind_down: me.evening_wind_down ?? null,
     energy_pattern: isEnergyPattern(me.energy_pattern) ? me.energy_pattern : null,
     recovery_style: isRecoveryStyle(me.recovery_style) ? me.recovery_style : null,

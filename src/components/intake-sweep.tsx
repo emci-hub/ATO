@@ -50,7 +50,7 @@ export function IntakeSweep({
     routeQuestionSweep({
       me: {
         name: me.name,
-        talk_style: me.talk_style,
+        talk_style: me.talk_style ?? 'even',
         voice_preset: me.voice_preset,
       },
       useLocal: VOICE_CONFIG.provider === 'local' || !VOICE_CONFIG.geminiApiKey,
