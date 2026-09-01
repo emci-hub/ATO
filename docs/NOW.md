@@ -4,7 +4,7 @@
 **Gates:** A ✓ (non-goals in ATO_PLAN_v2.md) · B ✓ (iOS/Expo, Supabase, Apple Sign-in+email) · C in progress · D not started
 **Modules on:** report/block (Social), crisis static-card + privacy pass (Health/finance/kids) — both required, in progress
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
-**Latest production OTA:** `0028d5f5-3797-417e-b345-9005cb17ca5b` (commit `41fcec4`) — core intake as one scrollable page
+**Latest production OTA:** `9688599c-1d38-4a62-a474-ca7333d80dae` (commit `22d5361`) — skippable intake + null-safe Dawn + energy_pattern push timing
 
 ## On
 **Test-account wipe for clean retest (Aug 31, 2026).** All test accounts (riley, sam, yeezy, zintake9, lazyemci) hard-deleted via `auth.users` cascade (checks, trait_history, trait_tracks, token_events, ai_usage, going, sage_messages, explore_*, question_*, connections, messages, blocks, mutes, reports, invite_codes, apple_credentials all cascade; `account_deletions` audit rows written for each). Only **emci2** (`lil_emci@hotmail.com`, Apple) remains. **EMCIRETEST** is owned by emci2, unlimited (`max_uses NULL`), verified usable. **Known gap:** handle is `emci2`, not `emci`, so dev-root RPCs keyed on `handle='emci'` don't recognize it.
@@ -74,9 +74,11 @@
 2. Sentry native crash symbolication — still **unconfirmed** from here. Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
 3. Friends external testing group — Beta App Review pending on Apple since Aug 26, 2026. No action, just waiting.
 
-**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ receive JS via `eas update`. Devices on binary 8 or earlier cannot. Latest production JS: group `0028d5f5-3797-417e-b345-9005cb17ca5b` (`41fcec4`, core intake one page). **OTA published Sep 1, 2026.** Prior group `4b669c70-ba79-433b-9f1e-2bde060ff656` (`0387ea9`, nav default 5 items) is superseded.
+**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ receive JS via `eas update`. Devices on binary 8 or earlier cannot. Latest production JS: group `9688599c-1d38-4a62-a474-ca7333d80dae` (`22d5361`, skippable intake + null-safe Dawn + energy_pattern push timing). **OTA published Sep 1, 2026.** Prior group `0028d5f5-3797-417e-b345-9005cb17ca5b` (`41fcec4`, core intake one page) is superseded.
 
 ## Done
+**Skippable intake + null-safe Dawn + push timing OTA** (commit `22d5361`). Group `9688599c`. Core intake is skippable (null intake fields accepted via `wave23`), Dawn degrades safely on null fields, and daily push windows key off `energy_pattern`. **OTA published Sep 1, 2026.** 100% production channel — no staged rollout. Supersedes `0028d5f5`.
+
 **Push timing keyed off `energy_pattern`.** Daily morning/evening windows shift with the chip — `morning` 6/19, `afternoon` 8/20, `evening` 9/21, `night_owl` 10/22; null keeps the fixed 7/20 default. Sunday stays fixed 10:00. Only the send time moves — content, deep links, and copy are untouched. `morning_cue` / `evening_wind_down` stay anchor phrases for card copy, never timing.
 
 **Sign up / Log in split is in.** Separate screens: Sign up is OTP + Apple with no password field; Log in is Apple, optional password, and OTP fallback. Password set/change in You Settings via `supabase.auth.updateUser` (GoTrue hash).
@@ -114,7 +116,7 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 7. **Intake sweep copy** — `INTAKE_SWEEP_COPY_REVIEWED = false` (`questions/local.ts`).
 
 ## Left
-- Full device pass against `docs/ATO_DEVICE_TESTS.md` (binary 10+, OTA `0028d5f5`)
+- Full device pass against `docs/ATO_DEVICE_TESTS.md` (binary 10+, OTA `9688599c`)
 - Get all testers onto binary 10 (they cannot receive OTA on binary 8)
 - Confirm binary 10 on a real device (icon, OTA, everything)
 - Gut Call regression — still open
@@ -168,4 +170,4 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 - **Around refresh secrets (Wave 2):** Edge Function `refresh-around` is deployed. Needs `EDMTRAIN_CLIENT_KEY` + `AROUND_REFRESH_SECRET`; cron not scheduled until both exist. Phone never holds the Edmtrain key.
 
 ## Next 15 min
-Work through `docs/ATO_DEVICE_TESTS.md` in full on a real device with **binary 10** installed (it pulls OTA `0028d5f5-3797-417e-b345-9005cb17ca5b`). Every box's checklist, one sitting. Bring back anything that fails. Once that pass is clean, Stage 8 handoff #2: invite/referral gate (Auth + ME). Open items that are not the device pass: Gut Call regression, Live Talk failure, closing the `emci2` root-handle gap.
+Work through `docs/ATO_DEVICE_TESTS.md` in full on a real device with **binary 10** installed (it pulls OTA `9688599c-1d38-4a62-a474-ca7333d80dae`). Every box's checklist, one sitting. Bring back anything that fails. Once that pass is clean, Stage 8 handoff #2: invite/referral gate (Auth + ME). Open items that are not the device pass: Gut Call regression, Live Talk failure, closing the `emci2` root-handle gap.
