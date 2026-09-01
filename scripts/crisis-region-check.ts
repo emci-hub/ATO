@@ -133,7 +133,7 @@ assert.equal((sage.match(/<SageSupportTap /g) ?? []).length, 2);
 assert.match(sage, /visible=\{showSupport\}/);
 assert.match(sage, /<CrisisCard onDismiss=\{\(\) => setShowSupport\(false\)\} \/>/);
 assert.doesNotMatch(
-  sage.slice(sage.indexOf('function SageSupportTap'), sage.indexOf('function CategorySpotlightLine')),
+  sage.slice(sage.indexOf('function SageSupportTap'), sage.indexOf('const styles = StyleSheet.create')),
   /logCrisisFlag/,
 );
 ok('Sage Support tap opens the same card; keyword interrupt stays a separate path');

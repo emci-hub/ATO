@@ -417,14 +417,17 @@ ok('cached pack is reused; no second generate the same day');
 
 const home = read('src/app/(tabs)/index.tsx');
 const sage = read('src/app/(tabs)/sage.tsx');
+const exploreScreen = read('src/app/explore.tsx');
 assert.doesNotMatch(home, /ExplorePanel/);
 assert.doesNotMatch(home, /HomeInnerTabs/);
-assert.match(sage, /routeExplore/);
-assert.match(sage, /SageExploreObservations/);
-assert.match(sage, /ExplorePinnedCategories/);
-assert.match(sage, /SageStoryFold/);
+assert.match(exploreScreen, /routeExplore/);
+assert.match(exploreScreen, /SageExploreObservations/);
+assert.match(exploreScreen, /SageStoryFold/);
+assert.match(exploreScreen, /CategoriesFold/);
+assert.match(exploreScreen, /SageTitleCard/);
+assert.doesNotMatch(sage, /routeExplore|SageExploreObservations|ExplorePinnedCategories|SageStoryFold|SageTitleCard/);
 assert.doesNotMatch(sage, /EXPLORE_LEDE|EXPLORE_LABEL/);
-ok('Explore observations render on Sage; Home has no inner tabs');
+ok('Explore is its own full screen; Sage stays clean chat; Home has no inner tabs');
 
 const you = read('src/app/(tabs)/you.tsx');
 assert.doesNotMatch(you, /ExplorePanel|HomeInnerTabs|explore_entries/);

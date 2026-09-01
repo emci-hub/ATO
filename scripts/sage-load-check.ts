@@ -55,8 +55,9 @@ async function main() {
 
   assert.match(sage, /fetchTalkHistory/);
   assert.match(sage, /history: checksToHistory\(talk\.checks\)/);
-  assert.match(sage, /fetchChecks\(/);
-  assert.match(sage, /checksToHistory\(exploreChecks\)/);
+  const exploreScreen = read('src/app/explore.tsx');
+  assert.match(exploreScreen, /fetchChecks\(/);
+  assert.match(exploreScreen, /checksToHistory\(exploreChecks\)/);
   assert.match(checksLib, /export const TALK_RECENT_CHECKS = 5/);
   assert.match(prompt, /export const TALK_PROMPT_HISTORY = 5/);
   ok('Talk context is last 5 Checks; Explore uses full fetchChecks history');

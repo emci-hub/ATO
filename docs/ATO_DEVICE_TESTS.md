@@ -36,13 +36,16 @@ Compiled as each box lands. Same file in the repo at `docs/ATO_DEVICE_TESTS.md`.
 - [ ] Confirm `/dev-lab` access is unchanged — still root + granted testers, still opens locally under `__DEV__`.
 - [ ] Note: PushTestCard and SentryTestCard remain on the You tab (`you-dev-tools.tsx`), not physically inside `/dev-lab`. Confirm both still work from there.
 
-## Box 7 — Explore into the Sage thread
+## Box 7 — Explore into its own screen
 
-- [ ] Open Sage. Confirm Explore observations render as left-side Sage bubbles at the top of the thread, above the first real message — not as a separate card or tab.
-- [ ] Confirm there is no inner tab bar on Home at all (no "Today" / "Explore" toggle).
-- [ ] Tap "Did this land?" on an observation. Confirm the "Noted." fade still appears (and confirm it's instant, not fading, if you have Reduce Motion on).
+- [ ] Open the Sage tab. Confirm it is **clean chat only** — 8-ball + the conversation, with nothing else stacked above the thread (no title card, no categories, no story, no observations, no "N of 16 settled", no Notes spend).
+- [ ] Confirm a small **"Explore ›"** button sits in the Sage header (top right, next to the title). It is a button/tap, **not** a nav tab.
+- [ ] Tap "Explore ›". Confirm it pushes a **full screen** (no tab bar), titled "Explore", with a Back button that returns to Sage.
+- [ ] On the Explore screen confirm the order top to bottom: title card, Categories (full detail fold), The Story, Notes insight spend, then the observation bubbles.
+- [ ] Confirm the observation bubbles render there, each with "Did this land?" yes/no and the "Noted." ack.
+- [ ] Confirm Explore observations are not on Home and not on the You tab.
 - [ ] In `/dev-lab` → Sage section, tap "Force regenerate Explore." Confirm it shows fresh observation text with its tagged axis inline.
-      **F5 check (known, deferred):** read the regenerated text against its tagged axis — does the prose actually match the axis name (e.g. does an `openness`-tagged entry read like openness, not like sleep/recovery)? This is not fixed yet (Box 14). Use this tool to gauge how bad it looks in the more-visible Sage thread now that it's moved.
+      **F5 check (known, deferred):** read the regenerated text against its tagged axis — does the prose actually match the axis name (e.g. does an `openness`-tagged entry read like openness, not like sleep/recovery)? This is not fixed yet (Box 14). Use this tool to gauge how bad it looks on the Explore screen.
 - [ ] Confirm a Talk message in Sage still behaves normally — reply quality/tone should be unchanged, since Talk still uses the narrower 5-check history, not the fuller Explore history.
 
 ## Box 8 — Home strip-down, two slots (deliberate override)
@@ -147,10 +150,10 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] On a thin/new account (none of Steadiness, Agency, Drive settled): open Dawn/Home generated Read. Confirm it still draws from knocks/facts/focus, not empty, and Do is still `After you {morning_cue}, …`.
 - [ ] On an account with Steadiness settled: confirm a generated Read may lean on that merge, still never names the category, and Do is unchanged.
 - [ ] Confirm a category-sourced Read still drops on topical-repeat / cut-after-crisis / two-cuts / cruel-cut / framework-echo the same as any other Read.
-- [ ] Open Sage. Confirm a pinned Categories summary sits above Explore observations. Confirm a generated Explore line does not paraphrase that pinned card.
+- [ ] Open the Explore screen (Sage → "Explore ›"). Confirm a Categories summary (full detail) sits above The Story and the observations. Confirm a generated Explore line does not paraphrase that Categories card.
 - [ ] Confirm Explore never combines more than two categories, and never pairs all three of growth_mindset + locus_of_control + self_efficacy as raw axes.
 - [ ] On You → Categories, confirm Levity appears as a **bar** (not a map) once playfulness + a conflict axis have settled. Love / closeness remains the only conflict-adjacent map.
-- [ ] Confirm The Story fold (collapsed) sits under the pinned Categories card. Open it only when Gemini actually wrote one. Confirm: no generic fallback paragraph when the model is unreachable; the fold is simply missing. Confirm the prose never names a category. If told-vs-played tension exists, confirm it is hedged, not an accusation, not smoothed away.
+- [ ] On the Explore screen, confirm The Story fold (collapsed) sits under Categories. Open it only when Gemini actually wrote one. Confirm: no generic fallback paragraph when the model is unreachable; the fold is simply missing. Confirm the prose never names a category. If told-vs-played tension exists, confirm it is hedged, not an accusation, not smoothed away.
 - [ ] Flag every Story paragraph and every new Levity/Dawn/Explore line for emci before treating any of it as shippable.
 
 ## Box 23 — Shared friend-voice style checklist (all 5 surfaces)

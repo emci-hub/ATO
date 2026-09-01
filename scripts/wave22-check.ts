@@ -174,8 +174,9 @@ assert.match(fold, /setStory\(null\)/);
 assert.doesNotMatch(fold, /fallbackBandFor|TITLE_EMPTY|composeLocal/);
 assert.match(fold, /formatStoryTensionNote/);
 assert.doesNotMatch(fold, /formatDivergenceNote/);
-assert.match(read('src/app/(tabs)/sage.tsx'), /SageStoryFold/);
-assert.match(read('src/app/(tabs)/sage.tsx'), /ExplorePinnedCategories/);
+assert.match(read('src/app/explore.tsx'), /SageStoryFold/);
+assert.match(read('src/app/explore.tsx'), /CategoriesFold/);
+assert.doesNotMatch(read('src/app/(tabs)/sage.tsx'), /SageStoryFold|ExplorePinnedCategories/);
 ok('Story UI hides when Gemini is unreachable; no generic fallback paragraph');
 
 assert.equal(STORY_SAMPLES.every((row) => row.shape.includes('thin') || row.body.length > 0 || row.body === ''), true);

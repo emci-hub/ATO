@@ -182,11 +182,12 @@ assert.doesNotMatch(meSrc.slice(confirmStart, persistStart), /applyEwmaAnswer/);
 ok('confirm-upgrade still does not touch tracks or the number');
 
 const sage = read('src/app/(tabs)/sage.tsx');
-assert.match(sage, /settledAxisLabel/);
+const exploreScreen = read('src/app/explore.tsx');
+assert.match(exploreScreen, /settledAxisLabel/);
 assert.match(sage, /settledCount/);
 assert.match(sage, /divergingAxesFromTracks/);
-assert.match(sage, /SageTitleCard/);
-assert.doesNotMatch(sage, /answeredAxisLabel/);
+assert.match(exploreScreen, /SageTitleCard/);
+assert.doesNotMatch(sage, /answeredAxisLabel|SageTitleCard/);
 assert.doesNotMatch(sage, /divergingAxes\(/);
 ok('Sage uses settled completeness, blended-track divergence, and the title card');
 
