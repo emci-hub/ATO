@@ -4,10 +4,10 @@
 **Gates:** A ✓ (non-goals in ATO_PLAN_v2.md) · B ✓ (iOS/Expo, Supabase, Apple Sign-in+email) · C in progress · D not started
 **Modules on:** report/block (Social), crisis static-card + privacy pass (Health/finance/kids) — both required, in progress
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
-**Latest production OTA:** `cab5a13c-2ccd-4c00-a0fe-a9d22e797d25` (commit `76483a7`) — More-sheet taps + locked Circle until a friend is scanned
+**Latest production OTA:** `b84f0aa6-a668-4d59-8374-ea9c96e95f63` (commit `6e07fbc`) — unified AI provider layer + rotated Gemini API key
 
 ## On
-**Unified AI provider layer (Sep 1, 2026).** Every Sage model call goes through `generateText({ prompt, temperature, maxOutputTokens, responseFormat })` in `src/lib/ai`. `EXPO_PUBLIC_AI_PROVIDER` selects Gemini, NVIDIA, Perplexity, Claude, Grok, or `local`. Gemini / NVIDIA / Perplexity stay client-side (`EXPO_PUBLIC_*` keys). Claude and Grok go through the `ai-generate` Edge Function (keys are Supabase secrets, not in the bundle). `MODEL_PROVIDER=local` still forces the deterministic fallback. A hidden provider switcher (tap the Build line 5 times) stores an on-device override in AsyncStorage. Each remote call logs `provider + timestamp` to `ai_provider_log` (not the response) so the switcher can show rolling 1-minute / 24-hour self-tracked counts next to seeded free-tier baselines.
+**Unified AI provider layer is on production (OTA `b84f0aa6`, Sep 1, 2026).** Every Sage model call goes through `generateText({ prompt, temperature, maxOutputTokens, responseFormat })` in `src/lib/ai`. `EXPO_PUBLIC_AI_PROVIDER` selects Gemini, NVIDIA, Perplexity, Claude, Grok, or `local`. Gemini / NVIDIA / Perplexity stay client-side (`EXPO_PUBLIC_*` keys). Claude and Grok go through the `ai-generate` Edge Function (keys are Supabase secrets, not in the bundle). `MODEL_PROVIDER=local` still forces the deterministic fallback. A hidden provider switcher (tap the Build line 5 times) stores an on-device override in AsyncStorage. Each remote call logs `provider + timestamp` to `ai_provider_log` (not the response) so the switcher can show rolling 1-minute / 24-hour self-tracked counts next to seeded free-tier baselines. **Gemini API key rotated the same day** in gitignored `.env.local` and the production EAS env var (`eas env:set`; classic `eas secret:list` is empty/deprecated). Claude/Grok will 503 until `ANTHROPIC_API_KEY` and `XAI_API_KEY` are set on the Supabase project. NVIDIA/Perplexity need their `EXPO_PUBLIC_*` keys locally to switch to them.
 
 **Test-account wipe for clean retest (Aug 31, 2026).** All test accounts (riley, sam, yeezy, zintake9, lazyemci) hard-deleted via `auth.users` cascade (checks, trait_history, trait_tracks, token_events, ai_usage, going, sage_messages, explore_*, question_*, connections, messages, blocks, mutes, reports, invite_codes, apple_credentials all cascade; `account_deletions` audit rows written for each). Only **emci2** (`lil_emci@hotmail.com`, Apple) remains. **EMCIRETEST** is owned by emci2, unlimited (`max_uses NULL`), verified usable. **Known gap:** handle is `emci2`, not `emci`, so dev-root RPCs keyed on `handle='emci'` don't recognize it.
 
@@ -76,10 +76,12 @@
 2. Sentry native crash symbolication — still **unconfirmed** from here. Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
 3. Friends external testing group — Beta App Review pending on Apple since Aug 26, 2026. No action, just waiting.
 
-**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ receive JS via `eas update`. Devices on binary 8 or earlier cannot. Latest production JS: group `cab5a13c-2ccd-4c00-a0fe-a9d22e797d25` (`76483a7`, More-sheet taps + locked Circle until a friend is scanned). **OTA published Sep 1, 2026.** Prior group `9688599c-1d38-4a62-a474-ca7333d80dae` (`22d5361`, skippable intake + null-safe Dawn + energy_pattern push timing) is superseded.
+**EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ receive JS via `eas update`. Devices on binary 8 or earlier cannot. Latest production JS: group `b84f0aa6-a668-4d59-8374-ea9c96e95f63` (`6e07fbc`, provider layer + rotated Gemini key). **OTA published Sep 1, 2026.** Prior group `cab5a13c-2ccd-4c00-a0fe-a9d22e797d25` (`76483a7`, More-sheet taps + locked Circle) is superseded.
 
 ## Done
-**More-sheet + locked-tab OTA** (commit `76483a7`). Group `cab5a13c`. More items navigate (push before close; hidden TabTriggers). Gated tabs use `isUnlocked` — Circle stays in Edit Navigation under "Not unlocked yet" until a friend is scanned. **OTA published Sep 1, 2026.** 100% production channel — no staged rollout. Supersedes `9688599c`.
+**Provider-layer + Gemini key-rotation OTA** (commit `6e07fbc`). Group `b84f0aa6`. Unified `generateText` transport, hidden 5-tap `/ai-lab` switcher, `ai_provider_log` usage rows, `ai-generate` Edge Function for Claude/Grok. Gemini key value rotated in `.env.local` + EAS production env (not committed). **OTA published Sep 1, 2026.** 100% production channel — no staged rollout. Supersedes `cab5a13c`.
+
+**More-sheet + locked-tab OTA** (commit `76483a7`). Group `cab5a13c`. More items navigate (push before close; hidden TabTriggers). Gated tabs use `isUnlocked` — Circle stays in Edit Navigation under "Not unlocked yet" until a friend is scanned. **OTA published Sep 1, 2026.** 100% production channel — no staged rollout. Supersedes `9688599c`. Superseded by `b84f0aa6`.
 
 **Skippable intake + null-safe Dawn + push timing OTA** (commit `22d5361`). Group `9688599c`. Core intake is skippable (null intake fields accepted via `wave23`), Dawn degrades safely on null fields, and daily push windows key off `energy_pattern`. **OTA published Sep 1, 2026.** 100% production channel — no staged rollout. Supersedes `0028d5f5`.
 
@@ -120,7 +122,8 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 7. **Intake sweep copy** — `INTAKE_SWEEP_COPY_REVIEWED = false` (`questions/local.ts`).
 
 ## Left
-- Full device pass against `docs/ATO_DEVICE_TESTS.md` (binary 10+, OTA `cab5a13c`)
+- Full device pass against `docs/ATO_DEVICE_TESTS.md` (binary 10+, OTA `b84f0aa6`)
+- Set Supabase secrets `ANTHROPIC_API_KEY` / `XAI_API_KEY` (and optional `ANTHROPIC_MODEL` / `XAI_MODEL`) before Claude or Grok can work from `/ai-lab`
 - Get all testers onto binary 10 (they cannot receive OTA on binary 8)
 - Confirm binary 10 on a real device (icon, OTA, everything)
 - Gut Call regression — still open
@@ -163,8 +166,8 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 - Slack — parked as future ops tooling
 
 ## Housekeeping
-- docs/ATO_PLAN_v2.md, docs/ME.md, docs/NOW.md, docs/BUSINESS.md — Cursor maintains these directly. Commit together, `git push` immediately, never left local-only. ATO_PLAN_v2.md is a **working reference**, not a locked spec. Crisis / coach-label / diagnosis-avoidance / App Store floor sections are compliance-grounded and not casually revised. Device pass lives in `docs/ATO_DEVICE_TESTS.md`.
-- EXPO_PUBLIC_AI_PROVIDER selects the live vendor (default gemini). Gemini / NVIDIA / Perplexity keys are `EXPO_PUBLIC_*`; Claude / Grok keys are Edge Function secrets on `ai-generate`. Gemini still live-verified; model from `EXPO_PUBLIC_GEMINI_MODEL` (pinned to `gemini-3.7-flash` in production).
+- docs/ATO_PLAN_v2.md, docs/ME.md, docs/NOW.md, docs/BUSINESS.md — Cursor maintains these directly. Commit together, `git push` immediately, never left local-only. ATO_PLAN_v2.md is a **working reference**, not a locked spec. Crisis / coach-label / diagnosis-avoidance / App Store floor sections are compliance-grounded and not casually revised. Device pass lives in `docs/ATO_DEVICE_TESTS.md`. `PROJECT_CONTEXT.md` is a pointer to these four, not a second source of truth.
+- EXPO_PUBLIC_AI_PROVIDER selects the live vendor (default gemini). Gemini / NVIDIA / Perplexity keys are `EXPO_PUBLIC_*`; Claude / Grok keys are Edge Function secrets on `ai-generate`. Gemini key rotated Sep 1, 2026 (`.env.local` + EAS production env). Model from `EXPO_PUBLIC_GEMINI_MODEL` (pinned to `gemini-3.7-flash` in production). Never commit `.env.local`.
 - **Open decision (emci's, not technical):** Apple Developer account type — Individual vs Organization. Revisit before public submission.
 - Bundle ID `com.emgens.ato` (App ID) / `com.emgens.ato.signin` (Services ID) confirmed.
 - Apple client_secret JWT minted Aug 25, 2026, expires Feb 24, 2027 07:24 UTC. Regenerate around late Jan 2027. Not automated.
@@ -174,4 +177,4 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 - **Around refresh secrets (Wave 2):** Edge Function `refresh-around` is deployed. Needs `EDMTRAIN_CLIENT_KEY` + `AROUND_REFRESH_SECRET`; cron not scheduled until both exist. Phone never holds the Edmtrain key.
 
 ## Next 15 min
-Work through `docs/ATO_DEVICE_TESTS.md` in full on a real device with **binary 10** installed (it pulls OTA `cab5a13c-2ccd-4c00-a0fe-a9d22e797d25`). Every box's checklist, one sitting. Bring back anything that fails. Once that pass is clean, Stage 8 handoff #2: invite/referral gate (Auth + ME). Open items that are not the device pass: Gut Call regression, Live Talk failure, closing the `emci2` root-handle gap.
+Work through `docs/ATO_DEVICE_TESTS.md` in full on a real device with **binary 10** installed (it pulls OTA `b84f0aa6-a668-4d59-8374-ea9c96e95f63`). Every box's checklist, one sitting. Bring back anything that fails. Once that pass is clean, Stage 8 handoff #2: invite/referral gate (Auth + ME). Open items that are not the device pass: Gut Call regression, Live Talk failure, closing the `emci2` root-handle gap, Claude/Grok Supabase secrets if those providers will be used.

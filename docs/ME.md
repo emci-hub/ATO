@@ -18,7 +18,7 @@
 
 **Circle Explore is in.** Circle appears only after a QR scan / link paste connects two accounts. Category compare is **dual-opt-in** — per-friend (`category_share`) or the Close Friends pool (`close_friends_share`, on by default off). Both sides must opt in before either sees the other; `peer_category_pack` returns cached title+category summaries only, never Full Profile. Fully separate from Full Profile.
 
-**Binary 10 in TestFlight.** Latest JS OTA: group `cab5a13c-2ccd-4c00-a0fe-a9d22e797d25` (`76483a7`, More-sheet taps + locked Circle until a friend is scanned). Open items: device pass, then invite/referral; Gut Call regression; Live Talk failure; get all testers off binary 8 onto binary 10.
+**Binary 10 in TestFlight.** Latest JS OTA: group `b84f0aa6-a668-4d59-8374-ea9c96e95f63` (`6e07fbc`, unified AI provider layer + rotated Gemini key). Open items: device pass, then invite/referral; Gut Call regression; Live Talk failure; get all testers off binary 8 onto binary 10; Claude/Grok Supabase secrets if those providers will be used.
 
 ## App
 
@@ -47,7 +47,7 @@
 ## Live AI + model
 
 - Cursor: Grok 4.6 (current) — crisis/safety-critical work always routes to Claude Opus 5 (fixed lane) regardless of Home/Away
-- App's own router: `EXPO_PUBLIC_AI_PROVIDER` (default `gemini`). Gemini / NVIDIA / Perplexity are client-side; Claude / Grok via the `ai-generate` Edge Function. `local` is the deterministic fallback. Server-side rate-limited (20/day, 200/month per user). On-device override (5-tap Build line) is AsyncStorage, not synced.
+- App's own router: `EXPO_PUBLIC_AI_PROVIDER` (default `gemini`). Gemini / NVIDIA / Perplexity are client-side; Claude / Grok via the `ai-generate` Edge Function. `local` is the deterministic fallback. Server-side rate-limited (20/day, 200/month per user). On-device override (5-tap Build line) is AsyncStorage, not synced. Production OTA `b84f0aa6` includes this layer. Gemini key rotated Sep 1, 2026 (`.env.local` + EAS production env; never committed).
 
 ## Unreviewed copy — one list, waiting on emci (Aug 31, 2026)
 
