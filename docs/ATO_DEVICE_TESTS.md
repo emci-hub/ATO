@@ -2,7 +2,7 @@
 
 Compiled as each box lands. Same file in the repo at `docs/ATO_DEVICE_TESTS.md`. Run this whole list on a real device before TestFlight, not per box. Ordered so earlier items don't depend on later ones.
 
-**JS for this checklist is on production OTA** group `5999d5d4-06a2-46e9-bc7e-5ab1938a8711` (`34f45a5`, Explore as its own full screen; Sage tab clean chat), published Aug 31, 2026. 100% of the production channel — no staged rollout. **You must be on binary 10+** — binary 8 and earlier cannot receive OTA and will show the stale "Dev only." cold-start bug. Binary 10 is in TestFlight (build `1d0d1041`).
+**JS for this checklist is on production OTA** group `5999d5d4-06a2-46e9-bc7e-5ab1938a8711` (`34f45a5`, Explore is a real tab; Sage tab clean chat), published Aug 31, 2026. 100% of the production channel — no staged rollout. **You must be on binary 10+** — binary 8 and earlier cannot receive OTA and will show the stale "Dev only." cold-start bug. Binary 10 is in TestFlight (build `1d0d1041`).
 
 ---
 
@@ -36,16 +36,16 @@ Compiled as each box lands. Same file in the repo at `docs/ATO_DEVICE_TESTS.md`.
 - [ ] Confirm `/dev-lab` access is unchanged — still root + granted testers, still opens locally under `__DEV__`.
 - [ ] Note: PushTestCard and SentryTestCard remain on the You tab (`you-dev-tools.tsx`), not physically inside `/dev-lab`. Confirm both still work from there.
 
-## Box 7 — Explore into its own screen
+## Box 7 — Explore is a real tab
 
-- [ ] Open the Sage tab. Confirm it is **clean chat only** — 8-ball + the conversation, with nothing else stacked above the thread (no title card, no categories, no story, no observations, no "N of 16 settled", no Notes spend).
-- [ ] Confirm a small **"Explore ›"** button sits in the Sage header (top right, next to the title). It is a button/tap, **not** a nav tab.
-- [ ] Tap "Explore ›". Confirm it pushes a **full screen** (no tab bar), titled "Explore", with a Back button that returns to Sage.
-- [ ] On the Explore screen confirm the order top to bottom: title card, Categories (full detail fold), The Story, Notes insight spend, then the observation bubbles.
+- [ ] Confirm the bottom tab bar reads, in order: **Home / Sage / Explore / Around / Circle / You** (Circle only after a connection).
+- [ ] Open the Sage tab. Confirm it is **clean chat only** — 8-ball + the conversation, with nothing else stacked above the thread (no title card, no categories, no story, no observations, no "N of 16 settled", no Notes spend, **no "Explore ›" header button**).
+- [ ] Tap the **Explore** tab directly. Confirm it opens the Explore content in place (tab bar stays visible — it is not a pushed screen, there is no Back button).
+- [ ] On the Explore tab confirm the order top to bottom: "Explore" header with "N of 16 settled", title card, Categories (full detail fold), The Story, Notes insight spend, then the observation bubbles.
 - [ ] Confirm the observation bubbles render there, each with "Did this land?" yes/no and the "Noted." ack.
 - [ ] Confirm Explore observations are not on Home and not on the You tab.
 - [ ] In `/dev-lab` → Sage section, tap "Force regenerate Explore." Confirm it shows fresh observation text with its tagged axis inline.
-      **F5 check (known, deferred):** read the regenerated text against its tagged axis — does the prose actually match the axis name (e.g. does an `openness`-tagged entry read like openness, not like sleep/recovery)? This is not fixed yet (Box 14). Use this tool to gauge how bad it looks on the Explore screen.
+      **F5 check (known, deferred):** read the regenerated text against its tagged axis — does the prose actually match the axis name (e.g. does an `openness`-tagged entry read like openness, not like sleep/recovery)? This is not fixed yet (Box 14). Use this tool to gauge how bad it looks on the Explore tab.
 - [ ] Confirm a Talk message in Sage still behaves normally — reply quality/tone should be unchanged, since Talk still uses the narrower 5-check history, not the fuller Explore history.
 
 ## Box 8 — Home strip-down, two slots (deliberate override)
@@ -150,10 +150,10 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] On a thin/new account (none of Steadiness, Agency, Drive settled): open Dawn/Home generated Read. Confirm it still draws from knocks/facts/focus, not empty, and Do is still `After you {morning_cue}, …`.
 - [ ] On an account with Steadiness settled: confirm a generated Read may lean on that merge, still never names the category, and Do is unchanged.
 - [ ] Confirm a category-sourced Read still drops on topical-repeat / cut-after-crisis / two-cuts / cruel-cut / framework-echo the same as any other Read.
-- [ ] Open the Explore screen (Sage → "Explore ›"). Confirm a Categories summary (full detail) sits above The Story and the observations. Confirm a generated Explore line does not paraphrase that Categories card.
+- [ ] Open the Explore tab directly. Confirm a Categories summary (full detail) sits above The Story and the observations. Confirm a generated Explore line does not paraphrase that Categories card.
 - [ ] Confirm Explore never combines more than two categories, and never pairs all three of growth_mindset + locus_of_control + self_efficacy as raw axes.
 - [ ] On You → Categories, confirm Levity appears as a **bar** (not a map) once playfulness + a conflict axis have settled. Love / closeness remains the only conflict-adjacent map.
-- [ ] On the Explore screen, confirm The Story fold (collapsed) sits under Categories. Open it only when Gemini actually wrote one. Confirm: no generic fallback paragraph when the model is unreachable; the fold is simply missing. Confirm the prose never names a category. If told-vs-played tension exists, confirm it is hedged, not an accusation, not smoothed away.
+- [ ] On the Explore tab, confirm The Story fold (collapsed) sits under Categories. Open it only when Gemini actually wrote one. Confirm: no generic fallback paragraph when the model is unreachable; the fold is simply missing. Confirm the prose never names a category. If told-vs-played tension exists, confirm it is hedged, not an accusation, not smoothed away.
 - [ ] Flag every Story paragraph and every new Levity/Dawn/Explore line for emci before treating any of it as shippable.
 
 ## Box 23 — Shared friend-voice style checklist (all 5 surfaces)
@@ -197,9 +197,9 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 
 ## Box 27 — Nav bar is fixed (no customization)
 
-- [ ] Confirm the tab bar shows Home / Sage / Around / You, and Circle only after a connection.
-- [ ] Confirm there is **no** tab reorder control, **no** "More" tab, and **no** nav customization UI anywhere (You settings, Home, dev-lab). This feature does not exist by design — do not test for behavior that isn't built.
-- [ ] Confirm Home and Sage cannot be hidden/removed from the tab bar.
+- [ ] Confirm the tab bar shows Home / Sage / Explore / Around / You, and Circle only after a connection.
+- [ ] Confirm there is **no** tab reorder control, **no** "More" tab, and **no** nav customization UI anywhere (You settings, Home, dev-lab). This feature does not exist by design — the tab bar is a fixed `NativeTabs` list — do not test for behavior that isn't built.
+- [ ] Confirm Home and Sage are the first two tabs and cannot be hidden/removed from the tab bar.
 - [ ] Confirm the pixel nav companion stays fixed top-right on every tab and does not remount on tab switch.
 
 ---

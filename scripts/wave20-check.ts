@@ -182,7 +182,7 @@ assert.doesNotMatch(meSrc.slice(confirmStart, persistStart), /applyEwmaAnswer/);
 ok('confirm-upgrade still does not touch tracks or the number');
 
 const sage = read('src/app/(tabs)/sage.tsx');
-const exploreScreen = read('src/app/explore.tsx');
+const exploreScreen = read('src/app/(tabs)/explore.tsx');
 assert.match(exploreScreen, /settledAxisLabel/);
 assert.match(sage, /settledCount/);
 assert.match(sage, /divergingAxesFromTracks/);

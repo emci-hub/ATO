@@ -55,7 +55,7 @@ async function main() {
 
   assert.match(sage, /fetchTalkHistory/);
   assert.match(sage, /history: checksToHistory\(talk\.checks\)/);
-  const exploreScreen = read('src/app/explore.tsx');
+  const exploreScreen = read('src/app/(tabs)/explore.tsx');
   assert.match(exploreScreen, /fetchChecks\(/);
   assert.match(exploreScreen, /checksToHistory\(exploreChecks\)/);
   assert.match(checksLib, /export const TALK_RECENT_CHECKS = 5/);

@@ -30,6 +30,9 @@ export default function AppTabs() {
           <TabTrigger name="sage" href="/sage" asChild>
             <TabButton icon={<SageTabIcon />}>Sage</TabButton>
           </TabTrigger>
+          <TabTrigger name="explore" href="/explore" asChild>
+            <TabButton>Explore</TabButton>
+          </TabTrigger>
           <TabTrigger name="around" href="/around" asChild>
             <TabButton>Around</TabButton>
           </TabTrigger>

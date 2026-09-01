@@ -1,7 +1,5 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 
@@ -12,7 +10,7 @@ import { SageTitleCard } from '@/components/sage-title-card';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { checksToHistory, fetchChecks, type Check } from '@/lib/checks';
@@ -51,9 +49,8 @@ import { claimAiCall, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-s
 import type { CheckHistory } from '@/lib/voice/types';
 
 /**
- * Explore — a full-screen room for Categories, The Story, and the periodic
- * observations, pushed from a small entry button on the Sage tab. The Sage
- * chat stays clean (8-ball + conversation only).
+ * Explore — a real tab holding Categories (full detail), The Story, Notes
+ * insight spend, and the periodic observations. Sage stays clean chat.
  */
 export default function ExploreScreen() {
   const theme = useTheme();
@@ -112,27 +109,13 @@ export default function ExploreScreen() {
     };
   }, [userId, me?.timezone]);
 
-  function close() {
-    if (router.canGoBack()) router.back();
-    else router.replace('/');
-  }
-
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={[styles.safeArea, { backgroundColor: theme.background }]}>
         <ScrollView
           {...NO_PINCH_ZOOM}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled">
-          <Pressable
-            onPress={close}
-            hitSlop={12}
-            style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
-            <ThemedText type="smallBold" themeColor="textSecondary">
-              ‹ Back
-            </ThemedText>
-          </Pressable>
-
           <View style={styles.header}>
             <ThemedText type="subtitle">Explore</ThemedText>
             {me ? (
@@ -402,12 +385,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     gap: Spacing.three,
     paddingVertical: Spacing.three,
-    paddingBottom: Spacing.six,
-  },
-  backButton: {
-    alignSelf: 'flex-start',
-    paddingVertical: Spacing.one,
-    paddingRight: Spacing.three,
+    paddingBottom: BottomTabInset + Spacing.six,
   },
   header: {
     gap: Spacing.half,

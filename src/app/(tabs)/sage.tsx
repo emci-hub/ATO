@@ -1,5 +1,4 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import {
   Dimensions,
@@ -430,20 +429,6 @@ export default function SageScreen() {
                 {TALK_LEDE}
               </ThemedText>
             </View>
-            <Pressable
-              onPress={() => router.push('/explore')}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="Open Explore"
-              style={({ pressed }) => [
-                styles.exploreButton,
-                { borderColor: controlBorderColor(theme) },
-                pressed && styles.pressed,
-              ]}>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                Explore ›
-              </ThemedText>
-            </Pressable>
           </View>
 
         <View style={styles.chatColumn}>
@@ -741,13 +726,6 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     flex: 1,
-  },
-  exploreButton: {
-    borderRadius: Spacing.five,
-    borderWidth: 1,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.one,
-    marginTop: Spacing.half,
   },
   lede: {
     paddingTop: Spacing.half,

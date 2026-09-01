@@ -47,6 +47,11 @@ export default function AppTabs() {
         <Icon src={SAGE_MASK_ICON} />
       </NativeTabs.Trigger>
 
+      <NativeTabs.Trigger name="explore">
+        <Label>Explore</Label>
+        <Icon src={<VectorIcon family={MaterialCommunityIcons} name="compass-outline" />} />
+      </NativeTabs.Trigger>
+
       <NativeTabs.Trigger name="around">
         <Label>Around</Label>
         <Icon src={<VectorIcon family={MaterialCommunityIcons} name="map-marker-radius-outline" />} />

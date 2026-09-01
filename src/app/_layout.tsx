@@ -83,7 +83,6 @@ function RootNavigator() {
               <Stack.Screen name="questions" />
               <Stack.Screen name="intake-sweep" />
               <Stack.Screen name="chat" />
-              <Stack.Screen name="explore" />
               <Stack.Screen name="dev-lab" />
             </Stack.Protected>
 
