@@ -2,7 +2,7 @@
 
 Compiled as each box lands. Same file in the repo at `docs/ATO_DEVICE_TESTS.md`. Run this whole list on a real device before TestFlight, not per box. Ordered so earlier items don't depend on later ones.
 
-**JS for this checklist is on production OTA** group `9855305a-2d09-4184-8efb-bb1e8b741490` (`96f61b8`, friend-voice style checklist across Dawn Read, Explore, Title, Category, Story), published Aug 31, 2026. 100% of the production channel — no staged rollout. Binary 10+ picks it up on launch. Devices on binary 8 or earlier cannot.
+**JS for this checklist is on production OTA** group `9855305a-2d09-4184-8efb-bb1e8b741490` (`96f61b8`, friend-voice style checklist across Dawn Read, Explore, Title, Category, Story), published Aug 31, 2026. 100% of the production channel — no staged rollout. **You must be on binary 10+** — binary 8 and earlier cannot receive OTA and will show the stale "Dev only." cold-start bug. Binary 10 is in TestFlight (build `1d0d1041`).
 
 ---
 
@@ -153,6 +153,52 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] Confirm The Story fold (collapsed) sits under the pinned Categories card. Open it only when Gemini actually wrote one. Confirm: no generic fallback paragraph when the model is unreachable; the fold is simply missing. Confirm the prose never names a category. If told-vs-played tension exists, confirm it is hedged, not an accusation, not smoothed away.
 - [ ] Flag every Story paragraph and every new Levity/Dawn/Explore line for emci before treating any of it as shippable.
 
+## Box 23 — Shared friend-voice style checklist (all 5 surfaces)
+
+- [ ] Open a generated Dawn Read (Home/dawn), an Explore observation, the Sage Title + its Category lines, and The Story. For each, confirm the copy reads like a friend who noticed something: never "you are", never self-description ("this reflects", "a gap worth", "the data shows"), never "always" (prefers lately/this week/for now).
+- [ ] Confirm a title or category summary that names more than one quality joins them with but/yet/and — never a plain comma list. Example to match: "Grounded and self-driven, but happiest doing it alone", not "Steady, driven, and independent".
+- [ ] Confirm multi-trait sentences read as one whole person (Rule 6) and single-idea sentences stay one idea (Rule 3).
+- [ ] Confirm the checklist text never appears in rendered output (it's prompt-only scaffolding).
+
+## Box 24 — Circle Explore handshake (consent-gated comparison)
+
+- [ ] With two test accounts, scan a QR / paste a link to connect. Confirm Circle appears for **both** accounts and is not present before the connection.
+- [ ] On account A, tap "Share categories with them" (per-friend path). Confirm the copy flips to "Waiting for them to opt in too." Confirm **no** comparison is visible yet.
+- [ ] On account B, confirm it shows the opt-in for A but no cards until B also opts in.
+- [ ] Opt in on B. Confirm both now see "You both opted in. Tap Compare to look side by side." and "Compare categories" works.
+- [ ] Confirm compare shows each ready category's line for You vs Them side by side — and **never** Full Profile axes, trait numbers, or anything not in the cached `peer_category_pack` (title + category lines only).
+- [ ] Close Friends pool: on account A, enable Close Friends (`close_friends_share`). Confirm the per-friend toggle becomes "Visible in Close Friends — no per-person toggle in this group" once B is also in the pool.
+- [ ] Unfriend from one side. Confirm Circle disappears for both and the connection row is gone.
+- [ ] Spot check Supabase: `category_share` / `close_friends_share` rows flip only with consent; `peer_category_pack` returns cached summaries only.
+
+## Box 25 — Thin-profile behavior (live 6/15 rule)
+
+- [ ] **Actual live rule:** thin is `settledCount / TRAIT_AXES.length < 6/15`. With 16 axes today that means **fewer than 7 effective settled report-track axes = thin** (6/16 = 0.375 < 0.4; 7/16 = 0.4375 ≥ 0.4). Stability-weighted, report-track only — gut-call never counts.
+- [ ] On a brand-new account (0 settled): open Sage. Confirm the "N of 16 settled" line reads 0/16 and coaching copy is honest/thin (does not invent specifics, does not nag).
+- [ ] Confirm a thin account's Talk replies coach more generally and do not invent specifics.
+- [ ] Fill exactly one axis with 3+ self-reports so it settles. Confirm Sage still counts it thin.
+- [ ] Settle 7 axes. Confirm the account is **no longer** thin: Sage coaching deepens, Full Profile shows `7 of 16 settled`, and The Story fold is allowed to generate (if Gemini is reachable).
+- [ ] Confirm a gut-call (`self_game`) answer on an axis does **not** count toward settled (report-track only) — Sage's count stays put.
+- [ ] Confirm The Story fold is absent on a thin account even when Gemini is reachable (thin gate holds).
+
+## Box 26 — Tokens, Full Profile depth, trait_history timeline
+
+- [ ] Log a Check. Confirm Notes balance went up by 3 (check-in earn), and the `token_events` ledger shows a +3 row.
+- [ ] Play a game round (Gut call). Confirm +5 and a ledger row.
+- [ ] Spend 8 Notes on "A closer look from Sage." Confirm a new insight renders, balance drops 8, ledger shows -8, and no trait value changed.
+- [ ] With 12+ Notes, spend on Full Profile Depth for one axis. Confirm a real ranking pick or gut-call fires for that axis, the 48h per-axis cooldown blocks a second depth spend on the same axis, and balance drops 12.
+- [ ] Confirm you can never buy Notes anywhere in the app (no purchase path).
+- [ ] Open You → Full Profile. Confirm every currently-defined axis shows, null axes say "not answered yet", and each filled axis has a 2-letter code and an expandable "How this has shifted" timeline from `trait_history`.
+- [ ] Tap a filled axis to edit. Confirm 8s undo works (no persist/history if undone) and re-tapping the same axis immediately after loses undo.
+- [ ] Confirm Full Profile stays fully viewable at 0 Notes — spend only gates new depth/insight, never viewing.
+
+## Box 27 — Nav bar is fixed (no customization)
+
+- [ ] Confirm the tab bar shows Home / Sage / Around / You, and Circle only after a connection.
+- [ ] Confirm there is **no** tab reorder control, **no** "More" tab, and **no** nav customization UI anywhere (You settings, Home, dev-lab). This feature does not exist by design — do not test for behavior that isn't built.
+- [ ] Confirm Home and Sage cannot be hidden/removed from the tab bar.
+- [ ] Confirm the pixel nav companion stays fixed top-right on every tab and does not remount on tab switch.
+
 ---
 
-**All 15 boxes complete (0, 1, 2, 3, 4, 5, 6, 6.5, 7, 8, 9, 10, 11, 12, 12.5, 13, 13.1, 14) plus Wave 21/22 checks above.** This checklist is now the full end-to-end device pass — work through every section above in one sitting before TestFlight submission, not per-box.
+**All boxes complete (0–14 plus 6.5, 12.5, 13.1, 21–27).** This checklist is now the full end-to-end device pass — work through every section above in one sitting on a **binary 10+** device (it pulls OTA `9855305a`), not per box.
