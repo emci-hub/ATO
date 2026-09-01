@@ -18,7 +18,7 @@
 
 **Circle Explore is in.** Circle appears only after a QR scan / link paste connects two accounts. Category compare is **dual-opt-in** — per-friend (`category_share`) or the Close Friends pool (`close_friends_share`, on by default off). Both sides must opt in before either sees the other; `peer_category_pack` returns cached title+category summaries only, never Full Profile. Fully separate from Full Profile.
 
-**Binary 10 in TestFlight.** Latest JS OTA: group `9855305a-2d09-4184-8efb-bb1e8b741490` (`96f61b8`, friend-voice style checklist). Open items: device pass, then invite/referral; Gut Call regression; Live Talk failure; get all testers off binary 8 onto binary 10.
+**Binary 10 in TestFlight.** Latest JS OTA: group `5999d5d4-06a2-46e9-bc7e-5ab1938a8711` (`34f45a5`, Explore as its own full screen; Sage tab clean chat). Open items: device pass, then invite/referral; Gut Call regression; Live Talk failure; get all testers off binary 8 onto binary 10.
 
 ## App
 
@@ -61,4 +61,4 @@ Every flag below is `false` in code; nothing here is shippable without emci's di
 6. **Dawn category grounding** — `DAWN_CATEGORY_COPY_REVIEWED = false` (`dawn-category.ts`): prompt-only meaning lines for Steadiness / Agency / Drive.
 7. **Intake sweep copy** — `INTAKE_SWEEP_COPY_REVIEWED = false` (`questions/local.ts`): optional skippable IQ sweep (one item per axis) after the 9 chips.
 
-(The `Dev only.` "copy" was not user-facing text to review — it was a stale binary 8 embedded-bundle bug, fixed in code since Aug 28 and available via binary 10 + OTA `9855305a`.)
+(The `Dev only.` "copy" was not user-facing text to review — it was a stale binary 8 embedded-bundle bug, fixed in code since Aug 28 and available via binary 10 + OTA `5999d5d4`.)
