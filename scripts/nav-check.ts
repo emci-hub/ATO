@@ -94,13 +94,24 @@ assert.match(overlay, /Sortable\.Flex/);
 assert.match(overlay, /customHandle/);
 assert.match(overlay, /onDragEnd/);
 assert.match(overlay, /commitOrder/);
+assert.match(overlay, /MAIN_BAR_CAP/);
+assert.match(overlay, /draftMain\.length >= MAIN_BAR_CAP/);
+assert.match(overlay, /SafeAreaProvider/);
+assert.match(overlay, /The bar is full/);
 assert.doesNotMatch(overlay, /main\.push|more\.push/);
-ok('edit overlay drags via Sortable.Flex and commits atomically');
+ok('edit overlay drags via Sortable.Flex, caps the bar at 2, uses SafeAreaProvider, commits atomically');
 
 const sheet = read('src/components/nav-more-sheet.tsx');
 assert.match(sheet, /moreIds/);
 assert.match(sheet, /router\.push/);
-ok('More sheet lists more[] items and navigates on tap');
+assert.match(sheet, /SafeAreaProvider/);
+ok('More sheet lists more[] items, navigates on tap, and uses SafeAreaProvider');
+
+// The bar overlays the screen (like the native tab bar did), so screens keep
+// their existing BottomTabInset padding and no per-screen change was needed.
+assert.match(tabs, /position: 'absolute'/);
+assert.match(tabs, /bottom: 0/);
+ok('custom bar is an absolute bottom overlay, matching the native tab bar layout contract');
 
 const layout = read('src/app/(tabs)/_layout.tsx');
 assert.match(layout, /NavOrderProvider/);

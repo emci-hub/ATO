@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Sortable from 'react-native-sortables';
 import { useState } from 'react';
 
@@ -19,6 +19,8 @@ import { controlBorderColor } from '@/lib/theme/chrome';
  * Cross-list moves use explicit affordances ("move to More" / "move to bar")
  * rather than a cross-list drag, keeping the interaction robust.
  */
+const MAIN_BAR_CAP = 2;
+
 export function NavEditOverlay() {
   const theme = useTheme();
   const { order, cancelEditing, commitOrder } = useNavOrder();
@@ -26,6 +28,7 @@ export function NavEditOverlay() {
   const [homeFirst, setHomeFirst] = useState(order.homeFirst);
   const [draftMain, setDraftMain] = useState<ReorderableTabId[]>(order.main);
   const [draftMore, setDraftMore] = useState<ReorderableTabId[]>(order.more);
+  const [barFullNote, setBarFullNote] = useState(false);
 
   function moveToMore(id: ReorderableTabId) {
     setDraftMain((main) => main.filter((item) => item !== id));
@@ -33,8 +36,18 @@ export function NavEditOverlay() {
   }
 
   function moveToBar(id: ReorderableTabId) {
-    setDraftMore((more) => more.filter((item) => item !== id));
-    setDraftMain((main) => [...main, id]);
+    setDraftMore((more) => {
+      if (!more.includes(id)) return more;
+      setDraftMain((main) => {
+        if (main.length >= MAIN_BAR_CAP) {
+          setBarFullNote(true);
+          return main;
+        }
+        setBarFullNote(false);
+        return [...main, id];
+      });
+      return more.filter((item) => item !== id);
+    });
   }
 
   function done() {
@@ -43,7 +56,8 @@ export function NavEditOverlay() {
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={cancelEditing}>
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <SafeAreaProvider style={styles.provider}>
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.header}>
           <ThemedText type="subtitle">Edit navigation</ThemedText>
           <Pressable hitSlop={8} onPress={done}>
@@ -72,8 +86,14 @@ export function NavEditOverlay() {
 
           <ThemedText type="smallBold">On the bar</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            Drag the grip to reorder. Tap “More” to move an item off the bar.
+            2 slots — Home and Sage always stay, plus two more. Drag to reorder. Tap “More” to move one off.
           </ThemedText>
+
+          {barFullNote ? (
+            <ThemedText type="small" themeColor="textSecondary" style={styles.note}>
+              The bar is full — move something off first.
+            </ThemedText>
+          ) : null}
 
           {draftMain.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary">
@@ -133,8 +153,9 @@ export function NavEditOverlay() {
                     accessibilityRole="button"
                     accessibilityLabel={`Move ${NAV_TABS[id].label} to bar`}
                     onPress={() => moveToBar(id)}
+                    disabled={draftMain.length >= MAIN_BAR_CAP}
                     hitSlop={8}
-                    style={({ pressed }) => pressed && styles.pressed}>
+                    style={({ pressed }) => [pressed && styles.pressed, draftMain.length >= MAIN_BAR_CAP && styles.disabled]}>
                     <ThemedText type="small" themeColor="textSecondary">
                       Bar
                     </ThemedText>
@@ -145,6 +166,7 @@ export function NavEditOverlay() {
           )}
         </ScrollView>
       </SafeAreaView>
+      </SafeAreaProvider>
     </Modal>
   );
 }
@@ -158,6 +180,9 @@ function PinnedBadge({ label }: { label: string }) {
 }
 
 const styles = StyleSheet.create({
+  provider: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
@@ -171,6 +196,9 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     paddingHorizontal: Spacing.four,
     paddingBottom: Spacing.six,
+  },
+  note: {
+    color: '#E5484D',
   },
   pinnedRow: {
     flexDirection: 'row',
@@ -211,5 +239,8 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
+  },
+  disabled: {
+    opacity: 0.4,
   },
 });

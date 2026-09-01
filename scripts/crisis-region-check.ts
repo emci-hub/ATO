@@ -138,7 +138,7 @@ assert.doesNotMatch(
 );
 ok('Sage Support tap opens the same card; keyword interrupt stays a separate path');
 
-assert.match(tabs, /name: 'sage'/);
+assert.match(tabs, /name="sage"/);
 assert.doesNotMatch(tabs, /homeFirst: false[\s\S]*more: \['sage'\]/);
 ok('Sage tab trigger is always present (not hideable)');
 

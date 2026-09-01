@@ -134,17 +134,23 @@ function NavTabButton({
   );
 }
 
-const styles = StyleSheet.create({
+  const styles = StyleSheet.create({
   slot: {
     flex: 1,
   },
   bar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
     paddingHorizontal: Spacing.two,
     paddingTop: Spacing.one,
     borderTopWidth: StyleSheet.hairlineWidth,
+    zIndex: 20,
+    elevation: 20,
   },
   tabButton: {
     flex: 1,
