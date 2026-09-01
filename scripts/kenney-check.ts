@@ -66,6 +66,24 @@ assert.equal(nearestVariant(SHAPE_MANIFEST, '#da5463'), 'red');
 assert.equal(nearestVariant(SHAPE_MANIFEST, '#f8c13a'), 'yellow');
 ok('nearestVariant matches the 6 pack colors from a hex palette');
 
+// show_up must actually drive the pixel color: the palette handed to the
+// variant matcher is hex (never hsl, which the hex parser would read as NaN
+// and collapse every account to the first variant = blue).
+const { resolveFacePalette, accentFromShowUp } = require('../src/lib/color') as typeof import('../src/lib/color');
+const hexRe = /^#[0-9a-f]{6}$/i;
+for (const phrase of ['building something', 'running hot', 'finishing my resume', 'quiet week']) {
+  assert.match(resolveFacePalette(null, phrase), hexRe);
+  assert.match(accentFromShowUp(phrase).light, hexRe);
+  assert.match(accentFromShowUp(phrase).dark, hexRe);
+}
+const showUpVariants = new Set(
+  ['building something', 'running hot', 'finishing my resume'].map((phrase) =>
+    nearestVariant(SHAPE_MANIFEST, resolveFacePalette(null, phrase)),
+  ),
+);
+assert.ok(showUpVariants.size >= 3, 'distinct show_up answers must land on distinct color variants');
+ok('show_up maps to a real hex palette and distinct pixel colors, not a blue default');
+
 // Legacy migrations.
 const legacyShape = normalizeRecipe({ source: 'shape', base: 'rhombus', top: 'tired', hair: null, palette: null });
 assert.equal(legacyShape.source, 'shape');
