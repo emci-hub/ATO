@@ -103,6 +103,23 @@ assert.match(tabs, /hidden-\$\{id\}/);
 assert.doesNotMatch(tabs, /id !== 'circle'/);
 ok('tab bar is the custom JS bar driven by NavOrder, with More + edit mode');
 
+// Hidden TabTriggers for tabs parked in More MUST render inside <TabList> —
+// expo-router/ui's Tabs only registers TabTriggers that are descendants of
+// TabList as real routes, so a trigger placed outside it is silently never
+// wired up and taps on that tab from the More sheet become a no-op.
+const tabListOpen = tabs.indexOf('<TabList');
+const tabListClose = tabs.indexOf('</TabList>');
+const hiddenTriggerIdx = tabs.indexOf('hidden-${id}');
+assert.ok(
+  tabListOpen !== -1 && tabListClose !== -1 && hiddenTriggerIdx !== -1,
+  'expected <TabList>, </TabList>, and a hidden-${id} trigger to all be present'
+);
+assert.ok(
+  hiddenTriggerIdx > tabListOpen && hiddenTriggerIdx < tabListClose,
+  'hidden TabTriggers for More-parked tabs must render inside <TabList>, or expo-router/ui will not register them as routes and More-sheet taps will silently no-op (regression of the You-tab bug)'
+);
+ok('hidden TabTriggers for More-parked tabs stay inside TabList, so they remain registered routes');
+
 const overlay = read('src/components/nav-edit-overlay.tsx');
 assert.match(overlay, /Sortable\.Flex/);
 assert.match(overlay, /customHandle/);

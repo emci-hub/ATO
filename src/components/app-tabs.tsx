@@ -93,7 +93,13 @@ export default function AppTabs() {
           </Pressable>
 
           {NAV_TAB_IDS.filter((id) => !mainIds.includes(id) && isTabUnlocked(id, unlockCtx)).map((id) => (
-            <TabTrigger key={`hidden-${id}`} name={id} href={NAV_TABS[id].href} style={styles.hidden} />
+            <TabTrigger
+              key={`hidden-${id}`}
+              name={id}
+              href={NAV_TABS[id].href}
+              style={styles.hidden}
+              accessible={false}
+            />
           ))}
         </TabList>
       </Tabs>
