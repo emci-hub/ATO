@@ -1,6 +1,11 @@
 # PROJECT_CONTEXT.md
 
-Pointer only. Live status lives in the four tracked docs — keep them in sync, commit together, and `git push` immediately.
+## What ATO is
+A self-based alternative to Costar-style astrology apps. Instead of generic daily content, it uses a multi-axis personality/behavior framework to generate accurate, personalized guidance. Goal: help users understand themselves and how they interact with others (e.g. why an extrovert might overwhelm an introvert), and nudge them toward growth and new experiences.
+
+**Confirmed 16 axes** (`TRAIT_AXES` in `src/lib/traits.ts:15`): openness, conscientiousness, extraversion, agreeableness, steadiness, attachment_anxiety, attachment_avoidance, conflict_assertiveness, conflict_cooperativeness, autonomy, competence, relatedness, growth_mindset, locus_of_control, self_efficacy, playfulness.
+
+Pointer only below this. Live status lives in the four tracked docs — keep them in sync, commit together, and `git push` immediately.
 
 | File | Role |
 |---|---|
