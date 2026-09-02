@@ -250,6 +250,16 @@ assert.match(skipSql, /skip_question_item/);
 assert.match(skipSql, /skip_rest_question_pack/);
 ok('schema has packs/items, a separate questions regen claim, and skip RPCs');
 
+// wave21 must drop every legacy 15-axis check so the 16-axis
+// `question_items_axis_known` (incl. playfulness) is the only authority.
+const playfulness = read('supabase/migrations/wave21_playfulness_categories.sql');
+assert.match(playfulness, /drop constraint %I/);
+assert.match(playfulness, /question_items_axis_known check \(axis in \(/);
+assert.match(playfulness, /'playfulness'/);
+const wave27 = read('supabase/migrations/wave27_drop_stale_question_items_axis_check.sql');
+assert.match(wave27, /drop constraint if exists question_items_axis_check/);
+ok('no legacy 15-axis question_items check survives; wave27 drops any stale copy');
+
 const home = read('src/app/(tabs)/index.tsx');
 const you = read('src/app/(tabs)/you.tsx');
 const sage = read('src/app/(tabs)/sage.tsx');
