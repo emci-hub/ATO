@@ -33,6 +33,7 @@ export const DEFAULT_MODELS = {
   perplexity: 'sonar',
   claude: 'claude-sonnet-4-5',
   grok: 'grok-3-mini',
+  deepseek: 'deepseek-v4-flash',
 } as const;
 
 /**

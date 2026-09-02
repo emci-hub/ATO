@@ -1,6 +1,6 @@
 /**
- * ai-generate — Claude and Grok only. Keys stay in Edge Function secrets
- * (ANTHROPIC_API_KEY, XAI_API_KEY), never bundled in the client.
+ * ai-generate — Claude, Grok, and DeepSeek. Keys stay in Edge Function secrets
+ * (ANTHROPIC_API_KEY, XAI_API_KEY, DEEPSEEK_API_KEY), never bundled in the client.
  *
  * JWT required. Body: { provider, prompt, temperature, maxOutputTokens, responseFormat }.
  * Returns { text } — the same raw string the client parsers already expect.
@@ -100,6 +100,44 @@ async function completeGrok(input: {
   return text;
 }
 
+async function completeDeepseek(input: {
+  prompt: string;
+  temperature: number;
+  maxOutputTokens: number;
+  responseFormat: 'json' | 'text';
+}): Promise<string> {
+  const apiKey = Deno.env.get('DEEPSEEK_API_KEY') ?? '';
+  if (!apiKey) throw new Error('deepseek_key_missing');
+  const model = Deno.env.get('DEEPSEEK_MODEL') || 'deepseek-v4-flash';
+
+  const body: Record<string, unknown> = {
+    model,
+    messages: [{ role: 'user', content: input.prompt }],
+    temperature: input.temperature,
+    max_tokens: input.maxOutputTokens,
+    stream: false,
+  };
+  if (input.responseFormat === 'json') {
+    body.response_format = { type: 'json_object' };
+  }
+
+  const res = await fetch('https://api.deepseek.com/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => '');
+    throw new Error(`DeepSeek ${res.status}: ${errBody.slice(0, 300)}`);
+  }
+  const text = extractOpenAiText(await res.json());
+  if (!text.trim()) throw new Error('DeepSeek response contained no text');
+  return text;
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
@@ -121,7 +159,7 @@ Deno.serve(async (request) => {
   }
 
   const provider = payload.provider;
-  if (provider !== 'claude' && provider !== 'grok') {
+  if (provider !== 'claude' && provider !== 'grok' && provider !== 'deepseek') {
     return json({ error: 'unsupported_provider' }, 400);
   }
   const prompt = typeof payload.prompt === 'string' ? payload.prompt : '';
@@ -136,7 +174,9 @@ Deno.serve(async (request) => {
     const text =
       provider === 'claude'
         ? await completeClaude({ prompt, temperature, maxOutputTokens })
-        : await completeGrok({ prompt, temperature, maxOutputTokens, responseFormat });
+        : provider === 'grok'
+          ? await completeGrok({ prompt, temperature, maxOutputTokens, responseFormat })
+          : await completeDeepseek({ prompt, temperature, maxOutputTokens, responseFormat });
     return json({ text });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'generate_failed';

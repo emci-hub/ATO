@@ -69,10 +69,14 @@ ok('shared generateText dispatches Gemini / NVIDIA / Perplexity / Edge');
 const edge = read('supabase/functions/ai-generate/index.ts');
 assert.match(edge, /ANTHROPIC_API_KEY/);
 assert.match(edge, /XAI_API_KEY/);
+assert.match(edge, /DEEPSEEK_API_KEY/);
 assert.doesNotMatch(edge, /process\.env\.EXPO_PUBLIC_/);
-assert.match(edge, /provider !== 'claude' && provider !== 'grok'/);
+assert.match(edge, /provider !== 'claude' && provider !== 'grok' && provider !== 'deepseek'/);
 assert.match(edge, /api\.anthropic\.com\/v1\/messages/);
 assert.match(edge, /api\.x\.ai\/v1\/chat\/completions/);
+assert.match(edge, /api\.deepseek\.com\/chat\/completions/);
+assert.equal(PROVIDER_LIMITS.deepseek.rpm, null);
+assert.ok(AI_PROVIDER_IDS.includes('deepseek'));
 ok('Edge Function holds Claude and Grok keys server-side');
 
 const srcFiles = walk(resolve(root, 'src'));

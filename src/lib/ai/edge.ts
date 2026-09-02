@@ -2,18 +2,18 @@ import type { GenerateRequest } from './types';
 import { AiProviderError } from './http';
 import type { RemoteAiProviderId } from './types';
 
-const EDGE_PROVIDERS = new Set<RemoteAiProviderId>(['claude', 'grok']);
+const EDGE_PROVIDERS = new Set<RemoteAiProviderId>(['claude', 'grok', 'deepseek']);
 
-export function isEdgeProvider(id: string): id is 'claude' | 'grok' {
+export function isEdgeProvider(id: string): id is 'claude' | 'grok' | 'deepseek' {
   return EDGE_PROVIDERS.has(id as RemoteAiProviderId);
 }
 
 /**
- * Claude and Grok keys stay on the server. Dynamic import so Node unit checks
- * that never call this path do not load the Supabase client.
+ * Claude, Grok, and DeepSeek keys stay on the server. Dynamic import so Node
+ * unit checks that never call this path do not load the Supabase client.
  */
 export async function completeViaEdge(
-  provider: 'claude' | 'grok',
+  provider: 'claude' | 'grok' | 'deepseek',
   request: GenerateRequest,
 ): Promise<string> {
   const { supabase } = await import('@/lib/supabase');

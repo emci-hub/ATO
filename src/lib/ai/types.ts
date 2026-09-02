@@ -10,6 +10,7 @@ export const AI_PROVIDER_IDS = [
   'perplexity',
   'claude',
   'grok',
+  'deepseek',
   'local',
 ] as const;
 
@@ -21,6 +22,7 @@ export const REMOTE_AI_PROVIDER_IDS = [
   'perplexity',
   'claude',
   'grok',
+  'deepseek',
 ] as const;
 
 export type RemoteAiProviderId = (typeof REMOTE_AI_PROVIDER_IDS)[number];

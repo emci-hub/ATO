@@ -12,6 +12,7 @@ function emptyCounts(): ProviderCounts {
     perplexity: { minute: 0, day: 0 },
     claude: { minute: 0, day: 0 },
     grok: { minute: 0, day: 0 },
+    deepseek: { minute: 0, day: 0 },
   };
 }
 

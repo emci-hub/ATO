@@ -43,6 +43,12 @@ export const PROVIDER_LIMITS: Record<AiProviderId, ProviderLimit> = {
     rpd: null,
     note: 'No free tier. Paid per-token. Call count is a rough spend-risk proxy only.',
   },
+  deepseek: {
+    label: 'DeepSeek',
+    rpm: null,
+    rpd: null,
+    note: 'No free tier. Paid per-token. Call count is a rough spend-risk proxy only.',
+  },
   local: {
     label: 'Local (deterministic)',
     rpm: null,
