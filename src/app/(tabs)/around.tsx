@@ -64,7 +64,8 @@ export default function AroundScreen() {
           const night = await fetchNight(show.id);
           return [show.id, night] as const;
         } catch {
-          return [show.id, { going: false, colors: [], faces: [] }] as const;
+          const empty: NightSnapshot = { going: false, colors: [], faces: [] };
+          return [show.id, empty] as const;
         }
       }),
     ).then((rows) => {

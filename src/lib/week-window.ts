@@ -33,7 +33,8 @@ export function ymdInWindow(ymd: string, window: WeekWindow): boolean {
 }
 
 export interface WeekCheck {
-  created_at: string;
+  /** Optional so BadgeCheck / RevealCheck rows qualify; logged_on is preferred. */
+  created_at?: string;
   /** Calendar date the Check is for. Preferred over created_at. */
   logged_on?: string | null;
   read_text?: string | null;
@@ -42,6 +43,7 @@ export interface WeekCheck {
 
 function checkYmd(check: WeekCheck, timeZone: string): string {
   if (check.logged_on) return check.logged_on;
+  if (!check.created_at) return '';
   return localYmd(new Date(check.created_at), timeZone);
 }
 

@@ -227,7 +227,7 @@ const answeredPack = {
       id: 'old-a',
       packId: 'yesterday',
       sortIndex: 0,
-      axis: 'openness',
+      axis: 'openness' as const,
       prompt: 'One.',
       options: [
         { text: 'A', value: 0.8 },

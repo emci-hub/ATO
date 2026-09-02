@@ -74,13 +74,13 @@ assert.deepEqual(
 ok('one Check per day: logging day 9 does not open a second Check that day');
 
 assert.equal(
-  canLogDay({
+  (canLogDay({
     epochYmd: epoch,
     todayYmd: today,
     day: 11,
     loggedOnYmd: '2026-08-27',
     loggedDays: [11],
-  }).reason,
+  }) as { reason?: string }).reason,
   'taken',
 );
 ok('already-logged journey day cannot take a second Check');

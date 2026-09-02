@@ -349,13 +349,17 @@ assert.match(talkPrompt, /I slept badly/);
 assert.doesNotMatch(talkPrompt, /Today's card:\n {2}read:/);
 ok('Talk prompt answers the typed line first; Home card is demoted; thread turns are included');
 
-let capturedTalk: { message?: string; recentTurns?: Array<{ role: string; text: string }>; todayCard?: unknown } | null = null;
+// Holder object: TS narrows a `let x: T | null = null` to `null` for the rest
+// of the scope when the only assignment happens inside a closure.
+const captured: {
+  talk: { message?: string; recentTurns?: { role: string; text: string }[]; todayCard?: unknown } | null;
+} = { talk: null };
 const captureTalk: VoiceProvider = {
   id: 'local',
   label: 'capture-talk',
   generate: async () => ({ read: 'x', do: 'y' }),
   generateTalk: async (input) => {
-    capturedTalk = {
+    captured.talk = {
       message: input.message,
       recentTurns: input.recentTurns,
       todayCard: input.todayCard,
@@ -382,9 +386,9 @@ const flowersTalk = await routeTalkReply(
   { config: localConfig, providers: { gemini: captureTalk, local: captureTalk }, ...dev },
 );
 assert.equal(flowersTalk.kind, 'reply');
-assert.equal(capturedTalk?.message, 'Should my gf get flowers today or later this week?');
-assert.equal(capturedTalk?.recentTurns?.length, 2);
-assert.equal(capturedTalk?.recentTurns?.[0]?.text, 'Yesterday was noisy.');
+assert.equal(captured.talk?.message, 'Should my gf get flowers today or later this week?');
+assert.equal(captured.talk?.recentTurns?.length, 2);
+assert.equal(captured.talk?.recentTurns?.[0]?.text, 'Yesterday was noisy.');
 assert.match(flowersTalk.reply ?? '', /flower|today|later|wait/i);
 assert.doesNotMatch(flowersTalk.reply ?? '', /sticky-?note|protect the baseline/i);
 ok('Talk router forwards the typed line plus prior turns; local reply does not mirror the Home card');

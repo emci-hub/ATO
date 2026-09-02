@@ -124,6 +124,7 @@ export type MeInsert = Omit<
   Me,
   | 'id'
   | 'ai_consent'
+  | 'voice_preset'
   | 'recipe'
   | 'facts'
   | 'milestones_celebrated'

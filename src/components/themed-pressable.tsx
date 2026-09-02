@@ -31,7 +31,7 @@ export function ThemedPressable({
         const lift = !reduceMotion && theme.liftOnHover && hovered && !pressed ? -2 : 0;
         const scale = pressed && !reduceMotion ? theme.pressScale : 1;
         const extra = typeof style === 'function' ? style(state) : style;
-        const focusRing = Platform.select<ViewStyle>({
+        const focusRing = Platform.select<ViewStyle | undefined>({
           web: focused
             ? {
                 outlineStyle: 'solid',

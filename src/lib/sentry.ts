@@ -25,7 +25,7 @@ export async function sendFloorTestError(): Promise<string> {
     throw new Error('Sentry DSN is not set (EXPO_PUBLIC_SENTRY_DSN)');
   }
   const eventId = Sentry.captureException(new Error(FLOOR_TEST_ERROR_MESSAGE));
-  await Sentry.flush(8000);
+  await Sentry.flush();
   if (!eventId) {
     throw new Error('Sentry did not assign an event id');
   }

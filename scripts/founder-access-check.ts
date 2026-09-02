@@ -92,7 +92,7 @@ async function main() {
   const stamp = Date.now();
   const email = `ato-access-check-${stamp}@example.com`;
   const inserted = await supabase.from('access_requests').insert({ email });
-  assert.equal(inserted.error, null, inserted.error?.message);
+  assert.equal(inserted.error, null, inserted.error?.message ?? 'insert failed');
   ok('anon can insert an access request', { email });
 
   const dup = await supabase.from('access_requests').insert({ email });
@@ -100,15 +100,16 @@ async function main() {
   ok('duplicate request email is rejected');
 
   const listed = await supabase.from('access_requests').select('id, email');
-  assert.equal(listed.data?.length ?? 0, 0, 'anon must not read access_requests');
+  assert.equal((listed.data as unknown[] | null)?.length ?? 0, 0, 'anon must not read access_requests');
   ok('anon cannot read access_requests');
 
   const updated = await supabase
     .from('access_requests')
     .update({ status: 'approved' })
     .eq('email', email);
+  const updatedRows: unknown = updated.data;
   assert.ok(
-    (updated.data == null || (Array.isArray(updated.data) && updated.data.length === 0)) &&
+    (updatedRows == null || (Array.isArray(updatedRows) && updatedRows.length === 0)) &&
       (updated.error || updated.count === 0 || updated.count == null),
   );
   const sneak = await supabase.rpc('list_pending_access_requests');
@@ -119,7 +120,7 @@ async function main() {
     p_code: env.ATO_FOUNDER_CHECK_CODE ?? 'NOT-A-REAL-CODE',
   });
   if (env.ATO_FOUNDER_CHECK_CODE) {
-    assert.equal(founderPeek.error, null, founderPeek.error?.message);
+    assert.equal(founderPeek.error, null, founderPeek.error?.message ?? 'founder peek failed');
     ok('founder check code is usable (no cap)');
   } else {
     assert.ok(founderPeek.error);

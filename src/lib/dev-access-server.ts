@@ -49,7 +49,7 @@ export async function listDevAccessGrants(handle: string): Promise<DevGrantRow[]
   const { data, error } = await supabase.rpc('list_dev_access_grants', { p_handle: handle });
   if (error) throw new Error(rpcMessage(error));
   return ((data ?? []) as { capability: string; granted_at: string }[])
-    .filter((row) => isGrantableCapability(row.capability))
+    .filter((row): row is DevGrantRow => isGrantableCapability(row.capability))
     .map((row) => ({ capability: row.capability, granted_at: row.granted_at }));
 }
 
