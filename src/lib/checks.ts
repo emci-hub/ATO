@@ -1,4 +1,5 @@
 import { earnTokensQuiet } from '@/lib/tokens-server';
+import { localYmd } from '@/lib/local-date';
 import { supabase } from '@/lib/supabase';
 import type { CheckHistory, CheckStatus, VoiceCard, VoiceSource } from '@/lib/voice/types';
 
