@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
+import { ProviderStatusDot } from '@/components/provider-status-dot';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -79,6 +80,7 @@ export default function AiLabScreen() {
               This device only. Other accounts keep the bundled default (
               {PROVIDER_LIMITS[bundled].label}).
             </ThemedText>
+            <ProviderStatusDot provider={active} />
           </View>
 
           {AI_PROVIDER_IDS.map((id) => {

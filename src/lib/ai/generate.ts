@@ -3,7 +3,7 @@ import { completeGemini } from './gemini';
 import { completeNvidia, completePerplexity } from './openai-compat';
 import { completeViaEdge, isEdgeProvider } from './edge';
 import { resolveActiveProvider } from './override';
-import type { AiProviderId, GenerateRequest } from './types';
+import type { AiProviderId, GenerateRequest, RemoteAiProviderId } from './types';
 
 async function logQuiet(provider: AiProviderId): Promise<void> {
   try {
@@ -60,4 +60,21 @@ export async function generateText(request: GenerateRequest): Promise<string | n
     console.log('[ai] generate error:', err);
     return null;
   }
+}
+
+/**
+ * Minimal real call through the same dispatch as generateText, for
+ * connectivity checks. Unlike generateText, errors propagate (not swallowed)
+ * and no usage is logged, so a ping never pollutes the self-tracked counts.
+ */
+export async function pingProvider(provider: RemoteAiProviderId): Promise<void> {
+  await completeFor(provider, {
+    prompt: 'Reply with the word ready.',
+    temperature: 0,
+    // Reasoning models (Gemini thinkingConfig, grok-3-mini) can spend part of
+    // this budget on hidden thinking tokens before any output text — too low
+    // a budget makes a reachable provider look down with an empty response.
+    maxOutputTokens: 64,
+    responseFormat: 'text',
+  });
 }
