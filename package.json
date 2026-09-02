@@ -117,6 +117,7 @@
     "check:around": "tsx ./scripts/around-check.ts",
     "check:around-going": "tsx ./scripts/around-going-check.ts",
     "check:around-going-live": "tsx ./scripts/around-going-live-check.ts",
+    "check:legends-live": "tsx ./scripts/legends-live-check.ts",
     "check:quota": "tsx ./scripts/quota-check.ts",
     "check:ui-bundle": "tsx ./scripts/ui-bundle-check.ts",
     "check:sage-load": "tsx ./scripts/sage-load-check.ts",
