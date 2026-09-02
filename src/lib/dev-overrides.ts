@@ -1,12 +1,13 @@
 /**
  * Dev-lab Home overrides. Storage is written from /dev-lab; Home is not wired yet.
- * Readers return null unless __DEV__ — production never honours these keys.
+ * Readers return null unless PRE_LAUNCH_DEV — production never honours these keys (pre-launch).
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { AskPick } from '@/lib/ask';
 import type { TodaySlot } from '@/lib/today-slot';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 
 export const SLOT_OVERRIDE_KEY = 'ato.dev.slot-override.v1';
 export const ASK_OVERRIDE_KEY = 'ato.dev.ask-override.v1';
@@ -63,11 +64,11 @@ export async function clearAskOverride(): Promise<void> {
 }
 
 export async function readSlotOverride(): Promise<TodaySlot['kind'] | null> {
-  if (!__DEV__) return null;
+  if (!PRE_LAUNCH_DEV) return null;
   return loadStoredSlotOverride();
 }
 
 export async function readAskOverride(): Promise<AskPick['kind'] | null> {
-  if (!__DEV__) return null;
+  if (!PRE_LAUNCH_DEV) return null;
   return loadStoredAskOverride();
 }

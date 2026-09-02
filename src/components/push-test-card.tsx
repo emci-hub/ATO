@@ -10,12 +10,13 @@ import { fetchChecks, type Check } from '@/lib/checks';
 import { fireTestPush, notificationsAreGranted } from '@/lib/push';
 import type { PushKind } from '@/lib/push-copy';
 import { controlBorderColor } from '@/lib/theme/chrome';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 
 /**
  * Manual fire for the three pushes. Dev-only — not on TestFlight You.
  */
 export function PushTestCard({ timeZone }: { timeZone: string }) {
-  if (!__DEV__) return null;
+  if (!PRE_LAUNCH_DEV) return null;
   return <PushTestCardInner timeZone={timeZone} />;
 }
 

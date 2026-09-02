@@ -151,27 +151,27 @@ function main() {
   assert.match(sessionSrc, /devTestAutoSignIn/);
   assert.match(sessionSrc, /if \(!data\.session && __DEV__\)/);
   assert.match(moduleSrc, /export async function devTestAutoSignIn\(\)/);
-  assert.match(moduleSrc, /if \(!__DEV__\) return false/);
+  assert.match(moduleSrc, /if \(!PRE_LAUNCH_DEV\) return false/);
   assert.match(moduleSrc, /signInWithPassword/);
   assert.match(moduleSrc, /export const DEV_TEST_PASSWORD/);
-  ok('auto sign-in is __DEV__-gated and only fires with no cached session');
+  ok('cold-start auto sign-in is __DEV__-gated; the helper is pre-launch-gated for the manual button');
 
   // Presets refuse to run for any real account.
   assert.match(moduleSrc, /export async function applyDevArchetypePreset\(/);
-  assert.match(moduleSrc, /if \(!__DEV__\) throw new Error/);
+  assert.match(moduleSrc, /if \(!PRE_LAUNCH_DEV\) throw new Error/);
   assert.match(moduleSrc, /user\.id !== DEV_TEST_USER_ID/);
   assert.match(moduleSrc, /\.from\('user_legend_history'\)[\s\S]*?\.delete\(\)[\s\S]*?\.eq\('user_id', user\.id\)/);
   assert.match(moduleSrc, /\.from\('me'\)[\s\S]*?\.update\([\s\S]*?\.\.\.preset\.values[\s\S]*?trait_sources: traitSources[\s\S]*?trait_touched_at: traitTouchedAt/);
   assert.match(moduleSrc, /traitSources\[axis\] = 'self_settings'/);
   assert.doesNotMatch(moduleSrc, /from '@\/lib\/me'/);
-  ok('applyDevArchetypePreset guards __DEV__ + the dev user id, writes me directly, then clears seen history');
+  ok('applyDevArchetypePreset guards PRE_LAUNCH_DEV + the dev user id, writes me directly, then clears seen history');
 
   // Legends-tab strip only renders for the dev user, and under __DEV__.
   assert.match(legendsSrc, /DevTestPresetStrip/);
-  assert.match(legendsSrc, /if \(!__DEV__ \|\| !isDevUser\) return null/);
+  assert.match(legendsSrc, /if \(!PRE_LAUNCH_DEV \|\| !isDevUser\) return null/);
   assert.match(legendsSrc, /DEV_TEST_USER_ID/);
   assert.match(legendsSrc, /applyDevArchetypePreset/);
-  ok('Legends tab shows the preset strip only for the dev user in __DEV__');
+  ok('Legends tab shows the preset strip only for the dev user (pre-launch)');
 
   // 4 presets, each with all 16 axes filled.
   const presets = parsePresets(moduleSrc);

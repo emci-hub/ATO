@@ -80,7 +80,7 @@ assert.doesNotMatch(sageBlock, /ResetAiConsent/);
 assert.doesNotMatch(youBlock, /ResetAiConsent/);
 ok('Reset AI consent lives under System and writes ai_consent back to null');
 
-assert.match(systemBlock, /__DEV__ \? <CrisisCardPreview \/>/);
+assert.match(systemBlock, /PRE_LAUNCH_DEV \? <CrisisCardPreview \/>/);
 assert.match(systemBlock, /Preview crisis card\./);
 assert.match(hub, /function CrisisCardPreview/);
 assert.match(hub, /<CrisisCard onDismiss=/);
@@ -107,7 +107,7 @@ ok('System crisis-card preview is fenced to /dev-lab and absent from Dawn and Sa
 
 assert.match(
   hub,
-  /!canSeeDevLab\(\{\s*isDev: __DEV__,\s*isRoot: devAccess\.isRoot,\s*capabilities: devAccess\.capabilities,\s*\}\)/,
+  /!canSeeDevLab\(\{\s*isDev: PRE_LAUNCH_DEV,\s*isRoot: devAccess\.isRoot,\s*capabilities: devAccess\.capabilities,\s*\}\)/,
 );
 assert.match(hub, /Redirect href="\/"/);
 ok('existing access guard is unchanged');

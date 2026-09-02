@@ -27,6 +27,7 @@ import { recordOwnDevTrace } from '@/lib/dev-trace-server';
 import type { VoiceCardResult } from '@/lib/voice/types';
 import { DAWN_SAGE_LEDE } from '@/lib/sage-copy';
 import { controlBorderColor } from '@/lib/theme/chrome';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 
 const TONE_LABEL: Record<string, string> = {
   lift: 'lift',
@@ -333,7 +334,7 @@ export default function DawnScreen() {
                 <ThemedText style={styles.cardText}>{card.do}</ThemedText>
               </ThemedView>
 
-              {__DEV__ && result.dev ? (
+              {PRE_LAUNCH_DEV && result.dev ? (
                 <ThemedText type="code" themeColor="textSecondary" style={styles.devTrace}>
                   dev · source {result.source} · {result.dev.providerLabel} · check_count{' '}
                   {result.dev.checkCount} · consent {result.consent} · fromBankFile{' '}

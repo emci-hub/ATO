@@ -1,4 +1,5 @@
 import { Redirect } from 'expo-router';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,7 +25,7 @@ const BODY_STATES = Object.keys(SHAPE_MANIFEST.parts.find((p) => p.id === 'body'
 const LOOKS = Object.keys(SHAPE_MANIFEST.parts.find((p) => p.id === 'face')!.states);
 
 export default function PixelLabScreen() {
-  if (!__DEV__) {
+  if (!PRE_LAUNCH_DEV) {
     return <Redirect href="/" />;
   }
 

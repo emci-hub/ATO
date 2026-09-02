@@ -18,6 +18,8 @@ import {
 } from '@/lib/auth-password';
 import { setPendingInviteCode } from '@/lib/invite';
 import { supabase } from '@/lib/supabase';
+import { devTestAutoSignIn } from '@/lib/dev-test-user';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 
 export default function LoginScreen() {
   const theme = useTheme();
@@ -28,6 +30,7 @@ export default function LoginScreen() {
   const [step, setStep] = useState<'form' | 'code'>('form');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [devBusy, setDevBusy] = useState(false);
   const [appleAvailable, setAppleAvailable] = useState(false);
 
   const normalizedIdentifier = identifier.trim();
@@ -57,6 +60,15 @@ export default function LoginScreen() {
     if (outcome.status === 'signed-in' && !outcome.linkedForRevocation) {
       console.log('[auth] Apple sign-in succeeded without storing a revocation token');
     }
+  }
+
+  async function handleDevSignIn() {
+    if (devBusy) return;
+    setDevBusy(true);
+    setError(null);
+    const ok = await devTestAutoSignIn();
+    setDevBusy(false);
+    if (!ok) setError('Could not sign in as the dev-test user.');
   }
 
   async function handlePasswordSignIn() {
@@ -232,6 +244,17 @@ export default function LoginScreen() {
                 {busy ? 'Sending…' : 'Email me a code instead'}
               </ThemedText>
             </Pressable>
+
+            {PRE_LAUNCH_DEV ? (
+              <Pressable
+                onPress={handleDevSignIn}
+                disabled={busy || devBusy}
+                style={({ pressed }) => [authStyles.passwordLink, pressed && authStyles.pressed]}>
+                <ThemedText type="link">
+                  {devBusy ? 'Signing in…' : 'Sign in as dev user'}
+                </ThemedText>
+              </Pressable>
+            ) : null}
           </ThemedView>
 
           <Link href="/auth" asChild>

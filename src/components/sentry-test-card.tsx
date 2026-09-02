@@ -6,6 +6,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { controlBorderColor } from '@/lib/theme/chrome';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import {
   sendFloorTestError,
   SENTRY_DSN,
@@ -17,7 +18,7 @@ import {
  * must not ship a Native crash button on You.
  */
 export function SentryTestCard() {
-  if (!__DEV__) return null;
+  if (!PRE_LAUNCH_DEV) return null;
   return <SentryTestCardInner />;
 }
 

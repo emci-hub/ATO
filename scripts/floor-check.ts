@@ -209,11 +209,11 @@ ok('Sentry JS init + native crash handling + Expo plugin + wrap are wired');
 const youTab = read('src/app/(tabs)/you.tsx');
 assert.doesNotMatch(youTab, /from '@\/components\/sentry-test-card'/);
 assert.doesNotMatch(youTab, /from '@\/components\/push-test-card'/);
-assert.match(youTab, /if \(__DEV__\) \{/);
+assert.match(youTab, /if \(PRE_LAUNCH_DEV\) \{/);
 assert.match(youTab, /require\('@\/components\/you-dev-tools'\)/);
-assert.match(read('metro.config.js'), /NODE_ENV === 'production'/);
-assert.match(sentryLib, /if \(!__DEV__\) return;/);
-ok('You-tab crash/push probes are compile-time __DEV__ + Metro production stub, not a runtime hide');
+assert.doesNotMatch(read('metro.config.js'), /PROBE_STUB/);
+assert.match(sentryLib, /if \(!PRE_LAUNCH_DEV\) return;/);
+ok('You-tab crash/push probes are PRE_LAUNCH_DEV-gated, not a runtime hide');
 
 assert.match(
   dawn,

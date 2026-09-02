@@ -27,6 +27,7 @@ import { useMeContext } from '@/lib/me-context';
 import { voiceMeFrom } from '@/lib/intake';
 import { resolveAsk, type AskPick } from '@/lib/ask';
 import { readAskOverride, readSlotOverride } from '@/lib/dev-overrides';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { weekdayInZone } from '@/lib/local-date';
 import { homeSageLabel, homeSageLede, NUDGE_LABEL, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { persistRoutedCard, saveTodayCard, todayCardFromCheck } from '@/lib/today-card';
@@ -178,7 +179,7 @@ export default function HomeScreen() {
   }, [me, checks, crisisToday, crisisYesterday, growth.checkCount, growth.factCount]);
 
   useEffect(() => {
-    if (!__DEV__) return;
+    if (!PRE_LAUNCH_DEV) return;
     let cancelled = false;
     void Promise.all([readAskOverride(), readSlotOverride()]).then(([askKind, nextSlot]) => {
       if (cancelled) return;
@@ -232,7 +233,7 @@ export default function HomeScreen() {
       askPending: liveAsk !== null,
       isSunday: weekdayInZone(new Date(), me?.timezone || 'UTC') === 0,
     }).kind;
-    if (__DEV__ && slotOverride) return slotOverride;
+    if (PRE_LAUNCH_DEV && slotOverride) return slotOverride;
     return resolved;
   }, [
     crisisToday,
@@ -490,17 +491,17 @@ export default function HomeScreen() {
           {me && canShowCategoryTeaser(slotKind) ? <CategoryTeaser me={me} /> : null}
 
           {(canSeeDevLab({
-            isDev: __DEV__,
+            isDev: PRE_LAUNCH_DEV,
             isRoot: devAccess.isRoot,
             capabilities: devAccess.capabilities,
           }) ||
-            __DEV__) ? (
+            PRE_LAUNCH_DEV) ? (
             <ThemedView type="backgroundElement" style={styles.boxCard}>
               <ThemedText type="code" themeColor="textSecondary" style={styles.boxKicker}>
                 dev
               </ThemedText>
               {canSeeDevLab({
-                isDev: __DEV__,
+                isDev: PRE_LAUNCH_DEV,
                 isRoot: devAccess.isRoot,
                 capabilities: devAccess.capabilities,
               }) ? (
@@ -516,7 +517,7 @@ export default function HomeScreen() {
                 <ThemedText themeColor="textSecondary">›</ThemedText>
               </Pressable>
               ) : null}
-              {__DEV__ ? (
+              {PRE_LAUNCH_DEV ? (
                 <>
               <Pressable
                 onPress={() => router.push('/voice-lab')}

@@ -1,15 +1,14 @@
 /**
- * Production bundle must not contain You-tab crash/push probes.
- * Run: npm run check:prod-you
+ * Pre-launch: the production bundle MUST ship the You-tab crash/push probes so
+ * they work over OTA. Asserts the probe modules are wired through the
+ * PRE_LAUNCH_DEV flag and that Metro is NOT stubbing them out of production.
  *
- * Exports an iOS production bundle and asserts the crash-test copy is gone.
- * `__DEV__` is compiled false here; Metro also stubs the probe modules.
- * This is not a runtime hide flag.
+ * Before signup_mode goes public, invert this check (probes must NOT ship) and
+ * re-add the Metro production probe stub — see PROJECT_CONTEXT.md "Pre-launch
+ * re-gating checklist".
  */
 import assert from 'node:assert/strict';
-import { execSync } from 'node:child_process';
-import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 let passed = 0;
@@ -22,40 +21,13 @@ const root = resolve(__dirname, '..');
 const you = readFileSync(join(root, 'src/app/(tabs)/you.tsx'), 'utf8');
 assert.doesNotMatch(you, /from '@\/components\/sentry-test-card'/);
 assert.doesNotMatch(you, /from '@\/components\/push-test-card'/);
-assert.match(you, /if \(__DEV__\) \{/);
-assert.match(readFileSync(join(root, 'metro.config.js'), 'utf8'), /PROBE_STUB/);
-ok('You tab has no static import of crash/push probes; Metro stubs them in production');
+assert.match(you, /if \(PRE_LAUNCH_DEV\) \{/);
+assert.match(you, /require\('@\/components\/you-dev-tools'\)/);
+ok('You tab loads crash/push probes via a PRE_LAUNCH_DEV-gated dynamic require');
 
-const outDir = mkdtempSync(join(tmpdir(), 'ato-prod-you-'));
-try {
-  execSync(`npx expo export --platform ios --output-dir "${outDir}"`, {
-    cwd: root,
-    env: { ...process.env, NODE_ENV: 'production' },
-    stdio: 'pipe',
-    encoding: 'utf8',
-  });
-
-  const files: string[] = [];
-  function walk(dir: string) {
-    for (const name of readdirSync(dir)) {
-      const next = join(dir, name);
-      if (statSync(next).isDirectory()) walk(next);
-      else files.push(next);
-    }
-  }
-  walk(outDir);
-
-  const haystack = files
-    .filter((file) => /\.js$/.test(file) && !file.endsWith('.map'))
-    .map((file) => readFileSync(file, 'utf8'))
-    .join('\n');
-
-  assert.doesNotMatch(haystack, /Test crash reporting/);
-  assert.doesNotMatch(haystack, /Native crash/);
-  assert.doesNotMatch(haystack, /Test notifications/);
-  ok('production iOS export contains no crash-test or push-test controls');
-} finally {
-  rmSync(outDir, { recursive: true, force: true });
-}
+const metro = readFileSync(join(root, 'metro.config.js'), 'utf8');
+assert.doesNotMatch(metro, /resolveRequest/);
+assert.doesNotMatch(metro, /dev-probes-stub/);
+ok('Metro is not stubbing the probe modules — they ship in production (pre-launch)');
 
 console.log(`\nprod-you-check: ${passed}/${passed} passed`);

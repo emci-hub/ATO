@@ -1,4 +1,5 @@
 import { Redirect } from 'expo-router';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -17,7 +18,7 @@ import { useCrisisRegion } from '@/lib/crisis/region-context';
 export default function CrisisLabScreen() {
   const { region, autoRegion, override } = useCrisisRegion();
 
-  if (!__DEV__) {
+  if (!PRE_LAUNCH_DEV) {
     return <Redirect href="/" />;
   }
 

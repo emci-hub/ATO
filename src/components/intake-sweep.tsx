@@ -20,6 +20,7 @@ import { earnTokensQuiet } from '@/lib/tokens-server';
 import { shouldUseLocalAi } from '@/lib/ai/override';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { withTimeout } from '@/lib/timeout';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 
 export const INTAKE_SWEEP_TITLE = 'A faster pass';
 export const INTAKE_SWEEP_LEDE =
@@ -147,7 +148,7 @@ export function IntakeSweep({
         <ThemedText type="small" themeColor="textSecondary">
           {INTAKE_SWEEP_LEDE}
         </ThemedText>
-        {!INTAKE_SWEEP_COPY_REVIEWED && __DEV__ ? (
+        {!INTAKE_SWEEP_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
           <ThemedText type="code" themeColor="textSecondary">
             Draft copy — waiting on emci review.
           </ThemedText>

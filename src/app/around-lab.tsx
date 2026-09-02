@@ -1,4 +1,5 @@
 import { Redirect } from 'expo-router';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,11 +19,11 @@ export default function AroundLabScreen() {
   const [load, setLoad] = useState<AroundLoad | null>(null);
 
   useEffect(() => {
-    if (!__DEV__) return;
+    if (!PRE_LAUNCH_DEV) return;
     fetchWeekendJson(city).then(setLoad);
   }, [city]);
 
-  if (!__DEV__) {
+  if (!PRE_LAUNCH_DEV) {
     return <Redirect href="/" />;
   }
 

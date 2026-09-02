@@ -56,13 +56,14 @@ import { aiConsentFor, setCity, setVisible, setAiConsent } from '@/lib/me';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { supabase } from '@/lib/supabase';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 
 const GROWTH_PREVIEW_KEY = 'ato.dev.growth-preview.v1';
 
 export type GrowthPreview = { checkCount: number; factCount: number };
 
 export async function readGrowthPreview(): Promise<GrowthPreview | null> {
-  if (!__DEV__) return null;
+  if (!PRE_LAUNCH_DEV) return null;
   const raw = await AsyncStorage.getItem(GROWTH_PREVIEW_KEY);
   if (!raw) return null;
   try {
@@ -75,12 +76,12 @@ export async function readGrowthPreview(): Promise<GrowthPreview | null> {
 }
 
 export async function writeGrowthPreview(next: GrowthPreview): Promise<void> {
-  if (!__DEV__) return;
+  if (!PRE_LAUNCH_DEV) return;
   await AsyncStorage.setItem(GROWTH_PREVIEW_KEY, JSON.stringify(next));
 }
 
 export async function clearGrowthPreview(): Promise<void> {
-  if (!__DEV__) return;
+  if (!PRE_LAUNCH_DEV) return;
   await AsyncStorage.removeItem(GROWTH_PREVIEW_KEY);
 }
 
@@ -134,7 +135,7 @@ export default function YouScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (!__DEV__) return;
+      if (!PRE_LAUNCH_DEV) return;
       let cancelled = false;
       void readGrowthPreview().then((next) => {
         if (!cancelled) setGrowthPreview(next);
@@ -587,12 +588,12 @@ export default function YouScreen() {
 }
 
 /**
- * Crash/push probes live behind the same compile-time `__DEV__` cut as
- * Stack.Protected labs. Production Metro also resolves the probe modules
- * to a null stub, so TestFlight never even contains the controls.
+ * Crash/push probes render pre-launch (PRE_LAUNCH_DEV) so they work over OTA.
+ * Re-gate to __DEV__ (and re-add the Metro PROBE_STUB) before signup_mode goes
+ * public — see PROJECT_CONTEXT.md "Pre-launch re-gating checklist".
  */
 function YouDevToolsSlot({ timeZone }: { timeZone: string }) {
-  if (__DEV__) {
+  if (PRE_LAUNCH_DEV) {
     const { YouDevTools } = require('@/components/you-dev-tools') as typeof import('@/components/you-dev-tools');
     return <YouDevTools timeZone={timeZone} />;
   }

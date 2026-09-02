@@ -1,5 +1,7 @@
 /**
- * Fixed dev-test identity + 4 Legends-archetype presets. __DEV__ only.
+ * Fixed dev-test identity + 4 Legends-archetype presets. Pre-launch (PRE_LAUNCH_DEV)
+ * for the manual "Sign in as dev user" button + Legends test-persona strip;
+ * the cold-start auto-login itself stays __DEV__-only (use-session.ts).
  *
  * The dev-test user is a REAL Supabase auth + me row provisioned by
  * supabase/migrations/wave31_dev_test_user.sql:
@@ -31,6 +33,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 
 export const DEV_TEST_EMAIL = 'ato-dev@example.com';
 export const DEV_TEST_PASSWORD = 'ATO-dev-user-2026';
@@ -159,7 +162,7 @@ export function isDevTestEmail(email: string | null | undefined): boolean {
  * and the normal signed-out auth screen shows — it never blocks boot.
  */
 export async function devTestAutoSignIn(): Promise<boolean> {
-  if (!__DEV__) return false;
+  if (!PRE_LAUNCH_DEV) return false;
   const { error } = await supabase.auth.signInWithPassword({
     email: DEV_TEST_EMAIL,
     password: DEV_TEST_PASSWORD,
@@ -185,7 +188,7 @@ export async function devTestAutoSignIn(): Promise<boolean> {
 export async function applyDevArchetypePreset(
   presetId: DevArchetypePresetId,
 ): Promise<void> {
-  if (!__DEV__) throw new Error('Dev archetype presets are __DEV__ only');
+  if (!PRE_LAUNCH_DEV) throw new Error('Dev archetype presets are pre-launch only');
 
   const {
     data: { user },

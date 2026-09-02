@@ -14,6 +14,7 @@ import { navigationTheme } from '@/lib/theme/navigation';
 import { MeProvider, useMeContext } from '@/lib/me-context';
 import { initSentry, Sentry } from '@/lib/sentry';
 import { useSession } from '@/hooks/use-session';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 
 initSentry();
 SplashScreen.preventAutoHideAsync();
@@ -86,7 +87,7 @@ function RootNavigator() {
               <Stack.Screen name="ai-lab" />
             </Stack.Protected>
 
-            <Stack.Protected guard={__DEV__}>
+            <Stack.Protected guard={PRE_LAUNCH_DEV}>
               <Stack.Screen name="theme-lab" />
               <Stack.Screen name="around-lab" />
               <Stack.Screen name="talk-lab" />

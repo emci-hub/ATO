@@ -1,6 +1,8 @@
 import * as Sentry from '@sentry/react-native';
 import { Platform } from 'react-native';
 
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+
 /** Public DSN (ingest-only). Keep the auth token out of the client bundle. */
 export const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? '';
 
@@ -34,7 +36,7 @@ export async function sendFloorTestError(): Promise<string> {
 
 /** Native crash. Dev-only — production/TestFlight compile this out. */
 export function triggerNativeTestCrash(): void {
-  if (!__DEV__) return;
+  if (!PRE_LAUNCH_DEV) return;
   Sentry.nativeCrash();
 }
 

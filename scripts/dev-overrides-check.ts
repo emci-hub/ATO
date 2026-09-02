@@ -34,9 +34,9 @@ function functionBody(src: string, name: string): string {
   return next === -1 ? src.slice(start) : src.slice(start, next);
 }
 
-assert.match(functionBody(overrides, 'readSlotOverride'), /if \(!__DEV__\)/);
-assert.match(functionBody(overrides, 'readAskOverride'), /if \(!__DEV__\)/);
-ok('both reader functions contain a __DEV__ guard');
+assert.match(functionBody(overrides, 'readSlotOverride'), /if \(!PRE_LAUNCH_DEV\)/);
+assert.match(functionBody(overrides, 'readAskOverride'), /if \(!PRE_LAUNCH_DEV\)/);
+ok('both reader functions contain a PRE_LAUNCH_DEV guard');
 
 assert.doesNotMatch(home, /ato\.dev\.slot-override\.v1/);
 assert.doesNotMatch(home, /ato\.dev\.ask-override\.v1/);

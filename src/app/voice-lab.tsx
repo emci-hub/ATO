@@ -1,4 +1,5 @@
 import { Redirect } from 'expo-router';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -95,7 +96,7 @@ const SCENARIOS: Scenario[] = [
 ];
 
 export default function VoiceLabScreen() {
-  if (!__DEV__) {
+  if (!PRE_LAUNCH_DEV) {
     return <Redirect href="/" />;
   }
   return <VoiceLab />;

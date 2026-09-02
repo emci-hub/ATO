@@ -82,7 +82,7 @@ ok('hub has Grants, Profiles, Trace, and Access; never-grantable rows are labele
 
 const layout = read('src/app/_layout.tsx');
 assert.match(layout, /<Stack\.Protected guard=\{isAuthed && hasMe\}>[\s\S]*name="dev-lab"/);
-assert.doesNotMatch(layout, /<Stack\.Protected guard=\{__DEV__\}>[\s\S]*name="dev-lab"/);
+assert.doesNotMatch(layout, /<Stack\.Protected guard=\{PRE_LAUNCH_DEV\}>[\s\S]*name="dev-lab"/);
 ok('dev-lab is on the authed stack so TestFlight can open it');
 
 const home = read('src/app/(tabs)/index.tsx');

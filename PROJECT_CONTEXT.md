@@ -27,7 +27,40 @@ Do not commit `.env.local` or API keys. Do not change dependencies, schemas, aut
 - DeepSeek uses Supabase secret `DEEPSEEK_API_KEY` — **set and confirmed LIVE on 2026-09-02** (edge function dispatched a real DeepSeek completion; see Decisions log). NVIDIA and Perplexity have never had client-side keys configured in `.env.local` either (`EXPO_PUBLIC_NVIDIA_API_KEY`/`EXPO_PUBLIC_PERPLEXITY_API_KEY` both empty) — **as of 2026-09-02, only Gemini has ever had a real key, and even that is quota-exhausted, meaning every one of the 6 AI providers is currently unusable in production** unless the Gemini free-tier quota resets (the new Gemini→DeepSeek quota fallback now routes through the live DeepSeek key when that happens).
 - Next product work: full device pass (`docs/ATO_DEVICE_TESTS.md`) on binary 10, then Stage 8 invite/referral. Known follow-up (not urgent): the same missing-timeout pattern as the "A faster pass" bug still exists at `explore.tsx` and `dev-lab.tsx` — not fixed yet. `questions-fold.tsx` and `explore-panel.tsx` are now fixed (see Decisions log).
 
+## Pre-launch re-gating checklist (must re-gate or remove before public launch)
+
+These dev/testing conveniences are deliberately un-`__DEV__`-gated (via the
+`PRE_LAUNCH_DEV` flag in `src/lib/dev-mode.ts`) so they work over OTA while the
+app is invite-only. Before `signup_mode` flips to `public`, each must be
+re-gated to `__DEV__` (or removed), and the Metro `PROBE_STUB` re-added:
+
+1. Dev-test-user **auto-login stays `__DEV__`** (cold-start only); the manual
+   "Sign in as dev user" button (`src/app/auth/login.tsx`) must be removed/re-gated.
+2. Legends "test persona" strip (`src/app/(tabs)/legends.tsx` + `applyDevArchetypePreset`).
+3. Six `*-lab` screens (`_layout.tsx` guard + each lab's redirect).
+4. Home slot/ask overrides (`dev-overrides.ts` + `index.tsx`).
+5. Home "dev" links box (`index.tsx`).
+6. You-tab growth preview (`you.tsx`).
+7. You-tab crash/push probes (`you.tsx` + `you-dev-tools.tsx` + `push-test-card.tsx`
+   + `sentry-test-card.tsx`) — also re-add the Metro `PROBE_STUB` and invert `check:prod-you`.
+8. Dawn dev-trace line (`dawn.tsx`).
+9. Dev-lab unconditional dev access (`dev-lab.tsx` `isDev` + `CrisisCardPreview`).
+10. Sentry native-crash probe (`sentry.ts`).
+11. Intake-sweep "draft copy" badge (`intake-sweep.tsx`).
+
+One flag controls all of these: `PRE_LAUNCH_DEV = true` in `src/lib/dev-mode.ts`.
+
 ## Decisions log
+
+- 2026-09-02: Un-`__DEV__`-gated every dev/testing convenience behind a single
+  `PRE_LAUNCH_DEV = true` flag (`src/lib/dev-mode.ts`) so they work over OTA
+  (app is invite-only; OTA is the testing environment). Dev-test cold-start
+  auto-login stays `__DEV__`-only; a manual "Sign in as dev user" button on the
+  login screen covers OTA. Removed the Metro `PROBE_STUB` so the crash/push
+  probes ship in production, and inverted `check:prod-you` to assert they are
+  present (re-invert before public). Updated dev-test-user/dev-overrides/dev-lab/
+  floor/appearance/dev-lab-sections/dev-access checks to the `PRE_LAUNCH_DEV`
+  guard. Full re-gating list in the "Pre-launch re-gating checklist" above.
 
 - 2026-09-02: **Hard pre-publish OTA gate added — no more manual/after-the-fact checks.** Confirmed there was no automatic gate (no CI, no hooks, no pre-publish script; checks were run by hand before OTAs). New `npm run ota:publish -- <eas args>` runs the full offline `check:*` suite (`check:ota-gate`, 44 checks) and exits 1 without touching EAS on any failure; `check:ota-gate` runs the suite alone. Live/env-gated checks (around, around-going, auth-password, apple-revoke, card-live, crisis-live, delete-account, founder-access, intake-live, invite, quota, sentry, style-live, talk-live) are excluded by design — they need real accounts/seeds/network/providers and stay runnable by hand. Two stale offline assertions were blocking green and are fixed: `check:traits` sliced onboarding `submit()` through the newer `refreshAndGoHome()` helper (the assertion intent — submit never calls refresh — is preserved), and `check:founder-access` asserted the old literal `id: 'access'` in dev-lab instead of the current `canSeeHubSection('access', gate)` gate. Docs synced in NOW (housekeeping) / PROJECT_CONTEXT.
 - 2026-09-02: **Published OTA `d5332b8b` (production, ios+android, commit `fb71b2d`)** — "Legends dev-test personas: `__DEV__` auto-login as dev-test user + 4-archetype test strip on Legends tab". This was the first OTA to carry the dev-test-user client. The **Legends tab** had already shipped one OTA earlier — `d4919b06` (commit `d95fcfa`, question deferral + invited list) was the first to include the Legends tab code (commit `7cc530d`). Pre-publish checks were run manually before this OTA (`check:dev-test-user` 9/9 + `check:nav` 17/17). Docs synced in NOW/ME/PROJECT_CONTEXT.

@@ -19,6 +19,7 @@ import { isRevealOpenedToday } from '@/components/reveal-card';
 import { TraitBandDetail } from '@/components/trait-bands-fold';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useMeContext } from '@/lib/me-context';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useSession } from '@/hooks/use-session';
 import { useGrowth } from '@/hooks/use-growth';
 import { useTheme } from '@/hooks/use-theme';
@@ -136,7 +137,7 @@ export default function DevLabScreen() {
   }
   if (
     !canSeeDevLab({
-      isDev: __DEV__,
+      isDev: PRE_LAUNCH_DEV,
       isRoot: devAccess.isRoot,
       capabilities: devAccess.capabilities,
     })
@@ -150,7 +151,7 @@ function DevLab() {
   const { devAccess, me } = useMeContext();
   const gate = useMemo(
     () => ({
-      isDev: __DEV__,
+      isDev: PRE_LAUNCH_DEV,
       isRoot: devAccess.isRoot,
       capabilities: devAccess.capabilities,
     }),
@@ -164,7 +165,7 @@ function DevLab() {
           <View style={styles.header}>
             <ThemedText type="subtitle">Dev Tools Hub</ThemedText>
             <ThemedText themeColor="textSecondary">
-              Root and granted testers in TestFlight. Local __DEV__ always opens it.
+              Root and granted testers in TestFlight. Local PRE_LAUNCH_DEV always opens it.
               Access, grants, and profile pause/delete stay root-only.
             </ThemedText>
             <RunningUpdateLine />
@@ -205,7 +206,7 @@ function DevLab() {
             {canSeeHubSection('profiles', gate) ? <ProfilesPanel /> : null}
             {me ? <YouDevTools timeZone={me.timezone || 'UTC'} /> : null}
             <ResetAiConsent />
-            {__DEV__ ? <CrisisCardPreview /> : null}
+            {PRE_LAUNCH_DEV ? <CrisisCardPreview /> : null}
             <ForceTestError message="Dev Lab test error — System" />
           </View>
         </ScrollView>
