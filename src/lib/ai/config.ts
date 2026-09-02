@@ -28,7 +28,8 @@ export interface AiConfig {
 export const AI_PROVIDER_DEFAULT: AiProviderId = 'gemini';
 
 export const DEFAULT_MODELS = {
-  gemini: 'gemini-2.5-flash',
+  // gemini-2.5-flash was retired for new users (404, verified 2026-09-02).
+  gemini: 'gemini-3.7-flash',
   nvidia: 'meta/llama-3.1-8b-instruct',
   perplexity: 'sonar',
   claude: 'claude-sonnet-4-5',

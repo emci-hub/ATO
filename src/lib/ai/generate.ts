@@ -48,9 +48,11 @@ async function completeFor(
 }
 
 /**
- * Quota-triggered fallback gate: only Gemini quota / token-limit failures
- * qualify (e.g. free-tier 429 RESOURCE_EXHAUSTED). Anything else is a real
- * error and must surface as the normal error state, not a provider switch.
+ * Classifies a Gemini failure as quota / token-limit (e.g. 429
+ * RESOURCE_EXHAUSTED) vs anything else. Used for the log line only — since
+ * 2026-09-02 EVERY Gemini failure falls back to DeepSeek (see generateText),
+ * because there is no reason to show an empty card while a live second
+ * provider is available.
  */
 export function isQuotaLimitError(err: unknown): boolean {
   if (!(err instanceof Error)) return false;
@@ -82,16 +84,18 @@ export async function generateText(
     void logQuiet(provider);
     return text;
   } catch (err) {
-    // Gemini is the bundled default. When it fails on quota/token limits
-    // specifically (not other errors), retry the same request once on
-    // DeepSeek; if that also fails, fall through to the normal error state.
-    if (provider === 'gemini' && isQuotaLimitError(err)) {
+    // Gemini is the bundled primary. On ANY Gemini failure (quota, 404 model
+    // retired, 5xx, network, empty response) retry the same request once on
+    // DeepSeek; only if that also fails fall through to the normal error state.
+    if (provider === 'gemini') {
+      const why = isQuotaLimitError(err) ? 'quota' : 'error';
+      console.log(`[ai] Gemini ${why} -> DeepSeek fallback:`, err);
       try {
         const text = await completeFor('deepseek', request, meta);
         void logQuiet('deepseek');
         return text;
       } catch (fallbackErr) {
-        console.log('[ai] Gemini quota -> DeepSeek fallback failed:', fallbackErr);
+        console.log('[ai] Gemini -> DeepSeek fallback failed:', fallbackErr);
       }
     }
     void logQuiet(provider);

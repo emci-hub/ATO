@@ -47,7 +47,7 @@ assert.equal(buildVoiceConfig({ MODEL_PROVIDER: 'local' }).provider, 'local');
 assert.ok(!isAiProviderId('groq'));
 ok('AI_PROVIDER selects the vendor; MODEL_PROVIDER=local still forces the fallback');
 
-assert.equal(DEFAULT_MODELS.gemini, 'gemini-2.5-flash');
+assert.equal(DEFAULT_MODELS.gemini, 'gemini-3.7-flash');
 assert.equal(PROVIDER_LIMITS.gemini.rpm, 12);
 assert.equal(PROVIDER_LIMITS.nvidia.rpm, 40);
 assert.equal(PROVIDER_LIMITS.perplexity.rpm, null);
@@ -164,7 +164,13 @@ for (const site of AI_CALL_SITES) {
 }
 ok('metadata catalog covers all 8 call sites with boolean flags');
 
-// --- Gemini -> DeepSeek quota fallback gate --------------------------------
+// --- Gemini -> DeepSeek fallback ------------------------------------------
+// Any Gemini failure falls back (not only quota); isQuotaLimitError only
+// classifies the log line.
+const generateSrc = read('src/lib/ai/generate.ts');
+assert.match(generateSrc, /if \(provider === 'gemini'\) \{[\s\S]*completeFor\('deepseek'/);
+assert.doesNotMatch(generateSrc, /provider === 'gemini' && isQuotaLimitError/);
+ok('every Gemini failure retries once on DeepSeek before the error state');
 assert.equal(isQuotaLimitError(new Error('Gemini 429: Resource has been exhausted')), true);
 assert.equal(isQuotaLimitError(new Error('Gemini 429: {"status":"RESOURCE_EXHAUSTED"}')), true);
 assert.equal(isQuotaLimitError(new Error('Gemini 429: RATE_LIMIT_EXCEEDED')), true);
@@ -174,7 +180,7 @@ assert.equal(isQuotaLimitError(new Error('Gemini 500: internal error')), false);
 assert.equal(isQuotaLimitError(new Error('Gemini 403: API key not valid')), false);
 assert.equal(isQuotaLimitError(new Error('network unreachable')), false);
 assert.equal(isQuotaLimitError(null), false);
-ok('fallback fires only on Gemini quota / token-limit errors, never other failures');
+ok('isQuotaLimitError classifies quota / token-limit vs other Gemini failures');
 
 const lab = read('src/app/ai-lab.tsx');
 assert.match(lab, /self-tracked call counts/);
