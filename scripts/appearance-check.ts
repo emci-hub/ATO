@@ -6,6 +6,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { APPEARANCE_IDS, APPEARANCES } from '../src/constants/appearance';
+import {
+  FREE_APPEARANCE_IDS,
+  isAppearanceUnlocked,
+  resolveAllowedAppearance,
+} from '../src/lib/subscription';
 import { contrastRatio, meetsAa } from '../src/lib/theme/contrast';
 
 let passed = 0;
@@ -52,6 +57,7 @@ assert.ok(neonFill != null && neonFill >= 4.5);
 ok(`Neon filled button uses a darker cyan fill (${neonFill?.toFixed(2)}:1), not raw #00FFFF under white`);
 
 const root = path.resolve(__dirname, '..');
+const srcFile = (rel: string) => fs.readFileSync(path.join(root, rel), 'utf8');
 const picker = fs.readFileSync(path.join(root, 'src/components/appearance-picker.tsx'), 'utf8');
 const you = fs.readFileSync(path.join(root, 'src/app/(tabs)/you.tsx'), 'utf8');
 const layout = fs.readFileSync(path.join(root, 'src/app/_layout.tsx'), 'utf8');
@@ -95,5 +101,49 @@ assert.doesNotMatch(tabBar, /backgroundElement/);
 assert.match(ctx, /typeof Appearance\.setColorScheme === 'function'/);
 assert.match(ctx, /ready: boolean/);
 ok('tab bar chrome uses appearance background (opaque, not DefaultTheme white)');
+
+
+// --- subscription gate (no billing wired; this is the decision layer) -------
+assert.deepEqual([...FREE_APPEARANCE_IDS], ['soft', 'quest']);
+for (const id of APPEARANCE_IDS) {
+  const free = (FREE_APPEARANCE_IDS as readonly string[]).includes(id);
+  assert.equal(isAppearanceUnlocked(id, false), free, `${id} unlocked-without-sub should be ${free}`);
+  assert.equal(isAppearanceUnlocked(id, true), true, `${id} must unlock with a subscription`);
+}
+// A lapsed subscriber is moved to the default, never stranded on a locked mode.
+assert.equal(resolveAllowedAppearance('neon', false), 'soft');
+assert.equal(resolveAllowedAppearance('neon', true), 'neon');
+assert.equal(resolveAllowedAppearance('quest', false), 'quest');
+ok('Soft + Quest are free; the other three need a subscription and fall back to Soft');
+
+// The picker must gate, and the provider must refuse a locked mode.
+assert.match(picker, /isAppearanceUnlocked/);
+assert.match(picker, /SUBSCRIPTION_LOCKED_NOTE/);
+const themeContext = srcFile('src/lib/theme/context.tsx');
+assert.match(themeContext, /resolveAllowedAppearance/);
+assert.match(themeContext, /if \(!isAppearanceUnlocked\(next, subscriptionActive\)\) return false;/);
+ok('picker shows locked modes without applying them; provider refuses a locked write');
+
+// --- shared token base: modes declare differences, not copies ---------------
+const appearanceSrc = srcFile('src/constants/appearance.ts');
+assert.match(appearanceSrc, /const BASE_TOKENS = \{/);
+assert.equal((appearanceSrc.match(/^ {4}\.\.\.BASE_TOKENS,$/gm) ?? []).length, APPEARANCE_IDS.length);
+ok('every appearance mode is built from the one shared BASE_TOKENS');
+
+// --- type scale: the 20 and 24 steps exist ---------------------------------
+const themedText = srcFile('src/components/themed-text.tsx');
+for (const size of ['fontSize: 20', 'fontSize: 24']) {
+  assert.ok(themedText.includes(size), `themed-text is missing ${size}`);
+}
+assert.match(themedText, /subheading/);
+assert.match(themedText, /heading/);
+ok('type scale has the 20 (subheading) and 24 (heading) steps');
+
+// --- Soft cards have an edge, controls keep the stronger border ------------
+assert.notEqual(APPEARANCES.soft.border, 'transparent');
+assert.equal(APPEARANCES.soft.cardBorderWidth, 1);
+assert.equal(APPEARANCES.soft.controlBorder, 'rgba(31, 41, 55, 0.22)');
+assert.match(srcFile('src/lib/theme/chrome.ts'), /if \(theme\.controlBorder\) return theme\.controlBorder;/);
+ok('Soft cards have a hairline; outline controls keep the higher-contrast border');
 
 console.log(`\nappearance-check: ${passed}/${passed} passed`);

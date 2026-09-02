@@ -18,9 +18,9 @@ import { useTheme } from '@/hooks/use-theme';
 import { useGrowth } from '@/hooks/use-growth';
 import { useTodayCard } from '@/hooks/use-today-card';
 import { checkWindowFor } from '@/lib/check-window';
-import { checksToHistory, fetchChecks, recordCheck, type Check } from '@/lib/checks';
+import { checksToHistory, recordCheck, type Check } from '@/lib/checks';
 import { emitChecksChanged, onChecksChanged } from '@/lib/checks-events';
-import { crisisFlagsForWindow } from '@/lib/crisis/days';
+import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
 import { aiConsentFor } from '@/lib/me';
 import { useMeContext } from '@/lib/me-context';
@@ -39,7 +39,6 @@ import { resolveTodaySlot, canShowCategoryTeaser, type TodaySlot } from '@/lib/t
 import { traitStateFromRow, TRAIT_POLE_LINES } from '@/lib/traits';
 import { bankCardForMe } from '@/lib/voice/bank';
 import { routeVoiceCard } from '@/lib/voice/router';
-import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { logJargonGuard } from '@/lib/voice/quota-server';
 import { canSeeDevLab } from '@/lib/dev-access';
@@ -97,53 +96,33 @@ export default function HomeScreen() {
   const [noteOpenedToday, setNoteOpenedToday] = useState(false);
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
 
-  const reloadChecks = useCallback(async () => {
-    if (!userId) return;
-    try {
-      setChecks(await fetchChecks(userId));
-    } catch (err) {
-      console.log('[home] fetchChecks error:', err);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    reloadChecks();
-    return onChecksChanged(() => {
-      reloadChecks();
-    });
-  }, [reloadChecks]);
-
-  useEffect(() => {
-    if (!me) return;
-    let cancelled = false;
-    fetchTraitTracks(me.id)
-      .then((next) => {
-        if (!cancelled) setTracks(next);
-      })
-      .catch(() => {
-        if (!cancelled) setTracks([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [me?.id, me?.updated_at]);
-
-  useEffect(() => {
+  /**
+   * One round trip for checks + trait tracks + crisis flags (wave35
+   * `home_bootstrap`). These were three separate queries on every mount, so a
+   * cold Home waited on three sequential requests before it settled.
+   */
+  const timeZone = me?.timezone || 'UTC';
+  const reloadHome = useCallback(async () => {
     if (!userId || !me) return;
-    let cancelled = false;
-    crisisFlagsForWindow(userId, me.timezone)
-      .then((flags) => {
-        if (cancelled) return;
-        setCrisisToday(flags.crisisToday);
-        setCrisisYesterday(flags.crisisYesterday);
-      })
-      .catch((err) => {
-        console.log('[home] crisis flags error:', err);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [userId, me?.timezone]);
+    try {
+      const next = await fetchHomeBootstrap(timeZone);
+      setChecks(next.checks);
+      setTracks(next.tracks);
+      setCrisisToday(next.crisisToday);
+      setCrisisYesterday(next.crisisYesterday);
+    } catch (err) {
+      console.log('[home] bootstrap error:', err);
+    }
+  }, [userId, me, timeZone]);
+
+  useEffect(() => {
+    void reloadHome();
+    // A logged check changes counts, tracks and (rarely) crisis state, so the
+    // same payload is what a refresh needs.
+    return onChecksChanged(() => {
+      void reloadHome();
+    });
+  }, [reloadHome]);
 
   const window = me
     ? checkWindowFor(
@@ -331,8 +310,7 @@ export default function HomeScreen() {
         status,
         noCard,
       });
-      const nextChecks = await fetchChecks(userId);
-      setChecks(nextChecks);
+      // Home listens to this and reloads via home_bootstrap — no second fetch.
       emitChecksChanged();
       if (status === 'done') triggerGesture('checkDone');
       await reloadCard();
@@ -351,9 +329,10 @@ export default function HomeScreen() {
           {...NO_PINCH_ZOOM}
           contentContainerStyle={styles.scrollContent}
           contentInsetAdjustmentBehavior="never">
+          {/* No "Home" title: the tab bar already says it, and a 32px label
+              above the fold pushed the card the user came for off-screen. */}
           <View style={styles.header}>
-            <ThemedText type="subtitle">Home</ThemedText>
-            <ThemedText themeColor="textSecondary">
+            <ThemedText type="subheading" themeColor="textSecondary">
               {params.focus === 'check' ? 'Check today.' : homeSageLede(theme.id)}
             </ThemedText>
           </View>
@@ -365,28 +344,36 @@ export default function HomeScreen() {
               </ThemedText>
             </ThemedView>
           ) : card ? (
-            <>
-              <ThemedView type="backgroundElement" style={styles.todayCard}>
-                <ThemedText type="code" themeColor="textSecondary" style={styles.sageKicker}>
-                  {homeSageLabel(theme.id)} · read
-                </ThemedText>
-                <ThemedText style={styles.cardText}>{card.read}</ThemedText>
-              </ThemedView>
-              <ThemedView type="backgroundElement" style={styles.todayCard}>
+            /*
+             * One card, one hierarchy. Read is the hero — it is the thing the
+             * app promises. Do sits under a hairline as a quieter instruction,
+             * and Nudge is an inline line, not a third equal box. Three
+             * identical rounded rectangles gave the day's read no more weight
+             * than a footnote.
+             */
+            <ThemedView type="backgroundElement" style={styles.heroCard}>
+              <ThemedText type="code" themeColor="textSecondary" style={styles.sageKicker}>
+                {homeSageLabel(theme.id)} · read
+              </ThemedText>
+              <ThemedText style={styles.heroRead}>{card.read}</ThemedText>
+
+              <View
+                style={[styles.heroDivider, { backgroundColor: controlBorderColor(theme) }]}
+              />
+
+              <View style={styles.doBlock}>
                 <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
                   do
                 </ThemedText>
-                <ThemedText style={styles.cardText}>{card.do}</ThemedText>
-              </ThemedView>
+                <ThemedText style={styles.doText}>{card.do}</ThemedText>
+              </View>
+
               {card.nudge ? (
-                <ThemedView type="backgroundElement" style={styles.todayCard}>
-                  <ThemedText type="code" themeColor="textSecondary" style={styles.sageKicker}>
-                    {NUDGE_LABEL}
-                  </ThemedText>
-                  <ThemedText style={styles.cardText}>{card.nudge}</ThemedText>
-                </ThemedView>
+                <ThemedText type="small" themeColor="textSecondary" style={styles.nudgeLine}>
+                  {NUDGE_LABEL} · {card.nudge}
+                </ThemedText>
               ) : null}
-            </>
+            </ThemedView>
           ) : (
             <Pressable onPress={() => router.push('/dawn')} style={({ pressed }) => pressed && styles.pressed}>
               <ThemedView type="backgroundElement" style={styles.todayCard}>
@@ -598,6 +585,30 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.four,
     padding: Spacing.four,
     gap: Spacing.two,
+  },
+  heroCard: {
+    borderRadius: Spacing.four,
+    padding: Spacing.four,
+    gap: Spacing.two,
+  },
+  heroRead: {
+    fontSize: 22,
+    lineHeight: 32,
+    fontWeight: '500',
+  },
+  heroDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginTop: Spacing.three,
+    opacity: 0.7,
+  },
+  doBlock: {
+    gap: Spacing.half,
+  },
+  doText: {
+    lineHeight: 24,
+  },
+  nudgeLine: {
+    paddingTop: Spacing.two,
   },
   kicker: {
     textTransform: 'uppercase',

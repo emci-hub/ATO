@@ -8,7 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useNavOrder } from '@/lib/nav/nav-context';
-import { NAV_TABS, type ReorderableTabId } from '@/lib/nav/nav-order';
+import { MAIN_BAR_CAP, NAV_TABS, type ReorderableTabId } from '@/lib/nav/nav-order';
 import { controlBorderColor } from '@/lib/theme/chrome';
 
 /**
@@ -19,7 +19,7 @@ import { controlBorderColor } from '@/lib/theme/chrome';
  * Cross-list moves use explicit affordances ("move to More" / "move to bar")
  * rather than a cross-list drag, keeping the interaction robust.
  */
-const MAIN_BAR_CAP = 2;
+
 
 export function NavEditOverlay({
   lockedTabs = [],

@@ -3,10 +3,12 @@ import { Platform, type ViewStyle } from 'react-native';
 import type { AppearanceTokens } from '@/constants/appearance';
 
 /**
- * Soft uses a transparent card border (shadow instead). Outline buttons still
- * need a visible hairline — `theme.backgroundSelected` on white is invisible.
+ * Outline CONTROLS (buttons, inputs) need more contrast than a card hairline.
+ * A mode may set `controlBorder` for that; otherwise the surface border is
+ * reused, and a transparent one falls back to a readable neutral.
  */
 export function controlBorderColor(theme: AppearanceTokens): string {
+  if (theme.controlBorder) return theme.controlBorder;
   if (theme.border && theme.border !== 'transparent') return theme.border;
   return 'rgba(31, 41, 55, 0.22)';
 }

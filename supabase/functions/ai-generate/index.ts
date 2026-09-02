@@ -15,7 +15,7 @@
  *   maxOutputTokens is clamped server-side to MAX_OUTPUT_TOKENS.
  *   callType tags ai_usage.by_type ('sage' | 'explore'); defaults to 'sage'.
  *   ping: true is a connectivity probe — the prompt is replaced with a fixed
- *   16-token request and NO quota is claimed, so the dev provider-status dots
+ *   64-token request and NO quota is claimed, so the dev provider-status dots
  *   can poll without draining a user's day.
  * Returns { text } — the same raw string the client parsers already expect.
  */
@@ -25,7 +25,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 const MAX_OUTPUT_TOKENS = 1024;
 const DEFAULT_OUTPUT_TOKENS = 1024;
 const PING_PROMPT = 'Reply with the word ready.';
-const PING_OUTPUT_TOKENS = 16;
+const PING_OUTPUT_TOKENS = 64;
 
 const PROVIDERS = ['gemini', 'nvidia', 'perplexity', 'claude', 'grok', 'deepseek'] as const;
 type ProviderId = (typeof PROVIDERS)[number];

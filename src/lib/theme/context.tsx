@@ -17,6 +17,11 @@ import {
   type AppearanceTokens,
 } from '@/constants/appearance';
 import { loadAppearanceId, saveAppearanceId } from '@/lib/theme/storage';
+import {
+  isAppearanceUnlocked,
+  resolveAllowedAppearance,
+  useSubscription,
+} from '@/lib/subscription';
 
 type AppearanceContextValue = {
   id: AppearanceId;
@@ -24,7 +29,10 @@ type AppearanceContextValue = {
   reduceMotion: boolean;
   /** False until the on-device mode is read. Tabs must not mount as Soft first. */
   ready: boolean;
-  setAppearance: (id: AppearanceId) => Promise<void>;
+  /** True when the viewer may use subscriber-only modes. */
+  subscriptionActive: boolean;
+  /** Refuses a locked mode; returns false when the change was not applied. */
+  setAppearance: (id: AppearanceId) => Promise<boolean>;
 };
 
 function applyNativeChrome(id: AppearanceId) {
@@ -46,13 +54,17 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
   const [id, setId] = useState<AppearanceId>(DEFAULT_APPEARANCE);
   const [ready, setReady] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const { active: subscriptionActive } = useSubscription();
 
   useEffect(() => {
     let cancelled = false;
     loadAppearanceId().then((stored) => {
       if (cancelled) return;
-      setId(stored);
-      applyNativeChrome(stored);
+      // A stored subscriber mode is not honoured without the entitlement — a
+      // lapsed subscriber lands back on the default, not a locked screen.
+      const allowed = resolveAllowedAppearance(stored, subscriptionActive);
+      setId(allowed);
+      applyNativeChrome(allowed);
       setReady(true);
     });
     return () => {
@@ -84,10 +96,15 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const setAppearance = useCallback(async (next: AppearanceId) => {
-    setId(next);
-    await saveAppearanceId(next);
-  }, []);
+  const setAppearance = useCallback(
+    async (next: AppearanceId) => {
+      if (!isAppearanceUnlocked(next, subscriptionActive)) return false;
+      setId(next);
+      await saveAppearanceId(next);
+      return true;
+    },
+    [subscriptionActive],
+  );
 
   const value = useMemo(
     () => ({
@@ -95,9 +112,10 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
       tokens: APPEARANCES[id],
       reduceMotion,
       ready,
+      subscriptionActive,
       setAppearance,
     }),
-    [id, reduceMotion, ready, setAppearance],
+    [id, reduceMotion, ready, subscriptionActive, setAppearance],
   );
 
   return <AppearanceContext.Provider value={value}>{children}</AppearanceContext.Provider>;
@@ -111,7 +129,8 @@ export function useAppearance(): AppearanceContextValue {
       tokens: APPEARANCES[DEFAULT_APPEARANCE],
       reduceMotion: false,
       ready: true,
-      setAppearance: async () => {},
+      subscriptionActive: false,
+      setAppearance: async () => false,
     };
   }
   return ctx;

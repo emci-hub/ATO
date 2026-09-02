@@ -83,12 +83,26 @@ export interface NavOrder {
   more: ReorderableTabId[];
 }
 
+/**
+ * Reorderable tabs allowed on the bar at once. The bar renders 2 pinned
+ * (Home + Sage) + this + More, so 3 = 6 items.
+ */
+export const MAIN_BAR_CAP = 3;
+
+/**
+ * Every placement below is a decision, not a leftover:
+ *   bar  - Explore (daily content), Legends (the reason to come back), Circle
+ *          (the whole social half; gated until a friend is scanned, but it
+ *          keeps its slot rather than hiding inside More once unlocked).
+ *   More - Around (a room opened on purpose), Questions (a deliberate
+ *          sit-down), You (settings and profile, opened rarely, never
+ *          mid-task).
+ * Only new/unset accounts get this; any persisted order is preserved.
+ */
 export const DEFAULT_NAV_ORDER: NavOrder = {
   homeFirst: true,
-  // Main bar = Home + Sage + Explore + You + More (5 items). Around/Questions/
-  // Legends are secondary "rooms opened on purpose", so they default into More.
-  main: ['explore', 'you'],
-  more: ['around', 'circle', 'questions', 'legends'],
+  main: ['explore', 'legends', 'circle'],
+  more: ['around', 'questions', 'you'],
 };
 
 const NAV_ORDER_KEY = 'ato.nav.order.v1';

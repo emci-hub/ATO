@@ -31,6 +31,17 @@ function parseTrack(raw: {
   };
 }
 
+/** Validates raw trait_tracks rows (from a table read or the home_bootstrap RPC). */
+export function parseTraitTrackRows(rows: readonly unknown[]): TraitTrack[] {
+  const out: TraitTrack[] = [];
+  for (const row of rows) {
+    if (!row || typeof row !== 'object') continue;
+    const parsed = parseTrack(row as Parameters<typeof parseTrack>[0]);
+    if (parsed) out.push(parsed);
+  }
+  return out;
+}
+
 export async function fetchTraitTracks(userId: string): Promise<TraitTrack[]> {
   const { data, error } = await supabase
     .from('trait_tracks')

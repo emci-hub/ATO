@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedPressable } from '@/components/themed-pressable';
@@ -11,11 +12,22 @@ import {
 } from '@/constants/appearance';
 import { Spacing } from '@/constants/theme';
 import { useAppearance } from '@/lib/theme/context';
+import {
+  isAppearanceUnlocked,
+  SUBSCRIPTION_LABEL,
+  SUBSCRIPTION_LOCKED_NOTE,
+} from '@/lib/subscription';
 import { useTheme } from '@/hooks/use-theme';
 
+/**
+ * Appearance list. Soft and Quest are free; the rest are subscriber modes and
+ * render locked (visible, swatches shown, not selectable) until an entitlement
+ * exists — nothing is hidden, so the value of subscribing is legible.
+ */
 export function AppearancePicker() {
   const theme = useTheme();
-  const { id, setAppearance } = useAppearance();
+  const { id, setAppearance, subscriptionActive } = useAppearance();
+  const [lockedNote, setLockedNote] = useState<AppearanceId | null>(null);
 
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
@@ -27,25 +39,48 @@ export function AppearancePicker() {
       </ThemedText>
       {APPEARANCE_IDS.map((option: AppearanceId) => {
         const selected = id === option;
+        const unlocked = isAppearanceUnlocked(option, subscriptionActive);
         return (
-          <ThemedPressable
-            key={option}
-            accessibilityRole="button"
-            accessibilityLabel={APPEARANCE_LABELS[option]}
-            accessibilityState={{ selected }}
-            onPress={() => {
-              void setAppearance(option);
-            }}
-            style={[
-              styles.row,
-              selected && { backgroundColor: theme.backgroundSelected },
-            ]}>
-            <View style={styles.swatches}>
-              <View style={[styles.swatch, { backgroundColor: APPEARANCES[option].background }]} />
-              <View style={[styles.swatch, { backgroundColor: APPEARANCES[option].accentFill }]} />
-            </View>
-            <ThemedText type="smallBold">{APPEARANCE_LABELS[option]}</ThemedText>
-          </ThemedPressable>
+          <View key={option}>
+            <ThemedPressable
+              accessibilityRole="button"
+              accessibilityLabel={
+                unlocked
+                  ? APPEARANCE_LABELS[option]
+                  : `${APPEARANCE_LABELS[option]}, ${SUBSCRIPTION_LABEL} only`
+              }
+              accessibilityState={{ selected, disabled: !unlocked }}
+              onPress={() => {
+                if (!unlocked) {
+                  setLockedNote(option);
+                  return;
+                }
+                setLockedNote(null);
+                void setAppearance(option);
+              }}
+              style={[
+                styles.row,
+                selected && { backgroundColor: theme.backgroundSelected },
+              ]}>
+              <View style={[styles.swatches, !unlocked && styles.lockedSwatches]}>
+                <View style={[styles.swatch, { backgroundColor: APPEARANCES[option].background }]} />
+                <View style={[styles.swatch, { backgroundColor: APPEARANCES[option].accentFill }]} />
+              </View>
+              <ThemedText type="smallBold" themeColor={unlocked ? undefined : 'textSecondary'}>
+                {APPEARANCE_LABELS[option]}
+              </ThemedText>
+              {unlocked ? null : (
+                <ThemedText type="small" themeColor="textSecondary" style={styles.badge}>
+                  {SUBSCRIPTION_LABEL}
+                </ThemedText>
+              )}
+            </ThemedPressable>
+            {lockedNote === option ? (
+              <ThemedText type="small" themeColor="textSecondary" style={styles.note}>
+                {SUBSCRIPTION_LOCKED_NOTE}
+              </ThemedText>
+            ) : null}
+          </View>
         );
       })}
     </ThemedView>
@@ -75,6 +110,16 @@ const styles = StyleSheet.create({
   swatches: {
     flexDirection: 'row',
     gap: 4,
+  },
+  lockedSwatches: {
+    opacity: 0.45,
+  },
+  badge: {
+    marginLeft: 'auto',
+  },
+  note: {
+    paddingHorizontal: Spacing.three,
+    paddingBottom: Spacing.two,
   },
   swatch: {
     width: 14,

@@ -11,10 +11,11 @@ import { resolve } from 'node:path';
 
 import {
   DEFAULT_NAV_ORDER,
-  isTabUnlocked,
-  lockedTabIds,
+  MAIN_BAR_CAP,
   NAV_TABS,
   NAV_TAB_IDS,
+  isTabUnlocked,
+  lockedTabIds,
   normalizeNavOrder,
   type NavOrder,
 } from '../src/lib/nav/nav-order';
@@ -41,14 +42,27 @@ ok('Home and Sage are not reorderable ids — they can never enter main/more');
 
 assert.deepEqual(DEFAULT_NAV_ORDER, {
   homeFirst: true,
-  main: ['explore', 'you'],
-  more: ['around', 'circle', 'questions', 'legends'],
+  main: ['explore', 'legends', 'circle'],
+  more: ['around', 'questions', 'you'],
 });
-ok('default order: Explore/You on the bar; Around/Circle/Questions/Legends in More (bar = 5 items)');
+ok('default order: Explore/Legends/Circle on the bar; Around/Questions/You in More');
 
-// Main bar renders 2 pinned (Home+Sage) + main.length + More. Default must be 5.
-assert.equal(2 + DEFAULT_NAV_ORDER.main.length + 1, 5);
-ok('default main bar is 5 items max, not 6');
+// Main bar renders 2 pinned (Home+Sage) + main.length + More = 6 at the cap.
+assert.equal(MAIN_BAR_CAP, 3);
+assert.equal(DEFAULT_NAV_ORDER.main.length, MAIN_BAR_CAP);
+assert.equal(2 + DEFAULT_NAV_ORDER.main.length + 1, 6);
+ok('bar cap is 3 reorderable tabs = 6 items, and the default fills it');
+
+// No tab may sit in More by accident: every id is placed on purpose, and the
+// two the product calls primary (Legends, Circle) are on the bar.
+assert.deepEqual(
+  [...DEFAULT_NAV_ORDER.main, ...DEFAULT_NAV_ORDER.more].sort(),
+  [...NAV_TAB_IDS].sort(),
+);
+for (const id of ['legends', 'circle'] as const) {
+  assert.ok(DEFAULT_NAV_ORDER.main.includes(id), `${id} must have a primary slot`);
+}
+ok('every tab has a deliberate placement; Legends and Circle are primary');
 
 // A stored custom order is NOT reset by the default change: normalizing the
 // old-style 6-item order keeps around on the bar (it is only the DEFAULT for
