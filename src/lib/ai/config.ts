@@ -1,8 +1,4 @@
-import {
-  isAiProviderId,
-  type AiProviderId,
-  type RemoteAiProviderId,
-} from './types';
+import { isAiProviderId, type AiProviderId } from './types';
 
 export interface AiEnv {
   AI_PROVIDER?: string;
@@ -60,28 +56,31 @@ export function buildAiConfig(env: AiEnv): AiConfig {
   };
 }
 
+/**
+ * Since 2026-09-02 NO vendor key is read here. Every remote call goes through
+ * the ai-generate Edge Function, whose secrets (GEMINI_API_KEY, NVIDIA_API_KEY,
+ * PERPLEXITY_API_KEY, ANTHROPIC_API_KEY, XAI_API_KEY, DEEPSEEK_API_KEY) never
+ * reach the bundle. The *_API_KEY fields on AiEnv/AiConfig remain only so the
+ * live Node check scripts (card-live / talk-live / style-live) can pass a key
+ * explicitly to the script-only Gemini adapter.
+ *
+ * Only statically referenced EXPO_PUBLIC_* vars get inlined by Expo, so
+ * omitting them here is what actually removes them from the app.
+ */
 const BUNDLE_ENV: AiEnv = {
   AI_PROVIDER: process.env.EXPO_PUBLIC_AI_PROVIDER,
   MODEL_PROVIDER: process.env.EXPO_PUBLIC_MODEL_PROVIDER,
   GEMINI_MODEL: process.env.EXPO_PUBLIC_GEMINI_MODEL,
-  GEMINI_API_KEY: process.env.EXPO_PUBLIC_GEMINI_API_KEY,
   NVIDIA_MODEL: process.env.EXPO_PUBLIC_NVIDIA_MODEL,
-  NVIDIA_API_KEY: process.env.EXPO_PUBLIC_NVIDIA_API_KEY,
   PERPLEXITY_MODEL: process.env.EXPO_PUBLIC_PERPLEXITY_MODEL,
-  PERPLEXITY_API_KEY: process.env.EXPO_PUBLIC_PERPLEXITY_API_KEY,
 };
 
 export const AI_CONFIG: AiConfig = buildAiConfig(BUNDLE_ENV);
 
-/** Client-held keys only. Claude/Grok keys live in Edge Function secrets. */
-export function hasClientKey(config: AiConfig, id: RemoteAiProviderId): boolean {
-  if (id === 'gemini') return Boolean(config.geminiApiKey);
-  if (id === 'nvidia') return Boolean(config.nvidiaApiKey);
-  if (id === 'perplexity') return Boolean(config.perplexityApiKey);
-  return true;
-}
-
-export function isRemoteReady(config: AiConfig, id: AiProviderId): boolean {
-  if (id === 'local') return false;
-  return hasClientKey(config, id);
+/**
+ * A remote provider is always "ready" from the client's point of view — the
+ * key check happens in the Edge Function (503 `<provider>_key_missing`).
+ */
+export function isRemoteReady(_config: AiConfig, id: AiProviderId): boolean {
+  return id !== 'local';
 }

@@ -42,7 +42,6 @@ assert.equal(buildAiConfig({ MODEL_PROVIDER: 'local' }).provider, 'local');
 assert.equal(buildAiConfig({ AI_PROVIDER: 'nvidia' }).provider, 'nvidia');
 assert.equal(buildAiConfig({ AI_PROVIDER: 'nvidia', MODEL_PROVIDER: 'local' }).provider, 'local');
 assert.equal(buildAiConfig({ AI_PROVIDER: 'claude' }).provider, 'claude');
-assert.equal(buildAiConfig({ MODEL_PROVIDER: 'gemini' }).geminiApiKey, undefined);
 assert.equal(buildVoiceConfig({ MODEL_PROVIDER: 'local' }).provider, 'local');
 assert.ok(!isAiProviderId('groq'));
 ok('AI_PROVIDER selects the vendor; MODEL_PROVIDER=local still forces the fallback');
@@ -59,28 +58,46 @@ ok('seeded reference limits match the known free-tier baselines');
 const generate = read('src/lib/ai/generate.ts');
 assert.match(generate, /export async function generateText/);
 assert.match(read('src/lib/ai/types.ts'), /responseFormat/);
-assert.match(generate, /completeGemini/);
-assert.match(generate, /completeNvidia/);
-assert.match(generate, /completePerplexity/);
 assert.match(generate, /completeViaEdge/);
-assert.match(read('src/lib/ai/gemini.ts'), /thinkingConfig/);
-assert.match(read('src/lib/ai/openai-compat.ts'), /integrate\.api\.nvidia\.com/);
-assert.match(read('src/lib/ai/openai-compat.ts'), /disable_search: true/);
+assert.doesNotMatch(generate, /completeGemini|completeNvidia|completePerplexity/);
 assert.match(read('src/lib/ai/edge.ts'), /functions\.invoke\('ai-generate'/);
-ok('shared generateText dispatches Gemini / NVIDIA / Perplexity / Edge');
+assert.match(read('src/lib/ai/edge.ts'), /isRemoteAiProviderId\(id\)/);
+ok('shared generateText sends every remote vendor through the Edge Function');
+
+// No vendor key may be inlined into the bundle: only statically referenced
+// EXPO_PUBLIC_* vars are inlined, so the reference itself is the leak.
+const keyLeaks = walk(resolve(root, 'src')).filter((file) =>
+  /EXPO_PUBLIC_[A-Z_]*API_KEY/.test(readFileSync(file, 'utf8')),
+);
+assert.deepEqual(keyLeaks, []);
+ok('no EXPO_PUBLIC_*_API_KEY reference anywhere in src');
 
 const edge = read('supabase/functions/ai-generate/index.ts');
-assert.match(edge, /ANTHROPIC_API_KEY/);
-assert.match(edge, /XAI_API_KEY/);
-assert.match(edge, /DEEPSEEK_API_KEY/);
+for (const secret of [
+  'GEMINI_API_KEY',
+  'NVIDIA_API_KEY',
+  'PERPLEXITY_API_KEY',
+  'ANTHROPIC_API_KEY',
+  'XAI_API_KEY',
+  'DEEPSEEK_API_KEY',
+]) {
+  assert.match(edge, new RegExp(secret));
+}
 assert.doesNotMatch(edge, /process\.env\.EXPO_PUBLIC_/);
-assert.match(edge, /provider !== 'claude' && provider !== 'grok' && provider !== 'deepseek'/);
+assert.match(edge, /PROVIDERS as readonly string\[\]\)\.includes\(provider\)/);
+assert.match(edge, /generativelanguage\.googleapis\.com/);
+assert.match(edge, /thinkingConfig/);
+assert.match(edge, /integrate\.api\.nvidia\.com/);
+assert.match(edge, /disable_search: true/);
 assert.match(edge, /api\.anthropic\.com\/v1\/messages/);
 assert.match(edge, /api\.x\.ai\/v1\/chat\/completions/);
 assert.match(edge, /api\.deepseek\.com\/chat\/completions/);
+assert.match(edge, /auth\.getUser\(\)/);
+assert.match(edge, /claim_ai_call/);
+assert.match(edge, /MAX_OUTPUT_TOKENS = 1024/);
 assert.equal(PROVIDER_LIMITS.deepseek.rpm, null);
 assert.ok(AI_PROVIDER_IDS.includes('deepseek'));
-ok('Edge Function holds Claude and Grok keys server-side');
+ok('Edge Function holds every vendor key, verifies the JWT, claims quota, caps tokens');
 
 const srcFiles = walk(resolve(root, 'src'));
 const generateContentHits = srcFiles.filter((file) => {
@@ -88,7 +105,7 @@ const generateContentHits = srcFiles.filter((file) => {
   return text.includes(':generateContent') && !file.endsWith('src\\lib\\ai\\gemini.ts') && !file.endsWith('src/lib/ai/gemini.ts');
 });
 assert.deepEqual(generateContentHits, []);
-ok('only the Gemini adapter hits generateContent');
+ok('only the script-only Gemini adapter hits generateContent from src');
 
 assert.match(read('src/lib/explore/generate.ts'), /generateText/);
 assert.match(read('src/lib/questions/generate.ts'), /generateText/);

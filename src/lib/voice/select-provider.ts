@@ -15,7 +15,7 @@ export async function pickVoiceProvider(
     const label =
       requested === 'local'
         ? local.label
-        : `local (no ${requested} key configured)`;
+        : `local (${requested} unavailable)`;
     return { provider: local, label };
   }
   const provider = providers[requested] ?? providers.local;

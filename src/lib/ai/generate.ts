@@ -1,6 +1,4 @@
 import { AI_CONFIG, isRemoteReady } from './config';
-import { completeGemini } from './gemini';
-import { completeNvidia, completePerplexity } from './openai-compat';
 import { completeViaEdge, isEdgeProvider } from './edge';
 import { resolveActiveProvider } from './override';
 import type { AiCallMetadata, AiProviderId, GenerateRequest, RemoteAiProviderId } from './types';
@@ -23,24 +21,8 @@ async function completeFor(
   // meta is threaded through so every call site's declaration follows the
   // request into future per-call logging / batching layers.
   void meta;
-  if (provider === 'gemini') {
-    return completeGemini(request, {
-      model: AI_CONFIG.geminiModel,
-      apiKey: AI_CONFIG.geminiApiKey ?? '',
-    });
-  }
-  if (provider === 'nvidia') {
-    return completeNvidia(request, {
-      model: AI_CONFIG.nvidiaModel,
-      apiKey: AI_CONFIG.nvidiaApiKey ?? '',
-    });
-  }
-  if (provider === 'perplexity') {
-    return completePerplexity(request, {
-      model: AI_CONFIG.perplexityModel,
-      apiKey: AI_CONFIG.perplexityApiKey ?? '',
-    });
-  }
+  // Every vendor — Gemini included — is called by the ai-generate Edge
+  // Function. No vendor key exists in this bundle.
   if (isEdgeProvider(provider)) {
     return completeViaEdge(provider, request, options);
   }

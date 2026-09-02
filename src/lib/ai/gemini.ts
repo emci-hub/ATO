@@ -1,6 +1,12 @@
 import { extractGeminiText, AiProviderError } from './http';
 import type { GenerateRequest } from './types';
 
+/**
+ * SCRIPT-ONLY Gemini adapter (card-live / talk-live / style-live checks pass a
+ * key from the Node env). The app never imports this: every in-app call goes
+ * through the ai-generate Edge Function. scripts/ai-provider-check asserts
+ * that src/lib/ai/generate.ts does not reference it.
+ */
 export async function completeGemini(
   request: GenerateRequest,
   options: { model: string; apiKey: string },

@@ -1,19 +1,19 @@
-import type { GenerateRequest } from './types';
+import type { GenerateRequest, RemoteAiProviderId } from './types';
 import { AiProviderError } from './http';
-import type { RemoteAiProviderId } from './types';
+import { isRemoteAiProviderId } from './types';
 
-const EDGE_PROVIDERS = new Set<RemoteAiProviderId>(['claude', 'grok', 'deepseek']);
-
-export function isEdgeProvider(id: string): id is 'claude' | 'grok' | 'deepseek' {
-  return EDGE_PROVIDERS.has(id as RemoteAiProviderId);
+/** Every remote vendor is served by the ai-generate Edge Function. */
+export function isEdgeProvider(id: string): id is RemoteAiProviderId {
+  return isRemoteAiProviderId(id);
 }
 
 /**
- * Claude, Grok, and DeepSeek keys stay on the server. Dynamic import so Node
- * unit checks that never call this path do not load the Supabase client.
+ * All vendor keys stay on the server (Edge Function secrets). Dynamic import
+ * so Node unit checks that never call this path do not load the Supabase
+ * client.
  */
 export async function completeViaEdge(
-  provider: 'claude' | 'grok' | 'deepseek',
+  provider: RemoteAiProviderId,
   request: GenerateRequest,
   options: { ping?: boolean } = {},
 ): Promise<string> {
