@@ -37,7 +37,7 @@ This is not a substitute for legal advice. This draft is intended for review by 
 We use a small number of service providers to run ATO. We don't sell your data to anyone, ever.
 
 - **Supabase** — hosts our database and handles authentication. Your profile, Checks, chat messages, and facts live here.
-- **Google / NVIDIA / Perplexity (client APIs)** and **Anthropic / xAI (via our `ai-generate` Edge Function)** — power Sage, the in-app AI coach. When you talk to Sage or receive a daily card, relevant context is sent to whichever provider is configured: ME, recent Checks, and for Talk a short window of recent Sage turns so a follow-up can be answered (not the full thread). That provider's own privacy terms govern how they process the request. ATO logs only which provider was called and when, not the prompt or the reply.
+- **Google Gemini** and **DeepSeek** — power Sage, the in-app AI coach. Gemini is the default provider; if a Gemini request is blocked by its usage or rate limits, ATO retries the same request once through DeepSeek. When you talk to Sage or receive a daily card, relevant context is sent to whichever provider is active: ME, recent Checks, and for Talk a short window of recent Sage turns so a follow-up can be answered (not the full thread). That provider's own privacy terms govern how they process the request. ATO logs only which provider was called and when, not the prompt or the reply. No other AI provider is configured at this time.
 - **Resend** — sends the one-time login codes to your email, and invite codes when a landing-page access request is approved.
 - **Apple** — if you sign in with Apple, Apple may relay a private email address instead of your real one. We only see whatever Apple gives us.
 

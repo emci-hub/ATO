@@ -14,7 +14,7 @@ Copy these answers into App Store Connect → App Privacy. They must match `Priv
 | Name | Yes | Linked | No | App Functionality, Product Personalization | `me.name` |
 | Date of Birth | Yes | Linked | No | App Functionality | `me.born_on` (self-reported at onboarding). Age is computed from the date — 16+ to create an account, 18+ later for Wave 2 "going". Not a frozen age or boolean. |
 | User ID | Yes | Linked | No | App Functionality | Auth UUID, `@handle`, Apple `sub`, invite `referred_by` (abuse prevention only; never shown publicly) |
-| Other User Content | Yes | Linked | No | App Functionality, Product Personalization | Chat messages; Sage messages; ME free text (`show_up`, `knocks_you_off`, `morning_cue`, `talk_style`, `evening_wind_down`, `energy_pattern`, `recovery_style`, `support_style`, `current_focus`, `facts`, typed `city` for Around, IANA `timezone`); pixel `recipe`; Check read/do text. The configured Sage provider (Gemini / NVIDIA / Perplexity / Claude / Grok) receives ME + recent checks +, for Talk, a short window of recent Sage turns — not the full thread. |
+| Other User Content | Yes | Linked | No | App Functionality, Product Personalization | Chat messages; Sage messages; ME free text (`show_up`, `knocks_you_off`, `morning_cue`, `talk_style`, `evening_wind_down`, `energy_pattern`, `recovery_style`, `support_style`, `current_focus`, `facts`, typed `city` for Around, IANA `timezone`); pixel `recipe`; Check read/do text. The Sage provider (Google Gemini by default; DeepSeek as the automatic fallback when Gemini's usage or rate limit blocks a request) receives ME + recent checks +, for Talk, a short window of recent Sage turns — not the full thread. |
 | Customer Support | Yes | Linked | No | App Functionality | `reports` (reason + target) on Chat and Sage |
 | Product Interaction | Yes | Linked | No | App Functionality, Product Personalization | Checks (`did`/`skip`), AI consent, invite-code uses, `ai_usage` counts, `ai_provider_log` (provider + timestamp only) |
 | Other Usage Data | Yes | Linked | No | App Functionality | `crisis_flags` (user + timestamp only, never the message) |
@@ -48,6 +48,7 @@ Push notification token: `privacy.md` says we collect one if notifications are e
 
 - **Supabase** — database, auth, profile, Checks, chat, facts, reports, crisis-flag timestamps, referrals.
 - **Google (Gemini API)** — Sage coach replies and generated daily cards; relevant context only. Talk may include a short window of recent Sage turns, not the full thread.
+- **DeepSeek** — automatic fallback for Sage requests when the default Gemini provider is rate-limited; the same relevant context is sent, nothing extra.
 - **Resend** — one-time login codes to email, and invite codes when an access request is approved.
 - **Apple** — Sign in with Apple (may relay a private email); Hide My Email address is what we store.
 - **Sentry** — crash/diagnostic data, not linked to the ATO account.
