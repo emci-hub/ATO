@@ -5,6 +5,7 @@ import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { generateStoryBody } from '@/lib/explore/generate';
+import { SAGE_STORY_META } from '@/lib/ai/call-sites';
 import { localYmd } from '@/lib/local-date';
 import type { Me } from '@/lib/me';
 import {
@@ -86,7 +87,10 @@ export function SageStoryFold({
         }
         let body: string | null = null;
         for (let attempt = 1; attempt <= 2; attempt += 1) {
-          const raw = await generateStoryBody(buildStoryPrompt({ tracks, divergenceNote }));
+          const raw = await generateStoryBody(
+            buildStoryPrompt({ tracks, divergenceNote }),
+            SAGE_STORY_META,
+          );
           if (!raw) break;
           if (containsFrameworkTerm(raw) || matchingJargonTerm(raw) || storyNamesACategory(raw)) {
             continue;

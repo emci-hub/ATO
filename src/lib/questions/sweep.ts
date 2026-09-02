@@ -12,6 +12,7 @@ import { voicePresetOf, VOICE_PRESET_GUIDE } from '@/lib/voice/preset';
 import { TALK_STYLE_GUIDE } from '@/lib/voice/providers/types';
 import type { TalkStyle } from '@/lib/voice/types';
 import { generateText } from '@/lib/ai/generate';
+import { SWEEP_META } from '@/lib/ai/call-sites';
 import { shouldUseLocalAi } from '@/lib/ai/override';
 
 import type { QuestionDraft } from './types';
@@ -69,7 +70,7 @@ export async function generateQuestionSweep(prompt: string): Promise<QuestionDra
     temperature: 0.8,
     maxOutputTokens: 4096,
     responseFormat: 'json',
-  });
+  }, SWEEP_META);
   if (!text) return null;
   const drafts = parseQuestionSweep(text);
   return drafts.length > 0 ? drafts : null;

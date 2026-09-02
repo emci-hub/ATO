@@ -6,6 +6,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { fallbackCategoryCopies } from '@/lib/category-bands';
 import { generateExploreBody } from '@/lib/explore/generate';
+import { SAGE_TITLE_META } from '@/lib/ai/call-sites';
 import { localYmd } from '@/lib/local-date';
 import type { Me } from '@/lib/me';
 import {
@@ -89,7 +90,7 @@ export function SageTitleCard({
           if (!cancelled) setTitle(cached);
           return;
         }
-        const raw = await generateExploreBody(buildTitlePrompt(tracks, today));
+        const raw = await generateExploreBody(buildTitlePrompt(tracks, today), SAGE_TITLE_META);
         const parsed = raw ? parseCombinedBody(raw) : null;
         if (!parsed || containsFrameworkTerm(parsed.title) || containsFrameworkTerm(parsed.lede)) {
           if (!cancelled) setTitle(cached);

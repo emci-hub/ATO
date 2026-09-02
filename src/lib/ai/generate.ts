@@ -3,7 +3,7 @@ import { completeGemini } from './gemini';
 import { completeNvidia, completePerplexity } from './openai-compat';
 import { completeViaEdge, isEdgeProvider } from './edge';
 import { resolveActiveProvider } from './override';
-import type { AiProviderId, GenerateRequest, RemoteAiProviderId } from './types';
+import type { AiCallMetadata, AiProviderId, GenerateRequest, RemoteAiProviderId } from './types';
 
 async function logQuiet(provider: AiProviderId): Promise<void> {
   try {
@@ -17,7 +17,11 @@ async function logQuiet(provider: AiProviderId): Promise<void> {
 async function completeFor(
   provider: Exclude<AiProviderId, 'local'>,
   request: GenerateRequest,
+  meta: AiCallMetadata,
 ): Promise<string> {
+  // meta is threaded through so every call site's declaration follows the
+  // request into future per-call logging / batching layers.
+  void meta;
   if (provider === 'gemini') {
     return completeGemini(request, {
       model: AI_CONFIG.geminiModel,
@@ -43,24 +47,65 @@ async function completeFor(
 }
 
 /**
+ * Quota-triggered fallback gate: only Gemini quota / token-limit failures
+ * qualify (e.g. free-tier 429 RESOURCE_EXHAUSTED). Anything else is a real
+ * error and must surface as the normal error state, not a provider switch.
+ */
+export function isQuotaLimitError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  const msg = err.message;
+  if (/\b429\b/.test(msg)) return true;
+  if (/resource_exhausted|rate_limit|quota/i.test(msg)) return true;
+  if (/token/i.test(msg) && /limit|exceed|max|too long|length/i.test(msg)) return true;
+  return false;
+}
+
+/**
  * One-shot, non-streaming. Returns the raw model text (JSON string or prose)
  * so existing parse* functions stay unchanged. Null when local / unconfigured
  * / the vendor call failed.
+ *
+ * `meta` is required — every call site must declare how its output may be
+ * shared or batched (see src/lib/ai/call-sites.ts). scripts/ai-provider-check.ts
+ * fails on any call site that omits it.
  */
-export async function generateText(request: GenerateRequest): Promise<string | null> {
+export async function generateText(
+  request: GenerateRequest,
+  meta: AiCallMetadata,
+): Promise<string | null> {
   const provider = await resolveActiveProvider();
   if (provider === 'local' || !isRemoteReady(AI_CONFIG, provider)) return null;
 
   try {
-    const text = await completeFor(provider, request);
+    const text = await completeFor(provider, request, meta);
     void logQuiet(provider);
     return text;
   } catch (err) {
+    // Gemini is the bundled default. When it fails on quota/token limits
+    // specifically (not other errors), retry the same request once on
+    // DeepSeek; if that also fails, fall through to the normal error state.
+    if (provider === 'gemini' && isQuotaLimitError(err)) {
+      try {
+        const text = await completeFor('deepseek', request, meta);
+        void logQuiet('deepseek');
+        return text;
+      } catch (fallbackErr) {
+        console.log('[ai] Gemini quota -> DeepSeek fallback failed:', fallbackErr);
+      }
+    }
     void logQuiet(provider);
     console.log('[ai] generate error:', err);
     return null;
   }
 }
+
+/** Connectivity probes are not content — never quota-fallback, never user-visible. */
+const PING_META: AiCallMetadata = {
+  personalized: false,
+  cohortShareable: false,
+  bucketShareable: false,
+  latencySensitive: false,
+};
 
 /**
  * Minimal real call through the same dispatch as generateText, for
@@ -76,5 +121,5 @@ export async function pingProvider(provider: RemoteAiProviderId): Promise<void> 
     // a budget makes a reachable provider look down with an empty response.
     maxOutputTokens: 64,
     responseFormat: 'text',
-  });
+  }, PING_META);
 }

@@ -36,6 +36,23 @@ export interface GenerateRequest {
   responseFormat: AiResponseFormat;
 }
 
+/**
+ * Every generateText call site must declare how its output may be shared or
+ * batched. Values live in src/lib/ai/call-sites.ts; scripts/ai-provider-check.ts
+ * fails when any call site is missing this metadata, so a new AI feature has
+ * to make the call before it ships.
+ */
+export interface AiCallMetadata {
+  /** Output is per-user (name / history / messages / tone) and cannot be shared. */
+  personalized: boolean;
+  /** A single generation could serve every user (no user-specific input). */
+  cohortShareable: boolean;
+  /** One generation per trait-profile bucket could serve every user in that bucket. */
+  bucketShareable: boolean;
+  /** A user is waiting live on this call; it cannot move to a schedule without a cache. */
+  latencySensitive: boolean;
+}
+
 export function isAiProviderId(value: unknown): value is AiProviderId {
   return typeof value === 'string' && (AI_PROVIDER_IDS as readonly string[]).includes(value);
 }

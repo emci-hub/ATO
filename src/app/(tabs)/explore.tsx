@@ -29,6 +29,7 @@ import {
   EXPLORE_NOTED,
 } from '@/lib/explore/copy';
 import { generateExploreBody } from '@/lib/explore/generate';
+import { EXPLORE_OBSERVATIONS_META } from '@/lib/ai/call-sites';
 import { routeExplore } from '@/lib/explore/route';
 import {
   fetchExploreMissNotes,
@@ -268,7 +269,7 @@ function SageExploreObservations({
         claimAiCall: () => claimAiCall('explore'),
         logJargonHit: logJargonGuard,
         logPhraseHit: logPhraseGuard,
-        generateBody: generateExploreBody,
+        generateBody: (prompt) => generateExploreBody(prompt, EXPLORE_OBSERVATIONS_META),
         useLocal: await shouldUseLocalAi(),
         recordTrace: recordOwnDevTrace,
       },
