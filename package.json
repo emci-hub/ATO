@@ -123,6 +123,7 @@
     "check:dev-lab": "tsx ./scripts/dev-lab-check.ts",
     "check:dev-lab-sections": "tsx ./scripts/dev-lab-sections-check.ts",
     "check:dev-overrides": "tsx ./scripts/dev-overrides-check.ts",
+    "check:dev-test-user": "tsx ./scripts/dev-test-user-check.ts",
     "check:dev-access": "tsx ./scripts/dev-access-check.ts",
     "check:home-hydrate": "tsx ./scripts/home-hydrate-check.ts",
     "check:prod-you": "tsx ./scripts/prod-you-check.ts",

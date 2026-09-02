@@ -7,9 +7,18 @@ import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useMeContext } from '@/lib/me-context';
+import {
+  applyDevArchetypePreset,
+  DEV_ARCHETYPE_PRESETS,
+  DEV_TEST_USER_ID,
+  devPresetById,
+  type DevArchetypePresetId,
+} from '@/lib/dev-test-user';
 import { fetchLegendCatalog, fetchSeenLegendIds, logShownLegends } from '@/lib/legends/store';
 import { buildLegendView, type LegendView } from '@/lib/legends/match';
+import { supabase } from '@/lib/supabase';
 import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
 type LoadState =
@@ -25,6 +34,91 @@ function emptyCopy(view: LegendView): string {
     return 'You have seen every legend that fits you so far. New ones appear as your matches shift.';
   }
   return 'Nothing here yet. Once enough of your traits have settled, a legend that matches you will show up here.';
+}
+
+/**
+ * Dev-testing strip for the fixed dev-test user (@atodev), __DEV__ only.
+ * Applies one of the 4 legend-archetype trait presets and clears the user's
+ * seen-legend history so the matching card re-appears immediately. Never
+ * renders for a real account — their traits cannot be overwritten from here.
+ */
+function DevTestPresetStrip() {
+  const theme = useTheme();
+  const { refresh } = useMeContext();
+  const [isDevUser, setIsDevUser] = useState(false);
+  const [busyId, setBusyId] = useState<DevArchetypePresetId | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!__DEV__) return;
+    supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        if (active) setIsDevUser(data.user?.id === DEV_TEST_USER_ID);
+      })
+      .catch(() => {
+        // Signed out or network error — keep the strip hidden.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (!__DEV__ || !isDevUser) return null;
+
+  async function applyPreset(id: DevArchetypePresetId) {
+    if (busyId) return;
+    setBusyId(id);
+    setNote(null);
+    try {
+      await applyDevArchetypePreset(id);
+      await refresh();
+      const preset = devPresetById(id);
+      setNote(preset ? `Preset applied — now matching ${preset.legendName}.` : 'Preset applied.');
+    } catch (err) {
+      setNote(err instanceof Error ? err.message : 'Could not apply the preset.');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  return (
+    <ThemedView type="backgroundElement" style={styles.presetCard}>
+      <ThemedText type="smallBold">Dev · test persona</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Set traits to match a legend&apos;s archetype. Seen history is cleared, so the
+        card reloads here.
+      </ThemedText>
+      <View style={styles.presetRow}>
+        {DEV_ARCHETYPE_PRESETS.map((preset) => {
+          return (
+            <Pressable
+              key={preset.id}
+              accessibilityRole="button"
+              onPress={() => void applyPreset(preset.id)}
+              disabled={busyId !== null}
+              style={({ pressed }) => [
+                styles.presetChip,
+                { backgroundColor: theme.backgroundSelected },
+                pressed && styles.pressed,
+              ]}>
+              <ThemedText type="smallBold">{preset.legendName}</ThemedText>
+            </Pressable>
+          );
+        })}
+      </View>
+      {busyId ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          Applying…
+        </ThemedText>
+      ) : note ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {note}
+        </ThemedText>
+      ) : null}
+    </ThemedView>
+  );
 }
 
 /**
@@ -121,6 +215,8 @@ export default function LegendsScreen() {
             )
           ) : null}
 
+          <DevTestPresetStrip />
+
           <ThemedText type="small" themeColor="textSecondary" style={styles.attr}>
             Matched to your traits, never a diagnosis. A legend never repeats.
           </ThemedText>
@@ -154,6 +250,21 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.four,
     padding: Spacing.four,
     gap: Spacing.two,
+  },
+  presetCard: {
+    borderRadius: Spacing.four,
+    padding: Spacing.three,
+    gap: Spacing.two,
+  },
+  presetRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
+  presetChip: {
+    borderRadius: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
   },
   attr: {
     paddingBottom: Spacing.two,
