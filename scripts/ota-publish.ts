@@ -18,6 +18,11 @@ import { spawnSync } from 'node:child_process';
 
 import { runOtaGate } from './ota-gate';
 
+function shellQuote(value: string): string {
+  // cmd.exe quoting: wrap in double quotes, escaping embedded quotes.
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
 if (require.main === module) {
   const ok = runOtaGate();
   if (!ok) {
@@ -25,10 +30,16 @@ if (require.main === module) {
     process.exit(1);
   }
 
+  // npx is a .cmd shim on Windows, so it needs a shell there; args must be
+  // quoted so multi-word values (e.g. --message "a b c") reach EAS verbatim.
   const args = process.argv.slice(2);
-  const eas = spawnSync('npx', ['eas-cli', 'update', ...args], {
-    stdio: 'inherit',
-    shell: process.platform === 'win32',
-  });
+  const childArgs = ['eas-cli', 'update', ...args];
+  const eas =
+    process.platform === 'win32'
+      ? spawnSync('npx', childArgs.map(shellQuote), {
+          stdio: 'inherit',
+          shell: true,
+        })
+      : spawnSync('npx', childArgs, { stdio: 'inherit', shell: false });
   process.exit(eas.status ?? 1);
 }
