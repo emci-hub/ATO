@@ -1,3 +1,14 @@
+# OLD PLAN — Reference only — suggestions, not rules
+
+> Archived 2026-09-02 from `docs/ATO_PLAN_v2.md`. This was the working plan while the
+> app was being built. It is **not** a spec and **not** a source of truth: where it
+> disagrees with the code, `docs/NOW.md`, or `PROJECT_CONTEXT.md`, those win. Read it
+> for intent and history only. Crisis / coach-label / diagnosis-avoidance / App Store
+> floor sections remain compliance-grounded — treat those as rules, everything else as
+> suggestions.
+
+---
+
 # ATO — one plan for any AI (Claude, Cursor, DeepSeek, whoever's building)
 
 Fresh build. Nothing carries over from the old Bolt version except the domain (astrollogs.com) — that's a link, not a foundation. Code starts here.

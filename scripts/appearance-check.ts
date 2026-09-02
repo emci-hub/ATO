@@ -55,7 +55,7 @@ const root = path.resolve(__dirname, '..');
 const picker = fs.readFileSync(path.join(root, 'src/components/appearance-picker.tsx'), 'utf8');
 const you = fs.readFileSync(path.join(root, 'src/app/(tabs)/you.tsx'), 'utf8');
 const layout = fs.readFileSync(path.join(root, 'src/app/_layout.tsx'), 'utf8');
-const plan = fs.readFileSync(path.join(root, 'docs/ATO_PLAN_v2.md'), 'utf8');
+const plan = fs.readFileSync(path.join(root, 'docs/archive/OLD_PLAN.md'), 'utf8');
 const now = fs.readFileSync(path.join(root, 'docs/NOW.md'), 'utf8');
 
 assert.match(you, /AppearancePicker/);

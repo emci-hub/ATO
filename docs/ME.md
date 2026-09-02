@@ -26,7 +26,7 @@
 
 - **Category:** Hybrid — AI-native (Sage/router) + Social (Circle/Chat) + Health/finance/kids (crisis spec, coaching tone)
 - **Landmine modules kept:** Social (report/block required) + Health/finance/kids (privacy pass, crisis static-card required, Grok critique before code on sensitive pieces)
-- **A proof (APP.md w/ non-goals):** satisfied by ATO_PLAN_v2.md.
+- **A proof (APP.md w/ non-goals):** satisfied by archive/OLD_PLAN.md.
 - **B proof (3 decisions):** satisfied — platform = iOS/Expo → TestFlight → Apple; data lives in Supabase (project `ato`); accounts = yes (email OTP via Resend + Sign in with Apple on device; optional password after first login via Settings, hashed by GoTrue).
 - **First 60 seconds:** open app → Home shows today's Check (read + if-then Do) with the live pixel fixed top-right, Did/Skip, then the primary slot and (when not crisis/missed-check) a collapsed category teaser — no inner tabs, no badge strip. Deliberate Aug 31, 2026 override of the original one-slot rule.
 - **16-axis trait backbone (live):** openness, conscientiousness, extraversion, agreeableness, steadiness, attachment_anxiety, attachment_avoidance, conflict_assertiveness, conflict_cooperativeness, autonomy, competence, relatedness, growth_mindset, locus_of_control, self_efficacy, **playfulness** (Wave 21). Every numeric write appends `trait_history` and blends into `trait_tracks` (**told** = self-report vs **played** = gut-call; never mix; EWMA α=0.35; stability floor 3 answers; 60-day idle then 90-day half-life decay at read). Direct sources (`self_slider`, `self_tap`, `self_confirm`, `self_settings`) are sticky over inferred (`self_grid`, `self_situation`, `self_game`). Confirm-upgrade (`confirmTraitSource`) flips the source token + `last_touched` only, never the number.
@@ -44,7 +44,7 @@
 ## Roster
 
 - Assistant (Drake) — active
-- Builder (Cursor) — active. Current model: Grok 4.6. Owns docs/ME.md, docs/NOW.md, docs/ATO_PLAN_v2.md, and docs/BUSINESS.md — updates committed **and pushed** together, never left local-only.
+- Builder (Cursor) — active. Current model: Grok 4.6. Owns docs/ME.md, docs/NOW.md, docs/archive/OLD_PLAN.md, and docs/BUSINESS.md — updates committed **and pushed** together, never left local-only.
 
 ## Live AI + model
 

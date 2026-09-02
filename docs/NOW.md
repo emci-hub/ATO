@@ -1,7 +1,7 @@
 # NOW
 
 **Category:** Hybrid — AI-native + Social + Health/finance/kids
-**Gates:** A ✓ (non-goals in ATO_PLAN_v2.md) · B ✓ (iOS/Expo, Supabase, Apple Sign-in+email) · C in progress · D not started
+**Gates:** A ✓ (non-goals in archive/OLD_PLAN.md) · B ✓ (iOS/Expo, Supabase, Apple Sign-in+email) · C in progress · D not started
 **Modules on:** report/block (Social), crisis static-card + privacy pass (Health/finance/kids) — both required, in progress
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
 **Latest production OTA:** `c897410d-a019-4d66-8062-3267ca695710` (commit `4b27a0b`) — Legend story variants: figures can resurface via a different story variant (figure+variant model, per-variant never-repeat). Also carries the PRE_LAUNCH_DEV re-gating and the hard ota:publish gate. Published Sep 2, 2026. Binary 10+.
@@ -35,7 +35,7 @@
 
 **Does Sage know you? is in (Stage 13, part 2).** One kind of the weekly Home Ask (never inside Talk replies, no duplicate Sage/You card). Banked high/low paraphrase lines only — no Gemini call, no quota. Buttons are "Still fits" / "Not quite". Still fits is `confirmTraitSource` (source upgrade, number unchanged). Not quite is a single-axis Settings write (`self_settings`). Eligible axes are non-null, past a 14-day cooldown, not mid-band, not on the cruel-pole list, and not the last axis shown. Round-robin through that pool. At most one per week; yields while any axis is still null; dismiss ends the week. Two consecutive Still fits graduates it until the 3-month Settings re-ask (not built). `me.sage_knows` stores cursor, week slot, streaks, and graduation.
 
-**Sage content model v2 is in.** Read/Do labels unchanged (no ATOsophy/Sync). Cards stay per-user on the existing quota (20/day, 200/month). Reload (cycle stored same-truth variants) is decided in ATO_PLAN_v2.md, not built. Home in Quest uses `Sage · npc` on the card only; elsewhere `Sage · coach`. Home can show a third daily category, **Nudge** (internal zGlitch): encouragement from a real recent signal only. Never Circle, widget, or morning push. `checks_select_connected` is dropped; `peer_checks` returns day / status / Read / Do only.
+**Sage content model v2 is in.** Read/Do labels unchanged (no ATOsophy/Sync). Cards stay per-user on the existing quota (20/day, 200/month). Reload (cycle stored same-truth variants) is decided in archive/OLD_PLAN.md, not built. Home in Quest uses `Sage · npc` on the card only; elsewhere `Sage · coach`. Home can show a third daily category, **Nudge** (internal zGlitch): encouragement from a real recent signal only. Never Circle, widget, or morning push. `checks_select_connected` is dropped; `peer_checks` returns day / status / Read / Do only.
 
 **Home milestone badges are in (Stage 13, part 1).** On You: a collapsible milestone strip — 7 Checks, first fact taught to Sage, and a full week without a cut, plus the full-picture capstone (all categories ready). Pure reads of already-logged data. Glow only when true. Honest-empty Checks count toward presence.
 
@@ -177,13 +177,13 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
   14. `src/lib/reveal.ts:167` — `RevealCheck`/`WeekCheck` `created_at` mismatch
   15. `src/lib/reveal.ts:168` — `WeekCheck`/`RevealCheck` missing `day, status`
   16. `src/lib/sentry.ts:28` — `Expected 0 arguments, but got 1`
-- **Decided, later Wave 1.5 boxes (see ATO_PLAN_v2 Understanding spec):** three-path extra-axis intake (play path shipped as scenarios); 3-month Settings prompt; You-tab weekly completeness slot; Dawn Reload. Locks from the Aug 28 Grok review are in that spec (do not reopen in a later box).
+- **Decided, later Wave 1.5 boxes (see OLD_PLAN Understanding spec):** three-path extra-axis intake (play path shipped as scenarios); 3-month Settings prompt; You-tab weekly completeness slot; Dawn Reload. Locks from the Aug 28 Grok review are in that spec (do not reopen in a later box).
 - Crisis: relational-safety/abuse category, own resource number, parked separately
 - **AI capacity hardening** — close the client-embedded-key bypass before public launch
 - Slack — parked as future ops tooling
 
 ## Housekeeping
-- docs/ATO_PLAN_v2.md, docs/ME.md, docs/NOW.md, docs/BUSINESS.md — Cursor maintains these directly. Commit together, `git push` immediately, never left local-only. ATO_PLAN_v2.md is a **working reference**, not a locked spec. Crisis / coach-label / diagnosis-avoidance / App Store floor sections are compliance-grounded and not casually revised. Device pass lives in `docs/ATO_DEVICE_TESTS.md`. `PROJECT_CONTEXT.md` is a pointer to these four, not a second source of truth.
+- docs/archive/OLD_PLAN.md, docs/ME.md, docs/NOW.md, docs/BUSINESS.md — Cursor maintains these directly. Commit together, `git push` immediately, never left local-only. archive/OLD_PLAN.md is a **working reference**, not a locked spec. Crisis / coach-label / diagnosis-avoidance / App Store floor sections are compliance-grounded and not casually revised. Device pass lives in `docs/ATO_DEVICE_TESTS.md`. `PROJECT_CONTEXT.md` is a pointer to these four, not a second source of truth.
 - **Production OTA publishes go through `npm run ota:publish -- <eas args>` — the hard pre-publish gate.** It runs the full offline `check:*` suite first (`npm run check:ota-gate`) and refuses to publish if any check fails. Never run bare `eas update` for production. Live/env-gated checks (accounts, seeds, network, providers) are excluded from the gate by design and run by hand when their environment exists.
 - EXPO_PUBLIC_AI_PROVIDER selects the live vendor (default gemini). Gemini / NVIDIA / Perplexity keys are `EXPO_PUBLIC_*`; Claude / Grok keys are Edge Function secrets on `ai-generate`. Gemini key rotated Sep 1, 2026 (`.env.local` + EAS production env). Model from `EXPO_PUBLIC_GEMINI_MODEL` (pinned to `gemini-3.7-flash` in production). Never commit `.env.local`.
 - **Open decision (emci's, not technical):** Apple Developer account type — Individual vs Organization. Revisit before public submission.

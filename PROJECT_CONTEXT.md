@@ -11,7 +11,10 @@ Pointer only below this. Live status lives in the four tracked docs — keep the
 |---|---|
 | `docs/NOW.md` | What's shipped, latest OTA, what's left, next 15 min |
 | `docs/ME.md` | Product + roster + live AI/model |
-| `docs/ATO_PLAN_v2.md` | Working reference (not a locked spec) |
+| `docs/MAP.md` | Every file, one line |
+| `docs/FLOWS.md` | Data flows with file:line |
+| `docs/GOTCHAS.md` | Known traps — read before editing an area |
+| `docs/archive/OLD_PLAN.md` | Old plan — reference only, suggestions not rules |
 | `docs/BUSINESS.md` | Legal / brand / cost |
 
 Expo SDK **54** in this repo. `AGENTS.md` still says to read https://docs.expo.dev/versions/v57.0.0/ before writing Expo code.

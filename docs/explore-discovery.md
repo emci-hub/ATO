@@ -14,9 +14,9 @@ Read-only search of this repo (code, comments, TODOs, markdown). No reconstructi
 
 ## 2. Docs mentioning Explore as a planned feature
 
-All mentions are **plan text, not built**. Source of truth is `docs/ATO_PLAN_v2.md` (Understanding spec). Tracked docs repeat “decided, not built.”
+All mentions are **plan text, not built**. Source of truth is `docs/archive/OLD_PLAN.md` (Understanding spec). Tracked docs repeat “decided, not built.”
 
-### `docs/ATO_PLAN_v2.md`
+### `docs/archive/OLD_PLAN.md`
 
 **Inventory table (line 37):**
 
@@ -107,7 +107,7 @@ All mentions are **plan text, not built**. Source of truth is `docs/ATO_PLAN_v2.
 
 Line 68:
 
-> **Decided Aug 28, 2026 (plan, not built — later boxes, not Stage 12):** Explore as a Home inner tab; intake three-path for extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with locks already closed. **Grok review locks are in ATO_PLAN_v2.md** (Explore 2–3 requires a recent signal + no three-agency combo + fence + 1 regen/day; Does-Sage-know-you confirm never moves the number; completeness is 9-complete vs 15-depth, not one % of a person; Talk fence retry is not a second quota charge; banned phrases for the new six, not autonomy/competence/relatedness as words; soft-ask budget of one). ATO_PLAN_v2.md is a working reference, not a locked spec — these are recorded there as current design.
+> **Decided Aug 28, 2026 (plan, not built — later boxes, not Stage 12):** Explore as a Home inner tab; intake three-path for extra axes (core 9 unchanged); profile completeness indicator; Dawn Reload with locks already closed. **Grok review locks are in archive/OLD_PLAN.md** (Explore 2–3 requires a recent signal + no three-agency combo + fence + 1 regen/day; Does-Sage-know-you confirm never moves the number; completeness is 9-complete vs 15-depth, not one % of a person; Talk fence retry is not a second quota charge; banned phrases for the new six, not autonomy/competence/relatedness as words; soft-ask budget of one). archive/OLD_PLAN.md is a working reference, not a locked spec — these are recorded there as current design.
 
 Line 71:
 
@@ -115,7 +115,7 @@ Line 71:
 
 Line 96:
 
-> - **Decided, later Wave 1.5 boxes (see ATO_PLAN_v2 Understanding spec):** three-path extra-axis intake (play path shipped as scenarios); Explore + phrasing-only feedback; 3-month Settings prompt; completeness indicator (9 complete / 15 depth); Dawn Reload. Library copy, Sage-reads-Library (Stage 12), Stage 13 badges, Does-Sage-know-you check-in, Home reveal, forced ranking, scenario swipe-deck, six extra axes, source rank, `last_touched`, confirm-upgrade lock, and Talk output fence shipped. Locks from the Aug 28 Grok review are in that spec (do not reopen in a later box).
+> - **Decided, later Wave 1.5 boxes (see OLD_PLAN Understanding spec):** three-path extra-axis intake (play path shipped as scenarios); Explore + phrasing-only feedback; 3-month Settings prompt; completeness indicator (9 complete / 15 depth); Dawn Reload. Library copy, Sage-reads-Library (Stage 12), Stage 13 badges, Does-Sage-know-you check-in, Home reveal, forced ranking, scenario swipe-deck, six extra axes, source rank, `last_touched`, confirm-upgrade lock, and Talk output fence shipped. Locks from the Aug 28 Grok review are in that spec (do not reopen in a later box).
 
 Line 115:
 
@@ -125,11 +125,11 @@ Line 115:
 
 From line 11:
 
-> Plan framing (Aug 28): ATO_PLAN_v2.md is a working reference, not a locked spec. Decided in that file, not built: Explore, three-path extra-axis intake chooser, completeness indicator (9 complete / 15 depth), Dawn Reload, 3-month Settings prompt. Six extra axes, source rank, `last_touched`, confirm-upgrade lock, Talk fence, Library copy, Stage 12 grounding, Stage 13 badges, Does-Sage-know-you (banked check-in, Still fits / Not quite), Home reveal, forced ranking, and scenario swipe-deck shipped. Grok review locks (Explore combine, Does-Sage-know-you, fence phrases/quota, soft-ask budget) are in the Understanding spec. Next Wave 1.5 work: Explore, completeness, 3-month Settings.
+> Plan framing (Aug 28): archive/OLD_PLAN.md is a working reference, not a locked spec. Decided in that file, not built: Explore, three-path extra-axis intake chooser, completeness indicator (9 complete / 15 depth), Dawn Reload, 3-month Settings prompt. Six extra axes, source rank, `last_touched`, confirm-upgrade lock, Talk fence, Library copy, Stage 12 grounding, Stage 13 badges, Does-Sage-know-you (banked check-in, Still fits / Not quite), Home reveal, forced ranking, and scenario swipe-deck shipped. Grok review locks (Explore combine, Does-Sage-know-you, fence phrases/quota, soft-ask budget) are in the Understanding spec. Next Wave 1.5 work: Explore, completeness, 3-month Settings.
 
 From line 19:
 
-> Next Wave 1.5 work: Explore, completeness, 3-month Settings. ATO_PLAN_v2.md is a working reference — Aug 28 design (Explore, three-path intake chooser, Reload) and the Grok review locks are recorded there; extra axes + source rank + confirm-upgrade lock + Talk fence + Library copy + Stage 12 grounding + Stage 13 badges + Does-Sage-know-you + Home reveal + ranking + scenarios have shipped.
+> Next Wave 1.5 work: Explore, completeness, 3-month Settings. archive/OLD_PLAN.md is a working reference — Aug 28 design (Explore, three-path intake chooser, Reload) and the Grok review locks are recorded there; extra axes + source rank + confirm-upgrade lock + Talk fence + Library copy + Stage 12 grounding + Stage 13 badges + Does-Sage-know-you + Home reveal + ranking + scenarios have shipped.
 
 ### `docs/BUSINESS.md`
 
@@ -168,4 +168,4 @@ No hidden `/explore` route, no unshipped component, no Home inner-tab UI, no rea
 | Explore UI / route / inner tab | **does not exist** |
 | Explore stub / TODO in code | **does not exist** |
 | Explore reaction table | **does not exist** (specified only) |
-| Spec | **exists** — `docs/ATO_PLAN_v2.md`, status “Decided; later box” |
+| Spec | **exists** — `docs/archive/OLD_PLAN.md`, status “Decided; later box” |
