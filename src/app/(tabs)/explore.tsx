@@ -31,6 +31,7 @@ import {
 import { generateExploreBody } from '@/lib/explore/generate';
 import { EXPLORE_OBSERVATIONS_META } from '@/lib/ai/call-sites';
 import { routeExplore } from '@/lib/explore/route';
+import { withTimeout } from '@/lib/timeout';
 import {
   fetchExploreMissNotes,
   fetchLatestExplorePack,
@@ -249,7 +250,8 @@ function SageExploreObservations({
   } | null>(null);
 
   const load = useCallback(async () => {
-    const next = await routeExplore(
+    // No timeout here previously: a stalled AI call left "Loading…" forever.
+    const next = await withTimeout(routeExplore(
       {
         me: {
           ...voiceMeFrom(me),
@@ -273,7 +275,7 @@ function SageExploreObservations({
         useLocal: await shouldUseLocalAi(),
         recordTrace: recordOwnDevTrace,
       },
-    );
+    ), 25_000, 'explore');
     setResult(next);
   }, [me, history, crisisToday, tracks]);
 

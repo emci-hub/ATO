@@ -68,6 +68,7 @@ import { TRACE_SECTIONS, type DevTraceEvent, type DevTraceSession } from '@/lib/
 import { generateExploreBody } from '@/lib/explore/generate';
 import { EXPLORE_OBSERVATIONS_META } from '@/lib/ai/call-sites';
 import { routeExplore } from '@/lib/explore/route';
+import { withTimeout } from '@/lib/timeout';
 import { fetchExploreMissNotes } from '@/lib/explore/store';
 import type { RouteExploreResult } from '@/lib/explore/types';
 import { voiceMeFrom } from '@/lib/intake';
@@ -247,7 +248,7 @@ function ExploreRegen() {
     try {
       const flags = await crisisFlagsForWindow(session.user.id, me.timezone);
       const history = checksToHistory(await fetchChecks(session.user.id));
-      const next = await routeExplore(
+      const next = await withTimeout(routeExplore(
         {
           me: {
             ...voiceMeFrom(me),
@@ -266,7 +267,7 @@ function ExploreRegen() {
           generateBody: (prompt) => generateExploreBody(prompt, EXPLORE_OBSERVATIONS_META),
           useLocal: await shouldUseLocalAi(),
         },
-      );
+      ), 25_000, 'explore');
       setResult(next);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not regenerate Explore.');
