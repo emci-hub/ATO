@@ -20,7 +20,7 @@ export const HOME_SAGE_LEDE =
 export const HOME_SAGE_LEDE_QUEST = "Today's Read and Do.";
 
 /** Home-only third daily category. Never Circle, widget, or morning push. */
-export const NUDGE_LABEL = 'Nudge';
+export const NUDGE_LABEL = 'Bump';
 
 export function homeSageLabel(appearanceId: string): string {
   return appearanceId === 'quest' ? SAGE_NPC_LABEL : SAGE_COACH_LABEL;

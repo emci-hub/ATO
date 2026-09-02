@@ -128,7 +128,7 @@ function finishCardSteps(
   });
   appendTraceStep(steps, {
     step_type: 'output',
-    label: 'Read / Do / Nudge',
+    label: 'Read / Do / Bump',
     ...output,
   });
   return { steps, guardFired: guard.guardFired };

@@ -107,7 +107,7 @@ export const ENERGY_PATTERN_CHIPS: IntakeChip<EnergyPattern>[] = [
 ];
 
 export const SUPPORT_STYLE_CHIPS: IntakeChip<SupportStyle>[] = [
-  { value: 'nudge', label: 'A nudge to keep going' },
+  { value: 'nudge', label: 'A bump to keep going' },
   { value: 'space', label: 'Space to sit with it' },
   { value: 'listen', label: 'Someone to listen' },
   { value: 'plan', label: 'A plan to fix it' },
@@ -199,13 +199,13 @@ export const CORE_INTAKE_QUESTIONS: CoreIntakeQuestion[] = [
   {
     field: 'morning_cue',
     n: 4,
-    prompt: 'The one thing you already do every morning — your daily nudge hangs off this.',
+    prompt: 'The one thing you already do every morning — your daily bump hangs off this.',
     chips: MORNING_CUE_CHIPS,
   },
   {
     field: 'evening_wind_down',
     n: 5,
-    prompt: 'What already happens at the end of your day? The evening Check nudge hangs off this.',
+    prompt: 'What already happens at the end of your day? The evening Check bump hangs off this.',
     chips: EVENING_WIND_DOWN_CHIPS,
   },
   {

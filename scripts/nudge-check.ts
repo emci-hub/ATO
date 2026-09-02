@@ -24,9 +24,9 @@ function read(rel: string): string {
   return readFileSync(resolve(root, rel), 'utf8');
 }
 
-assert.equal(NUDGE_LABEL, 'Nudge');
+assert.equal(NUDGE_LABEL, 'Bump');
 assert.equal(NUDGE_INTERNAL_NAME, 'zGlitch');
-ok('user-facing label is Nudge; internal name stays zGlitch');
+ok('user-facing label is Bump; internal name stays zGlitch');
 
 const emptyHistory: CheckHistory[] = [];
 

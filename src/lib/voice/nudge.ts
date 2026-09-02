@@ -8,7 +8,7 @@ export const NUDGE_RECENT_DAYS = 7;
 
 export type NudgeSignalKind = 'skip-pattern' | 'knock' | 'fact';
 
-/** Internal id; user-facing label is always "Nudge". */
+/** Internal id; user-facing label is always "Bump". */
 export const NUDGE_INTERNAL_NAME = 'zGlitch';
 
 export { NUDGE_LABEL } from '@/lib/sage-copy';

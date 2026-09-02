@@ -539,7 +539,7 @@ function CardSimulator() {
     <View style={styles.section}>
       <ThemedText type="smallBold">Card simulator</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        Local generator, consent granted. Use this to preview a Read/Do/Nudge without
+        Local generator, consent granted. Use this to preview a Read/Do/Bump without
         spending a real quota. Streak below 3 uses the written bank, not the generator.
       </ThemedText>
 
@@ -621,7 +621,7 @@ function CardSimulator() {
           />
           <CardBlock kicker="do" body={result.card?.do ?? '—'} />
           <CardBlock
-            kicker="nudge"
+            kicker="bump"
             body={result.nudge ?? 'none — no skip pattern, knock-in-text, or safe fact'}
           />
           {result.dropped.length > 0 ? (
@@ -1058,7 +1058,7 @@ function FenceTester() {
     <View style={styles.section}>
       <ThemedText type="smallBold">Framework-echo fence</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        Paste generated Read / Do / Nudge / a Teach-Sage fact. Same matcher the router uses.
+        Paste generated Read / Do / Bump / a Teach-Sage fact. Same matcher the router uses.
       </ThemedText>
       <TextInput
         value={text}
