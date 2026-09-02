@@ -21,7 +21,7 @@ Do not commit `.env.local` or API keys. Do not change dependencies, schemas, aut
 ## Snapshot (Sep 2, 2026)
 
 - Branch: `master` @ `bedc6cd` — added a "Questions" nav tab hosting "A faster pass"; removed it from onboarding and the You tab (see Decisions log).
-- Latest production OTA: `30049d3f-e957-4ffd-afc2-29694d4f2d83` ("A faster pass" hang fix — missing timeout on the AI draft call). Binary 10+ only.
+- Latest production OTA: `ca9f203c-3622-44d3-859c-aff0873bf791` (Explore tab collapsible-sections reorg, published from commit `95733a3` — also carries whatever else had landed on `master` by then, incl. the new Questions nav tab). Binary 10+ only.
 - Gemini key lives in gitignored `.env.local` and EAS production env (`eas env:set`). Classic `eas secret:list` is empty/deprecated.
 - Claude/Grok need Supabase secrets `ANTHROPIC_API_KEY` / `XAI_API_KEY` or those adapters 503.
 - Next product work: full device pass (`docs/ATO_DEVICE_TESTS.md`) on binary 10, then Stage 8 invite/referral. Known follow-up (not urgent): the same missing-timeout pattern as the "A faster pass" bug still exists at `explore.tsx` and `dev-lab.tsx` — not fixed yet. `questions-fold.tsx` and `explore-panel.tsx` are now fixed (see Decisions log).
