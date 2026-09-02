@@ -20,7 +20,7 @@
 
 **Circle Explore is in.** Circle appears only after a QR scan / link paste connects two accounts. Category compare is **dual-opt-in** — per-friend (`category_share`) or the Close Friends pool (`close_friends_share`, on by default off). Both sides must opt in before either sees the other; `peer_category_pack` returns cached title+category summaries only, never Full Profile. Fully separate from Full Profile.
 
-**Binary 10 in TestFlight.** Latest JS OTA: group `b84f0aa6-a668-4d59-8374-ea9c96e95f63` (`6e07fbc`, unified AI provider layer + rotated Gemini key). Open items: device pass, then invite/referral; Gut Call regression; Live Talk failure; get all testers off binary 8 onto binary 10; Claude/Grok Supabase secrets if those providers will be used.
+**Binary 10 in TestFlight.** Latest JS OTA: group `d5332b8b-7d5d-4898-bb5f-df121933b499` (`fb71b2d`, Legends dev-test personas). Open items: device pass, then invite/referral; verify dev-test auto-login + Legends persona strip on a real dev build; Gut Call regression; Live Talk failure; get all testers off binary 8 onto binary 10; Claude/Grok Supabase secrets if those providers will be used.
 
 ## App
 
