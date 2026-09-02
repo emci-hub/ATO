@@ -128,6 +128,8 @@
     "check:home-hydrate": "tsx ./scripts/home-hydrate-check.ts",
     "check:prod-you": "tsx ./scripts/prod-you-check.ts",
     "check:auth-password": "tsx ./scripts/auth-password-check.ts",
+    "check:ota-gate": "tsx ./scripts/ota-gate.ts",
+    "ota:publish": "tsx ./scripts/ota-publish.ts",
     "probe:apple-endpoint": "tsx ./scripts/apple-endpoint-probe.ts"
   },
   "private": true

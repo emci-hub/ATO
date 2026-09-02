@@ -63,11 +63,12 @@ async function main() {
   ok('migration allows unlimited consume, founder code, and access_requests');
 
   const hub = read('src/app/dev-lab.tsx');
-  assert.match(hub, /id: 'access'/);
+  assert.match(hub, /canSeeHubSection\('access', gate\)/);
+  assert.match(hub, /AccessReview/);
   assert.match(hub, /listPendingAccessRequests/);
   assert.match(hub, /approveAccessRequest/);
   assert.match(hub, /denyAccessRequest/);
-  ok('dev-lab Access section reviews pending requests');
+  ok('dev-lab Access section (root-only gate) reviews pending requests');
 
   const fn = read('supabase/functions/review-access/index.ts');
   assert.match(fn, /api\.resend\.com\/emails/);

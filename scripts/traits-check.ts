@@ -226,7 +226,7 @@ async function main() {
   const optionalUi = read('src/components/optional-intake.tsx');
   const submitFn = onboarding.slice(
     onboarding.indexOf('async function submit()'),
-    onboarding.indexOf('async function goHome()'),
+    onboarding.indexOf('async function refreshAndGoHome()'),
   );
   assert.match(submitFn, /createMe\(/);
   assert.match(submitFn, /setPhase\('optional-gate'\)/);
