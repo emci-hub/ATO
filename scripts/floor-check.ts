@@ -228,7 +228,7 @@ assert.doesNotMatch(sage, /consent === 'pending' \?\s*\([\s\S]*<AiConsentCard/);
 assert.match(sage, /Talk is off/);
 assert.match(dawn, /setAiConsent/);
 assert.match(sage, /setAiConsent/);
-assert.match(youTab, /Sage's AI/);
+assert.match(youTab, /Sage(&apos;|')s AI/);
 assert.match(youTab, /'On'/);
 assert.match(youTab, /'Off'/);
 assert.match(youTab, /'Not set yet'/);

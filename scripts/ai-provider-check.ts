@@ -201,7 +201,7 @@ ok('isQuotaLimitError classifies quota / token-limit vs other Gemini failures');
 
 const lab = read('src/app/ai-lab.tsx');
 assert.match(lab, /self-tracked call counts/);
-assert.match(lab, /not the provider's/);
+assert.match(lab, /not the provider(&apos;|')s/);
 assert.match(lab, /Refresh counts/);
 assert.match(lab, /This device only/);
 assert.match(read('src/components/running-update-line.tsx'), /secret\.current\.n >= 5/);

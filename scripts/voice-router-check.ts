@@ -17,6 +17,8 @@ import { resolve } from 'node:path';
 
 import { bankCard, parseBank } from '../src/lib/voice/bank';
 import { buildVoiceConfig } from '../src/lib/voice/config';
+import { pickVoiceProvider } from '../src/lib/voice/select-provider';
+import { buildProviders } from '../src/lib/voice/providers';
 import { BANK_MARKDOWN } from '../src/lib/voice/content.generated';
 import { detectCrisis, keywordDetect, normalizeCrisis } from '../src/lib/crisis/detect';
 import { filterCard, hasCut, isCruelCut, isTopicalRepeat, isVagueDo } from '../src/lib/voice/filters';
@@ -807,12 +809,18 @@ assert.match(dawnGen[0]?.steps?.[1].label ?? '', /Router/);
 ok('Dawn generated path logs the same generic step sequence');
 
 // ---------------------------------------------------------------------------
-console.log('gemini default + no-key fallback');
-const geminiNoKey = buildVoiceConfig({ MODEL_PROVIDER: 'gemini' });
-const fallback = await routeVoiceCard(input(3, d1, { aiConsent: true }), { config: geminiNoKey, ...dev });
-assert.equal(fallback.provider, 'local', 'no gemini key → local provider fallback');
-assert.ok(fallback.dev!.providerLabel.includes('local'));
-ok('MODEL_PROVIDER=gemini default; without a key it falls back to local, not a rewrite');
+console.log('gemini default routes to the remote provider (keys live server-side)');
+// Since 2026-09-02 no vendor key exists in the bundle, so "no key → local" is
+// not a client decision any more: a remote provider is always selectable and
+// the ai-generate Edge Function answers 503 <provider>_key_missing instead.
+const geminiConfig = buildVoiceConfig({ MODEL_PROVIDER: 'gemini' });
+assert.equal(geminiConfig.provider, 'gemini');
+const remotePick = await pickVoiceProvider(geminiConfig, buildProviders(geminiConfig), false);
+assert.equal(remotePick.provider.id, 'gemini', 'remote provider is selected without a client key');
+assert.equal(remotePick.label, 'gemini');
+const localPick = await pickVoiceProvider(localConfig, buildProviders(localConfig), false);
+assert.equal(localPick.provider.id, 'local');
+ok('MODEL_PROVIDER=gemini selects the remote provider; only MODEL_PROVIDER=local forces local');
 
 console.log(`\nAll ${passed} checks passed.`);
 }
