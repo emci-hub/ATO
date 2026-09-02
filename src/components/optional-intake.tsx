@@ -62,6 +62,97 @@ function scenarioChips(screen: OptionalScreen): IntakeChip[] {
   return SCENARIO_QUESTIONS[screen].options.map(({ value, label }) => ({ value, label }));
 }
 
+/**
+ * Onboarding's single-scroll version of the 8 scenario questions — same
+ * shape as CoreIntakeSweep. Answering nothing is fine; unlike core intake
+ * this never gates Save on completeness.
+ */
+export function OptionalIntakeSweep({
+  answers,
+  busy,
+  formError,
+  onSelect,
+  onSubmit,
+  onSkip,
+  onBack,
+}: {
+  answers: Partial<Record<OptionalScreen, string>>;
+  busy: boolean;
+  formError: string | null;
+  onSelect: (screen: OptionalScreen, value: string) => void;
+  onSubmit: () => void;
+  onSkip: () => void;
+  onBack: () => void;
+}) {
+  const answeredCount = SCENARIO_QUESTIONS.filter((_, i) => answers[i as OptionalScreen]).length;
+
+  return (
+    <View style={styles.sweepBody}>
+      <Pressable
+        onPress={onBack}
+        disabled={busy}
+        hitSlop={12}
+        style={({ pressed }) => [styles.backLink, pressed && styles.pressed, busy && styles.disabled]}>
+        <ThemedText type="smallBold" themeColor="textSecondary">
+          ‹ Back
+        </ThemedText>
+      </Pressable>
+
+      <ThemedText type="subtitle">Want to add a bit more?</ThemedText>
+      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.progress}>
+        {optionalProgressLabel(answeredCount)}
+      </ThemedText>
+      <ThemedText themeColor="textSecondary" style={styles.lede}>
+        If you already know more about how you show up, you can add it. Totally optional —
+        answer what you want, skip the rest. This is a starting point. It can change.
+      </ThemedText>
+
+      {SCENARIO_QUESTIONS.map((question, i) => {
+        const screen = i as OptionalScreen;
+        const selected = answers[screen];
+        return (
+          <View key={screen} style={styles.item}>
+            <ThemedText type="smallBold">{question.prompt}</ThemedText>
+            <ChipGroup
+              chips={scenarioChips(screen)}
+              selected={selected ? [selected] : []}
+              disabled={busy}
+              onSelect={(value) => onSelect(screen, value)}
+            />
+          </View>
+        );
+      })}
+
+      {formError ? (
+        <ThemedText type="smallBold" style={{ color: '#E5484D' }}>
+          {formError}
+        </ThemedText>
+      ) : null}
+
+      <Pressable
+        onPress={onSubmit}
+        disabled={busy}
+        style={({ pressed }) => [
+          styles.submitButton,
+          { backgroundColor: '#3c87f7' },
+          pressed && styles.pressed,
+          busy && styles.disabled,
+        ]}>
+        <ThemedText type="smallBold" style={styles.submitText}>
+          {busy ? 'Saving…' : 'Save'}
+        </ThemedText>
+      </Pressable>
+
+      <Pressable
+        onPress={onSkip}
+        disabled={busy}
+        style={({ pressed }) => [styles.skipButton, pressed && styles.pressed, busy && styles.disabled]}>
+        <ThemedText type="smallBold">Skip for now</ThemedText>
+      </Pressable>
+    </View>
+  );
+}
+
 export function OptionalStep({
   screen,
   busy,
@@ -223,6 +314,17 @@ const styles = StyleSheet.create({
   },
   progress: {
     letterSpacing: 0.4,
+  },
+  sweepBody: {
+    gap: Spacing.three,
+  },
+  backLink: {
+    alignSelf: 'flex-start',
+    paddingVertical: Spacing.one,
+    paddingRight: Spacing.three,
+  },
+  item: {
+    gap: Spacing.two,
   },
   skipRow: {
     flexDirection: 'row',

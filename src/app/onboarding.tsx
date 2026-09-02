@@ -14,7 +14,7 @@ import { BornOnFields } from '@/components/born-on-fields';
 import { CityPicker } from '@/components/city-picker';
 import { CoreIntakeSweep } from '@/components/core-intake-sweep';
 import { IntakeSweep } from '@/components/intake-sweep';
-import { OptionalGate, OptionalStep } from '@/components/optional-intake';
+import { OptionalGate, OptionalIntakeSweep } from '@/components/optional-intake';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -33,7 +33,13 @@ import {
   type SupportStyle,
 } from '@/lib/intake';
 import { createMe, errorMessageForHandle, fetchMe, TalkStyle, updateTraits, checkHandleAvailable, handleFormatError, normalizeHandle, type Me } from '@/lib/me';
-import { OPTIONAL_INTAKE_TOTAL, writeForOptionalScreen, type OptionalScreen } from '@/lib/traits';
+import {
+  OPTIONAL_INTAKE_TOTAL,
+  writeForOptionalScreen,
+  type OptionalScreen,
+  type TraitAxis,
+  type TraitSource,
+} from '@/lib/traits';
 import { slugifyCity } from '@/lib/around/slug';
 import { DEFAULT_AROUND_CITY } from '@/constants/around-cities';
 import { useMeContext } from '@/lib/me-context';
@@ -52,7 +58,6 @@ export default function OnboardingScreen() {
   const { refresh } = useMeContext();
 
   const [phase, setPhase] = useState<Phase>('account');
-  const [optionalIndex, setOptionalIndex] = useState(0);
   const [createdUserId, setCreatedUserId] = useState<string | null>(null);
   const [meRow, setMeRow] = useState<Me | null>(null);
   const [optionalAnswers, setOptionalAnswers] = useState<Partial<Record<OptionalScreen, string>>>({});
@@ -287,31 +292,36 @@ export default function OnboardingScreen() {
     }
   }
 
-  async function persistOptionalThen(next: 'advance' | 'home') {
+  async function submitOptional() {
     if (!createdUserId || busy) return;
-    const write = writeForOptionalScreen({
-      screen: optionalIndex as OptionalScreen,
-      optionId: optionalAnswers[optionalIndex as OptionalScreen] ?? null,
-    });
+    const incoming: Partial<Record<TraitAxis, number>> = {};
+    const allowed: TraitAxis[] = [];
+    let source: Exclude<TraitSource, 'self_confirm'> | null = null;
+    for (let i = 0; i < OPTIONAL_INTAKE_TOTAL; i++) {
+      const write = writeForOptionalScreen({
+        screen: i as OptionalScreen,
+        optionId: optionalAnswers[i as OptionalScreen] ?? null,
+      });
+      if (!write) continue;
+      Object.assign(incoming, write.incoming);
+      allowed.push(...write.allowed);
+      source = write.source;
+    }
     setBusy(true);
     setFormError(null);
     try {
-      if (write) {
+      if (source && Object.keys(incoming).length > 0) {
         const updated = await withTimeout(
-          updateTraits(createdUserId, write.incoming, write.source, write.allowed),
+          updateTraits(createdUserId, incoming, source, allowed),
           15000,
           'updateTraits',
         );
         setMeRow(updated);
       }
-      if (next === 'home' || optionalIndex >= OPTIONAL_INTAKE_TOTAL - 1) {
-        setPhase('sweep');
-        return;
-      }
-      setOptionalIndex((i) => i + 1);
+      setPhase('sweep');
     } catch (err) {
       console.log('[onboarding] updateTraits error:', err);
-      setFormError('Couldn\u2019t save that extra bit. Skip or try again.');
+      setFormError('Couldn\u2019t save those extra bits. Skip or try again.');
     } finally {
       setBusy(false);
     }
@@ -390,43 +400,24 @@ export default function OnboardingScreen() {
                 onSkip={() => setPhase('sweep')}
                 onAdd={() => {
                   setFormError(null);
-                  setOptionalIndex(0);
                   setPhase('optional');
                 }}
               />
             ) : phase === 'optional' ? (
-              <>
-                <OptionalStep
-                  screen={optionalIndex as OptionalScreen}
-                  busy={busy}
-                  selectedOptionId={optionalAnswers[optionalIndex as OptionalScreen] ?? null}
-                  onSelect={(value) => {
-                    setOptionalAnswers((prev) => ({ ...prev, [optionalIndex as OptionalScreen]: value }));
-                  }}
-                  onBack={() => {
-                    setFormError(null);
-                    if (optionalIndex === 0) {
-                      setPhase('optional-gate');
-                      return;
-                    }
-                    setOptionalIndex((i) => i - 1);
-                  }}
-                  onSkipThis={() => {
-                    if (optionalIndex >= OPTIONAL_INTAKE_TOTAL - 1) {
-                      setPhase('sweep');
-                      return;
-                    }
-                    setOptionalIndex((i) => i + 1);
-                  }}
-                  onSkipRest={() => setPhase('sweep')}
-                  onContinue={() => void persistOptionalThen('advance')}
-                />
-                {formError ? (
-                  <ThemedText type="smallBold" style={{ color: '#E5484D' }}>
-                    {formError}
-                  </ThemedText>
-                ) : null}
-              </>
+              <OptionalIntakeSweep
+                answers={optionalAnswers}
+                busy={busy}
+                formError={formError}
+                onSelect={(screen, value) => {
+                  setOptionalAnswers((prev) => ({ ...prev, [screen]: value }));
+                }}
+                onSubmit={() => void submitOptional()}
+                onSkip={() => setPhase('sweep')}
+                onBack={() => {
+                  setFormError(null);
+                  setPhase('optional-gate');
+                }}
+              />
             ) : phase === 'sweep' && meRow ? (
               <IntakeSweep
                 me={meRow}
