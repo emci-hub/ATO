@@ -13,6 +13,11 @@
  *   delete-account, founder-access, intake-live, invite, quota, sentry,
  *   style-live, talk-live, around-going-live
  *
+ * PREFLIGHT: `typecheck` (tsc --noEmit) and `lint` (expo lint) run before the
+ * check suite. They were never part of the gate before 2026-09-02, which is
+ * how a guaranteed ReferenceError (checks.ts) and 16 type errors sat on
+ * master through several OTAs.
+ *
  * A check that fails here exits 1 (and ota-publish.ts refuses to publish).
  */
 import { execFileSync } from 'node:child_process';
@@ -54,9 +59,22 @@ function npmRun(script: string): void {
   execFileSync('npm', ['run', script], { stdio: 'inherit', shell: process.platform === 'win32' });
 }
 
+const PREFLIGHT = ['typecheck', 'lint'] as const;
+
 /** Returns true when every offline gate check passes. */
 export function runOtaGate(): boolean {
   const names = gateCheckNames();
+  const failed: string[] = [];
+  for (const step of PREFLIGHT) {
+    const start = Date.now();
+    try {
+      npmRun(step);
+      console.log(`ota-gate: pass  ${step} (${Date.now() - start}ms)`);
+    } catch {
+      console.error(`ota-gate: FAIL  ${step} (${Date.now() - start}ms)`);
+      failed.push(step);
+    }
+  }
   const totalChecks = Object.keys(
     JSON.parse(readFileSync(resolve(__dirname, '../package.json'), 'utf8')) as {
       scripts: Record<string, string>;
@@ -65,7 +83,6 @@ export function runOtaGate(): boolean {
   console.log(
     `ota-gate: running ${names.length} offline checks (${totalChecks - names.length} live/env-gated/meta checks skipped)`,
   );
-  const failed: string[] = [];
   for (const name of names) {
     const start = Date.now();
     try {
@@ -81,7 +98,7 @@ export function runOtaGate(): boolean {
     console.error(`  ${failed.join(', ')}`);
     return false;
   }
-  console.log(`\nota-gate: all ${names.length} offline checks passed.`);
+  console.log(`\nota-gate: typecheck + lint + all ${names.length} offline checks passed.`);
   return true;
 }
 

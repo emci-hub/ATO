@@ -185,7 +185,7 @@ export function NavEditOverlay({
             <>
               <ThemedText type="smallBold">Not unlocked yet</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
-                These stay off the bar until they're unlocked. No Bar or More toggle.
+                These stay off the bar until they&apos;re unlocked. No Bar or More toggle.
               </ThemedText>
               {lockedTabs.map((id) => (
                 <View key={id} style={[styles.lockedRow, { borderColor: controlBorderColor(theme) }]}>

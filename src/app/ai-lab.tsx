@@ -58,7 +58,7 @@ export default function AiLabScreen() {
     }
   }
 
-  async function useDefault() {
+  async function applyBundledDefault() {
     setBusy(true);
     try {
       await setProviderOverride(null);
@@ -131,9 +131,9 @@ export default function AiLabScreen() {
           })}
 
           <ThemedText type="small" themeColor="textSecondary">
-            These are self-tracked call counts from this app, not the provider's
+            These are self-tracked call counts from this app, not the provider&apos;s
             official billing numbers. Windows are rolling (last 60 seconds / last
-            24 hours), not the provider's reset window. Dashboards like Google
+            24 hours), not the provider&apos;s reset window. Dashboards like Google
             Cloud Monitoring need separate admin credentials — the API key cannot
             read them.
           </ThemedText>
@@ -151,7 +151,7 @@ export default function AiLabScreen() {
           </ThemedPressable>
 
           <ThemedPressable
-            onPress={() => void useDefault()}
+            onPress={() => void applyBundledDefault()}
             disabled={busy}
             style={[styles.btn, { borderColor: controlBorderColor(theme) }]}>
             <ThemedText type="smallBold">Use bundled default</ThemedText>

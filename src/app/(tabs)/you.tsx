@@ -500,7 +500,7 @@ export default function YouScreen() {
                     pressed && styles.pressed,
                   ]}>
                   <ThemedText type="small" themeColor="textSecondary">
-                    Sage's AI
+                    Sage&apos;s AI
                   </ThemedText>
                   <ThemedText type="small" style={styles.detailValue}>
                     {me.ai_consent === true ? 'On' : me.ai_consent === false ? 'Off' : 'Not set yet'}

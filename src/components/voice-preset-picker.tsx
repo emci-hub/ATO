@@ -40,7 +40,7 @@ export function VoicePresetPicker({
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
       <ThemedText type="smallBold" style={styles.heading}>
-        Sage's voice
+        Sage&apos;s voice
       </ThemedText>
       <ThemedText type="small" themeColor="textSecondary" style={styles.lede}>
         Close friend is the default. A livelier pick adds energy, not a different set of rules.

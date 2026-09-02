@@ -67,6 +67,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "sync:voice": "node ./scripts/sync-voice-content.mjs",
     "check:ai": "tsx ./scripts/ai-provider-check.ts",
     "report:ai": "tsx ./scripts/ai-call-sites-report.ts",
