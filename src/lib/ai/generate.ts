@@ -18,6 +18,7 @@ async function completeFor(
   provider: Exclude<AiProviderId, 'local'>,
   request: GenerateRequest,
   meta: AiCallMetadata,
+  options: { ping?: boolean } = {},
 ): Promise<string> {
   // meta is threaded through so every call site's declaration follows the
   // request into future per-call logging / batching layers.
@@ -41,7 +42,7 @@ async function completeFor(
     });
   }
   if (isEdgeProvider(provider)) {
-    return completeViaEdge(provider, request);
+    return completeViaEdge(provider, request, options);
   }
   throw new Error(`Unknown AI provider: ${provider}`);
 }
@@ -121,5 +122,5 @@ export async function pingProvider(provider: RemoteAiProviderId): Promise<void> 
     // a budget makes a reachable provider look down with an empty response.
     maxOutputTokens: 64,
     responseFormat: 'text',
-  }, PING_META);
+  }, PING_META, { ping: true }); // edge providers: server probe, no quota claim
 }

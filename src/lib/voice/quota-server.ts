@@ -23,8 +23,18 @@ export async function logPhraseGuard(flag: string): Promise<void> {
 /**
  * Server-side claim. RLS blocks client writes to ai_usage; this RPC is the
  * only increment path, keyed on auth.uid().
+ *
+ * Edge providers (Claude / Grok / DeepSeek) claim inside the ai-generate Edge
+ * Function itself, right before the paid key is used — so for those the client
+ * must not claim too, or every call would count twice. The claim lives wherever
+ * the vendor key lives.
  */
 export async function claimAiCall(callType: 'sage' | 'explore' = 'sage'): Promise<QuotaDecision> {
+  const { resolveActiveProvider } = await import('@/lib/ai/override');
+  const { isEdgeProvider } = await import('@/lib/ai/edge');
+  const provider = await resolveActiveProvider();
+  if (isEdgeProvider(provider)) return { ok: true };
+
   const { data, error } = await supabase.rpc('claim_ai_call', { p_call_type: callType });
   if (error) throw error;
   return decisionFromClaim(data);

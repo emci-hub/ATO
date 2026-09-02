@@ -2,9 +2,28 @@
  * ai-generate — Claude, Grok, and DeepSeek. Keys stay in Edge Function secrets
  * (ANTHROPIC_API_KEY, XAI_API_KEY, DEEPSEEK_API_KEY), never bundled in the client.
  *
- * JWT required. Body: { provider, prompt, temperature, maxOutputTokens, responseFormat }.
+ * JWT required and VERIFIED (auth.getUser on the caller's token — a bare
+ * Authorization header is not enough). Every real generation claims one unit
+ * of the caller's cap via claim_ai_call before any vendor is called; a refused
+ * claim returns 429 { error: 'quota' } and costs nothing.
+ *
+ * Body: { provider, prompt, temperature, maxOutputTokens, responseFormat,
+ *         callType?, ping? }.
+ *   maxOutputTokens is clamped server-side to MAX_OUTPUT_TOKENS.
+ *   callType tags ai_usage.by_type ('sage' | 'explore'); defaults to 'sage'.
+ *   ping: true is a connectivity probe — the prompt is replaced with a fixed
+ *   16-token request and NO quota is claimed, so the dev provider-status dots
+ *   can poll without draining a user's day.
  * Returns { text } — the same raw string the client parsers already expect.
  */
+import { createClient } from 'jsr:@supabase/supabase-js@2';
+
+/** Hard ceiling on output tokens per request, regardless of what the client asks for. */
+const MAX_OUTPUT_TOKENS = 1024;
+const DEFAULT_OUTPUT_TOKENS = 1024;
+const PING_PROMPT = 'Reply with the word ready.';
+const PING_OUTPUT_TOKENS = 16;
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -145,12 +164,27 @@ Deno.serve(async (request) => {
   const authHeader = request.headers.get('Authorization');
   if (!authHeader) return json({ error: 'missing_authorization' }, 401);
 
+  // Caller-scoped client: proves the JWT is real and lets claim_ai_call run
+  // as the caller (it keys on auth.uid()).
+  const caller = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: authHeader } }, auth: { persistSession: false } },
+  );
+  const {
+    data: { user },
+    error: userError,
+  } = await caller.auth.getUser();
+  if (userError || !user) return json({ error: 'not_authenticated' }, 401);
+
   let payload: {
     provider?: unknown;
     prompt?: unknown;
     temperature?: unknown;
     maxOutputTokens?: unknown;
     responseFormat?: unknown;
+    callType?: unknown;
+    ping?: unknown;
   };
   try {
     payload = await request.json();
@@ -162,13 +196,31 @@ Deno.serve(async (request) => {
   if (provider !== 'claude' && provider !== 'grok' && provider !== 'deepseek') {
     return json({ error: 'unsupported_provider' }, 400);
   }
-  const prompt = typeof payload.prompt === 'string' ? payload.prompt : '';
+  const ping = payload.ping === true;
+  const prompt = ping ? PING_PROMPT : typeof payload.prompt === 'string' ? payload.prompt : '';
   if (!prompt.trim()) return json({ error: 'missing_prompt' }, 400);
 
   const temperature = typeof payload.temperature === 'number' ? payload.temperature : 0.8;
-  const maxOutputTokens =
-    typeof payload.maxOutputTokens === 'number' ? payload.maxOutputTokens : 1024;
+  const requested =
+    typeof payload.maxOutputTokens === 'number' && Number.isFinite(payload.maxOutputTokens)
+      ? Math.floor(payload.maxOutputTokens)
+      : DEFAULT_OUTPUT_TOKENS;
+  const maxOutputTokens = ping
+    ? PING_OUTPUT_TOKENS
+    : Math.min(MAX_OUTPUT_TOKENS, Math.max(1, requested));
   const responseFormat = payload.responseFormat === 'json' ? 'json' : 'text';
+  const callType = payload.callType === 'explore' ? 'explore' : 'sage';
+
+  // Claim one unit of the caller's daily/monthly cap BEFORE touching a paid
+  // key. Pings are exempt (fixed tiny prompt, no user content).
+  if (!ping) {
+    const { data: claim, error: claimError } = await caller.rpc('claim_ai_call', {
+      p_call_type: callType,
+    });
+    if (claimError) return json({ error: `claim_failed: ${claimError.message}` }, 500);
+    const ok = claim && typeof claim === 'object' && (claim as { ok?: unknown }).ok === true;
+    if (!ok) return json({ error: 'quota' }, 429);
+  }
 
   try {
     const text =

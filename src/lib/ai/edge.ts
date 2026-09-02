@@ -15,8 +15,12 @@ export function isEdgeProvider(id: string): id is 'claude' | 'grok' | 'deepseek'
 export async function completeViaEdge(
   provider: 'claude' | 'grok' | 'deepseek',
   request: GenerateRequest,
+  options: { ping?: boolean } = {},
 ): Promise<string> {
   const { supabase } = await import('@/lib/supabase');
+  // The Edge Function claims the caller's quota itself (claim_ai_call), so the
+  // client must NOT also claim for edge providers — see claimAiCall.
+  // ping: true asks for the server's fixed connectivity probe (no claim).
   const { data, error } = await supabase.functions.invoke('ai-generate', {
     body: {
       provider,
@@ -24,6 +28,7 @@ export async function completeViaEdge(
       temperature: request.temperature,
       maxOutputTokens: request.maxOutputTokens,
       responseFormat: request.responseFormat,
+      ping: options.ping === true,
     },
   });
 
