@@ -24,14 +24,32 @@ export function bankByAxis(): Map<TraitAxis, QuestionDraft> {
 }
 
 /** Deterministic batch when Gemini is off. Same locked examples as the prompt. */
-export function composeLocalQuestionBatch(recentAxes: TraitAxis[] = []): QuestionDraft[] {
-  const copies = QUESTIONS_BANK.map((row) => ({
+export function composeLocalQuestionBatch(
+  recentAxes: TraitAxis[] = [],
+  priorityAxes: readonly TraitAxis[] = [],
+): QuestionDraft[] {
+  const byAxis = bankByAxis();
+  const out: QuestionDraft[] = [];
+  const seen = new Set<TraitAxis>();
+  const push = (draft: QuestionDraft | undefined) => {
+    if (!draft || seen.has(draft.axis)) return;
+    seen.add(draft.axis);
+    out.push({ ...draft, options: draft.options.map((opt) => ({ ...opt })) });
+  };
+  for (const axis of priorityAxes) {
+    push(byAxis.get(axis));
+    if (out.length >= QUESTIONS_BATCH_SIZE) return out;
+  }
+  const copies = QUESTIONS_BANK.filter((row) => !seen.has(row.axis)).map((row) => ({
     axis: row.axis,
     prompt: row.prompt,
     options: row.options.map((opt) => ({ ...opt })),
   }));
-  const rotated = preferFreshAxes(copies, recentAxes);
-  return rotated.slice(0, QUESTIONS_BATCH_SIZE);
+  for (const draft of preferFreshAxes(copies, recentAxes)) {
+    push(draft);
+    if (out.length >= QUESTIONS_BATCH_SIZE) break;
+  }
+  return out;
 }
 
 /** One item per axis, all TRAIT_AXES. Distinct from the 5-item rotation. */

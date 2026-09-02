@@ -93,17 +93,19 @@ async function guardedBatch(
   input: RouteQuestionsInput,
   deps: RouteQuestionsDeps,
   recentAxes: TraitAxis[],
+  priorityAxes: readonly TraitAxis[] = [],
 ): Promise<QuestionDraft[] | null> {
   const grounding = pickQuestionGrounding(input.me, input.history);
   const promptArgs = {
     me: input.me,
     grounding,
     recentAxes,
+    priorityAxes,
   };
 
   if (deps.useLocal === true || !deps.generateBatch) {
-    const local = composeLocalQuestionBatch(recentAxes);
-    return preferFreshAxes(keepGuardedDrafts(local).kept, recentAxes);
+    const local = composeLocalQuestionBatch(recentAxes, priorityAxes);
+    return preferFreshAxes(keepGuardedDrafts(local).kept, recentAxes, priorityAxes);
   }
 
   const first = await deps.generateBatch(buildQuestionsPrompt(promptArgs));
@@ -124,7 +126,7 @@ async function guardedBatch(
     }
   }
 
-  const rotated = preferFreshAxes(kept, recentAxes);
+  const rotated = preferFreshAxes(kept, recentAxes, priorityAxes);
   return rotated.length > 0 ? rotated : null;
 }
 
@@ -165,7 +167,18 @@ export async function routeQuestions(
   }
 
   const recent = recentAskedAxes(existing);
-  const drafts = await guardedBatch(input, deps, recent);
+  // The caller's priority list can be stale for one render right after an
+  // answer lands server-side. Never force a just-answered axis to the front
+  // of the regenerated batch — it has a trait value now.
+  const answeredInPack = new Set(
+    (existing?.items ?? [])
+      .filter((item) => item.answeredOption != null)
+      .map((item) => item.axis),
+  );
+  const priorityAxes = (input.priorityAxes ?? []).filter(
+    (axis) => !answeredInPack.has(axis),
+  );
+  const drafts = await guardedBatch(input, deps, recent, priorityAxes);
   if (!drafts || drafts.length === 0) {
     return { kind: 'empty', pack: todays, item: null };
   }

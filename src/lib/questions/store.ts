@@ -131,3 +131,15 @@ export async function skipRestOfQuestionPack(packId: string): Promise<void> {
   });
   if (error) throw error;
 }
+
+/** Persist the full deferred-axis set (skipped elsewhere in a questionnaire sweep). */
+export async function saveQuestionDeferral(
+  userId: string,
+  deferred: readonly TraitAxis[],
+): Promise<void> {
+  const { error } = await supabase
+    .from('me')
+    .update({ question_deferred: deferred })
+    .eq('id', userId);
+  if (error) throw error;
+}

@@ -456,20 +456,27 @@ export default function YouScreen() {
                 )}
               </ThemedView>
 
-              <ThemedView type="backgroundElement" style={styles.detailCard}>
-                <ThemedText type="smallBold" style={styles.inviteHeading}>
-                  People you invited
-                </ThemedText>
-                {referrals.length === 0 ? (
+              {referrals.length === 0 ? (
+                <ThemedView type="backgroundElement" style={styles.detailCard}>
+                  <ThemedText type="smallBold" style={styles.inviteHeading}>
+                    People you invited
+                  </ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
                     Nobody yet. Only you can see this list.
                   </ThemedText>
-                ) : (
-                  referrals.map((person) => (
+                </ThemedView>
+              ) : (
+                <SettingsFold
+                  title={
+                    referrals.length === 1
+                      ? '1 person invited'
+                      : `${referrals.length} people invited`
+                  }>
+                  {referrals.map((person) => (
                     <DetailRow key={person.id} label={person.name} value={`@${person.handle}`} />
-                  ))
-                )}
-              </ThemedView>
+                  ))}
+                </SettingsFold>
+              )}
 
               <SageUsageFold />
               <PasswordSettingsFold />

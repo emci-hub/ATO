@@ -22,14 +22,30 @@ export function recentAskedAxes(
     .slice(-n);
 }
 
-/** Prefer axes not in the last 2–3. Overlap is allowed if the batch would otherwise shrink. */
-export function preferFreshAxes(drafts: QuestionDraft[], recent: TraitAxis[]): QuestionDraft[] {
+/**
+ * Prefer axes not in the last 2–3. Overlap is allowed if the batch would
+ * otherwise shrink. `priority` (deferred-unanswered axes) leads the batch in
+ * the given order, before recency is considered; empty priority preserves
+ * today's behavior exactly.
+ */
+export function preferFreshAxes(
+  drafts: QuestionDraft[],
+  recent: TraitAxis[],
+  priority: readonly TraitAxis[] = [],
+): QuestionDraft[] {
   const avoid = new Set(recent.slice(-QUESTIONS_AXIS_MEMORY));
-  const fresh = drafts.filter((draft) => !avoid.has(draft.axis));
-  const overlap = drafts.filter((draft) => avoid.has(draft.axis));
+  const prioritySet = new Set(priority);
+  const prioritized: QuestionDraft[] = [];
+  for (const axis of priority) {
+    const match = drafts.find((draft) => draft.axis === axis);
+    if (match) prioritized.push(match);
+  }
+  const rest = drafts.filter((draft) => !prioritySet.has(draft.axis));
+  const fresh = rest.filter((draft) => !avoid.has(draft.axis));
+  const overlap = rest.filter((draft) => avoid.has(draft.axis));
   const seen = new Set<TraitAxis>();
   const out: QuestionDraft[] = [];
-  for (const draft of [...fresh, ...overlap]) {
+  for (const draft of [...prioritized, ...fresh, ...overlap]) {
     if (seen.has(draft.axis)) continue;
     seen.add(draft.axis);
     out.push(draft);

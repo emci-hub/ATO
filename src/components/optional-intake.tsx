@@ -7,14 +7,21 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import type { IntakeChip } from '@/lib/intake';
 import { updateTraits, type Me } from '@/lib/me';
+import {
+  deferredUnansweredAxes,
+  mergedDeferral,
+} from '@/lib/questions/deferral';
+import { saveQuestionDeferral } from '@/lib/questions/store';
 import { SCENARIO_QUESTIONS } from '@/lib/vibe-check';
 import {
   OPTIONAL_INTAKE_TOTAL,
+  axesWrittenByOptionalScreen,
   optionalFillWrite,
   optionalProgressLabel,
   traitStateFromRow,
   unansweredOptionalScreens,
   type OptionalScreen,
+  type TraitAxis,
 } from '@/lib/traits';
 
 export type { OptionalScreen };
@@ -241,7 +248,11 @@ export function OptionalIntakeFill({
   onUpdated: () => void | Promise<void>;
 }) {
   const values = traitStateFromRow(me).values;
-  const unanswered = unansweredOptionalScreens(values);
+  const deferred = new Set(deferredUnansweredAxes(values, me.question_deferred));
+  const unanswered = unansweredOptionalScreens(values).filter(
+    (screen) =>
+      !axesWrittenByOptionalScreen(screen).some((axis) => deferred.has(axis)),
+  );
   const [sessionSkipped, setSessionSkipped] = useState<ReadonlySet<OptionalScreen>>(
     () => new Set(),
   );
@@ -255,12 +266,40 @@ export function OptionalIntakeFill({
   const index = remaining.length === 0 ? 0 : Math.min(cursor, remaining.length - 1);
   const screen = remaining[index];
 
-  function skipScreens(screens: readonly OptionalScreen[]) {
+  function markSkipped(screens: readonly OptionalScreen[]) {
     setSessionSkipped((prev) => {
       const next = new Set(prev);
       for (const item of screens) next.add(item);
       return next;
     });
+  }
+
+  /** A skipped optional screen defers its still-unanswered axes to the pool. */
+  async function skipScreens(screens: readonly OptionalScreen[]) {
+    const axes: TraitAxis[] = [];
+    const seen = new Set<TraitAxis>();
+    for (const item of screens) {
+      for (const axis of axesWrittenByOptionalScreen(item)) {
+        if (seen.has(axis)) continue;
+        seen.add(axis);
+        if (values[axis] == null) axes.push(axis);
+      }
+    }
+    if (axes.length === 0) {
+      markSkipped(screens);
+      return;
+    }
+    setBusy(true);
+    try {
+      const next = mergedDeferral(me.question_deferred, values, axes);
+      await saveQuestionDeferral(me.id, next);
+      await onUpdated();
+      markSkipped(screens);
+    } catch (err) {
+      console.log('[optional-intake] skip error:', err);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function persistThenAdvance() {
@@ -274,8 +313,14 @@ export function OptionalIntakeFill({
       if (write) {
         await updateTraits(me.id, write.incoming, write.source, write.allowed);
         await onUpdated();
+        // Answered: nothing to defer (all the screen's writable null axes are
+        // now set). Just move the stepper on.
+        markSkipped([screen]);
+      } else {
+        // No option selected — this advance is effectively a skip, so relocate
+        // the screen's still-unanswered axes to the pool.
+        await skipScreens([screen]);
       }
-      skipScreens([screen]);
     } catch (err) {
       console.log('[optional-intake] fill error:', err);
     } finally {
@@ -298,8 +343,8 @@ export function OptionalIntakeFill({
               if (index <= 0) return;
               setCursor(index - 1);
             }}
-            onSkipThis={() => skipScreens([screen])}
-            onSkipRest={() => skipScreens(remaining)}
+            onSkipThis={() => void skipScreens([screen])}
+            onSkipRest={() => void skipScreens(remaining)}
             onContinue={() => void persistThenAdvance()}
           />
         )}

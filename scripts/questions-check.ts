@@ -17,6 +17,11 @@ import {
   QUESTIONS_SKIP_THIS,
 } from '../src/lib/questions/copy';
 import { questionDraftGuardHit } from '../src/lib/questions/guards';
+import {
+  deferredUnansweredAxes,
+  mergedDeferral,
+  normalizeDeferredAxes,
+} from '../src/lib/questions/deferral';
 import { composeLocalQuestionBatch } from '../src/lib/questions/local';
 import { parseQuestionBatch } from '../src/lib/questions/parse';
 import { buildQuestionsPrompt } from '../src/lib/questions/prompt';
@@ -145,6 +150,49 @@ assert.equal(rotated[0]?.axis, 'attachment_avoidance');
 assert.ok(!preferFreshAxes(composeLocalQuestionBatch(), ['openness']).slice(0, 1).some((row) => row.axis === 'openness'));
 ok('soft axis rotation prefers axes outside the last 2–3');
 
+// --- Question deferral (intake skip -> rotating pool) ---------------------
+assert.deepEqual(
+  normalizeDeferredAxes(['openness', 'bogus', 'openness', 7, 'playfulness']),
+  ['openness', 'playfulness'],
+);
+const deferredVals = emptyTraitState().values;
+deferredVals.openness = 0.5;
+assert.deepEqual(deferredUnansweredAxes(deferredVals, ['openness', 'playfulness']), ['playfulness']);
+assert.deepEqual(
+  mergedDeferral(['openness', 'autonomy'], { ...deferredVals }, ['autonomy', 'relatedness']),
+  ['autonomy', 'relatedness'],
+);
+ok('deferral helpers validate axes, dedupe, and prune answered axes');
+
+const priorityBatch = composeLocalQuestionBatch([], ['playfulness', 'autonomy']);
+assert.equal(priorityBatch[0]?.axis, 'playfulness');
+assert.equal(priorityBatch[1]?.axis, 'autonomy');
+assert.equal(priorityBatch.length, 5);
+const reordered = preferFreshAxes(
+  [
+    { axis: 'openness', prompt: 'p1', options: [{ text: 'a', value: 0.8 }, { text: 'b', value: 0.2 }] },
+    { axis: 'playfulness', prompt: 'p2', options: [{ text: 'a', value: 0.8 }, { text: 'b', value: 0.2 }] },
+    { axis: 'autonomy', prompt: 'p3', options: [{ text: 'a', value: 0.8 }, { text: 'b', value: 0.2 }] },
+  ],
+  [],
+  ['autonomy', 'playfulness'],
+);
+assert.deepEqual(
+  reordered.map((draft) => draft.axis),
+  ['autonomy', 'playfulness', 'openness'],
+);
+const prompted = buildQuestionsPrompt({
+  me: { name: 'Riley', talk_style: 'even', voice_preset: 'close_friend' },
+  grounding: { kind: 'do', detail: 'Write one line.' },
+  priorityAxes: ['playfulness', 'autonomy'],
+});
+assert.match(prompted, /PRIORITY AXES/);
+assert.match(prompted, /playfulness, autonomy/);
+assert.doesNotMatch(prompt, /PRIORITY AXES/);
+const deferralMigration = read('supabase/migrations/wave30_question_deferral.sql');
+assert.match(deferralMigration, /question_deferred jsonb not null default '\[\]'::jsonb/);
+ok('deferred axes lead local + rotated batches and the prompt; wave29 migration exists');
+
 async function main() {
 const routed = await routeQuestions(
   {
@@ -166,6 +214,54 @@ assert.ok(routed.item);
 assert.equal(routed.pack?.items.length, 5);
 assert.equal(nextUnansweredItem(routed.pack)?.id, routed.item?.id);
 ok('opening with local deps serves a cached-shape batch of 5');
+
+// A just-answered deferred axis (answered in the latest pack) must not be
+// re-front-loaded by the regenerated batch even if the UI's priority list is
+// one render stale.
+const answeredPack = {
+  id: 'yesterday',
+  generatedOn: '2026-08-29',
+  createdAt: '2026-08-29T12:00:00.000Z',
+  items: [
+    {
+      id: 'old-a',
+      packId: 'yesterday',
+      sortIndex: 0,
+      axis: 'openness',
+      prompt: 'One.',
+      options: [
+        { text: 'A', value: 0.8 },
+        { text: 'B', value: 0.2 },
+      ],
+      answeredOption: 0,
+      skippedAt: null,
+    },
+  ],
+};
+const afterAnswerRegen = await routeQuestions(
+  {
+    me: {
+      name: 'Riley',
+      timezone: 'UTC',
+      talk_style: 'even',
+      voice_preset: 'close_friend',
+      sage_knows: emptySageKnowsState(),
+      facts: [],
+      ai_consent: true,
+    },
+    history: [],
+    aiConsent: true,
+    priorityAxes: ['openness', 'playfulness'],
+  },
+  {
+    useLocal: true,
+    loadLatestPack: async () => answeredPack,
+  },
+);
+assert.ok(afterAnswerRegen.pack);
+assert.equal(afterAnswerRegen.pack.items[0]?.axis, 'playfulness');
+assert.ok(!afterAnswerRegen.pack.items.some((item) => item.axis === 'openness'));
+ok('answered deferred axis is dropped from the regen priority list');
 
 let generateCalls = 0;
 const dirtyThenClean = await routeQuestions(

@@ -7,6 +7,11 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { updateTraits, type Me } from '@/lib/me';
+import {
+  deferredUnansweredAxes,
+  mergedDeferral,
+} from '@/lib/questions/deferral';
+import { saveQuestionDeferral } from '@/lib/questions/store';
 import { INTAKE_SWEEP_COPY_REVIEWED, unansweredSweep } from '@/lib/questions/local';
 import { routeQuestionSweep } from '@/lib/questions/sweep';
 import type { QuestionDraft } from '@/lib/questions/types';
@@ -46,6 +51,7 @@ export function IntakeSweep({
   const answered = new Set(
     TRAIT_AXES.filter((axis) => values[axis] != null && Number.isFinite(values[axis])),
   );
+  const deferred = new Set(deferredUnansweredAxes(values, me.question_deferred));
 
   useEffect(() => {
     let cancelled = false;
@@ -79,7 +85,20 @@ export function IntakeSweep({
     };
   }, [me.name, me.talk_style, me.voice_preset]);
 
-  const open = unansweredSweep(drafts ?? [], answered).filter((row) => !skipped.has(row.axis));
+  const open = unansweredSweep(drafts ?? [], answered).filter(
+    (row) => !skipped.has(row.axis) && !deferred.has(row.axis),
+  );
+
+  async function persistSkip(axes: readonly TraitAxis[]) {
+    const deferred = mergedDeferral(me.question_deferred, values, axes);
+    await saveQuestionDeferral(me.id, deferred);
+    await onUpdated();
+    setSkipped((prev) => {
+      const next = new Set(prev);
+      for (const axis of axes) next.add(axis);
+      return next;
+    });
+  }
 
   async function pick(draft: QuestionDraft, index: number) {
     const option = draft.options[index];
@@ -96,8 +115,29 @@ export function IntakeSweep({
     }
   }
 
-  function skipOne(axis: TraitAxis) {
-    setSkipped((prev) => new Set(prev).add(axis));
+  async function skipOne(axis: TraitAxis) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await persistSkip([axis]);
+    } catch (err) {
+      console.log('[intake-sweep] skip error:', err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function skipRest() {
+    if (busy || open.length === 0) return;
+    setBusy(true);
+    try {
+      await persistSkip(open.map((row) => row.axis));
+      onDone();
+    } catch (err) {
+      console.log('[intake-sweep] skip-rest error:', err);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -142,7 +182,7 @@ export function IntakeSweep({
               ))}
             </View>
             <Pressable
-              onPress={() => skipOne(draft.axis)}
+              onPress={() => void skipOne(draft.axis)}
               disabled={busy}
               style={({ pressed }) => [styles.skip, pressed && styles.pressed]}>
               <ThemedText type="smallBold">{INTAKE_SWEEP_SKIP_ONE}</ThemedText>
@@ -151,7 +191,7 @@ export function IntakeSweep({
         ))
       )}
       {open.length > 0 ? (
-        <ThemedPressable onPress={onDone} disabled={busy} style={styles.skipAll}>
+        <ThemedPressable onPress={() => void skipRest()} disabled={busy} style={styles.skipAll}>
           <ThemedText type="small" themeColor="textSecondary">
             {INTAKE_SWEEP_SKIP_ALL}
           </ThemedText>

@@ -56,6 +56,11 @@ export interface RouteQuestionsInput {
   aiConsent?: boolean | null;
   crisisToday?: boolean;
   now?: Date;
+  /**
+   * Deferred-unanswered axes (skipped earlier in a questionnaire sweep) to
+   * cover first in the next generated batch. Empty when none.
+   */
+  priorityAxes?: readonly TraitAxis[];
 }
 
 export type QuestionsKind =

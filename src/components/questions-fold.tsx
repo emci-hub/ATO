@@ -8,6 +8,8 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { updateTraits, type Me } from '@/lib/me';
 import { earnTokensQuiet } from '@/lib/tokens-server';
+import { deferredUnansweredAxes } from '@/lib/questions/deferral';
+import { traitStateFromRow } from '@/lib/traits';
 import {
   QUESTIONS_CHECKPOINT,
   QUESTIONS_CHECKPOINT_AFTER,
@@ -109,6 +111,10 @@ export function QuestionsFold({
           history,
           aiConsent: me.ai_consent,
           crisisToday,
+          priorityAxes: deferredUnansweredAxes(
+            traitStateFromRow(me).values,
+            me.question_deferred,
+          ),
         },
         {
           loadLatestPack: fetchLatestQuestionPack,

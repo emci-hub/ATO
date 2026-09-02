@@ -1,7 +1,7 @@
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '@/lib/voice/preset';
 import { TALK_STYLE_GUIDE } from '@/lib/voice/providers/types';
-import { TRAIT_AXES } from '@/lib/traits';
+import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 import type { TalkStyle } from '@/lib/voice/types';
 
 import { QUESTIONS_FEW_SHOTS } from './bank';
@@ -16,6 +16,7 @@ export function buildQuestionsPrompt(input: {
   grounding: QuestionGrounding;
   recentAxes?: string[];
   retryHint?: boolean;
+  priorityAxes?: readonly TraitAxis[];
 }): string {
   const ground =
     input.grounding.kind === 'none' || !input.grounding.detail
@@ -28,6 +29,11 @@ export function buildQuestionsPrompt(input: {
     input.recentAxes && input.recentAxes.length > 0
       ? `Do not repeat these recently asked axes (soft rotation, last 2–3): ${input.recentAxes.join(', ')}.`
       : 'No recent axes to avoid.';
+
+  const priority =
+    input.priorityAxes && input.priorityAxes.length > 0
+      ? `PRIORITY AXES (cover as many of these as you can, in the order listed — the user skipped them elsewhere and they are still unanswered): ${input.priorityAxes.join(', ')}.\n`
+      : '';
 
   const retry = input.retryHint
     ? 'Previous draft had a blocked term or pattern in a question or an option. Write a different batch.\n'
@@ -52,7 +58,7 @@ ${retry}${ground}
 AXES (each question maps to exactly one):
 ${TRAIT_AXES.join(', ')}
 
-RULES
+${priority}RULES
 1. Return exactly 5 questions.
 2. Multiple-choice only. 2 or 3 options each. Never ask for free text.
 3. Each question maps to one axis from the list. Include the axis id in JSON.

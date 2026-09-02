@@ -6,6 +6,7 @@ import type {
   SupportStyle,
 } from '@/lib/intake';
 import { clearPendingInviteCode, errorMessageForInvite } from '@/lib/invite';
+import { normalizeDeferredAxes } from '@/lib/questions/deferral';
 import { supabase } from '@/lib/supabase';
 import { localYmd } from '@/lib/local-date';
 import {
@@ -85,6 +86,12 @@ export type Me = {
   facts: string[];
   /** Map of presence-milestone key -> ISO timestamp when its one-time celebration fired. */
   milestones_celebrated: Record<string, string>;
+  /**
+   * Axes the user skipped in a questionnaire sweep. Served by the rotating
+   * Questions pool until the axis is answered. Optional for older rows /
+   * fixtures; normalizeDeferredAxes defaults it to [].
+   */
+  question_deferred?: readonly TraitAxis[];
   /** Hidden. FK to the ME row that invited this user. Never shown publicly. */
   referred_by: string | null;
   /**
@@ -197,6 +204,7 @@ function withVisible(row: Me): Me {
     close_friends_share: row.close_friends_share === true,
     category_spotlight: row.category_spotlight ?? {},
     sage_story: row.sage_story ?? {},
+    question_deferred: normalizeDeferredAxes(row.question_deferred),
   };
 }
 
