@@ -4,7 +4,7 @@
 **Gates:** A ✓ (non-goals in archive/OLD_PLAN.md) · B ✓ (iOS/Expo, Supabase, Apple Sign-in+email) · C in progress · D not started
 **Modules on:** report/block (Social), crisis static-card + privacy pass (Health/finance/kids) — both required, in progress
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
-**Latest production OTA:** `c897410d-a019-4d66-8062-3267ca695710` (commit `4b27a0b`) — Legend story variants: figures can resurface via a different story variant (figure+variant model, per-variant never-repeat). Also carries the PRE_LAUNCH_DEV re-gating and the hard ota:publish gate. Published Sep 2, 2026. Binary 10+.
+**Latest production OTA:** `2498225d-caba-4e03-af9e-5c93b409434d` (commit `c2eb2f8`) — audit remediation Phases 0-2: every vendor key server-side, `ai-generate` verifies the JWT + caps tokens + claims quota, root is `me.is_root`, typecheck/lint in the OTA gate, docs restructure. Published Sep 2, 2026. Binary 10+. **Phase 3 (Home hero card, nav placement, gated appearance modes, home_bootstrap) is committed but not yet published.**
 
 ## On
 **Unified AI provider layer is on production (OTA `b84f0aa6`, Sep 1, 2026).** Every Sage model call goes through `generateText({ prompt, temperature, maxOutputTokens, responseFormat })` in `src/lib/ai`. `EXPO_PUBLIC_AI_PROVIDER` selects Gemini, NVIDIA, Perplexity, Claude, Grok, or `local`. Gemini / NVIDIA / Perplexity stay client-side (`EXPO_PUBLIC_*` keys). Claude and Grok go through the `ai-generate` Edge Function (keys are Supabase secrets, not in the bundle). `MODEL_PROVIDER=local` still forces the deterministic fallback. A hidden provider switcher (tap the Build line 5 times) stores an on-device override in AsyncStorage. Each remote call logs `provider + timestamp` to `ai_provider_log` (not the response) so the switcher can show rolling 1-minute / 24-hour self-tracked counts next to seeded free-tier baselines. **Gemini API key rotated the same day** in gitignored `.env.local` and the production EAS env var (`eas env:set`; classic `eas secret:list` is empty/deprecated). Claude/Grok will 503 until `ANTHROPIC_API_KEY` and `XAI_API_KEY` are set on the Supabase project. NVIDIA/Perplexity need their `EXPO_PUBLIC_*` keys locally to switch to them.
@@ -138,7 +138,10 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 7. **Intake sweep copy** — `INTAKE_SWEEP_COPY_REVIEWED = false` (`questions/local.ts`).
 
 ## Left
-- **Audit remediation ops (needs emci's ok, in this order):** set `GEMINI_API_KEY` Supabase secret → apply `wave34_root_is_column.sql` → redeploy `ai-generate` + `review-access` → `npm run ota:publish`. Then rotate the dev-test password (deferred). See PROJECT_CONTEXT Decisions log 2026-09-02.
+- **Push + publish Phase 3** — `git push origin master`, then `npm run ota:publish -- --branch production --message "Phase 3"`. (Phases 0-2 ops are all done and live.)
+- **Check EAS production `EXPO_PUBLIC_GEMINI_MODEL`** — must be `gemini-3.7-flash` or unset (the code default is now correct either way). Could not be read non-interactively from the build session.
+- **Rotate the dev-test password** (`src/lib/dev-test-user.ts`) — still in the bundle and in git history. Deferred on purpose; do it before public launch.
+- **Wire real billing** behind `src/lib/subscription.ts` before charging for Zen/Neon/Anime — the gate is live, the entitlement source is a stub that always returns inactive.
 - Full device pass against `docs/ATO_DEVICE_TESTS.md` (binary 10+, OTA `d5332b8b`)
 - Verify the dev-test auto-login + Legends "test persona" strip on a real dev build (both `__DEV__`-only; OTA `d5332b8b` carries the code, but dev builds need the strip exercised)
 - Set Supabase secrets `ANTHROPIC_API_KEY` / `XAI_API_KEY` (and optional `ANTHROPIC_MODEL` / `XAI_MODEL`) before Claude or Grok can work from `/ai-lab`
