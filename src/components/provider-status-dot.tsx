@@ -24,9 +24,11 @@ const STATUS_LABEL: Record<Status, string> = {
   checking: 'Checking…',
   connected: 'Connected',
   unavailable: 'Unavailable',
-  'not-configured': 'Not configured',
+  'not-configured': 'No API key',
   local: 'No connectivity check for local',
 };
+
+const MISSING_KEY_PATTERN = /key_missing/;
 
 /**
  * Pings the currently-selected AI provider through the same request path
@@ -71,8 +73,14 @@ export function ProviderStatusDot({ provider }: { provider: AiProviderId }) {
         setError(null);
       } catch (err) {
         if (cancelled) return;
-        setStatus('unavailable');
-        setError(err instanceof Error ? err.message : String(err));
+        const message = err instanceof Error ? err.message : String(err);
+        if (MISSING_KEY_PATTERN.test(message)) {
+          setStatus('not-configured');
+          setError(null);
+        } else {
+          setStatus('unavailable');
+          setError(message);
+        }
       }
     }
 

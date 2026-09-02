@@ -12,6 +12,7 @@ import { useTheme } from '@/hooks/use-theme';
 import {
   AI_PROVIDER_IDS,
   PROVIDER_LIMITS,
+  REMOTE_AI_PROVIDER_IDS,
   configuredProvider,
   resolveActiveProvider,
   setProviderOverride,
@@ -80,7 +81,17 @@ export default function AiLabScreen() {
               This device only. Other accounts keep the bundled default (
               {PROVIDER_LIMITS[bundled].label}).
             </ThemedText>
-            <ProviderStatusDot provider={active} />
+          </View>
+
+          <View style={styles.statusList}>
+            {REMOTE_AI_PROVIDER_IDS.map((id) => (
+              <View key={id} style={styles.statusRow}>
+                <ThemedText type="smallBold" style={styles.statusLabel}>
+                  {PROVIDER_LIMITS[id].label}
+                </ThemedText>
+                <ProviderStatusDot provider={id} />
+              </View>
+            ))}
           </View>
 
           {AI_PROVIDER_IDS.map((id) => {
@@ -169,6 +180,18 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: Spacing.half,
+  },
+  statusList: {
+    gap: Spacing.half,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  statusLabel: {
+    minWidth: 80,
   },
   back: {
     alignSelf: 'flex-start',
