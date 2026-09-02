@@ -14,7 +14,13 @@ import type { Href } from 'expo-router';
  * survives restarts, not just the session.
  */
 
-export type ReorderableTabId = 'explore' | 'around' | 'you' | 'circle' | 'questions';
+export type ReorderableTabId =
+  | 'explore'
+  | 'around'
+  | 'you'
+  | 'circle'
+  | 'questions'
+  | 'legends';
 
 export interface NavUnlockContext {
   /** True once this account has at least one Circle connection. */
@@ -50,6 +56,7 @@ export const NAV_TABS: Record<ReorderableTabId, NavTabMeta> = {
     unlockReason: 'Scan a friend to unlock Circle.',
   },
   questions: { label: 'Questions', href: '/intake-sweep', icon: 'comment-question-outline' },
+  legends: { label: 'Legends', href: '/legends', icon: 'book-open-page-variant-outline' },
 };
 
 export const NAV_TAB_IDS = Object.keys(NAV_TABS) as ReorderableTabId[];
@@ -78,10 +85,10 @@ export interface NavOrder {
 
 export const DEFAULT_NAV_ORDER: NavOrder = {
   homeFirst: true,
-  // Main bar = Home + Sage + Explore + You + More (5 items). Around/Questions
-  // are secondary "rooms opened on purpose", so they default into More.
+  // Main bar = Home + Sage + Explore + You + More (5 items). Around/Questions/
+  // Legends are secondary "rooms opened on purpose", so they default into More.
   main: ['explore', 'you'],
-  more: ['around', 'circle', 'questions'],
+  more: ['around', 'circle', 'questions', 'legends'],
 };
 
 const NAV_ORDER_KEY = 'ato.nav.order.v1';
