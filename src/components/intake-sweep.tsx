@@ -13,6 +13,7 @@ import { TRAIT_AXES, traitStateFromRow, type TraitAxis } from '@/lib/traits';
 import { earnTokensQuiet } from '@/lib/tokens-server';
 import { shouldUseLocalAi } from '@/lib/ai/override';
 import { controlBorderColor } from '@/lib/theme/chrome';
+import { withTimeout } from '@/lib/timeout';
 
 export const INTAKE_SWEEP_TITLE = 'A faster pass';
 export const INTAKE_SWEEP_LEDE =
@@ -49,14 +50,23 @@ export function IntakeSweep({
     let cancelled = false;
     void (async () => {
       try {
-        const next = await routeQuestionSweep({
-          me: {
-            name: me.name,
-            talk_style: me.talk_style ?? 'even',
-            voice_preset: me.voice_preset,
-          },
-          useLocal: await shouldUseLocalAi(),
-        });
+        // routeQuestionSweep can make two sequential AI calls (draft + retry) — longer
+        // budget than a single network call gets before falling back to setDrafts([]).
+        const next = await withTimeout(
+          (async () => {
+            const useLocal = await shouldUseLocalAi();
+            return routeQuestionSweep({
+              me: {
+                name: me.name,
+                talk_style: me.talk_style ?? 'even',
+                voice_preset: me.voice_preset,
+              },
+              useLocal,
+            });
+          })(),
+          25000,
+          'intake-sweep',
+        );
         if (!cancelled) setDrafts(next);
       } catch (err) {
         console.log('[intake-sweep] route error:', err);
