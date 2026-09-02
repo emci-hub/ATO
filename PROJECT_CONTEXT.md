@@ -20,11 +20,11 @@ Do not commit `.env.local` or API keys. Do not change dependencies, schemas, aut
 
 ## Snapshot (Sep 2, 2026)
 
-- Branch: `master` @ `b74cdc6` — replaced optional-intake flow with 2-axis scenario questions (see Decisions log). Not yet published as an OTA update.
-- Latest production OTA: `c9d31a38-867e-4017-99fa-0c3b55489b16` (removed MBTI type-code chips + dead onboarding grid screen). Binary 10+ only. The scenario-question rebuild above is committed but not yet on this OTA.
+- Branch: `master` @ `dac0813` — replaced optional-intake flow with 2-axis scenario questions (see Decisions log).
+- Latest production OTA: `6b5cf8d4-442e-4f21-9682-7cdf0ff78e35` (8-screen optional intake replaced with 8 scenario questions covering all 16 axes; chip text overflow fix). Binary 10+ only.
 - Gemini key lives in gitignored `.env.local` and EAS production env (`eas env:set`). Classic `eas secret:list` is empty/deprecated.
 - Claude/Grok need Supabase secrets `ANTHROPIC_API_KEY` / `XAI_API_KEY` or those adapters 503.
-- Next product work: publish the scenario-question rebuild as an OTA update (if/when emci wants it live), full device pass (`docs/ATO_DEVICE_TESTS.md`) on binary 10, then Stage 8 invite/referral.
+- Next product work: full device pass (`docs/ATO_DEVICE_TESTS.md`) on binary 10, then Stage 8 invite/referral.
 
 ## Decisions log
 
