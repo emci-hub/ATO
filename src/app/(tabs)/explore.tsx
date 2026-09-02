@@ -7,6 +7,7 @@ import { CategoriesFold } from '@/components/categories-fold';
 import { SageInsightSpend } from '@/components/sage-insight-spend';
 import { SageStoryFold } from '@/components/sage-story-fold';
 import { SageTitleCard } from '@/components/sage-title-card';
+import { SettingsFold } from '@/components/settings-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -132,7 +133,9 @@ export default function ExploreScreen() {
 
           {me ? (
             <>
-              <SageTitleCard me={me} tracks={tracks} tracksReady={tracksReady} />
+              <SettingsFold title="Today's Read">
+                <SageTitleCard me={me} tracks={tracks} tracksReady={tracksReady} />
+              </SettingsFold>
               <CategoriesFold me={me} onUpdated={() => refreshMe()} />
               <SageStoryFold
                 me={me}
@@ -314,65 +317,66 @@ function SageExploreObservations({
   if (!message && entries.length === 0) return null;
 
   return (
-    <View style={styles.exploreBlock}>
-      <ThemedText type="smallBold">Observations</ThemedText>
-      {message ? (
-        <View style={[styles.bubble, { backgroundColor: theme.backgroundElement }]}>
-          <ThemedText style={styles.bubbleText}>{message}</ThemedText>
-        </View>
-      ) : null}
-      {entries.map((entry) => (
-        <View key={entry.id} style={styles.exploreEntry}>
+    <SettingsFold title="Observations">
+      <View style={styles.exploreBlock}>
+        {message ? (
           <View style={[styles.bubble, { backgroundColor: theme.backgroundElement }]}>
-            <ThemedText style={styles.bubbleText}>{entry.body}</ThemedText>
+            <ThemedText style={styles.bubbleText}>{message}</ThemedText>
           </View>
-          <ThemedText type="small" themeColor="textSecondary">
-            {EXPLORE_LAND_Q}
-          </ThemedText>
-          <View style={styles.exploreActions}>
-            <View style={styles.actionSlot}>
-              <ThemedPressable
-                filled={entry.landed === true}
-                onPress={() => void react(entry, true)}
-                disabled={busyId !== null}
-                style={[styles.exploreYes, busyId !== null && styles.disabled]}>
-                <ThemedText
-                  type="smallBold"
-                  style={entry.landed === true ? { color: theme.onAccent } : undefined}
-                  themeColor={entry.landed === true ? undefined : 'textSecondary'}>
-                  {EXPLORE_LAND_YES}
-                </ThemedText>
-              </ThemedPressable>
-              {noted?.entryId === entry.id && noted.landed === true ? (
-                <NotedAck
-                  bump={noted.bump}
-                  reduceMotion={reduceMotion}
-                  onFill={entry.landed === true}
-                />
-              ) : null}
+        ) : null}
+        {entries.map((entry) => (
+          <View key={entry.id} style={styles.exploreEntry}>
+            <View style={[styles.bubble, { backgroundColor: theme.backgroundElement }]}>
+              <ThemedText style={styles.bubbleText}>{entry.body}</ThemedText>
             </View>
-            <View style={styles.actionSlot}>
-              <ThemedPressable
-                onPress={() => void react(entry, false)}
-                disabled={busyId !== null}
-                style={[
-                  styles.exploreNo,
-                  { borderColor: controlBorderColor(theme) },
-                  entry.landed === false && styles.missed,
-                  busyId !== null && styles.disabled,
-                ]}>
-                <ThemedText type="smallBold" themeColor="textSecondary">
-                  {EXPLORE_LAND_NO}
-                </ThemedText>
-              </ThemedPressable>
-              {noted?.entryId === entry.id && noted.landed === false ? (
-                <NotedAck bump={noted.bump} reduceMotion={reduceMotion} onFill={false} />
-              ) : null}
+            <ThemedText type="small" themeColor="textSecondary">
+              {EXPLORE_LAND_Q}
+            </ThemedText>
+            <View style={styles.exploreActions}>
+              <View style={styles.actionSlot}>
+                <ThemedPressable
+                  filled={entry.landed === true}
+                  onPress={() => void react(entry, true)}
+                  disabled={busyId !== null}
+                  style={[styles.exploreYes, busyId !== null && styles.disabled]}>
+                  <ThemedText
+                    type="smallBold"
+                    style={entry.landed === true ? { color: theme.onAccent } : undefined}
+                    themeColor={entry.landed === true ? undefined : 'textSecondary'}>
+                    {EXPLORE_LAND_YES}
+                  </ThemedText>
+                </ThemedPressable>
+                {noted?.entryId === entry.id && noted.landed === true ? (
+                  <NotedAck
+                    bump={noted.bump}
+                    reduceMotion={reduceMotion}
+                    onFill={entry.landed === true}
+                  />
+                ) : null}
+              </View>
+              <View style={styles.actionSlot}>
+                <ThemedPressable
+                  onPress={() => void react(entry, false)}
+                  disabled={busyId !== null}
+                  style={[
+                    styles.exploreNo,
+                    { borderColor: controlBorderColor(theme) },
+                    entry.landed === false && styles.missed,
+                    busyId !== null && styles.disabled,
+                  ]}>
+                  <ThemedText type="smallBold" themeColor="textSecondary">
+                    {EXPLORE_LAND_NO}
+                  </ThemedText>
+                </ThemedPressable>
+                {noted?.entryId === entry.id && noted.landed === false ? (
+                  <NotedAck bump={noted.bump} reduceMotion={reduceMotion} onFill={false} />
+                ) : null}
+              </View>
             </View>
           </View>
-        </View>
-      ))}
-    </View>
+        ))}
+      </View>
+    </SettingsFold>
   );
 }
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { SettingsFold } from '@/components/settings-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -64,33 +65,34 @@ export function SageInsightSpend({
   }
 
   return (
-    <View style={styles.block}>
-      <ThemedText type="smallBold">{TOKEN_INSIGHT_LABEL}</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        {TOKEN_INSIGHT_HINT} · {TOKEN_PRICE.sage_insight} notes
-      </ThemedText>
-      {body ? (
-        <ThemedText>{body}</ThemedText>
-      ) : (
-        <ThemedPressable
-          disabled={busy || !can}
-          onPress={() => void run()}
-          style={[
-            styles.btn,
-            { borderColor: controlBorderColor(theme) },
-            (busy || !can) && styles.disabled,
-          ]}>
-          <ThemedText type="smallBold">
-            {can ? `Spend ${TOKEN_PRICE.sage_insight}` : TOKEN_NEED_MORE}
-          </ThemedText>
-        </ThemedPressable>
-      )}
-      {error ? (
+    <SettingsFold title={TOKEN_INSIGHT_LABEL}>
+      <View style={styles.block}>
         <ThemedText type="small" themeColor="textSecondary">
-          {error}
+          {TOKEN_INSIGHT_HINT} · {TOKEN_PRICE.sage_insight} notes
         </ThemedText>
-      ) : null}
-    </View>
+        {body ? (
+          <ThemedText>{body}</ThemedText>
+        ) : (
+          <ThemedPressable
+            disabled={busy || !can}
+            onPress={() => void run()}
+            style={[
+              styles.btn,
+              { borderColor: controlBorderColor(theme) },
+              (busy || !can) && styles.disabled,
+            ]}>
+            <ThemedText type="smallBold">
+              {can ? `Spend ${TOKEN_PRICE.sage_insight}` : TOKEN_NEED_MORE}
+            </ThemedText>
+          </ThemedPressable>
+        )}
+        {error ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            {error}
+          </ThemedText>
+        ) : null}
+      </View>
+    </SettingsFold>
   );
 }
 
