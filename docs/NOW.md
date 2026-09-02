@@ -138,6 +138,7 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 7. **Intake sweep copy** — `INTAKE_SWEEP_COPY_REVIEWED = false` (`questions/local.ts`).
 
 ## Left
+- **Audit remediation ops (needs emci's ok, in this order):** set `GEMINI_API_KEY` Supabase secret → apply `wave34_root_is_column.sql` → redeploy `ai-generate` + `review-access` → `npm run ota:publish`. Then rotate the dev-test password (deferred). See PROJECT_CONTEXT Decisions log 2026-09-02.
 - Full device pass against `docs/ATO_DEVICE_TESTS.md` (binary 10+, OTA `d5332b8b`)
 - Verify the dev-test auto-login + Legends "test persona" strip on a real dev build (both `__DEV__`-only; OTA `d5332b8b` carries the code, but dev builds need the strip exercised)
 - Set Supabase secrets `ANTHROPIC_API_KEY` / `XAI_API_KEY` (and optional `ANTHROPIC_MODEL` / `XAI_MODEL`) before Claude or Grok can work from `/ai-lab`
@@ -185,7 +186,7 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 ## Housekeeping
 - docs/archive/OLD_PLAN.md, docs/ME.md, docs/NOW.md, docs/BUSINESS.md — Cursor maintains these directly. Commit together, `git push` immediately, never left local-only. archive/OLD_PLAN.md is a **working reference**, not a locked spec. Crisis / coach-label / diagnosis-avoidance / App Store floor sections are compliance-grounded and not casually revised. Device pass lives in `docs/ATO_DEVICE_TESTS.md`. `PROJECT_CONTEXT.md` is a pointer to these four, not a second source of truth.
 - **Production OTA publishes go through `npm run ota:publish -- <eas args>` — the hard pre-publish gate.** It runs the full offline `check:*` suite first (`npm run check:ota-gate`) and refuses to publish if any check fails. Never run bare `eas update` for production. Live/env-gated checks (accounts, seeds, network, providers) are excluded from the gate by design and run by hand when their environment exists.
-- EXPO_PUBLIC_AI_PROVIDER selects the live vendor (default gemini). Gemini / NVIDIA / Perplexity keys are `EXPO_PUBLIC_*`; Claude / Grok keys are Edge Function secrets on `ai-generate`. Gemini key rotated Sep 1, 2026 (`.env.local` + EAS production env). Model from `EXPO_PUBLIC_GEMINI_MODEL` (pinned to `gemini-3.7-flash` in production). Never commit `.env.local`.
+- EXPO_PUBLIC_AI_PROVIDER selects the live vendor (default gemini). **Since Sep 2, 2026 every vendor key is a Supabase secret on `ai-generate`** (`GEMINI_API_KEY`, `NVIDIA_API_KEY`, `PERPLEXITY_API_KEY`, `ANTHROPIC_API_KEY`, `XAI_API_KEY`, `DEEPSEEK_API_KEY`); nothing under `src/` may reference an `EXPO_PUBLIC_*_API_KEY` (`check:ai-provider` fails if it does). Model from `EXPO_PUBLIC_GEMINI_MODEL` / `GEMINI_MODEL` secret (default `gemini-3.7-flash`; `gemini-2.5-flash` is retired). Never commit `.env.local`.
 - **Open decision (emci's, not technical):** Apple Developer account type — Individual vs Organization. Revisit before public submission.
 - Bundle ID `com.emgens.ato` (App ID) / `com.emgens.ato.signin` (Services ID) confirmed.
 - Apple client_secret JWT minted Aug 25, 2026, expires Feb 24, 2027 07:24 UTC. Regenerate around late Jan 2027. Not automated.

@@ -17,18 +17,18 @@ Pointer only below this. Live status lives in the four tracked docs — keep the
 | `docs/archive/OLD_PLAN.md` | Old plan — reference only, suggestions not rules |
 | `docs/BUSINESS.md` | Legal / brand / cost |
 
-Expo SDK **54** in this repo. `AGENTS.md` still says to read https://docs.expo.dev/versions/v57.0.0/ before writing Expo code.
+Expo SDK **54** in this repo (`CLAUDE.md` / `AGENTS.md` point at the v54 docs).
 
 Do not commit `.env.local` or API keys. Do not change dependencies, schemas, auth, env config, or secrets without asking emci first.
 
 ## Snapshot (Sep 2, 2026)
 
-- Branch: `master` @ `4b27a0b` — legend story variants: figures resurface via a different story variant (wave32, see Decisions log).
+- Branch: `master` @ Phase 2 of the 2026-09-02 audit remediation (see the Decisions log entry "Audit remediation Phases 0–2"). Last OTA-published commit is still `4b27a0b`; everything after it is code-only until the next `npm run ota:publish`.
 - Latest production OTA: `c897410d-a019-4d66-8062-3267ca695710` (commit `4b27a0b`, legend story variants) — published Sep 2, 2026; Binary 10+ only. Carries the wave32 figure+variant client, the PRE_LAUNCH_DEV re-gating, and everything that landed on `master` before it. Nothing newer is published.
 - Gemini key lives in gitignored `.env.local` and EAS production env (`eas env:set`). Classic `eas secret:list` is empty/deprecated. **Re-verified 2026-09-02 (later the same day): the "free-tier quota exhausted" diagnosis no longer holds.** A direct `generateContent` probe with the `.env.local` key and `gemini-3.7-flash` returned **HTTP 200, `serviceTier: "standard"`** (paid tier) — Gemini is live. The real trap found instead: the code default `DEFAULT_MODELS.gemini` was `gemini-2.5-flash`, which Google now answers with **404 "no longer available to new users"** — so any build where `EXPO_PUBLIC_GEMINI_MODEL` is unset fails on every call regardless of quota. Default switched to `gemini-3.7-flash`. Whether the EAS production env sets `EXPO_PUBLIC_GEMINI_MODEL` could not be read from this session (`eas env:list` failed non-interactively) — check it. Every Gemini failure (not only quota) now falls back once to DeepSeek.
 - Claude/Grok need Supabase secrets `ANTHROPIC_API_KEY` / `XAI_API_KEY` or those adapters 503 — confirmed BOTH are currently unset on the live project (2026-09-02 diagnosis), not just theoretical.
-- DeepSeek uses Supabase secret `DEEPSEEK_API_KEY` — **set and confirmed LIVE on 2026-09-02** (edge function dispatched a real DeepSeek completion; see Decisions log). NVIDIA and Perplexity have never had client-side keys configured in `.env.local` either (`EXPO_PUBLIC_NVIDIA_API_KEY`/`EXPO_PUBLIC_PERPLEXITY_API_KEY` both empty) — **as of 2026-09-02, only Gemini has ever had a real key, and even that is quota-exhausted, meaning every one of the 6 AI providers is currently unusable in production** unless the Gemini free-tier quota resets (the new Gemini→DeepSeek quota fallback now routes through the live DeepSeek key when that happens).
-- Next product work: full device pass (`docs/ATO_DEVICE_TESTS.md`) on binary 10, then Stage 8 invite/referral. Known follow-up (not urgent): the same missing-timeout pattern as the "A faster pass" bug still exists at `explore.tsx` and `dev-lab.tsx` — not fixed yet. `questions-fold.tsx` and `explore-panel.tsx` are now fixed (see Decisions log).
+- DeepSeek uses Supabase secret `DEEPSEEK_API_KEY` — **set and confirmed LIVE on 2026-09-02** (edge function dispatched a real DeepSeek completion; see Decisions log). NVIDIA and Perplexity have never had client-side keys configured in `.env.local` either (`EXPO_PUBLIC_NVIDIA_API_KEY`/`EXPO_PUBLIC_PERPLEXITY_API_KEY` both empty) — **Corrected later on 2026-09-02:** Gemini is live on the paid tier (see the bullet above); DeepSeek is live. **Since the key move (Phase 1 item 9) every vendor key must be a Supabase secret on `ai-generate`** — `GEMINI_API_KEY` is not set there yet, so once the new function is deployed Gemini calls 503 `gemini_key_missing` and fall back to DeepSeek until it is.
+- Next product work: full device pass (`docs/ATO_DEVICE_TESTS.md`) on binary 10, then Stage 8 invite/referral. The missing-timeout pattern is now fixed everywhere (`explore.tsx` / `dev-lab.tsx` done 2026-09-02).
 
 ## Pre-launch re-gating checklist (must re-gate or remove before public launch)
 
@@ -37,23 +37,24 @@ These dev/testing conveniences are deliberately un-`__DEV__`-gated (via the
 app is invite-only. Before `signup_mode` flips to `public`, each must be
 re-gated to `__DEV__` (or removed), and the Metro `PROBE_STUB` re-added:
 
-1. Dev-test-user **auto-login stays `__DEV__`** (cold-start only); the manual
-   "Sign in as dev user" button (`src/app/auth/login.tsx`) must be removed/re-gated.
+1. ~~Dev-test-user "Sign in as dev user" button~~ — **done 2026-09-02, `__DEV__`**. Auto-login was always `__DEV__`. The dev password itself is still in the bundle/git history — rotate before public launch (deliberately deferred).
 2. Legends "test persona" strip (`src/app/(tabs)/legends.tsx` + `applyDevArchetypePreset`).
 3. Six `*-lab` screens (`_layout.tsx` guard + each lab's redirect).
 4. Home slot/ask overrides (`dev-overrides.ts` + `index.tsx`).
-5. Home "dev" links box (`index.tsx`).
+5. ~~Home "dev" links box (`index.tsx`)~~ — **done 2026-09-02, `__DEV__`**.
 6. You-tab growth preview (`you.tsx`).
 7. You-tab crash/push probes (`you.tsx` + `you-dev-tools.tsx` + `push-test-card.tsx`
    + `sentry-test-card.tsx`) — also re-add the Metro `PROBE_STUB` and invert `check:prod-you`.
 8. Dawn dev-trace line (`dawn.tsx`).
 9. Dev-lab unconditional dev access (`dev-lab.tsx` `isDev` + `CrisisCardPreview`).
-10. Sentry native-crash probe (`sentry.ts`).
+10. ~~Sentry native-crash probe (`sentry.ts`)~~ — **done 2026-09-02, `__DEV__`**.
 11. Intake-sweep "draft copy" badge (`intake-sweep.tsx`).
 
-One flag controls all of these: `PRE_LAUNCH_DEV = true` in `src/lib/dev-mode.ts`.
+One flag controls all of these: `PRE_LAUNCH_DEV = true` in `src/lib/dev-mode.ts`. **`npm run check:release-mode` (wired as the EAS `eas-build-post-install` hook) refuses a production build while it is `true`.**
 
 ## Decisions log
+
+- 2026-09-02: **Audit remediation Phases 0–2 (code on `master`, not yet OTA'd, nothing applied to production infra).** Phase 0 security: dev sign-in button / Home dev box / native-crash probe re-gated to `__DEV__`; `ai-generate` verifies the JWT (`auth.getUser`), caps `maxOutputTokens` at 1024, claims `claim_ai_call` server-side (client claim is a no-op for remote providers; `ping: true` is exempt); **root is `me.is_root`** (`wave34_root_is_column.sql`: column + trigger + `is_root()`/`require_root()`/`root_*` read it, `'emci'` reserved) after verifying on production that handle `emci` did not exist and was claimable; Gemini re-verified LIVE on paid tier and the retired `gemini-2.5-flash` default replaced by `gemini-3.7-flash`; any Gemini failure now falls back once to DeepSeek. Phase 1 stabilize: `checks.ts` missing import; `npm run typecheck` + lint wired into `check:ota-gate` as PREFLIGHT; all 16 TS errors fixed; **every vendor key moved server-side** (`ai-generate` serves all six vendors; no `EXPO_PUBLIC_*_API_KEY` reference under `src/`, asserted by `check:ai-provider`); 25s `withTimeout` on `explore.tsx`/`dev-lab.tsx`; `check:release-mode`. Phase 2 docs: `CLAUDE.md` map, `docs/MAP.md`, `docs/FLOWS.md`, `docs/GOTCHAS.md`, old plan archived to `docs/archive/OLD_PLAN.md`. Gate green: typecheck + lint + 46 checks. **Waiting on emci's ok (auth/schema/secrets):** (1) apply `wave34_root_is_column.sql` to production, (2) redeploy `ai-generate` and `review-access`, (3) set Supabase secrets `GEMINI_API_KEY` (and `NVIDIA_API_KEY` / `PERPLEXITY_API_KEY` if those vendors are wanted), (4) confirm EAS production env `EXPO_PUBLIC_GEMINI_MODEL`, (5) rotate the dev-test password (deferred). Order matters: secrets → deploy → OTA, or Gemini 503s to DeepSeek in the meantime.
 
 - 2026-09-02: **Legends wave32 device-verify + first resurface seeded (wave33, data-only).** Verified the wave32 figure+variant client against production: the catalog loads 5 fact-checked variants from `legend_variants` with the `legend_figures` embed intact, and `buildLegendView` serves at most one variant per figure per batch (no repeat). Seeded Da Vinci's first resurface — a `v2` variant (migration `supabase/migrations/wave33_legend_variant_v2.sql`, applied live via Supabase MCP) on the same `figure_id` / `canonical_slug`, `variant_key='v2'`, linked to `arch_the_architect`, with a new angle (systematic self-directed study vs v1's never-finishing). New live check `npm run check:legends-live` (4/4) proves: 5 variants all carry the figure embed; Da Vinci holds v1+v2 on one figure; the Architect preset yields exactly one Da Vinci card (no repeat); and once v1 is seen, Da Vinci resurfaces through v2 with the new story. No new OTA needed — the wave32 client reads `legend_variants` live. Not yet tapped through on a physical binary-10 device (verified at the data + shipped-match-logic layers).
 - 2026-09-02: **Legends repeat policy changed — a figure can resurface via story variants (wave32, applied live).** Replaced the single-story `legends` table with a normalized `legend_figures` (the person/myth: `canonical_slug` unique, name, era, type) + `legend_variants` (the story: `figure_id` FK, `variant_key`, teaser, full_story, `fact_checked`; unique `(figure_id, variant_key)`). The 4 seeded legends migrated to figures + a `v1` variant each (variant UUIDs reuse the old legend ids, so `legend_archetypes` and `user_legend_history` FKs re-pointed with zero data rewrite; old `legends` table dropped). **Never-repeat is now per VARIANT** — `user_legend_history` unique `(user_id, legend_id)` where legend_id = variant id, so a figure can later resurface with a different angle (same archetype) or a different archetype it also fits. Client moved in the same pass: `store.ts` reads `legend_variants` (+ `legend_figures` embed), `match.ts` dedupes per figure (best unseen variant per figure per batch), `legend-card.tsx`/Legends tab consume `LegendVariant`, history writes log variant ids. Content-spec docs updated. Gate (`check:ota-gate`) green 44/44 before apply. **Migration applied to production 2026-09-02 via Supabase MCP `wave32_legend_variants`**; verified 4 figures/4 variants, all fact-checked, links intact. **Client live via OTA `c897410d` (commit `4b27a0b`, Sep 2, 2026).**
