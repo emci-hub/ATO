@@ -212,8 +212,8 @@ assert.doesNotMatch(youTab, /from '@\/components\/push-test-card'/);
 assert.match(youTab, /if \(PRE_LAUNCH_DEV\) \{/);
 assert.match(youTab, /require\('@\/components\/you-dev-tools'\)/);
 assert.doesNotMatch(read('metro.config.js'), /PROBE_STUB/);
-assert.match(sentryLib, /if \(!PRE_LAUNCH_DEV\) return;/);
-ok('You-tab crash/push probes are PRE_LAUNCH_DEV-gated, not a runtime hide');
+assert.match(sentryLib, /if \(!__DEV__\) return;/);
+ok('You-tab crash/push probes are PRE_LAUNCH_DEV-gated; the native crash itself is __DEV__-only');
 
 assert.match(
   dawn,

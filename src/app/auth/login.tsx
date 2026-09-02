@@ -19,7 +19,6 @@ import {
 import { setPendingInviteCode } from '@/lib/invite';
 import { supabase } from '@/lib/supabase';
 import { devTestAutoSignIn } from '@/lib/dev-test-user';
-import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 
 export default function LoginScreen() {
   const theme = useTheme();
@@ -245,7 +244,7 @@ export default function LoginScreen() {
               </ThemedText>
             </Pressable>
 
-            {PRE_LAUNCH_DEV ? (
+            {__DEV__ ? (
               <Pressable
                 onPress={handleDevSignIn}
                 disabled={busy || devBusy}

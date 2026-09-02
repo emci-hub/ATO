@@ -491,17 +491,17 @@ export default function HomeScreen() {
           {me && canShowCategoryTeaser(slotKind) ? <CategoryTeaser me={me} /> : null}
 
           {(canSeeDevLab({
-            isDev: PRE_LAUNCH_DEV,
+            isDev: __DEV__,
             isRoot: devAccess.isRoot,
             capabilities: devAccess.capabilities,
           }) ||
-            PRE_LAUNCH_DEV) ? (
+            __DEV__) ? (
             <ThemedView type="backgroundElement" style={styles.boxCard}>
               <ThemedText type="code" themeColor="textSecondary" style={styles.boxKicker}>
                 dev
               </ThemedText>
               {canSeeDevLab({
-                isDev: PRE_LAUNCH_DEV,
+                isDev: __DEV__,
                 isRoot: devAccess.isRoot,
                 capabilities: devAccess.capabilities,
               }) ? (
@@ -517,7 +517,7 @@ export default function HomeScreen() {
                 <ThemedText themeColor="textSecondary">›</ThemedText>
               </Pressable>
               ) : null}
-              {PRE_LAUNCH_DEV ? (
+              {__DEV__ ? (
                 <>
               <Pressable
                 onPress={() => router.push('/voice-lab')}
