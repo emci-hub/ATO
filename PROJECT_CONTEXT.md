@@ -20,11 +20,11 @@ Do not commit `.env.local` or API keys. Do not change dependencies, schemas, aut
 
 ## Snapshot (Sep 2, 2026)
 
-- Branch: `master` @ `aadf050` — consolidated the 8-question optional-intake scenario flow onto a single scrollable page (see Decisions log).
-- Latest production OTA: `6b5cf8d4-442e-4f21-9682-7cdf0ff78e35` (8-screen optional intake replaced with 8 scenario questions covering all 16 axes; chip text overflow fix). Binary 10+ only. **Not yet on this OTA**: the Eight Quick Taps core-intake rebuild (`d770968`) and today's single-page consolidation of the optional-intake flow (`aadf050`) — both committed, neither published.
+- Branch: `master` @ `029c385` — consolidated the 8-question optional-intake scenario flow onto a single scrollable page (see Decisions log).
+- Latest production OTA: `7a669f88-1ffc-4e66-811c-34fd0509983f` (Eight Quick Taps core-intake rebuild + optional-intake scenario flow consolidated to one scrollable page). Binary 10+ only.
 - Gemini key lives in gitignored `.env.local` and EAS production env (`eas env:set`). Classic `eas secret:list` is empty/deprecated.
 - Claude/Grok need Supabase secrets `ANTHROPIC_API_KEY` / `XAI_API_KEY` or those adapters 503.
-- Next product work: publish an OTA covering both pending fixes above (if/when emci wants them live), full device pass (`docs/ATO_DEVICE_TESTS.md`) on binary 10, then Stage 8 invite/referral.
+- Next product work: full device pass (`docs/ATO_DEVICE_TESTS.md`) on binary 10, then Stage 8 invite/referral.
 
 ## Decisions log
 
