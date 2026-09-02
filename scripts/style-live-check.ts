@@ -85,7 +85,6 @@ async function main() {
     morning_cue: 'make coffee',
     facts: ['I finish work at four', 'Tuesday is the heavy meeting day'],
     current_focus: 'habit' as const,
-    recovery_style: 'alone_time' as const,
   };
 
   const history = [

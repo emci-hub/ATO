@@ -128,6 +128,7 @@ export async function syncPushSchedule(input: {
   checks: Check[];
   timeZone: string;
   energyPattern?: string | null;
+  eveningWindDown?: string | null;
 }): Promise<void> {
   if (Platform.OS === 'web') return;
 
@@ -150,7 +151,7 @@ export async function syncPushSchedule(input: {
         hour: window.morningHour,
         minute: 0,
       });
-      await scheduleRepeating(PUSH_IDS.evening, eveningPush(), {
+      await scheduleRepeating(PUSH_IDS.evening, eveningPush(input.eveningWindDown), {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
         channelId: CHANNEL_ID,
         hour: window.eveningHour,

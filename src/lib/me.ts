@@ -3,7 +3,6 @@ import { slugifyCity } from '@/lib/around/slug';
 import type {
   CurrentFocus,
   EnergyPattern,
-  RecoveryStyle,
   SupportStyle,
 } from '@/lib/intake';
 import { clearPendingInviteCode, errorMessageForInvite } from '@/lib/invite';
@@ -55,11 +54,10 @@ export type Me = {
   talk_style: TalkStyle | null;
   knocks_you_off: string | null;
   morning_cue: string | null;
-  /** Chip phrase. Times the evening Check push (wiring later). Null on skipped intake rows. */
+  /** Chip phrase. Personalizes the evening Check push body. Null on skipped intake rows. */
   evening_wind_down: string | null;
   /** Self-report. Null on pre-intake rows. Never a diagnosis. */
   energy_pattern: EnergyPattern | null;
-  recovery_style: RecoveryStyle | null;
   support_style: SupportStyle | null;
   current_focus: CurrentFocus | null;
   /** Per-axis write source. Direct is sticky over inferred. Null axes have no key. */
@@ -128,7 +126,6 @@ export type MeInsert = Omit<
     | 'city'
     | 'evening_wind_down'
     | 'energy_pattern'
-    | 'recovery_style'
     | 'support_style'
     | 'current_focus'
     | 'openness'
@@ -166,7 +163,6 @@ export type MeInsert = Omit<
   city?: string | null;
   evening_wind_down: string | null;
   energy_pattern: EnergyPattern | null;
-  recovery_style: RecoveryStyle | null;
   support_style: SupportStyle | null;
   current_focus: CurrentFocus | null;
 };
@@ -245,7 +241,6 @@ export async function createMe(row: MeInsert): Promise<Me> {
       p_born_on: profile.born_on,
       p_evening_wind_down: profile.evening_wind_down,
       p_energy_pattern: profile.energy_pattern,
-      p_recovery_style: profile.recovery_style,
       p_support_style: profile.support_style,
       p_current_focus: profile.current_focus,
     })
@@ -365,7 +360,6 @@ export type IntakePatch = Partial<{
   morning_cue: string;
   evening_wind_down: string;
   energy_pattern: EnergyPattern;
-  recovery_style: RecoveryStyle;
   support_style: SupportStyle;
   current_focus: CurrentFocus;
 }>;

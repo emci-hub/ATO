@@ -38,7 +38,6 @@ const ANSWERS = {
   morning_cue: 'make coffee',
   evening_wind_down: 'put my phone down',
   energy_pattern: 'night_owl',
-  recovery_style: 'alone_time',
   support_style: 'space',
   current_focus: 'habit',
 } as const;
@@ -72,7 +71,6 @@ async function main() {
     p_born_on: '2000-01-15',
     p_evening_wind_down: ANSWERS.evening_wind_down,
     p_energy_pattern: ANSWERS.energy_pattern,
-    p_recovery_style: ANSWERS.recovery_style,
     p_support_style: ANSWERS.support_style,
     p_current_focus: ANSWERS.current_focus,
   });
@@ -81,7 +79,7 @@ async function main() {
   const { data: row, error: readError } = await authed
     .from('me')
     .select(
-      'handle, talk_style, show_up, knocks_you_off, morning_cue, evening_wind_down, energy_pattern, recovery_style, support_style, current_focus',
+      'handle, talk_style, show_up, knocks_you_off, morning_cue, evening_wind_down, energy_pattern, support_style, current_focus',
     )
     .eq('id', session.user.id)
     .single();
@@ -94,7 +92,6 @@ async function main() {
   assert.equal(row.morning_cue, ANSWERS.morning_cue);
   assert.equal(row.evening_wind_down, ANSWERS.evening_wind_down);
   assert.equal(row.energy_pattern, ANSWERS.energy_pattern);
-  assert.equal(row.recovery_style, ANSWERS.recovery_style);
   assert.equal(row.support_style, ANSWERS.support_style);
   assert.equal(row.current_focus, ANSWERS.current_focus);
 
@@ -105,7 +102,6 @@ async function main() {
     morning_cue: 'put on music',
     evening_wind_down: 'get in bed',
     energy_pattern: 'morning',
-    recovery_style: 'movement',
     support_style: 'nudge',
     current_focus: 'show_up',
   } as const;
@@ -120,7 +116,7 @@ async function main() {
     const { data: edited, error: editedReadError } = await authed
       .from('me')
       .select(
-        'talk_style, show_up, knocks_you_off, morning_cue, evening_wind_down, energy_pattern, recovery_style, support_style, current_focus',
+        'talk_style, show_up, knocks_you_off, morning_cue, evening_wind_down, energy_pattern, support_style, current_focus',
       )
       .eq('id', session.user.id)
       .single();
@@ -131,7 +127,6 @@ async function main() {
     assert.equal(edited.morning_cue, EDITED.morning_cue);
     assert.equal(edited.evening_wind_down, EDITED.evening_wind_down);
     assert.equal(edited.energy_pattern, EDITED.energy_pattern);
-    assert.equal(edited.recovery_style, EDITED.recovery_style);
     assert.equal(edited.support_style, EDITED.support_style);
     assert.equal(edited.current_focus, EDITED.current_focus);
     assert.notEqual(colorHueFromShowUp(edited.show_up), colorHueFromShowUp(ANSWERS.show_up));
@@ -146,7 +141,7 @@ async function main() {
 
   console.log('ME row:', row);
   console.log('Day 1 Do:', day1?.do);
-  console.log('\nLive intake row check PASSED — all 9 fields on ME, cue in Day 1 Do, Settings-path edit round-trips.');
+  console.log('\nLive intake row check PASSED — all 8 fields on ME, cue in Day 1 Do, Settings-path edit round-trips.');
   void data;
 }
 

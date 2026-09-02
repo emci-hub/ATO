@@ -54,7 +54,7 @@ export interface VoiceProvider {
 
 /** Shared per-style voice notes used by both providers. */
 export const TALK_STYLE_GUIDE: Record<TalkStyle, string> = {
-  quiet: 'quiet: understated, 1–3 short sentences, no exclamation.',
-  even: 'even: plain, measured, matter-of-fact.',
-  loud: 'loud: short, punchy, a little energy, exclamation allowed.',
+  quiet: 'quiet: understated, spare word choice, short declarative sentences (under 12 words each), never an exclamation point, no filler or hype words — let the point sit without dressing it up.',
+  even: 'even: plain and matter-of-fact, medium-length sentences, conversational but level — no dramatics, no coddling, describe things as they are.',
+  loud: 'loud: energetic and punchy, short sentences stacked for momentum, exclamation points welcome, root for them like a friend who is genuinely fired up.',
 };

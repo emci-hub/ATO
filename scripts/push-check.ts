@@ -66,6 +66,16 @@ assert.equal(copyHasFakeUrgency(evening.body), false);
 assert.doesNotMatch(evening.body, /streak/i);
 ok('evening push is Check today, no streak framing');
 
+assert.equal(eveningPush(null).body, evening.body);
+assert.equal(eveningPush('  ').body, evening.body);
+const eveningWithCue = eveningPush('put my phone down');
+assert.match(eveningWithCue.body, /^When you put my phone down, log today's Check/);
+assert.match(eveningWithCue.body, /either one counts/i);
+assert.equal(copyHasFakeUrgency(eveningWithCue.body), false);
+assert.equal(eveningWithCue.url, PUSH_PATHS.evening);
+assert.equal(eveningWithCue.title, evening.title);
+ok('evening push personalizes with evening_wind_down cue when present; falls back when null/blank');
+
 const sundayZero = sundayPush({ showedUp: 0, recap: recapFromReads([]) });
 assert.equal(sundayZero.url, PUSH_PATHS.sunday);
 assert.match(sundayZero.body, /You showed up 0/);

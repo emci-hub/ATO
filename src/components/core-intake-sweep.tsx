@@ -12,7 +12,7 @@ import {
   type CoreIntakeQuestion,
 } from '@/lib/intake';
 
-export const CORE_INTAKE_SWEEP_TITLE = 'Nine quick taps';
+export const CORE_INTAKE_SWEEP_TITLE = 'Eight quick taps';
 
 function titleFor(question: CoreIntakeQuestion): string {
   return question.field === 'knocks_you_off' || question.helper

@@ -174,7 +174,7 @@ ${input.retryHint ? '- Previous draft was dropped because it named a type or lab
 CONTEXT
 ${traitLines(me, focus.traits)}
 ${axisGroundingBlock(focus.traits)}${categoryGroundingBlock(categories)}CHIPS they already named:
-${chipLines(me, focus.chips.length > 0 ? focus.chips : ['morning_cue', 'show_up', 'current_focus', 'recovery_style'])}
+${chipLines(me, focus.chips.length > 0 ? focus.chips : ['morning_cue', 'show_up', 'current_focus', 'support_style'])}
 ${signalLine}
 ${libraryGroundingBlock(selectLibraryEntries(me, { day: 1, surface: 'card' }))}
 

@@ -30,7 +30,6 @@ import {
   type CurrentFocus,
   type EnergyPattern,
   type KnocksChip,
-  type RecoveryStyle,
   type SupportStyle,
 } from '@/lib/intake';
 import { createMe, errorMessageForHandle, fetchMe, TalkStyle, updateTraits, checkHandleAvailable, handleFormatError, normalizeHandle, type Me } from '@/lib/me';
@@ -73,7 +72,6 @@ export default function OnboardingScreen() {
   const [morningCue, setMorningCue] = useState<string | null>(null);
   const [eveningWindDown, setEveningWindDown] = useState<string | null>(null);
   const [energyPattern, setEnergyPattern] = useState<EnergyPattern | null>(null);
-  const [recoveryStyle, setRecoveryStyle] = useState<RecoveryStyle | null>(null);
   const [supportStyle, setSupportStyle] = useState<SupportStyle | null>(null);
   const [currentFocus, setCurrentFocus] = useState<CurrentFocus | null>(null);
 
@@ -187,9 +185,6 @@ export default function OnboardingScreen() {
       case 'energy_pattern':
         setEnergyPattern(value as EnergyPattern);
         break;
-      case 'recovery_style':
-        setRecoveryStyle(value as RecoveryStyle);
-        break;
       case 'support_style':
         setSupportStyle(value as SupportStyle);
         break;
@@ -213,8 +208,6 @@ export default function OnboardingScreen() {
         return eveningWindDown ? [eveningWindDown] : [];
       case 'energy_pattern':
         return energyPattern ? [energyPattern] : [];
-      case 'recovery_style':
-        return recoveryStyle ? [recoveryStyle] : [];
       case 'support_style':
         return supportStyle ? [supportStyle] : [];
       case 'current_focus':
@@ -248,7 +241,6 @@ export default function OnboardingScreen() {
           morning_cue: morningCue,
           evening_wind_down: eveningWindDown,
           energy_pattern: energyPattern,
-          recovery_style: recoveryStyle,
           support_style: supportStyle,
           current_focus: currentFocus,
           timezone,

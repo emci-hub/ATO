@@ -35,8 +35,8 @@ const localConfig = buildVoiceConfig({ MODEL_PROVIDER: 'local' });
 const dev = { isDev: true, config: localConfig };
 
 async function main() {
-  assert.equal(CORE_INTAKE_QUESTIONS.length, 9);
-  assert.equal(CORE_INTAKE_TOTAL, 9);
+  assert.equal(CORE_INTAKE_QUESTIONS.length, 8);
+  assert.equal(CORE_INTAKE_TOTAL, 8);
   const fields = CORE_INTAKE_QUESTIONS.map((q) => q.field);
   assert.deepEqual(fields, [
     'talk_style',
@@ -45,7 +45,6 @@ async function main() {
     'morning_cue',
     'evening_wind_down',
     'energy_pattern',
-    'recovery_style',
     'support_style',
     'current_focus',
   ]);
@@ -54,10 +53,10 @@ async function main() {
     assert.ok(q.chips.length >= 3, `${q.field} needs chips`);
     assert.ok(q.prompt.length > 0);
   });
-  ok('9 core questions in spec order, one chip set each');
+  ok('8 core questions in spec order, one chip set each');
 
-  assert.equal(coreIntakeAnsweredLabel(3), 'answered 3 of 9');
-  ok('progress label is "answered 3 of 9"');
+  assert.equal(coreIntakeAnsweredLabel(3), 'answered 3 of 8');
+  ok('progress label is "answered 3 of 8"');
 
   const onboarding = readFileSync(resolve(__dirname, '../src/app/onboarding.tsx'), 'utf8');
   const coreSweep = readFileSync(resolve(__dirname, '../src/components/core-intake-sweep.tsx'), 'utf8');
@@ -119,7 +118,13 @@ async function main() {
   assert.match(you, /IntakeSettings/);
   assert.match(meLib, /export async function updateIntake/);
   assert.match(sage, /useMeContext/);
-  ok('Settings edits the same 9 chips; Sage reads the shared ME row');
+  ok('Settings edits the same 8 chips; Sage reads the shared ME row');
+
+  const explore = readFileSync(resolve(__dirname, '../src/app/(tabs)/explore.tsx'), 'utf8');
+  assert.match(explore, /me\?\.current_focus/);
+  assert.match(explore, /CURRENT_FOCUS_CHIPS/);
+  assert.match(explore, /Right now:/);
+  ok('current_focus surfaces as a deterministic Explore header line');
 
   const joined = joinKnocks(['sleep', 'workload']);
   assert.equal(joined, 'sleep, workload');
@@ -128,7 +133,7 @@ async function main() {
 
   assert.equal(phraseForStoredChip('through_it'), 'Get through something hard');
   assert.equal(phraseForStoredChip('night_owl'), 'Night owl');
-  assert.equal(phraseForStoredChip('alone_time'), 'Alone time');
+  assert.equal(phraseForStoredChip('space'), 'Space to sit with it');
   assert.equal(phraseForStoredChip('people/conflict'), 'People / conflict');
   assert.equal(phraseForStoredChip('make coffee'), 'make coffee');
   ok('stored chip ids map to chip labels; cue phrases pass through');
@@ -140,7 +145,6 @@ async function main() {
     morning_cue: 'make coffee',
     evening_wind_down: 'put my phone down',
     energy_pattern: 'morning',
-    recovery_style: 'sleep',
     support_style: 'nudge',
     current_focus: 'habit',
   };
@@ -168,7 +172,7 @@ async function main() {
     CORE_INTAKE_QUESTIONS.find((q) => q.field === 'knocks_you_off')?.prompt,
     "What actually gets in the way of a good day? Pick everything that's true, not just one.",
   );
-  ok('Settings labels and display values cover all 9 fields');
+  ok('Settings labels and display values cover all 8 fields');
 
   assert.equal(SCENARIO_QUESTIONS.length, 8);
   assert.equal(
@@ -195,7 +199,7 @@ async function main() {
   ok('no raw framework labels in intake UI or poster');
 
   const poster = readFileSync(resolve(__dirname, '../src/components/share-poster.tsx'), 'utf8');
-  assert.doesNotMatch(poster, /energy_pattern|recovery_style|support_style|current_focus/);
+  assert.doesNotMatch(poster, /energy_pattern|support_style|current_focus/);
   ok('poster does not render psych-adjacent fields');
 
   const fallback = bankStyleFor({ talk_style: 'even' });
@@ -225,7 +229,6 @@ async function main() {
     morning_cue: cue,
     evening_wind_down: 'put my phone down',
     energy_pattern: 'night_owl',
-    recovery_style: 'alone_time',
     support_style: 'space',
     current_focus: 'habit',
   });
@@ -237,7 +240,6 @@ async function main() {
     morning_cue: 'put on music',
     evening_wind_down: 'get in bed',
     energy_pattern: 'morning',
-    recovery_style: 'movement',
     support_style: 'nudge',
     current_focus: 'show_up',
   });

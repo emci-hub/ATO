@@ -49,9 +49,6 @@ function signalPool(me: VoiceMe): string {
     lines.push(`- Current focus chip: ${phraseForStoredChip(me.current_focus)}`);
   }
   if (me.show_up) lines.push(`- How this week feels: ${phraseForStoredChip(me.show_up)}`);
-  if (me.recovery_style) {
-    lines.push(`- What they say pulls them back: ${phraseForStoredChip(me.recovery_style)}`);
-  }
   return lines.length === 0 ? '- (no extra signals)' : lines.join('\n');
 }
 
@@ -71,9 +68,6 @@ function chipIntakeContext(me: VoiceMe): string {
   if (me.evening_wind_down) lines.push(`- Evening wind-down they named: ${me.evening_wind_down}`);
   if (me.energy_pattern) {
     lines.push(`- When they say they have the most energy: ${phraseForStoredChip(me.energy_pattern)}`);
-  }
-  if (me.recovery_style) {
-    lines.push(`- What they say pulls them back: ${phraseForStoredChip(me.recovery_style)}`);
   }
   if (me.support_style) lines.push(`- What they say helps: ${phraseForStoredChip(me.support_style)}`);
   if (me.current_focus) {

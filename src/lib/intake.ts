@@ -5,8 +5,7 @@
  * diagnosis or assessment. Stored values are closed chip ids (or the person's
  * own cue phrase), not framework labels (no MBTI / Big Five / attachment
  * names). Public surfaces (poster, Circle, /@handle) must not show the
- * psych-adjacent fields (energy_pattern, recovery_style, support_style,
- * current_focus).
+ * psych-adjacent fields (energy_pattern, support_style, current_focus).
  */
 
 import { sanitizeFacts } from '@/lib/voice/framework-fence';
@@ -17,7 +16,6 @@ import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 type TalkStyle = 'quiet' | 'even' | 'loud';
 
 export type EnergyPattern = 'morning' | 'afternoon' | 'evening' | 'night_owl';
-export type RecoveryStyle = 'movement' | 'sleep' | 'talking' | 'alone_time' | 'music';
 export type SupportStyle = 'nudge' | 'space' | 'listen' | 'plan';
 export type CurrentFocus = 'habit' | 'through_it' | 'like_yourself' | 'show_up';
 export type KnocksChip =
@@ -40,7 +38,6 @@ export interface CoreIntakeAnswers {
   morning_cue: string;
   evening_wind_down: string;
   energy_pattern: EnergyPattern;
-  recovery_style: RecoveryStyle;
   support_style: SupportStyle;
   current_focus: CurrentFocus;
 }
@@ -109,14 +106,6 @@ export const ENERGY_PATTERN_CHIPS: IntakeChip<EnergyPattern>[] = [
   { value: 'night_owl', label: 'Night owl' },
 ];
 
-export const RECOVERY_STYLE_CHIPS: IntakeChip<RecoveryStyle>[] = [
-  { value: 'movement', label: 'Movement' },
-  { value: 'sleep', label: 'Sleep' },
-  { value: 'talking', label: 'Talking to someone' },
-  { value: 'alone_time', label: 'Alone time' },
-  { value: 'music', label: 'Music' },
-];
-
 export const SUPPORT_STYLE_CHIPS: IntakeChip<SupportStyle>[] = [
   { value: 'nudge', label: 'A nudge to keep going' },
   { value: 'space', label: 'Space to sit with it' },
@@ -132,7 +121,6 @@ export const CURRENT_FOCUS_CHIPS: IntakeChip<CurrentFocus>[] = [
 ];
 
 export const ENERGY_PATTERN_VALUES: EnergyPattern[] = ENERGY_PATTERN_CHIPS.map((c) => c.value);
-export const RECOVERY_STYLE_VALUES: RecoveryStyle[] = RECOVERY_STYLE_CHIPS.map((c) => c.value);
 export const SUPPORT_STYLE_VALUES: SupportStyle[] = SUPPORT_STYLE_CHIPS.map((c) => c.value);
 export const CURRENT_FOCUS_VALUES: CurrentFocus[] = CURRENT_FOCUS_CHIPS.map((c) => c.value);
 export const KNOCKS_CHIP_VALUES: KnocksChip[] = KNOCKS_CHIPS.map((c) => c.value);
@@ -149,7 +137,6 @@ const SIGNAL_PHRASE_BY_VALUE: Record<string, string> = Object.fromEntries(
     ...SHOW_UP_CHIPS,
     ...KNOCKS_CHIPS,
     ...ENERGY_PATTERN_CHIPS,
-    ...RECOVERY_STYLE_CHIPS,
     ...SUPPORT_STYLE_CHIPS,
     ...CURRENT_FOCUS_CHIPS,
   ].map((chip) => [chip.value, chip.label]),
@@ -169,13 +156,12 @@ export type CoreIntakeField =
   | 'morning_cue'
   | 'evening_wind_down'
   | 'energy_pattern'
-  | 'recovery_style'
   | 'support_style'
   | 'current_focus';
 
 export interface CoreIntakeQuestion {
   field: CoreIntakeField;
-  /** 1-based index in the 9. */
+  /** 1-based index in the 8. */
   n: number;
   prompt: string;
   /** Optional second line under the question. */
@@ -184,7 +170,7 @@ export interface CoreIntakeQuestion {
   chips: IntakeChip[];
 }
 
-export const CORE_INTAKE_TOTAL = 9;
+export const CORE_INTAKE_TOTAL = 8;
 
 /**
  * One question per screen, in spec order. Why is baked into the prompt,
@@ -230,20 +216,14 @@ export const CORE_INTAKE_QUESTIONS: CoreIntakeQuestion[] = [
     chips: ENERGY_PATTERN_CHIPS,
   },
   {
-    field: 'recovery_style',
-    n: 7,
-    prompt: "When you're off track, what actually pulls you back?",
-    chips: RECOVERY_STYLE_CHIPS,
-  },
-  {
     field: 'support_style',
-    n: 8,
+    n: 7,
     prompt: "When you're in it, what helps more?",
     chips: SUPPORT_STYLE_CHIPS,
   },
   {
     field: 'current_focus',
-    n: 9,
+    n: 8,
     prompt: "Right now you're mostly trying to…",
     chips: CURRENT_FOCUS_CHIPS,
   },
@@ -267,7 +247,7 @@ export function chipLabel(chips: IntakeChip[], value: string | null | undefined)
   return chips.find((c) => c.value === value)?.label ?? value;
 }
 
-/** You-tab labels. Same 9 fields as onboarding, shorter than the prompt. */
+/** You-tab labels. Same 8 fields as onboarding, shorter than the prompt. */
 export const INTAKE_SETTINGS_LABELS: Record<CoreIntakeField, string> = {
   talk_style: 'How Sage talks to you',
   show_up: 'Show up',
@@ -275,7 +255,6 @@ export const INTAKE_SETTINGS_LABELS: Record<CoreIntakeField, string> = {
   morning_cue: 'Your morning anchor',
   evening_wind_down: 'Evening wind-down',
   energy_pattern: 'Most energy',
-  recovery_style: 'What pulls me back',
   support_style: 'What helps',
   current_focus: 'Right now',
 };
@@ -287,7 +266,6 @@ type IntakeMeSlice = {
   morning_cue: string | null;
   evening_wind_down?: string | null;
   energy_pattern?: string | null;
-  recovery_style?: string | null;
   support_style?: string | null;
   current_focus?: string | null;
 };
@@ -306,8 +284,6 @@ export function selectedIntakeValues(field: CoreIntakeField, me: IntakeMeSlice):
       return me.evening_wind_down ? [me.evening_wind_down] : [];
     case 'energy_pattern':
       return me.energy_pattern ? [me.energy_pattern] : [];
-    case 'recovery_style':
-      return me.recovery_style ? [me.recovery_style] : [];
     case 'support_style':
       return me.support_style ? [me.support_style] : [];
     case 'current_focus':
@@ -328,7 +304,7 @@ export function displayIntakeValue(field: CoreIntakeField, me: IntakeMeSlice): s
   return chipLabel(question.chips, raw);
 }
 
-/** One-page onboarding counter: "answered 3 of 9". */
+/** One-page onboarding counter: "answered 3 of 8". */
 export function coreIntakeAnsweredLabel(answered: number, total = CORE_INTAKE_TOTAL): string {
   return `answered ${answered} of ${total}`;
 }
@@ -375,10 +351,6 @@ export function isEnergyPattern(value: string | null | undefined): value is Ener
   return !!value && (ENERGY_PATTERN_VALUES as string[]).includes(value);
 }
 
-export function isRecoveryStyle(value: string | null | undefined): value is RecoveryStyle {
-  return !!value && (RECOVERY_STYLE_VALUES as string[]).includes(value);
-}
-
 export function isSupportStyle(value: string | null | undefined): value is SupportStyle {
   return !!value && (SUPPORT_STYLE_VALUES as string[]).includes(value);
 }
@@ -401,7 +373,6 @@ export function voiceMeFrom(
     morning_cue: string | null;
     evening_wind_down?: string | null;
     energy_pattern?: string | null;
-    recovery_style?: string | null;
     support_style?: string | null;
     current_focus?: string | null;
     facts?: string[] | unknown;
@@ -422,7 +393,6 @@ export function voiceMeFrom(
     morning_cue: (me.morning_cue && me.morning_cue.trim()) || DEFAULT_MORNING_CUE,
     evening_wind_down: me.evening_wind_down ?? null,
     energy_pattern: isEnergyPattern(me.energy_pattern) ? me.energy_pattern : null,
-    recovery_style: isRecoveryStyle(me.recovery_style) ? me.recovery_style : null,
     support_style: isSupportStyle(me.support_style) ? me.support_style : null,
     current_focus: isCurrentFocus(me.current_focus) ? me.current_focus : null,
     voice_preset: voicePresetOf(me.voice_preset),

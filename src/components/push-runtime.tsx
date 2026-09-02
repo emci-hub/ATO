@@ -54,6 +54,7 @@ export function PushRuntime() {
           checks,
           timeZone: me!.timezone || 'UTC',
           energyPattern: me!.energy_pattern,
+          eveningWindDown: me!.evening_wind_down,
         });
       } catch (err) {
         console.log('[push] sync skipped:', err);

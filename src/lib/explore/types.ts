@@ -10,7 +10,6 @@ export const EXPLORE_CORE_CHIPS = [
   'morning_cue',
   'evening_wind_down',
   'energy_pattern',
-  'recovery_style',
   'support_style',
   'current_focus',
 ] as const;

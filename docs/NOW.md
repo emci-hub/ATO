@@ -53,9 +53,9 @@
 
 **Wave 2 Stage 2 is in — "I'm going" + friend colors.** Opt-in `going` row per user per show. Color blob only at ≥3 people of that `show_up` hue; raw counts never leave the RPC. Faces show only when going, `me.visible` true, and not blocked. 18+ nights call `is_at_least_age`. City stays typed (not GPS). Calgary `weekend.json` honestly empty until Edmtrain.
 
-**Stage 9 first pass is in (intake core + Day 1 payoff wiring).** Fresh onboarding is identity, then 9 chip screens with a visible "N of 9". Five ME columns (`evening_wind_down`, `energy_pattern`, `recovery_style`, `support_style`, `current_focus`). All 9 chips editable from You/Settings.
+**Stage 9 first pass is in (intake core + Day 1 payoff wiring).** Fresh onboarding is identity, then 8 chip screens ("Eight quick taps") with a visible "N of 8". Four ME columns still active (`evening_wind_down`, `energy_pattern`, `support_style`, `current_focus`) — `recovery_style` question removed 2026-09-01 (was an orphan; the DB column stays for existing users' historical values, coalesced not overwritten on re-save). All 8 chips editable from You/Settings.
 
-**Stage 11 optional fast-entry is in.** After the 9 chips, `complete_signup` succeeds, then an optional `extra N of 9` phase (type grid + 8 vibe-check scenarios). All 16 nullable 0–1 axes exist on ME. Direct sources sticky over inferred; inferred writes damped; `last_touched` on write; confirm-upgrade cannot change the number.
+**Stage 11 optional fast-entry is in.** After the 8 chips, `complete_signup` succeeds, then an optional `extra N of 9` phase (type grid + 8 vibe-check scenarios). All 16 nullable 0–1 axes exist on ME. Direct sources sticky over inferred; inferred writes damped; `last_touched` on write; confirm-upgrade cannot change the number.
 
 **You-tab Full Profile is in.** Collapsed Settings fold on You: all currently-defined axes, "not answered yet" when null, last source in plain language, last updated from `trait_touched_at`, 2-letter codes, "How this has shifted" timeline, AxisTaps edit with 8s undo. Completion is `N of 16 settled` (stability-weighted report-track) — invitation, never a percent of a person.
 

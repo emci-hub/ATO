@@ -99,7 +99,7 @@ export function signalPoolFor(me: VoiceMe): string[] {
     .map((item) => item.trim())
     .filter(Boolean);
   const facts = (me.facts ?? []).map((fact) => fact.replace(/\.$/, '').trim()).filter(Boolean);
-  const extras = [me.show_up, me.current_focus, me.recovery_style].filter(
+  const extras = [me.show_up, me.current_focus].filter(
     (item): item is string => !!item,
   );
   return [...knocks, ...facts, ...extras];

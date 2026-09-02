@@ -49,7 +49,6 @@ const chipsOnly: ExploreMeSlice = {
   morning_cue: 'make coffee',
   evening_wind_down: 'dim the lights',
   energy_pattern: 'morning',
-  recovery_style: 'movement',
   support_style: 'nudge',
   current_focus: 'show_up',
   timezone: 'America/Edmonton',

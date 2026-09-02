@@ -36,7 +36,7 @@ import {
   saveExplorePack,
 } from '@/lib/explore/store';
 import type { ExploreEntryRow, RouteExploreResult } from '@/lib/explore/types';
-import { voiceMeFrom } from '@/lib/intake';
+import { chipLabel, CURRENT_FOCUS_CHIPS, voiceMeFrom } from '@/lib/intake';
 import { useMeContext } from '@/lib/me-context';
 import { type Me } from '@/lib/me';
 import { parseSageTitle, pinnedCategoryLines } from '@/lib/sage-title';
@@ -121,6 +121,11 @@ export default function ExploreScreen() {
             {me ? (
               <ThemedText type="small" themeColor="textSecondary">
                 {settledAxisLabel(tracks)}
+              </ThemedText>
+            ) : null}
+            {me?.current_focus ? (
+              <ThemedText type="small" themeColor="textSecondary">
+                Right now: {chipLabel(CURRENT_FOCUS_CHIPS, me.current_focus).toLowerCase()}
               </ThemedText>
             ) : null}
           </View>

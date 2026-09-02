@@ -92,7 +92,6 @@ async function main() {
     p_born_on: '2000-01-15',
     p_evening_wind_down: 'put my phone down',
     p_energy_pattern: 'morning',
-    p_recovery_style: 'sleep',
     p_support_style: 'nudge',
     p_current_focus: 'habit',
   });

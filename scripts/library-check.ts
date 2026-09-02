@@ -251,7 +251,6 @@ async function main() {
     knocks_you_off: '',
     morning_cue: 'make coffee',
     current_focus: 'through_it',
-    recovery_style: 'alone_time',
     energy_pattern: 'night_owl',
   };
   const leakCard = await localProvider.generate({
@@ -264,7 +263,7 @@ async function main() {
   });
   assert.equal(
     leakCard.read,
-    'Day 5 in the books. Point at it. Get through something hard can wait.',
+    'Day 5 in the books. Point at it. Building something can wait.',
   );
   assert.doesNotMatch(leakCard.read, /through_it|alone_time|night_owl|like_yourself/);
   const leakPrompt = buildPrompt({

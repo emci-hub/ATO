@@ -4,6 +4,8 @@
  * week's recap plus "you showed up N".
  */
 
+import { cueAfterYou } from '@/lib/voice/cue';
+
 export const PUSH_PATHS = {
   morning: '/',
   evening: '/?focus=check',
@@ -29,11 +31,14 @@ export function morningPush(read: string): PushPayload {
   };
 }
 
-export function eveningPush(): PushPayload {
+export function eveningPush(windDownCue?: string | null): PushPayload {
+  const cue = windDownCue?.trim() ? cueAfterYou(windDownCue.trim()) : '';
   return {
     kind: 'evening',
     title: 'Check today',
-    body: 'Did you do it, or skip? Either one counts.',
+    body: cue
+      ? `When you ${cue}, log today's Check — did it or skipped, either one counts.`
+      : 'Did you do it, or skip? Either one counts.',
     url: PUSH_PATHS.evening,
   };
 }
