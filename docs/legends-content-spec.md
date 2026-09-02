@@ -4,16 +4,21 @@ Format for every legend served in ATO — hand-written or generated. The
 future weekly-batch AI job generates to this exact format and no other.
 Approved with emci 2026-09-02. Reference samples at the bottom are the four
 approved legends (Da Vinci / Architect, Alexander / Front-Liner,
-Confucius / Watcher, Athena / Commander).
+Confucius / Watcher, Athena / Commander). Each sample is the figure's `v1`
+variant.
 
 ## Table shape
 
-Each legend row carries the content fields below plus `canonical_slug`,
-`era_title`, `type` (historical | modern-deceased | mythical), and
-`fact_checked` (false until a human verified the story; unchecked legends
-are never presented as fact). A legend links to one or more archetypes via
+A legend is authored as a FIGURE (`legend_figures`: `canonical_slug`, `name`,
+`era_title`, `type` historical | modern-deceased | mythical) plus one or more
+story VARIANTS (`legend_variants`: `variant_key`, `teaser`, `full_story`,
+`fact_checked`). Each variant links to one or more archetypes via
 `legend_archetypes`; the archetype named in the "[Name] Energy:" line is the
-one that legend is being matched against.
+one that variant is being matched against. A figure may gain later variants —
+a new angle on the same archetype or a different archetype it also fits — and
+each variant is served to a user at most once (a figure can resurface later
+through a different variant). `fact_checked` (false until a human verified the
+story) gates presentation; unchecked variants are never shown.
 
 ## Teaser
 

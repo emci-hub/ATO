@@ -7,7 +7,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-import type { ArchetypeDef, LegendDef } from '@/lib/legends/store';
+import type { ArchetypeDef, LegendVariant } from '@/lib/legends/store';
 
 /**
  * One legend as a collapsible card. The teaser (punchy hook, no archetype
@@ -19,7 +19,7 @@ export function LegendCard({
   legend,
   archetype,
 }: {
-  legend: LegendDef;
+  legend: LegendVariant;
   archetype: ArchetypeDef;
 }) {
   const theme = useTheme();

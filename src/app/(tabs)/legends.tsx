@@ -16,7 +16,8 @@ import {
   devPresetById,
   type DevArchetypePresetId,
 } from '@/lib/dev-test-user';
-import { fetchLegendCatalog, fetchSeenLegendIds, logShownLegends } from '@/lib/legends/store';
+import { fetchLegendCatalog, fetchSeenVariantIds, logShownVariants } from '@/lib/legends/store';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { buildLegendView, type LegendView } from '@/lib/legends/match';
 import { supabase } from '@/lib/supabase';
 import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
@@ -51,7 +52,7 @@ function DevTestPresetStrip() {
 
   useEffect(() => {
     let active = true;
-    if (!__DEV__) return;
+    if (!PRE_LAUNCH_DEV) return;
     supabase.auth
       .getUser()
       .then(({ data }) => {
@@ -65,7 +66,7 @@ function DevTestPresetStrip() {
     };
   }, []);
 
-  if (!__DEV__ || !isDevUser) return null;
+  if (!PRE_LAUNCH_DEV || !isDevUser) return null;
 
   async function applyPreset(id: DevArchetypePresetId) {
     if (busyId) return;
@@ -124,7 +125,8 @@ function DevTestPresetStrip() {
 /**
  * Legends — stories from history and myth, matched to the archetype(s) the
  * user's trait profile leans toward. Teaser visible, tap to expand the full
- * story. Every legend shown is logged to user_legend_history (never repeats).
+ * story. Every story variant shown is logged to user_legend_history; a figure
+ * can resurface later through a different variant (never the same one twice).
  */
 export default function LegendsScreen() {
   const { me } = useMeContext();
@@ -141,14 +143,14 @@ export default function LegendsScreen() {
     (async () => {
       try {
         const catalog = await fetchLegendCatalog();
-        const seen = await fetchSeenLegendIds(me.id);
+        const seen = await fetchSeenVariantIds(me.id);
         const view = buildLegendView(catalog, me, seen);
         if (cancelled) return;
         setLoad({ status: 'ready', view });
         if (view.cards.length > 0) {
-          void logShownLegends(
+          void logShownVariants(
             me.id,
-            view.cards.map((card) => card.legend.id),
+            view.cards.map((card) => card.variant.id),
             me.timezone || 'UTC',
           ).catch((err) => console.log('[legends] log shown error:', err));
         }
@@ -203,8 +205,8 @@ export default function LegendsScreen() {
             ready.cards.length > 0 ? (
               ready.cards.map((card) => (
                 <LegendCard
-                  key={card.legend.id}
-                  legend={card.legend}
+                  key={card.variant.id}
+                  legend={card.variant}
                   archetype={card.archetype}
                 />
               ))
@@ -218,7 +220,8 @@ export default function LegendsScreen() {
           <DevTestPresetStrip />
 
           <ThemedText type="small" themeColor="textSecondary" style={styles.attr}>
-            Matched to your traits, never a diagnosis. A legend never repeats.
+            Matched to your traits, never a diagnosis. A story never repeats —
+            the same figure can return later with a different one.
           </ThemedText>
         </ScrollView>
       </SafeAreaView>

@@ -4,11 +4,16 @@ import { localYmd } from '@/lib/local-date';
 /**
  * Legends content + history data access.
  *
- * Content tables (legends, legend_archetypes, archetype_defs) are read-only
- * catalogs with `authenticated` select; user_legend_history is owner
- * select/insert via RLS. No server code needed — wave25 grants everything
- * this module uses. A legend is served at most once per user (unique
- * (user_id, legend_id)), so the history write is an idempotent upsert.
+ * Content model (wave32): a FIGURE (legend_figures — the person/myth, e.g.
+ * Da Vinci) owns one or more story VARIANTS (legend_variants — one angle on
+ * an archetype or a different archetype the figure fits). A variant links to
+ * its archetype(s) through legend_archetypes; archetype_defs is the shared
+ * catalog. All content tables are read-only catalogs with `authenticated`
+ * select; user_legend_history is owner select/insert/delete via RLS.
+ *
+ * A VARIANT is served at most once per user (unique (user_id, legend_id) with
+ * legend_id = variant id), so a figure can resurface later through a different
+ * variant. The history write is an idempotent upsert on that constraint.
  */
 
 export type LegendType = 'historical' | 'modern-deceased' | 'mythical';
@@ -24,33 +29,51 @@ export interface ArchetypeDef {
   partyBuild: string | null;
 }
 
-export interface LegendDef {
+/**
+ * One servable story: a figure's display metadata flattened onto a variant.
+ * `id` is the VARIANT id — history, logging, and never-repeat all key on it.
+ */
+export interface LegendVariant {
   id: string;
+  /** Owning figure (legend_figures) — dedup key so one figure appears once per batch. */
+  figureId: string;
+  /** Figure identity slug, shared by all variants of that figure. */
   canonicalSlug: string;
+  /** Authoring key within the figure, e.g. 'v1' / 'v2'. */
+  variantKey: string;
+  /** Figure display name (shared by all variants). */
   name: string;
+  /** Figure era/setting (shared by all variants). */
   eraTitle: string;
   type: LegendType;
+  /** Variant-specific hook shown on cards. */
   teaser: string;
+  /** Variant-specific full story body. */
   fullStory: string;
   factChecked: boolean;
-  /** Archetype ids this legend links to via legend_archetypes. */
+  /** Archetype ids THIS variant links to via legend_archetypes. */
   archetypeIds: string[];
 }
 
 export interface LegendCatalog {
-  legends: LegendDef[];
+  /** Every fact-checked variant, figure fields flattened. */
+  variants: LegendVariant[];
   archetypes: Map<string, ArchetypeDef>;
 }
 
-interface LegendDbRow {
+interface VariantDbRow {
   id: string;
-  canonical_slug: string;
-  name: string;
-  era_title: string;
-  type: string;
+  variant_key: string;
   teaser: string;
   full_story: string;
   fact_checked: boolean;
+  figure_id: string;
+  legend_figures: {
+    canonical_slug: string;
+    name: string;
+    era_title: string;
+    type: string;
+  } | null;
   legend_archetypes: { archetype_id: string }[] | null;
 }
 
@@ -67,32 +90,38 @@ interface ArchetypeDbRow {
 const LEGEND_TYPES: readonly string[] = ['historical', 'modern-deceased', 'mythical'];
 
 /**
- * Fetches every fact-checked legend plus the archetype definitions they link
- * to. Unchecked legends must never be presented as fact (schema contract).
+ * Fetches every fact-checked variant with its figure + linked archetype defs.
+ * Unchecked variants must never be presented as fact (schema contract).
  */
 export async function fetchLegendCatalog(): Promise<LegendCatalog> {
   const { data, error } = await supabase
-    .from('legends')
+    .from('legend_variants')
     .select(
-      'id, canonical_slug, name, era_title, type, teaser, full_story, fact_checked, legend_archetypes(archetype_id)',
+      'id, variant_key, teaser, full_story, fact_checked, figure_id, ' +
+        'legend_figures(canonical_slug, name, era_title, type), ' +
+        'legend_archetypes(archetype_id)',
     )
     .eq('fact_checked', true);
   if (error) throw error;
 
   const archetypeIds = new Set<string>();
-  const legends: LegendDef[] = [];
-  for (const row of (data ?? []) as LegendDbRow[]) {
+  const variants: LegendVariant[] = [];
+  for (const row of (data ?? []) as unknown as VariantDbRow[]) {
+    const figure = row.legend_figures;
+    if (!figure) continue;
     const links = Array.isArray(row.legend_archetypes) ? row.legend_archetypes : [];
     const ids = links
       .map((link) => link.archetype_id)
       .filter((id): id is string => typeof id === 'string' && id.length > 0);
     for (const id of ids) archetypeIds.add(id);
-    legends.push({
+    variants.push({
       id: row.id,
-      canonicalSlug: row.canonical_slug,
-      name: row.name,
-      eraTitle: row.era_title,
-      type: LEGEND_TYPES.includes(row.type) ? (row.type as LegendType) : 'historical',
+      figureId: row.figure_id,
+      canonicalSlug: figure.canonical_slug,
+      variantKey: row.variant_key,
+      name: figure.name,
+      eraTitle: figure.era_title,
+      type: LEGEND_TYPES.includes(figure.type) ? (figure.type as LegendType) : 'historical',
       teaser: row.teaser,
       fullStory: row.full_story,
       factChecked: row.fact_checked === true,
@@ -120,11 +149,11 @@ export async function fetchLegendCatalog(): Promise<LegendCatalog> {
     }
   }
 
-  return { legends, archetypes };
+  return { variants, archetypes };
 }
 
-/** Legend ids this user has already been shown (never repeat). */
-export async function fetchSeenLegendIds(userId: string): Promise<Set<string>> {
+/** Variant ids this user has already been shown (never repeat per variant). */
+export async function fetchSeenVariantIds(userId: string): Promise<Set<string>> {
   const { data, error } = await supabase
     .from('user_legend_history')
     .select('legend_id')
@@ -134,22 +163,22 @@ export async function fetchSeenLegendIds(userId: string): Promise<Set<string>> {
 }
 
 /**
- * Records that a user was shown a legend. Idempotent on the (user_id,
+ * Records that a user was shown a variant. Idempotent on the (user_id,
  * legend_id) unique constraint — a re-render or refresh never double-logs.
  */
-export async function logShownLegends(
+export async function logShownVariants(
   userId: string,
-  legendIds: readonly string[],
+  variantIds: readonly string[],
   timezone: string,
 ): Promise<void> {
-  if (legendIds.length === 0) return;
+  if (variantIds.length === 0) return;
   const weekBatch = weekBatchId(timezone);
   const { error } = await supabase
     .from('user_legend_history')
     .upsert(
-      legendIds.map((legendId) => ({
+      variantIds.map((variantId) => ({
         user_id: userId,
-        legend_id: legendId,
+        legend_id: variantId,
         week_batch_id: weekBatch,
       })),
       { onConflict: 'user_id,legend_id', ignoreDuplicates: true },
@@ -157,7 +186,7 @@ export async function logShownLegends(
   if (error) throw error;
 }
 
-/** Week the legend was served, e.g. 2026-W36 (schema: "Derived client batch key"). */
+/** Week the variant was served, e.g. 2026-W36 (schema: "Derived client batch key"). */
 export function weekBatchId(timeZone: string): string {
   return isoWeekLabel(localYmd(new Date(), timeZone || 'UTC'));
 }

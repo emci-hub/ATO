@@ -1,20 +1,27 @@
 import { TRAIT_AXES, traitBand, type TraitAxis } from '@/lib/traits';
 
-import type { ArchetypeDef, LegendDef, LegendCatalog } from '@/lib/legends/store';
+import type { ArchetypeDef, LegendVariant, LegendCatalog } from '@/lib/legends/store';
 
 /**
  * Archetype matching for Legends.
  *
- * Each archetype carries a 3-axis combo validated against the app's 16-axis
+ * Each variant links to one or more archetypes via legend_archetypes; each
+ * archetype carries a 3-axis combo validated against the app's 16-axis
  * vocabulary (e.g. 'openness:high, autonomy:high'). The user's live trait
  * values on `me` are scored against those poles with the same band cutoffs
  * used everywhere else in the app: high ≥ 0.67, low ≤ 0.33. Unset and
  * mid-band axes are misses.
  *
- * A legend is served only when its linked archetype is "matched": at least
- * two of the archetype's three poles land in the required band. That says the
- * profile genuinely leans the archetype's way while tolerating one unsettled
- * or mid axis. Ties and one-hit profiles stay hidden.
+ * A variant is served only when one of its linked archetypes "matches": at
+ * least two of the archetype's three poles land in the required band. That
+ * says the profile genuinely leans the archetype's way while tolerating one
+ * unsettled or mid axis. Ties and one-hit profiles stay hidden.
+ *
+ * Never-repeat is per VARIANT (user_legend_history keys legend_id = variant
+ * id), not per figure: once a figure's v1 has been shown, a later v2 — a
+ * different angle on the same archetype or a different archetype the figure
+ * also fits — can still resurface. At most one variant of a figure is served
+ * per batch (best match wins), so a figure never fills the whole tab at once.
  */
 
 export interface AxisPole {
@@ -30,17 +37,17 @@ export type LegendValues = Readonly<Partial<Record<TraitAxis, number | null>>>;
 const MATCH_REQUIRED_HITS = 2;
 
 export interface LegendMatch {
-  legend: LegendDef;
+  variant: LegendVariant;
   archetype: ArchetypeDef;
   hits: number;
 }
 
 export interface LegendView {
-  /** Legends to show now: matched archetype + not previously seen. */
+  /** Variants to show now: matched archetype + not previously shown. */
   cards: LegendMatch[];
-  /** True when any archetype behind a legend matched, even if all seen. */
+  /** True when any archetype behind a variant matched, even if all shown. */
   anyMatchedArchetype: boolean;
-  /** False when no fact-checked legends exist in the catalog at all. */
+  /** False when no fact-checked variants exist in the catalog at all. */
   hasCatalog: boolean;
 }
 
@@ -76,34 +83,37 @@ function isMatch(poles: AxisPole[], hits: number): boolean {
 }
 
 /**
- * Picks the legends this user gets served today: each legend whose best
- * linked archetype matches (≥2/3 poles hit), ranked best-match first, with
- * previously-seen legends removed.
+ * Picks the variants this user gets served today: best unseen variant per
+ * figure (each whose linked archetype matches ≥2/3 poles), ranked best-match
+ * first. A figure whose only matching variant has already been shown stays
+ * hidden — until a different variant of it matches later.
  */
 export function buildLegendView(
   catalog: LegendCatalog,
   values: LegendValues,
-  seenLegendIds: ReadonlySet<string>,
+  seenVariantIds: ReadonlySet<string>,
 ): LegendView {
-  const cards: LegendMatch[] = [];
+  const bestPerFigure = new Map<string, LegendMatch>();
   let anyMatchedArchetype = false;
 
-  for (const legend of catalog.legends) {
-    if (!legend.factChecked) continue;
+  for (const variant of catalog.variants) {
+    if (!variant.factChecked) continue;
     let best: LegendMatch | null = null;
-    for (const archetypeId of legend.archetypeIds) {
+    for (const archetypeId of variant.archetypeIds) {
       const archetype = catalog.archetypes.get(archetypeId);
       if (!archetype) continue;
       const poles = parseAxisCombo(archetype.traitAxis);
       const hits = countPoleHits(poles, values);
       if (!isMatch(poles, hits)) continue;
       anyMatchedArchetype = true;
-      if (!best || hits > best.hits) best = { legend, archetype, hits };
+      if (!best || hits > best.hits) best = { variant, archetype, hits };
     }
-    if (!best || seenLegendIds.has(legend.id)) continue;
-    cards.push(best);
+    if (!best || seenVariantIds.has(variant.id)) continue;
+    const current = bestPerFigure.get(variant.figureId);
+    if (!current || best.hits > current.hits) bestPerFigure.set(variant.figureId, best);
   }
 
-  cards.sort((a, b) => b.hits - a.hits || a.legend.name.localeCompare(b.legend.name));
-  return { cards, anyMatchedArchetype, hasCatalog: catalog.legends.length > 0 };
+  const cards = [...bestPerFigure.values()];
+  cards.sort((a, b) => b.hits - a.hits || a.variant.name.localeCompare(b.variant.name));
+  return { cards, anyMatchedArchetype, hasCatalog: catalog.variants.length > 0 };
 }
