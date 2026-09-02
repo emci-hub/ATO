@@ -45,6 +45,7 @@ function gateCheckNames(): string[] {
   return Object.keys(pkg.scripts)
     .filter((name) => name.startsWith('check:'))
     .map((name) => name.slice('check:'.length))
+    .filter((name) => name !== 'ota-gate') // the gate itself is not a gated check
     .filter((name) => !EXCLUDED.has(name))
     .sort();
 }
@@ -56,7 +57,14 @@ function npmRun(script: string): void {
 /** Returns true when every offline gate check passes. */
 export function runOtaGate(): boolean {
   const names = gateCheckNames();
-  console.log(`ota-gate: running ${names.length} offline checks (${names.length} live/env-gated checks skipped)`);
+  const totalChecks = Object.keys(
+    JSON.parse(readFileSync(resolve(__dirname, '../package.json'), 'utf8')) as {
+      scripts: Record<string, string>;
+    },
+  ).filter((name) => name.startsWith('check:')).length;
+  console.log(
+    `ota-gate: running ${names.length} offline checks (${totalChecks - names.length} live/env-gated/meta checks skipped)`,
+  );
   const failed: string[] = [];
   for (const name of names) {
     const start = Date.now();
