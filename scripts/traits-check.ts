@@ -8,7 +8,7 @@ import { resolve } from 'node:path';
 
 import { writeForOptionalScreen } from '../src/lib/traits';
 import { voiceMeFrom } from '../src/lib/intake';
-import { VIBE_QUESTIONS } from '../src/lib/vibe-check';
+import { SCENARIO_QUESTIONS } from '../src/lib/vibe-check';
 import {
   EXTRA_AXES,
   OPTIONAL_INTAKE_TOTAL,
@@ -23,8 +23,6 @@ import {
   optionalProgressLabel,
   traitPatch,
   traitPromptLines,
-  traitsFromClosePattern,
-  traitsFromDisagree,
 } from '../src/lib/traits';
 import { filterCard } from '../src/lib/voice/filters';
 import {
@@ -81,18 +79,12 @@ function meBase(over: Partial<VoiceMe> = {}): VoiceMe {
 }
 
 async function main() {
-  const close = traitsFromClosePattern('worry_pull_away');
-  assert.equal(close.openness, undefined);
-  assert.equal(close.extraversion, undefined);
-  assert.equal(close.steadiness, undefined);
-  assert.ok((close.attachment_anxiety ?? 0) > 0.5);
-  ok('close-pattern tap writes anxiety/avoidance only, never Big Five');
-
-  const disagree = traitsFromDisagree('step_back');
-  assert.equal(disagree.attachment_anxiety, undefined);
-  assert.equal(disagree.attachment_avoidance, undefined);
-  assert.ok((disagree.conflict_assertiveness ?? 1) < 0.5);
-  ok('disagreement tap writes its own two axes only');
+  const allScenarioAxes = SCENARIO_QUESTIONS.flatMap((q) => q.axes);
+  assert.equal(allScenarioAxes.length, 16);
+  assert.equal(new Set(allScenarioAxes).size, 16);
+  for (const axis of TRAIT_AXES) assert.ok(allScenarioAxes.includes(axis), `${axis} missing from scenario bank`);
+  for (const q of SCENARIO_QUESTIONS) assert.equal(q.options.length, 3);
+  ok('8 scenario questions cover all 16 axes exactly once, 3 options each');
 
   const sliderFirst = mergeTraitWrite(
     emptyTraitState(),
@@ -196,37 +188,36 @@ async function main() {
   assert.match(playfulnessSql, /me_playfulness_unit/);
   ok('extra columns exist with 0–1 CHECK constraints; playfulness is in wave21; complete_signup is untouched');
 
-  const blankSliders = writeForOptionalScreen({
-    screen: 0,
-    sliderValues: {},
-    closeId: null,
-    disagreeId: null,
-  });
-  assert.equal(blankSliders, null);
-  ok('slider screen with no taps produces no write');
+  const blankScenario = writeForOptionalScreen({ screen: 0, optionId: null });
+  assert.equal(blankScenario, null);
+  ok('scenario screen with no tap produces no write');
 
-  const opennessWrite = writeForOptionalScreen({
-    screen: 0,
-    sliderValues: { openness: 1 },
-    closeId: null,
-    disagreeId: null,
-  });
-  assert.deepEqual(opennessWrite?.incoming, { openness: 1 });
-  assert.equal(opennessWrite?.source, 'self_slider');
-  ok('openness vibe-check writes only that axis');
+  const openConWrite = writeForOptionalScreen({ screen: 0, optionId: 'new_thing' });
+  assert.deepEqual(openConWrite?.incoming, { openness: 0.8, conscientiousness: 0.2 });
+  assert.equal(openConWrite?.source, 'self_scenario');
+  assert.deepEqual([...(openConWrite?.allowed ?? [])], ['openness', 'conscientiousness']);
+  ok('screen 0 writes both openness and conscientiousness from one tap, as direct self_scenario');
 
-  const closeWrite = writeForOptionalScreen({
-    screen: 5,
-    sliderValues: {},
-    closeId: 'close_steady',
-    disagreeId: null,
-  });
-  assert.deepEqual(closeWrite?.incoming, traitsFromClosePattern('close_steady'));
-  ok('first closeness vibe-check still uses close-pattern ids');
+  const attachmentWrite = writeForOptionalScreen({ screen: 5, optionId: 'did_i_do' });
+  assert.deepEqual(attachmentWrite?.incoming, { attachment_anxiety: 0.8, attachment_avoidance: 0.2 });
+  assert.equal(attachmentWrite?.source, 'self_scenario');
+  ok('attachment screen writes anxiety and avoidance from one tap');
 
-  assert.equal(OPTIONAL_INTAKE_TOTAL, VIBE_QUESTIONS.length);
-  assert.equal(VIBE_QUESTIONS.length, 8);
-  ok('optional phase is 8 vibe-check questions');
+  const directScenario = mergeTraitWrite(emptyTraitState(), openConWrite!.incoming, 'self_scenario', openConWrite!.allowed);
+  assert.equal(directScenario.values.openness, 0.8);
+  assert.equal(directScenario.sources.openness, 'self_scenario');
+  const laterGuess = mergeTraitWrite(directScenario, { openness: 0.1 }, 'self_game', TRAIT_AXES);
+  assert.equal(laterGuess.values.openness, 0.8);
+  assert.equal(laterGuess.sources.openness, 'self_scenario');
+  ok('self_scenario full-replaces the number (not damped toward 0.5) and blocks a later inferred write');
+
+  const unknownOption = writeForOptionalScreen({ screen: 0, optionId: 'not_a_real_option' });
+  assert.equal(unknownOption, null);
+  ok('an unrecognized option id produces no write');
+
+  assert.equal(OPTIONAL_INTAKE_TOTAL, SCENARIO_QUESTIONS.length);
+  assert.equal(SCENARIO_QUESTIONS.length, 8);
+  ok('optional phase is 8 scenario questions');
   assert.equal(optionalProgressLabel(1), 'extra 1 of 8');
   assert.notEqual(optionalProgressLabel(1), '10 of 13');
   ok('optional progress is its own counter');
@@ -426,6 +417,7 @@ async function main() {
   for (const token of [
     'self_slider',
     'self_situation',
+    'self_scenario',
     'self_game',
     'self_tap',
     'self_settings',

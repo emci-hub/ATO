@@ -112,12 +112,13 @@ const LAB_ME: VoiceMe = {
 };
 
 const SOURCE_NOTE: Record<TraitSource, string> = {
-  self_slider: 'direct — inferred cannot overwrite',
+  self_slider: 'direct — inferred cannot overwrite (historical, no longer written)',
   self_tap: 'direct — tap-form',
   self_confirm: 'direct — Does Sage know you? confirm',
   self_settings: 'direct — Settings edit',
-  self_grid: 'inferred — 16-grid',
-  self_situation: 'inferred — close-pattern / disagreement',
+  self_scenario: 'direct — optional-intake 2-axis scenario tap',
+  self_grid: 'inferred — 16-grid (historical, no longer written)',
+  self_situation: 'inferred — a situation you picked (close-pattern / intake-sweep / questions)',
   self_game: 'inferred — scenario swipe',
 };
 

@@ -30,12 +30,6 @@ function read(rel: string): string {
   return readFileSync(resolve(root, rel), 'utf8');
 }
 
-const blankInput = {
-  sliderValues: {} as Record<string, number>,
-  closeId: null as string | null,
-  disagreeId: null as string | null,
-};
-
 assert.deepEqual(unansweredOptionalScreens(emptyTraitValues()), [0, 1, 2, 3, 4, 5, 6, 7]);
 assert.equal(OPTIONAL_INTAKE_TOTAL, 8);
 ok('all 8 optional screens are unanswered when every axis is null');
@@ -56,40 +50,38 @@ assert.match(bandsFold, /if \(bands\.length === 0\) return null/);
 assert.doesNotMatch(bandsFold, /Want to add a bit more/);
 ok('section sits on You directly after TraitBandsFold and still renders when every band is null');
 
-const gamed = mergeTraitWrite(emptyTraitState(), { openness: 0.8 }, 'self_game', ['openness']);
-const naive = writeForOptionalScreen({
-  screen: 0,
-  ...blankInput,
-  sliderValues: { openness: 0 },
-});
-assert.ok(naive);
-const naiveMerged = mergeTraitWrite(gamed, naive.incoming, naive.source, naive.allowed);
-assert.equal(naiveMerged.sources.openness, 'self_slider');
-assert.notEqual(naiveMerged.values.openness, gamed.values.openness);
-const guardedSlider = optionalFillWrite(gamed.values, {
-  screen: 0,
-  ...blankInput,
-  sliderValues: { openness: 0 },
-});
-assert.equal(guardedSlider, null);
-assert.ok(!unansweredOptionalScreens(gamed.values).includes(0));
-ok('slider fill does not overwrite an axis that already has a non-null value from another source');
+const directOpenness = mergeTraitWrite(emptyTraitState(), { openness: 0.8 }, 'self_tap', ['openness']);
+const scenarioWrite = writeForOptionalScreen({ screen: 0, optionId: 'new_thing' });
+assert.ok(scenarioWrite);
+assert.equal(scenarioWrite.source, 'self_scenario');
+ok('scenario write is self_scenario — direct, not damped toward 0.5 like an inferred write would be');
+
+assert.ok(unansweredOptionalScreens(directOpenness.values).includes(0));
+const guardedFill = optionalFillWrite(directOpenness.values, { screen: 0, optionId: 'new_thing' });
+assert.deepEqual(guardedFill?.incoming, { conscientiousness: 0.2 });
+assert.equal(guardedFill?.source, 'self_scenario');
+ok(
+  'fill only writes the still-null axis (conscientiousness) when openness is already answered — ' +
+    'the null-axis guard in optionalFillWrite protects the answered axis, not source priority',
+);
+
+const fullyFilled = mergeTraitWrite(directOpenness, guardedFill!.incoming, guardedFill!.source, guardedFill!.allowed);
+assert.equal(fullyFilled.values.openness, 0.8);
+assert.equal(fullyFilled.sources.openness, 'self_tap');
+assert.ok(!unansweredOptionalScreens(fullyFilled.values).includes(0));
+ok('screen 0 clears from unanswered once both axes are filled; the already-answered axis is untouched');
 
 const closeFilled = mergeTraitWrite(
   emptyTraitState(),
   { attachment_anxiety: 0.2, attachment_avoidance: 0.2 },
-  'self_situation',
+  'self_scenario',
   ['attachment_anxiety', 'attachment_avoidance'],
 );
 assert.equal(
-  optionalFillWrite(closeFilled.values, {
-    screen: 5,
-    ...blankInput,
-    closeId: 'want_and_pull',
-  }),
+  optionalFillWrite(closeFilled.values, { screen: 5, optionId: 'kind_of_relief' }),
   null,
 );
-ok('close-pattern fill is a no-op when both attachment axes already have values');
+ok('attachment screen fill is a no-op when both axes already have values');
 
 assert.match(fillUi, /optionalFillWrite/);
 assert.match(fillUi, /updateTraits/);

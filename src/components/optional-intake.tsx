@@ -7,17 +7,14 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import type { IntakeChip } from '@/lib/intake';
 import { updateTraits, type Me } from '@/lib/me';
-import { VIBE_QUESTIONS, type VibeQuestion } from '@/lib/vibe-check';
+import { SCENARIO_QUESTIONS } from '@/lib/vibe-check';
 import {
   OPTIONAL_INTAKE_TOTAL,
-  SLIDER_AXES,
   optionalFillWrite,
   optionalProgressLabel,
   traitStateFromRow,
   unansweredOptionalScreens,
   type OptionalScreen,
-  type ClosePatternId,
-  type DisagreeId,
 } from '@/lib/traits';
 
 export type { OptionalScreen };
@@ -61,35 +58,15 @@ export function OptionalGate({
   );
 }
 
-function vibeChips(question: VibeQuestion): IntakeChip[] {
-  return question.chips.map(({ value, label }) => ({ value, label }));
-}
-
-function selectedFor(
-  question: VibeQuestion,
-  sliderValues: Partial<Record<(typeof SLIDER_AXES)[number], number>>,
-  closeId: string | null,
-  disagreeId: string | null,
-): string[] {
-  if (question.kind === 'slider') {
-    const score = sliderValues[question.axis];
-    if (typeof score !== 'number') return [];
-    const hit = question.chips.find((chip) => chip.score === score);
-    return hit ? [hit.value] : [];
-  }
-  if (question.kind === 'close') return closeId ? [closeId] : [];
-  return disagreeId ? [disagreeId] : [];
+function scenarioChips(screen: OptionalScreen): IntakeChip[] {
+  return SCENARIO_QUESTIONS[screen].options.map(({ value, label }) => ({ value, label }));
 }
 
 export function OptionalStep({
   screen,
   busy,
-  sliderValues,
-  closeId,
-  disagreeId,
-  onSlider,
-  onClose,
-  onDisagree,
+  selectedOptionId,
+  onSelect,
   onBack,
   onSkipThis,
   onSkipRest,
@@ -97,60 +74,28 @@ export function OptionalStep({
 }: {
   screen: OptionalScreen;
   busy: boolean;
-  sliderValues: Partial<Record<(typeof SLIDER_AXES)[number], number>>;
-  closeId: string | null;
-  disagreeId: string | null;
-  onSlider: (axis: (typeof SLIDER_AXES)[number], value: number) => void;
-  onClose: (value: string) => void;
-  onDisagree: (value: string) => void;
+  selectedOptionId: string | null;
+  onSelect: (value: string) => void;
   onBack: () => void;
   onSkipThis: () => void;
   onSkipRest: () => void;
   onContinue: () => void;
 }) {
   const last = screen === OPTIONAL_INTAKE_TOTAL - 1;
-  const question = VIBE_QUESTIONS[screen];
-
-  function onVibeSelect(value: string) {
-    if (!question) return;
-    if (question.kind === 'slider') {
-      const chip = question.chips.find((item) => item.value === value);
-      if (chip) onSlider(question.axis, chip.score);
-      return;
-    }
-    if (question.kind === 'close') {
-      onClose(value as ClosePatternId);
-      return;
-    }
-    onDisagree(value as DisagreeId);
-  }
+  const question = SCENARIO_QUESTIONS[screen];
 
   return (
     <>
       <ThemedText type="smallBold" themeColor="textSecondary" style={styles.progress}>
         {optionalProgressLabel(screen + 1)}
       </ThemedText>
-      {question ? (
-        <>
-          {question.kind !== 'disagree' && question.fieldLabel ? (
-            <>
-              <ThemedText type="subtitle">{question.fieldLabel}</ThemedText>
-              {question.fieldDescription ? (
-                <ThemedText themeColor="textSecondary" style={styles.lede}>
-                  {question.fieldDescription}
-                </ThemedText>
-              ) : null}
-            </>
-          ) : null}
-          <ThemedText type={question.fieldLabel ? 'smallBold' : 'subtitle'}>{question.prompt}</ThemedText>
-          <ChipGroup
-            chips={vibeChips(question)}
-            selected={selectedFor(question, sliderValues, closeId, disagreeId)}
-            disabled={busy}
-            onSelect={onVibeSelect}
-          />
-        </>
-      ) : null}
+      <ThemedText type="subtitle">{question.prompt}</ThemedText>
+      <ChipGroup
+        chips={scenarioChips(screen)}
+        selected={selectedOptionId ? [selectedOptionId] : []}
+        disabled={busy}
+        onSelect={onSelect}
+      />
 
       <View style={styles.skipRow}>
         <Pressable
@@ -211,12 +156,7 @@ export function OptionalIntakeFill({
   );
   const [cursor, setCursor] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [sliderValues, setSliderValues] = useState<
-    Partial<Record<(typeof SLIDER_AXES)[number], number>>
-  >({});
-  const [closeId, setCloseId] = useState<string | null>(null);
-  const [closeSecondId, setCloseSecondId] = useState<string | null>(null);
-  const [disagreeId, setDisagreeId] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<Partial<Record<OptionalScreen, string>>>({});
 
   if (unanswered.length === 0) return null;
 
@@ -236,10 +176,7 @@ export function OptionalIntakeFill({
     if (busy || screen == null) return;
     const write = optionalFillWrite(values, {
       screen,
-      sliderValues,
-      closeId,
-      closeSecondId,
-      disagreeId,
+      optionId: answers[screen] ?? null,
     });
     setBusy(true);
     try {
@@ -262,14 +199,10 @@ export function OptionalIntakeFill({
           <OptionalStep
             screen={screen}
             busy={busy}
-            sliderValues={sliderValues}
-            closeId={screen === 6 ? closeSecondId : closeId}
-            disagreeId={disagreeId}
-            onSlider={(axis, value) => {
-              setSliderValues((prev) => ({ ...prev, [axis]: value }));
+            selectedOptionId={answers[screen] ?? null}
+            onSelect={(value) => {
+              setAnswers((prev) => ({ ...prev, [screen]: value }));
             }}
-            onClose={screen === 6 ? setCloseSecondId : setCloseId}
-            onDisagree={setDisagreeId}
             onBack={() => {
               if (index <= 0) return;
               setCursor(index - 1);

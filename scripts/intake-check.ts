@@ -20,7 +20,7 @@ import {
   selectedIntakeValues,
   voiceMeFrom,
 } from '../src/lib/intake';
-import { VIBE_QUESTIONS, EVEN_KEEL_COPY, CLOSENESS_COPY } from '../src/lib/vibe-check';
+import { SCENARIO_QUESTIONS } from '../src/lib/vibe-check';
 import { bankCard, bankCardForMe } from '../src/lib/voice/bank';
 import { routeVoiceCard } from '../src/lib/voice/router';
 import { buildVoiceConfig } from '../src/lib/voice/config';
@@ -170,14 +170,13 @@ async function main() {
   );
   ok('Settings labels and display values cover all 9 fields');
 
-  assert.equal(VIBE_QUESTIONS.length, 8);
+  assert.equal(SCENARIO_QUESTIONS.length, 8);
   assert.equal(
-    VIBE_QUESTIONS[0]?.prompt,
-    'Someone in the group chat finds a spot that looks kinda sketchy but also kinda cool. Zero reviews.',
+    SCENARIO_QUESTIONS[0]?.prompt,
+    "You've had a plan locked in for weeks — everyone knows the spot. Right before, the group finds something new and everyone's suddenly into that instead.",
   );
-  assert.equal(EVEN_KEEL_COPY.label, 'How rattled a bad day gets you');
-  assert.equal(CLOSENESS_COPY.label, 'How you handle getting close to people');
-  ok('vibe-check prompts and field labels match the locked pass-1 copy');
+  assert.deepEqual(SCENARIO_QUESTIONS[0]?.axes, ['openness', 'conscientiousness']);
+  ok('scenario prompts and axis pairs match the locked copy');
 
   const copyBlob = [
     onboarding,

@@ -66,6 +66,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
+    flexShrink: 1,
+    maxWidth: '100%',
   },
   pressed: {
     opacity: 0.8,

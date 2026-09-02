@@ -11,6 +11,7 @@
  */
 
 import { containsFrameworkTerm, sanitizeFacts } from '@/lib/voice/framework-fence';
+import { SCENARIO_QUESTIONS } from '@/lib/vibe-check';
 
 export const TRAIT_AXES = [
   'openness',
@@ -49,6 +50,7 @@ export const DIRECT_TRAIT_SOURCES = [
   'self_tap',
   'self_confirm',
   'self_settings',
+  'self_scenario',
 ] as const;
 
 /** Ranked below direct. Last-write-wins among inferred only. */
@@ -87,13 +89,6 @@ export const SLIDER_AXES = [
   'steadiness',
 ] as const;
 
-export const CLOSE_AXES = ['attachment_anxiety', 'attachment_avoidance'] as const;
-
-export const DISAGREE_AXES = [
-  'conflict_assertiveness',
-  'conflict_cooperativeness',
-] as const;
-
 export type TraitValues = Record<TraitAxis, number | null>;
 export type TraitSources = Partial<Record<TraitAxis, TraitSource>>;
 export type TraitTouched = Partial<Record<TraitAxis, string>>;
@@ -105,25 +100,14 @@ export interface TraitState {
   touched: TraitTouched;
 }
 
-/** 8 vibe-check questions. */
+/** 8 two-axis scenario questions — see `SCENARIO_QUESTIONS` in `@/lib/vibe-check`. */
 export const OPTIONAL_INTAKE_TOTAL = 8;
 
 export type OptionalScreen = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
-const SLIDER_SCREEN_AXIS: Partial<Record<OptionalScreen, (typeof SLIDER_AXES)[number]>> = {
-  0: 'openness',
-  1: 'conscientiousness',
-  2: 'extraversion',
-  3: 'agreeableness',
-  4: 'steadiness',
-};
-
 /** Axes that optional screen `n` would write. Used to find skipped fill-later screens. */
 export function axesWrittenByOptionalScreen(screen: OptionalScreen): readonly TraitAxis[] {
-  const sliderAxis = SLIDER_SCREEN_AXIS[screen];
-  if (sliderAxis) return [sliderAxis];
-  if (screen === 5 || screen === 6) return CLOSE_AXES;
-  return DISAGREE_AXES;
+  return SCENARIO_QUESTIONS[screen].axes;
 }
 
 /** Optional screens that still have at least one null axis they would write. */
@@ -137,27 +121,6 @@ export function unansweredOptionalScreens(values: TraitValues): OptionalScreen[]
   }
   return out;
 }
-
-/** Behavioral close-pattern ids. Internal only — never stored, never shown as labels. */
-export const CLOSE_PATTERN_IDS = [
-  'close_steady',
-  'worry_pull_away',
-  'keep_distance',
-  'want_and_pull',
-] as const;
-
-export type ClosePatternId = (typeof CLOSE_PATTERN_IDS)[number];
-
-/** Behavioral disagreement ids. Internal only — never stored. */
-export const DISAGREE_IDS = [
-  'push_my_way',
-  'win_we_both',
-  'split_difference',
-  'step_back',
-  'give_ground',
-] as const;
-
-export type DisagreeId = (typeof DISAGREE_IDS)[number];
 
 export const SLIDER_STOPS = [0, 0.25, 0.5, 0.75, 1] as const;
 
@@ -190,50 +153,10 @@ export function emptyTraitState(): TraitState {
   return { values: emptyTraitValues(), sources: {}, touched: {} };
 }
 
-export function isClosePatternId(value: string): value is ClosePatternId {
-  return (CLOSE_PATTERN_IDS as readonly string[]).includes(value);
-}
-
-export function isDisagreeId(value: string): value is DisagreeId {
-  return (DISAGREE_IDS as readonly string[]).includes(value);
-}
-
-/** Close-pattern tap → anxiety/avoidance only. Never Big Five. */
-export function traitsFromClosePattern(
-  id: ClosePatternId,
-): Partial<Record<TraitAxis, number>> {
-  switch (id) {
-    case 'close_steady':
-      return { attachment_anxiety: 0.2, attachment_avoidance: 0.2 };
-    case 'worry_pull_away':
-      return { attachment_anxiety: 0.8, attachment_avoidance: 0.2 };
-    case 'keep_distance':
-      return { attachment_anxiety: 0.2, attachment_avoidance: 0.8 };
-    case 'want_and_pull':
-      return { attachment_anxiety: 0.8, attachment_avoidance: 0.8 };
-  }
-}
-
-/** Disagreement tap → assertiveness/cooperativeness only. Never shares a cell with close-pattern. */
-export function traitsFromDisagree(id: DisagreeId): Partial<Record<TraitAxis, number>> {
-  switch (id) {
-    case 'push_my_way':
-      return { conflict_assertiveness: 0.8, conflict_cooperativeness: 0.2 };
-    case 'win_we_both':
-      return { conflict_assertiveness: 0.8, conflict_cooperativeness: 0.8 };
-    case 'split_difference':
-      return { conflict_assertiveness: 0.5, conflict_cooperativeness: 0.5 };
-    case 'step_back':
-      return { conflict_assertiveness: 0.2, conflict_cooperativeness: 0.2 };
-    case 'give_ground':
-      return { conflict_assertiveness: 0.2, conflict_cooperativeness: 0.8 };
-  }
-}
-
 /**
  * Source-aware merge for numeric writes. Direct (slider / tap-form /
- * Settings) is sticky: a later inferred write (grid / situation / game)
- * cannot overwrite that axis. Direct sources full-replace the 0–1 number.
+ * Settings / scenario) is sticky: a later inferred write (grid / situation /
+ * game) cannot overwrite that axis. Direct sources full-replace the 0–1 number.
  * Inferred sources damp toward the signal:
  * `0.12 * signal + 0.88 * old` (null old uses 0.5). Among the same rank,
  * last-write-wins the source token. Incoming null/undefined means "this
@@ -335,7 +258,6 @@ export function traitPatch(
 export function allowedAxesForSource(source: TraitSource): readonly TraitAxis[] {
   if (source === 'self_grid') return GRID_AXES;
   if (source === 'self_slider') return SLIDER_AXES;
-  if (source === 'self_situation') return [...CLOSE_AXES, ...DISAGREE_AXES];
   return TRAIT_AXES;
 }
 
@@ -343,45 +265,29 @@ export function optionalProgressLabel(n: number): string {
   return `extra ${n} of ${OPTIONAL_INTAKE_TOTAL}`;
 }
 
+/**
+ * Selecting an option writes both axes for that screen's scenario question,
+ * as self_scenario — direct (full-replace, sticky), not blended toward 0.5
+ * like an inferred source would be, and never overwritten by a later
+ * inferred write. A later direct edit (e.g. Settings) can still replace it.
+ */
 export function writeForOptionalScreen(input: {
   screen: OptionalScreen;
-  sliderValues: Partial<Record<(typeof SLIDER_AXES)[number], number>>;
-  closeId: string | null;
-  closeSecondId?: string | null;
-  disagreeId: string | null;
+  optionId: string | null;
 }): {
   incoming: Partial<Record<TraitAxis, number>>;
   source: Exclude<TraitSource, 'self_confirm'>;
   allowed: readonly TraitAxis[];
 } | null {
-  const sliderAxis = SLIDER_SCREEN_AXIS[input.screen];
-  if (sliderAxis) {
-    const value = input.sliderValues[sliderAxis];
-    if (typeof value !== 'number') return null;
-    return { incoming: { [sliderAxis]: value }, source: 'self_slider', allowed: SLIDER_AXES };
-  }
-  if (input.screen === 5) {
-    if (!input.closeId || !isClosePatternId(input.closeId)) return null;
-    return {
-      incoming: traitsFromClosePattern(input.closeId),
-      source: 'self_situation',
-      allowed: CLOSE_AXES,
-    };
-  }
-  if (input.screen === 6) {
-    const second = input.closeSecondId ?? null;
-    if (!second || !isClosePatternId(second)) return null;
-    return {
-      incoming: traitsFromClosePattern(second),
-      source: 'self_situation',
-      allowed: CLOSE_AXES,
-    };
-  }
-  if (input.screen !== 7 || !input.disagreeId || !isDisagreeId(input.disagreeId)) return null;
+  if (!input.optionId) return null;
+  const question = SCENARIO_QUESTIONS[input.screen];
+  const option = question?.options.find((item) => item.value === input.optionId);
+  if (!option) return null;
+  const [axisA, axisB] = question.axes;
   return {
-    incoming: traitsFromDisagree(input.disagreeId),
-    source: 'self_situation',
-    allowed: DISAGREE_AXES,
+    incoming: { [axisA]: option.axisAValue, [axisB]: option.axisBValue },
+    source: 'self_scenario',
+    allowed: question.axes,
   };
 }
 

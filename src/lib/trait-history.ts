@@ -56,6 +56,7 @@ const REPORT_SOURCES: readonly TraitSource[] = [
   'self_tap',
   'self_confirm',
   'self_settings',
+  'self_scenario',
   'self_grid',
   'self_situation',
 ];

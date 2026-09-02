@@ -34,7 +34,7 @@ import {
   type SupportStyle,
 } from '@/lib/intake';
 import { createMe, errorMessageForHandle, fetchMe, TalkStyle, updateTraits, checkHandleAvailable, handleFormatError, normalizeHandle, type Me } from '@/lib/me';
-import { OPTIONAL_INTAKE_TOTAL, SLIDER_AXES, writeForOptionalScreen, type OptionalScreen } from '@/lib/traits';
+import { OPTIONAL_INTAKE_TOTAL, writeForOptionalScreen, type OptionalScreen } from '@/lib/traits';
 import { slugifyCity } from '@/lib/around/slug';
 import { DEFAULT_AROUND_CITY } from '@/constants/around-cities';
 import { useMeContext } from '@/lib/me-context';
@@ -56,10 +56,7 @@ export default function OnboardingScreen() {
   const [optionalIndex, setOptionalIndex] = useState(0);
   const [createdUserId, setCreatedUserId] = useState<string | null>(null);
   const [meRow, setMeRow] = useState<Me | null>(null);
-  const [sliderValues, setSliderValues] = useState<Partial<Record<(typeof SLIDER_AXES)[number], number>>>({});
-  const [closeId, setCloseId] = useState<string | null>(null);
-  const [closeSecondId, setCloseSecondId] = useState<string | null>(null);
-  const [disagreeId, setDisagreeId] = useState<string | null>(null);
+  const [optionalAnswers, setOptionalAnswers] = useState<Partial<Record<OptionalScreen, string>>>({});
 
   const [name, setName] = useState('');
   const [handle, setHandle] = useState('');
@@ -302,10 +299,7 @@ export default function OnboardingScreen() {
     if (!createdUserId || busy) return;
     const write = writeForOptionalScreen({
       screen: optionalIndex as OptionalScreen,
-      sliderValues,
-      closeId,
-      closeSecondId,
-      disagreeId,
+      optionId: optionalAnswers[optionalIndex as OptionalScreen] ?? null,
     });
     setBusy(true);
     setFormError(null);
@@ -413,14 +407,10 @@ export default function OnboardingScreen() {
                 <OptionalStep
                   screen={optionalIndex as OptionalScreen}
                   busy={busy}
-                  sliderValues={sliderValues}
-                  closeId={optionalIndex === 6 ? closeSecondId : closeId}
-                  disagreeId={disagreeId}
-                  onSlider={(axis, value) => {
-                    setSliderValues((prev) => ({ ...prev, [axis]: value }));
+                  selectedOptionId={optionalAnswers[optionalIndex as OptionalScreen] ?? null}
+                  onSelect={(value) => {
+                    setOptionalAnswers((prev) => ({ ...prev, [optionalIndex as OptionalScreen]: value }));
                   }}
-                  onClose={optionalIndex === 6 ? setCloseSecondId : setCloseId}
-                  onDisagree={setDisagreeId}
                   onBack={() => {
                     setFormError(null);
                     if (optionalIndex === 0) {

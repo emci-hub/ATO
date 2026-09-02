@@ -34,6 +34,7 @@ const TOLD_LINE: Record<
   self_grid: 'You told us directly — a type you already knew.',
   self_situation: 'You told us directly — a situation you picked.',
   self_tap: 'You told us directly — a ranking you sorted.',
+  self_scenario: 'You told us directly — a scenario you picked.',
 };
 
 export function traitValuesFromPartial(me: Partial<TraitValues>): TraitValues {

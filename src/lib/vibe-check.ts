@@ -1,150 +1,96 @@
 /**
- * Optional vibe-check copy (Pass 1). Chip ids stay internal; only labels
- * and prompts are user-facing. Scores still write the existing 0–1 axes.
+ * Optional intake scenario copy. Chip ids stay internal; only labels and
+ * prompts are user-facing. Each question maps to exactly two trait axes —
+ * the option a person taps carries both axes' values inline, so this file
+ * is the single source of truth for both copy and scoring.
  */
-import type { IntakeChip } from '@/lib/intake';
-import type { ClosePatternId, DisagreeId } from '@/lib/traits';
-import { SLIDER_AXES } from '@/lib/traits';
+import type { TraitAxis } from '@/lib/traits';
 
-export const EVEN_KEEL_COPY = {
-  label: 'How rattled a bad day gets you',
-  description: 'Some people shake it off fast, some carry it longer — no wrong answer here.',
-} as const;
-
-export const CLOSENESS_COPY = {
-  label: 'How you handle getting close to people',
-  description: "Everyone's a little different here — this just helps Sage read the room right.",
-} as const;
-
-type SliderAxis = (typeof SLIDER_AXES)[number];
-
-export type VibeSliderQuestion = {
-  kind: 'slider';
-  prompt: string;
-  axis: SliderAxis;
-  fieldLabel?: string;
-  fieldDescription?: string;
-  chips: (IntakeChip & { score: number })[];
+export type ScenarioOption = {
+  value: string;
+  label: string;
+  axisAValue: number;
+  axisBValue: number;
 };
 
-export type VibeCloseQuestion = {
-  kind: 'close';
+export type ScenarioQuestion = {
+  axes: readonly [TraitAxis, TraitAxis];
   prompt: string;
-  fieldLabel?: string;
-  fieldDescription?: string;
-  chips: IntakeChip<ClosePatternId>[];
+  options: readonly ScenarioOption[];
 };
 
-export type VibeDisagreeQuestion = {
-  kind: 'disagree';
-  prompt: string;
-  chips: IntakeChip<DisagreeId>[];
-};
-
-export type VibeQuestion = VibeSliderQuestion | VibeCloseQuestion | VibeDisagreeQuestion;
-
-export const VIBE_QUESTIONS: readonly VibeQuestion[] = [
+export const SCENARIO_QUESTIONS: readonly ScenarioQuestion[] = [
   {
-    kind: 'slider',
-    axis: 'openness',
+    axes: ['openness', 'conscientiousness'],
     prompt:
-      'Someone in the group chat finds a spot that looks kinda sketchy but also kinda cool. Zero reviews.',
-    chips: [
-      { value: 'open_high', label: "I'm in, that's kind of the fun part", score: 1 },
-      { value: 'open_mid', label: "I'll go if someone's got a backup plan", score: 0.5 },
-      { value: 'open_low', label: "I'd rather just go somewhere we know is good", score: 0 },
+      "You've had a plan locked in for weeks — everyone knows the spot. Right before, the group finds something new and everyone's suddenly into that instead.",
+    options: [
+      { value: 'new_thing', label: "New thing, I'm dropping the old plan", axisAValue: 0.8, axisBValue: 0.2 },
+      { value: 'flex_both', label: "I'll go if we can still make the old plan happen after", axisAValue: 0.5, axisBValue: 0.5 },
+      { value: 'stick_plan', label: "We already committed, we're doing the original plan", axisAValue: 0.2, axisBValue: 0.8 },
     ],
   },
   {
-    kind: 'slider',
-    axis: 'conscientiousness',
-    prompt: "You committed to plans two weeks ago. Day comes and you're just not feeling it.",
-    chips: [
-      { value: 'con_high', label: "I said I'd go, so I'm going", score: 1 },
-      { value: 'con_mid', label: 'Depends how hard I actually committed', score: 0.5 },
-      { value: 'con_low', label: "I'm probably canceling", score: 0 },
+    axes: ['extraversion', 'playfulness'],
+    prompt: "Group's already running late, and someone suggests a pointless, kind of silly detour on the way.",
+    options: [
+      { value: 'push_it', label: "I'm the one pushing for it, more people the better", axisAValue: 0.8, axisBValue: 0.8 },
+      { value: 'quiet_in', label: "I'll go along, but I'm quiet about it — I don't need it to be a whole thing", axisAValue: 0.3, axisBValue: 0.6 },
+      { value: 'keep_moving', label: "Not worth it, let's just get where we're going", axisAValue: 0.2, axisBValue: 0.1 },
     ],
   },
   {
-    kind: 'slider',
-    axis: 'extraversion',
-    prompt: 'Rough week, finally got a night to yourself.',
-    chips: [
-      { value: 'ex_high', label: "I'm texting people, let's do something", score: 1 },
-      { value: 'ex_mid', label: 'Maybe one person, kept low-key', score: 0.5 },
-      { value: 'ex_low', label: "Phone off, door closed, that's it", score: 0 },
+    axes: ['agreeableness', 'conflict_cooperativeness'],
+    prompt: "Group can't agree where to eat and it's dragging on.",
+    options: [
+      { value: 'wherever', label: 'Honestly, wherever — I just want it decided', axisAValue: 0.8, axisBValue: 0.4 },
+      { value: 'say_and_solve', label: "I say what I actually want, then help find something everyone's okay with", axisAValue: 0.3, axisBValue: 0.8 },
+      { value: 'push_my_pick', label: 'I push my pick until people come around', axisAValue: 0.1, axisBValue: 0.1 },
     ],
   },
   {
-    kind: 'slider',
-    axis: 'agreeableness',
-    prompt: "Group chat's picking dinner and it's not going your way.",
-    chips: [
-      { value: 'ag_low', label: "I'll say something, that's a fair ask", score: 0 },
-      { value: 'ag_mid', label: "I'll mention it once, then just go with it", score: 0.5 },
-      { value: 'ag_high', label: "Honestly, whatever's fine", score: 1 },
+    axes: ['conflict_assertiveness', 'autonomy'],
+    prompt: "Someone close to you makes a call on your behalf — signs you up, agrees to something for you — without checking first.",
+    options: [
+      { value: 'say_it', label: 'I tell them straight up I wanted to decide that myself', axisAValue: 0.8, axisBValue: 0.8 },
+      { value: 'mention_it', label: "I mention it, but let it ride since it's already done", axisAValue: 0.4, axisBValue: 0.4 },
+      { value: 'let_it_go', label: 'I let it go — honestly easier that someone else handled it', axisAValue: 0.1, axisBValue: 0.1 },
     ],
   },
   {
-    kind: 'slider',
-    axis: 'steadiness',
-    fieldLabel: EVEN_KEEL_COPY.label,
-    fieldDescription: EVEN_KEEL_COPY.description,
-    prompt: 'Plan falls through last minute. In the grand scheme, not a big deal.',
-    chips: [
-      { value: 'st_high', label: "Genuinely doesn't touch me, I move on", score: 1 },
-      { value: 'st_mid', label: "Annoying for a bit, then it's gone", score: 0.5 },
-      { value: 'st_low', label: 'Somehow ruins my whole day', score: 0 },
+    axes: ['steadiness', 'locus_of_control'],
+    prompt: "A plan you were counting on falls apart last minute — nobody's fault in particular.",
+    options: [
+      { value: 'reflect_hard', label: "Throws me for a bit, and I wonder what I should've done differently", axisAValue: 0.2, axisBValue: 0.8 },
+      { value: 'shake_external', label: 'I shake it off fast, and it was bound to happen either way', axisAValue: 0.8, axisBValue: 0.2 },
+      { value: 'shake_reflect', label: "I shake it off fast, but I do think about what I'd change next time", axisAValue: 0.8, axisBValue: 0.8 },
     ],
   },
   {
-    kind: 'close',
-    fieldLabel: CLOSENESS_COPY.label,
-    fieldDescription: CLOSENESS_COPY.description,
-    prompt:
-      "Someone goes quiet on you for a few days, no explanation. What's the actual gut reaction, not what you'd say out loud.",
-    chips: [
-      {
-        value: 'close_steady',
-        label: "They're probably just busy, I don't think much of it",
-      },
-      { value: 'worry_pull_away', label: "I start replaying what I might've done" },
-      {
-        value: 'keep_distance',
-        label: "Kind of nice not being checked on, if I'm honest",
-      },
-      {
-        value: 'want_and_pull',
-        label: "I notice, I miss it, but I'm still not the one texting first",
-      },
+    axes: ['attachment_anxiety', 'attachment_avoidance'],
+    prompt: "You're texting with someone you're into and they take way longer than usual to reply.",
+    options: [
+      { value: 'not_much', label: "I don't think much of it, they're probably just busy", axisAValue: 0.2, axisBValue: 0.2 },
+      { value: 'did_i_do', label: 'I start wondering if I did something wrong', axisAValue: 0.8, axisBValue: 0.2 },
+      { value: 'kind_of_relief', label: 'Honestly kind of a relief — less pressure to reply fast myself', axisAValue: 0.2, axisBValue: 0.8 },
     ],
   },
   {
-    kind: 'close',
-    prompt: 'A new group actually feels like your people. They start inviting you to a regular thing.',
-    chips: [
-      { value: 'close_steady', label: "I'm in, right away" },
-      {
-        value: 'worry_pull_away',
-        label: "I'll show up a few times before I let myself get attached",
-      },
-      { value: 'keep_distance', label: "I keep it light, I don't want to need this" },
-      { value: 'want_and_pull', label: "I want in more than I'm letting on" },
+    axes: ['competence', 'self_efficacy'],
+    prompt: "You get handed something you've never done before, basically no instructions, due soon.",
+    options: [
+      { value: 'just_start', label: 'I figure I can handle it, I just start', axisAValue: 0.8, axisBValue: 0.8 },
+      { value: 'check_work', label: 'I think I can get through it, but I want someone to check my work', axisAValue: 0.6, axisBValue: 0.5 },
+      { value: 'not_sure', label: "I'm not sure I'm the right person for this", axisAValue: 0.2, axisBValue: 0.2 },
     ],
   },
   {
-    kind: 'disagree',
-    prompt:
-      "You and someone close to you just aren't seeing eye to eye on something. First move?",
-    chips: [
-      { value: 'push_my_way', label: 'I say my piece, straight up' },
-      {
-        value: 'win_we_both',
-        label: "We talk it out until it's actually settled for both of us",
-      },
-      { value: 'split_difference', label: 'We meet in the middle' },
-      { value: 'step_back', label: 'I need to step away and come back to it' },
-      { value: 'give_ground', label: "I drop it, it's not worth the friction" },
+    axes: ['growth_mindset', 'relatedness'],
+    prompt: 'You mess up in a way people around you actually notice.',
+    options: [
+      { value: 'talk_it_through', label: 'I want to talk it through with someone right after', axisAValue: 0.6, axisBValue: 0.8 },
+      { value: 'own_it_alone', label: "I go over what happened on my own so I don't do it again", axisAValue: 0.8, axisBValue: 0.2 },
+      { value: 'move_past', label: "I just want to move past it — replaying it doesn't help", axisAValue: 0.2, axisBValue: 0.4 },
     ],
   },
 ];
