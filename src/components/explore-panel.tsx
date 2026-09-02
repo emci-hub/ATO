@@ -41,6 +41,7 @@ import { shouldUseLocalAi } from '@/lib/ai/override';
 import { claimAiCall, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
 import { recordOwnDevTrace } from '@/lib/dev-trace-server';
 import type { CheckHistory } from '@/lib/voice/types';
+import { withTimeout } from '@/lib/timeout';
 
 function emptyCopy(kind: RouteExploreResult['kind']): string | null {
   switch (kind) {
@@ -122,28 +123,32 @@ export function ExplorePanel({
   } | null>(null);
 
   const load = useCallback(async () => {
-    const next = await routeExplore(
-      {
-        me: {
-          ...voiceMeFrom(me),
-          timezone: me.timezone,
-          traitTouchedAt: me.trait_touched_at,
+    const next = await withTimeout(
+      routeExplore(
+        {
+          me: {
+            ...voiceMeFrom(me),
+            timezone: me.timezone,
+            traitTouchedAt: me.trait_touched_at,
+          },
+          history,
+          aiConsent: me.ai_consent,
+          crisisToday,
         },
-        history,
-        aiConsent: me.ai_consent,
-        crisisToday,
-      },
-      {
-        loadLatestPack: fetchLatestExplorePack,
-        savePack: saveExplorePack,
-        loadMissNotes: fetchExploreMissNotes,
-        claimAiCall: () => claimAiCall('explore'),
-        logJargonHit: logJargonGuard,
-        logPhraseHit: logPhraseGuard,
-        generateBody: generateExploreBody,
-        useLocal: await shouldUseLocalAi(),
-        recordTrace: recordOwnDevTrace,
-      },
+        {
+          loadLatestPack: fetchLatestExplorePack,
+          savePack: saveExplorePack,
+          loadMissNotes: fetchExploreMissNotes,
+          claimAiCall: () => claimAiCall('explore'),
+          logJargonHit: logJargonGuard,
+          logPhraseHit: logPhraseGuard,
+          generateBody: generateExploreBody,
+          useLocal: await shouldUseLocalAi(),
+          recordTrace: recordOwnDevTrace,
+        },
+      ),
+      25000,
+      'explore',
     );
     setResult(next);
   }, [me, history, crisisToday]);

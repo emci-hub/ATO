@@ -36,6 +36,7 @@ import { controlBorderColor } from '@/lib/theme/chrome';
 import { shouldUseLocalAi } from '@/lib/ai/override';
 import { claimQuestionsBatch, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
 import type { CheckHistory } from '@/lib/voice/types';
+import { withTimeout } from '@/lib/timeout';
 
 function emptyCopy(kind: RouteQuestionsResult['kind']): string | null {
   switch (kind) {
@@ -101,22 +102,26 @@ export function QuestionsFold({
   const [keptGoing, setKeptGoing] = useState(false);
 
   const load = useCallback(async () => {
-    const next = await routeQuestions(
-      {
-        me: { ...me, talk_style: me.talk_style ?? 'even' },
-        history,
-        aiConsent: me.ai_consent,
-        crisisToday,
-      },
-      {
-        loadLatestPack: fetchLatestQuestionPack,
-        savePack: saveQuestionPack,
-        claimBatch: claimQuestionsBatch,
-        generateBatch: generateQuestionBatch,
-        logJargonHit: logJargonGuard,
-        logPhraseHit: logPhraseGuard,
-        useLocal: await shouldUseLocalAi(),
-      },
+    const next = await withTimeout(
+      routeQuestions(
+        {
+          me: { ...me, talk_style: me.talk_style ?? 'even' },
+          history,
+          aiConsent: me.ai_consent,
+          crisisToday,
+        },
+        {
+          loadLatestPack: fetchLatestQuestionPack,
+          savePack: saveQuestionPack,
+          claimBatch: claimQuestionsBatch,
+          generateBatch: generateQuestionBatch,
+          logJargonHit: logJargonGuard,
+          logPhraseHit: logPhraseGuard,
+          useLocal: await shouldUseLocalAi(),
+        },
+      ),
+      25000,
+      'questions',
     );
     setResult(next);
   }, [me, history, crisisToday]);
