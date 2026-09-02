@@ -345,12 +345,6 @@ export default function YouScreen() {
                   <ThemedText type="smallBold">Tell Sage more</ThemedText>
                   <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
                 </Pressable>
-                <Pressable
-                  onPress={() => router.push('/intake-sweep')}
-                  style={({ pressed }) => [styles.inviteRow, pressed && styles.pressed]}>
-                  <ThemedText type="smallBold">A faster pass</ThemedText>
-                  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
-                </Pressable>
               </ThemedView>
 
               <ThemedView type="backgroundElement" style={styles.detailCard}>

@@ -13,7 +13,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BornOnFields } from '@/components/born-on-fields';
 import { CityPicker } from '@/components/city-picker';
 import { CoreIntakeSweep } from '@/components/core-intake-sweep';
-import { IntakeSweep } from '@/components/intake-sweep';
 import { OptionalGate, OptionalIntakeSweep } from '@/components/optional-intake';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -32,7 +31,7 @@ import {
   type KnocksChip,
   type SupportStyle,
 } from '@/lib/intake';
-import { createMe, errorMessageForHandle, fetchMe, TalkStyle, updateTraits, checkHandleAvailable, handleFormatError, normalizeHandle, type Me } from '@/lib/me';
+import { createMe, errorMessageForHandle, TalkStyle, updateTraits, checkHandleAvailable, handleFormatError, normalizeHandle } from '@/lib/me';
 import {
   OPTIONAL_INTAKE_TOTAL,
   writeForOptionalScreen,
@@ -51,7 +50,7 @@ import {
 import { clearLocalSession } from '@/lib/supabase';
 import { withTimeout } from '@/lib/timeout';
 
-type Phase = 'account' | 'intake' | 'optional-gate' | 'optional' | 'sweep';
+type Phase = 'account' | 'intake' | 'optional-gate' | 'optional';
 
 export default function OnboardingScreen() {
   const theme = useTheme();
@@ -59,7 +58,6 @@ export default function OnboardingScreen() {
 
   const [phase, setPhase] = useState<Phase>('account');
   const [createdUserId, setCreatedUserId] = useState<string | null>(null);
-  const [meRow, setMeRow] = useState<Me | null>(null);
   const [optionalAnswers, setOptionalAnswers] = useState<Partial<Record<OptionalScreen, string>>>({});
 
   const [name, setName] = useState('');
@@ -258,7 +256,6 @@ export default function OnboardingScreen() {
       );
       console.log('[onboarding] createMe succeeded');
       setCreatedUserId(created.id);
-      setMeRow(created);
       setPhase('optional-gate');
     } catch (err) {
       const e = err as { message?: string; code?: string; details?: string; hint?: string };
@@ -279,14 +276,20 @@ export default function OnboardingScreen() {
     }
   }
 
-  async function goHome() {
-    if (busy) return;
-    setBusy(true);
+  async function refreshAndGoHome() {
     try {
       await withTimeout(refresh(), 15000, 'refresh');
     } catch (err) {
       console.log('[onboarding] refresh error:', err);
       setFormError('Saved. Open the app again if Home does not show yet.');
+    }
+  }
+
+  async function goHome() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await refreshAndGoHome();
     } finally {
       setBusy(false);
     }
@@ -311,14 +314,9 @@ export default function OnboardingScreen() {
     setFormError(null);
     try {
       if (source && Object.keys(incoming).length > 0) {
-        const updated = await withTimeout(
-          updateTraits(createdUserId, incoming, source, allowed),
-          15000,
-          'updateTraits',
-        );
-        setMeRow(updated);
+        await withTimeout(updateTraits(createdUserId, incoming, source, allowed), 15000, 'updateTraits');
       }
-      setPhase('sweep');
+      await refreshAndGoHome();
     } catch (err) {
       console.log('[onboarding] updateTraits error:', err);
       setFormError('Couldn\u2019t save those extra bits. Skip or try again.');
@@ -397,7 +395,7 @@ export default function OnboardingScreen() {
             ) : phase === 'optional-gate' ? (
               <OptionalGate
                 busy={busy}
-                onSkip={() => setPhase('sweep')}
+                onSkip={() => void goHome()}
                 onAdd={() => {
                   setFormError(null);
                   setPhase('optional');
@@ -412,26 +410,12 @@ export default function OnboardingScreen() {
                   setOptionalAnswers((prev) => ({ ...prev, [screen]: value }));
                 }}
                 onSubmit={() => void submitOptional()}
-                onSkip={() => setPhase('sweep')}
+                onSkip={() => void goHome()}
                 onBack={() => {
                   setFormError(null);
                   setPhase('optional-gate');
                 }}
               />
-            ) : phase === 'sweep' && meRow ? (
-              <IntakeSweep
-                me={meRow}
-                onUpdated={async () => {
-                  if (!createdUserId) return;
-                  const next = await fetchMe(createdUserId);
-                  if (next) setMeRow(next);
-                }}
-                onDone={() => void goHome()}
-              />
-            ) : phase === 'sweep' ? (
-              <Pressable onPress={() => void goHome()}>
-                <ThemedText type="smallBold">Continue</ThemedText>
-              </Pressable>
             ) : null}
           </ScrollView>
         </KeyboardAvoidingView>

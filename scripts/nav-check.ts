@@ -39,8 +39,12 @@ for (const id of NAV_TAB_IDS) {
 }
 ok('Home and Sage are not reorderable ids — they can never enter main/more');
 
-assert.deepEqual(DEFAULT_NAV_ORDER, { homeFirst: true, main: ['explore', 'you'], more: ['around', 'circle'] });
-ok('default order: Explore/You on the bar; Around/Circle in More (bar = 5 items)');
+assert.deepEqual(DEFAULT_NAV_ORDER, {
+  homeFirst: true,
+  main: ['explore', 'you'],
+  more: ['around', 'circle', 'questions'],
+});
+ok('default order: Explore/You on the bar; Around/Circle/Questions in More (bar = 5 items)');
 
 // Main bar renders 2 pinned (Home+Sage) + main.length + More. Default must be 5.
 assert.equal(2 + DEFAULT_NAV_ORDER.main.length + 1, 5);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -101,15 +102,17 @@ export function IntakeSweep({
 
   return (
     <View style={styles.body}>
-      <ThemedText type="subtitle">{INTAKE_SWEEP_TITLE}</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        {INTAKE_SWEEP_LEDE}
-      </ThemedText>
-      {!INTAKE_SWEEP_COPY_REVIEWED && __DEV__ ? (
-        <ThemedText type="code" themeColor="textSecondary">
-          Draft copy — waiting on emci review.
+      <View style={styles.header}>
+        <ThemedText type="subtitle">{INTAKE_SWEEP_TITLE}</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          {INTAKE_SWEEP_LEDE}
         </ThemedText>
-      ) : null}
+        {!INTAKE_SWEEP_COPY_REVIEWED && __DEV__ ? (
+          <ThemedText type="code" themeColor="textSecondary">
+            Draft copy — waiting on emci review.
+          </ThemedText>
+        ) : null}
+      </View>
       {drafts == null ? (
         <ThemedText themeColor="textSecondary">Loading…</ThemedText>
       ) : open.length === 0 ? (
@@ -161,6 +164,10 @@ export function IntakeSweep({
 const styles = StyleSheet.create({
   body: {
     gap: Spacing.three,
+  },
+  header: {
+    gap: Spacing.half,
+    paddingRight: NAV_PIXEL_HEADER_INSET,
   },
   item: {
     gap: Spacing.two,
