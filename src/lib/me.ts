@@ -752,6 +752,9 @@ export const RESERVED_HANDLES = [
   'support',
   'you',
   'astrollogs',
+  // Former root literal — kept unclaimable so no account can ever inherit
+  // the old handle-based gate (root is me.is_root since wave34).
+  'emci',
 ] as const;
 
 export function normalizeHandle(raw: string): string {

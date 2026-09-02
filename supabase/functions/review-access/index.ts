@@ -5,7 +5,8 @@
  * it via Resend, same from-address as Auth OTP (`noreply@asstrollogs.com`).
  * Deny only flips the row — no email.
  *
- * JWT required. Caller must be signed in as handle emci. The RPCs re-check.
+ * JWT required. Caller's me row must have is_root = true (wave34 — root is a
+ * column, never a handle string). The RPCs re-check via require_root().
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
@@ -70,8 +71,8 @@ Deno.serve(async (request) => {
   } = await caller.auth.getUser();
   if (userError || !user) return json({ error: 'not_authenticated' }, 401);
 
-  const { data: me } = await caller.from('me').select('handle').eq('id', user.id).maybeSingle();
-  if (me?.handle !== 'emci') return json({ error: 'not_allowed' }, 403);
+  const { data: me } = await caller.from('me').select('is_root').eq('id', user.id).maybeSingle();
+  if (me?.is_root !== true) return json({ error: 'not_allowed' }, 403);
 
   let payload: { action?: unknown; id?: unknown };
   try {

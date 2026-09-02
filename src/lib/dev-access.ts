@@ -1,9 +1,11 @@
 /**
  * Dev Tools Hub visibility. Pure helpers so check:dev-access can pin the
  * grantable vs root-only split without a session.
+ *
+ * Root is decided server-side by the `me.is_root` column (wave34), surfaced to
+ * the client only through the `my_dev_access` RPC. There is deliberately no
+ * root handle constant here — a handle string was claimable by anyone.
  */
-
-export const ROOT_HANDLE = 'emci';
 
 export const GRANTABLE_CAPABILITIES = ['card', 'traits', 'quota', 'fence', 'trace'] as const;
 
@@ -56,8 +58,4 @@ export function canSeeHubSection(
   }
   if (input.isDev || input.isRoot) return true;
   return input.capabilities.includes(section);
-}
-
-export function isRootHandle(handle: string | null | undefined): boolean {
-  return handle === ROOT_HANDLE;
 }
