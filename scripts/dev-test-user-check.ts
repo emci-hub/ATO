@@ -97,7 +97,7 @@ function parsePresets(source: string): Map<string, Record<string, number>> {
   const presets = new Map<string, Record<string, number>>();
   let lastId = '';
   let current: Record<string, number> | null = null;
-  for (const line of source.split('\n')) {
+  for (const line of source.split(/\r?\n/)) {
     const presetId = /^    id: '([a-z_]+)',$/.exec(line);
     if (presetId) {
       if (current) presets.set(lastId, current);
