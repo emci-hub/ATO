@@ -21,6 +21,7 @@ import { QuestGrowthBars } from '@/components/quest-growth-bars';
 import { VoicePresetPicker } from '@/components/voice-preset-picker';
 import { SageFactsCard } from '@/components/sage-facts';
 import { RunningUpdateLine } from '@/components/running-update-line';
+import { AppVersionDevUnlock } from '@/components/dev-unlock-gate';
 import { SettingsFold } from '@/components/settings-fold';
 import { OptionalIntakeFill } from '@/components/optional-intake';
 import { FullProfileFold } from '@/components/full-profile-fold';
@@ -486,6 +487,7 @@ export default function YouScreen() {
               <SettingsFold title="Account">
                 <DetailRow label="Timezone" value={me.timezone} />
                 <BirthdayRow me={me} onUpdated={() => refresh()} />
+                <AppVersionDevUnlock />
                 <Pressable
                   onPress={() => {
                     if (aiConsentFor(me) === 'pending') {

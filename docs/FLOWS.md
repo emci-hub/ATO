@@ -6,9 +6,9 @@ line has drifted.
 ## 1. Boot → auth gate
 
 1. `src/app/_layout.tsx:19` — `initSentry()`, splash held.
-2. `src/hooks/use-session.ts:19` `resolveSession()` — cached session; if none and
-   `__DEV__`, `devTestAutoSignIn()` (`src/lib/dev-test-user.ts:164`); then `auth.getUser()`
-   proves the user still exists (a deleted account's stale JWT is cleared).
+2. `src/hooks/use-session.ts:19` `resolveSession()` — cached session, if any; then
+   `auth.getUser()` proves the user still exists (a deleted account's stale JWT is
+   cleared). No client-side auto sign-in of any kind.
 3. `src/lib/me-context.tsx:35` `MeProvider` — loads the `me` row + `my_dev_access`.
 4. `src/app/_layout.tsx:72-97` — `Stack.Protected`: `!isAuthed` → `auth`,
    `isAuthed && !hasMe` → `onboarding`, else `(tabs)` + pushed screens. Labs behind
@@ -67,7 +67,7 @@ line has drifted.
 3. Readers: `traitStateFromRow()` (`src/lib/traits.ts:215`) for Sage/Ask; report-track
    only for Categories (`src/lib/categories.ts`), Legends (`src/lib/legends/match.ts:91`),
    Full Profile completeness ("N of 16 settled").
-4. Dev-only exception: `applyDevArchetypePreset()` (`src/lib/dev-test-user.ts:188`)
+4. Dev-only exception: `applyDevArchetypePreset()` (`src/lib/dev-test-user.ts:159`)
    writes columns directly for the dev user (refuses any other account).
 
 ## 6. Sage Talk

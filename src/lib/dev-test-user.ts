@@ -1,21 +1,17 @@
 /**
- * Fixed dev-test identity + 4 Legends-archetype presets. Pre-launch (PRE_LAUNCH_DEV)
- * for the manual "Sign in as dev user" button + Legends test-persona strip;
- * the cold-start auto-login itself stays __DEV__-only (use-session.ts).
+ * 4 Legends-archetype presets for the fixed dev-test account, pre-launch
+ * (PRE_LAUNCH_DEV) only.
  *
  * The dev-test user is a REAL Supabase auth + me row provisioned by
- * supabase/migrations/wave31_dev_test_user.sql:
+ * supabase/migrations/wave31_dev_test_user.sql (email ato-dev@example.com,
+ * handle @atodev, auth id a70d3e0e-4c00-4a1e-8c0d-00000000d3e0).
  *
- *   email ato-dev@example.com · handle @atodev
- *   auth id a70d3e0e-4c00-4a1e-8c0d-00000000d3e0 · password ATO-dev-user-2026
- *
- * The password is a throwaway dev value (bcrypt in the migration) — never used
- * for any real account, and every entry point below no-ops / throws unless
- * __DEV__ is true, so release builds can never sign in through this module.
- * The account has no special grants (not root, not founder, no dev-lab
- * capabilities) — it exists purely so dev sessions can log in without Apple
- * prompts / OTP email and can swap their trait profile between the 4 seeded
- * Legends archetypes (matching logic: src/lib/legends/match.ts).
+ * There is no client-side sign-in for this account anymore — no hardcoded
+ * password, no auto-login. Sign in the normal way (Apple / OTP / a password
+ * set in Settings) and, while already signed in as @atodev, this module lets
+ * that session swap its trait profile between the 4 seeded Legends
+ * archetypes (matching logic: src/lib/legends/match.ts). The account has no
+ * special grants (not root, not founder, no dev-lab capabilities).
  *
  * Preset vectors are hand-set so each hits >=2/3 poles of exactly one of the
  * four legend-linked archetypes (Archetypes: Architect = C/autonomy/LOC high,
@@ -35,8 +31,6 @@ import { supabase } from '@/lib/supabase';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 
-export const DEV_TEST_EMAIL = 'ato-dev@example.com';
-export const DEV_TEST_PASSWORD = 'ATO-dev-user-2026';
 export const DEV_TEST_HANDLE = 'atodev';
 export const DEV_TEST_USER_ID = 'a70d3e0e-4c00-4a1e-8c0d-00000000d3e0';
 
@@ -151,29 +145,6 @@ export function devPresetById(
   return DEV_ARCHETYPE_PRESETS.find((preset) => preset.id === id) ?? null;
 }
 
-export function isDevTestEmail(email: string | null | undefined): boolean {
-  return typeof email === 'string' && email.toLowerCase() === DEV_TEST_EMAIL;
-}
-
-/**
- * Cold-start auto-login for dev builds (no Apple prompt, no OTP email).
- * Called from use-session ONLY when __DEV__ and no session is cached.
- * Fail-closed: any error (account rotated, network, suspended) returns false
- * and the normal signed-out auth screen shows — it never blocks boot.
- */
-export async function devTestAutoSignIn(): Promise<boolean> {
-  if (!PRE_LAUNCH_DEV) return false;
-  const { error } = await supabase.auth.signInWithPassword({
-    email: DEV_TEST_EMAIL,
-    password: DEV_TEST_PASSWORD,
-  });
-  if (error) {
-    console.log('[dev] dev-test auto sign-in failed:', error.message);
-    return false;
-  }
-  return true;
-}
-
 /**
  * Switches the signed-in dev user's trait profile to an archetype preset and
  * clears their legend history so the matching legend can be shown again.
@@ -193,7 +164,7 @@ export async function applyDevArchetypePreset(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user || user.id !== DEV_TEST_USER_ID || !isDevTestEmail(user.email)) {
+  if (!user || user.id !== DEV_TEST_USER_ID) {
     throw new Error('Dev archetype presets only apply to the fixed dev-test user');
   }
 

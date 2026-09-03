@@ -19,9 +19,13 @@ Read before editing the area. Each one has bitten this repo at least once.
 
 ## Auth / security
 
-- **The dev-test password is in the bundle and in git history**
-  (`src/lib/dev-test-user.ts:39`). Hiding the button is not remediation; rotate the
-  password before public launch (deferred on purpose as of 2026-09-02).
+- **Dev Tools Hub access has no client-side password anymore.** Tapping the version
+  number on You 7x opens a prompt checked server-side by the `dev-unlock` Edge
+  Function against the `DEV_UNLOCK_PASSWORD` secret; a match sets an in-memory,
+  session-only flag (`src/lib/dev-access-unlock.ts`) — never persisted, never sent
+  anywhere but that one request. The old dev-test account's own Supabase password
+  (`ATO-dev-user-2026`, wave31 migration) is still in git history and unrotated —
+  it no longer unlocks anything client-side, but rotate it before public launch too.
 - **Root is `me.is_root`.** Never gate on a handle string again — `emci` was claimable.
   The column is trigger-protected; set it from the SQL editor / service role only.
 - **`PRE_LAUNCH_DEV = true` ships dev tooling to every OTA user.** Only the dev sign-in

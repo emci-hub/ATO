@@ -8,7 +8,7 @@ scanned-in Circle. `PROJECT_CONTEXT.md` is the memory; `docs/NOW.md` is live sta
 
 | Task | Command |
 |---|---|
-| Dev server | `npm start` (dev builds auto-sign in as the dev-test user, `__DEV__` only) |
+| Dev server | `npm start` |
 | Typecheck | `npm run typecheck` |
 | Lint | `npm run lint` |
 | One check | `npm run check:<name>` (see `package.json`; `scripts/*-check.ts`) |
