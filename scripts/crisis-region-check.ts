@@ -52,6 +52,23 @@ assert.equal(crisisCardContent('CA').fallback, null);
 assert.equal(CRISIS_SERVICE_CA, '988 Suicide Crisis Helpline');
 ok('Canada locale shows the Canada 988 label, call or text 988');
 
+for (const region of ['US', 'CA'] as const) {
+  const actions = crisisCardContent(region).actions;
+  const call = actions.find((a) => a.label.startsWith('Call'));
+  const text = actions.find((a) => a.label.startsWith('Text'));
+  assert.equal(call?.href, 'tel:988', `${region} call action must be a tel: link`);
+  assert.equal(text?.href, 'sms:988', `${region} text action must be an sms: link`);
+}
+ok('US and Canada actions carry tel:/sms: hrefs for the same static 988 number');
+
+const crisisCardSrc = fs.readFileSync(
+  path.resolve(__dirname, '../src/components/crisis-card.tsx'),
+  'utf8',
+);
+assert.match(crisisCardSrc, /Linking\.openURL\(action\.href\)/);
+assert.match(crisisCardSrc, /accessibilityRole="link"/);
+ok('crisis card actually wires each action to Linking.openURL, not just static text');
+
 assert.equal(detect({ regionCode: 'GB' }), 'other');
 assert.equal(detect({ regionCode: 'GB', languageRegionCode: 'US' }), 'other');
 assert.equal(

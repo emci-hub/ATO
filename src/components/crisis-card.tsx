@@ -1,3 +1,4 @@
+import * as Linking from 'expo-linking';
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -40,10 +41,17 @@ export function CrisisCard({ onDismiss }: { onDismiss?: () => void }) {
       ) : (
         <View style={styles.actions}>
           {content.actions.map((action) => (
-            <View key={action.label} style={styles.actionRow}>
+            <Pressable
+              key={action.label}
+              accessibilityRole="link"
+              accessibilityLabel={action.label}
+              onPress={() => {
+                void Linking.openURL(action.href);
+              }}
+              style={({ pressed }) => [styles.actionRow, pressed && styles.pressed]}>
               <ThemedText style={styles.actionIcon}>{action.icon}</ThemedText>
               <ThemedText type="smallBold">{action.label}</ThemedText>
-            </View>
+            </Pressable>
           ))}
         </View>
       )}
