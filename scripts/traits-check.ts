@@ -424,8 +424,8 @@ async function main() {
   ] as const) {
     assert.doesNotMatch(fold, new RegExp(token));
   }
-  assert.match(read('src/app/(tabs)/you.tsx'), /router\.push\('\/week'\)/);
-  ok('band detail has the fixed provenance line once, no axis-name or source tokens; You links to /week');
+  assert.match(read('src/app/(tabs)/index.tsx'), /router\.push\('\/week'\)/);
+  ok('band detail has the fixed provenance line once, no axis-name or source tokens; Home links to /week');
 
   console.log(`\nAll ${passed} trait checks passed.`);
 }

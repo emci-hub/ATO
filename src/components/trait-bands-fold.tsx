@@ -8,6 +8,7 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
   TRAIT_BANDS_LABEL,
+  TRAIT_BANDS_LEDE,
   filledTraitBands,
   type FilledTraitBand,
 } from '@/lib/trait-bands';
@@ -27,6 +28,9 @@ export function TraitBandsFold({ me }: { me: Me }) {
   return (
     <>
       <SettingsFold title={TRAIT_BANDS_LABEL}>
+        <ThemedText type="small" themeColor="textSecondary" style={styles.lede}>
+          {TRAIT_BANDS_LEDE}
+        </ThemedText>
         <View style={styles.list}>
           {bands.map((band) => (
             <Pressable
@@ -109,6 +113,10 @@ export function TraitBandDetail({ band }: { band: FilledTraitBand }) {
 }
 
 const styles = StyleSheet.create({
+  lede: {
+    paddingHorizontal: Spacing.three,
+    paddingBottom: Spacing.one,
+  },
   list: {
     gap: Spacing.four,
     paddingHorizontal: Spacing.three,

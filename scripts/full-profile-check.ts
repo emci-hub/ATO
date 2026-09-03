@@ -126,14 +126,17 @@ assert.doesNotMatch(fold, /applyRankingWeek|applyScenarioWeek|applyCompletenessW
 assert.doesNotMatch(fold, /toFixed|percent|%/);
 ok('edits reuse updateTraits + AxisTaps; no new writer; no score or percent');
 
-const you = read('src/app/(tabs)/you.tsx');
-const bandsIdx = you.indexOf('<TraitBandsFold');
-const profileIdx = you.indexOf('<FullProfileFold');
-const fillIdx = you.indexOf('<OptionalIntakeFill');
-assert.ok(bandsIdx >= 0 && profileIdx > bandsIdx && fillIdx > profileIdx);
-assert.match(you, /from '@\/components\/full-profile-fold'/);
+const exploreTab = read('src/app/(tabs)/explore.tsx');
+const questionsTab = read('src/app/(tabs)/intake-sweep.tsx');
+const bandsIdx = exploreTab.indexOf('<TraitBandsFold');
+const profileIdx = exploreTab.indexOf('<FullProfileFold');
+assert.ok(bandsIdx >= 0 && profileIdx > bandsIdx);
+assert.ok(questionsTab.indexOf('<OptionalIntakeFill') >= 0);
+assert.match(exploreTab, /from '@\/components\/full-profile-fold'/);
+assert.match(exploreTab, /from '@\/components\/trait-bands-fold'/);
+assert.match(questionsTab, /from '@\/components\/optional-intake'/);
 assert.match(fold, /SettingsFold title=\{`\$\{FULL_PROFILE_LABEL\}/);
-ok('Full Profile sits on You after trait bands, before fill-later');
+ok('Full Profile sits on Explore after trait bands; fill-later lives on the Questions tab');
 
 const poster = read('src/components/share-poster.tsx');
 const handlePage = read('src/app/[handle].tsx');

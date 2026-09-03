@@ -477,6 +477,13 @@ export default function HomeScreen() {
             </Pressable>
           ) : null}
 
+          <Pressable
+            onPress={() => router.push('/week')}
+            style={({ pressed }) => [styles.weekRow, pressed && styles.pressed]}>
+            <ThemedText type="smallBold">This week</ThemedText>
+            <ThemedText themeColor="textSecondary">›</ThemedText>
+          </Pressable>
+
           {me && canShowCategoryTeaser(slotKind) ? <CategoryTeaser me={me} /> : null}
 
           {(canSeeDevLab({

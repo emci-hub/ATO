@@ -191,15 +191,15 @@ assert.doesNotMatch(crisis, /CategoryTeaser|FullProfileFold|playfulness/);
 assert.doesNotMatch(checkSwift, /CategoryTeaser|FullProfileFold/);
 ok('Home teaser is gated; crisis card and widget stay untouched');
 
-const you = read('src/app/(tabs)/you.tsx');
-assert.match(you, /CategoriesFold/);
-assert.match(you, /FullProfileFold/);
+const exploreTab = read('src/app/(tabs)/explore.tsx');
+assert.match(exploreTab, /CategoriesFold/);
+assert.match(exploreTab, /FullProfileFold/);
 const circle = read('src/app/(tabs)/circle.tsx');
 assert.match(circle, /setCategoryShare/);
 assert.match(circle, /close_friends_share|setCloseFriendsShare/);
 assert.match(circle, /CategoryCompareRow/);
 assert.doesNotMatch(circle, /FullProfileFold/);
-ok('You has Categories next to Full Profile; Circle compare is separate from Full Profile');
+ok('Explore has Categories next to Full Profile; Circle compare is separate from Full Profile');
 
 const box8 = read('docs/ATO_DEVICE_TESTS.md');
 assert.match(box8, /two-slot|2-slot|second slot|category teaser/i);

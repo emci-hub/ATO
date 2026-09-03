@@ -4,10 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 
 import { CategoriesFold } from '@/components/categories-fold';
+import { FullProfileFold } from '@/components/full-profile-fold';
+import { IntakeSettings } from '@/components/intake-settings';
+import { SageFactsCard } from '@/components/sage-facts';
 import { SageInsightSpend } from '@/components/sage-insight-spend';
 import { SageStoryFold } from '@/components/sage-story-fold';
 import { SageTitleCard } from '@/components/sage-title-card';
 import { SettingsFold } from '@/components/settings-fold';
+import { TraitBandsFold } from '@/components/trait-bands-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -138,7 +142,11 @@ export default function ExploreScreen() {
               <SettingsFold title="Today's Read">
                 <SageTitleCard me={me} tracks={tracks} tracksReady={tracksReady} />
               </SettingsFold>
+              <IntakeSettings me={me} onUpdated={() => refreshMe()} />
+              <TraitBandsFold me={me} />
+              <FullProfileFold me={me} onUpdated={() => refreshMe()} />
               <CategoriesFold me={me} onUpdated={() => refreshMe()} />
+              <SageFactsCard me={me} onUpdated={() => refreshMe()} />
               <SageStoryFold
                 me={me}
                 tracks={tracks}

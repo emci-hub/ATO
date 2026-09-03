@@ -116,14 +116,13 @@ const you = read('src/app/(tabs)/you.tsx');
 assert.doesNotMatch(you, /\{me\.name\}/);
 assert.doesNotMatch(you, /profileCard/);
 assert.match(you, /<SharePoster/);
-const weeksIdx = you.indexOf('<ThemedText type="smallBold">Weeks</ThemedText>');
+assert.match(you, /SettingsFold title="How Sage sounds"/);
 const crisisIdx = you.indexOf('<CrisisRegionPicker');
-const bandsIdx = you.indexOf('<TraitBandsFold');
 const usageIdx = you.indexOf('<SageUsageFold');
 const creditsIdx = you.indexOf('<KenneyCreditsCard');
-assert.ok(weeksIdx >= 0 && crisisIdx > weeksIdx && bandsIdx > crisisIdx);
+assert.ok(crisisIdx >= 0);
 assert.ok(usageIdx > crisisIdx && creditsIdx > usageIdx);
-ok('You shows the name once on the poster; crisis sits after Weeks, before trait bands, above usage and credits');
+ok('You shows the name once on the poster; How Sage sounds is a fold; crisis sits above usage and credits');
 
 const picker = read('src/components/crisis-region-picker.tsx');
 assert.match(picker, /SettingsFold title="If you need someone now"/);

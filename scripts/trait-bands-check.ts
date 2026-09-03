@@ -61,16 +61,16 @@ assert.equal(bands[0]?.value, damped.values.openness);
 assert.notEqual(bands[0]?.value, 0.8);
 ok('null axes stay hidden; filled bands read the damped mergeTraitWrite number');
 
-const you = read('src/app/(tabs)/you.tsx');
+const explore = read('src/app/(tabs)/explore.tsx');
 const fold = read('src/components/trait-bands-fold.tsx');
-const intakeIdx = you.indexOf('<IntakeSettings');
-const bandsIdx = you.indexOf('<TraitBandsFold');
+const intakeIdx = explore.indexOf('<IntakeSettings');
+const bandsIdx = explore.indexOf('<TraitBandsFold');
 assert.ok(intakeIdx >= 0 && bandsIdx > intakeIdx);
 assert.match(fold, /SettingsFold title=\{TRAIT_BANDS_LABEL\}/);
 assert.doesNotMatch(fold, /defaultOpen/);
 assert.doesNotMatch(fold, /%|percent|openness|Extraversion/);
 assert.doesNotMatch(fold, /accessibilityValue/);
 assert.equal(TRAIT_BANDS_LABEL.includes('%'), false);
-ok('fold sits next to identity chips, collapsed, with no number or trait-name copy');
+ok('fold sits with the axis summaries on Explore, collapsed, with no number or trait-name copy');
 
 console.log(`\n${passed} trait-band checks passed`);

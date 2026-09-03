@@ -4,7 +4,6 @@ import * as Clipboard from 'expo-clipboard';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { AiConsentCard } from '@/components/ai-consent-card';
@@ -16,17 +15,12 @@ import { BirthdayRow } from '@/components/birthday-row';
 import { CityPicker } from '@/components/city-picker';
 import { CrisisRegionPicker } from '@/components/crisis-region-picker';
 import { MilestoneBadges } from '@/components/check-milestone-badge';
-import { IntakeSettings, TalkStylePicker } from '@/components/intake-settings';
+import { TalkStylePicker } from '@/components/intake-settings';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
 import { VoicePresetPicker } from '@/components/voice-preset-picker';
-import { SageFactsCard } from '@/components/sage-facts';
 import { RunningUpdateLine } from '@/components/running-update-line';
 import { AppVersionDevUnlock } from '@/components/dev-unlock-gate';
 import { SettingsFold } from '@/components/settings-fold';
-import { OptionalIntakeFill } from '@/components/optional-intake';
-import { FullProfileFold } from '@/components/full-profile-fold';
-import { CategoriesFold } from '@/components/categories-fold';
-import { TraitBandsFold } from '@/components/trait-bands-fold';
 import { TOKEN_LABEL, TOKEN_LEDE, tokenBalanceOf } from '@/lib/tokens';
 import { KenneyCreditsCard } from '@/components/kenney-credits-card';
 import { PasswordSettingsFold } from '@/components/password-settings-fold';
@@ -325,42 +319,15 @@ export default function YouScreen() {
 
               <QuestGrowthBars presence={presence} depth={depth} />
 
-              <IntakeSettings
-                me={me}
-                onUpdated={() => refresh()}
-              />
-
-              <ThemedView type="backgroundElement" style={styles.detailCard}>
-                <ThemedText type="smallBold" style={styles.inviteHeading}>
-                  How Sage sounds
+              <SettingsFold title="How Sage sounds">
+                <ThemedText type="small" themeColor="textSecondary" style={styles.inviteHint}>
+                  How Sage talks to you, and how lively its voice feels.
                 </ThemedText>
                 <TalkStylePicker me={me} onUpdated={() => refresh()} />
                 <VoicePresetPicker me={me} onUpdated={() => refresh()} />
-              </ThemedView>
-
-              <SageFactsCard me={me} onUpdated={() => refresh()} />
-
-              <ThemedView type="backgroundElement" style={styles.detailCard}>
-                <Pressable
-                  onPress={() => router.push('/questions')}
-                  style={({ pressed }) => [styles.inviteRow, pressed && styles.pressed]}>
-                  <ThemedText type="smallBold">Tell Sage more</ThemedText>
-                  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
-                </Pressable>
-              </ThemedView>
-
-              <ThemedView type="backgroundElement" style={styles.detailCard}>
-                <Pressable
-                  onPress={() => router.push('/week')}
-                  style={({ pressed }) => [styles.inviteRow, pressed && styles.pressed]}>
-                  <ThemedText type="smallBold">Weeks</ThemedText>
-                  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
-                </Pressable>
-              </ThemedView>
+              </SettingsFold>
 
               <CrisisRegionPicker />
-
-              <TraitBandsFold me={me} />
 
               <ThemedView type="backgroundElement" style={styles.detailCard}>
                 <ThemedText type="smallBold">{TOKEN_LABEL}</ThemedText>
@@ -368,12 +335,6 @@ export default function YouScreen() {
                   {tokenBalanceOf(me)} · {TOKEN_LEDE}
                 </ThemedText>
               </ThemedView>
-
-              <FullProfileFold me={me} onUpdated={() => refresh()} />
-
-              <CategoriesFold me={me} onUpdated={() => refresh()} />
-
-              <OptionalIntakeFill me={me} onUpdated={() => refresh()} />
 
               <RunningUpdateLine />
 

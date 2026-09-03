@@ -34,21 +34,17 @@ assert.deepEqual(unansweredOptionalScreens(emptyTraitValues()), [0, 1, 2, 3, 4, 
 assert.equal(OPTIONAL_INTAKE_TOTAL, 8);
 ok('all 8 optional screens are unanswered when every axis is null');
 
-const you = read('src/app/(tabs)/you.tsx');
+const questionsTab = read('src/app/(tabs)/intake-sweep.tsx');
 const fillUi = read('src/components/optional-intake.tsx');
 const bandsFold = read('src/components/trait-bands-fold.tsx');
-const bandsIdx = you.indexOf('<TraitBandsFold');
-const fillIdx = you.indexOf('<OptionalIntakeFill');
-assert.ok(bandsIdx >= 0, 'You mounts TraitBandsFold');
-assert.ok(fillIdx > bandsIdx, 'fill section is after TraitBandsFold');
-assert.equal(you.slice(bandsIdx, fillIdx).includes('<RunningUpdateLine'), false);
-assert.match(you, /from '@\/components\/optional-intake'/);
+assert.ok(questionsTab.indexOf('<OptionalIntakeFill') >= 0, 'Questions mounts OptionalIntakeFill');
+assert.match(questionsTab, /from '@\/components\/optional-intake'/);
 assert.match(fillUi, /export function OptionalIntakeFill/);
 assert.match(fillUi, /<OptionalStep/);
 assert.match(fillUi, /Want to add a bit more\?/);
 assert.match(bandsFold, /if \(bands\.length === 0\) return null/);
 assert.doesNotMatch(bandsFold, /Want to add a bit more/);
-ok('section sits on You directly after TraitBandsFold and still renders when every band is null');
+ok('fill-later sits on the Questions tab and still renders when every band is null');
 
 const directOpenness = mergeTraitWrite(emptyTraitState(), { openness: 0.8 }, 'self_tap', ['openness']);
 const scenarioWrite = writeForOptionalScreen({ screen: 0, optionId: 'new_thing' });

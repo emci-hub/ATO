@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ChipGroup } from '@/components/intake-chips';
+import { SettingsFold } from '@/components/settings-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
@@ -150,12 +150,9 @@ export function IntakeSettings({
   }
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
-      <ThemedText type="smallBold" style={styles.heading}>
-        How you show up
-      </ThemedText>
+    <SettingsFold title="How you show up">
       <ThemedText type="small" themeColor="textSecondary" style={styles.lede}>
-        Tap a row to change it. Same answers as when you signed up.
+        How you show up day to day — the everyday defaults Sage reads from.
       </ThemedText>
       {IDENTITY_QUESTIONS.map((question) => {
         const selected = selectedIntakeValues(question.field, me);
@@ -200,19 +197,11 @@ export function IntakeSettings({
           </View>
         );
       })}
-    </ThemedView>
+    </SettingsFold>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: Spacing.four,
-    padding: Spacing.two,
-  },
-  heading: {
-    paddingHorizontal: Spacing.three,
-    paddingTop: Spacing.two,
-  },
   lede: {
     paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.one,

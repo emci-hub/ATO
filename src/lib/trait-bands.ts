@@ -12,6 +12,8 @@ import {
 } from '@/lib/traits';
 
 export const TRAIT_BANDS_LABEL = 'How you tend to move';
+export const TRAIT_BANDS_LEDE =
+  'Where you sit between two ways of being — the lean Sage reads your days through.';
 
 export interface TraitBandPhrases {
   low: string;

@@ -77,12 +77,12 @@ assert.doesNotMatch(ui, /TextInput/);
 assert.doesNotMatch(ui, /onChangeText/);
 ok('You-tab viewer is read/delete only — no fence, no new write field');
 
-const you = read('src/app/(tabs)/you.tsx');
-assert.match(you, /SageFactsCard/);
-const intakeIdx = you.indexOf('<IntakeSettings');
-const factsIdx = you.indexOf('<SageFactsCard');
+const explore = read('src/app/(tabs)/explore.tsx');
+assert.match(explore, /SageFactsCard/);
+const intakeIdx = explore.indexOf('<IntakeSettings');
+const factsIdx = explore.indexOf('<SageFactsCard');
 assert.ok(intakeIdx > 0 && factsIdx > intakeIdx);
-ok('facts summary sits with How you show up on You');
+ok('facts summary sits with How you show up on Explore');
 
 const chat = read('src/app/chat.tsx');
 assert.match(chat, /Teach Sage this/);

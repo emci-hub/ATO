@@ -36,23 +36,30 @@ export const SharePoster = forwardRef<View, { me: PosterPerson; width?: number }
   ref,
 ) {
   const accent = accentFromShowUp(me.show_up);
-  const qrSize = Math.round(width * 0.52);
+  const qrSize = Math.round(width * 0.5);
 
   return (
     <View ref={ref} collapsable={false} style={[styles.poster, { width }]}>
-      <View style={styles.bloomRule} />
+      {/* Soft accent wash behind the QR — a modern background, not flat paper. */}
+      <View
+        pointerEvents="none"
+        style={[
+          styles.bloom,
+          {
+            backgroundColor: `${accent.light}16`,
+            width: width * 0.82,
+            height: width * 0.82,
+            top: -width * 0.2,
+            right: -width * 0.2,
+          },
+        ]}
+      />
+      <View style={[styles.bloomRule, { backgroundColor: accent.light }]} />
 
       <View style={styles.body}>
         <View style={styles.identity}>
           <ThemedText style={styles.name}>{me.name}</ThemedText>
-          <ThemedText style={[styles.handle, { color: accent.light }]}>@{me.handle}</ThemedText>
-          {me.show_up ? (
-            <View style={styles.visibilityPill}>
-              <ThemedText numberOfLines={2} style={styles.visibility}>
-                {me.show_up}
-              </ThemedText>
-            </View>
-          ) : null}
+          <ThemedText style={[styles.handle, { color: STEEL }]}>@{me.handle}</ThemedText>
         </View>
 
         <View style={styles.qrCard}>
@@ -81,6 +88,10 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(87, 83, 78, 0.18)',
     overflow: 'hidden',
   },
+  bloom: {
+    position: 'absolute',
+    borderRadius: 9999,
+  },
   bloomRule: {
     position: 'absolute',
     top: 0,
@@ -89,7 +100,6 @@ const styles = StyleSheet.create({
     height: 3,
     borderBottomLeftRadius: 2,
     borderBottomRightRadius: 2,
-    backgroundColor: BLOOM,
   },
   body: {
     flexGrow: 1,
@@ -116,30 +126,17 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     letterSpacing: 0.2,
   },
-  visibilityPill: {
-    marginTop: 4,
-    maxWidth: '100%',
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(87, 83, 78, 0.28)',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    backgroundColor: 'rgba(87, 83, 78, 0.06)',
-  },
-  visibility: {
-    color: STEEL,
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-    textAlign: 'center',
-    lineHeight: 16,
-  },
   qrCard: {
     backgroundColor: QR_PAPER,
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(87, 83, 78, 0.16)',
+    borderColor: 'rgba(28, 25, 23, 0.08)',
+    shadowColor: 'rgba(28, 25, 23, 0.18)',
+    shadowOpacity: 1,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
   },
   caption: {
     color: INK,
