@@ -91,6 +91,16 @@ Read before editing the area. Each one has bitten this repo at least once.
   through once (`recovery_style`, fixed in wave24).
 - **Legend never-repeat is per variant**, not per figure (wave32). History FK points
   at `legend_variants.id`.
+- **`trait_tracks` cannot be deleted from the client.** wave20 grants only
+  select/insert/update to `authenticated` and explicitly revokes delete. Anything that
+  needs to "reset" tracks must upsert over them — see the dev thin-profile preset,
+  which writes `answer_count 0` (below `STABILITY_FLOOR_N`) instead of removing rows.
+- **Dev preset writes are destructive and cover BOTH the me row and tracks.** The
+  Legends "Thin profile" chip clears the dev user's whole profile to reach the
+  thin-profile gate; the 4 archetype chips restore a settled one. They must stay
+  symmetric — if an archetype preset ever stops writing tracks, one thin tap strands
+  the dev user permanently unsettled for Categories / Title / Story, which read
+  settled tracks rather than the `me` row. `check:dev-test-user` asserts the symmetry.
 
 ## UI
 

@@ -216,6 +216,88 @@ function main() {
   }
   ok('each preset matches exactly its own legend-linked archetype (>=2/3 poles, others <2)');
 
+  // Thin-profile preset — the only way to reach the Legends thin-profile gate,
+  // which needs NO archetype to match (every preset above is built to match).
+  assert.match(moduleSrc, /export async function applyDevThinProfilePreset/);
+  const thinBody = moduleSrc.slice(moduleSrc.indexOf('export async function applyDevThinProfilePreset'));
+  assert.match(thinBody, /PRE_LAUNCH_DEV/, 'thin preset must keep the pre-launch guard');
+  assert.match(thinBody, /DEV_TEST_USER_ID/, 'thin preset must refuse non-dev-test users');
+  ok('thin-profile preset carries both guards (pre-launch + dev-test user only)');
+
+  // Thin is two facts: me axes null (nothing matches) and tracks unsettled.
+  assert.match(thinBody, /clearedValues\[axis\] = null/);
+  assert.match(thinBody, /upsertTraitTracks/);
+  assert.match(thinBody, /THIN_PRESET_ANSWER_COUNT/);
+  // devTracks(null, ...) is what clears the values; a preset vector here would
+  // leave matchable poles behind and the gate would never fire.
+  assert.match(thinBody, /devTracks\(\s*null,/);
+  ok('thin preset nulls every me axis and writes unsettled trait_tracks rows');
+
+  // wave20 revokes delete on trait_tracks from authenticated — rows must be
+  // overwritten in place, never deleted, or the preset 403s at runtime.
+  const wave20 = read('supabase/migrations/wave20_trait_tracks_titles.sql');
+  assert.match(wave20, /revoke delete on public\.trait_tracks/);
+  const thinDeletes = thinBody.match(/\.from\('trait_tracks'\)[\s\S]{0,80}?\.delete\(\)/);
+  assert.equal(thinDeletes, null, 'thin preset must not delete trait_tracks (delete is revoked)');
+  ok('thin preset upserts trait_tracks instead of deleting (wave20 revokes delete)');
+
+  // The floor is what makes answer_count 0 read as unsettled. If the floor ever
+  // drops to 0, the preset silently stops producing a thin profile.
+  const stabilitySrc = read('src/lib/trait-stability.ts');
+  const floor = Number(/STABILITY_FLOOR_N = (\d+)/.exec(stabilitySrc)?.[1]);
+  const titleMin = Number(/TITLE_STABLE_MIN = ([\d.]+)/.exec(stabilitySrc)?.[1]);
+  const thinCount = Number(/THIN_PRESET_ANSWER_COUNT = (\d+)/.exec(moduleSrc)?.[1]);
+  assert.ok(Number.isFinite(floor) && Number.isFinite(thinCount), 'could not read floor/thin count');
+  assert.ok(
+    thinCount < floor,
+    `thin answer_count ${thinCount} must stay under STABILITY_FLOOR_N ${floor}`,
+  );
+  ok(`thin answer_count (${thinCount}) stays under the stability floor (${floor})`);
+
+  // Behavioral: the thin preset leaves me axes null AND writes mid (0.5) track
+  // values, so BOTH must score zero poles or the gate's "no archetype matched"
+  // precondition is false. Mid is the real test here — it exercises band(),
+  // where an unset axis would pass trivially.
+  const allMid: Record<string, number> = {};
+  for (const axis of TRAIT_AXES) allMid[axis] = 0.5;
+  for (const { archetypeId } of Object.values(LINKED)) {
+    const combo = COMBO_BY_ARCHETYPE[archetypeId];
+    assert.equal(hits(combo, allMid), 0, `${archetypeId} must score 0 hits on a mid profile`);
+    assert.equal(hits(combo, {}), 0, `${archetypeId} must score 0 hits on an unset profile`);
+  }
+  // The gate depends on the real matcher treating a null axis as a miss rather
+  // than banding it — guard that null-check directly.
+  const matchSrc = read('src/lib/legends/match.ts');
+  assert.match(matchSrc, /value == null \? null : traitBand\(value\)/);
+  ok('mid and unset profiles hit 0 poles on all 4 archetypes; matcher null-guards');
+
+  // Reversibility: the archetype presets must ALSO write settled tracks, or a
+  // single thin tap leaves the dev user permanently unsettled for Categories /
+  // Title / Story, which all read settled tracks rather than the me row.
+  const archBody = moduleSrc.slice(
+    moduleSrc.indexOf('export async function applyDevArchetypePreset'),
+    moduleSrc.indexOf('export async function applyDevThinProfilePreset'),
+  );
+  assert.match(archBody, /upsertTraitTracks/, 'archetype preset must restore tracks');
+  const archCount = Number(/ARCHETYPE_PRESET_ANSWER_COUNT = STABILITY_FLOOR_N/.test(moduleSrc)
+    ? floor
+    : NaN);
+  const archStability = Number(/ARCHETYPE_PRESET_STABILITY = ([\d.]+)/.exec(moduleSrc)?.[1]);
+  assert.ok(
+    archCount >= floor,
+    `archetype answer_count ${archCount} must reach STABILITY_FLOOR_N ${floor}`,
+  );
+  assert.ok(
+    archStability >= titleMin,
+    `archetype stability ${archStability} must clear TITLE_STABLE_MIN ${titleMin}`,
+  );
+  ok(`archetype presets restore settled tracks (n=${archCount}, stability=${archStability}) — thin is reversible`);
+
+  // The strip must actually expose it, or there is no way to reach the state.
+  assert.match(legendsSrc, /applyDevThinProfilePreset/);
+  assert.match(legendsSrc, /Thin profile/);
+  ok('Legends dev strip exposes the thin-profile preset');
+
   console.log(`\n${passed}/${passed} dev-test-user checks passed.`);
 }
 

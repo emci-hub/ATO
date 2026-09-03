@@ -12,6 +12,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useMeContext } from '@/lib/me-context';
 import {
   applyDevArchetypePreset,
+  applyDevThinProfilePreset,
   DEV_ARCHETYPE_PRESETS,
   DEV_TEST_USER_ID,
   devPresetById,
@@ -76,11 +77,11 @@ function missingAxis(me: Me, tracks: readonly TraitTrack[]): TraitAxis | null {
  * seen-legend history so the matching card re-appears immediately. Never
  * renders for a real account — their traits cannot be overwritten from here.
  */
-function DevTestPresetStrip() {
+function DevTestPresetStrip({ onApplied }: { onApplied: () => void }) {
   const theme = useTheme();
   const { refresh } = useMeContext();
   const [isDevUser, setIsDevUser] = useState(false);
-  const [busyId, setBusyId] = useState<DevArchetypePresetId | null>(null);
+  const [busyId, setBusyId] = useState<DevArchetypePresetId | 'thin' | null>(null);
   const [note, setNote] = useState<string | null>(null);
 
   useEffect(() => {
@@ -108,10 +109,27 @@ function DevTestPresetStrip() {
     try {
       await applyDevArchetypePreset(id);
       await refresh();
+      onApplied();
       const preset = devPresetById(id);
       setNote(preset ? `Preset applied — now matching ${preset.legendName}.` : 'Preset applied.');
     } catch (err) {
       setNote(err instanceof Error ? err.message : 'Could not apply the preset.');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function applyThin() {
+    if (busyId) return;
+    setBusyId('thin');
+    setNote(null);
+    try {
+      await applyDevThinProfilePreset();
+      await refresh();
+      onApplied();
+      setNote('Thin profile applied — no archetype should match now.');
+    } catch (err) {
+      setNote(err instanceof Error ? err.message : 'Could not apply the thin profile.');
     } finally {
       setBusyId(null);
     }
@@ -142,6 +160,22 @@ function DevTestPresetStrip() {
           );
         })}
       </View>
+      <ThemedText type="small" themeColor="textSecondary">
+        Or clear the profile entirely — no axis answered, no settled tracks — to
+        reach the thin-profile gate below.
+      </ThemedText>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => void applyThin()}
+        disabled={busyId !== null}
+        style={({ pressed }) => [
+          styles.presetChip,
+          styles.thinChip,
+          { backgroundColor: theme.backgroundSelected },
+          pressed && styles.pressed,
+        ]}>
+        <ThemedText type="smallBold">Thin profile</ThemedText>
+      </Pressable>
       {busyId ? (
         <ThemedText type="small" themeColor="textSecondary">
           Applying…
@@ -187,7 +221,9 @@ export default function LegendsScreen() {
     return () => {
       cancelled = true;
     };
-  }, [me?.id, me?.updated_at]);
+    // retryTick so a dev preset (which writes tracks directly, without moving
+    // me.updated_at) refetches instead of leaving stale tracks for the mount.
+  }, [me?.id, me?.updated_at, retryTick]);
 
   useEffect(() => {
     if (!me?.id) {
@@ -295,7 +331,7 @@ export default function LegendsScreen() {
             )
           ) : null}
 
-          <DevTestPresetStrip />
+          <DevTestPresetStrip onApplied={() => setRetryTick((tick) => tick + 1)} />
 
           <ThemedText type="small" themeColor="textSecondary" style={styles.attr}>
             Matched to your traits, never a diagnosis. A story never repeats —
@@ -335,6 +371,9 @@ const styles = StyleSheet.create({
   cta: {
     alignSelf: 'flex-start',
     paddingVertical: Spacing.one,
+  },
+  thinChip: {
+    alignSelf: 'flex-start',
   },
   presetCard: {
     borderRadius: Spacing.four,
