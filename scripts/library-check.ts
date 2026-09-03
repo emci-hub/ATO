@@ -45,12 +45,13 @@ assert.deepEqual(headings, [
   'Communication',
   'Health',
   'Money',
+  'Loneliness',
   'Self-Determination Theory',
   'Growth mindset',
   'Locus of control',
   'Self-efficacy',
 ]);
-ok('six domain entries and four framework entries exist under the expected headings');
+ok('seven domain entries and four framework entries exist under the expected headings');
 
 assert.match(library, /CDC \/ AASM/);
 assert.match(library, /Karasek; Sonnentag/);
@@ -68,7 +69,7 @@ ok('academic sources named; no commercial-platform or licensed-item copy');
 const forSageBlocks = [...library.matchAll(/### For Sage\n\n([\s\S]*?)(?=\n---|\n## |$)/g)].map(
   (m) => m[1].trim(),
 );
-assert.equal(forSageBlocks.length, 10);
+assert.equal(forSageBlocks.length, 11);
 for (const block of forSageBlocks) {
   const hits = matchingFrameworkTerms(block);
   assert.deepEqual(hits, [], `For Sage should be fence-clean, got ${hits.join(', ')}:\n${block}`);
@@ -87,7 +88,7 @@ ok('voice sync ships library.md; Sage prompt reads For Sage grounding only');
 
 const parsedFile = parseLibraryEntries(library);
 const parsedSync = parseLibraryEntries(LIBRARY_MARKDOWN);
-assert.equal(parsedFile.length, 10);
+assert.equal(parsedFile.length, 11);
 assert.deepEqual(
   parsedFile.map((e) => e.id),
   parsedSync.map((e) => e.id),
@@ -121,6 +122,21 @@ assert.match(pileGrounding, /one next piece, not the whole list/);
 assert.equal(LIBRARY_TEACHING_LEAK.test(pileGrounding), false);
 assert.doesNotMatch(pileGrounding, /^Source:/m);
 ok('workload knock selects only Workload For Sage paraphrases');
+
+const lonelyMe: VoiceMe = {
+  name: 'Riley',
+  show_up: '',
+  talk_style: 'even',
+  knocks_you_off: 'loneliness',
+  morning_cue: 'make coffee',
+};
+const lonelyEntries = selectLibraryEntries(lonelyMe, { day: 4, surface: 'card' });
+assert.deepEqual(lonelyEntries.map((e) => e.id), ['loneliness']);
+const lonelyGrounding = libraryGroundingBlock(lonelyEntries);
+assert.match(lonelyGrounding, /beats a whole new social life/);
+assert.equal(LIBRARY_TEACHING_LEAK.test(lonelyGrounding), false);
+assert.doesNotMatch(lonelyGrounding, /^Source:/m);
+ok('loneliness knock selects only Loneliness For Sage paraphrases');
 
 assert.equal(
   selectLibraryEntries(pileMe, { day: 4, surface: 'talk', message: 'Should I get flowers today?' }).length,

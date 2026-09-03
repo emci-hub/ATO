@@ -36,13 +36,14 @@ const KNOCK_ALIASES: Record<string, string[]> = {
   'people/conflict': ['people/conflict', 'conflict', 'argument', 'fight'],
   health: ['health', 'sick', 'illness'],
   money: ['money', 'rent', 'bills'],
+  loneliness: ['loneliness', 'lonely', 'alone', 'left out', 'isolated'],
 };
 
 function parseKnockChips(knocks: string): string[] {
   return knocks
     .split(',')
     .map((part) => part.trim().toLowerCase())
-    .filter((part) => part.length > 0 && part !== 'loneliness');
+    .filter((part) => part.length > 0);
 }
 
 function recentCorpus(history: CheckHistory[]): string {
@@ -104,6 +105,8 @@ function knockLine(chip: string): string {
       return "Health is what you said knocks you off, and it showed up recently. One small repeat attached to something you already do — no heroics.";
     case 'money':
       return "Money is what you said knocks you off, and it showed up in this week's Checks. Today's Do is one concrete step, not the whole problem.";
+    case 'loneliness':
+      return "Loneliness is what you said knocks you off, and it showed up in this week's Checks. Today's Do is one small reach toward a real person — not a whole social life.";
     default:
       return "Something you named as a knock-off showed up in this week's Checks. Today's Do is the smaller next step.";
   }

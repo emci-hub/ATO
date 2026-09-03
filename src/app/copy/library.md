@@ -11,8 +11,8 @@ Not a licensed inventory. Not a diagnosis. No paid-test items, no commercial
 platform write-ups. Academic ideas, restated in plain language.
 
 Two sets live in this file: domain entries aligned with `knocks_you_off`
-(Sleep, Workload, Conflict, Communication, Health, Money), then the four
-framework entries.
+(Sleep, Workload, Conflict, Communication, Health, Money, Loneliness), then
+the four framework entries.
 
 ---
 
@@ -179,6 +179,34 @@ not pick stocks, and does not shame a purchase.
 - A dip can freeze a useful next step because a loss feels louder than the same-sized win.
 - A default (wait a day, pay the buffer first) beats a pep talk at the checkout.
 - Talk about this week's money moment. Do not grade them. Do not pick stocks.
+
+---
+
+## Loneliness
+
+Source: loneliness and social-connection research (John Cacioppo; Julianne
+Holt-Lunstad). Not a loneliness scale. Not a diagnosis.
+
+Loneliness is not a personality trait — it is a signal, like hunger. It says
+a real need has gone unfilled: not just being around people, but being known
+and reached. A crowded room can be lonelier than an empty one when nobody in
+it actually sees you.
+
+The useful move is small and specific: one real reach toward one real person,
+a message that names something true, showing up somewhere you are expected.
+It is not "be more social" all at once. It is one thread of connection,
+tended on purpose.
+
+Sage treats loneliness as a need, not a verdict on how likeable someone is.
+Sage does not diagnose a condition, and does not prescribe a whole new
+social life.
+
+### For Sage
+
+- Loneliness is a signal that a need went unfilled, not a verdict on how likeable they are.
+- A crowded room can be lonelier than an empty one when nobody in it actually sees them.
+- One real reach toward one real person beats a whole new social life all at once.
+- Talk about the need and one small reach. Do not diagnose. Do not make it who they are.
 
 ---
 

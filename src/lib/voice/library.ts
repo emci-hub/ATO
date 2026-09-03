@@ -16,6 +16,7 @@ export const LIBRARY_ENTRY_IDS = [
   'communication',
   'health',
   'money',
+  'loneliness',
   'sdt',
   'growth_mindset',
   'locus_of_control',
@@ -36,6 +37,7 @@ const HEADING_TO_ID: Record<string, LibraryEntryId> = {
   Communication: 'communication',
   Health: 'health',
   Money: 'money',
+  Loneliness: 'loneliness',
   'Self-Determination Theory': 'sdt',
   'Growth mindset': 'growth_mindset',
   'Locus of control': 'locus_of_control',
@@ -56,6 +58,7 @@ const KEYWORDS: Record<LibraryEntryId, string[]> = {
   communication: ['what to say', 'hard conversation', 'told them', 'left out', 'one ask'],
   health: ['health', 'workout', 'sick', 'pill next', 'shoes by the door'],
   money: ['money', 'rent', 'bills', 'spend', 'checkout', 'pay the buffer'],
+  loneliness: ['lonely', 'loneliness', 'alone', 'left out', 'isolated'],
   sdt: ['their own way', 'path someone else', 'real connection'],
   growth_mindset: ['after a miss', 'try again', 'not good at that'],
   locus_of_control: ['bound to happen', 'first thought'],
@@ -119,7 +122,7 @@ function knockDomainIds(knocks: string): LibraryEntryId[] {
   const parts = knocks
     .split(/,\s*/)
     .map((part) => part.trim().toLowerCase())
-    .filter((part) => part.length > 0 && part !== 'loneliness');
+    .filter((part) => part.length > 0);
   const ids: LibraryEntryId[] = [];
   for (const part of parts) {
     if (part === 'sleep' || /\bsleep\b/.test(part) || part.includes('slept')) ids.push('sleep');
@@ -131,6 +134,7 @@ function knockDomainIds(knocks: string): LibraryEntryId[] {
     }
     if (part === 'health' || /\bhealth\b/.test(part)) ids.push('health');
     if (part === 'money' || /\bmoney\b/.test(part) || part.includes('rent')) ids.push('money');
+    if (part === 'loneliness' || part.includes('lonely')) ids.push('loneliness');
   }
   return [...new Set(ids)];
 }
