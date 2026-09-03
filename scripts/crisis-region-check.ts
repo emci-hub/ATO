@@ -155,6 +155,30 @@ assert.doesNotMatch(
 );
 ok('Sage Support tap opens the same card; keyword interrupt stays a separate path');
 
+// The user's line must only reach sage_messages after routeTalkReply (the
+// safety router) has run and cleared it — never written up front, never
+// written at all when the router flags it as crisis.
+const sendFn = sage.slice(
+  sage.indexOf('async function send(text: string)'),
+  sage.indexOf('function dismissCrisis'),
+);
+const routeIdx = sendFn.indexOf('await routeTalkReply(');
+const crisisIdx = sendFn.indexOf("result.kind === 'crisis'");
+const persistUserIdx = sendFn.indexOf("persistAndSwap(localUserId, 'user', trimmed)");
+assert.ok(routeIdx > 0, 'send() must call routeTalkReply');
+assert.ok(crisisIdx > routeIdx, 'the crisis branch must be checked on the routeTalkReply result');
+assert.ok(
+  persistUserIdx > crisisIdx,
+  'the user line is only persisted after the crisis branch is checked, never before routeTalkReply runs',
+);
+const crisisBlock = sendFn.slice(crisisIdx, sendFn.indexOf('} else {', crisisIdx));
+assert.doesNotMatch(
+  crisisBlock,
+  /persistAndSwap\(localUserId/,
+  'a crisis-flagged line must never be persisted to sage_messages',
+);
+ok('the crisis-triggering message is only persisted after the safety router clears it, never before or when flagged');
+
 assert.match(tabs, /name="sage"/);
 assert.doesNotMatch(tabs, /homeFirst: false[\s\S]*more: \['sage'\]/);
 ok('Sage tab trigger is always present (not hideable)');

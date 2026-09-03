@@ -337,8 +337,6 @@ export default function SageScreen() {
       return [...prev, { id: localUserId, role: 'user', text: trimmed }];
     });
     setInput('');
-    // Persist the user's line immediately so it gets a reportable id.
-    void persistAndSwap(localUserId, 'user', trimmed);
 
     try {
       const [{ routeTalkReply }, talk, trackRows] = await Promise.all([
@@ -372,24 +370,31 @@ export default function SageScreen() {
       );
 
       if (result.kind === 'crisis') {
+        // The safety router ran first and flagged this line — it is never
+        // written to sage_messages, only the flag is (logCrisisFlag, inside
+        // routeTalkReply).
         // No confirmation step — the static card shows automatically.
         // CRISIS HARD RULE: no gesture. Hands stay hidden — never celebrated,
         // never acknowledged with a pose. No exception. The static card is not
         // a Sage response and is not persisted/reportable.
         addLocal({ role: 'sage', text: '', crisis: true });
-      } else if (result.kind === 'quota') {
-        setQuotaEmpty(true);
-        setUsageRevision((n) => n + 1);
-      } else if (result.kind === 'empty') {
-        setError(TALK_TRY_AGAIN);
-        setUsageRevision((n) => n + 1);
-      } else if (result.kind === 'reply' && result.reply) {
-        const reply = result.reply;
-        const localSageId = `m${nextMessageId++}`;
-        setMessages((prev) => [...prev, { id: localSageId, role: 'sage', text: reply }]);
-        void persistAndSwap(localSageId, 'sage', reply);
-        triggerGesture('talkReply');
-        setUsageRevision((n) => n + 1);
+      } else {
+        // The safety router cleared this line — safe to persist now.
+        void persistAndSwap(localUserId, 'user', trimmed);
+        if (result.kind === 'quota') {
+          setQuotaEmpty(true);
+          setUsageRevision((n) => n + 1);
+        } else if (result.kind === 'empty') {
+          setError(TALK_TRY_AGAIN);
+          setUsageRevision((n) => n + 1);
+        } else if (result.kind === 'reply' && result.reply) {
+          const reply = result.reply;
+          const localSageId = `m${nextMessageId++}`;
+          setMessages((prev) => [...prev, { id: localSageId, role: 'sage', text: reply }]);
+          void persistAndSwap(localSageId, 'sage', reply);
+          triggerGesture('talkReply');
+          setUsageRevision((n) => n + 1);
+        }
       }
     } catch (err) {
       console.log('[talk] routeTalkReply error:', err);
