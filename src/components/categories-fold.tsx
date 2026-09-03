@@ -15,6 +15,7 @@ import {
   type CategoryId,
 } from '@/lib/categories';
 import { categoryConcept, CONCEPT_COPY_REVIEWED } from '@/lib/concept-explainers';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { saveCategorySpotlight, type Me } from '@/lib/me';
 import { sageKnowsWeekKey } from '@/lib/sage-knows';
 import { parseSageTitle } from '@/lib/sage-title';
@@ -73,7 +74,8 @@ export function CategoriesFold({
         <ThemedText type="small" themeColor="textSecondary">
           How a few things sit together, from what you have told us. Gut-call stays off this page.
         </ThemedText>
-        {!CATEGORY_COPY_REVIEWED || !CATEGORY_BAND_COPY_REVIEWED || !CONCEPT_COPY_REVIEWED ? (
+        {(!CATEGORY_COPY_REVIEWED || !CATEGORY_BAND_COPY_REVIEWED || !CONCEPT_COPY_REVIEWED) &&
+        PRE_LAUNCH_DEV ? (
           <ThemedText type="code" themeColor="textSecondary">
             Draft copy — waiting on emci review.
           </ThemedText>

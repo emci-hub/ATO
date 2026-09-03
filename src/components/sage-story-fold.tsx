@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { generateStoryBody } from '@/lib/explore/generate';
 import { SAGE_STORY_META } from '@/lib/ai/call-sites';
 import { localYmd } from '@/lib/local-date';
@@ -131,7 +132,7 @@ export function SageStoryFold({
           <ThemedText type="small" themeColor="textSecondary">
             {STORY_LEDE}
           </ThemedText>
-          {!STORY_COPY_REVIEWED ? (
+          {!STORY_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
             <ThemedText type="code" themeColor="textSecondary">
               Draft copy — waiting on emci review. Not shippable.
             </ThemedText>

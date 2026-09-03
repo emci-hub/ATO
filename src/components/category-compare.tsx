@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { CATEGORY_DEFS, type CategoryId } from '@/lib/categories';
 import { categoryConcept, CONCEPT_COPY_REVIEWED } from '@/lib/concept-explainers';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import type { CategoryCopy } from '@/lib/sage-title';
 
 export function CategoryCompactCard({
@@ -26,7 +27,7 @@ export function CategoryCompactCard({
       <ThemedText type="small" themeColor="textSecondary">
         {copy?.line ?? empty ?? 'Not showing yet.'}
       </ThemedText>
-      {!CONCEPT_COPY_REVIEWED ? (
+      {!CONCEPT_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
         <ThemedText type="code" themeColor="textSecondary">
           Draft copy — waiting on emci review.
         </ThemedText>

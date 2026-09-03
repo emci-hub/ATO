@@ -107,6 +107,12 @@ Read before editing the area. Each one has bitten this repo at least once.
 
 - **Seven surfaces ship behind `*_COPY_REVIEWED = false`.** Story/Levity are
   diagnosis-adjacent. Do not flip a flag without emci's read.
+- **The "Draft copy — waiting on emci review." badge is `PRE_LAUNCH_DEV`-gated,
+  every render site.** A `false` `*_COPY_REVIEWED` flag alone used to be enough to
+  show it to every OTA user, pre-launch or not — the unreviewed copy itself still
+  ships either way, but the internal review-status badge is now dev-only.
+  `check:copy-review-badges` asserts every site (new ones included) requires
+  `PRE_LAUNCH_DEV` alongside its `!*_COPY_REVIEWED` check.
 - **Never say "AI" or "tokens" in user copy** (`voice/quota.ts` comment); Sage is a
   "coach", Notes are "notes".
 - **MBTI four-letter codes were removed for trademark reasons** — do not reintroduce.

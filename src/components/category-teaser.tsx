@@ -9,6 +9,7 @@ import { Spacing } from '@/constants/theme';
 import { fallbackCategoryCopies, fallbackForReading, CATEGORY_BAND_COPY_REVIEWED } from '@/lib/category-bands';
 import { categoryById, readCategory } from '@/lib/categories';
 import { categoryConcept, CONCEPT_COPY_REVIEWED } from '@/lib/concept-explainers';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { fetchLatestExplorePack } from '@/lib/explore/store';
 import { exploreTraitsFromPack, pickDailyTeaser, readStoredTeaser, writeStoredTeaser } from '@/lib/home-teaser';
 import { localYmd } from '@/lib/local-date';
@@ -83,7 +84,7 @@ export function CategoryTeaser({ me }: { me: Me }) {
         <ThemedText type="small" themeColor="textSecondary">
           {line}
         </ThemedText>
-        {!CATEGORY_BAND_COPY_REVIEWED || !CONCEPT_COPY_REVIEWED ? (
+        {(!CATEGORY_BAND_COPY_REVIEWED || !CONCEPT_COPY_REVIEWED) && PRE_LAUNCH_DEV ? (
           <ThemedText type="code" themeColor="textSecondary">
             Draft copy — waiting on emci review.
           </ThemedText>
