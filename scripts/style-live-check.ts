@@ -1,55 +1,26 @@
 /**
- * LIVE style check — 3 fresh generations per surface against real Gemini,
- * using the updated prompts (style checklist + approved anchors).
+ * LIVE style check — 3 fresh generations per surface through the real path
+ * (signed-in user → ai-generate → Gemini with the server-held key + model),
+ * using the shipped prompts (style checklist + approved anchors).
+ *
+ * Costs the signed-in user 12 quota units (4 surfaces × 3). Output is for a
+ * human read; nothing is asserted beyond "the call returned text".
  * Run: npx tsx scripts/style-live-check.ts
  */
-import fs from 'node:fs';
-import path from 'node:path';
-
-// Load .env.local before importing app modules (they read env at import).
-const envRaw = fs.readFileSync(path.resolve(__dirname, '../.env.local'), 'utf8');
-for (const line of envRaw.split(/\r?\n/)) {
-  const t = line.trim();
-  if (!t || t.startsWith('#')) continue;
-  const eq = t.indexOf('=');
-  if (eq === -1) continue;
-  process.env[t.slice(0, eq).trim()] = t.slice(eq + 1).trim();
-}
-
-const MODEL = process.env.EXPO_PUBLIC_GEMINI_MODEL || 'gemini-3.7-flash';
-const KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
-
-async function callGemini(
-  prompt: string,
-  maxOutputTokens: number,
-  temperature: number,
-): Promise<string> {
-  const url =
-    `https://generativelanguage.googleapis.com/v1beta/models/` +
-    `${encodeURIComponent(MODEL)}:generateContent`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': KEY },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature,
-        maxOutputTokens,
-        responseMimeType: 'application/json',
-        thinkingConfig: { thinkingLevel: 'low' },
-      },
-    }),
-  });
-  if (!res.ok) throw new Error(`Gemini ${res.status}: ${(await res.text()).slice(0, 300)}`);
-  const data = (await res.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-  return data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';
-}
+import { completeViaEdgeLive, signInForLiveAi, type LiveAiSession } from './live-ai';
 
 const NOW_ISO = '2026-08-31T12:00:00.000Z';
 
 async function main() {
+  const session: LiveAiSession = await signInForLiveAi();
+  const callGemini = (prompt: string, maxOutputTokens: number, temperature: number) =>
+    completeViaEdgeLive(session, 'gemini', {
+      prompt,
+      maxOutputTokens,
+      temperature,
+      responseFormat: 'json',
+    });
+
   const { buildPrompt, parseGeminiCard } = await import('../src/lib/voice/providers/prompt');
   const { buildExplorePrompt, parseExploreBody } = await import('../src/lib/explore/prompt');
   const { buildTitlePrompt, parseCombinedBody } = await import('../src/lib/sage-title');
@@ -198,7 +169,7 @@ async function main() {
     if (parsed) console.log(`#${i} story:\n${parsed}`);
   }
 
-  console.log(`\n(TRAIT_AXES = ${TRAIT_AXES.length}; model = ${MODEL})`);
+  console.log(`\n(TRAIT_AXES = ${TRAIT_AXES.length}; model chosen server-side by ai-generate; user = ${session.email})`);
 }
 
 main().catch((err) => {

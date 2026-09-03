@@ -2,7 +2,7 @@
  * Unified AI provider layer. Run: npm run check:ai
  */
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { buildAiConfig, DEFAULT_MODELS } from '../src/lib/ai/config';
@@ -121,12 +121,37 @@ assert.match(edge, /Math\.min\(MAX_TEMPERATURE, Math\.max\(0, requestedTemperatu
 ok('prompt length and temperature are clamped server-side, not just output tokens');
 
 const srcFiles = walk(resolve(root, 'src'));
-const generateContentHits = srcFiles.filter((file) => {
-  const text = readFileSync(file, 'utf8');
-  return text.includes(':generateContent') && !file.endsWith('src\\lib\\ai\\gemini.ts') && !file.endsWith('src/lib/ai/gemini.ts');
-});
+// No client-side vendor transport survives: the script-only Gemini adapter
+// (src/lib/ai/gemini.ts) was deleted 2026-09-03; live checks now go through
+// scripts/live-ai.ts → ai-generate like the app does.
+const generateContentHits = srcFiles.filter((file) =>
+  readFileSync(file, 'utf8').includes(':generateContent'),
+);
 assert.deepEqual(generateContentHits, []);
-ok('only the script-only Gemini adapter hits generateContent from src');
+assert.ok(!existsSync(resolve(root, 'src/lib/ai/gemini.ts')), 'src/lib/ai/gemini.ts must stay deleted');
+assert.doesNotMatch(read('src/lib/voice/providers/gemini.ts'), /createGeminiProvider|apiKey|fetch\(/);
+assert.doesNotMatch(read('src/lib/ai/http.ts'), /extract(Gemini|OpenAi|Claude)Text|fetch\(/);
+ok('no vendor HTTP transport anywhere under src (Edge Function only)');
+
+// The model is chosen server-side. A stale EXPO_PUBLIC_*_MODEL in an EAS
+// environment must not be able to influence the bundle, so nothing under src
+// may reference one; AiEnv/AiConfig carry only the provider selection.
+const modelLeaks = srcFiles.filter((file) =>
+  /EXPO_PUBLIC_[A-Z_]*_MODEL\b/.test(readFileSync(file, 'utf8')),
+);
+assert.deepEqual(modelLeaks, []);
+const aiConfigSrc = read('src/lib/ai/config.ts');
+assert.doesNotMatch(aiConfigSrc, /geminiModel|geminiApiKey|GEMINI_API_KEY|GEMINI_MODEL\?/);
+assert.deepEqual(Object.keys(buildAiConfig({ AI_PROVIDER: 'grok' })), ['provider']);
+ok('no EXPO_PUBLIC_*_MODEL reference in src; client config is provider-only');
+
+// DEFAULT_MODELS is a documented mirror of the Edge Function's table; the
+// two must agree or the reference copy lies.
+const edgeModels = /const DEFAULT_MODELS: Record<ProviderId, string> = \{([\s\S]*?)\};/.exec(edge)?.[1] ?? '';
+for (const [id, model] of Object.entries(DEFAULT_MODELS)) {
+  assert.match(edgeModels, new RegExp(`${id}: '${model.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}'`), `edge default for ${id}`);
+}
+ok('client DEFAULT_MODELS mirrors the Edge Function defaults');
 
 assert.match(read('src/lib/explore/generate.ts'), /generateText/);
 assert.match(read('src/lib/questions/generate.ts'), /generateText/);
