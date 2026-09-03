@@ -3,74 +3,58 @@ import {
   ReactNode,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from 'react';
 
-import {
-  DEFAULT_NAV_ORDER,
-  loadNavOrder,
-  normalizeNavOrder,
-  saveNavOrder,
-  type NavOrder,
-} from '@/lib/nav/nav-order';
+import { saveNavLayout } from '@/lib/me';
+import { useMeContext } from '@/lib/me-context';
+import { DEFAULT_NAV_LAYOUT, type NavLayout } from '@/lib/nav/nav-order';
 
 /**
- * Single source of truth for the persisted tab order + edit-mode state.
- * Mounted at the tab shell so both the bar and the edit overlay read the same
- * order, and so a committed reorder persists across restarts.
+ * Single source of truth for the per-user tab layout + edit-mode state.
+ * Mounted at the tab shell so the bar and the edit overlay read the same
+ * layout, and a committed layout persists to `me.nav_layout`.
  */
 interface NavContextValue {
-  order: NavOrder;
-  /** False until the stored order is read (bar must not render a default flash). */
-  ready: boolean;
+  layout: NavLayout;
   /** True while the edit-mode overlay is open. */
   editing: boolean;
   startEditing: () => void;
   cancelEditing: () => void;
-  commitOrder: (next: NavOrder) => Promise<void>;
+  commitLayout: (next: NavLayout) => Promise<void>;
 }
 
 const NavContext = createContext<NavContextValue>({
-  order: DEFAULT_NAV_ORDER,
-  ready: false,
+  layout: DEFAULT_NAV_LAYOUT,
   editing: false,
   startEditing: () => {},
   cancelEditing: () => {},
-  commitOrder: async () => {},
+  commitLayout: async () => {},
 });
 
 export function NavOrderProvider({ children }: { children: ReactNode }) {
-  const [order, setOrder] = useState<NavOrder>(DEFAULT_NAV_ORDER);
-  const [ready, setReady] = useState(false);
+  const { me, refresh } = useMeContext();
   const [editing, setEditing] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    loadNavOrder().then((stored) => {
-      if (cancelled) return;
-      setOrder(stored);
-      setReady(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const layout = useMemo(() => me?.nav_layout ?? DEFAULT_NAV_LAYOUT, [me]);
 
   const startEditing = useCallback(() => setEditing(true), []);
   const cancelEditing = useCallback(() => setEditing(false), []);
 
-  const commitOrder = useCallback(async (next: NavOrder) => {
-    const normalized = normalizeNavOrder(next);
-    setOrder(normalized);
-    setEditing(false);
-    await saveNavOrder(normalized);
-  }, []);
+  const commitLayout = useCallback(
+    async (next: NavLayout) => {
+      setEditing(false);
+      if (!me) return;
+      await saveNavLayout(me.id, next);
+      await refresh();
+    },
+    [me, refresh],
+  );
 
   const value = useMemo(
-    () => ({ order, ready, editing, startEditing, cancelEditing, commitOrder }),
-    [order, ready, editing, startEditing, cancelEditing, commitOrder],
+    () => ({ layout, editing, startEditing, cancelEditing, commitLayout }),
+    [layout, editing, startEditing, cancelEditing, commitLayout],
   );
 
   return <NavContext.Provider value={value}>{children}</NavContext.Provider>;

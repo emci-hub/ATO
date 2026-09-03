@@ -1,26 +1,30 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Href } from 'expo-router';
 
 /**
- * Persisted nav order for the custom tab bar.
+ * Persisted 5-slot bottom-nav layout, per user (`me.nav_layout` jsonb).
  *
- * Home and Sage are pinned (never in `main`/`more`, never into More) and are
- * only swappable with each other via `homeFirst`. More is the fixed rightmost
- * slot whose contents are `more`. Everything else (Explore / Around / You /
- * Circle, and future tabs) is freely reorderable and movable between `main`
- * and `more`.
- *
- * Same AsyncStorage pattern as appearance (`ato.appearance.mode`) so the order
- * survives restarts, not just the session.
+ * Slot 5 is always "More" — fixed, not draggable, never reorderable. Slots
+ * 1–4 always contain Home and Sage exactly once each, in user-draggable
+ * positions; the remaining two slots hold pool tabs. The pool is the whole
+ * `NAV_TABS` registry (Explore / You / Questions / Around / Legends / Circle),
+ * so a future tab is added with one registry entry — the slot/drag/edit logic
+ * is generic over the registry and never hardcoded to today's set.
  */
 
+/** Pool tabs a user can place into slots 1–4 (and see in More). Extensible. */
 export type ReorderableTabId =
   | 'explore'
-  | 'around'
   | 'you'
-  | 'circle'
   | 'questions'
-  | 'legends';
+  | 'around'
+  | 'legends'
+  | 'circle';
+
+/** The two always-present tabs (not pool tabs; can never leave slots 1–4). */
+export type PinnedTabId = 'home' | 'sage';
+
+/** Anything that can occupy one of slots 1–4. */
+export type BarSlotId = PinnedTabId | ReorderableTabId;
 
 export interface NavUnlockContext {
   /** True once this account has at least one Circle connection. */
@@ -34,16 +38,19 @@ export interface NavTabMeta {
   /** MaterialCommunityIcons glyph name. */
   icon: string;
   /**
-   * Optional gate. When this returns false, the tab is omitted from the bar
-   * and More, and Edit Navigation shows it in "Not unlocked yet" — no Bar/More
-   * toggle. Omit for tabs that are always available.
+   * Optional gate. When this returns false, the tab is omitted from the bar,
+   * More, and the edit pool, and Edit Navigation shows it in "Not unlocked
+   * yet". Omit for tabs that are always available.
    */
   isUnlocked?: (ctx: NavUnlockContext) => boolean;
   /** Shown under the locked row. Required when `isUnlocked` is set. */
   unlockReason?: string;
 }
 
-/** Registry of reorderable tabs. Adding a new tab = add an entry here. */
+/**
+ * Registry of pool tabs. Adding a new tab = add one entry here (plus its route
+ * file). Nothing else in the slot/drag/edit logic references tab ids directly.
+ */
 export const NAV_TABS: Record<ReorderableTabId, NavTabMeta> = {
   explore: { label: 'Explore', href: '/explore', icon: 'compass-outline' },
   around: { label: 'Around', href: '/around', icon: 'map-marker-radius-outline' },
@@ -61,6 +68,14 @@ export const NAV_TABS: Record<ReorderableTabId, NavTabMeta> = {
 
 export const NAV_TAB_IDS = Object.keys(NAV_TABS) as ReorderableTabId[];
 
+export const PINNED_IDS: readonly PinnedTabId[] = ['home', 'sage'];
+
+/** Slots 1–4 count (slot 5 is the fixed "More"). */
+export const SLOT_COUNT = 4;
+
+/** How many of slots 1–4 hold pool tabs (the other 2 are Home + Sage). */
+export const POOL_SLOTS = 2;
+
 /** Tabs whose `isUnlocked` check fails. Tabs without a check are always open. */
 export function lockedTabIds(ctx: NavUnlockContext): ReorderableTabId[] {
   return NAV_TAB_IDS.filter((id) => {
@@ -74,96 +89,104 @@ export function isTabUnlocked(id: ReorderableTabId, ctx: NavUnlockContext): bool
   return check ? check(ctx) : true;
 }
 
-export interface NavOrder {
-  /** true = [Home, Sage], false = [Sage, Home]. Home/Sage never leave the bar. */
-  homeFirst: boolean;
-  /** Reorderable tabs on the main bar (between the pinned group and More). */
-  main: ReorderableTabId[];
-  /** Reorderable tabs inside the fixed rightmost More slot. */
-  more: ReorderableTabId[];
+export interface NavLayout {
+  /** Exactly SLOT_COUNT entries: home + sage once each, plus POOL_SLOTS pool ids. */
+  slots: BarSlotId[];
 }
 
-/**
- * Reorderable tabs allowed on the bar at once. The bar renders 2 pinned
- * (Home + Sage) + this + More, so 3 = 6 items.
- */
-export const MAIN_BAR_CAP = 3;
-
-/**
- * Every placement below is a decision, not a leftover:
- *   bar  - Explore (daily content), Legends (the reason to come back), Circle
- *          (the whole social half; gated until a friend is scanned, but it
- *          keeps its slot rather than hiding inside More once unlocked).
- *   More - Around (a room opened on purpose), Questions (a deliberate
- *          sit-down), You (settings and profile, opened rarely, never
- *          mid-task).
- * Only new/unset accounts get this; any persisted order is preserved.
- */
-export const DEFAULT_NAV_ORDER: NavOrder = {
-  homeFirst: true,
-  main: ['explore', 'legends', 'circle'],
-  more: ['around', 'questions', 'you'],
+export const DEFAULT_NAV_LAYOUT: NavLayout = {
+  slots: ['home', 'explore', 'sage', 'you'],
 };
 
-const NAV_ORDER_KEY = 'ato.nav.order.v1';
-
-function isValidTabId(value: unknown): value is ReorderableTabId {
+function isValidPoolId(value: unknown): value is ReorderableTabId {
   return typeof value === 'string' && (NAV_TAB_IDS as readonly string[]).includes(value);
 }
 
-/** Drops unknown/duplicate ids, preserving order of the first occurrence. */
-function normalizeIds(raw: unknown): ReorderableTabId[] {
-  if (!Array.isArray(raw)) return [];
-  const seen = new Set<ReorderableTabId>();
-  const out: ReorderableTabId[] = [];
-  for (const value of raw) {
-    if (isValidTabId(value) && !seen.has(value)) {
-      seen.add(value);
-      out.push(value);
-    }
-  }
-  return out;
+/** The pool tabs currently occupying slots 1–4, in left-to-right order. */
+export function poolIdsInLayout(layout: NavLayout): ReorderableTabId[] {
+  return layout.slots.filter((id): id is ReorderableTabId => id !== 'home' && id !== 'sage');
 }
 
 /**
- * Coerces arbitrary storage into a valid NavOrder. Guarantees every known tab
- * appears exactly once: `main` wins over `more` for duplicates, and any tab
- * missing from storage (e.g. a newly-added tab) is appended to `more`.
+ * Coerce arbitrary storage into a valid NavLayout: home + sage exactly once
+ * each (their interleaving preserved), plus exactly POOL_SLOTS distinct valid
+ * pool ids. Duplicate/invalid entries are dropped; gaps backfill from the
+ * default layout first, then the registry. Accepts both the stored
+ * `{ slots: [...] }` object shape and a bare array for robustness.
  */
-export function normalizeNavOrder(raw: unknown): NavOrder {
-  let homeFirst = true;
-  let main: ReorderableTabId[] = [];
-  let more: ReorderableTabId[] = [];
-
-  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
-    const row = raw as Record<string, unknown>;
-    if (typeof row.homeFirst === 'boolean') homeFirst = row.homeFirst;
-    main = normalizeIds(row.main);
-    more = normalizeIds(row.more);
+export function normalizeNavLayout(raw: unknown): NavLayout {
+  let incoming: unknown = raw;
+  if (
+    raw &&
+    typeof raw === 'object' &&
+    !Array.isArray(raw) &&
+    Array.isArray((raw as { slots?: unknown }).slots)
+  ) {
+    incoming = (raw as { slots: unknown[] }).slots;
   }
 
-  const mainSet = new Set(main);
-  const dedupedMore = more.filter((id) => !mainSet.has(id));
-
-  // Fill any tab not present anywhere into More (new tabs land in More).
-  const present = new Set([...main, ...dedupedMore]);
-  for (const id of NAV_TAB_IDS) {
-    if (!present.has(id)) dedupedMore.push(id);
+  const ordered: BarSlotId[] = [];
+  if (Array.isArray(incoming)) {
+    const seen = new Set<BarSlotId>();
+    for (const value of incoming) {
+      if (value === 'home' || value === 'sage' || isValidPoolId(value)) {
+        const id = value as BarSlotId;
+        if (!seen.has(id)) {
+          seen.add(id);
+          ordered.push(id);
+        }
+      }
+    }
   }
 
-  return { homeFirst, main, more: dedupedMore };
-}
-
-export async function loadNavOrder(): Promise<NavOrder> {
-  try {
-    const raw = await AsyncStorage.getItem(NAV_ORDER_KEY);
-    if (!raw) return DEFAULT_NAV_ORDER;
-    return normalizeNavOrder(JSON.parse(raw));
-  } catch {
-    return DEFAULT_NAV_ORDER;
+  // No valid incoming slots (null / unset / empty / all-invalid) → the default
+  // layout, exactly as specified (Home / Explore / Sage / You).
+  if (ordered.length === 0) {
+    return { slots: [...DEFAULT_NAV_LAYOUT.slots] };
   }
-}
 
-export async function saveNavOrder(order: NavOrder): Promise<void> {
-  await AsyncStorage.setItem(NAV_ORDER_KEY, JSON.stringify(normalizeNavOrder(order)));
+  // Preserve interleaving while enforcing home/sage once each and POOL_SLOTS pool ids.
+  const slots: BarSlotId[] = [];
+  let home = 0;
+  let sage = 0;
+  let pool = 0;
+  for (const id of ordered) {
+    if (id === 'home') {
+      if (home === 0) {
+        slots.push(id);
+        home += 1;
+      }
+      continue;
+    }
+    if (id === 'sage') {
+      if (sage === 0) {
+        slots.push(id);
+        sage += 1;
+      }
+      continue;
+    }
+    if (pool < POOL_SLOTS) {
+      slots.push(id);
+      pool += 1;
+    }
+  }
+
+  // Backfill any missing pinned, then any missing pool ids (default first, then registry).
+  if (home === 0) slots.unshift('home');
+  if (sage === 0) {
+    const homeIdx = slots.indexOf('home');
+    slots.splice(homeIdx >= 0 ? homeIdx + 1 : 0, 0, 'sage');
+  }
+  if (pool < POOL_SLOTS) {
+    const have = new Set<BarSlotId>(slots);
+    for (const id of [...DEFAULT_NAV_LAYOUT.slots, ...NAV_TAB_IDS]) {
+      if (id === 'home' || id === 'sage' || have.has(id)) continue;
+      slots.push(id);
+      have.add(id);
+      pool += 1;
+      if (pool >= POOL_SLOTS) break;
+    }
+  }
+
+  return { slots: slots.slice(0, SLOT_COUNT) };
 }

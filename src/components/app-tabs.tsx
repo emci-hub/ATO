@@ -12,43 +12,76 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useCircleContext } from '@/lib/circle-context';
 import { useNavOrder } from '@/lib/nav/nav-context';
-import { isTabUnlocked, lockedTabIds, NAV_TABS, NAV_TAB_IDS } from '@/lib/nav/nav-order';
+import {
+  isTabUnlocked,
+  lockedTabIds,
+  NAV_TABS,
+  NAV_TAB_IDS,
+  type BarSlotId,
+  type ReorderableTabId,
+} from '@/lib/nav/nav-order';
 import { controlBorderColor } from '@/lib/theme/chrome';
 
 /**
- * Custom JS bottom tab bar, driven by the persisted NavOrder.
+ * Custom JS bottom tab bar: 5 slots. Slot 5 is always "More" (fixed, not
+ * draggable). Slots 1–4 render Home + Sage (each once) interleaved with the
+ * two pool tabs chosen in edit mode, in the user's saved order. Locked pool
+ * tabs (e.g. Circle until a friend is scanned) are skipped visually but stay
+ * registered as routes via hidden triggers inside TabList.
  *
- * Home + Sage are pinned (swappable, never into More); More is the fixed
- * rightmost slot; Explore / Around / You / Circle are reorderable and can move
- * between the bar and More. Long-press any tab to enter edit mode.
- *
- * Replaces NativeTabs (native) and the web pill bar with one headless
- * expo-router/ui navigator so order/visibility are fully JS-controlled and
- * ship via OTA. Trade-off: native tab behaviors (freeze, minimize, blur,
- * scroll-to-top on re-tap) are not preserved.
+ * Replaces NativeTabs with one headless expo-router/ui navigator so order and
+ * visibility are fully JS-controlled and ship via OTA. Trade-off: native tab
+ * behaviors (freeze, minimize, blur, scroll-to-top on re-tap) are not kept.
  */
 export default function AppTabs() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { hasCircle } = useCircleContext();
-  const { order, editing, startEditing } = useNavOrder();
+  const { layout, editing, startEditing } = useNavOrder();
   const [moreOpen, setMoreOpen] = useState(false);
 
   const unlockCtx = { hasCircle };
   const lockedTabs = lockedTabIds(unlockCtx);
-  const mainIds = order.main.filter((id) => isTabUnlocked(id, unlockCtx));
-  const moreIds = order.more.filter((id) => isTabUnlocked(id, unlockCtx));
+  const lockedSet = new Set<string>(lockedTabs);
 
-  const sageTrigger = (
-    <TabTrigger name="sage" href="/sage" asChild>
-      <NavTabButton label="Sage" iconNode={<SageTabIcon />} onLongPress={startEditing} />
-    </TabTrigger>
+  // Slots 1–4, minus locked pool tabs (they render as empty until unlocked).
+  const visibleSlots = layout.slots.filter(
+    (id) => id === 'home' || id === 'sage' || !lockedSet.has(id),
   );
-  const homeTrigger = (
-    <TabTrigger name="home" href="/" asChild>
-      <NavTabButton label="Home" icon="home" onLongPress={startEditing} />
-    </TabTrigger>
+
+  // Every unlocked pool tab not currently shown in a slot → More + hidden trigger.
+  const shownPool = visibleSlots.filter(
+    (id): id is ReorderableTabId => id !== 'home' && id !== 'sage',
   );
+  const moreIds = NAV_TAB_IDS.filter(
+    (id) => !shownPool.includes(id) && isTabUnlocked(id, unlockCtx),
+  );
+
+  function renderSlot(id: BarSlotId) {
+    if (id === 'home') {
+      return (
+        <TabTrigger key="home" name="home" href="/" asChild>
+          <NavTabButton label="Home" icon="home" onLongPress={startEditing} />
+        </TabTrigger>
+      );
+    }
+    if (id === 'sage') {
+      return (
+        <TabTrigger key="sage" name="sage" href="/sage" asChild>
+          <NavTabButton label="Sage" iconNode={<SageTabIcon />} onLongPress={startEditing} />
+        </TabTrigger>
+      );
+    }
+    return (
+      <TabTrigger key={id} name={id} href={NAV_TABS[id].href} asChild>
+        <NavTabButton
+          label={NAV_TABS[id].label}
+          icon={NAV_TABS[id].icon}
+          onLongPress={startEditing}
+        />
+      </TabTrigger>
+    );
+  }
 
   return (
     <>
@@ -63,23 +96,7 @@ export default function AppTabs() {
               paddingBottom: Math.max(insets.bottom, Spacing.two),
             },
           ]}>
-          {order.homeFirst ? (
-            <>
-              {homeTrigger}
-              {sageTrigger}
-            </>
-          ) : (
-            <>
-              {sageTrigger}
-              {homeTrigger}
-            </>
-          )}
-
-          {mainIds.map((id) => (
-            <TabTrigger key={id} name={id} href={NAV_TABS[id].href} asChild>
-              <NavTabButton label={NAV_TABS[id].label} icon={NAV_TABS[id].icon} onLongPress={startEditing} />
-            </TabTrigger>
-          ))}
+          {visibleSlots.map(renderSlot)}
 
           <Pressable
             accessibilityRole="button"
@@ -92,7 +109,7 @@ export default function AppTabs() {
             </ThemedText>
           </Pressable>
 
-          {NAV_TAB_IDS.filter((id) => !mainIds.includes(id) && isTabUnlocked(id, unlockCtx)).map((id) => (
+          {moreIds.map((id) => (
             <TabTrigger
               key={`hidden-${id}`}
               name={id}
@@ -145,7 +162,7 @@ function NavTabButton({
   );
 }
 
-  const styles = StyleSheet.create({
+const styles = StyleSheet.create({
   slot: {
     flex: 1,
   },

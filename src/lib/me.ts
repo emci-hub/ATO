@@ -7,6 +7,7 @@ import type {
 } from '@/lib/intake';
 import { clearPendingInviteCode, errorMessageForInvite } from '@/lib/invite';
 import { normalizeDeferredAxes } from '@/lib/questions/deferral';
+import { normalizeNavLayout, type NavLayout } from '@/lib/nav/nav-order';
 import { supabase } from '@/lib/supabase';
 import { localYmd } from '@/lib/local-date';
 import {
@@ -116,6 +117,8 @@ export type Me = {
   close_friends_share: boolean;
   /** Weekly You/Sage category spotlight {weekKey, categoryId}. */
   category_spotlight: unknown;
+  /** Persisted 5-slot bottom-nav layout. Normalized; falls back to the default. */
+  nav_layout: NavLayout;
   created_at: string;
   updated_at: string;
 } & Record<TraitAxis, number | null>;
@@ -161,6 +164,7 @@ export type MeInsert = Omit<
     | 'sage_story'
     | 'close_friends_share'
     | 'category_spotlight'
+    | 'nav_layout'
     | 'created_at'
     | 'updated_at'
 > & {
@@ -204,6 +208,7 @@ function withVisible(row: Me): Me {
     tokens: typeof row.tokens === 'number' && Number.isFinite(row.tokens) ? Math.max(0, Math.floor(row.tokens)) : 0,
     close_friends_share: row.close_friends_share === true,
     category_spotlight: row.category_spotlight ?? {},
+    nav_layout: normalizeNavLayout(row.nav_layout),
     sage_story: row.sage_story ?? {},
     question_deferred: normalizeDeferredAxes(row.question_deferred),
   };
@@ -358,6 +363,21 @@ export async function saveCategorySpotlight(
     .select()
     .single();
   if (error) throw error;
+  return withVisible(data as Me);
+}
+
+/** Persists the user's 5-slot bottom-nav layout. Stored as `{ slots: [...] }`. */
+export async function saveNavLayout(userId: string, layout: NavLayout): Promise<Me> {
+  const { data, error } = await supabase
+    .from('me')
+    .update({ nav_layout: normalizeNavLayout(layout) })
+    .eq('id', userId)
+    .select()
+    .single();
+  if (error) {
+    console.log('[me] saveNavLayout error:', error);
+    throw error;
+  }
   return withVisible(data as Me);
 }
 

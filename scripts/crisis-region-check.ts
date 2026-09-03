@@ -180,8 +180,9 @@ assert.doesNotMatch(
 ok('the crisis-triggering message is only persisted after the safety router clears it, never before or when flagged');
 
 assert.match(tabs, /name="sage"/);
-assert.doesNotMatch(tabs, /homeFirst: false[\s\S]*more: \['sage'\]/);
-ok('Sage tab trigger is always present (not hideable)');
+assert.match(tabs, /name="home"/);
+assert.doesNotMatch(tabs, /sage.*isTabUnlocked|isTabUnlocked.*sage/);
+ok('Home and Sage tab triggers are always present in the bar (not hideable)');
 
 const invented = /116\s*123|Samaritans|13\s*11\s*14|0800\s*689|IASP|befrienders/i;
 assert.doesNotMatch(copy, invented);

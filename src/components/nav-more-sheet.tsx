@@ -11,9 +11,10 @@ import { NAV_TABS, type ReorderableTabId } from '@/lib/nav/nav-order';
 import { controlBorderColor } from '@/lib/theme/chrome';
 
 /**
- * The fixed rightmost "More" slot, opened as a bottom sheet. Lists the
- * reorderable tabs currently parked in `more[]`. Tapping one navigates to it;
- * long-press opens edit mode so it can be moved back to the main bar.
+ * The fixed rightmost "More" slot, opened as a bottom sheet. Lists the pool
+ * tabs not currently placed in slots 1–4 (More is their spillover). Tapping
+ * one navigates to it; long-press opens edit mode so it can be added to the
+ * bar.
  */
 // RN's default Modal `animationType="fade"` runs ~300ms on both platforms.
 const MODAL_FADE_MS = 300;
@@ -51,7 +52,7 @@ export function NavMoreSheet({
 
           {moreIds.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
-              Nothing here. Long-press a tab and move it into More.
+              Nothing here. Long-press a tab to edit the bar.
             </ThemedText>
           ) : (
             <ScrollView contentContainerStyle={styles.list}>
