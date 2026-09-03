@@ -44,7 +44,7 @@
 ## Roster
 
 - Assistant (Drake) — active
-- Builder (Cursor) — active. Current model: Grok 4.6. Owns docs/ME.md, docs/NOW.md, docs/archive/OLD_PLAN.md, and docs/BUSINESS.md — updates committed **and pushed** together, never left local-only.
+- Builder (Cursor) — active. Current model: Grok 4.6. Owns docs/ME.md, docs/NOW.md, and docs/BUSINESS.md — updates committed **and pushed** together, never left local-only. (Also maintains docs/archive/OLD_PLAN.md as a reference-only archive, outside the sync set.)
 
 ## Live AI + model
 

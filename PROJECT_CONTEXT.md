@@ -5,7 +5,7 @@ A self-based alternative to Costar-style astrology apps. Instead of generic dail
 
 **Confirmed 16 axes** (`TRAIT_AXES` in `src/lib/traits.ts:15`): openness, conscientiousness, extraversion, agreeableness, steadiness, attachment_anxiety, attachment_avoidance, conflict_assertiveness, conflict_cooperativeness, autonomy, competence, relatedness, growth_mindset, locus_of_control, self_efficacy, playfulness.
 
-Pointer only below this. Live status lives in the four tracked docs — keep them in sync, commit together, and `git push` immediately.
+Pointer only below this. Live status lives in the three tracked docs — keep them in sync, commit together, and `git push` immediately.
 
 | File | Role |
 |---|---|
