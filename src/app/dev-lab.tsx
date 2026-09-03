@@ -20,6 +20,7 @@ import { TraitBandDetail } from '@/components/trait-bands-fold';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useMeContext } from '@/lib/me-context';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
 import { useSession } from '@/hooks/use-session';
 import { useGrowth } from '@/hooks/use-growth';
 import { useTheme } from '@/hooks/use-theme';
@@ -127,6 +128,7 @@ const SOURCE_NOTE: Record<TraitSource, string> = {
 
 export default function DevLabScreen() {
   const { devAccess, devAccessLoading } = useMeContext();
+  const devUnlocked = useDevAccessUnlocked();
   if (devAccessLoading) {
     return (
       <ThemedView style={styles.container}>
@@ -138,7 +140,7 @@ export default function DevLabScreen() {
   }
   if (
     !canSeeDevLab({
-      isDev: PRE_LAUNCH_DEV,
+      isDev: PRE_LAUNCH_DEV || devUnlocked,
       isRoot: devAccess.isRoot,
       capabilities: devAccess.capabilities,
     })
@@ -150,13 +152,14 @@ export default function DevLabScreen() {
 
 function DevLab() {
   const { devAccess, me } = useMeContext();
+  const devUnlocked = useDevAccessUnlocked();
   const gate = useMemo(
     () => ({
-      isDev: PRE_LAUNCH_DEV,
+      isDev: PRE_LAUNCH_DEV || devUnlocked,
       isRoot: devAccess.isRoot,
       capabilities: devAccess.capabilities,
     }),
-    [devAccess.isRoot, devAccess.capabilities],
+    [devUnlocked, devAccess.isRoot, devAccess.capabilities],
   );
 
   return (

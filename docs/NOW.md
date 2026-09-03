@@ -11,7 +11,21 @@
 
 **Test-account wipe for clean retest (Aug 31, 2026).** All test accounts (riley, sam, yeezy, zintake9, lazyemci) hard-deleted via `auth.users` cascade (checks, trait_history, trait_tracks, token_events, ai_usage, going, sage_messages, explore_*, question_*, connections, messages, blocks, mutes, reports, invite_codes, apple_credentials all cascade; `account_deletions` audit rows written for each). Only **emci2** (`lil_emci@hotmail.com`, Apple) remains. **EMCIRETEST** is owned by emci2, unlimited (`max_uses NULL`), verified usable. **Known gap:** handle is `emci2`, not `emci`, so dev-root RPCs keyed on `handle='emci'` don't recognize it.
 
-**Fixed dev-test identity (Sep 2, 2026) — the standard dev-testing method.** No manual login, no Apple prompt, no OTP email: `ato-dev@example.com` / `@atodev` is a real auth + `me` row provisioned by `supabase/migrations/wave31_dev_test_user.sql` (auth id `a70d3e0e-4c00-4a1e-8c0d-00000000d3e0`; dev-throwaway bcrypt password lives in `src/lib/dev-test-user.ts`, `__DEV__` only). `__DEV__` builds auto-sign in as this user on cold start when no session is cached (`src/hooks/use-session.ts`) — a real account already signed in is never overridden. The account is deliberately not root/founder/dev-granted. The Legends tab shows a dev-only "test persona" strip (this user only) that swaps all 16 trait values between the 4 legend archetypes and clears seen-legend history so the matching card re-shows — needs the owner-scoped `user_legend_history` delete policy that `wave31` also added. `npm run check:dev-test-user` guards the whole thing. The earlier ad-hoc `legends-dev@emgens.com` / `@legendtest` account was removed by the same migration. **Client side live on production since OTA `d5332b8b` (Sep 2, 2026).**
+**Fixed dev-test identity (Sep 2, 2026).** `ato-dev@example.com` / `@atodev` is a real auth + `me` row provisioned by `supabase/migrations/wave31_dev_test_user.sql` (auth id `a70d3e0e-4c00-4a1e-8c0d-00000000d3e0`). **Superseded Sep 3, 2026: there is no client-side sign-in for this account anymore** — sign in the normal way (Apple / OTP / a password set in Settings) and, while already signed in as `@atodev`, the Legends tab shows a dev-only "test persona" strip (this user only) that swaps all 16 trait values between the 4 legend archetypes and clears seen-legend history so the matching card re-shows — needs the owner-scoped `user_legend_history` delete policy that `wave31` also added. `npm run check:dev-test-user` guards the whole thing. The earlier ad-hoc `legends-dev@emgens.com` / `@legendtest` account was removed by the same migration. The account is deliberately not root/founder/dev-granted.
+
+**Hidden dev-access unlock (Sep 3, 2026).** Tapping the version number on You 7x opens a password prompt, checked server-side by the new `dev-unlock` Edge Function against the `DEV_UNLOCK_PASSWORD` Supabase secret — never hardcoded client-side. A correct password sets an in-memory, session-only flag (`src/lib/dev-access-unlock.ts`, no AsyncStorage/SecureStore) that `canSeeDevLab` accepts alongside `PRE_LAUNCH_DEV`/`__DEV__`, root, and per-account grants (`dev-lab.tsx`, Home's dev row) — a cold start always starts locked again. This replaces the old "Sign in as dev user" button and the hardcoded dev-test password/auto-login in `src/lib/dev-test-user.ts`, both removed entirely. `npm run check:dev-unlock` guards the Edge Function contract and the wiring. **`DEV_UNLOCK_PASSWORD` still needs to be set as a Supabase secret and the function deployed** (`supabase secrets set DEV_UNLOCK_PASSWORD=... && supabase functions deploy dev-unlock`) — this repo has no CI, so both are manual, outside this PR.
+
+**Closed a live handle→email leak (Sep 3, 2026).** `login_email_for_identifier` was
+`anon`+`authenticated`-callable and returned the account's real email for any handle
+passed in — no password, no rate limit. Password login now goes through the new
+`password-login` Edge Function: it resolves the handle server-side (service-role) and
+calls `signInWithPassword` itself, so the email never reaches the client — only the
+resulting session, or a generic `invalid_credentials` that does not say whether the
+handle existed or the password was wrong. `wave36_login_email_lockdown.sql` revokes
+the RPC's `anon`/`authenticated` EXECUTE grants (service_role only now). Both the
+migration and the function were applied/deployed live to the `ato` project in the same
+pass. `npm run check:auth-password` (live) now asserts the direct RPC call is rejected
+for `anon` and that the function's response never contains the email.
 
 **"Dev only." on cold start = stale binary 8, not a live gate (confirmed).** Testers on binary 8 see a blank screen with "Dev only." — that is the **embedded bundle from before commits `2fdc278` + `5f1c86b` (Aug 28)** which (a) moved all `*-lab` screens out of the cold-start position behind `<Stack.Protected guard={__DEV__}>` and (b) replaced the `Dev only.` block in each lab with `<Redirect href="/" />`. The string no longer exists anywhere in `src` or the bundles. **Binary 8 cannot receive OTA** (no `expo-updates`). **Binary 10 is already submitted and processing in TestFlight** (build `1d0d1041`, submission `c0c6342d`, ASC app id `6805614731`, finished Aug 27) — the fix for all testers is **install binary 10**; the current production OTA `d5332b8b` then applies automatically.
 
@@ -140,10 +154,11 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 ## Left
 - ~~Push + publish Phase 3~~ — **done Sep 2, 2026**, OTA `11d99ff3` (commit `2bfbbc7`).
 - **Check EAS production `EXPO_PUBLIC_GEMINI_MODEL`** — must be `gemini-3.7-flash` or unset (the code default is now correct either way). Could not be read non-interactively from the build session.
-- **Rotate the dev-test password** (`src/lib/dev-test-user.ts`) — still in the bundle and in git history. Deferred on purpose; do it before public launch.
+- **Set the `DEV_UNLOCK_PASSWORD` Supabase secret and deploy `dev-unlock`** — the client and check suite are ready, but the Edge Function needs the secret set and deploying before the 7-tap unlock actually works.
+- **Rotate the dev-test account's own Supabase password** (`ATO-dev-user-2026`, wave31 migration) — still in git history; no longer reachable client-side, but rotate it before public launch too.
 - **Wire real billing** behind `src/lib/subscription.ts` before charging for Zen/Neon/Anime — the gate is live, the entitlement source is a stub that always returns inactive.
 - Full device pass against `docs/ATO_DEVICE_TESTS.md` (binary 10+, OTA `d5332b8b`)
-- Verify the dev-test auto-login + Legends "test persona" strip on a real dev build (both `__DEV__`-only; OTA `d5332b8b` carries the code, but dev builds need the strip exercised)
+- Verify the Legends "test persona" strip on a real dev build, signed in as `@atodev` the normal way (OTA `d5332b8b` carries the code, but dev builds need the strip exercised)
 - Set Supabase secrets `ANTHROPIC_API_KEY` / `XAI_API_KEY` (and optional `ANTHROPIC_MODEL` / `XAI_MODEL`) before Claude or Grok can work from `/ai-lab`
 - Get all testers onto binary 10 (they cannot receive OTA on binary 8)
 - Confirm binary 10 on a real device (icon, OTA, everything)

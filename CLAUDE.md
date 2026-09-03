@@ -8,7 +8,7 @@ scanned-in Circle. `PROJECT_CONTEXT.md` is the memory; `docs/NOW.md` is live sta
 
 | Task | Command |
 |---|---|
-| Dev server | `npm start` (dev builds auto-sign in as the dev-test user, `__DEV__` only) |
+| Dev server | `npm start` |
 | Typecheck | `npm run typecheck` |
 | Lint | `npm run lint` |
 | One check | `npm run check:<name>` (see `package.json`; `scripts/*-check.ts`) |
@@ -55,7 +55,7 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
 | Device test checklist | `docs/ATO_DEVICE_TESTS.md` |
 | Old plan (reference only, not rules) | `docs/archive/OLD_PLAN.md` |
 | Schema + RLS + RPCs | `supabase/migrations/*.sql` (chronological: stage* → wave*) |
-| Edge Functions (Deno) | `supabase/functions/{ai-generate,apple-link,delete-account,review-access,refresh-around}` |
+| Edge Functions (Deno) | `supabase/functions/{ai-generate,apple-link,delete-account,review-access,refresh-around,dev-unlock,password-login}` |
 
 Expo docs for this repo: https://docs.expo.dev/versions/v54.0.0/ (SDK 54 — check
 `package.json` before trusting any other version).

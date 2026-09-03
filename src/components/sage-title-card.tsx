@@ -5,6 +5,7 @@ import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { fallbackCategoryCopies } from '@/lib/category-bands';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { generateExploreBody } from '@/lib/explore/generate';
 import { SAGE_TITLE_META } from '@/lib/ai/call-sites';
 import { localYmd } from '@/lib/local-date';
@@ -151,7 +152,7 @@ export function SageTitleCard({
           {busy ? 'Sage is naming a shape…' : TITLE_EMPTY}
         </ThemedText>
       )}
-      {!TITLE_COPY_REVIEWED ? (
+      {!TITLE_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
         <ThemedText type="code" themeColor="textSecondary">
           Draft copy — waiting on emci review.
         </ThemedText>

@@ -2,9 +2,11 @@
  * Dev-test identity + archetype presets.
  * Run: npm run check:dev-test-user
  *
- * Static gate for the __DEV__ dev-testing system:
+ * Static gate for the pre-launch Legends persona-switch system:
  *   - identity constants match the provisioning migration (wave31) exactly
- *   - every entry point is __DEV__-gated and identity-guarded
+ *   - there is no client-side sign-in for this account (see check:dev-unlock
+ *     for the password-gated replacement) — applyDevArchetypePreset only
+ *     acts on an already-signed-in session and is identity-guarded
  *   - each of the 4 presets (values parsed from dev-test-user.ts) lands
  *     >=2/3 poles of exactly one legend-linked archetype — so switching the
  *     preset shows that legend's card and no other seeded legend's card
@@ -128,12 +130,26 @@ function main() {
     'ato-dev@example.com',
     'atodev',
     'a70d3e0e-4c00-4a1e-8c0d-00000000d3e0',
-    'ATO-dev-user-2026',
   ]) {
     assert.match(moduleSrc, new RegExp(esc(constant)));
     assert.match(migration, new RegExp(esc(constant)));
   }
   ok('dev-test-user constants match the wave31 migration');
+
+  // The hardcoded password/account sign-in path is gone entirely — no
+  // credential, no auto-login, no manual "Sign in as dev user" button.
+  assert.doesNotMatch(moduleSrc, /DEV_TEST_EMAIL/);
+  assert.doesNotMatch(moduleSrc, /DEV_TEST_PASSWORD/);
+  assert.doesNotMatch(moduleSrc, /devTestAutoSignIn/);
+  assert.doesNotMatch(moduleSrc, /isDevTestEmail/);
+  assert.doesNotMatch(moduleSrc, /signInWithPassword/);
+  assert.doesNotMatch(sessionSrc, /devTestAutoSignIn/);
+  assert.doesNotMatch(sessionSrc, /dev-test-user/);
+  const loginSrc = read('src/app/auth/login.tsx');
+  assert.doesNotMatch(loginSrc, /devTestAutoSignIn/);
+  assert.doesNotMatch(loginSrc, /Sign in as dev user/);
+  assert.doesNotMatch(loginSrc, /dev-test-user/);
+  ok('no hardcoded dev-test password/account or auto-login remains anywhere in the client');
 
   // The earlier ad-hoc account is removed by the migration with an audit row.
   assert.match(migration, /delete from auth\.users/);
@@ -146,15 +162,6 @@ function main() {
   assert.match(migration, /for delete using \(auth\.uid\(\) = user_id\)/);
   assert.match(migration, /grant delete on public\.user_legend_history to authenticated/);
   ok('migration grants owner-scoped delete on user_legend_history');
-
-  // Auto-login only from use-session, cold start, __DEV__ only.
-  assert.match(sessionSrc, /devTestAutoSignIn/);
-  assert.match(sessionSrc, /if \(!data\.session && __DEV__\)/);
-  assert.match(moduleSrc, /export async function devTestAutoSignIn\(\)/);
-  assert.match(moduleSrc, /if \(!PRE_LAUNCH_DEV\) return false/);
-  assert.match(moduleSrc, /signInWithPassword/);
-  assert.match(moduleSrc, /export const DEV_TEST_PASSWORD/);
-  ok('cold-start auto sign-in is __DEV__-gated; the helper is pre-launch-gated for the manual button');
 
   // Presets refuse to run for any real account.
   assert.match(moduleSrc, /export async function applyDevArchetypePreset\(/);

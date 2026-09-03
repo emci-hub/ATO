@@ -11,6 +11,7 @@ import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { AXIS_POLES, POLE_COPY_REVIEWED } from '@/lib/axis-poles';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import {
   FULL_PROFILE_LABEL,
   FULL_PROFILE_LEDE,
@@ -127,7 +128,7 @@ export function FullProfileFold({
               <ThemedText type="small" themeColor="textSecondary">
                 High: {poles.high}
               </ThemedText>
-              {!POLE_COPY_REVIEWED ? (
+              {!POLE_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
                 <ThemedText type="code" themeColor="textSecondary">
                   Draft copy — waiting on emci review.
                 </ThemedText>

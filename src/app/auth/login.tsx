@@ -11,14 +11,8 @@ import { ThemedView } from '@/components/themed-view';
 import { useTheme } from '@/hooks/use-theme';
 import { isAppleSignInAvailable, signInWithApple } from '@/lib/auth-apple';
 import { sendEmailOtp, verifyEmailOtp } from '@/lib/auth-otp';
-import {
-  LOGIN_PASSWORD_FAILED,
-  LOGIN_PASSWORD_HINT,
-  resolveLoginEmail,
-} from '@/lib/auth-password';
+import { LOGIN_PASSWORD_HINT, signInWithIdentifier } from '@/lib/auth-password';
 import { setPendingInviteCode } from '@/lib/invite';
-import { supabase } from '@/lib/supabase';
-import { devTestAutoSignIn } from '@/lib/dev-test-user';
 
 export default function LoginScreen() {
   const theme = useTheme();
@@ -29,7 +23,6 @@ export default function LoginScreen() {
   const [step, setStep] = useState<'form' | 'code'>('form');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [devBusy, setDevBusy] = useState(false);
   const [appleAvailable, setAppleAvailable] = useState(false);
 
   const normalizedIdentifier = identifier.trim();
@@ -61,15 +54,6 @@ export default function LoginScreen() {
     }
   }
 
-  async function handleDevSignIn() {
-    if (devBusy) return;
-    setDevBusy(true);
-    setError(null);
-    const ok = await devTestAutoSignIn();
-    setDevBusy(false);
-    if (!ok) setError('Could not sign in as the dev-test user.');
-  }
-
   async function handlePasswordSignIn() {
     if (!normalizedIdentifier) {
       setError('Enter your email or @handle first.');
@@ -83,22 +67,12 @@ export default function LoginScreen() {
     setBusy(true);
     setError(null);
     await setPendingInviteCode('');
-    const email = await resolveLoginEmail(normalizedIdentifier);
-    if (!email) {
-      setBusy(false);
-      setError(LOGIN_PASSWORD_FAILED);
-      setPassword('');
-      return;
-    }
-    const { error: signError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error: signError } = await signInWithIdentifier(normalizedIdentifier, password);
     setBusy(false);
     setPassword('');
 
     if (signError) {
-      setError(LOGIN_PASSWORD_FAILED);
+      setError(signError);
     }
   }
 
@@ -243,17 +217,6 @@ export default function LoginScreen() {
                 {busy ? 'Sending…' : 'Email me a code instead'}
               </ThemedText>
             </Pressable>
-
-            {__DEV__ ? (
-              <Pressable
-                onPress={handleDevSignIn}
-                disabled={busy || devBusy}
-                style={({ pressed }) => [authStyles.passwordLink, pressed && authStyles.pressed]}>
-                <ThemedText type="link">
-                  {devBusy ? 'Signing in…' : 'Sign in as dev user'}
-                </ThemedText>
-              </Pressable>
-            ) : null}
           </ThemedView>
 
           <Link href="/auth" asChild>

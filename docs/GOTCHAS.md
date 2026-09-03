@@ -19,16 +19,29 @@ Read before editing the area. Each one has bitten this repo at least once.
 
 ## Auth / security
 
-- **The dev-test password is in the bundle and in git history**
-  (`src/lib/dev-test-user.ts:39`). Hiding the button is not remediation; rotate the
-  password before public launch (deferred on purpose as of 2026-09-02).
+- **Dev Tools Hub access has no client-side password anymore.** Tapping the version
+  number on You 7x opens a prompt checked server-side by the `dev-unlock` Edge
+  Function against the `DEV_UNLOCK_PASSWORD` secret; a match sets an in-memory,
+  session-only flag (`src/lib/dev-access-unlock.ts`) — never persisted, never sent
+  anywhere but that one request. The old dev-test account's own Supabase password
+  (`ATO-dev-user-2026`, wave31 migration) is still in git history and unrotated —
+  it no longer unlocks anything client-side, but rotate it before public launch too.
 - **Root is `me.is_root`.** Never gate on a handle string again — `emci` was claimable.
   The column is trigger-protected; set it from the SQL editor / service role only.
-- **`PRE_LAUNCH_DEV = true` ships dev tooling to every OTA user.** Only the dev sign-in
-  button, Home dev box, native-crash probe and cold-start auto-login are `__DEV__`.
-  `check:release-mode` blocks a production *build*; it does not block an OTA.
+- **`PRE_LAUNCH_DEV = true` ships dev tooling to every OTA user.** Only the Home dev
+  box and native-crash probe are `__DEV__`. `check:release-mode` blocks a production
+  *build*; it does not block an OTA.
 - **Edge Functions must verify the JWT in code** (`auth.getUser()`); gateway
-  `verify_jwt` is not committed anywhere (no `supabase/config.toml`).
+  `verify_jwt` is not committed anywhere (no `supabase/config.toml`). `dev-unlock` and
+  `password-login` are the deliberate exceptions — both run pre-login or pre-unlock,
+  so there is no JWT to check yet; do not "fix" that.
+- **`login_email_for_identifier` is service_role-only (wave36).** It used to be
+  `anon`+`authenticated`-callable and returned the plain email for any handle — anyone
+  signed out could enumerate handle→email pairs. Password login now goes through the
+  `password-login` Edge Function, which resolves the handle and calls
+  `signInWithPassword` server-side; only the resulting session (or a generic
+  `invalid_credentials`) reaches the client. Never call this RPC directly from `src/`
+  again — that regression is exactly what `check:auth-password` asserts against.
 - **Apple's `/auth/revoke` returns 200 for almost anything.** Only the refresh-token
   reuse in `confirmRevoked` proves revocation.
 - **SecureStore caps values at 2048 bytes.** `auth-storage.ts` splits tokens into
@@ -46,7 +59,11 @@ Read before editing the area. Each one has bitten this repo at least once.
   `grok-3-mini` can spend a 16–64 token budget on hidden thinking and return empty text.
 - **Quota is claimed in the Edge Function.** The client `claimAiCall()` is a no-op for
   remote providers; do not add a second claim or users get charged twice.
-- **Pings (`ping: true`) are quota-exempt** by design — server-forced 16-token prompt.
+- **Pings (`ping: true`) never reach a vendor.** They used to make a real, unmetered
+  64-token vendor call with no quota claim at all — a free real generation outside the
+  quota system. Now they only confirm the vendor's key secret is present (`keyFor`)
+  and return a fixed `{ text: 'ready' }`; `complete()` and `claim_ai_call` are never
+  reached for a ping.
 - **Any Gemini failure falls back to DeepSeek once** (not only quota). If DeepSeek's
   secret is missing you get the empty-card state, not an error.
 - **Every AI await needs `withTimeout`** (25s where two sequential calls are possible).
@@ -90,6 +107,12 @@ Read before editing the area. Each one has bitten this repo at least once.
 
 - **Seven surfaces ship behind `*_COPY_REVIEWED = false`.** Story/Levity are
   diagnosis-adjacent. Do not flip a flag without emci's read.
+- **The "Draft copy — waiting on emci review." badge is `PRE_LAUNCH_DEV`-gated,
+  every render site.** A `false` `*_COPY_REVIEWED` flag alone used to be enough to
+  show it to every OTA user, pre-launch or not — the unreviewed copy itself still
+  ships either way, but the internal review-status badge is now dev-only.
+  `check:copy-review-badges` asserts every site (new ones included) requires
+  `PRE_LAUNCH_DEV` alongside its `!*_COPY_REVIEWED` check.
 - **Never say "AI" or "tokens" in user copy** (`voice/quota.ts` comment); Sage is a
   "coach", Notes are "notes".
 - **MBTI four-letter codes were removed for trademark reasons** — do not reintroduce.

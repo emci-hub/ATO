@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { CONCEPT_COPY_REVIEWED } from '@/lib/concept-explainers';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 
 /**
  * Small tap-to-reveal for what a concept generally means.
@@ -41,7 +42,7 @@ export function ConceptHint({
           <ThemedText type="small" themeColor="textSecondary">
             {explainer}
           </ThemedText>
-          {!CONCEPT_COPY_REVIEWED ? (
+          {!CONCEPT_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
             <ThemedText type="code" themeColor="textSecondary">
               Draft copy — waiting on emci review.
             </ThemedText>

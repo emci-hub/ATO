@@ -52,6 +52,23 @@ assert.equal(crisisCardContent('CA').fallback, null);
 assert.equal(CRISIS_SERVICE_CA, '988 Suicide Crisis Helpline');
 ok('Canada locale shows the Canada 988 label, call or text 988');
 
+for (const region of ['US', 'CA'] as const) {
+  const actions = crisisCardContent(region).actions;
+  const call = actions.find((a) => a.label.startsWith('Call'));
+  const text = actions.find((a) => a.label.startsWith('Text'));
+  assert.equal(call?.href, 'tel:988', `${region} call action must be a tel: link`);
+  assert.equal(text?.href, 'sms:988', `${region} text action must be an sms: link`);
+}
+ok('US and Canada actions carry tel:/sms: hrefs for the same static 988 number');
+
+const crisisCardSrc = fs.readFileSync(
+  path.resolve(__dirname, '../src/components/crisis-card.tsx'),
+  'utf8',
+);
+assert.match(crisisCardSrc, /Linking\.openURL\(action\.href\)/);
+assert.match(crisisCardSrc, /accessibilityRole="link"/);
+ok('crisis card actually wires each action to Linking.openURL, not just static text');
+
 assert.equal(detect({ regionCode: 'GB' }), 'other');
 assert.equal(detect({ regionCode: 'GB', languageRegionCode: 'US' }), 'other');
 assert.equal(
@@ -137,6 +154,30 @@ assert.doesNotMatch(
   /logCrisisFlag/,
 );
 ok('Sage Support tap opens the same card; keyword interrupt stays a separate path');
+
+// The user's line must only reach sage_messages after routeTalkReply (the
+// safety router) has run and cleared it — never written up front, never
+// written at all when the router flags it as crisis.
+const sendFn = sage.slice(
+  sage.indexOf('async function send(text: string)'),
+  sage.indexOf('function dismissCrisis'),
+);
+const routeIdx = sendFn.indexOf('await routeTalkReply(');
+const crisisIdx = sendFn.indexOf("result.kind === 'crisis'");
+const persistUserIdx = sendFn.indexOf("persistAndSwap(localUserId, 'user', trimmed)");
+assert.ok(routeIdx > 0, 'send() must call routeTalkReply');
+assert.ok(crisisIdx > routeIdx, 'the crisis branch must be checked on the routeTalkReply result');
+assert.ok(
+  persistUserIdx > crisisIdx,
+  'the user line is only persisted after the crisis branch is checked, never before routeTalkReply runs',
+);
+const crisisBlock = sendFn.slice(crisisIdx, sendFn.indexOf('} else {', crisisIdx));
+assert.doesNotMatch(
+  crisisBlock,
+  /persistAndSwap\(localUserId/,
+  'a crisis-flagged line must never be persisted to sage_messages',
+);
+ok('the crisis-triggering message is only persisted after the safety router clears it, never before or when flagged');
 
 assert.match(tabs, /name="sage"/);
 assert.doesNotMatch(tabs, /homeFirst: false[\s\S]*more: \['sage'\]/);

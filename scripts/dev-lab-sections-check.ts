@@ -107,9 +107,9 @@ ok('System crisis-card preview is fenced to /dev-lab and absent from Dawn and Sa
 
 assert.match(
   hub,
-  /!canSeeDevLab\(\{\s*isDev: PRE_LAUNCH_DEV,\s*isRoot: devAccess\.isRoot,\s*capabilities: devAccess\.capabilities,\s*\}\)/,
+  /!canSeeDevLab\(\{\s*isDev: PRE_LAUNCH_DEV \|\| devUnlocked,\s*isRoot: devAccess\.isRoot,\s*capabilities: devAccess\.capabilities,\s*\}\)/,
 );
 assert.match(hub, /Redirect href="\/"/);
-ok('existing access guard is unchanged');
+ok('access guard also accepts the session-only dev-unlock alongside PRE_LAUNCH_DEV');
 
 console.log(`\nAll ${passed} dev-lab-sections checks passed.`);

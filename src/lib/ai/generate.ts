@@ -95,17 +95,18 @@ const PING_META: AiCallMetadata = {
 };
 
 /**
- * Minimal real call through the same dispatch as generateText, for
- * connectivity checks. Unlike generateText, errors propagate (not swallowed)
- * and no usage is logged, so a ping never pollutes the self-tracked counts.
+ * Same dispatch as generateText, for connectivity checks. The Edge Function
+ * never forwards a ping to the vendor — it only confirms the key secret is
+ * configured — so these fields are unused server-side; they stay only
+ * because completeFor's request shape requires them. Unlike generateText,
+ * errors propagate (not swallowed) and no usage is logged, so a ping never
+ * pollutes the self-tracked counts.
  */
 export async function pingProvider(provider: RemoteAiProviderId): Promise<void> {
   await completeFor(provider, {
     prompt: 'Reply with the word ready.',
     temperature: 0,
-    // Reasoning models (Gemini thinkingConfig, grok-3-mini) can spend part of
-    // this budget on hidden thinking tokens before any output text — too low
-    // a budget makes a reachable provider look down with an empty response.
+    // Unused server-side for a ping (kept for the request shape only).
     maxOutputTokens: 64,
     responseFormat: 'text',
   }, PING_META, { ping: true }); // edge providers: server probe, no quota claim

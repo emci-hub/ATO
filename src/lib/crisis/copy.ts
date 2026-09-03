@@ -18,6 +18,8 @@ export const CRISIS_BODY =
 export interface CrisisAction {
   icon: string;
   label: string;
+  /** tel:/sms: link for the same static, already-confirmed number below — never generated, never guessed. */
+  href: string;
 }
 
 /** Specified US service name. Do not rewrite. */
@@ -37,14 +39,14 @@ export const CRISIS_DISMISS = "I'm okay, keep going";
 export function crisisActionsFor(region: CrisisRegion): CrisisAction[] {
   if (region === 'US') {
     return [
-      { icon: '📞', label: `Call 988 (${CRISIS_SERVICE_US})` },
-      { icon: '💬', label: 'Text 988' },
+      { icon: '📞', label: `Call 988 (${CRISIS_SERVICE_US})`, href: 'tel:988' },
+      { icon: '💬', label: 'Text 988', href: 'sms:988' },
     ];
   }
   if (region === 'CA') {
     return [
-      { icon: '📞', label: `Call 988 (${CRISIS_SERVICE_CA})` },
-      { icon: '💬', label: 'Text 988' },
+      { icon: '📞', label: `Call 988 (${CRISIS_SERVICE_CA})`, href: 'tel:988' },
+      { icon: '💬', label: 'Text 988', href: 'sms:988' },
     ];
   }
   return [];

@@ -21,6 +21,7 @@ import { QuestGrowthBars } from '@/components/quest-growth-bars';
 import { VoicePresetPicker } from '@/components/voice-preset-picker';
 import { SageFactsCard } from '@/components/sage-facts';
 import { RunningUpdateLine } from '@/components/running-update-line';
+import { AppVersionDevUnlock } from '@/components/dev-unlock-gate';
 import { SettingsFold } from '@/components/settings-fold';
 import { OptionalIntakeFill } from '@/components/optional-intake';
 import { FullProfileFold } from '@/components/full-profile-fold';
@@ -40,7 +41,7 @@ import { fetchChecks, type Check } from '@/lib/checks';
 import { onChecksChanged } from '@/lib/checks-events';
 import { depthTier, presenceTier } from '@/lib/growth';
 import { useMeContext } from '@/lib/me-context';
-import { addPeerByHandle } from '@/lib/circle';
+import { confirmAddPeer, resolvePeerByHandle } from '@/lib/circle';
 import { useCircleContext } from '@/lib/circle-context';
 import {
   fetchMyInviteCodes,
@@ -486,6 +487,7 @@ export default function YouScreen() {
               <SettingsFold title="Account">
                 <DetailRow label="Timezone" value={me.timezone} />
                 <BirthdayRow me={me} onUpdated={() => refresh()} />
+                <AppVersionDevUnlock />
                 <Pressable
                   onPress={() => {
                     if (aiConsentFor(me) === 'pending') {
@@ -554,7 +556,8 @@ export default function YouScreen() {
       <ScanSheet
         visible={scanning}
         onClose={() => setScanning(false)}
-        onAdd={addPeerByHandle}
+        onResolve={resolvePeerByHandle}
+        onConfirm={confirmAddPeer}
         onConnected={() => {
           triggerGesture('circleConnected');
           // Don't rely only on the realtime INSERT landing (it can be missed
