@@ -28,11 +28,20 @@ Read before editing the area. Each one has bitten this repo at least once.
   it no longer unlocks anything client-side, but rotate it before public launch too.
 - **Root is `me.is_root`.** Never gate on a handle string again — `emci` was claimable.
   The column is trigger-protected; set it from the SQL editor / service role only.
-- **`PRE_LAUNCH_DEV = true` ships dev tooling to every OTA user.** Only the dev sign-in
-  button, Home dev box, native-crash probe and cold-start auto-login are `__DEV__`.
-  `check:release-mode` blocks a production *build*; it does not block an OTA.
+- **`PRE_LAUNCH_DEV = true` ships dev tooling to every OTA user.** Only the Home dev
+  box and native-crash probe are `__DEV__`. `check:release-mode` blocks a production
+  *build*; it does not block an OTA.
 - **Edge Functions must verify the JWT in code** (`auth.getUser()`); gateway
-  `verify_jwt` is not committed anywhere (no `supabase/config.toml`).
+  `verify_jwt` is not committed anywhere (no `supabase/config.toml`). `dev-unlock` and
+  `password-login` are the deliberate exceptions — both run pre-login or pre-unlock,
+  so there is no JWT to check yet; do not "fix" that.
+- **`login_email_for_identifier` is service_role-only (wave36).** It used to be
+  `anon`+`authenticated`-callable and returned the plain email for any handle — anyone
+  signed out could enumerate handle→email pairs. Password login now goes through the
+  `password-login` Edge Function, which resolves the handle and calls
+  `signInWithPassword` server-side; only the resulting session (or a generic
+  `invalid_credentials`) reaches the client. Never call this RPC directly from `src/`
+  again — that regression is exactly what `check:auth-password` asserts against.
 - **Apple's `/auth/revoke` returns 200 for almost anything.** Only the refresh-token
   reuse in `confirmRevoked` proves revocation.
 - **SecureStore caps values at 2048 bytes.** `auth-storage.ts` splits tokens into

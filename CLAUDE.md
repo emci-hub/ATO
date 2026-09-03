@@ -55,7 +55,7 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
 | Device test checklist | `docs/ATO_DEVICE_TESTS.md` |
 | Old plan (reference only, not rules) | `docs/archive/OLD_PLAN.md` |
 | Schema + RLS + RPCs | `supabase/migrations/*.sql` (chronological: stage* → wave*) |
-| Edge Functions (Deno) | `supabase/functions/{ai-generate,apple-link,delete-account,review-access,refresh-around}` |
+| Edge Functions (Deno) | `supabase/functions/{ai-generate,apple-link,delete-account,review-access,refresh-around,dev-unlock,password-login}` |
 
 Expo docs for this repo: https://docs.expo.dev/versions/v54.0.0/ (SDK 54 — check
 `package.json` before trusting any other version).

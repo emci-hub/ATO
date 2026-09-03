@@ -30,21 +30,33 @@ export function passwordsMatch(a: string, b: string): boolean {
 }
 
 /**
- * Email as typed, or @handle → auth email via RPC. Null means no match
- * (same user-facing failure as a wrong password — do not say which).
+ * Password sign-in by @handle or email. Resolution and verification both
+ * happen server-side (the password-login Edge Function) so the account's
+ * email is never sent to this client — only the resulting session, or a
+ * generic failure that does not say whether the identifier or the password
+ * was wrong.
  */
-export async function resolveLoginEmail(identifier: string): Promise<string | null> {
+export async function signInWithIdentifier(
+  identifier: string,
+  password: string,
+): Promise<{ error: string | null }> {
   const trimmed = identifier.trim();
-  if (!trimmed) return null;
-  if (trimmed.includes('@')) return trimmed.toLowerCase();
+  if (!trimmed || !password) return { error: LOGIN_PASSWORD_FAILED };
 
-  const { data, error } = await supabase.rpc('login_email_for_identifier', {
-    p_identifier: trimmed,
+  const { data, error } = await supabase.functions.invoke('password-login', {
+    body: { identifier: trimmed, password },
   });
-  if (error) return null;
-  if (typeof data !== 'string') return null;
-  const email = data.trim();
-  return email.length > 0 ? email : null;
+  if (error) return { error: LOGIN_PASSWORD_FAILED };
+
+  const tokens = data as { access_token?: string; refresh_token?: string } | null;
+  if (!tokens?.access_token || !tokens.refresh_token) return { error: LOGIN_PASSWORD_FAILED };
+
+  const { error: sessionError } = await supabase.auth.setSession({
+    access_token: tokens.access_token,
+    refresh_token: tokens.refresh_token,
+  });
+  if (sessionError) return { error: LOGIN_PASSWORD_FAILED };
+  return { error: null };
 }
 
 export async function fetchAuthHasPassword(): Promise<boolean> {

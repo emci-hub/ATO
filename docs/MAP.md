@@ -25,7 +25,7 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 | File | Route / purpose |
 |---|---|
 | `_layout.tsx` | Root: Sentry, providers, three-way auth gate (`auth` / `onboarding` / app), lab guard |
-| `auth/_layout.tsx`, `auth/index.tsx`, `auth/login.tsx` | Sign up (OTP + Apple) / Log in (Apple, password, OTP; dev button `__DEV__`) |
+| `auth/_layout.tsx`, `auth/index.tsx`, `auth/login.tsx` | Sign up (OTP + Apple) / Log in (Apple, password via `password-login`, OTP) |
 | `onboarding.tsx` | Identity + 8 core chips + optional 8-scenario phase → `complete_signup` |
 | `(tabs)/_layout.tsx` | Tab shell: `AppTabs` + always-mounted `NavPixel` |
 | `(tabs)/index.tsx` | Home: today's card, Did/Skip, primary slot, category teaser |
@@ -120,6 +120,7 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 | `functions/review-access` | Root-only approve/deny landing signups (emails invite) |
 | `functions/refresh-around` | Edmtrain refresh (cron not scheduled yet) |
 | `functions/dev-unlock` | JWT required; checks a password against the `DEV_UNLOCK_PASSWORD` secret |
+| `functions/password-login` | No JWT (pre-login); resolves @handle/email + password to a session server-side, never returns the email |
 | `functions/_shared/apple.ts` | ES256 client-secret, token exchange, revoke, confirm |
 
 ## `scripts`

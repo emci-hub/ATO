@@ -49,13 +49,15 @@ async function main() {
 
   assert.match(login, /Log in/);
   assert.match(login, /handlePasswordSignIn/);
-  assert.match(login, /signInWithPassword/);
+  assert.match(login, /signInWithIdentifier/);
+  assert.doesNotMatch(login, /signInWithPassword/);
+  assert.doesNotMatch(login, /resolveLoginEmail/);
   assert.match(login, /secureTextEntry/);
   assert.match(login, /sendEmailOtp\(email, false\)/);
   assert.match(login, /signInWithApple/);
   assert.match(login, /Email me a code instead/);
   assert.match(login, /LOGIN_PASSWORD_HINT/);
-  ok('Log in has Apple, optional password, and OTP fallback that does not create users');
+  ok('Log in has Apple, optional password (via the password-login Edge Function), and OTP fallback that does not create users');
 
   assert.match(you, /PasswordSettingsFold/);
   assert.match(settings, /setAuthPassword/);
@@ -66,6 +68,22 @@ async function main() {
   assert.doesNotMatch(settings, /recordOwnDevTrace|recordTrace/);
   assert.match(otpLib, /signInWithOtp/);
   ok('Settings set/change uses GoTrue updateUser; password is not logged or traced');
+
+  assert.match(passwordLib, /functions\.invoke\('password-login'/);
+  assert.match(passwordLib, /auth\.setSession/);
+  assert.doesNotMatch(passwordLib, /rpc\('login_email_for_identifier'/);
+  const fn = readFileSync(
+    resolve(__dirname, '../supabase/functions/password-login/index.ts'),
+    'utf8',
+  );
+  assert.match(fn, /login_email_for_identifier/);
+  assert.match(fn, /SUPABASE_SERVICE_ROLE_KEY/);
+  assert.match(fn, /signInWithPassword/);
+  assert.match(
+    fn,
+    /return json\(\{\s*access_token: signInData\.session\.access_token,\s*refresh_token: signInData\.session\.refresh_token,\s*\}\);/,
+  );
+  ok('password-login Edge Function resolves + signs in server-side; the response is only session tokens, never the email');
 
   const env = loadEnv();
   const url = env.EXPO_PUBLIC_SUPABASE_URL;
@@ -79,31 +97,38 @@ async function main() {
   const reviewEmail = process.env.ATO_REVIEW_EMAIL ?? env.ATO_REVIEW_EMAIL ?? 'ato.review@asstrollogs.com';
   const reviewPassword = process.env.ATO_REVIEW_PASSWORD ?? env.ATO_REVIEW_PASSWORD;
 
-  const { data: mapped, error: mapError } = await supabase.rpc('login_email_for_identifier', {
+  const { data: leaked, error: leakError } = await supabase.rpc('login_email_for_identifier', {
     p_identifier: 'riley',
   });
-  assert.equal(mapError, null, mapError?.message ?? 'handle lookup failed');
-  assert.equal(mapped, reviewEmail);
-  ok('login identifier @riley maps to the review email');
+  assert.ok(leakError, 'anon must not be able to call login_email_for_identifier directly');
+  assert.equal(leaked, null);
+  ok('login_email_for_identifier rejects an anon caller — the RPC no longer leaks emails by handle');
 
-  const bad = await supabase.auth.signInWithPassword({
-    email: reviewEmail,
-    password: 'not-the-review-password',
+  const bad = await supabase.functions.invoke('password-login', {
+    body: { identifier: 'riley', password: 'not-the-review-password' },
   });
   assert.ok(bad.error, 'wrong password must fail');
-  assert.equal(bad.data.session, null);
-  ok('wrong password is rejected');
+  ok('wrong password is rejected without revealing whether @riley exists');
 
   if (!reviewPassword) {
     console.log('  ⚠ ATO_REVIEW_PASSWORD unset — skipping live password sign-in');
   } else {
-    const good = await supabase.auth.signInWithPassword({
-      email: reviewEmail,
-      password: reviewPassword,
+    const good = await supabase.functions.invoke('password-login', {
+      body: { identifier: 'riley', password: reviewPassword },
     });
     assert.equal(good.error, null, good.error?.message ?? 'password sign-in failed');
-    assert.ok(good.data.session, 'password sign-in must return a session');
-    assert.equal(good.data.user?.email, reviewEmail);
+    const tokens = good.data as { access_token?: string; refresh_token?: string } | null;
+    assert.ok(tokens?.access_token && tokens.refresh_token, 'password-login must return a session');
+    assert.doesNotMatch(JSON.stringify(good.data), /@/, 'response must never contain an email address');
+
+    const { error: sessionError } = await supabase.auth.setSession({
+      access_token: tokens!.access_token!,
+      refresh_token: tokens!.refresh_token!,
+    });
+    assert.equal(sessionError, null, sessionError?.message ?? 'setSession failed');
+
+    const { data: user } = await supabase.auth.getUser();
+    assert.equal(user.user?.email, reviewEmail);
     const { data: me, error: meError } = await supabase.from('me').select('handle').single();
     assert.equal(meError, null, meError?.message ?? 'me fetch failed');
     assert.equal(me?.handle, 'riley');
@@ -111,7 +136,7 @@ async function main() {
     const { data: hasPw, error: hasPwError } = await supabase.rpc('auth_has_password');
     assert.equal(hasPwError, null, hasPwError?.message ?? 'auth_has_password failed');
     assert.equal(hasPw, true, 'review account must report a stored password hash');
-    ok('ato.review@asstrollogs.com signInWithPassword returns a session for @riley');
+    ok('password-login for @riley returns a session, never the email, and it verifies');
     await supabase.auth.signOut();
   }
 

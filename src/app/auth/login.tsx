@@ -11,13 +11,8 @@ import { ThemedView } from '@/components/themed-view';
 import { useTheme } from '@/hooks/use-theme';
 import { isAppleSignInAvailable, signInWithApple } from '@/lib/auth-apple';
 import { sendEmailOtp, verifyEmailOtp } from '@/lib/auth-otp';
-import {
-  LOGIN_PASSWORD_FAILED,
-  LOGIN_PASSWORD_HINT,
-  resolveLoginEmail,
-} from '@/lib/auth-password';
+import { LOGIN_PASSWORD_HINT, signInWithIdentifier } from '@/lib/auth-password';
 import { setPendingInviteCode } from '@/lib/invite';
-import { supabase } from '@/lib/supabase';
 
 export default function LoginScreen() {
   const theme = useTheme();
@@ -72,22 +67,12 @@ export default function LoginScreen() {
     setBusy(true);
     setError(null);
     await setPendingInviteCode('');
-    const email = await resolveLoginEmail(normalizedIdentifier);
-    if (!email) {
-      setBusy(false);
-      setError(LOGIN_PASSWORD_FAILED);
-      setPassword('');
-      return;
-    }
-    const { error: signError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error: signError } = await signInWithIdentifier(normalizedIdentifier, password);
     setBusy(false);
     setPassword('');
 
     if (signError) {
-      setError(LOGIN_PASSWORD_FAILED);
+      setError(signError);
     }
   }
 

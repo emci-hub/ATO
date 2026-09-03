@@ -15,6 +15,18 @@
 
 **Hidden dev-access unlock (Sep 3, 2026).** Tapping the version number on You 7x opens a password prompt, checked server-side by the new `dev-unlock` Edge Function against the `DEV_UNLOCK_PASSWORD` Supabase secret — never hardcoded client-side. A correct password sets an in-memory, session-only flag (`src/lib/dev-access-unlock.ts`, no AsyncStorage/SecureStore) that `canSeeDevLab` accepts alongside `PRE_LAUNCH_DEV`/`__DEV__`, root, and per-account grants (`dev-lab.tsx`, Home's dev row) — a cold start always starts locked again. This replaces the old "Sign in as dev user" button and the hardcoded dev-test password/auto-login in `src/lib/dev-test-user.ts`, both removed entirely. `npm run check:dev-unlock` guards the Edge Function contract and the wiring. **`DEV_UNLOCK_PASSWORD` still needs to be set as a Supabase secret and the function deployed** (`supabase secrets set DEV_UNLOCK_PASSWORD=... && supabase functions deploy dev-unlock`) — this repo has no CI, so both are manual, outside this PR.
 
+**Closed a live handle→email leak (Sep 3, 2026).** `login_email_for_identifier` was
+`anon`+`authenticated`-callable and returned the account's real email for any handle
+passed in — no password, no rate limit. Password login now goes through the new
+`password-login` Edge Function: it resolves the handle server-side (service-role) and
+calls `signInWithPassword` itself, so the email never reaches the client — only the
+resulting session, or a generic `invalid_credentials` that does not say whether the
+handle existed or the password was wrong. `wave36_login_email_lockdown.sql` revokes
+the RPC's `anon`/`authenticated` EXECUTE grants (service_role only now). Both the
+migration and the function were applied/deployed live to the `ato` project in the same
+pass. `npm run check:auth-password` (live) now asserts the direct RPC call is rejected
+for `anon` and that the function's response never contains the email.
+
 **"Dev only." on cold start = stale binary 8, not a live gate (confirmed).** Testers on binary 8 see a blank screen with "Dev only." — that is the **embedded bundle from before commits `2fdc278` + `5f1c86b` (Aug 28)** which (a) moved all `*-lab` screens out of the cold-start position behind `<Stack.Protected guard={__DEV__}>` and (b) replaced the `Dev only.` block in each lab with `<Redirect href="/" />`. The string no longer exists anywhere in `src` or the bundles. **Binary 8 cannot receive OTA** (no `expo-updates`). **Binary 10 is already submitted and processing in TestFlight** (build `1d0d1041`, submission `c0c6342d`, ASC app id `6805614731`, finished Aug 27) — the fix for all testers is **install binary 10**; the current production OTA `d5332b8b` then applies automatically.
 
 **Wave 22 — Dawn categories, Explore combine, Levity, The Story (Aug 31, 2026).** Dawn Read may draw from one settled category among Steadiness / Agency / Drive; new users with none of those three settled keep knock/fact/focus exactly; Do if-then is untouched; anti-repeat and cut/crisis gates still run on the generated card. Explore may generate from any live category, at most two per entry and only when a recent signal ties them, and must not restate the pinned Categories card on the same screen. Agency-triple (GM+LC+SE) and the output fence are unchanged. 9th category **Levity** is a bar (Playfulness + conflict assertiveness + cooperativeness) — Love/closeness stays the only conflict-adjacent map. **The Story** is a separate longer-form Gemini call on its own quota (`claim_story_generate`), fingerprint-gated, thin-profile gated, no offline fallback, on the **Explore tab**. **All new copy is unreviewed. The Story is diagnosis-adjacent — same bar as the Crisis spec. Not shippable without emci's direct read.**
