@@ -56,11 +56,11 @@ export type AddPeerResult =
   | { ok: false; reason: 'not-found' | 'self' | 'already' | 'error'; message: string };
 
 /**
- * The single gate: resolving a handle to a peer and creating the connection.
- * Inserting one row makes the mirror trigger create the reverse row, so both
- * accounts get the Circle tab from this one event.
+ * Step 1 of the Circle connect gate: resolves a scanned/pasted handle to a
+ * public profile. Never writes a connection — the caller must show the
+ * resolved name/handle and get an explicit "Add" tap before confirmAddPeer.
  */
-export async function addPeerByHandle(raw: string): Promise<AddPeerResult> {
+export async function resolvePeerByHandle(raw: string): Promise<AddPeerResult> {
   const handle = handleFromScannedText(raw);
   if (!handle) {
     return { ok: false, reason: 'error', message: "That doesn't look like an @handle or ATO link." };
@@ -92,12 +92,44 @@ export async function addPeerByHandle(raw: string): Promise<AddPeerResult> {
     return { ok: false, reason: 'already', message: `${profile.name} is already in your circle.` };
   }
 
+  return { ok: true, peer: { id: profile.id, name: profile.name, handle: profile.handle } };
+}
+
+/**
+ * Step 2: the explicit "Add to Circle" tap after resolvePeerByHandle showed
+ * who this is — the actual connection write. Re-checks self/already so a
+ * stale resolve (the peer got added from another device meanwhile, say)
+ * cannot double-insert. Inserting one row makes the mirror trigger create
+ * the reverse row, so both accounts get the Circle tab from this one event.
+ */
+export async function confirmAddPeer(
+  peer: { id: string; name: string; handle: string },
+): Promise<AddPeerResult> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, reason: 'error', message: 'Not signed in.' };
+
+  if (peer.id === user.id) {
+    return { ok: false, reason: 'self', message: "That's your own ATO." };
+  }
+
+  const { data: existing } = await supabase
+    .from('connections')
+    .select('peer_id')
+    .eq('user_id', user.id)
+    .eq('peer_id', peer.id)
+    .maybeSingle();
+  if (existing) {
+    return { ok: false, reason: 'already', message: `${peer.name} is already in your circle.` };
+  }
+
   const { error: insertError } = await supabase
     .from('connections')
-    .insert({ user_id: user.id, peer_id: profile.id });
+    .insert({ user_id: user.id, peer_id: peer.id });
   if (insertError) return { ok: false, reason: 'error', message: insertError.message };
 
-  return { ok: true, peer: { id: profile.id, name: profile.name, handle: profile.handle } };
+  return { ok: true, peer };
 }
 
 /** Fetches a peer's poster + peer_checks. Requires an existing connection. */

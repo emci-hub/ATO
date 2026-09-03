@@ -96,7 +96,8 @@ unseen variant per figure) → `logShownVariants()` (:169) into `user_legend_his
 
 ## 9. Circle / Chat
 
-Scan or paste → `addPeerByHandle()` (`src/lib/circle.ts:63`) → `connections`.
+Scan or paste → `resolvePeerByHandle()` shows who it is → explicit "Add" tap →
+`confirmAddPeer()` (`src/lib/circle.ts`) writes `connections`. No auto-connect.
 Thread: `getOrCreateThread()` (`src/lib/chat.ts:34`); RLS hides a blocker's counterpart
 lines and blocks sends both ways (`src/lib/moderation.ts`). Category compare is
 dual-opt-in through `peer_category_pack`

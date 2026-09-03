@@ -41,7 +41,7 @@ import { fetchChecks, type Check } from '@/lib/checks';
 import { onChecksChanged } from '@/lib/checks-events';
 import { depthTier, presenceTier } from '@/lib/growth';
 import { useMeContext } from '@/lib/me-context';
-import { addPeerByHandle } from '@/lib/circle';
+import { confirmAddPeer, resolvePeerByHandle } from '@/lib/circle';
 import { useCircleContext } from '@/lib/circle-context';
 import {
   fetchMyInviteCodes,
@@ -556,7 +556,8 @@ export default function YouScreen() {
       <ScanSheet
         visible={scanning}
         onClose={() => setScanning(false)}
-        onAdd={addPeerByHandle}
+        onResolve={resolvePeerByHandle}
+        onConfirm={confirmAddPeer}
         onConnected={() => {
           triggerGesture('circleConnected');
           // Don't rely only on the realtime INSERT landing (it can be missed
