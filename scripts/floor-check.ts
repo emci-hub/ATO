@@ -178,9 +178,11 @@ assert.doesNotMatch(navPixel, /pointerEvents="none"/);
 assert.match(read('src/lib/kenney/tap-moods.ts'), /happyBounce/);
 assert.match(read('src/lib/kenney/use-kenney-animation.ts'), /playTapMood/);
 assert.doesNotMatch(poster, /PixelFace/);
-assert.match(poster, /const STEEL/);
-assert.match(poster, /const BLOOM/);
-ok('nav companion is shell-mounted top-right; You poster has no large pixel');
+assert.match(poster, /const FIELD = '#1A1B20'/);
+assert.match(poster, /const QR_INK/);
+assert.match(poster, /const PLATE = '#F6F2EA'/);
+assert.match(poster, /ecl="M"/);
+ok('nav companion is shell-mounted top-right; You poster keeps its own soft-dark palette and dark-on-light M QR');
 
 const chrome = read('src/lib/theme/chrome.ts');
 const crisisSrc = read('src/components/crisis-card.tsx');
