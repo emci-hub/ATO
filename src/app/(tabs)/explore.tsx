@@ -143,7 +143,7 @@ export default function ExploreScreen() {
                 <SageTitleCard me={me} tracks={tracks} tracksReady={tracksReady} />
               </SettingsFold>
               <IntakeSettings me={me} onUpdated={() => refreshMe()} />
-              <TraitBandsFold me={me} />
+              <TraitBandsFold me={me} tracks={tracks} />
               <FullProfileFold me={me} onUpdated={() => refreshMe()} />
               <CategoriesFold me={me} onUpdated={() => refreshMe()} />
               <SageFactsCard me={me} onUpdated={() => refreshMe()} />

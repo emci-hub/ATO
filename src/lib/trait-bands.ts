@@ -1,9 +1,12 @@
 /**
- * You-tab spectrum bands. Plain-language endpoints only — never a trait
- * name, never a number. Reads the same 0–1 ME columns mergeTraitWrite
- * already updates. Null axes are omitted (no gap-copy).
+ * Spectrum bands. Plain-language endpoints only — never a trait name, never a
+ * number. Reads the trait_tracks REPORT EWMA (the same source of truth
+ * Categories / Title / Story / Full Profile / the "settled" header all read),
+ * falling back to the raw me column when no report track exists yet. Null axes
+ * are omitted (no gap-copy).
  */
 
+import { trackFor, type TraitTrack } from '@/lib/trait-stability';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import {
   TRAIT_AXES,
@@ -99,14 +102,20 @@ export interface FilledTraitBand {
   high: string;
 }
 
-/** Axes with a real stored number, in TRAIT_AXES order. Same ME columns as mergeTraitWrite. */
+/**
+ * Axes with a real number, in TRAIT_AXES order. Value = the report-track EWMA
+ * when present (matching Full Profile / Categories / Title / Story), else the
+ * raw me column. This keeps "How you tend to move" in lock-step with "How
+ * you're currently leaning" for the same axis.
+ */
 export function filledTraitBands(
   row: Parameters<typeof traitStateFromRow>[0],
+  tracks: readonly TraitTrack[] = [],
 ): FilledTraitBand[] {
   const values = traitStateFromRow(row).values;
   const out: FilledTraitBand[] = [];
   for (const axis of TRAIT_AXES) {
-    const value = values[axis];
+    const value = trackFor(tracks, axis, 'report')?.value ?? values[axis];
     if (value == null || !Number.isFinite(value)) continue;
     const phrases = TRAIT_BAND_PHRASES[axis];
     out.push({ axis, value, low: phrases.low, high: phrases.high });

@@ -1,7 +1,8 @@
 /**
- * You-tab trait bands. Run: npm run check:trait-bands
+ * Trait bands. Run: npm run check:trait-bands
  *
- * Phrase endpoints only. Reads traitStateFromRow. No gap-copy for null axes.
+ * Phrase endpoints only; value reads the report-track EWMA (fallback me), so
+ * the band matches Full Profile for the same axis. No gap-copy for null axes.
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -13,6 +14,7 @@ import {
   bandPhrasesClean,
   filledTraitBands,
 } from '../src/lib/trait-bands';
+import { applyEwmaAnswer } from '../src/lib/trait-stability';
 import { TRAIT_AXES, emptyTraitState, mergeTraitWrite } from '../src/lib/traits';
 import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
 
@@ -52,25 +54,48 @@ for (const axis of TRAIT_AXES) {
 assert.equal(bandPhrasesClean(), true);
 ok('band phrases name no framework, axis, number, or percent');
 
-assert.deepEqual(filledTraitBands(emptyTraitState().values), []);
-const damped = mergeTraitWrite(emptyTraitState(), { openness: 0.8 }, 'self_game', ['openness']);
-const bands = filledTraitBands(damped.values);
-assert.equal(bands.length, 1);
-assert.equal(bands[0]?.axis, 'openness');
-assert.equal(bands[0]?.value, damped.values.openness);
-assert.notEqual(bands[0]?.value, 0.8);
-ok('null axes stay hidden; filled bands read the damped mergeTraitWrite number');
+assert.deepEqual(filledTraitBands(emptyTraitState().values, []), []);
+
+// Report-track-first: a self_situation answer damps the me column toward 0.5,
+// but the report EWMA keeps the raw signal. The band must read the report
+// track (matching Full Profile / Categories / Title / Story), not the damped
+// me column.
+const situation = mergeTraitWrite(
+  emptyTraitState(),
+  { extraversion: 0.8 },
+  'self_situation',
+  ['extraversion'],
+);
+const reportTrack = applyEwmaAnswer(null, 'extraversion', 'report', 0.8, '2026-09-03T00:00:00.000Z');
+const unified = filledTraitBands(situation.values, [reportTrack]);
+assert.equal(unified.length, 1);
+assert.equal(unified[0]?.axis, 'extraversion');
+assert.equal(unified[0]?.value, 0.8);
+assert.notEqual(unified[0]?.value, situation.values.extraversion);
+ok('band reads the report-track EWMA, not the damped me column');
+
+// Fallback: no report track → raw me column. self_game writes the game track
+// (never the report), so the band still falls back to the damped me value.
+const game = mergeTraitWrite(emptyTraitState(), { openness: 0.8 }, 'self_game', ['openness']);
+const gameBands = filledTraitBands(game.values, []);
+assert.equal(gameBands.length, 1);
+assert.equal(gameBands[0]?.axis, 'openness');
+assert.equal(gameBands[0]?.value, game.values.openness);
+assert.notEqual(gameBands[0]?.value, 0.8);
+ok('no report track → band falls back to the me column (game writes stay on the game track)');
 
 const explore = read('src/app/(tabs)/explore.tsx');
 const fold = read('src/components/trait-bands-fold.tsx');
 const intakeIdx = explore.indexOf('<IntakeSettings');
 const bandsIdx = explore.indexOf('<TraitBandsFold');
 assert.ok(intakeIdx >= 0 && bandsIdx > intakeIdx);
+assert.match(explore, /<TraitBandsFold me=\{me\} tracks=\{tracks\} \/>/);
+assert.match(fold, /filledTraitBands\(me, tracks\)/);
 assert.match(fold, /SettingsFold title=\{TRAIT_BANDS_LABEL\}/);
 assert.doesNotMatch(fold, /defaultOpen/);
 assert.doesNotMatch(fold, /%|percent|openness|Extraversion/);
 assert.doesNotMatch(fold, /accessibilityValue/);
 assert.equal(TRAIT_BANDS_LABEL.includes('%'), false);
-ok('fold sits with the axis summaries on Explore, collapsed, with no number or trait-name copy');
+ok('fold passes report tracks through and stays collapsed with no number or trait-name copy');
 
 console.log(`\n${passed} trait-band checks passed`);

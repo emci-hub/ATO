@@ -13,15 +13,17 @@ import {
   type FilledTraitBand,
 } from '@/lib/trait-bands';
 import type { Me } from '@/lib/me';
+import type { TraitTrack } from '@/lib/trait-stability';
 
 export const BAND_PROVENANCE = 'This came from a question you answered. It can change.';
 
 /**
- * Collapsed-by-default You-tab spectrum. Marker position only — no number,
- * no trait name, no midpoint label. Hidden entirely when every axis is null.
+ * Collapsed-by-default spectrum. Marker position only — no number, no trait
+ * name, no midpoint label. Hidden entirely when every axis is null. Reads the
+ * same report-track value as Full Profile so the two folds never disagree.
  */
-export function TraitBandsFold({ me }: { me: Me }) {
-  const bands = filledTraitBands(me);
+export function TraitBandsFold({ me, tracks }: { me: Me; tracks: readonly TraitTrack[] }) {
+  const bands = filledTraitBands(me, tracks);
   const [detail, setDetail] = useState<FilledTraitBand | null>(null);
   if (bands.length === 0) return null;
 
