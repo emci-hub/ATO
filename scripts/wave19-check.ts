@@ -253,6 +253,27 @@ assert.match(sql, /spend_tokens/);
 assert.match(sql, /tokens are earned only/);
 ok('schema: history + token ledger cascade with auth.users; RLS is own-row');
 
+// wave38 widens the trait_history.source CHECK to include self_scenario (a
+// direct client source added after wave19) — without it, every scenario-answer
+// history insert aborts on the CHECK and is silently swallowed by the client
+// catch, so scenario answers never reach the timeline.
+const wave38 = read('supabase/migrations/wave38_trait_history_self_scenario.sql');
+assert.match(wave38, /drop constraint if exists trait_history_source_known/);
+assert.match(wave38, /add constraint trait_history_source_known/);
+assert.match(wave38, /'self_scenario'/);
+for (const src of [
+  'self_slider',
+  'self_tap',
+  'self_confirm',
+  'self_settings',
+  'self_grid',
+  'self_situation',
+  'self_game',
+] as const) {
+  assert.match(wave38, new RegExp(`'${src}'`), `wave38 must retain ${src}`);
+}
+ok('wave38 widens trait_history.source CHECK to self_scenario without dropping any prior source');
+
 // --- Sage thin + no Home/crisis/widget -----------------------------------
 const talk = buildTalkPrompt({
   me: {
