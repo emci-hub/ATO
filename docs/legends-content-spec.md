@@ -7,6 +7,15 @@ approved legends (Da Vinci / Architect, Alexander / Front-Liner,
 Confucius / Watcher, Athena / Commander). Each sample is the figure's `v1`
 variant.
 
+> **Coverage status (2026-09-03) — not a bug.** The archetype catalog has all
+> 12 archetypes (wave26), but only **4** are currently reachable because only 4
+> legends have been authored and fact-checked so far — the 4 reference samples
+> below. The other 8 archetypes (Alchemist, Warm One, Chaos Agent, Steady One,
+> Anchor, Disruptor, Wanderer, Believer) are fully valid `archetype_defs` rows
+> with **zero linked `legend_variants`**, so the Legends matcher can never serve
+> them until a legend is written for each (by hand or by the future weekly-batch
+> job). This is intentional incremental content rollout, not missing data.
+
 ## Table shape
 
 A legend is authored as a FIGURE (`legend_figures`: `canonical_slug`, `name`,
