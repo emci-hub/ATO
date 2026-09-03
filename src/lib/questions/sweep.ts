@@ -10,6 +10,7 @@ import { parseQuestionSweep } from './parse';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '@/lib/voice/preset';
 import { TALK_STYLE_GUIDE } from '@/lib/voice/providers/types';
+import type { QuotaDecision } from '@/lib/voice/quota';
 import type { TalkStyle } from '@/lib/voice/types';
 import { generateText } from '@/lib/ai/generate';
 import { SWEEP_META } from '@/lib/ai/call-sites';
@@ -76,17 +77,47 @@ export async function generateQuestionSweep(prompt: string): Promise<QuestionDra
   return drafts.length > 0 ? drafts : null;
 }
 
+export type SweepKind =
+  | 'questions'
+  | 'consent-pending'
+  | 'consent-denied'
+  | 'crisis'
+  | 'quota';
+
+export interface RouteQuestionSweepResult {
+  kind: SweepKind;
+  drafts: QuestionDraft[];
+}
+
 /**
  * One item per axis. Gemini if reachable; otherwise the locked bank.
  * Does not touch the 5-item rotation used by Tell Sage more.
+ *
+ * Gated in the same order and manner as routeQuestions: consent → crisis →
+ * quota claim → generate. The local bank fallback is gated behind consent and
+ * crisis too (it still represents "Sage writing to you"), but never spends the
+ * questions quota lane (a deterministic bank costs no model call).
  */
 export async function routeQuestionSweep(input: {
   me: { name: string; talk_style: TalkStyle; voice_preset: string };
+  aiConsent?: boolean | null;
+  crisisToday?: boolean;
   useLocal?: boolean;
-}): Promise<QuestionDraft[]> {
-  const local = composeLocalSweep();
-  if (input.useLocal === true || (await shouldUseLocalAi())) {
-    return local;
+  claimBatch?: () => Promise<QuotaDecision>;
+}): Promise<RouteQuestionSweepResult> {
+  const consent = input.aiConsent ?? null;
+  if (consent === false) return { kind: 'consent-denied', drafts: [] };
+  if (consent !== true) return { kind: 'consent-pending', drafts: [] };
+  if (input.crisisToday) return { kind: 'crisis', drafts: [] };
+
+  const local = input.useLocal === true || (await shouldUseLocalAi());
+  if (!local && input.claimBatch) {
+    const claim = await input.claimBatch();
+    if (!claim.ok) return { kind: 'quota', drafts: [] };
+  }
+
+  if (local) {
+    return { kind: 'questions', drafts: composeLocalSweep() };
   }
 
   const first = await generateQuestionSweep(buildQuestionsSweepPrompt(input));
@@ -119,5 +150,5 @@ export async function routeQuestionSweep(input: {
       options: draft.options.map((opt) => ({ ...opt })),
     });
   }
-  return keepGuardedDrafts(out).kept;
+  return { kind: 'questions', drafts: keepGuardedDrafts(out).kept };
 }

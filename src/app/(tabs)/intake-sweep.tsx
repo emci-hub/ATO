@@ -86,7 +86,9 @@ export default function IntakeSweepTabScreen() {
           {me ? (
             <>
               <OptionalIntakeFill me={me} onUpdated={refresh} />
-              <IntakeSweep me={me} onUpdated={refresh} onDone={done} />
+              {flagsReady ? (
+                <IntakeSweep me={me} crisisToday={crisisToday} onUpdated={refresh} onDone={done} />
+              ) : null}
             </>
           ) : (
             <ThemedText themeColor="textSecondary">Loading…</ThemedText>

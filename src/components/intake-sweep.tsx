@@ -13,10 +13,17 @@ import {
 } from '@/lib/questions/deferral';
 import { saveQuestionDeferral } from '@/lib/questions/store';
 import { INTAKE_SWEEP_COPY_REVIEWED, unansweredSweep } from '@/lib/questions/local';
+import {
+  QUESTIONS_EMPTY_CONSENT,
+  QUESTIONS_EMPTY_CRISIS,
+  QUESTIONS_EMPTY_DENIED,
+  QUESTIONS_EMPTY_QUOTA,
+} from '@/lib/questions/copy';
 import { routeQuestionSweep } from '@/lib/questions/sweep';
 import type { QuestionDraft } from '@/lib/questions/types';
 import { TRAIT_AXES, traitStateFromRow, type TraitAxis } from '@/lib/traits';
 import { earnTokensQuiet } from '@/lib/tokens-server';
+import { claimQuestionsBatch } from '@/lib/voice/quota-server';
 import { shouldUseLocalAi } from '@/lib/ai/override';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { withTimeout } from '@/lib/timeout';
@@ -36,15 +43,18 @@ export const INTAKE_SWEEP_DONE = 'Done';
  */
 export function IntakeSweep({
   me,
+  crisisToday,
   onUpdated,
   onDone,
 }: {
   me: Me;
+  crisisToday: boolean;
   onUpdated: () => void | Promise<void>;
   onDone: () => void;
 }) {
   const theme = useTheme();
   const [drafts, setDrafts] = useState<QuestionDraft[] | null>(null);
+  const [gate, setGate] = useState<string | null>(null);
   const [skipped, setSkipped] = useState<Set<TraitAxis>>(new Set());
   const [busy, setBusy] = useState(false);
 
@@ -56,6 +66,8 @@ export function IntakeSweep({
 
   useEffect(() => {
     let cancelled = false;
+    setGate(null);
+    setDrafts(null);
     void (async () => {
       try {
         // routeQuestionSweep can make two sequential AI calls (draft + retry) — longer
@@ -69,13 +81,37 @@ export function IntakeSweep({
                 talk_style: me.talk_style ?? 'even',
                 voice_preset: me.voice_preset,
               },
+              aiConsent: me.ai_consent,
+              crisisToday,
               useLocal,
+              claimBatch: claimQuestionsBatch,
             });
           })(),
           25000,
           'intake-sweep',
         );
-        if (!cancelled) setDrafts(next);
+        if (cancelled) return;
+        switch (next.kind) {
+          case 'questions':
+            setDrafts(next.drafts);
+            break;
+          case 'consent-pending':
+            setDrafts([]);
+            setGate(QUESTIONS_EMPTY_CONSENT);
+            break;
+          case 'consent-denied':
+            setDrafts([]);
+            setGate(QUESTIONS_EMPTY_DENIED);
+            break;
+          case 'crisis':
+            setDrafts([]);
+            setGate(QUESTIONS_EMPTY_CRISIS);
+            break;
+          case 'quota':
+            setDrafts([]);
+            setGate(QUESTIONS_EMPTY_QUOTA);
+            break;
+        }
       } catch (err) {
         console.log('[intake-sweep] route error:', err);
         if (!cancelled) setDrafts([]);
@@ -84,7 +120,7 @@ export function IntakeSweep({
     return () => {
       cancelled = true;
     };
-  }, [me.name, me.talk_style, me.voice_preset]);
+  }, [me.name, me.talk_style, me.voice_preset, me.ai_consent, crisisToday]);
 
   const open = unansweredSweep(drafts ?? [], answered).filter(
     (row) => !skipped.has(row.axis) && !deferred.has(row.axis),
@@ -156,6 +192,10 @@ export function IntakeSweep({
       </View>
       {drafts == null ? (
         <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+      ) : gate != null ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {gate}
+        </ThemedText>
       ) : open.length === 0 ? (
         <>
           <ThemedText type="small" themeColor="textSecondary">

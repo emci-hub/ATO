@@ -27,6 +27,7 @@ import { parseQuestionBatch } from '../src/lib/questions/parse';
 import { buildQuestionsPrompt } from '../src/lib/questions/prompt';
 import { preferFreshAxes, recentAskedAxes } from '../src/lib/questions/rotation';
 import { nextUnansweredItem, routeQuestions } from '../src/lib/questions/route';
+import { routeQuestionSweep } from '../src/lib/questions/sweep';
 import { QUESTIONS_BATCH_SIZE, QUESTIONS_CALL_TYPE } from '../src/lib/questions/types';
 import type { QuestionDraft } from '../src/lib/questions/types';
 import { emptySageKnowsState } from '../src/lib/sage-knows';
@@ -383,6 +384,58 @@ assert.equal(QUESTIONS_CHECKPOINT, "That's plenty for now — come back anytime"
 assert.equal(QUESTIONS_KEEP_GOING, 'Keep going');
 assert.match(read('src/components/explore-panel.tsx'), /claimAiCall\('explore'\)/);
 ok('own screen from You; writes self_situation; Explore tagged separately');
+
+// "A faster pass" sweep is gated exactly like routeQuestions: consent → crisis
+// → quota → generate, and the local bank still sits behind consent/crisis.
+const sweepMe = { name: 'Riley', talk_style: 'even' as const, voice_preset: 'close_friend' };
+const sweepDenied = await routeQuestionSweep({ me: sweepMe, aiConsent: false, useLocal: true });
+assert.equal(sweepDenied.kind, 'consent-denied');
+assert.equal(sweepDenied.drafts.length, 0);
+const sweepPending = await routeQuestionSweep({ me: sweepMe });
+assert.equal(sweepPending.kind, 'consent-pending');
+const sweepCrisis = await routeQuestionSweep({ me: sweepMe, aiConsent: true, crisisToday: true, useLocal: true });
+assert.equal(sweepCrisis.kind, 'crisis');
+assert.equal(sweepCrisis.drafts.length, 0);
+
+let sweepClaimed = 0;
+const sweepQuota = await routeQuestionSweep({
+  me: sweepMe,
+  aiConsent: true,
+  useLocal: false,
+  claimBatch: async () => {
+    sweepClaimed += 1;
+    return { ok: false, reason: 'quota' } as const;
+  },
+});
+assert.equal(sweepQuota.kind, 'quota');
+assert.equal(sweepQuota.drafts.length, 0);
+assert.equal(sweepClaimed, 1);
+
+let localSweepClaimed = 0;
+const sweepLocal = await routeQuestionSweep({
+  me: sweepMe,
+  aiConsent: true,
+  useLocal: true,
+  claimBatch: async () => {
+    localSweepClaimed += 1;
+    return { ok: true } as const;
+  },
+});
+assert.equal(sweepLocal.kind, 'questions');
+assert.equal(sweepLocal.drafts.length, 16);
+assert.equal(localSweepClaimed, 0);
+ok('sweep gates consent → crisis → quota before generating; local bank is free but consent/crisis-gated');
+
+const sweepSrc = read('src/lib/questions/sweep.ts');
+assert.match(sweepSrc, /aiConsent/);
+assert.match(sweepSrc, /crisisToday/);
+assert.match(sweepSrc, /claimBatch/);
+assert.match(read('src/components/intake-sweep.tsx'), /claimQuestionsBatch/);
+assert.match(read('src/components/intake-sweep.tsx'), /QUESTIONS_EMPTY_CONSENT/);
+assert.match(read('src/components/intake-sweep.tsx'), /QUESTIONS_EMPTY_QUOTA/);
+assert.match(read('src/components/intake-sweep.tsx'), /crisisToday/);
+assert.match(read('src/app/(tabs)/intake-sweep.tsx'), /crisisToday=\{crisisToday\}/);
+ok('sweep wiring: component passes consent/crisis/claim, tab passes crisisToday');
 
 console.log(`\n${passed} question checks passed`);
 }
