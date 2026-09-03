@@ -99,6 +99,27 @@ assert.equal(PROVIDER_LIMITS.deepseek.rpm, null);
 assert.ok(AI_PROVIDER_IDS.includes('deepseek'));
 ok('Edge Function holds every vendor key, verifies the JWT, claims quota, caps tokens');
 
+// ping used to reach a real vendor with no quota claim at all (a free paid
+// call outside the quota system). It must now return before both `complete(`
+// and `claim_ai_call` — key-presence only, never the vendor.
+const pingBranch = edge.slice(edge.indexOf('if (payload.ping === true)'), edge.indexOf('const prompt ='));
+assert.notEqual(pingBranch, '');
+assert.match(pingBranch, /keyFor\(provider as ProviderId\)/);
+assert.match(pingBranch, /text: 'ready'/);
+assert.doesNotMatch(pingBranch, /complete\(/);
+assert.doesNotMatch(pingBranch, /claim_ai_call/);
+const afterPing = edge.slice(edge.indexOf('const prompt ='));
+assert.doesNotMatch(afterPing, /if \(!ping\)/);
+ok('ping never reaches a vendor or claims quota; every remaining path always claims before completing');
+
+// A real call's prompt length and temperature are both bounded server-side —
+// output tokens were already clamped, but neither of these was.
+assert.match(edge, /const MAX_PROMPT_CHARS = 24_000/);
+assert.match(edge, /prompt\.length > MAX_PROMPT_CHARS \? prompt\.slice\(0, MAX_PROMPT_CHARS\) : prompt/);
+assert.match(edge, /const MAX_TEMPERATURE = 1/);
+assert.match(edge, /Math\.min\(MAX_TEMPERATURE, Math\.max\(0, requestedTemperature\)\)/);
+ok('prompt length and temperature are clamped server-side, not just output tokens');
+
 const srcFiles = walk(resolve(root, 'src'));
 const generateContentHits = srcFiles.filter((file) => {
   const text = readFileSync(file, 'utf8');

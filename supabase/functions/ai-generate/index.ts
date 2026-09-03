@@ -12,11 +12,14 @@
  *
  * Body: { provider, prompt, temperature, maxOutputTokens, responseFormat,
  *         callType?, ping? }.
- *   maxOutputTokens is clamped server-side to MAX_OUTPUT_TOKENS.
+ *   maxOutputTokens is clamped server-side to MAX_OUTPUT_TOKENS; prompt length
+ *   to MAX_PROMPT_CHARS; temperature to [0, 1].
  *   callType tags ai_usage.by_type ('sage' | 'explore'); defaults to 'sage'.
- *   ping: true is a connectivity probe — the prompt is replaced with a fixed
- *   64-token request and NO quota is claimed, so the dev provider-status dots
- *   can poll without draining a user's day.
+ *   ping: true is a connectivity probe for the dev provider-status dots. It
+ *   never calls the vendor (so it costs nothing and needs no quota claim) —
+ *   it only confirms the vendor's API key secret is configured. It used to
+ *   make a real 64-token vendor call with no claim at all, which paid for
+ *   real generations outside the quota system; see docs/GOTCHAS.md.
  * Returns { text } — the same raw string the client parsers already expect.
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
@@ -24,8 +27,9 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 /** Hard ceiling on output tokens per request, regardless of what the client asks for. */
 const MAX_OUTPUT_TOKENS = 1024;
 const DEFAULT_OUTPUT_TOKENS = 1024;
-const PING_PROMPT = 'Reply with the word ready.';
-const PING_OUTPUT_TOKENS = 64;
+/** Generous backstop — every real ATO prompt is far shorter than this. */
+const MAX_PROMPT_CHARS = 24_000;
+const MAX_TEMPERATURE = 1;
 
 const PROVIDERS = ['gemini', 'nvidia', 'perplexity', 'claude', 'grok', 'deepseek'] as const;
 type ProviderId = (typeof PROVIDERS)[number];
@@ -291,35 +295,47 @@ Deno.serve(async (request) => {
     return json({ error: 'unsupported_provider' }, 400);
   }
 
-  const ping = payload.ping === true;
-  const prompt = ping ? PING_PROMPT : typeof payload.prompt === 'string' ? payload.prompt : '';
-  if (!prompt.trim()) return json({ error: 'missing_prompt' }, 400);
+  // Pings never reach a vendor and never claim quota — they only confirm the
+  // vendor's key secret is configured, so the dev provider-status dots have
+  // nothing to meter and nothing to pay for.
+  if (payload.ping === true) {
+    try {
+      keyFor(provider as ProviderId);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'generate_failed';
+      return json({ error: message }, 503);
+    }
+    return json({ text: 'ready' });
+  }
 
-  const temperature = typeof payload.temperature === 'number' ? payload.temperature : 0.8;
+  const prompt = typeof payload.prompt === 'string' ? payload.prompt : '';
+  if (!prompt.trim()) return json({ error: 'missing_prompt' }, 400);
+  const clampedPrompt = prompt.length > MAX_PROMPT_CHARS ? prompt.slice(0, MAX_PROMPT_CHARS) : prompt;
+
+  const requestedTemperature =
+    typeof payload.temperature === 'number' && Number.isFinite(payload.temperature)
+      ? payload.temperature
+      : 0.8;
+  const temperature = Math.min(MAX_TEMPERATURE, Math.max(0, requestedTemperature));
   const requested =
     typeof payload.maxOutputTokens === 'number' && Number.isFinite(payload.maxOutputTokens)
       ? Math.floor(payload.maxOutputTokens)
       : DEFAULT_OUTPUT_TOKENS;
-  const maxOutputTokens = ping
-    ? PING_OUTPUT_TOKENS
-    : Math.min(MAX_OUTPUT_TOKENS, Math.max(1, requested));
+  const maxOutputTokens = Math.min(MAX_OUTPUT_TOKENS, Math.max(1, requested));
   const responseFormat: 'json' | 'text' = payload.responseFormat === 'json' ? 'json' : 'text';
   const callType = payload.callType === 'explore' ? 'explore' : 'sage';
 
-  // Claim one unit of the caller's daily/monthly cap BEFORE touching a paid
-  // key. Pings are exempt (fixed tiny prompt, no user content).
-  if (!ping) {
-    const { data: claim, error: claimError } = await caller.rpc('claim_ai_call', {
-      p_call_type: callType,
-    });
-    if (claimError) return json({ error: `claim_failed: ${claimError.message}` }, 500);
-    const ok = claim && typeof claim === 'object' && (claim as { ok?: unknown }).ok === true;
-    if (!ok) return json({ error: 'quota' }, 429);
-  }
+  // Claim one unit of the caller's daily/monthly cap BEFORE touching a paid key.
+  const { data: claim, error: claimError } = await caller.rpc('claim_ai_call', {
+    p_call_type: callType,
+  });
+  if (claimError) return json({ error: `claim_failed: ${claimError.message}` }, 500);
+  const ok = claim && typeof claim === 'object' && (claim as { ok?: unknown }).ok === true;
+  if (!ok) return json({ error: 'quota' }, 429);
 
   try {
     const text = await complete(provider as ProviderId, {
-      prompt,
+      prompt: clampedPrompt,
       temperature,
       maxOutputTokens,
       responseFormat,

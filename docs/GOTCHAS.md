@@ -59,7 +59,11 @@ Read before editing the area. Each one has bitten this repo at least once.
   `grok-3-mini` can spend a 16–64 token budget on hidden thinking and return empty text.
 - **Quota is claimed in the Edge Function.** The client `claimAiCall()` is a no-op for
   remote providers; do not add a second claim or users get charged twice.
-- **Pings (`ping: true`) are quota-exempt** by design — server-forced 16-token prompt.
+- **Pings (`ping: true`) never reach a vendor.** They used to make a real, unmetered
+  64-token vendor call with no quota claim at all — a free real generation outside the
+  quota system. Now they only confirm the vendor's key secret is present (`keyFor`)
+  and return a fixed `{ text: 'ready' }`; `complete()` and `claim_ai_call` are never
+  reached for a ping.
 - **Any Gemini failure falls back to DeepSeek once** (not only quota). If DeepSeek's
   secret is missing you get the empty-card state, not an error.
 - **Every AI await needs `withTimeout`** (25s where two sequential calls are possible).
