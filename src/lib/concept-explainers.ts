@@ -63,6 +63,10 @@ export const CATEGORY_CONCEPTS: Record<CategoryId, string> = {
     'A map of doing it your way versus needing a real connection for a day to land. Two separate questions, plotted together.',
   cat_levity:
     'How much a hard talk can still have a little air in it — play in the day, plus how a disagreement gets named and left with a way through. A bar, not a map. This can shift.',
+  cat_structure:
+    'A map of whether a plan holds when the day gets boring, against how open you are to trading it for something you did not see coming. Two separate questions, plotted together.',
+  cat_resilience:
+    'What a hard task feels like, whether a miss reads as something to learn from or the end of the road, and how fast a knock fades.',
 };
 
 export function axisConcept(axis: TraitAxis): string {

@@ -24,7 +24,9 @@ export type CategoryId =
   | 'cat_communication'
   | 'cat_love'
   | 'cat_independence'
-  | 'cat_levity';
+  | 'cat_levity'
+  | 'cat_structure'
+  | 'cat_resilience';
 
 export type CategoryShape = 'bar' | 'map';
 
@@ -119,6 +121,24 @@ export const CATEGORY_DEFS: readonly CategoryDef[] = [
     shape: 'bar',
     axes: ['playfulness', 'conflict_assertiveness', 'conflict_cooperativeness'],
     weights: { playfulness: 1, conflict_assertiveness: 1, conflict_cooperativeness: 1 },
+    minStable: 2,
+    texture: [],
+  },
+  {
+    id: 'cat_structure',
+    name: 'Structure vs. spontaneity',
+    shape: 'map',
+    axes: ['openness', 'conscientiousness'],
+    weights: { openness: 1, conscientiousness: 1 },
+    minStable: 2,
+    texture: [],
+  },
+  {
+    id: 'cat_resilience',
+    name: 'Resilience under pressure',
+    shape: 'bar',
+    axes: ['competence', 'growth_mindset', 'steadiness'],
+    weights: { competence: 1, growth_mindset: 1, steadiness: 1 },
     minStable: 2,
     texture: [],
   },

@@ -64,6 +64,16 @@ export const CATEGORY_FALLBACK_BANDS: Record<CategoryId, readonly CategoryBand[]
     { min: 0.35, max: 0.65, lede: 'Sometimes they leave a little room in a hard talk. Sometimes they do not.' },
     { min: 0.65, max: 1.01, lede: 'A hard talk can still have a bit of air in it — not a joke, just not only a job.' },
   ],
+  cat_structure: [
+    { min: 0, max: 0.35, lede: 'A plan can drift once the day gets boring, and a new path does not pull that hard either.' },
+    { min: 0.35, max: 0.65, lede: 'Some days the plan holds, some days something new pulls harder.' },
+    { min: 0.65, max: 1.01, lede: 'Sees a plan through even when it drags, and still stays curious about what else is out there.' },
+  ],
+  cat_resilience: [
+    { min: 0, max: 0.35, lede: 'A hard task can feel like proof of doubt. A miss can feel like the end of that path.' },
+    { min: 0.35, max: 0.65, lede: 'Some days a hard task feels doable. A knock lingers, then fades.' },
+    { min: 0.65, max: 1.01, lede: 'A hard task feels handleable, a miss reads as something to learn from, and a knock fades fast.' },
+  ],
 };
 
 export function fallbackBandFor(id: CategoryId, score: number): string {
@@ -81,7 +91,10 @@ export function mapScore(x: number, y: number): number {
 type MapQuad = 'low_low' | 'high_low' | 'low_high' | 'high_high';
 
 /** UNREVIEWED map-quadrant lines. Used when both axes are independently stable. */
-export const MAP_QUADRANT_BANDS: Record<'cat_love' | 'cat_independence', Record<MapQuad, string>> = {
+export const MAP_QUADRANT_BANDS: Record<
+  'cat_love' | 'cat_independence' | 'cat_structure',
+  Record<MapQuad, string>
+> = {
   cat_love: {
     low_low: 'A slow reply is just a slow reply. Once they are in, they stay close.',
     high_low: 'A pause can start to feel like pulling away. Once they are in, they stay close.',
@@ -94,6 +107,12 @@ export const MAP_QUADRANT_BANDS: Record<'cat_love' | 'cat_independence', Record<
     low_high: 'A path already set is fine, and a real connection is how a day lands.',
     high_high: 'Would rather pick the path, and still needs a real connection for a day to land.',
   },
+  cat_structure: {
+    low_low: 'A set path is fine, and it can drift once the day gets boring.',
+    high_low: 'Quick to trade the plan for something new, and just as quick to let it drift.',
+    low_high: 'A set path is fine, and holds even when the day gets boring.',
+    high_high: 'Open to something new, but still sees the plan through once it is set.',
+  },
 };
 
 export function fallbackForReading(reading: {
@@ -103,7 +122,8 @@ export function fallbackForReading(reading: {
 }): string {
   if (reading.def.shape === 'map' && reading.map) {
     const quad: MapQuad = `${reading.map.x >= 0.5 ? 'high' : 'low'}_${reading.map.y >= 0.5 ? 'high' : 'low'}`;
-    const table = MAP_QUADRANT_BANDS[reading.def.id as 'cat_love' | 'cat_independence'];
+    const table =
+      MAP_QUADRANT_BANDS[reading.def.id as 'cat_love' | 'cat_independence' | 'cat_structure'];
     if (table) return table[quad];
     return fallbackBandFor(reading.def.id, mapScore(reading.map.x, reading.map.y));
   }

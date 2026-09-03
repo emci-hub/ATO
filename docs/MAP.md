@@ -89,7 +89,7 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 | Voice (cards) | `voice/{router,talk,bank,filters,jargon,phrase-guard,framework-fence,style-checklist,quota,quota-server,select-provider,config,library,nudge,cue,preset,voice-reference}.ts`, `voice/providers/*` | Dawn card + Talk routing, guards, quota, providers |
 | Explore | `explore/{route,generate,prompt,combine,cadence,copy,local,store,types}.ts` | Observation entries |
 | Questions | `questions/{route,generate,prompt,bank,sweep,rotation,deferral,guards,parse,store,local,copy,context,types}.ts` | Infinite questions + sweep |
-| Categories | `categories.ts`, `category-bands.ts`, `category-share-store.ts`, `concept-explainers.ts`, `dawn-category.ts` | 9 categories, bands, sharing, explainers |
+| Categories | `categories.ts`, `category-bands.ts`, `category-share-store.ts`, `concept-explainers.ts`, `dawn-category.ts` | 11 categories in code (`cat_structure`/`cat_resilience` new, DB seed + OTA pending), bands, sharing, explainers |
 | Sage extras | `sage-title*.ts`, `sage-story*.ts`, `sage-insight.ts`, `sage-messages.ts`, `sage-copy.ts`, `sage-eight-ball.ts`, `chat.ts`, `moderation.ts` | Title/Story, chat, block/mute/report |
 | Circle | `circle.ts`, `circle-context.tsx`, `share.ts`, `share-codec.ts` | Connections, poster link/QR |
 | Crisis | `crisis/{detect,copy,days,log,region,region-context,region-storage}.ts` | Keyword detect, static card, region |

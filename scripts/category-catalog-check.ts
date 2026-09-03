@@ -36,7 +36,12 @@ function stableReport(axis: TraitTrack['axis'], value: number): TraitTrack {
   return applyEwmaAnswer(row, axis, 'report', value, nowIso);
 }
 
-/** The exact rows wave21 + wave22 seed into `category_defs`, as the client receives them. */
+/**
+ * The exact rows wave21 + wave22 + wave40 seed into `category_defs`, as the client
+ * receives them. wave40's `cat_structure`/`cat_resilience` are staged in code and this
+ * fixture ahead of the live DB re-seed + OTA (deliberately reverted from prod pending
+ * that, see PROJECT_CONTEXT.md) — keep this array in sync with each seed migration.
+ */
 const SEED_ROWS: CategoryDefRow[] = [
   { id: 'cat_steadiness', name: 'Steadiness', shape: 'bar', axis_weights: { conscientiousness: 1, agreeableness: 1, steadiness: 1 }, min_axes_required_stable: 2, texture_axes: [] },
   { id: 'cat_openness', name: 'Openness to life', shape: 'bar', axis_weights: { openness: 1, extraversion: 1 }, min_axes_required_stable: 2, texture_axes: [] },
@@ -47,6 +52,8 @@ const SEED_ROWS: CategoryDefRow[] = [
   { id: 'cat_love', name: 'Love / closeness', shape: 'map', axis_weights: { attachment_anxiety: 1, attachment_avoidance: 1 }, min_axes_required_stable: 2, texture_axes: ['conflict_assertiveness', 'conflict_cooperativeness'] },
   { id: 'cat_independence', name: 'Independence & closeness', shape: 'map', axis_weights: { autonomy: 1, relatedness: 1 }, min_axes_required_stable: 2, texture_axes: [] },
   { id: 'cat_levity', name: 'Levity', shape: 'bar', axis_weights: { playfulness: 1, conflict_assertiveness: 1, conflict_cooperativeness: 1 }, min_axes_required_stable: 2, texture_axes: [] },
+  { id: 'cat_structure', name: 'Structure vs. spontaneity', shape: 'map', axis_weights: { openness: 1, conscientiousness: 1 }, min_axes_required_stable: 2, texture_axes: [] },
+  { id: 'cat_resilience', name: 'Resilience under pressure', shape: 'bar', axis_weights: { competence: 1, growth_mindset: 1, steadiness: 1 }, min_axes_required_stable: 2, texture_axes: [] },
 ];
 
 const byId = (id: string) => SEED_ROWS.find((row) => row.id === id)!;

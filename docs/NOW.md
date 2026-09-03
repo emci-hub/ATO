@@ -161,7 +161,7 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 2. **Playfulness poles + stems** — `POLE_COPY_REVIEWED = false` (`axis-poles.ts`): Full Profile poles for all 16 axes. Playfulness ranking items, scenario first + second stems (`SCENARIO_DECK_MORE`), `TRAIT_POLE_LINES`/mid lines.
 3. **Levity copy** — category def/name (`categories.ts`), fallback band + map-quadrant lines (`category-bands.ts`, `CATEGORY_BAND_COPY_REVIEWED = false`), category concept explainer, Explore category grounding for `cat_levity`.
 4. **Category bands + category copy** — `CATEGORY_COPY_REVIEWED = false` (`categories.ts`) and `CATEGORY_BAND_COPY_REVIEWED = false` (`category-bands.ts`): offline fallback bands + live category line copy (Explore pinned card, You fold, teaser, Circle compare).
-5. **25 concept explainers** — `CONCEPT_COPY_REVIEWED = false` (`concept-explainers.ts`): 16 axis + 9 category "?" explainers.
+5. **27 concept explainers** — `CONCEPT_COPY_REVIEWED = false` (`concept-explainers.ts`): 16 axis + 11 category "?" explainers (`cat_structure`/`cat_resilience` added in code, DB seed + OTA pending).
 6. **Dawn category grounding** — `DAWN_CATEGORY_COPY_REVIEWED = false` (`dawn-category.ts`).
 7. **Intake sweep copy** — `INTAKE_SWEEP_COPY_REVIEWED = false` (`questions/local.ts`).
 

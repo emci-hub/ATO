@@ -53,6 +53,10 @@ export const EXPLORE_CATEGORY_GROUNDING: Record<CategoryId, string> = {
     'doing it their way versus needing a real connection for a day to land — two separate questions sitting together',
   cat_levity:
     'whether a hard talk can still have a little air in it — lightness in the day, plus how a disagreement gets named and left with a way through',
+  cat_structure:
+    'whether a plan holds when the day gets boring, plotted against how open they are to trading it for something they did not see coming — two separate questions sitting together',
+  cat_resilience:
+    'what a hard task feels like, whether a miss reads as something to learn from or the end of the road, and how fast a knock fades',
 };
 
 function categoryGroundingBlock(categories: readonly CategoryId[]): string {

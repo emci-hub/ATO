@@ -62,15 +62,15 @@ assert.equal(AXIS_POLES.playfulness.low.length > 0, true);
 assert.equal(POLE_COPY_REVIEWED, false);
 ok('playfulness is the 16th axis: schema list, IQ, ranking, gut-call, depth, poles');
 
-assert.equal(CATEGORY_DEFS.length, 9);
-assert.equal(CATEGORY_DEFS.filter((row) => row.shape === 'map').length, 2);
+assert.equal(CATEGORY_DEFS.length, 11);
+assert.equal(CATEGORY_DEFS.filter((row) => row.shape === 'map').length, 3);
 const love = CATEGORY_DEFS.find((row) => row.id === 'cat_love')!;
 assert.deepEqual([...love.axes], ['attachment_anxiety', 'attachment_avoidance']);
 assert.deepEqual([...love.texture], ['conflict_assertiveness', 'conflict_cooperativeness']);
 const levity = CATEGORY_DEFS.find((row) => row.id === 'cat_levity')!;
 assert.equal(levity.shape, 'bar');
 assert.deepEqual([...levity.axes], ['playfulness', 'conflict_assertiveness', 'conflict_cooperativeness']);
-ok('nine category defs; love map keeps conflict as texture; Levity is a bar');
+ok('eleven category defs; love map keeps conflict as texture; Levity is a bar');
 
 const social = CATEGORY_DEFS.find((row) => row.id === 'cat_social')!;
 const gameOnly: TraitTrack[] = [

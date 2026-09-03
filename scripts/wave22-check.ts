@@ -111,7 +111,7 @@ const levity = CATEGORY_DEFS.find((row) => row.id === 'cat_levity');
 assert.ok(levity);
 assert.equal(levity!.shape, 'bar');
 assert.deepEqual([...levity!.axes], ['playfulness', 'conflict_assertiveness', 'conflict_cooperativeness']);
-assert.equal(CATEGORY_DEFS.filter((row) => row.shape === 'map').length, 2);
+assert.equal(CATEGORY_DEFS.filter((row) => row.shape === 'map').length, 3);
 const love = CATEGORY_DEFS.find((row) => row.id === 'cat_love')!;
 assert.equal(love.shape, 'map');
 const partial = [stableReport('playfulness', 0.8)];
