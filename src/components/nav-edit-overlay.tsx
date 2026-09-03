@@ -102,6 +102,8 @@ export function NavEditOverlay({
 
             <Sortable.Flex
               customHandle
+              flexDirection="column"
+              flexWrap="nowrap"
               onDragEnd={({ indexToKey }) => {
                 const next = indexToKey.filter(
                   (key): key is BarSlotId => key === 'home' || key === 'sage' || key in NAV_TABS,

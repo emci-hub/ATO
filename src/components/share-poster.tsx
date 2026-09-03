@@ -45,7 +45,7 @@ export const SharePoster = forwardRef<View, { me: PosterPerson; width?: number }
 ) {
   const accent = accentFromShowUp(me.show_up);
   const qrSize = Math.round(width * 0.5);
-  const scanTag = `ASTR//${me.handle.replace(/^@/, '').toUpperCase()}`;
+  const scanTag = `ATO//${me.handle.replace(/^@/, '').toUpperCase()}`;
 
   return (
     <View ref={ref} collapsable={false} style={[styles.poster, { width }]}>
@@ -189,9 +189,8 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 4,
   },
   scanRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     marginTop: 10,
     paddingHorizontal: 2,
   },
