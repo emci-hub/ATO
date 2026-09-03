@@ -1,5 +1,5 @@
 /**
- * You-tab facts list (read/delete). Run: npm run check:facts
+ * Sage-tab facts list (read/delete). Run: npm run check:facts
  *
  * Display is unfenced stored text. Create stays Chat "Teach Sage this".
  * Deleting the last fact is a real empty array, not a sticky once-true.
@@ -75,14 +75,16 @@ assert.doesNotMatch(ui, /framework-fence/);
 assert.doesNotMatch(ui, /containsFrameworkTerm/);
 assert.doesNotMatch(ui, /TextInput/);
 assert.doesNotMatch(ui, /onChangeText/);
-ok('You-tab viewer is read/delete only — no fence, no new write field');
+ok('Sage-tab viewer is read/delete only — no fence, no new write field');
 
 const explore = read('src/app/(tabs)/explore.tsx');
-assert.match(explore, /SageFactsCard/);
-const intakeIdx = explore.indexOf('<IntakeSettings');
-const factsIdx = explore.indexOf('<SageFactsCard');
-assert.ok(intakeIdx > 0 && factsIdx > intakeIdx);
-ok('facts summary sits with How you show up on Explore');
+assert.doesNotMatch(explore, /SageFactsCard/);
+const sageTab = read('src/app/(tabs)/sage.tsx');
+assert.match(sageTab, /SageFactsCard/);
+const ballIdx = sageTab.indexOf('<SageEightBall');
+const factsIdx = sageTab.indexOf('<SageFactsCard');
+assert.ok(ballIdx > 0 && factsIdx > ballIdx);
+ok('facts summary is a collapsible card below the 8-ball on Sage');
 
 const chat = read('src/app/chat.tsx');
 assert.match(chat, /Teach Sage this/);

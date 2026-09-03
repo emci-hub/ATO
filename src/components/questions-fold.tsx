@@ -9,7 +9,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { updateTraits, type Me } from '@/lib/me';
 import { earnTokensQuiet } from '@/lib/tokens-server';
 import { deferredUnansweredAxes } from '@/lib/questions/deferral';
-import { traitStateFromRow } from '@/lib/traits';
+import { TRAIT_AXES, traitStateFromRow, type TraitAxis } from '@/lib/traits';
 import {
   QUESTIONS_CHECKPOINT,
   QUESTIONS_CHECKPOINT_AFTER,
@@ -89,12 +89,15 @@ export function QuestionsFold({
   crisisToday,
   onUpdated,
   alwaysOpen = false,
+  focusAxis,
 }: {
   me: Me;
   history: CheckHistory[];
   crisisToday: boolean;
   onUpdated: () => Promise<void>;
   alwaysOpen?: boolean;
+  /** Front-loads this axis in the next batch (e.g. deep-linked from Legends). */
+  focusAxis?: TraitAxis;
 }) {
   const theme = useTheme();
   const [result, setResult] = useState<RouteQuestionsResult | null>(null);
@@ -104,6 +107,14 @@ export function QuestionsFold({
   const [keptGoing, setKeptGoing] = useState(false);
 
   const load = useCallback(async () => {
+    const deferred = deferredUnansweredAxes(
+      traitStateFromRow(me).values,
+      me.question_deferred,
+    );
+    const priorityAxes =
+      focusAxis && (TRAIT_AXES as readonly string[]).includes(focusAxis)
+        ? [focusAxis, ...deferred.filter((axis) => axis !== focusAxis)]
+        : deferred;
     const next = await withTimeout(
       routeQuestions(
         {
@@ -111,10 +122,7 @@ export function QuestionsFold({
           history,
           aiConsent: me.ai_consent,
           crisisToday,
-          priorityAxes: deferredUnansweredAxes(
-            traitStateFromRow(me).values,
-            me.question_deferred,
-          ),
+          priorityAxes,
         },
         {
           loadLatestPack: fetchLatestQuestionPack,
@@ -130,7 +138,7 @@ export function QuestionsFold({
       'questions',
     );
     setResult(next);
-  }, [me, history, crisisToday]);
+  }, [me, history, crisisToday, focusAxis]);
 
   function handleOpen() {
     setSessionCount(0);

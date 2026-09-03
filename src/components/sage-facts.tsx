@@ -1,12 +1,11 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
   FACTS_EMPTY_COPY,
@@ -16,75 +15,36 @@ import {
   factsSummaryLabel,
 } from '@/lib/facts';
 import { removeFact, type Me } from '@/lib/me';
-import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
+import { controlBorderColor } from '@/lib/theme/chrome';
 
 /**
- * You-tab facts list. Read and delete only — teaching still happens from
- * Chat's "Teach Sage this". Display is the stored string as written.
+ * Collapsible Sage-tab facts list. Read and delete only — teaching still
+ * happens from Chat's "Teach Sage this". Display is the stored string as
+ * written. Lives below the 8-ball on Sage, not on Explore.
  */
 export function SageFactsCard({
   me,
   onUpdated,
+  onResize,
 }: {
   me: Me;
   onUpdated: () => Promise<void>;
+  /** Called before this card changes height, so a host scroll view can skip its auto-scroll. */
+  onResize?: () => void;
 }) {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
-  const facts = asFactsArray(me.facts);
-  const summary = factsSummaryLabel(facts.length);
-
-  return (
-    <>
-      <ThemedView type="backgroundElement" style={styles.card}>
-        <ThemedPressable
-          accessibilityRole="button"
-          accessibilityLabel={summary}
-          onPress={() => setOpen(true)}
-          style={styles.summary}>
-          <ThemedText type="smallBold" style={styles.summaryText}>
-            {summary}
-          </ThemedText>
-          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
-        </ThemedPressable>
-      </ThemedView>
-      <SageFactsSheet
-        visible={open}
-        facts={facts}
-        userId={me.id}
-        onClose={() => setOpen(false)}
-        onUpdated={onUpdated}
-      />
-    </>
-  );
-}
-
-function SageFactsSheet({
-  visible,
-  facts,
-  userId,
-  onClose,
-  onUpdated,
-}: {
-  visible: boolean;
-  facts: string[];
-  userId: string;
-  onClose: () => void;
-  onUpdated: () => Promise<void>;
-}) {
-  const theme = useTheme();
   const [pending, setPending] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    if (!visible) setPending(null);
-  }, [visible]);
+  const facts = asFactsArray(me.facts);
+  const summary = factsSummaryLabel(facts.length);
 
   async function forget(index: number) {
     if (busy) return;
     setBusy(true);
+    onResize?.();
     try {
-      await removeFact(userId, index);
+      await removeFact(me.id, index);
       await onUpdated();
       setPending(null);
     } catch (err) {
@@ -95,85 +55,94 @@ function SageFactsSheet({
   }
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaProvider style={styles.provider}>
-        <ThemedView style={styles.sheet}>
-          <SafeAreaView style={styles.safe}>
-          <View style={styles.header}>
-            <ThemedText type="subtitle" style={styles.title}>
-              {FACTS_SCREEN_TITLE}
-            </ThemedText>
-            <Pressable onPress={onClose} hitSlop={12} style={({ pressed }) => pressed && styles.pressed}>
-              <MaterialCommunityIcons name="close" size={24} color={theme.text} />
-            </Pressable>
-          </View>
-
-          <ScrollView {...NO_PINCH_ZOOM} contentContainerStyle={styles.list}>
-            {facts.length === 0 ? (
-              <ThemedText themeColor="textSecondary">{FACTS_EMPTY_COPY}</ThemedText>
-            ) : (
-              facts.map((fact, index) => {
-                const confirming = pending === index;
-                return (
-                  <ThemedView key={`${index}:${fact}`} type="backgroundElement" style={styles.factCard}>
-                    {confirming ? (
-                      <View style={styles.confirmBlock}>
-                        <ThemedText type="smallBold">{FACTS_FORGET_CONFIRM}</ThemedText>
-                        <View style={styles.confirmRow}>
-                          <Pressable
-                            disabled={busy}
-                            onPress={() => setPending(null)}
-                            style={({ pressed }) => [
-                              styles.keepButton,
-                              { borderColor: controlBorderColor(theme) },
-                              pressed && styles.pressed,
-                              busy && styles.disabled,
-                            ]}>
-                            <ThemedText type="smallBold">Keep</ThemedText>
-                          </Pressable>
-                          <Pressable
-                            disabled={busy}
-                            onPress={() => {
-                              void forget(index);
-                            }}
-                            style={({ pressed }) => [
-                              styles.forgetButton,
-                              pressed && styles.pressed,
-                              busy && styles.disabled,
-                            ]}>
-                            <ThemedText type="smallBold" style={styles.forgetLabel}>
-                              Forget
-                            </ThemedText>
-                          </Pressable>
-                        </View>
-                      </View>
-                    ) : (
-                      <View style={styles.factRow}>
-                        <ThemedText style={styles.factText}>{fact}</ThemedText>
-                        <ThemedPressable
-                          accessibilityRole="button"
-                          accessibilityLabel={FACTS_FORGET_CONFIRM}
+    <ThemedView type="backgroundElement" style={styles.card}>
+      <ThemedPressable
+        accessibilityRole="button"
+        accessibilityLabel={`${FACTS_SCREEN_TITLE}. ${summary}`}
+        accessibilityState={{ expanded: open }}
+        onPress={() => {
+          onResize?.();
+          setPending(null);
+          setOpen((value) => !value);
+        }}
+        style={styles.header}>
+        <View style={styles.headerLabel}>
+          <ThemedText type="smallBold">{FACTS_SCREEN_TITLE}</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {summary}
+          </ThemedText>
+        </View>
+        <MaterialCommunityIcons
+          name={open ? 'chevron-up' : 'chevron-down'}
+          size={20}
+          color={theme.textSecondary}
+        />
+      </ThemedPressable>
+      {open ? (
+        <View style={styles.body}>
+          {facts.length === 0 ? (
+            <ThemedText themeColor="textSecondary">{FACTS_EMPTY_COPY}</ThemedText>
+          ) : (
+            facts.map((fact, index) => {
+              const confirming = pending === index;
+              return (
+                <ThemedView key={`${index}:${fact}`} type="backgroundElement" style={styles.factCard}>
+                  {confirming ? (
+                    <View style={styles.confirmBlock}>
+                      <ThemedText type="smallBold">{FACTS_FORGET_CONFIRM}</ThemedText>
+                      <View style={styles.confirmRow}>
+                        <Pressable
                           disabled={busy}
-                          onPress={() => setPending(index)}
-                          hitSlop={8}
-                          style={styles.deleteHit}>
-                          <MaterialCommunityIcons
-                            name="trash-can-outline"
-                            size={20}
-                            color={theme.textSecondary}
-                          />
-                        </ThemedPressable>
+                          onPress={() => setPending(null)}
+                          style={({ pressed }) => [
+                            styles.keepButton,
+                            { borderColor: controlBorderColor(theme) },
+                            pressed && styles.pressed,
+                            busy && styles.disabled,
+                          ]}>
+                          <ThemedText type="smallBold">Keep</ThemedText>
+                        </Pressable>
+                        <Pressable
+                          disabled={busy}
+                          onPress={() => {
+                            void forget(index);
+                          }}
+                          style={({ pressed }) => [
+                            styles.forgetButton,
+                            pressed && styles.pressed,
+                            busy && styles.disabled,
+                          ]}>
+                          <ThemedText type="smallBold" style={styles.forgetLabel}>
+                            Forget
+                          </ThemedText>
+                        </Pressable>
                       </View>
-                    )}
-                  </ThemedView>
-                );
-              })
-            )}
-          </ScrollView>
-          </SafeAreaView>
-        </ThemedView>
-      </SafeAreaProvider>
-    </Modal>
+                    </View>
+                  ) : (
+                    <View style={styles.factRow}>
+                      <ThemedText style={styles.factText}>{fact}</ThemedText>
+                      <ThemedPressable
+                        accessibilityRole="button"
+                        accessibilityLabel={FACTS_FORGET_CONFIRM}
+                        disabled={busy}
+                        onPress={() => setPending(index)}
+                        hitSlop={8}
+                        style={styles.deleteHit}>
+                        <MaterialCommunityIcons
+                          name="trash-can-outline"
+                          size={20}
+                          color={theme.textSecondary}
+                        />
+                      </ThemedPressable>
+                    </View>
+                  )}
+                </ThemedView>
+              );
+            })
+          )}
+        </View>
+      ) : null}
+    </ThemedView>
   );
 }
 
@@ -181,46 +150,25 @@ const DANGER = '#E5484D';
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: Spacing.four,
-    padding: Spacing.two,
-  },
-  summary: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.two,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
-  },
-  summaryText: {
-    flex: 1,
-  },
-  provider: {
-    flex: 1,
-  },
-  sheet: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  safe: {
-    flex: 1,
-    maxWidth: MaxContentWidth,
-    paddingHorizontal: Spacing.four,
+    borderRadius: Spacing.three,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.half,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: Spacing.two,
-    paddingVertical: Spacing.three,
+    paddingVertical: Spacing.one,
+    paddingHorizontal: Spacing.two,
   },
-  title: {
+  headerLabel: {
     flex: 1,
+    gap: Spacing.half,
   },
-  list: {
+  body: {
+    paddingHorizontal: Spacing.two,
+    paddingBottom: Spacing.two,
     gap: Spacing.two,
-    paddingBottom: Spacing.four,
   },
   factCard: {
     borderRadius: Spacing.three,

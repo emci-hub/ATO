@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,6 +22,16 @@ import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { buildLegendView, type LegendView } from '@/lib/legends/match';
 import { supabase } from '@/lib/supabase';
 import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
+import {
+  effectiveStability,
+  isThinProfile,
+  settledCount,
+  trackFor,
+  type TraitTrack,
+} from '@/lib/trait-stability';
+import { fetchTraitTracks } from '@/lib/trait-tracks-store';
+import { TRAIT_AXES, traitStateFromRow, type TraitAxis } from '@/lib/traits';
+import type { Me } from '@/lib/me';
 
 type LoadState =
   | { status: 'loading' }
@@ -34,7 +45,29 @@ function emptyCopy(view: LegendView): string {
   if (view.anyMatchedArchetype) {
     return 'You have seen every legend that fits you so far. New ones appear as your matches shift.';
   }
-  return 'Nothing here yet. Once enough of your traits have settled, a legend that matches you will show up here.';
+  return 'Nothing here yet. New legends appear as your matches shift.';
+}
+
+/**
+ * Axis to nudge toward in Questions when the profile is too thin to match a
+ * legend: the first completely unanswered axis, else the least-settled
+ * report axis.
+ */
+function missingAxis(me: Me, tracks: readonly TraitTrack[]): TraitAxis | null {
+  const values = traitStateFromRow(me).values;
+  for (const axis of TRAIT_AXES) {
+    if (values[axis] == null) return axis;
+  }
+  let best: TraitAxis | null = null;
+  let bestStability = Infinity;
+  for (const axis of TRAIT_AXES) {
+    const stability = effectiveStability(trackFor(tracks, axis, 'report'));
+    if (stability < bestStability) {
+      bestStability = stability;
+      best = axis;
+    }
+  }
+  return best;
 }
 
 /**
@@ -132,6 +165,29 @@ export default function LegendsScreen() {
   const { me } = useMeContext();
   const [load, setLoad] = useState<LoadState>({ status: 'loading' });
   const [retryTick, setRetryTick] = useState(0);
+  const [tracks, setTracks] = useState<TraitTrack[]>([]);
+  const [tracksReady, setTracksReady] = useState(false);
+
+  useEffect(() => {
+    if (!me?.id) return;
+    let cancelled = false;
+    setTracksReady(false);
+    fetchTraitTracks(me.id)
+      .then((rows) => {
+        if (cancelled) return;
+        setTracks(rows);
+        setTracksReady(true);
+      })
+      .catch((err) => {
+        console.log('[legends] tracks error:', err);
+        // Ready with zero tracks reads as a thin profile, which is the honest
+        // state when we cannot prove otherwise — better than the bare empty copy.
+        if (!cancelled) setTracksReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [me?.id, me?.updated_at]);
 
   useEffect(() => {
     if (!me?.id) {
@@ -170,6 +226,9 @@ export default function LegendsScreen() {
   }, [me, retryTick]);
 
   const ready = load.status === 'ready' ? load.view : null;
+  const settled = settledCount(tracks);
+  const thin = isThinProfile(settled);
+  const focusAxis = me ? missingAxis(me, tracks) : null;
 
   return (
     <ThemedView style={styles.container}>
@@ -210,6 +269,25 @@ export default function LegendsScreen() {
                   archetype={card.archetype}
                 />
               ))
+            ) : ready.hasCatalog && !ready.anyMatchedArchetype && tracksReady && thin ? (
+              <ThemedView type="backgroundElement" style={styles.card}>
+                <ThemedText type="smallBold">Your profile is still taking shape.</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Answer a few questions so your traits settle, and a legend that fits you
+                  will show up here.
+                </ThemedText>
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={!focusAxis}
+                  onPress={() => {
+                    if (focusAxis) {
+                      router.push({ pathname: '/intake-sweep', params: { axis: focusAxis } });
+                    }
+                  }}
+                  style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
+                  <ThemedText type="link">Answer questions</ThemedText>
+                </Pressable>
+              </ThemedView>
             ) : (
               <ThemedView type="backgroundElement" style={styles.card}>
                 <ThemedText>{emptyCopy(ready)}</ThemedText>
@@ -253,6 +331,10 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.four,
     padding: Spacing.four,
     gap: Spacing.two,
+  },
+  cta: {
+    alignSelf: 'flex-start',
+    paddingVertical: Spacing.one,
   },
   presetCard: {
     borderRadius: Spacing.four,

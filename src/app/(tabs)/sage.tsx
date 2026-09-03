@@ -19,6 +19,7 @@ import { AiConsentCard } from '@/components/ai-consent-card';
 import { CrisisCard } from '@/components/crisis-card';
 import { ReportSheet } from '@/components/report-sheet';
 import { SageEightBall } from '@/components/sage-eight-ball';
+import { SageFactsCard } from '@/components/sage-facts';
 import { SageUsageLine } from '@/components/sage-usage';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -191,6 +192,13 @@ export default function SageScreen() {
   const composerRef = useRef<View>(null);
   const { open: keyboardOpen, lift: keyboardLift } = useKeyboardLift(composerRef);
   const scrollRef = useRef<ScrollView>(null);
+  /**
+   * The Sage toys (8-ball, facts card, usage line) sit inside the chat
+   * ScrollView, so expanding the facts card or deleting a fact changes content
+   * height and would trip the thread's scroll-to-end. Set while a toy resizes
+   * itself so that one auto-scroll is skipped; new messages still scroll.
+   */
+  const skipAutoScrollRef = useRef(false);
 
   useEffect(() => {
     if (!keyboardOpen) return;
@@ -445,12 +453,25 @@ export default function SageScreen() {
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
             onContentSizeChange={() => {
+              if (skipAutoScrollRef.current) {
+                skipAutoScrollRef.current = false;
+                return;
+              }
               if (consent === 'granted') {
                 scrollRef.current?.scrollToEnd({ animated: keyboardOpen });
               }
             }}>
             <View style={styles.sageToys}>
               <SageEightBall />
+              {me ? (
+                <SageFactsCard
+                  me={me}
+                  onUpdated={() => refreshMe()}
+                  onResize={() => {
+                    skipAutoScrollRef.current = true;
+                  }}
+                />
+              ) : null}
               {me ? <SageUsageLine revision={usageRevision} /> : null}
             </View>
 

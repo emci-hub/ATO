@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +14,7 @@ import { checksToHistory, fetchChecks, type Check } from '@/lib/checks';
 import { crisisFlagsForWindow } from '@/lib/crisis/days';
 import { useMe } from '@/hooks/use-me';
 import { useSession } from '@/hooks/use-session';
+import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
 /**
  * Questions — every question surface that feeds the trait axes lives here:
@@ -24,6 +25,10 @@ export default function IntakeSweepTabScreen() {
   const { session } = useSession();
   const userId = session?.user.id;
   const { me, refresh } = useMe(userId);
+  const params = useLocalSearchParams<{ axis?: string }>();
+  const focusAxis = (TRAIT_AXES as readonly string[]).includes(params.axis ?? '')
+    ? (params.axis as TraitAxis)
+    : undefined;
   const [checks, setChecks] = useState<Check[]>([]);
   const [checksReady, setChecksReady] = useState(false);
   const [crisisToday, setCrisisToday] = useState(false);
@@ -80,6 +85,7 @@ export default function IntakeSweepTabScreen() {
               history={checksToHistory(checks)}
               crisisToday={crisisToday}
               onUpdated={refresh}
+              focusAxis={focusAxis}
             />
           ) : null}
 

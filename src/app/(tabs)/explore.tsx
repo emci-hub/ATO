@@ -6,7 +6,6 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } 
 import { CategoriesFold } from '@/components/categories-fold';
 import { FullProfileFold } from '@/components/full-profile-fold';
 import { IntakeSettings } from '@/components/intake-settings';
-import { SageFactsCard } from '@/components/sage-facts';
 import { SageInsightSpend } from '@/components/sage-insight-spend';
 import { SageStoryFold } from '@/components/sage-story-fold';
 import { SageTitleCard } from '@/components/sage-title-card';
@@ -146,7 +145,6 @@ export default function ExploreScreen() {
               <TraitBandsFold me={me} tracks={tracks} />
               <FullProfileFold me={me} onUpdated={() => refreshMe()} />
               <CategoriesFold me={me} onUpdated={() => refreshMe()} />
-              <SageFactsCard me={me} onUpdated={() => refreshMe()} />
               <SageStoryFold
                 me={me}
                 tracks={tracks}
