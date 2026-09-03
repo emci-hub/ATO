@@ -16,7 +16,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { fetchPeerState, type PeerState } from '@/lib/circle';
 import { useMeContext } from '@/lib/me-context';
 import { setCloseFriendsShare } from '@/lib/me';
-import { CATEGORY_DEFS } from '@/lib/categories';
+import { getCategoryDefs } from '@/lib/categories';
 import { parseSageTitle } from '@/lib/sage-title';
 import {
   fetchCategoryShareStatus,
@@ -360,7 +360,7 @@ function PeerCard({
         ) : null}
         {compareOpen ? (
           <View style={styles.compareList}>
-            {CATEGORY_DEFS.map((def) => (
+            {getCategoryDefs().map((def) => (
               <CategoryCompareRow
                 key={def.id}
                 id={def.id}

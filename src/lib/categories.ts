@@ -124,8 +124,124 @@ export const CATEGORY_DEFS: readonly CategoryDef[] = [
   },
 ];
 
+/**
+ * Live catalog. Starts as the fallback consts; the category catalog loader
+ * (`lib/category-catalog.ts`) replaces it after a successful fetch from the
+ * `category_defs` table. Math below reads this, never the const directly.
+ */
+let activeDefs: readonly CategoryDef[] = CATEGORY_DEFS;
+
+export function getCategoryDefs(): readonly CategoryDef[] {
+  return activeDefs;
+}
+
+/**
+ * Replaces the active catalog. An empty list is ignored so the fallback stays
+ * authoritative when the table is empty (or the fetch comes back with none).
+ */
+export function setCategoryDefs(defs: readonly CategoryDef[]): void {
+  if (defs.length === 0) return;
+  activeDefs = defs;
+}
+
 export function categoryById(id: string): CategoryDef | null {
-  return CATEGORY_DEFS.find((row) => row.id === id) ?? null;
+  return getCategoryDefs().find((row) => row.id === id) ?? null;
+}
+
+/** A `category_defs` table row (Supabase) as the client receives it. */
+export interface CategoryDefRow {
+  id: string;
+  name: string;
+  shape: string;
+  axis_weights: Record<string, unknown> | null;
+  min_axes_required_stable: unknown;
+  texture_axes: string[] | null;
+}
+
+function isTraitAxisKey(value: unknown): value is TraitAxis {
+  return typeof value === 'string' && (TRAIT_AXES as readonly string[]).includes(value);
+}
+
+/**
+ * Ordered `axes` for one category. Order matters for maps (`axes[0]` = x,
+ * `axes[1]` = y), so a known category keeps the fallback's curated order and
+ * any newly-added axis is appended after it. `axis_weights` is jsonb in the
+ * table, which does not preserve object key order, so the fallback is the
+ * only reliable source of the original x/y order.
+ */
+function orderedAxes(id: string, dbAxes: readonly TraitAxis[]): TraitAxis[] {
+  const fallback = CATEGORY_DEFS.find((row) => row.id === id);
+  const out: TraitAxis[] = [];
+  const seen = new Set<string>();
+  if (fallback) {
+    for (const axis of fallback.axes) {
+      if (dbAxes.includes(axis) && !seen.has(axis)) {
+        out.push(axis);
+        seen.add(axis);
+      }
+    }
+  }
+  for (const axis of dbAxes) {
+    if (!seen.has(axis)) {
+      out.push(axis);
+      seen.add(axis);
+    }
+  }
+  return out;
+}
+
+/** Maps a `category_defs` row to a `CategoryDef`. Null when the row is unusable. */
+export function categoryDefFromRow(row: CategoryDefRow): CategoryDef | null {
+  const id = typeof row.id === 'string' ? row.id.trim() : '';
+  const name = typeof row.name === 'string' ? row.name.trim() : '';
+  if (!id || !name) return null;
+
+  const weights: Partial<Record<TraitAxis, number>> = {};
+  if (row.axis_weights && typeof row.axis_weights === 'object' && !Array.isArray(row.axis_weights)) {
+    for (const [axis, raw] of Object.entries(row.axis_weights)) {
+      if (!isTraitAxisKey(axis)) continue;
+      const value = typeof raw === 'number' ? raw : Number(raw);
+      if (Number.isFinite(value)) weights[axis] = value;
+    }
+  }
+  const axes = orderedAxes(id, Object.keys(weights) as TraitAxis[]);
+  if (axes.length === 0) return null;
+
+  const minRaw =
+    typeof row.min_axes_required_stable === 'number'
+      ? row.min_axes_required_stable
+      : Number(row.min_axes_required_stable);
+  const minStable = Number.isFinite(minRaw) && minRaw >= 1 ? Math.floor(minRaw) : 2;
+
+  const texture = (Array.isArray(row.texture_axes) ? row.texture_axes : []).filter(isTraitAxisKey);
+
+  return {
+    id: id as CategoryId,
+    name,
+    shape: row.shape === 'map' ? 'map' : 'bar',
+    axes,
+    weights,
+    minStable,
+    texture,
+  };
+}
+
+/**
+ * Keeps the curated fallback order for known ids and appends any new rows (in
+ * table order) after — so the fetched catalog renders and rotates in the same
+ * order as the seed, without freezing a category count.
+ */
+export function sortCategoryDefs(defs: readonly CategoryDef[]): CategoryDef[] {
+  const order = new Map<string, number>();
+  CATEGORY_DEFS.forEach((row, index) => order.set(row.id, index));
+  return [...defs].sort((a, b) => {
+    const ai = order.get(a.id);
+    const bi = order.get(b.id);
+    if (ai !== undefined && bi !== undefined) return ai - bi;
+    if (ai !== undefined) return -1;
+    if (bi !== undefined) return 1;
+    return 0;
+  });
 }
 
 function reportStable(
@@ -216,7 +332,7 @@ export function readAllCategories(
   tracks: readonly TraitTrack[],
   now: Date = new Date(),
 ): CategoryReading[] {
-  return CATEGORY_DEFS.map((def) => readCategory(def, tracks, now));
+  return getCategoryDefs().map((def) => readCategory(def, tracks, now));
 }
 
 export function readyCategories(
@@ -242,7 +358,7 @@ export function categoriesFingerprint(tracks: readonly TraitTrack[], now: Date =
 
 export function categoriesTiedToAxes(axes: readonly TraitAxis[]): CategoryId[] {
   const out: CategoryId[] = [];
-  for (const def of CATEGORY_DEFS) {
+  for (const def of getCategoryDefs()) {
     if (def.axes.some((axis) => axes.includes(axis))) out.push(def.id);
   }
   return out;
@@ -280,7 +396,7 @@ export function nextSpotlight(
 }
 
 export function categoryCopyClean(): boolean {
-  return CATEGORY_DEFS.every((row) => !containsFrameworkTerm(row.name));
+  return getCategoryDefs().every((row) => !containsFrameworkTerm(row.name));
 }
 
 export function parseSpotlight(raw: unknown): { weekKey: string; categoryId: CategoryId } | null {

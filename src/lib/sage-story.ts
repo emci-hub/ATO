@@ -6,7 +6,7 @@
  * direct read — same bar as the Crisis spec.
  */
 import {
-  CATEGORY_DEFS,
+  getCategoryDefs,
   categoriesFingerprint,
   readAllCategories,
   type CategoryId,
@@ -100,7 +100,7 @@ export function parseSageStory(raw: unknown): SageStory | null {
   const categoryIds: CategoryId[] = [];
   if (Array.isArray(row.categoryIds)) {
     for (const item of row.categoryIds) {
-      if (typeof item === 'string' && CATEGORY_DEFS.some((def) => def.id === item)) {
+      if (typeof item === 'string' && getCategoryDefs().some((def) => def.id === item)) {
         categoryIds.push(item as CategoryId);
       }
     }
@@ -127,7 +127,7 @@ export function parseStoryBody(text: string): string | null {
 /** Distinctive multi-word category labels only — short English words stay allowed. */
 export function storyNamesACategory(body: string): boolean {
   const lower = body.toLowerCase();
-  for (const def of CATEGORY_DEFS) {
+  for (const def of getCategoryDefs()) {
     const name = def.name.toLowerCase();
     if (name.includes(' ') || name.includes('/')) {
       if (lower.includes(name)) return true;

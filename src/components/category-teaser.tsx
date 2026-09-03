@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { fallbackCategoryCopies, fallbackForReading, CATEGORY_BAND_COPY_REVIEWED } from '@/lib/category-bands';
+import { useCategoryDefs } from '@/lib/category-catalog';
 import { categoryById, readCategory } from '@/lib/categories';
 import { categoryConcept, CONCEPT_COPY_REVIEWED } from '@/lib/concept-explainers';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
@@ -23,6 +24,7 @@ import type { CategoryId } from '@/lib/categories';
 
 export function CategoryTeaser({ me }: { me: Me }) {
   const theme = useTheme();
+  useCategoryDefs();
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [id, setId] = useState<CategoryId | null>(null);
   const [peek, setPeek] = useState(false);

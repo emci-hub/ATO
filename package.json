@@ -109,6 +109,7 @@
     "check:wave20": "tsx ./scripts/wave20-check.ts",
     "check:wave21": "tsx ./scripts/wave21-check.ts",
     "check:wave22": "tsx ./scripts/wave22-check.ts",
+    "check:category-catalog": "tsx ./scripts/category-catalog-check.ts",
     "check:scenario": "tsx ./scripts/scenario-check.ts",
     "check:today-slot": "tsx ./scripts/today-slot-check.ts",
     "check:ask": "tsx ./scripts/ask-check.ts",

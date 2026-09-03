@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { ConceptHint } from '@/components/concept-hint';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
-import { CATEGORY_DEFS, type CategoryId } from '@/lib/categories';
+import { getCategoryDefs, type CategoryId } from '@/lib/categories';
 import { categoryConcept, CONCEPT_COPY_REVIEWED } from '@/lib/concept-explainers';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import type { CategoryCopy } from '@/lib/sage-title';
@@ -17,7 +17,7 @@ export function CategoryCompactCard({
   copy: CategoryCopy | undefined;
   empty?: string;
 }) {
-  const def = CATEGORY_DEFS.find((row) => row.id === id);
+  const def = getCategoryDefs().find((row) => row.id === id);
   if (!def) return null;
   return (
     <View style={styles.card}>

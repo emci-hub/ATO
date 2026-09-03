@@ -8,7 +8,7 @@
  * same function, same reasons, no source-based bypass.
  */
 import {
-  CATEGORY_DEFS,
+  getCategoryDefs,
   categoryById,
   readCategory,
   type CategoryId,
@@ -98,7 +98,7 @@ export function dawnCategoryPromptBlock(pick: DawnReadCategory | null): string {
 /** Catalog lock: Dawn's three ids must stay real bar categories. */
 export function dawnReadCategoriesAreBars(): boolean {
   return DAWN_READ_CATEGORY_IDS.every((id) => {
-    const def = CATEGORY_DEFS.find((row) => row.id === id);
+    const def = getCategoryDefs().find((row) => row.id === id);
     return def?.shape === 'bar';
   });
 }

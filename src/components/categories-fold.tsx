@@ -7,6 +7,7 @@ import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { fallbackCategoryCopies, fallbackForReading, CATEGORY_BAND_COPY_REVIEWED } from '@/lib/category-bands';
+import { useCategoryDefs } from '@/lib/category-catalog';
 import {
   CATEGORY_COPY_REVIEWED,
   nextSpotlight,
@@ -32,6 +33,7 @@ export function CategoriesFold({
 }) {
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [openId, setOpenId] = useState<CategoryId | null>(null);
+  useCategoryDefs();
   const readings = readAllCategories(tracks);
   const ready = readings.filter((row) => row.ready);
   const cached = parseSageTitle(me.sage_title);

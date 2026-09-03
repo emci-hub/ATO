@@ -3,7 +3,7 @@
  * One Gemini call. Copy is generated, not a lookup. UNREVIEWED samples live below.
  */
 import {
-  CATEGORY_DEFS,
+  getCategoryDefs,
   categoriesFingerprint,
   readAllCategories,
   type CategoryId,
@@ -82,7 +82,9 @@ export const TITLE_SAMPLES: readonly TitleSample[] = [
   },
 ];
 
-const CATEGORY_IDS = CATEGORY_DEFS.map((row) => row.id);
+function categoryIds(): CategoryId[] {
+  return getCategoryDefs().map((row) => row.id);
+}
 
 function parseCategoryCopy(raw: unknown): CategoryCopy | null {
   if (typeof raw === 'string') {
@@ -120,7 +122,7 @@ export function parseSageTitle(raw: unknown): SageTitle | null {
   const categories: Partial<Record<CategoryId, CategoryCopy>> = {};
   if (row.categories && typeof row.categories === 'object' && !Array.isArray(row.categories)) {
     const bag = row.categories as Record<string, unknown>;
-    for (const id of CATEGORY_IDS) {
+    for (const id of categoryIds()) {
       const copy = parseCategoryCopy(bag[id]);
       if (copy) categories[id] = copy;
     }
@@ -141,7 +143,7 @@ export function drivingAxisLines(axes: readonly TraitAxis[], tracks: readonly Tr
 export function pinnedCategoryLines(title: SageTitle | null | undefined): string[] {
   if (!title?.categories) return [];
   const out: string[] = [];
-  for (const id of CATEGORY_IDS) {
+  for (const id of categoryIds()) {
     const copy = title.categories[id];
     if (!copy) continue;
     if (copy.line.trim()) out.push(copy.line.trim());
@@ -245,7 +247,7 @@ export function parseCombinedBody(text: string): {
     const categories: Partial<Record<CategoryId, CategoryCopy>> = {};
     if (row.categories && typeof row.categories === 'object' && !Array.isArray(row.categories)) {
       const bag = row.categories as Record<string, unknown>;
-      for (const id of CATEGORY_IDS) {
+      for (const id of categoryIds()) {
         const copy = parseCategoryCopy(bag[id]);
         if (copy) categories[id] = copy;
       }

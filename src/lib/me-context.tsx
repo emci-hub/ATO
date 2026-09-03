@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react';
 
+import { refreshCategoryCatalog } from '@/lib/category-catalog';
 import { fetchMyDevAccess, type DevAccessSnapshot } from '@/lib/dev-access-server';
 import { fetchMe, Me } from '@/lib/me';
 import { supabase } from '@/lib/supabase';
@@ -86,6 +87,8 @@ export function MeProvider({ children }: { children: ReactNode }) {
         if (!cancelled) setLoading(false);
       });
 
+    void refreshCategoryCatalog().catch(() => {});
+
     fetchMyDevAccess()
       .then((next) => {
         if (!cancelled) setDevAccess(next);
@@ -115,6 +118,7 @@ export function MeProvider({ children }: { children: ReactNode }) {
     } catch {
       setDevAccess(EMPTY_DEV_ACCESS);
     }
+    void refreshCategoryCatalog({ force: true }).catch(() => {});
   }, [userId]);
 
   return (
