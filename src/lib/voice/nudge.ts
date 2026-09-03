@@ -36,7 +36,7 @@ const KNOCK_ALIASES: Record<string, string[]> = {
   'people/conflict': ['people/conflict', 'conflict', 'argument', 'fight'],
   health: ['health', 'sick', 'illness'],
   money: ['money', 'rent', 'bills'],
-  loneliness: ['loneliness', 'lonely', 'alone', 'left out', 'isolated'],
+  loneliness: ['loneliness', 'lonely', 'left out', 'isolated'],
 };
 
 function parseKnockChips(knocks: string): string[] {
