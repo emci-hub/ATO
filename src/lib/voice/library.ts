@@ -58,7 +58,7 @@ const KEYWORDS: Record<LibraryEntryId, string[]> = {
   communication: ['what to say', 'hard conversation', 'told them', 'left out', 'one ask'],
   health: ['health', 'workout', 'sick', 'pill next', 'shoes by the door'],
   money: ['money', 'rent', 'bills', 'spend', 'checkout', 'pay the buffer'],
-  loneliness: ['lonely', 'loneliness', 'alone', 'left out', 'isolated'],
+  loneliness: ['lonely', 'loneliness', 'left out', 'isolated'],
   sdt: ['their own way', 'path someone else', 'real connection'],
   growth_mindset: ['after a miss', 'try again', 'not good at that'],
   locus_of_control: ['bound to happen', 'first thought'],
