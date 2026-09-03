@@ -20,11 +20,11 @@ export type SupportStyle = 'nudge' | 'space' | 'listen' | 'plan';
 export type CurrentFocus = 'habit' | 'through_it' | 'like_yourself' | 'show_up';
 export type KnocksChip =
   | 'sleep'
+  | 'money'
   | 'workload'
   | 'people/conflict'
   | 'health'
-  | 'money'
-  | 'something else';
+  | 'loneliness';
 
 export interface IntakeChip<T extends string = string> {
   value: T;
@@ -45,9 +45,9 @@ export interface CoreIntakeAnswers {
 export const KNOCKS_DELIMITER = ', ';
 
 export const TALK_STYLE_CHIPS: IntakeChip<TalkStyle>[] = [
-  { value: 'quiet', label: 'Quiet' },
-  { value: 'even', label: 'Even' },
   { value: 'loud', label: 'Loud' },
+  { value: 'even', label: 'Even' },
+  { value: 'quiet', label: 'Quiet' },
 ];
 
 /** Cosmetic sample under the You-tab picker. Static local strings — never a model call. */
@@ -59,35 +59,32 @@ export const TALK_STYLE_PREVIEWS: Record<TalkStyle, string> = {
 
 /** Color-seed vibes. Stored on existing `show_up` (still a string). */
 export const SHOW_UP_CHIPS: IntakeChip[] = [
-  { value: 'building something', label: 'Building something' },
-  { value: 'getting through it', label: 'Getting through it' },
-  { value: 'finding my feet', label: 'Finding my feet' },
-  { value: 'showing up anyway', label: 'Showing up anyway' },
-  { value: 'clearing space', label: 'Clearing space' },
-  { value: 'running hot', label: 'Running hot' },
+  { value: 'push through it', label: 'Push through it' },
+  { value: 'stay steady', label: 'Stay steady' },
+  { value: 'go quiet', label: 'Go quiet' },
+  { value: 'push back', label: 'Push back' },
+  { value: 'reach out to someone', label: 'Reach out to someone' },
 ];
 
 export const KNOCKS_CHIPS: IntakeChip<KnocksChip>[] = [
   { value: 'sleep', label: 'Sleep' },
-  { value: 'workload', label: 'Workload' },
-  { value: 'people/conflict', label: 'People / conflict' },
-  { value: 'health', label: 'Health' },
   { value: 'money', label: 'Money' },
-  { value: 'something else', label: 'Something else' },
+  { value: 'workload', label: 'Workload' },
+  { value: 'people/conflict', label: 'People/conflict' },
+  { value: 'health', label: 'Health' },
+  { value: 'loneliness', label: 'Loneliness' },
 ];
 
 /**
  * Infinitive phrases that drop into first_cards.md: "After you {morning_cue}, …"
- * Chip label is the "After I …" shape from the spec; stored value is the cue.
+ * Chip label is the bare phrase from the spec; stored value is the cue.
  */
 export const MORNING_CUE_CHIPS: IntakeChip[] = [
-  { value: 'make coffee', label: 'After I make coffee' },
-  { value: 'brush my teeth', label: 'After I brush my teeth' },
-  { value: 'check my phone', label: 'After I check my phone' },
-  { value: 'get out of bed', label: 'After I get out of bed' },
-  { value: 'pour water', label: 'After I pour water' },
-  { value: 'put on music', label: 'After I put on music' },
-  { value: 'take a shower', label: 'After I take a shower' },
+  { value: 'make coffee', label: 'Make coffee' },
+  { value: 'get sunlight', label: 'Get sunlight' },
+  { value: 'move my body', label: 'Move my body' },
+  { value: 'check my phone', label: 'Check my phone' },
+  { value: 'sit in quiet', label: 'Sit in quiet' },
 ];
 
 export const EVENING_WIND_DOWN_CHIPS: IntakeChip[] = [
@@ -128,8 +125,8 @@ export const KNOCKS_CHIP_VALUES: KnocksChip[] = KNOCKS_CHIPS.map((c) => c.value)
 /**
  * Chip ids that must never appear in Sage copy or model prompts as snake_case.
  * Morning/evening cues stay out — their stored values are already phrases
- * ("make coffee"), and the chip labels are "After I …" / "When I …" shapes
- * that do not drop into a Read sentence.
+ * ("make coffee"), and the chip labels are plain phrases that do not drop
+ * into a Read sentence on their own.
  */
 const SIGNAL_PHRASE_BY_VALUE: Record<string, string> = Object.fromEntries(
   [
@@ -180,26 +177,26 @@ export const CORE_INTAKE_QUESTIONS: CoreIntakeQuestion[] = [
   {
     field: 'talk_style',
     n: 1,
-    prompt: 'Quiet, even, or a bit more direct — you already picked this, editable anytime.',
+    prompt: 'How do you come across when you talk to people?',
     chips: TALK_STYLE_CHIPS,
   },
   {
     field: 'show_up',
     n: 2,
-    prompt: "What's this week feel like? This colors your face on Home.",
+    prompt: "Under pressure, what's your instinct — push forward or pull back?",
     chips: SHOW_UP_CHIPS,
   },
   {
     field: 'knocks_you_off',
     n: 3,
-    prompt: "What actually gets in the way of a good day? Pick everything that's true, not just one.",
+    prompt: 'What tends to drain your energy or throw off your schedule?',
     multi: true,
     chips: KNOCKS_CHIPS,
   },
   {
     field: 'morning_cue',
     n: 4,
-    prompt: 'The one thing you already do every morning — your daily bump hangs off this.',
+    prompt: "What's the first thing you actually do when you wake up?",
     chips: MORNING_CUE_CHIPS,
   },
   {
@@ -251,7 +248,7 @@ export function chipLabel(chips: IntakeChip[], value: string | null | undefined)
 export const INTAKE_SETTINGS_LABELS: Record<CoreIntakeField, string> = {
   talk_style: 'How Sage talks to you',
   show_up: 'Show up',
-  knocks_you_off: 'What actually throws off your day',
+  knocks_you_off: 'Disruption',
   morning_cue: 'Your morning anchor',
   evening_wind_down: 'Evening wind-down',
   energy_pattern: 'Most energy',

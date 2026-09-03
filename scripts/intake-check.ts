@@ -135,13 +135,13 @@ async function main() {
   assert.equal(phraseForStoredChip('through_it'), 'Get through something hard');
   assert.equal(phraseForStoredChip('night_owl'), 'Night owl');
   assert.equal(phraseForStoredChip('space'), 'Space to sit with it');
-  assert.equal(phraseForStoredChip('people/conflict'), 'People / conflict');
+  assert.equal(phraseForStoredChip('people/conflict'), 'People/conflict');
   assert.equal(phraseForStoredChip('make coffee'), 'make coffee');
   ok('stored chip ids map to chip labels; cue phrases pass through');
 
   const sample = {
     talk_style: 'even',
-    show_up: 'building something',
+    show_up: 'push through it',
     knocks_you_off: 'sleep, workload',
     morning_cue: 'make coffee',
     evening_wind_down: 'put my phone down',
@@ -151,7 +151,7 @@ async function main() {
   };
   assert.equal(CORE_INTAKE_QUESTIONS.every((q) => INTAKE_SETTINGS_LABELS[q.field]), true);
   assert.equal(displayIntakeValue('talk_style', sample), 'Even');
-  assert.equal(displayIntakeValue('show_up', sample), 'Building something');
+  assert.equal(displayIntakeValue('show_up', sample), 'Push through it');
   assert.equal(displayIntakeValue('knocks_you_off', sample), 'Sleep, Workload');
   assert.deepEqual(selectedIntakeValues('knocks_you_off', sample), ['sleep', 'workload']);
   assert.equal(INTAKE_SETTINGS_LABELS.talk_style, 'How Sage talks to you');
@@ -171,7 +171,7 @@ async function main() {
   assert.equal(INTAKE_SETTINGS_LABELS.morning_cue, 'Your morning anchor');
   assert.equal(
     CORE_INTAKE_QUESTIONS.find((q) => q.field === 'knocks_you_off')?.prompt,
-    "What actually gets in the way of a good day? Pick everything that's true, not just one.",
+    'What tends to drain your energy or throw off your schedule?',
   );
   ok('Settings labels and display values cover all 8 fields');
 

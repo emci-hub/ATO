@@ -119,7 +119,7 @@ function knockDomainIds(knocks: string): LibraryEntryId[] {
   const parts = knocks
     .split(/,\s*/)
     .map((part) => part.trim().toLowerCase())
-    .filter((part) => part.length > 0 && part !== 'something else');
+    .filter((part) => part.length > 0 && part !== 'loneliness');
   const ids: LibraryEntryId[] = [];
   for (const part of parts) {
     if (part === 'sleep' || /\bsleep\b/.test(part) || part.includes('slept')) ids.push('sleep');

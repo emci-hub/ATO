@@ -42,7 +42,7 @@ function parseKnockChips(knocks: string): string[] {
   return knocks
     .split(',')
     .map((part) => part.trim().toLowerCase())
-    .filter((part) => part.length > 0 && part !== 'something else');
+    .filter((part) => part.length > 0 && part !== 'loneliness');
 }
 
 function recentCorpus(history: CheckHistory[]): string {

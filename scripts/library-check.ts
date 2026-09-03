@@ -246,7 +246,7 @@ async function main() {
 
   const leakMe: VoiceMe = {
     name: 'Riley',
-    show_up: 'building something',
+    show_up: 'push through it',
     talk_style: 'loud',
     knocks_you_off: '',
     morning_cue: 'make coffee',
@@ -263,7 +263,7 @@ async function main() {
   });
   assert.equal(
     leakCard.read,
-    'Day 5 in the books. Point at it. Building something can wait.',
+    'Day 5 in the books. Point at it. Push through it can wait.',
   );
   assert.doesNotMatch(leakCard.read, /through_it|alone_time|night_owl|like_yourself/);
   const leakPrompt = buildPrompt({
