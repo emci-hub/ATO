@@ -12,6 +12,14 @@ assert.equal(handleFromScannedText('EMCI'), 'emci');
 assert.equal(handleFromScannedText('not a link'), null);
 assert.equal(handleFromScannedText(''), null);
 
+// An email must never parse as a handle — the "@" there is glued to the
+// local part, not introducing a handle mention.
+assert.equal(handleFromScannedText('someone@example.com'), null);
+assert.equal(handleFromScannedText('first.last+tag@sub.example.co.uk'), null);
+assert.equal(handleFromScannedText('Someone@Example.COM'), null);
+// A real handle mention right after other text (space-separated) still works.
+assert.equal(handleFromScannedText('ping @emci about this'), 'emci');
+
 // The public link is /@handle.
 assert.equal(publicLink('emci'), 'https://astrollogs.com/@emci');
 
