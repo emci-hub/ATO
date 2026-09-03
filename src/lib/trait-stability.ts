@@ -123,10 +123,15 @@ export function reportTracks(rows: readonly TraitTrack[]): TraitTrack[] {
   return rows.filter((row) => row.track === 'report');
 }
 
-export function gameTracks(rows: readonly TraitTrack[]): TraitTrack[] {
-  return rows.filter((row) => row.track === 'game');
-}
-
+/**
+ * The `game` track (source `self_game`, gut-call/scenario answers) is
+ * INTERNAL-ONLY. It is written on every gut-call answer but never rendered as
+ * a standalone number: its value surfaces only through told-vs-played
+ * divergence (The Story via `sage-story-fold.tsx`, Talk via
+ * `formatDivergenceNote`), and gut-call deliberately never counts toward
+ * "settled"/Categories/Title (report-track only). Do not wire it into a band
+ * or fold.
+ */
 export function trackFor(
   rows: readonly TraitTrack[],
   axis: TraitAxis,
