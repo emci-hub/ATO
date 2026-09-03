@@ -6,6 +6,8 @@
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
 **Latest production OTA:** `11d99ff3-33a3-49f8-832f-bde38d8f61ed` (commit `2bfbbc7`, runtime 1.0.0, ios+android) — Phase 3: Home hero card, Legends+Circle primary tabs, subscription-gated appearance modes, 20/24 type steps, `home_bootstrap`. Published Sep 2, 2026. Binary 10+. Supersedes `2498225d` (commit `c2eb2f8`, Phases 0-2: vendor keys server-side, `ai-generate` JWT + token cap + quota claim, root as `me.is_root`, typecheck/lint in the OTA gate, docs restructure).
 
+**Latest red-team pass:** `docs/red-team-2026-09-03.md` (Sep 3, 2026) — security / visual / UI / UX / delight / opportunities, with quickest wins, biggest risks, best opportunities. Nothing in it is fixed yet; it is a findings list, not a changelog.
+
 ## On
 **Unified AI provider layer is on production (OTA `b84f0aa6`, Sep 1, 2026).** Every Sage model call goes through `generateText({ prompt, temperature, maxOutputTokens, responseFormat })` in `src/lib/ai`. `EXPO_PUBLIC_AI_PROVIDER` selects Gemini, NVIDIA, Perplexity, Claude, Grok, or `local`. **Superseded Sep 2, 2026: every one of those six now goes through the `ai-generate` Edge Function and every key is a Supabase secret** — the client-side `EXPO_PUBLIC_*` key path described below was removed, and `check:ai-provider` fails on any `EXPO_PUBLIC_*_API_KEY` reference under `src/`. `MODEL_PROVIDER=local` still forces the deterministic fallback. A hidden provider switcher (tap the Build line 5 times) stores an on-device override in AsyncStorage. Each remote call logs `provider + timestamp` to `ai_provider_log` (not the response) so the switcher can show rolling 1-minute / 24-hour self-tracked counts next to seeded free-tier baselines. **Gemini API key rotated the same day** in gitignored `.env.local` and the production EAS env var (`eas env:set`; classic `eas secret:list` is empty/deprecated). Claude/Grok will 503 until `ANTHROPIC_API_KEY` and `XAI_API_KEY` are set on the Supabase project. NVIDIA/Perplexity need their `EXPO_PUBLIC_*` keys locally to switch to them.
 
@@ -156,6 +158,7 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 - **Check EAS production `EXPO_PUBLIC_GEMINI_MODEL`** — must be `gemini-3.7-flash` or unset (the code default is now correct either way). Could not be read non-interactively from the build session.
 - **Set the `DEV_UNLOCK_PASSWORD` Supabase secret and deploy `dev-unlock`** — the client and check suite are ready, but the Edge Function needs the secret set and deploying before the 7-tap unlock actually works.
 - **Rotate the dev-test account's own Supabase password** (`ATO-dev-user-2026`, wave31 migration) — still in git history; no longer reachable client-side, but rotate it before public launch too.
+- **Delete the stale EAS env vars** `EXPO_PUBLIC_GEMINI_MODEL` (and `EXPO_PUBLIC_GEMINI_API_KEY` / `EXPO_PUBLIC_NVIDIA_MODEL` / `EXPO_PUBLIC_PERPLEXITY_MODEL` if any still exist) from the production/preview/development EAS environments — `eas env:delete --environment production --variable-name EXPO_PUBLIC_GEMINI_MODEL`. Since Sep 3, 2026 nothing under `src/` reads them (the model is chosen inside `ai-generate`; `check:ai-provider` fails on any `EXPO_PUBLIC_*_MODEL` reference), so they are inert but still a leftover. Needs an interactive EAS login; could not be run from the build session.
 - **Wire real billing** behind `src/lib/subscription.ts` before charging for Zen/Neon/Anime — the gate is live, the entitlement source is a stub that always returns inactive.
 - Full device pass against `docs/ATO_DEVICE_TESTS.md` (binary 10+, OTA `d5332b8b`)
 - Verify the Legends "test persona" strip on a real dev build, signed in as `@atodev` the normal way (OTA `d5332b8b` carries the code, but dev builds need the strip exercised)
@@ -179,23 +182,7 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 - Fantasy UI Borders pack (Kenney) — UI chrome/panels/buttons
 - Monster Builder Pack — parked, needs eyes/mouth slots added to recipe before usable
 - Revisit onboarding question wording if it still feels off after a fresh look
-- **`npx tsc --noEmit` pre-existing errors (16) — tracked cleanup, NOT fixed.** These are unrelated to the intake-sweep / nav / pixel work; the runtime check gates (`npm run check:*` via tsx) are the real gate. Full list:
-  1. `scripts/check-window-check.ts:83` — `.reason` on union `{ ok: true } | { ok: false; reason: ... }`
-  2. `scripts/founder-access-check.ts:94` — assert overload mismatch
-  3. `scripts/founder-access-check.ts:110` — `.length` on `never`
-  4. `scripts/founder-access-check.ts:121` — assert overload mismatch
-  5. `scripts/voice-router-check.ts:385` — `.message` on `never`
-  6. `scripts/voice-router-check.ts:386` — `.recentTurns` on `never`
-  7. `scripts/voice-router-check.ts:387` — `.recentTurns` on `never`
-  8. `src/app/(tabs)/around.tsx:73` — `NightSnapshot.colors` `readonly []` vs mutable `number[]`
-  9. `src/app/onboarding.tsx:261` — `createMe` call missing `voice_preset` (required by `MeInsert`)
-  10. `src/components/optional-intake.tsx:165` — `VibeQuestion.fieldLabel` doesn't exist on `VibeDisagreeQuestion`
-  11. `src/components/themed-pressable.tsx:43` — `StyleSheet` platform-specific overload (`default` key)
-  12. `src/lib/checks.ts:75` — `localYmd` not found
-  13. `src/lib/dev-access-server.ts:51` — `DevGrantRow.capability` string vs literal union
-  14. `src/lib/reveal.ts:167` — `RevealCheck`/`WeekCheck` `created_at` mismatch
-  15. `src/lib/reveal.ts:168` — `WeekCheck`/`RevealCheck` missing `day, status`
-  16. `src/lib/sentry.ts:28` — `Expected 0 arguments, but got 1`
+- ~~`npx tsc --noEmit` pre-existing errors (16)~~ — **cleared.** `npm run typecheck` is clean and runs as OTA-gate preflight (`scripts/ota-gate.ts:63`). Verified Sep 3, 2026.
 - **Decided, later Wave 1.5 boxes (see OLD_PLAN Understanding spec):** three-path extra-axis intake (play path shipped as scenarios); 3-month Settings prompt; You-tab weekly completeness slot; Dawn Reload. Locks from the Aug 28 Grok review are in that spec (do not reopen in a later box).
 - Crisis: relational-safety/abuse category, own resource number, parked separately
 - **AI capacity hardening** — close the client-embedded-key bypass before public launch
@@ -204,7 +191,7 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 ## Housekeeping
 - docs/archive/OLD_PLAN.md, docs/ME.md, docs/NOW.md, docs/BUSINESS.md — Cursor maintains these directly. Commit together, `git push` immediately, never left local-only. archive/OLD_PLAN.md is a **working reference**, not a locked spec. Crisis / coach-label / diagnosis-avoidance / App Store floor sections are compliance-grounded and not casually revised. Device pass lives in `docs/ATO_DEVICE_TESTS.md`. `PROJECT_CONTEXT.md` is a pointer to these four, not a second source of truth.
 - **Production OTA publishes go through `npm run ota:publish -- <eas args>` — the hard pre-publish gate.** It runs the full offline `check:*` suite first (`npm run check:ota-gate`) and refuses to publish if any check fails. Never run bare `eas update` for production. Live/env-gated checks (accounts, seeds, network, providers) are excluded from the gate by design and run by hand when their environment exists.
-- EXPO_PUBLIC_AI_PROVIDER selects the live vendor (default gemini). **Since Sep 2, 2026 every vendor key is a Supabase secret on `ai-generate`** (`GEMINI_API_KEY`, `NVIDIA_API_KEY`, `PERPLEXITY_API_KEY`, `ANTHROPIC_API_KEY`, `XAI_API_KEY`, `DEEPSEEK_API_KEY`); nothing under `src/` may reference an `EXPO_PUBLIC_*_API_KEY` (`check:ai-provider` fails if it does). Model from `EXPO_PUBLIC_GEMINI_MODEL` / `GEMINI_MODEL` secret (default `gemini-3.7-flash`; `gemini-2.5-flash` is retired). Never commit `.env.local`.
+- EXPO_PUBLIC_AI_PROVIDER selects the live vendor (default gemini). **Since Sep 2, 2026 every vendor key is a Supabase secret on `ai-generate`** (`GEMINI_API_KEY`, `NVIDIA_API_KEY`, `PERPLEXITY_API_KEY`, `ANTHROPIC_API_KEY`, `XAI_API_KEY`, `DEEPSEEK_API_KEY`); nothing under `src/` may reference an `EXPO_PUBLIC_*_API_KEY` (`check:ai-provider` fails if it does). Model from the `GEMINI_MODEL` Supabase secret only (default `gemini-3.7-flash`; `gemini-2.5-flash` is retired) — since Sep 3, 2026 the client reads no `EXPO_PUBLIC_*_MODEL` at all, and the script-only client Gemini adapter is gone (live checks go through `scripts/live-ai.ts` → `ai-generate`). Never commit `.env.local`.
 - **Open decision (emci's, not technical):** Apple Developer account type — Individual vs Organization. Revisit before public submission.
 - Bundle ID `com.emgens.ato` (App ID) / `com.emgens.ato.signin` (Services ID) confirmed.
 - Apple client_secret JWT minted Aug 25, 2026, expires Feb 24, 2027 07:24 UTC. Regenerate around late Jan 2027. Not automated.

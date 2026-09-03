@@ -53,8 +53,12 @@ Read before editing the area. Each one has bitten this repo at least once.
   `EXPO_PUBLIC_*` vars are inlined, so the reference itself is the leak.
   `check:ai-provider` fails on any `EXPO_PUBLIC_*_API_KEY`.
 - **`gemini-2.5-flash` is retired** (404 "no longer available to new users"). Default is
-  `gemini-3.7-flash`; a wrong `EXPO_PUBLIC_GEMINI_MODEL` / `GEMINI_MODEL` secret fails
-  every call regardless of quota.
+  `gemini-3.7-flash`; a wrong `GEMINI_MODEL` Supabase secret fails every call regardless
+  of quota. The model is chosen only in the Edge Function — the client no longer reads
+  any `EXPO_PUBLIC_*_MODEL` (an EAS env var by that name is inert; delete it).
+- **Live AI checks spend the dev-test user's quota** (`scripts/live-ai.ts`): card-live 3,
+  talk-live 2, style-live 12 of the 20/day cap. Run them on a day you are not also
+  device-testing as `@atodev`, or point `ATO_LIVE_EMAIL` / `ATO_LIVE_PASSWORD` elsewhere.
 - **Reasoning models eat the token budget.** Gemini `thinkingLevel: low` and
   `grok-3-mini` can spend a 16–64 token budget on hidden thinking and return empty text.
 - **Quota is claimed in the Edge Function.** The client `claimAiCall()` is a no-op for

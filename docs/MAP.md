@@ -85,7 +85,7 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 | Traits | `traits.ts`, `trait-history*.ts`, `trait-tracks-store.ts`, `trait-stability.ts`, `trait-bands.ts`, `axis-codes.ts`, `axis-poles.ts` | 16 axes, merge rules, EWMA tracks, bands |
 | Checks | `checks.ts`, `checks-events.ts`, `check-window.ts`, `week-window.ts`, `local-date.ts`, `today-card.ts`, `today-card-events.ts`, `today-slot.ts` | Check write/read, day window, widget card, Home slot |
 | Home extras | `ask.ts`, `ranking.ts`, `scenario.ts`, `sage-knows.ts`, `reveal.ts`, `badges.ts`, `growth.ts`, `home-teaser.ts`, `running-update.ts` | Weekly Ask, reveal, badges, growth |
-| AI transport | `ai/{config,types,generate,edge,http,gemini,override,usage,limits,call-sites}.ts` | `generateText` → Edge Function; provider override; usage log |
+| AI transport | `ai/{config,types,generate,edge,http,override,usage,limits,call-sites}.ts` | `generateText` → Edge Function; provider override; usage log. No vendor HTTP in the bundle |
 | Voice (cards) | `voice/{router,talk,bank,filters,jargon,phrase-guard,framework-fence,style-checklist,quota,quota-server,select-provider,config,library,nudge,cue,preset,voice-reference}.ts`, `voice/providers/*` | Dawn card + Talk routing, guards, quota, providers |
 | Explore | `explore/{route,generate,prompt,combine,cadence,copy,local,store,types}.ts` | Observation entries |
 | Questions | `questions/{route,generate,prompt,bank,sweep,rotation,deferral,guards,parse,store,local,copy,context,types}.ts` | Infinite questions + sweep |
@@ -126,5 +126,8 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 ## `scripts`
 
 `*-check.ts` — one static/pure-logic assertion file per feature (`npm run check:<name>`).
+`live-ai.ts` — shared transport for the live AI checks (`card-live`, `talk-live`, `style-live`):
+signs in as the dev-test user and calls `ai-generate`, so a live check spends that user's quota
+and never needs a vendor key on the machine.
 `ota-gate.ts` runs typecheck + lint + all offline checks; `ota-publish.ts` wraps `eas update`
 behind it; `release-mode-check.ts` blocks production builds while `PRE_LAUNCH_DEV` is true.

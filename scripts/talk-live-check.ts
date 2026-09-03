@@ -1,42 +1,26 @@
 /**
- * LIVE Talk exchange check against the real Gemini provider.
+ * LIVE Talk exchange check through the real path — signed-in user →
+ * ai-generate Edge Function → Gemini (server-held key + model).
  *
- * Proves the thinkingConfig fix: a full, untruncated reply comes back from the
- * actual Gemini path (gemini-3.7-flash, real key from .env.local) via
- * routeTalkReply → createGeminiProvider.generateTalk — not the local fallback.
+ * Proves a full, untruncated reply comes back via routeTalkReply →
+ * generateTalk on the real vendor, not the local fallback, and that Talk
+ * answers the typed line instead of echoing the Home card. Costs the
+ * signed-in user 2 quota units.
  *
  * Run: npx tsx scripts/talk-live-check.ts
  */
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
 
-// Load .env.local before importing the app modules (they read env at import).
-const envRaw = fs.readFileSync(path.resolve(__dirname, '../.env.local'), 'utf8');
-for (const line of envRaw.split(/\r?\n/)) {
-  const t = line.trim();
-  if (!t || t.startsWith('#')) continue;
-  const eq = t.indexOf('=');
-  if (eq === -1) continue;
-  process.env[t.slice(0, eq).trim()] = t.slice(eq + 1).trim();
-}
+import { createLiveEdgeProvider, signInForLiveAi } from './live-ai';
 
 async function main() {
+  const session = await signInForLiveAi();
   const { routeTalkReply } = await import('../src/lib/voice/talk');
   const { buildVoiceConfig } = await import('../src/lib/voice/config');
-  const { createGeminiProvider } = await import('../src/lib/voice/providers/gemini');
 
-  const config = buildVoiceConfig({
-    MODEL_PROVIDER: 'gemini',
-    GEMINI_MODEL: process.env.EXPO_PUBLIC_GEMINI_MODEL,
-    GEMINI_API_KEY: process.env.EXPO_PUBLIC_GEMINI_API_KEY,
-  });
-  assert.ok(config.geminiApiKey, 'real key must be present in .env.local');
-
-  const providers = {
-    gemini: createGeminiProvider({ model: config.geminiModel, apiKey: config.geminiApiKey! }),
-    local: createGeminiProvider({ model: config.geminiModel, apiKey: config.geminiApiKey! }),
-  };
+  const config = buildVoiceConfig({ MODEL_PROVIDER: 'gemini' });
+  const live = createLiveEdgeProvider(session, 'gemini');
+  const providers = { gemini: live, local: live };
 
   const me = {
     name: 'Emci',
@@ -85,10 +69,10 @@ async function main() {
   );
 
   console.log('kind     :', result.kind);
-  console.log('provider :', result.provider);
+  console.log('provider :', result.provider, '(via ai-generate as', session.email + ')');
   console.log('dev trace:', JSON.stringify(result.dev));
   console.log('reply    :', result.reply);
-  console.log('\nLive Talk exchange 1 PASSED — full reply from real Gemini path.');
+  console.log('\nLive Talk exchange 1 PASSED — full reply through the real Edge Function path.');
 
   const homeCard = {
     read: 'Sleep disrupted the streak. Protect the baseline with one sticky-note step.',

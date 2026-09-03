@@ -1,28 +1,28 @@
 import { isAiProviderId, type AiProviderId } from './types';
 
+/**
+ * The only two build-time settings the client still owns. Vendor keys and
+ * model names left the bundle on 2026-09-02: the ai-generate Edge Function
+ * picks the model (`<VENDOR>_MODEL` secret, else its own defaults) and holds
+ * every key, so the client sends a provider id and nothing else.
+ */
 export interface AiEnv {
   AI_PROVIDER?: string;
   MODEL_PROVIDER?: string;
-  GEMINI_MODEL?: string;
-  GEMINI_API_KEY?: string;
-  NVIDIA_MODEL?: string;
-  NVIDIA_API_KEY?: string;
-  PERPLEXITY_MODEL?: string;
-  PERPLEXITY_API_KEY?: string;
 }
 
 export interface AiConfig {
   provider: AiProviderId;
-  geminiModel: string;
-  geminiApiKey?: string;
-  nvidiaModel: string;
-  nvidiaApiKey?: string;
-  perplexityModel: string;
-  perplexityApiKey?: string;
 }
 
 export const AI_PROVIDER_DEFAULT: AiProviderId = 'gemini';
 
+/**
+ * Reference copy of the Edge Function's per-vendor defaults
+ * (supabase/functions/ai-generate/index.ts DEFAULT_MODELS). The client never
+ * sends a model; this exists so docs / labs / checks can name what the server
+ * runs by default. scripts/ai-provider-check asserts the two stay identical.
+ */
 export const DEFAULT_MODELS = {
   // gemini-2.5-flash was retired for new users (404, verified 2026-09-02).
   gemini: 'gemini-3.7-flash',
@@ -44,35 +44,18 @@ export function buildAiConfig(env: AiEnv): AiConfig {
   if (fromAi && isAiProviderId(fromAi)) provider = fromAi;
   else if (fromModel && isAiProviderId(fromModel)) provider = fromModel;
   if (fromModel === 'local') provider = 'local';
-
-  return {
-    provider,
-    geminiModel: env.GEMINI_MODEL || DEFAULT_MODELS.gemini,
-    geminiApiKey: env.GEMINI_API_KEY || undefined,
-    nvidiaModel: env.NVIDIA_MODEL || DEFAULT_MODELS.nvidia,
-    nvidiaApiKey: env.NVIDIA_API_KEY || undefined,
-    perplexityModel: env.PERPLEXITY_MODEL || DEFAULT_MODELS.perplexity,
-    perplexityApiKey: env.PERPLEXITY_API_KEY || undefined,
-  };
+  return { provider };
 }
 
 /**
- * Since 2026-09-02 NO vendor key is read here. Every remote call goes through
- * the ai-generate Edge Function, whose secrets (GEMINI_API_KEY, NVIDIA_API_KEY,
- * PERPLEXITY_API_KEY, ANTHROPIC_API_KEY, XAI_API_KEY, DEEPSEEK_API_KEY) never
- * reach the bundle. The *_API_KEY fields on AiEnv/AiConfig remain only so the
- * live Node check scripts (card-live / talk-live / style-live) can pass a key
- * explicitly to the script-only Gemini adapter.
- *
- * Only statically referenced EXPO_PUBLIC_* vars get inlined by Expo, so
- * omitting them here is what actually removes them from the app.
+ * Only statically referenced EXPO_PUBLIC_* vars get inlined by Expo, so the
+ * two names below are the complete list of what a build can bake in. No
+ * EXPO_PUBLIC_*_API_KEY and no EXPO_PUBLIC_*_MODEL may appear under src/
+ * (scripts/ai-provider-check.ts fails on either).
  */
 const BUNDLE_ENV: AiEnv = {
   AI_PROVIDER: process.env.EXPO_PUBLIC_AI_PROVIDER,
   MODEL_PROVIDER: process.env.EXPO_PUBLIC_MODEL_PROVIDER,
-  GEMINI_MODEL: process.env.EXPO_PUBLIC_GEMINI_MODEL,
-  NVIDIA_MODEL: process.env.EXPO_PUBLIC_NVIDIA_MODEL,
-  PERPLEXITY_MODEL: process.env.EXPO_PUBLIC_PERPLEXITY_MODEL,
 };
 
 export const AI_CONFIG: AiConfig = buildAiConfig(BUNDLE_ENV);
