@@ -51,14 +51,21 @@ Read before editing the area. Each one has bitten this repo at least once.
   reuse in `confirmRevoked` proves revocation.
 - **SecureStore caps values at 2048 bytes.** `auth-storage.ts` splits tokens into
   Keychain and the rest into AsyncStorage; do not store the whole session in Keychain.
-- **`app.qa_override_invite_code` (wave41) needs new connections to take effect.**
-  `ALTER DATABASE ... SET` only applies to backend connections opened after it runs —
-  pooled Supabase connections already open keep reading it as unset for a while. If the
-  override code "doesn't work" right after setting it, that's why; retry, don't
-  re-migrate. It's a Postgres GUC, not a row in `invite_codes` — `assert_invite_usable`/
-  `complete_signup` both check `current_setting('app.qa_override_invite_code', true)`.
-  Never put the actual value in git or under `src/`; it's set once via the Supabase SQL
-  editor. It's also `anon`-probeable (the RPC that checks it is anon-callable), so use a
+- **QA override invite code lives in `public.app_secrets` (wave42), not `invite_codes`
+  and not `app_config`.** `assert_invite_usable`/`complete_signup` both read
+  `app_secrets.qa_override_invite_code` (single row, `id = 1`). This table has RLS
+  enabled with **zero policies** and no grants for `anon`/`authenticated` — same
+  pattern as `account_deletions`/`dev_access_grants` — so no client path can ever read
+  or write it; only the two `SECURITY DEFINER` functions (running as the table owner,
+  which is exempt from RLS) can see it. **Do not put it in `app_config`** — that table
+  has a public-read RLS policy (`app_config_select_all`, `qual: true`), so any signed-out
+  client can already select every column on it; a secret there would be fetchable
+  straight from the app. wave41 tried a Postgres GUC (`ALTER DATABASE ... SET`) first —
+  blocked on Supabase's managed hosting (`42501: permission denied to set parameter`,
+  not superuser/owner) — wave42 superseded it with this table. Set the actual value with
+  a plain `update public.app_secrets set qa_override_invite_code = '...' where id = 1;`
+  from the Supabase SQL editor — never commit the value to git or reference it under
+  `src/`. It's also `anon`-probeable (the RPC that checks it is anon-callable), so use a
   long, high-entropy value, and know that override signups leave `referred_by = null`
   with no `invite_codes` audit trail.
 
