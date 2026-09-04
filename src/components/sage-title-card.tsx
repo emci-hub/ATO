@@ -24,7 +24,7 @@ import {
   type SageTitle,
 } from '@/lib/sage-title';
 import { claimTitleGenerate, insertTitleFlag, saveSageTitle } from '@/lib/sage-title-store';
-import { isThinProfile, settledCount, stableReportAxes, type TraitTrack } from '@/lib/trait-stability';
+import { stableReportAxes, type TraitTrack } from '@/lib/trait-stability';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import { shouldUseLocalAi } from '@/lib/ai/override';
 
@@ -67,11 +67,7 @@ export function SageTitleCard({
         if (!cancelled) setTitle(cached);
         return;
       }
-      // Profile-completeness gate: a thin profile is served from local
-      // compose, no model call and no quota claim — same rule Questions/
-      // Story already apply, extended here since Sage Title had none
-      // (titleReady above only needs 2 stable axes, well below thin-profile).
-      if ((await shouldUseLocalAi()) || isThinProfile(settledCount(tracks))) {
+      if (await shouldUseLocalAi()) {
         const local: SageTitle = {
           title: cached?.title ?? TITLE_EMPTY,
           lede: cached?.lede ?? TITLE_EMPTY,
