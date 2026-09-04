@@ -186,9 +186,9 @@ const qPrompt = buildQuestionsPrompt({
 });
 assert.match(qPrompt, /Return exactly 5 questions/);
 assert.doesNotMatch(qPrompt, /exactly 15/);
-assert.match(read('src/lib/questions/sweep.ts'), /Return exactly \$\{TRAIT_AXES\.length\} questions/);
-assert.doesNotMatch(read('src/lib/questions/sweep.ts'), /exactly 15 questions/);
-ok('existing IQ prompt is still a 5-item rotating batch');
+assert.doesNotMatch(read('src/lib/questions/sweep.ts'), /generateText/);
+assert.match(read('src/lib/questions/sweep.ts'), /composeLocalSweep/);
+ok('existing IQ prompt is still a 5-item rotating batch; the sweep is bank-only with no prompt');
 
 // --- ranking standalone ---------------------------------------------------
 for (const axis of EXTRA_AXES) {

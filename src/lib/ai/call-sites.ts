@@ -37,15 +37,6 @@ export const QUESTIONS_META: AiCallMetadata = {
   latencySensitive: true,
 };
 
-/** Full 16-axis sweep — "A faster pass". Same generic axis questions for every
- * user; near-fully cohort-shareable. */
-export const SWEEP_META: AiCallMetadata = {
-  personalized: false,
-  cohortShareable: true,
-  bucketShareable: false,
-  latencySensitive: true,
-};
-
 /** Explore Observations — periodic per-user pack grounded on this user's
  * traits, signals, reaction miss-notes, and pinned categories. */
 export const EXPLORE_OBSERVATIONS_META: AiCallMetadata = {
@@ -104,11 +95,6 @@ export const AI_CALL_SITES: readonly AiCallSite[] = [
     feature: 'Infinite Questions',
     location: 'src/lib/questions/generate.ts → generateQuestionBatch()',
     meta: QUESTIONS_META,
-  },
-  {
-    feature: 'Faster-pass sweep',
-    location: 'src/lib/questions/sweep.ts → generateQuestionSweep()',
-    meta: SWEEP_META,
   },
   {
     feature: 'Explore observations',

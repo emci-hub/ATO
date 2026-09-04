@@ -155,13 +155,13 @@ ok('client DEFAULT_MODELS mirrors the Edge Function defaults');
 
 assert.match(read('src/lib/explore/generate.ts'), /generateText/);
 assert.match(read('src/lib/questions/generate.ts'), /generateText/);
-assert.match(read('src/lib/questions/sweep.ts'), /generateText/);
+assert.doesNotMatch(read('src/lib/questions/sweep.ts'), /generateText/);
 assert.match(read('src/lib/voice/providers/remote.ts'), /generateText/);
 assert.doesNotMatch(read('src/lib/explore/prompt.ts'), /generateText/);
 assert.doesNotMatch(read('src/lib/voice/providers/prompt.ts'), /generateText/);
 assert.doesNotMatch(read('src/lib/sage-title.ts'), /generateText/);
 assert.doesNotMatch(read('src/lib/sage-story.ts'), /generateText/);
-ok('call sites use generateText; prompt builders are untouched');
+ok('call sites use generateText; prompt builders are untouched; the sweep now serves the static bank with no model call');
 
 // --- Required call-site metadata ------------------------------------------
 // generateText(request, meta) — meta is mandatory. Any src file that invokes
@@ -171,7 +171,6 @@ const METADATA_CALL_FILES = new Set([
   'src/lib/ai/generate.ts', // the dispatcher itself (definition, no self-calls)
   'src/lib/voice/providers/remote.ts',
   'src/lib/questions/generate.ts',
-  'src/lib/questions/sweep.ts',
   'src/lib/explore/generate.ts',
 ]);
 const CALL_WITH_META =
@@ -212,7 +211,7 @@ const META_FLAGS: readonly (keyof AiCallMetadata)[] = [
   'bucketShareable',
   'latencySensitive',
 ];
-assert.equal(AI_CALL_SITES.length, 8, 'one catalog entry per AI call site');
+assert.equal(AI_CALL_SITES.length, 7, 'one catalog entry per AI call site');
 const features = new Set<string>();
 for (const site of AI_CALL_SITES) {
   assert.ok(!features.has(site.feature), `duplicate call-site feature: ${site.feature}`);

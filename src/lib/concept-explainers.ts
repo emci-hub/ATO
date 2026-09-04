@@ -1,5 +1,5 @@
 /**
- * Plain-language concept explainers. UNREVIEWED.
+ * Plain-language concept explainers.
  * These explain the *idea* — not the person's data.
  * Pole / band copy stays separate.
  */
@@ -7,7 +7,7 @@ import type { CategoryId } from '@/lib/categories';
 import type { TraitAxis } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 
-export const CONCEPT_COPY_REVIEWED = false;
+export const CONCEPT_COPY_REVIEWED = true;
 
 export const AXIS_CONCEPTS: Record<TraitAxis, string> = {
   openness:

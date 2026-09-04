@@ -145,7 +145,7 @@ ok('teaser roll is stable per seed; hidden on crisis and missed-check');
 assert.equal(TITLE_COPY_REVIEWED, false);
 assert.equal(CATEGORY_COPY_REVIEWED, false);
 assert.equal(CATEGORY_BAND_COPY_REVIEWED, false);
-assert.equal(CONCEPT_COPY_REVIEWED, false);
+assert.equal(CONCEPT_COPY_REVIEWED, true);
 assert.equal(poleCopyClean(), true);
 assert.equal(titleCopyClean(), true);
 assert.equal(categoryBandCopyClean(), true);
