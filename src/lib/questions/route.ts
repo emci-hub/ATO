@@ -106,7 +106,10 @@ async function guardedBatch(
   };
 
   if (forceLocal || deps.useLocal === true || !deps.generateBatch) {
-    const local = composeLocalQuestionBatch(recentAxes, priorityAxes);
+    // `input.tracks` chooses each axis's draft by its own answer count, so a
+    // person served the bank on consecutive days does not see one frozen
+    // question per axis forever.
+    const local = composeLocalQuestionBatch(recentAxes, priorityAxes, input.tracks ?? []);
     return preferFreshAxes(keepGuardedDrafts(local).kept, recentAxes, priorityAxes);
   }
 

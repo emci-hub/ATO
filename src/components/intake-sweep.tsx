@@ -12,7 +12,7 @@ import {
   mergedDeferral,
 } from '@/lib/questions/deferral';
 import { saveQuestionDeferral } from '@/lib/questions/store';
-import { INTAKE_SWEEP_COPY_REVIEWED, unansweredSweep } from '@/lib/questions/local';
+import { INTAKE_SWEEP_COPY_REVIEWED, axisVariant, unansweredSweep } from '@/lib/questions/local';
 import {
   QUESTIONS_EMPTY_CONSENT,
   QUESTIONS_EMPTY_CRISIS,
@@ -20,6 +20,7 @@ import {
 } from '@/lib/questions/copy';
 import { routeQuestionSweep } from '@/lib/questions/sweep';
 import type { QuestionDraft } from '@/lib/questions/types';
+import type { TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, traitStateFromRow, type TraitAxis } from '@/lib/traits';
 import { earnTokensQuiet } from '@/lib/tokens-server';
 import { controlBorderColor } from '@/lib/theme/chrome';
@@ -41,11 +42,14 @@ export const INTAKE_SWEEP_DONE = 'Done';
 export function IntakeSweep({
   me,
   crisisToday,
+  tracks,
   onUpdated,
   onDone,
 }: {
   me: Me;
   crisisToday: boolean;
+  /** Report tracks. Each axis's answerCount picks which of its 3 drafts shows. */
+  tracks: readonly TraitTrack[];
   onUpdated: () => void | Promise<void>;
   onDone: () => void;
 }) {
@@ -60,6 +64,11 @@ export function IntakeSweep({
     TRAIT_AXES.filter((axis) => values[axis] != null && Number.isFinite(values[axis])),
   );
   const deferred = new Set(deferredUnansweredAxes(values, me.question_deferred));
+
+  // Stable primitive dep: the per-axis variant vector. `tracks` is a fresh
+  // array on every fetch, so keying the effect on it directly would refetch
+  // the sweep constantly; this changes only when an axis's answer count moves.
+  const variantKey = TRAIT_AXES.map((axis) => axisVariant(tracks, axis)).join(',');
 
   useEffect(() => {
     let cancelled = false;
@@ -76,6 +85,7 @@ export function IntakeSweep({
             },
             aiConsent: me.ai_consent,
             crisisToday,
+            tracks,
           }),
           25000,
           'intake-sweep',
@@ -106,7 +116,7 @@ export function IntakeSweep({
     return () => {
       cancelled = true;
     };
-  }, [me.name, me.talk_style, me.voice_preset, me.ai_consent, crisisToday]);
+  }, [me.name, me.talk_style, me.voice_preset, me.ai_consent, crisisToday, variantKey]);
 
   const open = unansweredSweep(drafts ?? [], answered).filter(
     (row) => !skipped.has(row.axis) && !deferred.has(row.axis),

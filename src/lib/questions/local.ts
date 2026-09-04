@@ -1,3 +1,4 @@
+import { trackFor, type TraitTrack } from '@/lib/trait-stability';
 import type { TraitAxis } from '@/lib/traits';
 import { TRAIT_AXES } from '@/lib/traits';
 
@@ -39,13 +40,7 @@ function copyDraft(draft: QuestionDraft): QuestionDraft {
 
 /**
  * One draft for an axis, wrapping by `variant` so any index is safe. Variant 0
- * is the axis's original locked draft, so every existing caller keeps today's
- * behaviour exactly.
- *
- * NOTE: no caller passes variant > 0 yet, so drafts 2 and 3 of each axis are
- * reachable through this API but not yet served. Wiring a selector needs
- * per-axis `answerCount` (from trait tracks) so a repeat pass asks a different
- * question — that is what would let the static bank alone settle an axis.
+ * is the axis's original locked draft.
  */
 export function bankDraftFor(axis: TraitAxis, variant = 0): QuestionDraft | null {
   const list = bankByAxis().get(axis);
@@ -54,7 +49,24 @@ export function bankDraftFor(axis: TraitAxis, variant = 0): QuestionDraft | null
   return copyDraft(list[index]!);
 }
 
-/** Variant 0 of every axis — the one-per-axis view older callers expect. */
+/**
+ * Which bank draft an axis should show next: its report-track `answerCount`.
+ *
+ * 0 answers -> draft 1, 1 answer -> draft 2, 2 answers -> draft 3, and
+ * `bankDraftFor` wraps from there. So a person working through Questions over
+ * repeat passes sees three DIFFERENT questions on an axis and can actually
+ * reach the `answerCount >= 3` that `effectiveStability` needs, instead of
+ * being shown draft 1 forever.
+ *
+ * Report track only — gut-call (`self_game`) never counts toward settled, so
+ * it must not advance the question either. An axis with no track reads 0.
+ */
+export function axisVariant(tracks: readonly TraitTrack[], axis: TraitAxis): number {
+  const row = trackFor(tracks, axis, 'report');
+  return row ? Math.max(0, row.answerCount) : 0;
+}
+
+/** Variant 0 of every axis — the one-per-axis view used to seed rotation. */
 export function bankLeadDrafts(): QuestionDraft[] {
   const out: QuestionDraft[] = [];
   for (const axis of TRAIT_AXES) {
@@ -64,28 +76,36 @@ export function bankLeadDrafts(): QuestionDraft[] {
   return out;
 }
 
-/** Deterministic batch when Gemini is off. Same locked examples as the prompt. */
+/**
+ * Deterministic batch when Gemini is off. Which axes appear is unchanged; the
+ * draft shown for each axis is now chosen by that axis's own answer count, so
+ * a repeat batch on the same axis asks something new. Empty `tracks` reads as
+ * "nothing answered" and yields the locked draft for every axis.
+ */
 export function composeLocalQuestionBatch(
   recentAxes: TraitAxis[] = [],
   priorityAxes: readonly TraitAxis[] = [],
-  variant = 0,
+  tracks: readonly TraitTrack[] = [],
 ): QuestionDraft[] {
   const out: QuestionDraft[] = [];
   const seen = new Set<TraitAxis>();
-  const push = (draft: QuestionDraft | null | undefined) => {
-    if (!draft || seen.has(draft.axis)) return;
-    seen.add(draft.axis);
+  const push = (axis: TraitAxis) => {
+    if (seen.has(axis)) return;
+    const draft = bankDraftFor(axis, axisVariant(tracks, axis));
+    if (!draft) return;
+    seen.add(axis);
     out.push(draft);
   };
   for (const axis of priorityAxes) {
-    push(bankDraftFor(axis, variant));
+    push(axis);
     if (out.length >= QUESTIONS_BATCH_SIZE) return out;
   }
   // One draft per axis before rotation: `preferFreshAxes` dedupes by axis, so
   // feeding it all three variants of an axis would spend slots it then drops.
+  // Rotation only decides WHICH axes lead; `push` decides which draft.
   const copies = bankLeadDrafts().filter((row) => !seen.has(row.axis));
   for (const draft of preferFreshAxes(copies, recentAxes)) {
-    push(bankDraftFor(draft.axis, variant));
+    push(draft.axis);
     if (out.length >= QUESTIONS_BATCH_SIZE) break;
   }
   return out;
@@ -93,12 +113,20 @@ export function composeLocalQuestionBatch(
 
 /**
  * One item per axis, all TRAIT_AXES. Distinct from the 5-item rotation.
- * `variant` wraps per axis; 0 keeps the original locked draft everywhere.
+ * Each axis shows the draft its own answer count points at, so a second pass
+ * over an axis is a different question. Empty `tracks` = the locked draft
+ * everywhere, which is what a brand-new profile gets.
+ *
+ * NOTE: `IntakeSweep` filters this through `unansweredSweep`, which drops any
+ * axis that already holds a trait value — so in practice the sweep fills each
+ * axis once and the later variants are delivered by the rotating pool above
+ * it. Passing tracks here keeps the two surfaces consistent (and covers an
+ * axis whose value was cleared but whose track survives).
  */
-export function composeLocalSweep(variant = 0): QuestionDraft[] {
+export function composeLocalSweep(tracks: readonly TraitTrack[] = []): QuestionDraft[] {
   const out: QuestionDraft[] = [];
   for (const axis of TRAIT_AXES) {
-    const draft = bankDraftFor(axis, variant);
+    const draft = bankDraftFor(axis, axisVariant(tracks, axis));
     if (draft) out.push(draft);
   }
   return keepGuardedDrafts(out).kept;

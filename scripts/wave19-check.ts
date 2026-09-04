@@ -19,7 +19,9 @@ import {
   emptyTraitState,
   emptyTraitValues,
   mergeTraitWrite,
+  type TraitAxis,
 } from '../src/lib/traits';
+import { applyEwmaAnswer, emptyTrack, type TraitTrack } from '../src/lib/trait-stability';
 import {
   forcedPickForAxis,
   rankingPromptForAxis,
@@ -39,6 +41,7 @@ import { parseQuestionBatch, parseQuestionSweep } from '../src/lib/questions/par
 import {
   INTAKE_SWEEP_COPY_REVIEWED,
   QUESTIONS_SWEEP_SIZE,
+  axisVariant,
   bankByAxis,
   bankDraftFor,
   bankLeadDrafts,
@@ -154,11 +157,51 @@ mutable!.options[0]!.value = 0.123;
 assert.notEqual(bankDraftFor('openness')?.options[0]?.value, 0.123);
 assert.equal(bankLeadDrafts().length, TRAIT_AXES.length);
 
-// A non-zero variant still yields one guard-clean item per axis, in order.
-const sweepV2 = composeLocalSweep(1);
-assert.equal(sweepV2.length, TRAIT_AXES.length);
-assert.deepEqual(sweepV2.map((row) => row.axis), [...TRAIT_AXES]);
-assert.notDeepEqual(sweepV2.map((row) => row.prompt), composeLocalSweep().map((row) => row.prompt));
+// --- variant selection is driven by each axis's own answerCount -----------
+// Build a track with an exact answerCount on one axis, everything else empty.
+function trackWithCount(axis: TraitAxis, answerCount: number): TraitTrack {
+  const nowIso = '2026-08-31T12:00:00.000Z';
+  // Exactly `answerCount` applications — applyEwmaAnswer(null, ...) is itself
+  // the FIRST answer, so seeding outside the loop would be off by one.
+  let row: TraitTrack | null = null;
+  for (let n = 0; n < answerCount; n += 1) {
+    row = applyEwmaAnswer(row, axis, 'report', 0.6, nowIso);
+  }
+  const out = row ?? emptyTrack(axis, 'report');
+  assert.equal(out.answerCount, answerCount, 'fixture must have the exact answer count');
+  return out;
+}
+
+assert.equal(axisVariant([], 'openness'), 0, 'no track reads as zero answers');
+assert.equal(axisVariant([trackWithCount('openness', 2)], 'openness'), 2);
+// Gut-call must never advance the question: settled ignores it, so this must too.
+const gameOnly = { ...trackWithCount('openness', 2), track: 'game' as const };
+assert.equal(axisVariant([gameOnly], 'openness'), 0, 'game track never advances the variant');
+
+// Three answers on one axis walk that axis through three DIFFERENT prompts,
+// then wrap — which is exactly what lets a repeat pass reach answerCount 3.
+const opennessPrompts = [0, 1, 2, 3].map(
+  (n) => composeLocalSweep([trackWithCount('openness', n)]).find((row) => row.axis === 'openness')?.prompt,
+);
+assert.equal(new Set(opennessPrompts.slice(0, 3)).size, 3, 'three answers, three distinct prompts');
+assert.equal(opennessPrompts[3], opennessPrompts[0], 'the fourth wraps back to the first');
+
+// One axis advancing must not disturb any other axis's draft.
+const baseSweep = composeLocalSweep();
+const bumped = composeLocalSweep([trackWithCount('openness', 1)]);
+assert.equal(bumped.length, TRAIT_AXES.length);
+assert.deepEqual(bumped.map((row) => row.axis), [...TRAIT_AXES]);
+assert.notEqual(
+  bumped.find((row) => row.axis === 'openness')?.prompt,
+  baseSweep.find((row) => row.axis === 'openness')?.prompt,
+);
+for (const axis of TRAIT_AXES.filter((a) => a !== 'openness')) {
+  assert.equal(
+    bumped.find((row) => row.axis === axis)?.prompt,
+    baseSweep.find((row) => row.axis === axis)?.prompt,
+    `${axis} is untouched when openness advances`,
+  );
+}
 
 // The 5-item rotation must still return 5 DISTINCT axes now that the bank has
 // three drafts per axis — feeding all of them to preferFreshAxes would spend
@@ -166,10 +209,35 @@ assert.notDeepEqual(sweepV2.map((row) => row.prompt), composeLocalSweep().map((r
 const batchV1 = composeLocalQuestionBatch();
 assert.equal(batchV1.length, QUESTIONS_BATCH_SIZE);
 assert.equal(new Set(batchV1.map((row) => row.axis)).size, QUESTIONS_BATCH_SIZE);
-const batchV2 = composeLocalQuestionBatch([], [], 1);
+// Same axes, advanced draft on the answered one only.
+const batchV2 = composeLocalQuestionBatch([], [], [trackWithCount(batchV1[0]!.axis, 1)]);
 assert.equal(batchV2.length, QUESTIONS_BATCH_SIZE);
 assert.deepEqual(batchV2.map((row) => row.axis), batchV1.map((row) => row.axis));
-assert.notDeepEqual(batchV2.map((row) => row.prompt), batchV1.map((row) => row.prompt));
+assert.notEqual(batchV2[0]?.prompt, batchV1[0]?.prompt, 'answered axis advances');
+assert.deepEqual(
+  batchV2.slice(1).map((row) => row.prompt),
+  batchV1.slice(1).map((row) => row.prompt),
+  'unanswered axes are unchanged',
+);
+
+// Every variant of every axis must be guard-clean, not just variant 0.
+for (const axis of TRAIT_AXES) {
+  for (let n = 0; n < 3; n += 1) {
+    const draft = composeLocalSweep([trackWithCount(axis, n)]).find((row) => row.axis === axis);
+    assert.ok(draft, `${axis} variant ${n} exists`);
+    assert.ok(draft!.options.length >= 2 && draft!.options.length <= 3);
+    assert.equal(containsFrameworkTerm(draft!.prompt), false, draft!.prompt);
+  }
+}
+
+// The wiring: both surfaces must actually pass tracks, or none of this ships.
+assert.match(read('src/lib/questions/route.ts'), /composeLocalQuestionBatch\(recentAxes, priorityAxes, input\.tracks/);
+assert.match(read('src/lib/questions/sweep.ts'), /composeLocalSweep\(input\.tracks/);
+assert.match(read('src/components/intake-sweep.tsx'), /tracks,/);
+assert.match(read('src/app/(tabs)/intake-sweep.tsx'), /tracks=\{tracks\}/);
+// An answer must refresh tracks, not just `me` — otherwise the count that
+// picks the next draft never moves and the same question comes back.
+assert.match(read('src/app/(tabs)/intake-sweep.tsx'), /onUpdated=\{refreshAfterAnswer\}/);
 const sweep = composeLocalSweep();
 assert.equal(sweep.length, TRAIT_AXES.length);
 assert.deepEqual(sweep.map((row) => row.axis), [...TRAIT_AXES]);

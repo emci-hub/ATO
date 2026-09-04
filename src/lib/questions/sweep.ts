@@ -3,6 +3,7 @@
  * Distinct from the 5-item soft-rotation used by Tell Sage more.
  */
 import { composeLocalSweep } from './local';
+import type { TraitTrack } from '@/lib/trait-stability';
 import type { QuotaDecision } from '@/lib/voice/quota';
 import type { TalkStyle } from '@/lib/voice/types';
 import type { QuestionDraft } from './types';
@@ -10,6 +11,7 @@ import type { QuestionDraft } from './types';
 export {
   INTAKE_SWEEP_COPY_REVIEWED,
   QUESTIONS_SWEEP_SIZE,
+  axisVariant,
   bankByAxis,
   bankDraftFor,
   bankLeadDrafts,
@@ -50,11 +52,17 @@ export async function routeQuestionSweep(input: {
   crisisToday?: boolean;
   useLocal?: boolean;
   claimBatch?: () => Promise<QuotaDecision>;
+  /**
+   * Report tracks. Each axis's `answerCount` picks which of its three bank
+   * drafts to show. Omitted/empty = the locked draft for every axis, which is
+   * exactly what a brand-new profile should see.
+   */
+  tracks?: readonly TraitTrack[];
 }): Promise<RouteQuestionSweepResult> {
   const consent = input.aiConsent ?? null;
   if (consent === false) return { kind: 'consent-denied', drafts: [] };
   if (consent !== true) return { kind: 'consent-pending', drafts: [] };
   if (input.crisisToday) return { kind: 'crisis', drafts: [] };
 
-  return { kind: 'questions', drafts: composeLocalSweep() };
+  return { kind: 'questions', drafts: composeLocalSweep(input.tracks ?? []) };
 }

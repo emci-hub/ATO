@@ -144,8 +144,20 @@ export default function IntakeSweepTabScreen() {
           {me ? (
             <>
               <OptionalIntakeFill me={me} onUpdated={refresh} />
-              {flagsReady ? (
-                <IntakeSweep me={me} crisisToday={crisisToday} onUpdated={refresh} onDone={done} />
+              {/*
+                `onUpdated` must refresh TRACKS too, not just `me`: an answer
+                bumps that axis's answerCount, which is what picks the next
+                bank draft. Refreshing `me` alone would leave the sweep showing
+                the same question after answering it.
+              */}
+              {flagsReady && tracksReady ? (
+                <IntakeSweep
+                  me={me}
+                  crisisToday={crisisToday}
+                  tracks={tracks}
+                  onUpdated={refreshAfterAnswer}
+                  onDone={done}
+                />
               ) : null}
             </>
           ) : (
