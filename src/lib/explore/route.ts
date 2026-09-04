@@ -13,6 +13,7 @@ import {
   type DevTraceRecordInput,
   type DevTraceStep,
 } from '@/lib/dev-trace';
+import { isThinProfile, settledCount } from '@/lib/trait-stability';
 
 import { decideExploreTrigger, exploreToday } from './cadence';
 import { exploreFingerprint, pickExplorePackFocuses, repeatsPinnedCategories } from './combine';
@@ -98,7 +99,11 @@ export async function routeExplore(
     pinnedLines: input.pinnedLines ?? [],
   });
   const notes = deps.loadMissNotes ? await deps.loadMissNotes() : [];
-  const useLocal = deps.useLocal === true;
+  // Profile-completeness gate: a thin profile is served from local compose,
+  // no model call and no quota claim — same rule Questions/Story already
+  // apply, extended here since Explore had none.
+  const useLocal =
+    deps.useLocal === true || isThinProfile(settledCount(input.tracks ?? [], input.now));
 
   if (!useLocal && deps.claimAiCall && deps.generateBody) {
     const claim = await deps.claimAiCall();
