@@ -11,6 +11,8 @@ export const EXPLORE_LAND_NO = 'Not this';
 /** Cosmetic tap ack. Never persisted, never a model call. */
 export const EXPLORE_NOTED = 'Noted.';
 
+export const EXPLORE_REACTION_ERROR = "Didn't save. Try again.";
+
 export const EXPLORE_GUARD_FALLBACK =
   'Noticed a pattern worth sitting with. Tell me if that still feels off.';
 

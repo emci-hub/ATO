@@ -23,6 +23,7 @@ import {
   EXPLORE_LAND_Q,
   EXPLORE_LAND_YES,
   EXPLORE_NOTED,
+  EXPLORE_REACTION_ERROR,
 } from '@/lib/explore/copy';
 import { generateExploreBody } from '@/lib/explore/generate';
 import { EXPLORE_OBSERVATIONS_META } from '@/lib/ai/call-sites';
@@ -122,6 +123,7 @@ export function ExplorePanel({
     landed: boolean;
     bump: number;
   } | null>(null);
+  const [reactionError, setReactionError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const next = await withTimeout(
@@ -168,10 +170,11 @@ export function ExplorePanel({
 
   async function react(entry: ExploreEntryRow, landed: boolean) {
     if (busyId || entry.id.startsWith('local-')) return;
-    setNoted({ entryId: entry.id, landed, bump: Date.now() });
     setBusyId(entry.id);
+    setReactionError(null);
     try {
       await recordExploreReaction(entry.id, landed);
+      setNoted({ entryId: entry.id, landed, bump: Date.now() });
       setResult((current) => {
         if (!current?.pack) return current;
         return {
@@ -186,6 +189,8 @@ export function ExplorePanel({
       });
     } catch (err) {
       console.log('[explore] reaction error:', err);
+      setNoted(null);
+      setReactionError(entry.id);
     } finally {
       setBusyId(null);
     }
@@ -262,6 +267,11 @@ export function ExplorePanel({
               ) : null}
             </View>
           </View>
+          {reactionError === entry.id ? (
+            <ThemedText type="small" themeColor="textSecondary" accessibilityLiveRegion="polite">
+              {EXPLORE_REACTION_ERROR}
+            </ThemedText>
+          ) : null}
         </ThemedView>
       ))}
     </View>
