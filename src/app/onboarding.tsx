@@ -351,6 +351,13 @@ export default function OnboardingScreen() {
     setSigningOut(false);
   }
 
+  async function onBackToLogin() {
+    if (signingOut || busy) return;
+    setSigningOut(true);
+    await clearLocalSession();
+    setSigningOut(false);
+  }
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -408,6 +415,10 @@ export default function OnboardingScreen() {
                 onContinue={() => {
                   void continueFromAccount();
                 }}
+                onBackToLogin={() => {
+                  void onBackToLogin();
+                }}
+                signingOut={signingOut}
               />
             ) : phase === 'intake' ? (
               <CoreIntakeSweep
@@ -482,6 +493,8 @@ function AccountStep({
   formError,
   onHandleBlur,
   onContinue,
+  onBackToLogin,
+  signingOut,
 }: {
   theme: { text: string; textSecondary: string; backgroundSelected: string };
   signupMode: SignupMode;
@@ -507,9 +520,21 @@ function AccountStep({
   formError: string | null;
   onHandleBlur: () => void;
   onContinue: () => void;
+  onBackToLogin: () => void;
+  signingOut: boolean;
 }) {
   return (
     <>
+      <Pressable
+        onPress={onBackToLogin}
+        disabled={signingOut || busy}
+        hitSlop={12}
+        style={({ pressed }) => [styles.backButton, pressed && styles.pressed, (signingOut || busy) && styles.disabled]}>
+        <ThemedText type="smallBold" themeColor="textSecondary">
+          {signingOut ? 'Signing out…' : '‹ Back'}
+        </ThemedText>
+      </Pressable>
+
       <ThemedText type="subtitle">Introduce yourself</ThemedText>
       <ThemedText themeColor="textSecondary" style={styles.lede}>
         A few facts first, then nine taps so ATO knows how to talk to you.
@@ -686,6 +711,11 @@ const styles = StyleSheet.create({
   signOutLink: {
     alignSelf: 'flex-start',
     paddingVertical: Spacing.one,
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: Spacing.one,
+    paddingRight: Spacing.three,
   },
   field: {
     gap: Spacing.two,
