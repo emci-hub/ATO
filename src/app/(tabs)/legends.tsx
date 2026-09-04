@@ -24,8 +24,11 @@ import { buildLegendView, type LegendView } from '@/lib/legends/match';
 import { supabase } from '@/lib/supabase';
 import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import {
+  isProfileSettled,
   isThinProfile,
   missingAxis,
+  PROFILE_LOCKED_COPY,
+  PROFILE_LOCKED_CTA,
   settledCount,
   type TraitTrack,
 } from '@/lib/trait-stability';
@@ -241,6 +244,12 @@ export default function LegendsScreen() {
   const settled = settledCount(tracks);
   const thin = isThinProfile(settled);
   const focusAxis = me ? missingAxis(traitStateFromRow(me).values, tracks) : null;
+  // Profile-completeness gate, same rule as Explore observations / Sage Title /
+  // Sage insight: every axis must be settled before a matched legend shows.
+  // Checked only once tracks have loaded, so the screen doesn't flash locked
+  // before it knows better. Matching itself stays untouched (static pool, no
+  // spend) — this only decides what renders.
+  const locked = tracksReady && !isProfileSettled(tracks);
 
   return (
     <ThemedView style={styles.container}>
@@ -272,7 +281,24 @@ export default function LegendsScreen() {
             </ThemedView>
           ) : null}
 
-          {ready ? (
+          {ready && locked ? (
+            <ThemedView type="backgroundElement" style={styles.card}>
+              <ThemedText type="smallBold">{PROFILE_LOCKED_COPY}</ThemedText>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${PROFILE_LOCKED_COPY}. ${PROFILE_LOCKED_CTA}.`}
+                onPress={() => {
+                  if (focusAxis) {
+                    router.push({ pathname: '/intake-sweep', params: { axis: focusAxis } });
+                  } else {
+                    router.push({ pathname: '/intake-sweep' });
+                  }
+                }}
+                style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
+                <ThemedText type="link">{PROFILE_LOCKED_CTA}</ThemedText>
+              </Pressable>
+            </ThemedView>
+          ) : ready ? (
             ready.cards.length > 0 ? (
               ready.cards.map((card) => (
                 <LegendCard
