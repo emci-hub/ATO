@@ -6,6 +6,15 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+import { NOT_ANSWERED_YET } from '@/lib/full-profile';
+import {
+  PROFILE_FILL_COMPLETE_LABEL,
+  PROFILE_FILL_COMPLETE_LEDE,
+  PROFILE_FILL_COPY_REVIEWED,
+  PROFILE_FILL_LABEL,
+  PROFILE_FILL_LEDE,
+  PROFILE_FILL_ROW_FILLED,
+} from '@/lib/profile-fill';
 import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
 import {
   filledAxisLabel,
@@ -15,16 +24,6 @@ import {
   type TraitTrack,
 } from '@/lib/trait-stability';
 import { TRAIT_AXES } from '@/lib/traits';
-
-/** UNREVIEWED. Same lane as the other category/profile copy. */
-export const PROFILE_FILL_COPY_REVIEWED = false;
-
-export const PROFILE_FILL_LABEL = 'Full profile';
-export const PROFILE_FILL_LEDE =
-  'One answer is enough to fill a trait in. Filling one is not the same as settling it — settling takes a few answers that agree.';
-export const PROFILE_FILL_COMPLETE_LABEL = 'Complete';
-export const PROFILE_FILL_COMPLETE_LEDE =
-  'Every trait has at least one answer. Questions can go anywhere from here.';
 
 /**
  * Checklist of every axis, filled (>=1 report answer) or not. Deliberately
@@ -74,7 +73,7 @@ function ProfileFillRow({ label, filled }: { label: string; filled: boolean }) {
     <View
       accessible
       accessibilityRole="text"
-      accessibilityLabel={`${label}. ${filled ? 'Filled' : 'Not answered yet'}.`}
+      accessibilityLabel={`${label}. ${filled ? PROFILE_FILL_ROW_FILLED : NOT_ANSWERED_YET}.`}
       style={styles.row}>
       <MaterialCommunityIcons
         name={filled ? 'check-circle' : 'circle-outline'}

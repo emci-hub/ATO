@@ -131,10 +131,19 @@ Read before editing the area. Each one has bitten this repo at least once.
 
 ## Copy
 
-- **Nine surfaces ship behind `*_COPY_REVIEWED = false`** (nine badge render sites,
-  the list `check:copy-review-badges` pins). Story/Levity are diagnosis-adjacent. Do
-  not flip a flag without emci's read. Newest: `PROFILE_FILL_COPY_REVIEWED`, the
-  Explore "Full profile" checklist. Add any new site to that check's `sites` array.
+- **Nine badge render sites are pinned in `check:copy-review-badges`'s `sites`
+  array — one (`profile-fill-fold.tsx`) is reviewed, eight remain
+  `*_COPY_REVIEWED = false`.** Story/Levity are diagnosis-adjacent; do not flip
+  those without emci's own read. **The `containsFrameworkTerm` fence
+  (`profileFillCopyClean()` etc.) is not what makes a flag reviewed** — every
+  other clean-copy module passes that same fence and still ships `false`; the
+  fence only rules out banned type/framework language, it says nothing about
+  tone or whether the copy is fit to ship. `PROFILE_FILL_COPY_REVIEWED` was
+  flipped to `true` on emci's explicit, flag-specific delegation ("flip it to
+  true if it reads correctly") for copy judged genuinely non-diagnostic — a
+  filled/unfilled checklist describing data state, not the person. Add any new
+  site to the check's `sites` array regardless of its reviewed state — the badge
+  JSX stays in place either way, it just never renders once reviewed.
 - **The "Draft copy — waiting on emci review." badge is `PRE_LAUNCH_DEV`-gated,
   every render site.** A `false` `*_COPY_REVIEWED` flag alone used to be enough to
   show it to every OTA user, pre-launch or not — the unreviewed copy itself still

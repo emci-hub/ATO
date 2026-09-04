@@ -32,6 +32,7 @@ import {
   unfilledAxes,
   type TraitTrack,
 } from '../src/lib/trait-stability';
+import { PROFILE_FILL_COPY_REVIEWED, profileFillCopyClean } from '../src/lib/profile-fill';
 import { filterCard } from '../src/lib/voice/filters';
 import {
   containsFrameworkTerm,
@@ -464,6 +465,10 @@ async function main() {
   assert.equal(filledCount(gameOnly), 0);
   assert.equal(isProfileComplete(gameOnly), false);
   ok('answerCount 0 and game-track rows never count toward filled');
+
+  assert.equal(profileFillCopyClean(), true);
+  assert.equal(PROFILE_FILL_COPY_REVIEWED, true);
+  ok('Full profile checklist copy passes the framework fence and stays marked reviewed');
 
   console.log(`\nAll ${passed} trait checks passed.`);
 }
