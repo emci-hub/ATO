@@ -3,7 +3,7 @@ import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 import { clearNativeAuthSecrets, createNativeAuthStorage } from '@/lib/auth-storage';
 
@@ -35,6 +35,20 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false,
   },
 });
+
+// RN throttles JS timers while backgrounded, so the client's internal refresh
+// tick can miss its window; by foreground the access token has often fully
+// expired, which GoTrue treats as a dead session and signs out instead of
+// refreshing. Ticking auto-refresh on app-state change keeps it proactive.
+if (Platform.OS !== 'web') {
+  AppState.addEventListener('change', (state) => {
+    if (state === 'active') {
+      supabase.auth.startAutoRefresh().catch(() => {});
+    } else {
+      supabase.auth.stopAutoRefresh().catch(() => {});
+    }
+  });
+}
 
 /**
  * Drop every locally cached auth artifact. Used after account deletion and when
