@@ -59,6 +59,8 @@ One flag controls all of these: `PRE_LAUNCH_DEV = true` in `src/lib/dev-mode.ts`
 
 ## Decisions log
 
+- 2026-09-04: **Fixed the two credit-leak gaps from the read-only audit — Explore observations and Sage Title now check profile completeness before spending a paid AI call, matching Questions/Story.** Confirmed via investigator the gap was still live (no fix had landed since the audit). `src/lib/explore/route.ts`: `useLocal` now also goes `true` when `isThinProfile(settledCount(input.tracks ?? [], input.now))` — forces local compose, no `claimAiCall`, mirroring `questions/route.ts:169`'s "thin profile must never spend a paid call" rule; uses the caller's `input.now` (not a fresh `Date.now()`) so decay evaluation stays consistent with the rest of the routing logic. `src/components/sage-title-card.tsx`: same check added to the branch just before `claimTitleGenerate()`, coexisting with the pre-existing (much weaker — only needs 2 stable axes) `titleReady()` early return. **Flagged for emci, not changed:** users with roughly 2–6 settled axes will now see the "Not enough settled yet" empty state on Sage Title instead of an AI-generated one (previously they'd get a generated title on as few as 2 stable axes) — an intentional side effect of closing the gap, worth knowing about. **Known tradeoff, out of scope:** `dev-lab.tsx`'s Explore-regen dev tool doesn't fetch `tracks`, so it now always takes the local path when testing — real production callers (`explore.tsx`) already pass `tracks` and are unaffected. `scripts/explore-check.ts` gained a `verySettled()` fixture helper (8 EWMA reps, ~0.95 stability/axis — 3 reps only reaches ~0.58, not enough for the new summed-stability check) and a dedicated test proving a thin profile skips the claim; 3 pre-existing remote-path tests needed a non-thin `tracks` fixture added to keep exercising the guard/model-call path now that the gate exists. **Notable hiccup:** the `explore/route.ts` half of this fix was silently lost between editing and the first commit — verified/tested correctly beforehand, but the commit only picked up the other two files, and the file reverted to its pre-fix content with no diff to stage. Re-applied and re-verified (`check:explore` 32/32, typecheck clean) before a second commit; cause not identified, worth watching for recurrence. Reviewer: PASS on the original 3-file diff. Gate: typecheck + lint clean, `check:explore`/`check:questions`/`check:sage-load` all green, full `check:ota-gate` green (49 checks, run by reviewer). Pushed to `master` (`7c3cfa1`, `497e5fa`). Not yet OTA'd.
+
 - 2026-09-04: **Reverted: the separate "Back" button on the intake screen (entry below) was removed — collapsed back to one button.** Follow-up on the entry directly below. Investigator re-confirmed `onBackToLogin` was byte-for-byte identical to `handleSignOut` (both just `clearLocalSession()`) and that no non-destructive "show login while still authenticated" path exists in this architecture (`_layout.tsx` gates `auth` strictly on `!isAuthed`) without new scope (a login re-entry UI calling `signInWithPassword` directly, never proposed as needed). Asked emci: two buttons doing the identical thing was judged not worth keeping, since nothing is lost by signing out at this phase (no `me` row exists yet to preserve). Removed `onBackToLogin`, the `‹ Back` Pressable, its `onBackToLogin`/`signingOut` props on `AccountStep`, and the `backButton` style; only the original "Wrong account? Sign out" link remains. Reviewer: PASS, no orphaned refs. Gate: typecheck + lint clean. Pushed to `master` (`d288a2d`).
 
 - 2026-09-04: **Separate "Back" button added to the first intake screen ("Introduce yourself"/`AccountStep`), alongside the existing Cancel/sign-out link.** Requested by emci. Investigation surfaced a real constraint before building: the root navigator (`src/app/_layout.tsx:72-78`) only mounts the `auth` (login) screen when `!isAuthed`, and only mounts `onboarding` when `isAuthed && !hasMe` — by the time a user sees "Introduce yourself" they already have a live Supabase session (created in the `auth` screen just before), so there is no route that shows login while still signed in. Asked emci directly: confirmed the new `onBackToLogin` handler should do the same thing the existing Cancel/sign-out does (clear the session via `clearLocalSession()`) so the guard naturally flips to the login screen — just as a separately-named handler/button for future divergence, not a distinct non-destructive path (none exists today without changing the auth-gating architecture, out of scope). Implementation: `onBackToLogin` defined next to `handleSignOut` (`onboarding.tsx:347`), same signingOut/busy guard; new `‹ Back` Pressable added inside `AccountStep` only (new `backButton` style, mirrors `core-intake-sweep.tsx`'s existing back-button pattern); `AccountStep` gained `onBackToLogin`/`signingOut` props, wired only on the `phase === 'account'` render branch. Reviewer's one finding (Back button wasn't disabling/relabeling during the in-flight sign-out like the existing link does) fixed before push. Existing "Wrong account? Sign out" link/handler and other phases' `onBack` handlers (intake→account, optional→optional-gate) confirmed byte-for-byte untouched. Gate: typecheck + lint clean (only pre-existing unrelated warnings elsewhere). Pushed to `master` (`e957e79`). Not yet OTA'd — not device-verified (no interactive device/simulator session run this task; recommend a quick tap-through on the Account phase before the next OTA publish).
@@ -240,3 +242,101 @@ Server-side spend funnels through `supabase/functions/ai-generate/index.ts:329` 
 3. **No category-level question targeting**, and no note anywhere saying that's on purpose.
 4. **`CategoryId` has 11 members** while the brief and some docs say 9 — `docs/NOW.md` / `docs/ME.md` should be reconciled with the code, or the extra two (`cat_structure`, `cat_resilience`) confirmed as intended.
 5. `claim_ai_call` only distinguishes `explore` vs `sage`, so per-surface spend cannot be attributed from the DB alone.
+
+### Audit follow-up — "leaning" string, category source of truth, question coverage (2026-09-04, read-only)
+
+Second read-only pass requested by emci. No code changed.
+
+**1) The exact string "how are you leaning" does not exist in the codebase.** The closest matches are a different word order, `how you are leaning`, and none of them is a question, a trait, or a category — all are **UI copy**:
+- `src/components/full-profile-fold.tsx:215` and `:220` — `'Update how you are leaning'`, the accessibility label and button text on a Full Profile row.
+- `src/lib/full-profile.ts:18` — the disclaimer `'This can change. It is how you are leaning right now — not a type, not a diagnosis.'`
+- `src/lib/full-profile.ts:16` — the related section label `FULL_PROFILE_LABEL = "How you're currently leaning"` (this is the Explore-tab section title, cited in `docs/NOW.md` and `docs/ME.md`).
+
+So: **copy for the Full Profile fold, not a data-model entity.** If emci saw this phrasing in the app and expected a question behind it, there isn't one — the row it labels edits an existing trait axis value directly.
+
+**2) Category source of truth — live `category_defs` table matches the TS seed exactly.** Queried production (`aijzsmupaaaxjctfgwpl`) this pass: **11 rows**, same ids, names, shapes, axes, and `min_axes_required_stable: 2` as `CATEGORY_DEFS` in `src/lib/categories.ts:45-145`. No drift, no extra or missing rows, nothing overriding. (DB column names differ from the TS field names: `axis_weights` jsonb, `min_axes_required_stable`, `texture_axes`.)
+
+| # | ID | Name | Shape | Axes |
+|---|---|---|---|---|
+| 1 | `cat_steadiness` | Steadiness | bar | conscientiousness, agreeableness, steadiness |
+| 2 | `cat_openness` | Openness to life | bar | openness, extraversion |
+| 3 | `cat_drive` | Drive | bar | autonomy, competence, relatedness |
+| 4 | `cat_agency` | Agency | bar | growth_mindset, locus_of_control, self_efficacy |
+| 5 | `cat_social` | Everyday social energy | bar | extraversion, agreeableness, playfulness |
+| 6 | `cat_communication` | Communication | bar | conflict_assertiveness, conflict_cooperativeness |
+| 7 | `cat_love` | Love / closeness | map | attachment_anxiety, attachment_avoidance (+texture: conflict_assertiveness, conflict_cooperativeness) |
+| 8 | `cat_independence` | Independence & closeness | map | autonomy, relatedness |
+| 9 | `cat_levity` | Levity | bar | playfulness, conflict_assertiveness, conflict_cooperativeness |
+| 10 | `cat_structure` | Structure vs. spontaneity | map | openness, conscientiousness |
+| 11 | `cat_resilience` | Resilience under pressure | bar | competence, growth_mindset, steadiness |
+
+**3) Questions tagged to a category: none, for any category.** Confirmed again this pass — `grep -rn "cat_\|CategoryId\|categor" src/lib/questions/` returns **zero matches**. A question carries only `axis: TraitAxis`; there is no category field anywhere in the question schema, the bank, the prompt, or the DB rows.
+
+The static bank (`src/lib/questions/bank.ts`) holds **exactly 16 items — one per axis**, and `local.ts:20-21` de-dupes to one row per axis, so there is no second item for any axis. The AI generator can emit any of the 16 axes but likewise never a category.
+
+Table below reads: *tagged directly to the category* = always no; *reachable* = how many bank questions sit on axes this category is computed from (i.e. how many the category indirectly depends on).
+
+| Category | Has questions tagged to it | Count (tagged) | Bank questions on its axes (indirect) |
+|---|---|---|---|
+| `cat_steadiness` | No | 0 | 3 |
+| `cat_openness` | No | 0 | 2 |
+| `cat_drive` | No | 0 | 3 |
+| `cat_agency` | No | 0 | 3 |
+| `cat_social` | No | 0 | 3 |
+| `cat_communication` | No | 0 | 2 |
+| `cat_love` | No | 0 | 2 (+2 texture, not in the math) |
+| `cat_independence` | No | 0 | 2 |
+| `cat_levity` | No | 0 | 3 |
+| `cat_structure` | No | 0 | 2 |
+| `cat_resilience` | No | 0 | 3 |
+
+**What this means:** every category is fed indirectly, and every one of the 16 axes is covered by at least one bank question, so no category is unreachable. But nothing in the system can currently answer "ask me questions until Levity is ready" — that would need a new category→axis targeting layer, since `priorityAxes` (`questions/route.ts:186-192`) only accepts axes. Also worth noting the bank is **one question per axis total**; the depth all comes from the AI generator, so with the model unavailable a user sees the same 16 fallback questions and nothing more.
+
+### Audit follow-up 2 — the three Explore counters + full app-wide token spend map (2026-09-04, read-only)
+
+Third read-only pass. No code changed.
+
+#### 1) The three counters — three *different* predicates over the same data
+
+All three read the **report track only**; the `self_game` gut-call track never counts toward any of them (`trait-stability.ts:127-134`).
+
+**a) "Full profile · X of 16 filled"** — [profile-fill-fold.tsx:38](src/components/profile-fill-fold.tsx:38), title built from `filledAxisLabel(tracks)`.
+Chain: `filledAxisLabel` (`trait-stability.ts:239`) → `filledCount` (`:218`) → `filledAxes` (`:210`) → `isAxisFilled` (`:206`) = **`row.answerCount >= 1`**. That is the whole test — one answer on an axis fills it. At 16/16, `isProfileComplete` (`:233`) flips the title to the complete label instead.
+
+**b) "How you're currently leaning · X of 16 settled"** — [explore.tsx:144](src/app/(tabs)/explore.tsx:144) (label) and `:173` (number), from `settledAxisLabel` / `settledCount`.
+Chain: `settledCount` (`trait-stability.ts:156`) = `Math.round(settledScore)`; `settledScore` (`:148`) sums `effectiveStability(...)` across all 16 axes. `effectiveStability` (`:114`) returns **0 when `answerCount < STABILITY_FLOOR_N` (3)**, else `decayedStability` — full value for 60 idle days, then a 90-day half-life (`:102-112`).
+So "settled" is a **rounded sum of fractional stabilities, not a count of axes**. It can move without any new answer (decay), and 16 axes each at 0.5 stability reads as "8 of 16 settled" while every one of them is filled. Filled and settled are documented as allowed to disagree (`trait-stability.ts:197-202`, `profile-fill-fold.tsx:30-32`).
+
+**c) "Categories · X of 11 ready"** — [categories-fold.tsx:76](src/components/categories-fold.tsx:76), literally `${ready.length} of ${readings.length} ready` where `ready = readings.filter((row) => row.ready)` (`:40`).
+`ready` comes from `readCategory` (`categories.ts:294-345`). **What "ready" means depends on the category's shape:**
+- **bar** (8 of 11): `ready = stable.length >= def.minStable`, and `minStable` is **2** for every category — so a 3-axis bar is "ready" on 2 of its 3 axes.
+- **map** (3 of 11 — `cat_love`, `cat_independence`, `cat_structure`): **both** named axes must independently clear the floor, else it does not render (`categories.ts:309-317`).
+- "Clears the floor" = `reportStable` (`categories.ts:266-274`) → `effectiveStability(...) > 0` → **`answerCount >= 3` on that axis**, after decay.
+- `texture` axes (only `cat_love` has them) are display-only and never affect `ready`.
+
+**Net:** an axis needs **1** answer to count as filled, **3** to contribute to settled or to a category. A category needs 2 qualifying axes. These thresholds are independent, which is why the three numbers on one screen routinely disagree.
+
+#### 2 & 3) Every AI-token-spending call site in the app, and what it checks
+
+Spend is claimed in two places: client-side RPCs (`claimAiCall`, `claimQuestionsBatch`, `claimTitleGenerate`, `claimStoryGenerate`) and, for edge-routed providers, `claim_ai_call` inside the Edge Function itself (`supabase/functions/ai-generate/index.ts:329`) — which fires **before any vendor call and regardless of what the client checked** (`edge.ts:21-22` notes the client must not double-claim).
+
+| # | Surface | Call site | Quota claim | Checks *filled* (`isProfileComplete`) | Checks *settled* (`isThinProfile`) | Checks *categories ready* | Blocks spend? |
+|---|---|---|---|---|---|---|---|
+| 1 | Daily card (Dawn / Home / missed-check) | `voice/providers/remote.ts:18-23`, via `routeVoiceCard` (`voice/router.ts:283`) — callers `(tabs)/index.tsx:41`, `dawn.tsx:22`, `missed-check-card.tsx:11` | Edge-side only | No | Yes — `prompt.ts:189-191`, **copy only** | No | **No** |
+| 2 | Talk reply (Sage chat) | `remote.ts:33-38`, via `voice/talk.ts:134` (`(tabs)/sage.tsx:370`) | `claimAiCall('sage')` | No — explicitly ungated (`questions/route.ts:167`) | No | No | **No** |
+| 3 | Explore observations (Explore tab) | `(tabs)/explore.tsx:295-298` → `explore/route.ts:103-104` | `claimAiCall('explore')` | No | No | No | **No** |
+| 4 | Explore observations (panel) | `explore-panel.tsx:145-148` → same route | `claimAiCall('explore')` | No | No | No | **No** |
+| 5 | Sage Title ("Today's Read") | `sage-title-card.tsx:89` claim, `:94` generate | `claim_title_generate` | No | No | No | **No** |
+| 6 | Sage insight ("A closer look") | `sage-insight.ts:56` | via `claimAiCall` at caller | No | Yes — `sage-insight.ts:22,51`, **copy only** | No | **No** |
+| 7 | Infinite Questions batch | `questions/generate.ts:8` via `questions/route.ts:168-175` (`questions-fold.tsx:138`) | `claim_questions_batch` | **Yes** — `isProfileComplete` | No | No | **Yes** — falls back to the 16-item static bank, no claim, no model call |
+| 8 | The Story | `sage-story-fold.tsx:66` gate → `:84` claim | `claim_story_generate` (own lane) | No | **Yes** — `storyReady()` = `!isThinProfile(...)` | Reads `readyCategories(tracks)` at `:110`, but only to **fill the prompt**, not to gate | **Yes** |
+| 9 | Dev Lab explore probe | `dev-lab.tsx:267-270` | `claimAiCall('explore')` | No | No | No | No (dev-only screen) |
+| 10 | Dev Lab card probe | `dev-lab.tsx:97` → `routeVoiceCard` | Edge-side only | No | No | No | No (dev-only screen) |
+| 11 | Voice Lab card probe | `voice-lab.tsx:11` → `routeVoiceCard` | Edge-side only | No | No | No | No (dev-only screen) |
+| — | Provider ping (`ai-lab.tsx`) | `pingProvider()` (`ai/generate.ts`) | **none by design** — never claims quota | n/a | n/a | n/a | n/a |
+
+**Summary of the completeness picture:**
+- **Only 2 of 8 production spend sites block on completeness**: Infinite Questions (`filled`) and The Story (`settled`).
+- **Two more look guarded but aren't** — the Daily card and Sage insight call `isThinProfile` and then spend anyway; it only softens the wording.
+- **"Categories ready" gates nothing anywhere in the app.** `readyCategories` has exactly one consumer (`sage-story-fold.tsx:110`) and it is a prompt input, not a gate.
+- The two gates that do exist use **different signals** (`isProfileComplete` on filled vs `isThinProfile` on settled), so a user can be blocked from one surface and allowed on the other with the same profile.
