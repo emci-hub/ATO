@@ -4,7 +4,7 @@
 **Gates:** A ✓ (non-goals in archive/OLD_PLAN.md) · B ✓ (iOS/Expo, Supabase, Apple Sign-in+email) · C in progress · D not started
 **Modules on:** report/block (Social), crisis static-card + privacy pass (Health/finance/kids) — both required, in progress
 **Live AI + model:** Cursor, Grok 4.6 (current), Expo SDK 54
-**Latest production OTA:** `229bc909-0954-445e-ba36-022188f2f34d` (commit `6f4623b`, runtime 1.0.0, ios+android) — Sage facts card moved to Sage tab + chat auto-scroll fix, Legends thin-profile gate + Questions deep link, dev "Thin profile" preset. Published Sep 3, 2026. **Not yet device-verified.** Binary 10+. Supersedes `87207080` (commit `6e8e7b2`, intake copy/options + loneliness).
+**Latest production OTA:** `d08b8ff2-ebdf-43fa-b556-4a87dbe23c66` (runtime 1.0.0, ios+android) — fixes unexpected sign-outs (Supabase auto-refresh now ticks on app foreground/background), fixes Observations "It landed"/"Not this" taps flashing "Noted." before the save succeeded, and temporarily unlocks ATO+ appearance modes (Zen/Neon/Anime) for all users. Published Sep 3, 2026. **Not yet device-verified** — background/foreground session test and Observations tap re-test both still pending. Binary 10+. Supersedes `229bc909` (commit `6f4623b`, Sage facts card move + chat auto-scroll fix, Legends thin-profile gate + Questions deep link, dev "Thin profile" preset).
 
 **Latest red-team pass:** `docs/red-team-2026-09-03.md` (Sep 3, 2026) — security / visual / UI / UX / delight / opportunities, with quickest wins, biggest risks, best opportunities. Nothing in it is fixed yet; it is a findings list, not a changelog.
 
