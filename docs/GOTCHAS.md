@@ -26,6 +26,11 @@ Read before editing the area. Each one has bitten this repo at least once.
   anywhere but that one request. The old dev-test account's own Supabase password
   (`ATO-dev-user-2026`, wave31 migration) is still in git history and unrotated —
   it no longer unlocks anything client-side, but rotate it before public launch too.
+- **`ato-dev@example.com` has a password on purpose** (seeded by wave31, deliberately —
+  see above). It will always show "Change password" (old + new + confirm), never "Set
+  password", in Settings. That is correct, not a bug — the has-password check
+  (`auth_has_password()` RPC) is reading real state. If you need to test the
+  no-password → "Set Password" path, use an OTP-only account, not `@atodev`.
 - **Root is `me.is_root`.** Never gate on a handle string again — `emci` was claimable.
   The column is trigger-protected; set it from the SQL editor / service role only.
 - **`PRE_LAUNCH_DEV = true` ships dev tooling to every OTA user.** Only the Home dev
