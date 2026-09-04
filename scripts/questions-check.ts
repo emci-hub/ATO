@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { QUESTIONS_BANK, QUESTIONS_FEW_SHOTS } from '../src/lib/questions/bank';
+import { CATEGORY_DEFS, getCategoryDefs } from '../src/lib/categories';
 import { pickQuestionGrounding } from '../src/lib/questions/context';
 import {
   QUESTIONS_CHECKPOINT,
@@ -19,6 +20,7 @@ import {
 import { questionDraftGuardHit } from '../src/lib/questions/guards';
 import {
   deferredUnansweredAxes,
+  mergeCategoryPriority,
   mergedDeferral,
   normalizeDeferredAxes,
 } from '../src/lib/questions/deferral';
@@ -90,6 +92,37 @@ assert.match(QUESTIONS_FEW_SHOTS, /Your Do today was writing down one thing you'
 assert.match(QUESTIONS_FEW_SHOTS, /A friend cancels same-day, no real reason given/);
 assert.match(QUESTIONS_FEW_SHOTS, /Everyone at the table already knows their order/);
 ok('locked few-shot set is used verbatim');
+
+// --- Category tagging (additive; not wired into the picker mechanism) -----
+// Every bank question resolves to a real category, using the deterministic
+// "first CATEGORY_DEFS entry, in defined order, whose axes include this
+// question's axis" rule — same rule used to assign the 48 entries.
+function firstMatchingCategory(axis: string): string | undefined {
+  return CATEGORY_DEFS.find((def) => (def.axes as readonly string[]).includes(axis))?.id;
+}
+for (const row of QUESTIONS_BANK) {
+  assert.ok(row.category, `${row.axis} bank draft is missing a category`);
+  assert.equal(
+    row.category,
+    firstMatchingCategory(row.axis),
+    `${row.axis} category must be the first CATEGORY_DEFS match, got ${row.category}`,
+  );
+  assert.ok(
+    getCategoryDefs().some((def) => def.id === row.category),
+    `${row.category} must resolve in the live category catalog`,
+  );
+}
+ok('every bank question has a deterministic, resolvable category');
+
+// --- Category picker priority merge (additive axis-priority lever) --------
+// No category picked -> priority list is exactly the base list, unchanged.
+assert.deepEqual(mergeCategoryPriority([], ['openness', 'playfulness']), ['openness', 'playfulness']);
+// A category's axes lead, deduped against the base list.
+assert.deepEqual(
+  mergeCategoryPriority(['autonomy', 'competence'], ['competence', 'openness']),
+  ['autonomy', 'competence', 'openness'],
+);
+ok('category-priority merge is a no-op when unset and dedupes when set');
 
 const local = composeLocalQuestionBatch();
 assert.equal(local.length, 5);
@@ -520,6 +553,14 @@ assert.match(fold, /QUESTIONS_CHECKPOINT/);
 assert.match(fold, /QUESTIONS_KEEP_GOING/);
 assert.match(fold, /logJargonGuard/);
 assert.match(fold, /logPhraseGuard/);
+// Category picker wiring: uses the shared, unit-tested merge helper (not an
+// inline duplicate), defaults unselected, and never imports anything from
+// the question_items/category_id direction — confirms the picker stays on
+// the axis-priority lever, not a stored per-item category.
+assert.match(fold, /mergeCategoryPriority/);
+assert.match(fold, /useState<CategoryId \| null>\(null\)/);
+assert.doesNotMatch(fold, /category_id/);
+ok('category picker wires through the shared merge helper, defaults unselected');
 assert.equal(QUESTIONS_SKIP_THIS, 'Skip this one');
 assert.equal(QUESTIONS_SKIP_REST, 'Skip the rest');
 assert.equal(QUESTIONS_CHECKPOINT, "That's plenty for now — come back anytime");

@@ -315,6 +315,7 @@ export default function YouScreen() {
                 timeZone={me.timezone || 'UTC'}
                 defaultOpen={false}
                 userId={me.id}
+                me={me}
               />
 
               <QuestGrowthBars presence={presence} depth={depth} />

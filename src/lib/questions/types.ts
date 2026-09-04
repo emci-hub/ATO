@@ -1,3 +1,4 @@
+import type { CategoryId } from '@/lib/categories';
 import type { TraitTrack } from '@/lib/trait-stability';
 import type { TraitAxis } from '@/lib/traits';
 import type { CheckHistory } from '@/lib/voice/types';
@@ -12,6 +13,15 @@ export interface QuestionOption {
 
 export interface QuestionDraft {
   axis: TraitAxis;
+  /**
+   * The category this question is filed under for the Questions-screen
+   * category picker (additive, does not affect axis rotation/routing).
+   * Deterministic: the first CATEGORY_DEFS entry (in defined order) whose
+   * `axes` includes this question's axis. Only the static bank (bank.ts)
+   * sets this — AI-generated drafts (parse.ts) have no fixed category, so
+   * this stays optional rather than required.
+   */
+  category?: CategoryId;
   prompt: string;
   options: QuestionOption[];
 }

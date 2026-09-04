@@ -21,6 +21,7 @@ import {
   markFullProfileUnlockSeen,
 } from '@/lib/full-profile-unlock';
 import { neonGlowColors, presenceGlowLayersForTier, PRESENCE_GLOW_LAYERS } from '@/lib/growth';
+import type { Me } from '@/lib/me';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { useAppearance } from '@/lib/theme/context';
 import {
@@ -182,6 +183,7 @@ export function MilestoneBadges({
   timeZone = 'UTC',
   defaultOpen = false,
   userId,
+  me,
 }: {
   checkCount: number;
   factCount: number;
@@ -189,6 +191,14 @@ export function MilestoneBadges({
   timeZone?: string;
   defaultOpen?: boolean;
   userId?: string;
+  /**
+   * Re-fetch trigger only — not read inside this component. `updateTraits`
+   * never bumps `me.updated_at` (no DB trigger for it either), so keying off
+   * the whole object reference is what actually catches a trait write:
+   * `MeContext.refresh()` hands back a new object every call, same fix
+   * already applied to Explore/Sage's tracks effects.
+   */
+  me?: Me | null;
 }) {
   const theme = useTheme();
   const { reduceMotion } = useAppearance();
@@ -235,7 +245,7 @@ export function MilestoneBadges({
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, me]);
 
   const states = resolveBadges({ checkCount, factCount, checks, timeZone, fullPicture });
   const earned = unlockedCount(states);

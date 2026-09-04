@@ -22,6 +22,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   // --- openness ------------------------------------------------------------
   {
     axis: 'openness',
+    category: 'cat_openness',
     prompt:
       "Your Do today was writing down one thing you're walking into. Was today's version the safe pick or the different one?",
     options: [
@@ -32,6 +33,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'openness',
+    category: 'cat_openness',
     prompt: 'Same restaurant, and there is a menu item you have never tried.',
     options: [
       { text: 'New one. Obviously', value: 0.8 },
@@ -41,6 +43,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'openness',
+    category: 'cat_openness',
     prompt: 'A friend wants to drag you to something you would never pick yourself.',
     options: [
       { text: "I'm in, that's the fun part", value: 0.8 },
@@ -51,6 +54,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   // --- conscientiousness ---------------------------------------------------
   {
     axis: 'conscientiousness',
+    category: 'cat_steadiness',
     prompt: 'A plan you made last week hits a boring stretch today.',
     options: [
       { text: 'I still see it through', value: 0.8 },
@@ -60,6 +64,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'conscientiousness',
+    category: 'cat_steadiness',
     prompt: 'Something is due Friday. It is Monday.',
     options: [
       { text: 'I start chipping at it now', value: 0.8 },
@@ -69,6 +74,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'conscientiousness',
+    category: 'cat_steadiness',
     prompt: 'You said you would do a small thing for someone and nobody followed up.',
     options: [
       { text: 'I still do it', value: 0.8 },
@@ -79,6 +85,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   // --- extraversion --------------------------------------------------------
   {
     axis: 'extraversion',
+    category: 'cat_openness',
     prompt: 'Saturday afternoon, nobody has plans yet.',
     options: [
       { text: "I'd rather text a few people and make something happen", value: 0.8 },
@@ -88,6 +95,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'extraversion',
+    category: 'cat_openness',
     prompt: 'You walk into a party and know maybe two people.',
     options: [
       { text: 'I start talking to someone new', value: 0.8 },
@@ -97,6 +105,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'extraversion',
+    category: 'cat_openness',
     prompt: 'A long week just ended.',
     options: [
       { text: 'Going out would recharge me', value: 0.8 },
@@ -107,6 +116,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   // --- agreeableness -------------------------------------------------------
   {
     axis: 'agreeableness',
+    category: 'cat_steadiness',
     prompt: "A group chat is picking a place you don't really like.",
     options: [
       { text: "I go along, it's not worth a fuss", value: 0.8 },
@@ -116,6 +126,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'agreeableness',
+    category: 'cat_steadiness',
     prompt: 'Someone takes credit for something that was mostly yours.',
     options: [
       { text: 'I let it slide', value: 0.8 },
@@ -125,6 +136,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'agreeableness',
+    category: 'cat_steadiness',
     prompt: 'A stranger is clearly in the wrong and clearly having a bad day.',
     options: [
       { text: 'I give them the benefit of the doubt', value: 0.8 },
@@ -135,6 +147,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   // --- steadiness ----------------------------------------------------------
   {
     axis: 'steadiness',
+    category: 'cat_steadiness',
     prompt: 'A small thing goes wrong first thing in the morning.',
     options: [
       { text: "I'm mostly over it by lunch", value: 0.8 },
@@ -144,6 +157,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'steadiness',
+    category: 'cat_steadiness',
     prompt: 'Plans change on you an hour before.',
     options: [
       { text: 'Fine, I roll with it', value: 0.8 },
@@ -153,6 +167,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'steadiness',
+    category: 'cat_steadiness',
     prompt: 'Someone sends a short reply that could be read two ways.',
     options: [
       { text: 'I read it the plain way and move on', value: 0.8 },
@@ -163,6 +178,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   // --- attachment_anxiety --------------------------------------------------
   {
     axis: 'attachment_anxiety',
+    category: 'cat_love',
     prompt: 'Someone you like takes a while to reply.',
     options: [
       { text: "I start wondering if they're pulling away", value: 0.8 },
@@ -172,6 +188,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'attachment_anxiety',
+    category: 'cat_love',
     prompt: 'A close friend has been quieter than usual this week.',
     options: [
       { text: 'I assume I did something', value: 0.8 },
@@ -181,6 +198,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'attachment_anxiety',
+    category: 'cat_love',
     prompt: 'You need reassurance more often than you would like to admit.',
     options: [
       { text: 'Yeah, that lands', value: 0.8 },
@@ -191,6 +209,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   // --- attachment_avoidance ------------------------------------------------
   {
     axis: 'attachment_avoidance',
+    category: 'cat_love',
     prompt: 'Someone close to you wants to talk something out in person instead of over text.',
     options: [
       { text: "Sure, that's fine when it matters", value: 0.2 },
@@ -199,6 +218,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'attachment_avoidance',
+    category: 'cat_love',
     prompt: 'A rough week. Someone asks how you actually are.',
     options: [
       { text: 'I tell them the real version', value: 0.2 },
@@ -208,6 +228,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'attachment_avoidance',
+    category: 'cat_love',
     prompt: 'Things are getting closer with someone.',
     options: [
       { text: 'I lean in', value: 0.2 },
@@ -218,6 +239,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   // --- conflict_assertiveness ----------------------------------------------
   {
     axis: 'conflict_assertiveness',
+    category: 'cat_communication',
     prompt: 'You disagree with someone in the room.',
     options: [
       { text: 'I say so, even if it gets a little sharp', value: 0.8 },
@@ -227,6 +249,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'conflict_assertiveness',
+    category: 'cat_communication',
     prompt: 'The order is wrong and the place is busy.',
     options: [
       { text: 'I send it back', value: 0.8 },
@@ -236,6 +259,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'conflict_assertiveness',
+    category: 'cat_communication',
     prompt: 'You want something and asking might annoy someone.',
     options: [
       { text: 'I ask anyway', value: 0.8 },
@@ -246,6 +270,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   // --- conflict_cooperativeness --------------------------------------------
   {
     axis: 'conflict_cooperativeness',
+    category: 'cat_communication',
     prompt:
       'When you and someone else both want different things with no obvious middle ground, who usually gives first?',
     options: [
@@ -256,6 +281,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'conflict_cooperativeness',
+    category: 'cat_communication',
     prompt: 'An argument is going nowhere and it is getting late.',
     options: [
       { text: 'I look for something we both can live with', value: 0.8 },
@@ -265,6 +291,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'conflict_cooperativeness',
+    category: 'cat_communication',
     prompt: 'Winning the point matters more than keeping the peace.',
     options: [
       { text: 'Not for me, usually', value: 0.8 },
@@ -275,6 +302,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   // --- autonomy ------------------------------------------------------------
   {
     axis: 'autonomy',
+    category: 'cat_drive',
     prompt: 'Someone hands you a plan that would work fine.',
     options: [
       { text: "I'd still rather do it my way", value: 0.8 },
@@ -284,6 +312,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'autonomy',
+    category: 'cat_drive',
     prompt: 'You get told exactly how to do something you already know how to do.',
     options: [
       { text: 'It gets under my skin', value: 0.8 },
@@ -293,6 +322,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'autonomy',
+    category: 'cat_drive',
     prompt: 'A free day with nothing scheduled and nobody asking anything of you.',
     options: [
       { text: 'That is the best kind of day', value: 0.8 },
@@ -303,6 +333,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   // --- competence ----------------------------------------------------------
   {
     axis: 'competence',
+    category: 'cat_drive',
     prompt: 'A hard task lands on your plate.',
     options: [
       { text: 'I feel like I can handle it', value: 0.8 },
@@ -312,6 +343,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'competence',
+    category: 'cat_drive',
     prompt: 'You are learning something new and you are still bad at it.',
     options: [
       { text: 'I can feel myself getting better', value: 0.8 },
@@ -321,6 +353,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'competence',
+    category: 'cat_drive',
     prompt: 'Someone says you are good at something you do a lot.',
     options: [
       { text: 'Yeah, I think so too', value: 0.8 },
@@ -331,6 +364,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   // --- relatedness ---------------------------------------------------------
   {
     axis: 'relatedness',
+    category: 'cat_drive',
     prompt: 'A friend cancels same-day, no real reason given.',
     options: [
       { text: "I'd want to talk it through", value: 0.8 },
@@ -339,6 +373,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'relatedness',
+    category: 'cat_drive',
     prompt: 'Something good happens to you on an ordinary Tuesday.',
     options: [
       { text: "I'm texting someone before I sit down", value: 0.8 },
@@ -348,6 +383,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'relatedness',
+    category: 'cat_drive',
     prompt: 'A whole day with no messages from anyone.',
     options: [
       { text: 'I feel the gap', value: 0.8 },
@@ -358,6 +394,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   // --- growth_mindset ------------------------------------------------------
   {
     axis: 'growth_mindset',
+    category: 'cat_agency',
     prompt: 'You try something new and it goes badly the first time. What actually happens next?',
     options: [
       { text: "I look at what I'd do differently", value: 0.8 },
@@ -366,6 +403,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'growth_mindset',
+    category: 'cat_agency',
     prompt: 'Someone is much better than you at a thing you care about.',
     options: [
       { text: 'I want to know how they got there', value: 0.8 },
@@ -375,6 +413,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'growth_mindset',
+    category: 'cat_agency',
     prompt: 'You can get noticeably better at almost anything with enough reps.',
     options: [
       { text: 'I believe that', value: 0.8 },
@@ -385,6 +424,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   // --- locus_of_control ----------------------------------------------------
   {
     axis: 'locus_of_control',
+    category: 'cat_agency',
     prompt: 'A plan you were in on falls apart.',
     options: [
       { text: 'I look first at what I might have done differently', value: 0.8 },
@@ -394,6 +434,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'locus_of_control',
+    category: 'cat_agency',
     prompt: 'A good week. Where does the credit actually go?',
     options: [
       { text: 'Mostly to what I did', value: 0.8 },
@@ -403,6 +444,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'locus_of_control',
+    category: 'cat_agency',
     prompt: 'How next year goes is mostly up to you.',
     options: [
       { text: 'Mostly, yes', value: 0.8 },
@@ -413,6 +455,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   // --- self_efficacy -------------------------------------------------------
   {
     axis: 'self_efficacy',
+    category: 'cat_agency',
     prompt: "Everyone at the table already knows their order. You don't.",
     options: [
       { text: "I panic-order whatever's closest", value: 0.2 },
@@ -422,6 +465,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'self_efficacy',
+    category: 'cat_agency',
     prompt: 'Something breaks and you have never fixed one before.',
     options: [
       { text: "I'll figure it out", value: 0.8 },
@@ -431,6 +475,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'self_efficacy',
+    category: 'cat_agency',
     prompt: 'A big thing you have to do, and no obvious first step.',
     options: [
       { text: 'I start somewhere and adjust', value: 0.8 },
@@ -441,6 +486,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   // --- playfulness ---------------------------------------------------------
   {
     axis: 'playfulness',
+    category: 'cat_social',
     prompt: 'A dull stretch with nothing required of you.',
     options: [
       { text: "I'd mess around and see what happens", value: 0.8 },
@@ -450,6 +496,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'playfulness',
+    category: 'cat_social',
     prompt: 'A serious conversation hits a genuinely funny moment.',
     options: [
       { text: 'I take the joke', value: 0.8 },
@@ -459,6 +506,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   },
   {
     axis: 'playfulness',
+    category: 'cat_social',
     prompt: 'People would say you are one of the sillier people they know.',
     options: [
       { text: 'That tracks', value: 0.8 },

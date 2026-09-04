@@ -109,7 +109,7 @@ export default function ExploreScreen() {
     return () => {
       cancelled = true;
     };
-  }, [userId, me?.updated_at]);
+  }, [userId, me]);
 
   useEffect(() => {
     if (!userId || !me) return;

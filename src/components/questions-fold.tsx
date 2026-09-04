@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { getCategoryDefs, type CategoryId } from '@/lib/categories';
 import { updateTraits, type Me } from '@/lib/me';
 import { earnTokensQuiet } from '@/lib/tokens-server';
-import { deferredUnansweredAxes } from '@/lib/questions/deferral';
+import { deferredUnansweredAxes, mergeCategoryPriority } from '@/lib/questions/deferral';
 import { unansweredAxisLabel, type TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, traitStateFromRow, type TraitAxis } from '@/lib/traits';
 import {
@@ -112,16 +113,36 @@ export function QuestionsFold({
   const [sessionCount, setSessionCount] = useState(0);
   const [checkpoint, setCheckpoint] = useState(false);
   const [keptGoing, setKeptGoing] = useState(false);
+  /**
+   * Category picker (additive). Purely re-weights which axes lead the next
+   * batch via the same `priorityAxes` lever `focusAxis` already uses in
+   * production — it never touches the axis-driven rotation/sweep or the
+   * deferred-axis/skip machinery below. A bad or stale selection just
+   * contributes an empty axis list, which falls back to `deferred` exactly
+   * as if no category were picked — it can never block the existing flow.
+   */
+  const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (categoryOverride?: CategoryId | null) => {
+    const category = categoryOverride !== undefined ? categoryOverride : selectedCategory;
     const deferred = deferredUnansweredAxes(
       traitStateFromRow(me).values,
       me.question_deferred,
     );
-    const priorityAxes =
+    const base =
       focusAxis && (TRAIT_AXES as readonly string[]).includes(focusAxis)
         ? [focusAxis, ...deferred.filter((axis) => axis !== focusAxis)]
         : deferred;
+    let categoryAxes: TraitAxis[] = [];
+    try {
+      categoryAxes = category
+        ? [...(getCategoryDefs().find((def) => def.id === category)?.axes ?? [])]
+        : [];
+    } catch (err) {
+      console.log('[questions] category lookup error:', err);
+      categoryAxes = [];
+    }
+    const priorityAxes = mergeCategoryPriority(categoryAxes, base);
     const next = await withTimeout(
       routeQuestions(
         {
@@ -146,7 +167,7 @@ export function QuestionsFold({
       'questions',
     );
     setResult(next);
-  }, [me, history, crisisToday, focusAxis, tracks]);
+  }, [me, history, crisisToday, focusAxis, tracks, selectedCategory]);
 
   function handleOpen() {
     setSessionCount(0);
@@ -170,6 +191,21 @@ export function QuestionsFold({
     setCheckpoint(false);
     void load().catch((err) => {
       console.log('[questions] route error:', err);
+      setResult({ kind: 'empty', pack: null, item: null });
+    });
+  }
+
+  /**
+   * Tapping the active category clears it (back to plain axis rotation);
+   * tapping another switches it. Never touches sessionCount/checkpoint/
+   * keptGoing — those govern the unrelated pause-after-N-answers flow.
+   */
+  function handleSelectCategory(id: CategoryId) {
+    if (busy) return;
+    const next = selectedCategory === id ? null : id;
+    setSelectedCategory(next);
+    void load(next).catch((err) => {
+      console.log('[questions] category route error:', err);
       setResult({ kind: 'empty', pack: null, item: null });
     });
   }
@@ -252,11 +288,47 @@ export function QuestionsFold({
   const empty = result ? emptyCopy(result.kind) : null;
   const item = checkpoint ? null : (result?.item ?? null);
 
+  // Fail-open: a broken/empty catalog just hides the picker row, it never
+  // blocks the question below (which does not depend on this list).
+  let categoryDefs: ReturnType<typeof getCategoryDefs> = [];
+  try {
+    categoryDefs = getCategoryDefs();
+  } catch (err) {
+    console.log('[questions] category list error:', err);
+  }
+
   const body = (
     <View style={styles.body}>
       <ThemedText type="small" themeColor="textSecondary">
         {QUESTIONS_LEDE}
       </ThemedText>
+      {categoryDefs.length > 0 ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryRow}>
+          {categoryDefs.map((def) => {
+            const active = selectedCategory === def.id;
+            return (
+              <Pressable
+                key={def.id}
+                onPress={() => handleSelectCategory(def.id)}
+                disabled={busy}
+                style={({ pressed }) => [
+                  styles.categoryChip,
+                  { borderColor: controlBorderColor(theme) },
+                  active && [styles.categoryChipActive, { borderColor: theme.accent }],
+                  pressed && styles.pressed,
+                  busy && styles.disabled,
+                ]}>
+                <ThemedText type="smallBold" themeColor={active ? undefined : 'textSecondary'}>
+                  {def.name}
+                </ThemedText>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      ) : null}
       {checkpoint ? (
         <>
           <ThemedText>{QUESTIONS_CHECKPOINT}</ThemedText>
@@ -347,6 +419,19 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.two,
+  },
+  categoryRow: {
+    gap: Spacing.two,
+    paddingRight: Spacing.three,
+  },
+  categoryChip: {
+    borderWidth: 1,
+    borderRadius: Spacing.three,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+  },
+  categoryChipActive: {
+    borderWidth: 2,
   },
   options: {
     gap: Spacing.two,

@@ -1,0 +1,119 @@
+/**
+ * Inconsistent-answerer floor on effectiveStability. Run: npm run check:trait-stability
+ *
+ * An axis where every answer disagrees with the running EWMA by >= 0.5 holds
+ * `stability` at exactly 0 forever (0 is a fixed point of the EWMA recurrence
+ * at zero agreement) — effectiveStability floors that case once answerCount
+ * reaches STABILITY_FLOOR_OVERRIDE_N, so the axis can eventually settle.
+ */
+import assert from 'node:assert/strict';
+
+import {
+  STABILITY_FLOOR_N,
+  STABILITY_FLOOR_OVERRIDE_N,
+  STABILITY_INCONSISTENT_FLOOR,
+  applyEwmaAnswer,
+  effectiveStability,
+  isProfileSettled,
+  trackFor,
+  type TraitTrack,
+} from '../src/lib/trait-stability';
+import { TRAIT_AXES } from '../src/lib/traits';
+
+let passed = 0;
+function ok(label: string) {
+  passed += 1;
+  console.log(`  ✓ ${label}`);
+}
+
+const NOW = new Date('2026-09-04T12:00:00.000Z');
+
+function answerMany(signals: number[]): TraitTrack | null {
+  let row: TraitTrack | null = null;
+  for (const signal of signals) {
+    row = applyEwmaAnswer(row, 'openness', 'report', signal, NOW.toISOString());
+  }
+  return row;
+}
+
+/**
+ * The worst-case adversarial answerer: each new answer is whichever extreme
+ * (0 or 1) is furthest from the *current* EWMA value. Since
+ * max(v, 1-v) >= 0.5 for every v in [0,1], this guarantees delta >= 0.5 (so
+ * agreement, and therefore the stability update, is exactly 0) on every
+ * single step, by construction — unlike a fixed alternating pattern (e.g.
+ * 0.9/0.1), whose delta shrinks below 0.5 once the EWMA value converges
+ * toward the middle and would eventually clear the gate on its own.
+ */
+function answerAdversarially(count: number): TraitTrack | null {
+  let row: TraitTrack | null = null;
+  for (let i = 0; i < count; i += 1) {
+    const current = row?.value ?? 0;
+    const signal = current <= 0.5 ? 1 : 0;
+    row = applyEwmaAnswer(row, 'openness', 'report', signal, NOW.toISOString());
+  }
+  return row;
+}
+
+// Scenario A — consistent answerer: settles normally by answerCount 3, floor
+// threshold is well above STABILITY_FLOOR_N so it never engages here.
+assert.ok(STABILITY_FLOOR_OVERRIDE_N > STABILITY_FLOOR_N);
+const consistent = answerMany([0.8, 0.75, 0.82]);
+assert.equal(consistent?.answerCount, 3);
+assert.ok(effectiveStability(consistent, NOW) > 0);
+ok('consistent answers settle by answerCount 3, unaffected by the floor');
+
+// Scenario C — the trap: every sample flips >= 0.5 away from the running
+// EWMA, so agreement is 0 every time and raw stability is stuck at exactly 0
+// no matter how many times the axis is answered.
+const trapped = answerAdversarially(STABILITY_FLOOR_OVERRIDE_N - 1);
+assert.equal(trapped?.answerCount, STABILITY_FLOOR_OVERRIDE_N - 1);
+assert.equal(trapped?.stability, 0, 'raw stability stays at exactly 0 under maximal disagreement');
+assert.equal(effectiveStability(trapped, NOW), 0, 'below the override threshold, still locked');
+ok('inconsistent answers under the override threshold stay locked (no floor yet)');
+
+const trappedAtFloor = answerAdversarially(STABILITY_FLOOR_OVERRIDE_N);
+assert.equal(trappedAtFloor?.answerCount, STABILITY_FLOOR_OVERRIDE_N);
+assert.equal(trappedAtFloor?.stability, 0);
+assert.equal(
+  effectiveStability(trappedAtFloor, NOW),
+  STABILITY_INCONSISTENT_FLOOR,
+  'answerCount reaching the override floors effectiveStability instead of returning raw 0',
+);
+ok(`axis settles once answerCount reaches STABILITY_FLOOR_OVERRIDE_N (${STABILITY_FLOOR_OVERRIDE_N})`);
+
+// The floor must never write back into the stored row — only the read-side
+// effectiveStability computation changes. Decay math and future EWMA updates
+// must operate on the real (still-zero) stored stability.
+assert.equal(trappedAtFloor?.stability, 0, 'stored stability is untouched by the floor');
+ok('floor is read-side only; stored stability/EWMA math is unmodified');
+
+// isProfileSettled: every other axis instantly settled (3 consistent
+// answers), the trapped axis only clears the gate once it reaches the floor.
+function otherRows(): TraitTrack[] {
+  return TRAIT_AXES.filter((axis) => axis !== 'openness').map((axis) => ({
+    axis,
+    track: 'report' as const,
+    value: 0.5,
+    stability: 0.5,
+    answerCount: 3,
+    lastTouched: NOW.toISOString(),
+    lastDepthAt: null,
+  }));
+}
+const beforeFloor = [...otherRows(), trapped!];
+assert.equal(isProfileSettled(beforeFloor, NOW), false, 'trapped axis blocks the whole profile');
+const afterFloor = [...otherRows(), trappedAtFloor!];
+assert.equal(isProfileSettled(afterFloor, NOW), true, 'floor unblocks the whole profile once reached');
+ok('isProfileSettled unblocks once the trapped axis clears the floor, and only then');
+
+// Game track never counts, floor included — same rule as before the change.
+const gameOnly = trackFor(
+  [{ ...trappedAtFloor!, track: 'game' }],
+  'openness',
+  'report',
+);
+assert.equal(gameOnly, null);
+ok('game track is still excluded from effectiveStability lookups, floor included');
+
+console.log(`\n${passed} trait-stability floor checks passed`);

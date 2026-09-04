@@ -33,6 +33,7 @@ export function bankByAxis(): Map<TraitAxis, QuestionDraft[]> {
 function copyDraft(draft: QuestionDraft): QuestionDraft {
   return {
     axis: draft.axis,
+    category: draft.category,
     prompt: draft.prompt,
     options: draft.options.map((opt) => ({ ...opt })),
   };

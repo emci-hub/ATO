@@ -13,6 +13,18 @@ import {
 
 export const EWMA_ALPHA = 0.35;
 export const STABILITY_FLOOR_N = 3;
+/**
+ * Inconsistent-answerer floor. An axis where every sample disagrees with the
+ * running EWMA by >= 0.5 holds `stability` at exactly 0 forever (the EWMA
+ * recurrence has 0 as a fixed point at zero agreement) — no amount of
+ * re-answering clears it. Once answerCount reaches this threshold,
+ * `effectiveStability` floors the result to STABILITY_INCONSISTENT_FLOOR
+ * instead of returning the (possibly still-zero) raw value, so the axis can
+ * eventually settle. Read-side only: the stored `stability` value and the
+ * EWMA math in `applyEwmaAnswer` are untouched.
+ */
+export const STABILITY_FLOOR_OVERRIDE_N = 8;
+export const STABILITY_INCONSISTENT_FLOOR = 0.05;
 export const DECAY_GRACE_DAYS = 60;
 export const DECAY_HALF_LIFE_DAYS = 90;
 export const DEPTH_COOLDOWN_HOURS = 48;
@@ -113,7 +125,11 @@ export function decayedStability(
 
 export function effectiveStability(row: TraitTrack | null, now: Date = new Date()): number {
   if (!row || row.answerCount < STABILITY_FLOOR_N) return 0;
-  return decayedStability(row.stability, row.lastTouched, now);
+  const decayed = decayedStability(row.stability, row.lastTouched, now);
+  if (row.answerCount >= STABILITY_FLOOR_OVERRIDE_N) {
+    return Math.max(decayed, STABILITY_INCONSISTENT_FLOOR);
+  }
+  return decayed;
 }
 
 export function isStableForTitle(row: TraitTrack | null, now: Date = new Date()): boolean {
@@ -246,7 +262,9 @@ export function isProfileComplete(rows: readonly TraitTrack[]): boolean {
  *   !isThinProfile     — a stability SUM over 6/15 of the inventory, so a few
  *                        deep axes can clear it while others sit at zero
  * An axis answered inconsistently (every new sample >= 0.5 from its EWMA)
- * holds agreement at 0 and never settles — that user stays gated.
+ * holds agreement at 0, but `effectiveStability` floors it to
+ * STABILITY_INCONSISTENT_FLOOR once answerCount reaches
+ * STABILITY_FLOOR_OVERRIDE_N, so that axis eventually settles too.
  */
 export function isProfileSettled(
   rows: readonly TraitTrack[],

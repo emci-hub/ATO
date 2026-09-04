@@ -53,3 +53,17 @@ export function mergedDeferral(
   }
   return TRAIT_AXES.filter((axis) => out.has(axis));
 }
+
+/**
+ * Questions-screen category picker (additive). Prepends a category's axes
+ * ahead of the base priority list (focusAxis + deferred), deduped. An empty
+ * `categoryAxes` — no category picked, or a bad/empty lookup — returns `base`
+ * unchanged, so the picker can never alter behavior when it is not in use.
+ */
+export function mergeCategoryPriority(
+  categoryAxes: readonly TraitAxis[],
+  base: readonly TraitAxis[],
+): TraitAxis[] {
+  if (categoryAxes.length === 0) return [...base];
+  return [...new Set([...categoryAxes, ...base])];
+}

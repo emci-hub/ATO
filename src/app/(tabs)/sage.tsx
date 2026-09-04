@@ -279,7 +279,7 @@ export default function SageScreen() {
     return () => {
       cancelled = true;
     };
-  }, [userId, me?.updated_at]);
+  }, [userId, me]);
 
   useEffect(() => {
     if (!keyboardOpen) return;
