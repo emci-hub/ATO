@@ -93,10 +93,15 @@ export interface RouteQuestionSweepResult {
  * One item per axis. Gemini if reachable; otherwise the locked bank.
  * Does not touch the 5-item rotation used by Tell Sage more.
  *
- * Gated in the same order and manner as routeQuestions: consent → crisis →
- * quota claim → generate. The local bank fallback is gated behind consent and
- * crisis too (it still represents "Sage writing to you"), but never spends the
- * questions quota lane (a deterministic bank costs no model call).
+ * Gated consent → crisis → quota claim → generate. The local bank fallback is
+ * gated behind consent and crisis too (it still represents "Sage writing to
+ * you"), but never spends the questions quota lane (a deterministic bank costs
+ * no model call).
+ *
+ * NOTE: this path deliberately has NO profile-completeness gate, unlike
+ * `routeQuestions`. The sweep's whole job is to fill every axis in one pass, so
+ * gating it on a filled profile would make it unreachable exactly when it is
+ * most useful. It therefore still reaches the model for a thin profile.
  */
 export async function routeQuestionSweep(input: {
   me: { name: string; talk_style: TalkStyle; voice_preset: string };

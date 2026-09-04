@@ -31,7 +31,8 @@ import { routeQuestionSweep } from '../src/lib/questions/sweep';
 import { QUESTIONS_BATCH_SIZE, QUESTIONS_CALL_TYPE } from '../src/lib/questions/types';
 import type { QuestionDraft } from '../src/lib/questions/types';
 import { emptySageKnowsState } from '../src/lib/sage-knows';
-import { emptyTraitState, mergeTraitWrite } from '../src/lib/traits';
+import type { TraitTrack } from '../src/lib/trait-stability';
+import { TRAIT_AXES, emptyTraitState, mergeTraitWrite } from '../src/lib/traits';
 import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
 import { PHRASE_FLAG_TYPE } from '../src/lib/voice/phrase-guard';
 
@@ -39,6 +40,24 @@ let passed = 0;
 function ok(label: string) {
   passed += 1;
   console.log(`  ✓ ${label}`);
+}
+
+/** Report tracks with >=1 answer on every axis — a "complete" profile. */
+function completeTracks(): TraitTrack[] {
+  return TRAIT_AXES.map((axis) => ({
+    axis,
+    track: 'report' as const,
+    value: 0.5,
+    stability: 0.5,
+    answerCount: 1,
+    lastTouched: '2026-09-03T12:00:00.000Z',
+    lastDepthAt: null,
+  }));
+}
+
+/** Complete except for the named axes, which have no row at all. */
+function tracksMissing(...axes: readonly string[]): TraitTrack[] {
+  return completeTracks().filter((row) => !axes.includes(row.axis));
 }
 
 const root = resolve(__dirname, '..');
@@ -253,6 +272,7 @@ const afterAnswerRegen = await routeQuestions(
     history: [],
     aiConsent: true,
     priorityAxes: ['openness', 'playfulness'],
+    tracks: completeTracks(),
   },
   {
     useLocal: true,
@@ -278,6 +298,7 @@ const dirtyThenClean = await routeQuestions(
     },
     history: [],
     aiConsent: true,
+    tracks: completeTracks(),
   },
   {
     claimBatch: async () => ({ ok: true }),
@@ -297,6 +318,102 @@ assert.equal(
   false,
 );
 ok('guard failure retries once, then skips the dirty question');
+
+// --- Profile-completeness gate -------------------------------------------
+const gateMe = {
+  name: 'Riley',
+  timezone: 'UTC',
+  talk_style: 'even' as const,
+  voice_preset: 'close_friend',
+  sage_knows: emptySageKnowsState(),
+  facts: [],
+  ai_consent: true,
+};
+
+// Incomplete profile: no model call, and no quota claim either.
+let incompleteGenerate = 0;
+let incompleteClaims = 0;
+const incomplete = await routeQuestions(
+  {
+    me: gateMe,
+    history: [],
+    aiConsent: true,
+    tracks: tracksMissing('playfulness', 'autonomy'),
+  },
+  {
+    claimBatch: async () => {
+      incompleteClaims += 1;
+      return { ok: true };
+    },
+    generateBatch: async () => {
+      incompleteGenerate += 1;
+      return composeLocalQuestionBatch();
+    },
+  },
+);
+assert.equal(incompleteGenerate, 0);
+assert.equal(incompleteClaims, 0);
+assert.ok(incomplete.pack);
+ok('incomplete profile never calls the model and never claims quota');
+
+// ...and it leads with the axes that are actually unfilled, in TRAIT_AXES order
+// (autonomy sits ahead of playfulness in that list).
+assert.equal(incomplete.pack!.items[0]?.axis, 'autonomy');
+assert.equal(incomplete.pack!.items[1]?.axis, 'playfulness');
+ok('incomplete profile serves the unfilled axes first, from the static bank');
+
+// Complete profile: the AI path is reachable exactly as before.
+let completeGenerate = 0;
+let completeClaims = 0;
+await routeQuestions(
+  { me: gateMe, history: [], aiConsent: true, tracks: completeTracks() },
+  {
+    claimBatch: async () => {
+      completeClaims += 1;
+      return { ok: true };
+    },
+    generateBatch: async () => {
+      completeGenerate += 1;
+      return composeLocalQuestionBatch();
+    },
+  },
+);
+assert.equal(completeGenerate, 1);
+assert.equal(completeClaims, 1);
+ok('complete profile reaches the model and claims quota as before');
+
+// Consent and crisis still outrank the gate — a complete profile does not
+// bypass them, and an incomplete one reports them rather than the bank.
+assert.equal(
+  (await routeQuestions({ me: gateMe, history: [], aiConsent: false, tracks: completeTracks() }, {}))
+    .kind,
+  'consent-denied',
+);
+assert.equal(
+  (
+    await routeQuestions(
+      { me: gateMe, history: [], aiConsent: true, crisisToday: true, tracks: tracksMissing('playfulness') },
+      {},
+    )
+  ).kind,
+  'crisis',
+);
+ok('consent and crisis still precede the completeness gate');
+
+// Missing tracks read as incomplete — the safe direction (no paid call).
+let noTracksGenerate = 0;
+await routeQuestions(
+  { me: gateMe, history: [], aiConsent: true },
+  {
+    claimBatch: async () => ({ ok: true }),
+    generateBatch: async () => {
+      noTracksGenerate += 1;
+      return composeLocalQuestionBatch();
+    },
+  },
+);
+assert.equal(noTracksGenerate, 0);
+ok('absent tracks read as incomplete rather than opening the AI path');
 
 const asked = recentAskedAxes({
   id: 'p',

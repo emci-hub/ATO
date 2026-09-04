@@ -84,6 +84,14 @@ once) → `sage_messages`.
   category grounding (`src/lib/explore/prompt.ts:122`), reactions. 25s `withTimeout`
   at every call site.
 - Questions: `src/lib/questions/route.ts`; regen 3/UTC-day via `claim_questions_batch`.
+  Gate order in `routeQuestions`: consent → crisis → cached pack → **profile
+  completeness** → quota claim → generate. An incomplete profile (any axis with
+  0 report answers, `isProfileComplete` in `trait-stability.ts`) is served from
+  the static bank with its unfilled axes first, and claims **no** quota. Tracks
+  reach the route via `(tabs)/intake-sweep.tsx` → `QuestionsFold` → `tracks`;
+  the fold is not mounted until `tracksReady`, or a complete profile could be
+  locked into a bank-only pack for the rest of the day by the cache. Sage chat
+  (`routeTalkReply`, `src/lib/voice/talk.ts`) is a separate path and is never gated.
 - Story: `src/lib/sage-story.ts`, own quota `claim_story_generate`
   (`supabase/migrations/wave22_levity_story.sql:30`), no offline fallback.
 

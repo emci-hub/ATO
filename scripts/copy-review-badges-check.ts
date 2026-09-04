@@ -34,6 +34,7 @@ const sites = [
   'src/components/categories-fold.tsx',
   'src/components/sage-story-fold.tsx',
   'src/components/intake-sweep.tsx',
+  'src/components/profile-fill-fold.tsx',
 ];
 
 for (const rel of sites) {

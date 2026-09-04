@@ -9,6 +9,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { updateTraits, type Me } from '@/lib/me';
 import { earnTokensQuiet } from '@/lib/tokens-server';
 import { deferredUnansweredAxes } from '@/lib/questions/deferral';
+import type { TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, traitStateFromRow, type TraitAxis } from '@/lib/traits';
 import {
   QUESTIONS_CHECKPOINT,
@@ -90,6 +91,7 @@ export function QuestionsFold({
   onUpdated,
   alwaysOpen = false,
   focusAxis,
+  tracks,
 }: {
   me: Me;
   history: CheckHistory[];
@@ -98,6 +100,11 @@ export function QuestionsFold({
   alwaysOpen?: boolean;
   /** Front-loads this axis in the next batch (e.g. deep-linked from Legends). */
   focusAxis?: TraitAxis;
+  /**
+   * Report tracks, for the profile-completeness gate in `routeQuestions`.
+   * Absent reads as incomplete: static bank only, no model call.
+   */
+  tracks?: readonly TraitTrack[];
 }) {
   const theme = useTheme();
   const [result, setResult] = useState<RouteQuestionsResult | null>(null);
@@ -123,6 +130,7 @@ export function QuestionsFold({
           aiConsent: me.ai_consent,
           crisisToday,
           priorityAxes,
+          tracks,
         },
         {
           loadLatestPack: fetchLatestQuestionPack,
@@ -138,7 +146,7 @@ export function QuestionsFold({
       'questions',
     );
     setResult(next);
-  }, [me, history, crisisToday, focusAxis]);
+  }, [me, history, crisisToday, focusAxis, tracks]);
 
   function handleOpen() {
     setSessionCount(0);

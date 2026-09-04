@@ -62,6 +62,7 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 | `crisis-region-picker.tsx` | Region override for the crisis card |
 | `categories-fold.tsx`, `category-compare.tsx`, `category-visual.tsx`, `concept-hint.tsx` | Categories UI + "?" explainers |
 | `explore-panel.tsx`, `sage-story-fold.tsx`, `sage-title-card.tsx`, `sage-insight-spend.tsx` | Explore tab pieces |
+| `profile-fill-fold.tsx` | Explore "Full profile" checklist — filled (>=1 answer) per axis, N of 16, Complete state |
 | `sage-eight-ball.tsx`, `sage-usage.tsx`, `sage-facts.tsx` | Sage chat pieces; usage line; "What Sage remembers" |
 | `core-intake-sweep.tsx`, `optional-intake.tsx`, `intake-sweep.tsx`, `intake-chips.tsx`, `intake-settings.tsx` | Intake screens/chips |
 | `questions-fold.tsx` | Question batch UI |

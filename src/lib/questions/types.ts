@@ -1,3 +1,4 @@
+import type { TraitTrack } from '@/lib/trait-stability';
 import type { TraitAxis } from '@/lib/traits';
 import type { CheckHistory } from '@/lib/voice/types';
 
@@ -61,6 +62,13 @@ export interface RouteQuestionsInput {
    * cover first in the next generated batch. Empty when none.
    */
   priorityAxes?: readonly TraitAxis[];
+  /**
+   * Report-track rows, used only to decide whether the profile is complete
+   * (every axis has >=1 answer). An incomplete profile is served from the
+   * static bank and never reaches the model. Omitted/empty reads as
+   * incomplete, which is the safe direction — no paid call.
+   */
+  tracks?: readonly TraitTrack[];
 }
 
 export type QuestionsKind =

@@ -14,6 +14,8 @@ import { checksToHistory, fetchChecks, type Check } from '@/lib/checks';
 import { crisisFlagsForWindow } from '@/lib/crisis/days';
 import { useMe } from '@/hooks/use-me';
 import { useSession } from '@/hooks/use-session';
+import type { TraitTrack } from '@/lib/trait-stability';
+import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
 /**
@@ -33,6 +35,8 @@ export default function IntakeSweepTabScreen() {
   const [checksReady, setChecksReady] = useState(false);
   const [crisisToday, setCrisisToday] = useState(false);
   const [flagsReady, setFlagsReady] = useState(false);
+  const [tracks, setTracks] = useState<TraitTrack[]>([]);
+  const [tracksReady, setTracksReady] = useState(false);
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -67,6 +71,34 @@ export default function IntakeSweepTabScreen() {
     };
   }, [userId, me?.timezone]);
 
+  // Tracks feed the profile-completeness gate in `routeQuestions`.
+  // Deliberately NOT keyed on a `me` field: a trait write patches only trait
+  // values / `trait_sources` / `trait_touched_at` (`traitPatch`, no `me`
+  // UPDATE trigger touches `updated_at`), and `trait_touched_at` is an object
+  // whose identity churns on every fetch. Answers refetch through `onUpdated`
+  // instead. Note the refreshed tracks land one batch late: `pick()` re-runs
+  // `load()` from the render closure that still holds the old prop, so the
+  // answer filling the last axis regenerates one more bank pack and the AI
+  // path opens on the regen after that. Bounded, and no quota is spent.
+  const loadTracks = useCallback(async () => {
+    if (!userId) return;
+    try {
+      setTracks(await fetchTraitTracks(userId));
+    } catch (err) {
+      console.log('[questions] fetchTraitTracks error:', err);
+    } finally {
+      setTracksReady(true);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    void loadTracks();
+  }, [loadTracks]);
+
+  const refreshAfterAnswer = useCallback(async () => {
+    await Promise.all([refresh(), loadTracks()]);
+  }, [refresh, loadTracks]);
+
   function done() {
     router.replace('/');
   }
@@ -79,13 +111,21 @@ export default function IntakeSweepTabScreen() {
             <ThemedText type="subtitle">Questions</ThemedText>
           </View>
 
-          {me && checksReady && flagsReady ? (
+          {/*
+            `tracksReady` gates the mount for the same reason `flagsReady` gates
+            the sweep below: QuestionsFold generates and SAVES a pack on open,
+            and that pack is then served from cache until it is exhausted. A
+            mount before tracks land would read as an incomplete profile and
+            hand a complete-profile user a bank-only pack to work through first.
+          */}
+          {me && checksReady && flagsReady && tracksReady ? (
             <QuestionsFold
               me={me}
               history={checksToHistory(checks)}
               crisisToday={crisisToday}
-              onUpdated={refresh}
+              onUpdated={refreshAfterAnswer}
               focusAxis={focusAxis}
+              tracks={tracks}
             />
           ) : null}
 

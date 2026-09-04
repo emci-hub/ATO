@@ -1,4 +1,5 @@
 import { localYmd } from '@/lib/local-date';
+import { isProfileComplete, unfilledAxes } from '@/lib/trait-stability';
 import type { TraitAxis } from '@/lib/traits';
 import type { QuotaDecision } from '@/lib/voice/quota';
 import { PHRASE_FLAG_CLOSING, PHRASE_FLAG_REFRAME, PHRASE_FLAG_TYPE } from '@/lib/voice/phrase-guard';
@@ -94,6 +95,7 @@ async function guardedBatch(
   deps: RouteQuestionsDeps,
   recentAxes: TraitAxis[],
   priorityAxes: readonly TraitAxis[] = [],
+  forceLocal = false,
 ): Promise<QuestionDraft[] | null> {
   const grounding = pickQuestionGrounding(input.me, input.history);
   const promptArgs = {
@@ -103,7 +105,7 @@ async function guardedBatch(
     priorityAxes,
   };
 
-  if (deps.useLocal === true || !deps.generateBatch) {
+  if (forceLocal || deps.useLocal === true || !deps.generateBatch) {
     const local = composeLocalQuestionBatch(recentAxes, priorityAxes);
     return preferFreshAxes(keepGuardedDrafts(local).kept, recentAxes, priorityAxes);
   }
@@ -158,7 +160,13 @@ export async function routeQuestions(
     return { kind: 'cached', pack: todays, item: open };
   }
 
-  const useLocal = deps.useLocal === true;
+  // Profile-completeness gate. Until every axis has at least one answer, the
+  // batch is served from the static bank: no model call, and no quota claim
+  // either — a thin profile must never spend a paid call. Sits after
+  // consent/crisis so those keep their existing precedence and messaging.
+  // Sage chat (`routeTalkReply`) is a separate path and stays ungated.
+  const profileComplete = isProfileComplete(input.tracks ?? []);
+  const useLocal = deps.useLocal === true || !profileComplete;
   if (!useLocal && deps.claimBatch && deps.generateBatch) {
     const claim = await deps.claimBatch();
     if (!claim.ok) {
@@ -175,10 +183,14 @@ export async function routeQuestions(
       .filter((item) => item.answeredOption != null)
       .map((item) => item.axis),
   );
-  const priorityAxes = (input.priorityAxes ?? []).filter(
-    (axis) => !answeredInPack.has(axis),
-  );
-  const drafts = await guardedBatch(input, deps, recent, priorityAxes);
+  // An incomplete profile covers its unfilled axes first; the caller's own
+  // deferred-axis priorities follow. Duplicates collapse, and a just-answered
+  // axis is still never forced to the front.
+  const wanted = profileComplete
+    ? (input.priorityAxes ?? [])
+    : [...unfilledAxes(input.tracks ?? []), ...(input.priorityAxes ?? [])];
+  const priorityAxes = [...new Set(wanted)].filter((axis) => !answeredInPack.has(axis));
+  const drafts = await guardedBatch(input, deps, recent, priorityAxes, useLocal);
   if (!drafts || drafts.length === 0) {
     return { kind: 'empty', pack: todays, item: null };
   }

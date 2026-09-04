@@ -169,6 +169,43 @@ export function isThinProfile(
   return axisTotal > 0 && settled / axisTotal < THIN_PROFILE_RATIO;
 }
 
+/**
+ * "Filled" is a different, weaker predicate than "settled" over the same column.
+ * Filled  = report track has answerCount >= 1 (the axis has been answered at all).
+ * Settled = report track has answerCount >= STABILITY_FLOOR_N (3) AND carries
+ *           enough agreement to score above 0 via `effectiveStability`.
+ * An axis can be filled and not settled; never settled and not filled.
+ * Report track only — the game track never counts, same rule as settled.
+ */
+export const FILL_FLOOR_N = 1;
+
+export function isAxisFilled(row: TraitTrack | null): boolean {
+  return !!row && row.answerCount >= FILL_FLOOR_N;
+}
+
+export function filledAxes(rows: readonly TraitTrack[]): TraitAxis[] {
+  return TRAIT_AXES.filter((axis) => isAxisFilled(trackFor(rows, axis, 'report')));
+}
+
+export function unfilledAxes(rows: readonly TraitTrack[]): TraitAxis[] {
+  return TRAIT_AXES.filter((axis) => !isAxisFilled(trackFor(rows, axis, 'report')));
+}
+
+export function filledCount(rows: readonly TraitTrack[]): number {
+  return filledAxes(rows).length;
+}
+
+/** Every currently-defined axis has at least one report answer. */
+export function isProfileComplete(rows: readonly TraitTrack[]): boolean {
+  return TRAIT_AXES.length > 0 && filledCount(rows) >= TRAIT_AXES.length;
+}
+
+export const FILLED_LABEL_SUFFIX = `of ${TRAIT_AXES.length} filled`;
+
+export function filledAxisLabel(rows: readonly TraitTrack[]): string {
+  return `${filledCount(rows)} ${FILLED_LABEL_SUFFIX}`;
+}
+
 export const SETTLED_LABEL_SUFFIX = `of ${TRAIT_AXES.length} settled`;
 
 export function settledAxisLabel(rows: readonly TraitTrack[], now: Date = new Date()): string {

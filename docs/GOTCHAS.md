@@ -87,6 +87,18 @@ Read before editing the area. Each one has bitten this repo at least once.
   first-touch flows (this is why optional intake uses `self_scenario`).
 - **Report track vs game track never mix.** Categories, Legends, completeness read
   report only.
+- **"Filled" and "settled" are two different predicates over one column.** Filled is
+  `answer_count >= 1` (`isAxisFilled`/`isProfileComplete`, `trait-stability.ts`);
+  settled is `answer_count >= 3` plus agreement, via `effectiveStability`. A profile
+  can be Complete (16/16 filled) and still 0 settled — that is the expected state
+  after one pass, not a bug, and the Explore folds deliberately show both numbers.
+  Note `FullProfileFold` has a third, older notion of "filled" (`value != null` on the
+  trait column) that predates this and is not the same thing.
+- **The Questions AI path is gated on profile completeness.** `routeQuestions` serves
+  the static bank — and claims no quota — until every axis has one answer. The gate
+  reads `input.tracks`, and **absent tracks read as incomplete**, so anything newly
+  calling `routeQuestions` must pass tracks or it silently loses the AI path. Sage
+  chat is a separate route and stays open.
 - **`complete_signup` re-save must coalesce every field.** One overwrite slipped
   through once (`recovery_style`, fixed in wave24).
 - **Legend never-repeat is per variant**, not per figure (wave32). History FK points
@@ -119,8 +131,10 @@ Read before editing the area. Each one has bitten this repo at least once.
 
 ## Copy
 
-- **Seven surfaces ship behind `*_COPY_REVIEWED = false`.** Story/Levity are
-  diagnosis-adjacent. Do not flip a flag without emci's read.
+- **Nine surfaces ship behind `*_COPY_REVIEWED = false`** (nine badge render sites,
+  the list `check:copy-review-badges` pins). Story/Levity are diagnosis-adjacent. Do
+  not flip a flag without emci's read. Newest: `PROFILE_FILL_COPY_REVIEWED`, the
+  Explore "Full profile" checklist. Add any new site to that check's `sites` array.
 - **The "Draft copy — waiting on emci review." badge is `PRE_LAUNCH_DEV`-gated,
   every render site.** A `false` `*_COPY_REVIEWED` flag alone used to be enough to
   show it to every OTA user, pre-launch or not — the unreviewed copy itself still

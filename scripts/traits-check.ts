@@ -23,7 +23,15 @@ import {
   optionalProgressLabel,
   traitPatch,
   traitPromptLines,
+  type TraitAxis,
 } from '../src/lib/traits';
+import {
+  filledCount,
+  isProfileComplete,
+  settledCount,
+  unfilledAxes,
+  type TraitTrack,
+} from '../src/lib/trait-stability';
 import { filterCard } from '../src/lib/voice/filters';
 import {
   containsFrameworkTerm,
@@ -426,6 +434,36 @@ async function main() {
   }
   assert.match(read('src/app/(tabs)/index.tsx'), /router\.push\('\/week'\)/);
   ok('band detail has the fixed provenance line once, no axis-name or source tokens; Home links to /week');
+
+  // --- Filled (>=1) vs settled (>=3): same column, different predicates ---
+  const track = (axis: TraitAxis, answerCount: number): TraitTrack => ({
+    axis,
+    track: 'report',
+    value: 0.6,
+    stability: 0.9,
+    answerCount,
+    lastTouched: new Date().toISOString(),
+    lastDepthAt: null,
+  });
+
+  const oneAnswerEach = TRAIT_AXES.map((axis) => track(axis, 1));
+  assert.equal(filledCount(oneAnswerEach), TRAIT_AXES.length);
+  assert.equal(isProfileComplete(oneAnswerEach), true);
+  assert.equal(settledCount(oneAnswerEach), 0);
+  ok('one answer per axis is complete-but-unsettled: filled 16, settled 0');
+
+  const shortOne = TRAIT_AXES.slice(0, -1).map((axis) => track(axis, 5));
+  assert.equal(isProfileComplete(shortOne), false);
+  assert.deepEqual(unfilledAxes(shortOne), [TRAIT_AXES[TRAIT_AXES.length - 1]]);
+  assert.equal(filledCount(shortOne), TRAIT_AXES.length - 1);
+  ok('a single missing axis leaves the profile incomplete and names that axis');
+
+  // Zero-answer rows and game-track rows must never count as filled.
+  assert.equal(filledCount(TRAIT_AXES.map((axis) => track(axis, 0))), 0);
+  const gameOnly = TRAIT_AXES.map((axis) => ({ ...track(axis, 5), track: 'game' as const }));
+  assert.equal(filledCount(gameOnly), 0);
+  assert.equal(isProfileComplete(gameOnly), false);
+  ok('answerCount 0 and game-track rows never count toward filled');
 
   console.log(`\nAll ${passed} trait checks passed.`);
 }
