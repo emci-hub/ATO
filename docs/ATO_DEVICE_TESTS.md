@@ -207,6 +207,14 @@ All copy on this box is **unreviewed**. Do not treat Category/Levity/Story lines
 - [ ] Unfriend the last peer (Circle disappears) then reconnect. Confirm Circle returns to its stored slot (in More by default), not a new random position.
 - [ ] Confirm the pixel nav companion stays fixed top-right on every tab and does not remount on tab switch.
 
+## Box 28 — Sage toys pinned above the chat scroll (OTA `0ff16d9d`)
+
+- [ ] Open the Sage tab. Confirm the 8-ball and "What Sage remembers" (facts) card render **above** the message thread and do not scroll away — swipe the message list up/down and confirm the 8-ball/facts card stay fixed in place while only the messages scroll underneath.
+- [ ] Tap the facts card to expand it (if you have any stored facts) or tap it open/closed with none. Confirm expanding/collapsing it does **not** jump or scroll the message thread.
+- [ ] Send a new message to Sage. Confirm the thread still auto-scrolls to the bottom to show the new message and Sage's reply (this is the behavior that must survive — only the resize-triggered auto-scroll was removed, not the new-message one).
+- [ ] Open the keyboard (tap the composer). Confirm the thread still scrolls to keep the latest message visible above the keyboard.
+- [ ] Screenshot: Sage tab mid-scroll showing the 8-ball/facts card fixed at top with messages scrolled underneath.
+
 ---
 
-**All boxes complete (0–14 plus 6.5, 12.5, 13.1, 21–27).** This checklist is now the full end-to-end device pass — work through every section above in one sitting on a **binary 10+** device (it pulls OTA `0028d5f5`), not per box.
+**All boxes complete (0–14 plus 6.5, 12.5, 13.1, 21–28).** This checklist is now the full end-to-end device pass — work through every section above in one sitting on a **binary 10+** device (it pulls OTA `0028d5f5`; Box 28 specifically needs OTA `0ff16d9d` or later), not per box.
