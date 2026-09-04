@@ -1,5 +1,6 @@
+import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 
@@ -48,8 +49,9 @@ import { chipLabel, CURRENT_FOCUS_CHIPS, voiceMeFrom } from '@/lib/intake';
 import { useMeContext } from '@/lib/me-context';
 import { type Me } from '@/lib/me';
 import { parseSageTitle, pinnedCategoryLines } from '@/lib/sage-title';
-import { settledAxisLabel, settledCount, type TraitTrack } from '@/lib/trait-stability';
+import { missingAxis, settledAxisLabel, settledCount, type TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
+import { traitStateFromRow } from '@/lib/traits';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import { useAppearance } from '@/lib/theme/context';
 import { shouldUseLocalAi } from '@/lib/ai/override';
@@ -127,9 +129,21 @@ export default function ExploreScreen() {
           <View style={styles.header}>
             <ThemedText type="subtitle">Explore</ThemedText>
             {me ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                {settledAxisLabel(tracks)}
-              </ThemedText>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${settledAxisLabel(tracks)}. Tap to answer more.`}
+                onPress={() => {
+                  const axis = missingAxis(traitStateFromRow(me).values, tracks);
+                  router.push(
+                    axis
+                      ? { pathname: '/intake-sweep', params: { axis } }
+                      : { pathname: '/intake-sweep' },
+                  );
+                }}>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {settledAxisLabel(tracks)}
+                </ThemedText>
+              </Pressable>
             ) : null}
             {me?.current_focus ? (
               <ThemedText type="small" themeColor="textSecondary">

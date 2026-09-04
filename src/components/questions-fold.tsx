@@ -9,7 +9,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { updateTraits, type Me } from '@/lib/me';
 import { earnTokensQuiet } from '@/lib/tokens-server';
 import { deferredUnansweredAxes } from '@/lib/questions/deferral';
-import type { TraitTrack } from '@/lib/trait-stability';
+import { unansweredAxisLabel, type TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, traitStateFromRow, type TraitAxis } from '@/lib/traits';
 import {
   QUESTIONS_CHECKPOINT,
@@ -333,8 +333,10 @@ export function QuestionsFold({
 
   if (alwaysOpen) return body;
 
+  const title = tracks ? `${QUESTIONS_LABEL} · ${unansweredAxisLabel(tracks)}` : QUESTIONS_LABEL;
+
   return (
-    <SettingsFold title={QUESTIONS_LABEL} onOpen={handleOpen}>
+    <SettingsFold title={title} onOpen={handleOpen}>
       {body}
     </SettingsFold>
   );

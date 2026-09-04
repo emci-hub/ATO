@@ -384,6 +384,31 @@ export function categoriesTiedToAxes(axes: readonly TraitAxis[]): CategoryId[] {
   return out;
 }
 
+/**
+ * Which of a not-ready category's own axes to nudge toward next: the first
+ * one that never cleared the stability floor, else the least-stable one.
+ * Scoped to `reading.def.axes` only — never picks an axis outside the
+ * category.
+ */
+export function missingAxisForCategory(
+  reading: CategoryReading,
+  tracks: readonly TraitTrack[],
+  now: Date = new Date(),
+): TraitAxis | null {
+  const unstable = reading.def.axes.filter((axis) => !reading.stableAxes.includes(axis));
+  if (unstable.length === 0) return null;
+  let best: TraitAxis | null = null;
+  let bestStability = Infinity;
+  for (const axis of unstable) {
+    const stability = effectiveStability(trackFor(tracks, axis, 'report'), now);
+    if (stability < bestStability) {
+      bestStability = stability;
+      best = axis;
+    }
+  }
+  return best;
+}
+
 /** ~1 in 4 fully random among ready; otherwise prefer categories tied to signal axes. */
 export function pickTeaserCategory(
   ready: readonly CategoryReading[],

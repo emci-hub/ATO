@@ -1,5 +1,6 @@
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { ThemedPressable } from '@/components/themed-pressable';
@@ -17,7 +18,30 @@ import {
 import { allCategoriesReady, getCategoryDefs } from '@/lib/categories';
 import { neonGlowColors, presenceGlowLayersForTier, PRESENCE_GLOW_LAYERS } from '@/lib/growth';
 import { controlBorderColor } from '@/lib/theme/chrome';
+import {
+  effectiveStability,
+  trackFor,
+  unfilledAxes,
+  type TraitTrack,
+} from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
+import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
+
+/** First unanswered axis, else the least-stable one. Tracks only — no `me` row needed here. */
+function leastReadyAxis(tracks: readonly TraitTrack[]): TraitAxis | null {
+  const unfilled = unfilledAxes(tracks);
+  if (unfilled.length > 0) return unfilled[0];
+  let best: TraitAxis | null = null;
+  let bestStability = Infinity;
+  for (const axis of TRAIT_AXES) {
+    const stability = effectiveStability(trackFor(tracks, axis, 'report'));
+    if (stability < bestStability) {
+      bestStability = stability;
+      best = axis;
+    }
+  }
+  return best;
+}
 
 const UNLOCK_GLOW = 2;
 
@@ -38,6 +62,7 @@ export function CheckMilestoneBadge({
   accessibilityLabel,
   decorative = false,
   capstone = false,
+  onPress,
 }: {
   kicker: string;
   value: string | number;
@@ -46,18 +71,21 @@ export function CheckMilestoneBadge({
   accessibilityLabel: string;
   decorative?: boolean;
   capstone?: boolean;
+  onPress?: () => void;
 }) {
   const theme = useTheme();
   const layers = presenceGlowLayersForTier(glowFor(unlocked, glow));
   const palette = neonGlowColors(theme.accent);
+  const Wrap = onPress ? Pressable : View;
 
   return (
-    <View
+    <Wrap
       style={[styles.wrap, !unlocked && styles.locked]}
-      accessibilityRole={decorative ? undefined : 'text'}
-      accessibilityLabel={decorative ? undefined : accessibilityLabel}
-      importantForAccessibility={decorative ? 'no-hide-descendants' : 'auto'}
-      accessibilityElementsHidden={decorative}>
+      accessibilityRole={onPress ? 'button' : decorative ? undefined : 'text'}
+      accessibilityLabel={decorative && !onPress ? undefined : accessibilityLabel}
+      importantForAccessibility={decorative && !onPress ? 'no-hide-descendants' : 'auto'}
+      accessibilityElementsHidden={decorative && !onPress}
+      onPress={onPress}>
       {layers > 0
         ? PRESENCE_GLOW_LAYERS.slice(0, layers).map((layer, i) => (
             <View
@@ -95,7 +123,7 @@ export function CheckMilestoneBadge({
           {value}
         </ThemedText>
       </View>
-    </View>
+    </Wrap>
   );
 }
 
@@ -159,13 +187,17 @@ export function MilestoneBadges({
   const theme = useTheme();
   const [open, setOpen] = useState(defaultOpen);
   const [fullPicture, setFullPicture] = useState(false);
+  const [nextAxis, setNextAxis] = useState<TraitAxis | null>(null);
 
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
     fetchTraitTracks(userId)
       .then((tracks) => {
-        if (!cancelled) setFullPicture(allCategoriesReady(tracks));
+        if (!cancelled) {
+          setFullPicture(allCategoriesReady(tracks));
+          setNextAxis(leastReadyAxis(tracks));
+        }
       })
       .catch(() => {
         if (!cancelled) setFullPicture(false);
@@ -220,6 +252,11 @@ export function MilestoneBadges({
               factCount,
               unlocked: badge.unlocked,
             });
+            const jumpToNextAxis =
+              badge.id === 'full-picture' && !badge.unlocked && nextAxis
+                ? () =>
+                    router.push({ pathname: '/intake-sweep', params: { axis: nextAxis } })
+                : undefined;
             return (
               <CheckMilestoneBadge
                 key={badge.id}
@@ -228,7 +265,10 @@ export function MilestoneBadges({
                 unlocked={badge.unlocked}
                 glow={badge.id === 'checks-7' ? checksGlow : UNLOCK_GLOW}
                 capstone={badge.id === 'full-picture'}
-                accessibilityLabel={copy.label}
+                accessibilityLabel={
+                  jumpToNextAxis ? `${copy.label} Tap to answer more.` : copy.label
+                }
+                onPress={jumpToNextAxis}
               />
             );
           })}

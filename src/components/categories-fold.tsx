@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -10,6 +11,7 @@ import { fallbackCategoryCopies, fallbackForReading, CATEGORY_BAND_COPY_REVIEWED
 import { useCategoryDefs } from '@/lib/category-catalog';
 import {
   CATEGORY_COPY_REVIEWED,
+  missingAxisForCategory,
   nextSpotlight,
   parseSpotlight,
   readAllCategories,
@@ -71,7 +73,7 @@ export function CategoriesFold({
       : null;
 
   return (
-    <SettingsFold title={`Categories · ${ready.length} of ${readings.length} showing`}>
+    <SettingsFold title={`Categories · ${ready.length} of ${readings.length} ready`}>
       <View style={styles.body}>
         <ThemedText type="small" themeColor="textSecondary">
           How a few things sit together, from what you have told us. Gut-call stays off this page.
@@ -87,40 +89,58 @@ export function CategoriesFold({
             This week&apos;s look · {readings.find((row) => row.def.id === spotlightId)?.def.name}
           </ThemedText>
         ) : null}
-        {ready.length === 0 ? (
-          <ThemedText type="small" themeColor="textSecondary">
-            Nothing here yet. A category shows once enough of it has settled.
-          </ThemedText>
-        ) : (
-          ready.map((reading) => {
-            const copy = cached?.categories[reading.def.id] ?? fallback[reading.def.id];
-            const line = copy?.line ?? fallbackForReading(reading);
-            const full = copy?.full ?? line;
-            const open = openId === reading.def.id;
+        {readings.map((reading) => {
+          if (!reading.ready) {
+            const axis = missingAxisForCategory(reading, tracks);
             return (
               <View key={reading.def.id} style={styles.row}>
                 <Pressable
-                  onPress={() => setOpenId(open ? null : reading.def.id)}
+                  onPress={() =>
+                    router.push(
+                      axis
+                        ? { pathname: '/intake-sweep', params: { axis } }
+                        : { pathname: '/intake-sweep' },
+                    )
+                  }
                   accessibilityRole="button"
-                  accessibilityState={{ expanded: open }}
                   style={({ pressed }) => [pressed && styles.pressed]}>
-                  <ConceptHint explainer={categoryConcept(reading.def.id)} label={reading.def.name}>
-                    <ThemedText type="smallBold">{reading.def.name}</ThemedText>
-                  </ConceptHint>
+                  <ThemedText type="smallBold" themeColor="textSecondary">
+                    {reading.def.name}
+                  </ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
-                    {line}
+                    Not ready yet — needs more answers. Tap to help it along.
                   </ThemedText>
                 </Pressable>
-                {open ? (
-                  <View style={styles.expand}>
-                    <ThemedText type="small">{full}</ThemedText>
-                    <CategoryVisual reading={reading} />
-                  </View>
-                ) : null}
               </View>
             );
-          })
-        )}
+          }
+          const copy = cached?.categories[reading.def.id] ?? fallback[reading.def.id];
+          const line = copy?.line ?? fallbackForReading(reading);
+          const full = copy?.full ?? line;
+          const open = openId === reading.def.id;
+          return (
+            <View key={reading.def.id} style={styles.row}>
+              <Pressable
+                onPress={() => setOpenId(open ? null : reading.def.id)}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: open }}
+                style={({ pressed }) => [pressed && styles.pressed]}>
+                <ConceptHint explainer={categoryConcept(reading.def.id)} label={reading.def.name}>
+                  <ThemedText type="smallBold">{reading.def.name}</ThemedText>
+                </ConceptHint>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {line}
+                </ThemedText>
+              </Pressable>
+              {open ? (
+                <View style={styles.expand}>
+                  <ThemedText type="small">{full}</ThemedText>
+                  <CategoryVisual reading={reading} />
+                </View>
+              ) : null}
+            </View>
+          );
+        })}
       </View>
     </SettingsFold>
   );

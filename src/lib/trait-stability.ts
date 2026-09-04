@@ -8,6 +8,7 @@ import {
   isDirectTraitSource,
   type TraitAxis,
   type TraitSource,
+  type TraitValues,
 } from '@/lib/traits';
 
 export const EWMA_ALPHA = 0.35;
@@ -170,6 +171,29 @@ export function isThinProfile(
 }
 
 /**
+ * Axis to nudge toward when a profile needs more answers: the first
+ * completely unanswered axis, else the least-settled report axis.
+ */
+export function missingAxis(
+  values: TraitValues,
+  tracks: readonly TraitTrack[],
+): TraitAxis | null {
+  for (const axis of TRAIT_AXES) {
+    if (values[axis] == null) return axis;
+  }
+  let best: TraitAxis | null = null;
+  let bestStability = Infinity;
+  for (const axis of TRAIT_AXES) {
+    const stability = effectiveStability(trackFor(tracks, axis, 'report'));
+    if (stability < bestStability) {
+      bestStability = stability;
+      best = axis;
+    }
+  }
+  return best;
+}
+
+/**
  * "Filled" is a different, weaker predicate than "settled" over the same column.
  * Filled  = report track has answerCount >= 1 (the axis has been answered at all).
  * Settled = report track has answerCount >= STABILITY_FLOOR_N (3) AND carries
@@ -193,6 +217,16 @@ export function unfilledAxes(rows: readonly TraitTrack[]): TraitAxis[] {
 
 export function filledCount(rows: readonly TraitTrack[]): number {
   return filledAxes(rows).length;
+}
+
+export function unansweredCount(rows: readonly TraitTrack[]): number {
+  return unfilledAxes(rows).length;
+}
+
+export const UNANSWERED_LABEL_SUFFIX = `of ${TRAIT_AXES.length} unanswered`;
+
+export function unansweredAxisLabel(rows: readonly TraitTrack[]): string {
+  return `${unansweredCount(rows)} ${UNANSWERED_LABEL_SUFFIX}`;
 }
 
 /** Every currently-defined axis has at least one report answer. */

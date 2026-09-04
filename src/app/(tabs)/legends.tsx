@@ -24,15 +24,13 @@ import { buildLegendView, type LegendView } from '@/lib/legends/match';
 import { supabase } from '@/lib/supabase';
 import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import {
-  effectiveStability,
   isThinProfile,
+  missingAxis,
   settledCount,
-  trackFor,
   type TraitTrack,
 } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
-import { TRAIT_AXES, traitStateFromRow, type TraitAxis } from '@/lib/traits';
-import type { Me } from '@/lib/me';
+import { traitStateFromRow } from '@/lib/traits';
 
 type LoadState =
   | { status: 'loading' }
@@ -47,28 +45,6 @@ function emptyCopy(view: LegendView): string {
     return 'You have seen every legend that fits you so far. New ones appear as your matches shift.';
   }
   return 'Nothing here yet. New legends appear as your matches shift.';
-}
-
-/**
- * Axis to nudge toward in Questions when the profile is too thin to match a
- * legend: the first completely unanswered axis, else the least-settled
- * report axis.
- */
-function missingAxis(me: Me, tracks: readonly TraitTrack[]): TraitAxis | null {
-  const values = traitStateFromRow(me).values;
-  for (const axis of TRAIT_AXES) {
-    if (values[axis] == null) return axis;
-  }
-  let best: TraitAxis | null = null;
-  let bestStability = Infinity;
-  for (const axis of TRAIT_AXES) {
-    const stability = effectiveStability(trackFor(tracks, axis, 'report'));
-    if (stability < bestStability) {
-      bestStability = stability;
-      best = axis;
-    }
-  }
-  return best;
 }
 
 /**
@@ -264,7 +240,7 @@ export default function LegendsScreen() {
   const ready = load.status === 'ready' ? load.view : null;
   const settled = settledCount(tracks);
   const thin = isThinProfile(settled);
-  const focusAxis = me ? missingAxis(me, tracks) : null;
+  const focusAxis = me ? missingAxis(traitStateFromRow(me).values, tracks) : null;
 
   return (
     <ThemedView style={styles.container}>

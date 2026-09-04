@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { SettingsFold } from '@/components/settings-fold';
@@ -23,7 +24,7 @@ import {
   trackFor,
   type TraitTrack,
 } from '@/lib/trait-stability';
-import { TRAIT_AXES } from '@/lib/traits';
+import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
 /**
  * Checklist of every axis, filled (>=1 report answer) or not. Deliberately
@@ -57,6 +58,7 @@ export function ProfileFillFold({ tracks }: { tracks: readonly TraitTrack[] }) {
           {TRAIT_AXES.map((axis) => (
             <ProfileFillRow
               key={axis}
+              axis={axis}
               label={AXIS_EDITOR_COPY[axis].label}
               filled={isAxisFilled(trackFor(tracks, axis, 'report'))}
             />
@@ -67,13 +69,21 @@ export function ProfileFillFold({ tracks }: { tracks: readonly TraitTrack[] }) {
   );
 }
 
-function ProfileFillRow({ label, filled }: { label: string; filled: boolean }) {
+function ProfileFillRow({
+  axis,
+  label,
+  filled,
+}: {
+  axis: TraitAxis;
+  label: string;
+  filled: boolean;
+}) {
   const theme = useTheme();
   return (
-    <View
-      accessible
-      accessibilityRole="text"
+    <Pressable
+      accessibilityRole="button"
       accessibilityLabel={`${label}. ${filled ? PROFILE_FILL_ROW_FILLED : NOT_ANSWERED_YET}.`}
+      onPress={() => router.push({ pathname: '/intake-sweep', params: { axis } })}
       style={styles.row}>
       <MaterialCommunityIcons
         name={filled ? 'check-circle' : 'circle-outline'}
@@ -86,7 +96,7 @@ function ProfileFillRow({ label, filled }: { label: string; filled: boolean }) {
         style={styles.rowLabel}>
         {label}
       </ThemedText>
-    </View>
+    </Pressable>
   );
 }
 
