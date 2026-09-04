@@ -6,7 +6,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { decideExploreTrigger } from '../src/lib/explore/cadence';
-import { applyEwmaAnswer, type TraitTrack } from '../src/lib/trait-stability';
+import { applyEwmaAnswer, isThinProfile, settledCount, type TraitTrack } from '../src/lib/trait-stability';
 import {
   AGENCY_AXES,
   dropsAgencyTriple,
@@ -157,6 +157,39 @@ const twoCatTracks: TraitTrack[] = [
   stableReport('locus_of_control', 0.7),
   stableReport('self_efficacy', 0.6),
 ];
+
+// stableReport's 3 reps only reach ~0.58 effective stability (EWMA_ALPHA
+// convergence) — enough for the category-ready/title thresholds elsewhere in
+// this file, but settledCount sums stability across axes, so 3-rep axes
+// undercount here. 8 reps converges to ~0.95 per axis.
+function verySettled(axis: TraitTrack['axis'], value: number): TraitTrack {
+  const nowIso = '2026-08-31T12:00:00.000Z';
+  let row = applyEwmaAnswer(null, axis, 'report', value, nowIso);
+  for (let i = 0; i < 7; i += 1) {
+    row = applyEwmaAnswer(row, axis, 'report', value, nowIso);
+  }
+  return row;
+}
+
+// Above THIN_PROFILE_RATIO (6/15) so routeExplore's completeness gate lets
+// the remote path run — used by tests exercising the guard/model call.
+const fullTracks: TraitTrack[] = [
+  verySettled('openness', 0.6),
+  verySettled('conscientiousness', 0.8),
+  verySettled('extraversion', 0.8),
+  verySettled('agreeableness', 0.7),
+  verySettled('steadiness', 0.4),
+  verySettled('growth_mindset', 0.8),
+  verySettled('locus_of_control', 0.7),
+  verySettled('self_efficacy', 0.6),
+];
+// Fixed reference "now" so these fixtures never cross the decay grace period
+// as real time moves on — decay is idle-since-lastTouched, not calendar-bound,
+// but a hardcoded lastTouched needs a hardcoded "now" to stay stable forever.
+const FIXTURE_NOW = new Date('2026-08-31T12:00:00.000Z');
+assert.equal(isThinProfile(settledCount(fullTracks, FIXTURE_NOW)), false);
+const thinTracks: TraitTrack[] = [stableReport('openness', 0.5)];
+assert.equal(isThinProfile(settledCount(thinTracks, FIXTURE_NOW)), true);
 const twoCatMe: ExploreMeSlice = {
   ...chipsOnly,
   conscientiousness: 0.8,
@@ -312,6 +345,7 @@ const generated = await routeExplore(
     history: [],
     aiConsent: true,
     now: new Date('2026-08-29T15:00:00Z'),
+    tracks: fullTracks,
   },
   {
     useLocal: false,
@@ -337,6 +371,7 @@ const phraseOnly = await routeExplore(
     history: [],
     aiConsent: true,
     now: new Date('2026-08-29T15:00:00Z'),
+    tracks: fullTracks,
   },
   {
     useLocal: false,
@@ -383,6 +418,7 @@ await routeExplore(
     history: [],
     aiConsent: true,
     now: new Date('2026-08-29T15:00:00Z'),
+    tracks: fullTracks,
   },
   {
     useLocal: false,
@@ -396,6 +432,30 @@ await routeExplore(
 const guardStep = flaggedPipe[0]?.steps?.find((step) => step.step_type === 'guard_check');
 assert.equal(guardStep?.status, 'flagged');
 ok('Explore guard_check is flagged when phrase/jargon fires');
+
+let claimed = false;
+const thinProfile = await routeExplore(
+  {
+    me: { ...chipsOnly, extraversion: 0.8 },
+    history: [],
+    aiConsent: true,
+    now: new Date('2026-08-29T15:00:00Z'),
+    tracks: thinTracks,
+  },
+  {
+    useLocal: false,
+    generateBody: async () => {
+      throw new Error('must not call the model on a thin profile');
+    },
+    claimAiCall: async () => {
+      claimed = true;
+      return { ok: true as const };
+    },
+  },
+);
+assert.equal(thinProfile.kind, 'pack');
+assert.equal(claimed, false);
+ok('a thin profile skips the quota claim and composes locally, same rule as Questions/Story');
 
 const cached = await routeExplore(
   {
