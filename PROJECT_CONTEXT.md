@@ -48,6 +48,12 @@ re-gated to `__DEV__` (or removed), and the Metro `PROBE_STUB` re-added:
 9. Dev-lab unconditional dev access (`dev-lab.tsx` `isDev` + `CrisisCardPreview`).
 10. ~~Sentry native-crash probe (`sentry.ts`)~~ — **done 2026-09-02, `__DEV__`**.
 11. Intake-sweep "draft copy" badge (`intake-sweep.tsx`).
+12. **QA override invite code (`public.app_secrets.qa_override_invite_code`, wave42) is
+    only 4 characters** — brute-forceable via the anon-callable `assert_invite_usable`
+    RPC (no rate limiting in the schema). Emci set it deliberately short for now;
+    rotate to a long, high-entropy value (`update public.app_secrets set
+    qa_override_invite_code = '...' where id = 1;`) before public launch, same as the
+    dev-test password in item 1.
 
 One flag controls all of these: `PRE_LAUNCH_DEV = true` in `src/lib/dev-mode.ts`. **`npm run check:release-mode` (wired as the EAS `eas-build-post-install` hook) refuses a production build while it is `true`.**
 
