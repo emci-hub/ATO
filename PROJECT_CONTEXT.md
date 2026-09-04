@@ -342,3 +342,80 @@ Spend is claimed in two places: client-side RPCs (`claimAiCall`, `claimQuestions
 - **Two more look guarded but aren't** — the Daily card and Sage insight call `isThinProfile` and then spend anyway; it only softens the wording.
 - **"Categories ready" gates nothing anywhere in the app.** `readyCategories` has exactly one consumer (`sage-story-fold.tsx:110`) and it is a prompt input, not a gate.
 - The two gates that do exist use **different signals** (`isProfileComplete` on filled vs `isThinProfile` on settled), so a user can be blocked from one surface and allowed on the other with the same profile.
+
+---
+
+## Research pass — question inventory, skip routing, authoring format, unlock UI (Sep 4, 2026)
+
+Read-only. No code changed. Context: the `isProfileSettled` gate (Decisions log, same day)
+means every AI surface now depends on all 16 axes reaching 3+ consistent answers, so the
+question supply is the bottleneck.
+
+### 1) Static questions per axis and per category — the 1-per-axis floor is EXACTLY met, with zero slack
+
+`QUESTIONS_BANK` ([src/lib/questions/bank.ts:7](src/lib/questions/bank.ts:7)) is **16 items for 16 axes — exactly one each, no axis missing, no axis doubled.**
+
+| | |
+|---|---|
+| Bank size | 16 |
+| Axes covered | 16 of 16 (`TRAIT_AXES`) |
+| Axes with 0 questions | none |
+| Axes with >1 question | **none** |
+| Option counts | 3 options on 13 items; 2 options on 3 (`attachment_avoidance`, `relatedness`, `growth_mindset`) |
+
+Per category ([CATEGORY_DEFS](src/lib/categories.ts:47)) — "total qs" is just the sum of its axes' questions, so it equals the axis count:
+
+| Category | Shape | Axes | Total static qs | Ready needs |
+|---|---|---|---|---|
+| cat_steadiness | bar | 3 | 3 | 2 stable |
+| cat_openness | bar | 2 | 2 | 2 stable |
+| cat_drive | bar | 3 | 3 | 2 stable |
+| cat_agency | bar | 3 | 3 | 2 stable |
+| cat_social | bar | 3 | 3 | 2 stable |
+| cat_communication | bar | 2 | 2 | 2 stable |
+| cat_love | map | 2 | 2 | **both** |
+| cat_independence | map | 2 | 2 | **both** |
+| cat_levity | bar | 3 | 3 | 2 stable |
+| cat_structure | map | 2 | 2 | **both** |
+| cat_resilience | bar | 3 | 3 | 2 stable |
+
+**The floor is met but it is only a floor.** The bank is a *fallback*, not a supply: `composeLocalSweep` / `bankByAxis` ([local.ts:18](src/lib/questions/local.ts:18)) dedupe to the **first** draft per axis, so a second bank question on an axis would be ignored by the sweep as written. And `effectiveStability` needs `answerCount >= 3` per axis — with one static question per axis, **the static bank alone can never settle a single axis.** Reaching `isProfileSettled` today requires the Gemini-generated `routeQuestions` batches, the gut-call/ranking decks, or repeat passes. Worth deciding explicitly: the gate just shipped is not reachable from static content alone.
+
+### 2) What intake does on skip — it defers, it does not drop the user
+
+Two separate skip paths, both non-destructive:
+
+- **Full sweep** (`IntakeSweep`, [intake-sweep.tsx:141](src/components/intake-sweep.tsx:141)): "Skip this one" / "Skip the rest" call `persistSkip` -> `mergedDeferral` -> `saveQuestionDeferral`, writing the axis onto **`me.question_deferred`** (jsonb array). An axis is only ever "deferred *while unanswered*" — `deferredUnansweredAxes` drops it the moment it gains a trait value ([deferral.ts:28](src/lib/questions/deferral.ts:28)).
+- **Rotating Questions** (`QuestionsFold`, [questions-fold.tsx:202](src/components/questions-fold.tsx:202)): "Skip this one" -> `skipQuestionItem` (per-item `skipped_at`); "Skip the rest" -> `skipRestOfQuestionPack`, result kind `paused`. There is also a checkpoint after 8 (`QUESTIONS_CHECKPOINT_AFTER`).
+
+**Where a skipped axis goes:** back into the *regular rotating pool*, not into limbo. `questions-fold.tsx:117-132` reads `deferredUnansweredAxes` and passes them as `priorityAxes` to `routeQuestions`, which front-loads them in the next batch ([route.ts:186-192](src/lib/questions/route.ts:186)). So skip = "ask me later, in the other surface", which is the right behaviour for the new gate.
+
+**Two caveats:**
+- Only **"Skip the rest"** on the full sweep navigates (`onDone()` -> `router.replace('/')`, [intake-sweep.tsx:203](src/app/(tabs)/intake-sweep.tsx:203)) — it drops the user to **Home**, not anywhere profile-related. Skipping one stays in place.
+- `routeQuestionSweep` ([sweep.ts:41](src/lib/questions/sweep.ts:41)) deliberately has **no** completeness gate ("gating it would make it unreachable exactly when it is most useful") and claims no quota — it is pure local bank. That is the one path a locked user can always reach, which matters now.
+
+### 3) Adding MC / true-false variants per axis — **content change, not schema change**
+
+The storage is already shape-agnostic:
+
+- Type is `{ axis, prompt, options: { text, value }[] }` ([types.ts:13](src/lib/questions/types.ts:13)) — `value` is a free 0..1 number, so a 2-option true/false is just `[{text:'True',value:0.8},{text:'False',value:0.2}]`. **Three bank items are already 2-option**, so TF is an existing shape, not a new one.
+- DB: `question_items.options` is **`jsonb`**, unconstrained in the column ([wave17:189](supabase/migrations/wave17_infinite_questions.sql:189)). `axis` has a 16-value CHECK (`question_items_axis_known`); `prompt` is capped at 400 chars.
+
+**Three real constraints to design within — all are edits, none are migrations:**
+1. **Option count is hard-capped at 2-3 in three places:** the `insert_question_pack` RPC raises "question needs 2-3 options" ([wave17:250](supabase/migrations/wave17_infinite_questions.sql:250)), `parseQuestionDraft` rejects outside 2..3 ([parse.ts:31](src/lib/questions/parse.ts:31)), and the prompt says "2 or 3 options each" ([prompt.ts:63](src/lib/questions/prompt.ts:63)). A 4-option MC **would** be a schema change (the RPC). 2-3 is not.
+2. **`sort_index` CHECK is `>= 0 and < 5`** ([wave17:180](supabase/migrations/wave17_infinite_questions.sql:180)) — a persisted pack can never exceed 5 items. Not a blocker for the 16-item sweep, which is local-only and writes traits directly via `updateTraits`, never through `insert_question_pack`.
+3. **`bankByAxis` keeps only the first draft per axis** ([local.ts:18](src/lib/questions/local.ts:18)) — adding a 2nd/3rd variant per axis needs a selection change there (rotation/random pick), otherwise the extra variants are dead content. This is the one code change a "variants" feature actually requires.
+
+Also note `INTAKE_SWEEP_COPY_REVIEWED = false` ([local.ts:16](src/lib/questions/local.ts:16)) — new question copy ships behind the unreviewed badge until emci reads it, same discipline as crisis copy.
+
+### 4) Existing "unlock / congrats" UI worth reusing for a "full profile unlocked" moment
+
+There is a **complete, working unlock vocabulary already built** — and one of its badges is already almost exactly this moment:
+
+- **`MilestoneBadges`** ([check-milestone-badge.tsx:172](src/components/check-milestone-badge.tsx:172)) — collapsible strip of chips, each `{ kicker, value, unlocked }`. Explicitly documented as "**Not a popup**". Glow only once true (`presenceGlowLayersForTier`, `chipShadow`), locked chips dimmed via `styles.locked`.
+- **`full-picture` capstone badge** ([badges.ts:9](src/lib/badges.ts:9), copy at [check-milestone-badge.tsx:159](src/components/check-milestone-badge.tsx:159)) — the closest existing analogue. Rendered with `capstone` styling (accent fill, 2px border, `onAccent` text) instead of a plain chip, and when locked its `onPress` deep-links to `/intake-sweep?axis=<leastReadyAxis>` — **the exact CTA pattern the new lock states use.** It currently fires on `allCategoriesReady(tracks)`, which is a *different* predicate from `isProfileSettled`; worth deciding whether they should be one badge or two.
+- **`ProfileFillFold`** ([profile-fill-fold.tsx:35](src/components/profile-fill-fold.tsx:35)) — swaps its own title/lede to `PROFILE_FILL_COMPLETE_LABEL` ("Complete") / `_LEDE` at 16/16. A title-swap-on-completion pattern, no ceremony.
+- **`AppearancePicker`** ([appearance-picker.tsx:42](src/components/appearance-picker.tsx:42)) — locked rows stay visible with a dimmed swatch + a small badge, rather than disappearing. Good precedent for "show the thing you'll get".
+- **`NotedAck`** ([explore.tsx](src/app/(tabs)/explore.tsx), [explore-panel.tsx](src/components/explore-panel.tsx)) — the only celebratory *animation* in the app: a reanimated `withSequence` fade with a `reduceMotion` branch. Reusable if a moment should be more than a state change.
+
+**Gap to note:** there is **no first-time-unlock detection anywhere** — no `seen_*` / `hasSeen` state in `src/lib`. Every badge is a pure function of current data, so it renders identically on the 1st and 100th view. A true "you just unlocked your full profile" *moment* (fires once, then stops) would need new persisted state; a permanently-glowing capstone chip would not.
