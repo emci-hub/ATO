@@ -4,7 +4,7 @@
  * spend happens only after a body lands.
  */
 import { traitPromptLines, type TraitAxis, TRAIT_AXES } from '@/lib/traits';
-import { isThinProfile } from '@/lib/trait-stability';
+import { isProfileSettled, isThinProfile, type TraitTrack } from '@/lib/trait-stability';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import type { VoiceMe } from '@/lib/voice/types';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
@@ -46,7 +46,23 @@ Respond with JSON only, no prose, in this shape:
 {"body": "<the observation>"}`;
 }
 
-export async function generateSageInsight(me: VoiceMe, settled = 0): Promise<string | null> {
+/**
+ * `tracks` omitted (undefined) means the caller supplied no track state —
+ * tests and labs — and leaves the completeness gate off. An empty array is a
+ * real answer ("nothing settled") and gates. The production caller
+ * (`sage-insight-spend.tsx`) always passes tracks.
+ */
+export async function generateSageInsight(
+  me: VoiceMe,
+  settled = 0,
+  tracks?: readonly TraitTrack[],
+): Promise<string | null> {
+  // Profile-completeness gate: until every axis is settled this returns the
+  // static thin line — no model call, no notes spent (the caller only charges
+  // after a body lands, and this body is free).
+  if (tracks !== undefined && !isProfileSettled(tracks)) {
+    return containsFrameworkTerm(SAGE_INSIGHT_THIN) ? null : SAGE_INSIGHT_THIN;
+  }
   if (await shouldUseLocalAi()) {
     const body = isThinProfile(settled)
       ? SAGE_INSIGHT_THIN

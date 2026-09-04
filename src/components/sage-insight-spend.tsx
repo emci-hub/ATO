@@ -1,5 +1,6 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
@@ -8,6 +9,14 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { voiceMeFrom } from '@/lib/intake';
 import { type Me } from '@/lib/me';
+import {
+  PROFILE_LOCKED_COPY,
+  PROFILE_LOCKED_CTA,
+  isProfileSettled,
+  missingAxis,
+  type TraitTrack,
+} from '@/lib/trait-stability';
+import { traitStateFromRow } from '@/lib/traits';
 import { generateSageInsight } from '@/lib/sage-insight';
 import {
   spendTokens,
@@ -25,11 +34,14 @@ import { controlBorderColor } from '@/lib/theme/chrome';
 export function SageInsightSpend({
   me,
   settled = 0,
+  tracks,
   onUpdated,
 }: {
   me: Me;
   /** Stability-weighted N of currently-defined axes settled. */
   settled?: number;
+  /** Report/game tracks. Drives the profile-completeness gate. */
+  tracks: readonly TraitTrack[];
   onUpdated: () => void | Promise<void>;
 }) {
   const theme = useTheme();
@@ -37,14 +49,17 @@ export function SageInsightSpend({
   const [body, setBody] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const notes = tokenBalanceOf(me);
-  const can = notes >= TOKEN_PRICE.sage_insight;
+  // Profile-completeness gate. Locked = no model call and, because this is a
+  // paid surface, no spend either — never charge notes for a static line.
+  const locked = !isProfileSettled(tracks);
+  const can = notes >= TOKEN_PRICE.sage_insight && !locked;
 
   async function run() {
     if (busy || !can) return;
     setBusy(true);
     setError(null);
     try {
-      const next = await generateSageInsight(voiceMeFrom(me), settled);
+      const next = await generateSageInsight(voiceMeFrom(me), settled, tracks);
       if (!next) {
         setError("Couldn't land that. Notes were not spent.");
         return;
@@ -70,7 +85,28 @@ export function SageInsightSpend({
         <ThemedText type="small" themeColor="textSecondary">
           {TOKEN_INSIGHT_HINT} · {TOKEN_PRICE.sage_insight} notes
         </ThemedText>
-        {body ? (
+        {locked ? (
+          <>
+            <ThemedText type="small" themeColor="textSecondary">
+              {PROFILE_LOCKED_COPY}
+            </ThemedText>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${PROFILE_LOCKED_COPY}. ${PROFILE_LOCKED_CTA}.`}
+              onPress={() => {
+                const axis = missingAxis(traitStateFromRow(me).values, tracks);
+                router.push(
+                  axis
+                    ? { pathname: '/intake-sweep', params: { axis } }
+                    : { pathname: '/intake-sweep' },
+                );
+              }}>
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                {PROFILE_LOCKED_CTA}
+              </ThemedText>
+            </Pressable>
+          </>
+        ) : body ? (
           <ThemedText>{body}</ThemedText>
         ) : (
           <ThemedPressable

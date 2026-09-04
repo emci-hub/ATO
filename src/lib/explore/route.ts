@@ -13,7 +13,7 @@ import {
   type DevTraceRecordInput,
   type DevTraceStep,
 } from '@/lib/dev-trace';
-import { isThinProfile, settledCount } from '@/lib/trait-stability';
+import { isProfileSettled } from '@/lib/trait-stability';
 
 import { decideExploreTrigger, exploreToday } from './cadence';
 import { exploreFingerprint, pickExplorePackFocuses, repeatsPinnedCategories } from './combine';
@@ -80,6 +80,18 @@ export async function routeExplore(
     return { kind: 'crisis', pack: null };
   }
 
+  // ---- Profile-completeness gate ----------------------------------------
+  // Explore observations are locked outright until every axis is settled:
+  // no cached pack, no local compose, no quota claim, no model call. The UI
+  // renders PROFILE_LOCKED_COPY plus a link to Questions.
+  //
+  // `tracks` omitted (undefined) means "caller did not supply track state" —
+  // tests and labs — and leaves the gate off. An empty array is a real answer
+  // ("nothing settled") and locks. Every production caller passes tracks.
+  if (input.tracks !== undefined && !isProfileSettled(input.tracks, input.now)) {
+    return { kind: 'locked', pack: null };
+  }
+
   const today = exploreToday(input.me.timezone, input.now);
     const fingerprint = exploreFingerprint(
       input.me,
@@ -99,11 +111,7 @@ export async function routeExplore(
     pinnedLines: input.pinnedLines ?? [],
   });
   const notes = deps.loadMissNotes ? await deps.loadMissNotes() : [];
-  // Profile-completeness gate: a thin profile is served from local compose,
-  // no model call and no quota claim — same rule Questions/Story already
-  // apply, extended here since Explore had none.
-  const useLocal =
-    deps.useLocal === true || isThinProfile(settledCount(input.tracks ?? [], input.now));
+  const useLocal = deps.useLocal === true;
 
   if (!useLocal && deps.claimAiCall && deps.generateBody) {
     const claim = await deps.claimAiCall();

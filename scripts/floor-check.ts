@@ -251,7 +251,15 @@ assert.match(sage, /QUOTA_EMPTY_MESSAGE/);
 assert.match(sage, /kind === 'quota'/);
 assert.match(sage, /kind === 'empty'/);
 assert.match(sage, /claimAiCall/);
-assert.match(read('src/lib/voice/talk.ts'), /const claim = deps\.claimAiCall/);
+const talkSrc = read('src/lib/voice/talk.ts');
+assert.match(talkSrc, /const claim =\s+deps\.claimAiCall/);
+// The completeness gate must not consume a quota claim, and must sit AFTER the
+// crisis return so a flagged line is never routed through it.
+assert.match(talkSrc, /deps\.claimAiCall && !settledGate/);
+assert.ok(
+  talkSrc.indexOf("kind: 'crisis'") < talkSrc.indexOf('const settledGate'),
+  'crisis returns before the profile-completeness gate is evaluated',
+);
 assert.match(read('src/lib/voice/talk.ts'), /containsFrameworkTerm/);
 assert.match(read('src/lib/voice/talk.ts'), /TALK_FENCE_ATTEMPTS = 2/);
 assert.match(read('src/lib/voice/quota-server.ts'), /claim_ai_call/);

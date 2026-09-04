@@ -1,4 +1,5 @@
 import { detectCrisis as defaultDetectCrisis, type CrisisDetection } from '@/lib/crisis/detect';
+import { isProfileSettled, type TraitTrack } from '@/lib/trait-stability';
 import {
   appendTraceStep,
   clipTraceText,
@@ -42,6 +43,16 @@ export interface TalkReplyInput {
   userId?: string;
   answeredCount?: number;
   divergenceNote?: string | null;
+  /**
+   * Report/game tracks. Drives the profile-completeness gate: until every axis
+   * is settled Sage replies from the deterministic local provider — no network
+   * call, no tokens, no quota claim, no lock screen.
+   *
+   * Omitted (undefined) means the caller supplied no track state — tests and
+   * labs — and leaves the gate off. An empty array is a real answer ("nothing
+   * settled") and gates. The production caller (`sage.tsx`) always passes it.
+   */
+  tracks?: readonly TraitTrack[];
 }
 
 export interface TalkReplyDeps {
@@ -130,8 +141,17 @@ export async function routeTalkReply(
     };
   }
 
+  // ---- Profile-completeness gate ----------------------------------------
+  // Placed AFTER the crisis return above, so a flagged line is never touched
+  // by this gate. When the profile is not settled Sage still answers — from
+  // the deterministic local provider — so no quota is claimed and no tokens
+  // are spent, and there is no lock screen in the thread.
+  const settledGate = input.tracks !== undefined && !isProfileSettled(input.tracks);
+
   // ---- Per-user cap (server-side; floor requirement) ---------------------
-  const claim = deps.claimAiCall ? await deps.claimAiCall() : { ok: true as const };
+  // Skipped when gated: a local reply is free, so it must not consume a claim.
+  const claim =
+    deps.claimAiCall && !settledGate ? await deps.claimAiCall() : { ok: true as const };
   if (!claim.ok) {
     return { kind: 'quota', provider: null, dev: trace(false, 'quota') };
   }
@@ -140,8 +160,10 @@ export async function routeTalkReply(
   const config = deps.config ?? VOICE_CONFIG;
   const providers = { ...buildProviders(config), ...deps.providers };
   const picked = await pickVoiceProvider(config, providers, !deps.config);
-  const provider = picked.provider;
-  const providerLabel = picked.label;
+  const provider = settledGate ? providers.local : picked.provider;
+  const providerLabel = settledGate
+    ? `${providers.local.label} — profile not settled`
+    : picked.label;
 
   const library = libraryLinesFor(input.me, {
     day: input.checkCount + 1,

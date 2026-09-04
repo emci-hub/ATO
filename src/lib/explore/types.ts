@@ -85,6 +85,8 @@ export type ExploreKind =
   | 'consent-pending'
   | 'consent-denied'
   | 'crisis'
+  /** Profile not settled on every axis — locked UI, no model call, no claim. */
+  | 'locked'
   | 'quota'
   | 'empty';
 

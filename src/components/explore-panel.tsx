@@ -1,5 +1,6 @@
+import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -37,6 +38,13 @@ import {
 import type { ExploreEntryRow, ExplorePackRow, RouteExploreResult } from '@/lib/explore/types';
 import { voiceMeFrom } from '@/lib/intake';
 import type { Me } from '@/lib/me';
+import {
+  PROFILE_LOCKED_COPY,
+  PROFILE_LOCKED_CTA,
+  missingAxis,
+  type TraitTrack,
+} from '@/lib/trait-stability';
+import { traitStateFromRow } from '@/lib/traits';
 import { useAppearance } from '@/lib/theme/context';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { shouldUseLocalAi } from '@/lib/ai/override';
@@ -53,6 +61,8 @@ function emptyCopy(kind: RouteExploreResult['kind']): string | null {
       return EXPLORE_EMPTY_DENIED;
     case 'crisis':
       return EXPLORE_EMPTY_CRISIS;
+    case 'locked':
+      return PROFILE_LOCKED_COPY;
     case 'quota':
       return EXPLORE_EMPTY_QUOTA;
     case 'empty':
@@ -109,10 +119,13 @@ export function ExplorePanel({
   me,
   history,
   crisisToday,
+  tracks,
 }: {
   me: Me;
   history: CheckHistory[];
   crisisToday: boolean;
+  /** Report/game tracks. Drives the profile-completeness gate in routeExplore. */
+  tracks: readonly TraitTrack[];
 }) {
   const theme = useTheme();
   const { reduceMotion } = useAppearance();
@@ -137,6 +150,7 @@ export function ExplorePanel({
           history,
           aiConsent: me.ai_consent,
           crisisToday,
+          tracks,
         },
         {
           loadLatestPack: fetchLatestExplorePack,
@@ -154,7 +168,7 @@ export function ExplorePanel({
       'explore',
     );
     setResult(next);
-  }, [me, history, crisisToday]);
+  }, [me, history, crisisToday, tracks]);
 
   useEffect(() => {
     let cancelled = false;
@@ -208,6 +222,23 @@ export function ExplorePanel({
             {EXPLORE_LABEL}
           </ThemedText>
           <ThemedText style={styles.body}>{message}</ThemedText>
+          {result?.kind === 'locked' ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${PROFILE_LOCKED_COPY}. ${PROFILE_LOCKED_CTA}.`}
+              onPress={() => {
+                const axis = missingAxis(traitStateFromRow(me).values, tracks);
+                router.push(
+                  axis
+                    ? { pathname: '/intake-sweep', params: { axis } }
+                    : { pathname: '/intake-sweep' },
+                );
+              }}>
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                {PROFILE_LOCKED_CTA}
+              </ThemedText>
+            </Pressable>
+          ) : null}
         </ThemedView>
       ) : null}
       {entries.map((entry) => (

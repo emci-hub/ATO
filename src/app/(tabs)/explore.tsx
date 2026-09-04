@@ -49,7 +49,14 @@ import { chipLabel, CURRENT_FOCUS_CHIPS, voiceMeFrom } from '@/lib/intake';
 import { useMeContext } from '@/lib/me-context';
 import { type Me } from '@/lib/me';
 import { parseSageTitle, pinnedCategoryLines } from '@/lib/sage-title';
-import { missingAxis, settledAxisLabel, settledCount, type TraitTrack } from '@/lib/trait-stability';
+import {
+  PROFILE_LOCKED_COPY,
+  PROFILE_LOCKED_CTA,
+  missingAxis,
+  settledAxisLabel,
+  settledCount,
+  type TraitTrack,
+} from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import { traitStateFromRow } from '@/lib/traits';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
@@ -171,6 +178,7 @@ export default function ExploreScreen() {
               <SageInsightSpend
                 me={me}
                 settled={settledCount(tracks)}
+                tracks={tracks}
                 onUpdated={() => refreshMe()}
               />
               <SageExploreObservations
@@ -199,6 +207,8 @@ function emptyExploreCopy(kind: RouteExploreResult['kind']): string | null {
       return EXPLORE_EMPTY_DENIED;
     case 'crisis':
       return EXPLORE_EMPTY_CRISIS;
+    case 'locked':
+      return PROFILE_LOCKED_COPY;
     case 'quota':
       return EXPLORE_EMPTY_QUOTA;
     case 'empty':
@@ -344,6 +354,7 @@ function SageExploreObservations({
 
   const message = result ? emptyExploreCopy(result.kind) : null;
   const entries = result?.pack?.entries ?? [];
+  const locked = result?.kind === 'locked';
   if (!message && entries.length === 0) return null;
 
   return (
@@ -353,6 +364,23 @@ function SageExploreObservations({
           <View style={[styles.bubble, { backgroundColor: theme.backgroundElement }]}>
             <ThemedText style={styles.bubbleText}>{message}</ThemedText>
           </View>
+        ) : null}
+        {locked ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${PROFILE_LOCKED_COPY}. ${PROFILE_LOCKED_CTA}.`}
+            onPress={() => {
+              const axis = missingAxis(traitStateFromRow(me).values, tracks);
+              router.push(
+                axis
+                  ? { pathname: '/intake-sweep', params: { axis } }
+                  : { pathname: '/intake-sweep' },
+              );
+            }}>
+            <ThemedText type="smallBold" themeColor="textSecondary">
+              {PROFILE_LOCKED_CTA}
+            </ThemedText>
+          </Pressable>
         ) : null}
         {entries.map((entry) => (
           <View key={entry.id} style={styles.exploreEntry}>

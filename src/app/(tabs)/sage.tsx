@@ -365,6 +365,7 @@ export default function SageScreen() {
           aiConsent: me.ai_consent,
           userId,
           answeredCount: settledCount(trackRows),
+          tracks: trackRows,
           divergenceNote: formatDivergenceNote(divergingAxesFromTracks(trackRows)),
         },
         { logCrisisFlag: (id) => logCrisisFlag(id), claimAiCall, logJargonHit: logJargonGuard, recordTrace: recordOwnDevTrace },

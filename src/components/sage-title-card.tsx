@@ -1,5 +1,6 @@
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
@@ -24,7 +25,15 @@ import {
   type SageTitle,
 } from '@/lib/sage-title';
 import { claimTitleGenerate, insertTitleFlag, saveSageTitle } from '@/lib/sage-title-store';
-import { isThinProfile, settledCount, stableReportAxes, type TraitTrack } from '@/lib/trait-stability';
+import {
+  PROFILE_LOCKED_COPY,
+  PROFILE_LOCKED_CTA,
+  isProfileSettled,
+  missingAxis,
+  stableReportAxes,
+  type TraitTrack,
+} from '@/lib/trait-stability';
+import { traitStateFromRow } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import { shouldUseLocalAi } from '@/lib/ai/override';
 
@@ -41,6 +50,7 @@ export function SageTitleCard({
   const [busy, setBusy] = useState(false);
   const [flagged, setFlagged] = useState(false);
   const [showAxes, setShowAxes] = useState(false);
+  const [locked, setLocked] = useState(false);
   const fingerprint = combinedFingerprint(tracks);
 
   useEffect(() => {
@@ -55,6 +65,20 @@ export function SageTitleCard({
       const cached = parseSageTitle(me.sage_title);
       const fallbackCats = fallbackCategoryCopies(tracks);
 
+      // ---- Profile-completeness gate --------------------------------------
+      // Every axis must be settled before Sage names a shape. Not settled =
+      // locked UI, no model call, no quota claim, and nothing written to
+      // sage_title. Checked before titleReady so the person sees the reason
+      // rather than a blank card.
+      if (!isProfileSettled(tracks)) {
+        if (!cancelled) {
+          setLocked(true);
+          setTitle(null);
+        }
+        return;
+      }
+      if (!cancelled) setLocked(false);
+
       if (!titleReady(tracks)) {
         if (!cancelled) setTitle(null);
         return;
@@ -67,11 +91,7 @@ export function SageTitleCard({
         if (!cancelled) setTitle(cached);
         return;
       }
-      // Profile-completeness gate: a thin profile is served from local
-      // compose, no model call and no quota claim — same rule Questions/
-      // Story already apply, extended here since Sage Title had none
-      // (titleReady above only needs 2 stable axes, well below thin-profile).
-      if ((await shouldUseLocalAi()) || isThinProfile(settledCount(tracks))) {
+      if (await shouldUseLocalAi()) {
         const local: SageTitle = {
           title: cached?.title ?? TITLE_EMPTY,
           lede: cached?.lede ?? TITLE_EMPTY,
@@ -143,6 +163,31 @@ export function SageTitleCard({
 
   const shown = title && title.title !== TITLE_EMPTY ? title : null;
   const axisLines = shown ? drivingAxisLines(shown.axes, tracks) : [];
+
+  if (locked) {
+    return (
+      <View style={styles.block} testID="sage-title-card">
+        <ThemedText type="small" themeColor="textSecondary">
+          {PROFILE_LOCKED_COPY}
+        </ThemedText>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${PROFILE_LOCKED_COPY}. ${PROFILE_LOCKED_CTA}.`}
+          onPress={() => {
+            const axis = missingAxis(traitStateFromRow(me).values, tracks);
+            router.push(
+              axis
+                ? { pathname: '/intake-sweep', params: { axis } }
+                : { pathname: '/intake-sweep' },
+            );
+          }}>
+          <ThemedText type="smallBold" themeColor="textSecondary">
+            {PROFILE_LOCKED_CTA}
+          </ThemedText>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.block} testID="sage-title-card">

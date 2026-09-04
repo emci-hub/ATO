@@ -6,7 +6,13 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { decideExploreTrigger } from '../src/lib/explore/cadence';
-import { applyEwmaAnswer, isThinProfile, settledCount, type TraitTrack } from '../src/lib/trait-stability';
+import {
+  applyEwmaAnswer,
+  isProfileSettled,
+  isThinProfile,
+  settledCount,
+  type TraitTrack,
+} from '../src/lib/trait-stability';
 import {
   AGENCY_AXES,
   dropsAgencyTriple,
@@ -171,25 +177,24 @@ function verySettled(axis: TraitTrack['axis'], value: number): TraitTrack {
   return row;
 }
 
-// Above THIN_PROFILE_RATIO (6/15) so routeExplore's completeness gate lets
-// the remote path run — used by tests exercising the guard/model call.
-const fullTracks: TraitTrack[] = [
-  verySettled('openness', 0.6),
-  verySettled('conscientiousness', 0.8),
-  verySettled('extraversion', 0.8),
-  verySettled('agreeableness', 0.7),
-  verySettled('steadiness', 0.4),
-  verySettled('growth_mindset', 0.8),
-  verySettled('locus_of_control', 0.7),
-  verySettled('self_efficacy', 0.6),
-];
+// routeExplore's completeness gate is isProfileSettled: EVERY axis must clear
+// effectiveStability > 0, so this fixture covers the whole live inventory.
+// Used by tests exercising the guard/model call.
+const fullTracks: TraitTrack[] = TRAIT_AXES.map((axis, i) =>
+  verySettled(axis, 0.4 + ((i * 0.03) % 0.5)),
+);
 // Fixed reference "now" so these fixtures never cross the decay grace period
 // as real time moves on — decay is idle-since-lastTouched, not calendar-bound,
 // but a hardcoded lastTouched needs a hardcoded "now" to stay stable forever.
 const FIXTURE_NOW = new Date('2026-08-31T12:00:00.000Z');
 assert.equal(isThinProfile(settledCount(fullTracks, FIXTURE_NOW)), false);
+assert.equal(isProfileSettled(fullTracks, FIXTURE_NOW), true);
 const thinTracks: TraitTrack[] = [stableReport('openness', 0.5)];
 assert.equal(isThinProfile(settledCount(thinTracks, FIXTURE_NOW)), true);
+assert.equal(isProfileSettled(thinTracks, FIXTURE_NOW), false);
+// One axis short of the full inventory is still not settled — the gate is
+// all-or-nothing, unlike the stability SUM that isThinProfile reads.
+assert.equal(isProfileSettled(fullTracks.slice(1), FIXTURE_NOW), false);
 const twoCatMe: ExploreMeSlice = {
   ...chipsOnly,
   conscientiousness: 0.8,
@@ -434,7 +439,8 @@ assert.equal(guardStep?.status, 'flagged');
 ok('Explore guard_check is flagged when phrase/jargon fires');
 
 let claimed = false;
-const thinProfile = await routeExplore(
+let packLoaded = false;
+const unsettledProfile = await routeExplore(
   {
     me: { ...chipsOnly, extraversion: 0.8 },
     history: [],
@@ -444,8 +450,12 @@ const thinProfile = await routeExplore(
   },
   {
     useLocal: false,
+    loadLatestPack: async () => {
+      packLoaded = true;
+      return null;
+    },
     generateBody: async () => {
-      throw new Error('must not call the model on a thin profile');
+      throw new Error('must not call the model on an unsettled profile');
     },
     claimAiCall: async () => {
       claimed = true;
@@ -453,9 +463,56 @@ const thinProfile = await routeExplore(
     },
   },
 );
-assert.equal(thinProfile.kind, 'pack');
+assert.equal(unsettledProfile.kind, 'locked');
+assert.equal(unsettledProfile.pack, null);
 assert.equal(claimed, false);
-ok('a thin profile skips the quota claim and composes locally, same rule as Questions/Story');
+assert.equal(packLoaded, false);
+ok('an unsettled profile locks Explore: no cached pack, no quota claim, no model call');
+
+// Locked outranks a cached pack — a profile that decays below settled stops
+// showing yesterday's observations rather than serving stale ones.
+const lockedOverCache = await routeExplore(
+  {
+    me: { ...chipsOnly, extraversion: 0.8 },
+    history: [],
+    aiConsent: true,
+    now: new Date('2026-08-29T15:00:00Z'),
+    tracks: [],
+  },
+  {
+    useLocal: true,
+    loadLatestPack: async () => {
+      throw new Error('must not read the pack when locked');
+    },
+  },
+);
+assert.equal(lockedOverCache.kind, 'locked');
+ok('empty tracks lock Explore; omitted tracks leave the gate off for labs/tests');
+
+// Crisis must win over the gate: an unsettled profile in crisis is 'crisis',
+// never 'locked'.
+const crisisBeatsLock = await routeExplore(
+  {
+    me: { ...chipsOnly, extraversion: 0.8 },
+    history: [],
+    aiConsent: true,
+    crisisToday: true,
+    now: new Date('2026-08-29T15:00:00Z'),
+    tracks: [],
+  },
+  { useLocal: true },
+);
+assert.equal(crisisBeatsLock.kind, 'crisis');
+ok('crisis short-circuits before the completeness gate');
+
+const exploreUi = read('src/app/(tabs)/explore.tsx');
+assert.match(exploreUi, /case 'locked':/);
+assert.match(exploreUi, /PROFILE_LOCKED_COPY/);
+assert.match(exploreUi, /PROFILE_LOCKED_CTA/);
+assert.match(exploreUi, /pathname: '\/intake-sweep'/);
+assert.match(read('src/components/explore-panel.tsx'), /case 'locked':/);
+assert.match(read('src/components/explore-panel.tsx'), /PROFILE_LOCKED_CTA/);
+ok('both Explore surfaces render the locked copy with a link to Questions');
 
 const cached = await routeExplore(
   {

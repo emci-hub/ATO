@@ -30,7 +30,12 @@ import {
   dawnReadCategoriesAreBars,
   pickDawnReadCategory,
 } from '../src/lib/dawn-category';
-import { applyEwmaAnswer, type TraitTrack } from '../src/lib/trait-stability';
+import {
+  applyEwmaAnswer,
+  isProfileSettled,
+  type TraitTrack,
+} from '../src/lib/trait-stability';
+import { TRAIT_AXES } from '../src/lib/traits';
 import type { VoiceProvider } from '../src/lib/voice/providers/types';
 import { deriveTone, routeVoiceCard } from '../src/lib/voice/router';
 import { routeTalkReply } from '../src/lib/voice/talk';
@@ -821,6 +826,150 @@ assert.equal(remotePick.label, 'gemini');
 const localPick = await pickVoiceProvider(localConfig, buildProviders(localConfig), false);
 assert.equal(localPick.provider.id, 'local');
 ok('MODEL_PROVIDER=gemini selects the remote provider; only MODEL_PROVIDER=local forces local');
+
+console.log('\nProfile-completeness gate (daily card + Sage chat)');
+
+// Every axis at 8 consistent reps -> effectiveStability well above 0 everywhere.
+function settledTrack(axis: TraitTrack['axis'], value: number): TraitTrack {
+  const nowIso = new Date().toISOString();
+  let row = applyEwmaAnswer(null, axis, 'report', value, nowIso);
+  for (let i = 0; i < 7; i += 1) row = applyEwmaAnswer(row, axis, 'report', value, nowIso);
+  return row;
+}
+const settledTracks: TraitTrack[] = TRAIT_AXES.map((axis, i) =>
+  settledTrack(axis, 0.4 + ((i * 0.03) % 0.5)),
+);
+assert.equal(isProfileSettled(settledTracks), true);
+assert.equal(isProfileSettled(settledTracks.slice(1)), false, 'one axis short is not settled');
+assert.equal(isProfileSettled([]), false);
+
+let gateCalls = 0;
+const gateSpy: VoiceProvider = {
+  id: 'gemini',
+  label: 'gemini (spy)',
+  generate: async () => {
+    gateCalls += 1;
+    return { read: 'Spy read.', do: 'After you make coffee, do the spy thing.' };
+  },
+  generateTalk: async () => {
+    gateCalls += 1;
+    return { reply: 'Spy reply.' };
+  },
+};
+const remoteConfig = buildVoiceConfig({ MODEL_PROVIDER: 'gemini' });
+
+// --- Daily card: not settled -> real card, locally composed, zero model calls.
+const unsettledCard = await routeVoiceCard(
+  { me: ME, checkCount: 6, history: d1, aiConsent: true, day: 7, tracks: [] },
+  { config: remoteConfig, providers: { gemini: gateSpy }, ...dev },
+);
+assert.ok(unsettledCard.card, 'an unsettled profile still gets a card - never a blank day');
+assert.equal(gateCalls, 0, 'no model call for an unsettled profile');
+assert.match(unsettledCard.dev?.providerLabel ?? '', /profile not settled/);
+assert.equal(containsFrameworkTerm(unsettledCard.card.read), false);
+assert.equal(containsFrameworkTerm(unsettledCard.card.do), false);
+ok('daily card: unsettled profile is composed locally - real card, no lock screen, no tokens');
+
+// Day 7 is past the bank (Days 1-3 only), so the gate must not fall back to it.
+assert.equal(bankCard(7, 'even', CUE), null, 'the bank has no Day 7 - local compose is required');
+ok('the gate cannot use the bank: it only holds Days 1-3');
+
+// --- Daily card: settled -> the model runs as before.
+const settledCard = await routeVoiceCard(
+  { me: ME, checkCount: 6, history: d1, aiConsent: true, day: 7, tracks: settledTracks },
+  { config: remoteConfig, providers: { gemini: gateSpy }, ...dev },
+);
+assert.equal(settledCard.card?.read, 'Spy read.');
+assert.equal(gateCalls, 1, 'a settled profile reaches the model');
+ok('daily card: a settled profile still routes to the model');
+
+// --- Sage chat: not settled -> local reply, and NO quota claim.
+gateCalls = 0;
+let gateClaims = 0;
+const unsettledTalk = await routeTalkReply(
+  { me: ME, message: 'How is my week going?', checkCount: 6, history: d1, aiConsent: true, tracks: [] },
+  {
+    config: remoteConfig,
+    providers: { gemini: gateSpy },
+    claimAiCall: async () => {
+      gateClaims += 1;
+      return { ok: true as const };
+    },
+    ...dev,
+  },
+);
+assert.equal(unsettledTalk.kind, 'reply');
+assert.ok(unsettledTalk.reply && unsettledTalk.reply.length > 0);
+assert.equal(gateCalls, 0, 'no model call for an unsettled profile');
+assert.equal(gateClaims, 0, 'a free local reply must not consume a quota claim');
+ok('Sage chat: unsettled profile replies locally - no lock screen, no claim, no tokens');
+
+// --- Sage chat: crisis is never touched by the gate.
+let gateFlags = 0;
+const unsettledCrisis = await routeTalkReply(
+  {
+    me: ME,
+    message: 'I’ve been thinking about suicide',
+    checkCount: 6,
+    history: d1,
+    aiConsent: true,
+    userId: 'u1',
+    tracks: [],
+  },
+  {
+    config: remoteConfig,
+    providers: { gemini: gateSpy },
+    claimAiCall: async () => {
+      gateClaims += 1;
+      return { ok: true as const };
+    },
+    logCrisisFlag: async () => {
+      gateFlags += 1;
+    },
+    ...dev,
+  },
+);
+assert.equal(unsettledCrisis.kind, 'crisis', 'crisis wins over the completeness gate');
+assert.equal(unsettledCrisis.crisis?.method, 'keyword');
+assert.equal(gateFlags, 1, 'crisis flag still logged on an unsettled profile');
+assert.equal(gateCalls, 0);
+assert.equal(gateClaims, 0);
+ok('Sage chat: a flagged line returns the static crisis result regardless of the gate');
+
+// --- Sage chat: settled -> the model runs, and the claim happens.
+const settledTalk = await routeTalkReply(
+  {
+    me: ME,
+    message: 'How is my week going?',
+    checkCount: 6,
+    history: d1,
+    aiConsent: true,
+    tracks: settledTracks,
+  },
+  {
+    config: remoteConfig,
+    providers: { gemini: gateSpy },
+    claimAiCall: async () => {
+      gateClaims += 1;
+      return { ok: true as const };
+    },
+    ...dev,
+  },
+);
+assert.equal(settledTalk.reply, 'Spy reply.');
+assert.equal(gateCalls, 1);
+assert.equal(gateClaims, 1, 'a settled profile claims quota exactly once');
+ok('Sage chat: a settled profile claims quota and routes to the model');
+
+// --- Omitted tracks leave the gate off (labs / existing callers).
+gateCalls = 0;
+const noTracksCard = await routeVoiceCard(
+  { me: ME, checkCount: 6, history: d1, aiConsent: true, day: 7 },
+  { config: remoteConfig, providers: { gemini: gateSpy }, ...dev },
+);
+assert.equal(noTracksCard.card?.read, 'Spy read.');
+assert.equal(gateCalls, 1, 'omitted tracks = no track state supplied = gate off');
+ok('omitted tracks leave the gate off; an empty array is a real "nothing settled" and gates');
 
 console.log(`\nAll ${passed} checks passed.`);
 }

@@ -26,6 +26,7 @@ import { buildProviders } from './providers';
 import type { VoiceProvider } from './providers/types';
 import { pickVoiceProvider } from './select-provider';
 import { pickDawnReadCategory } from '@/lib/dawn-category';
+import { isProfileSettled } from '@/lib/trait-stability';
 import type {
   CheckHistory,
   DevTrace,
@@ -256,8 +257,21 @@ export async function routeVoiceCard(
   // ---- Generated path: check_count >= 3 --------------------------------
   const providers = { ...buildProviders(config), ...deps.providers };
   const picked = await pickVoiceProvider(config, providers, !deps.config);
-  const provider = picked.provider;
-  const providerLabel = picked.label;
+
+  // ---- Profile-completeness gate ----------------------------------------
+  // Until every axis is settled the card is composed by the deterministic
+  // local provider: no network call, no tokens, no lock screen — the person
+  // still gets a real card every day. The bank is NOT the fallback here: it
+  // only holds Days 1-3, so day 4+ would render nothing.
+  //
+  // `tracks` omitted (undefined) means the caller supplied no track state —
+  // tests and labs — and leaves the gate off. An empty array is a real answer
+  // ("nothing settled") and gates. Every production caller passes tracks.
+  const settledGate = input.tracks !== undefined && !isProfileSettled(input.tracks);
+  const provider = settledGate ? providers.local : picked.provider;
+  const providerLabel = settledGate
+    ? `${providers.local.label} — profile not settled`
+    : picked.label;
 
   const shownCards: Array<{ read: string; do: string }> = input.history
     .filter((h) => h.read && h.do)

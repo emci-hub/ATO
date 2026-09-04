@@ -234,6 +234,38 @@ export function isProfileComplete(rows: readonly TraitTrack[]): boolean {
   return TRAIT_AXES.length > 0 && filledCount(rows) >= TRAIT_AXES.length;
 }
 
+/**
+ * The strictest completeness predicate, and the one every AI surface gates on.
+ * True only when EVERY currently-defined axis has a report track that scores
+ * above 0 through `effectiveStability` — i.e. answerCount >= STABILITY_FLOOR_N
+ * (3) AND enough agreement between answers to survive decay. Gut-call never
+ * counts, same rule as settled.
+ *
+ * Strictly stronger than both existing predicates:
+ *   isProfileComplete  — one answer on each axis (no agreement requirement)
+ *   !isThinProfile     — a stability SUM over 6/15 of the inventory, so a few
+ *                        deep axes can clear it while others sit at zero
+ * An axis answered inconsistently (every new sample >= 0.5 from its EWMA)
+ * holds agreement at 0 and never settles — that user stays gated.
+ */
+export function isProfileSettled(
+  rows: readonly TraitTrack[],
+  now: Date = new Date(),
+): boolean {
+  // TRAIT_AXES is a non-empty const tuple, so `every` on it is never
+  // vacuously true — no empty-inventory guard needed (isProfileComplete's
+  // length check exists only because it compares against a count).
+  return TRAIT_AXES.every((axis) => effectiveStability(trackFor(rows, axis, 'report'), now) > 0);
+}
+
+/**
+ * Shown on surfaces that lock rather than degrade (Explore observations, Sage
+ * Title). The surfaces that stay silent instead — the daily card and Sage chat
+ * — never render this; they serve local/templated content and spend nothing.
+ */
+export const PROFILE_LOCKED_COPY = 'Complete your profile to unlock this';
+export const PROFILE_LOCKED_CTA = 'Answer Questions';
+
 export const FILLED_LABEL_SUFFIX = `of ${TRAIT_AXES.length} filled`;
 
 export function filledAxisLabel(rows: readonly TraitTrack[]): string {
