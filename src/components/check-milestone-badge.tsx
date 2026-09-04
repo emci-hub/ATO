@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { ThemedPressable } from '@/components/themed-pressable';
@@ -15,11 +16,16 @@ import {
   resolveBadges,
   unlockedCount,
 } from '@/lib/badges';
-import { allCategoriesReady, getCategoryDefs } from '@/lib/categories';
+import {
+  hasSeenFullProfileUnlock,
+  markFullProfileUnlockSeen,
+} from '@/lib/full-profile-unlock';
 import { neonGlowColors, presenceGlowLayersForTier, PRESENCE_GLOW_LAYERS } from '@/lib/growth';
 import { controlBorderColor } from '@/lib/theme/chrome';
+import { useAppearance } from '@/lib/theme/context';
 import {
   effectiveStability,
+  isProfileSettled,
   trackFor,
   unfilledAxes,
   type TraitTrack,
@@ -158,10 +164,10 @@ const CHIP_COPY: Record<
   }),
   'full-picture': ({ unlocked }) => ({
     kicker: 'full picture',
-    value: unlocked ? getCategoryDefs().length : '—',
+    value: unlocked ? TRAIT_AXES.length : '—',
     label: unlocked
-      ? `Full picture, unlocked. All ${getCategoryDefs().length} categories have settled.`
-      : 'Full picture, locked. Not every category has settled yet.',
+      ? `Full picture, unlocked. All ${TRAIT_AXES.length} axes have settled.`
+      : 'Full picture, locked. Not every axis has settled yet.',
   }),
 };
 
@@ -185,22 +191,46 @@ export function MilestoneBadges({
   userId?: string;
 }) {
   const theme = useTheme();
+  const { reduceMotion } = useAppearance();
   const [open, setOpen] = useState(defaultOpen);
   const [fullPicture, setFullPicture] = useState(false);
   const [nextAxis, setNextAxis] = useState<TraitAxis | null>(null);
+  /** Celebrate once, ever. Null until the persisted flag has been read. */
+  const [celebrate, setCelebrate] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
     fetchTraitTracks(userId)
-      .then((tracks) => {
+      .then(async (tracks) => {
+        const settled = isProfileSettled(tracks);
+        if (cancelled) return;
+        setFullPicture(settled);
+        setNextAxis(leastReadyAxis(tracks));
+        if (!settled) {
+          setCelebrate(false);
+          return;
+        }
+        // First time this device has seen a settled profile: fire the
+        // celebration and burn the flag immediately, so a re-render or a
+        // second mount in the same session cannot replay it.
+        const seen = await hasSeenFullProfileUnlock();
+        if (cancelled) return;
+        if (seen) {
+          setCelebrate(false);
+          return;
+        }
+        await markFullProfileUnlockSeen();
         if (!cancelled) {
-          setFullPicture(allCategoriesReady(tracks));
-          setNextAxis(leastReadyAxis(tracks));
+          setCelebrate(true);
+          setOpen(true);
         }
       })
       .catch(() => {
-        if (!cancelled) setFullPicture(false);
+        if (!cancelled) {
+          setFullPicture(false);
+          setCelebrate(false);
+        }
       });
     return () => {
       cancelled = true;
@@ -246,6 +276,9 @@ export function MilestoneBadges({
       </ThemedPressable>
       {open ? (
         <View style={styles.body}>
+          {celebrate ? (
+            <FullProfileUnlockAck reduceMotion={reduceMotion} />
+          ) : null}
           {states.map((badge) => {
             const copy = CHIP_COPY[badge.id]({
               checkCount,
@@ -278,6 +311,46 @@ export function MilestoneBadges({
   );
 }
 
+export const FULL_PROFILE_UNLOCK_COPY = 'Full profile unlocked.';
+
+/**
+ * One-time celebration for the full-picture capstone. Same fade shape as
+ * Explore's NotedAck — a held beat, then out, with a reduceMotion branch that
+ * skips the animation and just times the dismissal. Purely visual: the badge
+ * underneath is already unlocked whether or not this ever renders.
+ */
+function FullProfileUnlockAck({ reduceMotion }: { reduceMotion: boolean }) {
+  const theme = useTheme();
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    opacity.value = 1;
+    if (reduceMotion) {
+      const hide = setTimeout(() => {
+        opacity.value = 0;
+      }, 2400);
+      return () => clearTimeout(hide);
+    }
+    opacity.value = withSequence(
+      withTiming(1, { duration: 900 }),
+      withTiming(0, { duration: 1200 }),
+    );
+  }, [reduceMotion, opacity]);
+
+  const fade = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      accessibilityLiveRegion="polite"
+      style={[styles.unlockAck, { backgroundColor: theme.accent }, fade]}>
+      <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
+        {FULL_PROFILE_UNLOCK_COPY}
+      </ThemedText>
+    </Animated.View>
+  );
+}
+
 function chipShadow(accent: string, presence: number) {
   if (presence <= 0) return null;
   const glow = neonGlowColors(accent);
@@ -297,6 +370,13 @@ function chipShadow(accent: string, presence: number) {
 }
 
 const styles = StyleSheet.create({
+  unlockAck: {
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    borderRadius: Spacing.three,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+  },
   fold: {
     alignSelf: 'flex-start',
     borderRadius: Spacing.three,

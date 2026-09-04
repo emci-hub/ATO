@@ -1,5 +1,5 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -95,18 +95,30 @@ export default function IntakeSweepTabScreen() {
     void loadTracks();
   }, [loadTracks]);
 
+  const scrollRef = useRef<ScrollView>(null);
+
   const refreshAfterAnswer = useCallback(async () => {
     await Promise.all([refresh(), loadTracks()]);
   }, [refresh, loadTracks]);
 
+  /**
+   * "Skip the rest" on the full sweep. Skipping defers every remaining axis
+   * onto `me.question_deferred`, and QuestionsFold — the first block on this
+   * same screen — front-loads those as `priorityAxes` on its next batch. So
+   * the person stays in Questions and is scrolled back to the pool that just
+   * inherited their skipped axes. This used to replace the route with Home,
+   * where nothing would ask them again. Skipping must never be a way out of
+   * the profile-completeness gate, only a way to defer.
+   */
   function done() {
-    router.replace('/');
+    void refresh();
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
   }
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <ThemedText type="subtitle">Questions</ThemedText>
           </View>

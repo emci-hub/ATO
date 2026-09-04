@@ -34,11 +34,14 @@ import {
 } from '../src/lib/scenario';
 import { QUESTIONS_BANK } from '../src/lib/questions/bank';
 import { composeLocalQuestionBatch } from '../src/lib/questions/local';
+import { QUESTIONS_BATCH_SIZE } from '../src/lib/questions/types';
 import { parseQuestionBatch, parseQuestionSweep } from '../src/lib/questions/parse';
 import {
   INTAKE_SWEEP_COPY_REVIEWED,
   QUESTIONS_SWEEP_SIZE,
   bankByAxis,
+  bankDraftFor,
+  bankLeadDrafts,
   composeLocalSweep,
 } from '../src/lib/questions/local';
 import {
@@ -126,8 +129,47 @@ ok('divergence notes self-report vs gut-call without overwriting');
 // --- IQ sweep -------------------------------------------------------------
 assert.equal(QUESTIONS_SWEEP_SIZE, TRAIT_AXES.length);
 assert.equal(INTAKE_SWEEP_COPY_REVIEWED, false);
-assert.equal(QUESTIONS_BANK.length, TRAIT_AXES.length);
-assert.equal(bankByAxis().size, TRAIT_AXES.length);
+// Bank is 3 drafts per axis. bankByAxis keeps ALL of them (it used to drop
+// every draft after the first, which made variants 2 and 3 dead content).
+assert.equal(QUESTIONS_BANK.length, TRAIT_AXES.length * 3);
+const grouped = bankByAxis();
+assert.equal(grouped.size, TRAIT_AXES.length);
+for (const axis of TRAIT_AXES) {
+  assert.equal(grouped.get(axis)?.length, 3, `${axis} keeps all 3 drafts`);
+}
+assert.equal(
+  [...grouped.values()].reduce((n, list) => n + list.length, 0),
+  QUESTIONS_BANK.length,
+  'bankByAxis drops nothing',
+);
+
+// bankDraftFor wraps, so any index is safe, and variant 0 is the locked draft.
+const lead = bankDraftFor('openness');
+assert.equal(lead?.prompt, QUESTIONS_BANK.find((row) => row.axis === 'openness')?.prompt);
+assert.deepEqual(bankDraftFor('openness', 3), lead, 'variant wraps at the group length');
+assert.notDeepEqual(bankDraftFor('openness', 1), lead, 'variant 1 is a different draft');
+// Returned drafts are copies — a caller mutating options must not edit the bank.
+const mutable = bankDraftFor('openness');
+mutable!.options[0]!.value = 0.123;
+assert.notEqual(bankDraftFor('openness')?.options[0]?.value, 0.123);
+assert.equal(bankLeadDrafts().length, TRAIT_AXES.length);
+
+// A non-zero variant still yields one guard-clean item per axis, in order.
+const sweepV2 = composeLocalSweep(1);
+assert.equal(sweepV2.length, TRAIT_AXES.length);
+assert.deepEqual(sweepV2.map((row) => row.axis), [...TRAIT_AXES]);
+assert.notDeepEqual(sweepV2.map((row) => row.prompt), composeLocalSweep().map((row) => row.prompt));
+
+// The 5-item rotation must still return 5 DISTINCT axes now that the bank has
+// three drafts per axis — feeding all of them to preferFreshAxes would spend
+// slots on duplicates it then drops.
+const batchV1 = composeLocalQuestionBatch();
+assert.equal(batchV1.length, QUESTIONS_BATCH_SIZE);
+assert.equal(new Set(batchV1.map((row) => row.axis)).size, QUESTIONS_BATCH_SIZE);
+const batchV2 = composeLocalQuestionBatch([], [], 1);
+assert.equal(batchV2.length, QUESTIONS_BATCH_SIZE);
+assert.deepEqual(batchV2.map((row) => row.axis), batchV1.map((row) => row.axis));
+assert.notDeepEqual(batchV2.map((row) => row.prompt), batchV1.map((row) => row.prompt));
 const sweep = composeLocalSweep();
 assert.equal(sweep.length, TRAIT_AXES.length);
 assert.deepEqual(sweep.map((row) => row.axis), [...TRAIT_AXES]);

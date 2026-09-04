@@ -32,7 +32,7 @@ import { QUESTIONS_BATCH_SIZE, QUESTIONS_CALL_TYPE } from '../src/lib/questions/
 import type { QuestionDraft } from '../src/lib/questions/types';
 import { emptySageKnowsState } from '../src/lib/sage-knows';
 import type { TraitTrack } from '../src/lib/trait-stability';
-import { TRAIT_AXES, emptyTraitState, mergeTraitWrite } from '../src/lib/traits';
+import { TRAIT_AXES, emptyTraitState, mergeTraitWrite, type TraitAxis } from '../src/lib/traits';
 import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
 import { PHRASE_FLAG_TYPE } from '../src/lib/voice/phrase-guard';
 
@@ -67,7 +67,25 @@ function read(rel: string): string {
 
 assert.equal(QUESTIONS_BATCH_SIZE, 5);
 assert.equal(QUESTIONS_CALL_TYPE, 'questions');
-assert.equal(QUESTIONS_BANK.length, 16);
+// Three drafts per axis, grouped, first-of-group is the locked few-shot one.
+assert.equal(QUESTIONS_BANK.length, TRAIT_AXES.length * 3);
+const bankPerAxis = new Map<string, number>();
+for (const row of QUESTIONS_BANK) {
+  bankPerAxis.set(row.axis, (bankPerAxis.get(row.axis) ?? 0) + 1);
+}
+for (const axis of TRAIT_AXES) {
+  assert.equal(bankPerAxis.get(axis), 3, `${axis} needs exactly 3 bank drafts`);
+}
+// Axis groups are contiguous and in TRAIT_AXES order.
+assert.deepEqual([...new Set(QUESTIONS_BANK.map((row) => row.axis))], [...TRAIT_AXES]);
+// Every stem and option clears the full guard chain, and no prompt repeats.
+const bankPrompts = QUESTIONS_BANK.map((row) => row.prompt);
+assert.equal(new Set(bankPrompts).size, bankPrompts.length, 'no duplicate bank prompts');
+for (const row of QUESTIONS_BANK) {
+  assert.ok(row.options.length >= 2 && row.options.length <= 3, row.prompt);
+  assert.ok(row.prompt.length <= 400, row.prompt);
+  assert.equal(questionDraftGuardHit(row), null, row.prompt);
+}
 assert.match(QUESTIONS_FEW_SHOTS, /Your Do today was writing down one thing you're walking into/);
 assert.match(QUESTIONS_FEW_SHOTS, /A friend cancels same-day, no real reason given/);
 assert.match(QUESTIONS_FEW_SHOTS, /Everyone at the table already knows their order/);
@@ -165,8 +183,15 @@ const cleanDraft: QuestionDraft = {
 assert.equal(questionDraftGuardHit(cleanDraft), null);
 ok('guards run on question text and every option');
 
-const rotated = composeLocalQuestionBatch(['openness', 'relatedness', 'growth_mindset']);
-assert.equal(rotated[0]?.axis, 'attachment_avoidance');
+const recentThree: TraitAxis[] = ['openness', 'relatedness', 'growth_mindset'];
+const rotated = composeLocalQuestionBatch(recentThree);
+// The bank is grouped by axis in TRAIT_AXES order, so the first axis not in
+// the recent set leads. (It was 'attachment_avoidance' while the bank kept the
+// old interleaved few-shot order; the rotation rule itself is unchanged.)
+assert.equal(rotated[0]?.axis, 'conscientiousness');
+for (const axis of recentThree) {
+  assert.ok(!rotated.some((row) => row.axis === axis), `${axis} is skipped while recent`);
+}
 assert.ok(!preferFreshAxes(composeLocalQuestionBatch(), ['openness']).slice(0, 1).some((row) => row.axis === 'openness'));
 ok('soft axis rotation prefers axes outside the last 2–3');
 

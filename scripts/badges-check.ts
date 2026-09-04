@@ -18,6 +18,17 @@ import {
   unlockedCount,
 } from '../src/lib/badges';
 import { addDaysYmd } from '../src/lib/local-date';
+import {
+  hasSeenFullProfileUnlock,
+  markFullProfileUnlockSeen,
+  resetFullProfileUnlockCache,
+} from '../src/lib/full-profile-unlock';
+import {
+  applyEwmaAnswer,
+  isProfileSettled,
+  type TraitTrack,
+} from '../src/lib/trait-stability';
+import { TRAIT_AXES } from '../src/lib/traits';
 
 let passed = 0;
 function ok(label: string) {
@@ -167,7 +178,7 @@ ok('fixture of 11 consecutive dones + one fact unlocks the three check/fact/week
 const withPicture = resolveBadges({ ...fixture, fullPicture: true });
 assert.equal(withPicture.find((badge) => badge.id === 'full-picture')?.unlocked, true);
 assert.equal(unlockedCount(withPicture), 4);
-ok('full-picture capstone unlocks only when all categories are ready');
+ok('full-picture capstone unlocks only when the profile is fully settled');
 
 const src = readFileSync(resolve('src/lib/badges.ts'), 'utf8');
 const ui = readFileSync(resolve('src/components/check-milestone-badge.tsx'), 'utf8');
@@ -178,4 +189,68 @@ assert.doesNotMatch(readFileSync(resolve('src/app/(tabs)/index.tsx'), 'utf8'), /
 assert.match(readFileSync(resolve('src/app/(tabs)/you.tsx'), 'utf8'), /MilestoneBadges/);
 ok('unlock path has no randomness; badges are mounted on You, not Home');
 
-console.log(`\nAll ${passed} badge checks passed.`);
+// --- full-picture predicate + one-time unlock celebration -----------------
+// The capstone reads isProfileSettled (all 16 axes past the stability floor),
+// not allCategoriesReady (which a bar clears on 2 of its 3 axes) — the same
+// predicate every AI surface gates on, so the badge and the locks agree.
+assert.match(ui, /isProfileSettled/);
+assert.doesNotMatch(ui, /allCategoriesReady/);
+assert.match(ui, /axes have settled/);
+assert.doesNotMatch(ui, /categories have settled/);
+ok('capstone unlock reads isProfileSettled, and its copy says axes not categories');
+
+const settledTracks: TraitTrack[] = TRAIT_AXES.map((axis, i) => {
+  const nowIso = new Date().toISOString();
+  const value = 0.4 + ((i * 0.03) % 0.5);
+  let row = applyEwmaAnswer(null, axis, 'report', value, nowIso);
+  for (let n = 0; n < 7; n += 1) {
+    row = applyEwmaAnswer(row, axis, 'report', value, nowIso);
+  }
+  return row;
+});
+assert.equal(isProfileSettled(settledTracks), true);
+assert.equal(isProfileSettled(settledTracks.slice(1)), false);
+assert.equal(isProfileSettled([]), false);
+ok('capstone predicate is all-or-nothing across every axis');
+
+// The flag is burned BEFORE the celebration renders, so a second mount in the
+// same session cannot replay it, and the ack honours reduceMotion.
+const markIdx = ui.indexOf('markFullProfileUnlockSeen()');
+const celebrateIdx = ui.indexOf('setCelebrate(true)');
+assert.ok(markIdx >= 0 && celebrateIdx > markIdx, 'seen flag is burned before celebrating');
+assert.match(ui, /reduceMotion/);
+assert.match(ui, /FullProfileUnlockAck/);
+ok('one-time celebration burns its flag first and has a reduceMotion branch');
+
+// --- skip-the-rest must not escape the gate -------------------------------
+// "Skip the rest" defers every remaining axis into the rotating pool on the
+// same screen. It must NOT navigate to Home, where nothing asks again.
+const questionsTabSrc = readFileSync(resolve('src/app/(tabs)/intake-sweep.tsx'), 'utf8');
+assert.doesNotMatch(questionsTabSrc, /router\.replace\('\/'\)/);
+assert.match(questionsTabSrc, /function done\(\)/);
+assert.match(questionsTabSrc, /scrollRef\.current\?\.scrollTo/);
+assert.match(readFileSync(resolve('src/components/intake-sweep.tsx'), 'utf8'), /saveQuestionDeferral/);
+ok('skip-the-rest keeps the person in Questions instead of dropping them on Home');
+
+/**
+ * The flag defaults to false so a device that has never stored it still
+ * celebrates once; a read failure must fall the same way, never suppress it.
+ * Async, so it runs last — these checks transpile to CJS (no top-level await).
+ */
+async function checkUnlockFlag(): Promise<void> {
+  resetFullProfileUnlockCache();
+  assert.equal(await hasSeenFullProfileUnlock(), false, 'unset flag must not suppress');
+  await markFullProfileUnlockSeen();
+  assert.equal(await hasSeenFullProfileUnlock(), true, 'marking is sticky in-session');
+  resetFullProfileUnlockCache();
+  ok('hasSeenFullProfileUnlock defaults false and sticks once marked');
+}
+
+checkUnlockFlag()
+  .then(() => {
+    console.log(`\nAll ${passed} badge checks passed.`);
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
