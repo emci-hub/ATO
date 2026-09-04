@@ -43,6 +43,8 @@ import { slugifyCity } from '@/lib/around/slug';
 import { DEFAULT_AROUND_CITY } from '@/constants/around-cities';
 import { useMeContext } from '@/lib/me-context';
 import {
+  assertInviteUsable,
+  errorMessageForInvite,
   fetchSignupMode,
   getPendingInviteCode,
   type SignupMode,
@@ -79,6 +81,7 @@ export default function OnboardingScreen() {
   const [currentFocus, setCurrentFocus] = useState<CurrentFocus | null>(null);
 
   const [handleError, setHandleError] = useState<string | null>(null);
+  const [inviteError, setInviteError] = useState<string | null>(null);
   const [ageError, setAgeError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -142,6 +145,22 @@ export default function OnboardingScreen() {
     if (busy) return;
     setBusy(true);
     try {
+      if (signupMode === 'invite_only') {
+        const trimmed = inviteCode.trim();
+        if (!trimmed) {
+          setInviteError('Enter your invite code.');
+          return;
+        }
+        try {
+          await assertInviteUsable(trimmed);
+        } catch (err) {
+          setInviteError(
+            errorMessageForInvite(err) ?? 'That invite code is missing, already used, or invalid.',
+          );
+          return;
+        }
+      }
+      setInviteError(null);
       const result = await checkHandleAvailable(handle);
       if (!result.ok) {
         setHandleError(result.message);
@@ -341,12 +360,28 @@ export default function OnboardingScreen() {
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled">
+            <Pressable
+              onPress={() => void handleSignOut()}
+              disabled={signingOut || busy}
+              style={({ pressed }) => [
+                styles.signOutLink,
+                pressed && styles.pressed,
+                (signingOut || busy) && styles.disabled,
+              ]}>
+              <ThemedText type="small" themeColor="textSecondary">
+                {signingOut ? 'Signing out…' : 'Wrong account? Sign out'}
+              </ThemedText>
+            </Pressable>
             {phase === 'account' ? (
               <AccountStep
                 theme={theme}
                 signupMode={signupMode}
                 inviteCode={inviteCode}
-                setInviteCode={setInviteCode}
+                setInviteCode={(text) => {
+                  setInviteCode(text);
+                  setInviteError(null);
+                }}
+                inviteError={inviteError}
                 birthYear={birthYear}
                 setBirthYear={setBirthYear}
                 birthMonth={birthMonth}
@@ -366,8 +401,6 @@ export default function OnboardingScreen() {
                 city={city}
                 setCity={setCity}
                 busy={busy}
-                signingOut={signingOut}
-                onSignOut={handleSignOut}
                 formError={formError}
                 onHandleBlur={() => {
                   void onHandleBlur();
@@ -429,6 +462,7 @@ function AccountStep({
   signupMode,
   inviteCode,
   setInviteCode,
+  inviteError,
   birthYear,
   setBirthYear,
   birthMonth,
@@ -445,8 +479,6 @@ function AccountStep({
   city,
   setCity,
   busy,
-  signingOut,
-  onSignOut,
   formError,
   onHandleBlur,
   onContinue,
@@ -455,6 +487,7 @@ function AccountStep({
   signupMode: SignupMode;
   inviteCode: string;
   setInviteCode: (value: string) => void;
+  inviteError: string | null;
   birthYear: string;
   setBirthYear: (value: string) => void;
   birthMonth: string;
@@ -471,8 +504,6 @@ function AccountStep({
   city: string;
   setCity: (value: string) => void;
   busy: boolean;
-  signingOut: boolean;
-  onSignOut: () => void;
   formError: string | null;
   onHandleBlur: () => void;
   onContinue: () => void;
@@ -488,6 +519,7 @@ function AccountStep({
         <Field
           label="Invite code"
           required
+          error={inviteError}
           hint="Required for a new account. Returning sign-in does not need one.">
           <TextInput
             value={inviteCode}
@@ -504,19 +536,6 @@ function AccountStep({
           />
         </Field>
       ) : null}
-
-      <Pressable
-        onPress={onSignOut}
-        disabled={signingOut || busy}
-        style={({ pressed }) => [
-          styles.signOutLink,
-          pressed && styles.pressed,
-          (signingOut || busy) && styles.disabled,
-        ]}>
-        <ThemedText type="small" themeColor="textSecondary">
-          {signingOut ? 'Signing out…' : 'Wrong account? Sign out'}
-        </ThemedText>
-      </Pressable>
 
       <Field
         label="When were you born?"

@@ -51,6 +51,16 @@ Read before editing the area. Each one has bitten this repo at least once.
   reuse in `confirmRevoked` proves revocation.
 - **SecureStore caps values at 2048 bytes.** `auth-storage.ts` splits tokens into
   Keychain and the rest into AsyncStorage; do not store the whole session in Keychain.
+- **`app.qa_override_invite_code` (wave41) needs new connections to take effect.**
+  `ALTER DATABASE ... SET` only applies to backend connections opened after it runs —
+  pooled Supabase connections already open keep reading it as unset for a while. If the
+  override code "doesn't work" right after setting it, that's why; retry, don't
+  re-migrate. It's a Postgres GUC, not a row in `invite_codes` — `assert_invite_usable`/
+  `complete_signup` both check `current_setting('app.qa_override_invite_code', true)`.
+  Never put the actual value in git or under `src/`; it's set once via the Supabase SQL
+  editor. It's also `anon`-probeable (the RPC that checks it is anon-callable), so use a
+  long, high-entropy value, and know that override signups leave `referred_by = null`
+  with no `invite_codes` audit trail.
 
 ## AI
 
