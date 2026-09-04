@@ -532,12 +532,11 @@ const sweepSrc = read('src/lib/questions/sweep.ts');
 assert.match(sweepSrc, /aiConsent/);
 assert.match(sweepSrc, /crisisToday/);
 assert.match(sweepSrc, /composeLocalSweep/);
-assert.match(read('src/components/intake-sweep.tsx'), /claimQuestionsBatch/);
+assert.doesNotMatch(read('src/components/intake-sweep.tsx'), /claimQuestionsBatch|QUESTIONS_EMPTY_QUOTA/);
 assert.match(read('src/components/intake-sweep.tsx'), /QUESTIONS_EMPTY_CONSENT/);
-assert.match(read('src/components/intake-sweep.tsx'), /QUESTIONS_EMPTY_QUOTA/);
 assert.match(read('src/components/intake-sweep.tsx'), /crisisToday/);
 assert.match(read('src/app/(tabs)/intake-sweep.tsx'), /crisisToday=\{crisisToday\}/);
-ok('sweep wiring: component passes consent/crisis/claim, tab passes crisisToday');
+ok('sweep wiring: component passes consent/crisis, tab passes crisisToday; no dead quota-claim wiring');
 
 console.log(`\n${passed} question checks passed`);
 }

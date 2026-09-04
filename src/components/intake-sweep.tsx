@@ -17,14 +17,11 @@ import {
   QUESTIONS_EMPTY_CONSENT,
   QUESTIONS_EMPTY_CRISIS,
   QUESTIONS_EMPTY_DENIED,
-  QUESTIONS_EMPTY_QUOTA,
 } from '@/lib/questions/copy';
 import { routeQuestionSweep } from '@/lib/questions/sweep';
 import type { QuestionDraft } from '@/lib/questions/types';
 import { TRAIT_AXES, traitStateFromRow, type TraitAxis } from '@/lib/traits';
 import { earnTokensQuiet } from '@/lib/tokens-server';
-import { claimQuestionsBatch } from '@/lib/voice/quota-server';
-import { shouldUseLocalAi } from '@/lib/ai/override';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { withTimeout } from '@/lib/timeout';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
@@ -70,23 +67,16 @@ export function IntakeSweep({
     setDrafts(null);
     void (async () => {
       try {
-        // routeQuestionSweep can make two sequential AI calls (draft + retry) — longer
-        // budget than a single network call gets before falling back to setDrafts([]).
         const next = await withTimeout(
-          (async () => {
-            const useLocal = await shouldUseLocalAi();
-            return routeQuestionSweep({
-              me: {
-                name: me.name,
-                talk_style: me.talk_style ?? 'even',
-                voice_preset: me.voice_preset,
-              },
-              aiConsent: me.ai_consent,
-              crisisToday,
-              useLocal,
-              claimBatch: claimQuestionsBatch,
-            });
-          })(),
+          routeQuestionSweep({
+            me: {
+              name: me.name,
+              talk_style: me.talk_style ?? 'even',
+              voice_preset: me.voice_preset,
+            },
+            aiConsent: me.ai_consent,
+            crisisToday,
+          }),
           25000,
           'intake-sweep',
         );
@@ -106,10 +96,6 @@ export function IntakeSweep({
           case 'crisis':
             setDrafts([]);
             setGate(QUESTIONS_EMPTY_CRISIS);
-            break;
-          case 'quota':
-            setDrafts([]);
-            setGate(QUESTIONS_EMPTY_QUOTA);
             break;
         }
       } catch (err) {

@@ -2,7 +2,7 @@
 
 **Status: UNREVIEWED.** Same discipline as crisis card copy. `INTAKE_SWEEP_COPY_REVIEWED` is `false` until this set is signed off. Do not treat this as shipped-final.
 
-This is the 15-item Infinite Questions fallback bank. Offline / Gemini-unreachable uses it. The one-page intake (Part 5) pulls from full-sweep mode, which fills any Gemini miss from this bank. Structured MC only (2–3 options). Single-axis. `self_situation`. No true/false type. No free text.
+This is the 15-item Infinite Questions fallback bank. Offline / Gemini-unreachable uses it. The one-page intake (Part 5) pulls from full-sweep mode, which now always serves straight from this bank (no model call). Structured MC only (2–3 options). Single-axis. `self_situation`. No true/false type. No free text.
 
 The first six items were already live as the locked few-shot / fallback set. They are listed again so the full intake set is in one place. New items are marked **NEW**.
 

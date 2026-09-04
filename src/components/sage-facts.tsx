@@ -25,12 +25,9 @@ import { controlBorderColor } from '@/lib/theme/chrome';
 export function SageFactsCard({
   me,
   onUpdated,
-  onResize,
 }: {
   me: Me;
   onUpdated: () => Promise<void>;
-  /** Called before this card changes height, so a host scroll view can skip its auto-scroll. */
-  onResize?: () => void;
 }) {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
@@ -42,7 +39,6 @@ export function SageFactsCard({
   async function forget(index: number) {
     if (busy) return;
     setBusy(true);
-    onResize?.();
     try {
       await removeFact(me.id, index);
       await onUpdated();
@@ -61,7 +57,6 @@ export function SageFactsCard({
         accessibilityLabel={`${FACTS_SCREEN_TITLE}. ${summary}`}
         accessibilityState={{ expanded: open }}
         onPress={() => {
-          onResize?.();
           setPending(null);
           setOpen((value) => !value);
         }}
