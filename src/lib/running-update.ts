@@ -13,6 +13,7 @@ export interface RunningUpdateSnapshot {
   groupId: string | null;
   channel: string | null;
   runtimeVersion: string | null;
+  createdAt: Date | null;
 }
 
 export interface RunningUpdateLabel {
@@ -55,6 +56,24 @@ export function shortId(value: string | null | undefined): string | null {
   const trimmed = value.trim();
   if (trimmed.length === 0) return null;
   return trimmed.slice(0, RUNNING_UPDATE_SHORT);
+}
+
+/**
+ * When this running update was actually published. Device-local time (this is
+ * build/debug info, not a personal trait timestamp, so it does not use the
+ * user's stored timezone the way `full-profile.ts` does). Null when there is
+ * no real publish date (embedded/local builds), same "honest, not faked" rule
+ * as the rest of this file.
+ */
+export function formatPublishedAt(createdAt: Date | null): string | null {
+  if (!createdAt || Number.isNaN(createdAt.getTime())) return null;
+  return createdAt.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 export function formatRunningUpdate(snap: RunningUpdateSnapshot): RunningUpdateLabel {
