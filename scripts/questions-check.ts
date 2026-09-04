@@ -24,7 +24,12 @@ import {
   mergedDeferral,
   normalizeDeferredAxes,
 } from '../src/lib/questions/deferral';
-import { composeLocalQuestionBatch } from '../src/lib/questions/local';
+import {
+  bankProgressForAxes,
+  bankQuestionCount,
+  bankTotalProgress,
+  composeLocalQuestionBatch,
+} from '../src/lib/questions/local';
 import { parseQuestionBatch } from '../src/lib/questions/parse';
 import { buildQuestionsPrompt } from '../src/lib/questions/prompt';
 import { preferFreshAxes, recentAskedAxes } from '../src/lib/questions/rotation';
@@ -60,6 +65,19 @@ function completeTracks(): TraitTrack[] {
 /** Complete except for the named axes, which have no row at all. */
 function tracksMissing(...axes: readonly string[]): TraitTrack[] {
   return completeTracks().filter((row) => !axes.includes(row.axis));
+}
+
+/** One report-track row for an axis at a specific answer count. */
+function trackWithCount(axis: TraitAxis, answerCount: number): TraitTrack {
+  return {
+    axis,
+    track: 'report',
+    value: 0.5,
+    stability: 0.5,
+    answerCount,
+    lastTouched: '2026-09-03T12:00:00.000Z',
+    lastDepthAt: null,
+  };
 }
 
 const root = resolve(__dirname, '..');
@@ -227,6 +245,50 @@ for (const axis of recentThree) {
 }
 assert.ok(!preferFreshAxes(composeLocalQuestionBatch(), ['openness']).slice(0, 1).some((row) => row.axis === 'openness'));
 ok('soft axis rotation prefers axes outside the last 2–3');
+
+// --- Category question list (bank progress, sequential in-axis unlock) ----
+assert.equal(bankQuestionCount(['openness']), 3);
+assert.equal(
+  bankQuestionCount(['openness', 'extraversion']),
+  QUESTIONS_BANK.filter((d) => d.axis === 'openness').length +
+    QUESTIONS_BANK.filter((d) => d.axis === 'extraversion').length,
+);
+assert.equal(bankQuestionCount([]), 0);
+
+const zeroProgress = bankProgressForAxes(['openness'], []);
+assert.equal(zeroProgress.length, 3);
+assert.deepEqual(zeroProgress.map((row) => row.state), ['current', 'locked', 'locked']);
+
+const oneAnswered = bankProgressForAxes(['openness'], [trackWithCount('openness', 1)]);
+assert.deepEqual(oneAnswered.map((row) => row.state), ['answered', 'current', 'locked']);
+
+const twoAnswered = bankProgressForAxes(['openness'], [trackWithCount('openness', 2)]);
+assert.deepEqual(twoAnswered.map((row) => row.state), ['answered', 'answered', 'current']);
+
+// Fully answered (>= list length) never overflows into a phantom 4th state,
+// and repeat cycling past 3 stays fully answered rather than re-locking.
+const fullyAnswered = bankProgressForAxes(['openness'], [trackWithCount('openness', 3)]);
+assert.deepEqual(fullyAnswered.map((row) => row.state), ['answered', 'answered', 'answered']);
+const wrappedAnswered = bankProgressForAxes(['openness'], [trackWithCount('openness', 7)]);
+assert.deepEqual(wrappedAnswered.map((row) => row.state), ['answered', 'answered', 'answered']);
+
+// Each axis unlocks independently — one axis at draft 1 does not lock or
+// unlock a sibling axis's own progress.
+const twoAxes = bankProgressForAxes(
+  ['openness', 'extraversion'],
+  [trackWithCount('openness', 2), trackWithCount('extraversion', 0)],
+);
+assert.deepEqual(
+  twoAxes.map((row) => `${row.axis}:${row.state}`),
+  ['openness:answered', 'openness:answered', 'openness:current', 'extraversion:current', 'extraversion:locked', 'extraversion:locked'],
+);
+
+assert.deepEqual(bankTotalProgress([]), { answered: 0, total: QUESTIONS_BANK.length });
+assert.deepEqual(bankTotalProgress(completeTracks()), {
+  answered: TRAIT_AXES.length,
+  total: QUESTIONS_BANK.length,
+});
+ok('category list progress: sequential in-axis unlock, per-axis independence, total answered/total');
 
 // --- Question deferral (intake skip -> rotating pool) ---------------------
 assert.deepEqual(
@@ -675,14 +737,40 @@ assert.match(fold, /QUESTIONS_CHECKPOINT/);
 assert.match(fold, /QUESTIONS_KEEP_GOING/);
 assert.match(fold, /logJargonGuard/);
 assert.match(fold, /logPhraseGuard/);
-// Category picker wiring: uses the shared, unit-tested merge helper (not an
-// inline duplicate), defaults unselected, and never imports anything from
-// the question_items/category_id direction — confirms the picker stays on
-// the axis-priority lever, not a stored per-item category.
-assert.match(fold, /mergeCategoryPriority/);
+// Category picker wiring: selecting a category renders a self-contained list
+// straight from the static bank (bankProgressForAxes/bankTotalProgress/
+// bankQuestionCount) — not routed through routeQuestions/priorityAxes, and
+// never imports anything from the question_items/category_id direction, so
+// a bad selection can never touch the persisted rotation. Defaults unselected.
+assert.match(fold, /bankProgressForAxes/);
+assert.match(fold, /bankTotalProgress/);
+assert.match(fold, /bankQuestionCount/);
+assert.doesNotMatch(fold, /mergeCategoryPriority/);
 assert.match(fold, /useState<CategoryId \| null>\(null\)/);
 assert.doesNotMatch(fold, /category_id/);
-ok('category picker wires through the shared merge helper, defaults unselected');
+ok('category picker renders straight from the static bank, not through routeQuestions');
+
+// The category list replaces skip/pause entirely — those stay on the default
+// rotation only. Scope the check to CategoryQuestionsList's own body so a
+// match on the (unrelated) default-rotation branch above it doesn't hide a
+// regression, and so a future default-rotation edit doesn't false-positive.
+const categoryListSection = fold.slice(
+  fold.indexOf('function CategoryQuestionsList'),
+  fold.indexOf('const styles = StyleSheet.create({'),
+);
+assert.ok(categoryListSection.length > 200, 'CategoryQuestionsList function body found');
+assert.doesNotMatch(
+  categoryListSection,
+  /QUESTIONS_SKIP_THIS|QUESTIONS_SKIP_REST|QUESTIONS_CHECKPOINT|QUESTIONS_KEEP_GOING/,
+);
+assert.match(categoryListSection, /'Answered'/);
+assert.match(categoryListSection, /'Locked'/);
+// Default rotation (outside that function) still keeps skip/pause, untouched.
+const defaultRotationSection = fold.slice(0, fold.indexOf('function CategoryQuestionsList'));
+assert.match(defaultRotationSection, /QUESTIONS_SKIP_THIS/);
+assert.match(defaultRotationSection, /QUESTIONS_SKIP_REST/);
+assert.match(defaultRotationSection, /QUESTIONS_CHECKPOINT/);
+ok('category list drops skip/pause; default rotation keeps them, unaffected');
 assert.equal(QUESTIONS_SKIP_THIS, 'Skip this one');
 assert.equal(QUESTIONS_SKIP_REST, 'Skip the rest');
 assert.equal(QUESTIONS_CHECKPOINT, "That's plenty for now — come back anytime");

@@ -139,3 +139,64 @@ export function unansweredSweep(
 ): QuestionDraft[] {
   return drafts.filter((draft) => !answered.has(draft.axis));
 }
+
+export type BankItemState = 'answered' | 'current' | 'locked';
+
+export interface BankProgressItem {
+  axis: TraitAxis;
+  /** 0-based index within this axis's bank list — matches `bankDraftFor`'s variant. */
+  variant: number;
+  draft: QuestionDraft;
+  state: BankItemState;
+}
+
+/**
+ * All bank drafts for one axis with a sequential-unlock state, derived from
+ * `axisVariant` (the axis's own answer count) — no separate persisted
+ * "which exact question was answered" state exists, so order is the only
+ * thing that keeps this accurate: draft 0 must be answered before 1 unlocks,
+ * 1 before 2, matching how `bankDraftFor`/rotation already serve them.
+ */
+export function bankProgressForAxis(
+  axis: TraitAxis,
+  tracks: readonly TraitTrack[],
+): BankProgressItem[] {
+  const list = bankByAxis().get(axis) ?? [];
+  const answeredCount = Math.min(axisVariant(tracks, axis), list.length);
+  return list.map((draft, index) => ({
+    axis,
+    variant: index,
+    draft,
+    state: index < answeredCount ? 'answered' : index === answeredCount ? 'current' : 'locked',
+  }));
+}
+
+/** Concatenated `bankProgressForAxis` for a set of axes, in axis order. */
+export function bankProgressForAxes(
+  axes: readonly TraitAxis[],
+  tracks: readonly TraitTrack[],
+): BankProgressItem[] {
+  return axes.flatMap((axis) => bankProgressForAxis(axis, tracks));
+}
+
+/** Total bank drafts covering a set of axes (e.g. a category's question count). */
+export function bankQuestionCount(axes: readonly TraitAxis[]): number {
+  const map = bankByAxis();
+  return axes.reduce((sum, axis) => sum + (map.get(axis)?.length ?? 0), 0);
+}
+
+/** "N of 48 answered" across the whole bank, every axis. */
+export function bankTotalProgress(tracks: readonly TraitTrack[]): {
+  answered: number;
+  total: number;
+} {
+  const map = bankByAxis();
+  let answered = 0;
+  let total = 0;
+  for (const axis of TRAIT_AXES) {
+    const list = map.get(axis) ?? [];
+    total += list.length;
+    answered += Math.min(axisVariant(tracks, axis), list.length);
+  }
+  return { answered, total };
+}
