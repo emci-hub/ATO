@@ -342,6 +342,128 @@ assert.equal(afterAnswerRegen.pack.items[0]?.axis, 'playfulness');
 assert.ok(!afterAnswerRegen.pack.items.some((item) => item.axis === 'openness'));
 ok('answered deferred axis is dropped from the regen priority list');
 
+// A category pick (or focusAxis deep-link) must be able to surface a
+// different open item from TODAY's pack, not always whatever item happens to
+// be first — regression for the "picker highlights, no question changes" bug.
+const todaysOpenPack = {
+  id: 'today',
+  generatedOn: '2026-09-04',
+  createdAt: '2026-09-04T12:00:00.000Z',
+  items: [
+    {
+      id: 'open-openness',
+      packId: 'today',
+      sortIndex: 0,
+      axis: 'openness' as const,
+      prompt: 'One.',
+      options: [
+        { text: 'A', value: 0.8 },
+        { text: 'B', value: 0.2 },
+      ],
+      answeredOption: null,
+      skippedAt: null,
+    },
+    {
+      id: 'open-playfulness',
+      packId: 'today',
+      sortIndex: 1,
+      axis: 'playfulness' as const,
+      prompt: 'Two.',
+      options: [
+        { text: 'A', value: 0.8 },
+        { text: 'B', value: 0.2 },
+      ],
+      answeredOption: null,
+      skippedAt: null,
+    },
+  ],
+};
+const categoryRouted = await routeQuestions(
+  {
+    me: {
+      name: 'Riley',
+      timezone: 'UTC',
+      talk_style: 'even',
+      voice_preset: 'close_friend',
+      sage_knows: emptySageKnowsState(),
+      facts: [],
+      ai_consent: true,
+    },
+    history: [],
+    aiConsent: true,
+    now: new Date('2026-09-04T15:00:00.000Z'),
+    priorityAxes: ['playfulness'],
+  },
+  { useLocal: true, loadLatestPack: async () => todaysOpenPack },
+);
+assert.equal(categoryRouted.kind, 'cached');
+assert.equal(categoryRouted.item?.id, 'open-playfulness');
+const noPriorityRouted = await routeQuestions(
+  {
+    me: {
+      name: 'Riley',
+      timezone: 'UTC',
+      talk_style: 'even',
+      voice_preset: 'close_friend',
+      sage_knows: emptySageKnowsState(),
+      facts: [],
+      ai_consent: true,
+    },
+    history: [],
+    aiConsent: true,
+    now: new Date('2026-09-04T15:00:00.000Z'),
+  },
+  { useLocal: true, loadLatestPack: async () => todaysOpenPack },
+);
+assert.equal(noPriorityRouted.item?.id, 'open-openness');
+ok('a priority axis with an already-open match in today\'s pack is served over item order (category picker / focusAxis fix)');
+
+// A priority axis with NO open match in today's pack must not silently fall
+// back to whatever's already open (the original bug) — it must fall through
+// to a fresh, priority-led batch instead.
+const noMatchPack = {
+  id: 'today',
+  generatedOn: '2026-09-04',
+  createdAt: '2026-09-04T12:00:00.000Z',
+  items: [
+    {
+      id: 'open-openness-2',
+      packId: 'today',
+      sortIndex: 0,
+      axis: 'openness' as const,
+      prompt: 'One.',
+      options: [
+        { text: 'A', value: 0.8 },
+        { text: 'B', value: 0.2 },
+      ],
+      answeredOption: null,
+      skippedAt: null,
+    },
+  ],
+};
+const noMatchRouted = await routeQuestions(
+  {
+    me: {
+      name: 'Riley',
+      timezone: 'UTC',
+      talk_style: 'even',
+      voice_preset: 'close_friend',
+      sage_knows: emptySageKnowsState(),
+      facts: [],
+      ai_consent: true,
+    },
+    history: [],
+    aiConsent: true,
+    now: new Date('2026-09-04T15:00:00.000Z'),
+    priorityAxes: ['playfulness'],
+    tracks: completeTracks(),
+  },
+  { useLocal: true, loadLatestPack: async () => noMatchPack },
+);
+assert.equal(noMatchRouted.kind, 'item');
+assert.equal(noMatchRouted.item?.axis, 'playfulness');
+ok('a priority axis with no open match regenerates a fresh batch led by that axis, instead of serving the unrelated open item');
+
 let generateCalls = 0;
 const dirtyThenClean = await routeQuestions(
   {

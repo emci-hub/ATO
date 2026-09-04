@@ -23,6 +23,26 @@ export function nextUnansweredItem(pack: QuestionPackRow | null): QuestionItemRo
   return pack.items.find((item) => isOpenQuestionItem(item)) ?? null;
 }
 
+/**
+ * First open item in today's pack matching one of the wanted axes (a
+ * category pick or a focusAxis deep-link). Lets an explicit priority survive
+ * the cached-pack short-circuit below instead of always serving whatever
+ * happens to be first in item order.
+ */
+function openItemForAxes(
+  pack: QuestionPackRow | null,
+  axes: readonly TraitAxis[],
+): QuestionItemRow | null {
+  if (!pack || axes.length === 0) return null;
+  const wanted = new Set(axes);
+  return (
+    pack.items.find(
+      (item) =>
+        wanted.has(item.axis) && isOpenQuestionItem(item) && questionDraftGuardHit(item) == null,
+    ) ?? null
+  );
+}
+
 export function nextPlayableItem(pack: QuestionPackRow | null): QuestionItemRow | null {
   if (!pack) return null;
   return (
@@ -158,7 +178,13 @@ export async function routeQuestions(
   const today = localYmd(now, input.me.timezone || 'UTC');
   const existing = deps.loadLatestPack ? await deps.loadLatestPack() : null;
   const todays = packForToday(existing, today);
-  const open = nextPlayableItem(todays);
+  const wantedAxes = input.priorityAxes ?? [];
+  // An explicit priority (category pick, focusAxis deep-link, deferred axes)
+  // must not silently fall back to an unrelated open item — that is the bug
+  // this branch exists to avoid. No match in today's pack falls through to
+  // the regeneration path below instead, which already honors priorityAxes
+  // and the existing local/quota gating.
+  const open = wantedAxes.length > 0 ? openItemForAxes(todays, wantedAxes) : nextPlayableItem(todays);
   if (todays && open) {
     return { kind: 'cached', pack: todays, item: open };
   }
