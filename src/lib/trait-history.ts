@@ -4,7 +4,7 @@
  */
 import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
 import { TRAIT_AXES, isTraitSource, type TraitAxis, type TraitSource, type TraitState } from '@/lib/traits';
-import { trackFor, type TraitTrack } from '@/lib/trait-stability';
+import { trackFor, type EvidenceEntry, type TraitTrack } from '@/lib/trait-stability';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 
 export interface TraitHistoryRow {
@@ -42,6 +42,25 @@ export function historyForAxis(
   axis: TraitAxis,
 ): TraitHistoryRow[] {
   return rows.filter((row) => row.axis === axis);
+}
+
+/**
+ * Attaches this axis+track's write history (already-fetched `trait_history`
+ * rows) to a `TraitTrack` as `evidenceHistory` — read-side only, no schema
+ * change, no new fetch: reuses `fetchTraitHistory`'s existing output. Report
+ * vs game rows are told apart the same way `divergingAxes` already does
+ * (`self_game` source vs every other known source). Nothing calls this yet —
+ * groundwork for later phases.
+ */
+export function attachEvidenceHistory(
+  row: TraitTrack,
+  allHistory: readonly TraitHistoryRow[],
+): TraitTrack {
+  const wantGame = row.track === 'game';
+  const evidenceHistory: EvidenceEntry[] = historyForAxis(allHistory, row.axis)
+    .filter((entry) => (entry.source === 'self_game') === wantGame)
+    .map((entry) => ({ value: entry.value, source: entry.source, createdAt: entry.createdAt }));
+  return { ...row, evidenceHistory };
 }
 
 /** Latest self-report (IQ / ranking / slider / settings) vs latest gut-call. */

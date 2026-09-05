@@ -35,6 +35,18 @@ export const TITLE_STABLE_MIN = 0.4;
 
 export type TraitTrackKind = 'report' | 'game';
 
+/**
+ * Lightweight replay of a single trait write, for `evidenceHistory` below.
+ * Deliberately its own minimal shape rather than importing `TraitHistoryRow`
+ * from trait-history.ts, which already imports `TraitTrack` from this file —
+ * importing back would be circular.
+ */
+export interface EvidenceEntry {
+  value: number;
+  source: string;
+  createdAt: string;
+}
+
 export interface TraitTrack {
   axis: TraitAxis;
   track: TraitTrackKind;
@@ -43,6 +55,38 @@ export interface TraitTrack {
   answerCount: number;
   lastTouched: string;
   lastDepthAt: string | null;
+  /**
+   * Multi-axis question engine fields (additive, not persisted to
+   * `trait_tracks` — no schema change). Absent on every track today, which
+   * correctly means "no secondary-axis evidence exists yet" (Phase 4, the
+   * multi-axis scoring-apply loop, hasn't shipped) — `directEvidenceCountFor`
+   * / `totalEvidenceCountFor` below both read as `answerCount` until then.
+   */
+  directEvidenceCount?: number;
+  totalEvidenceCount?: number;
+  /**
+   * Per-write replay for this axis+track, attached read-side from the
+   * existing `trait_history` table (see `attachEvidenceHistory` in
+   * trait-history.ts) — reuses data that already exists, no schema change.
+   */
+  evidenceHistory?: readonly EvidenceEntry[];
+}
+
+/**
+ * Direct-evidence count for an axis: explicit once Phase 4 sets it, else
+ * `answerCount` — every write today is direct evidence, since no
+ * secondary-axis evidence exists yet.
+ */
+export function directEvidenceCountFor(row: TraitTrack): number {
+  return row.directEvidenceCount ?? row.answerCount;
+}
+
+/**
+ * Total-evidence count (primary + secondary) for an axis. Equal to
+ * `directEvidenceCountFor` today, same reason.
+ */
+export function totalEvidenceCountFor(row: TraitTrack): number {
+  return row.totalEvidenceCount ?? row.answerCount;
 }
 
 export function trackKindForSource(source: TraitSource): TraitTrackKind {
