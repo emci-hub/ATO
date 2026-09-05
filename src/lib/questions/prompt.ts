@@ -72,7 +72,11 @@ ${priority}RULES
 11. Mix stakes. Include genuinely low-stakes / light scenarios. Not every question should be emotionally weighty.
 12. ${recent}
 13. Never repeat the same sentence shape/structure two questions in a row.
+14. Optional, only when genuinely justified: a question may include primaryAxes (1-2 axes it specifically measures, each {axis, weight 0-1, reason}), secondaryAxes (0-3 weaker supporting axes, same shape, lower weight), excludedAxes (axes this question deliberately does NOT measure), and redundancyTags (short lowercase real-world-theme tags). Every one of these is optional — omit all of them for a clean single-axis question rather than inventing a weak secondary axis to fill the field.
 
-Respond with JSON only, no prose, in this shape:
-{"questions":[{"axis":"openness","prompt":"...","options":[{"text":"...","value":0.8},{"text":"...","value":0.2}]}]}`;
+Respond with JSON only, no prose. Minimum shape (single-axis, always valid):
+{"questions":[{"axis":"openness","prompt":"...","options":[{"text":"...","value":0.8},{"text":"...","value":0.2}]}]}
+
+Optional richer shape, only when a question genuinely spans axes (see rule 14):
+{"questions":[{"axis":"conflict_assertiveness","prompt":"...","options":[{"text":"...","value":0.8},{"text":"...","value":0.2}],"primaryAxes":[{"axis":"conflict_assertiveness","weight":1.0,"reason":"..."},{"axis":"conflict_cooperativeness","weight":0.85,"reason":"..."}],"secondaryAxes":[{"axis":"steadiness","weight":0.35,"reason":"..."}],"excludedAxes":["openness"],"redundancyTags":["interpersonal_conflict"]}]}`;
 }
