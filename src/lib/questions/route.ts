@@ -190,7 +190,11 @@ export async function routeQuestions(
   const today = localYmd(now, input.me.timezone || 'UTC');
   const existing = deps.loadLatestPack ? await deps.loadLatestPack() : null;
   const todays = packForToday(existing, today);
-  const wantedAxes = input.priorityAxes ?? [];
+  // Phase 6: contradicted axes must lead a cached-item lookup exactly like
+  // priorityAxes already does — omitted here would be a landmine the moment
+  // a real caller sets contradictedAxes, since it would silently fall through
+  // to nextPlayableItem below and never actually get served sooner.
+  const wantedAxes = [...(input.contradictedAxes ?? []), ...(input.priorityAxes ?? [])];
   // An explicit priority (category pick, focusAxis deep-link, deferred axes)
   // must not silently fall back to an unrelated open item — that is the bug
   // this branch exists to avoid. No match in today's pack falls through to
@@ -224,12 +228,20 @@ export async function routeQuestions(
       .filter((item) => item.answeredOption != null)
       .map((item) => item.axis),
   );
-  // An incomplete profile covers its unfilled axes first; the caller's own
-  // deferred-axis priorities follow. Duplicates collapse, and a just-answered
-  // axis is still never forced to the front.
+  // An incomplete profile covers its unfilled axes first; contradicted axes
+  // (Phase 6 — caller-computed, unused by any caller yet) follow, ahead of
+  // the caller's own deferred-axis priorities. Duplicates collapse, and a
+  // just-answered axis is still never forced to the front. Contradiction can
+  // exist regardless of completeness (an axis needs >=2 answers to
+  // contradict, so it never overlaps unfilledAxes), hence it's included in
+  // both branches.
   const wanted = profileComplete
-    ? (input.priorityAxes ?? [])
-    : [...unfilledAxes(input.tracks ?? []), ...(input.priorityAxes ?? [])];
+    ? [...(input.contradictedAxes ?? []), ...(input.priorityAxes ?? [])]
+    : [
+        ...unfilledAxes(input.tracks ?? []),
+        ...(input.contradictedAxes ?? []),
+        ...(input.priorityAxes ?? []),
+      ];
   const priorityAxes = [...new Set(wanted)].filter((axis) => !answeredInPack.has(axis));
   const drafts = await guardedBatch(input, deps, recent, priorityAxes, useLocal);
   if (!drafts || drafts.length === 0) {

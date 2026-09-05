@@ -196,6 +196,33 @@ export function effectiveStability(row: TraitTrack | null, now: Date = new Date(
   return decayed;
 }
 
+/**
+ * Phase 6 — tells apart "this axis is genuinely stuck in the
+ * inconsistent-answering trap" from "reads similarly low/decayed for an
+ * ordinary reason" (natural time-decay of an axis that was actually answered
+ * consistently). The two can produce an IDENTICAL `effectiveStability` read
+ * (both floor to `STABILITY_INCONSISTENT_FLOOR` once `answerCount` reaches
+ * `STABILITY_FLOOR_OVERRIDE_N`) — this checks the RAW stored `stability`
+ * directly (never `decayedStability`, which can only ever shrink an already
+ *-low value further and so can never change this verdict — there is no
+ * decay path back above the floor once raw stability is below it). Raw
+ * `stability` near 0 is what actually carries the agreement signal: a
+ * genuinely inconsistent answerer keeps it pinned near 0 regardless of time
+ * (0 is a fixed point of the EWMA recurrence at zero agreement — see
+ * `STABILITY_FLOOR_OVERRIDE_N` above), while a naturally-decayed axis has a
+ * HIGH raw `stability` (built from a consistent history) that only reads
+ * low after `decayedStability` ages it down at READ time — decay alone can
+ * never make this function return true.
+ *
+ * Named for what it detects, not for whether the floor happens to be
+ * active on a given read (a naturally-decayed axis, once idle long enough,
+ * IS floored by `effectiveStability` too — this function still correctly
+ * reads false for it, since it was never the inconsistent-answering trap).
+ */
+export function isInconsistentAnswerer(row: TraitTrack | null): boolean {
+  return !!row && row.answerCount >= STABILITY_FLOOR_OVERRIDE_N && row.stability < STABILITY_INCONSISTENT_FLOOR;
+}
+
 export function isStableForTitle(row: TraitTrack | null, now: Date = new Date()): boolean {
   return effectiveStability(row, now) >= TITLE_STABLE_MIN;
 }

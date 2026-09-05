@@ -111,6 +111,17 @@ export interface RouteQuestionsInput {
    * incomplete, which is the safe direction — no paid call.
    */
   tracks?: readonly TraitTrack[];
+  /**
+   * Phase 6 (additive, not yet consumed by any caller — same pattern as
+   * Phases 1-3's unused schema/prompt fields). Axes whose recent answers
+   * genuinely contradicted each other (see `hasContradictedAnswers` in
+   * trait-history.ts), to cover sooner in the next batch, same as
+   * `priorityAxes`. Caller-computed: reading this requires the full
+   * per-axis `trait_history`, which nothing in the Questions flow currently
+   * fetches — wiring a real computation into a caller is a separate,
+   * not-yet-scoped task. Empty/omitted is a no-op, identical to today.
+   */
+  contradictedAxes?: readonly TraitAxis[];
 }
 
 export type QuestionsKind =

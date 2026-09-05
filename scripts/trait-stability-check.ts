@@ -15,12 +15,14 @@ import {
   applyEwmaAnswer,
   directEvidenceCountFor,
   effectiveStability,
+  isInconsistentAnswerer,
   isProfileSettled,
   nudgedSecondaryValue,
   totalEvidenceCountFor,
   trackFor,
   type TraitTrack,
 } from '../src/lib/trait-stability';
+import { hasContradictedAnswers } from '../src/lib/trait-history';
 import { TRAIT_AXES } from '../src/lib/traits';
 
 let passed = 0;
@@ -163,5 +165,106 @@ ok('secondary-axis evidence moves value but cannot move stability/answerCount/ef
 assert.equal(directEvidenceCountFor(alreadySettled), alreadySettled.answerCount, 'directEvidenceCountFor defaults to answerCount');
 assert.equal(totalEvidenceCountFor(alreadySettled), alreadySettled.answerCount, 'totalEvidenceCountFor defaults to answerCount too — equal until Phase 4 content actually differentiates them');
 ok('directEvidenceCountFor/totalEvidenceCountFor both default to answerCount, unchanged behavior');
+
+// --- Phase 6, T-01: isInconsistentAnswerer tells the trap apart from natural decay ---
+const genuinelyFloored: TraitTrack = {
+  axis: 'openness',
+  track: 'report',
+  value: 0.5,
+  stability: 0, // worst-case: every answer disagreed, agreement pinned at 0
+  answerCount: STABILITY_FLOOR_OVERRIDE_N,
+  lastTouched: NOW.toISOString(), // no decay involved at all
+  lastDepthAt: null,
+};
+const naturallyDecayed: TraitTrack = {
+  axis: 'openness',
+  track: 'report',
+  value: 0.5,
+  stability: 0.8, // built from a genuinely consistent answering history
+  answerCount: STABILITY_FLOOR_OVERRIDE_N,
+  lastTouched: new Date(NOW.getTime() - 500 * 86_400_000).toISOString(), // 500 idle days
+  lastDepthAt: null,
+};
+assert.equal(
+  effectiveStability(genuinelyFloored, NOW),
+  effectiveStability(naturallyDecayed, NOW),
+  'sanity: both fixtures read the SAME effectiveStability (both floor to STABILITY_INCONSISTENT_FLOOR)',
+);
+assert.equal(isInconsistentAnswerer(genuinelyFloored), true, 'genuinely inconsistent answering reads true');
+assert.equal(isInconsistentAnswerer(naturallyDecayed), false, 'a naturally-decayed-but-consistent axis reads false, even though effectiveStability floors it too');
+assert.equal(
+  isInconsistentAnswerer({ ...genuinelyFloored, answerCount: STABILITY_FLOOR_OVERRIDE_N - 1 }),
+  false,
+  'below the override threshold, isInconsistentAnswerer is always false regardless of stability',
+);
+ok('isInconsistentAnswerer distinguishes the trap from natural decay, even when effectiveStability reads identically');
+
+// --- Phase 6, T-02: hasContradictedAnswers reads raw evidenceHistory ------
+const t0 = NOW.toISOString();
+const tOld = new Date(NOW.getTime() - 500 * 86_400_000).toISOString();
+const tMid = new Date(NOW.getTime() - 250 * 86_400_000).toISOString();
+assert.equal(hasContradictedAnswers([]), false, 'zero entries (normal unanswered) never reads contradicted');
+assert.equal(
+  hasContradictedAnswers([{ value: 0.8, source: 'self_situation', createdAt: t0 }]),
+  false,
+  'a single entry never reads contradicted',
+);
+assert.equal(
+  hasContradictedAnswers([
+    { value: 0.8, source: 'self_situation', createdAt: tOld },
+    { value: 0.75, source: 'self_situation', createdAt: tMid },
+    { value: 0.7, source: 'self_situation', createdAt: t0 },
+  ]),
+  false,
+  'gradual drift (small consecutive deltas) does not read as contradiction',
+);
+assert.equal(
+  hasContradictedAnswers([
+    { value: 0.9, source: 'self_situation', createdAt: tOld },
+    { value: 0.1, source: 'self_situation', createdAt: t0 },
+  ]),
+  true,
+  'a genuine swing between consecutive answers reads as contradiction',
+);
+assert.equal(
+  hasContradictedAnswers([
+    // Deliberately out of chronological order — the function must sort
+    // defensively rather than trust caller order.
+    { value: 0.1, source: 'self_situation', createdAt: t0 },
+    { value: 0.9, source: 'self_situation', createdAt: tOld },
+  ]),
+  true,
+  'out-of-order input is sorted defensively before detecting a swing',
+);
+assert.equal(
+  hasContradictedAnswers([
+    { value: 0.5, source: 'self_situation', createdAt: tOld },
+    { value: 0.52, source: 'self_situation', createdAt: t0 },
+  ]),
+  false,
+  'an old-but-internally-consistent axis (large time gap, small value gap) is never a false positive — orthogonal to decay',
+);
+// Boundary: delta === threshold exactly (0.9 - 0.4 subtracts cleanly to 0.5
+// in IEEE-754) must read as contradicted, matching the >= in the function.
+assert.equal(
+  hasContradictedAnswers([
+    { value: 0.9, source: 'self_situation', createdAt: tOld },
+    { value: 0.4, source: 'self_situation', createdAt: t0 },
+  ]),
+  true,
+  'a delta exactly at the threshold reads as contradicted (>=, not >)',
+);
+// An unparseable createdAt is dropped rather than crashing or misordering —
+// only 2 valid entries remain here, with no swing between them.
+assert.equal(
+  hasContradictedAnswers([
+    { value: 0.9, source: 'self_situation', createdAt: 'not-a-date' },
+    { value: 0.5, source: 'self_situation', createdAt: tOld },
+    { value: 0.52, source: 'self_situation', createdAt: t0 },
+  ]),
+  false,
+  'an entry with an unparseable createdAt is dropped rather than corrupting the sort',
+);
+ok('hasContradictedAnswers detects genuine same-axis swings, ignores drift/single-answer/old-but-consistent/malformed-date cases');
 
 console.log(`\n${passed} trait-stability floor checks passed`);

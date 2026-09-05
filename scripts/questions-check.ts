@@ -715,6 +715,47 @@ assert.equal(incomplete.pack!.items[0]?.axis, 'autonomy');
 assert.equal(incomplete.pack!.items[1]?.axis, 'playfulness');
 ok('incomplete profile serves the unfilled axes first, from the static bank');
 
+// Phase 6, T-03: contradictedAxes leads the batch like priorityAxes does,
+// ahead of the caller's own priorityAxes but after genuinely unfilled axes
+// (contradiction requires >=2 answers, so it never overlaps unfilledAxes).
+const contradictedRouted = await routeQuestions(
+  {
+    me: gateMe,
+    history: [],
+    aiConsent: true,
+    tracks: completeTracks(),
+    contradictedAxes: ['playfulness'],
+    priorityAxes: ['autonomy'],
+  },
+  {},
+);
+assert.equal(contradictedRouted.pack!.items[0]?.axis, 'playfulness');
+assert.equal(contradictedRouted.pack!.items[1]?.axis, 'autonomy');
+ok('contradictedAxes leads the batch ahead of the caller\'s own priorityAxes');
+
+// Omitting contradictedAxes entirely must be byte-identical to today.
+const withoutContradicted = await routeQuestions(
+  { me: gateMe, history: [], aiConsent: true, tracks: completeTracks(), priorityAxes: ['autonomy'] },
+  {},
+);
+const withEmptyContradicted = await routeQuestions(
+  {
+    me: gateMe,
+    history: [],
+    aiConsent: true,
+    tracks: completeTracks(),
+    contradictedAxes: [],
+    priorityAxes: ['autonomy'],
+  },
+  {},
+);
+assert.deepEqual(
+  withoutContradicted.pack!.items.map((item) => item.axis),
+  withEmptyContradicted.pack!.items.map((item) => item.axis),
+  'omitting contradictedAxes vs. passing it as an explicit empty array produce identical batches',
+);
+ok('contradictedAxes is a provable no-op when omitted/empty, same pattern as every prior additive phase');
+
 // Complete profile: the AI path is reachable exactly as before.
 let completeGenerate = 0;
 let completeClaims = 0;

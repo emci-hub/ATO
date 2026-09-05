@@ -63,6 +63,48 @@ export function attachEvidenceHistory(
   return { ...row, evidenceHistory };
 }
 
+/**
+ * Same 0.5 divisor `applyEwmaAnswer` uses to turn a value delta into
+ * agreement (`agreement = 1 - clamp01(delta / 0.5)`, so agreement hits 0
+ * once delta >= 0.5) — NOT `STABILITY_INCONSISTENT_FLOOR` (that's 0.05, an
+ * unrelated constant: the floor effectiveStability reads, not a delta).
+ * Reused here for consistency of meaning, in an otherwise distinct
+ * computation over raw consecutive values, not EWMA agreement.
+ */
+export const CONTRADICTION_SWING_THRESHOLD = 0.5;
+
+/**
+ * Phase 6 — same-axis contradiction detector, reading the already-attached
+ * `evidenceHistory` (Phase 2). Independently defined from `applyEwmaAnswer`'s
+ * `agreement` (which compares a new signal to the RUNNING EWMA value, not
+ * two raw answers) — this compares consecutive raw answers directly, sorted
+ * chronologically defensively rather than trusting caller order. Entries
+ * with an unparseable `createdAt` are dropped before sorting/comparing
+ * (never crash, never silently misorder on a corrupt date). Fewer than 2
+ * valid entries (including zero — the normal-unanswered case) always reads
+ * false, never "contradicted."
+ *
+ * Orthogonal to decay and to `isInconsistentAnswerer` by construction: this
+ * reads only `value`, never `createdAt` gaps or elapsed time, so an
+ * old-but-internally-consistent axis (small consecutive deltas, however
+ * long ago) never triggers a false positive here.
+ */
+export function hasContradictedAnswers(
+  entries: readonly EvidenceEntry[],
+  threshold: number = CONTRADICTION_SWING_THRESHOLD,
+): boolean {
+  const valid = entries.filter((entry) => Number.isFinite(new Date(entry.createdAt).getTime()));
+  if (valid.length < 2) return false;
+  const chronological = [...valid].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  );
+  for (let i = 1; i < chronological.length; i += 1) {
+    const delta = Math.abs(chronological[i]!.value - chronological[i - 1]!.value);
+    if (delta >= threshold) return true;
+  }
+  return false;
+}
+
 /** Latest self-report (IQ / ranking / slider / settings) vs latest gut-call. */
 export interface AxisDivergence {
   axis: TraitAxis;
