@@ -130,7 +130,13 @@ async function guardedBatch(
     // person served the bank on consecutive days does not see one frozen
     // question per axis forever.
     const local = composeLocalQuestionBatch(recentAxes, priorityAxes, input.tracks ?? []);
-    return preferFreshAxes(keepGuardedDrafts(local).kept, recentAxes, priorityAxes);
+    return preferFreshAxes(
+      keepGuardedDrafts(local).kept,
+      recentAxes,
+      priorityAxes,
+      input.tracks ?? [],
+      input.now ?? new Date(),
+    );
   }
 
   const first = await deps.generateBatch(buildQuestionsPrompt(promptArgs));
@@ -151,7 +157,13 @@ async function guardedBatch(
     }
   }
 
-  const rotated = preferFreshAxes(kept, recentAxes, priorityAxes);
+  const rotated = preferFreshAxes(
+    kept,
+    recentAxes,
+    priorityAxes,
+    input.tracks ?? [],
+    input.now ?? new Date(),
+  );
   return rotated.length > 0 ? rotated : null;
 }
 

@@ -246,6 +246,117 @@ for (const axis of recentThree) {
 assert.ok(!preferFreshAxes(composeLocalQuestionBatch(), ['openness']).slice(0, 1).some((row) => row.axis === 'openness'));
 ok('soft axis rotation prefers axes outside the last 2–3');
 
+// --- Phase 5: stability-ascending ordering + redundancy-tag deferral ------
+const PHASE5_NOW = new Date('2026-09-04T15:00:00.000Z');
+function stableTrack(axis: TraitAxis, stability: number): TraitTrack {
+  return {
+    axis,
+    track: 'report',
+    value: 0.5,
+    stability,
+    answerCount: 3,
+    lastTouched: PHASE5_NOW.toISOString(),
+    lastDepthAt: null,
+  };
+}
+
+// T-01: within the fresh tier, the least-confident (lowest-stability) axis
+// sorts first — draft order alone (openness before extraversion) would have
+// kept openness first pre-Phase-5; the low-stability axis must win instead.
+const stabilityDrafts: QuestionDraft[] = [
+  { axis: 'openness', prompt: 'p', options: [] },
+  { axis: 'extraversion', prompt: 'p', options: [] },
+];
+const stabilityTracks = [stableTrack('openness', 0.9), stableTrack('extraversion', 0.1)];
+const stabilityOrdered = preferFreshAxes(stabilityDrafts, [], [], stabilityTracks, PHASE5_NOW);
+assert.deepEqual(
+  stabilityOrdered.map((row) => row.axis),
+  ['extraversion', 'openness'],
+  'least-confident axis (lowest effectiveStability) sorts first among non-priority axes',
+);
+ok('preferFreshAxes sorts fresh/overlap axes by ascending effectiveStability');
+
+// T-02: redundancy-tag deferral never drops a draft, only reorders it behind
+// a non-overlapping alternative. openness and extraversion share a tag;
+// agreeableness does not overlap either.
+const redundancyDrafts: QuestionDraft[] = [
+  { axis: 'openness', prompt: 'p', options: [], redundancyTags: ['novelty'] },
+  { axis: 'extraversion', prompt: 'p', options: [], redundancyTags: ['novelty'] },
+  { axis: 'agreeableness', prompt: 'p', options: [] },
+];
+const redundancyOrdered = preferFreshAxes(redundancyDrafts, [], [], [], PHASE5_NOW);
+assert.deepEqual(
+  redundancyOrdered.map((row) => row.axis),
+  ['openness', 'agreeableness', 'extraversion'],
+  'a tag-overlapping draft is deferred behind a non-overlapping one, never dropped',
+);
+ok('preferFreshAxes defers (never drops) a redundancyTags-overlapping draft behind a non-overlapping one');
+
+// Redundancy-avoidance must never outrank freshness across tiers: a
+// tag-colliding FRESH draft can be deferred behind another fresh draft, but
+// must never be pushed behind an OVERLAP (recently-asked) draft just because
+// of a tag collision — freshness still wins the tier boundary.
+const tierDrafts: QuestionDraft[] = [
+  { axis: 'openness', prompt: 'p', options: [], redundancyTags: ['novelty'] },
+  { axis: 'extraversion', prompt: 'p', options: [], redundancyTags: ['novelty'] },
+  { axis: 'agreeableness', prompt: 'p', options: [] },
+];
+const tierOrdered = preferFreshAxes(tierDrafts, ['agreeableness'], [], [], PHASE5_NOW);
+assert.deepEqual(
+  tierOrdered.map((row) => row.axis),
+  ['openness', 'extraversion', 'agreeableness'],
+  'redundancy-deferral backfills within the fresh tier before any overlap (recently-asked) draft is ever considered',
+);
+ok('redundancy-avoidance is scoped per-tier and cannot let an overlap draft leapfrog ahead of a fresh one');
+
+// T-03: with no tracks/redundancyTags (true of every real bank/AI draft
+// today), Phase 5's output must match a reimplementation of the actual
+// pre-Phase-5 algorithm — not just itself under two equivalent call shapes,
+// which would prove nothing about a real regression.
+function legacyPreferFreshAxes(
+  drafts: QuestionDraft[],
+  recent: TraitAxis[],
+  priority: readonly TraitAxis[] = [],
+): QuestionDraft[] {
+  const avoid = new Set(recent.slice(-3));
+  const prioritySet = new Set(priority);
+  const prioritized: QuestionDraft[] = [];
+  for (const axis of priority) {
+    const match = drafts.find((draft) => draft.axis === axis);
+    if (match) prioritized.push(match);
+  }
+  const rest = drafts.filter((draft) => !prioritySet.has(draft.axis));
+  const fresh = rest.filter((draft) => !avoid.has(draft.axis));
+  const overlap = rest.filter((draft) => avoid.has(draft.axis));
+  const seen = new Set<TraitAxis>();
+  const out: QuestionDraft[] = [];
+  for (const draft of [...prioritized, ...fresh, ...overlap]) {
+    if (seen.has(draft.axis)) continue;
+    seen.add(draft.axis);
+    out.push(draft);
+    if (out.length >= QUESTIONS_BATCH_SIZE) break;
+  }
+  return out;
+}
+const localBatch = composeLocalQuestionBatch();
+assert.deepEqual(
+  preferFreshAxes(localBatch, []).map((row) => row.axis),
+  legacyPreferFreshAxes(localBatch, []).map((row) => row.axis),
+  'no tracks/redundancyTags: Phase 5 output matches the pre-Phase-5 algorithm exactly (recent=[])',
+);
+assert.deepEqual(
+  preferFreshAxes(localBatch, ['openness', 'conscientiousness']).map((row) => row.axis),
+  legacyPreferFreshAxes(localBatch, ['openness', 'conscientiousness']).map((row) => row.axis),
+  'no tracks/redundancyTags: Phase 5 output matches the pre-Phase-5 algorithm exactly (recent set)',
+);
+const priorityBatch2 = composeLocalQuestionBatch([], ['playfulness', 'autonomy']);
+assert.deepEqual(
+  preferFreshAxes(priorityBatch2, [], ['playfulness', 'autonomy']).map((row) => row.axis),
+  legacyPreferFreshAxes(priorityBatch2, [], ['playfulness', 'autonomy']).map((row) => row.axis),
+  'no tracks/redundancyTags: Phase 5 output matches the pre-Phase-5 algorithm exactly (priority set)',
+);
+ok('preferFreshAxes with no confidence/redundancy data matches the actual pre-Phase-5 algorithm, not just itself');
+
 // --- Category question list (bank progress, sequential in-axis unlock) ----
 assert.equal(bankQuestionCount(['openness']), 3);
 assert.equal(
