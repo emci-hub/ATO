@@ -88,6 +88,12 @@ export type Me = {
   /** Map of presence-milestone key -> ISO timestamp when its one-time celebration fired. */
   milestones_celebrated: Record<string, string>;
   /**
+   * Milestone ids already shown/celebrated (checkMilestones). Distinct from
+   * milestones_celebrated above. Optional for rows predating this column;
+   * callers must default to [].
+   */
+  celebrated_milestone_ids?: string[];
+  /**
    * Axes the user skipped in a questionnaire sweep. Served by the rotating
    * Questions pool until the axis is answered. Optional for older rows /
    * fixtures; normalizeDeferredAxes defaults it to [].
@@ -131,6 +137,7 @@ export type MeInsert = Omit<
   | 'recipe'
   | 'facts'
   | 'milestones_celebrated'
+    | 'celebrated_milestone_ids'
     | 'referred_by'
     | 'is_founder'
     | 'born_on'
