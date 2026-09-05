@@ -4,7 +4,7 @@
  */
 import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
 import { TRAIT_AXES, isTraitSource, type TraitAxis, type TraitSource, type TraitState } from '@/lib/traits';
-import { trackFor, type EvidenceEntry, type TraitTrack } from '@/lib/trait-stability';
+import { trackFor, trackKindForSource, type EvidenceEntry, type TraitTrack } from '@/lib/trait-stability';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 
 export interface TraitHistoryRow {
@@ -103,6 +103,24 @@ export function hasContradictedAnswers(
     if (delta >= threshold) return true;
   }
   return false;
+}
+
+/**
+ * T-04 — real consumer of `hasContradictedAnswers`, over every currently-
+ * defined axis. Report-track only (same convention as
+ * `effectiveStability`/`isProfileSettled` — gut-call never counts), reusing
+ * `trackKindForSource` rather than a hardcoded `'self_game'` check to stay in
+ * sync with that classification.
+ */
+export function contradictedAxesFrom(history: readonly TraitHistoryRow[]): TraitAxis[] {
+  const out: TraitAxis[] = [];
+  for (const axis of TRAIT_AXES) {
+    const reportEntries = historyForAxis(history, axis).filter(
+      (row) => trackKindForSource(row.source) === 'report',
+    );
+    if (hasContradictedAnswers(reportEntries)) out.push(axis);
+  }
+  return out;
 }
 
 /** Latest self-report (IQ / ranking / slider / settings) vs latest gut-call. */

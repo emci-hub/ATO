@@ -22,7 +22,7 @@ import {
   trackFor,
   type TraitTrack,
 } from '../src/lib/trait-stability';
-import { hasContradictedAnswers } from '../src/lib/trait-history';
+import { contradictedAxesFrom, hasContradictedAnswers } from '../src/lib/trait-history';
 import { TRAIT_AXES } from '../src/lib/traits';
 
 let passed = 0;
@@ -266,5 +266,32 @@ assert.equal(
   'an entry with an unparseable createdAt is dropped rather than corrupting the sort',
 );
 ok('hasContradictedAnswers detects genuine same-axis swings, ignores drift/single-answer/old-but-consistent/malformed-date cases');
+
+// --- Phase 6, T-04: contradictedAxesFrom (the real trait_history consumer) ---
+const t04History = [
+  // openness: genuine report-track swing.
+  { id: 'h1', axis: 'openness' as const, value: 0.9, source: 'self_situation' as const, createdAt: tOld },
+  { id: 'h2', axis: 'openness' as const, value: 0.1, source: 'self_situation' as const, createdAt: t0 },
+  // conscientiousness: report-track drift only, never contradicted.
+  { id: 'h3', axis: 'conscientiousness' as const, value: 0.6, source: 'self_situation' as const, createdAt: tOld },
+  { id: 'h4', axis: 'conscientiousness' as const, value: 0.65, source: 'self_situation' as const, createdAt: t0 },
+  // extraversion: two CONSISTENT report-track answers with a self_game
+  // outlier sandwiched between them. If the report-track filter were
+  // accidentally dropped, this WOULD flag (0.9 -> 0.1 -> 0.92 swings past
+  // threshold against the outlier); with the filter correctly applied, only
+  // the two consistent report rows remain (delta 0.02) — not a case the
+  // threshold alone would have excluded, so this genuinely exercises the
+  // filter rather than coincidentally passing either way.
+  { id: 'h5', axis: 'extraversion' as const, value: 0.9, source: 'self_situation' as const, createdAt: tOld },
+  { id: 'h6', axis: 'extraversion' as const, value: 0.1, source: 'self_game' as const, createdAt: tMid },
+  { id: 'h7', axis: 'extraversion' as const, value: 0.92, source: 'self_situation' as const, createdAt: t0 },
+];
+assert.deepEqual(
+  contradictedAxesFrom(t04History),
+  ['openness'],
+  'contradictedAxesFrom flags only the genuinely swinging report-track axis, in TRAIT_AXES order, correctly excluding a self_game outlier that would otherwise create a false-positive swing',
+);
+assert.deepEqual(contradictedAxesFrom([]), [], 'no history at all yields no contradicted axes');
+ok('contradictedAxesFrom (T-04) correctly wires hasContradictedAnswers to real trait_history rows, report-track only');
 
 console.log(`\n${passed} trait-stability floor checks passed`);

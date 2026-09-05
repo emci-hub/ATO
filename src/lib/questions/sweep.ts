@@ -45,6 +45,16 @@ export interface RouteQuestionSweepResult {
  * `routeQuestions`. The sweep's whole job is to fill every axis in one pass, so
  * gating it on a filled profile would make it unreachable exactly when it is
  * most useful.
+ *
+ * T-04, deliberately NOT wired here: `contradictedAxesFrom` (`trait-history.ts`)
+ * has no plug-in point in this path — the sweep always serves ALL TRAIT_AXES
+ * in one pass, unconditionally (`composeLocalSweep`), with no priority/
+ * ordering concept at all (unlike `routeQuestions`'s `priorityAxes`/
+ * `contradictedAxes`). Wiring contradiction-awareness here would mean adding
+ * an ordering mechanism to a path whose whole point is "everything, in a
+ * fixed pass" — a bigger, separate change, not a trivial one. `questions-fold.tsx`
+ * (Tell Sage more / the 5-item rotation) is the one caller wired to real
+ * `contradictedAxes` data.
  */
 export async function routeQuestionSweep(input: {
   me: { name: string; talk_style: TalkStyle; voice_preset: string };

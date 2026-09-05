@@ -902,6 +902,20 @@ assert.match(fold, /useState<CategoryId \| null>\(null\)/);
 assert.doesNotMatch(fold, /category_id/);
 ok('category picker renders straight from the static bank, not through routeQuestions');
 
+// T-04: the real trait_history fetch + contradictedAxes wiring must survive —
+// nothing else asserts this, so a regression here (e.g. deleting the fetch,
+// or removing the field from the routeQuestions call while leaving the
+// unused useMemo behind) would otherwise pass every other check in this
+// file. The third assertion is anchored to the actual routeQuestions call
+// site (tracks immediately followed by contradictedAxes) — a bare
+// /contradictedAxes/ substring match would still pass even with the wiring
+// line deleted, since `contradictedAxesFrom`/the useMemo declaration alone
+// also contain that substring.
+assert.match(fold, /fetchTraitHistory/);
+assert.match(fold, /contradictedAxesFrom/);
+assert.match(fold, /tracks,\s*\n\s*contradictedAxes,/);
+ok('questions-fold.tsx fetches trait_history and passes contradictedAxes into the routeQuestions call itself');
+
 // The category list replaces skip/pause entirely — those stay on the default
 // rotation only. Scope the check to CategoryQuestionsList's own body so a
 // match on the (unrelated) default-rotation branch above it doesn't hide a

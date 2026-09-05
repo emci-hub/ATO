@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { SettingsFold } from '@/components/settings-fold';
@@ -10,6 +10,8 @@ import { getCategoryDefs, type CategoryDef, type CategoryId } from '@/lib/catego
 import { updateTraits, type Me } from '@/lib/me';
 import { earnTokensQuiet } from '@/lib/tokens-server';
 import { deferredUnansweredAxes } from '@/lib/questions/deferral';
+import { contradictedAxesFrom, type TraitHistoryRow } from '@/lib/trait-history';
+import { fetchTraitHistory } from '@/lib/trait-history-store';
 import { unansweredAxisLabel, type TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, traitStateFromRow, type TraitAxis } from '@/lib/traits';
 import {
@@ -137,6 +139,34 @@ export function QuestionsFold({
    */
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(null);
 
+  // T-04: real caller of Phase 6's hasContradictedAnswers. Fetched here
+  // (route-level), not from any shared cache — none exists for trait_history
+  // anywhere in the app; every screen that reads it (e.g. full-profile-fold.tsx)
+  // fetches it fresh, unbounded, same as here — no windowing/limit is applied,
+  // matching that existing precedent, not a new tradeoff introduced by this
+  // fetch. Keyed on the whole `me` object, same convention `load` below
+  // already uses — `useMe`'s `refresh()` always returns a new `Me` object, so
+  // this re-fires after an answer lands, same pattern this codebase's other
+  // staleness fixes rely on. One caveat: `pick()`'s `load()` call below still
+  // runs against the PRE-answer `contradictedAxes` from this render's closure
+  // (the fetch is async) — a just-created contradiction leads the FOLLOWING
+  // batch, not the very next one.
+  const [traitHistory, setTraitHistory] = useState<TraitHistoryRow[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    fetchTraitHistory(me.id)
+      .then((rows) => {
+        if (!cancelled) setTraitHistory(rows);
+      })
+      .catch((err) => {
+        console.log('[questions] trait history fetch error:', err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [me]);
+  const contradictedAxes = useMemo(() => contradictedAxesFrom(traitHistory), [traitHistory]);
+
   const load = useCallback(async () => {
     const deferred = deferredUnansweredAxes(
       traitStateFromRow(me).values,
@@ -155,6 +185,7 @@ export function QuestionsFold({
           crisisToday,
           priorityAxes,
           tracks,
+          contradictedAxes,
         },
         {
           loadLatestPack: fetchLatestQuestionPack,
@@ -170,7 +201,7 @@ export function QuestionsFold({
       'questions',
     );
     setResult(next);
-  }, [me, history, crisisToday, focusAxis, tracks]);
+  }, [me, history, crisisToday, focusAxis, tracks, contradictedAxes]);
 
   function handleOpen() {
     setSessionCount(0);
