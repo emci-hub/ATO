@@ -11,6 +11,14 @@ export interface QuestionOption {
   value: number;
 }
 
+export interface AxisWeight {
+  axis: TraitAxis;
+  /** 0-1. Primary-axis weights should dominate; secondary weights are weaker. */
+  weight: number;
+  /** Documented psychological/behavioral reason for this axis mapping. */
+  reason?: string;
+}
+
 export interface QuestionDraft {
   axis: TraitAxis;
   /**
@@ -24,6 +32,30 @@ export interface QuestionDraft {
   category?: CategoryId;
   prompt: string;
   options: QuestionOption[];
+  /**
+   * Multi-axis question engine fields (additive, not yet consumed anywhere).
+   * Absent on every existing bank/AI-generated draft today — `primaryAxesFor`
+   * below is the backward-compatible read: a draft with none of these still
+   * behaves exactly as a single-axis question at weight 1 on `axis`.
+   */
+  /** 1-2 axes this question is specifically designed to measure. */
+  primaryAxes?: readonly AxisWeight[];
+  /** 0-3 weaker, supporting axes. */
+  secondaryAxes?: readonly AxisWeight[];
+  /** Axes explicitly not touched by this question (prevents unsupported trait leakage). */
+  excludedAxes?: readonly TraitAxis[];
+  /** Dedup-by-meaning tags for future adaptive/redundancy-aware selection. */
+  redundancyTags?: readonly string[];
+}
+
+/**
+ * Backward-compatible primary-axis view of a draft: explicit `primaryAxes` if
+ * set, else the legacy single `axis` at weight 1. Nothing reads this yet —
+ * groundwork for the scoring-apply loop, kept here so that loop and this
+ * schema can't drift apart.
+ */
+export function primaryAxesFor(draft: QuestionDraft): readonly AxisWeight[] {
+  return draft.primaryAxes ?? [{ axis: draft.axis, weight: 1 }];
 }
 
 export interface QuestionItemRow {

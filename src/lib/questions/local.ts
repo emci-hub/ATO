@@ -36,6 +36,10 @@ function copyDraft(draft: QuestionDraft): QuestionDraft {
     category: draft.category,
     prompt: draft.prompt,
     options: draft.options.map((opt) => ({ ...opt })),
+    primaryAxes: draft.primaryAxes?.map((row) => ({ ...row })),
+    secondaryAxes: draft.secondaryAxes?.map((row) => ({ ...row })),
+    excludedAxes: draft.excludedAxes ? [...draft.excludedAxes] : undefined,
+    redundancyTags: draft.redundancyTags ? [...draft.redundancyTags] : undefined,
   };
 }
 
