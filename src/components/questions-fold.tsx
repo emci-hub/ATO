@@ -26,6 +26,7 @@ import {
   QUESTIONS_SKIP_REST,
   QUESTIONS_SKIP_THIS,
 } from '@/lib/questions/copy';
+import { applyQuestionAnswer } from '@/lib/questions/answer';
 import { generateQuestionBatch } from '@/lib/questions/generate';
 import {
   bankProgressForAxes,
@@ -41,7 +42,13 @@ import {
   skipQuestionItem,
   skipRestOfQuestionPack,
 } from '@/lib/questions/store';
-import type { QuestionItemRow, QuestionPackRow, RouteQuestionsResult } from '@/lib/questions/types';
+import type {
+  QuestionDraft,
+  QuestionItemRow,
+  QuestionOption,
+  QuestionPackRow,
+  RouteQuestionsResult,
+} from '@/lib/questions/types';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { shouldUseLocalAi } from '@/lib/ai/override';
 import { claimQuestionsBatch, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
@@ -210,12 +217,19 @@ export function QuestionsFold({
     }
   }
 
-  /** Answers one bank question directly from the category list. */
-  async function pickBankItem(axis: TraitAxis, option: { text: string; value: number }) {
+  /**
+   * Answers one bank question directly from the category list. Local
+   * (bank-sourced) `QuestionDraft`, never a persisted `QuestionItemRow` — so
+   * this can safely carry primaryAxes/secondaryAxes (Phase 4) via the shared
+   * `applyQuestionAnswer`, same as intake-sweep. `pick()` below (the
+   * persisted-pack path) cannot: `QuestionItemRow` has no axis-weight
+   * fields, and adding them would be a `question_items` schema change.
+   */
+  async function pickBankItem(draft: QuestionDraft, option: QuestionOption) {
     if (busy) return;
     setBusy(true);
     try {
-      await updateTraits(me.id, { [axis]: option.value }, 'self_situation', [axis]);
+      await applyQuestionAnswer(me.id, draft, option, tracks ?? []);
       earnTokensQuiet('game_round');
       await onUpdated();
     } catch (err) {
@@ -225,6 +239,14 @@ export function QuestionsFold({
     }
   }
 
+  /**
+   * Answers a persisted pack item. `QuestionItemRow` (unlike `QuestionDraft`
+   * above) has no primaryAxes/secondaryAxes fields — `insert_question_pack`
+   * and this table only ever store axis/prompt/options — so this path stays
+   * single-axis until/unless a `question_items` schema change is proposed
+   * and signed off. Not done, not asked (Phase 4 decision, see
+   * PROJECT_CONTEXT.md).
+   */
   async function pick(item: QuestionItemRow, index: number) {
     const option = item.options[index];
     if (!option || busy) return;
@@ -361,7 +383,7 @@ export function QuestionsFold({
           def={activeCategory}
           tracks={tracks ?? []}
           busy={busy}
-          onPick={(axis, option) => void pickBankItem(axis, option)}
+          onPick={(draft, option) => void pickBankItem(draft, option)}
         />
       ) : checkpoint ? (
         <>
@@ -465,7 +487,7 @@ function CategoryQuestionsList({
   def: CategoryDef;
   tracks: readonly TraitTrack[];
   busy: boolean;
-  onPick: (axis: TraitAxis, option: { text: string; value: number }) => void;
+  onPick: (draft: QuestionDraft, option: QuestionOption) => void;
 }) {
   const theme = useTheme();
   const rows: BankProgressItem[] = bankProgressForAxes(def.axes, tracks);
@@ -482,7 +504,7 @@ function CategoryQuestionsList({
                   <ThemedPressable
                     key={`${row.axis}-${row.variant}-${index}`}
                     disabled={busy}
-                    onPress={() => onPick(row.axis, option)}
+                    onPress={() => onPick(row.draft, option)}
                     style={[
                       styles.option,
                       { borderColor: controlBorderColor(theme) },

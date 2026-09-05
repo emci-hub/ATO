@@ -13,8 +13,11 @@ import {
   STABILITY_FLOOR_OVERRIDE_N,
   STABILITY_INCONSISTENT_FLOOR,
   applyEwmaAnswer,
+  directEvidenceCountFor,
   effectiveStability,
   isProfileSettled,
+  nudgedSecondaryValue,
+  totalEvidenceCountFor,
   trackFor,
   type TraitTrack,
 } from '../src/lib/trait-stability';
@@ -115,5 +118,50 @@ const gameOnly = trackFor(
 );
 assert.equal(gameOnly, null);
 ok('game track is still excluded from effectiveStability lookups, floor included');
+
+// Phase 4 — secondary-axis evidence must never move stability/answerCount,
+// so effectiveStability/isProfileSettled cannot be influenced by it.
+assert.equal(nudgedSecondaryValue(null, 0.8, 0.35), 0.8, 'no current value: nudge is the raw signal');
+assert.equal(nudgedSecondaryValue(0.5, 0.8, 1), 0.8, 'weight 1 behaves like a full pull toward signal');
+assert.equal(nudgedSecondaryValue(0.5, 0.8, 0), 0.5, 'weight 0 leaves the value untouched');
+const halfPull = nudgedSecondaryValue(0.5, 0.8, 0.5);
+assert.ok(halfPull > 0.5 && halfPull < 0.8, 'weight 0.5 is a partial pull, strictly between current and signal');
+ok('nudgedSecondaryValue: pure weight-scaled pull, matches weight 0/0.5/1 boundary cases');
+
+// Genuinely settled (not floor-blocked on both sides trivially) so the
+// before/after comparison actually proves something.
+const alreadySettled: TraitTrack = {
+  axis: 'openness',
+  track: 'report',
+  value: 0.5,
+  stability: 0.9,
+  answerCount: STABILITY_FLOOR_N,
+  lastTouched: NOW.toISOString(),
+  lastDepthAt: null,
+};
+const beforeSecondary = [...otherRows(), alreadySettled];
+assert.equal(isProfileSettled(beforeSecondary, NOW), true, 'sanity: axis is genuinely settled before the secondary write');
+const stabilityBefore = effectiveStability(alreadySettled, NOW);
+const nudged = nudgedSecondaryValue(alreadySettled.value, 0.9, 0.35);
+const afterSecondary: TraitTrack = { ...alreadySettled, value: nudged };
+assert.notEqual(afterSecondary.value, alreadySettled.value, 'value actually moved');
+assert.equal(afterSecondary.stability, alreadySettled.stability, 'stability untouched by a secondary-only write');
+assert.equal(afterSecondary.answerCount, alreadySettled.answerCount, 'answerCount untouched by a secondary-only write');
+assert.equal(
+  effectiveStability(afterSecondary, NOW),
+  stabilityBefore,
+  'effectiveStability reads numerically identical before/after a secondary-only value nudge',
+);
+const afterRows = [...otherRows(), afterSecondary];
+assert.equal(
+  isProfileSettled(afterRows, NOW),
+  true,
+  'isProfileSettled stays true (unaffected) after a secondary-only value nudge',
+);
+ok('secondary-axis evidence moves value but cannot move stability/answerCount/effectiveStability/isProfileSettled');
+
+assert.equal(directEvidenceCountFor(alreadySettled), alreadySettled.answerCount, 'directEvidenceCountFor defaults to answerCount');
+assert.equal(totalEvidenceCountFor(alreadySettled), alreadySettled.answerCount, 'totalEvidenceCountFor defaults to answerCount too — equal until Phase 4 content actually differentiates them');
+ok('directEvidenceCountFor/totalEvidenceCountFor both default to answerCount, unchanged behavior');
 
 console.log(`\n${passed} trait-stability floor checks passed`);

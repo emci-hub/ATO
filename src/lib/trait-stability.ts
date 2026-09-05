@@ -89,6 +89,26 @@ export function totalEvidenceCountFor(row: TraitTrack): number {
   return row.totalEvidenceCount ?? row.answerCount;
 }
 
+/**
+ * Phase 4 — the weight-scaled nudge for a SECONDARY-axis write. Pure, no
+ * stability/answerCount/lastTouched involved at all — callers must persist
+ * only the returned `value`, never route this through `applyEwmaAnswer`
+ * (which would read the damped-toward-current value as high agreement and
+ * incorrectly inflate stability from weak evidence). `current: null` means
+ * the axis has no track yet — the nudge is the raw signal, still inert with
+ * respect to confidence since stability/answerCount are never touched here.
+ */
+export function nudgedSecondaryValue(
+  current: number | null,
+  signal: number,
+  weight: number,
+): number {
+  const w = clamp01(weight);
+  const s = clamp01(signal);
+  if (current == null) return s;
+  return clamp01(current + w * (s - current));
+}
+
 export function trackKindForSource(source: TraitSource): TraitTrackKind {
   return source === 'self_game' ? 'game' : 'report';
 }

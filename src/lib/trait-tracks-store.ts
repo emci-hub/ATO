@@ -56,6 +56,32 @@ export async function fetchTraitTracks(userId: string): Promise<TraitTrack[]> {
   return out;
 }
 
+/**
+ * Phase 4 — narrow value-only update for SECONDARY-axis evidence. Updates
+ * ONLY `value`; deliberately does not touch stability/answer_count/
+ * last_touched/last_depth_at directly, so a secondary write cannot move
+ * `effectiveStability`/`isProfileSettled` on its own. (It can still have a
+ * small, delayed, indirect effect: a later PRIMARY answer on the same axis
+ * computes its own agreement against this nudged `value` — intended, and
+ * still never an immediate effect.) No-op (silent) if the row does not
+ * exist yet — same fail-open convention as the rest of this module; a
+ * primary answer creates the row first.
+ */
+export async function updateTraitTrackValueOnly(
+  userId: string,
+  axis: TraitAxis,
+  track: TraitTrackKind,
+  value: number,
+): Promise<void> {
+  const { error } = await supabase
+    .from('trait_tracks')
+    .update({ value })
+    .eq('user_id', userId)
+    .eq('axis', axis)
+    .eq('track', track);
+  if (error) throw error;
+}
+
 export async function stampAxisDepth(userId: string, axis: TraitAxis): Promise<void> {
   const { error } = await supabase
     .from('trait_tracks')

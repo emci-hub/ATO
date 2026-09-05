@@ -6,7 +6,7 @@ import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { updateTraits, type Me } from '@/lib/me';
+import type { Me } from '@/lib/me';
 import {
   deferredUnansweredAxes,
   mergedDeferral,
@@ -19,6 +19,7 @@ import {
   QUESTIONS_EMPTY_DENIED,
 } from '@/lib/questions/copy';
 import { routeQuestionSweep } from '@/lib/questions/sweep';
+import { applyQuestionAnswer } from '@/lib/questions/answer';
 import type { QuestionDraft } from '@/lib/questions/types';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, traitStateFromRow, type TraitAxis } from '@/lib/traits';
@@ -138,7 +139,7 @@ export function IntakeSweep({
     if (!option || busy) return;
     setBusy(true);
     try {
-      await updateTraits(me.id, { [draft.axis]: option.value }, 'self_situation', [draft.axis]);
+      await applyQuestionAnswer(me.id, draft, option, tracks);
       earnTokensQuiet('game_round');
       await onUpdated();
     } catch (err) {
