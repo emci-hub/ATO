@@ -14,9 +14,17 @@ import { checksToHistory, fetchChecks, type Check } from '@/lib/checks';
 import { crisisFlagsForWindow } from '@/lib/crisis/days';
 import { useMe } from '@/hooks/use-me';
 import { useSession } from '@/hooks/use-session';
+import { persistCelebratedMilestones } from '@/lib/me';
+import { checkMilestones, type MilestoneDef } from '@/lib/milestones';
+import { bankTotalProgress } from '@/lib/questions/local';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
+
+/** TODO(T-06): show a toast/celebration UI for `def`. Scaffolding only for now. */
+function onMilestoneCrossed(def: MilestoneDef) {
+  console.log('[milestones] crossed', def.id);
+}
 
 /**
  * Questions — every question surface that feeds the trait axes lives here:
@@ -81,11 +89,14 @@ export default function IntakeSweepTabScreen() {
   // answer filling the last axis regenerates one more bank pack and the AI
   // path opens on the regen after that. Bounded, and no quota is spent.
   const loadTracks = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) return undefined;
     try {
-      setTracks(await fetchTraitTracks(userId));
+      const fresh = await fetchTraitTracks(userId);
+      setTracks(fresh);
+      return fresh;
     } catch (err) {
       console.log('[questions] fetchTraitTracks error:', err);
+      return undefined;
     } finally {
       setTracksReady(true);
     }
@@ -97,9 +108,55 @@ export default function IntakeSweepTabScreen() {
 
   const scrollRef = useRef<ScrollView>(null);
 
+  /**
+   * One-time, silent catch-up for existing users: mark any bank-progress
+   * milestone already crossed as celebrated with no toast, before the
+   * post-answer check below (which fires the placeholder) can ever run.
+   * Idempotent (checkMilestones returns [] once caught up), guarded to run
+   * at most once per mount so it never fights the post-answer check.
+   */
+  const [backfillReady, setBackfillReady] = useState(false);
+  const backfilledRef = useRef(false);
+
+  useEffect(() => {
+    if (!userId || !me || !tracksReady || backfilledRef.current) return;
+    backfilledRef.current = true;
+    const celebrated = me.celebrated_milestone_ids ?? [];
+    const crossed = checkMilestones('bankTotalProgress', bankTotalProgress(tracks).answered, celebrated);
+    if (crossed.length === 0) {
+      setBackfillReady(true);
+      return;
+    }
+    persistCelebratedMilestones(userId, [...celebrated, ...crossed.map((def) => def.id)])
+      .then(() => refresh())
+      .catch((err) => {
+        // If the write failed, celebrated_milestone_ids is still stale — a
+        // real answer's refreshAfterAnswer would then wrongly treat these
+        // already-crossed defs as new. Reset the guard so the next mount
+        // (or a later dependency change this session) retries the backfill
+        // before that can happen, rather than marking it done.
+        console.log('[questions] celebrated-milestone backfill error:', err);
+        backfilledRef.current = false;
+      })
+      .finally(() => setBackfillReady(true));
+  }, [userId, me, tracksReady, tracks, refresh]);
+
   const refreshAfterAnswer = useCallback(async () => {
-    await Promise.all([refresh(), loadTracks()]);
-  }, [refresh, loadTracks]);
+    const [, freshTracks] = await Promise.all([refresh(), loadTracks()]);
+    if (!userId || !me || !freshTracks) return;
+    const celebrated = me.celebrated_milestone_ids ?? [];
+    const crossed = checkMilestones('bankTotalProgress', bankTotalProgress(freshTracks).answered, celebrated);
+    if (crossed.length === 0) return;
+    for (const def of crossed) {
+      onMilestoneCrossed(def);
+    }
+    try {
+      await persistCelebratedMilestones(userId, [...celebrated, ...crossed.map((def) => def.id)]);
+      await refresh();
+    } catch (err) {
+      console.log('[questions] persistCelebratedMilestones error:', err);
+    }
+  }, [refresh, loadTracks, userId, me]);
 
   /**
    * "Skip the rest" on the full sweep. Skipping defers every remaining axis
@@ -130,7 +187,7 @@ export default function IntakeSweepTabScreen() {
             mount before tracks land would read as an incomplete profile and
             hand a complete-profile user a bank-only pack to work through first.
           */}
-          {me && checksReady && flagsReady && tracksReady ? (
+          {me && checksReady && flagsReady && tracksReady && backfillReady ? (
             <QuestionsFold
               me={me}
               history={checksToHistory(checks)}
@@ -150,7 +207,7 @@ export default function IntakeSweepTabScreen() {
                 bank draft. Refreshing `me` alone would leave the sweep showing
                 the same question after answering it.
               */}
-              {flagsReady && tracksReady ? (
+              {flagsReady && tracksReady && backfillReady ? (
                 <IntakeSweep
                   me={me}
                   crisisToday={crisisToday}

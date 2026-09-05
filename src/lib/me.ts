@@ -877,6 +877,35 @@ export async function markMilestoneCelebrated(
 }
 
 /**
+ * Merges `ids` (MILESTONE_DEFS ids, src/lib/milestones.ts) into
+ * `celebrated_milestone_ids` and persists the union. Distinct from
+ * markMilestoneCelebrated above (different column, different shape — that
+ * one is a presence-streak map, this is a milestone-id array). Callers
+ * decide which ids are new; this just dedupes and writes.
+ */
+export async function persistCelebratedMilestones(userId: string, ids: readonly string[]): Promise<Me> {
+  const { data: current } = await supabase
+    .from('me')
+    .select('celebrated_milestone_ids')
+    .eq('id', userId)
+    .single();
+  const existing = Array.isArray(current?.celebrated_milestone_ids)
+    ? (current.celebrated_milestone_ids as string[])
+    : [];
+  const merged = Array.from(new Set([...existing, ...ids]));
+
+  const { data, error } = await supabase
+    .from('me')
+    .update({ celebrated_milestone_ids: merged })
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
  * Appends a fact the user told Sage. Depth-axis input; Stage 7's "Teach Sage
  * this" will call this. Idempotent by exact string.
  */
