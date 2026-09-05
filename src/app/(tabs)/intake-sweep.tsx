@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { IntakeSweep } from '@/components/intake-sweep';
+import { MilestoneToast } from '@/components/milestone-toast';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { OptionalIntakeFill } from '@/components/optional-intake';
 import { QuestionsFold } from '@/components/questions-fold';
@@ -20,11 +21,7 @@ import { bankTotalProgress } from '@/lib/questions/local';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
-
-/** TODO(T-06): show a toast/celebration UI for `def`. Scaffolding only for now. */
-function onMilestoneCrossed(def: MilestoneDef) {
-  console.log('[milestones] crossed', def.id);
-}
+import { useAppearance } from '@/lib/theme/context';
 
 /**
  * Questions — every question surface that feeds the trait axes lives here:
@@ -35,6 +32,7 @@ export default function IntakeSweepTabScreen() {
   const { session } = useSession();
   const userId = session?.user.id;
   const { me, refresh } = useMe(userId);
+  const { reduceMotion } = useAppearance();
   const params = useLocalSearchParams<{ axis?: string }>();
   const focusAxis = (TRAIT_AXES as readonly string[]).includes(params.axis ?? '')
     ? (params.axis as TraitAxis)
@@ -45,6 +43,21 @@ export default function IntakeSweepTabScreen() {
   const [flagsReady, setFlagsReady] = useState(false);
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [tracksReady, setTracksReady] = useState(false);
+
+  // One milestone toast at a time. Two crossings landing in the same
+  // refreshAfterAnswer pass is not possible today (bankTotalProgress moves
+  // by at most 1 per answer and MILESTONE_DEFS thresholds are 12 apart) but
+  // this queue keeps that true even if a future metric changes that.
+  const [toastQueue, setToastQueue] = useState<MilestoneDef[]>([]);
+  const activeToast = toastQueue[0] ?? null;
+
+  const onMilestoneCrossed = useCallback((def: MilestoneDef) => {
+    setToastQueue((queue) => [...queue, def]);
+  }, []);
+
+  const dismissActiveToast = useCallback(() => {
+    setToastQueue((queue) => queue.slice(1));
+  }, []);
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -156,7 +169,7 @@ export default function IntakeSweepTabScreen() {
     } catch (err) {
       console.log('[questions] persistCelebratedMilestones error:', err);
     }
-  }, [refresh, loadTracks, userId, me]);
+  }, [refresh, loadTracks, userId, me, onMilestoneCrossed]);
 
   /**
    * "Skip the rest" on the full sweep. Skipping defers every remaining axis
@@ -179,6 +192,16 @@ export default function IntakeSweepTabScreen() {
           <View style={styles.header}>
             <ThemedText type="subtitle">Questions</ThemedText>
           </View>
+
+          {activeToast ? (
+            <MilestoneToast
+              key={activeToast.id}
+              title={activeToast.title}
+              body={activeToast.body}
+              reduceMotion={reduceMotion}
+              onDone={dismissActiveToast}
+            />
+          ) : null}
 
           {/*
             `tracksReady` gates the mount for the same reason `flagsReady` gates

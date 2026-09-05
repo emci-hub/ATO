@@ -96,7 +96,9 @@ assert.ok(
 ok('backfill effect never calls onMilestoneCrossed (silent by design)');
 
 const refreshAfterAnswerStart = intakeSweepSrc.indexOf('const refreshAfterAnswer = useCallback(async () => {');
-const refreshAfterAnswerEnd = intakeSweepSrc.indexOf('}, [refresh, loadTracks, userId, me]);');
+const refreshAfterAnswerEnd = intakeSweepSrc.indexOf(
+  '}, [refresh, loadTracks, userId, me, onMilestoneCrossed]);',
+);
 assert.ok(
   refreshAfterAnswerStart > -1 && refreshAfterAnswerEnd > refreshAfterAnswerStart,
   'expected anchors around refreshAfterAnswer were not found in intake-sweep.tsx — did it move or get renamed?',
@@ -107,5 +109,44 @@ assert.ok(
   'refreshAfterAnswer (T-05) must call the toast placeholder for each newly-crossed def — removing this call should fail the suite',
 );
 ok('refreshAfterAnswer calls onMilestoneCrossed for newly-crossed defs');
+
+// --- Source assertions: MilestoneToast wiring (T-06) ---
+assert.ok(
+  intakeSweepSrc.includes("import { MilestoneToast } from '@/components/milestone-toast';"),
+  'intake-sweep.tsx imports the real MilestoneToast component',
+);
+assert.ok(
+  !intakeSweepSrc.includes("console.log('[milestones] crossed'"),
+  'the T-06 console.log placeholder for crossed milestones should be gone once the real toast is wired',
+);
+assert.ok(
+  intakeSweepSrc.includes('setToastQueue((queue) => [...queue, def]);'),
+  'onMilestoneCrossed enqueues the crossed def rather than showing it directly, so two crossings in one pass cannot clobber each other',
+);
+assert.ok(
+  /<MilestoneToast[\s\S]*?title=\{activeToast\.title\}[\s\S]*?body=\{activeToast\.body\}[\s\S]*?\/>/.test(
+    intakeSweepSrc,
+  ),
+  'MilestoneToast is rendered with the active queued def\'s title/body, not hardcoded copy',
+);
+ok('MilestoneToast is wired into onMilestoneCrossed via a queue, not hardcoded');
+
+assert.ok(
+  /<MilestoneToast[\s\S]*?key=\{activeToast\.id\}/.test(intakeSweepSrc),
+  'MilestoneToast must be keyed on activeToast.id — without a key, React reuses the same instance ' +
+    'across queued toasts and the second one never replays its fade-in effect',
+);
+ok('MilestoneToast is keyed on activeToast.id so each queued toast remounts and replays its fade');
+
+const milestoneToastSrc = readFileSync(resolve(__dirname, '../src/components/milestone-toast.tsx'), 'utf8');
+assert.ok(
+  MILESTONE_DEFS.every((def) => !milestoneToastSrc.includes(def.title) && !milestoneToastSrc.includes(def.body)),
+  'MilestoneToast must not hardcode any MILESTONE_DEFS title or body — they must stay props',
+);
+assert.ok(
+  /title:\s*string/.test(milestoneToastSrc) && /body:\s*string/.test(milestoneToastSrc),
+  'MilestoneToast\'s prop type must declare title and body as string props',
+);
+ok('MilestoneToast takes title/body as props, no hardcoded MILESTONE_DEFS copy');
 
 console.log(`\n${passed} milestones checks passed.`);
