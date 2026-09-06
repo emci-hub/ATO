@@ -24,19 +24,24 @@ import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 import { useAppearance } from '@/lib/theme/context';
 
 /**
- * Every newly-crossed milestone across both metrics this screen tracks:
- * bankTotalProgress (raw answers-in-the-bank count) and profile_percent
+ * Every newly-crossed milestone across every metric this screen tracks:
+ * bankTotalProgress (raw answers-in-the-bank count), profile_percent
  * (settled-axis ratio, same "settled" as settledCount's "N of 16" label —
- * NOT isProfileSettled, which is a strict all-16 boolean gate). Computed at
- * the same two call sites bankTotalProgress already ran at before this
- * change (the backfill effect and refreshAfterAnswer below); settledCount
- * is a new read here for profile_percent specifically.
+ * NOT isProfileSettled, which is a strict all-16 boolean gate), and
+ * bank_percent (answered/total bank questions, ×100 — unlike
+ * profile_percent this genuinely reaches 100 once every bank question is
+ * answered, since it isn't gated on stability). Computed at the same two
+ * call sites bankTotalProgress already ran at before this change (the
+ * backfill effect and refreshAfterAnswer below).
  */
 function crossedMilestonesFor(tracks: readonly TraitTrack[], celebrated: readonly string[]): MilestoneDef[] {
-  const percent = (settledCount(tracks) / TRAIT_AXES.length) * 100;
+  const { answered, total } = bankTotalProgress(tracks);
+  const profilePercent = (settledCount(tracks) / TRAIT_AXES.length) * 100;
+  const bankPercent = total > 0 ? (answered / total) * 100 : 0;
   return [
-    ...checkMilestones('bankTotalProgress', bankTotalProgress(tracks).answered, celebrated),
-    ...checkMilestones('profile_percent', percent, celebrated),
+    ...checkMilestones('bankTotalProgress', answered, celebrated),
+    ...checkMilestones('profile_percent', profilePercent, celebrated),
+    ...checkMilestones('bank_percent', bankPercent, celebrated),
   ];
 }
 
@@ -62,9 +67,10 @@ export default function IntakeSweepTabScreen() {
   const [tracksReady, setTracksReady] = useState(false);
 
   // One milestone toast at a time. Two crossings CAN land in the same
-  // refreshAfterAnswer pass (e.g. bankTotalProgress and profile_percent
-  // both crossing on the same answer) — this queue shows them one after
-  // another instead of clobbering.
+  // refreshAfterAnswer pass — answers_48 (bankTotalProgress) and profile_100
+  // (bank_percent) always cross together, since both reduce to "every bank
+  // question answered" — this queue shows them one after another instead of
+  // clobbering.
   const [toastQueue, setToastQueue] = useState<MilestoneDef[]>([]);
   const activeToast = toastQueue[0] ?? null;
 

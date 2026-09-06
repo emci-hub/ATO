@@ -7,7 +7,11 @@
 import { bankQuestionCount } from '@/lib/questions/local';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
-export type MilestoneMetric = 'bankTotalProgress' | 'profile_percent' | `axisComplete:${TraitAxis}`;
+export type MilestoneMetric =
+  | 'bankTotalProgress'
+  | 'profile_percent'
+  | 'bank_percent'
+  | `axisComplete:${TraitAxis}`;
 
 export interface MilestoneDef {
   id: string;
@@ -87,7 +91,7 @@ export const MILESTONE_DEFS: readonly MilestoneDef[] = [
   },
   {
     id: 'profile_100',
-    metric: 'profile_percent',
+    metric: 'bank_percent',
     threshold: 100,
     title: 'Profile complete',
     body: "You've completed your full profile!",
