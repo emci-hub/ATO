@@ -29,9 +29,11 @@ assert.deepEqual(
 assert.equal(new Set(MILESTONE_DEFS.map((d) => d.id)).size, MILESTONE_DEFS.length);
 ok('MILESTONE_DEFS has 4 unique bankTotalProgress entries at 12/24/36/48');
 
-// profile_50 stays on profile_percent (settledCount-based) — a meaningful
-// mid-point milestone on its own, even though profile_percent can't reach
-// 100 from bank answers alone (settledCount needs near-perfect stability).
+// profile_50 is the only profile_percent def — profile_100 was removed:
+// it was on bank_percent (answered/total bank questions x100), which
+// always crossed in the same pass as answers_48 (bankTotalProgress), since
+// both reduce to "every bank question answered" — redundant, so
+// profile_100 and the bank_percent metric were dropped entirely.
 const profilePercentDefs = MILESTONE_DEFS.filter((d) => d.metric === 'profile_percent');
 assert.equal(profilePercentDefs.length, 1);
 assert.deepEqual(
@@ -43,7 +45,7 @@ assert.ok(
   !containsFrameworkTerm(profilePercentDefs[0]!.title) && !containsFrameworkTerm(profilePercentDefs[0]!.body),
   'profile_percent copy hits the framework fence',
 );
-ok('MILESTONE_DEFS has profile_50 on profile_percent at threshold 50, fence-clean');
+ok('MILESTONE_DEFS has only profile_50 on profile_percent at threshold 50, fence-clean');
 
 assert.deepEqual(checkMilestones('profile_percent', 49.9, []), []);
 assert.deepEqual(
@@ -52,28 +54,11 @@ assert.deepEqual(
 );
 ok('checkMilestones works unchanged for the profile_percent metric (no new mechanic needed)');
 
-// profile_100 moved to bank_percent — answered/total bank questions, which
-// genuinely reaches 100 once every bank question is answered, unlike
-// profile_percent (capped well under 100 by settledCount's stability gate).
-const bankPercentDefs = MILESTONE_DEFS.filter((d) => d.metric === 'bank_percent');
-assert.equal(bankPercentDefs.length, 1);
-assert.deepEqual(
-  bankPercentDefs.map((d) => d.id),
-  ['profile_100'],
-);
-assert.equal(bankPercentDefs[0]!.threshold, 100);
 assert.ok(
-  !containsFrameworkTerm(bankPercentDefs[0]!.title) && !containsFrameworkTerm(bankPercentDefs[0]!.body),
-  'bank_percent copy hits the framework fence',
+  !MILESTONE_DEFS.some((d) => d.id === 'profile_100'),
+  'profile_100 must be fully removed, not just re-metric\'d',
 );
-ok('MILESTONE_DEFS has profile_100 on bank_percent at threshold 100, fence-clean');
-
-assert.deepEqual(checkMilestones('bank_percent', 99.9, []), []);
-assert.deepEqual(
-  checkMilestones('bank_percent', 100, []).map((d) => d.id),
-  ['profile_100'],
-);
-ok('checkMilestones works unchanged for the bank_percent metric (no new mechanic needed)');
+ok('profile_100 is gone from MILESTONE_DEFS');
 
 const axisCompleteDefs = MILESTONE_DEFS.filter((d) => d.metric.startsWith('axisComplete:'));
 assert.equal(axisCompleteDefs.length, TRAIT_AXES.length);
@@ -157,9 +142,9 @@ assert.ok(
 );
 assert.equal(
   (intakeSweepSrc.match(/checkMilestones\(/g) ?? []).length,
-  3,
-  'checkMilestones should be called exactly 3 times, file-wide, once per metric ' +
-    '(bankTotalProgress, profile_percent, bank_percent)',
+  2,
+  'checkMilestones should be called exactly twice, file-wide, once per metric ' +
+    '(bankTotalProgress, profile_percent)',
 );
 assert.equal(
   (intakeSweepSrc.match(/crossedMilestonesFor\(/g) ?? []).length,
@@ -177,9 +162,9 @@ assert.ok(
 const crossedMilestonesForBody = intakeSweepSrc.slice(crossedMilestonesForStart, crossedMilestonesForEnd);
 assert.equal(
   (crossedMilestonesForBody.match(/checkMilestones\(/g) ?? []).length,
-  3,
-  'all 3 checkMilestones calls (bankTotalProgress, profile_percent, bank_percent) must live ' +
-    'inside crossedMilestonesFor, not duplicated at each call site',
+  2,
+  'both checkMilestones calls (bankTotalProgress, profile_percent) must live inside ' +
+    'crossedMilestonesFor, not duplicated at each call site',
 );
 assert.ok(
   /settledCount\(\s*tracks\s*\)\s*\/\s*TRAIT_AXES\.length/.test(crossedMilestonesForBody),
@@ -187,13 +172,8 @@ assert.ok(
     'site bankTotalProgress already runs at — not a separately duplicated computation',
 );
 assert.ok(
-  crossedMilestonesForBody.includes("checkMilestones('bank_percent'"),
-  'bank_percent must be checked in crossedMilestonesFor alongside the other metrics',
-);
-assert.ok(
-  /answered\s*\/\s*total\)\s*\*\s*100/.test(crossedMilestonesForBody),
-  'bank_percent must be computed as answered/total bank questions ×100, not a duplicated formula ' +
-    '(this is the metric that should actually reach 100, unlike profile_percent)',
+  !crossedMilestonesForBody.includes('bank_percent'),
+  'bank_percent was removed along with profile_100 — it must not silently reappear',
 );
 ok('intake-sweep.tsx wires through the shared checkMilestones/persistCelebratedMilestones/crossedMilestonesFor helpers');
 
