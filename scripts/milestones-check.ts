@@ -9,10 +9,28 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { bankQuestionCount } from '../src/lib/questions/local';
+import { axisVariant, bankQuestionCount } from '../src/lib/questions/local';
 import { MILESTONE_DEFS, checkMilestones } from '../src/lib/milestones';
+import type { TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES } from '../src/lib/traits';
 import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
+
+/** A trait-track fixture for one axis at a given answerCount (report by default). */
+function reportTrackAt(
+  axis: (typeof TRAIT_AXES)[number],
+  answerCount: number,
+  track: TraitTrack['track'] = 'report',
+): TraitTrack {
+  return {
+    axis,
+    track,
+    value: 0.5,
+    stability: 0.5,
+    answerCount,
+    lastTouched: new Date().toISOString(),
+    lastDepthAt: null,
+  };
+}
 
 let passed = 0;
 function ok(label: string) {
@@ -91,6 +109,44 @@ assert.deepEqual(
 assert.deepEqual(checkMilestones(`axisComplete:${firstAxis}`, bankQuestionCount([firstAxis]) - 1, []), []);
 ok('checkMilestones works unchanged for a per-axis metric (no new mechanic needed)');
 
+// Wiring proof: a real TraitTrack fixture run through axisVariant (the same
+// function crossedMilestonesFor now calls), not just checkMilestones fed a
+// hand-picked number — this is what "completing an axis" actually looks
+// like on the wire, and it must produce a crossed def, not just prove the
+// config entries exist.
+for (const axis of [TRAIT_AXES[0], TRAIT_AXES[TRAIT_AXES.length - 1]]) {
+  const full = bankQuestionCount([axis]);
+  const completedTracks = [reportTrackAt(axis, full)];
+  const stillGoingTracks = [reportTrackAt(axis, full - 1)];
+  assert.deepEqual(
+    checkMilestones(`axisComplete:${axis}`, axisVariant(completedTracks, axis), []).map((d) => d.id),
+    [`axis_complete_${axis}`],
+    `completing ${axis}'s bank via a real TraitTrack fixture must cross axis_complete_${axis}`,
+  );
+  assert.deepEqual(
+    checkMilestones(`axisComplete:${axis}`, axisVariant(stillGoingTracks, axis), []),
+    [],
+    `one answer short of ${axis}'s bank must not cross axis_complete_${axis}`,
+  );
+  assert.deepEqual(
+    checkMilestones(`axisComplete:${axis}`, axisVariant(completedTracks, axis), [`axis_complete_${axis}`]),
+    [],
+    `axis_complete_${axis} must not re-cross once already celebrated`,
+  );
+
+  // Gut-call (game track) never counts toward settled elsewhere in this
+  // codebase, and axisVariant enforces that by reading the report track
+  // only — a full game-track fixture must not cross the milestone either.
+  const gameTracks = [reportTrackAt(axis, full, 'game')];
+  assert.equal(axisVariant(gameTracks, axis), 0, `axisVariant must ignore a game-track-only fixture for ${axis}`);
+  assert.deepEqual(
+    checkMilestones(`axisComplete:${axis}`, axisVariant(gameTracks, axis), []),
+    [],
+    `a full gut-call (game track) fixture must not cross axis_complete_${axis}`,
+  );
+}
+ok('completing an axis via a real TraitTrack/axisVariant fixture actually crosses its axis_complete_* milestone, and gut-call never counts');
+
 assert.deepEqual(checkMilestones('bankTotalProgress', 0, []), []);
 ok('below every threshold crosses nothing');
 
@@ -142,9 +198,9 @@ assert.ok(
 );
 assert.equal(
   (intakeSweepSrc.match(/checkMilestones\(/g) ?? []).length,
-  2,
-  'checkMilestones should be called exactly twice, file-wide, once per metric ' +
-    '(bankTotalProgress, profile_percent)',
+  3,
+  'checkMilestones should be called exactly 3 times, file-wide, once per metric group ' +
+    '(bankTotalProgress, profile_percent, and once inside the per-axis flatMap)',
 );
 assert.equal(
   (intakeSweepSrc.match(/crossedMilestonesFor\(/g) ?? []).length,
@@ -162,9 +218,9 @@ assert.ok(
 const crossedMilestonesForBody = intakeSweepSrc.slice(crossedMilestonesForStart, crossedMilestonesForEnd);
 assert.equal(
   (crossedMilestonesForBody.match(/checkMilestones\(/g) ?? []).length,
-  2,
-  'both checkMilestones calls (bankTotalProgress, profile_percent) must live inside ' +
-    'crossedMilestonesFor, not duplicated at each call site',
+  3,
+  'all 3 checkMilestones call sites (bankTotalProgress, profile_percent, per-axis flatMap) must ' +
+    'live inside crossedMilestonesFor, not duplicated at each caller',
 );
 assert.ok(
   /settledCount\(\s*tracks\s*\)\s*\/\s*TRAIT_AXES\.length/.test(crossedMilestonesForBody),
@@ -172,10 +228,17 @@ assert.ok(
     'site bankTotalProgress already runs at — not a separately duplicated computation',
 );
 assert.ok(
+  /TRAIT_AXES\.flatMap\(\s*\(axis\)\s*=>\s*[\s\S]*?checkMilestones\(\s*`axisComplete:\$\{axis\}`,\s*axisVariant\(\s*tracks,\s*axis\s*\)/.test(
+    crossedMilestonesForBody,
+  ),
+  'axisComplete:<axis> must be checked once per TRAIT_AXES axis, passing axisVariant(tracks, axis) ' +
+    'as currentValue — not a hardcoded/partial axis list or a different value source',
+);
+assert.ok(
   !crossedMilestonesForBody.includes('bank_percent'),
   'bank_percent was removed along with profile_100 — it must not silently reappear',
 );
-ok('intake-sweep.tsx wires through the shared checkMilestones/persistCelebratedMilestones/crossedMilestonesFor helpers');
+ok('intake-sweep.tsx wires through the shared checkMilestones/persistCelebratedMilestones/crossedMilestonesFor helpers, including per-axis axisComplete checks');
 
 const backfillEffectStart = intakeSweepSrc.indexOf('backfilledRef.current = true;');
 const backfillEffectEnd = intakeSweepSrc.indexOf('}, [userId, me, tracksReady, tracks, refresh]);');

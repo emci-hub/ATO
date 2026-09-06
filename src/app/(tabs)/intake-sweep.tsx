@@ -17,25 +17,31 @@ import { useMe } from '@/hooks/use-me';
 import { useSession } from '@/hooks/use-session';
 import { persistCelebratedMilestones } from '@/lib/me';
 import { checkMilestones, type MilestoneDef } from '@/lib/milestones';
-import { bankTotalProgress } from '@/lib/questions/local';
+import { axisVariant, bankTotalProgress } from '@/lib/questions/local';
 import { settledCount, type TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 import { useAppearance } from '@/lib/theme/context';
 
 /**
- * Every newly-crossed milestone across both metrics this screen tracks:
- * bankTotalProgress (raw answers-in-the-bank count) and profile_percent
+ * Every newly-crossed milestone across every metric this screen tracks:
+ * bankTotalProgress (raw answers-in-the-bank count), profile_percent
  * (settled-axis ratio, same "settled" as settledCount's "N of 16" label —
- * NOT isProfileSettled, which is a strict all-16 boolean gate). Computed at
- * the same two call sites bankTotalProgress already ran at before this
- * change (the backfill effect and refreshAfterAnswer below).
+ * NOT isProfileSettled, which is a strict all-16 boolean gate), and one
+ * axisComplete:<axis> check per TRAIT_AXES axis (that axis's own bank
+ * answer count via axisVariant, reaching its own bank-size threshold).
+ * Computed at the same two call sites bankTotalProgress already ran at
+ * before this change (the backfill effect and refreshAfterAnswer below).
  */
 function crossedMilestonesFor(tracks: readonly TraitTrack[], celebrated: readonly string[]): MilestoneDef[] {
   const percent = (settledCount(tracks) / TRAIT_AXES.length) * 100;
+  const axisCrossed = TRAIT_AXES.flatMap((axis) =>
+    checkMilestones(`axisComplete:${axis}`, axisVariant(tracks, axis), celebrated),
+  );
   return [
     ...checkMilestones('bankTotalProgress', bankTotalProgress(tracks).answered, celebrated),
     ...checkMilestones('profile_percent', percent, celebrated),
+    ...axisCrossed,
   ];
 }
 
