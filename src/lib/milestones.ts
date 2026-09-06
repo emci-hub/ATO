@@ -4,8 +4,10 @@
  * NavPixel/useGrowth) — this is a separate mechanism, not wired to any
  * metric or screen yet.
  */
+import { bankQuestionCount } from '@/lib/questions/local';
+import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
-export type MilestoneMetric = 'bankTotalProgress';
+export type MilestoneMetric = 'bankTotalProgress' | `axisComplete:${TraitAxis}`;
 
 export interface MilestoneDef {
   id: string;
@@ -14,6 +16,38 @@ export interface MilestoneDef {
   title: string;
   body: string;
 }
+
+/**
+ * Overrides for axes whose plain humanized name hits the framework fence
+ * (src/lib/voice/framework-fence.ts PHRASES: "growth mindset", "locus of
+ * control", "self efficacy" are banned framework terms). Every other axis
+ * humanizes fine as-is.
+ */
+const AXIS_DISPLAY_OVERRIDES: Partial<Record<TraitAxis, string>> = {
+  growth_mindset: 'growth',
+  locus_of_control: 'control',
+  self_efficacy: 'confidence',
+};
+
+/** Placeholder copy — unreviewed. "attachment_anxiety" -> "attachment anxiety". */
+function humanizeAxis(axis: TraitAxis): string {
+  return AXIS_DISPLAY_OVERRIDES[axis] ?? axis.replace(/_/g, ' ');
+}
+
+/**
+ * One entry per axis, threshold = that axis's own bank draft count (not
+ * hardcoded — reads bankQuestionCount so this stays correct if the bank's
+ * per-axis draft count ever changes). Metric is per-axis so the caller
+ * passes axisVariant(tracks, axis) as currentValue for that one axis;
+ * checkMilestones itself needs no change to support this.
+ */
+const AXIS_COMPLETE_DEFS: readonly MilestoneDef[] = TRAIT_AXES.map((axis) => ({
+  id: `axis_complete_${axis}`,
+  metric: `axisComplete:${axis}` as const,
+  threshold: bankQuestionCount([axis]),
+  title: `${humanizeAxis(axis)} axis complete`,
+  body: `You've completed the ${humanizeAxis(axis)} axis!`,
+}));
 
 export const MILESTONE_DEFS: readonly MilestoneDef[] = [
   {
@@ -44,6 +78,7 @@ export const MILESTONE_DEFS: readonly MilestoneDef[] = [
     title: '48 answers in',
     body: 'You have answered every question in the bank.',
   },
+  ...AXIS_COMPLETE_DEFS,
 ];
 
 /**

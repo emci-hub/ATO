@@ -9,7 +9,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import { bankQuestionCount } from '../src/lib/questions/local';
 import { MILESTONE_DEFS, checkMilestones } from '../src/lib/milestones';
+import { TRAIT_AXES } from '../src/lib/traits';
+import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
 
 let passed = 0;
 function ok(label: string) {
@@ -17,14 +20,45 @@ function ok(label: string) {
   console.log(`  ✓ ${label}`);
 }
 
-assert.equal(MILESTONE_DEFS.length, 4);
+const bankTotalDefs = MILESTONE_DEFS.filter((d) => d.metric === 'bankTotalProgress');
+assert.equal(bankTotalDefs.length, 4);
 assert.deepEqual(
-  MILESTONE_DEFS.map((d) => d.threshold),
+  bankTotalDefs.map((d) => d.threshold),
   [12, 24, 36, 48],
 );
-assert.ok(MILESTONE_DEFS.every((d) => d.metric === 'bankTotalProgress'));
 assert.equal(new Set(MILESTONE_DEFS.map((d) => d.id)).size, MILESTONE_DEFS.length);
 ok('MILESTONE_DEFS has 4 unique bankTotalProgress entries at 12/24/36/48');
+
+const axisCompleteDefs = MILESTONE_DEFS.filter((d) => d.metric !== 'bankTotalProgress');
+assert.equal(axisCompleteDefs.length, TRAIT_AXES.length);
+assert.deepEqual(
+  new Set(axisCompleteDefs.map((d) => d.metric)),
+  new Set(TRAIT_AXES.map((axis) => `axisComplete:${axis}`)),
+);
+for (const axis of TRAIT_AXES) {
+  const def = axisCompleteDefs.find((d) => d.metric === `axisComplete:${axis}`);
+  assert.ok(def, `no per-axis milestone def for ${axis}`);
+  assert.equal(def!.id, `axis_complete_${axis}`);
+  assert.equal(def!.threshold, bankQuestionCount([axis]));
+  assert.ok(
+    def!.threshold > 0,
+    `axis ${axis} has a 0-question bank, so its milestone would be unconditionally already-crossed`,
+  );
+  assert.ok(def!.title.length > 0 && def!.body.length > 0);
+  assert.ok(
+    !containsFrameworkTerm(def!.title) && !containsFrameworkTerm(def!.body),
+    `axis-complete copy for ${axis} hits the framework fence: "${def!.title}" / "${def!.body}"`,
+  );
+}
+ok(`MILESTONE_DEFS has one axisComplete entry per axis (${TRAIT_AXES.length}), threshold = that axis's bank size, fence-clean`);
+
+const firstAxis = TRAIT_AXES[0];
+assert.deepEqual(
+  checkMilestones(`axisComplete:${firstAxis}`, bankQuestionCount([firstAxis]), []).map((d) => d.id),
+  [`axis_complete_${firstAxis}`],
+);
+assert.deepEqual(checkMilestones(`axisComplete:${firstAxis}`, bankQuestionCount([firstAxis]) - 1, []), []);
+ok('checkMilestones works unchanged for a per-axis metric (no new mechanic needed)');
 
 assert.deepEqual(checkMilestones('bankTotalProgress', 0, []), []);
 ok('below every threshold crosses nothing');
