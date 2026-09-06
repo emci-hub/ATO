@@ -18,10 +18,27 @@ import { useSession } from '@/hooks/use-session';
 import { persistCelebratedMilestones } from '@/lib/me';
 import { checkMilestones, type MilestoneDef } from '@/lib/milestones';
 import { bankTotalProgress } from '@/lib/questions/local';
-import type { TraitTrack } from '@/lib/trait-stability';
+import { settledCount, type TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 import { useAppearance } from '@/lib/theme/context';
+
+/**
+ * Every newly-crossed milestone across both metrics this screen tracks:
+ * bankTotalProgress (raw answers-in-the-bank count) and profile_percent
+ * (settled-axis ratio, same "settled" as settledCount's "N of 16" label —
+ * NOT isProfileSettled, which is a strict all-16 boolean gate). Computed at
+ * the same two call sites bankTotalProgress already ran at before this
+ * change (the backfill effect and refreshAfterAnswer below); settledCount
+ * is a new read here for profile_percent specifically.
+ */
+function crossedMilestonesFor(tracks: readonly TraitTrack[], celebrated: readonly string[]): MilestoneDef[] {
+  const percent = (settledCount(tracks) / TRAIT_AXES.length) * 100;
+  return [
+    ...checkMilestones('bankTotalProgress', bankTotalProgress(tracks).answered, celebrated),
+    ...checkMilestones('profile_percent', percent, celebrated),
+  ];
+}
 
 /**
  * Questions — every question surface that feeds the trait axes lives here:
@@ -44,10 +61,10 @@ export default function IntakeSweepTabScreen() {
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [tracksReady, setTracksReady] = useState(false);
 
-  // One milestone toast at a time. Two crossings landing in the same
-  // refreshAfterAnswer pass is not possible today (bankTotalProgress moves
-  // by at most 1 per answer and MILESTONE_DEFS thresholds are 12 apart) but
-  // this queue keeps that true even if a future metric changes that.
+  // One milestone toast at a time. Two crossings CAN land in the same
+  // refreshAfterAnswer pass (e.g. bankTotalProgress and profile_percent
+  // both crossing on the same answer) — this queue shows them one after
+  // another instead of clobbering.
   const [toastQueue, setToastQueue] = useState<MilestoneDef[]>([]);
   const activeToast = toastQueue[0] ?? null;
 
@@ -135,7 +152,7 @@ export default function IntakeSweepTabScreen() {
     if (!userId || !me || !tracksReady || backfilledRef.current) return;
     backfilledRef.current = true;
     const celebrated = me.celebrated_milestone_ids ?? [];
-    const crossed = checkMilestones('bankTotalProgress', bankTotalProgress(tracks).answered, celebrated);
+    const crossed = crossedMilestonesFor(tracks, celebrated);
     if (crossed.length === 0) {
       setBackfillReady(true);
       return;
@@ -158,7 +175,7 @@ export default function IntakeSweepTabScreen() {
     const [, freshTracks] = await Promise.all([refresh(), loadTracks()]);
     if (!userId || !me || !freshTracks) return;
     const celebrated = me.celebrated_milestone_ids ?? [];
-    const crossed = checkMilestones('bankTotalProgress', bankTotalProgress(freshTracks).answered, celebrated);
+    const crossed = crossedMilestonesFor(freshTracks, celebrated);
     if (crossed.length === 0) return;
     for (const def of crossed) {
       onMilestoneCrossed(def);

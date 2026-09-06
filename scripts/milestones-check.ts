@@ -29,7 +29,34 @@ assert.deepEqual(
 assert.equal(new Set(MILESTONE_DEFS.map((d) => d.id)).size, MILESTONE_DEFS.length);
 ok('MILESTONE_DEFS has 4 unique bankTotalProgress entries at 12/24/36/48');
 
-const axisCompleteDefs = MILESTONE_DEFS.filter((d) => d.metric !== 'bankTotalProgress');
+const profilePercentDefs = MILESTONE_DEFS.filter((d) => d.metric === 'profile_percent');
+assert.equal(profilePercentDefs.length, 2);
+assert.deepEqual(
+  profilePercentDefs.map((d) => d.id),
+  ['profile_50', 'profile_100'],
+);
+assert.deepEqual(
+  profilePercentDefs.map((d) => d.threshold),
+  [50, 100],
+);
+assert.ok(
+  profilePercentDefs.every((d) => !containsFrameworkTerm(d.title) && !containsFrameworkTerm(d.body)),
+  'profile_percent copy hits the framework fence',
+);
+ok('MILESTONE_DEFS has profile_50/profile_100 at thresholds 50/100, fence-clean');
+
+assert.deepEqual(checkMilestones('profile_percent', 49.9, []), []);
+assert.deepEqual(
+  checkMilestones('profile_percent', 50, []).map((d) => d.id),
+  ['profile_50'],
+);
+assert.deepEqual(
+  checkMilestones('profile_percent', 100, ['profile_50']).map((d) => d.id),
+  ['profile_100'],
+);
+ok('checkMilestones works unchanged for the profile_percent metric (no new mechanic needed)');
+
+const axisCompleteDefs = MILESTONE_DEFS.filter((d) => d.metric.startsWith('axisComplete:'));
 assert.equal(axisCompleteDefs.length, TRAIT_AXES.length);
 assert.deepEqual(
   new Set(axisCompleteDefs.map((d) => d.metric)),
@@ -112,9 +139,34 @@ assert.ok(
 assert.equal(
   (intakeSweepSrc.match(/checkMilestones\(/g) ?? []).length,
   2,
-  'checkMilestones is called exactly twice: once in the backfill effect, once in refreshAfterAnswer',
+  'checkMilestones should be called exactly twice, file-wide, once per metric',
 );
-ok('intake-sweep.tsx wires through the shared checkMilestones/persistCelebratedMilestones helpers');
+assert.equal(
+  (intakeSweepSrc.match(/crossedMilestonesFor\(/g) ?? []).length,
+  3,
+  'crossedMilestonesFor should be defined once and called from both the backfill effect and ' +
+    'refreshAfterAnswer (3 occurrences total: 1 definition + 2 call sites)',
+);
+
+const crossedMilestonesForStart = intakeSweepSrc.indexOf('function crossedMilestonesFor(');
+const crossedMilestonesForEnd = intakeSweepSrc.indexOf('export default function IntakeSweepTabScreen');
+assert.ok(
+  crossedMilestonesForStart > -1 && crossedMilestonesForEnd > crossedMilestonesForStart,
+  'expected anchors around crossedMilestonesFor were not found in intake-sweep.tsx — did it move or get renamed?',
+);
+const crossedMilestonesForBody = intakeSweepSrc.slice(crossedMilestonesForStart, crossedMilestonesForEnd);
+assert.equal(
+  (crossedMilestonesForBody.match(/checkMilestones\(/g) ?? []).length,
+  2,
+  'both checkMilestones calls (bankTotalProgress, profile_percent) must live inside ' +
+    'crossedMilestonesFor, not duplicated at each call site',
+);
+assert.ok(
+  /settledCount\(\s*tracks\s*\)\s*\/\s*TRAIT_AXES\.length/.test(crossedMilestonesForBody),
+  'profile_percent must be computed as the settled-axis ratio via settledCount, at the same call ' +
+    'site bankTotalProgress already runs at — not a separately duplicated computation',
+);
+ok('intake-sweep.tsx wires through the shared checkMilestones/persistCelebratedMilestones/crossedMilestonesFor helpers');
 
 const backfillEffectStart = intakeSweepSrc.indexOf('backfilledRef.current = true;');
 const backfillEffectEnd = intakeSweepSrc.indexOf('}, [userId, me, tracksReady, tracks, refresh]);');
