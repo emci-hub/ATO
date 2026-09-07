@@ -32,7 +32,6 @@ import { applyQuestionAnswer } from '@/lib/questions/answer';
 import { generateQuestionBatch } from '@/lib/questions/generate';
 import {
   bankProgressForAxes,
-  bankQuestionCount,
   bankTotalProgress,
   type BankProgressItem,
 } from '@/lib/questions/local';
@@ -385,10 +384,13 @@ export function QuestionsFold({
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
+          style={styles.categoryScroll}
           contentContainerStyle={styles.categoryRow}>
           {categoryDefs.map((def) => {
             const active = selectedCategory === def.id;
-            const count = bankQuestionCount(def.axes);
+            const remaining = bankProgressForAxes(def.axes, tracks ?? []).filter(
+              (row) => row.state !== 'answered',
+            ).length;
             return (
               <Pressable
                 key={def.id}
@@ -402,7 +404,7 @@ export function QuestionsFold({
                   busy && styles.disabled,
                 ]}>
                 <ThemedText type="smallBold" themeColor={active ? undefined : 'textSecondary'}>
-                  {count > 0 ? `${def.name} · ${count} questions` : def.name}
+                  {remaining > 0 ? `${def.name} · ${remaining} left` : def.name}
                 </ThemedText>
               </Pressable>
             );
@@ -521,7 +523,9 @@ function CategoryQuestionsList({
   onPick: (draft: QuestionDraft, option: QuestionOption) => void;
 }) {
   const theme = useTheme();
-  const rows: BankProgressItem[] = bankProgressForAxes(def.axes, tracks);
+  const rows: BankProgressItem[] = bankProgressForAxes(def.axes, tracks).filter(
+    (row) => row.state !== 'answered',
+  );
 
   return (
     <View style={styles.categoryList}>
@@ -570,6 +574,10 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.two,
+  },
+  categoryScroll: {
+    overflow: 'hidden',
+    alignSelf: 'stretch',
   },
   categoryRow: {
     gap: Spacing.two,

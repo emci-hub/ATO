@@ -123,6 +123,10 @@ export function IntakeSweep({
     (row) => !skipped.has(row.axis) && !deferred.has(row.axis),
   );
 
+  if (drafts != null && gate == null && open.length === 0) {
+    return null;
+  }
+
   async function persistSkip(axes: readonly TraitAxis[]) {
     const deferred = mergedDeferral(me.question_deferred, values, axes);
     await saveQuestionDeferral(me.id, deferred);
@@ -193,17 +197,6 @@ export function IntakeSweep({
         <ThemedText type="small" themeColor="textSecondary">
           {gate}
         </ThemedText>
-      ) : open.length === 0 ? (
-        <>
-          <ThemedText type="small" themeColor="textSecondary">
-            That is all for this pass.
-          </ThemedText>
-          <ThemedPressable filled onPress={onDone} style={styles.done}>
-            <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-              {INTAKE_SWEEP_DONE}
-            </ThemedText>
-          </ThemedPressable>
-        </>
       ) : (
         open.map((draft) => (
           <View key={draft.axis} style={styles.item}>

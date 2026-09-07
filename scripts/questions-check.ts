@@ -890,13 +890,17 @@ assert.match(fold, /QUESTIONS_KEEP_GOING/);
 assert.match(fold, /logJargonGuard/);
 assert.match(fold, /logPhraseGuard/);
 // Category picker wiring: selecting a category renders a self-contained list
-// straight from the static bank (bankProgressForAxes/bankTotalProgress/
-// bankQuestionCount) — not routed through routeQuestions/priorityAxes, and
-// never imports anything from the question_items/category_id direction, so
-// a bad selection can never touch the persisted rotation. Defaults unselected.
+// straight from the static bank (bankProgressForAxes/bankTotalProgress) —
+// not routed through routeQuestions/priorityAxes, and never imports anything
+// from the question_items/category_id direction, so a bad selection can
+// never touch the persisted rotation. Defaults unselected. Answered rows are
+// filtered out of both the chip's remaining-count and the expanded list, so
+// the chip reads "N left" rather than the old total bank-size wording.
 assert.match(fold, /bankProgressForAxes/);
 assert.match(fold, /bankTotalProgress/);
-assert.match(fold, /bankQuestionCount/);
+assert.match(fold, /row\.state !== 'answered'/);
+assert.match(fold, /left`/);
+assert.doesNotMatch(fold, /bankQuestionCount/);
 assert.doesNotMatch(fold, /mergeCategoryPriority/);
 assert.match(fold, /useState<CategoryId \| null>\(null\)/);
 assert.doesNotMatch(fold, /category_id/);
