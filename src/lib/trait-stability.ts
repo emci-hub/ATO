@@ -249,6 +249,28 @@ export function trackFor(
 }
 
 /**
+ * Every currently-defined axis, ranked ascending by `effectiveStability`
+ * (least-stable/least-answered first) — a pre-generation counterpart to
+ * `rotation.ts`'s `byAscendingStability`, which only ever ranks drafts
+ * already returned from a generation call. Same decorate-sort-undecorate
+ * shape with an explicit original-index tie-break (Hermes' `Array.sort` is
+ * not guaranteed stable), so two axes both reading 0 (or any tied value)
+ * keep `TRAIT_AXES` order rather than depending on engine behavior.
+ */
+export function rankAxesByStability(
+  rows: readonly TraitTrack[],
+  now: Date = new Date(),
+): TraitAxis[] {
+  return TRAIT_AXES.map((axis, index) => ({
+    axis,
+    index,
+    stability: effectiveStability(trackFor(rows, axis, 'report'), now),
+  }))
+    .sort((a, b) => a.stability - b.stability || a.index - b.index)
+    .map((row) => row.axis);
+}
+
+/**
  * Sum of effective report-track stability across every currently-defined axis.
  * Gut-call never counts. Below the answer-count floor an axis contributes 0.
  */

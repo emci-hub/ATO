@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getCategoryDefs, type CategoryId } from '@/lib/categories';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { updateTraits, type Me } from '@/lib/me';
 import { humanizeAxis } from '@/lib/milestones';
 import { earnTokensQuiet } from '@/lib/tokens-server';
@@ -30,6 +31,19 @@ import {
   QUESTIONS_SKIP_THIS,
 } from '@/lib/questions/copy';
 import { applyQuestionAnswer } from '@/lib/questions/answer';
+import {
+  categoryBatchProgressFrom,
+  composeCategoryBatch,
+  CATEGORY_BATCH_COPY_REVIEWED,
+  CATEGORY_BATCH_SIZE,
+  type CategoryBatchState,
+} from '@/lib/questions/category-batch';
+import {
+  answerCategoryQuestionItem,
+  fetchAskedQuestionTexts,
+  fetchCategoryBatch,
+  saveCategoryBatchItems,
+} from '@/lib/questions/category-batch-store';
 import { generateQuestionBatch } from '@/lib/questions/generate';
 import {
   bankProgressForAxis,
@@ -446,6 +460,148 @@ export function QuestionsFold({
     <SettingsFold title={title} onOpen={handleOpen}>
       {body}
     </SettingsFold>
+  );
+}
+
+/**
+ * "10 questions per category" (separate mode from Infinite Questions above
+ * — sibling component, not a branch inside `QuestionsFold`, so the existing
+ * rotation/skip/checkpoint machinery there stays completely untouched).
+ * Entered via `category`, same prop `QuestionsFold` already accepted as
+ * unused plumbing. Generates-or-resumes a fixed 10-question batch for this
+ * category on mount, answers write traits immediately (same
+ * `applyQuestionAnswer` as `pickBankItem` above), and once all 10 are
+ * answered the whole list locks read-only in place — same visual as
+ * `FullProfileList`'s lock, no navigation, no toast. Skip is not offered in
+ * this mode at all (no shared code path with `skipThis`/`skipRest` above).
+ */
+export function CategoryBatchFold({
+  me,
+  tracks,
+  category,
+  onUpdated,
+}: {
+  me: Me;
+  tracks: readonly TraitTrack[];
+  category: CategoryId;
+  onUpdated: () => Promise<void>;
+}) {
+  const theme = useTheme();
+  const [batch, setBatch] = useState<CategoryBatchState | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const existing = await fetchCategoryBatch(category);
+      if (existing && existing.items.length >= CATEGORY_BATCH_SIZE) {
+        setBatch(existing);
+        return;
+      }
+      const composed = await composeCategoryBatch(
+        category,
+        tracks,
+        { name: me.name, talk_style: me.talk_style ?? 'even', voice_preset: me.voice_preset },
+        {
+          generateBatch: generateQuestionBatch,
+          fetchAskedTexts: fetchAskedQuestionTexts,
+          saveItems: saveCategoryBatchItems,
+        },
+        new Date(),
+        existing,
+      );
+      setBatch(composed);
+    } catch (err) {
+      console.log('[category-batch] load error:', err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [category, tracks, me]);
+
+  useEffect(() => {
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one generation per category mount
+  }, [category]);
+
+  async function pick(item: CategoryBatchState['items'][number], index: number) {
+    const option = item.options[index];
+    if (!option || busy || !batch) return;
+    setBusy(true);
+    try {
+      await answerCategoryQuestionItem(item.id, index);
+      const draft: QuestionDraft = { axis: item.axis, prompt: item.prompt, options: [...item.options] };
+      await applyQuestionAnswer(me.id, draft, option, tracks);
+      setBatch({
+        ...batch,
+        items: batch.items.map((row) =>
+          row.id === item.id ? { ...row, answeredOption: index } : row,
+        ),
+      });
+      earnTokensQuiet('game_round');
+      await onUpdated();
+    } catch (err) {
+      console.log('[category-batch] answer error:', err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const progress = categoryBatchProgressFrom(category, batch);
+
+  return (
+    <View style={styles.body}>
+      {!CATEGORY_BATCH_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
+        <ThemedText type="code" themeColor="textSecondary">
+          Draft copy — waiting on emci review.
+        </ThemedText>
+      ) : null}
+      {loading ? (
+        <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+      ) : error ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          Could not generate this category&apos;s questions. Try again.
+        </ThemedText>
+      ) : (
+        <>
+          <ThemedText type="small" themeColor="textSecondary">
+            {progress.answeredCount} of {CATEGORY_BATCH_SIZE} answered
+          </ThemedText>
+          {(batch?.items ?? []).map((item) => (
+            <View key={item.id} style={styles.axisItem}>
+              <View style={styles.axisItemHeader}>
+                <ThemedText type="small">{item.prompt}</ThemedText>
+                {item.answeredOption != null ? (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Answered
+                  </ThemedText>
+                ) : null}
+              </View>
+              {progress.locked ? null : (
+                <View style={styles.options}>
+                  {item.options.map((option, index) => (
+                    <ThemedPressable
+                      key={`${item.id}-${index}`}
+                      disabled={busy || item.answeredOption != null}
+                      onPress={() => void pick(item, index)}
+                      style={[
+                        styles.option,
+                        { borderColor: controlBorderColor(theme) },
+                        (busy || item.answeredOption != null) && styles.disabled,
+                      ]}>
+                      <ThemedText type="smallBold">{option.text}</ThemedText>
+                    </ThemedPressable>
+                  ))}
+                </View>
+              )}
+            </View>
+          ))}
+        </>
+      )}
+    </View>
   );
 }
 

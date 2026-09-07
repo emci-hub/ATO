@@ -85,7 +85,9 @@ export function parseQuestionDraft(raw: unknown): QuestionDraft | null {
   };
 }
 
-export function parseQuestionBatch(raw: string): QuestionDraft[] {
+/** `count` defaults to 5 so every pre-existing caller is byte-identical. */
+export function parseQuestionBatch(raw: string, count = 5): QuestionDraft[] {
+  const max = count > 0 ? Math.floor(count) : 5;
   const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
   let parsed: unknown;
   try {
@@ -102,7 +104,7 @@ export function parseQuestionBatch(raw: string): QuestionDraft[] {
   for (const item of list) {
     const draft = parseQuestionDraft(item);
     if (draft) out.push(draft);
-    if (out.length >= 5) break;
+    if (out.length >= max) break;
   }
   return out;
 }

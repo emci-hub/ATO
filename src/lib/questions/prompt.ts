@@ -42,6 +42,23 @@ export function buildQuestionsPrompt(input: {
   retryHint?: boolean;
   priorityAxes?: readonly TraitAxis[];
   tracks?: readonly TraitTrack[];
+  /** Defaults to 5 (Infinite Questions' existing size). Category batches pass up to 10. */
+  count?: number;
+  /**
+   * Category-batch mode only (additive — every pre-existing caller omits
+   * this and gets identical output to before). Restricts the AXES list to
+   * exactly these axes (instead of all 16) and tells the model how many
+   * questions to write for each, so a category's own axes plus any
+   * lagging-axis filler questions can be requested in one call.
+   */
+  axisCounts?: Partial<Record<TraitAxis, number>>;
+  /**
+   * Category-batch mode only. Literal question text already served to this
+   * user (Infinite Questions history + this batch's already-saved
+   * questions) — the model must not repeat or closely restate any of these.
+   * New phrasing on the same axis is fine; this only blocks near-duplicates.
+   */
+  excludeText?: readonly string[];
 }): string {
   const ground =
     input.grounding.kind === 'none' || !input.grounding.detail
@@ -70,6 +87,21 @@ export function buildQuestionsPrompt(input: {
       ? `TRAIT CONTEXT (settled axes only, for flavor/grounding — never ask about a trait directly, never name it, never reference the score):\n${traitLines.join('\n')}\n\n`
       : '';
 
+  const count = input.count && input.count > 0 ? Math.floor(input.count) : 5;
+  const axesLines = input.axisCounts
+    ? Object.entries(input.axisCounts)
+        .filter(([, n]) => (n ?? 0) > 0)
+        .map(([axis, n]) => `${axis} x${n}`)
+        .join(', ')
+    : TRAIT_AXES.join(', ');
+  const axesLabel = input.axisCounts
+    ? `AXES (write exactly this many questions for each — total must equal ${count})`
+    : 'AXES (each question maps to exactly one)';
+  const exclude =
+    input.excludeText && input.excludeText.length > 0
+      ? `ALREADY ASKED (never repeat or closely restate any of these — new phrasing on the same axis is fine, the same question is not):\n${input.excludeText.map((t) => `- ${t}`).join('\n')}\n\n`
+      : '';
+
   return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. This is Infinite Questions — multiple-choice only, mapping to existing trait axes.
 
 VOICE REFERENCE (write in this register — do NOT reuse these lines verbatim):
@@ -86,11 +118,11 @@ TODAY
 CONTEXT
 ${retry}${ground}
 
-${traitContext}AXES (each question maps to exactly one):
-${TRAIT_AXES.join(', ')}
+${traitContext}${exclude}${axesLabel}:
+${axesLines}
 
 ${priority}RULES
-1. Return exactly 5 questions.
+1. Return exactly ${count} question${count === 1 ? '' : 's'}.
 2. Multiple-choice only. 2 or 3 options each. Never ask for free text.
 3. Each question maps to one axis from the list. Include the axis id in JSON.
 4. Options need a 0–1 value for that axis (high pole closer to 1).
