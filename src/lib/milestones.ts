@@ -36,7 +36,7 @@ const AXIS_DISPLAY_OVERRIDES: Partial<Record<TraitAxis, string>> = {
 };
 
 /** Placeholder copy — unreviewed. "attachment_anxiety" -> "attachment anxiety". */
-function humanizeAxis(axis: TraitAxis): string {
+export function humanizeAxis(axis: TraitAxis): string {
   return AXIS_DISPLAY_OVERRIDES[axis] ?? axis.replace(/_/g, ' ');
 }
 

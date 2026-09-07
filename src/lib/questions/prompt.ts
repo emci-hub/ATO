@@ -1,3 +1,6 @@
+import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
+import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
+import { effectiveStability, trackFor, type TraitTrack } from '@/lib/trait-stability';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '@/lib/voice/preset';
 import { TALK_STYLE_GUIDE } from '@/lib/voice/providers/types';
@@ -6,6 +9,27 @@ import type { TalkStyle } from '@/lib/voice/types';
 
 import { QUESTIONS_FEW_SHOTS } from './bank';
 import type { QuestionGrounding } from './types';
+
+/**
+ * Settled axes only (`effectiveStability > 0`), as qualitative pole phrases —
+ * never a raw trait value — same convention as `sage-title.ts`'s settled
+ * notes. Flavor for grounding, not something the model should ask about
+ * directly; the RULES section below says so explicitly.
+ */
+function traitContextLines(tracks: readonly TraitTrack[]): string[] {
+  const lines: string[] = [];
+  for (const axis of TRAIT_AXES) {
+    const row = trackFor(tracks, axis, 'report');
+    if (!row) continue;
+    const stability = effectiveStability(row);
+    if (stability <= 0) continue;
+    const pole = row.value >= 0.5 ? TRAIT_BAND_PHRASES[axis].high : TRAIT_BAND_PHRASES[axis].low;
+    lines.push(
+      `- ${AXIS_EDITOR_COPY[axis].label}: leans toward "${pole}" (settled ${stability.toFixed(2)})`,
+    );
+  }
+  return lines;
+}
 
 export function buildQuestionsPrompt(input: {
   me: {
@@ -17,6 +41,7 @@ export function buildQuestionsPrompt(input: {
   recentAxes?: string[];
   retryHint?: boolean;
   priorityAxes?: readonly TraitAxis[];
+  tracks?: readonly TraitTrack[];
 }): string {
   const ground =
     input.grounding.kind === 'none' || !input.grounding.detail
@@ -39,6 +64,12 @@ export function buildQuestionsPrompt(input: {
     ? 'Previous draft had a blocked term or pattern in a question or an option. Write a different batch.\n'
     : '';
 
+  const traitLines = traitContextLines(input.tracks ?? []);
+  const traitContext =
+    traitLines.length > 0
+      ? `TRAIT CONTEXT (settled axes only, for flavor/grounding — never ask about a trait directly, never name it, never reference the score):\n${traitLines.join('\n')}\n\n`
+      : '';
+
   return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. This is Infinite Questions — multiple-choice only, mapping to existing trait axes.
 
 VOICE REFERENCE (write in this register — do NOT reuse these lines verbatim):
@@ -55,7 +86,7 @@ TODAY
 CONTEXT
 ${retry}${ground}
 
-AXES (each question maps to exactly one):
+${traitContext}AXES (each question maps to exactly one):
 ${TRAIT_AXES.join(', ')}
 
 ${priority}RULES

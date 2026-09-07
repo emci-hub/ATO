@@ -203,7 +203,70 @@ assert.match(prompt, /Mix stakes/);
 assert.match(prompt, /same sentence shape/);
 assert.match(prompt, /you mentioned to Sage/);
 assert.doesNotMatch(prompt, /TextInput/);
+assert.doesNotMatch(prompt, /TRAIT CONTEXT/, 'no tracks -> no trait context section at all');
 ok('prompt is multiple-choice, includes the locked few-shots');
+
+// Trait-adaptive prompt context: settled axes (effectiveStability > 0) show
+// as a qualitative pole phrase + a settled score, never a raw trait value;
+// unsettled axes (answerCount < 3) are omitted entirely, same convention as
+// sage-title.ts's settled notes.
+const settledHighTrack: TraitTrack = {
+  axis: 'openness',
+  track: 'report',
+  value: 0.8,
+  stability: 0.6,
+  answerCount: 3,
+  lastTouched: new Date().toISOString(),
+  lastDepthAt: null,
+};
+const settledLowTrack: TraitTrack = {
+  axis: 'extraversion',
+  track: 'report',
+  value: 0.2,
+  stability: 0.6,
+  answerCount: 3,
+  lastTouched: new Date().toISOString(),
+  lastDepthAt: null,
+};
+const unsettledTrack: TraitTrack = {
+  axis: 'agreeableness',
+  track: 'report',
+  value: 0.9,
+  stability: 0.6,
+  answerCount: 1,
+  lastTouched: new Date().toISOString(),
+  lastDepthAt: null,
+};
+const traitPrompt = buildQuestionsPrompt({
+  me: { name: 'Riley', talk_style: 'even', voice_preset: 'close_friend' },
+  grounding: { kind: 'do', detail: 'Write one line.' },
+  tracks: [settledHighTrack, settledLowTrack, unsettledTrack],
+});
+assert.match(traitPrompt, /TRAIT CONTEXT/);
+assert.match(traitPrompt, /never ask about a trait directly/);
+assert.match(traitPrompt, /goes for the untried option/); // openness high pole (value 0.8)
+assert.match(traitPrompt, /leans toward quiet time/); // extraversion low pole (value 0.2)
+// Scoped to the TRAIT CONTEXT block itself — the prompt's fixed JSON-shape
+// example legitimately contains "0.8"/"0.2" as sample option values, so a
+// file-wide match would false-positive on that unrelated boilerplate.
+const traitContextBlock = traitPrompt.slice(
+  traitPrompt.indexOf('TRAIT CONTEXT'),
+  traitPrompt.indexOf('AXES (each question maps to exactly one)'),
+);
+assert.doesNotMatch(traitContextBlock, /0\.8/, 'raw trait value must never appear, only the settled score');
+assert.doesNotMatch(traitContextBlock, /0\.2/, 'raw trait value must never appear, only the settled score');
+assert.doesNotMatch(
+  traitContextBlock,
+  /go along to keep things easy/, // agreeableness's AXIS_EDITOR_COPY label
+  'unsettled axis (answerCount < 3) must be omitted entirely',
+);
+const noTracksPrompt = buildQuestionsPrompt({
+  me: { name: 'Riley', talk_style: 'even', voice_preset: 'close_friend' },
+  grounding: { kind: 'do', detail: 'Write one line.' },
+  tracks: [unsettledTrack],
+});
+assert.doesNotMatch(noTracksPrompt, /TRAIT CONTEXT/, 'all-unsettled tracks -> no trait context section');
+ok('trait context surfaces settled axes as pole phrases only, omits unsettled axes and raw values');
 
 const jargonOption: QuestionDraft = {
   axis: 'openness',
@@ -889,22 +952,40 @@ assert.match(fold, /QUESTIONS_CHECKPOINT/);
 assert.match(fold, /QUESTIONS_KEEP_GOING/);
 assert.match(fold, /logJargonGuard/);
 assert.match(fold, /logPhraseGuard/);
-// Category picker wiring: selecting a category renders a self-contained list
-// straight from the static bank (bankProgressForAxes/bankTotalProgress) —
-// not routed through routeQuestions/priorityAxes, and never imports anything
-// from the question_items/category_id direction, so a bad selection can
-// never touch the persisted rotation. Defaults unselected. Answered rows are
-// filtered out of both the chip's remaining-count and the expanded list, so
-// the chip reads "N left" rather than the old total bank-size wording.
-assert.match(fold, /bankProgressForAxes/);
+// Full Profile wiring: all 16 axes render straight from the static bank
+// (bankProgressForAxis/bankTotalProgress) — not routed through
+// routeQuestions/priorityAxes, and never imports anything from the
+// question_items/category_id direction, so a bad bank read can never touch
+// the persisted rotation. No category picker UI anymore (replaced Sep 2026):
+// every axis is always shown, no selection state, no per-category chips.
+// Scoped to FullProfileList's own body — `category` targeting below is real
+// wiring elsewhere in this file (the default rotation's `load()`), which
+// must NOT show up inside Full Profile's rendering.
+assert.match(fold, /bankProgressForAxis/);
 assert.match(fold, /bankTotalProgress/);
-assert.match(fold, /row\.state !== 'answered'/);
-assert.match(fold, /left`/);
+assert.match(fold, /humanizeAxis/);
 assert.doesNotMatch(fold, /bankQuestionCount/);
-assert.doesNotMatch(fold, /mergeCategoryPriority/);
-assert.match(fold, /useState<CategoryId \| null>\(null\)/);
 assert.doesNotMatch(fold, /category_id/);
-ok('category picker renders straight from the static bank, not through routeQuestions');
+{
+  const fullProfileOnly = fold.slice(
+    fold.indexOf('function FullProfileList'),
+    fold.indexOf('const styles = StyleSheet.create({'),
+  );
+  assert.doesNotMatch(fullProfileOnly, /mergeCategoryPriority/);
+  assert.doesNotMatch(fullProfileOnly, /CategoryId/);
+}
+ok('Full Profile renders every axis straight from the static bank, not through routeQuestions');
+
+// Category-to-axis targeting (additive, unused by any caller yet — same
+// pattern as focusAxis): an optional `category` prop resolves to that
+// category's axes via getCategoryDefs and merges ahead of the base priority
+// list via the existing mergeCategoryPriority, never introducing a new
+// category concept into routeQuestions/the model/the DB — only a plain
+// TraitAxis[] crosses that boundary.
+assert.match(fold, /category\?:\s*CategoryId/);
+assert.match(fold, /getCategoryDefs\(\)\.find/);
+assert.match(fold, /mergeCategoryPriority\(categoryAxes, base\)/);
+ok('category prop resolves to axes and merges into priorityAxes, never reaching routeQuestions as a category');
 
 // T-04: the real trait_history fetch + contradictedAxes wiring must survive —
 // nothing else asserts this, so a regression here (e.g. deleting the fetch,
@@ -920,27 +1001,31 @@ assert.match(fold, /contradictedAxesFrom/);
 assert.match(fold, /tracks,\s*\n\s*contradictedAxes,/);
 ok('questions-fold.tsx fetches trait_history and passes contradictedAxes into the routeQuestions call itself');
 
-// The category list replaces skip/pause entirely — those stay on the default
-// rotation only. Scope the check to CategoryQuestionsList's own body so a
-// match on the (unrelated) default-rotation branch above it doesn't hide a
+// Full Profile replaces skip/pause entirely — those stay on the default
+// rotation only. Scope the check to FullProfileList's own body so a match on
+// the (unrelated) default-rotation branch above it doesn't hide a
 // regression, and so a future default-rotation edit doesn't false-positive.
-const categoryListSection = fold.slice(
-  fold.indexOf('function CategoryQuestionsList'),
+const fullProfileSection = fold.slice(
+  fold.indexOf('function FullProfileList'),
   fold.indexOf('const styles = StyleSheet.create({'),
 );
-assert.ok(categoryListSection.length > 200, 'CategoryQuestionsList function body found');
+assert.ok(fullProfileSection.length > 200, 'FullProfileList function body found');
 assert.doesNotMatch(
-  categoryListSection,
+  fullProfileSection,
   /QUESTIONS_SKIP_THIS|QUESTIONS_SKIP_REST|QUESTIONS_CHECKPOINT|QUESTIONS_KEEP_GOING/,
 );
-assert.match(categoryListSection, /'Answered'/);
-assert.match(categoryListSection, /'Locked'/);
+assert.match(fullProfileSection, />\s*Answered\s*</);
+// No sequential lock left to render a 'Locked' label for — every one of an
+// axis's 3 drafts is shown and answerable at once, any order.
+assert.doesNotMatch(fullProfileSection, /'Locked'/);
+assert.doesNotMatch(fullProfileSection, />\s*Locked\s*</);
+assert.match(fullProfileSection, /locked \? null :/);
 // Default rotation (outside that function) still keeps skip/pause, untouched.
-const defaultRotationSection = fold.slice(0, fold.indexOf('function CategoryQuestionsList'));
+const defaultRotationSection = fold.slice(0, fold.indexOf('function FullProfileList'));
 assert.match(defaultRotationSection, /QUESTIONS_SKIP_THIS/);
 assert.match(defaultRotationSection, /QUESTIONS_SKIP_REST/);
 assert.match(defaultRotationSection, /QUESTIONS_CHECKPOINT/);
-ok('category list drops skip/pause; default rotation keeps them, unaffected');
+ok('Full Profile drops skip/pause and locks entirely at 48/48; default rotation keeps skip/pause, unaffected');
 assert.equal(QUESTIONS_SKIP_THIS, 'Skip this one');
 assert.equal(QUESTIONS_SKIP_REST, 'Skip the rest');
 assert.equal(QUESTIONS_CHECKPOINT, "That's plenty for now — come back anytime");

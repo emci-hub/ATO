@@ -123,6 +123,7 @@ async function guardedBatch(
     grounding,
     recentAxes,
     priorityAxes,
+    tracks: input.tracks ?? [],
   };
 
   if (forceLocal || deps.useLocal === true || !deps.generateBatch) {

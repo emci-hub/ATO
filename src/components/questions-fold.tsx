@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { getCategoryDefs, type CategoryDef, type CategoryId } from '@/lib/categories';
+import { getCategoryDefs, type CategoryId } from '@/lib/categories';
 import { updateTraits, type Me } from '@/lib/me';
+import { humanizeAxis } from '@/lib/milestones';
 import { earnTokensQuiet } from '@/lib/tokens-server';
-import { deferredUnansweredAxes } from '@/lib/questions/deferral';
+import { deferredUnansweredAxes, mergeCategoryPriority } from '@/lib/questions/deferral';
 import { contradictedAxesFrom, type TraitHistoryRow } from '@/lib/trait-history';
 import { fetchTraitHistory } from '@/lib/trait-history-store';
 import { unansweredAxisLabel, type TraitTrack } from '@/lib/trait-stability';
@@ -31,7 +32,7 @@ import {
 import { applyQuestionAnswer } from '@/lib/questions/answer';
 import { generateQuestionBatch } from '@/lib/questions/generate';
 import {
-  bankProgressForAxes,
+  bankProgressForAxis,
   bankTotalProgress,
   type BankProgressItem,
 } from '@/lib/questions/local';
@@ -106,6 +107,7 @@ export function QuestionsFold({
   onUpdated,
   alwaysOpen = false,
   focusAxis,
+  category,
   tracks,
 }: {
   me: Me;
@@ -115,6 +117,14 @@ export function QuestionsFold({
   alwaysOpen?: boolean;
   /** Front-loads this axis in the next batch (e.g. deep-linked from Legends). */
   focusAxis?: TraitAxis;
+  /**
+   * Front-loads a whole category's axes ahead of the base priority list (no
+   * caller passes this yet — plumbing for a future "generate for category X"
+   * entry point). Resolved to axes here, via `getCategoryDefs`; `category`
+   * never reaches `routeQuestions`/the model/the DB — only the resulting
+   * `TraitAxis[]` does, same as `focusAxis`.
+   */
+  category?: CategoryId;
   /**
    * Report tracks, for the profile-completeness gate in `routeQuestions`.
    * Absent reads as incomplete: static bank only, no model call.
@@ -127,16 +137,6 @@ export function QuestionsFold({
   const [sessionCount, setSessionCount] = useState(0);
   const [checkpoint, setCheckpoint] = useState(false);
   const [keptGoing, setKeptGoing] = useState(false);
-  /**
-   * Category picker. No category selected = today's default axis-driven
-   * rotation, entirely unchanged below. Picking a category switches to a
-   * self-contained list of that category's bank questions (rendered
-   * straight from `bankProgressForAxes`, never routed through
-   * `routeQuestions`/`priorityAxes`) — so a bad or stale selection can never
-   * block or alter the default rotation; it only decides which block below
-   * renders.
-   */
-  const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(null);
 
   // T-04: real caller of Phase 6's hasContradictedAnswers. Fetched here
   // (route-level), not from any shared cache — none exists for trait_history
@@ -171,10 +171,14 @@ export function QuestionsFold({
       traitStateFromRow(me).values,
       me.question_deferred,
     );
-    const priorityAxes =
+    const base =
       focusAxis && (TRAIT_AXES as readonly string[]).includes(focusAxis)
         ? [focusAxis, ...deferred.filter((axis) => axis !== focusAxis)]
         : deferred;
+    const categoryAxes = category
+      ? (getCategoryDefs().find((def) => def.id === category)?.axes ?? [])
+      : [];
+    const priorityAxes = mergeCategoryPriority(categoryAxes, base);
     const next = await withTimeout(
       routeQuestions(
         {
@@ -200,7 +204,7 @@ export function QuestionsFold({
       'questions',
     );
     setResult(next);
-  }, [me, history, crisisToday, focusAxis, tracks, contradictedAxes]);
+  }, [me, history, crisisToday, focusAxis, category, tracks, contradictedAxes]);
 
   function handleOpen() {
     setSessionCount(0);
@@ -229,26 +233,7 @@ export function QuestionsFold({
   }
 
   /**
-   * Tapping the active category clears it, back to the default rotation
-   * (resumed with a fresh `load()`, same as opening the fold); tapping
-   * another switches the list. Never touches sessionCount/checkpoint/
-   * keptGoing — those govern the unrelated pause-after-N-answers flow, which
-   * does not apply to the category list.
-   */
-  function handleSelectCategory(id: CategoryId) {
-    if (busy) return;
-    const next = selectedCategory === id ? null : id;
-    setSelectedCategory(next);
-    if (next === null) {
-      void load().catch((err) => {
-        console.log('[questions] route error:', err);
-        setResult({ kind: 'empty', pack: null, item: null });
-      });
-    }
-  }
-
-  /**
-   * Answers one bank question directly from the category list. Local
+   * Answers one bank question directly from the Full Profile list. Local
    * (bank-sourced) `QuestionDraft`, never a persisted `QuestionItemRow` — so
    * this can safely carry primaryAxes/secondaryAxes (Phase 4) via the shared
    * `applyQuestionAnswer`, same as intake-sweep. `pick()` below (the
@@ -355,20 +340,13 @@ export function QuestionsFold({
   const empty = result ? emptyCopy(result.kind) : null;
   const item = checkpoint ? null : (result?.item ?? null);
 
-  // Fail-open: a broken/empty catalog just hides the picker row and the
-  // progress header, and a selection that no longer resolves to a def falls
-  // through to the default chain below (activeCategory reads null) — the
-  // question below never depends on any of this.
-  let categoryDefs: ReturnType<typeof getCategoryDefs> = [];
-  try {
-    categoryDefs = getCategoryDefs();
-  } catch (err) {
-    console.log('[questions] category list error:', err);
-  }
-  const activeCategory = selectedCategory
-    ? (categoryDefs.find((def) => def.id === selectedCategory) ?? null)
-    : null;
   const progress = bankTotalProgress(tracks ?? []);
+  // Full Profile is exactly the required 48 (3 per axis) — once every axis
+  // has all 3, the whole section goes read-only. Re-answering past that
+  // point would only add an invisible extra EWMA sample (no milestone, no
+  // stability change worth showing), so it's clearer to just stop offering
+  // it than to let taps silently do nothing meaningful.
+  const fullProfileLocked = progress.total > 0 && progress.answered >= progress.total;
 
   const body = (
     <View style={styles.body}>
@@ -380,45 +358,13 @@ export function QuestionsFold({
           {progress.answered} of {progress.total} answered
         </ThemedText>
       ) : null}
-      {categoryDefs.length > 0 ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.categoryScroll}
-          contentContainerStyle={styles.categoryRow}>
-          {categoryDefs.map((def) => {
-            const active = selectedCategory === def.id;
-            const remaining = bankProgressForAxes(def.axes, tracks ?? []).filter(
-              (row) => row.state !== 'answered',
-            ).length;
-            return (
-              <Pressable
-                key={def.id}
-                onPress={() => handleSelectCategory(def.id)}
-                disabled={busy}
-                style={({ pressed }) => [
-                  styles.categoryChip,
-                  { borderColor: controlBorderColor(theme) },
-                  active && [styles.categoryChipActive, { borderColor: theme.accent }],
-                  pressed && styles.pressed,
-                  busy && styles.disabled,
-                ]}>
-                <ThemedText type="smallBold" themeColor={active ? undefined : 'textSecondary'}>
-                  {remaining > 0 ? `${def.name} · ${remaining} left` : def.name}
-                </ThemedText>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      ) : null}
-      {activeCategory ? (
-        <CategoryQuestionsList
-          def={activeCategory}
-          tracks={tracks ?? []}
-          busy={busy}
-          onPick={(draft, option) => void pickBankItem(draft, option)}
-        />
-      ) : checkpoint ? (
+      <FullProfileList
+        tracks={tracks ?? []}
+        busy={busy}
+        locked={fullProfileLocked}
+        onPick={(draft, option) => void pickBankItem(draft, option)}
+      />
+      {checkpoint ? (
         <>
           <ThemedText>{QUESTIONS_CHECKPOINT}</ThemedText>
           <ThemedPressable
@@ -504,67 +450,71 @@ export function QuestionsFold({
 }
 
 /**
- * A category's bank questions as a browsable list, straight from the static
- * bank (`bankProgressForAxes`) — never routed through `routeQuestions`. Each
- * axis unlocks its own 3 drafts in order: the current one is answerable
- * inline, earlier ones show answered, later ones show locked. No skip / no
- * pause-after-N here — those belong to the endless single-item rotation this
- * list replaces while a category is selected.
+ * The required 48 (3 per axis), straight from the static bank — never routed
+ * through `routeQuestions`. All 3 of an axis's drafts are shown and
+ * answerable at once, any order (no current/locked sequencing): the bank
+ * only tracks a per-axis answer count, not which literal draft was
+ * answered, so "answered" always lands on the count-th row front-to-back
+ * regardless of which one was actually tapped. Re-answering an already
+ * "Answered" row is allowed (it blends another EWMA sample, same mechanism
+ * as the rotating pool elsewhere) — until `locked`, once the full 48 is
+ * answered, when every option disappears and the section goes read-only.
  */
-function CategoryQuestionsList({
-  def,
+function FullProfileList({
   tracks,
   busy,
+  locked,
   onPick,
 }: {
-  def: CategoryDef;
   tracks: readonly TraitTrack[];
   busy: boolean;
+  locked: boolean;
   onPick: (draft: QuestionDraft, option: QuestionOption) => void;
 }) {
   const theme = useTheme();
-  const rows: BankProgressItem[] = bankProgressForAxes(def.axes, tracks).filter(
-    (row) => row.state !== 'answered',
-  );
 
   return (
-    <View style={styles.categoryList}>
-      {rows.map((row) => (
-        <View key={`${row.axis}-${row.variant}`} style={styles.categoryListItem}>
-          {row.state === 'current' ? (
-            <>
-              <ThemedText type="smallBold">{row.draft.prompt}</ThemedText>
-              <View style={styles.options}>
-                {row.draft.options.map((option, index) => (
-                  <ThemedPressable
-                    key={`${row.axis}-${row.variant}-${index}`}
-                    disabled={busy}
-                    onPress={() => onPick(row.draft, option)}
-                    style={[
-                      styles.option,
-                      { borderColor: controlBorderColor(theme) },
-                      busy && styles.disabled,
-                    ]}>
-                    <ThemedText type="smallBold">{option.text}</ThemedText>
-                  </ThemedPressable>
-                ))}
+    <View style={styles.axisSections}>
+      {TRAIT_AXES.map((axis) => {
+        const rows: BankProgressItem[] = bankProgressForAxis(axis, tracks);
+        const answeredCount = rows.filter((row) => row.state === 'answered').length;
+        return (
+          <View key={axis} style={styles.axisSection}>
+            <ThemedText type="smallBold">
+              {`${humanizeAxis(axis)} · ${answeredCount}/${rows.length}`}
+            </ThemedText>
+            {rows.map((row) => (
+              <View key={`${row.axis}-${row.variant}`} style={styles.axisItem}>
+                <View style={styles.axisItemHeader}>
+                  <ThemedText type="small">{row.draft.prompt}</ThemedText>
+                  {row.state === 'answered' ? (
+                    <ThemedText type="small" themeColor="textSecondary">
+                      Answered
+                    </ThemedText>
+                  ) : null}
+                </View>
+                {locked ? null : (
+                  <View style={styles.options}>
+                    {row.draft.options.map((option, index) => (
+                      <ThemedPressable
+                        key={`${row.axis}-${row.variant}-${index}`}
+                        disabled={busy}
+                        onPress={() => onPick(row.draft, option)}
+                        style={[
+                          styles.option,
+                          { borderColor: controlBorderColor(theme) },
+                          busy && styles.disabled,
+                        ]}>
+                        <ThemedText type="smallBold">{option.text}</ThemedText>
+                      </ThemedPressable>
+                    ))}
+                  </View>
+                )}
               </View>
-            </>
-          ) : (
-            <View style={styles.categoryListRow}>
-              <ThemedText
-                type="small"
-                themeColor="textSecondary"
-                style={row.state === 'locked' ? styles.disabled : undefined}>
-                {row.draft.prompt}
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {row.state === 'answered' ? 'Answered' : 'Locked'}
-              </ThemedText>
-            </View>
-          )}
-        </View>
-      ))}
+            ))}
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -575,30 +525,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.two,
   },
-  categoryScroll: {
-    overflow: 'hidden',
-    alignSelf: 'stretch',
+  axisSections: {
+    gap: Spacing.four,
   },
-  categoryRow: {
-    gap: Spacing.two,
-    paddingRight: Spacing.three,
-  },
-  categoryChip: {
-    borderWidth: 1,
-    borderRadius: Spacing.three,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
-  },
-  categoryChipActive: {
-    borderWidth: 2,
-  },
-  categoryList: {
-    gap: Spacing.three,
-  },
-  categoryListItem: {
+  axisSection: {
     gap: Spacing.two,
   },
-  categoryListRow: {
+  axisItem: {
+    gap: Spacing.two,
+  },
+  axisItemHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
