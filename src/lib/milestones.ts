@@ -12,6 +12,7 @@ export type MilestoneMetric =
   | 'bankTotalProgress'
   | 'profile_percent'
   | 'current_streak'
+  | 'profile_settled'
   | `axisComplete:${TraitAxis}`;
 
 export interface MilestoneDef {
@@ -110,6 +111,13 @@ export const MILESTONE_DEFS: readonly MilestoneDef[] = [
     threshold: 21,
     title: '21-day streak',
     body: "You've checked in 21 days in a row.",
+  },
+  {
+    id: 'legends_unlocked',
+    metric: 'profile_settled',
+    threshold: 1,
+    title: 'Legends unlocked!',
+    body: "Your profile is settled — Legends are ready for you.",
   },
   ...AXIS_COMPLETE_DEFS,
 ];

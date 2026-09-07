@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LegendCard } from '@/components/legend-card';
+import { MilestoneToast } from '@/components/milestone-toast';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -21,7 +22,10 @@ import {
 import { fetchLegendCatalog, fetchSeenVariantIds, logShownVariants } from '@/lib/legends/store';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { buildLegendView, type LegendView } from '@/lib/legends/match';
+import { persistCelebratedMilestones } from '@/lib/me';
+import { checkMilestones, type MilestoneDef } from '@/lib/milestones';
 import { supabase } from '@/lib/supabase';
+import { useAppearance } from '@/lib/theme/context';
 import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import {
   isProfileSettled,
@@ -175,7 +179,8 @@ function DevTestPresetStrip({ onApplied }: { onApplied: () => void }) {
  * can resurface later through a different variant (never the same one twice).
  */
 export default function LegendsScreen() {
-  const { me } = useMeContext();
+  const { me, refresh } = useMeContext();
+  const { reduceMotion } = useAppearance();
   const [load, setLoad] = useState<LoadState>({ status: 'loading' });
   const [retryTick, setRetryTick] = useState(0);
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
@@ -251,6 +256,41 @@ export default function LegendsScreen() {
   // spend) — this only decides what renders.
   const locked = tracksReady && !isProfileSettled(tracks);
 
+  // One-time "Legends unlocked!" celebration, on top of `locked` above —
+  // isProfileSettled's own logic is untouched. `locked` can genuinely flip
+  // false while this screen stays mounted (its tracks-loading effect is
+  // keyed on me.updated_at, not just first mount), so this checks on every
+  // re-evaluation, not just mount; the persisted celebrated_milestone_ids
+  // id (same mechanism every other milestone in this feature uses) is what
+  // actually guarantees it never fires twice — the ref only guards the
+  // narrow window while that persist request is still in flight.
+  const [unlockToast, setUnlockToast] = useState<MilestoneDef | null>(null);
+  const celebratingUnlockRef = useRef(false);
+
+  useEffect(() => {
+    // tracksReady must gate this too, not just `locked` — `locked` is
+    // `tracksReady && !isProfileSettled(tracks)`, which reads `false` both
+    // when genuinely unlocked AND while tracks are still loading (tracksReady
+    // starts false). Without this, the celebration would fire — and
+    // permanently persist — for every brand-new, unsettled profile during
+    // the loading window before the first real tracks fetch resolves.
+    if (!me || !tracksReady || locked || celebratingUnlockRef.current) return;
+    const celebrated = me.celebrated_milestone_ids ?? [];
+    const crossed = checkMilestones('profile_settled', 1, celebrated);
+    if (crossed.length === 0) return;
+    celebratingUnlockRef.current = true;
+    setUnlockToast(crossed[0]!);
+    persistCelebratedMilestones(me.id, [...celebrated, ...crossed.map((def) => def.id)])
+      .then(() => refresh())
+      .catch((err) => {
+        // Mirror intake-sweep.tsx's backfill effect: if the write failed,
+        // celebrated_milestone_ids is still stale server-side, so reset the
+        // guard rather than leave this session permanently unable to retry.
+        console.log('[legends] persistCelebratedMilestones error:', err);
+        celebratingUnlockRef.current = false;
+      });
+  }, [me, tracksReady, locked, refresh]);
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -262,6 +302,16 @@ export default function LegendsScreen() {
               actually sit, not a label that sticks.
             </ThemedText>
           </View>
+
+          {unlockToast ? (
+            <MilestoneToast
+              key={unlockToast.id}
+              title={unlockToast.title}
+              body={unlockToast.body}
+              reduceMotion={reduceMotion}
+              onDone={() => setUnlockToast(null)}
+            />
+          ) : null}
 
           {load.status === 'loading' ? (
             <ThemedText themeColor="textSecondary">Loading legends…</ThemedText>

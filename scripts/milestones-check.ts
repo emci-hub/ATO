@@ -14,7 +14,7 @@ import { computeStreak } from '../src/lib/growth';
 import { addDaysYmd, localYmd } from '../src/lib/local-date';
 import { axisVariant, bankQuestionCount } from '../src/lib/questions/local';
 import { MILESTONE_DEFS, checkMilestones } from '../src/lib/milestones';
-import type { TraitTrack } from '../src/lib/trait-stability';
+import { isProfileSettled, type TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES } from '../src/lib/traits';
 import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
 
@@ -125,6 +125,53 @@ assert.ok(
   'profile_100 must be fully removed, not just re-metric\'d',
 );
 ok('profile_100 is gone from MILESTONE_DEFS');
+
+// legends_unlocked: one-time "Legends unlocked!" celebration on
+// isProfileSettled going false -> true, wired into legends.tsx (NOT
+// intake-sweep.tsx) — this is the one milestone in this feature that
+// doesn't run through crossedMilestonesFor.
+const profileSettledDefs = MILESTONE_DEFS.filter((d) => d.metric === 'profile_settled');
+assert.equal(profileSettledDefs.length, 1);
+assert.deepEqual(
+  profileSettledDefs.map((d) => d.id),
+  ['legends_unlocked'],
+);
+assert.equal(profileSettledDefs[0]!.threshold, 1);
+assert.ok(
+  !containsFrameworkTerm(profileSettledDefs[0]!.title) && !containsFrameworkTerm(profileSettledDefs[0]!.body),
+  'profile_settled copy hits the framework fence',
+);
+ok('MILESTONE_DEFS has legends_unlocked on profile_settled at threshold 1, fence-clean');
+
+assert.deepEqual(checkMilestones('profile_settled', 0, []), []);
+assert.deepEqual(
+  checkMilestones('profile_settled', 1, []).map((d) => d.id),
+  ['legends_unlocked'],
+);
+assert.deepEqual(checkMilestones('profile_settled', 1, ['legends_unlocked']), []);
+ok('checkMilestones works unchanged for the profile_settled metric (no new mechanic needed)');
+
+// Wiring proof: a real settled-profile TraitTrack fixture (all 16 axes,
+// answerCount >= STABILITY_FLOOR_N) run through the actual isProfileSettled
+// — the same predicate legends.tsx's `locked` already uses — must produce
+// a crossed legends_unlocked def, not just checkMilestones fed a 1.
+{
+  const settledTracks = TRAIT_AXES.map((axis) => reportTrackAt(axis, 3));
+  assert.equal(isProfileSettled(settledTracks), true, 'fixture must actually be settled, or this test proves nothing');
+  assert.deepEqual(
+    checkMilestones('profile_settled', isProfileSettled(settledTracks) ? 1 : 0, []).map((d) => d.id),
+    ['legends_unlocked'],
+    'a genuinely settled profile via isProfileSettled must cross legends_unlocked',
+  );
+  const oneAxisMissing = settledTracks.slice(1);
+  assert.equal(isProfileSettled(oneAxisMissing), false, 'missing one axis must not read as settled');
+  assert.deepEqual(
+    checkMilestones('profile_settled', isProfileSettled(oneAxisMissing) ? 1 : 0, []),
+    [],
+    'an unsettled profile (missing one axis) must not cross legends_unlocked',
+  );
+}
+ok('a real isProfileSettled(tracks) fixture actually crosses legends_unlocked');
 
 const axisCompleteDefs = MILESTONE_DEFS.filter((d) => d.metric.startsWith('axisComplete:'));
 assert.equal(axisCompleteDefs.length, TRAIT_AXES.length);
@@ -404,5 +451,71 @@ assert.ok(
   'MilestoneToast\'s prop type must declare title and body as string props',
 );
 ok('MilestoneToast takes title/body as props, no hardcoded MILESTONE_DEFS copy');
+
+// --- Source assertions: legends.tsx unlock-celebration wiring ---
+const legendsSrc = readFileSync(resolve(__dirname, '../src/app/(tabs)/legends.tsx'), 'utf8');
+
+assert.ok(
+  legendsSrc.includes('const locked = tracksReady && !isProfileSettled(tracks);'),
+  "legends.tsx's own isProfileSettled-based lock computation must stay byte-identical — only a " +
+    'celebration is added on top of it, isProfileSettled itself is not touched',
+);
+assert.ok(
+  legendsSrc.includes("import { MilestoneToast } from '@/components/milestone-toast';"),
+  'legends.tsx imports the real MilestoneToast component',
+);
+assert.ok(
+  legendsSrc.includes("import { persistCelebratedMilestones } from '@/lib/me';"),
+  'legends.tsx imports persistCelebratedMilestones from the shared module, not a duplicated version',
+);
+assert.ok(
+  legendsSrc.includes("import { checkMilestones, type MilestoneDef } from '@/lib/milestones';"),
+  'legends.tsx imports checkMilestones from the shared module, not a duplicated version',
+);
+
+const legendsUnlockEffectStart = legendsSrc.indexOf('const celebratingUnlockRef = useRef(false);');
+const legendsUnlockEffectEnd = legendsSrc.indexOf('}, [me, tracksReady, locked, refresh]);');
+assert.ok(
+  legendsUnlockEffectStart > -1 && legendsUnlockEffectEnd > legendsUnlockEffectStart,
+  'expected anchors around the legends-unlock celebration effect were not found in legends.tsx — did it move or get renamed?',
+);
+const legendsUnlockEffectBody = legendsSrc.slice(legendsUnlockEffectStart, legendsUnlockEffectEnd);
+assert.ok(
+  legendsUnlockEffectBody.includes('if (!me || !tracksReady || locked || celebratingUnlockRef.current) return;'),
+  'the celebration must gate on tracksReady AND locked, not `locked` alone — `locked` reads false ' +
+    'both when genuinely unlocked and while tracks are still loading (tracksReady starts false), so ' +
+    'gating on `locked` alone would fire (and permanently persist) for every unsettled profile ' +
+    'during the loading window',
+);
+assert.ok(
+  legendsUnlockEffectBody.includes("checkMilestones('profile_settled', 1, celebrated)"),
+  'the celebration must check profile_settled via the shared checkMilestones, not a duplicated ' +
+    "condition on `locked` directly (which would skip the celebrated_milestone_ids guard)",
+);
+assert.ok(
+  legendsUnlockEffectBody.includes('celebratingUnlockRef.current = true;'),
+  'a ref guard must prevent double-firing while the persistCelebratedMilestones request is in ' +
+    'flight, since locked can flip within the same mounted session (me.updated_at is a dependency ' +
+    "of legends.tsx's tracks-loading effect, not just first mount)",
+);
+assert.ok(
+  legendsUnlockEffectBody.includes('celebratingUnlockRef.current = false;'),
+  'a failed persist must reset the ref so this session can retry, mirroring intake-sweep.tsx\'s ' +
+    'backfill effect — otherwise a network error silently and permanently blocks the celebration ' +
+    'for this session even though celebrated_milestone_ids never actually got the id',
+);
+assert.ok(
+  legendsUnlockEffectBody.includes('persistCelebratedMilestones(me.id,'),
+  'the celebration must persist the crossed id so it never re-fires on a later visit',
+);
+ok('legends.tsx wires the unlock celebration through the shared checkMilestones/persistCelebratedMilestones helpers, on top of the untouched isProfileSettled-based lock, correctly gated on tracksReady');
+
+assert.ok(
+  /<MilestoneToast[\s\S]*?key=\{unlockToast\.id\}[\s\S]*?title=\{unlockToast\.title\}[\s\S]*?body=\{unlockToast\.body\}/.test(
+    legendsSrc,
+  ),
+  'MilestoneToast must be rendered with the crossed def\'s own title/body/key, not hardcoded copy',
+);
+ok('legends.tsx renders MilestoneToast with the crossed def\'s title/body, keyed to remount cleanly');
 
 console.log(`\n${passed} milestones checks passed.`);
