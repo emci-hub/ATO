@@ -85,12 +85,9 @@ export type Me = {
   recipe: unknown;
   /** Facts the user has told Sage (one string per fact). Depth-axis input. */
   facts: string[];
-  /** Map of presence-milestone key -> ISO timestamp when its one-time celebration fired. */
-  milestones_celebrated: Record<string, string>;
   /**
-   * Milestone ids already shown/celebrated (checkMilestones). Distinct from
-   * milestones_celebrated above. Optional for rows predating this column;
-   * callers must default to [].
+   * Milestone ids already shown/celebrated (checkMilestones). Optional for
+   * rows predating this column; callers must default to [].
    */
   celebrated_milestone_ids?: string[];
   /**
@@ -136,8 +133,7 @@ export type MeInsert = Omit<
   | 'voice_preset'
   | 'recipe'
   | 'facts'
-  | 'milestones_celebrated'
-    | 'celebrated_milestone_ids'
+  | 'celebrated_milestone_ids'
     | 'referred_by'
     | 'is_founder'
     | 'born_on'
@@ -846,42 +842,9 @@ export async function setAiConsent(userId: string, consent: boolean): Promise<Me
 }
 
 /**
- * Marks a presence milestone (e.g. "7" or "21") as celebrated with the current
- * timestamp. Idempotent per milestone: returns the refreshed row. Called only
- * when a milestone celebration fires, so each threshold shows exactly once.
- */
-export async function markMilestoneCelebrated(
-  userId: string,
-  milestone: string,
-): Promise<Me> {
-  const { data: current } = await supabase
-    .from('me')
-    .select('milestones_celebrated')
-    .eq('id', userId)
-    .single();
-  const celebrated: Record<string, string> =
-    current?.milestones_celebrated && typeof current.milestones_celebrated === 'object'
-      ? (current.milestones_celebrated as Record<string, string>)
-      : {};
-  celebrated[milestone] = new Date().toISOString();
-
-  const { data, error } = await supabase
-    .from('me')
-    .update({ milestones_celebrated: celebrated })
-    .eq('id', userId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-/**
  * Merges `ids` (MILESTONE_DEFS ids, src/lib/milestones.ts) into
- * `celebrated_milestone_ids` and persists the union. Distinct from
- * markMilestoneCelebrated above (different column, different shape — that
- * one is a presence-streak map, this is a milestone-id array). Callers
- * decide which ids are new; this just dedupes and writes.
+ * `celebrated_milestone_ids` and persists the union. Callers decide which
+ * ids are new; this just dedupes and writes.
  */
 export async function persistCelebratedMilestones(userId: string, ids: readonly string[]): Promise<Me> {
   const { data: current } = await supabase

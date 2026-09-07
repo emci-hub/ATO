@@ -2,12 +2,18 @@
  * Growth-tier checks. Run: npx tsx scripts/growth-check.ts
  *
  * Verifies: presence/depth tier boundaries, presence monotonic-by-construction,
- * depth live from facts.length (including back to 0 after a delete), milestone
- * once-only gating, and the live derivation from counts (no cached tier).
+ * depth live from facts.length (including back to 0 after a delete), the live
+ * derivation from counts (no cached tier), and computeStreak's day-streak /
+ * grace-period logic. The old one-time presence-milestone celebration
+ * (PRESENCE_MILESTONES/shouldCelebrateMilestone) was removed — confirmed zero
+ * real-account firings; day streaks (src/lib/milestones.ts's current_streak
+ * metric) replace it.
  */
 import assert from 'node:assert/strict';
 
+import type { Check } from '../src/lib/checks';
 import {
+  computeStreak,
   DEPTH_TIERS,
   depthTier,
   growthState,
@@ -16,11 +22,11 @@ import {
   neonGlowColors,
   presenceGlowLayersForTier,
   PRESENCE_GLOW_ALPHA,
-  PRESENCE_MILESTONES,
   PRESENCE_TIERS,
   presenceTier,
-  shouldCelebrateMilestone,
+  STREAK_GRACE_HOURS,
 } from '../src/lib/growth';
+import { addDaysYmd, localYmd } from '../src/lib/local-date';
 
 let passed = 0;
 function ok(label: string) {
@@ -58,7 +64,7 @@ assert.equal(hasDepthSparkle(1), true);
 ok('depth tier boundaries (0/3/8)');
 
 // Live derivation from counts — no cached tier.
-const me = { facts: ['a', 'b', 'c'], milestones_celebrated: {} } as const;
+const me = { facts: ['a', 'b', 'c'] } as const;
 const state = growthState(me, 7);
 assert.equal(state.presence, 2);
 assert.equal(state.depth, 1);
@@ -105,21 +111,85 @@ assert.equal(presenceGlowLayersForTier(2), 2);
 assert.equal(presenceGlowLayersForTier(3), 3);
 ok('tiers add glow layers (1/2/3), not just opacity');
 
-// Milestone once-only: uncelebrated at threshold → true; celebrated → false.
-assert.equal(shouldCelebrateMilestone(state, 7, {}), true, '7 not yet celebrated');
-assert.equal(
-  shouldCelebrateMilestone(state, 7, { '7': '2026-08-24T00:00:00.000Z' }),
-  false,
-  '7 already celebrated',
-);
-assert.equal(shouldCelebrateMilestone(state, 21, {}), false, '21 not reached yet');
-assert.equal(shouldCelebrateMilestone(growthState(me, 21), 21, {}), true, '21 reached, not celebrated');
-ok('milestones gate on reach + not-yet-celebrated');
-
-// Thresholds list matches the tier boundaries they celebrate.
-assert.deepEqual([...PRESENCE_MILESTONES], [7, 21]);
 assert.ok(PRESENCE_TIERS.length >= 4);
 assert.ok(DEPTH_TIERS.length >= 3);
-ok('milestone thresholds (7, 21) match presence tier boundaries');
+ok('presence/depth tier catalogs have the expected shape');
+
+// --- computeStreak ---------------------------------------------------------
+
+const TZ = 'America/Denver';
+const NOW = new Date('2026-09-06T15:00:00.000Z'); // well past local midnight in TZ
+
+function checkOn(ymd: string): Check {
+  return {
+    id: ymd,
+    user_id: 'u',
+    day: 0,
+    logged_on: ymd,
+    read_text: null,
+    do_text: null,
+    nudge_text: null,
+    source: 'bank',
+    status: 'done',
+    created_at: `${ymd}T12:00:00.000Z`,
+  };
+}
+
+const today = localYmd(NOW, TZ);
+const yesterday = addDaysYmd(today, -1);
+const dayBefore = addDaysYmd(today, -2);
+
+assert.equal(computeStreak([], TZ, NOW), 0);
+ok('no checks at all -> streak 0');
+
+// me.timezone can be blank in practice (same defensive fallback used
+// elsewhere in this codebase, e.g. me.ts's `me.timezone || 'UTC'`) —
+// Intl.DateTimeFormat throws a RangeError on an empty string, so
+// computeStreak must not pass a blank zone straight through.
+assert.doesNotThrow(() => computeStreak([checkOn(today)], '', NOW));
+assert.equal(computeStreak([checkOn(today)], '', NOW), computeStreak([checkOn(today)], 'UTC', NOW));
+ok('a blank timezone falls back to UTC instead of throwing');
+
+assert.equal(computeStreak([checkOn(today), checkOn(yesterday), checkOn(dayBefore)], TZ, NOW), 3);
+ok('3 consecutive days ending today -> streak 3');
+
+assert.equal(computeStreak([checkOn(yesterday), checkOn(dayBefore)], TZ, NOW), 0);
+ok('no check today, past the grace window -> streak 0 (broken, not "still yesterday\'s streak")');
+
+assert.equal(computeStreak([checkOn(today), checkOn(addDaysYmd(today, -3))], TZ, NOW), 1);
+ok('a gap right after today stops the walk there, even with an older check further back');
+
+// Grace period: no check yet today, but still within STREAK_GRACE_HOURS of
+// local midnight -> anchor on yesterday instead of breaking the streak.
+// Using 'UTC' as the timezone keeps the wall-clock math trivial to verify:
+// the Date's own UTC hour IS the local hour.
+const graceTz = 'UTC';
+const graceToday = localYmd(NOW, graceTz);
+const graceYesterday = addDaysYmd(graceToday, -1);
+const graceDayBefore = addDaysYmd(graceToday, -2);
+const graceProbeHour = 1;
+assert.ok(graceProbeHour < STREAK_GRACE_HOURS, 'test assumes a 1-hour-past-midnight probe fits inside the grace window');
+const withinGraceNow = new Date(`${graceToday}T0${graceProbeHour}:00:00.000Z`);
+const pastGraceNow = new Date(`${graceToday}T12:00:00.000Z`);
+assert.equal(
+  computeStreak([checkOn(graceYesterday), checkOn(graceDayBefore)], graceTz, withinGraceNow),
+  2,
+  'no check yet today, but within grace -> still counts yesterday\'s run',
+);
+assert.equal(
+  computeStreak([checkOn(graceYesterday), checkOn(graceDayBefore)], graceTz, pastGraceNow),
+  0,
+  'same missing-today state, but past the grace window -> broken',
+);
+ok('grace period lets a not-yet-logged today continue yesterday\'s streak, but only within STREAK_GRACE_HOURS');
+
+// Backdated check heals a gap: recomputed fresh each call, not an
+// incremental counter, so inserting a late row for a skipped day
+// immediately reconnects the streak on the next computeStreak call.
+const withGap = [checkOn(today), checkOn(dayBefore)]; // yesterday missing
+assert.equal(computeStreak(withGap, TZ, NOW), 1, 'gap before backdating: only today counts');
+const healed = [...withGap, checkOn(yesterday)]; // backdated check for yesterday lands
+assert.equal(computeStreak(healed, TZ, NOW), 3, 'backdated check heals the gap on the very next call');
+ok('a backdated check (record_check allows up to 2 days late) heals a gap on recompute, not incrementally');
 
 console.log(`\nAll ${passed} growth-tier checks passed.`);

@@ -15,6 +15,7 @@ import { checksToHistory, fetchChecks, type Check } from '@/lib/checks';
 import { crisisFlagsForWindow } from '@/lib/crisis/days';
 import { useMe } from '@/hooks/use-me';
 import { useSession } from '@/hooks/use-session';
+import { computeStreak } from '@/lib/growth';
 import { persistCelebratedMilestones } from '@/lib/me';
 import { checkMilestones, type MilestoneDef } from '@/lib/milestones';
 import { axisVariant, bankTotalProgress } from '@/lib/questions/local';
@@ -27,21 +28,31 @@ import { useAppearance } from '@/lib/theme/context';
  * Every newly-crossed milestone across every metric this screen tracks:
  * bankTotalProgress (raw answers-in-the-bank count), profile_percent
  * (settled-axis ratio, same "settled" as settledCount's "N of 16" label —
- * NOT isProfileSettled, which is a strict all-16 boolean gate), and one
+ * NOT isProfileSettled, which is a strict all-16 boolean gate), one
  * axisComplete:<axis> check per TRAIT_AXES axis (that axis's own bank
- * answer count via axisVariant, reaching its own bank-size threshold).
- * Computed at the same two call sites bankTotalProgress already ran at
- * before this change (the backfill effect and refreshAfterAnswer below).
+ * answer count via axisVariant, reaching its own bank-size threshold), and
+ * current_streak (consecutive check-in days via computeStreak — unrelated
+ * to the old presence-milestone system, which counted all-time checks, not
+ * a day streak). Computed at the same two call sites bankTotalProgress
+ * already ran at before this change (the backfill effect and
+ * refreshAfterAnswer below).
  */
-function crossedMilestonesFor(tracks: readonly TraitTrack[], celebrated: readonly string[]): MilestoneDef[] {
+function crossedMilestonesFor(
+  tracks: readonly TraitTrack[],
+  celebrated: readonly string[],
+  checks: readonly Check[],
+  timezone: string,
+): MilestoneDef[] {
   const percent = (settledCount(tracks) / TRAIT_AXES.length) * 100;
   const axisCrossed = TRAIT_AXES.flatMap((axis) =>
     checkMilestones(`axisComplete:${axis}`, axisVariant(tracks, axis), celebrated),
   );
+  const streak = computeStreak(checks, timezone);
   return [
     ...checkMilestones('bankTotalProgress', bankTotalProgress(tracks).answered, celebrated),
     ...checkMilestones('profile_percent', percent, celebrated),
     ...axisCrossed,
+    ...checkMilestones('current_streak', streak, celebrated),
   ];
 }
 
@@ -154,10 +165,10 @@ export default function IntakeSweepTabScreen() {
   const backfilledRef = useRef(false);
 
   useEffect(() => {
-    if (!userId || !me || !tracksReady || backfilledRef.current) return;
+    if (!userId || !me || !tracksReady || !checksReady || backfilledRef.current) return;
     backfilledRef.current = true;
     const celebrated = me.celebrated_milestone_ids ?? [];
-    const crossed = crossedMilestonesFor(tracks, celebrated);
+    const crossed = crossedMilestonesFor(tracks, celebrated, checks, me.timezone);
     if (crossed.length === 0) {
       setBackfillReady(true);
       return;
@@ -174,13 +185,13 @@ export default function IntakeSweepTabScreen() {
         backfilledRef.current = false;
       })
       .finally(() => setBackfillReady(true));
-  }, [userId, me, tracksReady, tracks, refresh]);
+  }, [userId, me, tracksReady, checksReady, tracks, checks, refresh]);
 
   const refreshAfterAnswer = useCallback(async () => {
     const [, freshTracks] = await Promise.all([refresh(), loadTracks()]);
     if (!userId || !me || !freshTracks) return;
     const celebrated = me.celebrated_milestone_ids ?? [];
-    const crossed = crossedMilestonesFor(freshTracks, celebrated);
+    const crossed = crossedMilestonesFor(freshTracks, celebrated, checks, me.timezone);
     if (crossed.length === 0) return;
     for (const def of crossed) {
       onMilestoneCrossed(def);
@@ -191,7 +202,7 @@ export default function IntakeSweepTabScreen() {
     } catch (err) {
       console.log('[questions] persistCelebratedMilestones error:', err);
     }
-  }, [refresh, loadTracks, userId, me, onMilestoneCrossed]);
+  }, [refresh, loadTracks, userId, me, checks, onMilestoneCrossed]);
 
   /**
    * "Skip the rest" on the full sweep. Skipping defers every remaining axis

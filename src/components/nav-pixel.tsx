@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,7 +28,7 @@ export const NAV_PIXEL_HEADER_INSET = NAV_PIXEL_SLOT;
 /**
  * Persistent nav companion: one small live pixel, fixed top-right over every
  * tab. Mounted at the tab shell so it does not remount on tab switches or
- * scroll. Idle / event-gesture / milestone / tap-mood animation all run here.
+ * scroll. Idle / event-gesture / tap-mood animation all run here.
  *
  * Current-you (Home, Around, You, Circle): recipe + idle, no growth glow.
  * Aspirational-you (Sage): same instance, presence glow + depth sparkle.
@@ -39,19 +39,11 @@ export function NavPixel() {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const { me } = useMeContext();
-  const { state, pendingMilestone, markCelebrated } = useGrowth();
-  const celebrateRef = useRef<(() => void) | null>(null);
+  const { state } = useGrowth();
   const tapMoodRef = useRef<((mood: TapMood) => void) | null>(null);
   const lastMoodRef = useRef<TapMoodId | null>(null);
   const recipe = useMemo(() => recipeForAccount(me?.id, me?.recipe), [me]);
   const onSage = pathname === '/sage' || pathname.endsWith('/sage');
-
-  useEffect(() => {
-    if (pendingMilestone != null && celebrateRef.current) {
-      celebrateRef.current();
-      markCelebrated().catch(() => {});
-    }
-  }, [pendingMilestone, markCelebrated]);
 
   if (!me) return null;
 
@@ -89,7 +81,6 @@ export function NavPixel() {
           size={NAV_PIXEL_FACE}
           showUp={me.show_up}
           animated
-          celebrateRef={celebrateRef}
           tapMoodRef={tapMoodRef}
           pressable={false}
         />

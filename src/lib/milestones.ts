@@ -1,13 +1,18 @@
 /**
- * Generic milestone definitions and crossing check.
- * Distinct from me.milestones_celebrated (presence-streak celebrations in
- * NavPixel/useGrowth) — this is a separate mechanism, not wired to any
- * metric or screen yet.
+ * Generic milestone definitions and crossing check, wired into
+ * src/app/(tabs)/intake-sweep.tsx's crossedMilestonesFor. Replaces the old
+ * one-time presence-milestone celebration (me.milestones_celebrated /
+ * PRESENCE_MILESTONES, removed 2026-09-06 — confirmed zero real-account
+ * firings) — current_streak below is the real day-streak equivalent.
  */
 import { bankQuestionCount } from '@/lib/questions/local';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
-export type MilestoneMetric = 'bankTotalProgress' | 'profile_percent' | `axisComplete:${TraitAxis}`;
+export type MilestoneMetric =
+  | 'bankTotalProgress'
+  | 'profile_percent'
+  | 'current_streak'
+  | `axisComplete:${TraitAxis}`;
 
 export interface MilestoneDef {
   id: string;
@@ -84,6 +89,27 @@ export const MILESTONE_DEFS: readonly MilestoneDef[] = [
     threshold: 50,
     title: 'Halfway there',
     body: "You've completed half of your profile!",
+  },
+  {
+    id: 'streak_3',
+    metric: 'current_streak',
+    threshold: 3,
+    title: '3-day streak',
+    body: "You've checked in 3 days in a row.",
+  },
+  {
+    id: 'streak_7',
+    metric: 'current_streak',
+    threshold: 7,
+    title: '7-day streak',
+    body: "You've checked in 7 days in a row.",
+  },
+  {
+    id: 'streak_21',
+    metric: 'current_streak',
+    threshold: 21,
+    title: '21-day streak',
+    body: "You've checked in 21 days in a row.",
   },
   ...AXIS_COMPLETE_DEFS,
 ];

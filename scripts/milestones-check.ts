@@ -9,11 +9,29 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import type { Check } from '../src/lib/checks';
+import { computeStreak } from '../src/lib/growth';
+import { addDaysYmd, localYmd } from '../src/lib/local-date';
 import { axisVariant, bankQuestionCount } from '../src/lib/questions/local';
 import { MILESTONE_DEFS, checkMilestones } from '../src/lib/milestones';
 import type { TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES } from '../src/lib/traits';
 import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
+
+function checkOn(ymd: string): Check {
+  return {
+    id: ymd,
+    user_id: 'u',
+    day: 0,
+    logged_on: ymd,
+    read_text: null,
+    do_text: null,
+    nudge_text: null,
+    source: 'bank',
+    status: 'done',
+    created_at: `${ymd}T12:00:00.000Z`,
+  };
+}
 
 /** A trait-track fixture for one axis at a given answerCount (report by default). */
 function reportTrackAt(
@@ -71,6 +89,36 @@ assert.deepEqual(
   ['profile_50'],
 );
 ok('checkMilestones works unchanged for the profile_percent metric (no new mechanic needed)');
+
+// streak_3/7/21 replace the old, removed one-time presence-milestone
+// celebration (PRESENCE_MILESTONES = [7, 21] in growth.ts) with a real
+// consecutive-day streak metric (current_streak, from computeStreak).
+const streakDefs = MILESTONE_DEFS.filter((d) => d.metric === 'current_streak');
+assert.equal(streakDefs.length, 3);
+assert.deepEqual(
+  streakDefs.map((d) => d.id),
+  ['streak_3', 'streak_7', 'streak_21'],
+);
+assert.deepEqual(
+  streakDefs.map((d) => d.threshold),
+  [3, 7, 21],
+);
+assert.ok(
+  streakDefs.every((d) => !containsFrameworkTerm(d.title) && !containsFrameworkTerm(d.body)),
+  'current_streak copy hits the framework fence',
+);
+ok('MILESTONE_DEFS has streak_3/7/21 on current_streak at thresholds 3/7/21, fence-clean');
+
+assert.deepEqual(checkMilestones('current_streak', 2, []), []);
+assert.deepEqual(
+  checkMilestones('current_streak', 7, []).map((d) => d.id),
+  ['streak_3', 'streak_7'],
+);
+assert.deepEqual(
+  checkMilestones('current_streak', 7, ['streak_3']).map((d) => d.id),
+  ['streak_7'],
+);
+ok('checkMilestones works unchanged for the current_streak metric (no new mechanic needed)');
 
 assert.ok(
   !MILESTONE_DEFS.some((d) => d.id === 'profile_100'),
@@ -147,6 +195,32 @@ for (const axis of [TRAIT_AXES[0], TRAIT_AXES[TRAIT_AXES.length - 1]]) {
 }
 ok('completing an axis via a real TraitTrack/axisVariant fixture actually crosses its axis_complete_* milestone, and gut-call never counts');
 
+// Wiring proof: a real Check[] fixture run through computeStreak (the same
+// function crossedMilestonesFor now calls) must produce a crossed
+// current_streak def — not just checkMilestones fed a hand-picked number.
+{
+  const TZ = 'America/Denver';
+  const now = new Date('2026-09-06T15:00:00.000Z');
+  const today = localYmd(now, TZ);
+  const days = [0, -1, -2].map((offset) => checkOn(addDaysYmd(today, offset)));
+  assert.deepEqual(
+    checkMilestones('current_streak', computeStreak(days, TZ, now), []).map((d) => d.id),
+    ['streak_3'],
+    '3 consecutive real Check rows via computeStreak must cross streak_3',
+  );
+  assert.deepEqual(
+    checkMilestones('current_streak', computeStreak(days.slice(1), TZ, now), []),
+    [],
+    'only 2 consecutive days (missing today, past grace) must not cross streak_3',
+  );
+  assert.deepEqual(
+    checkMilestones('current_streak', computeStreak(days, TZ, now), ['streak_3']),
+    [],
+    'streak_3 must not re-cross once already celebrated',
+  );
+}
+ok('a real streak via a Check[]/computeStreak fixture actually crosses streak_3');
+
 assert.deepEqual(checkMilestones('bankTotalProgress', 0, []), []);
 ok('below every threshold crosses nothing');
 
@@ -196,11 +270,15 @@ assert.ok(
   intakeSweepSrc.includes("import { persistCelebratedMilestones } from '@/lib/me';"),
   'intake-sweep.tsx imports persistCelebratedMilestones from the shared module',
 );
+assert.ok(
+  intakeSweepSrc.includes("import { computeStreak } from '@/lib/growth';"),
+  'intake-sweep.tsx imports computeStreak from the shared module',
+);
 assert.equal(
   (intakeSweepSrc.match(/checkMilestones\(/g) ?? []).length,
-  3,
-  'checkMilestones should be called exactly 3 times, file-wide, once per metric group ' +
-    '(bankTotalProgress, profile_percent, and once inside the per-axis flatMap)',
+  4,
+  'checkMilestones should be called exactly 4 times, file-wide, once per metric group ' +
+    '(bankTotalProgress, profile_percent, current_streak, and once inside the per-axis flatMap)',
 );
 assert.equal(
   (intakeSweepSrc.match(/crossedMilestonesFor\(/g) ?? []).length,
@@ -218,9 +296,17 @@ assert.ok(
 const crossedMilestonesForBody = intakeSweepSrc.slice(crossedMilestonesForStart, crossedMilestonesForEnd);
 assert.equal(
   (crossedMilestonesForBody.match(/checkMilestones\(/g) ?? []).length,
-  3,
-  'all 3 checkMilestones call sites (bankTotalProgress, profile_percent, per-axis flatMap) must ' +
-    'live inside crossedMilestonesFor, not duplicated at each caller',
+  4,
+  'all 4 checkMilestones call sites (bankTotalProgress, profile_percent, current_streak, per-axis ' +
+    'flatMap) must live inside crossedMilestonesFor, not duplicated at each caller',
+);
+assert.ok(
+  /computeStreak\(\s*checks,\s*timezone\s*\)/.test(crossedMilestonesForBody),
+  'current_streak must be computed via computeStreak(checks, timezone), not a duplicated formula',
+);
+assert.ok(
+  crossedMilestonesForBody.includes("checkMilestones('current_streak'"),
+  'current_streak must be checked in crossedMilestonesFor alongside the other metrics',
 );
 assert.ok(
   /settledCount\(\s*tracks\s*\)\s*\/\s*TRAIT_AXES\.length/.test(crossedMilestonesForBody),
@@ -241,7 +327,9 @@ assert.ok(
 ok('intake-sweep.tsx wires through the shared checkMilestones/persistCelebratedMilestones/crossedMilestonesFor helpers, including per-axis axisComplete checks');
 
 const backfillEffectStart = intakeSweepSrc.indexOf('backfilledRef.current = true;');
-const backfillEffectEnd = intakeSweepSrc.indexOf('}, [userId, me, tracksReady, tracks, refresh]);');
+const backfillEffectEnd = intakeSweepSrc.indexOf(
+  '}, [userId, me, tracksReady, checksReady, tracks, checks, refresh]);',
+);
 assert.ok(
   backfillEffectStart > -1 && backfillEffectEnd > backfillEffectStart,
   'expected anchors around the backfill effect body were not found in intake-sweep.tsx — did it move or get renamed?',
@@ -253,9 +341,19 @@ assert.ok(
 );
 ok('backfill effect never calls onMilestoneCrossed (silent by design)');
 
+assert.ok(
+  /if \(!userId \|\| !me \|\| !tracksReady \|\| !checksReady \|\| backfilledRef\.current\) return;/.test(
+    intakeSweepSrc,
+  ),
+  'the backfill effect must gate on checksReady too, not just tracksReady — otherwise it can mark ' +
+    'itself done against an empty checks array before real checks load, then wrongly treat a real ' +
+    "user's pre-existing streak as newly-crossed on their next answer",
+);
+ok('backfill effect gates on checksReady before computing current_streak');
+
 const refreshAfterAnswerStart = intakeSweepSrc.indexOf('const refreshAfterAnswer = useCallback(async () => {');
 const refreshAfterAnswerEnd = intakeSweepSrc.indexOf(
-  '}, [refresh, loadTracks, userId, me, onMilestoneCrossed]);',
+  '}, [refresh, loadTracks, userId, me, checks, onMilestoneCrossed]);',
 );
 assert.ok(
   refreshAfterAnswerStart > -1 && refreshAfterAnswerEnd > refreshAfterAnswerStart,

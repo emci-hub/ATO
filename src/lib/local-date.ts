@@ -40,3 +40,16 @@ export function daysBetweenYmd(startYmd: string, endYmd: string): number {
   const end = Date.UTC(ey, em - 1, ed);
   return Math.round((end - start) / 86_400_000);
 }
+
+/** Hours elapsed since local midnight in `timeZone` (e.g. 2.5 = 02:30 local). */
+export function hoursSinceLocalMidnight(date: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hour: 'numeric',
+    minute: 'numeric',
+    hourCycle: 'h23',
+  }).formatToParts(date);
+  const hour = Number(parts.find((p) => p.type === 'hour')?.value ?? 0);
+  const minute = Number(parts.find((p) => p.type === 'minute')?.value ?? 0);
+  return hour + minute / 60;
+}

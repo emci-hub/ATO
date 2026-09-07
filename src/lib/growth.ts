@@ -9,6 +9,8 @@
  * deleting a fact can drop it, including back to 0. There is no sticky
  * "once-true" cache.
  */
+import type { Check } from '@/lib/checks';
+import { addDaysYmd, hoursSinceLocalMidnight, localYmd } from '@/lib/local-date';
 
 // --- Presence axis (drives glow intensity) --------------------------------
 
@@ -18,9 +20,6 @@ export const PRESENCE_TIERS = [
   { min: 7, level: 2 },
   { min: 21, level: 3 },
 ] as const;
-
-/** Presence thresholds that trigger a one-time milestone celebration. */
-export const PRESENCE_MILESTONES = [7, 21] as const;
 
 /** Presence tier (0-3) from all-time check count. Monotonic by construction. */
 export function presenceTier(checkCount: number): number {
@@ -156,7 +155,57 @@ export function hasDepthSparkle(level: number): boolean {
   return level > 0;
 }
 
-// --- Milestone celebration ------------------------------------------------
+// --- Day streak (consecutive calendar days with a check-in) ---------------
+
+/** Hours past local midnight a missed "today" check still counts as continuing yesterday's streak. */
+export const STREAK_GRACE_HOURS = 3;
+
+/**
+ * Calendar day a Check is FOR — mirrors checks.ts's checkLoggedOnYmd exactly,
+ * but reimplemented here (not imported) so growth.ts stays free of
+ * react-native: checks.ts pulls in the Supabase client, which pulls in
+ * react-native, which breaks running this file's checks directly under Node.
+ */
+function loggedOnYmd(check: Pick<Check, 'logged_on' | 'created_at'>, timeZone: string): string {
+  if (check.logged_on) return check.logged_on;
+  return localYmd(new Date(check.created_at), timeZone);
+}
+
+/**
+ * Consecutive calendar days (in `timeZone`) with at least one check-in,
+ * counting backward from today. Recomputed fresh from `checks` every call —
+ * `record_check` allows backdating up to 2 days, so a full recompute (not an
+ * incrementally-maintained counter) is what correctly absorbs a backdated
+ * check filling a gap after the fact.
+ *
+ * If today has no check yet but it's still within `STREAK_GRACE_HOURS` of
+ * local midnight, the walk anchors on yesterday instead — a missed "today"
+ * doesn't break the streak until the grace period elapses.
+ */
+export function computeStreak(checks: readonly Check[], timeZone: string, now: Date = new Date()): number {
+  // me.timezone can be blank (same defensive fallback as me.ts's other
+  // readers) — Intl.DateTimeFormat throws a RangeError on an empty string.
+  const zone = timeZone || 'UTC';
+  const days = new Set(checks.map((check) => loggedOnYmd(check, zone)));
+  const todayYmd = localYmd(now, zone);
+  const withinGrace = hoursSinceLocalMidnight(now, zone) < STREAK_GRACE_HOURS;
+
+  let anchor = todayYmd;
+  if (!days.has(todayYmd) && withinGrace) {
+    anchor = addDaysYmd(todayYmd, -1);
+  }
+  if (!days.has(anchor)) return 0;
+
+  let streak = 0;
+  let cursor = anchor;
+  while (days.has(cursor)) {
+    streak += 1;
+    cursor = addDaysYmd(cursor, -1);
+  }
+  return streak;
+}
+
+// --- Live growth state ------------------------------------------------------
 
 export interface GrowthState {
   /** Live presence tier (0-3). */
@@ -179,14 +228,4 @@ export function growthState(
     checkCount,
     factCount: facts.length,
   };
-}
-
-/** True if the presence threshold is a milestone that hasn't been celebrated yet. */
-export function shouldCelebrateMilestone(
-  state: GrowthState,
-  milestone: number,
-  celebrated: Record<string, string> | undefined,
-): boolean {
-  if (state.checkCount < milestone) return false;
-  return !celebrated?.[String(milestone)];
 }
