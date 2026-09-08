@@ -84,6 +84,8 @@ export const DEFEND_START_SCRAP = 80; // start_scrap — each run starts with th
 
 /** Defend clear rewards (GAME_SPEC §9c / §9 XP numbers). */
 export const TOKEN_CLEAR_BASE = 50; // token_clear_base — reward juice per clear
+/** After this many clears in a local day, further clear tokens halve (§9). */
+export const DAILY_CLEAR_HALF_AFTER = 5;
 /** Clear wave W → this much XP to the Avatar (GAME_SPEC "xp_clear: 10 + wave*2"). */
 export function xpForClear(wave: number): number {
   return 10 + Math.max(1, Math.floor(wave)) * 2;
@@ -210,10 +212,12 @@ export type DiveRun = {
  * from slot → id into slot → `{ id, star }` so a worn merge result survives.
  * v1–v5 docs migrate (legacy copies are star 0). v7 (Defend 5a) added the
  * `highest_wave_cleared` meta. v8 (Defend 5c) added `xp` + `avatar_level`
- * (clears grant XP; a level gives +2% base wave_power).
+ * (clears grant XP; a level gives +2% base wave_power). v9 (Defend daily soft
+ * cap) added `clears_today` + `clears_ymd` — after 5 clears in a local day the
+ * token reward halves until the next local midnight (XP/highest stay full).
  */
 export type PlayStoreDoc = {
-  version: 8;
+  version: 9;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -237,6 +241,10 @@ export type PlayStoreDoc = {
   xp: number;
   /** Avatar meta level (start 1). +2% base wave_power per level. */
   avatar_level: number;
+  /** Defend clears this device-local day (drives the §9 half-cap). */
+  clears_today: number;
+  /** Device-local YYYY-MM-DD `clears_today` belongs to. */
+  clears_ymd: string | null;
 };
 
 export type DiveChargeView = {
@@ -275,6 +283,8 @@ export type PlayView = {
   highestWaveCleared: number;
   /** Avatar meta level (start 1) — drives the +2% wave_power HUD note. */
   avatarLevel: number;
+  /** Defend clears this device-local day (over 5 → tokens halved). */
+  clearsToday: number;
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -315,7 +325,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 8,
+    version: 9,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -328,6 +338,8 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     highest_wave_cleared: 0,
     xp: 0,
     avatar_level: 1,
+    clears_today: 0,
+    clears_ymd: null,
   };
 }
 
@@ -380,6 +392,7 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     statSums: equippedStatSums(doc.equipped),
     highestWaveCleared: doc.highest_wave_cleared,
     avatarLevel: doc.avatar_level,
+    clearsToday: doc.clears_today,
   };
 }
 
@@ -409,34 +422,76 @@ export function canClaimResearch(view: PlayView): boolean {
  * that is never persisted.
  * ------------------------------------------------------------------------- */
 
+/** What a Defend win paid out (the overlay shows the honest amount). */
+export type DefendWinResult = {
+  tokensGranted: number;
+  xpGranted: number;
+  /** True when this win was past the daily soft cap (tokens halved). */
+  halved: boolean;
+  /** Clears today AFTER this win (1-based). */
+  clearsToday: number;
+};
+
 /**
  * A wave W cleared → grant tokens + XP, level the Avatar up as needed, and
  * raise `highest_wave_cleared = max(current, W)`. XP curve per GAME_SPEC §9
  * (`10 + W*2`, `50 + level*25`); +2% wave_power per level is applied at
  * combat time via `avatarLevelWavePower`.
+ *
+ * Daily soft cap (§9): after `DAILY_CLEAR_HALF_AFTER` (5) clears in a
+ * device-local day, the TOKEN reward halves until the next local midnight —
+ * wins 1–5 are full, wins 6+ pay 25. XP and highest_wave_cleared stay full.
+ * The counter rolls over on the first clear of a new local day.
  */
 export function recordDefendWin(
   doc: PlayStoreDoc,
   wave: number,
-): PlayStoreDoc {
-  let xp = doc.xp + xpForClear(wave);
+  now: number = Date.now(),
+): { doc: PlayStoreDoc; result: DefendWinResult } {
+  const todayYmd = localYmd(new Date(now));
+  const priorClears = doc.clears_ymd === todayYmd ? doc.clears_today : 0;
+  const clearsToday = priorClears + 1;
+  const halved = priorClears >= DAILY_CLEAR_HALF_AFTER;
+  const tokensGranted = halved
+    ? Math.floor(TOKEN_CLEAR_BASE / 2)
+    : TOKEN_CLEAR_BASE;
+
+  const xpGranted = xpForClear(wave);
+  let xp = doc.xp + xpGranted;
   let level = doc.avatar_level;
   while (xp >= xpToNext(level)) {
     xp -= xpToNext(level);
     level += 1;
   }
   return {
-    ...doc,
-    tokens: doc.tokens + TOKEN_CLEAR_BASE,
-    xp,
-    avatar_level: level,
-    highest_wave_cleared: Math.max(doc.highest_wave_cleared, Math.floor(wave)),
+    doc: {
+      ...doc,
+      tokens: doc.tokens + tokensGranted,
+      xp,
+      avatar_level: level,
+      highest_wave_cleared: Math.max(doc.highest_wave_cleared, Math.floor(wave)),
+      clears_today: clearsToday,
+      clears_ymd: todayYmd,
+    },
+    result: { tokensGranted, xpGranted, halved, clearsToday },
   };
 }
 
 /** Dev kit only: make the next wave 1 again (highest_wave_cleared → 0). */
 export function devDefendSetWaveOne(doc: PlayStoreDoc): PlayStoreDoc {
   return { ...doc, highest_wave_cleared: 0 };
+}
+
+/** Dev kit only: zero today's clear counter (clears stay on today's YMD so a
+ * fresh win restarts from 1 full-reward clear). */
+export function devDefendResetClears(doc: PlayStoreDoc): PlayStoreDoc {
+  return { ...doc, clears_today: 0, clears_ymd: localYmd() };
+}
+
+/** Dev kit only: set today's clears to the half-cap so the next win is halved
+ * (honest-note path becomes reachable on demand). */
+export function devDefendSetClearsFive(doc: PlayStoreDoc): PlayStoreDoc {
+  return { ...doc, clears_today: DAILY_CLEAR_HALF_AFTER, clears_ymd: localYmd() };
 }
 
 /* ---------------------------------------------------------------------------
@@ -1014,15 +1069,15 @@ function snapshotDive(
 function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
   try {
     const data = JSON.parse(raw) as Record<string, unknown>;
-    // v1 (pre-inventory) … v7 (highest_wave_cleared) all migrate to v8: legacy
-    // copies are star 0, equipped string ids become refs with star 0, Defend
-    // meta defaults to 0 clears / 0 XP / level 1. v1–v4 also stored `inventory`
-    // as a string[] of owned ids WITH worn copies included, so those subtract
-    // one copy per equipped slot.
+    // v1 (pre-inventory) … v8 (xp/level) all migrate to v9: legacy copies are
+    // star 0, equipped string ids become refs with star 0, Defend meta defaults
+    // to 0 clears / 0 XP / level 1 / no daily clear count. v1–v4 also stored
+    // `inventory` as a string[] of owned ids WITH worn copies included, so
+    // those subtract one copy per equipped slot.
     const version = data?.version;
     if (
       version !== 1 && version !== 2 && version !== 3 && version !== 4 &&
-      version !== 5 && version !== 6 && version !== 7 && version !== 8
+      version !== 5 && version !== 6 && version !== 7 && version !== 8 && version !== 9
     ) {
       return null;
     }
@@ -1039,8 +1094,11 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     const highestWaveCleared = finiteNumber(data.highest_wave_cleared) ?? 0;
     const xp = finiteNumber(data.xp) ?? 0;
     const avatarLevel = finiteNumber(data.avatar_level) ?? 1;
+    const clearsToday = finiteNumber(data.clears_today) ?? 0;
+    const clearsYmd =
+      typeof data.clears_ymd === 'string' ? data.clears_ymd : null;
     return {
-      version: 8,
+      version: 9,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -1053,6 +1111,8 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       highest_wave_cleared: Math.max(0, Math.floor(highestWaveCleared)),
       xp: Math.max(0, Math.floor(xp)),
       avatar_level: Math.max(1, Math.floor(avatarLevel)),
+      clears_today: Math.max(0, Math.floor(clearsToday)),
+      clears_ymd: clearsYmd,
     };
   } catch {
     return null;

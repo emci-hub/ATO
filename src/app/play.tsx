@@ -78,6 +78,8 @@ export default function PlayScreen() {
     sellAllJunk,
     recordDefendWin,
     setDefendWaveOne,
+    resetDailyClears,
+    setClearsTodayFive,
   } = usePlayStore();
   const [mode, setMode] = useState<PlayMode>('grove');
   const [toast, setToast] = useState<PlayToast | null>(null);
@@ -206,11 +208,10 @@ export default function PlayScreen() {
     [unequip],
   );
 
-  /** Defend — persist a win (tokens + XP + level + highest_wave_cleared). */
+  /** Defend — persist a win (tokens + XP + level + highest). Returns what it
+   * paid so the overlay can show honest (possibly halved) token counts. */
   const handleRecordDefendWin = useCallback(
-    (wave: number) => {
-      void recordDefendWin(wave);
-    },
+    (wave: number) => recordDefendWin(wave),
     [recordDefendWin],
   );
 
@@ -218,6 +219,15 @@ export default function PlayScreen() {
   const handleSetDefendWaveOne = useCallback(() => {
     void setDefendWaveOne();
   }, [setDefendWaveOne]);
+
+  /** Defend dev rows — daily clear half-cap testing. */
+  const handleResetDailyClears = useCallback(() => {
+    void resetDailyClears();
+  }, [resetDailyClears]);
+
+  const handleSetClearsTodayFive = useCallback(() => {
+    void setClearsTodayFive();
+  }, [setClearsTodayFive]);
 
   function closePlay() {
     if (router.canGoBack()) {
@@ -318,6 +328,8 @@ export default function PlayScreen() {
               view={view}
               onWin={handleRecordDefendWin}
               onSetWaveOne={handleSetDefendWaveOne}
+              onResetDailyClears={handleResetDailyClears}
+              onSetClearsTodayFive={handleSetClearsTodayFive}
               onBackToGrove={() => setMode('grove')}
             />
           ) : (

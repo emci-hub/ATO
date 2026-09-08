@@ -49,7 +49,12 @@ import {
   type DefendLive,
   type TowerKind,
 } from '@/play/defend';
-import { avatarLevelWavePower, bucketMultiplier, type PlayView } from '@/play/playStore';
+import {
+  avatarLevelWavePower,
+  bucketMultiplier,
+  type DefendWinResult,
+  type PlayView,
+} from '@/play/playStore';
 import { tipForWave } from '@/play/coach';
 
 const PUFF_COLOR = '#F472B6';
@@ -70,11 +75,15 @@ export function DefendScreen({
   view,
   onWin,
   onSetWaveOne,
+  onResetDailyClears,
+  onSetClearsTodayFive,
   onBackToGrove,
 }: {
   view: PlayView;
-  onWin: (wave: number) => void;
+  onWin: (wave: number) => Promise<DefendWinResult | null>;
   onSetWaveOne: () => void;
+  onResetDailyClears: () => void;
+  onSetClearsTodayFive: () => void;
   onBackToGrove: () => void;
 }) {
   const theme = useTheme();
@@ -89,6 +98,8 @@ export function DefendScreen({
   const [godMode, setGodMode] = useState(false);
   const [coachHidden, setCoachHidden] = useState(false);
   const [whyOpen, setWhyOpen] = useState(false);
+  /** What the last win paid — shows the honest (possibly halved) tokens. */
+  const [lastWin, setLastWin] = useState<DefendWinResult | null>(null);
 
   const phaseRef = useRef(phase);
   const pausedRef = useRef(paused);
@@ -152,7 +163,9 @@ export function DefendScreen({
     setPhase('won');
     setPaused(false);
     setSelectedPad(null);
-    onWin(wave);
+    void onWin(wave).then((result) => {
+      if (result) setLastWin(result);
+    });
   }, [nextWave, onWin]);
 
   // Sim ticker: running + not paused.
@@ -570,9 +583,23 @@ export function DefendScreen({
         {phase === 'won' ? (
           <ThemedView type="backgroundElement" style={styles.card}>
             <ThemedText type="smallBold">Wave {sim?.wave ?? nextWave} cleared</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              +50 tokens · +{10 + (sim?.wave ?? nextWave) * 2} XP · Level {view.avatarLevel}
-            </ThemedText>
+            {lastWin ? (
+              <>
+                <ThemedText type="small" themeColor="textSecondary">
+                  +{lastWin.tokensGranted} tokens · +{lastWin.xpGranted} XP · Level{' '}
+                  {view.avatarLevel} · {lastWin.clearsToday} clears today
+                </ThemedText>
+                {lastWin.halved ? (
+                  <ThemedText type="small" themeColor="textSecondary" style={styles.halvedNote}>
+                    Half tokens today — come back tomorrow for full.
+                  </ThemedText>
+                ) : null}
+              </>
+            ) : (
+              <ThemedText type="small" themeColor="textSecondary">
+                +50 tokens · +{10 + (sim?.wave ?? nextWave) * 2} XP
+              </ThemedText>
+            )}
             <Pressable
               onPress={() => freshRun((sim?.wave ?? nextWave) + 1)}
               accessibilityRole="button"
@@ -680,6 +707,22 @@ export function DefendScreen({
               onPress={() => setCoachHidden((hidden) => !hidden)}
             />
             <DevRow
+              label="Reset daily clear count"
+              disabled={!sim}
+              onPress={() => {
+                onResetDailyClears();
+                setLastWin(null);
+              }}
+            />
+            <DevRow
+              label="Set clears today to 5"
+              disabled={!sim}
+              onPress={() => {
+                onSetClearsTodayFive();
+                setLastWin(null);
+              }}
+            />
+            <DevRow
               label="Set wave to 1"
               onPress={() => {
                 onSetWaveOne();
@@ -764,6 +807,10 @@ const styles = StyleSheet.create({
   },
   whyText: {
     marginTop: Spacing.one,
+  },
+  halvedNote: {
+    color: undefined,
+    fontStyle: 'italic',
   },
   statRow: {
     flexDirection: 'row',

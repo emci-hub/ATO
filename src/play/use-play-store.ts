@@ -23,6 +23,8 @@ import {
   claimResearch,
   deeperDive,
   devClearEquipped,
+  devDefendResetClears,
+  devDefendSetClearsFive,
   devDefendSetWaveOne,
   devFillJunkLooks,
   devGrantRandomFind,
@@ -41,6 +43,7 @@ import {
   unequipItem,
   type ClaimResult,
   type DeeperOutcome,
+  type DefendWinResult,
   type EquipOutcome,
   type MergeOutcome,
   type MergeTarget,
@@ -283,16 +286,17 @@ export function usePlayStore() {
     return result;
   }, [commit]);
 
-  /** A Defend wave cleared → persist tokens + XP + level + highest_wave. */
+  /** A Defend wave cleared → persist tokens (halved past 5/day) + XP + level +
+   * highest_wave. Returns what the win actually paid so the overlay is honest. */
   const recordDefendWin = useCallback(
-    async (wave: number): Promise<boolean> => {
-      let ok = false;
-      commit((current) => {
-        const next = persistDefendWin(current, wave);
-        ok = next !== current;
-        return next;
+    async (wave: number): Promise<DefendWinResult | null> => {
+      let result: DefendWinResult | null = null;
+      commit((current, now) => {
+        const next = persistDefendWin(current, wave, now);
+        result = next.result;
+        return next.doc;
       });
-      return ok;
+      return result;
     },
     [commit],
   );
@@ -302,6 +306,28 @@ export function usePlayStore() {
     let ok = false;
     commit((current) => {
       const next = devDefendSetWaveOne(current);
+      ok = next !== current;
+      return ok ? next : null;
+    });
+    return ok;
+  }, [commit]);
+
+  /** Dev kit only: zero today's clear counter. */
+  const resetDailyClears = useCallback(async (): Promise<boolean> => {
+    let ok = false;
+    commit((current) => {
+      const next = devDefendResetClears(current);
+      ok = next !== current;
+      return ok ? next : null;
+    });
+    return ok;
+  }, [commit]);
+
+  /** Dev kit only: set today's clears to 5 (next win is halved). */
+  const setClearsTodayFive = useCallback(async (): Promise<boolean> => {
+    let ok = false;
+    commit((current) => {
+      const next = devDefendSetClearsFive(current);
       ok = next !== current;
       return ok ? next : null;
     });
@@ -327,5 +353,7 @@ export function usePlayStore() {
     sellAllJunk,
     recordDefendWin,
     setDefendWaveOne,
+    resetDailyClears,
+    setClearsTodayFive,
   };
 }
