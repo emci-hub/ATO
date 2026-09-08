@@ -50,6 +50,7 @@ import {
   type TowerKind,
 } from '@/play/defend';
 import { avatarLevelWavePower, bucketMultiplier, type PlayView } from '@/play/playStore';
+import { tipForWave } from '@/play/coach';
 
 const PUFF_COLOR = '#F472B6';
 const AVATAR_COLOR = '#38BDF8';
@@ -79,9 +80,15 @@ export function DefendScreen({
   const theme = useTheme();
   const [phase, setPhase] = useState<DefendPhase>('setup');
   const [paused, setPaused] = useState(false);
-  const [sim, setSim] = useState<DefendLive | null>(null);
+  /** The live board. Always present so towers can be placed during SETUP
+   * (spawns wait until Start); transitions rebuild it at the right times. */
+  const [sim, setSim] = useState<DefendLive | null>(
+    () => createDefendLive(view.highestWaveCleared + 1),
+  );
   const [selectedPad, setSelectedPad] = useState<number | null>(null);
   const [godMode, setGodMode] = useState(false);
+  const [coachHidden, setCoachHidden] = useState(false);
+  const [whyOpen, setWhyOpen] = useState(false);
 
   const phaseRef = useRef(phase);
   const pausedRef = useRef(paused);
@@ -119,11 +126,25 @@ export function DefendScreen({
   const bucketsRef = useRef(buckets);
   bucketsRef.current = buckets;
 
-  const startWave = useCallback((wave: number) => {
-    setSim(createDefendLive(wave));
+  const displayedWaveRef = useRef(1);
+  displayedWaveRef.current = sim?.wave ?? view.highestWaveCleared + 1;
+
+  /** Start the wave on the current board — placed towers + spent scrap carry
+   * into the fight (spec §9: setup place → start). */
+  const startWave = useCallback(() => {
+    setSim((prev) => prev ?? createDefendLive(displayedWaveRef.current));
     setPhase('running');
     setPaused(false);
     setSelectedPad(null);
+  }, []);
+
+  /** Rebuild a fresh board for `wave` and go back to setup (Next wave / dev). */
+  const freshRun = useCallback((wave: number) => {
+    setSim(createDefendLive(wave));
+    setPhase('setup');
+    setPaused(false);
+    setSelectedPad(null);
+    setWhyOpen(false);
   }, []);
 
   const winWave = useCallback(() => {
@@ -196,6 +217,14 @@ export function DefendScreen({
   const skillReady = (sim?.skillCooldownMs ?? 0) <= 0;
   const skillSeconds = Math.ceil((sim?.skillCooldownMs ?? 0) / 1000);
   const scrap = sim?.scrap ?? 80;
+
+  // Coach tip (pure): read the current wave, scrap, and what's on the pads.
+  const towerCounts = useMemo(() => {
+    const counts = { archer: 0, vine: 0, crystal: 0 };
+    for (const tower of sim?.towers ?? []) counts[tower.kind] += 1;
+    return counts;
+  }, [sim?.towers]);
+  const coach = tipForWave(displayedWave, scrap, towerCounts);
 
   // Drag gesture for the Avatar (mirrors scenario-card.tsx Pan pattern).
   const pan = Gesture.Pan()
@@ -468,32 +497,73 @@ export function DefendScreen({
 
         {/* Status / actions */}
         {phase === 'setup' ? (
-          <ThemedView type="backgroundElement" style={styles.card}>
-            <ThemedText type="smallBold">
-              Wave {nextWave} · {waveEnemyCount(nextWave)} puffs
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              Tap pads to place archers, vines, or crystals. Drag your Avatar near the path, then
-              start.
-            </ThemedText>
-            <Pressable
-              onPress={() => startWave(nextWave)}
-              accessibilityRole="button"
-              style={({ pressed }) => [
-                styles.primaryButton,
-                { backgroundColor: theme.accentFill },
-                pressed && styles.pressed,
-              ]}>
-              <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                Start wave
+          <>
+            {!coachHidden ? (
+              <ThemedView type="backgroundElement" style={styles.coachCard}>
+                <View style={styles.coachHeader}>
+                  <ThemedText type="smallBold" themeColor="emphasis">
+                    Coach · wave {nextWave}
+                  </ThemedText>
+                  <Pressable
+                    onPress={() => setCoachHidden(true)}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Hide coach"
+                    style={({ pressed }) => [pressed && styles.pressed]}>
+                    <ThemedText type="code" themeColor="textSecondary">
+                      Hide
+                    </ThemedText>
+                  </Pressable>
+                </View>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {coach.tip}
+                </ThemedText>
+                {coach.why ? (
+                  <Pressable
+                    onPress={() => setWhyOpen((open) => !open)}
+                    accessibilityRole="button"
+                    style={({ pressed }) => [pressed && styles.pressed]}>
+                    <ThemedText type="code" themeColor="textSecondary">
+                      {whyOpen ? 'Why? (hide)' : 'Why?'}
+                    </ThemedText>
+                  </Pressable>
+                ) : null}
+                {whyOpen && coach.why ? (
+                  <ThemedText type="small" themeColor="textSecondary" style={styles.whyText}>
+                    {coach.why}
+                  </ThemedText>
+                ) : null}
+              </ThemedView>
+            ) : null}
+            <ThemedView type="backgroundElement" style={styles.card}>
+              <ThemedText type="smallBold">
+                Wave {nextWave} · {waveEnemyCount(nextWave)} puffs
               </ThemedText>
-            </Pressable>
-          </ThemedView>
+              <ThemedText type="small" themeColor="textSecondary">
+                Tap pads to place archers, vines, or crystals. Drag your Avatar near the path, then
+                start.
+              </ThemedText>
+              <Pressable
+                onPress={() => startWave()}
+                accessibilityRole="button"
+                style={({ pressed }) => [
+                  styles.primaryButton,
+                  { backgroundColor: theme.accentFill },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
+                  Start wave
+                </ThemedText>
+              </Pressable>
+            </ThemedView>
+          </>
         ) : null}
 
         {phase === 'running' && !paused ? (
           <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-            Towers fire on their own — drag your Avatar and time {SKILL_NAME}.
+            {coachHidden
+              ? `Towers fire on their own — drag your Avatar and time ${SKILL_NAME}.`
+              : `Coach: ${coach.tip}`}
           </ThemedText>
         ) : null}
 
@@ -504,11 +574,7 @@ export function DefendScreen({
               +50 tokens · +{10 + (sim?.wave ?? nextWave) * 2} XP · Level {view.avatarLevel}
             </ThemedText>
             <Pressable
-              onPress={() => {
-                setSim(null);
-                setPhase('setup');
-                setSelectedPad(null);
-              }}
+              onPress={() => freshRun((sim?.wave ?? nextWave) + 1)}
               accessibilityRole="button"
               style={({ pressed }) => [
                 styles.primaryButton,
@@ -610,13 +676,14 @@ export function DefendScreen({
               onPress={() => setGodMode((value) => !value)}
             />
             <DevRow
+              label={coachHidden ? 'Show coach' : 'Coach on'}
+              onPress={() => setCoachHidden((hidden) => !hidden)}
+            />
+            <DevRow
               label="Set wave to 1"
               onPress={() => {
                 onSetWaveOne();
-                setSim(null);
-                setPhase('setup');
-                setPaused(false);
-                setSelectedPad(null);
+                freshRun(1);
               }}
             />
           </ThemedView>
@@ -683,6 +750,20 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     gap: Spacing.three,
     alignItems: 'stretch',
+  },
+  coachCard: {
+    borderRadius: Spacing.three,
+    padding: Spacing.three,
+    gap: Spacing.one,
+    alignItems: 'stretch',
+  },
+  coachHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  whyText: {
+    marginTop: Spacing.one,
   },
   statRow: {
     flexDirection: 'row',
