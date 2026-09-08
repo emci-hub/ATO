@@ -14,6 +14,29 @@ import {
 export const EWMA_ALPHA = 0.35;
 export const STABILITY_FLOOR_N = 3;
 /**
+ * Kalman-gain value update (trait system redesign §4). `prior_variance` for
+ * a track is derived as `1 - stability` rather than stored separately (no
+ * schema/shape change) — floored by KALMAN_MIN_VARIANCE so gain can never
+ * reach exactly 0 (an axis can always still move from new evidence).
+ *
+ * KALMAN_MEASUREMENT_NOISE is calibrated, not an arbitrary starting guess:
+ * `(1 - EWMA_ALPHA) / EWMA_ALPHA` makes the Kalman gain equal EXACTLY
+ * EWMA_ALPHA whenever prior_variance is at its ceiling (stability === 0,
+ * i.e. an axis with no established confidence yet) — so `value`'s update is
+ * mathematically equivalent to the pre-redesign fixed-EWMA formula
+ * (`gain * signal + (1 - gain) * current.value`, same shape as the old
+ * `EWMA_ALPHA * signal + (1 - EWMA_ALPHA) * current.value`) for any
+ * not-yet-settled axis, and only starts moving less than before once real
+ * confidence (stability > 0) has actually built up. A naively "reasonable"
+ * fixed constant here (tried first) gave fresh axes a much higher gain than
+ * EWMA_ALPHA ever did, which overshoots on ordinary (not just adversarial)
+ * varying answers and, via `value` feeding back into the next answer's
+ * delta/agreement, suppressed `stability` for sequences that used to settle
+ * fine (caught by wave20-check.ts's alternating-answer fixture).
+ */
+export const KALMAN_MEASUREMENT_NOISE = (1 - EWMA_ALPHA) / EWMA_ALPHA;
+export const KALMAN_MIN_VARIANCE = 0.05;
+/**
  * Inconsistent-answerer floor. An axis where every sample disagrees with the
  * running EWMA by >= 0.5 holds `stability` at exactly 0 forever (the EWMA
  * recurrence has 0 as a fixed point at zero agreement) — no amount of
@@ -133,6 +156,35 @@ export function emptyTrack(axis: TraitAxis, track: TraitTrackKind): TraitTrack {
 /**
  * Blend a new sample into a track. Never overwrites.
  * First answer lands as the value with stability 0 (not yet meaningful).
+ *
+ * Kalman-gain redesign (§4): a settled axis's Nth answer moves `value` less
+ * than an early answer did, instead of every answer swinging it by the same
+ * fixed EWMA_ALPHA regardless of how much history already exists. `value`
+ * uses a Kalman gain derived from the track's current confidence
+ * (`prior_variance = 1 - stability`, floored by KALMAN_MIN_VARIANCE so an
+ * axis is never permanently frozen) — no separate hardcoded "first few
+ * answers" branch is needed: since `stability` itself starts at 0 and only
+ * grows once real agreement is established (see below), prior_variance is
+ * already ~1 (low confidence, gain near 1) for an axis's first answers, and
+ * naturally shrinks as the axis genuinely settles. This is what fixes the
+ * "10th answer swings as much as the 2nd" problem the redesign targets.
+ *
+ * `stability` itself deliberately keeps the ORIGINAL agreement-based update
+ * (delta/agreement blended at EWMA_ALPHA), completely unchanged in formula
+ * and timing from before this redesign. Two reasons: (1) a pure
+ * Kalman-variance stability update has no disagreement term, so it would
+ * climb every answer regardless of whether answers keep contradicting each
+ * other — silently disabling `isInconsistentAnswerer`'s trap detection
+ * (STABILITY_FLOOR_OVERRIDE_N below), which specifically depends on raw
+ * stability staying pinned at exactly 0 under maximal disagreement (see
+ * `trait-stability-check.ts`'s adversarial-answerer proof); (2) many
+ * existing check scripts build "already settled" fixtures via a
+ * `stableReport`-style helper (3 identical `applyEwmaAnswer` calls) that
+ * depends on the exact old ramp-up speed — changing it would break those
+ * fixtures' numeric assumptions across the codebase for no product benefit,
+ * since the Kalman fix is specifically about the *value* swing, not
+ * `stability`'s own convergence rate. Only the value-update path is Kalman
+ * now; `stability`'s formula/timing is byte-for-byte the same as before.
  */
 export function applyEwmaAnswer(
   current: TraitTrack | null,
@@ -155,7 +207,9 @@ export function applyEwmaAnswer(
   }
   const delta = Math.abs(signal - current.value);
   const agreement = 1 - clamp01(delta / 0.5);
-  const value = clamp01(EWMA_ALPHA * signal + (1 - EWMA_ALPHA) * current.value);
+  const priorVariance = Math.max(KALMAN_MIN_VARIANCE, 1 - current.stability);
+  const kalmanGain = priorVariance / (priorVariance + KALMAN_MEASUREMENT_NOISE);
+  const value = clamp01(current.value + kalmanGain * (signal - current.value));
   const stability = clamp01(EWMA_ALPHA * agreement + (1 - EWMA_ALPHA) * current.stability);
   return {
     axis,
