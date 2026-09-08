@@ -1,19 +1,18 @@
 /**
- * Defend — board skeleton (Play step 5a, GAME_SPEC §9, §11 screen 5).
+ * Defend — board + towers (Play steps 5a/5b, GAME_SPEC §9, §9b, §11 screen 5).
  *
- * One Grove Path (SVG polyline) with puff placeholders walking it. Leak at the
- * exit ends the wave (fail); a clean wave is a win — real wins need towers
- * (5b), so this step's only win source is the Dev kit. The wave fought is
- * `highest_wave_cleared + 1`; Retry replays the same wave with an empty board;
- * Pause freezes the sim; leaving discards the run (scrap is not spent yet, and
- * towers do not exist yet — pads stay empty as specced). No Supabase.
+ * One Grove Path with puff enemies walking it; six pads hold up to six towers
+ * (archer / vine / crystal). Tap a pad to place (or upgrade an existing tower)
+ * with scrap; a range ring shows while a pad is selected and hides when idle.
+ * Towers auto-fire into range; kills grant scrap; leak = fail; a clean wave is
+ * a win. No hero drag / skill yet (5c). No Supabase.
  *
  * The sim is local + transient (see `defend.ts`); only `highest_wave_cleared`
- * persists through the shared store via `onRecordClear` / `onSetWaveOne`.
+ * persists through the shared store via `onRecordClear`.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Pressable, StyleSheet, View } from 'react-native';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -22,18 +21,30 @@ import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import {
+  DEFEND_PADS,
   DEFEND_PATH,
   DEFEND_TICK_MS,
+  TOWER_DEFS,
+  TOWER_MAX_LEVEL,
   createDefendLive,
+  placeTower,
   puffPosition,
+  retryDefendLive,
   stepDefendLive,
+  towerUpgradeCost,
+  upgradeTower,
   waveEnemyCount,
   type DefendLive,
+  type TowerKind,
 } from '@/play/defend';
-import { DEFEND_START_SCRAP, type PlayView } from '@/play/playStore';
+import { bucketMultiplier, type PlayView } from '@/play/playStore';
 
-/** Puff placeholder pink — puff_pink. */
 const PUFF_COLOR = '#F472B6';
+const TOWER_COLORS: Record<TowerKind, string> = {
+  archer: '#34D399',
+  vine: '#A3E635',
+  crystal: '#A78BFA',
+};
 
 type DefendPhase = 'setup' | 'running' | 'won' | 'lost';
 
@@ -52,6 +63,7 @@ export function DefendScreen({
   const [phase, setPhase] = useState<DefendPhase>('setup');
   const [paused, setPaused] = useState(false);
   const [sim, setSim] = useState<DefendLive | null>(null);
+  const [selectedPad, setSelectedPad] = useState<number | null>(null);
 
   const phaseRef = useRef(phase);
   const pausedRef = useRef(paused);
@@ -63,44 +75,53 @@ export function DefendScreen({
   const nextWave = view.highestWaveCleared + 1;
   const displayedWave = sim?.wave ?? nextWave;
 
-  /** Start a run for `wave` (fresh sim; empty board — no towers this step). */
+  // Equipped mult buckets, board-wide for towers (GAME_SPEC §9b).
+  const buckets = useMemo(
+    () => ({
+      wavePower: bucketMultiplier('wave_power', view.statSums),
+      towerSpeed: bucketMultiplier('tower_speed', view.statSums),
+    }),
+    [view.statSums],
+  );
+  const bucketsRef = useRef(buckets);
+  bucketsRef.current = buckets;
+
   const startWave = useCallback((wave: number) => {
     setSim(createDefendLive(wave));
     setPhase('running');
     setPaused(false);
+    setSelectedPad(null);
   }, []);
 
-  /** Real-clear path — only reachable via the Dev kit this step. */
   const winWave = useCallback(() => {
     const wave = simRef.current?.wave ?? nextWave;
     setPhase('won');
     setPaused(false);
-    onRecordClear(wave); // fires-and-forgets the persist; view updates after
+    setSelectedPad(null);
+    onRecordClear(wave);
   }, [nextWave, onRecordClear]);
 
-  // Sim ticker: only while running and not paused.
+  // Sim ticker: running + not paused.
   useEffect(() => {
     if (phase !== 'running' || paused) return;
     const id = setInterval(() => {
       const current = simRef.current;
       if (!current) return;
-      const step = stepDefendLive(current, DEFEND_TICK_MS);
+      const step = stepDefendLive(current, DEFEND_TICK_MS, bucketsRef.current);
       simRef.current = step.state;
       setSim(step.state);
       if (step.leak) {
         setPhase('lost');
         setPaused(false);
+        setSelectedPad(null);
         return;
       }
-      if (step.done) {
-        // Natural clear (arrives with towers in 5b). Persist the highest.
-        winWave();
-      }
+      if (step.done) winWave();
     }, DEFEND_TICK_MS);
     return () => clearInterval(id);
   }, [phase, paused, winWave]);
 
-  // App in the background → freeze the wave (GAME_SPEC §9 pause/background).
+  // Background → freeze the wave (GAME_SPEC §9 pause/background).
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
       if (state !== 'active' && phaseRef.current === 'running' && !pausedRef.current) {
@@ -109,6 +130,25 @@ export function DefendScreen({
     });
     return () => sub.remove();
   }, []);
+
+  const selectedTower =
+    sim && selectedPad != null
+      ? sim.towers.find((tower) => tower.pad === selectedPad) ?? null
+      : null;
+
+  const placeOnPad = (kind: TowerKind) => {
+    if (selectedPad == null) return;
+    setSim((prev) => (prev ? placeTower(prev, selectedPad, kind) ?? prev : prev));
+  };
+
+  const upgradeSelected = () => {
+    if (!selectedTower) return;
+    setSim((prev) =>
+      prev ? upgradeTower(prev, selectedTower.id) ?? prev : prev,
+    );
+  };
+
+  const scrap = sim?.scrap ?? 80;
 
   return (
     <ThemedView style={styles.container}>
@@ -129,7 +169,7 @@ export function DefendScreen({
           Protect the Grove Path. One leak and the wave ends.
         </ThemedText>
 
-        {/* HUD: wave, scrap, pause */}
+        {/* HUD */}
         <ThemedView type="backgroundElement" style={styles.card}>
           <View style={styles.statRow}>
             <ThemedText type="smallBold">Wave</ThemedText>
@@ -140,7 +180,7 @@ export function DefendScreen({
           <View style={styles.statRow}>
             <ThemedText type="smallBold">Scrap</ThemedText>
             <ThemedText type="subheading" themeColor="emphasis">
-              {DEFEND_START_SCRAP}
+              {scrap}
             </ThemedText>
           </View>
           {phase === 'running' ? (
@@ -170,12 +210,66 @@ export function DefendScreen({
                 strokeLinejoin="round"
                 fill="none"
               />
-              {/* Spawn + exit markers */}
-              <Circle cx={2} cy={20} r={2.4} fill={theme.accentTertiary} />
-              <Circle cx={98} cy={60} r={3} fill={theme.accent} />
-              {(sim?.puffs ?? []).map((puff) => {
+              {/* Pads (tap targets). Selected pad shows a range ring. */}
+              {DEFEND_PADS.map((pad, index) => {
+                const tower = sim?.towers.find((t) => t.pad === index);
+                const selected = selectedPad === index;
+                return (
+                  <Circle
+                    key={`pad-${index}`}
+                    cx={pad.x}
+                    cy={pad.y}
+                    r={5.5}
+                    fill={tower ? TOWER_COLORS[tower.kind] : theme.accent}
+                    fillOpacity={tower ? 1 : 0.25}
+                    stroke={selected ? theme.accent : 'none'}
+                    strokeWidth={selected ? 1.4 : 0}
+                    onPress={() => setSelectedPad(selected ? null : index)}
+                  />
+                );
+              })}
+              {/* Range ring for the selected pad. */}
+              {selectedPad != null && (
+                <Circle
+                  cx={DEFEND_PADS[selectedPad].x}
+                  cy={DEFEND_PADS[selectedPad].y}
+                  r={selectedTower ? TOWER_DEFS[selectedTower.kind].range : 18}
+                  fill="none"
+                  stroke={theme.accent}
+                  strokeOpacity={0.5}
+                  strokeWidth={1}
+                  strokeDasharray="2 2"
+                />
+              )}
+              {/* Tower levels */}
+              {sim?.towers.map((tower) => {
+                const pad = DEFEND_PADS[tower.pad];
+                return (
+                  <SvgText
+                    key={`tower-${tower.id}`}
+                    x={pad.x}
+                    y={pad.y + 1.4}
+                    fontSize={4.2}
+                    fontWeight="bold"
+                    fill="#FFFFFF"
+                    textAnchor="middle">
+                    {tower.level}
+                  </SvgText>
+                );
+              })}
+              {/* Enemies with HP bars. */}
+              {sim?.puffs.map((puff) => {
                 const pos = puffPosition(puff.dist);
-                return <Circle key={puff.id} cx={pos.x * 100} cy={pos.y * 100} r={3.4} fill={PUFF_COLOR} />;
+                const x = pos.x * 100;
+                const y = pos.y * 100;
+                const pct = Math.max(0, Math.min(1, puff.hp / puff.maxHp));
+                return (
+                  <G key={`puff-${puff.id}`}>
+                    <Circle cx={x} cy={y} r={3.4} fill={PUFF_COLOR} />
+                    <Rect x={x - 4} y={y - 7} width={8} height={1.6} fill="rgba(0,0,0,0.35)" rx={0.8} />
+                    <Rect x={x - 4} y={y - 7} width={8 * pct} height={1.6} fill="#4ADE80" rx={0.8} />
+                  </G>
+                );
               })}
             </Svg>
           </View>
@@ -186,6 +280,84 @@ export function DefendScreen({
           ) : null}
         </ThemedView>
 
+        {/* Pad action panel */}
+        {selectedPad != null ? (
+          <ThemedView type="backgroundElement" style={styles.card}>
+            {selectedTower ? (
+              <>
+                <ThemedText type="smallBold">
+                  {TOWER_DEFS[selectedTower.kind].name} · level {selectedTower.level}/{TOWER_MAX_LEVEL}
+                </ThemedText>
+                {selectedTower.level < TOWER_MAX_LEVEL ? (
+                  <Pressable
+                    onPress={upgradeSelected}
+                    disabled={scrap < towerUpgradeCost(selectedTower)}
+                    accessibilityRole="button"
+                    style={({ pressed }) => [
+                      styles.primaryButton,
+                      {
+                        backgroundColor:
+                          scrap >= towerUpgradeCost(selectedTower)
+                            ? theme.accentFill
+                            : theme.backgroundSelected,
+                      },
+                      pressed && styles.pressed,
+                    ]}>
+                    <ThemedText
+                      type="smallBold"
+                      style={{
+                        color:
+                          scrap >= towerUpgradeCost(selectedTower)
+                            ? theme.onAccent
+                            : theme.textSecondary,
+                      }}>
+                      Upgrade · {towerUpgradeCost(selectedTower)} scrap
+                    </ThemedText>
+                  </Pressable>
+                ) : (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Fully upgraded.
+                  </ThemedText>
+                )}
+              </>
+            ) : (
+              <>
+                <ThemedText type="smallBold">Build a tower</ThemedText>
+                {(Object.keys(TOWER_DEFS) as TowerKind[]).map((kind) => {
+                  const def = TOWER_DEFS[kind];
+                  const affordable = scrap >= def.placeCost;
+                  return (
+                    <Pressable
+                      key={kind}
+                      onPress={() => placeOnPad(kind)}
+                      disabled={!affordable}
+                      accessibilityRole="button"
+                      style={({ pressed }) => [
+                        styles.hudButton,
+                        { backgroundColor: affordable ? theme.backgroundSelected : theme.backgroundElement },
+                        pressed && affordable && styles.pressed,
+                      ]}>
+                      <ThemedText
+                        type="smallBold"
+                        themeColor={affordable ? undefined : 'textSecondary'}>
+                        {def.name} · {def.placeCost} scrap
+                      </ThemedText>
+                    </Pressable>
+                  );
+                })}
+              </>
+            )}
+            <Pressable
+              onPress={() => setSelectedPad(null)}
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.hudButton, pressed && styles.pressed]}>
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                Done
+              </ThemedText>
+            </Pressable>
+          </ThemedView>
+        ) : null}
+
         {/* Status / actions */}
         {phase === 'setup' ? (
           <ThemedView type="backgroundElement" style={styles.card}>
@@ -193,7 +365,7 @@ export function DefendScreen({
               Wave {nextWave} · {waveEnemyCount(nextWave)} puffs
             </ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              Towers come in a later step — for now the path runs on its own. Puffs that reach
+              Tap pads to place archers (fast), vines (slow), or crystals (heavy). Puffs that reach
               the exit end the wave.
             </ThemedText>
             <Pressable
@@ -213,7 +385,7 @@ export function DefendScreen({
 
         {phase === 'running' && !paused ? (
           <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-            Puffs are on the path — Pause freezes the wave.
+            Towers fire on their own — Pause freezes the wave.
           </ThemedText>
         ) : null}
 
@@ -227,6 +399,7 @@ export function DefendScreen({
               onPress={() => {
                 setSim(null);
                 setPhase('setup');
+                setSelectedPad(null);
               }}
               accessibilityRole="button"
               style={({ pressed }) => [
@@ -255,11 +428,18 @@ export function DefendScreen({
           <ThemedView type="backgroundElement" style={styles.card}>
             <ThemedText type="smallBold">The path was breached.</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              One puff reached the exit — wave {sim?.wave ?? nextWave} ends. Retry the same wave;
-              the board is empty again.
+              One puff reached the exit — wave {sim?.wave ?? nextWave} ends. Retry the same wave with
+              your towers kept.
             </ThemedText>
             <Pressable
-              onPress={() => sim && startWave(sim.wave)}
+              onPress={() => {
+                if (sim) {
+                  setSim(retryDefendLive(sim));
+                  setPhase('running');
+                  setPaused(false);
+                  setSelectedPad(null);
+                }
+              }}
               accessibilityRole="button"
               style={({ pressed }) => [
                 styles.primaryButton,
@@ -299,7 +479,18 @@ export function DefendScreen({
               onPress={() => {
                 setPhase('lost');
                 setPaused(false);
+                setSelectedPad(null);
               }}
+            />
+            <DevRow
+              label="+40 scrap"
+              disabled={!sim}
+              onPress={() => setSim((prev) => (prev ? { ...prev, scrap: prev.scrap + 40 } : prev))}
+            />
+            <DevRow
+              label="Clear all towers"
+              disabled={!sim || sim.towers.length === 0}
+              onPress={() => setSim((prev) => (prev ? { ...prev, towers: [] } : prev))}
             />
             <DevRow
               label="Set wave to 1"
@@ -308,6 +499,7 @@ export function DefendScreen({
                 setSim(null);
                 setPhase('setup');
                 setPaused(false);
+                setSelectedPad(null);
               }}
             />
           </ThemedView>
