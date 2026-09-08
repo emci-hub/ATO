@@ -13,6 +13,7 @@ import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useAppearance } from '@/lib/theme/context';
 import { DiveScreen } from '@/play/dive-screen';
 import { DressScreen } from '@/play/dress-screen';
+import { DefendScreen } from '@/play/defend-screen';
 import { GROVE_ACTION_TILES, GROVE_LEDE } from '@/play/grove';
 import { itemName, type ItemSlot } from '@/play/items';
 import {
@@ -40,11 +41,13 @@ import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
  * post-result cooldown; Dev kit can skip the delays) and its bust odds are
  * bent by equipped dive_luck (§7). Dress (step 4) equips 4 slots from the
  * collection, sells Looks over the soft cap, and shows the equipped-stat
- * buckets. Defend stays "soon". No Supabase — local AsyncStorage only.
- * Hidden outside pre-launch builds via PRE_LAUNCH_DEV.
+ * buckets. Defend (step 5a) is a board skeleton: one path with puff
+ * placeholders, leak = fail, Retry replays, Pause freezes, next wave = highest
+ * cleared + 1. No Supabase — local AsyncStorage only. Hidden outside
+ * pre-launch builds via PRE_LAUNCH_DEV.
  */
 
-type PlayMode = 'grove' | 'dive' | 'dress';
+type PlayMode = 'grove' | 'dive' | 'dress' | 'defend';
 
 type PlayToast =
   | { kind: 'claim'; result: ClaimResult }
@@ -73,6 +76,8 @@ export default function PlayScreen() {
     fillJunkLooks,
     grantTideBlades,
     sellAllJunk,
+    recordDefendClear,
+    setDefendWaveOne,
   } = usePlayStore();
   const [mode, setMode] = useState<PlayMode>('grove');
   const [toast, setToast] = useState<PlayToast | null>(null);
@@ -201,6 +206,19 @@ export default function PlayScreen() {
     [unequip],
   );
 
+  /** Defend — persist a cleared wave (highest_wave_cleared = max). */
+  const handleRecordDefendClear = useCallback(
+    (wave: number) => {
+      void recordDefendClear(wave);
+    },
+    [recordDefendClear],
+  );
+
+  /** Defend dev row — reset the ladder so the next wave is 1. */
+  const handleSetDefendWaveOne = useCallback(() => {
+    void setDefendWaveOne();
+  }, [setDefendWaveOne]);
+
   function closePlay() {
     if (router.canGoBack()) {
       router.back();
@@ -295,6 +313,13 @@ export default function PlayScreen() {
               onMerge={handleMerge}
               onBackToGrove={() => setMode('grove')}
             />
+          ) : mode === 'defend' && view ? (
+            <DefendScreen
+              view={view}
+              onRecordClear={handleRecordDefendClear}
+              onSetWaveOne={handleSetDefendWaveOne}
+              onBackToGrove={() => setMode('grove')}
+            />
           ) : (
             <>
               <View style={styles.topRow}>
@@ -364,8 +389,7 @@ export default function PlayScreen() {
 
               <View style={styles.actionList}>
                 {GROVE_ACTION_TILES.map((tile) => {
-                  const openMode: PlayMode | null =
-                    tile.kind === 'defend' ? null : tile.kind;
+                  const openMode: PlayMode | null = tile.soon == null ? tile.kind : null;
                   const enabled = tile.soon == null;
                   return (
                     <ThemedView key={tile.kind} type="backgroundElement" style={styles.actionCard}>

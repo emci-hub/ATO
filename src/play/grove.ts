@@ -24,7 +24,7 @@ export type GroveActionTile = {
   soon: string | null;
 };
 
-/** Dive + Dress are live since steps 3–4; Defend is "soon" until its step. */
+/** Dive + Dress + Defend board skeleton are live since steps 3–5a. */
 export const GROVE_ACTION_TILES: GroveActionTile[] = [
   {
     kind: 'dive',
@@ -45,6 +45,6 @@ export const GROVE_ACTION_TILES: GroveActionTile[] = [
     icon: 'shield-outline',
     title: 'Defend',
     lede: 'Protect the grove path.',
-    soon: 'Soon',
+    soon: null,
   },
 ];

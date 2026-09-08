@@ -23,6 +23,7 @@ import {
   claimResearch,
   deeperDive,
   devClearEquipped,
+  devDefendSetWaveOne,
   devFillJunkLooks,
   devGrantRandomFind,
   devGrantRandomPower,
@@ -32,6 +33,7 @@ import {
   loadPlayStore,
   mergeItem,
   playView,
+  recordDefendClear as persistDefendClear,
   savePlayStore,
   sellItem,
   startDive,
@@ -281,6 +283,31 @@ export function usePlayStore() {
     return result;
   }, [commit]);
 
+  /** A Defend wave cleared → persist highest_wave_cleared = max(current, W). */
+  const recordDefendClear = useCallback(
+    async (wave: number): Promise<boolean> => {
+      let ok = false;
+      commit((current) => {
+        const next = persistDefendClear(current, wave);
+        ok = next !== current;
+        return next;
+      });
+      return ok;
+    },
+    [commit],
+  );
+
+  /** Dev kit only: reset the Defend ladder so the next wave is 1 again. */
+  const setDefendWaveOne = useCallback(async (): Promise<boolean> => {
+    let ok = false;
+    commit((current) => {
+      const next = devDefendSetWaveOne(current);
+      ok = next !== current;
+      return ok ? next : null;
+    });
+    return ok;
+  }, [commit]);
+
   return {
     view,
     claim,
@@ -298,5 +325,7 @@ export function usePlayStore() {
     fillJunkLooks,
     grantTideBlades,
     sellAllJunk,
+    recordDefendClear,
+    setDefendWaveOne,
   };
 }

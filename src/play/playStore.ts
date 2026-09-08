@@ -30,6 +30,10 @@
  *   `dive_run` so killing the app mid-run keeps the same decision on relaunch.
  *   Equipped `dive_luck` bends the bust % (§7: bust × (1 − 0.15·(luck_bucket−1)),
  *   floored at half the table value) — never hidden, always shown as-is.
+ * - Defend meta (step 5a+) — `highest_wave_cleared` (GAME_DATA defend run
+ *   defaults, start 0). Entering Defend fights wave = highest + 1; a clear
+ *   bumps it via `recordDefendClear`. The live board (spawns, pauses, leak) is
+ *   a transient screen sim in `defend.ts`, not persisted — only this number is.
  * - Daily tend bonus — +10 tokens once per device-local day on the first Claim
  *   (later also Dress/Decor), tracked by `last_tend_bonus_ymd`.
  *
@@ -73,6 +77,9 @@ export const DAILY_TEND_BONUS_TOKENS = 10;
 /** Inventory + Dress (GAME_SPEC §9 inventory, §9c; GAME_DATA sell knob). */
 export const INVENTORY_SOFT_CAP = 80; // soft cap: total items across stacks (sum of counts)
 export const LOOK_SELL_TOKENS = 3; // GAME_DATA look_sell_tokens
+
+/** Defend run defaults (GAME_DATA). */
+export const DEFEND_START_SCRAP = 80; // start_scrap — each run starts with this
 
 /** Risky merge (Dive-style, this step). */
 export const MERGE_MAX_STAR = 5;
@@ -185,11 +192,11 @@ export type DiveRun = {
  * (worn included) into `ItemStack[]` of bagged copies (worn excluded); v6
  * (this step) added a `star` tier to every stack copy and changed `equipped`
  * from slot → id into slot → `{ id, star }` so a worn merge result survives.
- * v1–v5 docs migrate (legacy copies are star 0). Still to come behind later
- * bumps: Defend adds `highest_wave_cleared`.
+ * v1–v5 docs migrate (legacy copies are star 0). v7 (Defend 5a) added the
+ * `highest_wave_cleared` meta. Later bumps: Defend run fields, XP/level.
  */
 export type PlayStoreDoc = {
-  version: 6;
+  version: 7;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -207,6 +214,8 @@ export type PlayStoreDoc = {
   equipped: Partial<Record<ItemSlot, ItemRef>>;
   /** Active Dive run (null when no charge has been spent / run is over). */
   dive_run: DiveRun | null;
+  /** Defend meta — highest wave cleared (start 0). Next wave = this + 1. */
+  highest_wave_cleared: number;
 };
 
 export type DiveChargeView = {
@@ -241,6 +250,8 @@ export type PlayView = {
   /** Raw additive mult sums from equipped items (§9c same-stat adds, scaled
    * +10% per worn star so a merged ★2 Tide Blade beats a ★1). */
   statSums: StatSums;
+  /** Highest Defend wave cleared (next wave = this + 1). */
+  highestWaveCleared: number;
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -281,7 +292,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 6,
+    version: 7,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -291,6 +302,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     inventory: [],
     equipped: {},
     dive_run: null,
+    highest_wave_cleared: 0,
   };
 }
 
@@ -341,6 +353,7 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     inventory: doc.inventory,
     equipped: doc.equipped,
     statSums: equippedStatSums(doc.equipped),
+    highestWaveCleared: doc.highest_wave_cleared,
   };
 }
 
@@ -359,6 +372,30 @@ function diveRunViewOf(doc: PlayStoreDoc): DiveRunView {
 
 export function canClaimResearch(view: PlayView): boolean {
   return view.research.readyFinds >= 1;
+}
+
+/* ---------------------------------------------------------------------------
+ * Defend meta (GAME_SPEC §9 wave ladder; GAME_DATA defend run defaults).
+ *
+ * Only the persistent number lives here (`highest_wave_cleared`); the live
+ * board — spawns, puffs walking the path, pause, leak → fail — is a transient
+ * screen simulation in `defend.ts` that is never persisted.
+ * ------------------------------------------------------------------------- */
+
+/** A wave W cleared → highest_wave_cleared = max(current, W). */
+export function recordDefendClear(
+  doc: PlayStoreDoc,
+  wave: number,
+): PlayStoreDoc {
+  return {
+    ...doc,
+    highest_wave_cleared: Math.max(doc.highest_wave_cleared, Math.floor(wave)),
+  };
+}
+
+/** Dev kit only: make the next wave 1 again (highest_wave_cleared → 0). */
+export function devDefendSetWaveOne(doc: PlayStoreDoc): PlayStoreDoc {
+  return { ...doc, highest_wave_cleared: 0 };
 }
 
 /* ---------------------------------------------------------------------------
@@ -936,12 +973,16 @@ function snapshotDive(
 function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
   try {
     const data = JSON.parse(raw) as Record<string, unknown>;
-    // v1 (pre-inventory) … v5 (stacked bags, slot→id equipped) all migrate to
-    // v6: legacy copies are star 0, and equipped string ids become refs with
-    // star 0. v1–v4 also stored `inventory` as a string[] of owned ids WITH
-    // worn copies included, so those subtract one copy per equipped slot.
+    // v1 (pre-inventory) … v6 (starred stacks) all migrate to v7: legacy
+    // copies are star 0, equipped string ids become refs with star 0, and the
+    // Defend meta defaults to 0 clears. v1–v4 also stored `inventory` as a
+    // string[] of owned ids WITH worn copies included, so those subtract one
+    // copy per equipped slot.
     const version = data?.version;
-    if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6) {
+    if (
+      version !== 1 && version !== 2 && version !== 3 && version !== 4 &&
+      version !== 5 && version !== 6 && version !== 7
+    ) {
       return null;
     }
     const tokens = finiteNumber(data.tokens);
@@ -954,8 +995,9 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       return null;
     }
     const equipped = parseEquipped(data.equipped);
+    const highestWaveCleared = finiteNumber(data.highest_wave_cleared) ?? 0;
     return {
-      version: 6,
+      version: 7,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -965,6 +1007,7 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       inventory: parseInventory(data.inventory, equipped, version < 5),
       equipped,
       dive_run: parseDiveRun(data.dive_run),
+      highest_wave_cleared: Math.max(0, Math.floor(highestWaveCleared)),
     };
   } catch {
     return null;
