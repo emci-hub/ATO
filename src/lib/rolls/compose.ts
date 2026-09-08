@@ -54,9 +54,15 @@ export interface ComposedRoll {
 /**
  * Eligibility per §5/§7's try_roll pseudocode: a first-ever roll (no
  * snapshot yet), or a genuine RCI-detected change since the last one. Pure
- * — does not itself claim quota or write anything; the caller (Edge
- * Function) checks this BEFORE calling claim_roll(), so an ineligible
- * client can never burn quota or generate content.
+ * — does not itself claim quota or write anything.
+ *
+ * NOT independently server-enforced today: the real caller (src/lib/rolls/run.ts)
+ * checks this client-side before calling claimRoll(), which reduces
+ * unnecessary claims for an honest client but does not stop a modified
+ * client from skipping this check and calling claimRoll() directly — a
+ * known, accepted gap (see run.ts's docstring for the full reasoning and
+ * what actually still bounds the cost regardless: claimRoll +
+ * claimRollGeneration, both real server-side RPCs).
  */
 export function rollEligible(
   tracks: readonly TraitTrack[],
@@ -115,11 +121,31 @@ export async function composeRoll(
   const legendView = buildLegendView(catalog, values, seenVariantIds);
   const topLegend: LegendMatch | null = legendView.cards[0] ?? null;
 
+  // Store only what a roll's legend item actually needs to display —
+  // variant.fullStory (the complete story body) is already reachable
+  // through the existing Legends feature's own fetch; duplicating it into
+  // every roll's result risks approaching store_roll's 8KB per-item cap for
+  // no real benefit, and just bloats every stored roll.
+  const legendResult = topLegend
+    ? {
+        ready: true,
+        matched: true,
+        hits: topLegend.hits,
+        variant: {
+          id: topLegend.variant.id,
+          figureId: topLegend.variant.figureId,
+          name: topLegend.variant.name,
+          teaser: topLegend.variant.teaser,
+        },
+        archetype: { id: topLegend.archetype.id, formalName: topLegend.archetype.formalName },
+      }
+    : { ready: false, matched: false };
+
   const items: RollItem[] = [
     {
       type: 'legend',
       categoryId: null,
-      result: topLegend ? { ready: true, matched: true, ...topLegend } : { ready: false, matched: false },
+      result: legendResult,
     },
   ];
 

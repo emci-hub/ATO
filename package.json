@@ -119,6 +119,8 @@
     "check:wave46": "tsx ./scripts/wave46-check.ts",
     "check:rolls-compose": "tsx ./scripts/rolls-compose-check.ts",
     "check:wave47": "tsx ./scripts/wave47-check.ts",
+    "check:rolls-store": "tsx ./scripts/rolls-store-check.ts",
+    "check:wave48": "tsx ./scripts/wave48-check.ts",
     "check:category-paged-questions": "tsx ./scripts/category-paged-questions-check.ts",
     "check:wave19": "tsx ./scripts/wave19-check.ts",
     "check:wave20": "tsx ./scripts/wave20-check.ts",

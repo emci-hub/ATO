@@ -3,6 +3,8 @@
  * Run: npm run check:rolls-compose
  */
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 import { getCategoryDefs, readAllCategories, setCategoryDefs } from '../src/lib/categories';
 import type { LegendCatalog, LegendVariant, ArchetypeDef } from '../src/lib/legends/store';
@@ -33,6 +35,17 @@ assert.equal(rollEligible([], null, NOW), true, 'no snapshot yet: always eligibl
   assert.equal(rollEligible(bigChange, snapshot, NOW), true, 'a real sustained change must warrant a new roll');
 }
 ok('rollEligible: first-ever always eligible, otherwise delegates correctly to RCI (drift no, real change yes)');
+
+{
+  // Found in review: rollEligible's docstring claimed "the caller (Edge
+  // Function) checks this BEFORE calling claim_roll()," which was false —
+  // no such Edge Function exists, and the real caller (run.ts) is client
+  // code. Must be corrected to honestly describe the gap, not just moved.
+  const composeSrc = readFileSync(resolve(__dirname, '../src/lib/rolls/compose.ts'), 'utf8');
+  assert.doesNotMatch(composeSrc, /the caller \(Edge\s*\n?\s*\* Function\) checks this BEFORE calling claim_roll/, 'the false Edge Function enforcement claim must be gone from compose.ts, not just run.ts');
+  assert.match(composeSrc, /NOT independently server-enforced today/, 'rollEligible\'s own docstring must honestly flag the gap, consistent with run.ts\'s corrected docstring');
+  ok('compose.ts\'s rollEligible docstring no longer makes the false Edge-Function-enforcement claim');
+}
 
 // --- buildCategoryReadPrompt / parseCategoryReadBody -----------------------
 {

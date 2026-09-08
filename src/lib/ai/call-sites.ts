@@ -73,6 +73,18 @@ export const SAGE_INSIGHT_META: AiCallMetadata = {
   latencySensitive: true,
 };
 
+/** Roll generation (trait-system redesign §7) — the 11 category reads + the
+ * story item within one roll. Same bucket-shareable shape as Sage Story
+ * (pure function of trait-derived readings, no name/history baked into the
+ * prompt); not latency-sensitive since a roll computes in the background
+ * before any reveal, unlike a chat reply. */
+export const ROLL_META: AiCallMetadata = {
+  personalized: false,
+  cohortShareable: false,
+  bucketShareable: true,
+  latencySensitive: false,
+};
+
 export interface AiCallSite {
   feature: string;
   location: string;
@@ -115,5 +127,10 @@ export const AI_CALL_SITES: readonly AiCallSite[] = [
     feature: 'Sage insight spend',
     location: 'src/lib/sage-insight.ts',
     meta: SAGE_INSIGHT_META,
+  },
+  {
+    feature: 'Roll generation',
+    location: 'src/lib/rolls/generate.ts → generateRollItemText()',
+    meta: ROLL_META,
   },
 ];

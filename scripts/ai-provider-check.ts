@@ -172,6 +172,7 @@ const METADATA_CALL_FILES = new Set([
   'src/lib/voice/providers/remote.ts',
   'src/lib/questions/generate.ts',
   'src/lib/explore/generate.ts',
+  'src/lib/rolls/generate.ts',
 ]);
 const CALL_WITH_META =
   /generateText\(\s*\{[\s\S]*?\}\s*,\s*[A-Za-z0-9_$.[\]]+\s*\)/g;
@@ -211,7 +212,7 @@ const META_FLAGS: readonly (keyof AiCallMetadata)[] = [
   'bucketShareable',
   'latencySensitive',
 ];
-assert.equal(AI_CALL_SITES.length, 7, 'one catalog entry per AI call site');
+assert.equal(AI_CALL_SITES.length, 8, 'one catalog entry per AI call site');
 const features = new Set<string>();
 for (const site of AI_CALL_SITES) {
   assert.ok(!features.has(site.feature), `duplicate call-site feature: ${site.feature}`);
