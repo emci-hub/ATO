@@ -1,7 +1,8 @@
 /**
  * "5 questions per category" — a fixed, closed batch per category,
- * independent of Full Profile's 48/3-per-axis tracking and of Infinite
- * Questions' rotating daily pack. Pure/testable here (no Supabase import);
+ * independent of Full Profile's frozen-50-question tracking (trait-system
+ * redesign §3) and of Infinite Questions' rotating daily pack. Pure/testable
+ * here (no Supabase import);
  * the actual DB reads/writes live in category-batch-store.ts and are
  * injected as deps into `composeCategoryBatch` below, same pattern
  * `routeQuestions` (route.ts) already uses for `RouteQuestionsDeps`.

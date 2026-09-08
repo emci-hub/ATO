@@ -189,7 +189,7 @@ export function bankQuestionCount(axes: readonly TraitAxis[]): number {
   return axes.reduce((sum, axis) => sum + (map.get(axis)?.length ?? 0), 0);
 }
 
-/** "N of 48 answered" across the whole bank, every axis. */
+/** "N of 50 answered" across the whole bank, every axis (frozen intake, §3). */
 export function bankTotalProgress(tracks: readonly TraitTrack[]): {
   answered: number;
   total: number;

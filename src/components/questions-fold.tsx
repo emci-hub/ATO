@@ -357,11 +357,13 @@ export function QuestionsFold({
   const item = checkpoint ? null : (result?.item ?? null);
 
   const progress = bankTotalProgress(tracks ?? []);
-  // Full Profile is exactly the required 48 (3 per axis) — once every axis
-  // has all 3, the whole section goes read-only. Re-answering past that
-  // point would only add an invisible extra EWMA sample (no milestone, no
-  // stability change worth showing), so it's clearer to just stop offering
-  // it than to let taps silently do nothing meaningful.
+  // Full Profile is exactly the frozen intake's 50 questions (tiered
+  // per-axis counts, trait-system redesign §2/§3 — no longer a flat 3) —
+  // once every axis has all of its own drafts, the whole section goes
+  // read-only. Re-answering past that point would only add an invisible
+  // extra EWMA sample (no milestone, no stability change worth showing), so
+  // it's clearer to just stop offering it than to let taps silently do
+  // nothing meaningful.
   const fullProfileLocked = progress.total > 0 && progress.answered >= progress.total;
 
   const body = (

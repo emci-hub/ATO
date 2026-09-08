@@ -57,6 +57,16 @@ const AXIS_COMPLETE_DEFS: readonly MilestoneDef[] = TRAIT_AXES.map((axis) => ({
 
 export const MILESTONE_DEFS: readonly MilestoneDef[] = [
   {
+    // Progressive unlock §6: fires at the same crossing as sage.tsx's own
+    // tab-unlock check (sageUnlocked) — explains what Sage is, and that 25
+    // more questions unlocks Legends.
+    id: 'sage_unlocked',
+    metric: 'bankTotalProgress',
+    threshold: 25,
+    title: 'Sage unlocked!',
+    body: 'Sage is ready to talk. Answer 25 more questions to unlock Legends.',
+  },
+  {
     id: 'answers_12',
     metric: 'bankTotalProgress',
     threshold: 12,
@@ -78,10 +88,10 @@ export const MILESTONE_DEFS: readonly MilestoneDef[] = [
     body: 'You have answered 36 questions from the bank.',
   },
   {
-    id: 'answers_48',
+    id: 'answers_50',
     metric: 'bankTotalProgress',
-    threshold: 48,
-    title: '48 answers in',
+    threshold: 50,
+    title: '50 answers in',
     body: 'You have answered every question in the bank.',
   },
   {
@@ -113,11 +123,31 @@ export const MILESTONE_DEFS: readonly MilestoneDef[] = [
     body: "You've checked in 21 days in a row.",
   },
   {
+    // Retargeted from `profile_settled` (isProfileSettled) to `bankTotalProgress`
+    // at the same 50-question threshold as `answers_50` (trait-system redesign
+    // §6, per emci's explicit call) — the tiered intake alone doesn't satisfy
+    // isProfileSettled for every axis, so that gate would have kept Legends
+    // locked past question 50 for most users. Now fires at the exact same
+    // crossing as legends.tsx's own tab-unlock check (legendsUnlocked).
     id: 'legends_unlocked',
-    metric: 'profile_settled',
-    threshold: 1,
+    metric: 'bankTotalProgress',
+    threshold: 50,
     title: 'Legends unlocked!',
-    body: "Your profile is settled — Legends are ready for you.",
+    body: "You've answered all 50 intake questions — Legends are ready for you.",
+  },
+  {
+    // Separate from legends_unlocked above per §6: "plus a separate 'you are
+    // now fully unlocked' banner" — same 50-question crossing, distinct copy.
+    id: 'profile_fully_unlocked',
+    metric: 'bankTotalProgress',
+    threshold: 50,
+    title: "You're fully unlocked",
+    // Deliberately NOT "nothing left to unlock" — Explore observations, Sage
+    // Title, Sage insight, and the full-picture capstone all still gate on
+    // isProfileSettled separately, which 50 intake answers alone doesn't
+    // guarantee for every axis (10 axes only reach 2 intake answers, below
+    // STABILITY_FLOOR_N). This banner is scoped to what it actually unlocked.
+    body: 'Sage and Legends are both open now.',
   },
   ...AXIS_COMPLETE_DEFS,
 ];

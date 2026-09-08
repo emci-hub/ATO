@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { QUESTIONS_BANK, QUESTIONS_FEW_SHOTS } from '../src/lib/questions/bank';
+import { AXIS_TIER_COUNTS } from '../src/lib/questions/tiered-axis-plan';
 import { CATEGORY_DEFS, getCategoryDefs } from '../src/lib/categories';
 import { pickQuestionGrounding } from '../src/lib/questions/context';
 import {
@@ -87,14 +88,19 @@ function read(rel: string): string {
 
 assert.equal(QUESTIONS_BATCH_SIZE, 5);
 assert.equal(QUESTIONS_CALL_TYPE, 'questions');
-// Three drafts per axis, grouped, first-of-group is the locked few-shot one.
-assert.equal(QUESTIONS_BANK.length, TRAIT_AXES.length * 3);
+// Frozen 50-question intake (trait-system redesign §3): per-axis draft count
+// follows AXIS_TIER_COUNTS x2 (two 25-question rounds), not a flat 3 anymore.
+assert.equal(QUESTIONS_BANK.length, 50);
 const bankPerAxis = new Map<string, number>();
 for (const row of QUESTIONS_BANK) {
   bankPerAxis.set(row.axis, (bankPerAxis.get(row.axis) ?? 0) + 1);
 }
 for (const axis of TRAIT_AXES) {
-  assert.equal(bankPerAxis.get(axis), 3, `${axis} needs exactly 3 bank drafts`);
+  assert.equal(
+    bankPerAxis.get(axis),
+    AXIS_TIER_COUNTS[axis] * 2,
+    `${axis} needs exactly ${AXIS_TIER_COUNTS[axis] * 2} bank drafts (tier count x2 rounds)`,
+  );
 }
 // Axis groups are contiguous and in TRAIT_AXES order.
 assert.deepEqual([...new Set(QUESTIONS_BANK.map((row) => row.axis))], [...TRAIT_AXES]);
@@ -421,7 +427,8 @@ assert.deepEqual(
 ok('preferFreshAxes with no confidence/redundancy data matches the actual pre-Phase-5 algorithm, not just itself');
 
 // --- Category question list (bank progress, sequential in-axis unlock) ----
-assert.equal(bankQuestionCount(['openness']), 3);
+// openness is a tier-1 axis: 6 drafts now (was a flat 3 pre-redesign).
+assert.equal(bankQuestionCount(['openness']), 6);
 assert.equal(
   bankQuestionCount(['openness', 'extraversion']),
   QUESTIONS_BANK.filter((d) => d.axis === 'openness').length +
@@ -429,32 +436,31 @@ assert.equal(
 );
 assert.equal(bankQuestionCount([]), 0);
 
-const zeroProgress = bankProgressForAxes(['openness'], []);
-assert.equal(zeroProgress.length, 3);
-assert.deepEqual(zeroProgress.map((row) => row.state), ['current', 'locked', 'locked']);
+// steadiness is a tier-4 axis: exactly 2 drafts now (was 3) — small enough to
+// exercise the same current/locked/answered/wrap sequence with a cleaner list.
+const zeroProgress = bankProgressForAxes(['steadiness'], []);
+assert.equal(zeroProgress.length, 2);
+assert.deepEqual(zeroProgress.map((row) => row.state), ['current', 'locked']);
 
-const oneAnswered = bankProgressForAxes(['openness'], [trackWithCount('openness', 1)]);
-assert.deepEqual(oneAnswered.map((row) => row.state), ['answered', 'current', 'locked']);
+const oneAnswered = bankProgressForAxes(['steadiness'], [trackWithCount('steadiness', 1)]);
+assert.deepEqual(oneAnswered.map((row) => row.state), ['answered', 'current']);
 
-const twoAnswered = bankProgressForAxes(['openness'], [trackWithCount('openness', 2)]);
-assert.deepEqual(twoAnswered.map((row) => row.state), ['answered', 'answered', 'current']);
-
-// Fully answered (>= list length) never overflows into a phantom 4th state,
-// and repeat cycling past 3 stays fully answered rather than re-locking.
-const fullyAnswered = bankProgressForAxes(['openness'], [trackWithCount('openness', 3)]);
-assert.deepEqual(fullyAnswered.map((row) => row.state), ['answered', 'answered', 'answered']);
-const wrappedAnswered = bankProgressForAxes(['openness'], [trackWithCount('openness', 7)]);
-assert.deepEqual(wrappedAnswered.map((row) => row.state), ['answered', 'answered', 'answered']);
+// Fully answered (>= list length) never overflows into a phantom 3rd state,
+// and repeat cycling past 2 stays fully answered rather than re-locking.
+const fullyAnswered = bankProgressForAxes(['steadiness'], [trackWithCount('steadiness', 2)]);
+assert.deepEqual(fullyAnswered.map((row) => row.state), ['answered', 'answered']);
+const wrappedAnswered = bankProgressForAxes(['steadiness'], [trackWithCount('steadiness', 7)]);
+assert.deepEqual(wrappedAnswered.map((row) => row.state), ['answered', 'answered']);
 
 // Each axis unlocks independently — one axis at draft 1 does not lock or
 // unlock a sibling axis's own progress.
 const twoAxes = bankProgressForAxes(
-  ['openness', 'extraversion'],
-  [trackWithCount('openness', 2), trackWithCount('extraversion', 0)],
+  ['steadiness', 'extraversion'],
+  [trackWithCount('steadiness', 1), trackWithCount('extraversion', 0)],
 );
 assert.deepEqual(
   twoAxes.map((row) => `${row.axis}:${row.state}`),
-  ['openness:answered', 'openness:answered', 'openness:current', 'extraversion:current', 'extraversion:locked', 'extraversion:locked'],
+  ['steadiness:answered', 'steadiness:current', 'extraversion:current', 'extraversion:locked', 'extraversion:locked', 'extraversion:locked', 'extraversion:locked', 'extraversion:locked'],
 );
 
 assert.deepEqual(bankTotalProgress([]), { answered: 0, total: QUESTIONS_BANK.length });

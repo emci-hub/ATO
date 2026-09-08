@@ -1,12 +1,23 @@
 import type { QuestionDraft } from './types';
 
 /**
- * Fallback bank when Gemini is off, and the source of the locked few-shot set.
+ * Frozen 50-question intake (trait-system redesign §3) — replaces the old
+ * flat 48-question, 3-per-axis bank. Per-axis count now follows the §2 axis
+ * tiers doubled for 2 rounds (`AXIS_TIER_COUNTS` in tiered-axis-plan.ts x2):
+ * tier 1/2 axes (conscientiousness, extraversion, openness) get 6 drafts
+ * each, tier 3 (agreeableness, conflict_assertiveness, relatedness) get 4
+ * each, tier 4 (the remaining 10 axes) get 2 each — 3x6 + 3x4 + 10x2 = 50.
+ * Hand-authored (AI-assisted authoring, not live-per-user generation, same
+ * one-time-content convention as the archetype names) rather than generated
+ * live — see docs/archive/TRAIT_SYSTEM_REDESIGN_PLAN.md §3.
  *
- * THREE drafts per axis, grouped in TRAIT_AXES order, and the first draft of
- * each axis is the original locked one quoted verbatim in QUESTIONS_FEW_SHOTS
- * below — do not reorder an axis group or reword a first entry without
- * updating that string too (`check:questions` asserts three of them verbatim).
+ * Grouped in TRAIT_AXES order, and the FIRST draft of an axis that already
+ * existed pre-redesign is still the original locked one quoted verbatim in
+ * QUESTIONS_FEW_SHOTS below — do not reorder an axis group or reword a first
+ * entry without updating that string too (`check:questions` asserts several
+ * of them verbatim). New drafts were appended at the end of their axis group
+ * (tier 1/2/3 axes) or trimmed from the end (tier 4 axes, down from 3 to 2)
+ * specifically so no first-entry few-shot quote had to move.
  *
  * Multiple choice only, 2 or 3 options, never free text: `parseQuestionDraft`
  * and the `insert_question_pack` RPC both reject anything outside 2-3.
@@ -50,6 +61,35 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: "I'd probably pass", value: 0.2 },
     ],
   },
+  {
+    axis: 'openness',
+    category: 'cat_openness',
+    prompt: "You're picking a show to watch and there's something new in your queue you haven't tried.",
+    options: [
+      { text: 'New one', value: 0.8 },
+      { text: 'Depends on my mood', value: 0.5 },
+      { text: 'Something familiar', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'openness',
+    category: 'cat_openness',
+    prompt: 'A coworker suggests doing the project a totally different way than you planned.',
+    options: [
+      { text: "I'm curious, let's see", value: 0.8 },
+      { text: "I'll hear them out", value: 0.5 },
+      { text: "I'd rather stick to the plan", value: 0.2 },
+    ],
+  },
+  {
+    axis: 'openness',
+    category: 'cat_openness',
+    prompt: "You have a free Saturday and someone mentions a class or hobby you've never tried.",
+    options: [
+      { text: "I'd sign up", value: 0.8 },
+      { text: 'Maybe another time', value: 0.2 },
+    ],
+  },
 
   // --- conscientiousness ---------------------------------------------------
   {
@@ -79,6 +119,35 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
     options: [
       { text: 'I still do it', value: 0.8 },
       { text: 'It quietly disappears', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'conscientiousness',
+    category: 'cat_steadiness',
+    prompt: "Your alarm goes off and you already know today's to-do list is long.",
+    options: [
+      { text: 'I get moving right away', value: 0.8 },
+      { text: 'I ease into it', value: 0.5 },
+      { text: 'I hit snooze', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'conscientiousness',
+    category: 'cat_steadiness',
+    prompt: "You told yourself you'd clean up before bed, and you're tired.",
+    options: [
+      { text: 'I still do it', value: 0.8 },
+      { text: 'I do the bare minimum', value: 0.5 },
+      { text: 'It waits until tomorrow', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'conscientiousness',
+    category: 'cat_steadiness',
+    prompt: 'A form needs three pieces of information and you only have two handy.',
+    options: [
+      { text: 'I track down the third one now', value: 0.8 },
+      { text: 'I fill in what I can and come back', value: 0.2 },
     ],
   },
 
@@ -112,6 +181,35 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'Being alone would recharge me', value: 0.2 },
     ],
   },
+  {
+    axis: 'extraversion',
+    category: 'cat_openness',
+    prompt: "You've been working alone for hours and hit a wall.",
+    options: [
+      { text: 'I go find someone to talk to', value: 0.8 },
+      { text: 'Either way', value: 0.5 },
+      { text: 'I push through alone', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'extraversion',
+    category: 'cat_openness',
+    prompt: 'A coworker asks if you want to grab lunch with the group instead of eating at your desk.',
+    options: [
+      { text: 'Yes, easily', value: 0.8 },
+      { text: 'Depends on the day', value: 0.5 },
+      { text: "I'd rather eat alone", value: 0.2 },
+    ],
+  },
+  {
+    axis: 'extraversion',
+    category: 'cat_openness',
+    prompt: "You're the one who has to make small talk with someone new at an event.",
+    options: [
+      { text: "I don't mind starting it", value: 0.8 },
+      { text: "I'll follow their lead", value: 0.2 },
+    ],
+  },
 
   // --- agreeableness -------------------------------------------------------
   {
@@ -143,6 +241,16 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'Bad day or not, wrong is wrong', value: 0.2 },
     ],
   },
+  {
+    axis: 'agreeableness',
+    category: 'cat_steadiness',
+    prompt: "Someone asks for a favor that's a genuine inconvenience for you.",
+    options: [
+      { text: 'I usually say yes anyway', value: 0.8 },
+      { text: 'Depends how big a favor', value: 0.5 },
+      { text: "I say no if it's a real hassle", value: 0.2 },
+    ],
+  },
 
   // --- steadiness ----------------------------------------------------------
   {
@@ -165,16 +273,6 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'It throws off the whole evening', value: 0.2 },
     ],
   },
-  {
-    axis: 'steadiness',
-    category: 'cat_steadiness',
-    prompt: 'Someone sends a short reply that could be read two ways.',
-    options: [
-      { text: 'I read it the plain way and move on', value: 0.8 },
-      { text: 'I reread it a few times', value: 0.2 },
-    ],
-  },
-
   // --- attachment_anxiety --------------------------------------------------
   {
     axis: 'attachment_anxiety',
@@ -196,16 +294,6 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'People get busy', value: 0.2 },
     ],
   },
-  {
-    axis: 'attachment_anxiety',
-    category: 'cat_love',
-    prompt: 'You need reassurance more often than you would like to admit.',
-    options: [
-      { text: 'Yeah, that lands', value: 0.8 },
-      { text: 'Not really me', value: 0.2 },
-    ],
-  },
-
   // --- attachment_avoidance ------------------------------------------------
   {
     axis: 'attachment_avoidance',
@@ -226,16 +314,6 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'I say I am fine and change the subject', value: 0.8 },
     ],
   },
-  {
-    axis: 'attachment_avoidance',
-    category: 'cat_love',
-    prompt: 'Things are getting closer with someone.',
-    options: [
-      { text: 'I lean in', value: 0.2 },
-      { text: 'I want a bit of room', value: 0.8 },
-    ],
-  },
-
   // --- conflict_assertiveness ----------------------------------------------
   {
     axis: 'conflict_assertiveness',
@@ -266,6 +344,16 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'I let it go', value: 0.2 },
     ],
   },
+  {
+    axis: 'conflict_assertiveness',
+    category: 'cat_communication',
+    prompt: "A friend keeps borrowing money and hasn't paid you back.",
+    options: [
+      { text: 'I bring it up directly', value: 0.8 },
+      { text: 'I hint at it', value: 0.5 },
+      { text: 'I let it slide', value: 0.2 },
+    ],
+  },
 
   // --- conflict_cooperativeness --------------------------------------------
   {
@@ -289,16 +377,6 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'I hold my line', value: 0.2 },
     ],
   },
-  {
-    axis: 'conflict_cooperativeness',
-    category: 'cat_communication',
-    prompt: 'Winning the point matters more than keeping the peace.',
-    options: [
-      { text: 'Not for me, usually', value: 0.8 },
-      { text: 'Honestly, sometimes yes', value: 0.2 },
-    ],
-  },
-
   // --- autonomy ------------------------------------------------------------
   {
     axis: 'autonomy',
@@ -320,16 +398,6 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: "Fine by me, less to think about", value: 0.2 },
     ],
   },
-  {
-    axis: 'autonomy',
-    category: 'cat_drive',
-    prompt: 'A free day with nothing scheduled and nobody asking anything of you.',
-    options: [
-      { text: 'That is the best kind of day', value: 0.8 },
-      { text: "I'd rather have a plan", value: 0.2 },
-    ],
-  },
-
   // --- competence ----------------------------------------------------------
   {
     axis: 'competence',
@@ -351,16 +419,6 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'I mostly feel behind', value: 0.2 },
     ],
   },
-  {
-    axis: 'competence',
-    category: 'cat_drive',
-    prompt: 'Someone says you are good at something you do a lot.',
-    options: [
-      { text: 'Yeah, I think so too', value: 0.8 },
-      { text: 'I brush it off', value: 0.2 },
-    ],
-  },
-
   // --- relatedness ---------------------------------------------------------
   {
     axis: 'relatedness',
@@ -390,6 +448,16 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'Bliss', value: 0.2 },
     ],
   },
+  {
+    axis: 'relatedness',
+    category: 'cat_drive',
+    prompt: "You just finished something you're proud of.",
+    options: [
+      { text: 'I want to tell someone right away', value: 0.8 },
+      { text: 'It can wait until it comes up', value: 0.5 },
+      { text: 'I keep it to myself', value: 0.2 },
+    ],
+  },
 
   // --- growth_mindset ------------------------------------------------------
   {
@@ -411,16 +479,6 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'Some people just have it', value: 0.2 },
     ],
   },
-  {
-    axis: 'growth_mindset',
-    category: 'cat_agency',
-    prompt: 'You can get noticeably better at almost anything with enough reps.',
-    options: [
-      { text: 'I believe that', value: 0.8 },
-      { text: 'Only up to a point', value: 0.2 },
-    ],
-  },
-
   // --- locus_of_control ----------------------------------------------------
   {
     axis: 'locus_of_control',
@@ -442,16 +500,6 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'Mostly to how things fell', value: 0.2 },
     ],
   },
-  {
-    axis: 'locus_of_control',
-    category: 'cat_agency',
-    prompt: 'How next year goes is mostly up to you.',
-    options: [
-      { text: 'Mostly, yes', value: 0.8 },
-      { text: 'Timing decides more than I do', value: 0.2 },
-    ],
-  },
-
   // --- self_efficacy -------------------------------------------------------
   {
     axis: 'self_efficacy',
@@ -473,16 +521,6 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'I find someone who knows', value: 0.2 },
     ],
   },
-  {
-    axis: 'self_efficacy',
-    category: 'cat_agency',
-    prompt: 'A big thing you have to do, and no obvious first step.',
-    options: [
-      { text: 'I start somewhere and adjust', value: 0.8 },
-      { text: 'I stall until it gets urgent', value: 0.2 },
-    ],
-  },
-
   // --- playfulness ---------------------------------------------------------
   {
     axis: 'playfulness',
@@ -502,15 +540,6 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'I take the joke', value: 0.8 },
       { text: 'Depends who is in the room', value: 0.5 },
       { text: 'I keep it serious', value: 0.2 },
-    ],
-  },
-  {
-    axis: 'playfulness',
-    category: 'cat_social',
-    prompt: 'People would say you are one of the sillier people they know.',
-    options: [
-      { text: 'That tracks', value: 0.8 },
-      { text: 'Not the word they would use', value: 0.2 },
     ],
   },
 ];

@@ -24,11 +24,12 @@ import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { buildLegendView, type LegendView } from '@/lib/legends/match';
 import { persistCelebratedMilestones } from '@/lib/me';
 import { checkMilestones, type MilestoneDef } from '@/lib/milestones';
+import { bankTotalProgress } from '@/lib/questions/local';
+import { legendsUnlocked } from '@/lib/questions/progressive-unlock';
 import { supabase } from '@/lib/supabase';
 import { useAppearance } from '@/lib/theme/context';
 import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import {
-  isProfileSettled,
   isThinProfile,
   missingAxis,
   PROFILE_LOCKED_COPY,
@@ -249,34 +250,41 @@ export default function LegendsScreen() {
   const settled = settledCount(tracks);
   const thin = isThinProfile(settled);
   const focusAxis = me ? missingAxis(traitStateFromRow(me).values, tracks) : null;
-  // Profile-completeness gate, same rule as Explore observations / Sage Title /
-  // Sage insight: every axis must be settled before a matched legend shows.
-  // Checked only once tracks have loaded, so the screen doesn't flash locked
-  // before it knows better. Matching itself stays untouched (static pool, no
-  // spend) — this only decides what renders.
-  const locked = tracksReady && !isProfileSettled(tracks);
+  // Progressive unlock (§6, retargeted per emci's explicit call): Legends
+  // unlocks at question 50 of the frozen intake, REPLACING the prior
+  // isProfileSettled gate — the tiered intake alone doesn't satisfy
+  // isProfileSettled for every axis (10 of 16 axes only reach 2 intake
+  // answers, below the 3-answer stability floor), so that gate would have
+  // kept Legends locked past question 50 for most users. Checked only once
+  // tracks have loaded, so the screen doesn't flash locked before it knows
+  // better. Matching itself stays untouched (static pool, no spend) — this
+  // only decides what renders.
+  const locked = tracksReady && !legendsUnlocked(tracks);
 
   // One-time "Legends unlocked!" celebration, on top of `locked` above —
-  // isProfileSettled's own logic is untouched. `locked` can genuinely flip
-  // false while this screen stays mounted (its tracks-loading effect is
-  // keyed on me.updated_at, not just first mount), so this checks on every
-  // re-evaluation, not just mount; the persisted celebrated_milestone_ids
-  // id (same mechanism every other milestone in this feature uses) is what
-  // actually guarantees it never fires twice — the ref only guards the
-  // narrow window while that persist request is still in flight.
+  // now keyed to the SAME bankTotalProgress/50 crossing as `locked` itself,
+  // so the toast and the actual tab unlock always fire together. `locked`
+  // can genuinely flip false while this screen stays mounted (its
+  // tracks-loading effect is keyed on me.updated_at, not just first mount),
+  // so this checks on every re-evaluation, not just mount; the persisted
+  // celebrated_milestone_ids id (same mechanism every other milestone in
+  // this feature uses) is what actually guarantees it never fires twice —
+  // the ref only guards the narrow window while that persist request is
+  // still in flight.
   const [unlockToast, setUnlockToast] = useState<MilestoneDef | null>(null);
   const celebratingUnlockRef = useRef(false);
 
   useEffect(() => {
     // tracksReady must gate this too, not just `locked` — `locked` is
-    // `tracksReady && !isProfileSettled(tracks)`, which reads `false` both
+    // `tracksReady && !legendsUnlocked(tracks)`, which reads `false` both
     // when genuinely unlocked AND while tracks are still loading (tracksReady
     // starts false). Without this, the celebration would fire — and
     // permanently persist — for every brand-new, unsettled profile during
     // the loading window before the first real tracks fetch resolves.
     if (!me || !tracksReady || locked || celebratingUnlockRef.current) return;
     const celebrated = me.celebrated_milestone_ids ?? [];
-    const crossed = checkMilestones('profile_settled', 1, celebrated);
+    const crossed = checkMilestones('bankTotalProgress', bankTotalProgress(tracks).answered, celebrated)
+      .filter((def) => def.id === 'legends_unlocked');
     if (crossed.length === 0) return;
     celebratingUnlockRef.current = true;
     setUnlockToast(crossed[0]!);
@@ -289,7 +297,7 @@ export default function LegendsScreen() {
         console.log('[legends] persistCelebratedMilestones error:', err);
         celebratingUnlockRef.current = false;
       });
-  }, [me, tracksReady, locked, refresh]);
+  }, [me, tracksReady, locked, refresh, tracks]);
 
   return (
     <ThemedView style={styles.container}>

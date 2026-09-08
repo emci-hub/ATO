@@ -32,7 +32,7 @@ import {
   resetCategoryPagePositionCache,
   saveCategoryPagePosition,
 } from '../src/lib/questions/category-page-position';
-import { bankProgressForAxis } from '../src/lib/questions/local';
+import { bankProgressForAxis, bankQuestionCount } from '../src/lib/questions/local';
 import type { TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis } from '../src/lib/traits';
 
@@ -73,7 +73,7 @@ function bankRowsForAxis(tracks: readonly TraitTrack[]) {
 async function main() {
   // --- Check 1: an answer survives Back-then-forward navigation ----------
   {
-    // 'steadiness' has 1 of 3 bank questions answered.
+    // 'steadiness' has 1 of its 2 bank questions answered (tier-4 axis, §2/§3).
     const tracks: TraitTrack[] = [trackWithCount('steadiness', 1)];
     const rowsForAxis = bankRowsForAxis(tracks);
 
@@ -118,8 +118,10 @@ async function main() {
     assert.ok(unique.length < naiveSum, 'unique axis count must be less than the naive per-category sum given real overlap');
 
     // Now fully answer the shared axis and confirm it contributes exactly 1
-    // to completedAxes.length, not one per owning category.
-    const tracks: TraitTrack[] = [trackWithCount(sharedAxis!, 5)];
+    // to completedAxes.length, not one per owning category. Uses the axis's
+    // own real bank size (varies by tier since the trait-system redesign,
+    // §2/§3 — no longer a flat 3), not a hardcoded count.
+    const tracks: TraitTrack[] = [trackWithCount(sharedAxis!, bankQuestionCount([sharedAxis!]))];
     const rowsForAxis = bankRowsForAxis(tracks);
     const completed = completedAxesFrom(unique, rowsForAxis);
     assert.equal(completed.filter((axis) => axis === sharedAxis).length, 1);
@@ -133,10 +135,10 @@ async function main() {
   // --- Check 3: a 3-question and a 5-question category both lay out cleanly ---
   {
     const defs = getCategoryDefs();
-    const threeQ = defs.find((def) => def.axes.length === 1); // 1 axis * 3 bank drafts = 3 questions
+    const singleAxisCategory = defs.find((def) => def.axes.length === 1);
     // No 1-axis category exists in the real catalog today — build an
     // equivalent synthetic one to still exercise the "small category" shape.
-    const smallCategory: CategoryDef = threeQ ?? {
+    const smallCategory: CategoryDef = singleAxisCategory ?? {
       id: 'cat_steadiness',
       name: 'Steadiness',
       shape: 'bar',
@@ -147,8 +149,11 @@ async function main() {
     };
     const tracks: TraitTrack[] = [];
     const rowsForAxis = bankRowsForAxis(tracks);
-    const threeRows = smallCategory.axes.flatMap((axis) => rowsForAxis(axis));
-    assert.equal(threeRows.length, 3, 'a single-axis category renders exactly the bank\'s 3 questions for that axis');
+    const smallRows = smallCategory.axes.flatMap((axis) => rowsForAxis(axis));
+    // Expected count derives from the axis's own real bank size (varies by
+    // tier since the trait-system redesign, §2/§3 — no longer a flat 3).
+    const expectedSmallCount = bankQuestionCount(smallCategory.axes);
+    assert.equal(smallRows.length, expectedSmallCount, `a single-axis category renders exactly the bank's ${expectedSmallCount} questions for that axis`);
 
     // Simulate a 5-question category (the future "questions stack" source,
     // which this same component must support per the reusability
@@ -178,7 +183,7 @@ async function main() {
     // The row list itself must render every row it's given — no internal
     // slicing/truncation by count.
     assert.doesNotMatch(src, /\.slice\(0,\s*\d+\)/, 'must not truncate the row list to a fixed count');
-    ok('PASS — a 3-question category (3 rows) and a 5-question category (5 rows) both render through the same unbounded, non-clipping list — no maxHeight/overflow:hidden/numberOfLines/slice found in the component');
+    ok(`PASS — a ${expectedSmallCount}-question category (${expectedSmallCount} rows) and a 5-question category (5 rows) both render through the same unbounded, non-clipping list — no maxHeight/overflow:hidden/numberOfLines/slice found in the component`);
   }
 
   // --- Check 4: leaving and returning restores the same category ---------

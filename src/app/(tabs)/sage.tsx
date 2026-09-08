@@ -42,8 +42,10 @@ import {
 } from '@/lib/sage-messages';
 import { TALK_COMPOSER_PLACEHOLDER, TALK_EMPTY, TALK_LEDE, TALK_TRY_AGAIN, TALK_WRITING, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { divergingAxesFromTracks, formatDivergenceNote } from '@/lib/trait-history';
-import { settledCount, type TraitTrack } from '@/lib/trait-stability';
+import { sageUnlocked } from '@/lib/questions/progressive-unlock';
+import { PROFILE_LOCKED_COPY, PROFILE_LOCKED_CTA, settledCount, type TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
+import { router } from 'expo-router';
 import { QUOTA_EMPTY_MESSAGE } from '@/lib/voice/quota';
 import { claimAiCall, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
 import { recordOwnDevTrace } from '@/lib/dev-trace-server';
@@ -290,6 +292,11 @@ export default function SageScreen() {
   }, [keyboardOpen, messages.length]);
 
   const consent = me ? aiConsentFor(me) : 'pending';
+  // Progressive unlock (§6): Sage stays locked until 25 of the frozen
+  // 50-question intake are answered. Checked only once tracks have loaded,
+  // same convention as Legends' own gate, so the screen doesn't flash locked
+  // before it knows better.
+  const locked = tracksReady && !sageUnlocked(tracks);
 
   async function saveConsent(value: boolean) {
     if (!userId || !me || busy) return;
@@ -324,7 +331,13 @@ export default function SageScreen() {
 
   async function send(text: string) {
     const trimmed = text.trim();
-    if (!me || !userId || busy || trimmed.length === 0) return;
+    // Progressive unlock (§6): `locked` is render-only (false during the
+    // tracks-loading window too, same as legends.tsx's identical pattern) —
+    // legends.tsx's lock is safe with that gap since matching there is
+    // static/free, but Sage's send() spends a real, paid AI call, so it
+    // needs its own explicit guard rather than relying on the UI not
+    // rendering the composer.
+    if (!me || !userId || busy || trimmed.length === 0 || locked) return;
     setBusy('send');
     setError(null);
     setQuotaEmpty(false);
@@ -438,6 +451,18 @@ export default function SageScreen() {
             </View>
           </View>
 
+        {locked ? (
+          <ThemedView type="backgroundElement" style={styles.emptyCard}>
+            <ThemedText type="smallBold">{PROFILE_LOCKED_COPY}</ThemedText>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${PROFILE_LOCKED_COPY}. ${PROFILE_LOCKED_CTA}.`}
+              onPress={() => router.push({ pathname: '/intake-sweep' })}
+              style={({ pressed }) => pressed && styles.pressed}>
+              <ThemedText type="link">{PROFILE_LOCKED_CTA}</ThemedText>
+            </Pressable>
+          </ThemedView>
+        ) : (
         <View style={styles.chatColumn}>
           <View style={styles.sageToys}>
             <SageEightBall />
@@ -631,6 +656,7 @@ export default function SageScreen() {
             </View>
           ) : null}
         </View>
+        )}
         </View>
       </SafeAreaView>
 

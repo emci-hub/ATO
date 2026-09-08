@@ -35,6 +35,7 @@ import {
   applyScenarioWrite,
 } from '../src/lib/scenario';
 import { QUESTIONS_BANK } from '../src/lib/questions/bank';
+import { AXIS_TIER_COUNTS } from '../src/lib/questions/tiered-axis-plan';
 import { composeLocalQuestionBatch } from '../src/lib/questions/local';
 import { QUESTIONS_BATCH_SIZE } from '../src/lib/questions/types';
 import { parseQuestionBatch, parseQuestionSweep } from '../src/lib/questions/parse';
@@ -132,13 +133,15 @@ ok('divergence notes self-report vs gut-call without overwriting');
 // --- IQ sweep -------------------------------------------------------------
 assert.equal(QUESTIONS_SWEEP_SIZE, TRAIT_AXES.length);
 assert.equal(INTAKE_SWEEP_COPY_REVIEWED, false);
-// Bank is 3 drafts per axis. bankByAxis keeps ALL of them (it used to drop
-// every draft after the first, which made variants 2 and 3 dead content).
-assert.equal(QUESTIONS_BANK.length, TRAIT_AXES.length * 3);
+// Bank is 50 questions total, per-axis count varying by tier (trait-system
+// redesign §2/§3 — no longer a flat 3). bankByAxis keeps ALL of them (it
+// used to drop every draft after the first, which made variants 2+ dead
+// content).
+assert.equal(QUESTIONS_BANK.length, 50);
 const grouped = bankByAxis();
 assert.equal(grouped.size, TRAIT_AXES.length);
 for (const axis of TRAIT_AXES) {
-  assert.equal(grouped.get(axis)?.length, 3, `${axis} keeps all 3 drafts`);
+  assert.equal(grouped.get(axis)?.length, AXIS_TIER_COUNTS[axis] * 2, `${axis} keeps all ${AXIS_TIER_COUNTS[axis] * 2} drafts`);
 }
 assert.equal(
   [...grouped.values()].reduce((n, list) => n + list.length, 0),
@@ -146,10 +149,12 @@ assert.equal(
   'bankByAxis drops nothing',
 );
 
-// bankDraftFor wraps, so any index is safe, and variant 0 is the locked draft.
+// bankDraftFor wraps, so any index is safe, and variant 0 is the locked
+// draft. openness is a tier-2 axis with 6 drafts now (was 3) — variant 6
+// wraps back to 0, not variant 3.
 const lead = bankDraftFor('openness');
 assert.equal(lead?.prompt, QUESTIONS_BANK.find((row) => row.axis === 'openness')?.prompt);
-assert.deepEqual(bankDraftFor('openness', 3), lead, 'variant wraps at the group length');
+assert.deepEqual(bankDraftFor('openness', 6), lead, 'variant wraps at the group length');
 assert.notDeepEqual(bankDraftFor('openness', 1), lead, 'variant 1 is a different draft');
 // Returned drafts are copies — a caller mutating options must not edit the bank.
 const mutable = bankDraftFor('openness');
@@ -178,13 +183,19 @@ assert.equal(axisVariant([trackWithCount('openness', 2)], 'openness'), 2);
 const gameOnly = { ...trackWithCount('openness', 2), track: 'game' as const };
 assert.equal(axisVariant([gameOnly], 'openness'), 0, 'game track never advances the variant');
 
-// Three answers on one axis walk that axis through three DIFFERENT prompts,
-// then wrap — which is exactly what lets a repeat pass reach answerCount 3.
-const opennessPrompts = [0, 1, 2, 3].map(
-  (n) => composeLocalSweep([trackWithCount('openness', n)]).find((row) => row.axis === 'openness')?.prompt,
+// N answers on one axis (its own bank size, 6 for openness — a tier-2 axis,
+// §2/§3) walk that axis through N DIFFERENT prompts, then wrap — which is
+// exactly what lets a repeat pass reach the full answer count.
+const opennessBankSize = AXIS_TIER_COUNTS.openness * 2;
+const opennessPrompts = Array.from({ length: opennessBankSize + 1 }, (_, n) =>
+  composeLocalSweep([trackWithCount('openness', n)]).find((row) => row.axis === 'openness')?.prompt,
 );
-assert.equal(new Set(opennessPrompts.slice(0, 3)).size, 3, 'three answers, three distinct prompts');
-assert.equal(opennessPrompts[3], opennessPrompts[0], 'the fourth wraps back to the first');
+assert.equal(
+  new Set(opennessPrompts.slice(0, opennessBankSize)).size,
+  opennessBankSize,
+  `${opennessBankSize} answers, ${opennessBankSize} distinct prompts`,
+);
+assert.equal(opennessPrompts[opennessBankSize], opennessPrompts[0], 'the wrap-around answer returns to the first prompt');
 
 // One axis advancing must not disturb any other axis's draft.
 const baseSweep = composeLocalSweep();

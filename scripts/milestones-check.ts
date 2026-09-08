@@ -14,7 +14,7 @@ import { computeStreak } from '../src/lib/growth';
 import { addDaysYmd, localYmd } from '../src/lib/local-date';
 import { axisVariant, bankQuestionCount } from '../src/lib/questions/local';
 import { MILESTONE_DEFS, checkMilestones } from '../src/lib/milestones';
-import { isProfileSettled, type TraitTrack } from '../src/lib/trait-stability';
+import type { TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES } from '../src/lib/traits';
 import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
 
@@ -56,14 +56,26 @@ function ok(label: string) {
   console.log(`  ✓ ${label}`);
 }
 
+// Trait-system redesign §6: sage_unlocked (25) and legends_unlocked/
+// profile_fully_unlocked (both 50, retargeted from profile_settled) joined
+// the pre-existing answers_12/24/36 — and answers_48 became answers_50,
+// since the frozen intake is 50 questions now, not 48 (§3).
 const bankTotalDefs = MILESTONE_DEFS.filter((d) => d.metric === 'bankTotalProgress');
-assert.equal(bankTotalDefs.length, 4);
+assert.equal(bankTotalDefs.length, 7);
+assert.deepEqual(
+  bankTotalDefs.map((d) => d.id),
+  ['sage_unlocked', 'answers_12', 'answers_24', 'answers_36', 'answers_50', 'legends_unlocked', 'profile_fully_unlocked'],
+);
 assert.deepEqual(
   bankTotalDefs.map((d) => d.threshold),
-  [12, 24, 36, 48],
+  [25, 12, 24, 36, 50, 50, 50],
 );
 assert.equal(new Set(MILESTONE_DEFS.map((d) => d.id)).size, MILESTONE_DEFS.length);
-ok('MILESTONE_DEFS has 4 unique bankTotalProgress entries at 12/24/36/48');
+assert.ok(
+  bankTotalDefs.every((d) => !containsFrameworkTerm(d.title) && !containsFrameworkTerm(d.body)),
+  'bankTotalProgress copy hits the framework fence',
+);
+ok('MILESTONE_DEFS has 7 unique bankTotalProgress entries: sage_unlocked (25), answers_12/24/36/50, legends_unlocked + profile_fully_unlocked (50), fence-clean');
 
 // profile_50 is the only profile_percent def — profile_100 was removed:
 // it was on bank_percent (answered/total bank questions x100), which
@@ -126,52 +138,44 @@ assert.ok(
 );
 ok('profile_100 is gone from MILESTONE_DEFS');
 
-// legends_unlocked: one-time "Legends unlocked!" celebration on
-// isProfileSettled going false -> true, wired into legends.tsx (NOT
-// intake-sweep.tsx) — this is the one milestone in this feature that
-// doesn't run through crossedMilestonesFor.
-const profileSettledDefs = MILESTONE_DEFS.filter((d) => d.metric === 'profile_settled');
-assert.equal(profileSettledDefs.length, 1);
-assert.deepEqual(
-  profileSettledDefs.map((d) => d.id),
-  ['legends_unlocked'],
-);
-assert.equal(profileSettledDefs[0]!.threshold, 1);
-assert.ok(
-  !containsFrameworkTerm(profileSettledDefs[0]!.title) && !containsFrameworkTerm(profileSettledDefs[0]!.body),
-  'profile_settled copy hits the framework fence',
-);
-ok('MILESTONE_DEFS has legends_unlocked on profile_settled at threshold 1, fence-clean');
+// profile_settled metric is fully retired — legends_unlocked moved onto
+// bankTotalProgress (see below). Explicit negative so a future re-add under
+// any name gets caught, same pattern already used for profile_100's removal.
+assert.equal(MILESTONE_DEFS.filter((d) => d.metric === 'profile_settled').length, 0);
+ok('profile_settled metric has zero defs — legends_unlocked no longer uses it');
 
-assert.deepEqual(checkMilestones('profile_settled', 0, []), []);
-assert.deepEqual(
-  checkMilestones('profile_settled', 1, []).map((d) => d.id),
-  ['legends_unlocked'],
-);
-assert.deepEqual(checkMilestones('profile_settled', 1, ['legends_unlocked']), []);
-ok('checkMilestones works unchanged for the profile_settled metric (no new mechanic needed)');
-
-// Wiring proof: a real settled-profile TraitTrack fixture (all 16 axes,
-// answerCount >= STABILITY_FLOOR_N) run through the actual isProfileSettled
-// — the same predicate legends.tsx's `locked` already uses — must produce
-// a crossed legends_unlocked def, not just checkMilestones fed a 1.
+// Wiring proof: a real 50-answered-questions TraitTrack fixture, run through
+// the actual legendsUnlocked (bankTotalProgress(tracks).answered >= 50) —
+// the SAME predicate legends.tsx's `locked` now uses — must produce a
+// crossed legends_unlocked def. Deliberately NOT isProfileSettled anymore:
+// per emci's explicit call, Q50 alone unlocks Legends, since the tiered
+// intake alone never satisfies isProfileSettled for 10 of 16 axes.
 {
-  const settledTracks = TRAIT_AXES.map((axis) => reportTrackAt(axis, 3));
-  assert.equal(isProfileSettled(settledTracks), true, 'fixture must actually be settled, or this test proves nothing');
-  assert.deepEqual(
-    checkMilestones('profile_settled', isProfileSettled(settledTracks) ? 1 : 0, []).map((d) => d.id),
-    ['legends_unlocked'],
-    'a genuinely settled profile via isProfileSettled must cross legends_unlocked',
+  // 50 answers spread across axes per their own frozen-intake bank size
+  // (tier-1/2 axes: 6, tier-3: 4, tier-4: 2) — matches how a real user would
+  // actually reach 50 total, not an arbitrary even split.
+  const fullIntakeTracks: TraitTrack[] = TRAIT_AXES.map((axis) =>
+    reportTrackAt(axis, bankQuestionCount([axis])),
   );
-  const oneAxisMissing = settledTracks.slice(1);
-  assert.equal(isProfileSettled(oneAxisMissing), false, 'missing one axis must not read as settled');
+  const totalAnswered = fullIntakeTracks.reduce((sum, row) => sum + row.answerCount, 0);
+  assert.equal(totalAnswered, 50, 'fixture must actually total 50 answers, or this test proves nothing');
   assert.deepEqual(
-    checkMilestones('profile_settled', isProfileSettled(oneAxisMissing) ? 1 : 0, []),
-    [],
-    'an unsettled profile (missing one axis) must not cross legends_unlocked',
+    checkMilestones('bankTotalProgress', totalAnswered, []).map((d) => d.id).includes('legends_unlocked'),
+    true,
+    'a genuinely 50-answered profile must cross legends_unlocked',
+  );
+  const oneShort = fullIntakeTracks.map((row, i) =>
+    i === 0 ? { ...row, answerCount: row.answerCount - 1 } : row,
+  );
+  const oneShortTotal = oneShort.reduce((sum, row) => sum + row.answerCount, 0);
+  assert.equal(oneShortTotal, 49);
+  assert.equal(
+    checkMilestones('bankTotalProgress', oneShortTotal, []).map((d) => d.id).includes('legends_unlocked'),
+    false,
+    '49 of 50 answered must not cross legends_unlocked',
   );
 }
-ok('a real isProfileSettled(tracks) fixture actually crosses legends_unlocked');
+ok('a real 50-answered-questions fixture actually crosses legends_unlocked (bankTotalProgress, not isProfileSettled)');
 
 const axisCompleteDefs = MILESTONE_DEFS.filter((d) => d.metric.startsWith('axisComplete:'));
 assert.equal(axisCompleteDefs.length, TRAIT_AXES.length);
@@ -275,7 +279,7 @@ assert.deepEqual(
   checkMilestones('bankTotalProgress', 24, []).map((d) => d.id),
   ['answers_12', 'answers_24'],
 );
-ok('crossing 24 with nothing celebrated returns 12 and 24');
+ok('crossing 24 with nothing celebrated returns 12 and 24 (sage_unlocked at 25 not yet reached)');
 
 assert.deepEqual(
   checkMilestones('bankTotalProgress', 24, ['answers_12']).map((d) => d.id),
@@ -283,25 +287,39 @@ assert.deepEqual(
 );
 ok('already-celebrated ids are excluded');
 
+// 25 crosses sage_unlocked alongside the pre-existing answers_12/24.
 assert.deepEqual(
-  checkMilestones('bankTotalProgress', 48, ['answers_12', 'answers_24', 'answers_36', 'answers_48']),
-  [],
+  checkMilestones('bankTotalProgress', 25, []).map((d) => d.id),
+  ['sage_unlocked', 'answers_12', 'answers_24'],
 );
-ok('fully celebrated returns nothing even at max value');
+ok('crossing 25 unlocks Sage alongside answers_12/24');
+
+const ALL_BANK_TOTAL_IDS = ['sage_unlocked', 'answers_12', 'answers_24', 'answers_36', 'answers_50', 'legends_unlocked', 'profile_fully_unlocked'];
+assert.deepEqual(checkMilestones('bankTotalProgress', 50, ALL_BANK_TOTAL_IDS), []);
+ok('fully celebrated returns nothing even at max value (50)');
+
+// 50 crosses every remaining bankTotalProgress def at once: answers_50,
+// legends_unlocked, and profile_fully_unlocked all share the same threshold
+// (§6/§9's "plus a separate 'you are now fully unlocked' banner").
+assert.deepEqual(
+  checkMilestones('bankTotalProgress', 50, ['sage_unlocked', 'answers_12', 'answers_24', 'answers_36']).map((d) => d.id),
+  ['answers_50', 'legends_unlocked', 'profile_fully_unlocked'],
+);
+ok('crossing 50 with everything below it already celebrated returns answers_50, legends_unlocked, and profile_fully_unlocked together');
 
 const celebratedIds = ['answers_12'];
-checkMilestones('bankTotalProgress', 48, celebratedIds);
+checkMilestones('bankTotalProgress', 50, celebratedIds);
 assert.deepEqual(celebratedIds, ['answers_12']);
 ok('checkMilestones does not mutate celebratedIds');
 
 // Backfill scenario (T-04): an existing user who already answered 30 bank
-// questions before this feature shipped should silently catch up on 12/24,
-// with 36/48 still ahead of them.
+// questions before this feature shipped should silently catch up on
+// sage_unlocked/12/24, with 36/50 still ahead of them.
 assert.deepEqual(
   checkMilestones('bankTotalProgress', 30, []).map((d) => d.id),
-  ['answers_12', 'answers_24'],
+  ['sage_unlocked', 'answers_12', 'answers_24'],
 );
-ok('backfill scenario: 30 answered, nothing celebrated yet, catches up to 12 and 24');
+ok('backfill scenario: 30 answered, nothing celebrated yet, catches up to sage_unlocked, 12, and 24');
 
 // --- Source assertions: intake-sweep.tsx wiring (T-04/T-05) ---
 const intakeSweepSrc = readFileSync(
@@ -456,9 +474,14 @@ ok('MilestoneToast takes title/body as props, no hardcoded MILESTONE_DEFS copy')
 const legendsSrc = readFileSync(resolve(__dirname, '../src/app/(tabs)/legends.tsx'), 'utf8');
 
 assert.ok(
-  legendsSrc.includes('const locked = tracksReady && !isProfileSettled(tracks);'),
-  "legends.tsx's own isProfileSettled-based lock computation must stay byte-identical — only a " +
-    'celebration is added on top of it, isProfileSettled itself is not touched',
+  legendsSrc.includes('const locked = tracksReady && !legendsUnlocked(tracks);'),
+  "legends.tsx's lock computation must use legendsUnlocked (bankTotalProgress >= 50), retargeted " +
+    'from isProfileSettled per emci\'s explicit call (§6) — the tiered intake alone never satisfies ' +
+    'isProfileSettled for every axis, so that gate would have kept Legends locked past question 50',
+);
+assert.ok(
+  !legendsSrc.includes("import {") || !legendsSrc.match(/import \{[^}]*\bisProfileSettled\b[^}]*\} from '@\/lib\/trait-stability'/),
+  'isProfileSettled must no longer be imported in legends.tsx — comments may still reference it for history/rationale, but no code path may use it',
 );
 assert.ok(
   legendsSrc.includes("import { MilestoneToast } from '@/components/milestone-toast';"),
@@ -474,7 +497,7 @@ assert.ok(
 );
 
 const legendsUnlockEffectStart = legendsSrc.indexOf('const celebratingUnlockRef = useRef(false);');
-const legendsUnlockEffectEnd = legendsSrc.indexOf('}, [me, tracksReady, locked, refresh]);');
+const legendsUnlockEffectEnd = legendsSrc.indexOf('}, [me, tracksReady, locked, refresh, tracks]);');
 assert.ok(
   legendsUnlockEffectStart > -1 && legendsUnlockEffectEnd > legendsUnlockEffectStart,
   'expected anchors around the legends-unlock celebration effect were not found in legends.tsx — did it move or get renamed?',
@@ -488,9 +511,16 @@ assert.ok(
     'during the loading window',
 );
 assert.ok(
-  legendsUnlockEffectBody.includes("checkMilestones('profile_settled', 1, celebrated)"),
-  'the celebration must check profile_settled via the shared checkMilestones, not a duplicated ' +
-    "condition on `locked` directly (which would skip the celebrated_milestone_ids guard)",
+  legendsUnlockEffectBody.includes("checkMilestones('bankTotalProgress', bankTotalProgress(tracks).answered, celebrated)"),
+  'the celebration must check bankTotalProgress via the shared checkMilestones, not a duplicated ' +
+    "condition on `locked` directly (which would skip the celebrated_milestone_ids guard) — retargeted " +
+    'from profile_settled alongside the lock itself, so both cross at the exact same moment',
+);
+assert.ok(
+  legendsUnlockEffectBody.includes("filter((def) => def.id === 'legends_unlocked')"),
+  "the celebration must filter to legends_unlocked specifically — bankTotalProgress at threshold 50 " +
+    "also matches answers_50/profile_fully_unlocked, which are intake-sweep.tsx's concern " +
+    "(crossedMilestonesFor), not this local effect's",
 );
 assert.ok(
   legendsUnlockEffectBody.includes('celebratingUnlockRef.current = true;'),
@@ -508,7 +538,7 @@ assert.ok(
   legendsUnlockEffectBody.includes('persistCelebratedMilestones(me.id,'),
   'the celebration must persist the crossed id so it never re-fires on a later visit',
 );
-ok('legends.tsx wires the unlock celebration through the shared checkMilestones/persistCelebratedMilestones helpers, on top of the untouched isProfileSettled-based lock, correctly gated on tracksReady');
+ok('legends.tsx wires the unlock celebration through the shared checkMilestones/persistCelebratedMilestones helpers, on top of the retargeted legendsUnlocked-based lock, correctly gated on tracksReady');
 
 assert.ok(
   /<MilestoneToast[\s\S]*?key=\{unlockToast\.id\}[\s\S]*?title=\{unlockToast\.title\}[\s\S]*?body=\{unlockToast\.body\}/.test(
