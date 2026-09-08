@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { CategoryPagedQuestions } from '@/components/category-paged-questions';
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getCategoryDefs, type CategoryId } from '@/lib/categories';
+import { useCategoryDefs } from '@/lib/category-catalog';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { updateTraits, type Me } from '@/lib/me';
-import { humanizeAxis } from '@/lib/milestones';
 import { earnTokensQuiet } from '@/lib/tokens-server';
 import { deferredUnansweredAxes, mergeCategoryPriority } from '@/lib/questions/deferral';
 import { contradictedAxesFrom, type TraitHistoryRow } from '@/lib/trait-history';
@@ -45,11 +46,7 @@ import {
   saveCategoryBatchItems,
 } from '@/lib/questions/category-batch-store';
 import { generateQuestionBatch } from '@/lib/questions/generate';
-import {
-  bankProgressForAxis,
-  bankTotalProgress,
-  type BankProgressItem,
-} from '@/lib/questions/local';
+import { bankProgressForAxis, bankTotalProgress } from '@/lib/questions/local';
 import { nextPlayableItem, routeQuestions } from '@/lib/questions/route';
 import {
   answerQuestionItem,
@@ -146,6 +143,11 @@ export function QuestionsFold({
   tracks?: readonly TraitTrack[];
 }) {
   const theme = useTheme();
+  // Live-subscribed catalog (same hook categories-fold.tsx/category-teaser.tsx
+  // already use) — CategoryPagedQuestions needs the current list, not a
+  // mount-time snapshot, since a category_defs fetch can swap the array
+  // while this screen is open.
+  const liveCategoryDefs = useCategoryDefs();
   const [result, setResult] = useState<RouteQuestionsResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [sessionCount, setSessionCount] = useState(0);
@@ -372,8 +374,17 @@ export function QuestionsFold({
           {progress.answered} of {progress.total} answered
         </ThemedText>
       ) : null}
-      <FullProfileList
-        tracks={tracks ?? []}
+      <CategoryPagedQuestions
+        storageKey="full-profile"
+        categories={liveCategoryDefs}
+        rowsForAxis={(axis) =>
+          bankProgressForAxis(axis, tracks ?? []).map((row) => ({
+            key: `${row.axis}-${row.variant}`,
+            axis: row.axis,
+            draft: row.draft,
+            answered: row.state === 'answered',
+          }))
+        }
         busy={busy}
         locked={fullProfileLocked}
         onPick={(draft, option) => void pickBankItem(draft, option)}
@@ -472,9 +483,10 @@ export function QuestionsFold({
  * mount (a single generation call — 5 is the proven-reliable size, no
  * chunking/resume logic), answers write traits immediately (same
  * `applyQuestionAnswer` as `pickBankItem` above), and once all 5 are
- * answered the whole list locks read-only in place — same visual as
- * `FullProfileList`'s lock, no navigation, no toast. Skip is not offered in
- * this mode at all (no shared code path with `skipThis`/`skipRest` above).
+ * answered the whole list locks read-only in place — same visual as Full
+ * Profile's (`CategoryPagedQuestions`'s `locked` prop) lock, no navigation,
+ * no toast. Skip is not offered in this mode at all (no shared code path
+ * with `skipThis`/`skipRest` above).
  */
 export function CategoryBatchFold({
   me,
@@ -604,87 +616,11 @@ export function CategoryBatchFold({
   );
 }
 
-/**
- * The required 48 (3 per axis), straight from the static bank — never routed
- * through `routeQuestions`. All 3 of an axis's drafts are shown and
- * answerable at once, any order (no current/locked sequencing): the bank
- * only tracks a per-axis answer count, not which literal draft was
- * answered, so "answered" always lands on the count-th row front-to-back
- * regardless of which one was actually tapped. Re-answering an already
- * "Answered" row is allowed (it blends another EWMA sample, same mechanism
- * as the rotating pool elsewhere) — until `locked`, once the full 48 is
- * answered, when every option disappears and the section goes read-only.
- */
-function FullProfileList({
-  tracks,
-  busy,
-  locked,
-  onPick,
-}: {
-  tracks: readonly TraitTrack[];
-  busy: boolean;
-  locked: boolean;
-  onPick: (draft: QuestionDraft, option: QuestionOption) => void;
-}) {
-  const theme = useTheme();
-
-  return (
-    <View style={styles.axisSections}>
-      {TRAIT_AXES.map((axis) => {
-        const rows: BankProgressItem[] = bankProgressForAxis(axis, tracks);
-        const answeredCount = rows.filter((row) => row.state === 'answered').length;
-        return (
-          <View key={axis} style={styles.axisSection}>
-            <ThemedText type="smallBold">
-              {`${humanizeAxis(axis)} · ${answeredCount}/${rows.length}`}
-            </ThemedText>
-            {rows.map((row) => (
-              <View key={`${row.axis}-${row.variant}`} style={styles.axisItem}>
-                <View style={styles.axisItemHeader}>
-                  <ThemedText type="small">{row.draft.prompt}</ThemedText>
-                  {row.state === 'answered' ? (
-                    <ThemedText type="small" themeColor="textSecondary">
-                      Answered
-                    </ThemedText>
-                  ) : null}
-                </View>
-                {locked ? null : (
-                  <View style={styles.options}>
-                    {row.draft.options.map((option, index) => (
-                      <ThemedPressable
-                        key={`${row.axis}-${row.variant}-${index}`}
-                        disabled={busy}
-                        onPress={() => onPick(row.draft, option)}
-                        style={[
-                          styles.option,
-                          { borderColor: controlBorderColor(theme) },
-                          busy && styles.disabled,
-                        ]}>
-                        <ThemedText type="smallBold">{option.text}</ThemedText>
-                      </ThemedPressable>
-                    ))}
-                  </View>
-                )}
-              </View>
-            ))}
-          </View>
-        );
-      })}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   body: {
     gap: Spacing.three,
     paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.two,
-  },
-  axisSections: {
-    gap: Spacing.four,
-  },
-  axisSection: {
-    gap: Spacing.two,
   },
   axisItem: {
     gap: Spacing.two,

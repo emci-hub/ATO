@@ -952,29 +952,75 @@ assert.match(fold, /QUESTIONS_CHECKPOINT/);
 assert.match(fold, /QUESTIONS_KEEP_GOING/);
 assert.match(fold, /logJargonGuard/);
 assert.match(fold, /logPhraseGuard/);
-// Full Profile wiring: all 16 axes render straight from the static bank
-// (bankProgressForAxis/bankTotalProgress) — not routed through
+// Full Profile wiring: every question still renders straight from the
+// static bank (bankProgressForAxis/bankTotalProgress) — not routed through
 // routeQuestions/priorityAxes, and never imports anything from the
-// question_items/category_id direction, so a bad bank read can never touch
-// the persisted rotation. No category picker UI anymore (replaced Sep 2026):
-// every axis is always shown, no selection state, no per-category chips.
-// Scoped to FullProfileList's own body — `category` targeting below is real
-// wiring elsewhere in this file (the default rotation's `load()`), which
-// must NOT show up inside Full Profile's rendering.
+// question_items direction, so a bad bank read can never touch the
+// persisted rotation. Re-platformed Sep 2026 onto the reusable
+// CategoryPagedQuestions component (category-per-screen, replacing the old
+// single flat 16-axis list) — `useCategoryDefs()`/`getCategoryDefs()` IS now
+// expected inside this wiring (the opposite of the pre-Sep-2026 invariant
+// this block used to assert), scoped to the bank-adapter call site so a
+// stray category reference elsewhere in the file doesn't false-positive
+// this specific check.
 assert.match(fold, /bankProgressForAxis/);
 assert.match(fold, /bankTotalProgress/);
-assert.match(fold, /humanizeAxis/);
 assert.doesNotMatch(fold, /bankQuestionCount/);
 assert.doesNotMatch(fold, /category_id/);
+assert.match(fold, /CategoryPagedQuestions/);
+assert.match(fold, /storageKey="full-profile"/);
+// Live-subscribed catalog, not a mount-time getCategoryDefs() snapshot — a
+// category_defs fetch swapping the list while this screen is open must be
+// reflected, same hook categories-fold.tsx/category-teaser.tsx already use.
+assert.match(fold, /useCategoryDefs\(\)/);
+assert.match(fold, /categories=\{liveCategoryDefs\}/);
 {
-  const fullProfileOnly = fold.slice(
-    fold.indexOf('function FullProfileList'),
-    fold.indexOf('const styles = StyleSheet.create({'),
+  const bankAdapter = fold.slice(
+    fold.indexOf('<CategoryPagedQuestions'),
+    fold.indexOf('/>', fold.indexOf('<CategoryPagedQuestions')),
   );
-  assert.doesNotMatch(fullProfileOnly, /mergeCategoryPriority/);
-  assert.doesNotMatch(fullProfileOnly, /CategoryId/);
+  assert.match(bankAdapter, /bankProgressForAxis/);
+  assert.match(bankAdapter, /locked=\{fullProfileLocked\}/);
+  // routeQuestions/priorityAxes/mergeCategoryPriority belong to the default
+  // rotation above this usage, never to how Full Profile is fed — a bad bank
+  // read must never be able to reach the persisted daily-pack rotation.
+  assert.doesNotMatch(bankAdapter, /routeQuestions|priorityAxes|mergeCategoryPriority/);
 }
-ok('Full Profile renders every axis straight from the static bank, not through routeQuestions');
+ok('Full Profile renders through the reusable CategoryPagedQuestions component (live category catalog), straight from the static bank, never through routeQuestions');
+
+// CategoryPagedQuestions itself: one category's questions per screen, a
+// caller-supplied row accessor (never assumes a fixed question count or
+// where questions come from — the reusability this component was built
+// for), Back/Next/Skip category navigation, and a dedup'd axis-completion
+// count (uniqueCategoryAxes) so an axis shared by two categories is never
+// double-counted toward progress. Must never itself reach into
+// routeQuestions/priorityAxes/mergeCategoryPriority — those are the default
+// (Infinite Questions) rotation's concern, not this component's.
+const pagedQuestions = read('src/components/category-paged-questions.tsx');
+assert.match(pagedQuestions, /rowsForAxis: \(axis: TraitAxis\) => readonly CategoryQuestionRow\[\]/);
+assert.doesNotMatch(pagedQuestions, /routeQuestions|priorityAxes|mergeCategoryPriority/);
+// uniqueCategoryAxes/completedAxesFrom live in the pure, react-native-free
+// src/lib/questions/category-paged.ts (importing an RN-touching file into a
+// plain Node check script fails — same class of issue growth.ts hit) and are
+// re-exported here for callers of this component; check the pure module for
+// the real definitions, and this file only for the re-export + usage.
+assert.match(pagedQuestions, /from '@\/lib\/questions\/category-paged'/);
+assert.match(pagedQuestions, /export \{ completedAxesFrom, uniqueCategoryAxes \}/);
+const categoryPagedLib = read('src/lib/questions/category-paged.ts');
+assert.match(categoryPagedLib, /export function uniqueCategoryAxes/);
+assert.match(categoryPagedLib, /export function completedAxesFrom/);
+assert.match(pagedQuestions, /humanizeAxis/);
+assert.match(pagedQuestions, /locked \? null :/);
+assert.match(pagedQuestions, /Category \{clampedIndex \+ 1\} of \{categories\.length\}/);
+assert.match(pagedQuestions, /loadCategoryPagePosition/);
+assert.match(pagedQuestions, /saveCategoryPagePosition/);
+// Category navigation is a distinct concept from Infinite Questions' own
+// checkpoint/skip-this-item copy — must not reuse those constants.
+assert.doesNotMatch(
+  pagedQuestions,
+  /QUESTIONS_SKIP_THIS|QUESTIONS_SKIP_REST|QUESTIONS_CHECKPOINT|QUESTIONS_KEEP_GOING/,
+);
+ok('CategoryPagedQuestions groups by category via the existing axis-membership lookup, dedupes shared-axis progress, and persists/restores position — independent of Infinite Questions\' own copy/state');
 
 // Category-to-axis targeting (additive, unused by any caller yet — same
 // pattern as focusAxis): an optional `category` prop resolves to that
@@ -1001,31 +1047,23 @@ assert.match(fold, /contradictedAxesFrom/);
 assert.match(fold, /tracks,\s*\n\s*contradictedAxes,/);
 ok('questions-fold.tsx fetches trait_history and passes contradictedAxes into the routeQuestions call itself');
 
-// Full Profile replaces skip/pause entirely — those stay on the default
-// rotation only. Scope the check to FullProfileList's own body so a match on
-// the (unrelated) default-rotation branch above it doesn't hide a
-// regression, and so a future default-rotation edit doesn't false-positive.
-const fullProfileSection = fold.slice(
-  fold.indexOf('function FullProfileList'),
-  fold.indexOf('const styles = StyleSheet.create({'),
-);
-assert.ok(fullProfileSection.length > 200, 'FullProfileList function body found');
-assert.doesNotMatch(
-  fullProfileSection,
-  /QUESTIONS_SKIP_THIS|QUESTIONS_SKIP_REST|QUESTIONS_CHECKPOINT|QUESTIONS_KEEP_GOING/,
-);
-assert.match(fullProfileSection, />\s*Answered\s*</);
-// No sequential lock left to render a 'Locked' label for — every one of an
-// axis's 3 drafts is shown and answerable at once, any order.
-assert.doesNotMatch(fullProfileSection, /'Locked'/);
-assert.doesNotMatch(fullProfileSection, />\s*Locked\s*</);
-assert.match(fullProfileSection, /locked \? null :/);
-// Default rotation (outside that function) still keeps skip/pause, untouched.
-const defaultRotationSection = fold.slice(0, fold.indexOf('function FullProfileList'));
+// Full Profile (now CategoryPagedQuestions) still never uses Infinite
+// Questions' own skip/checkpoint copy — already asserted against
+// category-paged-questions.tsx above. Confirm the reverse holds too: the
+// default rotation section of this same file (everything before the
+// CategoryPagedQuestions usage) still keeps that copy, untouched by the
+// re-platform.
+const defaultRotationSection = fold.slice(0, fold.indexOf('<CategoryPagedQuestions'));
 assert.match(defaultRotationSection, /QUESTIONS_SKIP_THIS/);
 assert.match(defaultRotationSection, /QUESTIONS_SKIP_REST/);
 assert.match(defaultRotationSection, /QUESTIONS_CHECKPOINT/);
-ok('Full Profile drops skip/pause and locks entirely at 48/48; default rotation keeps skip/pause, unaffected');
+// No sequential lock left to render a 'Locked' label for — every one of an
+// axis's drafts is shown and answerable at once, any order, in the new
+// component too.
+assert.doesNotMatch(pagedQuestions, /'Locked'/);
+assert.doesNotMatch(pagedQuestions, />\s*Locked\s*</);
+assert.match(pagedQuestions, />\s*Answered\s*</);
+ok('Full Profile (CategoryPagedQuestions) still never touches Infinite Questions\' skip/checkpoint copy; default rotation keeps it, unaffected; no stale per-row lock label');
 assert.equal(QUESTIONS_SKIP_THIS, 'Skip this one');
 assert.equal(QUESTIONS_SKIP_REST, 'Skip the rest');
 assert.equal(QUESTIONS_CHECKPOINT, "That's plenty for now — come back anytime");
