@@ -25,6 +25,8 @@ import {
   devFillResearchOne,
   devResetPlayStore,
   type ClaimResult,
+  type MergeOutcome,
+  type MergeTarget,
 } from '@/play/playStore';
 import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
 
@@ -65,6 +67,7 @@ export default function PlayScreen() {
     equip,
     unequip,
     sell,
+    mergeItems,
     grantRandomPower,
     clearEquipped,
     fillJunkLooks,
@@ -77,6 +80,8 @@ export default function PlayScreen() {
   const [forceBustArmed, setForceBustArmed] = useState(false);
   /** Dev kit only: skip the Dive searching beat + cooldown for fast testing. */
   const [skipDelays, setSkipDelays] = useState(false);
+  /** Dev kit only: pin the next merge to succeed / fail (one-shot). */
+  const [forceMerge, setForceMerge] = useState<'none' | 'success' | 'fail'>('none');
 
   const researchReady = view != null && canClaimResearch(view);
 
@@ -136,8 +141,8 @@ export default function PlayScreen() {
 
   /** Dress handlers. Equip/sell failures surface as honest message toasts. */
   const handleEquip = useCallback(
-    async (itemId: string) => {
-      const outcome = await equip(itemId);
+    async (itemId: string, star: number) => {
+      const outcome = await equip(itemId, star);
       if (!outcome.ok && outcome.reason === 'bag_full') {
         setToast({
           kind: 'message',
@@ -150,8 +155,8 @@ export default function PlayScreen() {
   );
 
   const handleSell = useCallback(
-    async (itemId: string) => {
-      const outcome = await sell(itemId);
+    async (itemId: string, star: number) => {
+      const outcome = await sell(itemId, star);
       if (outcome.ok) {
         setToast({
           kind: 'message',
@@ -161,6 +166,32 @@ export default function PlayScreen() {
       }
     },
     [sell],
+  );
+
+  /** Risky Merge — Dive feel: toast like a Dive bust on the outcome. */
+  const handleMerge = useCallback(
+    async (target: MergeTarget): Promise<MergeOutcome | null> => {
+      const force = forceMerge;
+      if (force !== 'none') setForceMerge('none'); // one-shot arm consumed
+      const outcome = await mergeItems(target, force);
+      if (!outcome) return null;
+      const name = itemName(target.id) ?? target.id;
+      if (outcome.success) {
+        setToast({
+          kind: 'message',
+          title: `${name} ${'★'.repeat(outcome.toStar)}`,
+          body: `Merge succeeded — a ${name} spare was spent.`,
+        });
+      } else {
+        setToast({
+          kind: 'message',
+          title: 'Merge failed',
+          body: `${name} is untouched — one spare was spent.`,
+        });
+      }
+      return outcome;
+    },
+    [forceMerge, mergeItems],
   );
 
   const handleUnequip = useCallback(
@@ -256,9 +287,12 @@ export default function PlayScreen() {
           ) : mode === 'dress' && view ? (
             <DressScreen
               view={view}
+              skipDelays={skipDelays}
+              reduceMotion={reduceMotion}
               onEquip={handleEquip}
               onSell={handleSell}
               onUnequip={handleUnequip}
+              onMerge={handleMerge}
               onBackToGrove={() => setMode('grove')}
             />
           ) : (
@@ -386,6 +420,8 @@ export default function PlayScreen() {
                   onToggleForceBust={() => setForceBustArmed((armed) => !armed)}
                   skipDelays={skipDelays}
                   onToggleSkipDelays={() => setSkipDelays((skip) => !skip)}
+                  forceMerge={forceMerge}
+                  onSetForceMerge={setForceMerge}
                 />
               ) : null}
             </>
@@ -418,6 +454,8 @@ function GroveDevKit({
   onToggleForceBust,
   skipDelays,
   onToggleSkipDelays,
+  forceMerge,
+  onSetForceMerge,
 }: {
   commit: (transition: PlayTransition) => boolean;
   onGrantRandomFind: () => Promise<void>;
@@ -430,6 +468,8 @@ function GroveDevKit({
   onToggleForceBust: () => void;
   skipDelays: boolean;
   onToggleSkipDelays: () => void;
+  forceMerge: 'none' | 'success' | 'fail';
+  onSetForceMerge: (mode: 'none' | 'success' | 'fail') => void;
 }) {
   const theme = useTheme();
   const [resetArmed, setResetArmed] = useState(false);
@@ -542,6 +582,22 @@ function GroveDevKit({
       },
     },
     {
+      key: 'force-merge-success',
+      label: forceMerge === 'success' ? 'Force merge success (armed)' : 'Force merge success',
+      onPress: () => {
+        clearResetArm();
+        onSetForceMerge(forceMerge === 'success' ? 'none' : 'success');
+      },
+    },
+    {
+      key: 'force-merge-fail',
+      label: forceMerge === 'fail' ? 'Force merge fail (armed)' : 'Force merge fail',
+      onPress: () => {
+        clearResetArm();
+        onSetForceMerge(forceMerge === 'fail' ? 'none' : 'fail');
+      },
+    },
+    {
       key: 'skip-delays',
       label: skipDelays ? 'Skip Dive delays (on)' : 'Skip Dive delays',
       onPress: () => {
@@ -558,7 +614,11 @@ function GroveDevKit({
       </ThemedText>
 
       {rows.map((row) => {
-        const armed = (row.key === 'force-bust' && forceBustArmed) || (row.key === 'skip-delays' && skipDelays);
+        const armed =
+          (row.key === 'force-bust' && forceBustArmed) ||
+          (row.key === 'skip-delays' && skipDelays) ||
+          (row.key === 'force-merge-success' && forceMerge === 'success') ||
+          (row.key === 'force-merge-fail' && forceMerge === 'fail');
         return (
           <Pressable
             key={row.key}

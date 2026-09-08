@@ -10,14 +10,20 @@
  * - Research — 30 min cycles that accrue continuously into a pending bag,
  *   offline included, capped at 10h (20 cycles). One Claim dumps the whole bag,
  *   then accrual resets and the timer restarts.
- * - Inventory — owned items stack by id (`{ id, count }`, v5). Every find
- *   (Research bag dump, Dive bank, dev grants) merges into the stacks. The
- *   bag holds what is NOT worn: equipping takes one copy out of its stack
- *   into the slot, unequipping puts it back, so a stack is never cleared and
- *   an unequip never dupes. Dress (step 4) consumes it: 4 slots, one item per
- *   slot, mult buckets summed per stat (same-stat add, §9c soft-caps). The
- *   §9 soft cap (80) counts TOTAL items — the sum of stack counts + worn —
- *   not the number of distinct rows.
+ * - Inventory — owned items stack by id AND star (`{ id, count, star }`, v6).
+ *   Every find (Research bag dump, Dive bank, dev grants) merges into the
+ *   stacks at star 0. The bag holds what is NOT worn: equipping takes one copy
+ *   out of its (id, star) stack into the slot, unequipping puts it back, so a
+ *   stack is never cleared and an unequip never dupes. Dress (step 4) consumes
+ *   it: 4 slots, one item per slot, mult buckets summed per stat (same-stat
+ *   add, §9c soft-caps), scaled lightly by the worn copy's star. The §9 soft
+ *   cap (80) counts TOTAL items — the sum of stack counts + worn — not the
+ *   number of distinct rows.
+ * - Risky Merge — same id + same star can merge (★0→1 70%, 1→2 55%, 2→3 40%,
+ *   3→4 28%, 4→5 18%, cap ★5). A worn main or a bagged copy is the "main";
+ *   one bagged spare of the same id + star is consumed as fuel. Success raises
+ *   the main one star (mults scale +10% per star); a fail loses the fuel only —
+ *   the main is never destroyed. Same Dive feel: honest % shown, ~1s beat.
  * - Dive — push-your-luck (GAME_SPEC §7, step 3): spend 1 charge → find card →
  *   Surface banks the whole haul into `inventory`, or Deeper rolls the bust
  *   table (18/28/40/55%, max 4 Deepers). The in-progress haul lives in
@@ -68,8 +74,18 @@ export const DAILY_TEND_BONUS_TOKENS = 10;
 export const INVENTORY_SOFT_CAP = 80; // soft cap: total items across stacks (sum of counts)
 export const LOOK_SELL_TOKENS = 3; // GAME_DATA look_sell_tokens
 
-/** One bag row: a stack of identical item ids (count ≥ 1). */
-export type ItemStack = { id: string; count: number };
+/** Risky merge (Dive-style, this step). */
+export const MERGE_MAX_STAR = 5;
+/** Success % per current star: ★0→1 70%, 1→2 55%, 2→3 40%, 3→4 28%, 4→5 18%. */
+export const MERGE_SUCCESS_TABLE = [0.7, 0.55, 0.4, 0.28, 0.18] as const;
+/** Each star scales the item's mults +10% (light per-star bump). */
+export const MERGE_STAR_MULT_STEP = 0.1;
+
+/** One bag row: a stack of identical copies (same id AND star). */
+export type ItemStack = { id: string; count: number; star: number };
+
+/** A worn (equipped) item: id + the star tier of that copy. */
+export type ItemRef = { id: string; star: number };
 
 /** Sum of counts across the bag stacks (= bagged items only). */
 export function bagItemCount(inventory: readonly ItemStack[]): number {
@@ -78,52 +94,60 @@ export function bagItemCount(inventory: readonly ItemStack[]): number {
 
 /** How many slots are currently worn. */
 export function wornItemCount(
-  equipped: Readonly<Partial<Record<ItemSlot, string>>>,
+  equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>,
 ): number {
-  return Object.values(equipped).filter((id): id is string => id != null).length;
+  return Object.values(equipped).filter((ref): ref is ItemRef => ref != null).length;
 }
 
 /** Total owned items — worn + bagged. The soft cap counts THIS, not rows. */
 export function totalOwnedCount(
   inventory: readonly ItemStack[],
-  equipped: Readonly<Partial<Record<ItemSlot, string>>>,
+  equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>,
 ): number {
   return bagItemCount(inventory) + wornItemCount(equipped);
 }
 
-/**
- * Add `n` copies of `id` into the bag, merging into an existing stack of the
- * same id when one is present. All grants (Claim, Dive bank, dev) go through
- * here so duplicates always stack.
- */
+/** Same id AND same star — the only copies that can stack or merge. */
+function sameTier(stack: { id: string; star: number }, id: string, star: number): boolean {
+  return stack.id === id && stack.star === star;
+}
+
+/** Add `n` copies of (id, star) into the bag, merging into the matching stack. */
 function addCopiesToBag(
   inventory: readonly ItemStack[],
   id: string,
+  star: number,
   n: number,
 ): ItemStack[] {
-  const existing = inventory.find((stack) => stack.id === id);
+  const existing = inventory.find((stack) => sameTier(stack, id, star));
   if (existing) {
     return inventory.map((stack) =>
-      stack.id === id ? { id, count: stack.count + n } : stack,
+      sameTier(stack, id, star) ? { id, star, count: stack.count + n } : stack,
     );
   }
-  return [...inventory, { id, count: n }];
+  return [...inventory, { id, star, count: n }];
 }
 
-/** Merge a run of granted ids (may repeat) into the bag as stacks. */
+/** Merge a run of granted ids (all star 0) into the bag as stacks. */
 function addManyToBag(
   inventory: readonly ItemStack[],
   ids: readonly string[],
 ): ItemStack[] {
   let next: ItemStack[] = [...inventory];
-  for (const id of ids) next = addCopiesToBag(next, id, 1);
+  for (const id of ids) next = addCopiesToBag(next, id, 0, 1);
   return next;
 }
 
-/** Take one copy out of a stack; the stack disappears at zero. */
-function takeOneFromBag(inventory: readonly ItemStack[], id: string): ItemStack[] {
+/** Take one copy out of the matching (id, star) stack; it disappears at zero. */
+function takeOneFromBag(
+  inventory: readonly ItemStack[],
+  id: string,
+  star: number,
+): ItemStack[] {
   return inventory
-    .map((stack) => (stack.id === id ? { id, count: stack.count - 1 } : stack))
+    .map((stack) =>
+      sameTier(stack, id, star) ? { ...stack, count: stack.count - 1 } : stack,
+    )
     .filter((stack) => stack.count > 0);
 }
 
@@ -158,12 +182,14 @@ export type DiveRun = {
  * Persisted shape. Versioned under one key; add fields behind a version bump.
  * v2 added `inventory` (step 2b); v3 added `dive_run` (step 3); v4 added
  * `equipped` (step 4); v5 re-shaped `inventory` from a string[] of owned ids
- * (worn included) into `ItemStack[]` of bagged copies (worn excluded) — old
- * bags migrate and subtract the worn copies. Still to come behind later bumps:
- * Defend adds `highest_wave_cleared`.
+ * (worn included) into `ItemStack[]` of bagged copies (worn excluded); v6
+ * (this step) added a `star` tier to every stack copy and changed `equipped`
+ * from slot → id into slot → `{ id, star }` so a worn merge result survives.
+ * v1–v5 docs migrate (legacy copies are star 0). Still to come behind later
+ * bumps: Defend adds `highest_wave_cleared`.
  */
 export type PlayStoreDoc = {
-  version: 5;
+  version: 6;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -175,10 +201,10 @@ export type PlayStoreDoc = {
   research_accrued_ms: number;
   /** Device-local YYYY-MM-DD the daily tend bonus was last granted. */
   last_tend_bonus_ymd: string | null;
-  /** Bagged copies, stacked by id. Worn copies are NOT in here. */
+  /** Bagged copies stacked by (id, star). Worn copies are NOT in here. */
   inventory: ItemStack[];
-  /** Worn items by slot (one per slot); the worn copy lives outside the bag. */
-  equipped: Partial<Record<ItemSlot, string>>;
+  /** Worn item refs by slot (one per slot); the worn copy lives outside the bag. */
+  equipped: Partial<Record<ItemSlot, ItemRef>>;
   /** Active Dive run (null when no charge has been spent / run is over). */
   dive_run: DiveRun | null;
 };
@@ -208,11 +234,12 @@ export type PlayView = {
   research: ResearchView;
   /** Daily tend bonus still available this device-local day. */
   tendBonusAvailable: boolean;
-  /** Bagged copies stacked by id (worn copies excluded); Dress renders it. */
+  /** Bagged copies stacked by (id, star) (worn excluded); Dress renders it. */
   inventory: readonly ItemStack[];
-  /** Worn item ids by slot; Dress renders it. */
-  equipped: Readonly<Partial<Record<ItemSlot, string>>>;
-  /** Raw additive mult sums from equipped items (§9c same-stat adds). */
+  /** Worn item refs by slot; Dress renders it. */
+  equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>;
+  /** Raw additive mult sums from equipped items (§9c same-stat adds, scaled
+   * +10% per worn star so a merged ★2 Tide Blade beats a ★1). */
   statSums: StatSums;
 };
 
@@ -254,7 +281,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 5,
+    version: 6,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -345,9 +372,13 @@ export function canClaimResearch(view: PlayView): boolean {
  * the §7 dive_luck tier formula; it is what the screen always shows.
  * ------------------------------------------------------------------------- */
 
-/** Raw additive sums per stat from the equipped items (0 when none). */
+/**
+ * Raw additive sums per stat from the equipped items (0 when none). Each
+ * worn copy's mult value is scaled by its star: value × (1 + 10% per star),
+ * so a merged ★2 power beats a ★1 (GAME_SPEC "scale mults lightly per star").
+ */
 export function equippedStatSums(
-  equipped: Readonly<Partial<Record<ItemSlot, string>>>,
+  equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>,
 ): StatSums {
   const sums: StatSums = {
     wave_power: 0,
@@ -358,10 +389,11 @@ export function equippedStatSums(
   };
   for (const slot of Object.values(equipped)) {
     if (!slot) continue;
-    const def = getItemDef(slot);
+    const def = getItemDef(slot.id);
     if (!def) continue;
+    const scale = 1 + MERGE_STAR_MULT_STEP * slot.star;
     for (const mult of [def.mult_a, def.mult_b]) {
-      if (mult) sums[mult.stat] += mult.value;
+      if (mult) sums[mult.stat] += mult.value * scale;
     }
   }
   return sums;
@@ -389,7 +421,7 @@ export function diveLuckBucket(statSums: StatSums): number {
  */
 export function effectiveBustPct(
   baseBust: number,
-  equipped: Readonly<Partial<Record<ItemSlot, string>>>,
+  equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>,
 ): number {
   const bucket = diveLuckBucket(equippedStatSums(equipped));
   const bent = baseBust * (1 - LUCK_BUST_BEND_PER_TIER * (bucket - 1));
@@ -547,17 +579,17 @@ export function deeperDive(
  * Dress — 4 slots, one item per slot (GAME_SPEC §9 inventory, §11 screen 4;
  * GAME_DATA item + equipped shape).
  *
- * `inventory` is the bag: copies stacked by id, worn copies excluded. Equipping
- * takes exactly ONE copy out of its stack into the slot (the stack keeps the
- * rest — never cleared); unequipping puts that one copy back, so a stack is
- * never duped. Swapping a slot returns the old item to the bag. The §9 soft
- * cap (80) counts TOTAL owned items (sum of stack counts + worn) and gates a
- * net-new Power into an empty slot: you must sell a Look for
- * `LOOK_SELL_TOKENS` first. Sell removes one copy from a Look stack.
+ * `inventory` is the bag: copies stacked by (id, star), worn copies excluded.
+ * Equipping takes exactly ONE copy out of its matching stack into the slot
+ * (the stack keeps the rest — never cleared); unequipping puts that one copy
+ * back, so a stack is never duped. Swapping a slot returns the old ref to its
+ * own stack. The §9 soft cap (80) counts TOTAL owned items (sum of stack
+ * counts + worn) and gates a net-new Power into an empty slot: you must sell
+ * a Look for `LOOK_SELL_TOKENS` first. Sell removes one copy from a Look
+ * stack (Looks never carry stars).
  *
- * TODO(fridge → GAME_SPEC §16c "fridge" / "No crafting / merge" line): when
- * the merge ladder is specced, duplicates here become the merge fuel (e.g.
- * Tide Blade ×3 → Tide Blade 2/3). Not implemented on purpose.
+ * Risky Merge lives right below — duplicates of a Power (same id + star)
+ * become the merge fuel; see that section for the ladder TODO.
  * ------------------------------------------------------------------------- */
 
 export type EquipOutcome =
@@ -568,50 +600,54 @@ export type SellOutcome =
   | { ok: true; gainedTokens: number; name: string }
   | { ok: false; reason: 'not_owned' | 'not_look' };
 
-/** Equip one owned (bagged) copy into its slot. Blocked when the bag is over
- * the soft cap and the item is a Power going into an EMPTY slot (net-new gear
- * — sell a Look first). Swaps (slot holds a DIFFERENT item) are always allowed,
- * as are Look equips, because neither adds to the total owned count. Equipping
- * an id that is ALREADY worn is refused (`already_equipped`) — one per slot —
- * so spare copies of a worn item can only sit in the bag (or sell, if Look). */
+/** Equip one owned (bagged) copy of (id, star) into its slot. Blocked when
+ * the bag is over the soft cap and the item is a Power going into an EMPTY
+ * slot (net-new gear — sell a Look first). Swaps (slot holds a DIFFERENT ref)
+ * are always allowed, as are Look equips, because neither adds to the total
+ * owned count. Equipping the exact ref ALREADY worn is refused
+ * (`already_equipped`) — one per slot — so spare copies of a worn item can
+ * only sit in the bag (or feed a merge, or sell, if Look). */
 export function equipItem(
   doc: PlayStoreDoc,
   itemId: string,
+  star: number,
 ): { doc: PlayStoreDoc; outcome: EquipOutcome } {
   const def = getItemDef(itemId);
-  if (!def || !doc.inventory.some((stack) => stack.id === itemId && stack.count >= 1)) {
+  if (!def || !doc.inventory.some((stack) => sameTier(stack, itemId, star))) {
     return { doc, outcome: { ok: false, reason: 'not_owned' } };
   }
   const slot = def.core.slot;
-  const occupiedId = doc.equipped[slot];
-  if (occupiedId === itemId) {
+  const occupied = doc.equipped[slot];
+  if (occupied && occupied.id === itemId && occupied.star === star) {
     return { doc, outcome: { ok: false, reason: 'already_equipped' } };
   }
   const totalOwned = totalOwnedCount(doc.inventory, doc.equipped);
-  if (def.core.kind === 'power' && occupiedId == null && totalOwned >= INVENTORY_SOFT_CAP) {
+  if (def.core.kind === 'power' && occupied == null && totalOwned >= INVENTORY_SOFT_CAP) {
     return { doc, outcome: { ok: false, reason: 'bag_full' } };
   }
-  // Take one copy from the bag; if this is a swap, the old item goes back.
-  let inventory = takeOneFromBag(doc.inventory, itemId);
-  if (occupiedId != null) inventory = addCopiesToBag(inventory, occupiedId, 1);
+  // Take one copy from the bag; if this is a swap, the old ref goes back to
+  // its own (id, star) stack.
+  let inventory = takeOneFromBag(doc.inventory, itemId, star);
+  if (occupied) inventory = addCopiesToBag(inventory, occupied.id, occupied.star, 1);
   return {
-    doc: { ...doc, inventory, equipped: { ...doc.equipped, [slot]: itemId } },
+    doc: { ...doc, inventory, equipped: { ...doc.equipped, [slot]: { id: itemId, star } } },
     outcome: { ok: true },
   };
 }
 
-/** Take an equipped item off and return exactly one copy to its bag stack. */
+/** Take an equipped item off and return exactly one copy to its bag stack
+ * (the matching (id, star) tier). */
 export function unequipItem(
   doc: PlayStoreDoc,
   slot: ItemSlot,
 ): { doc: PlayStoreDoc } {
-  const itemId = doc.equipped[slot];
-  if (!itemId) return { doc };
+  const ref = doc.equipped[slot];
+  if (!ref) return { doc };
   const equipped = { ...doc.equipped };
   delete equipped[slot];
   // Only return known items; a corrupt id is dropped rather than bagged.
-  const inventory = getItemDef(itemId)
-    ? addCopiesToBag(doc.inventory, itemId, 1)
+  const inventory = getItemDef(ref.id)
+    ? addCopiesToBag(doc.inventory, ref.id, ref.star, 1)
     : doc.inventory;
   return { doc: { ...doc, equipped, inventory } };
 }
@@ -622,9 +658,10 @@ export function unequipItem(
 export function sellItem(
   doc: PlayStoreDoc,
   itemId: string,
+  star: number,
 ): { doc: PlayStoreDoc; outcome: SellOutcome } {
   const def = getItemDef(itemId);
-  if (!def || !doc.inventory.some((stack) => stack.id === itemId && stack.count >= 1)) {
+  if (!def || !doc.inventory.some((stack) => sameTier(stack, itemId, star))) {
     return { doc, outcome: { ok: false, reason: 'not_owned' } };
   }
   if (def.core.kind !== 'look') {
@@ -634,9 +671,121 @@ export function sellItem(
     doc: {
       ...doc,
       tokens: doc.tokens + LOOK_SELL_TOKENS,
-      inventory: takeOneFromBag(doc.inventory, itemId),
+      inventory: takeOneFromBag(doc.inventory, itemId, star),
     },
     outcome: { ok: true, gainedTokens: LOOK_SELL_TOKENS, name: def.core.name },
+  };
+}
+
+/* ---------------------------------------------------------------------------
+ * Risky Merge — Dive feel on Power duplicates.
+ *
+ * Same id + same star can merge. A "main" (the copy you keep and upgrade) can
+ * be a WORN item or a BAGGED copy; one bagged spare of the same id + star is
+ * consumed as fuel. Roll the honest % from `MERGE_SUCCESS_TABLE` (★0→1 70% …
+ * 4→5 18%, cap ★5). Success raises the main one star; a fail spends the fuel
+ * and leaves the main untouched — an equipped main is NEVER destroyed. Mult
+ * values scale +10% per star (see `equippedStatSums`).
+ *
+ * TODO(merge ladder → GAME_SPEC §16c "fridge" / the old "No crafting / merge"
+ * line): this risky single-star merge is v0. The specced upgrade ladder (e.g.
+ * Tide Blade ×3 → Tide Blade 2/3 tiers with new art/names, or auto-combine of
+ * excess spares) stays out of scope on purpose — when it lands it builds on
+ * these same (id, star) stacks.
+ * ------------------------------------------------------------------------- */
+
+export type MergeOutcome =
+  | { success: true; pct: number; fromStar: number; toStar: number }
+  | { success: false; pct: number; fromStar: number };
+
+/** What a merge is trying to raise: the main copy's tier + where it lives. */
+export type MergeTarget = { id: string; star: number; main: 'worn' | 'bag' };
+
+/** Honest success % (whole number) for raising `star` → `star + 1`, or null
+ * when `star` is at the cap (nothing to roll). */
+export function mergeSuccessPct(star: number): number | null {
+  if (star < 0 || star >= MERGE_MAX_STAR) return null;
+  return Math.round(MERGE_SUCCESS_TABLE[star] * 100);
+}
+
+/** Does the worn slot hold an item that can be merged with bagged fuel? */
+export function canMergeWorn(
+  doc: PlayStoreDoc,
+  slot: ItemSlot,
+): boolean {
+  const ref = doc.equipped[slot];
+  if (!ref) return false;
+  const def = getItemDef(ref.id);
+  if (!def || def.core.kind !== 'power') return false;
+  if (mergeSuccessPct(ref.star) == null) return false;
+  return doc.inventory.some((stack) => sameTier(stack, ref.id, ref.star));
+}
+
+/** Is this bag stack a merge-able main (a Power with ≥ 2 copies of its tier)?
+ * A stack of 1 could still be fuel for a worn main, but not a main itself. */
+export function canMergeStack(stack: ItemStack): boolean {
+  const def = getItemDef(stack.id);
+  if (!def || def.core.kind !== 'power') return false;
+  if (mergeSuccessPct(stack.star) == null) return false;
+  return stack.count >= 2;
+}
+
+/**
+ * Roll one risky merge.
+ *
+ * `main` 'worn' targets the equipped copy (def.core.slot) and needs ≥ 1
+ * bagged fuel of the same (id, star). `main` 'bag' targets a bagged copy and
+ * needs its own (id, star) stack to hold ≥ 2 (main + fuel). Fuel is always
+ * consumed; the main only changes on success. Null when the merge cannot be
+ * made (nothing to do — caller should have hidden the button).
+ */
+export function mergeItem(
+  doc: PlayStoreDoc,
+  target: MergeTarget,
+  rng: () => number = Math.random,
+): { doc: PlayStoreDoc; outcome: MergeOutcome } | null {
+  const def = getItemDef(target.id);
+  const pct = mergeSuccessPct(target.star);
+  if (!def || def.core.kind !== 'power' || pct == null) return null;
+  const slot = def.core.slot;
+
+  // Validate the main and that enough fuel of the same tier exists.
+  if (target.main === 'worn') {
+    const worn = doc.equipped[slot];
+    if (!worn || worn.id !== target.id || worn.star !== target.star) return null;
+    const fuel = doc.inventory.find((stack) => sameTier(stack, target.id, target.star));
+    if (!fuel || fuel.count < 1) return null;
+  } else {
+    const stack = doc.inventory.find((stack) => sameTier(stack, target.id, target.star));
+    if (!stack || stack.count < 2) return null;
+  }
+
+  const success = rng() < MERGE_SUCCESS_TABLE[target.star];
+
+  // Fuel always goes first.
+  let inventory = takeOneFromBag(doc.inventory, target.id, target.star);
+  let equipped = doc.equipped;
+
+  if (success) {
+    if (target.main === 'worn') {
+      // The worn main keeps its copy and moves up a star.
+      equipped = { ...equipped, [slot]: { id: target.id, star: target.star + 1 } };
+    } else {
+      // The bag main moves up a star: pull one more copy from the old tier,
+      // push it into the next tier.
+      inventory = takeOneFromBag(inventory, target.id, target.star);
+      inventory = addCopiesToBag(inventory, target.id, target.star + 1, 1);
+    }
+    return {
+      doc: { ...doc, inventory, equipped },
+      outcome: { success: true, pct, fromStar: target.star, toStar: target.star + 1 },
+    };
+  }
+
+  // Fail: main untouched (bag main = the remaining copy of its stack), fuel gone.
+  return {
+    doc: { ...doc, inventory, equipped },
+    outcome: { success: false, pct, fromStar: target.star },
   };
 }
 
@@ -677,7 +826,7 @@ export function devGrantRandomFind(
 ): { doc: PlayStoreDoc; grantedId: string } {
   const grantedId = rollResearchFind(rng);
   return {
-    doc: { ...doc, inventory: addCopiesToBag(doc.inventory, grantedId, 1) },
+    doc: { ...doc, inventory: addCopiesToBag(doc.inventory, grantedId, 0, 1) },
     grantedId,
   };
 }
@@ -701,18 +850,18 @@ export function devGrantRandomPower(
 ): { doc: PlayStoreDoc; grantedId: string } {
   const grantedId = rollPowerFind(rng);
   return {
-    doc: { ...doc, inventory: addCopiesToBag(doc.inventory, grantedId, 1) },
+    doc: { ...doc, inventory: addCopiesToBag(doc.inventory, grantedId, 0, 1) },
     grantedId,
   };
 }
 
-/** Dev kit: grant 3 copies of Tide Blade (one stack) to test stacking. */
+/** Dev kit: grant 3 copies of Tide Blade (one ★0 stack) to test stacking. */
 export function devGrantTideBlades(
   doc: PlayStoreDoc,
 ): { doc: PlayStoreDoc; grantedId: string; count: number } {
   const grantedId = 'item_tide_blade_01';
   return {
-    doc: { ...doc, inventory: addCopiesToBag(doc.inventory, grantedId, 3) },
+    doc: { ...doc, inventory: addCopiesToBag(doc.inventory, grantedId, 0, 3) },
     grantedId,
     count: 3,
   };
@@ -757,7 +906,7 @@ export function devFillJunkLooks(doc: PlayStoreDoc): PlayStoreDoc {
   if (needed <= 0) return doc;
   return {
     ...doc,
-    inventory: addCopiesToBag(doc.inventory, junk, needed),
+    inventory: addCopiesToBag(doc.inventory, junk, 0, needed),
   };
 }
 
@@ -787,12 +936,12 @@ function snapshotDive(
 function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
   try {
     const data = JSON.parse(raw) as Record<string, unknown>;
-    // v1 (pre-inventory) … v4 (equipped) stored `inventory` as a string[] of
-    // owned ids WITH worn copies included. v5 stacks bagged copies with worn
-    // excluded, so legacy bags migrate by stacking occurrences and subtracting
-    // one copy per equipped slot. A device that already banked items keeps them.
+    // v1 (pre-inventory) … v5 (stacked bags, slot→id equipped) all migrate to
+    // v6: legacy copies are star 0, and equipped string ids become refs with
+    // star 0. v1–v4 also stored `inventory` as a string[] of owned ids WITH
+    // worn copies included, so those subtract one copy per equipped slot.
     const version = data?.version;
-    if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5) {
+    if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6) {
       return null;
     }
     const tokens = finiteNumber(data.tokens);
@@ -806,7 +955,7 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     }
     const equipped = parseEquipped(data.equipped);
     return {
-      version: 5,
+      version: 6,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -823,50 +972,62 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
 }
 
 /**
- * Normalize a stored bag into v5 stacks. Accepts legacy string[] rows or
- * already-stacked rows. When `subtractWorn` (versions 1–4, where worn copies
- * were also listed in the bag) one copy per equipped slot is removed.
+ * Normalize a stored bag into v6 stacks keyed by (id, star). Accepts legacy
+ * string[] rows (star 0), v5 {id, count} rows (star 0), or v6 rows carrying a
+ * star. When `subtractWorn` (versions 1–4, where worn copies were also listed
+ * in the bag) one copy per equipped slot is removed.
  */
 function parseInventory(
   raw: unknown,
-  equipped: Partial<Record<ItemSlot, string>>,
+  equipped: Partial<Record<ItemSlot, ItemRef>>,
   subtractWorn: boolean,
 ): ItemStack[] {
   const counts = new Map<string, number>();
-  const bump = (id: string, n: number) => {
-    const next = (counts.get(id) ?? 0) + n;
-    if (next > 0) counts.set(id, next);
-    else counts.delete(id);
+  const bump = (id: string, star: number, n: number) => {
+    const key = `${id}\u0000${star}`;
+    const next = (counts.get(key) ?? 0) + n;
+    if (next > 0) counts.set(key, next);
+    else counts.delete(key);
   };
   if (Array.isArray(raw)) {
     for (const entry of raw) {
       if (typeof entry === 'string' && entry.length > 0) {
-        bump(entry, 1);
-      } else if (
-        isRecord(entry) &&
-        typeof entry.id === 'string' &&
-        typeof entry.count === 'number' &&
-        Number.isFinite(entry.count)
-      ) {
-        bump(entry.id, Math.max(1, Math.floor(entry.count)));
+        bump(entry, 0, 1);
+      } else if (isRecord(entry) && typeof entry.id === 'string' && typeof entry.count === 'number') {
+        const star = typeof entry.star === 'number' && Number.isFinite(entry.star)
+          ? clampInt(entry.star, 0, MERGE_MAX_STAR)
+          : 0;
+        bump(entry.id, star, Math.max(1, Math.floor(entry.count)));
       }
     }
   }
   if (subtractWorn) {
-    for (const slot of Object.values(equipped)) {
-      if (slot) bump(slot, -1);
+    for (const ref of Object.values(equipped)) {
+      if (ref) bump(ref.id, ref.star, -1);
     }
   }
-  return [...counts.entries()].map(([id, count]) => ({ id, count }));
+  return [...counts.entries()].map(([key, count]) => {
+    const [id, star] = key.split('\u0000');
+    return { id, count, star: Number(star) };
+  });
 }
 
-/** Loose-shape read of equipped slots; bad values drop to un-equipped. */
-function parseEquipped(raw: unknown): Partial<Record<ItemSlot, string>> {
+/** Loose-shape read of equipped slots: v6 refs or legacy string ids → refs. */
+function parseEquipped(raw: unknown): Partial<Record<ItemSlot, ItemRef>> {
   if (!isRecord(raw)) return {};
-  const equipped: Partial<Record<ItemSlot, string>> = {};
+  const equipped: Partial<Record<ItemSlot, ItemRef>> = {};
   for (const slot of ['weapon', 'armor', 'cloak', 'trinket'] as const) {
     const value = raw[slot];
-    if (typeof value === 'string') equipped[slot] = value;
+    if (typeof value === 'string' && value.length > 0) {
+      equipped[slot] = { id: value, star: 0 };
+    } else if (
+      isRecord(value) &&
+      typeof value.id === 'string' &&
+      typeof value.star === 'number' &&
+      Number.isFinite(value.star)
+    ) {
+      equipped[slot] = { id: value.id, star: clampInt(value.star, 0, MERGE_MAX_STAR) };
+    }
   }
   return equipped;
 }

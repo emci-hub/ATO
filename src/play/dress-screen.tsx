@@ -1,28 +1,32 @@
 /**
- * Dress — 4 slots + bag (Play step 4 + bag polish, GAME_SPEC §9 inventory /
- * §9c / §11 screen 4; GAME_DATA item + equipped shape).
+ * Dress — 4 slots + bag + risky Merge (Play step 4 + merge polish, GAME_SPEC
+ * §9 inventory / §9c / §11 screen 4; GAME_DATA item + equipped shape).
  *
- * Pure read/view of `view`. The bag is stacks (`{ id, count }` — each row one
- * distinct item id); the Worn card shows the four slots. Interactions delegate
- * up through `play.tsx` to the shared playStore:
- * - tap a Worn slot → unequip (the copy returns to its bag stack);
- * - tap a bag row → equip one copy into its slot (Power equips into an empty
- *   slot are refused over the 80-item soft cap — sell a Look first);
+ * Pure read/view of `view`. The bag is stacks (`{ id, count, star }` — each
+ * row one distinct id+star tier). Interactions delegate up through `play.tsx`
+ * to the shared playStore:
+ * - tap a Worn slot → unequip (the copy returns to its matching-tier stack);
+ * - tap a bag row → equip one copy of that tier into its slot (Power equips
+ *   into an empty slot are refused over the 80-item soft cap);
  * - Looks carry an inline "Sell · +3" that sells ONE copy from the stack.
  *
- * The bag section filters by tab (All / Weapon / Armor / Cloak / Trinket /
- * Junk) and sorts within each tab by rarity (best first), then by name.
- * Junk = Looks, whatever slot they belong to. No Defend. No Supabase.
+ * Risky Merge: Power rows that can merge (a Worn power with a bagged spare of
+ * the same tier, or a bag stack holding ≥ 2 of its tier) offer a "Merge" chip.
+ * Tapping it opens a paced confirm panel showing the honest success % for
+ * ★n → ★n+1 (70/55/40/28/18) with the same searching-beat + cooldown rhythm
+ * Dive uses (`usePacedAction`, "Skip Dive delays" respected). Fail spends the
+ * fuel only — the main is never destroyed. No Defend. No Supabase.
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { ComponentProps } from 'react';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { usePacedAction } from '@/play/action-pacing';
 import {
   formatMult,
   getItemDef,
@@ -34,8 +38,12 @@ import {
 import {
   INVENTORY_SOFT_CAP,
   LOOK_SELL_TOKENS,
+  mergeSuccessPct,
   totalOwnedCount,
+  type ItemRef,
   type ItemStack,
+  type MergeOutcome,
+  type MergeTarget,
   type PlayView,
 } from '@/play/playStore';
 
@@ -74,24 +82,37 @@ const FILTER_TABS: { key: BagFilter; label: string }[] = [
 
 export function DressScreen({
   view,
+  skipDelays,
+  reduceMotion,
   onEquip,
   onSell,
   onUnequip,
+  onMerge,
   onBackToGrove,
 }: {
   view: PlayView;
-  onEquip: (itemId: string) => void;
-  onSell: (itemId: string) => void;
+  skipDelays: boolean;
+  reduceMotion: boolean;
+  onEquip: (itemId: string, star: number) => void;
+  onSell: (itemId: string, star: number) => void;
   onUnequip: (slot: ItemSlot) => void;
+  onMerge: (target: MergeTarget) => Promise<MergeOutcome | null>;
   onBackToGrove: () => void;
 }) {
   const theme = useTheme();
   const [filter, setFilter] = useState<BagFilter>('all');
+  const [mergeTarget, setMergeTarget] = useState<MergeTarget | null>(null);
+  const { act, busy, showSplash } = usePacedAction(skipDelays);
+
   const totalOwned = totalOwnedCount(view.inventory, view.equipped);
   const overCap = totalOwned >= INVENTORY_SOFT_CAP;
   const activeBonuses = STAT_ORDER.filter((stat) => view.statSums[stat] > 0);
-
   const stacks = visibleStacks(view.inventory, filter);
+
+  const handleMergePress = (target: MergeTarget) => {
+    if (busy) return;
+    setMergeTarget(target);
+  };
 
   return (
     <>
@@ -111,16 +132,40 @@ export function DressScreen({
         Four slots. Equip Powers to shape your Grove — Looks are for the eye.
       </ThemedText>
 
+      {mergeTarget ? (
+        <MergePanel
+          target={mergeTarget}
+          busy={busy}
+          showSplash={showSplash}
+          reduceMotion={reduceMotion}
+          onMerge={() =>
+            act('Merging…', async () => {
+              const outcome = await onMerge(mergeTarget);
+              if (outcome) setMergeTarget(null); // resolved → back to the list
+              return outcome != null;
+            })
+          }
+          onDone={() => {
+            if (!busy) setMergeTarget(null);
+          }}
+        />
+      ) : null}
+
       <ThemedView type="backgroundElement" style={styles.card}>
         <ThemedText type="smallBold">Worn</ThemedText>
-        {SLOT_ORDER.map((slot) => (
-          <SlotRow
-            key={slot}
-            slot={slot}
-            itemId={view.equipped[slot] ?? null}
-            onUnequip={onUnequip}
-          />
-        ))}
+        {SLOT_ORDER.map((slot) => {
+          const ref = view.equipped[slot] ?? null;
+          return (
+            <SlotRow
+              key={slot}
+              slot={slot}
+              ref={ref}
+              fuelInBag={ref ? hasFuel(view, ref) : false}
+              onUnequip={onUnequip}
+              onMerge={handleMergePress}
+            />
+          );
+        })}
       </ThemedView>
 
       <ThemedView type="backgroundElement" style={styles.card}>
@@ -191,18 +236,117 @@ export function DressScreen({
             {emptyCopy(filter)}
           </ThemedText>
         ) : (
-          stacks.map((stack) => (
-            <StackRow
-              key={stack.id}
-              stack={stack}
-              alreadyWorn={view.equipped[getItemDef(stack.id)?.core.slot ?? 'weapon'] === stack.id}
-              onEquip={onEquip}
-              onSell={onSell}
-            />
-          ))
+          stacks.map((stack) => {
+            const def = getItemDef(stack.id);
+            const wornRef = def ? view.equipped[def.core.slot] : undefined;
+            const sameTierWorn =
+              wornRef != null && wornRef.id === stack.id && wornRef.star === stack.star;
+            return (
+              <StackRow
+                key={`${stack.id}@${stack.star}`}
+                stack={stack}
+                sameTierWorn={sameTierWorn}
+                onEquip={onEquip}
+                onSell={onSell}
+                onMerge={handleMergePress}
+              />
+            );
+          })
         )}
       </ThemedView>
     </>
+  );
+}
+
+/** Does the bag hold ≥1 spare of the exact tier this worn ref is on? */
+function hasFuel(view: PlayView, ref: ItemRef): boolean {
+  return view.inventory.some(
+    (stack) => stack.id === ref.id && stack.star === ref.star && stack.count >= 1,
+  );
+}
+
+/**
+ * Merge confirm panel — Dive feel: shows the main, its honest success % for
+ * ★n → ★n+1, and a paced Merge button (beat → resolve → cooldown). On resolve
+ * the caller (play.tsx) toasts the result and this panel clears via `onDone`.
+ */
+function MergePanel({
+  target,
+  busy,
+  showSplash,
+  reduceMotion,
+  onMerge,
+  onDone,
+}: {
+  target: MergeTarget;
+  busy: boolean;
+  showSplash: boolean;
+  reduceMotion: boolean;
+  onMerge: () => void;
+  onDone: () => void;
+}) {
+  const theme = useTheme();
+  const def = getItemDef(target.id);
+  const pct = mergeSuccessPct(target.star);
+  const fromLabel = starLabel(target.star);
+  const toLabel = starLabel(target.star + 1);
+  if (!def || pct == null) return null; // nothing mergeable anymore
+  return (
+    <ThemedView type="backgroundElement" style={styles.mergeCard}>
+      {showSplash ? (
+        <View style={styles.splashRow}>
+          {!reduceMotion ? <ActivityIndicator size="small" color={theme.accent} /> : null}
+          <ThemedText type="smallBold">Merging…</ThemedText>
+        </View>
+      ) : (
+        <>
+          <View style={styles.statRow}>
+            <ThemedText type="smallBold">
+              Merge {def.core.name} {fromLabel} → {toLabel}
+            </ThemedText>
+            <ThemedText type="subheading" themeColor="emphasis">
+              {pct}%
+            </ThemedText>
+          </View>
+          <ThemedText type="small" themeColor="textSecondary">
+            One {def.core.name} {fromLabel || 'spare'} is spent as fuel — a higher
+            star scales its bonuses. A miss keeps your {target.main === 'worn' ? 'worn' : ''}{' '}
+            {def.core.name} and only costs the fuel.
+          </ThemedText>
+          <View style={styles.buttonRow}>
+            <Pressable
+              onPress={onDone}
+              disabled={busy}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: busy }}
+              style={({ pressed }) => [
+                styles.button,
+                { backgroundColor: theme.backgroundSelected },
+                pressed && !busy && styles.pressed,
+                busy && styles.disabled,
+              ]}>
+              <ThemedText type="smallBold">Cancel</ThemedText>
+            </Pressable>
+            <Pressable
+              onPress={onMerge}
+              disabled={busy}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: busy }}
+              style={({ pressed }) => [
+                styles.button,
+                styles.buttonPrimary,
+                { backgroundColor: theme.accentFill },
+                pressed && !busy && styles.pressed,
+                busy && styles.disabled,
+              ]}>
+              <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
+                Merge · {pct}%
+              </ThemedText>
+            </Pressable>
+          </View>
+        </>
+      )}
+    </ThemedView>
   );
 }
 
@@ -221,7 +365,9 @@ function visibleStacks(inventory: readonly ItemStack[], filter: BagFilter): Item
     if (!aDef || !bDef) return a.id.localeCompare(b.id);
     const byRarity = rarityRank(aDef.core.rarity) - rarityRank(bDef.core.rarity);
     if (byRarity !== 0) return byRarity;
-    return aDef.core.name.localeCompare(bDef.core.name);
+    const byName = aDef.core.name.localeCompare(bDef.core.name);
+    if (byName !== 0) return byName;
+    return b.star - a.star; // same item: higher star first
   });
 }
 
@@ -231,71 +377,116 @@ function emptyCopy(filter: BagFilter): string {
   return `No ${label} in the bag.`;
 }
 
-/** One Worn slot: label + equipped item (tap the row to take it off). */
+/** "★2" for star > 0, "" for a base copy. */
+function starLabel(star: number): string {
+  return star > 0 ? `★${star}` : '';
+}
+
+/** One Worn slot: label + equipped item. Tap to take off; Merge when fuel. */
 function SlotRow({
   slot,
-  itemId,
+  ref,
+  fuelInBag,
   onUnequip,
+  onMerge,
 }: {
   slot: ItemSlot;
-  itemId: string | null;
+  ref: ItemRef | null;
+  fuelInBag: boolean;
   onUnequip: (slot: ItemSlot) => void;
+  onMerge: (target: MergeTarget) => void;
 }) {
   const theme = useTheme();
-  const def = itemId ? getItemDef(itemId) : undefined;
+  const def = ref ? getItemDef(ref.id) : undefined;
+  const canMerge =
+    !!ref &&
+    !!def &&
+    def.core.kind === 'power' &&
+    fuelInBag &&
+    mergeSuccessPct(ref.star) != null;
   return (
-    <Pressable
-      disabled={!def}
-      onPress={() => def && onUnequip(slot)}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: !def }}
-      style={({ pressed }) => [styles.slotRow, pressed && def && styles.pressed]}>
-      <View style={[styles.slotIcon, { backgroundColor: theme.backgroundSelected }]}>
-        <MaterialCommunityIcons name={SLOT_ICONS[slot]} size={18} color={theme.accent} />
-      </View>
-      <View style={styles.slotText}>
-        <ThemedText type="small" themeColor="textSecondary">
-          {SLOT_LABELS[slot]}
-        </ThemedText>
-        {def ? (
-          <ThemedText type="smallBold">{def.core.name}</ThemedText>
-        ) : (
+    <View style={styles.slotRow}>
+      <Pressable
+        disabled={!def}
+        onPress={() => def && onUnequip(slot)}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: !def }}
+        style={({ pressed }) => [styles.slotMain, pressed && def && styles.pressed]}>
+        <View style={[styles.slotIcon, { backgroundColor: theme.backgroundSelected }]}>
+          <MaterialCommunityIcons name={SLOT_ICONS[slot]} size={18} color={theme.accent} />
+        </View>
+        <View style={styles.slotText}>
           <ThemedText type="small" themeColor="textSecondary">
-            Empty
+            {SLOT_LABELS[slot]}
           </ThemedText>
-        )}
-      </View>
-      {def ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          Take off
-        </ThemedText>
+          {def && ref ? (
+            <View style={styles.titleLine}>
+              <ThemedText type="smallBold">
+                {def.core.name}
+                {starLabel(ref.star) ? ` ${starLabel(ref.star)}` : ''}
+              </ThemedText>
+            </View>
+          ) : (
+            <ThemedText type="small" themeColor="textSecondary">
+              Empty
+            </ThemedText>
+          )}
+        </View>
+      </Pressable>
+      {canMerge && ref ? (
+        <Pressable
+          onPress={() => onMerge({ id: ref.id, star: ref.star, main: 'worn' })}
+          accessibilityRole="button"
+          accessibilityLabel={`Merge ${def?.core.name}`}
+          style={({ pressed }) => [
+            styles.chip,
+            { backgroundColor: theme.backgroundSelected },
+            pressed && styles.pressed,
+          ]}>
+          <ThemedText type="code" themeColor="emphasis">
+            Merge
+          </ThemedText>
+        </Pressable>
       ) : null}
-    </Pressable>
+      {def && ref ? (
+        <Pressable
+          onPress={() => onUnequip(slot)}
+          accessibilityRole="button"
+          accessibilityLabel={`Take off ${def.core.name}`}
+          style={({ pressed }) => [styles.chip, pressed && styles.pressed]}>
+          <ThemedText type="code" themeColor="textSecondary">
+            Take off
+          </ThemedText>
+        </Pressable>
+      ) : null}
+    </View>
   );
 }
 
-/**
- * One bag stack. Tap the row to equip one copy into its slot — unless a copy
- * of that id is ALREADY worn (one per slot), in which case these are spares:
- * the row is inert (Sell still works for Looks). Looks sell one at a time.
- */
+/** One bag stack. Tap the row to equip one copy of its tier — unless that
+ * exact tier is ALREADY worn (spare / merge fuel). Looks sell one at a time. */
 function StackRow({
   stack,
-  alreadyWorn,
+  sameTierWorn,
   onEquip,
   onSell,
+  onMerge,
 }: {
   stack: ItemStack;
-  alreadyWorn: boolean;
-  onEquip: (itemId: string) => void;
-  onSell: (itemId: string) => void;
+  sameTierWorn: boolean;
+  onEquip: (itemId: string, star: number) => void;
+  onSell: (itemId: string, star: number) => void;
+  onMerge: (target: MergeTarget) => void;
 }) {
   const theme = useTheme();
   const def = getItemDef(stack.id);
   if (!def) {
     return (
       <View style={styles.stackRow}>
-        <ThemedText type="smallBold">Unknown item ×{stack.count}</ThemedText>
+        <ThemedText type="smallBold">
+          Unknown item ×{stack.count}
+          {starLabel(stack.star)}
+        </ThemedText>
       </View>
     );
   }
@@ -303,6 +494,11 @@ function StackRow({
     (mult): mult is NonNullable<ItemDef['mult_a']> => mult != null,
   );
   const sellable = def.core.kind === 'look';
+  const isPower = def.core.kind === 'power';
+  // A power stack with ≥ 2 of its tier can merge (one main + one fuel).
+  const canMergeAsBagMain = isPower && stack.count >= 2 && mergeSuccessPct(stack.star) != null;
+  const star = starLabel(stack.star);
+
   const icon = (
     <View style={[styles.stackIcon, { backgroundColor: theme.backgroundSelected }]}>
       <MaterialCommunityIcons name={SLOT_ICONS[def.core.slot]} size={18} color={theme.accent} />
@@ -311,7 +507,10 @@ function StackRow({
   const body = (
     <View style={styles.stackText}>
       <View style={styles.stackTitleLine}>
-        <ThemedText type="smallBold">{def.core.name}</ThemedText>
+        <ThemedText type="smallBold">
+          {def.core.name}
+          {star ? ` ${star}` : ''}
+        </ThemedText>
         {stack.count > 1 ? (
           <View style={[styles.countBadge, { backgroundColor: theme.backgroundSelected }]}>
             <ThemedText type="code" themeColor="emphasis">
@@ -319,7 +518,7 @@ function StackRow({
             </ThemedText>
           </View>
         ) : null}
-        {alreadyWorn ? (
+        {sameTierWorn ? (
           <View style={[styles.spareBadge, { backgroundColor: theme.backgroundSelected }]}>
             <ThemedText type="code" themeColor="textSecondary">
               Spare
@@ -333,26 +532,38 @@ function StackRow({
       </ThemedText>
     </View>
   );
+
   return (
     <View style={styles.stackRow}>
-      {alreadyWorn ? (
-        <View style={styles.stackMainGroup}>
-          {icon}
-          {body}
-        </View>
+      {sameTierWorn ? (
+        <View style={styles.stackMain}>{icon}{body}</View>
       ) : (
         <Pressable
-          onPress={() => onEquip(stack.id)}
+          onPress={() => onEquip(stack.id, stack.star)}
           accessibilityRole="button"
-          accessibilityLabel={`Equip ${def.core.name}`}
-          style={({ pressed }) => [styles.stackMainGroup, pressed && styles.pressed]}>
-          {icon}
-          {body}
+          accessibilityLabel={`Equip ${def.core.name}${star ? ` ${star}` : ''}`}
+          style={({ pressed }) => [styles.stackMain, pressed && styles.pressed]}>
+          {icon}{body}
         </Pressable>
       )}
+      {canMergeAsBagMain ? (
+        <Pressable
+          onPress={() => onMerge({ id: stack.id, star: stack.star, main: 'bag' })}
+          accessibilityRole="button"
+          accessibilityLabel={`Merge ${def.core.name}`}
+          style={({ pressed }) => [
+            styles.chip,
+            { backgroundColor: theme.backgroundSelected },
+            pressed && styles.pressed,
+          ]}>
+          <ThemedText type="code" themeColor="emphasis">
+            Merge
+          </ThemedText>
+        </Pressable>
+      ) : null}
       {sellable ? (
         <Pressable
-          onPress={() => onSell(stack.id)}
+          onPress={() => onSell(stack.id, stack.star)}
           accessibilityRole="button"
           accessibilityLabel={`Sell one ${def.core.name}`}
           style={({ pressed }) => [
@@ -387,13 +598,19 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     alignItems: 'stretch',
   },
+  mergeCard: {
+    borderRadius: Spacing.four,
+    padding: Spacing.three,
+    gap: Spacing.three,
+    alignItems: 'stretch',
+  },
   statRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'space-between',
   },
   filterRow: {
-    marginHorizontal: -Spacing.three, // bleed to the card edge like a chip bar
+    marginHorizontal: -Spacing.three,
   },
   filterContent: {
     flexDirection: 'row',
@@ -409,10 +626,16 @@ const styles = StyleSheet.create({
   slotRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.three,
+    gap: Spacing.two,
     borderRadius: Spacing.two,
     paddingVertical: Spacing.one,
     paddingHorizontal: Spacing.one,
+  },
+  slotMain: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
   },
   slotIcon: {
     width: 32,
@@ -423,6 +646,10 @@ const styles = StyleSheet.create({
   },
   slotText: {
     flex: 1,
+  },
+  titleLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   bonusRow: {
     flexDirection: 'row',
@@ -437,7 +664,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
     paddingHorizontal: Spacing.one,
   },
-  stackMainGroup: {
+  stackMain: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -469,10 +696,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.one,
     paddingVertical: 1,
   },
+  chip: {
+    borderRadius: Spacing.two,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.half,
+  },
   sellPill: {
     borderRadius: Spacing.two,
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.half,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  button: {
+    flex: 1,
+    alignItems: 'center',
+    borderRadius: Spacing.three,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+  },
+  buttonPrimary: {
+    flex: 2,
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  splashRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.two,
+    paddingVertical: Spacing.one,
   },
   pressed: {
     opacity: 0.8,

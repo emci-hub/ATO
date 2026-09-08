@@ -9,23 +9,22 @@
  *
  * All mutations go through the callbacks (which live in `play.tsx` and commit
  * through the shared playStore), so this stays a read-only view of store
- * truth. Dive actions are paced against mash: pressing Start / Surface /
- * Deeper shows a short "searching…" beat (all buttons locked), then the result
- * commits, then a brief cooldown still holds the buttons. The Dev kit can set
- * `skipDelays` to make every action instant for fast testing.
+ * truth. Dive actions are paced against mash via `usePacedAction` — a short
+ * "searching…" beat locks the buttons before the result lands, then a cooldown
+ * still holds them; the Dev kit's "Skip Dive delays" toggle makes it instant.
  *
  * Copy never uses gamble / casino / jackpot / bet — Dive / Surface / Deeper /
  * bust only (GAME_SPEC §7).
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { ComponentProps } from 'react';
-import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { usePacedAction } from '@/play/action-pacing';
 import { formatMult, getItemDef, type ItemDef, type ItemSlot } from '@/play/items';
 import { DIVE_CHARGE_CAP, DIVE_DEEPER_MAX, type PlayView } from '@/play/playStore';
 
@@ -35,10 +34,6 @@ const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>
   cloak: 'hanger',
   trinket: 'star-four-points',
 };
-
-/** Beat before a result lands (0.8–1.2s) and the input lockout after it. */
-const SPLASH_MS = 950;
-const COOLDOWN_MS = 650;
 
 export function DiveScreen({
   view,
@@ -63,50 +58,8 @@ export function DiveScreen({
   const run = view.diveRun;
   const canSpend = !run.active && charges >= 1;
 
-  // -- Pacing ---------------------------------------------------------------
-  // `busy` locks every action button. `splashCopy` non-null renders the
-  // "searching…" beat (before the action commits); while busy with null copy
-  // we are in the short post-result cooldown (result visible, buttons locked).
-  const [busy, setBusy] = useState(false);
-  const [splashCopy, setSplashCopy] = useState<string | null>(null);
-  const busyRef = useRef(false);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-
-  useEffect(() => {
-    const pending = timers.current;
-    return () => pending.forEach(clearTimeout);
-  }, []);
-
-  const act = (label: string, action: () => Promise<boolean>) => {
-    if (busyRef.current) return;
-    busyRef.current = true;
-    setBusy(true);
-    const finish = () => {
-      void action().then(() => {
-        setSplashCopy(null);
-        if (skipDelays) {
-          busyRef.current = false;
-          setBusy(false);
-        } else {
-          timers.current.push(
-            setTimeout(() => {
-              busyRef.current = false;
-              setBusy(false);
-            }, COOLDOWN_MS),
-          );
-        }
-      });
-    };
-    if (skipDelays) {
-      setSplashCopy(null);
-      finish();
-    } else {
-      setSplashCopy(label);
-      timers.current.push(setTimeout(finish, SPLASH_MS));
-    }
-  };
-
-  const showSplash = busy && splashCopy != null;
+  // -- Pacing (shared with Merge: beat → resolve → cooldown; skip in dev) ----
+  const { act, busy, splashCopy, showSplash } = usePacedAction(skipDelays);
 
   return (
     <>

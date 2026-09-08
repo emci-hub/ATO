@@ -30,6 +30,7 @@ import {
   devSellAllJunk,
   equipItem,
   loadPlayStore,
+  mergeItem,
   playView,
   savePlayStore,
   sellItem,
@@ -39,6 +40,8 @@ import {
   type ClaimResult,
   type DeeperOutcome,
   type EquipOutcome,
+  type MergeOutcome,
+  type MergeTarget,
   type PlayStoreDoc,
   type PlayView,
   type SellOutcome,
@@ -156,16 +159,19 @@ export function usePlayStore() {
 
   const view: PlayView | null = doc ? playView(doc, Date.now()) : null;
 
-  /** Equip an owned item into its slot (bag-full gating lives in the store). */
-  const equip = useCallback(async (itemId: string): Promise<EquipOutcome> => {
-    let outcome: EquipOutcome = { ok: false, reason: 'not_owned' };
-    commit((current) => {
-      const next = equipItem(current, itemId);
-      outcome = next.outcome;
-      return next.outcome.ok ? next.doc : null;
-    });
-    return outcome;
-  }, [commit]);
+  /** Equip one owned (bagged) copy of (itemId, star) into its slot. */
+  const equip = useCallback(
+    async (itemId: string, star: number): Promise<EquipOutcome> => {
+      let outcome: EquipOutcome = { ok: false, reason: 'not_owned' };
+      commit((current) => {
+        const next = equipItem(current, itemId, star);
+        outcome = next.outcome;
+        return next.outcome.ok ? next.doc : null;
+      });
+      return outcome;
+    },
+    [commit],
+  );
 
   /** Take an equipped item off its slot. */
   const unequip = useCallback(async (slot: ItemSlot): Promise<boolean> => {
@@ -178,16 +184,44 @@ export function usePlayStore() {
     return ok;
   }, [commit]);
 
-  /** Sell one Look for tokens. */
-  const sell = useCallback(async (itemId: string): Promise<SellOutcome> => {
-    let outcome: SellOutcome = { ok: false, reason: 'not_owned' };
-    commit((current) => {
-      const next = sellItem(current, itemId);
-      outcome = next.outcome;
-      return next.outcome.ok ? next.doc : null;
-    });
-    return outcome;
-  }, [commit]);
+  /** Sell one Look copy of (itemId, star) for tokens. */
+  const sell = useCallback(
+    async (itemId: string, star: number): Promise<SellOutcome> => {
+      let outcome: SellOutcome = { ok: false, reason: 'not_owned' };
+      commit((current) => {
+        const next = sellItem(current, itemId, star);
+        outcome = next.outcome;
+        return next.outcome.ok ? next.doc : null;
+      });
+      return outcome;
+    },
+    [commit],
+  );
+
+  /**
+   * Roll one risky merge. `force` is Dev kit only: pin the rng so the merge
+   * always succeeds or always fails for fast testing.
+   */
+  const mergeItems = useCallback(
+    async (
+      target: MergeTarget,
+      force: 'success' | 'fail' | 'none' = 'none',
+    ): Promise<MergeOutcome | null> => {
+      let outcome: MergeOutcome | null = null;
+      commit((current) => {
+        const next =
+          force === 'success'
+            ? mergeItem(current, target, () => 0)
+            : force === 'fail'
+              ? mergeItem(current, target, () => 1)
+              : mergeItem(current, target);
+        outcome = next ? next.outcome : null;
+        return next ? next.doc : null;
+      });
+      return outcome;
+    },
+    [commit],
+  );
 
   /** Dev kit only: grant one random Power into the bag. Returns its id. */
   const grantRandomPower = useCallback(async (): Promise<string | null> => {
@@ -258,6 +292,7 @@ export function usePlayStore() {
     equip,
     unequip,
     sell,
+    mergeItems,
     grantRandomPower,
     clearEquipped,
     fillJunkLooks,
