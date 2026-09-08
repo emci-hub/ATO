@@ -93,6 +93,10 @@ function RootNavigator() {
               <Stack.Screen name="pixel-lab" />
               <Stack.Screen name="crisis-lab" />
               <Stack.Screen name="voice-lab" />
+              {/* Play (Grove) is an in-progress module, not a dev lab: it rides
+                  the same PRE_LAUNCH_DEV gate so it can never reach a public
+                  build until the module is finished and the gate is lifted. */}
+              <Stack.Screen name="play" />
             </Stack.Protected>
           </Stack>
         </>
