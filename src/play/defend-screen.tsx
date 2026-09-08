@@ -1,17 +1,25 @@
 /**
- * Defend — board + towers (Play steps 5a/5b, GAME_SPEC §9, §9b, §11 screen 5).
+ * Defend — board + towers + Avatar + skill (Play steps 5a/5b/5c, GAME_SPEC §9,
+ * §9b, §9d, §11 screen 5).
  *
  * One Grove Path with puff enemies walking it; six pads hold up to six towers
- * (archer / vine / crystal). Tap a pad to place (or upgrade an existing tower)
- * with scrap; a range ring shows while a pad is selected and hides when idle.
- * Towers auto-fire into range; kills grant scrap; leak = fail; a clean wave is
- * a win. No hero drag / skill yet (5c). No Supabase.
+ * (archer / vine / crystal). Tap a pad to place/upgrade with scrap; a range
+ * ring shows while a pad is selected. The Avatar (placeholder circle) is
+ * draggable and auto-attacks the nearest enemy in range; one skill button
+ * casts slow_pulse "Root Veil" (12s cooldown). Kills → scrap; leak = fail; a
+ * clean wave = win (tokens + XP via `onWin`). No SakPix, no new tower types.
  *
- * The sim is local + transient (see `defend.ts`); only `highest_wave_cleared`
- * persists through the shared store via `onRecordClear`.
+ * The sim is local + transient (see `defend.ts`); only `highest_wave_cleared`,
+ * `xp`, and `avatar_level` persist through the shared store.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Pressable, StyleSheet, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
 import Svg, { Circle, G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -24,8 +32,12 @@ import {
   DEFEND_PADS,
   DEFEND_PATH,
   DEFEND_TICK_MS,
+  SKILL_COOLDOWN_MS,
+  SKILL_DESCRIPTION,
+  SKILL_NAME,
   TOWER_DEFS,
   TOWER_MAX_LEVEL,
+  castSlowPulse,
   createDefendLive,
   placeTower,
   puffPosition,
@@ -37,9 +49,10 @@ import {
   type DefendLive,
   type TowerKind,
 } from '@/play/defend';
-import { bucketMultiplier, type PlayView } from '@/play/playStore';
+import { avatarLevelWavePower, bucketMultiplier, type PlayView } from '@/play/playStore';
 
 const PUFF_COLOR = '#F472B6';
+const AVATAR_COLOR = '#38BDF8';
 const TOWER_COLORS: Record<TowerKind, string> = {
   archer: '#34D399',
   vine: '#A3E635',
@@ -48,14 +61,18 @@ const TOWER_COLORS: Record<TowerKind, string> = {
 
 type DefendPhase = 'setup' | 'running' | 'won' | 'lost';
 
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
+
 export function DefendScreen({
   view,
-  onRecordClear,
+  onWin,
   onSetWaveOne,
   onBackToGrove,
 }: {
   view: PlayView;
-  onRecordClear: (wave: number) => void;
+  onWin: (wave: number) => void;
   onSetWaveOne: () => void;
   onBackToGrove: () => void;
 }) {
@@ -64,24 +81,40 @@ export function DefendScreen({
   const [paused, setPaused] = useState(false);
   const [sim, setSim] = useState<DefendLive | null>(null);
   const [selectedPad, setSelectedPad] = useState<number | null>(null);
+  const [godMode, setGodMode] = useState(false);
 
   const phaseRef = useRef(phase);
   const pausedRef = useRef(paused);
   const simRef = useRef(sim);
+  const godModeRef = useRef(godMode);
   phaseRef.current = phase;
   pausedRef.current = paused;
   simRef.current = sim;
+  godModeRef.current = godMode;
 
   const nextWave = view.highestWaveCleared + 1;
   const displayedWave = sim?.wave ?? nextWave;
 
-  // Equipped mult buckets, board-wide for towers (GAME_SPEC §9b).
+  // Avatar position (board units 0..1) — smooth via shared values, engine via ref.
+  const avatarX = useSharedValue(0.5);
+  const avatarY = useSharedValue(0.4);
+  const startX = useSharedValue(0.5);
+  const startY = useSharedValue(0.4);
+  const avatarPosRef = useRef({ x: 50, y: 40 }); // board units (0..100)
+  const boardSizeRef = useRef(100);
+
+  const setAvatarPosRef = useCallback((x: number, y: number) => {
+    avatarPosRef.current = { x, y };
+  }, []);
+
+  // Equipped mult buckets, board-wide for towers + Avatar.
   const buckets = useMemo(
     () => ({
       wavePower: bucketMultiplier('wave_power', view.statSums),
       towerSpeed: bucketMultiplier('tower_speed', view.statSums),
+      avatarLevel: view.avatarLevel,
     }),
-    [view.statSums],
+    [view.statSums, view.avatarLevel],
   );
   const bucketsRef = useRef(buckets);
   bucketsRef.current = buckets;
@@ -98,8 +131,8 @@ export function DefendScreen({
     setPhase('won');
     setPaused(false);
     setSelectedPad(null);
-    onRecordClear(wave);
-  }, [nextWave, onRecordClear]);
+    onWin(wave);
+  }, [nextWave, onWin]);
 
   // Sim ticker: running + not paused.
   useEffect(() => {
@@ -107,10 +140,11 @@ export function DefendScreen({
     const id = setInterval(() => {
       const current = simRef.current;
       if (!current) return;
-      const step = stepDefendLive(current, DEFEND_TICK_MS, bucketsRef.current);
+      const avatar = avatarPosRef.current;
+      const step = stepDefendLive(current, DEFEND_TICK_MS, bucketsRef.current, avatar);
       simRef.current = step.state;
       setSim(step.state);
-      if (step.leak) {
+      if (step.leak && !godModeRef.current) {
         setPhase('lost');
         setPaused(false);
         setSelectedPad(null);
@@ -121,7 +155,7 @@ export function DefendScreen({
     return () => clearInterval(id);
   }, [phase, paused, winWave]);
 
-  // Background → freeze the wave (GAME_SPEC §9 pause/background).
+  // Background → freeze the wave.
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
       if (state !== 'active' && phaseRef.current === 'running' && !pausedRef.current) {
@@ -148,7 +182,42 @@ export function DefendScreen({
     );
   };
 
+  const castSkill = () => {
+    const current = simRef.current;
+    if (!current) return;
+    const avatar = avatarPosRef.current;
+    const next = castSlowPulse(current, avatar);
+    if (next) {
+      simRef.current = next;
+      setSim(next);
+    }
+  };
+
+  const skillReady = (sim?.skillCooldownMs ?? 0) <= 0;
+  const skillSeconds = Math.ceil((sim?.skillCooldownMs ?? 0) / 1000);
   const scrap = sim?.scrap ?? 80;
+
+  // Drag gesture for the Avatar (mirrors scenario-card.tsx Pan pattern).
+  const pan = Gesture.Pan()
+    .onStart(() => {
+      startX.value = avatarX.value;
+      startY.value = avatarY.value;
+    })
+    .onUpdate((event) => {
+      const size = boardSizeRef.current || 100;
+      const nx = clamp01(startX.value + event.translationX / size);
+      const ny = clamp01(startY.value + event.translationY / size);
+      avatarX.value = nx;
+      avatarY.value = ny;
+      runOnJS(setAvatarPosRef)(nx * 100, ny * 100);
+    });
+
+  const avatarStyle = useAnimatedStyle(() => ({
+    left: avatarX.value * (boardSizeRef.current || 100) - AVATAR_RADIUS_PX,
+    top: avatarY.value * (boardSizeRef.current || 100) - AVATAR_RADIUS_PX,
+  }));
+
+  const levelBonus = avatarLevelWavePower(view.avatarLevel);
 
   return (
     <ThemedView style={styles.container}>
@@ -166,7 +235,7 @@ export function DefendScreen({
 
         <ThemedText type="subtitle">Defend</ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.lede}>
-          Protect the Grove Path. One leak and the wave ends.
+          Protect the Grove Path. Drag your Avatar to the thick, and time Root Veil.
         </ThemedText>
 
         {/* HUD */}
@@ -183,23 +252,59 @@ export function DefendScreen({
               {scrap}
             </ThemedText>
           </View>
+          <View style={styles.statRow}>
+            <ThemedText type="smallBold">Avatar · Lv {view.avatarLevel}</ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              ×{levelBonus.toFixed(2)} power
+            </ThemedText>
+          </View>
           {phase === 'running' ? (
-            <Pressable
-              onPress={() => setPaused((value) => !value)}
-              accessibilityRole="button"
-              style={({ pressed }) => [
-                styles.hudButton,
-                { backgroundColor: theme.backgroundSelected },
-                pressed && styles.pressed,
-              ]}>
-              <ThemedText type="smallBold">{paused ? 'Resume' : 'Pause'}</ThemedText>
-            </Pressable>
-          ) : null}
+            <View style={styles.buttonRow}>
+              <Pressable
+                onPress={() => setPaused((value) => !value)}
+                accessibilityRole="button"
+                style={({ pressed }) => [
+                  styles.hudButton,
+                  styles.flex1,
+                  { backgroundColor: theme.backgroundSelected },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="smallBold">{paused ? 'Resume' : 'Pause'}</ThemedText>
+              </Pressable>
+              <Pressable
+                onPress={castSkill}
+                disabled={!skillReady}
+                accessibilityRole="button"
+                accessibilityLabel={SKILL_NAME}
+                style={({ pressed }) => [
+                  styles.hudButton,
+                  styles.flex1,
+                  {
+                    backgroundColor: skillReady ? theme.accentFill : theme.backgroundSelected,
+                  },
+                  pressed && skillReady && styles.pressed,
+                ]}>
+                <ThemedText
+                  type="smallBold"
+                  style={{ color: skillReady ? theme.onAccent : theme.textSecondary }}>
+                  {skillReady ? SKILL_NAME : `${SKILL_NAME} · ${skillSeconds}s`}
+                </ThemedText>
+              </Pressable>
+            </View>
+          ) : (
+            <ThemedText type="small" themeColor="textSecondary">
+              {SKILL_NAME}: {SKILL_DESCRIPTION} ({SKILL_COOLDOWN_MS / 1000}s cooldown)
+            </ThemedText>
+          )}
         </ThemedView>
 
         {/* Board */}
         <ThemedView type="backgroundElement" style={styles.card}>
-          <View style={[styles.board, { backgroundColor: theme.backgroundSelected }]}>
+          <View
+            style={[styles.board, { backgroundColor: theme.backgroundSelected }]}
+            onLayout={(event) => {
+              boardSizeRef.current = event.nativeEvent.layout.width || 100;
+            }}>
             <Svg width="100%" height="100%" viewBox="0 0 100 100">
               <Path
                 d={pathD()}
@@ -210,7 +315,6 @@ export function DefendScreen({
                 strokeLinejoin="round"
                 fill="none"
               />
-              {/* Pads (tap targets). Selected pad shows a range ring. */}
               {DEFEND_PADS.map((pad, index) => {
                 const tower = sim?.towers.find((t) => t.pad === index);
                 const selected = selectedPad === index;
@@ -228,7 +332,6 @@ export function DefendScreen({
                   />
                 );
               })}
-              {/* Range ring for the selected pad. */}
               {selectedPad != null && (
                 <Circle
                   cx={DEFEND_PADS[selectedPad].x}
@@ -241,7 +344,6 @@ export function DefendScreen({
                   strokeDasharray="2 2"
                 />
               )}
-              {/* Tower levels */}
               {sim?.towers.map((tower) => {
                 const pad = DEFEND_PADS[tower.pad];
                 return (
@@ -257,21 +359,27 @@ export function DefendScreen({
                   </SvgText>
                 );
               })}
-              {/* Enemies with HP bars. */}
               {sim?.puffs.map((puff) => {
                 const pos = puffPosition(puff.dist);
                 const x = pos.x * 100;
                 const y = pos.y * 100;
                 const pct = Math.max(0, Math.min(1, puff.hp / puff.maxHp));
+                const slowed = puff.slowMs > 0;
                 return (
                   <G key={`puff-${puff.id}`}>
                     <Circle cx={x} cy={y} r={3.4} fill={PUFF_COLOR} />
+                    <Circle cx={x} cy={y} r={3.4} fill={slowed ? theme.accentTertiary : 'none'} fillOpacity={0.5} />
                     <Rect x={x - 4} y={y - 7} width={8} height={1.6} fill="rgba(0,0,0,0.35)" rx={0.8} />
                     <Rect x={x - 4} y={y - 7} width={8 * pct} height={1.6} fill="#4ADE80" rx={0.8} />
                   </G>
                 );
               })}
             </Svg>
+
+            {/* Draggable Avatar overlay */}
+            <GestureDetector gesture={pan}>
+              <Animated.View style={[styles.avatar, avatarStyle, { backgroundColor: AVATAR_COLOR }]} />
+            </GestureDetector>
           </View>
           {paused && phase === 'running' ? (
             <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
@@ -365,8 +473,8 @@ export function DefendScreen({
               Wave {nextWave} · {waveEnemyCount(nextWave)} puffs
             </ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              Tap pads to place archers (fast), vines (slow), or crystals (heavy). Puffs that reach
-              the exit end the wave.
+              Tap pads to place archers, vines, or crystals. Drag your Avatar near the path, then
+              start.
             </ThemedText>
             <Pressable
               onPress={() => startWave(nextWave)}
@@ -385,7 +493,7 @@ export function DefendScreen({
 
         {phase === 'running' && !paused ? (
           <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-            Towers fire on their own — Pause freezes the wave.
+            Towers fire on their own — drag your Avatar and time {SKILL_NAME}.
           </ThemedText>
         ) : null}
 
@@ -393,7 +501,7 @@ export function DefendScreen({
           <ThemedView type="backgroundElement" style={styles.card}>
             <ThemedText type="smallBold">Wave {sim?.wave ?? nextWave} cleared</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              The path is safe. Next wave is ready when you are.
+              +50 tokens · +{10 + (sim?.wave ?? nextWave) * 2} XP · Level {view.avatarLevel}
             </ThemedText>
             <Pressable
               onPress={() => {
@@ -493,6 +601,15 @@ export function DefendScreen({
               onPress={() => setSim((prev) => (prev ? { ...prev, towers: [] } : prev))}
             />
             <DevRow
+              label="Reset skill CD"
+              disabled={!sim}
+              onPress={() => setSim((prev) => (prev ? { ...prev, skillCooldownMs: 0 } : prev))}
+            />
+            <DevRow
+              label={godMode ? 'God mode (on)' : 'God mode'}
+              onPress={() => setGodMode((value) => !value)}
+            />
+            <DevRow
               label="Set wave to 1"
               onPress={() => {
                 onSetWaveOne();
@@ -529,6 +646,8 @@ function DevRow({ label, onPress, disabled }: { label: string; onPress: () => vo
     </Pressable>
   );
 }
+
+const AVATAR_RADIUS_PX = 9;
 
 /** SVG path data for the road (viewBox 100). */
 function pathD(): string {
@@ -575,6 +694,21 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     borderRadius: Spacing.three,
     overflow: 'hidden',
+  },
+  avatar: {
+    position: 'absolute',
+    width: AVATAR_RADIUS_PX * 2,
+    height: AVATAR_RADIUS_PX * 2,
+    borderRadius: AVATAR_RADIUS_PX,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  flex1: {
+    flex: 1,
   },
   primaryButton: {
     alignItems: 'center',

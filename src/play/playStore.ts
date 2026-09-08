@@ -32,8 +32,9 @@
  *   floored at half the table value) — never hidden, always shown as-is.
  * - Defend meta (step 5a+) — `highest_wave_cleared` (GAME_DATA defend run
  *   defaults, start 0). Entering Defend fights wave = highest + 1; a clear
- *   bumps it via `recordDefendClear`. The live board (spawns, pauses, leak) is
- *   a transient screen sim in `defend.ts`, not persisted — only this number is.
+ *   bumps it via `recordDefendWin` (tokens + XP + level + highest). The live
+ *   board (spawns, pauses, leak) is a transient screen sim in `defend.ts`, not
+ *   persisted — only these numbers are.
  * - Daily tend bonus — +10 tokens once per device-local day on the first Claim
  *   (later also Dress/Decor), tracked by `last_tend_bonus_ymd`.
  *
@@ -80,6 +81,21 @@ export const LOOK_SELL_TOKENS = 3; // GAME_DATA look_sell_tokens
 
 /** Defend run defaults (GAME_DATA). */
 export const DEFEND_START_SCRAP = 80; // start_scrap — each run starts with this
+
+/** Defend clear rewards (GAME_SPEC §9c / §9 XP numbers). */
+export const TOKEN_CLEAR_BASE = 50; // token_clear_base — reward juice per clear
+/** Clear wave W → this much XP to the Avatar (GAME_SPEC "xp_clear: 10 + wave*2"). */
+export function xpForClear(wave: number): number {
+  return 10 + Math.max(1, Math.floor(wave)) * 2;
+}
+/** XP needed to go from `level` → `level + 1` (GAME_SPEC "50 + level*25"). */
+export function xpToNext(level: number): number {
+  return 50 + level * 25;
+}
+/** Avatar level → small base wave_power bonus (+2% per level, GAME_SPEC §9). */
+export function avatarLevelWavePower(level: number): number {
+  return 1 + 0.02 * (level - 1);
+}
 
 /** Risky merge (Dive-style, this step). */
 export const MERGE_MAX_STAR = 5;
@@ -193,10 +209,11 @@ export type DiveRun = {
  * (this step) added a `star` tier to every stack copy and changed `equipped`
  * from slot → id into slot → `{ id, star }` so a worn merge result survives.
  * v1–v5 docs migrate (legacy copies are star 0). v7 (Defend 5a) added the
- * `highest_wave_cleared` meta. Later bumps: Defend run fields, XP/level.
+ * `highest_wave_cleared` meta. v8 (Defend 5c) added `xp` + `avatar_level`
+ * (clears grant XP; a level gives +2% base wave_power).
  */
 export type PlayStoreDoc = {
-  version: 7;
+  version: 8;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -216,6 +233,10 @@ export type PlayStoreDoc = {
   dive_run: DiveRun | null;
   /** Defend meta — highest wave cleared (start 0). Next wave = this + 1. */
   highest_wave_cleared: number;
+  /** Avatar meta XP (toward the next level), from Defend clears only. */
+  xp: number;
+  /** Avatar meta level (start 1). +2% base wave_power per level. */
+  avatar_level: number;
 };
 
 export type DiveChargeView = {
@@ -252,6 +273,8 @@ export type PlayView = {
   statSums: StatSums;
   /** Highest Defend wave cleared (next wave = this + 1). */
   highestWaveCleared: number;
+  /** Avatar meta level (start 1) — drives the +2% wave_power HUD note. */
+  avatarLevel: number;
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -292,7 +315,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 7,
+    version: 8,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -303,6 +326,8 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     equipped: {},
     dive_run: null,
     highest_wave_cleared: 0,
+    xp: 0,
+    avatar_level: 1,
   };
 }
 
@@ -354,6 +379,7 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     equipped: doc.equipped,
     statSums: equippedStatSums(doc.equipped),
     highestWaveCleared: doc.highest_wave_cleared,
+    avatarLevel: doc.avatar_level,
   };
 }
 
@@ -375,20 +401,35 @@ export function canClaimResearch(view: PlayView): boolean {
 }
 
 /* ---------------------------------------------------------------------------
- * Defend meta (GAME_SPEC §9 wave ladder; GAME_DATA defend run defaults).
+ * Defend meta (GAME_SPEC §9 wave ladder / §9 XP; GAME_DATA defend run defaults).
  *
- * Only the persistent number lives here (`highest_wave_cleared`); the live
- * board — spawns, puffs walking the path, pause, leak → fail — is a transient
- * screen simulation in `defend.ts` that is never persisted.
+ * Only the persistent numbers live here (`highest_wave_cleared`, `xp`,
+ * `avatar_level`); the live board — spawns, puffs walking the path, towers,
+ * Avatar, pause, leak → fail — is a transient screen simulation in `defend.ts`
+ * that is never persisted.
  * ------------------------------------------------------------------------- */
 
-/** A wave W cleared → highest_wave_cleared = max(current, W). */
-export function recordDefendClear(
+/**
+ * A wave W cleared → grant tokens + XP, level the Avatar up as needed, and
+ * raise `highest_wave_cleared = max(current, W)`. XP curve per GAME_SPEC §9
+ * (`10 + W*2`, `50 + level*25`); +2% wave_power per level is applied at
+ * combat time via `avatarLevelWavePower`.
+ */
+export function recordDefendWin(
   doc: PlayStoreDoc,
   wave: number,
 ): PlayStoreDoc {
+  let xp = doc.xp + xpForClear(wave);
+  let level = doc.avatar_level;
+  while (xp >= xpToNext(level)) {
+    xp -= xpToNext(level);
+    level += 1;
+  }
   return {
     ...doc,
+    tokens: doc.tokens + TOKEN_CLEAR_BASE,
+    xp,
+    avatar_level: level,
     highest_wave_cleared: Math.max(doc.highest_wave_cleared, Math.floor(wave)),
   };
 }
@@ -973,15 +1014,15 @@ function snapshotDive(
 function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
   try {
     const data = JSON.parse(raw) as Record<string, unknown>;
-    // v1 (pre-inventory) … v6 (starred stacks) all migrate to v7: legacy
-    // copies are star 0, equipped string ids become refs with star 0, and the
-    // Defend meta defaults to 0 clears. v1–v4 also stored `inventory` as a
-    // string[] of owned ids WITH worn copies included, so those subtract one
-    // copy per equipped slot.
+    // v1 (pre-inventory) … v7 (highest_wave_cleared) all migrate to v8: legacy
+    // copies are star 0, equipped string ids become refs with star 0, Defend
+    // meta defaults to 0 clears / 0 XP / level 1. v1–v4 also stored `inventory`
+    // as a string[] of owned ids WITH worn copies included, so those subtract
+    // one copy per equipped slot.
     const version = data?.version;
     if (
       version !== 1 && version !== 2 && version !== 3 && version !== 4 &&
-      version !== 5 && version !== 6 && version !== 7
+      version !== 5 && version !== 6 && version !== 7 && version !== 8
     ) {
       return null;
     }
@@ -996,8 +1037,10 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     }
     const equipped = parseEquipped(data.equipped);
     const highestWaveCleared = finiteNumber(data.highest_wave_cleared) ?? 0;
+    const xp = finiteNumber(data.xp) ?? 0;
+    const avatarLevel = finiteNumber(data.avatar_level) ?? 1;
     return {
-      version: 7,
+      version: 8,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -1008,6 +1051,8 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       equipped,
       dive_run: parseDiveRun(data.dive_run),
       highest_wave_cleared: Math.max(0, Math.floor(highestWaveCleared)),
+      xp: Math.max(0, Math.floor(xp)),
+      avatar_level: Math.max(1, Math.floor(avatarLevel)),
     };
   } catch {
     return null;

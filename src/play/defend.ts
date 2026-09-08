@@ -1,22 +1,26 @@
 /**
- * Defend — board engine (Play steps 5a/5b, GAME_SPEC §9, §9b; GAME_DATA tower
- * upgrade).
+ * Defend — board engine (Play steps 5a/5b/5c, GAME_SPEC §9, §9b, §9d; GAME_DATA
+ * tower upgrade).
  *
  * PURE simulation — no React, no AsyncStorage. The screen owns a timer and
  * feeds `dtMs` into `stepDefendLive`. Enemies walk the path, leak at the exit
  * = fail, towers auto-fire within range, kills grant scrap, and a clean wave
  * is a win. Tower placement / upgrade / retry are pure transitions here too.
+ * The Avatar (step 5c) auto-attacks the nearest enemy in range and its skill
+ * (slow_pulse) is a pure transition that slows everything in radius.
  *
  * Map: ONE path, viewBox 0 0 100 100, spawn left → two bends → exit right.
- * Six tower pads sit near the path. No hero drag / skill in this step (5c).
+ * Six tower pads sit near the path. No SakPix — a placeholder Avatar circle.
  *
  * Stat note: GAME_DATA fully defines only `tower_archer` (base wave_power 0.6,
  * tower_speed 1.1; level_cost_scrap [0,40,90]; level_mult_wave_power
- * [1.0,1.25,1.55]). Vine / crystal base attack + range and the enemy base HP
- * are NOT in the defs yet — the numbers below are clearly-commented
- * placeholders tuned so wave 1 is clearable with ~2 towers from the 80 scrap,
- * and stay one-line changes once the real defs land.
+ * [1.0,1.25,1.55]). Vine / crystal base attack + range, the enemy base HP, and
+ * the Avatar's base attack + range are NOT in the defs yet — the numbers below
+ * are clearly-commented placeholders tuned so wave 1 is clearable, and stay
+ * one-line changes once the real defs land.
  */
+
+import { avatarLevelWavePower } from '@/play/playStore';
 
 /* ------------------------------------------------------------------ path --- */
 export type DefendWaypoint = { x: number; y: number };
@@ -43,8 +47,25 @@ export const PUFF_SPEED_PER_SEC = 0.06;
 /** One kill grants this much scrap (GAME_SPEC §9c `scrap_kill` default 3). */
 export const SCRAP_PER_KILL = 3;
 
+/* ----------------------------------------------------------------- Avatar --- */
+/** Avatar base attack (placeholder — def not in GAME_DATA). */
+export const AVATAR_BASE_ATTACK = 12;
+/** Avatar auto-attack radius, board units (0..100 space). */
+export const AVATAR_RANGE = 15;
+/** Avatar auto-attack cooldown (GAME_SPEC §9b: 0.7s). */
+export const AVATAR_COOLDOWN_MS = 700;
+
+/** Starter skill — slow_pulse "Root Veil" (GAME_SPEC §9d / GAME_DATA). */
+export const SKILL_NAME = 'Root Veil';
+export const SKILL_DESCRIPTION = 'Vines slow nearby foes for a short breath.';
+export const SKILL_COOLDOWN_MS = 12_000; // §9d cooldown 12 (≥10s)
+export const SKILL_SLOW_FACTOR = 1 - 0.35; // slow_pct 0.35 → speed ×0.65
+export const SKILL_SLOW_MS = 2_000; // duration 2.0
+export const SKILL_RADIUS = 24; // §9d radius 90 art-px → ~24 board units
+
 export function waveEnemyCount(wave: number): number {
-  return Math.floor(6 + wave * 1.2);
+  // §9 formula, capped at 20 (§5c: if FPS dips, cut count first).
+  return Math.min(20, Math.floor(6 + wave * 1.2));
 }
 export function waveHpMult(wave: number): number {
   return 1 + (wave - 1) * 0.12;
@@ -133,8 +154,10 @@ export type Puff = {
   dist: number;
   hp: number;
   maxHp: number;
-  /** ms of remaining slow; while > 0 the puff moves at slowPct speed. */
+  /** ms of remaining slow; while > 0 the puff moves at `slowFactor` speed. */
   slowMs: number;
+  /** Speed multiplier while slowed (1 when un-slowed). */
+  slowFactor: number;
 };
 
 export type Tower = {
@@ -154,6 +177,10 @@ export type DefendLive = {
   nextId: number;
   towers: Tower[];
   scrap: number;
+  /** ms until the Avatar's next auto-attack. */
+  avatarCooldownMs: number;
+  /** ms until the skill button is ready again. */
+  skillCooldownMs: number;
 };
 
 export type DefendStep = {
@@ -176,6 +203,8 @@ export function createDefendLive(wave: number, scrap = 80): DefendLive {
     nextId: 0,
     towers: [],
     scrap,
+    avatarCooldownMs: 0,
+    skillCooldownMs: 0,
   };
 }
 
@@ -191,7 +220,7 @@ export function retryDefendLive(state: DefendLive): DefendLive {
 }
 
 /* ---------------------------------------------------------------- combat --- */
-type DefendBuckets = { wavePower: number; towerSpeed: number };
+type DefendBuckets = { wavePower: number; towerSpeed: number; avatarLevel: number };
 
 /** Place a tower on an empty pad, deducting scrap. Null when blocked. */
 export function placeTower(
@@ -245,13 +274,15 @@ function padPuffDist(pad: DefendWaypoint, dist: number): number {
 
 /**
  * Advance the live run by `dtMs`: spawns, movement (slow applied), tower fire,
- * kills → scrap, leak and done flags. `buckets` carries the equipped
- * wave_power / tower_speed multipliers from playStore.
+ * Avatar auto-attack, kills → scrap, skill cooldown, leak and done flags.
+ * `buckets` carries the equipped wave_power / tower_speed multipliers and the
+ * Avatar level from playStore; `avatar` is the Avatar's position (board units).
  */
 export function stepDefendLive(
   state: DefendLive,
   dtMs: number,
   buckets: DefendBuckets,
+  avatar: { x: number; y: number },
 ): DefendStep {
   const speedBase =
     (PUFF_SPEED_PER_SEC * waveSpeedMult(state.wave) * dtMs) / 1000;
@@ -265,14 +296,17 @@ export function stepDefendLive(
 
   // Spawns.
   if (pendingSpawns > 0 && spawnCooldownMs <= 0) {
-    puffs = [...puffs, { id: nextId++, dist: 0, hp, maxHp: hp, slowMs: 0 }];
+    puffs = [
+      ...puffs,
+      { id: nextId++, dist: 0, hp, maxHp: hp, slowMs: 0, slowFactor: 1 },
+    ];
     pendingSpawns -= 1;
     spawnCooldownMs = DEFEND_SPAWN_INTERVAL_MS;
   }
 
-  // Movement (slowed puffs crawl at their type's slowPct).
+  // Movement (slowed puffs crawl at their applied slow factor).
   puffs = puffs.map((puff) => {
-    const slow = puff.slowMs > 0 ? TOWER_DEFS.vine.slowPct ?? 1 : 1;
+    const slow = puff.slowMs > 0 ? puff.slowFactor : 1;
     const slowMs = Math.max(0, puff.slowMs - dtMs);
     return { ...puff, dist: puff.dist + speedBase * slow, slowMs };
   });
@@ -303,6 +337,27 @@ export function stepDefendLive(
     firedTowers.push({ ...tower, cooldownMs });
   }
 
+  // Avatar auto-attack: nearest enemy in range (§9b), 0.7s cooldown.
+  let avatarCooldownMs = state.avatarCooldownMs - dtMs;
+  if (avatarCooldownMs <= 0) {
+    const target = acquireAvatarTarget(avatar, puffs);
+    if (target) {
+      const damage =
+        AVATAR_BASE_ATTACK * buckets.wavePower * avatarLevelWavePower(buckets.avatarLevel);
+      puffs = puffs.map((puff) =>
+        puff.id === target.id ? { ...puff, hp: puff.hp - damage } : puff,
+      );
+      if (puffs.some((p) => p.id === target.id && p.hp <= 0)) {
+        scrap += SCRAP_PER_KILL;
+        puffs = puffs.filter((p) => p.id !== target.id);
+      }
+      avatarCooldownMs = AVATAR_COOLDOWN_MS;
+    } else {
+      avatarCooldownMs = 0;
+    }
+  }
+
+  const skillCooldownMs = Math.max(0, state.skillCooldownMs - dtMs);
   const leak = puffs.some((puff) => puff.dist >= 1);
 
   return {
@@ -314,10 +369,46 @@ export function stepDefendLive(
       nextId,
       towers: firedTowers,
       scrap,
+      avatarCooldownMs,
+      skillCooldownMs,
     },
     leak,
     done: pendingSpawns === 0 && puffs.length === 0,
   };
+}
+
+/** Cast the Avatar skill (slow_pulse): slow everything within `SKILL_RADIUS`
+ * of the Avatar and put the skill on cooldown. Null when still cooling down. */
+export function castSlowPulse(
+  state: DefendLive,
+  avatar: { x: number; y: number },
+): DefendLive | null {
+  if (state.skillCooldownMs > 0) return null;
+  const puffs = state.puffs.map((puff) => {
+    const pos = puffPosition(puff.dist);
+    const dist = Math.hypot(pos.x * 100 - avatar.x, pos.y * 100 - avatar.y);
+    if (dist > SKILL_RADIUS) return puff;
+    return { ...puff, slowMs: SKILL_SLOW_MS, slowFactor: SKILL_SLOW_FACTOR };
+  });
+  return { ...state, puffs, skillCooldownMs: SKILL_COOLDOWN_MS };
+}
+
+/** Nearest enemy to the Avatar within `AVATAR_RANGE` (§9b), or null. */
+function acquireAvatarTarget(
+  avatar: { x: number; y: number },
+  puffs: Puff[],
+): Puff | null {
+  let best: Puff | null = null;
+  let bestDist = Infinity;
+  for (const puff of puffs) {
+    const pos = puffPosition(puff.dist);
+    const d = Math.hypot(pos.x * 100 - avatar.x, pos.y * 100 - avatar.y);
+    if (d <= AVATAR_RANGE && d < bestDist) {
+      best = puff;
+      bestDist = d;
+    }
+  }
+  return best;
 }
 
 /** Pick the tower's target per §9b: archer/vine first-toward-exit (max dist);
@@ -341,6 +432,7 @@ function applyHit(puffs: Puff[], targetId: number, damage: number, def: TowerDef
       ...puff,
       hp: puff.hp - damage,
       slowMs: def.slowMs ? def.slowMs : puff.slowMs,
+      slowFactor: def.slowMs ? def.slowPct ?? puff.slowFactor : puff.slowFactor,
     };
   });
 }

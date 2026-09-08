@@ -33,7 +33,7 @@ import {
   loadPlayStore,
   mergeItem,
   playView,
-  recordDefendClear as persistDefendClear,
+  recordDefendWin as persistDefendWin,
   savePlayStore,
   sellItem,
   startDive,
@@ -283,12 +283,12 @@ export function usePlayStore() {
     return result;
   }, [commit]);
 
-  /** A Defend wave cleared → persist highest_wave_cleared = max(current, W). */
-  const recordDefendClear = useCallback(
+  /** A Defend wave cleared → persist tokens + XP + level + highest_wave. */
+  const recordDefendWin = useCallback(
     async (wave: number): Promise<boolean> => {
       let ok = false;
       commit((current) => {
-        const next = persistDefendClear(current, wave);
+        const next = persistDefendWin(current, wave);
         ok = next !== current;
         return next;
       });
@@ -325,7 +325,7 @@ export function usePlayStore() {
     fillJunkLooks,
     grantTideBlades,
     sellAllJunk,
-    recordDefendClear,
+    recordDefendWin,
     setDefendWaveOne,
   };
 }

@@ -76,7 +76,7 @@ export default function PlayScreen() {
     fillJunkLooks,
     grantTideBlades,
     sellAllJunk,
-    recordDefendClear,
+    recordDefendWin,
     setDefendWaveOne,
   } = usePlayStore();
   const [mode, setMode] = useState<PlayMode>('grove');
@@ -206,12 +206,12 @@ export default function PlayScreen() {
     [unequip],
   );
 
-  /** Defend — persist a cleared wave (highest_wave_cleared = max). */
-  const handleRecordDefendClear = useCallback(
+  /** Defend — persist a win (tokens + XP + level + highest_wave_cleared). */
+  const handleRecordDefendWin = useCallback(
     (wave: number) => {
-      void recordDefendClear(wave);
+      void recordDefendWin(wave);
     },
-    [recordDefendClear],
+    [recordDefendWin],
   );
 
   /** Defend dev row — reset the ladder so the next wave is 1. */
@@ -316,7 +316,7 @@ export default function PlayScreen() {
           ) : mode === 'defend' && view ? (
             <DefendScreen
               view={view}
-              onRecordClear={handleRecordDefendClear}
+              onWin={handleRecordDefendWin}
               onSetWaveOne={handleSetDefendWaveOne}
               onBackToGrove={() => setMode('grove')}
             />
