@@ -62,7 +62,8 @@ const ITEM_BY_ID: ReadonlyMap<string, ItemDef> = new Map(
 
 /**
  * Roll one research-bag find — a uniform draw over the stub table. Uniform is
- * placeholder until loot_tables.json lands with Dive's weighted odds.
+ * placeholder until loot_tables.json lands with Dive's weighted odds. Dive
+ * (step 3) reuses the same stub-table roll for its finds until then.
  */
 export function rollResearchFind(rng: () => number = Math.random): string {
   const ids = ITEMS.map((item) => item.id);
@@ -72,6 +73,26 @@ export function rollResearchFind(rng: () => number = Math.random): string {
 /** Display name for an id, or null when the id is not a def (dangling). */
 export function itemName(id: string): string | null {
   return ITEM_BY_ID.get(id)?.core.name ?? null;
+}
+
+/** Full def for an id (find cards / Dress later); undefined when dangling. */
+export function getItemDef(id: string): ItemDef | undefined {
+  return ITEM_BY_ID.get(id);
+}
+
+/** Stat-key → readable label for the find card's mult lines. */
+const STAT_LABELS: Record<ItemStat, string> = {
+  wave_power: 'wave power',
+  tower_speed: 'tower speed',
+  token_earn: 'token gain',
+  dive_luck: 'dive luck',
+  research_yield: 'research yield',
+};
+
+/** "+8% wave power" style line, e.g. for a Power find's card. */
+export function formatMult(mult: StatMult): string {
+  const pct = Math.round(mult.value * 100);
+  return `+${pct}% ${STAT_LABELS[mult.stat]}`;
 }
 
 function loadItems(raw: unknown): readonly ItemDef[] {

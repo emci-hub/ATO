@@ -13,6 +13,10 @@
  * - Inventory — every research find now grants a real item id rolled from the
  *   stub table (`src/play/data/items.json`, one roll per dumped cycle,
  *   appended to `inventory`). Dress (step 4) is the consumer; no soft cap here.
+ * - Dive — push-your-luck (GAME_SPEC §7, step 3): spend 1 charge → find card →
+ *   Surface banks the whole haul into `inventory`, or Deeper rolls the bust
+ *   table (18/28/40/55%, max 4 Deepers). The in-progress haul lives in
+ *   `dive_run` so killing the app mid-run keeps the same decision on relaunch.
  * - Daily tend bonus — +10 tokens once per device-local day on the first Claim
  *   (later also Dress/Decor), tracked by `last_tend_bonus_ymd`.
  *
@@ -31,6 +35,10 @@ export const PLAY_STORE_KEY = 'ato.play.store.v1';
 export const DIVE_CHARGE_CAP = 10;
 export const DIVE_CHARGE_REFILL_MS = 10 * 60 * 1000; // refill_seconds: 600
 
+/** Dive push-your-luck odds (GAME_SPEC §7 / GAME_DATA dive odds). */
+export const DIVE_DEEPER_MAX = 4; // dive_deeper_max
+export const DIVE_BUST_TABLE = [0.18, 0.28, 0.4, 0.55] as const; // Deeper #1..#4
+
 /** Research idle earn (GAME_DATA research_default). */
 export const RESEARCH_CYCLE_MS = 30 * 60 * 1000; // duration_seconds: 1800
 export const RESEARCH_CAP_MS = 10 * 60 * 60 * 1000; // offline_cap_seconds: 36000
@@ -43,13 +51,25 @@ export const TEND_MAX_TOKENS = 40;
 export const DAILY_TEND_BONUS_TOKENS = 10;
 
 /**
+ * An in-progress Dive run. Persisted so an app kill mid-run keeps the same
+ * haul + the same Surface/Deeper decision on relaunch (the charge is already
+ * spent either way).
+ */
+export type DiveRun = {
+  /** Deeper presses survived so far (0 on the first find card, max 4). */
+  deepers: number;
+  /** Item ids found this run. Surface banks all of them; a bust loses them. */
+  haul: string[];
+};
+
+/**
  * Persisted shape. Versioned under one key; add fields behind a version bump.
- * v2 added `inventory` (step 2b); still to come behind later bumps: Dress adds
- * `equipped`, Defend adds `highest_wave_cleared`. v1 docs parse to v2 with an
- * empty bag so nothing already on a device resets.
+ * v2 added `inventory` (step 2b); v3 added `dive_run` (step 3). Still to come
+ * behind later bumps: Dress adds `equipped`, Defend adds `highest_wave_cleared`.
+ * v1/v2 docs parse to v3 (empty bag / no run) so nothing on a device resets.
  */
 export type PlayStoreDoc = {
-  version: 2;
+  version: 3;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -63,6 +83,8 @@ export type PlayStoreDoc = {
   last_tend_bonus_ymd: string | null;
   /** Bag of granted item ids (Grove stub table) — Dress consumes this later. */
   inventory: string[];
+  /** Active Dive run (null when no charge has been spent / run is over). */
+  dive_run: DiveRun | null;
 };
 
 export type DiveChargeView = {
@@ -85,9 +107,24 @@ export type ResearchView = {
 export type PlayView = {
   tokens: number;
   dive: DiveChargeView;
+  /** In-progress Dive run view (null run → not diving). */
+  diveRun: DiveRunView;
   research: ResearchView;
   /** Daily tend bonus still available this device-local day. */
   tendBonusAvailable: boolean;
+};
+
+/** Read-model of an active Dive run for the screen (no mutable doc shape). */
+export type DiveRunView = {
+  active: boolean;
+  /** Deeper presses survived so far (0 on the first find card). */
+  deepers: number;
+  /** Finds so far this run — the haul the screen renders as find cards. */
+  haul: readonly string[];
+  /** Bust % of the next Deeper press, or null when the run is maxed. */
+  bustPctNext: number | null;
+  /** A Deeper press is still allowed. */
+  canDeeper: boolean;
 };
 
 export type ClaimResult = {
@@ -112,7 +149,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 2,
+    version: 3,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -120,6 +157,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     research_accrued_ms: 0,
     last_tend_bonus_ymd: null,
     inventory: [],
+    dive_run: null,
   };
 }
 
@@ -164,8 +202,21 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
   return {
     tokens: doc.tokens,
     dive: diveChargeAt(doc, now),
+    diveRun: diveRunViewOf(doc.dive_run),
     research: researchAt(doc, now),
     tendBonusAvailable: doc.last_tend_bonus_ymd !== localYmd(new Date(now)),
+  };
+}
+
+function diveRunViewOf(run: DiveRun | null): DiveRunView {
+  if (!run) return { active: false, deepers: 0, haul: [], bustPctNext: null, canDeeper: false };
+  const canDeeper = run.deepers < DIVE_DEEPER_MAX;
+  return {
+    active: true,
+    deepers: run.deepers,
+    haul: run.haul,
+    bustPctNext: canDeeper ? Math.round(DIVE_BUST_TABLE[run.deepers] * 100) : null,
+    canDeeper,
   };
 }
 
@@ -233,6 +284,87 @@ export function claimResearch(
 }
 
 /* ---------------------------------------------------------------------------
+ * Dive — push-your-luck (GAME_SPEC §7, GAME_DATA "Dive odds + XP").
+ *
+ * Flow: spend 1 charge → first find card → Surface banks the whole haul into
+ * inventory, or Deeper rolls the bust table (18/28/40/55%) and, on a safe
+ * roll, adds another find. Max 4 Deepers. A bust loses this haul only — the
+ * charge is already spent and nothing outside the haul is touched. Honest
+ * numbers: the UI shows the exact bust % of the next Deeper from this table.
+ *
+ * `dive_luck` (from equipped items) does not bend these rolls until Dress
+ * (step 4) computes buckets; until then the table is shown as-is, never
+ * hidden. All item rolls reuse the stub-table uniform roll — weighted Dive
+ * loot arrives with loot_tables.json later.
+ * ------------------------------------------------------------------------- */
+
+export type DeeperOutcome =
+  | { busted: true; bustPct: number }
+  | { busted: false; bustPct: number; addedId: string };
+
+/**
+ * Spend 1 dive charge to start a run and roll the first find. Null when there
+ * is already a run in progress or no charge is available.
+ */
+export function startDive(
+  doc: PlayStoreDoc,
+  now: number,
+  rng: () => number = Math.random,
+): { doc: PlayStoreDoc; firstFind: string } | null {
+  if (doc.dive_run) return null;
+  const dive = diveChargeAt(doc, now);
+  if (dive.current < 1) return null;
+  const firstFind = rollResearchFind(rng);
+  return {
+    doc: {
+      ...doc,
+      // Spend one derived charge; the refill timer restarts from now.
+      dive_charge: dive.current - 1,
+      dive_charge_at: now,
+      dive_run: { deepers: 0, haul: [firstFind] },
+    },
+    firstFind,
+  };
+}
+
+/** Bank the current haul into inventory and end the run. Null when idle. */
+export function surfaceDive(
+  doc: PlayStoreDoc,
+): { doc: PlayStoreDoc; banked: string[] } | null {
+  const run = doc.dive_run;
+  if (!run) return null;
+  return {
+    doc: { ...doc, dive_run: null, inventory: [...doc.inventory, ...run.haul] },
+    banked: run.haul,
+  };
+}
+
+/**
+ * Roll one Deeper press. Bust chance comes from `DIVE_BUST_TABLE[run.deepers]`
+ * (Deeper # = deepers + 1). On a bust the whole haul is lost and the run ends.
+ * On a safe roll another find is added. Null when idle or the run is maxed.
+ */
+export function deeperDive(
+  doc: PlayStoreDoc,
+  rng: () => number = Math.random,
+): { doc: PlayStoreDoc; outcome: DeeperOutcome } | null {
+  const run = doc.dive_run;
+  if (!run || run.deepers >= DIVE_DEEPER_MAX) return null;
+  const bustPct = DIVE_BUST_TABLE[run.deepers];
+  if (rng() < bustPct) {
+    return { doc: { ...doc, dive_run: null }, outcome: { busted: true, bustPct } };
+  }
+  const addedId = rollResearchFind(rng);
+  return {
+    doc: {
+      ...doc,
+      dive_run: { deepers: run.deepers + 1, haul: [...run.haul, addedId] },
+    },
+    outcome: { busted: false, bustPct, addedId },
+  };
+}
+
+/* ---------------------------------------------------------------------------
  * Standing Dev kit mutators (test panel).
  *
  * Pure transitions backing the Grove "Dev kit · testing only" rows in
@@ -276,6 +408,13 @@ export function devFillDiveCharges(doc: PlayStoreDoc, now: number): PlayStoreDoc
   return { ...doc, dive_charge: DIVE_CHARGE_CAP, dive_charge_at: now };
 }
 
+/** +1 dive charge from the derived count, clamped at cap (kit row label). */
+export function devAddDiveCharge(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const current = diveChargeAt(doc, now).current;
+  if (current >= DIVE_CHARGE_CAP) return doc;
+  return { ...doc, dive_charge: current + 1, dive_charge_at: now };
+}
+
 /** Reset the whole store to a fresh default (fresh timers, 10 charges, 0 tokens). */
 export function devResetPlayStore(_doc: PlayStoreDoc, now: number): PlayStoreDoc {
   return defaultPlayStore(now);
@@ -302,9 +441,10 @@ function snapshotDive(
 function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
   try {
     const data = JSON.parse(raw) as Record<string, unknown>;
-    // v1 (pre-inventory) and v2 both parse; v1 migrates with an empty bag so a
-    // device that already banked tokens keeps them on the 2b update.
-    if (data?.version !== 1 && data?.version !== 2) return null;
+    // v1 (pre-inventory), v2 (inventory) and v3 (dive_run) all parse; older
+    // versions migrate with an empty bag / no run so a device that already
+    // banked tokens keeps them across updates.
+    if (data?.version !== 1 && data?.version !== 2 && data?.version !== 3) return null;
     const tokens = finiteNumber(data.tokens);
     const diveCharge = finiteNumber(data.dive_charge);
     const diveChargeAt = finiteNumber(data.dive_charge_at);
@@ -318,7 +458,7 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       ? data.inventory.filter((id): id is string => typeof id === 'string')
       : [];
     return {
-      version: 2,
+      version: 3,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -326,10 +466,27 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       research_accrued_ms: Math.min(RESEARCH_CAP_MS, Math.max(0, researchAccruedMs ?? 0)),
       last_tend_bonus_ymd: lastTend,
       inventory,
+      dive_run: parseDiveRun(data.dive_run),
     };
   } catch {
     return null;
   }
+}
+
+/** Loose-shape read of the persisted run; anything malformed → no run. */
+function parseDiveRun(raw: unknown): DiveRun | null {
+  if (!isRecord(raw)) return null;
+  if (typeof raw.deepers !== 'number' || !Number.isFinite(raw.deepers)) return null;
+  const deepers = clampInt(raw.deepers, 0, DIVE_DEEPER_MAX);
+  const haul = Array.isArray(raw.haul)
+    ? raw.haul.filter((id): id is string => typeof id === 'string')
+    : [];
+  if (haul.length === 0) return null;
+  return { deepers, haul };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
 function finiteNumber(value: unknown): number | null {

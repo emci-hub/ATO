@@ -10,18 +10,23 @@
  * only real mutations write back to AsyncStorage. `claim` is the game-code
  * path; `commit` is the generic persistence primitive (used by Claim and by
  * the Grove Dev kit's test transitions). `grantRandomFind` is the Dev kit's
- * one-off item grant for step 2b.
+ * one-off item grant for step 2b; `beginDive` / `surfaceRun` / `pushDeeper`
+ * drive the step-3 Dive push-your-luck loop.
  */
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
 import {
   claimResearch,
+  deeperDive,
   devGrantRandomFind,
   loadPlayStore,
   playView,
   savePlayStore,
+  startDive,
+  surfaceDive,
   type ClaimResult,
+  type DeeperOutcome,
   type PlayStoreDoc,
   type PlayView,
 } from '@/play/playStore';
@@ -97,6 +102,45 @@ export function usePlayStore() {
     return ok ? grantedId : null;
   }, [commit]);
 
+  /** Spend 1 dive charge and roll the first find. True when a run started. */
+  const beginDive = useCallback(async (): Promise<boolean> => {
+    let started = false;
+    commit((current, now) => {
+      const next = startDive(current, now);
+      started = next != null;
+      return next ? next.doc : null;
+    });
+    return started;
+  }, [commit]);
+
+  /** Surface: bank the whole haul into inventory. Returns the banked ids. */
+  const surfaceRun = useCallback(async (): Promise<string[] | null> => {
+    let banked: string[] | null = null;
+    const ok = commit((current) => {
+      const next = surfaceDive(current);
+      banked = next ? next.banked : null;
+      return next ? next.doc : null;
+    });
+    return ok ? banked : null;
+  }, [commit]);
+
+  /**
+   * Roll one Deeper press. Pass `forceBust` only from the Dev kit's "force
+   * bust next Deeper" toggle — it swaps in a rng that always busts.
+   */
+  const pushDeeper = useCallback(
+    async (forceBust: boolean): Promise<DeeperOutcome | null> => {
+      let outcome: DeeperOutcome | null = null;
+      const ok = commit((current) => {
+        const next = forceBust ? deeperDive(current, () => 0) : deeperDive(current);
+        outcome = next ? next.outcome : null;
+        return next ? next.doc : null;
+      });
+      return ok ? outcome : null;
+    },
+    [commit],
+  );
+
   const view: PlayView | null = doc ? playView(doc, Date.now()) : null;
-  return { view, claim, commit, grantRandomFind };
+  return { view, claim, commit, grantRandomFind, beginDive, surfaceRun, pushDeeper };
 }

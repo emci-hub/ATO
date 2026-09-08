@@ -11,11 +11,13 @@ import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useAppearance } from '@/lib/theme/context';
+import { DiveScreen } from '@/play/dive-screen';
 import { GROVE_ACTION_TILES, GROVE_LEDE } from '@/play/grove';
 import { itemName } from '@/play/items';
 import {
   DIVE_CHARGE_CAP,
   canClaimResearch,
+  devAddDiveCharge,
   devAddTokens,
   devFillDiveCharges,
   devFillResearchFull,
@@ -26,27 +28,42 @@ import {
 import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
 
 /**
- * Play room — Grove screen (GAME_SPEC §3, §11 screen 1).
+ * Play room — Grove + Dive (GAME_SPEC §3, §7, §11 screens 1–2).
  *
- * Step 1 shell (placeholder avatar + "soon" tiles) now rides a real local
- * economy from `usePlayStore` (`src/play/playStore.ts`): tokens, dive charges
- * (0–10, ~10 min refill), Research (30-min cycles, 10h cap, one Claim dump) and
- * the daily tend bonus (+10 once per device-local day). Claim also dumps the
- * bag as real stub items (step 2b) — one id rolled per cycle from
- * `src/play/data/items.json`, held in `inventory` until Dress (step 4). Dive /
- * Dress / Defend stay "soon" placeholders. No Supabase — local AsyncStorage
- * only. Hidden outside pre-launch builds via PRE_LAUNCH_DEV.
+ * Grove view rides a real local economy from `usePlayStore`
+ * (`src/play/playStore.ts`): tokens, dive charges (0–10, ~10 min refill),
+ * Research (30-min cycles, 10h cap, one Claim dump, daily tend bonus). Claim
+ * dumps the bag as real stub items (step 2b). Dive (step 3) is one screen
+ * with two views: the Grove action list enables the Dive row → `DiveScreen`
+ * (spend charge → find card → Surface / Deeper with honest §7 odds, max 4
+ * Deepers). Dress / Defend stay "soon". No Supabase — local AsyncStorage only.
+ * Hidden outside pre-launch builds via PRE_LAUNCH_DEV.
  */
+
+type PlayMode = 'grove' | 'dive';
 
 type PlayToast =
   | { kind: 'claim'; result: ClaimResult }
-  | { kind: 'find'; foundName: string };
+  | { kind: 'find'; foundName: string }
+  | { kind: 'surface'; itemIds: string[] }
+  | { kind: 'bust' };
 
 export default function PlayScreen() {
   const theme = useTheme();
   const { reduceMotion } = useAppearance();
-  const { view, claim, commit, grantRandomFind } = usePlayStore();
+  const {
+    view,
+    claim,
+    commit,
+    grantRandomFind,
+    beginDive,
+    surfaceRun,
+    pushDeeper,
+  } = usePlayStore();
+  const [mode, setMode] = useState<PlayMode>('grove');
   const [toast, setToast] = useState<PlayToast | null>(null);
+  /** Dev kit only: one-shot forced bust on the next Deeper press. */
+  const [forceBustArmed, setForceBustArmed] = useState(false);
 
   const researchReady = view != null && canClaimResearch(view);
 
@@ -61,6 +78,22 @@ export default function PlayScreen() {
     if (id) setToast({ kind: 'find', foundName: itemName(id) ?? id });
   }, [grantRandomFind]);
 
+  /** Dive view handlers — commit through the shared store, toast on results. */
+  const handleSpendCharge = useCallback(async (): Promise<boolean> => beginDive(), [beginDive]);
+
+  const handleSurface = useCallback(async (): Promise<boolean> => {
+    const banked = await surfaceRun();
+    if (banked) setToast({ kind: 'surface', itemIds: banked });
+    return banked != null;
+  }, [surfaceRun]);
+
+  const handleDeeper = useCallback(async (): Promise<boolean> => {
+    const outcome = await pushDeeper(forceBustArmed);
+    if (forceBustArmed) setForceBustArmed(false); // one-shot arm consumed
+    if (outcome?.busted) setToast({ kind: 'bust' });
+    return outcome != null;
+  }, [forceBustArmed, pushDeeper]);
+
   function closePlay() {
     if (router.canGoBack()) {
       router.back();
@@ -74,6 +107,28 @@ export default function PlayScreen() {
     return <Redirect href="/" />;
   }
 
+  const toastContent =
+    toast == null
+      ? null
+      : {
+          title:
+            toast.kind === 'claim'
+              ? `Claimed +${toast.result.tendTokens + toast.result.dailyBonusTokens} tokens`
+              : toast.kind === 'find'
+                ? 'Found'
+                : toast.kind === 'surface'
+                  ? 'Surfaced'
+                  : 'Bust',
+          body:
+            toast.kind === 'claim'
+              ? claimToastBody(toast.result)
+              : toast.kind === 'find'
+                ? toast.foundName
+                : toast.kind === 'surface'
+                  ? `Banked ${summarizeNames(toast.itemIds)}.`
+                  : 'This haul is lost — the charge was already spent. Your Grove is untouched.',
+        };
+
   const tokensText = view == null ? '…' : String(view.tokens);
   const chargeText =
     view == null
@@ -84,10 +139,7 @@ export default function PlayScreen() {
             view.dive.nextChargeAt,
           )}`;
 
-  const researchTitle =
-    view == null || researchReady
-      ? 'Your grove is ready.'
-      : 'Researching…';
+  const researchTitle = view == null || researchReady ? 'Your grove is ready.' : 'Researching…';
   const researchBody =
     view == null
       ? '…'
@@ -102,106 +154,143 @@ export default function PlayScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.topRow}>
-            <Pressable onPress={closePlay} hitSlop={12} style={({ pressed }) => [pressed && styles.pressed]}>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                ‹ Back
-              </ThemedText>
-            </Pressable>
-          </View>
-
-          <ThemedText type="subtitle">Grove</ThemedText>
-          <ThemedText themeColor="textSecondary" style={styles.lede}>
-            {GROVE_LEDE}
-          </ThemedText>
-
-          <ThemedView type="backgroundElement" style={styles.card}>
-            <View style={styles.groveRow}>
-              {/* Placeholder avatar — TODO: SakPix swap. No mock PNGs in v0. */}
-              <View style={[styles.avatar, { backgroundColor: theme.backgroundSelected }]}>
-                <MaterialCommunityIcons name="sprout" size={44} color={theme.accent} />
-              </View>
-              <View style={styles.groveText}>
-                <ThemedText type="heading">Your grove</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {researchTitle}
-                </ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {researchBody}
-                </ThemedText>
-              </View>
-            </View>
-          </ThemedView>
-
-          {toast ? (
+          {toastContent ? (
             <MilestoneToast
-              title={
-                toast.kind === 'claim'
-                  ? `Claimed +${toast.result.tendTokens + toast.result.dailyBonusTokens} tokens`
-                  : 'Found'
-              }
-              body={
-                toast.kind === 'claim' ? claimToastBody(toast.result) : toast.foundName
-              }
+              title={toastContent.title}
+              body={toastContent.body}
               reduceMotion={reduceMotion}
               onDone={() => setToast(null)}
             />
           ) : null}
 
-          <ThemedView type="backgroundElement" style={styles.card}>
-            <View style={styles.statRow}>
-              <ThemedText type="smallBold">Tokens</ThemedText>
-              <ThemedText type="subheading" themeColor="emphasis">
-                {tokensText}
-              </ThemedText>
-            </View>
-            <View style={styles.statRow}>
-              <ThemedText type="smallBold">Dive charges</ThemedText>
-              <ThemedText type="subheading" themeColor="emphasis">
-                {chargeText}
-              </ThemedText>
-            </View>
-            <Pressable
-              disabled={!researchReady}
-              onPress={handleClaim}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: !researchReady }}
-              style={({ pressed }) => [
-                styles.claimButton,
-                { backgroundColor: researchReady ? theme.accentFill : theme.backgroundSelected },
-                pressed && researchReady && styles.pressed,
-              ]}>
-              <ThemedText
-                type="smallBold"
-                style={{ color: researchReady ? theme.onAccent : theme.textSecondary }}>
-                {claimLabel}
-              </ThemedText>
-            </Pressable>
-            <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-              Research accrues every 30 minutes — up to a 10-hour bag, then it waits for you.
-            </ThemedText>
-          </ThemedView>
+          {mode === 'dive' && view ? (
+            <DiveScreen
+              view={view}
+              onSpendCharge={handleSpendCharge}
+              onSurface={handleSurface}
+              onDeeper={handleDeeper}
+              onBackToGrove={() => setMode('grove')}
+            />
+          ) : (
+            <>
+              <View style={styles.topRow}>
+                <Pressable onPress={closePlay} hitSlop={12} style={({ pressed }) => [pressed && styles.pressed]}>
+                  <ThemedText type="smallBold" themeColor="textSecondary">
+                    ‹ Back
+                  </ThemedText>
+                </Pressable>
+              </View>
 
-          <View style={styles.actionList}>
-            {GROVE_ACTION_TILES.map((tile) => (
-              <ThemedView key={tile.kind} type="backgroundElement" style={styles.actionCard}>
-                <MaterialCommunityIcons name={tile.icon} size={22} color={theme.textSecondary} />
-                <View style={styles.actionText}>
-                  <ThemedText type="smallBold">{tile.title}</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {tile.lede}
-                  </ThemedText>
-                </View>
-                <View style={[styles.soonBadge, { backgroundColor: theme.backgroundSelected }]}>
-                  <ThemedText type="code" themeColor="textSecondary">
-                    {tile.soon}
-                  </ThemedText>
+              <ThemedText type="subtitle">Grove</ThemedText>
+              <ThemedText themeColor="textSecondary" style={styles.lede}>
+                {GROVE_LEDE}
+              </ThemedText>
+
+              <ThemedView type="backgroundElement" style={styles.card}>
+                <View style={styles.groveRow}>
+                  {/* Placeholder avatar — TODO: SakPix swap. No mock PNGs in v0. */}
+                  <View style={[styles.avatar, { backgroundColor: theme.backgroundSelected }]}>
+                    <MaterialCommunityIcons name="sprout" size={44} color={theme.accent} />
+                  </View>
+                  <View style={styles.groveText}>
+                    <ThemedText type="heading">Your grove</ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {researchTitle}
+                    </ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {researchBody}
+                    </ThemedText>
+                  </View>
                 </View>
               </ThemedView>
-            ))}
-          </View>
 
-          {PRE_LAUNCH_DEV ? <GroveDevKit commit={commit} onGrantRandomFind={handleGrantRandomFind} /> : null}
+              <ThemedView type="backgroundElement" style={styles.card}>
+                <View style={styles.statRow}>
+                  <ThemedText type="smallBold">Tokens</ThemedText>
+                  <ThemedText type="subheading" themeColor="emphasis">
+                    {tokensText}
+                  </ThemedText>
+                </View>
+                <View style={styles.statRow}>
+                  <ThemedText type="smallBold">Dive charges</ThemedText>
+                  <ThemedText type="subheading" themeColor="emphasis">
+                    {chargeText}
+                  </ThemedText>
+                </View>
+                <Pressable
+                  disabled={!researchReady}
+                  onPress={handleClaim}
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: !researchReady }}
+                  style={({ pressed }) => [
+                    styles.claimButton,
+                    { backgroundColor: researchReady ? theme.accentFill : theme.backgroundSelected },
+                    pressed && researchReady && styles.pressed,
+                  ]}>
+                  <ThemedText
+                    type="smallBold"
+                    style={{ color: researchReady ? theme.onAccent : theme.textSecondary }}>
+                    {claimLabel}
+                  </ThemedText>
+                </Pressable>
+                <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
+                  Research accrues every 30 minutes — up to a 10-hour bag, then it waits for you.
+                </ThemedText>
+              </ThemedView>
+
+              <View style={styles.actionList}>
+                {GROVE_ACTION_TILES.map((tile) => {
+                  const enabled = tile.soon == null;
+                  return (
+                    <ThemedView key={tile.kind} type="backgroundElement" style={styles.actionCard}>
+                      {enabled ? (
+                        <Pressable
+                          onPress={() => setMode('dive')}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Open ${tile.title}`}
+                          style={({ pressed }) => [styles.actionRow, pressed && styles.pressed]}>
+                          <MaterialCommunityIcons name={tile.icon} size={22} color={theme.textSecondary} />
+                          <View style={styles.actionText}>
+                            <ThemedText type="smallBold">{tile.title}</ThemedText>
+                            <ThemedText type="small" themeColor="textSecondary">
+                              {tile.lede}
+                            </ThemedText>
+                          </View>
+                          <ThemedText type="smallBold" themeColor="textSecondary">
+                            ›
+                          </ThemedText>
+                        </Pressable>
+                      ) : (
+                        <View style={styles.actionRow}>
+                          <MaterialCommunityIcons name={tile.icon} size={22} color={theme.textSecondary} />
+                          <View style={styles.actionText}>
+                            <ThemedText type="smallBold">{tile.title}</ThemedText>
+                            <ThemedText type="small" themeColor="textSecondary">
+                              {tile.lede}
+                            </ThemedText>
+                          </View>
+                          <View style={[styles.soonBadge, { backgroundColor: theme.backgroundSelected }]}>
+                            <ThemedText type="code" themeColor="textSecondary">
+                              {tile.soon}
+                            </ThemedText>
+                          </View>
+                        </View>
+                      )}
+                    </ThemedView>
+                  );
+                })}
+              </View>
+
+              {PRE_LAUNCH_DEV ? (
+                <GroveDevKit
+                  commit={commit}
+                  onGrantRandomFind={handleGrantRandomFind}
+                  forceBustArmed={forceBustArmed}
+                  onToggleForceBust={() => setForceBustArmed((armed) => !armed)}
+                />
+              ) : null}
+            </>
+          )}
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -221,9 +310,13 @@ export default function PlayScreen() {
 function GroveDevKit({
   commit,
   onGrantRandomFind,
+  forceBustArmed,
+  onToggleForceBust,
 }: {
   commit: (transition: PlayTransition) => boolean;
   onGrantRandomFind: () => Promise<void>;
+  forceBustArmed: boolean;
+  onToggleForceBust: () => void;
 }) {
   const theme = useTheme();
   const [resetArmed, setResetArmed] = useState(false);
@@ -275,11 +368,24 @@ function GroveDevKit({
       onPress: () => run(devFillDiveCharges),
     },
     {
+      key: 'dive-charge',
+      label: '+1 dive charge',
+      onPress: () => run(devAddDiveCharge),
+    },
+    {
       key: 'grant-find',
       label: 'Grant random find',
       onPress: () => {
         clearResetArm();
         void onGrantRandomFind();
+      },
+    },
+    {
+      key: 'force-bust',
+      label: forceBustArmed ? 'Force bust next Deeper (armed)' : 'Force bust next Deeper',
+      onPress: () => {
+        clearResetArm();
+        onToggleForceBust();
       },
     },
   ];
@@ -296,7 +402,9 @@ function GroveDevKit({
           onPress={row.onPress}
           accessibilityRole="button"
           style={({ pressed }) => [styles.devKitRow, pressed && styles.pressed]}>
-          <ThemedText type="small">{row.label}</ThemedText>
+          <ThemedText type="small" themeColor={row.key === 'force-bust' && forceBustArmed ? 'emphasis' : undefined}>
+            {row.label}
+          </ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
             ›
           </ThemedText>
@@ -333,16 +441,19 @@ function minutesUntilLabel(nextAt: number | null): string {
   return `${minutes}m`;
 }
 
-/** Item names for a bag dump, capped at 3 so a 20-find Claim stays readable. */
-function foundSummary(itemIds: string[]): string {
-  if (itemIds.length === 0) return 'nothing found';
+/** Names for a haul, capped at 3 so a long claim/bank stays readable. */
+function summarizeNames(itemIds: readonly string[]): string {
   const shown = Math.min(itemIds.length, 3);
   const names = itemIds
     .slice(0, shown)
     .map((id) => itemName(id) ?? id)
     .join(', ');
   const hidden = itemIds.length - shown;
-  return hidden > 0 ? `Found ${names} +${hidden} more` : `Found ${names}`;
+  return hidden > 0 ? `${names} +${hidden} more` : names;
+}
+
+function foundSummary(itemIds: string[]): string {
+  return itemIds.length === 0 ? 'nothing found' : `Found ${summarizeNames(itemIds)}`;
 }
 
 function claimToastBody(result: ClaimResult): string {
@@ -415,12 +526,15 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   actionCard: {
+    borderRadius: Spacing.four,
+    opacity: 0.9,
+  },
+  actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
     borderRadius: Spacing.three,
     padding: Spacing.three,
-    opacity: 0.9,
   },
   actionText: {
     flex: 1,

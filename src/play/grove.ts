@@ -20,17 +20,18 @@ export type GroveActionTile = {
   icon: ComponentProps<typeof MaterialCommunityIcons>['name'];
   title: string;
   lede: string;
-  soon: string;
+  /** "Soon" badge text; null = enabled since its step landed. */
+  soon: string | null;
 };
 
-/** Dive / Dress / Defend are "soon" until their own steps land. */
+/** Dive is live since step 3; Dress / Defend are "soon" until their steps land. */
 export const GROVE_ACTION_TILES: GroveActionTile[] = [
   {
     kind: 'dive',
     icon: 'waves',
     title: 'Dive',
     lede: 'Push your luck for finds.',
-    soon: 'Soon',
+    soon: null,
   },
   {
     kind: 'dress',
