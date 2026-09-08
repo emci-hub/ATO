@@ -1,10 +1,14 @@
--- Category batches: a fixed 10-question set per category, independent of
+-- Category batches: a fixed 5-question set per category, independent of
 -- Full Profile's axis-count tracking and of Infinite Questions' rotating
--- daily pack (question_packs/question_items, hard-capped at 5 items/pack —
--- cannot hold 10). Answers still write trait_tracks on the client via
+-- daily pack (question_packs/question_items — a separate table, kept
+-- separate here too so the two features' constraints never entangle).
+-- Answers still write trait_tracks on the client via
 -- applyQuestionAnswer/mergeTraitWrite, same as every other question source;
--- these tables only track "which 10 questions belong to this category batch
--- and how many are answered."
+-- these tables only track "which 5 questions belong to this category batch
+-- and how many are answered." 5 is the proven-reliable single-generation-call
+-- size already used by Infinite Questions, so this batch is filled in one
+-- call — no chunking/resume logic needed (see composeCategoryBatch in
+-- src/lib/questions/category-batch.ts).
 
 create table public.category_question_batches (
   id uuid primary key default gen_random_uuid(),
@@ -16,13 +20,13 @@ create table public.category_question_batches (
 );
 
 comment on table public.category_question_batches is
-  'One fixed 10-question batch per (user, category). finalized_at is set only by finalize_category_batches, nothing else reads/writes it.';
+  'One fixed 5-question batch per (user, category). finalized_at is set only by finalize_category_batches, nothing else reads/writes it.';
 
 create table public.category_question_items (
   id uuid primary key default gen_random_uuid(),
   batch_id uuid not null references public.category_question_batches(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
-  sort_index int not null check (sort_index >= 0 and sort_index < 10),
+  sort_index int not null check (sort_index >= 0 and sort_index < 5),
   axis text not null check (axis in (
     'openness', 'conscientiousness', 'extraversion', 'agreeableness', 'steadiness',
     'attachment_anxiety', 'attachment_avoidance',
@@ -42,7 +46,7 @@ create index category_question_items_batch_idx on public.category_question_items
 create index category_question_items_user_idx on public.category_question_items (user_id);
 
 comment on table public.category_question_items is
-  'Up to 10 items per category_question_batches row. Skip is not allowed in this mode — no skipped_at column. options is [{text, value}], same shape as question_items.';
+  'Up to 5 items per category_question_batches row. Skip is not allowed in this mode — no skipped_at column. options is [{text, value}], same shape as question_items.';
 
 alter table public.category_question_batches enable row level security;
 alter table public.category_question_items enable row level security;
@@ -53,11 +57,10 @@ create policy category_question_batches_select_own on public.category_question_b
 create policy category_question_items_select_own on public.category_question_items
   for select using (auth.uid() = user_id);
 
--- Appends up to 10 items total per (user, category) across one or more
--- calls (the composing caller saves whatever a generation call returns
--- immediately, then retries only for the shortfall — see composeCategoryBatch
--- in src/lib/questions/category-batch.ts). Creates the batch row on first
--- call, reuses it on later calls for the same category.
+-- Appends up to 5 items total per (user, category) in one call (a single
+-- generateQuestionBatch call is expected to cover the whole batch — see
+-- composeCategoryBatch in src/lib/questions/category-batch.ts). Creates the
+-- batch row on first call, reuses it if called again for the same category.
 create or replace function public.insert_category_batch_items(
   p_category_id text,
   p_items jsonb
@@ -98,8 +101,8 @@ begin
   from public.category_question_items
   where batch_id = v_batch_id and user_id = uid;
 
-  if existing_count + entry_count > 10 then
-    raise exception 'category batch cannot exceed 10 items' using errcode = '22023';
+  if existing_count + entry_count > 5 then
+    raise exception 'category batch cannot exceed 5 items' using errcode = '22023';
   end if;
 
   idx := existing_count;
@@ -178,7 +181,7 @@ revoke all on function public.answer_category_question_item(uuid, int) from publ
 grant execute on function public.answer_category_question_item(uuid, int) to authenticated;
 
 -- Sets finalized_at (nothing else) on every one of the caller's category
--- batches that has all 10 items present and all 10 answered, and isn't
+-- batches that has all 5 items present and all 5 answered, and isn't
 -- already finalized. Returns how many batches it finalized.
 create or replace function public.finalize_category_batches()
 returns int
@@ -199,7 +202,7 @@ begin
     from public.category_question_items
     where user_id = uid
     group by batch_id
-    having count(*) >= 10 and count(*) filter (where answered_option is not null) >= 10
+    having count(*) >= 5 and count(*) filter (where answered_option is not null) >= 5
   )
   update public.category_question_batches b
     set finalized_at = timezone('utc', now())

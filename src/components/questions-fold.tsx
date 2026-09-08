@@ -464,13 +464,14 @@ export function QuestionsFold({
 }
 
 /**
- * "10 questions per category" (separate mode from Infinite Questions above
+ * "5 questions per category" (separate mode from Infinite Questions above
  * — sibling component, not a branch inside `QuestionsFold`, so the existing
  * rotation/skip/checkpoint machinery there stays completely untouched).
  * Entered via `category`, same prop `QuestionsFold` already accepted as
- * unused plumbing. Generates-or-resumes a fixed 10-question batch for this
- * category on mount, answers write traits immediately (same
- * `applyQuestionAnswer` as `pickBankItem` above), and once all 10 are
+ * unused plumbing. Generates a fixed 5-question batch for this category on
+ * mount (a single generation call — 5 is the proven-reliable size, no
+ * chunking/resume logic), answers write traits immediately (same
+ * `applyQuestionAnswer` as `pickBankItem` above), and once all 5 are
  * answered the whole list locks read-only in place — same visual as
  * `FullProfileList`'s lock, no navigation, no toast. Skip is not offered in
  * this mode at all (no shared code path with `skipThis`/`skipRest` above).
@@ -510,8 +511,6 @@ export function CategoryBatchFold({
           fetchAskedTexts: fetchAskedQuestionTexts,
           saveItems: saveCategoryBatchItems,
         },
-        new Date(),
-        existing,
       );
       setBatch(composed);
     } catch (err) {
