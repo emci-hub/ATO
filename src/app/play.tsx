@@ -8,37 +8,35 @@ import { MilestoneToast } from '@/components/milestone-toast';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
-import { useAppearance } from '@/lib/theme/context';
 import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
-import {
-  GROVE_ACTION_TILES,
-  GROVE_LEDE,
-  PREVIEW_CLAIM_TOKENS,
-  PREVIEW_START_TOKENS,
-  RESEARCH_PREVIEW_BODY,
-  RESEARCH_PREVIEW_TITLE,
-} from '@/play/grove';
+import { useAppearance } from '@/lib/theme/context';
+import { GROVE_ACTION_TILES, GROVE_LEDE } from '@/play/grove';
+import { DIVE_CHARGE_CAP, canClaimResearch, type ClaimResult } from '@/play/playStore';
+import { usePlayStore } from '@/play/use-play-store';
 
 /**
  * Play room — Grove screen (GAME_SPEC §3, §11 screen 1).
  *
- * Step 1 shell only: placeholder avatar, preview tokens, a Claim button that
- * bumps a fake bag toast, and Dive/Dress/Defend marked "soon". No store yet —
- * Step 2 lands `playStore` (AsyncStorage) and swaps the preview numbers out.
- * Routable because it lives under `src/app/`; all Play data/logic will stay in
- * `src/play/`. Hidden outside pre-launch builds via PRE_LAUNCH_DEV.
+ * Step 1 shell (placeholder avatar + "soon" tiles) now rides a real local
+ * economy from `usePlayStore` (`src/play/playStore.ts`): tokens, dive charges
+ * (0–10, ~10 min refill), Research (30-min cycles, 10h cap, one Claim dump) and
+ * the daily tend bonus (+10 once per device-local day). Dive / Dress / Defend
+ * stay "soon" placeholders. No Supabase — local AsyncStorage only.
+ * Hidden outside pre-launch builds via PRE_LAUNCH_DEV.
  */
 export default function PlayScreen() {
   const theme = useTheme();
   const { reduceMotion } = useAppearance();
-  const [tokens, setTokens] = useState(PREVIEW_START_TOKENS);
-  const [claimed, setClaimed] = useState(false);
+  const { view, claim } = usePlayStore();
+  const [toast, setToast] = useState<ClaimResult | null>(null);
 
-  const handleClaim = useCallback(() => {
-    setTokens((current) => current + PREVIEW_CLAIM_TOKENS);
-    setClaimed(true);
-  }, []);
+  const researchReady = view != null && canClaimResearch(view);
+
+  const handleClaim = useCallback(async () => {
+    const result = await claim();
+    if (result) setToast(result);
+  }, [claim]);
 
   function closePlay() {
     if (router.canGoBack()) {
@@ -52,6 +50,30 @@ export default function PlayScreen() {
   if (!PRE_LAUNCH_DEV) {
     return <Redirect href="/" />;
   }
+
+  const tokensText = view == null ? '…' : String(view.tokens);
+  const chargeText =
+    view == null
+      ? '…'
+      : view.dive.full
+        ? `${view.dive.current}/${DIVE_CHARGE_CAP}`
+        : `${view.dive.current}/${DIVE_CHARGE_CAP} · +1 ~${minutesUntilLabel(
+            view.dive.nextChargeAt,
+          )}`;
+
+  const researchTitle =
+    view == null || researchReady
+      ? 'Your grove is ready.'
+      : 'Researching…';
+  const researchBody =
+    view == null
+      ? '…'
+      : researchReady
+        ? `${view.research.readyFinds} ${findsWord(view.research.readyFinds)} waiting — Claim gathers them.`
+        : `Next find in ~${minutesUntilLabel(view.research.nextFindAt)}.`;
+
+  const claimLabel =
+    view == null ? '…' : researchReady ? 'Claim' : `Ready in ~${minutesUntilLabel(view.research.nextFindAt)}`;
 
   return (
     <ThemedView style={styles.container}>
@@ -79,21 +101,21 @@ export default function PlayScreen() {
               <View style={styles.groveText}>
                 <ThemedText type="heading">Your grove</ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
-                  {RESEARCH_PREVIEW_TITLE}
+                  {researchTitle}
                 </ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
-                  {RESEARCH_PREVIEW_BODY}
+                  {researchBody}
                 </ThemedText>
               </View>
             </View>
           </ThemedView>
 
-          {claimed ? (
+          {toast ? (
             <MilestoneToast
-              title={`Claimed +${PREVIEW_CLAIM_TOKENS} tokens`}
-              body="Preview bag — real finds arrive with Step 2."
+              title={`Claimed +${toast.tendTokens + toast.dailyBonusTokens} tokens`}
+              body={claimToastBody(toast)}
               reduceMotion={reduceMotion}
-              onDone={() => setClaimed(false)}
+              onDone={() => setToast(null)}
             />
           ) : null}
 
@@ -101,23 +123,33 @@ export default function PlayScreen() {
             <View style={styles.statRow}>
               <ThemedText type="smallBold">Tokens</ThemedText>
               <ThemedText type="subheading" themeColor="emphasis">
-                {tokens}
+                {tokensText}
+              </ThemedText>
+            </View>
+            <View style={styles.statRow}>
+              <ThemedText type="smallBold">Dive charges</ThemedText>
+              <ThemedText type="subheading" themeColor="emphasis">
+                {chargeText}
               </ThemedText>
             </View>
             <Pressable
+              disabled={!researchReady}
               onPress={handleClaim}
               accessibilityRole="button"
+              accessibilityState={{ disabled: !researchReady }}
               style={({ pressed }) => [
                 styles.claimButton,
-                { backgroundColor: theme.accentFill },
-                pressed && styles.pressed,
+                { backgroundColor: researchReady ? theme.accentFill : theme.backgroundSelected },
+                pressed && researchReady && styles.pressed,
               ]}>
-              <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                Claim
+              <ThemedText
+                type="smallBold"
+                style={{ color: researchReady ? theme.onAccent : theme.textSecondary }}>
+                {claimLabel}
               </ThemedText>
             </Pressable>
             <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-              Preview economy — resets when real Research arrives.
+              Research accrues every 30 minutes — up to a 10-hour bag, then it waits for you.
             </ThemedText>
           </ThemedView>
 
@@ -143,6 +175,25 @@ export default function PlayScreen() {
       </SafeAreaView>
     </ThemedView>
   );
+}
+
+function findsWord(count: number): string {
+  return count === 1 ? 'find' : 'finds';
+}
+
+/** Whole minutes until a timestamp, floored at 1 so copy never says "0 min". */
+function minutesUntilLabel(nextAt: number | null): string {
+  if (nextAt == null) return '—';
+  const minutes = Math.max(1, Math.ceil((nextAt - Date.now()) / 60_000));
+  return `${minutes}m`;
+}
+
+function claimToastBody(result: ClaimResult): string {
+  const parts: string[] = [`+${result.tendTokens} tend`];
+  if (result.dailyBonusTokens > 0) parts.push(`+${result.dailyBonusTokens} daily`);
+  if (result.diveChargeGranted) parts.push('+1 dive charge');
+  parts.push(`${result.cyclesClaimed} ${findsWord(result.cyclesClaimed)} gathered`);
+  return parts.join(' · ');
 }
 
 const styles = StyleSheet.create({
