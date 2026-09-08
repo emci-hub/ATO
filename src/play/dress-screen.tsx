@@ -1,21 +1,23 @@
 /**
- * Dress — 4 slots + bag (Play step 4, GAME_SPEC §9 inventory / §9c / §11
- * screen 4; GAME_DATA item + equipped shape).
+ * Dress — 4 slots + bag (Play step 4 + bag polish, GAME_SPEC §9 inventory /
+ * §9c / §11 screen 4; GAME_DATA item + equipped shape).
  *
- * Pure read/view of `view`: four Worn slots (weapon, armor, cloak, trinket),
- * the equipped-stat bonus card (raw same-stat sums from equipped items — the
- * "bucket numbers"), and the Bag (whole owned collection minus what is worn).
+ * Pure read/view of `view`. The bag is stacks (`{ id, count }` — each row one
+ * distinct item id); the Worn card shows the four slots. Interactions delegate
+ * up through `play.tsx` to the shared playStore:
+ * - tap a Worn slot → unequip (the copy returns to its bag stack);
+ * - tap a bag row → equip one copy into its slot (Power equips into an empty
+ *   slot are refused over the 80-item soft cap — sell a Look first);
+ * - Looks carry an inline "Sell · +3" that sells ONE copy from the stack.
  *
- * Interactions delegate up through `play.tsx` to the shared playStore:
- * - tap a slot → unequip (item stays in the collection);
- * - tap a bag row → equip into its slot (Power equips are refused by the store
- *   when the bag is over the 80-row soft cap — sell a Look first);
- * - Looks carry an inline "Sell · +3" → tokens, frees a row.
- * No Defend. No Supabase.
+ * The bag section filters by tab (All / Weapon / Armor / Cloak / Trinket /
+ * Junk) and sorts within each tab by rarity (best first), then by name.
+ * Junk = Looks, whatever slot they belong to. No Defend. No Supabase.
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { ComponentProps } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -24,11 +26,18 @@ import { useTheme } from '@/hooks/use-theme';
 import {
   formatMult,
   getItemDef,
+  rarityRank,
   type ItemDef,
   type ItemSlot,
   type ItemStat,
 } from '@/play/items';
-import { INVENTORY_SOFT_CAP, LOOK_SELL_TOKENS, type PlayView } from '@/play/playStore';
+import {
+  INVENTORY_SOFT_CAP,
+  LOOK_SELL_TOKENS,
+  totalOwnedCount,
+  type ItemStack,
+  type PlayView,
+} from '@/play/playStore';
 
 const SLOT_ORDER: ItemSlot[] = ['weapon', 'armor', 'cloak', 'trinket'];
 const SLOT_LABELS: Record<ItemSlot, string> = {
@@ -51,6 +60,18 @@ const STAT_ORDER: ItemStat[] = [
   'research_yield',
 ];
 
+/** Bag filter tabs: a slot, "all", or "junk" (= every Look, any slot). */
+type BagFilter = 'all' | ItemSlot | 'junk';
+
+const FILTER_TABS: { key: BagFilter; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'weapon', label: 'Weapon' },
+  { key: 'armor', label: 'Armor' },
+  { key: 'cloak', label: 'Cloak' },
+  { key: 'trinket', label: 'Trinket' },
+  { key: 'junk', label: 'Junk' },
+];
+
 export function DressScreen({
   view,
   onEquip,
@@ -65,11 +86,12 @@ export function DressScreen({
   onBackToGrove: () => void;
 }) {
   const theme = useTheme();
-  const wornIds = new Set(Object.values(view.equipped).filter((id): id is string => id != null));
-  // The bag is everything owned that is not currently worn.
-  const bagIds = view.inventory.filter((id) => !wornIds.has(id));
-  const overCap = view.inventory.length >= INVENTORY_SOFT_CAP;
+  const [filter, setFilter] = useState<BagFilter>('all');
+  const totalOwned = totalOwnedCount(view.inventory, view.equipped);
+  const overCap = totalOwned >= INVENTORY_SOFT_CAP;
   const activeBonuses = STAT_ORDER.filter((stat) => view.statSums[stat] > 0);
+
+  const stacks = visibleStacks(view.inventory, filter);
 
   return (
     <>
@@ -127,23 +149,53 @@ export function DressScreen({
         <View style={styles.statRow}>
           <ThemedText type="smallBold">Bag</ThemedText>
           <ThemedText type="code" themeColor="textSecondary">
-            {view.inventory.length}/{INVENTORY_SOFT_CAP}
+            {totalOwned}/{INVENTORY_SOFT_CAP} held
           </ThemedText>
+        </View>
+        <View style={styles.filterRow}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterContent}>
+            {FILTER_TABS.map((tab) => {
+              const selected = filter === tab.key;
+              return (
+                <Pressable
+                  key={tab.key}
+                  onPress={() => setFilter(tab.key)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  style={({ pressed }) => [
+                    styles.filterChip,
+                    { backgroundColor: selected ? theme.backgroundSelected : 'transparent' },
+                    pressed && styles.pressed,
+                  ]}>
+                  <ThemedText
+                    type="code"
+                    themeColor={selected ? undefined : 'textSecondary'}
+                    style={selected && { color: theme.accent }}>
+                    {tab.label}
+                  </ThemedText>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
         </View>
         {overCap ? (
           <ThemedText type="small" themeColor="textSecondary">
             Bag is full — sell a Look to make room for a new Power.
           </ThemedText>
         ) : null}
-        {bagIds.length === 0 ? (
+        {stacks.length === 0 ? (
           <ThemedText type="small" themeColor="textSecondary">
-            Nothing to wear yet. Claim or Dive to find items.
+            {emptyCopy(filter)}
           </ThemedText>
         ) : (
-          bagIds.map((id, index) => (
-            <BagRow
-              key={`${id}-${index}`}
-              id={id}
+          stacks.map((stack) => (
+            <StackRow
+              key={stack.id}
+              stack={stack}
+              alreadyWorn={view.equipped[getItemDef(stack.id)?.core.slot ?? 'weapon'] === stack.id}
               onEquip={onEquip}
               onSell={onSell}
             />
@@ -152,6 +204,31 @@ export function DressScreen({
       </ThemedView>
     </>
   );
+}
+
+/** Bag rows for the active filter, sorted best-rarity-first then by name. */
+function visibleStacks(inventory: readonly ItemStack[], filter: BagFilter): ItemStack[] {
+  const rows = inventory.filter((stack) => {
+    const def = getItemDef(stack.id);
+    if (!def) return filter === 'all'; // dangling rows only under All
+    if (filter === 'junk') return def.core.kind === 'look';
+    if (filter === 'all') return true;
+    return def.core.slot === filter;
+  });
+  return rows.sort((a, b) => {
+    const aDef = getItemDef(a.id);
+    const bDef = getItemDef(b.id);
+    if (!aDef || !bDef) return a.id.localeCompare(b.id);
+    const byRarity = rarityRank(aDef.core.rarity) - rarityRank(bDef.core.rarity);
+    if (byRarity !== 0) return byRarity;
+    return aDef.core.name.localeCompare(bDef.core.name);
+  });
+}
+
+function emptyCopy(filter: BagFilter): string {
+  if (filter === 'all') return 'Nothing in the bag yet. Claim or Dive to find items.';
+  const label = filter === 'junk' ? 'junk Looks' : `${SLOT_LABELS[filter]}s`;
+  return `No ${label} in the bag.`;
 }
 
 /** One Worn slot: label + equipped item (tap the row to take it off). */
@@ -172,10 +249,7 @@ function SlotRow({
       onPress={() => def && onUnequip(slot)}
       accessibilityRole="button"
       accessibilityState={{ disabled: !def }}
-      style={({ pressed }) => [
-        styles.slotRow,
-        pressed && def && styles.pressed,
-      ]}>
+      style={({ pressed }) => [styles.slotRow, pressed && def && styles.pressed]}>
       <View style={[styles.slotIcon, { backgroundColor: theme.backgroundSelected }]}>
         <MaterialCommunityIcons name={SLOT_ICONS[slot]} size={18} color={theme.accent} />
       </View>
@@ -200,22 +274,28 @@ function SlotRow({
   );
 }
 
-/** One bag item: tap to equip; Looks also carry an inline "Sell · +3". */
-function BagRow({
-  id,
+/**
+ * One bag stack. Tap the row to equip one copy into its slot — unless a copy
+ * of that id is ALREADY worn (one per slot), in which case these are spares:
+ * the row is inert (Sell still works for Looks). Looks sell one at a time.
+ */
+function StackRow({
+  stack,
+  alreadyWorn,
   onEquip,
   onSell,
 }: {
-  id: string;
+  stack: ItemStack;
+  alreadyWorn: boolean;
   onEquip: (itemId: string) => void;
   onSell: (itemId: string) => void;
 }) {
   const theme = useTheme();
-  const def = getItemDef(id);
+  const def = getItemDef(stack.id);
   if (!def) {
     return (
-      <View style={styles.bagRow}>
-        <ThemedText type="smallBold">Unknown item</ThemedText>
+      <View style={styles.stackRow}>
+        <ThemedText type="smallBold">Unknown item ×{stack.count}</ThemedText>
       </View>
     );
   }
@@ -223,29 +303,58 @@ function BagRow({
     (mult): mult is NonNullable<ItemDef['mult_a']> => mult != null,
   );
   const sellable = def.core.kind === 'look';
+  const icon = (
+    <View style={[styles.stackIcon, { backgroundColor: theme.backgroundSelected }]}>
+      <MaterialCommunityIcons name={SLOT_ICONS[def.core.slot]} size={18} color={theme.accent} />
+    </View>
+  );
+  const body = (
+    <View style={styles.stackText}>
+      <View style={styles.stackTitleLine}>
+        <ThemedText type="smallBold">{def.core.name}</ThemedText>
+        {stack.count > 1 ? (
+          <View style={[styles.countBadge, { backgroundColor: theme.backgroundSelected }]}>
+            <ThemedText type="code" themeColor="emphasis">
+              ×{stack.count}
+            </ThemedText>
+          </View>
+        ) : null}
+        {alreadyWorn ? (
+          <View style={[styles.spareBadge, { backgroundColor: theme.backgroundSelected }]}>
+            <ThemedText type="code" themeColor="textSecondary">
+              Spare
+            </ThemedText>
+          </View>
+        ) : null}
+      </View>
+      <ThemedText type="code" themeColor="textSecondary">
+        {capitalize(def.core.rarity)} {capitalize(def.core.kind)}
+        {mults.length > 0 ? ` · ${mults.map(formatMult).join(' · ')}` : ''}
+      </ThemedText>
+    </View>
+  );
   return (
-    <View style={styles.bagRow}>
-      <Pressable
-        onPress={() => onEquip(id)}
-        accessibilityRole="button"
-        accessibilityLabel={`Equip ${def.core.name}`}
-        style={({ pressed }) => [styles.bagMain, pressed && styles.pressed]}>
-        <View style={[styles.bagIcon, { backgroundColor: theme.backgroundSelected }]}>
-          <MaterialCommunityIcons name={SLOT_ICONS[def.core.slot]} size={18} color={theme.accent} />
+    <View style={styles.stackRow}>
+      {alreadyWorn ? (
+        <View style={styles.stackMainGroup}>
+          {icon}
+          {body}
         </View>
-        <View style={styles.bagText}>
-          <ThemedText type="smallBold">{def.core.name}</ThemedText>
-          <ThemedText type="code" themeColor="textSecondary">
-            {capitalize(def.core.rarity)} {capitalize(def.core.kind)}
-            {mults.length > 0 ? ` · ${mults.map(formatMult).join(' · ')}` : ''}
-          </ThemedText>
-        </View>
-      </Pressable>
+      ) : (
+        <Pressable
+          onPress={() => onEquip(stack.id)}
+          accessibilityRole="button"
+          accessibilityLabel={`Equip ${def.core.name}`}
+          style={({ pressed }) => [styles.stackMainGroup, pressed && styles.pressed]}>
+          {icon}
+          {body}
+        </Pressable>
+      )}
       {sellable ? (
         <Pressable
-          onPress={() => onSell(id)}
+          onPress={() => onSell(stack.id)}
           accessibilityRole="button"
-          accessibilityLabel={`Sell ${def.core.name}`}
+          accessibilityLabel={`Sell one ${def.core.name}`}
           style={({ pressed }) => [
             styles.sellPill,
             { backgroundColor: theme.backgroundSelected },
@@ -283,6 +392,20 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
     justifyContent: 'space-between',
   },
+  filterRow: {
+    marginHorizontal: -Spacing.three, // bleed to the card edge like a chip bar
+  },
+  filterContent: {
+    flexDirection: 'row',
+    gap: Spacing.one,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.half,
+  },
+  filterChip: {
+    borderRadius: Spacing.two,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 4,
+  },
   slotRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -306,7 +429,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.two,
   },
-  bagRow: {
+  stackRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
@@ -314,21 +437,37 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
     paddingHorizontal: Spacing.one,
   },
-  bagMain: {
+  stackMainGroup: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
   },
-  bagIcon: {
+  stackIcon: {
     width: 32,
     height: 32,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bagText: {
+  stackText: {
     flex: 1,
+    gap: Spacing.half,
+  },
+  stackTitleLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  countBadge: {
+    borderRadius: Spacing.two,
+    paddingHorizontal: Spacing.one,
+    paddingVertical: 1,
+  },
+  spareBadge: {
+    borderRadius: Spacing.two,
+    paddingHorizontal: Spacing.one,
+    paddingVertical: 1,
   },
   sellPill: {
     borderRadius: Spacing.two,

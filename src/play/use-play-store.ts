@@ -26,6 +26,8 @@ import {
   devFillJunkLooks,
   devGrantRandomFind,
   devGrantRandomPower,
+  devGrantTideBlades,
+  devSellAllJunk,
   equipItem,
   loadPlayStore,
   playView,
@@ -220,6 +222,31 @@ export function usePlayStore() {
     return ok;
   }, [commit]);
 
+  /** Dev kit only: grant 3 copies of Tide Blade into one stack. */
+  const grantTideBlades = useCallback(async (): Promise<string | null> => {
+    let grantedId: string | null = null;
+    commit((current) => {
+      const granted = devGrantTideBlades(current);
+      grantedId = granted.grantedId;
+      return granted.doc;
+    });
+    return grantedId;
+  }, [commit]);
+
+  /** Dev kit only: sell every Look copy in the bag. */
+  const sellAllJunk = useCallback(async (): Promise<{
+    sold: number;
+    gainedTokens: number;
+  } | null> => {
+    let result: { sold: number; gainedTokens: number } | null = null;
+    commit((current) => {
+      const next = devSellAllJunk(current);
+      result = { sold: next.sold, gainedTokens: next.gainedTokens };
+      return next.doc;
+    });
+    return result;
+  }, [commit]);
+
   return {
     view,
     claim,
@@ -234,5 +261,7 @@ export function usePlayStore() {
     grantRandomPower,
     clearEquipped,
     fillJunkLooks,
+    grantTideBlades,
+    sellAllJunk,
   };
 }

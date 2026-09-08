@@ -68,6 +68,8 @@ export default function PlayScreen() {
     grantRandomPower,
     clearEquipped,
     fillJunkLooks,
+    grantTideBlades,
+    sellAllJunk,
   } = usePlayStore();
   const [mode, setMode] = useState<PlayMode>('grove');
   const [toast, setToast] = useState<PlayToast | null>(null);
@@ -94,6 +96,27 @@ export default function PlayScreen() {
     const id = await grantRandomPower();
     if (id) setToast({ kind: 'find', foundName: itemName(id) ?? id });
   }, [grantRandomPower]);
+
+  /** Dev kit row: grant 3× Tide Blade as one stack (stacking test). */
+  const handleGrantTideBlades = useCallback(async () => {
+    const id = await grantTideBlades();
+    if (id) {
+      const name = itemName(id) ?? id;
+      setToast({ kind: 'find', foundName: `${name} ×3` });
+    }
+  }, [grantTideBlades]);
+
+  /** Dev kit row: sell every Look in the bag. */
+  const handleSellAllJunk = useCallback(async () => {
+    const result = await sellAllJunk();
+    if (result && result.sold > 0) {
+      setToast({
+        kind: 'message',
+        title: 'Junk sold',
+        body: `${result.sold} Looks · +${result.gainedTokens} tokens`,
+      });
+    }
+  }, [sellAllJunk]);
 
   /** Dive view handlers — commit through the shared store, toast on results. */
   const handleSpendCharge = useCallback(async (): Promise<boolean> => beginDive(), [beginDive]);
@@ -134,12 +157,6 @@ export default function PlayScreen() {
           kind: 'message',
           title: 'Sold',
           body: `${outcome.name} · +${outcome.gainedTokens} tokens`,
-        });
-      } else if (outcome.reason === 'equipped') {
-        setToast({
-          kind: 'message',
-          title: 'Take it off first',
-          body: 'Unequip the Look before selling it.',
         });
       }
     },
@@ -361,6 +378,8 @@ export default function PlayScreen() {
                   commit={commit}
                   onGrantRandomFind={handleGrantRandomFind}
                   onGrantRandomPower={handleGrantRandomPower}
+                  onGrantTideBlades={handleGrantTideBlades}
+                  onSellAllJunk={handleSellAllJunk}
                   onClearEquipped={() => void clearEquipped()}
                   onFillJunkLooks={() => void fillJunkLooks()}
                   forceBustArmed={forceBustArmed}
@@ -391,6 +410,8 @@ function GroveDevKit({
   commit,
   onGrantRandomFind,
   onGrantRandomPower,
+  onGrantTideBlades,
+  onSellAllJunk,
   onClearEquipped,
   onFillJunkLooks,
   forceBustArmed,
@@ -401,6 +422,8 @@ function GroveDevKit({
   commit: (transition: PlayTransition) => boolean;
   onGrantRandomFind: () => Promise<void>;
   onGrantRandomPower: () => Promise<void>;
+  onGrantTideBlades: () => Promise<void>;
+  onSellAllJunk: () => Promise<void>;
   onClearEquipped: () => void;
   onFillJunkLooks: () => void;
   forceBustArmed: boolean;
@@ -476,6 +499,22 @@ function GroveDevKit({
       onPress: () => {
         clearResetArm();
         void onGrantRandomPower();
+      },
+    },
+    {
+      key: 'grant-tide',
+      label: 'Grant 3× Tide Blade (stack test)',
+      onPress: () => {
+        clearResetArm();
+        void onGrantTideBlades();
+      },
+    },
+    {
+      key: 'sell-all-junk',
+      label: 'Sell all Junk',
+      onPress: () => {
+        clearResetArm();
+        void onSellAllJunk();
       },
     },
     {

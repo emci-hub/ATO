@@ -10,10 +10,14 @@
  * - Research — 30 min cycles that accrue continuously into a pending bag,
  *   offline included, capped at 10h (20 cycles). One Claim dumps the whole bag,
  *   then accrual resets and the timer restarts.
- * - Inventory — every research find now grants a real item id rolled from the
- *   stub table (`src/play/data/items.json`, one roll per dumped cycle,
- *   appended to `inventory`). Dress (step 4) consumes it: 4 slots, one item per
- *   slot, mult buckets summed per stat (same-stat add, §9c soft-caps).
+ * - Inventory — owned items stack by id (`{ id, count }`, v5). Every find
+ *   (Research bag dump, Dive bank, dev grants) merges into the stacks. The
+ *   bag holds what is NOT worn: equipping takes one copy out of its stack
+ *   into the slot, unequipping puts it back, so a stack is never cleared and
+ *   an unequip never dupes. Dress (step 4) consumes it: 4 slots, one item per
+ *   slot, mult buckets summed per stat (same-stat add, §9c soft-caps). The
+ *   §9 soft cap (80) counts TOTAL items — the sum of stack counts + worn —
+ *   not the number of distinct rows.
  * - Dive — push-your-luck (GAME_SPEC §7, step 3): spend 1 charge → find card →
  *   Surface banks the whole haul into `inventory`, or Deeper rolls the bust
  *   table (18/28/40/55%, max 4 Deepers). The in-progress haul lives in
@@ -61,8 +65,67 @@ export const TEND_MAX_TOKENS = 40;
 export const DAILY_TEND_BONUS_TOKENS = 10;
 
 /** Inventory + Dress (GAME_SPEC §9 inventory, §9c; GAME_DATA sell knob). */
-export const INVENTORY_SOFT_CAP = 80; // soft cap 80 item rows
+export const INVENTORY_SOFT_CAP = 80; // soft cap: total items across stacks (sum of counts)
 export const LOOK_SELL_TOKENS = 3; // GAME_DATA look_sell_tokens
+
+/** One bag row: a stack of identical item ids (count ≥ 1). */
+export type ItemStack = { id: string; count: number };
+
+/** Sum of counts across the bag stacks (= bagged items only). */
+export function bagItemCount(inventory: readonly ItemStack[]): number {
+  return inventory.reduce((sum, stack) => sum + stack.count, 0);
+}
+
+/** How many slots are currently worn. */
+export function wornItemCount(
+  equipped: Readonly<Partial<Record<ItemSlot, string>>>,
+): number {
+  return Object.values(equipped).filter((id): id is string => id != null).length;
+}
+
+/** Total owned items — worn + bagged. The soft cap counts THIS, not rows. */
+export function totalOwnedCount(
+  inventory: readonly ItemStack[],
+  equipped: Readonly<Partial<Record<ItemSlot, string>>>,
+): number {
+  return bagItemCount(inventory) + wornItemCount(equipped);
+}
+
+/**
+ * Add `n` copies of `id` into the bag, merging into an existing stack of the
+ * same id when one is present. All grants (Claim, Dive bank, dev) go through
+ * here so duplicates always stack.
+ */
+function addCopiesToBag(
+  inventory: readonly ItemStack[],
+  id: string,
+  n: number,
+): ItemStack[] {
+  const existing = inventory.find((stack) => stack.id === id);
+  if (existing) {
+    return inventory.map((stack) =>
+      stack.id === id ? { id, count: stack.count + n } : stack,
+    );
+  }
+  return [...inventory, { id, count: n }];
+}
+
+/** Merge a run of granted ids (may repeat) into the bag as stacks. */
+function addManyToBag(
+  inventory: readonly ItemStack[],
+  ids: readonly string[],
+): ItemStack[] {
+  let next: ItemStack[] = [...inventory];
+  for (const id of ids) next = addCopiesToBag(next, id, 1);
+  return next;
+}
+
+/** Take one copy out of a stack; the stack disappears at zero. */
+function takeOneFromBag(inventory: readonly ItemStack[], id: string): ItemStack[] {
+  return inventory
+    .map((stack) => (stack.id === id ? { id, count: stack.count - 1 } : stack))
+    .filter((stack) => stack.count > 0);
+}
 
 /** Gear mult soft-caps (§9c table) — same-stat adds, past-cap at 25% strength. */
 const GEAR_SOFT_CAP_MULT: Record<ItemStat, number> = {
@@ -94,12 +157,13 @@ export type DiveRun = {
 /**
  * Persisted shape. Versioned under one key; add fields behind a version bump.
  * v2 added `inventory` (step 2b); v3 added `dive_run` (step 3); v4 added
- * `equipped` (step 4). Still to come behind later bumps: Defend adds
- * `highest_wave_cleared`. v1–v3 docs parse to v4 (empty bag / no run / nothing
- * equipped) so nothing on a device resets.
+ * `equipped` (step 4); v5 re-shaped `inventory` from a string[] of owned ids
+ * (worn included) into `ItemStack[]` of bagged copies (worn excluded) — old
+ * bags migrate and subtract the worn copies. Still to come behind later bumps:
+ * Defend adds `highest_wave_cleared`.
  */
 export type PlayStoreDoc = {
-  version: 4;
+  version: 5;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -111,9 +175,9 @@ export type PlayStoreDoc = {
   research_accrued_ms: number;
   /** Device-local YYYY-MM-DD the daily tend bonus was last granted. */
   last_tend_bonus_ymd: string | null;
-  /** Owned item ids (Grove stub table) — the whole collection, worn or bagged. */
-  inventory: string[];
-  /** Worn items by slot (one per slot); ids reference the collection. */
+  /** Bagged copies, stacked by id. Worn copies are NOT in here. */
+  inventory: ItemStack[];
+  /** Worn items by slot (one per slot); the worn copy lives outside the bag. */
   equipped: Partial<Record<ItemSlot, string>>;
   /** Active Dive run (null when no charge has been spent / run is over). */
   dive_run: DiveRun | null;
@@ -144,8 +208,8 @@ export type PlayView = {
   research: ResearchView;
   /** Daily tend bonus still available this device-local day. */
   tendBonusAvailable: boolean;
-  /** Whole owned collection (worn + bagged); Dress renders it. */
-  inventory: readonly string[];
+  /** Bagged copies stacked by id (worn copies excluded); Dress renders it. */
+  inventory: readonly ItemStack[];
   /** Worn item ids by slot; Dress renders it. */
   equipped: Readonly<Partial<Record<ItemSlot, string>>>;
   /** Raw additive mult sums from equipped items (§9c same-stat adds). */
@@ -190,7 +254,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 4,
+    version: 5,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -365,14 +429,15 @@ export function claimResearch(
     : snapshotDive(doc, now);
 
   // Bag dump: every whole cycle in the bag is one find = one roll from the
-  // stub table. Real ids go into inventory; the UI only ever sees names.
+  // stub table. Real ids go into inventory (stacked by id); the toast result
+  // keeps the raw rolls so the UI can name them.
   const items = Array.from({ length: research.readyFinds }, () => rollResearchFind(rng));
 
   const next: PlayStoreDoc = {
     ...doc,
     tokens: doc.tokens + tendTokens + dailyBonusTokens,
     ...nextDive,
-    inventory: [...doc.inventory, ...items],
+    inventory: addManyToBag(doc.inventory, items),
     research_accrued_ms: 0,
     research_started_at: now,
     last_tend_bonus_ymd: dailyBonusTokens > 0 ? todayYmd : doc.last_tend_bonus_ymd,
@@ -435,14 +500,18 @@ export function startDive(
   };
 }
 
-/** Bank the current haul into inventory and end the run. Null when idle. */
+/** Bank the current haul into inventory (stacked) and end the run. Null when idle. */
 export function surfaceDive(
   doc: PlayStoreDoc,
 ): { doc: PlayStoreDoc; banked: string[] } | null {
   const run = doc.dive_run;
   if (!run) return null;
   return {
-    doc: { ...doc, dive_run: null, inventory: [...doc.inventory, ...run.haul] },
+    doc: {
+      ...doc,
+      dive_run: null,
+      inventory: addManyToBag(doc.inventory, run.haul),
+    },
     banked: run.haul,
   };
 }
@@ -478,75 +547,94 @@ export function deeperDive(
  * Dress — 4 slots, one item per slot (GAME_SPEC §9 inventory, §11 screen 4;
  * GAME_DATA item + equipped shape).
  *
- * `inventory` is the whole owned collection (worn or bagged). Equipping writes
- * a slot pointer; unequipping clears it — neither changes the row count. The
- * §9 soft cap (80 rows) gates NEW Power equips while over: you must sell a
- * Look for `LOOK_SELL_TOKENS` first. Looks are the discard fodder (Power items
- * are never sellable). Row count can exceed the cap from Claim / Dive; those
- * keep working.
+ * `inventory` is the bag: copies stacked by id, worn copies excluded. Equipping
+ * takes exactly ONE copy out of its stack into the slot (the stack keeps the
+ * rest — never cleared); unequipping puts that one copy back, so a stack is
+ * never duped. Swapping a slot returns the old item to the bag. The §9 soft
+ * cap (80) counts TOTAL owned items (sum of stack counts + worn) and gates a
+ * net-new Power into an empty slot: you must sell a Look for
+ * `LOOK_SELL_TOKENS` first. Sell removes one copy from a Look stack.
+ *
+ * TODO(fridge → GAME_SPEC §16c "fridge" / "No crafting / merge" line): when
+ * the merge ladder is specced, duplicates here become the merge fuel (e.g.
+ * Tide Blade ×3 → Tide Blade 2/3). Not implemented on purpose.
  * ------------------------------------------------------------------------- */
 
 export type EquipOutcome =
   | { ok: true }
-  | { ok: false; reason: 'not_owned' | 'bag_full' };
+  | { ok: false; reason: 'not_owned' | 'bag_full' | 'already_equipped' };
 
 export type SellOutcome =
   | { ok: true; gainedTokens: number; name: string }
-  | { ok: false; reason: 'not_owned' | 'not_look' | 'equipped' };
+  | { ok: false; reason: 'not_owned' | 'not_look' };
 
-/** Equip an owned item into its slot. Blocked when over the soft cap and the
- * item is a Power (bag full — sell a Look first). Looks may still swap. */
+/** Equip one owned (bagged) copy into its slot. Blocked when the bag is over
+ * the soft cap and the item is a Power going into an EMPTY slot (net-new gear
+ * — sell a Look first). Swaps (slot holds a DIFFERENT item) are always allowed,
+ * as are Look equips, because neither adds to the total owned count. Equipping
+ * an id that is ALREADY worn is refused (`already_equipped`) — one per slot —
+ * so spare copies of a worn item can only sit in the bag (or sell, if Look). */
 export function equipItem(
   doc: PlayStoreDoc,
   itemId: string,
 ): { doc: PlayStoreDoc; outcome: EquipOutcome } {
-  if (!doc.inventory.includes(itemId)) {
+  const def = getItemDef(itemId);
+  if (!def || !doc.inventory.some((stack) => stack.id === itemId && stack.count >= 1)) {
     return { doc, outcome: { ok: false, reason: 'not_owned' } };
   }
-  const def = getItemDef(itemId);
-  if (!def) return { doc, outcome: { ok: false, reason: 'not_owned' } };
-  if (def.core.kind === 'power' && doc.inventory.length >= INVENTORY_SOFT_CAP) {
+  const slot = def.core.slot;
+  const occupiedId = doc.equipped[slot];
+  if (occupiedId === itemId) {
+    return { doc, outcome: { ok: false, reason: 'already_equipped' } };
+  }
+  const totalOwned = totalOwnedCount(doc.inventory, doc.equipped);
+  if (def.core.kind === 'power' && occupiedId == null && totalOwned >= INVENTORY_SOFT_CAP) {
     return { doc, outcome: { ok: false, reason: 'bag_full' } };
   }
+  // Take one copy from the bag; if this is a swap, the old item goes back.
+  let inventory = takeOneFromBag(doc.inventory, itemId);
+  if (occupiedId != null) inventory = addCopiesToBag(inventory, occupiedId, 1);
   return {
-    doc: { ...doc, equipped: { ...doc.equipped, [def.core.slot]: itemId } },
+    doc: { ...doc, inventory, equipped: { ...doc.equipped, [slot]: itemId } },
     outcome: { ok: true },
   };
 }
 
-/** Take an equipped item off; it stays in the collection. */
+/** Take an equipped item off and return exactly one copy to its bag stack. */
 export function unequipItem(
   doc: PlayStoreDoc,
   slot: ItemSlot,
 ): { doc: PlayStoreDoc } {
-  if (!doc.equipped[slot]) return { doc };
+  const itemId = doc.equipped[slot];
+  if (!itemId) return { doc };
   const equipped = { ...doc.equipped };
   delete equipped[slot];
-  return { doc: { ...doc, equipped } };
+  // Only return known items; a corrupt id is dropped rather than bagged.
+  const inventory = getItemDef(itemId)
+    ? addCopiesToBag(doc.inventory, itemId, 1)
+    : doc.inventory;
+  return { doc: { ...doc, equipped, inventory } };
 }
 
-/** Sell one Look for a tiny token gain. Powers are never sellable; you must
- * unequip a worn Look before selling it. */
+/** Sell ONE copy from a Look stack for a tiny token gain. Powers are never
+ * sellable. Worn copies are not in the bag, so they can never be sold out from
+ * under you — extra bagged copies of a worn id are sellable. */
 export function sellItem(
   doc: PlayStoreDoc,
   itemId: string,
 ): { doc: PlayStoreDoc; outcome: SellOutcome } {
-  if (!doc.inventory.includes(itemId)) {
+  const def = getItemDef(itemId);
+  if (!def || !doc.inventory.some((stack) => stack.id === itemId && stack.count >= 1)) {
     return { doc, outcome: { ok: false, reason: 'not_owned' } };
   }
-  const def = getItemDef(itemId);
-  if (!def) return { doc, outcome: { ok: false, reason: 'not_owned' } };
   if (def.core.kind !== 'look') {
     return { doc, outcome: { ok: false, reason: 'not_look' } };
-  }
-  if (doc.equipped[def.core.slot] === itemId) {
-    return { doc, outcome: { ok: false, reason: 'equipped' } };
   }
   return {
     doc: {
       ...doc,
       tokens: doc.tokens + LOOK_SELL_TOKENS,
-      inventory: doc.inventory.filter((id) => id !== itemId),
+      inventory: takeOneFromBag(doc.inventory, itemId),
     },
     outcome: { ok: true, gainedTokens: LOOK_SELL_TOKENS, name: def.core.name },
   };
@@ -588,7 +676,10 @@ export function devGrantRandomFind(
   rng: () => number = Math.random,
 ): { doc: PlayStoreDoc; grantedId: string } {
   const grantedId = rollResearchFind(rng);
-  return { doc: { ...doc, inventory: [...doc.inventory, grantedId] }, grantedId };
+  return {
+    doc: { ...doc, inventory: addCopiesToBag(doc.inventory, grantedId, 1) },
+    grantedId,
+  };
 }
 
 /** Top dive charges to 10; refill timer pauses at cap. */
@@ -609,7 +700,46 @@ export function devGrantRandomPower(
   rng: () => number = Math.random,
 ): { doc: PlayStoreDoc; grantedId: string } {
   const grantedId = rollPowerFind(rng);
-  return { doc: { ...doc, inventory: [...doc.inventory, grantedId] }, grantedId };
+  return {
+    doc: { ...doc, inventory: addCopiesToBag(doc.inventory, grantedId, 1) },
+    grantedId,
+  };
+}
+
+/** Dev kit: grant 3 copies of Tide Blade (one stack) to test stacking. */
+export function devGrantTideBlades(
+  doc: PlayStoreDoc,
+): { doc: PlayStoreDoc; grantedId: string; count: number } {
+  const grantedId = 'item_tide_blade_01';
+  return {
+    doc: { ...doc, inventory: addCopiesToBag(doc.inventory, grantedId, 3) },
+    grantedId,
+    count: 3,
+  };
+}
+
+/** Dev kit: sell EVERY Look copy in the bag. Returns what sold so the row can
+ * toast. Worn Looks are not in the bag, so they are never touched. */
+export function devSellAllJunk(
+  doc: PlayStoreDoc,
+): { doc: PlayStoreDoc; sold: number; gainedTokens: number } {
+  let sold = 0;
+  let gainedTokens = 0;
+  const inventory: ItemStack[] = [];
+  for (const stack of doc.inventory) {
+    const def = getItemDef(stack.id);
+    if (def?.core.kind === 'look') {
+      sold += stack.count;
+      gainedTokens += stack.count * LOOK_SELL_TOKENS;
+    } else {
+      inventory.push(stack);
+    }
+  }
+  return {
+    doc: { ...doc, tokens: doc.tokens + gainedTokens, inventory },
+    sold,
+    gainedTokens,
+  };
 }
 
 /** Dev kit: take every slot off (items stay in the collection). */
@@ -617,15 +747,17 @@ export function devClearEquipped(doc: PlayStoreDoc): PlayStoreDoc {
   return { ...doc, equipped: {} };
 }
 
-/** Dev kit: fill junk Looks up to just over the soft cap, so the §9 "bag full"
- * sell path is testable. No-op when already over the cap. */
+/** Dev kit: fill junk Looks until total owned is just over the soft cap (81),
+ * so the §9 "bag full — sell a Look" path is testable. No-op when already over. */
 export function devFillJunkLooks(doc: PlayStoreDoc): PlayStoreDoc {
   const junk = junkLookId();
-  if (!junk || doc.inventory.length >= INVENTORY_SOFT_CAP + 1) return doc;
-  const needed = INVENTORY_SOFT_CAP + 1 - doc.inventory.length;
+  if (!junk) return doc;
+  const totalOwned = totalOwnedCount(doc.inventory, doc.equipped);
+  const needed = INVENTORY_SOFT_CAP + 1 - totalOwned;
+  if (needed <= 0) return doc;
   return {
     ...doc,
-    inventory: [...doc.inventory, ...Array.from({ length: needed }, () => junk)],
+    inventory: addCopiesToBag(doc.inventory, junk, needed),
   };
 }
 
@@ -655,11 +787,14 @@ function snapshotDive(
 function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
   try {
     const data = JSON.parse(raw) as Record<string, unknown>;
-    // v1 (pre-inventory), v2 (inventory), v3 (dive_run) and v4 (equipped) all
-    // parse; older versions migrate with empty bag / no run / nothing equipped
-    // so a device that already banked tokens keeps them across updates.
+    // v1 (pre-inventory) … v4 (equipped) stored `inventory` as a string[] of
+    // owned ids WITH worn copies included. v5 stacks bagged copies with worn
+    // excluded, so legacy bags migrate by stacking occurrences and subtracting
+    // one copy per equipped slot. A device that already banked items keeps them.
     const version = data?.version;
-    if (version !== 1 && version !== 2 && version !== 3 && version !== 4) return null;
+    if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5) {
+      return null;
+    }
     const tokens = finiteNumber(data.tokens);
     const diveCharge = finiteNumber(data.dive_charge);
     const diveChargeAt = finiteNumber(data.dive_charge_at);
@@ -669,24 +804,60 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     if (tokens == null || diveCharge == null || diveChargeAt == null || researchStartedAt == null) {
       return null;
     }
-    const inventory = Array.isArray(data.inventory)
-      ? data.inventory.filter((id): id is string => typeof id === 'string')
-      : [];
+    const equipped = parseEquipped(data.equipped);
     return {
-      version: 4,
+      version: 5,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
       research_started_at: researchStartedAt,
       research_accrued_ms: Math.min(RESEARCH_CAP_MS, Math.max(0, researchAccruedMs ?? 0)),
       last_tend_bonus_ymd: lastTend,
-      inventory,
-      equipped: parseEquipped(data.equipped),
+      inventory: parseInventory(data.inventory, equipped, version < 5),
+      equipped,
       dive_run: parseDiveRun(data.dive_run),
     };
   } catch {
     return null;
   }
+}
+
+/**
+ * Normalize a stored bag into v5 stacks. Accepts legacy string[] rows or
+ * already-stacked rows. When `subtractWorn` (versions 1–4, where worn copies
+ * were also listed in the bag) one copy per equipped slot is removed.
+ */
+function parseInventory(
+  raw: unknown,
+  equipped: Partial<Record<ItemSlot, string>>,
+  subtractWorn: boolean,
+): ItemStack[] {
+  const counts = new Map<string, number>();
+  const bump = (id: string, n: number) => {
+    const next = (counts.get(id) ?? 0) + n;
+    if (next > 0) counts.set(id, next);
+    else counts.delete(id);
+  };
+  if (Array.isArray(raw)) {
+    for (const entry of raw) {
+      if (typeof entry === 'string' && entry.length > 0) {
+        bump(entry, 1);
+      } else if (
+        isRecord(entry) &&
+        typeof entry.id === 'string' &&
+        typeof entry.count === 'number' &&
+        Number.isFinite(entry.count)
+      ) {
+        bump(entry.id, Math.max(1, Math.floor(entry.count)));
+      }
+    }
+  }
+  if (subtractWorn) {
+    for (const slot of Object.values(equipped)) {
+      if (slot) bump(slot, -1);
+    }
+  }
+  return [...counts.entries()].map(([id, count]) => ({ id, count }));
 }
 
 /** Loose-shape read of equipped slots; bad values drop to un-equipped. */

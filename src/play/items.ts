@@ -93,6 +93,20 @@ export function getItemDef(id: string): ItemDef | undefined {
   return ITEM_BY_ID.get(id);
 }
 
+/**
+ * Rarity sort order, best first. The v0 stub table only ships common/rare rows
+ * (validation above rejects anything else); the higher tiers are listed here
+ * so Dress's "legendary → … → common" sort keeps working when more rarities
+ * are added to the defs (GAME_DATA content ladder), no code change needed.
+ */
+const RARITY_ORDER = ['legendary', 'epic', 'rare', 'uncommon', 'common'] as const;
+
+/** 0 = best (legendary) … N = worst (common). Unknown rarities sort last. */
+export function rarityRank(rarity: ItemRarity): number {
+  const index = RARITY_ORDER.indexOf(rarity as (typeof RARITY_ORDER)[number]);
+  return index === -1 ? RARITY_ORDER.length : index;
+}
+
 /** Stat-key → readable label for the find card's mult lines. */
 const STAT_LABELS: Record<ItemStat, string> = {
   wave_power: 'wave power',
