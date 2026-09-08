@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -310,6 +310,16 @@ export default function LegendsScreen() {
               actually sit, not a label that sticks.
             </ThemedText>
           </View>
+
+          {ready && tracksReady && !locked ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Roll a fresh read across your legend, categories, and story"
+              onPress={() => router.push('/roll' as Href)}
+              style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
+              <ThemedText type="link">Roll</ThemedText>
+            </Pressable>
+          ) : null}
 
           {unlockToast ? (
             <MilestoneToast

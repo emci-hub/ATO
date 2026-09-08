@@ -72,6 +72,20 @@ assert.match(storeSrc, /order\('created_at', \{ ascending: false \}\)/);
 assert.match(storeSrc, /import \{[\s\S]*?\} from '\.\/results'/, 'store.ts must delegate parsing to the pure results.ts module, not duplicate it');
 ok('store.ts calls all four RPCs (including claim_roll_generation) with the correct argument names, fetches the latest snapshot ordered newest-first, delegates parsing to results.ts');
 
+assert.match(storeSrc, /export async function fetchRollItems\(rollId: string\)/, 'store.ts must expose a reader for a stored roll\'s items — runRoll only returns the roll_id, nothing previously fetched the 13 rows back for display');
+assert.match(storeSrc, /from\('trait_rolls'\)/);
+assert.match(storeSrc, /\.eq\('roll_id', rollId\)/);
+ok('store.ts exposes fetchRollItems, reading trait_rolls scoped by roll_id (RLS scopes it to the caller\'s own rows)');
+
+assert.match(storeSrc, /export async function fetchLatestRollId\(userId: string\)/, 'store.ts must expose a way to find the user\'s most recent roll_id — a screen restoring after reload/navigation has no other way to find what to fetchRollItems for');
+assert.match(storeSrc, /\.eq\('user_id', userId\)[\s\S]*?\.order\('created_at', \{ ascending: false \}\)[\s\S]*?\.limit\(1\)/, 'fetchLatestRollId must scope to the given user and order newest-first');
+ok('store.ts exposes fetchLatestRollId, ordered newest-first and scoped to the caller\'s own rows');
+
+// --- compose.ts: display-only price mirror ---------------------------------
+const composeSrc = read('src/lib/rolls/compose.ts');
+assert.match(composeSrc, /export function rollItemPrice\(type: RollItemType\): number \{\s*\n\s*return type === 'legend' \? 5 : 1;/, 'rollItemPrice must mirror reveal_roll_item\'s own server-side pricing exactly (wave46/47 SQL: legend=5, else=1)');
+ok('compose.ts exposes rollItemPrice as a display-only mirror of the server\'s authoritative pricing');
+
 // --- generate.ts: dedicated call site with the right metadata, gated by its own quota ---
 const generateSrc = read('src/lib/rolls/generate.ts');
 assert.match(generateSrc, /import \{ ROLL_META \} from '@\/lib\/ai\/call-sites'/);

@@ -66,3 +66,64 @@ export async function revealRollItem(itemId: string): Promise<RevealRollItemResu
   if (error) throw error;
   return parseRevealRollItemResult(data);
 }
+
+export interface StoredRollItem {
+  id: string;
+  type: RollItem['type'];
+  categoryId: string | null;
+  result: RollItem['result'];
+  revealedAt: string | null;
+}
+
+/**
+ * The most recent roll's roll_id for this user, or null if they've never
+ * rolled — lets a screen restore its last roll's items on mount/reload
+ * instead of only ever being reachable via the outcome of runRoll() in the
+ * same session. All 13 rows of a roll share the same insert statement (and
+ * so the same created_at, for ordering purposes) via store_roll's single
+ * atomic write; RLS (trait_rolls_select_own) scopes rows to the caller.
+ */
+export async function fetchLatestRollId(userId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('trait_rolls')
+    .select('roll_id')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.roll_id ?? null;
+}
+
+/**
+ * Fetches one stored roll's rows back for display — store_roll (wave46)
+ * writes them, but nothing previously read them back; runRoll only returns
+ * the roll_id. Ordered legend, then categories, then story so the screen
+ * doesn't need to re-sort (trait_rolls has no sort column of its own; `type`
+ * sorts alphabetically as category/legend/story, so this orders client-side
+ * instead). RLS (trait_rolls_select_own) already scopes rows to the caller.
+ */
+export async function fetchRollItems(rollId: string): Promise<StoredRollItem[]> {
+  const { data, error } = await supabase
+    .from('trait_rolls')
+    .select('id, type, category_id, result, revealed_at')
+    .eq('roll_id', rollId);
+  if (error) throw error;
+  const rows = (data ?? []) as {
+    id: string;
+    type: RollItem['type'];
+    category_id: string | null;
+    result: RollItem['result'];
+    revealed_at: string | null;
+  }[];
+  const rank: Record<RollItem['type'], number> = { legend: 0, category: 1, story: 2 };
+  return rows
+    .map((row) => ({
+      id: row.id,
+      type: row.type,
+      categoryId: row.category_id,
+      result: row.result,
+      revealedAt: row.revealed_at,
+    }))
+    .sort((a, b) => rank[a.type] - rank[b.type]);
+}

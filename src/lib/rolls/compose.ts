@@ -52,6 +52,17 @@ export interface ComposedRoll {
 }
 
 /**
+ * Display-only mirror of reveal_roll_item's own pricing (wave46/47 SQL:
+ * `v_price := case v_type when 'legend' then 5 else 1 end;`) — the RPC is
+ * still the authoritative source (it returns the real `price` charged on
+ * reveal), this just lets a screen show a cost before the user taps Reveal
+ * without a round trip.
+ */
+export function rollItemPrice(type: RollItemType): number {
+  return type === 'legend' ? 5 : 1;
+}
+
+/**
  * Eligibility per §5/§7's try_roll pseudocode: a first-ever roll (no
  * snapshot yet), or a genuine RCI-detected change since the last one. Pure
  * — does not itself claim quota or write anything.
