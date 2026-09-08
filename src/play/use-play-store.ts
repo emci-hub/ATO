@@ -7,7 +7,9 @@
  *   without user input.
  *
  * All time-dependent numbers are derived from `doc` + `Date.now()` at render;
- * only real mutations (Claim) write back to AsyncStorage.
+ * only real mutations write back to AsyncStorage. `claim` is the game-code
+ * path; `commit` is the generic persistence primitive (used by Claim and by
+ * the Grove Dev kit's test transitions).
  */
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { AppState } from 'react-native';
@@ -24,6 +26,10 @@ import {
 
 /** Rough tick for countdowns; refills/research are minutes-long, 30s is plenty. */
 const TICK_MS = 30_000;
+
+/** Pure store transition: derive a next doc from the current one at `now`, or
+ * return null to refuse the change. */
+export type PlayTransition = (doc: PlayStoreDoc, now: number) => PlayStoreDoc | null;
 
 export function usePlayStore() {
   const [doc, setDoc] = useState<PlayStoreDoc | null>(null);
@@ -52,19 +58,31 @@ export function usePlayStore() {
     };
   }, [hydrate]);
 
-  const claim = useCallback(async (): Promise<ClaimResult | null> => {
+  /** Run a pure transition, persist the result, re-render. False when no doc yet
+   * or the transition refused. */
+  const commit = useCallback((transition: PlayTransition): boolean => {
     const current = docRef.current;
-    if (!current) return null;
-    const claimed = claimResearch(current, Date.now());
-    if (!claimed) return null;
-    docRef.current = claimed.doc;
-    setDoc(claimed.doc);
-    savePlayStore(claimed.doc).catch(() => {
+    if (!current) return false;
+    const next = transition(current, Date.now());
+    if (!next) return false;
+    docRef.current = next;
+    setDoc(next);
+    savePlayStore(next).catch(() => {
       // Keep the in-memory economy on save failure; next open re-reads storage.
     });
-    return claimed.result;
+    return true;
   }, []);
 
+  const claim = useCallback(async (): Promise<ClaimResult | null> => {
+    let result: ClaimResult | null = null;
+    const ok = commit((current, now) => {
+      const claimed = claimResearch(current, now);
+      result = claimed ? claimed.result : null;
+      return claimed ? claimed.doc : null;
+    });
+    return ok ? result : null;
+  }, [commit]);
+
   const view: PlayView | null = doc ? playView(doc, Date.now()) : null;
-  return { view, claim };
+  return { view, claim, commit };
 }

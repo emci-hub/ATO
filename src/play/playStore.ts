@@ -213,6 +213,42 @@ export function claimResearch(
   };
 }
 
+/* ---------------------------------------------------------------------------
+ * Standing Dev kit mutators (test panel).
+ *
+ * Pure transitions backing the Grove "Dev kit · testing only" rows in
+ * `src/app/play.tsx`. Dev-only: the kit's UI is PRE_LAUNCH_DEV-gated (Play's
+ * route redirects when the gate is off), and nothing in a production path
+ * calls these. This kit is the single test surface for Play — when a step adds
+ * a time/RNG-gated feature, add its fill/reset transition here and a button in
+ * that same step. Never reach these from game code.
+ * ------------------------------------------------------------------------- */
+
+/** Bank exactly one whole 30-min cycle so Claim becomes available. */
+export function devFillResearchOne(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  return { ...doc, research_accrued_ms: RESEARCH_CYCLE_MS, research_started_at: now };
+}
+
+/** Bank the full 10h cap (20 finds); accrual stops until Claim. */
+export function devFillResearchFull(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  return { ...doc, research_accrued_ms: RESEARCH_CAP_MS, research_started_at: now };
+}
+
+/** +10 tokens (matches the kit row label). */
+export function devAddTokens(doc: PlayStoreDoc): PlayStoreDoc {
+  return { ...doc, tokens: doc.tokens + 10 };
+}
+
+/** Top dive charges to 10; refill timer pauses at cap. */
+export function devFillDiveCharges(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  return { ...doc, dive_charge: DIVE_CHARGE_CAP, dive_charge_at: now };
+}
+
+/** Reset the whole store to a fresh default (fresh timers, 10 charges, 0 tokens). */
+export function devResetPlayStore(_doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  return defaultPlayStore(now);
+}
+
 /**
  * Rewrite dive_charge/dive_charge_at from the derived value at `now`, keeping
  * partial refill progress by backdating `dive_charge_at` to the last full

@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Redirect, router } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -12,8 +12,17 @@ import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useAppearance } from '@/lib/theme/context';
 import { GROVE_ACTION_TILES, GROVE_LEDE } from '@/play/grove';
-import { DIVE_CHARGE_CAP, canClaimResearch, type ClaimResult } from '@/play/playStore';
-import { usePlayStore } from '@/play/use-play-store';
+import {
+  DIVE_CHARGE_CAP,
+  canClaimResearch,
+  devAddTokens,
+  devFillDiveCharges,
+  devFillResearchFull,
+  devFillResearchOne,
+  devResetPlayStore,
+  type ClaimResult,
+} from '@/play/playStore';
+import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
 
 /**
  * Play room — Grove screen (GAME_SPEC §3, §11 screen 1).
@@ -28,7 +37,7 @@ import { usePlayStore } from '@/play/use-play-store';
 export default function PlayScreen() {
   const theme = useTheme();
   const { reduceMotion } = useAppearance();
-  const { view, claim } = usePlayStore();
+  const { view, claim, commit } = usePlayStore();
   const [toast, setToast] = useState<ClaimResult | null>(null);
 
   const researchReady = view != null && canClaimResearch(view);
@@ -171,8 +180,110 @@ export default function PlayScreen() {
               </ThemedView>
             ))}
           </View>
+
+          {PRE_LAUNCH_DEV ? <GroveDevKit commit={commit} /> : null}
         </ScrollView>
       </SafeAreaView>
+    </ThemedView>
+  );
+}
+
+/**
+ * Standing test panel — extend per feature.
+ *
+ * The one debug surface for Play: PRE_LAUNCH_DEV-only (the route above already
+ * redirects when the gate is off, so this can never render in production).
+ * Whenever a step adds a time/RNG-gated Play feature, add its fill/reset
+ * transition to `playStore.ts` (dev*) and a row here in that same step — do
+ * not start a second debug menu. All rows run pure transitions through
+ * `commit` and re-render from the same store view the real UI uses.
+ */
+function GroveDevKit({ commit }: { commit: (transition: PlayTransition) => boolean }) {
+  const theme = useTheme();
+  const [resetArmed, setResetArmed] = useState(false);
+  const disarmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearResetArm = useCallback(() => {
+    if (disarmTimer.current) {
+      clearTimeout(disarmTimer.current);
+      disarmTimer.current = null;
+    }
+    setResetArmed(false);
+  }, []);
+
+  const run = useCallback(
+    (transition: PlayTransition) => {
+      clearResetArm();
+      commit(transition);
+    },
+    [clearResetArm, commit],
+  );
+
+  const pressReset = useCallback(() => {
+    if (resetArmed) {
+      clearResetArm();
+      commit(devResetPlayStore);
+      return;
+    }
+    setResetArmed(true);
+    disarmTimer.current = setTimeout(() => setResetArmed(false), 4000);
+  }, [clearResetArm, commit, resetArmed]);
+
+  useEffect(() => clearResetArm, [clearResetArm]);
+
+  const rows: { key: string; label: string; onPress: () => void }[] = [
+    {
+      key: 'research-one',
+      label: 'Fill research (ready to Claim)',
+      onPress: () => run(devFillResearchOne),
+    },
+    {
+      key: 'research-full',
+      label: 'Fill research full (10h cap)',
+      onPress: () => run(devFillResearchFull),
+    },
+    { key: 'tokens', label: '+10 tokens', onPress: () => run(devAddTokens) },
+    {
+      key: 'charges',
+      label: 'Fill dive charges to 10',
+      onPress: () => run(devFillDiveCharges),
+    },
+  ];
+
+  return (
+    <ThemedView type="backgroundElement" style={styles.devKitCard}>
+      <ThemedText type="smallBold" themeColor="textSecondary">
+        Dev kit · testing only
+      </ThemedText>
+
+      {rows.map((row) => (
+        <Pressable
+          key={row.key}
+          onPress={row.onPress}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.devKitRow, pressed && styles.pressed]}>
+          <ThemedText type="small">{row.label}</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            ›
+          </ThemedText>
+        </Pressable>
+      ))}
+
+      <Pressable
+        onPress={pressReset}
+        accessibilityRole="button"
+        style={({ pressed }) => [
+          styles.devKitRow,
+          resetArmed && { backgroundColor: theme.backgroundSelected },
+          pressed && styles.pressed,
+        ]}>
+        <ThemedText type="small" themeColor={resetArmed ? 'emphasis' : undefined}>
+          {resetArmed ? 'Tap again to reset the store' : 'Reset play store'}
+        </ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          ›
+        </ThemedText>
+      </Pressable>
     </ThemedView>
   );
 }
@@ -273,6 +384,21 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.two,
     paddingHorizontal: Spacing.two,
     paddingVertical: 2,
+  },
+  devKitCard: {
+    borderRadius: Spacing.four,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    gap: Spacing.half,
+  },
+  devKitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: Spacing.two,
+    paddingVertical: Spacing.one,
+    paddingHorizontal: Spacing.two,
+    gap: Spacing.three,
   },
   pressed: {
     opacity: 0.8,
