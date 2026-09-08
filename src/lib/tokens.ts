@@ -16,6 +16,21 @@ export const TOKEN_PRICE = {
   profile_depth: 12,
 } as const;
 
+/**
+ * Trait-system redesign §7 — a new, dedicated earn event, deliberately NOT
+ * added to TOKEN_EARN above: those reasons all go through the generic
+ * earn_tokens(reason) RPC (once-per-local-day idempotency), while this one
+ * has a "once ever" idempotency shape and calls its own dedicated RPC
+ * (claimIntakeComplete in tokens-server.ts) — kept as a separate constant
+ * so the two call patterns can never be silently conflated.
+ *
+ * round_complete's +13/round price is documented in the plan but has no
+ * constant here yet — its RPC is deliberately not shipped until real
+ * round-tracking state exists to validate a round number against (see
+ * wave45_trait_redesign_tokens.sql's header comment).
+ */
+export const TOKEN_EARN_INTAKE_COMPLETE = 20;
+
 export type TokenEarnReason = keyof typeof TOKEN_EARN;
 export type TokenSpendReason = keyof typeof TOKEN_PRICE;
 
@@ -44,6 +59,8 @@ export interface TokenResult {
   delta?: number;
   reason?: string;
   price?: number;
+  /** Only set by claim_round_complete's result (§7). */
+  roundNumber?: number;
 }
 
 export function parseTokenResult(data: unknown): TokenResult {
@@ -58,6 +75,7 @@ export function parseTokenResult(data: unknown): TokenResult {
     delta: typeof row.delta === 'number' ? row.delta : undefined,
     reason: typeof row.reason === 'string' ? row.reason : undefined,
     price: typeof row.price === 'number' ? row.price : undefined,
+    roundNumber: typeof row.round_number === 'number' ? row.round_number : undefined,
   };
 }
 
