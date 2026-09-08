@@ -12,11 +12,14 @@
  *   then accrual resets and the timer restarts.
  * - Inventory — every research find now grants a real item id rolled from the
  *   stub table (`src/play/data/items.json`, one roll per dumped cycle,
- *   appended to `inventory`). Dress (step 4) is the consumer; no soft cap here.
+ *   appended to `inventory`). Dress (step 4) consumes it: 4 slots, one item per
+ *   slot, mult buckets summed per stat (same-stat add, §9c soft-caps).
  * - Dive — push-your-luck (GAME_SPEC §7, step 3): spend 1 charge → find card →
  *   Surface banks the whole haul into `inventory`, or Deeper rolls the bust
  *   table (18/28/40/55%, max 4 Deepers). The in-progress haul lives in
  *   `dive_run` so killing the app mid-run keeps the same decision on relaunch.
+ *   Equipped `dive_luck` bends the bust % (§7: bust × (1 − 0.15·(luck_bucket−1)),
+ *   floored at half the table value) — never hidden, always shown as-is.
  * - Daily tend bonus — +10 tokens once per device-local day on the first Claim
  *   (later also Dress/Decor), tracked by `last_tend_bonus_ymd`.
  *
@@ -27,7 +30,14 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { rollResearchFind } from '@/play/items';
+import {
+  getItemDef,
+  junkLookId,
+  rollPowerFind,
+  rollResearchFind,
+  type ItemSlot,
+  type ItemStat,
+} from '@/play/items';
 
 export const PLAY_STORE_KEY = 'ato.play.store.v1';
 
@@ -50,6 +60,25 @@ export const TEND_MIN_TOKENS = 15;
 export const TEND_MAX_TOKENS = 40;
 export const DAILY_TEND_BONUS_TOKENS = 10;
 
+/** Inventory + Dress (GAME_SPEC §9 inventory, §9c; GAME_DATA sell knob). */
+export const INVENTORY_SOFT_CAP = 80; // soft cap 80 item rows
+export const LOOK_SELL_TOKENS = 3; // GAME_DATA look_sell_tokens
+
+/** Gear mult soft-caps (§9c table) — same-stat adds, past-cap at 25% strength. */
+const GEAR_SOFT_CAP_MULT: Record<ItemStat, number> = {
+  wave_power: 2.0,
+  tower_speed: 1.75,
+  token_earn: 1.5,
+  dive_luck: 1.5,
+  research_yield: 1.5,
+};
+const GEAR_DIMINISHING_RATE = 0.25; // §9c "past the cap, extra rolls add at 25% strength"
+/** §7 luck tiers: each whole +5% equipped dive_luck is one bucket. */
+const LUCK_BUCKET_STEP = 0.05;
+const LUCK_BUCKET_MAX = 5;
+/** §7 bust bend per luck tier and floor ("floored at 50% of table bust"). */
+const LUCK_BUST_BEND_PER_TIER = 0.15;
+
 /**
  * An in-progress Dive run. Persisted so an app kill mid-run keeps the same
  * haul + the same Surface/Deeper decision on relaunch (the charge is already
@@ -64,12 +93,13 @@ export type DiveRun = {
 
 /**
  * Persisted shape. Versioned under one key; add fields behind a version bump.
- * v2 added `inventory` (step 2b); v3 added `dive_run` (step 3). Still to come
- * behind later bumps: Dress adds `equipped`, Defend adds `highest_wave_cleared`.
- * v1/v2 docs parse to v3 (empty bag / no run) so nothing on a device resets.
+ * v2 added `inventory` (step 2b); v3 added `dive_run` (step 3); v4 added
+ * `equipped` (step 4). Still to come behind later bumps: Defend adds
+ * `highest_wave_cleared`. v1–v3 docs parse to v4 (empty bag / no run / nothing
+ * equipped) so nothing on a device resets.
  */
 export type PlayStoreDoc = {
-  version: 3;
+  version: 4;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -81,8 +111,10 @@ export type PlayStoreDoc = {
   research_accrued_ms: number;
   /** Device-local YYYY-MM-DD the daily tend bonus was last granted. */
   last_tend_bonus_ymd: string | null;
-  /** Bag of granted item ids (Grove stub table) — Dress consumes this later. */
+  /** Owned item ids (Grove stub table) — the whole collection, worn or bagged. */
   inventory: string[];
+  /** Worn items by slot (one per slot); ids reference the collection. */
+  equipped: Partial<Record<ItemSlot, string>>;
   /** Active Dive run (null when no charge has been spent / run is over). */
   dive_run: DiveRun | null;
 };
@@ -112,7 +144,16 @@ export type PlayView = {
   research: ResearchView;
   /** Daily tend bonus still available this device-local day. */
   tendBonusAvailable: boolean;
+  /** Whole owned collection (worn + bagged); Dress renders it. */
+  inventory: readonly string[];
+  /** Worn item ids by slot; Dress renders it. */
+  equipped: Readonly<Partial<Record<ItemSlot, string>>>;
+  /** Raw additive mult sums from equipped items (§9c same-stat adds). */
+  statSums: StatSums;
 };
+
+/** Raw mult sums per stat from the four equipped items (before soft-cap). */
+export type StatSums = Record<ItemStat, number>;
 
 /** Read-model of an active Dive run for the screen (no mutable doc shape). */
 export type DiveRunView = {
@@ -149,7 +190,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 3,
+    version: 4,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -157,6 +198,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     research_accrued_ms: 0,
     last_tend_bonus_ymd: null,
     inventory: [],
+    equipped: {},
     dive_run: null,
   };
 }
@@ -202,26 +244,93 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
   return {
     tokens: doc.tokens,
     dive: diveChargeAt(doc, now),
-    diveRun: diveRunViewOf(doc.dive_run),
+    diveRun: diveRunViewOf(doc),
     research: researchAt(doc, now),
     tendBonusAvailable: doc.last_tend_bonus_ymd !== localYmd(new Date(now)),
+    inventory: doc.inventory,
+    equipped: doc.equipped,
+    statSums: equippedStatSums(doc.equipped),
   };
 }
 
-function diveRunViewOf(run: DiveRun | null): DiveRunView {
+function diveRunViewOf(doc: PlayStoreDoc): DiveRunView {
+  const run = doc.dive_run;
   if (!run) return { active: false, deepers: 0, haul: [], bustPctNext: null, canDeeper: false };
   const canDeeper = run.deepers < DIVE_DEEPER_MAX;
   return {
     active: true,
     deepers: run.deepers,
     haul: run.haul,
-    bustPctNext: canDeeper ? Math.round(DIVE_BUST_TABLE[run.deepers] * 100) : null,
+    bustPctNext: canDeeper ? effectiveBustPct(DIVE_BUST_TABLE[run.deepers], doc.equipped) : null,
     canDeeper,
   };
 }
 
 export function canClaimResearch(view: PlayView): boolean {
   return view.research.readyFinds >= 1;
+}
+
+/* ---------------------------------------------------------------------------
+ * Equipped gear buckets (GAME_SPEC §9c).
+ *
+ * Each equipped item contributes its mult_a / mult_b. Same stat adds into one
+ * bucket; different stats stay separate and multiply later (Defend). The raw
+ * sums are the display truth ("+8% wave power"); `bucketMultiplier` applies
+ * the §9c soft-cap — past the cap (wave_power ×2.0 from gear, others ×1.5)
+ * extra rolls add at 25% strength. `effectiveBustPct` bends a Dive bust % via
+ * the §7 dive_luck tier formula; it is what the screen always shows.
+ * ------------------------------------------------------------------------- */
+
+/** Raw additive sums per stat from the equipped items (0 when none). */
+export function equippedStatSums(
+  equipped: Readonly<Partial<Record<ItemSlot, string>>>,
+): StatSums {
+  const sums: StatSums = {
+    wave_power: 0,
+    tower_speed: 0,
+    token_earn: 0,
+    dive_luck: 0,
+    research_yield: 0,
+  };
+  for (const slot of Object.values(equipped)) {
+    if (!slot) continue;
+    const def = getItemDef(slot);
+    if (!def) continue;
+    for (const mult of [def.mult_a, def.mult_b]) {
+      if (mult) sums[mult.stat] += mult.value;
+    }
+  }
+  return sums;
+}
+
+/** §9c soft-capped multiplier for one stat from its raw additive sum. */
+export function bucketMultiplier(stat: ItemStat, sums: StatSums): number {
+  const addCap = GEAR_SOFT_CAP_MULT[stat] - 1;
+  const raw = sums[stat];
+  return 1 + Math.min(raw, addCap) + GEAR_DIMINISHING_RATE * Math.max(0, raw - addCap);
+}
+
+/** §7 luck tier from the (uncapped) dive_luck sum: each +5% is one tier. */
+export function diveLuckBucket(statSums: StatSums): number {
+  return Math.min(
+    LUCK_BUCKET_MAX,
+    Math.max(1, 1 + Math.floor(statSums.dive_luck / LUCK_BUCKET_STEP)),
+  );
+}
+
+/**
+ * §7 bust bend: table bust % × (1 − 0.15·(luck_bucket−1)), floored at 50% of
+ * the table value. Returns whole percent (what the UI shows) — honest odds,
+ * never hidden.
+ */
+export function effectiveBustPct(
+  baseBust: number,
+  equipped: Readonly<Partial<Record<ItemSlot, string>>>,
+): number {
+  const bucket = diveLuckBucket(equippedStatSums(equipped));
+  const bent = baseBust * (1 - LUCK_BUST_BEND_PER_TIER * (bucket - 1));
+  const floored = Math.max(0.5 * baseBust, bent);
+  return Math.round(floored * 100);
 }
 
 /**
@@ -290,12 +399,11 @@ export function claimResearch(
  * inventory, or Deeper rolls the bust table (18/28/40/55%) and, on a safe
  * roll, adds another find. Max 4 Deepers. A bust loses this haul only — the
  * charge is already spent and nothing outside the haul is touched. Honest
- * numbers: the UI shows the exact bust % of the next Deeper from this table.
+ * numbers: the UI shows the effective bust % of the next Deeper — the table
+ * value already bent by equipped `dive_luck` (§7), never hidden.
  *
- * `dive_luck` (from equipped items) does not bend these rolls until Dress
- * (step 4) computes buckets; until then the table is shown as-is, never
- * hidden. All item rolls reuse the stub-table uniform roll — weighted Dive
- * loot arrives with loot_tables.json later.
+ * All item rolls reuse the stub-table uniform roll — weighted Dive loot
+ * arrives with loot_tables.json later.
  * ------------------------------------------------------------------------- */
 
 export type DeeperOutcome =
@@ -340,9 +448,10 @@ export function surfaceDive(
 }
 
 /**
- * Roll one Deeper press. Bust chance comes from `DIVE_BUST_TABLE[run.deepers]`
- * (Deeper # = deepers + 1). On a bust the whole haul is lost and the run ends.
- * On a safe roll another find is added. Null when idle or the run is maxed.
+ * Roll one Deeper press. Bust chance is the §7 table value at this run's depth
+ * (Deeper # = deepers + 1), bent by equipped `dive_luck` via `effectiveBustPct`
+ * — the same number the UI shows. On a bust the whole haul is lost and the run
+ * ends. On a safe roll another find is added. Null when idle or run is maxed.
  */
 export function deeperDive(
   doc: PlayStoreDoc,
@@ -350,8 +459,9 @@ export function deeperDive(
 ): { doc: PlayStoreDoc; outcome: DeeperOutcome } | null {
   const run = doc.dive_run;
   if (!run || run.deepers >= DIVE_DEEPER_MAX) return null;
-  const bustPct = DIVE_BUST_TABLE[run.deepers];
-  if (rng() < bustPct) {
+  const bustChance = effectiveBustPct(DIVE_BUST_TABLE[run.deepers], doc.equipped) / 100;
+  if (rng() < bustChance) {
+    const bustPct = Math.round(bustChance * 100);
     return { doc: { ...doc, dive_run: null }, outcome: { busted: true, bustPct } };
   }
   const addedId = rollResearchFind(rng);
@@ -360,7 +470,85 @@ export function deeperDive(
       ...doc,
       dive_run: { deepers: run.deepers + 1, haul: [...run.haul, addedId] },
     },
-    outcome: { busted: false, bustPct, addedId },
+    outcome: { busted: false, bustPct: Math.round(bustChance * 100), addedId },
+  };
+}
+
+/* ---------------------------------------------------------------------------
+ * Dress — 4 slots, one item per slot (GAME_SPEC §9 inventory, §11 screen 4;
+ * GAME_DATA item + equipped shape).
+ *
+ * `inventory` is the whole owned collection (worn or bagged). Equipping writes
+ * a slot pointer; unequipping clears it — neither changes the row count. The
+ * §9 soft cap (80 rows) gates NEW Power equips while over: you must sell a
+ * Look for `LOOK_SELL_TOKENS` first. Looks are the discard fodder (Power items
+ * are never sellable). Row count can exceed the cap from Claim / Dive; those
+ * keep working.
+ * ------------------------------------------------------------------------- */
+
+export type EquipOutcome =
+  | { ok: true }
+  | { ok: false; reason: 'not_owned' | 'bag_full' };
+
+export type SellOutcome =
+  | { ok: true; gainedTokens: number; name: string }
+  | { ok: false; reason: 'not_owned' | 'not_look' | 'equipped' };
+
+/** Equip an owned item into its slot. Blocked when over the soft cap and the
+ * item is a Power (bag full — sell a Look first). Looks may still swap. */
+export function equipItem(
+  doc: PlayStoreDoc,
+  itemId: string,
+): { doc: PlayStoreDoc; outcome: EquipOutcome } {
+  if (!doc.inventory.includes(itemId)) {
+    return { doc, outcome: { ok: false, reason: 'not_owned' } };
+  }
+  const def = getItemDef(itemId);
+  if (!def) return { doc, outcome: { ok: false, reason: 'not_owned' } };
+  if (def.core.kind === 'power' && doc.inventory.length >= INVENTORY_SOFT_CAP) {
+    return { doc, outcome: { ok: false, reason: 'bag_full' } };
+  }
+  return {
+    doc: { ...doc, equipped: { ...doc.equipped, [def.core.slot]: itemId } },
+    outcome: { ok: true },
+  };
+}
+
+/** Take an equipped item off; it stays in the collection. */
+export function unequipItem(
+  doc: PlayStoreDoc,
+  slot: ItemSlot,
+): { doc: PlayStoreDoc } {
+  if (!doc.equipped[slot]) return { doc };
+  const equipped = { ...doc.equipped };
+  delete equipped[slot];
+  return { doc: { ...doc, equipped } };
+}
+
+/** Sell one Look for a tiny token gain. Powers are never sellable; you must
+ * unequip a worn Look before selling it. */
+export function sellItem(
+  doc: PlayStoreDoc,
+  itemId: string,
+): { doc: PlayStoreDoc; outcome: SellOutcome } {
+  if (!doc.inventory.includes(itemId)) {
+    return { doc, outcome: { ok: false, reason: 'not_owned' } };
+  }
+  const def = getItemDef(itemId);
+  if (!def) return { doc, outcome: { ok: false, reason: 'not_owned' } };
+  if (def.core.kind !== 'look') {
+    return { doc, outcome: { ok: false, reason: 'not_look' } };
+  }
+  if (doc.equipped[def.core.slot] === itemId) {
+    return { doc, outcome: { ok: false, reason: 'equipped' } };
+  }
+  return {
+    doc: {
+      ...doc,
+      tokens: doc.tokens + LOOK_SELL_TOKENS,
+      inventory: doc.inventory.filter((id) => id !== itemId),
+    },
+    outcome: { ok: true, gainedTokens: LOOK_SELL_TOKENS, name: def.core.name },
   };
 }
 
@@ -415,6 +603,32 @@ export function devAddDiveCharge(doc: PlayStoreDoc, now: number): PlayStoreDoc {
   return { ...doc, dive_charge: current + 1, dive_charge_at: now };
 }
 
+/** Dev kit: grant one random Power item into the bag. */
+export function devGrantRandomPower(
+  doc: PlayStoreDoc,
+  rng: () => number = Math.random,
+): { doc: PlayStoreDoc; grantedId: string } {
+  const grantedId = rollPowerFind(rng);
+  return { doc: { ...doc, inventory: [...doc.inventory, grantedId] }, grantedId };
+}
+
+/** Dev kit: take every slot off (items stay in the collection). */
+export function devClearEquipped(doc: PlayStoreDoc): PlayStoreDoc {
+  return { ...doc, equipped: {} };
+}
+
+/** Dev kit: fill junk Looks up to just over the soft cap, so the §9 "bag full"
+ * sell path is testable. No-op when already over the cap. */
+export function devFillJunkLooks(doc: PlayStoreDoc): PlayStoreDoc {
+  const junk = junkLookId();
+  if (!junk || doc.inventory.length >= INVENTORY_SOFT_CAP + 1) return doc;
+  const needed = INVENTORY_SOFT_CAP + 1 - doc.inventory.length;
+  return {
+    ...doc,
+    inventory: [...doc.inventory, ...Array.from({ length: needed }, () => junk)],
+  };
+}
+
 /** Reset the whole store to a fresh default (fresh timers, 10 charges, 0 tokens). */
 export function devResetPlayStore(_doc: PlayStoreDoc, now: number): PlayStoreDoc {
   return defaultPlayStore(now);
@@ -441,10 +655,11 @@ function snapshotDive(
 function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
   try {
     const data = JSON.parse(raw) as Record<string, unknown>;
-    // v1 (pre-inventory), v2 (inventory) and v3 (dive_run) all parse; older
-    // versions migrate with an empty bag / no run so a device that already
-    // banked tokens keeps them across updates.
-    if (data?.version !== 1 && data?.version !== 2 && data?.version !== 3) return null;
+    // v1 (pre-inventory), v2 (inventory), v3 (dive_run) and v4 (equipped) all
+    // parse; older versions migrate with empty bag / no run / nothing equipped
+    // so a device that already banked tokens keeps them across updates.
+    const version = data?.version;
+    if (version !== 1 && version !== 2 && version !== 3 && version !== 4) return null;
     const tokens = finiteNumber(data.tokens);
     const diveCharge = finiteNumber(data.dive_charge);
     const diveChargeAt = finiteNumber(data.dive_charge_at);
@@ -458,7 +673,7 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       ? data.inventory.filter((id): id is string => typeof id === 'string')
       : [];
     return {
-      version: 3,
+      version: 4,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -466,11 +681,23 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       research_accrued_ms: Math.min(RESEARCH_CAP_MS, Math.max(0, researchAccruedMs ?? 0)),
       last_tend_bonus_ymd: lastTend,
       inventory,
+      equipped: parseEquipped(data.equipped),
       dive_run: parseDiveRun(data.dive_run),
     };
   } catch {
     return null;
   }
+}
+
+/** Loose-shape read of equipped slots; bad values drop to un-equipped. */
+function parseEquipped(raw: unknown): Partial<Record<ItemSlot, string>> {
+  if (!isRecord(raw)) return {};
+  const equipped: Partial<Record<ItemSlot, string>> = {};
+  for (const slot of ['weapon', 'armor', 'cloak', 'trinket'] as const) {
+    const value = raw[slot];
+    if (typeof value === 'string') equipped[slot] = value;
+  }
+  return equipped;
 }
 
 /** Loose-shape read of the persisted run; anything malformed → no run. */

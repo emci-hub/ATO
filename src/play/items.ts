@@ -70,6 +70,19 @@ export function rollResearchFind(rng: () => number = Math.random): string {
   return ids[Math.floor(rng() * ids.length)];
 }
 
+/** Roll one Power item id — uniform over the kind: power rows. */
+export function rollPowerFind(rng: () => number = Math.random): string {
+  const powers = ITEMS.filter((item) => item.core.kind === 'power');
+  return powers[Math.floor(rng() * powers.length)].id;
+}
+
+/** A stable common Look — the Dev kit's junk-fill fodder (auto-sell source). */
+export function junkLookId(): string {
+  const junk =
+    ITEMS.find((item) => item.core.kind === 'look' && item.core.rarity === 'common') ?? ITEMS[0];
+  return junk?.id ?? '';
+}
+
 /** Display name for an id, or null when the id is not a def (dangling). */
 export function itemName(id: string): string | null {
   return ITEM_BY_ID.get(id)?.core.name ?? null;

@@ -24,7 +24,7 @@ export type GroveActionTile = {
   soon: string | null;
 };
 
-/** Dive is live since step 3; Dress / Defend are "soon" until their steps land. */
+/** Dive + Dress are live since steps 3–4; Defend is "soon" until its step. */
 export const GROVE_ACTION_TILES: GroveActionTile[] = [
   {
     kind: 'dive',
@@ -38,7 +38,7 @@ export const GROVE_ACTION_TILES: GroveActionTile[] = [
     icon: 'hanger',
     title: 'Dress',
     lede: 'Equip what you find.',
-    soon: 'Soon',
+    soon: null,
   },
   {
     kind: 'defend',

@@ -4,17 +4,23 @@
  * Renders the whole Dive decision surface off `view.diveRun`:
  * - no run → "Dive · 1 charge" CTA (disabled at 0 charges with an honest note);
  * - run active → the haul as find cards + a "next move" card showing the exact
- *   bust % of the next Deeper (18 → 28 → 40 → 55%, max 4 Deepers) with Surface
- *   and Deeper buttons.
+ *   effective bust % of the next Deeper (§7, already bent by equipped
+ *   dive_luck, never hidden) with Surface and Deeper buttons.
  *
  * All mutations go through the callbacks (which live in `play.tsx` and commit
  * through the shared playStore), so this stays a read-only view of store
- * truth. Copy never uses gamble / casino / jackpot / bet — Dive / Surface /
- * Deeper / bust only (GAME_SPEC §7).
+ * truth. Dive actions are paced against mash: pressing Start / Surface /
+ * Deeper shows a short "searching…" beat (all buttons locked), then the result
+ * commits, then a brief cooldown still holds the buttons. The Dev kit can set
+ * `skipDelays` to make every action instant for fast testing.
+ *
+ * Copy never uses gamble / casino / jackpot / bet — Dive / Surface / Deeper /
+ * bust only (GAME_SPEC §7).
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { ComponentProps } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -30,14 +36,23 @@ const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>
   trinket: 'star-four-points',
 };
 
+/** Beat before a result lands (0.8–1.2s) and the input lockout after it. */
+const SPLASH_MS = 950;
+const COOLDOWN_MS = 650;
+
 export function DiveScreen({
   view,
+  skipDelays,
+  reduceMotion,
   onSpendCharge,
   onSurface,
   onDeeper,
   onBackToGrove,
 }: {
   view: PlayView;
+  /** Dev kit only — resolve every action instantly (no beat, no cooldown). */
+  skipDelays: boolean;
+  reduceMotion: boolean;
   onSpendCharge: () => Promise<boolean>;
   onSurface: () => Promise<boolean>;
   onDeeper: () => Promise<boolean>;
@@ -47,6 +62,51 @@ export function DiveScreen({
   const charges = view.dive.current;
   const run = view.diveRun;
   const canSpend = !run.active && charges >= 1;
+
+  // -- Pacing ---------------------------------------------------------------
+  // `busy` locks every action button. `splashCopy` non-null renders the
+  // "searching…" beat (before the action commits); while busy with null copy
+  // we are in the short post-result cooldown (result visible, buttons locked).
+  const [busy, setBusy] = useState(false);
+  const [splashCopy, setSplashCopy] = useState<string | null>(null);
+  const busyRef = useRef(false);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    const pending = timers.current;
+    return () => pending.forEach(clearTimeout);
+  }, []);
+
+  const act = (label: string, action: () => Promise<boolean>) => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setBusy(true);
+    const finish = () => {
+      void action().then(() => {
+        setSplashCopy(null);
+        if (skipDelays) {
+          busyRef.current = false;
+          setBusy(false);
+        } else {
+          timers.current.push(
+            setTimeout(() => {
+              busyRef.current = false;
+              setBusy(false);
+            }, COOLDOWN_MS),
+          );
+        }
+      });
+    };
+    if (skipDelays) {
+      setSplashCopy(null);
+      finish();
+    } else {
+      setSplashCopy(label);
+      timers.current.push(setTimeout(finish, SPLASH_MS));
+    }
+  };
+
+  const showSplash = busy && splashCopy != null;
 
   return (
     <>
@@ -87,99 +147,134 @@ export function DiveScreen({
           </ThemedView>
 
           <ThemedView type="backgroundElement" style={styles.card}>
-            <ThemedText type="smallBold">Next move</ThemedText>
-            {run.canDeeper && run.bustPctNext != null ? (
-              <>
-                <ThemedText type="small" themeColor="textSecondary">
-                  Deeper adds another find to this haul — {run.bustPctNext}% to lose it all.
-                  Surface keeps every find and banks it to your bag.
-                </ThemedText>
-                <View style={styles.buttonRow}>
-                  <Pressable
-                    onPress={() => void onDeeper()}
-                    accessibilityRole="button"
-                    style={({ pressed }) => [
-                      styles.button,
-                      styles.rowButton,
-                      { backgroundColor: theme.backgroundSelected },
-                      pressed && styles.pressed,
-                    ]}>
-                    <ThemedText type="smallBold">Deeper</ThemedText>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => void onSurface()}
-                    accessibilityRole="button"
-                    style={({ pressed }) => [
-                      styles.button,
-                      styles.rowButtonPrimary,
-                      { backgroundColor: theme.accentFill },
-                      pressed && styles.pressed,
-                    ]}>
-                    <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                      Surface
-                    </ThemedText>
-                  </Pressable>
-                </View>
-              </>
+            {showSplash ? (
+              <SplashRow label={splashCopy ?? 'Searching…'} showSpinner={!reduceMotion} />
             ) : (
               <>
-                <ThemedText type="small" themeColor="textSecondary">
-                  Max depth — this haul has reached its last Deeper. Surface to keep it.
-                </ThemedText>
-                <Pressable
-                  onPress={() => void onSurface()}
-                  accessibilityRole="button"
-                  style={({ pressed }) => [
-                    styles.button,
-                    { backgroundColor: theme.accentFill },
-                    pressed && styles.pressed,
-                  ]}>
-                  <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                    Surface
-                  </ThemedText>
-                </Pressable>
+                <ThemedText type="smallBold">Next move</ThemedText>
+                {run.canDeeper && run.bustPctNext != null ? (
+                  <>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      Deeper adds another find to this haul — {run.bustPctNext}% to lose it all.
+                      Surface keeps every find and banks it to your bag.
+                    </ThemedText>
+                    <View style={styles.buttonRow}>
+                      <Pressable
+                        onPress={() => act('Going deeper…', onDeeper)}
+                        disabled={busy}
+                        accessibilityRole="button"
+                        accessibilityState={{ disabled: busy }}
+                        style={({ pressed }) => [
+                          styles.button,
+                          styles.rowButton,
+                          { backgroundColor: theme.backgroundSelected },
+                          pressed && !busy && styles.pressed,
+                          busy && styles.disabled,
+                        ]}>
+                        <ThemedText type="smallBold">Deeper</ThemedText>
+                      </Pressable>
+                      <Pressable
+                        onPress={() => act('Heading up…', onSurface)}
+                        disabled={busy}
+                        accessibilityRole="button"
+                        accessibilityState={{ disabled: busy }}
+                        style={({ pressed }) => [
+                          styles.button,
+                          styles.rowButtonPrimary,
+                          { backgroundColor: theme.accentFill },
+                          pressed && !busy && styles.pressed,
+                          busy && styles.disabled,
+                        ]}>
+                        <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
+                          Surface
+                        </ThemedText>
+                      </Pressable>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      Max depth — this haul has reached its last Deeper. Surface to keep it.
+                    </ThemedText>
+                    <Pressable
+                      onPress={() => act('Heading up…', onSurface)}
+                      disabled={busy}
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled: busy }}
+                      style={({ pressed }) => [
+                        styles.button,
+                        { backgroundColor: theme.accentFill },
+                        pressed && !busy && styles.pressed,
+                        busy && styles.disabled,
+                      ]}>
+                      <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
+                        Surface
+                      </ThemedText>
+                    </Pressable>
+                  </>
+                )}
               </>
             )}
           </ThemedView>
         </>
       ) : (
         <ThemedView type="backgroundElement" style={styles.card}>
-          <ThemedText type="smallBold">One charge, one find</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            A dive starts with a single find. Each Deeper adds another, and the
-            bust chance climbs with it — 18%, then 28%, 40%, up to 55%. Surface
-            any time to keep what you have.
-          </ThemedText>
-          {canSpend ? (
-            <Pressable
-              onPress={() => void onSpendCharge()}
-              accessibilityRole="button"
-              style={({ pressed }) => [
-                styles.button,
-                { backgroundColor: theme.accentFill },
-                pressed && styles.pressed,
-              ]}>
-              <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                Dive · 1 charge
-              </ThemedText>
-            </Pressable>
+          {showSplash ? (
+            <SplashRow label={splashCopy ?? 'Searching…'} showSpinner={!reduceMotion} />
           ) : (
-            <Pressable
-              disabled
-              accessibilityRole="button"
-              accessibilityState={{ disabled: true }}
-              style={[styles.button, { backgroundColor: theme.backgroundSelected }]}>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                No dive charges
+            <>
+              <ThemedText type="smallBold">One charge, one find</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                A dive starts with a single find. Each Deeper adds another, and the
+                bust chance climbs with it — 18%, then 28%, 40%, up to 55%. Surface
+                any time to keep what you have.
               </ThemedText>
-            </Pressable>
+              {canSpend ? (
+                <Pressable
+                  onPress={() => act('Searching…', onSpendCharge)}
+                  disabled={busy}
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: busy }}
+                  style={({ pressed }) => [
+                    styles.button,
+                    { backgroundColor: theme.accentFill },
+                    pressed && !busy && styles.pressed,
+                    busy && styles.disabled,
+                  ]}>
+                  <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
+                    Dive · 1 charge
+                  </ThemedText>
+                </Pressable>
+              ) : (
+                <Pressable
+                  disabled
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: true }}
+                  style={[styles.button, { backgroundColor: theme.backgroundSelected }]}>
+                  <ThemedText type="smallBold" themeColor="textSecondary">
+                    No dive charges
+                  </ThemedText>
+                </Pressable>
+              )}
+              <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
+                Charges refill every ~10 minutes, and a Research claim can grant one too.
+              </ThemedText>
+            </>
           )}
-          <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-            Charges refill every ~10 minutes, and a Research claim can grant one too.
-          </ThemedText>
         </ThemedView>
       )}
     </>
+  );
+}
+
+/** Small "searching…" beat row — spinner when motion is fine, copy alone when not. */
+function SplashRow({ label, showSpinner }: { label: string; showSpinner: boolean }) {
+  const theme = useTheme();
+  return (
+    <View style={styles.splashRow}>
+      {showSpinner ? <ActivityIndicator size="small" color={theme.accent} /> : null}
+      <ThemedText type="smallBold">{label}</ThemedText>
+    </View>
   );
 }
 
@@ -281,6 +376,16 @@ const styles = StyleSheet.create({
   },
   rowButtonPrimary: {
     flex: 2,
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  splashRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.two,
+    paddingVertical: Spacing.one,
   },
   centerText: {
     textAlign: 'center',

@@ -12,8 +12,9 @@ import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useAppearance } from '@/lib/theme/context';
 import { DiveScreen } from '@/play/dive-screen';
+import { DressScreen } from '@/play/dress-screen';
 import { GROVE_ACTION_TILES, GROVE_LEDE } from '@/play/grove';
-import { itemName } from '@/play/items';
+import { itemName, type ItemSlot } from '@/play/items';
 import {
   DIVE_CHARGE_CAP,
   canClaimResearch,
@@ -28,25 +29,27 @@ import {
 import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
 
 /**
- * Play room — Grove + Dive (GAME_SPEC §3, §7, §11 screens 1–2).
+ * Play room — Grove + Dive + Dress (GAME_SPEC §3, §7, §9c, §11 screens 1–4).
  *
  * Grove view rides a real local economy from `usePlayStore`
  * (`src/play/playStore.ts`): tokens, dive charges (0–10, ~10 min refill),
  * Research (30-min cycles, 10h cap, one Claim dump, daily tend bonus). Claim
- * dumps the bag as real stub items (step 2b). Dive (step 3) is one screen
- * with two views: the Grove action list enables the Dive row → `DiveScreen`
- * (spend charge → find card → Surface / Deeper with honest §7 odds, max 4
- * Deepers). Dress / Defend stay "soon". No Supabase — local AsyncStorage only.
+ * dumps the bag as real stub items. Dive (step 3) is paced (searching beat +
+ * post-result cooldown; Dev kit can skip the delays) and its bust odds are
+ * bent by equipped dive_luck (§7). Dress (step 4) equips 4 slots from the
+ * collection, sells Looks over the soft cap, and shows the equipped-stat
+ * buckets. Defend stays "soon". No Supabase — local AsyncStorage only.
  * Hidden outside pre-launch builds via PRE_LAUNCH_DEV.
  */
 
-type PlayMode = 'grove' | 'dive';
+type PlayMode = 'grove' | 'dive' | 'dress';
 
 type PlayToast =
   | { kind: 'claim'; result: ClaimResult }
   | { kind: 'find'; foundName: string }
   | { kind: 'surface'; itemIds: string[] }
-  | { kind: 'bust' };
+  | { kind: 'bust' }
+  | { kind: 'message'; title: string; body: string };
 
 export default function PlayScreen() {
   const theme = useTheme();
@@ -59,11 +62,19 @@ export default function PlayScreen() {
     beginDive,
     surfaceRun,
     pushDeeper,
+    equip,
+    unequip,
+    sell,
+    grantRandomPower,
+    clearEquipped,
+    fillJunkLooks,
   } = usePlayStore();
   const [mode, setMode] = useState<PlayMode>('grove');
   const [toast, setToast] = useState<PlayToast | null>(null);
   /** Dev kit only: one-shot forced bust on the next Deeper press. */
   const [forceBustArmed, setForceBustArmed] = useState(false);
+  /** Dev kit only: skip the Dive searching beat + cooldown for fast testing. */
+  const [skipDelays, setSkipDelays] = useState(false);
 
   const researchReady = view != null && canClaimResearch(view);
 
@@ -77,6 +88,12 @@ export default function PlayScreen() {
     const id = await grantRandomFind();
     if (id) setToast({ kind: 'find', foundName: itemName(id) ?? id });
   }, [grantRandomFind]);
+
+  /** Dev kit row: grant one Power into the bag, named in the toast. */
+  const handleGrantRandomPower = useCallback(async () => {
+    const id = await grantRandomPower();
+    if (id) setToast({ kind: 'find', foundName: itemName(id) ?? id });
+  }, [grantRandomPower]);
 
   /** Dive view handlers — commit through the shared store, toast on results. */
   const handleSpendCharge = useCallback(async (): Promise<boolean> => beginDive(), [beginDive]);
@@ -93,6 +110,48 @@ export default function PlayScreen() {
     if (outcome?.busted) setToast({ kind: 'bust' });
     return outcome != null;
   }, [forceBustArmed, pushDeeper]);
+
+  /** Dress handlers. Equip/sell failures surface as honest message toasts. */
+  const handleEquip = useCallback(
+    async (itemId: string) => {
+      const outcome = await equip(itemId);
+      if (!outcome.ok && outcome.reason === 'bag_full') {
+        setToast({
+          kind: 'message',
+          title: 'Bag full',
+          body: 'The Grove holds 80 finds — sell a Look to make room for a Power.',
+        });
+      }
+    },
+    [equip],
+  );
+
+  const handleSell = useCallback(
+    async (itemId: string) => {
+      const outcome = await sell(itemId);
+      if (outcome.ok) {
+        setToast({
+          kind: 'message',
+          title: 'Sold',
+          body: `${outcome.name} · +${outcome.gainedTokens} tokens`,
+        });
+      } else if (outcome.reason === 'equipped') {
+        setToast({
+          kind: 'message',
+          title: 'Take it off first',
+          body: 'Unequip the Look before selling it.',
+        });
+      }
+    },
+    [sell],
+  );
+
+  const handleUnequip = useCallback(
+    (slot: ItemSlot) => {
+      void unequip(slot);
+    },
+    [unequip],
+  );
 
   function closePlay() {
     if (router.canGoBack()) {
@@ -118,7 +177,9 @@ export default function PlayScreen() {
                 ? 'Found'
                 : toast.kind === 'surface'
                   ? 'Surfaced'
-                  : 'Bust',
+                  : toast.kind === 'bust'
+                    ? 'Bust'
+                    : toast.title,
           body:
             toast.kind === 'claim'
               ? claimToastBody(toast.result)
@@ -126,7 +187,9 @@ export default function PlayScreen() {
                 ? toast.foundName
                 : toast.kind === 'surface'
                   ? `Banked ${summarizeNames(toast.itemIds)}.`
-                  : 'This haul is lost — the charge was already spent. Your Grove is untouched.',
+                  : toast.kind === 'bust'
+                    ? 'This haul is lost — the charge was already spent. Your Grove is untouched.'
+                    : toast.body,
         };
 
   const tokensText = view == null ? '…' : String(view.tokens);
@@ -166,9 +229,19 @@ export default function PlayScreen() {
           {mode === 'dive' && view ? (
             <DiveScreen
               view={view}
+              skipDelays={skipDelays}
+              reduceMotion={reduceMotion}
               onSpendCharge={handleSpendCharge}
               onSurface={handleSurface}
               onDeeper={handleDeeper}
+              onBackToGrove={() => setMode('grove')}
+            />
+          ) : mode === 'dress' && view ? (
+            <DressScreen
+              view={view}
+              onEquip={handleEquip}
+              onSell={handleSell}
+              onUnequip={handleUnequip}
               onBackToGrove={() => setMode('grove')}
             />
           ) : (
@@ -240,12 +313,14 @@ export default function PlayScreen() {
 
               <View style={styles.actionList}>
                 {GROVE_ACTION_TILES.map((tile) => {
+                  const openMode: PlayMode | null =
+                    tile.kind === 'defend' ? null : tile.kind;
                   const enabled = tile.soon == null;
                   return (
                     <ThemedView key={tile.kind} type="backgroundElement" style={styles.actionCard}>
-                      {enabled ? (
+                      {enabled && openMode ? (
                         <Pressable
-                          onPress={() => setMode('dive')}
+                          onPress={() => setMode(openMode)}
                           accessibilityRole="button"
                           accessibilityLabel={`Open ${tile.title}`}
                           style={({ pressed }) => [styles.actionRow, pressed && styles.pressed]}>
@@ -285,8 +360,13 @@ export default function PlayScreen() {
                 <GroveDevKit
                   commit={commit}
                   onGrantRandomFind={handleGrantRandomFind}
+                  onGrantRandomPower={handleGrantRandomPower}
+                  onClearEquipped={() => void clearEquipped()}
+                  onFillJunkLooks={() => void fillJunkLooks()}
                   forceBustArmed={forceBustArmed}
                   onToggleForceBust={() => setForceBustArmed((armed) => !armed)}
+                  skipDelays={skipDelays}
+                  onToggleSkipDelays={() => setSkipDelays((skip) => !skip)}
                 />
               ) : null}
             </>
@@ -310,13 +390,23 @@ export default function PlayScreen() {
 function GroveDevKit({
   commit,
   onGrantRandomFind,
+  onGrantRandomPower,
+  onClearEquipped,
+  onFillJunkLooks,
   forceBustArmed,
   onToggleForceBust,
+  skipDelays,
+  onToggleSkipDelays,
 }: {
   commit: (transition: PlayTransition) => boolean;
   onGrantRandomFind: () => Promise<void>;
+  onGrantRandomPower: () => Promise<void>;
+  onClearEquipped: () => void;
+  onFillJunkLooks: () => void;
   forceBustArmed: boolean;
   onToggleForceBust: () => void;
+  skipDelays: boolean;
+  onToggleSkipDelays: () => void;
 }) {
   const theme = useTheme();
   const [resetArmed, setResetArmed] = useState(false);
@@ -381,11 +471,43 @@ function GroveDevKit({
       },
     },
     {
+      key: 'grant-power',
+      label: 'Grant random Power',
+      onPress: () => {
+        clearResetArm();
+        void onGrantRandomPower();
+      },
+    },
+    {
+      key: 'fill-junk',
+      label: 'Fill junk Looks (test bag-full sell)',
+      onPress: () => {
+        clearResetArm();
+        onFillJunkLooks();
+      },
+    },
+    {
+      key: 'clear-equipped',
+      label: 'Clear equipped',
+      onPress: () => {
+        clearResetArm();
+        onClearEquipped();
+      },
+    },
+    {
       key: 'force-bust',
       label: forceBustArmed ? 'Force bust next Deeper (armed)' : 'Force bust next Deeper',
       onPress: () => {
         clearResetArm();
         onToggleForceBust();
+      },
+    },
+    {
+      key: 'skip-delays',
+      label: skipDelays ? 'Skip Dive delays (on)' : 'Skip Dive delays',
+      onPress: () => {
+        clearResetArm();
+        onToggleSkipDelays();
       },
     },
   ];
@@ -396,20 +518,23 @@ function GroveDevKit({
         Dev kit · testing only
       </ThemedText>
 
-      {rows.map((row) => (
-        <Pressable
-          key={row.key}
-          onPress={row.onPress}
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.devKitRow, pressed && styles.pressed]}>
-          <ThemedText type="small" themeColor={row.key === 'force-bust' && forceBustArmed ? 'emphasis' : undefined}>
-            {row.label}
-          </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            ›
-          </ThemedText>
-        </Pressable>
-      ))}
+      {rows.map((row) => {
+        const armed = (row.key === 'force-bust' && forceBustArmed) || (row.key === 'skip-delays' && skipDelays);
+        return (
+          <Pressable
+            key={row.key}
+            onPress={row.onPress}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.devKitRow, pressed && styles.pressed]}>
+            <ThemedText type="small" themeColor={armed ? 'emphasis' : undefined}>
+              {row.label}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              ›
+            </ThemedText>
+          </Pressable>
+        );
+      })}
 
       <Pressable
         onPress={pressReset}

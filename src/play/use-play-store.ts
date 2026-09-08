@@ -11,24 +11,35 @@
  * path; `commit` is the generic persistence primitive (used by Claim and by
  * the Grove Dev kit's test transitions). `grantRandomFind` is the Dev kit's
  * one-off item grant for step 2b; `beginDive` / `surfaceRun` / `pushDeeper`
- * drive the step-3 Dive push-your-luck loop.
+ * drive the step-3 Dive push-your-luck loop. Step 4 (Dress) adds `equip` /
+ * `unequip` / `sell` plus the Dev kit's `grantRandomPower` / `clearEquipped` /
+ * `fillJunkLooks`.
  */
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
+import type { ItemSlot } from '@/play/items';
 import {
   claimResearch,
   deeperDive,
+  devClearEquipped,
+  devFillJunkLooks,
   devGrantRandomFind,
+  devGrantRandomPower,
+  equipItem,
   loadPlayStore,
   playView,
   savePlayStore,
+  sellItem,
   startDive,
   surfaceDive,
+  unequipItem,
   type ClaimResult,
   type DeeperOutcome,
+  type EquipOutcome,
   type PlayStoreDoc,
   type PlayView,
+  type SellOutcome,
 } from '@/play/playStore';
 
 /** Rough tick for countdowns; refills/research are minutes-long, 30s is plenty. */
@@ -142,5 +153,86 @@ export function usePlayStore() {
   );
 
   const view: PlayView | null = doc ? playView(doc, Date.now()) : null;
-  return { view, claim, commit, grantRandomFind, beginDive, surfaceRun, pushDeeper };
+
+  /** Equip an owned item into its slot (bag-full gating lives in the store). */
+  const equip = useCallback(async (itemId: string): Promise<EquipOutcome> => {
+    let outcome: EquipOutcome = { ok: false, reason: 'not_owned' };
+    commit((current) => {
+      const next = equipItem(current, itemId);
+      outcome = next.outcome;
+      return next.outcome.ok ? next.doc : null;
+    });
+    return outcome;
+  }, [commit]);
+
+  /** Take an equipped item off its slot. */
+  const unequip = useCallback(async (slot: ItemSlot): Promise<boolean> => {
+    let ok = false;
+    commit((current) => {
+      const next = unequipItem(current, slot);
+      ok = next.doc !== current;
+      return ok ? next.doc : null;
+    });
+    return ok;
+  }, [commit]);
+
+  /** Sell one Look for tokens. */
+  const sell = useCallback(async (itemId: string): Promise<SellOutcome> => {
+    let outcome: SellOutcome = { ok: false, reason: 'not_owned' };
+    commit((current) => {
+      const next = sellItem(current, itemId);
+      outcome = next.outcome;
+      return next.outcome.ok ? next.doc : null;
+    });
+    return outcome;
+  }, [commit]);
+
+  /** Dev kit only: grant one random Power into the bag. Returns its id. */
+  const grantRandomPower = useCallback(async (): Promise<string | null> => {
+    let grantedId: string | null = null;
+    commit((current) => {
+      const granted = devGrantRandomPower(current);
+      grantedId = granted.grantedId;
+      return granted.doc;
+    });
+    return grantedId;
+  }, [commit]);
+
+  /** Dev kit only: clear every equipped slot. */
+  const clearEquipped = useCallback(async (): Promise<boolean> => {
+    let ok = false;
+    commit((current) => {
+      const next = devClearEquipped(current);
+      ok = next !== current;
+      return ok ? next : null;
+    });
+    return ok;
+  }, [commit]);
+
+  /** Dev kit only: fill junk Looks just past the soft cap. */
+  const fillJunkLooks = useCallback(async (): Promise<boolean> => {
+    let ok = false;
+    commit((current) => {
+      const next = devFillJunkLooks(current);
+      ok = next !== current;
+      return ok ? next : null;
+    });
+    return ok;
+  }, [commit]);
+
+  return {
+    view,
+    claim,
+    commit,
+    grantRandomFind,
+    beginDive,
+    surfaceRun,
+    pushDeeper,
+    equip,
+    unequip,
+    sell,
+    grantRandomPower,
+    clearEquipped,
+    fillJunkLooks,
+  };
 }
