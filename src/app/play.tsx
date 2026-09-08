@@ -12,6 +12,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useAppearance } from '@/lib/theme/context';
 import { GROVE_ACTION_TILES, GROVE_LEDE } from '@/play/grove';
+import { itemName } from '@/play/items';
 import {
   DIVE_CHARGE_CAP,
   canClaimResearch,
@@ -30,22 +31,35 @@ import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
  * Step 1 shell (placeholder avatar + "soon" tiles) now rides a real local
  * economy from `usePlayStore` (`src/play/playStore.ts`): tokens, dive charges
  * (0–10, ~10 min refill), Research (30-min cycles, 10h cap, one Claim dump) and
- * the daily tend bonus (+10 once per device-local day). Dive / Dress / Defend
- * stay "soon" placeholders. No Supabase — local AsyncStorage only.
- * Hidden outside pre-launch builds via PRE_LAUNCH_DEV.
+ * the daily tend bonus (+10 once per device-local day). Claim also dumps the
+ * bag as real stub items (step 2b) — one id rolled per cycle from
+ * `src/play/data/items.json`, held in `inventory` until Dress (step 4). Dive /
+ * Dress / Defend stay "soon" placeholders. No Supabase — local AsyncStorage
+ * only. Hidden outside pre-launch builds via PRE_LAUNCH_DEV.
  */
+
+type PlayToast =
+  | { kind: 'claim'; result: ClaimResult }
+  | { kind: 'find'; foundName: string };
+
 export default function PlayScreen() {
   const theme = useTheme();
   const { reduceMotion } = useAppearance();
-  const { view, claim, commit } = usePlayStore();
-  const [toast, setToast] = useState<ClaimResult | null>(null);
+  const { view, claim, commit, grantRandomFind } = usePlayStore();
+  const [toast, setToast] = useState<PlayToast | null>(null);
 
   const researchReady = view != null && canClaimResearch(view);
 
   const handleClaim = useCallback(async () => {
     const result = await claim();
-    if (result) setToast(result);
+    if (result) setToast({ kind: 'claim', result });
   }, [claim]);
+
+  /** Dev kit row: roll one find into the bag and name it in the toast. */
+  const handleGrantRandomFind = useCallback(async () => {
+    const id = await grantRandomFind();
+    if (id) setToast({ kind: 'find', foundName: itemName(id) ?? id });
+  }, [grantRandomFind]);
 
   function closePlay() {
     if (router.canGoBack()) {
@@ -121,8 +135,14 @@ export default function PlayScreen() {
 
           {toast ? (
             <MilestoneToast
-              title={`Claimed +${toast.tendTokens + toast.dailyBonusTokens} tokens`}
-              body={claimToastBody(toast)}
+              title={
+                toast.kind === 'claim'
+                  ? `Claimed +${toast.result.tendTokens + toast.result.dailyBonusTokens} tokens`
+                  : 'Found'
+              }
+              body={
+                toast.kind === 'claim' ? claimToastBody(toast.result) : toast.foundName
+              }
               reduceMotion={reduceMotion}
               onDone={() => setToast(null)}
             />
@@ -181,7 +201,7 @@ export default function PlayScreen() {
             ))}
           </View>
 
-          {PRE_LAUNCH_DEV ? <GroveDevKit commit={commit} /> : null}
+          {PRE_LAUNCH_DEV ? <GroveDevKit commit={commit} onGrantRandomFind={handleGrantRandomFind} /> : null}
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -198,7 +218,13 @@ export default function PlayScreen() {
  * not start a second debug menu. All rows run pure transitions through
  * `commit` and re-render from the same store view the real UI uses.
  */
-function GroveDevKit({ commit }: { commit: (transition: PlayTransition) => boolean }) {
+function GroveDevKit({
+  commit,
+  onGrantRandomFind,
+}: {
+  commit: (transition: PlayTransition) => boolean;
+  onGrantRandomFind: () => Promise<void>;
+}) {
   const theme = useTheme();
   const [resetArmed, setResetArmed] = useState(false);
   const disarmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -247,6 +273,14 @@ function GroveDevKit({ commit }: { commit: (transition: PlayTransition) => boole
       key: 'charges',
       label: 'Fill dive charges to 10',
       onPress: () => run(devFillDiveCharges),
+    },
+    {
+      key: 'grant-find',
+      label: 'Grant random find',
+      onPress: () => {
+        clearResetArm();
+        void onGrantRandomFind();
+      },
     },
   ];
 
@@ -299,11 +333,23 @@ function minutesUntilLabel(nextAt: number | null): string {
   return `${minutes}m`;
 }
 
+/** Item names for a bag dump, capped at 3 so a 20-find Claim stays readable. */
+function foundSummary(itemIds: string[]): string {
+  if (itemIds.length === 0) return 'nothing found';
+  const shown = Math.min(itemIds.length, 3);
+  const names = itemIds
+    .slice(0, shown)
+    .map((id) => itemName(id) ?? id)
+    .join(', ');
+  const hidden = itemIds.length - shown;
+  return hidden > 0 ? `Found ${names} +${hidden} more` : `Found ${names}`;
+}
+
 function claimToastBody(result: ClaimResult): string {
   const parts: string[] = [`+${result.tendTokens} tend`];
   if (result.dailyBonusTokens > 0) parts.push(`+${result.dailyBonusTokens} daily`);
   if (result.diveChargeGranted) parts.push('+1 dive charge');
-  parts.push(`${result.cyclesClaimed} ${findsWord(result.cyclesClaimed)} gathered`);
+  parts.push(foundSummary(result.items));
   return parts.join(' · ');
 }
 

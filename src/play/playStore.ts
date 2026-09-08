@@ -10,6 +10,9 @@
  * - Research — 30 min cycles that accrue continuously into a pending bag,
  *   offline included, capped at 10h (20 cycles). One Claim dumps the whole bag,
  *   then accrual resets and the timer restarts.
+ * - Inventory — every research find now grants a real item id rolled from the
+ *   stub table (`src/play/data/items.json`, one roll per dumped cycle,
+ *   appended to `inventory`). Dress (step 4) is the consumer; no soft cap here.
  * - Daily tend bonus — +10 tokens once per device-local day on the first Claim
  *   (later also Dress/Decor), tracked by `last_tend_bonus_ymd`.
  *
@@ -19,6 +22,8 @@
  * PLAY_DEEPSEEK_HANDOFF.md).
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { rollResearchFind } from '@/play/items';
 
 export const PLAY_STORE_KEY = 'ato.play.store.v1';
 
@@ -38,11 +43,13 @@ export const TEND_MAX_TOKENS = 40;
 export const DAILY_TEND_BONUS_TOKENS = 10;
 
 /**
- * Persisted shape. Versioned under one key; add fields behind a version bump in
- * later steps (Dress adds inventory/equipped, Defend adds highest_wave_cleared).
+ * Persisted shape. Versioned under one key; add fields behind a version bump.
+ * v2 added `inventory` (step 2b); still to come behind later bumps: Dress adds
+ * `equipped`, Defend adds `highest_wave_cleared`. v1 docs parse to v2 with an
+ * empty bag so nothing already on a device resets.
  */
 export type PlayStoreDoc = {
-  version: 1;
+  version: 2;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -54,6 +61,8 @@ export type PlayStoreDoc = {
   research_accrued_ms: number;
   /** Device-local YYYY-MM-DD the daily tend bonus was last granted. */
   last_tend_bonus_ymd: string | null;
+  /** Bag of granted item ids (Grove stub table) — Dress consumes this later. */
+  inventory: string[];
 };
 
 export type DiveChargeView = {
@@ -82,8 +91,10 @@ export type PlayView = {
 };
 
 export type ClaimResult = {
-  /** Whole cycles dumped from the bag. */
+  /** Whole cycles dumped from the bag (= number of item finds granted). */
   cyclesClaimed: number;
+  /** Granted item ids (one roll per claimed cycle), appended to `inventory`. */
+  items: string[];
   tendTokens: number;
   dailyBonusTokens: number;
   diveChargeGranted: boolean;
@@ -101,13 +112,14 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 1,
+    version: 2,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
     research_started_at: now,
     research_accrued_ms: 0,
     last_tend_bonus_ymd: null,
+    inventory: [],
   };
 }
 
@@ -165,9 +177,10 @@ export function canClaimResearch(view: PlayView): boolean {
  * Claim the whole research bag once (GAME_SPEC §8).
  *
  * Grants tend tokens (15–40), the daily tend bonus (+10, first Claim of the
- * device-local day), and a 35% roll for +1 dive charge (once per Claim, no-op at
- * cap). Resets accrued research to 0 and restarts the timer. Returns null when
- * nothing is ready to claim.
+ * device-local day), a 35% roll for +1 dive charge (once per Claim, no-op at
+ * cap), and one item find per dumped cycle — each cycle rolls a stub id from
+ * the Grove item table and the ids are appended to `inventory`. Resets accrued
+ * research to 0 and restarts the timer. Returns null when nothing is ready.
  */
 export function claimResearch(
   doc: PlayStoreDoc,
@@ -191,10 +204,15 @@ export function claimResearch(
     ? { dive_charge: dive.current + 1, dive_charge_at: now }
     : snapshotDive(doc, now);
 
+  // Bag dump: every whole cycle in the bag is one find = one roll from the
+  // stub table. Real ids go into inventory; the UI only ever sees names.
+  const items = Array.from({ length: research.readyFinds }, () => rollResearchFind(rng));
+
   const next: PlayStoreDoc = {
     ...doc,
     tokens: doc.tokens + tendTokens + dailyBonusTokens,
     ...nextDive,
+    inventory: [...doc.inventory, ...items],
     research_accrued_ms: 0,
     research_started_at: now,
     last_tend_bonus_ymd: dailyBonusTokens > 0 ? todayYmd : doc.last_tend_bonus_ymd,
@@ -204,6 +222,7 @@ export function claimResearch(
     doc: next,
     result: {
       cyclesClaimed: research.readyFinds,
+      items,
       tendTokens,
       dailyBonusTokens,
       diveChargeGranted,
@@ -239,6 +258,19 @@ export function devAddTokens(doc: PlayStoreDoc): PlayStoreDoc {
   return { ...doc, tokens: doc.tokens + 10 };
 }
 
+/**
+ * Dev kit: roll one research-bag find straight into the bag. Also returns the
+ * granted id so the kit row can toast the item name — the roll goes through
+ * the same `rollResearchFind` path a real Claim uses, never fake state.
+ */
+export function devGrantRandomFind(
+  doc: PlayStoreDoc,
+  rng: () => number = Math.random,
+): { doc: PlayStoreDoc; grantedId: string } {
+  const grantedId = rollResearchFind(rng);
+  return { doc: { ...doc, inventory: [...doc.inventory, grantedId] }, grantedId };
+}
+
 /** Top dive charges to 10; refill timer pauses at cap. */
 export function devFillDiveCharges(doc: PlayStoreDoc, now: number): PlayStoreDoc {
   return { ...doc, dive_charge: DIVE_CHARGE_CAP, dive_charge_at: now };
@@ -270,7 +302,9 @@ function snapshotDive(
 function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
   try {
     const data = JSON.parse(raw) as Record<string, unknown>;
-    if (data?.version !== 1) return null;
+    // v1 (pre-inventory) and v2 both parse; v1 migrates with an empty bag so a
+    // device that already banked tokens keeps them on the 2b update.
+    if (data?.version !== 1 && data?.version !== 2) return null;
     const tokens = finiteNumber(data.tokens);
     const diveCharge = finiteNumber(data.dive_charge);
     const diveChargeAt = finiteNumber(data.dive_charge_at);
@@ -280,14 +314,18 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     if (tokens == null || diveCharge == null || diveChargeAt == null || researchStartedAt == null) {
       return null;
     }
+    const inventory = Array.isArray(data.inventory)
+      ? data.inventory.filter((id): id is string => typeof id === 'string')
+      : [];
     return {
-      version: 1,
+      version: 2,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
       research_started_at: researchStartedAt,
       research_accrued_ms: Math.min(RESEARCH_CAP_MS, Math.max(0, researchAccruedMs ?? 0)),
       last_tend_bonus_ymd: lastTend,
+      inventory,
     };
   } catch {
     return null;

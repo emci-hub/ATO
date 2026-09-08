@@ -9,13 +9,15 @@
  * All time-dependent numbers are derived from `doc` + `Date.now()` at render;
  * only real mutations write back to AsyncStorage. `claim` is the game-code
  * path; `commit` is the generic persistence primitive (used by Claim and by
- * the Grove Dev kit's test transitions).
+ * the Grove Dev kit's test transitions). `grantRandomFind` is the Dev kit's
+ * one-off item grant for step 2b.
  */
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
 import {
   claimResearch,
+  devGrantRandomFind,
   loadPlayStore,
   playView,
   savePlayStore,
@@ -83,6 +85,18 @@ export function usePlayStore() {
     return ok ? result : null;
   }, [commit]);
 
+  /** Dev kit only (the screen PRE_LAUNCH_DEV-gates its caller): grant one
+   * random research-bag find into inventory. Returns the granted item id. */
+  const grantRandomFind = useCallback(async (): Promise<string | null> => {
+    let grantedId: string | null = null;
+    const ok = commit((current) => {
+      const granted = devGrantRandomFind(current);
+      grantedId = granted.grantedId;
+      return granted.doc;
+    });
+    return ok ? grantedId : null;
+  }, [commit]);
+
   const view: PlayView | null = doc ? playView(doc, Date.now()) : null;
-  return { view, claim, commit };
+  return { view, claim, commit, grantRandomFind };
 }

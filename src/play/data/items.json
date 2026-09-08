@@ -1,0 +1,62 @@
+[
+  {
+    "id": "item_leaf_cape_01",
+    "core": { "slot": "cloak", "rarity": "common", "kind": "look", "name": "Leaf Cape", "art": "cape_leaf_01", "type_tag": "bloom" },
+    "mult_a": null,
+    "mult_b": null
+  },
+  {
+    "id": "item_glowveil_cloak_01",
+    "core": { "slot": "cloak", "rarity": "rare", "kind": "look", "name": "Glowveil", "art": "cape_glow_01", "type_tag": "ember" },
+    "mult_a": null,
+    "mult_b": null
+  },
+  {
+    "id": "item_bud_staff_01",
+    "core": { "slot": "weapon", "rarity": "common", "kind": "look", "name": "Bud Staff", "art": "staff_bud_01", "type_tag": "bloom" },
+    "mult_a": null,
+    "mult_b": null
+  },
+  {
+    "id": "item_salt_helm_01",
+    "core": { "slot": "armor", "rarity": "rare", "kind": "look", "name": "Saltcrest Helm", "art": "helm_salt_01", "type_tag": "tide" },
+    "mult_a": null,
+    "mult_b": null
+  },
+  {
+    "id": "item_moss_habit_01",
+    "core": { "slot": "armor", "rarity": "common", "kind": "look", "name": "Moss Habit", "art": "robe_moss_01", "type_tag": "bloom" },
+    "mult_a": null,
+    "mult_b": null
+  },
+  {
+    "id": "item_deep_pearl_01",
+    "core": { "slot": "trinket", "rarity": "rare", "kind": "look", "name": "Deep Pearl", "art": "trinket_pearl_01", "type_tag": "tide" },
+    "mult_a": null,
+    "mult_b": null
+  },
+  {
+    "id": "item_tide_blade_01",
+    "core": { "slot": "weapon", "rarity": "rare", "kind": "power", "name": "Tide Blade", "art": "blade_tide_01", "type_tag": "steel" },
+    "mult_a": { "stat": "wave_power", "value": 0.08 },
+    "mult_b": { "stat": "dive_luck", "value": 0.03 }
+  },
+  {
+    "id": "item_bark_aegis_01",
+    "core": { "slot": "armor", "rarity": "rare", "kind": "power", "name": "Bark Aegis", "art": "shield_bark_01", "type_tag": "bark" },
+    "mult_a": { "stat": "tower_speed", "value": 0.05 },
+    "mult_b": { "stat": "wave_power", "value": 0.03 }
+  },
+  {
+    "id": "item_copper_keeper_01",
+    "core": { "slot": "trinket", "rarity": "common", "kind": "power", "name": "Copper Keeper", "art": "trinket_copper_01", "type_tag": "steel" },
+    "mult_a": { "stat": "token_earn", "value": 0.05 },
+    "mult_b": null
+  },
+  {
+    "id": "item_curator_cloak_01",
+    "core": { "slot": "cloak", "rarity": "common", "kind": "power", "name": "Curator's Cloak", "art": "cloak_curator_01", "type_tag": "bloom" },
+    "mult_a": { "stat": "research_yield", "value": 0.06 },
+    "mult_b": null
+  }
+]
