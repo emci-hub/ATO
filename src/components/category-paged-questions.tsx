@@ -63,6 +63,11 @@ export function CategoryPagedQuestions({
   const theme = useTheme();
   const [index, setIndex] = useState(0);
   const [positionReady, setPositionReady] = useState(false);
+  // Tracks which option was just tapped per row (session-local — rows here
+  // are intentionally re-answerable, so this is a display hint, not a lock)
+  // so a tap visually confirms before/while it saves. Previously there was
+  // no highlight at all, which read as "it answered the wrong question."
+  const [pickedByRow, setPickedByRow] = useState<Record<string, number>>({});
 
   // Restore the last-viewed category for this question set on mount. Scoped
   // to `storageKey` only (not `categories`) — categories is a live catalog
@@ -148,19 +153,27 @@ export function CategoryPagedQuestions({
                   </View>
                   {locked ? null : (
                     <View style={styles.options}>
-                      {row.draft.options.map((option, optIndex) => (
-                        <ThemedPressable
-                          key={`${row.key}-${optIndex}`}
-                          disabled={busy}
-                          onPress={() => onPick(row.draft, option)}
-                          style={[
-                            styles.option,
-                            { borderColor: controlBorderColor(theme) },
-                            busy && styles.disabled,
-                          ]}>
-                          <ThemedText type="smallBold">{option.text}</ThemedText>
-                        </ThemedPressable>
-                      ))}
+                      {row.draft.options.map((option, optIndex) => {
+                        const picked = pickedByRow[row.key] === optIndex;
+                        return (
+                          <ThemedPressable
+                            key={`${row.key}-${optIndex}`}
+                            disabled={busy}
+                            accessibilityState={{ selected: picked }}
+                            onPress={() => {
+                              setPickedByRow((prev) => ({ ...prev, [row.key]: optIndex }));
+                              onPick(row.draft, option);
+                            }}
+                            style={[
+                              styles.option,
+                              { borderColor: controlBorderColor(theme) },
+                              picked && { backgroundColor: theme.backgroundSelected },
+                              busy && styles.disabled,
+                            ]}>
+                            <ThemedText type="smallBold">{option.text}</ThemedText>
+                          </ThemedPressable>
+                        );
+                      })}
                     </View>
                   )}
                 </View>

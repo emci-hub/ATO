@@ -153,6 +153,12 @@ export function QuestionsFold({
   const [sessionCount, setSessionCount] = useState(0);
   const [checkpoint, setCheckpoint] = useState(false);
   const [keptGoing, setKeptGoing] = useState(false);
+  // Tracks which option was just tapped so it can highlight while the
+  // answer saves — options previously gave no visual confirmation at all,
+  // which read as "it answered the wrong question" (bug report). Keyed by
+  // itemId so a stale pick from a prior question never matches once `item`
+  // advances to the next one.
+  const [pickedOption, setPickedOption] = useState<{ itemId: string; index: number } | null>(null);
 
   // T-04: real caller of Phase 6's hasContradictedAnswers. Fetched here
   // (route-level), not from any shared cache — none exists for trait_history
@@ -282,6 +288,7 @@ export function QuestionsFold({
     const option = item.options[index];
     if (!option || busy) return;
     setBusy(true);
+    setPickedOption({ itemId: item.id, index });
     try {
       if (!isLocalId(item.id)) {
         await answerQuestionItem(item.id, index);
@@ -298,6 +305,10 @@ export function QuestionsFold({
       }
     } catch (err) {
       console.log('[questions] answer error:', err);
+      // A failed save must not leave the tapped option looking picked — the
+      // question stays on screen (nothing advanced), so the stale highlight
+      // would read as "saved" when it wasn't (found in review).
+      setPickedOption(null);
     } finally {
       setBusy(false);
     }
@@ -422,19 +433,24 @@ export function QuestionsFold({
         <>
           <ThemedText>{item.prompt}</ThemedText>
           <View style={styles.options}>
-            {item.options.map((option, index) => (
-              <ThemedPressable
-                key={`${item.id}-${index}`}
-                disabled={busy}
-                onPress={() => void pick(item, index)}
-                style={[
-                  styles.option,
-                  { borderColor: controlBorderColor(theme) },
-                  busy && styles.disabled,
-                ]}>
-                <ThemedText type="smallBold">{option.text}</ThemedText>
-              </ThemedPressable>
-            ))}
+            {item.options.map((option, index) => {
+              const picked = pickedOption?.itemId === item.id && pickedOption.index === index;
+              return (
+                <ThemedPressable
+                  key={`${item.id}-${index}`}
+                  disabled={busy}
+                  accessibilityState={{ selected: picked }}
+                  onPress={() => void pick(item, index)}
+                  style={[
+                    styles.option,
+                    { borderColor: controlBorderColor(theme) },
+                    picked && { backgroundColor: theme.backgroundSelected },
+                    busy && styles.disabled,
+                  ]}>
+                  <ThemedText type="smallBold">{option.text}</ThemedText>
+                </ThemedPressable>
+              );
+            })}
           </View>
           <View style={styles.skipRow}>
             <Pressable
@@ -599,10 +615,12 @@ export function CategoryBatchFold({
                     <ThemedPressable
                       key={`${item.id}-${index}`}
                       disabled={busy || item.answeredOption != null}
+                      accessibilityState={{ selected: item.answeredOption === index }}
                       onPress={() => void pick(item, index)}
                       style={[
                         styles.option,
                         { borderColor: controlBorderColor(theme) },
+                        item.answeredOption === index && { backgroundColor: theme.backgroundSelected },
                         (busy || item.answeredOption != null) && styles.disabled,
                       ]}>
                       <ThemedText type="smallBold">{option.text}</ThemedText>
