@@ -174,10 +174,24 @@ assert.match(fold, /setStory\(null\)/);
 assert.doesNotMatch(fold, /fallbackBandFor|TITLE_EMPTY|composeLocal/);
 assert.match(fold, /formatStoryTensionNote/);
 assert.doesNotMatch(fold, /formatDivergenceNote/);
-assert.match(read('src/app/(tabs)/explore.tsx'), /SageStoryFold/);
+// §9 (2026-09-08): a real locked state — previously `!story?.body` was the
+// ONLY render branch, so an unready profile rendered nothing at all, same
+// as every other "no content yet" case. The locked check must come before
+// that fallback and must not fire during crisis (crisis hides Story
+// entirely, same as before) or before tracks have loaded (would flash).
+const lockedIdx = fold.indexOf("if (tracksReady && !crisisToday && !storyReady(tracks))");
+const fallbackIdx = fold.indexOf('if (!story?.body) return null');
+assert.ok(lockedIdx > -1 && fallbackIdx > -1 && lockedIdx < fallbackIdx, 'the real locked-state check must exist and run before the silent no-content fallback');
+assert.match(fold, /PROFILE_LOCKED_COPY/);
+assert.match(fold, /PROFILE_LOCKED_CTA/);
+// §9 (2026-09-08): Story moved from Explore to Home, directly below the
+// daily check-in card — the assertion below moved with it. Explore keeps
+// CategoriesFold (unrelated to Story) but no longer imports SageStoryFold.
+assert.match(read('src/app/(tabs)/index.tsx'), /SageStoryFold/);
 assert.match(read('src/app/(tabs)/explore.tsx'), /CategoriesFold/);
+assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /SageStoryFold/);
 assert.doesNotMatch(read('src/app/(tabs)/sage.tsx'), /SageStoryFold|ExplorePinnedCategories/);
-ok('Story UI hides when Gemini is unreachable; no generic fallback paragraph');
+ok('Story UI hides when Gemini is unreachable; no generic fallback paragraph; Story now lives on Home (§9), not Explore');
 
 assert.equal(STORY_SAMPLES.every((row) => row.shape.includes('thin') || row.body.length > 0 || row.body === ''), true);
 ok('draft Story samples and tension lines exist for emci review and are not treated as reviewed');

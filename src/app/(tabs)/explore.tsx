@@ -8,8 +8,8 @@ import { CategoriesFold } from '@/components/categories-fold';
 import { FullProfileFold } from '@/components/full-profile-fold';
 import { IntakeSettings } from '@/components/intake-settings';
 import { ProfileFillFold } from '@/components/profile-fill-fold';
+import { RollHistoryFold } from '@/components/roll-history-fold';
 import { SageInsightSpend } from '@/components/sage-insight-spend';
-import { SageStoryFold } from '@/components/sage-story-fold';
 import { SageTitleCard } from '@/components/sage-title-card';
 import { SettingsFold } from '@/components/settings-fold';
 import { TraitBandsFold } from '@/components/trait-bands-fold';
@@ -169,11 +169,11 @@ export default function ExploreScreen() {
               <ProfileFillFold tracks={tracks} />
               <FullProfileFold me={me} onUpdated={() => refreshMe()} />
               <CategoriesFold me={me} onUpdated={() => refreshMe()} />
-              <SageStoryFold
-                me={me}
-                tracks={tracks}
-                tracksReady={tracksReady}
-                crisisToday={crisisToday}
+              <RollHistoryFold
+                userId={me.id}
+                types={['legend', 'category']}
+                title="Past reads"
+                emptyCopy="Nothing revealed yet — reveal an item from your Roll to see it here."
               />
               <SageInsightSpend
                 me={me}

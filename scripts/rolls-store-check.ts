@@ -81,6 +81,10 @@ assert.match(storeSrc, /export async function fetchLatestRollId\(userId: string\
 assert.match(storeSrc, /\.eq\('user_id', userId\)[\s\S]*?\.order\('created_at', \{ ascending: false \}\)[\s\S]*?\.limit\(1\)/, 'fetchLatestRollId must scope to the given user and order newest-first');
 ok('store.ts exposes fetchLatestRollId, ordered newest-first and scoped to the caller\'s own rows');
 
+assert.match(storeSrc, /export async function fetchRevealedRollItems\(\s*\n\s*userId: string,\s*\n\s*types: readonly RollItem\['type'\]\[\],\s*\n\)/, 'store.ts must expose a history reader (§8) across ALL rolls, not just one roll_id');
+assert.match(storeSrc, /\.eq\('user_id', userId\)[\s\S]*?\.in\('type', types\)[\s\S]*?\.not\('revealed_at', 'is', null\)[\s\S]*?\.order\('revealed_at', \{ ascending: false \}\)[\s\S]*?\.limit\(REVEALED_HISTORY_LIMIT\)/, 'fetchRevealedRollItems must scope to the user, filter by type and revealed-only, newest reveal first, and cap the query');
+ok('store.ts exposes fetchRevealedRollItems (§8 history/archive), scoped, type-filtered, revealed-only, newest-first, capped');
+
 // --- compose.ts: display-only price mirror ---------------------------------
 const composeSrc = read('src/lib/rolls/compose.ts');
 assert.match(composeSrc, /export function rollItemPrice\(type: RollItemType\): number \{\s*\n\s*return type === 'legend' \? 5 : 1;/, 'rollItemPrice must mirror reveal_roll_item\'s own server-side pricing exactly (wave46/47 SQL: legend=5, else=1)');

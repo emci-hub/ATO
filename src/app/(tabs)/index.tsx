@@ -9,6 +9,8 @@ import AskSheet from '@/components/ask-sheet';
 import { CrisisCard } from '@/components/crisis-card';
 import { CategoryTeaser } from '@/components/category-teaser';
 import { RevealCard, isRevealOpenedToday } from '@/components/reveal-card';
+import { RollHistoryFold } from '@/components/roll-history-fold';
+import { SageStoryFold } from '@/components/sage-story-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -97,6 +99,11 @@ export default function HomeScreen() {
   const [slotOverride, setSlotOverride] = useState<TodaySlot['kind'] | null>(null);
   const [noteOpenedToday, setNoteOpenedToday] = useState(false);
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
+  // Set once the first home_bootstrap fetch settles, success or failure — the
+  // Story fold's own tracksReady prop needs this to avoid flashing its
+  // locked state before tracks have actually loaded (same class of flash
+  // bug fixed on Legends/Roll).
+  const [bootstrapReady, setBootstrapReady] = useState(false);
 
   /**
    * One round trip for checks + trait tracks + crisis flags (wave35
@@ -114,8 +121,17 @@ export default function HomeScreen() {
       setCrisisYesterday(next.crisisYesterday);
     } catch (err) {
       console.log('[home] bootstrap error:', err);
+    } finally {
+      setBootstrapReady(true);
     }
   }, [userId, me, timeZone]);
+
+  // Reset (not just set) on a user change specifically — reloadHome also
+  // re-runs on every logged check via onChecksChanged below, and resetting
+  // there too would flash the Story lock on every ordinary check-in.
+  useEffect(() => {
+    setBootstrapReady(false);
+  }, [userId]);
 
   useEffect(() => {
     void reloadHome();
@@ -475,6 +491,18 @@ export default function HomeScreen() {
               <ThemedText type="smallBold">Your week.</ThemedText>
               <ThemedText themeColor="textSecondary">›</ThemedText>
             </Pressable>
+          ) : null}
+
+          {me ? (
+            <>
+              <SageStoryFold me={me} tracks={tracks} tracksReady={bootstrapReady} crisisToday={crisisToday} />
+              <RollHistoryFold
+                userId={me.id}
+                types={['story']}
+                title="Past Story reveals"
+                emptyCopy="Nothing revealed yet — reveal your Story from Roll to see it here."
+              />
+            </>
           ) : null}
 
           <Pressable

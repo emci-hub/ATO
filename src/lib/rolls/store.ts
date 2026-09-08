@@ -127,3 +127,43 @@ export async function fetchRollItems(rollId: string): Promise<StoredRollItem[]> 
     }))
     .sort((a, b) => rank[a.type] - rank[b.type]);
 }
+
+/** Cap on a single history-fold fetch — a roll is 1/day and only 13 items each, so this comfortably covers months of history without an unbounded query. */
+const REVEALED_HISTORY_LIMIT = 50;
+
+/**
+ * Trait-system redesign §8 — history/archive views. Every past REVEALED item
+ * of the given type(s), across all rolls (not just the latest), newest
+ * reveal first. RLS (trait_rolls_select_own) scopes rows to the caller;
+ * `.eq('user_id', userId)` is also explicit here (unlike fetchRollItems,
+ * which trusts a specific roll_id) since this query has no roll_id to
+ * narrow by.
+ */
+export async function fetchRevealedRollItems(
+  userId: string,
+  types: readonly RollItem['type'][],
+): Promise<StoredRollItem[]> {
+  const { data, error } = await supabase
+    .from('trait_rolls')
+    .select('id, type, category_id, result, revealed_at')
+    .eq('user_id', userId)
+    .in('type', types)
+    .not('revealed_at', 'is', null)
+    .order('revealed_at', { ascending: false })
+    .limit(REVEALED_HISTORY_LIMIT);
+  if (error) throw error;
+  const rows = (data ?? []) as {
+    id: string;
+    type: RollItem['type'];
+    category_id: string | null;
+    result: RollItem['result'];
+    revealed_at: string | null;
+  }[];
+  return rows.map((row) => ({
+    id: row.id,
+    type: row.type,
+    categoryId: row.category_id,
+    result: row.result,
+    revealedAt: row.revealed_at,
+  }));
+}

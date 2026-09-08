@@ -538,16 +538,20 @@ const tabs = read('src/components/app-tabs.tsx');
 const navOrder = read('src/lib/nav/nav-order.ts');
 assert.doesNotMatch(home, /ExplorePanel/);
 assert.doesNotMatch(home, /HomeInnerTabs/);
+// §9 (2026-09-08): Story moved from Explore to Home, directly below the
+// daily check-in card, with a real locked state — Explore no longer
+// references it at all.
+assert.match(home, /SageStoryFold/);
+assert.doesNotMatch(exploreScreen, /SageStoryFold/);
 assert.match(exploreScreen, /routeExplore/);
 assert.match(exploreScreen, /SageExploreObservations/);
-assert.match(exploreScreen, /SageStoryFold/);
 assert.match(exploreScreen, /CategoriesFold/);
 assert.match(exploreScreen, /SageTitleCard/);
 assert.match(navOrder, /explore: \{ label: 'Explore', href: '\/explore'/);
 assert.match(tabs, /NavEditOverlay/);
 assert.doesNotMatch(sage, /routeExplore|SageExploreObservations|ExplorePinnedCategories|SageStoryFold|SageTitleCard/);
 assert.doesNotMatch(sage, /EXPLORE_LEDE|EXPLORE_LABEL/);
-ok('Explore is its own tab; Sage stays clean chat; Home has no inner tabs');
+ok('Explore is its own tab; Sage stays clean chat; Home has no inner tabs; Story lives on Home (§9), not Explore');
 
 const you = read('src/app/(tabs)/you.tsx');
 assert.doesNotMatch(you, /ExplorePanel|HomeInnerTabs|explore_entries/);

@@ -3,13 +3,12 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
+import { itemTitle, RollItemBody } from '@/components/roll-item-body';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useMeContext } from '@/lib/me-context';
 import { useCategoryDefs } from '@/lib/category-catalog';
-import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
-import { CATEGORY_READ_COPY_REVIEWED } from '@/lib/rolls/category-read';
 import { rollEligible, rollItemPrice } from '@/lib/rolls/compose';
 import {
   fetchLastRollSnapshot,
@@ -20,7 +19,6 @@ import {
 } from '@/lib/rolls/store';
 import { runRoll, type RunRollOutcome } from '@/lib/rolls/run';
 import { rollItemResultIsReady } from '@/lib/rolls/results';
-import { STORY_COPY_REVIEWED } from '@/lib/sage-story';
 import { TOKEN_LABEL, tokenBalanceOf } from '@/lib/tokens';
 import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import type { TraitTrack } from '@/lib/trait-stability';
@@ -34,26 +32,6 @@ type ScreenState =
   | { status: 'items'; rollId: string; items: StoredRollItem[] }
   | { status: 'outcome'; outcome: Exclude<RunRollOutcome, { kind: 'stored' }> }
   | { status: 'error'; message: string };
-
-interface LegendItemResult {
-  matched: boolean;
-  variant: { name: string; teaser: string };
-  archetype: { formalName: string };
-}
-
-/** Unrevealed copy is unreviewed for both category reads and Story (§ CLAUDE.md hard invariant) — same draft-copy badge sage-story-fold.tsx already shows. */
-const ROLL_COPY_REVIEWED = CATEGORY_READ_COPY_REVIEWED && STORY_COPY_REVIEWED;
-
-function categoryLabel(categoryId: string | null, defs: readonly { id: string; name: string }[]): string {
-  if (!categoryId) return 'Category';
-  return defs.find((def) => def.id === categoryId)?.name ?? categoryId;
-}
-
-function itemTitle(item: StoredRollItem, defs: readonly { id: string; name: string }[]): string {
-  if (item.type === 'legend') return 'Legend';
-  if (item.type === 'story') return 'Story';
-  return categoryLabel(item.categoryId, defs);
-}
 
 /**
  * Trait-system redesign §7 — the roll/reveal screen. Reached from Legends
@@ -321,7 +299,7 @@ export default function RollScreen() {
                         Still forming — not enough here yet to read.
                       </ThemedText>
                     ) : revealed ? (
-                      <RevealedBody item={item} />
+                      <RollItemBody item={item} />
                     ) : balance < price ? (
                       <ThemedText type="small" themeColor="textSecondary">
                         Needs {price} {TOKEN_LABEL.toLowerCase()} — check in or play to earn more.
@@ -346,38 +324,6 @@ export default function RollScreen() {
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
-  );
-}
-
-function RevealedBody({ item }: { item: StoredRollItem }) {
-  if (item.type === 'legend') {
-    // ready:true for a legend only ever means matched:true with a variant
-    // and archetype attached (compose.ts:129-142) — the not-matched case is
-    // {ready:false}, which never reaches here (the card shows "still
-    // forming" instead). No fallback branch: that case is unreachable, not
-    // just unlikely.
-    const { variant, archetype } = item.result as unknown as LegendItemResult;
-    return (
-      <>
-        <ThemedText type="smallBold">{variant.name}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          {archetype.formalName} Energy
-        </ThemedText>
-        <ThemedText type="small">{variant.teaser}</ThemedText>
-      </>
-    );
-  }
-  const rawBody = (item.result as { body?: unknown }).body;
-  const body = typeof rawBody === 'string' ? rawBody : '';
-  return (
-    <>
-      {!ROLL_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
-        <ThemedText type="code" themeColor="textSecondary">
-          Draft copy — waiting on emci review. Not shippable.
-        </ThemedText>
-      ) : null}
-      <ThemedText type="small">{body}</ThemedText>
-    </>
   );
 }
 

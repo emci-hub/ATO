@@ -1,5 +1,6 @@
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
@@ -24,15 +25,22 @@ import {
 import { claimStoryGenerate, saveSageStory } from '@/lib/sage-story-store';
 import { readyCategories } from '@/lib/categories';
 import { divergingAxesFromTracks } from '@/lib/trait-history';
-import type { TraitTrack } from '@/lib/trait-stability';
+import {
+  missingAxis,
+  PROFILE_LOCKED_COPY,
+  PROFILE_LOCKED_CTA,
+  type TraitTrack,
+} from '@/lib/trait-stability';
+import { traitStateFromRow } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import { matchingJargonTerm } from '@/lib/voice/jargon';
 import { shouldUseLocalAi } from '@/lib/ai/override';
 
 /**
- * Longer-form Story under pinned Categories on Explore.
- * Own quota. Fingerprint-gated. No offline fallback — hide the section
- * when Gemini is unreachable or the profile is still thin.
+ * Longer-form Story, directly below the daily check-in card on Home (§9 —
+ * moved from Explore 2026-09-08). Own quota. Fingerprint-gated. Shows a real
+ * locked state when the profile isn't ready yet; still no offline
+ * fallback otherwise — hides the section when Gemini is unreachable.
  *
  * UNREVIEWED. Diagnosis-adjacent. Same bar as the Crisis spec.
  */
@@ -123,6 +131,40 @@ export function SageStoryFold({
     };
   }, [me.id, me.timezone, me.sage_story, tracks, tracksReady, fingerprint, crisisToday, divergenceNote]);
 
+  // A real locked state (§9) — previously this rendered nothing at all when
+  // the profile wasn't ready, same as every other "no content yet" case
+  // below (still generating, quota refused, local-AI mode). Only the
+  // genuinely-not-ready case gets a real "answer more questions" card; the
+  // others are unchanged (transient, and already accepted as silent).
+  if (tracksReady && !crisisToday && !storyReady(tracks)) {
+    const focusAxis = missingAxis(traitStateFromRow(me).values, tracks);
+    return (
+      <View style={styles.wrap} testID="sage-story-fold">
+        <SettingsFold title={STORY_LABEL}>
+          <View style={styles.body}>
+            <ThemedText type="small" themeColor="textSecondary">
+              {STORY_LEDE}
+            </ThemedText>
+            <ThemedText type="smallBold">{PROFILE_LOCKED_COPY}</ThemedText>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${PROFILE_LOCKED_COPY}. ${PROFILE_LOCKED_CTA}.`}
+              onPress={() => {
+                if (focusAxis) {
+                  router.push({ pathname: '/intake-sweep', params: { axis: focusAxis } });
+                } else {
+                  router.push({ pathname: '/intake-sweep' });
+                }
+              }}
+              style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
+              <ThemedText type="link">{PROFILE_LOCKED_CTA}</ThemedText>
+            </Pressable>
+          </View>
+        </SettingsFold>
+      </View>
+    );
+  }
+
   if (!story?.body) return null;
 
   return (
@@ -152,5 +194,12 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.two,
+  },
+  cta: {
+    alignSelf: 'flex-start',
+    paddingVertical: Spacing.one,
+  },
+  pressed: {
+    opacity: 0.8,
   },
 });
