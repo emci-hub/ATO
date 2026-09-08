@@ -114,6 +114,7 @@
     "check:category-batch": "tsx ./scripts/category-batch-check.ts",
     "check:frozen-intake": "tsx ./scripts/frozen-intake-check.ts",
     "check:progressive-unlock": "tsx ./scripts/progressive-unlock-check.ts",
+    "check:rci": "tsx ./scripts/rci-check.ts",
     "check:category-paged-questions": "tsx ./scripts/category-paged-questions-check.ts",
     "check:wave19": "tsx ./scripts/wave19-check.ts",
     "check:wave20": "tsx ./scripts/wave20-check.ts",
