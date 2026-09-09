@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import type { TraitAxis } from '@/lib/traits';
 
+import { assignBankItemIdsByPosition } from './bank-pool-match';
 import type { QuestionDraft, QuestionOption } from './types';
 
 /**
@@ -93,6 +94,8 @@ export async function recordBankUsage(ids: readonly string[]): Promise<void> {
  * wave50 RPC) before they're saved as this user's round items, so every
  * ongoing-round question always has a bank row to reference (core loop
  * redesign §2 Q9) — mutates each draft in place with its new `bankItemId`.
+ * Matching logic (by array position, not prompt text) lives in
+ * `bank-pool-match.ts` — see that file for why.
  */
 export async function addToBankPool(drafts: QuestionDraft[]): Promise<void> {
   if (drafts.length === 0) return;
@@ -104,10 +107,5 @@ export async function addToBankPool(drafts: QuestionDraft[]): Promise<void> {
   }));
   const { data, error } = await supabase.rpc('insert_bank_pool_items', { p_items: payload });
   if (error) throw error;
-  const rows = (data ?? []) as { id: string; prompt: string }[];
-  const idByPrompt = new Map(rows.map((row) => [row.prompt, row.id]));
-  for (const draft of drafts) {
-    const id = idByPrompt.get(draft.prompt);
-    if (id) draft.bankItemId = id;
-  }
+  assignBankItemIdsByPosition(drafts, (data ?? []) as { id: string }[]);
 }
