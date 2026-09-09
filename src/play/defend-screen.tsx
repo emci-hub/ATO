@@ -40,6 +40,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
 import {
+  BOUND_BOSS_MAX_ON_BOARD,
   DEFEND_MAPS,
   DEFEND_TICK_MS,
   SKILL_COOLDOWN_MS,
@@ -50,6 +51,7 @@ import {
   castSlowPulse,
   createDefendLive,
   defendDifficulty,
+  placeBoundBoss,
   placeTower,
   puffPosition,
   retryDefendLive,
@@ -62,7 +64,7 @@ import {
   type Puff,
   type TowerKind,
 } from '@/play/defend';
-import { bossBandFor, previewDropTable, gearScore, recommendedGs, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, typeMatchBonus, type TypeTag } from '@/play/engine';
+import { BOUND_BOSS_MAX_STAR, bossBandFor, boundBossFragmentCost, defaultBoundBossId, getBoundBossDef, isUniqueDrop, previewDropTable, gearScore, recommendedGs, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, typeMatchBonus, type TypeTag } from '@/play/engine';
 import { getItemDef } from '@/play/items';
 import {
   AVATAR_STAR_MAX,
@@ -191,6 +193,23 @@ function fightTitle(fight: Fight): string {
   return fight.mode === 'replay'
     ? `Replay ${phase} wave ${fight.wave}`
     : `${phase} wave ${fight.wave}`;
+}
+
+/** Results drop label from a boss band (§9k copy): normal waves keep "Found:",
+ * boss bands name their drop. */
+function dropLabelFor(phase: CampaignPhase, wave: number): string {
+  const band = bossBandFor(phase, wave);
+  if (!band) return 'Found:';
+  switch (band.kind) {
+    case 'scout_mini':
+      return 'Mini-boss drop:';
+    case 'scout':
+      return 'Boss drop:';
+    case 'semi':
+      return 'Semi-boss drop:';
+    case 'final':
+      return 'Final drop:';
+  }
 }
 
 export function DefendScreen({
@@ -527,10 +546,32 @@ export function DefendScreen({
     sim && selectedPad != null
       ? sim.towers.find((tower) => tower.pad === selectedPad) ?? null
       : null;
+  const selectedBoundBoss =
+    sim && selectedPad != null
+      ? sim.boundBosses.find((bb) => bb.pad === selectedPad) ?? null
+      : null;
+  /** Unlocked Bound Bosses (stars ≥ 1) the player can place. */
+  const unlockedBoundBosses = view.boundBosses.filter((bb) => bb.unlocked);
+  const boundBossCount = sim?.boundBosses.length ?? 0;
+  /** The cycle's boss family (one until pack 2) for the fragment preview. */
+  const cycleBossId = defaultBoundBossId();
+  const cycleBossDef = cycleBossId ? getBoundBossDef(cycleBossId) : undefined;
+  const cycleBossRecord = view.boundBosses.find((bb) => bb.id === cycleBossId);
+  const cycleBossStars = cycleBossRecord?.stars ?? 0;
+  const cycleBossFrags = cycleBossRecord?.frags ?? 0;
+  const cycleBossNextCost =
+    cycleBossDef && cycleBossStars < BOUND_BOSS_MAX_STAR
+      ? boundBossFragmentCost(cycleBossDef, cycleBossStars)
+      : null;
 
   const placeOnPad = (kind: TowerKind) => {
     if (selectedPad == null) return;
     setSim((prev) => (prev ? placeTower(prev, selectedPad, kind) ?? prev : prev));
+  };
+
+  const placeOnBoundBoss = (bossId: string, stars: number) => {
+    if (selectedPad == null) return;
+    setSim((prev) => (prev ? placeBoundBoss(prev, selectedPad, bossId, stars) ?? prev : prev));
   };
 
   const upgradeSelected = () => {
@@ -755,15 +796,22 @@ export function DefendScreen({
               />
               {boardMap.pads.map((pad, index) => {
                 const tower = sim?.towers.find((t) => t.pad === index);
+                const boundBoss = sim?.boundBosses.find((b) => b.pad === index);
                 const selected = selectedPad === index;
+                const occupied = tower != null || boundBoss != null;
+                const fillColor = boundBoss
+                  ? TAG_COLOR[getBoundBossDef(boundBoss.bossId)?.tint ?? view.cycleTint]
+                  : tower
+                    ? TOWER_COLORS[tower.kind]
+                    : theme.accent;
                 return (
                   <Circle
                     key={`pad-${index}`}
                     cx={pad.x}
                     cy={pad.y}
                     r={5.5}
-                    fill={tower ? TOWER_COLORS[tower.kind] : theme.accent}
-                    fillOpacity={tower ? 1 : 0.25}
+                    fill={fillColor}
+                    fillOpacity={occupied ? 1 : 0.25}
                     stroke={selected ? theme.accent : 'none'}
                     strokeWidth={selected ? 1.4 : 0}
                     onPress={() => setSelectedPad(selected ? null : index)}
@@ -774,7 +822,13 @@ export function DefendScreen({
                 <Circle
                   cx={boardMap.pads[selectedPad].x}
                   cy={boardMap.pads[selectedPad].y}
-                  r={selectedTower ? TOWER_DEFS[selectedTower.kind].range : 18}
+                  r={
+                    selectedTower
+                      ? TOWER_DEFS[selectedTower.kind].range
+                      : selectedBoundBoss
+                        ? getBoundBossDef(selectedBoundBoss.bossId)?.range ?? 18
+                        : 18
+                  }
                   fill="none"
                   stroke={theme.accent}
                   strokeOpacity={0.5}
@@ -794,6 +848,21 @@ export function DefendScreen({
                     fill="#FFFFFF"
                     textAnchor="middle">
                     {tower.level}
+                  </SvgText>
+                );
+              })}
+              {sim?.boundBosses.map((bb) => {
+                const pad = boardMap.pads[bb.pad];
+                return (
+                  <SvgText
+                    key={`bb-${bb.id}`}
+                    x={pad.x}
+                    y={pad.y + 1.4}
+                    fontSize={4.2}
+                    fontWeight="bold"
+                    fill="#FFFFFF"
+                    textAnchor="middle">
+                    {'★' + bb.stars}
                   </SvgText>
                 );
               })}
@@ -898,6 +967,18 @@ export function DefendScreen({
                   </ThemedText>
                 )}
               </>
+            ) : selectedBoundBoss ? (
+              <>
+                <ThemedText type="smallBold">
+                  {getBoundBossDef(selectedBoundBoss.bossId)?.name ?? 'Bound Boss'} · ★
+                  {selectedBoundBoss.stars}
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Bound Boss — fixed on the pad, stars only (no scrap upgrade).{' '}
+                  {getBoundBossDef(selectedBoundBoss.bossId)?.skill.name}:{' '}
+                  {getBoundBossDef(selectedBoundBoss.bossId)?.skill.description}
+                </ThemedText>
+              </>
             ) : (
               <>
                 <ThemedText type="smallBold">Build a tower</ThemedText>
@@ -923,6 +1004,42 @@ export function DefendScreen({
                     </Pressable>
                   );
                 })}
+                {unlockedBoundBosses.length > 0 ? (
+                  <>
+                    <ThemedText type="smallBold" themeColor="textSecondary">
+                      Bound Boss
+                    </ThemedText>
+                    {unlockedBoundBosses.map((bb) => {
+                      const def = getBoundBossDef(bb.id);
+                      const affordable = def != null && scrap >= def.place_cost;
+                      const atCap = boundBossCount >= BOUND_BOSS_MAX_ON_BOARD;
+                      return (
+                        <Pressable
+                          key={bb.id}
+                          onPress={() => placeOnBoundBoss(bb.id, bb.stars)}
+                          disabled={!affordable || atCap}
+                          accessibilityRole="button"
+                          style={({ pressed }) => [
+                            styles.hudButton,
+                            {
+                              backgroundColor:
+                                affordable && !atCap
+                                  ? theme.backgroundSelected
+                                  : theme.backgroundElement,
+                            },
+                            pressed && affordable && !atCap && styles.pressed,
+                          ]}>
+                          <ThemedText
+                            type="smallBold"
+                            themeColor={affordable && !atCap ? undefined : 'textSecondary'}>
+                            {def?.name ?? bb.id} ★{bb.stars} · {def?.place_cost ?? 0} scrap
+                            {atCap ? ' · max 2' : ''}
+                          </ThemedText>
+                        </Pressable>
+                      );
+                    })}
+                  </>
+                ) : null}
               </>
             )}
             <Pressable
@@ -1107,6 +1224,15 @@ export function DefendScreen({
                     : `Avatar star token · ${Math.round(getTune().avatarStarDropPct * 100)}% drop · pity on the ${getTune().avatarStarPityClears}rd Final this cycle (${view.finalClearsThisCycle}/${getTune().avatarStarPityClears} so far)`}
                 </ThemedText>
               ) : null}
+              {band && cycleBossDef ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {cycleBossStars >= BOUND_BOSS_MAX_STAR
+                    ? `Boss fragment · ${cycleBossDef.name} ★${cycleBossStars} (max)`
+                    : `Boss fragment · ${cycleBossFrags}/${cycleBossNextCost ?? '—'}${
+                        cycleBossStars > 0 ? ` · ★${cycleBossStars}` : ''
+                      }`}
+                </ThemedText>
+              ) : null}
               {dropRows.length === 0 ? (
                 <ThemedText type="small" themeColor="textSecondary">
                   No drops listed for this wave.
@@ -1242,15 +1368,29 @@ export function DefendScreen({
                 </ThemedText>
                 {lastWin.dropItems.length > 0 ? (
                   <ThemedText type="small" themeColor="textSecondary">
-                    Found:{' '}
+                    {dropLabelFor(playedRef.current.phase, playedRef.current.wave)}{' '}
                     {lastWin.dropItems
-                      .map((id) => getItemDef(id)?.core.name ?? id)
+                      .map((id) => {
+                        const name = getItemDef(id)?.core.name ?? id;
+                        const unique = isUniqueDrop(
+                          dropTableForWave(playedRef.current.phase, playedRef.current.wave),
+                          id,
+                        );
+                        return unique ? `${name} (Unique)` : name;
+                      })
                       .join(', ')}
                   </ThemedText>
                 ) : null}
                 {lastWin.starTokenGranted ? (
                   <ThemedText type="small" themeColor="textSecondary">
-                    ★ Avatar star token earned — spend it for +3% base wave power.
+                    Final drop: Avatar star
+                  </ThemedText>
+                ) : null}
+                {lastWin.bossFragment ? (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {lastWin.bossFragment.starred
+                      ? `${lastWin.bossFragment.name} bound ★${lastWin.bossFragment.stars}!`
+                      : `Boss fragment · ${lastWin.bossFragment.frags}/${lastWin.bossFragment.nextCost ?? '—'}`}
                   </ThemedText>
                 ) : null}
                 {lastWin.conquered ? (
@@ -1413,6 +1553,11 @@ export function DefendScreen({
               label="Clear all towers"
               disabled={!sim || sim.towers.length === 0}
               onPress={() => setSim((prev) => (prev ? { ...prev, towers: [] } : prev))}
+            />
+            <DevRow
+              label="Clear Bound Bosses"
+              disabled={!sim || sim.boundBosses.length === 0}
+              onPress={() => setSim((prev) => (prev ? { ...prev, boundBosses: [] } : prev))}
             />
             <DevRow
               label="Reset skill CD"

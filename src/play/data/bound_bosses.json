@@ -1,1 +1,23 @@
-[]
+[
+  {
+    "boss_id": "ember_sovereign",
+    "name": "Ember Sovereign",
+    "family": "ember",
+    "tint": "ember",
+    "base_attack": 22,
+    "cooldown_ms": 1300,
+    "range": 20,
+    "place_cost": 50,
+    "skill": {
+      "skill_id": "burst",
+      "name": "Sovereign Nova",
+      "description": "A soft blast that clears a knot of pufflings.",
+      "power": 1.6,
+      "radius": 22,
+      "cooldown_ms": 9000
+    },
+    "star_cost_frags": [3, 2, 3, 4, 5],
+    "star_mult_damage": [1.0, 1.2, 1.45, 1.7, 1.95, 2.2],
+    "star_skill_cd_scale": [1.0, 0.95, 0.9, 0.85, 0.8, 0.75]
+  }
+]

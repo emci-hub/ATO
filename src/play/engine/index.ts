@@ -56,3 +56,15 @@ export {
   recommendedBase,
   recommendedGs,
 } from './gear-score';
+export {
+  BOUND_BOSS_MAX_STAR,
+  BoundBossDef,
+  BoundBossSkill,
+  BoundBossSkillId,
+  allBoundBossDefs,
+  boundBossFragmentCost,
+  boundBossStarDamage,
+  boundBossStarSkillCdScale,
+  defaultBoundBossId,
+  getBoundBossDef,
+} from './bound-boss';

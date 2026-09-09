@@ -37,6 +37,12 @@ import {
   DEFAULT_CYCLE_TINT,
 } from '@/play/playStore';
 import { bossBandFor, type BossBand } from '@/play/engine/bands';
+import {
+  boundBossStarDamage,
+  boundBossStarSkillCdScale,
+  getBoundBossDef,
+  type BoundBossDef,
+} from '@/play/engine/bound-boss';
 import { type TypeTag } from '@/play/engine/type-match';
 import { getTune } from '@/play/tune';
 
@@ -280,6 +286,22 @@ export type Tower = {
   cooldownMs: number;
 };
 
+/** A placed Bound Boss tower (GAME_SPEC §9k) — fixed on a pad, stars-only
+ * (no scrap 1→3 upgrade), auto-attacks + fires its echo skill on CD. */
+export type BoundBossTower = {
+  id: number;
+  pad: number; // index into the map's `pads`
+  bossId: string; // matches a bound_bosses.json def
+  stars: number; // 1..5
+  /** ms until the next auto-attack. */
+  cooldownMs: number;
+  /** ms until the echo skill fires again. */
+  skillCooldownMs: number;
+};
+
+/** Max Bound Bosses on the board at once (of 6 pads — §9k). */
+export const BOUND_BOSS_MAX_ON_BOARD = 2;
+
 export type DefendLive = {
   /** 1-based display wave (within its phase/map — Trial or Main). */
   wave: number;
@@ -298,6 +320,7 @@ export type DefendLive = {
   spawnCooldownMs: number;
   nextId: number;
   towers: Tower[];
+  boundBosses: BoundBossTower[];
   scrap: number;
   /** ms until the Avatar's next auto-attack. */
   avatarCooldownMs: number;
@@ -344,6 +367,7 @@ export function createDefendLive(wave: number, options: DefendLiveOptions = {}):
     spawnCooldownMs: 0,
     nextId: 0,
     towers: [],
+    boundBosses: [],
     scrap: options.scrap ?? getTune().startScrap,
     avatarCooldownMs: 0,
     skillCooldownMs: 0,
@@ -363,6 +387,11 @@ export function retryDefendLive(state: DefendLive): DefendLive {
       tint: state.tint,
     }),
     towers: state.towers.map((tower) => ({ ...tower, cooldownMs: 0 })),
+    boundBosses: state.boundBosses.map((bb) => ({
+      ...bb,
+      cooldownMs: 0,
+      skillCooldownMs: 0,
+    })),
   };
 }
 
@@ -419,6 +448,43 @@ export function upgradeTower(
 export function towerUpgradeCost(tower: Tower): number {
   if (tower.level >= TOWER_MAX_LEVEL) return 0;
   return TOWER_DEFS[tower.kind].levelCostScrap[tower.level] ?? 0;
+}
+
+/** Place a Bound Boss on an empty pad (§9k), deducting its scrap place cost.
+ * Blocked when the boss isn't ≥ ★1, the pad is occupied, scrap is short, or
+ * the board already holds `BOUND_BOSS_MAX_ON_BOARD` Bound Bosses. */
+export function placeBoundBoss(
+  state: DefendLive,
+  pad: number,
+  bossId: string,
+  stars: number,
+): DefendLive | null {
+  const def = getBoundBossDef(bossId);
+  if (!def || stars < 1) return null;
+  if (state.scrap < def.place_cost) return null;
+  if (
+    state.towers.some((tower) => tower.pad === pad) ||
+    state.boundBosses.some((bb) => bb.pad === pad)
+  ) {
+    return null;
+  }
+  if (state.boundBosses.length >= BOUND_BOSS_MAX_ON_BOARD) return null;
+  return {
+    ...state,
+    scrap: state.scrap - def.place_cost,
+    boundBosses: [
+      ...state.boundBosses,
+      {
+        id: state.nextId,
+        pad,
+        bossId,
+        stars: Math.max(1, Math.min(5, Math.floor(stars))),
+        cooldownMs: 0,
+        skillCooldownMs: 0,
+      },
+    ],
+    nextId: state.nextId + 1,
+  };
 }
 
 /** Distance in board units between a pad and a puff's current position. */
@@ -558,6 +624,64 @@ export function stepDefendLive(
     }
   }
 
+  // Bound Boss towers fire (§9k): auto-attack on CD + echo skill on CD. Auto
+  // only — no second skill button. The echo maps to the closed skill
+  // primitives (burst = instant AoE around the pad); slow_pulse / focus_beam
+  // are authored with future packs, no new primitive here.
+  const firedBoundBosses: BoundBossTower[] = [];
+  for (const bb of state.boundBosses) {
+    const def = getBoundBossDef(bb.bossId);
+    if (!def) {
+      firedBoundBosses.push(bb);
+      continue;
+    }
+    const pad = map.pads[bb.pad];
+    let cooldownMs = bb.cooldownMs - dtMs;
+    let skillCooldownMs = bb.skillCooldownMs - dtMs;
+
+    // Auto-attack — highest current HP in range (a boss echoes its chunk hits).
+    if (cooldownMs <= 0) {
+      const target = acquireBoundBossTarget(def, pad, puffs, map);
+      if (target) {
+        const damage = def.base_attack * boundBossStarDamage(def, bb.stars) * boardMult;
+        puffs = puffs.map((p) => (p.id === target.id ? { ...p, hp: p.hp - damage } : p));
+        if (puffs.some((p) => p.id === target.id && p.hp <= 0)) {
+          scrap += scrapPerKill;
+          puffs = puffs.filter((p) => p.id !== target.id);
+        }
+        cooldownMs = def.cooldown_ms;
+      } else {
+        cooldownMs = 0;
+      }
+    }
+
+    // Echo skill (burst): instant AoE damage around the pad on CD.
+    if (skillCooldownMs <= 0) {
+      if (def.skill.skill_id === 'burst') {
+        const hitAny = puffs.some(
+          (puff) => padPuffDist(pad, puff.dist, map) <= def.skill.radius,
+        );
+        if (hitAny) {
+          const skillDamage =
+            def.base_attack * def.skill.power * boundBossStarDamage(def, bb.stars) * boardMult;
+          puffs = puffs.map((puff) => {
+            if (padPuffDist(pad, puff.dist, map) > def.skill.radius) return puff;
+            return { ...puff, hp: puff.hp - skillDamage };
+          });
+          scrap += puffs.filter((p) => p.hp <= 0).length * scrapPerKill;
+          puffs = puffs.filter((p) => p.hp > 0);
+          skillCooldownMs = def.skill.cooldown_ms * boundBossStarSkillCdScale(def, bb.stars);
+        } else {
+          skillCooldownMs = 0;
+        }
+      } else {
+        skillCooldownMs = def.skill.cooldown_ms;
+      }
+    }
+
+    firedBoundBosses.push({ ...bb, cooldownMs, skillCooldownMs });
+  }
+
   // Boss enrage (§18 C): a boss that first drops below its HP threshold fires
   // once and spawns a burst of extra runners (`burst` primitive's threat spike
   // in v0 — enemies can't damage towers/hero, so leak-only fail makes a
@@ -591,6 +715,7 @@ export function stepDefendLive(
       spawnCooldownMs,
       nextId,
       towers: firedTowers,
+      boundBosses: firedBoundBosses,
       scrap,
       avatarCooldownMs,
       skillCooldownMs,
@@ -652,6 +777,19 @@ function acquireTarget(tower: Tower, puffs: Puff[], map: DefendMap): Puff | null
     return inRange.reduce((a, b) => (b.hp > a.hp ? b : a));
   }
   return inRange.reduce((a, b) => (b.dist > a.dist ? b : a));
+}
+
+/** Bound Boss auto-attack target — highest current HP in range (a boss echoes
+ * its chunky hits). */
+function acquireBoundBossTarget(
+  def: BoundBossDef,
+  pad: DefendWaypoint,
+  puffs: Puff[],
+  map: DefendMap,
+): Puff | null {
+  const inRange = puffs.filter((puff) => padPuffDist(pad, puff.dist, map) <= def.range);
+  if (inRange.length === 0) return null;
+  return inRange.reduce((a, b) => (b.hp > a.hp ? b : a));
 }
 
 /** Subtract damage; vine also (re)applies its slow. Returns a new array. */

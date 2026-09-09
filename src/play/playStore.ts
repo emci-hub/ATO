@@ -53,6 +53,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { cyclePower, defaultCyclePower } from '@/play/engine/cycle';
 import { bossBandFor } from '@/play/engine/bands';
+import {
+  BOUND_BOSS_MAX_STAR,
+  boundBossFragmentCost,
+  defaultBoundBossId,
+  getBoundBossDef,
+  type BoundBossDef,
+} from '@/play/engine/bound-boss';
 import { isUniqueDrop, rollDropById } from '@/play/engine/drop-table';
 import { gearScore, recommendedGs } from '@/play/engine/gear-score';
 import { isTypeTag, type TypeTag } from '@/play/engine/type-match';
@@ -276,6 +283,10 @@ export type DiveRun = {
  * v13 (Phase C — bosses + type match + Avatar star) adds `avatar_stars`,
  * `avatar_star_tokens`, `avatar_star_rolled_cycle`, `final_clears_this_cycle`,
  * `uniques[]`, and `cycle_tint`. Older saves default these to fresh values.
+ * v14 (Phase E — Bound Boss) makes `bound_bosses[]` live: each record carries
+ * `stars` (0 = fragments only, 1–5 = bound) + `frags` (toward the next star).
+ * Older empty/legacy records default to stars 0 / frags 0, so no migration is
+ * needed beyond the version bump.
  */
 
 /** Campaign phase. `trial` (Grove Path, waves 1–5) then `main` (Divecore
@@ -292,16 +303,66 @@ export type CampaignState = {
   wave_in_phase: number;
 };
 
-/** One Bound Boss record (empty for v0 — no boss system yet). */
+/** One Bound Boss record (GAME_SPEC §9k). `stars` 0 = fragments collected but
+ * the boss is not a tower yet; 1–5 = bound at that star. `frags` counts
+ * fragments toward the NEXT star (or toward the ★1 unlock when stars === 0). */
 export type BoundBossRecord = {
-  /** Stable boss id (rows land in bound_bosses.json later). */
+  /** Stable boss id (matches a row in bound_bosses.json). */
   id: string;
-  /** Wave the boss was bound at; null until it has been bound. */
+  /** Unlocked stars (0 = not yet bound, 1–5 = bound). */
+  stars: number;
+  /** Fragments toward the next star (or toward unlock when stars === 0). */
+  frags: number;
+  /** Wave the boss was first bound at; null until it has been bound. */
   bound_wave: number | null;
 };
 
+/** Read-model of a Bound Boss for the Defend setup / drop preview. */
+export type BoundBossView = {
+  id: string;
+  name: string;
+  /** Unlocked stars (0 = fragments only, 1–5 = bound). */
+  stars: number;
+  /** Fragments toward the next star (or unlock). */
+  frags: number;
+  /** True when placeable on a pad (stars ≥ 1). */
+  unlocked: boolean;
+  /** Fragments needed for the next star/unlock; null at the ★5 cap. */
+  nextCost: number | null;
+};
+
+/** Add `count` boss fragments to a record, auto-starring up through the §9k
+ * fragment ladder (unlock ★1 at 3, then +2/+3/+4/+5 per star, cap ★5).
+ * Returns the new record + whether a star was gained. */
+function addBossFragments(
+  record: BoundBossRecord,
+  def: BoundBossDef,
+  count: number,
+  wave: number | null,
+): { record: BoundBossRecord; gainedStar: boolean } {
+  let stars = Math.max(0, Math.min(BOUND_BOSS_MAX_STAR, Math.floor(record.stars)));
+  let frags = Math.max(0, Math.floor(record.frags)) + Math.max(0, count);
+  let gainedStar = false;
+  while (stars < BOUND_BOSS_MAX_STAR) {
+    const cost = boundBossFragmentCost(def, stars);
+    if (cost == null || frags < cost) break;
+    frags -= cost;
+    stars += 1;
+    gainedStar = true;
+  }
+  return {
+    record: {
+      id: record.id,
+      stars,
+      frags,
+      bound_wave: record.bound_wave ?? (stars > 0 ? wave : null),
+    },
+    gainedStar,
+  };
+}
+
 export type PlayStoreDoc = {
-  version: 13;
+  version: 14;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -412,6 +473,8 @@ export type PlayView = {
   uniques: readonly string[];
   /** Current cycle's boss tint. */
   cycleTint: TypeTag;
+  /** Bound Bosses (fragments + stars) — the §9k tower roster. */
+  boundBosses: readonly BoundBossView[];
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -452,7 +515,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 13,
+    version: 14,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -541,6 +604,17 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     finalClearsThisCycle: doc.final_clears_this_cycle,
     uniques: doc.uniques,
     cycleTint: doc.cycle_tint,
+    boundBosses: doc.bound_bosses.map((record) => {
+      const def = getBoundBossDef(record.id);
+      return {
+        id: record.id,
+        name: def?.name ?? record.id,
+        stars: record.stars,
+        frags: record.frags,
+        unlocked: record.stars >= 1,
+        nextCost: def ? boundBossFragmentCost(def, record.stars) : null,
+      };
+    }),
   };
 }
 
@@ -600,6 +674,16 @@ export type DefendWinResult = {
   avatarStarTokens: number;
   /** Item ids dropped from this wave's drop table (rolled on the win). */
   dropItems: string[];
+  /** Boss fragment dropped this win (§9k — Final/Scout/Semi bands only), or
+   * null when no fragment dropped. `starred` = the drop auto-starred-up. */
+  bossFragment: {
+    id: string;
+    name: string;
+    stars: number;
+    frags: number;
+    nextCost: number | null;
+    starred: boolean;
+  } | null;
 };
 
 /**
@@ -704,6 +788,43 @@ export function recordDefendWin(
     final_clears_this_cycle = attempts;
   }
 
+  // Boss fragment roll (§9k): Final ~35%, Scout 5%, Semi 10% — a simple roll
+  // every clear, no pity. Fragments go to the cycle's one boss family (Ember
+  // until pack 2). Skip is a separate path (skipCampaignToEven), so fragments
+  // can never come from the skip crate.
+  const band = bossBandFor(phase, wave);
+  const cycleBossId = defaultBoundBossId();
+  let bound_bosses = doc.bound_bosses;
+  let bossFragment: DefendWinResult['bossFragment'] = null;
+  if (band && cycleBossId) {
+    const pct =
+      band.kind === 'final'
+        ? tune.bossFragFinalPct
+        : band.kind === 'semi'
+          ? tune.bossFragSemiPct
+          : tune.bossFragScoutPct; // scout_mini + scout both use the Scout %
+    if (rng() < pct) {
+      const def = getBoundBossDef(cycleBossId);
+      if (def) {
+        const existing =
+          bound_bosses.find((b) => b.id === cycleBossId) ??
+          { id: cycleBossId, stars: 0, frags: 0, bound_wave: null };
+        const next = addBossFragments(existing, def, 1, Math.floor(wave));
+        bound_bosses = bound_bosses.some((b) => b.id === cycleBossId)
+          ? bound_bosses.map((b) => (b.id === cycleBossId ? next.record : b))
+          : [...bound_bosses, next.record];
+        bossFragment = {
+          id: cycleBossId,
+          name: def.name,
+          stars: next.record.stars,
+          frags: next.record.frags,
+          nextCost: boundBossFragmentCost(def, next.record.stars),
+          starred: next.gainedStar,
+        };
+      }
+    }
+  }
+
   // Rewards. Replays are the §9h farm path: half tokens + half XP, and they
   // never count as a lifetime/campaign clear. Campaign wins honour the §9
   // daily soft cap on tokens and always add a lifetime clear.
@@ -800,6 +921,7 @@ export function recordDefendWin(
     avatar_star_rolled_cycle,
     final_clears_this_cycle,
     uniques: uniquesAfter,
+    bound_bosses,
   };
   return {
     doc: next,
@@ -819,6 +941,7 @@ export function recordDefendWin(
       starTokenGranted,
       avatarStarTokens: avatar_star_tokens,
       dropItems,
+      bossFragment,
     },
   };
 }
@@ -1256,6 +1379,45 @@ export function devOvergear(doc: PlayStoreDoc): PlayStoreDoc {
  * the Scout band, never auto-runs the bosses). */
 export function devForceSkipOffer(doc: PlayStoreDoc): PlayStoreDoc {
   return devOvergear(devCampaignReset(doc));
+}
+
+/** Dev kit only: grant one boss fragment to the cycle's boss family (auto-star
+ * ups through the §9k fragment ladder). */
+export function devGrantBossFragment(doc: PlayStoreDoc): PlayStoreDoc {
+  const bossId = defaultBoundBossId();
+  if (!bossId) return doc;
+  const def = getBoundBossDef(bossId);
+  if (!def) return doc;
+  const existing =
+    doc.bound_bosses.find((b) => b.id === bossId) ??
+    { id: bossId, stars: 0, frags: 0, bound_wave: null };
+  const next = addBossFragments(existing, def, 1, null);
+  const bound_bosses = doc.bound_bosses.some((b) => b.id === bossId)
+    ? doc.bound_bosses.map((b) => (b.id === bossId ? next.record : b))
+    : [...doc.bound_bosses, next.record];
+  return { ...doc, bound_bosses };
+}
+
+/** Dev kit only: force the cycle boss to be bound (≥ ★1) immediately. */
+export function devUnlockBoundBoss(doc: PlayStoreDoc): PlayStoreDoc {
+  const bossId = defaultBoundBossId();
+  if (!bossId) return doc;
+  const existing = doc.bound_bosses.find((b) => b.id === bossId);
+  const record: BoundBossRecord = {
+    id: bossId,
+    stars: Math.max(1, existing?.stars ?? 1),
+    frags: existing?.frags ?? 0,
+    bound_wave: existing?.bound_wave ?? null,
+  };
+  const bound_bosses = existing
+    ? doc.bound_bosses.map((b) => (b.id === bossId ? record : b))
+    : [...doc.bound_bosses, record];
+  return { ...doc, bound_bosses };
+}
+
+/** Dev kit only: clear every Bound Boss record (re-test the fragment grind). */
+export function devResetBoundBosses(doc: PlayStoreDoc): PlayStoreDoc {
+  return { ...doc, bound_bosses: [] };
 }
 
 /** §7 bust table value at a Deeper index plus the §9c tune boost (whole-%),
@@ -1866,7 +2028,7 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 1 && version !== 2 && version !== 3 && version !== 4 &&
       version !== 5 && version !== 6 && version !== 7 && version !== 8 &&
       version !== 9 && version !== 10 && version !== 11 && version !== 12 &&
-      version !== 13
+      version !== 13 && version !== 14
     ) {
       return null;
     }
@@ -1911,7 +2073,7 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       : [];
     const cycleTint = isTypeTag(data.cycle_tint) ? data.cycle_tint : DEFAULT_CYCLE_TINT;
     return {
-      version: 13,
+      version: 14,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -1977,15 +2139,20 @@ function parseCampaign(raw: unknown): CampaignState {
   return { phase: 'trial', wave_in_phase: 1 };
 }
 
-/** Loose read of bound-boss rows; malformed rows are dropped. */
+/** Loose read of bound-boss rows; malformed rows are dropped. v14 rows carry
+ * `stars` + `frags`; legacy `{ id, bound_wave }` rows default to stars 0. */
 function parseBoundBosses(raw: unknown): BoundBossRecord[] {
   if (!Array.isArray(raw)) return [];
   const rows: BoundBossRecord[] = [];
   for (const entry of raw) {
     if (!isRecord(entry) || typeof entry.id !== 'string' || entry.id.length === 0) continue;
     const bound = finiteNumber(entry.bound_wave);
+    const stars = Math.max(0, Math.min(BOUND_BOSS_MAX_STAR, Math.floor(finiteNumber(entry.stars) ?? 0)));
+    const frags = Math.max(0, Math.floor(finiteNumber(entry.frags) ?? 0));
     rows.push({
       id: entry.id,
+      stars,
+      frags,
       bound_wave: bound == null ? null : Math.max(1, Math.floor(bound)),
     });
   }

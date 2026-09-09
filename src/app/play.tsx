@@ -31,8 +31,11 @@ import {
   devFillResearchFull,
   devFillResearchOne,
   devForceConquered,
+  devGrantBossFragment,
+  devResetBoundBosses,
   devResetPlayStore,
   devSetCampaignSeat,
+  devUnlockBoundBoss,
   type ClaimResult,
   type DefendWinContext,
   type MergeOutcome,
@@ -816,6 +819,21 @@ function GroveDevKit({
       key: 'campaign-force-conquered',
       label: 'Force Conquered +1',
       onPress: () => run(devForceConquered),
+    },
+    {
+      key: 'boss-grant-fragment',
+      label: '+1 boss fragment',
+      onPress: () => run(devGrantBossFragment),
+    },
+    {
+      key: 'boss-unlock',
+      label: 'Unlock Bound Boss',
+      onPress: () => run(devUnlockBoundBoss),
+    },
+    {
+      key: 'boss-reset',
+      label: 'Reset Bound Bosses',
+      onPress: () => run(devResetBoundBosses),
     },
   ];
 

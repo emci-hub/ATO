@@ -63,6 +63,13 @@ export type TuneDoc = {
   /** Skip-to-even pay (§9j): fraction of a real clear's tokens/XP per skipped
    * wave (spec 40–50%). */
   skipPayFraction: number;
+  /** Bound Boss fragment drop chance on a Scout band clear (§9k, Sane 5%).
+   * Never pity — a simple roll every clear. */
+  bossFragScoutPct: number;
+  /** Bound Boss fragment drop chance on a Semi band clear (§9k, Sane 10%). */
+  bossFragSemiPct: number;
+  /** Bound Boss fragment drop chance on a Final clear (§9k, Sane 35%). */
+  bossFragFinalPct: number;
 };
 
 /** Sane = the ship defaults the engines shipped with. */
@@ -89,6 +96,9 @@ export const SANE_TUNE: TuneDoc = {
   avatarStarWavePowerStep: 0.03,
   skipGsThreshold: 1.25,
   skipPayFraction: 0.45,
+  bossFragScoutPct: 0.05,
+  bossFragSemiPct: 0.1,
+  bossFragFinalPct: 0.35,
 };
 
 export const TUNE_PRESETS: Record<TunePresetId, TuneDoc> = {
