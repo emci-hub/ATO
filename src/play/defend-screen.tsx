@@ -397,6 +397,9 @@ export function DefendScreen({
               {displayedWave} · {defendDifficulty(displayedWave)}
             </ThemedText>
           </View>
+          <ThemedText type="small" themeColor="textSecondary">
+            Waves climb through bands — Easy at first, then Moderate, Hard, and Brutal.
+          </ThemedText>
           <View style={styles.statRow}>
             <ThemedText type="smallBold">Scrap</ThemedText>
             <ThemedText type="subheading" themeColor="emphasis">
@@ -405,7 +408,7 @@ export function DefendScreen({
           </View>
           <ThemedText type="small" themeColor="textSecondary">
             Run scrap — spend to place and upgrade towers, earn by defeating foes, resets each
-            Defend.
+            run. You start with enough for about two towers.
           </ThemedText>
           <View style={styles.statRow}>
             <ThemedText type="smallBold">Avatar · Lv {view.avatarLevel}</ThemedText>

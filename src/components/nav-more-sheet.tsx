@@ -113,8 +113,8 @@ export function NavMoreSheet({
                     { borderColor: controlBorderColor(theme) },
                     pressed && styles.pressed,
                   ]}>
-                  <MaterialCommunityIcons name="play-circle" size={22} color={theme.text} />
-                  <ThemedText type="small" style={styles.rowLabel}>
+                  <MaterialCommunityIcons name="play-circle" size={22} color={theme.accent} />
+                  <ThemedText type="smallBold" style={styles.rowLabel}>
                     Divecore
                   </ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">

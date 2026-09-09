@@ -416,7 +416,8 @@ export default function PlayScreen() {
                   </ThemedText>
                 </View>
                 <ThemedText type="small" themeColor="textSecondary">
-                  Soft currency — from Claim, Dive banks, and Defend clears.
+                  Soft currency — earned from Claims, Dive banks, and Defend clears. Nothing
+                  spends it yet; it banks until Dive refills arrive.
                 </ThemedText>
                 <View style={styles.statRow}>
                   <ThemedText type="smallBold">Dive charges</ThemedText>
