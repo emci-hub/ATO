@@ -46,6 +46,14 @@ export interface QuestionDraft {
   excludedAxes?: readonly TraitAxis[];
   /** Dedup-by-meaning tags for future adaptive/redundancy-aware selection. */
   redundancyTags?: readonly string[];
+  /**
+   * Which question_bank_pool row (wave49) this draft came from — set by
+   * bank-pool.ts, either drawn directly (fetchBankCandidates) or written
+   * back after fresh AI generation (addToBankPool). Never set for the
+   * static intake bank (bank.ts) or Infinite Questions drafts, which have
+   * no bank-pool concept.
+   */
+  bankItemId?: string;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { generateText } from '@/lib/ai/generate';
-import { QUESTIONS_META } from '@/lib/ai/call-sites';
+import { ONGOING_ROUND_META, QUESTIONS_META } from '@/lib/ai/call-sites';
 
 import { parseQuestionBatch } from './parse';
 import type { QuestionDraft } from './types';
@@ -24,6 +24,29 @@ export async function generateQuestionBatch(
     maxOutputTokens: 2048,
     responseFormat: 'json',
   }, QUESTIONS_META);
+  if (!text) return null;
+  const drafts = parseQuestionBatch(text, n);
+  return drafts.length >= n ? drafts.slice(0, n) : drafts.length > 0 ? drafts : null;
+}
+
+/**
+ * Same shape as `generateQuestionBatch`, but for the post-Full-Profile
+ * ongoing round (ongoing-round.ts's `generateBatch` dep, called by
+ * chunked-generate.ts's per-chunk AI fallback) — `ONGOING_ROUND_META`
+ * instead of `QUESTIONS_META` since each prompt is grounded in this user's
+ * profile/history, not generic (see call-sites.ts).
+ */
+export async function generateOngoingRoundBatch(
+  prompt: string,
+  count: number,
+): Promise<QuestionDraft[] | null> {
+  const n = count > 0 ? Math.floor(count) : 1;
+  const text = await generateText({
+    prompt,
+    temperature: 0.9,
+    maxOutputTokens: 2048,
+    responseFormat: 'json',
+  }, ONGOING_ROUND_META);
   if (!text) return null;
   const drafts = parseQuestionBatch(text, n);
   return drafts.length >= n ? drafts.slice(0, n) : drafts.length > 0 ? drafts : null;

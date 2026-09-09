@@ -122,8 +122,16 @@ Status: **Planning only, nothing built.** Written 2026-09-09 from a finalized pr
 T-00  Verify unlock gate (no-op expected)                         [no deps]
 T-01  question_bank_pool schema + seed                             [needs emci: schema]
 T-02  fetchRecentTexts + bank-pool fill wired into ongoing-round.ts [depends: T-01]
-      (also fixes the pre-existing question_items.axis check constraint —
-      missing 'playfulness', wave17 — before this round-save path uses it)
+      (CORRECTED 2026-09-09, mid-T-02, caught by this session's own review
+      before push: the note that used to be here — "also fixes the
+      pre-existing question_items.axis check constraint, missing
+      'playfulness', wave17" — was wrong. That check was already replaced by
+      `question_items_axis_known` in wave21_playfulness_categories.sql, with
+      wave27_drop_stale_question_items_axis_check.sql dropping the old
+      15-axis constraint by name specifically so the two can't coexist.
+      wave49's "re-verified — confirmed stale, no fix needed" comment was
+      correct all along. No axis-check change was needed in wave50; the
+      earlier draft of wave50 that re-added it was reverted before push.)
 T-03  Ongoing-round UI trigger + save path (question_items reuse)  [depends: T-02]
 T-04  ato_tokens schema + ledger + RPCs                             [needs emci: schema]
 T-05  claim_ongoing_round_complete wired into T-03's submit path   [depends: T-03, T-04]
