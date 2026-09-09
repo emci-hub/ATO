@@ -23,13 +23,16 @@ import { POLE_COMBOS } from '@/lib/legends64/classify';
  * `archetypeName` below) reads correctly for all 384 combinations — no
  * per-skin template needed.
  *
- * One inherited quirk, not introduced here: the anime skin's core-code LHL
- * ('Senpai') and modifier-code LLH ('Senpai') are the same word in the
- * source draft. A user classified core=LHL + modifier=LLH (code
- * 'LHL-LLH') gets the anime name 'Senpai Senpai' — a real but narrow
- * (1-of-64-codes, 1-of-6-skins) repeated-word edge case, left as the
- * draft's own captured content rather than silently rewritten; worth a
- * one-line fix if emci confirms it during their content pass.
+ * Revised 2026-09-09 per emci's content pass: several Modifier entries
+ * from the archive draft were nouns (matching Core, which is always a
+ * noun/role) rather than adjectives, which read fine alone but doubled up
+ * grammatically once joined with a Core noun. Modifiers only (Cores are
+ * untouched, already correct as nouns) were corrected to adjective forms
+ * across gaming (all 8), anime (2), funny (3), and dark (2) — real and
+ * godType were already adjectives, left as-is. This same pass also
+ * resolved the earlier-flagged 'Senpai Senpai' collision (anime
+ * core-code LHL vs. modifier-code LLH): LLH's modifier is now 'Watchful',
+ * so code 'LHL-LLH' composes to 'Watchful Senpai', not a repeated word.
  */
 
 export type LegendSkin = 'real' | 'gaming' | 'godType' | 'anime' | 'funny' | 'dark';
@@ -142,14 +145,14 @@ export const MODIFIER_DESCRIPTORS: SkinMap = {
     LLL: 'Low-Key',
   },
   gaming: {
-    HHH: 'Healer',
-    HHL: 'Paladin',
-    HLH: 'Support',
-    HLL: 'Druid',
-    LHH: 'Warrior',
-    LHL: 'Berserker',
-    LLH: 'Sentinel',
-    LLL: 'Rogue',
+    HHH: 'Healing',
+    HHL: 'Valiant',
+    HLH: 'Supportive',
+    HLL: 'Sylvan',
+    LHH: 'Fierce',
+    LHL: 'Untamed',
+    LLH: 'Vigilant',
+    LLL: 'Elusive',
   },
   godType: {
     HHH: 'Devoted',
@@ -166,30 +169,30 @@ export const MODIFIER_DESCRIPTORS: SkinMap = {
     HHL: 'Genki',
     HLH: 'Dandere',
     HLL: 'Kuudere',
-    LHH: 'Onee',
+    LHH: 'Protective',
     LHL: 'Kakkoii',
-    LLH: 'Senpai',
+    LLH: 'Watchful',
     LLL: 'Mysterious',
   },
   funny: {
-    HHH: 'Rizzler',
+    HHH: 'Rizzy',
     HHL: 'Unbothered',
     HLH: 'Soft',
     HLL: 'Cozy',
     LHH: 'Petty',
-    LHL: 'Villain-Arc',
+    LHL: 'Savage',
     LLH: 'Judgy',
-    LLL: 'Ghosting',
+    LLL: 'MIA',
   },
   dark: {
     HHH: 'Beloved',
-    HHL: 'Fatale',
+    HHL: 'Alluring',
     HLH: 'Sympathetic',
     HLL: 'Elegant',
     LHH: 'Ruthless',
     LHL: 'Unrepentant',
     LLH: 'Silent',
-    LLL: 'Shadow',
+    LLL: 'Shadowy',
   },
 };
 
