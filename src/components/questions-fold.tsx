@@ -13,6 +13,8 @@ import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { updateTraits, type Me } from '@/lib/me';
 import { earnTokensQuiet } from '@/lib/tokens-server';
 import { claimOngoingRoundCompleteQuiet } from '@/lib/ato-tokens-server';
+import { ATO_TOKEN_PRICE, atoPriceLine, atoTokenBalanceOf, ATO_TOKEN_NEED_MORE } from '@/lib/ato-tokens';
+import { rerollCategoryItem, rerollQuestionItem } from '@/lib/questions/reroll';
 import { deferredUnansweredAxes, mergeCategoryPriority } from '@/lib/questions/deferral';
 import { contradictedAxesFrom, type TraitHistoryRow } from '@/lib/trait-history';
 import { fetchTraitHistory } from '@/lib/trait-history-store';
@@ -560,6 +562,10 @@ function OngoingRoundFold({
   const [starting, setStarting] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
+  const [rerollBusy, setRerollBusy] = useState(false);
+  const [rerollNote, setRerollNote] = useState<string | null>(null);
+  const atoBalance = atoTokenBalanceOf(me);
+  const canRerollQuestion = atoBalance >= ATO_TOKEN_PRICE.question_reroll;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -637,6 +643,40 @@ function OngoingRoundFold({
     }
   }
 
+  async function reroll(item: QuestionItemRow) {
+    if (rerollBusy || busy || !canRerollQuestion || !pack) return;
+    setRerollBusy(true);
+    setRerollNote(null);
+    try {
+      const { result, item: updated } = await rerollQuestionItem(item);
+      if (result.reason === 'no_candidates') {
+        setRerollNote("Couldn't find a fresh question right now. Nothing spent.");
+        return;
+      }
+      if (!result.ok) {
+        setRerollNote(result.already ? 'Already rerolled today.' : ATO_TOKEN_NEED_MORE);
+        return;
+      }
+      if (!updated) {
+        setRerollNote("Couldn't find a fresh question right now.");
+        return;
+      }
+      setPack({
+        ...pack,
+        items: pack.items.map((row) =>
+          row.id === updated.id ? { ...row, prompt: updated.prompt, options: updated.options } : row,
+        ),
+      });
+      // Refresh me so the ATO balance shown next to the (now-disabled-for-today) button is current.
+      await onUpdated();
+    } catch (err) {
+      console.log('[ongoing-round] reroll error:', err);
+      setRerollNote("Couldn't reroll right now. Try again.");
+    } finally {
+      setRerollBusy(false);
+    }
+  }
+
   const nextItem = nextUnansweredItem(pack);
 
   return (
@@ -683,6 +723,29 @@ function OngoingRoundFold({
               </ThemedPressable>
             ))}
           </View>
+          <View style={styles.skipRow}>
+            <Pressable
+              onPress={() => void reroll(nextItem)}
+              disabled={busy || rerollBusy || !canRerollQuestion}
+              style={({ pressed }) => [
+                styles.skipLink,
+                pressed && styles.pressed,
+                (busy || rerollBusy || !canRerollQuestion) && styles.disabled,
+              ]}>
+              <ThemedText type="smallBold">
+                {rerollBusy
+                  ? 'Rerolling…'
+                  : canRerollQuestion
+                    ? `Reroll · ${atoPriceLine('question_reroll')}`
+                    : ATO_TOKEN_NEED_MORE}
+              </ThemedText>
+            </Pressable>
+          </View>
+          {rerollNote ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {rerollNote}
+            </ThemedText>
+          ) : null}
         </>
       ) : (
         <>
@@ -733,6 +796,9 @@ export function CategoryBatchFold({
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
+  const [rerollingId, setRerollingId] = useState<string | null>(null);
+  const [rerollNote, setRerollNote] = useState<string | null>(null);
+  const canRerollCategory = atoTokenBalanceOf(me) >= ATO_TOKEN_PRICE.category_reroll;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -790,6 +856,45 @@ export function CategoryBatchFold({
     }
   }
 
+  async function reroll(item: CategoryBatchState['items'][number]) {
+    if (rerollingId || busy || !canRerollCategory || !batch) return;
+    setRerollingId(item.id);
+    setRerollNote(null);
+    try {
+      const { result, item: updated } = await rerollCategoryItem(
+        item,
+        category,
+        { name: me.name, talk_style: me.talk_style ?? 'even', voice_preset: me.voice_preset },
+        tracks,
+      );
+      if (result.reason === 'no_draft') {
+        setRerollNote("Couldn't write a fresh question right now. Nothing spent.");
+        return;
+      }
+      if (!result.ok) {
+        setRerollNote(result.already ? 'Already rerolled today.' : ATO_TOKEN_NEED_MORE);
+        return;
+      }
+      if (!updated) {
+        setRerollNote("Couldn't find a fresh question right now.");
+        return;
+      }
+      setBatch({
+        ...batch,
+        items: batch.items.map((row) =>
+          row.id === updated.id ? { ...row, prompt: updated.prompt, options: updated.options } : row,
+        ),
+      });
+      // Refresh me so the ATO balance shown next to the (now-disabled-for-today) button is current.
+      await onUpdated();
+    } catch (err) {
+      console.log('[category-batch] reroll error:', err);
+      setRerollNote("Couldn't reroll right now. Try again.");
+    } finally {
+      setRerollingId(null);
+    }
+  }
+
   const progress = categoryBatchProgressFrom(category, batch);
 
   return (
@@ -821,26 +926,51 @@ export function CategoryBatchFold({
                 ) : null}
               </View>
               {progress.locked ? null : (
-                <View style={styles.options}>
-                  {item.options.map((option, index) => (
-                    <ThemedPressable
-                      key={`${item.id}-${index}`}
-                      disabled={busy || item.answeredOption != null}
-                      accessibilityState={{ selected: item.answeredOption === index }}
-                      onPress={() => void pick(item, index)}
-                      style={[
-                        styles.option,
-                        { borderColor: controlBorderColor(theme) },
-                        item.answeredOption === index && { backgroundColor: theme.backgroundSelected },
-                        (busy || item.answeredOption != null) && styles.disabled,
+                <>
+                  <View style={styles.options}>
+                    {item.options.map((option, index) => (
+                      <ThemedPressable
+                        key={`${item.id}-${index}`}
+                        disabled={busy || item.answeredOption != null}
+                        accessibilityState={{ selected: item.answeredOption === index }}
+                        onPress={() => void pick(item, index)}
+                        style={[
+                          styles.option,
+                          { borderColor: controlBorderColor(theme) },
+                          item.answeredOption === index && { backgroundColor: theme.backgroundSelected },
+                          (busy || item.answeredOption != null) && styles.disabled,
+                        ]}>
+                        <ThemedText type="smallBold">{option.text}</ThemedText>
+                      </ThemedPressable>
+                    ))}
+                  </View>
+                  {item.answeredOption == null ? (
+                    <Pressable
+                      onPress={() => void reroll(item)}
+                      disabled={rerollingId != null || busy || !canRerollCategory}
+                      style={({ pressed }) => [
+                        styles.skipLink,
+                        pressed && styles.pressed,
+                        (rerollingId != null || busy || !canRerollCategory) && styles.disabled,
                       ]}>
-                      <ThemedText type="smallBold">{option.text}</ThemedText>
-                    </ThemedPressable>
-                  ))}
-                </View>
+                      <ThemedText type="smallBold" themeColor="textSecondary">
+                        {rerollingId === item.id
+                          ? 'Rerolling…'
+                          : canRerollCategory
+                            ? `Reroll · ${atoPriceLine('category_reroll')}`
+                            : ATO_TOKEN_NEED_MORE}
+                      </ThemedText>
+                    </Pressable>
+                  ) : null}
+                </>
               )}
             </View>
           ))}
+          {rerollNote ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {rerollNote}
+            </ThemedText>
+          ) : null}
         </>
       )}
     </View>

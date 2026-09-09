@@ -78,7 +78,7 @@ export function countPoleHits(poles: AxisPole[], values: LegendValues): number {
   return hits;
 }
 
-function isMatch(poles: AxisPole[], hits: number): boolean {
+export function isMatch(poles: AxisPole[], hits: number): boolean {
   return poles.length > 0 && hits >= Math.min(MATCH_REQUIRED_HITS, poles.length);
 }
 
@@ -116,4 +116,33 @@ export function buildLegendView(
   const cards = [...bestPerFigure.values()];
   cards.sort((a, b) => b.hits - a.hits || a.variant.name.localeCompare(b.variant.name));
   return { cards, anyMatchedArchetype, hasCatalog: catalog.variants.length > 0 };
+}
+
+/**
+ * Best matching variant for ONE figure, excluding `excludeVariantIds` on top
+ * of the usual match rules — used by legend reroll to recompute a single
+ * card in place without re-deriving (and re-logging as shown) every other
+ * currently-displayed figure's pick, which a full `buildLegendView` re-run
+ * would do since every figure already shown has already been logged seen.
+ */
+export function bestVariantForFigure(
+  catalog: LegendCatalog,
+  values: LegendValues,
+  figureId: string,
+  excludeVariantIds: ReadonlySet<string>,
+): LegendMatch | null {
+  let best: LegendMatch | null = null;
+  for (const variant of catalog.variants) {
+    if (!variant.factChecked || variant.figureId !== figureId) continue;
+    if (excludeVariantIds.has(variant.id)) continue;
+    for (const archetypeId of variant.archetypeIds) {
+      const archetype = catalog.archetypes.get(archetypeId);
+      if (!archetype) continue;
+      const poles = parseAxisCombo(archetype.traitAxis);
+      const hits = countPoleHits(poles, values);
+      if (!isMatch(poles, hits)) continue;
+      if (!best || hits > best.hits) best = { variant, archetype, hits };
+    }
+  }
+  return best;
 }

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LegendCard } from '@/components/legend-card';
+import { LegendCard, type LegendRerollOutcome } from '@/components/legend-card';
 import { MilestoneToast } from '@/components/milestone-toast';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { ThemedText } from '@/components/themed-text';
@@ -19,14 +19,16 @@ import {
   devPresetById,
   type DevArchetypePresetId,
 } from '@/lib/dev-test-user';
-import { fetchLegendCatalog, fetchSeenVariantIds, logShownVariants } from '@/lib/legends/store';
+import { fetchLegendCatalog, fetchSeenVariantIds, logShownVariants, type LegendCatalog } from '@/lib/legends/store';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
-import { buildLegendView, type LegendView } from '@/lib/legends/match';
+import { bestVariantForFigure, buildLegendView, type LegendMatch, type LegendView } from '@/lib/legends/match';
 import { persistCelebratedMilestones } from '@/lib/me';
 import { checkMilestones, type MilestoneDef } from '@/lib/milestones';
 import { bankTotalProgress } from '@/lib/questions/local';
 import { legendsUnlocked } from '@/lib/questions/progressive-unlock';
 import { claimFullProfileComplete } from '@/lib/ato-tokens-server';
+import { ATO_TOKEN_NEED_MORE } from '@/lib/ato-tokens';
+import { rerollLegend } from '@/lib/questions/reroll';
 import { supabase } from '@/lib/supabase';
 import { useAppearance } from '@/lib/theme/context';
 import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
@@ -187,6 +189,13 @@ export default function LegendsScreen() {
   const [retryTick, setRetryTick] = useState(0);
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [tracksReady, setTracksReady] = useState(false);
+  // Held so a single-card reroll can recompute just that one figure's pick
+  // locally (bestVariantForFigure) instead of re-running buildLegendView —
+  // every card already on screen was already logged "seen" the moment it
+  // rendered, so a full re-derive after a reroll would swap every card, not
+  // just the one paid for (found in review).
+  const [catalog, setCatalog] = useState<LegendCatalog | null>(null);
+  const [seenIds, setSeenIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!me?.id) return;
@@ -224,6 +233,8 @@ export default function LegendsScreen() {
         const seen = await fetchSeenVariantIds(me.id);
         const view = buildLegendView(catalog, me, seen);
         if (cancelled) return;
+        setCatalog(catalog);
+        setSeenIds(seen);
         setLoad({ status: 'ready', view });
         if (view.cards.length > 0) {
           void logShownVariants(
@@ -264,6 +275,46 @@ export default function LegendsScreen() {
     } else {
       router.push({ pathname: '/intake-sweep' });
     }
+  }
+
+  /**
+   * Legend reroll for one card. Finds the replacement locally first
+   * (catalog + trait values already in state, no network) — a figure with
+   * no other matching variant is refused for free, never charged. Only on
+   * success does it patch just this one card in `load.view.cards`, leaving
+   * every other currently-shown card untouched.
+   */
+  async function handleLegendReroll(card: LegendMatch): Promise<LegendRerollOutcome> {
+    if (!me || !catalog) {
+      return { ok: false, note: "Couldn't reroll right now. Try again." };
+    }
+    const exclude = new Set(seenIds);
+    exclude.add(card.variant.id);
+    const replacement = bestVariantForFigure(catalog, me, card.variant.figureId, exclude);
+    if (!replacement) {
+      return { ok: false, note: 'No other story fits this archetype right now.' };
+    }
+    const result = await rerollLegend(me.id, me.timezone || 'UTC', card.variant.id, replacement.variant.id);
+    if (!result.ok) {
+      return { ok: false, note: result.already ? 'Already rerolled today.' : ATO_TOKEN_NEED_MORE };
+    }
+    setSeenIds((prev) => new Set(prev).add(card.variant.id));
+    setLoad((prev) =>
+      prev.status === 'ready'
+        ? {
+            ...prev,
+            view: {
+              ...prev.view,
+              cards: prev.view.cards.map((row) =>
+                row.variant.id === card.variant.id ? replacement : row,
+              ),
+            },
+          }
+        : prev,
+    );
+    // Refresh me so the ATO balance the button gates on next isn't stale.
+    void refresh().catch((err) => console.log('[legends] refresh after reroll error:', err));
+    return { ok: true };
   }
   // Progressive unlock (§6, retargeted per emci's explicit call): Legends
   // unlocks at question 50 of the frozen intake, REPLACING the prior
@@ -389,6 +440,8 @@ export default function LegendsScreen() {
                   key={card.variant.id}
                   legend={card.variant}
                   archetype={card.archetype}
+                  me={me ? { ato_tokens: me.ato_tokens } : undefined}
+                  onReroll={me ? () => handleLegendReroll(card) : undefined}
                 />
               ))
             ) : ready.hasCatalog && !ready.anyMatchedArchetype && tracksReady && thin ? (

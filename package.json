@@ -129,6 +129,7 @@
     "check:wave51": "tsx ./scripts/wave51-check.ts",
     "check:wave52": "tsx ./scripts/wave52-check.ts",
     "check:ato-tokens": "tsx ./scripts/ato-tokens-check.ts",
+    "check:reroll": "tsx ./scripts/reroll-check.ts",
     "check:category-paged-questions": "tsx ./scripts/category-paged-questions-check.ts",
     "check:wave19": "tsx ./scripts/wave19-check.ts",
     "check:wave20": "tsx ./scripts/wave20-check.ts",

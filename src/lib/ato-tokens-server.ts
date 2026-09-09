@@ -28,14 +28,14 @@ export function claimOngoingRoundCompleteQuiet(packId: string): void {
   });
 }
 
-/** -10, capped 1/day. No reroll UI calls this yet — plumbing for a future Legends reroll card. */
+/** -10, capped 1/day. Called by src/lib/questions/reroll.ts's rerollLegend. */
 export async function spendAtoTokensLegendReroll(): Promise<AtoTokenResult> {
   const { data, error } = await supabase.rpc('spend_ato_tokens_legend_reroll');
   if (error) throw error;
   return parseAtoTokenResult(data);
 }
 
-/** -1, capped 1/day per category. No reroll UI calls this yet — plumbing for a future Categorize reroll card. */
+/** -1, capped 1/day per category. Called by src/lib/questions/reroll.ts's rerollCategoryItem. */
 export async function spendAtoTokensCategoryReroll(categoryId: string): Promise<AtoTokenResult> {
   const { data, error } = await supabase.rpc('spend_ato_tokens_category_reroll', {
     p_category_id: categoryId,
@@ -44,7 +44,7 @@ export async function spendAtoTokensCategoryReroll(categoryId: string): Promise<
   return parseAtoTokenResult(data);
 }
 
-/** -1, capped 1/day per question slot. No reroll.ts caller yet — this is the plumbing it will call. */
+/** -1, capped 1/day per question slot. Called by src/lib/questions/reroll.ts's rerollQuestionItem. */
 export async function spendAtoTokensQuestionReroll(questionItemId: string): Promise<AtoTokenResult> {
   const { data, error } = await supabase.rpc('spend_ato_tokens_question_reroll', {
     p_question_item_id: questionItemId,
