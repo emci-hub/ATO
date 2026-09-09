@@ -70,6 +70,12 @@ export type TuneDoc = {
   bossFragSemiPct: number;
   /** Bound Boss fragment drop chance on a Final clear (§9k, Sane 35%). */
   bossFragFinalPct: number;
+  /** §9m within-wave HP ramp — the LAST spawn of a wave/band minion phase is
+   * this much fatter than the first (linear climb, fraction). Sane 0.15. */
+  withinWaveRamp: number;
+  /** §9m boss-band breath — pause between the minion phase and the boss spawn,
+   * ms (spec ~2.0s). Normal waves never use it. */
+  bossBreathMs: number;
 };
 
 /** Sane = the ship defaults the engines shipped with. */
@@ -99,6 +105,8 @@ export const SANE_TUNE: TuneDoc = {
   bossFragScoutPct: 0.05,
   bossFragSemiPct: 0.1,
   bossFragFinalPct: 0.35,
+  withinWaveRamp: 0.15,
+  bossBreathMs: 2000,
 };
 
 export const TUNE_PRESETS: Record<TunePresetId, TuneDoc> = {

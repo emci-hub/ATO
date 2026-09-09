@@ -767,6 +767,48 @@ Feeling: “I can grind all night” + “numbers stop exploding.” Soft-cap af
 - If it needs a 4th tower job or new `skill_id`, that is a **version bump**, not a content pack.  
 - Fridge seasonal maps until the forever loop feels good on **two** maps + rotating packs.
 
+
+## 9m. Wave beat + skill loadout (post-E locks)
+
+### Boss-band spawn order (locked)
+On Scout/Semi/Final bands:
+1. **Minion phase** — puffs/runners first; light **within-wave ramp** (later spawns slightly fatter HP, Tune)
+2. **Breath** — ~**2.0s** pause after last minion dies (or after minion spawn budget ends + board clear of minions). Banner: “They’re coming…”
+3. **Boss phase** — mini/final spawns **last**. Optional enrage still mid-boss.
+
+Normal waves: same light within-wave ramp only — **no** 2s boss breath (keeps pace). Across the campaign, `cycle_power` + wave # already escalate; within-wave ramp is the “unique feel” without a second mode.
+
+### Frags (= boss fragments)
+Currency toward **Bound Boss** unlock/stars. Not Avatar stars. Drop from Scout/Semi/Final clears. 3 → unlock ★1.
+
+### Avatar skill button + bottom HUD (locked)
+Defend **live** bottom bar (left→right, with spacing):
+1. **Pause**
+2. gap
+3. **Skill: &lt;name&gt;** (e.g. `Skill: Root Veil`) — one button only
+Bound Bosses auto — never steal this button. Setup screen = no skill cast.
+
+### Boss / Mini-boss alert (locked)
+After the ~2s breath, big toast/banner before boss spawns:
+- Scout mini (9) → **Mini-boss alert**
+- Scout boss (10) / Semi (19) / Final (20) → **Boss alert**
+(Optional second line with boss name.) Then boss spawns.
+
+### Skill Orbs + merge (planned — after smoke; not blocking forever loop)
+Industry light steal: one equipped skill, orbs star it — **not** a full gem grid.
+
+| Piece | Rule |
+|---|---|
+| Skill bank | Max **4** unique Avatar skills (closed primitives + flavor). Starter **Root Veil** is skill #1. |
+| Stars | Each skill ★0–★5 via rare **Skill Orb** (StarTable). |
+| Orb drops | Rare: Final ~8%, Semi ~4%, Scout ~2%, Dive step tiny — Tune. Never from skip. |
+| Equip | **One** active: either a single skill **or** one **merged** pair |
+| Merge | Exactly **2** owned skills → merge → one button fires **both** in sequence (shared CD ~1.25× longest). Button label = short **fusion name** per pair (e.g. `Skill: Twin Veil`), not “A + B”. Still **one** button. |
+| Unmerge | Free, anytime in Dress/You — refund both skills, lose merge-only bonus if any |
+| Orb spend | Dress (or skill sheet): tap Orb onto a skill → +1★. Soft-cap ★5. |
+
+**Not doing:** 9 hotkeys, PoE support-gem grid, 4 skill buttons, Bound Boss using Avatar skill slot, orbs from skip.
+
 ## 10. Graphics pipeline (no gaps)
 
 | Layer | Source | Notes |

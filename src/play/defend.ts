@@ -318,6 +318,19 @@ export type DefendLive = {
   puffs: Puff[];
   pendingSpawns: number;
   spawnCooldownMs: number;
+  /**
+   * §9m wave beat: `minions` (normal puffs / band runners ramp in first) →
+   * `breath` (boss bands only, ~2s pause after the minion budget is spent and
+   * the board is clear) → `boss` (the mini/final spawns last). Normal waves
+   * never leave `minions`.
+   */
+  spawnStage: SpawnStage;
+  /** ms left in the boss-band breath (only while `spawnStage === 'breath'`). */
+  breathMs: number;
+  /** Minion spawns so far — drives the §9m within-wave HP ramp. */
+  minionsSpawned: number;
+  /** Total minion budget (grows when a boss enrage adds burst runners). */
+  minionsPlanned: number;
   nextId: number;
   towers: Tower[];
   boundBosses: BoundBossTower[];
@@ -339,6 +352,9 @@ export type DefendStep = {
 export const DEFEND_SPAWN_INTERVAL_MS = 850;
 export const DEFEND_TICK_MS = 100;
 
+/** §9m spawn beat — see `DefendLive.spawnStage`. */
+export type SpawnStage = 'minions' | 'breath' | 'boss';
+
 export type DefendLiveOptions = {
   /** Map to fight on (default `trial` = Grove Path). */
   mapId?: DefendMapId;
@@ -355,6 +371,8 @@ export function createDefendLive(wave: number, options: DefendLiveOptions = {}):
   const cyclePower = Math.max(1, options.cyclePower ?? 1);
   const waveN = Math.max(1, Math.floor(wave));
   const band = bossBandFor(mapId, waveN);
+  // §9m: band minions are the runner pack; normal waves are the §9 count.
+  const minionCount = band ? band.runners : waveEnemyCount(waveN, cyclePower);
   return {
     wave: waveN,
     mapId,
@@ -363,8 +381,12 @@ export function createDefendLive(wave: number, options: DefendLiveOptions = {}):
     tint: options.tint ?? DEFAULT_CYCLE_TINT,
     bossesRemaining: band ? band.boss.count : 0,
     puffs: [],
-    pendingSpawns: band ? band.runners : waveEnemyCount(waveN, cyclePower),
+    pendingSpawns: minionCount,
     spawnCooldownMs: 0,
+    spawnStage: 'minions',
+    breathMs: 0,
+    minionsSpawned: 0,
+    minionsPlanned: minionCount,
     nextId: 0,
     towers: [],
     boundBosses: [],
@@ -526,48 +548,90 @@ export function stepDefendLive(
   let nextId = state.nextId;
   let puffs = state.puffs;
   let scrap = state.scrap;
+  let spawnStage = state.spawnStage;
+  let breathMs = state.breathMs;
+  let minionsSpawned = state.minionsSpawned;
+  let minionsPlanned = state.minionsPlanned;
 
-  // Spawns — bosses first (they lead the pack), then runners/normal puffs.
-  if ((bossesRemaining > 0 || pendingSpawns > 0) && spawnCooldownMs <= 0) {
-    if (bossesRemaining > 0) {
-      const burst = band?.boss.burst;
-      puffs = [
-        ...puffs,
-        {
-          id: nextId++,
-          dist: 0,
-          hp: bossHp,
-          maxHp: bossHp,
-          slowMs: 0,
-          slowFactor: 1,
-          kind: 'boss',
-          tint: state.tint,
-          size: band?.boss.size ?? 1,
-          burstHpPct: burst?.hp_pct ?? null,
-          burstFired: false,
-        },
-      ];
-      bossesRemaining -= 1;
-    } else {
-      puffs = [
-        ...puffs,
-        {
-          id: nextId++,
-          dist: 0,
-          hp: puffHp,
-          maxHp: puffHp,
-          slowMs: 0,
-          slowFactor: 1,
-          kind: band ? 'runner' : 'puff',
-          tint: null,
-          size: 1,
-          burstHpPct: null,
-          burstFired: false,
-        },
-      ];
-      pendingSpawns -= 1;
+  // §9m wave beat. Normal waves: light within-wave HP ramp only — no breath,
+  // no alert, the beat never leaves `minions`. Boss bands: minions first →
+  // ~2s breath once the budget is spent and the board is clear → the boss
+  // spawns last (the screen shows the alert banner on the breath→boss step).
+  const rampPct = getTune().withinWaveRamp;
+  // Spawn one minion (puff / runner) — later spawns are slightly fatter HP.
+  const spawnMinion = () => {
+    const rampFrac =
+      minionsPlanned > 1 ? Math.min(1, minionsSpawned / (minionsPlanned - 1)) : 0;
+    const hp = puffHp * (1 + rampPct * rampFrac);
+    puffs = [
+      ...puffs,
+      {
+        id: nextId++,
+        dist: 0,
+        hp,
+        maxHp: hp,
+        slowMs: 0,
+        slowFactor: 1,
+        kind: band ? 'runner' : 'puff',
+        tint: null,
+        size: 1,
+        burstHpPct: null,
+        burstFired: false,
+      },
+    ];
+    pendingSpawns -= 1;
+    minionsSpawned += 1;
+  };
+  // Spawn a boss — the last, fat beat (no within-wave ramp on itself).
+  const spawnBoss = () => {
+    const burst = band?.boss.burst;
+    puffs = [
+      ...puffs,
+      {
+        id: nextId++,
+        dist: 0,
+        hp: bossHp,
+        maxHp: bossHp,
+        slowMs: 0,
+        slowFactor: 1,
+        kind: 'boss',
+        tint: state.tint,
+        size: band?.boss.size ?? 1,
+        burstHpPct: burst?.hp_pct ?? null,
+        burstFired: false,
+      },
+    ];
+    bossesRemaining -= 1;
+  };
+
+  if (spawnStage === 'minions') {
+    if (pendingSpawns > 0 && spawnCooldownMs <= 0) {
+      spawnMinion();
+      spawnCooldownMs = DEFEND_SPAWN_INTERVAL_MS;
+    } else if (pendingSpawns === 0 && puffs.length === 0 && band) {
+      // Minion budget spent + board clear → the ~2s breath before the boss.
+      spawnStage = 'breath';
+      breathMs = getTune().bossBreathMs;
     }
-    spawnCooldownMs = DEFEND_SPAWN_INTERVAL_MS;
+  } else if (spawnStage === 'breath') {
+    breathMs -= dtMs;
+    if (breathMs <= 0 && bossesRemaining > 0) {
+      // Boss spawns last — the screen banners this breath→boss step.
+      spawnStage = 'boss';
+      spawnBoss();
+      spawnCooldownMs = DEFEND_SPAWN_INTERVAL_MS;
+    }
+  } else if (spawnStage === 'boss') {
+    // Boss(es) first, then any burst runners a boss enrage added.
+    if (spawnCooldownMs <= 0) {
+      if (bossesRemaining > 0) {
+        spawnBoss();
+        spawnCooldownMs = DEFEND_SPAWN_INTERVAL_MS;
+      } else if (pendingSpawns > 0) {
+        spawnMinion();
+        spawnCooldownMs = DEFEND_SPAWN_INTERVAL_MS;
+      }
+    }
   }
 
   // Movement (slowed puffs crawl; runners rush at their faster clip).
@@ -695,7 +759,13 @@ export function stepDefendLive(
     ) {
       puffs = puffs.map((p) => (p.id === puff.id ? { ...p, burstFired: true } : p));
       const burst = band?.boss.burst;
-      if (burst) pendingSpawns += Math.max(1, Math.round(burst.power));
+      if (burst) {
+        const runners = Math.max(1, Math.round(burst.power));
+        // Burst runners re-open the minion budget; count them in the ramp so
+        // the fatter tail stays monotonic.
+        pendingSpawns += runners;
+        minionsPlanned += runners;
+      }
     }
   }
 
@@ -713,6 +783,10 @@ export function stepDefendLive(
       puffs,
       pendingSpawns,
       spawnCooldownMs,
+      spawnStage,
+      breathMs,
+      minionsSpawned,
+      minionsPlanned,
       nextId,
       towers: firedTowers,
       boundBosses: firedBoundBosses,

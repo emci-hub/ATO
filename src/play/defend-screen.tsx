@@ -59,15 +59,17 @@ import {
   towerUpgradeCost,
   upgradeTower,
   waveEnemyCount,
-  type DefendMapId,
   type DefendLive,
+  type DefendMapId,
   type Puff,
+  type SpawnStage,
   type TowerKind,
 } from '@/play/defend';
 import { BOUND_BOSS_MAX_STAR, bossBandFor, boundBossFragmentCost, defaultBoundBossId, getBoundBossDef, isUniqueDrop, previewDropTable, gearScore, recommendedGs, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, typeMatchBonus, type TypeTag } from '@/play/engine';
 import { getItemDef } from '@/play/items';
 import {
   AVATAR_STAR_MAX,
+  MAIN_WAVE_COUNT,
   avatarLevelWavePower,
   avatarStarWavePower,
   bucketMultiplier,
@@ -222,6 +224,7 @@ export function DefendScreen({
   onResetMilestones,
   onResetCampaign,
   onJumpMain19,
+  onJumpScout,
   onForceConquered,
   onSpendStarToken,
   onGrantStarToken,
@@ -245,6 +248,8 @@ export function DefendScreen({
   onResetCampaign: () => void;
   /** Dev kit only: park the seat at Main wave 19. */
   onJumpMain19: () => void;
+  /** Dev kit only: park the seat at the Scout band (Main wave 9). */
+  onJumpScout: () => void;
   /** Dev kit only: force one more Conquered cycle. */
   onForceConquered: () => void;
   /** Spend one Avatar star token → +1 star (§9h). */
@@ -300,6 +305,10 @@ export function DefendScreen({
   const floaterSeq = useRef(0);
   /** Puff list from the previous running tick — diffed for floaters. */
   const prevPuffsRef = useRef<Puff[]>([]);
+  /** §9m boss / mini-boss alert banner shown while the boss steps in. */
+  const [bossAlert, setBossAlert] = useState<{ label: string; name: string } | null>(null);
+  /** Spawn stage from the previous running tick — diffed for the alert. */
+  const prevStageRef = useRef<SpawnStage>('minions');
 
   const phaseRef = useRef(phase);
   const pausedRef = useRef(paused);
@@ -442,6 +451,8 @@ export function DefendScreen({
       setWhyOpen(false);
       prevPuffsRef.current = [];
       setFloaters([]);
+      prevStageRef.current = 'minions';
+      setBossAlert(null);
     },
     [view.cyclePower, view.cycleTint],
   );
@@ -456,6 +467,8 @@ export function DefendScreen({
     setWhyOpen(false);
     prevPuffsRef.current = [];
     setFloaters([]);
+    prevStageRef.current = 'minions';
+    setBossAlert(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fightKey, view.cyclePower, view.cycleTint]);
 
@@ -473,6 +486,8 @@ export function DefendScreen({
     setSelectedPad(null);
     prevPuffsRef.current = [];
     setFloaters([]);
+    prevStageRef.current = 'minions';
+    setBossAlert(null);
   }, [view.cyclePower, view.cycleTint]);
 
   /** Push hit/kill floaters (capped + oldest dropped = pooled, no unbounded
@@ -514,6 +529,19 @@ export function DefendScreen({
       if (!current) return;
       const avatar = avatarPosRef.current;
       const step = stepDefendLive(current, DEFEND_TICK_MS, bucketsRef.current, avatar);
+      // §9m boss alert: banner the breath → boss step (the boss spawns last).
+      const bandNow = step.state.band;
+      if (
+        bandNow &&
+        prevStageRef.current === 'breath' &&
+        step.state.spawnStage === 'boss'
+      ) {
+        setBossAlert({
+          label: bandNow.kind === 'scout_mini' ? 'Mini-boss alert' : 'Boss alert',
+          name: bandNow.boss.name,
+        });
+      }
+      prevStageRef.current = step.state.spawnStage;
       // Display-only floaters: any puff that lost HP this tick, or vanished
       // (killed), gets a short damage number near it. No engine changes.
       const events = diffPuffEvents(prevPuffsRef.current, step.state.puffs, step.state.mapId);
@@ -525,12 +553,23 @@ export function DefendScreen({
         setPhase('lost');
         setPaused(false);
         setSelectedPad(null);
+        setBossAlert(null);
         return;
       }
-      if (step.done) winWave();
+      if (step.done) {
+        setBossAlert(null);
+        winWave();
+      }
     }, DEFEND_TICK_MS);
     return () => clearInterval(id);
   }, [phase, paused, winWave, spawnFloaters]);
+
+  // The alert is a banner — auto-dismiss after a short beat.
+  useEffect(() => {
+    if (!bossAlert) return;
+    const timer = setTimeout(() => setBossAlert(null), 1600);
+    return () => clearTimeout(timer);
+  }, [bossAlert]);
 
   // Background → freeze the wave.
   useEffect(() => {
@@ -572,6 +611,41 @@ export function DefendScreen({
   const placeOnBoundBoss = (bossId: string, stars: number) => {
     if (selectedPad == null) return;
     setSim((prev) => (prev ? placeBoundBoss(prev, selectedPad, bossId, stars) ?? prev : prev));
+  };
+
+  /** Dev kit only: park the seat at the Final band and start the run already
+   * in the §9m breath, so the alert → boss beat previews in under a second
+   * instead of after the full runner phase. */
+  const previewBossBeat = () => {
+    onForceFinal();
+    setReplayPick(null);
+    const base = createDefendLive(MAIN_WAVE_COUNT, {
+      mapId: 'main',
+      cyclePower: view.cyclePower,
+      tint: view.cycleTint,
+    });
+    // Carry any placed board into the preview so the boss is fightable.
+    const current = simRef.current;
+    const preview: DefendLive = {
+      ...base,
+      towers: current?.towers ?? [],
+      boundBosses: current?.boundBosses ?? [],
+      scrap: current?.scrap ?? base.scrap,
+      pendingSpawns: 0,
+      puffs: [],
+      bossesRemaining: base.band ? base.band.boss.count : 1,
+      spawnStage: 'breath',
+      breathMs: 800,
+    };
+    simRef.current = preview;
+    setSim(preview);
+    setPhase('running');
+    setPaused(false);
+    setSelectedPad(null);
+    prevPuffsRef.current = [];
+    setFloaters([]);
+    prevStageRef.current = 'breath';
+    setBossAlert(null);
   };
 
   const upgradeSelected = () => {
@@ -732,44 +806,11 @@ export function DefendScreen({
           {chartOpen ? (
             <TypeMatchChart tint={view.cycleTint} matched={typeMatchActive} matchPct={typeMatchPct} />
           ) : null}
-          {phase === 'running' ? (
-            <View style={styles.buttonRow}>
-              <Pressable
-                onPress={() => setPaused((value) => !value)}
-                accessibilityRole="button"
-                style={({ pressed }) => [
-                  styles.hudButton,
-                  styles.flex1,
-                  { backgroundColor: theme.backgroundSelected },
-                  pressed && styles.pressed,
-                ]}>
-                <ThemedText type="smallBold">{paused ? 'Resume' : 'Pause'}</ThemedText>
-              </Pressable>
-              <Pressable
-                onPress={castSkill}
-                disabled={!skillReady}
-                accessibilityRole="button"
-                accessibilityLabel={SKILL_NAME}
-                style={({ pressed }) => [
-                  styles.hudButton,
-                  styles.flex1,
-                  {
-                    backgroundColor: skillReady ? theme.accentFill : theme.backgroundSelected,
-                  },
-                  pressed && skillReady && styles.pressed,
-                ]}>
-                <ThemedText
-                  type="smallBold"
-                  style={{ color: skillReady ? theme.onAccent : theme.textSecondary }}>
-                  {skillReady ? SKILL_NAME : `${SKILL_NAME} · ${skillSeconds}s`}
-                </ThemedText>
-              </Pressable>
-            </View>
-          ) : (
+          {phase !== 'running' ? (
             <ThemedText type="small" themeColor="textSecondary">
               {SKILL_NAME}: {SKILL_DESCRIPTION} ({SKILL_COOLDOWN_MS / 1000}s cooldown)
             </ThemedText>
-          )}
+          ) : null}
         </ThemedView>
 
         {/* Board */}
@@ -919,6 +960,26 @@ export function DefendScreen({
                 onDone={() => dropFloater(floater.id)}
               />
             ))}
+
+            {/* §9m boss alert banner — shows as the boss steps in (display only). */}
+            {bossAlert ? (
+              <View pointerEvents="none" style={styles.bossAlertWrap}>
+                <View
+                  style={[
+                    styles.bossAlertPill,
+                    { backgroundColor: theme.backgroundSelected, borderColor: theme.accent },
+                  ]}>
+                  <ThemedText type="subheading" themeColor="emphasis">
+                    {bossAlert.label}
+                  </ThemedText>
+                  {bossAlert.name ? (
+                    <ThemedText type="code" themeColor="textSecondary">
+                      {bossAlert.name}
+                    </ThemedText>
+                  ) : null}
+                </View>
+              </View>
+            ) : null}
           </View>
           {paused && phase === 'running' ? (
             <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
@@ -1340,10 +1401,50 @@ export function DefendScreen({
 
         {phase === 'running' && !paused ? (
           <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-            {coachHidden
-              ? `Towers fire on their own — drag your Avatar and time ${SKILL_NAME}.`
-              : `Coach: ${coach.tip}`}
+            {sim?.spawnStage === 'breath'
+              ? 'Minions cleared — something big stirs beyond the path…'
+              : coachHidden
+                ? `Towers fire on their own — drag your Avatar and time ${SKILL_NAME}.`
+                : `Coach: ${coach.tip}`}
           </ThemedText>
+        ) : null}
+
+        {/* §9m live bottom HUD — Pause · gap · Skill (ONE button; Bound Bosses
+         * stay auto). Shown only while a run is live; setup never casts. */}
+        {phase === 'running' ? (
+          <ThemedView type="backgroundElement" style={styles.bottomHud}>
+            <Pressable
+              onPress={() => setPaused((value) => !value)}
+              accessibilityRole="button"
+              accessibilityLabel={paused ? 'Resume wave' : 'Pause wave'}
+              style={({ pressed }) => [
+                styles.hudButton,
+                styles.bottomHudPause,
+                { backgroundColor: theme.backgroundSelected },
+                pressed && styles.pressed,
+              ]}>
+              <ThemedText type="smallBold">{paused ? 'Resume' : 'Pause'}</ThemedText>
+            </Pressable>
+            <Pressable
+              onPress={castSkill}
+              disabled={!skillReady}
+              accessibilityRole="button"
+              accessibilityLabel={`Skill ${SKILL_NAME}`}
+              style={({ pressed }) => [
+                styles.hudButton,
+                styles.bottomHudSkill,
+                {
+                  backgroundColor: skillReady ? theme.accentFill : theme.backgroundSelected,
+                },
+                pressed && skillReady && styles.pressed,
+              ]}>
+              <ThemedText
+                type="smallBold"
+                style={{ color: skillReady ? theme.onAccent : theme.textSecondary }}>
+                {skillReady ? `Skill: ${SKILL_NAME}` : `Skill: ${SKILL_NAME} · ${skillSeconds}s`}
+              </ThemedText>
+            </Pressable>
+          </ThemedView>
         ) : null}
 
         {phase === 'won' ? (
@@ -1500,6 +1601,8 @@ export function DefendScreen({
                   setSelectedPad(null);
                   prevPuffsRef.current = [];
                   setFloaters([]);
+                  prevStageRef.current = 'minions';
+                  setBossAlert(null);
                 }
               }}
               accessibilityRole="button"
@@ -1622,6 +1725,18 @@ export function DefendScreen({
                 onJumpMain19();
                 buildSetup({ phase: 'main', wave: 19, mode: 'campaign' });
               }}
+            />
+            <DevRow
+              label="Jump to Scout (Main wave 9)"
+              onPress={() => {
+                onJumpScout();
+                buildSetup({ phase: 'main', wave: 9, mode: 'campaign' });
+              }}
+            />
+            <DevRow
+              label="Preview boss beat (Final)"
+              disabled={!sim}
+              onPress={previewBossBeat}
             />
             <DevRow
               label="Force Conquered +1"
@@ -2023,12 +2138,33 @@ const styles = StyleSheet.create({
     color: '#FBBF24', // gold — reads as a kill on both light and dark boards
     fontSize: 14,
   },
-  buttonRow: {
+  /** §9m live bottom HUD bar: Pause · gap · Skill (left → right). */
+  bottomHud: {
     flexDirection: 'row',
-    gap: Spacing.two,
+    alignItems: 'center',
+    gap: Spacing.four,
+    borderRadius: Spacing.four,
+    padding: Spacing.two,
   },
-  flex1: {
+  bottomHudPause: {
+    paddingHorizontal: Spacing.four,
+  },
+  bottomHudSkill: {
     flex: 1,
+  },
+  /** §9m boss alert banner — centered over the board while the boss steps in. */
+  bossAlertWrap: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bossAlertPill: {
+    alignItems: 'center',
+    gap: Spacing.half,
+    borderRadius: Spacing.three,
+    borderWidth: 1,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.four,
   },
   primaryButton: {
     alignItems: 'center',

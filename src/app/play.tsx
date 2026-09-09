@@ -287,6 +287,10 @@ export default function PlayScreen() {
     void setCampaignSeat('main', 19);
   }, [setCampaignSeat]);
 
+  const handleJumpScout = useCallback(() => {
+    void setCampaignSeat('main', 9);
+  }, [setCampaignSeat]);
+
   const handleForceConquered = useCallback(() => {
     void forceConquered();
   }, [forceConquered]);
@@ -467,6 +471,7 @@ export default function PlayScreen() {
               onResetMilestones={handleResetMilestones}
               onResetCampaign={handleResetCampaign}
               onJumpMain19={handleJumpMain19}
+              onJumpScout={handleJumpScout}
               onForceConquered={handleForceConquered}
               onSpendStarToken={handleSpendStarToken}
               onGrantStarToken={handleGrantStarToken}
