@@ -54,6 +54,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cyclePower, defaultCyclePower } from '@/play/engine/cycle';
 import { bossBandFor } from '@/play/engine/bands';
 import { isUniqueDrop, rollDropById } from '@/play/engine/drop-table';
+import { gearScore, recommendedGs } from '@/play/engine/gear-score';
 import { isTypeTag, type TypeTag } from '@/play/engine/type-match';
 import { getTune } from '@/play/tune';
 import {
@@ -119,6 +120,17 @@ export const CYCLE_CLEAR_BONUS_XP = 50;
 export const AVATAR_STAR_MAX = 5;
 /** Default cycle boss tint (§18 C: one boss family until ContentPack 2). */
 export const DEFAULT_CYCLE_TINT: TypeTag = 'ember';
+/** Dev kit (skip smoke): the four regular Powers worn at ★5 when overgearing.
+ * One per slot — weapon/armor/trinket/cloak — no uniques, no boss gear. */
+const OVERGEAR_POWER_IDS = [
+  'item_tide_blade_01',
+  'item_bark_aegis_01',
+  'item_copper_keeper_01',
+  'item_curator_cloak_01',
+] as const;
+/** Dev kit (skip smoke): the Avatar level `devOvergear` jumps to, so GS reads
+ * far above every normal wave's recommendation (§18 level term +2%). */
+const DEV_OVERGEAR_LEVEL = 200;
 /** Clear wave W → this much XP to the Avatar (GAME_SPEC "xp_clear: 10 + wave*2"). */
 export function xpForClear(wave: number): number {
   return 10 + Math.max(1, Math.floor(wave)) * 2;
@@ -960,6 +972,209 @@ export function replayBands(snapshot: CampaignSnapshot): ReplayBandView[] {
   ];
 }
 
+/* ---------------------------------------------------------------------------
+ * Gear Score + Skip-to-even (GAME_SPEC §9j; §18 lock — Phase D).
+ *
+ * GS (engine/gear-score.ts) is the §18 locked formula from the soft-capped
+ * equipped wave_power bucket, Avatar level and Avatar stars; Defend setup
+ * shows it next to `recommendedGs` for the wave. When GS overkills the next
+ * normal wave by `skipGsThreshold` (Sane ×1.25), the player can fast-forward
+ * through the trivial normal waves until the gate fails or a boss band is
+ * reached. Skipped waves pay REDUCED tokens/XP (`skipPayFraction`, Sane 45%)
+ * + ONE commons-only skip crate per batch — never uniques, tint boss gear,
+ * Avatar stars, or boss fragments (§9j table). Milestones (5/10/25) still fire
+ * when the lifetime clear count crosses a boundary (§18: milestones ride
+ * `lifetime_waves_cleared`, which skip also advances). Farm bands stay open:
+ * the seat has moved, so replayBands unlocks everything below it.
+ *
+ * Skip is the ONLY write path here besides `recordDefendWin` that advances the
+ * campaign seat; both never run on replays. Skip does not touch the §9 daily
+ * clear cap or the milestone flags beyond genuine crossings.
+ * ------------------------------------------------------------------------- */
+
+/** Why a skip walk stopped — shown to the player when an offer exists. */
+export type SkipStopReason = 'boss' | 'gs' | 'end';
+
+export type SkipPlan = {
+  /** Normal waves the walk would fast-forward (empty → nothing to skip). */
+  steps: readonly CampaignState[];
+  /** Seat when the offer is made. */
+  fromSeat: CampaignState;
+  /** Seat after skipping (== fromSeat when nothing was skippable). */
+  toSeat: CampaignState;
+  /** Why the walk stopped at `toSeat` ('end' is a guard — Main 20 is a boss
+   * band and always stops as 'boss' first). */
+  stopReason: SkipStopReason;
+};
+
+/** Advance the campaign seat one display wave (Trial 5 → Main 1). Null when
+ * there is no normal wave left to fast-forward past (Main 20 is a boss band). */
+export function campaignNextSeat(seat: CampaignState): CampaignState | null {
+  if (seat.phase === 'trial') {
+    return seat.wave_in_phase >= TRIAL_WAVE_COUNT
+      ? { phase: 'main', wave_in_phase: 1 }
+      : { phase: 'trial', wave_in_phase: seat.wave_in_phase + 1 };
+  }
+  if (seat.wave_in_phase >= MAIN_WAVE_COUNT) return null;
+  return { phase: 'main', wave_in_phase: seat.wave_in_phase + 1 };
+}
+
+/** Player GS from the persisted doc (soft-capped bucket + level + stars). */
+export function gearScoreOf(doc: PlayStoreDoc): number {
+  const wavePowerBucket = bucketMultiplier('wave_power', equippedStatSums(doc.equipped));
+  return gearScore(wavePowerBucket, doc.avatar_level, doc.avatar_stars);
+}
+
+/**
+ * Walk the campaign forward from the seat across normal waves that GS
+ * overkills by the skip threshold; stop at the first boss band (Main
+ * 9/10/19/20 — never auto-skipped) or the first wave whose recommended GS
+ * clears the gate. Pure — the UI reads it to decide whether to offer Skip.
+ */
+export function planSkipToEven(
+  seat: CampaignState,
+  gs: number,
+  cyclePowerValue: number,
+): SkipPlan {
+  const threshold = getTune().skipGsThreshold;
+  const steps: CampaignState[] = [];
+  let cursor: CampaignState = seat;
+  let guard = 0;
+  while (guard++ < 64) {
+    if (bossBandFor(cursor.phase, cursor.wave_in_phase)) {
+      return { steps, fromSeat: seat, toSeat: cursor, stopReason: 'boss' };
+    }
+    const rec = recommendedGs(cursor.phase, cursor.wave_in_phase, cyclePowerValue);
+    if (gs < threshold * rec) {
+      return {
+        steps,
+        fromSeat: seat,
+        toSeat: cursor,
+        stopReason: steps.length > 0 ? 'gs' : 'end',
+      };
+    }
+    const next = campaignNextSeat(cursor);
+    if (!next) {
+      return { steps, fromSeat: seat, toSeat: cursor, stopReason: 'end' };
+    }
+    steps.push(cursor);
+    cursor = next;
+  }
+  return { steps, fromSeat: seat, toSeat: cursor, stopReason: 'gs' };
+}
+
+/** What one Skip batch paid (the Defend screen + hub toast show it honestly). */
+export type SkipRewardResult = {
+  /** Normal waves fast-forwarded this batch. */
+  skippedWaves: number;
+  stopReason: SkipStopReason;
+  /** Seat before the batch. */
+  fromSeat: CampaignState;
+  /** Seat after the batch (what Defend plays next). */
+  toSeat: CampaignState;
+  tokensGranted: number;
+  xpGranted: number;
+  /** The ONE commons-only skip crate roll (may be empty if the table is gone). */
+  crateItemIds: string[];
+  /** Milestone Rare Looks fired because lifetime crossed 5/10/25. */
+  milestoneLooks: readonly { wave: number; itemId: string }[];
+  /** Avatar level after XP from this batch. */
+  avatarLevel: number;
+};
+
+/**
+ * Apply one Skip-to-even batch (GAME_SPEC §9j). Refuses when nothing is
+ * skippable at the seat (returns null). Grants reduced tokens/XP per skipped
+ * wave, ONE commons-only crate (`drop_skip_crate`) at the end of the batch,
+ * and any milestone Look whose lifetime boundary was crossed — then parks the
+ * seat at the stop wave. Daily clear cap, uniques, tint gear and Avatar-star
+ * rolls are never touched by a skip.
+ */
+export function skipCampaignToEven(
+  doc: PlayStoreDoc,
+  rng: () => number = Math.random,
+): { doc: PlayStoreDoc; result: SkipRewardResult } | null {
+  const plan = planSkipToEven(doc.campaign, gearScoreOf(doc), doc.cycle_power);
+  if (plan.steps.length < 1) return null;
+
+  const tune = getTune();
+  const payFraction = tune.skipPayFraction;
+
+  // Reduced pay per skipped wave (flat token base + wave-scaled XP, × fraction).
+  let tokensGranted = 0;
+  let xpGranted = 0;
+  let highestWave = doc.highest_wave_cleared;
+  for (const step of plan.steps) {
+    tokensGranted += Math.floor(tune.tokenClearBase * payFraction);
+    xpGranted += Math.floor(xpForClear(step.wave_in_phase) * payFraction);
+    highestWave = Math.max(highestWave, step.wave_in_phase);
+  }
+
+  // Lifetime clear count + milestones crossing 5/10/25 (§18 lock).
+  const lifetimeAfter = doc.lifetime_waves_cleared + plan.steps.length;
+  const milestoneLooks: { wave: number; itemId: string }[] = [];
+  const claimedNow: number[] = [];
+  for (const milestoneWave of MILESTONE_WAVES) {
+    if (
+      milestoneWave > doc.lifetime_waves_cleared &&
+      milestoneWave <= lifetimeAfter &&
+      !doc.milestone_waves_claimed.includes(milestoneWave)
+    ) {
+      const grant = claimMilestoneLook(doc, milestoneWave, rng);
+      if (grant) {
+        milestoneLooks.push(grant);
+        claimedNow.push(grant.wave);
+      }
+    }
+  }
+
+  // ONE commons-only skip crate per batch — never uniques / tint gear / stars.
+  let inventory = doc.inventory;
+  const crateId = rollDropById('drop_skip_crate', rng);
+  const crateItemIds = crateId ? [crateId] : [];
+  for (const look of milestoneLooks) {
+    inventory = addCopiesToBag(inventory, look.itemId, 0, 1);
+  }
+  if (crateId) inventory = addCopiesToBag(inventory, crateId, 0, 1);
+
+  // XP feeds the same level curve as a real clear.
+  let xp = doc.xp + xpGranted;
+  let level = doc.avatar_level;
+  while (xp >= xpToNext(level)) {
+    xp -= xpToNext(level);
+    level += 1;
+  }
+
+  const next: PlayStoreDoc = {
+    ...doc,
+    tokens: doc.tokens + tokensGranted,
+    xp,
+    avatar_level: level,
+    highest_wave_cleared: highestWave,
+    lifetime_waves_cleared: lifetimeAfter,
+    campaign: plan.toSeat,
+    inventory,
+    milestone_waves_claimed: [
+      ...doc.milestone_waves_claimed,
+      ...claimedNow,
+    ],
+  };
+  return {
+    doc: next,
+    result: {
+      skippedWaves: plan.steps.length,
+      stopReason: plan.stopReason,
+      fromSeat: plan.fromSeat,
+      toSeat: plan.toSeat,
+      tokensGranted,
+      xpGranted,
+      crateItemIds,
+      milestoneLooks,
+      avatarLevel: level,
+    },
+  };
+}
+
 /** Dev kit only: zero today's clear counter (clears stay on today's YMD so a
  * fresh win restarts from 1 full-reward clear). */
 export function devDefendResetClears(doc: PlayStoreDoc): PlayStoreDoc {
@@ -1013,6 +1228,34 @@ export function devForceFinal(doc: PlayStoreDoc): PlayStoreDoc {
 /** Dev kit only: reset the Avatar-star cycle flags (re-test 25% + pity). */
 export function devResetAvatarStarCycle(doc: PlayStoreDoc): PlayStoreDoc {
   return { ...doc, avatar_star_rolled_cycle: false, final_clears_this_cycle: 0 };
+}
+
+/**
+ * Dev kit only: jump the Avatar to an extreme level + ★5 and wear a ★5 copy
+ * of every regular Power, so GS reads far above any normal wave's
+ * recommendation — Skip-to-even becomes offerable from any seat. Worn copies
+ * are fabricated directly (dev-only); nothing in a game path calls this.
+ */
+export function devOvergear(doc: PlayStoreDoc): PlayStoreDoc {
+  const equipped: PlayStoreDoc['equipped'] = { ...doc.equipped };
+  for (const id of OVERGEAR_POWER_IDS) {
+    const def = getItemDef(id);
+    if (!def) continue;
+    equipped[def.core.slot] = { id, star: MERGE_MAX_STAR };
+  }
+  return {
+    ...doc,
+    avatar_level: DEV_OVERGEAR_LEVEL,
+    avatar_stars: AVATAR_STAR_MAX,
+    equipped,
+  };
+}
+
+/** Dev kit only: overgear AND reset the campaign to Trial wave 1, so the Skip
+ * offer is force-visible at the next Defend setup (smoke: skip then stops at
+ * the Scout band, never auto-runs the bosses). */
+export function devForceSkipOffer(doc: PlayStoreDoc): PlayStoreDoc {
+  return devOvergear(devCampaignReset(doc));
 }
 
 /** §7 bust table value at a Deeper index plus the §9c tune boost (whole-%),

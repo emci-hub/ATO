@@ -29,11 +29,13 @@ import {
   devFillJunkLooks,
   devForceConquered,
   devForceFinal,
+  devForceSkipOffer,
   devGrantAvatarStarToken,
   devGrantMilestoneWaveFive,
   devGrantRandomFind,
   devGrantRandomPower,
   devGrantTideBlades,
+  devOvergear,
   devResetAvatarStarCycle,
   devResetMilestones,
   devSellAllJunk,
@@ -46,6 +48,7 @@ import {
   recordDefendWin as persistDefendWin,
   savePlayStore,
   sellItem,
+  skipCampaignToEven as persistSkipToEven,
   spendAvatarStarToken,
   startDive,
   surfaceDive,
@@ -61,6 +64,7 @@ import {
   type PlayStoreDoc,
   type PlayView,
   type SellOutcome,
+  type SkipRewardResult,
 } from '@/play/playStore';
 import type { TypeTag } from '@/play/engine/type-match';
 
@@ -453,6 +457,45 @@ export function usePlayStore() {
     return ok;
   }, [commit]);
 
+  /**
+   * Skip-to-even (Phase D — GAME_SPEC §9j): fast-forward the trivial normal
+   * waves ahead of the campaign seat at reduced tokens/XP + one commons-only
+   * crate, stopping before any boss band. Returns the batch summary for the
+   * win toast, or null when nothing at the seat is skippable.
+   */
+  const skipToEven = useCallback(async (): Promise<SkipRewardResult | null> => {
+    let result: SkipRewardResult | null = null;
+    commit((current) => {
+      const next = persistSkipToEven(current);
+      result = next ? next.result : null;
+      return next ? next.doc : null;
+    });
+    return result;
+  }, [commit]);
+
+  /** Dev kit only: overgear (level + ★5 + equipped ★5 Powers) so GS is huge. */
+  const overgear = useCallback(async (): Promise<boolean> => {
+    let ok = false;
+    commit((current) => {
+      const next = devOvergear(current);
+      ok = next !== current;
+      return ok ? next : null;
+    });
+    return ok;
+  }, [commit]);
+
+  /** Dev kit only: overgear AND reset the campaign to Trial wave 1, so the
+   * Skip offer is force-visible at the next Defend setup. */
+  const forceSkipOffer = useCallback(async (): Promise<boolean> => {
+    let ok = false;
+    commit((current) => {
+      const next = devForceSkipOffer(current);
+      ok = next !== current;
+      return ok ? next : null;
+    });
+    return ok;
+  }, [commit]);
+
   return {
     view,
     claim,
@@ -483,5 +526,8 @@ export function usePlayStore() {
     setCycleTint,
     forceFinal,
     resetAvatarStarCycle,
+    skipToEven,
+    overgear,
+    forceSkipOffer,
   };
 }

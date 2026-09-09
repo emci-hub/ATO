@@ -58,6 +58,11 @@ export type TuneDoc = {
   avatarStarPityClears: number;
   /** +% base wave_power per Avatar star when a star token is spent (§9h). */
   avatarStarWavePowerStep: number;
+  /** Skip-to-even gate (§9j): offer skip when GS ≥ this × recommended(next). */
+  skipGsThreshold: number;
+  /** Skip-to-even pay (§9j): fraction of a real clear's tokens/XP per skipped
+   * wave (spec 40–50%). */
+  skipPayFraction: number;
 };
 
 /** Sane = the ship defaults the engines shipped with. */
@@ -82,6 +87,8 @@ export const SANE_TUNE: TuneDoc = {
   avatarStarDropPct: 0.25,
   avatarStarPityClears: 3,
   avatarStarWavePowerStep: 0.03,
+  skipGsThreshold: 1.25,
+  skipPayFraction: 0.45,
 };
 
 export const TUNE_PRESETS: Record<TunePresetId, TuneDoc> = {

@@ -60,6 +60,8 @@ const KNOBS: KnobRow[] = [
   { key: 'avatarStarDropPct', label: 'Avatar star drop %', step: 0.05, format: (v) => v.toFixed(2) },
   { key: 'avatarStarPityClears', label: 'Avatar star pity clears', step: 1 },
   { key: 'avatarStarWavePowerStep', label: 'Star wave-power step', step: 0.01, format: (v) => v.toFixed(2) },
+  { key: 'skipGsThreshold', label: 'Skip GS threshold ×', step: 0.05, format: (v) => v.toFixed(2) },
+  { key: 'skipPayFraction', label: 'Skip pay fraction', step: 0.05, format: (v) => v.toFixed(2) },
 ];
 
 export function TunePanel({ onClose }: { onClose: () => void }) {

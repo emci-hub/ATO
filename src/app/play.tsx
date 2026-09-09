@@ -37,6 +37,7 @@ import {
   type DefendWinContext,
   type MergeOutcome,
   type MergeTarget,
+  type SkipRewardResult,
 } from '@/play/playStore';
 import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
 
@@ -98,6 +99,9 @@ export default function PlayScreen() {
     setCycleTint,
     forceFinal,
     resetAvatarStarCycle,
+    skipToEven,
+    overgear,
+    forceSkipOffer,
   } = usePlayStore();
   const [mode, setMode] = useState<PlayMode>('grove');
   const [toast, setToast] = useState<PlayToast | null>(null);
@@ -321,6 +325,39 @@ export default function PlayScreen() {
     void resetAvatarStarCycle();
   }, [resetAvatarStarCycle]);
 
+  /** Skip-to-even (§9j / Phase D): fast-forward trivial normal waves at
+   * reduced pay. The Defend screen's Skip button drives this; the seat move
+   * re-renders Defend back at the stop wave. */
+  const handleSkipToEven = useCallback(async (): Promise<SkipRewardResult | null> => {
+    const result = await skipToEven();
+    if (result) {
+      const parts: string[] = [
+        `+${result.tokensGranted} tokens · +${result.xpGranted} XP over ${result.skippedWaves} ${
+          result.skippedWaves === 1 ? 'wave' : 'waves'
+        }`,
+      ];
+      if (result.crateItemIds.length > 0) {
+        const crateName = result.crateItemIds.map((id) => itemName(id) ?? id).join(', ');
+        parts.push(`skip crate: ${crateName}`);
+      }
+      for (const look of result.milestoneLooks) {
+        parts.push(`${look.wave}th-clear milestone — ${itemName(look.itemId) ?? look.itemId}`);
+      }
+      setToast({ kind: 'message', title: 'Skipped ahead', body: parts.join(' · ') });
+    }
+    return result;
+  }, [skipToEven]);
+
+  /** Dev kit: overgear — level + ★5 + equipped ★5 Powers → GS reads huge. */
+  const handleDevOvergear = useCallback(() => {
+    void overgear();
+  }, [overgear]);
+
+  /** Dev kit: overgear + reset to Trial wave 1 → the skip offer force-shows. */
+  const handleDevForceSkipOffer = useCallback(() => {
+    void forceSkipOffer();
+  }, [forceSkipOffer]);
+
   function closePlay() {
     if (router.canGoBack()) {
       router.back();
@@ -433,6 +470,9 @@ export default function PlayScreen() {
               onSetCycleTint={handleSetCycleTint}
               onForceFinal={handleForceFinal}
               onResetAvatarStarCycle={handleResetAvatarStarCycle}
+              onSkipToEven={handleSkipToEven}
+              onDevOvergear={handleDevOvergear}
+              onDevForceSkipOffer={handleDevForceSkipOffer}
               onBackToGrove={() => setMode('grove')}
             />
           ) : (

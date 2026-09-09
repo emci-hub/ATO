@@ -104,5 +104,15 @@
       { "id": "item_bark_aegis_01", "weight": 10 },
       { "id": "item_copper_keeper_01", "weight": 10 }
     ]
+  },
+  {
+    "id": "drop_skip_crate",
+    "rolls": [
+      { "id": "item_leaf_cape_01", "weight": 24 },
+      { "id": "item_bud_staff_01", "weight": 24 },
+      { "id": "item_moss_habit_01", "weight": 24 },
+      { "id": "item_curator_cloak_01", "weight": 14 },
+      { "id": "item_copper_keeper_01", "weight": 14 }
+    ]
   }
 ]

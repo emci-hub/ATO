@@ -62,16 +62,18 @@ import {
   type Puff,
   type TowerKind,
 } from '@/play/defend';
-import { bossBandFor, previewDropTable, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, typeMatchBonus, type TypeTag } from '@/play/engine';
+import { bossBandFor, previewDropTable, gearScore, recommendedGs, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, typeMatchBonus, type TypeTag } from '@/play/engine';
 import { getItemDef } from '@/play/items';
 import {
   AVATAR_STAR_MAX,
   avatarLevelWavePower,
   avatarStarWavePower,
   bucketMultiplier,
+  campaignNextSeat,
   campaignPhaseLabel,
   dropTableForWave,
   hasTypeMatch,
+  planSkipToEven,
   replayBands,
   xpForClear,
   type CampaignPhase,
@@ -79,6 +81,7 @@ import {
   type DefendWinMode,
   type DefendWinResult,
   type PlayView,
+  type SkipRewardResult,
 } from '@/play/playStore';
 import { tipForWave } from '@/play/coach';
 import { getTune, saveTune, setKnob } from '@/play/tune';
@@ -206,6 +209,9 @@ export function DefendScreen({
   onSetCycleTint,
   onForceFinal,
   onResetAvatarStarCycle,
+  onSkipToEven,
+  onDevOvergear,
+  onDevForceSkipOffer,
   onBackToGrove,
 }: {
   view: PlayView;
@@ -232,6 +238,13 @@ export function DefendScreen({
   onForceFinal: () => void;
   /** Dev kit only: reset Avatar-star cycle flags. */
   onResetAvatarStarCycle: () => void;
+  /** Skip-to-even (§9j): fast-forward trivial normal waves at reduced pay.
+   * The parent toasts the summary; the seat advance re-renders this screen. */
+  onSkipToEven: () => Promise<SkipRewardResult | null>;
+  /** Dev kit only: overgear (level + ★5 + ★5 Powers) so GS is huge. */
+  onDevOvergear: () => void;
+  /** Dev kit only: overgear + reset to Trial wave 1 (forces the skip offer). */
+  onDevForceSkipOffer: () => void;
   onBackToGrove: () => void;
 }) {
   const theme = useTheme();
@@ -259,6 +272,8 @@ export function DefendScreen({
   const [chartOpen, setChartOpen] = useState(false);
   /** Dev kit only: dump the current band's drop table inline. */
   const [dumpDropsOpen, setDumpDropsOpen] = useState(false);
+  /** Dev kit only: dump GS + per-wave recommended (Phase D smoke aid). */
+  const [gsDumpOpen, setGsDumpOpen] = useState(false);
   /** What the last win paid — shows the honest (possibly halved) tokens. */
   const [lastWin, setLastWin] = useState<DefendWinResult | null>(null);
   /** Floating damage numbers, pooled to MAX_FLOATERS (display only). */
@@ -332,6 +347,70 @@ export function DefendScreen({
   );
   const bucketsRef = useRef(buckets);
   bucketsRef.current = buckets;
+
+  // Gear Score (§9j / §18 lock): soft-capped wave_power bucket × Avatar level
+  // × Avatar stars. Type match is combat only and never enters GS.
+  const gs = useMemo(
+    () => gearScore(buckets.wavePower, view.avatarLevel, view.avatarStars),
+    [buckets.wavePower, view.avatarLevel, view.avatarStars],
+  );
+  /** recommended_GS for the campaign seat wave (null on replays). */
+  const seatRec = fight.mode === 'campaign'
+    ? recommendedGs(fight.phase, fight.wave, view.cyclePower)
+    : null;
+  /** What a Skip batch from the seat would fast-forward (campaign only). */
+  const skipPlan = useMemo(
+    () =>
+      fight.mode === 'campaign'
+        ? planSkipToEven(view.campaign, gs, view.cyclePower)
+        : null,
+    [fight.mode, view.campaign, gs, view.cyclePower],
+  );
+  /** Last wave the skip would fast-forward (null → no offer). */
+  const skipLast =
+    skipPlan && skipPlan.steps.length > 0
+      ? skipPlan.steps[skipPlan.steps.length - 1]
+      : null;
+  /** The wave the skip stops at, read as "wave wants ~Y" text for the offer. */
+  const skipStopRec =
+    skipPlan && skipPlan.steps.length > 0
+      ? recommendedGs(skipPlan.toSeat.phase, skipPlan.toSeat.wave_in_phase, view.cyclePower)
+      : null;
+  const skipStopName =
+    skipPlan && skipPlan.stopReason === 'boss'
+      ? bossBandFor(skipPlan.toSeat.phase, skipPlan.toSeat.wave_in_phase)?.label ??
+        `wave ${skipPlan.toSeat.wave_in_phase}`
+      : skipPlan
+        ? `wave ${skipPlan.toSeat.wave_in_phase}`
+        : null;
+
+  /** Dev kit only: one line per upcoming wave from the seat — its recommended
+   * GS, boss-band marks, and where the current Skip plan would stop. */
+  const gsDumpLines = useMemo(() => {
+    const lines: string[] = [
+      `GS ${gs} · cycle power ×${view.cyclePower.toFixed(2)} · seat ${campaignPhaseLabel(view.campaign.phase)} ${view.campaign.wave_in_phase}`,
+    ];
+    let cursor = view.campaign;
+    let guard = 0;
+    while (cursor && guard++ < 18) {
+      const band = bossBandFor(cursor.phase, cursor.wave_in_phase);
+      const rec = recommendedGs(cursor.phase, cursor.wave_in_phase, view.cyclePower);
+      const stop =
+        skipPlan &&
+        skipPlan.steps.length > 0 &&
+        cursor.phase === skipPlan.toSeat.phase &&
+        cursor.wave_in_phase === skipPlan.toSeat.wave_in_phase
+          ? '  ◆ skip stops'
+          : '';
+      lines.push(
+        `${campaignPhaseLabel(cursor.phase)} w${cursor.wave_in_phase} ~${rec}${band ? '  boss' : ''}${stop}`,
+      );
+      const next = campaignNextSeat(cursor);
+      if (!next || (skipPlan && cursor.phase === skipPlan.toSeat.phase && cursor.wave_in_phase === skipPlan.toSeat.wave_in_phase)) break;
+      cursor = next;
+    }
+    return lines;
+  }, [gs, skipPlan, view.campaign, view.cyclePower]);
 
   /** Rebuild a fresh board for a fight and go back to setup. */
   const buildSetup = useCallback(
@@ -956,6 +1035,61 @@ export function DefendScreen({
               </Pressable>
             </ThemedView>
 
+            {/* Gear score + Skip-to-even (§9j / §18 D) — campaign only. */}
+            {fight.mode === 'campaign' ? (
+              <ThemedView type="backgroundElement" style={styles.card}>
+                <View style={styles.statRow}>
+                  <ThemedText type="smallBold">Your GS</ThemedText>
+                  <ThemedText type="subheading" themeColor="emphasis">
+                    {gs}
+                  </ThemedText>
+                </View>
+                <View style={styles.statRow}>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Wave wants
+                  </ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    ~{seatRec}
+                  </ThemedText>
+                </View>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Gear score reads your soft-capped equipped power, Avatar level, and stars.
+                  Type match is combat only — it never counts toward GS.
+                </ThemedText>
+                {skipPlan && skipPlan.steps.length > 0 && skipLast ? (
+                  <View style={[styles.skipBox, { backgroundColor: theme.backgroundSelected }]}>
+                    <ThemedText type="smallBold" themeColor="emphasis">
+                      Your GS {gs} — skip ahead?
+                    </ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      The next {skipPlan.steps.length}{' '}
+                      {skipPlan.steps.length === 1 ? 'normal wave' : 'normal waves'} — up to{' '}
+                      {campaignPhaseLabel(skipLast.phase)} wave {skipLast.wave_in_phase} — want ~
+                      {recommendedGs(skipLast.phase, skipLast.wave_in_phase, view.cyclePower)} or
+                      less. Skipping pays ~{Math.round(getTune().skipPayFraction * 100)}% tokens
+                      and XP plus one small commons-only crate — never uniques, boss drops, or
+                      Avatar stars. Skip stops at {skipStopName} (wants ~{skipStopRec}); farm bands
+                      stay open after.
+                    </ThemedText>
+                    <Pressable
+                      onPress={() => void onSkipToEven()}
+                      accessibilityRole="button"
+                      accessibilityLabel="Skip ahead"
+                      style={({ pressed }) => [
+                        styles.primaryButton,
+                        { backgroundColor: theme.accentFill },
+                        pressed && styles.pressed,
+                      ]}>
+                      <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
+                        Skip ahead · {skipPlan.steps.length}{' '}
+                        {skipPlan.steps.length === 1 ? 'wave' : 'waves'}
+                      </ThemedText>
+                    </Pressable>
+                  </View>
+                ) : null}
+              </ThemedView>
+            ) : null}
+
             {/* Drop preview — honest "what can drop" for this wave/band (§9i). */}
             <ThemedView type="backgroundElement" style={styles.card}>
               <View style={styles.statRow}>
@@ -1376,6 +1510,29 @@ export function DefendScreen({
               }}
             />
             <DevRow
+              label="Set GS high (overgear)"
+              onPress={() => {
+                onDevOvergear();
+                setLastWin(null);
+              }}
+            />
+            <DevRow
+              label="Force skip offer (overgear → Trial 1)"
+              onPress={() => {
+                onDevForceSkipOffer();
+                buildSetup({ phase: 'trial', wave: 1, mode: 'campaign' });
+              }}
+            />
+            <DevRow
+              label={gsDumpOpen ? 'Hide GS vs recommended' : 'Dump GS vs recommended'}
+              onPress={() => setGsDumpOpen((open) => !open)}
+            />
+            {gsDumpOpen ? (
+              <ThemedText type="code" themeColor="textSecondary">
+                {gsDumpLines.join('\n')}
+              </ThemedText>
+            ) : null}
+            <DevRow
               label={dumpDropsOpen ? 'Hide band drop table' : 'Dump drops for band'}
               onPress={() => setDumpDropsOpen((open) => !open)}
             />
@@ -1631,6 +1788,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.one,
+  },
+  skipBox: {
+    borderRadius: Spacing.three,
+    padding: Spacing.two,
+    gap: Spacing.two,
+    alignItems: 'stretch',
   },
   dropRow: {
     flexDirection: 'row',

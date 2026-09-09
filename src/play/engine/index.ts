@@ -48,3 +48,11 @@ export {
   allBossBands,
   bossBandFor,
 } from './bands';
+export {
+  GEAR_SCORE_LEVEL_STEP,
+  GEAR_SCORE_STAR_STEP,
+  RECOMMENDED_WAVE_ONE,
+  gearScore,
+  recommendedBase,
+  recommendedGs,
+} from './gear-score';
