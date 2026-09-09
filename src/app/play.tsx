@@ -16,6 +16,8 @@ import { DressScreen } from '@/play/dress-screen';
 import { DefendScreen } from '@/play/defend-screen';
 import { GROVE_ACTION_TILES, GROVE_LEDE } from '@/play/grove';
 import { itemName, type ItemSlot } from '@/play/items';
+import { TunePanel } from '@/play/tune-panel';
+import { loadTune } from '@/play/tune';
 import {
   DIVE_CHARGE_CAP,
   canClaimResearch,
@@ -91,6 +93,13 @@ export default function PlayScreen() {
   const [skipDelays, setSkipDelays] = useState(false);
   /** Dev kit only: pin the next merge to succeed / fail (one-shot). */
   const [forceMerge, setForceMerge] = useState<'none' | 'success' | 'fail'>('none');
+  /** Dev kit only: §9c Tune panel open state (PRE_LAUNCH_DEV hides the entry). */
+  const [showTune, setShowTune] = useState(false);
+
+  // Hydrate the local tune doc once so persisted presets survive app kills.
+  useEffect(() => {
+    void loadTune();
+  }, []);
 
   const researchReady = view != null && canClaimResearch(view);
 
@@ -476,6 +485,10 @@ export default function PlayScreen() {
                 })}
               </View>
 
+              {showTune ? (
+                <TunePanel onClose={() => setShowTune(false)} />
+              ) : null}
+
               {PRE_LAUNCH_DEV ? (
                 <GroveDevKit
                   commit={commit}
@@ -491,6 +504,7 @@ export default function PlayScreen() {
                   onToggleSkipDelays={() => setSkipDelays((skip) => !skip)}
                   forceMerge={forceMerge}
                   onSetForceMerge={setForceMerge}
+                  onToggleTune={() => setShowTune((open) => !open)}
                 />
               ) : null}
             </>
@@ -525,6 +539,7 @@ function GroveDevKit({
   onToggleSkipDelays,
   forceMerge,
   onSetForceMerge,
+  onToggleTune,
 }: {
   commit: (transition: PlayTransition) => boolean;
   onGrantRandomFind: () => Promise<void>;
@@ -539,6 +554,7 @@ function GroveDevKit({
   onToggleSkipDelays: () => void;
   forceMerge: 'none' | 'success' | 'fail';
   onSetForceMerge: (mode: 'none' | 'success' | 'fail') => void;
+  onToggleTune: () => void;
 }) {
   const theme = useTheme();
   const [resetArmed, setResetArmed] = useState(false);
@@ -672,6 +688,14 @@ function GroveDevKit({
       onPress: () => {
         clearResetArm();
         onToggleSkipDelays();
+      },
+    },
+    {
+      key: 'tune',
+      label: 'Tune…',
+      onPress: () => {
+        clearResetArm();
+        onToggleTune();
       },
     },
   ];

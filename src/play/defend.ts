@@ -21,6 +21,7 @@
  */
 
 import { avatarLevelWavePower } from '@/play/playStore';
+import { getTune } from '@/play/tune';
 
 /* ------------------------------------------------------------------ path --- */
 export type DefendWaypoint = { x: number; y: number };
@@ -44,31 +45,28 @@ const PATH_LENGTH = DEFEND_PATH.slice(1).reduce(
 export const PUFF_BASE_HP = 40;
 /** Puffs walk this fraction of the whole path per second (base speed). */
 export const PUFF_SPEED_PER_SEC = 0.06;
-/** One kill grants this much scrap (GAME_SPEC §9c `scrap_kill` default 3). */
-export const SCRAP_PER_KILL = 3;
 
 /* ----------------------------------------------------------------- Avatar --- */
 /** Avatar base attack (placeholder — def not in GAME_DATA). */
 export const AVATAR_BASE_ATTACK = 12;
 /** Avatar auto-attack radius, board units (0..100 space). */
 export const AVATAR_RANGE = 15;
-/** Avatar auto-attack cooldown (GAME_SPEC §9b: 0.7s). */
-export const AVATAR_COOLDOWN_MS = 700;
 
-/** Starter skill — slow_pulse "Root Veil" (GAME_SPEC §9d / GAME_DATA). */
+/** Starter skill — slow_pulse "Root Veil" (GAME_SPEC §9d / GAME_DATA). Live
+ * slow strength + cooldown read the tune doc; these are the Sane copy/defs. */
 export const SKILL_NAME = 'Root Veil';
 export const SKILL_DESCRIPTION = 'Vines slow nearby foes for a short breath.';
-export const SKILL_COOLDOWN_MS = 12_000; // §9d cooldown 12 (≥10s)
-export const SKILL_SLOW_FACTOR = 1 - 0.35; // slow_pct 0.35 → speed ×0.65
+export const SKILL_COOLDOWN_MS = 12_000; // §9d cooldown 12 (≥10s, Sane)
 export const SKILL_SLOW_MS = 2_000; // duration 2.0
 export const SKILL_RADIUS = 24; // §9d radius 90 art-px → ~24 board units
 
 export function waveEnemyCount(wave: number): number {
   // §9 formula, capped at 20 (§5c: if FPS dips, cut count first).
-  return Math.min(20, Math.floor(6 + wave * 1.2));
+  const perLevel = getTune().waveCountPerLevel;
+  return Math.min(20, Math.floor(6 + wave * perLevel));
 }
 export function waveHpMult(wave: number): number {
-  return 1 + (wave - 1) * 0.12;
+  return 1 + (wave - 1) * getTune().waveHpPerLevel;
 }
 export function waveSpeedMult(wave: number): number {
   return 1 + Math.max(0, wave - 10) * 0.02;
@@ -194,7 +192,7 @@ export type DefendStep = {
 export const DEFEND_SPAWN_INTERVAL_MS = 850;
 export const DEFEND_TICK_MS = 100;
 
-export function createDefendLive(wave: number, scrap = 80): DefendLive {
+export function createDefendLive(wave: number, scrap = getTune().startScrap): DefendLive {
   return {
     wave: Math.max(1, Math.floor(wave)),
     puffs: [],
@@ -313,6 +311,8 @@ export function stepDefendLive(
 
   // Towers fire.
   const towerSpeedBucket = Math.max(0.1, buckets.towerSpeed);
+  const towerCdScale = getTune().towerCooldownScale;
+  const scrapPerKill = getTune().scrapKill;
   const firedTowers: Tower[] = [];
   for (const tower of state.towers) {
     let cooldownMs = tower.cooldownMs - dtMs;
@@ -326,10 +326,10 @@ export function stepDefendLive(
           buckets.wavePower;
         puffs = applyHit(puffs, target.id, damage, def);
         if (puffs.some((p) => p.id === target.id && p.hp <= 0)) {
-          scrap += SCRAP_PER_KILL;
+          scrap += scrapPerKill;
           puffs = puffs.filter((p) => p.id !== target.id);
         }
-        cooldownMs = def.cooldownMs / towerSpeedBucket;
+        cooldownMs = (def.cooldownMs * towerCdScale) / towerSpeedBucket;
       } else {
         cooldownMs = 0; // idle: retry next tick
       }
@@ -348,10 +348,10 @@ export function stepDefendLive(
         puff.id === target.id ? { ...puff, hp: puff.hp - damage } : puff,
       );
       if (puffs.some((p) => p.id === target.id && p.hp <= 0)) {
-        scrap += SCRAP_PER_KILL;
+        scrap += scrapPerKill;
         puffs = puffs.filter((p) => p.id !== target.id);
       }
-      avatarCooldownMs = AVATAR_COOLDOWN_MS;
+      avatarCooldownMs = getTune().avatarCooldownMs;
     } else {
       avatarCooldownMs = 0;
     }
@@ -378,19 +378,22 @@ export function stepDefendLive(
 }
 
 /** Cast the Avatar skill (slow_pulse): slow everything within `SKILL_RADIUS`
- * of the Avatar and put the skill on cooldown. Null when still cooling down. */
+ * of the Avatar and put the skill on cooldown. Slow strength + cooldown read
+ * the tune doc (§9c skill power/cooldown); duration stays the def's 2s. Null
+ * when still cooling down. */
 export function castSlowPulse(
   state: DefendLive,
   avatar: { x: number; y: number },
 ): DefendLive | null {
   if (state.skillCooldownMs > 0) return null;
+  const slowFactor = 1 - getTune().skillSlowPct;
   const puffs = state.puffs.map((puff) => {
     const pos = puffPosition(puff.dist);
     const dist = Math.hypot(pos.x * 100 - avatar.x, pos.y * 100 - avatar.y);
     if (dist > SKILL_RADIUS) return puff;
-    return { ...puff, slowMs: SKILL_SLOW_MS, slowFactor: SKILL_SLOW_FACTOR };
+    return { ...puff, slowMs: SKILL_SLOW_MS, slowFactor };
   });
-  return { ...state, puffs, skillCooldownMs: SKILL_COOLDOWN_MS };
+  return { ...state, puffs, skillCooldownMs: getTune().skillCooldownMs };
 }
 
 /** Nearest enemy to the Avatar within `AVATAR_RANGE` (§9b), or null. */

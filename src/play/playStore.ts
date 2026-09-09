@@ -45,6 +45,7 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { getTune } from '@/play/tune';
 import {
   getItemDef,
   junkLookId,
@@ -80,13 +81,15 @@ export const DAILY_TEND_BONUS_TOKENS = 10;
 export const INVENTORY_SOFT_CAP = 80; // soft cap: total items across stacks (sum of counts)
 export const LOOK_SELL_TOKENS = 3; // GAME_DATA look_sell_tokens
 
-/** Defend run defaults (GAME_DATA). */
-export const DEFEND_START_SCRAP = 80; // start_scrap — each run starts with this
-
-/** Defend clear rewards (GAME_SPEC §9c / §9 XP numbers). */
-export const TOKEN_CLEAR_BASE = 50; // token_clear_base — reward juice per clear
-/** After this many clears in a local day, further clear tokens halve (§9). */
-export const DAILY_CLEAR_HALF_AFTER = 5;
+/**
+ * §9c Tune-able economy/reward numbers — the exports below are the SANE
+ * reference values; every live read goes through `getTune()` so presets take
+ * effect without recompiling. `recordDefendWin` / the daily half-cap read the
+ * tune doc; the Defend run's starting scrap is the tune's `startScrap`.
+ */
+export const DEFEND_START_SCRAP = 80; // Sane start_scrap
+export const TOKEN_CLEAR_BASE = 50; // Sane token_clear_base
+export const DAILY_CLEAR_HALF_AFTER = 5; // Sane daily_clear_half_after
 /** First-clear milestone waves — each grants one Rare Look once (§13). */
 export const MILESTONE_WAVES = [5, 10, 25] as const;
 /** Clear wave W → this much XP to the Avatar (GAME_SPEC "xp_clear: 10 + wave*2"). */
@@ -179,20 +182,18 @@ function takeOneFromBag(
     .filter((stack) => stack.count > 0);
 }
 
-/** Gear mult soft-caps (§9c table) — same-stat adds, past-cap at 25% strength. */
-const GEAR_SOFT_CAP_MULT: Record<ItemStat, number> = {
-  wave_power: 2.0,
-  tower_speed: 1.75,
-  token_earn: 1.5,
-  dive_luck: 1.5,
-  research_yield: 1.5,
-};
-const GEAR_DIMINISHING_RATE = 0.25; // §9c "past the cap, extra rolls add at 25% strength"
 /** §7 luck tiers: each whole +5% equipped dive_luck is one bucket. */
 const LUCK_BUCKET_STEP = 0.05;
 const LUCK_BUCKET_MAX = 5;
 /** §7 bust bend per luck tier and floor ("floored at 50% of table bust"). */
 const LUCK_BUST_BEND_PER_TIER = 0.15;
+
+/**
+ * Gear soft-caps + diminishing are §9c Tune knobs now — the docs below are the
+ * Sane reference; the engines read them from the tune doc via `getTune()`.
+ * gear_softcap_wave_power (Sane 2.0), gear_softcap_other (Sane 1.5),
+ * diminishing_after_cap (Sane 0.25).
+ */
 
 /**
  * An in-progress Dive run. Persisted so an app kill mid-run keeps the same
@@ -412,7 +413,9 @@ function diveRunViewOf(doc: PlayStoreDoc): DiveRunView {
     active: true,
     deepers: run.deepers,
     haul: run.haul,
-    bustPctNext: canDeeper ? effectiveBustPct(DIVE_BUST_TABLE[run.deepers], doc.equipped) : null,
+    bustPctNext: canDeeper
+      ? effectiveBustPct(diveBustChanceAt(run.deepers), doc.equipped)
+      : null,
     canDeeper,
   };
 }
@@ -462,13 +465,14 @@ export function recordDefendWin(
   now: number = Date.now(),
   rng: () => number = Math.random,
 ): { doc: PlayStoreDoc; result: DefendWinResult } {
+  const tune = getTune();
   const todayYmd = localYmd(new Date(now));
   const priorClears = doc.clears_ymd === todayYmd ? doc.clears_today : 0;
   const clearsToday = priorClears + 1;
-  const halved = priorClears >= DAILY_CLEAR_HALF_AFTER;
+  const halved = priorClears >= tune.dailyClearHalfAfter;
   const tokensGranted = halved
-    ? Math.floor(TOKEN_CLEAR_BASE / 2)
-    : TOKEN_CLEAR_BASE;
+    ? Math.floor(tune.tokenClearBase / 2)
+    : tune.tokenClearBase;
 
   const xpGranted = xpForClear(wave);
   let xp = doc.xp + xpGranted;
@@ -526,10 +530,10 @@ export function devDefendResetClears(doc: PlayStoreDoc): PlayStoreDoc {
   return { ...doc, clears_today: 0, clears_ymd: localYmd() };
 }
 
-/** Dev kit only: set today's clears to the half-cap so the next win is halved
- * (honest-note path becomes reachable on demand). */
+/** Dev kit only: set today's clears to the Tune half threshold so the next
+ * win is halved (honest-note path becomes reachable on demand). */
 export function devDefendSetClearsFive(doc: PlayStoreDoc): PlayStoreDoc {
-  return { ...doc, clears_today: DAILY_CLEAR_HALF_AFTER, clears_ymd: localYmd() };
+  return { ...doc, clears_today: getTune().dailyClearHalfAfter, clears_ymd: localYmd() };
 }
 
 /** Dev kit only: force the wave-5 milestone Look into the bag (fires once —
@@ -555,15 +559,24 @@ export function devResetMilestones(doc: PlayStoreDoc): PlayStoreDoc {
   return { ...doc, milestone_waves_claimed: [] };
 }
 
+/** §7 bust table value at a Deeper index plus the §9c tune boost (whole-%),
+ * clamped to 5%–90% so a preset can soften or spice the risk safely. */
+function diveBustChanceAt(deeperIndex: number): number {
+  const table = DIVE_BUST_TABLE[deeperIndex];
+  const boost = getTune().diveBustBoostPct / 100;
+  return Math.min(0.9, Math.max(0.05, table + boost));
+}
+
 /* ---------------------------------------------------------------------------
  * Equipped gear buckets (GAME_SPEC §9c).
  *
  * Each equipped item contributes its mult_a / mult_b. Same stat adds into one
  * bucket; different stats stay separate and multiply later (Defend). The raw
  * sums are the display truth ("+8% wave power"); `bucketMultiplier` applies
- * the §9c soft-cap — past the cap (wave_power ×2.0 from gear, others ×1.5)
- * extra rolls add at 25% strength. `effectiveBustPct` bends a Dive bust % via
- * the §7 dive_luck tier formula; it is what the screen always shows.
+ * the §9c soft-cap — past the cap extra rolls add at diminishing strength
+ * (Tune knobs, Sane: wave_power ×2.0, others ×1.5, past-cap 25%). Dive bust %
+ * is the §7 table plus the tune boost, bent by `effectiveBustPct` via equipped
+ * dive_luck (the §7 luck formula) — the number the UI always shows.
  * ------------------------------------------------------------------------- */
 
 /**
@@ -593,11 +606,19 @@ export function equippedStatSums(
   return sums;
 }
 
-/** §9c soft-capped multiplier for one stat from its raw additive sum. */
+/** §9c soft-capped multiplier for one stat from its raw additive sum. The
+ * soft caps are Tune knobs: wave_power uses gear_softcap_wave_power; every
+ * other stat uses gear_softcap_other. Past-cap rolls add at diminishing
+ * strength (diminishing_after_cap). */
 export function bucketMultiplier(stat: ItemStat, sums: StatSums): number {
-  const addCap = GEAR_SOFT_CAP_MULT[stat] - 1;
+  const tune = getTune();
+  const cap =
+    stat === 'wave_power' ? tune.gearSoftcapWavePower : tune.gearSoftcapOther;
+  const addCap = cap - 1;
   const raw = sums[stat];
-  return 1 + Math.min(raw, addCap) + GEAR_DIMINISHING_RATE * Math.max(0, raw - addCap);
+  return (
+    1 + Math.min(raw, addCap) + tune.diminishingAfterCap * Math.max(0, raw - addCap)
+  );
 }
 
 /** §7 luck tier from the (uncapped) dive_luck sum: each +5% is one tier. */
@@ -754,7 +775,10 @@ export function deeperDive(
 ): { doc: PlayStoreDoc; outcome: DeeperOutcome } | null {
   const run = doc.dive_run;
   if (!run || run.deepers >= DIVE_DEEPER_MAX) return null;
-  const bustChance = effectiveBustPct(DIVE_BUST_TABLE[run.deepers], doc.equipped) / 100;
+  // §7 table at this depth + the §9c tune bust boost, bent by equipped
+  // dive_luck — the same number the UI shows.
+  const bustChance =
+    effectiveBustPct(diveBustChanceAt(run.deepers), doc.equipped) / 100;
   if (rng() < bustChance) {
     const bustPct = Math.round(bustChance * 100);
     return { doc: { ...doc, dive_run: null }, outcome: { busted: true, bustPct } };

@@ -58,6 +58,7 @@ import {
   type PlayView,
 } from '@/play/playStore';
 import { tipForWave } from '@/play/coach';
+import { getTune, saveTune, setKnob } from '@/play/tune';
 
 const PUFF_COLOR = '#F472B6';
 const AVATAR_COLOR = '#38BDF8';
@@ -166,7 +167,8 @@ export function DefendScreen({
     () => createDefendLive(view.highestWaveCleared + 1),
   );
   const [selectedPad, setSelectedPad] = useState<number | null>(null);
-  const [godMode, setGodMode] = useState(false);
+  /** God mode — starts from the §9c tune doc (BrokenOP turns it on). */
+  const [godMode, setGodMode] = useState(() => getTune().godMode);
   const [coachHidden, setCoachHidden] = useState(false);
   const [whyOpen, setWhyOpen] = useState(false);
   /** What the last win paid — shows the honest (possibly halved) tokens. */
@@ -335,7 +337,7 @@ export function DefendScreen({
 
   const skillReady = (sim?.skillCooldownMs ?? 0) <= 0;
   const skillSeconds = Math.ceil((sim?.skillCooldownMs ?? 0) / 1000);
-  const scrap = sim?.scrap ?? 80;
+  const scrap = sim?.scrap ?? getTune().startScrap;
 
   // Coach tip (pure): read the current wave, scrap, and what's on the pads.
   const towerCounts = useMemo(() => {
@@ -832,7 +834,14 @@ export function DefendScreen({
             />
             <DevRow
               label={godMode ? 'God mode (on)' : 'God mode'}
-              onPress={() => setGodMode((value) => !value)}
+              onPress={() => {
+                setGodMode((value) => {
+                  const next = !value;
+                  setKnob('godMode', next); // tune doc — applies on re-entry too
+                  void saveTune();
+                  return next;
+                });
+              }}
             />
             <DevRow
               label={coachHidden ? 'Show coach' : 'Coach on'}
