@@ -30,11 +30,17 @@
  *   `dive_run` so killing the app mid-run keeps the same decision on relaunch.
  *   Equipped `dive_luck` bends the bust % (§7: bust × (1 − 0.15·(luck_bucket−1)),
  *   floored at half the table value) — never hidden, always shown as-is.
- * - Defend meta (step 5a+) — `highest_wave_cleared` (GAME_DATA defend run
- *   defaults, start 0). Entering Defend fights wave = highest + 1; a clear
- *   bumps it via `recordDefendWin` (tokens + XP + level + highest). The live
- *   board (spawns, pauses, leak) is a transient screen sim in `defend.ts`, not
- *   persisted — only these numbers are.
+ * - Defend campaign (step 5a+ / Phase B) — the `campaign` seat
+ *   (`{ phase: 'trial' | 'main', wave_in_phase }`) is what Defend plays next:
+ *   Trial waves 1–5 on the Grove Path map, then Main waves 1–20 on the
+ *   Divecore Main map. Clearing Main wave 20 → `conquered_cycles += 1`,
+ *   `cycle_power` recomputed via `CycleScaler`, and the seat resets to Main
+ *   wave 1 (Trial is skipped once `conquered_cycles ≥ 1`). Cleared bands can
+ *   be replayed at half tokens. `recordDefendWin` banks tokens + XP + level
+ *   and advances the seat. Legacy `highest_wave_cleared` (start 0) is kept for
+ *   old saves but no longer drives the next wave. The live board (spawns,
+ *   pauses, leak) is a transient screen sim in `defend.ts`, not persisted —
+ *   only these numbers are.
  * - Daily tend bonus — +10 tokens once per device-local day on the first Claim
  *   (later also Dress/Decor), tracked by `last_tend_bonus_ymd`.
  *
@@ -91,8 +97,20 @@ export const LOOK_SELL_TOKENS = 3; // GAME_DATA look_sell_tokens
 export const DEFEND_START_SCRAP = 80; // Sane start_scrap
 export const TOKEN_CLEAR_BASE = 50; // Sane token_clear_base
 export const DAILY_CLEAR_HALF_AFTER = 5; // Sane daily_clear_half_after
-/** First-clear milestone waves — each grants one Rare Look once (§13). */
+/** First-clear milestone waves: each grants one Rare Look once. §18 lock:
+ * milestones fire off `lifetime_waves_cleared` (never resets on a Conquered),
+ * so the 25 milestone stays reachable after Main ends at 20. */
 export const MILESTONE_WAVES = [5, 10, 25] as const;
+/** Campaign (Phase B — GAME_SPEC §9e). The seat names the phase + next
+ * display wave Defend plays. Trial = Grove Path map, waves 1–5 (teach);
+ * Main = Divecore Main map, waves 1–20 (real climb). Clearing Main wave 20
+ * conquers the cycle. */
+export const TRIAL_WAVE_COUNT = 5; // Trial waves 1..5 (Grove Path map)
+export const MAIN_WAVE_COUNT = 20; // Main waves 1..20 (Divecore Main map)
+/** Cycle-clear bonus (GAME_SPEC §9e "tokens/XP milestone bonus"). Sane flat
+ * amounts so it reads as a milestone — tuned later. */
+export const CYCLE_CLEAR_BONUS_TOKENS = 150;
+export const CYCLE_CLEAR_BONUS_XP = 50;
 /** Clear wave W → this much XP to the Avatar (GAME_SPEC "xp_clear: 10 + wave*2"). */
 export function xpForClear(wave: number): number {
   return 10 + Math.max(1, Math.floor(wave)) * 2;
@@ -225,15 +243,24 @@ export type DiveRun = {
  * v11 (forever-engine stubs) added the campaign seat + forever meta — the
  * `campaign` seat (phase / wave_in_phase), `conquered_cycles` with its derived
  * `cycle_power`, `lifetime_waves_cleared`, and an empty `bound_bosses[]`.
- * Nothing reads them yet; defaults keep old saves crash-free.
+ * v12 (campaign Phase B) makes the seat live: `campaign.phase` is
+ * `'trial' | 'main'`, Defend plays the seat's wave, Main wave 20 conquers a
+ * cycle, `cycle_power` scales the next run's enemies, cleared bands replay at
+ * half tokens, and milestones fire off the lifetime clear count. Legacy saves
+ * (numeric phase 1/2) migrate onto the string phases.
  */
 
-/** Forever-engine campaign seat (data only — no campaign UI). Phase 1 /
- * wave 1 is a fresh start. */
+/** Campaign phase. `trial` (Grove Path, waves 1–5) then `main` (Divecore
+ * Main, waves 1–20); a cleared Main 20 conquers a cycle and the seat resets
+ * (Trial is skipped once `conquered_cycles ≥ 1`). */
+export type CampaignPhase = 'trial' | 'main';
+
+/** Forever-engine campaign seat — the phase + next display wave Defend plays
+ * (`wave_in_phase` is 1-based and ALWAYS the next wave to clear). */
 export type CampaignState = {
-  /** 1-based phase the player is parked in. */
-  phase: number;
-  /** 1-based wave inside that phase. */
+  /** Phase the player is parked in. */
+  phase: CampaignPhase;
+  /** 1-based next wave inside that phase. */
   wave_in_phase: number;
 };
 
@@ -246,7 +273,7 @@ export type BoundBossRecord = {
 };
 
 export type PlayStoreDoc = {
-  version: 11;
+  version: 12;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -276,7 +303,7 @@ export type PlayStoreDoc = {
   clears_ymd: string | null;
   /** Milestone waves whose Rare-Look reward has already fired (5/10/25). */
   milestone_waves_claimed: number[];
-  /** Forever-engine (v11): campaign seat + cycle / boss meta stubs. */
+  /** Forever-engine (v11+): campaign seat + cycle / boss meta. */
   campaign: CampaignState;
   /** Whole cycles conquered (drives cycle_power). Starts 0. */
   conquered_cycles: number;
@@ -321,12 +348,18 @@ export type PlayView = {
   /** Raw additive mult sums from equipped items (§9c same-stat adds, scaled
    * +10% per worn star so a merged ★2 Tide Blade beats a ★1). */
   statSums: StatSums;
-  /** Highest Defend wave cleared (next wave = this + 1). */
-  highestWaveCleared: number;
   /** Avatar meta level (start 1) — drives the +2% wave_power HUD note. */
   avatarLevel: number;
   /** Defend clears this device-local day (over 5 → tokens halved). */
   clearsToday: number;
+  /** Campaign seat — the phase + next display wave Defend plays. */
+  campaign: CampaignState;
+  /** Whole cycles conquered (drives `cyclePower`). */
+  conqueredCycles: number;
+  /** Cycle power = 1 + conquered × tune step — scales the next run's enemies. */
+  cyclePower: number;
+  /** Total waves cleared over all time (never resets on a Conquered). */
+  lifetimeWavesCleared: number;
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -367,7 +400,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 11,
+    version: 12,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -383,7 +416,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     clears_today: 0,
     clears_ymd: null,
     milestone_waves_claimed: [],
-    campaign: { phase: 1, wave_in_phase: 1 },
+    campaign: { phase: 'trial', wave_in_phase: 1 },
     conquered_cycles: 0,
     cycle_power: defaultCyclePower(),
     lifetime_waves_cleared: 0,
@@ -438,9 +471,12 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     inventory: doc.inventory,
     equipped: doc.equipped,
     statSums: equippedStatSums(doc.equipped),
-    highestWaveCleared: doc.highest_wave_cleared,
     avatarLevel: doc.avatar_level,
     clearsToday: doc.clears_today,
+    campaign: doc.campaign,
+    conqueredCycles: doc.conquered_cycles,
+    cyclePower: doc.cycle_power,
+    lifetimeWavesCleared: doc.lifetime_waves_cleared,
   };
 }
 
@@ -464,12 +500,14 @@ export function canClaimResearch(view: PlayView): boolean {
 }
 
 /* ---------------------------------------------------------------------------
- * Defend meta (GAME_SPEC §9 wave ladder / §9 XP; GAME_DATA defend run defaults).
+ * Defend meta (GAME_SPEC §9 wave ladder, §9 XP + §9e campaign; GAME_DATA
+ * defend run defaults).
  *
- * Only the persistent numbers live here (`highest_wave_cleared`, `xp`,
- * `avatar_level`); the live board — spawns, puffs walking the path, towers,
- * Avatar, pause, leak → fail — is a transient screen simulation in `defend.ts`
- * that is never persisted.
+ * The persistent numbers live here — campaign seat, conquered cycles with the
+ * derived cycle_power, lifetime clear count, XP/level, and the legacy
+ * `highest_wave_cleared` mirror. The live board — spawns, puffs walking the
+ * path, towers, Avatar, pause, leak → fail — is a transient screen simulation
+ * in `defend.ts` that is never persisted.
  * ------------------------------------------------------------------------- */
 
 /** What a Defend win paid out (the overlay shows the honest amount). */
@@ -478,42 +516,128 @@ export type DefendWinResult = {
   xpGranted: number;
   /** True when this win was past the daily soft cap (tokens halved). */
   halved: boolean;
-  /** Clears today AFTER this win (1-based). */
+  /** True when this was a band replay (half tokens + half XP, §9h farm). */
+  replayHalf: boolean;
+  /** Clears today AFTER this win (unchanged by replays). */
   clearsToday: number;
-  /** Milestone Rare Look granted by this first-clear (5/10/25), if any. */
-  milestoneLook: { wave: number; itemId: string } | null;
+  /** Milestone Rare Look granted by a lifetime-clear boundary (5/10/25). */
+  milestoneLook: { count: number; itemId: string } | null;
+  /** True when this Main wave-20 campaign clear conquered the cycle. */
+  conquered: boolean;
+  /** Conquered cycles AFTER this win. */
+  conqueredCycles: number;
+  /** Cycle power AFTER this win (`1 + conquered × step`). */
+  cyclePower: number;
+  /** Campaign seat AFTER this win (what Defend plays next). */
+  campaign: CampaignState;
 };
 
 /**
- * A wave W cleared → grant tokens + XP, level the Avatar up as needed, and
- * raise `highest_wave_cleared = max(current, W)`. XP curve per GAME_SPEC §9
- * (`10 + W*2`, `50 + level*25`); +2% wave_power per level is applied at
- * combat time via `avatarLevelWavePower`.
+ * What one Defend fight is: the display wave on its phase/map and whether it
+ * is the campaign's next wave (`campaign` — advances the seat) or a cleared
+ * band replay (`replay` — half tokens, seat untouched).
+ */
+export type DefendWinMode = 'campaign' | 'replay';
+export type DefendWinContext = {
+  phase: CampaignPhase;
+  wave: number;
+  mode: DefendWinMode;
+};
+
+/**
+ * A Defend win → the shared reward + campaign-advance math (GAME_SPEC §9e).
  *
- * Daily soft cap (§9): after `DAILY_CLEAR_HALF_AFTER` (5) clears in a
- * device-local day, the TOKEN reward halves until the next local midnight —
- * wins 1–5 are full, wins 6+ pay 25. XP and highest_wave_cleared stay full.
- * The counter rolls over on the first clear of a new local day.
+ * `recordDefendWin` is the ONLY write path for a Defend clear. It grants
+ * tokens + XP, levels the Avatar, counts the clear toward the lifetime total
+ * AND (campaign clears only) the §9 daily soft-cap counter, fires first-clear
+ * milestones off `lifetime_waves_cleared` (5/10/25 — never reset by a
+ * Conquered), and advances the campaign seat.
  *
- * First-clear milestones (§13): clearing a `MILESTONE_WAVES` wave for the
- * first time also grants one guaranteed Rare Look (fires once per wave).
+ * Daily soft cap (§9): after `DAILY_CLEAR_HALF_AFTER` (5) campaign clears in a
+ * device-local day, the TOKEN reward halves until the next local midnight.
+ * XP and the seat always stay full. Band replays (`mode: 'replay'`) are the
+ * §9h farm path: half tokens AND half XP, and they never consume the daily
+ * clear counter, never count toward `lifetime_waves_cleared`, and never fire a
+ * milestone — so grinding one cleared band cannot print Rare Looks or level
+ * the Avatar without campaign progress. Milestones (5/10/25) land on natural
+ * campaign beats (finishing Trial, mid-Main, and the Conquered clear itself).
+ *
+ * Conquered (Main wave 20 clear, campaign mode): `conquered_cycles += 1`,
+ * `cycle_power` recomputed via `CycleScaler`, the seat resets to Main wave 1
+ * (skip Trial once `conquered_cycles ≥ 1`), and a cycle-clear token/XP bonus
+ * is added to that final wave's payout.
  */
 export function recordDefendWin(
   doc: PlayStoreDoc,
-  wave: number,
+  ctx: DefendWinContext,
   now: number = Date.now(),
   rng: () => number = Math.random,
 ): { doc: PlayStoreDoc; result: DefendWinResult } {
   const tune = getTune();
   const todayYmd = localYmd(new Date(now));
-  const priorClears = doc.clears_ymd === todayYmd ? doc.clears_today : 0;
-  const clearsToday = priorClears + 1;
-  const halved = priorClears >= tune.dailyClearHalfAfter;
-  const tokensGranted = halved
-    ? Math.floor(tune.tokenClearBase / 2)
-    : tune.tokenClearBase;
+  const { phase, wave, mode } = ctx;
+  const isReplay = mode === 'replay';
 
-  const xpGranted = xpForClear(wave);
+  // Rewards. Replays are the §9h farm path: half tokens + half XP, and they
+  // never count as a lifetime/campaign clear. Campaign wins honour the §9
+  // daily soft cap on tokens and always add a lifetime clear.
+  let tokensGranted = tune.tokenClearBase;
+  let halved = false;
+  let replayHalf = false;
+  let clearsToday = doc.clears_today;
+  let clearsYmd = doc.clears_ymd;
+  let xpGranted = xpForClear(wave);
+  let lifetimeAfter = doc.lifetime_waves_cleared;
+  let milestone: { wave: number; itemId: string } | null = null;
+  if (isReplay) {
+    replayHalf = true;
+    tokensGranted = Math.floor(tokensGranted / 2);
+    xpGranted = Math.floor(xpGranted / 2);
+  } else {
+    const priorClears = doc.clears_ymd === todayYmd ? doc.clears_today : 0;
+    halved = priorClears >= tune.dailyClearHalfAfter;
+    if (halved) tokensGranted = Math.floor(tokensGranted / 2);
+    clearsToday = priorClears + 1;
+    clearsYmd = todayYmd;
+    // Lifetime clear count (never resets on a Conquered) + milestones.
+    lifetimeAfter = doc.lifetime_waves_cleared + 1;
+    milestone = (MILESTONE_WAVES as readonly number[]).includes(lifetimeAfter)
+      ? claimMilestoneLook(doc, lifetimeAfter, rng)
+      : null;
+  }
+
+  // Campaign seat advance + Conquered. A campaign-mode win only advances when
+  // it matches the seat — a stale/duplicate win after the seat already moved
+  // (e.g. Main 20 conquered) grants rewards but never double-advances.
+  let campaign = doc.campaign;
+  let conquered = false;
+  let conqueredCycles = doc.conquered_cycles;
+  if (mode === 'campaign') {
+    const seatMatches =
+      doc.campaign.phase === phase && doc.campaign.wave_in_phase === Math.floor(wave);
+    if (seatMatches) {
+      if (phase === 'trial') {
+        campaign =
+          wave >= TRIAL_WAVE_COUNT
+            ? { phase: 'main', wave_in_phase: 1 }
+            : { phase: 'trial', wave_in_phase: Math.min(TRIAL_WAVE_COUNT, wave + 1) };
+      } else if (wave >= MAIN_WAVE_COUNT) {
+        conquered = true;
+        conqueredCycles = doc.conquered_cycles + 1;
+        // Reset display; default skips Trial once Conquered ≥ 1 (§9e).
+        campaign = { phase: 'main', wave_in_phase: 1 };
+      } else {
+        campaign = { phase: 'main', wave_in_phase: Math.min(MAIN_WAVE_COUNT, wave + 1) };
+      }
+    }
+  }
+  const cyclePowerValue = cyclePower(conqueredCycles);
+  if (conquered) {
+    tokensGranted += CYCLE_CLEAR_BONUS_TOKENS;
+    xpGranted += CYCLE_CLEAR_BONUS_XP;
+  }
+
+  // XP level-ups (clear XP + any conquer bonus feed the same curve).
   let xp = doc.xp + xpGranted;
   let level = doc.avatar_level;
   while (xp >= xpToNext(level)) {
@@ -521,33 +645,51 @@ export function recordDefendWin(
     level += 1;
   }
 
-  const milestone = claimMilestoneLook(doc, wave, rng);
   const next: PlayStoreDoc = {
     ...doc,
     tokens: doc.tokens + tokensGranted,
     xp,
     avatar_level: level,
     highest_wave_cleared: Math.max(doc.highest_wave_cleared, Math.floor(wave)),
-    // Forever-engine stub: total waves cleared over all time (+1 per clear).
-    lifetime_waves_cleared: doc.lifetime_waves_cleared + 1,
+    lifetime_waves_cleared: lifetimeAfter,
     clears_today: clearsToday,
-    clears_ymd: todayYmd,
+    clears_ymd: clearsYmd,
+    campaign,
+    conquered_cycles: conqueredCycles,
+    cycle_power: cyclePowerValue,
     inventory: milestone
       ? addCopiesToBag(doc.inventory, milestone.itemId, 0, 1)
       : doc.inventory,
     milestone_waves_claimed: milestone
-      ? [...doc.milestone_waves_claimed, wave]
+      ? [...doc.milestone_waves_claimed, lifetimeAfter]
       : doc.milestone_waves_claimed,
   };
-  return { doc: next, result: { tokensGranted, xpGranted, halved, clearsToday, milestoneLook: milestone } };
+  return {
+    doc: next,
+    result: {
+      tokensGranted,
+      xpGranted,
+      halved,
+      replayHalf,
+      clearsToday,
+      milestoneLook: milestone
+        ? { count: lifetimeAfter, itemId: milestone.itemId }
+        : null,
+      conquered,
+      conqueredCycles,
+      cyclePower: cyclePowerValue,
+      campaign,
+    },
+  };
 }
 
 /**
- * Grant the first-clear Rare Look for `wave` when it is a milestone and has
- * not fired yet. Pure doc transition: rolls a Rare Look into the bag (star 0)
- * and marks the wave claimed. Returns what was granted (null = nothing fired,
- * e.g. wave not a milestone or already claimed). Shared by recordDefendWin and
- * the Dev kit's force-grant.
+ * Grant the Rare Look for a lifetime-clear boundary when it is a milestone
+ * (5/10/25 — GAME_SPEC §18 lock: milestones read `lifetime_waves_cleared`,
+ * never reset on a Conquered) and it has not fired yet. Pure doc transition:
+ * rolls a Rare Look into the bag (star 0) and marks the boundary claimed.
+ * Returns what was granted (null = nothing fired, e.g. not a milestone or
+ * already claimed). Shared by recordDefendWin and the Dev kit's force-grant.
  */
 export function claimMilestoneLook(
   doc: PlayStoreDoc,
@@ -560,9 +702,113 @@ export function claimMilestoneLook(
   return { wave, itemId };
 }
 
-/** Dev kit only: make the next wave 1 again (highest_wave_cleared → 0). */
-export function devDefendSetWaveOne(doc: PlayStoreDoc): PlayStoreDoc {
-  return { ...doc, highest_wave_cleared: 0 };
+/**
+ * Dev kit only: reset the campaign back to a fresh start — Trial wave 1, no
+ * conquered cycles, cycle_power back to ×1 (lifetime clears / XP / inventory
+ * are kept; this only resets the campaign seat + cycle counter).
+ */
+export function devCampaignReset(doc: PlayStoreDoc): PlayStoreDoc {
+  return {
+    ...doc,
+    campaign: { phase: 'trial', wave_in_phase: 1 },
+    conquered_cycles: 0,
+    cycle_power: cyclePower(0),
+  };
+}
+
+/**
+ * Dev kit only: park the campaign seat at a specific phase + next wave
+ * (e.g. Main wave 19) so a specific band / the final climb is testable fast.
+ */
+export function devSetCampaignSeat(
+  doc: PlayStoreDoc,
+  phase: CampaignPhase,
+  wave: number,
+): PlayStoreDoc {
+  const waveInPhase =
+    phase === 'trial'
+      ? Math.min(TRIAL_WAVE_COUNT, Math.max(1, Math.floor(wave)))
+      : Math.min(MAIN_WAVE_COUNT, Math.max(1, Math.floor(wave)));
+  return { ...doc, campaign: { phase, wave_in_phase: waveInPhase } };
+}
+
+/**
+ * Dev kit only: force one more Conquered cycle — bumps `conquered_cycles`,
+ * recomputes `cycle_power` via CycleScaler, and resets the seat to Main wave 1
+ * (the post-Conquered default). Enemies on the next run scale × the new power.
+ */
+export function devForceConquered(doc: PlayStoreDoc): PlayStoreDoc {
+  const conqueredCycles = doc.conquered_cycles + 1;
+  return {
+    ...doc,
+    campaign: { phase: 'main', wave_in_phase: 1 },
+    conquered_cycles: conqueredCycles,
+    cycle_power: cyclePower(conqueredCycles),
+  };
+}
+
+/** Player-facing label for a campaign phase (what Defend shows next). */
+export function campaignPhaseLabel(phase: CampaignPhase): string {
+  return phase === 'main' ? 'Main' : 'Trial';
+}
+
+/**
+ * One replay band (GAME_SPEC §9h farm): a cleared wave range on a phase's map,
+ * replayable at half tokens. `clearedThrough` is the furthest wave of the band
+ * cleared in the CURRENT cycle (waves below the seat are cleared); a band
+ * fully cleared in ANY prior cycle is unlocked for the whole range again —
+ * `conquered_cycles ≥ 1` proves Main wave 20, and therefore every wave of the
+ * current Main climb, was beaten once, so the Final stays farmable each cycle.
+ */
+export type ReplayBandView = {
+  phase: CampaignPhase;
+  label: string;
+  firstWave: number;
+  lastWave: number;
+  /** True when at least one wave of the band is replayable right now. */
+  unlocked: boolean;
+  /** Furthest wave of the band replayable now (≤ lastWave when unlocked). */
+  clearedThrough: number;
+};
+
+/** The two campaign facts replay gates are derived from (doc or view). */
+export type CampaignSnapshot = {
+  campaign: CampaignState;
+  conqueredCycles: number;
+};
+
+export function replayBands(snapshot: CampaignSnapshot): ReplayBandView[] {
+  const conquered = snapshot.conqueredCycles > 0;
+  const seat = snapshot.campaign;
+  const trialThrough =
+    seat.phase === 'main' || conquered
+      ? TRIAL_WAVE_COUNT
+      : seat.phase === 'trial'
+        ? Math.max(0, seat.wave_in_phase - 1)
+        : 0;
+  const mainThrough = conquered
+    ? MAIN_WAVE_COUNT
+    : seat.phase === 'main'
+      ? Math.max(0, seat.wave_in_phase - 1)
+      : 0;
+  return [
+    {
+      phase: 'trial',
+      label: 'Trial',
+      firstWave: 1,
+      lastWave: TRIAL_WAVE_COUNT,
+      unlocked: trialThrough >= 1,
+      clearedThrough: trialThrough,
+    },
+    {
+      phase: 'main',
+      label: 'Main',
+      firstWave: 1,
+      lastWave: MAIN_WAVE_COUNT,
+      unlocked: mainThrough >= 1,
+      clearedThrough: mainThrough,
+    },
+  ];
 }
 
 /** Dev kit only: zero today's clear counter (clears stay on today's YMD so a
@@ -1195,18 +1441,19 @@ function snapshotDive(
 function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
   try {
     const data = JSON.parse(raw) as Record<string, unknown>;
-    // v1 (pre-inventory) … v10 (milestones) all migrate to v11: legacy copies
-    // are star 0, equipped string ids become refs with star 0, Defend meta
-    // defaults to 0 clears / 0 XP / level 1 / no daily count / no milestone
-    // flags, and the forever-engine stubs (campaign seat, conquered cycles +
-    // cycle_power, lifetime clears, bound bosses) default to fresh values.
-    // v1–v4 also stored `inventory` as a string[] of owned ids WITH worn
-    // copies included, so those subtract one per equipped slot.
+    // v1 (pre-inventory) … v11 (forever stubs) all migrate to v12: legacy
+    // copies are star 0, equipped string ids become refs with star 0, Defend
+    // meta defaults to 0 clears / 0 XP / level 1 / no daily count / no
+    // milestone flags, and the campaign seat (v11 numeric phases 1/2 → v12
+    // string phases 'trial'/'main') + conquered cycles + cycle_power +
+    // lifetime clears + bound bosses default to fresh values. v1–v4 also
+    // stored `inventory` as a string[] of owned ids WITH worn copies included,
+    // so those subtract one per equipped slot.
     const version = data?.version;
     if (
       version !== 1 && version !== 2 && version !== 3 && version !== 4 &&
       version !== 5 && version !== 6 && version !== 7 && version !== 8 &&
-      version !== 9 && version !== 10 && version !== 11
+      version !== 9 && version !== 10 && version !== 11 && version !== 12
     ) {
       return null;
     }
@@ -1241,7 +1488,7 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     const lifetimeWaves = finiteNumber(data.lifetime_waves_cleared) ?? 0;
     const boundBosses = parseBoundBosses(data.bound_bosses);
     return {
-      version: 11,
+      version: 12,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -1268,19 +1515,37 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
   }
 }
 
-/** Loose read of the campaign seat; anything malformed → fresh phase 1 / wave 1. */
+/**
+ * Loose read of the campaign seat. v11 stored numeric phases (1 = trial,
+ * 2 = main); v12 stores `'trial' | 'main'` — both migrate here. Anything
+ * malformed → fresh trial wave 1.
+ */
 function parseCampaign(raw: unknown): CampaignState {
   if (isRecord(raw)) {
-    const phase = finiteNumber(raw.phase);
-    const waveInPhase = finiteNumber(raw.wave_in_phase);
-    if (phase != null && waveInPhase != null) {
-      return {
-        phase: Math.max(1, Math.floor(phase)),
-        wave_in_phase: Math.max(1, Math.floor(waveInPhase)),
-      };
+    const rawPhase = raw.phase;
+    const waveRaw = finiteNumber(raw.wave_in_phase);
+    if (waveRaw != null) {
+      const phase: CampaignPhase | null =
+        rawPhase === 'trial' || rawPhase === 'main'
+          ? rawPhase
+          : rawPhase === 1
+            ? 'trial'
+            : rawPhase === 2
+              ? 'main'
+              : null;
+      if (phase != null) {
+        const wave = Math.max(1, Math.floor(waveRaw));
+        return {
+          phase,
+          wave_in_phase:
+            phase === 'trial'
+              ? Math.min(TRIAL_WAVE_COUNT, wave)
+              : Math.min(MAIN_WAVE_COUNT, wave),
+        };
+      }
     }
   }
-  return { phase: 1, wave_in_phase: 1 };
+  return { phase: 'trial', wave_in_phase: 1 };
 }
 
 /** Loose read of bound-boss rows; malformed rows are dropped. */

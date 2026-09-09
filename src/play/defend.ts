@@ -1,6 +1,6 @@
 /**
- * Defend — board engine (Play steps 5a/5b/5c, GAME_SPEC §9, §9b, §9d; GAME_DATA
- * tower upgrade).
+ * Defend — board engine (Play steps 5a/5b/5c + Phase B campaign, GAME_SPEC §9,
+ * §9b, §9d, §9e; GAME_DATA tower upgrade).
  *
  * PURE simulation — no React, no AsyncStorage. The screen owns a timer and
  * feeds `dtMs` into `stepDefendLive`. Enemies walk the path, leak at the exit
@@ -9,36 +9,121 @@
  * The Avatar (step 5c) auto-attacks the nearest enemy in range and its skill
  * (slow_pulse) is a pure transition that slows everything in radius.
  *
- * Map: ONE path, viewBox 0 0 100 100, spawn left → two bends → exit right.
- * Six tower pads sit near the path. No SakPix — a placeholder Avatar circle.
+ * Maps (Phase B — GAME_SPEC §9e): the Trial map reuses the original Grove
+ * Path (one path, spawn left → two bends → exit right); the Main campaign map
+ * lives in `data/maps/divecore_main.json` (a longer S-curve + chokes). Both
+ * are `DefendMap`s of waypoints (0..1 board fractions) + six tower pads
+ * (0..100 board units). A `DefendLive` carries its own `mapId`, so one screen
+ * can switch maps between waves without global state. No SakPix — placeholder
+ * circles only.
+ *
+ * Forever engine (Phase B): a conquered cycle raises `cyclePower`
+ * (1 + conquered × tune step, `CycleScaler` in `engine/cycle.ts`). Each live
+ * run carries its cycle power, which scales enemy spawn COUNT and base HP on
+ * the next run (GAME_SPEC §9e) — wave speed and rewards are untouched here.
  *
  * Stat note: GAME_DATA fully defines only `tower_archer` (base wave_power 0.6,
  * tower_speed 1.1; level_cost_scrap [0,40,90]; level_mult_wave_power
  * [1.0,1.25,1.55]). Vine / crystal base attack + range, the enemy base HP, and
  * the Avatar's base attack + range are NOT in the defs yet — the numbers below
  * are clearly-commented placeholders tuned so wave 1 is clearable, and stay
- * one-line changes once the real defs land.
+ * one-line changes once the real defs land. Boss bands (Scout/Semi/Final) are
+ * a later phase — waves 9/10/19/20 are plain formula waves here.
  */
 
 import { avatarLevelWavePower } from '@/play/playStore';
 import { getTune } from '@/play/tune';
 
-/* ------------------------------------------------------------------ path --- */
+import rawMainMap from './data/maps/divecore_main.json';
+
+/* ------------------------------------------------------------------ maps --- */
+export type DefendMapId = 'trial' | 'main';
+
 export type DefendWaypoint = { x: number; y: number };
 
-/** Grove Path — spawn left/top → 2 bends → exit right/bottom (leak). */
-export const DEFEND_PATH: readonly DefendWaypoint[] = [
-  { x: 0, y: 0.2 }, // spawn, left edge
-  { x: 0.52, y: 0.2 }, // bend 1
-  { x: 0.52, y: 0.6 }, // bend 2
-  { x: 1, y: 0.6 }, // exit / leak
-] as const;
+/** One board: the road the puffs walk (waypoints 0..1) + six tower pads
+ * (board units 0..100). Content-driven — new maps are new JSON, no engine. */
+export type DefendMap = {
+  id: DefendMapId;
+  /** Player-facing map name. */
+  name: string;
+  path: readonly DefendWaypoint[];
+  pads: readonly DefendWaypoint[];
+};
 
-const PATH_LENGTH = DEFEND_PATH.slice(1).reduce(
-  (length, point, index) =>
-    length + Math.hypot(point.x - DEFEND_PATH[index].x, point.y - DEFEND_PATH[index].y),
-  0,
-);
+/** Trial map = the original Grove Path (spawn left → 2 bends → exit right). */
+export const TRIAL_MAP: DefendMap = {
+  id: 'trial',
+  name: 'Grove Path',
+  path: [
+    { x: 0, y: 0.2 }, // spawn, left edge
+    { x: 0.52, y: 0.2 }, // bend 1
+    { x: 0.52, y: 0.6 }, // bend 2
+    { x: 1, y: 0.6 }, // exit / leak
+  ],
+  pads: [
+    { x: 12, y: 10 },
+    { x: 38, y: 10 },
+    { x: 52, y: 26 },
+    { x: 52, y: 54 },
+    { x: 76, y: 70 },
+    { x: 92, y: 56 },
+  ],
+};
+
+/** Loose read of the Main map JSON; any malformed row falls back to the Trial
+ * geometry so a bad content file can never crash the board. */
+function parseMapJson(raw: unknown): DefendMap | null {
+  if (typeof raw !== 'object' || raw == null) return null;
+  const row = raw as Record<string, unknown>;
+  const id = row.id;
+  if (id !== 'main') return null;
+  const name = typeof row.name === 'string' && row.name.length > 0 ? row.name : 'Divecore Main';
+  const path = Array.isArray(row.path)
+    ? row.path.filter(isWaypoint)
+    : [];
+  const pads = Array.isArray(row.pads)
+    ? row.pads.filter(isWaypoint)
+    : [];
+  if (path.length < 2 || pads.length === 0) return null;
+  return { id, name, path, pads };
+}
+
+function isWaypoint(value: unknown): value is DefendWaypoint {
+  if (typeof value !== 'object' || value == null) return false;
+  const point = value as Record<string, unknown>;
+  return (
+    typeof point.x === 'number' &&
+    Number.isFinite(point.x) &&
+    typeof point.y === 'number' &&
+    Number.isFinite(point.y)
+  );
+}
+
+const parsedMain = parseMapJson(rawMainMap);
+/** Main campaign map — Divecore Main (longer S-curve + chokes). */
+export const MAIN_MAP: DefendMap =
+  parsedMain ?? { id: 'main', name: 'Divecore Main', path: TRIAL_MAP.path, pads: TRIAL_MAP.pads };
+
+/** All board geometry, keyed by map id. `DefendLive.mapId` picks one. */
+export const DEFEND_MAPS: Record<DefendMapId, DefendMap> = {
+  trial: TRIAL_MAP,
+  main: MAIN_MAP,
+};
+
+const lengthCache = new WeakMap<DefendMap, number>();
+/** Total road length (0..1 units) for one map — cached per map object. */
+function mapPathLength(map: DefendMap): number {
+  const cached = lengthCache.get(map);
+  if (cached != null) return cached;
+  const length = map.path.slice(1).reduce(
+    (total, point, index) =>
+      total + Math.hypot(point.x - map.path[index].x, point.y - map.path[index].y),
+    0,
+  );
+  lengthCache.set(map, length);
+  return length;
+}
 
 /* ---------------------------------------------------------------- enemies --- */
 /** Puff pink base HP (placeholder — enemy def not in GAME_DATA yet). */
@@ -60,10 +145,19 @@ export const SKILL_COOLDOWN_MS = 12_000; // §9d cooldown 12 (≥10s, Sane)
 export const SKILL_SLOW_MS = 2_000; // duration 2.0
 export const SKILL_RADIUS = 24; // §9d radius 90 art-px → ~24 board units
 
-export function waveEnemyCount(wave: number): number {
-  // §9 formula, capped at 20 (§5c: if FPS dips, cut count first).
+/**
+ * Puff count for `wave`, scaled by this run's `cyclePower` (GAME_SPEC §9e —
+ * a conquered cycle makes the NEXT run fatter, not the current one). §9
+ * formula `floor(6 + wave × count_per_level)`, then × cycle power. The hard
+ * 20 cap (§5c: if FPS dips, cut count first) is the perf bound and stays LAST,
+ * so count scaling saturates on late-Main waves and `cycle_power` keeps
+ * scaling there through puff HP (`stepDefendLive`).
+ */
+export function waveEnemyCount(wave: number, cyclePower: number = 1): number {
   const perLevel = getTune().waveCountPerLevel;
-  return Math.min(20, Math.floor(6 + wave * perLevel));
+  const base = Math.floor(6 + Math.max(1, Math.floor(wave)) * perLevel);
+  const scaled = base * Math.max(1, cyclePower);
+  return Math.min(20, Math.max(1, Math.round(scaled)));
 }
 export function waveHpMult(wave: number): number {
   return 1 + (wave - 1) * getTune().waveHpPerLevel;
@@ -145,18 +239,6 @@ export const TOWER_DEFS: Record<TowerKind, TowerDef> = {
   },
 };
 
-/** Six tower pads, board coordinates (0..100), hugging the path so every road
- * segment sits within a tower's range. Positions: two cover the top run (spawn
- * → bend 1), two the vertical, two the bottom run → exit (leak). */
-export const DEFEND_PADS: readonly DefendWaypoint[] = [
-  { x: 12, y: 10 },
-  { x: 38, y: 10 },
-  { x: 52, y: 26 },
-  { x: 52, y: 54 },
-  { x: 76, y: 70 },
-  { x: 92, y: 56 },
-] as const;
-
 export type Puff = {
   id: number;
   /** Path progress 0..1. */
@@ -171,7 +253,7 @@ export type Puff = {
 
 export type Tower = {
   id: number;
-  pad: number; // index into DEFEND_PADS
+  pad: number; // index into the map's `pads`
   kind: TowerKind;
   level: number; // 1..3
   /** ms until the next shot; decremented each tick. */
@@ -179,7 +261,12 @@ export type Tower = {
 };
 
 export type DefendLive = {
+  /** 1-based display wave (within its phase/map — Trial or Main). */
   wave: number;
+  /** Which map this run is on (`DEFEND_MAPS[mapId]` gives the geometry). */
+  mapId: DefendMapId;
+  /** Forever-engine cycle power for this run: scales puff count + HP. */
+  cyclePower: number;
   puffs: Puff[];
   pendingSpawns: number;
   spawnCooldownMs: number;
@@ -203,15 +290,28 @@ export type DefendStep = {
 export const DEFEND_SPAWN_INTERVAL_MS = 850;
 export const DEFEND_TICK_MS = 100;
 
-export function createDefendLive(wave: number, scrap = getTune().startScrap): DefendLive {
+export type DefendLiveOptions = {
+  /** Map to fight on (default `trial` = Grove Path). */
+  mapId?: DefendMapId;
+  /** Cycle power for this run (default 1 — no conquered cycles). */
+  cyclePower?: number;
+  /** Starting scrap (defaults to the tune's startScrap). */
+  scrap?: number;
+};
+
+export function createDefendLive(wave: number, options: DefendLiveOptions = {}): DefendLive {
+  const mapId = options.mapId ?? 'trial';
+  const cyclePower = Math.max(1, options.cyclePower ?? 1);
   return {
     wave: Math.max(1, Math.floor(wave)),
+    mapId,
+    cyclePower,
     puffs: [],
-    pendingSpawns: waveEnemyCount(wave),
+    pendingSpawns: waveEnemyCount(wave, cyclePower),
     spawnCooldownMs: 0,
     nextId: 0,
     towers: [],
-    scrap,
+    scrap: options.scrap ?? getTune().startScrap,
     avatarCooldownMs: 0,
     skillCooldownMs: 0,
   };
@@ -219,11 +319,12 @@ export function createDefendLive(wave: number, scrap = getTune().startScrap): De
 
 /**
  * Retry after a fail keeps the tower layout (GAME_SPEC §9) and resets the
- * enemy queue + scrap to the run start, so Retry is always playable.
+ * enemy queue + scrap to the run start, so Retry is always playable. The map
+ * and cycle power of the failed run are kept.
  */
 export function retryDefendLive(state: DefendLive): DefendLive {
   return {
-    ...createDefendLive(state.wave),
+    ...createDefendLive(state.wave, { mapId: state.mapId, cyclePower: state.cyclePower }),
     towers: state.towers.map((tower) => ({ ...tower, cooldownMs: 0 })),
   };
 }
@@ -276,8 +377,8 @@ export function towerUpgradeCost(tower: Tower): number {
 }
 
 /** Distance in board units between a pad and a puff's current position. */
-function padPuffDist(pad: DefendWaypoint, dist: number): number {
-  const pos = puffPosition(dist);
+function padPuffDist(pad: DefendWaypoint, dist: number, map: DefendMap): number {
+  const pos = puffPosition(dist, map);
   return Math.hypot(pos.x * 100 - pad.x, pos.y * 100 - pad.y);
 }
 
@@ -286,6 +387,7 @@ function padPuffDist(pad: DefendWaypoint, dist: number): number {
  * Avatar auto-attack, kills → scrap, skill cooldown, leak and done flags.
  * `buckets` carries the equipped wave_power / tower_speed multipliers and the
  * Avatar level from playStore; `avatar` is the Avatar's position (board units).
+ * Puff HP and spawn count are already scaled by the run's `cyclePower` (§9e).
  */
 export function stepDefendLive(
   state: DefendLive,
@@ -293,9 +395,10 @@ export function stepDefendLive(
   buckets: DefendBuckets,
   avatar: { x: number; y: number },
 ): DefendStep {
+  const map = DEFEND_MAPS[state.mapId];
   const speedBase =
     (PUFF_SPEED_PER_SEC * waveSpeedMult(state.wave) * dtMs) / 1000;
-  const hp = PUFF_BASE_HP * waveHpMult(state.wave);
+  const hp = PUFF_BASE_HP * waveHpMult(state.wave) * state.cyclePower;
 
   let pendingSpawns = state.pendingSpawns;
   let spawnCooldownMs = state.spawnCooldownMs - dtMs;
@@ -328,7 +431,7 @@ export function stepDefendLive(
   for (const tower of state.towers) {
     let cooldownMs = tower.cooldownMs - dtMs;
     if (cooldownMs <= 0) {
-      const target = acquireTarget(tower, puffs);
+      const target = acquireTarget(tower, puffs, map);
       if (target) {
         const def = TOWER_DEFS[tower.kind];
         const damage =
@@ -351,7 +454,7 @@ export function stepDefendLive(
   // Avatar auto-attack: nearest enemy in range (§9b), 0.7s cooldown.
   let avatarCooldownMs = state.avatarCooldownMs - dtMs;
   if (avatarCooldownMs <= 0) {
-    const target = acquireAvatarTarget(avatar, puffs);
+    const target = acquireAvatarTarget(avatar, puffs, map);
     if (target) {
       const damage =
         AVATAR_BASE_ATTACK * buckets.wavePower * avatarLevelWavePower(buckets.avatarLevel);
@@ -374,6 +477,8 @@ export function stepDefendLive(
   return {
     state: {
       wave: state.wave,
+      mapId: state.mapId,
+      cyclePower: state.cyclePower,
       puffs,
       pendingSpawns,
       spawnCooldownMs,
@@ -397,9 +502,10 @@ export function castSlowPulse(
   avatar: { x: number; y: number },
 ): DefendLive | null {
   if (state.skillCooldownMs > 0) return null;
+  const map = DEFEND_MAPS[state.mapId];
   const slowFactor = 1 - getTune().skillSlowPct;
   const puffs = state.puffs.map((puff) => {
-    const pos = puffPosition(puff.dist);
+    const pos = puffPosition(puff.dist, map);
     const dist = Math.hypot(pos.x * 100 - avatar.x, pos.y * 100 - avatar.y);
     if (dist > SKILL_RADIUS) return puff;
     return { ...puff, slowMs: SKILL_SLOW_MS, slowFactor };
@@ -407,15 +513,18 @@ export function castSlowPulse(
   return { ...state, puffs, skillCooldownMs: getTune().skillCooldownMs };
 }
 
-/** Nearest enemy to the Avatar within `AVATAR_RANGE` (§9b), or null. */
+/** Nearest enemy to the Avatar within `AVATAR_RANGE` (§9b), or null. The
+ * geometry is the run's own map (a Main-map run must not measure puffs on the
+ * Trial path). */
 function acquireAvatarTarget(
   avatar: { x: number; y: number },
   puffs: Puff[],
+  map: DefendMap,
 ): Puff | null {
   let best: Puff | null = null;
   let bestDist = Infinity;
   for (const puff of puffs) {
-    const pos = puffPosition(puff.dist);
+    const pos = puffPosition(puff.dist, map);
     const d = Math.hypot(pos.x * 100 - avatar.x, pos.y * 100 - avatar.y);
     if (d <= AVATAR_RANGE && d < bestDist) {
       best = puff;
@@ -427,10 +536,10 @@ function acquireAvatarTarget(
 
 /** Pick the tower's target per §9b: archer/vine first-toward-exit (max dist);
  * crystal highest current HP. In range only. */
-function acquireTarget(tower: Tower, puffs: Puff[]): Puff | null {
+function acquireTarget(tower: Tower, puffs: Puff[], map: DefendMap): Puff | null {
   const range = TOWER_DEFS[tower.kind].range;
-  const pad = DEFEND_PADS[tower.pad];
-  const inRange = puffs.filter((puff) => padPuffDist(pad, puff.dist) <= range);
+  const pad = map.pads[tower.pad];
+  const inRange = puffs.filter((puff) => padPuffDist(pad, puff.dist, map) <= range);
   if (inRange.length === 0) return null;
   if (tower.kind === 'crystal') {
     return inRange.reduce((a, b) => (b.hp > a.hp ? b : a));
@@ -453,15 +562,15 @@ function applyHit(puffs: Puff[], targetId: number, damage: number, def: TowerDef
 
 /**
  * A puff at path progress `dist` (0..1) → its board position (0..1 space,
- * same as `DEFEND_PATH`). Multiply by the SVG viewBox (100) to render.
+ * same as `map.path`). Multiply by the SVG viewBox (100) to render.
  */
-export function puffPosition(dist: number): { x: number; y: number } {
+export function puffPosition(dist: number, map: DefendMap = TRIAL_MAP): { x: number; y: number } {
   const clamped = Math.max(0, Math.min(1, dist));
-  const target = clamped * PATH_LENGTH;
+  const target = clamped * mapPathLength(map);
   let travelled = 0;
-  for (let i = 0; i < DEFEND_PATH.length - 1; i++) {
-    const from = DEFEND_PATH[i];
-    const to = DEFEND_PATH[i + 1];
+  for (let i = 0; i < map.path.length - 1; i++) {
+    const from = map.path[i];
+    const to = map.path[i + 1];
     const segment = Math.hypot(to.x - from.x, to.y - from.y);
     if (travelled + segment >= target) {
       const t = segment === 0 ? 0 : (target - travelled) / segment;
@@ -469,6 +578,6 @@ export function puffPosition(dist: number): { x: number; y: number } {
     }
     travelled += segment;
   }
-  const end = DEFEND_PATH[DEFEND_PATH.length - 1];
+  const end = map.path[map.path.length - 1];
   return { x: end.x, y: end.y };
 }

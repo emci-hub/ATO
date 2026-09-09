@@ -29,8 +29,11 @@ import {
   devFillDiveCharges,
   devFillResearchFull,
   devFillResearchOne,
+  devForceConquered,
   devResetPlayStore,
+  devSetCampaignSeat,
   type ClaimResult,
+  type DefendWinContext,
   type MergeOutcome,
   type MergeTarget,
 } from '@/play/playStore';
@@ -82,7 +85,9 @@ export default function PlayScreen() {
     grantTideBlades,
     sellAllJunk,
     recordDefendWin,
-    setDefendWaveOne,
+    resetCampaign,
+    setCampaignSeat,
+    forceConquered,
     resetDailyClears,
     setClearsTodayFive,
     grantMilestoneWaveFive,
@@ -224,18 +229,19 @@ export default function PlayScreen() {
     [unequip],
   );
 
-  /** Defend — persist a win (tokens + XP + level + highest). Returns what it
-   * paid so the overlay can show honest (possibly halved) token counts. A
-   * first-clear milestone (5/10/25) also toasts its Rare Look name. */
+  /** Defend — persist a win (tokens + XP + level + campaign advance). Returns
+   * what it paid so the overlay can show honest (possibly halved) token
+   * counts. A lifetime-clear milestone (5/10/25) also toasts its Rare Look. */
   const handleRecordDefendWin = useCallback(
-    async (wave: number) => {
-      const result = await recordDefendWin(wave);
+    async (ctx: DefendWinContext) => {
+      const result = await recordDefendWin(ctx);
       if (result?.milestoneLook) {
-        const name = itemName(result.milestoneLook.itemId) ?? result.milestoneLook.itemId;
+        const name =
+          itemName(result.milestoneLook.itemId) ?? result.milestoneLook.itemId;
         setToast({
           kind: 'message',
-          title: `Wave ${result.milestoneLook.wave} milestone`,
-          body: `First clear — found ${name}.`,
+          title: 'Clear milestone',
+          body: `${result.milestoneLook.count} lifetime clears — found ${name}.`,
         });
       }
       return result;
@@ -259,10 +265,18 @@ export default function PlayScreen() {
     void resetMilestones();
   }, [resetMilestones]);
 
-  /** Defend dev row — reset the ladder so the next wave is 1. */
-  const handleSetDefendWaveOne = useCallback(() => {
-    void setDefendWaveOne();
-  }, [setDefendWaveOne]);
+  /** Defend dev rows — campaign seat testing. */
+  const handleResetCampaign = useCallback(() => {
+    void resetCampaign();
+  }, [resetCampaign]);
+
+  const handleJumpMain19 = useCallback(() => {
+    void setCampaignSeat('main', 19);
+  }, [setCampaignSeat]);
+
+  const handleForceConquered = useCallback(() => {
+    void forceConquered();
+  }, [forceConquered]);
 
   /** Defend dev rows — daily clear half-cap testing. */
   const handleResetDailyClears = useCallback(() => {
@@ -373,11 +387,13 @@ export default function PlayScreen() {
               view={view}
               reduceMotion={reduceMotion}
               onWin={handleRecordDefendWin}
-              onSetWaveOne={handleSetDefendWaveOne}
               onResetDailyClears={handleResetDailyClears}
               onSetClearsTodayFive={handleSetClearsTodayFive}
               onGrantMilestoneWaveFive={handleGrantMilestoneWaveFive}
               onResetMilestones={handleResetMilestones}
+              onResetCampaign={handleResetCampaign}
+              onJumpMain19={handleJumpMain19}
+              onForceConquered={handleForceConquered}
               onBackToGrove={() => setMode('grove')}
             />
           ) : (
@@ -711,6 +727,16 @@ function GroveDevKit({
         clearResetArm();
         onToggleTune();
       },
+    },
+    {
+      key: 'campaign-jump-main-19',
+      label: 'Jump to Main wave 19',
+      onPress: () => run((doc) => devSetCampaignSeat(doc, 'main', 19)),
+    },
+    {
+      key: 'campaign-force-conquered',
+      label: 'Force Conquered +1',
+      onPress: () => run(devForceConquered),
     },
   ];
 

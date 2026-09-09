@@ -22,17 +22,19 @@ import type { ItemSlot } from '@/play/items';
 import {
   claimResearch,
   deeperDive,
+  devCampaignReset,
   devClearEquipped,
   devDefendResetClears,
   devDefendSetClearsFive,
-  devDefendSetWaveOne,
   devFillJunkLooks,
+  devForceConquered,
   devGrantMilestoneWaveFive,
   devGrantRandomFind,
   devGrantRandomPower,
   devGrantTideBlades,
   devResetMilestones,
   devSellAllJunk,
+  devSetCampaignSeat,
   equipItem,
   loadPlayStore,
   mergeItem,
@@ -43,8 +45,10 @@ import {
   startDive,
   surfaceDive,
   unequipItem,
+  type CampaignPhase,
   type ClaimResult,
   type DeeperOutcome,
+  type DefendWinContext,
   type DefendWinResult,
   type EquipOutcome,
   type MergeOutcome,
@@ -288,13 +292,14 @@ export function usePlayStore() {
     return result;
   }, [commit]);
 
-  /** A Defend wave cleared → persist tokens (halved past 5/day) + XP + level +
-   * highest_wave. Returns what the win actually paid so the overlay is honest. */
+  /** A Defend wave cleared → persist rewards + XP + level, count the lifetime
+   * clear, and advance the campaign seat (or stay put for a replay). Returns
+   * what the win actually paid so the overlay is honest. */
   const recordDefendWin = useCallback(
-    async (wave: number): Promise<DefendWinResult | null> => {
+    async (ctx: DefendWinContext): Promise<DefendWinResult | null> => {
       let result: DefendWinResult | null = null;
       commit((current, now) => {
-        const next = persistDefendWin(current, wave, now);
+        const next = persistDefendWin(current, ctx, now);
         result = next.result;
         return next.doc;
       });
@@ -303,11 +308,36 @@ export function usePlayStore() {
     [commit],
   );
 
-  /** Dev kit only: reset the Defend ladder so the next wave is 1 again. */
-  const setDefendWaveOne = useCallback(async (): Promise<boolean> => {
+  /** Dev kit only: reset the campaign to a fresh Trial wave 1 (no cycles). */
+  const resetCampaign = useCallback(async (): Promise<boolean> => {
     let ok = false;
     commit((current) => {
-      const next = devDefendSetWaveOne(current);
+      const next = devCampaignReset(current);
+      ok = next !== current;
+      return ok ? next : null;
+    });
+    return ok;
+  }, [commit]);
+
+  /** Dev kit only: park the campaign seat at a phase + next wave. */
+  const setCampaignSeat = useCallback(
+    async (phase: CampaignPhase, wave: number): Promise<boolean> => {
+      let ok = false;
+      commit((current) => {
+        const next = devSetCampaignSeat(current, phase, wave);
+        ok = next !== current;
+        return ok ? next : null;
+      });
+      return ok;
+    },
+    [commit],
+  );
+
+  /** Dev kit only: force one more Conquered cycle (power + seat reset). */
+  const forceConquered = useCallback(async (): Promise<boolean> => {
+    let ok = false;
+    commit((current) => {
+      const next = devForceConquered(current);
       ok = next !== current;
       return ok ? next : null;
     });
@@ -377,7 +407,9 @@ export function usePlayStore() {
     grantTideBlades,
     sellAllJunk,
     recordDefendWin,
-    setDefendWaveOne,
+    resetCampaign,
+    setCampaignSeat,
+    forceConquered,
     resetDailyClears,
     setClearsTodayFive,
     grantMilestoneWaveFive,

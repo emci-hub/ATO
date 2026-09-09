@@ -242,3 +242,14 @@ ONE job: Gear Score + Skip-to-even. No uniques/frags/Avatar star from skip. One 
 ONE job: boss fragments → unlock Bound Boss tower; StarTable stars; max 2 pads; auto skill only (no extra skill button). No pity. Commit.
 ```
 
+---
+
+## Phase 2 — build status (append after each phase ships)
+
+| Phase | Ship | Notes |
+|---|---|---|
+| A0 | ✅ 2026-09-09 | Divecore/Basecore copy + Defend band + start-scrap hints (`b689015`, `1955147`) |
+| A | ✅ 2026-09-09 | Engines (`StarTable`/`DropTable`/`SoftCap`/`CycleScaler`), data stubs, store v11, PIN-locked Dev kit (`82efbc2`) |
+| B | ✅ 2026-09-09 | **Campaign Trial 1–5 → Main 1–20 → Conquered.** Store v12 (`campaign.phase` `'trial'|'main'`, seat = next wave). Main map = `src/play/data/maps/divecore_main.json` (waypoints + 6 pads); Trial reuses Grove Path. Main 20 clear → `conquered_cycles++`, `cycle_power` via CycleScaler, seat resets to Main 1 (Trial skipped once Conquered ≥ 1). `cycle_power` scales enemy count + HP. Band picker on Defend setup replays any cleared band wave at half tokens AND half XP (never moves seat / daily cap / lifetime — replays can't farm milestone Looks). Milestones (5/10/25) fire on campaign-wins' `lifetime_waves_cleared`, which survives Conquered — they land on natural beats (finish Trial, mid-Main, the Conquered clear). Dev kit (Calgary1! gate intact) adds: Jump to Main wave 19, Force Conquered +1, Reset campaign to Trial 1. No Bound Boss / GS skip / type match yet (C). |
+| C | — | next |
+

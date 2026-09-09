@@ -1,0 +1,23 @@
+{
+  "id": "main",
+  "name": "Divecore Main",
+  "comment": "Main campaign map (GAME_SPEC 9e). Longer S-curve than the Trial Grove Path, with three vertical chokes. Path waypoints are 0..1 board fractions; tower pads are 0..100 board units (same convention as the Trial map in defend.ts). Placeholder geometry - tune later.",
+  "path": [
+    { "x": 0, "y": 0.12 },
+    { "x": 0.58, "y": 0.12 },
+    { "x": 0.58, "y": 0.3 },
+    { "x": 0.18, "y": 0.3 },
+    { "x": 0.18, "y": 0.55 },
+    { "x": 0.62, "y": 0.55 },
+    { "x": 0.62, "y": 0.78 },
+    { "x": 1, "y": 0.78 }
+  ],
+  "pads": [
+    { "x": 24, "y": 22 },
+    { "x": 52, "y": 20 },
+    { "x": 26, "y": 44 },
+    { "x": 52, "y": 44 },
+    { "x": 48, "y": 68 },
+    { "x": 76, "y": 68 }
+  ]
+}

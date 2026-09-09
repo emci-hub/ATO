@@ -1,16 +1,24 @@
 /**
- * Defend — board + towers + Avatar + skill (Play steps 5a/5b/5c, GAME_SPEC §9,
- * §9b, §9d, §11 screen 5).
+ * Defend — board + towers + Avatar + skill + campaign (Play steps 5a–5c,
+ * Phase B campaign; GAME_SPEC §9, §9b, §9d, §9e, §9h, §11 screen 5).
  *
- * One Grove Path with puff enemies walking it; six pads hold up to six towers
- * (archer / vine / crystal). Tap a pad to place/upgrade with scrap; a range
- * ring shows while a pad is selected. The Avatar (placeholder circle) is
- * draggable and auto-attacks the nearest enemy in range; one skill button
- * casts slow_pulse "Root Veil" (12s cooldown). Kills → scrap; leak = fail; a
- * clean wave = win (tokens + XP via `onWin`). No SakPix, no new tower types.
+ * Campaign (Phase B): the fight is either the campaign's next wave (Trial
+ * 1–5 on the Grove Path map, then Main 1–20 on the Divecore Main map — full
+ * tokens, advances the seat) or a replay of a cleared band (half tokens,
+ * seat untouched). Clearing Main wave 20 conquers the cycle: `cycle_power`
+ * rises and the seat resets to Main wave 1. Every run carries its map + cycle
+ * power, so puffs get fatter/faster-with-power on later cycles.
  *
- * The sim is local + transient (see `defend.ts`); only `highest_wave_cleared`,
- * `xp`, and `avatar_level` persist through the shared store.
+ * One board (whichever map the run is on): puff enemies walk the road; six
+ * pads hold up to six towers (archer / vine / crystal). Tap a pad to
+ * place/upgrade with scrap; a range ring shows while a pad is selected. The
+ * Avatar (placeholder circle) is draggable and auto-attacks the nearest enemy
+ * in range; one skill button casts slow_pulse "Root Veil" (12s cooldown).
+ * Kills → scrap; leak = fail; a clean wave = win (tokens + XP + campaign
+ * advance via `onWin`). No SakPix, no new tower types.
+ *
+ * The sim is local + transient (see `defend.ts`); only the campaign seat,
+ * rewards, and meta persist through the shared store.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Pressable, Share, StyleSheet, View } from 'react-native';
@@ -31,8 +39,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
 import {
-  DEFEND_PADS,
-  DEFEND_PATH,
+  DEFEND_MAPS,
   DEFEND_TICK_MS,
   SKILL_COOLDOWN_MS,
   SKILL_DESCRIPTION,
@@ -49,6 +56,7 @@ import {
   towerUpgradeCost,
   upgradeTower,
   waveEnemyCount,
+  type DefendMapId,
   type DefendLive,
   type Puff,
   type TowerKind,
@@ -56,6 +64,12 @@ import {
 import {
   avatarLevelWavePower,
   bucketMultiplier,
+  campaignPhaseLabel,
+  replayBands,
+  xpForClear,
+  type CampaignPhase,
+  type DefendWinContext,
+  type DefendWinMode,
   type DefendWinResult,
   type PlayView,
 } from '@/play/playStore';
@@ -102,20 +116,25 @@ type HitEvent = {
  * Pure diff of two puff arrays → hit events. Any puff that lost HP got a hit;
  * any puff that vanished was killed (a leak freezes the sim, so a puff never
  * leaves the array any other way mid-run). Display only — the engine is the
- * sole owner of combat math.
+ * sole owner of combat math. Floaters sit on the run's own map.
  */
-function diffPuffEvents(before: readonly Puff[], after: readonly Puff[]): HitEvent[] {
+function diffPuffEvents(
+  before: readonly Puff[],
+  after: readonly Puff[],
+  mapId: DefendMapId,
+): HitEvent[] {
+  const map = DEFEND_MAPS[mapId];
   const byId = new Map(after.map((puff) => [puff.id, puff]));
   const events: HitEvent[] = [];
   for (const old of before) {
     const now = byId.get(old.id);
     if (!now) {
       // Killed — the last visible chunk of its HP is the killing blow.
-      const pos = puffPosition(old.dist);
+      const pos = puffPosition(old.dist, map);
       events.push({ x: pos.x, y: pos.y, damage: Math.round(old.hp), kill: true });
     } else if (now.hp < old.hp) {
       const damage = old.hp - now.hp;
-      const pos = puffPosition(now.dist);
+      const pos = puffPosition(now.dist, map);
       events.push({ x: pos.x, y: pos.y, damage: Math.round(damage), kill: false });
     }
   }
@@ -138,26 +157,58 @@ function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
 
+/** One fight on the board: which phase/map, which display wave, and whether
+ * it is the campaign's next wave (`campaign`) or a cleared band replay
+ * (`replay` — half tokens, seat untouched). */
+type Fight = {
+  phase: CampaignPhase;
+  wave: number;
+  mode: DefendWinMode;
+};
+
+/** The campaign's next wave (the seat) as a fight. */
+function campaignFightOf(view: PlayView): Fight {
+  return {
+    phase: view.campaign.phase,
+    wave: view.campaign.wave_in_phase,
+    mode: 'campaign',
+  };
+}
+
+function fightTitle(fight: Fight): string {
+  const phase = campaignPhaseLabel(fight.phase);
+  return fight.mode === 'replay'
+    ? `Replay ${phase} wave ${fight.wave}`
+    : `${phase} wave ${fight.wave}`;
+}
+
 export function DefendScreen({
   view,
   reduceMotion,
   onWin,
-  onSetWaveOne,
   onResetDailyClears,
   onSetClearsTodayFive,
   onGrantMilestoneWaveFive,
   onResetMilestones,
+  onResetCampaign,
+  onJumpMain19,
+  onForceConquered,
   onBackToGrove,
 }: {
   view: PlayView;
   /** Reduce-motion → floaters render static (no rise/fade). */
   reduceMotion: boolean;
-  onWin: (wave: number) => Promise<DefendWinResult | null>;
-  onSetWaveOne: () => void;
+  onWin: (ctx: DefendWinContext) => Promise<DefendWinResult | null>;
   onResetDailyClears: () => void;
   onSetClearsTodayFive: () => void;
   onGrantMilestoneWaveFive: () => Promise<void>;
   onResetMilestones: () => void;
+  /** Dev kit only: reset the campaign to a fresh Trial wave 1. */
+  onResetCampaign: () => void;
+  /** Dev kit only: park the seat at Main wave 19. */
+  onJumpMain19: () => void;
+  /** Dev kit only: force one more Conquered cycle. */
+  onForceConquered: () => void;
   onBackToGrove: () => void;
 }) {
   const theme = useTheme();
@@ -165,10 +216,15 @@ export function DefendScreen({
   const devUnlocked = usePlayDevUnlocked();
   const [phase, setPhase] = useState<DefendPhase>('setup');
   const [paused, setPaused] = useState(false);
+  /** A cleared-band wave picked for replay, or null → fight the campaign seat. */
+  const [replayPick, setReplayPick] = useState<{ phase: CampaignPhase; wave: number } | null>(null);
   /** The live board. Always present so towers can be placed during SETUP
    * (spawns wait until Start); transitions rebuild it at the right times. */
-  const [sim, setSim] = useState<DefendLive | null>(
-    () => createDefendLive(view.highestWaveCleared + 1),
+  const [sim, setSim] = useState<DefendLive | null>(() =>
+    createDefendLive(view.campaign.wave_in_phase, {
+      mapId: view.campaign.phase,
+      cyclePower: view.cyclePower,
+    }),
   );
   const [selectedPad, setSelectedPad] = useState<number | null>(null);
   /** God mode — starts from the §9c tune doc (BrokenOP turns it on). */
@@ -192,8 +248,26 @@ export function DefendScreen({
   simRef.current = sim;
   godModeRef.current = godMode;
 
-  const nextWave = view.highestWaveCleared + 1;
-  const displayedWave = sim?.wave ?? nextWave;
+  // What this screen is fighting right now. The replay pick overrides the
+  // campaign seat; the seat drives the default.
+  const campaignFight: Fight = campaignFightOf(view);
+  const fight: Fight = replayPick
+    ? { phase: replayPick.phase, wave: replayPick.wave, mode: 'replay' }
+    : campaignFight;
+  const fightRef = useRef<Fight>(fight);
+  fightRef.current = fight;
+  /** The fight that started the CURRENT run (won overlay actions key off it). */
+  const playedRef = useRef<Fight>(fight);
+
+  const displayedWave = sim?.wave ?? fight.wave;
+  const mapId = fight.phase; // a phase names its own map ('trial' | 'main')
+  /** The phase of the CURRENT board — the sim's run wins while one exists, so
+   * the won/lost overlays keep labelling the run that just finished even after
+   * the campaign seat has already moved on. */
+  const labelPhase: CampaignPhase = sim?.mapId ?? fight.phase;
+  /** The map the CURRENT board draws — follows the sim so a finished run never
+   * visually jumps maps before the player moves on. */
+  const boardMap = DEFEND_MAPS[sim?.mapId ?? mapId];
 
   // Avatar position (board units 0..1) — smooth via shared values, engine via ref.
   const avatarX = useSharedValue(0.5);
@@ -219,30 +293,48 @@ export function DefendScreen({
   const bucketsRef = useRef(buckets);
   bucketsRef.current = buckets;
 
-  const displayedWaveRef = useRef(1);
-  displayedWaveRef.current = sim?.wave ?? view.highestWaveCleared + 1;
+  /** Rebuild a fresh board for a fight and go back to setup. */
+  const buildSetup = useCallback(
+    (next: Fight) => {
+      setReplayPick(next.mode === 'replay' ? { phase: next.phase, wave: next.wave } : null);
+      setSim(createDefendLive(next.wave, { mapId: next.phase, cyclePower: view.cyclePower }));
+      setPhase('setup');
+      setPaused(false);
+      setSelectedPad(null);
+      setWhyOpen(false);
+      prevPuffsRef.current = [];
+      setFloaters([]);
+    },
+    [view.cyclePower],
+  );
+
+  /** When the chosen fight changes while on SETUP (seat advanced after a win,
+   * a dev jump, a replay pick), resync the board. Runs on mount too. */
+  const fightKey = `${fight.phase}:${fight.wave}:${fight.mode}`;
+  useEffect(() => {
+    if (phase !== 'setup') return;
+    setSim(createDefendLive(fight.wave, { mapId: fight.phase, cyclePower: view.cyclePower }));
+    setSelectedPad(null);
+    setWhyOpen(false);
+    prevPuffsRef.current = [];
+    setFloaters([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fightKey, view.cyclePower]);
 
   /** Start the wave on the current board — placed towers + spent scrap carry
    * into the fight (spec §9: setup place → start). */
   const startWave = useCallback(() => {
-    setSim((prev) => prev ?? createDefendLive(displayedWaveRef.current));
+    playedRef.current = fightRef.current;
+    setSim((prev) => prev ?? createDefendLive(fightRef.current.wave, {
+      mapId: fightRef.current.phase,
+      cyclePower: view.cyclePower,
+    }));
     setPhase('running');
     setPaused(false);
     setSelectedPad(null);
     prevPuffsRef.current = [];
     setFloaters([]);
-  }, []);
-
-  /** Rebuild a fresh board for `wave` and go back to setup (Next wave / dev). */
-  const freshRun = useCallback((wave: number) => {
-    setSim(createDefendLive(wave));
-    setPhase('setup');
-    setPaused(false);
-    setSelectedPad(null);
-    setWhyOpen(false);
-    prevPuffsRef.current = [];
-    setFloaters([]);
-  }, []);
+  }, [view.cyclePower]);
 
   /** Push hit/kill floaters (capped + oldest dropped = pooled, no unbounded
    * growth under heavy fire). Board units → px via the measured board size. */
@@ -266,14 +358,14 @@ export function DefendScreen({
   }, []);
 
   const winWave = useCallback(() => {
-    const wave = simRef.current?.wave ?? nextWave;
+    const played = playedRef.current;
     setPhase('won');
     setPaused(false);
     setSelectedPad(null);
-    void onWin(wave).then((result) => {
+    void onWin({ phase: played.phase, wave: played.wave, mode: played.mode }).then((result) => {
       if (result) setLastWin(result);
     });
-  }, [nextWave, onWin]);
+  }, [onWin]);
 
   // Sim ticker: running + not paused.
   useEffect(() => {
@@ -285,7 +377,7 @@ export function DefendScreen({
       const step = stepDefendLive(current, DEFEND_TICK_MS, bucketsRef.current, avatar);
       // Display-only floaters: any puff that lost HP this tick, or vanished
       // (killed), gets a short damage number near it. No engine changes.
-      const events = diffPuffEvents(prevPuffsRef.current, step.state.puffs);
+      const events = diffPuffEvents(prevPuffsRef.current, step.state.puffs, step.state.mapId);
       if (events.length > 0) spawnFloaters(events);
       prevPuffsRef.current = step.state.puffs;
       simRef.current = step.state;
@@ -372,6 +464,11 @@ export function DefendScreen({
   }));
 
   const levelBonus = avatarLevelWavePower(view.avatarLevel);
+  const bands = replayBands(view);
+  const cycleNote =
+    view.conqueredCycles > 0
+      ? `Cycle ${view.conqueredCycles} — foes scale ×${view.cyclePower.toFixed(2)}`
+      : null;
 
   return (
     <ThemedView style={styles.container}>
@@ -395,13 +492,19 @@ export function DefendScreen({
         {/* HUD */}
         <ThemedView type="backgroundElement" style={styles.card}>
           <View style={styles.statRow}>
-            <ThemedText type="smallBold">Wave</ThemedText>
+            <ThemedText type="smallBold">
+              {campaignPhaseLabel(labelPhase)} wave {displayedWave}
+            </ThemedText>
             <ThemedText type="subheading" themeColor="emphasis">
-              {displayedWave} · {defendDifficulty(displayedWave)}
+              {defendDifficulty(displayedWave)}
             </ThemedText>
           </View>
           <ThemedText type="small" themeColor="textSecondary">
-            Waves climb through bands — Easy at first, then Moderate, Hard, and Brutal.
+            {fight.mode === 'replay'
+              ? 'Replay of a cleared band — pays half tokens, your campaign seat stays put.'
+              : cycleNote
+                ? `Campaign climb — ${cycleNote}.`
+                : 'Campaign climb — Trial 1–5, then Main 1–20. Clear Main 20 to Conquer a cycle.'}
           </ThemedText>
           <View style={styles.statRow}>
             <ThemedText type="smallBold">Scrap</ThemedText>
@@ -461,6 +564,11 @@ export function DefendScreen({
 
         {/* Board */}
         <ThemedView type="backgroundElement" style={styles.card}>
+          <ThemedText type="small" themeColor="textSecondary">
+            {boardMap.name}
+            {cycleNote ? ` · ${cycleNote}` : ''}
+            {fight.mode === 'replay' ? ' · replay (half tokens)' : ''}
+          </ThemedText>
           <View
             style={[styles.board, { backgroundColor: theme.backgroundSelected }]}
             onLayout={(event) => {
@@ -468,7 +576,7 @@ export function DefendScreen({
             }}>
             <Svg width="100%" height="100%" viewBox="0 0 100 100">
               <Path
-                d={pathD()}
+                d={pathD(boardMap.path)}
                 stroke={theme.textSecondary}
                 strokeOpacity={0.3}
                 strokeWidth={9}
@@ -476,7 +584,7 @@ export function DefendScreen({
                 strokeLinejoin="round"
                 fill="none"
               />
-              {DEFEND_PADS.map((pad, index) => {
+              {boardMap.pads.map((pad, index) => {
                 const tower = sim?.towers.find((t) => t.pad === index);
                 const selected = selectedPad === index;
                 return (
@@ -493,10 +601,10 @@ export function DefendScreen({
                   />
                 );
               })}
-              {selectedPad != null && (
+              {selectedPad != null && boardMap.pads[selectedPad] ? (
                 <Circle
-                  cx={DEFEND_PADS[selectedPad].x}
-                  cy={DEFEND_PADS[selectedPad].y}
+                  cx={boardMap.pads[selectedPad].x}
+                  cy={boardMap.pads[selectedPad].y}
                   r={selectedTower ? TOWER_DEFS[selectedTower.kind].range : 18}
                   fill="none"
                   stroke={theme.accent}
@@ -504,9 +612,9 @@ export function DefendScreen({
                   strokeWidth={1}
                   strokeDasharray="2 2"
                 />
-              )}
+              ) : null}
               {sim?.towers.map((tower) => {
-                const pad = DEFEND_PADS[tower.pad];
+                const pad = boardMap.pads[tower.pad];
                 return (
                   <SvgText
                     key={`tower-${tower.id}`}
@@ -521,7 +629,7 @@ export function DefendScreen({
                 );
               })}
               {sim?.puffs.map((puff) => {
-                const pos = puffPosition(puff.dist);
+                const pos = puffPosition(puff.dist, boardMap);
                 const x = pos.x * 100;
                 const y = pos.y * 100;
                 const pct = Math.max(0, Math.min(1, puff.hp / puff.maxHp));
@@ -645,7 +753,7 @@ export function DefendScreen({
               <ThemedView type="backgroundElement" style={styles.coachCard}>
                 <View style={styles.coachHeader}>
                   <ThemedText type="smallBold" themeColor="emphasis">
-                    Coach · wave {nextWave}
+                    Coach · {fightTitle(fight)}
                   </ThemedText>
                   <Pressable
                     onPress={() => setCoachHidden(true)}
@@ -678,16 +786,34 @@ export function DefendScreen({
                 ) : null}
               </ThemedView>
             ) : null}
+
+            {/* Fight card — campaign next or the chosen replay. */}
             <ThemedView type="backgroundElement" style={styles.card}>
-              <ThemedText type="smallBold">
-                Wave {nextWave} · {waveEnemyCount(nextWave)} puffs
-              </ThemedText>
+              <View style={styles.statRow}>
+                <ThemedText type="smallBold">{fightTitle(fight)}</ThemedText>
+                <ThemedText type="subheading" themeColor="emphasis">
+                  {waveEnemyCount(fight.wave, view.cyclePower)} puffs
+                </ThemedText>
+              </View>
               <ThemedText type="small" themeColor="textSecondary">
-                Tap pads to place archers, vines, or crystals. Drag your Avatar near the path, then
-                start.
+                {fight.mode === 'replay'
+                  ? 'Half-token replay — tap a cleared wave below, or head back to the campaign.'
+                  : cycleNote
+                    ? `The campaign climb — ${cycleNote}. Place towers, then start.`
+                    : 'The campaign climb — Trial teaches the path, Main is the real deal. Place towers, then start.'}
               </ThemedText>
+              {fight.mode === 'replay' ? (
+                <Pressable
+                  onPress={() => buildSetup(campaignFight)}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [styles.hudButton, { backgroundColor: theme.backgroundSelected }, pressed && styles.pressed]}>
+                  <ThemedText type="smallBold" themeColor="textSecondary">
+                    Back to campaign
+                  </ThemedText>
+                </Pressable>
+              ) : null}
               <Pressable
-                onPress={() => startWave()}
+                onPress={startWave}
                 accessibilityRole="button"
                 style={({ pressed }) => [
                   styles.primaryButton,
@@ -695,9 +821,79 @@ export function DefendScreen({
                   pressed && styles.pressed,
                 ]}>
                 <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                  Start wave
+                  {fight.mode === 'replay' ? 'Start replay' : 'Start wave'}
                 </ThemedText>
               </Pressable>
+            </ThemedView>
+
+            {/* Band picker — replay any cleared band at half tokens (§9h). */}
+            <ThemedView type="backgroundElement" style={styles.card}>
+              <ThemedText type="smallBold">Cleared bands · replay at half tokens</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                Replays pay half tokens and never move your campaign seat or daily-clear cap.
+              </ThemedText>
+              {bands.map((band) => {
+                return (
+                  <View key={band.phase} style={styles.bandBlock}>
+                    <View style={styles.statRow}>
+                      <ThemedText type="smallBold">
+                        {campaignPhaseLabel(band.phase)} waves {band.firstWave}–{band.lastWave}
+                      </ThemedText>
+                      {band.unlocked ? (
+                        <ThemedText type="code" themeColor="emphasis">
+                          half
+                        </ThemedText>
+                      ) : (
+                        <ThemedText type="code" themeColor="textSecondary">
+                          locked
+                        </ThemedText>
+                      )}
+                    </View>
+                    {band.unlocked ? (
+                      <View style={styles.chipRow}>
+                        {Array.from({ length: band.clearedThrough }, (_, index) => index + 1).map(
+                          (wave) => {
+                            const active =
+                              replayPick != null &&
+                              replayPick.phase === band.phase &&
+                              replayPick.wave === wave;
+                            return (
+                              <Pressable
+                                key={`${band.phase}-${wave}`}
+                                onPress={() =>
+                                  buildSetup({ phase: band.phase, wave, mode: 'replay' })
+                                }
+                                accessibilityRole="button"
+                                accessibilityLabel={`Replay ${band.label} wave ${wave}`}
+                                style={({ pressed }) => [
+                                  styles.chip,
+                                  {
+                                    backgroundColor: active
+                                      ? theme.accentFill
+                                      : theme.backgroundSelected,
+                                  },
+                                  pressed && styles.pressed,
+                                ]}>
+                                <ThemedText
+                                  type="smallBold"
+                                  style={{ color: active ? theme.onAccent : theme.textSecondary }}>
+                                  {wave}
+                                </ThemedText>
+                              </Pressable>
+                            );
+                          },
+                        )}
+                      </View>
+                    ) : (
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {band.phase === 'trial'
+                          ? 'Clear the Trial run to open its replays.'
+                          : 'Reach Main to open its replays.'}
+                      </ThemedText>
+                    )}
+                  </View>
+                );
+              })}
             </ThemedView>
           </>
         ) : null}
@@ -713,15 +909,33 @@ export function DefendScreen({
         {phase === 'won' ? (
           <ThemedView type="backgroundElement" style={styles.card}>
             <ThemedText type="smallBold">
-              Avatar Lv {view.avatarLevel} — cleared Wave {sim?.wave ?? nextWave}
+              {lastWin?.conquered
+                ? `Cycle ${lastWin.conqueredCycles} conquered — Main cleared!`
+                : playedRef.current.mode === 'replay'
+                  ? `Cleared ${campaignPhaseLabel(playedRef.current.phase)} wave ${playedRef.current.wave} (replay)`
+                  : `Cleared ${fightTitle(playedRef.current)}`}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              Avatar Lv {view.avatarLevel} · {view.lifetimeWavesCleared} waves cleared lifetime
             </ThemedText>
             {lastWin ? (
               <>
                 <ThemedText type="small" themeColor="textSecondary">
-                  +{lastWin.tokensGranted} tokens · +{lastWin.xpGranted} XP · Level{' '}
-                  {view.avatarLevel} · {lastWin.clearsToday} clears today
+                  +{lastWin.tokensGranted} tokens · +{lastWin.xpGranted} XP
+                  {lastWin.milestoneLook
+                    ? ` · ${ordinal(lastWin.milestoneLook.count)} clear — found a Rare Look!`
+                    : ''}
                 </ThemedText>
-                {lastWin.halved ? (
+                {lastWin.conquered ? (
+                  <ThemedText type="small" themeColor="textSecondary" style={styles.conqueredNote}>
+                    Conquered! Enemies now scale ×{lastWin.cyclePower.toFixed(2)}. Next cycle
+                    starts at Main wave 1.
+                  </ThemedText>
+                ) : lastWin.replayHalf ? (
+                  <ThemedText type="small" themeColor="textSecondary" style={styles.halvedNote}>
+                    Half-token replay — your campaign seat is exactly where you left it.
+                  </ThemedText>
+                ) : lastWin.halved ? (
                   <ThemedText type="small" themeColor="textSecondary" style={styles.halvedNote}>
                     Half tokens today — come back tomorrow for full.
                   </ThemedText>
@@ -729,23 +943,58 @@ export function DefendScreen({
               </>
             ) : (
               <ThemedText type="small" themeColor="textSecondary">
-                +50 tokens · +{10 + (sim?.wave ?? nextWave) * 2} XP
+                {playedRef.current.mode === 'replay'
+                  ? `Half-token replay — +${Math.floor(getTune().tokenClearBase / 2)} tokens · +${Math.floor(
+                      xpForClear(sim?.wave ?? fight.wave) / 2,
+                    )} XP`
+                  : `+${getTune().tokenClearBase} tokens · +${xpForClear(sim?.wave ?? fight.wave)} XP`}
               </ThemedText>
             )}
+            {playedRef.current.mode === 'replay' ? (
+              <>
+                <Pressable
+                  onPress={() => buildSetup(playedRef.current)}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
+                    styles.primaryButton,
+                    { backgroundColor: theme.accentFill },
+                    pressed && styles.pressed,
+                  ]}>
+                  <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
+                    Farm again
+                  </ThemedText>
+                </Pressable>
+                <Pressable
+                  onPress={() => buildSetup(campaignFight)}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
+                    styles.hudButton,
+                    { backgroundColor: theme.backgroundSelected },
+                    pressed && styles.pressed,
+                  ]}>
+                  <ThemedText type="smallBold" themeColor="textSecondary">
+                    Back to campaign
+                  </ThemedText>
+                </Pressable>
+              </>
+            ) : (
+              <Pressable
+                onPress={() => buildSetup(campaignFight)}
+                accessibilityRole="button"
+                style={({ pressed }) => [
+                  styles.primaryButton,
+                  { backgroundColor: theme.accentFill },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
+                  {lastWin?.conquered
+                    ? 'Next cycle · Main wave 1'
+                    : `Next · ${fightTitle(campaignFight)}`}
+                </ThemedText>
+              </Pressable>
+            )}
             <Pressable
-              onPress={() => freshRun((sim?.wave ?? nextWave) + 1)}
-              accessibilityRole="button"
-              style={({ pressed }) => [
-                styles.primaryButton,
-                { backgroundColor: theme.accentFill },
-                pressed && styles.pressed,
-              ]}>
-              <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                Next wave
-              </ThemedText>
-            </Pressable>
-            <Pressable
-              onPress={() => void shareDefendClear(sim?.wave ?? nextWave, view.avatarLevel)}
+              onPress={() => void shareDefendClear(playedRef.current.wave, view.avatarLevel)}
               accessibilityRole="button"
               accessibilityLabel="Share this clear"
               style={({ pressed }) => [
@@ -772,8 +1021,8 @@ export function DefendScreen({
           <ThemedView type="backgroundElement" style={styles.card}>
             <ThemedText type="smallBold">The path was breached.</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              One puff reached the exit — wave {sim?.wave ?? nextWave} ends. Retry the same wave with
-              your towers kept.
+              One puff reached the exit — {fightTitle(playedRef.current)} ends. Retry the same
+              wave with your towers kept.
             </ThemedText>
             <Pressable
               onPress={() => {
@@ -889,10 +1138,24 @@ export function DefendScreen({
               }}
             />
             <DevRow
-              label="Set wave to 1"
+              label="Reset campaign to Trial wave 1"
               onPress={() => {
-                onSetWaveOne();
-                freshRun(1);
+                onResetCampaign();
+                buildSetup({ phase: 'trial', wave: 1, mode: 'campaign' });
+              }}
+            />
+            <DevRow
+              label="Jump to Main wave 19"
+              onPress={() => {
+                onJumpMain19();
+                buildSetup({ phase: 'main', wave: 19, mode: 'campaign' });
+              }}
+            />
+            <DevRow
+              label="Force Conquered +1"
+              onPress={() => {
+                onForceConquered();
+                buildSetup({ phase: 'main', wave: 1, mode: 'campaign' });
               }}
             />
           </ThemedView>
@@ -984,6 +1247,17 @@ function HitFloater({
 
 const AVATAR_RADIUS_PX = 9;
 
+/** 1st/2nd/3rd… for the lifetime-clear milestone copy. */
+function ordinal(n: number): string {
+  const rem100 = n % 100;
+  if (rem100 >= 11 && rem100 <= 13) return `${n}th`;
+  const rem10 = n % 10;
+  if (rem10 === 1) return `${n}st`;
+  if (rem10 === 2) return `${n}nd`;
+  if (rem10 === 3) return `${n}rd`;
+  return `${n}th`;
+}
+
 /**
  * Share stub for the win glow card (§13): plain text (Avatar level + wave # +
  * "cleared Wave N"). Uses the Web Share API where present, else the native
@@ -1011,9 +1285,9 @@ async function shareDefendClear(wave: number, level: number): Promise<void> {
   await fallback();
 }
 
-/** SVG path data for the road (viewBox 100). */
-function pathD(): string {
-  const [first, ...rest] = DEFEND_PATH;
+/** SVG path data for a map's road (viewBox 100). */
+function pathD(path: readonly { x: number; y: number }[]): string {
+  const [first, ...rest] = path;
   const parts = [`M ${first.x * 100} ${first.y * 100}`];
   for (const point of rest) parts.push(`L ${point.x * 100} ${point.y * 100}`);
   return parts.join(' ');
@@ -1064,10 +1338,29 @@ const styles = StyleSheet.create({
     color: undefined,
     fontStyle: 'italic',
   },
+  conqueredNote: {
+    color: undefined,
+    fontStyle: 'italic',
+  },
   statRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'space-between',
+  },
+  bandBlock: {
+    gap: Spacing.one,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.one,
+  },
+  chip: {
+    minWidth: 34,
+    alignItems: 'center',
+    borderRadius: Spacing.two,
+    paddingVertical: Spacing.one,
+    paddingHorizontal: Spacing.two,
   },
   board: {
     width: '100%',
