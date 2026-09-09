@@ -19,6 +19,7 @@ import Animated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import Svg, { Circle, G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -47,6 +48,7 @@ import {
   upgradeTower,
   waveEnemyCount,
   type DefendLive,
+  type Puff,
   type TowerKind,
 } from '@/play/defend';
 import {
@@ -65,6 +67,68 @@ const TOWER_COLORS: Record<TowerKind, string> = {
   crystal: '#A78BFA',
 };
 
+/* ---- floating hit numbers (display only) -------------------------------- */
+/** On-screen floater cap — more than this and oldest are dropped (pooled). */
+const MAX_FLOATERS = 8;
+/** Rise distance (px) + fade timing for the cheap opacity/translateY pop. */
+const FLOAT_RISE_PX = 14;
+const FLOAT_MS = 700;
+const FLOAT_STATIC_MS = 500; // reduce-motion: hold still, then clear
+/** Center-ish the small text over the puff. */
+const FLOATER_OFFSET_X = 14;
+const FLOATER_OFFSET_Y = 22;
+
+type Floater = {
+  id: number;
+  /** px position inside the board (top-left of the text box). */
+  left: number;
+  top: number;
+  label: string;
+  kill: boolean;
+};
+
+/** A per-tick hit the screen derived from puff HP deltas (never sent back). */
+type HitEvent = {
+  x: number; // board units 0..1
+  y: number;
+  damage: number;
+  kill: boolean;
+};
+
+/**
+ * Pure diff of two puff arrays → hit events. Any puff that lost HP got a hit;
+ * any puff that vanished was killed (a leak freezes the sim, so a puff never
+ * leaves the array any other way mid-run). Display only — the engine is the
+ * sole owner of combat math.
+ */
+function diffPuffEvents(before: readonly Puff[], after: readonly Puff[]): HitEvent[] {
+  const byId = new Map(after.map((puff) => [puff.id, puff]));
+  const events: HitEvent[] = [];
+  for (const old of before) {
+    const now = byId.get(old.id);
+    if (!now) {
+      // Killed — the last visible chunk of its HP is the killing blow.
+      const pos = puffPosition(old.dist);
+      events.push({ x: pos.x, y: pos.y, damage: Math.round(old.hp), kill: true });
+    } else if (now.hp < old.hp) {
+      const damage = old.hp - now.hp;
+      const pos = puffPosition(now.dist);
+      events.push({ x: pos.x, y: pos.y, damage: Math.round(damage), kill: false });
+    }
+  }
+  return events;
+}
+
+/** Short damage label — K/M when big (no shared ATO helper existed). */
+function formatHit(damage: number): string {
+  const n = Math.round(damage);
+  if (n < 1_000) return String(n);
+  const oneDecimal = (value: number) =>
+    value >= 100 ? String(Math.round(value)) : String(Math.round(value * 10) / 10);
+  if (n < 1_000_000) return `${oneDecimal(n / 1_000)}K`;
+  return `${oneDecimal(n / 1_000_000)}M`;
+}
+
 type DefendPhase = 'setup' | 'running' | 'won' | 'lost';
 
 function clamp01(value: number): number {
@@ -73,6 +137,7 @@ function clamp01(value: number): number {
 
 export function DefendScreen({
   view,
+  reduceMotion,
   onWin,
   onSetWaveOne,
   onResetDailyClears,
@@ -80,6 +145,8 @@ export function DefendScreen({
   onBackToGrove,
 }: {
   view: PlayView;
+  /** Reduce-motion → floaters render static (no rise/fade). */
+  reduceMotion: boolean;
   onWin: (wave: number) => Promise<DefendWinResult | null>;
   onSetWaveOne: () => void;
   onResetDailyClears: () => void;
@@ -100,6 +167,11 @@ export function DefendScreen({
   const [whyOpen, setWhyOpen] = useState(false);
   /** What the last win paid — shows the honest (possibly halved) tokens. */
   const [lastWin, setLastWin] = useState<DefendWinResult | null>(null);
+  /** Floating damage numbers, pooled to MAX_FLOATERS (display only). */
+  const [floaters, setFloaters] = useState<Floater[]>([]);
+  const floaterSeq = useRef(0);
+  /** Puff list from the previous running tick — diffed for floaters. */
+  const prevPuffsRef = useRef<Puff[]>([]);
 
   const phaseRef = useRef(phase);
   const pausedRef = useRef(paused);
@@ -147,6 +219,8 @@ export function DefendScreen({
     setPhase('running');
     setPaused(false);
     setSelectedPad(null);
+    prevPuffsRef.current = [];
+    setFloaters([]);
   }, []);
 
   /** Rebuild a fresh board for `wave` and go back to setup (Next wave / dev). */
@@ -156,6 +230,29 @@ export function DefendScreen({
     setPaused(false);
     setSelectedPad(null);
     setWhyOpen(false);
+    prevPuffsRef.current = [];
+    setFloaters([]);
+  }, []);
+
+  /** Push hit/kill floaters (capped + oldest dropped = pooled, no unbounded
+   * growth under heavy fire). Board units → px via the measured board size. */
+  const spawnFloaters = useCallback((events: readonly HitEvent[]) => {
+    const size = boardSizeRef.current || 100;
+    const created: Floater[] = events.map((event) => ({
+      id: ++floaterSeq.current,
+      left: event.x * size - FLOATER_OFFSET_X,
+      top: event.y * size - FLOATER_OFFSET_Y,
+      label: formatHit(event.damage),
+      kill: event.kill,
+    }));
+    setFloaters((prev) => {
+      const merged = [...prev, ...created];
+      return merged.length > MAX_FLOATERS ? merged.slice(merged.length - MAX_FLOATERS) : merged;
+    });
+  }, []);
+
+  const dropFloater = useCallback((id: number) => {
+    setFloaters((prev) => prev.filter((floater) => floater.id !== id));
   }, []);
 
   const winWave = useCallback(() => {
@@ -176,6 +273,11 @@ export function DefendScreen({
       if (!current) return;
       const avatar = avatarPosRef.current;
       const step = stepDefendLive(current, DEFEND_TICK_MS, bucketsRef.current, avatar);
+      // Display-only floaters: any puff that lost HP this tick, or vanished
+      // (killed), gets a short damage number near it. No engine changes.
+      const events = diffPuffEvents(prevPuffsRef.current, step.state.puffs);
+      if (events.length > 0) spawnFloaters(events);
+      prevPuffsRef.current = step.state.puffs;
       simRef.current = step.state;
       setSim(step.state);
       if (step.leak && !godModeRef.current) {
@@ -187,7 +289,7 @@ export function DefendScreen({
       if (step.done) winWave();
     }, DEFEND_TICK_MS);
     return () => clearInterval(id);
-  }, [phase, paused, winWave]);
+  }, [phase, paused, winWave, spawnFloaters]);
 
   // Background → freeze the wave.
   useEffect(() => {
@@ -422,6 +524,17 @@ export function DefendScreen({
             <GestureDetector gesture={pan}>
               <Animated.View style={[styles.avatar, avatarStyle, { backgroundColor: AVATAR_COLOR }]} />
             </GestureDetector>
+
+            {/* Floating damage numbers (display only, pooled) */}
+            {floaters.map((floater) => (
+              <HitFloater
+                key={floater.id}
+                floater={floater}
+                kill={floater.kill}
+                reduceMotion={reduceMotion}
+                onDone={() => dropFloater(floater.id)}
+              />
+            ))}
           </View>
           {paused && phase === 'running' ? (
             <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
@@ -639,6 +752,8 @@ export function DefendScreen({
                   setPhase('running');
                   setPaused(false);
                   setSelectedPad(null);
+                  prevPuffsRef.current = [];
+                  setFloaters([]);
                 }
               }}
               accessibilityRole="button"
@@ -757,6 +872,65 @@ function DevRow({ label, onPress, disabled }: { label: string; onPress: () => vo
   );
 }
 
+/** One floating damage number. Rises + fades (cheap opacity/translateY) unless
+ * reduce-motion — then it holds still for a beat and clears. */
+function HitFloater({
+  floater,
+  kill,
+  reduceMotion,
+  onDone,
+}: {
+  floater: Floater;
+  kill: boolean;
+  reduceMotion: boolean;
+  onDone: () => void;
+}) {
+  const theme = useTheme();
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      const timer = setTimeout(onDone, FLOAT_STATIC_MS);
+      return () => clearTimeout(timer);
+    }
+    progress.value = withTiming(1, { duration: FLOAT_MS });
+    const timer = setTimeout(onDone, FLOAT_MS);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const animated = useAnimatedStyle(() => ({
+    opacity: 1 - progress.value,
+    transform: [{ translateY: -FLOAT_RISE_PX * progress.value }],
+  }));
+
+  if (reduceMotion) {
+    return (
+      <ThemedText
+        type="code"
+        style={[
+          styles.floater,
+          kill ? styles.floaterKill : { color: theme.text },
+          { left: floater.left, top: floater.top },
+        ]}>
+        {floater.label}
+      </ThemedText>
+    );
+  }
+  return (
+    <Animated.Text
+      pointerEvents="none"
+      style={[
+        styles.floater,
+        kill ? styles.floaterKill : { color: theme.text },
+        { left: floater.left, top: floater.top },
+        animated,
+      ]}>
+      {floater.label}
+    </Animated.Text>
+  );
+}
+
 const AVATAR_RADIUS_PX = 9;
 
 /** SVG path data for the road (viewBox 100). */
@@ -830,6 +1004,19 @@ const styles = StyleSheet.create({
     borderRadius: AVATAR_RADIUS_PX,
     borderWidth: 2,
     borderColor: '#FFFFFF',
+  },
+  floater: {
+    position: 'absolute',
+    fontSize: 12,
+    fontWeight: '700',
+    textShadowColor: 'rgba(0,0,0,0.35)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
+    zIndex: 5,
+  },
+  floaterKill: {
+    color: '#FBBF24', // gold — reads as a kill on both light and dark boards
+    fontSize: 14,
   },
   buttonRow: {
     flexDirection: 'row',

@@ -326,6 +326,7 @@ export default function PlayScreen() {
           ) : mode === 'defend' && view ? (
             <DefendScreen
               view={view}
+              reduceMotion={reduceMotion}
               onWin={handleRecordDefendWin}
               onSetWaveOne={handleSetDefendWaveOne}
               onResetDailyClears={handleResetDailyClears}
