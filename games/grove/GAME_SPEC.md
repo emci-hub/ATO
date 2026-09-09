@@ -1,7 +1,8 @@
 # Grove — full game spec (ATO Play module)
 
 **Status:** DESIGN **10/10** (emci locked Wayne picks 2026-09-08). Do **not** build until ATO Wave 1 Home exists (or emci parks ATO). Build readiness **unlocked by emci 2026-09-08** (ATO spine done; questions polish can continue in parallel). Still never on Home.  
-**Where it lives:** Inside ATO as a **Play** room — never on Home, never replaces Sage.  
+**Where it lives:** Inside ATO as a **Play** room — never on Home, never replaces Sage.
+**Public Play name:** **Divecore** (hub/room title + More row + play icon). Chill base flavor copy = **Basecore** (“your Basecore”) — do not use “Grove” in player-facing chrome.  
 **Engine:** **Expo** (same app). Lightweight 2D on a dedicated screen (Skia or Gesture-Handler + Reanimated canvas). Not Unity. Not Godot.  
 **Tone:** Cozy first, spicy optional. Fun, a bit grindy, engaging. Chill players can earn without Defend.
 
@@ -96,6 +97,21 @@ Same stat **adds** in bucket; different stats **multiply** across. 4 slots: weap
 JSON shape: see `GAME_DATA.md`.
 
 ---
+
+
+### Inventory stacks & merge (locked direction)
+
+**Now (Dress polish):** inventory is **stacked by item id** (`{id, count}`). UI tabs by slot (weapon/armor/cloak/trinket) + **Junk** (Looks / extras to sell). Sort by rarity. **Equip holds 1** — does not consume the whole stack; stack count stays (≥1 while worn, or worn is separate and count excludes equipped — pick one and stay consistent).
+
+**Merge (Dive-style risk — ship after stacks):**
+- Need **main** copy + **1 fuel** copy of the **same item id** (same star). Main can be worn or in bag; fuel always from bag spares.
+- Show honest odds (like Dive). Buttons: **Merge** / cancel. Short searching beat (reuse Dive pacing).
+- **Success:** main gains **+1 star** (soft-cap e.g. ★5). Fuel copy consumed. Mults scale lightly per star (e.g. +15% of base mults per star — Tune later).
+- **Fail:** main **untouched**; **lose 1 fuel** only (broken attempt). Charge/grind again — same emotional loop as Dive bust.
+- Default fail climb optional: first merge of a session softer; keep v0 **flat table** e.g. ★0→1 success 70%, ★1→2 55%, ★2→3 40%, ★3→4 28%, ★4→5 18% (Tune).
+- **Not** “merge 10 at once.” Not destroy equipped main on fail.
+- Legendary / higher rarity = separate drop band later (bigger base mults in JSON), not required for merge v0.
+- Dev kit: Force merge success · Force merge fail · Grant 3× same Power.
 
 ## 7. Dive (push-your-luck)
 
@@ -338,6 +354,10 @@ Sliders / fields (live, restart wave to apply):
 
 Tune writes to local overrides only (or `play_tune` row for your user_id). Never sync Tune to other players. Ship build strips the menu unless internal TestFlight flag.
 
+
+### Dev kit lock (internal)
+Dev kit + Tune stay in builds behind `PRE_LAUNCH_DEV` **and** a local password gate (v0 string `Calgary1!`). Wrong password = kit stays hidden. Not real security (client-side); just keeps friends/TestFlight from poking. Production App Store: `PRE_LAUNCH_DEV` false strips the kit entirely.
+
 ### Playtest rule
 
 Change **one** preset at a time. If BrokenOP stops being fun in 3 waves, the loop is content-thin — add Looks/milestones, don’t only nerf. If Sane feels weak at wave 5, bump scrap or lower hp_per_level before raising gear caps.
@@ -427,6 +447,325 @@ No lore walls. Same pattern as Dive odds — honest.
 ### What we are not doing
 
 Per-hero unique code. Ultimate cutscenes. 4-skill talent trees. Barracks-style blocker units v0 (enemies don’t melee).
+
+
+## 9e. Campaign stages (no rewrite — extends wave math)
+
+**Loop (industry: act → finale → prestige cycle):**
+
+| Phase | Map | Waves (display resets) | Role |
+|---|---|---|---|
+| **Trial** | Newbie (current Grove Path) | **1–5** | Teach place / drag / skill |
+| **ATO Main** | Divecore Main (longer S-curve + chokes) | **1–20** | Real deal |
+| Waves **9–10** | Main | **Training arc / preview** | Teach the cycle’s bosses |
+| Wave **9** | Main | **Scout mini-boss** — same silhouette/tag as end mini-boss, ~40–50% HP, smaller scale | “You’ve met them” |
+| Wave **10** | Main | **Scout boss** — same family as final, ~50–60% HP, shows **tags** (not full elements) | Expectation set |
+| Waves **11–18** | Main | Normal climb + runners | Pressure |
+| Wave **19** | Main | Semi-final — full mini-boss (+ pack) | Revenge heat |
+| Wave **20** | Main | **Final form** boss (+ runners) | Clear = Conquered +1 |
+
+**Story (light):** one toast/banner lines only — e.g. w9 “A scout slips the path…”, w10 “They’ll remember this.”, w19 “They’re back.”, w20 “Final form.” No cutscenes, no dialogue trees.
+
+**“Elements” here = tags** (Runner / Marked / Boss family id) + tint/size — **not** fire/ice immunity matrix. Same engine flags as planned.
+
+On clear of Main wave 20:
+1. `conquered_cycles += 1` (UI: **Conquered Waves** = cycles finished — or name it Conquered Cycles; show big number)
+2. Apply `cycle_power = 1 + conquered_cycles * 0.12` (Tune) to enemy HP/count on the **next** run
+3. Reset display wave to Trial 1 (or skip Trial after first clear — player choice / default skip Trial once Conquered ≥ 1)
+4. Tokens/XP milestone bonus for cycle clear
+
+**Does not require starting from scratch:** keep `stepDefendLive`, scrap, towers, Avatar. Add `maps/*.json` (waypoints + pads), `campaign.phase`, `campaign.wave_in_phase`, `conquered_cycles`, `cycle_power` on playStore. Enemy tags Runner + mini-boss later plug into same engine.
+
+**Not doing:** map geometry morph every 25 waves; elemental immunity matrix; 10 maps.
+
+
+## 9f. Elements (Divecore — soft match, not immunities)
+
+Learn from mobile RPGs: **advantage ≈ +20–25%**, not 0-damage walls (RO-style immunities kill clarity on phone TD).
+
+**Our take (ATO colors, already on item `type_tag`):**
+
+| Tag | Feel | Soft edge |
+|---|---|---|
+| **Tide** | water / dive | vs Ember |
+| **Ember** | fire / spark | vs Root |
+| **Root** | growth / wood | vs Spark |
+| **Spark** | storm / metal-bright | vs Tide |
+
+(Old ATO Ink/Paper/Steel/Bloom map 1:1 → Tide/Ember/Root/Spark in Play JSON; ATO coach colors stay elsewhere.)
+
+Cycle / boss family carries one `type_tint`. Equipped Power Cores with matching `type_tag` get **`type_match_bonus` = +0.20** vs that tint (locked balanced default). Mismatch = **neutral** (no −%). Chart shows edges; play still required because cycle_power + soft-caps outpace a single match.
+
+**Scout w10 / Final w20:** same tint family so Dress “equip for the fight” is teachable mid-act.
+
+**OP elemental uniques:** fridge — after soft match feels good. No new towers per element. No camo/lead matrix.
+
+
+## 9g. More light steals (worth it / skip)
+
+**Worth (map onto what we have):**
+1. **Wave preview** before Start — icons for puff / Runner / mini-boss / boss tint (Renz-style). Dress becomes a loadout decision.
+2. **Soft type match** — Tide/Ember/Root/Spark +15–25% (Dress matters).
+3. **Scout → Final** boss family (already §9e).
+4. **Perfect-clear juice** — optional tiny token bonus if you never paused-panic / cleared under scrap waste — or skip; we already fail on 1 leak.
+5. **Boss mark** — Root Veil / Avatar hits apply a short “exposed” mult on mini-boss only (teaches drag).
+6. **Conquered cycle** power climb (already §9e).
+
+**Skip (heavy):** dynamic path mazes, roguelike card drafts between every wave, 7+ tower types, hard immunities, procedural maps every 25.
+
+
+
+### Dive vs Defend drop roles (even the economy)
+
+| Source | Role | Adjustment |
+|---|---|---|
+| **Dive** | **Volume** — commons/rares, merge fuel, Looks | Lower Power weight ~15–25% vs early stubs; bust table stays (skill). Not the unique lane. |
+| **Research Claim** | Steady scraps + small Power chance | Keep chill; guarantee common Power if undergeared (already) |
+| **Defend farm** | **Uniques + tint gear + Avatar star** | Previewable; uniques once; farmables repeat |
+
+Dive stays exciting push-your-luck; Defend is where “chase the named piece” lives. Don’t gut Dive — **re-role** it.
+
+## 9h. Progression balance (grind fair — not trivial)
+
+**Pillars of power** (all soft-capped; none carries alone):
+1. Gear mults (already ×~2 soft-cap) + stars (merge ★0–5, +10%/star — already)
+2. Soft **type match +20%** (Dress matters; never immunity)
+3. Avatar level (+2%/level from clears)
+4. **Avatar stars** (meta, slow) — see below
+5. Towers / scrap skill (run only)
+6. `cycle_power` from Conquered (enemies scale ~+12%/cycle)
+
+**Why OP loot doesn’t end the game:** cycle_power and wave math climb faster than one god roll; soft-caps + diminishing after cap; daily token half-cap; Dive bust risk.
+
+### Farm / rerun (no new mode)
+- After unlocking Main, player may **replay** any cleared wave band: Trial, Main normal, **Scout (9–10)**, **Semi (19)**, **Final (20)**.
+- Replay pays **reduced tokens** (e.g. 50%) but full drop tables for that band.
+- **Scout mini-boss (9):** chance at tagged Look / common–rare Power of the cycle tint.
+- **Scout boss (10):** better Power of tint; small star-fuel chance.
+- **Semi (19):** armor/cloak tint piece.
+- **Final (20):** weapon tint piece + **Avatar star roll**.
+
+### Avatar star (slow prestige drip)
+- Max ★5 on Avatar (same soft feel as gear).
+- Final boss clear: **25%** to drop `avatar_star_token` **once per Conquered cycle** (flag `avatar_star_rolled_cycle`).
+- If miss: pity — guaranteed on **3rd** Final clear of that cycle (still once per cycle).
+- Spending token: +1 Avatar star → +3% base wave_power (Tune). Not 2× hero.
+
+### Hero ally IAP
+Unchanged — later. Free Avatar is the star path.
+
+### Dive vs Defend evenness
+- Dive = best **raw Power / Look volume** + merge fuel.
+- Defend clears = **XP, tokens, milestones, boss uniques, Avatar stars**.
+- Neither alone maxes all pillars — intentional.
+
+### Element chart UX (locked)
+Defend **setup card** + live **`?` overlay** (user choice). Shows Tide→Ember→Root→Spark cycle + “match = +20%”.
+
+
+## 9i. Drop preview + shops
+
+### Drop preview (honest UI)
+On Defend setup (and Scout/Semi/Final band select): show **What can drop** list for this wave/band.
+- Each row: name/rarity/slot + **Farmable** or **Unique**
+- If Unique and already owned: **"Owned — won't drop again"**
+- If Farmable: **"Can grind — still drops"**
+- Avatar star token: show 25% / pity 3rd Final this cycle + owned state for this cycle
+
+### Shops (open design — build after loop)
+
+**Token shop** (soft `tokens`):
+- Dive refresh (already), Look cosmetics, decor, maybe merge-fuel crate (small, soft-capped/day)
+- Never sells permanent wave_power uncapped
+- Never sells cycle_power skips that break Conquered
+
+**Paid shop** (Apple IAP / real money):
+- **Unique OP rows** only available here (labeled Paid Unique)
+- Stronger mult bands but still soft-capped by same gear caps
+- Optional Hero ally (already planned)
+- Must not paywall Trial/Claim/crisis; Play remains optional in ATO
+
+Both shops: empty shelves OK in v0 — **wire UI stubs + JSON catalog**, fill OP rows later.
+
+### Where numbers are adjusted
+| Knob | Home |
+|---|---|
+| Dive Power weights / bust | `loot_tables` + Tune `dive_bust_*` |
+| Type match +20% | `type_match_bonus` / Tune |
+| Cycle enemy climb | `cycle_power` per Conquered |
+| Daily token half | `DAILY_CLEAR_HALF_AFTER` |
+| Boss drop rates / unique flags | `drops/*.json` per band |
+| Avatar star 25% + pity | playStore finals |
+| Shop prices | `shops/token.json`, `shops/paid.json` |
+| Live playtest | Tune presets Sane/Juicy/Brutal/BrokenOP |
+
+
+## 9j. Gear Score + Skip (QoL — don't print uniques)
+
+**Gear Score (GS)** = readable number from equipped Powers (mult buckets after soft-cap) + Avatar level + Avatar stars + type-match vs **this wave’s tint** (small). Shown on Defend setup vs **Recommended GS** for the wave/band.
+
+### Skip when overpowered
+If `GS >= recommended * 1.25` (Tune), offer **Skip to even**:
+- Fast-forward **campaign progress** through trivial normal waves until GS ≈ recommended (stop before Scout 9–10 / Semi 19 / Final 20 unless player confirms “skip into boss preview”).
+- Default: **never auto-skip boss bands** — player must tap into 9/10/19/20 (teach + farm).
+
+### What skip pays (critical)
+| Reward | On skipped normal waves |
+|---|---|
+| Tokens / XP | **Reduced** (~40–50% of a real clear, Tune) |
+| Merge fuel / common Looks | Small **skip crate** once per skip batch (not per wave×N uncapped) |
+| **Uniques / tint boss gear / Avatar star** | **Never** from skip |
+| Milestone Looks 5/10/25 | Only if that wave number is crossed — grant once if not claimed (OK) |
+
+**Why:** “Full drops per skipped wave” breaks uniques, shops, and Dive’s role. Industry skip/sweep is **time QoL**, not a second loot printer.
+
+### Farm still open
+After skip, player can still open **Scout / Semi / Final** bands anytime for previewed drops (half tokens on replay). GS does not lock you out of grinding down.
+
+### UI
+- “Your GS 1240 · Wave wants ~800 — Skip ahead?”
+- Drop preview still lists what **playing** that band can drop; skip crate contents listed separately as commons-only.
+
+
+## 9k. Bound Boss towers (Final → ally tower grind)
+
+**Fits:** yes — classic “beat them → recruit them” (Pit People capture, Team Building recruit, TD fragment evolves). Perfect **Conquered** grind when `cycle_power` climbs: harder Final still pays progress you *want*.
+
+### Unlock
+- **Final (w20)** clear can drop **`boss_fragment`** for that cycle’s boss family (`boss_id`).
+- **3 fragments** → unlock that boss as a **Bound Boss** tower (Dress/Defend roster).
+- **Scout / Semi:** optional **low** fragment chance (e.g. Scout 5%, Semi 10%, Final **35%** — Tune). Never guaranteed. **No pity** (honest grind; optional power fantasy, not Avatar-star prestige).
+- Drop preview: “Boss fragment · 1/3 · Owned”.
+
+### Board rules
+| Rule | Value |
+|---|---|
+| Slot type | **Tower pad** (unmovable) — not a second Avatar/Hero |
+| Max Bound Bosses on board | **2** (of 6 pads) |
+| Remaining pads | 4 for Archer / Vine / Crystal |
+| Drag | Never — Avatar/Hero stays the only movable |
+| Place cost | Scrap like towers (or slightly higher Tune) |
+| Levels | Use Bound Boss **stars** instead of 1→3 scrap upgrades (or stars + light scrap — pick one: **stars only** for v0 clarity) |
+
+### Stars ★1–★5
+- Unlock at ★1 with 3 fragments.
+- Extra fragments → star up (e.g. +2 / +3 / +4 / +5 fragments per star — Tune table in GAME_DATA). Cap ★5.
+- Each star: +damage / shorter skill CD / slightly bigger skill numbers — soft, not 2× board.
+- Fragments for **this** `boss_id` only (cycle family). New Conquered cycle may rotate boss family → new Bound Boss to collect (fridge: keep prior Bound Bosses forever once unlocked).
+
+### Skill = fight echo (closed kit)
+When you fought them they used a tagged skill; as a tower they keep **the same primitive + flavor**, not new code:
+- Boss fight skill → Bound Boss **auto or tap skill** mapped to existing `skill_id` (`burst` / `slow_pulse` / `focus_beam` / …) + numbers + VFX tint.
+- One skill button for Bound Boss if active-type; if passive aura, show always-on line only.
+- Budget: Bound Boss skill DPS ≤ Avatar skill budget; **two** Bound Bosses together ≤ ~1.5× one Avatar skill (Tune) so they help the climb without deleting Avatar.
+
+### Economy vs other lanes
+| Lane | Owns |
+|---|---|
+| Avatar star | Final 25% + pity 3rd — **prestige wave_power** |
+| Bound Boss fragments | Final (main) — **board tower fantasy**, **no pity** |
+| Tint uniques | Final / Semi — gear |
+| Skip crate | Commons only — **never** fragments |
+
+So farming Final when the game gets hard still helps: fragments → Bound Bosses that push the next harder cycle.
+
+### What we are not doing
+- Capturing mid-fight / nets.
+- Bound Boss as movable Hero (breaks “one drag”).
+- Per-boss unique code paths.
+- Pity on fragments.
+- More than 2 Bound Bosses on pads.
+- Fragments from skip.
+
+
+## 9l. Forever engine (data-driven core — ship once, content forever)
+
+**Goal:** one combat + economy **runtime**. Future seasons = **JSON + art**, not new systems. Player save stays tiny. Overgrind allowed; returns soft-cap so the loop never breaks.
+
+### Three layers (do not mix)
+
+| Layer | Lives where | What it is |
+|---|---|---|
+| **Engine** | TypeScript once | Defend sim, Dive rolls, merge, GS skip, Conquered reset, star-up, fragment unlock, soft-caps |
+| **Content packs** | `data/*.json` (+ SakPix sheets) | Boss families, wave bands, loot tables, star costs, skill numbers, map waypoints |
+| **Player save** | AsyncStorage (`playStore`) → later optional cloud blob | IDs + counts + flags only — never full item defs |
+
+Industry pattern: idle/TD forever loops + offline-first single-player (client sim, soft caps, prestige). Backend is backup/IAP, not the grind brain.
+
+### Generic engines (reuse for everything)
+
+1. **`StarTable`** — `{ from, to, cost_currency, cost_amount, success_pct? }`  
+   Powers (merge), Avatar stars (token), Bound Boss stars (fragments) all call the **same** star-up resolver. New star lane = new table row, not new code.
+
+2. **`DropTable`** — weighted rows + `once_per_cycle` / `unique` / `farmable` flags + preview labels.  
+   Final / Scout / Dive / skip-crate / Bound fragments all use one roller.
+
+3. **`SoftCap`** — `(stat, soft, hard?)` diminishing after soft. Gear mults, tokens/day, Research hours, Bound Boss skill budget. Overgrind past soft is **approved** but flat.
+
+4. **`CycleScaler`** — `cycle_power = f(conquered_cycles)` applied to enemy HP/count/recommended GS. One knob climbs the forever wall.
+
+5. **`SkillPrimitive`** — closed set only; content picks `skill_id` + knobs + VFX tint.
+
+6. **`ContentPack`** — `{ pack_id, boss_family[], maps[], loot_refs[], art_atlas }`. Season 2 = new pack + sprites. Engine unchanged.
+
+### Tiny save (minimize storage)
+
+Store **references**, not definitions:
+
+```json
+{
+  "v": 1,
+  "conquered_cycles": 3,
+  "campaign": { "phase": "main", "wave": 12 },
+  "tokens": 420,
+  "inventory": [{ "def_id": "pwr_tide_core", "stars": 2, "qty": 1 }],
+  "bound_bosses": [{ "boss_id": "ember_warden", "stars": 2, "frags": 1 }],
+  "flags": { "avatar_star_rolled_cycle": true, "uniques": ["u_ember_blade"] },
+  "tune_local": {}
+}
+```
+
+- Item **stats** live in `data/items.json` keyed by `def_id`.
+- Changing balance = ship new JSON; old saves still resolve.
+- Cap inventory rows (stack commons; unique once). No history log of every wave.
+
+**Backend (later, thin):** one JSONB blob per user (account sync + IAP receipts). No per-wave rows, no server combat. Client remains truth for solo grind; server optional mirror.
+
+### Forever loop (no new content required to keep playing)
+
+```
+Dress → Defend (or Skip if GS high) → clear / farm boss band
+  → drops (tables) → merge / Bound frags / Avatar star
+  → Conquered on Final → cycle_power↑ → harder wall
+  → farm Bound Bosses + soft-capped tokens → push again
+```
+
+Dive = volume between Defends. Research = idle drip. **Loop never needs a new map** to stay valid; packs only add *flavor* walls.
+
+### Overgrind policy (approve + cap)
+
+| Activity | Approve overgrind? | Cap |
+|---|---|---|
+| Farm Scout/Semi/Final | Yes | Half tokens on replay; uniques once; fragments no pity but ★5 hard |
+| Dive / merge | Yes | Charge cap 10; merge ★5; Dive Power weight soft |
+| Research / tend | Yes | **10h** Research accrual; daily tend once |
+| Skip ahead | Yes | Reduced pay; no uniques/frags |
+| Token wallet | Soft | Soft-cap spend sinks; daily clear half-cap after N |
+
+Feeling: “I can grind all night” + “numbers stop exploding.” Soft-cap after soft; hard only on stars / charges / unique flags.
+
+### What live ops actually ships
+
+1. New **boss family** pack (silhouette + tint + skill knobs + fragment table)  
+2. Optional new **Looks** / atlas frames  
+3. Tune number pass (or remote config later)  
+4. **Not** new combat systems, new pad rules, or new skill primitives without a version bump
+
+### Build rule for DeepSeek / Claude
+
+- Feature asks → “which engine + which JSON?” before new modules.  
+- If it needs a 4th tower job or new `skill_id`, that is a **version bump**, not a content pack.  
+- Fridge seasonal maps until the forever loop feels good on **two** maps + rotating packs.
 
 ## 10. Graphics pipeline (no gaps)
 
@@ -531,7 +870,7 @@ One box at a time. Same ATO rule: if two stages in one turn, undo the second.
 
 Godot/Unity. Multi-lane maps. Element immunities. PvP. Guilds. **Angry streak flames.** Live who-is-playing. Putting Play on Home. Building Play before ATO Home.
 
-Also stay out (looks cool, kills light): merge heroes, gacha hero roster, prestige/rebirth, barracks blockers, Bloons immunity matrix, daily challenge maps, side modes (match-3 etc.), second currency maze, uncapped offline Research.
+Also stay out (looks cool, kills light): merge heroes, gacha hero roster, full wipe prestige/rebirth (Conquered soft-cycle is OK), barracks blockers, Bloons immunity matrix, daily challenge maps, side modes (match-3 etc.), second currency maze, uncapped offline Research.
 
 ## 16b. Light retention locks (v0)
 
@@ -637,3 +976,60 @@ Design 10/10 ≠ permission to build. Raising build readiness requires **Home sh
 ## 17. Done when
 
 A friend opens Play, claims Research (gets ≥1 Power if undergeared), banks one Dive with visible odds, clears wave 3 by dragging the Hero, shares optional glow card, and can leave Grove-only the next day without feeling stuck. Content floor met. 30 fps on mid iPhone. Fun + light grind + clear next goal. **Design 10/10** when §16d checklist is true in the docs; **build 10/10** only after §16d build ladder completes post-ATO-gate.
+
+
+---
+
+## 18. Red-team + final plan (2026-09-09) — GO for DeepSeek
+
+### Verdict
+**Design is implementable.** No fatal holes. A few ambiguities are **locked below**. Do **not** build all of §9e–9l in one chat — phase it.
+
+### Gaps found → locked picks (Wayne)
+
+| Gap | Risk | Lock |
+|---|---|---|
+| §9 “one map” vs §9e Trial+Main | Confuse agent | **Two maps:** Trial = current Grove Path; Main = new `maps/divecore_main.json`. No third map v0. |
+| Bound Boss tap skill vs “one skill button” | UI fight | Bound Boss = **auto/passive only** v0. Avatar skill button stays alone. Boss echo skill = auto pulse on CD (primitive). |
+| Boss fight skills undefined | Scope creep | Final/Scout bosses v0 = **fat HP + tint + size + Runner pack**. Optional HP-threshold `burst` from JSON. Bound Boss skill numbers live in `bound_bosses.json`, not unique code. |
+| Boss family rotation | Save/content mess | **One** boss family until ContentPack 2. Conquered only bumps `cycle_power`, does not swap boss yet. |
+| GS formula missing | Skip broken | `GS = floor(100 * wave_power_eff * (1 + 0.02*avatar_level) * (1 + 0.03*avatar_stars))` after soft-caps. Type match is **combat only**, not GS. `recommended_GS(wave) = base[wave] * cycle_power` from JSON. |
+| Skip algorithm missing | Infinite skip | While next wave is **normal** (not 9/10/19/20) and `GS >= 1.25 * recommended(next)`, advance + accumulate reduced pay; stop at boss band or when GS check fails. One skip-crate at end of batch. |
+| Milestones 5/10/25 vs Main ends 20 | Orphan 25 | Milestones use **`lifetime_waves_cleared`** (never resets on Conquered). 25 still reachable. |
+| Inventory “cap rows” | Bloat | Soft warn at **40** stacks; hard refuse new commons at **60** (uniques always keep). Sell/discard sink. |
+| §14 Supabase vs handoff local | Agent wires DB early | **Local AsyncStorage wins** until optional sync step. Spec §14 = later. |
+| Shops open design | Distraction | **Fridge** until Phase E done. Stub shelf OK only after forever loop playable. |
+| §16 “no prestige” vs Conquered | Doc fight | Conquered = soft cycle (wave display reset + cycle_power). Full wipe rebirth stays banned. |
+| Dive Power re-weight vs Defend uniques | Economy | Do in Phase C with DropTable — not a separate rewrite. |
+| SakPix | Art block | Placeholders until after Phase E smoke. Push branch anytime; merge when art ready. |
+
+### Still fridge (do not DeepSeek yet)
+- Hero IAP, paid OP shop rows, ads, cloud JSONB sync  
+- Boss family rotation / Season packs  
+- Dynamic mazes, immunities, 4th tower, pity on Bound frags  
+- Perfect-clear juice, OP elemental uniques  
+
+### Already built (do not redo)
+Grove hub, Claim/Research, Dive, Dress+merge, Defend path/towers/Avatar/skill, coach, half-cap, floaters, milestones stub, Dev kit, Tune — on `play/grove-v0`.
+
+### DeepSeek phases (one chat = one phase; Flash unless noted)
+
+| Phase | Model | Ship | Cite |
+|---|---|---|---|
+| **A0** | Flash | Divecore **copy/UX polish** (rename, blurbs, scrap hint) — product feel | SPEC naming + hub |
+| **A** | Flash | Forever **engine stubs**: `StarTable`, `DropTable`, `SoftCap`, `CycleScaler` helpers + `data/*.json` shapes; playStore `v` migrate (`campaign`, `conquered_cycles`, `lifetime_waves_cleared`, `bound_bosses[]`) | §9l, GAME_DATA |
+| **B** | Flash→Pro if stuck | **Campaign**: Trial 1–5 → Main 1–20; Conquered; `cycle_power`; band picker (farm cleared bands @ half tokens) | §9e, §9h farm |
+| **C** | Pro for combat bits | Boss bands (Scout/Semi/Final fat HP); Tide/Ember/Root/Spark +20%; wave preview; drop preview; Avatar star roll+pity; Dive Power weight trim | §9f–9i |
+| **D** | Flash | Gear Score + Skip-to-even (no unique/frag from skip) | §9j |
+| **E** | Pro | Bound Boss: fragments, unlock ★1, star via StarTable, max 2 pads, auto skill | §9k |
+| **F** | Flash | Shop **stubs** + Dev kit buttons for A–E; Expo smoke checklist | §9i stubs |
+| **G** | — | SakPix swap (Canva/you); one PR when smoke+desired art | §10 |
+
+**Abort rules:** If B fails twice → ship A0+A only (engines ready). If E fails → forever loop without Bound Boss still valid (farm uniques + Avatar star). Bound Boss is stretch fantasy, not required for “full loop.”
+
+### Full loop definition (done enough to grind forever)
+Campaign Conquered works + farm Final + soft-caps + type match + drop preview. GS skip and Bound Boss are **QoL / fantasy** on top — great, not blockers.
+
+### Go / no-go
+**GO** for DeepSeek starting **A0 → A → B**. Do not start E before C. Do not invent new systems mid-phase.
+

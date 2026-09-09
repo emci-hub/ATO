@@ -35,15 +35,15 @@ Handoff was **not** finish-safe as first written. Fixed below.
 
 ## Dev kit (standing — every step)
 
-Grove screen has a **Dev kit** block under the Defend rows, visible **only** when `PRE_LAUNCH_DEV` **and** the session PIN unlock is entered. The hub shows a small **Dev** PIN row while locked; the PIN is `Calgary1!` (soft client gate — wrong = kit stays hidden; unlock is in-memory session-only via `src/play/dev-lock.ts`, so a cold start locks again). Never a real security boundary: `PRE_LAUNCH_DEV = false` strips the whole route for App Store builds, and real Dev Tools use the server-side `dev-unlock` path instead.
+Grove/Divecore screen has a **Dev kit** block, visible when `PRE_LAUNCH_DEV` **and** unlocked with local password `Calgary1!` (client soft-gate). Wrong/locked = hidden. App Store strips via `PRE_LAUNCH_DEV` false.
 
 - Each new Play feature that is time/RNG gated must add a **dev button** here to force the ready state / grant / reset for that feature.
 - Never use Dev kit in production (`PRE_LAUNCH_DEV` false = hidden).
 - Prefer calling `playStore` helpers; no duplicate fake state.
 
-Starter buttons: Fill research · Fill research full · +10 tokens · Fill dive 10 · Dump save v · Reset play store.
+Starter buttons (step 2.5): Fill research · Fill research full · +10 tokens · Fill dive 10 · Reset play store.
 
-Later examples: grant Dive find · force Surface bank · start Defend wave 1 with scrap · clear inventory · unlock skill CD. The Defend kit (win / leak / +40 scrap / god mode / milestones) lives on the Defend screen under the same PIN gate.
+Later examples: grant Dive find · force Surface bank · start Defend wave 1 with scrap · clear inventory · unlock skill CD.
 
 ## Token rules
 
@@ -175,3 +175,70 @@ ONE job. play_* tables + RLS keyed by ATO user_id; sync tokens/inventory on fore
 **Minimum ship:** Claim → Dive bank → Dress equip → persist.  
 **Target ship:** + Defend wave 3 clear.  
 **Not required for “addon finished”:** SakPix, IAP, ads, push, Supabase sync, 24 Looks.
+
+
+---
+
+## Phase 2 — Forever loop (post 1–7) — red-team 2026-09-09
+
+**GO.** Cite `GAME_SPEC.md` §18 + only the section for that phase. Full loop = A0→C; D/E stretch.
+
+### Order
+A0 copy polish → A engines+JSON → B campaign/Conquered → C bosses/type/drops → D GS skip → E Bound Boss → F shop stubs → G SakPix/PR
+
+### Phase prompts (paste one per chat)
+
+### A0 — Flash — Divecore copy
+```
+@PLAY_DEEPSEEK_HANDOFF.md @GAME_SPEC.md (§18 A0 + naming)
+
+Branch play/grove-v0. ONE job: Divecore product copy/UX only.
+Rename Grove chrome → Divecore / Basecore where user-facing.
+Add newbie blurbs: play icon feel, token/charge one-liners, Dress bonus categories, Defend wave bands + scrap hint.
+No new systems. Touch only play UI strings + hub. Commit. Expo smoke.
+```
+
+### A — Flash — engines
+```
+@PLAY_DEEPSEEK_HANDOFF.md @GAME_SPEC.md (§9l §18 A + Dev kit lock) @GAME_DATA.md
+
+Branch play/grove-v0. ONE job: forever engine stubs + data shapes + Dev kit password lock.
+Keep Dev kit (do NOT remove). Gate it: PRE_LAUNCH_DEV AND unlock with password Calgary1! (local soft-gate; hide until unlocked).
+Add helpers: StarTable, DropTable, SoftCap, CycleScaler (pure TS).
+Add data/*.json stubs (drops, stars, waves, bound_bosses empty).
+Migrate playStore v: campaign, conquered_cycles, cycle_power, lifetime_waves_cleared, bound_bosses[].
+Dev kit: Dump save v + keep existing force buttons. Commit.
+```
+
+### B — Flash — campaign
+```
+@PLAY_DEEPSEEK_HANDOFF.md @GAME_SPEC.md (§9e §9h farm §18 B)
+
+Branch play/grove-v0. ONE job: Trial 1–5 then Main 1–20, Conquered on Main 20, cycle_power apply to enemy HP/count.
+Band picker: replay cleared bands at half tokens. lifetime_waves_cleared milestones.
+Main map JSON (waypoints+pads) — Trial reuses current path.
+Pro only if Flash fails twice. Commit. Smoke Trial→Main→Conquered once.
+```
+
+### C — Pro — bosses + type + drops
+```
+@PLAY_DEEPSEEK_HANDOFF.md @GAME_SPEC.md (§9f §9g §9h §9i §18 C)
+
+Branch play/grove-v0. ONE job: Scout 9–10 / Semi 19 / Final 20 fat bosses; soft type match +20%; setup chart+?; wave+drop preview; Avatar star 25%+pity 3rd; trim Dive Power weights.
+Use DropTable. No Bound Boss yet. Commit.
+```
+
+### D — Flash — GS skip
+```
+@PLAY_DEEPSEEK_HANDOFF.md @GAME_SPEC.md (§9j §18 D)
+
+ONE job: Gear Score + Skip-to-even. No uniques/frags/Avatar star from skip. One skip crate/batch. Stop before boss bands. Commit.
+```
+
+### E — Pro — Bound Boss
+```
+@PLAY_DEEPSEEK_HANDOFF.md @GAME_SPEC.md (§9k §18 E)
+
+ONE job: boss fragments → unlock Bound Boss tower; StarTable stars; max 2 pads; auto skill only (no extra skill button). No pity. Commit.
+```
+
