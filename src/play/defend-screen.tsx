@@ -20,6 +20,7 @@
  * The sim is local + transient (see `defend.ts`); only the campaign seat,
  * rewards, and meta persist through the shared store.
  */
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -61,10 +62,16 @@ import {
   type Puff,
   type TowerKind,
 } from '@/play/defend';
+import { bossBandFor, previewDropTable, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, typeMatchBonus, type TypeTag } from '@/play/engine';
+import { getItemDef } from '@/play/items';
 import {
+  AVATAR_STAR_MAX,
   avatarLevelWavePower,
+  avatarStarWavePower,
   bucketMultiplier,
   campaignPhaseLabel,
+  dropTableForWave,
+  hasTypeMatch,
   replayBands,
   xpForClear,
   type CampaignPhase,
@@ -77,6 +84,7 @@ import { tipForWave } from '@/play/coach';
 import { getTune, saveTune, setKnob } from '@/play/tune';
 
 const PUFF_COLOR = '#F472B6';
+const RUNNER_COLOR = '#FBBF24';
 const AVATAR_COLOR = '#38BDF8';
 const TOWER_COLORS: Record<TowerKind, string> = {
   archer: '#34D399',
@@ -193,6 +201,11 @@ export function DefendScreen({
   onResetCampaign,
   onJumpMain19,
   onForceConquered,
+  onSpendStarToken,
+  onGrantStarToken,
+  onSetCycleTint,
+  onForceFinal,
+  onResetAvatarStarCycle,
   onBackToGrove,
 }: {
   view: PlayView;
@@ -209,6 +222,16 @@ export function DefendScreen({
   onJumpMain19: () => void;
   /** Dev kit only: force one more Conquered cycle. */
   onForceConquered: () => void;
+  /** Spend one Avatar star token → +1 star (§9h). */
+  onSpendStarToken: () => Promise<boolean>;
+  /** Dev kit only: grant one Avatar star token. */
+  onGrantStarToken: () => Promise<void>;
+  /** Dev kit only: set the cycle boss tint. */
+  onSetCycleTint: (tint: TypeTag) => void;
+  /** Dev kit only: park the seat at the Final band (Main wave 20). */
+  onForceFinal: () => void;
+  /** Dev kit only: reset Avatar-star cycle flags. */
+  onResetAvatarStarCycle: () => void;
   onBackToGrove: () => void;
 }) {
   const theme = useTheme();
@@ -224,6 +247,7 @@ export function DefendScreen({
     createDefendLive(view.campaign.wave_in_phase, {
       mapId: view.campaign.phase,
       cyclePower: view.cyclePower,
+      tint: view.cycleTint,
     }),
   );
   const [selectedPad, setSelectedPad] = useState<number | null>(null);
@@ -231,6 +255,10 @@ export function DefendScreen({
   const [godMode, setGodMode] = useState(() => getTune().godMode);
   const [coachHidden, setCoachHidden] = useState(false);
   const [whyOpen, setWhyOpen] = useState(false);
+  /** Type-match chart (§9f §9i "?") — open state on setup + live. */
+  const [chartOpen, setChartOpen] = useState(false);
+  /** Dev kit only: dump the current band's drop table inline. */
+  const [dumpDropsOpen, setDumpDropsOpen] = useState(false);
   /** What the last win paid — shows the honest (possibly halved) tokens. */
   const [lastWin, setLastWin] = useState<DefendWinResult | null>(null);
   /** Floating damage numbers, pooled to MAX_FLOATERS (display only). */
@@ -269,6 +297,15 @@ export function DefendScreen({
    * visually jumps maps before the player moves on. */
   const boardMap = DEFEND_MAPS[sim?.mapId ?? mapId];
 
+  /** Boss band of the chosen fight (null for a normal formula wave). */
+  const band = bossBandFor(fight.phase, fight.wave);
+  /** Soft type match vs the cycle tint (§9f) — board-wide +20% on a match. */
+  const typeMatchActive = hasTypeMatch(view.equipped, view.cycleTint);
+  const typeMatchPct = Math.round(typeMatchBonus(typeMatchActive) * 100);
+  /** Drop table + honest preview rows for the chosen fight (§9i). */
+  const dropTableId = dropTableForWave(fight.phase, fight.wave);
+  const dropRows = previewDropTable(dropTableId, new Set(view.uniques));
+
   // Avatar position (board units 0..1) — smooth via shared values, engine via ref.
   const avatarX = useSharedValue(0.5);
   const avatarY = useSharedValue(0.4);
@@ -281,14 +318,17 @@ export function DefendScreen({
     avatarPosRef.current = { x, y };
   }, []);
 
-  // Equipped mult buckets, board-wide for towers + Avatar.
+  // Equipped mult buckets, board-wide for towers + Avatar. Type match (§9f)
+  // and Avatar stars (§9h) fold into the same damage pass.
   const buckets = useMemo(
     () => ({
       wavePower: bucketMultiplier('wave_power', view.statSums),
       towerSpeed: bucketMultiplier('tower_speed', view.statSums),
       avatarLevel: view.avatarLevel,
+      typeMatch: typeMatchActive ? typeMatchBonus(true) : 0,
+      avatarStars: view.avatarStars,
     }),
-    [view.statSums, view.avatarLevel],
+    [view.statSums, view.avatarLevel, view.avatarStars, typeMatchActive],
   );
   const bucketsRef = useRef(buckets);
   bucketsRef.current = buckets;
@@ -297,7 +337,7 @@ export function DefendScreen({
   const buildSetup = useCallback(
     (next: Fight) => {
       setReplayPick(next.mode === 'replay' ? { phase: next.phase, wave: next.wave } : null);
-      setSim(createDefendLive(next.wave, { mapId: next.phase, cyclePower: view.cyclePower }));
+      setSim(createDefendLive(next.wave, { mapId: next.phase, cyclePower: view.cyclePower, tint: view.cycleTint }));
       setPhase('setup');
       setPaused(false);
       setSelectedPad(null);
@@ -305,7 +345,7 @@ export function DefendScreen({
       prevPuffsRef.current = [];
       setFloaters([]);
     },
-    [view.cyclePower],
+    [view.cyclePower, view.cycleTint],
   );
 
   /** When the chosen fight changes while on SETUP (seat advanced after a win,
@@ -313,13 +353,13 @@ export function DefendScreen({
   const fightKey = `${fight.phase}:${fight.wave}:${fight.mode}`;
   useEffect(() => {
     if (phase !== 'setup') return;
-    setSim(createDefendLive(fight.wave, { mapId: fight.phase, cyclePower: view.cyclePower }));
+    setSim(createDefendLive(fight.wave, { mapId: fight.phase, cyclePower: view.cyclePower, tint: view.cycleTint }));
     setSelectedPad(null);
     setWhyOpen(false);
     prevPuffsRef.current = [];
     setFloaters([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fightKey, view.cyclePower]);
+  }, [fightKey, view.cyclePower, view.cycleTint]);
 
   /** Start the wave on the current board — placed towers + spent scrap carry
    * into the fight (spec §9: setup place → start). */
@@ -328,13 +368,14 @@ export function DefendScreen({
     setSim((prev) => prev ?? createDefendLive(fightRef.current.wave, {
       mapId: fightRef.current.phase,
       cyclePower: view.cyclePower,
+      tint: view.cycleTint,
     }));
     setPhase('running');
     setPaused(false);
     setSelectedPad(null);
     prevPuffsRef.current = [];
     setFloaters([]);
-  }, [view.cyclePower]);
+  }, [view.cyclePower, view.cycleTint]);
 
   /** Push hit/kill floaters (capped + oldest dropped = pooled, no unbounded
    * growth under heavy fire). Board units → px via the measured board size. */
@@ -522,6 +563,55 @@ export function DefendScreen({
               ×{levelBonus.toFixed(2)} power
             </ThemedText>
           </View>
+          <View style={styles.statRow}>
+            <ThemedText type="smallBold">
+              Avatar ★{view.avatarStars}/{AVATAR_STAR_MAX}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              ×{avatarStarWavePower(view.avatarStars).toFixed(2)} power
+            </ThemedText>
+          </View>
+          {view.avatarStarTokens > 0 && view.avatarStars < AVATAR_STAR_MAX ? (
+            <Pressable
+              onPress={() => void onSpendStarToken()}
+              accessibilityRole="button"
+              accessibilityLabel="Spend Avatar star token"
+              style={({ pressed }) => [
+                styles.hudButton,
+                { backgroundColor: theme.backgroundSelected },
+                pressed && styles.pressed,
+              ]}>
+              <ThemedText type="smallBold">
+                Spend star token → ★{view.avatarStars + 1} (+
+                {Math.round(getTune().avatarStarWavePowerStep * 100)}% power)
+              </ThemedText>
+            </Pressable>
+          ) : null}
+          <View style={styles.statRow}>
+            <View style={styles.typeMatchRow}>
+              <MaterialCommunityIcons
+                name={TAG_ICON[view.cycleTint]}
+                size={14}
+                color={TAG_COLOR[view.cycleTint]}
+              />
+              <ThemedText type="smallBold">
+                Type · {TAG_LABEL[view.cycleTint]}
+              </ThemedText>
+            </View>
+            <Pressable
+              onPress={() => setChartOpen((open) => !open)}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Type match chart"
+              style={({ pressed }) => [pressed && styles.pressed]}>
+              <ThemedText type="smallBold" themeColor={typeMatchActive ? 'emphasis' : 'textSecondary'}>
+                {typeMatchActive ? `+${typeMatchPct}% match` : 'no match'}
+              </ThemedText>
+            </Pressable>
+          </View>
+          {chartOpen ? (
+            <TypeMatchChart tint={view.cycleTint} matched={typeMatchActive} matchPct={typeMatchPct} />
+          ) : null}
           {phase === 'running' ? (
             <View style={styles.buttonRow}>
               <Pressable
@@ -634,12 +724,33 @@ export function DefendScreen({
                 const y = pos.y * 100;
                 const pct = Math.max(0, Math.min(1, puff.hp / puff.maxHp));
                 const slowed = puff.slowMs > 0;
+                const radius = 3.4 * puff.size;
+                const fill =
+                  puff.kind === 'boss'
+                    ? puff.tint
+                      ? TAG_COLOR[puff.tint]
+                      : PUFF_COLOR
+                    : puff.kind === 'runner'
+                      ? RUNNER_COLOR
+                      : PUFF_COLOR;
+                const barWidth = 8 * puff.size;
                 return (
                   <G key={`puff-${puff.id}`}>
-                    <Circle cx={x} cy={y} r={3.4} fill={PUFF_COLOR} />
-                    <Circle cx={x} cy={y} r={3.4} fill={slowed ? theme.accentTertiary : 'none'} fillOpacity={0.5} />
-                    <Rect x={x - 4} y={y - 7} width={8} height={1.6} fill="rgba(0,0,0,0.35)" rx={0.8} />
-                    <Rect x={x - 4} y={y - 7} width={8 * pct} height={1.6} fill="#4ADE80" rx={0.8} />
+                    <Circle cx={x} cy={y} r={radius} fill={fill} />
+                    {puff.kind === 'boss' ? (
+                      <Circle
+                        cx={x}
+                        cy={y}
+                        r={radius}
+                        fill="none"
+                        stroke="#FFFFFF"
+                        strokeWidth={0.6}
+                        strokeOpacity={0.7}
+                      />
+                    ) : null}
+                    <Circle cx={x} cy={y} r={radius} fill={slowed ? theme.accentTertiary : 'none'} fillOpacity={0.5} />
+                    <Rect x={x - barWidth / 2} y={y - radius - 4} width={barWidth} height={1.6} fill="rgba(0,0,0,0.35)" rx={0.8} />
+                    <Rect x={x - barWidth / 2} y={y - radius - 4} width={barWidth * pct} height={1.6} fill="#4ADE80" rx={0.8} />
                   </G>
                 );
               })}
@@ -792,15 +903,34 @@ export function DefendScreen({
               <View style={styles.statRow}>
                 <ThemedText type="smallBold">{fightTitle(fight)}</ThemedText>
                 <ThemedText type="subheading" themeColor="emphasis">
-                  {waveEnemyCount(fight.wave, view.cyclePower)} puffs
+                  {band
+                    ? `${band.boss.count} boss + ${band.runners} runners`
+                    : `${waveEnemyCount(fight.wave, view.cyclePower)} puffs`}
                 </ThemedText>
               </View>
+              {band ? (
+                <View style={styles.bandRow}>
+                  <MaterialCommunityIcons
+                    name={TAG_ICON[view.cycleTint]}
+                    size={14}
+                    color={TAG_COLOR[view.cycleTint]}
+                  />
+                  <ThemedText type="smallBold">
+                    {band.label} — {band.boss.name}
+                  </ThemedText>
+                  <ThemedText type="code" themeColor="textSecondary">
+                    {TAG_LABEL[view.cycleTint]}
+                  </ThemedText>
+                </View>
+              ) : null}
               <ThemedText type="small" themeColor="textSecondary">
-                {fight.mode === 'replay'
-                  ? 'Half-token replay — tap a cleared wave below, or head back to the campaign.'
-                  : cycleNote
-                    ? `The campaign climb — ${cycleNote}. Place towers, then start.`
-                    : 'The campaign climb — Trial teaches the path, Main is the real deal. Place towers, then start.'}
+                {band?.story
+                  ? band.story
+                  : fight.mode === 'replay'
+                    ? 'Half-token replay — tap a cleared wave below, or head back to the campaign.'
+                    : cycleNote
+                      ? `The campaign climb — ${cycleNote}. Place towers, then start.`
+                      : 'The campaign climb — Trial teaches the path, Main is the real deal. Place towers, then start.'}
               </ThemedText>
               {fight.mode === 'replay' ? (
                 <Pressable
@@ -824,6 +954,56 @@ export function DefendScreen({
                   {fight.mode === 'replay' ? 'Start replay' : 'Start wave'}
                 </ThemedText>
               </Pressable>
+            </ThemedView>
+
+            {/* Drop preview — honest "what can drop" for this wave/band (§9i). */}
+            <ThemedView type="backgroundElement" style={styles.card}>
+              <View style={styles.statRow}>
+                <ThemedText type="smallBold">What can drop</ThemedText>
+                {band?.kind === 'final' ? (
+                  <ThemedText type="code" themeColor="emphasis">
+                    + Avatar star {Math.round(getTune().avatarStarDropPct * 100)}%
+                  </ThemedText>
+                ) : null}
+              </View>
+              {band?.kind === 'final' ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {view.avatarStarRolledCycle
+                    ? 'Avatar star token · already rolled this cycle'
+                    : `Avatar star token · ${Math.round(getTune().avatarStarDropPct * 100)}% drop · pity on the ${getTune().avatarStarPityClears}rd Final this cycle (${view.finalClearsThisCycle}/${getTune().avatarStarPityClears} so far)`}
+                </ThemedText>
+              ) : null}
+              {dropRows.length === 0 ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  No drops listed for this wave.
+                </ThemedText>
+              ) : (
+                dropRows.map((row) => {
+                  const def = getItemDef(row.id);
+                  const name = def?.core.name ?? row.id;
+                  const slot = def?.core.slot ?? 'item';
+                  const rarity = def ? capitalize(def.core.rarity) : '';
+                  return (
+                    <View key={row.id} style={styles.dropRow}>
+                      <View style={styles.dropRowLeft}>
+                        <ThemedText type="smallBold">{name}</ThemedText>
+                        <ThemedText type="code" themeColor="textSecondary">
+                          {rarity} · {slot}
+                        </ThemedText>
+                      </View>
+                      <ThemedText
+                        type="code"
+                        themeColor={row.owned ? 'textSecondary' : row.unique ? 'emphasis' : undefined}>
+                        {row.owned
+                          ? "Owned — won't drop again"
+                          : row.unique
+                            ? 'Unique'
+                            : 'Can grind — still drops'}
+                      </ThemedText>
+                    </View>
+                  );
+                })
+              )}
             </ThemedView>
 
             {/* Band picker — replay any cleared band at half tokens (§9h). */}
@@ -926,6 +1106,19 @@ export function DefendScreen({
                     ? ` · ${ordinal(lastWin.milestoneLook.count)} clear — found a Rare Look!`
                     : ''}
                 </ThemedText>
+                {lastWin.dropItems.length > 0 ? (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Found:{' '}
+                    {lastWin.dropItems
+                      .map((id) => getItemDef(id)?.core.name ?? id)
+                      .join(', ')}
+                  </ThemedText>
+                ) : null}
+                {lastWin.starTokenGranted ? (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    ★ Avatar star token earned — spend it for +3% base wave power.
+                  </ThemedText>
+                ) : null}
                 {lastWin.conquered ? (
                   <ThemedText type="small" themeColor="textSecondary" style={styles.conqueredNote}>
                     Conquered! Enemies now scale ×{lastWin.cyclePower.toFixed(2)}. Next cycle
@@ -1158,6 +1351,40 @@ export function DefendScreen({
                 buildSetup({ phase: 'main', wave: 1, mode: 'campaign' });
               }}
             />
+            <DevRow
+              label="Jump to Final (Main wave 20)"
+              onPress={() => {
+                onForceFinal();
+                buildSetup({ phase: 'main', wave: 20, mode: 'campaign' });
+              }}
+            />
+            <DevRow label="Grant star token" onPress={() => void onGrantStarToken()} />
+            <DevRow label="Spend star token" onPress={() => void onSpendStarToken()} />
+            <DevRow
+              label={`Cycle tint → next (${TAG_LABEL[view.cycleTint]})`}
+              onPress={() => {
+                const idx = TYPE_MATCH_CYCLE.indexOf(view.cycleTint);
+                const next = TYPE_MATCH_CYCLE[(idx + 1) % TYPE_MATCH_CYCLE.length];
+                onSetCycleTint(next);
+              }}
+            />
+            <DevRow
+              label="Reset Avatar-star cycle"
+              onPress={() => {
+                onResetAvatarStarCycle();
+                setLastWin(null);
+              }}
+            />
+            <DevRow
+              label={dumpDropsOpen ? 'Hide band drop table' : 'Dump drops for band'}
+              onPress={() => setDumpDropsOpen((open) => !open)}
+            />
+            {dumpDropsOpen ? (
+              <ThemedText type="code" themeColor="textSecondary">
+                {dropTableId}: {dropRows.length} rows
+                {dropRows.map((row) => `\n  ${row.id}${row.unique ? ' (unique)' : ''}`).join('')}
+              </ThemedText>
+            ) : null}
           </ThemedView>
         ) : null}
       </SafeAreaView>
@@ -1184,6 +1411,54 @@ function DevRow({ label, onPress, disabled }: { label: string; onPress: () => vo
       </ThemedText>
     </Pressable>
   );
+}
+
+/** Type-match chart (§9f §9i "?"): Tide → Ember → Root → Spark cycle + the
+ * match rule. Display only — the combat rule is match-or-nothing. */
+function TypeMatchChart({
+  tint,
+  matched,
+  matchPct,
+}: {
+  tint: TypeTag;
+  matched: boolean;
+  matchPct: number;
+}) {
+  const theme = useTheme();
+  return (
+    <ThemedView type="backgroundElement" style={styles.chartCard}>
+      <View style={styles.chartRow}>
+        {TYPE_MATCH_CYCLE.map((tag, index) => (
+          <View key={tag} style={styles.chartItem}>
+            <View
+              style={[
+                styles.chartDot,
+                { backgroundColor: TAG_COLOR[tag], borderColor: theme.background },
+              ]}>
+              {tag === tint ? <View style={styles.chartDotActive} /> : null}
+            </View>
+            <ThemedText type="code" themeColor={tag === tint ? 'emphasis' : 'textSecondary'}>
+              {TAG_LABEL[tag]}
+            </ThemedText>
+            {index < TYPE_MATCH_CYCLE.length - 1 ? (
+              <ThemedText type="code" themeColor="textSecondary">
+                →
+              </ThemedText>
+            ) : null}
+          </View>
+        ))}
+      </View>
+      <ThemedText type="small" themeColor="textSecondary">
+        {matched
+          ? `Match = +${matchPct}% board power.`
+          : 'Equip a matching Power for +20% board power. Mismatch is neutral.'}
+      </ThemedText>
+    </ThemedView>
+  );
+}
+
+function capitalize(word: string): string {
+  return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
 /** One floating damage number. Rises + fades (cheap opacity/translateY) unless
@@ -1346,6 +1621,57 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'space-between',
+  },
+  typeMatchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  bandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  dropRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  dropRowLeft: {
+    flex: 1,
+    gap: Spacing.half,
+  },
+  chartCard: {
+    borderRadius: Spacing.three,
+    padding: Spacing.two,
+    gap: Spacing.two,
+    alignItems: 'stretch',
+  },
+  chartRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: Spacing.one,
+  },
+  chartItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.half,
+  },
+  chartDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chartDotActive: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FFFFFF',
   },
   bandBlock: {
     gap: Spacing.one,

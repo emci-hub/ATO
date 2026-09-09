@@ -17,15 +17,15 @@
   {
     "id": "drop_dive_step",
     "rolls": [
-      { "id": "item_deep_pearl_01", "weight": 18 },
-      { "id": "item_salt_helm_01", "weight": 15 },
-      { "id": "item_tide_blade_01", "weight": 12 },
-      { "id": "item_bark_aegis_01", "weight": 12 },
-      { "id": "item_glowveil_cloak_01", "weight": 10 },
-      { "id": "item_copper_keeper_01", "weight": 10 },
-      { "id": "item_leaf_cape_01", "weight": 8 },
-      { "id": "item_curator_cloak_01", "weight": 8 },
-      { "id": "item_bud_staff_01", "weight": 7 }
+      { "id": "item_deep_pearl_01", "weight": 24 },
+      { "id": "item_salt_helm_01", "weight": 22 },
+      { "id": "item_glowveil_cloak_01", "weight": 16 },
+      { "id": "item_leaf_cape_01", "weight": 14 },
+      { "id": "item_bud_staff_01", "weight": 12 },
+      { "id": "item_tide_blade_01", "weight": 6 },
+      { "id": "item_bark_aegis_01", "weight": 6 },
+      { "id": "item_copper_keeper_01", "weight": 5 },
+      { "id": "item_curator_cloak_01", "weight": 5 }
     ]
   },
   {
@@ -43,6 +43,66 @@
       { "id": "item_glowveil_cloak_01", "weight": 34 },
       { "id": "item_salt_helm_01", "weight": 33 },
       { "id": "item_deep_pearl_01", "weight": 33 }
+    ]
+  },
+  {
+    "id": "drop_defend_farm",
+    "rolls": [
+      { "id": "item_deep_pearl_01", "weight": 20 },
+      { "id": "item_salt_helm_01", "weight": 18 },
+      { "id": "item_leaf_cape_01", "weight": 16 },
+      { "id": "item_bud_staff_01", "weight": 14 },
+      { "id": "item_glowveil_cloak_01", "weight": 10 },
+      { "id": "item_moss_habit_01", "weight": 6 },
+      { "id": "item_tide_blade_01", "weight": 4 },
+      { "id": "item_bark_aegis_01", "weight": 4 },
+      { "id": "item_copper_keeper_01", "weight": 4 },
+      { "id": "item_curator_cloak_01", "weight": 4 }
+    ]
+  },
+  {
+    "id": "drop_band_scout9",
+    "rolls": [
+      { "id": "item_curator_cloak_01", "weight": 26 },
+      { "id": "item_glowveil_cloak_01", "weight": 14 },
+      { "id": "item_tide_blade_01", "weight": 12 },
+      { "id": "item_bark_aegis_01", "weight": 12 },
+      { "id": "item_copper_keeper_01", "weight": 12 },
+      { "id": "item_deep_pearl_01", "weight": 12 },
+      { "id": "item_salt_helm_01", "weight": 12 }
+    ]
+  },
+  {
+    "id": "drop_band_scout10",
+    "rolls": [
+      { "id": "item_curator_cloak_01", "weight": 30 },
+      { "id": "item_glowveil_cloak_01", "weight": 14 },
+      { "id": "item_deep_pearl_01", "weight": 14 },
+      { "id": "item_tide_blade_01", "weight": 14 },
+      { "id": "item_bark_aegis_01", "weight": 14 },
+      { "id": "item_copper_keeper_01", "weight": 14 }
+    ]
+  },
+  {
+    "id": "drop_band_semi19",
+    "rolls": [
+      { "id": "item_uni_ember_ward", "weight": 30, "unique": true },
+      { "id": "item_uni_ember_mantle", "weight": 30, "unique": true },
+      { "id": "item_curator_cloak_01", "weight": 14 },
+      { "id": "item_copper_keeper_01", "weight": 10 },
+      { "id": "item_tide_blade_01", "weight": 8 },
+      { "id": "item_bark_aegis_01", "weight": 8 }
+    ]
+  },
+  {
+    "id": "drop_band_final20",
+    "rolls": [
+      { "id": "item_uni_ember_edge", "weight": 40, "unique": true },
+      { "id": "item_curator_cloak_01", "weight": 16 },
+      { "id": "item_glowveil_cloak_01", "weight": 14 },
+      { "id": "item_tide_blade_01", "weight": 10 },
+      { "id": "item_bark_aegis_01", "weight": 10 },
+      { "id": "item_copper_keeper_01", "weight": 10 }
     ]
   }
 ]

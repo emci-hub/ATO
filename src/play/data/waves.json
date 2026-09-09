@@ -1,32 +1,46 @@
 [
   {
-    "id": "wave_1",
-    "wave": 1,
-    "phase": 1,
-    "enemy": "puff_pink",
-    "count": 7,
-    "hp_mult": 1.0,
-    "speed_mult": 1.0,
-    "token_reward": 50
+    "id": "band_main_9",
+    "phase": "main",
+    "wave": 9,
+    "kind": "scout_mini",
+    "label": "Scout mini-boss",
+    "story": "A scout slips the path…",
+    "drops": "drop_band_scout9",
+    "boss": { "name": "Scout", "hp_mult": 8, "size": 1.5, "count": 1, "burst": { "hp_pct": 0.5, "power": 2, "radius": 60 } },
+    "runners": 4
   },
   {
-    "id": "wave_5",
-    "wave": 5,
-    "phase": 1,
-    "enemy": "puff_pink",
-    "count": 12,
-    "hp_mult": 1.48,
-    "speed_mult": 1.0,
-    "token_reward": 50
-  },
-  {
-    "id": "wave_10",
+    "id": "band_main_10",
+    "phase": "main",
     "wave": 10,
-    "phase": 1,
-    "enemy": "puff_pink",
-    "count": 18,
-    "hp_mult": 2.08,
-    "speed_mult": 1.0,
-    "token_reward": 50
+    "kind": "scout",
+    "label": "Scout boss",
+    "story": "They'll remember this.",
+    "drops": "drop_band_scout10",
+    "boss": { "name": "Scout Warden", "hp_mult": 12, "size": 1.8, "count": 1, "burst": { "hp_pct": 0.5, "power": 3, "radius": 70 } },
+    "runners": 6
+  },
+  {
+    "id": "band_main_19",
+    "phase": "main",
+    "wave": 19,
+    "kind": "semi",
+    "label": "Semi-final",
+    "story": "They're back.",
+    "drops": "drop_band_semi19",
+    "boss": { "name": "Ember Warden", "hp_mult": 15, "size": 2.2, "count": 1, "burst": { "hp_pct": 0.5, "power": 4, "radius": 80 } },
+    "runners": 8
+  },
+  {
+    "id": "band_main_20",
+    "phase": "main",
+    "wave": 20,
+    "kind": "final",
+    "label": "Final form",
+    "story": "Final form.",
+    "drops": "drop_band_final20",
+    "boss": { "name": "Ember Sovereign", "hp_mult": 18, "size": 2.6, "count": 1, "burst": { "hp_pct": 0.5, "power": 5, "radius": 90 } },
+    "runners": 10
   }
 ]

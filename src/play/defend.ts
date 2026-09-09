@@ -31,7 +31,13 @@
  * a later phase — waves 9/10/19/20 are plain formula waves here.
  */
 
-import { avatarLevelWavePower } from '@/play/playStore';
+import {
+  avatarLevelWavePower,
+  avatarStarWavePower,
+  DEFAULT_CYCLE_TINT,
+} from '@/play/playStore';
+import { bossBandFor, type BossBand } from '@/play/engine/bands';
+import { type TypeTag } from '@/play/engine/type-match';
 import { getTune } from '@/play/tune';
 
 import rawMainMap from './data/maps/divecore_main.json';
@@ -130,6 +136,8 @@ function mapPathLength(map: DefendMap): number {
 export const PUFF_BASE_HP = 40;
 /** Puffs walk this fraction of the whole path per second (base speed). */
 export const PUFF_SPEED_PER_SEC = 0.06;
+/** Runners (boss pack / late-Main pressure) move this much faster than a puff. */
+export const RUNNER_SPEED_MULT = 1.25;
 
 /* ----------------------------------------------------------------- Avatar --- */
 /** Avatar base attack (placeholder — def not in GAME_DATA). */
@@ -239,6 +247,8 @@ export const TOWER_DEFS: Record<TowerKind, TowerDef> = {
   },
 };
 
+export type PuffKind = 'puff' | 'runner' | 'boss';
+
 export type Puff = {
   id: number;
   /** Path progress 0..1. */
@@ -249,6 +259,16 @@ export type Puff = {
   slowMs: number;
   /** Speed multiplier while slowed (1 when un-slowed). */
   slowFactor: number;
+  /** Enemy archetype: normal puff, fast runner, or a fat boss. */
+  kind: PuffKind;
+  /** Boss only: cycle tint (renders a tinted ring). */
+  tint: TypeTag | null;
+  /** Boss only: render radius scale (1 for normal enemies). */
+  size: number;
+  /** Boss only: enrage once below this HP fraction, or null. */
+  burstHpPct: number | null;
+  /** Boss only: the enrage already fired. */
+  burstFired: boolean;
 };
 
 export type Tower = {
@@ -267,6 +287,12 @@ export type DefendLive = {
   mapId: DefendMapId;
   /** Forever-engine cycle power for this run: scales puff count + HP. */
   cyclePower: number;
+  /** Boss band for this run (null = normal formula wave). */
+  band: BossBand | null;
+  /** Cycle tint for this run (boss tint + type-match target). */
+  tint: TypeTag;
+  /** Bosses still to spawn (from band.boss.count; boss bands only). */
+  bossesRemaining: number;
   puffs: Puff[];
   pendingSpawns: number;
   spawnCooldownMs: number;
@@ -297,17 +323,24 @@ export type DefendLiveOptions = {
   cyclePower?: number;
   /** Starting scrap (defaults to the tune's startScrap). */
   scrap?: number;
+  /** Cycle boss tint (defaults to the store's cycle tint). */
+  tint?: TypeTag;
 };
 
 export function createDefendLive(wave: number, options: DefendLiveOptions = {}): DefendLive {
   const mapId = options.mapId ?? 'trial';
   const cyclePower = Math.max(1, options.cyclePower ?? 1);
+  const waveN = Math.max(1, Math.floor(wave));
+  const band = bossBandFor(mapId, waveN);
   return {
-    wave: Math.max(1, Math.floor(wave)),
+    wave: waveN,
     mapId,
     cyclePower,
+    band,
+    tint: options.tint ?? DEFAULT_CYCLE_TINT,
+    bossesRemaining: band ? band.boss.count : 0,
     puffs: [],
-    pendingSpawns: waveEnemyCount(wave, cyclePower),
+    pendingSpawns: band ? band.runners : waveEnemyCount(waveN, cyclePower),
     spawnCooldownMs: 0,
     nextId: 0,
     towers: [],
@@ -324,13 +357,25 @@ export function createDefendLive(wave: number, options: DefendLiveOptions = {}):
  */
 export function retryDefendLive(state: DefendLive): DefendLive {
   return {
-    ...createDefendLive(state.wave, { mapId: state.mapId, cyclePower: state.cyclePower }),
+    ...createDefendLive(state.wave, {
+      mapId: state.mapId,
+      cyclePower: state.cyclePower,
+      tint: state.tint,
+    }),
     towers: state.towers.map((tower) => ({ ...tower, cooldownMs: 0 })),
   };
 }
 
 /* ---------------------------------------------------------------- combat --- */
-type DefendBuckets = { wavePower: number; towerSpeed: number; avatarLevel: number };
+type DefendBuckets = {
+  wavePower: number;
+  towerSpeed: number;
+  avatarLevel: number;
+  /** Type-match bonus fraction (0, or tune.typeMatchBonus when matched). */
+  typeMatch: number;
+  /** Avatar stars (→ +3% base wave_power each, `avatarStarWavePower`). */
+  avatarStars: number;
+};
 
 /** Place a tower on an empty pad, deducting scrap. Null when blocked. */
 export function placeTower(
@@ -396,31 +441,75 @@ export function stepDefendLive(
   avatar: { x: number; y: number },
 ): DefendStep {
   const map = DEFEND_MAPS[state.mapId];
+  const band = state.band;
   const speedBase =
     (PUFF_SPEED_PER_SEC * waveSpeedMult(state.wave) * dtMs) / 1000;
-  const hp = PUFF_BASE_HP * waveHpMult(state.wave) * state.cyclePower;
+  const puffHp = PUFF_BASE_HP * waveHpMult(state.wave) * state.cyclePower;
+  const bossHp = band
+    ? PUFF_BASE_HP * waveHpMult(state.wave) * state.cyclePower * band.boss.hp_mult
+    : puffHp;
+  // Board-wide damage mults: gear wave_power × type-match × Avatar stars.
+  const boardMult =
+    buckets.wavePower *
+    (1 + buckets.typeMatch) *
+    avatarStarWavePower(buckets.avatarStars);
 
   let pendingSpawns = state.pendingSpawns;
+  let bossesRemaining = state.bossesRemaining;
   let spawnCooldownMs = state.spawnCooldownMs - dtMs;
   let nextId = state.nextId;
   let puffs = state.puffs;
   let scrap = state.scrap;
 
-  // Spawns.
-  if (pendingSpawns > 0 && spawnCooldownMs <= 0) {
-    puffs = [
-      ...puffs,
-      { id: nextId++, dist: 0, hp, maxHp: hp, slowMs: 0, slowFactor: 1 },
-    ];
-    pendingSpawns -= 1;
+  // Spawns — bosses first (they lead the pack), then runners/normal puffs.
+  if ((bossesRemaining > 0 || pendingSpawns > 0) && spawnCooldownMs <= 0) {
+    if (bossesRemaining > 0) {
+      const burst = band?.boss.burst;
+      puffs = [
+        ...puffs,
+        {
+          id: nextId++,
+          dist: 0,
+          hp: bossHp,
+          maxHp: bossHp,
+          slowMs: 0,
+          slowFactor: 1,
+          kind: 'boss',
+          tint: state.tint,
+          size: band?.boss.size ?? 1,
+          burstHpPct: burst?.hp_pct ?? null,
+          burstFired: false,
+        },
+      ];
+      bossesRemaining -= 1;
+    } else {
+      puffs = [
+        ...puffs,
+        {
+          id: nextId++,
+          dist: 0,
+          hp: puffHp,
+          maxHp: puffHp,
+          slowMs: 0,
+          slowFactor: 1,
+          kind: band ? 'runner' : 'puff',
+          tint: null,
+          size: 1,
+          burstHpPct: null,
+          burstFired: false,
+        },
+      ];
+      pendingSpawns -= 1;
+    }
     spawnCooldownMs = DEFEND_SPAWN_INTERVAL_MS;
   }
 
-  // Movement (slowed puffs crawl at their applied slow factor).
+  // Movement (slowed puffs crawl; runners rush at their faster clip).
   puffs = puffs.map((puff) => {
     const slow = puff.slowMs > 0 ? puff.slowFactor : 1;
+    const speed = puff.kind === 'runner' ? speedBase * RUNNER_SPEED_MULT : speedBase;
     const slowMs = Math.max(0, puff.slowMs - dtMs);
-    return { ...puff, dist: puff.dist + speedBase * slow, slowMs };
+    return { ...puff, dist: puff.dist + speed * slow, slowMs };
   });
 
   // Towers fire.
@@ -435,9 +524,7 @@ export function stepDefendLive(
       if (target) {
         const def = TOWER_DEFS[tower.kind];
         const damage =
-          def.baseAttack *
-          def.levelMultWavePower[tower.level - 1] *
-          buckets.wavePower;
+          def.baseAttack * def.levelMultWavePower[tower.level - 1] * boardMult;
         puffs = applyHit(puffs, target.id, damage, def);
         if (puffs.some((p) => p.id === target.id && p.hp <= 0)) {
           scrap += scrapPerKill;
@@ -457,7 +544,7 @@ export function stepDefendLive(
     const target = acquireAvatarTarget(avatar, puffs, map);
     if (target) {
       const damage =
-        AVATAR_BASE_ATTACK * buckets.wavePower * avatarLevelWavePower(buckets.avatarLevel);
+        AVATAR_BASE_ATTACK * boardMult * avatarLevelWavePower(buckets.avatarLevel);
       puffs = puffs.map((puff) =>
         puff.id === target.id ? { ...puff, hp: puff.hp - damage } : puff,
       );
@@ -471,6 +558,23 @@ export function stepDefendLive(
     }
   }
 
+  // Boss enrage (§18 C): a boss that first drops below its HP threshold fires
+  // once and spawns a burst of extra runners (`burst` primitive's threat spike
+  // in v0 — enemies can't damage towers/hero, so leak-only fail makes a
+  // reinforcement burst the meaningful enrage).
+  for (const puff of puffs) {
+    if (
+      puff.kind === 'boss' &&
+      puff.burstHpPct != null &&
+      !puff.burstFired &&
+      puff.hp <= puff.maxHp * puff.burstHpPct
+    ) {
+      puffs = puffs.map((p) => (p.id === puff.id ? { ...p, burstFired: true } : p));
+      const burst = band?.boss.burst;
+      if (burst) pendingSpawns += Math.max(1, Math.round(burst.power));
+    }
+  }
+
   const skillCooldownMs = Math.max(0, state.skillCooldownMs - dtMs);
   const leak = puffs.some((puff) => puff.dist >= 1);
 
@@ -479,6 +583,9 @@ export function stepDefendLive(
       wave: state.wave,
       mapId: state.mapId,
       cyclePower: state.cyclePower,
+      band,
+      tint: state.tint,
+      bossesRemaining,
       puffs,
       pendingSpawns,
       spawnCooldownMs,
@@ -489,7 +596,7 @@ export function stepDefendLive(
       skillCooldownMs,
     },
     leak,
-    done: pendingSpawns === 0 && puffs.length === 0,
+    done: bossesRemaining === 0 && pendingSpawns === 0 && puffs.length === 0,
   };
 }
 

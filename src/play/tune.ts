@@ -49,6 +49,15 @@ export type TuneDoc = {
   /** Forever-engine cycle-power growth step (cycle_power = 1 + cycles × this,
    * Sane 0.12). Not wired to a live system yet — tune-ready for the engine. */
   cyclePowerStep: number;
+  /** Soft type-match bonus when an equipped Power's tag == the cycle tint
+   *   (§9f locked default +0.20). Mismatch stays neutral (no −%). */
+  typeMatchBonus: number;
+  /** Avatar star drop chance on a Final clear (§9h, 25% once/cycle). */
+  avatarStarDropPct: number;
+  /** Final clears in a cycle before the Avatar star is guaranteed (pity). */
+  avatarStarPityClears: number;
+  /** +% base wave_power per Avatar star when a star token is spent (§9h). */
+  avatarStarWavePowerStep: number;
 };
 
 /** Sane = the ship defaults the engines shipped with. */
@@ -69,6 +78,10 @@ export const SANE_TUNE: TuneDoc = {
   skillCooldownMs: 12_000,
   godMode: false,
   cyclePowerStep: 0.12,
+  typeMatchBonus: 0.2,
+  avatarStarDropPct: 0.25,
+  avatarStarPityClears: 3,
+  avatarStarWavePowerStep: 0.03,
 };
 
 export const TUNE_PRESETS: Record<TunePresetId, TuneDoc> = {

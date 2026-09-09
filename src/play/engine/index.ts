@@ -1,17 +1,18 @@
 /**
- * Forever-engine pure helpers (GAME_SPEC forever-engine stubs) — data shapes
- * only. No combat, campaign, or Bound-Boss systems are wired: these are the
- * math homes the future engine reads from (StarTable, DropTable, SoftCap,
- * CycleScaler), each backed by a JSON stub under `src/play/data/`.
- *
- * `cycle.ts` is already read by `playStore.ts` (cycle_power defaults); the
- * other three are exported here ready for when their systems land.
+ * Forever-engine pure helpers (GAME_SPEC §9l). The math homes the runtime reads
+ * from: StarTable (merge/star scaling), DropTable (weighted drops + uniques),
+ * SoftCap (diminishing soft caps), CycleScaler (Conquered power climb), and —
+ * since Phase C — TypeTag (soft type match) + BossBand (Main 9/10/19/20).
+ * Each is backed by a JSON stub under `src/play/data/`.
  */
 export { CycleScaler, cyclePower, cyclePowerStep, defaultCyclePower } from './cycle';
 export {
   DropTable,
   DropRoll,
+  DropPreviewRow,
   getDropTable,
+  isUniqueDrop,
+  previewDropTable,
   rollDropById,
   rollDropTable,
 } from './drop-table';
@@ -30,3 +31,20 @@ export {
   starMultScale,
   starRow,
 } from './star-table';
+export {
+  TYPE_MATCH_CYCLE,
+  TYPE_TAGS,
+  TAG_COLOR,
+  TAG_ICON,
+  TAG_LABEL,
+  TypeTag,
+  isTypeTag,
+  typeMatchBonus,
+} from './type-match';
+export {
+  BossBand,
+  BossBandKind,
+  BossBurst,
+  allBossBands,
+  bossBandFor,
+} from './bands';

@@ -56,6 +56,10 @@ const KNOBS: KnobRow[] = [
   { key: 'skillSlowPct', label: 'Root Veil slow', step: 0.05, format: (v) => v.toFixed(2) },
   { key: 'skillCooldownMs', label: 'Root Veil CD (ms)', step: 1000 },
   { key: 'cyclePowerStep', label: 'Cycle power step', step: 0.02, format: (v) => v.toFixed(2) },
+  { key: 'typeMatchBonus', label: 'Type match bonus', step: 0.05, format: (v) => v.toFixed(2) },
+  { key: 'avatarStarDropPct', label: 'Avatar star drop %', step: 0.05, format: (v) => v.toFixed(2) },
+  { key: 'avatarStarPityClears', label: 'Avatar star pity clears', step: 1 },
+  { key: 'avatarStarWavePowerStep', label: 'Star wave-power step', step: 0.01, format: (v) => v.toFixed(2) },
 ];
 
 export function TunePanel({ onClose }: { onClose: () => void }) {

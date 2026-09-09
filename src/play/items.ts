@@ -13,6 +13,8 @@
  * the stub table; Dive (step 3) brings its own weighted odds.
  */
 import rawItems from './data/items.json';
+import { rollDropById } from './engine/drop-table';
+import { isTypeTag, type TypeTag } from './engine/type-match';
 
 export const ITEM_SLOTS = ['weapon', 'armor', 'cloak', 'trinket'] as const;
 export type ItemSlot = (typeof ITEM_SLOTS)[number];
@@ -46,7 +48,7 @@ export type ItemDef = {
     kind: ItemKind;
     name: string;
     art: string;
-    type_tag: string;
+    type_tag: TypeTag;
   };
   /** Look items keep both null; a Power always carries at least mult_a. */
   mult_a: StatMult | null;
@@ -74,6 +76,15 @@ export function rollResearchFind(rng: () => number = Math.random): string {
 export function rollPowerFind(rng: () => number = Math.random): string {
   const powers = ITEMS.filter((item) => item.core.kind === 'power');
   return powers[Math.floor(rng() * powers.length)].id;
+}
+
+/**
+ * Roll one Dive find — the weighted `drop_dive_step` table (§9g: Dive is the
+ * Volume lane, Power weight trimmed to ~20% so Defend owns the uniques/tint
+ * lane). Falls back to the uniform stub roll if the table is missing/empty.
+ */
+export function rollDiveFind(rng: () => number = Math.random): string {
+  return rollDropById('drop_dive_step', rng) ?? rollResearchFind(rng);
 }
 
 /** A stable common Look — the Dev kit's junk-fill fodder (auto-sell source). */
@@ -177,8 +188,8 @@ function validateItems(raw: unknown): string[] {
     if (typeof core.art !== 'string' || core.art.length === 0) {
       problems.push(`${at}: core.art missing`);
     }
-    if (typeof core.type_tag !== 'string' || core.type_tag.length === 0) {
-      problems.push(`${at}: core.type_tag missing`);
+    if (!isTypeTag(core.type_tag)) {
+      problems.push(`${at}: core.type_tag must be one of tide/ember/root/spark`);
     }
 
     if (core.kind === 'look') {

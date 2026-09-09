@@ -28,13 +28,17 @@ import {
   devDefendSetClearsFive,
   devFillJunkLooks,
   devForceConquered,
+  devForceFinal,
+  devGrantAvatarStarToken,
   devGrantMilestoneWaveFive,
   devGrantRandomFind,
   devGrantRandomPower,
   devGrantTideBlades,
+  devResetAvatarStarCycle,
   devResetMilestones,
   devSellAllJunk,
   devSetCampaignSeat,
+  devSetCycleTint,
   equipItem,
   loadPlayStore,
   mergeItem,
@@ -42,6 +46,7 @@ import {
   recordDefendWin as persistDefendWin,
   savePlayStore,
   sellItem,
+  spendAvatarStarToken,
   startDive,
   surfaceDive,
   unequipItem,
@@ -57,6 +62,7 @@ import {
   type PlayView,
   type SellOutcome,
 } from '@/play/playStore';
+import type { TypeTag } from '@/play/engine/type-match';
 
 /** Rough tick for countdowns; refills/research are minutes-long, 30s is plenty. */
 const TICK_MS = 30_000;
@@ -389,6 +395,64 @@ export function usePlayStore() {
     return ok;
   }, [commit]);
 
+  /** Spend one Avatar star token → +1 star (§9h). Returns true when gained. */
+  const spendStarToken = useCallback(async (): Promise<boolean> => {
+    let gained = false;
+    commit((current) => {
+      const next = spendAvatarStarToken(current);
+      gained = next.gainedStar;
+      return next.gainedStar ? next.doc : null;
+    });
+    return gained;
+  }, [commit]);
+
+  /** Dev kit only: grant one Avatar star token. */
+  const grantStarToken = useCallback(async (): Promise<boolean> => {
+    let ok = false;
+    commit((current) => {
+      const next = devGrantAvatarStarToken(current);
+      ok = next !== current;
+      return ok ? next : null;
+    });
+    return ok;
+  }, [commit]);
+
+  /** Dev kit only: set the cycle boss tint. */
+  const setCycleTint = useCallback(
+    async (tint: TypeTag): Promise<boolean> => {
+      let ok = false;
+      commit((current) => {
+        const next = devSetCycleTint(current, tint);
+        ok = next !== current;
+        return ok ? next : null;
+      });
+      return ok;
+    },
+    [commit],
+  );
+
+  /** Dev kit only: park the seat at the Final band (Main wave 20). */
+  const forceFinal = useCallback(async (): Promise<boolean> => {
+    let ok = false;
+    commit((current) => {
+      const next = devForceFinal(current);
+      ok = next !== current;
+      return ok ? next : null;
+    });
+    return ok;
+  }, [commit]);
+
+  /** Dev kit only: reset Avatar-star cycle flags (re-test 25% + pity). */
+  const resetAvatarStarCycle = useCallback(async (): Promise<boolean> => {
+    let ok = false;
+    commit((current) => {
+      const next = devResetAvatarStarCycle(current);
+      ok = next !== current;
+      return ok ? next : null;
+    });
+    return ok;
+  }, [commit]);
+
   return {
     view,
     claim,
@@ -414,5 +478,10 @@ export function usePlayStore() {
     setClearsTodayFive,
     grantMilestoneWaveFive,
     resetMilestones,
+    spendStarToken,
+    grantStarToken,
+    setCycleTint,
+    forceFinal,
+    resetAvatarStarCycle,
   };
 }

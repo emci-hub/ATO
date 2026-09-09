@@ -1,7 +1,7 @@
 [
   {
     "id": "item_leaf_cape_01",
-    "core": { "slot": "cloak", "rarity": "common", "kind": "look", "name": "Leaf Cape", "art": "cape_leaf_01", "type_tag": "bloom" },
+    "core": { "slot": "cloak", "rarity": "common", "kind": "look", "name": "Leaf Cape", "art": "cape_leaf_01", "type_tag": "root" },
     "mult_a": null,
     "mult_b": null
   },
@@ -13,7 +13,7 @@
   },
   {
     "id": "item_bud_staff_01",
-    "core": { "slot": "weapon", "rarity": "common", "kind": "look", "name": "Bud Staff", "art": "staff_bud_01", "type_tag": "bloom" },
+    "core": { "slot": "weapon", "rarity": "common", "kind": "look", "name": "Bud Staff", "art": "staff_bud_01", "type_tag": "root" },
     "mult_a": null,
     "mult_b": null
   },
@@ -25,7 +25,7 @@
   },
   {
     "id": "item_moss_habit_01",
-    "core": { "slot": "armor", "rarity": "common", "kind": "look", "name": "Moss Habit", "art": "robe_moss_01", "type_tag": "bloom" },
+    "core": { "slot": "armor", "rarity": "common", "kind": "look", "name": "Moss Habit", "art": "robe_moss_01", "type_tag": "root" },
     "mult_a": null,
     "mult_b": null
   },
@@ -37,26 +37,44 @@
   },
   {
     "id": "item_tide_blade_01",
-    "core": { "slot": "weapon", "rarity": "rare", "kind": "power", "name": "Tide Blade", "art": "blade_tide_01", "type_tag": "steel" },
+    "core": { "slot": "weapon", "rarity": "rare", "kind": "power", "name": "Tide Blade", "art": "blade_tide_01", "type_tag": "tide" },
     "mult_a": { "stat": "wave_power", "value": 0.08 },
     "mult_b": { "stat": "dive_luck", "value": 0.03 }
   },
   {
     "id": "item_bark_aegis_01",
-    "core": { "slot": "armor", "rarity": "rare", "kind": "power", "name": "Bark Aegis", "art": "shield_bark_01", "type_tag": "bark" },
+    "core": { "slot": "armor", "rarity": "rare", "kind": "power", "name": "Bark Aegis", "art": "shield_bark_01", "type_tag": "root" },
     "mult_a": { "stat": "tower_speed", "value": 0.05 },
     "mult_b": { "stat": "wave_power", "value": 0.03 }
   },
   {
     "id": "item_copper_keeper_01",
-    "core": { "slot": "trinket", "rarity": "common", "kind": "power", "name": "Copper Keeper", "art": "trinket_copper_01", "type_tag": "steel" },
+    "core": { "slot": "trinket", "rarity": "common", "kind": "power", "name": "Copper Keeper", "art": "trinket_copper_01", "type_tag": "spark" },
     "mult_a": { "stat": "token_earn", "value": 0.05 },
     "mult_b": null
   },
   {
     "id": "item_curator_cloak_01",
-    "core": { "slot": "cloak", "rarity": "common", "kind": "power", "name": "Curator's Cloak", "art": "cloak_curator_01", "type_tag": "bloom" },
+    "core": { "slot": "cloak", "rarity": "common", "kind": "power", "name": "Curator's Cloak", "art": "cloak_curator_01", "type_tag": "ember" },
     "mult_a": { "stat": "research_yield", "value": 0.06 },
     "mult_b": null
+  },
+  {
+    "id": "item_uni_ember_edge",
+    "core": { "slot": "weapon", "rarity": "rare", "kind": "power", "name": "Ember Edge", "art": "blade_ember_01", "type_tag": "ember" },
+    "mult_a": { "stat": "wave_power", "value": 0.10 },
+    "mult_b": { "stat": "tower_speed", "value": 0.04 }
+  },
+  {
+    "id": "item_uni_ember_ward",
+    "core": { "slot": "armor", "rarity": "rare", "kind": "power", "name": "Ember Ward", "art": "shield_ember_01", "type_tag": "ember" },
+    "mult_a": { "stat": "tower_speed", "value": 0.07 },
+    "mult_b": { "stat": "wave_power", "value": 0.04 }
+  },
+  {
+    "id": "item_uni_ember_mantle",
+    "core": { "slot": "cloak", "rarity": "rare", "kind": "power", "name": "Ember Mantle", "art": "cloak_ember_01", "type_tag": "ember" },
+    "mult_a": { "stat": "wave_power", "value": 0.06 },
+    "mult_b": { "stat": "research_yield", "value": 0.05 }
   }
 ]

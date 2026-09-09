@@ -17,6 +17,7 @@ import { DevUnlockRow } from '@/play/dev-unlock-row';
 import { DiveScreen } from '@/play/dive-screen';
 import { DressScreen } from '@/play/dress-screen';
 import { DefendScreen } from '@/play/defend-screen';
+import type { TypeTag } from '@/play/engine/type-match';
 import { GROVE_ACTION_TILES, GROVE_LEDE } from '@/play/grove';
 import { itemName, type ItemSlot } from '@/play/items';
 import { TunePanel } from '@/play/tune-panel';
@@ -92,6 +93,11 @@ export default function PlayScreen() {
     setClearsTodayFive,
     grantMilestoneWaveFive,
     resetMilestones,
+    spendStarToken,
+    grantStarToken,
+    setCycleTint,
+    forceFinal,
+    resetAvatarStarCycle,
   } = usePlayStore();
   const [mode, setMode] = useState<PlayMode>('grove');
   const [toast, setToast] = useState<PlayToast | null>(null);
@@ -287,6 +293,34 @@ export default function PlayScreen() {
     void setClearsTodayFive();
   }, [setClearsTodayFive]);
 
+  /** Avatar star (§9h): spend a token → +1 star (no-op at cap / no token). */
+  const handleSpendStarToken = useCallback(async (): Promise<boolean> => {
+    return spendStarToken();
+  }, [spendStarToken]);
+
+  /** Dev kit: grant one Avatar star token. */
+  const handleGrantStarToken = useCallback(async () => {
+    await grantStarToken();
+  }, [grantStarToken]);
+
+  /** Dev kit: set the cycle boss tint. */
+  const handleSetCycleTint = useCallback(
+    (tint: TypeTag) => {
+      void setCycleTint(tint);
+    },
+    [setCycleTint],
+  );
+
+  /** Dev kit: park the seat at the Final band (Main wave 20). */
+  const handleForceFinal = useCallback(() => {
+    void forceFinal();
+  }, [forceFinal]);
+
+  /** Dev kit: reset the Avatar-star cycle flags. */
+  const handleResetAvatarStarCycle = useCallback(() => {
+    void resetAvatarStarCycle();
+  }, [resetAvatarStarCycle]);
+
   function closePlay() {
     if (router.canGoBack()) {
       router.back();
@@ -394,6 +428,11 @@ export default function PlayScreen() {
               onResetCampaign={handleResetCampaign}
               onJumpMain19={handleJumpMain19}
               onForceConquered={handleForceConquered}
+              onSpendStarToken={handleSpendStarToken}
+              onGrantStarToken={handleGrantStarToken}
+              onSetCycleTint={handleSetCycleTint}
+              onForceFinal={handleForceFinal}
+              onResetAvatarStarCycle={handleResetAvatarStarCycle}
               onBackToGrove={() => setMode('grove')}
             />
           ) : (

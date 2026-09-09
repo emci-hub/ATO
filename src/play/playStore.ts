@@ -52,10 +52,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { cyclePower, defaultCyclePower } from '@/play/engine/cycle';
+import { bossBandFor } from '@/play/engine/bands';
+import { isUniqueDrop, rollDropById } from '@/play/engine/drop-table';
+import { isTypeTag, type TypeTag } from '@/play/engine/type-match';
 import { getTune } from '@/play/tune';
 import {
   getItemDef,
   junkLookId,
+  rollDiveFind,
   rollMilestoneLook,
   rollPowerFind,
   rollResearchFind,
@@ -111,6 +115,10 @@ export const MAIN_WAVE_COUNT = 20; // Main waves 1..20 (Divecore Main map)
  * amounts so it reads as a milestone — tuned later. */
 export const CYCLE_CLEAR_BONUS_TOKENS = 150;
 export const CYCLE_CLEAR_BONUS_XP = 50;
+/** Avatar star cap (§9h) — same soft ★5 feel as gear, max 5 stars. */
+export const AVATAR_STAR_MAX = 5;
+/** Default cycle boss tint (§18 C: one boss family until ContentPack 2). */
+export const DEFAULT_CYCLE_TINT: TypeTag = 'ember';
 /** Clear wave W → this much XP to the Avatar (GAME_SPEC "xp_clear: 10 + wave*2"). */
 export function xpForClear(wave: number): number {
   return 10 + Math.max(1, Math.floor(wave)) * 2;
@@ -122,6 +130,11 @@ export function xpToNext(level: number): number {
 /** Avatar level → small base wave_power bonus (+2% per level, GAME_SPEC §9). */
 export function avatarLevelWavePower(level: number): number {
   return 1 + 0.02 * (level - 1);
+}
+
+/** Avatar stars → base wave_power bonus (+3% per star, §9h, Tune-able). */
+export function avatarStarWavePower(stars: number): number {
+  return 1 + getTune().avatarStarWavePowerStep * Math.max(0, Math.min(AVATAR_STAR_MAX, stars));
 }
 
 /** Risky merge (Dive-style, this step). */
@@ -248,6 +261,9 @@ export type DiveRun = {
  * cycle, `cycle_power` scales the next run's enemies, cleared bands replay at
  * half tokens, and milestones fire off the lifetime clear count. Legacy saves
  * (numeric phase 1/2) migrate onto the string phases.
+ * v13 (Phase C — bosses + type match + Avatar star) adds `avatar_stars`,
+ * `avatar_star_tokens`, `avatar_star_rolled_cycle`, `final_clears_this_cycle`,
+ * `uniques[]`, and `cycle_tint`. Older saves default these to fresh values.
  */
 
 /** Campaign phase. `trial` (Grove Path, waves 1–5) then `main` (Divecore
@@ -273,7 +289,7 @@ export type BoundBossRecord = {
 };
 
 export type PlayStoreDoc = {
-  version: 12;
+  version: 13;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -314,6 +330,18 @@ export type PlayStoreDoc = {
   lifetime_waves_cleared: number;
   /** Bound Bosses bound so far (empty until the boss system lands). */
   bound_bosses: BoundBossRecord[];
+  /** Avatar stars earned (0..5) — +3% base wave_power each (§9h). */
+  avatar_stars: number;
+  /** Unspent Avatar star tokens (spend → +1 star). */
+  avatar_star_tokens: number;
+  /** The cycle's star has already rolled once this cycle (§9h once/cycle). */
+  avatar_star_rolled_cycle: boolean;
+  /** Final clears this cycle (pity guarantees the star on the 3rd). */
+  final_clears_this_cycle: number;
+  /** Unique item ids already granted (drop once, never again — §9i). */
+  uniques: string[];
+  /** Current cycle's boss tint (one family until ContentPack 2). */
+  cycle_tint: TypeTag;
 };
 
 export type DiveChargeView = {
@@ -360,6 +388,18 @@ export type PlayView = {
   cyclePower: number;
   /** Total waves cleared over all time (never resets on a Conquered). */
   lifetimeWavesCleared: number;
+  /** Avatar stars earned (0..5). */
+  avatarStars: number;
+  /** Unspent Avatar star tokens. */
+  avatarStarTokens: number;
+  /** This cycle's star already rolled (drives Final 25% + pity). */
+  avatarStarRolledCycle: boolean;
+  /** Final clears this cycle (pity fires on the 3rd). */
+  finalClearsThisCycle: number;
+  /** Unique item ids already granted (drop once). */
+  uniques: readonly string[];
+  /** Current cycle's boss tint. */
+  cycleTint: TypeTag;
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -400,7 +440,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 12,
+    version: 13,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -421,6 +461,12 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     cycle_power: defaultCyclePower(),
     lifetime_waves_cleared: 0,
     bound_bosses: [],
+    avatar_stars: 0,
+    avatar_star_tokens: 0,
+    avatar_star_rolled_cycle: false,
+    final_clears_this_cycle: 0,
+    uniques: [],
+    cycle_tint: DEFAULT_CYCLE_TINT,
   };
 }
 
@@ -477,6 +523,12 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     conqueredCycles: doc.conquered_cycles,
     cyclePower: doc.cycle_power,
     lifetimeWavesCleared: doc.lifetime_waves_cleared,
+    avatarStars: doc.avatar_stars,
+    avatarStarTokens: doc.avatar_star_tokens,
+    avatarStarRolledCycle: doc.avatar_star_rolled_cycle,
+    finalClearsThisCycle: doc.final_clears_this_cycle,
+    uniques: doc.uniques,
+    cycleTint: doc.cycle_tint,
   };
 }
 
@@ -530,6 +582,12 @@ export type DefendWinResult = {
   cyclePower: number;
   /** Campaign seat AFTER this win (what Defend plays next). */
   campaign: CampaignState;
+  /** A Final clear dropped an Avatar star token this win (§9h). */
+  starTokenGranted: boolean;
+  /** Unspent Avatar star tokens AFTER this win. */
+  avatarStarTokens: number;
+  /** Item ids dropped from this wave's drop table (rolled on the win). */
+  dropItems: string[];
 };
 
 /**
@@ -543,6 +601,33 @@ export type DefendWinContext = {
   wave: number;
   mode: DefendWinMode;
 };
+
+/** The drop table a Defend wave rolls from (boss bands have their own; normal
+ * waves share the generic farm table). */
+export function dropTableForWave(phase: CampaignPhase, wave: number): string {
+  return bossBandFor(phase, wave)?.drops ?? 'drop_defend_farm';
+}
+
+/** Type tags of every worn Power (Looks never carry a combat tag). */
+export function equippedTypeTags(
+  equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>,
+): TypeTag[] {
+  const tags: TypeTag[] = [];
+  for (const ref of Object.values(equipped)) {
+    if (!ref) continue;
+    const def = getItemDef(ref.id);
+    if (def?.core.kind === 'power') tags.push(def.core.type_tag);
+  }
+  return tags;
+}
+
+/** True when any worn Power's type_tag matches the cycle tint (§9f). */
+export function hasTypeMatch(
+  equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>,
+  tint: TypeTag,
+): boolean {
+  return equippedTypeTags(equipped).includes(tint);
+}
 
 /**
  * A Defend win → the shared reward + campaign-advance math (GAME_SPEC §9e).
@@ -577,6 +662,35 @@ export function recordDefendWin(
   const todayYmd = localYmd(new Date(now));
   const { phase, wave, mode } = ctx;
   const isReplay = mode === 'replay';
+  const isFinalBand = phase === 'main' && Math.floor(wave) >= MAIN_WAVE_COUNT;
+
+  // Drop roll (§9g/§9i): every Defend win (campaign or replay) rolls this
+  // wave's drop table once. Owned uniques are excluded so they never drop
+  // twice; a rolled unique is remembered for the rest of the save.
+  const dropTableId = dropTableForWave(phase, wave);
+  const droppedId = rollDropById(dropTableId, rng, new Set(doc.uniques));
+  const dropItems = droppedId ? [droppedId] : [];
+  const uniquesAfter =
+    droppedId && isUniqueDrop(dropTableId, droppedId)
+      ? Array.from(new Set([...doc.uniques, droppedId]))
+      : doc.uniques;
+
+  // Avatar star roll (§9h): a Final clear (campaign OR replay) rolls 25%
+  // once/cycle, with pity guaranteeing it on the 3rd Final clear of the cycle.
+  let avatar_star_tokens = doc.avatar_star_tokens;
+  let avatar_star_rolled_cycle = doc.avatar_star_rolled_cycle;
+  let final_clears_this_cycle = doc.final_clears_this_cycle;
+  let starTokenGranted = false;
+  if (isFinalBand && !avatar_star_rolled_cycle) {
+    const attempts = final_clears_this_cycle + 1;
+    const hit = rng() < tune.avatarStarDropPct || attempts >= tune.avatarStarPityClears;
+    if (hit) {
+      starTokenGranted = true;
+      avatar_star_tokens += 1;
+      avatar_star_rolled_cycle = true;
+    }
+    final_clears_this_cycle = attempts;
+  }
 
   // Rewards. Replays are the §9h farm path: half tokens + half XP, and they
   // never count as a lifetime/campaign clear. Campaign wins honour the §9
@@ -635,6 +749,10 @@ export function recordDefendWin(
   if (conquered) {
     tokensGranted += CYCLE_CLEAR_BONUS_TOKENS;
     xpGranted += CYCLE_CLEAR_BONUS_XP;
+    // A new cycle begins — the Avatar-star roll + pity counters reset (§9h:
+    // once/cycle, pity counts Final clears WITHIN a cycle).
+    final_clears_this_cycle = 0;
+    avatar_star_rolled_cycle = false;
   }
 
   // XP level-ups (clear XP + any conquer bonus feed the same curve).
@@ -644,6 +762,11 @@ export function recordDefendWin(
     xp -= xpToNext(level);
     level += 1;
   }
+
+  // Bag: milestone Rare Look (if fired) + this wave's drop roll(s).
+  let inventory = doc.inventory;
+  if (milestone) inventory = addCopiesToBag(inventory, milestone.itemId, 0, 1);
+  if (dropItems.length > 0) inventory = addManyToBag(inventory, dropItems);
 
   const next: PlayStoreDoc = {
     ...doc,
@@ -657,12 +780,14 @@ export function recordDefendWin(
     campaign,
     conquered_cycles: conqueredCycles,
     cycle_power: cyclePowerValue,
-    inventory: milestone
-      ? addCopiesToBag(doc.inventory, milestone.itemId, 0, 1)
-      : doc.inventory,
+    inventory,
     milestone_waves_claimed: milestone
       ? [...doc.milestone_waves_claimed, lifetimeAfter]
       : doc.milestone_waves_claimed,
+    avatar_star_tokens,
+    avatar_star_rolled_cycle,
+    final_clears_this_cycle,
+    uniques: uniquesAfter,
   };
   return {
     doc: next,
@@ -679,6 +804,9 @@ export function recordDefendWin(
       conqueredCycles,
       cyclePower: cyclePowerValue,
       campaign,
+      starTokenGranted,
+      avatarStarTokens: avatar_star_tokens,
+      dropItems,
     },
   };
 }
@@ -700,6 +828,27 @@ export function claimMilestoneLook(
   if (!milestone || doc.milestone_waves_claimed.includes(wave)) return null;
   const itemId = rollMilestoneLook(rng);
   return { wave, itemId };
+}
+
+/**
+ * Spend one Avatar star token → +1 Avatar star (§9h). The token is only
+ * consumed when a star is actually gained (at the ★5 cap or with no token,
+ * this is a no-op). Each star adds +3% base wave_power (`avatarStarWavePower`).
+ */
+export function spendAvatarStarToken(
+  doc: PlayStoreDoc,
+): { doc: PlayStoreDoc; gainedStar: boolean } {
+  if (doc.avatar_star_tokens < 1 || doc.avatar_stars >= AVATAR_STAR_MAX) {
+    return { doc, gainedStar: false };
+  }
+  return {
+    doc: {
+      ...doc,
+      avatar_stars: doc.avatar_stars + 1,
+      avatar_star_tokens: doc.avatar_star_tokens - 1,
+    },
+    gainedStar: true,
+  };
 }
 
 /**
@@ -844,6 +993,26 @@ export function devGrantMilestoneWaveFive(
 /** Dev kit only: clear milestone flags so 5/10/25 fire again on their clears. */
 export function devResetMilestones(doc: PlayStoreDoc): PlayStoreDoc {
   return { ...doc, milestone_waves_claimed: [] };
+}
+
+/** Dev kit only: grant one Avatar star token (tests the spend → +★ path). */
+export function devGrantAvatarStarToken(doc: PlayStoreDoc): PlayStoreDoc {
+  return { ...doc, avatar_star_tokens: doc.avatar_star_tokens + 1 };
+}
+
+/** Dev kit only: set the cycle boss tint (re-skins boss bands + preview). */
+export function devSetCycleTint(doc: PlayStoreDoc, tint: TypeTag): PlayStoreDoc {
+  return { ...doc, cycle_tint: tint };
+}
+
+/** Dev kit only: park the seat at the Final band (Main wave 20). */
+export function devForceFinal(doc: PlayStoreDoc): PlayStoreDoc {
+  return devSetCampaignSeat(doc, 'main', MAIN_WAVE_COUNT);
+}
+
+/** Dev kit only: reset the Avatar-star cycle flags (re-test 25% + pity). */
+export function devResetAvatarStarCycle(doc: PlayStoreDoc): PlayStoreDoc {
+  return { ...doc, avatar_star_rolled_cycle: false, final_clears_this_cycle: 0 };
 }
 
 /** §7 bust table value at a Deeper index plus the §9c tune boost (whole-%),
@@ -1021,7 +1190,7 @@ export function startDive(
   if (doc.dive_run) return null;
   const dive = diveChargeAt(doc, now);
   if (dive.current < 1) return null;
-  const firstFind = rollResearchFind(rng);
+  const firstFind = rollDiveFind(rng);
   return {
     doc: {
       ...doc,
@@ -1070,7 +1239,7 @@ export function deeperDive(
     const bustPct = Math.round(bustChance * 100);
     return { doc: { ...doc, dive_run: null }, outcome: { busted: true, bustPct } };
   }
-  const addedId = rollResearchFind(rng);
+  const addedId = rollDiveFind(rng);
   return {
     doc: {
       ...doc,
@@ -1453,7 +1622,8 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     if (
       version !== 1 && version !== 2 && version !== 3 && version !== 4 &&
       version !== 5 && version !== 6 && version !== 7 && version !== 8 &&
-      version !== 9 && version !== 10 && version !== 11 && version !== 12
+      version !== 9 && version !== 10 && version !== 11 && version !== 12 &&
+      version !== 13
     ) {
       return null;
     }
@@ -1487,8 +1657,18 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       storedPower != null && storedPower >= 1 ? storedPower : cyclePower(conqueredCycles);
     const lifetimeWaves = finiteNumber(data.lifetime_waves_cleared) ?? 0;
     const boundBosses = parseBoundBosses(data.bound_bosses);
+    // v13 (Phase C): Avatar star + unique drops + cycle tint. All default for
+    // older saves.
+    const avatarStars = Math.max(0, Math.min(AVATAR_STAR_MAX, Math.floor(finiteNumber(data.avatar_stars) ?? 0)));
+    const avatarStarTokens = Math.max(0, Math.floor(finiteNumber(data.avatar_star_tokens) ?? 0));
+    const avatarStarRolled = data.avatar_star_rolled_cycle === true;
+    const finalClears = Math.max(0, Math.floor(finiteNumber(data.final_clears_this_cycle) ?? 0));
+    const uniques = Array.isArray(data.uniques)
+      ? data.uniques.filter((id): id is string => typeof id === 'string' && id.length > 0)
+      : [];
+    const cycleTint = isTypeTag(data.cycle_tint) ? data.cycle_tint : DEFAULT_CYCLE_TINT;
     return {
-      version: 12,
+      version: 13,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -1509,6 +1689,12 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       cycle_power: cyclePowerValue,
       lifetime_waves_cleared: Math.max(0, Math.floor(lifetimeWaves)),
       bound_bosses: boundBosses,
+      avatar_stars: avatarStars,
+      avatar_star_tokens: avatarStarTokens,
+      avatar_star_rolled_cycle: avatarStarRolled,
+      final_clears_this_cycle: finalClears,
+      uniques,
+      cycle_tint: cycleTint,
     };
   } catch {
     return null;
