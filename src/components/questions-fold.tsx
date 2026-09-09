@@ -12,6 +12,7 @@ import { useCategoryDefs } from '@/lib/category-catalog';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { updateTraits, type Me } from '@/lib/me';
 import { earnTokensQuiet } from '@/lib/tokens-server';
+import { claimOngoingRoundCompleteQuiet } from '@/lib/ato-tokens-server';
 import { deferredUnansweredAxes, mergeCategoryPriority } from '@/lib/questions/deferral';
 import { contradictedAxesFrom, type TraitHistoryRow } from '@/lib/trait-history';
 import { fetchTraitHistory } from '@/lib/trait-history-store';
@@ -566,6 +567,13 @@ function OngoingRoundFold({
     try {
       const existing = await fetchLatestOngoingRoundPack();
       setPack(existing);
+      // ATO tokens T-04: if the last answer's claim call was lost (app
+      // closed/offline before it fired), retry it here on load — the RPC
+      // dedupes on pack id, so a redundant claim for an already-claimed
+      // pack is a harmless no-op, never a double award.
+      if (existing && nextUnansweredItem(existing) === null) {
+        claimOngoingRoundCompleteQuiet(existing.id);
+      }
     } catch (err) {
       console.log('[ongoing-round] load error:', err);
       setError(true);
@@ -610,12 +618,18 @@ function OngoingRoundFold({
       await updateTraits(me.id, { [item.axis]: option.value }, 'self_situation', [item.axis]);
       earnTokensQuiet('game_round');
       await onUpdated();
-      setPack({
-        ...pack,
-        items: pack.items.map((row) =>
-          row.id === item.id ? { ...row, answeredOption: index } : row,
-        ),
-      });
+      const updatedItems = pack.items.map((row) =>
+        row.id === item.id ? { ...row, answeredOption: index } : row,
+      );
+      setPack({ ...pack, items: updatedItems });
+      // ATO tokens T-04: award the round-completion bonus the moment the
+      // last item is answered. The RPC re-verifies completion server-side
+      // (every question_items row in the pack answered) and dedupes on
+      // pack id, so this can never double-award even if pick() somehow
+      // fires this branch more than once for the same pack.
+      if (nextUnansweredItem({ ...pack, items: updatedItems }) === null) {
+        claimOngoingRoundCompleteQuiet(pack.id);
+      }
     } catch (err) {
       console.log('[ongoing-round] answer error:', err);
     } finally {

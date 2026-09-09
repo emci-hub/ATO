@@ -26,6 +26,7 @@ import { persistCelebratedMilestones } from '@/lib/me';
 import { checkMilestones, type MilestoneDef } from '@/lib/milestones';
 import { bankTotalProgress } from '@/lib/questions/local';
 import { legendsUnlocked } from '@/lib/questions/progressive-unlock';
+import { claimFullProfileComplete } from '@/lib/ato-tokens-server';
 import { supabase } from '@/lib/supabase';
 import { useAppearance } from '@/lib/theme/context';
 import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
@@ -302,6 +303,13 @@ export default function LegendsScreen() {
     if (crossed.length === 0) return;
     celebratingUnlockRef.current = true;
     setUnlockToast(crossed[0]!);
+    // ATO tokens T-04: award the Full Profile (50-question) completion bonus
+    // at the exact same crossing as this celebration. Fire-and-forget — the
+    // RPC's own once-ever unique index makes a double-fire harmless, so this
+    // never needs to gate on (or retry with) the milestone-persist result.
+    claimFullProfileComplete().catch((err) => {
+      console.log('[legends] claimFullProfileComplete error:', err);
+    });
     persistCelebratedMilestones(me.id, [...celebrated, ...crossed.map((def) => def.id)])
       .then(() => refresh())
       .catch((err) => {

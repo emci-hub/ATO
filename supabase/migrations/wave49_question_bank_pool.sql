@@ -3,8 +3,8 @@
 -- T-01 (core loop redesign, docs/CORE_LOOP_REDESIGN_PLAN.md §2/§8): the
 -- shared, growing question bank for the post-50 "ongoing round" loop, plus
 -- the small question_packs/question_items additions the plan's §7-§11
--- gap review (2026-09-09 checkpoint) called for. NOT YET APPLIED to the
--- live DB — needs emci's apply, same as every prior schema-only commit.
+-- gap review (2026-09-09 checkpoint) called for. Applied to the live DB
+-- 2026-09-09.
 --
 -- 1. question_bank_pool: shared, not user-scoped, catalog-style table
 --    (same RLS shape as archetype_defs/legends, wave25) — every axis-tagged

@@ -112,6 +112,8 @@ export type Me = {
   voice_preset: VoicePreset;
   /** Earned-only notes balance. Never purchased. */
   tokens: number;
+  /** Earned-only ATO tokens balance. Separate currency from tokens (Notes). */
+  ato_tokens: number;
   /** Cached Sage title from stable report-track axes. */
   sage_title: unknown;
   /** Cached Sage Story from settled categories. Empty object when none. */
@@ -163,6 +165,7 @@ export type MeInsert = Omit<
     | 'sage_knows'
     | 'visible'
     | 'tokens'
+    | 'ato_tokens'
     | 'sage_title'
     | 'sage_story'
     | 'close_friends_share'
@@ -209,6 +212,8 @@ function withVisible(row: Me): Me {
     sage_knows: parseSageKnowsState(row.sage_knows),
     voice_preset: voicePresetOf(row.voice_preset),
     tokens: typeof row.tokens === 'number' && Number.isFinite(row.tokens) ? Math.max(0, Math.floor(row.tokens)) : 0,
+    ato_tokens:
+      typeof row.ato_tokens === 'number' && Number.isFinite(row.ato_tokens) ? Math.max(0, Math.floor(row.ato_tokens)) : 0,
     close_friends_share: row.close_friends_share === true,
     category_spotlight: row.category_spotlight ?? {},
     nav_layout: normalizeNavLayout(row.nav_layout),

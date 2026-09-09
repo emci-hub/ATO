@@ -1,8 +1,7 @@
 -- wave50_ongoing_round_prep.sql
 --
--- T-02 (core loop redesign, docs/CORE_LOOP_REDESIGN_PLAN.md §2). NOT YET
--- APPLIED to the live DB — needs emci's apply, same as every prior
--- schema-only commit.
+-- T-02 (core loop redesign, docs/CORE_LOOP_REDESIGN_PLAN.md §2). Applied to
+-- the live DB 2026-09-09.
 --
 -- CORRECTION (caught in this session's own review, before push): an earlier
 -- draft of this migration re-added a 16-axis `question_items_axis_check`
