@@ -40,6 +40,7 @@ import {
   TOWER_MAX_LEVEL,
   castSlowPulse,
   createDefendLive,
+  defendDifficulty,
   placeTower,
   puffPosition,
   retryDefendLive,
@@ -377,15 +378,15 @@ export function DefendScreen({
             onPress={onBackToGrove}
             hitSlop={12}
             style={({ pressed }) => [pressed && styles.pressed]}>
-            <ThemedText type="smallBold" themeColor="textSecondary">
-              ‹ Grove
-            </ThemedText>
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                ‹ Divecore
+              </ThemedText>
           </Pressable>
         </View>
 
         <ThemedText type="subtitle">Defend</ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.lede}>
-          Protect the Grove Path. Drag your Avatar to the thick, and time Root Veil.
+          Protect the Basecore Path. Drag your Avatar to the thick, and time Root Veil.
         </ThemedText>
 
         {/* HUD */}
@@ -393,7 +394,7 @@ export function DefendScreen({
           <View style={styles.statRow}>
             <ThemedText type="smallBold">Wave</ThemedText>
             <ThemedText type="subheading" themeColor="emphasis">
-              {displayedWave}
+              {displayedWave} · {defendDifficulty(displayedWave)}
             </ThemedText>
           </View>
           <View style={styles.statRow}>
@@ -402,6 +403,10 @@ export function DefendScreen({
               {scrap}
             </ThemedText>
           </View>
+          <ThemedText type="small" themeColor="textSecondary">
+            Run scrap — spend to place and upgrade towers, earn by defeating foes, resets each
+            Defend.
+          </ThemedText>
           <View style={styles.statRow}>
             <ThemedText type="smallBold">Avatar · Lv {view.avatarLevel}</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
@@ -980,17 +985,17 @@ const AVATAR_RADIUS_PX = 9;
  */
 async function shareDefendClear(wave: number, level: number): Promise<void> {
   const line = `Avatar Lv ${level} — cleared Wave ${wave}`;
-  const message = `Grove: ${line}.`;
+  const message = `Divecore: ${line}.`;
   const fallback = async () => {
     try {
-      await Share.share({ message, title: 'Grove' });
+      await Share.share({ message, title: 'Divecore' });
     } catch {
       // user dismissed the sheet — fine
     }
   };
   if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
     try {
-      await navigator.share({ title: 'Grove', text: message });
+      await navigator.share({ title: 'Divecore', text: message });
     } catch {
       // AbortError (dismissed) or unavailable — fall back to the native sheet
       await fallback();

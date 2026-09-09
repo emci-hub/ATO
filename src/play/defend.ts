@@ -72,6 +72,17 @@ export function waveSpeedMult(wave: number): number {
   return 1 + Math.max(0, wave - 10) * 0.02;
 }
 
+/* ------------------------------------------------------------ difficulty --- */
+export type DefendDifficulty = 'Easy' | 'Moderate' | 'Hard' | 'Brutal';
+
+/** Player-facing difficulty band from the wave number (display only). */
+export function defendDifficulty(wave: number): DefendDifficulty {
+  if (wave <= 3) return 'Easy';
+  if (wave <= 8) return 'Moderate';
+  if (wave <= 15) return 'Hard';
+  return 'Brutal';
+}
+
 /* ----------------------------------------------------------------- towers --- */
 export type TowerKind = 'archer' | 'vine' | 'crystal';
 

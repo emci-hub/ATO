@@ -69,7 +69,7 @@ export function DiveScreen({
           hitSlop={12}
           style={({ pressed }) => [pressed && styles.pressed]}>
           <ThemedText type="smallBold" themeColor="textSecondary">
-            ‹ Grove
+            ‹ Divecore
           </ThemedText>
         </Pressable>
       </View>

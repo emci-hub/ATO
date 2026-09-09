@@ -68,6 +68,25 @@ const STAT_ORDER: ItemStat[] = [
   'research_yield',
 ];
 
+/** §9c grouping for the Equipped bonuses card (display only — no math). */
+const BONUS_CATEGORIES: {
+  title: 'Combat' | 'Economy' | 'Dive';
+  stats: ItemStat[];
+}[] = [
+  { title: 'Combat', stats: ['wave_power', 'tower_speed'] },
+  { title: 'Economy', stats: ['token_earn', 'research_yield'] },
+  { title: 'Dive', stats: ['dive_luck'] },
+];
+
+/** One small icon per stat so a category never feels like a wall of text. */
+const BONUS_ICONS: Record<ItemStat, ComponentProps<typeof MaterialCommunityIcons>['name']> = {
+  wave_power: 'lightning-bolt',
+  tower_speed: 'speedometer',
+  token_earn: 'cash',
+  research_yield: 'flask',
+  dive_luck: 'waves',
+};
+
 /** Bag filter tabs: a slot, "all", or "junk" (= every Look, any slot). */
 type BagFilter = 'all' | ItemSlot | 'junk';
 
@@ -107,6 +126,7 @@ export function DressScreen({
   const totalOwned = totalOwnedCount(view.inventory, view.equipped);
   const overCap = totalOwned >= INVENTORY_SOFT_CAP;
   const activeBonuses = STAT_ORDER.filter((stat) => view.statSums[stat] > 0);
+  const anyBonuses = activeBonuses.length > 0;
   const stacks = visibleStacks(view.inventory, filter);
 
   const handleMergePress = (target: MergeTarget) => {
@@ -122,14 +142,14 @@ export function DressScreen({
           hitSlop={12}
           style={({ pressed }) => [pressed && styles.pressed]}>
           <ThemedText type="smallBold" themeColor="textSecondary">
-            ‹ Grove
+            ‹ Divecore
           </ThemedText>
         </Pressable>
       </View>
 
       <ThemedText type="subtitle">Dress</ThemedText>
       <ThemedText themeColor="textSecondary" style={styles.lede}>
-        Four slots. Equip Powers to shape your Grove — Looks are for the eye.
+        Four slots. Equip Powers to shape your Basecore — Looks are for the eye.
       </ThemedText>
 
       {mergeTarget ? (
@@ -170,23 +190,39 @@ export function DressScreen({
 
       <ThemedView type="backgroundElement" style={styles.card}>
         <ThemedText type="smallBold">Equipped bonuses</ThemedText>
-        {activeBonuses.length === 0 ? (
+        {!anyBonuses ? (
           <ThemedText type="small" themeColor="textSecondary">
             No bonuses yet — find and equip a Power item.
           </ThemedText>
         ) : (
-          activeBonuses.map((stat) => (
-            <View key={stat} style={styles.bonusRow}>
-              <MaterialCommunityIcons
-                name={stat === 'wave_power' ? 'lightning-bolt' : 'trending-up'}
-                size={16}
-                color={theme.accent}
-              />
-              <ThemedText type="smallBold">
-                {formatMult({ stat, value: view.statSums[stat] })}
-              </ThemedText>
-            </View>
-          ))
+          BONUS_CATEGORIES.map((category) => {
+            const stats = category.stats.filter((stat) => view.statSums[stat] > 0);
+            return (
+              <View key={category.title} style={styles.bonusCategory}>
+                <ThemedText type="code" themeColor="textSecondary">
+                  {category.title}
+                </ThemedText>
+                {stats.length > 0 ? (
+                  stats.map((stat) => (
+                    <View key={stat} style={styles.bonusRow}>
+                      <MaterialCommunityIcons
+                        name={BONUS_ICONS[stat]}
+                        size={16}
+                        color={theme.accent}
+                      />
+                      <ThemedText type="smallBold">
+                        {formatMult({ stat, value: view.statSums[stat] })}
+                      </ThemedText>
+                    </View>
+                  ))
+                ) : (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    none yet
+                  </ThemedText>
+                )}
+              </View>
+            );
+          })
         )}
       </ThemedView>
 
@@ -650,6 +686,9 @@ const styles = StyleSheet.create({
   titleLine: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  bonusCategory: {
+    gap: Spacing.one,
   },
   bonusRow: {
     flexDirection: 'row',

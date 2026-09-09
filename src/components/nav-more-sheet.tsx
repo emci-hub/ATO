@@ -6,6 +6,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useNavOrder } from '@/lib/nav/nav-context';
 import { NAV_TABS, type ReorderableTabId } from '@/lib/nav/nav-order';
 import { controlBorderColor } from '@/lib/theme/chrome';
@@ -15,6 +16,10 @@ import { controlBorderColor } from '@/lib/theme/chrome';
  * tabs not currently placed in slots 1–4 (More is their spillover). Tapping
  * one navigates to it; long-press opens edit mode so it can be added to the
  * bar.
+ *
+ * Play (Grove) is appended as a fixed module row while PRE_LAUNCH_DEV — it is
+ * a pushed room (root /play route), not a pool tab, so it never appears in
+ * the bar or the edit pool and rides the same gate as its route.
  */
 // RN's default Modal `animationType="fade"` runs ~300ms on both platforms.
 const MODAL_FADE_MS = 300;
@@ -50,7 +55,7 @@ export function NavMoreSheet({
             </Pressable>
           </View>
 
-          {moreIds.length === 0 ? (
+          {moreIds.length === 0 && !PRE_LAUNCH_DEV ? (
             <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
               Nothing here. Long-press a tab to edit the bar.
             </ThemedText>
@@ -91,6 +96,32 @@ export function NavMoreSheet({
                   </ThemedText>
                 </Pressable>
               ))}
+
+              {PRE_LAUNCH_DEV ? (
+                <Pressable
+                  key="play"
+                  accessibilityRole="button"
+                  accessibilityLabel="Open Divecore"
+                  onPress={() => {
+                    // Push first so closing the Modal cannot unmount before
+                    // the route is received (same pattern as the rows above).
+                    router.push('/play');
+                    onClose();
+                  }}
+                  style={({ pressed }) => [
+                    styles.row,
+                    { borderColor: controlBorderColor(theme) },
+                    pressed && styles.pressed,
+                  ]}>
+                  <MaterialCommunityIcons name="play-circle" size={22} color={theme.text} />
+                  <ThemedText type="small" style={styles.rowLabel}>
+                    Divecore
+                  </ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    ›
+                  </ThemedText>
+                </Pressable>
+              ) : null}
             </ScrollView>
           )}
         </SafeAreaView>

@@ -165,7 +165,7 @@ export default function PlayScreen() {
         setToast({
           kind: 'message',
           title: 'Bag full',
-          body: 'The Grove holds 80 finds — sell a Look to make room for a Power.',
+          body: 'Your Basecore holds 80 finds — sell a Look to make room for a Power.',
         });
       }
     },
@@ -303,7 +303,7 @@ export default function PlayScreen() {
                 : toast.kind === 'surface'
                   ? `Banked ${summarizeNames(toast.itemIds)}.`
                   : toast.kind === 'bust'
-                    ? 'This haul is lost — the charge was already spent. Your Grove is untouched.'
+                    ? 'This haul is lost — the charge was already spent. Your Basecore is untouched.'
                     : toast.body,
         };
 
@@ -317,7 +317,8 @@ export default function PlayScreen() {
             view.dive.nextChargeAt,
           )}`;
 
-  const researchTitle = view == null || researchReady ? 'Your grove is ready.' : 'Researching…';
+  const researchTitle =
+    view == null || researchReady ? 'Your Basecore is ready.' : 'Researching…';
   const researchBody =
     view == null
       ? '…'
@@ -384,7 +385,7 @@ export default function PlayScreen() {
                 </Pressable>
               </View>
 
-              <ThemedText type="subtitle">Grove</ThemedText>
+              <ThemedText type="subtitle">Divecore</ThemedText>
               <ThemedText themeColor="textSecondary" style={styles.lede}>
                 {GROVE_LEDE}
               </ThemedText>
@@ -396,7 +397,7 @@ export default function PlayScreen() {
                     <MaterialCommunityIcons name="sprout" size={44} color={theme.accent} />
                   </View>
                   <View style={styles.groveText}>
-                    <ThemedText type="heading">Your grove</ThemedText>
+                    <ThemedText type="heading">Your Basecore</ThemedText>
                     <ThemedText type="small" themeColor="textSecondary">
                       {researchTitle}
                     </ThemedText>
@@ -414,12 +415,18 @@ export default function PlayScreen() {
                     {tokensText}
                   </ThemedText>
                 </View>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Soft currency — from Claim, Dive banks, and Defend clears.
+                </ThemedText>
                 <View style={styles.statRow}>
                   <ThemedText type="smallBold">Dive charges</ThemedText>
                   <ThemedText type="subheading" themeColor="emphasis">
                     {chargeText}
                   </ThemedText>
                 </View>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Energy to Dive — refills over time, and a Claim can grant one · cap 10.
+                </ThemedText>
                 <Pressable
                   disabled={!researchReady}
                   onPress={handleClaim}

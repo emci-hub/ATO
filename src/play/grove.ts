@@ -11,7 +11,7 @@ import type MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIco
 import type { ComponentProps } from 'react';
 
 export const GROVE_LEDE =
-  'A quiet little corner of ATO. Tend it, dress it, defend it — whenever you like.';
+  'A quiet little corner of ATO — tend, dress, and defend your Basecore, whenever you like.';
 
 export type GroveActionKind = 'dive' | 'dress' | 'defend';
 
@@ -44,7 +44,7 @@ export const GROVE_ACTION_TILES: GroveActionTile[] = [
     kind: 'defend',
     icon: 'shield-outline',
     title: 'Defend',
-    lede: 'Protect the grove path.',
+    lede: 'Protect the Basecore path.',
     soon: null,
   },
 ];
