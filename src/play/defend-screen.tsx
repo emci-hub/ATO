@@ -65,8 +65,8 @@ import {
   type SpawnStage,
   type TowerKind,
 } from '@/play/defend';
-import { BOUND_BOSS_MAX_STAR, bossBandFor, boundBossFragmentCost, defaultBoundBossId, getBoundBossDef, isUniqueDrop, previewDropTable, gearScore, recommendedGs, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, typeMatchBonus, type TypeTag } from '@/play/engine';
-import { getItemDef } from '@/play/items';
+import { BOUND_BOSS_MAX_STAR, bossBandFor, boundBossFragmentCost, defaultBoundBossId, getBoundBossDef, isUniqueDrop, previewDropTable, gearScore, recommendedGs, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, typeMatchBonus, type DropPreviewRow, type TypeTag } from '@/play/engine';
+import { getItemDef, type ItemSlot } from '@/play/items';
 import {
   AVATAR_STAR_MAX,
   MAIN_WAVE_COUNT,
@@ -84,6 +84,8 @@ import {
   type DefendWinContext,
   type DefendWinMode,
   type DefendWinResult,
+  type ItemRef,
+  type ItemStack,
   type PlayView,
   type SkipRewardResult,
 } from '@/play/playStore';
@@ -212,6 +214,52 @@ function dropLabelFor(phase: CampaignPhase, wave: number): string {
     case 'final':
       return 'Final drop:';
   }
+}
+
+/** Total copies of an item the player holds — bagged stacks across every star
+ * tier plus one if a copy of that id is currently worn. The §9m "Owned ×N"
+ * shown on farmable drop rows. */
+function ownedCopies(
+  inventory: readonly ItemStack[],
+  equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>,
+  id: string,
+): number {
+  let count = 0;
+  for (const stack of inventory) if (stack.id === id) count += stack.count;
+  for (const ref of Object.values(equipped)) if (ref && ref.id === id) count += 1;
+  return count;
+}
+
+/** One "What can drop" row (§9i §9m): name/meta left, honest state right.
+ * Uniques are once-per-save; farmables show how many copies you already hold. */
+function DropRowView({ row, ownedCount }: { row: DropPreviewRow; ownedCount: number }) {
+  const theme = useTheme();
+  const def = getItemDef(row.id);
+  const name = def?.core.name ?? row.id;
+  const slot = def?.core.slot ?? 'item';
+  const rarity = def ? capitalize(def.core.rarity) : '';
+  const label = row.owned
+    ? "Owned — won't drop again"
+    : row.unique
+      ? 'Unique'
+      : ownedCount > 0
+        ? `Owned ×${ownedCount}`
+        : 'Can grind — still drops';
+  return (
+    <View style={styles.dropRow}>
+      <View style={styles.dropRowLeft}>
+        <ThemedText type="smallBold">{name}</ThemedText>
+        <ThemedText type="code" themeColor="textSecondary">
+          {rarity} · {slot}
+        </ThemedText>
+      </View>
+      <ThemedText
+        type="code"
+        themeColor={row.owned ? 'textSecondary' : row.unique ? 'emphasis' : undefined}>
+        {label}
+      </ThemedText>
+    </View>
+  );
 }
 
 export function DefendScreen({
@@ -348,6 +396,10 @@ export function DefendScreen({
   /** Drop table + honest preview rows for the chosen fight (§9i). */
   const dropTableId = dropTableForWave(fight.phase, fight.wave);
   const dropRows = previewDropTable(dropTableId, new Set(view.uniques));
+  /** On a boss band the preview groups uniques under "Boss drops" and the
+   * repeatable pool under "Band drops" (§9m); normal waves keep one list. */
+  const bossRows = band ? dropRows.filter((row) => row.unique) : [];
+  const bandRows = band ? dropRows.filter((row) => !row.unique) : [];
 
   // Avatar position (board units 0..1) — smooth via shared values, engine via ref.
   const avatarX = useSharedValue(0.5);
@@ -489,6 +541,28 @@ export function DefendScreen({
     prevStageRef.current = 'minions';
     setBossAlert(null);
   }, [view.cyclePower, view.cycleTint]);
+
+  /** Abandon a live run back to setup — no win rewards. The tower layout is
+   * kept (same feel as Retry after a fail), so Start wave is instantly
+   * re-playable with your placement intact. */
+  const abandonRun = useCallback(() => {
+    const current = simRef.current;
+    if (current) {
+      // Fresh board for the SAME fight carrying towers + Bound Bosses; scrap
+      // returns to the run start (matches Retry semantics).
+      const fresh = retryDefendLive(current);
+      simRef.current = fresh;
+      setSim(fresh);
+    }
+    setPhase('setup');
+    setPaused(false);
+    setSelectedPad(null);
+    setWhyOpen(false);
+    prevPuffsRef.current = [];
+    setFloaters([]);
+    prevStageRef.current = 'minions';
+    setBossAlert(null);
+  }, []);
 
   /** Push hit/kill floaters (capped + oldest dropped = pooled, no unbounded
    * growth under heavy fire). Board units → px via the measured board size. */
@@ -982,9 +1056,24 @@ export function DefendScreen({
             ) : null}
           </View>
           {paused && phase === 'running' ? (
-            <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-              Paused — the wave is frozen.
-            </ThemedText>
+            <View style={styles.pausedBox}>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
+                Paused — the wave is frozen.
+              </ThemedText>
+              <Pressable
+                onPress={abandonRun}
+                accessibilityRole="button"
+                accessibilityLabel="Abandon run"
+                style={({ pressed }) => [
+                  styles.hudButton,
+                  { backgroundColor: theme.backgroundSelected },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="smallBold" themeColor="textSecondary">
+                  Abandon run — back to Start, no rewards · towers kept
+                </ThemedText>
+              </Pressable>
+            </View>
           ) : null}
         </ThemedView>
 
@@ -1268,62 +1357,62 @@ export function DefendScreen({
               </ThemedView>
             ) : null}
 
-            {/* Drop preview — honest "what can drop" for this wave/band (§9i). */}
+            {/* Drop preview — honest "what can drop" for this wave/band (§9i §9m). */}
             <ThemedView type="backgroundElement" style={styles.card}>
-              <View style={styles.statRow}>
-                <ThemedText type="smallBold">What can drop</ThemedText>
-                {band?.kind === 'final' ? (
-                  <ThemedText type="code" themeColor="emphasis">
-                    + Avatar star {Math.round(getTune().avatarStarDropPct * 100)}%
+              <ThemedText type="smallBold">What can drop</ThemedText>
+              {band ? (
+                <>
+                  <ThemedText type="smallBold" themeColor="textSecondary">
+                    Boss drops
                   </ThemedText>
-                ) : null}
-              </View>
-              {band?.kind === 'final' ? (
-                <ThemedText type="small" themeColor="textSecondary">
-                  {view.avatarStarRolledCycle
-                    ? 'Avatar star token · already rolled this cycle'
-                    : `Avatar star token · ${Math.round(getTune().avatarStarDropPct * 100)}% drop · pity on the ${getTune().avatarStarPityClears}rd Final this cycle (${view.finalClearsThisCycle}/${getTune().avatarStarPityClears} so far)`}
-                </ThemedText>
-              ) : null}
-              {band && cycleBossDef ? (
-                <ThemedText type="small" themeColor="textSecondary">
-                  {cycleBossStars >= BOUND_BOSS_MAX_STAR
-                    ? `Boss fragment · ${cycleBossDef.name} ★${cycleBossStars} (max)`
-                    : `Boss fragment · ${cycleBossFrags}/${cycleBossNextCost ?? '—'}${
-                        cycleBossStars > 0 ? ` · ★${cycleBossStars}` : ''
-                      }`}
-                </ThemedText>
-              ) : null}
-              {dropRows.length === 0 ? (
+                  {band.kind === 'final' ? (
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {view.avatarStarRolledCycle
+                        ? `Avatar star token · ${Math.round(getTune().avatarStarDropPct * 100)}% · already rolled this cycle`
+                        : `Avatar star token · ${Math.round(getTune().avatarStarDropPct * 100)}% drop · pity on the ${getTune().avatarStarPityClears}rd Final this cycle (${view.finalClearsThisCycle}/${getTune().avatarStarPityClears} so far)`}
+                    </ThemedText>
+                  ) : null}
+                  {cycleBossDef ? (
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {cycleBossStars >= BOUND_BOSS_MAX_STAR
+                        ? `Boss fragment · ${cycleBossDef.name} ★${cycleBossStars} (max)`
+                        : `Boss fragment · ${cycleBossFrags}/${cycleBossNextCost ?? '—'}${
+                            cycleBossStars > 0 ? ` · ★${cycleBossStars}` : ''
+                          }`}
+                    </ThemedText>
+                  ) : null}
+                  {bossRows.length === 0
+                    ? null
+                    : bossRows.map((row) => <DropRowView key={row.id} row={row} ownedCount={0} />)}
+                  <ThemedText type="smallBold" themeColor="textSecondary">
+                    Band drops
+                  </ThemedText>
+                  {bandRows.length === 0 ? (
+                    <ThemedText type="small" themeColor="textSecondary">
+                      No repeatable drops on this band.
+                    </ThemedText>
+                  ) : (
+                    bandRows.map((row) => (
+                      <DropRowView
+                        key={row.id}
+                        row={row}
+                        ownedCount={ownedCopies(view.inventory, view.equipped, row.id)}
+                      />
+                    ))
+                  )}
+                </>
+              ) : dropRows.length === 0 ? (
                 <ThemedText type="small" themeColor="textSecondary">
                   No drops listed for this wave.
                 </ThemedText>
               ) : (
-                dropRows.map((row) => {
-                  const def = getItemDef(row.id);
-                  const name = def?.core.name ?? row.id;
-                  const slot = def?.core.slot ?? 'item';
-                  const rarity = def ? capitalize(def.core.rarity) : '';
-                  return (
-                    <View key={row.id} style={styles.dropRow}>
-                      <View style={styles.dropRowLeft}>
-                        <ThemedText type="smallBold">{name}</ThemedText>
-                        <ThemedText type="code" themeColor="textSecondary">
-                          {rarity} · {slot}
-                        </ThemedText>
-                      </View>
-                      <ThemedText
-                        type="code"
-                        themeColor={row.owned ? 'textSecondary' : row.unique ? 'emphasis' : undefined}>
-                        {row.owned
-                          ? "Owned — won't drop again"
-                          : row.unique
-                            ? 'Unique'
-                            : 'Can grind — still drops'}
-                      </ThemedText>
-                    </View>
-                  );
-                })
+                dropRows.map((row) => (
+                  <DropRowView
+                    key={row.id}
+                    row={row}
+                    ownedCount={ownedCopies(view.inventory, view.equipped, row.id)}
+                  />
+                ))
               )}
             </ThemedView>
 
@@ -2116,6 +2205,10 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     borderRadius: Spacing.three,
     overflow: 'hidden',
+  },
+  pausedBox: {
+    gap: Spacing.two,
+    marginTop: Spacing.two,
   },
   avatar: {
     position: 'absolute',
