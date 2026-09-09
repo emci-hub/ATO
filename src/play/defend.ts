@@ -634,10 +634,18 @@ export function stepDefendLive(
     }
   }
 
-  // Movement (slowed puffs crawl; runners rush at their faster clip).
+  // Movement (§9m boss crawl): bosses move at ~1/3 puff speed so the alert
+  // beat is fightable; runners keep their faster clip; normal puffs are the
+  // baseline. Slowed puffs crawl on top of their kind's base.
+  const bossSpeedMult = getTune().bossSpeedMult;
   puffs = puffs.map((puff) => {
     const slow = puff.slowMs > 0 ? puff.slowFactor : 1;
-    const speed = puff.kind === 'runner' ? speedBase * RUNNER_SPEED_MULT : speedBase;
+    const speed =
+      puff.kind === 'runner'
+        ? speedBase * RUNNER_SPEED_MULT
+        : puff.kind === 'boss'
+          ? speedBase * Math.max(0.05, bossSpeedMult)
+          : speedBase;
     const slowMs = Math.max(0, puff.slowMs - dtMs);
     return { ...puff, dist: puff.dist + speed * slow, slowMs };
   });

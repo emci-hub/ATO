@@ -76,6 +76,10 @@ export type TuneDoc = {
   /** §9m boss-band breath — pause between the minion phase and the boss spawn,
    * ms (spec ~2.0s). Normal waves never use it. */
   bossBreathMs: number;
+  /** §9m boss move speed as a fraction of a normal puff's speed (Sane 1/3 —
+   * a crawling boss you can fight before it reaches the exit). Runners and
+   * normal puffs are untouched. */
+  bossSpeedMult: number;
 };
 
 /** Sane = the ship defaults the engines shipped with. */
@@ -107,6 +111,7 @@ export const SANE_TUNE: TuneDoc = {
   bossFragFinalPct: 0.35,
   withinWaveRamp: 0.15,
   bossBreathMs: 2000,
+  bossSpeedMult: 0.33,
 };
 
 export const TUNE_PRESETS: Record<TunePresetId, TuneDoc> = {
