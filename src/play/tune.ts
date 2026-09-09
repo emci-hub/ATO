@@ -46,6 +46,9 @@ export type TuneDoc = {
   skillCooldownMs: number;
   /** God mode — leak does not fail the wave (brokenop only). */
   godMode: boolean;
+  /** Forever-engine cycle-power growth step (cycle_power = 1 + cycles × this,
+   * Sane 0.12). Not wired to a live system yet — tune-ready for the engine. */
+  cyclePowerStep: number;
 };
 
 /** Sane = the ship defaults the engines shipped with. */
@@ -65,6 +68,7 @@ export const SANE_TUNE: TuneDoc = {
   skillSlowPct: 0.35,
   skillCooldownMs: 12_000,
   godMode: false,
+  cyclePowerStep: 0.12,
 };
 
 export const TUNE_PRESETS: Record<TunePresetId, TuneDoc> = {

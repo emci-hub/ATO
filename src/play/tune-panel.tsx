@@ -55,6 +55,7 @@ const KNOBS: KnobRow[] = [
   { key: 'towerCooldownScale', label: 'Tower CD scale', step: 0.1, format: (v) => v.toFixed(1) },
   { key: 'skillSlowPct', label: 'Root Veil slow', step: 0.05, format: (v) => v.toFixed(2) },
   { key: 'skillCooldownMs', label: 'Root Veil CD (ms)', step: 1000 },
+  { key: 'cyclePowerStep', label: 'Cycle power step', step: 0.02, format: (v) => v.toFixed(2) },
 ];
 
 export function TunePanel({ onClose }: { onClose: () => void }) {

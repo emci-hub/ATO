@@ -29,6 +29,7 @@ import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+import { usePlayDevUnlocked } from '@/play/dev-lock';
 import {
   DEFEND_PADS,
   DEFEND_PATH,
@@ -160,6 +161,8 @@ export function DefendScreen({
   onBackToGrove: () => void;
 }) {
   const theme = useTheme();
+  /** Dev kit only: soft PIN gate (same session flag the hub uses). */
+  const devUnlocked = usePlayDevUnlocked();
   const [phase, setPhase] = useState<DefendPhase>('setup');
   const [paused, setPaused] = useState(false);
   /** The live board. Always present so towers can be placed during SETUP
@@ -806,7 +809,7 @@ export function DefendScreen({
           </ThemedView>
         ) : null}
 
-        {PRE_LAUNCH_DEV ? (
+        {PRE_LAUNCH_DEV && devUnlocked ? (
           <ThemedView type="backgroundElement" style={styles.card}>
             <ThemedText type="smallBold" themeColor="textSecondary">
               Dev kit · defend only

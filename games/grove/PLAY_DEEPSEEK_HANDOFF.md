@@ -32,6 +32,19 @@ Handoff was **not** finish-safe as first written. Fixed below.
 | 5b towers+scrap, 5c drag+skill | **Pro** |
 | Any step fails twice on Flash | one **Pro** retry, then cut scope |
 
+
+## Dev kit (standing — every step)
+
+Grove screen has a **Dev kit** block under the Defend rows, visible **only** when `PRE_LAUNCH_DEV` **and** the session PIN unlock is entered. The hub shows a small **Dev** PIN row while locked; the PIN is `Calgary1!` (soft client gate — wrong = kit stays hidden; unlock is in-memory session-only via `src/play/dev-lock.ts`, so a cold start locks again). Never a real security boundary: `PRE_LAUNCH_DEV = false` strips the whole route for App Store builds, and real Dev Tools use the server-side `dev-unlock` path instead.
+
+- Each new Play feature that is time/RNG gated must add a **dev button** here to force the ready state / grant / reset for that feature.
+- Never use Dev kit in production (`PRE_LAUNCH_DEV` false = hidden).
+- Prefer calling `playStore` helpers; no duplicate fake state.
+
+Starter buttons: Fill research · Fill research full · +10 tokens · Fill dive 10 · Dump save v · Reset play store.
+
+Later examples: grant Dive find · force Surface bank · start Defend wave 1 with scrap · clear inventory · unlock skill CD. The Defend kit (win / leak / +40 scrap / god mode / milestones) lives on the Defend screen under the same PIN gate.
+
 ## Token rules
 
 1. One step = **one new Composer chat**.  

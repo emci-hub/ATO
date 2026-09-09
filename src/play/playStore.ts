@@ -45,6 +45,7 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { cyclePower, defaultCyclePower } from '@/play/engine/cycle';
 import { getTune } from '@/play/tune';
 import {
   getItemDef,
@@ -221,9 +222,31 @@ export type DiveRun = {
  * token reward halves until the next local midnight (XP/highest stay full).
  * v10 (milestones) added `milestone_waves_claimed` — the first clear of waves
  * 5/10/25 grants one guaranteed Rare Look, once each.
+ * v11 (forever-engine stubs) added the campaign seat + forever meta — the
+ * `campaign` seat (phase / wave_in_phase), `conquered_cycles` with its derived
+ * `cycle_power`, `lifetime_waves_cleared`, and an empty `bound_bosses[]`.
+ * Nothing reads them yet; defaults keep old saves crash-free.
  */
+
+/** Forever-engine campaign seat (data only — no campaign UI). Phase 1 /
+ * wave 1 is a fresh start. */
+export type CampaignState = {
+  /** 1-based phase the player is parked in. */
+  phase: number;
+  /** 1-based wave inside that phase. */
+  wave_in_phase: number;
+};
+
+/** One Bound Boss record (empty for v0 — no boss system yet). */
+export type BoundBossRecord = {
+  /** Stable boss id (rows land in bound_bosses.json later). */
+  id: string;
+  /** Wave the boss was bound at; null until it has been bound. */
+  bound_wave: number | null;
+};
+
 export type PlayStoreDoc = {
-  version: 10;
+  version: 11;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -253,6 +276,17 @@ export type PlayStoreDoc = {
   clears_ymd: string | null;
   /** Milestone waves whose Rare-Look reward has already fired (5/10/25). */
   milestone_waves_claimed: number[];
+  /** Forever-engine (v11): campaign seat + cycle / boss meta stubs. */
+  campaign: CampaignState;
+  /** Whole cycles conquered (drives cycle_power). Starts 0. */
+  conquered_cycles: number;
+  /** cycle_power = 1 + conquered_cycles × tune step (Sane 0.12). Derived
+   * value stored so old saves default without a crash. */
+  cycle_power: number;
+  /** Total waves cleared over all time (+1 per Defend win). Starts 0. */
+  lifetime_waves_cleared: number;
+  /** Bound Bosses bound so far (empty until the boss system lands). */
+  bound_bosses: BoundBossRecord[];
 };
 
 export type DiveChargeView = {
@@ -333,7 +367,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 10,
+    version: 11,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -349,6 +383,11 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     clears_today: 0,
     clears_ymd: null,
     milestone_waves_claimed: [],
+    campaign: { phase: 1, wave_in_phase: 1 },
+    conquered_cycles: 0,
+    cycle_power: defaultCyclePower(),
+    lifetime_waves_cleared: 0,
+    bound_bosses: [],
   };
 }
 
@@ -489,6 +528,8 @@ export function recordDefendWin(
     xp,
     avatar_level: level,
     highest_wave_cleared: Math.max(doc.highest_wave_cleared, Math.floor(wave)),
+    // Forever-engine stub: total waves cleared over all time (+1 per clear).
+    lifetime_waves_cleared: doc.lifetime_waves_cleared + 1,
     clears_today: clearsToday,
     clears_ymd: todayYmd,
     inventory: milestone
@@ -1154,16 +1195,18 @@ function snapshotDive(
 function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
   try {
     const data = JSON.parse(raw) as Record<string, unknown>;
-    // v1 (pre-inventory) … v9 (daily clear half-cap) all migrate to v10:
-    // legacy copies are star 0, equipped string ids become refs with star 0,
-    // Defend meta defaults to 0 clears / 0 XP / level 1 / no daily count / no
-    // milestone flags. v1–v4 also stored `inventory` as a string[] of owned
-    // ids WITH worn copies included, so those subtract one per equipped slot.
+    // v1 (pre-inventory) … v10 (milestones) all migrate to v11: legacy copies
+    // are star 0, equipped string ids become refs with star 0, Defend meta
+    // defaults to 0 clears / 0 XP / level 1 / no daily count / no milestone
+    // flags, and the forever-engine stubs (campaign seat, conquered cycles +
+    // cycle_power, lifetime clears, bound bosses) default to fresh values.
+    // v1–v4 also stored `inventory` as a string[] of owned ids WITH worn
+    // copies included, so those subtract one per equipped slot.
     const version = data?.version;
     if (
       version !== 1 && version !== 2 && version !== 3 && version !== 4 &&
       version !== 5 && version !== 6 && version !== 7 && version !== 8 &&
-      version !== 9 && version !== 10
+      version !== 9 && version !== 10 && version !== 11
     ) {
       return null;
     }
@@ -1188,8 +1231,17 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
           (w): w is number => typeof w === 'number' && Number.isFinite(w),
         )
       : [];
+    // Forever-engine v11 stubs — default so every older save still parses.
+    const campaign = parseCampaign(data.campaign);
+    const conqueredRaw = finiteNumber(data.conquered_cycles);
+    const conqueredCycles = conqueredRaw == null ? 0 : Math.max(0, Math.floor(conqueredRaw));
+    const storedPower = finiteNumber(data.cycle_power);
+    const cyclePowerValue =
+      storedPower != null && storedPower >= 1 ? storedPower : cyclePower(conqueredCycles);
+    const lifetimeWaves = finiteNumber(data.lifetime_waves_cleared) ?? 0;
+    const boundBosses = parseBoundBosses(data.bound_bosses);
     return {
-      version: 10,
+      version: 11,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -1205,10 +1257,45 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       clears_today: Math.max(0, Math.floor(clearsToday)),
       clears_ymd: clearsYmd,
       milestone_waves_claimed: milestoneWaves,
+      campaign,
+      conquered_cycles: conqueredCycles,
+      cycle_power: cyclePowerValue,
+      lifetime_waves_cleared: Math.max(0, Math.floor(lifetimeWaves)),
+      bound_bosses: boundBosses,
     };
   } catch {
     return null;
   }
+}
+
+/** Loose read of the campaign seat; anything malformed → fresh phase 1 / wave 1. */
+function parseCampaign(raw: unknown): CampaignState {
+  if (isRecord(raw)) {
+    const phase = finiteNumber(raw.phase);
+    const waveInPhase = finiteNumber(raw.wave_in_phase);
+    if (phase != null && waveInPhase != null) {
+      return {
+        phase: Math.max(1, Math.floor(phase)),
+        wave_in_phase: Math.max(1, Math.floor(waveInPhase)),
+      };
+    }
+  }
+  return { phase: 1, wave_in_phase: 1 };
+}
+
+/** Loose read of bound-boss rows; malformed rows are dropped. */
+function parseBoundBosses(raw: unknown): BoundBossRecord[] {
+  if (!Array.isArray(raw)) return [];
+  const rows: BoundBossRecord[] = [];
+  for (const entry of raw) {
+    if (!isRecord(entry) || typeof entry.id !== 'string' || entry.id.length === 0) continue;
+    const bound = finiteNumber(entry.bound_wave);
+    rows.push({
+      id: entry.id,
+      bound_wave: bound == null ? null : Math.max(1, Math.floor(bound)),
+    });
+  }
+  return rows;
 }
 
 /**

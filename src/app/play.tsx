@@ -11,6 +11,9 @@ import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useAppearance } from '@/lib/theme/context';
+import { SaveDumpRow } from '@/play/dev-dump';
+import { usePlayDevUnlocked } from '@/play/dev-lock';
+import { DevUnlockRow } from '@/play/dev-unlock-row';
 import { DiveScreen } from '@/play/dive-screen';
 import { DressScreen } from '@/play/dress-screen';
 import { DefendScreen } from '@/play/defend-screen';
@@ -95,6 +98,8 @@ export default function PlayScreen() {
   const [forceMerge, setForceMerge] = useState<'none' | 'success' | 'fail'>('none');
   /** Dev kit only: §9c Tune panel open state (PRE_LAUNCH_DEV hides the entry). */
   const [showTune, setShowTune] = useState(false);
+  /** Dev kit only: PIN-unlocked this session? (soft gate — dev-lock.ts). */
+  const devUnlocked = usePlayDevUnlocked();
 
   // Hydrate the local tune doc once so persisted presets survive app kills.
   useEffect(() => {
@@ -497,7 +502,8 @@ export default function PlayScreen() {
                 <TunePanel onClose={() => setShowTune(false)} />
               ) : null}
 
-              {PRE_LAUNCH_DEV ? (
+              {PRE_LAUNCH_DEV && !devUnlocked ? <DevUnlockRow /> : null}
+              {PRE_LAUNCH_DEV && devUnlocked ? (
                 <GroveDevKit
                   commit={commit}
                   onGrantRandomFind={handleGrantRandomFind}
@@ -751,6 +757,7 @@ function GroveDevKit({
           ›
         </ThemedText>
       </Pressable>
+      <SaveDumpRow />
     </ThemedView>
   );
 }
