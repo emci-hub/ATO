@@ -1,7 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
-import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -320,29 +319,6 @@ export default function YouScreen() {
               />
 
               <QuestGrowthBars presence={presence} depth={depth} />
-
-              {/* Play (Grove) — the module is in-progress and its route is
-                  PRE_LAUNCH_DEV-gated, so the entry rides the same gate. When
-                  Play passes its own ATO gate, lift both this card and the
-                  route registration together. Never on Home. */}
-              {PRE_LAUNCH_DEV ? (
-                <ThemedView type="backgroundElement" style={styles.detailCard}>
-                  <Pressable
-                    onPress={() => router.push('/play')}
-                    style={({ pressed }) => [styles.playRow, pressed && styles.pressed]}>
-                    <View style={[styles.playIcon, { backgroundColor: theme.backgroundSelected }]}>
-                      <MaterialCommunityIcons name="sprout" size={20} color={theme.accent} />
-                    </View>
-                    <View style={styles.playRowText}>
-                      <ThemedText type="smallBold">Play</ThemedText>
-                      <ThemedText type="small" themeColor="textSecondary">
-                        Grove — a quiet room of your own.
-                      </ThemedText>
-                    </View>
-                    <ThemedText themeColor="textSecondary">›</ThemedText>
-                  </Pressable>
-                </ThemedView>
-              ) : null}
 
               <SettingsFold title="How Sage sounds">
                 <ThemedText type="small" themeColor="textSecondary" style={styles.inviteHint}>
@@ -686,24 +662,6 @@ const styles = StyleSheet.create({
   detailValue: {
     flex: 1,
     textAlign: 'right',
-  },
-  playRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.one,
-  },
-  playIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  playRowText: {
-    flex: 1,
-    gap: Spacing.half,
   },
   inviteHeading: {
     paddingHorizontal: Spacing.three,
