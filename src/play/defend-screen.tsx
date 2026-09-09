@@ -13,7 +13,7 @@
  * `xp`, and `avatar_level` persist through the shared store.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AppState, Pressable, StyleSheet, View } from 'react-native';
+import { AppState, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
@@ -142,6 +142,8 @@ export function DefendScreen({
   onSetWaveOne,
   onResetDailyClears,
   onSetClearsTodayFive,
+  onGrantMilestoneWaveFive,
+  onResetMilestones,
   onBackToGrove,
 }: {
   view: PlayView;
@@ -151,6 +153,8 @@ export function DefendScreen({
   onSetWaveOne: () => void;
   onResetDailyClears: () => void;
   onSetClearsTodayFive: () => void;
+  onGrantMilestoneWaveFive: () => Promise<void>;
+  onResetMilestones: () => void;
   onBackToGrove: () => void;
 }) {
   const theme = useTheme();
@@ -695,7 +699,9 @@ export function DefendScreen({
 
         {phase === 'won' ? (
           <ThemedView type="backgroundElement" style={styles.card}>
-            <ThemedText type="smallBold">Wave {sim?.wave ?? nextWave} cleared</ThemedText>
+            <ThemedText type="smallBold">
+              Avatar Lv {view.avatarLevel} — cleared Wave {sim?.wave ?? nextWave}
+            </ThemedText>
             {lastWin ? (
               <>
                 <ThemedText type="small" themeColor="textSecondary">
@@ -724,6 +730,17 @@ export function DefendScreen({
               <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
                 Next wave
               </ThemedText>
+            </Pressable>
+            <Pressable
+              onPress={() => void shareDefendClear(sim?.wave ?? nextWave, view.avatarLevel)}
+              accessibilityRole="button"
+              accessibilityLabel="Share this clear"
+              style={({ pressed }) => [
+                styles.hudButton,
+                { backgroundColor: theme.backgroundSelected },
+                pressed && styles.pressed,
+              ]}>
+              <ThemedText type="smallBold">Share this clear</ThemedText>
             </Pressable>
             <Pressable
               onPress={onBackToGrove}
@@ -838,6 +855,20 @@ export function DefendScreen({
               }}
             />
             <DevRow
+              label="Grant wave-5 milestone"
+              disabled={!sim}
+              onPress={() => {
+                void onGrantMilestoneWaveFive();
+              }}
+            />
+            <DevRow
+              label="Reset milestones"
+              disabled={!sim}
+              onPress={() => {
+                onResetMilestones();
+              }}
+            />
+            <DevRow
               label="Set wave to 1"
               onPress={() => {
                 onSetWaveOne();
@@ -932,6 +963,33 @@ function HitFloater({
 }
 
 const AVATAR_RADIUS_PX = 9;
+
+/**
+ * Share stub for the win glow card (§13): plain text (Avatar level + wave # +
+ * "cleared Wave N"). Uses the Web Share API where present, else the native
+ * React Native share sheet. Optional — rewards were already banked by the win.
+ */
+async function shareDefendClear(wave: number, level: number): Promise<void> {
+  const line = `Avatar Lv ${level} — cleared Wave ${wave}`;
+  const message = `Grove: ${line}.`;
+  const fallback = async () => {
+    try {
+      await Share.share({ message, title: 'Grove' });
+    } catch {
+      // user dismissed the sheet — fine
+    }
+  };
+  if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+    try {
+      await navigator.share({ title: 'Grove', text: message });
+    } catch {
+      // AbortError (dismissed) or unavailable — fall back to the native sheet
+      await fallback();
+    }
+    return;
+  }
+  await fallback();
+}
 
 /** SVG path data for the road (viewBox 100). */
 function pathD(): string {

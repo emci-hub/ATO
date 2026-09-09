@@ -80,6 +80,8 @@ export default function PlayScreen() {
     setDefendWaveOne,
     resetDailyClears,
     setClearsTodayFive,
+    grantMilestoneWaveFive,
+    resetMilestones,
   } = usePlayStore();
   const [mode, setMode] = useState<PlayMode>('grove');
   const [toast, setToast] = useState<PlayToast | null>(null);
@@ -209,11 +211,39 @@ export default function PlayScreen() {
   );
 
   /** Defend — persist a win (tokens + XP + level + highest). Returns what it
-   * paid so the overlay can show honest (possibly halved) token counts. */
+   * paid so the overlay can show honest (possibly halved) token counts. A
+   * first-clear milestone (5/10/25) also toasts its Rare Look name. */
   const handleRecordDefendWin = useCallback(
-    (wave: number) => recordDefendWin(wave),
+    async (wave: number) => {
+      const result = await recordDefendWin(wave);
+      if (result?.milestoneLook) {
+        const name = itemName(result.milestoneLook.itemId) ?? result.milestoneLook.itemId;
+        setToast({
+          kind: 'message',
+          title: `Wave ${result.milestoneLook.wave} milestone`,
+          body: `First clear — found ${name}.`,
+        });
+      }
+      return result;
+    },
     [recordDefendWin],
   );
+
+  /** Defend dev rows — milestone testing. */
+  const handleGrantMilestoneWaveFive = useCallback(async () => {
+    const id = await grantMilestoneWaveFive();
+    if (id) {
+      setToast({
+        kind: 'message',
+        title: 'Wave 5 milestone',
+        body: `Found ${itemName(id) ?? id}.`,
+      });
+    }
+  }, [grantMilestoneWaveFive]);
+
+  const handleResetMilestones = useCallback(() => {
+    void resetMilestones();
+  }, [resetMilestones]);
 
   /** Defend dev row — reset the ladder so the next wave is 1. */
   const handleSetDefendWaveOne = useCallback(() => {
@@ -331,6 +361,8 @@ export default function PlayScreen() {
               onSetWaveOne={handleSetDefendWaveOne}
               onResetDailyClears={handleResetDailyClears}
               onSetClearsTodayFive={handleSetClearsTodayFive}
+              onGrantMilestoneWaveFive={handleGrantMilestoneWaveFive}
+              onResetMilestones={handleResetMilestones}
               onBackToGrove={() => setMode('grove')}
             />
           ) : (

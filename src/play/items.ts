@@ -83,6 +83,16 @@ export function junkLookId(): string {
   return junk?.id ?? '';
 }
 
+/** A guaranteed milestone Look — uniform over the kind: look, rarity: rare
+ * rows (GAME_SPEC §13: first-clear milestones 5/10/25 grant a Rare Look). */
+export function rollMilestoneLook(rng: () => number = Math.random): string {
+  const rareLooks = ITEMS.filter(
+    (item) => item.core.kind === 'look' && item.core.rarity === 'rare',
+  );
+  const pool = rareLooks.length > 0 ? rareLooks : ITEMS;
+  return pool[Math.floor(rng() * pool.length)].id;
+}
+
 /** Display name for an id, or null when the id is not a def (dangling). */
 export function itemName(id: string): string | null {
   return ITEM_BY_ID.get(id)?.core.name ?? null;

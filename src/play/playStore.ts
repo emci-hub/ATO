@@ -48,6 +48,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getItemDef,
   junkLookId,
+  rollMilestoneLook,
   rollPowerFind,
   rollResearchFind,
   type ItemSlot,
@@ -86,6 +87,8 @@ export const DEFEND_START_SCRAP = 80; // start_scrap — each run starts with th
 export const TOKEN_CLEAR_BASE = 50; // token_clear_base — reward juice per clear
 /** After this many clears in a local day, further clear tokens halve (§9). */
 export const DAILY_CLEAR_HALF_AFTER = 5;
+/** First-clear milestone waves — each grants one Rare Look once (§13). */
+export const MILESTONE_WAVES = [5, 10, 25] as const;
 /** Clear wave W → this much XP to the Avatar (GAME_SPEC "xp_clear: 10 + wave*2"). */
 export function xpForClear(wave: number): number {
   return 10 + Math.max(1, Math.floor(wave)) * 2;
@@ -215,9 +218,11 @@ export type DiveRun = {
  * (clears grant XP; a level gives +2% base wave_power). v9 (Defend daily soft
  * cap) added `clears_today` + `clears_ymd` — after 5 clears in a local day the
  * token reward halves until the next local midnight (XP/highest stay full).
+ * v10 (milestones) added `milestone_waves_claimed` — the first clear of waves
+ * 5/10/25 grants one guaranteed Rare Look, once each.
  */
 export type PlayStoreDoc = {
-  version: 9;
+  version: 10;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -245,6 +250,8 @@ export type PlayStoreDoc = {
   clears_today: number;
   /** Device-local YYYY-MM-DD `clears_today` belongs to. */
   clears_ymd: string | null;
+  /** Milestone waves whose Rare-Look reward has already fired (5/10/25). */
+  milestone_waves_claimed: number[];
 };
 
 export type DiveChargeView = {
@@ -325,7 +332,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 9,
+    version: 10,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -340,6 +347,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     avatar_level: 1,
     clears_today: 0,
     clears_ymd: null,
+    milestone_waves_claimed: [],
   };
 }
 
@@ -430,6 +438,8 @@ export type DefendWinResult = {
   halved: boolean;
   /** Clears today AFTER this win (1-based). */
   clearsToday: number;
+  /** Milestone Rare Look granted by this first-clear (5/10/25), if any. */
+  milestoneLook: { wave: number; itemId: string } | null;
 };
 
 /**
@@ -442,11 +452,15 @@ export type DefendWinResult = {
  * device-local day, the TOKEN reward halves until the next local midnight —
  * wins 1–5 are full, wins 6+ pay 25. XP and highest_wave_cleared stay full.
  * The counter rolls over on the first clear of a new local day.
+ *
+ * First-clear milestones (§13): clearing a `MILESTONE_WAVES` wave for the
+ * first time also grants one guaranteed Rare Look (fires once per wave).
  */
 export function recordDefendWin(
   doc: PlayStoreDoc,
   wave: number,
   now: number = Date.now(),
+  rng: () => number = Math.random,
 ): { doc: PlayStoreDoc; result: DefendWinResult } {
   const todayYmd = localYmd(new Date(now));
   const priorClears = doc.clears_ymd === todayYmd ? doc.clears_today : 0;
@@ -463,18 +477,42 @@ export function recordDefendWin(
     xp -= xpToNext(level);
     level += 1;
   }
-  return {
-    doc: {
-      ...doc,
-      tokens: doc.tokens + tokensGranted,
-      xp,
-      avatar_level: level,
-      highest_wave_cleared: Math.max(doc.highest_wave_cleared, Math.floor(wave)),
-      clears_today: clearsToday,
-      clears_ymd: todayYmd,
-    },
-    result: { tokensGranted, xpGranted, halved, clearsToday },
+
+  const milestone = claimMilestoneLook(doc, wave, rng);
+  const next: PlayStoreDoc = {
+    ...doc,
+    tokens: doc.tokens + tokensGranted,
+    xp,
+    avatar_level: level,
+    highest_wave_cleared: Math.max(doc.highest_wave_cleared, Math.floor(wave)),
+    clears_today: clearsToday,
+    clears_ymd: todayYmd,
+    inventory: milestone
+      ? addCopiesToBag(doc.inventory, milestone.itemId, 0, 1)
+      : doc.inventory,
+    milestone_waves_claimed: milestone
+      ? [...doc.milestone_waves_claimed, wave]
+      : doc.milestone_waves_claimed,
   };
+  return { doc: next, result: { tokensGranted, xpGranted, halved, clearsToday, milestoneLook: milestone } };
+}
+
+/**
+ * Grant the first-clear Rare Look for `wave` when it is a milestone and has
+ * not fired yet. Pure doc transition: rolls a Rare Look into the bag (star 0)
+ * and marks the wave claimed. Returns what was granted (null = nothing fired,
+ * e.g. wave not a milestone or already claimed). Shared by recordDefendWin and
+ * the Dev kit's force-grant.
+ */
+export function claimMilestoneLook(
+  doc: PlayStoreDoc,
+  wave: number,
+  rng: () => number = Math.random,
+): { wave: number; itemId: string } | null {
+  const milestone = (MILESTONE_WAVES as readonly number[]).includes(wave);
+  if (!milestone || doc.milestone_waves_claimed.includes(wave)) return null;
+  const itemId = rollMilestoneLook(rng);
+  return { wave, itemId };
 }
 
 /** Dev kit only: make the next wave 1 again (highest_wave_cleared → 0). */
@@ -492,6 +530,29 @@ export function devDefendResetClears(doc: PlayStoreDoc): PlayStoreDoc {
  * (honest-note path becomes reachable on demand). */
 export function devDefendSetClearsFive(doc: PlayStoreDoc): PlayStoreDoc {
   return { ...doc, clears_today: DAILY_CLEAR_HALF_AFTER, clears_ymd: localYmd() };
+}
+
+/** Dev kit only: force the wave-5 milestone Look into the bag (fires once —
+ * repeat presses are no-ops until milestones reset). Returns the granted id. */
+export function devGrantMilestoneWaveFive(
+  doc: PlayStoreDoc,
+  rng: () => number = Math.random,
+): { doc: PlayStoreDoc; grantedId: string | null } {
+  const granted = claimMilestoneLook(doc, MILESTONE_WAVES[0], rng);
+  if (!granted) return { doc, grantedId: null };
+  return {
+    doc: {
+      ...doc,
+      inventory: addCopiesToBag(doc.inventory, granted.itemId, 0, 1),
+      milestone_waves_claimed: [...doc.milestone_waves_claimed, granted.wave],
+    },
+    grantedId: granted.itemId,
+  };
+}
+
+/** Dev kit only: clear milestone flags so 5/10/25 fire again on their clears. */
+export function devResetMilestones(doc: PlayStoreDoc): PlayStoreDoc {
+  return { ...doc, milestone_waves_claimed: [] };
 }
 
 /* ---------------------------------------------------------------------------
@@ -1069,15 +1130,16 @@ function snapshotDive(
 function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
   try {
     const data = JSON.parse(raw) as Record<string, unknown>;
-    // v1 (pre-inventory) … v8 (xp/level) all migrate to v9: legacy copies are
-    // star 0, equipped string ids become refs with star 0, Defend meta defaults
-    // to 0 clears / 0 XP / level 1 / no daily clear count. v1–v4 also stored
-    // `inventory` as a string[] of owned ids WITH worn copies included, so
-    // those subtract one copy per equipped slot.
+    // v1 (pre-inventory) … v9 (daily clear half-cap) all migrate to v10:
+    // legacy copies are star 0, equipped string ids become refs with star 0,
+    // Defend meta defaults to 0 clears / 0 XP / level 1 / no daily count / no
+    // milestone flags. v1–v4 also stored `inventory` as a string[] of owned
+    // ids WITH worn copies included, so those subtract one per equipped slot.
     const version = data?.version;
     if (
       version !== 1 && version !== 2 && version !== 3 && version !== 4 &&
-      version !== 5 && version !== 6 && version !== 7 && version !== 8 && version !== 9
+      version !== 5 && version !== 6 && version !== 7 && version !== 8 &&
+      version !== 9 && version !== 10
     ) {
       return null;
     }
@@ -1097,8 +1159,13 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     const clearsToday = finiteNumber(data.clears_today) ?? 0;
     const clearsYmd =
       typeof data.clears_ymd === 'string' ? data.clears_ymd : null;
+    const milestoneWaves = Array.isArray(data.milestone_waves_claimed)
+      ? data.milestone_waves_claimed.filter(
+          (w): w is number => typeof w === 'number' && Number.isFinite(w),
+        )
+      : [];
     return {
-      version: 9,
+      version: 10,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -1113,6 +1180,7 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       avatar_level: Math.max(1, Math.floor(avatarLevel)),
       clears_today: Math.max(0, Math.floor(clearsToday)),
       clears_ymd: clearsYmd,
+      milestone_waves_claimed: milestoneWaves,
     };
   } catch {
     return null;

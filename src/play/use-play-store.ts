@@ -27,9 +27,11 @@ import {
   devDefendSetClearsFive,
   devDefendSetWaveOne,
   devFillJunkLooks,
+  devGrantMilestoneWaveFive,
   devGrantRandomFind,
   devGrantRandomPower,
   devGrantTideBlades,
+  devResetMilestones,
   devSellAllJunk,
   equipItem,
   loadPlayStore,
@@ -334,6 +336,29 @@ export function usePlayStore() {
     return ok;
   }, [commit]);
 
+  /** Dev kit only: force the wave-5 milestone Look (fires once). Returns the
+   * granted item id so the row can toast the name. */
+  const grantMilestoneWaveFive = useCallback(async (): Promise<string | null> => {
+    let grantedId: string | null = null;
+    commit((current) => {
+      const next = devGrantMilestoneWaveFive(current);
+      grantedId = next.grantedId;
+      return next.doc;
+    });
+    return grantedId;
+  }, [commit]);
+
+  /** Dev kit only: clear milestone flags so 5/10/25 can fire again. */
+  const resetMilestones = useCallback(async (): Promise<boolean> => {
+    let ok = false;
+    commit((current) => {
+      const next = devResetMilestones(current);
+      ok = next !== current;
+      return ok ? next : null;
+    });
+    return ok;
+  }, [commit]);
+
   return {
     view,
     claim,
@@ -355,5 +380,7 @@ export function usePlayStore() {
     setDefendWaveOne,
     resetDailyClears,
     setClearsTodayFive,
+    grantMilestoneWaveFive,
+    resetMilestones,
   };
 }
