@@ -47,9 +47,11 @@ import {
 } from '@/lib/questions/category-batch-store';
 import { generateQuestionBatch } from '@/lib/questions/generate';
 import { bankProgressForAxis, bankTotalProgress } from '@/lib/questions/local';
-import { nextPlayableItem, routeQuestions } from '@/lib/questions/route';
+import { runOngoingRound } from '@/lib/questions/run-ongoing-round';
+import { nextPlayableItem, nextUnansweredItem, routeQuestions } from '@/lib/questions/route';
 import {
   answerQuestionItem,
+  fetchLatestOngoingRoundPack,
   fetchLatestQuestionPack,
   saveQuestionPack,
   skipQuestionItem,
@@ -433,6 +435,9 @@ export function QuestionsFold({
         locked={fullProfileLocked}
         onPick={(draft, option) => void pickBankItem(draft, option)}
       />
+      {fullProfileLocked ? (
+        <OngoingRoundFold me={me} history={history} tracks={tracks ?? []} onUpdated={onUpdated} />
+      ) : null}
       {checkpoint ? (
         <>
           <ThemedText>{QUESTIONS_CHECKPOINT}</ThemedText>
@@ -520,6 +525,167 @@ export function QuestionsFold({
     <SettingsFold title={title} defaultOpen={defaultOpen} onOpen={handleOpen}>
       {body}
     </SettingsFold>
+  );
+}
+
+/**
+ * Post-Full-Profile ongoing round (T-03, core loop redesign §2/§3). Shown
+ * once the frozen 50-question intake above (`fullProfileLocked`) is done — a
+ * self-contained sibling, not a branch inside the intake/Infinite-Questions
+ * state above: it has its own load/answer cycle against its own persisted
+ * pack (`question_packs.kind='ongoing_round'`, `fetchLatestOngoingRoundPack`),
+ * distinct from both the frozen bank and Infinite Questions' daily-cache
+ * pack. No pack yet (or the last one is fully answered) offers a "start"
+ * CTA that calls `runOngoingRound` (the real `composeOngoingRound` wiring)
+ * and saves the result via `saveOngoingRoundBatch`/`insert_ongoing_round_pack`
+ * in one shot; otherwise it serves the pack's next unanswered item, reusing
+ * the same `answerQuestionItem` + `updateTraits` write path Infinite
+ * Questions' `pick()` above already uses.
+ */
+function OngoingRoundFold({
+  me,
+  history,
+  tracks,
+  onUpdated,
+}: {
+  me: Me;
+  history: CheckHistory[];
+  tracks: readonly TraitTrack[];
+  onUpdated: () => Promise<void>;
+}) {
+  const theme = useTheme();
+  const [pack, setPack] = useState<QuestionPackRow | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [starting, setStarting] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const existing = await fetchLatestOngoingRoundPack();
+      setPack(existing);
+    } catch (err) {
+      console.log('[ongoing-round] load error:', err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-once load, same as CategoryBatchFold below
+  }, []);
+
+  async function start() {
+    if (starting) return;
+    setStarting(true);
+    setError(false);
+    try {
+      const ongoingMe = {
+        name: me.name,
+        talk_style: me.talk_style ?? 'even',
+        voice_preset: me.voice_preset,
+        sage_knows: me.sage_knows,
+        facts: me.facts,
+      };
+      const saved = await runOngoingRound(ongoingMe, history, tracks);
+      setPack(saved);
+    } catch (err) {
+      console.log('[ongoing-round] start error:', err);
+      setError(true);
+    } finally {
+      setStarting(false);
+    }
+  }
+
+  async function pick(item: QuestionItemRow, index: number) {
+    const option = item.options[index];
+    if (!option || busy || !pack) return;
+    setBusy(true);
+    try {
+      await answerQuestionItem(item.id, index);
+      await updateTraits(me.id, { [item.axis]: option.value }, 'self_situation', [item.axis]);
+      earnTokensQuiet('game_round');
+      await onUpdated();
+      setPack({
+        ...pack,
+        items: pack.items.map((row) =>
+          row.id === item.id ? { ...row, answeredOption: index } : row,
+        ),
+      });
+    } catch (err) {
+      console.log('[ongoing-round] answer error:', err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const nextItem = nextUnansweredItem(pack);
+
+  return (
+    <View style={styles.body}>
+      <ThemedText type="smallBold">Next round</ThemedText>
+      {loading ? (
+        <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+      ) : error ? (
+        <>
+          <ThemedText type="small" themeColor="textSecondary">
+            Could not load your next round. Try again.
+          </ThemedText>
+          <ThemedPressable
+            disabled={loading}
+            onPress={() => void load()}
+            style={[styles.option, { borderColor: controlBorderColor(theme) }]}>
+            <ThemedText type="smallBold">Try again</ThemedText>
+          </ThemedPressable>
+        </>
+      ) : !pack ? (
+        <ThemedPressable
+          disabled={starting}
+          onPress={() => void start()}
+          style={[styles.option, { borderColor: controlBorderColor(theme) }, starting && styles.disabled]}>
+          <ThemedText type="smallBold">
+            {starting ? 'Putting together your next round…' : 'Start your next round'}
+          </ThemedText>
+        </ThemedPressable>
+      ) : nextItem ? (
+        <>
+          <ThemedText>{nextItem.prompt}</ThemedText>
+          <View style={styles.options}>
+            {nextItem.options.map((option, index) => (
+              <ThemedPressable
+                key={`${nextItem.id}-${index}`}
+                disabled={busy}
+                onPress={() => void pick(nextItem, index)}
+                style={[
+                  styles.option,
+                  { borderColor: controlBorderColor(theme) },
+                  busy && styles.disabled,
+                ]}>
+                <ThemedText type="smallBold">{option.text}</ThemedText>
+              </ThemedPressable>
+            ))}
+          </View>
+        </>
+      ) : (
+        <>
+          <ThemedText type="small" themeColor="textSecondary">
+            Round complete.
+          </ThemedText>
+          <ThemedPressable
+            disabled={starting}
+            onPress={() => void start()}
+            style={[styles.option, { borderColor: controlBorderColor(theme) }, starting && styles.disabled]}>
+            <ThemedText type="smallBold">
+              {starting ? 'Putting together your next round…' : 'Start another round'}
+            </ThemedText>
+          </ThemedPressable>
+        </>
+      )}
+    </View>
   );
 }
 

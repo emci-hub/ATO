@@ -96,6 +96,7 @@
     "check:tiered-axis-plan": "tsx ./scripts/tiered-axis-plan-check.ts",
     "check:chunked-generate": "tsx ./scripts/chunked-generate-check.ts",
     "check:ongoing-round": "tsx ./scripts/ongoing-round-check.ts",
+    "check:ongoing-round-save": "tsx ./scripts/ongoing-round-save-check.ts",
     "check:milestones": "tsx ./scripts/milestones-check.ts",
     "check:trait-sources": "tsx ./scripts/trait-sources-check.ts",
     "check:trait-bands": "tsx ./scripts/trait-bands-check.ts",
