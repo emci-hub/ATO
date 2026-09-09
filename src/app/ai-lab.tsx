@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 
 import { ProviderStatusDot } from '@/components/provider-status-dot';
 import { ThemedPressable } from '@/components/themed-pressable';
@@ -19,13 +19,48 @@ import {
   type AiProviderId,
 } from '@/lib/ai';
 import { fetchProviderCounts, type ProviderCounts } from '@/lib/ai/usage';
+import { canSeeDevLab } from '@/lib/dev-access';
+import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+import { useMeContext } from '@/lib/me-context';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
 /**
  * Hidden provider switcher. Opened by tapping the Build line five times.
  * Override is AsyncStorage on this device only — never synced.
+ *
+ * Dev-gated on the same predicate as `/dev-lab` and Home's dev row. It used
+ * to be the one lab on the authed stack with no guard at all, so any signed-in
+ * account could reach it from the Build line on You and change which vendor
+ * its generations ran against — and unlike the `PRE_LAUNCH_DEV` labs, that
+ * would have survived the flag flip into public launch. `RunningUpdateLine`
+ * gates the gesture on the same predicate; this is the route-level backstop.
  */
 export default function AiLabScreen() {
+  const { devAccess, devAccessLoading } = useMeContext();
+  const devUnlocked = useDevAccessUnlocked();
+  if (devAccessLoading) {
+    return (
+      <ThemedView style={styles.container}>
+        <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+          <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+        </SafeAreaView>
+      </ThemedView>
+    );
+  }
+  if (
+    !canSeeDevLab({
+      isDev: PRE_LAUNCH_DEV || devUnlocked,
+      isRoot: devAccess.isRoot,
+      capabilities: devAccess.capabilities,
+    })
+  ) {
+    return <Redirect href="/" />;
+  }
+  return <AiLab />;
+}
+
+function AiLab() {
   const theme = useTheme();
   const bundled = configuredProvider();
   const [active, setActive] = useState<AiProviderId>(bundled);

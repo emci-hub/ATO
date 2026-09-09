@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
@@ -25,6 +25,35 @@ export function SettingsFold({
 }) {
   const theme = useTheme();
   const [open, setOpen] = useState(defaultOpen);
+
+  /**
+   * `defaultOpen` has to drive the fold on every rising edge, not just the
+   * first mount, and it has to move BOTH `open` and `onOpen`:
+   *
+   * - `useState(defaultOpen)` seeds once, so a tab that is already mounted
+   *   (the normal case — every deep link into this fold comes from another
+   *   tab) would keep the stale `false` and stay visually collapsed.
+   * - `onOpen` is the only hook callers load their content in, and `toggle`
+   *   is the only other thing that fires it, so a fold that opens this way
+   *   would otherwise sit on its loading state forever.
+   *
+   * Edge-triggered via a ref rather than level-triggered, so a re-render or a
+   * new `onOpen` identity cannot re-fire it, while a genuine false→true flip
+   * (a second deep link naming a different axis) still reloads. Closing again
+   * is left to the person; this never force-collapses.
+   */
+  const defaultOpenRef = useRef(false);
+  useEffect(() => {
+    if (!defaultOpen) {
+      defaultOpenRef.current = false;
+      return;
+    }
+    if (defaultOpenRef.current) return;
+    defaultOpenRef.current = true;
+    setOpen(true);
+    onOpen?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- edge-triggered on defaultOpen
+  }, [defaultOpen]);
 
   function toggle() {
     setOpen((value) => {

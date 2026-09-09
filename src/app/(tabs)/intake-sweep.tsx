@@ -66,6 +66,11 @@ export default function IntakeSweepTabScreen() {
   const userId = session?.user.id;
   const { me, refresh } = useMe(userId);
   const { reduceMotion } = useAppearance();
+  // Every "answer questions about X" CTA in the app (Legends, Explore,
+  // Categories, Sage, the Story fold, the milestone badge, Profile Fill,
+  // Insight Spend) deep-links here with `?axis=`. The fold below must open
+  // itself when one arrives — collapsed, it never called `routeQuestions`,
+  // so the axis was silently dropped and every one of those CTAs dead-ended.
   const params = useLocalSearchParams<{ axis?: string }>();
   const focusAxis = (TRAIT_AXES as readonly string[]).includes(params.axis ?? '')
     ? (params.axis as TraitAxis)
@@ -249,6 +254,7 @@ export default function IntakeSweepTabScreen() {
               history={checksToHistory(checks)}
               crisisToday={crisisToday}
               onUpdated={refreshAfterAnswer}
+              defaultOpen={!!focusAxis}
               focusAxis={focusAxis}
               tracks={tracks}
             />

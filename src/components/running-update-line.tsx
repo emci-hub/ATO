@@ -7,6 +7,10 @@ import * as Updates from 'expo-updates';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
+import { canSeeDevLab } from '@/lib/dev-access';
+import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+import { useMeContext } from '@/lib/me-context';
 import {
   formatPublishedAt,
   formatRunningUpdate,
@@ -47,6 +51,17 @@ export function RunningUpdateLine({ compact = false }: { compact?: boolean }) {
   const label = formatRunningUpdate(snap);
   const copyValue = snap.groupId ?? snap.updateId ?? label.line;
   const secret = useRef({ n: 0, at: 0 });
+  // This row renders on You for EVERY account, so the 5-tap shortcut below
+  // has to carry the same gate `/ai-lab` itself does — otherwise any user
+  // could open the provider switcher. Copy-to-clipboard stays open to all;
+  // only the hidden navigation is gated.
+  const { devAccess } = useMeContext();
+  const devUnlocked = useDevAccessUnlocked();
+  const canOpenAiLab = canSeeDevLab({
+    isDev: PRE_LAUNCH_DEV || devUnlocked,
+    isRoot: devAccess.isRoot,
+    capabilities: devAccess.capabilities,
+  });
   // Only a real running update has a real publish date — never shown for
   // embedded/local, same "honest, not faked" rule as the line itself. Its own
   // line rather than appended to `label.line`: that line is already close to
@@ -71,7 +86,7 @@ export function RunningUpdateLine({ compact = false }: { compact?: boolean }) {
           secret.current.n += 1;
           if (secret.current.n >= 5) {
             secret.current.n = 0;
-            router.push('/ai-lab');
+            if (canOpenAiLab) router.push('/ai-lab');
           }
         }}
         style={styles.column}>

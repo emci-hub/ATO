@@ -149,6 +149,27 @@ assert.ok(
 );
 ok('hidden TabTriggers for un-slotted pool tabs stay inside TabList, so they remain registered routes');
 
+// Same rule for `(tabs)` routes that are never a bar/More destination and are
+// pushed from inside another tab (`/roll`, from Legends). `/roll` shipped with
+// NO trigger at all — only an `as Href` cast at the push site, which typecheck
+// does not enforce here (a deliberately bogus route string also compiles), so
+// nothing caught it. It must stay inside <TabList> for the same reason as the
+// More-parked triggers above, and must stay OUT of NAV_TABS or it becomes a
+// user-placeable bar slot and shows up in More and the edit pool.
+const hiddenRouteIdx = tabs.indexOf('HIDDEN_TAB_ROUTES.map');
+assert.notEqual(hiddenRouteIdx, -1, 'expected a HIDDEN_TAB_ROUTES trigger loop in app-tabs.tsx');
+assert.ok(
+  hiddenRouteIdx > tabListOpen && hiddenRouteIdx < tabListClose,
+  'HIDDEN_TAB_ROUTES triggers must render inside <TabList>, or expo-router/ui never registers those routes and pushes to them silently no-op (this is exactly how /roll shipped unreachable)'
+);
+assert.match(tabs, /\{ name: 'roll', href: '\/roll' \}/);
+assert.ok(
+  !(NAV_TAB_IDS as readonly string[]).includes('roll'),
+  'roll must not be a NAV_TABS pool id — it is pushed from Legends, never a bar/More destination'
+);
+assert.doesNotMatch(read('src/app/(tabs)/legends.tsx'), /as Href/);
+ok('/roll is registered by a hidden TabList trigger, stays out of the nav pool, and needs no Href cast');
+
 const overlay = read('src/components/nav-edit-overlay.tsx');
 assert.match(overlay, /Sortable\.Flex/);
 assert.match(overlay, /customHandle/);

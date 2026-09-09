@@ -1,4 +1,4 @@
-import { router, type Href } from 'expo-router';
+import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -250,6 +250,20 @@ export default function LegendsScreen() {
   const settled = settledCount(tracks);
   const thin = isThinProfile(settled);
   const focusAxis = me ? missingAxis(traitStateFromRow(me).values, tracks) : null;
+  /**
+   * Both "answer questions" CTAs on this screen. `focusAxis` is a nice-to-have
+   * (it front-loads that axis in the next batch), never a precondition — the
+   * thin-profile CTA below used to be `disabled={!focusAxis}`, which rendered
+   * an enabled-looking button that did nothing for exactly the people it was
+   * written for. One handler so the two copies cannot drift again.
+   */
+  function goToQuestions() {
+    if (focusAxis) {
+      router.push({ pathname: '/intake-sweep', params: { axis: focusAxis } });
+    } else {
+      router.push({ pathname: '/intake-sweep' });
+    }
+  }
   // Progressive unlock (§6, retargeted per emci's explicit call): Legends
   // unlocks at question 50 of the frozen intake, REPLACING the prior
   // isProfileSettled gate — the tiered intake alone doesn't satisfy
@@ -315,7 +329,7 @@ export default function LegendsScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Roll a fresh read across your legend, categories, and story"
-              onPress={() => router.push('/roll' as Href)}
+              onPress={() => router.push('/roll')}
               style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
               <ThemedText type="link">Roll</ThemedText>
             </Pressable>
@@ -355,13 +369,7 @@ export default function LegendsScreen() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`${PROFILE_LOCKED_COPY}. ${PROFILE_LOCKED_CTA}.`}
-                onPress={() => {
-                  if (focusAxis) {
-                    router.push({ pathname: '/intake-sweep', params: { axis: focusAxis } });
-                  } else {
-                    router.push({ pathname: '/intake-sweep' });
-                  }
-                }}
+                onPress={goToQuestions}
                 style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
                 <ThemedText type="link">{PROFILE_LOCKED_CTA}</ThemedText>
               </Pressable>
@@ -384,12 +392,7 @@ export default function LegendsScreen() {
                 </ThemedText>
                 <Pressable
                   accessibilityRole="button"
-                  disabled={!focusAxis}
-                  onPress={() => {
-                    if (focusAxis) {
-                      router.push({ pathname: '/intake-sweep', params: { axis: focusAxis } });
-                    }
-                  }}
+                  onPress={goToQuestions}
                   style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
                   <ThemedText type="link">Answer questions</ThemedText>
                 </Pressable>

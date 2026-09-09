@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -36,7 +37,12 @@ type ScreenState =
 /**
  * Trait-system redesign §7 — the roll/reveal screen. Reached from Legends
  * once legendsUnlocked (the roll's legend item needs the same match data).
- * Not a tab: pushed like intake-sweep.tsx.
+ *
+ * It IS a `(tabs)` route (never a bar destination), so it needs a hidden
+ * `TabTrigger` inside `TabList` to be navigable at all — see
+ * `HIDDEN_TAB_ROUTES` in `components/app-tabs.tsx`. It shipped without one,
+ * behind an `as Href` cast that hid the gap from typecheck. Do not "simplify"
+ * that trigger away.
  */
 export default function RollScreen() {
   const { me, refresh } = useMeContext();
@@ -203,6 +209,23 @@ export default function RollScreen() {
       <SafeAreaView style={styles.safeArea}>
         <ScrollView {...NO_PINCH_ZOOM} contentContainerStyle={styles.scroll}>
           <View style={styles.header}>
+            {/*
+              Roll is pushed from Legends but lives under `(tabs)`, so it keeps
+              the bottom bar and no slot highlights for it. Without this row the
+              only way out is tapping some other tab — every other pushed screen
+              (chat/week/dawn/ai-lab) offers an explicit Back. Falls back to
+              Legends when there is no history (cold-start deep link).
+            */}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Back to Legends"
+              onPress={() => (router.canGoBack() ? router.back() : router.replace('/legends'))}
+              hitSlop={12}
+              style={({ pressed }) => [styles.back, pressed && styles.pressed]}>
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                ‹ Back
+              </ThemedText>
+            </Pressable>
             <ThemedText type="subtitle">Roll</ThemedText>
             <ThemedText themeColor="textSecondary">
               A fresh read across your legend, every category, and your story — spend{' '}
@@ -346,6 +369,10 @@ const styles = StyleSheet.create({
   header: {
     gap: Spacing.half,
     paddingRight: NAV_PIXEL_HEADER_INSET,
+  },
+  back: {
+    alignSelf: 'flex-start',
+    paddingVertical: Spacing.one,
   },
   card: {
     borderRadius: Spacing.four,

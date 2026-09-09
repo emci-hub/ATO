@@ -1,4 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import type { Href } from 'expo-router';
 import { TabList, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
 import { useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
@@ -33,6 +34,19 @@ import { controlBorderColor } from '@/lib/theme/chrome';
  * visibility are fully JS-controlled and ship via OTA. Trade-off: native tab
  * behaviors (freeze, minimize, blur, scroll-to-top on re-tap) are not kept.
  */
+
+/**
+ * Routes that live under `(tabs)/` but are never a bar/More destination —
+ * they are pushed from inside another tab (Roll, from Legends). They still
+ * need a trigger registered INSIDE `TabList`, exactly like the More-parked
+ * tabs below, or the navigator has no route to navigate to. `/roll` shipped
+ * without one and was only reachable through an `as Href` cast that hid the
+ * gap from typecheck. Deliberately NOT in `NAV_TABS`: entries there become
+ * user-placeable bar slots and show up in More and the edit pool.
+ */
+const HIDDEN_TAB_ROUTES: readonly { name: string; href: Href }[] = [
+  { name: 'roll', href: '/roll' },
+];
 export default function AppTabs() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -114,6 +128,16 @@ export default function AppTabs() {
               key={`hidden-${id}`}
               name={id}
               href={NAV_TABS[id].href}
+              style={styles.hidden}
+              accessible={false}
+            />
+          ))}
+
+          {HIDDEN_TAB_ROUTES.map((route) => (
+            <TabTrigger
+              key={`hidden-route-${route.name}`}
+              name={route.name}
+              href={route.href}
               style={styles.hidden}
               accessible={false}
             />

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { CategoryPagedQuestions } from '@/components/category-paged-questions';
@@ -117,6 +117,7 @@ export function QuestionsFold({
   crisisToday,
   onUpdated,
   alwaysOpen = false,
+  defaultOpen = false,
   focusAxis,
   category,
   tracks,
@@ -126,6 +127,14 @@ export function QuestionsFold({
   crisisToday: boolean;
   onUpdated: () => Promise<void>;
   alwaysOpen?: boolean;
+  /**
+   * Render the fold already expanded, with its batch loaded. Set when the
+   * person arrived on a deep link that named an axis (`focusAxis`) — landing
+   * them on a collapsed fold silently threw that axis away, since `load()`
+   * only ever ran from `SettingsFold`'s `onOpen`. Unlike `alwaysOpen` this
+   * keeps the header and lets them collapse it again.
+   */
+  defaultOpen?: boolean;
   /** Front-loads this axis in the next batch (e.g. deep-linked from Legends). */
   focusAxis?: TraitAxis;
   /**
@@ -244,6 +253,28 @@ export function QuestionsFold({
     // One session when the screen mounts. Answering already calls load().
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only session
   }, [alwaysOpen]);
+
+  /**
+   * A second deep link naming a DIFFERENT axis, arriving while this screen is
+   * still mounted, is a true→true transition for `defaultOpen` — SettingsFold
+   * sees no rising edge, so nothing reloads and the new axis is dropped. That
+   * is the same defect `defaultOpen` exists to fix (Explore alone has several
+   * axis CTAs, so hopping between them is a real path), so track the axis
+   * itself. The first axis is claimed without reloading: SettingsFold's own
+   * mount edge already ran `handleOpen` for it.
+   */
+  const loadedFocusRef = useRef<TraitAxis | undefined>(undefined);
+  useEffect(() => {
+    if (!defaultOpen || !focusAxis) return;
+    if (loadedFocusRef.current === undefined) {
+      loadedFocusRef.current = focusAxis;
+      return;
+    }
+    if (loadedFocusRef.current === focusAxis) return;
+    loadedFocusRef.current = focusAxis;
+    handleOpen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the axis, not handleOpen's identity
+  }, [defaultOpen, focusAxis]);
 
   function handleKeepGoing() {
     setKeptGoing(true);
@@ -486,7 +517,7 @@ export function QuestionsFold({
   const title = tracks ? `${QUESTIONS_LABEL} · ${unansweredAxisLabel(tracks)}` : QUESTIONS_LABEL;
 
   return (
-    <SettingsFold title={title} onOpen={handleOpen}>
+    <SettingsFold title={title} defaultOpen={defaultOpen} onOpen={handleOpen}>
       {body}
     </SettingsFold>
   );
