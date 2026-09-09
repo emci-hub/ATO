@@ -53,6 +53,8 @@ import {
   startDive,
   surfaceDive,
   unequipItem,
+  recordAvatarPark,
+  type AvatarParkMapId,
   type CampaignPhase,
   type ClaimResult,
   type DeeperOutcome,
@@ -446,6 +448,21 @@ export function usePlayStore() {
     return ok;
   }, [commit]);
 
+  /** Record the Avatar's parked position for a Defend map (v15) — Defend
+   * calls this when a drag ends so the next setup restores the same spot. */
+  const saveAvatarPark = useCallback(
+    async (mapId: AvatarParkMapId, x: number, y: number): Promise<boolean> => {
+      let ok = false;
+      commit((current) => {
+        const next = recordAvatarPark(current, mapId, x, y);
+        ok = next !== current;
+        return ok ? next : null;
+      });
+      return ok;
+    },
+    [commit],
+  );
+
   /** Dev kit only: reset Avatar-star cycle flags (re-test 25% + pity). */
   const resetAvatarStarCycle = useCallback(async (): Promise<boolean> => {
     let ok = false;
@@ -514,6 +531,7 @@ export function usePlayStore() {
     grantTideBlades,
     sellAllJunk,
     recordDefendWin,
+    saveAvatarPark,
     resetCampaign,
     setCampaignSeat,
     forceConquered,

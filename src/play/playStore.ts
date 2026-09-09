@@ -287,12 +287,30 @@ export type DiveRun = {
  * `stars` (0 = fragments only, 1–5 = bound) + `frags` (toward the next star).
  * Older empty/legacy records default to stars 0 / frags 0, so no migration is
  * needed beyond the version bump.
+ * v15 (Defend park) adds `avatar_park` — the Avatar's last dragged position
+ * per map (board fractions 0..1), so re-entering Defend puts the Avatar where
+ * the player left it instead of snapping to the old mid-board default.
  */
 
 /** Campaign phase. `trial` (Grove Path, waves 1–5) then `main` (Divecore
  * Main, waves 1–20); a cleared Main 20 conquers a cycle and the seat resets
  * (Trial is skipped once `conquered_cycles ≥ 1`). */
 export type CampaignPhase = 'trial' | 'main';
+
+/** One Defend board map the Avatar can be parked on (mapId string, loose so
+ * playStore never imports the board module). */
+export type AvatarParkMapId = 'trial' | 'main';
+
+/** Saved Avatar park position as board fractions (0..1). */
+export type AvatarParkPoint = { x: number; y: number };
+
+/** Map id → last dragged Avatar position. Absent = use that map's top-right
+ * default once (then a drag saves it). */
+export type AvatarPark = Partial<Record<AvatarParkMapId, AvatarParkPoint>>;
+
+/** The newbie-friendly spawn: top-right of the board. Used when a map has no
+ * saved park yet (first-ever Defend, or a Trial ↔ Main switch). */
+export const DEFAULT_AVATAR_PARK: AvatarParkPoint = { x: 0.82, y: 0.12 };
 
 /** Forever-engine campaign seat — the phase + next display wave Defend plays
  * (`wave_in_phase` is 1-based and ALWAYS the next wave to clear). */
@@ -362,7 +380,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 14;
+  version: 15;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -415,6 +433,9 @@ export type PlayStoreDoc = {
   uniques: string[];
   /** Current cycle's boss tint (one family until ContentPack 2). */
   cycle_tint: TypeTag;
+  /** Avatar park per Defend map (v15) — last dragged position, board
+   * fractions. Absent → the map's top-right default. */
+  avatar_park: AvatarPark;
 };
 
 export type DiveChargeView = {
@@ -475,6 +496,8 @@ export type PlayView = {
   cycleTint: TypeTag;
   /** Bound Bosses (fragments + stars) — the §9k tower roster. */
   boundBosses: readonly BoundBossView[];
+  /** Saved Avatar park per map (board fractions) — Defend restores it. */
+  avatarPark: AvatarPark;
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -515,7 +538,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 14,
+    version: 15,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -542,6 +565,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     final_clears_this_cycle: 0,
     uniques: [],
     cycle_tint: DEFAULT_CYCLE_TINT,
+    avatar_park: {},
   };
 }
 
@@ -604,6 +628,7 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     finalClearsThisCycle: doc.final_clears_this_cycle,
     uniques: doc.uniques,
     cycleTint: doc.cycle_tint,
+    avatarPark: doc.avatar_park,
     boundBosses: doc.bound_bosses.map((record) => {
       const def = getBoundBossDef(record.id);
       return {
@@ -1093,6 +1118,26 @@ export function replayBands(snapshot: CampaignSnapshot): ReplayBandView[] {
       clearedThrough: mainThrough,
     },
   ];
+}
+
+/** Record the Avatar's parked position for a Defend map (v15). Board
+ * fractions clamp to 0..1 so a corrupt drag can never park off-board. */
+export function recordAvatarPark(
+  doc: PlayStoreDoc,
+  mapId: AvatarParkMapId,
+  x: number,
+  y: number,
+): PlayStoreDoc {
+  return {
+    ...doc,
+    avatar_park: {
+      ...doc.avatar_park,
+      [mapId]: {
+        x: Math.max(0, Math.min(1, x)),
+        y: Math.max(0, Math.min(1, y)),
+      },
+    },
+  };
 }
 
 /* ---------------------------------------------------------------------------
@@ -2028,7 +2073,7 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 1 && version !== 2 && version !== 3 && version !== 4 &&
       version !== 5 && version !== 6 && version !== 7 && version !== 8 &&
       version !== 9 && version !== 10 && version !== 11 && version !== 12 &&
-      version !== 13 && version !== 14
+      version !== 13 && version !== 14 && version !== 15
     ) {
       return null;
     }
@@ -2072,8 +2117,9 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       ? data.uniques.filter((id): id is string => typeof id === 'string' && id.length > 0)
       : [];
     const cycleTint = isTypeTag(data.cycle_tint) ? data.cycle_tint : DEFAULT_CYCLE_TINT;
+    const avatarPark = parseAvatarPark(data.avatar_park);
     return {
-      version: 14,
+      version: 15,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -2100,10 +2146,31 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       final_clears_this_cycle: finalClears,
       uniques,
       cycle_tint: cycleTint,
+      avatar_park: avatarPark,
     };
   } catch {
     return null;
   }
+}
+
+/** Loose read of the v15 avatar park (map id → clamped board fractions).
+ * Malformed entries are dropped; a missing park defaults to empty (maps fall
+ * back to their top-right default until the player drags). */
+function parseAvatarPark(raw: unknown): AvatarPark {
+  if (!isRecord(raw)) return {};
+  const park: AvatarPark = {};
+  for (const key of ['trial', 'main'] as const) {
+    const point = raw[key];
+    if (!isRecord(point)) continue;
+    const x = finiteNumber(point.x);
+    const y = finiteNumber(point.y);
+    if (x == null || y == null) continue;
+    park[key] = {
+      x: Math.max(0, Math.min(1, x)),
+      y: Math.max(0, Math.min(1, y)),
+    };
+  }
+  return park;
 }
 
 /**

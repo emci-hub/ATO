@@ -467,20 +467,25 @@ function SlotRow({
               Empty
             </ThemedText>
           )}
+          {def ? (
+            <ThemedText type="code" themeColor="textSecondary">
+              {describeItem(def)}
+            </ThemedText>
+          ) : null}
         </View>
       </Pressable>
-      {canMerge && ref ? (
+      {canMerge && ref && def ? (
         <Pressable
           onPress={() => onMerge({ id: ref.id, star: ref.star, main: 'worn' })}
           accessibilityRole="button"
-          accessibilityLabel={`Merge ${def?.core.name}`}
+          accessibilityLabel={`Merge ${def.core.name}`}
           style={({ pressed }) => [
             styles.chip,
             { backgroundColor: theme.backgroundSelected },
             pressed && styles.pressed,
           ]}>
           <ThemedText type="code" themeColor="emphasis">
-            Merge
+            Merge · {mergeSuccessPct(ref.star)}%
           </ThemedText>
         </Pressable>
       ) : null}
@@ -526,13 +531,11 @@ function StackRow({
       </View>
     );
   }
-  const mults = [def.mult_a, def.mult_b].filter(
-    (mult): mult is NonNullable<ItemDef['mult_a']> => mult != null,
-  );
   const sellable = def.core.kind === 'look';
   const isPower = def.core.kind === 'power';
   // A power stack with ≥ 2 of its tier can merge (one main + one fuel).
   const canMergeAsBagMain = isPower && stack.count >= 2 && mergeSuccessPct(stack.star) != null;
+  const mergePct = mergeSuccessPct(stack.star);
   const star = starLabel(stack.star);
 
   const icon = (
@@ -563,8 +566,7 @@ function StackRow({
         ) : null}
       </View>
       <ThemedText type="code" themeColor="textSecondary">
-        {capitalize(def.core.rarity)} {capitalize(def.core.kind)}
-        {mults.length > 0 ? ` · ${mults.map(formatMult).join(' · ')}` : ''}
+        {describeItem(def)}
       </ThemedText>
     </View>
   );
@@ -593,7 +595,7 @@ function StackRow({
             pressed && styles.pressed,
           ]}>
           <ThemedText type="code" themeColor="emphasis">
-            Merge
+            {mergePct != null ? `Merge · ${mergePct}%` : 'Merge'}
           </ThemedText>
         </Pressable>
       ) : null}
@@ -614,6 +616,18 @@ function StackRow({
       ) : null}
     </View>
   );
+}
+
+/** "Rare Power · +8% wave power · +3% dive luck" — rarity + plain what-it-does
+ * for an item, in the friendly mult language (never raw stat keys). Looks keep
+ * just their rarity + kind (no effect line). */
+function describeItem(def: ItemDef): string {
+  const mults = [def.mult_a, def.mult_b].filter(
+    (mult): mult is NonNullable<ItemDef['mult_a']> => mult != null,
+  );
+  const head = `${capitalize(def.core.rarity)} ${capitalize(def.core.kind)}`;
+  if (mults.length === 0) return head;
+  return `${head} · ${mults.map(formatMult).join(' · ')}`;
 }
 
 function capitalize(word: string): string {

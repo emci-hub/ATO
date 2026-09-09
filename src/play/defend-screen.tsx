@@ -69,6 +69,7 @@ import { BOUND_BOSS_MAX_STAR, bossBandFor, boundBossFragmentCost, defaultBoundBo
 import { getItemDef, type ItemSlot } from '@/play/items';
 import {
   AVATAR_STAR_MAX,
+  DEFAULT_AVATAR_PARK,
   MAIN_WAVE_COUNT,
   avatarLevelWavePower,
   avatarStarWavePower,
@@ -80,6 +81,7 @@ import {
   planSkipToEven,
   replayBands,
   xpForClear,
+  type AvatarParkMapId,
   type CampaignPhase,
   type DefendWinContext,
   type DefendWinMode,
@@ -233,7 +235,6 @@ function ownedCopies(
 /** One "What can drop" row (§9i §9m): name/meta left, honest state right.
  * Uniques are once-per-save; farmables show how many copies you already hold. */
 function DropRowView({ row, ownedCount }: { row: DropPreviewRow; ownedCount: number }) {
-  const theme = useTheme();
   const def = getItemDef(row.id);
   const name = def?.core.name ?? row.id;
   const slot = def?.core.slot ?? 'item';
@@ -282,6 +283,7 @@ export function DefendScreen({
   onSkipToEven,
   onDevOvergear,
   onDevForceSkipOffer,
+  onSaveAvatarPark,
   onBackToGrove,
 }: {
   view: PlayView;
@@ -317,6 +319,8 @@ export function DefendScreen({
   onDevOvergear: () => void;
   /** Dev kit only: overgear + reset to Trial wave 1 (forces the skip offer). */
   onDevForceSkipOffer: () => void;
+  /** Avatar drag ended → persist the park for this Defend map (v15). */
+  onSaveAvatarPark: (mapId: AvatarParkMapId, x: number, y: number) => void;
   onBackToGrove: () => void;
 }) {
   const theme = useTheme();
@@ -401,17 +405,49 @@ export function DefendScreen({
   const bossRows = band ? dropRows.filter((row) => row.unique) : [];
   const bandRows = band ? dropRows.filter((row) => !row.unique) : [];
 
-  // Avatar position (board units 0..1) — smooth via shared values, engine via ref.
-  const avatarX = useSharedValue(0.5);
-  const avatarY = useSharedValue(0.4);
-  const startX = useSharedValue(0.5);
-  const startY = useSharedValue(0.4);
-  const avatarPosRef = useRef({ x: 50, y: 40 }); // board units (0..100)
+  // Avatar position (board units 0..1) — smooth via shared values, engine via
+  // ref. v15: the park is per-map; a fresh map (or no save yet) starts the
+  // Avatar TOP-RIGHT, readable for newbies, then the last drag is persisted.
+  const initialParkMap: AvatarParkMapId = view.campaign.phase;
+  const initialPark = view.avatarPark[initialParkMap] ?? DEFAULT_AVATAR_PARK;
+  const avatarX = useSharedValue(initialPark.x);
+  const avatarY = useSharedValue(initialPark.y);
+  const startX = useSharedValue(initialPark.x);
+  const startY = useSharedValue(initialPark.y);
+  const avatarPosRef = useRef({ x: initialPark.x * 100, y: initialPark.y * 100 }); // board units (0..100)
   const boardSizeRef = useRef(100);
+  /** Which map the Avatar is currently parked on (guard: only re-park on a
+   * Trial ↔ Main switch, never on every wave/rebuild). */
+  const parkedMapRef = useRef<AvatarParkMapId | null>(initialParkMap);
 
   const setAvatarPosRef = useCallback((x: number, y: number) => {
     avatarPosRef.current = { x, y };
   }, []);
+
+  /** Park the Avatar for a map — its saved spot, else the top-right default.
+   * Runs once per map (guard above), so a same-map rebuild never snaps the
+   * Avatar back off where the player left it. */
+  const ensureParked = useCallback(
+    (mapId: AvatarParkMapId) => {
+      if (parkedMapRef.current === mapId) return;
+      const park = view.avatarPark[mapId] ?? DEFAULT_AVATAR_PARK;
+      avatarX.value = park.x;
+      avatarY.value = park.y;
+      startX.value = park.x;
+      startY.value = park.y;
+      avatarPosRef.current = { x: park.x * 100, y: park.y * 100 };
+      parkedMapRef.current = mapId;
+    },
+    // avatarX/avatarY/startX/startY are stable shared-value handles (their
+    // `.value` writes never change identity); view.avatarPark is the read.
+    [view.avatarPark, avatarX, avatarY, startX, startY],
+  );
+
+  /** Persist the Avatar's current spot as this board map's park (drag end). */
+  const commitAvatarPark = useCallback(() => {
+    const mapId = (simRef.current?.mapId ?? fightRef.current.phase) as AvatarParkMapId;
+    onSaveAvatarPark(mapId, avatarPosRef.current.x / 100, avatarPosRef.current.y / 100);
+  }, [onSaveAvatarPark]);
 
   // Equipped mult buckets, board-wide for towers + Avatar. Type match (§9f)
   // and Avatar stars (§9h) fold into the same damage pass.
@@ -497,6 +533,7 @@ export function DefendScreen({
     (next: Fight) => {
       setReplayPick(next.mode === 'replay' ? { phase: next.phase, wave: next.wave } : null);
       setSim(createDefendLive(next.wave, { mapId: next.phase, cyclePower: view.cyclePower, tint: view.cycleTint }));
+      ensureParked(next.phase);
       setPhase('setup');
       setPaused(false);
       setSelectedPad(null);
@@ -506,7 +543,7 @@ export function DefendScreen({
       prevStageRef.current = 'minions';
       setBossAlert(null);
     },
-    [view.cyclePower, view.cycleTint],
+    [view.cyclePower, view.cycleTint, ensureParked],
   );
 
   /** When the chosen fight changes while on SETUP (seat advanced after a win,
@@ -515,6 +552,7 @@ export function DefendScreen({
   useEffect(() => {
     if (phase !== 'setup') return;
     setSim(createDefendLive(fight.wave, { mapId: fight.phase, cyclePower: view.cyclePower, tint: view.cycleTint }));
+    ensureParked(fight.phase);
     setSelectedPad(null);
     setWhyOpen(false);
     prevPuffsRef.current = [];
@@ -713,6 +751,7 @@ export function DefendScreen({
     };
     simRef.current = preview;
     setSim(preview);
+    ensureParked('main');
     setPhase('running');
     setPaused(false);
     setSelectedPad(null);
@@ -765,6 +804,10 @@ export function DefendScreen({
       avatarX.value = nx;
       avatarY.value = ny;
       runOnJS(setAvatarPosRef)(nx * 100, ny * 100);
+    })
+    .onEnd(() => {
+      // Persist the park (v15) so the next setup restores this same spot.
+      runOnJS(commitAvatarPark)();
     });
 
   const avatarStyle = useAnimatedStyle(() => ({
@@ -886,6 +929,46 @@ export function DefendScreen({
             </ThemedText>
           ) : null}
         </ThemedView>
+
+        {/* Coach — top of Defend setup, right under the wave-title block, so a
+         * newbie reads the tip before placing/starting. Still dismissible. */}
+        {phase === 'setup' && !coachHidden ? (
+          <ThemedView type="backgroundElement" style={styles.coachCard}>
+            <View style={styles.coachHeader}>
+              <ThemedText type="smallBold" themeColor="emphasis">
+                Coach · {fightTitle(fight)}
+              </ThemedText>
+              <Pressable
+                onPress={() => setCoachHidden(true)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Hide coach"
+                style={({ pressed }) => [pressed && styles.pressed]}>
+                <ThemedText type="code" themeColor="textSecondary">
+                  Hide
+                </ThemedText>
+              </Pressable>
+            </View>
+            <ThemedText type="small" themeColor="textSecondary">
+              {coach.tip}
+            </ThemedText>
+            {coach.why ? (
+              <Pressable
+                onPress={() => setWhyOpen((open) => !open)}
+                accessibilityRole="button"
+                style={({ pressed }) => [pressed && styles.pressed]}>
+                <ThemedText type="code" themeColor="textSecondary">
+                  {whyOpen ? 'Why? (hide)' : 'Why?'}
+                </ThemedText>
+              </Pressable>
+            ) : null}
+            {whyOpen && coach.why ? (
+              <ThemedText type="small" themeColor="textSecondary" style={styles.whyText}>
+                {coach.why}
+              </ThemedText>
+            ) : null}
+          </ThemedView>
+        ) : null}
 
         {/* Board */}
         <ThemedView type="backgroundElement" style={styles.card}>
@@ -1206,44 +1289,6 @@ export function DefendScreen({
         {/* Status / actions */}
         {phase === 'setup' ? (
           <>
-            {!coachHidden ? (
-              <ThemedView type="backgroundElement" style={styles.coachCard}>
-                <View style={styles.coachHeader}>
-                  <ThemedText type="smallBold" themeColor="emphasis">
-                    Coach · {fightTitle(fight)}
-                  </ThemedText>
-                  <Pressable
-                    onPress={() => setCoachHidden(true)}
-                    hitSlop={8}
-                    accessibilityRole="button"
-                    accessibilityLabel="Hide coach"
-                    style={({ pressed }) => [pressed && styles.pressed]}>
-                    <ThemedText type="code" themeColor="textSecondary">
-                      Hide
-                    </ThemedText>
-                  </Pressable>
-                </View>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {coach.tip}
-                </ThemedText>
-                {coach.why ? (
-                  <Pressable
-                    onPress={() => setWhyOpen((open) => !open)}
-                    accessibilityRole="button"
-                    style={({ pressed }) => [pressed && styles.pressed]}>
-                    <ThemedText type="code" themeColor="textSecondary">
-                      {whyOpen ? 'Why? (hide)' : 'Why?'}
-                    </ThemedText>
-                  </Pressable>
-                ) : null}
-                {whyOpen && coach.why ? (
-                  <ThemedText type="small" themeColor="textSecondary" style={styles.whyText}>
-                    {coach.why}
-                  </ThemedText>
-                ) : null}
-              </ThemedView>
-            ) : null}
-
             {/* Fight card — campaign next or the chosen replay. */}
             <ThemedView type="backgroundElement" style={styles.card}>
               <View style={styles.statRow}>

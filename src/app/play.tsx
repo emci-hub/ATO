@@ -37,6 +37,7 @@ import {
   devSetCampaignSeat,
   devUnlockBoundBoss,
   type ClaimResult,
+  type AvatarParkMapId,
   type DefendWinContext,
   type MergeOutcome,
   type MergeTarget,
@@ -105,6 +106,7 @@ export default function PlayScreen() {
     skipToEven,
     overgear,
     forceSkipOffer,
+    saveAvatarPark,
   } = usePlayStore();
   const [mode, setMode] = useState<PlayMode>('grove');
   const [toast, setToast] = useState<PlayToast | null>(null);
@@ -365,6 +367,14 @@ export default function PlayScreen() {
     void forceSkipOffer();
   }, [forceSkipOffer]);
 
+  /** Defend drag-end → persist the Avatar park for that map (§9m). */
+  const handleSaveAvatarPark = useCallback(
+    (mapId: AvatarParkMapId, x: number, y: number) => {
+      void saveAvatarPark(mapId, x, y);
+    },
+    [saveAvatarPark],
+  );
+
   function closePlay() {
     if (router.canGoBack()) {
       router.back();
@@ -481,6 +491,7 @@ export default function PlayScreen() {
               onSkipToEven={handleSkipToEven}
               onDevOvergear={handleDevOvergear}
               onDevForceSkipOffer={handleDevForceSkipOffer}
+              onSaveAvatarPark={handleSaveAvatarPark}
               onBackToGrove={() => setMode('grove')}
             />
           ) : (
