@@ -794,6 +794,10 @@ After the ~2s breath, big toast/banner before boss spawns:
 - Scout boss (10) / Semi (19) / Final (20) → **Boss alert**
 (Optional second line with boss name.) Then boss spawns.
 
+### Boss move speed (locked)
+Mini-boss + boss units move at **`bossSpeedMult` ≈ 0.33** of normal puff speed (Tune; ~3× slower). Runners/minions keep normal speed. Fat + slow = readable threat after the alert.
+
+
 ### Skill Orbs + merge (planned — after smoke; not blocking forever loop)
 Industry light steal: one equipped skill, orbs star it — **not** a full gem grid.
 
