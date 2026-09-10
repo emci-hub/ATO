@@ -74,7 +74,6 @@ import { dir8FromDelta, type Dir8 } from '@/play/art';
 import {
   bandUnitRole,
   skinArt,
-  skinCasing,
   skinClipArt,
   skinDrawBox,
   skinScale,
@@ -82,7 +81,7 @@ import {
   skinUnits,
   type SkinRoleId,
 } from '@/play/skin';
-import { boardDecor } from '@/play/board-decor';
+import { boardDecor, roadDecor } from '@/play/board-decor';
 import { BOUND_BOSS_MAX_STAR, bossBandFor, boundBossFragmentCost, defaultBoundBossId, getBoundBossDef, isUniqueDrop, previewDropTable, gearScore, recommendedGs, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, typeMatchBonus, type DropPreviewRow, type TypeTag } from '@/play/engine';
 import { formatItemStats, getItemDef } from '@/play/items';
 import {
@@ -432,14 +431,14 @@ export function DefendScreen({
   /** The map the CURRENT board draws — follows the sim so a finished run never
    * visually jumps maps before the player moves on. */
   const boardMap = DEFEND_MAPS[sim?.mapId ?? mapId];
-  /** Static Scribble Dungeons tile dressing for this map (§19). Pure + memoized. */
+  /** Ground dressing (grass + props + pad markers). Pure + memoized. */
   const decor = useMemo(() => boardDecor(boardMap), [boardMap]);
-  /** Road ribbon — the waypoint polyline stroked under the units, so the road
-   * art hugs the exact line creeps walk (no grid-cell drift). */
+  /** Cobble road stamps hugging the waypoint polyline (Craftpix Road5). */
+  const roadStamps = useMemo(() => roadDecor(boardMap), [boardMap]);
+  /** Thin dark underlay bed the stamps sit on, for edge contrast. */
   const roadD = useMemo(() => roadPathD(boardMap), [boardMap]);
-  const roadTone = skinTone('map.path') ?? '#c07848';
-  const roadCasing = skinCasing('map.path') ?? '#8f5a33';
-  const roadWidth = skinUnits('map.path', 9);
+  const underlayTone = skinTone('road.underlay') ?? '#7a5636';
+  const underlayWidth = skinUnits('road.underlay', 11);
 
   /** Boss band of the chosen fight (null for a normal formula wave). */
   const band = bossBandFor(fight.phase, fight.wave);
@@ -1343,27 +1342,35 @@ export function DefendScreen({
                 (click-to-move / pad select). */}
             <View style={styles.boardArt} pointerEvents="none">
             <Svg width="100%" height="100%" viewBox="0 0 100 100">
-              {/* Road ribbon — stroked exactly along the waypoint polyline, so
-               * the road art and the line creeps walk can never drift apart.
+              {/* Road — a thin dark underlay bed stroked along the waypoint
+               * polyline, then cobble STAMPS (straights + elbow corners + flared
+               * ends) centred on the centreline. Waypoints stay the walk truth.
                * Drawn first so pads/towers/units sit on top. */}
               <G>
                 <Path
                   d={roadD}
-                  stroke={roadCasing}
-                  strokeWidth={roadWidth + 2.6}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-                <Path
-                  d={roadD}
-                  stroke={roadTone}
-                  strokeWidth={roadWidth}
+                  stroke={underlayTone}
+                  strokeWidth={underlayWidth}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   fill="none"
                 />
               </G>
+              {roadStamps.map((stamp, index) => {
+                const source = skinArt(stamp.role);
+                if (!source) return null;
+                const box = skinDrawBox(stamp.role, stamp.x, stamp.y, stamp.size);
+                return (
+                  <SvgImage
+                    key={`road-${index}`}
+                    href={source}
+                    x={box.x}
+                    y={box.y}
+                    width={box.size}
+                    height={box.size}
+                  />
+                );
+              })}
               {boardMap.pads.map((pad, index) => {
                 const tower = sim?.towers.find((t) => t.pad === index);
                 const boundBoss = sim?.boundBosses.find((b) => b.pad === index);

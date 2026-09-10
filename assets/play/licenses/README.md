@@ -7,6 +7,7 @@ The PNGs under `assets/play/` are unpacked from the packs below (see
 | Folder | Pack | Author | License |
 |---|---|---|---|
 | `craftpix-fields/` | **Fields Tileset** (board terrain) | Craftpix | Craftpix file license |
+| `craftpix-roads/` | **Roads Tileset** (cobble road stamps) | Craftpix | Craftpix file license |
 | `kenney-td/` | **Tower Defense** (towers/units/fx) | Kenney | CC0 |
 | `kenney-ui/` | Fantasy UI Borders | Kenney | CC0 |
 | `kenney-icons/` | Cursor Pack | Kenney | CC0 |

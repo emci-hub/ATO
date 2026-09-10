@@ -47,13 +47,17 @@ next job adds Craftpix units/towers, those roles just appear in
 ## Map roles (already dropped)
 
 - `map.grass` — `FieldsTile_38` (olive floor), grid-tiled 8×8.
-- `map.path` — ribbon stroked along the waypoint polyline, tinted with the
-  role's `tone` / `casing` (FieldsTile_15 dirt).
+- `map.path` — **cobble stamps** (Road5_grass) laid as straight tiles along each
+  segment + real elbow corners at bends + flared straight ends at spawn/exit,
+  all centred on the waypoint polyline (see `board-decor.roadDecor`). A thin
+  dark underlay bed sits under the stamps for edge contrast.
 - `map.pad` — `PlaceForTower1`, centred on each pad's world point.
 - `prop.tree` / `prop.bush` / `prop.stone` / `prop.grass` / `prop.fence` —
   ground garnish from `board-decor.ts` (`MAP_PROPS`), capped ~12, verified
   ≥8 board units off the road and off pads. Props render in the `boardTiles`
   layer, under the gameplay SVG.
+- `road.straight` / `road.corner_{bl,tr,tl,rb}` / `road.underlay` — the Craftpix
+  road tiles (sliced from `Road5_grass.png`) + the underlay bed.
 
 ## Out of scope (this pass)
 

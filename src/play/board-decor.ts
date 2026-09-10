@@ -93,7 +93,7 @@ const MAP_PROPS: Record<string, readonly PropSpec[]> = {
 /**
  * Build the tile list for a map: grass under every cell, prop garnish, then a
  * pad slot marker CENTRED on each tower pad (drawn last so pads sit on top of
- * garnish). The road ribbon is drawn in the board SVG.
+ * garnish). The road is emitted separately by `roadDecor` (cobble stamps).
  */
 export function boardDecor(map: DefendMap): BoardTile[] {
   const tiles: BoardTile[] = [];
@@ -138,4 +138,142 @@ export function boardDecor(map: DefendMap): BoardTile[] {
   });
 
   return tiles;
+}
+
+/* ------------------------------------------------------------------ road --- */
+
+export type RoadStamp = {
+  /** Skin role: `road.straight` or `road.corner_*`. */
+  role: SkinRoleId;
+  /** Centre point, board units (0..100). */
+  x: number;
+  y: number;
+  /** Square edge, board units (the road tile is square; corners too). */
+  size: number;
+  /** Degrees, clockwise (only the flare stamps rotate for direction). */
+  rotate: number;
+};
+
+/** Cobble stamp edge, board units (matches `road.straight` units). */
+const ROAD_WIDTH = 9;
+/** Flare multiplier at the spawn + exit (wider cobble so the ends read). */
+const ROAD_FLARE_SCALE = 1.5;
+
+type Vec = { x: number; y: number };
+
+/** Cardinal direction of a segment (unit vector), or null for a zero segment. */
+function segDir(a: Vec, b: Vec): Vec | null {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len = Math.hypot(dx, dy);
+  if (len < 1e-6) return null;
+  return { x: dx / len, y: dy / len };
+}
+
+/** The corner role for a 90° turn `inDir` → `outDir` (road enters from one
+ * edge, exits an adjacent one). Matches the Craftpix elbow quadrants. */
+function cornerRole(inDir: Vec, outDir: Vec): SkinRoleId {
+  // Cardinal axis of each direction (sign only): +1 east/south, -1 west/north.
+  const axis = (v: Vec): { e: number; s: number } => {
+    if (Math.abs(v.x) > Math.abs(v.y)) return { e: Math.sign(v.x), s: 0 };
+    return { e: 0, s: Math.sign(v.y) };
+  };
+  const inA = axis(inDir);
+  const outA = axis(outDir);
+  // Entering edge is the OPPOSITE of travel direction; exiting = same as travel.
+  const enter = { e: -inA.e, s: -inA.s };
+  const exit = outA;
+  // Enter/exit edges → corner quadrant.
+  const enterWest = enter.e === -1;
+  const enterEast = enter.e === 1;
+  const enterNorth = enter.s === -1;
+  const enterSouth = enter.s === 1;
+  const exitEast = exit.e === 1;
+  const exitWest = exit.e === -1;
+  const exitSouth = exit.s === 1;
+  const exitNorth = exit.s === -1;
+  if (enterWest && exitSouth) return 'road.corner_bl';
+  if (enterWest && exitNorth) return 'road.corner_tl';
+  if (enterNorth && exitEast) return 'road.corner_tr';
+  if (enterNorth && exitWest) return 'road.corner_tl';
+  if (enterEast && exitSouth) return 'road.corner_rb';
+  if (enterEast && exitNorth) return 'road.corner_tr';
+  if (enterSouth && exitEast) return 'road.corner_rb';
+  if (enterSouth && exitWest) return 'road.corner_bl';
+  // Degenerate / non-90° — fall back to a straight stamp.
+  return 'road.straight';
+}
+
+/**
+ * Cobble road stamps hugging the waypoint polyline: straight tiles along each
+ * segment (centred on the centreline), a real elbow tile at each bend, and a
+ * flared straight at the spawn + exit so the leak ends read. Waypoints stay the
+ * walk truth — stamps are centred on the polyline, never offset from it.
+ */
+export function roadDecor(map: DefendMap): RoadStamp[] {
+  const pts = map.path.map((p) => ({ x: p.x * 100, y: p.y * 100 }));
+  const stamps: RoadStamp[] = [];
+  if (pts.length < 2) return stamps;
+
+  // Flare ends.
+  const first = pts[0]!;
+  const firstDir = segDir(first, pts[1]!);
+  if (firstDir) {
+    stamps.push({
+      role: 'road.straight',
+      x: first.x,
+      y: first.y,
+      size: ROAD_WIDTH * ROAD_FLARE_SCALE,
+      rotate: 0,
+    });
+  }
+  const last = pts[pts.length - 1]!;
+  const lastDir = segDir(pts[pts.length - 2]!, last);
+  if (lastDir) {
+    stamps.push({
+      role: 'road.straight',
+      x: last.x,
+      y: last.y,
+      size: ROAD_WIDTH * ROAD_FLARE_SCALE,
+      rotate: 0,
+    });
+  }
+
+  // Straight segments + corner elbows.
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i]!;
+    const b = pts[i + 1]!;
+    const dir = segDir(a, b);
+    if (!dir) continue;
+    const len = Math.hypot(b.x - a.x, b.y - a.y);
+    // Straight stamps from just inside `a` to just inside `b`, step ROAD_WIDTH.
+    const start = ROAD_WIDTH / 2;
+    const end = len - ROAD_WIDTH / 2;
+    for (let t = start; t <= end + 1e-6; t += ROAD_WIDTH) {
+      stamps.push({
+        role: 'road.straight',
+        x: a.x + dir.x * t,
+        y: a.y + dir.y * t,
+        size: ROAD_WIDTH,
+        rotate: 0,
+      });
+    }
+
+    // A bend at the interior waypoint between this segment and the next.
+    if (i < pts.length - 2) {
+      const nextDir = segDir(pts[i + 1]!, pts[i + 2]!);
+      if (nextDir) {
+        const corner = cornerRole(dir, nextDir);
+        stamps.push({
+          role: corner,
+          x: b.x,
+          y: b.y,
+          size: ROAD_WIDTH,
+          rotate: 0,
+        });
+      }
+    }
+  }
+
+  return stamps;
 }

@@ -24,6 +24,50 @@
       "cellPx": 62,
       "units": 12
     },
+    "road.straight": {
+      "keys": ["craftpix-roads/straight"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 16,
+      "units": 9
+    },
+    "road.corner_bl": {
+      "keys": ["craftpix-roads/corner_bl"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 16,
+      "units": 9
+    },
+    "road.corner_tr": {
+      "keys": ["craftpix-roads/corner_tr"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 16,
+      "units": 9
+    },
+    "road.corner_tl": {
+      "keys": ["craftpix-roads/corner_tl"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 16,
+      "units": 9
+    },
+    "road.corner_rb": {
+      "keys": ["craftpix-roads/corner_rb"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 16,
+      "units": 9
+    },
+    "road.underlay": {
+      "$comment": "Thin dark bed under the cobble stamps for contrast. tone = bed, casing = nothing (stamps sit on it).",
+      "keys": [],
+      "dirs": 1,
+      "pivot": "center",
+      "units": 11,
+      "tone": "#7a5636",
+      "casing": "#5c3f26"
+    },
     "prop.tree": {
       "keys": ["craftpix-fields/props/tree1"],
       "dirs": 1,
