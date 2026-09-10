@@ -71,14 +71,15 @@ import {
 import { avatarDef } from '@/play/avatars';
 import { PlayFrame } from '@/play/play-frame';
 import {
-  PRIMAL_CAST,
+  ENEMY_CAST,
   PUFF_ART,
-  avatarRotation,
+  avatarSprite,
   dir8FromDelta,
-  playTile,
-  primalRotation,
+  enemyArtSource,
+  tdTile,
   towerArtSource,
   type Dir8,
+  type EnemyRole,
 } from '@/play/art';
 import { boardDecor } from '@/play/board-decor';
 import { BOUND_BOSS_MAX_STAR, bossBandFor, boundBossFragmentCost, defaultBoundBossId, getBoundBossDef, isUniqueDrop, previewDropTable, gearScore, recommendedGs, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, typeMatchBonus, type DropPreviewRow, type TypeTag } from '@/play/engine';
@@ -934,14 +935,15 @@ export function DefendScreen({
       ? `Cycle ${view.conqueredCycles} — foes scale ×${view.cyclePower.toFixed(2)}`
       : null;
 
-  // §19 Avatar frames: Dungeon Legends ships 8-way idle rotations only, so the
-  // board always draws the rotation facing the nearest foe; the attack reads as
-  // a short tint/flash (below), not a slash sheet.
+  // §19 Avatar: one Kenney TD soldier sprite, ROTATED toward the nearest foe
+  // (the pack has no per-direction sheets). The attack reads as a short
+  // tint/flash (below).
   const avatarFacing = avatarFacingRef.current;
+  const avatarFacingDeg = dir8Degrees(avatarFacing);
   const nowMs = Date.now();
   const attackElapsed = nowMs - avatarAttackAtRef.current;
   const avatarAttacking = attackElapsed < AVATAR_ATTACK_MS;
-  const avatarFrameSource = avatarRotation(view.activeAvatarId, avatarFacing);
+  const avatarFrameSource = avatarSprite();
 
   return (
     <ThemedView style={styles.container}>
@@ -1107,14 +1109,15 @@ export function DefendScreen({
               boardSizeRef.current = width;
               boardSize.value = width;
             }}>
-            {/* Scribble Dungeons tile dressing (§19) — background only, behind
-                every gameplay layer (zIndex 0). pointerEvents none so taps fall
-                through to the pads on the SVG above. */}
+            {/* Kenney Tower Defense terrain (§19) — grass floor + path + pad
+                markers, background only, behind every gameplay layer (zIndex 0).
+                pointerEvents none so taps fall through to the pads on the SVG
+                above. */}
             <View
               pointerEvents="none"
               style={[StyleSheet.absoluteFill, styles.boardTiles]}>
               {decor.map((tile, index) => {
-                const source = playTile(tile.key);
+                const source = tdTile(tile.key);
                 if (!source) return null;
                 return (
                   <Image
@@ -1182,42 +1185,28 @@ export function DefendScreen({
                   strokeDasharray="2 2"
                 />
               ) : null}
-              {/* §19 tower sprites: Dungeon Legends bodies per tower job (drawn
-               * under the level number so the badge stays readable). */}
+              {/* §19 tower sprites: Kenney TD art per job. Visual level is
+               * SCALE ONLY (Lv1 0.70 · Lv2 0.85 · Lv3 1.0) — no number badges. */}
               {sim?.towers.map((tower) => {
                 const pad = boardMap.pads[tower.pad];
                 const source = towerArtSource(tower.kind);
                 if (!source) return null;
+                const size = TOWER_PAD_UNITS * towerLevelScale(tower.level);
                 return (
                   <SvgImage
                     key={`tower-art-${tower.id}`}
                     href={source}
-                    x={pad.x - 5}
-                    y={pad.y - 5}
-                    width={10}
-                    height={10}
+                    x={pad.x - size / 2}
+                    y={pad.y - size / 2}
+                    width={size}
+                    height={size}
                   />
                 );
               })}
-              {sim?.towers.map((tower) => {
-                const pad = boardMap.pads[tower.pad];
-                return (
-                  <SvgText
-                    key={`tower-${tower.id}`}
-                    x={pad.x}
-                    y={pad.y + 1.4}
-                    fontSize={4.2}
-                    fontWeight="bold"
-                    fill="#FFFFFF"
-                    textAnchor="middle">
-                    {tower.level}
-                  </SvgText>
-                );
-              })}
-              {/* §19 Bound Boss carries the Final beast sprite (Jaguar). */}
+              {/* §19 Bound Boss carries the heavy Final sprite. */}
               {sim?.boundBosses.map((bb) => {
                 const pad = boardMap.pads[bb.pad];
-                const source = primalRotation(PRIMAL_CAST.final, 'south');
+                const source = enemyArtSource(ENEMY_CAST.final);
                 if (!source) return null;
                 return (
                   <SvgImage
@@ -1260,14 +1249,13 @@ export function DefendScreen({
                     : puff.kind === 'runner'
                       ? RUNNER_COLOR
                       : PUFF_COLOR;
-                // §19 cast lock: runners = Lynx, bosses = Primal by band,
-                // normal puffs = Kenney shape circle.
-                const facing = puffFacing(puff, boardMap);
+                // §19 board cast (Kenney TD): runners = fast unit, bosses =
+                // tanks/heavy by band, normal puffs = the puff unit.
                 const sprite =
                   puff.kind === 'boss'
-                    ? bossArtSource(band?.kind ?? '', facing)
+                    ? enemyArtSource(bossEnemyRole(band?.kind ?? ''))
                     : puff.kind === 'runner'
-                      ? primalRotation(PRIMAL_CAST.runner, facing)
+                      ? enemyArtSource(ENEMY_CAST.runner)
                       : PUFF_ART;
                 const spriteSize = radius * 4.4;
                 const barWidth = 8 * puff.size;
@@ -1304,9 +1292,9 @@ export function DefendScreen({
             </Svg>
             </View>
 
-            {/* Draggable Avatar overlay (§19 Dungeon Legends — active Legend,
-                8-way idle rotations). zIndex 10 keeps it above the tiles AND
-                the gameplay SVG so it is always grabbable. */}
+            {/* Draggable Avatar overlay (§19 Kenney TD soldier, rotated toward
+                the nearest foe). zIndex 10 keeps it above the tiles AND the
+                gameplay SVG so it is always grabbable. */}
             <GestureDetector gesture={pan}>
               <Animated.View
                 style={[styles.avatar, avatarStyle]}
@@ -1317,7 +1305,9 @@ export function DefendScreen({
                     pointerEvents="none"
                   />
                 ) : null}
-                <View style={styles.avatarArt} pointerEvents="none">
+                <View
+                  style={[styles.avatarArt, { transform: [{ rotate: `${avatarFacingDeg}deg` }] }]}
+                  pointerEvents="none">
                   {avatarFrameSource ? (
                     <Image source={avatarFrameSource} contentFit="contain" style={styles.avatarImage} />
                   ) : (
@@ -2327,27 +2317,46 @@ const AVATAR_HIT_SLOP = { top: 10, bottom: 10, left: 10, right: 10 } as const;
 /** Attack flash length (ms) — tuned to the Avatar's 0.7s cooldown. */
 const AVATAR_ATTACK_MS = 700;
 
-/** Which Primal Dynasties beast plays each boss band (§19 cast lock). */
-function bossArtSource(kind: string, dir: Dir8) {
-  switch (kind) {
-    case 'final':
-      return primalRotation(PRIMAL_CAST.final, dir);
-    case 'semi':
-      return primalRotation(PRIMAL_CAST.semi, dir);
-    case 'scout':
-      return primalRotation(PRIMAL_CAST.scoutBoss, dir);
-    case 'scout_mini':
-      return primalRotation(PRIMAL_CAST.scoutMini, dir);
-    default:
-      return primalRotation(PRIMAL_CAST.final, dir);
-  }
+/** 8-way facing → rotation degrees for a single top-down sprite (east = 0). */
+const DIR8_DEGREES: Record<Dir8, number> = {
+  east: 0,
+  'south-east': 45,
+  south: 90,
+  'south-west': 135,
+  west: 180,
+  'north-west': 225,
+  north: 270,
+  'north-east': 315,
+};
+
+export function dir8Degrees(dir: Dir8): number {
+  return DIR8_DEGREES[dir];
 }
 
-/** Where a puff is heading (8-way), from its path tangent. */
-function puffFacing(puff: Puff, map: DefendMap): Dir8 {
-  const behind = puffPosition(Math.max(0, puff.dist - 0.02), map);
-  const ahead = puffPosition(Math.min(1, puff.dist + 0.02), map);
-  return dir8FromDelta(ahead.x - behind.x, ahead.y - behind.y);
+/** Base tower sprite size on the pad, board units (64px art scaled to fit). */
+const TOWER_PAD_UNITS = 13;
+
+/** Visual tower level → scale (§19: Lv1 0.70 · Lv2 0.85 · Lv3 1.0). */
+export function towerLevelScale(level: number): number {
+  if (level <= 1) return 0.7;
+  if (level === 2) return 0.85;
+  return 1;
+}
+
+/** Which Kenney TD unit plays each boss band (§19 board cast). */
+function bossEnemyRole(kind: string): EnemyRole {
+  switch (kind) {
+    case 'final':
+      return ENEMY_CAST.final;
+    case 'semi':
+      return ENEMY_CAST.semi;
+    case 'scout':
+      return ENEMY_CAST.scoutBoss;
+    case 'scout_mini':
+      return ENEMY_CAST.scoutMini;
+    default:
+      return ENEMY_CAST.final;
+  }
 }
 
 /** Delta from the Avatar to the nearest puff in attack range (facing aid). */

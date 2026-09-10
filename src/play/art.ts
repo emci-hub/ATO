@@ -8,13 +8,13 @@
  * (if it needs a stable id) add a mapping here. No screen should `require()` a
  * play PNG directly.
  *
- * Tower bodies and the normal puff silhouette come from the Dungeon Legends
- * pack (towers) and the already-bundled Kenney shape family (puffs) —
- * `assets/kenney/shape/`, see `@/lib/kenney/generated-assets`.
+ * The board cast is the **Kenney Tower Defense** pack (grass/dirt terrain,
+ * towers, top-down units). Scribble / Primal / Dungeon Legends / Masterpiece /
+ * Cozy are no longer loaded for the board (their files stay on disk). The
+ * locked tile ids live in `games/grove/KENNEY_TD_TILE_MAP.md`.
  */
 import type { ImageSourcePropType } from 'react-native';
 
-import { KENNEY_ASSETS } from '@/lib/kenney/generated-assets';
 import { PLAY_ART } from '@/play/generated-play-assets';
 
 /** An 8-way facing (matches the rotation folders the packs ship). */
@@ -49,8 +49,39 @@ function art(key: string): ImageSourcePropType | undefined {
   return PLAY_ART[key];
 }
 
-/** Where the Dungeon Legends avatar packs live under `assets/play/`. */
-const DUNGEON_LEGENDS_DIR = 'avatars/dungeon-legends';
+/* --------------------------------------------------- Kenney Tower Defense --- */
+
+/**
+ * Locked board-cast tile ids (see `games/grove/KENNEY_TD_TILE_MAP.md`). Every
+ * sprite is a single top-down 64px tile — no rotation sheets, so facing is a
+ * transform, not a different image.
+ */
+export const TD_TILE = {
+  /** Grass floor — painted under the whole board. */
+  grass: 24,
+  /** Dirt path — painted on every path cell (no corner autotile this pass). */
+  path: 50,
+  /** Tower pad slot marker. */
+  pad: 181,
+  /** Towers (art only; jobs + math unchanged). */
+  towerArcher: 249,
+  towerVine: 206,
+  towerCrystal: 250,
+  /** Units. */
+  avatar: 247,
+  puff: 245,
+  runner: 248,
+  tank: 268,
+  tankAlt: 269,
+  final: 271,
+  coin: 272,
+  projectile: 273,
+} as const;
+
+/** One Kenney Tower Defense tile by number (`towerDefense_tileNNN`). */
+export function tdTile(n: number): ImageSourcePropType | undefined {
+  return art(`kenney-td/towerDefense_tile${String(n).padStart(3, '0')}`);
+}
 
 /* ------------------------------------------------------------------ tiles --- */
 
@@ -71,7 +102,7 @@ const TILE_FILES: Record<PlayTileId, string> = {
   stairs: 'stairs_down',
 };
 
-/** A Scribble Dungeons 64px tile by stable id. */
+/** A Scribble Dungeons 64px tile by stable id. Kept for non-board UI use. */
 export function playTile(id: PlayTileId): ImageSourcePropType | undefined {
   return art(`tiles/scribble-dungeons/${TILE_FILES[id]}`);
 }
@@ -110,91 +141,66 @@ export function cursorIcon(file: string): ImageSourcePropType | undefined {
 
 export type TowerArtId = 'archer' | 'vine' | 'crystal';
 
-/**
- * §19 cast lock — tower sprites come from the Dungeon Legends pack (a small
- * body reading south so the pad stays readable under the level badge). Jobs and
- * math are unchanged; this is an art swap over the old Kenney shape bodies.
- */
-const TOWER_LEGEND: Record<TowerArtId, string> = {
-  archer: '05_ARCANE_ENGINEER',
-  vine: '06_DUNGEON_WITCH',
-  crystal: '10_SERAPHIC_DUNGEON_CLERIC',
+/** Kenney TD tower art per job. Jobs, ranges and math are unchanged. */
+const TOWER_TILE: Record<TowerArtId, number> = {
+  archer: TD_TILE.towerArcher,
+  vine: TD_TILE.towerVine,
+  crystal: TD_TILE.towerCrystal,
 };
 
-/** Dungeon Legends sprite used as a tower on the pad (south-facing). */
+/** Kenney TD sprite used as a tower on the pad. */
 export function towerArtSource(kind: TowerArtId): ImageSourcePropType | undefined {
-  return art(`${DUNGEON_LEGENDS_DIR}/${TOWER_LEGEND[kind]}/rotations/south`);
+  return tdTile(TOWER_TILE[kind]);
 }
 
-/** Kenney shape-character body for the normal puff silhouette. */
-export const PUFF_ART: ImageSourcePropType | undefined = KENNEY_ASSETS['shape/body/circle.pink.png'];
+/** Normal puff silhouette (Kenney TD unit). */
+export const PUFF_ART: ImageSourcePropType | undefined = tdTile(TD_TILE.puff);
 
 /* ---------------------------------------------------------------- avatars --- */
 
 /**
- * Avatar id → Dungeon Legends pack folder. Every legend ships 8 idle rotations
- * (no walk/attack sheets), so the board reads facing from `avatarRotation` and
- * a short tint/flash stands in for the attack (no Iron_Slash dependency).
- *
- * The starter keeps its legacy id `ava_sprout` so existing saves retain their
- * level/stars/park/equipped — only its identity + art changed (it is the Druid
- * now). The other nine are unlockable stubs.
+ * One top-down soldier sprite for every Avatar (the TD pack has no per-hero
+ * art). Identity still comes from `avatars.ts` (name/icon/colour); the board
+ * draws this single sprite and rotates it toward the nearest foe.
  */
-const AVATAR_PACK: Record<string, string> = {
-  ava_sprout: '03_DUNGEON_DRUID', // starter — Dungeon Druid
-  ava_assassin: '02_ABYSSAL_ASSASSIN',
-  ava_champion: '04_DRAGONBLOOD_CHAMPION',
-  ava_engineer: '05_ARCANE_ENGINEER',
-  ava_witch: '06_DUNGEON_WITCH',
-  ava_ratkin: '07_RATKIN_TREASURE_HUNTER',
-  ava_berserker: '08_CRYSTAL_BERSERKER',
-  ava_death_knight: '09_DEATH_KNIGHT',
-  ava_cleric: '10_SERAPHIC_DUNGEON_CLERIC',
-  ava_demon_guardian: '11_FREE_BONUS_ABYSSAL_DEMON_GUARDIAN',
-};
-
-/** Starter pack — the fallback for any unknown avatar id. */
-const STARTER_PACK = AVATAR_PACK.ava_sprout!;
-
-function avatarPack(avatarId: string): string {
-  return AVATAR_PACK[avatarId] ?? STARTER_PACK;
-}
-
-/** The 8-way idle rotation for an avatar (the pack ships rotations only). */
-export function avatarRotation(
-  avatarId: string,
-  dir: Dir8,
-): ImageSourcePropType | undefined {
-  return art(`${DUNGEON_LEGENDS_DIR}/${avatarPack(avatarId)}/rotations/${dir}`);
+export function avatarSprite(): ImageSourcePropType | undefined {
+  return tdTile(TD_TILE.avatar);
 }
 
 /* ----------------------------------------------------------------- primal --- */
 
-export type PrimalBeast =
-  | 'jaguar_sun_guardian'
-  | 'panther_shadowblade'
-  | 'lynx_huntress'
-  | 'raven_deathcaller'
-  | 'mammoth_warchief'
-  | 'cobra_oracle'
-  | 'gorilla_titan'
-  | 'rhino_juggernaut'
-  | 'buffalo_earthshaker'
-  | 'shark_tide_knight';
+/**
+ * Board enemy roles (Kenney TD units). `final` is the heavy boss sprite; the
+ * mid bands reuse the tank sprites at different scales.
+ */
+export type EnemyRole = 'puff' | 'runner' | 'tank' | 'tankAlt' | 'final';
 
-/** One 8-way idle rotation for a Primal Dynasties beast. */
-export function primalRotation(
-  beast: PrimalBeast,
-  dir: Dir8,
-): ImageSourcePropType | undefined {
-  return art(`primal/${beast}/Idle/rotations/${dir}`);
+const ENEMY_TILE: Record<EnemyRole, number> = {
+  puff: TD_TILE.puff,
+  runner: TD_TILE.runner,
+  tank: TD_TILE.tank,
+  tankAlt: TD_TILE.tankAlt,
+  final: TD_TILE.final,
+};
+
+/** The Kenney TD sprite for an enemy role. */
+export function enemyArtSource(role: EnemyRole): ImageSourcePropType | undefined {
+  return tdTile(ENEMY_TILE[role]);
 }
 
-/** The §19 cast lock: which beast stands in for which board role. */
-export const PRIMAL_CAST = {
-  final: 'jaguar_sun_guardian',
-  semi: 'mammoth_warchief',
-  scoutBoss: 'raven_deathcaller',
-  scoutMini: 'panther_shadowblade',
-  runner: 'lynx_huntress',
-} as const satisfies Record<string, PrimalBeast>;
+/**
+ * Which enemy sprite plays each boss band (art only — bands/scaling unchanged).
+ * Mini/scout use the tanks, semi the alt tank, the Final the heavy tile.
+ */
+export const ENEMY_CAST = {
+  final: 'final',
+  semi: 'tankAlt',
+  scoutBoss: 'tank',
+  scoutMini: 'tank',
+  runner: 'runner',
+} as const satisfies Record<string, EnemyRole>;
+
+/** Projectile sprite for shot FX (optional polish). */
+export const PROJECTILE_ART: ImageSourcePropType | undefined = tdTile(TD_TILE.projectile);
+/** Coin sprite for reward FX (optional polish). */
+export const COIN_ART: ImageSourcePropType | undefined = tdTile(TD_TILE.coin);

@@ -13,7 +13,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useAppearance } from '@/lib/theme/context';
 import { AboutScreen } from '@/play/about-screen';
-import { avatarRotation } from '@/play/art';
+import { avatarSprite } from '@/play/art';
 import { STUB_AVATAR_ID, avatarDef } from '@/play/avatars';
 import { SaveDumpRow } from '@/play/dev-dump';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
@@ -602,11 +602,11 @@ export default function PlayScreen() {
 
               <PlayFrame style={styles.card}>
                 <View style={styles.groveRow}>
-                  {/* §19 Avatar art — reflects the ACTIVE Avatar (swap in Dress). */}
+                  {/* §19 Avatar art — the active Avatar's board sprite (Kenney TD). */}
                   <View style={[styles.avatar, { backgroundColor: theme.backgroundSelected }]}>
-                    {activeAvatar && avatarRotation(activeAvatar.id, 'south') ? (
+                    {activeAvatar && avatarSprite() ? (
                       <Image
-                        source={avatarRotation(activeAvatar.id, 'south')}
+                        source={avatarSprite()}
                         contentFit="contain"
                         style={styles.avatarArt}
                       />

@@ -21,11 +21,11 @@ export const PLAY_CC0_LINE =
 
 export const PLAY_CREDITS: readonly PlayCredit[] = [
   {
-    pack: 'Scribble Dungeons (64px)',
+    pack: 'Tower Defense',
     author: 'Kenney',
-    usedFor: 'Defend board tiles — floor, walls, path and doorway',
+    usedFor: 'Board cast — grass + path terrain, tower sprites, Avatar, units and bosses',
     license: 'CC0',
-    url: 'https://kenney.nl/assets/scribble-dungeons',
+    url: 'https://kenney.nl/assets/tower-defense-kit',
   },
   {
     pack: 'Fantasy UI Borders',
@@ -40,25 +40,6 @@ export const PLAY_CREDITS: readonly PlayCredit[] = [
     usedFor: 'Item and shop icons',
     license: 'CC0',
     url: 'https://kenney.nl/assets/cursor-pack',
-  },
-  {
-    pack: 'Shape Characters',
-    author: 'Kenney',
-    usedFor: 'Normal puff enemies',
-    license: 'CC0',
-    url: 'https://kenney.nl/assets/shape-characters',
-  },
-  {
-    pack: 'Dungeon Legends',
-    author: 'Pack author',
-    usedFor: 'Playable Avatars (starter Druid + 9 unlockable Legends) and tower sprites',
-    license: 'Per the pack license included with the download',
-  },
-  {
-    pack: 'Primal Dynasties — Beast Champions',
-    author: 'Pack author',
-    usedFor: 'Scout mini, Scout boss, Semi, Final boss and runners',
-    license: 'Per the pack license included with the download',
   },
 ];
 

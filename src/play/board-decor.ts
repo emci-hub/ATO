@@ -1,15 +1,21 @@
 /**
- * Board decorator — dresses the Defend board with Kenney Scribble Dungeons
- * tiles (§19) WITHOUT touching combat geometry. Waypoints/pads stay the source
- * of truth; this only answers "which tile image goes in which 8×8 cell, and how
- * is it rotated".
+ * Board decorator — dresses the Defend board with Kenney Tower Defense tiles
+ * (GAME_SPEC §19 superseding board cast) WITHOUT touching combat geometry.
+ * Waypoints/pads stay the source of truth; this only answers "which tile goes
+ * in which 8×8 cell".
+ *
+ * Locked ids (see `games/grove/KENNEY_TD_TILE_MAP.md`):
+ * - `grass` 024 — painted under every cell.
+ * - `path` 050 — painted on every cell the lane crosses (no corner autotile
+ *   this pass; the sampled cells already trace the bends).
+ * - `pad` 181 — a slot marker on each of the six tower pads.
  *
  * Output is in the same 0..100 board-unit space the board uses, so a tile at
  * `{x, y, size}` maps to an absolutely-positioned image at `left: x%`, etc.
  * Pure + deterministic so it can be memoized per map.
  */
 import type { DefendMap } from '@/play/defend';
-import type { PlayTileId } from '@/play/art';
+import { TD_TILE } from '@/play/art';
 
 /** Grid resolution across the board (100 board units / 8 = 12.5 per tile). */
 export const BOARD_GRID = 8;
@@ -22,7 +28,8 @@ const CELL = 100 / BOARD_GRID;
 const LANE_HALF = CELL / 2;
 
 export type BoardTile = {
-  key: PlayTileId;
+  /** Kenney Tower Defense tile number (`towerDefense_tileNNN`). */
+  key: number;
   /** Top-left corner, board units. */
   x: number;
   y: number;
@@ -35,25 +42,6 @@ export type BoardTile = {
 type Vec = { x: number; y: number };
 
 const toUnits = (p: { x: number; y: number }): Vec => ({ x: p.x * 100, y: p.y * 100 });
-
-/** Compass angle in degrees: east = 0, south = 90, west = 180, north = 270. */
-function angleOf(dx: number, dy: number): number {
-  return ((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360;
-}
-
-function normalizeAngle(a: number): number {
-  return ((a % 360) + 360) % 360;
-}
-
-/** Rotation aligning the tile's base open edges (east + south) to a target pair. */
-function rotationForOpenPair(targetA: number, targetB: number): number {
-  const base = [0, 90];
-  for (const r of [0, 90, 180, 270]) {
-    const open = new Set(base.map((a) => normalizeAngle(a + r)));
-    if (open.has(normalizeAngle(targetA)) && open.has(normalizeAngle(targetB))) return r;
-  }
-  return 0;
-}
 
 function distanceToSegment(px: number, py: number, a: Vec, b: Vec): number {
   const vx = b.x - a.x;
@@ -75,122 +63,56 @@ function cellOf(p: Vec): { i: number; j: number } {
   return { i, j };
 }
 
-/** True when the two joined segments are not collinear (a real turn). */
-function isTurn(prev: Vec, at: Vec, next: Vec): boolean {
-  const inAng = angleOf(at.x - prev.x, at.y - prev.y);
-  const outAng = angleOf(next.x - at.x, next.y - at.y);
-  return Math.abs(normalizeAngle(outAng - inAng)) > 1 && Math.abs(normalizeAngle(outAng - inAng)) < 359;
-}
-
-/**
- * Tile art base facing. `stairs_down` / `door_open` are authored facing DOWN
- * (toward the tile's bottom edge = south = 90° in the compass angle above), so
- * the rotation that points one along a path direction is `direction - 90`.
- * If a future art pack changes the base, this single number moves.
- */
-const TILE_BASE_FACING_DEG = 90;
-
-/** Rotation (deg, clockwise) that points a base-facing-down tile along (dx, dy). */
-function facingRotation(dx: number, dy: number): number {
-  return normalizeAngle(angleOf(dx, dy) - TILE_BASE_FACING_DEG);
-}
-
-/** Rotation pointing a tile along the segment a → b (same compass convention). */
-function segmentFacing(a: Vec, b: Vec): number {
-  return facingRotation(b.x - a.x, b.y - a.y);
-}
-
 const key = (i: number, j: number) => `${i},${j}`;
 
 /**
- * Build the full tile list for a map: floors everywhere, walls on the outer
- * ring (skipped on the lane and on pads), path tiles over the lane, and a
- * doorway/stairs marker at the exit/spawn.
+ * Build the full tile list for a map: grass everywhere, path over every cell
+ * the lane crosses, and a pad marker on each tower pad.
  */
 export function boardDecor(map: DefendMap): BoardTile[] {
   const pts = map.path.map(toUnits);
-  const padCells = new Set(map.pads.map((pad) => cellOf({ x: pad.x, y: pad.y })).map((c) => key(c.i, c.j)));
 
   // Classify every cell: is it on the lane?
-  const laneInfo = new Map<string, { tile: PlayTileId; rotate: number }>();
-
+  const laneCells = new Set<string>();
   for (let i = 0; i < BOARD_GRID; i += 1) {
     for (let j = 0; j < BOARD_GRID; j += 1) {
       const center = cellCenter(i, j);
       let best = Infinity;
-      let bestSeg = -1;
       for (let s = 0; s < pts.length - 1; s += 1) {
         const d = distanceToSegment(center.x, center.y, pts[s]!, pts[s + 1]!);
-        if (d < best) {
-          best = d;
-          bestSeg = s;
-        }
+        if (d < best) best = d;
       }
-      if (best > LANE_HALF || bestSeg < 0) continue;
-
-      const a = pts[bestSeg]!;
-      const b = pts[bestSeg + 1]!;
-      // path.png runs vertically (north–south); rotate it onto the segment.
-      const rotate = normalizeAngle(angleOf(b.x - a.x, b.y - a.y) - 90);
-      laneInfo.set(key(i, j), { tile: 'path', rotate });
+      if (best <= LANE_HALF) laneCells.add(key(i, j));
     }
   }
-
-  // Turns: the cell containing each interior waypoint draws the curve tile, and
-  // is forced onto the lane even if the sampling above just missed it.
+  // The cell containing an interior waypoint is always lane, so a bend can't
+  // fall between samples and leave a gap.
   for (let v = 1; v < pts.length - 1; v += 1) {
-    const at = pts[v]!;
-    const prev = pts[v - 1]!;
-    const next = pts[v + 1]!;
-    if (!isTurn(prev, at, next)) continue;
-    const back = angleOf(prev.x - at.x, prev.y - at.y);
-    const fwd = angleOf(next.x - at.x, next.y - at.y);
-    const cell = cellOf(at);
-    laneInfo.set(key(cell.i, cell.j), {
-      tile: 'path_curve',
-      rotate: rotationForOpenPair(back, fwd),
-    });
+    const cell = cellOf(pts[v]!);
+    laneCells.add(key(cell.i, cell.j));
   }
 
   const tiles: BoardTile[] = [];
 
-  // Base layer: floor everywhere, walls on the outer ring (never on lane/pad).
+  // Grass floor everywhere, path tiles over the lane.
   for (let j = 0; j < BOARD_GRID; j += 1) {
     for (let i = 0; i < BOARD_GRID; i += 1) {
-      const k = key(i, j);
-      const onLane = laneInfo.has(k);
-      const isPad = padCells.has(k);
-      const isBorder = i === 0 || j === 0 || i === BOARD_GRID - 1 || j === BOARD_GRID - 1;
-
-      let base: PlayTileId = 'floor';
-      let rotate = 0;
-      if (isBorder && !onLane && !isPad) {
-        // wall.png is a wall along the tile's TOP edge.
-        base = 'wall';
-        rotate = j === 0 ? 0 : j === BOARD_GRID - 1 ? 180 : i === 0 ? 270 : 90;
-      }
-      tiles.push({ key: base, x: i * CELL, y: j * CELL, size: CELL, rotate });
+      const onLane = laneCells.has(key(i, j));
+      tiles.push({
+        key: onLane ? TD_TILE.path : TD_TILE.grass,
+        x: i * CELL,
+        y: j * CELL,
+        size: CELL,
+        rotate: 0,
+      });
     }
   }
 
-  // Lane layer: path / curve tiles over the floor.
-  for (const [k, info] of laneInfo) {
-    const [i, j] = k.split(',').map(Number) as [number, number];
-    tiles.push({ key: info.tile, x: i * CELL, y: j * CELL, size: CELL, rotate: info.rotate });
-  }
-
-  // Endpoint markers: the stairs at spawn face the FIRST path segment (the way
-  // the lane leaves them), and the doorway at the exit faces the exit
-  // direction. Both are derived from the path so they follow any map.
-  const spawn = cellOf(pts[0]!);
-  const exit = cellOf(pts[pts.length - 1]!);
-  // A degenerate path (a single waypoint) has no direction — fall back to the
-  // base facing rather than an arbitrary rotation.
-  const stairsFacing = pts.length >= 2 ? segmentFacing(pts[0]!, pts[1]!) : 0;
-  const doorFacing =
-    pts.length >= 2 ? segmentFacing(pts[pts.length - 2]!, pts[pts.length - 1]!) : 0;
-  tiles.push({ key: 'stairs', x: spawn.i * CELL, y: spawn.j * CELL, size: CELL, rotate: stairsFacing });
-  tiles.push({ key: 'door', x: exit.i * CELL, y: exit.j * CELL, size: CELL, rotate: doorFacing });
+  // Pad slot markers on the six pads (drawn over the grass/path cell).
+  map.pads.forEach((pad) => {
+    const cell = cellOf({ x: pad.x, y: pad.y });
+    tiles.push({ key: TD_TILE.pad, x: cell.i * CELL, y: cell.j * CELL, size: CELL, rotate: 0 });
+  });
 
   return tiles;
 }
