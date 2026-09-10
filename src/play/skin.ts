@@ -89,6 +89,29 @@ export function skinScale(role: SkinRoleId, level: number): number {
   return scales[index] ?? 1;
 }
 
+/** Frame counts for a clip (0 when the clip isn't authored). */
+export function skinClipFrames(role: SkinRoleId, clip: keyof SkinClips): number {
+  return ROLES[role]?.clips?.[clip] ?? 0;
+}
+
+/**
+ * Art for a multi-frame clip on a `dirs: 1` role: `keys` are read as frames
+ * (index 0 = frame 0). Returns undefined when the role has no such clip or only
+ * one frame, so callers fall back to the idle art (Kenney v0 ships 1 frame).
+ */
+export function skinClipArt(
+  role: SkinRoleId,
+  clip: keyof SkinClips,
+  frame: number,
+): ImageSourcePropType | undefined {
+  const def = ROLES[role];
+  if (!def || def.dirs !== 1) return undefined;
+  const frames = def.clips?.[clip] ?? 0;
+  if (frames <= 1) return undefined;
+  const key = def.keys[((frame % frames) + frames) % frames];
+  return key ? PLAY_ART[key] : undefined;
+}
+
 /**
  * Top-left draw box for a sprite of `size` board units centred (or footed) on
  * the world point (`cx`, `cy`). Every presenter uses this so all layers stack

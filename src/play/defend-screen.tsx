@@ -24,9 +24,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Pressable, Share, StyleSheet, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -75,6 +73,7 @@ import { dir8FromDelta, type Dir8 } from '@/play/art';
 import {
   bandUnitRole,
   skinArt,
+  skinClipArt,
   skinDrawBox,
   skinScale,
   skinUnits,
@@ -202,10 +201,6 @@ type Shot = {
   bornAt: number;
 };
 
-function clamp01(value: number): number {
-  return Math.max(0, Math.min(1, value));
-}
-
 /** One fight on the board: which phase/map, which display wave, and whether
  * it is the campaign's next wave (`campaign`) or a cleared band replay
  * (`replay` — half tokens, seat untouched). */
@@ -318,7 +313,6 @@ export function DefendScreen({
   onDevOvergear,
   onDevForceSkipOffer,
   onSaveAvatarPark,
-  onAvatarDragStateChange,
   onBackToGrove,
 }: {
   view: PlayView;
@@ -356,9 +350,6 @@ export function DefendScreen({
   onDevForceSkipOffer: () => void;
   /** Avatar drag ended → persist the park for this Defend map (v15). */
   onSaveAvatarPark: (mapId: AvatarParkMapId, x: number, y: number) => void;
-  /** Avatar drag started/ended → the parent freezes the page ScrollView while
-   * a drag is in flight so the pan can't be stolen by the scroll view. */
-  onAvatarDragStateChange?: (dragging: boolean) => void;
   onBackToGrove: () => void;
 }) {
   const theme = useTheme();
@@ -460,26 +451,28 @@ export function DefendScreen({
   const initialPark = avatarParkFor(view.avatarPark, initialParkMap);
   const avatarX = useSharedValue(initialPark.x);
   const avatarY = useSharedValue(initialPark.y);
-  const startX = useSharedValue(initialPark.x);
-  const startY = useSharedValue(initialPark.y);
   const avatarPosRef = useRef({ x: initialPark.x * 100, y: initialPark.y * 100 }); // board units (0..100)
-  /** Which way the Avatar faces (8-way) — idles toward the nearest foe. */
+  /** Where the Avatar is walking to (board units 0..100), or null when idle. */
+  const moveTargetRef = useRef<{ x: number; y: number } | null>(null);
+  /** True while the walk loop is actually stepping (drives the bob). */
+  const movingRef = useRef(false);
+  /** Walk-cycle phase (radians) + the vertical bob it drives, px. */
+  const walkPhase = useSharedValue(0);
+  const walkBob = useSharedValue(0);
+  /** Which way the Avatar faces (8-way) — set from walk velocity while moving,
+   * kept as lastFacing when idle. */
   const avatarFacingRef = useRef<Dir8>('south');
-  /** Timestamp of the last Avatar auto-attack (drives the Iron_Slash flash). */
+  /** Last walk facing — restored when a walk ends so the sprite never snaps. */
+  const lastFacingRef = useRef<Dir8>('south');
+  /** Timestamp of the last Avatar auto-attack (drives the attack flash). */
   const avatarAttackAtRef = useRef(0);
-  /** Measured board size. `boardSizeRef` is the JS-thread copy (gesture math);
-   * `boardSize` is the SHARED copy the avatar's animated style reads — a plain
-   * ref is not reactive, so reading it in the worklet left the Avatar stuck at
-   * `park × 100px` until the first drag (the "weird spot"). */
+  /** Measured board size. `boardSizeRef` is the JS-thread copy (tap math);
+   * `boardSize` is the SHARED copy the avatar's animated style reads. */
   const boardSizeRef = useRef(100);
   const boardSize = useSharedValue(100);
   /** Which map the Avatar is currently parked on (guard: only re-park on a
    * Trial ↔ Main switch, never on every wave/rebuild). */
   const parkedMapRef = useRef<AvatarParkMapId | null>(initialParkMap);
-
-  const setAvatarPosRef = useCallback((x: number, y: number) => {
-    avatarPosRef.current = { x, y };
-  }, []);
 
   /** Park the Avatar for a map — its saved spot (this Avatar's own), else the
    * shared board MIDDLE. First visit / missing / corrupt park is persisted as
@@ -495,17 +488,18 @@ export function DefendScreen({
       const park = avatarParkFor(view.avatarPark, mapId);
       avatarX.value = park.x;
       avatarY.value = park.y;
-      startX.value = park.x;
-      startY.value = park.y;
       avatarPosRef.current = { x: park.x * 100, y: park.y * 100 };
+      moveTargetRef.current = null;
+      movingRef.current = false;
+      walkBob.value = 0;
       parkedMapRef.current = mapId;
     },
-    // avatarX/avatarY/startX/startY are stable shared-value handles (their
-    // `.value` writes never change identity); view.avatarPark is the read.
-    [view.avatarPark, onSaveAvatarPark, avatarX, avatarY, startX, startY],
+    // avatarX/avatarY/walkBob are stable shared-value handles (their `.value`
+    // writes never change identity); view.avatarPark is the read.
+    [view.avatarPark, onSaveAvatarPark, avatarX, avatarY, walkBob],
   );
 
-  /** Persist the Avatar's current spot as this board map's park (drag end).
+  /** Persist the Avatar's current spot as this board map's park (walk arrival).
    * Same path for Trial and Main. */
   const commitAvatarPark = useCallback(() => {
     const mapId = (simRef.current?.mapId ?? fightRef.current.phase) as AvatarParkMapId;
@@ -805,7 +799,8 @@ export function DefendScreen({
       // the engine reset it — i.e. the Avatar attacked this tick.
       const aimed = nearestPuffDelta(current.puffs, avatar, DEFEND_MAPS[current.mapId]);
       const step = stepDefendLive(current, DEFEND_TICK_MS, bucketsRef.current, avatar);
-      if (aimed) avatarFacingRef.current = dir8FromDelta(aimed.dx, aimed.dy);
+      // Facing is owned by the walk loop (velocity while moving, lastFacing when
+      // idle); the ticker only detects the attack to fire the flash.
       if (step.state.avatarCooldownMs > current.avatarCooldownMs + 1 && aimed) {
         avatarAttackAtRef.current = Date.now();
       }
@@ -978,39 +973,101 @@ export function DefendScreen({
   }, [sim?.towers]);
   const coach = tipForWave(displayedWave, scrap, towerCounts);
 
-  // Drag gesture for the Avatar (mirrors scenario-card.tsx Pan pattern).
-  const pan = Gesture.Pan()
-    // Freeze the page ScrollView the instant a drag can start (touch down on
-    // the Avatar), so the pan is never stolen by the scroll view. Released on
-    // finalize even when the gesture is cancelled, so scroll can never stick.
-    .onBegin(() => {
-      if (onAvatarDragStateChange) runOnJS(onAvatarDragStateChange)(true);
-    })
-    .onStart(() => {
-      startX.value = avatarX.value;
-      startY.value = avatarY.value;
-    })
-    .onUpdate((event) => {
-      // Shared board size (worklet-safe) so drag math matches the rendered
-      // position — a plain ref could capture a stale 100px board.
-      const size = boardSize.value || 100;
-      const nx = clamp01(startX.value + event.translationX / size);
-      const ny = clamp01(startY.value + event.translationY / size);
-      avatarX.value = nx;
-      avatarY.value = ny;
-      runOnJS(setAvatarPosRef)(nx * 100, ny * 100);
-    })
-    .onEnd(() => {
-      // Persist the park (v15) so the next setup restores this same spot.
-      runOnJS(commitAvatarPark)();
-    })
-    .onFinalize(() => {
-      if (onAvatarDragStateChange) runOnJS(onAvatarDragStateChange)(false);
-    });
+  /**
+   * Click-to-move: walk the Avatar toward `moveTargetRef` at a fixed board
+   * speed; on arrival, snap exactly onto the target, stop, and persist the park
+   * (the same store the old drag wrote). Runs in setup AND live, and freezes
+   * while paused. Facing comes from the walk velocity (lastFacing kept when
+   * idle); the bob is a cheap walk tell for the single-frame Kenney sprite.
+   */
+  useEffect(() => {
+    const id = setInterval(() => {
+      const target = moveTargetRef.current;
+      if (!target || pausedRef.current) {
+        if (movingRef.current) {
+          movingRef.current = false;
+          walkBob.value = 0;
+        }
+        return;
+      }
+      const cur = avatarPosRef.current;
+      const dx = target.x - cur.x;
+      const dy = target.y - cur.y;
+      const dist = Math.hypot(dx, dy);
+      const stepLen = AVATAR_WALK_UNITS_PER_SEC * (MOVE_TICK_MS / 1000);
+      if (dist <= stepLen) {
+        // Arrived: land exactly on the target, idle, persist the new park.
+        avatarPosRef.current = { x: target.x, y: target.y };
+        avatarX.value = target.x / 100;
+        avatarY.value = target.y / 100;
+        avatarFacingRef.current = lastFacingRef.current;
+        moveTargetRef.current = null;
+        movingRef.current = false;
+        walkBob.value = 0;
+        commitAvatarPark();
+        return;
+      }
+      const nx = cur.x + (dx / dist) * stepLen;
+      const ny = cur.y + (dy / dist) * stepLen;
+      avatarPosRef.current = { x: nx, y: ny };
+      avatarX.value = nx / 100;
+      avatarY.value = ny / 100;
+      // Face the direction of travel; remember it for when the walk stops.
+      const facing = dir8FromDelta(dx, dy);
+      avatarFacingRef.current = facing;
+      lastFacingRef.current = facing;
+      movingRef.current = true;
+      if (reduceMotion) {
+        walkBob.value = 0;
+      } else {
+        walkPhase.value += MOVE_BOB_STEP;
+        walkBob.value = Math.sin(walkPhase.value) * MOVE_BOB_PX;
+      }
+    }, MOVE_TICK_MS);
+    return () => clearInterval(id);
+  }, [
+    commitAvatarPark,
+    reduceMotion,
+    avatarX,
+    avatarY,
+    walkPhase,
+    walkBob,
+  ]);
+
+  /**
+   * One tap on the board. Pads win (they open the tower UI, the old `onPress`);
+   * an empty-board tap sets a walk target. HUD / tower panels live OUTSIDE the
+   * board view, so their taps never reach here.
+   */
+  const handleBoardTap = useCallback(
+    (locationX: number, locationY: number) => {
+      const size = boardSizeRef.current || 100;
+      const bx = (locationX / size) * 100;
+      const by = (locationY / size) * 100;
+      let hit: number | null = null;
+      let bestDist = Infinity;
+      boardMap.pads.forEach((pad, index) => {
+        const d = Math.hypot(pad.x - bx, pad.y - by);
+        if (d <= PAD_TAP_RADIUS && d < bestDist) {
+          bestDist = d;
+          hit = index;
+        }
+      });
+      if (hit != null) {
+        setSelectedPad((prev) => (prev === hit ? null : hit));
+        return;
+      }
+      moveTargetRef.current = {
+        x: Math.max(0, Math.min(100, bx)),
+        y: Math.max(0, Math.min(100, by)),
+      };
+    },
+    [boardMap],
+  );
 
   const avatarStyle = useAnimatedStyle(() => {
     // Read the SHARED board size (reactive) so the sprite scales with the board
-    // and stays centered on the Avatar point.
+    // and stays centered on the Avatar point; `walkBob` adds the step bob.
     const size = boardSize.value || 100;
     const box = Math.max(AVATAR_MIN_PX, size * AVATAR_ART_FRAC);
     return {
@@ -1018,6 +1075,7 @@ export function DefendScreen({
       height: box,
       left: avatarX.value * size - box / 2,
       top: avatarY.value * size - box / 2,
+      transform: [{ translateY: walkBob.value }],
     };
   });
 
@@ -1032,15 +1090,20 @@ export function DefendScreen({
       ? `Cycle ${view.conqueredCycles} — foes scale ×${view.cyclePower.toFixed(2)}`
       : null;
 
-  // §19 Avatar: one Kenney TD soldier sprite, ROTATED toward the nearest foe
-  // (the pack has no per-direction sheets). The attack reads as a short
-  // tint/flash (below).
+  // §19 Avatar: one Kenney TD soldier sprite. Facing comes from the walk
+  // velocity (lastFacing kept when idle — see the walk loop). The attack reads
+  // as a short tint/flash (below).
   const avatarFacing = avatarFacingRef.current;
   const avatarFacingDeg = dir8Degrees(avatarFacing);
   const nowMs = Date.now();
   const attackElapsed = nowMs - avatarAttackAtRef.current;
   const avatarAttacking = attackElapsed < AVATAR_ATTACK_MS;
-  const avatarFrameSource = skinArt('unit.avatar');
+  // Walk tell: if a skin authors a walk clip, use its first frame while moving
+  // (Kenney v0 ships none, so this resolves to the idle frame and facing + the
+  // bob below carry the motion).
+  const avatarWalkArt = skinClipArt('unit.avatar', 'walk', 0);
+  const avatarFrameSource =
+    (movingRef.current ? avatarWalkArt : undefined) ?? skinArt('unit.avatar');
 
   return (
     <ThemedView style={styles.container}>
@@ -1205,13 +1268,23 @@ export function DefendScreen({
               const width = event.nativeEvent.layout.width || 100;
               boardSizeRef.current = width;
               boardSize.value = width;
-            }}>
+            }}
+            // Click-to-move: one tap on the board walks the Avatar, unless the
+            // tap lands on a pad (that opens the tower UI instead). HUD and the
+            // tower panels sit outside this view, so their taps never land here.
+            // A drag still scrolls the page: ScrollView takes the responder
+            // back when it starts scrolling, which cancels this tap.
+            onStartShouldSetResponder={() => true}
+            onResponderTerminationRequest={() => true}
+            onResponderRelease={(event) =>
+              handleBoardTap(event.nativeEvent.locationX, event.nativeEvent.locationY)
+            }>
             {/* Kenney Tower Defense terrain (§19) — grass floor + path + pad
                 markers, background only, behind every gameplay layer (zIndex 0).
                 `anchor: 'center'` tiles (the pad slot) sit ON the world point so
                 they stack with the tower sprite and range ring; grid tiles tile
-                from their top-left. pointerEvents none so taps fall through to
-                the pads on the SVG above. */}
+                from their top-left. pointerEvents none — taps fall through to
+                the board's own tap handler (click-to-move / pad select). */}
             <View
               pointerEvents="none"
               style={[StyleSheet.absoluteFill, styles.boardTiles]}>
@@ -1240,10 +1313,10 @@ export function DefendScreen({
             </View>
             {/* Gameplay layer — path, pads, towers, Bound Bosses, enemies.
                 Sits ABOVE the tiles (zIndex 1 > 0) so gameplay always reads on
-                top of the scroll art. box-none so the wrapper itself never
-                swallows a touch aimed at the Avatar; the SVG inside still
-                receives the pad taps. */}
-            <View style={styles.boardArt} pointerEvents="box-none">
+                top of the scroll art. pointerEvents none: gameplay is pure art
+                now, and every tap belongs to the board view underneath
+                (click-to-move / pad select). */}
+            <View style={styles.boardArt} pointerEvents="none">
             <Svg width="100%" height="100%" viewBox="0 0 100 100">
               {boardMap.pads.map((pad, index) => {
                 const tower = sim?.towers.find((t) => t.pad === index);
@@ -1265,7 +1338,6 @@ export function DefendScreen({
                     fillOpacity={occupied ? 1 : 0.25}
                     stroke={selected ? theme.accent : 'none'}
                     strokeWidth={selected ? 1.4 : 0}
-                    onPress={() => setSelectedPad(selected ? null : index)}
                   />
                 );
               })}
@@ -1422,30 +1494,29 @@ export function DefendScreen({
             </Svg>
             </View>
 
-            {/* Draggable Avatar overlay (§19 Kenney TD soldier, rotated toward
-                the nearest foe). zIndex 10 keeps it above the tiles AND the
-                gameplay SVG so it is always grabbable. */}
-            <GestureDetector gesture={pan}>
-              <Animated.View
-                style={[styles.avatar, avatarStyle]}
-                hitSlop={AVATAR_HIT_SLOP}>
-                {avatarAttacking ? (
-                  <View
-                    style={[styles.avatarFlash, { borderColor: avatarColor }]}
-                    pointerEvents="none"
-                  />
-                ) : null}
+            {/* Walking Avatar overlay (§19 Kenney TD soldier). Facing comes from
+                the walk velocity; the box bobs while moving. pointerEvents none
+                so board taps pass through to the board's move handler. zIndex 10
+                keeps it above the tiles AND the gameplay SVG. */}
+            <Animated.View
+              style={[styles.avatar, avatarStyle]}
+              pointerEvents="none">
+              {avatarAttacking ? (
                 <View
-                  style={[styles.avatarArt, { transform: [{ rotate: `${avatarFacingDeg}deg` }] }]}
-                  pointerEvents="none">
-                  {avatarFrameSource ? (
-                    <Image source={avatarFrameSource} contentFit="contain" style={styles.avatarImage} />
-                  ) : (
-                    <View style={[styles.avatarFallback, { backgroundColor: avatarColor }]} />
-                  )}
-                </View>
-              </Animated.View>
-            </GestureDetector>
+                  style={[styles.avatarFlash, { borderColor: avatarColor }]}
+                  pointerEvents="none"
+                />
+              ) : null}
+              <View
+                style={[styles.avatarArt, { transform: [{ rotate: `${avatarFacingDeg}deg` }] }]}
+                pointerEvents="none">
+                {avatarFrameSource ? (
+                  <Image source={avatarFrameSource} contentFit="contain" style={styles.avatarImage} />
+                ) : (
+                  <View style={[styles.avatarFallback, { backgroundColor: avatarColor }]} />
+                )}
+              </View>
+            </Animated.View>
 
             {/* Floating damage numbers (display only, pooled) */}
             {floaters.map((floater) => (
@@ -2438,16 +2509,24 @@ function HitFloater({
 /**
  * Visible Avatar size as a fraction of the measured board width (§19 cast lock:
  * the Legends sprites read bigger than the old Masterpiece art, which was tiny
- * inside its 244px frame). The art box IS the touch target, so a bigger sprite
- * is also an easier grab.
+ * inside its 244px frame).
  */
 const AVATAR_ART_FRAC = 0.22;
-/** Floor for the art/hit box, px (small boards / thumb reach). */
+/** Floor for the art box, px (small boards). */
 const AVATAR_MIN_PX = 56;
-/** Extra slop around the hit box (thumb-friendly without growing the visual). */
-const AVATAR_HIT_SLOP = { top: 10, bottom: 10, left: 10, right: 10 } as const;
 /** Attack flash length (ms) — tuned to the Avatar's 0.7s cooldown. */
 const AVATAR_ATTACK_MS = 700;
+
+/* ------------------------------------------------------- click-to-move --- */
+/** Walk speed, board units (0..100) per second. */
+const AVATAR_WALK_UNITS_PER_SEC = 42;
+/** Walk loop cadence (ms) — 30fps so the bob reads as stepping. */
+const MOVE_TICK_MS = 33;
+/** Walk-bob amplitude (px) + phase step per tick (single-frame walk tell). */
+const MOVE_BOB_PX = 1.6;
+const MOVE_BOB_STEP = 0.55;
+/** Board units within a pad that count as "tapped the pad" (select, not move). */
+const PAD_TAP_RADIUS = 6.5;
 
 /** 8-way facing → rotation degrees for a single top-down sprite (east = 0). */
 const DIR8_DEGREES: Record<Dir8, number> = {
