@@ -14,12 +14,18 @@
 -- function` statements in wave25/wave55/wave56, not guessed — DROP FUNCTION
 -- matches by full signature, so a wrong parameter list would silently no-op
 -- rather than error.
+--
+-- ORDER FOUND LIVE (2026-09-10): a first apply attempt with
+-- `trait_axis_valid` dropped before the table drops failed —
+-- 2BP01: cannot drop function trait_axis_valid(text) because other objects
+-- depend on it (archetype_defs_trait_axis_valid CHECK constraint). The table
+-- must drop first so that CHECK constraint is gone before the function drop
+-- runs. Reordered below to match what actually applied successfully.
 
 drop function if exists public.reject_legend_variant(uuid);
 drop function if exists public.approve_legend_variant(uuid);
 drop function if exists public.insert_legend_candidate(jsonb, jsonb, text);
 drop function if exists public.claim_legend_generation();
-drop function if exists public.trait_axis_valid(text);
 
 -- Drop order is leaf-first (defensive) — cascade is also present as
 -- insurance, though no FK from any table OUTSIDE this 5-table set points
@@ -29,6 +35,8 @@ drop table if exists public.legend_archetypes cascade;
 drop table if exists public.legend_variants cascade;
 drop table if exists public.legend_figures cascade;
 drop table if exists public.archetype_defs cascade;
+
+drop function if exists public.trait_axis_valid(text);
 
 -- Old per-generation quota cap (wave55), superseded by wave58's
 -- legend_story_generations_daily_cap for the new system.
