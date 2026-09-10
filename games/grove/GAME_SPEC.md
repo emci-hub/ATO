@@ -1079,3 +1079,41 @@ Campaign Conquered works + farm Final + soft-caps + type match + drop preview. G
 ### Go / no-go
 **GO** for DeepSeek starting **A0 → A → B**. Do not start E before C. Do not invent new systems mid-phase.
 
+## 19. Art cast lock (2026-09-09) — wire these packs
+
+**Credits (Play → About):** Kenney (UI Borders, Cursor Pack, shape characters) · SakPix / pack authors for Masterpiece, Cozy Village Girl, Primal Dynasties, dungeon/nature tiles. CC0 Kenney; keep other pack licenses noted.
+
+### Characters
+| Role | Pack / asset | Notes |
+|---|---|---|
+| Active Avatar (starter) | Masterpiece fantasy pixel (~40px) | Breathing_Idle + Walking + **Iron_Slash**; 8-dir |
+| Stub Avatar #2 | Cozy Village Animated Girl | Idle / Walk / Pick_Up; unlock in Dress |
+| Final / Bound Boss (Ember Sovereign) | **Primal Dynasties — Jaguar Sun Guardian** | Idle 8-dir; scale up on board; ember tint OK |
+| Scout mini | Primal — Panther Shadowblade or Lynx Huntress | Smaller scale |
+| Scout boss / Semi | Primal — Raven Deathcaller or Mammoth Warchief | Mid scale |
+| Runners | Primal — Panther / Lynx | Fast, smaller |
+| Normal puffs | Kenney shape circles **or** tiny Primal recolors | Keep cheap on screen |
+
+Other Primal beasts (Rhino, Cobra, Gorilla, Buffalo, Shark) = fridge for later cycles / Bound Boss pack 2.
+
+### Maps / UI / icons
+| Layer | Pack |
+|---|---|
+| **Primary board map** | **Kenney Scribble Dungeons** (64px tiles + path/wall/door + Tiled sample) | Trial + Main path/pads — best TD fit |
+| Outdoor fluff (optional) | Nature free pack | BG accents only if budget |
+| Extra dungeon fluff (optional) | Basic dungeon pack | Accents only if budget |
+| Card frames | **Kenney Fantasy UI Borders** (panels, borders, dividers) |
+| Item icons (Power/Looks/Shop) | **Kenney Cursor Pack** tools: sword_a/b, axe, bow, boot, lock, etc. |
+| Towers (archer/vine/crystal) | Kenney shape-characters parts |
+
+### Engine wiring rules
+- Nearest-neighbor scale; no blurry upscale.
+- Avatar: face nearest enemy; play Iron_Slash (or stub attack) on hit; idle when still.
+- Bosses: Primal idle + slow crawl (`bossSpeedMult`); no AI-generated sheets required for v0.
+- UI: wrap Divecore cards with 9-slice / border PNGs from Fantasy UI Borders; keep ATO theme colors inside.
+- Icons: map `items.json` icon keys → Cursor Pack PNGs; missing → placeholder.
+- Assets live under `assets/play/` (or `src/play/assets/`) with stable ids; code reads ids not absolute Desktop paths.
+
+### Not in v0 art pass
+Spritix/AI anim generation; Founders animated; full unique icon set; seasonal map packs.
+
