@@ -909,3 +909,29 @@ export function puffPosition(dist: number, map: DefendMap = TRIAL_MAP): { x: num
   const end = map.path[map.path.length - 1];
   return { x: end.x, y: end.y };
 }
+
+/**
+ * Unit direction of travel along the path at `dist` (0..1), or null when the
+ * path has no usable direction. Samples a small window around `dist`; if that
+ * window lands on a zero-length span (or the very exit), it widens the search
+ * so a creep at the end of the road still faces its final heading. Display-only
+ * — this drives sprite facing, never movement.
+ */
+export function puffHeading(
+  dist: number,
+  map: DefendMap = TRIAL_MAP,
+): { dx: number; dy: number } | null {
+  const clamped = Math.max(0, Math.min(1, dist));
+  for (const eps of [0.004, 0.02, 0.05]) {
+    const a = Math.max(0, clamped - eps);
+    const b = Math.min(1, clamped + eps);
+    if (b <= a) continue;
+    const from = puffPosition(a, map);
+    const to = puffPosition(b, map);
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const len = Math.hypot(dx, dy);
+    if (len > 1e-6) return { dx: dx / len, dy: dy / len };
+  }
+  return null;
+}

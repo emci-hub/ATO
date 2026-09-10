@@ -11,26 +11,33 @@ render transform, not a different image.
 | Role | Tile | Notes |
 |---|---|---|
 | Grass floor | `024` | Painted under every board cell |
-| Dirt path | `050` | Painted on every path cell (no corner autotile this pass) |
+| Dirt path | `050` | **Road ribbon**: stroked along the waypoint polyline (tone + casing in the skin), not painted as grid cells |
 | Pad marker | `181` | Slot marker on each of the 6 tower pads |
 | Archer tower | `249` | Art only — job/range/math unchanged |
 | Vine tower | `206` | Art only |
 | Crystal tower | `250` | Art only |
-| Avatar | `247` | Rotated toward the nearest foe |
-| Puff (normal enemy) | `245` | |
+| Avatar | `247` | Rotated by walk velocity (up-facing convention) |
+| Puff (normal enemy) | `245` | Rotated along the path tangent |
 | Runner | `248` | Fast band |
 | Tank | `268` | Scout / scout-mini boss bands |
 | Tank alt | `269` | Semi-boss band |
 | Final boss | `271` | Heavy/highest band |
 | Coin | `272` | Reward FX (optional) |
-| Projectile | `273` | Shot FX (optional) |
+| Projectile | `273` | Shot FX, rotated along its velocity |
 
 ## Rules
 
 - **Tower upgrade = scale only.** Scales live on the tower skin roles:
   Lv1 `0.70` · Lv2 `0.85` · Lv3 `1.0` (max). No level-number badges on pads.
-- **Path painting:** all path cells `050`, all floor cells `024`. No corner
-  autotile in this pass.
+- **Path painting:** the road is a **ribbon stroked along the waypoint
+  polyline** (tone `#c07848`, casing `#8f5a33`, width from the `map.path` role),
+  so the art hugs the exact line creeps walk. Floor cells are grass `024` only —
+  no path cells, no corner autotile.
+- **Facing:** every sprite shares one convention — art is authored facing UP,
+  so `deg = atan2(dy, dx) + 90`. Towers aim at their target, creeps face the
+  path tangent (`puffHeading`), the Avatar faces its walk direction, shots face
+  their velocity. All wrapped in `<G transform="rotate(deg x y)">` around the
+  entity's own centre.
 - **Align to one world space:** 0..1 path fractions and 0..100 board units
   everywhere; every sprite draws through `skinDrawBox()` (centre or feet pivot)
   so pad marker + tower + enemy + avatar + range ring + projectile share a

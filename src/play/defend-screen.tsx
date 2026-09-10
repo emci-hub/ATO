@@ -29,7 +29,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Circle, G, Image as SvgImage, Rect, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, G, Image as SvgImage, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -57,6 +57,7 @@ import {
   puffPosition,
   retryDefendLive,
   stepDefendLive,
+  puffHeading,
   towerTarget,
   towerUpgradeCost,
   upgradeTower,
@@ -73,9 +74,11 @@ import { dir8FromDelta, type Dir8 } from '@/play/art';
 import {
   bandUnitRole,
   skinArt,
+  skinCasing,
   skinClipArt,
   skinDrawBox,
   skinScale,
+  skinTone,
   skinUnits,
   type SkinRoleId,
 } from '@/play/skin';
@@ -392,6 +395,9 @@ export function DefendScreen({
   const shotSeq = useRef(0);
   /** Per-tower aim rotation (deg), keyed by tower id; kept between shots. */
   const towerFacingRef = useRef<Record<number, number>>({});
+  /** Per-creep path facing (deg), keyed by puff id. Kept when a creep is nearly
+   * stopped (degenerate heading) so the sprite never snaps to a default. */
+  const puffFacingRef = useRef<Record<number, number>>({});
   /** §9m boss / mini-boss alert banner shown while the boss steps in. */
   const [bossAlert, setBossAlert] = useState<{ label: string; name: string } | null>(null);
   /** Spawn stage from the previous running tick — diffed for the alert. */
@@ -428,6 +434,12 @@ export function DefendScreen({
   const boardMap = DEFEND_MAPS[sim?.mapId ?? mapId];
   /** Static Scribble Dungeons tile dressing for this map (§19). Pure + memoized. */
   const decor = useMemo(() => boardDecor(boardMap), [boardMap]);
+  /** Road ribbon — the waypoint polyline stroked under the units, so the road
+   * art hugs the exact line creeps walk (no grid-cell drift). */
+  const roadD = useMemo(() => roadPathD(boardMap), [boardMap]);
+  const roadTone = skinTone('map.path') ?? '#c07848';
+  const roadCasing = skinCasing('map.path') ?? '#8f5a33';
+  const roadWidth = skinUnits('map.path', 9);
 
   /** Boss band of the chosen fight (null for a normal formula wave). */
   const band = bossBandFor(fight.phase, fight.wave);
@@ -598,6 +610,7 @@ export function DefendScreen({
       prevPuffsRef.current = [];
       setFloaters([]);
     shotsRef.current = [];
+    puffFacingRef.current = {};
     setShots([]);
       prevStageRef.current = 'minions';
       setBossAlert(null);
@@ -619,6 +632,7 @@ export function DefendScreen({
       prevPuffsRef.current = [];
       setFloaters([]);
     shotsRef.current = [];
+    puffFacingRef.current = {};
     setShots([]);
       prevStageRef.current = 'minions';
     }
@@ -644,6 +658,7 @@ export function DefendScreen({
     prevPuffsRef.current = [];
     setFloaters([]);
     shotsRef.current = [];
+    puffFacingRef.current = {};
     setShots([]);
     prevStageRef.current = 'minions';
     setBossAlert(null);
@@ -668,6 +683,7 @@ export function DefendScreen({
     prevPuffsRef.current = [];
     setFloaters([]);
     shotsRef.current = [];
+    puffFacingRef.current = {};
     setShots([]);
     prevStageRef.current = 'minions';
     setBossAlert(null);
@@ -702,6 +718,7 @@ export function DefendScreen({
     prevPuffsRef.current = [];
     setFloaters([]);
     shotsRef.current = [];
+    puffFacingRef.current = {};
     setShots([]);
     prevStageRef.current = 'minions';
     setBossAlert(null);
@@ -809,6 +826,13 @@ export function DefendScreen({
       // FX toward that same target. Display only — the engine already applied
       // the damage; nothing here changes combat math.
       const mapNow = DEFEND_MAPS[current.mapId];
+      for (const puff of step.state.puffs) {
+        // Creeps face along the road: the path tangent at their progress. A
+        // degenerate heading (nearly stopped / path corner case) keeps the last
+        // facing so the sprite never snaps to a default.
+        const head = puffHeading(puff.dist, mapNow);
+        if (head) puffFacingRef.current[puff.id] = facingDegrees(head.dx, head.dy);
+      }
       for (const tower of current.towers) {
         const target = towerTarget(tower, current.puffs, mapNow);
         const pad = mapNow.pads[tower.pad];
@@ -938,6 +962,7 @@ export function DefendScreen({
     prevPuffsRef.current = [];
     setFloaters([]);
     shotsRef.current = [];
+    puffFacingRef.current = {};
     setShots([]);
     prevStageRef.current = 'breath';
     setBossAlert(null);
@@ -1094,7 +1119,7 @@ export function DefendScreen({
   // velocity (lastFacing kept when idle — see the walk loop). The attack reads
   // as a short tint/flash (below).
   const avatarFacing = avatarFacingRef.current;
-  const avatarFacingDeg = dir8Degrees(avatarFacing);
+  const avatarFacingDeg = dir8Degrees(avatarFacing) + ART_BASE_FACING_DEG;
   const nowMs = Date.now();
   const attackElapsed = nowMs - avatarAttackAtRef.current;
   const avatarAttacking = attackElapsed < AVATAR_ATTACK_MS;
@@ -1318,6 +1343,27 @@ export function DefendScreen({
                 (click-to-move / pad select). */}
             <View style={styles.boardArt} pointerEvents="none">
             <Svg width="100%" height="100%" viewBox="0 0 100 100">
+              {/* Road ribbon — stroked exactly along the waypoint polyline, so
+               * the road art and the line creeps walk can never drift apart.
+               * Drawn first so pads/towers/units sit on top. */}
+              <G>
+                <Path
+                  d={roadD}
+                  stroke={roadCasing}
+                  strokeWidth={roadWidth + 2.6}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+                <Path
+                  d={roadD}
+                  stroke={roadTone}
+                  strokeWidth={roadWidth}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </G>
               {boardMap.pads.map((pad, index) => {
                 const tower = sim?.towers.find((t) => t.pad === index);
                 const boundBoss = sim?.boundBosses.find((b) => b.pad === index);
@@ -1443,19 +1489,25 @@ export function DefendScreen({
                 const sprite = skinArt(role);
                 const spriteSize = skinUnits(role, UNIT_BASE_UNITS) * puff.size;
                 const barWidth = 8 * puff.size;
+                // Face along the road (path tangent), same up-facing convention
+                // as the towers. Falls back to the last known facing when the
+                // heading is degenerate.
+                const facingDeg = puffFacingRef.current[puff.id] ?? 0;
                 return (
                   <G key={`puff-${puff.id}`}>
-                    {sprite ? (
-                      <SvgImage
-                        href={sprite}
-                        x={x - spriteSize / 2}
-                        y={y - spriteSize / 2}
-                        width={spriteSize}
-                        height={spriteSize}
-                      />
-                    ) : (
-                      <Circle cx={x} cy={y} r={radius} fill={fill} />
-                    )}
+                    <G transform={`rotate(${facingDeg} ${x} ${y})`}>
+                      {sprite ? (
+                        <SvgImage
+                          href={sprite}
+                          x={x - spriteSize / 2}
+                          y={y - spriteSize / 2}
+                          width={spriteSize}
+                          height={spriteSize}
+                        />
+                      ) : (
+                        <Circle cx={x} cy={y} r={radius} fill={fill} />
+                      )}
+                    </G>
                     {puff.kind === 'boss' ? (
                       <Circle
                         cx={x}
@@ -1480,15 +1532,18 @@ export function DefendScreen({
                 const source = skinArt(role);
                 if (!source) return null;
                 const box = skinDrawBox(role, shot.x, shot.y, skinUnits(role, 4.5));
+                // Point the round along its velocity (same up-facing convention).
+                const deg = facingDegrees(shot.vx, shot.vy);
                 return (
-                  <SvgImage
-                    key={`shot-${shot.id}`}
-                    href={source}
-                    x={box.x}
-                    y={box.y}
-                    width={box.size}
-                    height={box.size}
-                  />
+                  <G key={`shot-${shot.id}`} transform={`rotate(${deg} ${shot.x} ${shot.y})`}>
+                    <SvgImage
+                      href={source}
+                      x={box.x}
+                      y={box.y}
+                      width={box.size}
+                      height={box.size}
+                    />
+                  </G>
                 );
               })}
             </Svg>
@@ -2168,6 +2223,7 @@ export function DefendScreen({
                   prevPuffsRef.current = [];
                   setFloaters([]);
     shotsRef.current = [];
+    puffFacingRef.current = {};
     setShots([]);
                   prevStageRef.current = 'minions';
                   setBossAlert(null);
@@ -2568,13 +2624,34 @@ const FX_TICK_MS = 33;
 /**
  * Sprite base facing offset, degrees. Kenney TD tiles are authored facing UP
  * (north = -90° in atan2 space); bump this single constant if a future pack
- * faces a different way.
+ * faces a different way. Towers, creeps, the Avatar and shots all add it.
  */
 const ART_BASE_FACING_DEG = 90;
 
+/** Rotation (deg) for an up-facing sprite from a direction vector. */
+function facingDegrees(dx: number, dy: number): number {
+  return (Math.atan2(dy, dx) * 180) / Math.PI + ART_BASE_FACING_DEG;
+}
+
 /** World-space rotation (deg) from a point toward a target. */
 function aimDegrees(cx: number, cy: number, tx: number, ty: number): number {
-  return (Math.atan2(ty - cy, tx - cx) * 180) / Math.PI + ART_BASE_FACING_DEG;
+  return facingDegrees(tx - cx, ty - cy);
+}
+
+/**
+ * SVG path data for the road: the waypoint polyline in the SVG's 0..100
+ * viewBox. The waypoints are the single source of truth for where creeps walk,
+ * so stroking this exact polyline makes the road art hug the walk line.
+ */
+function roadPathD(map: DefendMap): string {
+  const first = map.path[0];
+  if (!first) return '';
+  const parts = [`M ${first.x * 100} ${first.y * 100}`];
+  for (let i = 1; i < map.path.length; i += 1) {
+    const point = map.path[i]!;
+    parts.push(`L ${point.x * 100} ${point.y * 100}`);
+  }
+  return parts.join(' ');
 }
 
 /** Delta from the Avatar to the nearest puff in attack range (facing aid). */

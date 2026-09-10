@@ -52,6 +52,9 @@ export type SkinRole = {
   /** Per-level size multipliers: `scales[level - 1]` (Lv1..Lv3). */
   scales?: readonly number[];
   clips?: SkinClips;
+  /** Solid tone + casing for a ribbon role (the road), sampled from the tile. */
+  tone?: string;
+  casing?: string;
 };
 
 const ROLES = rawSkin.roles as unknown as Record<string, SkinRole>;
@@ -79,6 +82,16 @@ export function skinArt(
 export function skinUnits(role: SkinRoleId, fallbackUnits: number): number {
   const units = ROLES[role]?.units;
   return typeof units === 'number' && units > 0 ? units : fallbackUnits;
+}
+
+/** Solid tone for a ribbon role (the road), or undefined when it has none. */
+export function skinTone(role: SkinRoleId): string | undefined {
+  return ROLES[role]?.tone;
+}
+
+/** Darker casing tone for a ribbon role, or undefined when it has none. */
+export function skinCasing(role: SkinRoleId): string | undefined {
+  return ROLES[role]?.casing;
 }
 
 /** Level multiplier for a role (Lv1..LvN), clamped; 1 when no scales. */

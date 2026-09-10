@@ -9,10 +9,14 @@
       "cellPx": 64
     },
     "map.path": {
+      "$comment": "Road colour for the ribbon stroked along the waypoint polyline (dirt tile 050's uniform tone) + its darker casing.",
       "keys": ["kenney-td/towerDefense_tile050"],
       "dirs": 1,
       "pivot": "center",
-      "cellPx": 64
+      "cellPx": 64,
+      "units": 9,
+      "tone": "#c07848",
+      "casing": "#8f5a33"
     },
     "map.pad": {
       "keys": ["kenney-td/towerDefense_tile181"],
