@@ -8,9 +8,9 @@
  * (if it needs a stable id) add a mapping here. No screen should `require()` a
  * play PNG directly.
  *
- * Tower / puff bodies reuse the already-bundled Kenney shape-character family
- * (`assets/kenney/shape/`, see `@/lib/kenney/generated-assets`): the incoming
- * Play pack drop had no separate shape zip, and this keeps one copy on disk.
+ * Tower bodies and the normal puff silhouette come from the Dungeon Legends
+ * pack (towers) and the already-bundled Kenney shape family (puffs) —
+ * `assets/kenney/shape/`, see `@/lib/kenney/generated-assets`.
  */
 import type { ImageSourcePropType } from 'react-native';
 
@@ -27,9 +27,6 @@ export type Dir8 =
   | 'south-west'
   | 'west'
   | 'north-west';
-
-/** A 4-way facing (only the animation folders ship 4 dirs). */
-export type Dir4 = 'north' | 'east' | 'south' | 'west';
 
 /** The board is top-down: +x is east, +y is south (screen-down). */
 export function dir8FromDelta(dx: number, dy: number): Dir8 {
@@ -48,32 +45,12 @@ export function dir8FromDelta(dx: number, dy: number): Dir8 {
   return table[(octant + 8) % 8] ?? 'south';
 }
 
-export function dir4FromDelta(dx: number, dy: number): Dir4 {
-  if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? 'east' : 'west';
-  return dy >= 0 ? 'south' : 'north';
-}
-
-/** Collapse an 8-way facing to the nearest 4-way animation folder. */
-export function dir4(dir: Dir8): Dir4 {
-  switch (dir) {
-    case 'east':
-    case 'north-east':
-    case 'south-east':
-      return 'east';
-    case 'west':
-    case 'north-west':
-    case 'south-west':
-      return 'west';
-    case 'north':
-      return 'north';
-    default:
-      return 'south';
-  }
-}
-
 function art(key: string): ImageSourcePropType | undefined {
   return PLAY_ART[key];
 }
+
+/** Where the Dungeon Legends avatar packs live under `assets/play/`. */
+const DUNGEON_LEGENDS_DIR = 'avatars/dungeon-legends';
 
 /* ------------------------------------------------------------------ tiles --- */
 
@@ -133,15 +110,20 @@ export function cursorIcon(file: string): ImageSourcePropType | undefined {
 
 export type TowerArtId = 'archer' | 'vine' | 'crystal';
 
-const TOWER_SHAPE: Record<TowerArtId, string> = {
-  archer: 'shape/body/square.green.png',
-  vine: 'shape/body/circle.green.png',
-  crystal: 'shape/body/rhombus.purple.png',
+/**
+ * §19 cast lock — tower sprites come from the Dungeon Legends pack (a small
+ * body reading south so the pad stays readable under the level badge). Jobs and
+ * math are unchanged; this is an art swap over the old Kenney shape bodies.
+ */
+const TOWER_LEGEND: Record<TowerArtId, string> = {
+  archer: '05_ARCANE_ENGINEER',
+  vine: '06_DUNGEON_WITCH',
+  crystal: '10_SERAPHIC_DUNGEON_CLERIC',
 };
 
-/** Kenney shape-character body used as a tower sprite. */
+/** Dungeon Legends sprite used as a tower on the pad (south-facing). */
 export function towerArtSource(kind: TowerArtId): ImageSourcePropType | undefined {
-  return KENNEY_ASSETS[TOWER_SHAPE[kind]];
+  return art(`${DUNGEON_LEGENDS_DIR}/${TOWER_LEGEND[kind]}/rotations/south`);
 }
 
 /** Kenney shape-character body for the normal puff silhouette. */
@@ -149,51 +131,41 @@ export const PUFF_ART: ImageSourcePropType | undefined = KENNEY_ASSETS['shape/bo
 
 /* ---------------------------------------------------------------- avatars --- */
 
-/** Avatar id → pack folder. Unknown ids fall back to the starter. */
+/**
+ * Avatar id → Dungeon Legends pack folder. Every legend ships 8 idle rotations
+ * (no walk/attack sheets), so the board reads facing from `avatarRotation` and
+ * a short tint/flash stands in for the attack (no Iron_Slash dependency).
+ *
+ * The starter keeps its legacy id `ava_sprout` so existing saves retain their
+ * level/stars/park/equipped — only its identity + art changed (it is the Druid
+ * now). The other nine are unlockable stubs.
+ */
 const AVATAR_PACK: Record<string, string> = {
-  ava_sprout: 'avatars/masterpiece',
-  ava_ember: 'avatars/cozy-girl',
+  ava_sprout: '03_DUNGEON_DRUID', // starter — Dungeon Druid
+  ava_assassin: '02_ABYSSAL_ASSASSIN',
+  ava_champion: '04_DRAGONBLOOD_CHAMPION',
+  ava_engineer: '05_ARCANE_ENGINEER',
+  ava_witch: '06_DUNGEON_WITCH',
+  ava_ratkin: '07_RATKIN_TREASURE_HUNTER',
+  ava_berserker: '08_CRYSTAL_BERSERKER',
+  ava_death_knight: '09_DEATH_KNIGHT',
+  ava_cleric: '10_SERAPHIC_DUNGEON_CLERIC',
+  ava_demon_guardian: '11_FREE_BONUS_ABYSSAL_DEMON_GUARDIAN',
 };
 
-const AVATAR_ATTACK_ANIM: Record<string, string> = {
-  'avatars/masterpiece': 'Iron_Slash',
-  'avatars/cozy-girl': 'Pick_Up_item',
-};
-
-export const AVATAR_IDLE_FRAMES = 4;
-export const AVATAR_ATTACK_FRAMES = 9;
+/** Starter pack — the fallback for any unknown avatar id. */
+const STARTER_PACK = AVATAR_PACK.ava_sprout!;
 
 function avatarPack(avatarId: string): string {
-  return AVATAR_PACK[avatarId] ?? 'avatars/masterpiece';
+  return AVATAR_PACK[avatarId] ?? STARTER_PACK;
 }
 
-/** One idle-breath frame for an avatar, facing `dir`. */
-export function avatarIdleFrame(
-  avatarId: string,
-  dir: Dir4,
-  frame: number,
-): ImageSourcePropType | undefined {
-  const n = ((frame % AVATAR_IDLE_FRAMES) + AVATAR_IDLE_FRAMES) % AVATAR_IDLE_FRAMES;
-  return art(`${avatarPack(avatarId)}/animations/Breathing_Idle/${dir}/frame_00${n}`);
-}
-
-/** One attack (slash / pickup) frame for an avatar, facing `dir`. */
-export function avatarAttackFrame(
-  avatarId: string,
-  dir: Dir4,
-  frame: number,
-): ImageSourcePropType | undefined {
-  const n = Math.max(0, Math.min(AVATAR_ATTACK_FRAMES - 1, frame));
-  const anim = AVATAR_ATTACK_ANIM[avatarPack(avatarId)] ?? 'Iron_Slash';
-  return art(`${avatarPack(avatarId)}/animations/${anim}/${dir}/frame_00${n}`);
-}
-
-/** The 8-way resting rotation for an avatar (used under reduce-motion). */
+/** The 8-way idle rotation for an avatar (the pack ships rotations only). */
 export function avatarRotation(
   avatarId: string,
   dir: Dir8,
 ): ImageSourcePropType | undefined {
-  return art(`${avatarPack(avatarId)}/rotations/${dir}`);
+  return art(`${DUNGEON_LEGENDS_DIR}/${avatarPack(avatarId)}/rotations/${dir}`);
 }
 
 /* ----------------------------------------------------------------- primal --- */

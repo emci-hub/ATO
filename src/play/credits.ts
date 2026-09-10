@@ -44,20 +44,14 @@ export const PLAY_CREDITS: readonly PlayCredit[] = [
   {
     pack: 'Shape Characters',
     author: 'Kenney',
-    usedFor: 'Tower sprites and normal puff enemies',
+    usedFor: 'Normal puff enemies',
     license: 'CC0',
     url: 'https://kenney.nl/assets/shape-characters',
   },
   {
-    pack: 'Masterpiece Fantasy Pixel Art',
+    pack: 'Dungeon Legends',
     author: 'Pack author',
-    usedFor: 'Active Avatar — Breathing Idle, Walking, Iron Slash',
-    license: 'Per the pack license included with the download',
-  },
-  {
-    pack: 'Cozy Village Animated Girl',
-    author: 'Pack author',
-    usedFor: 'Stub Avatar #2',
+    usedFor: 'Playable Avatars (starter Druid + 9 unlockable Legends) and tower sprites',
     license: 'Per the pack license included with the download',
   },
   {

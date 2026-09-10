@@ -71,13 +71,9 @@ import {
 import { avatarDef } from '@/play/avatars';
 import { PlayFrame } from '@/play/play-frame';
 import {
-  AVATAR_ATTACK_FRAMES,
   PRIMAL_CAST,
   PUFF_ART,
-  avatarAttackFrame,
-  avatarIdleFrame,
   avatarRotation,
-  dir4,
   dir8FromDelta,
   playTile,
   primalRotation,
@@ -915,13 +911,15 @@ export function DefendScreen({
     });
 
   const avatarStyle = useAnimatedStyle(() => {
-    // Read the SHARED board size (reactive). A ref here would leave the Avatar
-    // at `park × 100px` until the first drag re-ran the worklet.
+    // Read the SHARED board size (reactive) so the sprite scales with the board
+    // and stays centered on the Avatar point.
     const size = boardSize.value || 100;
-    // Center the (larger) hit box on the Avatar point.
+    const box = Math.max(AVATAR_MIN_PX, size * AVATAR_ART_FRAC);
     return {
-      left: avatarX.value * size - AVATAR_HIT_PX / 2,
-      top: avatarY.value * size - AVATAR_HIT_PX / 2,
+      width: box,
+      height: box,
+      left: avatarX.value * size - box / 2,
+      top: avatarY.value * size - box / 2,
     };
   });
 
@@ -936,21 +934,14 @@ export function DefendScreen({
       ? `Cycle ${view.conqueredCycles} — foes scale ×${view.cyclePower.toFixed(2)}`
       : null;
 
-  // §19 Avatar frames: Iron_Slash flash on attack, Breathing_Idle otherwise.
-  // Reduce-motion keeps the crisp 8-way rotation instead of animating.
+  // §19 Avatar frames: Dungeon Legends ships 8-way idle rotations only, so the
+  // board always draws the rotation facing the nearest foe; the attack reads as
+  // a short tint/flash (below), not a slash sheet.
   const avatarFacing = avatarFacingRef.current;
-  const avatarDir4 = dir4(avatarFacing);
   const nowMs = Date.now();
   const attackElapsed = nowMs - avatarAttackAtRef.current;
-  const avatarFrameSource = reduceMotion
-    ? avatarRotation(view.activeAvatarId, avatarFacing)
-    : attackElapsed < AVATAR_ATTACK_MS
-      ? avatarAttackFrame(
-          view.activeAvatarId,
-          avatarDir4,
-          Math.floor(attackElapsed / (AVATAR_ATTACK_MS / AVATAR_ATTACK_FRAMES)),
-        )
-      : avatarIdleFrame(view.activeAvatarId, avatarDir4, Math.floor(nowMs / AVATAR_IDLE_FRAME_MS));
+  const avatarAttacking = attackElapsed < AVATAR_ATTACK_MS;
+  const avatarFrameSource = avatarRotation(view.activeAvatarId, avatarFacing);
 
   return (
     <ThemedView style={styles.container}>
@@ -1191,7 +1182,7 @@ export function DefendScreen({
                   strokeDasharray="2 2"
                 />
               ) : null}
-              {/* §19 tower sprites: Kenney shape bodies per tower job (drawn
+              {/* §19 tower sprites: Dungeon Legends bodies per tower job (drawn
                * under the level number so the badge stays readable). */}
               {sim?.towers.map((tower) => {
                 const pad = boardMap.pads[tower.pad];
@@ -1313,13 +1304,19 @@ export function DefendScreen({
             </Svg>
             </View>
 
-            {/* Draggable Avatar overlay (§19 Masterpiece / Cozy Village art) —
-                zIndex 10 keeps it above the tiles AND the gameplay SVG so it is
-                always grabbable. */}
+            {/* Draggable Avatar overlay (§19 Dungeon Legends — active Legend,
+                8-way idle rotations). zIndex 10 keeps it above the tiles AND
+                the gameplay SVG so it is always grabbable. */}
             <GestureDetector gesture={pan}>
               <Animated.View
                 style={[styles.avatar, avatarStyle]}
                 hitSlop={AVATAR_HIT_SLOP}>
+                {avatarAttacking ? (
+                  <View
+                    style={[styles.avatarFlash, { borderColor: avatarColor }]}
+                    pointerEvents="none"
+                  />
+                ) : null}
                 <View style={styles.avatarArt} pointerEvents="none">
                   {avatarFrameSource ? (
                     <Image source={avatarFrameSource} contentFit="contain" style={styles.avatarImage} />
@@ -2316,21 +2313,19 @@ function HitFloater({
   );
 }
 
-/** Visible Avatar art size on the board, px (a drag overlay, not SVG units).
- * Kept at the previous visual size — only the touch box below grows. */
-const AVATAR_ART_PX = 32;
 /**
- * Touch target for grabbing the Avatar, px. Bigger than the art so the drag is
- * easy to start with a thumb on a phone; the art is centered inside it. This is
- * a touch/positioning box only — range and gameplay stay in board units.
+ * Visible Avatar size as a fraction of the measured board width (§19 cast lock:
+ * the Legends sprites read bigger than the old Masterpiece art, which was tiny
+ * inside its 244px frame). The art box IS the touch target, so a bigger sprite
+ * is also an easier grab.
  */
-const AVATAR_HIT_PX = 56;
+const AVATAR_ART_FRAC = 0.22;
+/** Floor for the art/hit box, px (small boards / thumb reach). */
+const AVATAR_MIN_PX = 56;
 /** Extra slop around the hit box (thumb-friendly without growing the visual). */
 const AVATAR_HIT_SLOP = { top: 10, bottom: 10, left: 10, right: 10 } as const;
-/** Attack slash flash length (ms) — tuned to the Avatar's 0.7s cooldown. */
+/** Attack flash length (ms) — tuned to the Avatar's 0.7s cooldown. */
 const AVATAR_ATTACK_MS = 700;
-/** One idle-breath frame step (ms). */
-const AVATAR_IDLE_FRAME_MS = 220;
 
 /** Which Primal Dynasties beast plays each boss band (§19 cast lock). */
 function bossArtSource(kind: string, dir: Dir8) {
@@ -2570,18 +2565,25 @@ const styles = StyleSheet.create({
   },
   avatar: {
     position: 'absolute',
-    width: AVATAR_HIT_PX,
-    height: AVATAR_HIT_PX,
     alignItems: 'center',
     justifyContent: 'center',
+    // Size + position come from `avatarStyle` (board-proportional).
     // Above the tiles (0) and the gameplay SVG (1) so it stays draggable.
     // zIndex only (no elevation) so the character art keeps no shadow.
     zIndex: 10,
   },
-  /** The visible art, centered inside the larger touch box. */
+  /** Attack tell — a short ring pulse (the pack has no slash sheet). */
+  avatarFlash: {
+    position: 'absolute',
+    width: '135%',
+    height: '135%',
+    borderRadius: 999,
+    borderWidth: 3,
+  },
+  /** The visible art, centered inside the touch box. */
   avatarArt: {
-    width: AVATAR_ART_PX,
-    height: AVATAR_ART_PX,
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2592,7 +2594,7 @@ const styles = StyleSheet.create({
   avatarFallback: {
     width: '100%',
     height: '100%',
-    borderRadius: AVATAR_ART_PX / 2,
+    borderRadius: 999,
     borderWidth: 2,
     borderColor: '#FFFFFF',
   },

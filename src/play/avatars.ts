@@ -21,27 +21,85 @@ export type AvatarDef = {
   color: string;
 };
 
-/** The starter Avatar — always owned, the seed record of every save. */
+/** The starter Avatar — always owned, the seed record of every save. Its id is
+ * legacy (`ava_sprout`) so existing saves keep their level/stars/park; the
+ * identity + art are the Dungeon Druid (§19 cast lock). */
 export const STARTER_AVATAR_ID = 'ava_sprout';
 
-/** Stub unlockable Avatar. "Starter + 1 stub unlock OK": the unlock path in
- * the Dress picker is a free stub until Hero/IAP lands — no real cost yet. */
-export const STUB_AVATAR_ID = 'ava_ember';
+/** First unlockable stub. "Starter + stubs unlock OK": the Dress picker's
+ * unlock is a free stub until Hero/IAP lands — no real cost yet. */
+export const STUB_AVATAR_ID = 'ava_assassin';
 
 const AVATAR_DEFS: readonly AvatarDef[] = [
   {
     id: STARTER_AVATAR_ID,
-    name: 'Sprout',
-    blurb: 'The Grove’s first keeper.',
-    icon: 'sprout',
-    color: '#38BDF8',
+    name: 'Dungeon Druid',
+    blurb: 'Starter Legend — the grove’s first keeper.',
+    icon: 'magic-staff',
+    color: '#4ADE80',
   },
   {
     id: STUB_AVATAR_ID,
-    name: 'Emberkin',
-    blurb: 'Stub Avatar — unlock shape only, no IAP yet.',
-    icon: 'fire',
-    color: '#FB923C',
+    name: 'Abyssal Assassin',
+    blurb: 'Stub Legend — unlock shape only, no IAP yet.',
+    icon: 'sword-cross',
+    color: '#A78BFA',
+  },
+  {
+    id: 'ava_champion',
+    name: 'Dragonblood Champion',
+    blurb: 'Stub Legend — unlock shape only, no IAP yet.',
+    icon: 'shield-crown',
+    color: '#F97316',
+  },
+  {
+    id: 'ava_engineer',
+    name: 'Arcane Engineer',
+    blurb: 'Stub Legend — unlock shape only, no IAP yet.',
+    icon: 'wrench',
+    color: '#FBBF24',
+  },
+  {
+    id: 'ava_witch',
+    name: 'Dungeon Witch',
+    blurb: 'Stub Legend — unlock shape only, no IAP yet.',
+    icon: 'broom',
+    color: '#C084FC',
+  },
+  {
+    id: 'ava_ratkin',
+    name: 'Ratkin Treasure Hunter',
+    blurb: 'Stub Legend — unlock shape only, no IAP yet.',
+    icon: 'rodent',
+    color: '#A8A29E',
+  },
+  {
+    id: 'ava_berserker',
+    name: 'Crystal Berserker',
+    blurb: 'Stub Legend — unlock shape only, no IAP yet.',
+    icon: 'axe',
+    color: '#22D3EE',
+  },
+  {
+    id: 'ava_death_knight',
+    name: 'Death Knight',
+    blurb: 'Stub Legend — unlock shape only, no IAP yet.',
+    icon: 'skull-crossbones',
+    color: '#94A3B8',
+  },
+  {
+    id: 'ava_cleric',
+    name: 'Seraphic Cleric',
+    blurb: 'Stub Legend — unlock shape only, no IAP yet.',
+    icon: 'cross-celtic',
+    color: '#FDE68A',
+  },
+  {
+    id: 'ava_demon_guardian',
+    name: 'Abyssal Demon Guardian',
+    blurb: 'Stub Legend — unlock shape only, no IAP yet.',
+    icon: 'bat',
+    color: '#EF4444',
   },
 ];
 
