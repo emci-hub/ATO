@@ -6,7 +6,8 @@ The PNGs under `assets/play/` are unpacked from the packs below (see
 
 | Folder | Pack | Author | License |
 |---|---|---|---|
-| `kenney-td/` | **Tower Defense** (board cast) | Kenney | CC0 |
+| `craftpix-fields/` | **Fields Tileset** (board terrain) | Craftpix | Craftpix file license |
+| `kenney-td/` | **Tower Defense** (towers/units/fx) | Kenney | CC0 |
 | `kenney-ui/` | Fantasy UI Borders | Kenney | CC0 |
 | `kenney-icons/` | Cursor Pack | Kenney | CC0 |
 | `tiles/scribble-dungeons/` | Scribble Dungeons *(no longer on the board)* | Kenney | CC0 |
@@ -14,12 +15,13 @@ The PNGs under `assets/play/` are unpacked from the packs below (see
 | `avatars/masterpiece/`, `avatars/cozy-girl/` | Masterpiece / Cozy Village *(unpacked copies removed; zips kept)* | pack author | per pack |
 | `primal/` | Primal Dynasties — Beast Champions *(no longer on the board)* | pack author | per pack |
 
-Kenney license texts are copied beside this file. The avatar/beast packs did
-not include a standalone license file in the archive; check the pack page
-before shipping.
+Kenney license texts are copied beside this file. Craftpix license points at
+`craftpix.net/file-licenses/`. The avatar/beast packs did not include a
+standalone license file in the archive; check the pack page before shipping.
 
-**Current board cast** is the Kenney Tower Defense pack — see
-`games/grove/KENNEY_TD_TILE_MAP.md` for the locked tile ids.
+**Board terrain** is the Craftpix Fields Tileset; **units/towers/fx** are still
+Kenney Tower Defense this job (see `games/grove/CAST_DROP.md` + the skin stack
+in `src/play/skin.ts`).
 
 ## Regenerating the registry
 

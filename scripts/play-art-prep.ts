@@ -18,7 +18,7 @@ import path from 'node:path';
 
 import { PNG } from 'pngjs';
 
-const FAMILIES = ['avatars', 'primal', 'kenney-ui', 'kenney-icons', 'kenney-td', 'tiles'] as const;
+const FAMILIES = ['avatars', 'primal', 'kenney-ui', 'kenney-icons', 'kenney-td', 'craftpix-fields', 'tiles'] as const;
 const HASH_SUFFIX = /-[0-9a-f]{8}(?=\/|$)/g;
 
 /**

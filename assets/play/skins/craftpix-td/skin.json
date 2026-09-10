@@ -1,0 +1,58 @@
+{
+  "$comment": "Craftpix TD — MAP + PROPS only (this job). Units/towers/avatar/fx still resolve kenney-td via the skin fallback stack in src/play/skin.ts. Map roles: FieldsTile_38 grass, FieldsTile_15 dirt path tone, PlaceForTower1 pad. See assets/play/incoming/craftpix/ROLE_MAP.md and games/grove/CAST_DROP.md.",
+  "pack": "craftpix-td",
+  "roles": {
+    "map.grass": {
+      "keys": ["craftpix-fields/tiles/FieldsTile_38"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 32
+    },
+    "map.path": {
+      "keys": ["craftpix-fields/tiles/FieldsTile_15"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 32,
+      "units": 9,
+      "tone": "#e08f5c",
+      "casing": "#a8623a"
+    },
+    "map.pad": {
+      "keys": ["craftpix-fields/objects/PlaceForTower1"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 62,
+      "units": 12
+    },
+    "prop.tree": {
+      "keys": ["craftpix-fields/props/tree1"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 66
+    },
+    "prop.bush": {
+      "keys": ["craftpix-fields/props/bush1"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 26
+    },
+    "prop.stone": {
+      "keys": ["craftpix-fields/props/stone1"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 11
+    },
+    "prop.grass": {
+      "keys": ["craftpix-fields/props/grass1"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 5
+    },
+    "prop.fence": {
+      "keys": ["craftpix-fields/props/fence1"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 27
+    }
+  }
+}

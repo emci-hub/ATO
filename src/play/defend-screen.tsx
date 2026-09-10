@@ -1304,12 +1304,12 @@ export function DefendScreen({
             onResponderRelease={(event) =>
               handleBoardTap(event.nativeEvent.locationX, event.nativeEvent.locationY)
             }>
-            {/* Kenney Tower Defense terrain (§19) — grass floor + path + pad
-                markers, background only, behind every gameplay layer (zIndex 0).
-                `anchor: 'center'` tiles (the pad slot) sit ON the world point so
-                they stack with the tower sprite and range ring; grid tiles tile
-                from their top-left. pointerEvents none — taps fall through to
-                the board's own tap handler (click-to-move / pad select). */}
+            {/* Terrain + prop garnish (§19 — active skin): grass floor, prop
+                garnish, and pad markers. Background only, behind every gameplay
+                layer (zIndex 0). `anchor: 'center'` tiles (pads, props) sit ON
+                the world point; grid tiles tile from their top-left.
+                pointerEvents none — taps fall through to the board's own tap
+                handler (click-to-move / pad select). */}
             <View
               pointerEvents="none"
               style={[StyleSheet.absoluteFill, styles.boardTiles]}>
@@ -1318,7 +1318,7 @@ export function DefendScreen({
                 if (!source) return null;
                 const box = skinDrawBox(tile.role, tile.x, tile.y, tile.size);
                 const left = tile.anchor === 'center' ? box.x : tile.x;
-                const top = tile.anchor === 'center' ? box.y : tile.y;
+                const top = tile.anchor === 'center' ? tile.y - (tile.h ?? tile.size) / 2 : tile.y;
                 return (
                   <Image
                     key={`tile-${index}`}
@@ -1329,7 +1329,7 @@ export function DefendScreen({
                       left: `${left}%`,
                       top: `${top}%`,
                       width: `${tile.size}%`,
-                      height: `${tile.size}%`,
+                      height: `${tile.h ?? tile.size}%`,
                       transform: [{ rotate: `${tile.rotate}deg` }],
                     }}
                   />

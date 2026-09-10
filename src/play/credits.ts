@@ -21,9 +21,16 @@ export const PLAY_CC0_LINE =
 
 export const PLAY_CREDITS: readonly PlayCredit[] = [
   {
+    pack: 'Fields Tileset',
+    author: 'Craftpix',
+    usedFor: 'Defend board terrain — grass floor, road, tower pads and prop garnish',
+    license: 'Craftpix file license (see assets/play/licenses/craftpix-fields-License.txt)',
+    url: 'https://craftpix.net/file-licenses/',
+  },
+  {
     pack: 'Tower Defense',
     author: 'Kenney',
-    usedFor: 'Board cast — grass + path terrain, tower sprites, Avatar, units and bosses',
+    usedFor: 'Board cast — tower sprites, Avatar, units and bosses',
     license: 'CC0',
     url: 'https://kenney.nl/assets/tower-defense-kit',
   },

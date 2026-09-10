@@ -1,27 +1,36 @@
 /**
- * Defend entity skin contract (v0 — Kenney Tower Defense).
+ * Defend entity skin contract — Cast Presenter skin stack.
  *
- * `assets/play/skins/kenney-td/skin.json` is the single place that maps a
- * game ROLE (`tower.archer`, `unit.puff`, `fx.shot`, …) to art keys + draw
- * metadata (dirs / pivot / units / per-level scales). Code reads roles only —
- * no raw `towerDefense_tileNNN` outside this contract (see
- * `games/grove/KENNEY_TD_TILE_MAP.md`).
+ * Skins live under `assets/play/skins/<id>/skin.json`; each maps a game ROLE
+ * (`tower.archer`, `unit.puff`, `map.grass`, `fx.shot`, `prop.tree`, …) to art
+ * keys + draw metadata (dirs / pivot / units / per-level scales / clips / tone).
+ * Code reads roles only — no raw tile filenames outside the contract.
+ *
+ * Resolution is per-role across a SKIN STACK (active first, then fallbacks):
+ * the active `craftpix-td` skin defines map + prop roles only, and everything
+ * else (units / towers / avatar / fx) falls through to `kenney-td`, which
+ * stays loadable as a complete fallback skin. A future job just adds the
+ * remaining roles to craftpix-td and they light up with no TS change.
  *
  * Everything on the board shares one world space: 0..1 path fractions and
  * 0..100 pad/enemy/avatar board units. `skinDrawBox()` turns a world point +
- * size into the top-left box the renderer needs, honouring `pivot`, so the pad
- * marker, tower, enemy, avatar, range ring and projectile all stack on the
- * same centre.
+ * size into the top-left box the renderer needs, honouring `pivot`.
  */
 import type { ImageSourcePropType } from 'react-native';
 
-import rawSkin from '@/assets/play/skins/kenney-td/skin.json';
+import rawCraftpix from '@/assets/play/skins/craftpix-td/skin.json';
+import rawKenney from '@/assets/play/skins/kenney-td/skin.json';
 import { PLAY_ART } from '@/play/generated-play-assets';
 
 export type SkinRoleId =
   | 'map.grass'
   | 'map.path'
   | 'map.pad'
+  | 'prop.tree'
+  | 'prop.bush'
+  | 'prop.stone'
+  | 'prop.grass'
+  | 'prop.fence'
   | 'tower.archer'
   | 'tower.vine'
   | 'tower.crystal'
@@ -37,7 +46,7 @@ export type SkinRoleId =
 export type SkinPivot = 'center' | 'feet';
 export type SkinDirs = 1 | 4 | 8;
 
-/** Frame counts per clip. Kenney v0 ships 1 frame for every clip. */
+/** Frame counts per clip. */
 export type SkinClips = { idle?: number; walk?: number; attack?: number };
 
 export type SkinRole = {
@@ -57,11 +66,25 @@ export type SkinRole = {
   casing?: string;
 };
 
-const ROLES = rawSkin.roles as unknown as Record<string, SkinRole>;
+/** One skin file: the roles it defines. A skin may define only a subset. */
+type SkinFile = { pack: string; roles: Record<string, SkinRole> };
 
-/** The role definition, or undefined when the id is not in the skin. */
+/** Active skin first, fallbacks after. Per-role resolution walks the stack so a
+ * partial skin only overrides the roles it actually defines. */
+const SKIN_STACK: readonly SkinFile[] = [rawCraftpix, rawKenney] as unknown as readonly SkinFile[];
+
+/** Resolve a role across the skin stack (active first, then fallbacks). */
+function resolveRole(role: SkinRoleId): SkinRole | undefined {
+  for (const skin of SKIN_STACK) {
+    const def = skin.roles[role];
+    if (def) return def;
+  }
+  return undefined;
+}
+
+/** The role definition, or undefined when no skin in the stack defines it. */
 export function getSkinRole(role: SkinRoleId): SkinRole | undefined {
-  return ROLES[role];
+  return resolveRole(role);
 }
 
 /** Art source for a role. With `dirs > 1`, `dirIndex` picks the facing. */
@@ -69,7 +92,7 @@ export function skinArt(
   role: SkinRoleId,
   dirIndex = 0,
 ): ImageSourcePropType | undefined {
-  const def = ROLES[role];
+  const def = resolveRole(role);
   if (!def || def.keys.length === 0) return undefined;
   const key =
     def.dirs === 1
@@ -80,23 +103,23 @@ export function skinArt(
 
 /** Drawn box edge for a role (board units), falling back to `fallbackUnits`. */
 export function skinUnits(role: SkinRoleId, fallbackUnits: number): number {
-  const units = ROLES[role]?.units;
+  const units = resolveRole(role)?.units;
   return typeof units === 'number' && units > 0 ? units : fallbackUnits;
 }
 
 /** Solid tone for a ribbon role (the road), or undefined when it has none. */
 export function skinTone(role: SkinRoleId): string | undefined {
-  return ROLES[role]?.tone;
+  return resolveRole(role)?.tone;
 }
 
 /** Darker casing tone for a ribbon role, or undefined when it has none. */
 export function skinCasing(role: SkinRoleId): string | undefined {
-  return ROLES[role]?.casing;
+  return resolveRole(role)?.casing;
 }
 
 /** Level multiplier for a role (Lv1..LvN), clamped; 1 when no scales. */
 export function skinScale(role: SkinRoleId, level: number): number {
-  const scales = ROLES[role]?.scales;
+  const scales = resolveRole(role)?.scales;
   if (!scales || scales.length === 0) return 1;
   const index = Math.max(0, Math.min(scales.length - 1, Math.floor(level) - 1));
   return scales[index] ?? 1;
@@ -104,20 +127,20 @@ export function skinScale(role: SkinRoleId, level: number): number {
 
 /** Frame counts for a clip (0 when the clip isn't authored). */
 export function skinClipFrames(role: SkinRoleId, clip: keyof SkinClips): number {
-  return ROLES[role]?.clips?.[clip] ?? 0;
+  return resolveRole(role)?.clips?.[clip] ?? 0;
 }
 
 /**
  * Art for a multi-frame clip on a `dirs: 1` role: `keys` are read as frames
  * (index 0 = frame 0). Returns undefined when the role has no such clip or only
- * one frame, so callers fall back to the idle art (Kenney v0 ships 1 frame).
+ * one frame, so callers fall back to the idle art.
  */
 export function skinClipArt(
   role: SkinRoleId,
   clip: keyof SkinClips,
   frame: number,
 ): ImageSourcePropType | undefined {
-  const def = ROLES[role];
+  const def = resolveRole(role);
   if (!def || def.dirs !== 1) return undefined;
   const frames = def.clips?.[clip] ?? 0;
   if (frames <= 1) return undefined;
@@ -136,7 +159,7 @@ export function skinDrawBox(
   cy: number,
   size: number,
 ): { x: number; y: number; size: number } {
-  const pivot = ROLES[role]?.pivot ?? 'center';
+  const pivot = resolveRole(role)?.pivot ?? 'center';
   if (pivot === 'feet') return { x: cx - size / 2, y: cy - size, size };
   return { x: cx - size / 2, y: cy - size / 2, size };
 }
@@ -148,7 +171,7 @@ export function skinFacingDeg(
   dx: number,
   dy: number,
 ): number {
-  const dirs = ROLES[role]?.dirs ?? 1;
+  const dirs = resolveRole(role)?.dirs ?? 1;
   if (dirs <= 1) return 0;
   const step = 360 / dirs;
   const raw = (Math.atan2(dy, dx) * 180) / Math.PI;
