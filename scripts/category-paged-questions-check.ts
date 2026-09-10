@@ -184,7 +184,16 @@ async function main() {
     assert.doesNotMatch(src, /maxHeight/, 'no maxHeight constraint that could clip a longer category');
     assert.doesNotMatch(src, /numberOfLines/, 'no line-clamping on question text');
     assert.doesNotMatch(src, /overflow:\s*['"]hidden['"]/, 'no overflow:hidden that could cut off content');
-    assert.doesNotMatch(src, /<ScrollView/, 'must not nest its own fixed-size ScrollView — relies on the parent screen\'s scroll');
+    // Matches actual JSX usage (a closing tag or self-close), not the
+    // `ScrollView` TYPE import this file legitimately has since core loop
+    // redesign's auto-scroll-to-next-unanswered work (T-02) — `RefObject<ScrollView | null>`
+    // contains the literal substring "<ScrollView" too, which a bare
+    // `/<ScrollView/` match would (and did) false-positive on.
+    assert.doesNotMatch(
+      src,
+      /<\/ScrollView>|<ScrollView\b[^<>]*\/>/,
+      'must not RENDER its own fixed-size ScrollView — relies on the parent screen\'s scroll (a ScrollView type import for the auto-scroll ref is fine)',
+    );
     // The row list itself must render every row it's given — no internal
     // slicing/truncation by count.
     assert.doesNotMatch(src, /\.slice\(0,\s*\d+\)/, 'must not truncate the row list to a fixed count');

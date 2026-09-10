@@ -1,11 +1,11 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { IntakeSweep } from '@/components/intake-sweep';
 import { MilestoneToast } from '@/components/milestone-toast';
-import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
+import { NAV_PIXEL_HEADER_INSET, NAV_PIXEL_RIGHT, NAV_PIXEL_SLOT } from '@/components/nav-pixel';
 import { OptionalIntakeFill } from '@/components/optional-intake';
 import { QuestionsFold } from '@/components/questions-fold';
 import { ThemedText } from '@/components/themed-text';
@@ -158,6 +158,7 @@ export default function IntakeSweepTabScreen() {
   }, [loadTracks]);
 
   const scrollRef = useRef<ScrollView>(null);
+  const insets = useSafeAreaInsets();
 
   /**
    * One-time, silent catch-up for existing users: mark any bank-progress
@@ -226,20 +227,39 @@ export default function IntakeSweepTabScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContent}>
-          <View style={styles.header}>
-            <ThemedText type="subtitle">Questions</ThemedText>
-          </View>
-
-          {activeToast ? (
+        {/*
+          Pinned near the avatar (NavPixel, mounted globally at the tab
+          shell — src/app/(tabs)/_layout.tsx) rather than in-flow with the
+          rest of the screen, so it stays visible while scrolling instead of
+          being scrolled past unread. `top: insets.top + Spacing.two`
+          matches NavPixel's own positioning exactly (nav-pixel.tsx) — an
+          earlier draft used `top: Spacing.two` alone, reasoning SafeAreaView
+          already insets its children so adding insets.top again would
+          double-count it; wrong (found in review): an absolutely-positioned
+          child is laid out from the containing node's BORDER box, and
+          SafeAreaView applies its top inset as PADDING on itself, so an
+          absolute child ignores that padding entirely and needs the inset
+          added explicitly, same as NavPixel does. Same fade timing as
+          before (untouched, inside MilestoneToast itself) — only the
+          position changed. legends.tsx's own MilestoneToast usage is
+          untouched, still full-width/in-flow.
+        */}
+        {activeToast ? (
+          <View pointerEvents="none" style={[styles.avatarToastWrap, { top: insets.top + Spacing.two }]}>
             <MilestoneToast
               key={activeToast.id}
               title={activeToast.title}
               body={activeToast.body}
               reduceMotion={reduceMotion}
               onDone={dismissActiveToast}
+              style={styles.avatarToast}
             />
-          ) : null}
+          </View>
+        ) : null}
+        <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContent}>
+          <View style={styles.header}>
+            <ThemedText type="subtitle">Questions</ThemedText>
+          </View>
 
           {/*
             `tracksReady` gates the mount for the same reason `flagsReady` gates
@@ -257,6 +277,7 @@ export default function IntakeSweepTabScreen() {
               defaultOpen={!!focusAxis}
               focusAxis={focusAxis}
               tracks={tracks}
+              scrollViewRef={scrollRef}
             />
           ) : null}
 
@@ -306,5 +327,16 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingRight: NAV_PIXEL_HEADER_INSET,
+  },
+  avatarToastWrap: {
+    position: 'absolute',
+    // `top` is set inline (insets.top + Spacing.two) — needs the live safe-area inset, not a static value.
+    right: NAV_PIXEL_RIGHT + NAV_PIXEL_SLOT,
+    alignItems: 'flex-end',
+    zIndex: 90, // stays below NavPixel's own zIndex 100, so the avatar renders on top if they ever overlap
+  },
+  avatarToast: {
+    alignSelf: 'flex-end',
+    maxWidth: 220,
   },
 });

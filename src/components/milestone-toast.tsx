@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
@@ -12,18 +12,25 @@ import { useTheme } from '@/hooks/use-theme';
  * timing and reduceMotion branch — but takes title/body as props instead
  * of hardcoded copy, so any future milestone type can reuse it, and calls
  * `onDone` once the fade finishes so a caller can advance a queue. Renders
- * in-flow; this repo has no overlay/portal system to reuse.
+ * in-flow by default (`styles.toast`'s `alignSelf: 'stretch'`) since this
+ * repo has no overlay/portal system to reuse — the optional `style` prop
+ * lets a caller override that (e.g. intake-sweep.tsx positions it
+ * absolutely, pinned near the avatar) without changing the default for
+ * every other caller (legends.tsx still renders it in-flow, unchanged).
  */
 export function MilestoneToast({
   title,
   body,
   reduceMotion,
   onDone,
+  style,
 }: {
   title: string;
   body: string;
   reduceMotion: boolean;
   onDone?: () => void;
+  /** Overrides/extends the default full-width `styles.toast` shape — e.g. intake-sweep.tsx's sticky avatar-speech placement, which needs a bounded width, not `alignSelf: 'stretch'`. Other callers (legends.tsx) are unaffected, since this is additive on top of the existing style array. */
+  style?: StyleProp<ViewStyle>;
 }) {
   const theme = useTheme();
   const opacity = useSharedValue(1);
@@ -52,7 +59,7 @@ export function MilestoneToast({
     <Animated.View
       pointerEvents="none"
       accessibilityLiveRegion="polite"
-      style={[styles.toast, { backgroundColor: theme.accent }, fade]}>
+      style={[styles.toast, { backgroundColor: theme.accent }, fade, style]}>
       <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
         {title}
       </ThemedText>

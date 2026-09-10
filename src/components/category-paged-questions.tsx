@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import type { ScrollView } from 'react-native';
 
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
@@ -42,6 +43,9 @@ function stampBackground(textSecondary: string): string {
   return rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.16)` : textSecondary;
 }
 
+/** Headroom left above an auto-scrolled target, so it doesn't land flush against the top edge. */
+const SCROLL_TARGET_OFFSET = 96;
+
 /**
  * One category's worth of questions per screen — every question belonging to
  * that category shown together (not one-at-a-time), with Back/Next/Skip
@@ -71,6 +75,7 @@ export function CategoryPagedQuestions({
   busy,
   locked = false,
   onPick,
+  scrollViewRef,
 }: {
   /** Unique id for this question set (e.g. "full-profile", "questions-stack") — scopes remembered position. */
   storageKey: string;
@@ -90,10 +95,20 @@ export function CategoryPagedQuestions({
    * answered-count elsewhere on screen (found in review).
    */
   onPick: (draft: QuestionDraft, option: QuestionOption) => Promise<boolean>;
+  /**
+   * Host screen's ScrollView ref, so answering can auto-scroll to the next
+   * unanswered row — same-category only (this component is paginated by
+   * category; jumping to a different category page on top of a scroll would
+   * be a much bigger, more disorienting UI move than the scroll itself, so
+   * that's deliberately not done here). Optional: absent means no
+   * auto-scroll, not a crash.
+   */
+  scrollViewRef?: RefObject<ScrollView | null>;
 }) {
   const theme = useTheme();
   const [index, setIndex] = useState(0);
   const [positionReady, setPositionReady] = useState(false);
+  const rowRefs = useRef(new Map<string, View>());
   // Tracks which option was picked per row — rows here are intentionally
   // re-answerable, so this is a display hint, not a lock. Seeded from
   // AsyncStorage (answered-option-storage.ts) on mount so a row answered in
@@ -165,6 +180,44 @@ export function CategoryPagedQuestions({
   const atFirst = clampedIndex === 0;
   const atLast = clampedIndex >= categories.length - 1;
 
+  /**
+   * Auto-scroll to the next unanswered row in the CURRENT category after an
+   * answer — same-category only (see the `scrollViewRef` prop doc). Runs
+   * synchronously right after the optimistic `setPickedByRow` in the tap
+   * handler below, using the just-known state directly (not waiting on a
+   * re-render or the async `onPick` round trip) so the scroll itself never
+   * adds to the perceived delay.
+   */
+  function scrollToNextUnanswered(justPickedRowKey: string, freshPicks: Record<string, number>) {
+    if (!current || !scrollViewRef?.current) return;
+    const flatRows = current.axes.flatMap((axis) => rowsForAxis(axis));
+    const startIndex = flatRows.findIndex((row) => row.key === justPickedRowKey);
+    if (startIndex < 0) return;
+    const target = flatRows
+      .slice(startIndex + 1)
+      .find((row) => !row.answered && freshPicks[row.key] == null);
+    if (!target) return; // nothing left unanswered in this category — stay put, no page jump
+    const node = rowRefs.current.get(target.key);
+    // getNativeScrollRef(), not findNodeHandle() — found in review: on the
+    // New Architecture (Fabric, default since Expo SDK 54, no
+    // newArchEnabled override in this repo), `measureLayout` rejects a
+    // plain numeric node handle outright (dev: console.error and silent
+    // no-op; onFail never even fires) — only Paper (the old architecture)
+    // accepted a number. The host instance from getNativeScrollRef() works
+    // on both.
+    const scrollNode = scrollViewRef.current.getNativeScrollRef();
+    if (!node || !scrollNode) return;
+    node.measureLayout(
+      scrollNode,
+      (_x, y) => {
+        scrollViewRef.current?.scrollTo({ y: Math.max(0, y - SCROLL_TARGET_OFFSET), animated: true });
+      },
+      () => {
+        // Measurement can fail (e.g. the node unmounted mid-flight) — nothing to fall back to, just skip the scroll.
+      },
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.progressRow}>
@@ -186,7 +239,19 @@ export function CategoryPagedQuestions({
                 {`${humanizeAxis(axis)} · ${answeredCount}/${rows.length}`}
               </ThemedText>
               {rows.map((row) => (
-                <View key={row.key} style={styles.axisItem}>
+                <View
+                  key={row.key}
+                  style={styles.axisItem}
+                  // collapsable={false}: Android can flatten a plain View
+                  // with only layout styling into its parent for perf,
+                  // which would make measureLayout unable to find it as a
+                  // distinct native view — same precedent nav-pixel.tsx
+                  // uses for a view that must exist natively.
+                  collapsable={false}
+                  ref={(node) => {
+                    if (node) rowRefs.current.set(row.key, node);
+                    else rowRefs.current.delete(row.key);
+                  }}>
                   <ThemedText type="small">{row.draft.prompt}</ThemedText>
                   {locked ? null : (
                     <View style={styles.options}>
@@ -198,7 +263,9 @@ export function CategoryPagedQuestions({
                             disabled={busy}
                             accessibilityState={{ selected: picked }}
                             onPress={async () => {
-                              setPickedByRow((prev) => ({ ...prev, [row.key]: optIndex }));
+                              const freshPicks = { ...pickedByRow, [row.key]: optIndex };
+                              setPickedByRow(freshPicks);
+                              scrollToNextUnanswered(row.key, freshPicks);
                               const ok = await onPick(row.draft, option);
                               if (ok) {
                                 void saveAnsweredOption(storageKey, row.key, optIndex);
@@ -208,7 +275,23 @@ export function CategoryPagedQuestions({
                               styles.option,
                               { borderColor: controlBorderColor(theme) },
                               picked && { backgroundColor: theme.backgroundSelected },
-                              busy && styles.disabled,
+                              // Deliberately excludes every ALREADY-PICKED option
+                              // (not just the one just tapped — `picked` is true for
+                              // any option with a stamp, including ones restored from
+                              // storage) from the busy dim. Dimming the just-answered
+                              // option the instant its stamp mounts was what read as
+                              // "the stamp animating in late" (found in review last
+                              // session: there is no actual animation on the stamp
+                              // itself, only this opacity flash coinciding with it).
+                              // Every UNPICKED option still dims/disables correctly
+                              // while busy, so double-tapping a different, still-open
+                              // option mid-save is still blocked. `disabled={busy}`
+                              // itself is left unchanged on picked options too — they
+                              // stay non-interactive during the save, just not dimmed;
+                              // re-tapping one would be a duplicate write of the same
+                              // answer, not a meaningfully different action to block
+                              // visually as "disabled."
+                              busy && !picked && styles.disabled,
                             ]}>
                             <ThemedText type="smallBold">{option.text}</ThemedText>
                             {picked ? (

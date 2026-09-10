@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import type { ScrollView } from 'react-native';
 
 import { CategoryPagedQuestions } from '@/components/category-paged-questions';
 import { SettingsFold } from '@/components/settings-fold';
@@ -112,6 +113,7 @@ export function QuestionsFold({
   focusAxis,
   category,
   tracks,
+  scrollViewRef,
 }: {
   me: Me;
   history: CheckHistory[];
@@ -141,6 +143,14 @@ export function QuestionsFold({
    * Absent reads as incomplete: static bank only, no model call.
    */
   tracks?: readonly TraitTrack[];
+  /**
+   * The host screen's own ScrollView ref (intake-sweep.tsx) — threaded down
+   * to `CategoryPagedQuestions` so it can auto-scroll to the next unanswered
+   * question after an answer, same-category only. Optional: absent means no
+   * auto-scroll, not a crash (a future host that doesn't have one wired yet
+   * degrades cleanly).
+   */
+  scrollViewRef?: RefObject<ScrollView | null>;
 }) {
   const theme = useTheme();
   // Live-subscribed catalog (same hook categories-fold.tsx/category-teaser.tsx
@@ -420,6 +430,7 @@ export function QuestionsFold({
         // signed in on the same device would see the first account's
         // answer stamps on questions it never answered (found in review).
         storageKey={`full-profile:${me.id}`}
+        scrollViewRef={scrollViewRef}
         categories={liveCategoryDefs}
         rowsForAxis={(axis) =>
           bankProgressForAxis(axis, tracks ?? []).map((row) => ({
