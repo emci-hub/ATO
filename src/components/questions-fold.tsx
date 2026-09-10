@@ -15,6 +15,7 @@ import { earnTokensQuiet } from '@/lib/tokens-server';
 import { claimOngoingRoundCompleteQuiet } from '@/lib/ato-tokens-server';
 import { ATO_TOKEN_PRICE, atoPriceLine, atoTokenBalanceOf, ATO_TOKEN_NEED_MORE } from '@/lib/ato-tokens';
 import { rerollQuestionItem } from '@/lib/questions/reroll';
+import { Sentry } from '@/lib/sentry';
 import { deferredUnansweredAxes, mergeCategoryPriority } from '@/lib/questions/deferral';
 import { contradictedAxesFrom, type TraitHistoryRow } from '@/lib/trait-history';
 import { fetchTraitHistory } from '@/lib/trait-history-store';
@@ -567,7 +568,7 @@ function OngoingRoundFold({
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(false);
+  const [errorKind, setErrorKind] = useState<'load' | 'start' | null>(null);
   const [rerollBusy, setRerollBusy] = useState(false);
   const [rerollNote, setRerollNote] = useState<string | null>(null);
   const atoBalance = atoTokenBalanceOf(me);
@@ -575,7 +576,7 @@ function OngoingRoundFold({
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError(false);
+    setErrorKind(null);
     try {
       const existing = await fetchLatestOngoingRoundPack();
       setPack(existing);
@@ -588,7 +589,8 @@ function OngoingRoundFold({
       }
     } catch (err) {
       console.log('[ongoing-round] load error:', err);
-      setError(true);
+      Sentry.captureException(err);
+      setErrorKind('load');
     } finally {
       setLoading(false);
     }
@@ -602,7 +604,7 @@ function OngoingRoundFold({
   async function start() {
     if (starting) return;
     setStarting(true);
-    setError(false);
+    setErrorKind(null);
     try {
       const ongoingMe = {
         name: me.name,
@@ -615,7 +617,8 @@ function OngoingRoundFold({
       setPack(saved);
     } catch (err) {
       console.log('[ongoing-round] start error:', err);
-      setError(true);
+      Sentry.captureException(err);
+      setErrorKind('start');
     } finally {
       setStarting(false);
     }
@@ -687,17 +690,19 @@ function OngoingRoundFold({
 
   return (
     <View style={styles.body}>
-      <ThemedText type="smallBold">Next round</ThemedText>
+      <ThemedText type="smallBold">Submit</ThemedText>
       {loading ? (
         <ThemedText themeColor="textSecondary">Loading…</ThemedText>
-      ) : error ? (
+      ) : errorKind ? (
         <>
           <ThemedText type="small" themeColor="textSecondary">
-            Could not load your next round. Try again.
+            {errorKind === 'start'
+              ? "Couldn't submit your answers. Try again."
+              : "Couldn't load your next round. Try again."}
           </ThemedText>
           <ThemedPressable
-            disabled={loading}
-            onPress={() => void load()}
+            disabled={loading || starting}
+            onPress={() => void (errorKind === 'start' ? start() : load())}
             style={[styles.option, { borderColor: controlBorderColor(theme) }]}>
             <ThemedText type="smallBold">Try again</ThemedText>
           </ThemedPressable>
