@@ -59,6 +59,7 @@ import {
   puffPosition,
   retryDefendLive,
   stepDefendLive,
+  towerTarget,
   towerUpgradeCost,
   upgradeTower,
   waveEnemyCount,
@@ -70,17 +71,15 @@ import {
 } from '@/play/defend';
 import { avatarDef } from '@/play/avatars';
 import { PlayFrame } from '@/play/play-frame';
+import { dir8FromDelta, type Dir8 } from '@/play/art';
 import {
-  ENEMY_CAST,
-  PUFF_ART,
-  avatarSprite,
-  dir8FromDelta,
-  enemyArtSource,
-  tdTile,
-  towerArtSource,
-  type Dir8,
-  type EnemyRole,
-} from '@/play/art';
+  bandUnitRole,
+  skinArt,
+  skinDrawBox,
+  skinScale,
+  skinUnits,
+  type SkinRoleId,
+} from '@/play/skin';
 import { boardDecor } from '@/play/board-decor';
 import { BOUND_BOSS_MAX_STAR, bossBandFor, boundBossFragmentCost, defaultBoundBossId, getBoundBossDef, isUniqueDrop, previewDropTable, gearScore, recommendedGs, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, typeMatchBonus, type DropPreviewRow, type TypeTag } from '@/play/engine';
 import { formatItemStats, getItemDef } from '@/play/items';
@@ -187,6 +186,21 @@ function formatHit(damage: number): string {
 }
 
 type DefendPhase = 'setup' | 'running' | 'won' | 'lost';
+
+/** A live shot FX (display only — damage is already applied by the engine). */
+type Shot = {
+  id: number;
+  /** Current world position, board units (0..100). */
+  x: number;
+  y: number;
+  /** Aim point, board units. */
+  tx: number;
+  ty: number;
+  vx: number;
+  vy: number;
+  /** Epoch ms the shot was fired (lifetime guard). */
+  bornAt: number;
+};
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -381,6 +395,12 @@ export function DefendScreen({
   const floaterSeq = useRef(0);
   /** Puff list from the previous running tick — diffed for floaters. */
   const prevPuffsRef = useRef<Puff[]>([]);
+  /** Live shot FX (display only) + id source + a mutable fast-tick copy. */
+  const [shots, setShots] = useState<Shot[]>([]);
+  const shotsRef = useRef<Shot[]>([]);
+  const shotSeq = useRef(0);
+  /** Per-tower aim rotation (deg), keyed by tower id; kept between shots. */
+  const towerFacingRef = useRef<Record<number, number>>({});
   /** §9m boss / mini-boss alert banner shown while the boss steps in. */
   const [bossAlert, setBossAlert] = useState<{ label: string; name: string } | null>(null);
   /** Spawn stage from the previous running tick — diffed for the alert. */
@@ -583,6 +603,8 @@ export function DefendScreen({
       setWhyOpen(false);
       prevPuffsRef.current = [];
       setFloaters([]);
+    shotsRef.current = [];
+    setShots([]);
       prevStageRef.current = 'minions';
       setBossAlert(null);
     },
@@ -602,6 +624,8 @@ export function DefendScreen({
       setSim(createDefendLive(fight.wave, { mapId: fight.phase, cyclePower: view.cyclePower, tint: view.cycleTint }));
       prevPuffsRef.current = [];
       setFloaters([]);
+    shotsRef.current = [];
+    setShots([]);
       prevStageRef.current = 'minions';
     }
     ensureParked(fight.phase);
@@ -625,6 +649,8 @@ export function DefendScreen({
     setSelectedPad(null);
     prevPuffsRef.current = [];
     setFloaters([]);
+    shotsRef.current = [];
+    setShots([]);
     prevStageRef.current = 'minions';
     setBossAlert(null);
   }, [view.cyclePower, view.cycleTint]);
@@ -647,6 +673,8 @@ export function DefendScreen({
     setWhyOpen(false);
     prevPuffsRef.current = [];
     setFloaters([]);
+    shotsRef.current = [];
+    setShots([]);
     prevStageRef.current = 'minions';
     setBossAlert(null);
   }, []);
@@ -679,6 +707,8 @@ export function DefendScreen({
     setWhyOpen(false);
     prevPuffsRef.current = [];
     setFloaters([]);
+    shotsRef.current = [];
+    setShots([]);
     prevStageRef.current = 'minions';
     setBossAlert(null);
   }, []);
@@ -703,6 +733,54 @@ export function DefendScreen({
   const dropFloater = useCallback((id: number) => {
     setFloaters((prev) => prev.filter((floater) => floater.id !== id));
   }, []);
+
+  /** Fire one shot FX from a tower centre toward its aim point (display only —
+   * the engine already applied the damage this tick). */
+  const spawnShot = useCallback((fromX: number, fromY: number, toX: number, toY: number) => {
+    const dx = toX - fromX;
+    const dy = toY - fromY;
+    const dist = Math.hypot(dx, dy);
+    if (dist <= 0.001) return;
+    const vx = (dx / dist) * SHOT_SPEED_UNITS_PER_SEC;
+    const vy = (dy / dist) * SHOT_SPEED_UNITS_PER_SEC;
+    const shot: Shot = {
+      id: ++shotSeq.current,
+      x: fromX,
+      y: fromY,
+      tx: toX,
+      ty: toY,
+      vx,
+      vy,
+      bornAt: Date.now(),
+    };
+    const next = [...shotsRef.current, shot];
+    shotsRef.current = next;
+    setShots(next);
+  }, []);
+
+  // FX tick: advance shot projectiles toward their aim point and despawn on
+  // reach (or after a short life). Runs faster than the 100ms sim tick so the
+  // shots read as motion; touches nothing in the engine.
+  useEffect(() => {
+    if (phase !== 'running' || paused) return;
+    const id = setInterval(() => {
+      const list = shotsRef.current;
+      if (list.length === 0) return;
+      const dt = FX_TICK_MS / 1000;
+      const now = Date.now();
+      const next: Shot[] = [];
+      for (const shot of list) {
+        if (now - shot.bornAt > SHOT_MAX_LIFE_MS) continue; // stale → despawn
+        const x = shot.x + shot.vx * dt;
+        const y = shot.y + shot.vy * dt;
+        if (Math.hypot(shot.tx - x, shot.ty - y) <= SHOT_HIT_RADIUS) continue; // reached
+        next.push({ ...shot, x, y });
+      }
+      shotsRef.current = next;
+      setShots(next);
+    }, FX_TICK_MS);
+    return () => clearInterval(id);
+  }, [phase, paused]);
 
   const winWave = useCallback(() => {
     const played = playedRef.current;
@@ -730,6 +808,23 @@ export function DefendScreen({
       if (aimed) avatarFacingRef.current = dir8FromDelta(aimed.dx, aimed.dy);
       if (step.state.avatarCooldownMs > current.avatarCooldownMs + 1 && aimed) {
         avatarAttackAtRef.current = Date.now();
+      }
+      // §19 entity presenter: towers turn toward their target every tick, and
+      // the tick a tower actually fires (its cooldown was reset) spawns a shot
+      // FX toward that same target. Display only — the engine already applied
+      // the damage; nothing here changes combat math.
+      const mapNow = DEFEND_MAPS[current.mapId];
+      for (const tower of current.towers) {
+        const target = towerTarget(tower, current.puffs, mapNow);
+        const pad = mapNow.pads[tower.pad];
+        if (!target) continue;
+        const tpos = puffPosition(target.dist, mapNow);
+        const tx = tpos.x * 100;
+        const ty = tpos.y * 100;
+        towerFacingRef.current[tower.id] = aimDegrees(pad.x, pad.y, tx, ty);
+        const after = step.state.towers.find((t) => t.id === tower.id);
+        const fired = after != null && after.cooldownMs > tower.cooldownMs + 1;
+        if (fired) spawnShot(pad.x, pad.y, tx, ty);
       }
       // §9m boss alert: banner the breath → boss step (the boss spawns last).
       const bandNow = step.state.band;
@@ -764,7 +859,7 @@ export function DefendScreen({
       }
     }, DEFEND_TICK_MS);
     return () => clearInterval(id);
-  }, [phase, paused, winWave, spawnFloaters]);
+  }, [phase, paused, winWave, spawnFloaters, spawnShot]);
 
   // The alert is a banner — auto-dismiss after a short beat.
   useEffect(() => {
@@ -847,6 +942,8 @@ export function DefendScreen({
     setSelectedPad(null);
     prevPuffsRef.current = [];
     setFloaters([]);
+    shotsRef.current = [];
+    setShots([]);
     prevStageRef.current = 'breath';
     setBossAlert(null);
   };
@@ -943,7 +1040,7 @@ export function DefendScreen({
   const nowMs = Date.now();
   const attackElapsed = nowMs - avatarAttackAtRef.current;
   const avatarAttacking = attackElapsed < AVATAR_ATTACK_MS;
-  const avatarFrameSource = avatarSprite();
+  const avatarFrameSource = skinArt('unit.avatar');
 
   return (
     <ThemedView style={styles.container}>
@@ -1111,14 +1208,19 @@ export function DefendScreen({
             }}>
             {/* Kenney Tower Defense terrain (§19) — grass floor + path + pad
                 markers, background only, behind every gameplay layer (zIndex 0).
-                pointerEvents none so taps fall through to the pads on the SVG
-                above. */}
+                `anchor: 'center'` tiles (the pad slot) sit ON the world point so
+                they stack with the tower sprite and range ring; grid tiles tile
+                from their top-left. pointerEvents none so taps fall through to
+                the pads on the SVG above. */}
             <View
               pointerEvents="none"
               style={[StyleSheet.absoluteFill, styles.boardTiles]}>
               {decor.map((tile, index) => {
-                const source = tdTile(tile.key);
+                const source = skinArt(tile.role);
                 if (!source) return null;
+                const box = skinDrawBox(tile.role, tile.x, tile.y, tile.size);
+                const left = tile.anchor === 'center' ? box.x : tile.x;
+                const top = tile.anchor === 'center' ? box.y : tile.y;
                 return (
                   <Image
                     key={`tile-${index}`}
@@ -1126,8 +1228,8 @@ export function DefendScreen({
                     contentFit="fill"
                     style={{
                       position: 'absolute',
-                      left: `${tile.x}%`,
-                      top: `${tile.y}%`,
+                      left: `${left}%`,
+                      top: `${top}%`,
                       width: `${tile.size}%`,
                       height: `${tile.size}%`,
                       transform: [{ rotate: `${tile.rotate}deg` }],
@@ -1185,37 +1287,46 @@ export function DefendScreen({
                   strokeDasharray="2 2"
                 />
               ) : null}
-              {/* §19 tower sprites: Kenney TD art per job. Visual level is
-               * SCALE ONLY (Lv1 0.70 · Lv2 0.85 · Lv3 1.0) — no number badges. */}
+              {/* §19 tower sprites (skin roles). Visual level is SCALE ONLY
+               * (Lv1 0.70 · Lv2 0.85 · Lv3 1.0) — no number badges. Each tower
+               * is rotated toward its current target around its own centre. */}
               {sim?.towers.map((tower) => {
                 const pad = boardMap.pads[tower.pad];
-                const source = towerArtSource(tower.kind);
+                const role = TOWER_ROLE[tower.kind];
+                const source = skinArt(role);
                 if (!source) return null;
-                const size = TOWER_PAD_UNITS * towerLevelScale(tower.level);
+                const size = skinUnits(role, TOWER_PAD_UNITS) * skinScale(role, tower.level);
+                const box = skinDrawBox(role, pad.x, pad.y, size);
+                const deg = towerFacingRef.current[tower.id] ?? 0;
                 return (
-                  <SvgImage
+                  <G
                     key={`tower-art-${tower.id}`}
-                    href={source}
-                    x={pad.x - size / 2}
-                    y={pad.y - size / 2}
-                    width={size}
-                    height={size}
-                  />
+                    transform={`rotate(${deg} ${pad.x} ${pad.y})`}>
+                    <SvgImage
+                      href={source}
+                      x={box.x}
+                      y={box.y}
+                      width={box.size}
+                      height={box.size}
+                    />
+                  </G>
                 );
               })}
-              {/* §19 Bound Boss carries the heavy Final sprite. */}
+              {/* §19 Bound Boss carries the heavy Final unit sprite. */}
               {sim?.boundBosses.map((bb) => {
                 const pad = boardMap.pads[bb.pad];
-                const source = enemyArtSource(ENEMY_CAST.final);
+                const role: SkinRoleId = 'unit.final';
+                const source = skinArt(role);
                 if (!source) return null;
+                const box = skinDrawBox(role, pad.x, pad.y, 11);
                 return (
                   <SvgImage
                     key={`bb-art-${bb.id}`}
                     href={source}
-                    x={pad.x - 5.5}
-                    y={pad.y - 5.5}
-                    width={11}
-                    height={11}
+                    x={box.x}
+                    y={box.y}
+                    width={box.size}
+                    height={box.size}
                   />
                 );
               })}
@@ -1249,15 +1360,16 @@ export function DefendScreen({
                     : puff.kind === 'runner'
                       ? RUNNER_COLOR
                       : PUFF_COLOR;
-                // §19 board cast (Kenney TD): runners = fast unit, bosses =
+                // §19 board cast (skin roles): runners = fast unit, bosses =
                 // tanks/heavy by band, normal puffs = the puff unit.
-                const sprite =
+                const role: SkinRoleId =
                   puff.kind === 'boss'
-                    ? enemyArtSource(bossEnemyRole(band?.kind ?? ''))
+                    ? bandUnitRole(band?.kind ?? '')
                     : puff.kind === 'runner'
-                      ? enemyArtSource(ENEMY_CAST.runner)
-                      : PUFF_ART;
-                const spriteSize = radius * 4.4;
+                      ? 'unit.runner'
+                      : 'unit.puff';
+                const sprite = skinArt(role);
+                const spriteSize = skinUnits(role, UNIT_BASE_UNITS) * puff.size;
                 const barWidth = 8 * puff.size;
                 return (
                   <G key={`puff-${puff.id}`}>
@@ -1287,6 +1399,24 @@ export function DefendScreen({
                     <Rect x={x - barWidth / 2} y={y - radius - 4} width={barWidth} height={1.6} fill="rgba(0,0,0,0.35)" rx={0.8} />
                     <Rect x={x - barWidth / 2} y={y - radius - 4} width={barWidth * pct} height={1.6} fill="#4ADE80" rx={0.8} />
                   </G>
+                );
+              })}
+              {/* §19 shot FX (display only) — one Kenney shot sprite per fired
+               * round, flying from the tower centre to its target's centre. */}
+              {shots.map((shot) => {
+                const role: SkinRoleId = 'fx.shot';
+                const source = skinArt(role);
+                if (!source) return null;
+                const box = skinDrawBox(role, shot.x, shot.y, skinUnits(role, 4.5));
+                return (
+                  <SvgImage
+                    key={`shot-${shot.id}`}
+                    href={source}
+                    x={box.x}
+                    y={box.y}
+                    width={box.size}
+                    height={box.size}
+                  />
                 );
               })}
             </Svg>
@@ -1966,6 +2096,8 @@ export function DefendScreen({
                   setSelectedPad(null);
                   prevPuffsRef.current = [];
                   setFloaters([]);
+    shotsRef.current = [];
+    setShots([]);
                   prevStageRef.current = 'minions';
                   setBossAlert(null);
                 }
@@ -2333,30 +2465,37 @@ export function dir8Degrees(dir: Dir8): number {
   return DIR8_DEGREES[dir];
 }
 
-/** Base tower sprite size on the pad, board units (64px art scaled to fit). */
+/* ---------------------------------------------------- entity presenter v0 --- */
+
+/** Which skin role draws each tower job (art only — math unchanged). */
+const TOWER_ROLE: Record<TowerKind, SkinRoleId> = {
+  archer: 'tower.archer',
+  vine: 'tower.vine',
+  crystal: 'tower.crystal',
+};
+
+/** Fallback tower box, board units, when a role omits `units`. */
 const TOWER_PAD_UNITS = 13;
+/** Fallback enemy box at `puff.size === 1` when a role omits `units`. */
+const UNIT_BASE_UNITS = 15;
 
-/** Visual tower level → scale (§19: Lv1 0.70 · Lv2 0.85 · Lv3 1.0). */
-export function towerLevelScale(level: number): number {
-  if (level <= 1) return 0.7;
-  if (level === 2) return 0.85;
-  return 1;
-}
+/** Shot FX: speed in board units/sec and the "reached target" radius. */
+const SHOT_SPEED_UNITS_PER_SEC = 95;
+const SHOT_HIT_RADIUS = 2.5;
+const SHOT_MAX_LIFE_MS = 900;
+/** The FX tick is faster than the 100ms sim tick so shots read as motion. */
+const FX_TICK_MS = 33;
 
-/** Which Kenney TD unit plays each boss band (§19 board cast). */
-function bossEnemyRole(kind: string): EnemyRole {
-  switch (kind) {
-    case 'final':
-      return ENEMY_CAST.final;
-    case 'semi':
-      return ENEMY_CAST.semi;
-    case 'scout':
-      return ENEMY_CAST.scoutBoss;
-    case 'scout_mini':
-      return ENEMY_CAST.scoutMini;
-    default:
-      return ENEMY_CAST.final;
-  }
+/**
+ * Sprite base facing offset, degrees. Kenney TD tiles are authored facing UP
+ * (north = -90° in atan2 space); bump this single constant if a future pack
+ * faces a different way.
+ */
+const ART_BASE_FACING_DEG = 90;
+
+/** World-space rotation (deg) from a point toward a target. */
+function aimDegrees(cx: number, cy: number, tx: number, ty: number): number {
+  return (Math.atan2(ty - cy, tx - cx) * 180) / Math.PI + ART_BASE_FACING_DEG;
 }
 
 /** Delta from the Avatar to the nearest puff in attack range (facing aid). */

@@ -1,21 +1,22 @@
 /**
- * Board decorator — dresses the Defend board with Kenney Tower Defense tiles
- * (GAME_SPEC §19 superseding board cast) WITHOUT touching combat geometry.
- * Waypoints/pads stay the source of truth; this only answers "which tile goes
- * in which 8×8 cell".
+ * Board decorator — dresses the Defend board with the Kenney Tower Defense
+ * terrain (GAME_SPEC §19) WITHOUT touching combat geometry. Waypoints/pads stay
+ * the source of truth; this only answers "which role goes where".
  *
- * Locked ids (see `games/grove/KENNEY_TD_TILE_MAP.md`):
- * - `grass` 024 — painted under every cell.
- * - `path` 050 — painted on every cell the lane crosses (no corner autotile
- *   this pass; the sampled cells already trace the bends).
- * - `pad` 181 — a slot marker on each of the six tower pads.
+ * Roles come from the skin contract (`map.grass` / `map.path` / `map.pad`), so
+ * no raw tile numbers live here (see `games/grove/KENNEY_TD_TILE_MAP.md`).
  *
- * Output is in the same 0..100 board-unit space the board uses, so a tile at
- * `{x, y, size}` maps to an absolutely-positioned image at `left: x%`, etc.
+ * Anchors (one shared world space):
+ * - `corner` — grid tiles (grass/path) tile the board from their top-left, so a
+ *   cell at (i, j) draws at `i * CELL`.
+ * - `center` — entity-style markers (the pad slot) sit ON the pad's world point,
+ *   so `x`/`y` are the CENTRE. This is the fix for the old bug that snapped the
+ *   pad art to 8×8 cell corners and left it off the tower/ring centre.
+ *
  * Pure + deterministic so it can be memoized per map.
  */
 import type { DefendMap } from '@/play/defend';
-import { TD_TILE } from '@/play/art';
+import type { SkinRoleId } from '@/play/skin';
 
 /** Grid resolution across the board (100 board units / 8 = 12.5 per tile). */
 export const BOARD_GRID = 8;
@@ -27,10 +28,17 @@ const CELL = 100 / BOARD_GRID;
  */
 const LANE_HALF = CELL / 2;
 
+/** Pad slot marker edge, board units (centred on the pad point). */
+const PAD_MARKER_UNITS = 11;
+
+export type BoardTileAnchor = 'corner' | 'center';
+
 export type BoardTile = {
-  /** Kenney Tower Defense tile number (`towerDefense_tileNNN`). */
-  key: number;
-  /** Top-left corner, board units. */
+  /** Skin role for this tile (`map.grass` / `map.path` / `map.pad`). */
+  role: SkinRoleId;
+  /** `corner` = x/y is top-left; `center` = x/y is the centre. */
+  anchor: BoardTileAnchor;
+  /** Board units (0..100). */
   x: number;
   y: number;
   /** Square edge, board units. */
@@ -67,7 +75,7 @@ const key = (i: number, j: number) => `${i},${j}`;
 
 /**
  * Build the full tile list for a map: grass everywhere, path over every cell
- * the lane crosses, and a pad marker on each tower pad.
+ * the lane crosses, and a pad slot marker CENTRED on each tower pad.
  */
 export function boardDecor(map: DefendMap): BoardTile[] {
   const pts = map.path.map(toUnits);
@@ -94,12 +102,13 @@ export function boardDecor(map: DefendMap): BoardTile[] {
 
   const tiles: BoardTile[] = [];
 
-  // Grass floor everywhere, path tiles over the lane.
+  // Grass floor everywhere, path tiles over the lane (grid-anchored).
   for (let j = 0; j < BOARD_GRID; j += 1) {
     for (let i = 0; i < BOARD_GRID; i += 1) {
       const onLane = laneCells.has(key(i, j));
       tiles.push({
-        key: onLane ? TD_TILE.path : TD_TILE.grass,
+        role: onLane ? 'map.path' : 'map.grass',
+        anchor: 'corner',
         x: i * CELL,
         y: j * CELL,
         size: CELL,
@@ -108,10 +117,17 @@ export function boardDecor(map: DefendMap): BoardTile[] {
     }
   }
 
-  // Pad slot markers on the six pads (drawn over the grass/path cell).
+  // Pad slot marker — CENTRED on the pad's world point so it stacks with the
+  // tower sprite and the range ring on the same centre.
   map.pads.forEach((pad) => {
-    const cell = cellOf({ x: pad.x, y: pad.y });
-    tiles.push({ key: TD_TILE.pad, x: cell.i * CELL, y: cell.j * CELL, size: CELL, rotate: 0 });
+    tiles.push({
+      role: 'map.pad',
+      anchor: 'center',
+      x: pad.x,
+      y: pad.y,
+      size: PAD_MARKER_UNITS,
+      rotate: 0,
+    });
   });
 
   return tiles;

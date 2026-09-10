@@ -27,22 +27,41 @@ render transform, not a different image.
 
 ## Rules
 
-- **Tower upgrade = scale only.** Lv1 `0.70` · Lv2 `0.85` · Lv3 `1.0` (max).
-  No level-number badges on pads.
+- **Tower upgrade = scale only.** Scales live on the tower skin roles:
+  Lv1 `0.70` · Lv2 `0.85` · Lv3 `1.0` (max). No level-number badges on pads.
 - **Path painting:** all path cells `050`, all floor cells `024`. No corner
   autotile in this pass.
+- **Align to one world space:** 0..1 path fractions and 0..100 board units
+  everywhere; every sprite draws through `skinDrawBox()` (centre or feet pivot)
+  so pad marker + tower + enemy + avatar + range ring + projectile share a
+  centre.
 - **Combat math unchanged** — waypoints, pads, scrap, levels, ranges and
-  damage are untouched; this is an art + tower-scale swap only.
+  damage are untouched; this is an art + presentation swap only. Shot FX are
+  display-only (the engine already applies the damage).
 - Nearest-neighbor scaling only (no blurry upscale).
 - Scribble Dungeons / Primal Dynasties / Dungeon Legends / Masterpiece / Cozy
   Village are **no longer loaded for the board**; their files stay on disk.
 
 ## Where it is wired
 
-- Tile ids: `TD_TILE` in `src/play/art.ts`
-- Terrain layout: `src/play/board-decor.ts`
-- Tower scale: `towerLevelScale()` in `src/play/defend-screen.tsx`
-- Enemy/boss roles: `ENEMY_CAST` in `src/play/art.ts`
+- **Skin contract:** `assets/play/skins/kenney-td/skin.json` — role → art keys +
+  `dirs` / `pivot` / `units` / `scales`. Read via `getSkinRole()` / `skinArt()`
+  in `src/play/skin.ts`. **Code reads roles only** (`tower.archer`, `unit.puff`,
+  `fx.shot`, …) — no raw `towerDefense_tileNNN` outside this contract.
+- Terrain layout: `src/play/board-decor.ts` (`map.grass` / `map.path` /
+  `map.pad` roles; pad marker is CENTER-anchored on `pad.x/pad.y`).
+- Entity presenter: `src/play/defend-screen.tsx` — towers turn toward their
+  target (`atan2`) and fire the `fx.shot` sprite; enemies/avatar rotate by
+  `skinFacingDeg`; every layer draws through `skinDrawBox()` so the pad marker,
+  tower, enemy, avatar, range ring and projectile share one centre.
+- Tower level scale: `scales: [0.7, 0.85, 1]` on the tower roles (`skinScale`).
+- Enemy/boss roles: `BAND_UNIT_ROLE` / `bandUnitRole()` in `src/play/skin.ts`.
+
+### Roles
+
+`map.grass` `map.path` `map.pad` · `tower.archer` `tower.vine` `tower.crystal` ·
+`unit.avatar` `unit.puff` `unit.runner` `unit.tank` `unit.tank_alt` `unit.final` ·
+`fx.shot` `fx.coin`
 
 ## Regenerating the art registry
 

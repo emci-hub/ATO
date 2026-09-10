@@ -13,7 +13,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useAppearance } from '@/lib/theme/context';
 import { AboutScreen } from '@/play/about-screen';
-import { avatarSprite } from '@/play/art';
+import { skinArt } from '@/play/skin';
 import { STUB_AVATAR_ID, avatarDef } from '@/play/avatars';
 import { SaveDumpRow } from '@/play/dev-dump';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
@@ -604,9 +604,9 @@ export default function PlayScreen() {
                 <View style={styles.groveRow}>
                   {/* §19 Avatar art — the active Avatar's board sprite (Kenney TD). */}
                   <View style={[styles.avatar, { backgroundColor: theme.backgroundSelected }]}>
-                    {activeAvatar && avatarSprite() ? (
+                    {activeAvatar && skinArt('unit.avatar') ? (
                       <Image
-                        source={avatarSprite()}
+                        source={skinArt('unit.avatar')}
                         contentFit="contain"
                         style={styles.avatarArt}
                       />

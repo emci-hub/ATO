@@ -658,7 +658,7 @@ export function stepDefendLive(
   for (const tower of state.towers) {
     let cooldownMs = tower.cooldownMs - dtMs;
     if (cooldownMs <= 0) {
-      const target = acquireTarget(tower, puffs, map);
+      const target = towerTarget(tower, puffs, map);
       if (target) {
         const def = TOWER_DEFS[tower.kind];
         const damage =
@@ -849,8 +849,9 @@ function acquireAvatarTarget(
 }
 
 /** Pick the tower's target per §9b: archer/vine first-toward-exit (max dist);
- * crystal highest current HP. In range only. */
-function acquireTarget(tower: Tower, puffs: Puff[], map: DefendMap): Puff | null {
+ * crystal highest current HP. In range only. Exported so the entity presenter
+ * aims its shot at the exact enemy the engine will damage (no math change). */
+export function towerTarget(tower: Tower, puffs: Puff[], map: DefendMap): Puff | null {
   const range = TOWER_DEFS[tower.kind].range;
   const pad = map.pads[tower.pad];
   const inRange = puffs.filter((puff) => padPuffDist(pad, puff.dist, map) <= range);

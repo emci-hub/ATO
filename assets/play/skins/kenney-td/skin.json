@@ -1,0 +1,108 @@
+{
+  "$comment": "Defend entity skin contract v0 (Kenney Tower Defense). Code reads roles only — never raw towerDefense_tileNNN. See games/grove/KENNEY_TD_TILE_MAP.md. `keys` are art-registry keys; `dirs` 1 = single top-down sprite (rotate to face); `pivot` center|feet; `units` = board units (0..100 space) for the drawn box; `cellPx` = source tile size; `scales` = per-level size multipliers (Lv1..Lv3).",
+  "pack": "kenney-td",
+  "roles": {
+    "map.grass": {
+      "keys": ["kenney-td/towerDefense_tile024"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 64
+    },
+    "map.path": {
+      "keys": ["kenney-td/towerDefense_tile050"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 64
+    },
+    "map.pad": {
+      "keys": ["kenney-td/towerDefense_tile181"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 64,
+      "units": 11
+    },
+    "tower.archer": {
+      "keys": ["kenney-td/towerDefense_tile249"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 64,
+      "units": 13,
+      "scales": [0.7, 0.85, 1],
+      "clips": { "idle": 1 }
+    },
+    "tower.vine": {
+      "keys": ["kenney-td/towerDefense_tile206"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 64,
+      "units": 13,
+      "scales": [0.7, 0.85, 1],
+      "clips": { "idle": 1 }
+    },
+    "tower.crystal": {
+      "keys": ["kenney-td/towerDefense_tile250"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 64,
+      "units": 13,
+      "scales": [0.7, 0.85, 1],
+      "clips": { "idle": 1 }
+    },
+    "unit.avatar": {
+      "keys": ["kenney-td/towerDefense_tile247"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 64,
+      "clips": { "idle": 1 }
+    },
+    "unit.puff": {
+      "keys": ["kenney-td/towerDefense_tile245"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 64,
+      "clips": { "idle": 1 }
+    },
+    "unit.runner": {
+      "keys": ["kenney-td/towerDefense_tile248"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 64,
+      "clips": { "idle": 1 }
+    },
+    "unit.tank": {
+      "keys": ["kenney-td/towerDefense_tile268"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 64,
+      "clips": { "idle": 1 }
+    },
+    "unit.tank_alt": {
+      "keys": ["kenney-td/towerDefense_tile269"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 64,
+      "clips": { "idle": 1 }
+    },
+    "unit.final": {
+      "keys": ["kenney-td/towerDefense_tile271"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 64,
+      "clips": { "idle": 1 }
+    },
+    "fx.shot": {
+      "keys": ["kenney-td/towerDefense_tile273"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 64,
+      "units": 4.5
+    },
+    "fx.coin": {
+      "keys": ["kenney-td/towerDefense_tile272"],
+      "dirs": 1,
+      "pivot": "center",
+      "cellPx": 64,
+      "units": 4.5
+    }
+  }
+}
