@@ -36,6 +36,7 @@ import {
   devResetAvatars,
   devResetBoundBosses,
   devResetPlayStore,
+  devResetShopDaily,
   devAddAvatarLevels,
   devSetCampaignSeat,
   devUnlockBoundBoss,
@@ -45,8 +46,12 @@ import {
   type DefendWinContext,
   type MergeOutcome,
   type MergeTarget,
+  type ShopPurchaseResult,
+  type ShopRefusal,
   type SkipRewardResult,
 } from '@/play/playStore';
+import type { ShopTokenRow } from '@/play/shop';
+import { ShopScreen } from '@/play/shop-screen';
 import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
 
 /**
@@ -65,7 +70,7 @@ import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
  * pre-launch builds via PRE_LAUNCH_DEV.
  */
 
-type PlayMode = 'grove' | 'dive' | 'dress' | 'defend';
+type PlayMode = 'grove' | 'dive' | 'dress' | 'defend' | 'shop';
 
 type PlayToast =
   | { kind: 'claim'; result: ClaimResult }
@@ -113,6 +118,7 @@ export default function PlayScreen() {
     saveAvatarPark,
     activateAvatar,
     unlockAvatarStub,
+    buyShopRow,
   } = usePlayStore();
   const [mode, setMode] = useState<PlayMode>('grove');
   const [toast, setToast] = useState<PlayToast | null>(null);
@@ -408,6 +414,28 @@ export default function PlayScreen() {
   /** The active Avatar's identity for the Grove card (v16 — swap visible). */
   const activeAvatar = view ? avatarDef(view.activeAvatarId) : undefined;
 
+  /** Token shop — buy a row (spend soft tokens, apply its effect) and toast
+   * the honest result. Paid rows never charge; the screen renders them "Soon". */
+  const handleBuyShopRow = useCallback(
+    async (row: ShopTokenRow): Promise<ShopPurchaseResult | null> => {
+      const result = await buyShopRow(row);
+      if (result?.ok) {
+        const parts: string[] = [`−${result.tokensSpent} tokens`];
+        if (result.grantedItemId) {
+          parts.push(`found ${itemName(result.grantedItemId) ?? result.grantedItemId}`);
+        }
+        if (row.kind === 'dive_charge') {
+          parts.push(`dive charges ${result.diveChargeNow}/${DIVE_CHARGE_CAP}`);
+        }
+        setToast({ kind: 'message', title: row.name, body: parts.join(' · ') });
+      } else if (result) {
+        setToast({ kind: 'message', title: row.name, body: shopRefusalCopy(result.reason) });
+      }
+      return result;
+    },
+    [buyShopRow],
+  );
+
   function closePlay() {
     if (router.canGoBack()) {
       router.back();
@@ -528,6 +556,12 @@ export default function PlayScreen() {
               onDevForceSkipOffer={handleDevForceSkipOffer}
               onSaveAvatarPark={handleSaveAvatarPark}
               onBackToGrove={() => setMode('grove')}
+            />
+          ) : mode === 'shop' && view ? (
+            <ShopScreen
+              view={view}
+              onBuyToken={handleBuyShopRow}
+              onBackToDivecore={() => setMode('grove')}
             />
           ) : (
             <>
@@ -888,6 +922,11 @@ function GroveDevKit({
       onPress: () => run(devResetAvatars),
     },
     {
+      key: 'shop-reset-daily',
+      label: 'Reset shop daily caps',
+      onPress: () => run(devResetShopDaily),
+    },
+    {
       key: 'campaign-jump-main-19',
       label: 'Jump to Main wave 19',
       onPress: () => run((doc) => devSetCampaignSeat(doc, 'main', 19)),
@@ -994,6 +1033,20 @@ function claimToastBody(result: ClaimResult): string {
   if (result.diveChargeGranted) parts.push('+1 dive charge');
   parts.push(foundSummary(result.items));
   return parts.join(' · ');
+}
+
+/** Honest copy for a token-shop refusal (why the buy didn't happen). */
+function shopRefusalCopy(reason: ShopRefusal): string {
+  switch (reason) {
+    case 'coming_soon':
+      return 'Not for sale yet — coming soon.';
+    case 'insufficient':
+      return 'Not enough tokens — Claim or clear a wave to earn more.';
+    case 'daily_cap':
+      return 'Daily limit reached — come back tomorrow.';
+    case 'dive_full':
+      return 'Dive charges are already full — nothing to add.';
+  }
 }
 
 const styles = StyleSheet.create({

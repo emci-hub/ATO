@@ -58,6 +58,7 @@ import {
   unlockAvatar,
   devAddAvatarLevels,
   devResetAvatars,
+  purchaseShopRow,
   type AvatarParkMapId,
   type AvatarId,
   type CampaignPhase,
@@ -71,9 +72,11 @@ import {
   type PlayStoreDoc,
   type PlayView,
   type SellOutcome,
+  type ShopPurchaseResult,
   type SkipRewardResult,
 } from '@/play/playStore';
 import type { TypeTag } from '@/play/engine/type-match';
+import type { ShopTokenRow } from '@/play/shop';
 
 /** Rough tick for countdowns; refills/research are minutes-long, 30s is plenty. */
 const TICK_MS = 30_000;
@@ -562,6 +565,21 @@ export function usePlayStore() {
     return ok;
   }, [commit]);
 
+  /** Token shop — buy one row (spend soft tokens, apply its effect). Returns
+   * the honest result (success or refusal) so the screen can toast it. */
+  const buyShopRow = useCallback(
+    async (row: ShopTokenRow): Promise<ShopPurchaseResult | null> => {
+      let result: ShopPurchaseResult | null = null;
+      commit((current, now) => {
+        const next = purchaseShopRow(current, row, now);
+        result = next.result;
+        return next.result.ok ? next.doc : null;
+      });
+      return result;
+    },
+    [commit],
+  );
+
   return {
     view,
     claim,
@@ -585,6 +603,7 @@ export function usePlayStore() {
     unlockAvatarStub,
     addAvatarLevels,
     resetAvatars,
+    buyShopRow,
     resetCampaign,
     setCampaignSeat,
     forceConquered,

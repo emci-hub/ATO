@@ -1,0 +1,32 @@
+{
+  "id": "shop_paid",
+  "rows": [
+    {
+      "id": "paid_unique_forge_edge",
+      "kind": "paid_unique",
+      "name": "Forge Edge",
+      "blurb": "A stronger weapon band — still soft-capped by the same gear caps. Not for sale yet.",
+      "price_label": "$2.99",
+      "available": false,
+      "badge": "Paid Unique"
+    },
+    {
+      "id": "paid_unique_emberheart",
+      "kind": "paid_unique",
+      "name": "Emberheart Ward",
+      "blurb": "A stronger armor band — still soft-capped by the same gear caps. Not for sale yet.",
+      "price_label": "$2.99",
+      "available": false,
+      "badge": "Paid Unique"
+    },
+    {
+      "id": "paid_hero_ally",
+      "kind": "hero",
+      "name": "Hero ally",
+      "blurb": "A second fighter for the board — planned later. Never required to Claim or Defend.",
+      "price_label": "$4.99",
+      "available": false,
+      "badge": "Hero"
+    }
+  ]
+}

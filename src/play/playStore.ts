@@ -65,6 +65,7 @@ import { isUniqueDrop, rollDropById } from '@/play/engine/drop-table';
 import { gearScore, recommendedGs } from '@/play/engine/gear-score';
 import { starMergeSuccess, starMultScale } from '@/play/engine/star-table';
 import { isTypeTag, type TypeTag } from '@/play/engine/type-match';
+import type { ShopTokenRow } from '@/play/shop';
 import { getTune } from '@/play/tune';
 import {
   getItemDef,
@@ -547,7 +548,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 16;
+  version: 17;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -598,6 +599,17 @@ export type PlayStoreDoc = {
   /** Which Avatar the board + Dress currently use (falls back to the first
    * record when the id is unknown/corrupt). */
   active_avatar_id: AvatarId;
+  /** Soft-shop daily purchases (v17) — device-local day + per-row counts, so
+   * a day-capped token row (e.g. the merge-fuel crate) can't be farmed. */
+  shop_daily: ShopDaily;
+};
+
+/** Per-device-local-day shop purchase counts (v17). `ymd` mismatch = fresh. */
+export type ShopDaily = {
+  /** Device-local YYYY-MM-DD the counts belong to; null = never bought. */
+  ymd: string | null;
+  /** Token-shop row id → buys made that day. */
+  counts: Record<string, number>;
 };
 
 export type DiveChargeView = {
@@ -674,6 +686,9 @@ export type PlayView = {
   /** The ACTIVE Avatar's saved park per map (board fractions) — Defend
    * restores it. Empty map = the map's middle default until first drag. */
   avatarPark: AvatarPark;
+  /** Token-shop buys made TODAY (device-local), row id → count. A stale stored
+   * day reads as empty, so the shop's daily caps reset at local midnight. */
+  shopCounts: Readonly<Record<string, number>>;
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -714,7 +729,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 16,
+    version: 17,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -739,6 +754,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     cycle_tint: DEFAULT_CYCLE_TINT,
     avatars: [defaultAvatarRecord(STARTER_AVATAR_ID)],
     active_avatar_id: STARTER_AVATAR_ID,
+    shop_daily: { ymd: null, counts: {} },
   };
 }
 
@@ -815,6 +831,8 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     ownedCounts: ownedCountsAcross(doc),
     ownedStars: ownedBestStarsAcross(doc),
     cycleTint: doc.cycle_tint,
+    shopCounts:
+      doc.shop_daily.ymd === localYmd(new Date(now)) ? doc.shop_daily.counts : {},
     avatarPark: active.park,
     boundBosses: doc.bound_bosses.map((record) => {
       const def = getBoundBossDef(record.id);
@@ -2199,6 +2217,113 @@ export function mergeItem(
 }
 
 /* ---------------------------------------------------------------------------
+ * Shop — soft-token purchases (GAME_SPEC §9i shops, §18 F).
+ *
+ * The token shelf spends `tokens` on a real effect (one Dive charge, a
+ * merge-fuel Power crate) or refuses as a "coming soon" stub. A row's
+ * `daily_limit` is enforced against `shop_daily` for the device-local day, so
+ * a small crate can't be farmed. The shelf NEVER sells wave_power or a
+ * cycle_power skip (§9i: those would break the Conquered climb).
+ *
+ * The paid shelf is STUBS ONLY in v0 (`shop.ts` rows with `available: false`)
+ * — this store has no IAP path at all, so nothing can charge Apple yet.
+ * ------------------------------------------------------------------------- */
+
+/** Why a token-shop purchase refused (the UI disables/labels accordingly). */
+export type ShopRefusal =
+  /** The row isn't priced yet / is a stub → "Coming soon". */
+  | 'coming_soon'
+  /** Not enough soft tokens. */
+  | 'insufficient'
+  /** Hit this row's per-day cap. */
+  | 'daily_cap'
+  /** Dive charges already at the 10 cap — buying would waste it. */
+  | 'dive_full';
+
+export type ShopPurchaseResult =
+  | {
+      ok: true;
+      rowId: string;
+      tokensSpent: number;
+      /** Item granted by the buy (merge crate), else null. */
+      grantedItemId: string | null;
+      tokensNow: number;
+      /** Dive charges after the buy (unchanged for non-charge rows). */
+      diveChargeNow: number;
+      /** Buys of this row made today AFTER this one. */
+      boughtToday: number;
+    }
+  | { ok: false; reason: ShopRefusal };
+
+/**
+ * Buy one token-shop row: spend `row.price` soft tokens and apply its effect.
+ * Refuses (doc untouched) when unpriced/stub, unaffordable, day-capped, or
+ * when a Dive-charge buy would exceed the charge cap. The daily counter resets
+ * at the next device-local midnight (the stored `ymd` no longer matches).
+ */
+export function purchaseShopRow(
+  doc: PlayStoreDoc,
+  row: ShopTokenRow,
+  now: number = Date.now(),
+  rng: () => number = Math.random,
+): { doc: PlayStoreDoc; result: ShopPurchaseResult } {
+  if (row.kind === 'stub' || row.price == null || !(row.price > 0)) {
+    return { doc, result: { ok: false, reason: 'coming_soon' } };
+  }
+  const todayYmd = localYmd(new Date(now));
+  const counts = doc.shop_daily.ymd === todayYmd ? doc.shop_daily.counts : {};
+  const bought = Math.max(0, Math.floor(counts[row.id] ?? 0));
+  if (row.daily_limit != null && bought >= row.daily_limit) {
+    return { doc, result: { ok: false, reason: 'daily_cap' } };
+  }
+  if (doc.tokens < row.price) {
+    return { doc, result: { ok: false, reason: 'insufficient' } };
+  }
+
+  // Apply the effect (refusals above leave the doc untouched).
+  let next = doc;
+  let grantedItemId: string | null = null;
+  if (row.kind === 'dive_charge') {
+    const current = diveChargeAt(doc, now).current;
+    if (current >= DIVE_CHARGE_CAP) {
+      return { doc, result: { ok: false, reason: 'dive_full' } };
+    }
+    next = {
+      ...next,
+      dive_charge: Math.min(DIVE_CHARGE_CAP, current + row.amount),
+      dive_charge_at: now, // refill timer restarts from the buy
+    };
+  } else if (row.kind === 'merge_crate') {
+    grantedItemId = rollPowerFind(rng);
+    next = {
+      ...next,
+      inventory: addCopiesToBag(next.inventory, grantedItemId, 0, row.amount),
+    };
+  }
+
+  next = {
+    ...next,
+    tokens: doc.tokens - row.price,
+    shop_daily: {
+      ymd: todayYmd,
+      counts: { ...counts, [row.id]: bought + 1 },
+    },
+  };
+  return {
+    doc: next,
+    result: {
+      ok: true,
+      rowId: row.id,
+      tokensSpent: row.price,
+      grantedItemId,
+      tokensNow: next.tokens,
+      diveChargeNow: next.dive_charge,
+      boughtToday: bought + 1,
+    },
+  };
+}
+
+/* ---------------------------------------------------------------------------
  * Standing Dev kit mutators (test panel).
  *
  * Pure transitions backing the Grove "Dev kit · testing only" rows in
@@ -2222,6 +2347,11 @@ export function devFillResearchFull(doc: PlayStoreDoc, now: number): PlayStoreDo
 /** +10 tokens (matches the kit row label). */
 export function devAddTokens(doc: PlayStoreDoc): PlayStoreDoc {
   return { ...doc, tokens: doc.tokens + 10 };
+}
+
+/** Dev kit: clear today's shop purchase counts (re-test daily caps). */
+export function devResetShopDaily(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  return { ...doc, shop_daily: { ymd: localYmd(new Date(now)), counts: {} } };
 }
 
 /**
@@ -2361,7 +2491,8 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 1 && version !== 2 && version !== 3 && version !== 4 &&
       version !== 5 && version !== 6 && version !== 7 && version !== 8 &&
       version !== 9 && version !== 10 && version !== 11 && version !== 12 &&
-      version !== 13 && version !== 14 && version !== 15 && version !== 16
+      version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
+      version !== 17
     ) {
       return null;
     }
@@ -2419,8 +2550,11 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     const { avatars, activeAvatarId } = version >= 16
       ? parseAvatars(data.avatars, starterRecordFromLegacy(legacy), data.active_avatar_id)
       : { avatars: [starterRecordFromLegacy(legacy)], activeAvatarId: STARTER_AVATAR_ID };
+    // v17 (Shop stubs): per-day token-shop purchase counts. Older saves default
+    // to none bought today.
+    const shopDaily = parseShopDaily(data.shop_daily);
     return {
-      version: 16,
+      version: 17,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -2445,6 +2579,7 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       cycle_tint: cycleTint,
       avatars,
       active_avatar_id: activeAvatarId,
+      shop_daily: shopDaily,
     };
   } catch {
     return null;
@@ -2533,6 +2668,21 @@ function parseAvatarPark(raw: unknown): AvatarPark {
     park[key] = { x, y };
   }
   return park;
+}
+
+/** Loose read of the v17 shop daily counts. A malformed day/row is dropped;
+ * anything unknown → no purchases today (caps fresh). */
+function parseShopDaily(raw: unknown): ShopDaily {
+  if (!isRecord(raw)) return { ymd: null, counts: {} };
+  const ymd = typeof raw.ymd === 'string' && raw.ymd.length > 0 ? raw.ymd : null;
+  const counts: Record<string, number> = {};
+  if (isRecord(raw.counts)) {
+    for (const [key, value] of Object.entries(raw.counts)) {
+      const n = finiteNumber(value);
+      if (key.length > 0 && n != null && n > 0) counts[key] = Math.floor(n);
+    }
+  }
+  return { ymd, counts };
 }
 
 /**

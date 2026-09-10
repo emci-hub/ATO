@@ -13,7 +13,7 @@ import type { ComponentProps } from 'react';
 export const GROVE_LEDE =
   'A quiet little corner of ATO — tend, dress, and defend your Basecore, whenever you like.';
 
-export type GroveActionKind = 'dive' | 'dress' | 'defend';
+export type GroveActionKind = 'dive' | 'dress' | 'defend' | 'shop';
 
 export type GroveActionTile = {
   kind: GroveActionKind;
@@ -45,6 +45,13 @@ export const GROVE_ACTION_TILES: GroveActionTile[] = [
     icon: 'shield-outline',
     title: 'Defend',
     lede: 'Protect the Basecore path.',
+    soon: null,
+  },
+  {
+    kind: 'shop',
+    icon: 'storefront-outline',
+    title: 'Shop',
+    lede: 'Spend tokens — and what’s coming.',
     soon: null,
   },
 ];
