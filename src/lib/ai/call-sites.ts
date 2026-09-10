@@ -97,6 +97,17 @@ export const ONGOING_ROUND_META: AiCallMetadata = {
   latencySensitive: false,
 };
 
+/** Category statements (core loop redesign §3) — one call producing a
+ * statement per ready category, grounded in this user's settled reading for
+ * each (same shape as Roll's category-read, batched into one call). Not
+ * latency-sensitive: triggered manually, no synchronous chat-reply pressure. */
+export const CATEGORY_STATEMENTS_META: AiCallMetadata = {
+  personalized: true,
+  cohortShareable: false,
+  bucketShareable: false,
+  latencySensitive: false,
+};
+
 /** Legends 64-archetype story (core loop redesign §4) — a flavor-text
  * generation for one classify.ts archetype code, but the plan calls for a
  * FRESH story per generation (manual trigger or paid reroll), not a
@@ -169,5 +180,10 @@ export const AI_CALL_SITES: readonly AiCallSite[] = [
     feature: 'Legend story generation',
     location: 'src/lib/legends64/generate-story.ts → generateLegendStory()',
     meta: LEGEND_STORY_META,
+  },
+  {
+    feature: 'Category statements',
+    location: 'src/lib/category-statements/generate-statements.ts → generateCategoryStatements()',
+    meta: CATEGORY_STATEMENTS_META,
   },
 ];

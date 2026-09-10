@@ -35,7 +35,7 @@ export async function spendAtoTokensLegendReroll(): Promise<AtoTokenResult> {
   return parseAtoTokenResult(data);
 }
 
-/** -1, capped 1/day per category. Called by src/lib/questions/reroll.ts's rerollCategoryItem. */
+/** -1, capped 1/day per category. Currency-only — no caller right now; the old category_question_items reroll that used this was removed with the rest of the old Categorize Q&A system (core loop redesign §3). A reroll for the new category_statements system would reuse this RPC (not yet built). */
 export async function spendAtoTokensCategoryReroll(categoryId: string): Promise<AtoTokenResult> {
   const { data, error } = await supabase.rpc('spend_ato_tokens_category_reroll', {
     p_category_id: categoryId,

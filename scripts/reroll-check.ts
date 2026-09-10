@@ -2,9 +2,11 @@
  * reroll: the ATO tokens reroll orchestration — reroll.ts pairs each
  * spendAtoTokens*Reroll call with its effect (legend: generate + save a
  * fresh legend_generations row for the live archetype code, core loop
- * redesign §4; question/category: swap content via the
- * reroll_question_item/reroll_category_batch_item RPCs, T-04 core loop
- * redesign §5). Run: npm run check:reroll
+ * redesign §4; question: swap content via the reroll_question_item RPC,
+ * T-04 core loop redesign §5). Category reroll was removed with the rest of
+ * the old Categorize Q&A system (core loop redesign §3, wave60/61) — a
+ * reroll for the new category_statements system is separate, not-yet-built
+ * scope. Run: npm run check:reroll
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -20,13 +22,17 @@ const rerollSrc = readFileSync(resolve(__dirname, '../src/lib/questions/reroll.t
 
 assert.match(rerollSrc, /export async function rerollLegend\(/);
 assert.match(rerollSrc, /export async function rerollQuestionItem\(/);
-assert.match(rerollSrc, /export async function rerollCategoryItem\(/);
-ok('reroll.ts exports rerollLegend / rerollQuestionItem / rerollCategoryItem');
+assert.doesNotMatch(rerollSrc, /export async function rerollCategoryItem\(/, 'rerollCategoryItem must not exist — it was removed with the old category_question_items system');
+ok('reroll.ts exports rerollLegend / rerollQuestionItem, and rerollCategoryItem is gone');
 
 assert.match(rerollSrc, /trySpend\(spendAtoTokensLegendReroll\)/);
 assert.match(rerollSrc, /trySpend\(\(\) => spendAtoTokensQuestionReroll\(item\.id\)\)/);
-assert.match(rerollSrc, /trySpend\(\(\) => spendAtoTokensCategoryReroll\(categoryId\)\)/);
-ok('each reroll function calls the matching spendAtoTokens*Reroll for its own surface, not another surface\'s');
+assert.doesNotMatch(
+  rerollSrc,
+  /import\s*\{[^}]*spendAtoTokensCategoryReroll/,
+  'spendAtoTokensCategoryReroll must not be imported — it has no caller in reroll.ts until a new category-statements reroll is built',
+);
+ok('each remaining reroll function calls the matching spendAtoTokens*Reroll for its own surface, not another surface\'s; the category surface\'s spend is unimported, not just unused');
 
 // spend RPCs raise (not return {ok:false}) on insufficient balance — trySpend
 // must catch that specific errcode so the UI's "not enough tokens" copy is
@@ -39,10 +45,10 @@ ok('trySpend catches the insufficient-balance exception (errcode P0040) rather t
 // takes the live archetype code and does its own generate-then-spend-then-
 // save, rather than taking a precomputed old/new variant pair (the old
 // figure-catalog system's shape). Order matters here even more than for
-// question/category reroll — it must generate BEFORE spending, and only
-// persist the new story AFTER the spend actually succeeds, otherwise a
-// quota-exhausted or failed generation could still cost the token, or a
-// failed spend could still leave a story saved for free.
+// question reroll — it must generate BEFORE spending, and only persist the
+// new story AFTER the spend actually succeeds, otherwise a quota-exhausted
+// or failed generation could still cost the token, or a failed spend could
+// still leave a story saved for free.
 assert.match(
   rerollSrc,
   /export async function rerollLegend\(archetypeCode: string\): Promise<LegendRerollResult>/,
@@ -81,39 +87,18 @@ assert.match(questionFnBody, /fetchPackBankItemIds\(item\.packId\)/);
 assert.match(questionFnBody, /!packBankIds\.has\(candidate\.id\)/);
 ok('rerollQuestionItem\'s precheck excludes bank items already used elsewhere in the same pack, mirroring the effect RPC');
 
-const categoryFnStart = rerollSrc.indexOf('export async function rerollCategoryItem');
-const categoryFnBody = rerollSrc.slice(categoryFnStart, rerollSrc.indexOf('\n}', categoryFnStart));
-assert.ok(
-  categoryFnBody.indexOf('generateQuestionBatch') < categoryFnBody.indexOf('spendAtoTokensCategoryReroll'),
-  'rerollCategoryItem must generate the replacement before spending',
-);
-ok('rerollCategoryItem generates the replacement question before spending');
-
 assert.match(rerollSrc, /supabase\.rpc\('reroll_question_item', \{ p_item_id: item\.id \}\)/);
-assert.match(
-  rerollSrc,
-  /supabase\.rpc\('reroll_category_batch_item', \{\s*\n\s*p_item_id: item\.id,\s*\n\s*p_prompt: draft\.prompt,\s*\n\s*p_options: draft\.options,\s*\n\s*\}\)/,
-);
-ok('the two effect RPCs are called with the correct argument shapes');
+ok('the question effect RPC is called with the correct argument shape');
 
-for (const name of ['wave53_reroll_rpcs', 'wave54_reroll_rpcs_fixes']) {
-  const src = readFileSync(resolve(__dirname, `../supabase/migrations/${name}.sql`), 'utf8');
+{
+  const src = readFileSync(resolve(__dirname, '../supabase/migrations/wave53_reroll_rpcs.sql'), 'utf8');
   assert.match(src, /create or replace function public\.reroll_question_item\(p_item_id uuid\)/);
-  assert.match(
-    src,
-    /create or replace function public\.reroll_category_batch_item\(\s*\n\s*p_item_id uuid,\s*\n\s*p_prompt text,\s*\n\s*p_options jsonb\s*\n\)/,
-  );
   assert.match(src, /security definer/);
-  assert.match(src, /if v_answered is not null then\s*\n\s*raise exception 'already answered'/);
 }
-ok('both migrations define reroll_question_item/reroll_category_batch_item as security definer and reject already-answered rows');
+ok('wave53 defines reroll_question_item as security definer');
 
 const wave53Src = readFileSync(resolve(__dirname, '../supabase/migrations/wave53_reroll_rpcs.sql'), 'utf8');
 assert.match(wave53Src, /revoke all on function public\.reroll_question_item\(uuid\) from public, anon;/);
-assert.match(
-  wave53Src,
-  /revoke all on function public\.reroll_category_batch_item\(uuid, text, jsonb\) from public, anon;/,
-);
 assert.match(wave53Src, /insert into public\.question_bank_reroll_exclusions/);
 ok('wave53 grants execute to authenticated only and permanently excludes the old bank item via question_bank_reroll_exclusions');
 
@@ -122,11 +107,7 @@ const wave54Src = readFileSync(
   'utf8',
 );
 assert.match(wave54Src, /from public\.question_items\s*\n\s*where id = p_item_id and user_id = uid\s*\n\s*for update;/);
-assert.match(
-  wave54Src,
-  /from public\.category_question_items\s*\n\s*where id = p_item_id and user_id = uid\s*\n\s*for update;/,
-);
-ok('wave54 adds `for update` row locking to both RPCs\' ownership/answered check, closing the concurrent-reroll race found in review');
+ok('wave54 adds `for update` row locking to reroll_question_item\'s ownership/answered check, closing the concurrent-reroll race found in review');
 
 // LegendCard must NOT call rerollLegend itself — legends.tsx owns the live
 // archetype-code computation (currentCode()) and passes the result down as
@@ -149,23 +130,18 @@ ok('legends.tsx rerolls using the current archetype code, delegating all spend/g
 
 const questionsFoldSrc = readFileSync(resolve(__dirname, '../src/components/questions-fold.tsx'), 'utf8');
 assert.match(questionsFoldSrc, /rerollQuestionItem\(/);
-assert.match(questionsFoldSrc, /rerollCategoryItem\(/);
+assert.doesNotMatch(questionsFoldSrc, /rerollCategoryItem\(/, 'questions-fold.tsx must not call rerollCategoryItem — CategoryBatchFold was deleted');
 assert.match(questionsFoldSrc, /ATO_TOKEN_PRICE\.question_reroll/);
-assert.match(questionsFoldSrc, /ATO_TOKEN_PRICE\.category_reroll/);
-ok('questions-fold.tsx wires reroll actions for both surfaces and gates on ATO_TOKEN_PRICE, not a hardcoded number');
+ok('questions-fold.tsx wires reroll for the surviving question surface and gates on ATO_TOKEN_PRICE, not a hardcoded number; the old category surface is gone');
 
 // A successful reroll must refresh `me` so the ATO balance the button gates
-// on next isn't stale (found in review) — both OngoingRoundFold and
-// CategoryBatchFold's reroll() call onUpdated() right after the local
-// pack/batch state patch, same as every answer path in this file already
-// does.
+// on next isn't stale (found in review) — OngoingRoundFold's reroll() calls
+// onUpdated() right after the local pack state patch, same as every answer
+// path in this file already does.
 const ongoingRerollStart = questionsFoldSrc.indexOf('async function reroll(item: QuestionItemRow)');
 const ongoingRerollBody = questionsFoldSrc.slice(ongoingRerollStart, questionsFoldSrc.indexOf('\n  }', ongoingRerollStart));
 assert.match(ongoingRerollBody, /await onUpdated\(\);/);
-const categoryRerollStart = questionsFoldSrc.indexOf("async function reroll(item: CategoryBatchState['items'][number])");
-const categoryRerollBody = questionsFoldSrc.slice(categoryRerollStart, questionsFoldSrc.indexOf('\n  }', categoryRerollStart));
-assert.match(categoryRerollBody, /await onUpdated\(\);/);
-ok('both question and category reroll refresh `me` (onUpdated) after a successful swap');
+ok('question reroll refreshes `me` (onUpdated) after a successful swap');
 
 const legendsScreenSrc2 = readFileSync(resolve(__dirname, '../src/app/(tabs)/legends.tsx'), 'utf8');
 assert.match(legendsScreenSrc2, /void refresh\(\)\.catch/);

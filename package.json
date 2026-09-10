@@ -113,7 +113,6 @@
     "check:explore": "tsx ./scripts/explore-check.ts",
     "check:nav": "tsx ./scripts/nav-check.ts",
     "check:questions": "tsx ./scripts/questions-check.ts",
-    "check:category-batch": "tsx ./scripts/category-batch-check.ts",
     "check:frozen-intake": "tsx ./scripts/frozen-intake-check.ts",
     "check:legends64": "tsx ./scripts/legends64-check.ts",
     "check:progressive-unlock": "tsx ./scripts/progressive-unlock-check.ts",

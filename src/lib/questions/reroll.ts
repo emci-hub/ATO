@@ -1,10 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import type { CategoryId } from '@/lib/categories';
-import type { TraitTrack } from '@/lib/trait-stability';
 import type { TraitAxis } from '@/lib/traits';
-import type { TalkStyle } from '@/lib/voice/types';
 import {
-  spendAtoTokensCategoryReroll,
   spendAtoTokensLegendReroll,
   spendAtoTokensQuestionReroll,
 } from '@/lib/ato-tokens-server';
@@ -13,27 +9,26 @@ import { splitArchetypeCode } from '@/lib/legends64/archetypes';
 import { generateLegendStory } from '@/lib/legends64/generate-story';
 import { saveGeneration } from '@/lib/legends64/store';
 
-import type { CategoryBatchItemState } from './category-batch';
-import { fetchAskedQuestionTexts } from './category-batch-store';
 import { fetchBankCandidates } from './bank-pool';
-import { generateQuestionBatch } from './generate';
-import { buildQuestionsPrompt } from './prompt';
 import type { QuestionItemRow, QuestionOption } from './types';
 
 /**
- * ATO tokens reroll (wave51/wave53, T-04 core loop redesign §5). Three
- * surfaces, three effects — spendAtoTokensLegendReroll/CategoryReroll/
- * QuestionReroll (ato-tokens-server.ts) already move the currency; this
- * module is the caller that pairs each spend with what it actually rerolls.
+ * ATO tokens reroll — spendAtoTokensLegendReroll/QuestionReroll
+ * (ato-tokens-server.ts) already move the currency; this module is the
+ * caller that pairs each spend with what it actually rerolls. Category
+ * reroll (spendAtoTokensCategoryReroll) has no caller here right now — the
+ * old category_question_items reroll was removed with the rest of the old
+ * Categorize Q&A system (core loop redesign §3); a reroll for the new
+ * category_statements system is separate, not-yet-built scope (§5/§6/T-10).
  *
- * Order matters for the two "generate a replacement" surfaces (question,
- * category): whatever can fail (finding a bank candidate, an AI call) runs
- * BEFORE the spend, same as SageInsightSpend's "never charge for a reroll
- * that can't happen." The one gap this can't close: a failure in the final
- * persist step (network drop between the spend landing and the effect RPC)
- * still leaves the day's reroll spent with nothing to show for it — accepted
- * given the price (1 ATO token for question/category) and how rarely a
- * same-session DB write fails right after a same-session read succeeded.
+ * Order matters for every "generate a replacement" surface: whatever can
+ * fail (finding a bank candidate, an AI call) runs BEFORE the spend, same
+ * as SageInsightSpend's "never charge for a reroll that can't happen." The
+ * one gap this can't close: a failure in the final persist step (network
+ * drop between the spend landing and the effect RPC) still leaves the day's
+ * reroll spent with nothing to show for it — accepted given the price (1
+ * ATO token for question, 10 for legend) and how rarely a same-session DB
+ * write fails right after a same-session read succeeded.
  */
 
 export interface RerollItemUpdate {
@@ -162,51 +157,3 @@ export async function rerollQuestionItem(
   return { result, item: parseRerollItemResult(data) };
 }
 
-export interface CategoryRerollMe {
-  name: string;
-  talk_style: TalkStyle;
-  voice_preset: string;
-}
-
-/**
- * Category reroll — category_question_items has no bank-pool concept
- * (category-batch.ts always generates via AI), so the replacement is
- * generated first, same order as rerollQuestionItem: nothing is spent until
- * there is a real replacement in hand.
- */
-export async function rerollCategoryItem(
-  item: Pick<CategoryBatchItemState, 'id' | 'axis' | 'prompt'>,
-  categoryId: CategoryId,
-  me: CategoryRerollMe,
-  tracks: readonly TraitTrack[],
-): Promise<{ result: AtoTokenResult; item: RerollItemUpdate | null }> {
-  const excludeText = await fetchAskedQuestionTexts();
-  const prompt = buildQuestionsPrompt({
-    me,
-    grounding: { kind: 'none', detail: null },
-    priorityAxes: [item.axis],
-    tracks,
-    count: 1,
-    axisCounts: { [item.axis]: 1 },
-    excludeText: [...excludeText, item.prompt],
-  });
-  const drafts = await generateQuestionBatch(prompt, 1);
-  const draft = (drafts ?? []).find((d) => d.axis === item.axis) ?? null;
-  if (!draft) {
-    return { result: { ok: false, balance: 0, reason: 'no_draft' }, item: null };
-  }
-
-  const result = await trySpend(() => spendAtoTokensCategoryReroll(categoryId));
-  if (!result.ok) return { result, item: null };
-
-  const { data, error } = await supabase.rpc('reroll_category_batch_item', {
-    p_item_id: item.id,
-    p_prompt: draft.prompt,
-    p_options: draft.options,
-  });
-  if (error) {
-    console.log('[reroll] category reroll effect error:', error);
-    return { result, item: null };
-  }
-  return { result, item: parseRerollItemResult(data) };
-}

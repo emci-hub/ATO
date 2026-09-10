@@ -2,14 +2,12 @@ import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { CategoryBatchFold } from '@/components/questions-fold';
+import { CategoryStatementArchiveFold } from '@/components/category-statement-archive-fold';
 import { CategoryVisual } from '@/components/category-visual';
 import { ConceptHint } from '@/components/concept-hint';
 import { SettingsFold } from '@/components/settings-fold';
-import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { fallbackCategoryCopies, fallbackForReading, CATEGORY_BAND_COPY_REVIEWED } from '@/lib/category-bands';
 import { useCategoryDefs } from '@/lib/category-catalog';
 import {
@@ -21,17 +19,10 @@ import {
   readAllCategories,
   type CategoryId,
 } from '@/lib/categories';
-import {
-  allCategoryBatchesLocked,
-  categoryBatchProgressFrom,
-  CATEGORY_BATCH_COPY_REVIEWED,
-  CATEGORY_BATCH_SIZE,
-  type CategoryBatchProgress,
-} from '@/lib/questions/category-batch';
-import { fetchAllCategoryBatches, finalizeCategoryBatches } from '@/lib/questions/category-batch-store';
+import { CATEGORY_STATEMENTS_COPY_REVIEWED, generateCategoryStatements } from '@/lib/category-statements/generate-statements';
+import { fetchCurrentStatements, saveCategoryStatements, type CategoryStatement } from '@/lib/category-statements/store';
 import { categoryConcept, CONCEPT_COPY_REVIEWED } from '@/lib/concept-explainers';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
-import { controlBorderColor } from '@/lib/theme/chrome';
 import { saveCategorySpotlight, type Me } from '@/lib/me';
 import { sageKnowsWeekKey } from '@/lib/sage-knows';
 import { parseSageTitle } from '@/lib/sage-title';
@@ -46,30 +37,29 @@ export function CategoriesFold({
   me: Me;
   onUpdated?: () => void | Promise<void>;
 }) {
-  const theme = useTheme();
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [openId, setOpenId] = useState<CategoryId | null>(null);
-  const [batchOpenId, setBatchOpenId] = useState<CategoryId | null>(null);
-  const [batchProgress, setBatchProgress] = useState<CategoryBatchProgress[]>([]);
-  const [submitBusy, setSubmitBusy] = useState(false);
-  const [promptDismissed, setPromptDismissed] = useState(false);
+  const [statements, setStatements] = useState<Map<CategoryId, CategoryStatement>>(new Map());
+  const [statementsLoaded, setStatementsLoaded] = useState(false);
+  const [generateBusy, setGenerateBusy] = useState(false);
+  const [generateNote, setGenerateNote] = useState<string | null>(null);
+  const [historyVersion, setHistoryVersion] = useState(0);
   useCategoryDefs();
 
-  const loadBatchProgress = useCallback(async () => {
+  const loadStatements = useCallback(async () => {
     try {
-      const batches = await fetchAllCategoryBatches();
-      const byId = new Map(batches.map((b) => [b.categoryId as CategoryId, b]));
-      setBatchProgress(
-        getCategoryDefs().map((def) => categoryBatchProgressFrom(def.id, byId.get(def.id) ?? null)),
-      );
+      const rows = await fetchCurrentStatements(me.id);
+      setStatements(new Map(rows.map((row) => [row.categoryId as CategoryId, row])));
     } catch (err) {
-      console.log('[categories] batch progress load error:', err);
+      console.log('[categories] statements load error:', err);
+    } finally {
+      setStatementsLoaded(true);
     }
-  }, []);
+  }, [me.id]);
 
   useEffect(() => {
-    void loadBatchProgress();
-  }, [loadBatchProgress]);
+    void loadStatements();
+  }, [loadStatements]);
   const readings = readAllCategories(tracks);
   const ready = readings.filter((row) => row.ready);
   const cached = parseSageTitle(me.sage_title);
@@ -106,6 +96,28 @@ export function CategoriesFold({
       ? spotlight.categoryId
       : null;
 
+  async function handleGenerateStatements() {
+    if (generateBusy || ready.length === 0) return;
+    setGenerateBusy(true);
+    setGenerateNote(null);
+    try {
+      const validIds = new Set(getCategoryDefs().map((def) => def.id));
+      const drafts = await generateCategoryStatements(ready, validIds);
+      if (!drafts) {
+        setGenerateNote("Couldn't put that together right now. Try again.");
+        return;
+      }
+      await saveCategoryStatements(drafts);
+      await loadStatements();
+      setHistoryVersion((v) => v + 1);
+    } catch (err) {
+      console.log('[categories] generate statements error:', err);
+      setGenerateNote("Couldn't put that together right now. Try again.");
+    } finally {
+      setGenerateBusy(false);
+    }
+  }
+
   return (
     <SettingsFold title={`Categories · ${ready.length} of ${readings.length} ready`}>
       <View style={styles.body}>
@@ -115,7 +127,7 @@ export function CategoriesFold({
         {(!CATEGORY_COPY_REVIEWED ||
           !CATEGORY_BAND_COPY_REVIEWED ||
           !CONCEPT_COPY_REVIEWED ||
-          !CATEGORY_BATCH_COPY_REVIEWED) &&
+          !CATEGORY_STATEMENTS_COPY_REVIEWED) &&
         PRE_LAUNCH_DEV ? (
           <ThemedText type="code" themeColor="textSecondary">
             Draft copy — waiting on emci review.
@@ -179,69 +191,45 @@ export function CategoriesFold({
           );
         })}
 
-        <View style={styles.batchList}>
-          {getCategoryDefs().map((def) => {
-            const progress = batchProgress.find((row) => row.categoryId === def.id) ?? null;
-            const locked = progress?.locked === true;
-            const batchOpen = batchOpenId === def.id;
-            return (
-              <View key={`batch-${def.id}`} style={styles.row}>
-                <Pressable
-                  onPress={() => setBatchOpenId(batchOpen ? null : def.id)}
-                  accessibilityRole="button"
-                  accessibilityState={{ expanded: batchOpen }}
-                  style={({ pressed }) => [pressed && styles.pressed]}>
-                  <ThemedText type="smallBold">
-                    {def.name} · {progress ? progress.answeredCount : 0} of {CATEGORY_BATCH_SIZE}
-                    {locked ? ' · locked' : ''}
-                  </ThemedText>
-                </Pressable>
-                {batchOpen ? (
-                  <CategoryBatchFold
-                    me={me}
-                    tracks={tracks}
-                    category={def.id}
-                    onUpdated={async () => {
-                      await loadBatchProgress();
-                      await onUpdated?.();
-                    }}
+        {ready.length > 0 ? (
+          <View style={styles.statementList}>
+            <ThemedText type="smallBold">Statements</ThemedText>
+            {ready.map((reading) => {
+              const statement = statements.get(reading.def.id);
+              return (
+                <View key={`statement-${reading.def.id}`} style={styles.row}>
+                  <ThemedText type="smallBold">{reading.def.name}</ThemedText>
+                  {statement ? (
+                    <ThemedText type="small">{statement.statement}</ThemedText>
+                  ) : statementsLoaded ? (
+                    <ThemedText type="small" themeColor="textSecondary">
+                      Not generated yet.
+                    </ThemedText>
+                  ) : null}
+                  <CategoryStatementArchiveFold
+                    userId={me.id}
+                    categoryId={reading.def.id}
+                    refreshSignal={historyVersion}
+                    title="Past statements"
+                    emptyCopy="No past statements yet."
                   />
-                ) : null}
-              </View>
-            );
-          })}
-        </View>
-
-        {allCategoryBatchesLocked(batchProgress) &&
-        !promptDismissed &&
-        !batchProgress.every((row) => row.finalizedAt != null) ? (
-          <View style={[styles.submitPrompt, { borderColor: controlBorderColor(theme) }]}>
-            <ThemedText type="smallBold">Every category is locked in.</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              Submit to finish, or cancel and come back later.
-            </ThemedText>
-            <View style={styles.submitActions}>
-              <ThemedPressable
-                disabled={submitBusy}
-                onPress={() => {
-                  setSubmitBusy(true);
-                  void finalizeCategoryBatches()
-                    .then(() => loadBatchProgress())
-                    .catch((err) => console.log('[categories] finalize error:', err))
-                    .finally(() => setSubmitBusy(false));
-                }}
-                style={[styles.option, { borderColor: controlBorderColor(theme) }]}>
-                <ThemedText type="smallBold">Submit</ThemedText>
-              </ThemedPressable>
-              <Pressable
-                onPress={() => setPromptDismissed(true)}
-                disabled={submitBusy}
-                style={({ pressed }) => [pressed && styles.pressed]}>
-                <ThemedText type="smallBold" themeColor="textSecondary">
-                  Cancel
-                </ThemedText>
-              </Pressable>
-            </View>
+                </View>
+              );
+            })}
+            <Pressable
+              accessibilityRole="button"
+              disabled={generateBusy}
+              onPress={() => void handleGenerateStatements()}
+              style={({ pressed }) => [styles.cta, (pressed || generateBusy) && styles.pressed]}>
+              <ThemedText type="link">
+                {generateBusy ? 'Generating…' : statements.size > 0 ? 'Regenerate statements' : 'Generate statements'}
+              </ThemedText>
+            </Pressable>
+            {generateNote ? (
+              <ThemedText type="small" themeColor="textSecondary">
+                {generateNote}
+              </ThemedText>
+            ) : null}
           </View>
         ) : null}
       </View>
@@ -259,29 +247,16 @@ const styles = StyleSheet.create({
     gap: Spacing.half,
     paddingVertical: Spacing.one,
   },
-  batchList: {
+  statementList: {
     gap: Spacing.two,
   },
   expand: {
     gap: Spacing.one,
     paddingTop: Spacing.one,
   },
-  submitPrompt: {
-    gap: Spacing.one,
-    borderWidth: 1,
-    borderRadius: Spacing.three,
-    padding: Spacing.three,
-  },
-  submitActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-  },
-  option: {
-    borderWidth: 1,
-    borderRadius: Spacing.three,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
+  cta: {
+    alignSelf: 'flex-start',
+    paddingVertical: Spacing.one,
   },
   pressed: {
     opacity: 0.8,

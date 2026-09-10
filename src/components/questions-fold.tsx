@@ -9,12 +9,11 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getCategoryDefs, type CategoryId } from '@/lib/categories';
 import { useCategoryDefs } from '@/lib/category-catalog';
-import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { updateTraits, type Me } from '@/lib/me';
 import { earnTokensQuiet } from '@/lib/tokens-server';
 import { claimOngoingRoundCompleteQuiet } from '@/lib/ato-tokens-server';
 import { ATO_TOKEN_PRICE, atoPriceLine, atoTokenBalanceOf, ATO_TOKEN_NEED_MORE } from '@/lib/ato-tokens';
-import { rerollCategoryItem, rerollQuestionItem } from '@/lib/questions/reroll';
+import { rerollQuestionItem } from '@/lib/questions/reroll';
 import { deferredUnansweredAxes, mergeCategoryPriority } from '@/lib/questions/deferral';
 import { contradictedAxesFrom, type TraitHistoryRow } from '@/lib/trait-history';
 import { fetchTraitHistory } from '@/lib/trait-history-store';
@@ -35,19 +34,6 @@ import {
   QUESTIONS_SKIP_THIS,
 } from '@/lib/questions/copy';
 import { applyQuestionAnswer } from '@/lib/questions/answer';
-import {
-  categoryBatchProgressFrom,
-  composeCategoryBatch,
-  CATEGORY_BATCH_COPY_REVIEWED,
-  CATEGORY_BATCH_SIZE,
-  type CategoryBatchState,
-} from '@/lib/questions/category-batch';
-import {
-  answerCategoryQuestionItem,
-  fetchAskedQuestionTexts,
-  fetchCategoryBatch,
-  saveCategoryBatchItems,
-} from '@/lib/questions/category-batch-store';
 import { generateQuestionBatch } from '@/lib/questions/generate';
 import { bankProgressForAxis, bankTotalProgress } from '@/lib/questions/local';
 import { runOngoingRound } from '@/lib/questions/run-ongoing-round';
@@ -590,7 +576,7 @@ function OngoingRoundFold({
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-once load, same as CategoryBatchFold below
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-once load
   }, []);
 
   async function start() {
@@ -766,231 +752,11 @@ function OngoingRoundFold({
   );
 }
 
-/**
- * "5 questions per category" (separate mode from Infinite Questions above
- * — sibling component, not a branch inside `QuestionsFold`, so the existing
- * rotation/skip/checkpoint machinery there stays completely untouched).
- * Entered via `category`, same prop `QuestionsFold` already accepted as
- * unused plumbing. Generates a fixed 5-question batch for this category on
- * mount (a single generation call — 5 is the proven-reliable size, no
- * chunking/resume logic), answers write traits immediately (same
- * `applyQuestionAnswer` as `pickBankItem` above), and once all 5 are
- * answered the whole list locks read-only in place — same visual as Full
- * Profile's (`CategoryPagedQuestions`'s `locked` prop) lock, no navigation,
- * no toast. Skip is not offered in this mode at all (no shared code path
- * with `skipThis`/`skipRest` above).
- */
-export function CategoryBatchFold({
-  me,
-  tracks,
-  category,
-  onUpdated,
-}: {
-  me: Me;
-  tracks: readonly TraitTrack[];
-  category: CategoryId;
-  onUpdated: () => Promise<void>;
-}) {
-  const theme = useTheme();
-  const [batch, setBatch] = useState<CategoryBatchState | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(false);
-  const [rerollingId, setRerollingId] = useState<string | null>(null);
-  const [rerollNote, setRerollNote] = useState<string | null>(null);
-  const canRerollCategory = atoTokenBalanceOf(me) >= ATO_TOKEN_PRICE.category_reroll;
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      const existing = await fetchCategoryBatch(category);
-      if (existing && existing.items.length >= CATEGORY_BATCH_SIZE) {
-        setBatch(existing);
-        return;
-      }
-      const composed = await composeCategoryBatch(
-        category,
-        tracks,
-        { name: me.name, talk_style: me.talk_style ?? 'even', voice_preset: me.voice_preset },
-        {
-          generateBatch: generateQuestionBatch,
-          fetchAskedTexts: fetchAskedQuestionTexts,
-          saveItems: saveCategoryBatchItems,
-        },
-      );
-      setBatch(composed);
-    } catch (err) {
-      console.log('[category-batch] load error:', err);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [category, tracks, me]);
-
-  useEffect(() => {
-    void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- one generation per category mount
-  }, [category]);
-
-  async function pick(item: CategoryBatchState['items'][number], index: number) {
-    const option = item.options[index];
-    if (!option || busy || !batch) return;
-    setBusy(true);
-    try {
-      await answerCategoryQuestionItem(item.id, index);
-      const draft: QuestionDraft = { axis: item.axis, prompt: item.prompt, options: [...item.options] };
-      await applyQuestionAnswer(me.id, draft, option, tracks);
-      setBatch({
-        ...batch,
-        items: batch.items.map((row) =>
-          row.id === item.id ? { ...row, answeredOption: index } : row,
-        ),
-      });
-      earnTokensQuiet('game_round');
-      await onUpdated();
-    } catch (err) {
-      console.log('[category-batch] answer error:', err);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function reroll(item: CategoryBatchState['items'][number]) {
-    if (rerollingId || busy || !canRerollCategory || !batch) return;
-    setRerollingId(item.id);
-    setRerollNote(null);
-    try {
-      const { result, item: updated } = await rerollCategoryItem(
-        item,
-        category,
-        { name: me.name, talk_style: me.talk_style ?? 'even', voice_preset: me.voice_preset },
-        tracks,
-      );
-      if (result.reason === 'no_draft') {
-        setRerollNote("Couldn't write a fresh question right now. Nothing spent.");
-        return;
-      }
-      if (!result.ok) {
-        setRerollNote(result.already ? 'Already rerolled today.' : ATO_TOKEN_NEED_MORE);
-        return;
-      }
-      if (!updated) {
-        setRerollNote("Couldn't find a fresh question right now.");
-        return;
-      }
-      setBatch({
-        ...batch,
-        items: batch.items.map((row) =>
-          row.id === updated.id ? { ...row, prompt: updated.prompt, options: updated.options } : row,
-        ),
-      });
-      // Refresh me so the ATO balance shown next to the (now-disabled-for-today) button is current.
-      await onUpdated();
-    } catch (err) {
-      console.log('[category-batch] reroll error:', err);
-      setRerollNote("Couldn't reroll right now. Try again.");
-    } finally {
-      setRerollingId(null);
-    }
-  }
-
-  const progress = categoryBatchProgressFrom(category, batch);
-
-  return (
-    <View style={styles.body}>
-      {!CATEGORY_BATCH_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
-        <ThemedText type="code" themeColor="textSecondary">
-          Draft copy — waiting on emci review.
-        </ThemedText>
-      ) : null}
-      {loading ? (
-        <ThemedText themeColor="textSecondary">Loading…</ThemedText>
-      ) : error ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          Could not generate this category&apos;s questions. Try again.
-        </ThemedText>
-      ) : (
-        <>
-          <ThemedText type="small" themeColor="textSecondary">
-            {progress.answeredCount} of {CATEGORY_BATCH_SIZE} answered
-          </ThemedText>
-          {(batch?.items ?? []).map((item) => (
-            <View key={item.id} style={styles.axisItem}>
-              <View style={styles.axisItemHeader}>
-                <ThemedText type="small">{item.prompt}</ThemedText>
-                {item.answeredOption != null ? (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    Answered
-                  </ThemedText>
-                ) : null}
-              </View>
-              {progress.locked ? null : (
-                <>
-                  <View style={styles.options}>
-                    {item.options.map((option, index) => (
-                      <ThemedPressable
-                        key={`${item.id}-${index}`}
-                        disabled={busy || item.answeredOption != null}
-                        accessibilityState={{ selected: item.answeredOption === index }}
-                        onPress={() => void pick(item, index)}
-                        style={[
-                          styles.option,
-                          { borderColor: controlBorderColor(theme) },
-                          item.answeredOption === index && { backgroundColor: theme.backgroundSelected },
-                          (busy || item.answeredOption != null) && styles.disabled,
-                        ]}>
-                        <ThemedText type="smallBold">{option.text}</ThemedText>
-                      </ThemedPressable>
-                    ))}
-                  </View>
-                  {item.answeredOption == null ? (
-                    <Pressable
-                      onPress={() => void reroll(item)}
-                      disabled={rerollingId != null || busy || !canRerollCategory}
-                      style={({ pressed }) => [
-                        styles.skipLink,
-                        pressed && styles.pressed,
-                        (rerollingId != null || busy || !canRerollCategory) && styles.disabled,
-                      ]}>
-                      <ThemedText type="smallBold" themeColor="textSecondary">
-                        {rerollingId === item.id
-                          ? 'Rerolling…'
-                          : canRerollCategory
-                            ? `Reroll · ${atoPriceLine('category_reroll')}`
-                            : ATO_TOKEN_NEED_MORE}
-                      </ThemedText>
-                    </Pressable>
-                  ) : null}
-                </>
-              )}
-            </View>
-          ))}
-          {rerollNote ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              {rerollNote}
-            </ThemedText>
-          ) : null}
-        </>
-      )}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   body: {
     gap: Spacing.three,
     paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.two,
-  },
-  axisItem: {
-    gap: Spacing.two,
-  },
-  axisItemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: Spacing.two,
   },
   options: {
     gap: Spacing.two,
