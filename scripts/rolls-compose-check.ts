@@ -7,7 +7,6 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { getCategoryDefs, readAllCategories, setCategoryDefs } from '../src/lib/categories';
-import type { LegendCatalog, LegendVariant, ArchetypeDef } from '../src/lib/legends/store';
 import { composeRoll, rollEligible, type RollComposeDeps } from '../src/lib/rolls/compose';
 import { buildCategoryReadPrompt, parseCategoryReadBody } from '../src/lib/rolls/category-read';
 import type { TraitTrack } from '../src/lib/trait-stability';
@@ -75,13 +74,13 @@ function fullyReadyTracks(): TraitTrack[] {
 
 async function run() {
   {
-    // No legend catalog at all: legend item reports matched:false, every
-    // category still gets its own slot (ready, since tracks are fully
-    // settled), exactly 13 items total.
+    // Legends 64-archetype rewrite (core loop redesign §4): the old
+    // figure-catalog matcher is gone, and /roll is hidden/unlaunched, so the
+    // legend item is a permanent ready:false/matched:false placeholder now
+    // (see compose.ts) — every category still gets its own slot (ready,
+    // since tracks are fully settled), exactly 13 items total.
     let generateCalls = 0;
     const deps: RollComposeDeps = {
-      fetchLegendCatalog: async () => ({ variants: [], archetypes: new Map() }) as LegendCatalog,
-      fetchSeenVariantIds: async () => new Set(),
       generateRollText: async () => {
         generateCalls += 1;
         return '{"body":"A grounded, low-key kind of week."}';
@@ -98,10 +97,10 @@ async function run() {
       new Set(getCategoryDefs().map((d) => d.id)),
       'category items cover exactly the real category catalog, no duplicates, none missing',
     );
-    assert.deepEqual(items[0]!.result, { ready: false, matched: false }, 'no catalog: legend item reports ready:false/matched:false, not an error');
+    assert.deepEqual(items[0]!.result, { ready: false, matched: false }, 'legend item is a permanent placeholder now (old figure catalog removed, /roll unlaunched)');
     assert.equal(generateCalls, 12, 'one generateRollText call per ready category (11) plus one for the ready-profile story');
     assert.ok(Object.keys(snapshot).length > 0, 'snapshot captures the answered axes');
-    ok('composeRoll: exactly 13 items with the correct type/category mix; no legend catalog degrades to matched:false, not a failure');
+    ok('composeRoll: exactly 13 items with the correct type/category mix; legend item is always a placeholder');
   }
 
   {
@@ -110,8 +109,6 @@ async function run() {
     let generateCalls = 0;
     const thinTracks: TraitTrack[] = []; // nothing settled anywhere
     const deps: RollComposeDeps = {
-      fetchLegendCatalog: async () => ({ variants: [], archetypes: new Map() }) as LegendCatalog,
-      fetchSeenVariantIds: async () => new Set(),
       generateRollText: async () => {
         generateCalls += 1;
         return '{"body":"x"}';
@@ -132,8 +129,6 @@ async function run() {
     // not-ready without failing the whole roll.
     let call = 0;
     const deps: RollComposeDeps = {
-      fetchLegendCatalog: async () => ({ variants: [], archetypes: new Map() }) as LegendCatalog,
-      fetchSeenVariantIds: async () => new Set(),
       generateRollText: async () => {
         call += 1;
         return call === 1 ? null : '{"body":"fine"}'; // first ready category's generation fails
@@ -147,47 +142,6 @@ async function run() {
   }
 
   {
-    // A real legend match: one variant whose archetype matches 2/2 poles
-    // must be picked (cards[0], already ranked by buildLegendView) and
-    // included with matched:true.
-    const archetype: ArchetypeDef = {
-      id: 'arch1',
-      formalName: 'The Formal Name',
-      slangName: 'The Slang Name',
-      animeFlavorTag: 'tag',
-      traitAxis: 'openness:high, autonomy:high',
-      throwbackVoice: null,
-      partyBuild: null,
-    };
-    const variant: LegendVariant = {
-      id: 'v1',
-      figureId: 'f1',
-      canonicalSlug: 'figure-one',
-      variantKey: 'v1',
-      name: 'Figure One',
-      eraTitle: 'era',
-      type: 'archetype' as LegendVariant['type'],
-      teaser: 'teaser',
-      fullStory: 'story',
-      factChecked: true,
-      archetypeIds: ['arch1'],
-    } as LegendVariant;
-    const catalog: LegendCatalog = { variants: [variant], archetypes: new Map([['arch1', archetype]]) };
-    const deps: RollComposeDeps = {
-      fetchLegendCatalog: async () => catalog,
-      fetchSeenVariantIds: async () => new Set(),
-      generateRollText: async () => '{"body":"fine"}',
-    };
-    const { items } = await composeRoll(fullyReadyTracks(), { openness: 0.9, autonomy: 0.9 }, deps);
-    const legendItem = items[0]!;
-    const result = legendItem.result as { ready: boolean; matched: boolean; variant?: { id: string } };
-    assert.equal(result.ready, true, 'a matched legend must read ready:true too (unified shape all item types share)');
-    assert.equal(result.matched, true, 'a genuinely matching archetype must be picked, not left as matched:false');
-    assert.equal(result.variant?.id, 'v1');
-    ok('composeRoll: a real matching legend candidate (buildLegendView\'s top-ranked card) is picked and stored, with the unified ready field set');
-  }
-
-  {
     // The category-count/dedupe guard must be REAL, not a tautology — a
     // first version compared getCategoryDefs().length against itself via
     // the same synchronous call and could never fire. Prove it actually
@@ -196,8 +150,6 @@ async function run() {
     // a live category_defs table fetch uses).
     const realDefs = getCategoryDefs();
     const deps: RollComposeDeps = {
-      fetchLegendCatalog: async () => ({ variants: [], archetypes: new Map() }) as LegendCatalog,
-      fetchSeenVariantIds: async () => new Set(),
       generateRollText: async () => '{"body":"x"}',
     };
     try {

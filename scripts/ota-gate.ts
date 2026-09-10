@@ -10,7 +10,7 @@
  * never block a JS-only publish, since they fail for environmental reasons
  * (e.g. the wiped review account) unrelated to the code being shipped:
  *   around, around-going, auth-password, apple-revoke, card-live, crisis-live,
- *   delete-account, founder-access, intake-live, invite, legends-live, quota,
+ *   delete-account, founder-access, intake-live, invite, quota,
  *   sentry, style-live, talk-live, around-going-live
  *
  * PREFLIGHT: `typecheck` (tsc --noEmit) and `lint` (expo lint) run before the
@@ -37,7 +37,6 @@ const EXCLUDED = new Set([
   'founder-access',
   'intake-live',
   'invite',
-  'legends-live',
   'quota',
   'sentry',
   'style-live',

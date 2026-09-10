@@ -8,8 +8,7 @@
  * ai-generate import here.
  */
 import { readAllCategories, type CategoryReading } from '@/lib/categories';
-import { buildLegendView, type LegendMatch, type LegendValues } from '@/lib/legends/match';
-import type { LegendCatalog } from '@/lib/legends/store';
+import type { LegendValues } from '@/lib/legends64/classify';
 import { hasReliableChange, snapshotFromTracks, type TraitSnapshot } from '@/lib/rci';
 import { divergingAxesFromTracks, formatDivergenceNote } from '@/lib/trait-history';
 import { buildStoryPrompt, parseStoryBody, storyReady } from '@/lib/sage-story';
@@ -30,8 +29,6 @@ export interface RollItem {
 }
 
 export interface RollComposeDeps {
-  fetchLegendCatalog: () => Promise<LegendCatalog>;
-  fetchSeenVariantIds: () => Promise<ReadonlySet<string>>;
   /**
    * One generation call — injected, same DI pattern
    * composeCategoryBatch/fillAxisCountsChunked already use; a real caller
@@ -125,38 +122,17 @@ export async function composeRoll(
     throw new Error(`composeRoll: expected ${ROLL_CATEGORY_COUNT} distinct category ids, got ${distinctIds.size} (duplicate id in the live catalog)`);
   }
 
-  const [catalog, seenVariantIds] = await Promise.all([
-    deps.fetchLegendCatalog(),
-    deps.fetchSeenVariantIds(),
-  ]);
-  const legendView = buildLegendView(catalog, values, seenVariantIds);
-  const topLegend: LegendMatch | null = legendView.cards[0] ?? null;
-
-  // Store only what a roll's legend item actually needs to display —
-  // variant.fullStory (the complete story body) is already reachable
-  // through the existing Legends feature's own fetch; duplicating it into
-  // every roll's result risks approaching store_roll's 8KB per-item cap for
-  // no real benefit, and just bloats every stored roll.
-  const legendResult = topLegend
-    ? {
-        ready: true,
-        matched: true,
-        hits: topLegend.hits,
-        variant: {
-          id: topLegend.variant.id,
-          figureId: topLegend.variant.figureId,
-          name: topLegend.variant.name,
-          teaser: topLegend.variant.teaser,
-        },
-        archetype: { id: topLegend.archetype.id, formalName: topLegend.archetype.formalName },
-      }
-    : { ready: false, matched: false };
-
+  // The old figure-catalog matcher (legends/match.ts, legends/store.ts) was
+  // deleted with the Legends 64-archetype rewrite (core loop redesign §4) —
+  // /roll is hidden/unlaunched (HIDDEN_TAB_ROUTES), so its legend item is
+  // left as a permanent "not ready" placeholder rather than rewired to the
+  // new system. Rewiring it to legend_generations is real future scope if
+  // /roll is ever surfaced (tracked as its own follow-up, not built here).
   const items: RollItem[] = [
     {
       type: 'legend',
       categoryId: null,
-      result: legendResult,
+      result: { ready: false, matched: false },
     },
   ];
 

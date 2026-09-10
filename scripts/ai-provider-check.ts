@@ -173,7 +173,7 @@ const METADATA_CALL_FILES = new Set([
   'src/lib/questions/generate.ts',
   'src/lib/explore/generate.ts',
   'src/lib/rolls/generate.ts',
-  'src/lib/legends/generate.ts',
+  'src/lib/legends64/generate-story.ts',
 ]);
 const CALL_WITH_META =
   /generateText\(\s*\{[\s\S]*?\}\s*,\s*[A-Za-z0-9_$.[\]]+\s*\)/g;

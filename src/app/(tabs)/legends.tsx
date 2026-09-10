@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LegendCard, type LegendRerollOutcome } from '@/components/legend-card';
+import { LegendHistoryFold } from '@/components/legend-history-fold';
 import { MilestoneToast } from '@/components/milestone-toast';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { ThemedText } from '@/components/themed-text';
@@ -19,9 +20,11 @@ import {
   devPresetById,
   type DevArchetypePresetId,
 } from '@/lib/dev-test-user';
-import { fetchLegendCatalog, fetchSeenVariantIds, logShownVariants, type LegendCatalog } from '@/lib/legends/store';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
-import { bestVariantForFigure, buildLegendView, type LegendMatch, type LegendView } from '@/lib/legends/match';
+import { DEFAULT_LEGEND_SKIN, LEGENDS64_COPY_REVIEWED, splitArchetypeCode, type LegendSkin } from '@/lib/legends64/archetypes';
+import { archetypeCode } from '@/lib/legends64/classify';
+import { generateLegendStory } from '@/lib/legends64/generate-story';
+import { fetchCurrentGeneration, saveGeneration } from '@/lib/legends64/store';
 import { persistCelebratedMilestones } from '@/lib/me';
 import { checkMilestones, type MilestoneDef } from '@/lib/milestones';
 import { bankTotalProgress } from '@/lib/questions/local';
@@ -43,26 +46,24 @@ import {
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import { traitStateFromRow } from '@/lib/traits';
 
+interface CurrentLegend {
+  /** id of the legend_generations row, when known — excluded from the archive fold so the currently-shown story isn't duplicated there. Null right after a fresh generate/reroll only if the save somehow returned no id. */
+  id: string | null;
+  code: string;
+  story: string;
+}
+
 type LoadState =
   | { status: 'loading' }
-  | { status: 'ready'; view: LegendView }
+  | { status: 'ready'; current: CurrentLegend | null }
   | { status: 'error'; message: string };
-
-function emptyCopy(view: LegendView): string {
-  if (!view.hasCatalog) {
-    return 'No legends here yet. More stories are being gathered.';
-  }
-  if (view.anyMatchedArchetype) {
-    return 'You have seen every legend that fits you so far. New ones appear as your matches shift.';
-  }
-  return 'Nothing here yet. New legends appear as your matches shift.';
-}
 
 /**
  * Dev-testing strip for the fixed dev-test user (@atodev), __DEV__ only.
- * Applies one of the 4 legend-archetype trait presets and clears the user's
- * seen-legend history so the matching card re-appears immediately. Never
- * renders for a real account — their traits cannot be overwritten from here.
+ * Applies one of the 4 archetype trait presets (core loop redesign §4 —
+ * each targets a distinct classify.ts archetypeCode, see dev-test-user.ts).
+ * Never renders for a real account — their traits cannot be overwritten
+ * from here.
  */
 function DevTestPresetStrip({ onApplied }: { onApplied: () => void }) {
   const theme = useTheme();
@@ -98,7 +99,7 @@ function DevTestPresetStrip({ onApplied }: { onApplied: () => void }) {
       await refresh();
       onApplied();
       const preset = devPresetById(id);
-      setNote(preset ? `Preset applied — now matching ${preset.legendName}.` : 'Preset applied.');
+      setNote(preset ? `Preset applied — should classify as ${preset.code}.` : 'Preset applied.');
     } catch (err) {
       setNote(err instanceof Error ? err.message : 'Could not apply the preset.');
     } finally {
@@ -114,7 +115,7 @@ function DevTestPresetStrip({ onApplied }: { onApplied: () => void }) {
       await applyDevThinProfilePreset();
       await refresh();
       onApplied();
-      setNote('Thin profile applied — no archetype should match now.');
+      setNote('Thin profile applied.');
     } catch (err) {
       setNote(err instanceof Error ? err.message : 'Could not apply the thin profile.');
     } finally {
@@ -126,8 +127,8 @@ function DevTestPresetStrip({ onApplied }: { onApplied: () => void }) {
     <ThemedView type="backgroundElement" style={styles.presetCard}>
       <ThemedText type="smallBold">Dev · test persona</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        Set traits to match a legend&apos;s archetype. Seen history is cleared, so the
-        card reloads here.
+        Set traits to a known archetype code. Your current generation (if any) is left as-is —
+        use Reroll to get a fresh one for the new code.
       </ThemedText>
       <View style={styles.presetRow}>
         {DEV_ARCHETYPE_PRESETS.map((preset) => {
@@ -142,7 +143,7 @@ function DevTestPresetStrip({ onApplied }: { onApplied: () => void }) {
                 { backgroundColor: theme.backgroundSelected },
                 pressed && styles.pressed,
               ]}>
-              <ThemedText type="smallBold">{preset.legendName}</ThemedText>
+              <ThemedText type="smallBold">{preset.code}</ThemedText>
             </Pressable>
           );
         })}
@@ -177,10 +178,12 @@ function DevTestPresetStrip({ onApplied }: { onApplied: () => void }) {
 }
 
 /**
- * Legends — stories from history and myth, matched to the archetype(s) the
- * user's trait profile leans toward. Teaser visible, tap to expand the full
- * story. Every story variant shown is logged to user_legend_history; a figure
- * can resurface later through a different variant (never the same one twice).
+ * Legends — one story for the 64-archetype code this person's traits land
+ * on (core loop redesign §4), shown under a switchable name/skin (real,
+ * gaming, godType, anime, funny, dark — the story text never changes, only
+ * the displayed name). Manual trigger only: nothing generates until tapped.
+ * A reroll (paid, 10 ATO tokens/day) generates and stores a fresh story for
+ * whatever code the person's traits currently resolve to.
  */
 export default function LegendsScreen() {
   const { me, refresh } = useMeContext();
@@ -189,13 +192,10 @@ export default function LegendsScreen() {
   const [retryTick, setRetryTick] = useState(0);
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [tracksReady, setTracksReady] = useState(false);
-  // Held so a single-card reroll can recompute just that one figure's pick
-  // locally (bestVariantForFigure) instead of re-running buildLegendView —
-  // every card already on screen was already logged "seen" the moment it
-  // rendered, so a full re-derive after a reroll would swap every card, not
-  // just the one paid for (found in review).
-  const [catalog, setCatalog] = useState<LegendCatalog | null>(null);
-  const [seenIds, setSeenIds] = useState<Set<string>>(new Set());
+  const [skin, setSkin] = useState<LegendSkin>(DEFAULT_LEGEND_SKIN);
+  const [generateBusy, setGenerateBusy] = useState(false);
+  const [historyVersion, setHistoryVersion] = useState(0);
+  const [generateNote, setGenerateNote] = useState<string | null>(null);
 
   useEffect(() => {
     if (!me?.id) return;
@@ -227,48 +227,31 @@ export default function LegendsScreen() {
     }
     let cancelled = false;
     setLoad({ status: 'loading' });
-    (async () => {
-      try {
-        const catalog = await fetchLegendCatalog();
-        const seen = await fetchSeenVariantIds(me.id);
-        const view = buildLegendView(catalog, me, seen);
+    fetchCurrentGeneration(me.id)
+      .then((generation) => {
         if (cancelled) return;
-        setCatalog(catalog);
-        setSeenIds(seen);
-        setLoad({ status: 'ready', view });
-        if (view.cards.length > 0) {
-          void logShownVariants(
-            me.id,
-            view.cards.map((card) => card.variant.id),
-            me.timezone || 'UTC',
-          ).catch((err) => console.log('[legends] log shown error:', err));
-        }
-      } catch (err) {
+        setLoad({
+          status: 'ready',
+          current: generation ? { id: generation.id, code: generation.archetypeCode, story: generation.story } : null,
+        });
+      })
+      .catch((err) => {
         console.log('[legends] load error:', err);
         if (!cancelled) {
           setLoad({
             status: 'error',
-            message: err instanceof Error ? err.message : 'Could not load legends.',
+            message: err instanceof Error ? err.message : 'Could not load your legend.',
           });
         }
-      }
-    })();
+      });
     return () => {
       cancelled = true;
     };
-  }, [me, retryTick]);
+  }, [me?.id, retryTick]);
 
-  const ready = load.status === 'ready' ? load.view : null;
   const settled = settledCount(tracks);
   const thin = isThinProfile(settled);
   const focusAxis = me ? missingAxis(traitStateFromRow(me).values, tracks) : null;
-  /**
-   * Both "answer questions" CTAs on this screen. `focusAxis` is a nice-to-have
-   * (it front-loads that axis in the next batch), never a precondition — the
-   * thin-profile CTA below used to be `disabled={!focusAxis}`, which rendered
-   * an enabled-looking button that did nothing for exactly the people it was
-   * written for. One handler so the two copies cannot drift again.
-   */
   function goToQuestions() {
     if (focusAxis) {
       router.push({ pathname: '/intake-sweep', params: { axis: focusAxis } });
@@ -277,45 +260,59 @@ export default function LegendsScreen() {
     }
   }
 
-  /**
-   * Legend reroll for one card. Finds the replacement locally first
-   * (catalog + trait values already in state, no network) — a figure with
-   * no other matching variant is refused for free, never charged. Only on
-   * success does it patch just this one card in `load.view.cards`, leaving
-   * every other currently-shown card untouched.
-   */
-  async function handleLegendReroll(card: LegendMatch): Promise<LegendRerollOutcome> {
-    if (!me || !catalog) {
-      return { ok: false, note: "Couldn't reroll right now. Try again." };
+  /** The code this person's traits resolve to RIGHT NOW — used for both the first-ever manual generation and every reroll, never the previously-stored generation's (possibly stale) code. */
+  function currentCode(): string | null {
+    if (!me) return null;
+    return archetypeCode(me);
+  }
+
+  async function handleGenerate() {
+    const code = currentCode();
+    if (!me || !code || generateBusy) return;
+    setGenerateBusy(true);
+    setGenerateNote(null);
+    try {
+      const split = splitArchetypeCode(code);
+      if (!split) return;
+      const outcome = await generateLegendStory(split.core, split.modifier);
+      if (outcome.kind !== 'ok') {
+        setGenerateNote(
+          outcome.kind === 'quota' ? "Today's search limit is reached — try again tomorrow." : "Couldn't search right now. Try again.",
+        );
+        return;
+      }
+      const id = await saveGeneration(code, outcome.story);
+      setLoad({ status: 'ready', current: { id, code, story: outcome.story } });
+      setHistoryVersion((v) => v + 1);
+    } catch (err) {
+      console.log('[legends] generate error:', err);
+      setGenerateNote("Couldn't search right now. Try again.");
+    } finally {
+      setGenerateBusy(false);
     }
-    const exclude = new Set(seenIds);
-    exclude.add(card.variant.id);
-    const replacement = bestVariantForFigure(catalog, me, card.variant.figureId, exclude);
-    if (!replacement) {
-      return { ok: false, note: 'No other story fits this archetype right now.' };
+  }
+
+  async function handleReroll(): Promise<LegendRerollOutcome> {
+    const code = currentCode();
+    if (!code) return { ok: false, note: "Couldn't reroll right now. Try again." };
+    const { result, story, generationId } = await rerollLegend(code);
+    if (!result.ok || !story) {
+      const note =
+        result.reason === 'quota'
+          ? "Today's search limit is reached — try again tomorrow."
+          : result.already
+            ? 'Already rerolled today.'
+            : result.reason === 'generation_failed'
+              ? "Couldn't reroll right now. Try again."
+              : ATO_TOKEN_NEED_MORE;
+      return { ok: false, note };
     }
-    const result = await rerollLegend(me.id, me.timezone || 'UTC', card.variant.id, replacement.variant.id);
-    if (!result.ok) {
-      return { ok: false, note: result.already ? 'Already rerolled today.' : ATO_TOKEN_NEED_MORE };
-    }
-    setSeenIds((prev) => new Set(prev).add(card.variant.id));
-    setLoad((prev) =>
-      prev.status === 'ready'
-        ? {
-            ...prev,
-            view: {
-              ...prev.view,
-              cards: prev.view.cards.map((row) =>
-                row.variant.id === card.variant.id ? replacement : row,
-              ),
-            },
-          }
-        : prev,
-    );
-    // Refresh me so the ATO balance the button gates on next isn't stale.
+    setLoad({ status: 'ready', current: { id: generationId, code, story } });
+    setHistoryVersion((v) => v + 1);
     void refresh().catch((err) => console.log('[legends] refresh after reroll error:', err));
     return { ok: true };
   }
+
   // Progressive unlock (§6, retargeted per emci's explicit call): Legends
   // unlocks at question 50 of the frozen intake, REPLACING the prior
   // isProfileSettled gate — the tiered intake alone doesn't satisfy
@@ -323,30 +320,17 @@ export default function LegendsScreen() {
   // answers, below the 3-answer stability floor), so that gate would have
   // kept Legends locked past question 50 for most users. Checked only once
   // tracks have loaded, so the screen doesn't flash locked before it knows
-  // better. Matching itself stays untouched (static pool, no spend) — this
-  // only decides what renders.
+  // better. classify.ts's archetypeCode stays untouched (deterministic, no
+  // spend) — this only decides what renders.
   const locked = tracksReady && !legendsUnlocked(tracks);
 
   // One-time "Legends unlocked!" celebration, on top of `locked` above —
-  // now keyed to the SAME bankTotalProgress/50 crossing as `locked` itself,
-  // so the toast and the actual tab unlock always fire together. `locked`
-  // can genuinely flip false while this screen stays mounted (its
-  // tracks-loading effect is keyed on me.updated_at, not just first mount),
-  // so this checks on every re-evaluation, not just mount; the persisted
-  // celebrated_milestone_ids id (same mechanism every other milestone in
-  // this feature uses) is what actually guarantees it never fires twice —
-  // the ref only guards the narrow window while that persist request is
-  // still in flight.
+  // kept exactly as before the rewrite; unrelated to which content system
+  // renders once unlocked.
   const [unlockToast, setUnlockToast] = useState<MilestoneDef | null>(null);
   const celebratingUnlockRef = useRef(false);
 
   useEffect(() => {
-    // tracksReady must gate this too, not just `locked` — `locked` is
-    // `tracksReady && !legendsUnlocked(tracks)`, which reads `false` both
-    // when genuinely unlocked AND while tracks are still loading (tracksReady
-    // starts false). Without this, the celebration would fire — and
-    // permanently persist — for every brand-new, unsettled profile during
-    // the loading window before the first real tracks fetch resolves.
     if (!me || !tracksReady || locked || celebratingUnlockRef.current) return;
     const celebrated = me.celebrated_milestone_ids ?? [];
     const crossed = checkMilestones('bankTotalProgress', bankTotalProgress(tracks).answered, celebrated)
@@ -354,19 +338,12 @@ export default function LegendsScreen() {
     if (crossed.length === 0) return;
     celebratingUnlockRef.current = true;
     setUnlockToast(crossed[0]!);
-    // ATO tokens T-04: award the Full Profile (50-question) completion bonus
-    // at the exact same crossing as this celebration. Fire-and-forget — the
-    // RPC's own once-ever unique index makes a double-fire harmless, so this
-    // never needs to gate on (or retry with) the milestone-persist result.
     claimFullProfileComplete().catch((err) => {
       console.log('[legends] claimFullProfileComplete error:', err);
     });
     persistCelebratedMilestones(me.id, [...celebrated, ...crossed.map((def) => def.id)])
       .then(() => refresh())
       .catch((err) => {
-        // Mirror intake-sweep.tsx's backfill effect: if the write failed,
-        // celebrated_milestone_ids is still stale server-side, so reset the
-        // guard rather than leave this session permanently unable to retry.
         console.log('[legends] persistCelebratedMilestones error:', err);
         celebratingUnlockRef.current = false;
       });
@@ -379,15 +356,20 @@ export default function LegendsScreen() {
           <View style={styles.header}>
             <ThemedText type="subtitle">Legends</ThemedText>
             <ThemedText themeColor="textSecondary">
-              Stories of the archetype you match — chosen from how your traits
+              One story for the archetype your traits land on right now — chosen from how you
               actually sit, not a label that sticks.
             </ThemedText>
+            {!LEGENDS64_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
+              <ThemedText type="code" themeColor="textSecondary">
+                Draft copy — waiting on emci review.
+              </ThemedText>
+            ) : null}
           </View>
 
-          {ready && tracksReady && !locked ? (
+          {load.status === 'ready' && tracksReady && !locked ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Roll a fresh read across your legend, categories, and story"
+              accessibilityLabel="Roll a fresh read across your categories and story"
               onPress={() => router.push('/roll')}
               style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
               <ThemedText type="link">Roll</ThemedText>
@@ -405,12 +387,12 @@ export default function LegendsScreen() {
           ) : null}
 
           {load.status === 'loading' ? (
-            <ThemedText themeColor="textSecondary">Loading legends…</ThemedText>
+            <ThemedText themeColor="textSecondary">Loading your legend…</ThemedText>
           ) : null}
 
           {load.status === 'error' ? (
             <ThemedView type="backgroundElement" style={styles.card}>
-              <ThemedText>Could not load legends right now.</ThemedText>
+              <ThemedText>Could not load your legend right now.</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
                 {load.message}
               </ThemedText>
@@ -422,7 +404,7 @@ export default function LegendsScreen() {
             </ThemedView>
           ) : null}
 
-          {ready && locked ? (
+          {load.status === 'ready' && locked ? (
             <ThemedView type="backgroundElement" style={styles.card}>
               <ThemedText type="smallBold">{PROFILE_LOCKED_COPY}</ThemedText>
               <Pressable
@@ -433,23 +415,22 @@ export default function LegendsScreen() {
                 <ThemedText type="link">{PROFILE_LOCKED_CTA}</ThemedText>
               </Pressable>
             </ThemedView>
-          ) : ready ? (
-            ready.cards.length > 0 ? (
-              ready.cards.map((card) => (
-                <LegendCard
-                  key={card.variant.id}
-                  legend={card.variant}
-                  archetype={card.archetype}
-                  me={me ? { ato_tokens: me.ato_tokens } : undefined}
-                  onReroll={me ? () => handleLegendReroll(card) : undefined}
-                />
-              ))
-            ) : ready.hasCatalog && !ready.anyMatchedArchetype && tracksReady && thin ? (
+          ) : load.status === 'ready' ? (
+            load.current ? (
+              <LegendCard
+                code={load.current.code}
+                story={load.current.story}
+                skin={skin}
+                onSkinChange={setSkin}
+                me={me ? { ato_tokens: me.ato_tokens } : undefined}
+                onReroll={me ? handleReroll : undefined}
+              />
+            ) : tracksReady && thin ? (
               <ThemedView type="backgroundElement" style={styles.card}>
                 <ThemedText type="smallBold">Your profile is still taking shape.</ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
-                  Answer a few questions so your traits settle, and a legend that fits you
-                  will show up here.
+                  Answer a few questions so your traits settle, and your legend will be ready to
+                  search for.
                 </ThemedText>
                 <Pressable
                   accessibilityRole="button"
@@ -460,16 +441,39 @@ export default function LegendsScreen() {
               </ThemedView>
             ) : (
               <ThemedView type="backgroundElement" style={styles.card}>
-                <ThemedText>{emptyCopy(ready)}</ThemedText>
+                <ThemedText type="smallBold">let&apos;s search your legend?</ThemedText>
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={generateBusy}
+                  onPress={() => void handleGenerate()}
+                  style={({ pressed }) => [styles.cta, (pressed || generateBusy) && styles.pressed]}>
+                  <ThemedText type="link">{generateBusy ? 'Searching…' : 'Search'}</ThemedText>
+                </Pressable>
+                {generateNote ? (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {generateNote}
+                  </ThemedText>
+                ) : null}
               </ThemedView>
             )
+          ) : null}
+
+          {me ? (
+            <LegendHistoryFold
+              userId={me.id}
+              excludeId={load.status === 'ready' ? (load.current?.id ?? null) : null}
+              skin={skin}
+              refreshSignal={historyVersion}
+              title="Past legends"
+              emptyCopy="No past legends yet — every generation you search for or reroll shows up here."
+            />
           ) : null}
 
           <DevTestPresetStrip onApplied={() => setRetryTick((tick) => tick + 1)} />
 
           <ThemedText type="small" themeColor="textSecondary" style={styles.attr}>
-            Matched to your traits, never a diagnosis. A story never repeats —
-            the same figure can return later with a different one.
+            Matched to your traits, never a diagnosis. A search or reroll can turn up a
+            different story than last time.
           </ThemedText>
         </ScrollView>
       </SafeAreaView>

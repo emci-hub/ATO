@@ -7,12 +7,14 @@
  *   - there is no client-side sign-in for this account (see check:dev-unlock
  *     for the password-gated replacement) — applyDevArchetypePreset only
  *     acts on an already-signed-in session and is identity-guarded
- *   - each of the 4 presets (values parsed from dev-test-user.ts) lands
- *     >=2/3 poles of exactly one legend-linked archetype — so switching the
- *     preset shows that legend's card and no other seeded legend's card
+ *   - each of the 4 presets (values parsed from dev-test-user.ts) resolves,
+ *     under classify.ts's straight midpoint split, to exactly its stated
+ *     64-archetype code (core loop redesign §4) — so applying a preset makes
+ *     Legends compute that preset's code and no other
  *
- * Band cutoffs mirror src/lib/traits.ts traitBand (high >= 0.67, low <= 0.33);
- * combos mirror the live archetype_defs rows seeded in wave26.
+ * Midpoint split mirrors src/lib/legends64/classify.ts's midpointHighLow
+ * (>= 0.5 is high, everything else is low, no mid band — unlike the old
+ * 0.67/0.33-banded matcher this replaced, every value resolves to a pole).
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -48,45 +50,28 @@ const TRAIT_AXES = [
   'playfulness',
 ];
 
-const COMBO_BY_ARCHETYPE: Record<string, string> = {
-  arch_the_architect: 'conscientiousness:high, autonomy:high, locus_of_control:high',
-  arch_the_front_liner: 'extraversion:high, openness:high, self_efficacy:high',
-  arch_the_watcher: 'extraversion:low, openness:high, conflict_assertiveness:low',
-  arch_the_commander: 'conscientiousness:high, conflict_assertiveness:high, competence:high',
+/** Preset id -> the classify.ts archetypeCode its values must resolve to. */
+const PRESET_CODES: Record<string, string> = {
+  architect: 'HLL-HLL',
+  front_liner: 'HHH-HHH',
+  watcher: 'LLH-HLL',
+  commander: 'HHH-LHL',
 };
 
-/** Preset id -> (linked archetype, legend slug seeded in wave28). */
-const LINKED: Record<string, { archetypeId: string; slug: string }> = {
-  architect: { archetypeId: 'arch_the_architect', slug: 'leonardo-da-vinci-1452' },
-  front_liner: { archetypeId: 'arch_the_front_liner', slug: 'alexander-the-great-356bc' },
-  watcher: { archetypeId: 'arch_the_watcher', slug: 'confucius-551bc' },
-  commander: { archetypeId: 'arch_the_commander', slug: 'athena-greek-mythology' },
-};
+/** Mirror of src/lib/legends64/classify.ts's CORE_AXES/MODIFIER_AXES order. */
+const CORE_AXES = ['conscientiousness', 'extraversion', 'openness'];
+const MODIFIER_AXES = ['agreeableness', 'conflict_assertiveness', 'relatedness'];
 
-/** Mirror of src/lib/traits.ts traitBand. */
-function band(value: number): 'low' | 'mid' | 'high' {
-  if (value <= 0.33) return 'low';
-  if (value >= 0.67) return 'high';
-  return 'mid';
+/** Mirror of src/lib/legends64/classify.ts's midpointHighLow. */
+function midpointHighLow(value: number | null | undefined): 'H' | 'L' {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0.5 ? 'H' : 'L';
 }
 
-function parseCombo(combo: string): { axis: string; band: 'high' | 'low' }[] {
-  return combo
-    .split(',')
-    .map((token) => token.trim())
-    .map((token) => {
-      const [axis, pole] = token.split(':');
-      return { axis: axis.trim(), band: pole.trim() as 'high' | 'low' };
-    });
-}
-
-function hits(combo: string, values: Record<string, number>): number {
-  let count = 0;
-  for (const pole of parseCombo(combo)) {
-    const value = values[pole.axis];
-    if (typeof value === 'number' && band(value) === pole.band) count += 1;
-  }
-  return count;
+/** Mirror of src/lib/legends64/classify.ts's archetypeCode. */
+function archetypeCodeFrom(values: Record<string, number | null | undefined>): string {
+  const core = CORE_AXES.map((axis) => midpointHighLow(values[axis])).join('');
+  const modifier = MODIFIER_AXES.map((axis) => midpointHighLow(values[axis])).join('');
+  return `${core}-${modifier}`;
 }
 
 /**
@@ -122,8 +107,6 @@ function main() {
   const sessionSrc = read('src/hooks/use-session.ts');
   const legendsSrc = read('src/app/(tabs)/legends.tsx');
   const migration = read('supabase/migrations/wave31_dev_test_user.sql');
-  const wave26 = read('supabase/migrations/wave26_legends_archetypes_content.sql');
-  const wave28 = read('supabase/migrations/wave28_legends_approved_seed.sql');
 
   // Identity constants are single-sourced with the provisioning migration.
   for (const constant of [
@@ -157,21 +140,14 @@ function main() {
   assert.match(migration, /account_deletions/);
   ok('migration removes the old legends-dev account with an audit row');
 
-  // Legend-history reset needs the owner-delete policy the migration adds.
-  assert.match(migration, /user_legend_history_delete_own/);
-  assert.match(migration, /for delete using \(auth\.uid\(\) = user_id\)/);
-  assert.match(migration, /grant delete on public\.user_legend_history to authenticated/);
-  ok('migration grants owner-scoped delete on user_legend_history');
-
   // Presets refuse to run for any real account.
   assert.match(moduleSrc, /export async function applyDevArchetypePreset\(/);
   assert.match(moduleSrc, /if \(!PRE_LAUNCH_DEV\) throw new Error/);
   assert.match(moduleSrc, /user\.id !== DEV_TEST_USER_ID/);
-  assert.match(moduleSrc, /\.from\('user_legend_history'\)[\s\S]*?\.delete\(\)[\s\S]*?\.eq\('user_id', user\.id\)/);
   assert.match(moduleSrc, /\.from\('me'\)[\s\S]*?\.update\([\s\S]*?\.\.\.preset\.values[\s\S]*?trait_sources: traitSources[\s\S]*?trait_touched_at: traitTouchedAt/);
   assert.match(moduleSrc, /traitSources\[axis\] = 'self_settings'/);
   assert.doesNotMatch(moduleSrc, /from '@\/lib\/me'/);
-  ok('applyDevArchetypePreset guards PRE_LAUNCH_DEV + the dev user id, writes me directly, then clears seen history');
+  ok('applyDevArchetypePreset guards PRE_LAUNCH_DEV + the dev user id, writes me directly');
 
   // Legends-tab strip only renders for the dev user, and under __DEV__.
   assert.match(legendsSrc, /DevTestPresetStrip/);
@@ -180,11 +156,11 @@ function main() {
   assert.match(legendsSrc, /applyDevArchetypePreset/);
   ok('Legends tab shows the preset strip only for the dev user (pre-launch)');
 
-  // 4 presets, each with all 16 axes filled.
+  // 4 presets, each with all 16 axes filled, each declaring its target code.
   const presets = parsePresets(moduleSrc);
   assert.equal(presets.size, 4, 'expected exactly 4 presets');
   for (const [presetId, values] of presets) {
-    assert.ok(LINKED[presetId], `unknown preset id ${presetId}`);
+    assert.ok(PRESET_CODES[presetId], `unknown preset id ${presetId}`);
     for (const axis of TRAIT_AXES) {
       assert.ok(values[axis] !== undefined, `${presetId} missing axis ${axis}`);
     }
@@ -192,32 +168,24 @@ function main() {
   }
   ok('4 presets parsed, all 16 axes set on each');
 
-  // Combo source of truth lives in wave26; legend links in wave28.
-  for (const { archetypeId } of Object.values(LINKED)) {
-    assert.match(wave26, new RegExp(esc(COMBO_BY_ARCHETYPE[archetypeId])));
-    assert.match(wave26, new RegExp(esc(archetypeId)));
-  }
-  for (const { slug, archetypeId } of Object.values(LINKED)) {
-    assert.match(wave28, new RegExp(`${esc(slug)}[^)]*${esc(archetypeId)}`));
-  }
-  ok('preset target combos exist in wave26 and are legend-linked in wave28');
-
-  // Math: each preset hits its own archetype and no other legend-linked one.
+  // Each preset's `code` field must appear verbatim in the source, and its
+  // values (run back through the same midpoint split classify.ts uses) must
+  // actually resolve to that code — this is what catches a values edit that
+  // silently drifts the resulting archetype away from what the preset claims.
   for (const [presetId, values] of presets) {
-    const target = LINKED[presetId].archetypeId;
-    for (const [archetypeId, combo] of Object.entries(COMBO_BY_ARCHETYPE)) {
-      const count = hits(combo, values);
-      if (archetypeId === target) {
-        assert.ok(count >= 2, `${presetId} should match ${archetypeId}, got ${count} hits`);
-      } else {
-        assert.ok(count <= 1, `${presetId} must not match ${archetypeId}, got ${count} hits`);
-      }
-    }
+    const expected = PRESET_CODES[presetId];
+    assert.match(moduleSrc, new RegExp(`id: '${esc(presetId)}',\\s*\\n\\s*code: '${esc(expected)}',`));
+    const resolved = archetypeCodeFrom(values);
+    assert.equal(resolved, expected, `${presetId}'s values resolve to ${resolved}, not its stated code ${expected}`);
   }
-  ok('each preset matches exactly its own legend-linked archetype (>=2/3 poles, others <2)');
+  const allCodes = new Set(Object.values(PRESET_CODES));
+  assert.equal(allCodes.size, 4, 'all 4 presets must target distinct archetype codes');
+  ok('each preset\'s values resolve to its stated archetypeCode under classify.ts\'s midpoint split, and all 4 codes are distinct');
 
-  // Thin-profile preset — the only way to reach the Legends thin-profile gate,
-  // which needs NO archetype to match (every preset above is built to match).
+  // Thin-profile preset — no code concept applies here; thinness is decided
+  // purely by settledCount/isThinProfile (trait-stability.ts), not by
+  // whether some archetype "matched" (the 64-archetype system always
+  // resolves to exactly one code, so there is no miss case to reach).
   assert.match(moduleSrc, /export async function applyDevThinProfilePreset/);
   const thinBody = moduleSrc.slice(moduleSrc.indexOf('export async function applyDevThinProfilePreset'));
   assert.match(thinBody, /PRE_LAUNCH_DEV/, 'thin preset must keep the pre-launch guard');
@@ -254,22 +222,17 @@ function main() {
   );
   ok(`thin answer_count (${thinCount}) stays under the stability floor (${floor})`);
 
-  // Behavioral: the thin preset leaves me axes null AND writes mid (0.5) track
-  // values, so BOTH must score zero poles or the gate's "no archetype matched"
-  // precondition is false. Mid is the real test here — it exercises band(),
-  // where an unset axis would pass trivially.
-  const allMid: Record<string, number> = {};
-  for (const axis of TRAIT_AXES) allMid[axis] = 0.5;
-  for (const { archetypeId } of Object.values(LINKED)) {
-    const combo = COMBO_BY_ARCHETYPE[archetypeId];
-    assert.equal(hits(combo, allMid), 0, `${archetypeId} must score 0 hits on a mid profile`);
-    assert.equal(hits(combo, {}), 0, `${archetypeId} must score 0 hits on an unset profile`);
-  }
-  // The gate depends on the real matcher treating a null axis as a miss rather
-  // than banding it — guard that null-check directly.
-  const matchSrc = read('src/lib/legends/match.ts');
-  assert.match(matchSrc, /value == null \? null : traitBand\(value\)/);
-  ok('mid and unset profiles hit 0 poles on all 4 archetypes; matcher null-guards');
+  // Behavioral: the thin preset leaves every me axis null. Unlike the old
+  // 0.67/0.33-banded matcher (which treated a null axis as a miss, so a
+  // thin profile matched nothing), classify.ts's straight midpoint split has
+  // no miss case — an unset axis just resolves to 'L' — so this only
+  // confirms that stays true and doesn't throw, not that "nothing matches"
+  // (there is no such state in the 64-archetype system).
+  const classifySrc = read('src/lib/legends64/classify.ts');
+  assert.match(classifySrc, /typeof value === 'number' && Number\.isFinite\(value\) && value >= 0\.5 \? 'H' : 'L'/);
+  assert.equal(midpointHighLow(null), 'L');
+  assert.equal(midpointHighLow(undefined), 'L');
+  ok('classify.ts resolves an unset axis to L deterministically, same as this check\'s own mirror');
 
   // Reversibility: the archetype presets must ALSO write settled tracks, or a
   // single thin tap leaves the dev user permanently unsettled for Categories /

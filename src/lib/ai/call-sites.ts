@@ -97,15 +97,18 @@ export const ONGOING_ROUND_META: AiCallMetadata = {
   latencySensitive: false,
 };
 
-/** Legend candidate generation (wave55) — a figure+variant proposal targeted
- * at one archetype, with no user-specific input at all (not even a trait
- * bucket): the exact same output is correct for every viewer, forever, once
- * approved. Root-triggered from a review screen, not user-facing, so not
- * latency-sensitive. */
-export const LEGEND_GENERATION_META: AiCallMetadata = {
-  personalized: false,
-  cohortShareable: true,
-  bucketShareable: true,
+/** Legends 64-archetype story (core loop redesign §4) — a flavor-text
+ * generation for one classify.ts archetype code, but the plan calls for a
+ * FRESH story per generation (manual trigger or paid reroll), not a
+ * pre-authored library entry reused forever — so unlike the old
+ * figure-catalog system this replaces, it's neither cohort- nor
+ * bucket-shareable even though the archetype code alone is deterministic.
+ * Manual-tap trigger, not latency-sensitive (no synchronous chat-reply
+ * pressure). */
+export const LEGEND_STORY_META: AiCallMetadata = {
+  personalized: true,
+  cohortShareable: false,
+  bucketShareable: false,
   latencySensitive: false,
 };
 
@@ -163,8 +166,8 @@ export const AI_CALL_SITES: readonly AiCallSite[] = [
     meta: ONGOING_ROUND_META,
   },
   {
-    feature: 'Legend candidate generation',
-    location: 'src/lib/legends/generate.ts → generateLegendCandidate()',
-    meta: LEGEND_GENERATION_META,
+    feature: 'Legend story generation',
+    location: 'src/lib/legends64/generate-story.ts → generateLegendStory()',
+    meta: LEGEND_STORY_META,
   },
 ];

@@ -1,5 +1,5 @@
 /**
- * 4 Legends-archetype presets for the fixed dev-test account, pre-launch
+ * 4 Legends 64-archetype presets for the fixed dev-test account, pre-launch
  * (PRE_LAUNCH_DEV) only.
  *
  * The dev-test user is a REAL Supabase auth + me row provisioned by
@@ -9,22 +9,27 @@
  * There is no client-side sign-in for this account anymore — no hardcoded
  * password, no auto-login. Sign in the normal way (Apple / OTP / a password
  * set in Settings) and, while already signed in as @atodev, this module lets
- * that session swap its trait profile between the 4 seeded Legends
- * archetypes (matching logic: src/lib/legends/match.ts). The account has no
- * special grants (not root, not founder, no dev-lab capabilities).
+ * that session swap its trait profile between 4 presets, each targeting a
+ * distinct classify.ts archetypeCode (core loop redesign §4 — the old
+ * figure-catalog matcher, src/lib/legends/match.ts, no longer exists). The
+ * account has no special grants (not root, not founder, no dev-lab
+ * capabilities).
  *
- * Preset vectors are hand-set so each hits >=2/3 poles of exactly one of the
- * four legend-linked archetypes (Archetypes: Architect = C/autonomy/LOC high,
- * Front-Liner = E/openness/SE high, Watcher = E low/openness high/assertiveness
- * low, Commander = C/assertiveness/competence high). Values use the app's band
- * cutoffs: high >= 0.67, low <= 0.33, mid misses. scripts/dev-test-user-check
- * asserts these stay single-match if a combo ever changes.
+ * Preset vectors are hand-set so each resolves to its stated `code` under
+ * classify.ts's straight midpoint split (>= 0.5 is high) on exactly the 6
+ * axes archetypeCode reads (CORE_AXES: conscientiousness, extraversion,
+ * openness; MODIFIER_AXES: agreeableness, conflict_assertiveness,
+ * relatedness) — unlike the old 0.67/0.33-banded matcher, every value lands
+ * somewhere, so there's no "miss" case to guard against, only "which side of
+ * 0.5." scripts/dev-test-user-check asserts each preset's values actually
+ * resolve to its stated code, so a values edit that drifts the code is
+ * caught.
  *
  * Presets are written DIRECTLY to the me trait columns (with self_settings
  * source tokens) rather than through updateTraits's EWMA pipeline: that
  * pipeline blends each write toward prior answers, so a second preset switch
- * would land between the poles and never match. A dev persona switch is an
- * exact rewrite by design; history/tracks stay out of it.
+ * would land between the poles and drift the resulting code. A dev persona
+ * switch is an exact rewrite by design; history/tracks stay out of it.
  */
 
 import { supabase } from '@/lib/supabase';
@@ -103,17 +108,15 @@ function devTracks(
 
 export interface DevArchetypePreset {
   id: DevArchetypePresetId;
-  /** Legend the linked archetype unlocks (the card you should see). */
-  legendName: string;
-  archetypeId: string;
+  /** Expected classify.ts archetypeCode these values resolve to (core: conscientiousness/extraversion/openness, modifier: agreeableness/conflict_assertiveness/relatedness — see legends64/classify.ts's CORE_AXES/MODIFIER_AXES order). */
+  code: string;
   values: Record<TraitAxis, number>;
 }
 
 export const DEV_ARCHETYPE_PRESETS: readonly DevArchetypePreset[] = [
   {
     id: 'architect',
-    legendName: 'Da Vinci',
-    archetypeId: 'arch_the_architect',
+    code: 'HLL-HLL',
     values: {
       openness: 0.45,
       conscientiousness: 0.8,
@@ -135,8 +138,7 @@ export const DEV_ARCHETYPE_PRESETS: readonly DevArchetypePreset[] = [
   },
   {
     id: 'front_liner',
-    legendName: 'Alexander the Great',
-    archetypeId: 'arch_the_front_liner',
+    code: 'HHH-HHH',
     values: {
       openness: 0.8,
       conscientiousness: 0.5,
@@ -158,8 +160,7 @@ export const DEV_ARCHETYPE_PRESETS: readonly DevArchetypePreset[] = [
   },
   {
     id: 'watcher',
-    legendName: 'Confucius',
-    archetypeId: 'arch_the_watcher',
+    code: 'LLH-HLL',
     values: {
       openness: 0.8,
       conscientiousness: 0.45,
@@ -181,8 +182,7 @@ export const DEV_ARCHETYPE_PRESETS: readonly DevArchetypePreset[] = [
   },
   {
     id: 'commander',
-    legendName: 'Athena',
-    archetypeId: 'arch_the_commander',
+    code: 'HHH-LHL',
     values: {
       openness: 0.5,
       conscientiousness: 0.8,
@@ -211,15 +211,15 @@ export function devPresetById(
 }
 
 /**
- * Switches the signed-in dev user's trait profile to an archetype preset and
- * clears their legend history so the matching legend can be shown again.
- * Refuses to run for anyone except the fixed dev-test user — a real account's
- * traits are never overwritten by this tool.
+ * Switches the signed-in dev user's trait profile to an archetype preset, so
+ * Legends' archetypeCode() recomputes to the preset's stated `code` on next
+ * load. Refuses to run for anyone except the fixed dev-test user — a real
+ * account's traits are never overwritten by this tool.
  *
  * Writes every axis directly to the me row (source self_settings, touched now)
  * so the stored profile is exactly the preset — deliberately not the EWMA
  * updateTraits pipeline, which would blend consecutive switches toward mid
- * band and break the match (see the module header).
+ * band and drift the resulting code (see the module header).
  */
 export async function applyDevArchetypePreset(
   presetId: DevArchetypePresetId,
@@ -267,25 +267,26 @@ export async function applyDevArchetypePreset(
       nowIso,
     ),
   );
-
-  // Reset "already seen" so the same legend re-appears for the next test.
-  // wave31 added the owner-scoped delete policy that makes this allowed.
-  const { error: historyError } = await supabase
-    .from('user_legend_history')
-    .delete()
-    .eq('user_id', user.id);
-  if (historyError) throw historyError;
+  // No "seen history" to reset for the 64-archetype system: archetypeCode()
+  // is a pure function of live trait values, recomputed fresh every time
+  // Legends loads — there is nothing analogous to the old
+  // user_legend_history dedup state to clear. A stale legend_generations row
+  // from a previous preset is left in place; the Reroll button (paid) or a
+  // fresh manual trigger (if none exists yet) is how a tester gets a new one.
 }
 
 /**
- * Clears the dev-test user's profile so the Legends thin-profile gate fires:
- * catalog non-empty, NO archetype matched, isThinProfile true. No archetype
- * preset above can reach this state, since each is built to match one.
+ * Clears the dev-test user's profile so Legends' thin-profile gate fires:
+ * isThinProfile(settledCount(tracks)) true. Unlike the old figure-catalog
+ * system, the 64-archetype system has no "no archetype matched" state to
+ * reach — classify.ts always resolves to exactly one code, even from null
+ * axes (see midpointHighLow) — so this preset targets settledCount alone,
+ * not any archetype-matching concept. No archetype preset above can reach
+ * this state, since each is built to reach STABILITY_FLOOR_N.
  *
  * Two writes, because thin is two separate facts:
- *   1. me axis columns -> null, so buildLegendView sees no poles and nothing
- *      matches (a mid value would also miss, but null is the honest unanswered
- *      state and makes missingAxis pick the first unanswered axis).
+ *   1. me axis columns -> null (the honest unanswered state, and what makes
+ *      missingAxis pick the first unanswered axis).
  *   2. trait_tracks -> answer_count 0, so effectiveStability floors to 0 for
  *      every axis and settledCount lands at 0.
  *
@@ -327,10 +328,4 @@ export async function applyDevThinProfilePreset(): Promise<void> {
     user.id,
     devTracks(null, THIN_PRESET_ANSWER_COUNT, 0, new Date().toISOString()),
   );
-
-  const { error: historyError } = await supabase
-    .from('user_legend_history')
-    .delete()
-    .eq('user_id', user.id);
-  if (historyError) throw historyError;
 }

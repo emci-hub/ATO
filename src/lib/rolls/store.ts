@@ -1,8 +1,8 @@
 /**
  * Roll/reveal data access (trait-system redesign §7) — wraps the RPCs from
  * supabase/migrations/wave46_trait_rolls.sql + wave47_reveal_requires_ready.sql.
- * Mirrors src/lib/legends/store.ts's naming (content/history data access,
- * separate from the pure logic in compose.ts/category-read.ts/results.ts).
+ * Content/history data access, separate from the pure logic in
+ * compose.ts/category-read.ts/results.ts.
  */
 import { supabase } from '@/lib/supabase';
 

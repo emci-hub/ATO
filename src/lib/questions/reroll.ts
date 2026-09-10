@@ -3,13 +3,15 @@ import type { CategoryId } from '@/lib/categories';
 import type { TraitTrack } from '@/lib/trait-stability';
 import type { TraitAxis } from '@/lib/traits';
 import type { TalkStyle } from '@/lib/voice/types';
-import { logShownVariants } from '@/lib/legends/store';
 import {
   spendAtoTokensCategoryReroll,
   spendAtoTokensLegendReroll,
   spendAtoTokensQuestionReroll,
 } from '@/lib/ato-tokens-server';
 import type { AtoTokenResult } from '@/lib/ato-tokens';
+import { splitArchetypeCode } from '@/lib/legends64/archetypes';
+import { generateLegendStory } from '@/lib/legends64/generate-story';
+import { saveGeneration } from '@/lib/legends64/store';
 
 import type { CategoryBatchItemState } from './category-batch';
 import { fetchAskedQuestionTexts } from './category-batch-store';
@@ -73,29 +75,43 @@ function parseRerollItemResult(data: unknown): RerollItemUpdate | null {
   return { id, axis: axis as TraitAxis, prompt, options };
 }
 
+export interface LegendRerollResult {
+  result: AtoTokenResult;
+  story: string | null;
+  /** id of the newly-saved legend_generations row, so the caller can exclude it from the archive fold (which otherwise duplicates the currently-shown story). */
+  generationId: string | null;
+}
+
 /**
- * Legend reroll: matching (buildLegendView) is already live/stateless, and
- * every currently-shown card is already logged "seen" the moment it renders
- * (legends.tsx's load effect) — so a plain re-derive-the-whole-view reroll
- * would silently swap EVERY card, not just the one the user paid to change.
- * The caller (legends.tsx) instead computes the single replacement locally
- * via `bestVariantForFigure` (catalog + trait values it already has, no
- * network) BEFORE calling this — so a figure with no other matching variant
- * is caught for free, never charged. This function only does the two things
- * that must go over the network: spend, then persist both the old and new
- * variant as shown (logShownVariants is idempotent, so logging the new one
- * here is the same write the normal load-effect path would eventually make).
+ * Legend reroll (core loop redesign §4, new 64-archetype system). Order is
+ * the OPPOSITE of a naive "charge then generate": generate the replacement
+ * story FIRST (claim_legend_story_generation's quota check is inside
+ * generateLegendStory), and only spend the 10 ATO tokens once that story
+ * actually exists — mirrors rerollQuestionItem/rerollCategoryItem's own
+ * "never charge for a reroll that can't happen" rule (see this file's top
+ * docstring) exactly, for the same reason: a quota-exhausted or failed AI
+ * call must never cost the user a token.
  */
-export async function rerollLegend(
-  userId: string,
-  timezone: string,
-  oldVariantId: string,
-  newVariantId: string,
-): Promise<AtoTokenResult> {
+export async function rerollLegend(archetypeCode: string): Promise<LegendRerollResult> {
+  const split = splitArchetypeCode(archetypeCode);
+  if (!split) {
+    return { result: { ok: false, balance: 0, reason: 'invalid_code' }, story: null, generationId: null };
+  }
+
+  const generation = await generateLegendStory(split.core, split.modifier);
+  if (generation.kind !== 'ok') {
+    return {
+      result: { ok: false, balance: 0, reason: generation.kind === 'quota' ? 'quota' : 'generation_failed' },
+      story: null,
+      generationId: null,
+    };
+  }
+
   const result = await trySpend(spendAtoTokensLegendReroll);
-  if (!result.ok) return result;
-  await logShownVariants(userId, [oldVariantId, newVariantId], timezone);
-  return result;
+  if (!result.ok) return { result, story: null, generationId: null };
+
+  const generationId = await saveGeneration(archetypeCode, generation.story);
+  return { result, story: generation.story, generationId };
 }
 
 /** question_items rows already used by the same pack (including the item being rerolled) — the reroll RPC never repeats one of these on the same axis within a round. */

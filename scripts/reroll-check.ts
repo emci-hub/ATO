@@ -1,10 +1,10 @@
 /**
- * reroll: the ATO tokens reroll orchestration (wave53/wave54, T-04 core loop
- * redesign §5) — reroll.ts pairs each spendAtoTokens*Reroll call with its
- * effect (legend: mark seen, driven by a locally-computed replacement in
- * legends.tsx; question/category: swap content via the
- * reroll_question_item/reroll_category_batch_item RPCs). Run:
- * npm run check:reroll
+ * reroll: the ATO tokens reroll orchestration — reroll.ts pairs each
+ * spendAtoTokens*Reroll call with its effect (legend: generate + save a
+ * fresh legend_generations row for the live archetype code, core loop
+ * redesign §4; question/category: swap content via the
+ * reroll_question_item/reroll_category_batch_item RPCs, T-04 core loop
+ * redesign §5). Run: npm run check:reroll
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -35,17 +35,35 @@ assert.match(rerollSrc, /async function trySpend\(/);
 assert.match(rerollSrc, /code === 'P0040'/);
 ok('trySpend catches the insufficient-balance exception (errcode P0040) rather than letting it throw uncaught');
 
-// rerollLegend takes the already-computed replacement id — it must not
-// derive one itself (that would risk the "reroll swaps every shown card"
-// bug found in review: every currently-shown card is already logged seen
-// the moment it renders, so a full view re-derive after a reroll silently
-// moves every figure's pick, not just the one paid for).
+// Legends 64-archetype rewrite (core loop redesign §4): rerollLegend now
+// takes the live archetype code and does its own generate-then-spend-then-
+// save, rather than taking a precomputed old/new variant pair (the old
+// figure-catalog system's shape). Order matters here even more than for
+// question/category reroll — it must generate BEFORE spending, and only
+// persist the new story AFTER the spend actually succeeds, otherwise a
+// quota-exhausted or failed generation could still cost the token, or a
+// failed spend could still leave a story saved for free.
 assert.match(
   rerollSrc,
-  /export async function rerollLegend\(\s*\n\s*userId: string,\s*\n\s*timezone: string,\s*\n\s*oldVariantId: string,\s*\n\s*newVariantId: string,\s*\n\)/,
+  /export async function rerollLegend\(archetypeCode: string\): Promise<LegendRerollResult>/,
 );
-assert.match(rerollSrc, /logShownVariants\(userId, \[oldVariantId, newVariantId\], timezone\)/);
-ok('rerollLegend takes a precomputed old/new variant pair rather than re-deriving the view itself');
+const legendFnStart = rerollSrc.indexOf('export async function rerollLegend');
+const legendFnBody = rerollSrc.slice(legendFnStart, rerollSrc.indexOf('\n}', legendFnStart));
+const legendGenerateIdx = legendFnBody.indexOf('generateLegendStory');
+const legendSpendIdx = legendFnBody.indexOf('spendAtoTokensLegendReroll');
+const legendSaveIdx = legendFnBody.indexOf('saveGeneration');
+assert.notEqual(legendGenerateIdx, -1, 'rerollLegend must call generateLegendStory');
+assert.notEqual(legendSpendIdx, -1, 'rerollLegend must call spendAtoTokensLegendReroll');
+assert.notEqual(legendSaveIdx, -1, 'rerollLegend must call saveGeneration');
+assert.ok(
+  legendGenerateIdx < legendSpendIdx,
+  'rerollLegend must generate the replacement story before spending',
+);
+assert.ok(
+  legendSpendIdx < legendSaveIdx,
+  'rerollLegend must only persist the new story after the spend actually succeeds',
+);
+ok('rerollLegend generates the story before spending, and only saves it after a successful spend');
 
 // Order: whatever can fail (bank candidate lookup, AI generation) must run
 // BEFORE the spend call, so a reroll that can't happen is never charged.
@@ -110,24 +128,24 @@ assert.match(
 );
 ok('wave54 adds `for update` row locking to both RPCs\' ownership/answered check, closing the concurrent-reroll race found in review');
 
-// Both call sites must exist, and LegendCard must NOT call rerollLegend
-// itself — legends.tsx owns the catalog (needed to find the replacement
-// before spending) and passes the result down as a plain callback.
+// LegendCard must NOT call rerollLegend itself — legends.tsx owns the live
+// archetype-code computation (currentCode()) and passes the result down as
+// a plain injected callback, same separation of concerns as the old system.
 const legendCardSrc = readFileSync(resolve(__dirname, '../src/components/legend-card.tsx'), 'utf8');
-assert.doesNotMatch(legendCardSrc, /rerollLegend\(/, 'LegendCard must not call rerollLegend directly — legends.tsx owns the catalog lookup');
+assert.doesNotMatch(legendCardSrc, /rerollLegend\(/, 'LegendCard must not call rerollLegend directly — legends.tsx owns the archetype-code computation');
 assert.match(legendCardSrc, /onReroll\?:\s*\(\)\s*=>\s*Promise<LegendRerollOutcome>/);
-ok('LegendCard delegates reroll to an injected onReroll callback rather than computing the replacement itself');
+ok('LegendCard delegates reroll to an injected onReroll callback rather than calling rerollLegend itself');
 
 const legendsScreenSrc = readFileSync(resolve(__dirname, '../src/app/(tabs)/legends.tsx'), 'utf8');
-assert.match(legendsScreenSrc, /bestVariantForFigure\(catalog, me, card\.variant\.figureId, exclude\)/);
-assert.match(legendsScreenSrc, /rerollLegend\(me\.id, me\.timezone \|\| 'UTC', card\.variant\.id, replacement\.variant\.id\)/);
-const rerollHandlerStart = legendsScreenSrc.indexOf('async function handleLegendReroll');
+assert.match(legendsScreenSrc, /rerollLegend\(code\)/);
+const rerollHandlerStart = legendsScreenSrc.indexOf('async function handleReroll');
 const rerollHandlerBody = legendsScreenSrc.slice(rerollHandlerStart, legendsScreenSrc.indexOf('\n  }', rerollHandlerStart));
-assert.ok(
-  rerollHandlerBody.indexOf('bestVariantForFigure') < rerollHandlerBody.indexOf('rerollLegend('),
-  'legends.tsx must find a replacement locally before spending on a legend reroll',
+assert.match(
+  rerollHandlerBody,
+  /currentCode\(\)/,
+  'legends.tsx must reroll using the LIVE archetype code (currentCode()), never a stale stored one',
 );
-ok('legends.tsx computes the replacement locally (no charge if none exists) before calling rerollLegend');
+ok('legends.tsx rerolls using the current archetype code, delegating all spend/generate ordering to rerollLegend');
 
 const questionsFoldSrc = readFileSync(resolve(__dirname, '../src/components/questions-fold.tsx'), 'utf8');
 assert.match(questionsFoldSrc, /rerollQuestionItem\(/);

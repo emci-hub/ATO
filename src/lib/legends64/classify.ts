@@ -1,5 +1,7 @@
 import { type TraitAxis } from '@/lib/traits';
-import type { LegendValues } from '@/lib/legends/match';
+
+/** Values of the form read off `me` (TraitValues shape). Local to legends64 — no dependency on the old legend-candidates system. */
+export type LegendValues = Readonly<Partial<Record<TraitAxis, number | null>>>;
 
 /**
  * 64-archetype classification (core loop redesign §4,

@@ -65,8 +65,9 @@ line has drifted.
    `trait_tracks` (`src/lib/trait-tracks-store.ts:57`; α=0.35, stability floor 3,
    60-day idle then 90-day half-life at read — `src/lib/trait-stability.ts`).
 3. Readers: `traitStateFromRow()` (`src/lib/traits.ts:215`) for Sage/Ask; report-track
-   only for Categories (`src/lib/categories.ts`), Legends (`src/lib/legends/match.ts:91`),
-   Full Profile completeness ("N of 16 settled").
+   only for Categories (`src/lib/categories.ts`), Legends (`src/lib/legends64/classify.ts`
+   — `archetypeCode()`, straight midpoint split, no band cutoffs), Full Profile
+   completeness ("N of 16 settled").
 4. Dev-only exception: `applyDevArchetypePreset()` (`src/lib/dev-test-user.ts:159`)
    writes columns directly for the dev user (refuses any other account).
 
@@ -97,10 +98,22 @@ once) → `sage_messages`.
 
 ## 8. Legends
 
-`(tabs)/legends.tsx` → `fetchLegendCatalog()` (`src/lib/legends/store.ts:96`,
-`legend_variants` + `legend_figures` embed) + `fetchSeenVariantIds()` (:156) →
-`buildLegendView()` (`src/lib/legends/match.ts:91`, ≥2/3 poles per archetype, best
-unseen variant per figure) → `logShownVariants()` (:169) into `user_legend_history`.
+64-archetype system (core loop redesign §4; replaces the old figure-catalog
+matcher entirely — `legend_figures`/`legend_variants`/`legend_archetypes`/
+`archetype_defs`/`user_legend_history` are dropped, `wave57`). Manual trigger
+only, nothing auto-generates. `(tabs)/legends.tsx` → `archetypeCode(me)`
+(`src/lib/legends64/classify.ts`, straight midpoint split on 6 axes, always
+resolves to exactly one of 64 codes) → tap "let's search your legend?" →
+`generateLegendStory()` (`src/lib/legends64/generate-story.ts`, claims
+`claim_legend_story_generation()` quota first, `wave58`) →
+`saveGeneration()`/`insert_legend_generation` (`src/lib/legends64/store.ts`)
+into `legend_generations`. Display name per skin: `archetypeName(code, skin)`
+(`src/lib/legends64/archetypes.ts`) — same stored story shown under all 6
+skins, switching is pure client state, no refetch. Reroll (10 ATO tokens,
+1/day): `rerollLegend()` (`src/lib/questions/reroll.ts`) — generates the
+replacement story BEFORE spending, only saves after a successful spend.
+Archive: `LegendHistoryFold` (`src/components/legend-history-fold.tsx`),
+latest 3 + expandable, excludes the currently-shown generation.
 
 ## 9. Circle / Chat
 

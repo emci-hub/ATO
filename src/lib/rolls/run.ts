@@ -6,8 +6,7 @@
  */
 import * as Crypto from 'expo-crypto';
 
-import type { LegendValues } from '@/lib/legends/match';
-import { fetchLegendCatalog, fetchSeenVariantIds } from '@/lib/legends/store';
+import type { LegendValues } from '@/lib/legends64/classify';
 import type { TraitTrack } from '@/lib/trait-stability';
 
 import { composeRoll, rollEligible } from './compose';
@@ -76,8 +75,6 @@ export async function runRoll(
     }
 
     const { items, snapshot } = await composeRoll(tracks, values, {
-      fetchLegendCatalog,
-      fetchSeenVariantIds: () => fetchSeenVariantIds(userId),
       generateRollText: generateRollItemText,
     });
 
