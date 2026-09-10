@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import type { ScrollView } from 'react-native';
 
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
@@ -43,30 +42,33 @@ function stampBackground(textSecondary: string): string {
   return rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.16)` : textSecondary;
 }
 
-/** Headroom left above an auto-scrolled target, so it doesn't land flush against the top edge. */
-const SCROLL_TARGET_OFFSET = 96;
+/** Questions shown per page, book-style — the last page can be shorter. */
+const PAGE_SIZE = 5;
 
 /**
- * One category's worth of questions per screen — every question belonging to
- * that category shown together (not one-at-a-time), with Back/Next/Skip
- * category navigation and a "Category X of Y" + dedup'd axis-completion
- * indicator. Generic over the question source: the caller supplies
- * `rowsForAxis`, so this component never assumes a fixed question count per
- * category or where the questions come from (the static Full Profile bank
- * today; a future "questions stack" source later, same component).
+ * A flat, book-style pager over every question across every category — 5
+ * questions per page, in stable axis order, "Next Page"/"Back" only. Replaces
+ * the earlier one-category-per-screen layout (Back/Skip/Next per category):
+ * with the questions no longer grouped by category, "skip this category"
+ * stopped making sense as a control, so it's gone along with the grouping.
+ * Generic over the question source: the caller supplies `rowsForAxis`, so
+ * this component never assumes a fixed question count per axis or where the
+ * questions come from (the static Full Profile bank today; a future
+ * "questions stack" source later, same component).
  *
  * Per-row rendering (prompt, options, an "Answered" stamp overlaid on the
- * picked option, themed border/colors) is the same shape Full Profile's old
- * flat list already used — same `ThemedText`/`ThemedPressable`/
- * `controlBorderColor` components, so it follows whatever the active
- * appearance theme renders (dark background, themed borders/highlight
- * color) exactly as before, nothing hardcoded here beyond the stamp's own
- * rotation/border, which is deliberately fixed (a stamp graphic, not
- * themed chrome).
+ * picked option, themed border/colors) is unchanged from the prior layout —
+ * same `ThemedText`/`ThemedPressable`/`controlBorderColor` components, so it
+ * follows whatever the active appearance theme renders exactly as before.
+ * The stamp itself has never had any entrance animation; the only motion the
+ * old layout had was a busy-dim opacity flash on the just-picked option,
+ * already excluded from the dim.
  *
  * Saving an answer is entirely the caller's responsibility via `onPick` —
  * this component never calls a save function itself, so the existing
- * answer-write path is untouched.
+ * answer-write path is untouched. No auto-scroll on answer (removed
+ * deliberately — it could overshoot); the page itself never moves until the
+ * viewer taps Next Page.
  */
 export function CategoryPagedQuestions({
   storageKey,
@@ -75,7 +77,6 @@ export function CategoryPagedQuestions({
   busy,
   locked = false,
   onPick,
-  scrollViewRef,
 }: {
   /** Unique id for this question set (e.g. "full-profile", "questions-stack") — scopes remembered position. */
   storageKey: string;
@@ -90,31 +91,22 @@ export function CategoryPagedQuestions({
    * highlight itself stays optimistic/instant (session-local, same as
    * before — a false one just disappears on remount, harmless), but the
    * "Answered" stamp is only PERSISTED (answered-option-storage.ts, so it
-   * survives remounts/scrolling back) once this confirms true — otherwise a
+   * survives remounts/paging back) once this confirms true — otherwise a
    * failed write would leave a permanent stamp that contradicts the real
-   * answered-count elsewhere on screen (found in review).
+   * answered-count elsewhere on screen (found in review, kept from the prior
+   * layout).
    */
   onPick: (draft: QuestionDraft, option: QuestionOption) => Promise<boolean>;
-  /**
-   * Host screen's ScrollView ref, so answering can auto-scroll to the next
-   * unanswered row — same-category only (this component is paginated by
-   * category; jumping to a different category page on top of a scroll would
-   * be a much bigger, more disorienting UI move than the scroll itself, so
-   * that's deliberately not done here). Optional: absent means no
-   * auto-scroll, not a crash.
-   */
-  scrollViewRef?: RefObject<ScrollView | null>;
 }) {
   const theme = useTheme();
-  const [index, setIndex] = useState(0);
+  const [pageIndex, setPageIndex] = useState(0);
   const [positionReady, setPositionReady] = useState(false);
-  const rowRefs = useRef(new Map<string, View>());
   // Tracks which option was picked per row — rows here are intentionally
   // re-answerable, so this is a display hint, not a lock. Seeded from
   // AsyncStorage (answered-option-storage.ts) on mount so a row answered in
-  // an earlier session/visit still shows its stamp when scrolled back to,
-  // not just the option just tapped this session; a fresh tap updates both
-  // this state and storage together (see pick() below).
+  // an earlier session/visit still shows its stamp when paged back to, not
+  // just the option just tapped this session; a fresh tap updates both this
+  // state and storage together (see the option's onPress below).
   const [pickedByRow, setPickedByRow] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -128,18 +120,18 @@ export function CategoryPagedQuestions({
     };
   }, [storageKey]);
 
-  // Restore the last-viewed category for this question set on mount. Scoped
-  // to `storageKey` only (not `categories`) — categories is a live catalog
-  // that can reorder/grow without invalidating a remembered position, since
-  // the lookup below matches by id, not index.
+  // Restore the last-viewed page for this question set on mount. Scoped to
+  // `storageKey` only (not the row list) — the row list can reorder/grow
+  // (a new bank draft, a catalog change) without invalidating a remembered
+  // page number; a stale page index simply clamps to the new last page below.
   useEffect(() => {
     let cancelled = false;
     setPositionReady(false);
     loadCategoryPagePosition(storageKey)
-      .then((savedId) => {
-        if (cancelled || !savedId) return;
-        const at = categories.findIndex((def) => def.id === savedId);
-        if (at >= 0) setIndex(at);
+      .then((saved) => {
+        if (cancelled || !saved) return;
+        const parsed = Number(saved);
+        if (Number.isInteger(parsed) && parsed >= 0) setPageIndex(parsed);
       })
       .finally(() => {
         if (!cancelled) setPositionReady(true);
@@ -147,183 +139,125 @@ export function CategoryPagedQuestions({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-time position load per storageKey/mount
   }, [storageKey]);
-
-  const clampedIndex = categories.length === 0 ? 0 : Math.min(index, categories.length - 1);
-  const current = categories[clampedIndex] ?? null;
-
-  // Persist the position on every change, but only after the initial load
-  // above resolves — otherwise the default index=0 would overwrite a real
-  // saved position in the instant before it loads.
-  useEffect(() => {
-    if (!positionReady || !current) return;
-    void saveCategoryPagePosition(storageKey, current.id);
-  }, [positionReady, storageKey, current]);
 
   const uniqueAxes = useMemo(() => uniqueCategoryAxes(categories), [categories]);
   const completedAxes = useMemo(
     () => completedAxesFrom(uniqueAxes, rowsForAxis),
     [uniqueAxes, rowsForAxis],
   );
+  // Flat, axis-order list of every question across every category — the
+  // book pager's whole "auto-sorted, not grouped by category" shape. Axes
+  // shared by two categories only contribute their rows once, since
+  // `uniqueAxes` is already deduped.
+  const allRows = useMemo(
+    () => uniqueAxes.flatMap((axis) => rowsForAxis(axis)),
+    [uniqueAxes, rowsForAxis],
+  );
+
+  const totalPages = Math.max(1, Math.ceil(allRows.length / PAGE_SIZE));
+  const clampedPage = Math.min(pageIndex, totalPages - 1);
+
+  // Persist the position on every change, but only after the initial load
+  // above resolves — otherwise the default index=0 would overwrite a real
+  // saved position in the instant before it loads. Also skipped while
+  // `allRows` is empty (nothing loaded yet for this caller) — writing "0"
+  // then would clobber a real remembered position before real rows arrive
+  // (found in review; not reachable today since the Full Profile bank is
+  // always non-empty, but this component is explicitly generic over the
+  // question source).
+  useEffect(() => {
+    if (!positionReady || allRows.length === 0) return;
+    void saveCategoryPagePosition(storageKey, String(clampedPage));
+  }, [positionReady, storageKey, clampedPage, allRows.length]);
 
   const goTo = useCallback(
     (next: number) => {
-      if (categories.length === 0) return;
-      setIndex(Math.max(0, Math.min(categories.length - 1, next)));
+      setPageIndex(Math.max(0, Math.min(totalPages - 1, next)));
     },
-    [categories.length],
+    [totalPages],
   );
 
-  if (!current) return null;
+  if (categories.length === 0) return null;
 
-  const atFirst = clampedIndex === 0;
-  const atLast = clampedIndex >= categories.length - 1;
-
-  /**
-   * Auto-scroll to the next unanswered row in the CURRENT category after an
-   * answer — same-category only (see the `scrollViewRef` prop doc). Runs
-   * synchronously right after the optimistic `setPickedByRow` in the tap
-   * handler below, using the just-known state directly (not waiting on a
-   * re-render or the async `onPick` round trip) so the scroll itself never
-   * adds to the perceived delay.
-   */
-  function scrollToNextUnanswered(justPickedRowKey: string, freshPicks: Record<string, number>) {
-    if (!current || !scrollViewRef?.current) return;
-    const flatRows = current.axes.flatMap((axis) => rowsForAxis(axis));
-    const startIndex = flatRows.findIndex((row) => row.key === justPickedRowKey);
-    if (startIndex < 0) return;
-    const target = flatRows
-      .slice(startIndex + 1)
-      .find((row) => !row.answered && freshPicks[row.key] == null);
-    if (!target) return; // nothing left unanswered in this category — stay put, no page jump
-    const node = rowRefs.current.get(target.key);
-    // getNativeScrollRef(), not findNodeHandle() — found in review: on the
-    // New Architecture (Fabric, default since Expo SDK 54, no
-    // newArchEnabled override in this repo), `measureLayout` rejects a
-    // plain numeric node handle outright (dev: console.error and silent
-    // no-op; onFail never even fires) — only Paper (the old architecture)
-    // accepted a number. The host instance from getNativeScrollRef() works
-    // on both.
-    const scrollNode = scrollViewRef.current.getNativeScrollRef();
-    if (!node || !scrollNode) return;
-    node.measureLayout(
-      scrollNode,
-      (_x, y) => {
-        scrollViewRef.current?.scrollTo({ y: Math.max(0, y - SCROLL_TARGET_OFFSET), animated: true });
-      },
-      () => {
-        // Measurement can fail (e.g. the node unmounted mid-flight) — nothing to fall back to, just skip the scroll.
-      },
-    );
-  }
+  const atFirst = clampedPage === 0;
+  const atLast = clampedPage >= totalPages - 1;
+  const pageRows = allRows.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE);
 
   return (
     <View style={styles.container}>
       <View style={styles.progressRow}>
         <ThemedText type="small" themeColor="textSecondary">
-          Category {clampedIndex + 1} of {categories.length}
+          Page {clampedPage + 1} of {totalPages}
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
           {completedAxes.length} of {uniqueAxes.length} axes complete
         </ThemedText>
       </View>
-      <ThemedText type="smallBold">{current.name}</ThemedText>
-      <View style={styles.axisSections}>
-        {current.axes.map((axis) => {
-          const rows = rowsForAxis(axis);
-          const answeredCount = rows.filter((row) => row.answered).length;
-          return (
-            <View key={axis} style={styles.axisSection}>
-              <ThemedText type="smallBold">
-                {`${humanizeAxis(axis)} · ${answeredCount}/${rows.length}`}
-              </ThemedText>
-              {rows.map((row) => (
-                <View
-                  key={row.key}
-                  style={styles.axisItem}
-                  // collapsable={false}: Android can flatten a plain View
-                  // with only layout styling into its parent for perf,
-                  // which would make measureLayout unable to find it as a
-                  // distinct native view — same precedent nav-pixel.tsx
-                  // uses for a view that must exist natively.
-                  collapsable={false}
-                  ref={(node) => {
-                    if (node) rowRefs.current.set(row.key, node);
-                    else rowRefs.current.delete(row.key);
-                  }}>
-                  <ThemedText type="small">{row.draft.prompt}</ThemedText>
-                  {locked ? null : (
-                    <View style={styles.options}>
-                      {row.draft.options.map((option, optIndex) => {
-                        const picked = pickedByRow[row.key] === optIndex;
-                        return (
-                          <ThemedPressable
-                            key={`${row.key}-${optIndex}`}
-                            disabled={busy}
-                            accessibilityState={{ selected: picked }}
-                            onPress={async () => {
-                              const freshPicks = { ...pickedByRow, [row.key]: optIndex };
-                              setPickedByRow(freshPicks);
-                              scrollToNextUnanswered(row.key, freshPicks);
-                              const ok = await onPick(row.draft, option);
-                              if (ok) {
-                                void saveAnsweredOption(storageKey, row.key, optIndex);
-                              }
-                            }}
+      <View style={styles.rows}>
+        {pageRows.map((row) => (
+          <View key={row.key} style={styles.axisItem}>
+            <ThemedText type="small" themeColor="textSecondary">
+              {humanizeAxis(row.axis)}
+            </ThemedText>
+            <ThemedText style={styles.questionPrompt}>{row.draft.prompt}</ThemedText>
+            {locked ? null : (
+              <View style={styles.options}>
+                {row.draft.options.map((option, optIndex) => {
+                  const picked = pickedByRow[row.key] === optIndex;
+                  return (
+                    <ThemedPressable
+                      key={`${row.key}-${optIndex}`}
+                      disabled={busy}
+                      accessibilityState={{ selected: picked }}
+                      onPress={async () => {
+                        setPickedByRow((prev) => ({ ...prev, [row.key]: optIndex }));
+                        const ok = await onPick(row.draft, option);
+                        if (ok) {
+                          void saveAnsweredOption(storageKey, row.key, optIndex);
+                        }
+                      }}
+                      style={[
+                        styles.option,
+                        { borderColor: controlBorderColor(theme) },
+                        picked && { backgroundColor: theme.backgroundSelected },
+                        // Deliberately excludes every ALREADY-PICKED option
+                        // (not just the one just tapped) from the busy dim —
+                        // dimming the just-answered option the instant its
+                        // stamp mounts read as "the tap didn't register".
+                        // Every UNPICKED option still dims/disables while
+                        // busy, so double-tapping a different, still-open
+                        // option mid-save is still blocked.
+                        busy && !picked && styles.disabled,
+                      ]}>
+                      <ThemedText type="smallBold">{option.text}</ThemedText>
+                      {picked ? (
+                        <View pointerEvents="none" style={styles.stampWrap}>
+                          <View
                             style={[
-                              styles.option,
-                              { borderColor: controlBorderColor(theme) },
-                              picked && { backgroundColor: theme.backgroundSelected },
-                              // Deliberately excludes every ALREADY-PICKED option
-                              // (not just the one just tapped — `picked` is true for
-                              // any option with a stamp, including ones restored from
-                              // storage) from the busy dim. Dimming the just-answered
-                              // option the instant its stamp mounts was what read as
-                              // "the stamp animating in late" (found in review last
-                              // session: there is no actual animation on the stamp
-                              // itself, only this opacity flash coinciding with it).
-                              // Every UNPICKED option still dims/disables correctly
-                              // while busy, so double-tapping a different, still-open
-                              // option mid-save is still blocked. `disabled={busy}`
-                              // itself is left unchanged on picked options too — they
-                              // stay non-interactive during the save, just not dimmed;
-                              // re-tapping one would be a duplicate write of the same
-                              // answer, not a meaningfully different action to block
-                              // visually as "disabled."
-                              busy && !picked && styles.disabled,
+                              styles.stamp,
+                              {
+                                borderColor: theme.textSecondary,
+                                backgroundColor: stampBackground(theme.textSecondary),
+                              },
                             ]}>
-                            <ThemedText type="smallBold">{option.text}</ThemedText>
-                            {picked ? (
-                              <View pointerEvents="none" style={styles.stampWrap}>
-                                <View
-                                  style={[
-                                    styles.stamp,
-                                    {
-                                      borderColor: theme.textSecondary,
-                                      backgroundColor: stampBackground(theme.textSecondary),
-                                    },
-                                  ]}>
-                                  <ThemedText type="smallBold" themeColor="textSecondary" style={styles.stampText}>
-                                    Answered
-                                  </ThemedText>
-                                </View>
-                              </View>
-                            ) : null}
-                          </ThemedPressable>
-                        );
-                      })}
-                    </View>
-                  )}
-                </View>
-              ))}
-            </View>
-          );
-        })}
+                            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.stampText}>
+                              Answered
+                            </ThemedText>
+                          </View>
+                        </View>
+                      ) : null}
+                    </ThemedPressable>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        ))}
       </View>
       <View style={styles.navRow}>
         <Pressable
-          onPress={() => goTo(clampedIndex - 1)}
+          onPress={() => goTo(clampedPage - 1)}
           disabled={busy || atFirst}
           style={({ pressed }) => [
             styles.navLink,
@@ -334,28 +268,16 @@ export function CategoryPagedQuestions({
             Back
           </ThemedText>
         </Pressable>
-        <Pressable
-          onPress={() => goTo(clampedIndex + 1)}
-          disabled={busy || atLast}
-          style={({ pressed }) => [
-            styles.navLink,
-            pressed && styles.pressed,
-            (busy || atLast) && styles.disabled,
-          ]}>
-          <ThemedText type="smallBold" themeColor="textSecondary">
-            Skip
-          </ThemedText>
-        </Pressable>
         <ThemedPressable
           disabled={busy || atLast}
-          onPress={() => goTo(clampedIndex + 1)}
+          onPress={() => goTo(clampedPage + 1)}
           style={[
             styles.option,
             styles.nextButton,
             { borderColor: controlBorderColor(theme) },
             (busy || atLast) && styles.disabled,
           ]}>
-          <ThemedText type="smallBold">Next</ThemedText>
+          <ThemedText type="smallBold">Next Page</ThemedText>
         </ThemedPressable>
       </View>
     </View>
@@ -371,11 +293,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  axisSections: {
+  rows: {
     gap: Spacing.four,
   },
-  axisSection: {
-    gap: Spacing.two,
+  // A bit larger than ThemedText's "small" (14/20) — this screen shows 5
+  // questions per page, denser than the single-question flow elsewhere in
+  // Questions, so a smaller bump than that flow's own override.
+  questionPrompt: {
+    fontSize: 16,
+    lineHeight: 22,
   },
   axisItem: {
     gap: Spacing.two,

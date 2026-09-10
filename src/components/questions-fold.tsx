@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import type { ScrollView } from 'react-native';
 
 import { CategoryPagedQuestions } from '@/components/category-paged-questions';
 import { SettingsFold } from '@/components/settings-fold';
@@ -10,6 +9,7 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getCategoryDefs, type CategoryId } from '@/lib/categories';
 import { useCategoryDefs } from '@/lib/category-catalog';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { updateTraits, type Me } from '@/lib/me';
 import { earnTokensQuiet } from '@/lib/tokens-server';
 import { claimOngoingRoundCompleteQuiet } from '@/lib/ato-tokens-server';
@@ -114,7 +114,6 @@ export function QuestionsFold({
   focusAxis,
   category,
   tracks,
-  scrollViewRef,
 }: {
   me: Me;
   history: CheckHistory[];
@@ -144,14 +143,6 @@ export function QuestionsFold({
    * Absent reads as incomplete: static bank only, no model call.
    */
   tracks?: readonly TraitTrack[];
-  /**
-   * The host screen's own ScrollView ref (intake-sweep.tsx) — threaded down
-   * to `CategoryPagedQuestions` so it can auto-scroll to the next unanswered
-   * question after an answer, same-category only. Optional: absent means no
-   * auto-scroll, not a crash (a future host that doesn't have one wired yet
-   * degrades cleanly).
-   */
-  scrollViewRef?: RefObject<ScrollView | null>;
 }) {
   const theme = useTheme();
   // Live-subscribed catalog (same hook categories-fold.tsx/category-teaser.tsx
@@ -431,7 +422,6 @@ export function QuestionsFold({
         // signed in on the same device would see the first account's
         // answer stamps on questions it never answered (found in review).
         storageKey={`full-profile:${me.id}`}
-        scrollViewRef={scrollViewRef}
         categories={liveCategoryDefs}
         rowsForAxis={(axis) =>
           bankProgressForAxis(axis, tracks ?? []).map((row) => ({
@@ -477,7 +467,7 @@ export function QuestionsFold({
         </ThemedText>
       ) : item ? (
         <>
-          <ThemedText>{item.prompt}</ThemedText>
+          <ThemedText style={styles.questionPrompt}>{item.prompt}</ThemedText>
           <View style={styles.options}>
             {item.options.map((option, index) => {
               const picked = pickedOption?.itemId === item.id && pickedOption.index === index;
@@ -491,7 +481,13 @@ export function QuestionsFold({
                     styles.option,
                     { borderColor: controlBorderColor(theme) },
                     picked && { backgroundColor: theme.backgroundSelected },
-                    busy && styles.disabled,
+                    // Excludes the just-picked option from the busy dim — the
+                    // same fix already shipped for CategoryPagedQuestions
+                    // (afd6365): dimming the option the instant it's
+                    // highlighted as picked read as "the tap didn't register"
+                    // rather than "saving". Every unpicked option still
+                    // dims/disables during the save.
+                    busy && !picked && styles.disabled,
                   ]}>
                   <ThemedText type="smallBold">{option.text}</ThemedText>
                 </ThemedPressable>
@@ -569,16 +565,20 @@ function OngoingRoundFold({
   const [starting, setStarting] = useState(false);
   const [busy, setBusy] = useState(false);
   const [errorKind, setErrorKind] = useState<'load' | 'start' | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [rerollBusy, setRerollBusy] = useState(false);
   const [rerollNote, setRerollNote] = useState<string | null>(null);
+  const [pickedIndex, setPickedIndex] = useState<{ itemId: string; index: number } | null>(null);
+  const [answerErrorNote, setAnswerErrorNote] = useState<string | null>(null);
   const atoBalance = atoTokenBalanceOf(me);
   const canRerollQuestion = atoBalance >= ATO_TOKEN_PRICE.question_reroll;
 
   const load = useCallback(async () => {
     setLoading(true);
     setErrorKind(null);
+    setErrorDetail(null);
     try {
-      const existing = await fetchLatestOngoingRoundPack();
+      const existing = await withTimeout(fetchLatestOngoingRoundPack(), 25000, 'ongoing-round-load');
       setPack(existing);
       // ATO tokens T-04: if the last answer's claim call was lost (app
       // closed/offline before it fired), retry it here on load — the RPC
@@ -589,8 +589,12 @@ function OngoingRoundFold({
       }
     } catch (err) {
       console.log('[ongoing-round] load error:', err);
-      Sentry.captureException(err);
+      Sentry.captureException(err, { tags: { stage: 'ongoing-round-load' } });
       setErrorKind('load');
+      setErrorDetail(String(err));
+      // Bounded, non-blocking — a stalled flush must never leave the error
+      // card (and its Try again button) stuck behind a spinner (found in review).
+      void Sentry.flush();
     } finally {
       setLoading(false);
     }
@@ -605,6 +609,7 @@ function OngoingRoundFold({
     if (starting) return;
     setStarting(true);
     setErrorKind(null);
+    setErrorDetail(null);
     try {
       const ongoingMe = {
         name: me.name,
@@ -613,12 +618,14 @@ function OngoingRoundFold({
         sage_knows: me.sage_knows,
         facts: me.facts,
       };
-      const saved = await runOngoingRound(ongoingMe, history, tracks);
+      const saved = await withTimeout(runOngoingRound(ongoingMe, history, tracks), 25000, 'ongoing-round-start');
       setPack(saved);
     } catch (err) {
       console.log('[ongoing-round] start error:', err);
-      Sentry.captureException(err);
+      Sentry.captureException(err, { tags: { stage: 'ongoing-round-start' } });
       setErrorKind('start');
+      setErrorDetail(String(err));
+      void Sentry.flush();
     } finally {
       setStarting(false);
     }
@@ -628,6 +635,8 @@ function OngoingRoundFold({
     const option = item.options[index];
     if (!option || busy || !pack) return;
     setBusy(true);
+    setPickedIndex({ itemId: item.id, index });
+    setAnswerErrorNote(null);
     try {
       await answerQuestionItem(item.id, index);
       await updateTraits(me.id, { [item.axis]: option.value }, 'self_situation', [item.axis]);
@@ -647,6 +656,14 @@ function OngoingRoundFold({
       }
     } catch (err) {
       console.log('[ongoing-round] answer error:', err);
+      Sentry.captureException(err, { tags: { stage: 'ongoing-round-answer' }, extra: { packId: pack.id, itemId: item.id } });
+      void Sentry.flush();
+      // A failed save must not leave the tapped option looking picked — same
+      // discipline as QuestionsFold's own pick() (see its pickedOption reset).
+      setPickedIndex(null);
+      // Previously silent — a failed answer just un-picked with no signal at
+      // all, the exact blind spot this diagnostics pass exists to close.
+      setAnswerErrorNote("Couldn't save that answer. Try again.");
     } finally {
       setBusy(false);
     }
@@ -700,6 +717,11 @@ function OngoingRoundFold({
               ? "Couldn't submit your answers. Try again."
               : "Couldn't load your next round. Try again."}
           </ThemedText>
+          {errorDetail && PRE_LAUNCH_DEV ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {errorDetail}
+            </ThemedText>
+          ) : null}
           <ThemedPressable
             disabled={loading || starting}
             onPress={() => void (errorKind === 'start' ? start() : load())}
@@ -718,22 +740,32 @@ function OngoingRoundFold({
         </ThemedPressable>
       ) : nextItem ? (
         <>
-          <ThemedText>{nextItem.prompt}</ThemedText>
+          <ThemedText style={styles.questionPrompt}>{nextItem.prompt}</ThemedText>
           <View style={styles.options}>
-            {nextItem.options.map((option, index) => (
-              <ThemedPressable
-                key={`${nextItem.id}-${index}`}
-                disabled={busy}
-                onPress={() => void pick(nextItem, index)}
-                style={[
-                  styles.option,
-                  { borderColor: controlBorderColor(theme) },
-                  busy && styles.disabled,
-                ]}>
-                <ThemedText type="smallBold">{option.text}</ThemedText>
-              </ThemedPressable>
-            ))}
+            {nextItem.options.map((option, index) => {
+              const picked = pickedIndex?.itemId === nextItem.id && pickedIndex.index === index;
+              return (
+                <ThemedPressable
+                  key={`${nextItem.id}-${index}`}
+                  disabled={busy}
+                  accessibilityState={{ selected: picked }}
+                  onPress={() => void pick(nextItem, index)}
+                  style={[
+                    styles.option,
+                    { borderColor: controlBorderColor(theme) },
+                    picked && { backgroundColor: theme.backgroundSelected },
+                    busy && !picked && styles.disabled,
+                  ]}>
+                  <ThemedText type="smallBold">{option.text}</ThemedText>
+                </ThemedPressable>
+              );
+            })}
           </View>
+          {answerErrorNote ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {answerErrorNote}
+            </ThemedText>
+          ) : null}
           <View style={styles.skipRow}>
             <Pressable
               onPress={() => void reroll(nextItem)}
@@ -782,6 +814,13 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.two,
+  },
+  // A bit larger than ThemedText's shared "default" (16/24) — local override
+  // rather than changing the shared type, since that would resize default
+  // body text everywhere else in the app too.
+  questionPrompt: {
+    fontSize: 18,
+    lineHeight: 26,
   },
   options: {
     gap: Spacing.two,

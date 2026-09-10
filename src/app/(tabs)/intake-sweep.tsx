@@ -277,7 +277,6 @@ export default function IntakeSweepTabScreen() {
               defaultOpen={!!focusAxis}
               focusAxis={focusAxis}
               tracks={tracks}
-              scrollViewRef={scrollRef}
             />
           ) : null}
 

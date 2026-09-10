@@ -1,19 +1,20 @@
 /**
- * "Category per screen" Questions UI. Run: npm run check:category-paged-questions
+ * "5 questions per page, book-style" Full Profile UI. Run: npm run check:category-paged-questions
  *
- * Covers the 4 things Emci explicitly asked to be verified, not assumed from
- * a passing typecheck:
- *   1. an answer survives Back-then-forward navigation between categories
+ * Covers the things Emci explicitly asked to be verified, not assumed from a
+ * passing typecheck:
+ *   1. an answer survives paging away and back
  *   2. the progress indicator never double-counts an axis shared by two
  *      categories
- *   3. a 3-question category and a 5-question category both produce a
- *      layout with no fixed-height/clip constraint that could cut content off
- *   4. leaving and returning restores the same category (position persistence)
+ *   3. the flat, axis-order row list has no fixed-height/clip constraint
+ *      that could cut content off, and is not grouped by category
+ *   4. leaving and returning restores the same page (position persistence)
+ *   5. no auto-scroll and no Back/Skip/Next-per-category controls remain
  *
  * Pure/offline only — category-paged-questions.tsx has no Supabase import.
  * AsyncStorage itself cannot be exercised for real under plain Node (its
  * calls throw "window is not defined" outside a RN runtime, confirmed by a
- * manual probe during this build) — check 4 below verifies the same
+ * manual probe during an earlier build) — check 4 below verifies the same
  * in-memory-cache fallback `full-profile-unlock.ts` already relies on for
  * exactly this reason, via category-page-position.ts's own cache.
  */
@@ -21,7 +22,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { getCategoryDefs, type CategoryDef } from '../src/lib/categories';
+import { getCategoryDefs } from '../src/lib/categories';
 import {
   completedAxesFrom,
   uniqueCategoryAxes,
@@ -76,31 +77,24 @@ function bankRowsForAxis(tracks: readonly TraitTrack[]) {
 }
 
 async function main() {
-  // --- Check 1: an answer survives Back-then-forward navigation ----------
+  // --- Check 1: an answer survives paging away and back -------------------
   {
     // 'steadiness' has 1 of its 2 bank questions answered (tier-4 axis, §2/§3).
     const tracks: TraitTrack[] = [trackWithCount('steadiness', 1)];
     const rowsForAxis = bankRowsForAxis(tracks);
 
-    const defs = getCategoryDefs();
-    const categoryWithSteadiness = defs.find((def) => def.axes.includes('steadiness'));
-    assert.ok(categoryWithSteadiness, 'a real category must contain steadiness');
-
-    // Render category 1's rows for steadiness (whatever screen the user is on).
     const beforeNav = rowsForAxis('steadiness');
     assert.equal(beforeNav.filter((r) => r.answered).length, 1);
 
-    // "Navigate" to a different category, then Back to the one with
-    // steadiness. The component's `index` state is the only thing that
-    // changes on navigation — `rowsForAxis` is a closure over `tracks` alone
-    // and takes no index/category argument, so calling it again after any
-    // number of navigations must return the identical answered state,
-    // proving the answer isn't stored per-screen and can't be lost by moving
-    // between categories.
+    // "Page away then back" — the component's `pageIndex` state is the only
+    // thing that changes on paging — `rowsForAxis` is a closure over
+    // `tracks` alone and takes no page argument, so calling it again after
+    // any number of page changes must return the identical answered state,
+    // proving the answer isn't stored per-page and can't be lost by paging.
     const afterNav = rowsForAxis('steadiness');
-    assert.deepEqual(afterNav, beforeNav, 'rowsForAxis must be pure w.r.t. navigation — same tracks in, same answered state out');
+    assert.deepEqual(afterNav, beforeNav, 'rowsForAxis must be pure w.r.t. paging — same tracks in, same answered state out');
     assert.equal(afterNav.filter((r) => r.answered).length, 1);
-    ok('PASS — an answered question stays answered after navigating away and back (rowsForAxis depends only on tracks, never on which category screen is showing)');
+    ok('PASS — an answered question stays answered after paging away and back (rowsForAxis depends only on tracks, never on which page is showing)');
   }
 
   // --- Check 2: shared-axis progress never double-counts -----------------
@@ -135,98 +129,77 @@ async function main() {
     // pins the invariant directly).
     assert.ok(completed.length <= unique.length);
     ok(`PASS — progress dedup: axis "${sharedAxis}" is shared by ${owningCategories.length} categories but counts once toward completion (${completed.length}/${unique.length}, not inflated)`);
+
+    // The flat row list the pager builds (uniqueAxes.flatMap(rowsForAxis))
+    // must likewise count the shared axis's rows exactly once, not once per
+    // owning category — the same dedup this component's own `allRows` relies on.
+    const flatRows = unique.flatMap((axis) => rowsForAxis(axis));
+    const expectedSharedRowCount = bankQuestionCount([sharedAxis!]);
+    assert.equal(
+      flatRows.filter((row) => row.axis === sharedAxis).length,
+      expectedSharedRowCount,
+      'the flat book-pager row list must not duplicate a shared axis\'s rows',
+    );
   }
 
-  // --- Check 3: a 3-question and a 5-question category both lay out cleanly ---
+  // --- Check 3: flat, unbounded, non-grouped row list ---------------------
   {
     const defs = getCategoryDefs();
-    const singleAxisCategory = defs.find((def) => def.axes.length === 1);
-    // No 1-axis category exists in the real catalog today — build an
-    // equivalent synthetic one to still exercise the "small category" shape.
-    const smallCategory: CategoryDef = singleAxisCategory ?? {
-      id: 'cat_steadiness',
-      name: 'Steadiness',
-      shape: 'bar',
-      axes: ['steadiness'],
-      weights: { steadiness: 1 },
-      minStable: 1,
-      texture: [],
-    };
     const tracks: TraitTrack[] = [];
     const rowsForAxis = bankRowsForAxis(tracks);
-    const smallRows = smallCategory.axes.flatMap((axis) => rowsForAxis(axis));
-    // Expected count derives from the axis's own real bank size (varies by
-    // tier since the trait-system redesign, §2/§3 — no longer a flat 3).
-    const expectedSmallCount = bankQuestionCount(smallCategory.axes);
-    assert.equal(smallRows.length, expectedSmallCount, `a single-axis category renders exactly the bank's ${expectedSmallCount} questions for that axis`);
+    const unique = uniqueCategoryAxes(defs);
+    const allRows = unique.flatMap((axis) => rowsForAxis(axis));
+    // Every axis's full bank shows up in the flat list — nothing dropped.
+    const expectedTotal = bankQuestionCount(unique);
+    assert.equal(allRows.length, expectedTotal, 'the flat row list must include every axis\'s full bank, not a fixed subset');
 
-    // Simulate a 5-question category (the future "questions stack" source,
-    // which this same component must support per the reusability
-    // requirement) by feeding it a synthetic 5-row rowsForAxis.
-    const fiveRowAxis: TraitAxis = 'openness';
-    const fiveRows: CategoryQuestionRow[] = Array.from({ length: 5 }, (_, i) => ({
-      key: `stack-${i}`,
-      axis: fiveRowAxis,
-      draft: {
-        axis: fiveRowAxis,
-        prompt: `Stack question ${i + 1}`,
-        options: [{ text: 'A', value: 0.2 }, { text: 'B', value: 0.8 }],
-      },
-      answered: false,
-    }));
-    assert.equal(fiveRows.length, 5);
-
-    // Structural layout check: the component must not impose any
-    // fixed-height/clipping container around the per-axis question list —
-    // it must scroll with whatever ancestor scroll view hosts it (the
-    // Questions screen's own ScrollView), same as the flat list it replaced.
     const src = read('src/components/category-paged-questions.tsx');
-    assert.doesNotMatch(src, /maxHeight/, 'no maxHeight constraint that could clip a longer category');
+    assert.doesNotMatch(src, /maxHeight/, 'no maxHeight constraint that could clip a page');
     assert.doesNotMatch(src, /numberOfLines/, 'no line-clamping on question text');
     assert.doesNotMatch(src, /overflow:\s*['"]hidden['"]/, 'no overflow:hidden that could cut off content');
-    // Matches actual JSX usage (a closing tag or self-close), not the
-    // `ScrollView` TYPE import this file legitimately has since core loop
-    // redesign's auto-scroll-to-next-unanswered work (T-02) — `RefObject<ScrollView | null>`
-    // contains the literal substring "<ScrollView" too, which a bare
-    // `/<ScrollView/` match would (and did) false-positive on.
-    assert.doesNotMatch(
-      src,
-      /<\/ScrollView>|<ScrollView\b[^<>]*\/>/,
-      'must not RENDER its own fixed-size ScrollView — relies on the parent screen\'s scroll (a ScrollView type import for the auto-scroll ref is fine)',
-    );
-    // The row list itself must render every row it's given — no internal
-    // slicing/truncation by count.
-    assert.doesNotMatch(src, /\.slice\(0,\s*\d+\)/, 'must not truncate the row list to a fixed count');
-    ok(`PASS — a ${expectedSmallCount}-question category (${expectedSmallCount} rows) and a 5-question category (5 rows) both render through the same unbounded, non-clipping list — no maxHeight/overflow:hidden/numberOfLines/slice found in the component`);
+    assert.doesNotMatch(src, /<\/ScrollView>|<ScrollView\b[^<>]*\/>/, 'must not render its own fixed-size ScrollView — relies on the parent screen\'s scroll');
+    // The row list itself must render every row on a page, no internal
+    // per-page slicing beyond the documented PAGE_SIZE-based slice.
+    assert.match(src, /PAGE_SIZE\s*=\s*5/, 'page size must be exactly 5 questions per page');
+    // Category grouping is gone: no per-category axis section headers.
+    assert.doesNotMatch(src, /current\.axes\.map/, 'must not group rows by category anymore (that was the pre-restructure layout)');
+    ok(`PASS — a flat, axis-order list of all ${expectedTotal} questions renders through one unbounded, non-clipping, non-category-grouped list, 5 per page`);
   }
 
-  // --- Check 4: leaving and returning restores the same category ---------
+  // --- Check 4: leaving and returning restores the same page --------------
   {
     resetCategoryPagePositionCache();
     const storageKey = 'full-profile';
-    const defs = getCategoryDefs();
-    const target = defs[2] ?? defs[0]!;
 
     // Nothing saved yet — a fresh viewer has no remembered position.
     assert.equal(await loadCategoryPagePosition(storageKey), null);
 
-    // User navigates to category 3 and the component persists it (this is
+    // User pages to page 3 (index 2) and the component persists it (this is
     // exactly what CategoryPagedQuestions' own position-save effect does).
-    await saveCategoryPagePosition(storageKey, target.id);
+    await saveCategoryPagePosition(storageKey, '2');
 
     // "Leaving and returning" — a fresh load call, as a remount would issue.
     const restored = await loadCategoryPagePosition(storageKey);
-    assert.equal(restored, target.id, 'must restore the exact category last viewed, not reset to the first one');
+    assert.equal(restored, '2', 'must restore the exact page last viewed, not reset to page 1');
 
     // A different question set (the future stack) must not share position
     // with Full Profile — confirms storageKey actually scopes the state per
     // the reusability requirement, not a single global position.
     assert.equal(await loadCategoryPagePosition('questions-stack'), null);
 
-    ok(`PASS — leaving and returning restores category "${target.id}" (position ${target.id} at index ${defs.indexOf(target) + 1} of ${defs.length}), scoped independently per question set (storageKey)`);
+    ok('PASS — leaving and returning restores page index "2", scoped independently per question set (storageKey)');
   }
 
-  // --- Check 5: answered-option stamp storage -----------------------------
+  // --- Check 5: no leftover Back/Skip/Next-per-category or auto-scroll ----
+  {
+    const src = read('src/components/category-paged-questions.tsx');
+    assert.doesNotMatch(src, /scrollTo|measureLayout|scrollViewRef/i, 'no auto-scroll code should remain in the book pager');
+    assert.doesNotMatch(src, />\s*Skip\s*</, 'the per-category "Skip" control must not remain — nothing to skip in a flat book pager');
+    assert.match(src, />\s*Next Page\s*</, 'must have a "Next Page" control');
+    ok('PASS — no auto-scroll and no per-category Skip control remain; "Next Page" is present');
+  }
+
+  // --- Check 6: answered-option stamp storage -----------------------------
   {
     resetAnsweredOptionCache();
     const storageKey = 'full-profile:test-user';

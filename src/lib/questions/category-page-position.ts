@@ -1,13 +1,15 @@
 /**
- * Remembers which category a `CategoryPagedQuestions` viewer last landed on,
- * per question set (`storageKey`, e.g. "full-profile"). Stored in
- * AsyncStorage, not on `me` — a `me` column is a schema change and needs
- * emci's sign-off first, same tradeoff `full-profile-unlock.ts` already
- * accepts. Per-device, not per-account: someone who leaves off on category 3
- * on their phone and opens the app on a new device starts back at category 1
- * there. Answers themselves are never affected either way — they live in
- * `trait_tracks` (or, for a future question-stack source, its own store),
- * always server-side.
+ * Remembers which page a `CategoryPagedQuestions` viewer last landed on, per
+ * question set (`storageKey`, e.g. "full-profile"). Stores a stringified page
+ * index (e.g. "3") — before the book-pager restructure this stored a category
+ * id instead; the storage shape (an opaque string per storageKey) didn't need
+ * to change, only what the caller puts in it. Stored in AsyncStorage, not on
+ * `me` — a `me` column is a schema change and needs emci's sign-off first,
+ * same tradeoff `full-profile-unlock.ts` already accepts. Per-device, not
+ * per-account: someone who leaves off on page 3 on their phone and opens the
+ * app on a new device starts back at page 1 there. Answers themselves are
+ * never affected either way — they live in `trait_tracks` (or, for a future
+ * question-stack source, its own store), always server-side.
  *
  * Lazy dynamic import of AsyncStorage (same shape as
  * `lib/full-profile-unlock.ts`) so Node check scripts can import this module

@@ -6,7 +6,7 @@
  * first), per-device rather than per-account. The row's actual answer still
  * lives in `trait_tracks` (a blended EWMA value, not a discrete option
  * index) — this is purely a display hint so the "answered" stamp can keep
- * showing the right option when scrolling back to a row answered earlier,
+ * showing the right option when paging back to a row answered earlier,
  * not just the one just tapped this session. Doesn't backfill: a row
  * answered before this shipped has no stored index here, so it reads as
  * answered with no option to stamp.

@@ -996,11 +996,12 @@ assert.match(fold, /categories=\{liveCategoryDefs\}/);
 }
 ok('Full Profile renders through the reusable CategoryPagedQuestions component (live category catalog), straight from the static bank, never through routeQuestions');
 
-// CategoryPagedQuestions itself: one category's questions per screen, a
-// caller-supplied row accessor (never assumes a fixed question count or
-// where questions come from — the reusability this component was built
-// for), Back/Next/Skip category navigation, and a dedup'd axis-completion
-// count (uniqueCategoryAxes) so an axis shared by two categories is never
+// CategoryPagedQuestions itself: a flat, axis-order book pager (5 questions
+// per page, Back/Next Page only — no per-category grouping or Skip since the
+// restructure), a caller-supplied row accessor (never assumes a fixed
+// question count or where questions come from — the reusability this
+// component was built for), and a dedup'd axis-completion count
+// (uniqueCategoryAxes) so an axis shared by two categories is never
 // double-counted toward progress. Must never itself reach into
 // routeQuestions/priorityAxes/mergeCategoryPriority — those are the default
 // (Infinite Questions) rotation's concern, not this component's.
@@ -1019,16 +1020,20 @@ assert.match(categoryPagedLib, /export function uniqueCategoryAxes/);
 assert.match(categoryPagedLib, /export function completedAxesFrom/);
 assert.match(pagedQuestions, /humanizeAxis/);
 assert.match(pagedQuestions, /locked \? null :/);
-assert.match(pagedQuestions, /Category \{clampedIndex \+ 1\} of \{categories\.length\}/);
+assert.match(pagedQuestions, /Page \{clampedPage \+ 1\} of \{totalPages\}/);
 assert.match(pagedQuestions, /loadCategoryPagePosition/);
 assert.match(pagedQuestions, /saveCategoryPagePosition/);
+// No per-category grouping left post-restructure — the row list is flat and
+// axis-ordered, paged 5 at a time, no "Skip this category" control.
+assert.doesNotMatch(pagedQuestions, /current\.axes\.map/);
+assert.match(pagedQuestions, /PAGE_SIZE\s*=\s*5/);
 // Category navigation is a distinct concept from Infinite Questions' own
 // checkpoint/skip-this-item copy — must not reuse those constants.
 assert.doesNotMatch(
   pagedQuestions,
   /QUESTIONS_SKIP_THIS|QUESTIONS_SKIP_REST|QUESTIONS_CHECKPOINT|QUESTIONS_KEEP_GOING/,
 );
-ok('CategoryPagedQuestions groups by category via the existing axis-membership lookup, dedupes shared-axis progress, and persists/restores position — independent of Infinite Questions\' own copy/state');
+ok('CategoryPagedQuestions is a flat, axis-order book pager (5/page), dedupes shared-axis progress, and persists/restores page position — independent of Infinite Questions\' own copy/state');
 
 // Category-to-axis targeting (additive, unused by any caller yet — same
 // pattern as focusAxis): an optional `category` prop resolves to that
