@@ -82,6 +82,24 @@ function isTurn(prev: Vec, at: Vec, next: Vec): boolean {
   return Math.abs(normalizeAngle(outAng - inAng)) > 1 && Math.abs(normalizeAngle(outAng - inAng)) < 359;
 }
 
+/**
+ * Tile art base facing. `stairs_down` / `door_open` are authored facing DOWN
+ * (toward the tile's bottom edge = south = 90° in the compass angle above), so
+ * the rotation that points one along a path direction is `direction - 90`.
+ * If a future art pack changes the base, this single number moves.
+ */
+const TILE_BASE_FACING_DEG = 90;
+
+/** Rotation (deg, clockwise) that points a base-facing-down tile along (dx, dy). */
+function facingRotation(dx: number, dy: number): number {
+  return normalizeAngle(angleOf(dx, dy) - TILE_BASE_FACING_DEG);
+}
+
+/** Rotation pointing a tile along the segment a → b (same compass convention). */
+function segmentFacing(a: Vec, b: Vec): number {
+  return facingRotation(b.x - a.x, b.y - a.y);
+}
+
 const key = (i: number, j: number) => `${i},${j}`;
 
 /**
@@ -161,11 +179,18 @@ export function boardDecor(map: DefendMap): BoardTile[] {
     tiles.push({ key: info.tile, x: i * CELL, y: j * CELL, size: CELL, rotate: info.rotate });
   }
 
-  // Endpoint markers: stairs at spawn, doorway at the exit.
+  // Endpoint markers: the stairs at spawn face the FIRST path segment (the way
+  // the lane leaves them), and the doorway at the exit faces the exit
+  // direction. Both are derived from the path so they follow any map.
   const spawn = cellOf(pts[0]!);
   const exit = cellOf(pts[pts.length - 1]!);
-  tiles.push({ key: 'stairs', x: spawn.i * CELL, y: spawn.j * CELL, size: CELL, rotate: 0 });
-  tiles.push({ key: 'door', x: exit.i * CELL, y: exit.j * CELL, size: CELL, rotate: 0 });
+  // A degenerate path (a single waypoint) has no direction — fall back to the
+  // base facing rather than an arbitrary rotation.
+  const stairsFacing = pts.length >= 2 ? segmentFacing(pts[0]!, pts[1]!) : 0;
+  const doorFacing =
+    pts.length >= 2 ? segmentFacing(pts[pts.length - 2]!, pts[pts.length - 1]!) : 0;
+  tiles.push({ key: 'stairs', x: spawn.i * CELL, y: spawn.j * CELL, size: CELL, rotate: stairsFacing });
+  tiles.push({ key: 'door', x: exit.i * CELL, y: exit.j * CELL, size: CELL, rotate: doorFacing });
 
   return tiles;
 }

@@ -307,6 +307,7 @@ export function DefendScreen({
   onDevOvergear,
   onDevForceSkipOffer,
   onSaveAvatarPark,
+  onAvatarDragStateChange,
   onBackToGrove,
 }: {
   view: PlayView;
@@ -344,6 +345,9 @@ export function DefendScreen({
   onDevForceSkipOffer: () => void;
   /** Avatar drag ended → persist the park for this Defend map (v15). */
   onSaveAvatarPark: (mapId: AvatarParkMapId, x: number, y: number) => void;
+  /** Avatar drag started/ended → the parent freezes the page ScrollView while
+   * a drag is in flight so the pan can't be stolen by the scroll view. */
+  onAvatarDragStateChange?: (dragging: boolean) => void;
   onBackToGrove: () => void;
 }) {
   const theme = useTheme();
@@ -882,6 +886,12 @@ export function DefendScreen({
 
   // Drag gesture for the Avatar (mirrors scenario-card.tsx Pan pattern).
   const pan = Gesture.Pan()
+    // Freeze the page ScrollView the instant a drag can start (touch down on
+    // the Avatar), so the pan is never stolen by the scroll view. Released on
+    // finalize even when the gesture is cancelled, so scroll can never stick.
+    .onBegin(() => {
+      if (onAvatarDragStateChange) runOnJS(onAvatarDragStateChange)(true);
+    })
     .onStart(() => {
       startX.value = avatarX.value;
       startY.value = avatarY.value;
@@ -899,15 +909,19 @@ export function DefendScreen({
     .onEnd(() => {
       // Persist the park (v15) so the next setup restores this same spot.
       runOnJS(commitAvatarPark)();
+    })
+    .onFinalize(() => {
+      if (onAvatarDragStateChange) runOnJS(onAvatarDragStateChange)(false);
     });
 
   const avatarStyle = useAnimatedStyle(() => {
     // Read the SHARED board size (reactive). A ref here would leave the Avatar
     // at `park × 100px` until the first drag re-ran the worklet.
     const size = boardSize.value || 100;
+    // Center the (larger) hit box on the Avatar point.
     return {
-      left: avatarX.value * size - AVATAR_RADIUS_PX,
-      top: avatarY.value * size - AVATAR_RADIUS_PX,
+      left: avatarX.value * size - AVATAR_HIT_PX / 2,
+      top: avatarY.value * size - AVATAR_HIT_PX / 2,
     };
   });
 
@@ -1130,9 +1144,10 @@ export function DefendScreen({
             </View>
             {/* Gameplay layer — path, pads, towers, Bound Bosses, enemies.
                 Sits ABOVE the tiles (zIndex 1 > 0) so gameplay always reads on
-                top of the scroll art, and NOT pointerEvents:none because the
-                pads need their taps. */}
-            <View style={styles.boardArt}>
+                top of the scroll art. box-none so the wrapper itself never
+                swallows a touch aimed at the Avatar; the SVG inside still
+                receives the pad taps. */}
+            <View style={styles.boardArt} pointerEvents="box-none">
             <Svg width="100%" height="100%" viewBox="0 0 100 100">
               {boardMap.pads.map((pad, index) => {
                 const tower = sim?.towers.find((t) => t.pad === index);
@@ -1302,12 +1317,16 @@ export function DefendScreen({
                 zIndex 10 keeps it above the tiles AND the gameplay SVG so it is
                 always grabbable. */}
             <GestureDetector gesture={pan}>
-              <Animated.View style={[styles.avatar, avatarStyle]}>
-                {avatarFrameSource ? (
-                  <Image source={avatarFrameSource} contentFit="contain" style={styles.avatarImage} />
-                ) : (
-                  <View style={[styles.avatarFallback, { backgroundColor: avatarColor }]} />
-                )}
+              <Animated.View
+                style={[styles.avatar, avatarStyle]}
+                hitSlop={AVATAR_HIT_SLOP}>
+                <View style={styles.avatarArt} pointerEvents="none">
+                  {avatarFrameSource ? (
+                    <Image source={avatarFrameSource} contentFit="contain" style={styles.avatarImage} />
+                  ) : (
+                    <View style={[styles.avatarFallback, { backgroundColor: avatarColor }]} />
+                  )}
+                </View>
               </Animated.View>
             </GestureDetector>
 
@@ -2297,8 +2316,17 @@ function HitFloater({
   );
 }
 
-/** Avatar sprite half-size on the board, px (a drag overlay, not SVG units). */
-const AVATAR_RADIUS_PX = 16;
+/** Visible Avatar art size on the board, px (a drag overlay, not SVG units).
+ * Kept at the previous visual size — only the touch box below grows. */
+const AVATAR_ART_PX = 32;
+/**
+ * Touch target for grabbing the Avatar, px. Bigger than the art so the drag is
+ * easy to start with a thumb on a phone; the art is centered inside it. This is
+ * a touch/positioning box only — range and gameplay stay in board units.
+ */
+const AVATAR_HIT_PX = 56;
+/** Extra slop around the hit box (thumb-friendly without growing the visual). */
+const AVATAR_HIT_SLOP = { top: 10, bottom: 10, left: 10, right: 10 } as const;
 /** Attack slash flash length (ms) — tuned to the Avatar's 0.7s cooldown. */
 const AVATAR_ATTACK_MS = 700;
 /** One idle-breath frame step (ms). */
@@ -2542,13 +2570,20 @@ const styles = StyleSheet.create({
   },
   avatar: {
     position: 'absolute',
-    width: AVATAR_RADIUS_PX * 2,
-    height: AVATAR_RADIUS_PX * 2,
+    width: AVATAR_HIT_PX,
+    height: AVATAR_HIT_PX,
     alignItems: 'center',
     justifyContent: 'center',
     // Above the tiles (0) and the gameplay SVG (1) so it stays draggable.
     // zIndex only (no elevation) so the character art keeps no shadow.
     zIndex: 10,
+  },
+  /** The visible art, centered inside the larger touch box. */
+  avatarArt: {
+    width: AVATAR_ART_PX,
+    height: AVATAR_ART_PX,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   avatarImage: {
     width: '100%',
@@ -2557,7 +2592,7 @@ const styles = StyleSheet.create({
   avatarFallback: {
     width: '100%',
     height: '100%',
-    borderRadius: AVATAR_RADIUS_PX,
+    borderRadius: AVATAR_ART_PX / 2,
     borderWidth: 2,
     borderColor: '#FFFFFF',
   },

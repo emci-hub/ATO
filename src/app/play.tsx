@@ -134,6 +134,10 @@ export default function PlayScreen() {
   const [forceMerge, setForceMerge] = useState<'none' | 'success' | 'fail'>('none');
   /** Dev kit only: §9c Tune panel open state (PRE_LAUNCH_DEV hides the entry). */
   const [showTune, setShowTune] = useState(false);
+  /** True while the Defend Avatar is being dragged — freezes this page's
+   * ScrollView so the pan can't be stolen by the scroll view (RNGH Avatar Pan
+   * wins). Set from DefendScreen's gesture begin/finalize. */
+  const [avatarDragging, setAvatarDragging] = useState(false);
   /** Dev kit only: PIN-unlocked this session? (soft gate — dev-lock.ts). */
   const devUnlocked = usePlayDevUnlocked();
 
@@ -141,6 +145,13 @@ export default function PlayScreen() {
   useEffect(() => {
     void loadTune();
   }, []);
+
+  // Safety: never leave the page ScrollView frozen. If Defend unmounts or the
+  // user navigates away mid-drag (a cancelled gesture may not fire finalize on
+  // unmount), clear the flag.
+  useEffect(() => {
+    if (mode !== 'defend' && avatarDragging) setAvatarDragging(false);
+  }, [mode, avatarDragging]);
 
   const researchReady = view != null && canClaimResearch(view);
 
@@ -504,7 +515,11 @@ export default function PlayScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          // Freeze the page while the Defend Avatar is under the thumb so the
+          // drag wins over scrolling; normal scroll everywhere else.
+          scrollEnabled={!avatarDragging}>
           {toastContent ? (
             <MilestoneToast
               title={toastContent.title}
@@ -559,6 +574,7 @@ export default function PlayScreen() {
               onDevOvergear={handleDevOvergear}
               onDevForceSkipOffer={handleDevForceSkipOffer}
               onSaveAvatarPark={handleSaveAvatarPark}
+              onAvatarDragStateChange={setAvatarDragging}
               onBackToGrove={() => setMode('grove')}
             />
           ) : mode === 'shop' && view ? (
