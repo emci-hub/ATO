@@ -49,8 +49,8 @@ export function RollHistoryFold({
       // Defensive against a row revealed before wave47's ready-gate existed
       // (a dev-only path today, but a crash here shouldn't be possible for
       // any row) — RollItemBody assumes a ready legend result always has
-      // variant/archetype attached, which only holds for rows that were
-      // actually ready when revealed.
+      // archetypeCode/story attached (core loop redesign §4, T-15), which
+      // only holds for rows that were actually ready when revealed.
       setItems(rows.filter((row) => rollItemResultIsReady(row.result)));
       setLoad({ status: 'ready' });
     } catch (err) {

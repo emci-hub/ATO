@@ -2,13 +2,20 @@
  * Roll composition (trait-system redesign §7) — assembles one roll's exact
  * 13-item payload (1 legend + 11 categories + 1 story), matching
  * store_roll's own hard validation (wave46_trait_rolls.sql). Pure
- * orchestration: every side effect (AI generation, legend catalog/history
- * fetch) is dependency-injected, same pattern
- * composeCategoryBatch/fillAxisCountsChunked already use — no Supabase or
- * ai-generate import here.
+ * orchestration: every side effect (AI generation) is dependency-injected,
+ * same pattern composeCategoryBatch/fillAxisCountsChunked already use — no
+ * Supabase or ai-generate import here. The legend item (core loop redesign
+ * §4) computes its archetypeCode purely (classify.ts, no side effect) and
+ * generates its story through the same injected `generateRollText` as every
+ * other item — legends64/story-prompt.ts is imported specifically (not
+ * legends64/generate-story.ts) because that file pulls in store.ts ->
+ * supabase, which would break this module's no-Supabase guarantee.
  */
 import { readAllCategories, type CategoryReading } from '@/lib/categories';
-import type { LegendValues } from '@/lib/legends64/classify';
+import { splitArchetypeCode } from '@/lib/legends64/archetypes';
+import { archetypeCode, type LegendValues } from '@/lib/legends64/classify';
+import { buildLegendStoryPrompt, parseLegendStoryBody } from '@/lib/legends64/story-prompt';
+import { legendsUnlocked } from '@/lib/questions/progressive-unlock';
 import { hasReliableChange, snapshotFromTracks, type TraitSnapshot } from '@/lib/rci';
 import { divergingAxesFromTracks, formatDivergenceNote } from '@/lib/trait-history';
 import { buildStoryPrompt, parseStoryBody, storyReady } from '@/lib/sage-story';
@@ -122,17 +129,46 @@ export async function composeRoll(
     throw new Error(`composeRoll: expected ${ROLL_CATEGORY_COUNT} distinct category ids, got ${distinctIds.size} (duplicate id in the live catalog)`);
   }
 
-  // The old figure-catalog matcher (legends/match.ts, legends/store.ts) was
-  // deleted with the Legends 64-archetype rewrite (core loop redesign §4) —
-  // /roll is hidden/unlaunched (HIDDEN_TAB_ROUTES), so its legend item is
-  // left as a permanent "not ready" placeholder rather than rewired to the
-  // new system. Rewiring it to legend_generations is real future scope if
-  // /roll is ever surfaced (tracked as its own follow-up, not built here).
+  // Rewired to the Legends 64-archetype system (core loop redesign §4,
+  // T-15) — the old figure-catalog matcher (legends/match.ts,
+  // legends/store.ts) is gone. archetypeCode() is always computable, but the
+  // STORY is a real AI call, so this item is now gated on `legendsUnlocked`
+  // — the SAME threshold the standalone Legends screen itself uses before
+  // it will generate anything (legends.tsx's `locked`/thin-profile checks).
+  // An earlier draft of this had NO gate at all, reasoning that the old
+  // figure-catalog system always attempted a match regardless of profile
+  // depth — caught in review as the wrong precedent to follow: that old
+  // behavior was free (no AI call), so "always attempt" cost nothing; this
+  // is a real generation, and Story's own gate right below exists for
+  // exactly this reason ("rather than asking the model to write
+  // diagnosis-adjacent prose from an empty settled-notes list") — a legend
+  // read from an all-default 'LLL-LLL' code for a brand-new profile is the
+  // same category of problem. Reuses the same `deps.generateRollText` DI
+  // every other roll item already goes through (ROLL_META), rather than a
+  // new metadata declaration, since buildLegendStoryPrompt's shape (pure
+  // function of pole phrases, no name/history) matches ROLL_META's own
+  // "bucket shareable" description — this is deliberately different from
+  // the standalone Legends screen's LEGEND_STORY_META (personalized, NOT
+  // bucket-shareable): that screen's "always fresh, never reused" is a
+  // product choice about a specific user's repeated manual taps/rerolls,
+  // not a claim that the underlying prompt itself carries per-user history.
+  let legendResult: RollItem['result'] = { ready: false, matched: false };
+  if (legendsUnlocked(tracks)) {
+    const code = archetypeCode(values);
+    const split = splitArchetypeCode(code);
+    if (split) {
+      const legendText = await deps.generateRollText(buildLegendStoryPrompt(split.core, split.modifier));
+      const story = legendText ? parseLegendStoryBody(legendText) : null;
+      if (story) {
+        legendResult = { ready: true, matched: true, archetypeCode: code, story };
+      }
+    }
+  }
   const items: RollItem[] = [
     {
       type: 'legend',
       categoryId: null,
-      result: { ready: false, matched: false },
+      result: legendResult,
     },
   ];
 

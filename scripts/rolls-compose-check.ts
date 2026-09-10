@@ -12,6 +12,9 @@ import { buildCategoryReadPrompt, parseCategoryReadBody } from '../src/lib/rolls
 import type { TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES } from '../src/lib/traits';
 
+/** Satisfies both parseCategoryReadBody ({body}) and parseLegendStoryBody ({story}) from one mocked response, since composeRoll now routes both through the same injected generateRollText. */
+const MOCK_RESPONSE = '{"body":"A grounded, low-key kind of week.","story":"A grounded, low-key kind of week."}';
+
 let passed = 0;
 function ok(label: string) {
   passed += 1;
@@ -20,8 +23,13 @@ function ok(label: string) {
 
 const NOW = new Date('2026-09-08T12:00:00.000Z');
 
+// answerCount 20 (not just STABILITY_FLOOR_N's 3) so bankTotalProgress credits
+// every axis at its full per-axis bank size regardless of tier — fullyReadyTracks()
+// must clear LEGENDS_UNLOCK_THRESHOLD (50) for the legend-generation tests below to
+// exercise the real "unlocked" path, not just the "settled enough for a category
+// read" path (verified directly: answerCount 5 landed at 47/50, just under).
 function settledTrack(axis: TraitTrack['axis'], value: number, stability = 0.9): TraitTrack {
-  return { axis, track: 'report', value, stability, answerCount: 5, lastTouched: NOW.toISOString(), lastDepthAt: null };
+  return { axis, track: 'report', value, stability, answerCount: 20, lastTouched: NOW.toISOString(), lastDepthAt: null };
 }
 
 // --- rollEligible ------------------------------------------------------------
@@ -74,16 +82,16 @@ function fullyReadyTracks(): TraitTrack[] {
 
 async function run() {
   {
-    // Legends 64-archetype rewrite (core loop redesign §4): the old
-    // figure-catalog matcher is gone, and /roll is hidden/unlaunched, so the
-    // legend item is a permanent ready:false/matched:false placeholder now
-    // (see compose.ts) — every category still gets its own slot (ready,
-    // since tracks are fully settled), exactly 13 items total.
+    // Legends 64-archetype rewrite (core loop redesign §4, T-15): the legend
+    // item now generates a real story through the same injected
+    // generateRollText every other item uses — every category still gets
+    // its own slot (ready, since tracks are fully settled), exactly 13
+    // items total, 13 generation calls (1 legend + 11 categories + 1 story).
     let generateCalls = 0;
     const deps: RollComposeDeps = {
       generateRollText: async () => {
         generateCalls += 1;
-        return '{"body":"A grounded, low-key kind of week."}';
+        return MOCK_RESPONSE;
       },
     };
     const { items, snapshot } = await composeRoll(fullyReadyTracks(), {}, deps);
@@ -97,21 +105,34 @@ async function run() {
       new Set(getCategoryDefs().map((d) => d.id)),
       'category items cover exactly the real category catalog, no duplicates, none missing',
     );
-    assert.deepEqual(items[0]!.result, { ready: false, matched: false }, 'legend item is a permanent placeholder now (old figure catalog removed, /roll unlaunched)');
-    assert.equal(generateCalls, 12, 'one generateRollText call per ready category (11) plus one for the ready-profile story');
+    const legendItem = items[0]!;
+    const legendResult = legendItem.result as { ready: boolean; matched: boolean; archetypeCode?: string; story?: string };
+    assert.equal(legendResult.ready, true, 'a successful generation makes the legend item ready:true');
+    assert.equal(legendResult.matched, true, 'a successful generation makes the legend item matched:true');
+    assert.match(legendResult.archetypeCode ?? '', /^[HL]{3}-[HL]{3}$/, 'archetypeCode is a real classify.ts code, not a placeholder');
+    assert.equal(legendResult.story, 'A grounded, low-key kind of week.');
+    assert.equal(generateCalls, 13, 'one generateRollText call for the legend, one per ready category (11), and one for the ready-profile story');
     assert.ok(Object.keys(snapshot).length > 0, 'snapshot captures the answered axes');
-    ok('composeRoll: exactly 13 items with the correct type/category mix; legend item is always a placeholder');
+    ok('composeRoll: exactly 13 items with the correct type/category mix; the legend item generates a real story through the same injected deps as every other item');
   }
 
   {
     // Some categories unready: those get {ready:false} WITHOUT spending a
     // generateRollText call, but still occupy their slot (still 11 total).
+    // The legend item IS gated (legendsUnlocked, same threshold the
+    // standalone Legends screen itself uses) — a thin profile is nowhere
+    // near that threshold, so the legend also stays a placeholder, same as
+    // categories/story. An earlier draft had the legend generate
+    // unconditionally on any profile depth; caught in review as spending a
+    // real AI call on a meaningless all-default 'LLL-LLL' read, unlike the
+    // categories/story it sits next to, which both deliberately skip
+    // exactly this case.
     let generateCalls = 0;
     const thinTracks: TraitTrack[] = []; // nothing settled anywhere
     const deps: RollComposeDeps = {
       generateRollText: async () => {
         generateCalls += 1;
-        return '{"body":"x"}';
+        return MOCK_RESPONSE;
       },
     };
     const { items } = await composeRoll(thinTracks, {}, deps);
@@ -120,25 +141,31 @@ async function run() {
     assert.ok(categoryItems.every((i) => (i.result as { ready: boolean }).ready === false), 'every category reads not-ready with no settled axes');
     const storyItem = items.find((i) => i.type === 'story')!;
     assert.deepEqual(storyItem.result, { ready: false }, 'a thin profile\'s story also reads not-ready');
-    assert.equal(generateCalls, 0, 'no AI call spent at all on a thin profile — every category is unready AND storyReady(tracks) is false, so even the story generation is skipped, matching the existing Story surface\'s own gate');
-    ok('composeRoll: on a thin profile, every category AND the story get a placeholder without spending any AI call, but every item still fills its slot');
+    const legendItem = items.find((i) => i.type === 'legend')!;
+    assert.deepEqual(legendItem.result, { ready: false, matched: false }, 'a thin profile is nowhere near legendsUnlocked, so the legend item stays a placeholder too, same as every other item on this profile');
+    assert.equal(generateCalls, 0, 'no AI call spent at all on a thin profile — legend is below legendsUnlocked, every category is unready, and storyReady(tracks) is false, so every generation is skipped');
+    ok('composeRoll: on a thin profile, the legend AND every category AND the story get a placeholder without spending any AI call, but every item still fills its slot');
   }
 
   {
     // A generation failure (null) for one item degrades that item to
-    // not-ready without failing the whole roll.
+    // not-ready without failing the whole roll. The legend item generates
+    // FIRST in composeRoll's item order, so the first mocked failure hits
+    // the legend, not a category.
     let call = 0;
     const deps: RollComposeDeps = {
       generateRollText: async () => {
         call += 1;
-        return call === 1 ? null : '{"body":"fine"}'; // first ready category's generation fails
+        return call === 1 ? null : MOCK_RESPONSE; // legend's generation fails, everything after succeeds
       },
     };
     const { items } = await composeRoll(fullyReadyTracks(), {}, deps);
     assert.equal(items.length, 13, 'a single generation failure must not shrink or fail the whole roll');
-    const firstCategory = items.find((i) => i.type === 'category')!;
-    assert.deepEqual(firstCategory.result, { ready: false }, 'the failed item reads not-ready, same as an unready category');
-    ok('composeRoll: a single failed generation degrades only that item, never the whole roll');
+    const legendItem = items.find((i) => i.type === 'legend')!;
+    assert.deepEqual(legendItem.result, { ready: false, matched: false }, 'the failed legend generation degrades to not-matched, same shape as before any code existed');
+    const categoryItems = items.filter((i) => i.type === 'category');
+    assert.ok(categoryItems.every((i) => (i.result as { ready: boolean }).ready === true), 'every category still generates successfully — one failed item never blocks the rest');
+    ok('composeRoll: a single failed generation (the legend, first in item order) degrades only that item, never the whole roll');
   }
 
   {
@@ -150,7 +177,7 @@ async function run() {
     // a live category_defs table fetch uses).
     const realDefs = getCategoryDefs();
     const deps: RollComposeDeps = {
-      generateRollText: async () => '{"body":"x"}',
+      generateRollText: async () => MOCK_RESPONSE,
     };
     try {
       setCategoryDefs([realDefs[0]!, realDefs[1]!]); // only 2, not 11
