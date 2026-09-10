@@ -8,6 +8,10 @@ import { useTheme } from '@/hooks/use-theme';
 import type { CategoryDef } from '@/lib/categories';
 import { humanizeAxis } from '@/lib/milestones';
 import {
+  loadAnsweredOptions,
+  saveAnsweredOption,
+} from '@/lib/questions/answered-option-storage';
+import {
   loadCategoryPagePosition,
   saveCategoryPagePosition,
 } from '@/lib/questions/category-page-position';
@@ -18,10 +22,25 @@ import {
 } from '@/lib/questions/category-paged';
 import type { QuestionDraft, QuestionOption } from '@/lib/questions/types';
 import { controlBorderColor } from '@/lib/theme/chrome';
+import { hexToRgb } from '@/lib/theme/contrast';
 import type { TraitAxis } from '@/lib/traits';
 
 export type { CategoryQuestionRow };
 export { completedAxesFrom, uniqueCategoryAxes };
+
+/**
+ * Translucent fill for the "Answered" stamp, derived from the same
+ * `textSecondary` token the old text label used (there is no dedicated
+ * green/success token in this theme system — see `constants/appearance.ts`)
+ * so the stamp reads as the same color in every appearance. Falls back to
+ * the token itself (opaque) if it's ever not a plain 6-digit hex — every
+ * appearance's `textSecondary` is today, but this degrades safely rather
+ * than rendering `undefined` as a background.
+ */
+function stampBackground(textSecondary: string): string {
+  const rgb = hexToRgb(textSecondary);
+  return rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.16)` : textSecondary;
+}
 
 /**
  * One category's worth of questions per screen — every question belonging to
@@ -32,11 +51,14 @@ export { completedAxesFrom, uniqueCategoryAxes };
  * category or where the questions come from (the static Full Profile bank
  * today; a future "questions stack" source later, same component).
  *
- * Per-row rendering (prompt, options, "Answered" label, themed border/colors)
- * is the same shape Full Profile's old flat list already used — same
- * `ThemedText`/`ThemedPressable`/`controlBorderColor` components, so it
- * follows whatever the active appearance theme renders (dark background,
- * themed borders/highlight color) exactly as before, nothing hardcoded here.
+ * Per-row rendering (prompt, options, an "Answered" stamp overlaid on the
+ * picked option, themed border/colors) is the same shape Full Profile's old
+ * flat list already used — same `ThemedText`/`ThemedPressable`/
+ * `controlBorderColor` components, so it follows whatever the active
+ * appearance theme renders (dark background, themed borders/highlight
+ * color) exactly as before, nothing hardcoded here beyond the stamp's own
+ * rotation/border, which is deliberately fixed (a stamp graphic, not
+ * themed chrome).
  *
  * Saving an answer is entirely the caller's responsibility via `onPick` —
  * this component never calls a save function itself, so the existing
@@ -58,16 +80,38 @@ export function CategoryPagedQuestions({
   busy: boolean;
   /** Hides every option everywhere, same meaning as Full Profile's old global lock. */
   locked?: boolean;
-  onPick: (draft: QuestionDraft, option: QuestionOption) => void;
+  /**
+   * Resolves to whether the write actually succeeded. The picked-option
+   * highlight itself stays optimistic/instant (session-local, same as
+   * before — a false one just disappears on remount, harmless), but the
+   * "Answered" stamp is only PERSISTED (answered-option-storage.ts, so it
+   * survives remounts/scrolling back) once this confirms true — otherwise a
+   * failed write would leave a permanent stamp that contradicts the real
+   * answered-count elsewhere on screen (found in review).
+   */
+  onPick: (draft: QuestionDraft, option: QuestionOption) => Promise<boolean>;
 }) {
   const theme = useTheme();
   const [index, setIndex] = useState(0);
   const [positionReady, setPositionReady] = useState(false);
-  // Tracks which option was just tapped per row (session-local — rows here
-  // are intentionally re-answerable, so this is a display hint, not a lock)
-  // so a tap visually confirms before/while it saves. Previously there was
-  // no highlight at all, which read as "it answered the wrong question."
+  // Tracks which option was picked per row — rows here are intentionally
+  // re-answerable, so this is a display hint, not a lock. Seeded from
+  // AsyncStorage (answered-option-storage.ts) on mount so a row answered in
+  // an earlier session/visit still shows its stamp when scrolled back to,
+  // not just the option just tapped this session; a fresh tap updates both
+  // this state and storage together (see pick() below).
   const [pickedByRow, setPickedByRow] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    loadAnsweredOptions(storageKey).then((saved) => {
+      if (cancelled) return;
+      setPickedByRow((prev) => ({ ...saved, ...prev }));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [storageKey]);
 
   // Restore the last-viewed category for this question set on mount. Scoped
   // to `storageKey` only (not `categories`) — categories is a live catalog
@@ -143,14 +187,7 @@ export function CategoryPagedQuestions({
               </ThemedText>
               {rows.map((row) => (
                 <View key={row.key} style={styles.axisItem}>
-                  <View style={styles.axisItemHeader}>
-                    <ThemedText type="small">{row.draft.prompt}</ThemedText>
-                    {row.answered ? (
-                      <ThemedText type="small" themeColor="textSecondary">
-                        Answered
-                      </ThemedText>
-                    ) : null}
-                  </View>
+                  <ThemedText type="small">{row.draft.prompt}</ThemedText>
                   {locked ? null : (
                     <View style={styles.options}>
                       {row.draft.options.map((option, optIndex) => {
@@ -160,9 +197,12 @@ export function CategoryPagedQuestions({
                             key={`${row.key}-${optIndex}`}
                             disabled={busy}
                             accessibilityState={{ selected: picked }}
-                            onPress={() => {
+                            onPress={async () => {
                               setPickedByRow((prev) => ({ ...prev, [row.key]: optIndex }));
-                              onPick(row.draft, option);
+                              const ok = await onPick(row.draft, option);
+                              if (ok) {
+                                void saveAnsweredOption(storageKey, row.key, optIndex);
+                              }
                             }}
                             style={[
                               styles.option,
@@ -171,6 +211,22 @@ export function CategoryPagedQuestions({
                               busy && styles.disabled,
                             ]}>
                             <ThemedText type="smallBold">{option.text}</ThemedText>
+                            {picked ? (
+                              <View pointerEvents="none" style={styles.stampWrap}>
+                                <View
+                                  style={[
+                                    styles.stamp,
+                                    {
+                                      borderColor: theme.textSecondary,
+                                      backgroundColor: stampBackground(theme.textSecondary),
+                                    },
+                                  ]}>
+                                  <ThemedText type="smallBold" themeColor="textSecondary" style={styles.stampText}>
+                                    Answered
+                                  </ThemedText>
+                                </View>
+                              </View>
+                            ) : null}
                           </ThemedPressable>
                         );
                       })}
@@ -241,12 +297,6 @@ const styles = StyleSheet.create({
   axisItem: {
     gap: Spacing.two,
   },
-  axisItemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
   options: {
     gap: Spacing.two,
   },
@@ -255,6 +305,23 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.three,
     paddingVertical: Spacing.three,
     paddingHorizontal: Spacing.three,
+    position: 'relative',
+  },
+  stampWrap: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stamp: {
+    borderWidth: 1.5,
+    borderRadius: Spacing.one,
+    paddingVertical: Spacing.half,
+    paddingHorizontal: Spacing.two,
+    transform: [{ rotate: '-10deg' }],
+  },
+  stampText: {
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   navRow: {
     flexDirection: 'row',

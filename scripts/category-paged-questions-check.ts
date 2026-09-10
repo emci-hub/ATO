@@ -28,6 +28,11 @@ import {
   type CategoryQuestionRow,
 } from '../src/lib/questions/category-paged';
 import {
+  loadAnsweredOptions,
+  resetAnsweredOptionCache,
+  saveAnsweredOption,
+} from '../src/lib/questions/answered-option-storage';
+import {
   loadCategoryPagePosition,
   resetCategoryPagePositionCache,
   saveCategoryPagePosition,
@@ -210,6 +215,44 @@ async function main() {
     assert.equal(await loadCategoryPagePosition('questions-stack'), null);
 
     ok(`PASS — leaving and returning restores category "${target.id}" (position ${target.id} at index ${defs.indexOf(target) + 1} of ${defs.length}), scoped independently per question set (storageKey)`);
+  }
+
+  // --- Check 5: answered-option stamp storage -----------------------------
+  {
+    resetAnsweredOptionCache();
+    const storageKey = 'full-profile:test-user';
+
+    // Nothing saved yet — a fresh viewer has no remembered picks.
+    assert.deepEqual(await loadAnsweredOptions(storageKey), {});
+
+    // A single save round-trips.
+    await saveAnsweredOption(storageKey, 'openness-0', 1);
+    assert.deepEqual(await loadAnsweredOptions(storageKey), { 'openness-0': 1 });
+
+    // Two saves for DIFFERENT rows fired without awaiting the first before
+    // starting the second (the exact shape of a fast double-tap) must both
+    // land — this is the read-modify-write race found in review: an
+    // earlier draft read the base map via `cache.get(key) ?? await
+    // loadAnsweredOptions(key)`, so two saves racing before that awaited
+    // read resolved would both derive `next` from the same stale base and
+    // the second `cache.set` would silently drop the first row's index.
+    resetAnsweredOptionCache();
+    const raceKey = 'full-profile:race-user';
+    const first = saveAnsweredOption(raceKey, 'row-a', 0);
+    const second = saveAnsweredOption(raceKey, 'row-b', 2);
+    await Promise.all([first, second]);
+    assert.deepEqual(
+      await loadAnsweredOptions(raceKey),
+      { 'row-a': 0, 'row-b': 2 },
+      'two picks on different rows racing before either resolves must both persist, not have the second overwrite the first',
+    );
+
+    // Scoped independently per storageKey (per-account, per question-set —
+    // this is what closes the cross-account leak found in review: the real
+    // caller now passes `full-profile:${me.id}`, not a bare "full-profile").
+    assert.deepEqual(await loadAnsweredOptions('full-profile:other-user'), {});
+
+    ok('PASS — answered-option storage round-trips, survives a same-tick double-save on different rows without dropping either, and stays scoped per storageKey (per-account)');
   }
 
   console.log(`\n${passed} category-paged-questions checks passed`);

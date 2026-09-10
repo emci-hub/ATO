@@ -974,7 +974,9 @@ assert.match(fold, /bankTotalProgress/);
 assert.doesNotMatch(fold, /bankQuestionCount/);
 assert.doesNotMatch(fold, /category_id/);
 assert.match(fold, /CategoryPagedQuestions/);
-assert.match(fold, /storageKey="full-profile"/);
+// Scoped per account (found in review: an unscoped key would leak one
+// account's answer stamps to another account signed in on the same device).
+assert.match(fold, /storageKey=\{`full-profile:\$\{me\.id\}`\}/);
 // Live-subscribed catalog, not a mount-time getCategoryDefs() snapshot — a
 // category_defs fetch swapping the list while this screen is open must be
 // reflected, same hook categories-fold.tsx/category-teaser.tsx already use.
