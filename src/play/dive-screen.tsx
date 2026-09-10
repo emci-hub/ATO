@@ -17,15 +17,17 @@
  * bust only (GAME_SPEC §7).
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Image } from 'expo-image';
 import type { ComponentProps } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { usePacedAction } from '@/play/action-pacing';
+import { itemArtSource } from '@/play/art';
 import { formatMult, getItemDef, type ItemDef, type ItemSlot } from '@/play/items';
+import { PlayFrame } from '@/play/play-frame';
 import { DIVE_CHARGE_CAP, DIVE_DEEPER_MAX, type PlayView } from '@/play/playStore';
 
 const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>['name']> = {
@@ -79,27 +81,27 @@ export function DiveScreen({
         Push your luck for finds. Surface banks the haul — Deeper risks it.
       </ThemedText>
 
-      <ThemedView type="backgroundElement" style={styles.card}>
+      <PlayFrame style={styles.card}>
         <View style={styles.statRow}>
           <ThemedText type="smallBold">Dive charges</ThemedText>
           <ThemedText type="subheading" themeColor="emphasis">
             {chargeText(view)}
           </ThemedText>
         </View>
-      </ThemedView>
+      </PlayFrame>
 
       {run.active ? (
         <>
-          <ThemedView type="backgroundElement" style={styles.card}>
+          <PlayFrame style={styles.card}>
             <ThemedText type="smallBold">
               Haul so far {run.deepers > 0 ? `· ${run.deepers}/${DIVE_DEEPER_MAX} deep` : '· first find'}
             </ThemedText>
             {run.haul.map((id, index) => (
               <FindRow key={`${id}-${index}`} id={id} index={index} />
             ))}
-          </ThemedView>
+          </PlayFrame>
 
-          <ThemedView type="backgroundElement" style={styles.card}>
+          <PlayFrame style={styles.card}>
             {showSplash ? (
               <SplashRow label={splashCopy ?? 'Searching…'} showSpinner={!reduceMotion} />
             ) : (
@@ -168,10 +170,10 @@ export function DiveScreen({
                 )}
               </>
             )}
-          </ThemedView>
+          </PlayFrame>
         </>
       ) : (
-        <ThemedView type="backgroundElement" style={styles.card}>
+        <PlayFrame style={styles.card}>
           {showSplash ? (
             <SplashRow label={splashCopy ?? 'Searching…'} showSpinner={!reduceMotion} />
           ) : (
@@ -214,7 +216,7 @@ export function DiveScreen({
               </ThemedText>
             </>
           )}
-        </ThemedView>
+        </PlayFrame>
       )}
     </>
   );
@@ -253,7 +255,11 @@ function FindRow({ id, index }: { id: string; index: number }) {
   return (
     <View style={styles.findRow}>
       <View style={[styles.findIcon, { backgroundColor: theme.backgroundSelected }]}>
-        <MaterialCommunityIcons name={SLOT_ICONS[def.core.slot]} size={18} color={theme.accent} />
+        {itemArtSource(def.core.art) ? (
+          <Image source={itemArtSource(def.core.art)} contentFit="contain" style={styles.findIconArt} />
+        ) : (
+          <MaterialCommunityIcons name={SLOT_ICONS[def.core.slot]} size={18} color={theme.accent} />
+        )}
       </View>
       <View style={styles.findText}>
         <ThemedText type="smallBold">{def.core.name}</ThemedText>
@@ -309,6 +315,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  findIconArt: {
+    width: 22,
+    height: 22,
   },
   findText: {
     flex: 1,

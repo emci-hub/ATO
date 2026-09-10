@@ -12,14 +12,16 @@
  * would break the Conquered climb, so no such row exists in the catalog.
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Image } from 'expo-image';
 import type { ComponentProps } from 'react';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { cursorIcon } from '@/play/art';
+import { PlayFrame } from '@/play/play-frame';
 import { DIVE_CHARGE_CAP, type PlayView, type ShopPurchaseResult } from '@/play/playStore';
 import {
   paidShopRows,
@@ -45,6 +47,41 @@ const PAID_ICONS: Record<ShopPaidRow['kind'], ShopIcon> = {
   hero: 'account-star',
   stub: 'storefront-outline',
 };
+
+/** Kenney Cursor Pack file per row kind (§19 item/shop icons). */
+const TOKEN_ICON_FILES: Record<ShopTokenRow['kind'], string> = {
+  dive_charge: 'target_round_a',
+  merge_crate: 'tool_hammer',
+  stub: 'tool_wand',
+};
+const PAID_ICON_FILES: Record<ShopPaidRow['kind'], string> = {
+  paid_unique: 'tool_sword_a',
+  hero: 'gauntlet_default',
+  stub: 'tool_torch',
+};
+
+/** Shop row icon: Kenney Cursor Pack art, falling back to a glyph. */
+function ShopRowIcon({
+  file,
+  fallback,
+  color,
+}: {
+  file: string;
+  fallback: ShopIcon;
+  color: string;
+}) {
+  const theme = useTheme();
+  const source = cursorIcon(file);
+  return (
+    <View style={[styles.rowIcon, { backgroundColor: theme.backgroundSelected }]}>
+      {source ? (
+        <Image source={source} contentFit="contain" style={styles.rowIconArt} />
+      ) : (
+        <MaterialCommunityIcons name={fallback} size={18} color={color} />
+      )}
+    </View>
+  );
+}
 
 /** Resolved display state of one token row (drives the button + disabled). */
 type TokenRowState = {
@@ -136,7 +173,7 @@ export function ShopScreen({
         Spend soft tokens on a small boost — or window-shop what is coming.
       </ThemedText>
 
-      <ThemedView type="backgroundElement" style={styles.card}>
+      <PlayFrame style={styles.card}>
         <View style={styles.statRow}>
           <ThemedText type="smallBold">Tokens</ThemedText>
           <ThemedText type="subheading" themeColor="emphasis">
@@ -177,10 +214,10 @@ export function ShopScreen({
             })}
           </ScrollView>
         </View>
-      </ThemedView>
+      </PlayFrame>
 
       {tab === 'token' ? (
-        <ThemedView type="backgroundElement" style={styles.card}>
+        <PlayFrame style={styles.card}>
           <ThemedText type="smallBold">Token shop</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
             Bought with soft tokens. Never sells permanent power or a cycle skip — those would
@@ -190,13 +227,11 @@ export function ShopScreen({
             const state = tokenRowState(view, row, busyRow === row.id);
             return (
               <View key={row.id} style={styles.row}>
-                <View style={[styles.rowIcon, { backgroundColor: theme.backgroundSelected }]}>
-                  <MaterialCommunityIcons
-                    name={TOKEN_ICONS[row.kind]}
-                    size={18}
-                    color={theme.accent}
-                  />
-                </View>
+                <ShopRowIcon
+                  file={TOKEN_ICON_FILES[row.kind]}
+                  fallback={TOKEN_ICONS[row.kind]}
+                  color={theme.accent}
+                />
                 <View style={styles.rowText}>
                   <ThemedText type="smallBold">{row.name}</ThemedText>
                   {row.blurb ? (
@@ -234,9 +269,9 @@ export function ShopScreen({
               </View>
             );
           })}
-        </ThemedView>
+        </PlayFrame>
       ) : (
-        <ThemedView type="backgroundElement" style={styles.card}>
+        <PlayFrame style={styles.card}>
           <ThemedText type="smallBold">Paid shop</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
             Previews only — Apple checkout lands later. Play stays optional: Claim and Defend
@@ -244,13 +279,11 @@ export function ShopScreen({
           </ThemedText>
           {paidShopRows().map((row) => (
             <View key={row.id} style={styles.row}>
-              <View style={[styles.rowIcon, { backgroundColor: theme.backgroundSelected }]}>
-                <MaterialCommunityIcons
-                  name={PAID_ICONS[row.kind]}
-                  size={18}
-                  color={theme.textSecondary}
-                />
-              </View>
+              <ShopRowIcon
+                file={PAID_ICON_FILES[row.kind]}
+                fallback={PAID_ICONS[row.kind]}
+                color={theme.textSecondary}
+              />
               <View style={styles.rowText}>
                 <View style={styles.titleLine}>
                   <ThemedText type="smallBold" themeColor="textSecondary">
@@ -280,7 +313,7 @@ export function ShopScreen({
               </View>
             </View>
           ))}
-        </ThemedView>
+        </PlayFrame>
       )}
     </>
   );
@@ -333,6 +366,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  rowIconArt: {
+    width: 22,
+    height: 22,
   },
   rowText: {
     flex: 1,

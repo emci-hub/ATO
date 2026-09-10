@@ -18,16 +18,26 @@
  * fuel only — the main is never destroyed. No Defend. No Supabase.
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Image } from 'expo-image';
 import type { ComponentProps } from 'react';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { usePacedAction } from '@/play/action-pacing';
+import { itemArtSource } from '@/play/art';
 import { allAvatarDefs, avatarDef } from '@/play/avatars';
+import { PlayFrame } from '@/play/play-frame';
 import {
   formatItemStats,
   formatMult,
@@ -62,6 +72,29 @@ const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>
   cloak: 'hanger',
   trinket: 'star-four-points',
 };
+
+/** Item art from the Kenney pack, falling back to a slot glyph (§19). */
+function ItemIcon({
+  art,
+  slot,
+  style,
+}: {
+  art?: string;
+  slot: ItemSlot;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const theme = useTheme();
+  const source = art ? itemArtSource(art) : undefined;
+  return (
+    <View style={[style, { backgroundColor: theme.backgroundSelected }]}>
+      {source ? (
+        <Image source={source} contentFit="contain" style={styles.itemIconArt} />
+      ) : (
+        <MaterialCommunityIcons name={SLOT_ICONS[slot]} size={18} color={theme.accent} />
+      )}
+    </View>
+  );
+}
 const STAT_ORDER: ItemStat[] = [
   'wave_power',
   'tower_speed',
@@ -170,7 +203,7 @@ export function DressScreen({
         onUnlockAvatar={onUnlockAvatar}
       />
 
-      <ThemedView type="backgroundElement" style={styles.card}>
+      <PlayFrame style={styles.card}>
         <ThemedText type="smallBold">Worn</ThemedText>
         {SLOT_ORDER.map((slot) => {
           const ref = view.equipped[slot] ?? null;
@@ -185,9 +218,9 @@ export function DressScreen({
             />
           );
         })}
-      </ThemedView>
+      </PlayFrame>
 
-      <ThemedView type="backgroundElement" style={styles.card}>
+      <PlayFrame style={styles.card}>
         <ThemedText type="smallBold">Equipped bonuses</ThemedText>
         {!anyBonuses ? (
           <ThemedText type="small" themeColor="textSecondary">
@@ -223,7 +256,7 @@ export function DressScreen({
             );
           })
         )}
-      </ThemedView>
+      </PlayFrame>
 
       {/* Merge confirm block sits DIRECTLY above the Bag — the fuel it
        * consumes comes from bag spares, so the panel anchors to that card. */}
@@ -246,7 +279,7 @@ export function DressScreen({
         />
       ) : null}
 
-      <ThemedView type="backgroundElement" style={styles.card}>
+      <PlayFrame style={styles.card}>
         <View style={styles.statRow}>
           <ThemedText type="smallBold">Bag</ThemedText>
           <ThemedText type="code" themeColor="textSecondary">
@@ -309,7 +342,7 @@ export function DressScreen({
             );
           })
         )}
-      </ThemedView>
+      </PlayFrame>
     </>
   );
 }
@@ -348,7 +381,7 @@ function MergePanel({
   const toLabel = starLabel(target.star + 1);
   if (!def || pct == null) return null; // nothing mergeable anymore
   return (
-    <ThemedView type="backgroundElement" style={styles.mergeCard}>
+    <PlayFrame style={styles.mergeCard}>
       {showSplash ? (
         <View style={styles.splashRow}>
           {!reduceMotion ? <ActivityIndicator size="small" color={theme.accent} /> : null}
@@ -402,7 +435,7 @@ function MergePanel({
           </View>
         </>
       )}
-    </ThemedView>
+    </PlayFrame>
   );
 }
 
@@ -468,9 +501,7 @@ function SlotRow({
         accessibilityRole="button"
         accessibilityState={{ disabled: !def }}
         style={({ pressed }) => [styles.slotMain, pressed && def && styles.pressed]}>
-        <View style={[styles.slotIcon, { backgroundColor: theme.backgroundSelected }]}>
-          <MaterialCommunityIcons name={SLOT_ICONS[slot]} size={18} color={theme.accent} />
-        </View>
+        <ItemIcon art={def?.core.art} slot={slot} style={styles.slotIcon} />
         <View style={styles.slotText}>
           <ThemedText type="small" themeColor="textSecondary">
             {SLOT_LABELS[slot]}
@@ -558,11 +589,7 @@ function StackRow({
   const mergePct = mergeSuccessPct(stack.star);
   const star = starLabel(stack.star);
 
-  const icon = (
-    <View style={[styles.stackIcon, { backgroundColor: theme.backgroundSelected }]}>
-      <MaterialCommunityIcons name={SLOT_ICONS[def.core.slot]} size={18} color={theme.accent} />
-    </View>
-  );
+  const icon = <ItemIcon art={def.core.art} slot={def.core.slot} style={styles.stackIcon} />;
   const body = (
     <View style={styles.stackText}>
       <View style={styles.stackTitleLine}>
@@ -667,7 +694,7 @@ function AvatarPicker({
   const owned = new Map(view.avatars.map((avatar) => [avatar.id, avatar]));
   const activeDef = avatarDef(view.activeAvatarId);
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
+    <PlayFrame style={styles.card}>
       <View style={styles.statRow}>
         <ThemedText type="smallBold">Active Avatar</ThemedText>
         <ThemedText type="smallBold" themeColor="emphasis">
@@ -766,7 +793,7 @@ function AvatarPicker({
           </View>
         );
       })}
-    </ThemedView>
+    </PlayFrame>
   );
 }
 
@@ -833,6 +860,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  itemIconArt: {
+    width: 22,
+    height: 22,
   },
   slotText: {
     flex: 1,

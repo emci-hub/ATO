@@ -21,6 +21,7 @@
  * rewards, and meta persist through the shared store.
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Image } from 'expo-image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -30,7 +31,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Circle, G, Path, Rect, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, G, Image as SvgImage, Rect, Text as SvgText } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -40,9 +41,11 @@ import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
 import {
+  AVATAR_RANGE,
   BOUND_BOSS_MAX_ON_BOARD,
   DEFEND_MAPS,
   DEFEND_TICK_MS,
+  type DefendMap,
   SKILL_COOLDOWN_MS,
   SKILL_DESCRIPTION,
   SKILL_NAME,
@@ -66,6 +69,22 @@ import {
   type TowerKind,
 } from '@/play/defend';
 import { avatarDef } from '@/play/avatars';
+import { PlayFrame } from '@/play/play-frame';
+import {
+  AVATAR_ATTACK_FRAMES,
+  PRIMAL_CAST,
+  PUFF_ART,
+  avatarAttackFrame,
+  avatarIdleFrame,
+  avatarRotation,
+  dir4,
+  dir8FromDelta,
+  playTile,
+  primalRotation,
+  towerArtSource,
+  type Dir8,
+} from '@/play/art';
+import { boardDecor } from '@/play/board-decor';
 import { BOUND_BOSS_MAX_STAR, bossBandFor, boundBossFragmentCost, defaultBoundBossId, getBoundBossDef, isUniqueDrop, previewDropTable, gearScore, recommendedGs, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, typeMatchBonus, type DropPreviewRow, type TypeTag } from '@/play/engine';
 import { formatItemStats, getItemDef } from '@/play/items';
 import {
@@ -395,6 +414,8 @@ export function DefendScreen({
   /** The map the CURRENT board draws — follows the sim so a finished run never
    * visually jumps maps before the player moves on. */
   const boardMap = DEFEND_MAPS[sim?.mapId ?? mapId];
+  /** Static Scribble Dungeons tile dressing for this map (§19). Pure + memoized. */
+  const decor = useMemo(() => boardDecor(boardMap), [boardMap]);
 
   /** Boss band of the chosen fight (null for a normal formula wave). */
   const band = bossBandFor(fight.phase, fight.wave);
@@ -421,6 +442,10 @@ export function DefendScreen({
   const startX = useSharedValue(initialPark.x);
   const startY = useSharedValue(initialPark.y);
   const avatarPosRef = useRef({ x: initialPark.x * 100, y: initialPark.y * 100 }); // board units (0..100)
+  /** Which way the Avatar faces (8-way) — idles toward the nearest foe. */
+  const avatarFacingRef = useRef<Dir8>('south');
+  /** Timestamp of the last Avatar auto-attack (drives the Iron_Slash flash). */
+  const avatarAttackAtRef = useRef(0);
   /** Measured board size. `boardSizeRef` is the JS-thread copy (gesture math);
    * `boardSize` is the SHARED copy the avatar's animated style reads — a plain
    * ref is not reactive, so reading it in the worklet left the Avatar stuck at
@@ -695,7 +720,16 @@ export function DefendScreen({
       const current = simRef.current;
       if (!current) return;
       const avatar = avatarPosRef.current;
+      // §19 Avatar face/slash (display only). Read the target from the PRE-step
+      // puffs: the engine may kill this very puff, and the post-step list would
+      // drop the killing blow's facing/flash. A higher post-step cooldown means
+      // the engine reset it — i.e. the Avatar attacked this tick.
+      const aimed = nearestPuffDelta(current.puffs, avatar, DEFEND_MAPS[current.mapId]);
       const step = stepDefendLive(current, DEFEND_TICK_MS, bucketsRef.current, avatar);
+      if (aimed) avatarFacingRef.current = dir8FromDelta(aimed.dx, aimed.dy);
+      if (step.state.avatarCooldownMs > current.avatarCooldownMs + 1 && aimed) {
+        avatarAttackAtRef.current = Date.now();
+      }
       // §9m boss alert: banner the breath → boss step (the boss spawns last).
       const bandNow = step.state.band;
       if (
@@ -888,6 +922,22 @@ export function DefendScreen({
       ? `Cycle ${view.conqueredCycles} — foes scale ×${view.cyclePower.toFixed(2)}`
       : null;
 
+  // §19 Avatar frames: Iron_Slash flash on attack, Breathing_Idle otherwise.
+  // Reduce-motion keeps the crisp 8-way rotation instead of animating.
+  const avatarFacing = avatarFacingRef.current;
+  const avatarDir4 = dir4(avatarFacing);
+  const nowMs = Date.now();
+  const attackElapsed = nowMs - avatarAttackAtRef.current;
+  const avatarFrameSource = reduceMotion
+    ? avatarRotation(view.activeAvatarId, avatarFacing)
+    : attackElapsed < AVATAR_ATTACK_MS
+      ? avatarAttackFrame(
+          view.activeAvatarId,
+          avatarDir4,
+          Math.floor(attackElapsed / (AVATAR_ATTACK_MS / AVATAR_ATTACK_FRAMES)),
+        )
+      : avatarIdleFrame(view.activeAvatarId, avatarDir4, Math.floor(nowMs / AVATAR_IDLE_FRAME_MS));
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -908,7 +958,7 @@ export function DefendScreen({
         </ThemedText>
 
         {/* HUD */}
-        <ThemedView type="backgroundElement" style={styles.card}>
+        <PlayFrame style={styles.card}>
           <View style={styles.statRow}>
             <ThemedText type="smallBold">
               {campaignPhaseLabel(labelPhase)} wave {displayedWave}
@@ -996,7 +1046,7 @@ export function DefendScreen({
               {SKILL_NAME}: {SKILL_DESCRIPTION} ({SKILL_COOLDOWN_MS / 1000}s cooldown)
             </ThemedText>
           ) : null}
-        </ThemedView>
+        </PlayFrame>
 
         {/* Coach — top of Defend setup, right under the wave-title block, so a
          * newbie reads the tip before placing/starting. Still dismissible. */}
@@ -1039,7 +1089,7 @@ export function DefendScreen({
         ) : null}
 
         {/* Board */}
-        <ThemedView type="backgroundElement" style={styles.card}>
+        <PlayFrame style={styles.card}>
           <ThemedText type="small" themeColor="textSecondary">
             {boardMap.name}
             {cycleNote ? ` · ${cycleNote}` : ''}
@@ -1052,16 +1102,29 @@ export function DefendScreen({
               boardSizeRef.current = width;
               boardSize.value = width;
             }}>
+            {/* Scribble Dungeons tile dressing (§19) — visual only, under the SVG. */}
+            <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+              {decor.map((tile, index) => {
+                const source = playTile(tile.key);
+                if (!source) return null;
+                return (
+                  <Image
+                    key={`tile-${index}`}
+                    source={source}
+                    contentFit="fill"
+                    style={{
+                      position: 'absolute',
+                      left: `${tile.x}%`,
+                      top: `${tile.y}%`,
+                      width: `${tile.size}%`,
+                      height: `${tile.size}%`,
+                      transform: [{ rotate: `${tile.rotate}deg` }],
+                    }}
+                  />
+                );
+              })}
+            </View>
             <Svg width="100%" height="100%" viewBox="0 0 100 100">
-              <Path
-                d={pathD(boardMap.path)}
-                stroke={theme.textSecondary}
-                strokeOpacity={0.3}
-                strokeWidth={9}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
               {boardMap.pads.map((pad, index) => {
                 const tower = sim?.towers.find((t) => t.pad === index);
                 const boundBoss = sim?.boundBosses.find((b) => b.pad === index);
@@ -1104,6 +1167,23 @@ export function DefendScreen({
                   strokeDasharray="2 2"
                 />
               ) : null}
+              {/* §19 tower sprites: Kenney shape bodies per tower job (drawn
+               * under the level number so the badge stays readable). */}
+              {sim?.towers.map((tower) => {
+                const pad = boardMap.pads[tower.pad];
+                const source = towerArtSource(tower.kind);
+                if (!source) return null;
+                return (
+                  <SvgImage
+                    key={`tower-art-${tower.id}`}
+                    href={source}
+                    x={pad.x - 5}
+                    y={pad.y - 5}
+                    width={10}
+                    height={10}
+                  />
+                );
+              })}
               {sim?.towers.map((tower) => {
                 const pad = boardMap.pads[tower.pad];
                 return (
@@ -1117,6 +1197,22 @@ export function DefendScreen({
                     textAnchor="middle">
                     {tower.level}
                   </SvgText>
+                );
+              })}
+              {/* §19 Bound Boss carries the Final beast sprite (Jaguar). */}
+              {sim?.boundBosses.map((bb) => {
+                const pad = boardMap.pads[bb.pad];
+                const source = primalRotation(PRIMAL_CAST.final, 'south');
+                if (!source) return null;
+                return (
+                  <SvgImage
+                    key={`bb-art-${bb.id}`}
+                    href={source}
+                    x={pad.x - 5.5}
+                    y={pad.y - 5.5}
+                    width={11}
+                    height={11}
+                  />
                 );
               })}
               {sim?.boundBosses.map((bb) => {
@@ -1149,10 +1245,30 @@ export function DefendScreen({
                     : puff.kind === 'runner'
                       ? RUNNER_COLOR
                       : PUFF_COLOR;
+                // §19 cast lock: runners = Lynx, bosses = Primal by band,
+                // normal puffs = Kenney shape circle.
+                const facing = puffFacing(puff, boardMap);
+                const sprite =
+                  puff.kind === 'boss'
+                    ? bossArtSource(band?.kind ?? '', facing)
+                    : puff.kind === 'runner'
+                      ? primalRotation(PRIMAL_CAST.runner, facing)
+                      : PUFF_ART;
+                const spriteSize = radius * 4.4;
                 const barWidth = 8 * puff.size;
                 return (
                   <G key={`puff-${puff.id}`}>
-                    <Circle cx={x} cy={y} r={radius} fill={fill} />
+                    {sprite ? (
+                      <SvgImage
+                        href={sprite}
+                        x={x - spriteSize / 2}
+                        y={y - spriteSize / 2}
+                        width={spriteSize}
+                        height={spriteSize}
+                      />
+                    ) : (
+                      <Circle cx={x} cy={y} r={radius} fill={fill} />
+                    )}
                     {puff.kind === 'boss' ? (
                       <Circle
                         cx={x}
@@ -1172,9 +1288,15 @@ export function DefendScreen({
               })}
             </Svg>
 
-            {/* Draggable Avatar overlay */}
+            {/* Draggable Avatar overlay (§19 Masterpiece / Cozy Village art) */}
             <GestureDetector gesture={pan}>
-              <Animated.View style={[styles.avatar, avatarStyle, { backgroundColor: avatarColor }]} />
+              <Animated.View style={[styles.avatar, avatarStyle]}>
+                {avatarFrameSource ? (
+                  <Image source={avatarFrameSource} contentFit="contain" style={styles.avatarImage} />
+                ) : (
+                  <View style={[styles.avatarFallback, { backgroundColor: avatarColor }]} />
+                )}
+              </Animated.View>
             </GestureDetector>
 
             {/* Floating damage numbers (display only, pooled) */}
@@ -1228,7 +1350,7 @@ export function DefendScreen({
               </Pressable>
             </View>
           ) : null}
-        </ThemedView>
+        </PlayFrame>
 
         {/* Pad action panel */}
         {selectedPad != null ? (
@@ -2163,7 +2285,56 @@ function HitFloater({
   );
 }
 
-const AVATAR_RADIUS_PX = 9;
+/** Avatar sprite half-size on the board, px (a drag overlay, not SVG units). */
+const AVATAR_RADIUS_PX = 16;
+/** Attack slash flash length (ms) — tuned to the Avatar's 0.7s cooldown. */
+const AVATAR_ATTACK_MS = 700;
+/** One idle-breath frame step (ms). */
+const AVATAR_IDLE_FRAME_MS = 220;
+
+/** Which Primal Dynasties beast plays each boss band (§19 cast lock). */
+function bossArtSource(kind: string, dir: Dir8) {
+  switch (kind) {
+    case 'final':
+      return primalRotation(PRIMAL_CAST.final, dir);
+    case 'semi':
+      return primalRotation(PRIMAL_CAST.semi, dir);
+    case 'scout':
+      return primalRotation(PRIMAL_CAST.scoutBoss, dir);
+    case 'scout_mini':
+      return primalRotation(PRIMAL_CAST.scoutMini, dir);
+    default:
+      return primalRotation(PRIMAL_CAST.final, dir);
+  }
+}
+
+/** Where a puff is heading (8-way), from its path tangent. */
+function puffFacing(puff: Puff, map: DefendMap): Dir8 {
+  const behind = puffPosition(Math.max(0, puff.dist - 0.02), map);
+  const ahead = puffPosition(Math.min(1, puff.dist + 0.02), map);
+  return dir8FromDelta(ahead.x - behind.x, ahead.y - behind.y);
+}
+
+/** Delta from the Avatar to the nearest puff in attack range (facing aid). */
+function nearestPuffDelta(
+  puffs: readonly Puff[],
+  avatar: { x: number; y: number },
+  map: DefendMap,
+): { dx: number; dy: number } | null {
+  let best: { dx: number; dy: number } | null = null;
+  let bestDist = Infinity;
+  for (const puff of puffs) {
+    const pos = puffPosition(puff.dist, map);
+    const dx = pos.x * 100 - avatar.x;
+    const dy = pos.y * 100 - avatar.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = { dx, dy };
+    }
+  }
+  return bestDist <= AVATAR_RANGE ? best : null;
+}
 
 /** 1st/2nd/3rd… for the lifetime-clear milestone copy. */
 function ordinal(n: number): string {
@@ -2201,14 +2372,6 @@ async function shareDefendClear(wave: number, level: number): Promise<void> {
     return;
   }
   await fallback();
-}
-
-/** SVG path data for a map's road (viewBox 100). */
-function pathD(path: readonly { x: number; y: number }[]): string {
-  const [first, ...rest] = path;
-  const parts = [`M ${first.x * 100} ${first.y * 100}`];
-  for (const point of rest) parts.push(`L ${point.x * 100} ${point.y * 100}`);
-  return parts.join(' ');
 }
 
 const styles = StyleSheet.create({
@@ -2358,6 +2521,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: AVATAR_RADIUS_PX * 2,
     height: AVATAR_RADIUS_PX * 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  avatarFallback: {
+    width: '100%',
+    height: '100%',
     borderRadius: AVATAR_RADIUS_PX,
     borderWidth: 2,
     borderColor: '#FFFFFF',

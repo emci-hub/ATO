@@ -1,4 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Image } from 'expo-image';
 import { Redirect, router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -11,6 +12,8 @@ import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useAppearance } from '@/lib/theme/context';
+import { AboutScreen } from '@/play/about-screen';
+import { avatarRotation } from '@/play/art';
 import { STUB_AVATAR_ID, avatarDef } from '@/play/avatars';
 import { SaveDumpRow } from '@/play/dev-dump';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
@@ -21,6 +24,7 @@ import { DefendScreen } from '@/play/defend-screen';
 import type { TypeTag } from '@/play/engine/type-match';
 import { GROVE_ACTION_TILES, GROVE_LEDE } from '@/play/grove';
 import { itemName, type ItemSlot } from '@/play/items';
+import { PlayFrame } from '@/play/play-frame';
 import { TunePanel } from '@/play/tune-panel';
 import { loadTune } from '@/play/tune';
 import {
@@ -70,7 +74,7 @@ import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
  * pre-launch builds via PRE_LAUNCH_DEV.
  */
 
-type PlayMode = 'grove' | 'dive' | 'dress' | 'defend' | 'shop';
+type PlayMode = 'grove' | 'dive' | 'dress' | 'defend' | 'shop' | 'about';
 
 type PlayToast =
   | { kind: 'claim'; result: ClaimResult }
@@ -563,6 +567,8 @@ export default function PlayScreen() {
               onBuyToken={handleBuyShopRow}
               onBackToDivecore={() => setMode('grove')}
             />
+          ) : mode === 'about' ? (
+            <AboutScreen onBackToDivecore={() => setMode('grove')} />
           ) : (
             <>
               <View style={styles.topRow}>
@@ -578,20 +584,23 @@ export default function PlayScreen() {
                 {GROVE_LEDE}
               </ThemedText>
 
-              <ThemedView type="backgroundElement" style={styles.card}>
+              <PlayFrame style={styles.card}>
                 <View style={styles.groveRow}>
-                  {/* Placeholder avatar — TODO: SakPix swap. No mock PNGs in v0.
-                   * Reflects the ACTIVE Avatar (swap in Dress). */}
-                  <View
-                    style={[
-                      styles.avatar,
-                      { backgroundColor: activeAvatar?.color ?? theme.backgroundSelected },
-                    ]}>
-                    <MaterialCommunityIcons
-                      name={activeAvatar?.icon ?? 'sprout'}
-                      size={44}
-                      color={activeAvatar ? '#FFFFFF' : theme.accent}
-                    />
+                  {/* §19 Avatar art — reflects the ACTIVE Avatar (swap in Dress). */}
+                  <View style={[styles.avatar, { backgroundColor: theme.backgroundSelected }]}>
+                    {activeAvatar && avatarRotation(activeAvatar.id, 'south') ? (
+                      <Image
+                        source={avatarRotation(activeAvatar.id, 'south')}
+                        contentFit="contain"
+                        style={styles.avatarArt}
+                      />
+                    ) : (
+                      <MaterialCommunityIcons
+                        name={activeAvatar?.icon ?? 'sprout'}
+                        size={44}
+                        color={activeAvatar ? '#FFFFFF' : theme.accent}
+                      />
+                    )}
                   </View>
                   <View style={styles.groveText}>
                     <ThemedText type="heading">
@@ -605,9 +614,9 @@ export default function PlayScreen() {
                     </ThemedText>
                   </View>
                 </View>
-              </ThemedView>
+              </PlayFrame>
 
-              <ThemedView type="backgroundElement" style={styles.card}>
+              <PlayFrame style={styles.card}>
                 <View style={styles.statRow}>
                   <ThemedText type="smallBold">Tokens</ThemedText>
                   <ThemedText type="subheading" themeColor="emphasis">
@@ -646,7 +655,7 @@ export default function PlayScreen() {
                 <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
                   Research accrues every 30 minutes — up to a 10-hour bag, then it waits for you.
                 </ThemedText>
-              </ThemedView>
+              </PlayFrame>
 
               <View style={styles.actionList}>
                 {GROVE_ACTION_TILES.map((tile) => {
@@ -691,6 +700,16 @@ export default function PlayScreen() {
                   );
                 })}
               </View>
+
+              <Pressable
+                onPress={() => setMode('about')}
+                accessibilityRole="button"
+                accessibilityLabel="About Divecore and art credits"
+                style={({ pressed }) => [styles.aboutRow, pressed && styles.pressed]}>
+                <ThemedText type="small" themeColor="textSecondary">
+                  About · Art credits
+                </ThemedText>
+              </Pressable>
 
               {showTune ? (
                 <TunePanel onClose={() => setShowTune(false)} />
@@ -1090,6 +1109,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  avatarArt: {
+    width: '100%',
+    height: '100%',
+  },
   groveText: {
     flex: 1,
     gap: Spacing.half,
@@ -1109,6 +1132,10 @@ const styles = StyleSheet.create({
   },
   actionList: {
     gap: Spacing.two,
+  },
+  aboutRow: {
+    alignSelf: 'center',
+    paddingVertical: Spacing.two,
   },
   actionCard: {
     borderRadius: Spacing.four,

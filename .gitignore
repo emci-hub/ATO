@@ -47,3 +47,8 @@ supabase/.temp/
 
 # Claude Code local preview config
 .claude/launch.json
+
+# Play art source packs (large; unpacked PNGs under assets/play/ are tracked).
+# Re-download here and run scripts/play-art-prep.ts to regenerate the registry.
+assets/play/incoming/
+assets/play/.staging/
