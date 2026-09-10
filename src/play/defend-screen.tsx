@@ -73,6 +73,7 @@ import {
   DEFAULT_AVATAR_PARK,
   MAIN_WAVE_COUNT,
   avatarLevelWavePower,
+  avatarParkFor,
   avatarStarWavePower,
   bucketMultiplier,
   campaignNextSeat,
@@ -409,17 +410,23 @@ export function DefendScreen({
   const bandRows = band ? dropRows.filter((row) => !row.unique) : [];
 
   // Avatar position (board units 0..1) — smooth via shared values, engine via
-  // ref. v16: the park lives on the ACTIVE Avatar and is per-map; a fresh map
-  // (or no save yet) starts the Avatar at the MIDDLE of the board, then the
-  // last drag is persisted. Swapping Avatars restores each one's own spot.
+  // ref. The park lives on the ACTIVE Avatar and is keyed by map id for BOTH
+  // maps (Trial and Main share this one path); a missing/corrupt park spawns at
+  // the same board MIDDLE and is persisted, so a map never restores the old
+  // corner default. Swapping Avatars restores each one's own spot.
   const initialParkMap: AvatarParkMapId = view.campaign.phase;
-  const initialPark = view.avatarPark[initialParkMap] ?? DEFAULT_AVATAR_PARK;
+  const initialPark = avatarParkFor(view.avatarPark, initialParkMap);
   const avatarX = useSharedValue(initialPark.x);
   const avatarY = useSharedValue(initialPark.y);
   const startX = useSharedValue(initialPark.x);
   const startY = useSharedValue(initialPark.y);
   const avatarPosRef = useRef({ x: initialPark.x * 100, y: initialPark.y * 100 }); // board units (0..100)
+  /** Measured board size. `boardSizeRef` is the JS-thread copy (gesture math);
+   * `boardSize` is the SHARED copy the avatar's animated style reads — a plain
+   * ref is not reactive, so reading it in the worklet left the Avatar stuck at
+   * `park × 100px` until the first drag (the "weird spot"). */
   const boardSizeRef = useRef(100);
+  const boardSize = useSharedValue(100);
   /** Which map the Avatar is currently parked on (guard: only re-park on a
    * Trial ↔ Main switch, never on every wave/rebuild). */
   const parkedMapRef = useRef<AvatarParkMapId | null>(initialParkMap);
@@ -429,12 +436,17 @@ export function DefendScreen({
   }, []);
 
   /** Park the Avatar for a map — its saved spot (this Avatar's own), else the
-   * map's MIDDLE default. Runs once per map (guard above), so a same-map
-   * rebuild never snaps the Avatar back off where the player left it. */
+   * shared board MIDDLE. First visit / missing / corrupt park is persisted as
+   * MIDDLE so the map can never regenerate a start or fall back to the old
+   * corner. Runs once per map (guard below), so a same-map rebuild never snaps
+   * the Avatar off where the player left it. */
   const ensureParked = useCallback(
     (mapId: AvatarParkMapId) => {
+      if (view.avatarPark[mapId] == null) {
+        onSaveAvatarPark(mapId, DEFAULT_AVATAR_PARK.x, DEFAULT_AVATAR_PARK.y);
+      }
       if (parkedMapRef.current === mapId) return;
-      const park = view.avatarPark[mapId] ?? DEFAULT_AVATAR_PARK;
+      const park = avatarParkFor(view.avatarPark, mapId);
       avatarX.value = park.x;
       avatarY.value = park.y;
       startX.value = park.x;
@@ -444,10 +456,11 @@ export function DefendScreen({
     },
     // avatarX/avatarY/startX/startY are stable shared-value handles (their
     // `.value` writes never change identity); view.avatarPark is the read.
-    [view.avatarPark, avatarX, avatarY, startX, startY],
+    [view.avatarPark, onSaveAvatarPark, avatarX, avatarY, startX, startY],
   );
 
-  /** Persist the Avatar's current spot as this board map's park (drag end). */
+  /** Persist the Avatar's current spot as this board map's park (drag end).
+   * Same path for Trial and Main. */
   const commitAvatarPark = useCallback(() => {
     const mapId = (simRef.current?.mapId ?? fightRef.current.phase) as AvatarParkMapId;
     onSaveAvatarPark(mapId, avatarPosRef.current.x / 100, avatarPosRef.current.y / 100);
@@ -840,7 +853,9 @@ export function DefendScreen({
       startY.value = avatarY.value;
     })
     .onUpdate((event) => {
-      const size = boardSizeRef.current || 100;
+      // Shared board size (worklet-safe) so drag math matches the rendered
+      // position — a plain ref could capture a stale 100px board.
+      const size = boardSize.value || 100;
       const nx = clamp01(startX.value + event.translationX / size);
       const ny = clamp01(startY.value + event.translationY / size);
       avatarX.value = nx;
@@ -852,10 +867,15 @@ export function DefendScreen({
       runOnJS(commitAvatarPark)();
     });
 
-  const avatarStyle = useAnimatedStyle(() => ({
-    left: avatarX.value * (boardSizeRef.current || 100) - AVATAR_RADIUS_PX,
-    top: avatarY.value * (boardSizeRef.current || 100) - AVATAR_RADIUS_PX,
-  }));
+  const avatarStyle = useAnimatedStyle(() => {
+    // Read the SHARED board size (reactive). A ref here would leave the Avatar
+    // at `park × 100px` until the first drag re-ran the worklet.
+    const size = boardSize.value || 100;
+    return {
+      left: avatarX.value * size - AVATAR_RADIUS_PX,
+      top: avatarY.value * size - AVATAR_RADIUS_PX,
+    };
+  });
 
   const levelBonus = avatarLevelWavePower(view.avatarLevel);
   /** Active Avatar's identity — the board draws + names the one you picked in
@@ -1028,7 +1048,9 @@ export function DefendScreen({
           <View
             style={[styles.board, { backgroundColor: theme.backgroundSelected }]}
             onLayout={(event) => {
-              boardSizeRef.current = event.nativeEvent.layout.width || 100;
+              const width = event.nativeEvent.layout.width || 100;
+              boardSizeRef.current = width;
+              boardSize.value = width;
             }}>
             <Svg width="100%" height="100%" viewBox="0 0 100 100">
               <Path

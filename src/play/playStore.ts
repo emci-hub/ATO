@@ -317,10 +317,25 @@ export type AvatarParkPoint = { x: number; y: number };
  * once (then a drag saves it). */
 export type AvatarPark = Partial<Record<AvatarParkMapId, AvatarParkPoint>>;
 
-/** The default spawn — the MIDDLE of the board. Used when a map has no saved
- * park yet (first-ever Defend, a Trial ↔ Main switch, or a fresh Avatar), so
- * new runs never snap to a corner or a tower pad. A drag then saves the spot. */
+/** The default spawn — the MIDDLE of the board. Used for BOTH maps (Trial and
+ * Main) when a map has no saved park yet (first-ever Defend, a Trial ↔ Main
+ * switch, or a fresh Avatar), so new runs never snap to a corner or a tower
+ * pad. A drag then saves the spot. */
 export const DEFAULT_AVATAR_PARK: AvatarParkPoint = { x: 0.5, y: 0.5 };
+
+/** The removed pre-v16 top-right default. A saved park equal to this is the
+ * OLD weird corner, not a real drag — the migration drops it so the map falls
+ * back to the MIDDLE instead of restoring it forever. */
+const LEGACY_AVATAR_PARK: AvatarParkPoint = { x: 0.82, y: 0.12 };
+
+/** Small epsilon for "is this point the old legacy default?" (float-safe). */
+const PARK_EPSILON = 0.001;
+
+/** The one spawn lookup BOTH maps share: a map's saved park, else the MIDDLE
+ * default. No Trial/Main special case — same helper, same fallback. */
+export function avatarParkFor(park: AvatarPark, mapId: AvatarParkMapId): AvatarParkPoint {
+  return park[mapId] ?? DEFAULT_AVATAR_PARK;
+}
 
 /** Stable Avatar id (matches a row in `avatars.ts` / a future Hero def). */
 export type AvatarId = string;
@@ -2488,9 +2503,15 @@ function parseAvatars(
   return { avatars: rows, activeAvatarId: activeId };
 }
 
-/** Loose read of an avatar park (map id → clamped board fractions).
- * Malformed entries are dropped; a missing park defaults to empty (maps fall
- * back to their MIDDLE default until the player drags). */
+/**
+ * Loose read of a saved avatar park (map id → board fractions).
+ *
+ * A row is KEPT only when it is a real in-range drag: finite x/y inside 0..1
+ * and NOT the removed pre-v16 top-right default. Anything else (missing,
+ * malformed, out-of-range/corrupt, or the old weird corner) is DROPPED, so the
+ * map falls back to the shared MIDDLE spawn (`avatarParkFor`) — never to a
+ * corner or a clamped edge.
+ */
 function parseAvatarPark(raw: unknown): AvatarPark {
   if (!isRecord(raw)) return {};
   const park: AvatarPark = {};
@@ -2500,10 +2521,16 @@ function parseAvatarPark(raw: unknown): AvatarPark {
     const x = finiteNumber(point.x);
     const y = finiteNumber(point.y);
     if (x == null || y == null) continue;
-    park[key] = {
-      x: Math.max(0, Math.min(1, x)),
-      y: Math.max(0, Math.min(1, y)),
-    };
+    // Corrupt / out-of-range → treat as missing (MIDDLE), never clamp to an edge.
+    if (x < 0 || x > 1 || y < 0 || y > 1) continue;
+    // The removed legacy top-right default is not a real park → drop it.
+    if (
+      Math.abs(x - LEGACY_AVATAR_PARK.x) < PARK_EPSILON &&
+      Math.abs(y - LEGACY_AVATAR_PARK.y) < PARK_EPSILON
+    ) {
+      continue;
+    }
+    park[key] = { x, y };
   }
   return park;
 }
