@@ -1102,8 +1102,12 @@ export function DefendScreen({
               boardSizeRef.current = width;
               boardSize.value = width;
             }}>
-            {/* Scribble Dungeons tile dressing (§19) — visual only, under the SVG. */}
-            <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+            {/* Scribble Dungeons tile dressing (§19) — background only, behind
+                every gameplay layer (zIndex 0). pointerEvents none so taps fall
+                through to the pads on the SVG above. */}
+            <View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFill, styles.boardTiles]}>
               {decor.map((tile, index) => {
                 const source = playTile(tile.key);
                 if (!source) return null;
@@ -1124,6 +1128,11 @@ export function DefendScreen({
                 );
               })}
             </View>
+            {/* Gameplay layer — path, pads, towers, Bound Bosses, enemies.
+                Sits ABOVE the tiles (zIndex 1 > 0) so gameplay always reads on
+                top of the scroll art, and NOT pointerEvents:none because the
+                pads need their taps. */}
+            <View style={styles.boardArt}>
             <Svg width="100%" height="100%" viewBox="0 0 100 100">
               {boardMap.pads.map((pad, index) => {
                 const tower = sim?.towers.find((t) => t.pad === index);
@@ -1287,8 +1296,11 @@ export function DefendScreen({
                 );
               })}
             </Svg>
+            </View>
 
-            {/* Draggable Avatar overlay (§19 Masterpiece / Cozy Village art) */}
+            {/* Draggable Avatar overlay (§19 Masterpiece / Cozy Village art) —
+                zIndex 10 keeps it above the tiles AND the gameplay SVG so it is
+                always grabbable. */}
             <GestureDetector gesture={pan}>
               <Animated.View style={[styles.avatar, avatarStyle]}>
                 {avatarFrameSource ? (
@@ -2513,6 +2525,17 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.three,
     overflow: 'hidden',
   },
+  /** Scribble tile dressing — bottom layer (background only). */
+  boardTiles: {
+    zIndex: 0,
+    elevation: 0,
+  },
+  /** Gameplay SVG (path · pads · towers · enemies) — above the tiles. */
+  boardArt: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
+    elevation: 1,
+  },
   pausedBox: {
     gap: Spacing.two,
     marginTop: Spacing.two,
@@ -2523,6 +2546,9 @@ const styles = StyleSheet.create({
     height: AVATAR_RADIUS_PX * 2,
     alignItems: 'center',
     justifyContent: 'center',
+    // Above the tiles (0) and the gameplay SVG (1) so it stays draggable.
+    // zIndex only (no elevation) so the character art keeps no shadow.
+    zIndex: 10,
   },
   avatarImage: {
     width: '100%',
@@ -2542,7 +2568,9 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.35)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 1,
-    zIndex: 5,
+    // Display-only damage text: above the tiles + gameplay art so it is never
+    // buried under the board (font is tiny, so this is cheap).
+    zIndex: 12,
   },
   floaterKill: {
     color: '#FBBF24', // gold — reads as a kill on both light and dark boards
@@ -2562,11 +2590,13 @@ const styles = StyleSheet.create({
   bottomHudSkill: {
     flex: 1,
   },
-  /** §9m boss alert banner — centered over the board while the boss steps in. */
+  /** §9m boss alert banner — centered over the board while the boss steps in.
+   * Top overlay layer (above tiles, gameplay art, and the Avatar). */
   bossAlertWrap: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 20,
   },
   bossAlertPill: {
     alignItems: 'center',
