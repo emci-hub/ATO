@@ -56,6 +56,12 @@ export type ShopPaidRow = {
   badge: string | null;
 };
 
+/** Valid effect kinds for a token row. Declared BEFORE the module-eval
+ * `TOKEN_ROWS` / `PAID_ROWS` initializers below, which run at import time and
+ * read this (calling a parser earlier would hit the temporal dead zone). */
+const TOKEN_KINDS: readonly ShopEffectKind[] = ['dive_charge', 'merge_crate', 'stub'];
+const PAID_KINDS: readonly ShopPaidKind[] = ['paid_unique', 'hero', 'stub'];
+
 const TOKEN_ROWS: readonly ShopTokenRow[] = parseTokenRows(rawToken);
 const PAID_ROWS: readonly ShopPaidRow[] = parsePaidRows(rawPaid);
 
@@ -81,8 +87,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function finite(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
-
-const TOKEN_KINDS: readonly ShopEffectKind[] = ['dive_charge', 'merge_crate', 'stub'];
 
 function parseTokenRows(raw: unknown): readonly ShopTokenRow[] {
   const rowsRaw = isRecord(raw) && Array.isArray(raw.rows) ? raw.rows : [];
@@ -114,8 +118,6 @@ function parseTokenRows(raw: unknown): readonly ShopTokenRow[] {
   }
   return rows;
 }
-
-const PAID_KINDS: readonly ShopPaidKind[] = ['paid_unique', 'hero', 'stub'];
 
 function parsePaidRows(raw: unknown): readonly ShopPaidRow[] {
   const rowsRaw = isRecord(raw) && Array.isArray(raw.rows) ? raw.rows : [];
