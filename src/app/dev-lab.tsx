@@ -66,6 +66,16 @@ import {
   stopDevTrace,
 } from '@/lib/dev-trace-server';
 import { TRACE_SECTIONS, type DevTraceEvent, type DevTraceSession } from '@/lib/dev-trace';
+import { generateLegendCandidate } from '@/lib/legends/generate';
+import {
+  approveLegendVariant,
+  claimLegendGeneration,
+  fetchPendingLegendCandidates,
+  insertLegendCandidate,
+  rejectLegendVariant,
+  type PendingLegendCandidate,
+} from '@/lib/legends/generate-store';
+import { fetchArchetypeCoverage, type ArchetypeCoverage } from '@/lib/legends/store';
 import { generateExploreBody } from '@/lib/explore/generate';
 import { EXPLORE_OBSERVATIONS_META } from '@/lib/ai/call-sites';
 import { routeExplore } from '@/lib/explore/route';
@@ -206,6 +216,7 @@ function DevLab() {
             {canSeeHubSection('fence', gate) ? <FenceTester /> : null}
             {canSeeHubSection('trace', gate) ? <TraceCapture /> : null}
             {canSeeHubSection('access', gate) ? <AccessReview /> : null}
+            {canSeeHubSection('legends', gate) ? <LegendCandidatesReview /> : null}
             {canSeeHubSection('grants', gate) ? <GrantsPanel /> : null}
             {canSeeHubSection('profiles', gate) ? <ProfilesPanel /> : null}
             {me ? <YouDevTools timeZone={me.timezone || 'UTC'} /> : null}
@@ -1600,6 +1611,185 @@ function AccessReview() {
                 ]}>
                 <ThemedText type="small" themeColor="textSecondary">
                   Deny
+                </ThemedText>
+              </Pressable>
+            </View>
+          </ThemedView>
+        ))
+      )}
+    </View>
+  );
+}
+
+/**
+ * Root-only (wave55) — generate an AI candidate figure+variant for an
+ * uncovered archetype, then approve/reject it. Approving is the only write
+ * that makes it live (fact_checked=true) — matching/reroll need zero other
+ * change, they already only ever read approved rows.
+ */
+function LegendCandidatesReview() {
+  const theme = useTheme();
+  const { session } = useSession();
+  const [coverage, setCoverage] = useState<ArchetypeCoverage[]>([]);
+  const [pending, setPending] = useState<PendingLegendCandidate[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const [genBusyId, setGenBusyId] = useState<string | null>(null);
+  const [reviewBusyId, setReviewBusyId] = useState<string | null>(null);
+
+  async function load() {
+    try {
+      const [nextCoverage, nextPending] = await Promise.all([
+        fetchArchetypeCoverage(),
+        fetchPendingLegendCandidates(),
+      ]);
+      setCoverage(nextCoverage);
+      setPending(nextPending);
+      setError(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not load Legend candidates.';
+      setError(message === 'not_allowed' ? 'Root only — sign in as root.' : message);
+    }
+  }
+
+  useEffect(() => {
+    if (!session?.user.id) return;
+    void load();
+  }, [session?.user.id]);
+
+  async function generate(archetype: ArchetypeCoverage) {
+    if (genBusyId) return;
+    setGenBusyId(archetype.id);
+    setNote(null);
+    try {
+      const claim = await claimLegendGeneration();
+      if (!claim.ok) {
+        setNote(claim.reason === 'quota' ? `Daily cap reached (${claim.daily}/${claim.dailyCap}).` : 'Could not claim generation.');
+        return;
+      }
+      const candidate = await generateLegendCandidate({
+        formalName: archetype.formalName,
+        traitAxis: archetype.traitAxis,
+      });
+      if (!candidate) {
+        setNote(`Generation failed for ${archetype.formalName} — nothing saved.`);
+        return;
+      }
+      await insertLegendCandidate(candidate, archetype.id);
+      setNote(`Proposed "${candidate.name}" for ${archetype.formalName} — review below.`);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Generation failed.');
+    } finally {
+      setGenBusyId(null);
+    }
+  }
+
+  async function review(variantId: string, action: 'approve' | 'reject') {
+    if (reviewBusyId) return;
+    setReviewBusyId(variantId);
+    setNote(null);
+    try {
+      if (action === 'approve') {
+        await approveLegendVariant(variantId);
+        setNote('Approved — live for matching and reroll now.');
+      } else {
+        await rejectLegendVariant(variantId);
+        setNote('Rejected — removed.');
+      }
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Review failed.');
+    } finally {
+      setReviewBusyId(null);
+    }
+  }
+
+  const gaps = coverage.filter((row) => row.variantCount === 0);
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Legend candidates</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        AI-proposed figure + story for an archetype with no Legend yet. Nothing is visible to users
+        (matching, reroll) until approved. Root only.
+      </ThemedText>
+      {!session ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          Sign in as root to review.
+        </ThemedText>
+      ) : null}
+      {error ? <ThemedText type="small">{error}</ThemedText> : null}
+      {note ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {note}
+        </ThemedText>
+      ) : null}
+
+      <ThemedText type="code" themeColor="textSecondary">
+        {gaps.length} of {coverage.length} archetypes have zero Legend content
+      </ThemedText>
+      <View style={styles.tabs}>
+        {gaps.map((archetype) => (
+          <Pressable
+            key={archetype.id}
+            disabled={genBusyId != null}
+            onPress={() => void generate(archetype)}
+            style={({ pressed }) => [
+              styles.chip,
+              { borderColor: controlBorderColor(theme) },
+              pressed && styles.pressed,
+            ]}>
+            <ThemedText type="small">
+              {genBusyId === archetype.id ? '…' : `Generate · ${archetype.formalName}`}
+            </ThemedText>
+          </Pressable>
+        ))}
+      </View>
+
+      {pending.length === 0 ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          No pending candidates.
+        </ThemedText>
+      ) : (
+        pending.map((candidate) => (
+          <ThemedView key={candidate.variantId} type="backgroundElement" style={styles.card}>
+            <ThemedText type="smallBold">
+              {candidate.name} · {candidate.eraTitle}
+            </ThemedText>
+            <ThemedText type="code" themeColor="textSecondary">
+              {candidate.type} · for{' '}
+              {candidate.archetypeIds
+                .map((id) => coverage.find((row) => row.id === id)?.formalName ?? id)
+                .join(', ')}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {candidate.teaser}
+            </ThemedText>
+            <ThemedText type="small">{candidate.fullStory}</ThemedText>
+            <View style={styles.tabs}>
+              <Pressable
+                disabled={reviewBusyId != null}
+                onPress={() => void review(candidate.variantId, 'approve')}
+                style={({ pressed }) => [
+                  styles.chip,
+                  { borderColor: controlBorderColor(theme), backgroundColor: theme.accentFill },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="small" style={{ color: theme.onAccent }}>
+                  {reviewBusyId === candidate.variantId ? '…' : 'Approve'}
+                </ThemedText>
+              </Pressable>
+              <Pressable
+                disabled={reviewBusyId != null}
+                onPress={() => void review(candidate.variantId, 'reject')}
+                style={({ pressed }) => [
+                  styles.chip,
+                  { borderColor: controlBorderColor(theme) },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Reject
                 </ThemedText>
               </Pressable>
             </View>

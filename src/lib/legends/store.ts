@@ -152,6 +152,47 @@ export async function fetchLegendCatalog(): Promise<LegendCatalog> {
   return { variants, archetypes };
 }
 
+export interface ArchetypeCoverage {
+  id: string;
+  formalName: string;
+  traitAxis: string;
+  /** Count of ANY linked legend_variants (approved or pending) — used to target generation at genuine gaps. */
+  variantCount: number;
+}
+
+/**
+ * All 12 archetype_defs with their current legend_variants link count
+ * (wave55) — drives the dev-lab "generate a candidate for X" list. A count
+ * of 0 is the real gap (docs/legends-content-spec.md: 8 of 12 today);
+ * candidates already proposed but not yet approved still count here so the
+ * same archetype isn't re-targeted for generation over and over.
+ */
+export async function fetchArchetypeCoverage(): Promise<ArchetypeCoverage[]> {
+  const { data: defs, error: defsError } = await supabase
+    .from('archetype_defs')
+    .select('id, formal_name, trait_axis');
+  if (defsError) throw defsError;
+
+  const { data: links, error: linksError } = await supabase
+    .from('legend_archetypes')
+    .select('archetype_id');
+  if (linksError) throw linksError;
+
+  const counts = new Map<string, number>();
+  for (const row of (links ?? []) as { archetype_id: string }[]) {
+    counts.set(row.archetype_id, (counts.get(row.archetype_id) ?? 0) + 1);
+  }
+
+  return ((defs ?? []) as { id: string; formal_name: string; trait_axis: string }[])
+    .map((row) => ({
+      id: row.id,
+      formalName: row.formal_name,
+      traitAxis: row.trait_axis,
+      variantCount: counts.get(row.id) ?? 0,
+    }))
+    .sort((a, b) => a.variantCount - b.variantCount || a.formalName.localeCompare(b.formalName));
+}
+
 /** Variant ids this user has already been shown (never repeat per variant). */
 export async function fetchSeenVariantIds(userId: string): Promise<Set<string>> {
   const { data, error } = await supabase

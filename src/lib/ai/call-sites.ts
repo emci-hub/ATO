@@ -97,6 +97,18 @@ export const ONGOING_ROUND_META: AiCallMetadata = {
   latencySensitive: false,
 };
 
+/** Legend candidate generation (wave55) — a figure+variant proposal targeted
+ * at one archetype, with no user-specific input at all (not even a trait
+ * bucket): the exact same output is correct for every viewer, forever, once
+ * approved. Root-triggered from a review screen, not user-facing, so not
+ * latency-sensitive. */
+export const LEGEND_GENERATION_META: AiCallMetadata = {
+  personalized: false,
+  cohortShareable: true,
+  bucketShareable: true,
+  latencySensitive: false,
+};
+
 export interface AiCallSite {
   feature: string;
   location: string;
@@ -149,5 +161,10 @@ export const AI_CALL_SITES: readonly AiCallSite[] = [
     feature: 'Ongoing round questions',
     location: 'src/lib/questions/generate.ts → generateOngoingRoundBatch()',
     meta: ONGOING_ROUND_META,
+  },
+  {
+    feature: 'Legend candidate generation',
+    location: 'src/lib/legends/generate.ts → generateLegendCandidate()',
+    meta: LEGEND_GENERATION_META,
   },
 ];

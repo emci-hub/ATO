@@ -34,7 +34,8 @@ export type HubSection =
   | DevCapability
   | 'access'
   | 'grants'
-  | 'profiles';
+  | 'profiles'
+  | 'legends';
 
 export function isGrantableCapability(value: string): value is DevCapability {
   return (GRANTABLE_CAPABILITIES as readonly string[]).includes(value);
@@ -53,7 +54,7 @@ export function canSeeHubSection(
   section: HubSection,
   input: { isDev: boolean; isRoot: boolean; capabilities: readonly string[] },
 ): boolean {
-  if (section === 'access' || section === 'grants' || section === 'profiles') {
+  if (section === 'access' || section === 'grants' || section === 'profiles' || section === 'legends') {
     return input.isRoot;
   }
   if (input.isDev || input.isRoot) return true;
