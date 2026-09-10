@@ -14,6 +14,7 @@
  */
 import rawItems from './data/items.json';
 import { rollDropById } from './engine/drop-table';
+import { starMultScale } from './engine/star-table';
 import { isTypeTag, type TypeTag } from './engine/type-match';
 
 export const ITEM_SLOTS = ['weapon', 'armor', 'cloak', 'trinket'] as const;
@@ -141,6 +142,29 @@ const STAT_LABELS: Record<ItemStat, string> = {
 export function formatMult(mult: StatMult): string {
   const pct = Math.round(mult.value * 100);
   return `+${pct}% ${STAT_LABELS[mult.stat]}`;
+}
+
+/**
+ * "+9.6% wave power" style line at a COPY's star — the mult scaled by the
+ * StarTable (×1.0 at ★0, +0.1 per star) so a ★2 copy reads stronger than its
+ * ★0 twin in Dress, drop previews, everywhere an item is described. One
+ * decimal only when the scaled % is non-whole (8% → 8.8% reads "+8.8%"). */
+export function formatMultAt(mult: StatMult, star: number): string {
+  const scale = starMultScale(Math.max(0, Math.floor(star)));
+  const pct = mult.value * 100 * scale;
+  const rounded = Math.round(pct * 10) / 10;
+  const text = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  return `+${text}% ${STAT_LABELS[mult.stat]}`;
+}
+
+/** The star-scaled stat line(s) of a Power def at a copy star ("+9.6% wave
+ * power · +3.6% dive luck"), or null for Looks / stat-less rows. */
+export function formatItemStats(def: ItemDef, star: number): string | null {
+  const mults = [def.mult_a, def.mult_b].filter(
+    (mult): mult is StatMult => mult != null,
+  );
+  if (mults.length === 0) return null;
+  return mults.map((mult) => formatMultAt(mult, star)).join(' · ');
 }
 
 function loadItems(raw: unknown): readonly ItemDef[] {

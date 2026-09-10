@@ -51,6 +51,7 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { STARTER_AVATAR_ID } from '@/play/avatars';
 import { cyclePower, defaultCyclePower } from '@/play/engine/cycle';
 import { bossBandFor } from '@/play/engine/bands';
 import {
@@ -62,6 +63,7 @@ import {
 } from '@/play/engine/bound-boss';
 import { isUniqueDrop, rollDropById } from '@/play/engine/drop-table';
 import { gearScore, recommendedGs } from '@/play/engine/gear-score';
+import { starMergeSuccess, starMultScale } from '@/play/engine/star-table';
 import { isTypeTag, type TypeTag } from '@/play/engine/type-match';
 import { getTune } from '@/play/tune';
 import {
@@ -156,12 +158,20 @@ export function avatarStarWavePower(stars: number): number {
   return 1 + getTune().avatarStarWavePowerStep * Math.max(0, Math.min(AVATAR_STAR_MAX, stars));
 }
 
-/** Risky merge (Dive-style, this step). */
+/** Trial catch-up XP multiplier (v16). Applied when the ACTIVE Avatar is more
+ * than one level behind the highest owned Avatar and the fight phase is
+ * Trial; Main (any wave) is always ×1. Tokens/drops are never touched. */
+export const CATCHUP_XP_MULT = 2.5;
+
+/** Risky merge (Dive-style, this step). Cap matches the StarTable's top row. */
 export const MERGE_MAX_STAR = 5;
-/** Success % per current star: ★0→1 70%, 1→2 55%, 2→3 40%, 3→4 28%, 4→5 18%. */
-export const MERGE_SUCCESS_TABLE = [0.7, 0.55, 0.4, 0.28, 0.18] as const;
-/** Each star scales the item's mults +10% (light per-star bump). */
-export const MERGE_STAR_MULT_STEP = 0.1;
+/**
+ * Success % per current star (★0→1 70%, 1→2 55%, 2→3 40%, 3→4 28%, 4→5 18%)
+ * and the per-star mult scale (+10% per star) are authored ONCE in the
+ * StarTable (`engine/star-table.ts` ← `data/stars.json`). Dress shows the
+ * honest next-star % and the store rolls merges from that same table — never a
+ * flattened second copy.
+ */
 
 /** One bag row: a stack of identical copies (same id AND star). */
 export type ItemStack = { id: string; count: number; star: number };
@@ -179,14 +189,6 @@ export function wornItemCount(
   equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>,
 ): number {
   return Object.values(equipped).filter((ref): ref is ItemRef => ref != null).length;
-}
-
-/** Total owned items — worn + bagged. The soft cap counts THIS, not rows. */
-export function totalOwnedCount(
-  inventory: readonly ItemStack[],
-  equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>,
-): number {
-  return bagItemCount(inventory) + wornItemCount(equipped);
 }
 
 /** Same id AND same star — the only copies that can stack or merge. */
@@ -289,7 +291,14 @@ export type DiveRun = {
  * needed beyond the version bump.
  * v15 (Defend park) adds `avatar_park` — the Avatar's last dragged position
  * per map (board fractions 0..1), so re-entering Defend puts the Avatar where
- * the player left it instead of snapping to the old mid-board default.
+ * the player left it instead of snapping to the old default.
+ * v16 (Avatar swap) moves the Avatar (level/XP/stars/equipped) into per-id
+ * `avatars[]` records with `active_avatar_id` naming who the board + Dress
+ * use. Shared economy (bag `inventory`, `tokens`, `campaign`, Bound Bosses,
+ * star tokens, uniques) stays at doc root. Each record carries its own
+ * `park` (per map, board fractions) so swapping Avatars never yanks the board
+ * position. Legacy root fields (xp / avatar_level / avatar_stars /
+ * avatar_park) migrate into the starter record. The starter is always owned.
  */
 
 /** Campaign phase. `trial` (Grove Path, waves 1–5) then `main` (Divecore
@@ -304,13 +313,156 @@ export type AvatarParkMapId = 'trial' | 'main';
 /** Saved Avatar park position as board fractions (0..1). */
 export type AvatarParkPoint = { x: number; y: number };
 
-/** Map id → last dragged Avatar position. Absent = use that map's top-right
- * default once (then a drag saves it). */
+/** Map id → last dragged Avatar position. Absent = that map's MIDDLE default
+ * once (then a drag saves it). */
 export type AvatarPark = Partial<Record<AvatarParkMapId, AvatarParkPoint>>;
 
-/** The newbie-friendly spawn: top-right of the board. Used when a map has no
- * saved park yet (first-ever Defend, or a Trial ↔ Main switch). */
-export const DEFAULT_AVATAR_PARK: AvatarParkPoint = { x: 0.82, y: 0.12 };
+/** The default spawn — the MIDDLE of the board. Used when a map has no saved
+ * park yet (first-ever Defend, a Trial ↔ Main switch, or a fresh Avatar), so
+ * new runs never snap to a corner or a tower pad. A drag then saves the spot. */
+export const DEFAULT_AVATAR_PARK: AvatarParkPoint = { x: 0.5, y: 0.5 };
+
+/** Stable Avatar id (matches a row in `avatars.ts` / a future Hero def). */
+export type AvatarId = string;
+
+/** One owned Avatar (v16). Everything that differs per Avatar lives here;
+ * the bag, tokens, campaign seat and Bound Bosses are shared at doc root. */
+export type AvatarRecord = {
+  /** Stable Avatar id (matches a row in `avatars.ts` / a future Hero def). */
+  id: AvatarId;
+  /** XP toward the next level, from Defend clears (this Avatar's own). */
+  xp: number;
+  /** Avatar meta level (start 1). +2% base wave_power per level. */
+  level: number;
+  /** Avatar stars earned (0..5) — +3% base wave_power each (§9h). */
+  stars: number;
+  /** Worn refs by slot — this Avatar's own 4 slots. Bag is shared. */
+  equipped: Partial<Record<ItemSlot, ItemRef>>;
+  /** Saved park per Defend map (board fractions) — restores this Avatar's
+   * last spot on that map (empty = the map's middle default). */
+  park: AvatarPark;
+};
+
+/** Roster row for the Dress picker / UI (read-model of `avatars[]`). */
+export type AvatarRosterView = {
+  id: AvatarId;
+  level: number;
+  stars: number;
+  /** True when this Avatar is the active one (board + Dress use it). */
+  active: boolean;
+  /** True when this Avatar still earns Trial catch-up XP (one or more levels
+   * behind the highest owned Avatar — `level ≤ highest − 1`). */
+  catchup: boolean;
+  /** Worn slots count (0..4) — per-Avatar equipped, bag is shared. */
+  worn: number;
+};
+
+/** True when `level` still qualifies for Trial catch-up XP: at or below
+ * `highestLevel - 1` (at least one level behind the top owned Avatar). The
+ * moment it reaches the highest Avatar's level, XP is normal again. */
+export function avatarCatchupEligible(level: number, highestLevel: number): boolean {
+  return Math.max(1, Math.floor(level)) <= Math.max(1, Math.floor(highestLevel)) - 1;
+}
+
+/** A fresh default record for an Avatar id (level 1, no XP/stars, no gear,
+ * no park — the park falls back to the map's middle until first drag). */
+export function defaultAvatarRecord(id: AvatarId): AvatarRecord {
+  return { id, xp: 0, level: 1, stars: 0, equipped: {}, park: {} };
+}
+
+/** The record for `id`, or the first record when `id` is unknown/corrupt. */
+export function avatarRecordOf(doc: PlayStoreDoc, id: AvatarId): AvatarRecord {
+  const found = doc.avatars.find((avatar) => avatar.id === id);
+  return found ?? doc.avatars[0] ?? defaultAvatarRecord(STARTER_AVATAR_ID);
+}
+
+/** The active Avatar record — the one the board drags and Dress equips. */
+export function activeAvatarOf(doc: PlayStoreDoc): AvatarRecord {
+  return avatarRecordOf(doc, doc.active_avatar_id);
+}
+
+/** Highest level among OWNED Avatars (catch-up compares against this). */
+export function highestAvatarLevel(doc: PlayStoreDoc): number {
+  let highest = 1;
+  for (const avatar of doc.avatars) highest = Math.max(highest, Math.max(1, avatar.level));
+  return highest;
+}
+
+/** True when the ACTIVE Avatar currently earns Trial catch-up XP. */
+export function activeAvatarCatchup(doc: PlayStoreDoc): boolean {
+  const active = activeAvatarOf(doc);
+  return avatarCatchupEligible(active.level, highestAvatarLevel(doc));
+}
+
+/** Replace one Avatar record (keeps array order; the starter can never be
+ * removed, only its record updated). */
+function replaceAvatarRecord(
+  doc: PlayStoreDoc,
+  id: AvatarId,
+  record: AvatarRecord,
+): PlayStoreDoc {
+  const exists = doc.avatars.some((avatar) => avatar.id === id);
+  return {
+    ...doc,
+    avatars: exists
+      ? doc.avatars.map((avatar) => (avatar.id === id ? record : avatar))
+      : [...doc.avatars, record],
+  };
+}
+
+/** Patch the ACTIVE Avatar record with `patch` (the common write path for
+ * every Avatar-only transition). */
+export function patchActiveAvatar(
+  doc: PlayStoreDoc,
+  patch: Partial<Omit<AvatarRecord, 'id'>>,
+): PlayStoreDoc {
+  const active = activeAvatarOf(doc);
+  return replaceAvatarRecord(doc, active.id, { ...active, ...patch });
+}
+
+/** Worn copies held by EVERY Avatar (the bag is shared, so "held" counts the
+ * bag plus every Avatar's four slots — not just the active one's). */
+export function wornCountAcrossAvatars(doc: PlayStoreDoc): number {
+  let worn = 0;
+  for (const avatar of doc.avatars) worn += wornItemCount(avatar.equipped);
+  return worn;
+}
+
+/** Total owned items — bag stacks + every Avatar's worn copies. */
+export function totalOwnedAcrossAvatars(doc: PlayStoreDoc): number {
+  return bagItemCount(doc.inventory) + wornCountAcrossAvatars(doc);
+}
+
+/** Copies held per item id — the shared bag plus EVERY Avatar's worn gear.
+ * The drop preview's honest "Owned ×N" reads this (an inactive Avatar's copy
+ * still counts). */
+export function ownedCountsAcross(doc: PlayStoreDoc): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const stack of doc.inventory) {
+    counts[stack.id] = (counts[stack.id] ?? 0) + stack.count;
+  }
+  for (const avatar of doc.avatars) {
+    for (const ref of Object.values(avatar.equipped)) {
+      if (ref) counts[ref.id] = (counts[ref.id] ?? 0) + 1;
+    }
+  }
+  return counts;
+}
+
+/** Highest star tier held per item id (bag or any Avatar's worn copy) — the
+ * drop preview's star-scaled stat line reads this. */
+export function ownedBestStarsAcross(doc: PlayStoreDoc): Record<string, number> {
+  const stars: Record<string, number> = {};
+  for (const stack of doc.inventory) {
+    stars[stack.id] = Math.max(stars[stack.id] ?? 0, stack.star);
+  }
+  for (const avatar of doc.avatars) {
+    for (const ref of Object.values(avatar.equipped)) {
+      if (ref) stars[ref.id] = Math.max(stars[ref.id] ?? 0, ref.star);
+    }
+  }
+  return stars;
+}
 
 /** Forever-engine campaign seat — the phase + next display wave Defend plays
  * (`wave_in_phase` is 1-based and ALWAYS the next wave to clear). */
@@ -380,7 +532,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 15;
+  version: 16;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -394,16 +546,10 @@ export type PlayStoreDoc = {
   last_tend_bonus_ymd: string | null;
   /** Bagged copies stacked by (id, star). Worn copies are NOT in here. */
   inventory: ItemStack[];
-  /** Worn item refs by slot (one per slot); the worn copy lives outside the bag. */
-  equipped: Partial<Record<ItemSlot, ItemRef>>;
   /** Active Dive run (null when no charge has been spent / run is over). */
   dive_run: DiveRun | null;
   /** Defend meta — highest wave cleared (start 0). Next wave = this + 1. */
   highest_wave_cleared: number;
-  /** Avatar meta XP (toward the next level), from Defend clears only. */
-  xp: number;
-  /** Avatar meta level (start 1). +2% base wave_power per level. */
-  avatar_level: number;
   /** Defend clears this device-local day (drives the §9 half-cap). */
   clears_today: number;
   /** Device-local YYYY-MM-DD `clears_today` belongs to. */
@@ -421,9 +567,7 @@ export type PlayStoreDoc = {
   lifetime_waves_cleared: number;
   /** Bound Bosses bound so far (empty until the boss system lands). */
   bound_bosses: BoundBossRecord[];
-  /** Avatar stars earned (0..5) — +3% base wave_power each (§9h). */
-  avatar_stars: number;
-  /** Unspent Avatar star tokens (spend → +1 star). */
+  /** Unspent Avatar star tokens (shared wallet — spend on the ACTIVE Avatar). */
   avatar_star_tokens: number;
   /** The cycle's star has already rolled once this cycle (§9h once/cycle). */
   avatar_star_rolled_cycle: boolean;
@@ -433,9 +577,12 @@ export type PlayStoreDoc = {
   uniques: string[];
   /** Current cycle's boss tint (one family until ContentPack 2). */
   cycle_tint: TypeTag;
-  /** Avatar park per Defend map (v15) — last dragged position, board
-   * fractions. Absent → the map's top-right default. */
-  avatar_park: AvatarPark;
+  /** Owned Avatars (v16) — every per-Avatar field lives on the record. The
+   * bag/tokens/campaign/Bound Bosses above are shared across all of them. */
+  avatars: AvatarRecord[];
+  /** Which Avatar the board + Dress currently use (falls back to the first
+   * record when the id is unknown/corrupt). */
+  active_avatar_id: AvatarId;
 };
 
 export type DiveChargeView = {
@@ -465,12 +612,19 @@ export type PlayView = {
   tendBonusAvailable: boolean;
   /** Bagged copies stacked by (id, star) (worn excluded); Dress renders it. */
   inventory: readonly ItemStack[];
-  /** Worn item refs by slot; Dress renders it. */
+  /** Total owned items — bag + EVERY Avatar's worn copies (the bag is
+   * shared, so an inactive Avatar's gear still counts toward the cap). */
+  totalOwned: number;
+  /** The ACTIVE Avatar's worn refs by slot; Dress renders it. */
   equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>;
-  /** Raw additive mult sums from equipped items (§9c same-stat adds, scaled
-   * +10% per worn star so a merged ★2 Tide Blade beats a ★1). */
+  /** Raw additive mult sums from the ACTIVE Avatar's equipped items (§9c
+   * same-stat adds, scaled +10% per worn star so a merged ★2 beats a ★1). */
   statSums: StatSums;
-  /** Avatar meta level (start 1) — drives the +2% wave_power HUD note. */
+  /** Owned Avatar roster (v16) — the Dress picker + catch-up badges read it. */
+  avatars: readonly AvatarRosterView[];
+  /** The Avatar the board + Dress currently use. */
+  activeAvatarId: AvatarId;
+  /** Active Avatar meta level (start 1) — drives the +2% wave_power HUD note. */
   avatarLevel: number;
   /** Defend clears this device-local day (over 5 → tokens halved). */
   clearsToday: number;
@@ -482,9 +636,9 @@ export type PlayView = {
   cyclePower: number;
   /** Total waves cleared over all time (never resets on a Conquered). */
   lifetimeWavesCleared: number;
-  /** Avatar stars earned (0..5). */
+  /** Active Avatar stars earned (0..5). */
   avatarStars: number;
-  /** Unspent Avatar star tokens. */
+  /** Unspent Avatar star tokens (shared — spend on the active Avatar). */
   avatarStarTokens: number;
   /** This cycle's star already rolled (drives Final 25% + pity). */
   avatarStarRolledCycle: boolean;
@@ -492,11 +646,18 @@ export type PlayView = {
   finalClearsThisCycle: number;
   /** Unique item ids already granted (drop once). */
   uniques: readonly string[];
+  /** Copies held per item id (bag + every Avatar's worn) — the drop preview's
+   * "Owned ×N". */
+  ownedCounts: Readonly<Record<string, number>>;
+  /** Best star tier held per item id (bag or any Avatar's worn) — the drop
+   * preview's star-scaled stat line. */
+  ownedStars: Readonly<Record<string, number>>;
   /** Current cycle's boss tint. */
   cycleTint: TypeTag;
   /** Bound Bosses (fragments + stars) — the §9k tower roster. */
   boundBosses: readonly BoundBossView[];
-  /** Saved Avatar park per map (board fractions) — Defend restores it. */
+  /** The ACTIVE Avatar's saved park per map (board fractions) — Defend
+   * restores it. Empty map = the map's middle default until first drag. */
   avatarPark: AvatarPark;
 };
 
@@ -538,7 +699,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 15,
+    version: 16,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -546,11 +707,8 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     research_accrued_ms: 0,
     last_tend_bonus_ymd: null,
     inventory: [],
-    equipped: {},
     dive_run: null,
     highest_wave_cleared: 0,
-    xp: 0,
-    avatar_level: 1,
     clears_today: 0,
     clears_ymd: null,
     milestone_waves_claimed: [],
@@ -559,13 +717,13 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     cycle_power: defaultCyclePower(),
     lifetime_waves_cleared: 0,
     bound_bosses: [],
-    avatar_stars: 0,
     avatar_star_tokens: 0,
     avatar_star_rolled_cycle: false,
     final_clears_this_cycle: 0,
     uniques: [],
     cycle_tint: DEFAULT_CYCLE_TINT,
-    avatar_park: {},
+    avatars: [defaultAvatarRecord(STARTER_AVATAR_ID)],
+    active_avatar_id: STARTER_AVATAR_ID,
   };
 }
 
@@ -607,6 +765,8 @@ export function researchAt(doc: PlayStoreDoc, now: number): ResearchView {
 }
 
 export function playView(doc: PlayStoreDoc, now: number): PlayView {
+  const active = activeAvatarOf(doc);
+  const highest = highestAvatarLevel(doc);
   return {
     tokens: doc.tokens,
     dive: diveChargeAt(doc, now),
@@ -614,21 +774,33 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     research: researchAt(doc, now),
     tendBonusAvailable: doc.last_tend_bonus_ymd !== localYmd(new Date(now)),
     inventory: doc.inventory,
-    equipped: doc.equipped,
-    statSums: equippedStatSums(doc.equipped),
-    avatarLevel: doc.avatar_level,
+    totalOwned: totalOwnedAcrossAvatars(doc),
+    equipped: active.equipped,
+    statSums: equippedStatSums(active.equipped),
+    avatars: doc.avatars.map((avatar) => ({
+      id: avatar.id,
+      level: avatar.level,
+      stars: avatar.stars,
+      active: avatar.id === active.id,
+      catchup: avatarCatchupEligible(avatar.level, highest),
+      worn: wornItemCount(avatar.equipped),
+    })),
+    activeAvatarId: active.id,
+    avatarLevel: active.level,
     clearsToday: doc.clears_today,
     campaign: doc.campaign,
     conqueredCycles: doc.conquered_cycles,
     cyclePower: doc.cycle_power,
     lifetimeWavesCleared: doc.lifetime_waves_cleared,
-    avatarStars: doc.avatar_stars,
+    avatarStars: active.stars,
     avatarStarTokens: doc.avatar_star_tokens,
     avatarStarRolledCycle: doc.avatar_star_rolled_cycle,
     finalClearsThisCycle: doc.final_clears_this_cycle,
     uniques: doc.uniques,
+    ownedCounts: ownedCountsAcross(doc),
+    ownedStars: ownedBestStarsAcross(doc),
     cycleTint: doc.cycle_tint,
-    avatarPark: doc.avatar_park,
+    avatarPark: active.park,
     boundBosses: doc.bound_bosses.map((record) => {
       const def = getBoundBossDef(record.id);
       return {
@@ -647,12 +819,13 @@ function diveRunViewOf(doc: PlayStoreDoc): DiveRunView {
   const run = doc.dive_run;
   if (!run) return { active: false, deepers: 0, haul: [], bustPctNext: null, canDeeper: false };
   const canDeeper = run.deepers < DIVE_DEEPER_MAX;
+  const equipped = activeAvatarOf(doc).equipped;
   return {
     active: true,
     deepers: run.deepers,
     haul: run.haul,
     bustPctNext: canDeeper
-      ? effectiveBustPct(diveBustChanceAt(run.deepers), doc.equipped)
+      ? effectiveBustPct(diveBustChanceAt(run.deepers), equipped)
       : null,
     canDeeper,
   };
@@ -697,6 +870,10 @@ export type DefendWinResult = {
   starTokenGranted: boolean;
   /** Unspent Avatar star tokens AFTER this win. */
   avatarStarTokens: number;
+  /** True when Trial catch-up XP (×2.5) was applied to this win's XP: the
+   * ACTIVE Avatar is one or more levels behind the highest owned Avatar
+   * (level ≤ highest − 1) AND the fight phase was Trial (Main is ×1). */
+  catchupXp: boolean;
   /** Item ids dropped from this wave's drop table (rolled on the win). */
   dropItems: string[];
   /** Boss fragment dropped this win (§9k — Final/Scout/Semi bands only), or
@@ -913,9 +1090,21 @@ export function recordDefendWin(
     avatar_star_rolled_cycle = false;
   }
 
-  // XP level-ups (clear XP + any conquer bonus feed the same curve).
-  let xp = doc.xp + xpGranted;
-  let level = doc.avatar_level;
+  // Trial catch-up XP (v16): while the ACTIVE Avatar is one or more levels
+  // behind the highest owned Avatar (level ≤ highest − 1), Trial fights
+  // (campaign or replay) award ×2.5 XP so the alt can climb to the pack. The
+  // moment it ties the highest level, XP is normal again. Tokens, drops and
+  // the seat are untouched; Main (any wave) is always ×1 — no catch-up there.
+  let catchupXp = false;
+  if (phase === 'trial' && activeAvatarCatchup(doc)) {
+    xpGranted = Math.floor(xpGranted * CATCHUP_XP_MULT);
+    catchupXp = true;
+  }
+
+  // XP level-ups (clear XP + any conquer/catch-up bonus feed the same curve).
+  const active = activeAvatarOf(doc);
+  let xp = active.xp + xpGranted;
+  let level = active.level;
   while (xp >= xpToNext(level)) {
     xp -= xpToNext(level);
     level += 1;
@@ -926,28 +1115,29 @@ export function recordDefendWin(
   if (milestone) inventory = addCopiesToBag(inventory, milestone.itemId, 0, 1);
   if (dropItems.length > 0) inventory = addManyToBag(inventory, dropItems);
 
-  const next: PlayStoreDoc = {
-    ...doc,
-    tokens: doc.tokens + tokensGranted,
-    xp,
-    avatar_level: level,
-    highest_wave_cleared: Math.max(doc.highest_wave_cleared, Math.floor(wave)),
-    lifetime_waves_cleared: lifetimeAfter,
-    clears_today: clearsToday,
-    clears_ymd: clearsYmd,
-    campaign,
-    conquered_cycles: conqueredCycles,
-    cycle_power: cyclePowerValue,
-    inventory,
-    milestone_waves_claimed: milestone
-      ? [...doc.milestone_waves_claimed, lifetimeAfter]
-      : doc.milestone_waves_claimed,
-    avatar_star_tokens,
-    avatar_star_rolled_cycle,
-    final_clears_this_cycle,
-    uniques: uniquesAfter,
-    bound_bosses,
-  };
+  const next: PlayStoreDoc = patchActiveAvatar(
+    {
+      ...doc,
+      tokens: doc.tokens + tokensGranted,
+      highest_wave_cleared: Math.max(doc.highest_wave_cleared, Math.floor(wave)),
+      lifetime_waves_cleared: lifetimeAfter,
+      clears_today: clearsToday,
+      clears_ymd: clearsYmd,
+      campaign,
+      conquered_cycles: conqueredCycles,
+      cycle_power: cyclePowerValue,
+      inventory,
+      milestone_waves_claimed: milestone
+        ? [...doc.milestone_waves_claimed, lifetimeAfter]
+        : doc.milestone_waves_claimed,
+      avatar_star_tokens,
+      avatar_star_rolled_cycle,
+      final_clears_this_cycle,
+      uniques: uniquesAfter,
+      bound_bosses,
+    },
+    { xp, level },
+  );
   return {
     doc: next,
     result: {
@@ -967,6 +1157,7 @@ export function recordDefendWin(
       avatarStarTokens: avatar_star_tokens,
       dropItems,
       bossFragment,
+      catchupXp,
     },
   };
 }
@@ -998,15 +1189,15 @@ export function claimMilestoneLook(
 export function spendAvatarStarToken(
   doc: PlayStoreDoc,
 ): { doc: PlayStoreDoc; gainedStar: boolean } {
-  if (doc.avatar_star_tokens < 1 || doc.avatar_stars >= AVATAR_STAR_MAX) {
+  const active = activeAvatarOf(doc);
+  if (doc.avatar_star_tokens < 1 || active.stars >= AVATAR_STAR_MAX) {
     return { doc, gainedStar: false };
   }
   return {
-    doc: {
-      ...doc,
-      avatar_stars: doc.avatar_stars + 1,
-      avatar_star_tokens: doc.avatar_star_tokens - 1,
-    },
+    doc: patchActiveAvatar(
+      { ...doc, avatar_star_tokens: doc.avatar_star_tokens - 1 },
+      { stars: active.stars + 1 },
+    ),
     gainedStar: true,
   };
 }
@@ -1120,23 +1311,80 @@ export function replayBands(snapshot: CampaignSnapshot): ReplayBandView[] {
   ];
 }
 
-/** Record the Avatar's parked position for a Defend map (v15). Board
- * fractions clamp to 0..1 so a corrupt drag can never park off-board. */
+/** Record the ACTIVE Avatar's parked position for a Defend map (v16 — park
+ * is per Avatar so swapping never yanks the board). Board fractions clamp to
+ * 0..1 so a corrupt drag can never park off-board. */
 export function recordAvatarPark(
   doc: PlayStoreDoc,
   mapId: AvatarParkMapId,
   x: number,
   y: number,
 ): PlayStoreDoc {
-  return {
-    ...doc,
-    avatar_park: {
-      ...doc.avatar_park,
+  const active = activeAvatarOf(doc);
+  return patchActiveAvatar(doc, {
+    park: {
+      ...active.park,
       [mapId]: {
         x: Math.max(0, Math.min(1, x)),
         y: Math.max(0, Math.min(1, y)),
       },
     },
+  });
+}
+
+/* ---------------------------------------------------------------------------
+ * Avatar roster (v16 — Dress "Active Avatar" swap).
+ *
+ * `avatars[]` are the OWNED Avatars; `active_avatar_id` picks who the board
+ * and Dress use. Only the ACTIVE Avatar's record is written by gameplay (XP,
+ * stars, equips, park) — the bag/tokens/campaign/Bound Bosses are shared.
+ * Unlocking adds a fresh level-1 record; switching Avatars never moves gear
+ * or the campaign seat.
+ * ------------------------------------------------------------------------- */
+
+/** Switch the active Avatar to an OWNED one. No-op when the id is unknown. */
+export function setActiveAvatar(
+  doc: PlayStoreDoc,
+  id: AvatarId,
+): { doc: PlayStoreDoc; ok: boolean } {
+  if (!doc.avatars.some((avatar) => avatar.id === id)) {
+    return { doc, ok: false };
+  }
+  return { doc: { ...doc, active_avatar_id: id }, ok: true };
+}
+
+/** Unlock an Avatar by adding a fresh default record (stub unlock — no real
+ * cost until Hero/IAP). No-op when already owned. */
+export function unlockAvatar(
+  doc: PlayStoreDoc,
+  id: AvatarId,
+): { doc: PlayStoreDoc; gained: boolean } {
+  if (doc.avatars.some((avatar) => avatar.id === id)) {
+    return { doc, gained: false };
+  }
+  return {
+    doc: { ...doc, avatars: [...doc.avatars, defaultAvatarRecord(id)] },
+    gained: true,
+  };
+}
+
+/** Dev kit only: bump the ACTIVE Avatar `levels` whole levels (XP reset to 0
+ * at the new level — speeds catch-up smoke). */
+export function devAddAvatarLevels(doc: PlayStoreDoc, levels: number): PlayStoreDoc {
+  const active = activeAvatarOf(doc);
+  return patchActiveAvatar(doc, {
+    level: Math.max(1, active.level + Math.max(0, Math.floor(levels))),
+    xp: 0,
+  });
+}
+
+/** Dev kit only: reset the roster back to a fresh starter Avatar (active =
+ * starter; bag/tokens/campaign/Bound Bosses are kept). */
+export function devResetAvatars(doc: PlayStoreDoc): PlayStoreDoc {
+  return {
+    ...doc,
+    avatars: [defaultAvatarRecord(STARTER_AVATAR_ID)],
+    active_avatar_id: STARTER_AVATAR_ID,
   };
 }
 
@@ -1187,10 +1435,12 @@ export function campaignNextSeat(seat: CampaignState): CampaignState | null {
   return { phase: 'main', wave_in_phase: seat.wave_in_phase + 1 };
 }
 
-/** Player GS from the persisted doc (soft-capped bucket + level + stars). */
+/** Player GS from the persisted doc (soft-capped bucket + ACTIVE Avatar level
+ * + stars). Swap Avatars and GS follows the new active. */
 export function gearScoreOf(doc: PlayStoreDoc): number {
-  const wavePowerBucket = bucketMultiplier('wave_power', equippedStatSums(doc.equipped));
-  return gearScore(wavePowerBucket, doc.avatar_level, doc.avatar_stars);
+  const active = activeAvatarOf(doc);
+  const wavePowerBucket = bucketMultiplier('wave_power', equippedStatSums(active.equipped));
+  return gearScore(wavePowerBucket, active.level, active.stars);
 }
 
 /**
@@ -1305,28 +1555,31 @@ export function skipCampaignToEven(
   }
   if (crateId) inventory = addCopiesToBag(inventory, crateId, 0, 1);
 
-  // XP feeds the same level curve as a real clear.
-  let xp = doc.xp + xpGranted;
-  let level = doc.avatar_level;
+  // XP feeds the same level curve as a real clear (skip is never a Trial
+  // fight, so catch-up XP never applies to a skip).
+  const active = activeAvatarOf(doc);
+  let xp = active.xp + xpGranted;
+  let level = active.level;
   while (xp >= xpToNext(level)) {
     xp -= xpToNext(level);
     level += 1;
   }
 
-  const next: PlayStoreDoc = {
-    ...doc,
-    tokens: doc.tokens + tokensGranted,
-    xp,
-    avatar_level: level,
-    highest_wave_cleared: highestWave,
-    lifetime_waves_cleared: lifetimeAfter,
-    campaign: plan.toSeat,
-    inventory,
-    milestone_waves_claimed: [
-      ...doc.milestone_waves_claimed,
-      ...claimedNow,
-    ],
-  };
+  const next: PlayStoreDoc = patchActiveAvatar(
+    {
+      ...doc,
+      tokens: doc.tokens + tokensGranted,
+      highest_wave_cleared: highestWave,
+      lifetime_waves_cleared: lifetimeAfter,
+      campaign: plan.toSeat,
+      inventory,
+      milestone_waves_claimed: [
+        ...doc.milestone_waves_claimed,
+        ...claimedNow,
+      ],
+    },
+    { xp, level },
+  );
   return {
     doc: next,
     result: {
@@ -1405,18 +1658,18 @@ export function devResetAvatarStarCycle(doc: PlayStoreDoc): PlayStoreDoc {
  * are fabricated directly (dev-only); nothing in a game path calls this.
  */
 export function devOvergear(doc: PlayStoreDoc): PlayStoreDoc {
-  const equipped: PlayStoreDoc['equipped'] = { ...doc.equipped };
+  const active = activeAvatarOf(doc);
+  const equipped: Partial<Record<ItemSlot, ItemRef>> = { ...active.equipped };
   for (const id of OVERGEAR_POWER_IDS) {
     const def = getItemDef(id);
     if (!def) continue;
     equipped[def.core.slot] = { id, star: MERGE_MAX_STAR };
   }
-  return {
-    ...doc,
-    avatar_level: DEV_OVERGEAR_LEVEL,
-    avatar_stars: AVATAR_STAR_MAX,
+  return patchActiveAvatar(doc, {
+    level: DEV_OVERGEAR_LEVEL,
+    stars: AVATAR_STAR_MAX,
     equipped,
-  };
+  });
 }
 
 /** Dev kit only: overgear AND reset the campaign to Trial wave 1, so the Skip
@@ -1504,7 +1757,9 @@ export function equippedStatSums(
     if (!slot) continue;
     const def = getItemDef(slot.id);
     if (!def) continue;
-    const scale = 1 + MERGE_STAR_MULT_STEP * slot.star;
+    // StarTable scale (×1.0 at ★0, +0.1 per star) — a ★2 copy of a Power
+    // really hits harder than its ★0 twin, in display AND combat math.
+    const scale = starMultScale(slot.star);
     for (const mult of [def.mult_a, def.mult_b]) {
       if (mult) sums[mult.stat] += mult.value * scale;
     }
@@ -1681,10 +1936,10 @@ export function deeperDive(
 ): { doc: PlayStoreDoc; outcome: DeeperOutcome } | null {
   const run = doc.dive_run;
   if (!run || run.deepers >= DIVE_DEEPER_MAX) return null;
-  // §7 table at this depth + the §9c tune bust boost, bent by equipped
-  // dive_luck — the same number the UI shows.
+  // §7 table at this depth + the §9c tune bust boost, bent by the ACTIVE
+  // Avatar's equipped dive_luck — the same number the UI shows.
   const bustChance =
-    effectiveBustPct(diveBustChanceAt(run.deepers), doc.equipped) / 100;
+    effectiveBustPct(diveBustChanceAt(run.deepers), activeAvatarOf(doc).equipped) / 100;
   if (rng() < bustChance) {
     const bustPct = Math.round(bustChance * 100);
     return { doc: { ...doc, dive_run: null }, outcome: { busted: true, bustPct } };
@@ -1724,13 +1979,14 @@ export type SellOutcome =
   | { ok: true; gainedTokens: number; name: string }
   | { ok: false; reason: 'not_owned' | 'not_look' };
 
-/** Equip one owned (bagged) copy of (id, star) into its slot. Blocked when
- * the bag is over the soft cap and the item is a Power going into an EMPTY
- * slot (net-new gear — sell a Look first). Swaps (slot holds a DIFFERENT ref)
- * are always allowed, as are Look equips, because neither adds to the total
- * owned count. Equipping the exact ref ALREADY worn is refused
- * (`already_equipped`) — one per slot — so spare copies of a worn item can
- * only sit in the bag (or feed a merge, or sell, if Look). */
+/** Equip one owned (bagged) copy of (id, star) into the ACTIVE Avatar's slot.
+ * Blocked when total owned (bag + EVERY Avatar's worn) is over the soft cap
+ * and the item is a Power going into an EMPTY slot (net-new gear — sell a
+ * Look first). Swaps (slot holds a DIFFERENT ref) are always allowed, as are
+ * Look equips, because neither adds to the total owned count. Equipping the
+ * exact ref ALREADY worn is refused (`already_equipped`) — one per slot — so
+ * spare copies of a worn item can only sit in the bag (or feed a merge, or
+ * sell, if Look). Each Avatar's slots are its own; the bag is shared. */
 export function equipItem(
   doc: PlayStoreDoc,
   itemId: string,
@@ -1741,11 +1997,12 @@ export function equipItem(
     return { doc, outcome: { ok: false, reason: 'not_owned' } };
   }
   const slot = def.core.slot;
-  const occupied = doc.equipped[slot];
+  const active = activeAvatarOf(doc);
+  const occupied = active.equipped[slot];
   if (occupied && occupied.id === itemId && occupied.star === star) {
     return { doc, outcome: { ok: false, reason: 'already_equipped' } };
   }
-  const totalOwned = totalOwnedCount(doc.inventory, doc.equipped);
+  const totalOwned = totalOwnedAcrossAvatars(doc);
   if (def.core.kind === 'power' && occupied == null && totalOwned >= INVENTORY_SOFT_CAP) {
     return { doc, outcome: { ok: false, reason: 'bag_full' } };
   }
@@ -1753,27 +2010,31 @@ export function equipItem(
   // its own (id, star) stack.
   let inventory = takeOneFromBag(doc.inventory, itemId, star);
   if (occupied) inventory = addCopiesToBag(inventory, occupied.id, occupied.star, 1);
+  const equipped = { ...active.equipped, [slot]: { id: itemId, star } };
   return {
-    doc: { ...doc, inventory, equipped: { ...doc.equipped, [slot]: { id: itemId, star } } },
+    doc: patchActiveAvatar({ ...doc, inventory }, { equipped }),
     outcome: { ok: true },
   };
 }
 
-/** Take an equipped item off and return exactly one copy to its bag stack
- * (the matching (id, star) tier). */
+/** Take an item off the ACTIVE Avatar's slot and return exactly one copy to
+ * its bag stack (the matching (id, star) tier). */
 export function unequipItem(
   doc: PlayStoreDoc,
   slot: ItemSlot,
 ): { doc: PlayStoreDoc } {
-  const ref = doc.equipped[slot];
+  const active = activeAvatarOf(doc);
+  const ref = active.equipped[slot];
   if (!ref) return { doc };
-  const equipped = { ...doc.equipped };
+  const equipped = { ...active.equipped };
   delete equipped[slot];
   // Only return known items; a corrupt id is dropped rather than bagged.
   const inventory = getItemDef(ref.id)
     ? addCopiesToBag(doc.inventory, ref.id, ref.star, 1)
     : doc.inventory;
-  return { doc: { ...doc, equipped, inventory } };
+  return {
+    doc: patchActiveAvatar({ ...doc, inventory }, { equipped }),
+  };
 }
 
 /** Sell ONE copy from a Look stack for a tiny token gain. Powers are never
@@ -1806,10 +2067,11 @@ export function sellItem(
  *
  * Same id + same star can merge. A "main" (the copy you keep and upgrade) can
  * be a WORN item or a BAGGED copy; one bagged spare of the same id + star is
- * consumed as fuel. Roll the honest % from `MERGE_SUCCESS_TABLE` (★0→1 70% …
- * 4→5 18%, cap ★5). Success raises the main one star; a fail spends the fuel
- * and leaves the main untouched — an equipped main is NEVER destroyed. Mult
- * values scale +10% per star (see `equippedStatSums`).
+ * consumed as fuel. Roll the honest % from the StarTable (data/stars.json —
+ * ★0→1 70% … 4→5 18%, cap ★5), the SAME table Dress shows. Success raises the
+ * main one star; a fail spends the fuel and leaves the main untouched — an
+ * equipped main is NEVER destroyed. Mult values scale +10% per star (see
+ * `equippedStatSums`).
  *
  * TODO(merge ladder → GAME_SPEC §16c "fridge" / the old "No crafting / merge"
  * line): this risky single-star merge is v0. The specced upgrade ladder (e.g.
@@ -1825,19 +2087,24 @@ export type MergeOutcome =
 /** What a merge is trying to raise: the main copy's tier + where it lives. */
 export type MergeTarget = { id: string; star: number; main: 'worn' | 'bag' };
 
-/** Honest success % (whole number) for raising `star` → `star + 1`, or null
- * when `star` is at the cap (nothing to roll). */
+/** Honest success % (whole number) for raising `star` → `star + 1`, read
+ * from the StarTable (`data/stars.json`), or null when `star` is at the cap
+ * (nothing to roll). Never a flattened copy — Dress shows exactly what the
+ * store rolls. */
 export function mergeSuccessPct(star: number): number | null {
-  if (star < 0 || star >= MERGE_MAX_STAR) return null;
-  return Math.round(MERGE_SUCCESS_TABLE[star] * 100);
+  if (!Number.isFinite(star) || star < 0) return null;
+  const fraction = starMergeSuccess(star);
+  if (fraction == null) return null;
+  return Math.round(Math.min(1, Math.max(0, fraction)) * 100);
 }
 
-/** Does the worn slot hold an item that can be merged with bagged fuel? */
+/** Does the ACTIVE Avatar's worn slot hold an item that can be merged with
+ * bagged fuel? */
 export function canMergeWorn(
   doc: PlayStoreDoc,
   slot: ItemSlot,
 ): boolean {
-  const ref = doc.equipped[slot];
+  const ref = activeAvatarOf(doc).equipped[slot];
   if (!ref) return false;
   const def = getItemDef(ref.id);
   if (!def || def.core.kind !== 'power') return false;
@@ -1873,9 +2140,11 @@ export function mergeItem(
   if (!def || def.core.kind !== 'power' || pct == null) return null;
   const slot = def.core.slot;
 
-  // Validate the main and that enough fuel of the same tier exists.
+  // Validate the main (the ACTIVE Avatar's worn copy or a bagged copy) and
+  // that enough fuel of the same tier exists.
+  const active = activeAvatarOf(doc);
   if (target.main === 'worn') {
-    const worn = doc.equipped[slot];
+    const worn = active.equipped[slot];
     if (!worn || worn.id !== target.id || worn.star !== target.star) return null;
     const fuel = doc.inventory.find((stack) => sameTier(stack, target.id, target.star));
     if (!fuel || fuel.count < 1) return null;
@@ -1884,11 +2153,12 @@ export function mergeItem(
     if (!stack || stack.count < 2) return null;
   }
 
-  const success = rng() < MERGE_SUCCESS_TABLE[target.star];
+  // Roll from the SAME StarTable the UI shows (data/stars.json).
+  const success = rng() < (starMergeSuccess(target.star) ?? 0);
 
   // Fuel always goes first.
   let inventory = takeOneFromBag(doc.inventory, target.id, target.star);
-  let equipped = doc.equipped;
+  let equipped = active.equipped;
 
   if (success) {
     if (target.main === 'worn') {
@@ -1901,14 +2171,14 @@ export function mergeItem(
       inventory = addCopiesToBag(inventory, target.id, target.star + 1, 1);
     }
     return {
-      doc: { ...doc, inventory, equipped },
+      doc: patchActiveAvatar({ ...doc, inventory }, { equipped }),
       outcome: { success: true, pct, fromStar: target.star, toStar: target.star + 1 },
     };
   }
 
   // Fail: main untouched (bag main = the remaining copy of its stack), fuel gone.
   return {
-    doc: { ...doc, inventory, equipped },
+    doc: patchActiveAvatar({ ...doc, inventory }, { equipped }),
     outcome: { success: false, pct, fromStar: target.star },
   };
 }
@@ -2015,17 +2285,18 @@ export function devSellAllJunk(
   };
 }
 
-/** Dev kit: take every slot off (items stay in the collection). */
+/** Dev kit: take every slot off the ACTIVE Avatar (items stay in the bag). */
 export function devClearEquipped(doc: PlayStoreDoc): PlayStoreDoc {
-  return { ...doc, equipped: {} };
+  return patchActiveAvatar(doc, { equipped: {} });
 }
 
-/** Dev kit: fill junk Looks until total owned is just over the soft cap (81),
- * so the §9 "bag full — sell a Look" path is testable. No-op when already over. */
+/** Dev kit: fill junk Looks until total owned (bag + every Avatar's worn) is
+ * just over the soft cap (81), so the §9 "bag full — sell a Look" path is
+ * testable. No-op when already over. */
 export function devFillJunkLooks(doc: PlayStoreDoc): PlayStoreDoc {
   const junk = junkLookId();
   if (!junk) return doc;
-  const totalOwned = totalOwnedCount(doc.inventory, doc.equipped);
+  const totalOwned = totalOwnedAcrossAvatars(doc);
   const needed = INVENTORY_SOFT_CAP + 1 - totalOwned;
   if (needed <= 0) return doc;
   return {
@@ -2067,13 +2338,15 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     // string phases 'trial'/'main') + conquered cycles + cycle_power +
     // lifetime clears + bound bosses default to fresh values. v1–v4 also
     // stored `inventory` as a string[] of owned ids WITH worn copies included,
-    // so those subtract one per equipped slot.
+    // so those subtract one per equipped slot. v16 (Avatar swap) moves every
+    // per-Avatar field into `avatars[]` records (the root xp / avatar_level /
+    // avatar_stars / avatar_park from v15 migrate onto the starter record).
     const version = data?.version;
     if (
       version !== 1 && version !== 2 && version !== 3 && version !== 4 &&
       version !== 5 && version !== 6 && version !== 7 && version !== 8 &&
       version !== 9 && version !== 10 && version !== 11 && version !== 12 &&
-      version !== 13 && version !== 14 && version !== 15
+      version !== 13 && version !== 14 && version !== 15 && version !== 16
     ) {
       return null;
     }
@@ -2086,10 +2359,10 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     if (tokens == null || diveCharge == null || diveChargeAt == null || researchStartedAt == null) {
       return null;
     }
-    const equipped = parseEquipped(data.equipped);
+    // Legacy root equipped (v1–v15) seeds the starter record AND is subtracted
+    // from v1–v4 bags (worn copies used to be listed in the bag too).
+    const legacyEquipped = parseEquipped(data.equipped);
     const highestWaveCleared = finiteNumber(data.highest_wave_cleared) ?? 0;
-    const xp = finiteNumber(data.xp) ?? 0;
-    const avatarLevel = finiteNumber(data.avatar_level) ?? 1;
     const clearsToday = finiteNumber(data.clears_today) ?? 0;
     const clearsYmd =
       typeof data.clears_ymd === 'string' ? data.clears_ymd : null;
@@ -2109,7 +2382,6 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     const boundBosses = parseBoundBosses(data.bound_bosses);
     // v13 (Phase C): Avatar star + unique drops + cycle tint. All default for
     // older saves.
-    const avatarStars = Math.max(0, Math.min(AVATAR_STAR_MAX, Math.floor(finiteNumber(data.avatar_stars) ?? 0)));
     const avatarStarTokens = Math.max(0, Math.floor(finiteNumber(data.avatar_star_tokens) ?? 0));
     const avatarStarRolled = data.avatar_star_rolled_cycle === true;
     const finalClears = Math.max(0, Math.floor(finiteNumber(data.final_clears_this_cycle) ?? 0));
@@ -2117,21 +2389,32 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       ? data.uniques.filter((id): id is string => typeof id === 'string' && id.length > 0)
       : [];
     const cycleTint = isTypeTag(data.cycle_tint) ? data.cycle_tint : DEFAULT_CYCLE_TINT;
-    const avatarPark = parseAvatarPark(data.avatar_park);
+    // v16 (Avatar swap): per-id records. Older saves (≤15) keep the single
+    // root Avatar → migrated onto the starter record.
+    const legacy = {
+      xp: Math.max(0, Math.floor(finiteNumber(data.xp) ?? 0)),
+      level: Math.max(1, Math.floor(finiteNumber(data.avatar_level) ?? 1)),
+      stars: Math.max(
+        0,
+        Math.min(AVATAR_STAR_MAX, Math.floor(finiteNumber(data.avatar_stars) ?? 0)),
+      ),
+      equipped: legacyEquipped,
+      park: parseAvatarPark(data.avatar_park),
+    };
+    const { avatars, activeAvatarId } = version >= 16
+      ? parseAvatars(data.avatars, starterRecordFromLegacy(legacy), data.active_avatar_id)
+      : { avatars: [starterRecordFromLegacy(legacy)], activeAvatarId: STARTER_AVATAR_ID };
     return {
-      version: 15,
+      version: 16,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
       research_started_at: researchStartedAt,
       research_accrued_ms: Math.min(RESEARCH_CAP_MS, Math.max(0, researchAccruedMs ?? 0)),
       last_tend_bonus_ymd: lastTend,
-      inventory: parseInventory(data.inventory, equipped, version < 5),
-      equipped,
+      inventory: parseInventory(data.inventory, legacyEquipped, version < 5),
       dive_run: parseDiveRun(data.dive_run),
       highest_wave_cleared: Math.max(0, Math.floor(highestWaveCleared)),
-      xp: Math.max(0, Math.floor(xp)),
-      avatar_level: Math.max(1, Math.floor(avatarLevel)),
       clears_today: Math.max(0, Math.floor(clearsToday)),
       clears_ymd: clearsYmd,
       milestone_waves_claimed: milestoneWaves,
@@ -2140,22 +2423,74 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       cycle_power: cyclePowerValue,
       lifetime_waves_cleared: Math.max(0, Math.floor(lifetimeWaves)),
       bound_bosses: boundBosses,
-      avatar_stars: avatarStars,
       avatar_star_tokens: avatarStarTokens,
       avatar_star_rolled_cycle: avatarStarRolled,
       final_clears_this_cycle: finalClears,
       uniques,
       cycle_tint: cycleTint,
-      avatar_park: avatarPark,
+      avatars,
+      active_avatar_id: activeAvatarId,
     };
   } catch {
     return null;
   }
 }
 
-/** Loose read of the v15 avatar park (map id → clamped board fractions).
+/** The legacy (≤ v15) single Avatar as a starter record — the migration seed
+ * for old saves. */
+function starterRecordFromLegacy(legacy: {
+  xp: number;
+  level: number;
+  stars: number;
+  equipped: Partial<Record<ItemSlot, ItemRef>>;
+  park: AvatarPark;
+}): AvatarRecord {
+  return { id: STARTER_AVATAR_ID, ...legacy };
+}
+
+/** Loose read of a v16 `avatars` array. Malformed rows are dropped; the
+ * starter record is ALWAYS present (prepended when missing); the active id
+ * (passed from the doc root `active_avatar_id`) falls back to the first owned
+ * record. When nothing parses, falls back to the legacy starter seed so a
+ * corrupt save still opens. */
+function parseAvatars(
+  raw: unknown,
+  legacy: ReturnType<typeof starterRecordFromLegacy>,
+  activeRaw?: unknown,
+): { avatars: AvatarRecord[]; activeAvatarId: AvatarId } {
+  const seen = new Set<string>();
+  const rows: AvatarRecord[] = [];
+  if (Array.isArray(raw)) {
+    for (const entry of raw) {
+      if (!isRecord(entry) || typeof entry.id !== 'string' || entry.id.length === 0) continue;
+      if (seen.has(entry.id)) continue;
+      seen.add(entry.id);
+      const level = Math.max(1, Math.floor(finiteNumber(entry.level) ?? 1));
+      rows.push({
+        id: entry.id,
+        xp: Math.max(0, Math.floor(finiteNumber(entry.xp) ?? 0)),
+        level,
+        stars: Math.max(0, Math.min(AVATAR_STAR_MAX, Math.floor(finiteNumber(entry.stars) ?? 0))),
+        equipped: parseEquipped(entry.equipped),
+        park: parseAvatarPark(entry.park),
+      });
+    }
+  }
+  if (!seen.has(STARTER_AVATAR_ID)) {
+    rows.unshift(legacy);
+    seen.add(STARTER_AVATAR_ID);
+  }
+  if (rows.length === 0) {
+    rows.push(legacy);
+    seen.add(STARTER_AVATAR_ID);
+  }
+  const activeId = typeof activeRaw === 'string' && seen.has(activeRaw) ? activeRaw : rows[0].id;
+  return { avatars: rows, activeAvatarId: activeId };
+}
+
+/** Loose read of an avatar park (map id → clamped board fractions).
  * Malformed entries are dropped; a missing park defaults to empty (maps fall
- * back to their top-right default until the player drags). */
+ * back to their MIDDLE default until the player drags). */
 function parseAvatarPark(raw: unknown): AvatarPark {
   if (!isRecord(raw)) return {};
   const park: AvatarPark = {};

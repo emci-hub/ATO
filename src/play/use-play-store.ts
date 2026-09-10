@@ -54,7 +54,12 @@ import {
   surfaceDive,
   unequipItem,
   recordAvatarPark,
+  setActiveAvatar,
+  unlockAvatar,
+  devAddAvatarLevels,
+  devResetAvatars,
   type AvatarParkMapId,
+  type AvatarId,
   type CampaignPhase,
   type ClaimResult,
   type DeeperOutcome,
@@ -513,6 +518,50 @@ export function usePlayStore() {
     return ok;
   }, [commit]);
 
+  /** Switch the ACTIVE Avatar (Dress picker). No-op for an unowned id. */
+  const activateAvatar = useCallback(async (id: AvatarId): Promise<boolean> => {
+    let ok = false;
+    commit((current) => {
+      const next = setActiveAvatar(current, id);
+      ok = next.ok;
+      return ok ? next.doc : null;
+    });
+    return ok;
+  }, [commit]);
+
+  /** Unlock an Avatar (free stub unlock — Hero/IAP later). True when gained. */
+  const unlockAvatarStub = useCallback(async (id: AvatarId): Promise<boolean> => {
+    let gained = false;
+    commit((current) => {
+      const next = unlockAvatar(current, id);
+      gained = next.gained;
+      return gained ? next.doc : null;
+    });
+    return gained;
+  }, [commit]);
+
+  /** Dev kit only: bump the ACTIVE Avatar `levels` whole levels. */
+  const addAvatarLevels = useCallback(async (levels: number): Promise<boolean> => {
+    let ok = false;
+    commit((current) => {
+      const next = devAddAvatarLevels(current, levels);
+      ok = next !== current;
+      return ok ? next : null;
+    });
+    return ok;
+  }, [commit]);
+
+  /** Dev kit only: reset the roster to a fresh starter (active = starter). */
+  const resetAvatars = useCallback(async (): Promise<boolean> => {
+    let ok = false;
+    commit((current) => {
+      const next = devResetAvatars(current);
+      ok = next !== current;
+      return ok ? next : null;
+    });
+    return ok;
+  }, [commit]);
+
   return {
     view,
     claim,
@@ -532,6 +581,10 @@ export function usePlayStore() {
     sellAllJunk,
     recordDefendWin,
     saveAvatarPark,
+    activateAvatar,
+    unlockAvatarStub,
+    addAvatarLevels,
+    resetAvatars,
     resetCampaign,
     setCampaignSeat,
     forceConquered,

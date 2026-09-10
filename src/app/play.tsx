@@ -11,6 +11,7 @@ import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useAppearance } from '@/lib/theme/context';
+import { STUB_AVATAR_ID, avatarDef } from '@/play/avatars';
 import { SaveDumpRow } from '@/play/dev-dump';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
 import { DevUnlockRow } from '@/play/dev-unlock-row';
@@ -32,10 +33,13 @@ import {
   devFillResearchOne,
   devForceConquered,
   devGrantBossFragment,
+  devResetAvatars,
   devResetBoundBosses,
   devResetPlayStore,
+  devAddAvatarLevels,
   devSetCampaignSeat,
   devUnlockBoundBoss,
+  unlockAvatar,
   type ClaimResult,
   type AvatarParkMapId,
   type DefendWinContext,
@@ -107,6 +111,8 @@ export default function PlayScreen() {
     overgear,
     forceSkipOffer,
     saveAvatarPark,
+    activateAvatar,
+    unlockAvatarStub,
   } = usePlayStore();
   const [mode, setMode] = useState<PlayMode>('grove');
   const [toast, setToast] = useState<PlayToast | null>(null);
@@ -375,6 +381,33 @@ export default function PlayScreen() {
     [saveAvatarPark],
   );
 
+  /** Avatar swap — Dress "Use": make another owned Avatar active. */
+  const handleActivateAvatar = useCallback(
+    (id: string) => {
+      void activateAvatar(id);
+    },
+    [activateAvatar],
+  );
+
+  /** Avatar swap — Dress lock row: free stub unlock until Hero/IAP. */
+  const handleUnlockAvatar = useCallback(
+    async (id: string) => {
+      const gained = await unlockAvatarStub(id);
+      if (gained) {
+        const def = avatarDef(id);
+        setToast({
+          kind: 'message',
+          title: 'Avatar unlocked',
+          body: `${def?.name ?? id} joined your Basecore — tap Use to make them active.`,
+        });
+      }
+    },
+    [unlockAvatarStub],
+  );
+
+  /** The active Avatar's identity for the Grove card (v16 — swap visible). */
+  const activeAvatar = view ? avatarDef(view.activeAvatarId) : undefined;
+
   function closePlay() {
     if (router.canGoBack()) {
       router.back();
@@ -468,6 +501,8 @@ export default function PlayScreen() {
               onSell={handleSell}
               onUnequip={handleUnequip}
               onMerge={handleMerge}
+              onActivateAvatar={handleActivateAvatar}
+              onUnlockAvatar={(id) => void handleUnlockAvatar(id)}
               onBackToGrove={() => setMode('grove')}
             />
           ) : mode === 'defend' && view ? (
@@ -511,12 +546,23 @@ export default function PlayScreen() {
 
               <ThemedView type="backgroundElement" style={styles.card}>
                 <View style={styles.groveRow}>
-                  {/* Placeholder avatar — TODO: SakPix swap. No mock PNGs in v0. */}
-                  <View style={[styles.avatar, { backgroundColor: theme.backgroundSelected }]}>
-                    <MaterialCommunityIcons name="sprout" size={44} color={theme.accent} />
+                  {/* Placeholder avatar — TODO: SakPix swap. No mock PNGs in v0.
+                   * Reflects the ACTIVE Avatar (swap in Dress). */}
+                  <View
+                    style={[
+                      styles.avatar,
+                      { backgroundColor: activeAvatar?.color ?? theme.backgroundSelected },
+                    ]}>
+                    <MaterialCommunityIcons
+                      name={activeAvatar?.icon ?? 'sprout'}
+                      size={44}
+                      color={activeAvatar ? '#FFFFFF' : theme.accent}
+                    />
                   </View>
                   <View style={styles.groveText}>
-                    <ThemedText type="heading">Your Basecore</ThemedText>
+                    <ThemedText type="heading">
+                      {activeAvatar?.name ?? 'Your Basecore'}
+                    </ThemedText>
                     <ThemedText type="small" themeColor="textSecondary">
                       {researchTitle}
                     </ThemedText>
@@ -825,6 +871,21 @@ function GroveDevKit({
         clearResetArm();
         onToggleTune();
       },
+    },
+    {
+      key: 'avatar-unlock',
+      label: 'Unlock stub Avatar (2nd slot)',
+      onPress: () => run((doc) => unlockAvatar(doc, STUB_AVATAR_ID).doc),
+    },
+    {
+      key: 'avatar-levels',
+      label: 'Active Avatar +4 levels',
+      onPress: () => run((doc) => devAddAvatarLevels(doc, 4)),
+    },
+    {
+      key: 'avatar-reset',
+      label: 'Reset Avatars to starter',
+      onPress: () => run(devResetAvatars),
     },
     {
       key: 'campaign-jump-main-19',

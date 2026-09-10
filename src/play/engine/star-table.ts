@@ -1,12 +1,14 @@
 /**
- * StarTable — per-star item scaling table (data stub; mirrors the live merge
- * numbers in `playStore.ts`, which stays the source of truth until the
- * forever engine wires this table in).
+ * StarTable — per-star item scaling table (data; the single source of truth
+ * for both merge odds and per-star mult scaling).
  *
  * One row per star tier 0…5: how much a worn copy's mults scale at that star
  * (`mult_scale`, +10% per star) and the honest risky-merge success % to reach
  * the NEXT star (`merge_success`; null at the cap). Rows are authored in
- * `src/play/data/stars.json` — code reads ids/rows only.
+ * `src/play/data/stars.json` — code reads ids/rows only. `playStore` reads
+ * `starMergeSuccess` for the merge roll + the displayed %, and `starMultScale`
+ * for equipped/bag stat lines, so the table is never flattened into a second
+ * copy.
  */
 import rawStars from '../data/stars.json';
 

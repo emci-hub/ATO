@@ -27,7 +27,9 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { usePacedAction } from '@/play/action-pacing';
+import { allAvatarDefs, avatarDef } from '@/play/avatars';
 import {
+  formatItemStats,
   formatMult,
   getItemDef,
   rarityRank,
@@ -36,10 +38,10 @@ import {
   type ItemStat,
 } from '@/play/items';
 import {
+  AVATAR_STAR_MAX,
   INVENTORY_SOFT_CAP,
   LOOK_SELL_TOKENS,
   mergeSuccessPct,
-  totalOwnedCount,
   type ItemRef,
   type ItemStack,
   type MergeOutcome,
@@ -107,6 +109,8 @@ export function DressScreen({
   onSell,
   onUnequip,
   onMerge,
+  onActivateAvatar,
+  onUnlockAvatar,
   onBackToGrove,
 }: {
   view: PlayView;
@@ -116,6 +120,11 @@ export function DressScreen({
   onSell: (itemId: string, star: number) => void;
   onUnequip: (slot: ItemSlot) => void;
   onMerge: (target: MergeTarget) => Promise<MergeOutcome | null>;
+  /** Avatar swap — make another owned Avatar active (its own level/stars/gear/
+   * park become the ones Dress + Defend use; the bag is shared). */
+  onActivateAvatar: (id: string) => void;
+  /** Avatar swap — unlock a def (stub, no IAP yet). */
+  onUnlockAvatar: (id: string) => void;
   onBackToGrove: () => void;
 }) {
   const theme = useTheme();
@@ -123,7 +132,7 @@ export function DressScreen({
   const [mergeTarget, setMergeTarget] = useState<MergeTarget | null>(null);
   const { act, busy, showSplash } = usePacedAction(skipDelays);
 
-  const totalOwned = totalOwnedCount(view.inventory, view.equipped);
+  const totalOwned = view.totalOwned;
   const overCap = totalOwned >= INVENTORY_SOFT_CAP;
   const activeBonuses = STAT_ORDER.filter((stat) => view.statSums[stat] > 0);
   const anyBonuses = activeBonuses.length > 0;
@@ -152,24 +161,14 @@ export function DressScreen({
         Four slots. Equip Powers to shape your Basecore — Looks are for the eye.
       </ThemedText>
 
-      {mergeTarget ? (
-        <MergePanel
-          target={mergeTarget}
-          busy={busy}
-          showSplash={showSplash}
-          reduceMotion={reduceMotion}
-          onMerge={() =>
-            act('Merging…', async () => {
-              const outcome = await onMerge(mergeTarget);
-              if (outcome) setMergeTarget(null); // resolved → back to the list
-              return outcome != null;
-            })
-          }
-          onDone={() => {
-            if (!busy) setMergeTarget(null);
-          }}
-        />
-      ) : null}
+      {/* Active Avatar picker (v16): per-Avatar level/stars/equip/park; the
+       * bag, tokens and campaign are shared. Behind Avatars show a ×2.5 EXP
+       * badge — Trial fights on them catch up until one below the top. */}
+      <AvatarPicker
+        view={view}
+        onActivateAvatar={onActivateAvatar}
+        onUnlockAvatar={onUnlockAvatar}
+      />
 
       <ThemedView type="backgroundElement" style={styles.card}>
         <ThemedText type="smallBold">Worn</ThemedText>
@@ -225,6 +224,27 @@ export function DressScreen({
           })
         )}
       </ThemedView>
+
+      {/* Merge confirm block sits DIRECTLY above the Bag — the fuel it
+       * consumes comes from bag spares, so the panel anchors to that card. */}
+      {mergeTarget ? (
+        <MergePanel
+          target={mergeTarget}
+          busy={busy}
+          showSplash={showSplash}
+          reduceMotion={reduceMotion}
+          onMerge={() =>
+            act('Merging…', async () => {
+              const outcome = await onMerge(mergeTarget);
+              if (outcome) setMergeTarget(null); // resolved → back to the list
+              return outcome != null;
+            })
+          }
+          onDone={() => {
+            if (!busy) setMergeTarget(null);
+          }}
+        />
+      ) : null}
 
       <ThemedView type="backgroundElement" style={styles.card}>
         <View style={styles.statRow}>
@@ -469,7 +489,7 @@ function SlotRow({
           )}
           {def ? (
             <ThemedText type="code" themeColor="textSecondary">
-              {describeItem(def)}
+              {describeItem(def, ref?.star ?? 0)}
             </ThemedText>
           ) : null}
         </View>
@@ -566,7 +586,7 @@ function StackRow({
         ) : null}
       </View>
       <ThemedText type="code" themeColor="textSecondary">
-        {describeItem(def)}
+        {describeItem(def, stack.star)}
       </ThemedText>
     </View>
   );
@@ -618,16 +638,136 @@ function StackRow({
   );
 }
 
-/** "Rare Power · +8% wave power · +3% dive luck" — rarity + plain what-it-does
- * for an item, in the friendly mult language (never raw stat keys). Looks keep
- * just their rarity + kind (no effect line). */
-function describeItem(def: ItemDef): string {
-  const mults = [def.mult_a, def.mult_b].filter(
-    (mult): mult is NonNullable<ItemDef['mult_a']> => mult != null,
-  );
+/** "Rare Power · +8% wave power · +3% dive luck" — rarity + kind + the
+ * item's effects scaled to the COPY's star (`formatItemStats`, StarTable
+ * ×(1 + 10% per star)), so a worn/bagged ★2 copy reads stronger than its ★0
+ * twin. Looks keep just their rarity + kind (no effect line). */
+function describeItem(def: ItemDef, star: number): string {
   const head = `${capitalize(def.core.rarity)} ${capitalize(def.core.kind)}`;
-  if (mults.length === 0) return head;
-  return `${head} · ${mults.map(formatMult).join(' · ')}`;
+  const stats = formatItemStats(def, star);
+  return stats ? `${head} · ${stats}` : head;
+}
+
+/**
+ * Dress's Active Avatar picker (v16 — Avatar swap). One row per known def:
+ * owned rows show Lv / ★ / worn slots and the ACTIVE state; rows one or more
+ * levels behind the highest owned Avatar carry the ×2.5 EXP catch-up badge.
+ * Locked defs show the free stub Unlock (Hero/IAP later).
+ */
+function AvatarPicker({
+  view,
+  onActivateAvatar,
+  onUnlockAvatar,
+}: {
+  view: PlayView;
+  onActivateAvatar: (id: string) => void;
+  onUnlockAvatar: (id: string) => void;
+}) {
+  const theme = useTheme();
+  const owned = new Map(view.avatars.map((avatar) => [avatar.id, avatar]));
+  const activeDef = avatarDef(view.activeAvatarId);
+  return (
+    <ThemedView type="backgroundElement" style={styles.card}>
+      <View style={styles.statRow}>
+        <ThemedText type="smallBold">Active Avatar</ThemedText>
+        <ThemedText type="smallBold" themeColor="emphasis">
+          {activeDef?.name ?? view.activeAvatarId}
+        </ThemedText>
+      </View>
+      <ThemedText type="small" themeColor="textSecondary">
+        Each Avatar levels, stars and equips on its own. The bag, tokens, campaign
+        and Bound Bosses are shared — swap freely.
+      </ThemedText>
+      {allAvatarDefs().map((def) => {
+        const record = owned.get(def.id);
+        if (!record) {
+          return (
+            <View key={def.id} style={styles.avatarRow}>
+              <View style={[styles.avatarIcon, { backgroundColor: theme.backgroundSelected }]}>
+                <MaterialCommunityIcons name={def.icon} size={18} color={theme.textSecondary} />
+              </View>
+              <View style={styles.avatarText}>
+                <ThemedText type="smallBold" themeColor="textSecondary">
+                  {def.name}
+                </ThemedText>
+                <ThemedText type="code" themeColor="textSecondary">
+                  {def.blurb}
+                </ThemedText>
+              </View>
+              <Pressable
+                onPress={() => onUnlockAvatar(def.id)}
+                accessibilityRole="button"
+                accessibilityLabel={`Unlock ${def.name}`}
+                style={({ pressed }) => [
+                  styles.avatarChip,
+                  { backgroundColor: theme.backgroundSelected },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="code" themeColor="emphasis">
+                  Unlock
+                </ThemedText>
+              </Pressable>
+            </View>
+          );
+        }
+        const defColor = def.color;
+        return (
+          <View
+            key={record.id}
+            style={[styles.avatarRow, record.active && { borderColor: defColor }]}>
+            <View
+              style={[
+                styles.avatarIcon,
+                { backgroundColor: record.active ? defColor : theme.backgroundSelected },
+              ]}>
+              <MaterialCommunityIcons
+                name={def.icon}
+                size={18}
+                color={record.active ? '#FFFFFF' : theme.textSecondary}
+              />
+            </View>
+            <View style={styles.avatarText}>
+              <View style={styles.avatarTitleLine}>
+                <ThemedText type="smallBold">{def.name}</ThemedText>
+                {record.catchup ? (
+                  <View
+                    style={[styles.avatarChip, { backgroundColor: theme.backgroundSelected }]}>
+                    <ThemedText type="code" themeColor="emphasis">
+                      ×2.5 EXP
+                    </ThemedText>
+                  </View>
+                ) : null}
+              </View>
+              <ThemedText type="code" themeColor="textSecondary">
+                Lv {record.level} · ★{record.stars}/{AVATAR_STAR_MAX} · {record.worn}/4 worn
+              </ThemedText>
+            </View>
+            {record.active ? (
+              <View style={[styles.avatarChip, { backgroundColor: theme.backgroundSelected }]}>
+                <ThemedText type="code" themeColor="emphasis">
+                  Active
+                </ThemedText>
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => onActivateAvatar(def.id)}
+                accessibilityRole="button"
+                accessibilityLabel={`Use ${def.name}`}
+                style={({ pressed }) => [
+                  styles.avatarChip,
+                  { backgroundColor: theme.backgroundSelected },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="code" themeColor="emphasis">
+                  Use
+                </ThemedText>
+              </Pressable>
+            )}
+          </View>
+        );
+      })}
+    </ThemedView>
+  );
 }
 
 function capitalize(word: string): string {
@@ -758,6 +898,37 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.two,
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.half,
+  },
+  avatarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    borderRadius: Spacing.two,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    paddingVertical: Spacing.one,
+    paddingHorizontal: Spacing.one,
+  },
+  avatarIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    flex: 1,
+    gap: Spacing.half,
+  },
+  avatarTitleLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  avatarChip: {
+    borderRadius: Spacing.two,
+    paddingHorizontal: Spacing.one,
+    paddingVertical: 1,
   },
   buttonRow: {
     flexDirection: 'row',

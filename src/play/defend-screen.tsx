@@ -65,8 +65,9 @@ import {
   type SpawnStage,
   type TowerKind,
 } from '@/play/defend';
+import { avatarDef } from '@/play/avatars';
 import { BOUND_BOSS_MAX_STAR, bossBandFor, boundBossFragmentCost, defaultBoundBossId, getBoundBossDef, isUniqueDrop, previewDropTable, gearScore, recommendedGs, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, typeMatchBonus, type DropPreviewRow, type TypeTag } from '@/play/engine';
-import { getItemDef, type ItemSlot } from '@/play/items';
+import { formatItemStats, getItemDef } from '@/play/items';
 import {
   AVATAR_STAR_MAX,
   DEFAULT_AVATAR_PARK,
@@ -86,8 +87,6 @@ import {
   type DefendWinContext,
   type DefendWinMode,
   type DefendWinResult,
-  type ItemRef,
-  type ItemStack,
   type PlayView,
   type SkipRewardResult,
 } from '@/play/playStore';
@@ -218,27 +217,26 @@ function dropLabelFor(phase: CampaignPhase, wave: number): string {
   }
 }
 
-/** Total copies of an item the player holds — bagged stacks across every star
- * tier plus one if a copy of that id is currently worn. The §9m "Owned ×N"
- * shown on farmable drop rows. */
-function ownedCopies(
-  inventory: readonly ItemStack[],
-  equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>,
-  id: string,
-): number {
-  let count = 0;
-  for (const stack of inventory) if (stack.id === id) count += stack.count;
-  for (const ref of Object.values(equipped)) if (ref && ref.id === id) count += 1;
-  return count;
-}
-
-/** One "What can drop" row (§9i §9m): name/meta left, honest state right.
- * Uniques are once-per-save; farmables show how many copies you already hold. */
-function DropRowView({ row, ownedCount }: { row: DropPreviewRow; ownedCount: number }) {
+/** One "What can drop" row (§9i §9m): name + rarity + short star-scaled stats
+ * (scaled to the star tier you already own across every Avatar, base ★0 when
+ * you don't), honest state right. Uniques are once-per-save; farmables show
+ * how many copies you hold. */
+function DropRowView({
+  row,
+  ownedCount,
+  ownedStar,
+}: {
+  row: DropPreviewRow;
+  ownedCount: number;
+  ownedStar: number;
+}) {
   const def = getItemDef(row.id);
   const name = def?.core.name ?? row.id;
-  const slot = def?.core.slot ?? 'item';
-  const rarity = def ? capitalize(def.core.rarity) : '';
+  const starMark = ownedStar > 0 ? ` ★${ownedStar}` : '';
+  const stats = def ? formatItemStats(def, ownedStar) : null;
+  const meta = def
+    ? `${capitalize(def.core.rarity)} ${capitalize(def.core.kind)}${stats ? ` · ${stats}` : ''}`
+    : '';
   const label = row.owned
     ? "Owned — won't drop again"
     : row.unique
@@ -249,10 +247,15 @@ function DropRowView({ row, ownedCount }: { row: DropPreviewRow; ownedCount: num
   return (
     <View style={styles.dropRow}>
       <View style={styles.dropRowLeft}>
-        <ThemedText type="smallBold">{name}</ThemedText>
-        <ThemedText type="code" themeColor="textSecondary">
-          {rarity} · {slot}
+        <ThemedText type="smallBold">
+          {name}
+          {starMark}
         </ThemedText>
+        {meta ? (
+          <ThemedText type="code" themeColor="textSecondary">
+            {meta}
+          </ThemedText>
+        ) : null}
       </View>
       <ThemedText
         type="code"
@@ -406,8 +409,9 @@ export function DefendScreen({
   const bandRows = band ? dropRows.filter((row) => !row.unique) : [];
 
   // Avatar position (board units 0..1) — smooth via shared values, engine via
-  // ref. v15: the park is per-map; a fresh map (or no save yet) starts the
-  // Avatar TOP-RIGHT, readable for newbies, then the last drag is persisted.
+  // ref. v16: the park lives on the ACTIVE Avatar and is per-map; a fresh map
+  // (or no save yet) starts the Avatar at the MIDDLE of the board, then the
+  // last drag is persisted. Swapping Avatars restores each one's own spot.
   const initialParkMap: AvatarParkMapId = view.campaign.phase;
   const initialPark = view.avatarPark[initialParkMap] ?? DEFAULT_AVATAR_PARK;
   const avatarX = useSharedValue(initialPark.x);
@@ -424,9 +428,9 @@ export function DefendScreen({
     avatarPosRef.current = { x, y };
   }, []);
 
-  /** Park the Avatar for a map — its saved spot, else the top-right default.
-   * Runs once per map (guard above), so a same-map rebuild never snaps the
-   * Avatar back off where the player left it. */
+  /** Park the Avatar for a map — its saved spot (this Avatar's own), else the
+   * map's MIDDLE default. Runs once per map (guard above), so a same-map
+   * rebuild never snaps the Avatar back off where the player left it. */
   const ensureParked = useCallback(
     (mapId: AvatarParkMapId) => {
       if (parkedMapRef.current === mapId) return;
@@ -547,17 +551,23 @@ export function DefendScreen({
   );
 
   /** When the chosen fight changes while on SETUP (seat advanced after a win,
-   * a dev jump, a replay pick), resync the board. Runs on mount too. */
+   * a dev jump, a replay pick), resync the board. Runs on mount too. When the
+   * board ALREADY sits on that fight's wave/map (e.g. the post-win "Leave"
+   * restage keeps your towers on the same wave), it stays untouched — only
+   * the park is re-checked so a Trial ↔ Main switch never re-snaps mid-board. */
   const fightKey = `${fight.phase}:${fight.wave}:${fight.mode}`;
   useEffect(() => {
     if (phase !== 'setup') return;
-    setSim(createDefendLive(fight.wave, { mapId: fight.phase, cyclePower: view.cyclePower, tint: view.cycleTint }));
+    const current = simRef.current;
+    if (!(current && current.wave === fight.wave && current.mapId === fight.phase)) {
+      setSim(createDefendLive(fight.wave, { mapId: fight.phase, cyclePower: view.cyclePower, tint: view.cycleTint }));
+      prevPuffsRef.current = [];
+      setFloaters([]);
+      prevStageRef.current = 'minions';
+    }
     ensureParked(fight.phase);
     setSelectedPad(null);
     setWhyOpen(false);
-    prevPuffsRef.current = [];
-    setFloaters([]);
-    prevStageRef.current = 'minions';
     setBossAlert(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fightKey, view.cyclePower, view.cycleTint]);
@@ -591,6 +601,38 @@ export function DefendScreen({
       const fresh = retryDefendLive(current);
       simRef.current = fresh;
       setSim(fresh);
+    }
+    setPhase('setup');
+    setPaused(false);
+    setSelectedPad(null);
+    setWhyOpen(false);
+    prevPuffsRef.current = [];
+    setFloaters([]);
+    prevStageRef.current = 'minions';
+    setBossAlert(null);
+  }, []);
+
+  /** Result-screen "Leave": STAY in Defend — back to SETUP on the SAME fight
+   * (Start wave ready) with towers kept, exactly like Abandon. Never the Grove
+   * hub (the ‹ Divecore back button leaves). A WON campaign wave restages as
+   * its honest cleared-band replay — the seat already moved past it, so half
+   * pay and no double-advance; a LOST wave keeps the campaign fight so Start
+   * wave retries it at full reward. */
+  const leaveResultsToSetup = useCallback((fromWon: boolean) => {
+    const current = simRef.current;
+    if (current) {
+      const fresh = retryDefendLive(current);
+      simRef.current = fresh;
+      setSim(fresh);
+    }
+    const played = playedRef.current;
+    if (fromWon) {
+      // The wave is cleared — replay of the same wave (band replay, half pay).
+      setReplayPick({ phase: played.phase, wave: played.wave });
+    } else if (played.mode === 'replay') {
+      setReplayPick({ phase: played.phase, wave: played.wave });
+    } else {
+      setReplayPick(null); // campaign fight — the seat still points at it
     }
     setPhase('setup');
     setPaused(false);
@@ -816,6 +858,10 @@ export function DefendScreen({
   }));
 
   const levelBonus = avatarLevelWavePower(view.avatarLevel);
+  /** Active Avatar's identity — the board draws + names the one you picked in
+   * Dress (one drag; park per Avatar). */
+  const activeAvatarDef = avatarDef(view.activeAvatarId);
+  const avatarColor = activeAvatarDef?.color ?? AVATAR_COLOR;
   const bands = replayBands(view);
   const cycleNote =
     view.conqueredCycles > 0
@@ -869,7 +915,9 @@ export function DefendScreen({
             run. You start with enough for about two towers.
           </ThemedText>
           <View style={styles.statRow}>
-            <ThemedText type="smallBold">Avatar · Lv {view.avatarLevel}</ThemedText>
+            <ThemedText type="smallBold">
+              {activeAvatarDef?.name ?? 'Avatar'} · Lv {view.avatarLevel}
+            </ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
               ×{levelBonus.toFixed(2)} power
             </ThemedText>
@@ -1104,7 +1152,7 @@ export function DefendScreen({
 
             {/* Draggable Avatar overlay */}
             <GestureDetector gesture={pan}>
-              <Animated.View style={[styles.avatar, avatarStyle, { backgroundColor: AVATAR_COLOR }]} />
+              <Animated.View style={[styles.avatar, avatarStyle, { backgroundColor: avatarColor }]} />
             </GestureDetector>
 
             {/* Floating damage numbers (display only, pooled) */}
@@ -1428,7 +1476,14 @@ export function DefendScreen({
                   ) : null}
                   {bossRows.length === 0
                     ? null
-                    : bossRows.map((row) => <DropRowView key={row.id} row={row} ownedCount={0} />)}
+                    : bossRows.map((row) => (
+                        <DropRowView
+                          key={row.id}
+                          row={row}
+                          ownedCount={view.ownedCounts[row.id] ?? 0}
+                          ownedStar={view.ownedStars[row.id] ?? 0}
+                        />
+                      ))}
                   <ThemedText type="smallBold" themeColor="textSecondary">
                     Band drops
                   </ThemedText>
@@ -1441,7 +1496,8 @@ export function DefendScreen({
                       <DropRowView
                         key={row.id}
                         row={row}
-                        ownedCount={ownedCopies(view.inventory, view.equipped, row.id)}
+                        ownedCount={view.ownedCounts[row.id] ?? 0}
+                        ownedStar={view.ownedStars[row.id] ?? 0}
                       />
                     ))
                   )}
@@ -1455,7 +1511,8 @@ export function DefendScreen({
                   <DropRowView
                     key={row.id}
                     row={row}
-                    ownedCount={ownedCopies(view.inventory, view.equipped, row.id)}
+                    ownedCount={view.ownedCounts[row.id] ?? 0}
+                    ownedStar={view.ownedStars[row.id] ?? 0}
                   />
                 ))
               )}
@@ -1601,6 +1658,17 @@ export function DefendScreen({
                     ? ` · ${ordinal(lastWin.milestoneLook.count)} clear — found a Rare Look!`
                     : ''}
                 </ThemedText>
+                {lastWin.catchupXp ? (
+                  <View
+                    style={[
+                      styles.xpBadge,
+                      { backgroundColor: theme.backgroundSelected },
+                    ]}>
+                    <ThemedText type="code" themeColor="emphasis">
+                      ×2.5 EXP · Trial catch-up
+                    </ThemedText>
+                  </View>
+                ) : null}
                 {lastWin.dropItems.length > 0 ? (
                   <ThemedText type="small" themeColor="textSecondary">
                     {dropLabelFor(playedRef.current.phase, playedRef.current.wave)}{' '}
@@ -1707,14 +1775,15 @@ export function DefendScreen({
               <ThemedText type="smallBold">Share this clear</ThemedText>
             </Pressable>
             <Pressable
-              onPress={onBackToGrove}
+              onPress={() => leaveResultsToSetup(true)}
               accessibilityRole="button"
+              accessibilityLabel="Leave to Defend setup"
               style={({ pressed }) => [
                 styles.hudButton,
                 { backgroundColor: theme.backgroundSelected },
                 pressed && styles.pressed,
               ]}>
-              <ThemedText type="smallBold">Leave</ThemedText>
+              <ThemedText type="smallBold">Leave — back to Start wave</ThemedText>
             </Pressable>
           </ThemedView>
         ) : null}
@@ -1750,14 +1819,15 @@ export function DefendScreen({
               </ThemedText>
             </Pressable>
             <Pressable
-              onPress={onBackToGrove}
+              onPress={() => leaveResultsToSetup(false)}
               accessibilityRole="button"
+              accessibilityLabel="Leave to Defend setup"
               style={({ pressed }) => [
                 styles.hudButton,
                 { backgroundColor: theme.backgroundSelected },
                 pressed && styles.pressed,
               ]}>
-              <ThemedText type="smallBold">Leave</ThemedText>
+              <ThemedText type="smallBold">Leave — back to Start wave</ThemedText>
             </Pressable>
           </ThemedView>
         ) : null}
@@ -2167,6 +2237,13 @@ const styles = StyleSheet.create({
   conqueredNote: {
     color: undefined,
     fontStyle: 'italic',
+  },
+  /** ×2.5 EXP badge on the results XP line while Trial catch-up applied. */
+  xpBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: Spacing.two,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 1,
   },
   statRow: {
     flexDirection: 'row',
