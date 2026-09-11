@@ -35,6 +35,7 @@ import { withoutFactAt } from '@/lib/facts';
 import { historyDiff } from '@/lib/trait-history';
 import { insertTraitHistory } from '@/lib/trait-history-store';
 import {
+  applyCountOnlyAnswer,
   applyEwmaAnswer,
   shouldWriteReportTrack,
   trackFor,
@@ -415,15 +416,19 @@ export async function updateIntake(userId: string, patch: IntakePatch): Promise<
 
 export { FACT_FRAMEWORK_MESSAGE };
 
+type TraitAnswer = {
+  axis: TraitAxis;
+  sample: number;
+  source: Exclude<TraitSource, 'self_confirm'>;
+  /** Record that the answer happened; leave value and stability alone. */
+  countOnly?: boolean;
+};
+
 async function persistMergedTraits(
   current: Me,
   merged: ReturnType<typeof mergeTraitWrite>,
   extra: Record<string, unknown> = {},
-  answers: Array<{
-    axis: TraitAxis;
-    sample: number;
-    source: Exclude<TraitSource, 'self_confirm'>;
-  }> = [],
+  answers: TraitAnswer[] = [],
 ): Promise<{ me: Me; wrote: boolean }> {
   const previous = traitStateFromRow(current);
   const nowIso = new Date().toISOString();
@@ -435,6 +440,13 @@ async function persistMergedTraits(
     for (const answer of answers) {
       const kind = trackKindForSource(answer.source);
       const prev = trackFor(tracks, answer.axis, kind);
+      if (answer.countOnly) {
+        const stored = nextMerged.values[answer.axis];
+        const seed =
+          typeof stored === 'number' && Number.isFinite(stored) ? stored : answer.sample;
+        trackUpdates.push(applyCountOnlyAnswer(prev, answer.axis, nowIso, seed));
+        continue;
+      }
       const next = applyEwmaAnswer(prev, answer.axis, kind, answer.sample, nowIso);
       trackUpdates.push(next);
       if (kind === 'report') {
@@ -481,7 +493,7 @@ function reportSample(
   merged: ReturnType<typeof mergeTraitWrite>,
   axis: TraitAxis,
   source: Exclude<TraitSource, 'self_confirm' | 'self_game'>,
-): Array<{ axis: TraitAxis; sample: number; source: Exclude<TraitSource, 'self_confirm'> }> {
+): TraitAnswer[] {
   const sample = merged.values[axis];
   if (sample == null || !Number.isFinite(sample)) return [];
   return [{ axis, sample, source }];
@@ -490,7 +502,7 @@ function reportSample(
 function gameSample(
   axis: TraitAxis,
   pole: ScenarioPole,
-): Array<{ axis: TraitAxis; sample: number; source: Exclude<TraitSource, 'self_confirm'> }> {
+): TraitAnswer[] {
   return [{ axis, sample: pole === 'high' ? 0.8 : 0.2, source: 'self_game' }];
 }
 
@@ -499,12 +511,8 @@ function collectAnswers(
   incoming: Partial<Record<TraitAxis, number | null>>,
   source: Exclude<TraitSource, 'self_confirm'>,
   allowed: readonly TraitAxis[],
-): Array<{ axis: TraitAxis; sample: number; source: Exclude<TraitSource, 'self_confirm'> }> {
-  const out: Array<{
-    axis: TraitAxis;
-    sample: number;
-    source: Exclude<TraitSource, 'self_confirm'>;
-  }> = [];
+): TraitAnswer[] {
+  const out: TraitAnswer[] = [];
   for (const axis of allowed) {
     const raw = incoming[axis];
     if (raw == null || !Number.isFinite(raw)) continue;
@@ -512,7 +520,14 @@ function collectAnswers(
       out.push({ axis, sample: raw, source });
       continue;
     }
-    if (!shouldWriteReportTrack(current.sources[axis], source)) continue;
+    if (!shouldWriteReportTrack(current.sources[axis], source)) {
+      // The frozen intake still counts toward the Sage/Legends unlock on an
+      // axis a direct source already owns — recorded, but never allowed to
+      // move the number. Every other inferred source keeps being dropped.
+      if (source !== 'self_situation') continue;
+      out.push({ axis, sample: raw, source, countOnly: true });
+      continue;
+    }
     out.push({ axis, sample: raw, source });
   }
   return out;

@@ -222,6 +222,47 @@ export function applyEwmaAnswer(
   };
 }
 
+/**
+ * Records that an answer happened on an axis without letting it move the
+ * number. `value` and `stability` carry through untouched, so a direct
+ * source stays the one that decides the trait; only `answerCount` and
+ * `lastTouched` move.
+ *
+ * This is what keeps the frozen intake's progress count honest when an axis
+ * was already written by a direct source: `shouldWriteReportTrack` blocks the
+ * value blend (correctly), but the person still answered, and
+ * `bankTotalProgress` — the Sage/Legends unlock count — reads `answerCount`.
+ * Without this, every intake answer on such an axis vanished and the unlock
+ * was unreachable.
+ *
+ * `seedValue` is only used when the axis has no report track yet: the track
+ * is created pinned to the value the direct source already stored, at
+ * `stability` 0, so a count-only bump can never invent agreement.
+ *
+ * `lastTouched` does move, which holds off `decayedStability`'s 60-day idle
+ * clock on a stability this answer contributed nothing to. That is deliberate:
+ * the person did answer the axis, so it is not idle.
+ */
+export function applyCountOnlyAnswer(
+  current: TraitTrack | null,
+  axis: TraitAxis,
+  nowIso: string,
+  seedValue: number,
+): TraitTrack {
+  if (!current || current.answerCount <= 0) {
+    return {
+      axis,
+      track: 'report',
+      value: clamp01(seedValue),
+      stability: 0,
+      answerCount: 1,
+      lastTouched: nowIso,
+      lastDepthAt: current?.lastDepthAt ?? null,
+    };
+  }
+  return { ...current, answerCount: current.answerCount + 1, lastTouched: nowIso };
+}
+
 export function daysIdle(lastTouchedIso: string, now: Date = new Date()): number {
   if (!lastTouchedIso) return 0;
   const at = new Date(lastTouchedIso);
