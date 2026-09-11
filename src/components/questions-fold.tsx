@@ -487,13 +487,6 @@ export function QuestionsFold({
                     styles.option,
                     { borderColor: controlBorderColor(theme) },
                     picked && { backgroundColor: theme.backgroundSelected },
-                    // Excludes the just-picked option from the busy dim — the
-                    // same fix already shipped for PagedQuestions
-                    // (afd6365): dimming the option the instant it's
-                    // highlighted as picked read as "the tap didn't register"
-                    // rather than "saving". Every unpicked option still
-                    // dims/disables during the save.
-                    busy && !picked && styles.disabled,
                   ]}>
                   <ThemedText type="smallBold">{option.text}</ThemedText>
                 </ThemedPressable>
