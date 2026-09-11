@@ -64,39 +64,39 @@ const PAGE_SIZE = 5;
  * old layout had was a busy-dim opacity flash on the just-picked option,
  * already excluded from the dim.
  *
- * Saving an answer is entirely the caller's responsibility via `onPick` —
- * this component never calls a save function itself, so the existing
- * answer-write path is untouched. No auto-scroll on answer (removed
- * deliberately — it could overshoot); the page itself never moves until the
- * viewer taps Next Page.
+ * Saving is entirely the caller's responsibility via `onSaveBatch` — this
+ * component never calls a save function itself. Answers picked on a page
+ * are held locally (nothing saved yet) until the viewer taps Next Page,
+ * which sends the whole page's picks in one batch and only advances if it
+ * resolves true; a false result leaves the page in place with an inline
+ * error so nothing is silently lost. No auto-scroll on answer (removed
+ * deliberately — it could overshoot); the page itself never moves until
+ * that batch save succeeds.
  */
 export function PagedQuestions({
   storageKey,
   categories,
   rowsForAxis,
-  busy,
   locked = false,
-  onPick,
+  onSaveBatch,
 }: {
   /** Unique id for this question set (e.g. "full-profile", "questions-stack") — scopes remembered position. */
   storageKey: string;
   categories: readonly CategoryDef[];
   /** Caller-supplied accessor so this component never assumes where questions come from. */
   rowsForAxis: (axis: TraitAxis) => readonly CategoryQuestionRow[];
-  busy: boolean;
   /** Hides every option everywhere, same meaning as Full Profile's old global lock. */
   locked?: boolean;
   /**
-   * Resolves to whether the write actually succeeded. The picked-option
-   * highlight itself stays optimistic/instant (session-local, same as
-   * before — a false one just disappears on remount, harmless), but the
-   * "Answered" stamp is only PERSISTED (answered-option-storage.ts, so it
-   * survives remounts/paging back) once this confirms true — otherwise a
-   * failed write would leave a permanent stamp that contradicts the real
-   * answered-count elsewhere on screen (found in review, kept from the prior
-   * layout).
+   * Resolves to whether the batch write actually succeeded. The picked-option
+   * highlight itself stays optimistic/instant (session-local — a false one
+   * just disappears on remount, harmless), but the "Answered" stamp is only
+   * PERSISTED (answered-option-storage.ts, so it survives remounts/paging
+   * back) once this confirms true — otherwise a failed write would leave a
+   * permanent stamp that contradicts the real answered-count elsewhere on
+   * screen (found in review, kept from the prior per-tap layout).
    */
-  onPick: (draft: QuestionDraft, option: QuestionOption) => Promise<boolean>;
+  onSaveBatch: (answers: readonly { draft: QuestionDraft; option: QuestionOption }[]) => Promise<boolean>;
 }) {
   const theme = useTheme();
   const [pageIndex, setPageIndex] = useState(0);
@@ -108,6 +108,14 @@ export function PagedQuestions({
   // just the option just tapped this session; a fresh tap updates both this
   // state and storage together (see the option's onPress below).
   const [pickedByRow, setPickedByRow] = useState<Record<string, number>>({});
+  // Answers picked on the current page but not yet saved — sent as one
+  // batch when Next Page is pressed, cleared only on a confirmed success so
+  // a failed save keeps them queued for the retry (pressing Next again).
+  const [pendingByRow, setPendingByRow] = useState<
+    Record<string, { draft: QuestionDraft; option: QuestionOption; optIndex: number }>
+  >({});
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -208,27 +216,19 @@ export function PagedQuestions({
                   return (
                     <ThemedPressable
                       key={`${row.key}-${optIndex}`}
-                      disabled={busy}
                       accessibilityState={{ selected: picked }}
-                      onPress={async () => {
+                      onPress={() => {
                         setPickedByRow((prev) => ({ ...prev, [row.key]: optIndex }));
-                        const ok = await onPick(row.draft, option);
-                        if (ok) {
-                          void saveAnsweredOption(storageKey, row.key, optIndex);
-                        }
+                        setPendingByRow((prev) => ({
+                          ...prev,
+                          [row.key]: { draft: row.draft, option, optIndex },
+                        }));
+                        setSaveError(null);
                       }}
                       style={[
                         styles.option,
                         { borderColor: controlBorderColor(theme) },
                         picked && { backgroundColor: theme.backgroundSelected },
-                        // Deliberately excludes every ALREADY-PICKED option
-                        // (not just the one just tapped) from the busy dim —
-                        // dimming the just-answered option the instant its
-                        // stamp mounts read as "the tap didn't register".
-                        // Every UNPICKED option still dims/disables while
-                        // busy, so double-tapping a different, still-open
-                        // option mid-save is still blocked.
-                        busy && !picked && styles.disabled,
                       ]}>
                       <ThemedText type="smallBold">{option.text}</ThemedText>
                       {picked ? (
@@ -255,29 +255,64 @@ export function PagedQuestions({
           </View>
         ))}
       </View>
+      {saveError ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {saveError}
+        </ThemedText>
+      ) : null}
       <View style={styles.navRow}>
         <Pressable
           onPress={() => goTo(clampedPage - 1)}
-          disabled={busy || atFirst}
+          disabled={saving || atFirst}
           style={({ pressed }) => [
             styles.navLink,
             pressed && styles.pressed,
-            (busy || atFirst) && styles.disabled,
+            (saving || atFirst) && styles.disabled,
           ]}>
           <ThemedText type="smallBold" themeColor="textSecondary">
             Back
           </ThemedText>
         </Pressable>
         <ThemedPressable
-          disabled={busy || atLast}
-          onPress={() => goTo(clampedPage + 1)}
+          disabled={saving}
+          onPress={async () => {
+            const pending = pageRows
+              .map((row) => pendingByRow[row.key])
+              .filter((entry): entry is { draft: QuestionDraft; option: QuestionOption; optIndex: number } =>
+                entry != null,
+              );
+            if (pending.length === 0) {
+              goTo(clampedPage + 1);
+              return;
+            }
+            setSaving(true);
+            setSaveError(null);
+            const ok = await onSaveBatch(pending.map(({ draft, option }) => ({ draft, option })));
+            setSaving(false);
+            if (!ok) {
+              setSaveError("Couldn't save your answers. Try again.");
+              return;
+            }
+            for (const row of pageRows) {
+              const entry = pendingByRow[row.key];
+              if (entry) void saveAnsweredOption(storageKey, row.key, entry.optIndex);
+            }
+            setPendingByRow((prev) => {
+              const next = { ...prev };
+              for (const row of pageRows) delete next[row.key];
+              return next;
+            });
+            goTo(clampedPage + 1);
+          }}
           style={[
             styles.option,
             styles.nextButton,
             { borderColor: controlBorderColor(theme) },
-            (busy || atLast) && styles.disabled,
+            saving && styles.disabled,
           ]}>
-          <ThemedText type="smallBold">Next Page</ThemedText>
+          <ThemedText type="smallBold">
+            {saving ? 'Saving…' : atLast ? 'Finish' : 'Next Page'}
+          </ThemedText>
         </ThemedPressable>
       </View>
     </View>

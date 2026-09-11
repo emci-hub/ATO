@@ -286,20 +286,30 @@ export function QuestionsFold({
    * persisted-pack path) cannot: `QuestionItemRow` has no axis-weight
    * fields, and adding them would be a `question_items` schema change.
    */
-  /** Returns whether the write actually succeeded — PagedQuestions only persists its "Answered" stamp on a confirmed true, so a failed write (currently only console.log'd here, no user-facing error) can never leave a permanent stamp that contradicts the real answered-count. */
-  async function pickBankItem(draft: QuestionDraft, option: QuestionOption): Promise<boolean> {
-    if (busy) return false;
-    setBusy(true);
+  /**
+   * Saves a whole page's worth of Full Profile bank answers in one batch,
+   * called from PagedQuestions only when Next Page is pressed (never
+   * per-tap). Sequential, not `Promise.all` — each call is a
+   * read-modify-write against the same user's trait row via
+   * `applyQuestionAnswer`, so running them concurrently could race. Returns
+   * whether every write succeeded — PagedQuestions only persists its
+   * "Answered" stamps and advances the page on a confirmed true; a false
+   * result leaves the page in place with an inline error, nothing silently
+   * lost.
+   */
+  async function saveBankAnswers(
+    answers: readonly { draft: QuestionDraft; option: QuestionOption }[],
+  ): Promise<boolean> {
     try {
-      await applyQuestionAnswer(me.id, draft, option, tracks ?? []);
+      for (const { draft, option } of answers) {
+        await applyQuestionAnswer(me.id, draft, option, tracks ?? []);
+      }
       earnTokensQuiet('game_round');
       await onUpdated();
       return true;
     } catch (err) {
-      console.log('[questions] category answer error:', err);
+      console.log('[questions] category batch answer error:', err);
       return false;
-    } finally {
-      setBusy(false);
     }
   }
 
@@ -431,9 +441,8 @@ export function QuestionsFold({
             answered: row.state === 'answered',
           }))
         }
-        busy={busy}
         locked={fullProfileLocked}
-        onPick={(draft, option) => pickBankItem(draft, option)}
+        onSaveBatch={saveBankAnswers}
       />
       {fullProfileLocked ? (
         <OngoingRoundFold me={me} history={history} tracks={tracks ?? []} onUpdated={onUpdated} />
