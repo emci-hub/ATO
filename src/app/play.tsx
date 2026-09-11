@@ -1,6 +1,5 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Image } from 'expo-image';
 import { Redirect, router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,8 +12,10 @@ import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useAppearance } from '@/lib/theme/context';
 import { AboutScreen } from '@/play/about-screen';
-import { skinArt } from '@/play/skin';
 import { STUB_AVATAR_ID, avatarDef } from '@/play/avatars';
+import { CommandHub } from '@/play/command-hub';
+import { NEON, type HubDestination } from '@/play/neon-viper';
+import { PlayThemeProvider } from '@/play/play-theme';
 import { SaveDumpRow } from '@/play/dev-dump';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
 import { DevUnlockRow } from '@/play/dev-unlock-row';
@@ -22,9 +23,7 @@ import { DiveScreen } from '@/play/dive-screen';
 import { DressScreen } from '@/play/dress-screen';
 import { DefendScreen } from '@/play/defend-screen';
 import type { TypeTag } from '@/play/engine/type-match';
-import { GROVE_ACTION_TILES, GROVE_LEDE } from '@/play/grove';
 import { itemName, type ItemSlot } from '@/play/items';
-import { PlayFrame } from '@/play/play-frame';
 import { TunePanel } from '@/play/tune-panel';
 import { loadTune } from '@/play/tune';
 import {
@@ -415,9 +414,6 @@ export default function PlayScreen() {
     [unlockAvatarStub],
   );
 
-  /** The active Avatar's identity for the Grove card (v16 — swap visible). */
-  const activeAvatar = view ? avatarDef(view.activeAvatarId) : undefined;
-
   /** Token shop — buy a row (spend soft tokens, apply its effect) and toast
    * the honest result. Paid rows never charge; the screen renders them "Soon". */
   const handleBuyShopRow = useCallback(
@@ -479,163 +475,35 @@ export default function PlayScreen() {
                     : toast.body,
         };
 
-  const tokensText = view == null ? '…' : String(view.tokens);
-  const chargeText =
-    view == null
-      ? '…'
-      : view.dive.full
-        ? `${view.dive.current}/${DIVE_CHARGE_CAP}`
-        : `${view.dive.current}/${DIVE_CHARGE_CAP} · +1 ~${minutesUntilLabel(
-            view.dive.nextChargeAt,
-          )}`;
-
-  const researchTitle =
-    view == null || researchReady ? 'Your Basecore is ready.' : 'Researching…';
-  const researchBody =
+  const researchLine =
     view == null
       ? '…'
       : researchReady
-        ? `${view.research.readyFinds} ${findsWord(view.research.readyFinds)} waiting — Claim gathers them.`
+        ? 'Research ready — Claim gathers your finds.'
         : `Next find in ~${minutesUntilLabel(view.research.nextFindAt)}.`;
-
   const claimLabel =
-    view == null ? '…' : researchReady ? 'Claim' : `Ready in ~${minutesUntilLabel(view.research.nextFindAt)}`;
+    view == null ? '…' : researchReady ? 'Claim' : `~${minutesUntilLabel(view.research.nextFindAt)}`;
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {toastContent ? (
-            <MilestoneToast
-              title={toastContent.title}
-              body={toastContent.body}
-              reduceMotion={reduceMotion}
-              onDone={() => setToast(null)}
-            />
-          ) : null}
-
-          {mode === 'dive' && view ? (
-            <DiveScreen
-              view={view}
-              skipDelays={skipDelays}
-              reduceMotion={reduceMotion}
-              onSpendCharge={handleSpendCharge}
-              onSurface={handleSurface}
-              onDeeper={handleDeeper}
-              onBackToGrove={() => setMode('grove')}
-            />
-          ) : mode === 'dress' && view ? (
-            <DressScreen
-              view={view}
-              skipDelays={skipDelays}
-              reduceMotion={reduceMotion}
-              onEquip={handleEquip}
-              onSell={handleSell}
-              onUnequip={handleUnequip}
-              onMerge={handleMerge}
-              onActivateAvatar={handleActivateAvatar}
-              onUnlockAvatar={(id) => void handleUnlockAvatar(id)}
-              onBackToGrove={() => setMode('grove')}
-            />
-          ) : mode === 'defend' && view ? (
-            <DefendScreen
-              view={view}
-              reduceMotion={reduceMotion}
-              onWin={handleRecordDefendWin}
-              onResetDailyClears={handleResetDailyClears}
-              onSetClearsTodayFive={handleSetClearsTodayFive}
-              onGrantMilestoneWaveFive={handleGrantMilestoneWaveFive}
-              onResetMilestones={handleResetMilestones}
-              onResetCampaign={handleResetCampaign}
-              onJumpMain19={handleJumpMain19}
-              onJumpScout={handleJumpScout}
-              onForceConquered={handleForceConquered}
-              onSpendStarToken={handleSpendStarToken}
-              onGrantStarToken={handleGrantStarToken}
-              onSetCycleTint={handleSetCycleTint}
-              onForceFinal={handleForceFinal}
-              onResetAvatarStarCycle={handleResetAvatarStarCycle}
-              onSkipToEven={handleSkipToEven}
-              onDevOvergear={handleDevOvergear}
-              onDevForceSkipOffer={handleDevForceSkipOffer}
-              onSaveAvatarPark={handleSaveAvatarPark}
-              onBackToGrove={() => setMode('grove')}
-            />
-          ) : mode === 'shop' && view ? (
-            <ShopScreen
-              view={view}
-              onBuyToken={handleBuyShopRow}
-              onBackToDivecore={() => setMode('grove')}
-            />
-          ) : mode === 'about' ? (
-            <AboutScreen onBackToDivecore={() => setMode('grove')} />
-          ) : (
-            <>
-              <View style={styles.topRow}>
-                <Pressable onPress={closePlay} hitSlop={12} style={({ pressed }) => [pressed && styles.pressed]}>
-                  <ThemedText type="smallBold" themeColor="textSecondary">
-                    ‹ Back
-                  </ThemedText>
-                </Pressable>
-              </View>
-
-              <ThemedText type="subtitle">Divecore</ThemedText>
-              <ThemedText themeColor="textSecondary" style={styles.lede}>
-                {GROVE_LEDE}
-              </ThemedText>
-
-              <PlayFrame style={styles.card}>
-                <View style={styles.groveRow}>
-                  {/* §19 Avatar art — the active Avatar's board sprite (Kenney TD). */}
-                  <View style={[styles.avatar, { backgroundColor: theme.backgroundSelected }]}>
-                    {activeAvatar && skinArt('unit.avatar') ? (
-                      <Image
-                        source={skinArt('unit.avatar')}
-                        contentFit="contain"
-                        style={styles.avatarArt}
-                      />
-                    ) : (
-                      <MaterialCommunityIcons
-                        name={activeAvatar?.icon ?? 'sprout'}
-                        size={44}
-                        color={activeAvatar ? '#FFFFFF' : theme.accent}
-                      />
-                    )}
-                  </View>
-                  <View style={styles.groveText}>
-                    <ThemedText type="heading">
-                      {activeAvatar?.name ?? 'Your Basecore'}
-                    </ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {researchTitle}
-                    </ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {researchBody}
-                    </ThemedText>
-                  </View>
-                </View>
-              </PlayFrame>
-
-              <PlayFrame style={styles.card}>
-                <View style={styles.statRow}>
-                  <ThemedText type="smallBold">Tokens</ThemedText>
-                  <ThemedText type="subheading" themeColor="emphasis">
-                    {tokensText}
+    <PlayThemeProvider>
+      {/* Forced ink chrome is dark regardless of the app-wide mode. */}
+      <StatusBar style="light" />
+      {mode === 'grove' ? (
+        <SafeAreaView style={styles.hubSafeArea}>
+          <ScrollView contentContainerStyle={styles.hubScroll} showsVerticalScrollIndicator={false}>
+            <CommandHub
+              scrap={view?.tokens ?? null}
+              wave={view?.campaign.wave_in_phase ?? 1}
+              onTile={(to: HubDestination) => setMode(to)}>
+              {/* Research / Claim — the token income the old Grove card carried,
+               * kept reachable now that the hub replaces that card. */}
+              <View style={styles.claimCard}>
+                <View style={styles.claimText}>
+                  <ThemedText type="smallBold">Basecore</ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {researchLine}
                   </ThemedText>
                 </View>
-                <ThemedText type="small" themeColor="textSecondary">
-                  Soft currency — earned from Claims, Dive banks, and Defend clears. Nothing
-                  spends it yet; it banks until Dive refills arrive.
-                </ThemedText>
-                <View style={styles.statRow}>
-                  <ThemedText type="smallBold">Dive charges</ThemedText>
-                  <ThemedText type="subheading" themeColor="emphasis">
-                    {chargeText}
-                  </ThemedText>
-                </View>
-                <ThemedText type="small" themeColor="textSecondary">
-                  Energy to Dive — refills over time, and a Claim can grant one · cap 10.
-                </ThemedText>
                 <Pressable
                   disabled={!researchReady}
                   onPress={handleClaim}
@@ -643,7 +511,10 @@ export default function PlayScreen() {
                   accessibilityState={{ disabled: !researchReady }}
                   style={({ pressed }) => [
                     styles.claimButton,
-                    { backgroundColor: researchReady ? theme.accentFill : theme.backgroundSelected },
+                    {
+                      backgroundColor: researchReady ? theme.accentFill : NEON.panel,
+                      borderColor: NEON.cyanDim,
+                    },
                     pressed && researchReady && styles.pressed,
                   ]}>
                   <ThemedText
@@ -652,68 +523,20 @@ export default function PlayScreen() {
                     {claimLabel}
                   </ThemedText>
                 </Pressable>
-                <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-                  Research accrues every 30 minutes — up to a 10-hour bag, then it waits for you.
-                </ThemedText>
-              </PlayFrame>
-
-              <View style={styles.actionList}>
-                {GROVE_ACTION_TILES.map((tile) => {
-                  const openMode: PlayMode | null = tile.soon == null ? tile.kind : null;
-                  const enabled = tile.soon == null;
-                  return (
-                    <ThemedView key={tile.kind} type="backgroundElement" style={styles.actionCard}>
-                      {enabled && openMode ? (
-                        <Pressable
-                          onPress={() => setMode(openMode)}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Open ${tile.title}`}
-                          style={({ pressed }) => [styles.actionRow, pressed && styles.pressed]}>
-                          <MaterialCommunityIcons name={tile.icon} size={22} color={theme.textSecondary} />
-                          <View style={styles.actionText}>
-                            <ThemedText type="smallBold">{tile.title}</ThemedText>
-                            <ThemedText type="small" themeColor="textSecondary">
-                              {tile.lede}
-                            </ThemedText>
-                          </View>
-                          <ThemedText type="smallBold" themeColor="textSecondary">
-                            ›
-                          </ThemedText>
-                        </Pressable>
-                      ) : (
-                        <View style={styles.actionRow}>
-                          <MaterialCommunityIcons name={tile.icon} size={22} color={theme.textSecondary} />
-                          <View style={styles.actionText}>
-                            <ThemedText type="smallBold">{tile.title}</ThemedText>
-                            <ThemedText type="small" themeColor="textSecondary">
-                              {tile.lede}
-                            </ThemedText>
-                          </View>
-                          <View style={[styles.soonBadge, { backgroundColor: theme.backgroundSelected }]}>
-                            <ThemedText type="code" themeColor="textSecondary">
-                              {tile.soon}
-                            </ThemedText>
-                          </View>
-                        </View>
-                      )}
-                    </ThemedView>
-                  );
-                })}
               </View>
 
               <Pressable
-                onPress={() => setMode('about')}
+                onPress={closePlay}
+                hitSlop={12}
                 accessibilityRole="button"
-                accessibilityLabel="About Divecore and art credits"
-                style={({ pressed }) => [styles.aboutRow, pressed && styles.pressed]}>
+                accessibilityLabel="Exit Play"
+                style={({ pressed }) => [styles.exitRow, pressed && styles.pressed]}>
                 <ThemedText type="small" themeColor="textSecondary">
-                  About · Art credits
+                  ‹ Exit Play
                 </ThemedText>
               </Pressable>
 
-              {showTune ? (
-                <TunePanel onClose={() => setShowTune(false)} />
-              ) : null}
+              {showTune ? <TunePanel onClose={() => setShowTune(false)} /> : null}
 
               {PRE_LAUNCH_DEV && !devUnlocked ? <DevUnlockRow /> : null}
               {PRE_LAUNCH_DEV && devUnlocked ? (
@@ -734,11 +557,83 @@ export default function PlayScreen() {
                   onToggleTune={() => setShowTune((open) => !open)}
                 />
               ) : null}
-            </>
-          )}
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
+            </CommandHub>
+          </ScrollView>
+        </SafeAreaView>
+      ) : (
+        <ThemedView style={styles.container}>
+          <SafeAreaView style={styles.safeArea}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+              {toastContent ? (
+                <MilestoneToast
+                  title={toastContent.title}
+                  body={toastContent.body}
+                  reduceMotion={reduceMotion}
+                  onDone={() => setToast(null)}
+                />
+              ) : null}
+
+              {mode === 'dive' && view ? (
+                <DiveScreen
+                  view={view}
+                  skipDelays={skipDelays}
+                  reduceMotion={reduceMotion}
+                  onSpendCharge={handleSpendCharge}
+                  onSurface={handleSurface}
+                  onDeeper={handleDeeper}
+                  onBackToGrove={() => setMode('grove')}
+                />
+              ) : mode === 'dress' && view ? (
+                <DressScreen
+                  view={view}
+                  skipDelays={skipDelays}
+                  reduceMotion={reduceMotion}
+                  onEquip={handleEquip}
+                  onSell={handleSell}
+                  onUnequip={handleUnequip}
+                  onMerge={handleMerge}
+                  onActivateAvatar={handleActivateAvatar}
+                  onUnlockAvatar={(id) => void handleUnlockAvatar(id)}
+                  onBackToGrove={() => setMode('grove')}
+                />
+              ) : mode === 'defend' && view ? (
+                <DefendScreen
+                  view={view}
+                  reduceMotion={reduceMotion}
+                  onWin={handleRecordDefendWin}
+                  onResetDailyClears={handleResetDailyClears}
+                  onSetClearsTodayFive={handleSetClearsTodayFive}
+                  onGrantMilestoneWaveFive={handleGrantMilestoneWaveFive}
+                  onResetMilestones={handleResetMilestones}
+                  onResetCampaign={handleResetCampaign}
+                  onJumpMain19={handleJumpMain19}
+                  onJumpScout={handleJumpScout}
+                  onForceConquered={handleForceConquered}
+                  onSpendStarToken={handleSpendStarToken}
+                  onGrantStarToken={handleGrantStarToken}
+                  onSetCycleTint={handleSetCycleTint}
+                  onForceFinal={handleForceFinal}
+                  onResetAvatarStarCycle={handleResetAvatarStarCycle}
+                  onSkipToEven={handleSkipToEven}
+                  onDevOvergear={handleDevOvergear}
+                  onDevForceSkipOffer={handleDevForceSkipOffer}
+                  onSaveAvatarPark={handleSaveAvatarPark}
+                  onBackToGrove={() => setMode('grove')}
+                />
+              ) : mode === 'shop' && view ? (
+                <ShopScreen
+                  view={view}
+                  onBuyToken={handleBuyShopRow}
+                  onBackToDivecore={() => setMode('grove')}
+                />
+              ) : mode === 'about' ? (
+                <AboutScreen onBackToDivecore={() => setMode('grove')} />
+              ) : null}
+            </ScrollView>
+          </SafeAreaView>
+        </ThemedView>
+      )}
+    </PlayThemeProvider>
   );
 }
 
@@ -1020,10 +915,6 @@ function GroveDevKit({
   );
 }
 
-function findsWord(count: number): string {
-  return count === 1 ? 'find' : 'finds';
-}
-
 /** Whole minutes until a timestamp, floored at 1 so copy never says "0 min". */
 function minutesUntilLabel(nextAt: number | null): string {
   if (nextAt == null) return '—';
@@ -1084,78 +975,39 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.three,
     paddingBottom: Spacing.six,
   },
-  topRow: {
+  /** Command Hub owns the full screen — no max width, no horizontal padding. */
+  hubSafeArea: {
+    flex: 1,
+    backgroundColor: NEON.ink,
+  },
+  hubScroll: {
+    flexGrow: 1,
+  },
+  exitRow: {
+    alignSelf: 'center',
+    paddingVertical: Spacing.three,
+  },
+  claimCard: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  lede: {
-    marginTop: -Spacing.one,
-  },
-  card: {
-    borderRadius: Spacing.four,
+    gap: Spacing.two,
+    marginHorizontal: 16,
+    marginTop: 16,
     padding: Spacing.three,
-    gap: Spacing.three,
-    alignItems: 'stretch',
+    borderWidth: 1,
+    borderColor: NEON.cyanDim,
+    backgroundColor: 'rgba(9, 15, 28, 0.92)',
   },
-  groveRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-  },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarArt: {
-    width: '100%',
-    height: '100%',
-  },
-  groveText: {
+  claimText: {
     flex: 1,
     gap: Spacing.half,
-  },
-  statRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
   },
   claimButton: {
     alignItems: 'center',
-    borderRadius: Spacing.three,
+    borderWidth: 1,
+    borderRadius: 8,
     paddingVertical: Spacing.two,
-  },
-  centerText: {
-    textAlign: 'center',
-  },
-  actionList: {
-    gap: Spacing.two,
-  },
-  aboutRow: {
-    alignSelf: 'center',
-    paddingVertical: Spacing.two,
-  },
-  actionCard: {
-    borderRadius: Spacing.four,
-    opacity: 0.9,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-    borderRadius: Spacing.three,
-    padding: Spacing.three,
-  },
-  actionText: {
-    flex: 1,
-    gap: Spacing.half,
-  },
-  soonBadge: {
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: 2,
+    paddingHorizontal: Spacing.three,
   },
   devKitCard: {
     borderRadius: Spacing.four,
