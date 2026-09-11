@@ -195,7 +195,11 @@ async function main() {
     const src = read('src/components/paged-questions.tsx');
     assert.doesNotMatch(src, /scrollTo|measureLayout|scrollViewRef/i, 'no auto-scroll code should remain in the book pager');
     assert.doesNotMatch(src, />\s*Skip\s*</, 'the per-category "Skip" control must not remain — nothing to skip in a flat book pager');
-    assert.match(src, />\s*Next Page\s*</, 'must have a "Next Page" control');
+    // The label is now a conditional expression ('Saving…' / 'Finish' /
+    // 'Next Page', batch-save-on-Next fix, 2026-09-11), not static JSX text,
+    // so this checks the literal string is still one of the button's states
+    // rather than requiring it as the sole text node between tags.
+    assert.match(src, /'Next Page'/, 'must still label the control "Next Page" on non-last pages');
     ok('PASS — no auto-scroll and no per-category Skip control remain; "Next Page" is present');
   }
 

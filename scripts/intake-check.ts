@@ -63,7 +63,10 @@ async function main() {
   const meLib = readFileSync(resolve(__dirname, '../src/lib/me.ts'), 'utf8');
   assert.match(onboarding, /CoreIntakeSweep/);
   assert.match(onboarding, /phase === 'account'/);
-  assert.match(onboarding, /phase === 'optional-gate'/);
+  // Removed 2026-09-11: onboarding no longer has an 'optional-gate' phase —
+  // signup goes straight from the core sweep to Home. See traits-check.ts
+  // for the fuller assertion that submit() calls refreshAndGoHome directly.
+  assert.doesNotMatch(onboarding, /optional-gate/);
   assert.doesNotMatch(onboarding, /intakeIndex/);
   assert.doesNotMatch(onboarding, /intakeProgressLabel/);
   assert.match(coreSweep, /CORE_INTAKE_QUESTIONS/);
@@ -103,7 +106,7 @@ async function main() {
   assert.match(continueFn, /checkHandleAvailable/);
   assert.match(continueFn, /setPhase\('intake'\)/);
   assert.doesNotMatch(
-    onboarding.slice(onboarding.indexOf('async function submit()'), onboarding.indexOf('async function goHome()')),
+    onboarding.slice(onboarding.indexOf('async function submit()'), onboarding.indexOf('async function refreshAndGoHome()')),
     /setPhase\('intake'\)/,
   );
   ok('handle reserved + uniqueness run on the account step, before intake questions');

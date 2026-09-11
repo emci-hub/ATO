@@ -127,12 +127,23 @@ ok('composeOngoingRound\'s saveItems hook is a true no-op; saveOngoingRoundBatch
 // --- questions-fold.tsx: UI trigger --------------------------------------------
 const foldSrc = read('src/components/questions-fold.tsx');
 
+// Removed 2026-09-11: OngoingRoundFold no longer auto-renders under the
+// finished Full Profile pager — it read as an unrelated "Submit" block
+// stacked directly under Back/Finish (found confusing, see docs/NOW.md).
+// The function itself is kept intact (not deleted) for reuse once a real
+// submit/approval flow is designed, so it's still asserted to exist below —
+// just no longer wired into QuestionsFold's own render.
 assert.match(
   foldSrc,
-  /\{fullProfileLocked \? \(\s*\n\s*<OngoingRoundFold me=\{me\} history=\{history\} tracks=\{tracks \?\? \[\]\} onUpdated=\{onUpdated\} \/>\s*\n\s*\) : null\}/,
-  'the ongoing-round CTA/flow must only render once fullProfileLocked (the frozen 50-question intake is done) — not alongside the still-in-progress intake',
+  /function OngoingRoundFold\(/,
+  'OngoingRoundFold must still be defined, even though it is no longer auto-rendered',
 );
-ok('OngoingRoundFold is only rendered once the frozen 50-question intake is complete (fullProfileLocked)');
+assert.doesNotMatch(
+  foldSrc,
+  /\{fullProfileLocked \? \(\s*\n\s*<OngoingRoundFold/,
+  'OngoingRoundFold must not auto-render under the finished intake pager anymore',
+);
+ok('OngoingRoundFold is defined but intentionally no longer wired into QuestionsFold\'s render');
 
 assert.match(foldSrc, /const existing = await withTimeout\(fetchLatestOngoingRoundPack\(\), 25000, 'ongoing-round-load'\);/);
 assert.match(foldSrc, /const saved = await withTimeout\(runOngoingRound\(ongoingMe, history, tracks\), 40000, 'ongoing-round-start'\);/);

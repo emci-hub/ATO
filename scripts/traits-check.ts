@@ -238,15 +238,22 @@ async function main() {
     onboarding.indexOf('async function refreshAndGoHome()'),
   );
   assert.match(submitFn, /createMe\(/);
-  assert.match(submitFn, /setPhase\('optional-gate'\)/);
-  assert.doesNotMatch(submitFn, /refresh\(/);
-  assert.match(onboarding, /phase === 'optional-gate'/);
+  // Removed 2026-09-11: onboarding no longer routes into the 8-question
+  // "Add a bit more" scenario phase after signup — emci kept hitting it and
+  // expecting it to gate the separate 50-question Full Profile bank, which
+  // it never did (docs/NOW.md). submit() now goes straight home.
+  assert.match(submitFn, /await refreshAndGoHome\(\);/);
+  assert.doesNotMatch(onboarding, /optional-gate/, 'the optional-gate onboarding phase must stay removed');
+  assert.doesNotMatch(
+    onboarding,
+    /OptionalIntakeSweep/,
+    'onboarding must not render the scenario sweep directly — it still exists as a You-tab fill-in only',
+  );
   assert.match(optionalUi, /Skip the rest/);
   assert.match(optionalUi, /Skip this one/);
   assert.doesNotMatch(optionalUi, /Pick one to keep going/);
   assert.doesNotMatch(optionalUi, /of 8/);
-  assert.doesNotMatch(submitFn, /'Pick one to keep going\.'/);
-  ok('core 9 is skippable on one page; optional never requires; signup finishes before the extra phase');
+  ok('core 9 is skippable on one page; signup finishes right after it; the optional 8-question scenario flow is no longer part of onboarding (still a You-tab fill-in)');
 
   const signup = read('supabase/migrations/stage9_intake_core.sql');
   assert.doesNotMatch(signup, /openness|trait_sources|attachment_anxiety/);
