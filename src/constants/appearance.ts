@@ -179,16 +179,18 @@ export const APPEARANCES: Record<AppearanceId, AppearanceTokens> = {
     ...BASE_TOKENS,
     id: 'neon',
     scheme: 'dark',
-    background: '#0A0A0F',
-    backgroundElement: '#0D0D12',
-    backgroundSelected: '#16161F',
-    // Thin accent border at ~30% — glow is a separate shadow layer.
-    border: 'rgba(0, 255, 255, 0.3)',
+    // Neon Viper lock: deep-ink base (#05070D) with cyan / pink / violet accents.
+    // Surfaces are the same ink hue, lifted just enough to separate a card.
+    background: '#05070D',
+    backgroundElement: '#0A0E18',
+    backgroundSelected: '#121A2B',
+    // Thin cyan border at ~30% — glow is a separate shadow layer.
+    border: 'rgba(0, 234, 255, 0.3)',
     text: '#FFFFFF',
     textSecondary: '#A5F3FC',
-    accent: '#00FFFF',
-    accentSecondary: '#FF00FF',
-    accentTertiary: '#00FFFF',
+    accent: '#00EAFF',
+    accentSecondary: '#FF23C9',
+    accentTertiary: '#8D5BFF',
     // Raw cyan is too light under white; darker cyan fill keeps the neon read and AA.
     accentFill: '#0E7490',
     emphasis: '#FFFFFF',

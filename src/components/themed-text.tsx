@@ -1,4 +1,4 @@
-import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
+import { Platform, StyleSheet, Text, type TextProps, type TextStyle } from 'react-native';
 
 import { Fonts, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -19,27 +19,44 @@ export type ThemedTextProps = TextProps & {
     | 'subtitle'
     | 'link'
     | 'linkPrimary'
-    | 'code';
+    | 'code'
+    | 'codeBold';
   themeColor?: ThemeColor;
 };
 
 export function ThemedText({ style, type = 'default', themeColor, ...rest }: ThemedTextProps) {
   const theme = useTheme();
-  const heading =
-    type === 'title' || type === 'subtitle' || type === 'heading' || type === 'subheading'
-      ? {
-          fontFamily: theme.useSerifHeadings ? Fonts.serif : undefined,
-          fontWeight: theme.headingWeight,
-          letterSpacing: theme.headingLetterSpacing,
-          textTransform: theme.headingTransform,
-          color: theme.id === 'quest' ? theme.emphasis : theme[themeColor ?? 'text'],
-          textShadowColor: theme.id === 'neon' ? 'rgba(0, 255, 255, 0.45)' : undefined,
-          textShadowOffset: theme.id === 'neon' ? { width: 0, height: 0 } : undefined,
-          textShadowRadius: theme.id === 'neon' ? 8 : undefined,
-        }
-      : null;
+  const isHeading =
+    type === 'title' || type === 'subtitle' || type === 'heading' || type === 'subheading';
+  // Display / headings ride Rajdhani (500 / 600 / 700); Zen keeps its serif.
+  const headingFontFamily = theme.useSerifHeadings
+    ? Fonts.serif
+    : theme.headingWeight === '700'
+      ? Fonts.displayBold
+      : theme.headingWeight === '300' || theme.headingWeight === '400'
+        ? Fonts.display
+        : Fonts.displaySemiBold;
+  const heading: TextStyle | null = isHeading
+    ? {
+        fontFamily: headingFontFamily,
+        // The Rajdhani families encode their weight; only the serif fallback
+        // needs an explicit weight (a numeric one alongside a loaded family
+        // can force a synthetic or system fallback face).
+        fontWeight: theme.useSerifHeadings ? theme.headingWeight : 'normal',
+        letterSpacing: theme.headingLetterSpacing,
+        textTransform: theme.headingTransform,
+        color: theme.id === 'quest' ? theme.emphasis : theme[themeColor ?? 'text'],
+        textShadowColor: theme.id === 'neon' ? 'rgba(0, 234, 255, 0.45)' : undefined,
+        textShadowOffset: theme.id === 'neon' ? { width: 0, height: 0 } : undefined,
+        textShadowRadius: theme.id === 'neon' ? 8 : undefined,
+      }
+    : null;
 
-  const mono = type === 'code' && theme.useMono ? { fontFamily: Fonts.mono } : null;
+  // Mono / HUD numbers ride Space Mono (400, or 700 for `codeBold`).
+  const mono =
+    (type === 'code' || type === 'codeBold') && theme.useMono
+      ? { fontFamily: type === 'codeBold' ? Fonts.monoBold : Fonts.mono, fontWeight: 'normal' as const }
+      : null;
 
   return (
     <Text
@@ -54,7 +71,10 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
         type === 'subtitle' && styles.subtitle,
         type === 'link' && styles.link,
         type === 'linkPrimary' && [styles.linkPrimary, { color: theme.accent }],
-        type === 'code' && [styles.code, !theme.useMono && { fontFamily: Fonts.sans }],
+        (type === 'code' || type === 'codeBold') && [
+          styles.code,
+          !theme.useMono && { fontFamily: Fonts.sans },
+        ],
         heading,
         mono,
         style,

@@ -2,8 +2,15 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { StyleSheet, View } from 'react-native';
+import {
+  Rajdhani_500Medium,
+  Rajdhani_600SemiBold,
+  Rajdhani_700Bold,
+} from '@expo-google-fonts/rajdhani';
+import { SpaceMono_400Regular, SpaceMono_700Bold } from '@expo-google-fonts/space-mono';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { PushRuntime } from '@/components/push-runtime';
@@ -49,10 +56,22 @@ function RootNavigator() {
   const { session, loading: sessionLoading } = useSession();
   const { me, loading: meLoading } = useMeContext();
   const { ready: appearanceReady } = useAppearance();
+  // Load display (Rajdhani) + HUD mono (Space Mono) before the navigator
+  // paints, so no screen renders with a fallback face and then swaps. A font
+  // load error still releases the UI rather than hanging on the blank view.
+  const [fontsLoaded, fontError] = useFonts({
+    Rajdhani_500Medium,
+    Rajdhani_600SemiBold,
+    Rajdhani_700Bold,
+    SpaceMono_400Regular,
+    SpaceMono_700Bold,
+  });
 
   const isAuthed = !!session;
   const hasMe = !!me;
-  const resolving = sessionLoading || (isAuthed && meLoading) || !appearanceReady;
+  const fontsReady = fontsLoaded || !!fontError;
+  const resolving =
+    sessionLoading || (isAuthed && meLoading) || !appearanceReady || !fontsReady;
 
   return (
     <>

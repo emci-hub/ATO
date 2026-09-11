@@ -59,11 +59,11 @@ export function surfaceShadow(theme: AppearanceTokens, reduceMotion: boolean): V
 
   if (theme.id === 'neon') {
     const glow = reduceMotion
-      ? '0 0 8px rgba(0, 255, 255, 0.18)'
-      : '0 0 8px rgba(0, 255, 255, 0.35), 0 0 22px rgba(0, 255, 255, 0.16)';
+      ? '0 0 8px rgba(0, 234, 255, 0.18)'
+      : '0 0 8px rgba(0, 234, 255, 0.35), 0 0 22px rgba(0, 234, 255, 0.16)';
     return Platform.select<ViewStyle>({
       ios: {
-        shadowColor: '#00FFFF',
+        shadowColor: '#00EAFF',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: reduceMotion ? 0.25 : 0.45,
         shadowRadius: reduceMotion ? 6 : 12,
