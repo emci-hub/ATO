@@ -21,6 +21,12 @@ Expo SDK **54** in this repo (`CLAUDE.md` / `AGENTS.md` point at the v54 docs).
 
 Do not commit `.env.local` or API keys. Do not change dependencies, schemas, auth, env config, or secrets without asking emci first.
 
+## House conventions
+
+- **Dev-only/internal tooling changes** (Dev Lab, test presets, anything not on a production user path): do NOT re-run typecheck/lint/`check:ota-gate` after every intermediate edit. Batch all edits for the task and stop once they're done — no automatic full-gate run, no reviewer round-trip loop. Emci tests these manually on device.
+- **Add a manual-verification hook on an existing dev surface** whenever a fix or feature would benefit from it and a dev-only path already exists (Dev Lab, dev-test-user presets, etc.) — a quick toggle/button/preset there instead of (or alongside) an automated check, so emci can tap and confirm it without another investigation round. Applies anywhere a dev surface reasonably fits, not just onboarding/intake.
+- **Do not run the full gate** (typecheck/lint/`check:ota-gate`) automatically before commit/push. Only run it when emci explicitly asks. If a change looks risky enough to warrant it, say so and recommend it — don't run it unprompted.
+
 ## Snapshot (Sep 2, 2026)
 
 - Branch: `master` @ `2bfbbc7` — audit remediation Phases 0-3, all pushed and published.
