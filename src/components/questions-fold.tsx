@@ -444,9 +444,6 @@ export function QuestionsFold({
         locked={fullProfileLocked}
         onSaveBatch={saveBankAnswers}
       />
-      {fullProfileLocked ? (
-        <OngoingRoundFold me={me} history={history} tracks={tracks ?? []} onUpdated={onUpdated} />
-      ) : null}
       {checkpoint ? (
         <>
           <ThemedText>{QUESTIONS_CHECKPOINT}</ThemedText>
