@@ -13,7 +13,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BornOnFields } from '@/components/born-on-fields';
 import { CityPicker } from '@/components/city-picker';
 import { CoreIntakeSweep } from '@/components/core-intake-sweep';
-import { OptionalGate, OptionalIntakeSweep } from '@/components/optional-intake';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -31,14 +30,7 @@ import {
   type KnocksChip,
   type SupportStyle,
 } from '@/lib/intake';
-import { createMe, errorMessageForHandle, TalkStyle, updateTraits, checkHandleAvailable, handleFormatError, normalizeHandle } from '@/lib/me';
-import {
-  OPTIONAL_INTAKE_TOTAL,
-  writeForOptionalScreen,
-  type OptionalScreen,
-  type TraitAxis,
-  type TraitSource,
-} from '@/lib/traits';
+import { createMe, errorMessageForHandle, TalkStyle, checkHandleAvailable, handleFormatError, normalizeHandle } from '@/lib/me';
 import { slugifyCity } from '@/lib/around/slug';
 import { DEFAULT_AROUND_CITY } from '@/constants/around-cities';
 import { useMeContext } from '@/lib/me-context';
@@ -52,15 +44,13 @@ import {
 import { clearLocalSession } from '@/lib/supabase';
 import { withTimeout } from '@/lib/timeout';
 
-type Phase = 'account' | 'intake' | 'optional-gate' | 'optional';
+type Phase = 'account' | 'intake';
 
 export default function OnboardingScreen() {
   const theme = useTheme();
   const { refresh } = useMeContext();
 
   const [phase, setPhase] = useState<Phase>('account');
-  const [createdUserId, setCreatedUserId] = useState<string | null>(null);
-  const [optionalAnswers, setOptionalAnswers] = useState<Partial<Record<OptionalScreen, string>>>({});
 
   const [name, setName] = useState('');
   const [handle, setHandle] = useState('');
@@ -253,7 +243,7 @@ export default function OnboardingScreen() {
     console.log('[onboarding] submit start');
 
     try {
-      const created = await withTimeout(
+      await withTimeout(
         createMe({
           name: name.trim(),
           handle: normalizeHandle(handle),
@@ -274,8 +264,7 @@ export default function OnboardingScreen() {
         'createMe',
       );
       console.log('[onboarding] createMe succeeded');
-      setCreatedUserId(created.id);
-      setPhase('optional-gate');
+      await refreshAndGoHome();
     } catch (err) {
       const e = err as { message?: string; code?: string; details?: string; hint?: string };
       console.log('[onboarding] createMe raw error:', JSON.stringify(e));
@@ -301,46 +290,6 @@ export default function OnboardingScreen() {
     } catch (err) {
       console.log('[onboarding] refresh error:', err);
       setFormError('Saved. Open the app again if Home does not show yet.');
-    }
-  }
-
-  async function goHome() {
-    if (busy) return;
-    setBusy(true);
-    try {
-      await refreshAndGoHome();
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function submitOptional() {
-    if (!createdUserId || busy) return;
-    const incoming: Partial<Record<TraitAxis, number>> = {};
-    const allowed: TraitAxis[] = [];
-    let source: Exclude<TraitSource, 'self_confirm'> | null = null;
-    for (let i = 0; i < OPTIONAL_INTAKE_TOTAL; i++) {
-      const write = writeForOptionalScreen({
-        screen: i as OptionalScreen,
-        optionId: optionalAnswers[i as OptionalScreen] ?? null,
-      });
-      if (!write) continue;
-      Object.assign(incoming, write.incoming);
-      allowed.push(...write.allowed);
-      source = write.source;
-    }
-    setBusy(true);
-    setFormError(null);
-    try {
-      if (source && Object.keys(incoming).length > 0) {
-        await withTimeout(updateTraits(createdUserId, incoming, source, allowed), 15000, 'updateTraits');
-      }
-      await refreshAndGoHome();
-    } catch (err) {
-      console.log('[onboarding] updateTraits error:', err);
-      setFormError('Couldn\u2019t save those extra bits. Skip or try again.');
-    } finally {
-      setBusy(false);
     }
   }
 
@@ -423,30 +372,6 @@ export default function OnboardingScreen() {
                 onBack={() => {
                   setFormError(null);
                   setPhase('account');
-                }}
-              />
-            ) : phase === 'optional-gate' ? (
-              <OptionalGate
-                busy={busy}
-                onSkip={() => void goHome()}
-                onAdd={() => {
-                  setFormError(null);
-                  setPhase('optional');
-                }}
-              />
-            ) : phase === 'optional' ? (
-              <OptionalIntakeSweep
-                answers={optionalAnswers}
-                busy={busy}
-                formError={formError}
-                onSelect={(screen, value) => {
-                  setOptionalAnswers((prev) => ({ ...prev, [screen]: value }));
-                }}
-                onSubmit={() => void submitOptional()}
-                onSkip={() => void goHome()}
-                onBack={() => {
-                  setFormError(null);
-                  setPhase('optional-gate');
                 }}
               />
             ) : null}
