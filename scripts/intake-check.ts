@@ -92,7 +92,7 @@ async function main() {
   assert.match(meLib, /export function handleFormatError/);
   assert.match(meLib, /That handle is reserved/);
   assert.match(meLib, /export async function checkHandleAvailable/);
-  assert.match(meLib, /public_profile/);
+  assert.match(meLib, /rpc\('handle_taken'/);
   assert.match(onboarding, /checkHandleAvailable/);
   assert.match(onboarding, /continueFromAccount/);
   assert.match(onboarding, /onHandleBlur/);

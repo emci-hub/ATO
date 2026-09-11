@@ -816,7 +816,12 @@ export function handleFormatError(raw: string): string | null {
 
 /**
  * Live uniqueness check for the account step. Reserved names fail here too.
- * createMe still enforces unique/reserved at insert (race after this check).
+ *
+ * Uses handle_taken (wave64), which reads public.me directly and so sees
+ * handles owned by hidden/paused accounts. public_profile must never be used
+ * here: it is visibility-filtered, so a taken handle read as available and
+ * only failed later at insert. createMe still enforces unique/reserved at
+ * insert — that is the race guard, not the primary check.
  */
 export async function checkHandleAvailable(
   raw: string,
@@ -824,10 +829,9 @@ export async function checkHandleAvailable(
   const format = handleFormatError(raw);
   if (format) return { ok: false, message: format };
   const handle = normalizeHandle(raw);
-  const { data, error } = await supabase.rpc('public_profile', { p_handle: handle });
+  const { data, error } = await supabase.rpc('handle_taken', { p_handle: handle });
   if (error) return { ok: false, message: "Couldn't check that handle. Try again." };
-  const rows = Array.isArray(data) ? data : data ? [data] : [];
-  if (rows.length > 0) return { ok: false, message: 'That handle is already taken' };
+  if (data === true) return { ok: false, message: 'That handle is already taken' };
   return { ok: true, handle };
 }
 
