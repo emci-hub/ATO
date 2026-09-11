@@ -94,6 +94,15 @@ import {
   writeAskOverride,
   writeSlotOverride,
 } from '@/lib/dev-overrides';
+import {
+  DEV_INTAKE_STAGES,
+  type DevIntakeStageId,
+} from '@/lib/dev-intake-stages';
+import { DEV_TEST_USER_ID, applyDevIntakeStagePreset } from '@/lib/dev-test-user';
+import { bankTotalProgress } from '@/lib/questions/local';
+import { legendsUnlocked, sageUnlocked } from '@/lib/questions/progressive-unlock';
+import { fetchTraitTracks } from '@/lib/trait-tracks-store';
+import type { TraitTrack } from '@/lib/trait-stability';
 import { routeVoiceCard } from '@/lib/voice/router';
 import type { VoiceCardResult, VoiceMe } from '@/lib/voice/types';
 import { resolveAsk, type AskPick } from '@/lib/ask';
@@ -196,6 +205,7 @@ function DevLab() {
           <View style={styles.section}>
             <ThemedText type="smallBold">You</ThemedText>
             {canSeeHubSection('traits', gate) ? <TraitViewer /> : null}
+            <IntakeStagePresets />
             <GrowthPreview />
             <BandDetailStepper />
             <ForceTestError message="Dev Lab test error — You" />
@@ -892,6 +902,89 @@ function BandDetailStepper() {
           No filled bands on this account.
         </ThemedText>
       )}
+    </View>
+  );
+}
+
+/**
+ * Intake-stage seeding. Pre-launch only, and only while signed in as the fixed
+ * dev-test user — applyDevIntakeStagePreset refuses anything else server-side
+ * of the guard too, so this is a convenience gate, not the only one.
+ */
+function IntakeStagePresets() {
+  const { me, refresh } = useMeContext();
+  const isDevUser = !!me && me.id === DEV_TEST_USER_ID;
+  const [tracks, setTracks] = useState<TraitTrack[]>([]);
+  const [busy, setBusy] = useState<DevIntakeStageId | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isDevUser || !me) return;
+    let active = true;
+    fetchTraitTracks(me.id)
+      .then((rows) => {
+        if (active) setTracks(rows);
+      })
+      .catch(() => {
+        if (active) setTracks([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [isDevUser, me]);
+
+  if (!PRE_LAUNCH_DEV || !isDevUser) return null;
+
+  const progress = bankTotalProgress(tracks);
+
+  async function applyStage(stage: DevIntakeStageId) {
+    if (busy) return;
+    setBusy(stage);
+    setError(null);
+    try {
+      await applyDevIntakeStagePreset(stage);
+      await refresh();
+      if (me) setTracks(await fetchTraitTracks(me.id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not apply that stage.');
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Intake stage</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Seeds @atodev straight to an onboarding/intake state by writing per-axis
+        trait_tracks answer_count. The real sageUnlocked/legendsUnlocked
+        predicates then read it normally — nothing is stubbed. Pre-launch and
+        dev-test user only; invisible to every other account.
+      </ThemedText>
+      <ThemedText type="code" themeColor="textSecondary">
+        {progress.answered}/{progress.total} · Sage{' '}
+        {sageUnlocked(tracks) ? 'unlocked' : 'locked'} · Legends{' '}
+        {legendsUnlocked(tracks) ? 'unlocked' : 'locked'}
+      </ThemedText>
+      {error ? <ThemedText type="small">{error}</ThemedText> : null}
+      {DEV_INTAKE_STAGES.map((stage) => (
+        <View key={stage.stage}>
+          <Chip
+            label={busy === stage.stage ? 'applying…' : stage.label}
+            selected={false}
+            onPress={() => void applyStage(stage.stage)}
+          />
+          <ThemedText type="small" themeColor="textSecondary">
+            {stage.hint}
+          </ThemedText>
+        </View>
+      ))}
+      <ThemedText type="small" themeColor="textSecondary">
+        Fresh signup does not reopen the &quot;Introduce yourself&quot; form: that
+        screen only renders when there is no me row, and deleting the me row
+        would delete the @atodev identity itself. It resets everything the form
+        would have written.
+      </ThemedText>
     </View>
   );
 }

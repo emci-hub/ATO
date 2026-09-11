@@ -37,6 +37,14 @@ import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { STABILITY_FLOOR_N, TITLE_STABLE_MIN, type TraitTrack } from '@/lib/trait-stability';
 import { upsertTraitTracks } from '@/lib/trait-tracks-store';
+import {
+  DEV_INTAKE_PRESET_SOURCE,
+  DEV_INTAKE_PRESET_VALUES,
+  devIntakeAnswerPlan,
+  devIntakeStageById,
+  devIntakeTracks,
+  type DevIntakeStageId,
+} from '@/lib/dev-intake-stages';
 
 export const DEV_TEST_HANDLE = 'atodev';
 export const DEV_TEST_USER_ID = 'a70d3e0e-4c00-4a1e-8c0d-00000000d3e0';
@@ -327,5 +335,92 @@ export async function applyDevThinProfilePreset(): Promise<void> {
   await upsertTraitTracks(
     user.id,
     devTracks(null, THIN_PRESET_ANSWER_COUNT, 0, new Date().toISOString()),
+  );
+}
+
+/**
+ * The onboarding "intake" preference taps, cleared by the fresh stage so the
+ * account reads as a signup that has answered nothing yet. All nullable
+ * (wave23 dropped NOT NULL on the first four; stage9_intake_core added the
+ * rest nullable). `recovery_style` is a parameter of the wave23 RPC but is
+ * never collected by the live onboarding screen, so it is deliberately not
+ * listed here.
+ */
+const DEV_INTAKE_PREFERENCE_COLUMNS = [
+  'show_up',
+  'talk_style',
+  'knocks_you_off',
+  'morning_cue',
+  'evening_wind_down',
+  'energy_pattern',
+  'support_style',
+  'current_focus',
+] as const;
+
+/**
+ * Jumps the signed-in dev-test user to one onboarding/intake stage.
+ *
+ * KNOWN LIMIT on 'fresh': the me row itself is NOT deleted. The onboarding
+ * screen renders only under `guard={isAuthed && !hasMe}` (src/app/_layout.tsx),
+ * so replaying the "Introduce yourself" form would mean deleting the row that
+ * IS the @atodev identity — and wave20-era grants give the client no delete on
+ * it. This stage resets what the intake forms wrote — traits, sources,
+ * tracks, the preference taps — but deliberately NOT the account facts the
+ * identity depends on (`born_on`, `timezone`, handle, name), and not
+ * `sage_knows`. It does not put the onboarding form back on screen. The
+ * separate presence-streak `milestones_celebrated` state is left alone too:
+ * it is driven by Checks, not by intake.
+ */
+export async function applyDevIntakeStagePreset(
+  stageId: DevIntakeStageId,
+): Promise<void> {
+  if (!PRE_LAUNCH_DEV) throw new Error('Dev intake presets are pre-launch only');
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.id !== DEV_TEST_USER_ID) {
+    throw new Error('Dev intake presets only apply to the fixed dev-test user');
+  }
+
+  const stage = devIntakeStageById(stageId);
+  if (!stage) throw new Error(`Unknown dev intake stage: ${stageId}`);
+
+  const nowIso = new Date().toISOString();
+  const patch: Record<string, unknown> = {};
+
+  if (stage.clearsProfile) {
+    for (const axis of TRAIT_AXES) patch[axis] = null;
+    patch.trait_sources = {};
+    patch.trait_touched_at = {};
+    for (const column of DEV_INTAKE_PREFERENCE_COLUMNS) patch[column] = null;
+  } else {
+    const traitSources: Record<string, string> = {};
+    const traitTouchedAt: Record<string, string> = {};
+    for (const axis of TRAIT_AXES) {
+      patch[axis] = DEV_INTAKE_PRESET_VALUES[axis];
+      traitSources[axis] = DEV_INTAKE_PRESET_SOURCE;
+      traitTouchedAt[axis] = nowIso;
+    }
+    patch.trait_sources = traitSources;
+    patch.trait_touched_at = traitTouchedAt;
+  }
+
+  // Cleared on EVERY stage, not just fresh: jumping legends -> sage-boundary
+  // and back is the whole point of the tool, and a celebration that already
+  // fired would never fire again on the way back up.
+  // NOT NULL default '{}' (wave43) — empty array, never null.
+  patch.celebrated_milestone_ids = [];
+
+  const { error } = await supabase.from('me').update(patch).eq('id', user.id);
+  if (error) throw error;
+
+  await upsertTraitTracks(
+    user.id,
+    devIntakeTracks(
+      stage.clearsProfile ? null : DEV_INTAKE_PRESET_VALUES,
+      devIntakeAnswerPlan(stage.answered),
+      nowIso,
+    ),
   );
 }

@@ -1,5 +1,5 @@
 /**
- * Dev-test identity + archetype presets.
+ * Dev-test identity, archetype presets, and intake-stage seeding.
  * Run: npm run check:dev-test-user
  *
  * Static gate for the pre-launch Legends persona-switch system:
@@ -12,6 +12,11 @@
  *     64-archetype code (core loop redesign §4) — so applying a preset makes
  *     Legends compute that preset's code and no other
  *
+ *   - the intake-stage presets (dev test seeding) plan exactly N answers
+ *     across the real 50-question bank and land on the correct side of the
+ *     Sage (25) and Legends (50) thresholds, checked against the live
+ *     predicates rather than a mirror
+ *
  * Midpoint split mirrors src/lib/legends64/classify.ts's midpointHighLow
  * (>= 0.5 is high, everything else is low, no mid band — unlike the old
  * 0.67/0.33-banded matcher this replaced, every value resolves to a pole).
@@ -19,6 +24,26 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+
+import {
+  DEV_INTAKE_PRESET_SOURCE,
+  DEV_INTAKE_PRESET_VALUES,
+  DEV_INTAKE_STAGES,
+  SCENARIO_PHASE_ANSWERS,
+  devIntakeAnswerPlan,
+  devIntakeStageById,
+  devIntakeTracks,
+} from '../src/lib/dev-intake-stages';
+import { bankQuestionCount, bankTotalProgress } from '../src/lib/questions/local';
+import {
+  LEGENDS_UNLOCK_THRESHOLD,
+  SAGE_UNLOCK_THRESHOLD,
+  legendsUnlocked,
+  sageUnlocked,
+} from '../src/lib/questions/progressive-unlock';
+import { DIRECT_TRAIT_SOURCES } from '../src/lib/traits';
+import { SCENARIO_QUESTIONS } from '../src/lib/vibe-check';
+import type { TraitTrack } from '../src/lib/trait-stability';
 
 let passed = 0;
 function ok(label: string) {
@@ -261,6 +286,193 @@ function main() {
   assert.match(legendsSrc, /Thin profile/);
   ok('Legends dev strip exposes the thin-profile preset');
 
+  /* -------------------------------------------------------------------------
+   * Intake-stage presets (dev test seeding).
+   *
+   * Unlike the archetype block above, these assertions run the REAL functions
+   * (dev-intake-stages.ts is deliberately supabase-free so it can be imported
+   * here) against the REAL unlock predicates — so a bank edit that changes an
+   * axis's question count, or a threshold change, fails here rather than
+   * silently seeding a preset onto the wrong side of a boundary.
+   * ---------------------------------------------------------------------- */
+  const stagesSrc = read('src/lib/dev-intake-stages.ts');
+
+  assert.equal(DEV_INTAKE_STAGES.length, 5, 'expected exactly 5 intake stages');
+  const stageIds = DEV_INTAKE_STAGES.map((row) => row.stage);
+  assert.deepEqual(stageIds, [
+    'fresh',
+    'scenarios-only',
+    'sage-boundary',
+    'pre-legends',
+    'legends',
+  ]);
+  for (const axis of TRAIT_AXES) {
+    assert.ok(
+      typeof (DEV_INTAKE_PRESET_VALUES as Record<string, number>)[axis] === 'number',
+      `intake preset values missing axis ${axis}`,
+    );
+  }
+  assert.equal(Object.keys(DEV_INTAKE_PRESET_VALUES).length, TRAIT_AXES.length);
+  ok('5 intake stages in flow order, preset vector covers all 16 axes');
+
+  // The optional phase is 8 two-axis scenarios writing self_scenario, which
+  // trackKindForSource routes to the REPORT track — so it leaves 16 answers
+  // on the counter, not 0. Seeding 0 would test a state no user can reach.
+  const traitsSrc = read('src/lib/traits.ts');
+  const stabilitySrcForScenario = read('src/lib/trait-stability.ts');
+  assert.equal(Number(/OPTIONAL_INTAKE_TOTAL = (\d+)/.exec(traitsSrc)?.[1]) * 2, SCENARIO_PHASE_ANSWERS);
+  assert.match(stabilitySrcForScenario, /source === 'self_game' \? 'game' : 'report'/);
+  // Each of the 8 scenarios covers 2 axes and no axis twice — that is what
+  // makes "one answer on every axis" true, and 16 the right number.
+  const scenarioAxes = SCENARIO_QUESTIONS.flatMap((row) => [...row.axes]);
+  assert.equal(scenarioAxes.length, SCENARIO_PHASE_ANSWERS);
+  assert.equal(new Set(scenarioAxes).size, SCENARIO_PHASE_ANSWERS, 'an axis is covered twice');
+  assert.equal(devIntakeStageById('scenarios-only')?.answered, SCENARIO_PHASE_ANSWERS);
+  assert.ok(SCENARIO_PHASE_ANSWERS < SAGE_UNLOCK_THRESHOLD, 'scenarios alone must not unlock Sage');
+  ok(`scenarios-only seeds ${SCENARIO_PHASE_ANSWERS}/50 — what a real scenario pass leaves — and stays under the Sage threshold`);
+
+  // The scenario phase must lock its axes against later inferred writes, or
+  // the "scenarios-only" state does not actually reproduce what the optional
+  // phase leaves behind.
+  assert.ok(
+    (DIRECT_TRAIT_SOURCES as readonly string[]).includes(DEV_INTAKE_PRESET_SOURCE),
+    `${DEV_INTAKE_PRESET_SOURCE} must be a DIRECT trait source`,
+  );
+  ok(`intake preset source (${DEV_INTAKE_PRESET_SOURCE}) is a direct, sticky source`);
+
+  /**
+  * Calls the REAL writer the preset uses, so a regression that wrote the
+  * plan to the wrong track or halved the counts fails here rather than
+  * passing against a check-local copy of the same logic.
+  */
+  function tracksFromPlan(plan: Record<string, number>): TraitTrack[] {
+    return devIntakeTracks(null, plan as never, "2026-01-01T00:00:00.000Z");
+  }
+  // Every plan must respect each axis's real bank size and sum to the target.
+  const bankTotal = bankTotalProgress([]).total;
+  assert.equal(bankTotal, 50, 'bank total must be 50 — thresholds are written against it');
+  for (let n = 0; n <= bankTotal; n++) {
+    const plan = devIntakeAnswerPlan(n);
+    let sum = 0;
+    for (const axis of TRAIT_AXES) {
+      const count = plan[axis as keyof typeof plan];
+      assert.ok(count >= 0, `${axis} plan went negative at n=${n}`);
+      assert.ok(
+        count <= bankQuestionCount([axis as never]),
+        `${axis} plan ${count} exceeds its bank size at n=${n}`,
+      );
+      sum += count;
+    }
+    assert.equal(sum, n, `plan for ${n} sums to ${sum}`);
+    // The live predicate must agree with the plan, not just the arithmetic.
+    assert.equal(bankTotalProgress(tracksFromPlan(plan)).answered, n);
+  }
+  ok('devIntakeAnswerPlan sums to the target and stays inside every axis cap for 0..50');
+
+  assert.throws(
+    () => devIntakeAnswerPlan(bankTotal + 1),
+    /Cannot plan/,
+    'a plan bigger than the bank must throw, not clamp',
+  );
+  ok('devIntakeAnswerPlan refuses a total the bank cannot hold');
+
+  // The values branch of the writer — used by 4 of the 5 stages — must put
+  // each axis's own value on both of its rows, and the clearing branch must
+  // fall back to the mid carrier the NOT NULL column needs.
+  const filled = devIntakeTracks(
+    DEV_INTAKE_PRESET_VALUES,
+    devIntakeAnswerPlan(SCENARIO_PHASE_ANSWERS),
+    '2026-01-01T00:00:00.000Z',
+  );
+  assert.equal(filled.length, TRAIT_AXES.length * 2);
+  for (const row of filled) {
+    assert.equal(
+      row.value,
+      (DEV_INTAKE_PRESET_VALUES as Record<string, number>)[row.axis],
+      `${row.axis}/${row.track} carries the wrong value`,
+    );
+  }
+  assert.ok(
+    devIntakeTracks(null, devIntakeAnswerPlan(0), '2026-01-01T00:00:00.000Z').every(
+      (row) => row.value === 0.5 && row.answerCount === 0,
+    ),
+    'the clearing branch must write the mid carrier at answer_count 0',
+  );
+  ok('devIntakeTracks maps each axis to its own value, and clears to the mid carrier');
+
+  // The boundaries emci actually tests: 24/25 for Sage, 49/50 for Legends.
+  const expectations: [number, boolean, boolean][] = [
+    [0, false, false],
+    [SAGE_UNLOCK_THRESHOLD - 1, false, false],
+    [SAGE_UNLOCK_THRESHOLD, true, false],
+    [LEGENDS_UNLOCK_THRESHOLD - 1, true, false],
+    [LEGENDS_UNLOCK_THRESHOLD, true, true],
+  ];
+  for (const [answered, sage, legends] of expectations) {
+    const tracks = tracksFromPlan(devIntakeAnswerPlan(answered));
+    assert.equal(sageUnlocked(tracks), sage, `sageUnlocked at ${answered}`);
+    assert.equal(legendsUnlocked(tracks), legends, `legendsUnlocked at ${answered}`);
+  }
+  ok('24 does not unlock Sage, 25 does; 49 does not unlock Legends, 50 does');
+
+  // Each stage's declared `answered` must land on the side of the boundary its
+  // label claims — this is what stops a renamed/retargeted stage lying.
+  const stageUnlocks: Record<string, [boolean, boolean]> = {
+    fresh: [false, false],
+    'scenarios-only': [false, false],
+    'sage-boundary': [true, false],
+    'pre-legends': [true, false],
+    legends: [true, true],
+  };
+  for (const stage of DEV_INTAKE_STAGES) {
+    const tracks = tracksFromPlan(devIntakeAnswerPlan(stage.answered));
+    const [sage, legends] = stageUnlocks[stage.stage];
+    assert.equal(sageUnlocked(tracks), sage, `${stage.stage} Sage state`);
+    assert.equal(legendsUnlocked(tracks), legends, `${stage.stage} Legends state`);
+    assert.equal(
+      devIntakeStageById(stage.stage)?.answered,
+      stage.answered,
+      `${stage.stage} lookup`,
+    );
+  }
+  // Only 'fresh' wipes the profile; the rest differ by answer count alone.
+  assert.deepEqual(
+    DEV_INTAKE_STAGES.filter((row) => row.clearsProfile).map((row) => row.stage),
+    ['fresh'],
+  );
+  ok('every stage lands on the Sage/Legends side its label claims; only fresh clears the profile');
+
+  // Same guards as the archetype presets, and the same no-delete rule.
+  const intakeStart = moduleSrc.indexOf('export async function applyDevIntakeStagePreset');
+  assert.ok(intakeStart >= 0, 'applyDevIntakeStagePreset must exist');
+  const intakeBody = moduleSrc.slice(intakeStart);
+  assert.match(intakeBody, /if \(!PRE_LAUNCH_DEV\) throw new Error/);
+  assert.match(intakeBody, /user\.id !== DEV_TEST_USER_ID/);
+  assert.match(intakeBody, /upsertTraitTracks/);
+  assert.equal(
+    intakeBody.match(/\.from\('trait_tracks'\)[\s\S]{0,80}?\.delete\(\)/),
+    null,
+    'intake preset must not delete trait_tracks (delete is revoked)',
+  );
+  assert.equal(
+    intakeBody.match(/\.from\('me'\)[\s\S]{0,120}?\.delete\(\)/),
+    null,
+    'intake preset must never delete the me row',
+  );
+  assert.match(intakeBody, /celebrated_milestone_ids = \[\]/);
+  ok('applyDevIntakeStagePreset carries both guards, upserts tracks, deletes nothing, and resets milestone celebrations on fresh');
+
+  // The pure module must stay importable by this check — no supabase client.
+  assert.doesNotMatch(stagesSrc, /from '@\/lib\/supabase'/);
+  ok('dev-intake-stages stays supabase-free so these assertions run the real functions');
+
+  // The Dev Lab surface is gated twice: pre-launch, and the dev-test user.
+  const hubSrc = read('src/app/dev-lab.tsx');
+  assert.match(hubSrc, /function IntakeStagePresets\(\)/);
+  assert.match(hubSrc, /if \(!PRE_LAUNCH_DEV \|\| !isDevUser\) return null/);
+  assert.match(hubSrc, /me\.id === DEV_TEST_USER_ID/);
+  assert.match(hubSrc, /applyDevIntakeStagePreset/);
+  ok('Dev Lab intake-stage panel is gated on PRE_LAUNCH_DEV and the dev-test user id');
   console.log(`\n${passed}/${passed} dev-test-user checks passed.`);
 }
 
