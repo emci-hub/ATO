@@ -64,14 +64,18 @@ const MAP_PROPS: Record<string, readonly PropSpec[]> = {
   trial: [
     { role: 'prop.tree', x: 5, y: 6, size: 15, h: 17.5, rotate: 0 },
     { role: 'prop.tree', x: 95, y: 6, size: 15, h: 17.5, rotate: 90 },
-    { role: 'prop.tree', x: 6, y: 92, size: 15, h: 17.5, rotate: 270 },
+    // (6,92) sat on the locked ATO road — moved to the clear bottom band.
+    { role: 'prop.tree', x: 20, y: 97, size: 13, h: 15, rotate: 270 },
     { role: 'prop.tree', x: 94, y: 92, size: 15, h: 17.5, rotate: 180 },
-    { role: 'prop.bush', x: 30, y: 10, size: 9, h: 8, rotate: 0 },
+    // (30,10) sat on the locked road — moved to the clear top band.
+    { role: 'prop.bush', x: 33, y: 3, size: 9, h: 8, rotate: 0 },
     { role: 'prop.bush', x: 74, y: 30, size: 9, h: 8, rotate: 180 },
     { role: 'prop.bush', x: 74, y: 48, size: 9, h: 8, rotate: 90 },
-    { role: 'prop.stone', x: 36, y: 70, size: 8, h: 6, rotate: 0 },
+    // (36,70) sat on the locked road — moved to the clear bottom band.
+    { role: 'prop.stone', x: 58, y: 97, size: 7, h: 5, rotate: 0 },
     { role: 'prop.stone', x: 18, y: 6, size: 7, h: 5, rotate: 45 },
-    { role: 'prop.grass', x: 58, y: 12, size: 6, h: 7, rotate: 0 },
+    // (58,12) sat on the locked road — moved to the clear top band.
+    { role: 'prop.grass', x: 55, y: 3, size: 6, h: 7, rotate: 0 },
     { role: 'prop.grass', x: 72, y: 50, size: 6, h: 7, rotate: 90 },
     { role: 'prop.fence', x: 44, y: 4, size: 12, h: 7, rotate: 0 },
   ],
@@ -276,4 +280,58 @@ export function roadDecor(map: DefendMap): RoadStamp[] {
   }
 
   return stamps;
+}
+
+/* -------------------------------------------------------------- ato ghost --- */
+
+/**
+ * ATO 16×16 logo mask, baked from `games/grove/ref/ato-map/ato-map.tmx`
+ * (Tile Layer 1 CSV). `10` = a drawn ATO cell, `28` = ground. It is painted as
+ * ONE faint SVG path UNDER the road (see `defend-screen`) — pure decor: the
+ * gameplay layer is `pointerEvents="none"`, so the ghost can never own a tap,
+ * and it never touches the waypoint polyline the pips walk.
+ *
+ * To flip the mask polarity, change the `'10'` test in `buildAtoGhostD`.
+ */
+const ATO_GHOST_CSV: readonly string[] = [
+  '28,28,28,28,28,28,28,28,28,28,28,28,28,10,10,28',
+  '28,10,10,10,10,10,10,28,28,10,10,10,10,10,10,28',
+  '28,10,10,10,10,10,10,28,28,10,10,10,10,10,10,28',
+  '28,10,10,28,28,10,10,28,28,10,10,28,28,28,28,28',
+  '28,10,10,28,28,10,10,28,28,10,10,28,28,28,28,28',
+  '28,10,10,10,10,10,10,28,28,10,10,10,10,10,10,28',
+  '28,10,10,10,10,10,10,28,28,10,10,10,10,10,10,28',
+  '28,10,10,28,28,10,10,28,28,10,10,28,28,10,10,28',
+  '28,10,10,28,28,10,10,28,28,10,10,28,28,10,10,28',
+  '28,10,10,28,28,10,10,28,28,10,10,10,10,10,10,28',
+  '28,10,10,28,28,10,10,28,28,10,10,10,10,10,10,28',
+  '28,10,10,28,28,10,10,28,28,28,28,28,28,10,10,28',
+  '28,10,10,28,28,10,10,28,28,28,28,28,28,10,10,28',
+  '28,10,10,28,28,10,10,10,10,10,10,10,10,10,10,28',
+  '10,10,10,28,28,10,10,10,10,10,10,10,10,10,10,28',
+  '10,10,10,28,28,28,28,28,28,28,28,28,28,28,28,28',
+];
+
+/** Edge of one ATO ghost cell, board units (16 cells across the 0..100 board). */
+export const ATO_GHOST_CELL = 100 / ATO_GHOST_CSV.length;
+
+/** Hairline overlap so neighbouring cells don't leak anti-aliased seams. */
+const ATO_GHOST_BLEED = 0.05;
+
+/** One SVG path `d` for the whole ATO ghost (0..100 board viewBox). */
+export const ATO_GHOST_D: string = buildAtoGhostD();
+
+function buildAtoGhostD(): string {
+  const cell = ATO_GHOST_CELL;
+  const size = cell + ATO_GHOST_BLEED;
+  const parts: string[] = [];
+  ATO_GHOST_CSV.forEach((row, y) => {
+    row.split(',').forEach((value, x) => {
+      if (value.trim() !== '10') return;
+      const px = x * cell;
+      const py = y * cell;
+      parts.push(`M ${px} ${py} h ${size} v ${size} h ${-size} Z`);
+    });
+  });
+  return parts.join(' ');
 }

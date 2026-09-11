@@ -12,8 +12,8 @@
  * Maps (Phase B — GAME_SPEC §9e): the Trial map reuses the original Grove
  * Path (one path, spawn left → two bends → exit right); the Main campaign map
  * lives in `data/maps/divecore_main.json` (a longer S-curve + chokes). Both
- * are `DefendMap`s of waypoints (0..1 board fractions) + six tower pads
- * (0..100 board units). A `DefendLive` carries its own `mapId`, so one screen
+ * are `DefendMap`s of waypoints (0..1 board fractions) + tower pads (0..100
+ * board units). A `DefendLive` carries its own `mapId`, so one screen
  * can switch maps between waves without global state. No SakPix — placeholder
  * circles only.
  *
@@ -53,7 +53,7 @@ export type DefendMapId = 'trial' | 'main';
 
 export type DefendWaypoint = { x: number; y: number };
 
-/** One board: the road the puffs walk (waypoints 0..1) + six tower pads
+/** One board: the road the puffs walk (waypoints 0..1) + tower pads
  * (board units 0..100). Content-driven — new maps are new JSON, no engine. */
 export type DefendMap = {
   id: DefendMapId;
@@ -63,23 +63,55 @@ export type DefendMap = {
   pads: readonly DefendWaypoint[];
 };
 
-/** Trial map = the original Grove Path (spawn left → 2 bends → exit right). */
+/**
+ * Trial map — the LOCKED ATO path (games/grove/ref/ato-map/PATH_LOCKED.md,
+ * 2026-09-11). Waypoints are 0..1 board fractions in path order; repeated
+ * vertices are intentional joins where the road loops back on itself, so the
+ * creeps retrace those spans (the `o` loop). Do not "dedupe" them.
+ *
+ * Pads are 0..100 board units and cover every listed slot (15); the deploy cap
+ * (MAX_TOWERS) is what limits a run to six towers, not the pad count.
+ */
 export const TRIAL_MAP: DefendMap = {
   id: 'trial',
   name: 'Grove Path',
   path: [
-    { x: 0, y: 0.2 }, // spawn, left edge
-    { x: 0.52, y: 0.2 }, // bend 1
-    { x: 0.52, y: 0.6 }, // bend 2
-    { x: 1, y: 0.6 }, // exit / leak
+    { x: 0.0625, y: 0.9375 }, // 0  (1,15) spawn
+    { x: 0.125, y: 0.9375 }, // 1  (2,15)
+    { x: 0.125, y: 0.375 }, // 2  (2,6)
+    { x: 0.375, y: 0.375 }, // 3  (6,6)
+    { x: 0.375, y: 0.125 }, // 4  (6,2)
+    { x: 0.125, y: 0.125 }, // 5  (2,2)
+    { x: 0.125, y: 0.375 }, // 6  (2,6)  ← join (retraces 2)
+    { x: 0.375, y: 0.375 }, // 7  (6,6)  ← join (retraces 3)
+    { x: 0.375, y: 0.875 }, // 8  (6,14)
+    { x: 0.875, y: 0.875 }, // 9  (14,14)
+    { x: 0.875, y: 0.625 }, // 10 (14,10)
+    { x: 0.625, y: 0.625 }, // 11 (10,10)
+    { x: 0.625, y: 0.375 }, // 12 (10,6)
+    { x: 0.875, y: 0.375 }, // 13 (14,6)
+    { x: 0.875, y: 0.625 }, // 14 (14,10) ← join (retraces 10)
+    { x: 0.625, y: 0.625 }, // 15 (10,10) ← join (retraces 11)
+    { x: 0.625, y: 0.125 }, // 16 (10,2)
+    { x: 0.875, y: 0.125 }, // 17 (14,2)
+    { x: 0.875, y: 0 }, // 18 (14,0) exit / leak
   ],
   pads: [
-    { x: 12, y: 10 },
-    { x: 38, y: 10 },
-    { x: 63, y: 26 },
-    { x: 63, y: 48 },
-    { x: 76, y: 70 },
-    { x: 92, y: 48 },
+    { x: 25, y: 25 }, // (4,4)
+    { x: 25, y: 50 }, // (4,8)
+    { x: 25, y: 62.5 }, // (4,10)
+    { x: 25, y: 75 }, // (4,12)
+    { x: 25, y: 87.5 }, // (4,14)
+    { x: 50, y: 12.5 }, // (8,2)
+    { x: 50, y: 25 }, // (8,4)
+    { x: 50, y: 37.5 }, // (8,6)
+    { x: 50, y: 50 }, // (8,8)
+    { x: 50, y: 62.5 }, // (8,10)
+    { x: 50, y: 75 }, // (8,12)
+    { x: 75, y: 25 }, // (12,4)
+    { x: 93.75, y: 25 }, // (15,4)
+    { x: 75, y: 50 }, // (12,8)
+    { x: 68.75, y: 75 }, // (11,12)
   ],
 };
 
@@ -216,6 +248,13 @@ export type TowerDef = {
 
 export const TOWER_MAX_LEVEL = 3;
 
+/**
+ * Max towers on the board at once. Pads are placeable slots (Trial lists 15),
+ * but a run may only deploy six towers — the pad count is geometry, this is the
+ * economy/board cap. Bound Bosses occupy pads separately and do not count.
+ */
+export const MAX_TOWERS = 6;
+
 /** Placeholder stats: archer from GAME_DATA; vine/crystal tuned to its spec
  * role (stall / chunk) until the defs land. One-line changes later. */
 export const TOWER_DEFS: Record<TowerKind, TowerDef> = {
@@ -299,7 +338,7 @@ export type BoundBossTower = {
   skillCooldownMs: number;
 };
 
-/** Max Bound Bosses on the board at once (of 6 pads — §9k). */
+/** Max Bound Bosses on the board at once (§9k). */
 export const BOUND_BOSS_MAX_ON_BOARD = 2;
 
 export type DefendLive = {
@@ -436,6 +475,7 @@ export function placeTower(
 ): DefendLive | null {
   const def = TOWER_DEFS[kind];
   if (state.scrap < def.placeCost) return null;
+  if (state.towers.length >= MAX_TOWERS) return null;
   if (state.towers.some((tower) => tower.pad === pad)) return null;
   return {
     ...state,

@@ -9,9 +9,10 @@
  * rises and the seat resets to Main wave 1. Every run carries its map + cycle
  * power, so puffs get fatter/faster-with-power on later cycles.
  *
- * One board (whichever map the run is on): puff enemies walk the road; six
- * pads hold up to six towers (archer / vine / crystal). Tap a pad to
- * place/upgrade with scrap; a range ring shows while a pad is selected. The
+ * One board (whichever map the run is on): puff enemies walk the road; open
+ * pads hold the towers (archer / vine / crystal), capped at six deployed per
+ * run. Tap a pad to place/upgrade with scrap; a range ring shows while a pad is
+ * selected. The
  * Avatar (placeholder circle) is draggable and auto-attacks the nearest enemy
  * in range; one skill button casts slow_pulse "Root Veil" (12s cooldown).
  * Kills → scrap; leak = fail; a clean wave = win (tokens + XP + campaign
@@ -44,6 +45,7 @@ import {
   DEFEND_MAPS,
   DEFEND_TICK_MS,
   type DefendMap,
+  MAX_TOWERS,
   SKILL_COOLDOWN_MS,
   SKILL_DESCRIPTION,
   SKILL_NAME,
@@ -81,7 +83,7 @@ import {
   skinUnits,
   type SkinRoleId,
 } from '@/play/skin';
-import { boardDecor, roadDecor } from '@/play/board-decor';
+import { boardDecor, roadDecor, ATO_GHOST_D } from '@/play/board-decor';
 import { BOUND_BOSS_MAX_STAR, bossBandFor, boundBossFragmentCost, defaultBoundBossId, getBoundBossDef, isUniqueDrop, previewDropTable, gearScore, recommendedGs, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, typeMatchBonus, type DropPreviewRow, type TypeTag } from '@/play/engine';
 import { formatItemStats, getItemDef } from '@/play/items';
 import {
@@ -907,6 +909,8 @@ export function DefendScreen({
   /** Unlocked Bound Bosses (stars ≥ 1) the player can place. */
   const unlockedBoundBosses = view.boundBosses.filter((bb) => bb.unlocked);
   const boundBossCount = sim?.boundBosses.length ?? 0;
+  /** Board tower cap reached — pads stay open but no more towers can deploy. */
+  const atTowerCap = (sim?.towers.length ?? 0) >= MAX_TOWERS;
   /** The cycle's boss family (one until pack 2) for the fragment preview. */
   const cycleBossId = defaultBoundBossId();
   const cycleBossDef = cycleBossId ? getBoundBossDef(cycleBossId) : undefined;
@@ -1342,6 +1346,14 @@ export function DefendScreen({
                 (click-to-move / pad select). */}
             <View style={styles.boardArt} pointerEvents="none">
             <Svg width="100%" height="100%" viewBox="0 0 100 100">
+              {/* ATO ghost — the 16×16 logo mask baked from `ato-map.tmx`,
+               * painted faint directly UNDER the road so the mark reads through
+               * the board. Pure decor: this whole layer is pointerEvents none,
+               * and the mask never touches the waypoint polyline the puffs walk.
+               * Trial-only for this slice. */}
+              {boardMap.id === 'trial' ? (
+                <Path d={ATO_GHOST_D} fill={theme.accent} fillOpacity={0.07} />
+              ) : null}
               {/* Road — a thin dark underlay bed stroked along the waypoint
                * polyline, then cobble STAMPS (straights + elbow corners + flared
                * ends) centred on the centreline. Waypoints stay the walk truth.
@@ -1687,10 +1699,13 @@ export function DefendScreen({
               </>
             ) : (
               <>
-                <ThemedText type="smallBold">Build a tower</ThemedText>
+                <ThemedText type="smallBold">
+                  Build a tower
+                  {atTowerCap ? ` · ${MAX_TOWERS}/${MAX_TOWERS} deployed` : ` · ${sim?.towers.length ?? 0}/${MAX_TOWERS}`}
+                </ThemedText>
                 {(Object.keys(TOWER_DEFS) as TowerKind[]).map((kind) => {
                   const def = TOWER_DEFS[kind];
-                  const affordable = scrap >= def.placeCost;
+                  const affordable = scrap >= def.placeCost && !atTowerCap;
                   return (
                     <Pressable
                       key={kind}
@@ -1706,6 +1721,7 @@ export function DefendScreen({
                         type="smallBold"
                         themeColor={affordable ? undefined : 'textSecondary'}>
                         {def.name} · {def.placeCost} scrap
+                        {atTowerCap ? ` · max ${MAX_TOWERS}` : ''}
                       </ThemedText>
                     </Pressable>
                   );
