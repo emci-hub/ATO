@@ -9,13 +9,13 @@
  * The Avatar (step 5c) auto-attacks the nearest enemy in range and its skill
  * (slow_pulse) is a pure transition that slows everything in radius.
  *
- * Maps (Phase B — GAME_SPEC §9e): the Trial map reuses the original Grove
- * Path (one path, spawn left → two bends → exit right); the Main campaign map
- * lives in `data/maps/divecore_main.json` (a longer S-curve + chokes). Both
- * are `DefendMap`s of waypoints (0..1 board fractions) + tower pads (0..100
- * board units). A `DefendLive` carries its own `mapId`, so one screen
- * can switch maps between waves without global state. No SakPix — placeholder
- * circles only.
+ * Maps (Phase B — GAME_SPEC §9e): both campaign maps — Trial and Main — share
+ * ONE locked ATO board geometry (`ATO_BOARD_PATH` / `ATO_BOARD_PADS`, baked
+ * from `games/grove/ref/ato-map/PATH_LOCKED.md`, 2026-09-11) and differ only by
+ * `id` + `name`. Both are `DefendMap`s of waypoints (0..1 board fractions) +
+ * tower pads (0..100 board units). A `DefendLive` carries its own `mapId`, so
+ * one screen can switch maps between waves without global state. No SakPix —
+ * placeholder circles only.
  *
  * Forever engine (Phase B): a conquered cycle raises `cyclePower`
  * (1 + conquered × tune step, `CycleScaler` in `engine/cycle.ts`). Each live
@@ -46,15 +46,14 @@ import {
 import { type TypeTag } from '@/play/engine/type-match';
 import { getTune } from '@/play/tune';
 
-import rawMainMap from './data/maps/divecore_main.json';
-
 /* ------------------------------------------------------------------ maps --- */
 export type DefendMapId = 'trial' | 'main';
 
 export type DefendWaypoint = { x: number; y: number };
 
 /** One board: the road the puffs walk (waypoints 0..1) + tower pads
- * (board units 0..100). Content-driven — new maps are new JSON, no engine. */
+ * (board units 0..100). Pure geometry — no engine, no combat numbers. Trial and
+ * Main share `ATO_BOARD_*` today and may diverge into their own packs later. */
 export type DefendMap = {
   id: DefendMapId;
   /** Player-facing map name. */
@@ -64,90 +63,75 @@ export type DefendMap = {
 };
 
 /**
- * Trial map — the LOCKED ATO path (games/grove/ref/ato-map/PATH_LOCKED.md,
- * 2026-09-11). Waypoints are 0..1 board fractions in path order; repeated
- * vertices are intentional joins where the road loops back on itself, so the
- * creeps retrace those spans (the `o` loop). Do not "dedupe" them.
+ * LOCKED ATO board geometry (games/grove/ref/ato-map/PATH_LOCKED.md,
+ * 2026-09-11) — the ONE board both campaign maps use. Waypoints are 0..1 board
+ * fractions in path order; repeated vertices are intentional joins where the
+ * road loops back on itself, so the creeps retrace those spans (the `o` loop).
+ * Do not "dedupe" them.
  *
  * Pads are 0..100 board units and cover every listed slot (15); the deploy cap
  * (MAX_TOWERS) is what limits a run to six towers, not the pad count.
  */
+const ATO_BOARD_PATH: readonly DefendWaypoint[] = [
+  { x: 0.0625, y: 0.9375 }, // 0  (1,15) spawn
+  { x: 0.125, y: 0.9375 }, // 1  (2,15)
+  { x: 0.125, y: 0.375 }, // 2  (2,6)
+  { x: 0.375, y: 0.375 }, // 3  (6,6)
+  { x: 0.375, y: 0.125 }, // 4  (6,2)
+  { x: 0.125, y: 0.125 }, // 5  (2,2)
+  { x: 0.125, y: 0.375 }, // 6  (2,6)  ← join (retraces 2)
+  { x: 0.375, y: 0.375 }, // 7  (6,6)  ← join (retraces 3)
+  { x: 0.375, y: 0.875 }, // 8  (6,14)
+  { x: 0.875, y: 0.875 }, // 9  (14,14)
+  { x: 0.875, y: 0.625 }, // 10 (14,10)
+  { x: 0.625, y: 0.625 }, // 11 (10,10)
+  { x: 0.625, y: 0.375 }, // 12 (10,6)
+  { x: 0.875, y: 0.375 }, // 13 (14,6)
+  { x: 0.875, y: 0.625 }, // 14 (14,10) ← join (retraces 10)
+  { x: 0.625, y: 0.625 }, // 15 (10,10) ← join (retraces 11)
+  { x: 0.625, y: 0.125 }, // 16 (10,2)
+  { x: 0.875, y: 0.125 }, // 17 (14,2)
+  { x: 0.875, y: 0 }, // 18 (14,0) exit / leak
+];
+
+const ATO_BOARD_PADS: readonly DefendWaypoint[] = [
+  { x: 25, y: 25 }, // (4,4)
+  { x: 25, y: 50 }, // (4,8)
+  { x: 25, y: 62.5 }, // (4,10)
+  { x: 25, y: 75 }, // (4,12)
+  { x: 25, y: 87.5 }, // (4,14)
+  { x: 50, y: 12.5 }, // (8,2)
+  { x: 50, y: 25 }, // (8,4)
+  { x: 50, y: 37.5 }, // (8,6)
+  { x: 50, y: 50 }, // (8,8)
+  { x: 50, y: 62.5 }, // (8,10)
+  { x: 50, y: 75 }, // (8,12)
+  { x: 75, y: 25 }, // (12,4)
+  { x: 93.75, y: 25 }, // (15,4)
+  { x: 75, y: 50 }, // (12,8)
+  { x: 68.75, y: 75 }, // (11,12)
+];
+
+/** Trial map — the locked ATO board, campaign opening (Grove Path). */
 export const TRIAL_MAP: DefendMap = {
   id: 'trial',
   name: 'Grove Path',
-  path: [
-    { x: 0.0625, y: 0.9375 }, // 0  (1,15) spawn
-    { x: 0.125, y: 0.9375 }, // 1  (2,15)
-    { x: 0.125, y: 0.375 }, // 2  (2,6)
-    { x: 0.375, y: 0.375 }, // 3  (6,6)
-    { x: 0.375, y: 0.125 }, // 4  (6,2)
-    { x: 0.125, y: 0.125 }, // 5  (2,2)
-    { x: 0.125, y: 0.375 }, // 6  (2,6)  ← join (retraces 2)
-    { x: 0.375, y: 0.375 }, // 7  (6,6)  ← join (retraces 3)
-    { x: 0.375, y: 0.875 }, // 8  (6,14)
-    { x: 0.875, y: 0.875 }, // 9  (14,14)
-    { x: 0.875, y: 0.625 }, // 10 (14,10)
-    { x: 0.625, y: 0.625 }, // 11 (10,10)
-    { x: 0.625, y: 0.375 }, // 12 (10,6)
-    { x: 0.875, y: 0.375 }, // 13 (14,6)
-    { x: 0.875, y: 0.625 }, // 14 (14,10) ← join (retraces 10)
-    { x: 0.625, y: 0.625 }, // 15 (10,10) ← join (retraces 11)
-    { x: 0.625, y: 0.125 }, // 16 (10,2)
-    { x: 0.875, y: 0.125 }, // 17 (14,2)
-    { x: 0.875, y: 0 }, // 18 (14,0) exit / leak
-  ],
-  pads: [
-    { x: 25, y: 25 }, // (4,4)
-    { x: 25, y: 50 }, // (4,8)
-    { x: 25, y: 62.5 }, // (4,10)
-    { x: 25, y: 75 }, // (4,12)
-    { x: 25, y: 87.5 }, // (4,14)
-    { x: 50, y: 12.5 }, // (8,2)
-    { x: 50, y: 25 }, // (8,4)
-    { x: 50, y: 37.5 }, // (8,6)
-    { x: 50, y: 50 }, // (8,8)
-    { x: 50, y: 62.5 }, // (8,10)
-    { x: 50, y: 75 }, // (8,12)
-    { x: 75, y: 25 }, // (12,4)
-    { x: 93.75, y: 25 }, // (15,4)
-    { x: 75, y: 50 }, // (12,8)
-    { x: 68.75, y: 75 }, // (11,12)
-  ],
+  path: ATO_BOARD_PATH,
+  pads: ATO_BOARD_PADS,
 };
 
-/** Loose read of the Main map JSON; any malformed row falls back to the Trial
- * geometry so a bad content file can never crash the board. */
-function parseMapJson(raw: unknown): DefendMap | null {
-  if (typeof raw !== 'object' || raw == null) return null;
-  const row = raw as Record<string, unknown>;
-  const id = row.id;
-  if (id !== 'main') return null;
-  const name = typeof row.name === 'string' && row.name.length > 0 ? row.name : 'Divecore Main';
-  const path = Array.isArray(row.path)
-    ? row.path.filter(isWaypoint)
-    : [];
-  const pads = Array.isArray(row.pads)
-    ? row.pads.filter(isWaypoint)
-    : [];
-  if (path.length < 2 || pads.length === 0) return null;
-  return { id, name, path, pads };
-}
-
-function isWaypoint(value: unknown): value is DefendWaypoint {
-  if (typeof value !== 'object' || value == null) return false;
-  const point = value as Record<string, unknown>;
-  return (
-    typeof point.x === 'number' &&
-    Number.isFinite(point.x) &&
-    typeof point.y === 'number' &&
-    Number.isFinite(point.y)
-  );
-}
-
-const parsedMain = parseMapJson(rawMainMap);
-/** Main campaign map — Divecore Main (longer S-curve + chokes). */
-export const MAIN_MAP: DefendMap =
-  parsedMain ?? { id: 'main', name: 'Divecore Main', path: TRIAL_MAP.path, pads: TRIAL_MAP.pads };
+/**
+ * Main campaign map — Divecore Main. Same locked ATO board as Trial for now
+ * (geometry sync, 2026-09-11); Trial and Main can diverge into their own packs
+ * later. Campaign/band wiring is keyed by `id`, so this stays a pure geometry
+ * swap.
+ */
+export const MAIN_MAP: DefendMap = {
+  id: 'main',
+  name: 'Divecore Main',
+  path: ATO_BOARD_PATH,
+  pads: ATO_BOARD_PADS,
+};
 
 /** All board geometry, keyed by map id. `DefendLive.mapId` picks one. */
 export const DEFEND_MAPS: Record<DefendMapId, DefendMap> = {

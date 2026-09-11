@@ -1350,10 +1350,8 @@ export function DefendScreen({
                * painted faint directly UNDER the road so the mark reads through
                * the board. Pure decor: this whole layer is pointerEvents none,
                * and the mask never touches the waypoint polyline the puffs walk.
-               * Trial-only for this slice. */}
-              {boardMap.id === 'trial' ? (
-                <Path d={ATO_GHOST_D} fill={theme.accent} fillOpacity={0.07} />
-              ) : null}
+               * Both campaign maps share the ATO board, so it renders on all. */}
+              <Path d={ATO_GHOST_D} fill={theme.accent} fillOpacity={0.07} />
               {/* Road — a thin dark underlay bed stroked along the waypoint
                * polyline, then cobble STAMPS (straights + elbow corners + flared
                * ends) centred on the centreline. Waypoints stay the walk truth.

@@ -5,13 +5,14 @@
  *
  * The ROAD is painted as a ribbon stroked along the waypoint polyline in the
  * board SVG (see `defend-screen`), so the art hugs the exact line creeps walk.
- * This module emits only the GROUND layers: grass cells, prop garnish, and the
- * pad slot markers — all rendered in the `boardTiles` layer UNDER the gameplay
- * SVG.
+ * This module emits the GROUND layers — grass cells, prop garnish, and the pad
+ * slot markers — all rendered in the `boardTiles` layer UNDER the gameplay SVG,
+ * plus the ATO ghost path (`ATO_GHOST_D`) that the gameplay SVG paints under
+ * the road.
  *
- * Roles come from the skin contract (no raw tile filenames). Props are capped
- * (~12 per map), placed deterministically off the road (≥8 board units) and off
- * pads, from the allow list in `ROLE_MAP.md`.
+ * Roles come from the skin contract (no raw tile filenames). Prop garnish is one
+ * shared list (~12) placed to sit clear of the lane and pads, from the allow
+ * list in `ROLE_MAP.md`.
  *
  * Anchors (one shared world space):
  * - `corner` — grid tiles (grass) tile from their top-left.
@@ -55,43 +56,37 @@ type PropSpec = {
 };
 
 /**
- * Prop garnish per map — verified ≥8 board units off the road polyline and ≥6
- * off every pad, so garnish never blocks path or pads. Trees at outer corners,
- * bushes near bends, stones as choke flavor, grass tufts near the lane, one
- * edge fence. No camps / campfires / lamps / boxes (forbid list).
+ * Prop garnish for the locked ATO board — ONE shared list, used by BOTH maps
+ * because Trial and Main share the same geometry. Placed to sit clear of the
+ * road and pads; props draw UNDER the road/pad layer, so any edge overlap is
+ * occluded rather than a gameplay issue. Trees at outer corners, bushes near
+ * bends, stones as choke flavor, grass tufts near the lane, one edge fence.
+ * No camps / campfires / lamps / boxes (forbid list).
+ *
+ * Kept keyed by map id so Trial / Main can diverge into their own packs later.
  */
+const ATO_BOARD_PROPS: readonly PropSpec[] = [
+  { role: 'prop.tree', x: 5, y: 6, size: 15, h: 17.5, rotate: 0 },
+  { role: 'prop.tree', x: 95, y: 6, size: 15, h: 17.5, rotate: 90 },
+  // (6,92) sat on the locked ATO road — moved to the clear bottom band.
+  { role: 'prop.tree', x: 20, y: 97, size: 13, h: 15, rotate: 270 },
+  { role: 'prop.tree', x: 94, y: 92, size: 15, h: 17.5, rotate: 180 },
+  // (30,10) sat on the locked road — moved to the clear top band.
+  { role: 'prop.bush', x: 33, y: 3, size: 9, h: 8, rotate: 0 },
+  { role: 'prop.bush', x: 74, y: 30, size: 9, h: 8, rotate: 180 },
+  { role: 'prop.bush', x: 74, y: 48, size: 9, h: 8, rotate: 90 },
+  // (36,70) sat on the locked road — moved to the clear bottom band.
+  { role: 'prop.stone', x: 58, y: 97, size: 7, h: 5, rotate: 0 },
+  { role: 'prop.stone', x: 18, y: 6, size: 7, h: 5, rotate: 45 },
+  // (58,12) sat on the locked road — moved to the clear top band.
+  { role: 'prop.grass', x: 55, y: 3, size: 6, h: 7, rotate: 0 },
+  { role: 'prop.grass', x: 72, y: 50, size: 6, h: 7, rotate: 90 },
+  { role: 'prop.fence', x: 44, y: 4, size: 12, h: 7, rotate: 0 },
+];
+
 const MAP_PROPS: Record<string, readonly PropSpec[]> = {
-  trial: [
-    { role: 'prop.tree', x: 5, y: 6, size: 15, h: 17.5, rotate: 0 },
-    { role: 'prop.tree', x: 95, y: 6, size: 15, h: 17.5, rotate: 90 },
-    // (6,92) sat on the locked ATO road — moved to the clear bottom band.
-    { role: 'prop.tree', x: 20, y: 97, size: 13, h: 15, rotate: 270 },
-    { role: 'prop.tree', x: 94, y: 92, size: 15, h: 17.5, rotate: 180 },
-    // (30,10) sat on the locked road — moved to the clear top band.
-    { role: 'prop.bush', x: 33, y: 3, size: 9, h: 8, rotate: 0 },
-    { role: 'prop.bush', x: 74, y: 30, size: 9, h: 8, rotate: 180 },
-    { role: 'prop.bush', x: 74, y: 48, size: 9, h: 8, rotate: 90 },
-    // (36,70) sat on the locked road — moved to the clear bottom band.
-    { role: 'prop.stone', x: 58, y: 97, size: 7, h: 5, rotate: 0 },
-    { role: 'prop.stone', x: 18, y: 6, size: 7, h: 5, rotate: 45 },
-    // (58,12) sat on the locked road — moved to the clear top band.
-    { role: 'prop.grass', x: 55, y: 3, size: 6, h: 7, rotate: 0 },
-    { role: 'prop.grass', x: 72, y: 50, size: 6, h: 7, rotate: 90 },
-    { role: 'prop.fence', x: 44, y: 4, size: 12, h: 7, rotate: 0 },
-  ],
-  main: [
-    { role: 'prop.tree', x: 4, y: 3, size: 15, h: 17.5, rotate: 0 },
-    { role: 'prop.tree', x: 94, y: 5, size: 15, h: 17.5, rotate: 90 },
-    { role: 'prop.tree', x: 6, y: 94, size: 15, h: 17.5, rotate: 270 },
-    { role: 'prop.tree', x: 94, y: 94, size: 15, h: 17.5, rotate: 180 },
-    { role: 'prop.bush', x: 8, y: 20, size: 9, h: 8, rotate: 0 },
-    { role: 'prop.bush', x: 42, y: 3, size: 9, h: 8, rotate: 180 },
-    { role: 'prop.bush', x: 72, y: 60, size: 9, h: 8, rotate: 90 },
-    { role: 'prop.stone', x: 40, y: 39, size: 8, h: 6, rotate: 0 },
-    { role: 'prop.stone', x: 10, y: 64, size: 7, h: 5, rotate: 45 },
-    { role: 'prop.grass', x: 48, y: 3, size: 6, h: 7, rotate: 0 },
-    { role: 'prop.grass', x: 70, y: 50, size: 6, h: 7, rotate: 90 },
-  ],
+  trial: ATO_BOARD_PROPS,
+  main: ATO_BOARD_PROPS,
 };
 
 /**
