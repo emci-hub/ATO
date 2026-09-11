@@ -45,7 +45,7 @@ import {
 } from '@/play/engine/bound-boss';
 import { type TypeTag } from '@/play/engine/type-match';
 import { getTune } from '@/play/tune';
-import { BOARD_MAPS, type BoardId, type BoardMap } from '@/play/board-data';
+import { ATO_ROAD_HALF, BOARD_MAPS, type BoardId, type BoardMap } from '@/play/board-data';
 
 export type { BoardId, BoardMap } from '@/play/board-data';
 
@@ -198,6 +198,32 @@ export const TOWER_DEFS: Record<TowerKind, TowerDef> = {
 
 export type PuffKind = 'puff' | 'runner' | 'boss';
 
+/**
+ * Placeholder visual role (tint until per-role sprites land). `swarm` is the
+ * default for an untagged creep; `runner` / `tank` / `boss` tint the heavier
+ * archetypes. Presentation only — waves/timing are unchanged.
+ */
+export type CreepRole = 'swarm' | 'runner' | 'tank' | 'boss';
+
+/** Display-only lateral slots across the road ribbon (0..4). */
+export const CREEP_LANE_COUNT = 5;
+
+/** Lane spread, board units — 85% of the ATO road half-width so an outermost
+ * creep still reads as on the road. Never affects movement/targeting. */
+const CREEP_LANE_SPREAD = ATO_ROAD_HALF * 0.85;
+
+/** Stable display lane 0..4 from an enemy id (hash — no RNG, no drift). */
+export function creepLaneIndex(id: number): number {
+  let h = Math.imul(id + 1, 0x27d4eb2d) >>> 0;
+  h ^= h >>> 15;
+  return h % CREEP_LANE_COUNT;
+}
+
+/** The creep's display role, defaulting any untagged creep to `swarm`. */
+export function creepRole(puff: Puff): CreepRole {
+  return puff.role ?? 'swarm';
+}
+
 export type Puff = {
   id: number;
   /** Path progress 0..1. */
@@ -218,6 +244,10 @@ export type Puff = {
   burstHpPct: number | null;
   /** Boss only: the enrage already fired. */
   burstFired: boolean;
+  /** Display-only road lane 0..4 (fans creeps across the road). */
+  laneIndex: number;
+  /** Placeholder visual role; defaults to `swarm` when omitted. */
+  role?: CreepRole;
 };
 
 export type Tower = {
@@ -514,20 +544,24 @@ export function stepDefendLive(
     const rampFrac =
       minionsPlanned > 1 ? Math.min(1, minionsSpawned / (minionsPlanned - 1)) : 0;
     const hp = puffHp * (1 + rampPct * rampFrac);
+    const id = nextId++;
+    const kind: PuffKind = band ? 'runner' : 'puff';
     puffs = [
       ...puffs,
       {
-        id: nextId++,
+        id,
         dist: 0,
         hp,
         maxHp: hp,
         slowMs: 0,
         slowFactor: 1,
-        kind: band ? 'runner' : 'puff',
+        kind,
         tint: null,
         size: 1,
         burstHpPct: null,
         burstFired: false,
+        laneIndex: creepLaneIndex(id),
+        role: kind === 'runner' ? 'runner' : 'swarm',
       },
     ];
     pendingSpawns -= 1;
@@ -536,10 +570,11 @@ export function stepDefendLive(
   // Spawn a boss — the last, fat beat (no within-wave ramp on itself).
   const spawnBoss = () => {
     const burst = band?.boss.burst;
+    const id = nextId++;
     puffs = [
       ...puffs,
       {
-        id: nextId++,
+        id,
         dist: 0,
         hp: bossHp,
         maxHp: bossHp,
@@ -550,6 +585,8 @@ export function stepDefendLive(
         size: band?.boss.size ?? 1,
         burstHpPct: burst?.hp_pct ?? null,
         burstFired: false,
+        laneIndex: creepLaneIndex(id),
+        role: 'boss',
       },
     ];
     bossesRemaining -= 1;
@@ -860,6 +897,30 @@ export function puffPosition(dist: number, map: DefendMap = BOARD_MAPS.ato): { x
   }
   const end = map.path[map.path.length - 1];
   return { x: end.x, y: end.y };
+}
+
+/**
+ * Display position for a creep: its path point pushed sideways onto its lane
+ * by `laneIndex`, offset along the local path normal. Display-only — the
+ * engine's combat math keeps using `puffPosition`, so lanes never change
+ * range, targeting, or the leak test. Same 0..1 space as `map.path`; multiply
+ * by the 100 viewBox to render.
+ */
+export function creepDrawPosition(
+  puff: Puff,
+  map: DefendMap = BOARD_MAPS.ato,
+): { x: number; y: number } {
+  const pos = puffPosition(puff.dist, map);
+  const head = puffHeading(puff.dist, map);
+  if (!head || CREEP_LANE_COUNT <= 1) return pos;
+  // laneIndex 0..4 → -half .. +half of the lane spread.
+  const t = puff.laneIndex / (CREEP_LANE_COUNT - 1);
+  const offsetUnits = (-1 + 2 * t) * CREEP_LANE_SPREAD;
+  // Path normal is the tangent turned 90°: (-dy, dx).
+  return {
+    x: pos.x + (-head.dy * offsetUnits) / 100,
+    y: pos.y + (head.dx * offsetUnits) / 100,
+  };
 }
 
 /**

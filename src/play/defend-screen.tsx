@@ -52,10 +52,11 @@ import {
   TOWER_MAX_LEVEL,
   castSlowPulse,
   createDefendLive,
+  creepDrawPosition,
+  creepRole,
   defendDifficulty,
   placeBoundBoss,
   placeTower,
-  puffPosition,
   retryDefendLive,
   stepDefendLive,
   puffHeading,
@@ -63,6 +64,7 @@ import {
   towerUpgradeCost,
   upgradeTower,
   waveEnemyCount,
+  type CreepRole,
   type DefendLive,
   type Puff,
   type SpawnStage,
@@ -113,8 +115,13 @@ import {
 import { tipForWave } from '@/play/coach';
 import { getTune, saveTune, setKnob } from '@/play/tune';
 
-const PUFF_COLOR = '#F472B6';
-const RUNNER_COLOR = '#FBBF24';
+/** Placeholder creep role tints (until per-role sprites land) — W1 only. */
+const CREEP_ROLE_COLOR: Record<CreepRole, string> = {
+  swarm: '#22D3EE', // cyan
+  runner: '#F472B6', // pink
+  tank: '#FB923C', // orange
+  boss: '#A78BFA', // violet
+};
 const AVATAR_COLOR = '#38BDF8';
 
 /** Default board paint — `neon` (procedural chrome) vs `grove-classic`
@@ -172,11 +179,11 @@ function diffPuffEvents(
     const now = byId.get(old.id);
     if (!now) {
       // Killed — the last visible chunk of its HP is the killing blow.
-      const pos = puffPosition(old.dist, map);
+      const pos = creepDrawPosition(old, map);
       events.push({ x: pos.x, y: pos.y, damage: Math.round(old.hp), kill: true });
     } else if (now.hp < old.hp) {
       const damage = old.hp - now.hp;
-      const pos = puffPosition(now.dist, map);
+      const pos = creepDrawPosition(now, map);
       events.push({ x: pos.x, y: pos.y, damage: Math.round(damage), kill: false });
     }
   }
@@ -870,7 +877,7 @@ export function DefendScreen({
         const target = towerTarget(tower, current.puffs, mapNow);
         const pad = mapNow.pads[tower.pad];
         if (!target) continue;
-        const tpos = puffPosition(target.dist, mapNow);
+        const tpos = creepDrawPosition(target, mapNow);
         const tx = tpos.x * 100;
         const ty = tpos.y * 100;
         towerFacingRef.current[tower.id] = aimDegrees(pad.x, pad.y, tx, ty);
@@ -1530,30 +1537,28 @@ export function DefendScreen({
                 );
               })}
               {sim?.puffs.map((puff) => {
-                const pos = puffPosition(puff.dist, boardMap);
+                const pos = creepDrawPosition(puff, boardMap);
                 const x = pos.x * 100;
                 const y = pos.y * 100;
                 const pct = Math.max(0, Math.min(1, puff.hp / puff.maxHp));
                 const slowed = puff.slowMs > 0;
                 const radius = 3.4 * puff.size;
-                const fill =
-                  puff.kind === 'boss'
-                    ? puff.tint
-                      ? TAG_COLOR[puff.tint]
-                      : PUFF_COLOR
-                    : puff.kind === 'runner'
-                      ? RUNNER_COLOR
-                      : PUFF_COLOR;
+                // W1 placeholder role tint (until per-role sprites): the role
+                // colour fills the no-sprite circle and rings every creep so it
+                // reads over the sprite too. Display only.
+                const creep = creepRole(puff);
+                const tintColor = CREEP_ROLE_COLOR[creep];
                 // §19 board cast (skin roles): runners = fast unit, bosses =
                 // tanks/heavy by band, normal puffs = the puff unit.
-                const role: SkinRoleId =
+                const spriteRole: SkinRoleId =
                   puff.kind === 'boss'
                     ? bandUnitRole(band?.kind ?? '')
                     : puff.kind === 'runner'
                       ? 'unit.runner'
                       : 'unit.puff';
-                const sprite = skinArt(role);
-                const spriteSize = skinUnits(role, UNIT_BASE_UNITS) * puff.size;
+                const sprite = skinArt(spriteRole);
+                const spriteSize = skinUnits(spriteRole, UNIT_BASE_UNITS) * puff.size;
+                const ringRadius = sprite ? spriteSize / 2 + 0.8 : radius + 0.9;
                 const barWidth = 8 * puff.size;
                 // Face along the road (path tangent), same up-facing convention
                 // as the towers. Falls back to the last known facing when the
@@ -1571,9 +1576,18 @@ export function DefendScreen({
                           height={spriteSize}
                         />
                       ) : (
-                        <Circle cx={x} cy={y} r={radius} fill={fill} />
+                        <Circle cx={x} cy={y} r={radius} fill={tintColor} />
                       )}
                     </G>
+                    <Circle
+                      cx={x}
+                      cy={y}
+                      r={ringRadius}
+                      fill="none"
+                      stroke={tintColor}
+                      strokeWidth={1}
+                      strokeOpacity={0.85}
+                    />
                     {puff.kind === 'boss' ? (
                       <Circle
                         cx={x}
@@ -2760,7 +2774,7 @@ function nearestPuffDelta(
   let best: { dx: number; dy: number } | null = null;
   let bestDist = Infinity;
   for (const puff of puffs) {
-    const pos = puffPosition(puff.dist, map);
+    const pos = creepDrawPosition(puff, map);
     const dx = pos.x * 100 - avatar.x;
     const dy = pos.y * 100 - avatar.y;
     const dist = Math.hypot(dx, dy);

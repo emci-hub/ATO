@@ -161,8 +161,9 @@ export const ATO_PADS: readonly { x: number; y: number }[] = [
 ];
 
 /** Road half-width, board units, used to rasterize the locked polyline into
- * path cells. Matches the original ~11-unit road ribbon. */
-const ATO_ROAD_HALF = 5.5;
+ * path cells. Matches the original ~11-unit road ribbon. Also the source of
+ * truth for the display-only creep lane spread in `defend.ts`. */
+export const ATO_ROAD_HALF = 5.5;
 
 /** Distance from point `p` to segment `a→b` (board units). */
 function distToSeg(
