@@ -18,7 +18,7 @@
  * - `corner` — grid tiles (grass) tile from their top-left.
  * - `center` — entity-style markers (pads, props) sit ON the world point.
  */
-import type { DefendMap } from '@/play/defend';
+import type { BoardMap } from '@/play/board-data';
 import type { SkinRoleId } from '@/play/skin';
 
 /** Grid resolution across the board (100 board units / 8 = 12.5 per tile). */
@@ -85,8 +85,8 @@ const ATO_BOARD_PROPS: readonly PropSpec[] = [
 ];
 
 const MAP_PROPS: Record<string, readonly PropSpec[]> = {
-  trial: ATO_BOARD_PROPS,
-  main: ATO_BOARD_PROPS,
+  ato: ATO_BOARD_PROPS,
+  'neon-maze': ATO_BOARD_PROPS,
 };
 
 /**
@@ -94,7 +94,7 @@ const MAP_PROPS: Record<string, readonly PropSpec[]> = {
  * pad slot marker CENTRED on each tower pad (drawn last so pads sit on top of
  * garnish). The road is emitted separately by `roadDecor` (cobble stamps).
  */
-export function boardDecor(map: DefendMap): BoardTile[] {
+export function boardDecor(map: BoardMap): BoardTile[] {
   const tiles: BoardTile[] = [];
 
   for (let j = 0; j < BOARD_GRID; j += 1) {
@@ -209,7 +209,7 @@ function cornerRole(inDir: Vec, outDir: Vec): SkinRoleId {
  * flared straight at the spawn + exit so the leak ends read. Waypoints stay the
  * walk truth — stamps are centred on the polyline, never offset from it.
  */
-export function roadDecor(map: DefendMap): RoadStamp[] {
+export function roadDecor(map: BoardMap): RoadStamp[] {
   const pts = map.path.map((p) => ({ x: p.x * 100, y: p.y * 100 }));
   const stamps: RoadStamp[] = [];
   if (pts.length < 2) return stamps;

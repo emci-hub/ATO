@@ -9,13 +9,13 @@
  * The Avatar (step 5c) auto-attacks the nearest enemy in range and its skill
  * (slow_pulse) is a pure transition that slows everything in radius.
  *
- * Maps (Phase B — GAME_SPEC §9e): both campaign maps — Trial and Main — share
- * ONE locked ATO board geometry (`ATO_BOARD_PATH` / `ATO_BOARD_PADS`, baked
- * from `games/grove/ref/ato-map/PATH_LOCKED.md`, 2026-09-11) and differ only by
- * `id` + `name`. Both are `DefendMap`s of waypoints (0..1 board fractions) +
- * tower pads (0..100 board units). A `DefendLive` carries its own `mapId`, so
- * one screen can switch maps between waves without global state. No SakPix —
- * placeholder circles only.
+ * Maps (Phase B — GAME_SPEC §9e): the campaign phase (`mapId` = 'trial' |
+ * 'main') drives boss bands + drops + the seat; the BOARD GEOMETRY is chosen
+ * separately by `boardId` (see `src/play/board-data.ts`). Default `ato` is the
+ * locked ATO board (PATH_LOCKED.md, 2026-09-11); `neon-maze` is a parked
+ * letter-maze prototype selectable only from the Maps UI. A `DefendLive`
+ * carries BOTH ids, so one screen can switch phase and board independently.
+ * No SakPix — placeholder circles only.
  *
  * Forever engine (Phase B): a conquered cycle raises `cyclePower`
  * (1 + conquered × tune step, `CycleScaler` in `engine/cycle.ts`). Each live
@@ -45,99 +45,19 @@ import {
 } from '@/play/engine/bound-boss';
 import { type TypeTag } from '@/play/engine/type-match';
 import { getTune } from '@/play/tune';
+import { BOARD_MAPS, type BoardId, type BoardMap } from '@/play/board-data';
+
+export type { BoardId, BoardMap } from '@/play/board-data';
 
 /* ------------------------------------------------------------------ maps --- */
+/** Campaign phase — drives boss bands, drops, and the seat ('trial' | 'main'). */
 export type DefendMapId = 'trial' | 'main';
 
 export type DefendWaypoint = { x: number; y: number };
 
-/** One board: the road the puffs walk (waypoints 0..1) + tower pads
- * (board units 0..100). Pure geometry — no engine, no combat numbers. Trial and
- * Main share `ATO_BOARD_*` today and may diverge into their own packs later. */
-export type DefendMap = {
-  id: DefendMapId;
-  /** Player-facing map name. */
-  name: string;
-  path: readonly DefendWaypoint[];
-  pads: readonly DefendWaypoint[];
-};
-
-/**
- * LOCKED ATO board geometry (games/grove/ref/ato-map/PATH_LOCKED.md,
- * 2026-09-11) — the ONE board both campaign maps use. Waypoints are 0..1 board
- * fractions in path order; repeated vertices are intentional joins where the
- * road loops back on itself, so the creeps retrace those spans (the `o` loop).
- * Do not "dedupe" them.
- *
- * Pads are 0..100 board units and cover every listed slot (15); the deploy cap
- * (MAX_TOWERS) is what limits a run to six towers, not the pad count.
- */
-const ATO_BOARD_PATH: readonly DefendWaypoint[] = [
-  { x: 0.0625, y: 0.9375 }, // 0  (1,15) spawn
-  { x: 0.125, y: 0.9375 }, // 1  (2,15)
-  { x: 0.125, y: 0.375 }, // 2  (2,6)
-  { x: 0.375, y: 0.375 }, // 3  (6,6)
-  { x: 0.375, y: 0.125 }, // 4  (6,2)
-  { x: 0.125, y: 0.125 }, // 5  (2,2)
-  { x: 0.125, y: 0.375 }, // 6  (2,6)  ← join (retraces 2)
-  { x: 0.375, y: 0.375 }, // 7  (6,6)  ← join (retraces 3)
-  { x: 0.375, y: 0.875 }, // 8  (6,14)
-  { x: 0.875, y: 0.875 }, // 9  (14,14)
-  { x: 0.875, y: 0.625 }, // 10 (14,10)
-  { x: 0.625, y: 0.625 }, // 11 (10,10)
-  { x: 0.625, y: 0.375 }, // 12 (10,6)
-  { x: 0.875, y: 0.375 }, // 13 (14,6)
-  { x: 0.875, y: 0.625 }, // 14 (14,10) ← join (retraces 10)
-  { x: 0.625, y: 0.625 }, // 15 (10,10) ← join (retraces 11)
-  { x: 0.625, y: 0.125 }, // 16 (10,2)
-  { x: 0.875, y: 0.125 }, // 17 (14,2)
-  { x: 0.875, y: 0 }, // 18 (14,0) exit / leak
-];
-
-const ATO_BOARD_PADS: readonly DefendWaypoint[] = [
-  { x: 25, y: 25 }, // (4,4)
-  { x: 25, y: 50 }, // (4,8)
-  { x: 25, y: 62.5 }, // (4,10)
-  { x: 25, y: 75 }, // (4,12)
-  { x: 25, y: 87.5 }, // (4,14)
-  { x: 50, y: 12.5 }, // (8,2)
-  { x: 50, y: 25 }, // (8,4)
-  { x: 50, y: 37.5 }, // (8,6)
-  { x: 50, y: 50 }, // (8,8)
-  { x: 50, y: 62.5 }, // (8,10)
-  { x: 50, y: 75 }, // (8,12)
-  { x: 75, y: 25 }, // (12,4)
-  { x: 93.75, y: 25 }, // (15,4)
-  { x: 75, y: 50 }, // (12,8)
-  { x: 68.75, y: 75 }, // (11,12)
-];
-
-/** Trial map — the locked ATO board, campaign opening (Grove Path). */
-export const TRIAL_MAP: DefendMap = {
-  id: 'trial',
-  name: 'Grove Path',
-  path: ATO_BOARD_PATH,
-  pads: ATO_BOARD_PADS,
-};
-
-/**
- * Main campaign map — Divecore Main. Same locked ATO board as Trial for now
- * (geometry sync, 2026-09-11); Trial and Main can diverge into their own packs
- * later. Campaign/band wiring is keyed by `id`, so this stays a pure geometry
- * swap.
- */
-export const MAIN_MAP: DefendMap = {
-  id: 'main',
-  name: 'Divecore Main',
-  path: ATO_BOARD_PATH,
-  pads: ATO_BOARD_PADS,
-};
-
-/** All board geometry, keyed by map id. `DefendLive.mapId` picks one. */
-export const DEFEND_MAPS: Record<DefendMapId, DefendMap> = {
-  trial: TRIAL_MAP,
-  main: MAIN_MAP,
-};
+/** Board geometry (path 0..1 + pads 0..100 + paint grid), keyed by `boardId`.
+ * Pure geometry — no engine, no combat numbers. */
+export type DefendMap = BoardMap;
 
 const lengthCache = new WeakMap<DefendMap, number>();
 /** Total road length (0..1 units) for one map — cached per map object. */
@@ -328,8 +248,10 @@ export const BOUND_BOSS_MAX_ON_BOARD = 2;
 export type DefendLive = {
   /** 1-based display wave (within its phase/map — Trial or Main). */
   wave: number;
-  /** Which map this run is on (`DEFEND_MAPS[mapId]` gives the geometry). */
+  /** Campaign phase this run is on ('trial' | 'main') — drives bands/drops. */
   mapId: DefendMapId;
+  /** Board geometry id ('ato' default | 'neon-maze' parked). */
+  boardId: BoardId;
   /** Forever-engine cycle power for this run: scales puff count + HP. */
   cyclePower: number;
   /** Boss band for this run (null = normal formula wave). */
@@ -379,8 +301,10 @@ export const DEFEND_TICK_MS = 100;
 export type SpawnStage = 'minions' | 'breath' | 'boss';
 
 export type DefendLiveOptions = {
-  /** Map to fight on (default `trial` = Grove Path). */
+  /** Campaign phase to fight on (default `trial` = Grove Path). */
   mapId?: DefendMapId;
+  /** Board geometry (default `ato` = the locked ATO board). */
+  boardId?: BoardId;
   /** Cycle power for this run (default 1 — no conquered cycles). */
   cyclePower?: number;
   /** Starting scrap (defaults to the tune's startScrap). */
@@ -391,6 +315,7 @@ export type DefendLiveOptions = {
 
 export function createDefendLive(wave: number, options: DefendLiveOptions = {}): DefendLive {
   const mapId = options.mapId ?? 'trial';
+  const boardId = options.boardId ?? 'ato';
   const cyclePower = Math.max(1, options.cyclePower ?? 1);
   const waveN = Math.max(1, Math.floor(wave));
   const band = bossBandFor(mapId, waveN);
@@ -399,6 +324,7 @@ export function createDefendLive(wave: number, options: DefendLiveOptions = {}):
   return {
     wave: waveN,
     mapId,
+    boardId,
     cyclePower,
     band,
     tint: options.tint ?? DEFAULT_CYCLE_TINT,
@@ -428,6 +354,7 @@ export function retryDefendLive(state: DefendLive): DefendLive {
   return {
     ...createDefendLive(state.wave, {
       mapId: state.mapId,
+      boardId: state.boardId,
       cyclePower: state.cyclePower,
       tint: state.tint,
     }),
@@ -552,7 +479,7 @@ export function stepDefendLive(
   buckets: DefendBuckets,
   avatar: { x: number; y: number },
 ): DefendStep {
-  const map = DEFEND_MAPS[state.mapId];
+  const map = BOARD_MAPS[state.boardId] ?? BOARD_MAPS.ato;
   const band = state.band;
   const speedBase =
     (PUFF_SPEED_PER_SEC * waveSpeedMult(state.wave) * dtMs) / 1000;
@@ -808,6 +735,7 @@ export function stepDefendLive(
     state: {
       wave: state.wave,
       mapId: state.mapId,
+      boardId: state.boardId,
       cyclePower: state.cyclePower,
       band,
       tint: state.tint,
@@ -840,7 +768,7 @@ export function castSlowPulse(
   avatar: { x: number; y: number },
 ): DefendLive | null {
   if (state.skillCooldownMs > 0) return null;
-  const map = DEFEND_MAPS[state.mapId];
+  const map = BOARD_MAPS[state.boardId] ?? BOARD_MAPS.ato;
   const slowFactor = 1 - getTune().skillSlowPct;
   const puffs = state.puffs.map((puff) => {
     const pos = puffPosition(puff.dist, map);
@@ -916,7 +844,7 @@ function applyHit(puffs: Puff[], targetId: number, damage: number, def: TowerDef
  * A puff at path progress `dist` (0..1) → its board position (0..1 space,
  * same as `map.path`). Multiply by the SVG viewBox (100) to render.
  */
-export function puffPosition(dist: number, map: DefendMap = TRIAL_MAP): { x: number; y: number } {
+export function puffPosition(dist: number, map: DefendMap = BOARD_MAPS.ato): { x: number; y: number } {
   const clamped = Math.max(0, Math.min(1, dist));
   const target = clamped * mapPathLength(map);
   let travelled = 0;
@@ -943,7 +871,7 @@ export function puffPosition(dist: number, map: DefendMap = TRIAL_MAP): { x: num
  */
 export function puffHeading(
   dist: number,
-  map: DefendMap = TRIAL_MAP,
+  map: DefendMap = BOARD_MAPS.ato,
 ): { dx: number; dy: number } | null {
   const clamped = Math.max(0, Math.min(1, dist));
   for (const eps of [0.004, 0.02, 0.05]) {

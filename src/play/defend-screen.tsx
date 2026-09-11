@@ -42,7 +42,6 @@ import { usePlayDevUnlocked } from '@/play/dev-lock';
 import {
   AVATAR_RANGE,
   BOUND_BOSS_MAX_ON_BOARD,
-  DEFEND_MAPS,
   DEFEND_TICK_MS,
   type DefendMap,
   MAX_TOWERS,
@@ -65,7 +64,6 @@ import {
   upgradeTower,
   waveEnemyCount,
   type DefendLive,
-  type DefendMapId,
   type Puff,
   type SpawnStage,
   type TowerKind,
@@ -74,6 +72,7 @@ import { avatarDef } from '@/play/avatars';
 import { PlayFrame } from '@/play/play-frame';
 import { dir8FromDelta, type Dir8 } from '@/play/art';
 import {
+  BOARD_SKIN,
   bandUnitRole,
   skinArt,
   skinClipArt,
@@ -84,6 +83,8 @@ import {
   type SkinRoleId,
 } from '@/play/skin';
 import { boardDecor, roadDecor, ATO_GHOST_D } from '@/play/board-decor';
+import { BOARD_MAPS, BOARD_ORDER, boardPathD, type BoardId } from '@/play/board-data';
+import { NeonBoardChrome } from '@/play/neon-chrome';
 import { BOUND_BOSS_MAX_STAR, bossBandFor, boundBossFragmentCost, defaultBoundBossId, getBoundBossDef, isUniqueDrop, previewDropTable, gearScore, recommendedGs, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, typeMatchBonus, type DropPreviewRow, type TypeTag } from '@/play/engine';
 import { formatItemStats, getItemDef } from '@/play/items';
 import {
@@ -115,6 +116,10 @@ import { getTune, saveTune, setKnob } from '@/play/tune';
 const PUFF_COLOR = '#F472B6';
 const RUNNER_COLOR = '#FBBF24';
 const AVATAR_COLOR = '#38BDF8';
+
+/** Default board paint — `neon` (procedural chrome) vs `grove-classic`
+ * (Craftpix field tiles + cobble road). Paint only; geometry is untouched. */
+const NEON_CHROME = BOARD_SKIN === 'neon';
 const TOWER_COLORS: Record<TowerKind, string> = {
   archer: '#34D399',
   vine: '#A3E635',
@@ -158,9 +163,9 @@ type HitEvent = {
 function diffPuffEvents(
   before: readonly Puff[],
   after: readonly Puff[],
-  mapId: DefendMapId,
+  boardId: BoardId,
 ): HitEvent[] {
-  const map = DEFEND_MAPS[mapId];
+  const map = BOARD_MAPS[boardId];
   const byId = new Map(after.map((puff) => [puff.id, puff]));
   const events: HitEvent[] = [];
   for (const old of before) {
@@ -363,11 +368,15 @@ export function DefendScreen({
   const [paused, setPaused] = useState(false);
   /** A cleared-band wave picked for replay, or null → fight the campaign seat. */
   const [replayPick, setReplayPick] = useState<{ phase: CampaignPhase; wave: number } | null>(null);
+  /** Board geometry for Main only (`ato` default | `neon-maze` parked). Trial
+   * always runs `ato`; the Maps UI switches this on Main. */
+  const [boardId, setBoardId] = useState<BoardId>('ato');
   /** The live board. Always present so towers can be placed during SETUP
    * (spawns wait until Start); transitions rebuild it at the right times. */
   const [sim, setSim] = useState<DefendLive | null>(() =>
     createDefendLive(view.campaign.wave_in_phase, {
       mapId: view.campaign.phase,
+      boardId: 'ato',
       cyclePower: view.cyclePower,
       tint: view.cycleTint,
     }),
@@ -425,20 +434,19 @@ export function DefendScreen({
   const playedRef = useRef<Fight>(fight);
 
   const displayedWave = sim?.wave ?? fight.wave;
-  const mapId = fight.phase; // a phase names its own map ('trial' | 'main')
   /** The phase of the CURRENT board — the sim's run wins while one exists, so
    * the won/lost overlays keep labelling the run that just finished even after
    * the campaign seat has already moved on. */
   const labelPhase: CampaignPhase = sim?.mapId ?? fight.phase;
-  /** The map the CURRENT board draws — follows the sim so a finished run never
-   * visually jumps maps before the player moves on. */
-  const boardMap = DEFEND_MAPS[sim?.mapId ?? mapId];
+  /** The board geometry the CURRENT board draws — follows the sim so a finished
+   * run never visually jumps boards before the player moves on. */
+  const boardMap = BOARD_MAPS[sim?.boardId ?? 'ato'];
   /** Ground dressing (grass + props + pad markers). Pure + memoized. */
   const decor = useMemo(() => boardDecor(boardMap), [boardMap]);
   /** Cobble road stamps hugging the waypoint polyline (Craftpix Road5). */
   const roadStamps = useMemo(() => roadDecor(boardMap), [boardMap]);
   /** Thin dark underlay bed the stamps sit on, for edge contrast. */
-  const roadD = useMemo(() => roadPathD(boardMap), [boardMap]);
+  const roadD = useMemo(() => boardPathD(boardMap), [boardMap]);
   const underlayTone = skinTone('road.underlay') ?? '#7a5636';
   const underlayWidth = skinUnits('road.underlay', 11);
 
@@ -602,7 +610,9 @@ export function DefendScreen({
   const buildSetup = useCallback(
     (next: Fight) => {
       setReplayPick(next.mode === 'replay' ? { phase: next.phase, wave: next.wave } : null);
-      setSim(createDefendLive(next.wave, { mapId: next.phase, cyclePower: view.cyclePower, tint: view.cycleTint }));
+      // Default board on every (re)build — maze is a deliberate Maps-UI pick.
+      setBoardId('ato');
+      setSim(createDefendLive(next.wave, { mapId: next.phase, boardId: 'ato', cyclePower: view.cyclePower, tint: view.cycleTint }));
       ensureParked(next.phase);
       setPhase('setup');
       setPaused(false);
@@ -629,7 +639,8 @@ export function DefendScreen({
     if (phase !== 'setup') return;
     const current = simRef.current;
     if (!(current && current.wave === fight.wave && current.mapId === fight.phase)) {
-      setSim(createDefendLive(fight.wave, { mapId: fight.phase, cyclePower: view.cyclePower, tint: view.cycleTint }));
+      setBoardId('ato');
+      setSim(createDefendLive(fight.wave, { mapId: fight.phase, boardId: 'ato', cyclePower: view.cyclePower, tint: view.cycleTint }));
       prevPuffsRef.current = [];
       setFloaters([]);
     shotsRef.current = [];
@@ -644,12 +655,33 @@ export function DefendScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fightKey, view.cyclePower, view.cycleTint]);
 
+  /** Maps UI: switch the Main board geometry (towers reset). Only reachable on
+   * Main — Trial keeps the locked `ato` board. */
+  const selectBoard = useCallback((next: BoardId) => {
+    setBoardId(next);
+    const f = fightRef.current;
+    setSim(createDefendLive(f.wave, {
+      mapId: f.phase,
+      boardId: next,
+      cyclePower: view.cyclePower,
+      tint: view.cycleTint,
+    }));
+    setSelectedPad(null);
+    prevPuffsRef.current = [];
+    setFloaters([]);
+    shotsRef.current = [];
+    puffFacingRef.current = {};
+    setShots([]);
+    prevStageRef.current = 'minions';
+  }, [view.cyclePower, view.cycleTint]);
+
   /** Start the wave on the current board — placed towers + spent scrap carry
    * into the fight (spec §9: setup place → start). */
   const startWave = useCallback(() => {
     playedRef.current = fightRef.current;
     setSim((prev) => prev ?? createDefendLive(fightRef.current.wave, {
       mapId: fightRef.current.phase,
+      boardId: fightRef.current.phase === 'main' ? boardId : 'ato',
       cyclePower: view.cyclePower,
       tint: view.cycleTint,
     }));
@@ -663,7 +695,7 @@ export function DefendScreen({
     setShots([]);
     prevStageRef.current = 'minions';
     setBossAlert(null);
-  }, [view.cyclePower, view.cycleTint]);
+  }, [view.cyclePower, view.cycleTint, boardId]);
 
   /** Abandon a live run back to setup — no win rewards. The tower layout is
    * kept (same feel as Retry after a fail), so Start wave is instantly
@@ -815,7 +847,7 @@ export function DefendScreen({
       // puffs: the engine may kill this very puff, and the post-step list would
       // drop the killing blow's facing/flash. A higher post-step cooldown means
       // the engine reset it — i.e. the Avatar attacked this tick.
-      const aimed = nearestPuffDelta(current.puffs, avatar, DEFEND_MAPS[current.mapId]);
+      const aimed = nearestPuffDelta(current.puffs, avatar, BOARD_MAPS[current.boardId] ?? BOARD_MAPS.ato);
       const step = stepDefendLive(current, DEFEND_TICK_MS, bucketsRef.current, avatar);
       // Facing is owned by the walk loop (velocity while moving, lastFacing when
       // idle); the ticker only detects the attack to fire the flash.
@@ -826,7 +858,7 @@ export function DefendScreen({
       // the tick a tower actually fires (its cooldown was reset) spawns a shot
       // FX toward that same target. Display only — the engine already applied
       // the damage; nothing here changes combat math.
-      const mapNow = DEFEND_MAPS[current.mapId];
+      const mapNow = BOARD_MAPS[current.boardId] ?? BOARD_MAPS.ato;
       for (const puff of step.state.puffs) {
         // Creeps face along the road: the path tangent at their progress. A
         // degenerate heading (nearly stopped / path corner case) keeps the last
@@ -861,7 +893,7 @@ export function DefendScreen({
       prevStageRef.current = step.state.spawnStage;
       // Display-only floaters: any puff that lost HP this tick, or vanished
       // (killed), gets a short damage number near it. No engine changes.
-      const events = diffPuffEvents(prevPuffsRef.current, step.state.puffs, step.state.mapId);
+      const events = diffPuffEvents(prevPuffsRef.current, step.state.puffs, step.state.boardId);
       if (events.length > 0) spawnFloaters(events);
       prevPuffsRef.current = step.state.puffs;
       simRef.current = step.state;
@@ -940,6 +972,7 @@ export function DefendScreen({
     setReplayPick(null);
     const base = createDefendLive(MAIN_WAVE_COUNT, {
       mapId: 'main',
+      boardId: 'ato',
       cyclePower: view.cyclePower,
       tint: view.cycleTint,
     });
@@ -1313,32 +1346,38 @@ export function DefendScreen({
                 the world point; grid tiles tile from their top-left.
                 pointerEvents none — taps fall through to the board's own tap
                 handler (click-to-move / pad select). */}
-            <View
-              pointerEvents="none"
-              style={[StyleSheet.absoluteFill, styles.boardTiles]}>
-              {decor.map((tile, index) => {
-                const source = skinArt(tile.role);
-                if (!source) return null;
-                const box = skinDrawBox(tile.role, tile.x, tile.y, tile.size);
-                const left = tile.anchor === 'center' ? box.x : tile.x;
-                const top = tile.anchor === 'center' ? tile.y - (tile.h ?? tile.size) / 2 : tile.y;
-                return (
-                  <Image
-                    key={`tile-${index}`}
-                    source={source}
-                    contentFit="fill"
-                    style={{
-                      position: 'absolute',
-                      left: `${left}%`,
-                      top: `${top}%`,
-                      width: `${tile.size}%`,
-                      height: `${tile.h ?? tile.size}%`,
-                      transform: [{ rotate: `${tile.rotate}deg` }],
-                    }}
-                  />
-                );
-              })}
-            </View>
+            {/* Craftpix field tiles (grass + props + pad markers) are the
+                `grove-classic` board skin only. The default `neon` chrome paints
+                its own void/corridor/brackets in the gameplay SVG below, so the
+                field tiles are bypassed entirely. */}
+            {NEON_CHROME ? null : (
+              <View
+                pointerEvents="none"
+                style={[StyleSheet.absoluteFill, styles.boardTiles]}>
+                {decor.map((tile, index) => {
+                  const source = skinArt(tile.role);
+                  if (!source) return null;
+                  const box = skinDrawBox(tile.role, tile.x, tile.y, tile.size);
+                  const left = tile.anchor === 'center' ? box.x : tile.x;
+                  const top = tile.anchor === 'center' ? tile.y - (tile.h ?? tile.size) / 2 : tile.y;
+                  return (
+                    <Image
+                      key={`tile-${index}`}
+                      source={source}
+                      contentFit="fill"
+                      style={{
+                        position: 'absolute',
+                        left: `${left}%`,
+                        top: `${top}%`,
+                        width: `${tile.size}%`,
+                        height: `${tile.h ?? tile.size}%`,
+                        transform: [{ rotate: `${tile.rotate}deg` }],
+                      }}
+                    />
+                  );
+                })}
+              </View>
+            )}
             {/* Gameplay layer — path, pads, towers, Bound Bosses, enemies.
                 Sits ABOVE the tiles (zIndex 1 > 0) so gameplay always reads on
                 top of the scroll art. pointerEvents none: gameplay is pure art
@@ -1346,41 +1385,51 @@ export function DefendScreen({
                 (click-to-move / pad select). */}
             <View style={styles.boardArt} pointerEvents="none">
             <Svg width="100%" height="100%" viewBox="0 0 100 100">
-              {/* ATO ghost — the 16×16 logo mask baked from `ato-map.tmx`,
-               * painted faint directly UNDER the road so the mark reads through
-               * the board. Pure decor: this whole layer is pointerEvents none,
-               * and the mask never touches the waypoint polyline the puffs walk.
-               * Both campaign maps share the ATO board, so it renders on all. */}
-              <Path d={ATO_GHOST_D} fill={theme.accent} fillOpacity={0.07} />
-              {/* Road — a thin dark underlay bed stroked along the waypoint
-               * polyline, then cobble STAMPS (straights + elbow corners + flared
-               * ends) centred on the centreline. Waypoints stay the walk truth.
-               * Drawn first so pads/towers/units sit on top. */}
-              <G>
-                <Path
-                  d={roadD}
-                  stroke={underlayTone}
-                  strokeWidth={underlayWidth}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-              </G>
-              {roadStamps.map((stamp, index) => {
-                const source = skinArt(stamp.role);
-                if (!source) return null;
-                const box = skinDrawBox(stamp.role, stamp.x, stamp.y, stamp.size);
-                return (
-                  <SvgImage
-                    key={`road-${index}`}
-                    href={source}
-                    x={box.x}
-                    y={box.y}
-                    width={box.size}
-                    height={box.size}
-                  />
-                );
-              })}
+              {NEON_CHROME ? (
+                /* Neon chrome — void/wall, ATO ghost, glowing path corridor and
+                 * magenta pad brackets. Painted FIRST so every gameplay layer
+                 * (pad rings, towers, enemies, shots) sits on top of it, and the
+                 * ghost stays under the corridor. Pure code/SVG, no PNGs. */
+                <NeonBoardChrome map={boardMap} ghostColor={theme.accent} />
+              ) : (
+                <>
+                  {/* ATO ghost — the 16×16 logo mask baked from `ato-map.tmx`,
+                   * painted faint directly UNDER the road so the mark reads through
+                   * the board. Pure decor: this whole layer is pointerEvents none,
+                   * and the mask never touches the waypoint polyline the puffs walk.
+                   * Both campaign maps share the ATO board, so it renders on all. */}
+                  <Path d={ATO_GHOST_D} fill={theme.accent} fillOpacity={0.07} />
+                  {/* Road — a thin dark underlay bed stroked along the waypoint
+                   * polyline, then cobble STAMPS (straights + elbow corners + flared
+                   * ends) centred on the centreline. Waypoints stay the walk truth.
+                   * Drawn first so pads/towers/units sit on top. */}
+                  <G>
+                    <Path
+                      d={roadD}
+                      stroke={underlayTone}
+                      strokeWidth={underlayWidth}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill="none"
+                    />
+                  </G>
+                  {roadStamps.map((stamp, index) => {
+                    const source = skinArt(stamp.role);
+                    if (!source) return null;
+                    const box = skinDrawBox(stamp.role, stamp.x, stamp.y, stamp.size);
+                    return (
+                      <SvgImage
+                        key={`road-${index}`}
+                        href={source}
+                        x={box.x}
+                        y={box.y}
+                        width={box.size}
+                        height={box.size}
+                      />
+                    );
+                  })}
+                </>
+              )}
               {boardMap.pads.map((pad, index) => {
                 const tower = sim?.towers.find((t) => t.pad === index);
                 const boundBoss = sim?.boundBosses.find((b) => b.pad === index);
@@ -1833,6 +1882,49 @@ export function DefendScreen({
                 </ThemedText>
               </Pressable>
             </ThemedView>
+
+            {/* Maps (§ — board picker, Main only): the locked ATO default vs the
+                parked Neon Maze prototype. Trial never shows this. */}
+            {fight.phase === 'main' ? (
+              <ThemedView type="backgroundElement" style={styles.card}>
+                <View style={styles.statRow}>
+                  <ThemedText type="smallBold">Maps</ThemedText>
+                  <ThemedText type="code" themeColor="textSecondary">
+                    {BOARD_MAPS[boardId].name}
+                  </ThemedText>
+                </View>
+                <ThemedText type="small" themeColor="textSecondary">
+                  ATO is the locked default. Neon Maze is the parked letter-maze
+                  prototype — pick it to playtest that board.
+                </ThemedText>
+                <View style={styles.mapList}>
+                  {BOARD_ORDER.map((id) => {
+                    const board = BOARD_MAPS[id];
+                    const active = boardId === id;
+                    return (
+                      <Pressable
+                        key={id}
+                        onPress={() => selectBoard(id)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Select ${board.name}`}
+                        style={({ pressed }) => [
+                          styles.mapCard,
+                          { borderColor: active ? theme.accent : theme.border },
+                          active && { backgroundColor: theme.backgroundSelected },
+                          pressed && styles.pressed,
+                        ]}>
+                        <ThemedText type="smallBold" themeColor={active ? 'emphasis' : undefined}>
+                          {board.name}
+                        </ThemedText>
+                        <ThemedText type="code" themeColor="textSecondary">
+                          {id === 'ato' ? 'Locked path · default' : 'Letter maze · parked'}
+                        </ThemedText>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </ThemedView>
+            ) : null}
 
             {/* Gear score + Skip-to-even (§9j / §18 D) — campaign only. */}
             {fight.mode === 'campaign' ? (
@@ -2659,22 +2751,6 @@ function aimDegrees(cx: number, cy: number, tx: number, ty: number): number {
   return facingDegrees(tx - cx, ty - cy);
 }
 
-/**
- * SVG path data for the road: the waypoint polyline in the SVG's 0..100
- * viewBox. The waypoints are the single source of truth for where creeps walk,
- * so stroking this exact polyline makes the road art hug the walk line.
- */
-function roadPathD(map: DefendMap): string {
-  const first = map.path[0];
-  if (!first) return '';
-  const parts = [`M ${first.x * 100} ${first.y * 100}`];
-  for (let i = 1; i < map.path.length; i += 1) {
-    const point = map.path[i]!;
-    parts.push(`L ${point.x * 100} ${point.y * 100}`);
-  }
-  return parts.join(' ');
-}
-
 /** Delta from the Avatar to the nearest puff in attack range (facing aid). */
 function nearestPuffDelta(
   puffs: readonly Puff[],
@@ -2980,6 +3056,18 @@ const styles = StyleSheet.create({
   },
   centerText: {
     textAlign: 'center',
+  },
+  /** Maps picker — stacked board cards (Main only). */
+  mapList: {
+    gap: Spacing.two,
+    marginTop: Spacing.one,
+  },
+  mapCard: {
+    gap: Spacing.half,
+    borderWidth: 1,
+    borderRadius: Spacing.two,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
   },
   disabled: {
     opacity: 0.5,

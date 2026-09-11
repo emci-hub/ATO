@@ -184,6 +184,29 @@ export function skinFacingDeg(
   return ((Math.round(raw / step) * step) % 360 + 360) % 360;
 }
 
+/* ----------------------------------------------------------- board chrome --- */
+
+/**
+ * Active board paint for the Defend screen (Trial + Main share it).
+ *
+ * - `neon` (default) — procedural Neon Viper chrome painted in code/SVG: void
+ *   wall, glowing path corridor, magenta pad brackets. No field tiles / no road
+ *   stamps (see `neon-chrome`).
+ * - `grove-classic` — the Craftpix field tiles + cobble road stamps, kept as the
+ *   original "Grove Classic" board skin.
+ *
+ * Swap this one value to preview either board. Gameplay geometry is untouched —
+ * this is paint only.
+ */
+export type BoardSkinId = 'neon' | 'grove-classic';
+
+export const BOARD_SKIN: BoardSkinId = 'neon';
+
+export const BOARD_SKIN_LABEL: Record<BoardSkinId, string> = {
+  neon: 'Neon Viper',
+  'grove-classic': 'Grove Classic',
+};
+
 /** Which unit role plays each boss band (art only — bands/scaling unchanged). */
 export const BAND_UNIT_ROLE = {
   final: 'unit.final',
