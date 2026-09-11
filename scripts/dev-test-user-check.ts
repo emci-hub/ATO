@@ -473,6 +473,78 @@ function main() {
   assert.match(hubSrc, /me\.id === DEV_TEST_USER_ID/);
   assert.match(hubSrc, /applyDevIntakeStagePreset/);
   ok('Dev Lab intake-stage panel is gated on PRE_LAUNCH_DEV and the dev-test user id');
+
+  /* -------------------------------------------------------------------------
+   * Preset 6 — handle-collision account (wave65).
+   * ---------------------------------------------------------------------- */
+  const wave65 = read('supabase/migrations/wave65_dev_collision_account.sql');
+  // Anchored to the stale-email guard's "id <>" clause specifically, not
+  // "the first 36-char quoted string in the file" — a reordering (e.g. the
+  // zero-uuid instance_id ending up first) could otherwise silently become
+  // what this matches instead.
+  const collisionId = /id <> '([0-9a-f-]{36})'/.exec(wave65)?.[1];
+  const realDevTestUserId = /export const DEV_TEST_USER_ID = '([0-9a-f-]{36})';/.exec(
+    moduleSrc,
+  )?.[1];
+
+  // Migration's id is distinct from the real dev-test user's (parsed from
+  // each source, not two copy-pasted literals — a future id edit on either
+  // side would actually be caught), and the handle constant the client
+  // checks against matches what the migration writes.
+  assert.ok(collisionId, 'could not parse an id out of wave65');
+  assert.ok(realDevTestUserId, 'could not parse DEV_TEST_USER_ID out of dev-test-user.ts');
+  assert.notEqual(collisionId, realDevTestUserId);
+  assert.match(moduleSrc, /export const DEV_COLLISION_HANDLE = 'atodev2';/);
+  assert.match(wave65, /'atodev2'/);
+  ok('handle-collision account id is distinct from @atodev, and the client handle constant matches wave65');
+
+  // Never sign-in-able: no password, no identities row — unlike wave31's
+  // real dev-test account, which sets both. Scoped to the INSERT statement
+  // itself (not the whole file) so the header comment can still explain why
+  // in prose without tripping the assertion on its own words.
+  const collisionInsertStart = wave65.indexOf('insert into auth.users');
+  const collisionInsertEnd = wave65.indexOf('commit;');
+  assert.ok(collisionInsertStart >= 0, 'wave65 must insert into auth.users');
+  assert.ok(collisionInsertEnd > collisionInsertStart, 'wave65 must end with commit;');
+  const collisionInsert = wave65.slice(collisionInsertStart, collisionInsertEnd);
+  assert.doesNotMatch(collisionInsert, /encrypted_password/);
+  assert.doesNotMatch(collisionInsert, /auth\.identities/);
+  ok('collision account has no password and no identities row — cannot be signed in to');
+
+  // Hidden, so it actually exercises the wave64 bug (a taken handle behind a
+  // visible=false row used to read as free).
+  assert.match(
+    wave65,
+    /\(id, name, handle, timezone, born_on, visible\)[\s\S]{0,200}?false\)/,
+  );
+  ok('collision account me row is inserted with visible = false');
+
+  // Idempotent, same shape as wave31 — including the stale-email guard,
+  // which on conflict (id) alone does not cover (a prior row at this email
+  // under a different id would fail the insert rather than converge).
+  assert.match(wave65, /on conflict \(id\) do update/);
+  assert.match(wave65, /delete from auth\.users\s*\nwhere email = 'ato-dev-collision@example\.com'\s*\n\s*and id <> '[0-9a-f-]{36}';/);
+  ok('wave65 is idempotent (on conflict do update, plus a stale-email guard, like wave31)');
+
+  // The check button is read-only: it must call the RPC and never write to
+  // `me` or any other table.
+  assert.match(hubSrc, /function HandleCollisionCheck\(\)/);
+  const collisionBody = hubSrc.slice(hubSrc.indexOf('function HandleCollisionCheck'));
+  const collisionBodyEnd = collisionBody.indexOf('\nfunction ResetAiConsent');
+  const collisionScoped = collisionBody.slice(0, collisionBodyEnd > 0 ? collisionBodyEnd : undefined);
+  assert.match(collisionScoped, /if \(!PRE_LAUNCH_DEV \|\| !isDevUser\) return null/);
+  // Calls the production client path (the same function onboarding's account
+  // step calls), not the bare RPC — so this proves the real call site stays
+  // fixed, not just the function underneath it.
+  assert.match(collisionScoped, /checkHandleAvailable\(DEV_COLLISION_HANDLE\)/);
+  assert.match(hubSrc, /import \{ checkHandleAvailable \} from '@\/lib\/me';/);
+  assert.match(collisionScoped, /DEV_COLLISION_HANDLE/);
+  assert.doesNotMatch(collisionScoped, /\.update\(/);
+  assert.doesNotMatch(collisionScoped, /\.insert\(/);
+  assert.doesNotMatch(collisionScoped, /\.delete\(/);
+  assert.doesNotMatch(collisionScoped, /\.upsert\(/);
+  ok('handle-collision check is gated the same as the intake panel and writes nothing');
+
   console.log(`\n${passed}/${passed} dev-test-user checks passed.`);
 }
 

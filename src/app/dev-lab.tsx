@@ -98,7 +98,12 @@ import {
   DEV_INTAKE_STAGES,
   type DevIntakeStageId,
 } from '@/lib/dev-intake-stages';
-import { DEV_TEST_USER_ID, applyDevIntakeStagePreset } from '@/lib/dev-test-user';
+import {
+  DEV_COLLISION_HANDLE,
+  DEV_TEST_USER_ID,
+  applyDevIntakeStagePreset,
+} from '@/lib/dev-test-user';
+import { checkHandleAvailable } from '@/lib/me';
 import { bankTotalProgress } from '@/lib/questions/local';
 import { legendsUnlocked, sageUnlocked } from '@/lib/questions/progressive-unlock';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
@@ -206,6 +211,7 @@ function DevLab() {
             <ThemedText type="smallBold">You</ThemedText>
             {canSeeHubSection('traits', gate) ? <TraitViewer /> : null}
             <IntakeStagePresets />
+            <HandleCollisionCheck />
             <GrowthPreview />
             <BandDetailStepper />
             <ForceTestError message="Dev Lab test error — You" />
@@ -985,6 +991,75 @@ function IntakeStagePresets() {
         would delete the @atodev identity itself. It resets everything the form
         would have written.
       </ThemedText>
+    </View>
+  );
+}
+
+/**
+ * Preset 6 — handle-collision check. Read-only: calls handle_taken (wave64)
+ * against the fixed hidden/paused account provisioned by wave65
+ * (DEV_COLLISION_HANDLE, @atodev2, visible = false) and reports the result.
+ * Proves the exact bug wave64 fixed — a handle owned by a hidden account used
+ * to read as free through public_profile — stays fixed. Writes nothing;
+ * gated the same as the intake-stage panel above.
+ */
+function HandleCollisionCheck() {
+  const { me } = useMeContext();
+  const isDevUser = !!me && me.id === DEV_TEST_USER_ID;
+  const [result, setResult] = useState<'unchecked' | 'checking' | boolean>('unchecked');
+  const [error, setError] = useState<string | null>(null);
+
+  if (!PRE_LAUNCH_DEV || !isDevUser) return null;
+
+  async function check() {
+    setResult('checking');
+    setError(null);
+    try {
+      // The exact client call the onboarding account step makes — this
+      // exercises the real production path, not just the RPC underneath it.
+      // checkHandleAvailable also returns ok:false on a format error or a
+      // network/RPC failure, so "not ok" alone would read those as "taken" —
+      // check the specific message it returns for an actually-taken handle.
+      const outcome = await checkHandleAvailable(DEV_COLLISION_HANDLE);
+      if (outcome.ok) {
+        setResult(false);
+      } else if (outcome.message === 'That handle is already taken') {
+        setResult(true);
+      } else {
+        setResult('unchecked');
+        setError(outcome.message);
+      }
+    } catch (err) {
+      setResult('unchecked');
+      setError(err instanceof Error ? err.message : 'Could not check that handle.');
+    }
+  }
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Handle collision (preset 6)</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        @{DEV_COLLISION_HANDLE} is a hidden (visible = false) account
+        provisioned by wave65 (migration not yet applied → will read as
+        &quot;available&quot; here, same as before the wave64 fix). Read-only
+        — calls checkHandleAvailable, the same function onboarding calls,
+        writes nothing. Once wave65 is applied it should report taken.
+      </ThemedText>
+      {error ? <ThemedText type="small">{error}</ThemedText> : null}
+      <ThemedText type="code" themeColor="textSecondary">
+        {result === 'unchecked'
+          ? 'not checked yet'
+          : result === 'checking'
+            ? 'checking…'
+            : result
+              ? 'taken (correct, once wave65 is applied)'
+              : 'available (expected until wave65 is applied)'}
+      </ThemedText>
+      <Chip
+        label={result === 'checking' ? 'checking…' : `check @${DEV_COLLISION_HANDLE}`}
+        selected={false}
+        onPress={() => void check()}
+      />
     </View>
   );
 }

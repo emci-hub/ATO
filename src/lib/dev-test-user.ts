@@ -49,6 +49,15 @@ import {
 export const DEV_TEST_HANDLE = 'atodev';
 export const DEV_TEST_USER_ID = 'a70d3e0e-4c00-4a1e-8c0d-00000000d3e0';
 
+/**
+ * Second dev identity (wave65), for handle-collision testing only. Hidden
+ * (me.visible = false), no password, no auth.identities row — it can never
+ * be the signed-in session, only a taken handle behind a paused profile.
+ * Not exported as a user id: nothing in the client is meant to sign in as or
+ * write to this account, only read its handle_taken result.
+ */
+export const DEV_COLLISION_HANDLE = 'atodev2';
+
 export type DevArchetypePresetId = 'architect' | 'front_liner' | 'watcher' | 'commander';
 
 /**
