@@ -1,5 +1,5 @@
 /**
- * "5 questions per page, book-style" Full Profile UI. Run: npm run check:category-paged-questions
+ * "5 questions per page, book-style" Full Profile UI. Run: npm run check:paged-questions
  *
  * Covers the things Emci explicitly asked to be verified, not assumed from a
  * passing typecheck:
@@ -11,7 +11,7 @@
  *   4. leaving and returning restores the same page (position persistence)
  *   5. no auto-scroll and no Back/Skip/Next-per-category controls remain
  *
- * Pure/offline only — category-paged-questions.tsx has no Supabase import.
+ * Pure/offline only — paged-questions.tsx has no Supabase import.
  * AsyncStorage itself cannot be exercised for real under plain Node (its
  * calls throw "window is not defined" outside a RN runtime, confirmed by a
  * manual probe during an earlier build) — check 4 below verifies the same
@@ -65,7 +65,7 @@ function trackWithCount(axis: TraitAxis, answerCount: number): TraitTrack {
   };
 }
 
-/** Same adapter shape questions-fold.tsx uses to feed CategoryPagedQuestions from the static bank. */
+/** Same adapter shape questions-fold.tsx uses to feed PagedQuestions from the static bank. */
 function bankRowsForAxis(tracks: readonly TraitTrack[]) {
   return (axis: TraitAxis): CategoryQuestionRow[] =>
     bankProgressForAxis(axis, tracks).map((row) => ({
@@ -153,7 +153,7 @@ async function main() {
     const expectedTotal = bankQuestionCount(unique);
     assert.equal(allRows.length, expectedTotal, 'the flat row list must include every axis\'s full bank, not a fixed subset');
 
-    const src = read('src/components/category-paged-questions.tsx');
+    const src = read('src/components/paged-questions.tsx');
     assert.doesNotMatch(src, /maxHeight/, 'no maxHeight constraint that could clip a page');
     assert.doesNotMatch(src, /numberOfLines/, 'no line-clamping on question text');
     assert.doesNotMatch(src, /overflow:\s*['"]hidden['"]/, 'no overflow:hidden that could cut off content');
@@ -175,7 +175,7 @@ async function main() {
     assert.equal(await loadCategoryPagePosition(storageKey), null);
 
     // User pages to page 3 (index 2) and the component persists it (this is
-    // exactly what CategoryPagedQuestions' own position-save effect does).
+    // exactly what PagedQuestions' own position-save effect does).
     await saveCategoryPagePosition(storageKey, '2');
 
     // "Leaving and returning" — a fresh load call, as a remount would issue.
@@ -192,7 +192,7 @@ async function main() {
 
   // --- Check 5: no leftover Back/Skip/Next-per-category or auto-scroll ----
   {
-    const src = read('src/components/category-paged-questions.tsx');
+    const src = read('src/components/paged-questions.tsx');
     assert.doesNotMatch(src, /scrollTo|measureLayout|scrollViewRef/i, 'no auto-scroll code should remain in the book pager');
     assert.doesNotMatch(src, />\s*Skip\s*</, 'the per-category "Skip" control must not remain — nothing to skip in a flat book pager');
     assert.match(src, />\s*Next Page\s*</, 'must have a "Next Page" control');
@@ -237,7 +237,7 @@ async function main() {
     ok('PASS — answered-option storage round-trips, survives a same-tick double-save on different rows without dropping either, and stays scoped per storageKey (per-account)');
   }
 
-  console.log(`\n${passed} category-paged-questions checks passed`);
+  console.log(`\n${passed} paged-questions checks passed`);
 }
 
 void main();

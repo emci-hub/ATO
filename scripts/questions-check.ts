@@ -963,8 +963,8 @@ assert.match(fold, /logPhraseGuard/);
 // routeQuestions/priorityAxes, and never imports anything from the
 // question_items direction, so a bad bank read can never touch the
 // persisted rotation. Re-platformed Sep 2026 onto the reusable
-// CategoryPagedQuestions component (category-per-screen, replacing the old
-// single flat 16-axis list) — `useCategoryDefs()`/`getCategoryDefs()` IS now
+// PagedQuestions component (book-style pager, 5 questions per page,
+// replacing the old single flat 16-axis list) — `useCategoryDefs()`/`getCategoryDefs()` IS now
 // expected inside this wiring (the opposite of the pre-Sep-2026 invariant
 // this block used to assert), scoped to the bank-adapter call site so a
 // stray category reference elsewhere in the file doesn't false-positive
@@ -973,7 +973,7 @@ assert.match(fold, /bankProgressForAxis/);
 assert.match(fold, /bankTotalProgress/);
 assert.doesNotMatch(fold, /bankQuestionCount/);
 assert.doesNotMatch(fold, /category_id/);
-assert.match(fold, /CategoryPagedQuestions/);
+assert.match(fold, /PagedQuestions/);
 // Scoped per account (found in review: an unscoped key would leak one
 // account's answer stamps to another account signed in on the same device).
 assert.match(fold, /storageKey=\{`full-profile:\$\{me\.id\}`\}/);
@@ -984,8 +984,8 @@ assert.match(fold, /useCategoryDefs\(\)/);
 assert.match(fold, /categories=\{liveCategoryDefs\}/);
 {
   const bankAdapter = fold.slice(
-    fold.indexOf('<CategoryPagedQuestions'),
-    fold.indexOf('/>', fold.indexOf('<CategoryPagedQuestions')),
+    fold.indexOf('<PagedQuestions'),
+    fold.indexOf('/>', fold.indexOf('<PagedQuestions')),
   );
   assert.match(bankAdapter, /bankProgressForAxis/);
   assert.match(bankAdapter, /locked=\{fullProfileLocked\}/);
@@ -994,9 +994,9 @@ assert.match(fold, /categories=\{liveCategoryDefs\}/);
   // read must never be able to reach the persisted daily-pack rotation.
   assert.doesNotMatch(bankAdapter, /routeQuestions|priorityAxes|mergeCategoryPriority/);
 }
-ok('Full Profile renders through the reusable CategoryPagedQuestions component (live category catalog), straight from the static bank, never through routeQuestions');
+ok('Full Profile renders through the reusable PagedQuestions component (live category catalog), straight from the static bank, never through routeQuestions');
 
-// CategoryPagedQuestions itself: a flat, axis-order book pager (5 questions
+// PagedQuestions itself: a flat, axis-order book pager (5 questions
 // per page, Back/Next Page only — no per-category grouping or Skip since the
 // restructure), a caller-supplied row accessor (never assumes a fixed
 // question count or where questions come from — the reusability this
@@ -1005,7 +1005,7 @@ ok('Full Profile renders through the reusable CategoryPagedQuestions component (
 // double-counted toward progress. Must never itself reach into
 // routeQuestions/priorityAxes/mergeCategoryPriority — those are the default
 // (Infinite Questions) rotation's concern, not this component's.
-const pagedQuestions = read('src/components/category-paged-questions.tsx');
+const pagedQuestions = read('src/components/paged-questions.tsx');
 assert.match(pagedQuestions, /rowsForAxis: \(axis: TraitAxis\) => readonly CategoryQuestionRow\[\]/);
 assert.doesNotMatch(pagedQuestions, /routeQuestions|priorityAxes|mergeCategoryPriority/);
 // uniqueCategoryAxes/completedAxesFrom live in the pure, react-native-free
@@ -1033,7 +1033,7 @@ assert.doesNotMatch(
   pagedQuestions,
   /QUESTIONS_SKIP_THIS|QUESTIONS_SKIP_REST|QUESTIONS_CHECKPOINT|QUESTIONS_KEEP_GOING/,
 );
-ok('CategoryPagedQuestions is a flat, axis-order book pager (5/page), dedupes shared-axis progress, and persists/restores page position — independent of Infinite Questions\' own copy/state');
+ok('PagedQuestions is a flat, axis-order book pager (5/page), dedupes shared-axis progress, and persists/restores page position — independent of Infinite Questions\' own copy/state');
 
 // Category-to-axis targeting (additive, unused by any caller yet — same
 // pattern as focusAxis): an optional `category` prop resolves to that
@@ -1060,13 +1060,13 @@ assert.match(fold, /contradictedAxesFrom/);
 assert.match(fold, /tracks,\s*\n\s*contradictedAxes,/);
 ok('questions-fold.tsx fetches trait_history and passes contradictedAxes into the routeQuestions call itself');
 
-// Full Profile (now CategoryPagedQuestions) still never uses Infinite
+// Full Profile (now PagedQuestions) still never uses Infinite
 // Questions' own skip/checkpoint copy — already asserted against
-// category-paged-questions.tsx above. Confirm the reverse holds too: the
+// paged-questions.tsx above. Confirm the reverse holds too: the
 // default rotation section of this same file (everything before the
-// CategoryPagedQuestions usage) still keeps that copy, untouched by the
+// PagedQuestions usage) still keeps that copy, untouched by the
 // re-platform.
-const defaultRotationSection = fold.slice(0, fold.indexOf('<CategoryPagedQuestions'));
+const defaultRotationSection = fold.slice(0, fold.indexOf('<PagedQuestions'));
 assert.match(defaultRotationSection, /QUESTIONS_SKIP_THIS/);
 assert.match(defaultRotationSection, /QUESTIONS_SKIP_REST/);
 assert.match(defaultRotationSection, /QUESTIONS_CHECKPOINT/);
@@ -1076,7 +1076,7 @@ assert.match(defaultRotationSection, /QUESTIONS_CHECKPOINT/);
 assert.doesNotMatch(pagedQuestions, /'Locked'/);
 assert.doesNotMatch(pagedQuestions, />\s*Locked\s*</);
 assert.match(pagedQuestions, />\s*Answered\s*</);
-ok('Full Profile (CategoryPagedQuestions) still never touches Infinite Questions\' skip/checkpoint copy; default rotation keeps it, unaffected; no stale per-row lock label');
+ok('Full Profile (PagedQuestions) still never touches Infinite Questions\' skip/checkpoint copy; default rotation keeps it, unaffected; no stale per-row lock label');
 assert.equal(QUESTIONS_SKIP_THIS, 'Skip this one');
 assert.equal(QUESTIONS_SKIP_REST, 'Skip the rest');
 assert.equal(QUESTIONS_CHECKPOINT, "That's plenty for now — come back anytime");

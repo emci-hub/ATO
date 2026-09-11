@@ -65,7 +65,7 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 | `profile-fill-fold.tsx` | Explore "Full profile" checklist — filled (>=1 answer) per axis, N of 16, Complete state |
 | `sage-eight-ball.tsx`, `sage-usage.tsx`, `sage-facts.tsx` | Sage chat pieces; usage line; "What Sage remembers" |
 | `core-intake-sweep.tsx`, `optional-intake.tsx`, `intake-sweep.tsx`, `intake-chips.tsx`, `intake-settings.tsx` | Intake screens/chips |
-| `questions-fold.tsx` | Question batch UI |
+| `questions-fold.tsx`, `paged-questions.tsx` | Question batch UI; flat 5-per-page book pager over the frozen 50-question intake |
 | `full-profile-fold.tsx`, `trait-bands-fold.tsx`, `axis-taps.tsx`, `axis-code-label.tsx`, `depth-dive.tsx` | Full Profile + trait editing |
 | `growth-markers.tsx`, `quest-growth-bars.tsx`, `check-milestone-badge.tsx` | Growth/badges |
 | `share-poster.tsx`, `scan-sheet.tsx`, `city-picker.tsx` | Poster + QR scan; Around city |

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { CategoryPagedQuestions } from '@/components/category-paged-questions';
+import { PagedQuestions } from '@/components/paged-questions';
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
@@ -146,7 +146,7 @@ export function QuestionsFold({
 }) {
   const theme = useTheme();
   // Live-subscribed catalog (same hook categories-fold.tsx/category-teaser.tsx
-  // already use) — CategoryPagedQuestions needs the current list, not a
+  // already use) — PagedQuestions needs the current list, not a
   // mount-time snapshot, since a category_defs fetch can swap the array
   // while this screen is open.
   const liveCategoryDefs = useCategoryDefs();
@@ -286,7 +286,7 @@ export function QuestionsFold({
    * persisted-pack path) cannot: `QuestionItemRow` has no axis-weight
    * fields, and adding them would be a `question_items` schema change.
    */
-  /** Returns whether the write actually succeeded — CategoryPagedQuestions only persists its "Answered" stamp on a confirmed true, so a failed write (currently only console.log'd here, no user-facing error) can never leave a permanent stamp that contradicts the real answered-count. */
+  /** Returns whether the write actually succeeded — PagedQuestions only persists its "Answered" stamp on a confirmed true, so a failed write (currently only console.log'd here, no user-facing error) can never leave a permanent stamp that contradicts the real answered-count. */
   async function pickBankItem(draft: QuestionDraft, option: QuestionOption): Promise<boolean> {
     if (busy) return false;
     setBusy(true);
@@ -414,7 +414,7 @@ export function QuestionsFold({
           {progress.answered} of {progress.total} answered
         </ThemedText>
       ) : null}
-      <CategoryPagedQuestions
+      <PagedQuestions
         // Scoped per account, not just per question-set — this key backs
         // BOTH the remembered scroll position (category-page-position.ts,
         // pre-existing) and the answered-option stamp storage
@@ -482,7 +482,7 @@ export function QuestionsFold({
                     { borderColor: controlBorderColor(theme) },
                     picked && { backgroundColor: theme.backgroundSelected },
                     // Excludes the just-picked option from the busy dim — the
-                    // same fix already shipped for CategoryPagedQuestions
+                    // same fix already shipped for PagedQuestions
                     // (afd6365): dimming the option the instant it's
                     // highlighted as picked read as "the tap didn't register"
                     // rather than "saving". Every unpicked option still

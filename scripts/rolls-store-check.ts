@@ -3,7 +3,7 @@
  *
  * results.ts is pure and imported/tested directly. store.ts/run.ts/generate.ts
  * import @/lib/supabase (pulls in react-native, fails under plain Node — same
- * class of issue category-paged-questions.tsx once hit) or @/lib/ai/generate,
+ * class of issue paged-questions.tsx once hit) or @/lib/ai/generate,
  * so they're checked via source assertions only, same pattern
  * ai-provider-check.ts already uses for RN-touching files.
  */

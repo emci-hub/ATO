@@ -2,7 +2,7 @@
  * Pure result-parsing for the roll/reveal RPCs (trait-system redesign §7).
  * Split out from store.ts specifically so this stays Node-testable — store.ts
  * imports @/lib/supabase, which pulls in react-native and fails under plain
- * Node (same class of issue category-paged-questions.tsx once hit), same
+ * Node (same class of issue paged-questions.tsx once hit), same
  * split tokens.ts (pure)/tokens-server.ts (RPC calls) already uses.
  */
 

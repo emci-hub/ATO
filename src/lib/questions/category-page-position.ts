@@ -1,5 +1,5 @@
 /**
- * Remembers which page a `CategoryPagedQuestions` viewer last landed on, per
+ * Remembers which page a `PagedQuestions` viewer last landed on, per
  * question set (`storageKey`, e.g. "full-profile"). Stores a stringified page
  * index (e.g. "3") — before the book-pager restructure this stored a category
  * id instead; the storage shape (an opaque string per storageKey) didn't need

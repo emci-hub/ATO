@@ -70,7 +70,7 @@ const PAGE_SIZE = 5;
  * deliberately — it could overshoot); the page itself never moves until the
  * viewer taps Next Page.
  */
-export function CategoryPagedQuestions({
+export function PagedQuestions({
   storageKey,
   categories,
   rowsForAxis,

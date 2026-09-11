@@ -1,5 +1,5 @@
 /**
- * Remembers which option a `CategoryPagedQuestions` row was answered with,
+ * Remembers which option a `PagedQuestions` row was answered with,
  * per question set (`storageKey`, e.g. "full-profile") — same shape as
  * `category-page-position.ts`, which this mirrors exactly, for the same
  * reason: AsyncStorage, not a `me` column (a schema change needing sign-off
