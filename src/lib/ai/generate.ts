@@ -1,7 +1,22 @@
+import { withTimeout } from '@/lib/timeout';
+
 import { AI_CONFIG, isRemoteReady } from './config';
 import { completeViaEdge, isEdgeProvider } from './edge';
 import { resolveActiveProvider } from './override';
 import type { AiCallMetadata, AiProviderId, GenerateRequest, RemoteAiProviderId } from './types';
+
+/** Backstop above the edge function's own 8s per-vendor-fetch timeout
+ * (supabase/functions/ai-generate/index.ts) — normally the edge function
+ * itself returns well inside this window. Without it, a stalled edge
+ * invocation (cold start, dropped connection) has no ceiling of its own and
+ * silently eats a caller's entire outer timeout budget (e.g. the
+ * ongoing-round-start wrapper in questions-fold.tsx) on a single call. Kept
+ * well above the edge function's 8s vendor ceiling (not equal to it) —
+ * auth + claim_ai_call + network overhead sit outside that 8s window, and
+ * claim_ai_call runs before the vendor call, so a client timeout that fires
+ * before the edge function's own would abandon calls that already spent a
+ * quota unit. */
+const AI_CALL_TIMEOUT_MS = 15000;
 
 async function logQuiet(provider: AiProviderId): Promise<void> {
   try {
@@ -24,7 +39,7 @@ async function completeFor(
   // Every vendor — Gemini included — is called by the ai-generate Edge
   // Function. No vendor key exists in this bundle.
   if (isEdgeProvider(provider)) {
-    return completeViaEdge(provider, request, options);
+    return withTimeout(completeViaEdge(provider, request, options), AI_CALL_TIMEOUT_MS, `ai-generate-${provider}`);
   }
   throw new Error(`Unknown AI provider: ${provider}`);
 }

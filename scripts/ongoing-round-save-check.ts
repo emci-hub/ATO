@@ -135,7 +135,7 @@ assert.match(
 ok('OngoingRoundFold is only rendered once the frozen 50-question intake is complete (fullProfileLocked)');
 
 assert.match(foldSrc, /const existing = await withTimeout\(fetchLatestOngoingRoundPack\(\), 25000, 'ongoing-round-load'\);/);
-assert.match(foldSrc, /const saved = await withTimeout\(runOngoingRound\(ongoingMe, history, tracks\), 25000, 'ongoing-round-start'\);/);
+assert.match(foldSrc, /const saved = await withTimeout\(runOngoingRound\(ongoingMe, history, tracks\), 40000, 'ongoing-round-start'\);/);
 assert.match(foldSrc, /const nextItem = nextUnansweredItem\(pack\);/);
 ok('OngoingRoundFold loads any existing ongoing-round pack, can start a new one via runOngoingRound, and serves its next unanswered item');
 

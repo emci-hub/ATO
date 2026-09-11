@@ -618,7 +618,13 @@ function OngoingRoundFold({
         sage_knows: me.sage_knows,
         facts: me.facts,
       };
-      const saved = await withTimeout(runOngoingRound(ongoingMe, history, tracks), 25000, 'ongoing-round-start');
+      // 40s, not 25s: composing a 25-item round can take several sequential
+      // AI calls (up to 5 chunks, see chunked-generate.ts) — each now has
+      // its own bounded per-call timeout (ai/generate.ts, ai-generate edge
+      // function), but the outer budget still needs enough room for a
+      // realistic (not pathological) chain to finish rather than always
+      // racing the whole composition against a ceiling tuned for one call.
+      const saved = await withTimeout(runOngoingRound(ongoingMe, history, tracks), 40000, 'ongoing-round-start');
       setPack(saved);
     } catch (err) {
       console.log('[ongoing-round] start error:', err);
