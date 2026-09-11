@@ -433,3 +433,28 @@ export async function applyDevIntakeStagePreset(
     ),
   );
 }
+
+/**
+ * Fully resets the signed-in dev-test user back to before onboarding —
+ * unlike `applyDevIntakeStagePreset('fresh', ...)`, this actually deletes the
+ * `me` row (via the `reset_dev_test_user` RPC, wave66), so the app's own
+ * `guard={isAuthed && !hasMe}` (src/app/_layout.tsx) puts the real
+ * "Introduce yourself" onboarding screen back on screen — no account
+ * deletion/recreation needed. The Supabase auth user/session is untouched;
+ * only data scoped to this one fixed account is removed. The RPC itself
+ * hard-gates to the same literal id server-side, so this client guard is a
+ * convenience, not the only enforcement.
+ */
+export async function resetDevTestUserToFreshSignup(): Promise<void> {
+  if (!PRE_LAUNCH_DEV) throw new Error('Dev-test reset is pre-launch only');
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.id !== DEV_TEST_USER_ID) {
+    throw new Error('Dev-test reset only applies to the fixed dev-test user');
+  }
+
+  const { error } = await supabase.rpc('reset_dev_test_user');
+  if (error) throw error;
+}

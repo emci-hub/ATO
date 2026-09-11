@@ -100,8 +100,10 @@ import {
 } from '@/lib/dev-intake-stages';
 import {
   DEV_COLLISION_HANDLE,
+  DEV_TEST_HANDLE,
   DEV_TEST_USER_ID,
   applyDevIntakeStagePreset,
+  resetDevTestUserToFreshSignup,
 } from '@/lib/dev-test-user';
 import { checkHandleAvailable } from '@/lib/me';
 import { bankTotalProgress } from '@/lib/questions/local';
@@ -211,6 +213,7 @@ function DevLab() {
             <ThemedText type="smallBold">You</ThemedText>
             {canSeeHubSection('traits', gate) ? <TraitViewer /> : null}
             <IntakeStagePresets />
+            <ResetToFreshSignup />
             <HandleCollisionCheck />
             <GrowthPreview />
             <BandDetailStepper />
@@ -991,6 +994,86 @@ function IntakeStagePresets() {
         would delete the @atodev identity itself. It resets everything the form
         would have written.
       </ThemedText>
+    </View>
+  );
+}
+
+/**
+ * Reset the dev-test account all the way back to before onboarding (wave66
+ * reset_dev_test_user RPC) — unlike the "Fresh signup" intake-stage preset
+ * above, this actually deletes the me row, so the real "Introduce yourself"
+ * screen renders again. Same two guards as every other dev-test-user action;
+ * requires typing the handle to confirm since it's destructive to this
+ * account's data (auth.users/the session are untouched either way).
+ */
+function ResetToFreshSignup() {
+  const theme = useTheme();
+  const { me, refresh } = useMeContext();
+  const isDevUser = !!me && me.id === DEV_TEST_USER_ID;
+  const [confirm, setConfirm] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+
+  if (!PRE_LAUNCH_DEV || !isDevUser) return null;
+
+  async function reset() {
+    if (busy || confirm !== DEV_TEST_HANDLE) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await resetDevTestUserToFreshSignup();
+      setConfirm('');
+      setDone(true);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not reset this account.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Reset to fresh signup</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Deletes the @{DEV_TEST_HANDLE} me row (traits, history, checks,
+        questions, tokens — everything scoped to this account) but keeps the
+        Supabase auth user and this session signed in, so the app routes
+        straight into the real &quot;Introduce yourself&quot; onboarding
+        screen. Irreversible for this account&apos;s data. Type{' '}
+        {DEV_TEST_HANDLE} to confirm.
+      </ThemedText>
+      {error ? <ThemedText type="small">{error}</ThemedText> : null}
+      {done ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          Done — this account has no profile now.
+        </ThemedText>
+      ) : null}
+      <TextInput
+        value={confirm}
+        onChangeText={setConfirm}
+        placeholder={DEV_TEST_HANDLE}
+        placeholderTextColor={theme.textSecondary}
+        autoCapitalize="none"
+        autoCorrect={false}
+        style={[
+          styles.input,
+          styles.searchInput,
+          { color: theme.text, backgroundColor: theme.backgroundSelected, borderColor: controlBorderColor(theme) },
+        ]}
+      />
+      <Pressable
+        disabled={busy || confirm !== DEV_TEST_HANDLE}
+        onPress={() => void reset()}
+        style={({ pressed }) => [
+          styles.chip,
+          { borderColor: controlBorderColor(theme) },
+          (busy || confirm !== DEV_TEST_HANDLE) && { opacity: 0.4 },
+          pressed && styles.pressed,
+        ]}>
+        <ThemedText type="small">{busy ? 'resetting…' : 'Reset to fresh signup'}</ThemedText>
+      </Pressable>
     </View>
   );
 }

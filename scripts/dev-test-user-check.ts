@@ -475,6 +475,60 @@ function main() {
   ok('Dev Lab intake-stage panel is gated on PRE_LAUNCH_DEV and the dev-test user id');
 
   /* -------------------------------------------------------------------------
+   * Reset to fresh signup (wave66) — deletes the me row, unlike every
+   * intake-stage preset above.
+   * ---------------------------------------------------------------------- */
+  const wave66 = read('supabase/migrations/wave66_dev_test_user_reset.sql');
+
+  // The RPC is hard-gated to the real dev-test id, not a parameter — parsed
+  // independently from wave66 and from dev-test-user.ts so an edit to either
+  // literal alone breaks this, not just a copy-pasted match.
+  const resetFnId = /v_dev_id constant uuid := '([0-9a-f-]{36})'/.exec(wave66)?.[1];
+  const devTestUserIdForReset = /export const DEV_TEST_USER_ID = '([0-9a-f-]{36})';/.exec(
+    moduleSrc,
+  )?.[1];
+  assert.ok(resetFnId, 'could not parse v_dev_id out of wave66');
+  assert.ok(devTestUserIdForReset, 'could not parse DEV_TEST_USER_ID out of dev-test-user.ts');
+  assert.equal(resetFnId, devTestUserIdForReset, 'wave66 must gate on the real dev-test user id');
+  assert.match(wave66, /if auth\.uid\(\) is distinct from v_dev_id then/);
+  assert.match(wave66, /raise exception/);
+  ok('reset_dev_test_user is hard-gated to the real dev-test user id via auth.uid(), not a parameter');
+
+  // Must never delete auth.users — only data scoped to this user. And must
+  // delete the me row itself (the whole point — unlike the intake presets).
+  assert.doesNotMatch(wave66, /delete from auth\.users/);
+  assert.match(wave66, /delete from public\.me where id = v_dev_id;/);
+  ok('wave66 deletes the me row but never touches auth.users');
+
+  // Execute is restricted to authenticated (the signed-in client calls it
+  // directly via .rpc), never left open to anon.
+  assert.match(wave66, /revoke execute on function public\.reset_dev_test_user\(\) from public, anon;/);
+  assert.match(wave66, /grant execute on function public\.reset_dev_test_user\(\) to authenticated;/);
+  ok('reset_dev_test_user execute grant excludes anon');
+
+  // Client wrapper: same two guards as every other dev-test-user action,
+  // calls the RPC, never writes to `me`/`trait_tracks` directly (the RPC is
+  // the only path since the client has no delete grant on either).
+  const resetFnStart = moduleSrc.indexOf('export async function resetDevTestUserToFreshSignup');
+  assert.ok(resetFnStart >= 0, 'resetDevTestUserToFreshSignup must exist');
+  const resetFnBody = moduleSrc.slice(resetFnStart);
+  assert.match(resetFnBody, /if \(!PRE_LAUNCH_DEV\) throw new Error/);
+  assert.match(resetFnBody, /user\.id !== DEV_TEST_USER_ID/);
+  assert.match(resetFnBody, /supabase\.rpc\('reset_dev_test_user'\)/);
+  ok('resetDevTestUserToFreshSignup carries both guards and calls the RPC, not a direct table write');
+
+  // Dev Lab button: gated the same way, requires typing the handle to
+  // confirm (destructive), and calls the wrapper above.
+  assert.match(hubSrc, /function ResetToFreshSignup\(\)/);
+  const resetPanelStart = hubSrc.indexOf('function ResetToFreshSignup');
+  const resetPanelEnd = hubSrc.indexOf('\nfunction HandleCollisionCheck');
+  const resetPanelScoped = hubSrc.slice(resetPanelStart, resetPanelEnd > 0 ? resetPanelEnd : undefined);
+  assert.match(resetPanelScoped, /if \(!PRE_LAUNCH_DEV \|\| !isDevUser\) return null/);
+  assert.match(resetPanelScoped, /confirm !== DEV_TEST_HANDLE/);
+  assert.match(resetPanelScoped, /resetDevTestUserToFreshSignup\(\)/);
+  ok('Reset-to-fresh-signup panel is gated on PRE_LAUNCH_DEV/dev-test-user and requires typing the handle to confirm');
+
+  /* -------------------------------------------------------------------------
    * Preset 6 — handle-collision account (wave65).
    * ---------------------------------------------------------------------- */
   const wave65 = read('supabase/migrations/wave65_dev_collision_account.sql');
