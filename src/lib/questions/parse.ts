@@ -11,6 +11,33 @@ function isAxis(value: unknown): value is TraitAxis {
   return typeof value === 'string' && (TRAIT_AXES as readonly string[]).includes(value);
 }
 
+const MAX_PROMPT_LENGTH = 400;
+
+/**
+ * Every reject path is logged. The parser used to return null in silence, so a
+ * round that asked for 5 questions could come back with 3 and nothing said why.
+ * `category` is not available here — it is only ever set by the static bank —
+ * so axis is the identity we log (or `unknown` when the axis is the bad field).
+ */
+function logDrop(reason: string, axis: unknown, promptLength: number): void {
+  const axisLabel = isAxis(axis) ? axis : 'unknown';
+  console.log(`[questions] dropped draft: ${reason} (axis=${axisLabel}, promptLength=${promptLength})`);
+}
+
+/** Cut at the last word boundary so a truncated prompt never ends mid-word. */
+function truncatePrompt(prompt: string): string {
+  if (prompt.length <= MAX_PROMPT_LENGTH) return prompt;
+  const head = prompt.slice(0, MAX_PROMPT_LENGTH - 1);
+  const lastSpace = head.lastIndexOf(' ');
+  const cut = lastSpace > MAX_PROMPT_LENGTH / 2 ? head.slice(0, lastSpace) : head;
+  // A prompt with no space cuts by index, which can strand the lead half of a
+  // surrogate pair; a lone surrogate makes PostgREST reject the whole insert.
+  const lead = cut.charCodeAt(cut.length - 1);
+  const whole = lead >= 0xd800 && lead <= 0xdbff ? cut.slice(0, -1) : cut;
+  const body = whole.trimEnd();
+  return `${body}…`;
+}
+
 function parseOption(raw: unknown): QuestionOption | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const row = raw as Record<string, unknown>;
@@ -62,14 +89,42 @@ function parseRedundancyTags(raw: unknown): string[] | undefined {
 }
 
 export function parseQuestionDraft(raw: unknown): QuestionDraft | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    logDrop('not an object', undefined, 0);
+    return null;
+  }
   const row = raw as Record<string, unknown>;
-  if (!isAxis(row.axis)) return null;
-  const prompt = typeof row.prompt === 'string' ? row.prompt.trim() : '';
-  if (!prompt || prompt.length > 400) return null;
-  if (!Array.isArray(row.options)) return null;
+  const rawPrompt = typeof row.prompt === 'string' ? row.prompt.trim() : '';
+  const promptLength = rawPrompt.length;
+  if (!isAxis(row.axis)) {
+    logDrop(`unknown axis ${JSON.stringify(row.axis).slice(0, 40)}`, row.axis, promptLength);
+    return null;
+  }
+  if (!rawPrompt) {
+    logDrop('empty prompt', row.axis, 0);
+    return null;
+  }
+  // Over-long prompts are trimmed, not thrown away: 400 mirrors the DB CHECK on
+  // question.prompt (wave17_infinite_questions.sql), so a trimmed prompt still inserts.
+  const prompt = truncatePrompt(rawPrompt);
+  if (promptLength > MAX_PROMPT_LENGTH) {
+    console.log(
+      `[questions] truncated prompt: ${promptLength} -> ${prompt.length} chars (axis=${row.axis})`,
+    );
+  }
+  if (!Array.isArray(row.options)) {
+    logDrop('options is not an array', row.axis, promptLength);
+    return null;
+  }
   const options = row.options.map(parseOption).filter((opt): opt is QuestionOption => opt != null);
-  if (options.length < 2 || options.length > 3) return null;
+  if (options.length < 2 || options.length > 3) {
+    logDrop(
+      `${options.length} valid options of ${row.options.length} raw (need 2-3)`,
+      row.axis,
+      promptLength,
+    );
+    return null;
+  }
   const primaryAxes = parseAxisWeightList(row.primaryAxes, 2);
   const secondaryAxes = parseAxisWeightList(row.secondaryAxes, 3);
   const excludedAxes = parseExcludedAxes(row.excludedAxes);
@@ -106,6 +161,9 @@ export function parseQuestionBatch(raw: string, count = 5): QuestionDraft[] {
     if (draft) out.push(draft);
     if (out.length >= max) break;
   }
+  if (out.length < max) {
+    console.log(`[questions] batch short: kept ${out.length} of ${list.length} drafts (wanted ${max})`);
+  }
   return out;
 }
 
@@ -125,12 +183,18 @@ export function parseQuestionSweep(raw: string): QuestionDraft[] {
       : [];
   const seen = new Set<TraitAxis>();
   const out: QuestionDraft[] = [];
+  let dropped = 0;
   for (const item of list) {
     const draft = parseQuestionDraft(item);
+    if (!draft) dropped += 1;
     if (!draft || seen.has(draft.axis)) continue;
     seen.add(draft.axis);
     out.push(draft);
     if (out.length >= TRAIT_AXES.length) break;
+  }
+  // Only malformed items count as short — the dedupe and TRAIT_AXES cap are normal.
+  if (dropped > 0) {
+    console.log(`[questions] sweep short: kept ${out.length} of ${list.length} drafts, ${dropped} malformed`);
   }
   return out;
 }
