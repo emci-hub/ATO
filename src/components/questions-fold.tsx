@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { PagedQuestions } from '@/components/paged-questions';
+import {
+  PagedQuestions,
+  completedAxesFrom,
+  uniqueCategoryAxes,
+  type CategoryQuestionRow,
+} from '@/components/paged-questions';
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
@@ -414,39 +419,52 @@ export function QuestionsFold({
   // nothing meaningful.
   const fullProfileLocked = progress.total > 0 && progress.answered >= progress.total;
 
+  const bankAxes = uniqueCategoryAxes(liveCategoryDefs);
+  const bankRowsForAxis = useCallback(
+    (axis: TraitAxis): CategoryQuestionRow[] =>
+      bankProgressForAxis(axis, tracks ?? []).map((row) => ({
+        key: `${row.axis}-${row.variant}`,
+        axis: row.axis,
+        draft: row.draft,
+        answered: row.state === 'answered',
+      })),
+    [tracks],
+  );
+  const bankCompletedAxes = completedAxesFrom(bankAxes, bankRowsForAxis);
+  const bankRows = bankAxes.flatMap((axis) => bankRowsForAxis(axis));
+
   const body = (
     <View style={styles.body}>
       <ThemedText type="small" themeColor="textSecondary">
         {QUESTIONS_LEDE}
       </ThemedText>
-      {progress.total > 0 ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {progress.answered} of {progress.total} answered
-        </ThemedText>
-      ) : null}
-      <PagedQuestions
-        // Scoped per account, not just per question-set — this key backs
-        // BOTH the remembered scroll position (category-page-position.ts,
-        // pre-existing) and the answered-option stamp storage
-        // (answered-option-storage.ts, new). Unscoped, a second account
-        // signed in on the same device would see the first account's
-        // answer stamps on questions it never answered (found in review).
-        storageKey={`full-profile:${me.id}`}
-        categories={liveCategoryDefs}
-        rowsForAxis={(axis) =>
-          bankProgressForAxis(axis, tracks ?? []).map((row) => ({
-            key: `${row.axis}-${row.variant}`,
-            axis: row.axis,
-            draft: row.draft,
-            answered: row.state === 'answered',
-          }))
-        }
-        locked={fullProfileLocked}
-        onSaveBatch={saveBankAnswers}
-      />
       {fullProfileLocked ? (
+        // The finished 50-question bank is gone from the screen entirely
+        // once a round exists — it used to stay visible (locked) with the
+        // round appended below as a small "Submit" sub-block, which read as
+        // unrelated/broken UI. Replacing it outright, not stacking.
         <OngoingRoundFold me={me} history={history} tracks={tracks ?? []} onUpdated={onUpdated} />
-      ) : null}
+      ) : (
+        <>
+          {progress.total > 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {progress.answered} of {progress.total} answered
+            </ThemedText>
+          ) : null}
+          <PagedQuestions
+            // Scoped per account, not just per question-set — this key backs
+            // BOTH the remembered scroll position (category-page-position.ts,
+            // pre-existing) and the answered-option stamp storage
+            // (answered-option-storage.ts, new). Unscoped, a second account
+            // signed in on the same device would see the first account's
+            // answer stamps on questions it never answered (found in review).
+            storageKey={`full-profile:${me.id}`}
+            rows={bankRows}
+            progressLabel={`${bankCompletedAxes.length} of ${bankAxes.length} axes complete`}
+            onSaveBatch={saveBankAnswers}
+          />
+        </>
+      )}
       {checkpoint ? (
         <>
           <ThemedText>{QUESTIONS_CHECKPOINT}</ThemedText>
@@ -565,13 +583,12 @@ function OngoingRoundFold({
   const [pack, setPack] = useState<QuestionPackRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [errorKind, setErrorKind] = useState<'load' | 'start' | null>(null);
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
-  const [rerollBusy, setRerollBusy] = useState(false);
-  const [rerollNote, setRerollNote] = useState<string | null>(null);
-  const [pickedIndex, setPickedIndex] = useState<{ itemId: string; index: number } | null>(null);
-  const [answerErrorNote, setAnswerErrorNote] = useState<string | null>(null);
+  // Per-row, not a single flag — a page of the round pager shows several
+  // unanswered rows at once, each independently rerollable.
+  const [rerollBusyByItem, setRerollBusyByItem] = useState<Record<string, boolean>>({});
+  const [rerollNoteByItem, setRerollNoteByItem] = useState<Record<string, string>>({});
   const atoBalance = atoTokenBalanceOf(me);
   const canRerollQuestion = atoBalance >= ATO_TOKEN_PRICE.question_reroll;
 
@@ -648,83 +665,122 @@ function OngoingRoundFold({
     }
   }
 
-  async function pick(item: QuestionItemRow, index: number) {
-    const option = item.options[index];
-    if (!option || busy || !pack) return;
-    setBusy(true);
-    setPickedIndex({ itemId: item.id, index });
-    setAnswerErrorNote(null);
+  /**
+   * Saves a whole page's worth of ongoing-round answers in one batch, called
+   * from the round pager only when Next Page is pressed (never per-tap) —
+   * same batch-save discipline as the Full Profile bank's saveBankAnswers,
+   * but through the persisted-pack write path (answerQuestionItem +
+   * updateTraits per item), since QuestionItemRow — unlike the bank's
+   * QuestionDraft — is a real, id-bearing row. Sequential per item: each
+   * item can carry a different axis, so this can't collapse into one
+   * updateTraits call the way the bank's does. Completion (round fully
+   * answered → claim the token bonus) is checked once, against the batch's
+   * combined effect, not per item.
+   */
+  async function saveRoundAnswers(
+    answers: readonly { key: string; draft: QuestionDraft; option: QuestionOption; optIndex: number }[],
+  ): Promise<boolean> {
+    if (!pack) return false;
     try {
-      await answerQuestionItem(item.id, index);
-      await updateTraits(me.id, { [item.axis]: option.value }, 'self_situation', [item.axis]);
+      for (const { key, draft, option, optIndex } of answers) {
+        await answerQuestionItem(key, optIndex);
+        await updateTraits(me.id, { [draft.axis]: option.value }, 'self_situation', [draft.axis]);
+      }
       earnTokensQuiet('game_round');
       await onUpdated();
-      const updatedItems = pack.items.map((row) =>
-        row.id === item.id ? { ...row, answeredOption: index } : row,
-      );
-      setPack({ ...pack, items: updatedItems });
+      // Functional update, not a closure read of `pack` — background saves
+      // for different pages (or a concurrent reroll) can resolve in any
+      // order, and a stale-closure write here would silently revert
+      // whichever one landed first (found in review).
+      const answeredKeys = new Set(answers.map((a) => a.key));
+      const holder: { pack: QuestionPackRow | null } = { pack: null };
+      setPack((prev) => {
+        if (!prev) return prev;
+        const updatedItems = prev.items.map((row) =>
+          answeredKeys.has(row.id)
+            ? { ...row, answeredOption: answers.find((a) => a.key === row.id)?.optIndex ?? row.answeredOption }
+            : row,
+        );
+        holder.pack = { ...prev, items: updatedItems };
+        return holder.pack;
+      });
       // ATO tokens T-04: award the round-completion bonus the moment the
-      // last item is answered. The RPC re-verifies completion server-side
-      // (every question_items row in the pack answered) and dedupes on
-      // pack id, so this can never double-award even if pick() somehow
-      // fires this branch more than once for the same pack.
-      if (nextUnansweredItem({ ...pack, items: updatedItems }) === null) {
-        claimOngoingRoundCompleteQuiet(pack.id);
+      // last item lands, evaluated against this batch's combined effect on
+      // top of the true latest state. The RPC re-verifies completion
+      // server-side and dedupes on pack id, so this can never double-award
+      // even across overlapping batches.
+      if (holder.pack && nextUnansweredItem(holder.pack) === null) {
+        claimOngoingRoundCompleteQuiet(holder.pack.id);
       }
+      return true;
     } catch (err) {
-      console.log('[ongoing-round] answer error:', err);
-      Sentry.captureException(err, { tags: { stage: 'ongoing-round-answer' }, extra: { packId: pack.id, itemId: item.id } });
+      console.log('[ongoing-round] batch answer error:', err);
+      Sentry.captureException(err, { tags: { stage: 'ongoing-round-answer' }, extra: { packId: pack.id } });
       void Sentry.flush();
-      // A failed save must not leave the tapped option looking picked — same
-      // discipline as QuestionsFold's own pick() (see its pickedOption reset).
-      setPickedIndex(null);
-      // Previously silent — a failed answer just un-picked with no signal at
-      // all, the exact blind spot this diagnostics pass exists to close.
-      setAnswerErrorNote("Couldn't save that answer. Try again.");
-    } finally {
-      setBusy(false);
+      return false;
     }
   }
 
-  async function reroll(item: QuestionItemRow) {
-    if (rerollBusy || busy || !canRerollQuestion || !pack) return;
-    setRerollBusy(true);
-    setRerollNote(null);
+  /**
+   * Rerolls one row. Only ever offered (see renderRowExtra below) on a row
+   * that is both unanswered AND has no local pending pick — the server's own
+   * guard (wave54, `answered_option is not null` → raise) only knows about
+   * PERSISTED answers, not a pick sitting unsaved in the pager's local state,
+   * so the pending check has to happen here on the client (found during
+   * planning, not the server's job to know about unsaved UI state).
+   */
+  async function reroll(row: CategoryQuestionRow) {
+    if (!pack || rerollBusyByItem[row.key] || !canRerollQuestion) return;
+    setRerollBusyByItem((prev) => ({ ...prev, [row.key]: true }));
+    setRerollNoteByItem((prev) => ({ ...prev, [row.key]: '' }));
     try {
-      const { result, item: updated } = await rerollQuestionItem(item);
+      const { result, item: updated } = await rerollQuestionItem({
+        id: row.key,
+        axis: row.axis,
+        packId: pack.id,
+      });
       if (result.reason === 'no_candidates') {
-        setRerollNote("Couldn't find a fresh question right now. Nothing spent.");
+        setRerollNoteByItem((prev) => ({ ...prev, [row.key]: "Couldn't find a fresh question right now. Nothing spent." }));
         return;
       }
       if (!result.ok) {
-        setRerollNote(result.already ? 'Already rerolled today.' : ATO_TOKEN_NEED_MORE);
+        setRerollNoteByItem((prev) => ({
+          ...prev,
+          [row.key]: result.already ? 'Already rerolled today.' : ATO_TOKEN_NEED_MORE,
+        }));
         return;
       }
       if (!updated) {
-        setRerollNote("Couldn't find a fresh question right now.");
+        setRerollNoteByItem((prev) => ({ ...prev, [row.key]: "Couldn't find a fresh question right now." }));
         return;
       }
-      setPack({
-        ...pack,
-        items: pack.items.map((row) =>
-          row.id === updated.id ? { ...row, prompt: updated.prompt, options: updated.options } : row,
-        ),
-      });
+      // Functional update — same reasoning as saveRoundAnswers: a
+      // concurrent background batch save could resolve around this reroll,
+      // and a stale-closure write here would revert it.
+      setPack((prev) =>
+        prev
+          ? {
+              ...prev,
+              items: prev.items.map((item) =>
+                item.id === updated.id ? { ...item, prompt: updated.prompt, options: updated.options } : item,
+              ),
+            }
+          : prev,
+      );
       // Refresh me so the ATO balance shown next to the (now-disabled-for-today) button is current.
       await onUpdated();
     } catch (err) {
       console.log('[ongoing-round] reroll error:', err);
-      setRerollNote("Couldn't reroll right now. Try again.");
+      setRerollNoteByItem((prev) => ({ ...prev, [row.key]: "Couldn't reroll right now. Try again." }));
     } finally {
-      setRerollBusy(false);
+      setRerollBusyByItem((prev) => ({ ...prev, [row.key]: false }));
     }
   }
 
-  const nextItem = nextUnansweredItem(pack);
+  const answeredCount = pack ? pack.items.filter((item) => item.answeredOption != null).length : 0;
 
   return (
     <View style={styles.body}>
-      <ThemedText type="smallBold">Submit</ThemedText>
       {loading ? (
         <ThemedText themeColor="textSecondary">Loading…</ThemedText>
       ) : errorKind ? (
@@ -755,59 +811,7 @@ function OngoingRoundFold({
             {starting ? 'Putting together your next round…' : 'Start your next round'}
           </ThemedText>
         </ThemedPressable>
-      ) : nextItem ? (
-        <>
-          <ThemedText style={styles.questionPrompt}>{nextItem.prompt}</ThemedText>
-          <View style={styles.options}>
-            {nextItem.options.map((option, index) => {
-              const picked = pickedIndex?.itemId === nextItem.id && pickedIndex.index === index;
-              return (
-                <ThemedPressable
-                  key={`${nextItem.id}-${index}`}
-                  disabled={busy}
-                  accessibilityState={{ selected: picked }}
-                  onPress={() => void pick(nextItem, index)}
-                  style={[
-                    styles.option,
-                    { borderColor: controlBorderColor(theme) },
-                    picked && { backgroundColor: theme.backgroundSelected },
-                    busy && !picked && styles.disabled,
-                  ]}>
-                  <ThemedText type="smallBold">{option.text}</ThemedText>
-                </ThemedPressable>
-              );
-            })}
-          </View>
-          {answerErrorNote ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              {answerErrorNote}
-            </ThemedText>
-          ) : null}
-          <View style={styles.skipRow}>
-            <Pressable
-              onPress={() => void reroll(nextItem)}
-              disabled={busy || rerollBusy || !canRerollQuestion}
-              style={({ pressed }) => [
-                styles.skipLink,
-                pressed && styles.pressed,
-                (busy || rerollBusy || !canRerollQuestion) && styles.disabled,
-              ]}>
-              <ThemedText type="smallBold">
-                {rerollBusy
-                  ? 'Rerolling…'
-                  : canRerollQuestion
-                    ? `Reroll · ${atoPriceLine('question_reroll')}`
-                    : ATO_TOKEN_NEED_MORE}
-              </ThemedText>
-            </Pressable>
-          </View>
-          {rerollNote ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              {rerollNote}
-            </ThemedText>
-          ) : null}
-        </>
-      ) : (
+      ) : nextUnansweredItem(pack) === null ? (
         <>
           <ThemedText type="small" themeColor="textSecondary">
             Round complete.
@@ -821,6 +825,55 @@ function OngoingRoundFold({
             </ThemedText>
           </ThemedPressable>
         </>
+      ) : (
+        <PagedQuestions
+          // Scoped per round, not just per account — a new round is a new
+          // pack id, and this key forces PagedQuestions to fully remount
+          // (fresh picked/pending/failed-batch state) rather than risk any
+          // stale local state bleeding from one round into the next.
+          key={pack.id}
+          storageKey={`ongoing-round:${pack.id}:${me.id}`}
+          rows={pack.items.map((item) => ({
+            key: item.id,
+            axis: item.axis,
+            draft: { axis: item.axis, prompt: item.prompt, options: item.options },
+            answered: item.answeredOption != null,
+          }))}
+          progressLabel={`${answeredCount} of ${pack.items.length} answered`}
+          onSaveBatch={saveRoundAnswers}
+          renderRowExtra={(row, isPending) => {
+            if (row.answered || isPending) return null;
+            const busy = rerollBusyByItem[row.key] ?? false;
+            const note = rerollNoteByItem[row.key];
+            return (
+              <>
+                <View style={styles.skipRow}>
+                  <Pressable
+                    onPress={() => void reroll(row)}
+                    disabled={busy || !canRerollQuestion}
+                    style={({ pressed }) => [
+                      styles.skipLink,
+                      pressed && styles.pressed,
+                      (busy || !canRerollQuestion) && styles.disabled,
+                    ]}>
+                    <ThemedText type="smallBold">
+                      {busy
+                        ? 'Rerolling…'
+                        : canRerollQuestion
+                          ? `Reroll · ${atoPriceLine('question_reroll')}`
+                          : ATO_TOKEN_NEED_MORE}
+                    </ThemedText>
+                  </Pressable>
+                </View>
+                {note ? (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {note}
+                  </ThemedText>
+                ) : null}
+              </>
+            );
+          }}
+        />
       )}
     </View>
   );

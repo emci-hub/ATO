@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import type { CategoryDef } from '@/lib/categories';
 import { humanizeAxis } from '@/lib/milestones';
 import {
   loadAnsweredOptions,
@@ -23,7 +23,6 @@ import {
 import type { QuestionDraft, QuestionOption } from '@/lib/questions/types';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { hexToRgb } from '@/lib/theme/contrast';
-import type { TraitAxis } from '@/lib/traits';
 
 export type { CategoryQuestionRow };
 export { completedAxesFrom, uniqueCategoryAxes };
@@ -51,10 +50,11 @@ const PAGE_SIZE = 5;
  * the earlier one-category-per-screen layout (Back/Skip/Next per category):
  * with the questions no longer grouped by category, "skip this category"
  * stopped making sense as a control, so it's gone along with the grouping.
- * Generic over the question source: the caller supplies `rowsForAxis`, so
- * this component never assumes a fixed question count per axis or where the
- * questions come from (the static Full Profile bank today; a future
- * "questions stack" source later, same component).
+ * Generic over the question source: the caller supplies an already-flat
+ * `rows` list and its own `progressLabel` line, so this component never
+ * assumes where the questions come from or how progress toward them is
+ * measured — the static Full Profile bank (axis-based) and the ongoing-round
+ * generator (answered-count-based) both use it, unchanged otherwise.
  *
  * Per-row rendering (prompt, options, an "Answered" stamp overlaid on the
  * picked option, themed border/colors) is unchanged from the prior layout —
@@ -75,16 +75,18 @@ const PAGE_SIZE = 5;
  */
 export function PagedQuestions({
   storageKey,
-  categories,
-  rowsForAxis,
+  rows,
+  progressLabel,
   locked = false,
   onSaveBatch,
+  renderRowExtra,
 }: {
-  /** Unique id for this question set (e.g. "full-profile", "questions-stack") — scopes remembered position. */
+  /** Unique id for this question set (e.g. "full-profile", "ongoing-round:<packId>") — scopes remembered position. */
   storageKey: string;
-  categories: readonly CategoryDef[];
-  /** Caller-supplied accessor so this component never assumes where questions come from. */
-  rowsForAxis: (axis: TraitAxis) => readonly CategoryQuestionRow[];
+  /** Already-flat, caller-ordered row list — this component never assumes where the questions come from. */
+  rows: readonly CategoryQuestionRow[];
+  /** Caller-supplied secondary line under "Page X of Y" (e.g. "16 of 16 axes complete", "12 of 25 answered"). */
+  progressLabel: string;
   /** Hides every option everywhere, same meaning as Full Profile's old global lock. */
   locked?: boolean;
   /**
@@ -94,9 +96,25 @@ export function PagedQuestions({
    * PERSISTED (answered-option-storage.ts, so it survives remounts/paging
    * back) once this confirms true — otherwise a failed write would leave a
    * permanent stamp that contradicts the real answered-count elsewhere on
-   * screen (found in review, kept from the prior per-tap layout).
+   * screen (found in review, kept from the prior per-tap layout). Each entry
+   * carries `key`/`optIndex` alongside `draft`/`option` — the Full Profile
+   * bank's save function ignores them (its write is content-addressed by
+   * axis/draft), but the ongoing-round save function needs `key` (the
+   * underlying `question_items.id`) and `optIndex` to call
+   * `answerQuestionItem`, which this component has no other way to supply.
    */
-  onSaveBatch: (answers: readonly { draft: QuestionDraft; option: QuestionOption }[]) => Promise<boolean>;
+  onSaveBatch: (
+    answers: readonly { key: string; draft: QuestionDraft; option: QuestionOption; optIndex: number }[],
+  ) => Promise<boolean>;
+  /**
+   * Optional extra content rendered under a row's options (e.g. a reroll
+   * control). `isPending` is true while that row has a local, not-yet-saved
+   * pick — callers must not offer an action here that would invalidate a
+   * pending pick (e.g. rerolling a question out from under an unsaved
+   * answer), since this component has no way to know what the extra content
+   * does.
+   */
+  renderRowExtra?: (row: CategoryQuestionRow, isPending: boolean) => ReactNode;
 }) {
   const theme = useTheme();
   const [pageIndex, setPageIndex] = useState(0);
@@ -129,7 +147,7 @@ export function PagedQuestions({
     rows: readonly { key: string; draft: QuestionDraft; option: QuestionOption; optIndex: number }[],
   ) {
     setSavingCount((n) => n + 1);
-    onSaveBatch(rows.map(({ draft, option }) => ({ draft, option })))
+    onSaveBatch(rows)
       .then((ok) => {
         if (ok) {
           for (const row of rows) void saveAnsweredOption(storageKey, row.key, row.optIndex);
@@ -182,35 +200,20 @@ export function PagedQuestions({
     };
   }, [storageKey]);
 
-  const uniqueAxes = useMemo(() => uniqueCategoryAxes(categories), [categories]);
-  const completedAxes = useMemo(
-    () => completedAxesFrom(uniqueAxes, rowsForAxis),
-    [uniqueAxes, rowsForAxis],
-  );
-  // Flat, axis-order list of every question across every category — the
-  // book pager's whole "auto-sorted, not grouped by category" shape. Axes
-  // shared by two categories only contribute their rows once, since
-  // `uniqueAxes` is already deduped.
-  const allRows = useMemo(
-    () => uniqueAxes.flatMap((axis) => rowsForAxis(axis)),
-    [uniqueAxes, rowsForAxis],
-  );
-
-  const totalPages = Math.max(1, Math.ceil(allRows.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const clampedPage = Math.min(pageIndex, totalPages - 1);
 
   // Persist the position on every change, but only after the initial load
   // above resolves — otherwise the default index=0 would overwrite a real
-  // saved position in the instant before it loads. Also skipped while
-  // `allRows` is empty (nothing loaded yet for this caller) — writing "0"
-  // then would clobber a real remembered position before real rows arrive
-  // (found in review; not reachable today since the Full Profile bank is
-  // always non-empty, but this component is explicitly generic over the
-  // question source).
+  // saved position in the instant before it loads. Also skipped while `rows`
+  // is empty (nothing loaded yet for this caller) — writing "0" then would
+  // clobber a real remembered position before real rows arrive (found in
+  // review; not reachable today since the Full Profile bank is always
+  // non-empty, but this component is explicitly generic over the source).
   useEffect(() => {
-    if (!positionReady || allRows.length === 0) return;
+    if (!positionReady || rows.length === 0) return;
     void saveCategoryPagePosition(storageKey, String(clampedPage));
-  }, [positionReady, storageKey, clampedPage, allRows.length]);
+  }, [positionReady, storageKey, clampedPage, rows.length]);
 
   const goTo = useCallback(
     (next: number) => {
@@ -219,11 +222,11 @@ export function PagedQuestions({
     [totalPages],
   );
 
-  if (categories.length === 0) return null;
+  if (rows.length === 0) return null;
 
   const atFirst = clampedPage === 0;
   const atLast = clampedPage >= totalPages - 1;
-  const pageRows = allRows.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE);
+  const pageRows = rows.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE);
 
   return (
     <View style={styles.container}>
@@ -232,7 +235,7 @@ export function PagedQuestions({
           Page {clampedPage + 1} of {totalPages}
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
-          {completedAxes.length} of {uniqueAxes.length} axes complete
+          {progressLabel}
         </ThemedText>
       </View>
       <View style={styles.rows}>
@@ -284,6 +287,7 @@ export function PagedQuestions({
                 })}
               </View>
             )}
+            {locked || !renderRowExtra ? null : renderRowExtra(row, pendingByRow[row.key] != null)}
           </View>
         ))}
       </View>

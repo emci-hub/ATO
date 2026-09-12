@@ -127,24 +127,29 @@ ok('composeOngoingRound\'s saveItems hook is a true no-op; saveOngoingRoundBatch
 // --- questions-fold.tsx: UI trigger --------------------------------------------
 const foldSrc = read('src/components/questions-fold.tsx');
 
-// Briefly removed 2026-09-11, restored the same day: this render IS the
-// bank-first/AI-fallback "next round of questions" flow (composeOngoingRound
-// -> bank-pool.ts's addToBankPool), correctly gated on fullProfileLocked
-// (only after the frozen 50-question intake is done). It was mistaken for
-// unrelated broken UI ("Submit" heading + a stray scenario question stacked
-// under Back/Finish) and removed, then restored once traced back to being
-// working, intentional behavior — see docs/NOW.md.
+// 2026-09-11, third pass on this screen the same day: the round now gets its
+// own paged UI (matching the Full Profile pager) that REPLACES the finished
+// 50-question bank on screen, rather than the bank staying visible (locked)
+// with the round appended below as a small single-question "Submit" block —
+// that stacking is exactly what read as unrelated/broken UI. Confirm the
+// bank's own PagedQuestions only ever renders in the NOT-locked branch.
 assert.match(
   foldSrc,
-  /\{fullProfileLocked \? \(\s*\n\s*<OngoingRoundFold me=\{me\} history=\{history\} tracks=\{tracks \?\? \[\]\} onUpdated=\{onUpdated\} \/>\s*\n\s*\) : null\}/,
-  'the ongoing-round CTA/flow must render once fullProfileLocked (the frozen 50-question intake is done) — not alongside the still-in-progress intake',
+  /\{fullProfileLocked \? \(\s*\n[\s\S]{0,500}?<OngoingRoundFold me=\{me\} history=\{history\} tracks=\{tracks \?\? \[\]\} onUpdated=\{onUpdated\} \/>\s*\n\s*\) : \(/,
+  'fullProfileLocked must render OngoingRoundFold in place of the bank pager, not alongside it',
 );
-ok('OngoingRoundFold is rendered once the frozen 50-question intake is complete (fullProfileLocked)');
+const bankBranchBody = foldSrc.slice(
+  foldSrc.indexOf(') : (', foldSrc.indexOf('{fullProfileLocked ? (')),
+  foldSrc.indexOf(')}', foldSrc.indexOf('storageKey={`full-profile:${me.id}`}')),
+);
+assert.match(bankBranchBody, /<PagedQuestions/, 'the bank pager must live in the NOT-fullProfileLocked branch');
+ok('the bank pager and the ongoing-round pager are mutually exclusive — never both on screen');
 
 // Auto-start (2026-09-11): the first time this mounts with no ongoing-round
 // pack yet, it must call start() itself rather than waiting on a manual
 // "Start your next round" tap — finishing the intake should immediately
-// release the next batch, per emci's explicit choice.
+// release the next batch, per emci's explicit choice. Unchanged by today's
+// paged-UI rewrite — load()/start() themselves were not touched.
 const loadFnBody = foldSrc.slice(
   foldSrc.indexOf('const load = useCallback(async () => {', foldSrc.indexOf('function OngoingRoundFold')),
   foldSrc.indexOf('async function start()'),
@@ -158,21 +163,62 @@ ok('the first ongoing round auto-starts on load — no manual tap required after
 
 assert.match(foldSrc, /const existing = await withTimeout\(fetchLatestOngoingRoundPack\(\), 25000, 'ongoing-round-load'\);/);
 assert.match(foldSrc, /const saved = await withTimeout\(runOngoingRound\(ongoingMe, history, tracks\), 40000, 'ongoing-round-start'\);/);
-assert.match(foldSrc, /const nextItem = nextUnansweredItem\(pack\);/);
-ok('OngoingRoundFold loads any existing ongoing-round pack, can start a new one via runOngoingRound, and serves its next unanswered item');
+ok('OngoingRoundFold loads any existing ongoing-round pack and can start a new one via runOngoingRound');
 
-// Answering an ongoing-round item must reuse the exact same write path
-// Infinite Questions' own pick() uses (answerQuestionItem + updateTraits +
-// earnTokensQuiet + onUpdated) — a second, divergent write path here would
-// be a real bug (e.g. missing the trait write or the token grant).
-const ongoingPickBody = foldSrc.slice(
-  foldSrc.indexOf('async function pick(item: QuestionItemRow, index: number) {', foldSrc.indexOf('function OngoingRoundFold')),
-  foldSrc.indexOf('const nextItem = nextUnansweredItem(pack);'),
+// Answering a batch of ongoing-round items must reuse the exact same
+// per-item write path Infinite Questions' own pick() uses (answerQuestionItem
+// + updateTraits), just looped once per item in the batch instead of once
+// per tap — a second, divergent write path here would be a real bug (e.g.
+// missing the trait write or the token grant).
+const saveRoundAnswersBody = foldSrc.slice(
+  foldSrc.indexOf('async function saveRoundAnswers(', foldSrc.indexOf('function OngoingRoundFold')),
+  foldSrc.indexOf('async function reroll('),
 );
-assert.match(ongoingPickBody, /await answerQuestionItem\(item\.id, index\);/);
-assert.match(ongoingPickBody, /await updateTraits\(me\.id, \{ \[item\.axis\]: option\.value \}, 'self_situation', \[item\.axis\]\);/);
-assert.match(ongoingPickBody, /earnTokensQuiet\('game_round'\);/);
-assert.match(ongoingPickBody, /await onUpdated\(\);/);
-ok('OngoingRoundFold answers an item through the same answerQuestionItem + updateTraits + earnTokensQuiet + onUpdated path Infinite Questions already uses');
+assert.match(saveRoundAnswersBody, /await answerQuestionItem\(key, optIndex\);/);
+assert.match(
+  saveRoundAnswersBody,
+  /await updateTraits\(me\.id, \{ \[draft\.axis\]: option\.value \}, 'self_situation', \[draft\.axis\]\);/,
+);
+assert.match(saveRoundAnswersBody, /earnTokensQuiet\('game_round'\);/);
+assert.match(saveRoundAnswersBody, /await onUpdated\(\);/);
+// Sequential, not Promise.all — same discipline saveBankAnswers already
+// uses, since each item can carry a different axis and updateTraits is a
+// read-modify-write against the same user row.
+assert.doesNotMatch(saveRoundAnswersBody, /Promise\.all/);
+ok('saveRoundAnswers answers a whole batch through the same answerQuestionItem + updateTraits + earnTokensQuiet + onUpdated path Infinite Questions already uses, sequentially not concurrently');
+
+// Completion is checked once per batch, not per item, via the same
+// dedup-on-pack-id RPC as before — and via a functional setPack update
+// (holder.pack), not a stale closure read of `pack`, so an overlapping
+// background save/reroll can't silently revert this batch's local effect
+// (found in review: the original draft used `setPack({...pack, ...})`,
+// which raced when multiple pages' saves were in flight at once).
+assert.match(saveRoundAnswersBody, /setPack\(\(prev\) => \{/, 'must use a functional state update, not a closure read of `pack`');
+assert.match(
+  saveRoundAnswersBody,
+  /if \(holder\.pack && nextUnansweredItem\(holder\.pack\) === null\) \{\s*\n\s*claimOngoingRoundCompleteQuiet\(holder\.pack\.id\);/,
+);
+ok('round-completion is evaluated once against the whole batch via a functional state update, not per item and not a stale closure');
+
+// Reroll must be impossible on a row with a local, not-yet-saved pending
+// pick — the server's own guard (wave54) only knows about PERSISTED
+// answers, so this client-side check is load-bearing, not redundant.
+const rerollGateBody = foldSrc.slice(
+  foldSrc.indexOf('renderRowExtra={(row, isPending) => {'),
+  foldSrc.indexOf('}}\n        />', foldSrc.indexOf('renderRowExtra={(row, isPending) => {')),
+);
+assert.match(
+  rerollGateBody,
+  /if \(row\.answered \|\| isPending\) return null;/,
+  'reroll must be hidden for both answered rows AND rows with a local pending pick',
+);
+ok('reroll is hidden on any row with a local pending pick, not just persisted-answered rows');
+
+// The round pager is keyed by pack id so a new round forces a fresh mount
+// (no stale picked/pending/failed-batch state bleeding from one round into
+// the next), and its storageKey/rows are scoped per pack + account.
+assert.match(foldSrc, /key=\{pack\.id\}/);
+assert.match(foldSrc, /storageKey=\{`ongoing-round:\$\{pack\.id\}:\$\{me\.id\}`\}/);
+ok('the round pager remounts per pack id and scopes its storage key per round + account');
 
 console.log(`\n${passed} ongoing-round-save checks passed`);

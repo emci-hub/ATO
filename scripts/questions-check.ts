@@ -981,20 +981,31 @@ assert.match(fold, /storageKey=\{`full-profile:\$\{me\.id\}`\}/);
 // category_defs fetch swapping the list while this screen is open must be
 // reflected, same hook categories-fold.tsx/category-teaser.tsx already use.
 assert.match(fold, /useCategoryDefs\(\)/);
-assert.match(fold, /categories=\{liveCategoryDefs\}/);
+// 2026-09-11: PagedQuestions itself no longer takes categories/rowsForAxis
+// (generalized to a flat `rows` prop, T-01 of the ongoing-round pager
+// build) — the caller (here) now flattens the live category catalog into
+// `bankRows` itself via uniqueCategoryAxes/bankProgressForAxis, then passes
+// the flat result straight through.
+assert.match(fold, /uniqueCategoryAxes\(liveCategoryDefs\)/);
 {
+  const bankSetup = fold.slice(
+    fold.indexOf('const bankAxes = uniqueCategoryAxes(liveCategoryDefs);'),
+    fold.indexOf('<PagedQuestions'),
+  );
+  assert.match(bankSetup, /bankProgressForAxis/);
+  assert.match(bankSetup, /completedAxesFrom\(bankAxes, bankRowsForAxis\)/);
   const bankAdapter = fold.slice(
     fold.indexOf('<PagedQuestions'),
     fold.indexOf('/>', fold.indexOf('<PagedQuestions')),
   );
-  assert.match(bankAdapter, /bankProgressForAxis/);
-  assert.match(bankAdapter, /locked=\{fullProfileLocked\}/);
+  assert.match(bankAdapter, /rows=\{bankRows\}/);
+  assert.match(bankAdapter, /progressLabel=\{`\$\{bankCompletedAxes\.length\} of \$\{bankAxes\.length\} axes complete`\}/);
   // routeQuestions/priorityAxes/mergeCategoryPriority belong to the default
   // rotation above this usage, never to how Full Profile is fed — a bad bank
   // read must never be able to reach the persisted daily-pack rotation.
-  assert.doesNotMatch(bankAdapter, /routeQuestions|priorityAxes|mergeCategoryPriority/);
+  assert.doesNotMatch(bankSetup + bankAdapter, /routeQuestions|priorityAxes|mergeCategoryPriority/);
 }
-ok('Full Profile renders through the reusable PagedQuestions component (live category catalog), straight from the static bank, never through routeQuestions');
+ok('Full Profile renders through the reusable PagedQuestions component (live category catalog flattened by the caller), straight from the static bank, never through routeQuestions');
 
 // PagedQuestions itself: a flat, axis-order book pager (5 questions
 // per page, Back/Next Page only — no per-category grouping or Skip since the
@@ -1006,7 +1017,12 @@ ok('Full Profile renders through the reusable PagedQuestions component (live cat
 // routeQuestions/priorityAxes/mergeCategoryPriority — those are the default
 // (Infinite Questions) rotation's concern, not this component's.
 const pagedQuestions = read('src/components/paged-questions.tsx');
-assert.match(pagedQuestions, /rowsForAxis: \(axis: TraitAxis\) => readonly CategoryQuestionRow\[\]/);
+// Generalized 2026-09-11 (T-01, ongoing-round pager build): a flat,
+// caller-supplied `rows` list instead of categories/rowsForAxis — the axis/
+// category machinery moved out to each caller (the bank in questions-fold.tsx
+// flattens it itself; the ongoing round never had categories to begin with).
+assert.match(pagedQuestions, /rows: readonly CategoryQuestionRow\[\]/);
+assert.doesNotMatch(pagedQuestions, /rowsForAxis/);
 assert.doesNotMatch(pagedQuestions, /routeQuestions|priorityAxes|mergeCategoryPriority/);
 // uniqueCategoryAxes/completedAxesFrom live in the pure, react-native-free
 // src/lib/questions/category-paged.ts (importing an RN-touching file into a

@@ -137,11 +137,23 @@ ok('questions-fold.tsx wires reroll for the surviving question surface and gates
 // A successful reroll must refresh `me` so the ATO balance the button gates
 // on next isn't stale (found in review) — OngoingRoundFold's reroll() calls
 // onUpdated() right after the local pack state patch, same as every answer
-// path in this file already does.
-const ongoingRerollStart = questionsFoldSrc.indexOf('async function reroll(item: QuestionItemRow)');
+// path in this file already does. Signature changed 2026-09-11 (T-01/T-03,
+// ongoing-round pager build): reroll now takes a CategoryQuestionRow (the
+// pager's row shape), not a raw QuestionItemRow, since it's called per-row
+// from the pager's renderRowExtra instead of from a single-item UI.
+const ongoingRerollStart = questionsFoldSrc.indexOf('async function reroll(row: CategoryQuestionRow)');
 const ongoingRerollBody = questionsFoldSrc.slice(ongoingRerollStart, questionsFoldSrc.indexOf('\n  }', ongoingRerollStart));
 assert.match(ongoingRerollBody, /await onUpdated\(\);/);
 ok('question reroll refreshes `me` (onUpdated) after a successful swap');
+
+// Reroll must be impossible on a row with a local, unsaved pending pick —
+// only the server-persisted `answered` state was guarded before this
+// build; a pending pick is local-only and the server has no way to know
+// about it (found in planning, not the server's job).
+const rendersReroll = questionsFoldSrc.indexOf('renderRowExtra={(row, isPending) => {');
+const rerollGateBody = questionsFoldSrc.slice(rendersReroll, questionsFoldSrc.indexOf('\n        }}', rendersReroll));
+assert.match(rerollGateBody, /if \(row\.answered \|\| isPending\) return null;/);
+ok('reroll is hidden for a row with a local pending pick, not just a persisted-answered one');
 
 const legendsScreenSrc2 = readFileSync(resolve(__dirname, '../src/app/(tabs)/legends.tsx'), 'utf8');
 assert.match(legendsScreenSrc2, /void refresh\(\)\.catch/);
