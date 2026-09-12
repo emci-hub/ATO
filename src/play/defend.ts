@@ -19,24 +19,37 @@
  *
  * Forever engine (Phase B): a conquered cycle raises `cyclePower`
  * (1 + conquered × tune step, `CycleScaler` in `engine/cycle.ts`). Each live
- * run carries its cycle power, which scales enemy spawn COUNT and base HP on
- * the next run (GAME_SPEC §9e) — wave speed and rewards are untouched here.
+ * run carries its cycle power, which scales enemy base HP on the next run
+ * (GAME_SPEC §9e) — wave speed and rewards are untouched here.
+ *
+ * W2 wave director: spawns are data-driven (see `src/play/director.ts` +
+ * `data/wave-tables.json`) — a wave is a list of `{ role, count, gapSec,
+ * delaySec, pattern }` groups flattened into a time-sorted schedule the engine
+ * pops. Roles (`swarm` / `runner` / `tank` / `boss`) rotate wave feel between
+ * swarm pressure and tank soak; boss stats still come from `bands.ts`.
  *
  * Stat note: GAME_DATA fully defines only `tower_archer` (base wave_power 0.6,
  * tower_speed 1.1; level_cost_scrap [0,40,90]; level_mult_wave_power
  * [1.0,1.25,1.55]). Vine / crystal base attack + range, the enemy base HP, and
  * the Avatar's base attack + range are NOT in the defs yet — the numbers below
  * are clearly-commented placeholders tuned so wave 1 is clearable, and stay
- * one-line changes once the real defs land. Boss bands (Scout/Semi/Final) are
- * a later phase — waves 9/10/19/20 are plain formula waves here.
+ * one-line changes once the real defs land.
  */
 
 import {
   avatarLevelWavePower,
   avatarStarWavePower,
   DEFAULT_CYCLE_TINT,
+  MAIN_WAVE_COUNT,
+  TRIAL_WAVE_COUNT,
 } from '@/play/playStore';
 import { bossBandFor, type BossBand } from '@/play/engine/bands';
+import {
+  buildSchedule,
+  waveDefFor,
+  type SpawnEvent,
+  type SpawnRole,
+} from '@/play/director';
 import {
   boundBossStarDamage,
   boundBossStarSkillCdScale,
@@ -80,6 +93,9 @@ export const PUFF_BASE_HP = 40;
 export const PUFF_SPEED_PER_SEC = 0.06;
 /** Runners (boss pack / late-Main pressure) move this much faster than a puff. */
 export const RUNNER_SPEED_MULT = 1.25;
+/** Tanks soak — fat HP, crawling clip (W2 wave-feel: soak vs pressure). */
+export const TANK_SPEED_MULT = 0.6;
+export const TANK_HP_MULT = 2.5;
 
 /* ----------------------------------------------------------------- Avatar --- */
 /** Avatar base attack (placeholder — def not in GAME_DATA). */
@@ -96,12 +112,11 @@ export const SKILL_SLOW_MS = 2_000; // duration 2.0
 export const SKILL_RADIUS = 24; // §9d radius 90 art-px → ~24 board units
 
 /**
- * Puff count for `wave`, scaled by this run's `cyclePower` (GAME_SPEC §9e —
- * a conquered cycle makes the NEXT run fatter, not the current one). §9
- * formula `floor(6 + wave × count_per_level)`, then × cycle power. The hard
- * 20 cap (§5c: if FPS dips, cut count first) is the perf bound and stays LAST,
- * so count scaling saturates on late-Main waves and `cycle_power` keeps
- * scaling there through puff HP (`stepDefendLive`).
+ * §9 puff count formula — now only a FALLBACK for a wave with no authored
+ * director table (see `defaultSchedule`). Live spawns come from the wave
+ * director's group tables, which are not cycle-scaled; `cyclePower` scales
+ * puff HP in `stepDefendLive` instead. Kept exported for gear-score + the
+ * setup card's honest fallback count.
  */
 export function waveEnemyCount(wave: number, cyclePower: number = 1): number {
   const perLevel = getTune().waveCountPerLevel;
@@ -196,7 +211,7 @@ export const TOWER_DEFS: Record<TowerKind, TowerDef> = {
   },
 };
 
-export type PuffKind = 'puff' | 'runner' | 'boss';
+export type PuffKind = 'puff' | 'runner' | 'tank' | 'boss';
 
 /**
  * Placeholder visual role (tint until per-role sprites land). `swarm` is the
@@ -288,24 +303,11 @@ export type DefendLive = {
   band: BossBand | null;
   /** Cycle tint for this run (boss tint + type-match target). */
   tint: TypeTag;
-  /** Bosses still to spawn (from band.boss.count; boss bands only). */
-  bossesRemaining: number;
   puffs: Puff[];
-  pendingSpawns: number;
-  spawnCooldownMs: number;
-  /**
-   * §9m wave beat: `minions` (normal puffs / band runners ramp in first) →
-   * `breath` (boss bands only, ~2s pause after the minion budget is spent and
-   * the board is clear) → `boss` (the mini/final spawns last). Normal waves
-   * never leave `minions`.
-   */
-  spawnStage: SpawnStage;
-  /** ms left in the boss-band breath (only while `spawnStage === 'breath'`). */
-  breathMs: number;
-  /** Minion spawns so far — drives the §9m within-wave HP ramp. */
-  minionsSpawned: number;
-  /** Total minion budget (grows when a boss enrage adds burst runners). */
-  minionsPlanned: number;
+  /** Remaining spawn events, time-sorted (pop from the front as time passes). */
+  schedule: readonly SpawnEvent[];
+  /** ms elapsed since the wave started — the director's clock. */
+  elapsedMs: number;
   nextId: number;
   towers: Tower[];
   boundBosses: BoundBossTower[];
@@ -322,13 +324,11 @@ export type DefendStep = {
   leak: boolean;
   /** Wave finished cleanly (all spawned dead, none leaked) → win. */
   done: boolean;
+  /** A boss spawned this tick (the screen banners the alert). */
+  bossSpawned: boolean;
 };
 
-export const DEFEND_SPAWN_INTERVAL_MS = 850;
 export const DEFEND_TICK_MS = 100;
-
-/** §9m spawn beat — see `DefendLive.spawnStage`. */
-export type SpawnStage = 'minions' | 'breath' | 'boss';
 
 export type DefendLiveOptions = {
   /** Campaign phase to fight on (default `trial` = Grove Path). */
@@ -347,10 +347,17 @@ export function createDefendLive(wave: number, options: DefendLiveOptions = {}):
   const mapId = options.mapId ?? 'trial';
   const boardId = options.boardId ?? 'ato';
   const cyclePower = Math.max(1, options.cyclePower ?? 1);
-  const waveN = Math.max(1, Math.floor(wave));
+  const waveMax = mapId === 'trial' ? TRIAL_WAVE_COUNT : MAIN_WAVE_COUNT;
+  const waveN = Math.max(1, Math.min(waveMax, Math.floor(wave)));
   const band = bossBandFor(mapId, waveN);
-  // §9m: band minions are the runner pack; normal waves are the §9 count.
-  const minionCount = band ? band.runners : waveEnemyCount(waveN, cyclePower);
+  // W2 director: the wave table drives spawns. Fall back to a single swarm
+  // stream (§9 count) if a wave somehow has no authored table.
+  const def = waveDefFor(mapId, waveN);
+  const schedule = def
+    ? buildSchedule(def, band
+        ? { size: band.boss.size, burstHpPct: band.boss.burst?.hp_pct ?? null }
+        : null)
+    : defaultSchedule(waveN, cyclePower);
   return {
     wave: waveN,
     mapId,
@@ -358,14 +365,9 @@ export function createDefendLive(wave: number, options: DefendLiveOptions = {}):
     cyclePower,
     band,
     tint: options.tint ?? DEFAULT_CYCLE_TINT,
-    bossesRemaining: band ? band.boss.count : 0,
     puffs: [],
-    pendingSpawns: minionCount,
-    spawnCooldownMs: 0,
-    spawnStage: 'minions',
-    breathMs: 0,
-    minionsSpawned: 0,
-    minionsPlanned: minionCount,
+    schedule,
+    elapsedMs: 0,
     nextId: 0,
     towers: [],
     boundBosses: [],
@@ -373,6 +375,22 @@ export function createDefendLive(wave: number, options: DefendLiveOptions = {}):
     avatarCooldownMs: 0,
     skillCooldownMs: 0,
   };
+}
+
+/** Fallback schedule — a single swarm stream of the §9 formula count, used
+ * only when a wave has no authored table (shouldn't happen in normal play). */
+function defaultSchedule(wave: number, cyclePower: number): SpawnEvent[] {
+  const count = waveEnemyCount(wave, cyclePower);
+  const events: SpawnEvent[] = [];
+  for (let i = 0; i < count; i += 1) {
+    events.push({
+      tMs: Math.round(i * (DEFEND_TICK_MS * 8.5)),
+      role: 'swarm' as SpawnRole,
+      rampFrac: count > 1 ? i / (count - 1) : 0,
+      boss: null,
+    });
+  }
+  return events;
 }
 
 /**
@@ -514,38 +532,38 @@ export function stepDefendLive(
   const speedBase =
     (PUFF_SPEED_PER_SEC * waveSpeedMult(state.wave) * dtMs) / 1000;
   const puffHp = PUFF_BASE_HP * waveHpMult(state.wave) * state.cyclePower;
-  const bossHp = band
-    ? PUFF_BASE_HP * waveHpMult(state.wave) * state.cyclePower * band.boss.hp_mult
-    : puffHp;
   // Board-wide damage mults: gear wave_power × type-match × Avatar stars.
   const boardMult =
     buckets.wavePower *
     (1 + buckets.typeMatch) *
     avatarStarWavePower(buckets.avatarStars);
 
-  let pendingSpawns = state.pendingSpawns;
-  let bossesRemaining = state.bossesRemaining;
-  let spawnCooldownMs = state.spawnCooldownMs - dtMs;
+  let schedule = state.schedule;
+  let elapsedMs = state.elapsedMs + dtMs;
   let nextId = state.nextId;
   let puffs = state.puffs;
   let scrap = state.scrap;
-  let spawnStage = state.spawnStage;
-  let breathMs = state.breathMs;
-  let minionsSpawned = state.minionsSpawned;
-  let minionsPlanned = state.minionsPlanned;
+  let bossSpawned = false;
 
-  // §9m wave beat. Normal waves: light within-wave HP ramp only — no breath,
-  // no alert, the beat never leaves `minions`. Boss bands: minions first →
-  // ~2s breath once the budget is spent and the board is clear → the boss
-  // spawns last (the screen shows the alert banner on the breath→boss step).
+  // W2 director: pop every event whose time has come this tick. Boss events
+  // carry their size/enrage from the band; non-boss events ramp HP within the
+  // wave (the §9m ramp, now data-driven). The escort→boss breath is just the
+  // schedule's time gap — no spawn-stage machine.
   const rampPct = getTune().withinWaveRamp;
-  // Spawn one minion (puff / runner) — later spawns are slightly fatter HP.
-  const spawnMinion = () => {
-    const rampFrac =
-      minionsPlanned > 1 ? Math.min(1, minionsSpawned / (minionsPlanned - 1)) : 0;
-    const hp = puffHp * (1 + rampPct * rampFrac);
+  const bossHpMult = band?.boss.hp_mult ?? 1;
+  const spawnEvent = (event: SpawnEvent) => {
+    const kind: PuffKind =
+      event.role === 'runner'
+        ? 'runner'
+        : event.role === 'tank'
+          ? 'tank'
+          : event.role === 'boss'
+            ? 'boss'
+            : 'puff';
+    const hpMult = kind === 'tank' ? TANK_HP_MULT : kind === 'boss' ? bossHpMult : 1;
+    const hp = puffHp * hpMult * (1 + rampPct * event.rampFrac);
     const id = nextId++;
-    const kind: PuffKind = band ? 'runner' : 'puff';
+    const isBoss = kind === 'boss';
     puffs = [
       ...puffs,
       {
@@ -556,84 +574,36 @@ export function stepDefendLive(
         slowMs: 0,
         slowFactor: 1,
         kind,
-        tint: null,
-        size: 1,
-        burstHpPct: null,
+        tint: isBoss ? state.tint : null,
+        size: isBoss ? (event.boss?.size ?? 1) : 1,
+        burstHpPct: isBoss ? (event.boss?.burstHpPct ?? null) : null,
         burstFired: false,
         laneIndex: creepLaneIndex(id),
-        role: kind === 'runner' ? 'runner' : 'swarm',
+        role: event.role,
       },
     ];
-    pendingSpawns -= 1;
-    minionsSpawned += 1;
+    if (isBoss) bossSpawned = true;
   };
-  // Spawn a boss — the last, fat beat (no within-wave ramp on itself).
-  const spawnBoss = () => {
-    const burst = band?.boss.burst;
-    const id = nextId++;
-    puffs = [
-      ...puffs,
-      {
-        id,
-        dist: 0,
-        hp: bossHp,
-        maxHp: bossHp,
-        slowMs: 0,
-        slowFactor: 1,
-        kind: 'boss',
-        tint: state.tint,
-        size: band?.boss.size ?? 1,
-        burstHpPct: burst?.hp_pct ?? null,
-        burstFired: false,
-        laneIndex: creepLaneIndex(id),
-        role: 'boss',
-      },
-    ];
-    bossesRemaining -= 1;
-  };
-
-  if (spawnStage === 'minions') {
-    if (pendingSpawns > 0 && spawnCooldownMs <= 0) {
-      spawnMinion();
-      spawnCooldownMs = DEFEND_SPAWN_INTERVAL_MS;
-    } else if (pendingSpawns === 0 && puffs.length === 0 && band) {
-      // Minion budget spent + board clear → the ~2s breath before the boss.
-      spawnStage = 'breath';
-      breathMs = getTune().bossBreathMs;
-    }
-  } else if (spawnStage === 'breath') {
-    breathMs -= dtMs;
-    if (breathMs <= 0 && bossesRemaining > 0) {
-      // Boss spawns last — the screen banners this breath→boss step.
-      spawnStage = 'boss';
-      spawnBoss();
-      spawnCooldownMs = DEFEND_SPAWN_INTERVAL_MS;
-    }
-  } else if (spawnStage === 'boss') {
-    // Boss(es) first, then any burst runners a boss enrage added.
-    if (spawnCooldownMs <= 0) {
-      if (bossesRemaining > 0) {
-        spawnBoss();
-        spawnCooldownMs = DEFEND_SPAWN_INTERVAL_MS;
-      } else if (pendingSpawns > 0) {
-        spawnMinion();
-        spawnCooldownMs = DEFEND_SPAWN_INTERVAL_MS;
-      }
-    }
+  while (schedule.length > 0 && schedule[0].tMs <= elapsedMs) {
+    const event = schedule[0];
+    schedule = schedule.slice(1);
+    spawnEvent(event);
   }
 
   // Movement (§9m boss crawl): bosses move at ~1/3 puff speed so the alert
-  // beat is fightable; runners keep their faster clip; normal puffs are the
-  // baseline. Slowed puffs crawl on top of their kind's base.
+  // beat is fightable; runners keep their faster clip; tanks crawl (soak);
+  // normal puffs are the baseline. Slowed puffs crawl on top of their base.
   const bossSpeedMult = getTune().bossSpeedMult;
   puffs = puffs.map((puff) => {
     const slow = puff.slowMs > 0 ? puff.slowFactor : 1;
     const speed =
       puff.kind === 'runner'
         ? speedBase * RUNNER_SPEED_MULT
-        : puff.kind === 'boss'
-          ? speedBase * Math.max(0.05, bossSpeedMult)
-          : speedBase;
+        : puff.kind === 'tank'
+          ? speedBase * TANK_SPEED_MULT
+          : puff.kind === 'boss'
+            ? speedBase * Math.max(0.05, bossSpeedMult)
+            : speedBase;
     const slowMs = Math.max(0, puff.slowMs - dtMs);
     return { ...puff, dist: puff.dist + speed * slow, slowMs };
   });
@@ -757,10 +727,18 @@ export function stepDefendLive(
       const burst = band?.boss.burst;
       if (burst) {
         const runners = Math.max(1, Math.round(burst.power));
-        // Burst runners re-open the minion budget; count them in the ramp so
-        // the fatter tail stays monotonic.
-        pendingSpawns += runners;
-        minionsPlanned += runners;
+        // Burst runners re-enter the schedule as a tight runner pack at the
+        // enrage moment, ramp'd to the fat tail so the threat stays monotonic.
+        const burstEvents: SpawnEvent[] = [];
+        for (let i = 0; i < runners; i += 1) {
+          burstEvents.push({
+            tMs: Math.round(elapsedMs + i * 400),
+            role: 'runner',
+            rampFrac: 1,
+            boss: null,
+          });
+        }
+        schedule = [...schedule, ...burstEvents].sort((a, b) => a.tMs - b.tMs);
       }
     }
   }
@@ -776,14 +754,9 @@ export function stepDefendLive(
       cyclePower: state.cyclePower,
       band,
       tint: state.tint,
-      bossesRemaining,
       puffs,
-      pendingSpawns,
-      spawnCooldownMs,
-      spawnStage,
-      breathMs,
-      minionsSpawned,
-      minionsPlanned,
+      schedule,
+      elapsedMs,
       nextId,
       towers: firedTowers,
       boundBosses: firedBoundBosses,
@@ -792,7 +765,8 @@ export function stepDefendLive(
       skillCooldownMs,
     },
     leak,
-    done: bossesRemaining === 0 && pendingSpawns === 0 && puffs.length === 0,
+    done: schedule.length === 0 && puffs.length === 0,
+    bossSpawned,
   };
 }
 

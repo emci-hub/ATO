@@ -26,6 +26,7 @@
  * numbers stay one-line changes here.
  */
 import { getTune } from '@/play/tune';
+import { ROLE_HP_MULT, waveDefFor } from '@/play/director';
 
 import { bossBandFor } from './bands';
 
@@ -58,11 +59,21 @@ function hpMultOf(wave: number): number {
   return 1 + (n - 1) * getTune().waveHpPerLevel;
 }
 
-/** Puff-equivalent count of one wave: normal = count; boss bands = their
- * runner pack + fat boss(es) (each boss counts its full hp_mult). */
+/** Puff-equivalent count of one wave, read from the wave director's group
+ * table: sum of each group's count × role HP (bosses count their full hp_mult).
+ * Falls back to the §9 formula when a wave has no authored table. */
 function waveUnits(phase: 'trial' | 'main', wave: number): number {
-  const band = bossBandFor(phase, wave);
-  if (band) return band.runners + band.boss.count * band.boss.hp_mult;
+  const def = waveDefFor(phase, wave);
+  if (def) {
+    const band = bossBandFor(phase, wave);
+    const bossHpMult = band?.boss.hp_mult ?? 1;
+    let units = 0;
+    for (const group of def.groups) {
+      const hpMult = group.role === 'boss' ? bossHpMult : ROLE_HP_MULT[group.role];
+      units += group.count * hpMult;
+    }
+    return Math.max(1, units);
+  }
   return basePuffCount(wave);
 }
 

@@ -1,0 +1,110 @@
+{
+  "trial": [
+    {
+      "wave": 1,
+      "groups": [
+        { "role": "swarm", "count": 7, "gapSec": 0.9, "delaySec": 0, "pattern": "stream" }
+      ]
+    },
+    {
+      "wave": 2,
+      "groups": [
+        { "role": "swarm", "count": 5, "gapSec": 0.85, "delaySec": 0, "pattern": "stream" },
+        { "role": "runner", "count": 2, "gapSec": 0.6, "delaySec": 4, "pattern": "stream" }
+      ]
+    },
+    {
+      "wave": 3,
+      "groups": [
+        { "role": "swarm", "count": 6, "gapSec": 0.8, "delaySec": 0, "pattern": "stream" },
+        { "role": "tank", "count": 1, "gapSec": 1.5, "delaySec": 5, "pattern": "stream" }
+      ]
+    },
+    {
+      "wave": 4,
+      "groups": [
+        { "role": "swarm", "count": 3, "gapSec": 0.7, "delaySec": 0, "pattern": "stream" },
+        { "role": "runner", "count": 3, "gapSec": 0.3, "delaySec": 3, "pattern": "cluster" }
+      ]
+    },
+    {
+      "wave": 5,
+      "groups": [
+        { "role": "swarm", "count": 4, "gapSec": 0.8, "delaySec": 0, "pattern": "stream" },
+        { "role": "boss", "count": 1, "gapSec": 1, "delaySec": 8, "pattern": "stream" }
+      ]
+    }
+  ],
+  "main": [
+    {
+      "wave": 1,
+      "groups": [
+        { "role": "swarm", "count": 7, "gapSec": 0.9, "delaySec": 0, "pattern": "stream" }
+      ]
+    },
+    {
+      "wave": 2,
+      "groups": [
+        { "role": "swarm", "count": 6, "gapSec": 0.85, "delaySec": 0, "pattern": "stream" },
+        { "role": "runner", "count": 2, "gapSec": 0.6, "delaySec": 4, "pattern": "stream" }
+      ]
+    },
+    {
+      "wave": 3,
+      "groups": [
+        { "role": "swarm", "count": 5, "gapSec": 0.8, "delaySec": 0, "pattern": "stream" },
+        { "role": "tank", "count": 2, "gapSec": 1.5, "delaySec": 5, "pattern": "stream" }
+      ]
+    },
+    {
+      "wave": 4,
+      "groups": [
+        { "role": "swarm", "count": 4, "gapSec": 0.8, "delaySec": 0, "pattern": "stream" },
+        { "role": "runner", "count": 4, "gapSec": 0.3, "delaySec": 3, "pattern": "cluster" }
+      ]
+    },
+    {
+      "wave": 5,
+      "groups": [
+        { "role": "swarm", "count": 5, "gapSec": 0.8, "delaySec": 0, "pattern": "stream" },
+        { "role": "boss", "count": 1, "gapSec": 1, "delaySec": 9, "pattern": "stream" }
+      ]
+    },
+    {
+      "wave": 6,
+      "groups": [
+        { "role": "swarm", "count": 7, "gapSec": 0.75, "delaySec": 0, "pattern": "stream" },
+        { "role": "tank", "count": 2, "gapSec": 1.4, "delaySec": 5, "pattern": "stream" }
+      ]
+    },
+    {
+      "wave": 7,
+      "groups": [
+        { "role": "swarm", "count": 4, "gapSec": 0.75, "delaySec": 0, "pattern": "stream" },
+        { "role": "runner", "count": 5, "gapSec": 0.3, "delaySec": 3, "pattern": "cluster" }
+      ]
+    },
+    {
+      "wave": 8,
+      "groups": [
+        { "role": "swarm", "count": 6, "gapSec": 0.7, "delaySec": 0, "pattern": "stream" },
+        { "role": "tank", "count": 3, "gapSec": 1.4, "delaySec": 5, "pattern": "stream" }
+      ]
+    },
+    {
+      "wave": 9,
+      "groups": [
+        { "role": "swarm", "count": 6, "gapSec": 0.7, "delaySec": 0, "pattern": "stream" },
+        { "role": "runner", "count": 3, "gapSec": 0.55, "delaySec": 4, "pattern": "stream" },
+        { "role": "tank", "count": 2, "gapSec": 1.4, "delaySec": 8, "pattern": "stream" }
+      ]
+    },
+    {
+      "wave": 10,
+      "groups": [
+        { "role": "swarm", "count": 6, "gapSec": 0.75, "delaySec": 0, "pattern": "stream" },
+        { "role": "boss", "count": 1, "gapSec": 1, "delaySec": 10, "pattern": "stream" }
+      ]
+    }
+  ]
+}

@@ -1,15 +1,17 @@
 /**
- * Boss bands — Main waves 9 / 10 / 19 / 20 (GAME_SPEC §9e §9f §18 C; Phase C).
+ * Boss bands — Trial wave 5, Main waves 5 + 10 (GAME_SPEC §9e §9f §18 C).
  *
  * Data-driven from `data/waves.json`: each boss band names its kind (Scout
- * mini-boss → Scout boss → Semi-final → Final form), a fat-HP boss (hp_mult /
- * size / count), an optional HP-threshold enrage "burst", a Runner pack, and
- * the drop table the band rolls from. The cycle tint (Tide/Ember/Root/Spark)
+ * mini-boss → Scout boss → Final form), a fat-HP boss (hp_mult / size /
+ * count), an optional HP-threshold enrage "burst", and the drop table the band
+ * rolls from. Spawn timing + escort composition live in the wave director
+ * (`src/play/director.ts` / `data/wave-tables.json`). The cycle tint
+ * (Tide/Ember/Root/Spark)
  * is NOT authored here — it is a cycle property living in `playStore`
  * (`cycle_tint`, one boss family until ContentPack 2), so the Dev kit's
  * "set tint" can re-skin the whole band without touching content JSON.
  *
- * v0 boss ability = fat HP + tint + size + Runner pack. The optional burst is
+ * v0 boss ability = fat HP + tint + size. The optional burst is
  * the `burst` skill primitive's knobs (hp_pct / power / radius): when a boss
  * first drops below `hp_pct` it fires once and spawns a burst of
  * `round(power)` extra runners (a threat spike). `radius` is carried for a
@@ -51,8 +53,6 @@ export type BossBand = {
     count: number;
     burst: BossBurst | null;
   };
-  /** Runner puffs escorting the boss (the "Runner pack"). */
-  runners: number;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -110,7 +110,6 @@ function parseBands(raw: unknown): readonly BossBand[] {
         count: Math.max(1, Math.floor(count)),
         burst: parseBurst(boss.burst),
       },
-      runners: Math.max(0, Math.floor(finite(entry.runners) ?? 0)),
     });
   }
   return bands;

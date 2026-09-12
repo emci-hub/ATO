@@ -67,9 +67,9 @@ import {
   type CreepRole,
   type DefendLive,
   type Puff,
-  type SpawnStage,
   type TowerKind,
 } from '@/play/defend';
+import { waveDefFor } from '@/play/director';
 import { avatarDef } from '@/play/avatars';
 import { PlayFrame } from '@/play/play-frame';
 import { dir8FromDelta, type Dir8 } from '@/play/art';
@@ -242,6 +242,15 @@ function fightTitle(fight: Fight): string {
     : `${phase} wave ${fight.wave}`;
 }
 
+/** Concise spawn summary for the setup card, read from the wave director's
+ * group table (e.g. "7 swarm", "4 swarm + 1 tank", "5 swarm + 1 boss").
+ * Falls back to the §9 count when a wave has no authored table. */
+function waveSpawnSummary(phase: CampaignPhase, wave: number): string {
+  const def = waveDefFor(phase, wave);
+  if (!def) return `${waveEnemyCount(wave, 1)} puffs`;
+  return def.groups.map((group) => `${group.count} ${group.role}`).join(' + ');
+}
+
 /** Results drop label from a boss band (§9k copy): normal waves keep "Found:",
  * boss bands name their drop. */
 function dropLabelFor(phase: CampaignPhase, wave: number): string {
@@ -317,7 +326,7 @@ export function DefendScreen({
   onGrantMilestoneWaveFive,
   onResetMilestones,
   onResetCampaign,
-  onJumpMain19,
+  onJumpMain9,
   onJumpScout,
   onForceConquered,
   onSpendStarToken,
@@ -341,9 +350,9 @@ export function DefendScreen({
   onResetMilestones: () => void;
   /** Dev kit only: reset the campaign to a fresh Trial wave 1. */
   onResetCampaign: () => void;
-  /** Dev kit only: park the seat at Main wave 19. */
-  onJumpMain19: () => void;
-  /** Dev kit only: park the seat at the Scout band (Main wave 9). */
+  /** Dev kit only: park the seat at Main wave 9. */
+  onJumpMain9: () => void;
+  /** Dev kit only: park the seat at the Scout band (Main wave 5). */
   onJumpScout: () => void;
   /** Dev kit only: force one more Conquered cycle. */
   onForceConquered: () => void;
@@ -417,8 +426,6 @@ export function DefendScreen({
   const puffFacingRef = useRef<Record<number, number>>({});
   /** §9m boss / mini-boss alert banner shown while the boss steps in. */
   const [bossAlert, setBossAlert] = useState<{ label: string; name: string } | null>(null);
-  /** Spawn stage from the previous running tick — diffed for the alert. */
-  const prevStageRef = useRef<SpawnStage>('minions');
 
   const phaseRef = useRef(phase);
   const pausedRef = useRef(paused);
@@ -630,7 +637,6 @@ export function DefendScreen({
     shotsRef.current = [];
     puffFacingRef.current = {};
     setShots([]);
-      prevStageRef.current = 'minions';
       setBossAlert(null);
     },
     [view.cyclePower, view.cycleTint, ensureParked],
@@ -653,7 +659,6 @@ export function DefendScreen({
     shotsRef.current = [];
     puffFacingRef.current = {};
     setShots([]);
-      prevStageRef.current = 'minions';
     }
     ensureParked(fight.phase);
     setSelectedPad(null);
@@ -679,7 +684,6 @@ export function DefendScreen({
     shotsRef.current = [];
     puffFacingRef.current = {};
     setShots([]);
-    prevStageRef.current = 'minions';
   }, [view.cyclePower, view.cycleTint]);
 
   /** Start the wave on the current board — placed towers + spent scrap carry
@@ -700,7 +704,6 @@ export function DefendScreen({
     shotsRef.current = [];
     puffFacingRef.current = {};
     setShots([]);
-    prevStageRef.current = 'minions';
     setBossAlert(null);
   }, [view.cyclePower, view.cycleTint, boardId]);
 
@@ -725,7 +728,6 @@ export function DefendScreen({
     shotsRef.current = [];
     puffFacingRef.current = {};
     setShots([]);
-    prevStageRef.current = 'minions';
     setBossAlert(null);
   }, []);
 
@@ -760,7 +762,6 @@ export function DefendScreen({
     shotsRef.current = [];
     puffFacingRef.current = {};
     setShots([]);
-    prevStageRef.current = 'minions';
     setBossAlert(null);
   }, []);
 
@@ -885,19 +886,15 @@ export function DefendScreen({
         const fired = after != null && after.cooldownMs > tower.cooldownMs + 1;
         if (fired) spawnShot(pad.x, pad.y, tx, ty);
       }
-      // §9m boss alert: banner the breath → boss step (the boss spawns last).
+      // §9m boss alert: banner the tick a boss spawns (the director's schedule
+      // drives it — no stage machine; the escort→boss breath is just a time gap).
       const bandNow = step.state.band;
-      if (
-        bandNow &&
-        prevStageRef.current === 'breath' &&
-        step.state.spawnStage === 'boss'
-      ) {
+      if (bandNow && step.bossSpawned) {
         setBossAlert({
           label: bandNow.kind === 'scout_mini' ? 'Mini-boss alert' : 'Boss alert',
           name: bandNow.boss.name,
         });
       }
-      prevStageRef.current = step.state.spawnStage;
       // Display-only floaters: any puff that lost HP this tick, or vanished
       // (killed), gets a short damage number near it. No engine changes.
       const events = diffPuffEvents(prevPuffsRef.current, step.state.puffs, step.state.boardId);
@@ -971,9 +968,9 @@ export function DefendScreen({
     setSim((prev) => (prev ? placeBoundBoss(prev, selectedPad, bossId, stars) ?? prev : prev));
   };
 
-  /** Dev kit only: park the seat at the Final band and start the run already
-   * in the §9m breath, so the alert → boss beat previews in under a second
-   * instead of after the full runner phase. */
+  /** Dev kit only: park the seat at the Final band and start the run with the
+   * boss event due immediately (escort dropped) so the boss beat previews in
+   * under a second instead of after the full escort stream. */
   const previewBossBeat = () => {
     onForceFinal();
     setReplayPick(null);
@@ -983,18 +980,20 @@ export function DefendScreen({
       cyclePower: view.cyclePower,
       tint: view.cycleTint,
     });
-    // Carry any placed board into the preview so the boss is fightable.
+    // Carry any placed board into the preview so the boss is fightable, and
+    // collapse the schedule to just the boss event, due on the next tick.
+    const bossEvents = base.schedule.filter((event) => event.role === 'boss').map(
+      (event) => ({ ...event, tMs: 0 }),
+    );
     const current = simRef.current;
     const preview: DefendLive = {
       ...base,
       towers: current?.towers ?? [],
       boundBosses: current?.boundBosses ?? [],
       scrap: current?.scrap ?? base.scrap,
-      pendingSpawns: 0,
+      schedule: bossEvents,
+      elapsedMs: 0,
       puffs: [],
-      bossesRemaining: base.band ? base.band.boss.count : 1,
-      spawnStage: 'breath',
-      breathMs: 800,
     };
     simRef.current = preview;
     setSim(preview);
@@ -1007,7 +1006,6 @@ export function DefendScreen({
     shotsRef.current = [];
     puffFacingRef.current = {};
     setShots([]);
-    prevStageRef.current = 'breath';
     setBossAlert(null);
   };
 
@@ -1549,13 +1547,16 @@ export function DefendScreen({
                 const creep = creepRole(puff);
                 const tintColor = CREEP_ROLE_COLOR[creep];
                 // §19 board cast (skin roles): runners = fast unit, bosses =
-                // tanks/heavy by band, normal puffs = the puff unit.
+                // tanks/heavy by band, tanks = the heavy soak unit, normal
+                // puffs = the puff unit.
                 const spriteRole: SkinRoleId =
                   puff.kind === 'boss'
                     ? bandUnitRole(band?.kind ?? '')
                     : puff.kind === 'runner'
                       ? 'unit.runner'
-                      : 'unit.puff';
+                      : puff.kind === 'tank'
+                        ? 'unit.tank'
+                        : 'unit.puff';
                 const sprite = skinArt(spriteRole);
                 const spriteSize = skinUnits(spriteRole, UNIT_BASE_UNITS) * puff.size;
                 const ringRadius = sprite ? spriteSize / 2 + 0.8 : radius + 0.9;
@@ -1844,9 +1845,7 @@ export function DefendScreen({
               <View style={styles.statRow}>
                 <ThemedText type="smallBold">{fightTitle(fight)}</ThemedText>
                 <ThemedText type="subheading" themeColor="emphasis">
-                  {band
-                    ? `${band.boss.count} boss + ${band.runners} runners`
-                    : `${waveEnemyCount(fight.wave, view.cyclePower)} puffs`}
+                  {waveSpawnSummary(fight.phase, fight.wave)}
                 </ThemedText>
               </View>
               {band ? (
@@ -2137,11 +2136,9 @@ export function DefendScreen({
 
         {phase === 'running' && !paused ? (
           <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-            {sim?.spawnStage === 'breath'
-              ? 'Minions cleared — something big stirs beyond the path…'
-              : coachHidden
-                ? `Towers fire on their own — drag your Avatar and time ${SKILL_NAME}.`
-                : `Coach: ${coach.tip}`}
+            {coachHidden
+              ? `Towers fire on their own — drag your Avatar and time ${SKILL_NAME}.`
+              : `Coach: ${coach.tip}`}
           </ThemedText>
         ) : null}
 
@@ -2352,7 +2349,6 @@ export function DefendScreen({
     shotsRef.current = [];
     puffFacingRef.current = {};
     setShots([]);
-                  prevStageRef.current = 'minions';
                   setBossAlert(null);
                 }
               }}
@@ -2472,17 +2468,17 @@ export function DefendScreen({
               }}
             />
             <DevRow
-              label="Jump to Main wave 19"
+              label="Jump to Main wave 9"
               onPress={() => {
-                onJumpMain19();
-                buildSetup({ phase: 'main', wave: 19, mode: 'campaign' });
+                onJumpMain9();
+                buildSetup({ phase: 'main', wave: 9, mode: 'campaign' });
               }}
             />
             <DevRow
-              label="Jump to Scout (Main wave 9)"
+              label="Jump to Scout (Main wave 5)"
               onPress={() => {
                 onJumpScout();
-                buildSetup({ phase: 'main', wave: 9, mode: 'campaign' });
+                buildSetup({ phase: 'main', wave: 5, mode: 'campaign' });
               }}
             />
             <DevRow
@@ -2498,10 +2494,10 @@ export function DefendScreen({
               }}
             />
             <DevRow
-              label="Jump to Final (Main wave 20)"
+              label="Jump to Final (Main wave 10)"
               onPress={() => {
                 onForceFinal();
-                buildSetup({ phase: 'main', wave: 20, mode: 'campaign' });
+                buildSetup({ phase: 'main', wave: 10, mode: 'campaign' });
               }}
             />
             <DevRow label="Grant star token" onPress={() => void onGrantStarToken()} />

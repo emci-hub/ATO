@@ -32,8 +32,8 @@
  *   floored at half the table value) — never hidden, always shown as-is.
  * - Defend campaign (step 5a+ / Phase B) — the `campaign` seat
  *   (`{ phase: 'trial' | 'main', wave_in_phase }`) is what Defend plays next:
- *   Trial waves 1–5 on the Grove Path map, then Main waves 1–20 on the
- *   Divecore Main map. Clearing Main wave 20 → `conquered_cycles += 1`,
+ *   Trial waves 1–5 on the Grove Path map, then Main waves 1–10 on the
+ *   Divecore Main map. Clearing Main wave 10 → `conquered_cycles += 1`,
  *   `cycle_power` recomputed via `CycleScaler`, and the seat resets to Main
  *   wave 1 (Trial is skipped once `conquered_cycles ≥ 1`). Cleared bands can
  *   be replayed at half tokens. `recordDefendWin` banks tokens + XP + level
@@ -118,10 +118,10 @@ export const DAILY_CLEAR_HALF_AFTER = 5; // Sane daily_clear_half_after
 export const MILESTONE_WAVES = [5, 10, 25] as const;
 /** Campaign (Phase B — GAME_SPEC §9e). The seat names the phase + next
  * display wave Defend plays. Trial = Grove Path map, waves 1–5 (teach);
- * Main = Divecore Main map, waves 1–20 (real climb). Clearing Main wave 20
+ * Main = Divecore Main map, waves 1–10 (real climb). Clearing Main wave 10
  * conquers the cycle. */
 export const TRIAL_WAVE_COUNT = 5; // Trial waves 1..5 (Grove Path map)
-export const MAIN_WAVE_COUNT = 20; // Main waves 1..20 (Divecore Main map)
+export const MAIN_WAVE_COUNT = 10; // Main waves 1..10 (Divecore Main map)
 /** Cycle-clear bonus (GAME_SPEC §9e "tokens/XP milestone bonus"). Sane flat
  * amounts so it reads as a milestone — tuned later. */
 export const CYCLE_CLEAR_BONUS_TOKENS = 150;
@@ -279,7 +279,7 @@ export type DiveRun = {
  * `campaign` seat (phase / wave_in_phase), `conquered_cycles` with its derived
  * `cycle_power`, `lifetime_waves_cleared`, and an empty `bound_bosses[]`.
  * v12 (campaign Phase B) makes the seat live: `campaign.phase` is
- * `'trial' | 'main'`, Defend plays the seat's wave, Main wave 20 conquers a
+ * `'trial' | 'main'`, Defend plays the seat's wave, Main wave 10 conquers a
  * cycle, `cycle_power` scales the next run's enemies, cleared bands replay at
  * half tokens, and milestones fire off the lifetime clear count. Legacy saves
  * (numeric phase 1/2) migrate onto the string phases.
@@ -303,7 +303,7 @@ export type DiveRun = {
  */
 
 /** Campaign phase. `trial` (Grove Path, waves 1–5) then `main` (Divecore
- * Main, waves 1–20); a cleared Main 20 conquers a cycle and the seat resets
+ * Main, waves 1–10); a cleared Main 10 conquers a cycle and the seat resets
  * (Trial is skipped once `conquered_cycles ≥ 1`). */
 export type CampaignPhase = 'trial' | 'main';
 
@@ -978,7 +978,7 @@ export function hasTypeMatch(
  * the Avatar without campaign progress. Milestones (5/10/25) land on natural
  * campaign beats (finishing Trial, mid-Main, and the Conquered clear itself).
  *
- * Conquered (Main wave 20 clear, campaign mode): `conquered_cycles += 1`,
+ * Conquered (Main wave 10 clear, campaign mode): `conquered_cycles += 1`,
  * `cycle_power` recomputed via `CycleScaler`, the seat resets to Main wave 1
  * (skip Trial once `conquered_cycles ≥ 1`), and a cycle-clear token/XP bonus
  * is added to that final wave's payout.
@@ -1290,7 +1290,7 @@ export function campaignPhaseLabel(phase: CampaignPhase): string {
  * replayable at half tokens. `clearedThrough` is the furthest wave of the band
  * cleared in the CURRENT cycle (waves below the seat are cleared); a band
  * fully cleared in ANY prior cycle is unlocked for the whole range again —
- * `conquered_cycles ≥ 1` proves Main wave 20, and therefore every wave of the
+ * `conquered_cycles ≥ 1` proves Main wave 10, and therefore every wave of the
  * current Main climb, was beaten once, so the Final stays farmable each cycle.
  */
 export type ReplayBandView = {
@@ -1478,8 +1478,8 @@ export function gearScoreOf(doc: PlayStoreDoc): number {
 
 /**
  * Walk the campaign forward from the seat across normal waves that GS
- * overkills by the skip threshold; stop at the first boss band (Main
- * 9/10/19/20 — never auto-skipped) or the first wave whose recommended GS
+ * overkills by the skip threshold; stop at the first boss band (Trial 5,
+ * Main 5 / 10 — never auto-skipped) or the first wave whose recommended GS
  * clears the gate. Pure — the UI reads it to decide whether to offer Skip.
  */
 export function planSkipToEven(
@@ -1674,7 +1674,7 @@ export function devSetCycleTint(doc: PlayStoreDoc, tint: TypeTag): PlayStoreDoc 
   return { ...doc, cycle_tint: tint };
 }
 
-/** Dev kit only: park the seat at the Final band (Main wave 20). */
+/** Dev kit only: park the seat at the Final band (Main wave 10). */
 export function devForceFinal(doc: PlayStoreDoc): PlayStoreDoc {
   return devSetCampaignSeat(doc, 'main', MAIN_WAVE_COUNT);
 }
