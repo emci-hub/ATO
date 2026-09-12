@@ -10,18 +10,31 @@
  *
  * The token shelf never sells wave_power or a cycle_power skip (§9i): both
  * would break the Conquered climb, so no such row exists in the catalog.
+ *
+ * Chrome (Slice 3): Neon Viper only — cyan-glow `NeonPanel` cards, mono cyan
+ * headings/chips, near-square icon frames + buttons. Logic is unchanged.
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
 import type { ComponentProps } from 'react';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { cursorIcon } from '@/play/art';
-import { PlayFrame } from '@/play/play-frame';
+import {
+  NEON_ROW_LINE,
+  NeonBackLink,
+  NeonButton,
+  NeonChip,
+  NeonHeader,
+  NeonIconFrame,
+  NeonLabel,
+  NeonPanel,
+  NeonPill,
+} from '@/play/neon-ui';
+import { NEON } from '@/play/neon-viper';
 import { DIVE_CHARGE_CAP, type PlayView, type ShopPurchaseResult } from '@/play/playStore';
 import {
   paidShopRows,
@@ -70,16 +83,15 @@ function ShopRowIcon({
   fallback: ShopIcon;
   color: string;
 }) {
-  const theme = useTheme();
   const source = cursorIcon(file);
   return (
-    <View style={[styles.rowIcon, { backgroundColor: theme.backgroundSelected }]}>
+    <NeonIconFrame size={34}>
       {source ? (
         <Image source={source} contentFit="contain" style={styles.rowIconArt} />
       ) : (
         <MaterialCommunityIcons name={fallback} size={18} color={color} />
       )}
-    </View>
+    </NeonIconFrame>
   );
 }
 
@@ -141,7 +153,6 @@ export function ShopScreen({
   onBuyToken: (row: ShopTokenRow) => Promise<ShopPurchaseResult | null>;
   onBackToDivecore: () => void;
 }) {
-  const theme = useTheme();
   const [tab, setTab] = useState<ShopTab>('token');
   const [busyRow, setBusyRow] = useState<string | null>(null);
 
@@ -157,25 +168,16 @@ export function ShopScreen({
 
   return (
     <>
-      <View style={styles.topRow}>
-        <Pressable
-          onPress={onBackToDivecore}
-          hitSlop={12}
-          style={({ pressed }) => [pressed && styles.pressed]}>
-          <ThemedText type="smallBold" themeColor="textSecondary">
-            ‹ Divecore
-          </ThemedText>
-        </Pressable>
-      </View>
+      <NeonBackLink onPress={onBackToDivecore} />
 
-      <ThemedText type="subtitle">Shop</ThemedText>
-      <ThemedText themeColor="textSecondary" style={styles.lede}>
-        Spend soft tokens on a small boost — or window-shop what is coming.
-      </ThemedText>
+      <NeonHeader
+        title="Shop"
+        lede="Spend soft tokens on a small boost — or window-shop what is coming."
+      />
 
-      <PlayFrame style={styles.card}>
+      <NeonPanel>
         <View style={styles.statRow}>
-          <ThemedText type="smallBold">Tokens</ThemedText>
+          <NeonLabel>Tokens</NeonLabel>
           <ThemedText type="subheading" themeColor="emphasis">
             {view.tokens}
           </ThemedText>
@@ -190,35 +192,21 @@ export function ShopScreen({
                 { key: 'token' as const, label: 'Token shop' },
                 { key: 'paid' as const, label: 'Paid shop' },
               ]
-            ).map((entry) => {
-              const selected = tab === entry.key;
-              return (
-                <Pressable
-                  key={entry.key}
-                  onPress={() => setTab(entry.key)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  style={({ pressed }) => [
-                    styles.filterChip,
-                    { backgroundColor: selected ? theme.backgroundSelected : 'transparent' },
-                    pressed && styles.pressed,
-                  ]}>
-                  <ThemedText
-                    type="code"
-                    themeColor={selected ? undefined : 'textSecondary'}
-                    style={selected && { color: theme.accent }}>
-                    {entry.label}
-                  </ThemedText>
-                </Pressable>
-              );
-            })}
+            ).map((entry) => (
+              <NeonChip
+                key={entry.key}
+                label={entry.label}
+                selected={tab === entry.key}
+                onPress={() => setTab(entry.key)}
+              />
+            ))}
           </ScrollView>
         </View>
-      </PlayFrame>
+      </NeonPanel>
 
       {tab === 'token' ? (
-        <PlayFrame style={styles.card}>
-          <ThemedText type="smallBold">Token shop</ThemedText>
+        <NeonPanel>
+          <NeonLabel>Token shop</NeonLabel>
           <ThemedText type="small" themeColor="textSecondary">
             Bought with soft tokens. Never sells permanent power or a cycle skip — those would
             break the climb.
@@ -230,7 +218,7 @@ export function ShopScreen({
                 <ShopRowIcon
                   file={TOKEN_ICON_FILES[row.kind]}
                   fallback={TOKEN_ICONS[row.kind]}
-                  color={theme.accent}
+                  color={NEON.cyan}
                 />
                 <View style={styles.rowText}>
                   <ThemedText type="smallBold">{row.name}</ThemedText>
@@ -245,34 +233,20 @@ export function ShopScreen({
                     </ThemedText>
                   ) : null}
                 </View>
-                <Pressable
+                <NeonButton
+                  label={state.actionLabel}
                   onPress={() => void handleBuy(row)}
                   disabled={state.disabled}
-                  accessibilityRole="button"
-                  accessibilityState={{ disabled: state.disabled }}
-                  style={({ pressed }) => [
-                    styles.buyButton,
-                    {
-                      backgroundColor: state.disabled
-                        ? theme.backgroundSelected
-                        : theme.accentFill,
-                    },
-                    pressed && !state.disabled && styles.pressed,
-                    state.disabled && styles.disabled,
-                  ]}>
-                  <ThemedText
-                    type="code"
-                    style={{ color: state.disabled ? theme.textSecondary : theme.onAccent }}>
-                    {state.actionLabel}
-                  </ThemedText>
-                </Pressable>
+                  accessibilityLabel={state.actionLabel}
+                  style={styles.buyButton}
+                />
               </View>
             );
           })}
-        </PlayFrame>
+        </NeonPanel>
       ) : (
-        <PlayFrame style={styles.card}>
-          <ThemedText type="smallBold">Paid shop</ThemedText>
+        <NeonPanel>
+          <NeonLabel>Paid shop</NeonLabel>
           <ThemedText type="small" themeColor="textSecondary">
             Previews only — Apple checkout lands later. Play stays optional: Claim and Defend
             never need it.
@@ -282,20 +256,14 @@ export function ShopScreen({
               <ShopRowIcon
                 file={PAID_ICON_FILES[row.kind]}
                 fallback={PAID_ICONS[row.kind]}
-                color={theme.textSecondary}
+                color={NEON.textMuted}
               />
               <View style={styles.rowText}>
                 <View style={styles.titleLine}>
                   <ThemedText type="smallBold" themeColor="textSecondary">
                     {row.name}
                   </ThemedText>
-                  {row.badge ? (
-                    <View style={[styles.tag, { backgroundColor: theme.backgroundSelected }]}>
-                      <ThemedText type="code" themeColor="emphasis">
-                        {row.badge}
-                      </ThemedText>
-                    </View>
-                  ) : null}
+                  {row.badge ? <NeonPill label={row.badge} tone="emphasis" /> : null}
                 </View>
                 {row.blurb ? (
                   <ThemedText type="small" themeColor="textSecondary">
@@ -306,33 +274,22 @@ export function ShopScreen({
                   {row.price_label} · not for sale yet
                 </ThemedText>
               </View>
-              <View style={[styles.buyButton, { backgroundColor: theme.backgroundSelected }]}>
-                <ThemedText type="code" themeColor="textSecondary">
-                  Soon
-                </ThemedText>
-              </View>
+              <NeonButton
+                label="Soon"
+                onPress={() => {}}
+                disabled
+                variant="secondary"
+                style={styles.buyButton}
+              />
             </View>
           ))}
-        </PlayFrame>
+        </NeonPanel>
       )}
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  lede: {
-    marginTop: -Spacing.one,
-  },
-  card: {
-    borderRadius: Spacing.four,
-    padding: Spacing.three,
-    gap: Spacing.three,
-    alignItems: 'stretch',
-  },
   statRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
@@ -343,33 +300,21 @@ const styles = StyleSheet.create({
   },
   filterContent: {
     flexDirection: 'row',
-    gap: Spacing.one,
-    paddingHorizontal: Spacing.two,
+    gap: Spacing.two,
+    paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.half,
-  },
-  filterChip: {
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: 4,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.one,
-    paddingHorizontal: Spacing.one,
-  },
-  rowIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: NEON_ROW_LINE,
+    paddingVertical: Spacing.two,
   },
   rowIconArt: {
-    width: 22,
-    height: 22,
+    width: 20,
+    height: 20,
   },
   rowText: {
     flex: 1,
@@ -380,22 +325,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.one,
   },
-  tag: {
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.one,
-    paddingVertical: 1,
-  },
   buyButton: {
     minWidth: 96,
-    alignItems: 'center',
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.one,
-  },
-  disabled: {
-    opacity: 0.6,
-  },
-  pressed: {
-    opacity: 0.8,
   },
 });

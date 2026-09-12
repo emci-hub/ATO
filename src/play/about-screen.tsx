@@ -1,6 +1,8 @@
 /**
  * About — Play → About (GAME_SPEC §19 credits). Lists the art packs actually
  * bundled under `assets/play/`, plus the optional-Play promise. View only.
+ *
+ * Chrome (Slice 3): Neon Viper — mono cyan headings/links, cyan-glow panels.
  */
 import { Pressable, StyleSheet, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
@@ -9,7 +11,7 @@ import * as Linking from 'expo-linking';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { PLAY_CC0_LINE, PLAY_CREDITS, PLAY_OPTIONAL_LINE } from '@/play/credits';
-import { PlayFrame } from '@/play/play-frame';
+import { NeonBackLink, NeonHeader, NeonLabel, NeonPanel } from '@/play/neon-ui';
 
 async function openUrl(url: string) {
   try {
@@ -22,25 +24,15 @@ async function openUrl(url: string) {
 export function AboutScreen({ onBackToDivecore }: { onBackToDivecore: () => void }) {
   return (
     <View style={styles.container}>
-      <View style={styles.topRow}>
-        <Pressable
-          onPress={onBackToDivecore}
-          hitSlop={12}
-          style={({ pressed }) => [pressed && styles.pressed]}>
-          <ThemedText type="smallBold" themeColor="textSecondary">
-            ‹ Divecore
-          </ThemedText>
-        </Pressable>
-      </View>
+      <NeonBackLink onPress={onBackToDivecore} />
 
-      <ThemedText type="subtitle">About</ThemedText>
-      <ThemedText themeColor="textSecondary" style={styles.lede}>
-        Divecore is built on a handful of pixel-art packs. Here is what is bundled and who made
-        it.
-      </ThemedText>
+      <NeonHeader
+        title="About"
+        lede="Divecore is built on a handful of pixel-art packs. Here is what is bundled and who made it."
+      />
 
-      <PlayFrame style={styles.card}>
-        <ThemedText type="smallBold">Art credits</ThemedText>
+      <NeonPanel>
+        <NeonLabel>Art credits</NeonLabel>
         {PLAY_CREDITS.map((credit) => (
           <View key={credit.pack} style={styles.credit}>
             <ThemedText type="smallBold">{credit.pack}</ThemedText>
@@ -55,21 +47,23 @@ export function AboutScreen({ onBackToDivecore }: { onBackToDivecore: () => void
                 onPress={() => openUrl(credit.url!)}
                 accessibilityRole="link"
                 style={({ pressed }) => [pressed && styles.pressed]}>
-                <ThemedText type="link">{credit.url.replace(/^https:\/\//, '')}</ThemedText>
+                <ThemedText type="link" themeColor="emphasis">
+                  {credit.url.replace(/^https:\/\//, '')}
+                </ThemedText>
               </Pressable>
             ) : null}
           </View>
         ))}
-      </PlayFrame>
+      </NeonPanel>
 
-      <PlayFrame style={styles.card}>
+      <NeonPanel>
         <ThemedText type="small" themeColor="textSecondary">
           {PLAY_CC0_LINE}
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
           {PLAY_OPTIONAL_LINE}
         </ThemedText>
-      </PlayFrame>
+      </NeonPanel>
 
       <View style={styles.footerSpace} />
     </View>
@@ -79,19 +73,6 @@ export function AboutScreen({ onBackToDivecore }: { onBackToDivecore: () => void
 const styles = StyleSheet.create({
   container: {
     gap: Spacing.three,
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  lede: {
-    marginTop: -Spacing.two,
-  },
-  card: {
-    borderRadius: Spacing.four,
-    padding: Spacing.three,
-    gap: Spacing.three,
-    alignItems: 'stretch',
   },
   credit: {
     gap: Spacing.half,

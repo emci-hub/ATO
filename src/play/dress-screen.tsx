@@ -37,7 +37,18 @@ import { useTheme } from '@/hooks/use-theme';
 import { usePacedAction } from '@/play/action-pacing';
 import { itemArtSource } from '@/play/art';
 import { allAvatarDefs, avatarDef } from '@/play/avatars';
-import { PlayFrame } from '@/play/play-frame';
+import {
+  NEON_ROW_LINE,
+  NeonBackLink,
+  NeonButton,
+  NeonChip,
+  NeonHeader,
+  NeonIconFrame,
+  NeonLabel,
+  NeonPanel,
+  NeonPill,
+} from '@/play/neon-ui';
+import { NEON } from '@/play/neon-viper';
 import {
   formatItemStats,
   formatMult,
@@ -83,16 +94,15 @@ function ItemIcon({
   slot: ItemSlot;
   style?: StyleProp<ViewStyle>;
 }) {
-  const theme = useTheme();
   const source = art ? itemArtSource(art) : undefined;
   return (
-    <View style={[style, { backgroundColor: theme.backgroundSelected }]}>
+    <NeonIconFrame size={34} style={style}>
       {source ? (
         <Image source={source} contentFit="contain" style={styles.itemIconArt} />
       ) : (
-        <MaterialCommunityIcons name={SLOT_ICONS[slot]} size={18} color={theme.accent} />
+        <MaterialCommunityIcons name={SLOT_ICONS[slot]} size={18} color={NEON.cyan} />
       )}
-    </View>
+    </NeonIconFrame>
   );
 }
 const STAT_ORDER: ItemStat[] = [
@@ -178,21 +188,12 @@ export function DressScreen({
 
   return (
     <>
-      <View style={styles.topRow}>
-        <Pressable
-          onPress={onBackToGrove}
-          hitSlop={12}
-          style={({ pressed }) => [pressed && styles.pressed]}>
-          <ThemedText type="smallBold" themeColor="textSecondary">
-            ‹ Divecore
-          </ThemedText>
-        </Pressable>
-      </View>
+      <NeonBackLink onPress={onBackToGrove} />
 
-      <ThemedText type="subtitle">Dress</ThemedText>
-      <ThemedText themeColor="textSecondary" style={styles.lede}>
-        Four slots. Equip Powers to shape your Basecore — Looks are for the eye.
-      </ThemedText>
+      <NeonHeader
+        title="Dress"
+        lede="Four slots. Equip Powers to shape your Basecore — Looks are for the eye."
+      />
 
       {/* Active Avatar picker (v16): per-Avatar level/stars/equip/park; the
        * bag, tokens and campaign are shared. Behind Avatars show a ×2.5 EXP
@@ -203,8 +204,8 @@ export function DressScreen({
         onUnlockAvatar={onUnlockAvatar}
       />
 
-      <PlayFrame style={styles.card}>
-        <ThemedText type="smallBold">Worn</ThemedText>
+      <NeonPanel>
+        <NeonLabel>Worn</NeonLabel>
         {SLOT_ORDER.map((slot) => {
           const ref = view.equipped[slot] ?? null;
           return (
@@ -218,10 +219,10 @@ export function DressScreen({
             />
           );
         })}
-      </PlayFrame>
+      </NeonPanel>
 
-      <PlayFrame style={styles.card}>
-        <ThemedText type="smallBold">Equipped bonuses</ThemedText>
+      <NeonPanel>
+        <NeonLabel>Equipped bonuses</NeonLabel>
         {!anyBonuses ? (
           <ThemedText type="small" themeColor="textSecondary">
             No bonuses yet — find and equip a Power item.
@@ -256,7 +257,7 @@ export function DressScreen({
             );
           })
         )}
-      </PlayFrame>
+      </NeonPanel>
 
       {/* Merge confirm block sits DIRECTLY above the Bag — the fuel it
        * consumes comes from bag spares, so the panel anchors to that card. */}
@@ -279,9 +280,9 @@ export function DressScreen({
         />
       ) : null}
 
-      <PlayFrame style={styles.card}>
+      <NeonPanel>
         <View style={styles.statRow}>
-          <ThemedText type="smallBold">Bag</ThemedText>
+          <NeonLabel>Bag</NeonLabel>
           <ThemedText type="code" themeColor="textSecondary">
             {totalOwned}/{INVENTORY_SOFT_CAP} held
           </ThemedText>
@@ -291,28 +292,14 @@ export function DressScreen({
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.filterContent}>
-            {FILTER_TABS.map((tab) => {
-              const selected = filter === tab.key;
-              return (
-                <Pressable
-                  key={tab.key}
-                  onPress={() => setFilter(tab.key)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  style={({ pressed }) => [
-                    styles.filterChip,
-                    { backgroundColor: selected ? theme.backgroundSelected : 'transparent' },
-                    pressed && styles.pressed,
-                  ]}>
-                  <ThemedText
-                    type="code"
-                    themeColor={selected ? undefined : 'textSecondary'}
-                    style={selected && { color: theme.accent }}>
-                    {tab.label}
-                  </ThemedText>
-                </Pressable>
-              );
-            })}
+            {FILTER_TABS.map((tab) => (
+              <NeonChip
+                key={tab.key}
+                label={tab.label}
+                selected={filter === tab.key}
+                onPress={() => setFilter(tab.key)}
+              />
+            ))}
           </ScrollView>
         </View>
         {overCap ? (
@@ -342,7 +329,7 @@ export function DressScreen({
             );
           })
         )}
-      </PlayFrame>
+      </NeonPanel>
     </>
   );
 }
@@ -381,7 +368,7 @@ function MergePanel({
   const toLabel = starLabel(target.star + 1);
   if (!def || pct == null) return null; // nothing mergeable anymore
   return (
-    <PlayFrame style={styles.mergeCard}>
+    <NeonPanel>
       {showSplash ? (
         <View style={styles.splashRow}>
           {!reduceMotion ? <ActivityIndicator size="small" color={theme.accent} /> : null}
@@ -403,39 +390,23 @@ function MergePanel({
             {def.core.name} and only costs the fuel.
           </ThemedText>
           <View style={styles.buttonRow}>
-            <Pressable
+            <NeonButton
+              label="Cancel"
               onPress={onDone}
               disabled={busy}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: busy }}
-              style={({ pressed }) => [
-                styles.button,
-                { backgroundColor: theme.backgroundSelected },
-                pressed && !busy && styles.pressed,
-                busy && styles.disabled,
-              ]}>
-              <ThemedText type="smallBold">Cancel</ThemedText>
-            </Pressable>
-            <Pressable
+              variant="secondary"
+              style={styles.mergeButtonCancel}
+            />
+            <NeonButton
+              label={`Merge · ${pct}%`}
               onPress={onMerge}
               disabled={busy}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: busy }}
-              style={({ pressed }) => [
-                styles.button,
-                styles.buttonPrimary,
-                { backgroundColor: theme.accentFill },
-                pressed && !busy && styles.pressed,
-                busy && styles.disabled,
-              ]}>
-              <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                Merge · {pct}%
-              </ThemedText>
-            </Pressable>
+              style={styles.mergeButtonConfirm}
+            />
           </View>
         </>
       )}
-    </PlayFrame>
+    </NeonPanel>
   );
 }
 
@@ -485,7 +456,6 @@ function SlotRow({
   onUnequip: (slot: ItemSlot) => void;
   onMerge: (target: MergeTarget) => void;
 }) {
-  const theme = useTheme();
   const def = ref ? getItemDef(ref.id) : undefined;
   const canMerge =
     !!ref &&
@@ -501,7 +471,7 @@ function SlotRow({
         accessibilityRole="button"
         accessibilityState={{ disabled: !def }}
         style={({ pressed }) => [styles.slotMain, pressed && def && styles.pressed]}>
-        <ItemIcon art={def?.core.art} slot={slot} style={styles.slotIcon} />
+        <ItemIcon art={def?.core.art} slot={slot} />
         <View style={styles.slotText}>
           <ThemedText type="small" themeColor="textSecondary">
             {SLOT_LABELS[slot]}
@@ -526,30 +496,22 @@ function SlotRow({
         </View>
       </Pressable>
       {canMerge && ref && def ? (
-        <Pressable
+        <NeonButton
+          label={`Merge · ${mergeSuccessPct(ref.star)}%`}
           onPress={() => onMerge({ id: ref.id, star: ref.star, main: 'worn' })}
-          accessibilityRole="button"
+          variant="danger"
           accessibilityLabel={`Merge ${def.core.name}`}
-          style={({ pressed }) => [
-            styles.chip,
-            { backgroundColor: theme.backgroundSelected },
-            pressed && styles.pressed,
-          ]}>
-          <ThemedText type="code" themeColor="emphasis">
-            Merge · {mergeSuccessPct(ref.star)}%
-          </ThemedText>
-        </Pressable>
+          style={styles.rowAction}
+        />
       ) : null}
       {def && ref ? (
-        <Pressable
+        <NeonButton
+          label="Take off"
           onPress={() => onUnequip(slot)}
-          accessibilityRole="button"
+          variant="secondary"
           accessibilityLabel={`Take off ${def.core.name}`}
-          style={({ pressed }) => [styles.chip, pressed && styles.pressed]}>
-          <ThemedText type="code" themeColor="textSecondary">
-            Take off
-          </ThemedText>
-        </Pressable>
+          style={styles.rowAction}
+        />
       ) : null}
     </View>
   );
@@ -570,7 +532,6 @@ function StackRow({
   onSell: (itemId: string, star: number) => void;
   onMerge: (target: MergeTarget) => void;
 }) {
-  const theme = useTheme();
   const def = getItemDef(stack.id);
   if (!def) {
     return (
@@ -589,7 +550,7 @@ function StackRow({
   const mergePct = mergeSuccessPct(stack.star);
   const star = starLabel(stack.star);
 
-  const icon = <ItemIcon art={def.core.art} slot={def.core.slot} style={styles.stackIcon} />;
+  const icon = <ItemIcon art={def.core.art} slot={def.core.slot} />;
   const body = (
     <View style={styles.stackText}>
       <View style={styles.stackTitleLine}>
@@ -597,20 +558,8 @@ function StackRow({
           {def.core.name}
           {star ? ` ${star}` : ''}
         </ThemedText>
-        {stack.count > 1 ? (
-          <View style={[styles.countBadge, { backgroundColor: theme.backgroundSelected }]}>
-            <ThemedText type="code" themeColor="emphasis">
-              ×{stack.count}
-            </ThemedText>
-          </View>
-        ) : null}
-        {sameTierWorn ? (
-          <View style={[styles.spareBadge, { backgroundColor: theme.backgroundSelected }]}>
-            <ThemedText type="code" themeColor="textSecondary">
-              Spare
-            </ThemedText>
-          </View>
-        ) : null}
+        {stack.count > 1 ? <NeonPill label={`×${stack.count}`} tone="emphasis" /> : null}
+        {sameTierWorn ? <NeonPill label="Spare" /> : null}
       </View>
       <ThemedText type="code" themeColor="textSecondary">
         {describeItem(def, stack.star)}
@@ -632,34 +581,22 @@ function StackRow({
         </Pressable>
       )}
       {canMergeAsBagMain ? (
-        <Pressable
+        <NeonButton
+          label={mergePct != null ? `Merge · ${mergePct}%` : 'Merge'}
           onPress={() => onMerge({ id: stack.id, star: stack.star, main: 'bag' })}
-          accessibilityRole="button"
+          variant="danger"
           accessibilityLabel={`Merge ${def.core.name}`}
-          style={({ pressed }) => [
-            styles.chip,
-            { backgroundColor: theme.backgroundSelected },
-            pressed && styles.pressed,
-          ]}>
-          <ThemedText type="code" themeColor="emphasis">
-            {mergePct != null ? `Merge · ${mergePct}%` : 'Merge'}
-          </ThemedText>
-        </Pressable>
+          style={styles.rowAction}
+        />
       ) : null}
       {sellable ? (
-        <Pressable
+        <NeonButton
+          label={`Sell +${LOOK_SELL_TOKENS}`}
           onPress={() => onSell(stack.id, stack.star)}
-          accessibilityRole="button"
+          variant="secondary"
           accessibilityLabel={`Sell one ${def.core.name}`}
-          style={({ pressed }) => [
-            styles.sellPill,
-            { backgroundColor: theme.backgroundSelected },
-            pressed && styles.pressed,
-          ]}>
-          <ThemedText type="code" themeColor="textSecondary">
-            Sell +{LOOK_SELL_TOKENS}
-          </ThemedText>
-        </Pressable>
+          style={styles.rowAction}
+        />
       ) : null}
     </View>
   );
@@ -690,13 +627,12 @@ function AvatarPicker({
   onActivateAvatar: (id: string) => void;
   onUnlockAvatar: (id: string) => void;
 }) {
-  const theme = useTheme();
   const owned = new Map(view.avatars.map((avatar) => [avatar.id, avatar]));
   const activeDef = avatarDef(view.activeAvatarId);
   return (
-    <PlayFrame style={styles.card}>
+    <NeonPanel>
       <View style={styles.statRow}>
-        <ThemedText type="smallBold">Active Avatar</ThemedText>
+        <NeonLabel>Active Avatar</NeonLabel>
         <ThemedText type="smallBold" themeColor="emphasis">
           {activeDef?.name ?? view.activeAvatarId}
         </ThemedText>
@@ -710,9 +646,9 @@ function AvatarPicker({
         if (!record) {
           return (
             <View key={def.id} style={styles.avatarRow}>
-              <View style={[styles.avatarIcon, { backgroundColor: theme.backgroundSelected }]}>
-                <MaterialCommunityIcons name={def.icon} size={18} color={theme.textSecondary} />
-              </View>
+              <NeonIconFrame size={34}>
+                <MaterialCommunityIcons name={def.icon} size={18} color={NEON.textMuted} />
+              </NeonIconFrame>
               <View style={styles.avatarText}>
                 <ThemedText type="smallBold" themeColor="textSecondary">
                   {def.name}
@@ -721,19 +657,13 @@ function AvatarPicker({
                   {def.blurb}
                 </ThemedText>
               </View>
-              <Pressable
+              <NeonButton
+                label="Unlock"
                 onPress={() => onUnlockAvatar(def.id)}
-                accessibilityRole="button"
+                variant="secondary"
                 accessibilityLabel={`Unlock ${def.name}`}
-                style={({ pressed }) => [
-                  styles.avatarChip,
-                  { backgroundColor: theme.backgroundSelected },
-                  pressed && styles.pressed,
-                ]}>
-                <ThemedText type="code" themeColor="emphasis">
-                  Unlock
-                </ThemedText>
-              </Pressable>
+                style={styles.rowAction}
+              />
             </View>
           );
         }
@@ -742,58 +672,39 @@ function AvatarPicker({
           <View
             key={record.id}
             style={[styles.avatarRow, record.active && { borderColor: defColor }]}>
-            <View
-              style={[
-                styles.avatarIcon,
-                { backgroundColor: record.active ? defColor : theme.backgroundSelected },
-              ]}>
+            <NeonIconFrame
+              size={34}
+              style={record.active ? { backgroundColor: defColor, borderColor: defColor } : undefined}>
               <MaterialCommunityIcons
                 name={def.icon}
                 size={18}
-                color={record.active ? '#FFFFFF' : theme.textSecondary}
+                color={record.active ? '#FFFFFF' : NEON.textMuted}
               />
-            </View>
+            </NeonIconFrame>
             <View style={styles.avatarText}>
               <View style={styles.avatarTitleLine}>
                 <ThemedText type="smallBold">{def.name}</ThemedText>
-                {record.catchup ? (
-                  <View
-                    style={[styles.avatarChip, { backgroundColor: theme.backgroundSelected }]}>
-                    <ThemedText type="code" themeColor="emphasis">
-                      ×2.5 EXP
-                    </ThemedText>
-                  </View>
-                ) : null}
+                {record.catchup ? <NeonPill label="×2.5 EXP" tone="emphasis" /> : null}
               </View>
               <ThemedText type="code" themeColor="textSecondary">
                 Lv {record.level} · ★{record.stars}/{AVATAR_STAR_MAX} · {record.worn}/4 worn
               </ThemedText>
             </View>
             {record.active ? (
-              <View style={[styles.avatarChip, { backgroundColor: theme.backgroundSelected }]}>
-                <ThemedText type="code" themeColor="emphasis">
-                  Active
-                </ThemedText>
-              </View>
+              <NeonPill label="Active" tone="emphasis" />
             ) : (
-              <Pressable
+              <NeonButton
+                label="Use"
                 onPress={() => onActivateAvatar(def.id)}
-                accessibilityRole="button"
+                variant="secondary"
                 accessibilityLabel={`Use ${def.name}`}
-                style={({ pressed }) => [
-                  styles.avatarChip,
-                  { backgroundColor: theme.backgroundSelected },
-                  pressed && styles.pressed,
-                ]}>
-                <ThemedText type="code" themeColor="emphasis">
-                  Use
-                </ThemedText>
-              </Pressable>
+                style={styles.rowAction}
+              />
             )}
           </View>
         );
       })}
-    </PlayFrame>
+    </NeonPanel>
   );
 }
 
@@ -802,25 +713,6 @@ function capitalize(word: string): string {
 }
 
 const styles = StyleSheet.create({
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  lede: {
-    marginTop: -Spacing.one,
-  },
-  card: {
-    borderRadius: Spacing.four,
-    padding: Spacing.three,
-    gap: Spacing.three,
-    alignItems: 'stretch',
-  },
-  mergeCard: {
-    borderRadius: Spacing.four,
-    padding: Spacing.three,
-    gap: Spacing.three,
-    alignItems: 'stretch',
-  },
   statRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
@@ -831,35 +723,23 @@ const styles = StyleSheet.create({
   },
   filterContent: {
     flexDirection: 'row',
-    gap: Spacing.one,
-    paddingHorizontal: Spacing.two,
+    gap: Spacing.two,
+    paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.half,
-  },
-  filterChip: {
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: 4,
   },
   slotRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.one,
-    paddingHorizontal: Spacing.one,
+    borderBottomWidth: 1,
+    borderBottomColor: NEON_ROW_LINE,
+    paddingVertical: Spacing.two,
   },
   slotMain: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-  },
-  slotIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   itemIconArt: {
     width: 22,
@@ -884,22 +764,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.one,
-    paddingHorizontal: Spacing.one,
+    borderBottomWidth: 1,
+    borderBottomColor: NEON_ROW_LINE,
+    paddingVertical: Spacing.two,
   },
   stackMain: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-  },
-  stackIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   stackText: {
     flex: 1,
@@ -910,42 +783,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.one,
   },
-  countBadge: {
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.one,
-    paddingVertical: 1,
-  },
-  spareBadge: {
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.one,
-    paddingVertical: 1,
-  },
-  chip: {
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.half,
-  },
-  sellPill: {
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.half,
-  },
   avatarRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-    borderRadius: Spacing.two,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    paddingVertical: Spacing.one,
-    paddingHorizontal: Spacing.one,
-  },
-  avatarIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: NEON_ROW_LINE,
+    borderLeftWidth: 2,
+    borderLeftColor: 'transparent',
+    paddingVertical: Spacing.two,
+    paddingLeft: Spacing.two,
   },
   avatarText: {
     flex: 1,
@@ -956,27 +803,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.one,
   },
-  avatarChip: {
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.one,
-    paddingVertical: 1,
+  rowAction: {
+    minHeight: 28,
+    paddingVertical: Spacing.one,
+    paddingHorizontal: Spacing.two,
   },
   buttonRow: {
     flexDirection: 'row',
     gap: Spacing.two,
   },
-  button: {
+  mergeButtonCancel: {
     flex: 1,
-    alignItems: 'center',
-    borderRadius: Spacing.three,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
   },
-  buttonPrimary: {
+  mergeButtonConfirm: {
     flex: 2,
-  },
-  disabled: {
-    opacity: 0.5,
   },
   splashRow: {
     flexDirection: 'row',
