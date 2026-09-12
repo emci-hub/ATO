@@ -444,6 +444,9 @@ export function QuestionsFold({
         locked={fullProfileLocked}
         onSaveBatch={saveBankAnswers}
       />
+      {fullProfileLocked ? (
+        <OngoingRoundFold me={me} history={history} tracks={tracks ?? []} onUpdated={onUpdated} />
+      ) : null}
       {checkpoint ? (
         <>
           <ThemedText>{QUESTIONS_CHECKPOINT}</ThemedText>
@@ -585,6 +588,14 @@ function OngoingRoundFold({
       // pack is a harmless no-op, never a double award.
       if (existing && nextUnansweredItem(existing) === null) {
         claimOngoingRoundCompleteQuiet(existing.id);
+      } else if (!existing) {
+        // No ongoing round has ever been started for this account — this
+        // only happens once, the first time this section mounts after the
+        // frozen 50-question intake finishes. Auto-start it (bank-first,
+        // AI-fallback) instead of waiting on a manual "Start your next
+        // round" tap, so finishing the intake immediately releases the
+        // next batch of questions.
+        void start();
       }
     } catch (err) {
       console.log('[ongoing-round] load error:', err);
@@ -597,6 +608,7 @@ function OngoingRoundFold({
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- start is a stable function-scope declaration re-created each render, not state; including it would defeat this callback's mount-once identity for no correctness benefit
   }, []);
 
   useEffect(() => {

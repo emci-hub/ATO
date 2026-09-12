@@ -127,23 +127,34 @@ ok('composeOngoingRound\'s saveItems hook is a true no-op; saveOngoingRoundBatch
 // --- questions-fold.tsx: UI trigger --------------------------------------------
 const foldSrc = read('src/components/questions-fold.tsx');
 
-// Removed 2026-09-11: OngoingRoundFold no longer auto-renders under the
-// finished Full Profile pager — it read as an unrelated "Submit" block
-// stacked directly under Back/Finish (found confusing, see docs/NOW.md).
-// The function itself is kept intact (not deleted) for reuse once a real
-// submit/approval flow is designed, so it's still asserted to exist below —
-// just no longer wired into QuestionsFold's own render.
+// Briefly removed 2026-09-11, restored the same day: this render IS the
+// bank-first/AI-fallback "next round of questions" flow (composeOngoingRound
+// -> bank-pool.ts's addToBankPool), correctly gated on fullProfileLocked
+// (only after the frozen 50-question intake is done). It was mistaken for
+// unrelated broken UI ("Submit" heading + a stray scenario question stacked
+// under Back/Finish) and removed, then restored once traced back to being
+// working, intentional behavior — see docs/NOW.md.
 assert.match(
   foldSrc,
-  /function OngoingRoundFold\(/,
-  'OngoingRoundFold must still be defined, even though it is no longer auto-rendered',
+  /\{fullProfileLocked \? \(\s*\n\s*<OngoingRoundFold me=\{me\} history=\{history\} tracks=\{tracks \?\? \[\]\} onUpdated=\{onUpdated\} \/>\s*\n\s*\) : null\}/,
+  'the ongoing-round CTA/flow must render once fullProfileLocked (the frozen 50-question intake is done) — not alongside the still-in-progress intake',
 );
-assert.doesNotMatch(
-  foldSrc,
-  /\{fullProfileLocked \? \(\s*\n\s*<OngoingRoundFold/,
-  'OngoingRoundFold must not auto-render under the finished intake pager anymore',
+ok('OngoingRoundFold is rendered once the frozen 50-question intake is complete (fullProfileLocked)');
+
+// Auto-start (2026-09-11): the first time this mounts with no ongoing-round
+// pack yet, it must call start() itself rather than waiting on a manual
+// "Start your next round" tap — finishing the intake should immediately
+// release the next batch, per emci's explicit choice.
+const loadFnBody = foldSrc.slice(
+  foldSrc.indexOf('const load = useCallback(async () => {', foldSrc.indexOf('function OngoingRoundFold')),
+  foldSrc.indexOf('async function start()'),
 );
-ok('OngoingRoundFold is defined but intentionally no longer wired into QuestionsFold\'s render');
+assert.match(
+  loadFnBody,
+  /\} else if \(!existing\) \{\s*\n[\s\S]{0,600}?void start\(\);/,
+  'load() must auto-call start() when no ongoing-round pack exists yet, not just set state and wait for a tap',
+);
+ok('the first ongoing round auto-starts on load — no manual tap required after finishing the intake');
 
 assert.match(foldSrc, /const existing = await withTimeout\(fetchLatestOngoingRoundPack\(\), 25000, 'ongoing-round-load'\);/);
 assert.match(foldSrc, /const saved = await withTimeout\(runOngoingRound\(ongoingMe, history, tracks\), 40000, 'ongoing-round-start'\);/);
