@@ -37,6 +37,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { controlBorderColor, surfaceShadow } from '@/lib/theme/chrome';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
 import {
@@ -132,6 +133,65 @@ const TOWER_COLORS: Record<TowerKind, string> = {
   vine: '#A3E635',
   crystal: '#A78BFA',
 };
+
+/* -------------------------------------------------------------- game speed --- */
+/** The sim clock multipliers a wave can run at. One multiplier drives the WHOLE
+ * wave clock (`dtMs × speed`), so movement, cooldowns and the spawn schedule
+ * all scale together — never spawn-only. */
+export type GameSpeed = 1 | 2;
+export const GAME_SPEEDS: readonly GameSpeed[] = [1, 2];
+
+/** 1x / 2x sim-speed pills (Neon Viper chrome). Shown between waves (setup) and
+ * in the live bottom HUD, so the clock can be retuned before or during a run. */
+function SpeedControl({
+  speed,
+  onChange,
+}: {
+  speed: GameSpeed;
+  onChange: (speed: GameSpeed) => void;
+}) {
+  const theme = useTheme();
+  return (
+    <View
+      style={[
+        styles.speedGroup,
+        { backgroundColor: theme.backgroundElement, borderColor: controlBorderColor(theme) },
+      ]}>
+      {GAME_SPEEDS.map((value) => {
+        const active = speed === value;
+        return (
+          <Pressable
+            key={value}
+            onPress={() => onChange(value)}
+            accessibilityRole="button"
+            accessibilityLabel={`${value}x wave speed`}
+            accessibilityState={{ selected: active }}
+            style={({ pressed }) => [
+              styles.speedPill,
+              active && { backgroundColor: theme.accentFill },
+              pressed && styles.pressed,
+            ]}>
+            <ThemedText
+              type="smallBold"
+              style={[
+                styles.speedText,
+                { color: active ? theme.onAccent : theme.textSecondary },
+              ]}>
+              {`${value}x`}
+            </ThemedText>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+/* -------------------------------------------------------------- boss warn --- */
+/** Boss warn banner (§9m). `LEAD_MS` = how far before the boss steps in the
+ * warn is raised; `MS` = how long it stays up. Display only — the sim keeps
+ * running underneath, so towers keep firing through the banner. */
+const BOSS_WARN_LEAD_MS = 1500;
+const BOSS_WARN_MS = 2000;
 
 /* ---- floating hit numbers (display only) -------------------------------- */
 /** On-screen floater cap — more than this and oldest are dropped (pooled). */
@@ -382,6 +442,8 @@ export function DefendScreen({
   const devUnlocked = usePlayDevUnlocked();
   const [phase, setPhase] = useState<DefendPhase>('setup');
   const [paused, setPaused] = useState(false);
+  /** Sim-clock multiplier (1x / 2x) — scales the whole wave clock together. */
+  const [speed, setSpeed] = useState<GameSpeed>(1);
   /** A cleared-band wave picked for replay, or null → fight the campaign seat. */
   const [replayPick, setReplayPick] = useState<{ phase: CampaignPhase; wave: number } | null>(null);
   /** Board geometry for Main only (`ato` default | `neon-maze` parked). Trial
@@ -424,17 +486,28 @@ export function DefendScreen({
   /** Per-creep path facing (deg), keyed by puff id. Kept when a creep is nearly
    * stopped (degenerate heading) so the sprite never snaps to a default. */
   const puffFacingRef = useRef<Record<number, number>>({});
-  /** §9m boss / mini-boss alert banner shown while the boss steps in. */
+  /** §9m boss warn banner — band label + boss name, raised as the boss nears. */
   const [bossAlert, setBossAlert] = useState<{ label: string; name: string } | null>(null);
+  /** Mid-run leave confirmation (one tap to confirm, Cancel stays in the fight). */
+  const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
+  /** One warn per wave run — the banner must not re-arm every tick. */
+  const bossWarnedRef = useRef(false);
+  /** True when the run was live (not paused) before the leave confirm opened, so
+   * Cancel restores exactly that state. */
+  const resumeAfterLeaveCancelRef = useRef(false);
 
   const phaseRef = useRef(phase);
   const pausedRef = useRef(paused);
   const simRef = useRef(sim);
   const godModeRef = useRef(godMode);
+  /** Read inside the fixed-cadence tickers so a speed change never restarts
+   * (and thus never gaps) the interval. */
+  const speedRef = useRef(speed);
   phaseRef.current = phase;
   pausedRef.current = paused;
   simRef.current = sim;
   godModeRef.current = godMode;
+  speedRef.current = speed;
 
   // What this screen is fighting right now. The replay pick overrides the
   // campaign seat; the seat drives the default.
@@ -705,6 +778,7 @@ export function DefendScreen({
     puffFacingRef.current = {};
     setShots([]);
     setBossAlert(null);
+    bossWarnedRef.current = false; // re-arm the warn for this run
   }, [view.cyclePower, view.cycleTint, boardId]);
 
   /** Abandon a live run back to setup — no win rewards. The tower layout is
@@ -729,7 +803,30 @@ export function DefendScreen({
     puffFacingRef.current = {};
     setShots([]);
     setBossAlert(null);
+    setLeaveConfirmOpen(false);
   }, []);
+
+  /** Mid-run Leave — one confirmation, then `abandonRun` (the existing path:
+   * towers kept, no win, no rewards, no fake leak). Opening the confirm freezes
+   * the sim so a creep can't leak while the player reads it; Cancel restores
+   * exactly the pre-confirm state. */
+  const requestLeaveRun = useCallback(() => {
+    if (phaseRef.current !== 'running') return;
+    resumeAfterLeaveCancelRef.current = !pausedRef.current;
+    setPaused(true);
+    setLeaveConfirmOpen(true);
+  }, []);
+
+  const cancelLeaveRun = useCallback(() => {
+    setLeaveConfirmOpen(false);
+    if (resumeAfterLeaveCancelRef.current) setPaused(false);
+    resumeAfterLeaveCancelRef.current = false;
+  }, []);
+
+  const confirmLeaveRun = useCallback(() => {
+    resumeAfterLeaveCancelRef.current = false;
+    abandonRun();
+  }, [abandonRun]);
 
   /** Result-screen "Leave": STAY in Defend — back to SETUP on the SAME fight
    * (Start wave ready) with towers kept, exactly like Abandon. Never the Grove
@@ -818,7 +915,9 @@ export function DefendScreen({
     const id = setInterval(() => {
       const list = shotsRef.current;
       if (list.length === 0) return;
-      const dt = FX_TICK_MS / 1000;
+      // Shots ride the same clock as the sim, so 2x keeps them ahead of the
+      // faster creeps instead of trailing them. Display only.
+      const dt = (FX_TICK_MS / 1000) * speedRef.current;
       const now = Date.now();
       const next: Shot[] = [];
       for (const shot of list) {
@@ -856,7 +955,14 @@ export function DefendScreen({
       // drop the killing blow's facing/flash. A higher post-step cooldown means
       // the engine reset it — i.e. the Avatar attacked this tick.
       const aimed = nearestPuffDelta(current.puffs, avatar, BOARD_MAPS[current.boardId] ?? BOARD_MAPS.ato);
-      const step = stepDefendLive(current, DEFEND_TICK_MS, bucketsRef.current, avatar);
+      // ONE sim clock: dtMs × speed drives elapsed (spawns), movement, tower /
+      // Avatar / skill cooldowns and slow decay together — never spawn-only.
+      const step = stepDefendLive(
+        current,
+        DEFEND_TICK_MS * speedRef.current,
+        bucketsRef.current,
+        avatar,
+      );
       // Facing is owned by the walk loop (velocity while moving, lastFacing when
       // idle); the ticker only detects the attack to fire the flash.
       if (step.state.avatarCooldownMs > current.avatarCooldownMs + 1 && aimed) {
@@ -886,14 +992,19 @@ export function DefendScreen({
         const fired = after != null && after.cooldownMs > tower.cooldownMs + 1;
         if (fired) spawnShot(pad.x, pad.y, tx, ty);
       }
-      // §9m boss alert: banner the tick a boss spawns (the director's schedule
-      // drives it — no stage machine; the escort→boss breath is just a time gap).
+      // §9m boss warn: peek the remaining schedule and raise the banner ONCE, a
+      // beat before the boss steps in (or the tick it lands, if the lead was
+      // skipped by a big dt). Display only — the sim keeps running under it, so
+      // towers still fire through the warning.
       const bandNow = step.state.band;
-      if (bandNow && step.bossSpawned) {
-        setBossAlert({
-          label: bandNow.kind === 'scout_mini' ? 'Mini-boss alert' : 'Boss alert',
-          name: bandNow.boss.name,
-        });
+      if (bandNow && !bossWarnedRef.current) {
+        const nextBoss = step.state.schedule.find((event) => event.role === 'boss');
+        const imminent =
+          nextBoss != null && nextBoss.tMs - step.state.elapsedMs <= BOSS_WARN_LEAD_MS;
+        if (imminent || step.bossSpawned) {
+          bossWarnedRef.current = true;
+          setBossAlert({ label: bandNow.label, name: bandNow.boss.name });
+        }
       }
       // Display-only floaters: any puff that lost HP this tick, or vanished
       // (killed), gets a short damage number near it. No engine changes.
@@ -917,10 +1028,10 @@ export function DefendScreen({
     return () => clearInterval(id);
   }, [phase, paused, winWave, spawnFloaters, spawnShot]);
 
-  // The alert is a banner — auto-dismiss after a short beat.
+  // The warn is a banner — auto-dismiss after a short beat (spec 1.5–2.5s).
   useEffect(() => {
     if (!bossAlert) return;
-    const timer = setTimeout(() => setBossAlert(null), 1600);
+    const timer = setTimeout(() => setBossAlert(null), BOSS_WARN_MS);
     return () => clearTimeout(timer);
   }, [bossAlert]);
 
@@ -1007,6 +1118,7 @@ export function DefendScreen({
     puffFacingRef.current = {};
     setShots([]);
     setBossAlert(null);
+    bossWarnedRef.current = false; // re-arm the warn for this preview run
   };
 
   const upgradeSelected = () => {
@@ -1665,15 +1777,28 @@ export function DefendScreen({
               />
             ))}
 
-            {/* §9m boss alert banner — shows as the boss steps in (display only). */}
+            {/* §9m boss warn — a NON-BLOCKING Neon Viper banner raised a beat
+                before the boss steps in. pointerEvents none and no sim change,
+                so the fight keeps running underneath (towers keep firing).
+                Copy: "BOSS INCOMING" — never "BOUND BOSS" (that names the
+                player-owned Bound Boss tower). */}
             {bossAlert ? (
               <View pointerEvents="none" style={styles.bossAlertWrap}>
                 <View
                   style={[
                     styles.bossAlertPill,
-                    { backgroundColor: theme.backgroundSelected, borderColor: theme.accent },
+                    surfaceShadow(theme, reduceMotion),
+                    {
+                      backgroundColor: theme.backgroundElement,
+                      borderColor: theme.accentSecondary,
+                    },
                   ]}>
-                  <ThemedText type="subheading" themeColor="emphasis">
+                  <ThemedText
+                    type="codeBold"
+                    style={[styles.bossWarnTitle, { color: theme.accentSecondary }]}>
+                    BOSS INCOMING
+                  </ThemedText>
+                  <ThemedText type="code" style={{ color: theme.accent }}>
                     {bossAlert.label}
                   </ThemedText>
                   {bossAlert.name ? (
@@ -1688,21 +1813,8 @@ export function DefendScreen({
           {paused && phase === 'running' ? (
             <View style={styles.pausedBox}>
               <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-                Paused — the wave is frozen.
+                Paused — the wave is frozen. Leave from the bar below.
               </ThemedText>
-              <Pressable
-                onPress={abandonRun}
-                accessibilityRole="button"
-                accessibilityLabel="Abandon run"
-                style={({ pressed }) => [
-                  styles.hudButton,
-                  { backgroundColor: theme.backgroundSelected },
-                  pressed && styles.pressed,
-                ]}>
-                <ThemedText type="smallBold" themeColor="textSecondary">
-                  Abandon run — back to Start, no rewards · towers kept
-                </ThemedText>
-              </Pressable>
             </View>
           ) : null}
         </PlayFrame>
@@ -1869,8 +1981,8 @@ export function DefendScreen({
                   : fight.mode === 'replay'
                     ? 'Half-token replay — tap a cleared wave below, or head back to the campaign.'
                     : cycleNote
-                      ? `The campaign climb — ${cycleNote}. Place towers, then start.`
-                      : 'The campaign climb — Trial teaches the path, Main is the real deal. Place towers, then start.'}
+                      ? `The campaign climb — ${cycleNote}. Place towers, then call the wave.`
+                      : 'The campaign climb — Trial teaches the path, Main is the real deal. Place towers, then call the wave.'}
               </ThemedText>
               {fight.mode === 'replay' ? (
                 <Pressable
@@ -1882,18 +1994,28 @@ export function DefendScreen({
                   </ThemedText>
                 </Pressable>
               ) : null}
-              <Pressable
-                onPress={startWave}
-                accessibilityRole="button"
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  { backgroundColor: theme.accentFill },
-                  pressed && styles.pressed,
-                ]}>
-                <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                  {fight.mode === 'replay' ? 'Start replay' : 'Start wave'}
-                </ThemedText>
-              </Pressable>
+              <View style={styles.callRow}>
+                <Pressable
+                  onPress={startWave}
+                  accessibilityRole="button"
+                  accessibilityLabel={fight.mode === 'replay' ? 'Call replay' : 'Call wave'}
+                  style={({ pressed }) => [
+                    styles.primaryButton,
+                    styles.callButton,
+                    {
+                      backgroundColor: theme.accentFill,
+                      borderColor: controlBorderColor(theme),
+                    },
+                    pressed && styles.pressed,
+                  ]}>
+                  <ThemedText
+                    type="smallBold"
+                    style={[styles.callLabel, { color: theme.onAccent }]}>
+                    {fight.mode === 'replay' ? 'CALL REPLAY' : 'CALL WAVE'}
+                  </ThemedText>
+                </Pressable>
+                <SpeedControl speed={speed} onChange={setSpeed} />
+              </View>
             </ThemedView>
 
             {/* Maps (§ — board picker, Main only): the locked ATO default vs the
@@ -2158,6 +2280,24 @@ export function DefendScreen({
               ]}>
               <ThemedText type="smallBold">{paused ? 'Resume' : 'Pause'}</ThemedText>
             </Pressable>
+            <SpeedControl speed={speed} onChange={setSpeed} />
+            <Pressable
+              onPress={requestLeaveRun}
+              accessibilityRole="button"
+              accessibilityLabel="Leave run"
+              style={({ pressed }) => [
+                styles.hudButton,
+                styles.leaveButton,
+                {
+                  backgroundColor: theme.backgroundSelected,
+                  borderColor: controlBorderColor(theme),
+                },
+                pressed && styles.pressed,
+              ]}>
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                Leave
+              </ThemedText>
+            </Pressable>
             <Pressable
               onPress={castSkill}
               disabled={!skillReady}
@@ -2325,7 +2465,7 @@ export function DefendScreen({
                 { backgroundColor: theme.backgroundSelected },
                 pressed && styles.pressed,
               ]}>
-              <ThemedText type="smallBold">Leave — back to Start wave</ThemedText>
+              <ThemedText type="smallBold">Leave — back to Call wave</ThemedText>
             </Pressable>
           </ThemedView>
         ) : null}
@@ -2371,7 +2511,7 @@ export function DefendScreen({
                 { backgroundColor: theme.backgroundSelected },
                 pressed && styles.pressed,
               ]}>
-              <ThemedText type="smallBold">Leave — back to Start wave</ThemedText>
+              <ThemedText type="smallBold">Leave — back to Call wave</ThemedText>
             </Pressable>
           </ThemedView>
         ) : null}
@@ -2553,6 +2693,68 @@ export function DefendScreen({
           </ThemedView>
         ) : null}
       </SafeAreaView>
+
+      {/* Mid-run leave confirm — a blocking Neon Viper overlay (same chrome as
+          CALL WAVE / the 1x·2x control). Cancel resumes the exact pre-confirm
+          state; Leave calls the existing `abandonRun` (no win, no rewards). */}
+      {phase === 'running' && leaveConfirmOpen ? (
+        <View style={styles.leaveConfirmWrap}>
+          <View
+            style={[
+              styles.leaveConfirmCard,
+              surfaceShadow(theme, reduceMotion),
+              {
+                backgroundColor: theme.backgroundElement,
+                borderColor: controlBorderColor(theme),
+              },
+            ]}>
+            <ThemedText
+              type="codeBold"
+              style={[styles.bossWarnTitle, { color: theme.accentSecondary }]}>
+              LEAVE RUN?
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              Progress this wave is lost.
+            </ThemedText>
+            <View style={styles.leaveConfirmRow}>
+              <Pressable
+                onPress={cancelLeaveRun}
+                accessibilityRole="button"
+                accessibilityLabel="Keep fighting"
+                style={({ pressed }) => [
+                  styles.primaryButton,
+                  styles.leaveConfirmButton,
+                  {
+                    backgroundColor: theme.backgroundSelected,
+                    borderColor: controlBorderColor(theme),
+                  },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="smallBold" themeColor="textSecondary">
+                  CANCEL
+                </ThemedText>
+              </Pressable>
+              <Pressable
+                onPress={confirmLeaveRun}
+                accessibilityRole="button"
+                accessibilityLabel="Leave run"
+                style={({ pressed }) => [
+                  styles.primaryButton,
+                  styles.leaveConfirmButton,
+                  {
+                    backgroundColor: theme.accentFill,
+                    borderColor: controlBorderColor(theme),
+                  },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
+                  LEAVE
+                </ThemedText>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      ) : null}
     </ThemedView>
   );
 }
@@ -3054,10 +3256,82 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     paddingHorizontal: Spacing.four,
   },
+  /** Pink Space Mono eyebrow on the boss warn banner. */
+  bossWarnTitle: {
+    fontSize: 13,
+    letterSpacing: 2,
+  },
+  /** Live HUD Leave pill (mirrors the CALL WAVE chrome). */
+  leaveButton: {
+    borderWidth: 1,
+    paddingHorizontal: Spacing.four,
+  },
+  /** Mid-run leave confirm — blocking overlay above everything (board + HUD). */
+  leaveConfirmWrap: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 30,
+    backgroundColor: 'rgba(3, 6, 13, 0.6)',
+  },
+  leaveConfirmCard: {
+    alignItems: 'center',
+    gap: Spacing.two,
+    borderRadius: Spacing.four,
+    borderWidth: 1,
+    paddingVertical: Spacing.three,
+    paddingHorizontal: Spacing.four,
+    maxWidth: 320,
+  },
+  leaveConfirmRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: Spacing.two,
+    marginTop: Spacing.one,
+  },
+  leaveConfirmButton: {
+    minWidth: 96,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.four,
+  },
   primaryButton: {
     alignItems: 'center',
     borderRadius: Spacing.three,
     paddingVertical: Spacing.two,
+  },
+  /** Between-wave call row: CALL WAVE pill (flex) + the 1x/2x speed control. */
+  callRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: Spacing.two,
+  },
+  callButton: {
+    flex: 1,
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  callLabel: {
+    letterSpacing: 1,
+  },
+  /** Neon Viper speed control — cyan-framed segmented 1x / 2x pills. */
+  speedGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: Spacing.three,
+    padding: Spacing.half,
+    gap: Spacing.half,
+  },
+  speedPill: {
+    minWidth: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Spacing.two,
+    paddingHorizontal: Spacing.one,
+    paddingVertical: Spacing.one,
+  },
+  speedText: {
+    letterSpacing: 0.5,
   },
   hudButton: {
     alignItems: 'center',
