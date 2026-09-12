@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedPressable } from '@/components/themed-pressable';
@@ -114,8 +114,41 @@ export function PagedQuestions({
   const [pendingByRow, setPendingByRow] = useState<
     Record<string, { draft: QuestionDraft; option: QuestionOption; optIndex: number }>
   >({});
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  // Batch saves now run in the background — Next Page advances immediately
+  // instead of waiting on the network round trip. `savingCount` is just a
+  // "something is still saving" indicator (never blocks navigation); a
+  // batch that fails lands in `failedBatches` instead of being lost, with
+  // its own retry, regardless of which page is showing when it resolves.
+  const [savingCount, setSavingCount] = useState(0);
+  const [failedBatches, setFailedBatches] = useState<
+    readonly { id: number; rows: readonly { key: string; draft: QuestionDraft; option: QuestionOption; optIndex: number }[] }[]
+  >([]);
+  const nextFailedBatchId = useRef(0);
+
+  function runBatchSave(
+    rows: readonly { key: string; draft: QuestionDraft; option: QuestionOption; optIndex: number }[],
+  ) {
+    setSavingCount((n) => n + 1);
+    onSaveBatch(rows.map(({ draft, option }) => ({ draft, option })))
+      .then((ok) => {
+        if (ok) {
+          for (const row of rows) void saveAnsweredOption(storageKey, row.key, row.optIndex);
+          setPendingByRow((prev) => {
+            const next = { ...prev };
+            for (const row of rows) delete next[row.key];
+            return next;
+          });
+        } else {
+          const id = ++nextFailedBatchId.current;
+          setFailedBatches((prev) => [...prev, { id, rows }]);
+        }
+      })
+      .catch(() => {
+        const id = ++nextFailedBatchId.current;
+        setFailedBatches((prev) => [...prev, { id, rows }]);
+      })
+      .finally(() => setSavingCount((n) => Math.max(0, n - 1)));
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -223,7 +256,6 @@ export function PagedQuestions({
                           ...prev,
                           [row.key]: { draft: row.draft, option, optIndex },
                         }));
-                        setSaveError(null);
                       }}
                       style={[
                         styles.option,
@@ -255,64 +287,58 @@ export function PagedQuestions({
           </View>
         ))}
       </View>
-      {saveError ? (
+      {savingCount > 0 ? (
         <ThemedText type="small" themeColor="textSecondary">
-          {saveError}
+          Saving…
         </ThemedText>
       ) : null}
+      {failedBatches.map((batch) => (
+        <View key={batch.id} style={styles.saveErrorRow}>
+          <ThemedText type="small" themeColor="textSecondary">
+            Couldn&apos;t save {batch.rows.length} answer{batch.rows.length === 1 ? '' : 's'}.
+          </ThemedText>
+          <Pressable
+            onPress={() => {
+              setFailedBatches((prev) => prev.filter((b) => b.id !== batch.id));
+              runBatchSave(batch.rows);
+            }}>
+            <ThemedText type="smallBold">Retry</ThemedText>
+          </Pressable>
+        </View>
+      ))}
       <View style={styles.navRow}>
         <Pressable
           onPress={() => goTo(clampedPage - 1)}
-          disabled={saving || atFirst}
+          disabled={atFirst}
           style={({ pressed }) => [
             styles.navLink,
             pressed && styles.pressed,
-            (saving || atFirst) && styles.disabled,
+            atFirst && styles.disabled,
           ]}>
           <ThemedText type="smallBold" themeColor="textSecondary">
             Back
           </ThemedText>
         </Pressable>
         <ThemedPressable
-          disabled={saving}
-          onPress={async () => {
+          onPress={() => {
             const pending = pageRows
-              .map((row) => pendingByRow[row.key])
-              .filter((entry): entry is { draft: QuestionDraft; option: QuestionOption; optIndex: number } =>
-                entry != null,
+              .map((row) => (pendingByRow[row.key] ? { key: row.key, ...pendingByRow[row.key] } : null))
+              .filter(
+                (entry): entry is { key: string; draft: QuestionDraft; option: QuestionOption; optIndex: number } =>
+                  entry != null,
               );
-            if (pending.length === 0) {
-              goTo(clampedPage + 1);
-              return;
-            }
-            setSaving(true);
-            setSaveError(null);
-            const ok = await onSaveBatch(pending.map(({ draft, option }) => ({ draft, option })));
-            setSaving(false);
-            if (!ok) {
-              setSaveError("Couldn't save your answers. Try again.");
-              return;
-            }
-            for (const row of pageRows) {
-              const entry = pendingByRow[row.key];
-              if (entry) void saveAnsweredOption(storageKey, row.key, entry.optIndex);
-            }
-            setPendingByRow((prev) => {
-              const next = { ...prev };
-              for (const row of pageRows) delete next[row.key];
-              return next;
-            });
+            // Fires in the background — the page advances immediately rather
+            // than waiting on the network round trip. A failed batch surfaces
+            // in `failedBatches` (with its own retry) instead of blocking here.
+            if (pending.length > 0) runBatchSave(pending);
             goTo(clampedPage + 1);
           }}
           style={[
             styles.option,
             styles.nextButton,
             { borderColor: controlBorderColor(theme) },
-            saving && styles.disabled,
           ]}>
-          <ThemedText type="smallBold">
-            {saving ? 'Saving…' : atLast ? 'Finish' : 'Next Page'}
-          </ThemedText>
+          <ThemedText type="smallBold">{atLast ? 'Finish' : 'Next Page'}</ThemedText>
         </ThemedPressable>
       </View>
     </View>
@@ -325,6 +351,12 @@ const styles = StyleSheet.create({
   },
   progressRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  saveErrorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
