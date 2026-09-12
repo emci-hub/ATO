@@ -9,6 +9,7 @@ import { cueAfterYou } from '@/lib/voice/cue';
 export const PUSH_PATHS = {
   morning: '/',
   evening: '/?focus=check',
+  insight: '/categories',
   sunday: '/week',
 } as const;
 
@@ -40,6 +41,17 @@ export function eveningPush(windDownCue?: string | null): PushPayload {
       ? `When you ${cue}, log today's Check — did it or skipped, either one counts.`
       : 'Did you do it, or skip? Either one counts.',
     url: PUSH_PATHS.evening,
+  };
+}
+
+/** Uses an already-generated, already-visible category statement — nothing new is generated for the push itself. */
+export function insightPush(categoryLabel: string, statementBody: string): PushPayload {
+  const body = statementBody.trim();
+  return {
+    kind: 'insight',
+    title: categoryLabel,
+    body: body.length > 0 ? body : 'A new read is ready in Categories.',
+    url: PUSH_PATHS.insight,
   };
 }
 

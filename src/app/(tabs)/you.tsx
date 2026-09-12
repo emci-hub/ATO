@@ -16,6 +16,7 @@ import { CityPicker } from '@/components/city-picker';
 import { CrisisRegionPicker } from '@/components/crisis-region-picker';
 import { MilestoneBadges } from '@/components/check-milestone-badge';
 import { TalkStylePicker } from '@/components/intake-settings';
+import { NotificationPrefsFold } from '@/components/notification-prefs-fold';
 import { QuestGrowthBars } from '@/components/quest-growth-bars';
 import { VoicePresetPicker } from '@/components/voice-preset-picker';
 import { RunningUpdateLine } from '@/components/running-update-line';
@@ -327,6 +328,8 @@ export default function YouScreen() {
                 <TalkStylePicker me={me} onUpdated={() => refresh()} />
                 <VoicePresetPicker me={me} onUpdated={() => refresh()} />
               </SettingsFold>
+
+              <NotificationPrefsFold />
 
               <CrisisRegionPicker />
 

@@ -545,7 +545,13 @@ assert.match(home, /SageStoryFold/);
 assert.doesNotMatch(exploreScreen, /SageStoryFold/);
 assert.match(exploreScreen, /routeExplore/);
 assert.match(exploreScreen, /SageExploreObservations/);
-assert.match(exploreScreen, /CategoriesFold/);
+// Categories moved to its own route (2026-09-12, judgment-pass.md §4A —
+// Explore was stacking 9+ nested surfaces, which is why category
+// statements shipping went unnoticed). Explore keeps a one-line teaser
+// linking to it; CategoriesFold itself now lives on the standalone screen.
+assert.doesNotMatch(exploreScreen, /CategoriesFold/);
+assert.match(exploreScreen, /'\/categories'/);
+assert.match(read('src/app/(tabs)/categories.tsx'), /CategoriesFold/);
 assert.match(exploreScreen, /SageTitleCard/);
 assert.match(navOrder, /explore: \{ label: 'Explore', href: '\/explore'/);
 assert.match(tabs, /NavEditOverlay/);

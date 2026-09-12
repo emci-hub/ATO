@@ -192,7 +192,10 @@ assert.doesNotMatch(checkSwift, /CategoryTeaser|FullProfileFold/);
 ok('Home teaser is gated; crisis card and widget stay untouched');
 
 const exploreTab = read('src/app/(tabs)/explore.tsx');
-assert.match(exploreTab, /CategoriesFold/);
+// Categories moved to its own route (2026-09-12, judgment-pass.md §4A).
+assert.doesNotMatch(exploreTab, /CategoriesFold/);
+assert.match(exploreTab, /'\/categories'/);
+assert.match(read('src/app/(tabs)/categories.tsx'), /CategoriesFold/);
 assert.match(exploreTab, /FullProfileFold/);
 const circle = read('src/app/(tabs)/circle.tsx');
 assert.match(circle, /setCategoryShare/);

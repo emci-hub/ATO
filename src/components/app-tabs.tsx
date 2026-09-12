@@ -46,6 +46,7 @@ import { controlBorderColor } from '@/lib/theme/chrome';
  */
 const HIDDEN_TAB_ROUTES: readonly { name: string; href: Href }[] = [
   { name: 'roll', href: '/roll' },
+  { name: 'categories', href: '/categories' },
 ];
 export default function AppTabs() {
   const theme = useTheme();

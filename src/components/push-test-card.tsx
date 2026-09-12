@@ -7,8 +7,11 @@ import { Spacing } from '@/constants/theme';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { fetchChecks, type Check } from '@/lib/checks';
+import { useMeContext } from '@/lib/me-context';
 import { fireTestPush, notificationsAreGranted } from '@/lib/push';
 import type { PushKind } from '@/lib/push-copy';
+import { fetchTraitTracks } from '@/lib/trait-tracks-store';
+import type { TraitTrack } from '@/lib/trait-stability';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 
@@ -23,9 +26,11 @@ export function PushTestCard({ timeZone }: { timeZone: string }) {
 function PushTestCardInner({ timeZone }: { timeZone: string }) {
   const theme = useTheme();
   const { session } = useSession();
+  const { me } = useMeContext();
   const userId = session?.user.id;
   const [granted, setGranted] = useState(false);
   const [checks, setChecks] = useState<Check[]>([]);
+  const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [firing, setFiring] = useState<PushKind | null>(null);
   const [note, setNote] = useState<string | null>(null);
 
@@ -40,6 +45,11 @@ function PushTestCardInner({ timeZone }: { timeZone: string }) {
       fetchChecks(userId)
         .then((rows) => {
           if (active) setChecks(rows);
+        })
+        .catch(() => {});
+      fetchTraitTracks(userId)
+        .then((rows) => {
+          if (active) setTracks(rows);
         })
         .catch(() => {});
     }
@@ -57,7 +67,7 @@ function PushTestCardInner({ timeZone }: { timeZone: string }) {
     setFiring(kind);
     setNote(null);
     try {
-      await fireTestPush(kind, checks, timeZone);
+      await fireTestPush(kind, checks, timeZone, me ? { me, tracks } : undefined);
       setNote(`${kind} arrives in a few seconds. Tap it to open the right screen.`);
     } catch (err) {
       console.log('[push] test fire error:', err);
@@ -78,7 +88,7 @@ function PushTestCardInner({ timeZone }: { timeZone: string }) {
       </ThemedText>
       <ThemedText type="small" themeColor="textSecondary" style={styles.hint}>
         {granted
-          ? 'Fires the real morning, evening, and Sunday copy so you can check the deep link.'
+          ? 'Fires the real morning, evening, insight, and Sunday copy so you can check the deep link.'
           : 'Notifications are off. Everything else still works.'}
       </ThemedText>
       <View style={styles.row}>
@@ -92,6 +102,12 @@ function PushTestCardInner({ timeZone }: { timeZone: string }) {
           label={firing === 'evening' ? '…' : 'Evening'}
           disabled={firing !== null}
           onPress={() => fire('evening')}
+          borderColor={controlBorderColor(theme)}
+        />
+        <TestButton
+          label={firing === 'insight' ? '…' : 'Insight'}
+          disabled={firing !== null}
+          onPress={() => fire('insight')}
           borderColor={controlBorderColor(theme)}
         />
         <TestButton

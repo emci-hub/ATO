@@ -18,6 +18,17 @@ export interface PushWindow {
 }
 
 /**
+ * Expo/iOS calendar weekday numbering: 1 = Sunday ... 7 = Saturday (matches
+ * the existing Sunday-recap trigger's `weekday: 1`).
+ */
+export const EVENING_WEEKDAYS = [3, 5, 1] as const; // Tue, Thu, Sun
+export const INSIGHT_WEEKDAYS = [2, 6] as const; // Mon, Fri
+
+export function isScheduledWeekday(weekdays: readonly number[], date: Date): boolean {
+  return weekdays.includes(date.getDay() + 1);
+}
+
+/**
  * Daily push windows keyed off the self-report `energy_pattern` chip.
  * Earlier energy → earlier window; later energy → later window. A null or
  * unknown value keeps today's fixed default so existing rows never shift

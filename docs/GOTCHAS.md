@@ -4,6 +4,10 @@ Read before editing the area. Each one has bitten this repo at least once.
 
 ## Process
 
+- **`access-requests.ts` is dev-only wiring.** `listPendingAccessRequests`/`approveAccessRequest`/
+  `denyAccessRequest` (`src/lib/access-requests.ts`) are wired only into `dev-lab.tsx`. Switching
+  `app_config.signup_mode` off `invite_only` needs a real user-facing request screen and a
+  non-dev review surface built first — neither exists today.
 - **The OTA gate is the only automation.** No CI. `npm run ota:publish` runs
   typecheck + lint + every offline check and refuses to publish on failure. A bare
   `eas update` skips all of it.

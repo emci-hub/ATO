@@ -185,10 +185,14 @@ assert.ok(lockedIdx > -1 && fallbackIdx > -1 && lockedIdx < fallbackIdx, 'the re
 assert.match(fold, /PROFILE_LOCKED_COPY/);
 assert.match(fold, /PROFILE_LOCKED_CTA/);
 // §9 (2026-09-08): Story moved from Explore to Home, directly below the
-// daily check-in card — the assertion below moved with it. Explore keeps
-// CategoriesFold (unrelated to Story) but no longer imports SageStoryFold.
+// daily check-in card — the assertion below moved with it. Explore no
+// longer imports SageStoryFold.
 assert.match(read('src/app/(tabs)/index.tsx'), /SageStoryFold/);
-assert.match(read('src/app/(tabs)/explore.tsx'), /CategoriesFold/);
+// Categories moved to its own route (2026-09-12, judgment-pass.md §4A) —
+// Explore keeps a teaser link, CategoriesFold itself lives on /categories.
+assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /CategoriesFold/);
+assert.match(read('src/app/(tabs)/explore.tsx'), /'\/categories'/);
+assert.match(read('src/app/(tabs)/categories.tsx'), /CategoriesFold/);
 assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /SageStoryFold/);
 assert.doesNotMatch(read('src/app/(tabs)/sage.tsx'), /SageStoryFold|ExplorePinnedCategories/);
 ok('Story UI hides when Gemini is unreachable; no generic fallback paragraph; Story now lives on Home (§9), not Explore');
