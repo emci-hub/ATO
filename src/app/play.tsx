@@ -300,12 +300,12 @@ export default function PlayScreen() {
     void resetCampaign();
   }, [resetCampaign]);
 
-  const handleJumpMain19 = useCallback(() => {
-    void setCampaignSeat('main', 19);
+  const handleJumpMain9 = useCallback(() => {
+    void setCampaignSeat('main', 9);
   }, [setCampaignSeat]);
 
   const handleJumpScout = useCallback(() => {
-    void setCampaignSeat('main', 9);
+    void setCampaignSeat('main', 5);
   }, [setCampaignSeat]);
 
   const handleForceConquered = useCallback(() => {
@@ -606,7 +606,7 @@ export default function PlayScreen() {
                   onGrantMilestoneWaveFive={handleGrantMilestoneWaveFive}
                   onResetMilestones={handleResetMilestones}
                   onResetCampaign={handleResetCampaign}
-                  onJumpMain19={handleJumpMain19}
+                  onJumpMain9={handleJumpMain9}
                   onJumpScout={handleJumpScout}
                   onForceConquered={handleForceConquered}
                   onSpendStarToken={handleSpendStarToken}
@@ -841,9 +841,9 @@ function GroveDevKit({
       onPress: () => run(devResetShopDaily),
     },
     {
-      key: 'campaign-jump-main-19',
-      label: 'Jump to Main wave 19',
-      onPress: () => run((doc) => devSetCampaignSeat(doc, 'main', 19)),
+      key: 'campaign-jump-main-9',
+      label: 'Jump to Main wave 9',
+      onPress: () => run((doc) => devSetCampaignSeat(doc, 'main', 9)),
     },
     {
       key: 'campaign-force-conquered',
