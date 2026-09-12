@@ -2,8 +2,8 @@
  * DropTable — weighted item drop tables (GAME_SPEC §9i §9l; Phase C).
  *
  * Rows are authored in `src/play/data/drops.json`: one table per drop context
- * (`drop_research`, `drop_dive_step`, `drop_defend_farm`, and the four boss
- * band tables `drop_band_scout9/10`, `drop_band_semi19`, `drop_band_final20`).
+ * (`drop_research`, `drop_dive_step`, `drop_defend_farm`, and the boss band
+ * tables `drop_band_scout9/10`, `drop_band_final20`).
  * Each roll references a stable item id with a relative weight; `unique` rows
  * drop at most once per save (the caller passes already-owned unique ids to
  * exclude). `previewDropTable` is the honest "What can drop" surface (Farmable

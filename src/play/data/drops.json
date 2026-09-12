@@ -75,6 +75,7 @@
   {
     "id": "drop_band_scout10",
     "rolls": [
+      { "id": "item_uni_ember_ward", "weight": 30, "unique": true },
       { "id": "item_curator_cloak_01", "weight": 30 },
       { "id": "item_glowveil_cloak_01", "weight": 14 },
       { "id": "item_deep_pearl_01", "weight": 14 },
@@ -84,20 +85,10 @@
     ]
   },
   {
-    "id": "drop_band_semi19",
-    "rolls": [
-      { "id": "item_uni_ember_ward", "weight": 30, "unique": true },
-      { "id": "item_uni_ember_mantle", "weight": 30, "unique": true },
-      { "id": "item_curator_cloak_01", "weight": 14 },
-      { "id": "item_copper_keeper_01", "weight": 10 },
-      { "id": "item_tide_blade_01", "weight": 8 },
-      { "id": "item_bark_aegis_01", "weight": 8 }
-    ]
-  },
-  {
     "id": "drop_band_final20",
     "rolls": [
       { "id": "item_uni_ember_edge", "weight": 40, "unique": true },
+      { "id": "item_uni_ember_mantle", "weight": 30, "unique": true },
       { "id": "item_curator_cloak_01", "weight": 16 },
       { "id": "item_glowveil_cloak_01", "weight": 14 },
       { "id": "item_tide_blade_01", "weight": 10 },
