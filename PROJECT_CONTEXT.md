@@ -23,6 +23,11 @@ Do not commit `.env.local` or API keys. Do not change dependencies, schemas, aut
 
 ## House conventions
 
+- **Every response — not just a final "done" report — must end with an explicit, unmissable "what's needed from emci / what happens next" line.** (Sep 13, 2026, emci explicit: "when code outputs I want it to tell me whats needed from me or whats next?? ... it just stops there.") Never end a substantive turn on just a status summary, buried "Next action:" line, or a vague "otherwise this is a good stopping point." Concretely:
+  - If nothing is needed and work continues automatically: say so plainly ("Nothing needed — continuing to the next screen now.").
+  - If emci needs to decide something: ask it as a direct question, not a buried footnote.
+  - If a new chat is the right move (per the checkpoint rule below): say so explicitly AND give the exact copy-paste prompt for the new chat, every time — don't assume emci remembers the convention or will infer it from "this is a good /clear point."
+  - This applies in every session working on this repo, not just the one where this was said — it's a standing rule, not a one-off preference.
 - **Dev-only/internal tooling changes** (Dev Lab, test presets, anything not on a production user path): do NOT re-run typecheck/lint/`check:ota-gate` after every intermediate edit. Batch all edits for the task and stop once they're done — no automatic full-gate run, no reviewer round-trip loop. Emci tests these manually on device.
 - **Add a manual-verification hook on an existing dev surface** whenever a fix or feature would benefit from it and a dev-only path already exists (Dev Lab, dev-test-user presets, etc.) — a quick toggle/button/preset there instead of (or alongside) an automated check, so emci can tap and confirm it without another investigation round. Applies anywhere a dev surface reasonably fits, not just onboarding/intake.
 - **Do not run the full gate** (typecheck/lint/`check:ota-gate`) automatically before commit/push. Only run it when emci explicitly asks. If a change looks risky enough to warrant it, say so and recommend it — don't run it unprompted.
