@@ -2,7 +2,59 @@
 
 Compiled as each box lands. Same file in the repo at `docs/ATO_DEVICE_TESTS.md`. Run this whole list on a real device before TestFlight, not per box. Ordered so earlier items don't depend on later ones.
 
-**JS for this checklist is on production OTA** group `0028d5f5-3797-417e-b345-9005cb17ca5b` (`41fcec4`, core intake one page), published Sep 1, 2026. 100% of the production channel — no staged rollout. **You must be on binary 10+** — binary 8 and earlier cannot receive OTA and will show the stale "Dev only." cold-start bug. Binary 10 is in TestFlight (build `1d0d1041`).
+> **⚠ Boxes 5–28 below are the HISTORICAL pass (Sep 1, 2026, OTA `0028d5f5`).** They were written before the Sep 4–13 work and their OTA reference is stale. The **current outstanding pass is the section immediately below** — start there.
+
+---
+
+# CURRENT PASS — outstanding as of Sep 13, 2026
+
+**What you're on:** production OTA group `4bbf01ea-85e7-44a5-9b2c-1268000a45f8` (commit `50c0c9f`, published Sep 12, device-verified Sep 13). Binary 10+.
+
+**The important thing: almost all of this is testable RIGHT NOW with no new OTA.** Everything from Sep 4–12 is already in `4bbf01ea`, and the Sep 13 changes were server-side (Edge Functions / secrets / DB), which reach your existing build immediately. Only sections C and D need something published or applied first.
+
+## A — Server-side changes from Sep 13 (live now, no OTA needed)
+
+- [ ] **`ai-generate` v9 — the one that matters most.** Redeployed Sep 13 carrying the ongoing-round timeout fix (`6f6bb61`). It is live in production and has not been exercised once. Confirm AI generation still works at all: open Dawn and get a real generated card, send a Sage Talk message and get a real reply. **If either returns empty/honest-empty when it shouldn't, stop and report — that's a production regression on the main user path.**
+- [ ] **Ongoing-round timeout (the reason for that deploy).** Finish the 50-question intake (or use a dev intake-stage preset to reach 50/50), then let the ongoing round auto-start. Confirm it releases 25 questions without a timeout/Sentry error — this is the exact failure the deploy was meant to fix.
+- [ ] **7-tap dev unlock.** You tab → tap the version number 7× → enter the `DEV_UNLOCK_PASSWORD`. Confirm it unlocks dev tools. Note the field is `autoCapitalize="none"` and the compare is exact — type the capital and the symbol deliberately. (Currently a no-op in practice since `PRE_LAUNCH_DEV` already shows dev tools; the real test is that a *wrong* password is rejected and a correct one returns `ok`.)
+- [ ] **QA override invite code.** Sign up a throwaway account using the override code. Confirm it is accepted. Also confirm the signup lands with `referred_by = null` and no `invite_codes` audit row — that's expected for the override path, not a bug.
+- [ ] **Dev-test account password.** Sign in as `ato-dev@example.com` / `@atodev` with the new password. Confirm the old `ATO-dev-user-2026` no longer works.
+
+## B — Already shipped in your current OTA, never device-verified
+
+Everything here is sitting on your phone right now and just needs exercising.
+
+- [ ] **Questions batch-save (Sep 11).** Answer questions in the 50-question intake. Confirm there is **no fade/dim on every tap** (the old per-answer save), that "Answered" stamps immediately, and that a page's answers only save when you press Next Page. Kill the app mid-page and confirm nothing is silently lost.
+- [ ] **Ongoing-round paged UI (Sep 11).** Once a round exists, confirm it renders as a real pager — "Page X of Y", 5 per page — and that it *replaces* the finished 50-question pager rather than stacking below it. Test reroll on a row and skip.
+- [ ] **Onboarding no longer shows "Add a bit more" (Sep 11).** On a fresh signup, confirm the flow is account info → 8 chip questions → Home. The 8-scenario screen should not appear.
+- [ ] **"Reset to fresh signup" for @atodev (Sep 11).** In Dev Lab → You, run it (type `atodev` to confirm). Confirm the app actually lands back on the "Introduce yourself" onboarding screen and you're still signed in.
+- [ ] **Legends "test persona" strip.** Signed in as `@atodev`, confirm the strip appears on Legends and that swapping archetypes actually changes the matched legend.
+- [ ] **Category picker + Legends gate + completeness gate (Sep 4 batch).** Confirm the Questions category picker renders that category's bank questions as a browsable list with "N of 48 answered"; confirm Legends shows the locked state with an "Answer Questions" CTA when the profile isn't settled; confirm Explore observations / Sage Title / Sage insight all lock with copy rather than degrading.
+- [ ] **Staleness fixes (Sep 4).** Settle your last axis and confirm the locked surfaces unlock **in the same session**, without backing out of the screen. This was the actual bug — they used to stay locked until unmount.
+- [ ] **Category statements prompt (Sep 10).** On an account with a long/rich profile, generate category statements and confirm they read correctly and aren't truncated or generic. Explicitly not yet tested against a real long-profile case.
+
+## C — Blocked: needs a migration applied first
+
+- [ ] **`wave65` handle-collision dev account (`@atodev2`).** The migration has **not been applied to the live project.** Until it is, the Dev Lab "Handle collision" panel will report the handle as *available* (a false negative). Apply the migration, then confirm the panel reports it as taken.
+
+## D — Blocked: needs a NEW BINARY BUILD (not an OTA)
+
+- [ ] **EAS env var deletion (Sep 13).** `EXPO_PUBLIC_GEMINI_API_KEY` and `EXPO_PUBLIC_GEMINI_MODEL` were deleted from the production EAS environment. **Env vars are baked in at build time, so an OTA cannot test this** — it only takes effect on the next EAS build. On that build, confirm AI generation still works (the model is chosen inside `ai-generate` now, so it should be unaffected). `EXPO_PUBLIC_MODEL_PROVIDER` was deliberately **kept** — it is still read live by `src/lib/ai/config.ts:58` and `src/lib/voice/config.ts:26`.
+
+## E — Needs a new OTA before it can be seen
+
+- [ ] **parse.ts silent-catch logging (commit `40a9dbc`).** Logging-only, visible only in dev logs, no user-facing behavior. **Not worth publishing an OTA for on its own** — it will ride along with the next one. When it does ship, a malformed AI question response should print `[questions] batch response was not valid JSON (rawLength=…)` instead of vanishing silently.
+
+## F — Open bugs with no written detail (investigate before testing)
+
+- [ ] **Gut Call regression** — listed as open in `docs/NOW.md` with no reproduction steps recorded. Needs someone to say what "regression" means before it can be tested.
+- [ ] **Live Talk failure** — same: listed as open, no detail. Note section A's Sage Talk check may already surface it.
+
+---
+
+# HISTORICAL PASS — Boxes 5–28 (Sep 1, 2026)
+
+**JS for this historical checklist was on production OTA** group `0028d5f5-3797-417e-b345-9005cb17ca5b` (`41fcec4`, core intake one page), published Sep 1, 2026. **You must be on binary 10+** — binary 8 and earlier cannot receive OTA and will show the stale "Dev only." cold-start bug. Binary 10 is in TestFlight (build `1d0d1041`).
 
 ---
 
