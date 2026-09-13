@@ -466,6 +466,22 @@ async function persistMergedTraits(
     if (rows.some((row) => row.axis === answer.axis && row.source === 'self_game')) continue;
     rows.push({ axis: answer.axis, value: updated.value, source: 'self_game' });
   }
+  // A count-only self_situation answer never changes `values`, so historyDiff
+  // (value-change-only) never sees it — but the person DID answer, and
+  // claim_full_profile_complete's payout floor counts self_situation
+  // trait_history rows. Without this, an axis already owned by a direct
+  // source (grid intake, ranking taps, settings) silently never contributes
+  // to that floor no matter how many times it's answered on the Questions
+  // tab, so a normal 50-question completion could permanently fall short of
+  // the payout through no fault of the user. Same explicit-row pattern as
+  // self_game above, just keyed on countOnly instead of track kind.
+  for (const answer of answers) {
+    if (answer.source !== 'self_situation' || !answer.countOnly) continue;
+    if (rows.some((row) => row.axis === answer.axis && row.source === 'self_situation')) continue;
+    const value = nextMerged.values[answer.axis];
+    if (value == null || !Number.isFinite(value)) continue;
+    rows.push({ axis: answer.axis, value, source: 'self_situation' });
+  }
 
   if (rows.length === 0 && trackUpdates.length === 0 && Object.keys(extra).length === 0) {
     return { me: current, wrote: false };
