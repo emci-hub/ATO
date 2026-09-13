@@ -24,6 +24,16 @@ function logDrop(reason: string, axis: unknown, promptLength: number): void {
   console.log(`[questions] dropped draft: ${reason} (axis=${axisLabel}, promptLength=${promptLength})`);
 }
 
+/**
+ * A wholly malformed response used to vanish in silence: `logDrop` only ever
+ * fires once `JSON.parse` has already succeeded, so a response that was not
+ * JSON at all returned an empty batch with nothing said why. Length only,
+ * never the raw text — this is untrusted model output.
+ */
+function logParseFailure(parser: 'batch' | 'sweep', rawLength: number): void {
+  console.log(`[questions] ${parser} response was not valid JSON (rawLength=${rawLength})`);
+}
+
 /** Cut at the last word boundary so a truncated prompt never ends mid-word. */
 function truncatePrompt(prompt: string): string {
   if (prompt.length <= MAX_PROMPT_LENGTH) return prompt;
@@ -148,6 +158,7 @@ export function parseQuestionBatch(raw: string, count = 5): QuestionDraft[] {
   try {
     parsed = JSON.parse(cleaned);
   } catch {
+    logParseFailure('batch', cleaned.length);
     return [];
   }
   const list = Array.isArray(parsed)
@@ -174,6 +185,7 @@ export function parseQuestionSweep(raw: string): QuestionDraft[] {
   try {
     parsed = JSON.parse(cleaned);
   } catch {
+    logParseFailure('sweep', cleaned.length);
     return [];
   }
   const list = Array.isArray(parsed)
