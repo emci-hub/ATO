@@ -8,9 +8,9 @@ Compiled as each box lands. Same file in the repo at `docs/ATO_DEVICE_TESTS.md`.
 
 # CURRENT PASS — outstanding as of Sep 13, 2026
 
-**What you're on:** production OTA group `4bbf01ea-85e7-44a5-9b2c-1268000a45f8` (commit `50c0c9f`, published Sep 12, device-verified Sep 13). Binary 10+.
+**What you're on:** production OTA group `e505d827-48ed-4bbb-8f68-1ae7a4f13f85` (commit `8363b28`, published Sep 13, 2026). Binary 10+. **Force-quit and reopen the app** (swipe it away, don't just background it) — updates are fetched on cold start only.
 
-**The important thing: almost all of this is testable RIGHT NOW with no new OTA.** Everything from Sep 4–12 is already in `4bbf01ea`, and the Sep 13 changes were server-side (Edge Functions / secrets / DB), which reach your existing build immediately. Only sections C and D need something published or applied first.
+**Everything in sections A, B and E is now on your device.** The Sep 13 server-side work (Edge Functions / secrets / DB) was already live before this OTA. Only C (needs a migration) and D (needs a new binary) remain blocked.
 
 ## A — Server-side changes from Sep 13 (live now, no OTA needed)
 
@@ -41,9 +41,9 @@ Everything here is sitting on your phone right now and just needs exercising.
 
 - [ ] **EAS env var deletion (Sep 13).** `EXPO_PUBLIC_GEMINI_API_KEY` and `EXPO_PUBLIC_GEMINI_MODEL` were deleted from the production EAS environment. **Env vars are baked in at build time, so an OTA cannot test this** — it only takes effect on the next EAS build. On that build, confirm AI generation still works (the model is chosen inside `ai-generate` now, so it should be unaffected). `EXPO_PUBLIC_MODEL_PROVIDER` was deliberately **kept** — it is still read live by `src/lib/ai/config.ts:58` and `src/lib/voice/config.ts:26`.
 
-## E — Needs a new OTA before it can be seen
+## E — Shipped in OTA `e505d827` (Sep 13)
 
-- [ ] **parse.ts silent-catch logging (commit `40a9dbc`).** Logging-only, visible only in dev logs, no user-facing behavior. **Not worth publishing an OTA for on its own** — it will ride along with the next one. When it does ship, a malformed AI question response should print `[questions] batch response was not valid JSON (rawLength=…)` instead of vanishing silently.
+- [ ] **parse.ts silent-catch logging (commit `40a9dbc`).** Logging-only, no user-facing behavior — there is nothing to *see* in the UI. A malformed AI question response now prints `[questions] batch response was not valid JSON (rawLength=…)` instead of vanishing silently. Only observable in dev logs, so treat this as "no news is fine" rather than an active test step.
 
 ## F — Open bugs with no written detail (investigate before testing)
 
