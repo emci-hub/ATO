@@ -65,9 +65,11 @@ export async function signInForLiveAi(): Promise<LiveAiSession> {
   if (!url || !anonKey) {
     throw new Error('Missing EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY in .env.local');
   }
-  const fallback = devTestCredentials();
-  const email = process.env.ATO_LIVE_EMAIL || fallback.email;
-  const password = process.env.ATO_LIVE_PASSWORD || fallback.password;
+  // Lazy: only read the (now-removed) dev-test-user.ts constants when no
+  // env override is supplied, so ATO_LIVE_EMAIL/ATO_LIVE_PASSWORD alone are
+  // enough to run this — the eager version threw even when both were set.
+  const email = process.env.ATO_LIVE_EMAIL || devTestCredentials().email;
+  const password = process.env.ATO_LIVE_PASSWORD || devTestCredentials().password;
 
   const anon = createClient(url, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
