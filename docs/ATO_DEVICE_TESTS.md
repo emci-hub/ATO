@@ -110,11 +110,11 @@ Everything here is sitting on your phone right now and just needs exercising.
 - [ ] Confirm the teaser does **not** change on every app-open; it refreshes once per local day.
 - [ ] Confirm Nudge caps at one extra line — never a fourth line of text in the card block.
 - [ ] In `/dev-lab` → Home, with the slot override set to `off`, confirm the new inline readout shows the six raw inputs (crisisActive, missedCheck, noteAvailable, noteOpenedToday, askPending, isSunday) and the kind it resolved to. Use this to sanity-check *why* Home is showing what it's showing on your real test accounts.
-- [ ] Force each of the six slot kinds via the override one at a time (`crisis`, `missed_check`, `note`, `ask`, `week`, `none`) and confirm Home renders correctly for each, including `none` rendering nothing in the **primary** slot (the category teaser may still appear when it is allowed).
+- [ ] Force each of the six slot kinds via the override one at a time (`crisis`, `missed_check`, `note`, `ask`, `week`, `none`) and confirm Home renders correctly for each, including `none` **and** `week` rendering nothing extra in the **primary** slot (the category teaser may still appear when either is allowed) — `week` no longer has its own row (see below).
 - [ ] Force `crisis` and `missed_check` and confirm the category teaser is absent.
 - [ ] With two or more missed checks open on a test account, confirm only the single OLDEST one renders — not one card per missed day.
 - [ ] Confirm MilestoneBadges and QuestGrowthBars no longer appear anywhere on Home.
-- [ ] Confirm the old always-visible "This week" row is gone from Home — it should now only appear as the Sunday `'week'` slot, and only on Sunday (or via override), labeled exactly "Your week."
+- [ ] Confirm Home shows exactly one link to `/week`, the always-visible "This week" row — the Sunday-only `'week'`-slot row ("Your week.") was removed (2026-09-13) as the duplicate; `'week'` still exists as a `slotKind` value (it still un-gates the category teaser same as `note`/`ask`/`none`) but no longer renders anything of its own in the primary slot.
 - [ ] Confirm the Note ("reveal") still opens correctly from the slot and that reopening it same-day doesn't re-show it in the slot (falls through to the next slot kind instead).
 - [ ] Confirm the teaser name has a small "?" that explains the *concept* (not the person's data). Draft copy — unreviewed.
 

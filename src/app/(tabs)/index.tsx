@@ -484,13 +484,6 @@ export default function HomeScreen() {
             <RevealCard pick={reveal} userId={userId} timeZone={me.timezone} />
           ) : slotKind === 'ask' && me && askPick ? (
             <AskSheet pick={askPick} me={me} onUpdated={() => { void refreshMe(); }} />
-          ) : slotKind === 'week' ? (
-            <Pressable
-              onPress={() => router.push('/week')}
-              style={({ pressed }) => [styles.weekRow, pressed && styles.pressed]}>
-              <ThemedText type="smallBold">Your week.</ThemedText>
-              <ThemedText themeColor="textSecondary">›</ThemedText>
-            </Pressable>
           ) : null}
 
           {me ? (
