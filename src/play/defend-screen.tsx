@@ -73,6 +73,7 @@ import {
 import { waveDefFor } from '@/play/director';
 import { avatarDef } from '@/play/avatars';
 import { PlayFrame } from '@/play/play-frame';
+import { NeonLabel, NeonPill, NEON_ROW_LINE } from '@/play/neon-ui';
 import { dir8FromDelta, type Dir8 } from '@/play/art';
 import {
   BOARD_SKIN,
@@ -89,7 +90,7 @@ import { boardDecor, roadDecor, ATO_GHOST_D } from '@/play/board-decor';
 import { BOARD_MAPS, BOARD_ORDER, boardPathD, type BoardId } from '@/play/board-data';
 import { NeonBoardChrome } from '@/play/neon-chrome';
 import { BOUND_BOSS_MAX_STAR, bossBandFor, boundBossFragmentCost, defaultBoundBossId, getBoundBossDef, isUniqueDrop, previewDropTable, gearScore, recommendedGs, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, typeMatchBonus, type DropPreviewRow, type TypeTag } from '@/play/engine';
-import { formatItemStats, getItemDef } from '@/play/items';
+import { formatItemStats, getItemDef, type ItemSlot } from '@/play/items';
 import {
   AVATAR_STAR_MAX,
   DEFAULT_AVATAR_PARK,
@@ -123,6 +124,30 @@ const CREEP_ROLE_COLOR: Record<CreepRole, string> = {
   tank: '#FB923C', // orange
   boss: '#A78BFA', // violet
 };
+
+/** Draw-size multiplier per creep role (display only, no sim impact): swarms
+ * normal, runners slim, tanks fat so the three read at a glance. Bosses keep
+ * their existing `puff.size` scaling (1 here). */
+const CREEP_DRAW_SCALE: Record<CreepRole, number> = {
+  swarm: 1,
+  runner: 0.9,
+  tank: 1.35,
+  boss: 1,
+};
+
+/** Role underglow opacity — low enough to sit under the sprite, strong enough
+ * to tint the tile around it. */
+const CREEP_GLOW_OPACITY = 0.28;
+/** Role ring stroke width (board units) — thicker than a hairline so the role
+ * still reads over the sprite. */
+const CREEP_RING_WIDTH = 1.6;
+/** Runner tell (display only): runners get a dashed pink ring plus a short
+ * trailing streak so a fast runner reads apart from a swarm at a glance.
+ * Swarm/tank/boss keep the solid ring + underglow unchanged. */
+const RUNNER_RING_DASH: number[] = [2.4, 1.6];
+const RUNNER_TRAIL_LEN = 5; // board units past the ring, behind the runner
+const RUNNER_TRAIL_HALF_WIDTH = 1.3;
+const RUNNER_TRAIL_OPACITY = 0.5;
 const AVATAR_COLOR = '#38BDF8';
 
 /** Default board paint — `neon` (procedural chrome) vs `grove-classic`
@@ -377,6 +402,44 @@ function DropRowView({
   );
 }
 
+/** Drops scan categories — derived from REAL data: `Uniques` is the drop
+ * table's once-per-save flag, the rest are the item defs' own `core.slot`
+ * (weapon / armor / cloak / trinket), and `Other` catches a dangling id with
+ * no def. Nothing here is invented, and no weights/odds are touched. */
+const DROPS_CATEGORY_ORDER = ['Uniques', 'Weapons', 'Armor', 'Cloaks', 'Trinkets', 'Other'] as const;
+type DropsCategory = (typeof DROPS_CATEGORY_ORDER)[number];
+
+const SLOT_CATEGORY: Record<ItemSlot, DropsCategory> = {
+  weapon: 'Weapons',
+  armor: 'Armor',
+  cloak: 'Cloaks',
+  trinket: 'Trinkets',
+};
+
+/** Which scan bucket a preview row belongs to (uniques win over their slot). */
+function dropsCategoryFor(row: DropPreviewRow): DropsCategory {
+  if (row.unique) return 'Uniques';
+  const slot = getItemDef(row.id)?.core.slot;
+  return slot ? SLOT_CATEGORY[slot] : 'Other';
+}
+
+/** Group preview rows into non-empty categories, in `DROPS_CATEGORY_ORDER`. */
+function groupDrops(
+  rows: readonly DropPreviewRow[],
+): { category: DropsCategory; rows: DropPreviewRow[] }[] {
+  const buckets = new Map<DropsCategory, DropPreviewRow[]>();
+  for (const row of rows) {
+    const category = dropsCategoryFor(row);
+    const bucket = buckets.get(category);
+    if (bucket) bucket.push(row);
+    else buckets.set(category, [row]);
+  }
+  return DROPS_CATEGORY_ORDER.filter((category) => buckets.has(category)).map((category) => ({
+    category,
+    rows: buckets.get(category) ?? [],
+  }));
+}
+
 export function DefendScreen({
   view,
   reduceMotion,
@@ -466,6 +529,9 @@ export function DefendScreen({
   const [whyOpen, setWhyOpen] = useState(false);
   /** Type-match chart (§9f §9i "?") — open state on setup + live. */
   const [chartOpen, setChartOpen] = useState(false);
+  /** Drops preview on setup — collapsed by default (one neon header row), tap
+   * to expand the categorized list. Display only. */
+  const [dropsOpen, setDropsOpen] = useState(false);
   /** Dev kit only: dump the current band's drop table inline. */
   const [dumpDropsOpen, setDumpDropsOpen] = useState(false);
   /** Dev kit only: dump GS + per-wave recommended (Phase D smoke aid). */
@@ -545,10 +611,10 @@ export function DefendScreen({
   /** Drop table + honest preview rows for the chosen fight (§9i). */
   const dropTableId = dropTableForWave(fight.phase, fight.wave);
   const dropRows = previewDropTable(dropTableId, new Set(view.uniques));
-  /** On a boss band the preview groups uniques under "Boss drops" and the
-   * repeatable pool under "Band drops" (§9m); normal waves keep one list. */
-  const bossRows = band ? dropRows.filter((row) => row.unique) : [];
-  const bandRows = band ? dropRows.filter((row) => !row.unique) : [];
+  /** Drops preview is grouped for scan by real data (`groupDrops`): uniques
+   * first, then the item slots, then Other. Display only — same rows, same
+   * odds; the grouping never changes what can drop. */
+  const dropGroups = groupDrops(dropRows);
 
   // Avatar position (board units 0..1) — smooth via shared values, engine via
   // ref. The park lives on the ACTIVE Avatar and is keyed by map id for BOTH
@@ -1283,6 +1349,77 @@ export function DefendScreen({
   const avatarFrameSource =
     (movingRef.current ? avatarWalkArt : undefined) ?? skinArt('unit.avatar');
 
+  /** Drops card — one shared block, collapsed by default to a single neon
+   * header row. On Main it renders just above Maps; Trial keeps its previous
+   * slot so that setup order is unchanged. Rows are grouped for scan by real
+   * data (uniques + item slots); nothing here changes odds or drop math. */
+  const dropsCard = (
+    <ThemedView type="backgroundElement" style={styles.card}>
+      <Pressable
+        onPress={() => setDropsOpen((open) => !open)}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: dropsOpen }}
+        accessibilityLabel={dropsOpen ? 'Collapse drops' : 'Expand drops'}
+        style={({ pressed }) => [styles.dropsHeaderRow, pressed && styles.pressed]}>
+        <NeonLabel style={styles.dropsTitle}>Drops</NeonLabel>
+        <View style={styles.dropsHeaderRight}>
+          <NeonPill label={`${dropRows.length}`} />
+          <MaterialCommunityIcons
+            name={dropsOpen ? 'chevron-up' : 'chevron-down'}
+            size={18}
+            color={theme.accent}
+          />
+        </View>
+      </Pressable>
+      {dropsOpen ? (
+        <>
+          {band && (band.kind === 'final' || cycleBossDef) ? (
+            <View style={styles.dropsGroup}>
+              <NeonLabel>Boss</NeonLabel>
+              {band.kind === 'final' ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {view.avatarStarRolledCycle
+                    ? `Avatar star token · ${Math.round(getTune().avatarStarDropPct * 100)}% · already rolled this cycle`
+                    : `Avatar star token · ${Math.round(getTune().avatarStarDropPct * 100)}% drop · pity on the ${getTune().avatarStarPityClears}rd Final this cycle (${view.finalClearsThisCycle}/${getTune().avatarStarPityClears} so far)`}
+                </ThemedText>
+              ) : null}
+              {cycleBossDef ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {cycleBossStars >= BOUND_BOSS_MAX_STAR
+                    ? `Boss fragment · ${cycleBossDef.name} ★${cycleBossStars} (max)`
+                    : `Boss fragment · ${cycleBossFrags}/${cycleBossNextCost ?? '—'}${
+                        cycleBossStars > 0 ? ` · ★${cycleBossStars}` : ''
+                      }`}
+                </ThemedText>
+              ) : null}
+            </View>
+          ) : null}
+          {dropGroups.length === 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              No drops listed for this wave.
+            </ThemedText>
+          ) : (
+            dropGroups.map((group) => (
+              <View key={group.category} style={styles.dropsGroup}>
+                <NeonLabel>{group.category}</NeonLabel>
+                {group.rows.map((row, index) => (
+                  <View key={row.id}>
+                    {index > 0 ? <View style={styles.dropsHairline} /> : null}
+                    <DropRowView
+                      row={row}
+                      ownedCount={view.ownedCounts[row.id] ?? 0}
+                      ownedStar={view.ownedStars[row.id] ?? 0}
+                    />
+                  </View>
+                ))}
+              </View>
+            ))
+          )}
+        </>
+      ) : null}
+    </ThemedView>
+  );
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -1652,12 +1789,14 @@ export function DefendScreen({
                 const y = pos.y * 100;
                 const pct = Math.max(0, Math.min(1, puff.hp / puff.maxHp));
                 const slowed = puff.slowMs > 0;
-                const radius = 3.4 * puff.size;
                 // W1 placeholder role tint (until per-role sprites): the role
                 // colour fills the no-sprite circle and rings every creep so it
                 // reads over the sprite too. Display only.
                 const creep = creepRole(puff);
+                const isRunner = puff.kind === 'runner';
                 const tintColor = CREEP_ROLE_COLOR[creep];
+                const drawScale = CREEP_DRAW_SCALE[creep];
+                const radius = 3.4 * puff.size * drawScale;
                 // §19 board cast (skin roles): runners = fast unit, bosses =
                 // tanks/heavy by band, tanks = the heavy soak unit, normal
                 // puffs = the puff unit.
@@ -1670,15 +1809,44 @@ export function DefendScreen({
                         ? 'unit.tank'
                         : 'unit.puff';
                 const sprite = skinArt(spriteRole);
-                const spriteSize = skinUnits(spriteRole, UNIT_BASE_UNITS) * puff.size;
+                const spriteSize = skinUnits(spriteRole, UNIT_BASE_UNITS) * puff.size * drawScale;
                 const ringRadius = sprite ? spriteSize / 2 + 0.8 : radius + 0.9;
-                const barWidth = 8 * puff.size;
+                const barWidth = 8 * puff.size * drawScale;
                 // Face along the road (path tangent), same up-facing convention
                 // as the towers. Falls back to the last known facing when the
                 // heading is degenerate.
                 const facingDeg = puffFacingRef.current[puff.id] ?? 0;
                 return (
                   <G key={`puff-${puff.id}`}>
+                    {/* Role underglow disc — sits beneath the sprite so the
+                     * role tint reads on the tile, not just as an outline. */}
+                    <Circle
+                      cx={x}
+                      cy={y}
+                      r={ringRadius}
+                      fill={tintColor}
+                      fillOpacity={CREEP_GLOW_OPACITY}
+                    />
+                    {/* Runner-only motion streak — a short comet tail trailing
+                     * the creep along its road heading (up = forward in the
+                     * rotated frame, so the tail sits at +y). Display only. */}
+                    {isRunner ? (
+                      <G transform={`rotate(${facingDeg} ${x} ${y})`}>
+                        <Path
+                          d={
+                            `M ${x - RUNNER_TRAIL_HALF_WIDTH} ${y + ringRadius * 0.55} ` +
+                            `L ${x} ${y + ringRadius + RUNNER_TRAIL_LEN} ` +
+                            `L ${x + RUNNER_TRAIL_HALF_WIDTH} ${y + ringRadius * 0.55} Z`
+                          }
+                          fill={tintColor}
+                          fillOpacity={RUNNER_TRAIL_OPACITY}
+                          stroke={tintColor}
+                          strokeWidth={0.4}
+                          strokeLinejoin="round"
+                          strokeOpacity={RUNNER_TRAIL_OPACITY}
+                        />
+                      </G>
+                    ) : null}
                     <G transform={`rotate(${facingDeg} ${x} ${y})`}>
                       {sprite ? (
                         <SvgImage
@@ -1698,8 +1866,9 @@ export function DefendScreen({
                       r={ringRadius}
                       fill="none"
                       stroke={tintColor}
-                      strokeWidth={1}
-                      strokeOpacity={0.85}
+                      strokeWidth={CREEP_RING_WIDTH}
+                      strokeOpacity={0.9}
+                      strokeDasharray={isRunner ? RUNNER_RING_DASH : undefined}
                     />
                     {puff.kind === 'boss' ? (
                       <Circle
@@ -2018,6 +2187,9 @@ export function DefendScreen({
               </View>
             </ThemedView>
 
+            {/* Drops sits just above Maps (Main setup only, collapsed). */}
+            {fight.phase === 'main' ? dropsCard : null}
+
             {/* Maps (§ — board picker, Main only): the locked ATO default vs the
                 parked Neon Maze prototype. Trial never shows this. */}
             {fight.phase === 'main' ? (
@@ -2116,73 +2288,9 @@ export function DefendScreen({
               </ThemedView>
             ) : null}
 
-            {/* Drop preview — honest "what can drop" for this wave/band (§9i §9m). */}
-            <ThemedView type="backgroundElement" style={styles.card}>
-              <ThemedText type="smallBold">What can drop</ThemedText>
-              {band ? (
-                <>
-                  <ThemedText type="smallBold" themeColor="textSecondary">
-                    Boss drops
-                  </ThemedText>
-                  {band.kind === 'final' ? (
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {view.avatarStarRolledCycle
-                        ? `Avatar star token · ${Math.round(getTune().avatarStarDropPct * 100)}% · already rolled this cycle`
-                        : `Avatar star token · ${Math.round(getTune().avatarStarDropPct * 100)}% drop · pity on the ${getTune().avatarStarPityClears}rd Final this cycle (${view.finalClearsThisCycle}/${getTune().avatarStarPityClears} so far)`}
-                    </ThemedText>
-                  ) : null}
-                  {cycleBossDef ? (
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {cycleBossStars >= BOUND_BOSS_MAX_STAR
-                        ? `Boss fragment · ${cycleBossDef.name} ★${cycleBossStars} (max)`
-                        : `Boss fragment · ${cycleBossFrags}/${cycleBossNextCost ?? '—'}${
-                            cycleBossStars > 0 ? ` · ★${cycleBossStars}` : ''
-                          }`}
-                    </ThemedText>
-                  ) : null}
-                  {bossRows.length === 0
-                    ? null
-                    : bossRows.map((row) => (
-                        <DropRowView
-                          key={row.id}
-                          row={row}
-                          ownedCount={view.ownedCounts[row.id] ?? 0}
-                          ownedStar={view.ownedStars[row.id] ?? 0}
-                        />
-                      ))}
-                  <ThemedText type="smallBold" themeColor="textSecondary">
-                    Band drops
-                  </ThemedText>
-                  {bandRows.length === 0 ? (
-                    <ThemedText type="small" themeColor="textSecondary">
-                      No repeatable drops on this band.
-                    </ThemedText>
-                  ) : (
-                    bandRows.map((row) => (
-                      <DropRowView
-                        key={row.id}
-                        row={row}
-                        ownedCount={view.ownedCounts[row.id] ?? 0}
-                        ownedStar={view.ownedStars[row.id] ?? 0}
-                      />
-                    ))
-                  )}
-                </>
-              ) : dropRows.length === 0 ? (
-                <ThemedText type="small" themeColor="textSecondary">
-                  No drops listed for this wave.
-                </ThemedText>
-              ) : (
-                dropRows.map((row) => (
-                  <DropRowView
-                    key={row.id}
-                    row={row}
-                    ownedCount={view.ownedCounts[row.id] ?? 0}
-                    ownedStar={view.ownedStars[row.id] ?? 0}
-                  />
-                ))
-              )}
-            </ThemedView>
+            {/* Drops — Trial keeps its previous slot here (setup order
+                unchanged); Main renders the same collapsed card above Maps. */}
+            {fight.phase !== 'main' ? dropsCard : null}
 
             {/* Band picker — replay any cleared band at half tokens (§9h). */}
             <ThemedView type="backgroundElement" style={styles.card}>
@@ -3108,6 +3216,27 @@ const styles = StyleSheet.create({
   dropRowLeft: {
     flex: 1,
     gap: Spacing.half,
+  },
+  dropsHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  dropsTitle: {
+    textTransform: 'none',
+  },
+  dropsHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  dropsGroup: {
+    gap: Spacing.one,
+  },
+  dropsHairline: {
+    height: 1,
+    backgroundColor: NEON_ROW_LINE,
   },
   chartCard: {
     borderRadius: Spacing.three,
