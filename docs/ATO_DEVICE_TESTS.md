@@ -33,9 +33,9 @@ Everything here is sitting on your phone right now and just needs exercising.
 - [ ] **Staleness fixes (Sep 4).** Settle your last axis and confirm the locked surfaces unlock **in the same session**, without backing out of the screen. This was the actual bug — they used to stay locked until unmount.
 - [ ] **Category statements prompt (Sep 10).** On an account with a long/rich profile, generate category statements and confirm they read correctly and aren't truncated or generic. Explicitly not yet tested against a real long-profile case.
 
-## C — Blocked: needs a migration applied first
+## C — Was blocked, now unblocked
 
-- [ ] **`wave65` handle-collision dev account (`@atodev2`).** The migration has **not been applied to the live project.** Until it is, the Dev Lab "Handle collision" panel will report the handle as *available* (a false negative). Apply the migration, then confirm the panel reports it as taken.
+- [ ] **`wave65` handle-collision dev account (`@atodev2`).** **Migration applied Sep 13, 2026, confirmed live** — `handle_taken('atodev2')` returns `true` via a direct RPC call. Remaining: confirm the Dev Lab "Handle collision" panel itself (not just the raw RPC) shows it as taken — that's the actual UI path a dev would use.
 
 ## D — Blocked: needs a NEW BINARY BUILD (not an OTA)
 
