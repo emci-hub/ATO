@@ -58,6 +58,13 @@ interface ChatMessage {
   crisis?: boolean;
   /** True when this row is persisted in sage_messages and therefore reportable. */
   reportable?: boolean;
+  /**
+   * True when the save to sage_messages failed. The bubble still shows —
+   * losing what Sage just said would be worse — but a reload loses it
+   * unless the tap-to-retry succeeds, so this must be visible, not a
+   * console.log the user never sees.
+   */
+  saveFailed?: boolean;
 }
 
 const CHIPS = [
@@ -317,16 +324,33 @@ export default function SageScreen() {
     setMessages((prev) => [...prev, { ...message, id: `m${nextMessageId++}` }]);
   }
 
-  /** Appends a row and, when persistence succeeds, swaps it in so reports get a real id. */
+  /**
+   * Appends a row and, when persistence succeeds, swaps it in so reports get
+   * a real id. On failure the bubble stays visible but flagged `saveFailed`
+   * — it used to only console.log, so a failed save was invisible and
+   * unrecoverable (gone on the next reload, quota already spent).
+   */
   async function persistAndSwap(localId: string, role: 'user' | 'sage', text: string) {
     try {
       const row = await addSageMessage(role, text);
       setMessages((prev) =>
-        prev.map((m) => (m.id === localId ? { id: row.id, role, text: row.text, reportable: true } : m)),
+        prev.map((m) =>
+          m.id === localId ? { id: row.id, role, text: row.text, reportable: true } : m,
+        ),
       );
     } catch (err) {
       console.log('[talk] addSageMessage error:', err);
+      setMessages((prev) =>
+        prev.map((m) => (m.id === localId ? { ...m, saveFailed: true } : m)),
+      );
     }
+  }
+
+  function retrySave(message: ChatMessage) {
+    setMessages((prev) =>
+      prev.map((m) => (m.id === message.id ? { ...m, saveFailed: false } : m)),
+    );
+    void persistAndSwap(message.id, message.role, message.text);
   }
 
   async function send(text: string) {
@@ -517,27 +541,46 @@ export default function SageScreen() {
                 ) : (
                   messages.map((message) =>
                     message.role === 'user' ? (
-                      <View key={message.id} style={[styles.bubble, styles.userBubble, { backgroundColor: theme.accentFill }]}>
-                        <ThemedText style={[styles.bubbleText, { color: theme.onAccent }]}>
-                          {message.text}
-                        </ThemedText>
+                      <View key={message.id}>
+                        <View style={[styles.bubble, styles.userBubble, { backgroundColor: theme.accentFill }]}>
+                          <ThemedText style={[styles.bubbleText, { color: theme.onAccent }]}>
+                            {message.text}
+                          </ThemedText>
+                        </View>
+                        {message.saveFailed ? (
+                          <Pressable
+                            onPress={() => retrySave(message)}
+                            style={[styles.saveFailedRow, styles.saveFailedRowUser]}>
+                            <ThemedText type="small" style={{ color: '#E5484D' }}>
+                              Couldn&apos;t save this. Tap to retry.
+                            </ThemedText>
+                          </Pressable>
+                        ) : null}
                       </View>
                     ) : message.crisis ? (
                       <View key={message.id} style={styles.crisisBubble}>
                         <CrisisCard onDismiss={() => dismissCrisis(message.id)} />
                       </View>
                     ) : (
-                      <Pressable
-                        key={message.id}
-                        onLongPress={() => message.reportable && setReportMessage(message)}
-                        delayLongPress={250}
-                        style={({ pressed }) => [
-                          styles.bubble,
-                          { backgroundColor: theme.backgroundElement },
-                          pressed && styles.pressed,
-                        ]}>
-                        <ThemedText style={styles.bubbleText}>{message.text}</ThemedText>
-                      </Pressable>
+                      <View key={message.id}>
+                        <Pressable
+                          onLongPress={() => message.reportable && setReportMessage(message)}
+                          delayLongPress={250}
+                          style={({ pressed }) => [
+                            styles.bubble,
+                            { backgroundColor: theme.backgroundElement },
+                            pressed && styles.pressed,
+                          ]}>
+                          <ThemedText style={styles.bubbleText}>{message.text}</ThemedText>
+                        </Pressable>
+                        {message.saveFailed ? (
+                          <Pressable onPress={() => retrySave(message)} style={styles.saveFailedRow}>
+                            <ThemedText type="small" style={{ color: '#E5484D' }}>
+                              Couldn&apos;t save this reply. Tap to retry.
+                            </ThemedText>
+                          </Pressable>
+                        ) : null}
+                      </View>
                     ),
                   )
                 )}
@@ -806,6 +849,13 @@ const styles = StyleSheet.create({
   },
   bubbleText: {
     lineHeight: 22,
+  },
+  saveFailedRow: {
+    paddingHorizontal: Spacing.three,
+    paddingTop: Spacing.half,
+  },
+  saveFailedRowUser: {
+    alignSelf: 'flex-end',
   },
   crisisBubble: {
     alignSelf: 'stretch',
