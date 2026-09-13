@@ -1,0 +1,7 @@
+[
+  { "id": "archangel", "role": "hero", "folder": "assets/play/skins/cast/heroes/archangel", "unlock": "starter_ticket" },
+  { "id": "aurex", "role": "hero", "folder": "assets/play/skins/cast/heroes/aurex", "unlock": "starter_ticket" },
+  { "id": "corvus", "role": "hero", "folder": "assets/play/skins/cast/heroes/corvus", "unlock": "starter_ticket" },
+  { "id": "kitsune", "role": "hero", "folder": "assets/play/skins/cast/heroes/kitsune", "unlock": "starter_ticket" },
+  { "id": "oni", "role": "hero", "folder": "assets/play/skins/cast/heroes/oni", "unlock": "starter_ticket" }
+]
