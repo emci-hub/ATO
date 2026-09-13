@@ -115,10 +115,10 @@ for `anon` and that the function's response never contains the email.
 
 **Delete-account re-verified (Aug 28, 2026).** `auth.admin.deleteUser` hard-deletes `auth.users`; `me` has no soft-delete flag and cascades with it. All owned rows cascade. `account_deletions` is the one retained row (no FK, audit). Apple revocation confirmed by refresh-token check after `/auth/revoke`, not the 200 alone.
 
-## Stage 8 — nearly closed, three loose ends (unchanged)
-1. EAS binary 10 (`1d0d1041-9318-461f-b995-c589ac505dc2`, git `dc9ae77`) — **already submitted and in TestFlight** (submission `c0c6342d`, ASC app id `6805614731`). Needs install + confirm on a real device. **Do not submit binary 8 or 9.** Binary 8 (`d40e57a9`) was submitted and installed but cannot receive OTA — testers must move to 10.
-2. Sentry native crash symbolication — still **unconfirmed** from here. Re-check once binary 10 is on-device, or by opening `e7bed112` in the Sentry dashboard.
-3. Friends external testing group — Beta App Review pending on Apple since Aug 26, 2026. No action, just waiting.
+## Stage 8 — device pass (T-06) confirmed, one loose end left
+1. ~~EAS binary 10 install + confirm on a real device~~ — **T-06 confirmed passed, device-verified Sep 13, 2026.** Binary 10 (`1d0d1041-9318-461f-b995-c589ac505dc2`, git `dc9ae77`, submission `c0c6342d`, ASC app id `6805614731`) is installed and working on a real device. **No remaining device-testing caveats.** Binary 8 (`d40e57a9`) still cannot receive OTA — any tester still on it must move to 10.
+2. ~~Sentry native crash symbolication~~ — **confirmed working as part of the same T-06 device pass, Sep 13, 2026.**
+3. Friends external testing group — Beta App Review pending on Apple since Aug 26, 2026. No action, just waiting (unrelated to the device pass — this is Apple's own review queue).
 
 **EAS Update (OTA) is live as of binary 10.** Devices on binary 10+ receive JS via `eas update`. Devices on binary 8 or earlier cannot. Latest production JS: group `229bc909-0954-445e-ba36-022188f2f34d` (commit `6f4623b`, Sage facts scroll fix + Legends thin-profile gate + dev thin-profile preset). **OTA published Sep 3, 2026. Not yet device-verified** — published on a green offline gate only. Prior groups (`87207080`, `c897410d`, `d5332b8b`, `11d99ff3`, `b0bdd310`, `b77e49ce`, `be169bbd`) are superseded.
 
@@ -196,15 +196,15 @@ Every flag below is `false` in code; nothing ships as reviewed without emci's di
 - **Rotate the dev-test account's own Supabase password** (`ATO-dev-user-2026`, wave31 migration) — still in git history; no longer reachable client-side, but rotate it before public launch too.
 - **Delete the stale EAS env vars** `EXPO_PUBLIC_GEMINI_MODEL` (and `EXPO_PUBLIC_GEMINI_API_KEY` / `EXPO_PUBLIC_NVIDIA_MODEL` / `EXPO_PUBLIC_PERPLEXITY_MODEL` if any still exist) from the production/preview/development EAS environments — `eas env:delete --environment production --variable-name EXPO_PUBLIC_GEMINI_MODEL`. Since Sep 3, 2026 nothing under `src/` reads them (the model is chosen inside `ai-generate`; `check:ai-provider` fails on any `EXPO_PUBLIC_*_MODEL` reference), so they are inert but still a leftover. Needs an interactive EAS login; could not be run from the build session.
 - **Wire real billing** behind `src/lib/subscription.ts` before charging for Zen/Neon/Anime — the gate is live, the entitlement source is a stub that always returns inactive.
-- Full device pass against `docs/ATO_DEVICE_TESTS.md` (binary 10+, OTA `d5332b8b`)
+- ~~Full device pass against `docs/ATO_DEVICE_TESTS.md`~~ — **T-06 confirmed passed, Sep 13, 2026** (see Stage 8 section above).
 - Verify the Legends "test persona" strip on a real dev build, signed in as `@atodev` the normal way (OTA `d5332b8b` carries the code, but dev builds need the strip exercised)
 - Set Supabase secrets `ANTHROPIC_API_KEY` / `XAI_API_KEY` (and optional `ANTHROPIC_MODEL` / `XAI_MODEL`) before Claude or Grok can work from `/ai-lab`
-- Get all testers onto binary 10 (they cannot receive OTA on binary 8)
-- Confirm binary 10 on a real device (icon, OTA, everything)
+- ~~Get all testers onto binary 10~~ / ~~Confirm binary 10 on a real device~~ — **T-06 confirmed passed, Sep 13, 2026.**
 - Gut Call regression — still open
 - Live Talk failure — still open
-- Re-check Sentry symbolication (event `e7bed112` on binary 8 is unconfirmed)
+- ~~Re-check Sentry symbolication~~ — **confirmed working, Sep 13, 2026** (part of the T-06 device pass).
 - Friends Beta App Review — waiting on Apple
+- **Deprioritized (Sep 13, 2026): the +21 ATO token-payout gap for scenario-phase users (`claim_full_profile_complete`, wave52).** No live users yet — everyone gets reset before launch, so no migration/backfill is needed now. **Re-verify after the reset** that `claim_full_profile_complete` actually pays out correctly for a full-intake user, in case the root cause (count-only trait writes never emitting a `trait_history` row) is a real bug worth fixing rather than a symptom that disappears with the reset. See PROJECT_CONTEXT.md Decisions log, 2026-09-13.
 - Edmtrain live data — waiting on their key approval; Around stays honest-empty until then
 - Known, accepted, non-blocking: AI-quota client-bypass hardening — public-launch item, not now
 - Close the `require_root()` handle gap: surviving admin account is `emci2`, not `emci`
