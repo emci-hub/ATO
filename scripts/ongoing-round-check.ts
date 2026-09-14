@@ -254,6 +254,63 @@ async function run() {
     ok('composeOngoingRound: a recordBankUsage failure is caught and logged, never fatal to the round');
   }
 
+  {
+    // AI generation persistently fails to produce a 'playfulness' draft (the
+    // real chunked generator gives up after MAX_SHORTFALL_RETRIES=1 and
+    // returns whatever it has, per chunked-generate.ts). The bank-fallback
+    // pass added after fillAxisCountsChunked must catch this shortfall and
+    // fill it from the shared bank pool instead of silently shipping the
+    // round short.
+    let playfulnessBankCalls = 0;
+    const fallbackBankDraft: QuestionDraft = {
+      axis: 'playfulness',
+      prompt: 'bank playfulness, ai kept failing',
+      options: [{ text: 'a', value: 0.2 }, { text: 'b', value: 0.8 }],
+    };
+    let seq = 0;
+
+    const drafts = await composeOngoingRound(me, [], [], {
+      fetchRecentTexts: async () => [],
+      fetchBankCandidates: async (axis) => {
+        if (axis !== 'playfulness') return [];
+        playfulnessBankCalls += 1;
+        // First call is the initial bank-first pass (nothing available yet);
+        // only the second call, from the new fallback pass, finds a row.
+        return playfulnessBankCalls >= 2 ? [{ id: 'bank-fallback', draft: fallbackBankDraft }] : [];
+      },
+      recordBankUsage: async () => {},
+      addToBankPool: async (drafts) => {
+        for (const draft of drafts) draft.bankItemId = `ai-${draft.prompt}`;
+      },
+      generateBatch: async (prompt, count) => {
+        const out: QuestionDraft[] = [];
+        for (const match of prompt.matchAll(/([a-z_]+) x(\d+)/g)) {
+          const axis = match[1] as TraitAxis;
+          const n = Number(match[2]);
+          if (axis === 'playfulness') continue; // simulated persistent AI shortfall for this axis
+          for (let i = 0; i < n; i += 1) {
+            out.push({ axis, prompt: `ongoing ${axis} s-${seq}`, options: [{ text: 'a', value: 0.2 }, { text: 'b', value: 0.8 }] });
+            seq += 1;
+          }
+        }
+        void count;
+        return out;
+      },
+      saveItems: async () => {},
+    });
+
+    assert.equal(
+      drafts.length,
+      TIERED_ROUND_SIZE,
+      'a persistent AI shortfall on one axis is still made up by the bank-fallback pass, so the round never ships short',
+    );
+    assert.ok(
+      drafts.some((d) => d.prompt === 'bank playfulness, ai kept failing'),
+      'the fallback pass actually pulls the missing axis from the bank pool',
+    );
+    ok('composeOngoingRound: AI persistently fails an axis → bank-fallback pass fills it, round still lands on the full tiered size');
+  }
+
   console.log(`\n${passed} ongoing-round checks passed`);
 }
 

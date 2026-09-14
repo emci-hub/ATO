@@ -75,7 +75,8 @@ export interface ChunkedGenerateDeps {
   saveItems: (drafts: readonly QuestionDraft[]) => Promise<void>;
 }
 
-function subtractKept(
+/** Exported so a caller can compute what's still unmet after a fill attempt (e.g. ongoing-round.ts's bank-fallback pass). */
+export function subtractKept(
   remaining: Partial<Record<TraitAxis, number>>,
   kept: readonly QuestionDraft[],
 ): Partial<Record<TraitAxis, number>> {
@@ -88,7 +89,7 @@ function subtractKept(
   return next;
 }
 
-function totalCount(axisCounts: Partial<Record<TraitAxis, number>>): number {
+export function totalCount(axisCounts: Partial<Record<TraitAxis, number>>): number {
   return Object.values(axisCounts).reduce((sum, n) => sum + (n ?? 0), 0);
 }
 

@@ -15,7 +15,13 @@ import type { BankCandidate } from './bank-pool';
 import { pickQuestionGrounding } from './context';
 import { buildQuestionsPrompt } from './prompt';
 import { tieredAxisCounts } from './tiered-axis-plan';
-import { fillAxisCountsChunked, isNearDuplicate, type ChunkedGenerateDeps } from './chunked-generate';
+import {
+  fillAxisCountsChunked,
+  isNearDuplicate,
+  subtractKept,
+  totalCount,
+  type ChunkedGenerateDeps,
+} from './chunked-generate';
 import type { QuestionDraft } from './types';
 import type { TraitAxis } from '@/lib/traits';
 import type { TraitTrack } from '@/lib/trait-stability';
@@ -155,5 +161,29 @@ export async function composeOngoingRound(
       }),
   });
 
-  return [...bankDrafts, ...aiDrafts];
+  // Bank-fallback pass: fillAxisCountsChunked gives up on a per-chunk
+  // shortfall after MAX_SHORTFALL_RETRIES (deliberately just 1, to stay
+  // inside the client's 25s round-start timeout — see chunked-generate.ts).
+  // Rather than silently shipping the round short, make one more pass at the
+  // shared bank pool for whatever axes are still unmet — the bank already
+  // has content sitting there from other users' rounds, so this costs no
+  // extra AI call and no extra latency budget.
+  const stillMissing = subtractKept(remaining, aiDrafts);
+  let fallbackDrafts: QuestionDraft[] = [];
+  if (totalCount(stillMissing) > 0) {
+    const aiExcludeText = [...excludeText, ...aiDrafts.map((d) => d.prompt)];
+    const fallback = await fillFromBank(stillMissing, aiExcludeText, deps);
+    fallbackDrafts = fallback.drafts;
+    if (fallbackDrafts.length > 0) {
+      await deps.saveItems(fallbackDrafts);
+    }
+    // The bank can also come up empty for a thin axis — narrows the gap
+    // (AI shortfall alone) rather than closing it. Log so a short round is
+    // at least diagnosable, since nothing else surfaces this to the caller.
+    if (totalCount(fallback.remaining) > 0) {
+      console.log('[questions] ongoing round still short after bank fallback:', fallback.remaining);
+    }
+  }
+
+  return [...bankDrafts, ...aiDrafts, ...fallbackDrafts];
 }
