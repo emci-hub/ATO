@@ -17,7 +17,7 @@
       "pivot": "feet",
       "footAt": 0.75,
       "cellPx": 64,
-      "units": 8,
+      "units": 16,
       "walk": {
         "dirs": 4,
         "order": ["north", "east", "south", "west"],
@@ -40,7 +40,7 @@
       "pivot": "feet",
       "footAt": 0.75,
       "cellPx": 64,
-      "units": 8,
+      "units": 16,
       "walk": {
         "dirs": 2,
         "order": ["east", "west"],
@@ -63,7 +63,7 @@
       "pivot": "feet",
       "footAt": 0.75,
       "cellPx": 64,
-      "units": 10,
+      "units": 20,
       "walk": {
         "dirs": 4,
         "order": ["north", "east", "south", "west"],

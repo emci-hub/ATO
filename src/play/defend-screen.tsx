@@ -152,7 +152,7 @@ const CREEP_DRAW_SCALE: Record<CreepRole, number> = {
  * halted creep holds its frame (`WALK_STOP_MS`) instead of moonwalking. Combat
  * dt is untouched — the engine still steps on `DEFEND_TICK_MS`.
  */
-const WALK_FRAMES_PER_PATH = 280;
+const WALK_FRAMES_PER_PATH = 140;
 const WALK_TICK_MS = 50;
 /** No dist change for this long ⇒ treat the creep as halted (legs hold). */
 const WALK_STOP_MS = 250;
