@@ -63,7 +63,7 @@
       "pivot": "feet",
       "footAt": 0.75,
       "cellPx": 64,
-      "units": 20,
+      "units": 16,
       "walk": {
         "dirs": 4,
         "order": ["north", "east", "south", "west"],
@@ -140,7 +140,7 @@
       "pivot": "feet",
       "footAt": 0.75,
       "cellPx": 64,
-      "units": 20
+      "units": 16
     }
   }
 }
