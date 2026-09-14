@@ -86,6 +86,10 @@ import {
   skinScale,
   skinTone,
   skinUnits,
+  skinWalkArt,
+  skinWalkDirIndex,
+  skinWalkDirs,
+  skinWalkFrames,
   type SkinRoleId,
 } from '@/play/skin';
 import { boardDecor, roadDecor, ATO_GHOST_D } from '@/play/board-decor';
@@ -136,6 +140,26 @@ const CREEP_DRAW_SCALE: Record<CreepRole, number> = {
   tank: 1.35,
   boss: 1,
 };
+
+/**
+ * Walk-clip cadence + display clock (H1.5, display only).
+ *
+ * `WALK_FRAMES_PER_PATH` = frames played across one full path traverse
+ * (dist 0→1). Creeps' `dist` only updates on the 100ms sim tick, which would
+ * quantise the gait to ~10fps and read as a glide, so a 50ms display tick
+ * (`WALK_TICK_MS`) advances a per-creep frame phase using that creep's own
+ * measured dist/sec: legs still track ground, slowed creeps cycle slower, and a
+ * halted creep holds its frame (`WALK_STOP_MS`) instead of moonwalking. Combat
+ * dt is untouched — the engine still steps on `DEFEND_TICK_MS`.
+ */
+const WALK_FRAMES_PER_PATH = 280;
+const WALK_TICK_MS = 50;
+/** No dist change for this long ⇒ treat the creep as halted (legs hold). */
+const WALK_STOP_MS = 250;
+/** Cap the rate-measurement window so a creep resuming after a long halt
+ * doesn't divide by the whole stall. The first resuming sample is approximate
+ * (it under-reads the rate); the next tick re-measures and corrects it. */
+const WALK_RATE_MAX_MS = 250;
 
 /** Runner tell (display only): a short trailing streak behind a fast runner
  * so it reads apart from a swarm at a glance. No role ring (removed). */
@@ -275,6 +299,10 @@ function formatHit(damage: number): string {
 }
 
 type DefendPhase = 'setup' | 'running' | 'won' | 'lost';
+
+/** Per-creep walk frame phase (H1.5, display only): a fractional frame cursor
+ * plus the dist/rate sample the walk tick uses to advance it. */
+type WalkPhase = { dist: number; at: number; rate: number; phase: number };
 
 /** A live shot FX (display only — damage is already applied by the engine). */
 type Shot = {
@@ -541,6 +569,13 @@ export function DefendScreen({
   /** Per-creep path facing (deg), keyed by puff id. Kept when a creep is nearly
    * stopped (degenerate heading) so the sprite never snaps to a default. */
   const puffFacingRef = useRef<Record<number, number>>({});
+  /** Per-creep walk frame phase (H1.5, display only), keyed by puff id: the
+   * fractional frame cursor plus the dist/rate sample that advances it between
+   * sim ticks. Rebuilt every walk tick, so ids that left the board drop out. */
+  const walkPhaseRef = useRef<Record<number, WalkPhase>>({});
+  /** Bumped by the walk tick purely to force the re-render that advances the
+   * creep walk frames. The value is never read. */
+  const [, setWalkFrameTick] = useState(0);
   /** §9m boss warn banner — band label + boss name, raised as the boss nears. */
   const [bossAlert, setBossAlert] = useState<{ label: string; name: string } | null>(null);
   /** Mid-run leave confirmation (one tap to confirm, Cancel stays in the fight). */
@@ -985,6 +1020,54 @@ export function DefendScreen({
       shotsRef.current = next;
       setShots(next);
     }, FX_TICK_MS);
+    return () => clearInterval(id);
+  }, [phase, paused]);
+
+  // Walk tick (H1.5, display only): creeps' legs. See `WALK_TICK_MS` — this
+  // advances a per-creep frame phase from its own measured dist/sec and bumps a
+  // counter to force the re-render. Touches no engine state: combat dt,
+  // movement and cooldowns still step only on DEFEND_TICK_MS.
+  useEffect(() => {
+    if (phase !== 'running' || paused) return;
+    const id = setInterval(() => {
+      const current = simRef.current;
+      if (!current || current.puffs.length === 0) return; // nothing to animate
+      const now = Date.now();
+      const dtSec = WALK_TICK_MS / 1000;
+      const next: typeof walkPhaseRef.current = {};
+      for (const puff of current.puffs) {
+        let prev: WalkPhase | undefined = walkPhaseRef.current[puff.id];
+        // A lower dist means this id was reused by a fresh run / respawn.
+        if (prev && puff.dist < prev.dist) prev = undefined;
+        if (!prev) {
+          // Seed ground-aligned so a new creep doesn't snap to frame 0.
+          next[puff.id] = {
+            dist: puff.dist,
+            at: now,
+            rate: 0,
+            phase: puff.dist * WALK_FRAMES_PER_PATH,
+          };
+          continue;
+        }
+        let rate = prev.rate;
+        let at = prev.at;
+        if (puff.dist !== prev.dist) {
+          const elapsed = Math.max(1, Math.min(WALK_RATE_MAX_MS, now - prev.at)) / 1000;
+          rate = (puff.dist - prev.dist) / elapsed;
+          at = now;
+        } else if (now - prev.at > WALK_STOP_MS) {
+          rate = 0; // halted — hold the frame instead of moonwalking
+        }
+        next[puff.id] = {
+          dist: puff.dist,
+          at,
+          rate,
+          phase: prev.phase + rate * dtSec * WALK_FRAMES_PER_PATH,
+        };
+      }
+      walkPhaseRef.current = next;
+      setWalkFrameTick((n) => n + 1);
+    }, WALK_TICK_MS);
     return () => clearInterval(id);
   }, [phase, paused]);
 
@@ -1797,12 +1880,30 @@ export function DefendScreen({
                 const heading = headingVectorFromDeg(facingDeg);
                 const spriteDirs = skinDirs(spriteRole);
                 const sprite = skinArt(spriteRole, skinDirIndex(spriteRole, heading.dx, heading.dy));
+                // H1.5 creep walk clips: while the role authors one, play its
+                // directional frames. The frame comes from the walk tick's
+                // per-creep phase (ground-tracking, smooth at WALK_TICK_MS);
+                // otherwise keep the static rotation. Towers + Titan-X author
+                // no `walk` and stay as-is.
+                const walkDirs = skinWalkDirs(spriteRole);
+                const walkFrames = skinWalkFrames(spriteRole);
+                const walkPhase =
+                  walkPhaseRef.current[puff.id]?.phase ?? puff.dist * WALK_FRAMES_PER_PATH;
+                const walkSprite =
+                  walkDirs > 0 && walkFrames > 1
+                    ? skinWalkArt(
+                        spriteRole,
+                        skinWalkDirIndex(spriteRole, heading.dx, heading.dy),
+                        Math.floor(walkPhase),
+                      )
+                    : undefined;
+                const spriteSource = walkSprite ?? sprite;
                 const spriteSize = skinUnits(spriteRole, UNIT_BASE_UNITS) * puff.size * drawScale;
                 // Feet-pivoted sprites rise above the path point, so the body
                 // chrome (ring / bar / badge) anchors to the draw box, not the
                 // path point.
                 const box = skinDrawBox(spriteRole, x, y, spriteSize);
-                const hasSprite = sprite != null;
+                const hasSprite = spriteSource != null;
                 const bodyCy = hasSprite ? box.y + spriteSize / 2 : y;
                 const ringRadius = hasSprite ? spriteSize / 2 + 0.8 : radius + 0.9;
                 const barWidth = 8 * puff.size * drawScale;
@@ -1838,9 +1939,9 @@ export function DefendScreen({
                       </G>
                     ) : null}
                     <G transform={spriteTransform}>
-                      {sprite ? (
+                      {spriteSource ? (
                         <SvgImage
-                          href={sprite}
+                          href={spriteSource}
                           x={box.x}
                           y={box.y}
                           width={box.size}

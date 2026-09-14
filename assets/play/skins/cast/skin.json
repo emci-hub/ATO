@@ -1,5 +1,5 @@
 {
-  "$comment": "Cast skin (H1) — the PixelLab default cast on the board. 8-dir STATIC rotations only this pass (walk anims are H1.5). `keys` are listed north-first canonical order: north, north-east, east, south-east, south, south-west, west, north-west (the `skinDirIndex` bucket order). cast sits FIRST on the skin stack; map/props fall to craftpix-td, and unit.avatar / unit.final / fx.* fall to kenney-td. See games/grove/CAST_DROP.md + games/grove/ref/cast-source/. Every cast rotation is a square canvas with the character filling the middle ~50%, so the bottom ~25% of the PNG is transparent: every `pivot: feet` role MUST carry `footAt: 0.75` so the visual feet land exactly on the world point (pad centre / road point) instead of floating a quarter-box high.",
+  "$comment": "Cast skin (H1 → H1.5) — the PixelLab default cast on the board. Rotations are 8-dir STATIC (Titan-X, towers); the three creeps now add a `walk` clip (multi-frame × dirs) played while moving, with the rotations kept as the idle/fallback art. `keys` are listed north-first canonical order: north, north-east, east, south-east, south, south-west, west, north-west (the `skinDirIndex` bucket order). A `walk` entry is { dirs: 2|4, order: [facing folder names in dirIndex order], frames: count per facing, base: registry key base }; frame keys resolve as `<base>/<order[dirIndex]>/frame_###`. cast sits FIRST on the skin stack; map/props fall to craftpix-td, and unit.avatar / unit.final / fx.* fall to kenney-td. See games/grove/CAST_DROP.md + games/grove/ref/cast-source/. Every cast rotation is a square canvas with the character filling the middle ~50%, so the bottom ~25% of the PNG is transparent: every `pivot: feet` role MUST carry `footAt: 0.75` so the visual feet land exactly on the world point (pad centre / road point) instead of floating a quarter-box high.",
   "pack": "cast",
   "roles": {
     "unit.puff": {
@@ -17,7 +17,13 @@
       "pivot": "feet",
       "footAt": 0.75,
       "cellPx": 64,
-      "units": 8
+      "units": 8,
+      "walk": {
+        "dirs": 4,
+        "order": ["north", "east", "south", "west"],
+        "frames": 6,
+        "base": "skins/cast/creeps/village-girl/animations/Walk"
+      }
     },
     "unit.runner": {
       "keys": [
@@ -34,7 +40,13 @@
       "pivot": "feet",
       "footAt": 0.75,
       "cellPx": 64,
-      "units": 8
+      "units": 8,
+      "walk": {
+        "dirs": 2,
+        "order": ["east", "west"],
+        "frames": 9,
+        "base": "skins/cast/creeps/wizard/animations/walk"
+      }
     },
     "unit.tank": {
       "keys": [
@@ -51,7 +63,13 @@
       "pivot": "feet",
       "footAt": 0.75,
       "cellPx": 64,
-      "units": 10
+      "units": 10,
+      "walk": {
+        "dirs": 4,
+        "order": ["north", "east", "south", "west"],
+        "frames": 6,
+        "base": "skins/cast/creeps/knight/animations/Walking"
+      }
     },
     "tower.archer": {
       "keys": [

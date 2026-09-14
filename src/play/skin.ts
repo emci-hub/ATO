@@ -57,6 +57,25 @@ export type SkinDirs = 1 | 4 | 8;
 /** Frame counts per clip. */
 export type SkinClips = { idle?: number; walk?: number; attack?: number };
 
+/**
+ * A multi-frame directional walk clip (creep legs while moving). Towers,
+ * `dirs: 1` roles and Titan-X author no `walk`, so they keep static rotations.
+ *
+ * Frame keys are built at read time from `base` + `order[dirIndex]` +
+ * `frame_###` (PixelLab's stable 3-digit export naming) — the contract avoids
+ * hand-listing dozens of `frame_NNN` keys in the skin JSON.
+ */
+export type SkinWalk = {
+  /** How many facings the walk is authored for (2 = E/W, 4 = cardinals). */
+  dirs: 2 | 4 | 8;
+  /** Facing folder names, indexed by dirIndex (see `skinWalkDirIndex`). */
+  order: readonly string[];
+  /** Frames per facing (uniform across facings). */
+  frames: number;
+  /** Registry key base (hash-stripped) to the clip folder. */
+  base: string;
+};
+
 export type SkinRole = {
   /** Art-registry keys. `dirs: 1` uses `keys[0]`; 4/8 index by facing. */
   keys: readonly string[];
@@ -81,6 +100,7 @@ export type SkinRole = {
   /** Per-level size multipliers: `scales[level - 1]` (Lv1..Lv3). */
   scales?: readonly number[];
   clips?: SkinClips;
+  walk?: SkinWalk;
   /** Solid tone + casing for a ribbon role (the road), sampled from the tile. */
   tone?: string;
   casing?: string;
@@ -88,6 +108,12 @@ export type SkinRole = {
 
 /** One skin file: the roles it defines. A skin may define only a subset. */
 type SkinFile = { pack: string; roles: Record<string, SkinRole> };
+
+/** Minimum |dx| for a 2-facing walk clip to claim an east/west frame. Below
+ * this the heading is effectively vertical and the clip has no honest art, so
+ * `skinWalkDirIndex` declines and the static rotation stays. Roads in this game
+ * are axis-aligned, so real headings sit near |dx| = 1 or |dx| = 0. */
+const WALK_2DIR_MIN_DX = 0.35;
 
 /** Active skin first, fallbacks after. Per-role resolution walks the stack so a
  * partial skin only overrides the roles it actually defines. The cast skin
@@ -188,6 +214,70 @@ export function skinClipArt(
   if (frames <= 1) return undefined;
   const key = def.keys[((frame % frames) + frames) % frames];
   return key ? PLAY_ART[key] : undefined;
+}
+
+/** Number of walk facings for a role (0 = no walk clip authored). */
+export function skinWalkDirs(role: SkinRoleId): number {
+  return resolveRole(role)?.walk?.dirs ?? 0;
+}
+
+/** Number of frames per facing in the role's walk clip (0 = none). */
+export function skinWalkFrames(role: SkinRoleId): number {
+  return resolveRole(role)?.walk?.frames ?? 0;
+}
+
+/** Sentinel from `skinWalkDirIndex` meaning "this heading has no honest walk
+ * frame" — the caller keeps the static rotation instead. */
+export const SKIN_WALK_NO_DIR = -1;
+
+/**
+ * Walk facing bucket for a role's walk clip (0..`skinWalkDirs(role)`-1).
+ * 2-dir clips snap to east/west; 4-dir clips snap to the nearest cardinal
+ * (diagonals fall to the closer cardinal, matching the `order` array below).
+ * Returns `SKIN_WALK_NO_DIR` when the role has no walk clip, or when a 2-dir
+ * clip is asked for a near-vertical heading it cannot express (playing a
+ * sideways cycle there would be worse than the static rotation).
+ */
+export function skinWalkDirIndex(role: SkinRoleId, dx: number, dy: number): number {
+  const walk = resolveRole(role)?.walk;
+  if (!walk) return SKIN_WALK_NO_DIR;
+  if (walk.dirs === 2) {
+    // A 2-facing clip only has east + west art. Roads are axis-aligned, so a
+    // vertical heading (|dx| ≈ 0) must fall back rather than pick a side.
+    if (Math.abs(dx) < WALK_2DIR_MIN_DX) return SKIN_WALK_NO_DIR;
+    return dx > 0 ? 0 : 1; // [east, west]
+  }
+  if (walk.dirs === 8) {
+    const deg = (Math.atan2(dy, dx) * 180) / Math.PI;
+    const bearing = deg + 90;
+    return ((Math.round(bearing / 45) % 8) + 8) % 8;
+  }
+  // 4-dir: nearest cardinal, order [north, east, south, west].
+  const deg = (Math.atan2(dy, dx) * 180) / Math.PI; // east = 0
+  const a = ((deg % 360) + 360) % 360; // 0..360 clockwise from east
+  if (a < 45 || a >= 315) return 1; // east
+  if (a < 135) return 2; // south
+  if (a < 225) return 3; // west
+  return 0; // north
+}
+
+/**
+ * Art for one frame of a role's directional walk clip. Returns undefined when
+ * the role authors no walk clip, so callers fall back to the rotation art.
+ */
+export function skinWalkArt(
+  role: SkinRoleId,
+  dirIndex: number,
+  frame: number,
+): ImageSourcePropType | undefined {
+  const walk = resolveRole(role)?.walk;
+  if (!walk || dirIndex < 0) return undefined;
+  const dir = ((dirIndex % walk.dirs) + walk.dirs) % walk.dirs;
+  const dirName = walk.order[dir];
+  if (!dirName) return undefined;
+  const f = ((frame % walk.frames) + walk.frames) % walk.frames;
+  const key = `${walk.base}/${dirName}/frame_${String(f).padStart(3, '0')}`;
+  return PLAY_ART[key];
 }
 
 /**
