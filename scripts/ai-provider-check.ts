@@ -11,7 +11,6 @@ import { AI_PROVIDER_IDS, isAiProviderId } from '../src/lib/ai/types';
 import type { AiCallMetadata } from '../src/lib/ai/types';
 import { AI_CALL_SITES } from '../src/lib/ai/call-sites';
 import { isQuotaLimitError } from '../src/lib/ai/generate';
-import { buildVoiceConfig } from '../src/lib/voice/config';
 
 let passed = 0;
 function ok(label: string) {
@@ -42,7 +41,6 @@ assert.equal(buildAiConfig({ MODEL_PROVIDER: 'local' }).provider, 'local');
 assert.equal(buildAiConfig({ AI_PROVIDER: 'nvidia' }).provider, 'nvidia');
 assert.equal(buildAiConfig({ AI_PROVIDER: 'nvidia', MODEL_PROVIDER: 'local' }).provider, 'local');
 assert.equal(buildAiConfig({ AI_PROVIDER: 'claude' }).provider, 'claude');
-assert.equal(buildVoiceConfig({ MODEL_PROVIDER: 'local' }).provider, 'local');
 assert.ok(!isAiProviderId('groq'));
 ok('AI_PROVIDER selects the vendor; MODEL_PROVIDER=local still forces the fallback');
 
@@ -123,13 +121,12 @@ ok('prompt length and temperature are clamped server-side, not just output token
 const srcFiles = walk(resolve(root, 'src'));
 // No client-side vendor transport survives: the script-only Gemini adapter
 // (src/lib/ai/gemini.ts) was deleted 2026-09-03; live checks now go through
-// scripts/live-ai.ts → ai-generate like the app does.
+// ai-generate like the app does.
 const generateContentHits = srcFiles.filter((file) =>
   readFileSync(file, 'utf8').includes(':generateContent'),
 );
 assert.deepEqual(generateContentHits, []);
 assert.ok(!existsSync(resolve(root, 'src/lib/ai/gemini.ts')), 'src/lib/ai/gemini.ts must stay deleted');
-assert.doesNotMatch(read('src/lib/voice/providers/gemini.ts'), /createGeminiProvider|apiKey|fetch\(/);
 assert.doesNotMatch(read('src/lib/ai/http.ts'), /extract(Gemini|OpenAi|Claude)Text|fetch\(/);
 ok('no vendor HTTP transport anywhere under src (Edge Function only)');
 
@@ -156,9 +153,7 @@ ok('client DEFAULT_MODELS mirrors the Edge Function defaults');
 assert.match(read('src/lib/explore/generate.ts'), /generateText/);
 assert.match(read('src/lib/questions/generate.ts'), /generateText/);
 assert.doesNotMatch(read('src/lib/questions/sweep.ts'), /generateText/);
-assert.match(read('src/lib/voice/providers/remote.ts'), /generateText/);
 assert.doesNotMatch(read('src/lib/explore/prompt.ts'), /generateText/);
-assert.doesNotMatch(read('src/lib/voice/providers/prompt.ts'), /generateText/);
 assert.doesNotMatch(read('src/lib/sage-title.ts'), /generateText/);
 assert.doesNotMatch(read('src/lib/sage-story.ts'), /generateText/);
 ok('call sites use generateText; prompt builders are untouched; the sweep now serves the static bank with no model call');
@@ -169,7 +164,6 @@ ok('call sites use generateText; prompt builders are untouched; the sweep now se
 // this is what forces a new AI feature to declare its sharing model up front.
 const METADATA_CALL_FILES = new Set([
   'src/lib/ai/generate.ts', // the dispatcher itself (definition, no self-calls)
-  'src/lib/voice/providers/remote.ts',
   'src/lib/questions/generate.ts',
   'src/lib/explore/generate.ts',
   'src/lib/rolls/generate.ts',
@@ -215,7 +209,7 @@ const META_FLAGS: readonly (keyof AiCallMetadata)[] = [
   'bucketShareable',
   'latencySensitive',
 ];
-assert.equal(AI_CALL_SITES.length, 12, 'one catalog entry per AI call site');
+assert.equal(AI_CALL_SITES.length, 10, 'one catalog entry per AI call site');
 const features = new Set<string>();
 for (const site of AI_CALL_SITES) {
   assert.ok(!features.has(site.feature), `duplicate call-site feature: ${site.feature}`);

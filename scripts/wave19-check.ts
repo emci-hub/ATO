@@ -65,7 +65,6 @@ import {
   tokenCopyClean,
 } from '../src/lib/tokens';
 import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
-import { buildTalkPrompt } from '../src/lib/voice/providers/prompt';
 import { buildQuestionsPrompt } from '../src/lib/questions/prompt';
 import { preferFreshAxes } from '../src/lib/questions/rotation';
 
@@ -396,54 +395,13 @@ for (const src of [
 ok('wave38 widens trait_history.source CHECK to self_scenario without dropping any prior source');
 
 // --- Sage thin + no Home/crisis/widget -----------------------------------
-const talk = buildTalkPrompt({
-  me: {
-    name: 'Riley',
-    show_up: 'steady',
-    talk_style: 'even',
-    knocks_you_off: 'late nights',
-    morning_cue: 'coffee',
-  },
-  message: 'How am I doing?',
-  day: 3,
-  history: [],
-  answeredCount: 2,
-});
-assert.match(read('src/lib/voice/providers/prompt.ts'), /isThinProfile/);
-assert.doesNotMatch(read('src/lib/voice/providers/prompt.ts'), /answered < 6/);
+// The Talk prompt builder went with the voice provider lane (2026-09-14), so
+// its thin-profile honesty and divergence-note assertions have nothing to run
+// against. The same thin-profile gate on the surviving surface is still
+// asserted, and Talk should re-earn these when it is rebuilt.
 assert.match(read('src/lib/sage-insight.ts'), /isThinProfile/);
 assert.doesNotMatch(read('src/lib/sage-insight.ts'), /settled < 6/);
-const talkFull = buildTalkPrompt({
-  me: {
-    name: 'Riley',
-    show_up: 'steady',
-    talk_style: 'even',
-    knocks_you_off: 'late nights',
-    morning_cue: 'coffee',
-  },
-  message: 'How am I doing?',
-  day: 3,
-  history: [],
-  answeredCount: 12,
-  divergenceNote: 'What they told us and a gut-call they played don\'t quite match.',
-});
-assert.match(talkFull, new RegExp(`12 of ${TRAIT_AXES.length} settled`));
-assert.match(talkFull, /TENSION/);
-const talkBoundary = buildTalkPrompt({
-  me: {
-    name: 'Riley',
-    show_up: 'steady',
-    talk_style: 'even',
-    knocks_you_off: 'late nights',
-    morning_cue: 'coffee',
-  },
-  message: 'How am I doing?',
-  day: 3,
-  history: [],
-  answeredCount: 6,
-});
-assert.match(talkBoundary, /PROFILE DEPTH: still thin/);
-ok('Talk prompt gets thin-profile honesty and optional divergence');
+ok('the surviving insight surface keeps the thin-profile gate');
 
 const home = read('src/app/(tabs)/index.tsx');
 const crisis = read('src/components/crisis-card.tsx');

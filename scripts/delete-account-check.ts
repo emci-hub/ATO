@@ -112,14 +112,14 @@ async function main() {
     p_status: 'done',
   });
   if (checkInsertError) throw new Error(`check insert failed: ${checkInsertError.message}`);
-  await authed.from('sage_messages').insert({ user_id: userId, role: 'user', text: 'hi' });
+  await authed.from('checks').insert({ user_id: userId, role: 'user', text: 'hi' });
 
   const { count: meCountBefore } = await authed
     .from('me')
     .select('*', { count: 'exact', head: true })
     .eq('id', userId);
   assert.equal(meCountBefore, 1, 'ME row should exist before delete');
-  ok('ME row + checks + sage_messages exist before delete', { meCountBefore });
+  ok('ME row + checks exist before delete', { meCountBefore });
 
   // The client must never be able to read Apple refresh tokens. RLS is enabled
   // on apple_credentials with zero policies, so an authenticated select returns

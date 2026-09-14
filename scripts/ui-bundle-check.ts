@@ -51,40 +51,13 @@ for (const line of flashes) {
 }
 ok('slot reel flashes other answers and finishes in under 2.5s');
 
-const sage = read('src/app/(tabs)/sage.tsx');
-assert.match(sage, /SageEightBall/);
-assert.match(sage, /SageUsageLine/);
-assert.match(sage, /styles\.sageToys/);
-assert.match(sage, /styles\.chatColumn/);
-assert.match(sage, /COMPOSER_REST_PAD/);
-assert.match(sage, /useKeyboardLift/);
-assert.match(sage, /visualViewport/);
-assert.match(sage, /scrollToEnd/);
-assert.match(sage, /keyboardOpen/);
-assert.match(sage, /measureInWindow/);
-assert.match(sage, /paddingBottom: keyboardLift/);
-assert.match(sage, /keyboardFallbackLift/);
-assert.doesNotMatch(sage, /enabled=\{false\}/);
-assert.doesNotMatch(sage, /useSafeAreaInsets/);
-ok('Sage mounts the 8-ball above chat and does not import the card router');
-ok('Sage composer lifts with the keyboard and scrolls the latest message into view');
-
-const eightBallUi = read('src/components/sage-eight-ball.tsx');
-assert.match(eightBallUi, /accessibilityState=\{\{ expanded: open \}\}/);
-assert.match(eightBallUi, /Ask again/);
-assert.doesNotMatch(eightBallUi, /if \(!open && answer == null\) roll/);
-assert.match(eightBallUi, /fontSize: 18/);
-assert.match(eightBallUi, /SageOrb/);
-assert.doesNotMatch(eightBallUi, /from 'react-native-svg'/);
-assert.match(eightBallUi, /withSequence/);
-assert.match(eightBallUi, /pickEightBallFlashes/);
-assert.match(eightBallUi, /rollingRef/);
-assert.match(eightBallUi, /reduceMotion/);
-assert.match(eightBallUi, /disabled=\{rolling\}/);
-assert.doesNotMatch(eightBallUi, /from '@\/lib\/kenney/);
-assert.doesNotMatch(eightBallUi, /numeric-8-circle/);
-ok('8-ball is collapsible, readable when open, and uses an original orb (Views, not SVG / Kenney / toy 8-ball)');
-ok('8-ball slot-rolls with a tap lock-out and skips the reel when reduceMotion is on');
+// The Sage tab's chat layout assertions (keyboard lift, composer padding,
+// scroll-to-end, the 8-ball and usage line) went with Talk's backend on
+// 2026-09-14 — the tab is now an inert placeholder with no composer. Restore
+// them when Talk is rebuilt.
+// The 8-ball was Talk-only UI and was deleted with the lane, along with the
+// composer/keyboard-lift assertions above it. Nothing here asserts a Sage
+// layout any more; the quota formatting below is shared and still live.
 
 assert.equal(formatSageUsage(6, 20, 'today'), '6 of 20 today');
 assert.equal(formatSageUsage(12, 200, 'this month'), '12 of 200 this month');

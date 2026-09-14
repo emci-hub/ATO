@@ -41,7 +41,6 @@ import {
   sanitizeFacts,
 } from '../src/lib/voice/framework-fence';
 import { resolveNudge } from '../src/lib/voice/nudge';
-import { buildPrompt } from '../src/lib/voice/providers/prompt';
 import type { VoiceMe } from '../src/lib/voice/types';
 
 let passed = 0;
@@ -305,24 +304,23 @@ async function main() {
   assert.deepEqual(withTraits.facts, ['I finish work at four']);
   ok('null axes stay null at read; banned facts are stripped before Sage sees them');
 
-  const prompt = buildPrompt({
-    me: withTraits,
-    day: 4,
-    tone: 'even',
-    history: [],
-    crisisToday: false,
-    previousHadCut: false,
-  });
-  // Dawn Read dropped the 16-axis backbone, so the card prompt paraphrases no
-  // individual axis — only the raw value must never leak.
-  assert.doesNotMatch(prompt, /0\.25/);
-  assert.doesNotMatch(prompt, /extraversion|openness/);
+  // The card prompt builder went with the voice provider lane (2026-09-14).
+  // The promise it carried — a raw trait value never reaches a prompt, only a
+  // paraphrase — is now the daily insight's, so it is asserted against that
+  // builder's own grounding helper instead.
+  const insightGen = read('src/lib/insight/generate-insight.ts');
+  assert.match(insightGen, /TRAIT_BAND_PHRASES\[axis\]\[leanHighLow\(row\.value\)\]/);
+  assert.doesNotMatch(insightGen, /row\.value\}|\$\{value\}/);
   const extLines = traitPromptLines({ extraversion: 0.25 });
   assert.match(extLines, /quieter time/);
   assert.doesNotMatch(extLines, /0\.25/);
+  // Only the fence itself is asserted here. The insight prompt deliberately
+  // NAMES these terms in its rules ("Never Myers-Briggs..."), so a substring
+  // check against the builder would fail on the very instruction that forbids
+  // them. What matters is that generated output carrying one is dropped, which
+  // parseDailyInsight does via containsFrameworkTerm on all five fields.
   for (const banned of BANNED) {
     assert.equal(containsFrameworkTerm(banned), true, `${banned} should be a banned term`);
-    assert.equal(prompt.toLowerCase().includes(banned.toLowerCase()), false, `prompt leaked ${banned}`);
   }
   const omitted = traitPromptLines({ extraversion: null, openness: null, autonomy: null, growth_mindset: null });
   assert.equal(omitted, '');
@@ -358,8 +356,8 @@ async function main() {
   // routeVoiceCard, which went with the card lane. The fence itself is
   // unchanged and still asserted directly above; the insight's own use of it
   // on all five fields is covered by scripts/insight-check.ts.
-  const insightGen = read('src/lib/insight/generate-insight.ts');
-  assert.match(insightGen, /if \(containsFrameworkTerm\(trimmed\)\) return null;/);
+  const insightFence = read('src/lib/insight/generate-insight.ts');
+  assert.match(insightFence, /if \(containsFrameworkTerm\(trimmed\)\) return null;/);
   ok('the daily insight runs the same framework fence over its generated fields');
 
   assert.equal(
@@ -389,11 +387,14 @@ async function main() {
   ok('addFact rejects a leaked phrase before it is persisted');
   ok('confirmTraits persists source+timestamp only — no numeric incoming');
 
-  const talkSrc = read('src/lib/voice/talk.ts');
-  assert.match(talkSrc, /containsFrameworkTerm/);
-  assert.match(talkSrc, /TALK_FENCE_ATTEMPTS = 2/);
-  assert.match(talkSrc, /kind: 'empty'/);
-  ok('Talk replies run the same framework fence; retry is one extra generate, then honest empty');
+  // Talk's backend was deleted 2026-09-14 and the Sage tab is an inert
+  // placeholder; these assertions should be re-earned when Talk is rebuilt.
+  // Talk's own fence assertions went with its backend. The same fence still
+  // guards every generated surface that survives, which is what actually
+  // matters; asserting nothing here would print green over a real gap.
+  assert.match(insightFence, /containsFrameworkTerm/);
+  assert.match(read('src/lib/category-statements/generate-statements.ts'), /containsFrameworkTerm/);
+  ok('the surviving generated surfaces all run the framework fence');
 
   const fold = read('src/components/trait-bands-fold.tsx');
   const provenance = 'This came from a question you answered. It can change.';

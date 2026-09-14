@@ -79,12 +79,16 @@ ok('Sage-tab viewer is read/delete only — no fence, no new write field');
 
 const explore = read('src/app/(tabs)/explore.tsx');
 assert.doesNotMatch(explore, /SageFactsCard/);
-const sageTab = read('src/app/(tabs)/sage.tsx');
-assert.match(sageTab, /SageFactsCard/);
-const ballIdx = sageTab.indexOf('<SageEightBall');
-const factsIdx = sageTab.indexOf('<SageFactsCard');
-assert.ok(ballIdx > 0 && factsIdx > ballIdx);
-ok('facts summary is a collapsible card below the 8-ball on Sage');
+// Talk's backend was deleted 2026-09-14 and the Sage tab is an inert
+// placeholder; these assertions should be re-earned when Talk is rebuilt.
+// The facts summary lived on the Sage tab, below the 8-ball.
+// Relocated to You 2026-09-14 when the Sage tab became a placeholder. This is
+// the only surface that lists stored facts and the only path to delete one, so
+// it has to live somewhere reachable — facts stay addable from chat either way.
+const youTabFacts = read('src/app/(tabs)/you.tsx');
+assert.match(youTabFacts, /<SageFactsCard me=\{me\} onUpdated=/);
+assert.match(read('src/components/sage-facts.tsx'), /removeFact/);
+ok('the facts list and its delete path are reachable from You');
 
 const chat = read('src/app/chat.tsx');
 assert.match(chat, /Teach Sage this/);

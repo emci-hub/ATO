@@ -1,17 +1,22 @@
 /**
- * Sage tab load path. Run: npm run check:sage-load
+ * The Sage tab is an inert placeholder while Talk is rebuilt.
+ * Run: npm run check:sage-load
  *
- * Locks the findings from the load-time investigation: history is the
- * paint-critical fetch, Talk context is a small query, the 8-ball stays
- * local, and framework-echo / Stage 11 traits are not on the mount path.
+ * Rewritten 2026-09-14. This file used to pin Talk's cold-open cost — no card
+ * router on mount, history loaded lazily, the Talk router imported only on
+ * send. Talk's entire backend (routeTalkReply, the local/remote/gemini provider
+ * layer, select-provider, the voice config) has since been deleted and the
+ * screen reduced to a registered route rendering a "being rebuilt" card.
+ *
+ * The promise worth keeping is narrower but still real, and it is the one that
+ * would actually bite during a rebuild: **mounting the Sage tab must cost
+ * nothing.** No model call, no quota claim, no message fetch, no consent
+ * prompt, and above all no import of the deleted lane — which is exactly the
+ * mistake someone would make wiring Talk back up from memory.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { performance } from 'node:perf_hooks';
-
-import { filterCard } from '../src/lib/voice/filters';
-import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
 
 let passed = 0;
 function ok(label: string) {
@@ -24,79 +29,59 @@ function read(rel: string): string {
   return readFileSync(resolve(root, rel), 'utf8');
 }
 
-async function main() {
-  const sage = read('src/app/(tabs)/sage.tsx');
-  const eightBall = read('src/components/sage-eight-ball.tsx');
-  const messages = read('src/lib/sage-messages.ts');
-  const insightHook = read('src/hooks/use-daily-insight.ts');
-  const insightCache = read('src/lib/insight/today-insight.ts');
-  const checksLib = read('src/lib/checks.ts');
-  const prompt = read('src/lib/voice/providers/prompt.ts');
-  const filters = read('src/lib/voice/filters.ts');
+const sage = read('src/app/(tabs)/sage.tsx');
 
-  assert.doesNotMatch(sage, /from '@\/lib\/voice\/router'/);
-  assert.doesNotMatch(sage, /routeVoiceCard/);
-  assert.doesNotMatch(sage, /filterCard/);
-  assert.doesNotMatch(sage, /containsFrameworkTerm/);
-  assert.doesNotMatch(sage, /traitPromptLines/);
-  assert.doesNotMatch(sage, /from '@\/lib\/traits'/);
-  ok('Sage mount does not run the card router, framework-echo fence, or a trait query');
+// The route must still exist and export a screen: pulling the tab would need a
+// native build, which is the whole reason this is a placeholder and not a
+// deletion.
+assert.match(sage, /export default function SageScreen/);
+ok('the Sage route is still registered and mountable');
 
-  assert.match(sage, /useMeContext/);
-  assert.doesNotMatch(sage, /useMe\(/);
-  assert.doesNotMatch(sage, /fetchMe\(/);
-  ok('Stage 11 columns arrive on the shared ME row — Sage does not re-fetch traits');
-
-  // Same promise, new lane: a Sage mount reads the cached insight and never
-  // triggers a generation or even a network fetch.
-  assert.match(sage, /useDailyInsight/);
-  assert.match(insightHook, /loadCachedInsight/);
-  assert.match(insightCache, /AsyncStorage\.getItem\(TODAY_INSIGHT_KEY\)/);
-  assert.doesNotMatch(insightHook, /generateDailyInsight|fetchTodayInsight|supabase/);
-  ok('useDailyInsight is an AsyncStorage read, not a generate');
-
-  assert.match(sage, /fetchTalkHistory/);
-  assert.match(sage, /history: checksToHistory\(talk\.checks\)/);
-  const exploreScreen = read('src/app/(tabs)/explore.tsx');
-  assert.match(exploreScreen, /fetchChecks\(/);
-  assert.match(exploreScreen, /checksToHistory\(exploreChecks\)/);
-  assert.match(checksLib, /export const TALK_RECENT_CHECKS = 5/);
-  assert.match(prompt, /export const TALK_PROMPT_HISTORY = 5/);
-  ok('Talk context is last 5 Checks; Explore uses full fetchChecks history');
-
-  assert.match(sage, /historyReady/);
-  assert.match(sage, /peekSageMessages/);
-  assert.match(messages, /peekSageMessages/);
-  assert.match(messages, /\.eq\('user_id', userId\)/);
-  ok('History has a loading state and an in-memory remount cache');
-
-  assert.doesNotMatch(sage, /from '@\/lib\/voice\/talk'/);
-  assert.match(sage, /import\('@\/lib\/voice\/talk'\)/);
-  ok('Talk router is loaded on send, not on first Sage paint');
-
-  assert.match(sage, /SageEightBall/);
-  assert.doesNotMatch(eightBall, /from 'react-native-svg'/);
-  assert.match(eightBall, /SageOrb/);
-  ok('8-ball is local Views — no SVG parse on Sage open');
-
-  assert.match(filters, /framework-echo/);
-  const card = {
-    read: 'Day 4. Mixed run — some did, some skip.',
-    do: 'After you make coffee, write one line about today.',
-  };
-  const t0 = performance.now();
-  for (let i = 0; i < 2000; i += 1) {
-    filterCard(card, { shownCards: [], crisisToday: false, previousHadCut: false });
-    containsFrameworkTerm('They tend to get energy from quieter time.');
-  }
-  const elapsed = performance.now() - t0;
-  assert.ok(elapsed < 50, `framework-echo fence took ${elapsed.toFixed(1)}ms for 2000 runs`);
-  ok(`framework-echo fence is cheap (${elapsed.toFixed(1)}ms / 2000 runs) — not a Sage load cost`);
-
-  console.log(`\n${passed} checks passed`);
+// The deleted lane must stay deleted. Each of these is a real file that no
+// longer exists; an import of any of them would not compile, but asserting it
+// here names the mistake instead of leaving a confusing module-not-found.
+for (const gone of [
+  'src/lib/voice/talk.ts',
+  'src/lib/voice/select-provider.ts',
+  'src/lib/voice/config.ts',
+  'src/lib/voice/providers/index.ts',
+  'src/lib/voice/providers/prompt.ts',
+  'src/lib/voice/providers/remote.ts',
+  'src/lib/voice/providers/local.ts',
+  'src/lib/voice/providers/gemini.ts',
+  'src/lib/voice/providers/types.ts',
+]) {
+  assert.ok(!existsSync(resolve(root, gone)), `${gone} must stay deleted — Talk is rebuilt against generateText, not the old provider layer`);
 }
+ok('the voice provider layer and Talk backend stay deleted');
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// Scoped to real code, not comments: the file's own docstring names these
+// modules on purpose, explaining what was removed and why.
+const sageCode = sage
+  .split('\n')
+  .filter((line) => {
+    const t = line.trimStart();
+    return !t.startsWith('*') && !t.startsWith('//') && !t.startsWith('/*');
+  })
+  .join('\n');
+// Asserted against all non-comment code, not just lines starting with
+// `import` — a multi-line import statement would slip past that filter.
+assert.doesNotMatch(sageCode, /voice\/talk|voice\/providers|select-provider/);
+ok('the placeholder imports nothing from the deleted lane');
+
+// Mounting must not spend money or hit the network.
+assert.doesNotMatch(sageCode, /generateText|claimAiCall|generateDailyInsight/);
+assert.doesNotMatch(sageCode, /fetchSageMessages|peekSageMessages|addSageMessage/);
+assert.doesNotMatch(sageCode, /supabase/);
+ok('mounting Sage claims no quota, calls no model, and reads no messages');
+
+// AI consent belongs to Home now — the only surface that still generates.
+assert.doesNotMatch(sageCode, /AiConsentCard|setAiConsent/);
+assert.match(read('src/app/(tabs)/index.tsx'), /AiConsentCard/);
+ok('the AI-consent gate lives on Home, not on the inert Sage tab');
+
+// The placeholder has to say it is a placeholder. A blank tab reads as broken.
+assert.match(sage, /rebuil/i);
+ok('the placeholder states that Talk is being rebuilt');
+
+console.log(`\n${passed} sage-load checks passed`);

@@ -10,23 +10,6 @@
  */
 import type { AiCallMetadata } from './types';
 
-/** Daily Read/Do card — Dawn, Home, catch-up. Prompt carries name, talk style,
- * yesterday's tone, the last 7 checks, and Library lines, so output is per-user. */
-export const DAILY_CARD_META: AiCallMetadata = {
-  personalized: true,
-  cohortShareable: false,
-  bucketShareable: false,
-  latencySensitive: true,
-};
-
-/** Talk reply — Sage chat, one reply per user message. Fully per-message. */
-export const TALK_META: AiCallMetadata = {
-  personalized: true,
-  cohortShareable: false,
-  bucketShareable: false,
-  latencySensitive: true,
-};
-
 /** Infinite Questions 5-item batch — Home fold / "Tell Sage more". Stems are
  * generic; only axis rotation + trait grounding are per-user, so one cohort
  * generation could be sliced per user. */
@@ -142,16 +125,6 @@ export interface AiCallSite {
 
 /** Display registry for the report command and the ai-provider check. */
 export const AI_CALL_SITES: readonly AiCallSite[] = [
-  {
-    feature: 'Daily card',
-    location: 'src/lib/voice/providers/remote.ts → generate()',
-    meta: DAILY_CARD_META,
-  },
-  {
-    feature: 'Talk reply',
-    location: 'src/lib/voice/providers/remote.ts → generateTalk()',
-    meta: TALK_META,
-  },
   {
     feature: 'Infinite Questions',
     location: 'src/lib/questions/generate.ts → generateQuestionBatch()',

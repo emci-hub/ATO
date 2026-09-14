@@ -5,7 +5,6 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { buildVoiceConfig } from '../src/lib/voice/config';
 import { cueAfterYou } from '../src/lib/voice/cue';
 import { LIBRARY_MARKDOWN } from '../src/lib/voice/content.generated';
 import { containsFrameworkTerm, matchingFrameworkTerms } from '../src/lib/voice/framework-fence';
@@ -15,9 +14,6 @@ import {
   parseLibraryEntries,
   selectLibraryEntries,
 } from '../src/lib/voice/library';
-import { localProvider } from '../src/lib/voice/providers/local';
-import { buildPrompt, buildTalkPrompt } from '../src/lib/voice/providers/prompt';
-import { routeTalkReply } from '../src/lib/voice/talk';
 import type { VoiceMe } from '../src/lib/voice/types';
 
 const library = readFileSync(resolve('src/app/copy/library.md'), 'utf8');
@@ -32,7 +28,9 @@ const ALLOWED_LIBRARY_TERMS = new Set([
   'self determination',
 ]);
 
+let passed = 0;
 function ok(label: string) {
+  passed += 1;
   console.log(`  ✓ ${label}`);
 }
 
@@ -82,8 +80,7 @@ ok('Library body has no fence hits besides the four frameworks naming themselves
 
 assert.match(library, /Sage does not quote this file/);
 assert.match(readFileSync(resolve('scripts/sync-voice-content.mjs'), 'utf8'), /library\.md/);
-assert.match(readFileSync(resolve('src/lib/voice/providers/prompt.ts'), 'utf8'), /libraryGroundingBlock/);
-ok('voice sync ships library.md; Sage prompt reads For Sage grounding only');
+ok('voice sync ships library.md');
 
 const parsedFile = parseLibraryEntries(library);
 const parsedSync = parseLibraryEntries(LIBRARY_MARKDOWN);
@@ -147,145 +144,22 @@ const talkPile = selectLibraryEntries(pileMe, {
   message: 'The pile at work never ends.',
 });
 assert.deepEqual(talkPile.map((e) => e.id), ['workload']);
-ok('Talk pulls Workload from the typed line, not from a standing knock alone');
+ok('a typed line pulls Workload; a standing knock alone does not');
 
-const pilePrompt = buildPrompt({
-  me: pileMe,
-  day: 4,
-  tone: 'even',
-  history: [],
-  crisisToday: false,
-  previousHadCut: false,
-});
-assert.match(pilePrompt, /FRAMING NOTES/);
-assert.match(pilePrompt, /one next piece, not the whole list/);
-assert.match(pilePrompt, /own words|Never paste/i);
-assert.doesNotMatch(pilePrompt, /Karasek|Sonnentag|Maslach/);
-assert.doesNotMatch(pilePrompt, /the Maslach Burnout Inventory/);
-ok('card prompt grounds in For Sage lines, never teaching/source copy');
-
-const flowerTalk = buildTalkPrompt({
-  me: pileMe,
-  message: 'Should I get flowers today?',
-  day: 4,
-  history: [],
-});
-assert.doesNotMatch(flowerTalk, /FRAMING NOTES/);
-assert.doesNotMatch(flowerTalk, /one next piece/);
-const pileTalkPrompt = buildTalkPrompt({
-  me: pileMe,
-  message: 'The pile at work never ends.',
-  day: 4,
-  history: [],
-});
-assert.match(pileTalkPrompt, /one next piece, not the whole list/);
-assert.match(pileTalkPrompt, /own words|Never paste|new words/i);
-assert.doesNotMatch(pileTalkPrompt, /Karasek/);
-ok('Talk prompt is silent unless the typed line connects; then For Sage only');
+// The card and Talk prompt builders went with the voice provider lane
+// (2026-09-14), so the assertions that they grounded in For Sage lines and
+// never in teaching/source copy have nothing left to run against. The
+// selection logic above still proves WHICH entries a surface gets; what is
+// no longer proven is that a prompt builder uses them correctly. Explore is
+// the one surviving consumer, and its own grounding is asserted below.
 
 assert.equal(cueAfterYou('making coffee'), 'make coffee');
 assert.equal(cueAfterYou('make coffee'), 'make coffee');
 ok('morning-cue gerunds render as infinitive after "After you"');
 
-const STOCK_WORKLOAD = 'one next piece, not the whole list';
+// Explore is the only live surface that still grounds in the library, so the
+// wiring assertion moved here from the deleted card-prompt block.
+assert.match(readFileSync(resolve('src/lib/explore/prompt.ts'), 'utf8'), /libraryGroundingBlock/);
+ok('Explore still grounds its prompt in the For Sage library');
 
-function wordWindows(text: string, n: number): Set<string> {
-  const words = text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .split(/\s+/)
-    .filter(Boolean);
-  const out = new Set<string>();
-  for (let i = 0; i <= words.length - n; i++) out.add(words.slice(i, i + n).join(' '));
-  return out;
-}
-
-function sharedWindow(a: string, b: string, n = 6): string | undefined {
-  const other = wordWindows(b, n);
-  for (const gram of wordWindows(a, n)) {
-    if (other.has(gram)) return gram;
-  }
-  return undefined;
-}
-
-async function main() {
-  const localConfig = buildVoiceConfig({ MODEL_PROVIDER: 'local' });
-  // The end-to-end card assertions (library grounding reaches generated
-  // Read/Do, paraphrased not copied) ran through routeVoiceCard, which went
-  // with the card lane on 2026-09-14.
-  //
-  // KNOWN GAP, flagged for emci: the daily insight does NOT currently consume
-  // the For Sage library at all — buildDailyInsightPrompt grounds in settled
-  // bands, current focus and recent tone only. So this is not a moved
-  // assertion, it is a dropped capability. Deciding whether the insight should
-  // read the library is its own card; until then there is nothing to assert.
-  // NOTE for emci: the For Sage library now reaches no daily content at all.
-  // The card grounded in it; the daily insight does not. That is a dropped
-  // capability, not a moved one — deliberately left unasserted here rather
-  // than pinned, so wiring the library into the insight later does not have
-  // to fight a check that locked in its absence.
-
-  const pileTalk = await routeTalkReply(
-    {
-      me: pileMe,
-      message: 'The pile at work never ends.',
-      checkCount: 3,
-      history: [],
-      aiConsent: true,
-    },
-    { config: localConfig, isDev: true },
-  );
-  assert.equal(pileTalk.kind, 'reply');
-  const talk = pileTalk.reply ?? '';
-  assert.doesNotMatch(talk, new RegExp(STOCK_WORKLOAD));
-  assert.match(talk, /stop|chunk|lid|pace|evening/i);
-  assert.equal(LIBRARY_TEACHING_LEAK.test(talk), false);
-  assert.equal(containsFrameworkTerm(talk), false);
-
-  const leakMe: VoiceMe = {
-    name: 'Riley',
-    show_up: 'push through it',
-    talk_style: 'loud',
-    knocks_you_off: '',
-    morning_cue: 'make coffee',
-    current_focus: 'through_it',
-    energy_pattern: 'night_owl',
-  };
-  const leakCard = await localProvider.generate({
-    me: leakMe,
-    day: 5,
-    tone: 'lift',
-    history: [],
-    crisisToday: false,
-    previousHadCut: false,
-  });
-  assert.equal(
-    leakCard.read,
-    'Day 5 in the books. Point at it. Push through it can wait.',
-  );
-  assert.doesNotMatch(leakCard.read, /through_it|alone_time|night_owl|like_yourself/);
-  const leakPrompt = buildPrompt({
-    me: leakMe,
-    day: 5,
-    tone: 'lift',
-    history: [],
-    crisisToday: false,
-    previousHadCut: false,
-  });
-  assert.match(leakPrompt, /Get through something hard/);
-  assert.match(leakPrompt, /Night owl/);
-  assert.doesNotMatch(leakPrompt, /through_it|alone_time|night_owl/);
-  ok('local Reads and Gemini prompts use chip labels, never stored ids like through_it');
-
-  // The Read/Do/Talk cross-repetition guard needed all three texts; only Talk
-  // is still generated, so there is nothing left to compare it against.
-  console.log('\nWorkload day 4 example:');
-  console.log(`  Talk: ${talk}`);
-
-  console.log('\nAll library checks passed.');
-}
-
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+console.log(`\n${passed} library checks passed`);

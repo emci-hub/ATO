@@ -136,10 +136,9 @@ const crisis = read('src/lib/crisis/copy.ts');
 assert.match(copy, /Sage is a coach, not a person/);
 assert.match(copy, /SAGE_NPC_LABEL/);
 assert.match(copy, /Sage · npc/);
-assert.match(sage, /TALK_LEDE/);
+// Sage is an inert placeholder while Talk is rebuilt; only the coach label
+// survives on it. Its own contract is pinned by scripts/sage-load-check.ts.
 assert.match(sage, /SAGE_COACH_LABEL/);
-assert.match(sage, /TALK_COMPOSER_PLACEHOLDER/);
-assert.match(sage, /useDailyInsight/);
 assert.doesNotMatch(sage, /from '@\/lib\/voice\/router'/);
 assert.doesNotMatch(sage, /routeVoiceCard/);
 assert.doesNotMatch(sage, /Ask Sage anything/);
@@ -219,15 +218,9 @@ assert.match(
   home,
   /<Modal[\s\S]*visible=\{needsConsentPrompt\}[\s\S]*<AiConsentCard[\s\S]*context="home"/,
 );
-assert.match(
-  sage,
-  /<Modal[\s\S]*visible=\{Boolean\(me\) && consent === 'pending'\}[\s\S]*<AiConsentCard[\s\S]*context="talk"/,
-);
 assert.doesNotMatch(home, /needsConsentPrompt \?\s*\([\s\S]{0,200}?<AiConsentCard/);
-assert.doesNotMatch(sage, /consent === 'pending' \?\s*\([\s\S]*<AiConsentCard/);
-assert.match(sage, /Talk is off/);
 assert.match(home, /setAiConsent/);
-assert.match(sage, /setAiConsent/);
+assert.doesNotMatch(sage, /setAiConsent/);
 assert.match(youTab, /Sage(&apos;|')s AI/);
 assert.match(youTab, /'On'/);
 assert.match(youTab, /'Off'/);
@@ -247,23 +240,12 @@ assert.match(home, /fetchTodayInsight/);
 assert.match(read('src/lib/insight/today-insight.ts'), /export async function loadCachedInsight/);
 ok('Home paints today\'s insight from cache before any fetch or generation');
 
+// Talk's quota/crisis-ordering assertions went with its backend (2026-09-14).
+// The user-facing quota copy still exists and is still the only thing shown
+// when the cap is hit, so that stays pinned; the surfaces that actually claim
+// are asserted where they live.
 const quota = read('src/lib/voice/quota.ts');
 assert.match(quota, /Sage's out of things to say for today, back tomorrow/);
-assert.match(sage, /QUOTA_EMPTY_MESSAGE/);
-assert.match(sage, /kind === 'quota'/);
-assert.match(sage, /kind === 'empty'/);
-assert.match(sage, /claimAiCall/);
-const talkSrc = read('src/lib/voice/talk.ts');
-assert.match(talkSrc, /const claim =\s+deps\.claimAiCall/);
-// The completeness gate must not consume a quota claim, and must sit AFTER the
-// crisis return so a flagged line is never routed through it.
-assert.match(talkSrc, /deps\.claimAiCall && !settledGate/);
-assert.ok(
-  talkSrc.indexOf("kind: 'crisis'") < talkSrc.indexOf('const settledGate'),
-  'crisis returns before the profile-completeness gate is evaluated',
-);
-assert.match(read('src/lib/voice/talk.ts'), /containsFrameworkTerm/);
-assert.match(read('src/lib/voice/talk.ts'), /TALK_FENCE_ATTEMPTS = 2/);
 assert.match(read('src/lib/voice/quota-server.ts'), /claim_ai_call/);
 assert.match(
   read('supabase/migrations/stage8_ai_quota.sql'),
@@ -275,9 +257,10 @@ assert.match(
 );
 ok('Talk router is rate-limited per user via claim_ai_call (20/day, 200/month)');
 
+// The usage helpers stay — Explore and Questions still read them — but the
+// Sage tab no longer renders a usage line, having nothing to spend.
 assert.match(read('src/lib/voice/quota.ts'), /formatSageUsage/);
 assert.match(read('src/lib/voice/quota-server.ts'), /fetchSageUsage/);
-assert.match(sage, /SageUsageLine/);
-ok('Talk usage is readable as a count of the cap, without claiming extra calls');
+ok('usage stays readable as a count of the cap, without claiming extra calls');
 
 console.log(`\n${passed} checks passed`);

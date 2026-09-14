@@ -120,7 +120,6 @@ const copy = fs.readFileSync(path.join(root, 'src/lib/crisis/copy.ts'), 'utf8');
 const region = fs.readFileSync(path.join(root, 'src/lib/crisis/region.ts'), 'utf8');
 const card = fs.readFileSync(path.join(root, 'src/components/crisis-card.tsx'), 'utf8');
 const you = fs.readFileSync(path.join(root, 'src/app/(tabs)/you.tsx'), 'utf8');
-const sage = fs.readFileSync(path.join(root, 'src/app/(tabs)/sage.tsx'), 'utf8');
 const tabs = fs.readFileSync(path.join(root, 'src/components/app-tabs.tsx'), 'utf8');
 const layout = fs.readFileSync(path.join(root, 'src/app/_layout.tsx'), 'utf8');
 const picker = fs.readFileSync(
@@ -141,43 +140,17 @@ assert.match(picker, /value: 'auto'/);
 assert.match(picker, /Does not render the active Talk crisis card/);
 ok('card, launch provider, and visible Settings picker are wired');
 
-assert.match(sage, /result\.kind === 'crisis'/);
-assert.match(sage, /<CrisisCard onDismiss=\{\(\) => dismissCrisis/);
-assert.match(sage, /function SageSupportTap/);
-assert.match(sage, /consent === 'denied'/);
-assert.match(sage, /consent === 'granted'/);
-assert.equal((sage.match(/<SageSupportTap /g) ?? []).length, 2);
-assert.match(sage, /visible=\{showSupport\}/);
-assert.match(sage, /<CrisisCard onDismiss=\{\(\) => setShowSupport\(false\)\} \/>/);
-assert.doesNotMatch(
-  sage.slice(sage.indexOf('function SageSupportTap'), sage.indexOf('const styles = StyleSheet.create')),
-  /logCrisisFlag/,
-);
-ok('Sage Support tap opens the same card; keyword interrupt stays a separate path');
+// REMOVED 2026-09-14: Talk's in-chat crisis surface (the keyword interrupt,
+// SageSupportTap, and the consent-state branches) went with Talk's backend.
+// The STATIC crisis card is untouched and still asserted above — that is the
+// hard invariant. Restore the in-chat safety assertions when Talk is rebuilt.
 
-// The user's line must only reach sage_messages after routeTalkReply (the
-// safety router) has run and cleared it — never written up front, never
-// written at all when the router flags it as crisis.
-const sendFn = sage.slice(
-  sage.indexOf('async function send(text: string)'),
-  sage.indexOf('function dismissCrisis'),
-);
-const routeIdx = sendFn.indexOf('await routeTalkReply(');
-const crisisIdx = sendFn.indexOf("result.kind === 'crisis'");
-const persistUserIdx = sendFn.indexOf("persistAndSwap(localUserId, 'user', trimmed)");
-assert.ok(routeIdx > 0, 'send() must call routeTalkReply');
-assert.ok(crisisIdx > routeIdx, 'the crisis branch must be checked on the routeTalkReply result');
-assert.ok(
-  persistUserIdx > crisisIdx,
-  'the user line is only persisted after the crisis branch is checked, never before routeTalkReply runs',
-);
-const crisisBlock = sendFn.slice(crisisIdx, sendFn.indexOf('} else {', crisisIdx));
-assert.doesNotMatch(
-  crisisBlock,
-  /persistAndSwap\(localUserId/,
-  'a crisis-flagged line must never be persisted to sage_messages',
-);
-ok('the crisis-triggering message is only persisted after the safety router clears it, never before or when flagged');
+// REMOVED 2026-09-14: this block asserted that Sage's send() persisted the
+// user's line only after routeTalkReply returned, so a crisis-flagged message
+// was never stored. Talk's backend is deleted and the tab is an inert
+// placeholder, so there is no send(), no routeTalkReply and no write to
+// sage_messages left to order. Restore an equivalent ordering assertion when
+// Talk is rebuilt.
 
 assert.match(tabs, /name="sage"/);
 assert.match(tabs, /name="home"/);

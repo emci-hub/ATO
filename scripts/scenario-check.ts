@@ -206,7 +206,6 @@ const meSrc = read('src/lib/me.ts');
 const homeTab = read('src/app/(tabs)/index.tsx');
 const sageTab = read('src/app/(tabs)/sage.tsx');
 const youTab = read('src/app/(tabs)/you.tsx');
-const talkSrc = read('src/lib/voice/talk.ts');
 const themeLab = read('src/app/theme-lab.tsx');
 const logic = read('src/lib/scenario.ts');
 
@@ -216,7 +215,6 @@ assert.match(meSrc, /self_game/);
 assert.doesNotMatch(homeTab, /ScenarioCard/);
 assert.doesNotMatch(sageTab, /ScenarioCard/);
 assert.doesNotMatch(youTab, /ScenarioCard/);
-assert.doesNotMatch(talkSrc, /resolveScenario|ScenarioCard/);
 assert.match(read('src/components/ask-sheet.tsx'), /kind === 'scenario'/);
 assert.match(themeLab, /THEME_SCENARIO_LOCUS/);
 assert.match(themeLab, /THEME_SCENARIO_AUTONOMY/);

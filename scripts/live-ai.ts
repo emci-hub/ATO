@@ -18,10 +18,6 @@ import path from 'node:path';
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-import type { VoiceCard } from '../src/lib/voice/types';
-import type { GenerateInput, TalkGenerateInput, VoiceProvider } from '../src/lib/voice/providers/types';
-import { buildPrompt, buildTalkPrompt, isUsableCard, parseGeminiCard, parseTalkReply } from '../src/lib/voice/providers/prompt';
-import { GeminiProviderError } from '../src/lib/voice/providers/gemini';
 import type { GenerateRequest, RemoteAiProviderId } from '../src/lib/ai/types';
 
 const ROOT = path.resolve(__dirname, '..');
@@ -119,42 +115,8 @@ export async function completeViaEdgeLive(
   return text;
 }
 
-/**
- * A VoiceProvider that always goes to `provider` through the Edge Function,
- * ignoring the on-device override — so a live check proves the real path
- * for one named vendor. Same prompts, parsers and token budgets as
- * src/lib/voice/providers/remote.ts.
- */
-export function createLiveEdgeProvider(
-  session: LiveAiSession,
-  provider: RemoteAiProviderId,
-): VoiceProvider {
-  return {
-    id: provider,
-    label: provider,
-    async generate(input: GenerateInput): Promise<VoiceCard> {
-      const text = await completeViaEdgeLive(session, provider, {
-        prompt: buildPrompt(input),
-        temperature: 1.0,
-        maxOutputTokens: 500,
-        responseFormat: 'json',
-      });
-      const card = parseGeminiCard(text);
-      if (!isUsableCard(card)) {
-        throw new GeminiProviderError(`${provider} response contained no usable card`);
-      }
-      return card;
-    },
-    async generateTalk(input: TalkGenerateInput) {
-      const text = await completeViaEdgeLive(session, provider, {
-        prompt: buildTalkPrompt(input),
-        temperature: 0.8,
-        maxOutputTokens: 1024,
-        responseFormat: 'text',
-      });
-      const reply = parseTalkReply(text);
-      if (!reply) throw new GeminiProviderError(`${provider} response contained no usable reply`);
-      return reply;
-    },
-  };
-}
+// createLiveEdgeProvider() was removed 2026-09-14 with the voice provider
+// layer. It wrapped the Edge Function in a VoiceProvider so a live check
+// could drive the card/Talk path for one named vendor; both of those paths
+// are gone. The transport above (signInForLiveAi + completeViaEdgeLive) is
+// what live checks actually use, and it is unchanged.

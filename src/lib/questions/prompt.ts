@@ -3,7 +3,7 @@ import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
 import { effectiveStability, trackFor, type TraitTrack } from '@/lib/trait-stability';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '@/lib/voice/preset';
-import { TALK_STYLE_GUIDE } from '@/lib/voice/providers/types';
+import { TALK_STYLE_GUIDE } from '@/lib/voice/talk-style';
 import { leanHighLow, TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 import type { TalkStyle } from '@/lib/voice/types';
 

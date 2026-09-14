@@ -35,6 +35,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { fetchChecks, type Check } from '@/lib/checks';
 import { onChecksChanged } from '@/lib/checks-events';
 import { depthTier, presenceTier } from '@/lib/growth';
+import { SageFactsCard } from '@/components/sage-facts';
 import { useMeContext } from '@/lib/me-context';
 import { confirmAddPeer, resolvePeerByHandle } from '@/lib/circle';
 import { useCircleContext } from '@/lib/circle-context';
@@ -328,6 +329,15 @@ export default function YouScreen() {
                 <TalkStylePicker me={me} onUpdated={() => refresh()} />
                 <VoicePresetPicker me={me} onUpdated={() => refresh()} />
               </SettingsFold>
+
+              {/*
+                Moved here 2026-09-14 from the Sage tab, which became a
+                placeholder when Talk's backend was deleted. This is the only
+                surface that lists stored facts and the only way to delete one
+                — facts can still be added from chat, so losing it would have
+                left them addable but neither visible nor removable.
+              */}
+              <SageFactsCard me={me} onUpdated={() => refresh()} />
 
               <NotificationPrefsFold />
 

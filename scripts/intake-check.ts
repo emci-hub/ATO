@@ -109,15 +109,13 @@ async function main() {
   const chips = readFileSync(resolve(__dirname, '../src/components/intake-chips.tsx'), 'utf8');
   const settings = readFileSync(resolve(__dirname, '../src/components/intake-settings.tsx'), 'utf8');
   const you = readFileSync(resolve(__dirname, '../src/app/(tabs)/you.tsx'), 'utf8');
-  const sage = readFileSync(resolve(__dirname, '../src/app/(tabs)/sage.tsx'), 'utf8');
   const exploreTab = readFileSync(resolve(__dirname, '../src/app/(tabs)/explore.tsx'), 'utf8');
   assert.match(chips, /accessibilityRole=\{multi \? 'checkbox' : 'radio'\}/);
   assert.match(settings, /CORE_INTAKE_QUESTIONS/);
   assert.match(settings, /updateIntake/);
   assert.match(exploreTab, /IntakeSettings/);
   assert.match(meLib, /export async function updateIntake/);
-  assert.match(sage, /useMeContext/);
-  ok('Settings edits the same 8 chips; Sage reads the shared ME row');
+  ok('Settings edits the same 8 chips from the shared ME row');
 
   const explore = readFileSync(resolve(__dirname, '../src/app/(tabs)/explore.tsx'), 'utf8');
   assert.match(explore, /me\?\.current_focus/);

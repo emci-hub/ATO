@@ -569,10 +569,8 @@ const you = read('src/app/(tabs)/you.tsx');
 assert.doesNotMatch(you, /ExplorePanel|HomeInnerTabs|explore_entries/);
 ok('Explore is not on the You tab');
 
-const talk = read('src/lib/voice/talk.ts');
-assert.doesNotMatch(talk, /phrase-guard|matchingPhrasePattern|logPhraseHit/);
-assert.match(talk, /matchingJargonTerm/);
-ok('Talk generation and word guard are untouched');
+// Talk generation went with its backend 2026-09-14; the word guard it used
+// is still asserted on Explore's own route above.
 
 const sql = read('supabase/migrations/explore.sql');
 assert.match(sql, /create table public.explore_packs/);

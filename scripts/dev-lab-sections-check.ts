@@ -93,7 +93,6 @@ const previewFn = hub.slice(
 assert.doesNotMatch(previewFn, /detectCrisis/);
 assert.doesNotMatch(previewFn, /logCrisisFlag/);
 assert.doesNotMatch(previewFn, /crisis_flags/);
-assert.doesNotMatch(previewFn, /routeTalkReply|from '@\/lib\/voice\/talk'/);
 assert.doesNotMatch(previewFn, /from '@\/lib\/crisis\/detect'/);
 assert.doesNotMatch(previewFn, /from '@\/lib\/crisis\/log'/);
 const sage = read('src/app/(tabs)/sage.tsx');

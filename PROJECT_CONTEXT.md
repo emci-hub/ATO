@@ -195,9 +195,48 @@ Read that file plus this section to resume; nothing depends on chat history.
   one. Deliberately left unasserted in `library-check.ts` so wiring it in later
   doesn't have to fight a check that pinned its absence.
 
+- **T-H2b (voice provider lane deleted, Talk placeholdered) — DONE.**
+  emci's call, reversing my earlier decision to keep the provider layer:
+  delete it outright and leave the front as a `(rebuild)` placeholder rather
+  than keep a dead backend alive or force an EAS build.
+
+  Deleted: all of `src/lib/voice/providers/`, `select-provider.ts`, `talk.ts`,
+  `config.ts`, `dawn-category.ts`, `talk-lab.tsx`, `sage-messages.ts`,
+  `sage-eight-ball.tsx`, `scripts/{talk-live,crisis-live}-check.ts` and their
+  two `check:*` keys (gate is 76). `src/app/(tabs)/sage.tsx` is now an inert
+  ~90-line placeholder: no model call, no quota claim, no message read, no
+  consent prompt. The route stays registered so this ships over OTA.
+
+  **Rescued from the delete, do not re-delete:** `TALK_STYLE_GUIDE` moved to
+  `src/lib/voice/talk-style.ts` (Explore, Questions and Sage Insight import
+  it). Everything else still in `src/lib/voice/` has live importers —
+  `framework-fence`, `preset`, `style-checklist`, `voice-reference`,
+  `content.generated`, `library`, `filters`, `nudge`, `jargon`, `phrase-guard`,
+  `quota`, `quota-server`, `cue`, `types`, `talk-style`.
+  `scripts/live-ai.ts` was kept too — it is `style-live-check`'s transport, not
+  a provider harness; only its `createLiveEdgeProvider` wrapper went.
+
+  **`SageFactsCard` moved to the You tab.** It was the only surface listing
+  stored facts and the only delete path; leaving it on the dead Sage tab would
+  have made facts addable (from chat) but neither visible nor removable.
+
+  ⚠️ **`wave71_drop_sage_messages.sql` WRITTEN, NOT APPLIED.** It destroys every
+  stored conversation — apply only once you have decided Talk starts clean.
+  It also drops and recreates the `reports_insert_owner` RLS policy first,
+  because that policy names `sage_messages` in its `WITH CHECK` body: a plain
+  drop is refused, and `cascade` would silently remove the ONLY insert policy
+  on `reports` and break user reporting entirely.
+
+  **Guard scripts:** ~18 trimmed. Where an assertion guarded something that
+  genuinely no longer exists it was removed with a "restore when Talk is
+  rebuilt" comment; the static crisis card stays fully guarded. Talk's in-chat
+  crisis interrupt assertions are gone with the surface they covered.
+
 - **Next: T-H3** (widget native build — `widgets.swift` key/type renames,
   needs an EAS build, cannot ship over OTA), then T-E2 (Explore removals +
   drop migration), then T-Z (final sweep + docs).
+  **When Talk is rebuilt** it goes against `generateText` → `ai-generate` like
+  every other current AI surface, never the deleted provider layer.
   Until T-H3 ships, the client deliberately keeps writing the CARD-era App
   Group keys (`read` ← insight.title, `do` ← insight.tryToday, `hasCard`) and
   widget kind `AtoCard`, because the widget already on people's home screens

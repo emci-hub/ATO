@@ -3,7 +3,7 @@ import { type CategoryId } from '@/lib/categories';
 import { libraryGroundingBlock, selectLibraryEntries } from '@/lib/voice/library';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '@/lib/voice/preset';
-import { TALK_STYLE_GUIDE } from '@/lib/voice/providers/types';
+import { TALK_STYLE_GUIDE } from '@/lib/voice/talk-style';
 import { STYLE_BLOCK } from '@/lib/voice/style-checklist';
 import { traitPromptLines, type TraitAxis } from '@/lib/traits';
 

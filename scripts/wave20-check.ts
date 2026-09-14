@@ -184,12 +184,12 @@ ok('confirm-upgrade still does not touch tracks or the number');
 const sage = read('src/app/(tabs)/sage.tsx');
 const exploreScreen = read('src/app/(tabs)/explore.tsx');
 assert.match(exploreScreen, /settledAxisLabel/);
-assert.match(sage, /settledCount/);
-assert.match(sage, /divergingAxesFromTracks/);
+// Talk's backend was deleted 2026-09-14 and the Sage tab is an inert
+// placeholder; these assertions should be re-earned when Talk is rebuilt.
 assert.match(exploreScreen, /SageTitleCard/);
 assert.doesNotMatch(sage, /answeredAxisLabel|SageTitleCard/);
 assert.doesNotMatch(sage, /divergingAxes\(/);
-ok('Sage uses settled completeness, blended-track divergence, and the title card');
+ok('Explore uses settled completeness and the title card');
 
 const fold = read('src/components/full-profile-fold.tsx');
 assert.match(fold, /settledAxisLabel/);

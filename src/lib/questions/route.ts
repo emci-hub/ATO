@@ -210,7 +210,7 @@ export async function routeQuestions(
   // batch is served from the static bank: no model call, and no quota claim
   // either — a thin profile must never spend a paid call. Sits after
   // consent/crisis so those keep their existing precedence and messaging.
-  // Sage chat (`routeTalkReply`) is a separate path and stays ungated.
+  // Sage chat was a separate path; its backend was retired 2026-09-14.
   const profileComplete = isProfileComplete(input.tracks ?? []);
   const useLocal = deps.useLocal === true || !profileComplete;
   if (!useLocal && deps.claimBatch && deps.generateBatch) {

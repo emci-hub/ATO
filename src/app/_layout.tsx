@@ -88,7 +88,6 @@ function RootNavigator() {
             <Stack.Protected guard={PRE_LAUNCH_DEV}>
               <Stack.Screen name="theme-lab" />
               <Stack.Screen name="around-lab" />
-              <Stack.Screen name="talk-lab" />
               <Stack.Screen name="pixel-lab" />
               <Stack.Screen name="crisis-lab" />
             </Stack.Protected>

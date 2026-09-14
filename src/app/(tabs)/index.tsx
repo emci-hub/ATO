@@ -608,17 +608,6 @@ export default function HomeScreen() {
                 <ThemedText themeColor="textSecondary">›</ThemedText>
               </Pressable>
               <Pressable
-                onPress={() => router.push('/talk-lab')}
-                style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
-                <View style={styles.boxRowText}>
-                  <ThemedText type="smallBold">Talk router</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    Dev: tones + crisis gate
-                  </ThemedText>
-                </View>
-                <ThemedText themeColor="textSecondary">›</ThemedText>
-              </Pressable>
-              <Pressable
                 onPress={() => router.push('/pixel-lab')}
                 style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
                 <View style={styles.boxRowText}>

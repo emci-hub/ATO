@@ -75,13 +75,13 @@ assert.match(sage, /Twice now you've gone with the option that actually interest
 assert.match(sage, /After you make coffee, text the one person you've been meaning to/);
 ok('sage.txt is behavior + few-shots, not a role noun');
 
-const prompt = read('src/lib/voice/providers/prompt.ts');
-assert.doesNotMatch(prompt, /You are Sage, the coach/);
-assert.match(prompt, /VOICE_PRESET_GUIDE/);
-ok('generate prompt carries the preset and drops the coach role line');
+// The card/Talk prompt builders went with the voice provider lane (2026-09-14).
+// The surviving prompt builders carry the same preset guide.
+const insightPrompt = read('src/lib/insight/generate-insight.ts');
+assert.doesNotMatch(insightPrompt, /You are Sage, the coach/);
+assert.match(read('src/lib/questions/prompt.ts'), /VOICE_PRESET_GUIDE/);
+ok('surviving prompt builders carry the preset and drop the coach role line');
 
-const talk = read('src/lib/voice/talk.ts');
-assert.match(talk, /logJargonHit/);
 assert.match(read('src/lib/voice/quota-server.ts'), /log_jargon_guard/);
 ok('jargon fires log to ai_usage without incrementing quota in the client helper');
 

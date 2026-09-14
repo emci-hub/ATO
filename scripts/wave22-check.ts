@@ -17,7 +17,6 @@ import {
   readCategory,
 } from '../src/lib/categories';
 import { CONCEPT_COPY_REVIEWED, CATEGORY_CONCEPTS, conceptCopyClean } from '../src/lib/concept-explainers';
-import { DAWN_CATEGORY_COPY_REVIEWED } from '../src/lib/dawn-category';
 import { repeatsPinnedCategories } from '../src/lib/explore/combine';
 import {
   STORY_COPY_REVIEWED,
@@ -86,7 +85,6 @@ assert.ok(fallbackForReading(readCategory(levity!, levityReady)).length > 0);
 assert.equal(CATEGORY_COPY_REVIEWED, false);
 assert.equal(CATEGORY_BAND_COPY_REVIEWED, false);
 assert.equal(CONCEPT_COPY_REVIEWED, true);
-assert.equal(DAWN_CATEGORY_COPY_REVIEWED, false);
 assert.equal(conceptCopyClean(), true);
 assert.equal(categoryBandCopyClean(), true);
 assert.ok(CATEGORY_CONCEPTS.cat_levity.length > 0);
