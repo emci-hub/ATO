@@ -15,6 +15,7 @@ import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
 import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
 import type { AxisDivergence } from '@/lib/trait-history';
 import { isThinProfile, settledCount, type TraitTrack } from '@/lib/trait-stability';
+import { leanComparative, leanHighLow } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import { STYLE_BLOCK } from '@/lib/voice/style-checklist';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
@@ -67,8 +68,8 @@ export function formatStoryTensionNote(rows: readonly AxisDivergence[]): string 
   if (rows.length === 0) return null;
   const first = rows[0]!;
   const phrases = TRAIT_BAND_PHRASES[first.axis];
-  const told = first.report >= 0.5 ? phrases.high : phrases.low;
-  const played = first.game >= 0.5 ? phrases.high : phrases.low;
+  const told = phrases[leanHighLow(first.report)];
+  const played = phrases[leanHighLow(first.game)];
   if (told === played) {
     return "You said one thing, but when it's not a big decision, you go a different way. Maybe you're just different depending on the moment — that's normal.";
   }
@@ -152,9 +153,7 @@ export function buildStoryPrompt(input: {
       );
     } else {
       lines.push(
-        `- Settled merge (do not name this): ${bits}. Lean ${
-          reading.bar != null && reading.bar >= 0.5 ? 'higher' : 'lower'
-        }.`,
+        `- Settled merge (do not name this): ${bits}. Lean ${leanComparative(reading.bar)}.`,
       );
     }
   }

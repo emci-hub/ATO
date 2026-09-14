@@ -14,6 +14,7 @@
  */
 import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
 import type { CategoryReading } from '@/lib/categories';
+import { leanComparative } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import { STYLE_BLOCK } from '@/lib/voice/style-checklist';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
@@ -42,7 +43,7 @@ export function buildCategoryReadPrompt(reading: CategoryReading): string {
 
   const positionLine = reading.map
     ? `Settled merge: ${bits}. Position is a mix of those two axes, not a coordinate — do not describe it as a graph or a point.`
-    : `Settled merge: ${bits}. Lean ${reading.bar != null && reading.bar >= 0.5 ? 'higher' : 'lower'}.`;
+    : `Settled merge: ${bits}. Lean ${leanComparative(reading.bar)}.`;
 
   return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. This is a category read — one personalized piece of prose about "${reading.def.name}" specifically, part of a larger roll (a legend match, 11 category reads, and a story, all generated together in one pass).
 

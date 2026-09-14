@@ -6,7 +6,7 @@ export type LegendValues = Readonly<Partial<Record<TraitAxis, number | null>>>;
 /**
  * 64-archetype classification (core loop redesign §4,
  * docs/CORE_LOOP_REDESIGN_PLAN.md). Deterministic straight-midpoint split —
- * deliberately NOT `traitBand`'s 0.67/0.33 bands (those stay as-is for
+ * deliberately NOT `traitBand`'s 0.35/0.65 bands (those stay as-is for
  * every other Legends/Explore/Sage Title consumer; this is a new,
  * independent classification used only by the 64-archetype system).
  *
@@ -34,6 +34,13 @@ export type Pole = 'H' | 'L';
  * code. An axis with no stored value yet (rare by Q50, when Legends
  * unlocks, but not impossible for all 6 of these specific axes) defaults
  * to low; this is a deliberate simplifying choice, not an oversight.
+ *
+ * The `>= 0.5` tie matters less than it looks: exactly-0.5 is a real point
+ * mass early on (every three-option middle is 0.5, as is the unset prior),
+ * but scripts/band-study-check.ts shows it decaying toward zero as answers
+ * accumulate — and Legends does not unlock until 50 answers, well past
+ * where that mass has thinned. Run `npm run check:band-study` for the
+ * current measured figures rather than trusting a number pasted here.
  */
 export function midpointHighLow(value: number | null | undefined): Pole {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0.5 ? 'H' : 'L';

@@ -319,11 +319,43 @@ export function optionalFillWrite(
 
 export type TraitBand = 'low' | 'mid' | 'high';
 
+/**
+ * Band cuts, derived from the question bank's own option midpoints rather
+ * than from the raw 0–1 line. Options are 0.2 / 0.5 / 0.8, so the
+ * instrument-correct boundaries are (0.2 + 0.5) / 2 and (0.5 + 0.8) / 2.
+ *
+ * scripts/band-study-check.ts proves a stored value can never leave the
+ * convex hull of the signals fed in — [0.2, 0.8] from the bank — so the
+ * previous 0.33/0.67 cuts were calibrated to a range the instrument cannot
+ * write into, handing `mid` 57% of the reachable line. CATEGORY_FALLBACK_BANDS
+ * already used these numbers; both now read from here, so there is one band
+ * system rather than two that happen to agree.
+ */
+export const TRAIT_BAND_LOW_CUT = 0.35;
+export const TRAIT_BAND_HIGH_CUT = 0.65;
+
 export function traitBand(value: number | null | undefined): TraitBand | null {
   if (value == null) return null;
-  if (value <= 0.33) return 'low';
-  if (value >= 0.67) return 'high';
+  if (value <= TRAIT_BAND_LOW_CUT) return 'low';
+  if (value >= TRAIT_BAND_HIGH_CUT) return 'high';
   return 'mid';
+}
+
+export type TraitLean = 'high' | 'low';
+
+/**
+ * Binary lean for prompt grounding and fallback copy tables — deliberately
+ * NOT `traitBand`. These sites need a pole for every value with no mid case,
+ * and an unset axis reads as low. Centralizes the `>= 0.5` literal that was
+ * repeated across the prompt builders.
+ */
+export function leanHighLow(value: number | null | undefined): TraitLean {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0.5 ? 'high' : 'low';
+}
+
+/** Same split, worded for the "Lean higher/lower." prompt lines. */
+export function leanComparative(value: number | null | undefined): 'higher' | 'lower' {
+  return leanHighLow(value) === 'high' ? 'higher' : 'lower';
 }
 
 /**

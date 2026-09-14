@@ -18,7 +18,7 @@ import {
   trackFor,
   type TraitTrack,
 } from '@/lib/trait-stability';
-import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
+import { leanComparative, leanHighLow, TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import { STYLE_BLOCK } from '@/lib/voice/style-checklist';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
@@ -135,7 +135,7 @@ export function drivingAxisLines(axes: readonly TraitAxis[], tracks: readonly Tr
     const copy = AXIS_EDITOR_COPY[axis];
     const phrases = TRAIT_BAND_PHRASES[axis];
     const row = trackFor(tracks, axis, 'report');
-    const toward = row && row.value >= 0.5 ? phrases.high : phrases.low;
+    const toward = phrases[leanHighLow(row?.value)];
     return `${copy.label} — leaning toward “${toward}.”`;
   });
 }
@@ -163,7 +163,7 @@ export function buildTitlePrompt(tracks: readonly TraitTrack[], _today: string):
     if (!isStableForTitle(row) || !row) continue;
     const phrases = TRAIT_BAND_PHRASES[axis];
     const copy = AXIS_EDITOR_COPY[axis];
-    const pole = row.value >= 0.5 ? phrases.high : phrases.low;
+    const pole = phrases[leanHighLow(row.value)];
     lines.push(
       `- ${copy.label}: leaning toward “${pole}” (settled ${effectiveStability(row).toFixed(2)})`,
     );
@@ -185,7 +185,7 @@ export function buildTitlePrompt(tracks: readonly TraitTrack[], _today: string):
       );
     } else {
       categoryLines.push(
-        `- ${reading.def.id} "${reading.def.name}" BAR from ${axisBits}. Lean ${reading.bar != null && reading.bar >= 0.5 ? 'higher' : 'lower'}.`,
+        `- ${reading.def.id} "${reading.def.name}" BAR from ${axisBits}. Lean ${leanComparative(reading.bar)}.`,
       );
     }
   }

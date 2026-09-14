@@ -4,7 +4,7 @@ import { effectiveStability, trackFor, type TraitTrack } from '@/lib/trait-stabi
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '@/lib/voice/preset';
 import { TALK_STYLE_GUIDE } from '@/lib/voice/providers/types';
-import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
+import { leanHighLow, TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 import type { TalkStyle } from '@/lib/voice/types';
 
 import { QUESTIONS_FEW_SHOTS } from './bank';
@@ -23,7 +23,7 @@ function traitContextLines(tracks: readonly TraitTrack[]): string[] {
     if (!row) continue;
     const stability = effectiveStability(row);
     if (stability <= 0) continue;
-    const pole = row.value >= 0.5 ? TRAIT_BAND_PHRASES[axis].high : TRAIT_BAND_PHRASES[axis].low;
+    const pole = TRAIT_BAND_PHRASES[axis][leanHighLow(row.value)];
     lines.push(
       `- ${AXIS_EDITOR_COPY[axis].label}: leans toward "${pole}" (settled ${stability.toFixed(2)})`,
     );

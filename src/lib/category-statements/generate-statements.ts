@@ -15,6 +15,7 @@ import { generateText } from '@/lib/ai/generate';
 import { CATEGORY_STATEMENTS_META } from '@/lib/ai/call-sites';
 import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
 import type { CategoryReading } from '@/lib/categories';
+import { leanComparative } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import { STYLE_BLOCK } from '@/lib/voice/style-checklist';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
@@ -37,7 +38,7 @@ function groundingLine(reading: CategoryReading): string {
       : '';
   const positionLine = reading.map
     ? `Settled merge: ${bits}. Position is a mix of those two axes, not a coordinate — do not describe it as a graph or a point.`
-    : `Settled merge: ${bits}. Lean ${reading.bar != null && reading.bar >= 0.5 ? 'higher' : 'lower'}.`;
+    : `Settled merge: ${bits}. Lean ${leanComparative(reading.bar)}.`;
   return `- "${reading.def.name}" (id: ${reading.def.id}): ${positionLine}${textureLine}`;
 }
 

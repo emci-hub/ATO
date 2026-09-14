@@ -102,6 +102,7 @@
     "check:milestones": "tsx ./scripts/milestones-check.ts",
     "check:trait-sources": "tsx ./scripts/trait-sources-check.ts",
     "check:trait-bands": "tsx ./scripts/trait-bands-check.ts",
+    "check:band-study": "tsx ./scripts/band-study-check.ts",
     "check:full-profile": "tsx ./scripts/full-profile-check.ts",
     "check:optional-intake": "tsx ./scripts/optional-intake-check.ts",
     "check:sage-knows": "tsx ./scripts/sage-knows-check.ts",
