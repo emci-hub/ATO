@@ -8,9 +8,14 @@ Compiled as each box lands. Same file in the repo at `docs/ATO_DEVICE_TESTS.md`.
 
 # CURRENT PASS — outstanding as of Sep 13, 2026
 
-**What you're on:** production OTA group `e505d827-48ed-4bbb-8f68-1ae7a4f13f85` (commit `8363b28`, published Sep 13, 2026). Binary 10+. **Force-quit and reopen the app** (swipe it away, don't just background it) — updates are fetched on cold start only.
+**What you're on:** production OTA group `bde37d37-3a2c-419a-8d18-5b2c2704d99e` (commit `03872c8`, published Sep 13, 2026). Binary 10+. **Force-quit and reopen the app** (swipe it away, don't just background it) — updates are fetched on cold start only.
 
-**Everything in sections A, B and E is now on your device.** The Sep 13 server-side work (Edge Functions / secrets / DB) was already live before this OTA. Only C (needs a migration) and D (needs a new binary) remain blocked.
+**New in this OTA, not yet on any checklist above — worth testing:**
+- [ ] **Sage Talk save-failure retry.** Hard to force on demand (needs an actual save failure), but if you ever see "Couldn't save this, tap to retry" under a message, confirm tapping it actually saves and the retry banner disappears.
+- [ ] **Home no longer shows a duplicate week row on Sunday.** Open Home on a Sunday (or force the `week` slot via Dev Lab override) and confirm only one "week" link renders, not two.
+- [ ] **+21 token payout.** Complete all 50 Questions-tab questions on a test account (ideally one that already has a few axes set via the intake grid or a ranking tap first, since that's the exact case that was broken) and confirm the +21 ATO tokens actually land.
+
+**Everything in sections A, B and E is now on your device.** The Sep 13 server-side work (Edge Functions / secrets / DB) was already live before this OTA. Only D (needs a new binary) remains blocked — C (`wave65`) is now applied and confirmed live, just needs the Dev Lab panel itself clicked through.
 
 ## A — Server-side changes from Sep 13 (live now, no OTA needed)
 
