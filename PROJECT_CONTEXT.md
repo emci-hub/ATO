@@ -114,10 +114,50 @@ Read that file plus this section to resume; nothing depends on chat history.
   they now assert Explore contains `CategoriesFold`, contains no
   `'/categories'` string, and that the route file stays deleted.
   This deliberately reverses the 2026-09-12 judgment-pass.md §4A split.
-- **Next: T-H1** — `daily_insights` migration (written, NOT applied), plus
-  `generate-insight.ts`, `insight/store.ts`, `DAILY_INSIGHT_META` and
-  `scripts/insight-check.ts`. Nothing rendered yet; Home is untouched until
-  T-H2, which is blocked on the migration being reviewed and applied.
+- **T-H1 (daily insight backend) — DONE, and this is where work STOPS.**
+  New `src/lib/insight/generate-insight.ts` (five fields, `containsFrameworkTerm`
+  on all five, `DAILY_INSIGHT_COPY_REVIEWED = false`) and `insight/store.ts`
+  (`fetchTodayInsight` / `saveInsight` / `fetchInsightHistory`, writes only via
+  the RPC). `DAILY_INSIGHT_META` declared and registered in `AI_CALL_SITES`;
+  `src/lib/insight/generate-insight.ts` added to `ai-provider-check.ts`'s
+  `METADATA_CALL_FILES` allowlist and its call-site count moved 11 → 12.
+  New `scripts/insight-check.ts` + `check:insight` (gate is now 77 checks).
+  The backend is deliberately **inert** — nothing renders it.
+
+  ⚠️ **TWO MIGRATIONS ARE WRITTEN BUT NOT APPLIED**, both awaiting emci's
+  review, same as wave68:
+
+  **`wave70_bank_pool_option_value_fix.sql`** — the other half of the 0.75 fix.
+  `bank.ts` and the wave49 seed text are both corrected, but wave49 seeds with
+  `on conflict (prompt) do nothing`, and `question_bank_pool` is the SHARED
+  global catalog — so until this runs, **every user is still served 0.75** on
+  that one question. Idempotent `update` matched on `prompt` and guarded by
+  `options @> '[{"value":0.75}]'`.
+
+  **`wave69_daily_insights.sql`** — its key properties:
+  owner-only RLS select with no peer-visible path (unlike `checks.read_text`),
+  a partial unique index giving one live insight per `(user, ymd)`, and all
+  writes through the `security definer` `insert_daily_insight` RPC scoped to
+  `auth.uid()`. Per-field character caps are duplicated between the migration's
+  CHECK constraints and `INSIGHT_FIELD_CAPS` in the generator;
+  `scripts/insight-check.ts` parses both and fails if they drift.
+  wave69 also carries `create or replace` refreshes of **`count_user_rows()`**
+  and **`reset_dev_test_user()`** — every new user-scoped table must join both
+  hardcoded lists, or `delete-account` reports a false-clean audit (the exact
+  bug wave67 existed to fix) and the dev reset leaves rows behind.
+
+  Accepted property, flagged for review: `insert_daily_insight` trusts
+  client-supplied `p_ymd`/`p_day`, unlike `record_check`'s server-derived
+  window. Bounded to the caller's own rows and spends no quota. Not guarded
+  because any server-side date bound loose enough for UTC-14..UTC+14 skew
+  would not actually prevent much.
+
+- **BLOCKED — next task is T-H2, and it cannot start until wave69 is applied.**
+  T-H2 deletes the old card lane (dawn.tsx, the Home card block, the card-only
+  voice files) and renders the insight in its place. Shipping it against a
+  missing table would leave Home with nothing to render at all. So: apply
+  wave69 first, then T-H2, then T-H3 (widget native build), T-E2 (Explore
+  removals + drop migration), T-Z (final sweep).
 
 **Gaps found in the plan doc itself (verified against the code, 2026-09-14):**
 

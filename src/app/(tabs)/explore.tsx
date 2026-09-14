@@ -515,9 +515,6 @@ const styles = StyleSheet.create({
   bubbleText: {
     lineHeight: 22,
   },
-  pressed: {
-    opacity: 0.8,
-  },
   disabled: {
     opacity: 0.5,
   },

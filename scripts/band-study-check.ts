@@ -1,8 +1,8 @@
 /**
  * Band study — 2-band vs 3-band, answered by simulation. Run: npm run check:band-study
  *
- * Why this exists: the app has three different band systems (traitBand's
- * 0.33/0.67, legends64's straight 0.5 midpoint, CATEGORY_FALLBACK_BANDS'
+ * Why this exists: the app had three different band systems (traitBand's
+ * then-0.33/0.67, legends64's straight 0.5 midpoint, CATEGORY_FALLBACK_BANDS'
  * 0.35/0.65) and no way to check any of them against real data — RLS blocks
  * cross-user reads, there is no aggregation RPC, and the app is pre-launch.
  * So the distribution is DERIVED instead: replay realistic answer sequences

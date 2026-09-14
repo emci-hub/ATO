@@ -108,6 +108,17 @@ export const CATEGORY_STATEMENTS_META: AiCallMetadata = {
   latencySensitive: false,
 };
 
+/** Daily insight (Home/Explore/Insight restructure) — the five-field insight
+ * that replaces the Read/Do card on Home. Prompt carries this user's settled
+ * bands, their current focus, and recent check tone, so it is per-user and
+ * never shareable. Latency-sensitive: it is the first thing Home renders. */
+export const DAILY_INSIGHT_META: AiCallMetadata = {
+  personalized: true,
+  cohortShareable: false,
+  bucketShareable: false,
+  latencySensitive: true,
+};
+
 /** Legends 64-archetype story (core loop redesign §4) — a flavor-text
  * generation for one classify.ts archetype code, but the plan calls for a
  * FRESH story per generation (manual trigger or paid reroll), not a
@@ -185,5 +196,10 @@ export const AI_CALL_SITES: readonly AiCallSite[] = [
     feature: 'Category statements',
     location: 'src/lib/category-statements/generate-statements.ts → generateCategoryStatements()',
     meta: CATEGORY_STATEMENTS_META,
+  },
+  {
+    feature: 'Daily insight',
+    location: 'src/lib/insight/generate-insight.ts → generateDailyInsight()',
+    meta: DAILY_INSIGHT_META,
   },
 ];

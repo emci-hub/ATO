@@ -330,13 +330,19 @@ export type TraitBand = 'low' | 'mid' | 'high';
  * write into, handing `mid` 57% of the reachable line. CATEGORY_FALLBACK_BANDS
  * already used these numbers; both now read from here, so there is one band
  * system rather than two that happen to agree.
+ *
+ * Interval convention matches CATEGORY_FALLBACK_BANDS exactly — low is
+ * [0, 0.35), mid is [0.35, 0.65), high is [0.65, 1]. Both cuts belong to the
+ * band above them. Without this, a value of exactly 0.35 would read `low` here
+ * and land in the mid lede over there, which is the kind of one-sided
+ * disagreement having two band systems caused in the first place.
  */
 export const TRAIT_BAND_LOW_CUT = 0.35;
 export const TRAIT_BAND_HIGH_CUT = 0.65;
 
 export function traitBand(value: number | null | undefined): TraitBand | null {
   if (value == null) return null;
-  if (value <= TRAIT_BAND_LOW_CUT) return 'low';
+  if (value < TRAIT_BAND_LOW_CUT) return 'low';
   if (value >= TRAIT_BAND_HIGH_CUT) return 'high';
   return 'mid';
 }
