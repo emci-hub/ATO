@@ -215,7 +215,7 @@ ok('capstone predicate is all-or-nothing across every axis');
 
 // The flag is burned BEFORE the celebration renders, so a second mount in the
 // same session cannot replay it, and the ack honours reduceMotion.
-const markIdx = ui.indexOf('markFullProfileUnlockSeen()');
+const markIdx = ui.indexOf('markFullProfileUnlockSeen(userId)');
 const celebrateIdx = ui.indexOf('setCelebrate(true)');
 assert.ok(markIdx >= 0 && celebrateIdx > markIdx, 'seen flag is burned before celebrating');
 assert.match(ui, /reduceMotion/);
@@ -238,12 +238,19 @@ ok('skip-the-rest keeps the person in Questions instead of dropping them on Home
  * Async, so it runs last — these checks transpile to CJS (no top-level await).
  */
 async function checkUnlockFlag(): Promise<void> {
+  const userId = 'badges-check-user';
+  const otherUserId = 'badges-check-other-user';
   resetFullProfileUnlockCache();
-  assert.equal(await hasSeenFullProfileUnlock(), false, 'unset flag must not suppress');
-  await markFullProfileUnlockSeen();
-  assert.equal(await hasSeenFullProfileUnlock(), true, 'marking is sticky in-session');
+  assert.equal(await hasSeenFullProfileUnlock(userId), false, 'unset flag must not suppress');
+  await markFullProfileUnlockSeen(userId);
+  assert.equal(await hasSeenFullProfileUnlock(userId), true, 'marking is sticky in-session');
+  assert.equal(
+    await hasSeenFullProfileUnlock(otherUserId),
+    false,
+    'a different account id must not inherit another account\'s flag',
+  );
   resetFullProfileUnlockCache();
-  ok('hasSeenFullProfileUnlock defaults false and sticks once marked');
+  ok('hasSeenFullProfileUnlock defaults false, sticks once marked, and is scoped per account');
 }
 
 checkUnlockFlag()

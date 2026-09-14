@@ -224,13 +224,13 @@ export function MilestoneBadges({
         // First time this device has seen a settled profile: fire the
         // celebration and burn the flag immediately, so a re-render or a
         // second mount in the same session cannot replay it.
-        const seen = await hasSeenFullProfileUnlock();
+        const seen = await hasSeenFullProfileUnlock(userId);
         if (cancelled) return;
         if (seen) {
           setCelebrate(false);
           return;
         }
-        await markFullProfileUnlockSeen();
+        await markFullProfileUnlockSeen(userId);
         if (!cancelled) {
           setCelebrate(true);
           setOpen(true);
