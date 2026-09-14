@@ -54,6 +54,7 @@ import {
   castSlowPulse,
   createDefendLive,
   creepDrawPosition,
+  creepLaneHalf,
   creepRole,
   defendDifficulty,
   placeBoundBoss,
@@ -152,7 +153,7 @@ const CREEP_DRAW_SCALE: Record<CreepRole, number> = {
  * halted creep holds its frame (`WALK_STOP_MS`) instead of moonwalking. Combat
  * dt is untouched — the engine still steps on `DEFEND_TICK_MS`.
  */
-const WALK_FRAMES_PER_PATH = 140;
+const WALK_FRAMES_PER_PATH = 70;
 const WALK_TICK_MS = 50;
 /** No dist change for this long ⇒ treat the creep as halted (legs hold). */
 const WALK_STOP_MS = 250;
@@ -277,11 +278,11 @@ function diffPuffEvents(
     const now = byId.get(old.id);
     if (!now) {
       // Killed — the last visible chunk of its HP is the killing blow.
-      const pos = creepDrawPosition(old, map);
+      const pos = creepDrawPosition(old, map, creepLaneHalfFor(old));
       events.push({ x: pos.x, y: pos.y, damage: Math.round(old.hp), kill: true });
     } else if (now.hp < old.hp) {
       const damage = old.hp - now.hp;
-      const pos = creepDrawPosition(now, map);
+      const pos = creepDrawPosition(now, map, creepLaneHalfFor(now));
       events.push({ x: pos.x, y: pos.y, damage: Math.round(damage), kill: false });
     }
   }
@@ -1122,7 +1123,9 @@ export function DefendScreen({
         const target = towerTarget(tower, current.puffs, mapNow);
         const pad = mapNow.pads[tower.pad];
         if (!target) continue;
-        const tpos = creepDrawPosition(target, mapNow);
+        // Same lane clamp the creep is drawn with, so the shot FX and the
+        // tower's aim land on the sprite instead of beside it.
+        const tpos = creepDrawPosition(target, mapNow, creepLaneHalfFor(target));
         const tx = tpos.x * 100;
         const ty = tpos.y * 100;
         towerFacingRef.current[tower.id] = aimDegrees(pad.x, pad.y, tx, ty);
@@ -1855,9 +1858,6 @@ export function DefendScreen({
                 );
               })}
               {sim?.puffs.map((puff) => {
-                const pos = creepDrawPosition(puff, boardMap);
-                const x = pos.x * 100;
-                const y = pos.y * 100;
                 const pct = Math.max(0, Math.min(1, puff.hp / puff.maxHp));
                 const slowed = puff.slowMs > 0;
                 // §19 board cast (skin roles): runners = fast unit, bosses =
@@ -1876,6 +1876,15 @@ export function DefendScreen({
                       : puff.kind === 'tank'
                         ? 'unit.tank'
                         : 'unit.puff';
+                // Lane offset is capped from the drawn WIDTH before the sprite
+                // exists: a creep's art is wider than its path point, so a wide
+                // unit (Knight / Titan-X) rides the centreline instead of
+                // clipping the neon wall. Feet stay on the path either way —
+                // this is a lateral shift, never a change of route.
+                const spriteSize = skinUnits(spriteRole, UNIT_BASE_UNITS) * puff.size * drawScale;
+                const pos = creepDrawPosition(puff, boardMap, creepLaneHalf(spriteSize));
+                const x = pos.x * 100;
+                const y = pos.y * 100;
                 const facingDeg = puffFacingRef.current[puff.id] ?? 0;
                 const heading = headingVectorFromDeg(facingDeg);
                 const spriteDirs = skinDirs(spriteRole);
@@ -1898,7 +1907,6 @@ export function DefendScreen({
                       )
                     : undefined;
                 const spriteSource = walkSprite ?? sprite;
-                const spriteSize = skinUnits(spriteRole, UNIT_BASE_UNITS) * puff.size * drawScale;
                 // Feet-pivoted sprites rise above the path point, so the body
                 // chrome (ring / bar / badge) anchors to the draw box, not the
                 // path point.
@@ -3151,6 +3159,29 @@ const TOWER_PAD_UNITS = 13;
 /** Fallback enemy box at `puff.size === 1` when a role omits `units`. */
 const UNIT_BASE_UNITS = 15;
 
+/**
+ * Board-unit width of a creep's drawn sprite box — the input the lane clamp
+ * needs. Mirrors the render's `spriteSize` from `puff.kind` / `puff.size` /
+ * role draw scale so every presenter that anchors to a creep (damage floaters,
+ * the Avatar's facing aid) lands on the sprite rather than beside it.
+ *
+ * A boss resolves to its band role in the render; here it resolves to the
+ * `unit.puff` box. That only matters through the clamp, and boss art sits wide
+ * enough that both routes land at ~0, so the difference is under 0.1 board
+ * units — well below visibility.
+ */
+function creepBoxUnits(puff: Puff): number {
+  const role: SkinRoleId =
+    puff.kind === 'runner' ? 'unit.runner' : puff.kind === 'tank' ? 'unit.tank' : 'unit.puff';
+  return skinUnits(role, UNIT_BASE_UNITS) * puff.size * CREEP_DRAW_SCALE[creepRole(puff)];
+}
+
+/** Lateral lane half-spread for a creep, so every presenter uses the same
+ * capped offset the render draws with. Display only. */
+function creepLaneHalfFor(puff: Puff): number {
+  return creepLaneHalf(creepBoxUnits(puff));
+}
+
 /** Tiny Space Mono role marker drawn at the tower's top-right (replaces the old
  * solid pad disc). Neon cyan matches the board chrome's pad labels. */
 const TOWER_LETTER: Record<TowerKind, string> = {
@@ -3207,7 +3238,7 @@ function nearestPuffDelta(
   let best: { dx: number; dy: number } | null = null;
   let bestDist = Infinity;
   for (const puff of puffs) {
-    const pos = creepDrawPosition(puff, map);
+    const pos = creepDrawPosition(puff, map, creepLaneHalfFor(puff));
     const dx = pos.x * 100 - avatar.x;
     const dy = pos.y * 100 - avatar.y;
     const dist = Math.hypot(dx, dy);

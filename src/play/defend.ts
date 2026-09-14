@@ -223,9 +223,34 @@ export type CreepRole = 'swarm' | 'runner' | 'tank' | 'boss';
 /** Display-only lateral slots across the road ribbon (0..4). */
 export const CREEP_LANE_COUNT = 5;
 
-/** Lane spread, board units — 85% of the ATO road half-width so an outermost
- * creep still reads as on the road. Never affects movement/targeting. */
-const CREEP_LANE_SPREAD = ATO_ROAD_HALF * 0.85;
+/** Base lane half-spread, board units — 60% of the ATO road half-width (was
+ * 85%). Kept well inside the ribbon: a creep's ART is wider than its centre
+ * point, so the visible edge — not the centre — is what has to stay on the
+ * road. This is now only a cap; `creepLaneHalf` shrinks it per creep from the
+ * drawn box width. Never affects movement/targeting. */
+const CREEP_LANE_SPREAD = ATO_ROAD_HALF * 0.6;
+
+/** Widest fraction of its drawn box that a cast creep's art fills, halved: the
+ * art's half-width as a fraction of the box. Measured across every creep
+ * rotation + walk frame (Titan-X north, 45.1% of its canvas wide, is the worst
+ * case; Knight 30%, Village Girl 31.8%, Wizard 35%). One conservative constant
+ * keeps the clamp safe for any frame without per-role art metrics. */
+const CREEP_ART_HALF_FRAC = 0.23;
+
+/** Clear space kept between the visible art edge and the road edge, units. */
+const CREEP_ROAD_MARGIN = 0.3;
+
+/**
+ * Lateral lane half-spread for a creep drawn `boxUnits` wide, so its VISIBLE
+ * art edge stays inside the road corridor instead of clipping the neon wall.
+ * Bigger units get a proportionally smaller spread, and a unit wider than the
+ * road can hold off-centre (Knight / Titan-X) drops to 0 and rides the
+ * centreline. Display only — movement and targeting use the path point.
+ */
+export function creepLaneHalf(boxUnits: number): number {
+  const allowed = ATO_ROAD_HALF - CREEP_ART_HALF_FRAC * boxUnits - CREEP_ROAD_MARGIN;
+  return Math.max(0, Math.min(CREEP_LANE_SPREAD, allowed));
+}
 
 /** Stable display lane 0..4 from an enemy id (hash — no RNG, no drift). */
 export function creepLaneIndex(id: number): number {
@@ -883,13 +908,17 @@ export function puffPosition(dist: number, map: DefendMap = BOARD_MAPS.ato): { x
 export function creepDrawPosition(
   puff: Puff,
   map: DefendMap = BOARD_MAPS.ato,
+  laneHalfUnits: number = CREEP_LANE_SPREAD,
 ): { x: number; y: number } {
   const pos = puffPosition(puff.dist, map);
   const head = puffHeading(puff.dist, map);
   if (!head || CREEP_LANE_COUNT <= 1) return pos;
-  // laneIndex 0..4 → -half .. +half of the lane spread.
+  // laneIndex 0..4 → -half .. +half of the lane spread. The caller caps the
+  // half from the creep's drawn width (`creepLaneHalf`) so wide units keep
+  // their art on the road; the default preserves the base spread.
+  const spread = Math.max(0, Math.min(CREEP_LANE_SPREAD, laneHalfUnits));
   const t = puff.laneIndex / (CREEP_LANE_COUNT - 1);
-  const offsetUnits = (-1 + 2 * t) * CREEP_LANE_SPREAD;
+  const offsetUnits = (-1 + 2 * t) * spread;
   // Path normal is the tangent turned 90°: (-dy, dx).
   return {
     x: pos.x + (-head.dy * offsetUnits) / 100,
