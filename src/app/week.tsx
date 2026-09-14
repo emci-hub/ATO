@@ -61,12 +61,14 @@ export default function WeekScreen() {
             {showedUp === 1 ? 'You showed up 1.' : `You showed up ${showedUp}.`}
           </ThemedText>
 
-          <ThemedView type="backgroundElement" style={styles.card}>
-            <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
-              recap
-            </ThemedText>
-            <ThemedText style={styles.body}>{recap}</ThemedText>
-          </ThemedView>
+          {recap ? (
+            <ThemedView type="backgroundElement" style={styles.card}>
+              <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
+                recap
+              </ThemedText>
+              <ThemedText style={styles.body}>{recap}</ThemedText>
+            </ThemedView>
+          ) : null}
 
           {week.length === 0 ? (
             <ThemedText themeColor="textSecondary">
@@ -80,11 +82,7 @@ export default function WeekScreen() {
                 </ThemedText>
                 {check.read_text ? (
                   <ThemedText style={styles.body}>{check.read_text}</ThemedText>
-                ) : (
-                  <ThemedText themeColor="textSecondary" style={styles.body}>
-                    Outcome kept. Read rolled out of this week.
-                  </ThemedText>
-                )}
+                ) : null}
                 {check.do_text ? (
                   <ThemedText themeColor="textSecondary" style={styles.body}>
                     {check.do_text}

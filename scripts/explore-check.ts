@@ -570,12 +570,9 @@ assert.doesNotMatch(you, /ExplorePanel|HomeInnerTabs|explore_entries/);
 ok('Explore is not on the You tab');
 
 const talk = read('src/lib/voice/talk.ts');
-const router = read('src/lib/voice/router.ts');
 assert.doesNotMatch(talk, /phrase-guard|matchingPhrasePattern|logPhraseHit/);
-assert.doesNotMatch(router, /phrase-guard|matchingPhrasePattern|logPhraseHit/);
 assert.match(talk, /matchingJargonTerm/);
-assert.match(router, /jargonInCard/);
-ok('Read/Do/Talk/Nudge generation and word guard are untouched');
+ok('Talk generation and word guard are untouched');
 
 const sql = read('supabase/migrations/explore.sql');
 assert.match(sql, /create table public.explore_packs/);

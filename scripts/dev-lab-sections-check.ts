@@ -35,7 +35,6 @@ ok('all four section headings exist');
 const homeBlock = hub.slice(homeHeading, sageHeading);
 const afterHome = hub.slice(sageHeading);
 assert.match(homeBlock, /<HomeOverrides \/>/);
-assert.match(homeBlock, /<CardSimulator \/>/);
 assert.match(hub, /Today slot override/);
 assert.match(hub, /Ask kind override/);
 assert.match(hub, /Today slot inputs/);
@@ -97,13 +96,12 @@ assert.doesNotMatch(previewFn, /crisis_flags/);
 assert.doesNotMatch(previewFn, /routeTalkReply|from '@\/lib\/voice\/talk'/);
 assert.doesNotMatch(previewFn, /from '@\/lib\/crisis\/detect'/);
 assert.doesNotMatch(previewFn, /from '@\/lib\/crisis\/log'/);
-const dawn = read('src/app/dawn.tsx');
 const sage = read('src/app/(tabs)/sage.tsx');
-assert.doesNotMatch(dawn, /CrisisCardPreview/);
-assert.doesNotMatch(dawn, /Preview crisis card/);
+assert.doesNotMatch(read('src/app/(tabs)/index.tsx'), /CrisisCardPreview/);
+assert.doesNotMatch(read('src/app/(tabs)/index.tsx'), /Preview crisis card/);
 assert.doesNotMatch(sage, /CrisisCardPreview/);
 assert.doesNotMatch(sage, /Preview crisis card/);
-ok('System crisis-card preview is fenced to /dev-lab and absent from Dawn and Sage');
+ok('System crisis-card preview is fenced to /dev-lab and absent from Home and Sage');
 
 assert.match(
   hub,

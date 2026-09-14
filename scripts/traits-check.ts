@@ -42,9 +42,6 @@ import {
 } from '../src/lib/voice/framework-fence';
 import { resolveNudge } from '../src/lib/voice/nudge';
 import { buildPrompt } from '../src/lib/voice/providers/prompt';
-import { routeVoiceCard } from '../src/lib/voice/router';
-import { buildVoiceConfig } from '../src/lib/voice/config';
-import type { VoiceProvider } from '../src/lib/voice/providers/types';
 import type { VoiceMe } from '../src/lib/voice/types';
 
 let passed = 0;
@@ -357,36 +354,13 @@ async function main() {
   assert.equal(containsFrameworkTerm('They picked their own way through it.'), false);
   ok('runtime fence drops generated Read/Do that names a type');
 
-  const echoProvider: VoiceProvider = {
-    id: 'local',
-    label: 'echo-test',
-    async generate() {
-      return {
-        read: 'Lean on your INFJ extraversion today.',
-        do: 'After you make coffee, stand up and drink a glass of water.',
-      };
-    },
-    async generateTalk() {
-      return { reply: 'ok' };
-    },
-  };
-  const localConfig = buildVoiceConfig({ MODEL_PROVIDER: 'local' });
-  const echoed = await routeVoiceCard(
-    {
-      me: withTraits,
-      checkCount: 3,
-      history: [
-        { day: 1, status: 'done', read: 'One.', do: 'After you make coffee, sit one minute.' },
-        { day: 2, status: 'done', read: 'Two.', do: 'After you make coffee, write one line.' },
-        { day: 3, status: 'done', read: 'Three.', do: 'After you make coffee, pick one task.' },
-      ],
-      aiConsent: true,
-    },
-    { config: localConfig, providers: { local: echoProvider, gemini: echoProvider }, isDev: true },
-  );
-  assert.equal(echoed.card, null);
-  assert.deepEqual(echoed.dropped, ['framework-echo']);
-  ok('dev provider that names a type is rejected at runtime (Gemini and local share this fence)');
+  // The end-to-end "a provider that names a type is rejected" case ran through
+  // routeVoiceCard, which went with the card lane. The fence itself is
+  // unchanged and still asserted directly above; the insight's own use of it
+  // on all five fields is covered by scripts/insight-check.ts.
+  const insightGen = read('src/lib/insight/generate-insight.ts');
+  assert.match(insightGen, /if \(containsFrameworkTerm\(trimmed\)\) return null;/);
+  ok('the daily insight runs the same framework fence over its generated fields');
 
   assert.equal(
     resolveNudge({

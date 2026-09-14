@@ -90,15 +90,15 @@ assert.match(home, /canSeeDevLab/);
 assert.match(home, /router\.push\('\/dev-lab'\)/);
 ok('Home Dev Tools Hub row uses the same root/grant gate');
 
-assert.match(read('src/app/(tabs)/index.tsx'), /traceSurface: 'dawn'/);
-assert.match(read('src/app/dawn.tsx'), /traceSurface: 'dawn'/);
+// The 'dawn' trace surface went with the card lane. dev_trace_steps' CHECK
+// constraint still lists it (surface in ('sage','explore','dawn','talk')), so
+// adding an 'insight' surface needs its own migration — tracked as a follow-up,
+// not silently diverged here.
 assert.match(read('src/app/(tabs)/sage.tsx'), /recordOwnDevTrace/);
 assert.match(read('src/components/explore-panel.tsx'), /recordOwnDevTrace/);
-assert.match(read('src/components/missed-check-card.tsx'), /traceSurface: 'dawn'/);
-assert.match(read('src/lib/voice/router.ts'), /recordTrace/);
 assert.match(read('src/lib/voice/talk.ts'), /surface: 'talk'/);
 assert.match(read('src/lib/explore/route.ts'), /recordTrace/);
-ok('Sage / Explore / Dawn production paths pass own-account recordTrace');
+ok('Sage / Explore / Talk production paths pass own-account recordTrace');
 
 const recordFn = read('supabase/migrations/dev_access.sql');
 assert.match(recordFn, /user_id = uid/);

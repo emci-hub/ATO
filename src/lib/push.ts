@@ -21,7 +21,7 @@ import {
   pushWindowForEnergy,
 } from '@/lib/push-policy';
 import { pickInsightPayload } from '@/lib/push-insight';
-import { loadTodayCard } from '@/lib/today-card';
+import { loadCachedInsight } from '@/lib/insight/today-insight';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { checksInRecapWeek } from '@/lib/week-window';
@@ -206,12 +206,12 @@ export async function syncPushSchedule(input: {
 
     const prefs = await getPushPrefs();
     await ensureAndroidChannel();
-    const card = await loadTodayCard();
+    const insight = await loadCachedInsight();
     const now = new Date();
     const window = pushWindowForEnergy(input.energyPattern);
 
-    if (prefs.morning && card?.read.trim()) {
-      await scheduleRepeating(PUSH_IDS.morning, morningPush(card.read), {
+    if (prefs.morning && insight?.title.trim()) {
+      await scheduleRepeating(PUSH_IDS.morning, morningPush(insight.title), {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
         channelId: CHANNEL_ID,
         hour: window.morningHour,
@@ -224,7 +224,7 @@ export async function syncPushSchedule(input: {
     // Evening keeps the original "only if there's a card" gate (re-evaluated
     // on every sync, same as before) — this pass only changed frequency and
     // the skip-if-logged condition, not whether a card is required at all.
-    const eveningTarget = prefs.evening && card?.read.trim()
+    const eveningTarget = prefs.evening && insight?.title.trim()
       ? nextWeekdayHour({
           now,
           timeZone: input.timeZone,
@@ -291,22 +291,22 @@ export async function fireTestPush(
   kind: PushPayload['kind'],
   checks: Check[],
   timeZone: string,
-  insight?: { me: Me; tracks: readonly TraitTrack[] },
+  insightInput?: { me: Me; tracks: readonly TraitTrack[] },
 ): Promise<void> {
   if (Platform.OS === 'web') return;
   if (!(await notificationsAreGranted())) {
     throw new Error('Notifications are off.');
   }
   await ensureAndroidChannel();
-  const card = await loadTodayCard();
+  const cached = await loadCachedInsight();
   const payload =
     kind === 'morning'
-      ? morningPush(card?.read ?? 'No card yet — open Dawn when you are ready.')
+      ? morningPush(cached?.title ?? 'No insight yet — open ATO when you are ready.')
       : kind === 'evening'
         ? eveningPush()
         : kind === 'insight'
-          ? insight
-            ? (await pickInsightPayload(insight.me, insight.tracks)) ??
+          ? insightInput
+            ? (await pickInsightPayload(insightInput.me, insightInput.tracks)) ??
               insightPush('Categories', 'No current statement yet — generate one on /explore first.')
             : insightPush('Categories', 'No current statement yet — generate one on /explore first.')
           : sundayPayloadFor(checks, new Date(), timeZone);

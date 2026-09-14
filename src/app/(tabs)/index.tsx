@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Pressable, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Modal, ScrollView, StyleSheet, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
@@ -18,35 +18,32 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { useTheme } from '@/hooks/use-theme';
 import { useGrowth } from '@/hooks/use-growth';
-import { useTodayCard } from '@/hooks/use-today-card';
+import { useDailyInsight } from '@/hooks/use-daily-insight';
 import { checkWindowFor } from '@/lib/check-window';
 import { checksToHistory, recordCheck, type Check } from '@/lib/checks';
 import { emitChecksChanged, onChecksChanged } from '@/lib/checks-events';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
-import { aiConsentFor } from '@/lib/me';
+import { aiConsentFor, setAiConsent } from '@/lib/me';
 import { useMeContext } from '@/lib/me-context';
-import { voiceMeFrom } from '@/lib/intake';
 import { resolveAsk, type AskPick } from '@/lib/ask';
 import { readAskOverride, readSlotOverride } from '@/lib/dev-overrides';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { weekdayInZone } from '@/lib/local-date';
-import { homeSageLabel, homeSageLede, NUDGE_LABEL, SAGE_COACH_LABEL } from '@/lib/sage-copy';
-import { persistRoutedCard, saveTodayCard, todayCardFromCheck } from '@/lib/today-card';
+import { homeSageLabel, homeSageLede, SAGE_COACH_LABEL } from '@/lib/sage-copy';
+import { AiConsentCard } from '@/components/ai-consent-card';
+import { generateDailyInsight } from '@/lib/insight/generate-insight';
+import { fetchTodayInsight, saveInsight } from '@/lib/insight/store';
+import { cachedFromInsight, saveCachedInsight } from '@/lib/insight/today-insight';
 import { resolveReveal } from '@/lib/reveal';
 import { RANKING_ROUNDS } from '@/lib/ranking';
 import { composeSageKnowsLine, parseSageKnowsState } from '@/lib/sage-knows';
 import { SCENARIO_DECK } from '@/lib/scenario';
 import { resolveTodaySlot, canShowCategoryTeaser, type TodaySlot } from '@/lib/today-slot';
 import { traitStateFromRow, TRAIT_POLE_LINES } from '@/lib/traits';
-import { bankCardForMe } from '@/lib/voice/bank';
-import { routeVoiceCard } from '@/lib/voice/router';
 import type { TraitTrack } from '@/lib/trait-stability';
-import { logJargonGuard } from '@/lib/voice/quota-server';
 import { canSeeDevLab } from '@/lib/dev-access';
 import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
-import { recordOwnDevTrace } from '@/lib/dev-trace-server';
-import type { VoiceCard, VoiceSource } from '@/lib/voice/types';
 import { useSession } from '@/hooks/use-session';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
@@ -87,11 +84,11 @@ export default function HomeScreen() {
   const userId = session?.user.id;
   const { me, refresh: refreshMe, devAccess } = useMeContext();
   const devUnlocked = useDevAccessUnlocked();
-  const { card, reload: reloadCard } = useTodayCard();
+  const { insight, reload: reloadInsight } = useDailyInsight();
   const { state: growth } = useGrowth();
   const params = useLocalSearchParams<{ focus?: string }>();
   const [checks, setChecks] = useState<Check[]>([]);
-  const [busy, setBusy] = useState<'log' | 'skip' | null>(null);
+  const [busy, setBusy] = useState<'log' | 'skip' | 'consent' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [crisisToday, setCrisisToday] = useState(false);
   const [crisisYesterday, setCrisisYesterday] = useState(false);
@@ -154,13 +151,20 @@ export default function HomeScreen() {
   const alreadyLogged =
     window != null && checks.some((check) => check.day === window.todayDay);
 
-  const consentOffEmpty = Boolean(
-    me &&
-      window &&
-      window.todayDay > 3 &&
-      me.ai_consent !== true &&
-      bankCardForMe(window.todayDay, voiceMeFrom(me)) === null,
-  );
+  /**
+   * Consent off means no insight at all — not "no insight after day 3" as it
+   * did for the card. The card had a starter bank to fall back on for the
+   * first three days; the insight has no offline lane, so a user who declines
+   * AI simply has no daily content. Nothing is generated and nothing is
+   * written to the widget on this branch.
+   */
+  const consentOffEmpty = Boolean(me && me.ai_consent !== true);
+
+  // Consent gate (Apple 5.1.2): ask exactly once, before the first moment a
+  // model call could happen (check_count >= 3). Moved here from Dawn, which
+  // owned this prompt until the insight replaced the card.
+  const consent = me ? aiConsentFor(me) : 'pending';
+  const needsConsentPrompt = me != null && consent === 'pending' && checks.length >= 3;
 
   const reveal = useMemo(() => {
     if (!me) return null;
@@ -242,80 +246,127 @@ export default function HomeScreen() {
     slotOverride,
   ]);
 
+  /**
+   * Today's insight: read the stored one first, generate only if there is none.
+   *
+   * The cached copy has already painted by now (useDailyInsight is a synchronous
+   * AsyncStorage read), so this never causes a flash of empty state — it just
+   * reconciles against the server and fills the gap on a day with no insight yet.
+   *
+   * Nothing here runs without consent: `consentOffEmpty` short-circuits before
+   * any fetch or generation, and the consent prompt blocks the first model call
+   * until the user has answered.
+   */
+  /**
+   * Today's insight: read the stored one first, generate only if there is none.
+   *
+   * The cached copy has already painted by now (useDailyInsight is a plain
+   * AsyncStorage read), so this never causes a flash of empty state — it just
+   * reconciles against the server and fills the gap on a day with no insight.
+   *
+   * Keyed on `window.todayDay`/`todayYmd`, NOT `todayOpen`: `todayOpen` comes
+   * from openLogDays, which drops days that are already logged, so keying on it
+   * meant an insight could never load for the rest of the day once the Check
+   * was in — a cleared cache would leave Home permanently empty until midnight.
+   *
+   * Nothing here runs without consent: `consentOffEmpty` and an unanswered
+   * consent prompt both short-circuit before any fetch or generation.
+   */
+  // Revoking consent has to reach the widget too: the cached insight is what
+  // the shipped widget renders, so leaving it would keep AI-written text on
+  // someone's lock screen after they turned AI off.
   useEffect(() => {
-    if (card || !window) return;
-    const todayCheck = checks.find((row) => row.day === window.todayDay);
-    const hydrated = todayCheck ? todayCardFromCheck(todayCheck) : null;
-    if (!hydrated) return;
-    let cancelled = false;
-    void saveTodayCard(hydrated).then(() => {
-      if (!cancelled) return reloadCard();
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [card, window?.todayDay, checks, reloadCard]);
+    if (!consentOffEmpty || !insight) return;
+    void saveCachedInsight(null).then(() => reloadInsight());
+  }, [consentOffEmpty, insight, reloadInsight]);
 
+  const generatingForYmd = useRef<string | null>(null);
   useEffect(() => {
-    if (!me || !todayOpen) return;
-    if (card?.day === todayOpen.day && card.nudge !== undefined) return;
+    if (!me || !userId || !window) return;
+    if (consentOffEmpty || needsConsentPrompt) return;
+    const { todayDay, todayYmd } = window;
+    if (insight?.ymd === todayYmd) return;
+    // A home_bootstrap reload gives `checks`/`tracks` fresh identities, which
+    // re-runs this effect. Without this guard the cleanup would cancel a run
+    // that had already paid for a generation and start a second one.
+    if (generatingForYmd.current === todayYmd) return;
+    generatingForYmd.current = todayYmd;
+
     let cancelled = false;
-    routeVoiceCard({
-      me: voiceMeFrom(me),
-      checkCount: checks.length,
-      history: checksToHistory(checks),
-      crisisToday,
-      crisisYesterday,
-      aiConsent: me.ai_consent,
-      day: todayOpen.day,
-      tracks,
-    }, { logJargonHit: logJargonGuard, recordTrace: recordOwnDevTrace, traceSurface: 'dawn' })
-      .then(async (next) => {
-        if (cancelled || !next.card) return;
-        await persistRoutedCard(next);
-        await reloadCard();
-      })
-      .catch((err) => {
-        console.log('[home] route today card error:', err);
-      });
+    void (async () => {
+      try {
+        const existing = await fetchTodayInsight(userId, todayYmd);
+        if (cancelled) return;
+        if (existing) {
+          await saveCachedInsight(cachedFromInsight(existing));
+          if (!cancelled) await reloadInsight();
+          return;
+        }
+
+        const draft = await generateDailyInsight({
+          tracks,
+          currentFocus: me.current_focus ?? null,
+          recentTone: checks
+            .slice(0, 7)
+            .map((check) => (check.status === 'done' ? 'did' : 'skip')),
+        });
+        if (cancelled || !draft) return;
+
+        await saveInsight(draft, todayDay, todayYmd);
+        await saveCachedInsight({
+          day: todayDay,
+          ymd: todayYmd,
+          theme: draft.theme,
+          title: draft.title,
+          reflection: draft.reflection,
+          tryToday: draft.tryToday,
+          watchFor: draft.watchFor,
+        });
+        if (!cancelled) await reloadInsight();
+      } catch (err) {
+        console.log('[home] today insight error:', err);
+      } finally {
+        // Cleared on failure so a later mount can retry; a success has already
+        // set `insight.ymd`, which short-circuits above.
+        if (generatingForYmd.current === todayYmd) generatingForYmd.current = null;
+      }
+    })();
+
     return () => {
       cancelled = true;
     };
-  }, [me, todayOpen?.day, card?.day, checks, reloadCard, crisisToday, crisisYesterday, tracks]);
+  }, [
+    me,
+    userId,
+    window?.todayYmd,
+    window?.todayDay,
+    insight?.ymd,
+    consentOffEmpty,
+    needsConsentPrompt,
+    tracks,
+    checks,
+    reloadInsight,
+  ]);
 
   async function logToday(status: 'done' | 'skipped') {
     if (!userId || !me || !todayOpen || busy || alreadyLogged) return;
-    if (consentOffEmpty) {
-      await commitLog(status, todayOpen.day, todayOpen.ymd, { read: '', do: '' }, 'bank', true);
-      return;
-    }
-    if (!card) return;
-    await commitLog(status, todayOpen.day, todayOpen.ymd, {
-      read: card.read,
-      do: card.do,
-      nudge: card.nudge ?? null,
-    }, card.source);
+    await commitLog(status, todayOpen.day, todayOpen.ymd);
   }
 
-  async function logMissed(
-    slotDay: number,
-    slotYmd: string,
-    status: 'done' | 'skipped',
-    voice: VoiceCard,
-    source: VoiceSource,
-  ) {
+  async function logMissed(slotDay: number, slotYmd: string, status: 'done' | 'skipped') {
     if (!userId || !me || busy) return;
-    await commitLog(status, slotDay, slotYmd, { read: voice.read, do: voice.do }, source);
+    await commitLog(status, slotDay, slotYmd);
   }
 
-  async function commitLog(
-    status: 'done' | 'skipped',
-    day: number,
-    loggedOn: string,
-    voice: VoiceCard,
-    source: VoiceSource,
-    noCard = false,
-  ) {
+  /**
+   * A Check is now an outcome and nothing else. `record_check` is still the
+   * only write path for one (hard invariant), but it always takes the no-text
+   * branch: the insight lives in `daily_insights` on its own lifecycle, and
+   * copying it onto the Check row would duplicate state that can be superseded
+   * independently. read_text/do_text stay populated only on Checks logged
+   * before this change.
+   */
+  async function commitLog(status: 'done' | 'skipped', day: number, loggedOn: string) {
     if (!userId || !me || busy) return;
     setBusy(status === 'done' ? 'log' : 'skip');
     setError(null);
@@ -323,18 +374,29 @@ export default function HomeScreen() {
       await recordCheck(userId, {
         day,
         loggedOn,
-        card: voice,
-        source,
         status,
-        noCard,
       });
       // Home listens to this and reloads via home_bootstrap — no second fetch.
       emitChecksChanged();
       if (status === 'done') triggerGesture('checkDone');
-      await reloadCard();
     } catch (err) {
       console.log('[home] recordCheck error:', err);
       setError(err instanceof Error ? err.message : 'Couldn\u2019t save your check. Try again.');
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function saveConsent(value: boolean) {
+    if (!userId || !me || busy) return;
+    setBusy('consent');
+    setError(null);
+    try {
+      await setAiConsent(userId, value);
+      await refreshMe();
+    } catch (err) {
+      console.log('[home] setAiConsent error:', err);
+      setError('Couldn\u2019t save your choice. Try again.');
     } finally {
       setBusy(null);
     }
@@ -358,22 +420,27 @@ export default function HomeScreen() {
           {consentOffEmpty ? (
             <ThemedView type="backgroundElement" style={styles.todayCard}>
               <ThemedText themeColor="textSecondary">
-                No card today. Sage only writes these with your say-so — you can turn that on any time in You.
+                {consent === 'denied'
+                  ? 'No insight today. Sage only writes these with your say-so — you can turn that on any time in You.'
+                  : 'No insight yet. Sage will ask before writing anything.'}
               </ThemedText>
             </ThemedView>
-          ) : card ? (
+          ) : insight ? (
             /*
-             * One card, one hierarchy. Read is the hero — it is the thing the
-             * app promises. Do sits under a hairline as a quieter instruction,
-             * and Nudge is an inline line, not a third equal box. Three
-             * identical rounded rectangles gave the day's read no more weight
-             * than a footnote.
+             * One card, one hierarchy. The title is the hero — it is the thing
+             * the app promises, and the line a person actually carries with
+             * them. Reflection sits under it as context, then Try / Watch for
+             * are the two quieter instructions under a hairline. Five equal
+             * boxes would give the day's line no more weight than a footnote.
              */
             <ThemedView type="backgroundElement" style={styles.heroCard}>
               <ThemedText type="code" themeColor="textSecondary" style={styles.sageKicker}>
-                {homeSageLabel(theme.id)} · read
+                {homeSageLabel(theme.id)} · {insight.theme}
               </ThemedText>
-              <ThemedText style={styles.heroRead}>{card.read}</ThemedText>
+              <ThemedText style={styles.heroRead}>{insight.title}</ThemedText>
+              <ThemedText themeColor="textSecondary" style={styles.reflectionText}>
+                {insight.reflection}
+              </ThemedText>
 
               <View
                 style={[styles.heroDivider, { backgroundColor: controlBorderColor(theme) }]}
@@ -381,49 +448,51 @@ export default function HomeScreen() {
 
               <View style={styles.doBlock}>
                 <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
-                  do
+                  try today
                 </ThemedText>
-                <ThemedText style={styles.doText}>{card.do}</ThemedText>
+                <ThemedText style={styles.doText}>{insight.tryToday}</ThemedText>
               </View>
 
-              {card.nudge ? (
-                <ThemedText type="small" themeColor="textSecondary" style={styles.nudgeLine}>
-                  {NUDGE_LABEL} · {card.nudge}
+              <View style={styles.doBlock}>
+                <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
+                  watch for
                 </ThemedText>
-              ) : null}
+                <ThemedText style={styles.doText}>{insight.watchFor}</ThemedText>
+              </View>
             </ThemedView>
           ) : (
-            <Pressable onPress={() => router.push('/dawn')} style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="backgroundElement" style={styles.todayCard}>
-                <ThemedText type="smallBold">No card yet</ThemedText>
-                <ThemedText themeColor="textSecondary">
-                  Open Dawn when you&apos;re ready. Nothing is made up in the meantime.
-                </ThemedText>
-              </ThemedView>
-            </Pressable>
+            <ThemedView type="backgroundElement" style={styles.todayCard}>
+              <ThemedText type="smallBold">No insight yet</ThemedText>
+              <ThemedText themeColor="textSecondary">
+                Sage is writing today&apos;s. Nothing is made up in the meantime.
+              </ThemedText>
+            </ThemedView>
           )}
 
-          {card || consentOffEmpty ? (
+          {/*
+            The Check is an outcome and is deliberately NOT gated on the
+            insight. Under the old card lane a bank fallback guaranteed a card
+            existed, so gating here was safe; the insight has no fallback, so a
+            failed or quota-blocked generation would otherwise leave someone
+            unable to log at all — an AI failure blocking the core loop.
+          */}
+          {me && window ? (
             <>
               {error ? (
                 <ThemedText themeColor="textSecondary">{error}</ThemedText>
               ) : null}
               {alreadyLogged ? (
                 <ThemedText type="small" themeColor="textSecondary">
-                  Logged for day {window?.todayDay ?? card?.day}.
+                  Logged for day {window?.todayDay ?? insight?.day}.
                 </ThemedText>
               ) : !todayOpen ? (
                 <ThemedText type="small" themeColor="textSecondary">
                   Today&apos;s Check is closed.
                 </ThemedText>
-              ) : me && !consentOffEmpty && aiConsentFor(me) === 'pending' && checks.length >= 3 ? (
-                <Pressable
-                  onPress={() => router.push('/dawn')}
-                  style={({ pressed }) => [pressed && styles.pressed]}>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    Open Dawn to continue.
-                  </ThemedText>
-                </Pressable>
+              ) : needsConsentPrompt ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  Answer the question above to continue.
+                </ThemedText>
               ) : (
                 <View style={styles.checkRow}>
                   <ThemedPressable
@@ -459,24 +528,15 @@ export default function HomeScreen() {
             <CrisisCard />
           ) : slotKind === 'missed_check' && me && oldestMissed ? (
             <>
-              {error && !card ? (
+              {error && !insight ? (
                 <ThemedText themeColor="textSecondary">{error}</ThemedText>
               ) : null}
               <MissedCheckCard
                 key={oldestMissed.ymd}
                 slot={oldestMissed}
-                routeInput={{
-                  me: voiceMeFrom(me),
-                  checkCount: checks.length,
-                  history: checksToHistory(checks),
-                  crisisToday,
-                  crisisYesterday,
-                  aiConsent: me.ai_consent,
-                  tracks,
-                }}
                 busy={busy !== null}
-                onLog={(status, voice, source) => {
-                  void logMissed(oldestMissed.day, oldestMissed.ymd, status, voice, source);
+                onLog={(status) => {
+                  void logMissed(oldestMissed.day, oldestMissed.ymd, status);
                 }}
               />
             </>
@@ -537,17 +597,6 @@ export default function HomeScreen() {
               {__DEV__ ? (
                 <>
               <Pressable
-                onPress={() => router.push('/voice-lab')}
-                style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
-                <View style={styles.boxRowText}>
-                  <ThemedText type="smallBold">Voice router</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    Dev: bank vs generated
-                  </ThemedText>
-                </View>
-                <ThemedText themeColor="textSecondary">›</ThemedText>
-              </Pressable>
-              <Pressable
                 onPress={() => router.push('/crisis-lab')}
                 style={({ pressed }) => [styles.boxRow, pressed && styles.pressed]}>
                 <View style={styles.boxRowText}>
@@ -586,6 +635,29 @@ export default function HomeScreen() {
           ) : null}
         </ScrollView>
       </SafeAreaView>
+
+      {/*
+        AI-consent gate (Apple 5.1.2), moved here from Dawn. A Modal, not a
+        conditionally-mounted card: it has to be unmissable and cannot be
+        scrolled past, because the first model call for the insight happens
+        immediately after the user answers.
+      */}
+      <Modal
+        visible={needsConsentPrompt}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {}}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalContent}>
+            <AiConsentCard
+              context="home"
+              busy={busy === 'consent'}
+              onGrant={() => saveConsent(true)}
+              onDeny={() => saveConsent(false)}
+            />
+          </View>
+        </View>
+      </Modal>
     </ThemedView>
   );
 }
@@ -637,8 +709,9 @@ const styles = StyleSheet.create({
   doText: {
     lineHeight: 24,
   },
-  nudgeLine: {
-    paddingTop: Spacing.two,
+  reflectionText: {
+    lineHeight: 24,
+    paddingTop: Spacing.one,
   },
   kicker: {
     textTransform: 'uppercase',
@@ -646,8 +719,17 @@ const styles = StyleSheet.create({
   sageKicker: {
     textTransform: 'none',
   },
-  cardText: {
-    lineHeight: 26,
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.four,
+  },
+  modalContent: {
+    alignSelf: 'stretch',
+    maxWidth: MaxContentWidth - Spacing.five,
+    gap: Spacing.three,
   },
   checkRow: {
     gap: Spacing.two,
@@ -656,9 +738,6 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.three,
     paddingVertical: Spacing.three,
     alignItems: 'center',
-  },
-  primaryText: {
-    color: '#ffffff',
   },
   secondaryButton: {
     borderRadius: Spacing.three,

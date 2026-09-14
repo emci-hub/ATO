@@ -540,7 +540,7 @@ export default function YouScreen() {
         <View style={styles.modalBackdrop}>
           <View style={styles.modalContent}>
             <AiConsentCard
-              context="dawn"
+              context="home"
               busy={consentBusy}
               onGrant={() => saveAiConsent(true)}
               onDeny={() => saveAiConsent(false)}

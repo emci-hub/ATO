@@ -17,7 +17,6 @@ import {
 } from '../src/lib/voice/library';
 import { localProvider } from '../src/lib/voice/providers/local';
 import { buildPrompt, buildTalkPrompt } from '../src/lib/voice/providers/prompt';
-import { routeVoiceCard } from '../src/lib/voice/router';
 import { routeTalkReply } from '../src/lib/voice/talk';
 import type { VoiceMe } from '../src/lib/voice/types';
 
@@ -211,37 +210,20 @@ function sharedWindow(a: string, b: string, n = 6): string | undefined {
 
 async function main() {
   const localConfig = buildVoiceConfig({ MODEL_PROVIDER: 'local' });
-  const pileCard = await routeVoiceCard(
-    { me: pileMe, checkCount: 3, history: [], aiConsent: true },
-    { config: localConfig, isDev: true },
-  );
-  assert.ok(pileCard.card);
-  assert.doesNotMatch(pileCard.card.read, new RegExp(STOCK_WORKLOAD));
-  assert.doesNotMatch(pileCard.card.do, new RegExp(STOCK_WORKLOAD));
-  assert.match(pileCard.card.do, /After you make coffee/);
-  assert.doesNotMatch(pileCard.card.do, /After you making coffee/);
-  assert.match(pileCard.card.read, /bite|slice|stack|unit|board|pile/i);
-  assert.match(pileCard.card.do, /slice|stack|lid|bite|unit|load/i);
-  assert.equal(LIBRARY_TEACHING_LEAK.test(`${pileCard.card.read}\n${pileCard.card.do}`), false);
-  assert.equal(containsFrameworkTerm(pileCard.card.read), false);
-  assert.equal(containsFrameworkTerm(pileCard.card.do), false);
-  if (pileCard.nudge) {
-    assert.equal(containsFrameworkTerm(pileCard.nudge), false);
-    assert.equal(LIBRARY_TEACHING_LEAK.test(pileCard.nudge), false);
-    assert.doesNotMatch(pileCard.nudge, new RegExp(STOCK_WORKLOAD));
-  }
-  ok('generated workload card paraphrases the For Sage idea and stays fence-clean');
-
-  const direct = await localProvider.generate({
-    me: pileMe,
-    day: 4,
-    tone: 'even',
-    history: [],
-    crisisToday: false,
-    previousHadCut: false,
-  });
-  assert.equal(direct.read, pileCard.card.read);
-  assert.equal(direct.do, pileCard.card.do);
+  // The end-to-end card assertions (library grounding reaches generated
+  // Read/Do, paraphrased not copied) ran through routeVoiceCard, which went
+  // with the card lane on 2026-09-14.
+  //
+  // KNOWN GAP, flagged for emci: the daily insight does NOT currently consume
+  // the For Sage library at all — buildDailyInsightPrompt grounds in settled
+  // bands, current focus and recent tone only. So this is not a moved
+  // assertion, it is a dropped capability. Deciding whether the insight should
+  // read the library is its own card; until then there is nothing to assert.
+  // NOTE for emci: the For Sage library now reaches no daily content at all.
+  // The card grounded in it; the daily insight does not. That is a dropped
+  // capability, not a moved one — deliberately left unasserted here rather
+  // than pinned, so wiring the library into the insight later does not have
+  // to fight a check that locked in its absence.
 
   const pileTalk = await routeTalkReply(
     {
@@ -295,17 +277,9 @@ async function main() {
   assert.doesNotMatch(leakPrompt, /through_it|alone_time|night_owl/);
   ok('local Reads and Gemini prompts use chip labels, never stored ids like through_it');
 
-  const readDo = sharedWindow(pileCard.card.read, pileCard.card.do);
-  const readTalk = sharedWindow(pileCard.card.read, talk);
-  const doTalk = sharedWindow(pileCard.card.do, talk);
-  assert.equal(readDo, undefined, `Read/Do share "${readDo}"`);
-  assert.equal(readTalk, undefined, `Read/Talk share "${readTalk}"`);
-  assert.equal(doTalk, undefined, `Do/Talk share "${doTalk}"`);
-  ok('Talk reply on a pile-day is shaped by Workload, phrased differently from Read and Do');
-
+  // The Read/Do/Talk cross-repetition guard needed all three texts; only Talk
+  // is still generated, so there is nothing left to compare it against.
   console.log('\nWorkload day 4 example:');
-  console.log(`  Read: ${pileCard.card.read}`);
-  console.log(`  Do:   ${pileCard.card.do}`);
   console.log(`  Talk: ${talk}`);
 
   console.log('\nAll library checks passed.');

@@ -38,6 +38,7 @@ Do not commit `.env.local` or API keys. Do not change dependencies, schemas, aut
   - **Priority right now is core functionality actually working** — real bugs, broken flows, missing features. If something fails or doesn't take (like a rotation attempt), don't retry it inline — spin it off (`spawn_task`) and keep moving on core work.
   - This does NOT relax: don't touch production data/config for OTHER projects, don't act destructively outside this repo's own Supabase project, and the actual pre-launch security pass still has to happen and be verified before `signup_mode` goes public — deferred is not skipped.
 - **Gate + OTA discipline during the core-fix effort (Sep 13, 2026, emci explicit, strengthened):** the full `check:ota-gate` (74 checks) and `npm run ota:publish` are both SLOW and are NOT part of the default per-fix loop anymore. Per change: `npm run typecheck` + eslint on the touched file(s) + the ONE most relevant `check:*` script if an obvious one exists — nothing more. **Do not publish an OTA per fix.** Batch fixes; publish/run the full gate only at a real milestone emci actually asks for (e.g. "publish what we have" or the end of a full screen-pass phase) — not reflexively after every commit. This supersedes the earlier version of this rule, which was still being run too often in practice.
+- **Checking cadence — ONE gate, ONE reviewer, at the end (Sep 14, 2026, emci explicit; supersedes the two bullets above wherever they conflict).** Do NOT run the full gate, individual `check:*` scripts, or the `reviewer` subagent after each file, sub-step, or task card. **Write the entire change first.** Then run `npm run check:ota-gate` and the reviewer **once**, at the very end, right before committing. If something fails: fix it once, re-run that once to confirm, and stop — do not loop back into repeated full-gate or repeated reviewer passes. This is a standing working agreement that carries forward to every task automatically, not a per-task instruction that needs restating. **Why:** the per-card cadence used during T-02/T-E1/T-H1 ran the gate four times and the reviewer twice for one session's work, which is slow and wasteful when the end state is what actually matters.
 - **UI/IA scaffold-first approach (Sep 13, 2026, emci's explicit plan — supersedes ad-hoc bug-hunting as the default mode).** Full mechanics:
   1. **Split every fix into "single" (screen-specific) or "shared" (used by 2+ screens) before starting it.** Quick grep/import-check first — don't screen-lock a fix that should be shared.
   2. **Screen-by-screen scaffold pass first**, nav order: Home → Explore → Sage → You → Around → Circle → Categories → Legends → Roll → Public Profile → Dev Tools last. Reference: `docs/screen-map.md` (built earlier this session, catalogs every section). For each screen, confirm what's actually there against the spec and fix single/screen-specific issues. Where something is missing or depends on broken shared code, leave a **visible, grep-able placeholder** — literal tag `[not built yet]` for something never implemented, `[blocked on shared fix]` for something that depends on a shared-code fix — never silently missing. One screen verified (typecheck + targeted check) before moving to the next, so nothing cascades.
@@ -152,12 +153,55 @@ Read that file plus this section to resume; nothing depends on chat history.
   because any server-side date bound loose enough for UTC-14..UTC+14 skew
   would not actually prevent much.
 
-- **BLOCKED — next task is T-H2, and it cannot start until wave69 is applied.**
-  T-H2 deletes the old card lane (dawn.tsx, the Home card block, the card-only
-  voice files) and renders the insight in its place. Shipping it against a
-  missing table would leave Home with nothing to render at all. So: apply
-  wave69 first, then T-H2, then T-H3 (widget native build), T-E2 (Explore
-  removals + drop migration), T-Z (final sweep).
+- **wave69 + wave70 APPLIED and verified live (2026-09-14).** Confirmed
+  against the database: all 11 `daily_insights` columns, the partial unique
+  index with its `WHERE superseded_at IS NULL`, RLS on with exactly one policy,
+  `insert_daily_insight` present, `count_user_rows`/`reset_dev_test_user` both
+  updated, and `question_bank_pool` now serving 0.2/0.5/0.8 with zero stale rows.
+
+- **T-H2 (Home swap + full card/Dawn removal) — DONE.**
+  Deleted: `src/app/dawn.tsx`, `src/app/voice-lab.tsx`, `voice/router.ts`,
+  `voice/bank.ts`, `today-card.ts`, `today-card-events.ts`, `use-today-card.ts`,
+  `scripts/voice-router-check.ts`, `scripts/card-live-check.ts`, dev-lab's
+  CardSimulator, and the `check:voice` / `check:card-live` keys (gate is 76).
+  Added: `insight/today-insight.ts` (cache + widget write + event),
+  `insight/events.ts`, `hooks/use-daily-insight.ts`.
+  Home renders the five fields, fetches today's insight and generates only if
+  absent, and now owns the AI-consent Modal that used to live on Dawn
+  (`ConsentContext` `'dawn'` → `'home'`, both copy bodies rewritten — the old
+  text promised starter cards that no longer exist).
+  `recordCheck` no longer takes card/source/noCard: it always writes null
+  read_text/do_text/nudge_text. **The columns stay** so historical Checks keep
+  rendering in /week and Circle.
+
+  **Scope corrections the plan got wrong** (verified, don't re-try them):
+  - **The voice provider layer is NOT deletable.** `providers/*`,
+    `select-provider.ts` and `content.generated.ts` are shared with Talk
+    (`voice/talk.ts`) and `library.ts`. Only `router.ts` and `bank.ts` were
+    card-exclusive. The card half inside `providers/prompt.ts` (`buildPrompt`,
+    `parseGeminiCard`) is now unreachable dead code, left in place on purpose;
+    `dawn-category.ts` stays because `providers/prompt.ts` imports it.
+    Stripping that safely is its own card.
+  - **The dev-trace `'dawn'` surface was dropped, not renamed.**
+    `dev_trace_steps.sql` has `surface in ('sage','explore','dawn','talk')` as a
+    CHECK constraint, so an `'insight'` surface needs a migration. Insight
+    generation currently records no dev trace.
+  - **Consent off now means no daily content at all** — there is no starter
+    bank behind the insight the way there was for days 1-3 of the card.
+
+  **Known gap, needs emci's decision:** the For Sage library
+  (`voice/library.ts`) now reaches NO daily content. The card grounded in it;
+  `buildDailyInsightPrompt` does not. That is a dropped capability, not a moved
+  one. Deliberately left unasserted in `library-check.ts` so wiring it in later
+  doesn't have to fight a check that pinned its absence.
+
+- **Next: T-H3** (widget native build — `widgets.swift` key/type renames,
+  needs an EAS build, cannot ship over OTA), then T-E2 (Explore removals +
+  drop migration), then T-Z (final sweep + docs).
+  Until T-H3 ships, the client deliberately keeps writing the CARD-era App
+  Group keys (`read` ← insight.title, `do` ← insight.tryToday, `hasCard`) and
+  widget kind `AtoCard`, because the widget already on people's home screens
+  reads exactly those and cannot be updated over OTA.
 
 **Gaps found in the plan doc itself (verified against the code, 2026-09-14):**
 

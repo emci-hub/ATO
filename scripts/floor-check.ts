@@ -128,20 +128,18 @@ ok('widget PrivacyInfo declares App Group UserDefaults C56D.1');
 
 const sage = read('src/app/(tabs)/sage.tsx');
 const home = read('src/app/(tabs)/index.tsx');
-const dawn = read('src/app/dawn.tsx');
 const push = read('src/lib/push-copy.ts');
 const widget = read('targets/widget/widgets.swift');
 const copy = read('src/lib/sage-copy.ts');
 const consent = read('src/components/ai-consent-card.tsx');
 const crisis = read('src/lib/crisis/copy.ts');
 assert.match(copy, /Sage is a coach, not a person/);
-assert.match(copy, /DAWN_SAGE_LEDE/);
 assert.match(copy, /SAGE_NPC_LABEL/);
 assert.match(copy, /Sage · npc/);
 assert.match(sage, /TALK_LEDE/);
 assert.match(sage, /SAGE_COACH_LABEL/);
 assert.match(sage, /TALK_COMPOSER_PLACEHOLDER/);
-assert.match(sage, /useTodayCard/);
+assert.match(sage, /useDailyInsight/);
 assert.doesNotMatch(sage, /from '@\/lib\/voice\/router'/);
 assert.doesNotMatch(sage, /routeVoiceCard/);
 assert.doesNotMatch(sage, /Ask Sage anything/);
@@ -150,18 +148,16 @@ assert.doesNotMatch(sage, /Sage · npc/);
 assert.match(home, /homeSageLede/);
 assert.match(home, /SAGE_COACH_LABEL/);
 assert.match(home, /homeSageLabel/);
-assert.match(dawn, /DAWN_SAGE_LEDE/);
-assert.doesNotMatch(dawn, /Sage · npc/);
 assert.match(push, /Sage · coach/);
 assert.match(widget, /SAGE · COACH/);
 assert.match(consent, /Sage is a coach in the app, not a person/);
 assert.match(crisis, /Sage is a coach, not emergency support/);
 assert.doesNotMatch(sage, /Sage listens/);
-assert.doesNotMatch(dawn, /Sage listens/);
+assert.doesNotMatch(home, /Sage listens/);
 assert.match(read('src/app/chat.tsx'), /Sage is a coach/);
-ok('Talk, Home, Dawn, consent, crisis, push, widget, and Teach Sage label Sage as a coach; Quest Home may use npc');
+ok('Talk, Home, consent, crisis, push, widget, and Teach Sage label Sage as a coach; Quest Home may use npc');
 
-assert.match(home, /No card yet/);
+assert.match(home, /No insight yet/);
 assert.doesNotMatch(home, /fake poster|Fake Person|open box|fake card media|fake ·/i);
 assert.doesNotMatch(home, /<PixelFace/);
 ok('Home has an honest empty card state and no Stage 1 fake fixtures');
@@ -217,33 +213,39 @@ assert.doesNotMatch(read('metro.config.js'), /PROBE_STUB/);
 assert.match(sentryLib, /if \(!__DEV__\) return;/);
 ok('You-tab crash/push probes are PRE_LAUNCH_DEV-gated; the native crash itself is __DEV__-only');
 
+// Moved from Dawn to Home 2026-09-14: the insight replaced the card, so the
+// first model call now happens on Home and the consent gate moved with it.
 assert.match(
-  dawn,
-  /<Modal[\s\S]*visible=\{needsConsentPrompt\}[\s\S]*<AiConsentCard[\s\S]*context="dawn"/,
+  home,
+  /<Modal[\s\S]*visible=\{needsConsentPrompt\}[\s\S]*<AiConsentCard[\s\S]*context="home"/,
 );
 assert.match(
   sage,
   /<Modal[\s\S]*visible=\{Boolean\(me\) && consent === 'pending'\}[\s\S]*<AiConsentCard[\s\S]*context="talk"/,
 );
-assert.doesNotMatch(dawn, /needsConsentPrompt \?\s*\([\s\S]*<AiConsentCard/);
+assert.doesNotMatch(home, /needsConsentPrompt \?\s*\([\s\S]{0,200}?<AiConsentCard/);
 assert.doesNotMatch(sage, /consent === 'pending' \?\s*\([\s\S]*<AiConsentCard/);
 assert.match(sage, /Talk is off/);
-assert.match(dawn, /setAiConsent/);
+assert.match(home, /setAiConsent/);
 assert.match(sage, /setAiConsent/);
 assert.match(youTab, /Sage(&apos;|')s AI/);
 assert.match(youTab, /'On'/);
 assert.match(youTab, /'Off'/);
 assert.match(youTab, /'Not set yet'/);
 assert.match(youTab, /SettingsFold title="Account"/);
-ok('AiConsentCard is a Modal interstitial on Dawn and Sage; You Account row is Sage\'s AI On/Off/Not set yet');
+ok('AiConsentCard is a Modal interstitial on Home and Sage; You Account row is Sage\'s AI On/Off/Not set yet');
 
 const crisisPickerIdx = youTab.indexOf('<CrisisRegionPicker');
 assert.ok(crisisPickerIdx >= 0, 'CrisisRegionPicker is present');
 ok('CrisisRegionPicker stays on You after the How Sage sounds fold');
 
-assert.match(home, /todayCardFromCheck/);
-assert.match(read('src/lib/today-card.ts'), /export function todayCardFromCheck/);
-ok('Home hydrates today\'s card from the Check row when on-device storage is empty');
+// Same no-flash promise, new source: the Check row no longer carries card
+// text, so Home paints from the cached insight and reconciles against
+// daily_insights behind it.
+assert.match(home, /useDailyInsight/);
+assert.match(home, /fetchTodayInsight/);
+assert.match(read('src/lib/insight/today-insight.ts'), /export async function loadCachedInsight/);
+ok('Home paints today\'s insight from cache before any fetch or generation');
 
 const quota = read('src/lib/voice/quota.ts');
 assert.match(quota, /Sage's out of things to say for today, back tomorrow/);

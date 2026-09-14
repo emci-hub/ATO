@@ -28,7 +28,7 @@ import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { useMeContext } from '@/lib/me-context';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
-import { useTodayCard } from '@/hooks/use-today-card';
+import { useDailyInsight } from '@/hooks/use-daily-insight';
 import { checksToHistory, fetchTalkHistory, type Check } from '@/lib/checks';
 import { logCrisisFlag } from '@/lib/crisis/log';
 import { triggerGesture } from '@/lib/kenney/gesture-actions';
@@ -197,7 +197,7 @@ export default function SageScreen() {
   const { session } = useSession();
   const userId = session?.user.id;
   const { me, refresh: refreshMe } = useMeContext();
-  const { card: todayCard } = useTodayCard();
+  const { insight: todayInsight } = useDailyInsight();
   const composerRef = useRef<View>(null);
   const { open: keyboardOpen, lift: keyboardLift } = useKeyboardLift(composerRef);
   const scrollRef = useRef<ScrollView>(null);
@@ -395,8 +395,8 @@ export default function SageScreen() {
           message: trimmed,
           checkCount: talk.checkCount,
           history: checksToHistory(talk.checks),
-          todayCard: todayCard
-            ? { read: todayCard.read, do: todayCard.do }
+          todayCard: todayInsight
+            ? { read: todayInsight.title, do: todayInsight.tryToday }
             : null,
           recentTurns: priorTurns,
           aiConsent: me.ai_consent,

@@ -53,11 +53,8 @@ import {
 import {
   DEV_LAB_AXIS_ORDER,
   DEV_LAB_GAPS,
-  DEV_LAB_PATTERNS,
-  DEV_LAB_STREAKS,
   buildSimHistory,
   demoTraitState,
-  simulateGapWindow,
 } from '@/lib/dev-lab';
 import {
   fetchDevTraceSession,
@@ -73,14 +70,12 @@ import { withTimeout } from '@/lib/timeout';
 import { fetchExploreMissNotes } from '@/lib/explore/store';
 import type { RouteExploreResult } from '@/lib/explore/types';
 import { voiceMeFrom } from '@/lib/intake';
-import { bankCardForMe } from '@/lib/voice/bank';
 import { localYmd, weekdayInZone } from '@/lib/local-date';
 import { supabase } from '@/lib/supabase';
 import { isDirectTraitSource, traitStateFromRow, type TraitSource } from '@/lib/traits';
 import { filledTraitBands } from '@/lib/trait-bands';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { shouldUseLocalAi } from '@/lib/ai/override';
-import { buildVoiceConfig } from '@/lib/voice/config';
 import { matchingFrameworkTerms } from '@/lib/voice/framework-fence';
 import { type SageUsageSnapshot } from '@/lib/voice/quota';
 import { claimAiCall, fetchSageUsage, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
@@ -110,8 +105,6 @@ import { bankTotalProgress } from '@/lib/questions/local';
 import { legendsUnlocked, sageUnlocked } from '@/lib/questions/progressive-unlock';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import type { TraitTrack } from '@/lib/trait-stability';
-import { routeVoiceCard } from '@/lib/voice/router';
-import type { VoiceCardResult, VoiceMe } from '@/lib/voice/types';
 import { resolveAsk, type AskPick } from '@/lib/ask';
 import { resolveReveal } from '@/lib/reveal';
 import { parseSageKnowsState } from '@/lib/sage-knows';
@@ -121,15 +114,6 @@ import {
   readGrowthPreview,
   writeGrowthPreview,
 } from '@/app/(tabs)/you';
-
-const LAB_ME: VoiceMe = {
-  name: 'Riley',
-  show_up: 'finishing my resume',
-  talk_style: 'even',
-  knocks_you_off: 'sleep',
-  morning_cue: 'make coffee',
-  facts: ['I finish work at four'],
-};
 
 const SOURCE_NOTE: Record<TraitSource, string> = {
   self_slider: 'direct — inferred cannot overwrite (historical, no longer written)',
@@ -196,7 +180,6 @@ function DevLab() {
             {canSeeHubSection('card', gate) ? (
               <>
                 <HomeOverrides />
-                <CardSimulator />
               </>
             ) : null}
             <ForceTestError message="Dev Lab test error — Home" />
@@ -465,10 +448,10 @@ function SlotReadout() {
           isSunday,
         };
         const kind = resolveTodaySlot(input).kind;
-        const pastDay3 = window.todayDay > 3;
-        const consentNotTrue = me.ai_consent !== true;
-        const noBankCard = bankCardForMe(window.todayDay, voiceMeFrom(me)) === null;
-        const honestEmpty = pastDay3 && consentNotTrue && noBankCard;
+        // Consent off now means no insight at all. The starter bank the
+        // card fell back on for days 1-3 went away with the card lane, so
+        // there is no longer a day threshold or a bank lookup in this gate.
+        const honestEmpty = me.ai_consent !== true;
         if (cancelled) return;
         setLines(
           [
@@ -479,9 +462,6 @@ function SlotReadout() {
             `askPending: ${input.askPending}`,
             `isSunday: ${input.isSunday}`,
             `kind: ${kind}`,
-            `pastDay3: ${pastDay3}`,
-            `consentNotTrue: ${consentNotTrue}`,
-            `noBankCard: ${noBankCard}`,
             `honestEmpty: ${honestEmpty}`,
           ].join('\n'),
         );
@@ -506,170 +486,6 @@ function SlotReadout() {
         {lines}
       </ThemedText>
     </>
-  );
-}
-
-function CardSimulator() {
-  const { me } = useMeContext();
-  const [streak, setStreak] = useState<(typeof DEV_LAB_STREAKS)[number]>(4);
-  const [patternId, setPatternId] = useState(DEV_LAB_PATTERNS[0].id);
-  const [gap, setGap] = useState<(typeof DEV_LAB_GAPS)[number]>(7);
-  const [result, setResult] = useState<VoiceCardResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  const pattern = DEV_LAB_PATTERNS.find((row) => row.id === patternId) ?? DEV_LAB_PATTERNS[0];
-  const history = useMemo(
-    () => buildSimHistory(streak, pattern.cells),
-    [streak, pattern],
-  );
-  const todayYmd = localYmd(new Date(), me?.timezone?.trim() || 'UTC');
-  const window = simulateGapWindow({
-    checkCount: history.length,
-    gapDays: gap,
-    todayYmd,
-  });
-
-  useEffect(() => {
-    let cancelled = false;
-    setBusy(true);
-    setError(null);
-    const config = buildVoiceConfig({ MODEL_PROVIDER: 'local' });
-    const voiceMe = me ? voiceMeFrom(me) : LAB_ME;
-    routeVoiceCard(
-      {
-        me: voiceMe,
-        checkCount: history.length,
-        history,
-        day: window.todayDay,
-        aiConsent: true,
-      },
-      { config, isDev: true },
-    )
-      .then((next) => {
-        if (!cancelled) setResult(next);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Could not route a card.');
-      })
-      .finally(() => {
-        if (!cancelled) setBusy(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [history, window.todayDay, me]);
-
-  return (
-    <View style={styles.section}>
-      <ThemedText type="smallBold">Card simulator</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        Local generator, consent granted. Use this to preview a Read/Do/Bump without
-        spending a real quota. Streak below 3 uses the written bank, not the generator.
-      </ThemedText>
-
-      <ThemedText type="code" themeColor="textSecondary">
-        streak — Checks already logged (journey length)
-      </ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        Not a consecutive-days streak. 0–2 stay on the Day 1–3 bank; 3+ generate.
-      </ThemedText>
-      <View style={styles.tabs}>
-        {DEV_LAB_STREAKS.map((n) => (
-          <Chip key={n} label={String(n)} selected={streak === n} onPress={() => setStreak(n)} />
-        ))}
-      </View>
-
-      <ThemedText type="code" themeColor="textSecondary">
-        recent log / skip — last few days of the fake history
-      </ThemedText>
-      <View style={styles.tabs}>
-        {DEV_LAB_PATTERNS.map((row) => (
-          <Chip
-            key={row.id}
-            label={row.label}
-            selected={patternId === row.id}
-            onPress={() => setPatternId(row.id)}
-          />
-        ))}
-      </View>
-
-      <ThemedText type="code" themeColor="textSecondary">
-        gap — calendar days since the last Check
-      </ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        1–2 still leave yesterday (and 2-days-ago) loggable. 7 closes days 3–6; only
-        today and the 2-day window stay open.
-      </ThemedText>
-      <View style={styles.tabs}>
-        {DEV_LAB_GAPS.map((n) => (
-          <Chip
-            key={n}
-            label={n === 7 ? '7 (3+ closed)' : `${n} day${n === 1 ? '' : 's'}`}
-            selected={gap === n}
-            onPress={() => setGap(n)}
-          />
-        ))}
-      </View>
-
-      <ThemedView type="backgroundElement" style={styles.card}>
-        <ThemedText type="code" themeColor="textSecondary">
-          window — days that can still take a Check
-        </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          Journey day {window.todayDay} is today&apos;s number since signup day 1, not a
-          streak count.
-        </ThemedText>
-        <ThemedText type="small">
-          Open: {window.open.length === 0 ? 'none' : window.open.map((slot) => offsetLabel(slot.offset)).join(', ')}
-        </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          Closed beyond 2-day window:{' '}
-          {window.closedMissed.length === 0
-            ? 'none'
-            : window.closedMissed.map((slot) => `${offsetLabel(slot.offset)} (day ${slot.day})`).join(', ')}
-        </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          Recent: {history.map((row) => (row.status === 'done' ? 'D' : 'S')).join(' ') || '(none)'}
-        </ThemedText>
-      </ThemedView>
-
-      {busy ? (
-        <ThemedText themeColor="textSecondary">Routing…</ThemedText>
-      ) : error ? (
-        <ThemedText type="smallBold">{error}</ThemedText>
-      ) : result ? (
-        <>
-          <CardBlock
-            kicker={`read · ${result.source} · ${result.tone}${result.dev?.fromBankFile ? ' · bank' : ''}`}
-            body={result.card?.read ?? '(dropped — nothing shown)'}
-          />
-          <CardBlock kicker="do" body={result.card?.do ?? '—'} />
-          <CardBlock
-            kicker="bump"
-            body={result.nudge ?? 'none — no skip pattern, knock-in-text, or safe fact'}
-          />
-          {result.dropped.length > 0 ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              dropped: {result.dropped.join(', ')}
-            </ThemedText>
-          ) : null}
-        </>
-      ) : null}
-
-      {window.open
-        .filter((slot) => slot.offset > 0)
-        .map((slot) => (
-          <ThemedView key={slot.ymd} type="backgroundElement" style={styles.card}>
-            <ThemedText type="code" themeColor="textSecondary">
-              catch-up still open · day {slot.day} · {offsetLabel(slot.offset)}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              Home would still offer a Check for this day.
-            </ThemedText>
-          </ThemedView>
-        ))}
-    </View>
   );
 }
 
@@ -1858,17 +1674,6 @@ function AccessReview() {
         ))
       )}
     </View>
-  );
-}
-
-function CardBlock({ kicker, body }: { kicker: string; body: string }) {
-  return (
-    <ThemedView type="backgroundElement" style={styles.card}>
-      <ThemedText type="code" themeColor="textSecondary">
-        {kicker}
-      </ThemedText>
-      <ThemedText>{body}</ThemedText>
-    </ThemedView>
   );
 }
 

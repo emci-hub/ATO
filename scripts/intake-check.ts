@@ -21,9 +21,6 @@ import {
   voiceMeFrom,
 } from '../src/lib/intake';
 import { SCENARIO_QUESTIONS } from '../src/lib/vibe-check';
-import { bankCard, bankCardForMe } from '../src/lib/voice/bank';
-import { routeVoiceCard } from '../src/lib/voice/router';
-import { buildVoiceConfig } from '../src/lib/voice/config';
 
 let passed = 0;
 function ok(label: string) {
@@ -31,8 +28,6 @@ function ok(label: string) {
   console.log(`  ✓ ${label}`);
 }
 
-const localConfig = buildVoiceConfig({ MODEL_PROVIDER: 'local' });
-const dev = { isDev: true, config: localConfig };
 
 async function main() {
   assert.equal(CORE_INTAKE_QUESTIONS.length, 8);
@@ -248,25 +243,22 @@ async function main() {
     current_focus: 'show_up',
   });
 
-  const quietCard = bankCardForMe(1, quietMe)!;
-  const loudCard = bankCardForMe(1, loudMe)!;
-  assert.equal(quietCard.do, bankCard(1, 'quiet', cue)!.do);
-  assert.equal(loudCard.do, bankCard(1, 'loud', 'put on music')!.do);
-  assert.ok(quietCard.do.includes(cue), 'Do must contain the person\'s morning_cue phrase');
-  assert.ok(!quietCard.do.includes('{morning_cue}'));
-  assert.notEqual(quietCard.read, loudCard.read);
-  assert.notEqual(quietCard.do, loudCard.do);
-  ok('Day 1 Do inserts the user cue; two answer sets pick different bank cards');
-
-  const routed = await routeVoiceCard(
-    { me: quietMe, checkCount: 0, history: [] },
-    dev,
-  );
-  assert.equal(routed.source, 'bank');
-  assert.equal(routed.provider, null);
-  assert.equal(routed.dev?.fromModel, false);
-  assert.equal(routed.card?.do, quietCard.do);
-  ok('check_count < 3 still uses first_cards.md with no model call');
+  // The starter-bank assertions went with the card lane: there is no written
+  // first-days bank behind the insight, and no "no model call before day 3"
+  // path left to prove. What intake still owes the next surface is the
+  // grounding itself, so that is what is asserted now — the two answer sets
+  // must still produce materially different voice slices.
+  // voiceMeFrom is the real mapping from stored intake columns to the slice
+  // every prompt builder grounds in — assert on its output, not on the two
+  // fixtures, which would compare a literal to itself and never fail.
+  // (the two fixtures' names are historical and don't match their talk_style)
+  assert.equal(quietMe.talk_style, 'loud');
+  assert.equal(loudMe.talk_style, 'quiet');
+  assert.equal(quietMe.morning_cue, cue);
+  assert.equal(quietMe.show_up, 'building something');
+  assert.equal(loudMe.morning_cue, 'put on music');
+  assert.notEqual(quietMe.knocks_you_off, loudMe.knocks_you_off);
+  ok('voiceMeFrom carries talk style, cue and show-up through to the generation slice');
 
   console.log(`\nAll ${passed} intake checks passed.`);
 }

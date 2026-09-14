@@ -28,8 +28,8 @@ async function main() {
   const sage = read('src/app/(tabs)/sage.tsx');
   const eightBall = read('src/components/sage-eight-ball.tsx');
   const messages = read('src/lib/sage-messages.ts');
-  const todayCardHook = read('src/hooks/use-today-card.ts');
-  const todayCardLib = read('src/lib/today-card.ts');
+  const insightHook = read('src/hooks/use-daily-insight.ts');
+  const insightCache = read('src/lib/insight/today-insight.ts');
   const checksLib = read('src/lib/checks.ts');
   const prompt = read('src/lib/voice/providers/prompt.ts');
   const filters = read('src/lib/voice/filters.ts');
@@ -47,11 +47,13 @@ async function main() {
   assert.doesNotMatch(sage, /fetchMe\(/);
   ok('Stage 11 columns arrive on the shared ME row — Sage does not re-fetch traits');
 
-  assert.match(sage, /useTodayCard/);
-  assert.match(todayCardHook, /loadTodayCard/);
-  assert.match(todayCardLib, /AsyncStorage\.getItem\(TODAY_CARD_KEY\)/);
-  assert.doesNotMatch(todayCardHook, /routeVoiceCard/);
-  ok('useTodayCard is an AsyncStorage read, not a generate');
+  // Same promise, new lane: a Sage mount reads the cached insight and never
+  // triggers a generation or even a network fetch.
+  assert.match(sage, /useDailyInsight/);
+  assert.match(insightHook, /loadCachedInsight/);
+  assert.match(insightCache, /AsyncStorage\.getItem\(TODAY_INSIGHT_KEY\)/);
+  assert.doesNotMatch(insightHook, /generateDailyInsight|fetchTodayInsight|supabase/);
+  ok('useDailyInsight is an AsyncStorage read, not a generate');
 
   assert.match(sage, /fetchTalkHistory/);
   assert.match(sage, /history: checksToHistory\(talk\.checks\)/);

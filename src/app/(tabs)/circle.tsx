@@ -291,11 +291,7 @@ function PeerCard({
                 <ThemedText type="small" style={styles.readText}>
                   {latest.read_text}
                 </ThemedText>
-              ) : (
-                <ThemedText type="small" themeColor="textSecondary" style={styles.readText}>
-                  Outcome kept. The Read for this day has rolled off.
-                </ThemedText>
-              )}
+              ) : null}
               {latest.do_text ? (
                 <ThemedText type="small" themeColor="textSecondary" style={styles.doText}>
                   {latest.do_text}

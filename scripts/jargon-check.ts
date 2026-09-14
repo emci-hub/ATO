@@ -81,9 +81,7 @@ assert.match(prompt, /VOICE_PRESET_GUIDE/);
 ok('generate prompt carries the preset and drops the coach role line');
 
 const talk = read('src/lib/voice/talk.ts');
-const router = read('src/lib/voice/router.ts');
 assert.match(talk, /logJargonHit/);
-assert.match(router, /logJargonHit/);
 assert.match(read('src/lib/voice/quota-server.ts'), /log_jargon_guard/);
 ok('jargon fires log to ai_usage without incrementing quota in the client helper');
 

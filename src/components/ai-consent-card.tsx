@@ -6,23 +6,28 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { controlBorderColor } from '@/lib/theme/chrome';
 
-export type ConsentContext = 'dawn' | 'talk';
+export type ConsentContext = 'home' | 'talk';
 
+// Both bodies rewritten 2026-09-14, when the daily insight replaced the
+// Read/Do card. The old copy promised "you keep the starter cards" on a no —
+// there is no starter bank behind the insight, so a no now means no daily
+// insight at all. This is the Apple 5.1.2 consent surface, so it has to state
+// what actually happens, and one ai_consent flag governs both surfaces.
 const COPY: Record<ConsentContext, { title: string; body: string }> = {
-  dawn: {
-    title: 'Can Sage use AI to write your card?',
+  home: {
+    title: 'Can Sage use AI to write your daily insight?',
     body:
-      'Once you\u2019ve logged three days, Sage writes your daily read and do using AI, ' +
+      'Once you\u2019ve logged three days, Sage writes your daily insight using AI, ' +
       'based on what you\u2019ve logged and told us. Sage is a coach in the app, not a person. ' +
-      'You\u2019ll only be asked once. Say no and ' +
-      'you keep the starter cards, and Sage\u2019s Talk stays off.',
+      'You\u2019ll only be asked once. Say no and Sage won\u2019t write one, ' +
+      'and Sage\u2019s Talk stays off.',
   },
   talk: {
     title: 'Can Sage use AI to talk with you?',
     body:
       'Sage replies to you using AI, in your talk style, based on what you\u2019ve logged and ' +
-      'told us. Sage is a coach in the app, not a person. You\u2019ll only be asked once. Say no and Talk stays off — your daily cards ' +
-      'keep working.',
+      'told us. Sage is a coach in the app, not a person. You\u2019ll only be asked once. Say no and Talk stays off — Sage ' +
+      'won’t write your daily insight either.',
   },
 };
 

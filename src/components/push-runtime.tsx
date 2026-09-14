@@ -9,7 +9,7 @@ import { useSession } from '@/hooks/use-session';
 import { useGrowth } from '@/hooks/use-growth';
 import { pathFromNotificationData } from '@/lib/push-copy';
 import { maybeAskNotificationPermission, resyncPushForUser } from '@/lib/push';
-import { onTodayCardChanged } from '@/lib/today-card-events';
+import { onDailyInsightChanged } from '@/lib/insight/events';
 
 function openPushPath(url: string) {
   router.push(url as Href);
@@ -56,14 +56,14 @@ export function PushRuntime() {
 
     sync();
     const unsubChecks = onChecksChanged(sync);
-    const unsubCard = onTodayCardChanged(sync);
+    const unsubInsight = onDailyInsightChanged(sync);
     const app = AppState.addEventListener('change', (next) => {
       if (next === 'active') sync();
     });
     return () => {
       active = false;
       unsubChecks();
-      unsubCard();
+      unsubInsight();
       app.remove();
     };
   }, [userId, me]);

@@ -142,7 +142,6 @@ const poster = read('src/components/share-poster.tsx');
 const handlePage = read('src/app/[handle].tsx');
 const home = read('src/app/(tabs)/index.tsx');
 const sage = read('src/app/(tabs)/sage.tsx');
-const dawn = read('src/app/dawn.tsx');
 const widget = read('targets/widget/widgets.swift');
 const push = read('src/lib/push-copy.ts');
 const explore = read('src/components/explore-panel.tsx');
@@ -151,7 +150,6 @@ for (const [name, source] of [
   ['handle', handlePage],
   ['home', home],
   ['sage', sage],
-  ['dawn', dawn],
   ['widget', widget],
   ['push', push],
   ['explore', explore],

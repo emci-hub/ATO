@@ -1,5 +1,5 @@
 /**
- * Wave 22: Dawn category Read, Explore category combine, Levity, The Story.
+ * Wave 22: Explore category combine, Levity, The Story.
  * Run: npm run check:wave22
  */
 import assert from 'node:assert/strict';
@@ -17,12 +17,7 @@ import {
   readCategory,
 } from '../src/lib/categories';
 import { CONCEPT_COPY_REVIEWED, CATEGORY_CONCEPTS, conceptCopyClean } from '../src/lib/concept-explainers';
-import {
-  DAWN_CATEGORY_COPY_REVIEWED,
-  DAWN_READ_CATEGORY_IDS,
-  dawnReadCategoriesAreBars,
-  pickDawnReadCategory,
-} from '../src/lib/dawn-category';
+import { DAWN_CATEGORY_COPY_REVIEWED } from '../src/lib/dawn-category';
 import { repeatsPinnedCategories } from '../src/lib/explore/combine';
 import {
   STORY_COPY_REVIEWED,
@@ -39,8 +34,6 @@ import {
 import { isThinProfile, settledCount, applyEwmaAnswer, type TraitTrack } from '../src/lib/trait-stability';
 import { TITLE_COPY_REVIEWED } from '../src/lib/sage-title';
 import { TRAIT_AXES } from '../src/lib/traits';
-import { buildPrompt } from '../src/lib/voice/providers/prompt';
-import type { VoiceMe } from '../src/lib/voice/types';
 
 let passed = 0;
 function ok(label: string) {
@@ -60,41 +53,9 @@ function stableReport(axis: TraitTrack['axis'], value: number): TraitTrack {
   return applyEwmaAnswer(row, axis, 'report', value, nowIso);
 }
 
-const me: VoiceMe = {
-  name: 'Sam',
-  show_up: 'steady',
-  talk_style: 'even',
-  knocks_you_off: 'sleep',
-  morning_cue: 'make coffee',
-  extraversion: 0.8,
-};
-
-console.log('PART 1 — Dawn');
-assert.equal(dawnReadCategoriesAreBars(), true);
-assert.deepEqual([...DAWN_READ_CATEGORY_IDS], ['cat_steadiness', 'cat_agency', 'cat_drive']);
-assert.equal(pickDawnReadCategory([], 1), null);
-assert.equal(pickDawnReadCategory(undefined, 1), null);
-const emptyPrompt = buildPrompt({
-  me,
-  day: 4,
-  tone: 'even',
-  history: [],
-  crisisToday: false,
-  previousHadCut: false,
-});
-assert.doesNotMatch(emptyPrompt, /DAWN CATEGORY/);
-assert.doesNotMatch(emptyPrompt, /extraversion/);
-assert.match(emptyPrompt, /After you make coffee/);
-assert.match(emptyPrompt, /AVAILABLE SIGNALS/);
-ok('unset Dawn categories fall back to knock/fact/focus; 16-axis backbone is not in the Read prompt');
-
-const promptSrc = read('src/lib/voice/providers/prompt.ts');
-const routerSrc = read('src/lib/voice/router.ts');
-const filtersSrc = read('src/lib/voice/filters.ts');
-assert.match(routerSrc, /const reason = filterCard\(candidate/);
-assert.doesNotMatch(filtersSrc, /DawnRead|dawnReadCategory/);
-assert.match(promptSrc, /exactly ONE if-then action, anchored to the morning cue/);
-ok('cut/crisis/anti-repeat still filter the card; Do if-then copy is untouched');
+// PART 1 (Dawn read-category selection) removed 2026-09-14 with the card lane.
+// dawn-category.ts still exists only because voice/providers/prompt.ts — a Talk
+// dependency — imports it; nothing reachable calls the card prompt any more.
 
 console.log('PART 2 — Explore combine');
 assert.equal(repeatsPinnedCategories('Sees a plan through and shakes a bad start off today.', [

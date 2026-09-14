@@ -57,7 +57,6 @@ assert.match(sage, /SageUsageLine/);
 assert.match(sage, /styles\.sageToys/);
 assert.match(sage, /styles\.chatColumn/);
 assert.match(sage, /COMPOSER_REST_PAD/);
-assert.doesNotMatch(sage, /routeVoiceCard/);
 assert.match(sage, /useKeyboardLift/);
 assert.match(sage, /visualViewport/);
 assert.match(sage, /scrollToEnd/);

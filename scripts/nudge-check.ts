@@ -182,28 +182,27 @@ const circle = read('src/app/(tabs)/circle.tsx');
 const circleLib = read('src/lib/circle.ts');
 const checksLib = read('src/lib/checks.ts');
 const peerChecksSql = read('supabase/migrations/peer_checks.sql');
-const dawn = read('src/app/dawn.tsx');
 const sage = read('src/app/(tabs)/sage.tsx');
 const widget = read('targets/widget/widgets.swift');
 const push = read('src/lib/push-copy.ts');
-const todayCard = read('src/lib/today-card.ts');
+const insightCache = read('src/lib/insight/today-insight.ts');
 const copy = read('src/lib/sage-copy.ts');
 const nudgeSrc = read('src/lib/voice/nudge.ts');
 
-assert.match(home, /NUDGE_LABEL/);
 assert.match(home, /SAGE_NPC_LABEL|homeSageLabel/);
 assert.match(copy, /Sage · npc/);
 assert.doesNotMatch(circle, /NUDGE_LABEL|nudge_text|Nudge/);
-assert.doesNotMatch(dawn, /NUDGE_LABEL/);
 assert.doesNotMatch(sage, /NUDGE_LABEL|Sage · npc/);
 assert.doesNotMatch(widget, /[Nn]udge|npc/i);
 assert.doesNotMatch(push, /[Nn]udge/);
-assert.match(todayCard, /storage\.set\('read'/);
-assert.match(todayCard, /storage\.set\('do'/);
-assert.doesNotMatch(todayCard, /storage\.set\('nudge'/);
-assert.doesNotMatch(home + circle + dawn + sage + copy, /ATOsophy|Sync/);
+// The widget still gets exactly two text keys and never a third. Sourced
+// from the insight now, but the "no nudge on the widget" rule is unchanged.
+assert.match(insightCache, /storage\.set\('read'/);
+assert.match(insightCache, /storage\.set\('do'/);
+assert.doesNotMatch(insightCache, /storage\.set\('nudge'/);
+assert.doesNotMatch(home + circle + sage + copy, /ATOsophy|Sync/);
 assert.doesNotMatch(nudgeSrc, /me\.talk_style|talk_style:/);
-ok('Nudge is Home-only; Circle/widget/push/Talk/Dawn have none; no ATOsophy/Sync; talk_style is not an input');
+ok('Nudge text reaches no surface; Circle/widget/push/Talk have none; no ATOsophy/Sync; talk_style is not an input');
 
 const peerChecksSqlBody = peerChecksSql.replace(/--.*$/gm, '');
 const peerChecksSelect = peerChecksSqlBody.match(/as \$\$([\s\S]*?)\$\$/)?.[1] ?? '';
