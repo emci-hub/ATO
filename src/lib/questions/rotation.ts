@@ -11,6 +11,31 @@ export function isOpenQuestionItem(item: QuestionItemRow): boolean {
   return item.answeredOption == null && item.skippedAt == null;
 }
 
+/**
+ * First genuinely UNANSWERED item — skips are not treated as resolved.
+ *
+ * The ongoing-round path must use this, not `nextUnansweredItem`
+ * (route.ts, built on `isOpenQuestionItem` above), because the two have
+ * opposite ideas of what a skip means and only one of them matches the
+ * server. `claim_ongoing_round_complete` (wave52) requires all 25 items to
+ * have `answered_option is not null` and does not consult `skipped_at` at
+ * all — it was patched that way to close an exploit where skipping a whole
+ * round still paid out its +21. A skip-tolerant completion check on the
+ * client would therefore mark a round finished, stop offering its remaining
+ * questions, and fire a claim the server silently refuses.
+ *
+ * Nothing sets `skippedAt` on an ongoing-round item today — the round pager
+ * (PagedQuestions) has no skip control, only reroll; skip belongs to the
+ * Infinite Questions fold, which keeps `isOpenQuestionItem`'s
+ * skip-is-resolved semantics on purpose. So this is latent rather than live.
+ * It is still the correct predicate for the caller that has a server-side
+ * counterpart, and pinning it here means adding a skip to the round later
+ * cannot quietly reintroduce the mismatch.
+ */
+export function isUnansweredQuestionItem(item: QuestionItemRow): boolean {
+  return item.answeredOption == null;
+}
+
 export function recentAskedAxes(
   pack: QuestionPackRow | null,
   n = QUESTIONS_AXIS_MEMORY,

@@ -97,6 +97,7 @@
     "check:chunked-generate": "tsx ./scripts/chunked-generate-check.ts",
     "check:ongoing-round": "tsx ./scripts/ongoing-round-check.ts",
     "check:bank-pool": "tsx ./scripts/bank-pool-check.ts",
+    "check:prewarm": "tsx ./scripts/prewarm-check.ts",
     "check:ongoing-round-save": "tsx ./scripts/ongoing-round-save-check.ts",
     "check:milestones": "tsx ./scripts/milestones-check.ts",
     "check:trait-sources": "tsx ./scripts/trait-sources-check.ts",

@@ -40,46 +40,58 @@ export interface BankCandidate {
 }
 
 /**
- * Least-served question_bank_pool rows for `axis` (bank-first fill, §2),
- * excluding this user's permanent question_bank_reroll_exclusions. Does NOT
- * filter by recent-text itself — over-fetches a small multiple of `count` so
- * the caller (ongoing-round.ts) can drop near-duplicates against its own
- * recent-text window using the same `isNearDuplicate` logic the AI-fallback
- * path already uses, and still land close to `count` picks.
+ * Least-served question_bank_pool rows for `axis` (bank-first fill, §2), via
+ * the wave68 `fetch_bank_candidates` RPC. The RPC excludes both this user's
+ * permanent question_bank_reroll_exclusions AND every bank row already
+ * referenced by one of their question_items — the second filter is why this
+ * moved server-side (wave68): it is an anti-join against an unbounded answer
+ * history, which a client-side `select` would have had to download in full
+ * on every axis of every round just to filter locally.
+ *
+ * Still does NOT filter by recent-text itself — over-fetches a small
+ * multiple of `count` so the caller (ongoing-round.ts) can drop
+ * near-duplicates against its own recent-text window using the same
+ * `isNearDuplicate` logic the AI-fallback path already uses, and still land
+ * close to `count` picks.
  */
 export async function fetchBankCandidates(axis: TraitAxis, count: number): Promise<BankCandidate[]> {
   if (count <= 0) return [];
 
-  const { data: exclusions, error: exclusionError } = await supabase
-    .from('question_bank_reroll_exclusions')
-    .select('question_bank_item_id');
-  if (exclusionError) throw exclusionError;
-  const excludedIds = new Set(
-    (exclusions ?? []).map((row) => (row as { question_bank_item_id: string }).question_bank_item_id),
-  );
-
-  const { data, error } = await supabase
-    .from('question_bank_pool')
-    .select('id, category, prompt, options')
-    .eq('axis', axis)
-    .order('times_served', { ascending: true })
-    .limit(count * 4 + 10);
+  const { data, error } = await supabase.rpc('fetch_bank_candidates', {
+    p_axis: axis,
+    p_limit: count * 4 + 10,
+  });
   if (error) throw error;
 
-  return (data ?? [])
-    .filter((row) => !excludedIds.has((row as BankRow).id))
-    .flatMap((row) => {
-      const bankRow = row as BankRow;
-      const options = parseOptions(bankRow.options);
-      if (options.length < 2) return [];
-      const draft: QuestionDraft = {
-        axis,
-        category: (bankRow.category ?? undefined) as QuestionDraft['category'],
-        prompt: bankRow.prompt,
-        options,
-      };
-      return [{ id: bankRow.id, draft }];
-    });
+  return ((data ?? []) as BankRow[]).flatMap((bankRow) => {
+    const options = parseOptions(bankRow.options);
+    if (options.length < 2) return [];
+    const draft: QuestionDraft = {
+      axis,
+      category: (bankRow.category ?? undefined) as QuestionDraft['category'],
+      prompt: bankRow.prompt,
+      options,
+    };
+    return [{ id: bankRow.id, draft }];
+  });
+}
+
+/**
+ * Per-axis count of bank questions this user has never been served (wave68
+ * `bank_pool_depth`) — how many more rounds the shared pool can cover for
+ * them before composition falls through to AI generation. An axis with no
+ * usable rows left is ABSENT from the RPC's result, not present as 0; the
+ * returned map preserves that, and `prewarm.ts` treats a missing axis as 0
+ * so an empty axis still reads as short.
+ */
+export async function fetchBankPoolDepth(): Promise<Partial<Record<TraitAxis, number>>> {
+  const { data, error } = await supabase.rpc('bank_pool_depth');
+  if (error) throw error;
+  const depth: Partial<Record<TraitAxis, number>> = {};
+  for (const row of (data ?? []) as { axis: string; available: number }[]) {
+    depth[row.axis as TraitAxis] = row.available;
+  }
+  return depth;
 }
 
 /** Bumps times_served for drawn bank items (wave50 RPC) — informational only, never itself an exclusion mechanism. */

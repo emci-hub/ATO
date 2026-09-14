@@ -44,7 +44,9 @@ import { applyQuestionAnswer } from '@/lib/questions/answer';
 import { generateQuestionBatch } from '@/lib/questions/generate';
 import { bankProgressForAxis, bankTotalProgress } from '@/lib/questions/local';
 import { runOngoingRound } from '@/lib/questions/run-ongoing-round';
-import { nextPlayableItem, nextUnansweredItem, routeQuestions } from '@/lib/questions/route';
+import { prewarmBankPool } from '@/lib/questions/run-prewarm';
+import { nextPlayableItem, routeQuestions } from '@/lib/questions/route';
+import { isUnansweredQuestionItem } from '@/lib/questions/rotation';
 import {
   answerQuestionItem,
   fetchLatestOngoingRoundPack,
@@ -87,6 +89,17 @@ function emptyCopy(kind: RouteQuestionsResult['kind']): string | null {
 
 function isLocalId(id: string): boolean {
   return id.startsWith('local-') || id === 'local';
+}
+
+/**
+ * Ongoing-round completion, matching `claim_ongoing_round_complete` (wave52)
+ * exactly: every item answered, skips NOT treated as resolved. Deliberately
+ * not `nextUnansweredItem` — see `isUnansweredQuestionItem` (rotation.ts) for
+ * why the round path needs the stricter predicate that the Infinite
+ * Questions path above does not.
+ */
+function roundFullyAnswered(pack: QuestionPackRow): boolean {
+  return !pack.items.some((item) => isUnansweredQuestionItem(item));
 }
 
 function markSkipped(pack: QuestionPackRow, itemId: string): QuestionPackRow {
@@ -603,7 +616,7 @@ function OngoingRoundFold({
       // closed/offline before it fired), retry it here on load — the RPC
       // dedupes on pack id, so a redundant claim for an already-claimed
       // pack is a harmless no-op, never a double award.
-      if (existing && nextUnansweredItem(existing) === null) {
+      if (existing && roundFullyAnswered(existing)) {
         claimOngoingRoundCompleteQuiet(existing.id);
       } else if (!existing) {
         // No ongoing round has ever been started for this account — this
@@ -654,6 +667,13 @@ function OngoingRoundFold({
       // racing the whole composition against a ceiling tuned for one call.
       const saved = await withTimeout(runOngoingRound(ongoingMe, history, tracks), 40000, 'ongoing-round-start');
       setPack(saved);
+      // Prewarm the shared bank for the NEXT round, now that this one is in
+      // the user's hands. Deliberately after setPack and deliberately not
+      // awaited: the whole point is to move generation off the path someone
+      // is waiting on, so awaiting it here (or running it before the round
+      // is served) would reintroduce exactly the latency it exists to
+      // remove. Self-throttling and never throws — see run-prewarm.ts.
+      void prewarmBankPool(ongoingMe, history, tracks);
     } catch (err) {
       console.log('[ongoing-round] start error:', err);
       Sentry.captureException(err, { tags: { stage: 'ongoing-round-start' } });
@@ -709,7 +729,7 @@ function OngoingRoundFold({
       // top of the true latest state. The RPC re-verifies completion
       // server-side and dedupes on pack id, so this can never double-award
       // even across overlapping batches.
-      if (holder.pack && nextUnansweredItem(holder.pack) === null) {
+      if (holder.pack && roundFullyAnswered(holder.pack)) {
         claimOngoingRoundCompleteQuiet(holder.pack.id);
       }
       return true;
@@ -811,7 +831,7 @@ function OngoingRoundFold({
             {starting ? 'Putting together your next round…' : 'Start your next round'}
           </ThemedText>
         </ThemedPressable>
-      ) : nextUnansweredItem(pack) === null ? (
+      ) : roundFullyAnswered(pack) ? (
         <>
           <ThemedText type="small" themeColor="textSecondary">
             Round complete.

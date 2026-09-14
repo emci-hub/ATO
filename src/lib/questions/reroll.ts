@@ -124,15 +124,26 @@ async function fetchPackBankItemIds(packId: string): Promise<Set<string>> {
 
 /**
  * Question reroll — ongoing-round items only (Infinite Questions rows carry
- * no question_bank_item_id and reroll_question_item rejects them). Mirrors
- * the effect RPC's own exclusion set (permanent per-user exclusions AND
- * every bank item already used elsewhere in this same pack) before spending
- * — a precheck that only matched the permanent-exclusion half let a sparse
- * axis spend the token and then have the RPC find nothing (found in
- * review). The RPC still re-derives its own pick atomically rather than
- * trusting this read, so a rare race where the candidate disappears between
- * the two calls still fails safely (spent, no swap) instead of reusing a
- * stale id.
+ * no question_bank_item_id and reroll_question_item rejects them). Prechecks
+ * that a swap is actually possible before spending the token — a precheck
+ * that only matched the permanent-exclusion half let a sparse axis spend the
+ * token and then have the RPC find nothing (found in review). The RPC still
+ * re-derives its own pick atomically rather than trusting this read, so a
+ * rare race where the candidate disappears between the two calls still fails
+ * safely (spent, no swap) instead of reusing a stale id.
+ *
+ * Since wave68 this precheck is STRICTER than the effect RPC, not a mirror
+ * of it: `fetchBankCandidates` now also excludes every bank item this user
+ * has ever been served (in any pack), while `reroll_question_item`
+ * (wave54_reroll_rpcs_fixes.sql) still excludes only the permanent reroll
+ * list plus this same pack. The drift is deliberately in the safe direction
+ * — the precheck's candidate set is a subset of the RPC's, so it can never
+ * green-light a spend the RPC would then fail. What it does mean is that
+ * reroll reports `no_candidates` earlier on a thin axis than it used to, and
+ * that a reroll can still land a question from one of this user's OWN
+ * earlier rounds. Closing that second gap needs the same anti-join inside
+ * the reroll RPC; deliberately left for a follow-up rather than widened into
+ * a token-spending path in the same change that introduced the dedup.
  */
 export async function rerollQuestionItem(
   item: Pick<QuestionItemRow, 'id' | 'axis' | 'packId'>,

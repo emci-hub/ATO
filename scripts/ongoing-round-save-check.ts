@@ -194,11 +194,21 @@ ok('saveRoundAnswers answers a whole batch through the same answerQuestionItem +
 // (found in review: the original draft used `setPack({...pack, ...})`,
 // which raced when multiple pages' saves were in flight at once).
 assert.match(saveRoundAnswersBody, /setPack\(\(prev\) => \{/, 'must use a functional state update, not a closure read of `pack`');
+// wave68: the predicate is `roundFullyAnswered`, NOT `nextUnansweredItem`.
+// The two disagree about skips, and only `roundFullyAnswered` matches
+// `claim_ongoing_round_complete` (wave52), which requires every item to have
+// `answered_option is not null` and ignores `skipped_at`. A skip-tolerant
+// check here would fire a claim the server refuses.
 assert.match(
   saveRoundAnswersBody,
-  /if \(holder\.pack && nextUnansweredItem\(holder\.pack\) === null\) \{\s*\n\s*claimOngoingRoundCompleteQuiet\(holder\.pack\.id\);/,
+  /if \(holder\.pack && roundFullyAnswered\(holder\.pack\)\) \{\s*\n\s*claimOngoingRoundCompleteQuiet\(holder\.pack\.id\);/,
 );
-ok('round-completion is evaluated once against the whole batch via a functional state update, not per item and not a stale closure');
+assert.doesNotMatch(
+  saveRoundAnswersBody,
+  /nextUnansweredItem/,
+  'the round path must not use the skip-tolerant Infinite Questions predicate',
+);
+ok('round-completion is evaluated once against the whole batch via a functional state update, not per item and not a stale closure, using the answer-only predicate the server agrees with');
 
 // Reroll must be impossible on a row with a local, not-yet-saved pending
 // pick — the server's own guard (wave54) only knows about PERSISTED
