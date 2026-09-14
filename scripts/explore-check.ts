@@ -2,7 +2,7 @@
  * Explore — Sage thread observations. Run: npm run check:explore
  */
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { decideExploreTrigger } from '../src/lib/explore/cadence';
@@ -545,13 +545,19 @@ assert.match(home, /SageStoryFold/);
 assert.doesNotMatch(exploreScreen, /SageStoryFold/);
 assert.match(exploreScreen, /routeExplore/);
 assert.match(exploreScreen, /SageExploreObservations/);
-// Categories moved to its own route (2026-09-12, judgment-pass.md §4A —
-// Explore was stacking 9+ nested surfaces, which is why category
-// statements shipping went unnoticed). Explore keeps a one-line teaser
-// linking to it; CategoriesFold itself now lives on the standalone screen.
-assert.doesNotMatch(exploreScreen, /CategoriesFold/);
-assert.match(exploreScreen, /'\/categories'/);
-assert.match(read('src/app/(tabs)/categories.tsx'), /CategoriesFold/);
+// Categories is back inline on Explore and the standalone route is retired
+// (2026-09-14, Home/Explore/Insight restructure T-E1). This REVERSES the
+// 2026-09-12 judgment-pass.md §4A split, which moved CategoriesFold to its
+// own screen to stop Explore stacking 9+ nested surfaces. That crowding is
+// being solved by deleting surfaces instead — the same pass removes
+// SageExploreObservations, ProfileFillFold, FullProfileFold and
+// SageInsightSpend — so the extra route no longer earns its navigation cost.
+assert.match(exploreScreen, /CategoriesFold/);
+assert.doesNotMatch(exploreScreen, /'\/categories'/);
+assert.ok(
+  !existsSync('src/app/(tabs)/categories.tsx'),
+  'the /categories route must stay deleted — Categories lives inline on Explore',
+);
 assert.match(exploreScreen, /SageTitleCard/);
 assert.match(navOrder, /explore: \{ label: 'Explore', href: '\/explore'/);
 assert.match(tabs, /NavEditOverlay/);

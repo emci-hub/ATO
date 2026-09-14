@@ -9,7 +9,7 @@ import { cueAfterYou } from '@/lib/voice/cue';
 export const PUSH_PATHS = {
   morning: '/',
   evening: '/?focus=check',
-  insight: '/categories',
+  insight: '/explore',
   sunday: '/week',
 } as const;
 

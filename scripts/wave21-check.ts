@@ -3,7 +3,7 @@
  * Run: npm run check:wave21
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { AXIS_POLES, POLE_COPY_REVIEWED, poleCopyClean } from '../src/lib/axis-poles';
@@ -192,10 +192,14 @@ assert.doesNotMatch(checkSwift, /CategoryTeaser|FullProfileFold/);
 ok('Home teaser is gated; crisis card and widget stay untouched');
 
 const exploreTab = read('src/app/(tabs)/explore.tsx');
-// Categories moved to its own route (2026-09-12, judgment-pass.md §4A).
-assert.doesNotMatch(exploreTab, /CategoriesFold/);
-assert.match(exploreTab, /'\/categories'/);
-assert.match(read('src/app/(tabs)/categories.tsx'), /CategoriesFold/);
+// Categories is back inline on Explore, standalone route retired
+// (2026-09-14, T-E1) — reverses the 2026-09-12 judgment-pass.md §4A split.
+assert.match(exploreTab, /CategoriesFold/);
+assert.doesNotMatch(exploreTab, /'\/categories'/);
+assert.ok(
+  !existsSync('src/app/(tabs)/categories.tsx'),
+  'the /categories route must stay deleted — Categories lives inline on Explore',
+);
 assert.match(exploreTab, /FullProfileFold/);
 const circle = read('src/app/(tabs)/circle.tsx');
 assert.match(circle, /setCategoryShare/);

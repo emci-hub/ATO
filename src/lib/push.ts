@@ -307,8 +307,8 @@ export async function fireTestPush(
         : kind === 'insight'
           ? insight
             ? (await pickInsightPayload(insight.me, insight.tracks)) ??
-              insightPush('Categories', 'No current statement yet — generate one on /categories first.')
-            : insightPush('Categories', 'No current statement yet — generate one on /categories first.')
+              insightPush('Categories', 'No current statement yet — generate one on /explore first.')
+            : insightPush('Categories', 'No current statement yet — generate one on /explore first.')
           : sundayPayloadFor(checks, new Date(), timeZone);
 
   const id = `ato.test.${kind}`;

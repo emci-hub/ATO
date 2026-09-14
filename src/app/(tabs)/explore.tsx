@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 
+import { CategoriesFold } from '@/components/categories-fold';
 import { FullProfileFold } from '@/components/full-profile-fold';
 import { IntakeSettings } from '@/components/intake-settings';
 import { ProfileFillFold } from '@/components/profile-fill-fold';
@@ -167,19 +168,7 @@ export default function ExploreScreen() {
               <TraitBandsFold me={me} tracks={tracks} />
               <ProfileFillFold tracks={tracks} />
               <FullProfileFold me={me} onUpdated={() => refreshMe()} />
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => router.push('/categories')}
-                style={({ pressed }) => [
-                  styles.categoriesTeaser,
-                  { borderColor: controlBorderColor(theme) },
-                  pressed && styles.pressed,
-                ]}>
-                <ThemedText type="smallBold">Categories</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  How a few things sit together, from what you have told us.
-                </ThemedText>
-              </Pressable>
+              <CategoriesFold me={me} onUpdated={() => refreshMe()} />
               <RollHistoryFold
                 userId={me.id}
                 types={['legend', 'category']}
@@ -481,12 +470,6 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     alignItems: 'center',
     marginTop: Spacing.two,
-  },
-  categoriesTeaser: {
-    borderRadius: Spacing.four,
-    borderWidth: 1,
-    padding: Spacing.three,
-    gap: Spacing.half,
   },
   exploreBlock: {
     gap: Spacing.two,

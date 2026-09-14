@@ -3,7 +3,7 @@
  * Run: npm run check:wave22
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
@@ -188,11 +188,14 @@ assert.match(fold, /PROFILE_LOCKED_CTA/);
 // daily check-in card — the assertion below moved with it. Explore no
 // longer imports SageStoryFold.
 assert.match(read('src/app/(tabs)/index.tsx'), /SageStoryFold/);
-// Categories moved to its own route (2026-09-12, judgment-pass.md §4A) —
-// Explore keeps a teaser link, CategoriesFold itself lives on /categories.
-assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /CategoriesFold/);
-assert.match(read('src/app/(tabs)/explore.tsx'), /'\/categories'/);
-assert.match(read('src/app/(tabs)/categories.tsx'), /CategoriesFold/);
+// Categories is back inline on Explore, standalone route retired
+// (2026-09-14, T-E1) — reverses the 2026-09-12 judgment-pass.md §4A split.
+assert.match(read('src/app/(tabs)/explore.tsx'), /CategoriesFold/);
+assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /'\/categories'/);
+assert.ok(
+  !existsSync('src/app/(tabs)/categories.tsx'),
+  'the /categories route must stay deleted — Categories lives inline on Explore',
+);
 assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /SageStoryFold/);
 assert.doesNotMatch(read('src/app/(tabs)/sage.tsx'), /SageStoryFold|ExplorePinnedCategories/);
 ok('Story UI hides when Gemini is unreachable; no generic fallback paragraph; Story now lives on Home (§9), not Explore');

@@ -59,6 +59,82 @@ Do not commit `.env.local` or API keys. Do not change dependencies, schemas, aut
 
 - **Structural flow audit (Sep 8, 2026) — Phase 0 shipped, commit `9b42556`.** Full audit of every user-facing flow (routes, Q&A, reachability, orphans) run this session. Spine is sound; the breaks were all CTAs *between* features. Phase 0 fixed the four that stranded a user: (1) **every "answer questions about X" CTA was a dead end** — ten push sites across seven screens deep-link `/intake-sweep?axis=`, but `QuestionsFold` sat in a collapsed `SettingsFold` whose `onOpen` (the only caller of `routeQuestions`) never fired, so the axis was dropped; (2) **`/ai-lab` had no guard** and was reachable by any account via 5 taps on the You Build line — now on `canSeeDevLab`, a **no-op today because `PRE_LAUNCH_DEV` is true**, it closes at the flag flip; (3) **`/roll` shipped with no `TabTrigger`**, reachable only via an `as Href` cast — note **typed routes are NOT enforced in this repo** (a deliberately bogus route string compiles clean), so `router.push` strings have zero typecheck protection; now registered via `HIDDEN_TAB_ROUTES` inside `TabList` and pinned by `check:nav`, plus a Back control it never had; (4) Legends' thin-profile CTA was `disabled={!focusAxis}` — a visible dead button. **Still to do (Phases 1-3, not started):** wire or delete the built-but-unimported §3.4 loop (`ongoing-round` + `tiered-axis-plan` + `chunked-generate` — zero `src/` importers, only their gate checks); delete `explore-panel.tsx` (357-line fossil superseded by `(tabs)/explore.tsx` when `home-inner-tabs.tsx` went in `06679e9`) and the four check scripts asserting on it; delete unreachable `theme-lab`/`around-lab`; add `+not-found.tsx`; Home slot fall-through and the Sunday duplicate week row; then `scripts/reachability-check.ts` + `scripts/orphan-check.ts` so orphans and unreachable routes fail the gate instead of accumulating. **Device verification pending** for `/roll` and all ten deep links.
 
+## ACTIVE PLAN — Home/Explore/Insight restructure (started 2026-09-14)
+
+**Plan of record:** `C:\Users\lil_e\.claude\plans\assess-current-home-screen-expressive-sunrise.md`
+(lives outside the repo, so it is NOT version-controlled — see "open question" below).
+Read that file plus this section to resume; nothing depends on chat history.
+
+**Locked decisions (emci, 2026-09-14) — do not re-litigate:**
+
+1. **Clean slate, bottom-up.** No live users. When old code exists only to
+   support something being replaced, **delete it** — do not patch it to
+   coexist with the new system, and do not spend cycles making legacy
+   behavior consistent with what is replacing it. Flag deletions in the
+   report; don't loop trying to reconcile.
+2. **Bands: keep 3, cuts move to 0.35/0.65** (T-B1's recommendation accepted).
+3. **Lean hints stay a simple binary 0.5 split** — they are prompt grounding,
+   not user-facing bands. Not rebuilt into the 3-band system.
+4. **`explore-panel.tsx` is deleted** as dead code (already independently
+   flagged in the Sep 8 structural audit above).
+5. **The dev-test-user root-gating change was discarded**, not fixed or
+   committed (`git checkout` on 2026-09-14). It was unrelated to this plan and
+   was also broken: its docstring claimed `reset_dev_test_user` is gated by
+   `is_root()` server-side "(wave67)", but wave67 is `count_user_rows_refresh`
+   and `wave66` still hard-gates to the literal `@atodev` uuid. If root-gating
+   is ever revisited, that server-side gate is the real work, not the client
+   guard. **Discarding it also removed a local `expo start --port 8082` tweak.**
+6. **Migrations are written but never applied.** Each one stops for emci's
+   review, same as wave68.
+
+**Progress:**
+
+- **T-B1 (band study script) — DONE**, commit `0862793`. `scripts/band-study-check.ts`
+  + `check:band-study`. Asserts structural invariants only, never a percentage,
+  so it survives future bank edits.
+- **T-B2 (band recalibration) — DONE**, same commit `0862793`.
+  `TRAIT_BAND_LOW_CUT`/`TRAIT_BAND_HIGH_CUT` in `traits.ts` now feed both
+  `traitBand` and `CATEGORY_FALLBACK_BANDS` (one band system, not two that
+  agreed by coincidence). Nine repeated `>= 0.5` literals replaced by
+  `leanHighLow`/`leanComparative`. Stray `0.75` answer value fixed in
+  `bank.ts` **and** the `wave49` seed.
+  **Open item:** wave49 seeds with `on conflict (prompt) do nothing`, so a
+  database already seeded still holds `0.75` for that one option. Needs a
+  one-row corrective migration — flagged, not written yet.
+  `dawn-category.ts` was deliberately left with its raw `>= 0.5` — it is
+  imported only by the card lane (`voice/router.ts`, `voice/providers/*`) and
+  is deleted wholesale in T-H2. Per decision 1, it is not worth patching.
+- **T-E1 (Categories inline, `/categories` retired) — DONE.**
+  `CategoriesFold` now renders inline on Explore where the teaser was;
+  `src/app/(tabs)/categories.tsx` deleted; the `categories` entry removed from
+  `HIDDEN_TAB_ROUTES`; `PUSH_PATHS.insight` and both `push.ts` fallback
+  strings now point at `/explore`. The six `/categories` assertions in
+  `explore-check` / `wave21-check` / `wave22-check` were **inverted, not
+  deleted**, each with a rewritten comment naming the reversal and its date —
+  they now assert Explore contains `CategoriesFold`, contains no
+  `'/categories'` string, and that the route file stays deleted.
+  This deliberately reverses the 2026-09-12 judgment-pass.md §4A split.
+- **Next: T-H1** — `daily_insights` migration (written, NOT applied), plus
+  `generate-insight.ts`, `insight/store.ts`, `DAILY_INSIGHT_META` and
+  `scripts/insight-check.ts`. Nothing rendered yet; Home is untouched until
+  T-H2, which is blocked on the migration being reviewed and applied.
+
+**Gaps found in the plan doc itself (verified against the code, 2026-09-14):**
+
+- `full-profile-check.ts:129-139` needs more surgery than the single line 135
+  the plan names — lines 132-133 also assert `FullProfileFold`'s presence.
+- `wave21-check.ts:199` asserts `FullProfileFold` and is missing from the
+  plan's guard-script list entirely.
+- `voice/providers/types.ts` must **survive** the voice-lane deletion in T-H2 —
+  it exports `TALK_STYLE_GUIDE` to Explore, Sage Insight and Questions. Only
+  its `DawnReadCategory` import gets removed. `voice/config.ts` and
+  `voice/talk.ts` are the Talk lane and also stay.
+- `push.ts`'s morning-body call is at `:304`, not `:310-311` as the plan says.
+
+**Open question for emci:** the plan of record sits in `~/.claude/plans/`,
+outside git. Should it move to `docs/` so it is version-controlled with the
+work it describes?
+
 ## Pre-launch re-gating checklist (must re-gate or remove before public launch)
 
 These dev/testing conveniences are deliberately un-`__DEV__`-gated (via the
