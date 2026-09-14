@@ -18,6 +18,7 @@
  */
 import type { ImageSourcePropType } from 'react-native';
 
+import rawCast from '@/assets/play/skins/cast/skin.json';
 import rawCraftpix from '@/assets/play/skins/craftpix-td/skin.json';
 import rawKenney from '@/assets/play/skins/kenney-td/skin.json';
 import { PLAY_ART } from '@/play/generated-play-assets';
@@ -45,6 +46,7 @@ export type SkinRoleId =
   | 'unit.runner'
   | 'unit.tank'
   | 'unit.tank_alt'
+  | 'unit.boss_scout'
   | 'unit.final'
   | 'fx.shot'
   | 'fx.coin';
@@ -60,6 +62,18 @@ export type SkinRole = {
   keys: readonly string[];
   dirs: SkinDirs;
   pivot: SkinPivot;
+  /**
+   * Only meaningful with `pivot: 'feet'`. Where the sprite's VISUAL feet sit
+   * inside the drawn box, as a fraction of the box height measured from its
+   * TOP (`0.75` = three quarters down). Default `1` = the box's bottom edge,
+   * which is only correct when the PNG has no transparent padding underneath.
+   *
+   * Cast (PixelLab) art ships each rotation as a square canvas with the
+   * character filling the middle ~50%, so the bottom ~25% of the PNG is
+   * transparent. Without `footAt` the feet float `(1 - footAt) * units` above
+   * the world point — hence `0.75` for every cast role.
+   */
+  footAt?: number;
   /** Source tile size in px (informational — the board scales in units). */
   cellPx?: number;
   /** Drawn box edge in board units (0..100 space). */
@@ -76,8 +90,10 @@ export type SkinRole = {
 type SkinFile = { pack: string; roles: Record<string, SkinRole> };
 
 /** Active skin first, fallbacks after. Per-role resolution walks the stack so a
- * partial skin only overrides the roles it actually defines. */
-const SKIN_STACK: readonly SkinFile[] = [rawCraftpix, rawKenney] as unknown as readonly SkinFile[];
+ * partial skin only overrides the roles it actually defines. The cast skin
+ * (PixelLab defaults) leads; craftpix-td owns map/props; kenney-td stays the
+ * complete fallback for unit.avatar / unit.final / fx.* / anything else. */
+const SKIN_STACK: readonly SkinFile[] = [rawCast, rawCraftpix, rawKenney] as unknown as readonly SkinFile[];
 
 /** Resolve a role across the skin stack (active first, then fallbacks). */
 function resolveRole(role: SkinRoleId): SkinRole | undefined {
@@ -111,6 +127,26 @@ export function skinArt(
 export function skinUnits(role: SkinRoleId, fallbackUnits: number): number {
   const units = resolveRole(role)?.units;
   return typeof units === 'number' && units > 0 ? units : fallbackUnits;
+}
+
+/** Number of facing dirs for a role (1 = single up-facing sprite that rotates;
+ * 4/8 = per-direction sprites). */
+export function skinDirs(role: SkinRoleId): number {
+  return resolveRole(role)?.dirs ?? 1;
+}
+
+/**
+ * Facing bucket 0..7 for a role, north-first canonical order matching the
+ * `keys` array in the skin: 0 north · 1 north-east · 2 east · 3 south-east ·
+ * 4 south · 5 south-west · 6 west · 7 north-west. Returns 0 for `dirs <= 1`
+ * (single-sprite roles rotate instead of picking a direction).
+ */
+export function skinDirIndex(role: SkinRoleId, dx: number, dy: number): number {
+  const dirs = resolveRole(role)?.dirs ?? 1;
+  if (dirs <= 1) return 0;
+  const deg = (Math.atan2(dy, dx) * 180) / Math.PI; // -180..180, east = 0
+  const bearing = deg + 90; // compass: north = 0, clockwise
+  return ((Math.round(bearing / 45) % 8) + 8) % 8;
 }
 
 /** Solid tone for a ribbon role (the road), or undefined when it has none. */
@@ -158,6 +194,10 @@ export function skinClipArt(
  * Top-left draw box for a sprite of `size` board units centred (or footed) on
  * the world point (`cx`, `cy`). Every presenter uses this so all layers stack
  * on one centre.
+ *
+ * `pivot: 'center'` puts the box middle on the point. `pivot: 'feet'` puts the
+ * sprite's VISUAL feet on the point via the role's `footAt` (transparent
+ * padding at the bottom of the PNG is compensated for, not drawn past).
  */
 export function skinDrawBox(
   role: SkinRoleId,
@@ -165,8 +205,14 @@ export function skinDrawBox(
   cy: number,
   size: number,
 ): { x: number; y: number; size: number } {
-  const pivot = resolveRole(role)?.pivot ?? 'center';
-  if (pivot === 'feet') return { x: cx - size / 2, y: cy - size, size };
+  const def = resolveRole(role);
+  if ((def?.pivot ?? 'center') === 'feet') {
+    // `footAt` = fraction of the box height (from the top) holding the visual
+    // feet; `1` means the art is flush to the bottom (no padding).
+    const raw = def?.footAt;
+    const footAt = typeof raw === 'number' && raw > 0 && raw <= 1 ? raw : 1;
+    return { x: cx - size / 2, y: cy - size * footAt, size };
+  }
   return { x: cx - size / 2, y: cy - size / 2, size };
 }
 
@@ -207,12 +253,15 @@ export const BOARD_SKIN_LABEL: Record<BoardSkinId, string> = {
   'grove-classic': 'Grove Classic',
 };
 
-/** Which unit role plays each boss band (art only — bands/scaling unchanged). */
+/** Which unit role plays each boss band (art only — bands/scaling unchanged).
+ * Scout mini + scout boss now use the dedicated Titan-X `unit.boss_scout` role
+ * (split off `unit.tank` so Knight stays the tank creep); semi/final keep their
+ * kenney fallback sprites until their cast packs land. */
 export const BAND_UNIT_ROLE = {
   final: 'unit.final',
   semi: 'unit.tank_alt',
-  scoutBoss: 'unit.tank',
-  scoutMini: 'unit.tank',
+  scoutBoss: 'unit.boss_scout',
+  scoutMini: 'unit.boss_scout',
   runner: 'unit.runner',
 } as const satisfies Record<string, SkinRoleId>;
 

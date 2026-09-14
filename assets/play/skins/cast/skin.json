@@ -1,0 +1,128 @@
+{
+  "$comment": "Cast skin (H1) — the PixelLab default cast on the board. 8-dir STATIC rotations only this pass (walk anims are H1.5). `keys` are listed north-first canonical order: north, north-east, east, south-east, south, south-west, west, north-west (the `skinDirIndex` bucket order). cast sits FIRST on the skin stack; map/props fall to craftpix-td, and unit.avatar / unit.final / fx.* fall to kenney-td. See games/grove/CAST_DROP.md + games/grove/ref/cast-source/. Every cast rotation is a square canvas with the character filling the middle ~50%, so the bottom ~25% of the PNG is transparent: every `pivot: feet` role MUST carry `footAt: 0.75` so the visual feet land exactly on the world point (pad centre / road point) instead of floating a quarter-box high.",
+  "pack": "cast",
+  "roles": {
+    "unit.puff": {
+      "keys": [
+        "skins/cast/creeps/village-girl/rotations/north",
+        "skins/cast/creeps/village-girl/rotations/north-east",
+        "skins/cast/creeps/village-girl/rotations/east",
+        "skins/cast/creeps/village-girl/rotations/south-east",
+        "skins/cast/creeps/village-girl/rotations/south",
+        "skins/cast/creeps/village-girl/rotations/south-west",
+        "skins/cast/creeps/village-girl/rotations/west",
+        "skins/cast/creeps/village-girl/rotations/north-west"
+      ],
+      "dirs": 8,
+      "pivot": "feet",
+      "footAt": 0.75,
+      "cellPx": 64,
+      "units": 8
+    },
+    "unit.runner": {
+      "keys": [
+        "skins/cast/creeps/wizard/rotations/north",
+        "skins/cast/creeps/wizard/rotations/north-east",
+        "skins/cast/creeps/wizard/rotations/east",
+        "skins/cast/creeps/wizard/rotations/south-east",
+        "skins/cast/creeps/wizard/rotations/south",
+        "skins/cast/creeps/wizard/rotations/south-west",
+        "skins/cast/creeps/wizard/rotations/west",
+        "skins/cast/creeps/wizard/rotations/north-west"
+      ],
+      "dirs": 8,
+      "pivot": "feet",
+      "footAt": 0.75,
+      "cellPx": 64,
+      "units": 8
+    },
+    "unit.tank": {
+      "keys": [
+        "skins/cast/creeps/knight/rotations/north",
+        "skins/cast/creeps/knight/rotations/north-east",
+        "skins/cast/creeps/knight/rotations/east",
+        "skins/cast/creeps/knight/rotations/south-east",
+        "skins/cast/creeps/knight/rotations/south",
+        "skins/cast/creeps/knight/rotations/south-west",
+        "skins/cast/creeps/knight/rotations/west",
+        "skins/cast/creeps/knight/rotations/north-west"
+      ],
+      "dirs": 8,
+      "pivot": "feet",
+      "footAt": 0.75,
+      "cellPx": 64,
+      "units": 10
+    },
+    "tower.archer": {
+      "keys": [
+        "skins/cast/towers/viper/rotations/north",
+        "skins/cast/towers/viper/rotations/north-east",
+        "skins/cast/towers/viper/rotations/east",
+        "skins/cast/towers/viper/rotations/south-east",
+        "skins/cast/towers/viper/rotations/south",
+        "skins/cast/towers/viper/rotations/south-west",
+        "skins/cast/towers/viper/rotations/west",
+        "skins/cast/towers/viper/rotations/north-west"
+      ],
+      "dirs": 8,
+      "pivot": "feet",
+      "footAt": 0.75,
+      "cellPx": 64,
+      "units": 26,
+      "scales": [0.7, 0.85, 1]
+    },
+    "tower.vine": {
+      "keys": [
+        "skins/cast/towers/ghost/rotations/north",
+        "skins/cast/towers/ghost/rotations/north-east",
+        "skins/cast/towers/ghost/rotations/east",
+        "skins/cast/towers/ghost/rotations/south-east",
+        "skins/cast/towers/ghost/rotations/south",
+        "skins/cast/towers/ghost/rotations/south-west",
+        "skins/cast/towers/ghost/rotations/west",
+        "skins/cast/towers/ghost/rotations/north-west"
+      ],
+      "dirs": 8,
+      "pivot": "feet",
+      "footAt": 0.75,
+      "cellPx": 64,
+      "units": 26,
+      "scales": [0.7, 0.85, 1]
+    },
+    "tower.crystal": {
+      "keys": [
+        "skins/cast/towers/lux/rotations/north",
+        "skins/cast/towers/lux/rotations/north-east",
+        "skins/cast/towers/lux/rotations/east",
+        "skins/cast/towers/lux/rotations/south-east",
+        "skins/cast/towers/lux/rotations/south",
+        "skins/cast/towers/lux/rotations/south-west",
+        "skins/cast/towers/lux/rotations/west",
+        "skins/cast/towers/lux/rotations/north-west"
+      ],
+      "dirs": 8,
+      "pivot": "feet",
+      "footAt": 0.75,
+      "cellPx": 64,
+      "units": 26,
+      "scales": [0.7, 0.85, 1]
+    },
+    "unit.boss_scout": {
+      "keys": [
+        "skins/cast/boss/titan-x/rotations/north",
+        "skins/cast/boss/titan-x/rotations/north-east",
+        "skins/cast/boss/titan-x/rotations/east",
+        "skins/cast/boss/titan-x/rotations/south-east",
+        "skins/cast/boss/titan-x/rotations/south",
+        "skins/cast/boss/titan-x/rotations/south-west",
+        "skins/cast/boss/titan-x/rotations/west",
+        "skins/cast/boss/titan-x/rotations/north-west"
+      ],
+      "dirs": 8,
+      "pivot": "feet",
+      "footAt": 0.75,
+      "cellPx": 64,
+      "units": 20
+    }
+  }
+}

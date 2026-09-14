@@ -80,6 +80,8 @@ import {
   bandUnitRole,
   skinArt,
   skinClipArt,
+  skinDirIndex,
+  skinDirs,
   skinDrawBox,
   skinScale,
   skinTone,
@@ -135,17 +137,9 @@ const CREEP_DRAW_SCALE: Record<CreepRole, number> = {
   boss: 1,
 };
 
-/** Role underglow opacity — low enough to sit under the sprite, strong enough
- * to tint the tile around it. */
-const CREEP_GLOW_OPACITY = 0.28;
-/** Role ring stroke width (board units) — thicker than a hairline so the role
- * still reads over the sprite. */
-const CREEP_RING_WIDTH = 1.6;
-/** Runner tell (display only): runners get a dashed pink ring plus a short
- * trailing streak so a fast runner reads apart from a swarm at a glance.
- * Swarm/tank/boss keep the solid ring + underglow unchanged. */
-const RUNNER_RING_DASH: number[] = [2.4, 1.6];
-const RUNNER_TRAIL_LEN = 5; // board units past the ring, behind the runner
+/** Runner tell (display only): a short trailing streak behind a fast runner
+ * so it reads apart from a swarm at a glance. No role ring (removed). */
+const RUNNER_TRAIL_LEN = 5; // board units past the body, behind the runner
 const RUNNER_TRAIL_HALF_WIDTH = 1.3;
 const RUNNER_TRAIL_OPACITY = 0.5;
 const AVATAR_COLOR = '#38BDF8';
@@ -153,11 +147,6 @@ const AVATAR_COLOR = '#38BDF8';
 /** Default board paint — `neon` (procedural chrome) vs `grove-classic`
  * (Craftpix field tiles + cobble road). Paint only; geometry is untouched. */
 const NEON_CHROME = BOARD_SKIN === 'neon';
-const TOWER_COLORS: Record<TowerKind, string> = {
-  archer: '#34D399',
-  vine: '#A3E635',
-  crystal: '#A78BFA',
-};
 
 /* -------------------------------------------------------------- game speed --- */
 /** The sim clock multipliers a wave can run at. One multiplier drives the WHOLE
@@ -1684,29 +1673,10 @@ export function DefendScreen({
                   })}
                 </>
               )}
-              {boardMap.pads.map((pad, index) => {
-                const tower = sim?.towers.find((t) => t.pad === index);
-                const boundBoss = sim?.boundBosses.find((b) => b.pad === index);
-                const selected = selectedPad === index;
-                const occupied = tower != null || boundBoss != null;
-                const fillColor = boundBoss
-                  ? TAG_COLOR[getBoundBossDef(boundBoss.bossId)?.tint ?? view.cycleTint]
-                  : tower
-                    ? TOWER_COLORS[tower.kind]
-                    : theme.accent;
-                return (
-                  <Circle
-                    key={`pad-${index}`}
-                    cx={pad.x}
-                    cy={pad.y}
-                    r={5.5}
-                    fill={fillColor}
-                    fillOpacity={occupied ? 1 : 0.25}
-                    stroke={selected ? theme.accent : 'none'}
-                    strokeWidth={selected ? 1.4 : 0}
-                  />
-                );
-              })}
+              {/* Pads draw NOTHING extra here — the neon chrome's magenta
+               * L-brackets + P-label are the whole read (no solid candy disc,
+               * no base ring). A selected pad is signalled by its dashed range
+               * ring below. */}
               {selectedPad != null && boardMap.pads[selectedPad] ? (
                 <Circle
                   cx={boardMap.pads[selectedPad].x}
@@ -1731,22 +1701,40 @@ export function DefendScreen({
               {sim?.towers.map((tower) => {
                 const pad = boardMap.pads[tower.pad];
                 const role = TOWER_ROLE[tower.kind];
-                const source = skinArt(role);
+                const dirs = skinDirs(role);
+                const deg = towerFacingRef.current[tower.id] ?? 0;
+                const heading = headingVectorFromDeg(deg);
+                const dirIndex = skinDirIndex(role, heading.dx, heading.dy);
+                const source = skinArt(role, dirIndex);
                 if (!source) return null;
                 const size = skinUnits(role, TOWER_PAD_UNITS) * skinScale(role, tower.level);
                 const box = skinDrawBox(role, pad.x, pad.y, size);
-                const deg = towerFacingRef.current[tower.id] ?? 0;
+                const transform =
+                  dirs > 1 ? undefined : `rotate(${deg} ${pad.x} ${pad.y})`;
                 return (
-                  <G
-                    key={`tower-art-${tower.id}`}
-                    transform={`rotate(${deg} ${pad.x} ${pad.y})`}>
-                    <SvgImage
-                      href={source}
-                      x={box.x}
-                      y={box.y}
-                      width={box.size}
-                      height={box.size}
-                    />
+                  <G key={`tower-art-${tower.id}`}>
+                    <G transform={transform}>
+                      <SvgImage
+                        href={source}
+                        x={box.x}
+                        y={box.y}
+                        width={box.size}
+                        height={box.size}
+                      />
+                    </G>
+                    {/* Tiny Space Mono role letter at the sprite's top-right —
+                     * outside the rotate group so it never spins. Anchored to
+                     * the visible art corner, not the padded box corner. */}
+                    <SvgText
+                      x={box.x + box.size * TOWER_BADGE_X_FRAC}
+                      y={box.y + box.size * TOWER_BADGE_Y_FRAC}
+                      fontSize={TOWER_MARKER_SIZE}
+                      fontFamily="SpaceMono_700Bold"
+                      fill={TOWER_MARKER_COLOR}
+                      textAnchor="end"
+                      opacity={0.95}>
+                      {TOWER_LETTER[tower.kind]}
+                    </SvgText>
                   </G>
                 );
               })}
@@ -1789,17 +1777,14 @@ export function DefendScreen({
                 const y = pos.y * 100;
                 const pct = Math.max(0, Math.min(1, puff.hp / puff.maxHp));
                 const slowed = puff.slowMs > 0;
-                // W1 placeholder role tint (until per-role sprites): the role
-                // colour fills the no-sprite circle and rings every creep so it
-                // reads over the sprite too. Display only.
+                // §19 board cast (skin roles): runners = fast unit, bosses =
+                // tanks/heavy by band, tanks = the heavy soak unit, normal
+                // puffs = the puff unit.
                 const creep = creepRole(puff);
                 const isRunner = puff.kind === 'runner';
                 const tintColor = CREEP_ROLE_COLOR[creep];
                 const drawScale = CREEP_DRAW_SCALE[creep];
                 const radius = 3.4 * puff.size * drawScale;
-                // §19 board cast (skin roles): runners = fast unit, bosses =
-                // tanks/heavy by band, tanks = the heavy soak unit, normal
-                // puffs = the puff unit.
                 const spriteRole: SkinRoleId =
                   puff.kind === 'boss'
                     ? bandUnitRole(band?.kind ?? '')
@@ -1808,35 +1793,40 @@ export function DefendScreen({
                       : puff.kind === 'tank'
                         ? 'unit.tank'
                         : 'unit.puff';
-                const sprite = skinArt(spriteRole);
+                const facingDeg = puffFacingRef.current[puff.id] ?? 0;
+                const heading = headingVectorFromDeg(facingDeg);
+                const spriteDirs = skinDirs(spriteRole);
+                const sprite = skinArt(spriteRole, skinDirIndex(spriteRole, heading.dx, heading.dy));
                 const spriteSize = skinUnits(spriteRole, UNIT_BASE_UNITS) * puff.size * drawScale;
-                const ringRadius = sprite ? spriteSize / 2 + 0.8 : radius + 0.9;
+                // Feet-pivoted sprites rise above the path point, so the body
+                // chrome (ring / bar / badge) anchors to the draw box, not the
+                // path point.
+                const box = skinDrawBox(spriteRole, x, y, spriteSize);
+                const hasSprite = sprite != null;
+                const bodyCy = hasSprite ? box.y + spriteSize / 2 : y;
+                const ringRadius = hasSprite ? spriteSize / 2 + 0.8 : radius + 0.9;
                 const barWidth = 8 * puff.size * drawScale;
                 // Face along the road (path tangent), same up-facing convention
                 // as the towers. Falls back to the last known facing when the
                 // heading is degenerate.
-                const facingDeg = puffFacingRef.current[puff.id] ?? 0;
+                const spriteTransform =
+                  spriteDirs > 1 ? undefined : `rotate(${facingDeg} ${x} ${bodyCy})`;
+                // Boss band badge (display only): M = scout mini-boss, B = boss.
+                const bossBadge =
+                  puff.kind === 'boss' ? (band?.kind === 'scout_mini' ? 'M' : 'B') : null;
+                const barTop = hasSprite ? box.y - 2.8 : y - radius - 4;
                 return (
                   <G key={`puff-${puff.id}`}>
-                    {/* Role underglow disc — sits beneath the sprite so the
-                     * role tint reads on the tile, not just as an outline. */}
-                    <Circle
-                      cx={x}
-                      cy={y}
-                      r={ringRadius}
-                      fill={tintColor}
-                      fillOpacity={CREEP_GLOW_OPACITY}
-                    />
                     {/* Runner-only motion streak — a short comet tail trailing
                      * the creep along its road heading (up = forward in the
                      * rotated frame, so the tail sits at +y). Display only. */}
                     {isRunner ? (
-                      <G transform={`rotate(${facingDeg} ${x} ${y})`}>
+                      <G transform={`rotate(${facingDeg} ${x} ${bodyCy})`}>
                         <Path
                           d={
-                            `M ${x - RUNNER_TRAIL_HALF_WIDTH} ${y + ringRadius * 0.55} ` +
-                            `L ${x} ${y + ringRadius + RUNNER_TRAIL_LEN} ` +
-                            `L ${x + RUNNER_TRAIL_HALF_WIDTH} ${y + ringRadius * 0.55} Z`
+                            `M ${x - RUNNER_TRAIL_HALF_WIDTH} ${bodyCy + ringRadius * 0.55} ` +
+                            `L ${x} ${bodyCy + ringRadius + RUNNER_TRAIL_LEN} ` +
+                            `L ${x + RUNNER_TRAIL_HALF_WIDTH} ${bodyCy + ringRadius * 0.55} Z`
                           }
                           fill={tintColor}
                           fillOpacity={RUNNER_TRAIL_OPACITY}
@@ -1847,43 +1837,56 @@ export function DefendScreen({
                         />
                       </G>
                     ) : null}
-                    <G transform={`rotate(${facingDeg} ${x} ${y})`}>
+                    <G transform={spriteTransform}>
                       {sprite ? (
                         <SvgImage
                           href={sprite}
-                          x={x - spriteSize / 2}
-                          y={y - spriteSize / 2}
-                          width={spriteSize}
-                          height={spriteSize}
+                          x={box.x}
+                          y={box.y}
+                          width={box.size}
+                          height={box.size}
                         />
                       ) : (
                         <Circle cx={x} cy={y} r={radius} fill={tintColor} />
                       )}
                     </G>
+                    {/* Slowed overlay — a translucent puddle under the sprite
+                     * while the creep is chilled (display only, no role ring). */}
                     <Circle
                       cx={x}
-                      cy={y}
-                      r={ringRadius}
-                      fill="none"
-                      stroke={tintColor}
-                      strokeWidth={CREEP_RING_WIDTH}
-                      strokeOpacity={0.9}
-                      strokeDasharray={isRunner ? RUNNER_RING_DASH : undefined}
+                      cy={bodyCy}
+                      r={radius}
+                      fill={slowed ? theme.accentTertiary : 'none'}
+                      fillOpacity={0.5}
                     />
-                    {puff.kind === 'boss' ? (
-                      <Circle
-                        cx={x}
-                        cy={y}
-                        r={radius}
-                        fill="none"
-                        stroke="#FFFFFF"
-                        strokeWidth={0.6}
-                        strokeOpacity={0.7}
-                      />
+                    <Rect
+                      x={x - barWidth / 2}
+                      y={barTop}
+                      width={barWidth}
+                      height={1.6}
+                      fill="rgba(0,0,0,0.35)"
+                      rx={0.8}
+                    />
+                    <Rect
+                      x={x - barWidth / 2}
+                      y={barTop}
+                      width={barWidth * pct}
+                      height={1.6}
+                      fill="#4ADE80"
+                      rx={0.8}
+                    />
+                    {bossBadge ? (
+                      <SvgText
+                        x={x}
+                        y={barTop - 2}
+                        fontSize={4.5}
+                        fontFamily="SpaceMono_700Bold"
+                        fill="#FFFFFF"
+                        textAnchor="middle"
+                        opacity={0.95}>
+                        {bossBadge}
+                      </SvgText>
                     ) : null}
-                    <Circle cx={x} cy={y} r={radius} fill={slowed ? theme.accentTertiary : 'none'} fillOpacity={0.5} />
-                    <Rect x={x - barWidth / 2} y={y - radius - 4} width={barWidth} height={1.6} fill="rgba(0,0,0,0.35)" rx={0.8} />
-                    <Rect x={x - barWidth / 2} y={y - radius - 4} width={barWidth * pct} height={1.6} fill="#4ADE80" rx={0.8} />
                   </G>
                 );
               })}
@@ -3047,6 +3050,22 @@ const TOWER_PAD_UNITS = 13;
 /** Fallback enemy box at `puff.size === 1` when a role omits `units`. */
 const UNIT_BASE_UNITS = 15;
 
+/** Tiny Space Mono role marker drawn at the tower's top-right (replaces the old
+ * solid pad disc). Neon cyan matches the board chrome's pad labels. */
+const TOWER_LETTER: Record<TowerKind, string> = {
+  archer: 'A',
+  vine: 'V',
+  crystal: 'C',
+};
+const TOWER_MARKER_COLOR = '#00EAFF';
+const TOWER_MARKER_SIZE = 4;
+/** Cast tower art fills the middle ~50% of its square canvas (same padding the
+ * `footAt` field compensates for), so the VISIBLE sprite's top-right corner sits
+ * at 0.75 across / 0.25 down the drawn box. Anchor the badge there — the padded
+ * box corner would leave the letter floating right of the art. */
+const TOWER_BADGE_X_FRAC = 0.75;
+const TOWER_BADGE_Y_FRAC = 0.25;
+
 /** Shot FX: speed in board units/sec and the "reached target" radius. */
 const SHOT_SPEED_UNITS_PER_SEC = 95;
 const SHOT_HIT_RADIUS = 2.5;
@@ -3069,6 +3088,13 @@ function facingDegrees(dx: number, dy: number): number {
 /** World-space rotation (deg) from a point toward a target. */
 function aimDegrees(cx: number, cy: number, tx: number, ty: number): number {
   return facingDegrees(tx - cx, ty - cy);
+}
+
+/** Recover the heading vector (east = +x) from a stored up-facing `deg`, so a
+ * `dirs > 1` role can bucket its per-direction sprite via `skinDirIndex`. */
+function headingVectorFromDeg(deg: number): { dx: number; dy: number } {
+  const rad = ((deg - ART_BASE_FACING_DEG) * Math.PI) / 180;
+  return { dx: Math.cos(rad), dy: Math.sin(rad) };
 }
 
 /** Delta from the Avatar to the nearest puff in attack range (facing aid). */
