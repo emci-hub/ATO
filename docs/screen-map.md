@@ -90,7 +90,8 @@ All of it lands in one `createMe(...)` insert (`lib/me.ts`): `name, handle, show
 ## Explore (`src/app/(tabs)/explore.tsx`)
 
 - Header: `settledAxisLabel(tracks)` (`lib/trait-stability.ts`) from `fetchTraitTracks(userId)`; `me.current_focus` chip label via `chipLabel(CURRENT_FOCUS_CHIPS, ...)` (`lib/intake.ts`)
-- Body (child components, all fed `me`/`tracks`): `SageTitleCard`, `IntakeSettings`, `TraitBandsFold`, `ProfileFillFold`, `FullProfileFold`, `CategoriesFold`, `RollHistoryFold` (types `['legend','category']`), `SageInsightSpend`
+- Body (child components, all fed `me`/`tracks`): `SageTitleCard`, `IntakeSettings`, `TraitBandsFold`, `ProfileFillFold`, `FullProfileFold`, `RollHistoryFold` (types `['legend','category']`), `SageInsightSpend`
+- Categories teaser card (explore.tsx:170-178) — pushes to `/categories` on press; `CategoriesFold` itself no longer renders here (see Categories section below)
 - `SageExploreObservations` fold (explore.tsx:264-447) — calls `routeExplore` (`lib/explore/route.ts`), wired to `fetchLatestExplorePack`/`saveExplorePack`/`fetchExploreMissNotes`/`recordExploreReaction` (`lib/explore/store.ts`), reading/writing `explore_packs`, `explore_entries`, `explore_reactions` via RPCs `insert_explore_pack`/`record_explore_reaction`. Renders per entry: `entry.body`, yes/no "landed" buttons, "noted" ack animation, reaction error text.
 
 **Data feeds:** other `explore/` modules (`cadence.ts`, `combine.ts`, `copy.ts`, `generate.ts`, `local.ts`, `prompt.ts`) are consumed indirectly through `routeExplore`/`generateExploreBody`, not called directly by explore.tsx.
@@ -238,9 +239,11 @@ Renders: token balance (`tokenBalanceOf(me)`), roll eligibility (`rollEligible(t
 
 ---
 
-## Categories
+## Categories (`src/app/(tabs)/categories.tsx`)
 
-No dedicated tab/route — `CategoriesFold` imports only into `explore.tsx` (confirms prior-batch finding), a `SettingsFold` embedded there.
+**Updated 2026-09-14 — moved off Explore.** As of the notification-prefs/Categories-own-route change (commit `58736e0`, 2026-09-12), Categories is its own hidden route (`/categories`, pushed via `router.push`) — not a bar tab (no entry in `app-tabs.tsx`) and no longer a `SettingsFold` embedded inside `explore.tsx`. `explore.tsx` now only renders a small teaser card (`categoriesTeaser`, explore.tsx:170-178, `<ThemedText>Categories</ThemedText>`) that pushes to `/categories` on press — grep-confirmed `CategoriesFold` no longer imports into `explore.tsx`.
+
+`categories.tsx` itself is a thin screen shell: back button (`router.back()`, falls back to `router.replace('/explore')` if there's no back stack), title, and `<CategoriesFold me={me} onUpdated={() => refreshMe()} />` — all real rendering still lives in `categories-fold.tsx`, unchanged.
 
 Renders (`categories-fold.tsx`): per-category readiness (`readAllCategories(tracks)`, reading `category_defs` via `lib/category-catalog.ts`), spotlight-of-the-week (`me.category_spotlight`, `parseSpotlight`/`saveCategorySpotlight`), cached AI copy (`me.sage_title` via `parseSageTitle`) with fallback (`fallbackCategoryCopies`, `lib/category-bands.ts`), expandable full text + `CategoryVisual` per open category, "Statements" section from `category_statements` table (`fetchCurrentStatements`, `lib/category-statements/store.ts`) with generate/regenerate CTA and per-category `CategoryStatementArchiveFold` (past statement history).
 
