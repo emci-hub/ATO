@@ -33,8 +33,9 @@ const sites = [
   'src/components/category-teaser.tsx',
   'src/components/categories-fold.tsx',
   'src/components/sage-story-fold.tsx',
-  'src/components/intake-sweep.tsx',
   'src/components/profile-fill-fold.tsx',
+  // 'src/components/intake-sweep.tsx' removed 2026-09-15 with the "A faster
+  // pass" sweep (emci) — file deleted entirely, not just unmounted.
 ];
 
 for (const rel of sites) {

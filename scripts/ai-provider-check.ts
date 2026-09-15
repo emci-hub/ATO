@@ -152,11 +152,17 @@ ok('client DEFAULT_MODELS mirrors the Edge Function defaults');
 
 assert.match(read('src/lib/explore/generate.ts'), /generateText/);
 assert.match(read('src/lib/questions/generate.ts'), /generateText/);
-assert.doesNotMatch(read('src/lib/questions/sweep.ts'), /generateText/);
+// The "A faster pass" sweep (`src/lib/questions/sweep.ts`) was deleted
+// entirely 2026-09-15 (emci) — the 50 bank questions elsewhere already cover
+// it, so there is nothing left here to assert has no model call.
+assert.ok(
+  !existsSync(resolve(root, 'src/lib/questions/sweep.ts')),
+  'src/lib/questions/sweep.ts must stay deleted',
+);
 assert.doesNotMatch(read('src/lib/explore/prompt.ts'), /generateText/);
 assert.doesNotMatch(read('src/lib/sage-title.ts'), /generateText/);
 assert.doesNotMatch(read('src/lib/sage-story.ts'), /generateText/);
-ok('call sites use generateText; prompt builders are untouched; the sweep now serves the static bank with no model call');
+ok('call sites use generateText; prompt builders are untouched; the deleted sweep stays deleted');
 
 // --- Required call-site metadata ------------------------------------------
 // generateText(request, meta) — meta is mandatory. Any src file that invokes

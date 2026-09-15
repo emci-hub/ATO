@@ -4,7 +4,7 @@
  * Cached batches of 5, self_situation damped write, own regen quota tag.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { QUESTIONS_BANK, QUESTIONS_FEW_SHOTS } from '../src/lib/questions/bank';
@@ -35,7 +35,6 @@ import { parseQuestionBatch } from '../src/lib/questions/parse';
 import { buildQuestionsPrompt } from '../src/lib/questions/prompt';
 import { preferFreshAxes, recentAskedAxes } from '../src/lib/questions/rotation';
 import { nextUnansweredItem, routeQuestions } from '../src/lib/questions/route';
-import { routeQuestionSweep } from '../src/lib/questions/sweep';
 import { QUESTIONS_BATCH_SIZE, QUESTIONS_CALL_TYPE } from '../src/lib/questions/types';
 import type { QuestionDraft } from '../src/lib/questions/types';
 import { emptySageKnowsState } from '../src/lib/sage-knows';
@@ -1162,43 +1161,36 @@ assert.equal(QUESTIONS_KEEP_GOING, 'Keep going');
 assert.match(read('src/components/explore-panel.tsx'), /claimAiCall\('explore'\)/);
 ok('own screen from You; writes self_situation; Explore tagged separately');
 
-// "A faster pass" sweep always serves the static bank (no model call), so it
-// has nothing to gate on AI consent for — 2026-09-15, removed a leftover
-// consent check that outlived this path's move off a model call. It still
-// gates crisis (a real safety concern, unrelated to consent) and never claims
-// quota. `aiConsent` is accepted but ignored, for call-site compatibility.
-const sweepMe = { name: 'Riley', talk_style: 'even' as const, voice_preset: 'close_friend' };
-const sweepDeniedIgnored = await routeQuestionSweep({ me: sweepMe, aiConsent: false });
-assert.equal(sweepDeniedIgnored.kind, 'questions');
-assert.equal(sweepDeniedIgnored.drafts.length, 16);
-const sweepPending = await routeQuestionSweep({ me: sweepMe });
-assert.equal(sweepPending.kind, 'questions');
-const sweepCrisis = await routeQuestionSweep({ me: sweepMe, aiConsent: true, crisisToday: true });
-assert.equal(sweepCrisis.kind, 'crisis');
-assert.equal(sweepCrisis.drafts.length, 0);
-
-let sweepClaimed = 0;
-const sweepLocal = await routeQuestionSweep({
-  me: sweepMe,
-  aiConsent: true,
-  claimBatch: async () => {
-    sweepClaimed += 1;
-    return { ok: true } as const;
-  },
-});
-assert.equal(sweepLocal.kind, 'questions');
-assert.equal(sweepLocal.drafts.length, 16);
-assert.equal(sweepClaimed, 0);
-ok('sweep ignores AI consent, gates crisis, always serves the static bank with no quota claim');
-
-const sweepSrc = read('src/lib/questions/sweep.ts');
-assert.match(sweepSrc, /crisisToday/);
-assert.match(sweepSrc, /composeLocalSweep/);
-assert.doesNotMatch(sweepSrc, /'consent-denied'|'consent-pending'/);
-assert.doesNotMatch(read('src/components/intake-sweep.tsx'), /claimQuestionsBatch|QUESTIONS_EMPTY_QUOTA|QUESTIONS_EMPTY_CONSENT|QUESTIONS_EMPTY_DENIED/);
-assert.match(read('src/components/intake-sweep.tsx'), /crisisToday/);
-assert.match(read('src/app/(tabs)/intake-sweep.tsx'), /crisisToday=\{crisisToday\}/);
-ok('sweep wiring: component gates only crisis, tab passes crisisToday; no dead quota-claim or consent-copy wiring');
+// REMOVED 2026-09-15 (emci): the "A faster pass" full sweep (`IntakeSweep`,
+// `routeQuestionSweep`, `src/lib/questions/sweep.ts`) — the 50-question bank
+// already covers the same ground via `QuestionsFold`/`PagedQuestions` above,
+// which this file still tests in full. Its own tests (consent-ignored,
+// crisis-gated, no-quota-claim wiring) are gone with the code they tested.
+assert.ok(
+  !existsSync(resolve(__dirname, '..', 'src/lib/questions/sweep.ts')),
+  'src/lib/questions/sweep.ts must stay deleted — the sweep is gone, not just unmounted',
+);
+assert.ok(
+  !existsSync(resolve(__dirname, '..', 'src/components/intake-sweep.tsx')),
+  'src/components/intake-sweep.tsx must stay deleted — the sweep is gone, not just unmounted',
+);
+const foldSrcForOpen = read('src/components/questions-fold.tsx');
+assert.match(foldSrcForOpen, /alwaysOpen\?: boolean/, 'QuestionsFold must still take an alwaysOpen prop');
+assert.match(
+  read('src/app/(tabs)/intake-sweep.tsx'),
+  /<QuestionsFold[\s\S]{0,300}alwaysOpen/,
+  'the Questions tab must pass alwaysOpen when mounting QuestionsFold — the bank list opens expanded, no tap required',
+);
+// The "Tell Sage more" rotation must NOT auto-load just because the fold is
+// always open — an always-open fold has no collapse-header tap left to gate
+// it, so it needs its OWN explicit press or it would fire a paid AI batch
+// with no tap behind it (the exact bug ISOLATION_PLAN §7 Card D removed
+// hours earlier the same day this file was edited — reviewer-caught
+// regression). The rigorous version of "no effect can reach a model call" is
+// check:no-auto-ai's job (it fixpoint-traces local calls, not a text regex);
+// this just pins that the explicit-press affordance genuinely exists.
+assert.match(foldSrcForOpen, /QUESTIONS_LOAD_MORE/, 'the always-open rotation section needs its own explicit Load press');
+ok('the "A faster pass" sweep stays deleted; the bank list opens expanded by default; the AI-backed rotation still requires its own explicit press');
 
 console.log(`\n${passed} question checks passed`);
 }

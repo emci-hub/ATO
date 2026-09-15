@@ -10,6 +10,7 @@ import {
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getCategoryDefs, type CategoryId } from '@/lib/categories';
@@ -37,6 +38,7 @@ import {
   QUESTIONS_KEEP_GOING,
   QUESTIONS_LABEL,
   QUESTIONS_LEDE,
+  QUESTIONS_LOAD_MORE,
   QUESTIONS_SKIP_REST,
   QUESTIONS_SKIP_THIS,
 } from '@/lib/questions/copy';
@@ -170,6 +172,11 @@ export function QuestionsFold({
   // while this screen is open.
   const liveCategoryDefs = useCategoryDefs();
   const [result, setResult] = useState<RouteQuestionsResult | null>(null);
+  // Only meaningful when `alwaysOpen`: the fold has no collapse header to
+  // tap in that mode, so `handleOpen()` needs its own explicit press instead
+  // — otherwise this section either auto-loads with no tap behind it, or
+  // sits on "Loading…" forever with nothing ever calling `load()`.
+  const [wantsMore, setWantsMore] = useState(false);
   const [busy, setBusy] = useState(false);
   const [sessionCount, setSessionCount] = useState(0);
   const [checkpoint, setCheckpoint] = useState(false);
@@ -533,15 +540,38 @@ export function QuestionsFold({
             </Pressable>
           </View>
         </>
+      ) : alwaysOpen && !wantsMore ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={QUESTIONS_LOAD_MORE}
+          onPress={() => {
+            setWantsMore(true);
+            handleOpen();
+          }}
+          style={({ pressed }) => [styles.option, { borderColor: controlBorderColor(theme) }, pressed && styles.pressed]}>
+          <ThemedText type="smallBold">{QUESTIONS_LOAD_MORE}</ThemedText>
+        </Pressable>
       ) : (
         <ThemedText themeColor="textSecondary">Loading…</ThemedText>
       )}
     </View>
   );
 
-  if (alwaysOpen) return body;
-
   const title = tracks ? `${QUESTIONS_LABEL} · ${unansweredAxisLabel(tracks)}` : QUESTIONS_LABEL;
+
+  if (alwaysOpen) {
+    // Same card chrome SettingsFold gives every other fold, minus its
+    // collapse header — losing the title along with the header would leave
+    // this section looking like unstyled text floating on the tab.
+    return (
+      <ThemedView type="backgroundElement" style={styles.alwaysOpenCard}>
+        <ThemedText type="smallBold" style={styles.alwaysOpenTitle}>
+          {title}
+        </ThemedText>
+        {body}
+      </ThemedView>
+    );
+  }
 
   return (
     <SettingsFold title={title} defaultOpen={defaultOpen} onOpen={handleOpen}>
@@ -884,6 +914,14 @@ function OngoingRoundFold({
 }
 
 const styles = StyleSheet.create({
+  alwaysOpenCard: {
+    borderRadius: Spacing.four,
+    padding: Spacing.two,
+  },
+  alwaysOpenTitle: {
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+  },
   body: {
     gap: Spacing.three,
     paddingHorizontal: Spacing.three,

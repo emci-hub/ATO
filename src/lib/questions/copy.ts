@@ -27,5 +27,14 @@ export const QUESTIONS_CHECKPOINT =
 
 export const QUESTIONS_KEEP_GOING = 'Keep going';
 
+/**
+ * Tap-to-load affordance for the "Tell Sage more" rotation when the fold
+ * renders always-expanded (Questions tab, 2026-09-15) instead of behind a
+ * collapse header — the header tap used to be what gated `handleOpen()`, so
+ * an always-open fold needs its own explicit press, or this section would
+ * either sit on "Loading…" forever or auto-load with no tap behind it.
+ */
+export const QUESTIONS_LOAD_MORE = 'Tell Sage more';
+
 /** Soft sitting pause — not a hard stop. */
 export const QUESTIONS_CHECKPOINT_AFTER = 8;

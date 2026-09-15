@@ -226,14 +226,14 @@ assert.match(ui, /FullProfileUnlockAck/);
 ok('one-time celebration burns its flag first and has a reduceMotion branch');
 
 // --- skip-the-rest must not escape the gate -------------------------------
-// "Skip the rest" defers every remaining axis into the rotating pool on the
-// same screen. It must NOT navigate to Home, where nothing asks again.
-const questionsTabSrc = readFileSync(resolve('src/app/(tabs)/intake-sweep.tsx'), 'utf8');
-assert.doesNotMatch(questionsTabSrc, /router\.replace\('\/'\)/);
-assert.match(questionsTabSrc, /function done\(\)/);
-assert.match(questionsTabSrc, /scrollRef\.current\?\.scrollTo/);
-assert.match(readFileSync(resolve('src/components/intake-sweep.tsx'), 'utf8'), /saveQuestionDeferral/);
-ok('skip-the-rest keeps the person in Questions instead of dropping them on Home');
+// REMOVED 2026-09-15 (emci): this tested the "A faster pass" full sweep's own
+// "Skip the rest" — which deferred unanswered axes onto `me.question_deferred`
+// for QuestionsFold to pick up next — a cross-surface handoff that no longer
+// exists now that the sweep itself is deleted. QuestionsFold has its own,
+// separate "Skip the rest" (`skipRest()`/`skipRestOfQuestionPack`, a same-pack
+// skip that shares nothing with the deleted mechanism but the label) — it had
+// no test coverage before this change either, and still doesn't; that gap is
+// pre-existing, not something this removal opened.
 
 /**
  * The flag defaults to false so a device that has never stored it still

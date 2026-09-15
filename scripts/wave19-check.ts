@@ -40,13 +40,10 @@ import { composeLocalQuestionBatch } from '../src/lib/questions/local';
 import { QUESTIONS_BATCH_SIZE } from '../src/lib/questions/types';
 import { parseQuestionBatch, parseQuestionSweep } from '../src/lib/questions/parse';
 import {
-  INTAKE_SWEEP_COPY_REVIEWED,
-  QUESTIONS_SWEEP_SIZE,
   axisVariant,
   bankByAxis,
   bankDraftFor,
   bankLeadDrafts,
-  composeLocalSweep,
 } from '../src/lib/questions/local';
 import {
   TRAIT_SHIFT_LABEL,
@@ -129,9 +126,7 @@ assert.equal(diverged.length, 1);
 assert.ok(formatDivergenceNote(diverged)?.includes('gut-call'));
 ok('divergence notes self-report vs gut-call without overwriting');
 
-// --- IQ sweep -------------------------------------------------------------
-assert.equal(QUESTIONS_SWEEP_SIZE, TRAIT_AXES.length);
-assert.equal(INTAKE_SWEEP_COPY_REVIEWED, false);
+// --- IQ bank ---------------------------------------------------------------
 // Bank is 50 questions total, per-axis count varying by tier (trait-system
 // redesign §2/§3 — no longer a flat 3). bankByAxis keeps ALL of them (it
 // used to drop every draft after the first, which made variants 2+ dead
@@ -182,37 +177,6 @@ assert.equal(axisVariant([trackWithCount('openness', 2)], 'openness'), 2);
 const gameOnly = { ...trackWithCount('openness', 2), track: 'game' as const };
 assert.equal(axisVariant([gameOnly], 'openness'), 0, 'game track never advances the variant');
 
-// N answers on one axis (its own bank size, 6 for openness — a tier-2 axis,
-// §2/§3) walk that axis through N DIFFERENT prompts, then wrap — which is
-// exactly what lets a repeat pass reach the full answer count.
-const opennessBankSize = AXIS_TIER_COUNTS.openness * 2;
-const opennessPrompts = Array.from({ length: opennessBankSize + 1 }, (_, n) =>
-  composeLocalSweep([trackWithCount('openness', n)]).find((row) => row.axis === 'openness')?.prompt,
-);
-assert.equal(
-  new Set(opennessPrompts.slice(0, opennessBankSize)).size,
-  opennessBankSize,
-  `${opennessBankSize} answers, ${opennessBankSize} distinct prompts`,
-);
-assert.equal(opennessPrompts[opennessBankSize], opennessPrompts[0], 'the wrap-around answer returns to the first prompt');
-
-// One axis advancing must not disturb any other axis's draft.
-const baseSweep = composeLocalSweep();
-const bumped = composeLocalSweep([trackWithCount('openness', 1)]);
-assert.equal(bumped.length, TRAIT_AXES.length);
-assert.deepEqual(bumped.map((row) => row.axis), [...TRAIT_AXES]);
-assert.notEqual(
-  bumped.find((row) => row.axis === 'openness')?.prompt,
-  baseSweep.find((row) => row.axis === 'openness')?.prompt,
-);
-for (const axis of TRAIT_AXES.filter((a) => a !== 'openness')) {
-  assert.equal(
-    bumped.find((row) => row.axis === axis)?.prompt,
-    baseSweep.find((row) => row.axis === axis)?.prompt,
-    `${axis} is untouched when openness advances`,
-  );
-}
-
 // The 5-item rotation must still return 5 DISTINCT axes now that the bank has
 // three drafts per axis — feeding all of them to preferFreshAxes would spend
 // slots on duplicates it then drops.
@@ -230,34 +194,12 @@ assert.deepEqual(
   'unanswered axes are unchanged',
 );
 
-// Every variant of every axis must be guard-clean, not just variant 0.
-for (const axis of TRAIT_AXES) {
-  for (let n = 0; n < 3; n += 1) {
-    const draft = composeLocalSweep([trackWithCount(axis, n)]).find((row) => row.axis === axis);
-    assert.ok(draft, `${axis} variant ${n} exists`);
-    assert.ok(draft!.options.length >= 2 && draft!.options.length <= 3);
-    assert.equal(containsFrameworkTerm(draft!.prompt), false, draft!.prompt);
-  }
-}
-
-// The wiring: both surfaces must actually pass tracks, or none of this ships.
+// The wiring: QuestionsFold must actually pass tracks, or none of this ships.
 assert.match(read('src/lib/questions/route.ts'), /composeLocalQuestionBatch\(recentAxes, priorityAxes, input\.tracks/);
-assert.match(read('src/lib/questions/sweep.ts'), /composeLocalSweep\(input\.tracks/);
-assert.match(read('src/components/intake-sweep.tsx'), /tracks,/);
 assert.match(read('src/app/(tabs)/intake-sweep.tsx'), /tracks=\{tracks\}/);
 // An answer must refresh tracks, not just `me` — otherwise the count that
 // picks the next draft never moves and the same question comes back.
 assert.match(read('src/app/(tabs)/intake-sweep.tsx'), /onUpdated=\{refreshAfterAnswer\}/);
-const sweep = composeLocalSweep();
-assert.equal(sweep.length, TRAIT_AXES.length);
-assert.deepEqual(sweep.map((row) => row.axis), [...TRAIT_AXES]);
-for (const draft of sweep) {
-  assert.ok(draft.options.length >= 2 && draft.options.length <= 3);
-  assert.equal(containsFrameworkTerm(draft.prompt), false, draft.prompt);
-  for (const option of draft.options) {
-    assert.equal(containsFrameworkTerm(option.text), false, option.text);
-  }
-}
 const local5 = composeLocalQuestionBatch();
 assert.equal(local5.length, 5);
 assert.equal(local5[0]?.axis, 'openness');
@@ -306,9 +248,7 @@ const qPrompt = buildQuestionsPrompt({
 });
 assert.match(qPrompt, /Return exactly 5 questions/);
 assert.doesNotMatch(qPrompt, /exactly 15/);
-assert.doesNotMatch(read('src/lib/questions/sweep.ts'), /generateText/);
-assert.match(read('src/lib/questions/sweep.ts'), /composeLocalSweep/);
-ok('existing IQ prompt is still a 5-item rotating batch; the sweep is bank-only with no prompt');
+ok('existing IQ prompt is still a 5-item rotating batch');
 
 // --- ranking standalone ---------------------------------------------------
 for (const axis of EXTRA_AXES) {
@@ -406,9 +346,12 @@ ok('the surviving insight surface keeps the thin-profile gate');
 const home = read('src/app/(tabs)/index.tsx');
 const crisis = read('src/components/crisis-card.tsx');
 const widget = read('targets/widget/widgets.swift');
-assert.doesNotMatch(home, /IntakeSweep|trait_history|spendTokens|TOKEN_PRICE/);
-assert.doesNotMatch(crisis, /token|IntakeSweep|trait_history/);
-assert.doesNotMatch(widget, /token|IntakeSweep|trait_history/);
+// `IntakeSweep` ("A faster pass") was removed entirely 2026-09-15, not just
+// unmounted here — this file no longer references it anywhere, so those
+// alternatives were dropped from the patterns below.
+assert.doesNotMatch(home, /trait_history|spendTokens|TOKEN_PRICE/);
+assert.doesNotMatch(crisis, /token|trait_history/);
+assert.doesNotMatch(widget, /token|trait_history/);
 assert.match(read('src/app/(tabs)/explore.tsx'), /settledAxisLabel/);
 // SageInsightSpend's Explore call site is parked (Isolation Plan Card 5,
 // 2026-09-15) — inverted per the Card 2/3 "invert, don't delete" convention.
@@ -425,7 +368,9 @@ assert.equal(answeredAxisCount(traitValuesFromPartial({ autonomy: 0.8 })), 1);
 
 const meSrc = read('src/lib/me.ts');
 assert.match(meSrc, /persistMergedTraits/);
+// The sweep ("A faster pass") is gone entirely (2026-09-15); this just
+// confirms routeQuestions was never entangled with it in the first place.
 assert.doesNotMatch(read('src/lib/questions/route.ts'), /routeQuestionSweep/);
-ok('sweep is a separate path; existing routeQuestions rotation is unchanged');
+ok('routeQuestions never referenced the (now-deleted) sweep path');
 
 console.log(`\n${passed} wave19 checks passed`);

@@ -1,9 +1,8 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { IntakeSweep } from '@/components/intake-sweep';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { QuestionsFold } from '@/components/questions-fold';
 import { ThemedText } from '@/components/themed-text';
@@ -20,12 +19,23 @@ import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
  * Questions — where the full profile gets built, and the only screen that can
  * add to it (ISOLATION_PLAN §7 Card D).
  *
- * Two surfaces, both still fully wired: `IntakeSweep` (the 50-question local
- * bank, no model call) and `QuestionsFold` (the bank while it is unfinished,
- * then the rotating 25-item round once it is). The round is now behind an
- * explicit "Next 25 questions" press — it used to compose itself on the first
- * mount after the intake finished, which was several chunked model calls
- * nobody asked for.
+ * One surface: `QuestionsFold` — the 50-question bank while it is unfinished,
+ * then the rotating 25-item round once it is. Renders `alwaysOpen`
+ * (2026-09-15): the bank list is expanded immediately, no collapse header
+ * and no tap needed — safe, since the bank is local/no-backend. Its separate
+ * "Tell Sage more" 5-item rotation, which CAN reach a paid AI batch once the
+ * bank is finished, keeps its own explicit "Tell Sage more" press instead of
+ * loading with the rest — an always-open fold has no collapse-header tap left
+ * to gate it, so it needs one of its own or it would auto-load with no press
+ * behind it, exactly the bug ISOLATION_PLAN §7 Card D removed hours earlier
+ * the same day (emci, after review caught the regression here). The 25-item
+ * round is separately behind its own "Next 25 questions" press, unaffected.
+ *
+ * REMOVED 2026-09-15 (emci): the "A faster pass" full sweep (`IntakeSweep`) —
+ * the 50 bank questions above already cover the same ground. Its now-unused
+ * code (`src/components/intake-sweep.tsx`, `src/lib/questions/sweep.ts`, and
+ * the sweep-only exports of `src/lib/questions/local.ts`) was deleted along
+ * with it, not just unmounted.
  *
  * PARKED here: the `MilestoneToast` overlay (and with it every write to
  * `me.celebrated_milestone_ids`) and `OptionalIntakeFill`. The Check history
@@ -91,39 +101,24 @@ export default function IntakeSweepTabScreen() {
     void loadTracks();
   }, [loadTracks]);
 
-  const scrollRef = useRef<ScrollView>(null);
-
   const refreshAfterAnswer = useCallback(async () => {
     await Promise.all([refresh(), loadTracks()]);
   }, [refresh, loadTracks]);
 
-  /**
-   * "Skip the rest" on the full sweep. Skipping defers every remaining axis
-   * onto `me.question_deferred`, and QuestionsFold — the first block on this
-   * same screen — front-loads those as `priorityAxes` on its next batch. So
-   * the person stays in Questions and is scrolled back to the pool that just
-   * inherited their skipped axes. Skipping must never be a way out of the
-   * profile-completeness gate, only a way to defer.
-   */
-  function done() {
-    void refresh();
-    scrollRef.current?.scrollTo({ y: 0, animated: true });
-  }
-
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContent}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <ThemedText type="subtitle">Questions</ThemedText>
           </View>
 
           {/*
-            `tracksReady` gates the mount for the same reason `flagsReady` gates
-            the sweep below: QuestionsFold generates and SAVES a pack on open,
-            and that pack is then served from cache until it is exhausted. A
-            mount before tracks land would read as an incomplete profile and
-            hand a complete-profile user a bank-only pack to work through first.
+            `tracksReady` gates the mount: QuestionsFold generates and SAVES a
+            pack on open, and that pack is then served from cache until it is
+            exhausted. A mount before tracks land would read as an incomplete
+            profile and hand a complete-profile user a bank-only pack to work
+            through first.
           */}
           {me && flagsReady && tracksReady ? (
             <QuestionsFold
@@ -133,28 +128,11 @@ export default function IntakeSweepTabScreen() {
               onUpdated={refreshAfterAnswer}
               focusAxis={focusAxis}
               tracks={tracks}
+              alwaysOpen
             />
-          ) : null}
-
-          {me ? (
-            /*
-              `onUpdated` must refresh TRACKS too, not just `me`: an answer
-              bumps that axis's answerCount, which is what picks the next bank
-              draft. Refreshing `me` alone would leave the sweep showing the
-              same question after answering it.
-            */
-            flagsReady && tracksReady ? (
-              <IntakeSweep
-                me={me}
-                crisisToday={crisisToday}
-                tracks={tracks}
-                onUpdated={refreshAfterAnswer}
-                onDone={done}
-              />
-            ) : null
-          ) : (
+          ) : !me ? (
             <ThemedText themeColor="textSecondary">Loading…</ThemedText>
-          )}
+          ) : null}
         </ScrollView>
       </SafeAreaView>
     </ThemedView>

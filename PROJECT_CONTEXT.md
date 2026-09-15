@@ -1070,3 +1070,47 @@ There is a **complete, working unlock vocabulary already built** — and one of 
   number/kind-label logic); `prod-you-check.ts` and `floor-check.ts` had only
   stale comments, no assertion change. `check:ota-gate` green (80/80). Reviewer
   passed, one warning fixed (bare dash → explicit "n/a"). Not yet OTA'd.
+
+- 2026-09-15: **Workflow change — SUPERSEDES the "one gate, one reviewer, at
+  the end" rule above (Sep 14 entry) wherever it says to run `check:ota-gate`
+  (emci explicit).** From now on, do **NOT** run `npm run check:ota-gate`
+  after a fix or a build — not once at the end, not per-card, not ever
+  automatically. Emci runs the full gate himself, on his own schedule.
+  Narrower verification (`npm run typecheck`, lint on touched files, or the
+  one obviously-relevant `check:*` script for what changed) is still fine and
+  still expected — this is specifically about the full aggregate gate command,
+  not about skipping verification altogether. The reviewer subagent pass at
+  the end of a task is unaffected by this and still happens as before.
+  **The one standing exception: always ask emci before running
+  `npm run ota:publish` / publishing any OTA update** — that part of the
+  existing discipline does not change.
+
+- 2026-09-15: **Fixed: removed the "A faster pass" full sweep from Questions;
+  the bank list now opens expanded by default.** Root cause/scope: emci asked
+  to delete `IntakeSweep` entirely (the 50 bank questions already cover the
+  same ground) and to stop requiring a tap to reveal the question list.
+  Deleted `src/components/intake-sweep.tsx` and `src/lib/questions/sweep.ts`
+  outright (not unmounted), trimmed their sweep-only exports out of
+  `src/lib/questions/local.ts` (`QUESTIONS_SWEEP_SIZE`,
+  `INTAKE_SWEEP_COPY_REVIEWED`, `composeLocalSweep`, `unansweredSweep`) and the
+  now-dead `keepGuardedDrafts` import; every shared bank/rotation export
+  (`axisVariant`, `bankDraftFor`, `composeLocalQuestionBatch`, etc.) is
+  untouched. **Real conflict caught mid-fix (reviewer + emci confirmed):**
+  making `QuestionsFold` expand via its existing `defaultOpen` prop would have
+  auto-fired `handleOpen()` → `routeQuestions` on every mount — a real paid AI
+  batch for anyone who has finished the 50-question bank, with no tap behind
+  it, reopening the exact bug ISOLATION_PLAN §7 Card D had removed from this
+  same file hours earlier the same day. Resolved (emci's pick): `QuestionsFold`
+  now renders `alwaysOpen` — the bank list (`PagedQuestions`) shows expanded
+  immediately with zero backend reach — while its separate "Tell Sage more"
+  5-item rotation, the part that can reach a paid batch, keeps its own new
+  explicit "Tell Sage more" press (`QUESTIONS_LOAD_MORE`) instead of loading
+  with the rest. `check:no-auto-ai` (the fixpoint-tracing effect check, not a
+  text regex) confirms nothing in the file's effects can reach a model call.
+  Also fixed a dangling `readFileSync` on the deleted `sweep.ts` in
+  `ai-provider-check.ts` (would have crashed `check:ai`), and corrected an
+  inaccurate coverage claim in `badges-check.ts` (QuestionsFold's own,
+  separate `skipRest()` has no test coverage — that gap is pre-existing, not
+  opened by this change). `check:questions`/`wave19`/`badges`/
+  `copy-review-badges`/`ai`/`no-auto-ai`/`full-profile`/`milestones` all green
+  (targeted, not the full gate — see workflow-change entry above).
