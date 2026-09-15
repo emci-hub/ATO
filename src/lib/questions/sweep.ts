@@ -19,12 +19,7 @@ export {
   unansweredSweep,
 } from './local';
 
-export type SweepKind =
-  | 'questions'
-  | 'consent-pending'
-  | 'consent-denied'
-  | 'crisis'
-  | 'quota';
+export type SweepKind = 'questions' | 'crisis' | 'quota';
 
 export interface RouteQuestionSweepResult {
   kind: SweepKind;
@@ -35,11 +30,16 @@ export interface RouteQuestionSweepResult {
  * One item per axis, always from the fixed local bank — no model call.
  * Does not touch the 5-item rotation used by Tell Sage more.
  *
- * Gated consent → crisis, same as before. No quota claim: a deterministic
- * bank costs no model call, so there is nothing to meter.
+ * No AI-consent gate: unlike `routeQuestions`, this path never calls a model,
+ * so there is nothing consent would be protecting. It used to gate on
+ * `aiConsent` from when this was AI-backed; that gate outlived the rewrite to
+ * `composeLocalSweep` and quietly blocked a purely local feature behind an
+ * unrelated permission (2026-09-15 — found via a report that Home's link to
+ * the 50-question bank dead-ended for anyone who hadn't answered the AI
+ * prompt). Still gated on crisis, which is a real safety concern here.
  *
- * `useLocal` and `claimBatch` are accepted for call-site compatibility with
- * the prior AI-backed version but are no longer read.
+ * `aiConsent`, `useLocal` and `claimBatch` are accepted for call-site
+ * compatibility with the prior AI-backed version but are no longer read.
  *
  * NOTE: this path deliberately has NO profile-completeness gate, unlike
  * `routeQuestions`. The sweep's whole job is to fill every axis in one pass, so
@@ -58,6 +58,7 @@ export interface RouteQuestionSweepResult {
  */
 export async function routeQuestionSweep(input: {
   me: { name: string; talk_style: TalkStyle; voice_preset: string };
+  /** No longer read — the local sweep calls no model, so there's nothing to consent to. Kept for call-site compatibility. */
   aiConsent?: boolean | null;
   crisisToday?: boolean;
   useLocal?: boolean;
@@ -69,9 +70,6 @@ export async function routeQuestionSweep(input: {
    */
   tracks?: readonly TraitTrack[];
 }): Promise<RouteQuestionSweepResult> {
-  const consent = input.aiConsent ?? null;
-  if (consent === false) return { kind: 'consent-denied', drafts: [] };
-  if (consent !== true) return { kind: 'consent-pending', drafts: [] };
   if (input.crisisToday) return { kind: 'crisis', drafts: [] };
 
   return { kind: 'questions', drafts: composeLocalSweep(input.tracks ?? []) };

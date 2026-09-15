@@ -214,11 +214,13 @@ ok('You-tab crash/push probes are PRE_LAUNCH_DEV-gated; the native crash itself 
 
 // Moved from Dawn to Home 2026-09-14: the insight replaced the card, so the
 // first model call now happens on Home and the consent gate moved with it.
+// Rendered inline (not a Modal) since the same day, per emci: the ask sits in
+// the normal page flow instead of interrupting as a popup.
+assert.doesNotMatch(home, /<Modal[\s\S]*<AiConsentCard/);
 assert.match(
   home,
-  /<Modal[\s\S]*visible=\{needsConsentPrompt\}[\s\S]*<AiConsentCard[\s\S]*context="home"/,
+  /needsConsentPrompt \?[\s\S]{0,600}<AiConsentCard[\s\S]{0,120}context="home"/,
 );
-assert.doesNotMatch(home, /needsConsentPrompt \?\s*\([\s\S]{0,200}?<AiConsentCard/);
 assert.match(home, /setAiConsent/);
 assert.doesNotMatch(sage, /setAiConsent/);
 assert.match(youTab, /Sage(&apos;|')s AI/);

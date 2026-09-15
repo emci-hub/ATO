@@ -17,10 +17,9 @@ const COPY: Record<ConsentContext, { title: string; body: string }> = {
   home: {
     title: 'Can Sage use AI to write your daily insight?',
     body:
-      'Once you\u2019ve logged three days, Sage writes your daily insight using AI, ' +
-      'based on what you\u2019ve logged and told us. Sage is a coach in the app, not a person. ' +
-      'You\u2019ll only be asked once. Say no and Sage won\u2019t write one, ' +
-      'and Sage\u2019s Talk stays off.',
+      'Sage writes your daily insight using AI, based on what you\u2019ve logged and told us. ' +
+      'Sage is a coach in the app, not a person. You\u2019ll only be asked once. ' +
+      'Say no and Sage won\u2019t write one, and Sage\u2019s Talk stays off.',
   },
   talk: {
     title: 'Can Sage use AI to talk with you?',

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Pressable, View } from 'react-native';
+import { ScrollView, StyleSheet, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
@@ -34,6 +34,7 @@ import { homeSageLabel, homeSageLede, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { AiConsentCard } from '@/components/ai-consent-card';
 import { generateDailyInsight } from '@/lib/insight/generate-insight';
 import { fetchTodayInsight, saveInsight } from '@/lib/insight/store';
+import { bankTotalProgress } from '@/lib/questions/local';
 import { cachedFromInsight, saveCachedInsight } from '@/lib/insight/today-insight';
 import { resolveReveal } from '@/lib/reveal';
 import { RANKING_ROUNDS } from '@/lib/ranking';
@@ -173,6 +174,13 @@ export default function HomeScreen() {
    * or there is nothing to show. Moved here from Dawn with the card.
    */
   const needsConsentPrompt = me != null && consent === 'pending';
+
+  // The 50-question bank is local and needs no AI/consent — a separate
+  // completeness signal from the insight above, shown on Home so there's
+  // somewhere to answer them without having to already know Questions exists.
+  const fullProfileProgress = useMemo(() => bankTotalProgress(tracks), [tracks]);
+  const fullProfileDone =
+    fullProfileProgress.total > 0 && fullProfileProgress.answered >= fullProfileProgress.total;
 
   const reveal = useMemo(() => {
     if (!me) return null;
@@ -432,11 +440,20 @@ export default function HomeScreen() {
               </ThemedText>
             </ThemedView>
           ) : needsConsentPrompt ? (
-            <ThemedView type="backgroundElement" style={styles.todayCard}>
-              <ThemedText themeColor="textSecondary">
-                Sage will ask before writing anything.
-              </ThemedText>
-            </ThemedView>
+            /*
+             * Inline, not a Modal (emci, 2026-09-14) — the ask sits in the
+             * normal page flow instead of interrupting as a popup. It is
+             * still the first thing on the page and still blocks Check
+             * logging below until answered, so it keeps the same "answer
+             * before anything else happens" guarantee a Modal gave, just
+             * without covering the rest of the screen.
+             */
+            <AiConsentCard
+              context="home"
+              busy={busy === 'consent'}
+              onGrant={() => saveConsent(true)}
+              onDeny={() => saveConsent(false)}
+            />
           ) : insight ? (
             /*
              * One card, one hierarchy. The title is the hero — it is the thing
@@ -482,6 +499,29 @@ export default function HomeScreen() {
           )}
 
           {/*
+            The 50-question bank needs no AI and no consent — it's local,
+            answer-anytime. So this shows regardless of the consent state
+            above, as long as the bank itself isn't finished yet.
+          */}
+          {!fullProfileDone ? (
+            <Pressable
+              onPress={() => router.push('/intake-sweep')}
+              style={({ pressed }) => [
+                styles.answerQuestionsRow,
+                { borderColor: controlBorderColor(theme) },
+                pressed && styles.pressed,
+              ]}>
+              <View style={styles.boxRowText}>
+                <ThemedText type="smallBold">Answer a few questions</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {fullProfileProgress.answered} of {fullProfileProgress.total} — helps Sage know you faster
+                </ThemedText>
+              </View>
+              <ThemedText themeColor="textSecondary">›</ThemedText>
+            </Pressable>
+          ) : null}
+
+          {/*
             The Check is an outcome and is deliberately NOT gated on the
             insight. Under the old card lane a bank fallback guaranteed a card
             existed, so gating here was safe; the insight has no fallback, so a
@@ -503,7 +543,7 @@ export default function HomeScreen() {
                 </ThemedText>
               ) : needsConsentPrompt ? (
                 <ThemedText type="small" themeColor="textSecondary">
-                  Answer the question above to continue.
+                  Answer Sage&apos;s AI question above to continue.
                 </ThemedText>
               ) : (
                 <View style={styles.checkRow}>
@@ -636,29 +676,6 @@ export default function HomeScreen() {
           ) : null}
         </ScrollView>
       </SafeAreaView>
-
-      {/*
-        AI-consent gate (Apple 5.1.2), moved here from Dawn. A Modal, not a
-        conditionally-mounted card: it has to be unmissable and cannot be
-        scrolled past, because the first model call for the insight happens
-        immediately after the user answers.
-      */}
-      <Modal
-        visible={needsConsentPrompt}
-        transparent
-        animationType="fade"
-        onRequestClose={() => {}}>
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalContent}>
-            <AiConsentCard
-              context="home"
-              busy={busy === 'consent'}
-              onGrant={() => saveConsent(true)}
-              onDeny={() => saveConsent(false)}
-            />
-          </View>
-        </View>
-      </Modal>
     </ThemedView>
   );
 }
@@ -720,18 +737,6 @@ const styles = StyleSheet.create({
   sageKicker: {
     textTransform: 'none',
   },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: Spacing.four,
-  },
-  modalContent: {
-    alignSelf: 'stretch',
-    maxWidth: MaxContentWidth - Spacing.five,
-    gap: Spacing.three,
-  },
   checkRow: {
     gap: Spacing.two,
   },
@@ -772,6 +777,14 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     paddingHorizontal: Spacing.one,
     borderRadius: Spacing.two,
+  },
+  answerQuestionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: Spacing.three,
+    borderWidth: 1,
+    padding: Spacing.three,
   },
   boxRowText: {
     gap: Spacing.half,

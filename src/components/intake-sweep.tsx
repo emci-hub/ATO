@@ -13,11 +13,7 @@ import {
 } from '@/lib/questions/deferral';
 import { saveQuestionDeferral } from '@/lib/questions/store';
 import { INTAKE_SWEEP_COPY_REVIEWED, axisVariant, unansweredSweep } from '@/lib/questions/local';
-import {
-  QUESTIONS_EMPTY_CONSENT,
-  QUESTIONS_EMPTY_CRISIS,
-  QUESTIONS_EMPTY_DENIED,
-} from '@/lib/questions/copy';
+import { QUESTIONS_EMPTY_CRISIS } from '@/lib/questions/copy';
 import { routeQuestionSweep } from '@/lib/questions/sweep';
 import { applyQuestionAnswer } from '@/lib/questions/answer';
 import type { QuestionDraft } from '@/lib/questions/types';
@@ -95,14 +91,6 @@ export function IntakeSweep({
         switch (next.kind) {
           case 'questions':
             setDrafts(next.drafts);
-            break;
-          case 'consent-pending':
-            setDrafts([]);
-            setGate(QUESTIONS_EMPTY_CONSENT);
-            break;
-          case 'consent-denied':
-            setDrafts([]);
-            setGate(QUESTIONS_EMPTY_DENIED);
             break;
           case 'crisis':
             setDrafts([]);

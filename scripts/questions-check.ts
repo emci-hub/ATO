@@ -1100,14 +1100,17 @@ assert.equal(QUESTIONS_KEEP_GOING, 'Keep going');
 assert.match(read('src/components/explore-panel.tsx'), /claimAiCall\('explore'\)/);
 ok('own screen from You; writes self_situation; Explore tagged separately');
 
-// "A faster pass" sweep always serves the static bank now (no model call);
-// it still gates consent → crisis first, and never claims quota.
+// "A faster pass" sweep always serves the static bank (no model call), so it
+// has nothing to gate on AI consent for — 2026-09-15, removed a leftover
+// consent check that outlived this path's move off a model call. It still
+// gates crisis (a real safety concern, unrelated to consent) and never claims
+// quota. `aiConsent` is accepted but ignored, for call-site compatibility.
 const sweepMe = { name: 'Riley', talk_style: 'even' as const, voice_preset: 'close_friend' };
-const sweepDenied = await routeQuestionSweep({ me: sweepMe, aiConsent: false });
-assert.equal(sweepDenied.kind, 'consent-denied');
-assert.equal(sweepDenied.drafts.length, 0);
+const sweepDeniedIgnored = await routeQuestionSweep({ me: sweepMe, aiConsent: false });
+assert.equal(sweepDeniedIgnored.kind, 'questions');
+assert.equal(sweepDeniedIgnored.drafts.length, 16);
 const sweepPending = await routeQuestionSweep({ me: sweepMe });
-assert.equal(sweepPending.kind, 'consent-pending');
+assert.equal(sweepPending.kind, 'questions');
 const sweepCrisis = await routeQuestionSweep({ me: sweepMe, aiConsent: true, crisisToday: true });
 assert.equal(sweepCrisis.kind, 'crisis');
 assert.equal(sweepCrisis.drafts.length, 0);
@@ -1124,17 +1127,16 @@ const sweepLocal = await routeQuestionSweep({
 assert.equal(sweepLocal.kind, 'questions');
 assert.equal(sweepLocal.drafts.length, 16);
 assert.equal(sweepClaimed, 0);
-ok('sweep gates consent → crisis, then always serves the static bank with no quota claim');
+ok('sweep ignores AI consent, gates crisis, always serves the static bank with no quota claim');
 
 const sweepSrc = read('src/lib/questions/sweep.ts');
-assert.match(sweepSrc, /aiConsent/);
 assert.match(sweepSrc, /crisisToday/);
 assert.match(sweepSrc, /composeLocalSweep/);
-assert.doesNotMatch(read('src/components/intake-sweep.tsx'), /claimQuestionsBatch|QUESTIONS_EMPTY_QUOTA/);
-assert.match(read('src/components/intake-sweep.tsx'), /QUESTIONS_EMPTY_CONSENT/);
+assert.doesNotMatch(sweepSrc, /'consent-denied'|'consent-pending'/);
+assert.doesNotMatch(read('src/components/intake-sweep.tsx'), /claimQuestionsBatch|QUESTIONS_EMPTY_QUOTA|QUESTIONS_EMPTY_CONSENT|QUESTIONS_EMPTY_DENIED/);
 assert.match(read('src/components/intake-sweep.tsx'), /crisisToday/);
 assert.match(read('src/app/(tabs)/intake-sweep.tsx'), /crisisToday=\{crisisToday\}/);
-ok('sweep wiring: component passes consent/crisis, tab passes crisisToday; no dead quota-claim wiring');
+ok('sweep wiring: component gates only crisis, tab passes crisisToday; no dead quota-claim or consent-copy wiring');
 
 console.log(`\n${passed} question checks passed`);
 }
