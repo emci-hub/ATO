@@ -127,22 +127,32 @@ assert.notEqual(storyFingerprint(many, null), storyFingerprint(many, 'gap'));
 ok('Story prompt is a separate holistic rewrite; fingerprint moves on told-vs-played');
 
 const fold = read('src/components/sage-story-fold.tsx');
-assert.match(fold, /if \(!story\?\.body\) return null/);
+/**
+ * REPINNED (ISOLATION_PLAN §7 Card B, 2026-09-15): the fold is now tap-only.
+ * The old shape — generate from a `useEffect`, `if (!story?.body) return null`
+ * as the silent fallback, `setStory(null)` for every failure — is gone: it
+ * spent a model call on every cold open of Home once the profile looked ready,
+ * and it never checked AI consent. The invariants those assertions protected
+ * are re-pinned here against the new shape.
+ */
 assert.match(fold, /shouldUseLocalAi/);
-assert.match(fold, /setStory\(null\)/);
 assert.doesNotMatch(fold, /fallbackBandFor|TITLE_EMPTY|composeLocal/);
 assert.match(fold, /formatStoryTensionNote/);
 assert.doesNotMatch(fold, /formatDivergenceNote/);
-// §9 (2026-09-08): a real locked state — previously `!story?.body` was the
-// ONLY render branch, so an unready profile rendered nothing at all, same
-// as every other "no content yet" case. The locked check must come before
-// that fallback and must not fire during crisis (crisis hides Story
-// entirely, same as before) or before tracks have loaded (would flash).
-const lockedIdx = fold.indexOf("if (tracksReady && !crisisToday && !storyReady(tracks))");
-const fallbackIdx = fold.indexOf('if (!story?.body) return null');
-assert.ok(lockedIdx > -1 && fallbackIdx > -1 && lockedIdx < fallbackIdx, 'the real locked-state check must exist and run before the silent no-content fallback');
-assert.match(fold, /PROFILE_LOCKED_COPY/);
-assert.match(fold, /PROFILE_LOCKED_CTA/);
+// Crisis still hides Story entirely, and must do so before anything else.
+const crisisIdx = fold.indexOf('if (crisisToday) return null;');
+const lockedIdx = fold.indexOf('if (!unlocked) {');
+assert.ok(crisisIdx > -1, 'crisis must still hide Story outright');
+assert.ok(lockedIdx > crisisIdx, 'the locked state must come after the crisis guard, never instead of it');
+// The locked state is the SHARED gate now, not Story's own settledness.
+assert.match(fold, /FULL_PROFILE_LOCKED_COPY/);
+assert.doesNotMatch(fold, /PROFILE_LOCKED_CTA/);
+// Nothing generates without a press, and an unready profile costs nothing.
+assert.doesNotMatch(fold, /void run\(\)/);
+assert.match(fold, /void loadStory\(\)/);
+assert.match(fold, /STORY_NOT_READY_COPY/);
+ok('Story is tap-only: crisis hides it, the shared gate locks it, and Load is the only thing that can spend a call');
+
 // §9 (2026-09-08): Story moved from Explore to Home, directly below the
 // daily check-in card — the assertion below moved with it. Explore no
 // longer imports SageStoryFold.

@@ -4,7 +4,6 @@ import { StyleSheet, View } from 'react-native';
 import { AxisCodeLabel } from '@/components/axis-code-label';
 import { AxisTaps } from '@/components/axis-taps';
 import { DepthDive } from '@/components/depth-dive';
-import { SageTitleCard } from '@/components/sage-title-card';
 import { SettingsFold } from '@/components/settings-fold';
 import { TraitBandVisual } from '@/components/trait-bands-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
@@ -52,7 +51,6 @@ export function FullProfileFold({
   const [openShift, setOpenShift] = useState<TraitAxis | null>(null);
   const [history, setHistory] = useState<TraitHistoryRow[]>([]);
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
-  const [tracksReady, setTracksReady] = useState(false);
   const [diving, setDiving] = useState<TraitAxis | null>(null);
   const [undoSpent, setUndoSpent] = useState<Partial<Record<TraitAxis, boolean>>>({});
 
@@ -63,11 +61,9 @@ export function FullProfileFold({
         if (cancelled) return;
         setHistory(hist);
         setTracks(nextTracks);
-        setTracksReady(true);
       })
       .catch((err) => {
         console.log('[full-profile] load error:', err);
-        if (!cancelled) setTracksReady(true);
       });
     return () => {
       cancelled = true;
@@ -99,7 +95,6 @@ export function FullProfileFold({
         <ThemedText type="small" themeColor="textSecondary" style={styles.lede}>
           {FULL_PROFILE_LEDE}
         </ThemedText>
-        <SageTitleCard me={me} tracks={tracks} tracksReady={tracksReady} />
         {TRAIT_AXES.map((axis) => {
           const report = trackFor(tracks, axis, 'report');
           const value = report?.value ?? state.values[axis];

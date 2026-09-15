@@ -48,6 +48,9 @@ import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
 import { useSession } from '@/hooks/use-session';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
+export const INSIGHT_LOAD_LABEL = 'Load insight';
+export const INSIGHT_UNAVAILABLE_COPY = 'Couldn’t write one just now. Try again later.';
+
 function fixtureAskPick(kind: AskPick['kind']): AskPick {
   if (kind === 'sage_knows') {
     return {
@@ -287,75 +290,76 @@ export default function HomeScreen() {
     void saveCachedInsight(null).then(() => reloadInsight());
   }, [me, consentGranted, insight, reloadInsight]);
 
+  /**
+   * "Load insight" — a TAP, never an effect (ISOLATION_PLAN §7 Card B, emci
+   * 2026-09-15). This used to be a `useEffect` that generated as soon as
+   * consent was granted and no insight existed for today, so simply opening
+   * Home could spend a model call. Nothing here runs on mount any more: the
+   * cached insight still paints from `useDailyInsight` (a local AsyncStorage
+   * read), and the server is only touched when the button is pressed.
+   *
+   * The stored-first order is kept: an insight already written for today is
+   * fetched and shown WITHOUT generating a second one, so a tap after a
+   * reinstall or on a second device costs nothing.
+   */
   const generatingForYmd = useRef<string | null>(null);
-  useEffect(() => {
+  const [insightState, setInsightState] = useState<'idle' | 'loading' | 'unavailable'>('idle');
+
+  const loadInsight = useCallback(async () => {
     if (!me || !userId || !window) return;
     // The one gate: no consent, no model call. Placed above every fetch,
     // generation, cache write and widget write, not below them.
     if (!consentGranted) return;
     const { todayDay, todayYmd } = window;
     if (insight?.ymd === todayYmd) return;
-    // A home_bootstrap reload gives `checks`/`tracks` fresh identities, which
-    // re-runs this effect. Without this guard the cleanup would cancel a run
-    // that had already paid for a generation and start a second one.
+    // Re-entrancy guard: a double tap must not pay for two generations.
     if (generatingForYmd.current === todayYmd) return;
     generatingForYmd.current = todayYmd;
+    setInsightState('loading');
 
-    let cancelled = false;
-    void (async () => {
-      try {
-        const existing = await fetchTodayInsight(userId, todayYmd);
-        if (cancelled) return;
-        if (existing) {
-          await saveCachedInsight(cachedFromInsight(existing, userId));
-          if (!cancelled) await reloadInsight();
-          return;
-        }
-
-        const draft = await generateDailyInsight({
-          tracks,
-          currentFocus: me.current_focus ?? null,
-          recentTone: checks
-            .slice(0, 7)
-            .map((check) => (check.status === 'done' ? 'did' : 'skip')),
-        });
-        if (cancelled || !draft) return;
-
-        await saveInsight(draft, todayDay, todayYmd);
-        await saveCachedInsight({
-          userId,
-          day: todayDay,
-          ymd: todayYmd,
-          theme: draft.theme,
-          title: draft.title,
-          reflection: draft.reflection,
-          tryToday: draft.tryToday,
-          watchFor: draft.watchFor,
-        });
-        if (!cancelled) await reloadInsight();
-      } catch (err) {
-        console.log('[home] today insight error:', err);
-      } finally {
-        // Cleared on failure so a later mount can retry; a success has already
-        // set `insight.ymd`, which short-circuits above.
-        if (generatingForYmd.current === todayYmd) generatingForYmd.current = null;
+    try {
+      const existing = await fetchTodayInsight(userId, todayYmd);
+      if (existing) {
+        await saveCachedInsight(cachedFromInsight(existing, userId));
+        await reloadInsight();
+        setInsightState('idle');
+        return;
       }
-    })();
 
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    me,
-    userId,
-    window?.todayYmd,
-    window?.todayDay,
-    insight?.ymd,
-    consentGranted,
-    tracks,
-    checks,
-    reloadInsight,
-  ]);
+      const draft = await generateDailyInsight({
+        tracks,
+        currentFocus: me.current_focus ?? null,
+        recentTone: checks
+          .slice(0, 7)
+          .map((check) => (check.status === 'done' ? 'did' : 'skip')),
+      });
+      if (!draft) {
+        setInsightState('unavailable');
+        return;
+      }
+
+      await saveInsight(draft, todayDay, todayYmd);
+      await saveCachedInsight({
+        userId,
+        day: todayDay,
+        ymd: todayYmd,
+        theme: draft.theme,
+        title: draft.title,
+        reflection: draft.reflection,
+        tryToday: draft.tryToday,
+        watchFor: draft.watchFor,
+      });
+      await reloadInsight();
+      setInsightState('idle');
+    } catch (err) {
+      console.log('[home] today insight error:', err);
+      setInsightState('unavailable');
+    } finally {
+      // Cleared either way so a later tap can retry; a success has already set
+      // `insight.ymd`, which short-circuits above.
+      if (generatingForYmd.current === todayYmd) generatingForYmd.current = null;
+    }
+  }, [me, userId, window, consentGranted, insight?.ymd, tracks, checks, reloadInsight]);
 
   async function logToday(status: 'done' | 'skipped') {
     if (!userId || !me || !todayOpen || busy || alreadyLogged) return;
@@ -498,6 +502,38 @@ export default function HomeScreen() {
           )}
 
           {/*
+            "Load insight" — the ONLY thing that can spend a model call for
+            the daily insight (ISOLATION_PLAN §7 Card B). Shown only when there
+            is something to load: consent given, bank finished, and today's
+            insight not already on screen.
+          */}
+          {consentGranted && fullProfileDone && insight?.ymd !== window?.todayYmd ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={INSIGHT_LOAD_LABEL}
+              disabled={insightState === 'loading'}
+              onPress={() => {
+                void loadInsight();
+              }}
+              style={({ pressed }) => [
+                styles.answerQuestionsRow,
+                { borderColor: controlBorderColor(theme) },
+                pressed && styles.pressed,
+              ]}>
+              <View style={styles.boxRowText}>
+                <ThemedText type="smallBold">
+                  {insightState === 'loading' ? 'Writing…' : INSIGHT_LOAD_LABEL}
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {insightState === 'unavailable'
+                    ? INSIGHT_UNAVAILABLE_COPY
+                    : 'Nothing is generated until you tap.'}
+                </ThemedText>
+              </View>
+            </Pressable>
+          ) : null}
+
+          {/*
             Apple 5.1.2: the AI-use disclosure is UNCONDITIONAL. It renders
             before the question is asked, after a yes, and after a no alike —
             only generation depends on the answer, never disclosure. This sits
@@ -624,7 +660,13 @@ export default function HomeScreen() {
 
           {me ? (
             <>
-              <SageStoryFold me={me} tracks={tracks} tracksReady={bootstrapReady} crisisToday={crisisToday} />
+              <SageStoryFold
+                me={me}
+                tracks={tracks}
+                tracksReady={bootstrapReady}
+                crisisToday={crisisToday}
+                unlocked={fullProfileDone}
+              />
               <RollHistoryFold
                 userId={me.id}
                 types={['story']}

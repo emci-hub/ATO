@@ -120,7 +120,11 @@ assert.match(fold, /TraitBandVisual/);
 assert.match(fold, /AXIS_EDITOR_COPY/);
 assert.match(fold, /settledAxisLabel/);
 assert.match(fold, /AXIS_POLES/);
-assert.match(fold, /SageTitleCard/);
+// INVERTED (ISOLATION_PLAN §7 Card B, 2026-09-15): this fold used to mount
+// SageTitleCard, which generated a title from a `useEffect` on mount — a third
+// auto-firing model call, found by check:no-auto-ai. Explore's only AI
+// affordance in the shipped flow is "Load categories", so the call site is gone.
+assert.doesNotMatch(fold, /SageTitleCard/);
 assert.doesNotMatch(fold, /recordRanking|recordScenario|optionalFillWrite/);
 assert.doesNotMatch(fold, /applyRankingWeek|applyScenarioWeek|applyCompletenessWeek|you_slot|week_slot/);
 assert.doesNotMatch(fold, /toFixed|percent|%/);
