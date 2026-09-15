@@ -5,7 +5,7 @@
  * (Home, Sage, You, System), not in a shared catch-all.
  */
 import { Redirect } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -21,6 +21,10 @@ import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useMeContext } from '@/lib/me-context';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
+import {
+  clearLocalAccountData,
+  listAccountScopedKeys,
+} from '@/lib/local-account-data';
 import { useSession } from '@/hooks/use-session';
 import { useGrowth } from '@/hooks/use-growth';
 import { useTheme } from '@/hooks/use-theme';
@@ -212,6 +216,7 @@ function DevLab() {
             {canSeeHubSection('profiles', gate) ? <ProfilesPanel /> : null}
             {me ? <YouDevTools timeZone={me.timezone || 'UTC'} /> : null}
             <ResetAiConsent />
+            <LocalAccountData />
             {PRE_LAUNCH_DEV ? <CrisisCardPreview /> : null}
             <ForceTestError message="Dev Lab test error — System" />
           </View>
@@ -1007,6 +1012,77 @@ function ResetAiConsent() {
         label={busy ? 'resetting…' : 'reset to null'}
         selected={false}
         onPress={() => void reset()}
+      />
+    </View>
+  );
+}
+
+/**
+ * What this account has written to THIS DEVICE, and a button to erase it.
+ *
+ * The manual-verification hook for the 2026-09-15 cross-account bug: deleting
+ * an account cleared the auth session and nothing else, so a new signup on the
+ * same device read the previous account's keys back. The fix runs inside
+ * `clearLocalSession` and on sign-out, where nothing is observable — so this
+ * panel is the only way to SEE whether the device is actually clean, before a
+ * delete and after the next signup, without another blind investigation.
+ *
+ * Deliberately lists keys, never values: the point is which state survives, and
+ * some of these hold generated personal content.
+ */
+function LocalAccountData() {
+  const [keys, setKeys] = useState<string[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setKeys(await listAccountScopedKeys());
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function wipe() {
+    if (busy) return;
+    setBusy(true);
+    setNote(null);
+    try {
+      const removed = await clearLocalAccountData();
+      setNote(
+        removed.length === 0
+          ? 'Nothing to remove — device was already clean.'
+          : `Removed ${removed.length} key${removed.length === 1 ? '' : 's'}.`,
+      );
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Local account data</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Every `ato.*` key on this device that belongs to the ACCOUNT rather than
+        the phone. These are what a deleted-then-recreated account used to
+        inherit. Device preferences (theme, crisis region, push prefs, auth) are
+        excluded by design and are not listed here. Wiping touches this device
+        only — it deletes nothing on the server.
+      </ThemedText>
+      <ThemedText type="code" themeColor="textSecondary">
+        {keys === null
+          ? 'reading…'
+          : keys.length === 0
+            ? '(none — clean)'
+            : keys.join('\n')}
+      </ThemedText>
+      {note ? <ThemedText type="small">{note}</ThemedText> : null}
+      <Chip label="refresh" selected={false} onPress={() => void load()} />
+      <Chip
+        label={busy ? 'wiping…' : 'wipe local account data'}
+        selected={false}
+        onPress={() => void wipe()}
       />
     </View>
   );

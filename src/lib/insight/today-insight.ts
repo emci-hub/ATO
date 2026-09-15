@@ -31,6 +31,16 @@ export const TODAY_INSIGHT_KEY = 'ato.today-insight.v1';
 
 /** The subset Home paints immediately and the widget mirrors. */
 export interface CachedInsight {
+  /**
+   * Who this insight belongs to. Added 2026-09-15: the cache key carries no
+   * user id (and cannot gain one without breaking the shipped widget's App
+   * Group contract), so the owner travels inside the payload instead and
+   * `loadCachedInsight` refuses a payload that belongs to someone else.
+   * Optional only so a payload written before this shipped parses rather than
+   * throwing — such a payload has no owner and is therefore never served to a
+   * caller that asks for one.
+   */
+  userId?: string;
   day: number;
   ymd: string;
   theme: string;
@@ -40,8 +50,9 @@ export interface CachedInsight {
   watchFor: string;
 }
 
-export function cachedFromInsight(insight: DailyInsight): CachedInsight {
+export function cachedFromInsight(insight: DailyInsight, userId: string): CachedInsight {
   return {
+    userId,
     day: insight.day,
     ymd: insight.ymd,
     theme: insight.theme,
@@ -71,7 +82,15 @@ function writeWidget(insight: CachedInsight | null) {
   }
 }
 
-export async function loadCachedInsight(): Promise<CachedInsight | null> {
+/**
+ * `expectedUserId` is the second half of the cross-account fix (the first being
+ * `clearLocalAccountData`, which erases this key on delete and sign-out). Pass
+ * it wherever the signed-in user is known and a wrong-owner paint would be
+ * visible — Home does. A caller that genuinely has no user in hand (push
+ * scheduling) omits it and gets whatever is cached, which is safe because the
+ * key no longer survives the account that wrote it.
+ */
+export async function loadCachedInsight(expectedUserId?: string): Promise<CachedInsight | null> {
   try {
     const raw = await AsyncStorage.getItem(TODAY_INSIGHT_KEY);
     if (!raw) return null;
@@ -79,6 +98,9 @@ export async function loadCachedInsight(): Promise<CachedInsight | null> {
     if (!parsed || typeof parsed.title !== 'string' || typeof parsed.tryToday !== 'string') {
       return null;
     }
+    // Unowned (pre-2026-09-15) payloads fail this too, on purpose: an insight
+    // whose owner cannot be established must not be shown to a named user.
+    if (expectedUserId !== undefined && parsed.userId !== expectedUserId) return null;
     return parsed;
   } catch {
     return null;

@@ -53,6 +53,7 @@ import { aiConsentFor, setCity, setVisible, setAiConsent } from '@/lib/me';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { supabase } from '@/lib/supabase';
+import { clearLocalAccountData } from '@/lib/local-account-data';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 
 const GROWTH_PREVIEW_KEY = 'ato.dev.growth-preview.v1';
@@ -169,6 +170,10 @@ export default function YouScreen() {
     if (error) {
       console.log('[you] signOut error:', error.message);
     }
+    // Not just the session: every `ato.*` key this account wrote stays on the
+    // device otherwise, and the next account signed in here reads it back.
+    // A plain sign-out bleeds exactly the same way a deletion did.
+    await clearLocalAccountData();
     setSigningOut(false);
     // The session guard in the root layout flips isAuthed to false on
     // SIGNOUT and declaratively routes back to /auth.

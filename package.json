@@ -100,6 +100,7 @@
     "check:trait-bands": "tsx ./scripts/trait-bands-check.ts",
     "check:band-study": "tsx ./scripts/band-study-check.ts",
     "check:insight": "tsx ./scripts/insight-check.ts",
+    "check:local-account-data": "tsx ./scripts/local-account-data-check.ts",
     "check:full-profile": "tsx ./scripts/full-profile-check.ts",
     "check:optional-intake": "tsx ./scripts/optional-intake-check.ts",
     "check:sage-knows": "tsx ./scripts/sage-knows-check.ts",

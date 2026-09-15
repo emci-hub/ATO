@@ -186,6 +186,31 @@ function checkLoggedToday(checks: Check[], now: Date, timeZone: string): boolean
 }
 
 /** Rebuild morning / evening / insight / Sunday local schedules from current state. */
+/**
+ * Cancel every schedule this app owns, without rescheduling anything.
+ *
+ * Split out of `syncPushSchedule`'s opening block (which cancels only to
+ * immediately re-add) because account deletion needs the cancel WITHOUT the
+ * resync: the morning/evening/insight/sunday payloads are built from the
+ * signed-in account's insight and checks, and `morningPush(insight.title)` is a
+ * DAILY REPEATING notification carrying AI-written text about that person.
+ * Those schedules live in the OS, not AsyncStorage, so wiping local storage
+ * does not touch them — without this they keep firing the deleted account's
+ * content until some later account finishes onboarding, or forever if nobody
+ * signs up on this device again (found in review, 2026-09-15).
+ */
+export async function cancelAllScheduledPush(): Promise<void> {
+  if (Platform.OS === 'web') return;
+  try {
+    await Notifications.cancelScheduledNotificationAsync(PUSH_IDS.morning).catch(() => {});
+    await Notifications.cancelScheduledNotificationAsync(PUSH_IDS.evening).catch(() => {});
+    await Notifications.cancelScheduledNotificationAsync(PUSH_IDS.insight).catch(() => {});
+    await Notifications.cancelScheduledNotificationAsync(PUSH_IDS.sunday).catch(() => {});
+  } catch (err) {
+    console.log('[push] cancelAllScheduledPush failed:', err);
+  }
+}
+
 export async function syncPushSchedule(input: {
   checks: Check[];
   timeZone: string;

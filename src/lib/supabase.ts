@@ -51,14 +51,30 @@ if (Platform.OS !== 'web') {
 }
 
 /**
- * Drop every locally cached auth artifact. Used after account deletion and when
- * a restored session points at a user that no longer exists on the server.
+ * Drop every locally cached artifact for the signed-in account — the auth
+ * tokens AND everything else this account wrote to the device. Used after
+ * account deletion, when a user abandons onboarding, and when a restored
+ * session points at a user that no longer exists on the server.
+ *
  * `scope: 'local'` is required when the remote user/session is already gone —
  * a global sign-out would 403 and leave the cache in place if we relied on it.
+ *
+ * The `clearLocalAccountData` call is the fix for the 2026-09-15 bug where a
+ * deleted-then-recreated account inherited the previous account's content: this
+ * used to clear the session only, so every other `ato.*` key survived the
+ * deletion and the next signup on that device read them straight back. It runs
+ * unconditionally, including when sign-out errored — a failure to drop the
+ * token is exactly when leftover account content matters most.
+ *
+ * Imported lazily to keep this module's import graph free of the question,
+ * insight and widget modules that `local-account-data` pulls in; `supabase.ts`
+ * is imported by nearly everything and is loaded at app start.
  */
 export async function clearLocalSession(): Promise<void> {
   const { error } = await supabase.auth.signOut({ scope: 'local' });
   if (error && Platform.OS !== 'web') {
     await clearNativeAuthSecrets(SecureStore);
   }
+  const { clearLocalAccountData } = await import('@/lib/local-account-data');
+  await clearLocalAccountData();
 }
