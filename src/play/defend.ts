@@ -59,6 +59,7 @@ import {
 import { type TypeTag } from '@/play/engine/type-match';
 import { getTune } from '@/play/tune';
 import { ATO_ROAD_HALF, BOARD_MAPS, type BoardId, type BoardMap } from '@/play/board-data';
+import { defaultTowerSkin, towerSkillCooldownMs } from '@/play/tower-skins-data';
 
 export type { BoardId, BoardMap } from '@/play/board-data';
 
@@ -211,6 +212,17 @@ export const TOWER_DEFS: Record<TowerKind, TowerDef> = {
   },
 };
 
+/* ------------------------------------------------------- tower auto-skill --- */
+/* K1b — a tower that authors `clips.skill` (see tower-skins-data) auto-casts
+ * one pulse on its skill cooldown when a target is in range. v1 effect is a
+ * small AoE around the pad: bonus damage ≈ 1.75× one attack (a placeholder
+ * until the real defs land — it reads the same level + board mults as a shot),
+ * in a radius a touch wider than any tower's range so the pulse reaches its
+ * current target plus nearby creep. The skill only runs when the skin authors
+ * the clip — a null skill no-ops entirely (no CD, no damage, no anim). */
+export const TOWER_SKILL_DAMAGE_MULT = 1.75;
+export const TOWER_SKILL_RADIUS = 20;
+
 export type PuffKind = 'puff' | 'runner' | 'tank' | 'boss';
 
 /**
@@ -298,6 +310,9 @@ export type Tower = {
   level: number; // 1..3
   /** ms until the next shot; decremented each tick. */
   cooldownMs: number;
+  /** ms until the auto-skill fires again (K1b); 0 for a tower whose skin
+   * authors no skill clip — such towers never tick or cast a skill. */
+  skillCooldownMs: number;
 };
 
 /** A placed Bound Boss tower (GAME_SPEC §9k) — fixed on a pad, stars-only
@@ -432,7 +447,7 @@ export function retryDefendLive(state: DefendLive): DefendLive {
       cyclePower: state.cyclePower,
       tint: state.tint,
     }),
-    towers: state.towers.map((tower) => ({ ...tower, cooldownMs: 0 })),
+    towers: state.towers.map((tower) => ({ ...tower, cooldownMs: 0, skillCooldownMs: 0 })),
     boundBosses: state.boundBosses.map((bb) => ({
       ...bb,
       cooldownMs: 0,
@@ -467,7 +482,7 @@ export function placeTower(
     scrap: state.scrap - def.placeCost,
     towers: [
       ...state.towers,
-      { id: state.nextId, pad, kind, level: 1, cooldownMs: 0 },
+      { id: state.nextId, pad, kind, level: 1, cooldownMs: 0, skillCooldownMs: 0 },
     ],
     nextId: state.nextId + 1,
   };
@@ -641,6 +656,8 @@ export function stepDefendLive(
   const firedTowers: Tower[] = [];
   for (const tower of state.towers) {
     let cooldownMs = tower.cooldownMs - dtMs;
+    let skillCooldownMs = Math.max(0, tower.skillCooldownMs - dtMs);
+    const skillCd = towerSkillCooldownMs(defaultTowerSkin(tower.kind));
     if (cooldownMs <= 0) {
       const target = towerTarget(tower, puffs, map);
       if (target) {
@@ -657,7 +674,35 @@ export function stepDefendLive(
         cooldownMs = 0; // idle: retry next tick
       }
     }
-    firedTowers.push({ ...tower, cooldownMs });
+    // Auto-skill (K1b): a tower whose skin authors `clips.skill` casts one
+    // pulse on its skill CD when a target is in range — same clock as shots, so
+    // it never casts while nothing is in range. A tower with no skill clip
+    // (`skillCd === null`) no-ops entirely here.
+    if (skillCd != null && skillCooldownMs <= 0) {
+      const target = towerTarget(tower, puffs, map);
+      if (target) {
+        const def = TOWER_DEFS[tower.kind];
+        const pad = map.pads[tower.pad];
+        const skillDamage =
+          def.baseAttack *
+          def.levelMultWavePower[tower.level - 1] *
+          boardMult *
+          TOWER_SKILL_DAMAGE_MULT;
+        puffs = puffs.map((puff) => {
+          if (padPuffDist(pad, puff.dist, map) > TOWER_SKILL_RADIUS) return puff;
+          return { ...puff, hp: puff.hp - skillDamage };
+        });
+        const killed = puffs.filter((p) => p.hp <= 0).length;
+        if (killed > 0) {
+          scrap += killed * scrapPerKill;
+          puffs = puffs.filter((p) => p.hp > 0);
+        }
+        skillCooldownMs = skillCd;
+      } else {
+        skillCooldownMs = 0; // no target: retry next tick
+      }
+    }
+    firedTowers.push({ ...tower, cooldownMs, skillCooldownMs });
   }
 
   // Avatar auto-attack: nearest enemy in range (§9b), 0.7s cooldown.

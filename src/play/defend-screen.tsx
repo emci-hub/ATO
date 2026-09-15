@@ -809,21 +809,28 @@ export function DefendScreen({
     return true;
   }, [avatarRole]);
 
-  /** Start a tower's `attack` one-shot (K1) when its shot FX fires. Returns
-   * false when the tower's skin authors no attack clip (unbundled art) — in
-   * which case nothing changes and the tower keeps its static rotation. */
-  const startTowerAttack = useCallback((towerId: number, role: SkinRole): boolean => {
-    if (towerClipFrames('attack', role) <= 0) return false;
-    const now = Date.now();
-    const state: TowerAnimState = {
-      clip: 'attack',
-      clipStartAt: now,
-      onceEndAt: now + Math.max(1, towerClipFrames('attack', role)) * TOWER_FRAME_MS.attack,
-    };
-    towerAnimRef.current[towerId] = state;
-    setTowerAnimTick((n) => n + 1); // show frame 0 of the shot immediately
-    return true;
-  }, []);
+  /** Start a tower one-shot clip (`attack` when its shot FX fires, `skill` when
+   * its auto-skill casts — K1/K1b) if the priority ladder allows it. Returns
+   * false when the tower's skin authors no such clip (unbundled art), or when a
+   * higher-priority one-shot is locked in — in which case nothing changes and
+   * the caller still does its gameplay work (shots still apply damage). */
+  const startTowerOnce = useCallback(
+    (clip: TowerClip, towerId: number, role: SkinRole): boolean => {
+      if (towerClipFrames(clip, role) <= 0) return false;
+      const now = Date.now();
+      const prev = towerAnimRef.current[towerId];
+      const state: TowerAnimState = prev ?? { clip: 'idle', clipStartAt: now, onceEndAt: 0 };
+      if (!canStartTowerClip(state, clip)) return false;
+      towerAnimRef.current[towerId] = {
+        clip,
+        clipStartAt: now,
+        onceEndAt: now + Math.max(1, towerClipFrames(clip, role)) * TOWER_FRAME_MS[clip],
+      };
+      setTowerAnimTick((n) => n + 1); // show frame 0 of the new clip immediately
+      return true;
+    },
+    [],
+  );
 
   // Display-only tower clip tick (K1). Runs whenever the screen is visible so a
   // tower breathes idle on its pad in setup too; it retires a finished attack
@@ -855,7 +862,10 @@ export function DefendScreen({
       let changed = false;
       for (const tower of current.towers) {
         const role = TOWER_KIT_ROLES[tower.kind];
-        const hasClips = towerClipFrames('idle', role) > 0 || towerClipFrames('attack', role) > 0;
+        const hasClips =
+          towerClipFrames('idle', role) > 0 ||
+          towerClipFrames('attack', role) > 0 ||
+          towerClipFrames('skill', role) > 0;
         if (!hasClips) continue; // static rotation — no clip to advance
         const prev = towerAnimRef.current[tower.id];
         const state: TowerAnimState = prev ?? { clip: 'idle', clipStartAt: now, onceEndAt: 0 };
@@ -1428,7 +1438,15 @@ export function DefendScreen({
         const fired = after != null && after.cooldownMs > tower.cooldownMs + 1;
         if (fired) {
           spawnShot(pad.x, pad.y, tx, ty);
-          startTowerAttack(tower.id, TOWER_KIT_ROLES[tower.kind]);
+          startTowerOnce('attack', tower.id, TOWER_KIT_ROLES[tower.kind]);
+        }
+        // K1b — the auto-skill cast: the engine reset `skillCooldownMs`, so a
+        // skill one-shot plays (if the skin authors it); the tower's face is
+        // already set toward the target above. Skill outranks attack in the
+        // clip ladder, so a same-tick shot keeps its FX but skips its clip.
+        const skillCast = after != null && after.skillCooldownMs > tower.skillCooldownMs + 1;
+        if (skillCast) {
+          startTowerOnce('skill', tower.id, TOWER_KIT_ROLES[tower.kind]);
         }
       }
       // §9m boss warn: peek the remaining schedule and raise the banner ONCE, a
@@ -1465,7 +1483,7 @@ export function DefendScreen({
       }
     }, DEFEND_TICK_MS);
     return () => clearInterval(id);
-  }, [phase, paused, winWave, spawnFloaters, spawnShot, startAvatarOnce, startTowerAttack]);
+  }, [phase, paused, winWave, spawnFloaters, spawnShot, startAvatarOnce, startTowerOnce]);
 
   // Run fail → play the Avatar's HURT clip once (art only; the lost overlay is
   // already showing). Catches the leak path and the dev "force leak" button.
@@ -2129,7 +2147,8 @@ export function DefendScreen({
                 const face = towerFaceRef.current[tower.id] ?? 'e';
                 const hasClips =
                   towerClipFrames('idle', kitRole) > 0 ||
-                  towerClipFrames('attack', kitRole) > 0;
+                  towerClipFrames('attack', kitRole) > 0 ||
+                  towerClipFrames('skill', kitRole) > 0;
 
                 let source: ImageSourcePropType | undefined;
                 let transform: string | undefined;
@@ -3664,10 +3683,23 @@ function avatarClipArt(
 /* ---------------------------------------------------- tower clip kit ---- */
 /** Tower clips (display only). A tower is a stationary humanoid: `idle` loops
  * while it isn't firing; `attack` is the SHOOT one-shot (its `fire` clip,
- * aliased to `attack` in the loader). No walk/dash/skill on a tower. */
-type TowerClip = 'idle' | 'attack';
+ * aliased to `attack` in the loader); `skill` (K1b) is the auto-skill one-shot
+ * a tower plays when its skin authors `clips.skill`. No walk/dash on a tower. */
+type TowerClip = 'idle' | 'attack' | 'skill';
 /** Display-only cadence for each tower clip (ms per frame). */
-const TOWER_FRAME_MS: Record<TowerClip, number> = { idle: 120, attack: 65 };
+const TOWER_FRAME_MS: Record<TowerClip, number> = { idle: 120, attack: 65, skill: 70 };
+
+/** Clip priority — a request only preempts a LOCKED one-shot (`onceEndAt > 0`)
+ * if it strictly outranks it, so a skill cast is never cut short by the
+ * ~0.9s attack one-shot. `idle` is a loop and always interruptible. This is the
+ * tower mirror of the Avatar's `AVATAR_CLIP_PRIORITY`. */
+const TOWER_CLIP_PRIORITY: Record<TowerClip, number> = { skill: 3, attack: 2, idle: 1 };
+
+/** Whether a tower clip request may preempt what's playing right now. */
+function canStartTowerClip(state: TowerAnimState, next: TowerClip): boolean {
+  if (state.onceEndAt === 0) return true; // idle loop — always interruptible
+  return TOWER_CLIP_PRIORITY[next] > TOWER_CLIP_PRIORITY[state.clip];
+}
 
 /** Tower clip-player state. `onceEndAt === 0` means the idle loop is active. */
 type TowerAnimState = {
@@ -3682,7 +3714,7 @@ function towerClipFrames(clip: TowerClip, role: SkinRole): number {
 }
 
 /** Frame index to draw for the current tower clip state. Looping idle wraps; a
- * one-shot attack holds its last frame. */
+ * one-shot attack/skill holds its last frame. */
 function towerClipFrame(state: TowerAnimState, now: number, role: SkinRole): number {
   const frames = Math.max(1, towerClipFrames(state.clip, role));
   const raw = Math.floor((now - state.clipStartAt) / TOWER_FRAME_MS[state.clip]);

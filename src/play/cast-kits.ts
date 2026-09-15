@@ -14,7 +14,8 @@
  *   - towers         — idle (loop) + `attack` as the SHOOT one-shot. Some packs
  *                      name the shoot folder `fire`; the loader aliases
  *                      `fire` → `attack` so the contract keeps ONE canonical
- *                      name (`attack`, matching heroes). No walk/dash/skill.
+ *                      name (`attack`, matching heroes). No walk/dash; a tower
+ *                      MAY author `skill` (K1b — the auto-skill one-shot).
  *   - creeps/bosses  — walk (locomotion) + idle + death + attack, on these same
  *                      slots (wired in K2/K3).
  *

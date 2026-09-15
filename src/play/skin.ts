@@ -22,7 +22,7 @@ import rawCast from '@/assets/play/skins/cast/skin.json';
 import rawCraftpix from '@/assets/play/skins/craftpix-td/skin.json';
 import rawKenney from '@/assets/play/skins/kenney-td/skin.json';
 import { PLAY_ART } from '@/play/generated-play-assets';
-import { heroById, type HeroDef } from '@/play/heroes-data';
+import { heroById, type HeroDef, BOUND_HERO_TOWER_CLIPS } from '@/play/heroes-data';
 import { defaultTowerSkin, type TowerSkinDef, type TowerSkinRole } from '@/play/tower-skins-data';
 
 export type SkinRoleId =
@@ -614,9 +614,11 @@ export function heroAvatarRole(heroId: string): SkinRole {
 /* ------------------------------------------- tower clip-kit role ------- */
 /* K1 — towers are stationary humanoids. The board keeps the static cast
  * rotation role (8-dir keys + footAt/units/scales) and OVERLAYS the tower
- * skin's idle/attack clips as `anims`, so the renderer plays a breathing idle
- * loop and a shoot one-shot when the art is bundled — and falls back to the
- * static rotations when it is not (today: no tower animation folders exist). */
+ * skin's idle/attack/skill clips as `anims`, so the renderer plays a breathing
+ * idle loop, a shoot one-shot, and (K1b) a skill one-shot when the art is
+ * bundled — and falls back to the static rotations when it is not (today: no
+ * tower animation folders exist). `skill` only appears when the skin authors
+ * `clips.skill`; a null skill contributes no `skill` anim, so the FSM skips it. */
 
 /** Tower kind → cast skin role id (art only). Same mapping `defend-screen`'s
  * `TOWER_ROLE` uses; kept here so the clip-kit builder and the renderer read
@@ -640,21 +642,38 @@ function towerClipWalk(skin: TowerSkinDef, name: string | undefined): SkinWalk |
 }
 
 /** The draw role for a tower kind: the static cast rotation role PLUS the tower
- * skin's idle/attack clips as `anims`. Falls back to the static role when the
- * kind is unknown or none of the skin's clip art is bundled, so a tower whose
- * clips haven't been copied still draws its rotation instead of crashing. */
+ * skin's idle/attack/skill clips as `anims`. Falls back to the static role when
+ * the kind is unknown or none of the skin's clip art is bundled, so a tower
+ * whose clips haven't been copied still draws its rotation instead of crashing. */
 export function towerSkinRole(kind: TowerSkinRole): SkinRole {
   const base = resolveRole(TOWER_KIND_ROLE[kind]);
   if (!base) return { keys: [], dirs: 8, pivot: 'feet' };
   const skin = defaultTowerSkin(kind);
   if (!skin) return base;
   const anims: SkinRole['anims'] = {};
-  for (const clip of ['idle', 'attack'] as const) {
+  for (const clip of ['idle', 'attack', 'skill'] as const) {
     const w = towerClipWalk(skin, skin.clips[clip]);
     if (w) anims[clip] = w;
   }
   if (Object.keys(anims).length === 0) return base;
   return { ...base, anims };
+}
+
+/* ------------------------------------------- bound hero as tower -------- */
+/* A6 prep — a hero bound as a tower (Slice A2 → A6) resolves its idle/attack/
+ * skill clips from `heroes.json` through the SAME `heroAvatarRole` builder the
+ * Avatar uses, narrowed to the tower FSM's three slots. No placement UI yet:
+ * this is the resolve path only, so Archangel's skill clip is playable the day
+ * A6 places a hero on a pad. An unknown/art-less hero falls back to the Corvus
+ * role (heroAvatarRole's own fallback), so the board always has a sprite. */
+export function resolveBoundHeroTowerKit(heroId: string): SkinRole {
+  const role = heroAvatarRole(heroId); // 8 rotations + full frame-counted anims
+  const anims: SkinRole['anims'] = {};
+  for (const clip of BOUND_HERO_TOWER_CLIPS) {
+    if (role.anims?.[clip]) anims[clip] = role.anims[clip];
+  }
+  // A tower never walks — drop the hero's locomotion clip.
+  return { ...role, walk: undefined, anims };
 }
 
 /** Feet anchor for a role object (same clamp as `skinFootAt`). */

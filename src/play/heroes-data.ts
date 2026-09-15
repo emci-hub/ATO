@@ -89,6 +89,25 @@ export type HeroFace = (typeof HERO_FACES)[number];
 /** Authored clip set, keyed by slot. Partial by design. */
 export type HeroClips = Partial<Record<HeroClip, string>>;
 
+/** The clip slots a hero bound as a tower plays (A6 prep) — the tower FSM's
+ * idle loop + attack one-shot + skill one-shot. Same slot names as the Avatar,
+ * no new ones; a stationary tower never plays walk/dash/hurt. */
+export const BOUND_HERO_TOWER_CLIPS = ['idle', 'attack', 'skill'] as const;
+export type BoundHeroTowerClip = (typeof BOUND_HERO_TOWER_CLIPS)[number];
+
+/** The clip folder names a hero contributes when bound as a tower — the tower
+ * subset of its full kit. Missing slots are simply absent (the tower falls back
+ * to its rotation art for that slot). Pure data read — no registry access, so
+ * the resolve path (`resolveBoundHeroTowerKit` in skin.ts) and `check:heroes`
+ * share one source of truth for which slots a hero-tower plays. */
+export function boundHeroTowerClips(hero: HeroDef): Partial<Record<BoundHeroTowerClip, string>> {
+  const clips: Partial<Record<BoundHeroTowerClip, string>> = {};
+  for (const clip of BOUND_HERO_TOWER_CLIPS) {
+    if (hero.clips[clip]) clips[clip] = hero.clips[clip];
+  }
+  return clips;
+}
+
 export type HeroDef = {
   id: string;
   /** Player-facing name — the toast / bind copy reads this. */

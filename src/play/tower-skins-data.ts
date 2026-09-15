@@ -10,7 +10,12 @@
  * the pad) and an **attack** one-shot (the SHOOT clip that plays the tick the
  * tower fires). The shoot clip uses the SAME `attack` slot name as heroes; a
  * pack that names its shoot folder `fire` is tolerated via a loader alias
- * (`fire` → `attack`). No walk/dash/skill on a tower — it never moves.
+ * (`fire` → `attack`). No walk/dash on a tower — it never moves. A tower MAY
+ * author a **skill** one-shot (K1b): when `clips.skill` is set (and its art is
+ * bundled) the board auto-casts it on the tower's skill cooldown. A null/absent
+ * `skill` is the honest default — the auto-skill no-ops (no CD, no damage, no
+ * anim). `skillCooldownMs` is the per-skin cooldown; a skin that omits it falls
+ * back to the role default (`TOWER_SKILL_COOLDOWN_DEFAULT`).
  *
  * Clip values are the animation FOLDER NAMES under `<folder>/animations/`,
  * spelled the way the Play art registry keys them (hash-stripped, no `N._`
@@ -48,6 +53,22 @@ import { CAST_CLIP_SLOTS, type CastClipKit, type CastClipSlot } from './cast-kit
 export const TOWER_SKIN_ROLES = ['archer', 'vine', 'crystal'] as const;
 export type TowerSkinRole = (typeof TOWER_SKIN_ROLES)[number];
 
+/** Per-role default auto-skill cooldown when a skin authors `clips.skill` but
+ * omits `skillCooldownMs` (K1b placeholder — tune later). */
+export const TOWER_SKILL_COOLDOWN_DEFAULT: Record<TowerSkinRole, number> = {
+  archer: 12_000,
+  vine: 14_000,
+  crystal: 10_000,
+};
+
+/** The auto-skill cooldown for a skin, or null when the skin authors no skill
+ * clip — a tower with no `clips.skill` has no auto-skill at all (the skill path
+ * no-ops: no CD ticking, no damage, no anim). */
+export function towerSkillCooldownMs(skin: TowerSkinDef | undefined): number | null {
+  if (!skin || !skin.clips.skill) return null;
+  return skin.skillCooldownMs ?? TOWER_SKILL_COOLDOWN_DEFAULT[skin.role] ?? 12_000;
+}
+
 export type TowerSkinDef = {
   id: string;
   role: TowerSkinRole;
@@ -58,6 +79,9 @@ export type TowerSkinDef = {
   isDefault: boolean;
   /** Authored clips. Partial: a slot whose art isn't copied yet is absent. */
   clips: CastClipKit;
+  /** Auto-skill cooldown, ms (K1b). Omitted → `TOWER_SKILL_COOLDOWN_DEFAULT`.
+   * Only meaningful when `clips.skill` is authored. */
+  skillCooldownMs?: number;
 };
 
 /** A tower skin folder must live under the Play art root. */
@@ -70,6 +94,7 @@ type RawTowerSkinRow = {
   folder: string;
   unlock?: string;
   default?: boolean;
+  skillCooldownMs?: number;
   clips?: Partial<Record<CastClipSlot, string | null>>;
 };
 
@@ -124,6 +149,12 @@ function normalizeTowerSkin(row: RawTowerSkinRow): TowerSkinDef {
     folder: row.folder,
     unlock: row.unlock ?? 'free_farm',
     isDefault: row.default === true,
+    skillCooldownMs:
+      typeof row.skillCooldownMs === 'number' &&
+      Number.isFinite(row.skillCooldownMs) &&
+      row.skillCooldownMs > 0
+        ? row.skillCooldownMs
+        : undefined,
     clips,
   };
 }
@@ -161,6 +192,14 @@ function validateTowerSkins(raw: unknown): string[] {
     }
     if (row.unlock != null && (typeof row.unlock !== 'string' || row.unlock.length === 0)) {
       problems.push(`${at}: unlock must be a non-empty string`);
+    }
+    if (
+      row.skillCooldownMs != null &&
+      (typeof row.skillCooldownMs !== 'number' ||
+        !Number.isFinite(row.skillCooldownMs) ||
+        row.skillCooldownMs <= 0)
+    ) {
+      problems.push(`${at}: skillCooldownMs must be a positive number of ms`);
     }
     problems.push(...validateTowerClips(row.clips, at));
   });

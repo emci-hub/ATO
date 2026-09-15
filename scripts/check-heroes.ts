@@ -39,6 +39,7 @@ import {
   DEFAULT_AVATAR_HERO_ID,
   HERO_CLIPS,
   allHeroes,
+  boundHeroTowerClips,
   heroById,
   heroName,
   type HeroClip,
@@ -602,5 +603,33 @@ const clearOffer = devClearHeroOffer({ ...base, hero_offer: { hero_id: 'oni', la
 assert.equal(clearOffer.hero_offer, null, 'clear-offer drops the queue');
 assert.equal(devClearHeroOffer(base), base, 'and is a no-op when empty');
 ok('clear-owned resets to Corvus, drops hero binds, keeps the cycle boss');
+
+/* ------------------------------------------------------- A6 prep --------
+ * A hero bound as a tower resolves its idle/attack/skill clips through the
+ * SAME `heroes.json` clips the Avatar uses (`resolveBoundHeroTowerKit` in
+ * skin.ts, not importable here because it reads the Metro art registry).
+ * `boundHeroTowerClips` is the pure data read both share — assert the resolve
+ * path's source of truth, pinned to Archangel so its skill clip is testable
+ * the day A6 places it. */
+const archangelTower = boundHeroTowerClips(heroById('archangel')!);
+assert.equal(archangelTower.idle, 'Hover_Idle', 'archangel tower idle clip');
+assert.equal(archangelTower.attack, 'Attack_01_Seraph_Strike', 'archangel tower attack clip');
+assert.equal(
+  archangelTower.skill,
+  'Ultimate_Final_Judgment',
+  'archangel tower skill clip (the resolve path has a real skill one-shot)',
+);
+for (const hero of heroes) {
+  const tower = boundHeroTowerClips(hero);
+  // A hero that authors a skill contributes it to its bound-tower kit.
+  if (hero.clips.skill) {
+    assert.equal(
+      tower.skill,
+      hero.clips.skill,
+      `${hero.id}: the bound-tower kit carries the hero's skill clip`,
+    );
+  }
+}
+ok('boundHeroTowerClips resolves each hero to its tower subset (idle/attack/skill)');
 
 console.log(`\nAll ${passed} hero-contract checks passed.`);

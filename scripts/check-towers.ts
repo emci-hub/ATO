@@ -33,10 +33,13 @@ import path from 'node:path';
 
 import { CAST_CLIP_SLOTS } from '../src/play/cast-kits';
 import {
+  TOWER_SKILL_COOLDOWN_DEFAULT,
   TOWER_SKIN_ROLES,
   allTowerSkins,
   defaultTowerSkin,
+  towerSkillCooldownMs,
   towerSkinById,
+  type TowerSkinDef,
 } from '../src/play/tower-skins-data';
 
 /** The authored roster, in authoring order (towerSkins.json). */
@@ -257,6 +260,46 @@ if (unfilled.length > 0) {
       `the tower stays a static rotation until the folder is copied): ${unfilled.join(', ')}`,
   );
 }
+
+// 6 — the auto-skill contract (K1b). `clips.skill` is OPTIONAL on a tower: a
+// null/absent skill means the auto-skill no-ops (no CD, no damage, no anim) —
+// which is every skin today, the honest default. The generic clip loop above
+// already enforces the skill FOLDER resolves when a skin's art is bundled; this
+// block pins the cooldown half of the contract.
+assert.equal(TOWER_SKILL_COOLDOWN_DEFAULT.archer, 12_000, 'archer skill CD default 12s');
+assert.equal(TOWER_SKILL_COOLDOWN_DEFAULT.vine, 14_000, 'vine skill CD default 14s');
+assert.equal(TOWER_SKILL_COOLDOWN_DEFAULT.crystal, 10_000, 'crystal skill CD default 10s');
+ok('per-role skill cooldown defaults are archer 12s / vine 14s / crystal 10s');
+
+for (const skin of skins) {
+  if (skin.clips.skill) {
+    const cd = towerSkillCooldownMs(skin);
+    assert.ok(cd != null && cd > 0, `${skin.id}: authors skill but no cooldown resolves`);
+  } else {
+    assert.equal(
+      towerSkillCooldownMs(skin),
+      null,
+      `${skin.id}: a null skill resolves to "no auto-skill"`,
+    );
+  }
+}
+// The omitted-field fallback: a skin that authors skill but leaves
+// `skillCooldownMs` off still gets its role default.
+const viper = defaultTowerSkin('archer');
+assert.ok(viper, 'viper resolves');
+const authoredNoCd: TowerSkinDef = {
+  ...viper,
+  skillCooldownMs: undefined,
+  clips: { ...viper.clips, skill: 'SomeSkill' },
+};
+assert.equal(towerSkillCooldownMs(authoredNoCd), 12_000, 'archer-authored skill falls back to 12s');
+ok('a skill-authored skin without skillCooldownMs falls back to its role default');
+
+const skillStubCount = skins.filter((skin) => !skin.clips.skill).length;
+console.log(
+  `  · ${skillStubCount}/${skins.length} skins have no skill clip (auto-skill no-ops — ` +
+    `the honest default until tower skill art lands)`,
+);
 
 // A tree where NOTHING is bundled enforces nothing against the registry — say so
 // loudly, because that is the shape a stale play-art-prep run or a forgotten art
