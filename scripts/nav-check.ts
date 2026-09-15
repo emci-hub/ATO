@@ -46,9 +46,14 @@ ok('Home and Sage are pinned ids, never pool tabs');
 
 assert.equal(SLOT_COUNT, 4);
 assert.equal(POOL_SLOTS, 2);
-assert.deepEqual(DEFAULT_NAV_LAYOUT, { slots: ['home', 'explore', 'sage', 'you'] });
+// REPINNED 2026-09-15: `legends` swapped in for `you` the same day Sage and
+// Legends were un-parked (emci: restore both tabs with their original
+// icon/label). `you` stays a fully working registry entry — it is only no
+// longer one of the two default pool slots, and remains reachable via More
+// or a user's own saved layout.
+assert.deepEqual(DEFAULT_NAV_LAYOUT, { slots: ['home', 'explore', 'sage', 'legends'] });
 assert.equal(DEFAULT_NAV_LAYOUT.slots.length, SLOT_COUNT);
-ok('5-slot bar: 4 draggable slots (home + sage + 2 pool) + fixed More; default is Home/Explore/Sage/You');
+ok('5-slot bar: 4 draggable slots (home + sage + 2 pool) + fixed More; default is Home/Explore/Sage/Legends');
 
 // The default layout carries home + sage exactly once and exactly POOL_SLOTS pool ids.
 const defaultPool = poolIdsInLayout(DEFAULT_NAV_LAYOUT);
@@ -58,7 +63,7 @@ assert.equal(DEFAULT_NAV_LAYOUT.slots.filter((s) => s === 'sage').length, 1);
 assert.ok(defaultPool.every((id) => NAV_TAB_IDS.includes(id)));
 ok('default layout has home + sage once each and 2 registry pool tabs');
 
-// normalizeNavLayout: null/empty → the exact default (Home/Explore/Sage/You).
+// normalizeNavLayout: null/empty → the exact default (Home/Explore/Sage/Legends).
 assert.deepEqual(normalizeNavLayout(null).slots, DEFAULT_NAV_LAYOUT.slots);
 assert.deepEqual(normalizeNavLayout(undefined).slots, DEFAULT_NAV_LAYOUT.slots);
 assert.deepEqual(normalizeNavLayout({ slots: [] }).slots, DEFAULT_NAV_LAYOUT.slots);

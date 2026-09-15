@@ -85,7 +85,7 @@ export function NavEditOverlay({
 
           <ScrollView contentContainerStyle={styles.body}>
             <ThemedText type="small" themeColor="textSecondary">
-              Home always stays in slots 1–4 — drag to move it. Pick {POOL_SLOTS} more
+              Home and Sage always stay in slots 1–4 — drag to move them. Pick {POOL_SLOTS} more
               from below.
             </ThemedText>
 
@@ -119,11 +119,12 @@ export function NavEditOverlay({
                 setDraftSlots([...next, ...parked]);
               }}>
               {/*
-                Parked slots are not shown here either (ISOLATION_PLAN §7 Card
-                F): Sage still occupies a slot in the saved layout — nothing
-                rewrites `me.nav_layout` — but the bar renders no button for
-                it, so listing it as "Pinned" in the editor described a tab the
-                user cannot see.
+                Parked pool ids (`around`, `circle` — ISOLATION_PLAN §7 Card F)
+                are not shown here either: they can still occupy a slot in a
+                saved layout — nothing rewrites `me.nav_layout` — but the bar
+                renders no button for them, so listing one in the editor would
+                describe a tab the user cannot see. `sage` and `legends` were
+                un-parked 2026-09-15 and render normally again.
               */}
               {draftSlots.filter((id) => !isTabParked(id)).map((id) => (
                 <View key={id} style={[styles.sortRow, { borderColor: controlBorderColor(theme) }]}>
@@ -174,7 +175,7 @@ export function NavEditOverlay({
 
             <ThemedText type="smallBold">Add to the bar</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              Pick {POOL_SLOTS} tabs total for slots 1–4, alongside Home.
+              Pick {POOL_SLOTS} tabs total for slots 1–4, alongside Home and Sage.
             </ThemedText>
 
             <View style={styles.poolList}>

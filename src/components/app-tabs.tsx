@@ -65,8 +65,9 @@ export default function AppTabs() {
     Slots 1–4, minus locked pool tabs (empty until unlocked) and minus every
     PARKED tab (ISOLATION_PLAN §7 Card F). A parked id keeps its slot in the
     saved layout — nothing rewrites `me.nav_layout` — it just renders no
-    button, and gets a hidden trigger below so its route stays navigable.
-    `sage` is parked and pinned, so it drops out here the same way.
+    button, and gets a hidden trigger below so its route stays navigable. A
+    parked PINNED id (none right now — `sage` was un-parked 2026-09-15) would
+    drop out here the same way, via `PARKED_PINNED_IDS`.
   */
   const visibleSlots = layout.slots.filter(
     (id) => !isTabParked(id) && (id === 'home' || id === 'sage' || !lockedSet.has(id)),
