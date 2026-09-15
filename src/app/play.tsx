@@ -121,6 +121,14 @@ export default function PlayScreen() {
     saveAvatarPark,
     activateAvatar,
     unlockAvatarStub,
+    setAvatarHero,
+    bindHeroAsTower,
+    dismissHeroOffer,
+    devOwnHero,
+    devOwnAllHeroes,
+    devSetAvatarHero,
+    devClearHeroOffer,
+    devClearOwnedHeroes,
     buyShopRow,
   } = usePlayStore();
   const [mode, setMode] = useState<PlayMode>('grove');
@@ -274,6 +282,9 @@ export default function PlayScreen() {
           body: `${result.milestoneLook.count} lifetime clears — found ${name}.`,
         });
       }
+      // Slice A2: a first-own also queues `hero_offer` in the save, which the
+      // Defend screen renders as the hero sheet (owned + the two actions). No
+      // toast here — one surface, so the two never stack.
       return result;
     },
     [recordDefendWin],
@@ -594,6 +605,7 @@ export default function PlayScreen() {
                   onMerge={handleMerge}
                   onActivateAvatar={handleActivateAvatar}
                   onUnlockAvatar={(id) => void handleUnlockAvatar(id)}
+                  onSetAvatarHero={(heroId) => void setAvatarHero(heroId)}
                   onBackToGrove={() => setMode('grove')}
                 />
               ) : mode === 'defend' && view ? (
@@ -618,6 +630,15 @@ export default function PlayScreen() {
                   onDevOvergear={handleDevOvergear}
                   onDevForceSkipOffer={handleDevForceSkipOffer}
                   onSaveAvatarPark={handleSaveAvatarPark}
+                  onSetAvatarHero={setAvatarHero}
+                  onBindHeroAsTower={bindHeroAsTower}
+                  onDismissHeroOffer={() => void dismissHeroOffer()}
+                  onDevOwnHero={devOwnHero}
+                  onDevOwnAllHeroes={devOwnAllHeroes}
+                  onDevSetAvatarHero={devSetAvatarHero}
+                  onDevClearHeroOffer={devClearHeroOffer}
+                  onDevClearOwnedHeroes={devClearOwnedHeroes}
+                  onOpenDress={() => setMode('dress')}
                   onBackToGrove={() => setMode('grove')}
                 />
               ) : mode === 'shop' && view ? (

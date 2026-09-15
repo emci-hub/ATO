@@ -21,6 +21,7 @@ import { AppState } from 'react-native';
 import type { ItemSlot } from '@/play/items';
 import {
   claimResearch,
+  clearHeroOffer,
   deeperDive,
   devCampaignReset,
   devClearEquipped,
@@ -58,6 +59,13 @@ import {
   unlockAvatar,
   devAddAvatarLevels,
   devResetAvatars,
+  devOwnHero as persistDevOwnHero,
+  devOwnAllHeroes as persistDevOwnAllHeroes,
+  devSetAvatarHero as persistDevSetAvatarHero,
+  devClearHeroOffer as persistDevClearHeroOffer,
+  devClearOwnedHeroes as persistDevClearOwnedHeroes,
+  bindHeroAsTower as persistBindHeroAsTower,
+  setAvatarHero as persistSetAvatarHero,
   purchaseShopRow,
   type AvatarParkMapId,
   type AvatarId,
@@ -67,6 +75,8 @@ import {
   type DefendWinContext,
   type DefendWinResult,
   type EquipOutcome,
+  type HeroBindReason,
+  type HeroSetReason,
   type MergeOutcome,
   type MergeTarget,
   type PlayStoreDoc,
@@ -543,6 +553,115 @@ export function usePlayStore() {
     return gained;
   }, [commit]);
 
+  /**
+   * Slice A2 — set an OWNED hero as the Avatar. Auto-unbinds the hero if it was
+   * bound as a tower (exclusivity) and clears the queued offer. Returns null on
+   * success, or the refusal reason for the sheet's message.
+   */
+  const setAvatarHero = useCallback(
+    async (heroId: string): Promise<HeroSetReason | null> => {
+      let reason: HeroSetReason | null = 'unknown_hero';
+      commit((current) => {
+        const next = persistSetAvatarHero(current, heroId);
+        reason = next.ok ? null : next.reason;
+        return next.ok && next.doc !== current ? next.doc : null;
+      });
+      return reason;
+    },
+    [commit],
+  );
+
+  /**
+   * Slice A2 — bind an OWNED hero as a Bound Boss tower (★1). Refuses while the
+   * hero is the active Avatar, or at the hero bind cap. Returns null on success
+   * (or when it was already bound), otherwise the refusal reason.
+   */
+  const bindHeroAsTower = useCallback(
+    async (heroId: string): Promise<HeroBindReason | null> => {
+      let reason: HeroBindReason | null = 'unknown_hero';
+      commit((current) => {
+        const next = persistBindHeroAsTower(current, heroId);
+        reason = next.ok ? null : next.reason;
+        return next.ok && next.doc !== current ? next.doc : null;
+      });
+      return reason;
+    },
+    [commit],
+  );
+
+  /** Slice A2 — drop the queued hero offer (sheet dismiss). */
+  const dismissHeroOffer = useCallback(async (): Promise<boolean> => {
+    let changed = false;
+    commit((current) => {
+      const next = clearHeroOffer(current);
+      changed = next !== current;
+      return changed ? next : null;
+    });
+    return changed;
+  }, [commit]);
+
+  /** Dev kit only: own a hero without clearing its band (tests the offer
+   * sheet). Reuses the real grant, so the exclusivity rules are identical. */
+  const devOwnHero = useCallback(
+    async (heroId: string): Promise<boolean> => {
+      let gained = false;
+      commit((current) => {
+        const next = persistDevOwnHero(current, heroId);
+        gained = next !== current;
+        return gained ? next : null;
+      });
+      return gained;
+    },
+    [commit],
+  );
+
+  /** Dev kit only: own every hero in `heroes.json` at once. */
+  const devOwnAllHeroes = useCallback(async (): Promise<boolean> => {
+    let changed = false;
+    commit((current) => {
+      const next = persistDevOwnAllHeroes(current);
+      changed = next !== current;
+      return changed ? next : null;
+    });
+    return changed;
+  }, [commit]);
+
+  /** Dev kit only: set an Avatar hero, auto-owning it first (test speed). */
+  const devSetAvatarHero = useCallback(
+    async (heroId: string): Promise<boolean> => {
+      let changed = false;
+      commit((current) => {
+        const next = persistDevSetAvatarHero(current, heroId);
+        changed = next !== current;
+        return changed ? next : null;
+      });
+      return changed;
+    },
+    [commit],
+  );
+
+  /** Dev kit only: drop a queued hero offer. */
+  const devClearHeroOffer = useCallback(async (): Promise<boolean> => {
+    let changed = false;
+    commit((current) => {
+      const next = persistDevClearHeroOffer(current);
+      changed = next !== current;
+      return changed ? next : null;
+    });
+    return changed;
+  }, [commit]);
+
+  /** Dev kit only: back to just the starter Hero (drops hero bindings too). */
+  const devClearOwnedHeroes = useCallback(async (): Promise<boolean> => {
+    let changed = false;
+    commit((current) => {
+      const next = persistDevClearOwnedHeroes(current);
+      changed = next !== current;
+      return changed ? next : null;
+    });
+    return changed;
+  }, [commit]);
+
   /** Dev kit only: bump the ACTIVE Avatar `levels` whole levels. */
   const addAvatarLevels = useCallback(async (levels: number): Promise<boolean> => {
     let ok = false;
@@ -603,6 +722,14 @@ export function usePlayStore() {
     unlockAvatarStub,
     addAvatarLevels,
     resetAvatars,
+    setAvatarHero,
+    bindHeroAsTower,
+    dismissHeroOffer,
+    devOwnHero,
+    devOwnAllHeroes,
+    devSetAvatarHero,
+    devClearHeroOffer,
+    devClearOwnedHeroes,
     buyShopRow,
     resetCampaign,
     setCampaignSeat,

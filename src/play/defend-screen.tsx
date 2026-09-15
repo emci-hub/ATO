@@ -73,7 +73,9 @@ import {
 } from '@/play/defend';
 import { waveDefFor } from '@/play/director';
 import { avatarDef } from '@/play/avatars';
+import { allHeroes } from '@/play/heroes-data';
 import { PlayFrame } from '@/play/play-frame';
+import { HeroOwnSheet } from '@/play/hero-own-sheet';
 import { NeonLabel, NeonPill, NEON_ROW_LINE } from '@/play/neon-ui';
 import { dir8FromDelta, type Dir8 } from '@/play/art';
 import {
@@ -118,6 +120,9 @@ import {
   type DefendWinContext,
   type DefendWinMode,
   type DefendWinResult,
+  type HeroBindReason,
+  type HeroOffer,
+  type HeroSetReason,
   type PlayView,
   type SkipRewardResult,
 } from '@/play/playStore';
@@ -479,6 +484,15 @@ export function DefendScreen({
   onDevOvergear,
   onDevForceSkipOffer,
   onSaveAvatarPark,
+  onSetAvatarHero,
+  onBindHeroAsTower,
+  onDismissHeroOffer,
+  onDevOwnHero,
+  onDevOwnAllHeroes,
+  onDevSetAvatarHero,
+  onDevClearHeroOffer,
+  onDevClearOwnedHeroes,
+  onOpenDress,
   onBackToGrove,
 }: {
   view: PlayView;
@@ -516,6 +530,25 @@ export function DefendScreen({
   onDevForceSkipOffer: () => void;
   /** Avatar drag ended → persist the park for this Defend map (v15). */
   onSaveAvatarPark: (mapId: AvatarParkMapId, x: number, y: number) => void;
+  /** Slice A2 — set an owned Hero as the Avatar (auto-unbinds it if bound).
+   * Null = it worked; otherwise the refusal the sheet shows. */
+  onSetAvatarHero: (heroId: string) => Promise<HeroSetReason | null>;
+  /** Slice A2 — bind an owned Hero as a Bound Boss tower (★1, cap 2). */
+  onBindHeroAsTower: (heroId: string) => Promise<HeroBindReason | null>;
+  /** Slice A2 — dismiss the queued hero-own offer (sheet's Later / Done). */
+  onDismissHeroOffer: () => void;
+  /** Dev kit only: own a hero without clearing its band (offer-sheet smoke). */
+  onDevOwnHero: (heroId: string) => Promise<boolean>;
+  /** Dev kit only: own every hero in `heroes.json` at once (no offer queued). */
+  onDevOwnAllHeroes: () => Promise<boolean>;
+  /** Dev kit only: set an Avatar hero, auto-owning it first (test speed). */
+  onDevSetAvatarHero: (heroId: string) => Promise<boolean>;
+  /** Dev kit only: drop a queued hero offer. */
+  onDevClearHeroOffer: () => Promise<boolean>;
+  /** Dev kit only: back to just the starter Hero (drops hero bindings too). */
+  onDevClearOwnedHeroes: () => Promise<boolean>;
+  /** Leave the sheet for the Dress Hero roster (A2.5). */
+  onOpenDress: () => void;
   onBackToGrove: () => void;
 }) {
   const theme = useTheme();
@@ -554,8 +587,14 @@ export function DefendScreen({
   const [dumpDropsOpen, setDumpDropsOpen] = useState(false);
   /** Dev kit only: dump GS + per-wave recommended (Phase D smoke aid). */
   const [gsDumpOpen, setGsDumpOpen] = useState(false);
+  /** Dev kit only: the Hero lab rows (Slice A2.5) — collapsed so ~14 hero
+   * actions don't bury the rest of the kit. */
+  const [heroLabOpen, setHeroLabOpen] = useState(false);
   /** What the last win paid — shows the honest (possibly halved) tokens. */
   const [lastWin, setLastWin] = useState<DefendWinResult | null>(null);
+  /** Slice A2 — the hero offer the sheet is showing (a local copy of the save's
+   * queued offer, so the sheet survives the action that clears the queue). */
+  const [heroSheetOffer, setHeroSheetOffer] = useState<HeroOffer | null>(null);
   /** Floating damage numbers, pooled to MAX_FLOATERS (display only). */
   const [floaters, setFloaters] = useState<Floater[]>([]);
   const floaterSeq = useRef(0);
@@ -1186,6 +1225,29 @@ export function DefendScreen({
     return () => sub.remove();
   }, []);
 
+  // Slice A2 — the hero sheet is shown from a LOCAL copy of the queued offer,
+  // not straight off `view.heroOffer`. Every action clears the save's queue
+  // (that is what makes the offer one-shot), so rendering the sheet off the
+  // queue directly would unmount it the instant the player acted — before it
+  // could confirm what happened. The local copy is dropped only when the sheet
+  // itself closes (Later / Done), and a NEW offer re-seeds it.
+  useEffect(() => {
+    if (view.heroOffer) setHeroSheetOffer(view.heroOffer);
+  }, [view.heroOffer]);
+  const closeHeroSheet = useCallback(() => {
+    setHeroSheetOffer(null);
+    onDismissHeroOffer();
+  }, [onDismissHeroOffer]);
+
+  /** Slice A2.5 — leave for the Dress Hero roster. The offer is dismissed on
+   * the way out: the player is going to the surface that owns this choice, so
+   * a re-run of the sheet on their return would be noise. */
+  const openDressFromSheet = useCallback(() => {
+    setHeroSheetOffer(null);
+    onDismissHeroOffer();
+    onOpenDress();
+  }, [onDismissHeroOffer, onOpenDress]);
+
   const selectedTower =
     sim && selectedPad != null
       ? sim.towers.find((tower) => tower.pad === selectedPad) ?? null
@@ -1194,8 +1256,13 @@ export function DefendScreen({
     sim && selectedPad != null
       ? sim.boundBosses.find((bb) => bb.pad === selectedPad) ?? null
       : null;
-  /** Unlocked Bound Bosses (stars ≥ 1) the player can place. */
-  const unlockedBoundBosses = view.boundBosses.filter((bb) => bb.unlocked);
+  /** Unlocked Bound Bosses (stars ≥ 1) the player can place. A "bound boss"
+   * with no def in `bound_bosses.json` is a HERO bound as a tower (Slice A2) —
+   * its tower def is A5/A6 content, so it is listed in the save but not yet
+   * placeable; skip it rather than render a row that does nothing. */
+  const unlockedBoundBosses = view.boundBosses.filter(
+    (bb) => bb.unlocked && getBoundBossDef(bb.id) != null,
+  );
   const boundBossCount = sim?.boundBosses.length ?? 0;
   /** Board tower cap reached — pads stay open but no more towers can deploy. */
   const atTowerCap = (sim?.towers.length ?? 0) >= MAX_TOWERS;
@@ -2862,6 +2929,37 @@ export function DefendScreen({
             />
             <DevRow label="Grant star token" onPress={() => void onGrantStarToken()} />
             <DevRow label="Spend star token" onPress={() => void onSpendStarToken()} />
+            {/* Slice A2/A2.5 — one "Hero lab" menu instead of a dozen rows: own
+                any/all heroes, set the Avatar (auto-owning for test speed), and
+                reset. Everything here is PRE_LAUNCH_DEV-gated by the parent. */}
+            <DevRow
+              label={heroLabOpen ? 'Hero lab (open)' : 'Hero lab'}
+              onPress={() => setHeroLabOpen((open) => !open)}
+            />
+            {heroLabOpen ? (
+              <>
+                {allHeroes().map((hero) => (
+                  <DevRow
+                    key={`own-${hero.id}`}
+                    label={`Own ${hero.name}`}
+                    onPress={() => void onDevOwnHero(hero.id)}
+                  />
+                ))}
+                <DevRow label="Own all heroes" onPress={() => void onDevOwnAllHeroes()} />
+                <DevRow label="Clear hero offer" onPress={() => void onDevClearHeroOffer()} />
+                <DevRow
+                  label="Clear owned heroes (→ Corvus)"
+                  onPress={() => void onDevClearOwnedHeroes()}
+                />
+                {allHeroes().map((hero) => (
+                  <DevRow
+                    key={`set-${hero.id}`}
+                    label={`Set Avatar → ${hero.name} (dev)`}
+                    onPress={() => void onDevSetAvatarHero(hero.id)}
+                  />
+                ))}
+              </>
+            ) : null}
             <DevRow
               label={`Cycle tint → next (${TAG_LABEL[view.cycleTint]})`}
               onPress={() => {
@@ -2974,6 +3072,23 @@ export function DefendScreen({
             </View>
           </View>
         </View>
+      ) : null}
+
+      {/* Slice A2 — the one-shot "Hero owned" offer (Final → Archangel, Scout →
+          Oni). The SAVE's `hero_offer` queue is what fires it exactly once; the
+          sheet then owns a local copy so its confirmation survives the action
+          that clears the queue. Actions call the store's setters, which own the
+          exclusivity + cap rules; the sheet only reports refusals. */}
+      {heroSheetOffer ? (
+        <HeroOwnSheet
+          key={heroSheetOffer.hero_id}
+          offer={heroSheetOffer}
+          isActiveAvatar={view.activeAvatarHeroId === heroSheetOffer.hero_id}
+          onSetAvatar={() => onSetAvatarHero(heroSheetOffer.hero_id)}
+          onBind={() => onBindHeroAsTower(heroSheetOffer.hero_id)}
+          onDismiss={closeHeroSheet}
+          onOpenDress={openDressFromSheet}
+        />
       ) : null}
     </ThemedView>
   );

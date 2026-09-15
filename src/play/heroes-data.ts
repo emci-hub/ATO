@@ -3,9 +3,10 @@
  *
  * `data/heroes.json` is the authoring surface: one row per Batch 1 Hero
  * (Corvus, Archangel, Aurex, Kitsune, Oni), stable `id`; code reads ids only.
- * A row carries the Hero's Cast art folder, its unlock lane, the skill kit it
- * brings (a Hero swaps sprites AND skill together — there is no mix-and-match
- * loadout) and the per-clip animation folder names its sprite set authors.
+ * A row carries the Hero's display name, its Cast art folder, its unlock lane,
+ * the skill kit it brings (a Hero swaps sprites AND skill together — there is
+ * no mix-and-match loadout) and the per-clip animation folder names its sprite
+ * set authors.
  *
  * Clip values are the animation FOLDER NAMES under `<folder>/animations/`,
  * spelled the way the Play art registry keys them: `scripts/play-art-prep.ts`
@@ -43,6 +44,13 @@ export type HeroClips = Partial<Record<HeroClip, string>>;
 
 export type HeroDef = {
   id: string;
+  /** Player-facing name — the toast / bind copy reads this. */
+  name: string;
+  /** How the hero is earned, as a short player-facing hint for a locked row
+   * ("Clear Main Final", "Starter", "Coming soon"). `unlock` is the economy
+   * lane; this is the copy that explains it, because a lane id is not a
+   * sentence and the locked rows have nowhere else to read it from. */
+  acquire: string;
   role: 'hero';
   /** Cast art root, relative to the repo root (`assets/play/...`). */
   folder: string;
@@ -63,6 +71,8 @@ export const DEFAULT_AVATAR_HERO_ID = 'corvus';
 /** A validated row straight from JSON — `clips` values may be explicit nulls. */
 type RawHeroRow = {
   id: string;
+  name: string;
+  acquire: string;
   role: 'hero';
   folder: string;
   unlock: HeroUnlock;
@@ -84,6 +94,13 @@ export function heroById(id: string): HeroDef | undefined {
   return HERO_BY_ID.get(id);
 }
 
+/** Player-facing name for an id, falling back to the raw id when the hero is
+ * unknown — so a stale save's offer/toast still reads as *something* rather
+ * than blank (the same fallback `playView` uses for a def-less Bound Boss). */
+export function heroName(id: string): string {
+  return HERO_BY_ID.get(id)?.name ?? id;
+}
+
 function loadHeroes(raw: unknown): readonly HeroDef[] {
   const problems = validateHeroes(raw);
   if (problems.length > 0) {
@@ -102,6 +119,8 @@ function normalizeHero(row: RawHeroRow): HeroDef {
   }
   return {
     id: row.id,
+    name: row.name,
+    acquire: row.acquire,
     role: row.role,
     folder: row.folder,
     unlock: row.unlock,
@@ -139,6 +158,12 @@ function validateHeroes(raw: unknown): string[] {
       ids.add(row.id);
     }
 
+    if (typeof row.name !== 'string' || row.name.length === 0) {
+      problems.push(`${at}: missing name`);
+    }
+    if (typeof row.acquire !== 'string' || row.acquire.length === 0) {
+      problems.push(`${at}: missing acquire hint (the locked-row copy)`);
+    }
     if (row.role !== 'hero') {
       problems.push(`${at}: role must be "hero"`);
     }

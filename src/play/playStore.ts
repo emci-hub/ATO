@@ -65,6 +65,7 @@ import { isUniqueDrop, rollDropById } from '@/play/engine/drop-table';
 import { gearScore, recommendedGs } from '@/play/engine/gear-score';
 import { starMergeSuccess, starMultScale } from '@/play/engine/star-table';
 import { isTypeTag, type TypeTag } from '@/play/engine/type-match';
+import { DEFAULT_AVATAR_HERO_ID, allHeroes, heroById, heroName } from '@/play/heroes-data';
 import type { ShopTokenRow } from '@/play/shop';
 import { getTune } from '@/play/tune';
 import {
@@ -128,6 +129,20 @@ export const CYCLE_CLEAR_BONUS_TOKENS = 150;
 export const CYCLE_CLEAR_BONUS_XP = 50;
 /** Avatar star cap (§9h) — same soft ★5 feel as gear, max 5 stars. */
 export const AVATAR_STAR_MAX = 5;
+
+/** Bound HEROES allowed at once (Slice A2). Separate from the board's
+ * `BOUND_BOSS_MAX_ON_BOARD` (2 placed towers in one fight) — this caps how many
+ * heroes the save holds as bound towers, and only counts hero bindings, so the
+ * cycle boss's own record never eats a hero slot. */
+export const BOUND_HERO_MAX = 2;
+
+/** Which hero a boss band's clear grants when the player owns it (Slice A2,
+ * product lock: Final = Archangel, Scout = Crimson Oni). The Scout *mini* band
+ * (Trial w5) grants nothing — it is the tutorial mini-boss. */
+export const HERO_BY_BAND_KIND = {
+  scout: 'oni',
+  final: 'archangel',
+} as const;
 /** Default cycle boss tint (§18 C: one boss family until ContentPack 2). */
 export const DEFAULT_CYCLE_TINT: TypeTag = 'ember';
 /** Dev kit (skip smoke): the four regular Powers worn at ★5 when overgearing.
@@ -493,7 +508,10 @@ export type CampaignState = {
  * the boss is not a tower yet; 1–5 = bound at that star. `frags` counts
  * fragments toward the NEXT star (or toward the ★1 unlock when stars === 0). */
 export type BoundBossRecord = {
-  /** Stable boss id (matches a row in bound_bosses.json). */
+  /** Stable boss id (matches a row in `bound_bosses.json`). Since Slice A2
+   * this may instead be a HERO id (heroes.json) bound as a tower — that hero's
+   * tower def is A5/A6 content, so until it lands the id is def-less and no
+   * def-driven read may assume `getBoundBossDef(id)` resolves. */
   id: string;
   /** Unlocked stars (0 = not yet bound, 1–5 = bound). */
   stars: number;
@@ -548,7 +566,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 17;
+  version: 18;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -602,6 +620,26 @@ export type PlayStoreDoc = {
   /** Soft-shop daily purchases (v17) — device-local day + per-row counts, so
    * a day-capped token row (e.g. the merge-fuel crate) can't be farmed. */
   shop_daily: ShopDaily;
+  /** Heroes OWNED (v18, Slice A2) — hero ids from `heroes.json`. Seeded with
+   * the starter hero (Corvus); a Final/Scout band clear adds its hero. */
+  owned_hero_ids: string[];
+  /** Which OWNED hero the Avatar is (v18, Slice A2). The board still draws the
+   * `unit.avatar` skin role (Corvus art) until the A3 sprite swap — this is the
+   * saved intent, not yet the art. */
+  active_avatar_hero_id: string;
+  /** One-shot "you own a hero" offer awaiting the player's decision (v18,
+   * Slice A2). Set when a hero is first owned; the hero sheet shows it once and
+   * every action (Avatar / bind / dismiss) clears it, so it can never re-fire
+   * for an already-owned hero. */
+  hero_offer: HeroOffer | null;
+};
+
+/** A queued "hero owned" offer (Slice A2). `label` is the hero's display name
+ * frozen at grant time, so the copy reads correctly even if a later content
+ * pack renames the hero. */
+export type HeroOffer = {
+  hero_id: string;
+  label: string;
 };
 
 /** Per-device-local-day shop purchase counts (v17). `ymd` mismatch = fresh. */
@@ -689,6 +727,16 @@ export type PlayView = {
   /** Token-shop buys made TODAY (device-local), row id → count. A stale stored
    * day reads as empty, so the shop's daily caps reset at local midnight. */
   shopCounts: Readonly<Record<string, number>>;
+  /** Heroes OWNED (Slice A2) — hero ids the player can set as Avatar or bind. */
+  ownedHeroIds: readonly string[];
+  /** The hero the player has set as their Avatar (Slice A2). Falls back to the
+   * starter hero when the stored id is unknown/corrupt. */
+  activeAvatarHeroId: string;
+  /** Hero ids currently bound as towers (Slice A2) — the hero subset of
+   * `boundBosses`, which is what the cap and the exclusivity rule read. */
+  boundHeroIds: readonly string[];
+  /** The queued "hero owned" offer awaiting a decision, or null. */
+  heroOffer: HeroOffer | null;
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -729,7 +777,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 17,
+    version: 18,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -755,6 +803,11 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     avatars: [defaultAvatarRecord(STARTER_AVATAR_ID)],
     active_avatar_id: STARTER_AVATAR_ID,
     shop_daily: { ymd: null, counts: {} },
+    // Slice A2: the starter hero is owned from the first launch, and starts as
+    // the active Avatar hero (what `unit.avatar` already draws).
+    owned_hero_ids: [DEFAULT_AVATAR_HERO_ID],
+    active_avatar_hero_id: DEFAULT_AVATAR_HERO_ID,
+    hero_offer: null,
   };
 }
 
@@ -834,6 +887,10 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     shopCounts:
       doc.shop_daily.ymd === localYmd(new Date(now)) ? doc.shop_daily.counts : {},
     avatarPark: active.park,
+    ownedHeroIds: doc.owned_hero_ids,
+    activeAvatarHeroId: normalizedAvatarHeroId(doc),
+    boundHeroIds: boundHeroIdsOf(doc),
+    heroOffer: doc.hero_offer,
     boundBosses: doc.bound_bosses.map((record) => {
       const def = getBoundBossDef(record.id);
       return {
@@ -909,6 +966,12 @@ export type DefendWinResult = {
   catchupXp: boolean;
   /** Item ids dropped from this wave's drop table (rolled on the win). */
   dropItems: string[];
+  /** Hero first owned by this win (Slice A2) — a Main Scout band clear grants
+   * Oni, a Main Final band clear grants Archangel. Null when this win granted no
+   * hero (a replay, a non-band wave, or a band whose hero was already owned).
+   * The same grant also queues `hero_offer` in the doc, which is what the hero
+   * sheet renders. */
+  heroOwned: { heroId: string; label: string } | null;
   /** Boss fragment dropped this win (§9k — Final/Scout/Semi bands only), or
    * null when no fragment dropped. `starred` = the drop auto-starred-up. */
   bossFragment: {
@@ -1148,6 +1211,25 @@ export function recordDefendWin(
   if (milestone) inventory = addCopiesToBag(inventory, milestone.itemId, 0, 1);
   if (dropItems.length > 0) inventory = addManyToBag(inventory, dropItems);
 
+  // Hero ownership (Slice A2): a CAMPAIGN clear of a hero band first-owns its
+  // hero — Main w5 (Scout) → Oni, Main w10 (Final) → Archangel — and queues the
+  // one-shot "owned" offer. Replays never grant (the farm lane must not re-own
+  // or re-offer), and `ownHero` is idempotent, so a re-clear of an owned band
+  // stays silent. Product lock: the Final band is fightable free; the Premium
+  // gate on USING it as Avatar/Bound Boss is TODO(A5) inside `ownHero`.
+  let ownedHeroIds = doc.owned_hero_ids;
+  let heroOffer = doc.hero_offer;
+  let heroOwned: DefendWinResult['heroOwned'] = null;
+  if (!isReplay && band) {
+    const heroId = HERO_BY_BAND_KIND[band.kind as keyof typeof HERO_BY_BAND_KIND];
+    const granted = heroId ? ownHero(doc, heroId) : null;
+    if (granted?.gained) {
+      ownedHeroIds = granted.doc.owned_hero_ids;
+      heroOffer = granted.doc.hero_offer;
+      heroOwned = { heroId, label: heroName(heroId) };
+    }
+  }
+
   const next: PlayStoreDoc = patchActiveAvatar(
     {
       ...doc,
@@ -1168,6 +1250,8 @@ export function recordDefendWin(
       final_clears_this_cycle,
       uniques: uniquesAfter,
       bound_bosses,
+      owned_hero_ids: ownedHeroIds,
+      hero_offer: heroOffer,
     },
     { xp, level },
   );
@@ -1189,6 +1273,7 @@ export function recordDefendWin(
       starTokenGranted,
       avatarStarTokens: avatar_star_tokens,
       dropItems,
+      heroOwned,
       bossFragment,
       catchupXp,
     },
@@ -1418,6 +1503,223 @@ export function devResetAvatars(doc: PlayStoreDoc): PlayStoreDoc {
     ...doc,
     avatars: [defaultAvatarRecord(STARTER_AVATAR_ID)],
     active_avatar_id: STARTER_AVATAR_ID,
+  };
+}
+
+/* ---------------------------------------------------------------------------
+ * Hero ownership + Avatar / Bound-Boss exclusivity (v18 — Slice A2).
+ *
+ * A HERO (heroes.json) is the sprite set + skill kit the player fights as; the
+ * owned set is `owned_hero_ids` (seeded with the starter, Corvus) and
+ * `active_avatar_hero_id` names the one in use. A hero becomes a Bound Boss by
+ * gaining a `bound_bosses` record (stars ≥ 1) — its tower def lands in A5/A6,
+ * so until then the record is intentionally def-less.
+ *
+ * The product lock is EXCLUSIVITY: the same hero can never be the active
+ * Avatar AND a bound tower. Both setters enforce it, deliberately differently:
+ *  - `setAvatarHero` AUTO-UNBINDS (the player asked for the Avatar; the bind is
+ *    the thing given up, and it is reversible from the same sheet),
+ *  - `bindHeroAsTower` REFUSES while the hero is the active Avatar, telling the
+ *    player to unequip first — binding is additive, so silently stealing the
+ *    Avatar out from under them would be the surprising move.
+ * ------------------------------------------------------------------------- */
+
+/** Hero ids BOUND as towers, in bind order — the hero subset of
+ * `bound_bosses` that counts against `BOUND_HERO_MAX`. A hero id is one
+ * `heroById` resolves; the cycle boss's own record (Ember) is not a hero, so it
+ * never consumes a hero slot. `stars >= 1` is the same "bound" line the view
+ * draws (`BoundBossView.unlocked`): a stars-0 record is fragments only, so it
+ * must not eat a slot. */
+export function boundHeroIdsOf(doc: PlayStoreDoc): string[] {
+  return doc.bound_bosses
+    .filter((record) => record.stars >= 1)
+    .map((record) => record.id)
+    .filter((id) => heroById(id) != null);
+}
+
+/** True when the save owns `heroId`. */
+export function heroOwned(doc: PlayStoreDoc, heroId: string): boolean {
+  return doc.owned_hero_ids.includes(heroId);
+}
+
+/** The active Avatar hero, falling back to the starter when the stored id is
+ * unknown/corrupt (mirrors `avatarRecordOf`'s tolerant read). */
+export function normalizedAvatarHeroId(doc: PlayStoreDoc): string {
+  const id = doc.active_avatar_hero_id;
+  return heroOwned(doc, id) && heroById(id) ? id : DEFAULT_AVATAR_HERO_ID;
+}
+
+/**
+ * Own a hero. No-op when the id is unknown, already owned, or the starter.
+ * Otherwise adds it to `owned_hero_ids` AND queues the one-shot offer the hero
+ * sheet shows ("Archangel owned" → Set as Avatar / Bind as tower).
+ *
+ * Economy assumption (locked product call): the Final band grants Archangel and
+ * the Scout band grants Oni for FREE on a campaign clear. TODO(A5): the Premium
+ * gate — owning Final as Avatar/Bound Boss is gated per the existing economy —
+ * belongs here, so when the paywall lands this becomes the one place to check.
+ */
+export function ownHero(
+  doc: PlayStoreDoc,
+  heroId: string,
+): { doc: PlayStoreDoc; gained: boolean } {
+  if (!heroById(heroId) || heroOwned(doc, heroId)) {
+    return { doc, gained: false };
+  }
+  return {
+    doc: {
+      ...doc,
+      owned_hero_ids: [...doc.owned_hero_ids, heroId],
+      hero_offer: { hero_id: heroId, label: heroName(heroId) },
+    },
+    gained: true,
+  };
+}
+
+/** Why `setAvatarHero` refused (null = it worked). */
+export type HeroSetReason = 'unknown_hero' | 'not_owned';
+
+/**
+ * Set an OWNED hero as the Avatar. If that hero is currently bound as a tower,
+ * the bind is given up in the same write (exclusivity). Refuses unknown or
+ * unowned ids, and is a no-op when the hero is already the Avatar (so the UI
+ * never re-writes state just to confirm). Clears the queued offer.
+ */
+export function setAvatarHero(
+  doc: PlayStoreDoc,
+  heroId: string,
+): { doc: PlayStoreDoc; ok: boolean; reason: HeroSetReason | null } {
+  if (!heroById(heroId)) return { doc, ok: false, reason: 'unknown_hero' };
+  if (!heroOwned(doc, heroId)) return { doc, ok: false, reason: 'not_owned' };
+  const bound = doc.bound_bosses.some((record) => record.id === heroId);
+  if (normalizedAvatarHeroId(doc) === heroId && !bound) {
+    return { doc: clearHeroOffer(doc), ok: true, reason: null };
+  }
+  return {
+    doc: {
+      ...doc,
+      active_avatar_hero_id: heroId,
+      // Exclusivity: an Avatar cannot also be a bound tower.
+      bound_bosses: bound
+        ? doc.bound_bosses.filter((record) => record.id !== heroId)
+        : doc.bound_bosses,
+      hero_offer: null,
+    },
+    ok: true,
+    reason: null,
+  };
+}
+
+/** Why `bindHeroAsTower` refused (null = it worked). */
+export type HeroBindReason = 'unknown_hero' | 'not_owned' | 'active_avatar' | 'cap';
+
+/**
+ * Bind an OWNED hero as a Bound Boss tower (§9k roster entry, ★1).
+ *
+ * Refuses while the hero is the ACTIVE Avatar (`active_avatar` — the player is
+ * told to set another Avatar first, or to use Set as Avatar's auto-unbind), and
+ * once `BOUND_HERO_MAX` heroes are already bound (`cap`). Idempotent: a hero
+ * that is already bound succeeds without duplicating the record. The ★1 record
+ * is def-less until A5/A6 ships the hero's tower def, so nothing here may assume
+ * `getBoundBossDef(id)` resolves.
+ */
+export function bindHeroAsTower(
+  doc: PlayStoreDoc,
+  heroId: string,
+): { doc: PlayStoreDoc; ok: boolean; reason: HeroBindReason | null } {
+  if (!heroById(heroId)) return { doc, ok: false, reason: 'unknown_hero' };
+  if (!heroOwned(doc, heroId)) return { doc, ok: false, reason: 'not_owned' };
+  const existing = doc.bound_bosses.find((record) => record.id === heroId);
+  if (existing && existing.stars >= 1) {
+    // Already bound — idempotent, and just clears the queued offer.
+    return { doc: clearHeroOffer(doc), ok: true, reason: null };
+  }
+  if (normalizedAvatarHeroId(doc) === heroId) {
+    return { doc, ok: false, reason: 'active_avatar' };
+  }
+  if (boundHeroIdsOf(doc).length >= BOUND_HERO_MAX) {
+    return { doc, ok: false, reason: 'cap' };
+  }
+  // A stars-0 record (fragments only, no tower yet) is upgraded in place so its
+  // fragments survive the bind.
+  const record: BoundBossRecord = existing
+    ? { ...existing, stars: 1, bound_wave: existing.bound_wave ?? null }
+    : { id: heroId, stars: 1, frags: 0, bound_wave: null };
+  return {
+    doc: {
+      ...doc,
+      bound_bosses: existing
+        ? doc.bound_bosses.map((row) => (row.id === heroId ? record : row))
+        : [...doc.bound_bosses, record],
+      hero_offer: null,
+    },
+    ok: true,
+    reason: null,
+  };
+}
+
+/** Drop the queued hero offer without acting on it (the sheet's dismiss, and
+ * every action path's exit). No-op when nothing is queued. */
+export function clearHeroOffer(doc: PlayStoreDoc): PlayStoreDoc {
+  return doc.hero_offer == null ? doc : { ...doc, hero_offer: null };
+}
+
+/** Dev kit only: own a hero without clearing its band, AND (re)queue its offer
+ * so the hero sheet is testable repeatedly. `ownHero` is idempotent, so owning
+ * an already-owned hero would otherwise be a no-op and the sheet could only be
+ * exercised once per hero per save. */
+export function devOwnHero(doc: PlayStoreDoc, heroId: string): PlayStoreDoc {
+  if (!heroById(heroId)) return doc;
+  const owned = ownHero(doc, heroId);
+  return { ...owned.doc, hero_offer: { hero_id: heroId, label: heroName(heroId) } };
+}
+
+/** Dev kit only: own EVERY hero in `heroes.json` at once, queuing no offer (a
+ * bulk grant has no single hero to offer a choice about). The queue is cleared
+ * so a pending offer cannot outlive the bulk grant it was superseded by.
+ * Returns the same doc when there is nothing left to grant. */
+export function devOwnAllHeroes(doc: PlayStoreDoc): PlayStoreDoc {
+  const owned = new Set(doc.owned_hero_ids);
+  for (const hero of allHeroes()) owned.add(hero.id);
+  if (owned.size === doc.owned_hero_ids.length && doc.hero_offer == null) return doc;
+  return { ...doc, owned_hero_ids: [...owned], hero_offer: null };
+}
+
+/** Dev kit only: set an Avatar hero for testing, auto-owning it first so the
+ * row works from a fresh save (the real `setAvatarHero` still refuses an
+ * unowned hero — this is the dev speed hatch, not a looser rule). */
+export function devSetAvatarHero(doc: PlayStoreDoc, heroId: string): PlayStoreDoc {
+  if (!heroById(heroId)) return doc;
+  const owned = heroOwned(doc, heroId) ? doc : ownHero(doc, heroId).doc;
+  const next = setAvatarHero(owned, heroId);
+  return next.ok ? next.doc : owned;
+}
+
+/** Dev kit only: drop a queued hero offer without acting on it. */
+export function devClearHeroOffer(doc: PlayStoreDoc): PlayStoreDoc {
+  return clearHeroOffer(doc);
+}
+
+/** Dev kit only: back to just the starter Hero — owned = Corvus, active =
+ * Corvus, no offer. Hero BINDINGS are dropped too: a bound hero the save no
+ * longer owns would break the "bound ⊆ owned" invariant the setters keep (the
+ * cycle boss's own record is not a hero, so it is left alone). Returns the same
+ * doc when it is already in that state. */
+export function devClearOwnedHeroes(doc: PlayStoreDoc): PlayStoreDoc {
+  const heroBinds = doc.bound_bosses.filter((record) => heroById(record.id) != null);
+  const alreadyClear =
+    doc.owned_hero_ids.length === 1 &&
+    doc.owned_hero_ids[0] === DEFAULT_AVATAR_HERO_ID &&
+    doc.active_avatar_hero_id === DEFAULT_AVATAR_HERO_ID &&
+    heroBinds.length === 0 &&
+    doc.hero_offer == null;
+  if (alreadyClear) return doc;
+  return {
+    ...doc,
+    owned_hero_ids: [DEFAULT_AVATAR_HERO_ID],
+    active_avatar_hero_id: DEFAULT_AVATAR_HERO_ID,
+    bound_bosses: doc.bound_bosses.filter((record) => heroById(record.id) == null),
+    hero_offer: null,
   };
 }
 
@@ -2473,7 +2775,15 @@ function snapshotDive(
   return { dive_charge: dive.current, dive_charge_at: lastLand };
 }
 
-function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
+/**
+ * Parse a persisted doc, migrating any older version forward (v1 … v18).
+ *
+ * Exported for the offline migration check (`scripts/check-heroes.ts`): a doc
+ * version bump otherwise ships unverified, and a save that silently fails to
+ * load costs the player their whole economy. Pure + total — returns null for an
+ * unreadable/unknown-version doc instead of throwing.
+ */
+export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
   try {
     const data = JSON.parse(raw) as Record<string, unknown>;
     // v1 (pre-inventory) … v11 (forever stubs) all migrate to v12: legacy
@@ -2492,7 +2802,7 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 5 && version !== 6 && version !== 7 && version !== 8 &&
       version !== 9 && version !== 10 && version !== 11 && version !== 12 &&
       version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
-      version !== 17
+      version !== 17 && version !== 18
     ) {
       return null;
     }
@@ -2553,8 +2863,14 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     // v17 (Shop stubs): per-day token-shop purchase counts. Older saves default
     // to none bought today.
     const shopDaily = parseShopDaily(data.shop_daily);
+    // v18 (Slice A2): owned heroes + the active Avatar hero + the one-shot own
+    // offer. Older saves start with the starter hero owned and active — the
+    // board's Avatar is unchanged, so nothing about an old save shifts.
+    const ownedHeroIds = parseOwnedHeroIds(data.owned_hero_ids);
+    const activeAvatarHeroId = parseAvatarHeroId(data.active_avatar_hero_id, ownedHeroIds);
+    const heroOffer = parseHeroOffer(data.hero_offer);
     return {
-      version: 17,
+      version: 18,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -2580,6 +2896,9 @@ function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       avatars,
       active_avatar_id: activeAvatarId,
       shop_daily: shopDaily,
+      owned_hero_ids: ownedHeroIds,
+      active_avatar_hero_id: activeAvatarHeroId,
+      hero_offer: heroOffer,
     };
   } catch {
     return null;
@@ -2736,6 +3055,37 @@ function parseBoundBosses(raw: unknown): BoundBossRecord[] {
     });
   }
   return rows;
+}
+
+/** Loose read of the v18 owned-hero list. Unknown ids are dropped (a save made
+ * by a build whose heroes.json has since changed must not carry a hero code
+ * can't resolve) and the starter hero is ALWAYS present — the board always has
+ * an Avatar to draw. */
+function parseOwnedHeroIds(raw: unknown): string[] {
+  const owned = new Set<string>([DEFAULT_AVATAR_HERO_ID]);
+  if (Array.isArray(raw)) {
+    for (const entry of raw) {
+      if (typeof entry === 'string' && heroById(entry)) owned.add(entry);
+    }
+  }
+  return [...owned];
+}
+
+/** Loose read of the v18 active Avatar hero. Falls back to the starter when the
+ * id is missing, unknown, or not owned — the invariant the setters keep. */
+function parseAvatarHeroId(raw: unknown, ownedHeroIds: readonly string[]): string {
+  return typeof raw === 'string' && heroById(raw) && ownedHeroIds.includes(raw)
+    ? raw
+    : DEFAULT_AVATAR_HERO_ID;
+}
+
+/** Loose read of the v18 queued hero offer. A malformed/unknown row clears
+ * rather than throwing — a broken offer must never block the sheet. */
+function parseHeroOffer(raw: unknown): HeroOffer | null {
+  if (!isRecord(raw) || typeof raw.hero_id !== 'string' || !heroById(raw.hero_id)) return null;
+  const label =
+    typeof raw.label === 'string' && raw.label.length > 0 ? raw.label : heroName(raw.hero_id);
+  return { hero_id: raw.hero_id, label };
 }
 
 /**

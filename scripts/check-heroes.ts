@@ -35,9 +35,28 @@ import {
   HERO_CLIPS,
   allHeroes,
   heroById,
+  heroName,
   type HeroClip,
   type HeroDef,
 } from '../src/play/heroes-data';
+import {
+  BOUND_HERO_MAX,
+  bindHeroAsTower,
+  boundHeroIdsOf,
+  clearHeroOffer,
+  defaultPlayStore,
+  devClearHeroOffer,
+  devClearOwnedHeroes,
+  devOwnAllHeroes,
+  devOwnHero,
+  devSetAvatarHero,
+  heroOwned,
+  ownHero,
+  parsePlayStore,
+  playView,
+  recordDefendWin,
+  setAvatarHero,
+} from '../src/play/playStore';
 
 /** The Batch 1 roster, in authoring order. */
 const EXPECTED_IDS = ['archangel', 'aurex', 'corvus', 'kitsune', 'oni'] as const;
@@ -201,12 +220,16 @@ if (stubs.length > 0) {
   );
 }
 
-// Corvus is the Hero that is live today: never a stub, whatever the tree holds.
+// Corvus is the Hero that is live today: the JSON contract must always be
+// complete. Whether its ART is bundled is a packaging question, not a contract
+// one — the registry is a generated file and the hero PNGs are not tracked yet,
+// so a tree can legitimately carry the contract without the art (this commit
+// does). When the art IS bundled, the enforcement loop above holds it to the
+// registry; `artBundled` below says which of the two this tree is.
 const corvus = heroById('corvus');
 assert.ok(corvus, 'corvus exists');
 for (const clip of HERO_CLIPS) {
   assert.ok(corvus.clips[clip], `corvus authors the ${clip} clip`);
-  assert.ok(!stubs.includes(`corvus/${clip}`), `corvus/${clip} is bundled (the live Avatar needs it)`);
 }
 assert.equal(
   Object.keys(corvus.clips).length,
@@ -214,7 +237,26 @@ assert.equal(
   'corvus authors exactly the six clips',
 );
 assert.equal(corvus.skillId, 'black_death_ritual', 'corvus ships its own skill kit');
-ok('corvus is fully specified and bundled: all six clips + its own skillId');
+assert.equal(
+  Object.keys(corvus.clips).some((clip) => !HERO_CLIPS.includes(clip as HeroClip)),
+  false,
+  'corvus authors no unknown clip slot',
+);
+const corvusArtBundled = HERO_CLIPS.every((clip) => !stubs.includes(`corvus/${clip}`));
+ok(
+  `corvus is fully specified in the contract: six clips + its own skillId` +
+    (corvusArtBundled ? ' (art bundled + enforced)' : ' (art not bundled in this tree)'),
+);
+
+// A tree where NOTHING is bundled enforces nothing against the registry — say so
+// loudly, because that is the shape a stale play-art-prep run or a forgotten art
+// copy would take, and it must not read as "all good".
+if (enforced === 0) {
+  console.log(
+    '  ! 0 heroes bundled in this tree — clip→registry enforcement is dormant. ' +
+      'Run `npx tsx scripts/play-art-prep.ts` after copying hero art if that is unexpected.',
+  );
+}
 
 // Skill kits are per-hero (never a shared/default id).
 assert.equal(
@@ -232,5 +274,263 @@ for (const hero of heroes) {
   }
 }
 ok('partial clips normalize to authored keys only (nulls dropped)');
+
+for (const hero of heroes) {
+  assert.equal(typeof hero.name, 'string', `${hero.id} has a display name`);
+  assert.ok(hero.name.length > 0, `${hero.id} display name is non-empty`);
+  assert.equal(heroName(hero.id), hero.name, `heroName('${hero.id}') reads it back`);
+  // The Dress roster's locked rows have no other source for the earn hint.
+  assert.equal(typeof hero.acquire, 'string', `${hero.id} has an acquire hint`);
+  assert.ok(hero.acquire.length > 0, `${hero.id} acquire hint is non-empty`);
+}
+assert.equal(heroName('nobody'), 'nobody', 'an unknown hero name falls back to the id');
+ok('every hero carries a display name + an acquire hint (Dress locked rows)');
+
+/* ------------------------------------------------------------------ A2 -----
+ * Ownership + the Avatar / Bound-Boss exclusivity rules. The store is pure, so
+ * the whole contract is assertable offline — this is where "same hero cannot be
+ * Avatar AND tower", the bind cap, and the one-shot offer are actually held.
+ * ------------------------------------------------------------------------- */
+
+const base = defaultPlayStore(0);
+assert.deepEqual(base.owned_hero_ids, ['corvus'], 'a fresh save owns the starter hero');
+assert.equal(base.active_avatar_hero_id, 'corvus', 'and has it as the active Avatar hero');
+assert.equal(base.hero_offer, null, 'with no offer queued');
+assert.deepEqual(boundHeroIdsOf(base), [], 'and nothing bound');
+ok('a fresh save starts with the starter hero owned + active');
+
+// First own queues the offer; a repeat own is silent.
+const owned = ownHero(base, 'archangel');
+assert.equal(owned.gained, true, 'owning a new hero gains it');
+assert.ok(heroOwned(owned.doc, 'archangel'), 'the hero is owned');
+assert.deepEqual(owned.doc.hero_offer, { hero_id: 'archangel', label: 'Archangel' }, 'offer queued');
+assert.equal(ownHero(owned.doc, 'archangel').gained, false, 'owning twice is a no-op');
+assert.equal(ownHero(base, 'nobody').gained, false, 'an unknown hero is never owned');
+ok('ownHero queues a one-shot offer and refuses unknown / repeat owns');
+
+// Exclusivity A: binding refuses while the hero is the active Avatar.
+const asAvatar = setAvatarHero(owned.doc, 'archangel');
+assert.equal(asAvatar.ok, true, 'an owned hero can be set as the Avatar');
+assert.equal(asAvatar.reason, null);
+assert.equal(asAvatar.doc.active_avatar_hero_id, 'archangel');
+assert.equal(asAvatar.doc.hero_offer, null, 'setting the Avatar clears the offer');
+const refusedBind = bindHeroAsTower(asAvatar.doc, 'archangel');
+assert.equal(refusedBind.ok, false, 'the active Avatar hero cannot also be bound');
+assert.equal(refusedBind.reason, 'active_avatar');
+assert.equal(refusedBind.doc, asAvatar.doc, 'a refused bind does not touch the save');
+assert.equal(setAvatarHero(base, 'aurex').reason, 'not_owned', 'an unowned hero cannot be set');
+assert.equal(setAvatarHero(base, 'nobody').reason, 'unknown_hero', 'an unknown hero cannot be set');
+ok('binding an active Avatar hero is refused (unequip as Avatar first)');
+
+// Exclusivity B: binding works once the Avatar moved away, and switching the
+// Avatar back to a bound hero gives up the bind in the same write.
+const backToCorvus = setAvatarHero(asAvatar.doc, 'corvus');
+assert.equal(backToCorvus.ok, true, 'switching back to the starter works');
+const bound = bindHeroAsTower(backToCorvus.doc, 'archangel');
+assert.equal(bound.ok, true, 'a non-Avatar owned hero binds');
+assert.deepEqual(boundHeroIdsOf(bound.doc), ['archangel'], 'the hero is bound');
+assert.equal(bound.doc.bound_bosses.at(-1)?.stars, 1, 'bound at ★1 (A5/A6 def comes later)');
+assert.equal(bound.doc.bound_bosses.at(-1)?.bound_wave, null, 'no wave recorded yet');
+const rebound = bindHeroAsTower(bound.doc, 'archangel');
+assert.equal(rebound.ok, true, 'binding twice succeeds (idempotent)');
+assert.equal(rebound.doc, bound.doc, 'and writes nothing — no duplicate record');
+const backAsAvatar = setAvatarHero(bound.doc, 'archangel');
+assert.equal(backAsAvatar.ok, true, 'a bound hero can still be set as the Avatar');
+assert.deepEqual(boundHeroIdsOf(backAsAvatar.doc), [], 'setting it as Avatar unbinds it');
+assert.equal(backAsAvatar.doc.active_avatar_hero_id, 'archangel');
+ok('Avatar/bound exclusivity holds in both directions');
+
+// The bind cap counts HERO bindings only, and the cycle boss never eats a slot.
+const capBase = setAvatarHero(ownHero(owned.doc, 'oni').doc, 'corvus').doc;
+const twoBound = bindHeroAsTower(bindHeroAsTower(capBase, 'archangel').doc, 'oni');
+assert.equal(twoBound.ok, true, 'a second hero binds');
+assert.equal(boundHeroIdsOf(twoBound.doc).length, BOUND_HERO_MAX, 'the cap is filled');
+assert.equal(
+  bindHeroAsTower(twoBound.doc, 'aurex').reason,
+  'not_owned',
+  'an unowned hero is refused before the cap is consulted',
+);
+const withAurex = ownHero(twoBound.doc, 'aurex').doc;
+assert.equal(
+  bindHeroAsTower(withAurex, 'aurex').reason,
+  'cap',
+  `a third hero binding is refused at BOUND_HERO_MAX (${BOUND_HERO_MAX})`,
+);
+// The cycle boss's own record is not a hero, so it never consumes a hero slot.
+const withCycleBoss = {
+  ...twoBound.doc,
+  bound_bosses: [
+    { id: 'ember_sovereign', stars: 3, frags: 0, bound_wave: 19 },
+    ...twoBound.doc.bound_bosses,
+  ],
+};
+assert.equal(boundHeroIdsOf(withCycleBoss).length, BOUND_HERO_MAX, 'Ember is not counted as a hero binding');
+// A stars-0 record means "fragments only, no tower yet" — it must not eat a
+// slot, and binding that hero upgrades the record in place (frags survive).
+const fragsOnly = {
+  ...ownHero(capBase, 'aurex').doc,
+  bound_bosses: [{ id: 'aurex', stars: 0, frags: 2, bound_wave: null }],
+};
+assert.deepEqual(boundHeroIdsOf(fragsOnly), [], 'a stars-0 hero record is not a bind');
+const upgraded = bindHeroAsTower(fragsOnly, 'aurex');
+assert.equal(upgraded.ok, true, 'binding a fragments-only hero works');
+assert.equal(upgraded.doc.bound_bosses[0]?.stars, 1, 'and upgrades it to ★1 in place');
+assert.equal(upgraded.doc.bound_bosses[0]?.frags, 2, 'keeping its fragments');
+assert.equal(upgraded.doc.bound_bosses.length, 1, 'with no duplicate record');
+ok(`hero bindings cap at ${BOUND_HERO_MAX} (the cycle boss does not consume a slot)`);
+
+// The grant path: a CAMPAIGN clear of a hero band first-owns its hero, and a
+// replay of the same band never re-grants or re-offers.
+const NEVER_ROLLS = () => 1; // above every drop/fragment/star roll in the win path
+const scoutClear = recordDefendWin(
+  { ...base, campaign: { phase: 'main', wave_in_phase: 5 } },
+  { phase: 'main', wave: 5, mode: 'campaign' },
+  0,
+  NEVER_ROLLS,
+);
+assert.deepEqual(scoutClear.result.heroOwned, { heroId: 'oni', label: 'Crimson Oni' }, 'Main w5 grants Oni');
+assert.ok(heroOwned(scoutClear.doc, 'oni'), 'Oni is owned by the win');
+assert.equal(scoutClear.doc.hero_offer?.hero_id, 'oni', 'and its offer is queued for the sheet');
+const finalClear = recordDefendWin(
+  { ...base, campaign: { phase: 'main', wave_in_phase: 10 } },
+  { phase: 'main', wave: 10, mode: 'campaign' },
+  0,
+  NEVER_ROLLS,
+);
+assert.deepEqual(finalClear.result.heroOwned, { heroId: 'archangel', label: 'Archangel' }, 'Main w10 grants Archangel');
+const scoutReplay = recordDefendWin(
+  { ...base, campaign: { phase: 'main', wave_in_phase: 5 } },
+  { phase: 'main', wave: 5, mode: 'replay' },
+  0,
+  NEVER_ROLLS,
+);
+assert.equal(scoutReplay.result.heroOwned, null, 'a replay never grants a hero');
+assert.deepEqual(scoutReplay.doc.owned_hero_ids, ['corvus'], 'and owns nothing new');
+const trialMini = recordDefendWin(
+  { ...base, campaign: { phase: 'trial', wave_in_phase: 5 } },
+  { phase: 'trial', wave: 5, mode: 'campaign' },
+  0,
+  NEVER_ROLLS,
+);
+assert.equal(trialMini.result.heroOwned, null, 'the Trial scout MINI-boss grants no hero');
+const alreadyOwned = recordDefendWin(
+  { ...ownHero(base, 'oni').doc, campaign: { phase: 'main', wave_in_phase: 5 } },
+  { phase: 'main', wave: 5, mode: 'campaign' },
+  0,
+  NEVER_ROLLS,
+);
+assert.equal(alreadyOwned.result.heroOwned, null, 'a re-clear of an owned band stays silent');
+ok('Main w5 grants Oni and Main w10 grants Archangel — campaign clears only');
+
+// The v17→v18 migration: an old save opens and gains the new fields without
+// losing anything it already had. This is the whole risk of the version bump.
+const v17 = JSON.stringify({
+  ...base,
+  version: 17,
+  tokens: 1234,
+  owned_hero_ids: undefined,
+  active_avatar_hero_id: undefined,
+  hero_offer: undefined,
+  bound_bosses: [{ id: 'ember_sovereign', stars: 2, frags: 1, bound_wave: 19 }],
+  avatars: [{ id: 'ava_sprout', xp: 5, level: 7, stars: 2, equipped: {}, park: {} }],
+  active_avatar_id: 'ava_sprout',
+  lifetime_waves_cleared: 42,
+});
+const migrated = parsePlayStore(v17, 0);
+assert.ok(migrated, 'a v17 save still parses');
+assert.equal(migrated.version, 18, 'and is written back as v18');
+assert.equal(migrated.tokens, 1234, 'its tokens survive');
+assert.equal(migrated.lifetime_waves_cleared, 42, 'its lifetime clears survive');
+assert.equal(migrated.avatars[0]?.level, 7, 'its Avatar level survives');
+assert.deepEqual(migrated.owned_hero_ids, ['corvus'], 'and it owns the starter hero');
+assert.equal(migrated.active_avatar_hero_id, 'corvus', 'with the starter as its Avatar hero');
+assert.equal(migrated.hero_offer, null, 'and nothing queued');
+assert.deepEqual(boundHeroIdsOf(migrated), [], 'its Ember bind is not mistaken for a hero bind');
+assert.equal(migrated.bound_bosses[0]?.stars, 2, 'and the cycle boss keeps its stars');
+// A save naming heroes this build does not have must not carry them forward.
+const stale = parsePlayStore(
+  JSON.stringify({
+    ...base,
+    version: 18,
+    owned_hero_ids: ['corvus', 'hero_that_left', 'oni'],
+    active_avatar_hero_id: 'hero_that_left',
+    hero_offer: { hero_id: 'hero_that_left', label: 'Gone' },
+  }),
+  0,
+);
+assert.deepEqual(stale?.owned_hero_ids, ['corvus', 'oni'], 'unknown hero ids are dropped');
+assert.equal(stale?.active_avatar_hero_id, 'corvus', 'a stale active Avatar hero falls back to the starter');
+assert.equal(stale?.hero_offer, null, 'a stale queued offer clears rather than throwing');
+assert.equal(parsePlayStore('not json', 0), null, 'unreadable storage returns null, never throws');
+ok('v17 saves migrate to v18 and stale hero ids are dropped');
+
+// The dev affordance has to be re-runnable: tapping "Own Archangel" again after
+// the sheet was dismissed must re-show it, or the sheet is testable once per
+// hero per save (ownHero alone is idempotent and would no-op).
+const devReoffer = devOwnHero(clearHeroOffer(ownHero(base, 'archangel').doc), 'archangel');
+assert.equal(devReoffer.hero_offer?.hero_id, 'archangel', 'a dev own re-queues the offer');
+assert.equal(devOwnHero(base, 'nobody'), base, 'a dev own of an unknown hero writes nothing');
+ok('the dev "own hero" rows re-queue the offer, so the sheet is repeatable');
+
+// The Hero roster in Dress reads the VIEW, so the view has to carry the owned
+// set + active hero — a plumbing regression there would show every hero locked.
+const view = playView(base, 0);
+assert.deepEqual([...view.ownedHeroIds], ['corvus'], 'the view exposes the owned hero ids');
+assert.equal(view.activeAvatarHeroId, 'corvus', 'and the active Avatar hero');
+assert.deepEqual([...view.boundHeroIds], [], 'and the bound hero ids');
+assert.equal(view.heroOffer, null, 'and the queued offer');
+const ownedView = playView(asAvatar.doc, 0);
+assert.equal(ownedView.activeAvatarHeroId, 'archangel', 'the view follows a set Avatar hero');
+assert.ok(ownedView.ownedHeroIds.includes('archangel'), 'including ownership');
+ok('the view carries the hero fields the Dress roster renders');
+
+// Dev: own-all owns every authored hero (and queues no single hero's offer).
+const allOwned = devOwnAllHeroes(clearHeroOffer(base));
+for (const hero of heroes) {
+  assert.ok(heroOwned(allOwned, hero.id), `own-all owns ${hero.id}`);
+}
+assert.equal(allOwned.hero_offer, null, 'own-all queues no offer');
+assert.equal(devOwnAllHeroes(allOwned), allOwned, 'own-all is idempotent');
+ok('own-all owns every hero in heroes.json and queues nothing');
+
+// Dev: "Set Avatar → X" auto-owns first, so the row works from a fresh save.
+const devSet = devSetAvatarHero(base, 'oni');
+assert.equal(devSet.active_avatar_hero_id, 'oni', 'a dev set switches the Avatar hero');
+assert.ok(heroOwned(devSet, 'oni'), 'auto-owning it on the way');
+assert.equal(devSetAvatarHero(base, 'nobody'), base, 'a dev set of an unknown hero writes nothing');
+assert.equal(
+  devSetAvatarHero(base, 'aurex').active_avatar_hero_id,
+  'aurex',
+  'an unowned hero is owned then set (the dev speed hatch)',
+);
+// The dev setter goes through the real setter, so exclusivity still holds.
+const devSetUnbinds = devSetAvatarHero(bound.doc, 'archangel');
+assert.deepEqual(boundHeroIdsOf(devSetUnbinds), [], 'a dev set still unbinds that hero');
+ok('the dev set Avatar row auto-owns and still honours exclusivity');
+
+// Dev: clear-owned back to just the starter. Hero BINDINGS go too (a bound hero
+// the save no longer owns would break "bound ⊆ owned"), but the cycle boss and
+// its stars are not a hero and must survive.
+const cleared = devClearOwnedHeroes({
+  ...bound.doc,
+  bound_bosses: [
+    { id: 'ember_sovereign', stars: 3, frags: 1, bound_wave: 19 },
+    ...bound.doc.bound_bosses,
+  ],
+  hero_offer: { hero_id: 'oni', label: 'Crimson Oni' },
+});
+assert.deepEqual(cleared.owned_hero_ids, ['corvus'], 'clear-owned leaves only the starter');
+assert.equal(cleared.active_avatar_hero_id, 'corvus', 'and makes it the active Avatar hero');
+assert.deepEqual(boundHeroIdsOf(cleared), [], 'dropping the hero bindings');
+assert.equal(cleared.bound_bosses.length, 1, 'but keeping the cycle boss');
+assert.equal(cleared.bound_bosses[0]?.id, 'ember_sovereign', 'which is the one left');
+assert.equal(cleared.bound_bosses[0]?.stars, 3, 'with its stars intact');
+assert.equal(cleared.hero_offer, null, 'and no offer left queued');
+assert.equal(devClearOwnedHeroes(cleared), cleared, 'clear-owned is idempotent');
+assert.equal(devClearOwnedHeroes(base), base, 'and writes nothing when already clear');
+const clearOffer = devClearHeroOffer({ ...base, hero_offer: { hero_id: 'oni', label: 'Crimson Oni' } });
+assert.equal(clearOffer.hero_offer, null, 'clear-offer drops the queue');
+assert.equal(devClearHeroOffer(base), base, 'and is a no-op when empty');
+ok('clear-owned resets to Corvus, drops hero binds, keeps the cycle boss');
 
 console.log(`\nAll ${passed} hero-contract checks passed.`);

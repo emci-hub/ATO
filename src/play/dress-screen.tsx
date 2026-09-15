@@ -38,6 +38,11 @@ import { usePacedAction } from '@/play/action-pacing';
 import { itemArtSource } from '@/play/art';
 import { allAvatarDefs, avatarDef } from '@/play/avatars';
 import {
+  DEFAULT_AVATAR_HERO_ID,
+  allHeroes,
+  heroById,
+} from '@/play/heroes-data';
+import {
   NEON_ROW_LINE,
   NeonBackLink,
   NeonButton,
@@ -154,6 +159,7 @@ export function DressScreen({
   onMerge,
   onActivateAvatar,
   onUnlockAvatar,
+  onSetAvatarHero,
   onBackToGrove,
 }: {
   view: PlayView;
@@ -168,6 +174,10 @@ export function DressScreen({
   onActivateAvatar: (id: string) => void;
   /** Avatar swap — unlock a def (stub, no IAP yet). */
   onUnlockAvatar: (id: string) => void;
+  /** Slice A2.5 — make an owned HERO the Avatar (the sprite + skill kit you
+   * fight as). Same setter the own-sheet uses, so it also gives up that hero's
+   * tower bind if it had one. No art change until A3. */
+  onSetAvatarHero: (heroId: string) => void;
   onBackToGrove: () => void;
 }) {
   const theme = useTheme();
@@ -203,6 +213,12 @@ export function DressScreen({
         onActivateAvatar={onActivateAvatar}
         onUnlockAvatar={onUnlockAvatar}
       />
+
+      {/* Hero roster (A2.5) — the Avatar SWITCH surface. The Avatars above are
+       * the v16 records (level/stars/gear); this is which HERO the player fights
+       * as (sprite set + skill kit). Both write the same Avatar; this one also
+       * honours the Bound Boss exclusivity rule and says so until A3 swaps art. */}
+      <HeroRoster view={view} onSetAvatarHero={onSetAvatarHero} />
 
       <NeonPanel>
         <NeonLabel>Worn</NeonLabel>
@@ -704,6 +720,94 @@ function AvatarPicker({
           </View>
         );
       })}
+    </NeonPanel>
+  );
+}
+
+/**
+ * Hero roster (Slice A2.5) — the Avatar SWITCH surface.
+ *
+ * A Hero is the sprite set + skill kit you fight as; this is where the player
+ * picks which one. Rows come from `allHeroes()` (every Batch hero, authored
+ * order), not from the owned list, so a hero the player has not earned yet is
+ * visible with the hint that explains how to earn it rather than being absent
+ * and undiscoverable.
+ *
+ * Owned rows call `onSetAvatarHero`, which is the same setter the own-sheet
+ * uses — so exclusivity (setting an Avatar gives up that hero's tower bind) and
+ * the ownership guard hold here too. Art is unchanged until A3: the board keeps
+ * drawing Corvus, and the row says so plainly instead of implying otherwise.
+ */
+function HeroRoster({
+  view,
+  onSetAvatarHero,
+}: {
+  view: PlayView;
+  onSetAvatarHero: (heroId: string) => void;
+}) {
+  const ownedHeroes = new Set(view.ownedHeroIds);
+  const activeHero = heroById(view.activeAvatarHeroId);
+  /** The Avatar's art still comes from the skin role, not the hero — say so
+   * while the two disagree (until A3's sprite swap lands). */
+  const artPending = view.activeAvatarHeroId !== DEFAULT_AVATAR_HERO_ID;
+  return (
+    <NeonPanel>
+      <View style={styles.statRow}>
+        <NeonLabel>Heroes</NeonLabel>
+        <ThemedText type="smallBold" themeColor="emphasis">
+          {activeHero?.name ?? view.activeAvatarHeroId}
+        </ThemedText>
+      </View>
+      <ThemedText type="small" themeColor="textSecondary">
+        Fight as one Hero at a time. A Hero carries its own skill kit — and cannot
+        be your Avatar and a bound tower at once.
+      </ThemedText>
+      {allHeroes().map((hero) => {
+        const owned = ownedHeroes.has(hero.id);
+        const active = view.activeAvatarHeroId === hero.id;
+        if (!owned) {
+          return (
+            <View key={hero.id} style={styles.avatarRow}>
+              <View style={styles.avatarText}>
+                <ThemedText type="smallBold" themeColor="textSecondary">
+                  {hero.name}
+                </ThemedText>
+                <ThemedText type="code" themeColor="textSecondary">
+                  {hero.acquire}
+                </ThemedText>
+              </View>
+              <NeonPill label="Locked" />
+            </View>
+          );
+        }
+        return (
+          <View key={hero.id} style={styles.avatarRow}>
+            <View style={styles.avatarText}>
+              <View style={styles.avatarTitleLine}>
+                <ThemedText type="smallBold">{hero.name}</ThemedText>
+                {active ? <NeonPill label="Active" tone="emphasis" /> : null}
+              </View>
+              <ThemedText type="code" themeColor="textSecondary">
+                {hero.skillId}
+              </ThemedText>
+            </View>
+            {active ? null : (
+              <NeonButton
+                label="Set"
+                onPress={() => onSetAvatarHero(hero.id)}
+                variant="secondary"
+                accessibilityLabel={`Set ${hero.name} as your Avatar`}
+                style={styles.rowAction}
+              />
+            )}
+          </View>
+        );
+      })}
+      {artPending ? (
+        <ThemedText type="code" themeColor="textSecondary">
+          Board art still shows Corvus until the sprite swap lands.
+        </ThemedText>
+      ) : null}
     </NeonPanel>
   );
 }
