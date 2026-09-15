@@ -109,24 +109,21 @@ const wave54Src = readFileSync(
 assert.match(wave54Src, /from public\.question_items\s*\n\s*where id = p_item_id and user_id = uid\s*\n\s*for update;/);
 ok('wave54 adds `for update` row locking to reroll_question_item\'s ownership/answered check, closing the concurrent-reroll race found in review');
 
-// LegendCard must NOT call rerollLegend itself — legends.tsx owns the live
-// archetype-code computation (currentCode()) and passes the result down as
-// a plain injected callback, same separation of concerns as the old system.
+// LegendCard must NOT call rerollLegend itself — parking-era note: LegendCard
+// is unreached (Legends is whole-file parked, ISOLATION_PLAN Card 3), but the
+// separation-of-concerns contract stays worth pinning for when it's rebuilt.
 const legendCardSrc = readFileSync(resolve(__dirname, '../src/components/legend-card.tsx'), 'utf8');
-assert.doesNotMatch(legendCardSrc, /rerollLegend\(/, 'LegendCard must not call rerollLegend directly — legends.tsx owns the archetype-code computation');
+assert.doesNotMatch(legendCardSrc, /rerollLegend\(/, 'LegendCard must not call rerollLegend directly — pre-parking, legends.tsx owned the archetype-code computation');
 assert.match(legendCardSrc, /onReroll\?:\s*\(\)\s*=>\s*Promise<LegendRerollOutcome>/);
 ok('LegendCard delegates reroll to an injected onReroll callback rather than calling rerollLegend itself');
 
-const legendsScreenSrc = readFileSync(resolve(__dirname, '../src/app/(tabs)/legends.tsx'), 'utf8');
-assert.match(legendsScreenSrc, /rerollLegend\(code\)/);
-const rerollHandlerStart = legendsScreenSrc.indexOf('async function handleReroll');
-const rerollHandlerBody = legendsScreenSrc.slice(rerollHandlerStart, legendsScreenSrc.indexOf('\n  }', rerollHandlerStart));
-assert.match(
-  rerollHandlerBody,
-  /currentCode\(\)/,
-  'legends.tsx must reroll using the LIVE archetype code (currentCode()), never a stale stored one',
-);
-ok('legends.tsx rerolls using the current archetype code, delegating all spend/generate ordering to rerollLegend');
+// legends.tsx is parked (docs/ISOLATION_PLAN.md Card 3, 2026-09-15) — it no
+// longer calls rerollLegend at all, per the "delete the call site, not the
+// callee" rule. rerollLegend's own generate-then-spend-then-save ordering is
+// still fully covered above via reroll.ts directly; this file's job was only
+// ever to confirm the screen wired that logic in correctly, and the screen no
+// longer exists in a form that can do so. rerollLegend now has zero client
+// callers, same status record_check reached when the Check loop was parked.
 
 const questionsFoldSrc = readFileSync(resolve(__dirname, '../src/components/questions-fold.tsx'), 'utf8');
 assert.match(questionsFoldSrc, /rerollQuestionItem\(/);
@@ -154,9 +151,5 @@ const rendersReroll = questionsFoldSrc.indexOf('renderRowExtra={(row, isPending)
 const rerollGateBody = questionsFoldSrc.slice(rendersReroll, questionsFoldSrc.indexOf('\n        }}', rendersReroll));
 assert.match(rerollGateBody, /if \(row\.answered \|\| isPending\) return null;/);
 ok('reroll is hidden for a row with a local pending pick, not just a persisted-answered one');
-
-const legendsScreenSrc2 = readFileSync(resolve(__dirname, '../src/app/(tabs)/legends.tsx'), 'utf8');
-assert.match(legendsScreenSrc2, /void refresh\(\)\.catch/);
-ok('legends.tsx refreshes `me` after a successful legend reroll too');
 
 console.log(`\n${passed} reroll checks passed`);

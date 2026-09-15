@@ -146,8 +146,8 @@ ok('profile_settled metric has zero defs — legends_unlocked no longer uses it'
 
 // Wiring proof: a real 50-answered-questions TraitTrack fixture, run through
 // the actual legendsUnlocked (bankTotalProgress(tracks).answered >= 50) —
-// the SAME predicate legends.tsx's `locked` now uses — must produce a
-// crossed legends_unlocked def. Deliberately NOT isProfileSettled anymore:
+// the predicate legends.tsx's `locked` used before it was parked — must
+// produce a crossed legends_unlocked def. Deliberately NOT isProfileSettled:
 // per emci's explicit call, Q50 alone unlocks Legends, since the tiered
 // intake alone never satisfies isProfileSettled for 10 of 16 axes.
 {
@@ -471,81 +471,13 @@ assert.ok(
 ok('MilestoneToast takes title/body as props, no hardcoded MILESTONE_DEFS copy');
 
 // --- Source assertions: legends.tsx unlock-celebration wiring ---
-const legendsSrc = readFileSync(resolve(__dirname, '../src/app/(tabs)/legends.tsx'), 'utf8');
-
-assert.ok(
-  legendsSrc.includes('const locked = tracksReady && !legendsUnlocked(tracks);'),
-  "legends.tsx's lock computation must use legendsUnlocked (bankTotalProgress >= 50), retargeted " +
-    'from isProfileSettled per emci\'s explicit call (§6) — the tiered intake alone never satisfies ' +
-    'isProfileSettled for every axis, so that gate would have kept Legends locked past question 50',
-);
-assert.ok(
-  !legendsSrc.includes("import {") || !legendsSrc.match(/import \{[^}]*\bisProfileSettled\b[^}]*\} from '@\/lib\/trait-stability'/),
-  'isProfileSettled must no longer be imported in legends.tsx — comments may still reference it for history/rationale, but no code path may use it',
-);
-assert.ok(
-  legendsSrc.includes("import { MilestoneToast } from '@/components/milestone-toast';"),
-  'legends.tsx imports the real MilestoneToast component',
-);
-assert.ok(
-  legendsSrc.includes("import { persistCelebratedMilestones } from '@/lib/me';"),
-  'legends.tsx imports persistCelebratedMilestones from the shared module, not a duplicated version',
-);
-assert.ok(
-  legendsSrc.includes("import { checkMilestones, type MilestoneDef } from '@/lib/milestones';"),
-  'legends.tsx imports checkMilestones from the shared module, not a duplicated version',
-);
-
-const legendsUnlockEffectStart = legendsSrc.indexOf('const celebratingUnlockRef = useRef(false);');
-const legendsUnlockEffectEnd = legendsSrc.indexOf('}, [me, tracksReady, locked, refresh, tracks]);');
-assert.ok(
-  legendsUnlockEffectStart > -1 && legendsUnlockEffectEnd > legendsUnlockEffectStart,
-  'expected anchors around the legends-unlock celebration effect were not found in legends.tsx — did it move or get renamed?',
-);
-const legendsUnlockEffectBody = legendsSrc.slice(legendsUnlockEffectStart, legendsUnlockEffectEnd);
-assert.ok(
-  legendsUnlockEffectBody.includes('if (!me || !tracksReady || locked || celebratingUnlockRef.current) return;'),
-  'the celebration must gate on tracksReady AND locked, not `locked` alone — `locked` reads false ' +
-    'both when genuinely unlocked and while tracks are still loading (tracksReady starts false), so ' +
-    'gating on `locked` alone would fire (and permanently persist) for every unsettled profile ' +
-    'during the loading window',
-);
-assert.ok(
-  legendsUnlockEffectBody.includes("checkMilestones('bankTotalProgress', bankTotalProgress(tracks).answered, celebrated)"),
-  'the celebration must check bankTotalProgress via the shared checkMilestones, not a duplicated ' +
-    "condition on `locked` directly (which would skip the celebrated_milestone_ids guard) — retargeted " +
-    'from profile_settled alongside the lock itself, so both cross at the exact same moment',
-);
-assert.ok(
-  legendsUnlockEffectBody.includes("filter((def) => def.id === 'legends_unlocked')"),
-  "the celebration must filter to legends_unlocked specifically — bankTotalProgress at threshold 50 " +
-    "also matches answers_50/profile_fully_unlocked, which are intake-sweep.tsx's concern " +
-    "(crossedMilestonesFor), not this local effect's",
-);
-assert.ok(
-  legendsUnlockEffectBody.includes('celebratingUnlockRef.current = true;'),
-  'a ref guard must prevent double-firing while the persistCelebratedMilestones request is in ' +
-    'flight, since locked can flip within the same mounted session (me.updated_at is a dependency ' +
-    "of legends.tsx's tracks-loading effect, not just first mount)",
-);
-assert.ok(
-  legendsUnlockEffectBody.includes('celebratingUnlockRef.current = false;'),
-  'a failed persist must reset the ref so this session can retry, mirroring intake-sweep.tsx\'s ' +
-    'backfill effect — otherwise a network error silently and permanently blocks the celebration ' +
-    'for this session even though celebrated_milestone_ids never actually got the id',
-);
-assert.ok(
-  legendsUnlockEffectBody.includes('persistCelebratedMilestones(me.id,'),
-  'the celebration must persist the crossed id so it never re-fires on a later visit',
-);
-ok('legends.tsx wires the unlock celebration through the shared checkMilestones/persistCelebratedMilestones helpers, on top of the retargeted legendsUnlocked-based lock, correctly gated on tracksReady');
-
-assert.ok(
-  /<MilestoneToast[\s\S]*?key=\{unlockToast\.id\}[\s\S]*?title=\{unlockToast\.title\}[\s\S]*?body=\{unlockToast\.body\}/.test(
-    legendsSrc,
-  ),
-  'MilestoneToast must be rendered with the crossed def\'s own title/body/key, not hardcoded copy',
-);
-ok('legends.tsx renders MilestoneToast with the crossed def\'s title/body, keyed to remount cleanly');
+// legends.tsx is parked (docs/ISOLATION_PLAN.md Card 3, 2026-09-15) — it now
+// renders only RebuiltNotice, so the UI-wiring assertions that used to live
+// here (lock computation, MilestoneToast rendering, the celebration effect)
+// no longer have anything to check. The predicate they wired to,
+// legendsUnlocked (bankTotalProgress >= 50), is still fully exercised above
+// via direct TraitTrack fixtures, independent of the screen. When Legends is
+// rebuilt, restore assertions here pinning it back to legendsUnlocked, not
+// isProfileSettled (see the comment above for why that gate is wrong).
 
 console.log(`\n${passed} milestones checks passed.`);

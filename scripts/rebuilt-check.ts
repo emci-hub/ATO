@@ -53,6 +53,8 @@ const NOTICE = 'src/components/rebuilt-notice.tsx';
 const PARKED_SCREENS: { rel: string; label: string }[] = [
   { rel: 'src/app/(tabs)/sage.tsx', label: 'Sage' },
   { rel: 'src/app/(tabs)/around.tsx', label: 'Around' },
+  { rel: 'src/app/(tabs)/legends.tsx', label: 'Legends' },
+  { rel: 'src/app/(tabs)/roll.tsx', label: 'Roll' },
 ];
 
 /**

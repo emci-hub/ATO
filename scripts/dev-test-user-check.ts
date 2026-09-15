@@ -130,7 +130,6 @@ function esc(value: string): string {
 function main() {
   const moduleSrc = read('src/lib/dev-test-user.ts');
   const sessionSrc = read('src/hooks/use-session.ts');
-  const legendsSrc = read('src/app/(tabs)/legends.tsx');
   const migration = read('supabase/migrations/wave31_dev_test_user.sql');
 
   // Identity constants are single-sourced with the provisioning migration.
@@ -174,12 +173,11 @@ function main() {
   assert.doesNotMatch(moduleSrc, /from '@\/lib\/me'/);
   ok('applyDevArchetypePreset guards PRE_LAUNCH_DEV + the dev user id, writes me directly');
 
-  // Legends-tab strip only renders for the dev user, and under __DEV__.
-  assert.match(legendsSrc, /DevTestPresetStrip/);
-  assert.match(legendsSrc, /if \(!PRE_LAUNCH_DEV \|\| !isDevUser\) return null/);
-  assert.match(legendsSrc, /DEV_TEST_USER_ID/);
-  assert.match(legendsSrc, /applyDevArchetypePreset/);
-  ok('Legends tab shows the preset strip only for the dev user (pre-launch)');
+  // legends.tsx is parked (docs/ISOLATION_PLAN.md Card 3, 2026-09-15) — the
+  // preset strip it used to render is gone along with the rest of the
+  // screen's live wiring. applyDevArchetypePreset itself (asserted above via
+  // moduleSrc) is untouched and has zero client callers until Legends is
+  // rebuilt, same status every other parked call site reaches.
 
   // 4 presets, each with all 16 axes filled, each declaring its target code.
   const presets = parsePresets(moduleSrc);
@@ -281,10 +279,9 @@ function main() {
   );
   ok(`archetype presets restore settled tracks (n=${archCount}, stability=${archStability}) — thin is reversible`);
 
-  // The strip must actually expose it, or there is no way to reach the state.
-  assert.match(legendsSrc, /applyDevThinProfilePreset/);
-  assert.match(legendsSrc, /Thin profile/);
-  ok('Legends dev strip exposes the thin-profile preset');
+  // legends.tsx is parked; the strip that used to expose this preset no
+  // longer exists on that screen. applyDevThinProfilePreset itself is fully
+  // exercised above via moduleSrc.
 
   /* -------------------------------------------------------------------------
    * Intake-stage presets (dev test seeding).
