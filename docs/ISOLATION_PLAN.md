@@ -16,6 +16,24 @@ deleting, rewiring, and breaking parked behavior is explicitly fair game.
 
 ---
 
+## 0. Decisions locked by emci, 2026-09-15 — do not re-litigate
+
+1. **The daily Check loop is parked, knowingly.** `record_check` ends up with zero
+   client callers. Confirmed intended; it comes back when the loop is rebuilt.
+2. **Tokens: Story is free while parked.** The token system is **not designed yet** —
+   emci is researching it separately. So do NOT move the earn site, do NOT write a
+   balance migration, and do NOT treat the economy as real. Story generates without
+   a token cost until the system is actually designed. See §4 risk 2 for mechanism.
+3. **`CrisisCard` stays Active.** Not parked.
+4. **`AiConsentCard` stays Active on Home**, as Insight infrastructure.
+5. **`ProfileFillFold` stays Active** on Explore — it counts as part of "full profile".
+
+**Standing reminder for emci: the ATO token system still needs to be researched and
+designed from scratch.** Nothing in this plan should be read as endorsing the current
+earn/spend wiring — it is placeholder economics that happens to exist in the code.
+
+---
+
 ## 1. Full inventory
 
 ### Home — `src/app/(tabs)/index.tsx`
@@ -28,7 +46,7 @@ deleting, rewiring, and breaking parked behavior is explicitly fair game.
 | 4 | `AiConsentCard` inline | `index.tsx:527` / `components/ai-consent-card.tsx` | **Active — forced.** See §4 risk 1 |
 | 5 | "Answer a few questions" row | `index.tsx:541` | **Active** (local-only, links to Questions) |
 | 6 | Check log / skip buttons | `index.tsx:566-608` -> `record_check` | **PARK** |
-| 7a | `CrisisCard` | `components/crisis-card.tsx` | **PARK** (see §4 risk 4) |
+| 7a | `CrisisCard` | `components/crisis-card.tsx` | **ACTIVE** — emci 2026-09-15: keep. Safety surface, static copy, no model call. |
 | 7b | `MissedCheckCard` | `components/missed-check-card.tsx` -> `record_check` | **PARK** |
 | 7c | `RevealCard` | `components/reveal-card.tsx` | **PARK** |
 | 7d | `AskSheet` (Ranking / SageKnows / Scenario) | `components/ask-sheet.tsx`, `lib/ask.ts` | **PARK** |
@@ -46,7 +64,7 @@ deleting, rewiring, and breaking parked behavior is explicitly fair game.
 | 2 | `SageTitleCard` in "Today's Read" fold | `explore.tsx:164` | **PARK** (makes an `ai-generate` call) |
 | 3 | `IntakeSettings` | `explore.tsx:167` | **PARK** |
 | 4 | **`TraitBandsFold`** — the 16-axis full profile | `explore.tsx:168` | **ACTIVE** ("full profile") |
-| 5 | `ProfileFillFold` | `explore.tsx:169` | **PARK** — *judgment call, see §6 open question* |
+| 5 | `ProfileFillFold` | `explore.tsx:169` | **ACTIVE** — emci 2026-09-15: keep, counts as part of "full profile". |
 | 6 | **`FullProfileFold`** — label is literally `How you're currently leaning` (`lib/full-profile.ts:16`) | `explore.tsx:170` | **ACTIVE** |
 | 7 | **`CategoriesFold`** | `explore.tsx:171` | **ACTIVE** |
 | 8 | `RollHistoryFold` (`types=['legend','category']`) | `explore.tsx:172` | **PARK** |
@@ -86,13 +104,15 @@ Only overlaps with *active* code matter. Listed worst-first.
 ### 2.1 `home_bootstrap` — ONE RPC feeding many Home folds
 `fetchHomeBootstrap` (`lib/home-bootstrap.ts:47`) returns `{checks, tracks, crisisToday, crisisYesterday}` in a single call. Field consumers:
 - `checks` -> Check row, `MissedCheckCard`, `alreadyLogged` (`index.tsx:143-153, 566-608`) — **all parked**
-- `crisisToday` / `crisisYesterday` -> `reveal` + `slotKind` (`index.tsx:191-269`) — **all parked**
+- `crisisToday` / `crisisYesterday` -> `reveal` + `slotKind` (`index.tsx:191-269`) — **mixed.** The Reveal / Missed / Ask branches are parked, but the **crisis branch stays Active** (locked decision 3), so these two fields stay connected.
 - `tracks` -> insight generator input (`index.tsx:322`) and `SageStoryFold` (`index.tsx:634`) — **both active**
 
-**Severing method:** do not change the RPC or its shape. Stop *consuming* `checks` and `crisis*`. Post-park, Home reads only `tracks`. `home_bootstrap` is called by no other screen, so narrowing it is risk-free.
+**Severing method:** do not change the RPC or its shape. Stop consuming **`checks` only**. Post-park, Home reads `tracks` (Insight + Story) and `crisis*` (CrisisCard). `home_bootstrap` is called by no other screen, so narrowing it is risk-free.
+
+**Care point for Card 4:** `slotKind` (`index.tsx:250-269`) currently picks *one* card from {crisis, missed, reveal, ask}. After parking it is no longer a chooser — it collapses to "render CrisisCard when the crisis flag is set, otherwise nothing." Rewrite it as that, per the standing edit-vs-rewrite rule; do not leave a four-branch selector with three dead arms.
 
 ### 2.2 `record_check` — hard invariant, becomes fully client-unused
-Called only from the Home Check row (`index.tsx:390`) and `MissedCheckCard`. Both parked means **nothing in the client calls `record_check` any more.** CLAUDE.md lists it as a hard invariant ("the only write path for a Check"); the invariant stays true, it just stops being exercised. Flagging because it means the daily Check loop is gone from the app until rebuilt. **Confirm this is intended** — "Home: Insight + Story only" implies yes.
+Called only from the Home Check row (`index.tsx:390`) and `MissedCheckCard`. Both parked means **nothing in the client calls `record_check` any more.** CLAUDE.md lists it as a hard invariant ("the only write path for a Check"); the invariant stays true, it just stops being exercised. The daily Check loop therefore leaves the app until it is rebuilt. **Confirmed intended by emci, 2026-09-15** (locked decision 1).
 
 ### 2.3 `updateTraits` / `mergeTraitWrite` — shared across parked and active
 Writers today: `QuestionsFold` (`questions-fold.tsx:351, 707`) **active**, `IntakeSweep` **active**, `FullProfileFold` (`full-profile-fold.tsx:82`) **active**, `OptionalIntakeFill` (`optional-intake.tsx:314`) **parked**, plus `AskSheet` sub-cards **parked**.
@@ -188,11 +208,13 @@ The rule, in order of preference:
 
 **Risk 1 — `AiConsentCard` cannot be parked, and Insight depends on it.** The card lives on both Home and You; You is off-limits. Worse, the *active* Insight card is gated on `consentGranted`. So Home cannot be reduced to literally "Insight + Story" — the consent card is load-bearing infrastructure for Insight. **Recommendation: keep it on Home, tagged Active, and treat it as part of the Insight feature rather than a separate element.** The alternative — consent grantable only from You — makes Home dead for any new account and is worse. This is the one place the stated scope has to bend.
 
-**Risk 2 — the token economy breaks silently (§2.6).** Parking Legends removes the only wired earn site while Story and Categories reroll keep spending. Nothing crashes; Story just becomes permanently unaffordable. **This is not solvable by parking alone.** Options: (a) make Story free while parked, (b) grant a standing balance server-side, (c) move the earn onto an active surface such as finishing the 50-question sweep. (c) is the most honest but is a real feature change, not a park. **Needs emci's call.**
+**Risk 2 — the token economy breaks silently (§2.6). RESOLVED: Story is free while parked.** Parking Legends removes the only wired earn site while Story and Categories reroll keep spending, which would leave Story permanently unaffordable. emci's call (2026-09-15): the token system is not designed yet, so it is not worth preserving — make Story free rather than inventing an earn path.
+
+**Mechanism, decided at Card 4 not before:** `claimStoryGenerate()` (`lib/sage-story-store.ts:12`) calls the `claim_story_generate` RPC, which does both the token spend *and* plausibly a quota/rate guard. Do **not** blanket-remove the call — check first whether it is the only thing bounding Story generation. Preferred order: (a) if the RPC is purely a token spend, skip it client-side and generate directly; (b) if it also guards quota, keep calling it and make the price zero. A price change means a migration, which per locked decision 6 stops for emci's review. Categories reroll (`spendAtoTokensCategoryReroll`) is a *reroll*, not a required path — leaving it unaffordable is acceptable and is not a blocker.
 
 **Risk 3 — `me` is a shared god-object and this plan does not fix that.** `useMeContext` is imported by every screen including You, and `me.celebrated_milestone_ids`, `me.ato_tokens`, `me.facts`, `me.ai_consent` are all fields written by one surface and read by others. Parking severs the *calls* but leaves the *shared mutable shape*. **True screen isolation is not achievable without splitting `me` into per-feature slices, which is a deeper rewrite than this plan.** This plan reduces ripple substantially; it does not eliminate it. Anyone editing `lib/me.ts` can still break every screen at once.
 
-**Risk 4 — parking `CrisisCard` removes a safety surface.** CLAUDE.md treats the crisis card as a hard invariant ("static — never a generated number, never a guessed region"). It is currently a Home slot and therefore falls outside "Insight + Story only". **Recommendation: do not park it.** Keep it rendering from a simple local flag, or keep just the `crisis*` fields of `home_bootstrap` connected for it alone. It is static copy with no model call, so it costs nothing to keep, and removing it should be a deliberate decision rather than a side effect of a layout call. **Flagging rather than deciding.**
+**Risk 4 — `CrisisCard`. RESOLVED: keep it Active.** CLAUDE.md treats the crisis card as a hard invariant ("static — never a generated number, never a guessed region"). emci's call (2026-09-15): keep it. **Consequence for §2.1: Home must keep consuming `home_bootstrap`'s `crisisToday`/`crisisYesterday` fields after all** — so the narrowing there is to `tracks` + `crisis*`, dropping only `checks`. The rest of the `slotKind` machinery (Reveal / Missed / Ask) still goes; only the crisis branch survives.
 
 **Risk 5 — `SettingsFold` is shared by ~15 components.** It is pure layout, so this is low-risk, but a styling change there still touches every screen. Acceptable; noted so "isolated" is not overclaimed.
 
@@ -204,12 +226,12 @@ The rule, in order of preference:
 
 Convention: each card is a standalone session, `/clear` between. Per the standing cadence rule, run `check:ota-gate` plus the `reviewer` subagent **once at the end of each card**, not per file.
 
-- **Card 0 — decisions (no code).** Resolve §6's open question, Risk 2 (tokens), Risk 4 (crisis card), and §2.2 (Check loop goes away). Short, emci-driven. **Blocks every other card.**
+- **Card 0 — decisions. DONE 2026-09-15.** All five resolved; see §0. No longer blocking.
 - **Card 1 — the pattern.** Build `RebuiltNotice` plus `scripts/rebuilt-check.ts` (generic: for each file in a `PARKED_SCREENS` list, assert `RebuiltNotice` present and no backend imports). Add to `check:ota-gate`. Prove it on `sage.tsx` by aligning Sage's existing placeholder to the shared component. Smallest possible first card, and it de-risks all the rest.
 - **Card 2 — Around.** Whole-screen park. Zero entanglement, so this is the clean rehearsal of the full procedure end to end.
 - **Card 3 — Legends (plus Roll).** Whole-screen park for both. Carries the token resolution from Card 0. Watch `nav-check.ts:170` and `legends64-check.ts`.
-- **Card 4 — Home.** Largest card. Park folds 6, 7b–7d, 9, 10, 11 (and 7a only if Card 0 says so); narrow `home_bootstrap` consumption to `tracks`; park the `/week` route. Home ends as: greeting, Insight, consent, questions link, Story.
-- **Card 5 — Explore.** Park `SageTitleCard`, `IntakeSettings`, `RollHistoryFold`, `SageInsightSpend`, `SageExploreObservations`, and `ProfileFillFold` (pending §6). Invert, don't delete, any `explore-check`/`wave21`/`wave22` assertions that break.
+- **Card 4 — Home.** Largest card. Park folds 6, 7b–7d, 9, 10, 11. Keep 7a (`CrisisCard`). Narrow `home_bootstrap` consumption to `tracks` + `crisis*`, dropping `checks`. Park the `/week` route. Carries the Story-free-while-parked mechanism from §4 risk 2. Home ends as: greeting, Insight, consent, questions link, CrisisCard slot, Story.
+- **Card 5 — Explore.** Park `SageTitleCard`, `IntakeSettings`, `RollHistoryFold`, `SageInsightSpend`, and `SageExploreObservations`. Keep `ProfileFillFold`. Invert, don't delete, any `explore-check`/`wave21`/`wave22` assertions that break.
 - **Card 6 — Questions.** Smallest of the three screens: park `OptionalIntakeFill` and `MilestoneToast`; leave `QuestionsFold` and `IntakeSweep` fully wired.
 - **Card 7 — sweep plus device pass.** Full `check:ota-gate`, one real device walk of every tab confirming every parked surface reads `(Rebuilt)` and nothing reads as a crash. Then one OTA.
 
@@ -217,9 +239,10 @@ Cards 2–6 are independent of each other once Card 1 lands, so they can be reor
 
 ---
 
-## 6. Open question for emci
+## 6. Open questions
 
-**Explore's "full profile" and "how you're currently leaning" are two different components, and a third sits between them.**
-- `FullProfileFold` is literally labelled `How you're currently leaning` (`lib/full-profile.ts:16`) — clearly Active.
-- `TraitBandsFold` is the 16-axis profile view — read as "full profile", Active.
-- `ProfileFillFold` is the progress/CTA toward *completing* that profile. It is arguably part of "full profile" and arguably a separate nudge. **Defaulted to PARK in the tables above; one word from emci flips it.**
+None outstanding — all five resolved in §0 on 2026-09-15.
+
+The one thing deliberately left undesigned: **the ATO token system itself.** emci is
+researching it separately. Until then, treat every `ato_tokens` earn/spend in the
+codebase as placeholder economics, not a contract to preserve.

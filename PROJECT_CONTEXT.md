@@ -82,17 +82,20 @@ every backend call disconnected.
 live-music tab) — not a guess. `around-lab.tsx` is its dev harness;
 `supabase/functions/refresh-around` is server-side cron and is untouched.
 
-**Blocking decisions for emci before any code (Card 0 in the plan):**
-1. Parking the Home Check row + `MissedCheckCard` leaves **`record_check` with zero
-   client callers** — the daily Check loop leaves the app until rebuilt. Intended?
-2. **Token economy breaks:** the only wired earn site is `claimFullProfileComplete()`
-   at `legends.tsx:341`. Parking Legends means Story (`claim_story_generate`) and
-   Categories reroll keep spending with no way to earn. Needs a call.
-3. `CrisisCard` is a CLAUDE.md hard invariant but sits outside "Insight + Story".
-   Recommendation: do **not** park it.
-4. `AiConsentCard` cannot be parked (shared with You, and Insight is gated on
-   consent) — it stays on Home as Insight infrastructure.
-5. `ProfileFillFold` on Explore: part of "full profile", or parked? Defaulted to parked.
+**Decisions LOCKED by emci 2026-09-15 (Card 0 done — do not re-litigate):**
+1. **Daily Check loop is parked knowingly** — `record_check` ends up with zero client
+   callers. Intended; it returns when the loop is rebuilt.
+2. **Tokens: Story is free while parked.** The **token system is not designed yet** —
+   emci is researching it separately. Do not move the earn site, do not write a balance
+   migration, do not treat the current earn/spend wiring as a contract. **Remind emci
+   that the ATO token system still needs research/design from scratch.**
+3. **`CrisisCard` stays Active** — so Home keeps consuming `home_bootstrap`'s `crisis*`
+   fields; only `checks` is dropped.
+4. **`AiConsentCard` stays Active on Home** as Insight infrastructure.
+5. **`ProfileFillFold` stays Active** on Explore — counts as part of "full profile".
+
+**Next: Card 1** (build `RebuiltNotice` + `scripts/rebuilt-check.ts`, prove it on Sage).
+Cards 2-6 are independent once Card 1 lands.
 
 **Honest ceiling:** call-graph isolation is achievable; *type* isolation is not,
 because `Me` and `TraitState` stay shared shapes. `lib/me.ts` remains a god-object
