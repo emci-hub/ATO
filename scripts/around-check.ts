@@ -122,17 +122,18 @@ ok('mapper keeps real shows, drops livestreams/out-of-window, empty list stays e
 ok('real Calgary Edmtrain show (RIOT Aug 29) maps into weekend JSON');
 
 const root = path.resolve(__dirname, '..');
-const aroundScreen = fs.readFileSync(path.join(root, 'src/app/(tabs)/around.tsx'), 'utf8');
 const refreshFn = fs.readFileSync(path.join(root, 'supabase/functions/refresh-around/index.ts'), 'utf8');
 const you = fs.readFileSync(path.join(root, 'src/app/(tabs)/you.tsx'), 'utf8');
 const onboarding = fs.readFileSync(path.join(root, 'src/app/onboarding.tsx'), 'utf8');
-assert.match(aroundScreen, /aroundEmptyCopy/);
-assert.doesNotMatch(aroundScreen, /heat map|heatmap/i);
 assert.match(refreshFn, /weekend\.json/);
 assert.match(refreshFn, /EDMTRAIN_CLIENT_KEY/);
 assert.match(you, /CityPicker/);
 assert.match(onboarding, /CityPicker/);
-ok('Around keeps honest empty + no heatmap; city is typed at setup; job writes weekend.json');
+ok('city is typed at setup; job writes weekend.json');
+
+// Around is parked (docs/ISOLATION_PLAN.md Card 2) — the screen itself no
+// longer reads live data or renders a heatmap; that is enforced generically
+// by check:rebuilt. This file's job stays the data-layer contract above.
 
 const fnCities = fs.readFileSync(path.join(root, 'supabase/functions/refresh-around/around.ts'), 'utf8');
 assert.match(fnCities, /edmtrainCity: 'Calgary'/);

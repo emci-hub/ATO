@@ -138,12 +138,14 @@ function main() {
   assert.equal(signupAgeMessage(parsedUnder.bornOn), UNDER_16_MESSAGE);
   ok('setBornOn re-runs the same onboarding 16+ check; underage dates stay blocked');
 
+  // Around is parked (docs/ISOLATION_PLAN.md Card 2) — the going toggle and its
+  // 18+ gate no longer live in the screen. The threshold itself (isAtLeastAge /
+  // NIGHT_GOING_AGE_YEARS, asserted above) is untouched and will re-gate the
+  // rebuilt screen the same way; this just confirms the parked screen doesn't
+  // carry a stale, unexercised copy of that logic.
   const around = readFileSync(resolve(__dirname, '../src/app/(tabs)/around.tsx'), 'utf8');
-  assert.match(
-    around,
-    /const oldEnough = me\?\.born_on \? isAtLeastAge\(me\.born_on, NIGHT_GOING_AGE_YEARS\) : false/,
-  );
-  ok('Around 18+ gate is unchanged — missing born_on still fails closed');
+  assert.doesNotMatch(around, /isAtLeastAge\(me\.born_on, NIGHT_GOING_AGE_YEARS\)/);
+  ok('Around is parked — the going 18+ gate is disconnected, not duplicated, on the placeholder');
 
   console.log(`\nAll ${passed} age client checks passed.`);
 }
