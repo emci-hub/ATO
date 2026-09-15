@@ -151,8 +151,11 @@ assert.match(home, /if \(!me \|\| consentGranted \|\| !insight\) return;/);
 ok('a revoke clears the widget cache; a failed profile refresh does not');
 
 // `fullProfileDone` must wait for home_bootstrap, or someone who HAS finished
-// the intake is told to finish it for a beat on every cold open.
-assert.match(home, /const fullProfileDone =[\s\S]{0,20}bootstrapReady &&/);
+// the intake is told to finish it for a beat on every cold open. The derivation
+// itself now lives in the one shared gate (`lib/full-profile-gate.ts`,
+// ISOLATION_PLAN §7 Card A); what Home still owns is passing its own
+// tracks-loaded flag in, so that is what is pinned here.
+assert.match(home, /const fullProfileDone = isFullProfileDone\(tracks, bootstrapReady\);/);
 ok('intake completion is not judged before home_bootstrap lands');
 
 // --- 3. the widget keeps rendering ----------------------------------------

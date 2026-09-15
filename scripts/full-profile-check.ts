@@ -160,7 +160,11 @@ for (const [name, source] of [
     continue;
   }
   assert.doesNotMatch(source, /FullProfileFold|of \d+ answered|of \d+ settled|How you're currently leaning/);
-  assert.doesNotMatch(source, /full-profile/, `${name} must not import Full Profile`);
+  // `full-profile-fold`, not a bare `full-profile`: the shared unlock gate
+  // (`lib/full-profile-gate.ts`, ISOLATION_PLAN §7 Card A) is a boolean every
+  // screen is SUPPOSED to import. What must stay off these surfaces is the
+  // completeness fold itself.
+  assert.doesNotMatch(source, /full-profile-fold/, `${name} must not import Full Profile`);
 }
 ok('completeness fold stays off Home, Explore, widget, push, poster, public handle; Sage reuses the settled line');
 

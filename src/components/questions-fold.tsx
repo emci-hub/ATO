@@ -43,6 +43,7 @@ import {
 import { applyQuestionAnswer } from '@/lib/questions/answer';
 import { generateQuestionBatch } from '@/lib/questions/generate';
 import { bankProgressForAxis, bankTotalProgress } from '@/lib/questions/local';
+import { isFullProfileDone } from '@/lib/full-profile-gate';
 import { runOngoingRound } from '@/lib/questions/run-ongoing-round';
 import { prewarmBankPool } from '@/lib/questions/run-prewarm';
 import { nextPlayableItem, routeQuestions } from '@/lib/questions/route';
@@ -430,7 +431,9 @@ export function QuestionsFold({
   // extra EWMA sample (no milestone, no stability change worth showing), so
   // it's clearer to just stop offering it than to let taps silently do
   // nothing meaningful.
-  const fullProfileLocked = progress.total > 0 && progress.answered >= progress.total;
+  // The ONE gate (lib/full-profile-gate.ts) — `tracks == null` means they
+  // haven't loaded yet, which is exactly the not-ready case the flag is for.
+  const fullProfileLocked = isFullProfileDone(tracks ?? [], tracks != null);
 
   const bankAxes = uniqueCategoryAxes(liveCategoryDefs);
   const bankRowsForAxis = useCallback(

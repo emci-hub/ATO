@@ -34,7 +34,7 @@ import { homeSageLabel, homeSageLede, SAGE_COACH_LABEL } from '@/lib/sage-copy';
 import { AiConsentCard, AI_USE_DISCLOSURE } from '@/components/ai-consent-card';
 import { generateDailyInsight } from '@/lib/insight/generate-insight';
 import { fetchTodayInsight, saveInsight } from '@/lib/insight/store';
-import { bankTotalProgress } from '@/lib/questions/local';
+import { fullProfileProgress, isFullProfileDone } from '@/lib/full-profile-gate';
 import { cachedFromInsight, saveCachedInsight } from '@/lib/insight/today-insight';
 import { resolveReveal } from '@/lib/reveal';
 import { RANKING_ROUNDS } from '@/lib/ranking';
@@ -152,18 +152,11 @@ export default function HomeScreen() {
   const alreadyLogged =
     window != null && checks.some((check) => check.day === window.todayDay);
 
-  // The 50-question bank is local and needs no AI/consent — a separate
-  // completeness signal from the insight above, shown on Home so there's
-  // somewhere to answer them without having to already know Questions exists.
-  const fullProfileProgress = useMemo(() => bankTotalProgress(tracks), [tracks]);
-  // `bootstrapReady` matters here: `tracks` is empty until home_bootstrap
-  // lands, so without it someone who HAS finished the intake would see
-  // "0 of 50" and "finish the questions first" for a beat before it corrected
-  // itself -- the same class of flash already fixed on Legends and Roll.
-  const fullProfileDone =
-    bootstrapReady &&
-    fullProfileProgress.total > 0 &&
-    fullProfileProgress.answered >= fullProfileProgress.total;
+  // The 50-question bank is local and needs no AI/consent. Both values come
+  // from `lib/full-profile-gate` — the ONE completeness signal every unlock in
+  // the app reads (ISOLATION_PLAN §7.1 decision 8). Do not re-derive it here.
+  const profileProgress = useMemo(() => fullProfileProgress(tracks), [tracks]);
+  const fullProfileDone = isFullProfileDone(tracks, bootstrapReady);
 
   /**
    * AI consent gates GENERATION, not the screen (2026-09-15, emci correction).
@@ -549,7 +542,7 @@ export default function HomeScreen() {
               <View style={styles.boxRowText}>
                 <ThemedText type="smallBold">Answer a few questions</ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
-                  {fullProfileProgress.answered} of {fullProfileProgress.total} — helps Sage know you faster
+                  {profileProgress.answered} of {profileProgress.total} — helps Sage know you faster
                 </ThemedText>
               </View>
               <ThemedText themeColor="textSecondary">›</ThemedText>
