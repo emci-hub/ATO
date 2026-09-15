@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 
 import { CrisisCard } from '@/components/crisis-card';
 import { SageStoryFold } from '@/components/sage-story-fold';
@@ -86,29 +86,73 @@ export default function HomeScreen() {
    * crisis flag (CrisisCard).
    */
   const timeZone = me?.timezone || 'UTC';
+  /**
+   * Both refs exist because this now runs on every focus rather than once on
+   * mount, which turns two harmless cold-open behaviours into mid-session bugs.
+   *
+   * `loadedOnceRef` — a failed refetch must not throw a user who already has
+   * good `tracks` into the "couldn't load" state. At cold open that state is the
+   * honest answer; on a refocus blip it would replace a working screen.
+   *
+   * `requestIdRef` — two quick focuses can resolve out of order and let an older
+   * response overwrite a newer one, which is the same stale-tracks class of bug
+   * this whole change is fixing. Only the newest request may write.
+   */
+  const loadedOnceRef = useRef(false);
+  const requestIdRef = useRef(0);
   const reloadHome = useCallback(async () => {
     if (!userId || !me) return;
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
     try {
       const next = await fetchHomeBootstrap(timeZone);
+      if (requestId !== requestIdRef.current) return;
+      loadedOnceRef.current = true;
       setTracks(next.tracks);
       setCrisisToday(next.crisisToday);
       setBootstrapFailed(false);
     } catch (err) {
       console.log('[home] bootstrap error:', err);
-      setBootstrapFailed(true);
+      if (requestId !== requestIdRef.current) return;
+      if (!loadedOnceRef.current) setBootstrapFailed(true);
     } finally {
-      setBootstrapReady(true);
+      if (requestId === requestIdRef.current) setBootstrapReady(true);
     }
   }, [userId, me, timeZone]);
 
   useEffect(() => {
+    // A new account starts from nothing: the old account's "we have data"
+    // and in-flight request must not carry over.
+    loadedOnceRef.current = false;
+    requestIdRef.current += 1;
     setBootstrapReady(false);
     setBootstrapFailed(false);
   }, [userId]);
 
-  useEffect(() => {
-    void reloadHome();
-  }, [reloadHome]);
+  /**
+   * Refetch on FOCUS, not on mount.
+   *
+   * Questions (`(tabs)/intake-sweep.tsx`) is a sibling tab route, and expo-router
+   * keeps tab screens mounted — so answering the last bank question there never
+   * remounted Home, Home never refetched `tracks`, and `fullProfileDone` stayed
+   * stuck on the stale locked value until the app was restarted. That is the
+   * whole bug: the gate was right, the data behind it was old.
+   *
+   * `useFocusEffect` covers the mount case too (Home is the first tab, so first
+   * focus is mount) and re-runs when `reloadHome`'s identity changes while
+   * focused, exactly as the mount effect did — so this replaces it rather than
+   * adding a second fetch. `fetchHomeBootstrap` is one RPC read; it spends no
+   * model call, so a refetch per focus stays free (Card B).
+   *
+   * Deliberately does NOT reset `bootstrapReady`: flipping it false on focus
+   * would make `isFullProfileDone` return false for the length of the fetch and
+   * flash the locked state at a finished user every time they came back.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      void reloadHome();
+    }, [reloadHome]),
+  );
 
   /**
    * `[]` for logged days, deliberately: only `todayYmd`/`todayDay` are used
