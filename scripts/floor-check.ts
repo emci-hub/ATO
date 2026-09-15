@@ -212,10 +212,11 @@ ok('Sentry JS init + native crash handling + Expo plugin + wrap are wired');
 
 const youTab = read('src/app/(tabs)/you.tsx');
 // PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You no longer mounts the
-// dev-tools slot or the running-update line — the screen is down to sign out,
-// delete account and AI consent. The two things that MUST stay true of a
-// public build are unchanged and still asserted: the sentry/push probe cards
-// are never imported directly, and you-dev-tools guards itself.
+// dev-tools slot — the screen is down to sign out, delete account, AI consent
+// and build/update info (RunningUpdateLine, restored same day). The two
+// things that MUST stay true of a public build are unchanged and still
+// asserted: the sentry/push probe cards are never imported directly, and
+// you-dev-tools guards itself.
 assert.doesNotMatch(youTab, /from '@\/components\/sentry-test-card'/);
 assert.doesNotMatch(youTab, /from '@\/components\/push-test-card'/);
 assert.doesNotMatch(youTab, /require\('@\/components\/you-dev-tools'\)/);

@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AiConsentCard, AI_USE_DISCLOSURE } from '@/components/ai-consent-card';
 import { DeleteAccountSheet } from '@/components/delete-account-sheet';
 import { RebuiltNotice } from '@/components/rebuilt-notice';
+import { RunningUpdateLine } from '@/components/running-update-line';
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -19,8 +20,8 @@ import { supabase } from '@/lib/supabase';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
 /**
- * You — PARKED, with three things deliberately kept alive (emci 2026-09-15,
- * ISOLATION_PLAN §7 Card F / O-1).
+ * You — PARKED, with four things deliberately kept alive (emci 2026-09-15,
+ * ISOLATION_PLAN §7 Card F / O-1; build/update info restored 2026-09-15).
  *
  * Everything this screen used to hold is gone pending rebuild: the profile
  * card and share poster, growth bars and milestone badges, invites and
@@ -35,8 +36,14 @@ import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
  * 3. **Sage's AI consent** — Apple 5.1.2, and it is the switch the Home
  *    insight and Story generation read. It must be revocable somewhere other
  *    than the one-time ask on Home.
+ * 4. **Build/update info** (`RunningUpdateLine`) — app version + build, the
+ *    running OTA update's short id, when it was published (local time),
+ *    channel/runtime, and an "Original build" vs "OTA update" label. Not a
+ *    safety/App-Store invariant like 1-3, but load-bearing for support: it is
+ *    how emci tells which OTA a bug report is actually running, and it is
+ *    the only entrance to `/ai-lab` (5 taps, dev-gated).
  *
- * These three are the whole screen. The AI-use disclosure renders
+ * These four are the whole screen. The AI-use disclosure renders
  * unconditionally beside the consent control, exactly as on Home.
  */
 export default function YouScreen() {
@@ -94,6 +101,8 @@ export default function YouScreen() {
             title="You"
             note="Your account controls below still work: AI consent, sign out, and deleting your account."
           />
+
+          <RunningUpdateLine />
 
           <SettingsFold title="Sage's AI" defaultOpen>
             <View style={styles.body}>
