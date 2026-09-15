@@ -152,19 +152,27 @@ export default function HomeScreen() {
     window != null && checks.some((check) => check.day === window.todayDay);
 
   /**
-   * Consent off means no insight at all — not "no insight after day 3" as it
-   * did for the card. The card had a starter bank to fall back on for the
-   * first three days; the insight has no offline lane, so a user who declines
-   * AI simply has no daily content. Nothing is generated and nothing is
-   * written to the widget on this branch.
+   * A DECLINED user has no daily content at all — the card had a starter bank
+   * to fall back on for its first three days, the insight has no offline lane.
+   * Nothing is generated and nothing is written to the widget on this branch.
+   *
+   * "Not asked yet" is deliberately NOT this state. Treating pending as
+   * consent-off is what broke a fresh account: ai_consent starts null, so a new
+   * user fell into the empty branch AND was never prompted, leaving Home
+   * permanently blank.
    */
-  const consentOffEmpty = Boolean(me && me.ai_consent !== true);
-
-  // Consent gate (Apple 5.1.2): ask exactly once, before the first moment a
-  // model call could happen (check_count >= 3). Moved here from Dawn, which
-  // owned this prompt until the insight replaced the card.
   const consent = me ? aiConsentFor(me) : 'pending';
-  const needsConsentPrompt = me != null && consent === 'pending' && checks.length >= 3;
+  const consentOffEmpty = consent === 'denied';
+
+  /**
+   * Consent gate (Apple 5.1.2): ask once, before the first model call.
+   *
+   * That moment used to be check_count >= 3, because days 1-3 were served by
+   * the offline bank and needed no model. The bank is gone — the very first
+   * insight is the first model call — so the prompt has to come up on day one
+   * or there is nothing to show. Moved here from Dawn with the card.
+   */
+  const needsConsentPrompt = me != null && consent === 'pending';
 
   const reveal = useMemo(() => {
     if (!me) return null;
@@ -420,9 +428,13 @@ export default function HomeScreen() {
           {consentOffEmpty ? (
             <ThemedView type="backgroundElement" style={styles.todayCard}>
               <ThemedText themeColor="textSecondary">
-                {consent === 'denied'
-                  ? 'No insight today. Sage only writes these with your say-so — you can turn that on any time in You.'
-                  : 'No insight yet. Sage will ask before writing anything.'}
+                No insight today. Sage only writes these with your say-so — you can turn that on any time in You.
+              </ThemedText>
+            </ThemedView>
+          ) : needsConsentPrompt ? (
+            <ThemedView type="backgroundElement" style={styles.todayCard}>
+              <ThemedText themeColor="textSecondary">
+                Sage will ask before writing anything.
               </ThemedText>
             </ThemedView>
           ) : insight ? (

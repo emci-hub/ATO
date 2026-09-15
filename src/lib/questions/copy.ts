@@ -5,7 +5,7 @@ export const QUESTIONS_LABEL = 'A few questions';
 export const QUESTIONS_LEDE = 'Tap when you feel like it. Not today\u2019s card.';
 
 export const QUESTIONS_EMPTY_CONSENT =
-  'Sage stays off until you say yes in Dawn.';
+  'Sage stays off until you say yes on Home.';
 
 export const QUESTIONS_EMPTY_DENIED =
   'Sage stays off for this account.';

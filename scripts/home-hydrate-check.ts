@@ -74,9 +74,14 @@ const CONSENT_OFF_EMPTY =
   'No insight today. Sage only writes these with your say-so — you can turn that on any time in You.';
 
 assert.ok(home.includes(CONSENT_OFF_EMPTY), 'Home must show the exact consent-off empty line');
-assert.match(home, /me\.ai_consent !== true/);
 assert.match(home, /consentOffEmpty/);
-ok('Home shows the exact consent-off empty line in place of the insight');
+// Declined and not-yet-asked are DIFFERENT states. Collapsing them is what
+// left a fresh account (ai_consent null) with no insight and no prompt — it
+// fell into the empty branch and was never asked, permanently.
+assert.match(home, /const consentOffEmpty = consent === 'denied';/);
+assert.match(home, /const needsConsentPrompt = me != null && consent === 'pending';/);
+assert.doesNotMatch(home, /consent === 'pending' && checks\.length >= 3/);
+ok('Home distinguishes declined from not-yet-asked, and prompts on day one');
 
 // The generation effect must bail on consent-off BEFORE any fetch, generation,
 // cache write or widget write. This is the assertion that would catch a

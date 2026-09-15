@@ -130,7 +130,7 @@ ${priority}RULES
 6. Ground in something that already happened. Never a hypothetical, "what if," or imagined variant of a real moment.
 7. One idea, one moment per question. Never double-barrel a real event and a hypothetical variant of it in the same stem.
 8. Options must be genuinely balanced — no leading or socially-desirable "better" answer, and not near-duplicates.
-9. Do not use a skipped Check, a cut, or a lapse as grounding. Dawn owns that signal.
+9. Do not use a skipped Check, a cut, or a lapse as grounding. The daily insight owns that signal.
 10. Personal facts (something they told Sage) may quietly shape at most one scenario. Never call it out ("you mentioned to Sage that…"). Use sparingly — not every question.
 11. Mix stakes. Include genuinely low-stakes / light scenarios. Not every question should be emotionally weighty.
 12. ${recent}
