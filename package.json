@@ -79,6 +79,7 @@
     "check:stage6": "tsx ./scripts/stage6-helper-check.ts",
     "check:kenney": "tsx ./scripts/kenney-check.ts",
     "check:wave-tables": "tsx ./scripts/wave-tables-check.ts",
+    "check:heroes": "tsx ./scripts/check-heroes.ts",
     "prep:kenney": "tsx ./scripts/kenney-prep.ts",
     "check:talk-live": "tsx ./scripts/talk-live-check.ts",
     "check:card-live": "tsx ./scripts/card-live-check.ts",

@@ -1,7 +1,82 @@
 [
-  { "id": "archangel", "role": "hero", "folder": "assets/play/skins/cast/heroes/archangel", "unlock": "starter_ticket" },
-  { "id": "aurex", "role": "hero", "folder": "assets/play/skins/cast/heroes/aurex", "unlock": "starter_ticket" },
-  { "id": "corvus", "role": "hero", "folder": "assets/play/skins/cast/heroes/corvus", "unlock": "starter_ticket" },
-  { "id": "kitsune", "role": "hero", "folder": "assets/play/skins/cast/heroes/kitsune", "unlock": "starter_ticket" },
-  { "id": "oni", "role": "hero", "folder": "assets/play/skins/cast/heroes/oni", "unlock": "starter_ticket" }
+  {
+    "id": "archangel",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/archangel",
+    "unlock": "starter_ticket",
+    "skillId": "skill_archangel",
+    "face": "ew",
+    "clips": {
+      "idle": "Celestial_Drift",
+      "walk": "Divine_Flight",
+      "dash": "Celestial_Rush",
+      "attack": null,
+      "skill": null,
+      "hurt": null
+    }
+  },
+  {
+    "id": "aurex",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/aurex",
+    "unlock": "starter_ticket",
+    "skillId": "skill_aurex",
+    "face": "ew",
+    "clips": {
+      "idle": "DRAGON_IDLE",
+      "walk": null,
+      "dash": "FLAME_DASH",
+      "attack": "DRAGON_SLASH",
+      "skill": "FIRE_WAVE",
+      "hurt": "HURT"
+    }
+  },
+  {
+    "id": "corvus",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/corvus",
+    "unlock": "starter_ticket",
+    "skillId": "black_death_ritual",
+    "face": "ew",
+    "clips": {
+      "idle": "PLAGUE_IDLE",
+      "walk": "DOCTOR_WALK",
+      "dash": "SHADOW_DASH",
+      "attack": "PESTILENCE_WAVE",
+      "skill": "BLACK_DEATH_RITUAL",
+      "hurt": "HURT"
+    }
+  },
+  {
+    "id": "kitsune",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/kitsune",
+    "unlock": "starter_ticket",
+    "skillId": "skill_kitsune",
+    "face": "ew",
+    "clips": {
+      "idle": "Breathing_Idle",
+      "walk": "Sexy_Walk",
+      "dash": "Crimson_Run",
+      "attack": "Attack_01_Scarlet_Moon_Slash",
+      "skill": "Special_Skill_Foxfire_Step",
+      "hurt": null
+    }
+  },
+  {
+    "id": "oni",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/oni",
+    "unlock": "starter_ticket",
+    "skillId": "skill_oni",
+    "face": "ew",
+    "clips": {
+      "idle": "Breathing_Idle",
+      "walk": "Walking",
+      "dash": "DASH_Phantom_Step",
+      "attack": "ATTACK_01_Swift_Crescent_Slash",
+      "skill": "BLOOD_MOON_IAIJUTSU",
+      "hurt": null
+    }
+  }
 ]
