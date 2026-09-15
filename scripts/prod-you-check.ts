@@ -1,5 +1,5 @@
 /**
- * Pre-launch: the production bundle MUST ship the You-tab crash/push probes so
+ * Pre-launch: the production bundle MUST ship the You-tab dev probes so
  * they work over OTA. Asserts the probe modules are wired through the
  * PRE_LAUNCH_DEV flag and that Metro is NOT stubbing them out of production.
  *
@@ -27,7 +27,7 @@ const you = readFileSync(join(root, 'src/app/(tabs)/you.tsx'), 'utf8');
 assert.doesNotMatch(you, /from '@\/components\/sentry-test-card'/);
 assert.doesNotMatch(you, /from '@\/components\/push-test-card'/);
 assert.doesNotMatch(you, /require\('@\/components\/you-dev-tools'\)/);
-ok('You tab loads crash/push probes via a PRE_LAUNCH_DEV-gated dynamic require');
+ok('the parked You tab loads no crash/push probes at all');
 
 // The You tab renders the Build line for every account, and 5 taps on it push
 // /ai-lab (the AI provider switcher). Both the gesture and the route must carry

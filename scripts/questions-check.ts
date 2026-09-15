@@ -51,13 +51,22 @@ function ok(label: string) {
 }
 
 /** Report tracks with >=1 answer on every axis — a "complete" profile. */
+/**
+ * A profile complete by BOTH gates routeQuestions now applies: every axis
+ * answered at least once (`isProfileComplete`) AND every bank question
+ * answered (`isFullProfileDone`, the shared unlock signal — ISOLATION_PLAN §7).
+ * `answerCount` was 1, which satisfies only the first — after the two gates
+ * were joined that fixture stopped reaching the paid path, so every "AI batch"
+ * assertion below would have silently tested the bank path instead. 99 is
+ * safely above the largest per-axis bank size.
+ */
 function completeTracks(): TraitTrack[] {
   return TRAIT_AXES.map((axis) => ({
     axis,
     track: 'report' as const,
     value: 0.5,
     stability: 0.5,
-    answerCount: 1,
+    answerCount: 99,
     lastTouched: '2026-09-03T12:00:00.000Z',
     lastDepthAt: null,
   }));
@@ -464,8 +473,16 @@ assert.deepEqual(
 );
 
 assert.deepEqual(bankTotalProgress([]), { answered: 0, total: QUESTIONS_BANK.length });
-assert.deepEqual(bankTotalProgress(completeTracks()), {
+// One answer per axis — spelled out here rather than reusing `completeTracks`,
+// which is now bank-complete (99 per axis) so that it satisfies the shared
+// unlock gate the paid path checks.
+const onePerAxis = TRAIT_AXES.map((axis) => trackWithCount(axis, 1));
+assert.deepEqual(bankTotalProgress(onePerAxis), {
   answered: TRAIT_AXES.length,
+  total: QUESTIONS_BANK.length,
+});
+assert.deepEqual(bankTotalProgress(completeTracks()), {
+  answered: QUESTIONS_BANK.length,
   total: QUESTIONS_BANK.length,
 });
 ok('category list progress: sequential in-axis unlock, per-axis independence, total answered/total');

@@ -96,10 +96,6 @@ export function isTabParked(id: BarSlotId): boolean {
   );
 }
 
-/** Pool tabs that are actually offerable today: in the registry, not parked. */
-export const LIVE_NAV_TAB_IDS: readonly ReorderableTabId[] = NAV_TAB_IDS.filter(
-  (id) => !isTabParked(id),
-);
 
 export const PINNED_IDS: readonly PinnedTabId[] = ['home', 'sage'];
 

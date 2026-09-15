@@ -35,9 +35,11 @@ export function fullProfileProgress(tracks: readonly TraitTrack[]): FullProfileP
 
 /**
  * The gate. `tracksReady` is not optional sugar: `tracks` is empty until the
- * fetch lands, so without it someone who HAS finished would see the locked
- * state for a beat before it corrected itself — the same flash already fixed
- * on Legends and Roll. Pass the screen's own tracks-loaded flag.
+ * fetch lands, so without it this would report "finished" nonsense off an
+ * empty array. It returns **false** while not ready, which is the same value
+ * as "locked" — so a screen that must tell those two apart (a cold open, or a
+ * failed fetch) needs its own third state; Home has one. Pass the screen's own
+ * tracks-loaded flag, and never treat `false` alone as "they haven't answered".
  */
 export function isFullProfileDone(
   tracks: readonly TraitTrack[],

@@ -65,10 +65,17 @@ export default function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
   const [crisisToday, setCrisisToday] = useState(false);
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
-  // Set once the first home_bootstrap fetch settles, success or failure — the
-  // unlock gate needs it to avoid flashing the locked state at someone who
-  // has actually finished (same class of flash bug fixed on Legends/Roll).
+  // Set once the first home_bootstrap fetch settles, success or failure. It
+  // stops the gate judging completeness off an empty `tracks`; it does NOT by
+  // itself distinguish "not finished" from "not loaded" — `bootstrapFailed`
+  // below is what does that.
   const [bootstrapReady, setBootstrapReady] = useState(false);
+  // A FAILED bootstrap is not an unfinished profile. Without this, a cold open
+  // with no network settled `bootstrapReady` on an empty `tracks`, and Home
+  // told someone who had answered all 50 questions "0 of 50" for the rest of
+  // the session — hiding their cached insight behind the locked state while
+  // the home-screen widget still showed it (found in review).
+  const [bootstrapFailed, setBootstrapFailed] = useState(false);
 
   /**
    * One round trip for trait tracks + crisis flags (wave35 `home_bootstrap`).
@@ -85,8 +92,10 @@ export default function HomeScreen() {
       const next = await fetchHomeBootstrap(timeZone);
       setTracks(next.tracks);
       setCrisisToday(next.crisisToday);
+      setBootstrapFailed(false);
     } catch (err) {
       console.log('[home] bootstrap error:', err);
+      setBootstrapFailed(true);
     } finally {
       setBootstrapReady(true);
     }
@@ -94,6 +103,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     setBootstrapReady(false);
+    setBootstrapFailed(false);
   }, [userId]);
 
   useEffect(() => {
@@ -326,7 +336,37 @@ export default function HomeScreen() {
           {/* Safety first, in both states, and never generated. */}
           {crisisToday ? <CrisisCard /> : null}
 
-          {!fullProfileDone ? (
+          {bootstrapFailed ? (
+            /*
+              The honest third state. Not State 1: we do not know whether the
+              profile is finished, so claiming it is not would be a lie, and
+              the retry has to be reachable.
+            */
+            <>
+              <ThemedView type="backgroundElement" style={styles.todayCard}>
+                <ThemedText type="smallBold">Couldn&apos;t load your profile</ThemedText>
+                <ThemedText themeColor="textSecondary">
+                  Nothing is lost — this is just a connection problem.
+                </ThemedText>
+              </ThemedView>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Try again"
+                onPress={() => {
+                  void reloadHome();
+                }}
+                style={({ pressed }) => [
+                  styles.answerQuestionsRow,
+                  { borderColor: controlBorderColor(theme) },
+                  pressed && styles.pressed,
+                ]}>
+                <View style={styles.boxRowText}>
+                  <ThemedText type="smallBold">Try again</ThemedText>
+                </View>
+                <ThemedText themeColor="textSecondary">›</ThemedText>
+              </Pressable>
+            </>
+          ) : !fullProfileDone ? (
             /*
               STATE 1 — before the profile is done. Consent, and one way
               forward. Nothing here reads trait data, because there isn't any

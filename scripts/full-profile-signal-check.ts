@@ -109,4 +109,27 @@ assert.doesNotMatch(
 );
 ok('Home reads the shared gate');
 
+const explore = read('src/app/(tabs)/explore.tsx');
+assert.match(explore, /isFullProfileDone/, 'Explore must gate Load categories on the shared signal');
+const fold = read('src/components/questions-fold.tsx');
+assert.match(fold, /isFullProfileDone/, 'Questions must gate the round on the shared signal');
+const story = read('src/components/sage-story-fold.tsx');
+assert.match(story, /unlocked/, 'the Story fold must take the shared gate as a prop');
+
+/**
+ * The paid question batch is the one gate that is not a visible button, and it
+ * was the last place the two signals disagreed: `routeQuestions` allowed a
+ * model call once `isProfileComplete` passed (one answer on each of the 16
+ * axes, reached ~20 questions in) while every visible unlock still needed the
+ * full bank. Expanding the Questions fold at that point spent a call. Both
+ * must hold.
+ */
+const route = codeOnly(read('src/lib/questions/route.ts'));
+assert.match(
+  route,
+  /isProfileComplete\(input\.tracks \?\? \[\]\) && isFullProfileDone\(input\.tracks \?\? \[\], true\)/,
+  'the paid question batch must require the shared unlock gate as well as per-axis completeness',
+);
+ok('Explore, Questions, Story and the paid question batch all read the one signal');
+
 console.log(`\n${passed} full-profile-signal checks passed`);

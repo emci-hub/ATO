@@ -1,4 +1,5 @@
 import { localYmd } from '@/lib/local-date';
+import { isFullProfileDone } from '@/lib/full-profile-gate';
 import { isProfileComplete, unfilledAxes } from '@/lib/trait-stability';
 import type { TraitAxis } from '@/lib/traits';
 import type { QuotaDecision } from '@/lib/voice/quota';
@@ -217,7 +218,18 @@ export async function routeQuestions(
   // either — a thin profile must never spend a paid call. Sits after
   // consent/crisis so those keep their existing precedence and messaging.
   // Sage chat was a separate path; its backend was retired 2026-09-14.
-  const profileComplete = isProfileComplete(input.tracks ?? []);
+  //
+  // TIGHTENED (ISOLATION_PLAN §7, 2026-09-15, reviewer catch): the gate is now
+  // BOTH the old completeness rule AND the one shared unlock signal
+  // (`isFullProfileDone` — every bank question answered). They disagreed:
+  // `isProfileComplete` passes once each of the 16 axes has a single answer,
+  // which a user reaches roughly 20 questions in — long before Load insight,
+  // Load story or Load categories unlock. Expanding the Questions fold out of
+  // curiosity at that point would claim quota and generate a batch, which is
+  // the only way left to spend a paid call while every visible unlock is still
+  // locked. Below the shared gate, the batch comes from the static bank.
+  const profileComplete =
+    isProfileComplete(input.tracks ?? []) && isFullProfileDone(input.tracks ?? [], true);
   const useLocal = deps.useLocal === true || !profileComplete;
   if (!useLocal && deps.claimBatch && deps.generateBatch) {
     const claim = await deps.claimBatch();

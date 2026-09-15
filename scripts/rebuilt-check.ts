@@ -59,7 +59,9 @@ const PARKED_SCREENS: { rel: string; label: string }[] = [
   // spine. `you.tsx` is NOT here on purpose — it is parked but deliberately
   // keeps sign out, delete account and AI consent alive (App Store 5.1.1(v)),
   // so it still reaches supabase and cannot satisfy the zero-backend rule.
-  // Its kept-controls contract is pinned in `delete-account-check.ts` instead.
+  // Its kept-controls contract is pinned at the bottom of THIS file instead
+  // (`delete-account-check.ts` is a live check and is excluded from the gate,
+  // so it cannot carry an App Store invariant).
   { rel: 'src/app/(tabs)/circle.tsx', label: 'Circle' },
   { rel: 'src/app/week.tsx', label: 'This week' },
   { rel: 'src/app/chat.tsx', label: 'Chat' },
@@ -148,5 +150,32 @@ for (const { rel, label } of PARKED_SCREENS) {
 
   ok(`${label} is parked: route intact, notice rendered, backend disconnected`);
 }
+
+// ---------------------------------------------------------------------------
+// You is parked, but three controls must survive the parking.
+// ---------------------------------------------------------------------------
+
+/**
+ * emci 2026-09-15 (ISOLATION_PLAN §7 Card F / O-1). App Store guideline
+ * 5.1.1(v) requires in-app account deletion; sign out is the only way off an
+ * account on a shared device; and AI consent (Apple 5.1.2) is the switch
+ * Home's insight and Story generation read, so it has to be revocable
+ * somewhere other than the one-time ask on Home.
+ *
+ * Nothing else offline asserts this — `check:delete-account` is a live check
+ * and is excluded from the gate — so a future parking pass that "finished the
+ * job" on You would fail App Store review with a green gate. It fails here now.
+ */
+const YOU = 'src/app/(tabs)/you.tsx';
+const youCode = codeOnly(read(YOU));
+
+assert.match(youCode, /<RebuiltNotice/, 'You must still read as parked');
+assert.match(youCode, /<DeleteAccountSheet/, 'delete account must stay reachable on You (App Store 5.1.1(v))');
+assert.match(youCode, /Delete account/, 'the delete-account control must be labelled');
+assert.match(youCode, /supabase\.auth\.signOut\(\)/, 'sign out must stay reachable on You');
+assert.match(youCode, /clearLocalAccountData\(\)/, "signing out must still clear this account's local keys");
+assert.match(youCode, /setAiConsent\(/, 'AI consent must stay changeable on You (Apple 5.1.2)');
+assert.match(youCode, /AI_USE_DISCLOSURE/, 'the AI-use disclosure must render beside the consent control');
+ok('You is parked but keeps delete account, sign out and AI consent');
 
 console.log(`\n${passed} rebuilt checks passed`);

@@ -111,7 +111,14 @@ export function NavEditOverlay({
                 );
                 setDraftSlots(next);
               }}>
-              {draftSlots.map((id) => (
+              {/*
+                Parked slots are not shown here either (ISOLATION_PLAN §7 Card
+                F): Sage still occupies a slot in the saved layout — nothing
+                rewrites `me.nav_layout` — but the bar renders no button for
+                it, so listing it as "Pinned" in the editor described a tab the
+                user cannot see.
+              */}
+              {draftSlots.filter((id) => !isTabParked(id)).map((id) => (
                 <View key={id} style={[styles.sortRow, { borderColor: controlBorderColor(theme) }]}>
                   <Sortable.Handle mode="draggable">
                     <MaterialCommunityIcons name="drag-vertical" size={22} color={theme.textSecondary} />

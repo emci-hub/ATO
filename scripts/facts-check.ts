@@ -91,7 +91,7 @@ const youTabFacts = read('src/app/(tabs)/you.tsx');
 // covered in this file; only its You mount site is gone.
 assert.doesNotMatch(youTabFacts, /<SageFactsCard/);
 assert.match(read('src/components/sage-facts.tsx'), /removeFact/);
-ok('the facts list and its delete path are reachable from You');
+ok('the facts list and its delete path still exist; their You mount site is parked');
 
 // PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): /chat is parked with Circle,
 // so the "Teach Sage this" create path has no screen behind it. `addFact` and

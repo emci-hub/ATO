@@ -179,7 +179,7 @@ for (const rel of KEPT) {
   for (const banned of BANNED_IN_SPINE) {
     assert.doesNotMatch(
       code,
-      new RegExp(`\b${banned}\b`),
+      new RegExp(String.raw`${banned}`),
       `${rel} mounts ${banned}, which generates on mount. It may not be part of the shipped spine.`,
     );
   }
