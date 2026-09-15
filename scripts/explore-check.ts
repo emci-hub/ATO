@@ -627,6 +627,27 @@ ok('reaction tap shows a local Noted fade and does not call the model');
 assert.equal(EXPLORE_LABEL, 'Explore');
 assert.ok(pickExplorePackFocuses(chipsOnly, []).length >= 1);
 
+// --- Card E: Categories is the ONLY AI affordance on Explore, and it is gated ---
+// ISOLATION_PLAN §7 Card E (emci 2026-09-15). Explore may offer exactly one
+// press that can spend a model call, it must be labelled "Load categories",
+// and it must be behind the shared unlock gate. Nothing on this screen may
+// generate on mount (check:no-auto-ai covers the effect side).
+const catFold = read('src/components/categories-fold.tsx');
+assert.match(catFold, /CATEGORIES_LOAD_LABEL = 'Load categories'/);
+assert.match(catFold, /\{unlocked \? \(/, 'the Load button must be behind the shared unlock gate');
+assert.match(catFold, /FULL_PROFILE_LOCKED_COPY/, 'the locked state must use the one shared line');
+assert.match(
+  catFold,
+  /if \(ready\.length === 0\) \{[\s\S]{0,140}CATEGORIES_NOT_READY_COPY/,
+  'an unready profile must get the not-ready line with no model call behind it',
+);
+assert.match(
+  exploreScreen,
+  /unlocked=\{isFullProfileDone\(tracks, tracksReady\)\}/,
+  'Explore must pass the shared gate, not its own derivation',
+);
+ok('Explore has one gated AI press: Load categories, locked until the bank is finished');
+
 console.log(`\nAll ${passed} explore checks passed.`);
 }
 

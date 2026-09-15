@@ -23,6 +23,7 @@ import { CATEGORY_STATEMENTS_COPY_REVIEWED, generateCategoryStatements } from '@
 import { fetchCurrentStatements, saveCategoryStatements, type CategoryStatement } from '@/lib/category-statements/store';
 import { categoryConcept, CONCEPT_COPY_REVIEWED } from '@/lib/concept-explainers';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+import { FULL_PROFILE_LOCKED_COPY } from '@/lib/full-profile-gate';
 import { saveCategorySpotlight, type Me } from '@/lib/me';
 import { sageKnowsWeekKey } from '@/lib/sage-knows';
 import { parseSageTitle } from '@/lib/sage-title';
@@ -30,12 +31,27 @@ import { localYmd } from '@/lib/local-date';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 
+export const CATEGORIES_LOAD_LABEL = 'Load categories';
+export const CATEGORIES_RELOAD_LABEL = 'Load new categories';
+export const CATEGORIES_NOT_READY_COPY =
+  'No category has enough answers behind it yet. Nothing was generated.';
+
+/**
+ * Categories on Explore. `unlocked` is the ONE shared gate
+ * (`lib/full-profile-gate.ts`) — the same signal behind Home's Load insight /
+ * Load story and Questions' next 25 (ISOLATION_PLAN §7 Card E). Until the bank
+ * is finished there is no Load button at all, so Explore has no way to spend a
+ * model call. Category readiness itself is checked on tap and reported without
+ * calling one.
+ */
 export function CategoriesFold({
   me,
   onUpdated,
+  unlocked,
 }: {
   me: Me;
   onUpdated?: () => void | Promise<void>;
+  unlocked: boolean;
 }) {
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [openId, setOpenId] = useState<CategoryId | null>(null);
@@ -97,7 +113,13 @@ export function CategoriesFold({
       : null;
 
   async function handleGenerateStatements() {
-    if (generateBusy || ready.length === 0) return;
+    if (generateBusy) return;
+    // Readiness is judged HERE, before any call, and says so plainly: a
+    // generator that lacks data reports it rather than paying to find out.
+    if (ready.length === 0) {
+      setGenerateNote(CATEGORIES_NOT_READY_COPY);
+      return;
+    }
     setGenerateBusy(true);
     setGenerateNote(null);
     try {
@@ -216,15 +238,25 @@ export function CategoriesFold({
                 </View>
               );
             })}
-            <Pressable
-              accessibilityRole="button"
-              disabled={generateBusy}
-              onPress={() => void handleGenerateStatements()}
-              style={({ pressed }) => [styles.cta, (pressed || generateBusy) && styles.pressed]}>
-              <ThemedText type="link">
-                {generateBusy ? 'Generating…' : statements.size > 0 ? 'Regenerate statements' : 'Generate statements'}
+            {unlocked ? (
+              <Pressable
+                accessibilityRole="button"
+                disabled={generateBusy}
+                onPress={() => void handleGenerateStatements()}
+                style={({ pressed }) => [styles.cta, (pressed || generateBusy) && styles.pressed]}>
+                <ThemedText type="link">
+                  {generateBusy
+                    ? 'Loading…'
+                    : statements.size > 0
+                      ? CATEGORIES_RELOAD_LABEL
+                      : CATEGORIES_LOAD_LABEL}
+                </ThemedText>
+              </Pressable>
+            ) : (
+              <ThemedText type="small" themeColor="textSecondary">
+                {FULL_PROFILE_LOCKED_COPY}
               </ThemedText>
-            </Pressable>
+            )}
             {generateNote ? (
               <ThemedText type="small" themeColor="textSecondary">
                 {generateNote}

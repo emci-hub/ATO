@@ -13,6 +13,7 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
+import { isFullProfileDone } from '@/lib/full-profile-gate';
 import { chipLabel, CURRENT_FOCUS_CHIPS } from '@/lib/intake';
 import { useMeContext } from '@/lib/me-context';
 import {
@@ -36,16 +37,20 @@ export default function ExploreScreen() {
   const userId = session?.user.id;
   const { me, refresh: refreshMe } = useMeContext();
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
+  const [tracksReady, setTracksReady] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
     fetchTraitTracks(userId)
       .then((rows) => {
-        if (!cancelled) setTracks(rows);
+        if (cancelled) return;
+        setTracks(rows);
+        setTracksReady(true);
       })
       .catch((err) => {
         console.log('[explore] tracks error:', err);
+        if (!cancelled) setTracksReady(true);
       });
     return () => {
       cancelled = true;
@@ -92,7 +97,11 @@ export default function ExploreScreen() {
               <TraitBandsFold me={me} tracks={tracks} />
               <ProfileFillFold tracks={tracks} />
               <FullProfileFold me={me} onUpdated={() => refreshMe()} />
-              <CategoriesFold me={me} onUpdated={() => refreshMe()} />
+              <CategoriesFold
+                me={me}
+                onUpdated={() => refreshMe()}
+                unlocked={isFullProfileDone(tracks, tracksReady)}
+              />
               <RebuiltNotice title="Past reads" />
               <RebuiltNotice title="Insight spend" />
               <RebuiltNotice title="Observations" />
