@@ -63,6 +63,41 @@ Do not commit `.env.local` or API keys. Do not change dependencies, schemas, aut
 
 - **Structural flow audit (Sep 8, 2026) — Phase 0 shipped, commit `9b42556`.** Full audit of every user-facing flow (routes, Q&A, reachability, orphans) run this session. Spine is sound; the breaks were all CTAs *between* features. Phase 0 fixed the four that stranded a user: (1) **every "answer questions about X" CTA was a dead end** — ten push sites across seven screens deep-link `/intake-sweep?axis=`, but `QuestionsFold` sat in a collapsed `SettingsFold` whose `onOpen` (the only caller of `routeQuestions`) never fired, so the axis was dropped; (2) **`/ai-lab` had no guard** and was reachable by any account via 5 taps on the You Build line — now on `canSeeDevLab`, a **no-op today because `PRE_LAUNCH_DEV` is true**, it closes at the flag flip; (3) **`/roll` shipped with no `TabTrigger`**, reachable only via an `as Href` cast — note **typed routes are NOT enforced in this repo** (a deliberately bogus route string compiles clean), so `router.push` strings have zero typecheck protection; now registered via `HIDDEN_TAB_ROUTES` inside `TabList` and pinned by `check:nav`, plus a Back control it never had; (4) Legends' thin-profile CTA was `disabled={!focusAxis}` — a visible dead button. **Still to do (Phases 1-3, not started):** wire or delete the built-but-unimported §3.4 loop (`ongoing-round` + `tiered-axis-plan` + `chunked-generate` — zero `src/` importers, only their gate checks); delete `explore-panel.tsx` (357-line fossil superseded by `(tabs)/explore.tsx` when `home-inner-tabs.tsx` went in `06679e9`) and the four check scripts asserting on it; delete unreachable `theme-lab`/`around-lab`; add `+not-found.tsx`; Home slot fall-through and the Sunday duplicate week row; then `scripts/reachability-check.ts` + `scripts/orphan-check.ts` so orphans and unreachable routes fail the gate instead of accumulating. **Device verification pending** for `/roll` and all ten deep links.
 
+## ACTIVE PLAN — Screen isolation / "parked" pass (assessed 2026-09-15)
+
+**Plan of record: `docs/ISOLATION_PLAN.md`** (in-repo, version-controlled — read it
+in full to resume cold; nothing depends on chat history). Status: **assessment only,
+nothing implemented.**
+
+Goal (emci, 2026-09-15): isolate every screen so editing one cannot ripple into
+another. Active spine kept as-is — Home: Insight + Story. Explore: Categories,
+full profile (`TraitBandsFold`), and "How you're currently leaning"
+(`FullProfileFold`). Sage: existing talk placeholder. Questions: the 50-question
+intake (`IntakeSweep`) and the 25-question round (`QuestionsFold`). **You: not
+touched at all.** Everything else on those screens, plus Legends and Around, gets
+**parked**: still exists, still reachable, shows a visible `(Rebuilt)` label, and
+every backend call disconnected.
+
+"Around" is identified with certainty as `src/app/(tabs)/around.tsx` (the local
+live-music tab) — not a guess. `around-lab.tsx` is its dev harness;
+`supabase/functions/refresh-around` is server-side cron and is untouched.
+
+**Blocking decisions for emci before any code (Card 0 in the plan):**
+1. Parking the Home Check row + `MissedCheckCard` leaves **`record_check` with zero
+   client callers** — the daily Check loop leaves the app until rebuilt. Intended?
+2. **Token economy breaks:** the only wired earn site is `claimFullProfileComplete()`
+   at `legends.tsx:341`. Parking Legends means Story (`claim_story_generate`) and
+   Categories reroll keep spending with no way to earn. Needs a call.
+3. `CrisisCard` is a CLAUDE.md hard invariant but sits outside "Insight + Story".
+   Recommendation: do **not** park it.
+4. `AiConsentCard` cannot be parked (shared with You, and Insight is gated on
+   consent) — it stays on Home as Insight infrastructure.
+5. `ProfileFillFold` on Explore: part of "full profile", or parked? Defaulted to parked.
+
+**Honest ceiling:** call-graph isolation is achievable; *type* isolation is not,
+because `Me` and `TraitState` stay shared shapes. `lib/me.ts` remains a god-object
+that can break every screen at once. Fixing that is a deeper rewrite, out of scope.
+
 ## ACTIVE PLAN — Home/Explore/Insight restructure (started 2026-09-14)
 
 **Plan of record:** `C:\Users\lil_e\.claude\plans\assess-current-home-screen-expressive-sunrise.md`
