@@ -162,7 +162,51 @@ Gate green (78/78 + typecheck + lint); reviewer passed, no critical findings.
 `docs/MAP.md`, `docs/NOW.md`, `docs/ME.md`, `docs/screen-map.md`, and a comment in
 `lib/sage-insight.ts:53` still describe Explore's now-parked folds / the deleted
 `sage-insight-spend.tsx`. Left out of this card's scope; worth a follow-up doc pass.
-**Next: Card 4 (Home) is outstanding — see correction above. Card 6 (Questions) after that.**
+**SUPERSEDED — the old Card 4 / 6 / 7 were absorbed into ISOLATION_PLAN §7's
+re-plan. See below.**
+
+**§7 Cards A-G ALL DONE 2026-09-15** (`ecd0c49` → `449e772`). The goal grew from
+"park the edges" to "ship the gated three-screen spine over OTA while the
+backend is rebuilt", and the remaining cards were re-planned as A-G in
+`docs/ISOLATION_PLAN.md` §7 before any code was written. What shipped:
+
+- **Live:** Home, Questions, Explore. **Parked:** Sage, Around, Legends, Roll,
+  Circle, `/week`, `/chat`, and You — You keeps AI consent, sign out and delete
+  account alive (App Store 5.1.1(v)), pinned by `check:rebuilt`.
+- **Register goes straight to Home.** Onboarding's nine core-intake taps are
+  deleted. Checked first, per emci's condition: they write `me` CONTEXT columns
+  (talk_style, show_up, knocks_you_off, morning_cue, evening_wind_down,
+  energy_pattern, support_style, current_focus) and **no trait module reads any
+  of them** — so they do not feed trait scoring and did not need relocating to
+  Questions. Handle / DOB / invite stay in register: `complete_signup` enforces
+  them server-side, and all eight intake columns are nullable — no schema
+  change, no RPC change.
+- **One unlock signal**: `src/lib/full-profile-gate.ts` — every bank question
+  answered. Story judges its own readiness and reports "not ready yet" without
+  calling a model.
+- **No AI call fires without a tap.** Four auto-firing paths were found and
+  removed: Home's insight effect, the Story fold's mount generate (which also
+  never checked consent), `SageTitleCard` generating on mount inside
+  `FullProfileFold`, and the 25-question round auto-starting from its load
+  effect. A fifth was found by the reviewer: `routeQuestions` allowed a paid
+  batch once `isProfileComplete` passed (~20 questions in) while every visible
+  unlock was still locked.
+- **Two new gate checks**: `check:no-auto-ai` (follows local calls to a
+  fixpoint, so an effect that generates through a helper still fails) and
+  `check:full-profile-signal` (one derivation of the unlock, all consumers
+  pinned). Gate is 82 checks now, green.
+- **Parked tabs left the tab bar** (JS-only, OTA-safe) but every route keeps a
+  hidden trigger, so any link into one lands on its `(Rebuilt)` notice.
+- ~30 check scripts inverted or repinned, never deleted, per the Card 2/3/5
+  convention.
+
+**Open for emci (see ISOLATION_PLAN §7.6):** the device pass + OTA publish; the
+rest of the deletion sweep (~20 unreachable modules whose logic a check script
+still covers — deleting them deletes that coverage); the tab bar reads Home /
+Explore / You / More, so **Questions is not a visible tab** (reachable from More
+and Home's main button) because parked Sage still occupies a pinned slot; and
+`logCrisisFlag` has had zero callers since before this work, so `crisisToday` is
+always false and the CrisisCard kept Active per §0 decision 3 can never render.
 
 **Two sequencing rules found in the 2026-09-15 red-team pass (now in ISOLATION_PLAN §5.1-5.3):**
 park `RollHistoryFold` per call site, never wholesale, or Card 4 silently changes Explore;

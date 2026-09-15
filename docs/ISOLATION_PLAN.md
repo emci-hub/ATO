@@ -1,6 +1,14 @@
 # Screen Isolation Plan — park everything outside the active spine
 
-**Status: Cards 1-3 and 5 shipped 2026-09-15. §1-§6 below are the original park-only
+**Status: §7 Cards A-G ALL SHIPPED 2026-09-15** (commits `ecd0c49` → `449e772`),
+on top of the earlier Cards 1-3 and 5. Gate green (typecheck + lint + 80 offline
+checks). Not yet OTA-published — the device pass in Card G is outstanding. What
+was deliberately left undone: the deletion sweep stopped at modules with no
+check-script coverage (16 files); ~20 more are unreachable but still carry
+verified logic in a check script, and deleting those means deleting that
+coverage — emci's call, not a side effect. See §7.6.
+
+**Earlier status: Cards 1-3 and 5 shipped 2026-09-15. §1-§6 below are the original park-only
 plan and are kept as the record. §7 (added 2026-09-15, awaiting emci's OK) REVISES the
 remaining work — the goal grew from "park the edges" to "ship the gated three-screen
 spine via OTA while the backend is rebuilt". Where §7 and §1-§6 disagree, §7 wins.
@@ -489,3 +497,58 @@ together) is **void** — the token concern behind it was moot.
   `nav-order.ts` + `nav-check.ts`)?
 - **O-3 — register fields.** Confirm C-1's recommendation: handle + DOB + invite code
   move into register, and onboarding's 9-question step is deleted rather than relocated.
+
+### 7.6 What actually shipped, 2026-09-15
+
+All seven cards landed in order, one commit each, each behind a green
+`check:ota-gate`.
+
+- **Card A** — `src/lib/full-profile-gate.ts` is the one place the unlock is
+  derived (`isFullProfileDone` = every bank question answered). `check:full-
+  profile-signal` fails if any other file re-derives the comparison, and pins
+  every consumer.
+- **Card B** — Home's insight and the Story fold became taps.
+  `check:no-auto-ai` follows local calls to a fixpoint, so an effect that
+  generates through a helper fails too. It found a third case nobody had
+  listed: `SageTitleCard` generated on mount and still reached Explore inside
+  `FullProfileFold` long after Explore's own call site was parked.
+- **Card C** — Home is two states. Parked: the Check row, MissedCheck, Reveal,
+  Ask, RollHistory, "This week", CategoryTeaser. `record_check` now has zero
+  client callers, knowingly. A third state was added after review: a failed
+  `home_bootstrap` is NOT an unfinished profile, and says so with a retry.
+- **Card D** — the 25-round is behind "Next 25 questions". It had been
+  auto-starting from its own load effect (several chunked model calls on
+  mount), and `QuestionsFold` had two more auto-load effects.
+- **Card E** — Categories is one gated "Load categories" press.
+- **Card F** — Circle, `/week`, `/chat` parked; You parked down to AI consent,
+  sign out and delete account (App Store 5.1.1(v)), which `check:rebuilt` now
+  pins. Parked tabs leave the bar, More and the edit pool while keeping hidden
+  triggers, so every route still lands on its notice.
+- **Card G** — register goes straight to Home. The nine core-intake taps were
+  **verified not to feed trait scoring** (they write `me` context columns; no
+  trait module reads them) before being deleted, per emci's Q1 condition.
+  Handle / DOB / invite stay in register: `complete_signup` enforces them
+  server-side and all eight intake columns are nullable, so no schema change.
+
+**One hole the reviewer caught that the cards had not:** `routeQuestions`
+allowed a paid batch once `isProfileComplete` passed (one answer per axis,
+~20 questions in) while every visible unlock was still locked — so expanding
+the Questions fold out of curiosity spent a call. Both gates are now required,
+with a behavioural test.
+
+**Remaining, for emci:**
+1. The device pass (fresh account, empty profile) and the OTA publish.
+2. The rest of the deletion sweep — ~20 unreachable modules whose behaviour a
+   check script still covers (`rolls/*`, `sage-title-card`, `category-teaser`,
+   `optional-intake`, `intake-settings`, `crisis-region-picker`, `sage-facts`,
+   `sage-usage`, kenney credits, `milestone-toast`, `explore-panel`,
+   `core-intake-sweep`, password settings, voice picker, `birthday-row`,
+   `dev-unlock-gate`). Deleting them deletes that coverage too.
+3. The tab bar now reads Home / Explore / You / More — **Questions is reachable
+   from More and from Home's main button, but is not a visible tab**, because
+   the slot engine keeps 2 pinned + 2 pool slots and parked Sage still occupies
+   one. Changing that means re-doing the pinned/pool split.
+4. `logCrisisFlag` has had zero callers since before this work, so nothing
+   writes `crisis_flags` — which means `crisisToday` is always false and the
+   `CrisisCard` kept Active per §0 decision 3 can never actually render.
+   Pre-existing, not caused here, but it makes decision 3 moot until fixed.
