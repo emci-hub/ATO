@@ -259,34 +259,14 @@ export function QuestionsFold({
     });
   }
 
-  useEffect(() => {
-    if (!alwaysOpen) return;
-    handleOpen();
-    // One session when the screen mounts. Answering already calls load().
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only session
-  }, [alwaysOpen]);
-
-  /**
-   * A second deep link naming a DIFFERENT axis, arriving while this screen is
-   * still mounted, is a true→true transition for `defaultOpen` — SettingsFold
-   * sees no rising edge, so nothing reloads and the new axis is dropped. That
-   * is the same defect `defaultOpen` exists to fix (Explore alone has several
-   * axis CTAs, so hopping between them is a real path), so track the axis
-   * itself. The first axis is claimed without reloading: SettingsFold's own
-   * mount edge already ran `handleOpen` for it.
-   */
-  const loadedFocusRef = useRef<TraitAxis | undefined>(undefined);
-  useEffect(() => {
-    if (!defaultOpen || !focusAxis) return;
-    if (loadedFocusRef.current === undefined) {
-      loadedFocusRef.current = focusAxis;
-      return;
-    }
-    if (loadedFocusRef.current === focusAxis) return;
-    loadedFocusRef.current = focusAxis;
-    handleOpen();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the axis, not handleOpen's identity
-  }, [defaultOpen, focusAxis]);
+  /*
+    REMOVED (ISOLATION_PLAN §7 Card D, 2026-09-15): a mount effect that called
+    `handleOpen()` whenever `alwaysOpen` was set, and a second one that
+    re-loaded when a deep-linked axis changed. `handleOpen` runs
+    `routeQuestions`, which can reach a model, so both were paths to a model
+    call with no press behind them. Loading now happens only from the fold's
+    own expand tap (`onOpen`) or "Keep going".
+  */
 
   function handleKeepGoing() {
     setKeptGoing(true);
@@ -570,6 +550,9 @@ export function QuestionsFold({
   );
 }
 
+export const NEXT_ROUND_LABEL = 'Next 25 questions';
+export const NEXT_ROUND_BUSY_LABEL = 'Putting together your next 25…';
+
 /**
  * Post-Full-Profile ongoing round (T-03, core loop redesign §2/§3). Shown
  * once the frozen 50-question intake above (`fullProfileLocked`) is done — a
@@ -621,15 +604,13 @@ function OngoingRoundFold({
       // pack is a harmless no-op, never a double award.
       if (existing && roundFullyAnswered(existing)) {
         claimOngoingRoundCompleteQuiet(existing.id);
-      } else if (!existing) {
-        // No ongoing round has ever been started for this account — this
-        // only happens once, the first time this section mounts after the
-        // frozen 50-question intake finishes. Auto-start it (bank-first,
-        // AI-fallback) instead of waiting on a manual "Start your next
-        // round" tap, so finishing the intake immediately releases the
-        // next batch of questions.
-        void start();
       }
+      // NO AUTO-START (ISOLATION_PLAN §7 Card D, emci 2026-09-15). This used to
+      // call `start()` when no pack existed, so the first mount after the
+      // 50-question intake composed a whole 25-item round — several chunked
+      // model calls — without anyone asking for it. The "no pack" branch below
+      // renders the NEXT_ROUND_LABEL button instead; that press is the only
+      // thing that can compose a round.
     } catch (err) {
       console.log('[ongoing-round] load error:', err);
       Sentry.captureException(err, { tags: { stage: 'ongoing-round-load' } });
@@ -831,7 +812,7 @@ function OngoingRoundFold({
           onPress={() => void start()}
           style={[styles.option, { borderColor: controlBorderColor(theme) }, starting && styles.disabled]}>
           <ThemedText type="smallBold">
-            {starting ? 'Putting together your next round…' : 'Start your next round'}
+            {starting ? NEXT_ROUND_BUSY_LABEL : NEXT_ROUND_LABEL}
           </ThemedText>
         </ThemedPressable>
       ) : roundFullyAnswered(pack) ? (
@@ -844,7 +825,7 @@ function OngoingRoundFold({
             onPress={() => void start()}
             style={[styles.option, { borderColor: controlBorderColor(theme) }, starting && styles.disabled]}>
             <ThemedText type="smallBold">
-              {starting ? 'Putting together your next round…' : 'Start another round'}
+              {starting ? NEXT_ROUND_BUSY_LABEL : NEXT_ROUND_LABEL}
             </ThemedText>
           </ThemedPressable>
         </>

@@ -135,10 +135,13 @@ const questionsTab = read('src/app/(tabs)/intake-sweep.tsx');
 const bandsIdx = exploreTab.indexOf('<TraitBandsFold');
 const profileIdx = exploreTab.indexOf('<FullProfileFold');
 assert.ok(bandsIdx >= 0 && profileIdx > bandsIdx);
-assert.ok(questionsTab.indexOf('<OptionalIntakeFill') >= 0);
+// PARKED (ISOLATION_PLAN §7 Card D, 2026-09-15): `OptionalIntakeFill` is off the
+// Questions tab. Its own logic is still covered by check:optional-intake; the
+// component has no mount site until the optional fill is rebuilt.
+assert.ok(questionsTab.indexOf('<OptionalIntakeFill') === -1);
 assert.match(exploreTab, /from '@\/components\/full-profile-fold'/);
 assert.match(exploreTab, /from '@\/components\/trait-bands-fold'/);
-assert.match(questionsTab, /from '@\/components\/optional-intake'/);
+assert.doesNotMatch(questionsTab, /from '@\/components\/optional-intake'/);
 assert.match(fold, /SettingsFold title=\{`\$\{FULL_PROFILE_LABEL\}/);
 ok('Full Profile sits on Explore after trait bands; fill-later lives on the Questions tab');
 

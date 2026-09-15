@@ -37,8 +37,11 @@ ok('all 8 optional screens are unanswered when every axis is null');
 const questionsTab = read('src/app/(tabs)/intake-sweep.tsx');
 const fillUi = read('src/components/optional-intake.tsx');
 const bandsFold = read('src/components/trait-bands-fold.tsx');
-assert.ok(questionsTab.indexOf('<OptionalIntakeFill') >= 0, 'Questions mounts OptionalIntakeFill');
-assert.match(questionsTab, /from '@\/components\/optional-intake'/);
+// PARKED (ISOLATION_PLAN §7 Card D, 2026-09-15): the fill is off the Questions
+// tab. Everything below still pins the component's own behaviour, so it can be
+// remounted unchanged when the optional fill is rebuilt.
+assert.ok(questionsTab.indexOf('<OptionalIntakeFill') === -1, 'Questions must not mount OptionalIntakeFill while it is parked');
+assert.doesNotMatch(questionsTab, /from '@\/components\/optional-intake'/);
 assert.match(fillUi, /export function OptionalIntakeFill/);
 assert.match(fillUi, /<OptionalStep/);
 assert.match(fillUi, /Want to add a bit more\?/);

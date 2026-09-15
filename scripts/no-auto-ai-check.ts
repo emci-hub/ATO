@@ -74,6 +74,14 @@ const GENERATORS = [
   'generateOngoingRoundBatch',
   'generateCategoryStatements',
   'claimAiCall',
+  // Composers that end in one of the above. `runOngoingRound` is why this list
+  // is not just the four `generate*` names: the ongoing round auto-started
+  // itself from its own load effect, several chunked AI calls deep, and a
+  // scan for `generate*` alone walked straight past it (found in Card D).
+  'runOngoingRound',
+  'composeOngoingRound',
+  'prewarmBankPool',
+  'routeQuestions',
 ];
 
 /**

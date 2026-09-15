@@ -145,21 +145,25 @@ const bankBranchBody = foldSrc.slice(
 assert.match(bankBranchBody, /<PagedQuestions/, 'the bank pager must live in the NOT-fullProfileLocked branch');
 ok('the bank pager and the ongoing-round pager are mutually exclusive — never both on screen');
 
-// Auto-start (2026-09-11): the first time this mounts with no ongoing-round
-// pack yet, it must call start() itself rather than waiting on a manual
-// "Start your next round" tap — finishing the intake should immediately
-// release the next batch, per emci's explicit choice. Unchanged by today's
-// paged-UI rewrite — load()/start() themselves were not touched.
+// AUTO-START REMOVED (ISOLATION_PLAN §7 Card D, emci 2026-09-15). This block
+// used to assert the opposite: that `load()` must call `start()` itself when no
+// pack existed, so finishing the intake immediately released the next batch
+// (emci's explicit choice, 2026-09-11). It is superseded by emci's harder rule
+// that NO model call may fire without a press — and this was the most
+// expensive one in the app: composing a 25-item round is several chunked AI
+// calls, fired from a mount effect. The "no pack" branch renders the
+// NEXT_ROUND_LABEL button instead, and that press is now the only way in.
 const loadFnBody = foldSrc.slice(
   foldSrc.indexOf('const load = useCallback(async () => {', foldSrc.indexOf('function OngoingRoundFold')),
   foldSrc.indexOf('async function start()'),
 );
-assert.match(
+assert.doesNotMatch(
   loadFnBody,
-  /\} else if \(!existing\) \{\s*\n[\s\S]{0,600}?void start\(\);/,
-  'load() must auto-call start() when no ongoing-round pack exists yet, not just set state and wait for a tap',
+  /void start\(\);/,
+  'load() must NOT start a round on its own — composing one spends several model calls',
 );
-ok('the first ongoing round auto-starts on load — no manual tap required after finishing the intake');
+assert.match(foldSrc, /NEXT_ROUND_LABEL/, 'the round must be offered as an explicit press instead');
+ok('the first ongoing round waits for an explicit "Next 25 questions" press — no model call on mount');
 
 assert.match(foldSrc, /const existing = await withTimeout\(fetchLatestOngoingRoundPack\(\), 25000, 'ongoing-round-load'\);/);
 assert.match(foldSrc, /const saved = await withTimeout\(runOngoingRound\(ongoingMe, history, tracks\), 40000, 'ongoing-round-start'\);/);
