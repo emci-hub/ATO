@@ -1,6 +1,6 @@
 # Screen Isolation Plan — park everything outside the active spine
 
-**Status: ASSESSMENT ONLY. Nothing implemented. Written 2026-09-15.**
+**Status: Card 1 shipped 2026-09-15. Cards 2–7 not started.** Written 2026-09-15.
 
 Goal (emci, 2026-09-15): reduce entanglement so editing one screen cannot ripple
 into another. Keep a small active spine; **park** everything else. No live users —
@@ -227,7 +227,12 @@ The rule, in order of preference:
 Convention: each card is a standalone session, `/clear` between. Per the standing cadence rule, run `check:ota-gate` plus the `reviewer` subagent **once at the end of each card**, not per file.
 
 - **Card 0 — decisions. DONE 2026-09-15.** All five resolved; see §0. No longer blocking.
-- **Card 1 — the pattern.** Build `RebuiltNotice` plus `scripts/rebuilt-check.ts` (generic: for each file in a `PARKED_SCREENS` list, assert `RebuiltNotice` present and no backend imports). Add to `check:ota-gate`. Prove it on `sage.tsx` by aligning Sage's existing placeholder to the shared component. Smallest possible first card, and it de-risks all the rest.
+- **Card 1 — the pattern. DONE 2026-09-15.** `src/components/rebuilt-notice.tsx` (exports
+  `RebuiltNotice` + `REBUILT_NOTICE_COPY`), `scripts/rebuilt-check.ts` (`PARKED_SCREENS`
+  list; asserts route export, `<RebuiltNotice` rendered, zero backend reach), wired in as
+  `check:rebuilt` — the gate auto-discovers `check:*`, so `ota-gate.ts` needed no edit.
+  `sage.tsx` now renders the shared component; `check:sage-load` still passes unmodified.
+  Adding a screen to `PARKED_SCREENS` is the whole of a later card's check work.
 - **Card 2 — Around.** Whole-screen park. Zero entanglement, so this is the clean rehearsal of the full procedure end to end.
 - **Card 3 — Legends (plus Roll).** Whole-screen park for both. Carries the token resolution from Card 0. Watch `nav-check.ts:170` and `legends64-check.ts`.
 - **Card 4 — Home.** Largest card. Park folds 6, 7b–7d, 9, 10, 11. Keep 7a (`CrisisCard`). Narrow `home_bootstrap` consumption to `tracks` + `crisis*`, dropping `checks`. Park the `/week` route. Carries the Story-free-while-parked mechanism from §4 risk 2. Home ends as: greeting, Insight, consent, questions link, CrisisCard slot, Story.
@@ -235,7 +240,28 @@ Convention: each card is a standalone session, `/clear` between. Per the standin
 - **Card 6 — Questions.** Smallest of the three screens: park `OptionalIntakeFill` and `MilestoneToast`; leave `QuestionsFold` and `IntakeSweep` fully wired.
 - **Card 7 — sweep plus device pass.** Full `check:ota-gate`, one real device walk of every tab confirming every parked surface reads `(Rebuilt)` and nothing reads as a crash. Then one OTA.
 
-Cards 2–6 are independent of each other once Card 1 lands, so they can be reordered freely if emci wants Home first.
+Cards 2–6 are *mostly* independent once Card 1 lands and can be reordered — with two
+exceptions found in the 2026-09-15 red-team pass:
+
+**5.1 `RollHistoryFold` is parked per call site, NOT wholesale.** §2.5 suggests parking the
+shared component itself since both consumers are parked. Do not — gutting the component
+during Card 4 (Home) would silently change Explore before Card 5 exists, which breaks the
+independence the card order relies on. Follow §3.3 rule 2 instead: drop Home's call site in
+Card 4, Explore's in Card 5. Only once both parents have dropped it does the component
+become dead code, and per §3.3 rule 4 it is then left in place, uncalled.
+
+**5.2 Cards 3 and 4 must ship together.** Card 3 parks Legends, removing the only wired
+token *earn* site; Card 4 carries the mechanism that makes Story free. Landing Card 3 alone
+leaves Story spending tokens that can no longer be earned — not a crash, but a permanently
+unaffordable active feature, and a confusing state for whoever picks up the next session.
+Zero live users makes this cheap, not harmless. Do not reorder these two apart.
+
+**5.3 Scope limit on `rebuilt-check.ts`.** The generic check asserts a parked file imports
+`RebuiltNotice` and has **no backend imports at all** — that is only true of *whole-file*
+parks (Sage, Around, Legends, Roll, Week). Home / Explore / Questions keep legitimate
+backend imports for their still-active folds, so they must never be added to
+`PARKED_SCREENS`. Fold-level parks (Cards 4–6) get bespoke assertions in each screen's own
+check script, following the `explore-check.ts` pattern.
 
 ---
 

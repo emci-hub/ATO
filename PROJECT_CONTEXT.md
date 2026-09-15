@@ -94,8 +94,23 @@ live-music tab) — not a guess. `around-lab.tsx` is its dev harness;
 4. **`AiConsentCard` stays Active on Home** as Insight infrastructure.
 5. **`ProfileFillFold` stays Active** on Explore — counts as part of "full profile".
 
-**Next: Card 1** (build `RebuiltNotice` + `scripts/rebuilt-check.ts`, prove it on Sage).
-Cards 2-6 are independent once Card 1 lands.
+**Card 1 DONE 2026-09-15** — `src/components/rebuilt-notice.tsx` + `scripts/rebuilt-check.ts`
++ `check:rebuilt` in the gate, proven on `sage.tsx`. Gate green (78 offline checks).
+**Next: Card 2 (Around)** — whole-screen park, zero entanglement, the clean rehearsal.
+
+**Two sequencing rules found in the 2026-09-15 red-team pass (now in ISOLATION_PLAN §5.1-5.3):**
+park `RollHistoryFold` per call site, never wholesale, or Card 4 silently changes Explore;
+ship Cards 3+4 together, or Story spends tokens that can no longer be earned; and never add
+Home/Explore/Questions to `PARKED_SCREENS` — that check assumes a whole-file park.
+
+**Token economy — researched 2026-09-15, NOT built, NOT approved.** emci ran the design
+research separately. Headline: non-monetary v1, never sell tokens directly, core self-insight
+always free, earn from completed reflection (no streak multipliers), append-only `token_ledger`
+with `SUM` balance + per-event idempotency key, daily earn cap 40, soft cap 500, no transfers,
+ledger cleared on account deletion. Build it **after Cards 1-6**, not before — the old wiring is
+dead by then. **Open gap: `Divecore`**, a game emci is building alongside ATO, is meant to feed
+tokens and the v1 numbers do not account for it. emci deferred that knowingly; surface it before
+any number is locked.
 
 **Honest ceiling:** call-graph isolation is achievable; *type* isolation is not,
 because `Me` and `TraitState` stay shared shapes. `lib/me.ts` remains a god-object

@@ -1,13 +1,13 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { RebuiltNotice } from '@/components/rebuilt-notice';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
-import { useTheme } from '@/hooks/use-theme';
 import { SAGE_COACH_LABEL } from '@/lib/sage-copy';
-import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
+import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
 /**
  * Talk — placeholder pending rebuild (2026-09-14).
@@ -29,8 +29,6 @@ import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
  * applying it.
  */
 export default function SageScreen() {
-  const theme = useTheme();
-
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -44,18 +42,7 @@ export default function SageScreen() {
             </ThemedText>
           </View>
 
-          <ThemedView
-            type="backgroundElement"
-            style={[styles.card, { borderColor: controlBorderColor(theme) }]}>
-            <ThemedText type="subtitle">Talk is being rebuilt</ThemedText>
-            <ThemedText themeColor="textSecondary" style={styles.body}>
-              This screen is off while the app is rebuilt from the ground up. Nothing
-              is running behind it, so nothing here is guessing at what to say.
-            </ThemedText>
-            <ThemedText themeColor="textSecondary" style={styles.body}>
-              Your daily insight on Home is unaffected.
-            </ThemedText>
-          </ThemedView>
+          <RebuiltNotice title="Talk" note="Your daily insight on Home is unaffected." />
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -80,14 +67,5 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: Spacing.two,
-  },
-  card: {
-    borderRadius: Spacing.four,
-    borderWidth: 1,
-    padding: Spacing.four,
-    gap: Spacing.two,
-  },
-  body: {
-    lineHeight: 24,
   },
 });
