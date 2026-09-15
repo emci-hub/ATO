@@ -1,6 +1,7 @@
 # Screen Isolation Plan — park everything outside the active spine
 
-**Status: Card 1 shipped 2026-09-15. Cards 2–7 not started.** Written 2026-09-15.
+**Status: Cards 1-3 shipped 2026-09-15. Cards 4-7 not started** (Card 4's
+concern turned out to be moot — see §4 risk 2 update below). Written 2026-09-15.
 
 Goal (emci, 2026-09-15): reduce entanglement so editing one screen cannot ripple
 into another. Keep a small active spine; **park** everything else. No live users —
@@ -126,10 +127,10 @@ Imported by Explore, Questions, Legends (`legends.tsx:204`), Roll, dev-lab. Same
 Rendered on Home (`types:['story']`) *and* Explore (`types:['legend','category']`), and reused inside `category-statement-archive-fold.tsx` and `legend-history-fold.tsx`. It is parked on **both** screens, so the component itself can be parked wholesale rather than per-call-site. Its only backend call is `fetchRevealedRollItems` (`lib/rolls/store.ts`).
 
 ### 2.6 ATO tokens — **the sharpest entanglement**
-- The only *wired* earn site is `claimFullProfileComplete()` at `legends.tsx:341` (`claim_full_profile_complete`). `claimOngoingRoundComplete` exists but its caller (`ongoing-round`) has zero `src/` importers.
-- Spend sites: `spendAtoTokensLegendReroll` (Legends, parked), `spendAtoTokensCategoryReroll` (Categories — **active**), `spendAtoTokensQuestionReroll`, and `claimStoryGenerate` -> `claim_story_generate` at `sage-story-fold.tsx:92` (**Story — active**).
+- The only *wired* earn site was `claimFullProfileComplete()` at `legends.tsx:341` (`claim_full_profile_complete`) — now unreachable, Legends is parked (Card 3). `claimOngoingRoundComplete` exists but its caller (`ongoing-round`) has zero `src/` importers.
+- Spend sites: `spendAtoTokensLegendReroll` (Legends, parked), `spendAtoTokensCategoryReroll` (Categories — **active**), `spendAtoTokensQuestionReroll`. `claimStoryGenerate` -> `claim_story_generate` at `sage-story-fold.tsx:92` is **NOT a token spend** — corrected 2026-09-15, see below.
 
-**Consequence: parking Legends removes the only connected way to earn tokens, while two active surfaces (Story, Categories reroll) still spend them.** A fresh account reaches zero and Story can never be revealed. This does not crash — it degrades to a permanently-unaffordable state — but it silently breaks an active feature. **Must be resolved before parking Legends** (see §5, Card 0).
+**Consequence: parking Legends removes the only connected way to earn tokens, while Categories reroll still spends them.** Categories reroll degrading to unaffordable was already accepted as non-blocking (§5.2 build order, "not a required path"). **Story is unaffected — it was never priced in ATO tokens.** `claim_story_generate` is a daily-quota guard against `ai_usage`/`app_config` (default 1/day), unrelated to the `ato_tokens` table. This was verified by reading the RPC's SQL directly (`wave22_levity_story.sql:30-84`) during Card 3 — no code change was needed for Story, and Card 4 as originally scoped (§5.2's "ship together" concern) turned out to be a no-op.
 
 ### 2.7 Milestones — `me.celebrated_milestone_ids`
 Written by `legends.tsx:344` and by Questions' `MilestoneToast` path (`intake-sweep.tsx:19-20`). Both parked. `checkMilestones` (`lib/milestones.ts`) stays untouched; only the call sites go. No active reader breaks — the `legends_unlocked` toast simply never fires again.
@@ -211,6 +212,8 @@ The rule, in order of preference:
 **Risk 2 — the token economy breaks silently (§2.6). RESOLVED: Story is free while parked.** Parking Legends removes the only wired earn site while Story and Categories reroll keep spending, which would leave Story permanently unaffordable. emci's call (2026-09-15): the token system is not designed yet, so it is not worth preserving — make Story free rather than inventing an earn path.
 
 **Mechanism, decided at Card 4 not before:** `claimStoryGenerate()` (`lib/sage-story-store.ts:12`) calls the `claim_story_generate` RPC, which does both the token spend *and* plausibly a quota/rate guard. Do **not** blanket-remove the call — check first whether it is the only thing bounding Story generation. Preferred order: (a) if the RPC is purely a token spend, skip it client-side and generate directly; (b) if it also guards quota, keep calling it and make the price zero. A price change means a migration, which per locked decision 6 stops for emci's review. Categories reroll (`spendAtoTokensCategoryReroll`) is a *reroll*, not a required path — leaving it unaffordable is acceptable and is not a blocker.
+
+**RESOLVED 2026-09-15, folded into Card 3's commit:** the RPC is case (b) but doesn't touch tokens at all. `claim_story_generate` (`supabase/migrations/wave22_levity_story.sql:30-84`) checks and increments a `story_daily_cap` (default 1/day) against `ai_usage`/`app_config` — no `ato_tokens` table is read or written anywhere in the Story path. Story was never actually priced in tokens, so there was no price to zero and no migration needed. This whole risk was based on a stale reading of the code; §2.6's "Spend sites" listing of Story is corrected below.
 
 **Risk 3 — `me` is a shared god-object and this plan does not fix that.** `useMeContext` is imported by every screen including You, and `me.celebrated_milestone_ids`, `me.ato_tokens`, `me.facts`, `me.ai_consent` are all fields written by one surface and read by others. Parking severs the *calls* but leaves the *shared mutable shape*. **True screen isolation is not achievable without splitting `me` into per-feature slices, which is a deeper rewrite than this plan.** This plan reduces ripple substantially; it does not eliminate it. Anyone editing `lib/me.ts` can still break every screen at once.
 

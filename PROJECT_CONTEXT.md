@@ -113,8 +113,27 @@ subagent explicitly running it), `age-check.ts` (inverted the 18+-gate-line matc
 `doesNotMatch`; the underlying `isAtLeastAge`/`NIGHT_GOING_AGE_YEARS` logic is still fully
 tested elsewhere in that file). Gate green (78/78 + typecheck + lint); `check:around-going`
 also confirmed green by hand (it's excluded from the gate).
-**Next: Card 3 (Legends + Roll)** — must ship together with Card 4 (token resolution), per
-ISOLATION_PLAN §5.2. Do not land Card 3 alone.
+**Card 3 DONE 2026-09-15** (commit `7727cfc`) — Legends + Roll whole-screen parked, mirroring
+Around's pattern exactly. Disconnected from `lib/legends64/*`, `lib/rolls/*`,
+`ato-tokens-server`, `milestones`, `trait-tracks-store`; those libs untouched. Registered in
+`rebuilt-check.ts`'s `PARKED_SCREENS`.
+**Card 4's token-resolution concern turned out to be moot, folded into this same commit:**
+investigated `claim_story_generate` (Story's RPC) and found it is a pure daily-quota guard
+(`story_daily_cap`, default 1/day, tracked in `ai_usage`/`app_config`) — it never touches the
+`ato_tokens` table at all. Story was never priced in tokens, so §5.2's "ship together, or Story
+spends tokens that can no longer be earned" risk never applied; no price to zero, no migration
+needed. `ISOLATION_PLAN.md` §2.6/§4 risk 2 corrected in place.
+Three pre-existing checks asserted on legends.tsx's own now-deleted source text
+(`milestones-check.ts`, `reroll-check.ts`, `dev-test-user-check.ts`) — inverted per the
+`around-check.ts` precedent from Card 2: dropped the screen-text asserts, kept the lib-level
+coverage (`rerollLegend`'s generate/spend/save order, `legendsUnlocked`'s 50-answer threshold,
+dev-preset `PRE_LAUNCH_DEV` guards). Gate green (78/78 + typecheck + lint); reviewer passed
+with no critical findings.
+**Known consequence, not a new bug:** the dev persona preset strip (`DevTestPresetStrip`) and
+the full-profile-complete token-earn RPC (`claimFullProfileComplete`) now have zero UI entry
+point until Legends is rebuilt. Flagging for whoever picks up Legends' rebuild — not urgent,
+zero live users.
+**Next: Card 5 (Explore).**
 
 **Two sequencing rules found in the 2026-09-15 red-team pass (now in ISOLATION_PLAN §5.1-5.3):**
 park `RollHistoryFold` per call site, never wholesale, or Card 4 silently changes Explore;
