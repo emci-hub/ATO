@@ -175,7 +175,7 @@ assert.match(youCode, /Delete account/, 'the delete-account control must be labe
 assert.match(youCode, /supabase\.auth\.signOut\(\)/, 'sign out must stay reachable on You');
 assert.match(youCode, /clearLocalAccountData\(\)/, "signing out must still clear this account's local keys");
 assert.match(youCode, /setAiConsent\(/, 'AI consent must stay changeable on You (Apple 5.1.2)');
-assert.match(youCode, /AI_USE_DISCLOSURE/, 'the AI-use disclosure must render beside the consent control');
+assert.match(youCode, /\{AI_USE_DISCLOSURE\}/, 'the AI-use disclosure must RENDER beside the consent control, not just be imported');
 ok('You is parked but keeps delete account, sign out and AI consent');
 
 console.log(`\n${passed} rebuilt checks passed`);

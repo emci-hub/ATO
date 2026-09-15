@@ -343,6 +343,9 @@ export default function HomeScreen() {
               the retry has to be reachable.
             */
             <>
+              {/* The disclosure and the consent ask are unconditional (Apple
+                  5.1.2) — a failed fetch is not a reason to drop them. */}
+              {consentBlock}
               <ThemedView type="backgroundElement" style={styles.todayCard}>
                 <ThemedText type="smallBold">Couldn&apos;t load your profile</ThemedText>
                 <ThemedText themeColor="textSecondary">

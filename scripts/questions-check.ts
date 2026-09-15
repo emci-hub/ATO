@@ -862,6 +862,41 @@ assert.equal(completeGenerate, 1);
 assert.equal(completeClaims, 1);
 ok('complete profile reaches the model and claims quota as before');
 
+/**
+ * The unlock gate, behaviourally (ISOLATION_PLAN §7, 2026-09-15).
+ *
+ * One answer on each of the 16 axes satisfies `isProfileComplete` — a user
+ * reaches it about 20 questions in, while Load insight, Load story and Load
+ * categories are all still locked behind the full bank. Before the two gates
+ * were joined, expanding the Questions fold at that point claimed quota and
+ * generated a batch: the last way to spend a paid call with every visible
+ * unlock still locked. Axis-complete but not bank-complete must cost nothing.
+ */
+let midGenerate = 0;
+let midClaims = 0;
+const midProfile = await routeQuestions(
+  {
+    me: gateMe,
+    history: [],
+    aiConsent: true,
+    tracks: TRAIT_AXES.map((axis) => trackWithCount(axis, 1)),
+  },
+  {
+    claimBatch: async () => {
+      midClaims += 1;
+      return { ok: true };
+    },
+    generateBatch: async () => {
+      midGenerate += 1;
+      return composeLocalQuestionBatch();
+    },
+  },
+);
+assert.equal(midGenerate, 0, 'no model call below the shared unlock gate');
+assert.equal(midClaims, 0, 'no quota claim below the shared unlock gate either');
+assert.ok(midProfile.pack, 'the batch still arrives — from the static bank');
+ok('axis-complete but not bank-complete spends nothing: bank batch, no claim, no generation');
+
 // RE-INVERTED 2026-09-15 (emci correction). Briefly the same day this
 // asserted that the rotation ignored consent. Regenerating a pack calls a
 // model, and with no dedicated Sage-talk screen built yet that makes it one

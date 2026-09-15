@@ -109,7 +109,14 @@ export function NavEditOverlay({
                 const next = indexToKey.filter(
                   (key): key is BarSlotId => key === 'home' || key === 'sage' || key in NAV_TABS,
                 );
-                setDraftSlots(next);
+                // `indexToKey` only knows about the rows actually rendered, and
+                // parked slots are filtered out of those. Without re-adding
+                // them, any drag would commit a layout with the parked ids
+                // dropped — `normalizeNavLayout` would then re-insert Sage at
+                // its own default position, silently moving a slot the user
+                // never touched (found in review).
+                const parked = draftSlots.filter((id) => isTabParked(id));
+                setDraftSlots([...next, ...parked]);
               }}>
               {/*
                 Parked slots are not shown here either (ISOLATION_PLAN §7 Card

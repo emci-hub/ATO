@@ -109,12 +109,12 @@ assert.doesNotMatch(
 );
 ok('Home reads the shared gate');
 
-const explore = read('src/app/(tabs)/explore.tsx');
+const explore = codeOnly(read('src/app/(tabs)/explore.tsx'));
 assert.match(explore, /isFullProfileDone/, 'Explore must gate Load categories on the shared signal');
-const fold = read('src/components/questions-fold.tsx');
+const fold = codeOnly(read('src/components/questions-fold.tsx'));
 assert.match(fold, /isFullProfileDone/, 'Questions must gate the round on the shared signal');
-const story = read('src/components/sage-story-fold.tsx');
-assert.match(story, /unlocked/, 'the Story fold must take the shared gate as a prop');
+const story = codeOnly(read('src/components/sage-story-fold.tsx'));
+assert.match(story, /unlocked: boolean/, 'the Story fold must take the shared gate as a prop');
 
 /**
  * The paid question batch is the one gate that is not a visible button, and it
