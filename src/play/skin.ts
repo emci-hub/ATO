@@ -57,9 +57,13 @@ export type SkinDirs = 1 | 4 | 8;
 /** Frame counts per clip. */
 export type SkinClips = { idle?: number; walk?: number; attack?: number };
 
+/** Named multi-dir clips beyond the legacy `walk` field (the Avatar's cast set:
+ * idle loop, attack/skill/hurt one-shots, dash). */
+export type SkinAnimClipName = 'idle' | 'attack' | 'skill' | 'hurt' | 'dash';
+
 /**
- * A multi-frame directional walk clip (creep legs while moving). Towers,
- * `dirs: 1` roles and Titan-X author no `walk`, so they keep static rotations.
+ * A multi-frame directional walk clip (creep legs while moving). Towers and
+ * `dirs: 1` roles author no `walk`, so they keep static rotations.
  *
  * Frame keys are built at read time from `base` + `order[dirIndex]` +
  * `frame_###` (PixelLab's stable 3-digit export naming) — the contract avoids
@@ -90,7 +94,9 @@ export type SkinRole = {
    * Cast (PixelLab) art ships each rotation as a square canvas with the
    * character filling the middle ~50%, so the bottom ~25% of the PNG is
    * transparent. Without `footAt` the feet float `(1 - footAt) * units` above
-   * the world point — hence `0.75` for every cast role.
+   * the world point. The value is the role's measured alpha-bbox feet line
+   * (shallowest idle rotation bottom) — `0.75` for the 64px creeps, lower for
+   * the 128px/188px bosses + towers whose padding differs (see cast skin.json).
    */
   footAt?: number;
   /** Source tile size in px (informational — the board scales in units). */
@@ -101,6 +107,9 @@ export type SkinRole = {
   scales?: readonly number[];
   clips?: SkinClips;
   walk?: SkinWalk;
+  /** Named multi-dir clips (`idle`/`attack`/`skill`/`hurt`/`dash`), same shape
+   * as `walk`. The Avatar's cast role uses these for its directional cycle. */
+  anims?: Partial<Record<SkinAnimClipName, SkinWalk>>;
   /** Solid tone + casing for a ribbon role (the road), sampled from the tile. */
   tone?: string;
   casing?: string;
@@ -109,16 +118,18 @@ export type SkinRole = {
 /** One skin file: the roles it defines. A skin may define only a subset. */
 type SkinFile = { pack: string; roles: Record<string, SkinRole> };
 
-/** Minimum |dx| for a 2-facing walk clip to claim an east/west frame. Below
- * this the heading is effectively vertical and the clip has no honest art, so
- * `skinWalkDirIndex` declines and the static rotation stays. Roads in this game
- * are axis-aligned, so real headings sit near |dx| = 1 or |dx| = 0. */
+/** Minimum |dx| for a heading to count as honestly east/west. Below this the
+ * heading is effectively vertical and the 2-facing walk clip has no art to show
+ * for it, so `skinWalkDirIndex` declines and the static rotation stays — while
+ * `skinWalkFace` (humanoid path walkers) keeps the last side profile instead.
+ * Roads in this game are axis-aligned, so real headings sit near |dx| = 1 or
+ * |dx| = 0. */
 const WALK_2DIR_MIN_DX = 0.35;
 
 /** Active skin first, fallbacks after. Per-role resolution walks the stack so a
  * partial skin only overrides the roles it actually defines. The cast skin
  * (PixelLab defaults) leads; craftpix-td owns map/props; kenney-td stays the
- * complete fallback for unit.avatar / unit.final / fx.* / anything else. */
+ * complete fallback for unit.avatar / fx.* / anything else. */
 const SKIN_STACK: readonly SkinFile[] = [rawCast, rawCraftpix, rawKenney] as unknown as readonly SkinFile[];
 
 /** Resolve a role across the skin stack (active first, then fallbacks). */
@@ -237,6 +248,11 @@ export const SKIN_WALK_NO_DIR = -1;
  * Returns `SKIN_WALK_NO_DIR` when the role has no walk clip, or when a 2-dir
  * clip is asked for a near-vertical heading it cannot express (playing a
  * sideways cycle there would be worse than the static rotation).
+ *
+ * Humanoid path walkers do NOT ask this for their own heading — a vertical road
+ * would freeze them (`SKIN_WALK_NO_DIR`) or snap them north/south (4-dir clips).
+ * They use `skinWalkFace` + `skinWalkFaceIndex` instead, which keep the last
+ * east/west profile through the vertical run while the legs keep cycling.
  */
 export function skinWalkDirIndex(role: SkinRoleId, dx: number, dy: number): number {
   const walk = resolveRole(role)?.walk;
@@ -261,6 +277,104 @@ export function skinWalkDirIndex(role: SkinRoleId, dx: number, dy: number): numb
   return 0; // north
 }
 
+/* -------------------------------------------- humanoid path walkers ------ */
+
+/**
+ * Side profile a humanoid path walker is drawn in. The cast authors honest
+ * east/west side art only, so a walker on the road is always one of these two —
+ * never rotated into the path tangent, never snapped to a north/south rotation.
+ * Commercial TD practice: a minion on a switchback keeps its last side profile
+ * through the vertical lane and lets the walk cycle carry the motion.
+ */
+export type SkinWalkFace = 'e' | 'w';
+
+/**
+ * Roles that ride the road as side-profile walkers: the three creeps
+ * (Village Girl / Wizard / Knight) plus the scout mini-boss (Crimson Oni) and
+ * the final boss (Archangel Commander). Towers sit on static pads, the Avatar
+ * is player-driven, and the semi's kenney `unit.tank_alt` has no side-profile
+ * art — none of those belong in this set.
+ */
+export const SKIN_PATH_WALKER_ROLES = [
+  'unit.puff',
+  'unit.runner',
+  'unit.tank',
+  'unit.boss_scout',
+  'unit.final',
+] as const satisfies readonly SkinRoleId[];
+
+/** True for the roles drawn as humanoid side-profile path walkers. */
+export function isPathWalker(role: SkinRoleId): boolean {
+  return (SKIN_PATH_WALKER_ROLES as readonly SkinRoleId[]).includes(role);
+}
+
+/**
+ * Sticky side profile for a path walker heading along (`dx`, `dy`).
+ *
+ * `|dx| >= WALK_2DIR_MIN_DX` means the heading is honestly east/west, so the
+ * face follows the sign of `dx`. Below that the heading is vertical (straight
+ * vertical lanes / the corners' tangent) and the walker keeps `lastFace`. The
+ * caller keeps advancing the walk frame from distance travelled, so a vertical
+ * run reads as a side-profile walk rather than a north/south snap or a frozen
+ * glide. Pass a spawn's first face in as `lastFace` (the caller defaults `'e'`).
+ */
+export function skinWalkFace(dx: number, lastFace: SkinWalkFace): SkinWalkFace {
+  if (Math.abs(dx) >= WALK_2DIR_MIN_DX) return dx >= 0 ? 'e' : 'w';
+  return lastFace;
+}
+
+/**
+ * Index into a role's walk `order` for one side profile — the walk frame row to
+ * play. Handles both authored shapes: 2-dir clips (`[east, west]`) and 4-dir
+ * clips (`[north, east, south, west]`), where a path walker deliberately uses
+ * only the east/west rows and leaves the north/south rows unused at runtime
+ * (the assets stay in the pack; only the draw ignores them).
+ * Returns `SKIN_WALK_NO_DIR` when the role authors no walk clip — or its order
+ * has no such side — so the caller falls back to the rotation art.
+ */
+export function skinWalkFaceIndex(role: SkinRoleId, face: SkinWalkFace): number {
+  const walk = resolveRole(role)?.walk;
+  if (!walk) return SKIN_WALK_NO_DIR;
+  const index = walk.order.indexOf(face === 'e' ? 'east' : 'west');
+  return index >= 0 ? index : SKIN_WALK_NO_DIR;
+}
+
+/**
+ * Index into a role's static `keys` for one side profile — the idle/fallback
+ * rotation to draw when the walk clip is missing or a frame isn't authored.
+ * Matched on the key's trailing path segment so `east` never lands on
+ * `north-east` / `south-east`. Falls back to 0 (the first/north key) only when
+ * the resolved skin has no `east`/`west` key at all — unreachable for the five
+ * path-walker roles, whose cast keys always carry both sides. A `dirs: 1` role
+ * has a single up-facing sprite and ignores the index anyway.
+ */
+export function skinFaceArtIndex(role: SkinRoleId, face: SkinWalkFace): number {
+  const keys = resolveRole(role)?.keys;
+  if (!keys || keys.length === 0) return 0;
+  const re = face === 'e' ? /(?:^|\/)east$/ : /(?:^|\/)west$/;
+  const index = keys.findIndex((key) => re.test(key));
+  return index >= 0 ? index : 0;
+}
+
+/**
+ * Art for one frame of a directional clip (`walk` or a named `anims` clip).
+ * Returns undefined when the clip is absent or the frame key isn't authored, so
+ * callers fall back to the rotation art.
+ */
+function directionalClipArt(
+  clip: { dirs: number; order: readonly string[]; frames: number; base: string } | undefined,
+  dirIndex: number,
+  frame: number,
+): ImageSourcePropType | undefined {
+  if (!clip || dirIndex < 0) return undefined;
+  const dir = ((dirIndex % clip.dirs) + clip.dirs) % clip.dirs;
+  const dirName = clip.order[dir];
+  if (!dirName) return undefined;
+  const f = ((frame % clip.frames) + clip.frames) % clip.frames;
+  const key = `${clip.base}/${dirName}/frame_${String(f).padStart(3, '0')}`;
+  return PLAY_ART[key];
+}
+
 /**
  * Art for one frame of a role's directional walk clip. Returns undefined when
  * the role authors no walk clip, so callers fall back to the rotation art.
@@ -270,14 +384,51 @@ export function skinWalkArt(
   dirIndex: number,
   frame: number,
 ): ImageSourcePropType | undefined {
-  const walk = resolveRole(role)?.walk;
-  if (!walk || dirIndex < 0) return undefined;
-  const dir = ((dirIndex % walk.dirs) + walk.dirs) % walk.dirs;
-  const dirName = walk.order[dir];
-  if (!dirName) return undefined;
-  const f = ((frame % walk.frames) + walk.frames) % walk.frames;
-  const key = `${walk.base}/${dirName}/frame_${String(f).padStart(3, '0')}`;
-  return PLAY_ART[key];
+  return directionalClipArt(resolveRole(role)?.walk, dirIndex, frame);
+}
+
+/** Number of frames in a role's named directional clip (0 when unauthored). */
+export function skinAnimFrames(role: SkinRoleId, clip: SkinAnimClipName): number {
+  return resolveRole(role)?.anims?.[clip]?.frames ?? 0;
+}
+
+/**
+ * Index into a role's named directional clip `order` for one side profile —
+ * the frame row to play. Returns `SKIN_WALK_NO_DIR` when the clip is missing or
+ * its order has no such side.
+ */
+export function skinAnimFaceIndex(
+  role: SkinRoleId,
+  clip: SkinAnimClipName,
+  face: SkinWalkFace,
+): number {
+  const anim = resolveRole(role)?.anims?.[clip];
+  if (!anim) return SKIN_WALK_NO_DIR;
+  const index = anim.order.indexOf(face === 'e' ? 'east' : 'west');
+  return index >= 0 ? index : SKIN_WALK_NO_DIR;
+}
+
+/**
+ * Art for one frame of a role's named directional clip (idle/attack/skill/
+ * hurt/dash). Returns undefined when the role authors no such clip, so callers
+ * fall back to the rotation art.
+ */
+export function skinAnimArt(
+  role: SkinRoleId,
+  clip: SkinAnimClipName,
+  dirIndex: number,
+  frame: number,
+): ImageSourcePropType | undefined {
+  return directionalClipArt(resolveRole(role)?.anims?.[clip], dirIndex, frame);
+}
+
+/**
+ * Feet anchor for a `pivot: 'feet'` role, clamped to (0, 1]. Falls back to 1
+ * (box bottom) when the role omits `footAt` or pivots center.
+ */
+export function skinFootAt(role: SkinRoleId): number {
+  const raw = resolveRole(role)?.footAt;
+  return typeof raw === 'number' && raw > 0 && raw <= 1 ? raw : 1;
 }
 
 /**
@@ -344,9 +495,9 @@ export const BOARD_SKIN_LABEL: Record<BoardSkinId, string> = {
 };
 
 /** Which unit role plays each boss band (art only — bands/scaling unchanged).
- * Scout mini + scout boss now use the dedicated Titan-X `unit.boss_scout` role
- * (split off `unit.tank` so Knight stays the tank creep); semi/final keep their
- * kenney fallback sprites until their cast packs land. */
+ * Scout mini + scout boss use the Crimson Oni `unit.boss_scout` role; final
+ * uses the Archangel Commander `unit.final` role; semi keeps its kenney
+ * fallback sprite until its cast pack lands. */
 export const BAND_UNIT_ROLE = {
   final: 'unit.final',
   semi: 'unit.tank_alt',

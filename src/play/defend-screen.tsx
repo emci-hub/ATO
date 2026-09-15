@@ -25,6 +25,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Pressable, Share, StyleSheet, View } from 'react-native';
+import type { ImageSourcePropType } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -77,23 +78,31 @@ import { allHeroes } from '@/play/heroes-data';
 import { PlayFrame } from '@/play/play-frame';
 import { HeroOwnSheet } from '@/play/hero-own-sheet';
 import { NeonLabel, NeonPill, NEON_ROW_LINE } from '@/play/neon-ui';
-import { dir8FromDelta, type Dir8 } from '@/play/art';
 import {
   BOARD_SKIN,
   bandUnitRole,
+  isPathWalker,
+  skinAnimArt,
+  skinAnimFaceIndex,
+  skinAnimFrames,
   skinArt,
-  skinClipArt,
   skinDirIndex,
   skinDirs,
   skinDrawBox,
+  skinFaceArtIndex,
+  skinFootAt,
   skinScale,
   skinTone,
   skinUnits,
   skinWalkArt,
   skinWalkDirIndex,
   skinWalkDirs,
+  skinWalkFace,
+  skinWalkFaceIndex,
   skinWalkFrames,
+  type SkinAnimClipName,
   type SkinRoleId,
+  type SkinWalkFace,
 } from '@/play/skin';
 import { boardDecor, roadDecor, ATO_GHOST_D } from '@/play/board-decor';
 import { BOARD_MAPS, BOARD_ORDER, boardPathD, type BoardId } from '@/play/board-data';
@@ -151,14 +160,15 @@ const CREEP_DRAW_SCALE: Record<CreepRole, number> = {
  * Walk-clip cadence + display clock (H1.5, display only).
  *
  * `WALK_FRAMES_PER_PATH` = frames played across one full path traverse
- * (dist 0→1). Creeps' `dist` only updates on the 100ms sim tick, which would
- * quantise the gait to ~10fps and read as a glide, so a 50ms display tick
- * (`WALK_TICK_MS`) advances a per-creep frame phase using that creep's own
- * measured dist/sec: legs still track ground, slowed creeps cycle slower, and a
- * halted creep holds its frame (`WALK_STOP_MS`) instead of moonwalking. Combat
- * dt is untouched — the engine still steps on `DEFEND_TICK_MS`.
+ * (dist 0→1), before the per-role gait multiplier (see `walkFramesPerPath`).
+ * Creeps' `dist` only updates on the 100ms sim tick, which would quantise the
+ * gait to ~10fps and read as a glide, so a 50ms display tick (`WALK_TICK_MS`)
+ * advances a per-creep frame phase using that creep's own measured dist/sec:
+ * legs still track ground, slowed creeps cycle slower, and a halted creep holds
+ * its frame (`WALK_STOP_MS`) instead of moonwalking. Combat dt is untouched —
+ * the engine still steps on `DEFEND_TICK_MS`.
  */
-const WALK_FRAMES_PER_PATH = 70;
+const WALK_FRAMES_PER_PATH = 110;
 const WALK_TICK_MS = 50;
 /** No dist change for this long ⇒ treat the creep as halted (legs hold). */
 const WALK_STOP_MS = 250;
@@ -167,11 +177,30 @@ const WALK_STOP_MS = 250;
  * (it under-reads the rate); the next tick re-measures and corrects it. */
 const WALK_RATE_MAX_MS = 250;
 
-/** Runner tell (display only): a short trailing streak behind a fast runner
- * so it reads apart from a swarm at a glance. No role ring (removed). */
-const RUNNER_TRAIL_LEN = 5; // board units past the body, behind the runner
-const RUNNER_TRAIL_HALF_WIDTH = 1.3;
-const RUNNER_TRAIL_OPACITY = 0.5;
+/**
+ * Per-role gait multiplier on `WALK_FRAMES_PER_PATH` (display only).
+ *
+ * The phase tracks ground travelled, which is right for a minion but makes the
+ * heavy boss bands look nearly frozen: they cross the board at 0.33× a puff's
+ * path speed, so a ground-locked gait plays their clip at a crawl (the 12-frame
+ * Archangel flight worked out to ~8.7s per cycle). Scaling the cadence per role
+ * restores a readable cycle without touching engine move speed, HP or the walk
+ * tick's clock.
+ *
+ * Only roles that actually author a walk clip need an entry. The three creeps
+ * stay at the 1× ground-tracked gait; the semi band (`unit.tank_alt`) has no
+ * walk clip at all, so it has no gait to scale and keeps its static rotation.
+ */
+const WALK_GAIT_MULT: Partial<Record<SkinRoleId, number>> = {
+  'unit.boss_scout': 2.2, // Crimson Oni mini-scout
+  'unit.final': 2.8, // Archangel Commander — Divine_Flight (primary)
+};
+
+/** Frames of walk clip per full path traverse for a role (see the constants). */
+function walkFramesPerPath(role: SkinRoleId): number {
+  return WALK_FRAMES_PER_PATH * (WALK_GAIT_MULT[role] ?? 1);
+}
+
 const AVATAR_COLOR = '#38BDF8';
 
 /** Default board paint — `neon` (procedural chrome) vs `grove-classic`
@@ -607,8 +636,16 @@ export function DefendScreen({
   /** Per-tower aim rotation (deg), keyed by tower id; kept between shots. */
   const towerFacingRef = useRef<Record<number, number>>({});
   /** Per-creep path facing (deg), keyed by puff id. Kept when a creep is nearly
-   * stopped (degenerate heading) so the sprite never snaps to a default. */
+   * stopped (degenerate heading) so the sprite never snaps to a default. This is
+   * the TRUE path tangent (the runner's motion streak rides it); the sprite's
+   * side profile comes from `puffWalkFaceRef`. */
   const puffFacingRef = useRef<Record<number, number>>({});
+  /** Per-creep side profile for the humanoid path walkers, keyed by puff id and
+   * defaulting to `'e'` on spawn. Sticky: a vertical lane keeps the last east/
+   * west face (see `skinWalkFace`) so the sprite never snaps north/south and the
+   * legs never freeze. Only read for `SKIN_PATH_WALKER_ROLES`; cleared with the
+   * facing map on every restage so a new run never inherits the last pose. */
+  const puffWalkFaceRef = useRef<Record<number, SkinWalkFace>>({});
   /** Per-creep walk frame phase (H1.5, display only), keyed by puff id: the
    * fractional frame cursor plus the dist/rate sample that advances it between
    * sim ticks. Rebuilt every walk tick, so ids that left the board drop out. */
@@ -692,18 +729,89 @@ export function DefendScreen({
   const avatarPosRef = useRef({ x: initialPark.x * 100, y: initialPark.y * 100 }); // board units (0..100)
   /** Where the Avatar is walking to (board units 0..100), or null when idle. */
   const moveTargetRef = useRef<{ x: number; y: number } | null>(null);
-  /** True while the walk loop is actually stepping (drives the bob). */
+  /** True while the walk loop is actually stepping (drives the walk clip). */
   const movingRef = useRef(false);
-  /** Walk-cycle phase (radians) + the vertical bob it drives, px. */
-  const walkPhase = useSharedValue(0);
-  const walkBob = useSharedValue(0);
-  /** Which way the Avatar faces (8-way) — set from walk velocity while moving,
-   * kept as lastFacing when idle. */
-  const avatarFacingRef = useRef<Dir8>('south');
-  /** Last walk facing — restored when a walk ends so the sprite never snaps. */
-  const lastFacingRef = useRef<Dir8>('south');
-  /** Timestamp of the last Avatar auto-attack (drives the attack flash). */
-  const avatarAttackAtRef = useRef(0);
+  /** Which way the Avatar faces (sticky E/W side profile for the 2-dir Corvus
+   * art). Aim math uses `avatarPosRef`; the DRAW uses only this face. */
+  const avatarFaceRef = useRef<SkinWalkFace>('e');
+  /** Avatar clip player state: the active clip, when it began, and when a
+   * one-shot (attack/skill/hurt/dash) ends (0 = looping clip). Driven by a
+   * display-only tick; combat/cooldowns never touch it. Seeded with a live
+   * timestamp so a fresh mount breathes idle from frame 0. */
+  const avatarAnimRef = useRef<AvatarAnimState>({
+    clip: 'idle',
+    clipStartAt: Date.now(),
+    onceEndAt: 0,
+    lockUntil: 0,
+  });
+  /** Bumped by the avatar anim tick purely to force the re-render that advances
+   * the Corvus frame. The value is never read. */
+  const [, setAvatarAnimTick] = useState(0);
+
+  /** Start an Avatar clip (attack/skill/hurt/dash) if its priority allows it.
+   * Returns false when a higher-priority one-shot is locked in, in which case
+   * nothing changes — the caller still does its gameplay work. */
+  const startAvatarOnce = useCallback((clip: AvatarClip): boolean => {
+    const a = avatarAnimRef.current;
+    const now = Date.now();
+    if (!canStartAvatarClip(a, clip, now)) return false;
+    a.clip = clip;
+    a.clipStartAt = now;
+    a.onceEndAt = now + Math.max(1, avatarClipFrames(clip)) * AVATAR_FRAME_MS[clip];
+    setAvatarAnimTick((n) => n + 1); // show frame 0 of the new clip immediately
+    return true;
+  }, []);
+
+  // Display-only Avatar clip tick. Runs whenever the screen is visible so idle
+  // breathes in setup and on the results overlays too; it picks walk/idle from
+  // `movingRef`, retires a finished one-shot, and bumps a counter so the Corvus
+  // frame advances. While paused it slides the clip's clock forward with real
+  // time instead of rendering, which holds the exact frame the pause caught and
+  // stops a one-shot from expiring on a frozen board. Never touches engine state.
+  useEffect(() => {
+    let lastTickAt = Date.now();
+    let lastFrameKey = '';
+    const id = setInterval(() => {
+      const a = avatarAnimRef.current;
+      const now = Date.now();
+      if (pausedRef.current) {
+        const dt = now - lastTickAt;
+        a.clipStartAt += dt;
+        if (a.onceEndAt > 0) a.onceEndAt += dt;
+        if (a.lockUntil > 0) a.lockUntil += dt;
+        lastTickAt = now;
+        return; // no bump → the frame renders frozen, matching the sim
+      }
+      lastTickAt = now;
+      if (a.onceEndAt > 0) {
+        if (now >= a.onceEndAt) {
+          // A finished skill leaves a short recovery tail so the next
+          // auto-attack can't clip Root Veil's last frames.
+          a.lockUntil = a.clip === 'skill' ? now + AVATAR_SKILL_RECOVER_MS : 0;
+          a.clip = movingRef.current ? 'walk' : 'idle';
+          a.clipStartAt = now;
+          a.onceEndAt = 0;
+        }
+      } else {
+        const want: AvatarClip = movingRef.current ? 'walk' : 'idle';
+        if (a.clip !== want) {
+          a.clip = want;
+          a.clipStartAt = now;
+        }
+      }
+      // Re-render only when the drawn frame actually changes: idle breathes at
+      // 120ms/frame, so this is ~2.4× fewer full-board renders than bumping on
+      // every tick. The clip name is part of the key so a clip swap (or the
+      // idle↔walk hand-off) always repaints even if the frame index matches.
+      const key = `${a.clip}:${avatarClipFrame(a, now)}`;
+      if (key !== lastFrameKey) {
+        lastFrameKey = key;
+        setAvatarAnimTick((n) => n + 1);
+      }
+    }, AVATAR_ANIM_TICK_MS);
+    return () => clearInterval(id);
+  }, []);
+
   /** Measured board size. `boardSizeRef` is the JS-thread copy (tap math);
    * `boardSize` is the SHARED copy the avatar's animated style reads. */
   const boardSizeRef = useRef(100);
@@ -729,12 +837,11 @@ export function DefendScreen({
       avatarPosRef.current = { x: park.x * 100, y: park.y * 100 };
       moveTargetRef.current = null;
       movingRef.current = false;
-      walkBob.value = 0;
       parkedMapRef.current = mapId;
     },
-    // avatarX/avatarY/walkBob are stable shared-value handles (their `.value`
-    // writes never change identity); view.avatarPark is the read.
-    [view.avatarPark, onSaveAvatarPark, avatarX, avatarY, walkBob],
+    // avatarX/avatarY are stable shared-value handles (their `.value` writes
+    // never change identity); view.avatarPark is the read.
+    [view.avatarPark, onSaveAvatarPark, avatarX, avatarY],
   );
 
   /** Persist the Avatar's current spot as this board map's park (walk arrival).
@@ -839,6 +946,7 @@ export function DefendScreen({
       setFloaters([]);
     shotsRef.current = [];
     puffFacingRef.current = {};
+    puffWalkFaceRef.current = {};
     setShots([]);
       setBossAlert(null);
     },
@@ -861,6 +969,7 @@ export function DefendScreen({
       setFloaters([]);
     shotsRef.current = [];
     puffFacingRef.current = {};
+    puffWalkFaceRef.current = {};
     setShots([]);
     }
     ensureParked(fight.phase);
@@ -886,6 +995,7 @@ export function DefendScreen({
     setFloaters([]);
     shotsRef.current = [];
     puffFacingRef.current = {};
+    puffWalkFaceRef.current = {};
     setShots([]);
   }, [view.cyclePower, view.cycleTint]);
 
@@ -906,6 +1016,7 @@ export function DefendScreen({
     setFloaters([]);
     shotsRef.current = [];
     puffFacingRef.current = {};
+    puffWalkFaceRef.current = {};
     setShots([]);
     setBossAlert(null);
     bossWarnedRef.current = false; // re-arm the warn for this run
@@ -931,6 +1042,7 @@ export function DefendScreen({
     setFloaters([]);
     shotsRef.current = [];
     puffFacingRef.current = {};
+    puffWalkFaceRef.current = {};
     setShots([]);
     setBossAlert(null);
     setLeaveConfirmOpen(false);
@@ -988,6 +1100,7 @@ export function DefendScreen({
     setFloaters([]);
     shotsRef.current = [];
     puffFacingRef.current = {};
+    puffWalkFaceRef.current = {};
     setShots([]);
     setBossAlert(null);
   }, []);
@@ -1075,7 +1188,11 @@ export function DefendScreen({
       const now = Date.now();
       const dtSec = WALK_TICK_MS / 1000;
       const next: typeof walkPhaseRef.current = {};
+      const bandKind = current.band?.kind;
       for (const puff of current.puffs) {
+        // Same role mapping the board render uses, so the frame phase and the
+        // gait multiplier always agree with the sprite actually drawn.
+        const framesPerPath = walkFramesPerPath(puffUnitRole(puff, bandKind));
         let prev: WalkPhase | undefined = walkPhaseRef.current[puff.id];
         // A lower dist means this id was reused by a fresh run / respawn.
         if (prev && puff.dist < prev.dist) prev = undefined;
@@ -1085,7 +1202,7 @@ export function DefendScreen({
             dist: puff.dist,
             at: now,
             rate: 0,
-            phase: puff.dist * WALK_FRAMES_PER_PATH,
+            phase: puff.dist * framesPerPath,
           };
           continue;
         }
@@ -1102,7 +1219,7 @@ export function DefendScreen({
           dist: puff.dist,
           at,
           rate,
-          phase: prev.phase + rate * dtSec * WALK_FRAMES_PER_PATH,
+          phase: prev.phase + rate * dtSec * framesPerPath,
         };
       }
       walkPhaseRef.current = next;
@@ -1141,10 +1258,15 @@ export function DefendScreen({
         bucketsRef.current,
         avatar,
       );
-      // Facing is owned by the walk loop (velocity while moving, lastFacing when
-      // idle); the ticker only detects the attack to fire the flash.
+      // Facing is owned by the walk loop (sticky E/W while moving); the ticker
+      // turns toward the puff it just hit and plays the Pestilence Wave clip if
+      // the clip ladder allows it. The damage/cooldown is already applied by
+      // `stepDefendLive` above — a refused clip changes nothing but the art, so
+      // a Root Veil cast keeps playing while the Avatar keeps hitting.
       if (step.state.avatarCooldownMs > current.avatarCooldownMs + 1 && aimed) {
-        avatarAttackAtRef.current = Date.now();
+        const aimLen = Math.max(1, Math.hypot(aimed.dx, aimed.dy));
+        avatarFaceRef.current = skinWalkFace(aimed.dx / aimLen, avatarFaceRef.current);
+        startAvatarOnce('attack');
       }
       // §19 entity presenter: towers turn toward their target every tick, and
       // the tick a tower actually fires (its cooldown was reset) spawns a shot
@@ -1156,7 +1278,17 @@ export function DefendScreen({
         // degenerate heading (nearly stopped / path corner case) keeps the last
         // facing so the sprite never snaps to a default.
         const head = puffHeading(puff.dist, mapNow);
-        if (head) puffFacingRef.current[puff.id] = facingDegrees(head.dx, head.dy);
+        if (head) {
+          puffFacingRef.current[puff.id] = facingDegrees(head.dx, head.dy);
+          // Humanoid path walkers also track a sticky east/west side profile:
+          // the tangent on a vertical lane carries no useful |dx|, so the sprite
+          // keeps the face it was already showing instead of snapping to a
+          // north/south rotation (which is what the 4-dir clips would pick).
+          puffWalkFaceRef.current[puff.id] = skinWalkFace(
+            head.dx,
+            puffWalkFaceRef.current[puff.id] ?? 'e',
+          );
+        }
       }
       for (const tower of current.towers) {
         const target = towerTarget(tower, current.puffs, mapNow);
@@ -1206,7 +1338,13 @@ export function DefendScreen({
       }
     }, DEFEND_TICK_MS);
     return () => clearInterval(id);
-  }, [phase, paused, winWave, spawnFloaters, spawnShot]);
+  }, [phase, paused, winWave, spawnFloaters, spawnShot, startAvatarOnce]);
+
+  // Run fail → play the Avatar's HURT clip once (art only; the lost overlay is
+  // already showing). Catches the leak path and the dev "force leak" button.
+  useEffect(() => {
+    if (phase === 'lost') startAvatarOnce('hurt');
+  }, [phase, startAvatarOnce]);
 
   // The warn is a banner — auto-dismiss after a short beat (spec 1.5–2.5s).
   useEffect(() => {
@@ -1324,6 +1462,7 @@ export function DefendScreen({
     setFloaters([]);
     shotsRef.current = [];
     puffFacingRef.current = {};
+    puffWalkFaceRef.current = {};
     setShots([]);
     setBossAlert(null);
     bossWarnedRef.current = false; // re-arm the warn for this preview run
@@ -1344,6 +1483,9 @@ export function DefendScreen({
     if (next) {
       simRef.current = next;
       setSim(next);
+      // Art only — the Root Veil numbers are already applied by castSlowPulse.
+      // skill (4) outranks attack (3), so this correctly cuts an attack clip.
+      startAvatarOnce('skill');
     }
   };
 
@@ -1363,8 +1505,8 @@ export function DefendScreen({
    * Click-to-move: walk the Avatar toward `moveTargetRef` at a fixed board
    * speed; on arrival, snap exactly onto the target, stop, and persist the park
    * (the same store the old drag wrote). Runs in setup AND live, and freezes
-   * while paused. Facing comes from the walk velocity (lastFacing kept when
-   * idle); the bob is a cheap walk tell for the single-frame Kenney sprite.
+   * while paused. Facing is a sticky E/W side profile (the Corvus art is 2-dir);
+   * the walk clip carries the motion.
    */
   useEffect(() => {
     const id = setInterval(() => {
@@ -1372,7 +1514,6 @@ export function DefendScreen({
       if (!target || pausedRef.current) {
         if (movingRef.current) {
           movingRef.current = false;
-          walkBob.value = 0;
         }
         return;
       }
@@ -1386,10 +1527,8 @@ export function DefendScreen({
         avatarPosRef.current = { x: target.x, y: target.y };
         avatarX.value = target.x / 100;
         avatarY.value = target.y / 100;
-        avatarFacingRef.current = lastFacingRef.current;
         moveTargetRef.current = null;
         movingRef.current = false;
-        walkBob.value = 0;
         commitAvatarPark();
         return;
       }
@@ -1398,26 +1537,16 @@ export function DefendScreen({
       avatarPosRef.current = { x: nx, y: ny };
       avatarX.value = nx / 100;
       avatarY.value = ny / 100;
-      // Face the direction of travel; remember it for when the walk stops.
-      const facing = dir8FromDelta(dx, dy);
-      avatarFacingRef.current = facing;
-      lastFacingRef.current = facing;
+      // Sticky E/W side profile: follow the sign of dx, keep the last face
+      // through a near-vertical step.
+      avatarFaceRef.current = skinWalkFace(dx / dist, avatarFaceRef.current);
       movingRef.current = true;
-      if (reduceMotion) {
-        walkBob.value = 0;
-      } else {
-        walkPhase.value += MOVE_BOB_STEP;
-        walkBob.value = Math.sin(walkPhase.value) * MOVE_BOB_PX;
-      }
     }, MOVE_TICK_MS);
     return () => clearInterval(id);
   }, [
     commitAvatarPark,
-    reduceMotion,
     avatarX,
     avatarY,
-    walkPhase,
-    walkBob,
   ]);
 
   /**
@@ -1443,25 +1572,37 @@ export function DefendScreen({
         setSelectedPad((prev) => (prev === hit ? null : hit));
         return;
       }
-      moveTargetRef.current = {
+      const target = {
         x: Math.max(0, Math.min(100, bx)),
         y: Math.max(0, Math.min(100, by)),
       };
+      moveTargetRef.current = target;
+      // Shadow Dash: a short burst clip for the first beat of the move, turned
+      // toward the destination.
+      const ddx = target.x - avatarPosRef.current.x;
+      const ddy = target.y - avatarPosRef.current.y;
+      avatarFaceRef.current = skinWalkFace(
+        ddx / Math.max(1, Math.hypot(ddx, ddy)),
+        avatarFaceRef.current,
+      );
+      // Refused while a skill/hurt is locked in (dash is lower priority) — the
+      // walk itself is unaffected, only the burst clip is skipped.
+      startAvatarOnce('dash');
     },
-    [boardMap],
+    [boardMap, startAvatarOnce],
   );
 
   const avatarStyle = useAnimatedStyle(() => {
-    // Read the SHARED board size (reactive) so the sprite scales with the board
-    // and stays centered on the Avatar point; `walkBob` adds the step bob.
+    // Read the SHARED board size (reactive) so the sprite scales with the board.
+    // The box is feet-pivoted (`AVATAR_FOOT_AT`) so Corvus's feet land on the
+    // Avatar point instead of floating a quarter-box above it.
     const size = boardSize.value || 100;
     const box = Math.max(AVATAR_MIN_PX, size * AVATAR_ART_FRAC);
     return {
       width: box,
       height: box,
       left: avatarX.value * size - box / 2,
-      top: avatarY.value * size - box / 2,
-      transform: [{ translateY: walkBob.value }],
+      top: avatarY.value * size - box * AVATAR_FOOT_AT,
     };
   });
 
@@ -1476,20 +1617,17 @@ export function DefendScreen({
       ? `Cycle ${view.conqueredCycles} — foes scale ×${view.cyclePower.toFixed(2)}`
       : null;
 
-  // §19 Avatar: one Kenney TD soldier sprite. Facing comes from the walk
-  // velocity (lastFacing kept when idle — see the walk loop). The attack reads
-  // as a short tint/flash (below).
-  const avatarFacing = avatarFacingRef.current;
-  const avatarFacingDeg = dir8Degrees(avatarFacing) + ART_BASE_FACING_DEG;
-  const nowMs = Date.now();
-  const attackElapsed = nowMs - avatarAttackAtRef.current;
-  const avatarAttacking = attackElapsed < AVATAR_ATTACK_MS;
-  // Walk tell: if a skin authors a walk clip, use its first frame while moving
-  // (Kenney v0 ships none, so this resolves to the idle frame and facing + the
-  // bob below carry the motion).
-  const avatarWalkArt = skinClipArt('unit.avatar', 'walk', 0);
+  // §19 Avatar: the cast Corvus role (idle loop / walk / attack / skill / hurt /
+  // dash clips, sticky E/W). The frame comes from the clip-player state via the
+  // shared `avatarClipFrame` (same math the anim tick uses); the face is the
+  // sticky side profile. Fails back to the static rotation when a clip frame
+  // isn't authored.
+  const avatarAnim = avatarAnimRef.current;
+  const avatarFrame = avatarClipFrame(avatarAnim, Date.now());
+  const avatarFace = avatarFaceRef.current;
   const avatarFrameSource =
-    (movingRef.current ? avatarWalkArt : undefined) ?? skinArt('unit.avatar');
+    avatarClipArt(avatarAnim.clip, avatarFace, avatarFrame) ??
+    skinArt('unit.avatar', skinFaceArtIndex('unit.avatar', avatarFace));
 
   /** Drops card — one shared block, collapsed by default to a single neon
    * header row. On Main it renders just above Maps; Trial keeps its previous
@@ -1931,21 +2069,13 @@ export function DefendScreen({
                 // tanks/heavy by band, tanks = the heavy soak unit, normal
                 // puffs = the puff unit.
                 const creep = creepRole(puff);
-                const isRunner = puff.kind === 'runner';
                 const tintColor = CREEP_ROLE_COLOR[creep];
                 const drawScale = CREEP_DRAW_SCALE[creep];
                 const radius = 3.4 * puff.size * drawScale;
-                const spriteRole: SkinRoleId =
-                  puff.kind === 'boss'
-                    ? bandUnitRole(band?.kind ?? '')
-                    : puff.kind === 'runner'
-                      ? 'unit.runner'
-                      : puff.kind === 'tank'
-                        ? 'unit.tank'
-                        : 'unit.puff';
+                const spriteRole = puffUnitRole(puff, band?.kind);
                 // Lane offset is capped from the drawn WIDTH before the sprite
                 // exists: a creep's art is wider than its path point, so a wide
-                // unit (Knight / Titan-X) rides the centreline instead of
+                // unit (Knight / Archangel) rides the centreline instead of
                 // clipping the neon wall. Feet stay on the path either way —
                 // this is a lateral shift, never a change of route.
                 const spriteSize = skinUnits(spriteRole, UNIT_BASE_UNITS) * puff.size * drawScale;
@@ -1954,24 +2084,39 @@ export function DefendScreen({
                 const y = pos.y * 100;
                 const facingDeg = puffFacingRef.current[puff.id] ?? 0;
                 const heading = headingVectorFromDeg(facingDeg);
+                // Humanoid path walkers (creeps + Oni + Archangel) render as side
+                // profiles: the sticky east/west face is the ONLY facing they use,
+                // and it never rotates into the path tangent. Every other creep
+                // role keeps the 8-dir heading bucket (the semi's kenney
+                // `unit.tank_alt` has no side-profile art).
+                const pathWalker = isPathWalker(spriteRole);
+                const walkFace = puffWalkFaceRef.current[puff.id] ?? 'e';
                 const spriteDirs = skinDirs(spriteRole);
-                const sprite = skinArt(spriteRole, skinDirIndex(spriteRole, heading.dx, heading.dy));
+                const sprite = skinArt(
+                  spriteRole,
+                  pathWalker
+                    ? skinFaceArtIndex(spriteRole, walkFace)
+                    : skinDirIndex(spriteRole, heading.dx, heading.dy),
+                );
                 // H1.5 creep walk clips: while the role authors one, play its
                 // directional frames. The frame comes from the walk tick's
                 // per-creep phase (ground-tracking, smooth at WALK_TICK_MS);
-                // otherwise keep the static rotation. Towers + Titan-X author
-                // no `walk` and stay as-is.
+                // otherwise keep the static rotation. Towers author no `walk`
+                // and stay as-is. A path walker always plays an east/west row
+                // (2-dir clip: its own side; 4-dir clip: the E/W rows only, N/S
+                // rows unused at runtime), so a vertical lane keeps the legs
+                // cycling instead of freezing on SKIN_WALK_NO_DIR.
                 const walkDirs = skinWalkDirs(spriteRole);
                 const walkFrames = skinWalkFrames(spriteRole);
                 const walkPhase =
-                  walkPhaseRef.current[puff.id]?.phase ?? puff.dist * WALK_FRAMES_PER_PATH;
+                  walkPhaseRef.current[puff.id]?.phase ??
+                  puff.dist * walkFramesPerPath(spriteRole);
+                const walkDirIndex = pathWalker
+                  ? skinWalkFaceIndex(spriteRole, walkFace)
+                  : skinWalkDirIndex(spriteRole, heading.dx, heading.dy);
                 const walkSprite =
                   walkDirs > 0 && walkFrames > 1
-                    ? skinWalkArt(
-                        spriteRole,
-                        skinWalkDirIndex(spriteRole, heading.dx, heading.dy),
-                        Math.floor(walkPhase),
-                      )
+                    ? skinWalkArt(spriteRole, walkDirIndex, Math.floor(walkPhase))
                     : undefined;
                 const spriteSource = walkSprite ?? sprite;
                 // Feet-pivoted sprites rise above the path point, so the body
@@ -1980,39 +2125,24 @@ export function DefendScreen({
                 const box = skinDrawBox(spriteRole, x, y, spriteSize);
                 const hasSprite = spriteSource != null;
                 const bodyCy = hasSprite ? box.y + spriteSize / 2 : y;
-                const ringRadius = hasSprite ? spriteSize / 2 + 0.8 : radius + 0.9;
                 const barWidth = 8 * puff.size * drawScale;
-                // Face along the road (path tangent), same up-facing convention
-                // as the towers. Falls back to the last known facing when the
-                // heading is degenerate.
+                // Up-facing single-sprite roles face along the road (path
+                // tangent), same convention as the towers; a degenerate heading
+                // keeps the last known facing. Path walkers are side-profile art
+                // with a sticky L/R face, so they stay at 0° — no SVG rotate.
+                // (`spriteDirs > 1` alone already gives them 0° today; the
+                // `pathWalker` guard makes "never rotate a cast walker" hold even
+                // if a walker role ever resolved to a single-sprite skin.)
                 const spriteTransform =
-                  spriteDirs > 1 ? undefined : `rotate(${facingDeg} ${x} ${bodyCy})`;
+                  pathWalker || spriteDirs > 1
+                    ? undefined
+                    : `rotate(${facingDeg} ${x} ${bodyCy})`;
                 // Boss band badge (display only): M = scout mini-boss, B = boss.
                 const bossBadge =
                   puff.kind === 'boss' ? (band?.kind === 'scout_mini' ? 'M' : 'B') : null;
                 const barTop = hasSprite ? box.y - 2.8 : y - radius - 4;
                 return (
                   <G key={`puff-${puff.id}`}>
-                    {/* Runner-only motion streak — a short comet tail trailing
-                     * the creep along its road heading (up = forward in the
-                     * rotated frame, so the tail sits at +y). Display only. */}
-                    {isRunner ? (
-                      <G transform={`rotate(${facingDeg} ${x} ${bodyCy})`}>
-                        <Path
-                          d={
-                            `M ${x - RUNNER_TRAIL_HALF_WIDTH} ${bodyCy + ringRadius * 0.55} ` +
-                            `L ${x} ${bodyCy + ringRadius + RUNNER_TRAIL_LEN} ` +
-                            `L ${x + RUNNER_TRAIL_HALF_WIDTH} ${bodyCy + ringRadius * 0.55} Z`
-                          }
-                          fill={tintColor}
-                          fillOpacity={RUNNER_TRAIL_OPACITY}
-                          stroke={tintColor}
-                          strokeWidth={0.4}
-                          strokeLinejoin="round"
-                          strokeOpacity={RUNNER_TRAIL_OPACITY}
-                        />
-                      </G>
-                    ) : null}
                     <G transform={spriteTransform}>
                       {spriteSource ? (
                         <SvgImage
@@ -2090,21 +2220,16 @@ export function DefendScreen({
             </Svg>
             </View>
 
-            {/* Walking Avatar overlay (§19 Kenney TD soldier). Facing comes from
-                the walk velocity; the box bobs while moving. pointerEvents none
-                so board taps pass through to the board's move handler. zIndex 10
+            {/* Walking Avatar overlay (§19 cast Corvus). The frame cycles
+                idle/walk and one-shots attack/skill/hurt/dash; the art is 2-dir
+                (sticky E/W), so no rotate is applied. pointerEvents none so
+                board taps pass through to the board's move handler. zIndex 10
                 keeps it above the tiles AND the gameplay SVG. */}
             <Animated.View
               style={[styles.avatar, avatarStyle]}
               pointerEvents="none">
-              {avatarAttacking ? (
-                <View
-                  style={[styles.avatarFlash, { borderColor: avatarColor }]}
-                  pointerEvents="none"
-                />
-              ) : null}
               <View
-                style={[styles.avatarArt, { transform: [{ rotate: `${avatarFacingDeg}deg` }] }]}
+                style={styles.avatarArt}
                 pointerEvents="none">
                 {avatarFrameSource ? (
                   <Image source={avatarFrameSource} contentFit="contain" style={styles.avatarImage} />
@@ -2775,6 +2900,7 @@ export function DefendScreen({
                   setFloaters([]);
     shotsRef.current = [];
     puffFacingRef.current = {};
+    puffWalkFaceRef.current = {};
     setShots([]);
                   setBossAlert(null);
                 }
@@ -3230,35 +3356,104 @@ function HitFloater({
 const AVATAR_ART_FRAC = 0.22;
 /** Floor for the art box, px (small boards). */
 const AVATAR_MIN_PX = 56;
-/** Attack flash length (ms) — tuned to the Avatar's 0.7s cooldown. */
-const AVATAR_ATTACK_MS = 700;
+/** Feet anchor for the cast Avatar sprite (fraction of the drawn box, from the
+ * top) — measured from Corvus's idle art so its feet land on the board point. */
+const AVATAR_FOOT_AT = skinFootAt('unit.avatar');
+
+/* ---------------------------------------------------- Avatar clip player --- */
+/** Avatar clips (display only). `walk` reads the role's `walk` clip; the rest
+ * read the named `anims` clips. */
+type AvatarClip = SkinAnimClipName | 'walk';
+/**
+ * Clip priority — a request only preempts a LOCKED one-shot (`onceEndAt > 0`)
+ * if it strictly outranks the one playing. `idle`/`walk` are loops, so they are
+ * always interruptible. This is what keeps a ~1.2s Root Veil cast from being
+ * cut short by the Avatar's ~0.7s auto-attack: `attack` (3) cannot preempt
+ * `skill` (4), and `hurt` (5) preempts everything.
+ */
+const AVATAR_CLIP_PRIORITY: Record<AvatarClip, number> = {
+  hurt: 5,
+  skill: 4,
+  attack: 3,
+  dash: 2,
+  walk: 1,
+  idle: 0,
+};
+/** Recovery tail after a skill one-shot ends, during which the auto-attack clip
+ * is also refused — the cast's last frames would otherwise be clipped. Damage
+ * and cooldowns are untouched; this is the CLIP only. */
+const AVATAR_SKILL_RECOVER_MS = 150;
+/** Display-only cadence for each Avatar clip (ms per frame). */
+const AVATAR_FRAME_MS: Record<AvatarClip, number> = {
+  idle: 120, // 13f ≈ 1.56s loop
+  walk: 100, // 9f ≈ 0.9s loop
+  attack: 65, // 13f ≈ 0.85s once
+  skill: 70, // 17f ≈ 1.2s once
+  hurt: 140, // 5f ≈ 0.7s once
+  dash: 50, // 9f ≈ 0.45s once
+};
+/** Avatar anim tick (ms) — just drives the frame re-render; the frame itself is
+ * time-derived so a dropped tick never desyncs. */
+const AVATAR_ANIM_TICK_MS = 50;
+
+/** Avatar clip-player state. `onceEndAt === 0` means a looping clip (idle/walk)
+ * is active; `lockUntil` is the post-skill attack recovery gate. */
+type AvatarAnimState = {
+  clip: AvatarClip;
+  clipStartAt: number;
+  onceEndAt: number;
+  lockUntil: number;
+};
+
+/** Whether a clip request may preempt what's playing right now. */
+function canStartAvatarClip(
+  state: AvatarAnimState,
+  next: AvatarClip,
+  now: number,
+): boolean {
+  if (next === 'attack' && now < state.lockUntil) return false;
+  if (state.onceEndAt === 0) return true; // idle/walk loop — always interruptible
+  return AVATAR_CLIP_PRIORITY[next] > AVATAR_CLIP_PRIORITY[state.clip];
+}
+
+/**
+ * Frame index to draw for the current clip state. Looping clips wrap; a one-shot
+ * holds its last frame. Single source of truth — the renderer and the anim tick
+ * both read this, so the tick can skip re-renders for frames it already showed
+ * without ever drifting from what the renderer would compute.
+ */
+function avatarClipFrame(state: AvatarAnimState, now: number): number {
+  const frames = Math.max(1, avatarClipFrames(state.clip));
+  const raw = Math.floor((now - state.clipStartAt) / AVATAR_FRAME_MS[state.clip]);
+  return state.onceEndAt > 0 ? Math.min(raw, frames - 1) : raw % frames;
+}
+
+/** Frame count for an Avatar clip (0 when the role omits it). */
+function avatarClipFrames(clip: AvatarClip): number {
+  return clip === 'walk'
+    ? skinWalkFrames('unit.avatar')
+    : skinAnimFrames('unit.avatar', clip);
+}
+
+/** Art for one frame of an Avatar clip, resolved at the sticky E/W face. */
+function avatarClipArt(
+  clip: AvatarClip,
+  face: SkinWalkFace,
+  frame: number,
+): ImageSourcePropType | undefined {
+  if (clip === 'walk') {
+    return skinWalkArt('unit.avatar', skinWalkFaceIndex('unit.avatar', face), frame);
+  }
+  return skinAnimArt('unit.avatar', clip, skinAnimFaceIndex('unit.avatar', clip, face), frame);
+}
 
 /* ------------------------------------------------------- click-to-move --- */
 /** Walk speed, board units (0..100) per second. */
 const AVATAR_WALK_UNITS_PER_SEC = 42;
-/** Walk loop cadence (ms) — 30fps so the bob reads as stepping. */
+/** Walk loop cadence (ms) — 30fps. */
 const MOVE_TICK_MS = 33;
-/** Walk-bob amplitude (px) + phase step per tick (single-frame walk tell). */
-const MOVE_BOB_PX = 1.6;
-const MOVE_BOB_STEP = 0.55;
 /** Board units within a pad that count as "tapped the pad" (select, not move). */
 const PAD_TAP_RADIUS = 6.5;
-
-/** 8-way facing → rotation degrees for a single top-down sprite (east = 0). */
-const DIR8_DEGREES: Record<Dir8, number> = {
-  east: 0,
-  'south-east': 45,
-  south: 90,
-  'south-west': 135,
-  west: 180,
-  'north-west': 225,
-  north: 270,
-  'north-east': 315,
-};
-
-export function dir8Degrees(dir: Dir8): number {
-  return DIR8_DEGREES[dir];
-}
 
 /* ---------------------------------------------------- entity presenter v0 --- */
 
@@ -3295,6 +3490,20 @@ function creepBoxUnits(puff: Puff): number {
  * capped offset the render draws with. Display only. */
 function creepLaneHalfFor(puff: Puff): number {
   return creepLaneHalf(creepBoxUnits(puff));
+}
+
+/**
+ * Skin role a puff is drawn with — the one mapping the board render and the
+ * walk tick both use, so the sprite, its walk clip and its gait multiplier can
+ * never disagree. Bosses resolve by band (scout mini + scout boss = the Crimson
+ * Oni `unit.boss_scout`, final = the Archangel `unit.final`); the three creeps
+ * map one-to-one.
+ */
+function puffUnitRole(puff: Puff, bandKind: string | undefined): SkinRoleId {
+  if (puff.kind === 'boss') return bandUnitRole(bandKind ?? '');
+  if (puff.kind === 'runner') return 'unit.runner';
+  if (puff.kind === 'tank') return 'unit.tank';
+  return 'unit.puff';
 }
 
 /** Tiny Space Mono role marker drawn at the tower's top-right (replaces the old
@@ -3586,14 +3795,6 @@ const styles = StyleSheet.create({
     // Above the tiles (0) and the gameplay SVG (1) so it stays draggable.
     // zIndex only (no elevation) so the character art keeps no shadow.
     zIndex: 10,
-  },
-  /** Attack tell — a short ring pulse (the pack has no slash sheet). */
-  avatarFlash: {
-    position: 'absolute',
-    width: '135%',
-    height: '135%',
-    borderRadius: 999,
-    borderWidth: 3,
   },
   /** The visible art, centered inside the touch box. */
   avatarArt: {
