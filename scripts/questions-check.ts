@@ -845,13 +845,19 @@ assert.equal(completeGenerate, 1);
 assert.equal(completeClaims, 1);
 ok('complete profile reaches the model and claims quota as before');
 
-// Consent and crisis still outrank the gate — a complete profile does not
-// bypass them, and an incomplete one reports them rather than the bank.
-assert.equal(
-  (await routeQuestions({ me: gateMe, history: [], aiConsent: false, tracks: completeTracks() }, {}))
-    .kind,
-  'consent-denied',
+// INVERTED 2026-09-15 (emci explicit), not deleted. This used to assert that
+// `aiConsent: false` produced 'consent-denied' ahead of the completeness
+// gate. AI consent now gates ONLY the conversational exchange with Sage, so
+// "Tell Sage more" rotates for a declined or never-asked account — which
+// means this path CAN now reach the model without consent. That is the
+// intended consequence of the instruction, not a regression.
+// Asserted at the source level: calling the router with no generate dep is
+// not a safe way to probe a path that no longer short-circuits.
+assert.doesNotMatch(
+  read('src/lib/questions/route.ts'),
+  /return \{ kind: 'consent-(denied|pending)'/,
 );
+// Crisis is a SAFETY gate and still outranks the completeness gate.
 assert.equal(
   (
     await routeQuestions(
@@ -861,7 +867,7 @@ assert.equal(
   ).kind,
   'crisis',
 );
-ok('consent and crisis still precede the completeness gate');
+ok('consent no longer gates the rotation; crisis still precedes the completeness gate');
 
 // Missing tracks read as incomplete — the safe direction (no paid call).
 let noTracksGenerate = 0;

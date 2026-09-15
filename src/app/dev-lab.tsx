@@ -448,10 +448,11 @@ function SlotReadout() {
           isSunday,
         };
         const kind = resolveTodaySlot(input).kind;
-        // Consent off now means no insight at all. The starter bank the
-        // card fell back on for days 1-3 went away with the card lane, so
-        // there is no longer a day threshold or a bank lookup in this gate.
-        const honestEmpty = me.ai_consent !== true;
+        // 2026-09-15: AI consent gates ONLY the conversational exchange with
+        // Sage, so it can no longer empty the day. This reported `true` for
+        // every declined or never-asked account, which is now a flatly false
+        // diagnostic. Nothing empties the slot on a consent basis any more.
+        const honestEmpty = false;
         if (cancelled) return;
         setLines(
           [

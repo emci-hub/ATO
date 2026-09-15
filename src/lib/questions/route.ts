@@ -171,18 +171,20 @@ async function guardedBatch(
 /**
  * On-demand batch of 5. Serve unanswered cache; regen when exhausted or
  * a new local day. Answering does not claim quota.
+ *
+ * No AI-consent gate (2026-09-15, emci explicit): AI consent gates the real
+ * conversational exchange with Sage and nothing else. Every other surface —
+ * this rotation included — runs for everyone regardless of `ai_consent`.
+ * This path DOES call a model when it regenerates, and that is the intended
+ * consequence of the instruction, not an oversight. `aiConsent` is still
+ * accepted on the input and `'consent-denied'`/`'consent-pending'` still
+ * exist in `RouteQuestionsResult['kind']` so callers' switches keep
+ * compiling; neither is produced any more.
  */
 export async function routeQuestions(
   input: RouteQuestionsInput,
   deps: RouteQuestionsDeps = {},
 ): Promise<RouteQuestionsResult> {
-  const consent = input.aiConsent ?? null;
-  if (consent === false) {
-    return { kind: 'consent-denied', pack: null, item: null };
-  }
-  if (consent !== true) {
-    return { kind: 'consent-pending', pack: null, item: null };
-  }
   if (input.crisisToday) {
     return { kind: 'crisis', pack: null, item: null };
   }

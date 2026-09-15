@@ -153,27 +153,17 @@ export default function HomeScreen() {
     window != null && checks.some((check) => check.day === window.todayDay);
 
   /**
-   * A DECLINED user has no daily content at all — the card had a starter bank
-   * to fall back on for its first three days, the insight has no offline lane.
-   * Nothing is generated and nothing is written to the widget on this branch.
+   * AI consent no longer gates ANYTHING on Home (2026-09-15, emci explicit).
+   * It is an opt-in for the conversational exchange with Sage and nothing
+   * else. The daily insight generates, renders and writes the widget for
+   * every account — granted, denied, or never asked.
    *
-   * "Not asked yet" is deliberately NOT this state. Treating pending as
-   * consent-off is what broke a fresh account: ai_consent starts null, so a new
-   * user fell into the empty branch AND was never prompted, leaving Home
-   * permanently blank.
+   * What survives is the ASK, not the gate: while `ai_consent` is null the
+   * card is offered inline, alongside the day's content rather than instead
+   * of it, and declining it removes the card and changes nothing else.
    */
   const consent = me ? aiConsentFor(me) : 'pending';
-  const consentOffEmpty = consent === 'denied';
-
-  /**
-   * Consent gate (Apple 5.1.2): ask once, before the first model call.
-   *
-   * That moment used to be check_count >= 3, because days 1-3 were served by
-   * the offline bank and needed no model. The bank is gone — the very first
-   * insight is the first model call — so the prompt has to come up on day one
-   * or there is nothing to show. Moved here from Dawn with the card.
-   */
-  const needsConsentPrompt = me != null && consent === 'pending';
+  const offerConsent = me != null && consent === 'pending';
 
   // The 50-question bank is local and needs no AI/consent — a separate
   // completeness signal from the insight above, shown on Home so there's
@@ -269,9 +259,8 @@ export default function HomeScreen() {
    * AsyncStorage read), so this never causes a flash of empty state — it just
    * reconciles against the server and fills the gap on a day with no insight yet.
    *
-   * Nothing here runs without consent: `consentOffEmpty` short-circuits before
-   * any fetch or generation, and the consent prompt blocks the first model call
-   * until the user has answered.
+   * Consent is NOT consulted here (2026-09-15): the insight generates for
+   * every account. See the `offerConsent` note above.
    */
   /**
    * Today's insight: read the stored one first, generate only if there is none.
@@ -285,21 +274,12 @@ export default function HomeScreen() {
    * meant an insight could never load for the rest of the day once the Check
    * was in — a cleared cache would leave Home permanently empty until midnight.
    *
-   * Nothing here runs without consent: `consentOffEmpty` and an unanswered
-   * consent prompt both short-circuit before any fetch or generation.
+   * Consent is NOT consulted here (2026-09-15): the insight generates for
+   * every account. See the `offerConsent` note above.
    */
-  // Revoking consent has to reach the widget too: the cached insight is what
-  // the shipped widget renders, so leaving it would keep AI-written text on
-  // someone's lock screen after they turned AI off.
-  useEffect(() => {
-    if (!consentOffEmpty || !insight) return;
-    void saveCachedInsight(null).then(() => reloadInsight());
-  }, [consentOffEmpty, insight, reloadInsight]);
-
   const generatingForYmd = useRef<string | null>(null);
   useEffect(() => {
     if (!me || !userId || !window) return;
-    if (consentOffEmpty || needsConsentPrompt) return;
     const { todayDay, todayYmd } = window;
     if (insight?.ymd === todayYmd) return;
     // A home_bootstrap reload gives `checks`/`tracks` fresh identities, which
@@ -357,8 +337,6 @@ export default function HomeScreen() {
     window?.todayYmd,
     window?.todayDay,
     insight?.ymd,
-    consentOffEmpty,
-    needsConsentPrompt,
     tracks,
     checks,
     reloadInsight,
@@ -433,28 +411,7 @@ export default function HomeScreen() {
             </ThemedText>
           </View>
 
-          {consentOffEmpty ? (
-            <ThemedView type="backgroundElement" style={styles.todayCard}>
-              <ThemedText themeColor="textSecondary">
-                No insight today. Sage only writes these with your say-so — you can turn that on any time in You.
-              </ThemedText>
-            </ThemedView>
-          ) : needsConsentPrompt ? (
-            /*
-             * Inline, not a Modal (emci, 2026-09-14) — the ask sits in the
-             * normal page flow instead of interrupting as a popup. It is
-             * still the first thing on the page and still blocks Check
-             * logging below until answered, so it keeps the same "answer
-             * before anything else happens" guarantee a Modal gave, just
-             * without covering the rest of the screen.
-             */
-            <AiConsentCard
-              context="home"
-              busy={busy === 'consent'}
-              onGrant={() => saveConsent(true)}
-              onDeny={() => saveConsent(false)}
-            />
-          ) : insight ? (
+          {insight ? (
             /*
              * One card, one hierarchy. The title is the hero — it is the thing
              * the app promises, and the line a person actually carries with
@@ -499,6 +456,23 @@ export default function HomeScreen() {
           )}
 
           {/*
+            The AI-consent ask (Apple 5.1.2), inline and non-blocking.
+            It sits BELOW the day's content on purpose (2026-09-15, emci
+            explicit): it is an opt-in for talking with Sage, not a gate on
+            anything on this screen. Everything above and below it renders,
+            generates and works whether or not it has been answered; once it
+            is answered either way it disappears and nothing else changes.
+          */}
+          {offerConsent ? (
+            <AiConsentCard
+              context="home"
+              busy={busy === 'consent'}
+              onGrant={() => saveConsent(true)}
+              onDeny={() => saveConsent(false)}
+            />
+          ) : null}
+
+          {/*
             The 50-question bank needs no AI and no consent — it's local,
             answer-anytime. So this shows regardless of the consent state
             above, as long as the bank itself isn't finished yet.
@@ -540,10 +514,6 @@ export default function HomeScreen() {
               ) : !todayOpen ? (
                 <ThemedText type="small" themeColor="textSecondary">
                   Today&apos;s Check is closed.
-                </ThemedText>
-              ) : needsConsentPrompt ? (
-                <ThemedText type="small" themeColor="textSecondary">
-                  Answer Sage&apos;s AI question above to continue.
                 </ThemedText>
               ) : (
                 <View style={styles.checkRow}>

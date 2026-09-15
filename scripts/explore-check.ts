@@ -325,14 +325,24 @@ for (const file of walkComponents(resolve(root, 'src/components'))) {
 ok('none of the axis grounding strings appear in any component file');
 
 async function main() {
+// INVERTED 2026-09-15 (emci explicit), not deleted: these two used to assert
+// routeExplore returned 'consent-denied'/'consent-pending'. AI consent now
+// gates ONLY the conversational exchange with Sage, so Explore generates for
+// a declined or never-asked account exactly as it does for a granted one.
 const denied = await routeExplore({
   me: chipsOnly,
   history: [],
   aiConsent: false,
 });
-assert.equal(denied.kind, 'consent-denied');
+assert.notEqual(denied.kind, 'consent-denied');
 const pending = await routeExplore({ me: chipsOnly, history: [], aiConsent: null });
-assert.equal(pending.kind, 'consent-pending');
+assert.notEqual(pending.kind, 'consent-pending');
+// The real point: ai_consent makes NO difference to the outcome. Comparing
+// the two runs to each other catches a gate reappearing under a new name,
+// which a pair of notEquals on its own would not.
+assert.equal(denied.kind, pending.kind);
+assert.doesNotMatch(read('src/lib/explore/route.ts'), /return \{ kind: 'consent-(denied|pending)'/);
+// Crisis is a SAFETY gate and is untouched by any of this.
 const crisis = await routeExplore({
   me: chipsOnly,
   history: [],
@@ -340,7 +350,7 @@ const crisis = await routeExplore({
   crisisToday: true,
 });
 assert.equal(crisis.kind, 'crisis');
-ok('consent and crisis are honest-empty, same gates as Talk');
+ok('Explore ignores ai_consent entirely; crisis is still honest-empty');
 
 let jargonLogged = '';
 let phraseLogged = '';

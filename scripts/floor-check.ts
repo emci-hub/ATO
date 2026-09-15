@@ -212,15 +212,16 @@ assert.doesNotMatch(read('metro.config.js'), /PROBE_STUB/);
 assert.match(sentryLib, /if \(!__DEV__\) return;/);
 ok('You-tab crash/push probes are PRE_LAUNCH_DEV-gated; the native crash itself is __DEV__-only');
 
-// Moved from Dawn to Home 2026-09-14: the insight replaced the card, so the
-// first model call now happens on Home and the consent gate moved with it.
-// Rendered inline (not a Modal) since the same day, per emci: the ask sits in
-// the normal page flow instead of interrupting as a popup.
+// Moved from Dawn to Home 2026-09-14; inline (not a Modal) per emci.
+// REWRITTEN 2026-09-15: the card is still on Home and still inline, but it is
+// now an OPT-IN, not a gate -- offerConsent renders it additively rather than
+// needsConsentPrompt rendering it instead of the day's content.
 assert.doesNotMatch(home, /<Modal[\s\S]*<AiConsentCard/);
 assert.match(
   home,
-  /needsConsentPrompt \?[\s\S]{0,600}<AiConsentCard[\s\S]{0,120}context="home"/,
+  /\{offerConsent \?[\s\S]{0,300}<AiConsentCard[\s\S]{0,120}context="home"/,
 );
+assert.doesNotMatch(home, /needsConsentPrompt/);
 assert.match(home, /setAiConsent/);
 assert.doesNotMatch(sage, /setAiConsent/);
 assert.match(youTab, /Sage(&apos;|')s AI/);
@@ -228,7 +229,7 @@ assert.match(youTab, /'On'/);
 assert.match(youTab, /'Off'/);
 assert.match(youTab, /'Not set yet'/);
 assert.match(youTab, /SettingsFold title="Account"/);
-ok('AiConsentCard is a Modal interstitial on Home and Sage; You Account row is Sage\'s AI On/Off/Not set yet');
+ok('AiConsentCard is an inline, non-blocking opt-in on Home; You Account row is Sage\'s AI On/Off/Not set yet');
 
 const crisisPickerIdx = youTab.indexOf('<CrisisRegionPicker');
 assert.ok(crisisPickerIdx >= 0, 'CrisisRegionPicker is present');

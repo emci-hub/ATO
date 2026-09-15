@@ -75,10 +75,12 @@ assert.doesNotMatch(sageCode, /fetchSageMessages|peekSageMessages|addSageMessage
 assert.doesNotMatch(sageCode, /supabase/);
 ok('mounting Sage claims no quota, calls no model, and reads no messages');
 
-// AI consent belongs to Home now — the only surface that still generates.
+// The consent ASK lives on Home. It is no longer a gate anywhere
+// (2026-09-15): when the real conversational Sage is rebuilt on this tab,
+// that exchange is the one thing ai_consent is allowed to gate.
 assert.doesNotMatch(sageCode, /AiConsentCard|setAiConsent/);
 assert.match(read('src/app/(tabs)/index.tsx'), /AiConsentCard/);
-ok('the AI-consent gate lives on Home, not on the inert Sage tab');
+ok('the AI-consent ask lives on Home, not on the inert Sage tab');
 
 // The placeholder has to say it is a placeholder. A blank tab reads as broken.
 assert.match(sage, /rebuil/i);

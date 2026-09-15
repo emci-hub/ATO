@@ -69,35 +69,50 @@ assert.match(home, /const \{ todayDay, todayYmd \} = window;/);
 assert.match(home, /if \(generatingForYmd\.current === todayYmd\) return;/);
 ok('Home reads the stored insight first and only generates when the day has none');
 
-// --- 2. consent off writes nothing ----------------------------------------
-const CONSENT_OFF_EMPTY =
-  'No insight today. Sage only writes these with your say-so — you can turn that on any time in You.';
+// --- 2. consent gates NOTHING on Home -------------------------------------
+// INVERTED 2026-09-15 (emci explicit), not deleted. This block used to assert
+// the opposite: that a declined account saw an exact "No insight today" line,
+// that `consentOffEmpty`/`needsConsentPrompt` existed, and that the generation
+// effect bailed on both before any fetch. AI consent now gates ONE thing --
+// the conversational exchange with Sage -- and nothing on Home. These
+// assertions now pin the removal so it cannot quietly come back.
+assert.doesNotMatch(home, /consentOffEmpty|needsConsentPrompt/);
+assert.ok(
+  !home.includes('No insight today. Sage only writes these with your say-so'),
+  'the consent-off empty branch must be gone, not just unreachable',
+);
+ok('Home has no consent-off empty branch and no consent-derived gate flags');
 
-assert.ok(home.includes(CONSENT_OFF_EMPTY), 'Home must show the exact consent-off empty line');
-assert.match(home, /consentOffEmpty/);
-// Declined and not-yet-asked are DIFFERENT states. Collapsing them is what
-// left a fresh account (ai_consent null) with no insight and no prompt — it
-// fell into the empty branch and was never asked, permanently.
-assert.match(home, /const consentOffEmpty = consent === 'denied';/);
-assert.match(home, /const needsConsentPrompt = me != null && consent === 'pending';/);
-assert.doesNotMatch(home, /consent === 'pending' && checks\.length >= 3/);
-ok('Home distinguishes declined from not-yet-asked, and prompts on day one');
-
-// The generation effect must bail on consent-off BEFORE any fetch, generation,
-// cache write or widget write. This is the assertion that would catch a
-// refactor quietly moving the guard below the call.
+// The generation effect must NOT consult consent at all. Pinning the guard
+// window keeps a future refactor from reintroducing a bail there.
 const effectStart = home.indexOf('const existing = await fetchTodayInsight');
 assert.ok(effectStart > 0, 'the insight effect must exist');
 const guardWindow = home.slice(home.indexOf('if (!me || !userId || !window) return;'), effectStart);
-assert.match(guardWindow, /if \(consentOffEmpty \|\| needsConsentPrompt\) return;/);
-ok('consent-off and the unanswered consent prompt both short-circuit before any fetch or generation');
+assert.doesNotMatch(guardWindow, /consent/i);
+ok('the insight generation effect runs regardless of ai_consent');
 
-// Nothing on the consent-off render branch may write the widget or the cache.
-assert.doesNotMatch(
-  home.slice(home.indexOf('consentOffEmpty ?'), home.indexOf('No insight yet')),
-  /saveCachedInsight|saveInsight|writeWidget/,
+// The ask survives as an opt-in, but additively: it must not be an
+// either/or with the insight card. If `offerConsent` ever becomes a branch
+// that replaces the day's content, this fails.
+assert.match(home, /const offerConsent = me != null && consent === 'pending';/);
+assert.match(home, /\{offerConsent \? \([\s\S]{0,200}<AiConsentCard/);
+// The insight card must be its OWN top-level branch, not a fallback arm of
+// a consent ternary -- that shape is exactly what made the ask a gate.
+assert.match(home, /\{insight \? \(/);
+assert.ok(
+  home.indexOf('{insight ? (') < home.indexOf('{offerConsent ? ('),
+  "the day's content must render above the consent ask, not behind it",
 );
-ok('the consent-off branch performs no cache or widget write');
+ok('the consent ask renders alongside the day\'s content, never instead of it');
+
+// Logging a Check must never be blocked on consent -- an AI permission
+// question standing between a user and the core loop is the exact failure
+// this pass existed to remove.
+assert.ok(
+  !home.includes('Answer Sage&apos;s AI question above to continue'),
+  'Check logging must not be gated on the consent answer',
+);
+ok('the Check is loggable with consent granted, denied or unanswered');
 
 // --- 3. the widget keeps rendering ----------------------------------------
 // The shipped widget binary reads the card-era keys and cannot be updated over

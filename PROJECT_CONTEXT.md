@@ -197,6 +197,38 @@ Read that file plus this section to resume; nothing depends on chat history.
   one. Deliberately left unasserted in `library-check.ts` so wiring it in later
   doesn't have to fight a check that pinned its absence.
 
+- **T-C (AI consent gates ONLY talking with Sage) — DONE, 2026-09-15.**
+  emci explicit: consent gates the real conversational exchange with Sage and
+  nothing else. **The boundary as found: there is no gated surface at all** —
+  `(tabs)/sage.tsx` is still T-H2b's rebuild placeholder (no model, no quota,
+  no consent) and `chat.tsx` is peer messaging, not Sage. The card survives as
+  the opt-in the future Sage rebuild will read.
+  Gates removed from `routeQuestions` ("Tell Sage more"), `routeExplore`
+  (Explore/category packs), Home (`consentOffEmpty` + `needsConsentPrompt`
+  deleted; insight generates for every account; the Check is loggable
+  regardless), and dev-lab's `honestEmpty`. **All three of those paths call a
+  model, so a declined or never-asked account now fires AI calls** — the
+  intended consequence, flagged not fixed.
+  Also removed: Home's clear-the-widget-cache-on-revoke effect, which with
+  generation ungated would have looped clear/regenerate.
+  Every `crisisToday` gate is untouched — crisis is safety, not consent.
+  `routeQuestionSweep` (the 50-question local bank) confirmed still free.
+  Home's card is now **additive** (`offerConsent`, below the day's content),
+  never a branch that replaces it; `home-hydrate-check` pins the ordering.
+  Consent copy rewritten — the old body promised "say no and Sage won't write
+  your daily insight", now false, and this is the Apple 5.1.2 surface.
+  The two consent `kind`s stay in both route result unions (callers' switches
+  keep compiling); source-level asserts pin that neither is produced.
+  Five check scripts **inverted, not deleted**, each with a dated comment.
+  Gate green (76 checks), reviewer PASS.
+
+  **Open item for emci (legal, not a bug):** the consent card is the app's only
+  AI disclosure surface, and a No now still means logged personal data reaches a
+  model via the insight, the rotation and Explore. Before an Apple 5.1.2
+  submission the app needs AI-use disclosure that is not conditioned on this
+  answer. The You-tab "Sage's AI — On/Off" row also now toggles nothing
+  observable.
+
 - **T-H2b (voice provider lane deleted, Talk placeholdered) — DONE.**
   emci's call, reversing my earlier decision to keep the provider layer:
   delete it outright and leave the front as a `(rebuild)` placeholder rather
