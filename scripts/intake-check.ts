@@ -56,8 +56,18 @@ async function main() {
   const onboarding = readFileSync(resolve(__dirname, '../src/app/onboarding.tsx'), 'utf8');
   const coreSweep = readFileSync(resolve(__dirname, '../src/components/core-intake-sweep.tsx'), 'utf8');
   const meLib = readFileSync(resolve(__dirname, '../src/lib/me.ts'), 'utf8');
-  assert.match(onboarding, /CoreIntakeSweep/);
-  assert.match(onboarding, /phase === 'account'/);
+  // REMOVED (ISOLATION_PLAN §7 Card G, emci 2026-09-15, Q1): register no longer
+  // has a second step. The nine core-intake taps wrote `me` CONTEXT columns
+  // (talk_style, show_up, knocks_you_off, morning_cue, evening_wind_down,
+  // energy_pattern, support_style, current_focus) — verified against
+  // lib/traits.ts and the trait modules: not one of them feeds trait scoring,
+  // which is why they could be dropped rather than relocated to Questions.
+  // `complete_signup` takes all eight as nullable, so no schema change.
+  // The sweep component's own copy is still asserted below; what is gone is
+  // its mount site and the phase machine around it.
+  assert.doesNotMatch(onboarding, /CoreIntakeSweep/);
+  assert.doesNotMatch(onboarding, /phase === 'account'/);
+  assert.doesNotMatch(onboarding, /setPhase/);
   // Removed 2026-09-11: onboarding no longer has an 'optional-gate' phase —
   // signup goes straight from the core sweep to Home. See traits-check.ts
   // for the fuller assertion that submit() calls refreshAndGoHome directly.
@@ -74,15 +84,9 @@ async function main() {
   assert.equal(energyQ?.helper, 'Helps us pick a good time to check in with you.');
   ok('Q6 energy-pattern question and helper match the locked copy');
 
-  const sweepUsage = onboarding.slice(
-    onboarding.indexOf('<CoreIntakeSweep'),
-    onboarding.indexOf('/>', onboarding.indexOf('<CoreIntakeSweep')) + 2,
-  );
-  assert.match(sweepUsage, /selectedFor=\{selectedValues\}/);
-  assert.match(sweepUsage, /onSubmit=\{\(\) => void submit\(\)\}/);
-  assert.match(sweepUsage, /setPhase\('account'\)/);
-  assert.doesNotMatch(sweepUsage, /setTalkStyle|setEnergyPattern|setCurrentFocus/);
-  ok('intake Back returns to the account step without clearing answers');
+  // The onboarding screen must no longer hold any of the nine answers itself.
+  assert.doesNotMatch(onboarding, /setTalkStyle|setEnergyPattern|setCurrentFocus|selectedValues/);
+  ok('register holds none of the nine intake answers — they are not collected at signup');
 
   assert.match(meLib, /export const RESERVED_HANDLES/);
   assert.match(meLib, /'ato'/);
@@ -98,13 +102,12 @@ async function main() {
     onboarding.indexOf('async function continueFromAccount()'),
     onboarding.indexOf('async function onHandleBlur()'),
   );
+  // The handle and invite checks still run BEFORE createMe — that ordering is
+  // the point, and it survived the step collapse: continueFromAccount now
+  // calls submit() itself instead of advancing to a second phase.
   assert.match(continueFn, /checkHandleAvailable/);
-  assert.match(continueFn, /setPhase\('intake'\)/);
-  assert.doesNotMatch(
-    onboarding.slice(onboarding.indexOf('async function submit()'), onboarding.indexOf('async function refreshAndGoHome()')),
-    /setPhase\('intake'\)/,
-  );
-  ok('handle reserved + uniqueness run on the account step, before intake questions');
+  assert.match(continueFn, /await submit\(\)/);
+  ok('handle reserved + uniqueness still run before createMe; register then goes straight to Home');
 
   const chips = readFileSync(resolve(__dirname, '../src/components/intake-chips.tsx'), 'utf8');
   const settings = readFileSync(resolve(__dirname, '../src/components/intake-settings.tsx'), 'utf8');
