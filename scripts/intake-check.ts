@@ -111,11 +111,17 @@ async function main() {
   const you = readFileSync(resolve(__dirname, '../src/app/(tabs)/you.tsx'), 'utf8');
   const exploreTab = readFileSync(resolve(__dirname, '../src/app/(tabs)/explore.tsx'), 'utf8');
   assert.match(chips, /accessibilityRole=\{multi \? 'checkbox' : 'radio'\}/);
-  assert.match(settings, /CORE_INTAKE_QUESTIONS/);
+  // IntakeSettings' Explore call site is parked (Isolation Plan Card 5,
+  // 2026-09-15) — the component itself is removed from intake-settings.tsx,
+  // but TalkStylePicker (same file, used on You) stays wired and untouched.
   assert.match(settings, /updateIntake/);
-  assert.match(exploreTab, /IntakeSettings/);
+  assert.match(settings, /CORE_INTAKE_QUESTIONS/);
+  assert.doesNotMatch(settings, /export function IntakeSettings/);
+  assert.match(settings, /export function TalkStylePicker/);
+  assert.doesNotMatch(exploreTab, /IntakeSettings/);
+  assert.match(you, /TalkStylePicker/);
   assert.match(meLib, /export async function updateIntake/);
-  ok('Settings edits the same 8 chips from the shared ME row');
+  ok('IntakeSettings is parked; TalkStylePicker (shared file, You-only) stays wired');
 
   const explore = readFileSync(resolve(__dirname, '../src/app/(tabs)/explore.tsx'), 'utf8');
   assert.match(explore, /me\?\.current_focus/);

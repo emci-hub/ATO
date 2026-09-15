@@ -512,13 +512,17 @@ assert.equal(crisisBeatsLock.kind, 'crisis');
 ok('crisis short-circuits before the completeness gate');
 
 const exploreUi = read('src/app/(tabs)/explore.tsx');
-assert.match(exploreUi, /case 'locked':/);
-assert.match(exploreUi, /PROFILE_LOCKED_COPY/);
-assert.match(exploreUi, /PROFILE_LOCKED_CTA/);
+// The observations fold that rendered the locked-copy branch is parked
+// (Isolation Plan Card 5, 2026-09-15) — inverted per the Card 2/3
+// "invert, don't delete" convention. The header's own intake-sweep link
+// (settled-axis routing) stays, so that assertion is unchanged.
+assert.doesNotMatch(exploreUi, /case 'locked':/);
+assert.doesNotMatch(exploreUi, /PROFILE_LOCKED_COPY/);
+assert.doesNotMatch(exploreUi, /PROFILE_LOCKED_CTA/);
 assert.match(exploreUi, /pathname: '\/intake-sweep'/);
 assert.match(read('src/components/explore-panel.tsx'), /case 'locked':/);
 assert.match(read('src/components/explore-panel.tsx'), /PROFILE_LOCKED_CTA/);
-ok('both Explore surfaces render the locked copy with a link to Questions');
+ok('locked-copy UI is parked on Explore; the orphaned explore-panel.tsx still has it; the intake-sweep link stays');
 
 const cached = await routeExplore(
   {
@@ -549,22 +553,31 @@ assert.doesNotMatch(home, /HomeInnerTabs/);
 // references it at all.
 assert.match(home, /SageStoryFold/);
 assert.doesNotMatch(exploreScreen, /SageStoryFold/);
-assert.match(exploreScreen, /routeExplore/);
-assert.match(exploreScreen, /SageExploreObservations/);
+// Isolation Plan Card 5 (2026-09-15): Today's Read, intake settings, roll
+// history, insight spend, and the observations panel are parked pending
+// rebuild — inverted per the Card 2/3 "invert, don't delete" convention.
+assert.doesNotMatch(exploreScreen, /routeExplore/);
+assert.doesNotMatch(exploreScreen, /SageExploreObservations/);
+assert.match(exploreScreen, /RebuiltNotice/);
 // Categories is back inline on Explore and the standalone route is retired
 // (2026-09-14, Home/Explore/Insight restructure T-E1). This REVERSES the
 // 2026-09-12 judgment-pass.md §4A split, which moved CategoriesFold to its
-// own screen to stop Explore stacking 9+ nested surfaces. That crowding is
-// being solved by deleting surfaces instead — the same pass removes
-// SageExploreObservations, ProfileFillFold, FullProfileFold and
-// SageInsightSpend — so the extra route no longer earns its navigation cost.
+// own screen to stop Explore stacking 9+ nested surfaces. That crowding was
+// solved by deleting surfaces instead — SageExploreObservations and
+// SageInsightSpend are now parked too (Isolation Plan Card 5, 2026-09-15) —
+// so the extra route no longer earns its navigation cost.
 assert.match(exploreScreen, /CategoriesFold/);
 assert.doesNotMatch(exploreScreen, /'\/categories'/);
 assert.ok(
   !existsSync('src/app/(tabs)/categories.tsx'),
   'the /categories route must stay deleted — Categories lives inline on Explore',
 );
-assert.match(exploreScreen, /SageTitleCard/);
+// SageTitleCard's Explore call site is parked (Card 5); the component
+// itself stays wired for FullProfileFold, which is still Active.
+assert.doesNotMatch(exploreScreen, /SageTitleCard/);
+assert.doesNotMatch(exploreScreen, /IntakeSettings/);
+assert.doesNotMatch(exploreScreen, /RollHistoryFold/);
+assert.doesNotMatch(exploreScreen, /SageInsightSpend/);
 assert.match(navOrder, /explore: \{ label: 'Explore', href: '\/explore'/);
 assert.match(tabs, /NavEditOverlay/);
 assert.doesNotMatch(sage, /routeExplore|SageExploreObservations|ExplorePinnedCategories|SageStoryFold|SageTitleCard/);

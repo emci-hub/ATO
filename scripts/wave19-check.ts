@@ -410,13 +410,15 @@ assert.doesNotMatch(home, /IntakeSweep|trait_history|spendTokens|TOKEN_PRICE/);
 assert.doesNotMatch(crisis, /token|IntakeSweep|trait_history/);
 assert.doesNotMatch(widget, /token|IntakeSweep|trait_history/);
 assert.match(read('src/app/(tabs)/explore.tsx'), /settledAxisLabel/);
-assert.match(read('src/app/(tabs)/explore.tsx'), /SageInsightSpend/);
+// SageInsightSpend's Explore call site is parked (Isolation Plan Card 5,
+// 2026-09-15) — inverted per the Card 2/3 "invert, don't delete" convention.
+assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /SageInsightSpend/);
 assert.match(read('src/components/axis-taps.tsx'), /TRAIT_UNDO/);
 assert.match(read('src/lib/me.ts'), /insertTraitHistory/);
 assert.match(read('src/lib/me.ts'), /recordStandaloneRanking/);
 assert.match(read('src/lib/me.ts'), /recordStandaloneScenario/);
 assert.match(read('src/lib/me.ts'), /recordForcedPick/);
-ok('Home, crisis card, and widget stay untouched; Sage gets progress + insight spend');
+ok('Home, crisis card, and widget stay untouched; Sage gets progress');
 
 assert.equal(answeredAxisLabel(traitValuesFromPartial({})), `0 of ${TRAIT_AXES.length} answered`);
 assert.equal(answeredAxisCount(traitValuesFromPartial({ autonomy: 0.8 })), 1);

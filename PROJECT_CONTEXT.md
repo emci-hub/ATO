@@ -133,7 +133,36 @@ with no critical findings.
 the full-profile-complete token-earn RPC (`claimFullProfileComplete`) now have zero UI entry
 point until Legends is rebuilt. Flagging for whoever picks up Legends' rebuild — not urgent,
 zero live users.
-**Next: Card 5 (Explore).**
+**Card 5 DONE 2026-09-15** — Explore fold-level parked. Removed Explore's call sites for
+`SageTitleCard` ("Today's Read"), `IntakeSettings`, `RollHistoryFold` (`types=['legend',
+'category']`), `SageInsightSpend`, and the in-file `SageExploreObservations` (+ its private
+`emptyExploreCopy`/`NotedAck` helpers). Kept Active and untouched: `TraitBandsFold`,
+`ProfileFillFold`, `FullProfileFold`, `CategoriesFold`, the screen header.
+**Correction to the build brief going into this card:** it assumed Home's `RollHistoryFold`
+call site (`types=['story']`) was already dropped. It was not — Card 4 (Home) has not
+shipped. This doesn't change Card 5's own scope (still just drop Explore's call site,
+per §2.5/§5.1 "per call site, not wholesale"), but it means `roll-history-fold.tsx` is
+still genuinely active code (Home uses it), not yet dead. **Card 4 (Home) is still
+outstanding** — flagging since `ISOLATION_PLAN.md`'s card order has it before Card 5, but
+it was skipped; do it next or explicitly re-sequence.
+**Two components turned out not to be single-importer, changing the delete-vs-edit call:**
+`SageTitleCard` is also rendered by `FullProfileFold` (kept Active) — component file
+untouched, only Explore's own render of it removed. `intake-settings.tsx` exports both
+`IntakeSettings` (Explore-only, now removed) and `TalkStylePicker` (used on You, off-limits
+per CLAUDE.md) — file edited to drop only the `IntakeSettings` function/export and its
+now-dead imports/styles, not deleted. `sage-insight-spend.tsx` was genuinely single-importer
+and was deleted outright. `updateIntake` (`lib/me.ts`) now has zero callers — left in place
+per §3.3 rule 4, not deleted.
+Five check scripts asserted on the removed folds' presence and were inverted, not deleted,
+per the Card 2/3 convention: `explore-check.ts`, `wave19-check.ts`, `wave20-check.ts`,
+`intake-check.ts`, `trait-bands-check.ts` (the last's fold-ordering assert was rebased onto
+`ProfileFillFold` since `IntakeSettings` no longer exists to order against).
+Gate green (78/78 + typecheck + lint); reviewer passed, no critical findings.
+**Known, deliberately unfixed (doc drift, flagged by reviewer, not code-breaking):**
+`docs/MAP.md`, `docs/NOW.md`, `docs/ME.md`, `docs/screen-map.md`, and a comment in
+`lib/sage-insight.ts:53` still describe Explore's now-parked folds / the deleted
+`sage-insight-spend.tsx`. Left out of this card's scope; worth a follow-up doc pass.
+**Next: Card 4 (Home) is outstanding — see correction above. Card 6 (Questions) after that.**
 
 **Two sequencing rules found in the 2026-09-15 red-team pass (now in ISOLATION_PLAN §5.1-5.3):**
 park `RollHistoryFold` per call site, never wholesale, or Card 4 silently changes Explore;

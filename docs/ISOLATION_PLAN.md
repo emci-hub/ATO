@@ -1,7 +1,9 @@
 # Screen Isolation Plan — park everything outside the active spine
 
-**Status: Cards 1-3 shipped 2026-09-15. Cards 4-7 not started** (Card 4's
-concern turned out to be moot — see §4 risk 2 update below). Written 2026-09-15.
+**Status: Cards 1-3 and 5 shipped 2026-09-15. Cards 4, 6, 7 not started** (Card 4's
+token-resolution concern turned out to be moot — see §4 risk 2 update below; Card 4's
+Home fold-parking itself is still outstanding, done out of order — see PROJECT_CONTEXT.md's
+Card 5 entry). Written 2026-09-15.
 
 Goal (emci, 2026-09-15): reduce entanglement so editing one screen cannot ripple
 into another. Keep a small active spine; **park** everything else. No live users —
@@ -239,7 +241,15 @@ Convention: each card is a standalone session, `/clear` between. Per the standin
 - **Card 2 — Around.** Whole-screen park. Zero entanglement, so this is the clean rehearsal of the full procedure end to end.
 - **Card 3 — Legends (plus Roll).** Whole-screen park for both. Carries the token resolution from Card 0. Watch `nav-check.ts:170` and `legends64-check.ts`.
 - **Card 4 — Home.** Largest card. Park folds 6, 7b–7d, 9, 10, 11. Keep 7a (`CrisisCard`). Narrow `home_bootstrap` consumption to `tracks` + `crisis*`, dropping `checks`. Park the `/week` route. Carries the Story-free-while-parked mechanism from §4 risk 2. Home ends as: greeting, Insight, consent, questions link, CrisisCard slot, Story.
-- **Card 5 — Explore.** Park `SageTitleCard`, `IntakeSettings`, `RollHistoryFold`, `SageInsightSpend`, and `SageExploreObservations`. Keep `ProfileFillFold`. Invert, don't delete, any `explore-check`/`wave21`/`wave22` assertions that break.
+- **Card 5 — Explore. DONE 2026-09-15.** Parked `SageTitleCard`'s Explore call site,
+  `IntakeSettings`, `RollHistoryFold`'s Explore call site (`types=['legend','category']`;
+  Home's `types=['story']` call site is still active — Card 4 hasn't shipped, so the
+  component itself stays wired), `SageInsightSpend`, and `SageExploreObservations`. Kept
+  `TraitBandsFold`, `ProfileFillFold`, `FullProfileFold`, `CategoriesFold`. `SageTitleCard`
+  and `intake-settings.tsx` turned out not to be single-importer — see PROJECT_CONTEXT.md's
+  Card 5 entry for the delete-vs-edit call on each. Inverted (not deleted) assertions in
+  `explore-check.ts`, `wave19-check.ts`, `wave20-check.ts`, `intake-check.ts`,
+  `trait-bands-check.ts`.
 - **Card 6 — Questions.** Smallest of the three screens: park `OptionalIntakeFill` and `MilestoneToast`; leave `QuestionsFold` and `IntakeSweep` fully wired.
 - **Card 7 — sweep plus device pass.** Full `check:ota-gate`, one real device walk of every tab confirming every parked surface reads `(Rebuilt)` and nothing reads as a crash. Then one OTA.
 
