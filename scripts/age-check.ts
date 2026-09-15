@@ -103,16 +103,14 @@ function main() {
   assert.match(me, /born_on: string \| null/);
   ok('createMe sends born_on through complete_signup; ME stores the date');
 
+  // PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You has no Account fold any
+  // more — it is down to AI consent, sign out and delete account. The birthday
+  // editor and its 16+ re-check are untouched and still fully asserted below;
+  // what is gone is the row that mounted it.
   const you = readFileSync(resolve(__dirname, '../src/app/(tabs)/you.tsx'), 'utf8');
-  const accountStart = you.indexOf('<SettingsFold title="Account">');
-  const accountEnd = you.indexOf('</SettingsFold>', accountStart);
-  assert.ok(accountStart >= 0 && accountEnd > accountStart, 'Account fold is on You');
-  const account = you.slice(accountStart, accountEnd);
-  const tzIdx = account.indexOf('label="Timezone"');
-  const birthdayIdx = account.indexOf('<BirthdayRow');
-  assert.ok(tzIdx >= 0, 'Timezone row is in Account');
-  assert.ok(birthdayIdx > tzIdx, 'Birthday row sits directly below Timezone in Account');
-  ok('You Account fold has Birthday directly below Timezone');
+  assert.ok(you.indexOf('<SettingsFold title="Account">') === -1, 'the Account fold is parked off You');
+  assert.ok(you.indexOf('<BirthdayRow') === -1, 'the birthday row is parked with it');
+  ok('You has no Account fold while it is parked; the birthday editor keeps its own coverage');
 
   const birthdayRow = readFileSync(resolve(__dirname, '../src/components/birthday-row.tsx'), 'utf8');
   const bornOnFields = readFileSync(resolve(__dirname, '../src/components/born-on-fields.tsx'), 'utf8');

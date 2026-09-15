@@ -13,6 +13,7 @@ import {
   NAV_TABS,
   NAV_TAB_IDS,
   POOL_SLOTS,
+  isTabParked,
   SLOT_COUNT,
   type BarSlotId,
   type ReorderableTabId,
@@ -84,7 +85,7 @@ export function NavEditOverlay({
 
           <ScrollView contentContainerStyle={styles.body}>
             <ThemedText type="small" themeColor="textSecondary">
-              Home and Sage always stay in slots 1–4 — drag to move them. Pick {POOL_SLOTS} more
+              Home always stays in slots 1–4 — drag to move it. Pick {POOL_SLOTS} more
               from below.
             </ThemedText>
 
@@ -159,11 +160,16 @@ export function NavEditOverlay({
 
             <ThemedText type="smallBold">Add to the bar</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              Pick {POOL_SLOTS} tabs total for slots 1–4, alongside Home and Sage.
+              Pick {POOL_SLOTS} tabs total for slots 1–4, alongside Home.
             </ThemedText>
 
             <View style={styles.poolList}>
-              {NAV_TAB_IDS.filter((id) => !lockedSet.has(id)).map((id) => {
+              {/*
+                Parked tabs are not offerable (ISOLATION_PLAN §7 Card F): their
+                screens are placeholders, so letting someone pin one to a slot
+                would just put a "(Rebuilt)" notice in the bar.
+              */}
+              {NAV_TAB_IDS.filter((id) => !lockedSet.has(id) && !isTabParked(id)).map((id) => {
                 const inBar = draftPool.includes(id);
                 return (
                   <View key={id} style={[styles.sortRow, { borderColor: controlBorderColor(theme) }]}>

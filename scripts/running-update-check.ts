@@ -114,7 +114,10 @@ ok('reads group from manifest metadata or extra.eas');
 const you = read('src/app/(tabs)/you.tsx');
 const hub = read('src/app/dev-lab.tsx');
 const line = read('src/components/running-update-line.tsx');
-assert.match(you, /RunningUpdateLine/);
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You is parked down to sign
+// out, delete account and AI consent. The component's own behaviour is still
+// covered in this file; only its You mount site is gone.
+assert.doesNotMatch(you, /RunningUpdateLine/);
 assert.match(hub, /RunningUpdateLine/);
 assert.match(line, /expo-updates/);
 assert.match(line, /Updates\.updateId/);

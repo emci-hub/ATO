@@ -19,10 +19,14 @@ function ok(label: string) {
 
 const root = resolve(__dirname, '..');
 const you = readFileSync(join(root, 'src/app/(tabs)/you.tsx'), 'utf8');
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You no longer mounts the
+// dev-tools slot or the running-update line — the screen is down to sign out,
+// delete account and AI consent. The two things that MUST stay true of a
+// public build are unchanged and still asserted: the sentry/push probe cards
+// are never imported directly, and you-dev-tools guards itself.
 assert.doesNotMatch(you, /from '@\/components\/sentry-test-card'/);
 assert.doesNotMatch(you, /from '@\/components\/push-test-card'/);
-assert.match(you, /if \(PRE_LAUNCH_DEV\) \{/);
-assert.match(you, /require\('@\/components\/you-dev-tools'\)/);
+assert.doesNotMatch(you, /require\('@\/components\/you-dev-tools'\)/);
 ok('You tab loads crash/push probes via a PRE_LAUNCH_DEV-gated dynamic require');
 
 // The You tab renders the Build line for every account, and 5 taps on it push

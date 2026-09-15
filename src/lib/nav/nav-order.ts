@@ -68,6 +68,39 @@ export const NAV_TABS: Record<ReorderableTabId, NavTabMeta> = {
 
 export const NAV_TAB_IDS = Object.keys(NAV_TABS) as ReorderableTabId[];
 
+/**
+ * Tabs whose screens are PARKED behind `RebuiltNotice` (ISOLATION_PLAN §7
+ * Card F, emci 2026-09-15: "hide parked tabs from the tab bar").
+ *
+ * They stay in the registry and stay registered as routes — removing a route
+ * would mean a native build, and every deep link into one must still land
+ * somewhere, which is the notice. What this list does is keep them out of the
+ * bar, out of More, and out of the edit pool, so nobody navigates into a
+ * placeholder by accident and nobody can pin one to a slot.
+ *
+ * `sage` is parked too but is a PINNED id, not a pool one, so it is listed
+ * separately below — the slot engine still places it, and `app-tabs` renders
+ * a hidden trigger for it instead of a button.
+ *
+ * Un-parking a screen = delete its id from here. Nothing else changes.
+ */
+export const PARKED_TAB_IDS: readonly ReorderableTabId[] = ['around', 'legends', 'circle'];
+
+/** Parked pinned tabs. Same rule, different slot type. */
+export const PARKED_PINNED_IDS: readonly PinnedTabId[] = ['sage'];
+
+export function isTabParked(id: BarSlotId): boolean {
+  return (
+    (PARKED_TAB_IDS as readonly string[]).includes(id) ||
+    (PARKED_PINNED_IDS as readonly string[]).includes(id)
+  );
+}
+
+/** Pool tabs that are actually offerable today: in the registry, not parked. */
+export const LIVE_NAV_TAB_IDS: readonly ReorderableTabId[] = NAV_TAB_IDS.filter(
+  (id) => !isTabParked(id),
+);
+
 export const PINNED_IDS: readonly PinnedTabId[] = ['home', 'sage'];
 
 /** Slots 1–4 count (slot 5 is the fixed "More"). */

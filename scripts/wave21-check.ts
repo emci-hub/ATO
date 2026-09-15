@@ -204,10 +204,12 @@ assert.ok(
   'the /categories route must stay deleted — Categories lives inline on Explore',
 );
 assert.match(exploreTab, /FullProfileFold/);
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): Circle is a whole-screen park, so
+// its category-share wiring and compare row are gone. `lib/circle*` and
+// CategoryCompareRow are untouched and rebuilt from when Circle comes back.
 const circle = read('src/app/(tabs)/circle.tsx');
-assert.match(circle, /setCategoryShare/);
-assert.match(circle, /close_friends_share|setCloseFriendsShare/);
-assert.match(circle, /CategoryCompareRow/);
+assert.doesNotMatch(circle, /setCategoryShare/);
+assert.doesNotMatch(circle, /CategoryCompareRow/);
 assert.doesNotMatch(circle, /FullProfileFold/);
 ok('Explore has Categories next to Full Profile; Circle compare is separate from Full Profile');
 

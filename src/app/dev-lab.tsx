@@ -117,7 +117,7 @@ import {
   clearGrowthPreview,
   readGrowthPreview,
   writeGrowthPreview,
-} from '@/app/(tabs)/you';
+} from '@/lib/dev-growth-preview';
 
 const SOURCE_NOTE: Record<TraitSource, string> = {
   self_slider: 'direct — inferred cannot overwrite (historical, no longer written)',

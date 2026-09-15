@@ -156,7 +156,11 @@ assert.match(consent, /Sage is a coach in the app, not a person/);
 assert.match(crisis, /Sage is a coach, not emergency support/);
 assert.doesNotMatch(sage, /Sage listens/);
 assert.doesNotMatch(home, /Sage listens/);
-assert.match(read('src/app/chat.tsx'), /Sage is a coach/);
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): /chat is a whole-screen park
+// (it was Circle's per-peer chat, and Circle is parked). The copy rule itself
+// is unchanged and still asserted against every live surface above; this line
+// asserts the parked screen carries none of it.
+assert.doesNotMatch(read('src/app/chat.tsx'), /Sage is a coach/);
 ok('Talk, Home, consent, crisis, push, widget, and Teach Sage label Sage as a coach; Quest Home may use npc');
 
 assert.match(home, /No insight yet/);
@@ -207,10 +211,14 @@ assert.match(read('src/app/_layout.tsx'), /Sentry\.wrap/);
 ok('Sentry JS init + native crash handling + Expo plugin + wrap are wired');
 
 const youTab = read('src/app/(tabs)/you.tsx');
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You no longer mounts the
+// dev-tools slot or the running-update line — the screen is down to sign out,
+// delete account and AI consent. The two things that MUST stay true of a
+// public build are unchanged and still asserted: the sentry/push probe cards
+// are never imported directly, and you-dev-tools guards itself.
 assert.doesNotMatch(youTab, /from '@\/components\/sentry-test-card'/);
 assert.doesNotMatch(youTab, /from '@\/components\/push-test-card'/);
-assert.match(youTab, /if \(PRE_LAUNCH_DEV\) \{/);
-assert.match(youTab, /require\('@\/components\/you-dev-tools'\)/);
+assert.doesNotMatch(youTab, /require\('@\/components\/you-dev-tools'\)/);
 assert.doesNotMatch(read('metro.config.js'), /PROBE_STUB/);
 assert.match(sentryLib, /if \(!__DEV__\) return;/);
 ok('You-tab crash/push probes are PRE_LAUNCH_DEV-gated; the native crash itself is __DEV__-only');
@@ -231,16 +239,27 @@ assert.match(home, /\{AI_USE_DISCLOSURE\}/);
 assert.match(consent, /AI_USE_DISCLOSURE = 'Sage uses AI to personalize your insights\.'/);
 assert.match(home, /setAiConsent/);
 assert.doesNotMatch(sage, /setAiConsent/);
+// REPINNED (ISOLATION_PLAN §7 Card F, 2026-09-15): You is parked, but AI
+// consent is one of the three controls deliberately kept alive there (with
+// sign out and delete account). It moved out of the now-gone Account fold into
+// its own "Sage's AI" fold, and the three-state row collapsed to a toggle plus
+// the full consent card while the answer is still pending — so "Not set yet"
+// is no longer a label, the card itself is that state.
 assert.match(youTab, /Sage(&apos;|')s AI/);
 assert.match(youTab, /'On'/);
 assert.match(youTab, /'Off'/);
-assert.match(youTab, /'Not set yet'/);
-assert.match(youTab, /SettingsFold title="Account"/);
-ok('AiConsentCard is inline on Home, gates generation only, and the AI-use disclosure is unconditional; You Account row is Sage\'s AI On/Off/Not set yet');
+assert.match(youTab, /<AiConsentCard/);
+assert.match(youTab, /setAiConsent/);
+assert.doesNotMatch(youTab, /SettingsFold title="Account"/);
+ok('AiConsentCard is inline on Home and still reachable on the parked You; the AI-use disclosure is unconditional on both');
 
-const crisisPickerIdx = youTab.indexOf('<CrisisRegionPicker');
-assert.ok(crisisPickerIdx >= 0, 'CrisisRegionPicker is present');
-ok('CrisisRegionPicker stays on You after the How Sage sounds fold');
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): the crisis REGION picker is
+// off the parked You. This is not the crisis card itself — `CrisisCard` is
+// still Active on Home (§0 decision 3), still static, and still asserted
+// elsewhere in this file. What is parked is only the per-region setting, which
+// had no effect while the picker's own region list is being rebuilt.
+assert.ok(youTab.indexOf('<CrisisRegionPicker') === -1, 'the region picker is parked with the rest of You');
+ok('the crisis REGION picker is parked; the static crisis card on Home is untouched');
 
 // Same no-flash promise, new source: the Check row no longer carries card
 // text, so Home paints from the cached insight and reconciles against

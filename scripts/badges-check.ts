@@ -186,7 +186,10 @@ assert.doesNotMatch(src, /Math\.random|Math\.floor\(\s*Math\.random|shuffle|loot
 assert.doesNotMatch(ui, /Math\.random|Math\.floor\(\s*Math\.random/i);
 assert.match(src, /hasCut/);
 assert.doesNotMatch(readFileSync(resolve('src/app/(tabs)/index.tsx'), 'utf8'), /MilestoneBadges/);
-assert.match(readFileSync(resolve('src/app/(tabs)/you.tsx'), 'utf8'), /MilestoneBadges/);
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You is parked down to sign
+// out, delete account and AI consent. The component's own behaviour is still
+// covered in this file; only its You mount site is gone.
+assert.doesNotMatch(readFileSync(resolve('src/app/(tabs)/you.tsx'), 'utf8'), /MilestoneBadges/);
 ok('unlock path has no randomness; badges are mounted on You, not Home');
 
 // --- full-picture predicate + one-time unlock celebration -----------------

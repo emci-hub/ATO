@@ -86,24 +86,30 @@ assert.doesNotMatch(explore, /SageFactsCard/);
 // the only surface that lists stored facts and the only path to delete one, so
 // it has to live somewhere reachable — facts stay addable from chat either way.
 const youTabFacts = read('src/app/(tabs)/you.tsx');
-assert.match(youTabFacts, /<SageFactsCard me=\{me\} onUpdated=/);
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You is parked down to sign
+// out, delete account and AI consent. The component's own behaviour is still
+// covered in this file; only its You mount site is gone.
+assert.doesNotMatch(youTabFacts, /<SageFactsCard/);
 assert.match(read('src/components/sage-facts.tsx'), /removeFact/);
 ok('the facts list and its delete path are reachable from You');
 
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): /chat is parked with Circle,
+// so the "Teach Sage this" create path has no screen behind it. `addFact` and
+// the facts store are untouched — asserted directly below.
 const chat = read('src/app/chat.tsx');
-assert.match(chat, /Teach Sage this/);
-assert.match(chat, /await addFact\(/);
-assert.equal((chat.match(/addFact/g) ?? []).length > 0, true);
-ok('Teach Sage this in Chat is unchanged');
+assert.doesNotMatch(chat, /Teach Sage this/);
+assert.doesNotMatch(chat, /addFact/);
+ok('the parked Chat screen carries no fact-create path');
 
+// With Chat parked, `addFact` has exactly one definition and no UI caller.
+// The assertion is inverted rather than dropped so that wiring a NEW create
+// path anywhere still trips it — the rule was never "Chat may call it", it was
+// "only one surface may".
 const callers = ['src/app/chat.tsx', 'src/lib/me.ts', 'src/components/sage-facts.tsx']
   .map((file) => ({ file, src: read(file) }))
   .filter((row) => /addFact\(/.test(row.src));
-assert.deepEqual(
-  callers.map((row) => row.file),
-  ['src/app/chat.tsx', 'src/lib/me.ts'],
-);
-ok('addFact is still only called from Chat');
+assert.deepEqual(callers.map((row) => row.file), ['src/lib/me.ts']);
+ok('addFact has no caller while Chat is parked — only its definition remains');
 
 const grown = growthState({ facts: ['a', 'b', 'c'] }, 7);
 assert.equal(grown.depth, 1);

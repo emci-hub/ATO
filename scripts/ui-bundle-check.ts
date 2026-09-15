@@ -87,14 +87,14 @@ ok('Credits uses the same collapsed SettingsFold as Sage today');
 const you = read('src/app/(tabs)/you.tsx');
 assert.doesNotMatch(you, /\{me\.name\}/);
 assert.doesNotMatch(you, /profileCard/);
-assert.match(you, /<SharePoster/);
-assert.match(you, /SettingsFold title="How Sage sounds"/);
-const crisisIdx = you.indexOf('<CrisisRegionPicker');
-const usageIdx = you.indexOf('<SageUsageFold');
-const creditsIdx = you.indexOf('<KenneyCreditsCard');
-assert.ok(crisisIdx >= 0);
-assert.ok(usageIdx > crisisIdx && creditsIdx > usageIdx);
-ok('You shows the name once on the poster; How Sage sounds is a fold; crisis sits above usage and credits');
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): the poster, the voice fold,
+// the crisis-region picker, Sage usage and credits are all off You, so there
+// is no longer an ordering to assert. What still holds — and is the reason
+// these two lines survive — is that You never renders the account name or the
+// profile card itself. Each component's own behaviour is covered elsewhere.
+assert.doesNotMatch(you, /<SharePoster/);
+assert.doesNotMatch(you, /SettingsFold title="How Sage sounds"/);
+ok('You is parked down to its account controls: no poster, no profile card, no name on screen');
 
 const picker = read('src/components/crisis-region-picker.tsx');
 assert.match(picker, /SettingsFold title="If you need someone now"/);

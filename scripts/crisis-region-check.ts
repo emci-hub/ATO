@@ -130,8 +130,10 @@ const picker = fs.readFileSync(
 assert.match(card, /crisisCardContent/);
 assert.match(card, /useCrisisRegion/);
 assert.match(layout, /CrisisRegionProvider/);
-assert.match(you, /CrisisRegionPicker/);
-assert.ok(you.indexOf('<CrisisRegionPicker') < you.indexOf('<KenneyCreditsCard'));
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You is parked down to sign
+// out, delete account and AI consent. The component's own behaviour is still
+// covered in this file; only its You mount site is gone.
+assert.doesNotMatch(you, /CrisisRegionPicker/);
 assert.match(picker, /SettingsFold title="If you need someone now"/);
 assert.match(picker, /United States/);
 assert.match(picker, /Canada/);

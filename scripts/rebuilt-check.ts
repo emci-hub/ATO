@@ -55,6 +55,14 @@ const PARKED_SCREENS: { rel: string; label: string }[] = [
   { rel: 'src/app/(tabs)/around.tsx', label: 'Around' },
   { rel: 'src/app/(tabs)/legends.tsx', label: 'Legends' },
   { rel: 'src/app/(tabs)/roll.tsx', label: 'Roll' },
+  // Card F (2026-09-15): everything outside the Home / Questions / Explore
+  // spine. `you.tsx` is NOT here on purpose — it is parked but deliberately
+  // keeps sign out, delete account and AI consent alive (App Store 5.1.1(v)),
+  // so it still reaches supabase and cannot satisfy the zero-backend rule.
+  // Its kept-controls contract is pinned in `delete-account-check.ts` instead.
+  { rel: 'src/app/(tabs)/circle.tsx', label: 'Circle' },
+  { rel: 'src/app/week.tsx', label: 'This week' },
+  { rel: 'src/app/chat.tsx', label: 'Chat' },
 ];
 
 /**

@@ -111,11 +111,15 @@ assert.match(hub, /denyAccessRequest/);
 ok('hub sections call the live fence, usage snapshot, card router, and access review');
 
 const you = read('src/app/(tabs)/you.tsx');
-assert.match(you, /RunningUpdateLine/);
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You no longer mounts the
+// dev-tools slot or the running-update line — the screen is down to sign out,
+// delete account and AI consent. The two things that MUST stay true of a
+// public build are unchanged and still asserted: the sentry/push probe cards
+// are never imported directly, and you-dev-tools guards itself.
+assert.doesNotMatch(you, /RunningUpdateLine/);
 assert.doesNotMatch(you, /from '@\/components\/sentry-test-card'/);
 assert.doesNotMatch(you, /from '@\/components\/push-test-card'/);
-assert.match(you, /if \(PRE_LAUNCH_DEV\) \{/);
-assert.match(you, /require\('@\/components\/you-dev-tools'\)/);
+assert.doesNotMatch(you, /require\('@\/components\/you-dev-tools'\)/);
 assert.match(read('src/components/you-dev-tools.tsx'), /if \(!PRE_LAUNCH_DEV\) return null;/);
 assert.match(read('src/components/sentry-test-card.tsx'), /if \(!PRE_LAUNCH_DEV\) return null;/);
 assert.match(read('src/components/push-test-card.tsx'), /if \(!PRE_LAUNCH_DEV\) return null;/);

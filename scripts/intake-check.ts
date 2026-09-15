@@ -119,7 +119,10 @@ async function main() {
   assert.doesNotMatch(settings, /export function IntakeSettings/);
   assert.match(settings, /export function TalkStylePicker/);
   assert.doesNotMatch(exploreTab, /IntakeSettings/);
-  assert.match(you, /TalkStylePicker/);
+  // PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You is parked down to sign
+  // out, delete account and AI consent. The component's own behaviour is still
+  // covered in this file; only its You mount site is gone.
+  assert.doesNotMatch(you, /TalkStylePicker/);
   assert.match(meLib, /export async function updateIntake/);
   ok('IntakeSettings is parked; TalkStylePicker (shared file, You-only) stays wired');
 

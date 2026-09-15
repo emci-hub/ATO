@@ -64,7 +64,10 @@ const layout = fs.readFileSync(path.join(root, 'src/app/_layout.tsx'), 'utf8');
 const plan = fs.readFileSync(path.join(root, 'docs/archive/OLD_PLAN.md'), 'utf8');
 const now = fs.readFileSync(path.join(root, 'docs/NOW.md'), 'utf8');
 
-assert.match(you, /AppearancePicker/);
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You is parked down to sign
+// out, delete account and AI consent. The component's own behaviour is still
+// covered in this file; only its You mount site is gone.
+assert.doesNotMatch(you, /AppearancePicker/);
 assert.match(picker, /Soft is the default/);
 assert.match(layout, /AppearanceProvider/);
 assert.match(plan, /Soft \/ Zen \/ Quest \/ Neon \/ Anime/);
