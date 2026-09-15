@@ -96,7 +96,25 @@ live-music tab) — not a guess. `around-lab.tsx` is its dev harness;
 
 **Card 1 DONE 2026-09-15** — `src/components/rebuilt-notice.tsx` + `scripts/rebuilt-check.ts`
 + `check:rebuilt` in the gate, proven on `sage.tsx`. Gate green (78 offline checks).
-**Next: Card 2 (Around)** — whole-screen park, zero entanglement, the clean rehearsal.
+
+**Card 2 DONE 2026-09-15** (commit `5c945d1`) — Around whole-screen parked. `around.tsx` now
+renders `<RebuiltNotice title="Around" />`; disconnected from `lib/around/*`, `use-session`,
+`use-me`, `lib/kenney/registry`. `lib/around/*` and `refresh-around` untouched (per rule:
+delete the call site, not the callee). Added to `rebuilt-check.ts`'s `PARKED_SCREENS`.
+One real entanglement the plan missed: `slugifyCity` (`lib/around/slug.ts`) is also imported
+by `lib/me.ts`, `city-picker.tsx`, `onboarding.tsx` — harmless (no network/DB), left as-is,
+`lib/around/slug.ts` must not be deleted later without checking those three first.
+Three check scripts asserted on the *screen's own text* and broke when it was gutted —
+fixed per §2.12's "invert, don't delete" rule: `around-check.ts` (dropped the
+`aroundEmptyCopy`/heatmap screen-text asserts, data-layer coverage untouched),
+`around-going-check.ts` (dropped the "I'm going"/empty-copy screen-text asserts — this one
+is gate-excluded/live-only so it wasn't caught by `check:ota-gate`, only by the reviewer
+subagent explicitly running it), `age-check.ts` (inverted the 18+-gate-line match to
+`doesNotMatch`; the underlying `isAtLeastAge`/`NIGHT_GOING_AGE_YEARS` logic is still fully
+tested elsewhere in that file). Gate green (78/78 + typecheck + lint); `check:around-going`
+also confirmed green by hand (it's excluded from the gate).
+**Next: Card 3 (Legends + Roll)** — must ship together with Card 4 (token resolution), per
+ISOLATION_PLAN §5.2. Do not land Card 3 alone.
 
 **Two sequencing rules found in the 2026-09-15 red-team pass (now in ISOLATION_PLAN §5.1-5.3):**
 park `RollHistoryFold` per call site, never wholesale, or Card 4 silently changes Explore;
