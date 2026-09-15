@@ -14,6 +14,11 @@
  *      and draws no animation.
  *   4. A truncated bundle: facings that disagree on frame count, or a registry
  *      with fewer frames than the PNGs on disk.
+ *   5. The reusable-hero-kit template (A3): a Hero whose art IS bundled must
+ *      author `attack` + `skill`, and the Avatar-reachable Heroes must author
+ *      both even before their art lands — so a kit can never ship idle-only.
+ *      The remaining template slots are reported, not failed. Aurex / Kitsune
+ *      are exempt until their art is copied; this rule then applies to them.
  *
  * A clip is ENFORCED as soon as its Hero's art is bundled — measured against
  * the generated registry, which IS tracked (the PNGs are not yet), so the same
@@ -60,6 +65,16 @@ import {
 
 /** The Batch 1 roster, in authoring order. */
 const EXPECTED_IDS = ['archangel', 'aurex', 'corvus', 'kitsune', 'oni'] as const;
+
+/** Heroes reachable as the Avatar TODAY: the starter (Corvus) plus the two the
+ * campaign grants (Archangel on a Main Final clear, Crimson Oni on a Main
+ * Scout clear). All three must author `attack` + `skill` whatever this tree has
+ * copied — the others may still be art-less stubs. */
+const AVATAR_READY_IDS = ['archangel', 'corvus', 'oni'] as const;
+
+/** The clips a Hero must author once its art is bundled. `idle`/`walk`/`dash`
+ * alone make a kit that can only move; an Avatar also has to hit and cast. */
+const REQUIRED_BUNDLED_CLIPS = ['attack', 'skill'] as const;
 
 /** A raw pack folder name leaked into the contract: `PLAGUE_IDLE-ab12cd34`. */
 const HASH_SUFFIX = /-[0-9a-f]{8}$/;
@@ -158,6 +173,9 @@ ok('every hero folder is assets/play/skins/cast/heroes/<id>');
  * answer does not depend on which PNGs a given working tree happens to have. */
 let enforced = 0;
 const stubs: string[] = [];
+/** Heroes with at least one clip bundled in this tree — the ones the template
+ * guard below can hold to the registry. */
+const bundledHeroIds = new Set<string>();
 
 for (const hero of heroes) {
   const animations = path.join(repoRoot, hero.folder, 'animations');
@@ -166,6 +184,7 @@ for (const hero of heroes) {
   assert.ok(authored.length > 0, `${hero.id}: authors at least one clip`);
   const clips = authored.map(([clip, name]) => ({ clip, name, base: registryBase(hero, name) }));
   const bundled = clips.some(({ base }) => registryFrames(base, 'east') > 0);
+  if (bundled) bundledHeroIds.add(hero.id);
 
   for (const { clip, name, base } of clips) {
     assert.ok(
@@ -220,12 +239,63 @@ if (stubs.length > 0) {
   );
 }
 
-// Corvus is the Hero that is live today: the JSON contract must always be
-// complete. Whether its ART is bundled is a packaging question, not a contract
-// one — the registry is a generated file and the hero PNGs are not tracked yet,
-// so a tree can legitimately carry the contract without the art (this commit
-// does). When the art IS bundled, the enforcement loop above holds it to the
-// registry; `artBundled` below says which of the two this tree is.
+// 5 — the reusable-kit template (A3). Two rules, so a Hero kit can never ship
+// as "walks and idles but never hits": art that IS bundled must author attack +
+// skill, and the Avatar-reachable Heroes must author both regardless of what
+// this tree happens to have copied. Aurex / Kitsune pass for free today (no art
+// bundled) and start being held to rule 1 the moment their art lands.
+for (const hero of heroes) {
+  if (!bundledHeroIds.has(hero.id)) continue;
+  for (const clip of REQUIRED_BUNDLED_CLIPS) {
+    assert.ok(
+      hero.clips[clip],
+      `${hero.id}: art is bundled but "${clip}" is null — a bound/owned Hero with no ${clip} ` +
+        `plays no one-shot. Copy the ${clip} clip folder and name it here (see heroes-data.ts).`,
+    );
+  }
+}
+ok(
+  `bundled Hero art authors ${REQUIRED_BUNDLED_CLIPS.join(' + ')} ` +
+    `(${[...bundledHeroIds].sort().join(', ')})`,
+);
+
+for (const id of AVATAR_READY_IDS) {
+  const hero = heroById(id);
+  assert.ok(hero, `${id}: an Avatar-reachable Hero must exist`);
+  for (const clip of REQUIRED_BUNDLED_CLIPS) {
+    assert.ok(
+      hero.clips[clip],
+      `${id} is reachable as the Avatar and must author "${clip}" — a Hero you can fight as ` +
+        `whose ${clip} is null (or whose ${clip} art was never copied) plays no ${clip} at all.`,
+    );
+  }
+}
+ok(
+  `Avatar-reachable Heroes author ${REQUIRED_BUNDLED_CLIPS.join(' + ')} ` +
+    `(${AVATAR_READY_IDS.join(', ')})`,
+);
+
+// The other template slots (idle / walk / dash / hurt) are reported, not failed:
+// a Hero missing one simply plays no one-shot for it — the clip player skips it
+// and never invents a frame — and a slot can legitimately be null because the
+// art pack has no such clip (Crimson Oni ships no flinch). Surfaced so a gap is
+// always a decision someone made, never something nobody noticed.
+const unfilled = AVATAR_READY_IDS.flatMap((id) => {
+  const hero = heroById(id);
+  if (!hero) return [];
+  return HERO_CLIPS.filter((clip) => !hero.clips[clip]).map((clip) => `${id}/${clip}`);
+});
+if (unfilled.length > 0) {
+  console.log(
+    `  · Avatar-reachable Hero slot(s) with no authored clip (reported, not failed — ` +
+      `that one-shot is skipped): ${unfilled.join(', ')}`,
+  );
+}
+
+// Corvus — the STARTER Hero, owned on every save — is held to its own skillId
+// and to having no unknown clip slot, on top of the six-slot rule above. The
+// three Avatar-reachable Heroes are checked as a set by the template guard; this
+// block pins the one piece that is Corvus-specific (its kit id).
 const corvus = heroById('corvus');
 assert.ok(corvus, 'corvus exists');
 for (const clip of HERO_CLIPS) {

@@ -22,6 +22,49 @@
  * (A3): the Defend Avatar resolves the hero set in Dress (`active_avatar_hero_id`)
  * to its cast folder + these clips, instead of a fixed Corvus role. Skill kits /
  * Defend wiring / the Avatar-vs-Bound-Boss exclusivity are A2/A6.
+ *
+ * ### Adding a Hero is a folder copy + a row here. No TypeScript.
+ *
+ * The six clip slots are `HERO_CLIPS` — **idle, walk, dash, attack, skill,
+ * hurt** — and `face` is always `'ew'` (the Cast packs ship honest east/west
+ * side profiles only; the board draws the Avatar as a sticky E/W side profile).
+ * Aim for all six on any Hero you can fight as, but the two the build ENFORCES
+ * are **`attack` and `skill`**: a Hero whose art is bundled must author both, and
+ * the Avatar-reachable Heroes (Corvus, Archangel, Oni) must author both even
+ * before their art lands — `scripts/check-heroes.ts` fails otherwise, so a kit
+ * can never ship able to walk and idle but never hit or cast. The remaining
+ * slots are REPORTED, not failed: a Hero simply plays no one-shot for a slot it
+ * does not author (the clip player skips it and never invents a frame), and a
+ * slot may legitimately be null because the pack has no such clip — Crimson Oni
+ * ships no flinch, so its `hurt` is reported and skipped. A leftover `null` is
+ * otherwise only legitimate while a Hero's art has not been copied yet (Aurex,
+ * Kitsune).
+ *
+ * The folder layout, per Hero id:
+ *   assets/play/skins/cast/heroes/<id>/rotations/{north,north-east,east,
+ *     south-east,south,south-west,west,north-west}.png        ← 8 static dirs
+ *   assets/play/skins/cast/heroes/<id>/animations/<Clip>/<east|west>/frame_###.png
+ *
+ * so a `clips` value is the `<Clip>` FOLDER NAME only, spelled the way the art
+ * registry keys it (hash stripped, no `N._` prefix, no PNG named). The recipe:
+ *
+ *   1. Copy the Hero's pack folder from `games/grove/ref/cast-source/...` into
+ *      `assets/play/skins/cast/heroes/<id>/`, keeping its `rotations/` as-is and
+ *      its `animations/<Clip>/<east|west>/frame_###.png` rows. Strip the source
+ *      pack's `N._` ordering prefix from clip folder names where it has one
+ *      (Corvus's did; Archangel's and Oni's did not). The `-deadbeef` folder
+ *      hash may stay — the registry strips it.
+ *   2. Run `npx tsx scripts/play-art-prep.ts` to register the new frame keys.
+ *      **If a dev server is already running, restart it with a cleared cache
+ *      (`npm start -- -c`) afterwards.** The script deletes and re-bakes the
+ *      9-slice folder under `assets/play/kenney-ui/border/sliced/`, and Metro's
+ *      file map does not always pick those files back up on Windows — the
+ *      running server then 500s the whole bundle with "Unable to resolve module
+ *      …/sliced/bl.png" even though the files are on disk and tracked.
+ *   3. Add the row here with the clip names. Frame counts are never listed:
+ *      `heroAvatarRole` counts them from the generated registry.
+ *   4. Run `npx tsx scripts/check-heroes.ts` — it holds the row to the registry,
+ *      both facings, the frame counts on disk, and the attack/skill floor.
  */
 import rawHeroes from './data/heroes.json';
 

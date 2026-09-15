@@ -9,12 +9,12 @@
     "skillId": "skill_archangel",
     "face": "ew",
     "clips": {
-      "idle": "Celestial_Drift",
+      "idle": "Hover_Idle",
       "walk": "Divine_Flight",
       "dash": "Celestial_Rush",
-      "attack": null,
-      "skill": null,
-      "hurt": null
+      "attack": "Attack_01_Seraph_Strike",
+      "skill": "Ultimate_Final_Judgment",
+      "hurt": "Angelic_Flinch"
     }
   },
   {
