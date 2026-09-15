@@ -325,24 +325,20 @@ for (const file of walkComponents(resolve(root, 'src/components'))) {
 ok('none of the axis grounding strings appear in any component file');
 
 async function main() {
-// INVERTED 2026-09-15 (emci explicit), not deleted: these two used to assert
-// routeExplore returned 'consent-denied'/'consent-pending'. AI consent now
-// gates ONLY the conversational exchange with Sage, so Explore generates for
-// a declined or never-asked account exactly as it does for a granted one.
+// RE-INVERTED 2026-09-15 (emci correction). Briefly the same day these
+// asserted that Explore ignored consent. With no dedicated Sage-talk screen
+// built yet, generating an Explore pack IS one of the app's three real AI
+// touchpoints, so it requires consent again -- and consent is checked ahead
+// of the completeness gate, so a declined account is told about consent
+// rather than a lock it cannot clear by answering more questions.
 const denied = await routeExplore({
   me: chipsOnly,
   history: [],
   aiConsent: false,
 });
-assert.notEqual(denied.kind, 'consent-denied');
+assert.equal(denied.kind, 'consent-denied');
 const pending = await routeExplore({ me: chipsOnly, history: [], aiConsent: null });
-assert.notEqual(pending.kind, 'consent-pending');
-// The real point: ai_consent makes NO difference to the outcome. Comparing
-// the two runs to each other catches a gate reappearing under a new name,
-// which a pair of notEquals on its own would not.
-assert.equal(denied.kind, pending.kind);
-assert.doesNotMatch(read('src/lib/explore/route.ts'), /return \{ kind: 'consent-(denied|pending)'/);
-// Crisis is a SAFETY gate and is untouched by any of this.
+assert.equal(pending.kind, 'consent-pending');
 const crisis = await routeExplore({
   me: chipsOnly,
   history: [],
@@ -350,7 +346,7 @@ const crisis = await routeExplore({
   crisisToday: true,
 });
 assert.equal(crisis.kind, 'crisis');
-ok('Explore ignores ai_consent entirely; crisis is still honest-empty');
+ok('consent and crisis are honest-empty, and consent precedes the completeness gate');
 
 let jargonLogged = '';
 let phraseLogged = '';

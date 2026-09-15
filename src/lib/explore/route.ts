@@ -69,11 +69,18 @@ export async function routeExplore(
   input: RouteExploreInput,
   deps: RouteExploreDeps = {},
 ): Promise<RouteExploreResult> {
-  // No AI-consent gate (2026-09-15, emci explicit): consent gates the real
-  // conversational exchange with Sage and nothing else. Explore packs
-  // generate for everyone. This path DOES call a model — intended, not an
-  // oversight. `aiConsent` stays on the input and the two consent `kind`s
-  // stay in the union so caller switches keep compiling; neither is produced.
+  // AI-consent gated (restored 2026-09-15, emci correction). Generating an
+  // Explore pack calls a model, and with no dedicated Sage-talk screen built
+  // yet this IS one of the app's three real AI touchpoints. Consent is
+  // checked before the completeness gate so a declined account reports
+  // consent, not a lock it cannot clear by answering more questions.
+  const consent = input.aiConsent ?? null;
+  if (consent === false) {
+    return { kind: 'consent-denied', pack: null };
+  }
+  if (consent !== true) {
+    return { kind: 'consent-pending', pack: null };
+  }
   if (input.crisisToday) {
     return { kind: 'crisis', pack: null };
   }

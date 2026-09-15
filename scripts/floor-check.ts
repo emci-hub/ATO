@@ -213,15 +213,19 @@ assert.match(sentryLib, /if \(!__DEV__\) return;/);
 ok('You-tab crash/push probes are PRE_LAUNCH_DEV-gated; the native crash itself is __DEV__-only');
 
 // Moved from Dawn to Home 2026-09-14; inline (not a Modal) per emci.
-// REWRITTEN 2026-09-15: the card is still on Home and still inline, but it is
-// now an OPT-IN, not a gate -- offerConsent renders it additively rather than
-// needsConsentPrompt rendering it instead of the day's content.
+// RE-INVERTED 2026-09-15 (emci correction): the card is still inline and still
+// additive, but consent is a real gate again -- on GENERATION only. It is now
+// surfaced at 50-question intake completion via offerConsent, and the
+// unconditional Apple 5.1.2 disclosure sits outside it.
 assert.doesNotMatch(home, /<Modal[\s\S]*<AiConsentCard/);
 assert.match(
   home,
   /\{offerConsent \?[\s\S]{0,300}<AiConsentCard[\s\S]{0,120}context="home"/,
 );
 assert.doesNotMatch(home, /needsConsentPrompt/);
+assert.match(home, /const consentGranted = consent === 'granted';/);
+assert.match(home, /\{AI_USE_DISCLOSURE\}/);
+assert.match(consent, /AI_USE_DISCLOSURE = 'Sage uses AI to personalize your insights\.'/);
 assert.match(home, /setAiConsent/);
 assert.doesNotMatch(sage, /setAiConsent/);
 assert.match(youTab, /Sage(&apos;|')s AI/);
@@ -229,7 +233,7 @@ assert.match(youTab, /'On'/);
 assert.match(youTab, /'Off'/);
 assert.match(youTab, /'Not set yet'/);
 assert.match(youTab, /SettingsFold title="Account"/);
-ok('AiConsentCard is an inline, non-blocking opt-in on Home; You Account row is Sage\'s AI On/Off/Not set yet');
+ok('AiConsentCard is inline on Home, gates generation only, and the AI-use disclosure is unconditional; You Account row is Sage\'s AI On/Off/Not set yet');
 
 const crisisPickerIdx = youTab.indexOf('<CrisisRegionPicker');
 assert.ok(crisisPickerIdx >= 0, 'CrisisRegionPicker is present');

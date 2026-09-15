@@ -31,7 +31,7 @@ import { readAskOverride, readSlotOverride } from '@/lib/dev-overrides';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { weekdayInZone } from '@/lib/local-date';
 import { homeSageLabel, homeSageLede, SAGE_COACH_LABEL } from '@/lib/sage-copy';
-import { AiConsentCard } from '@/components/ai-consent-card';
+import { AiConsentCard, AI_USE_DISCLOSURE } from '@/components/ai-consent-card';
 import { generateDailyInsight } from '@/lib/insight/generate-insight';
 import { fetchTodayInsight, saveInsight } from '@/lib/insight/store';
 import { bankTotalProgress } from '@/lib/questions/local';
@@ -85,7 +85,7 @@ export default function HomeScreen() {
   const userId = session?.user.id;
   const { me, refresh: refreshMe, devAccess } = useMeContext();
   const devUnlocked = useDevAccessUnlocked();
-  const { insight, reload: reloadInsight } = useDailyInsight();
+  const { insight, reload: reloadInsight } = useDailyInsight(userId);
   const { state: growth } = useGrowth();
   const params = useLocalSearchParams<{ focus?: string }>();
   const [checks, setChecks] = useState<Check[]>([]);
@@ -152,25 +152,41 @@ export default function HomeScreen() {
   const alreadyLogged =
     window != null && checks.some((check) => check.day === window.todayDay);
 
-  /**
-   * AI consent no longer gates ANYTHING on Home (2026-09-15, emci explicit).
-   * It is an opt-in for the conversational exchange with Sage and nothing
-   * else. The daily insight generates, renders and writes the widget for
-   * every account — granted, denied, or never asked.
-   *
-   * What survives is the ASK, not the gate: while `ai_consent` is null the
-   * card is offered inline, alongside the day's content rather than instead
-   * of it, and declining it removes the card and changes nothing else.
-   */
-  const consent = me ? aiConsentFor(me) : 'pending';
-  const offerConsent = me != null && consent === 'pending';
-
   // The 50-question bank is local and needs no AI/consent — a separate
   // completeness signal from the insight above, shown on Home so there's
   // somewhere to answer them without having to already know Questions exists.
   const fullProfileProgress = useMemo(() => bankTotalProgress(tracks), [tracks]);
+  // `bootstrapReady` matters here: `tracks` is empty until home_bootstrap
+  // lands, so without it someone who HAS finished the intake would see
+  // "0 of 50" and "finish the questions first" for a beat before it corrected
+  // itself -- the same class of flash already fixed on Legends and Roll.
   const fullProfileDone =
-    fullProfileProgress.total > 0 && fullProfileProgress.answered >= fullProfileProgress.total;
+    bootstrapReady &&
+    fullProfileProgress.total > 0 &&
+    fullProfileProgress.answered >= fullProfileProgress.total;
+
+  /**
+   * AI consent gates GENERATION, not the screen (2026-09-15, emci correction).
+   *
+   * With no dedicated Sage-talk screen built yet, the daily insight is one of
+   * the app's three real AI touchpoints, so it needs consent before it calls a
+   * model. Nothing else on Home is gated: the Check logs, the question bank
+   * opens, and every route stays reachable whatever the answer is.
+   *
+   * Declined and not-yet-asked stay DIFFERENT states. Collapsing them is what
+   * once left a fresh account (ai_consent null) with no insight and no prompt.
+   */
+  const consent = me ? aiConsentFor(me) : 'pending';
+  const consentGranted = consent === 'granted';
+  const consentOffEmpty = consent === 'denied';
+
+  /**
+   * Timing (emci, 2026-09-15): ask at the moment the 50-question intake
+   * finishes, which is the first point an AI feature has a full profile to
+   * generate from. Deliberately NOT an early blocking modal — it is an inline
+   * card below the day's content, and it blocks nothing while unanswered.
+   */
+  const offerConsent = me != null && consent === 'pending' && fullProfileDone;
 
   const reveal = useMemo(() => {
     if (!me) return null;
@@ -255,16 +271,6 @@ export default function HomeScreen() {
   /**
    * Today's insight: read the stored one first, generate only if there is none.
    *
-   * The cached copy has already painted by now (useDailyInsight is a synchronous
-   * AsyncStorage read), so this never causes a flash of empty state — it just
-   * reconciles against the server and fills the gap on a day with no insight yet.
-   *
-   * Consent is NOT consulted here (2026-09-15): the insight generates for
-   * every account. See the `offerConsent` note above.
-   */
-  /**
-   * Today's insight: read the stored one first, generate only if there is none.
-   *
    * The cached copy has already painted by now (useDailyInsight is a plain
    * AsyncStorage read), so this never causes a flash of empty state — it just
    * reconciles against the server and fills the gap on a day with no insight.
@@ -274,12 +280,26 @@ export default function HomeScreen() {
    * meant an insight could never load for the rest of the day once the Check
    * was in — a cleared cache would leave Home permanently empty until midnight.
    *
-   * Consent is NOT consulted here (2026-09-15): the insight generates for
-   * every account. See the `offerConsent` note above.
+   * Nothing here runs without consent: `consentGranted` short-circuits before
+   * any fetch, generation, cache write or widget write.
    */
+  // Revoking consent has to reach the widget too: the cached insight is what
+  // the shipped widget renders, so leaving it would keep AI-written text on
+  // someone's lock screen after they turned AI off.
+  useEffect(() => {
+    // `me` null means a failed profile refresh, not a revoked consent --
+    // `consent` falls back to 'pending' in that case, and wiping on it would
+    // blank a granted user's widget on a transient network failure.
+    if (!me || consentGranted || !insight) return;
+    void saveCachedInsight(null).then(() => reloadInsight());
+  }, [me, consentGranted, insight, reloadInsight]);
+
   const generatingForYmd = useRef<string | null>(null);
   useEffect(() => {
     if (!me || !userId || !window) return;
+    // The one gate: no consent, no model call. Placed above every fetch,
+    // generation, cache write and widget write, not below them.
+    if (!consentGranted) return;
     const { todayDay, todayYmd } = window;
     if (insight?.ymd === todayYmd) return;
     // A home_bootstrap reload gives `checks`/`tracks` fresh identities, which
@@ -294,7 +314,7 @@ export default function HomeScreen() {
         const existing = await fetchTodayInsight(userId, todayYmd);
         if (cancelled) return;
         if (existing) {
-          await saveCachedInsight(cachedFromInsight(existing));
+          await saveCachedInsight(cachedFromInsight(existing, userId));
           if (!cancelled) await reloadInsight();
           return;
         }
@@ -310,6 +330,7 @@ export default function HomeScreen() {
 
         await saveInsight(draft, todayDay, todayYmd);
         await saveCachedInsight({
+          userId,
           day: todayDay,
           ymd: todayYmd,
           theme: draft.theme,
@@ -337,6 +358,7 @@ export default function HomeScreen() {
     window?.todayYmd,
     window?.todayDay,
     insight?.ymd,
+    consentGranted,
     tracks,
     checks,
     reloadInsight,
@@ -411,7 +433,19 @@ export default function HomeScreen() {
             </ThemedText>
           </View>
 
-          {insight ? (
+          {consentOffEmpty ? (
+            /*
+             * Declined: no daily content at all. The card had a starter bank
+             * for its first three days; the insight has no offline lane, so
+             * this is the honest empty state rather than a stale or made-up
+             * one. Everything below this card still works.
+             */
+            <ThemedView type="backgroundElement" style={styles.todayCard}>
+              <ThemedText themeColor="textSecondary">
+                No insight today. Sage only writes these with your say-so — you can turn that on any time in You.
+              </ThemedText>
+            </ThemedView>
+          ) : insight ? (
             /*
              * One card, one hierarchy. The title is the hero — it is the thing
              * the app promises, and the line a person actually carries with
@@ -446,6 +480,21 @@ export default function HomeScreen() {
                 <ThemedText style={styles.doText}>{insight.watchFor}</ThemedText>
               </View>
             </ThemedView>
+          ) : !consentGranted ? (
+            /*
+             * Not asked yet. "Sage is writing today's" would be a lie here —
+             * nothing has been requested and nothing will be until the
+             * question below is answered. Which sentence depends on whether
+             * the ask is even on screen yet.
+             */
+            <ThemedView type="backgroundElement" style={styles.todayCard}>
+              <ThemedText type="smallBold">No insight yet</ThemedText>
+              <ThemedText themeColor="textSecondary">
+                {fullProfileDone
+                  ? 'Say yes below and Sage will write today’s.'
+                  : 'Finish the questions below first — then Sage can start writing these.'}
+              </ThemedText>
+            </ThemedView>
           ) : (
             <ThemedView type="backgroundElement" style={styles.todayCard}>
               <ThemedText type="smallBold">No insight yet</ThemedText>
@@ -456,12 +505,24 @@ export default function HomeScreen() {
           )}
 
           {/*
-            The AI-consent ask (Apple 5.1.2), inline and non-blocking.
-            It sits BELOW the day's content on purpose (2026-09-15, emci
-            explicit): it is an opt-in for talking with Sage, not a gate on
-            anything on this screen. Everything above and below it renders,
-            generates and works whether or not it has been answered; once it
-            is answered either way it disappears and nothing else changes.
+            Apple 5.1.2: the AI-use disclosure is UNCONDITIONAL. It renders
+            before the question is asked, after a yes, and after a no alike —
+            only generation depends on the answer, never disclosure. This sits
+            outside AiConsentCard on purpose, because that card disappears the
+            moment the question is answered.
+          */}
+          <ThemedText type="small" themeColor="textSecondary" style={styles.aiDisclosure}>
+            {AI_USE_DISCLOSURE}
+          </ThemedText>
+
+          {/*
+            The AI-consent ask (Apple 5.1.2), inline and non-blocking, surfaced
+            only once the 50-question intake is finished (emci, 2026-09-15) —
+            the first moment an AI feature has a full profile to generate from.
+            Deliberately not an early blocking modal: it sits below the day's
+            content, and while it is unanswered the Check still logs, the
+            question bank still opens and every route stays reachable. The one
+            thing it governs is whether a model is called at all.
           */}
           {offerConsent ? (
             <AiConsentCard
@@ -747,6 +808,10 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     paddingHorizontal: Spacing.one,
     borderRadius: Spacing.two,
+  },
+  aiDisclosure: {
+    textAlign: 'center',
+    opacity: 0.85,
   },
   answerQuestionsRow: {
     flexDirection: 'row',

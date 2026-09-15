@@ -197,6 +197,44 @@ Read that file plus this section to resume; nothing depends on chat history.
   one. Deliberately left unasserted in `library-check.ts` so wiring it in later
   doesn't have to fight a check that pinned its absence.
 
+- **T-C is SUPERSEDED by T-C2 below — read T-C2 first; T-C's behavior shipped as OTA `64fb42a3` and was then corrected.**
+
+- **T-C2 (consent RE-GATED on all three AI touchpoints) — DONE, 2026-09-15.**
+  emci's correction to T-C: "only gate Sage talk" was too narrow a read. There
+  is no dedicated Sage-talk screen *yet*, so the app's real AI touchpoints ARE
+  the daily insight, the "Tell Sage more" rotation and Explore packs — all
+  three re-gated.
+
+  **The rule, stated once so it stops moving: consent gates GENERATION, never
+  navigation.** A model call needs a yes; a screen, a route, a Check, or
+  anything served from local data does not.
+
+  | Feature | Model call? | Consent blocks it? |
+  |---|---|---|
+  | Home daily insight | yes | **YES** |
+  | "Tell Sage more" / `routeQuestions` | yes | **YES** |
+  | Explore packs / `routeExplore` | yes | **YES** |
+  | 50-question bank / `routeQuestionSweep` | no | **NO** — free, stays free |
+  | Logging a Check | no | **NO** |
+  | Home / Explore / any route | no | **NO** |
+
+  **Timing:** the ask surfaces at 50-question intake completion
+  (`offerConsent = pending && fullProfileDone`), inline and non-blocking — never
+  an early modal. `fullProfileDone` waits on `bootstrapReady` so a finished
+  account isn't told to finish for a beat on cold open.
+
+  **Apple 5.1.2 closed:** `AI_USE_DISCLOSURE` renders on Home unconditionally —
+  before the answer, after a yes, after a no. Deliberately NOT inside
+  `AiConsentCard`, which disappears once answered; a disclosure that vanishes
+  with the answer is what 5.1.2 forbids.
+
+  Also fixed: a revoke still clears the cached widget insight, but a failed
+  profile refresh (`me` null → consent reads 'pending') no longer does — that
+  would blank a granted user's lock screen on a transient network error.
+  `QUESTIONS_EMPTY_CONSENT`/`EXPLORE_EMPTY_CONSENT` now point at You, since Home
+  shows no ask before the intake is done.
+  Gate green (76), reviewer PASS, five check scripts re-inverted.
+
 - **T-C (AI consent gates ONLY talking with Sage) — DONE, 2026-09-15.**
   emci explicit: consent gates the real conversational exchange with Sage and
   nothing else. **The boundary as found: there is no gated surface at all** —

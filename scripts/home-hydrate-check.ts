@@ -69,50 +69,91 @@ assert.match(home, /const \{ todayDay, todayYmd \} = window;/);
 assert.match(home, /if \(generatingForYmd\.current === todayYmd\) return;/);
 ok('Home reads the stored insight first and only generates when the day has none');
 
-// --- 2. consent gates NOTHING on Home -------------------------------------
-// INVERTED 2026-09-15 (emci explicit), not deleted. This block used to assert
-// the opposite: that a declined account saw an exact "No insight today" line,
-// that `consentOffEmpty`/`needsConsentPrompt` existed, and that the generation
-// effect bailed on both before any fetch. AI consent now gates ONE thing --
-// the conversational exchange with Sage -- and nothing on Home. These
-// assertions now pin the removal so it cannot quietly come back.
-assert.doesNotMatch(home, /consentOffEmpty|needsConsentPrompt/);
-assert.ok(
-  !home.includes('No insight today. Sage only writes these with your say-so'),
-  'the consent-off empty branch must be gone, not just unreachable',
-);
-ok('Home has no consent-off empty branch and no consent-derived gate flags');
+// --- 2. consent gates GENERATION, and only generation ---------------------
+// Re-inverted 2026-09-15 (emci correction) after a same-day window in which
+// these asserted the gate's absence. With no dedicated Sage-talk screen built
+// yet, the daily insight is a real AI touchpoint and needs consent before it
+// calls a model -- but nothing else on Home may depend on the answer.
+const CONSENT_OFF_EMPTY =
+  'No insight today. Sage only writes these with your say-so — you can turn that on any time in You.';
 
-// The generation effect must NOT consult consent at all. Pinning the guard
-// window keeps a future refactor from reintroducing a bail there.
+assert.ok(home.includes(CONSENT_OFF_EMPTY), 'Home must show the exact consent-off empty line');
+// Declined and not-yet-asked are DIFFERENT states. Collapsing them is what
+// left a fresh account (ai_consent null) with no insight and no prompt.
+assert.match(home, /const consentGranted = consent === 'granted';/);
+assert.match(home, /const consentOffEmpty = consent === 'denied';/);
+ok('Home distinguishes declined from not-yet-asked and shows the honest empty line');
+
+// The generation effect must bail BEFORE any fetch, generation, cache write
+// or widget write. This is the assertion that would catch a refactor quietly
+// moving the guard below the call.
 const effectStart = home.indexOf('const existing = await fetchTodayInsight');
 assert.ok(effectStart > 0, 'the insight effect must exist');
 const guardWindow = home.slice(home.indexOf('if (!me || !userId || !window) return;'), effectStart);
-assert.doesNotMatch(guardWindow, /consent/i);
-ok('the insight generation effect runs regardless of ai_consent');
+assert.match(guardWindow, /if \(!consentGranted\) return;/);
+ok('no consent, no model call: the guard sits above every fetch and generation');
 
-// The ask survives as an opt-in, but additively: it must not be an
-// either/or with the insight card. If `offerConsent` ever becomes a branch
-// that replaces the day's content, this fails.
-assert.match(home, /const offerConsent = me != null && consent === 'pending';/);
-assert.match(home, /\{offerConsent \? \([\s\S]{0,200}<AiConsentCard/);
-// The insight card must be its OWN top-level branch, not a fallback arm of
-// a consent ternary -- that shape is exactly what made the ask a gate.
-assert.match(home, /\{insight \? \(/);
+// TIMING (emci, 2026-09-15): the ask surfaces when the 50-question intake
+// finishes, not as an early blocking modal. `fullProfileDone` must be part of
+// the condition, and must be computed before it.
+assert.match(
+  home,
+  /const offerConsent = me != null && consent === 'pending' && fullProfileDone;/,
+);
 assert.ok(
-  home.indexOf('{insight ? (') < home.indexOf('{offerConsent ? ('),
+  home.indexOf('const fullProfileDone') < home.indexOf('const offerConsent'),
+  'fullProfileDone must be computed before offerConsent reads it',
+);
+ok('the consent ask is surfaced at intake completion, not on day one');
+
+// The ask is additive: it must never be the branch that decides whether the
+// day's content renders. The content block is its own top-level ternary.
+assert.match(home, /\{offerConsent \? \([\s\S]{0,200}<AiConsentCard/);
+assert.ok(
+  home.indexOf('{consentOffEmpty ? (') < home.indexOf('{offerConsent ? ('),
   "the day's content must render above the consent ask, not behind it",
 );
-ok('the consent ask renders alongside the day\'s content, never instead of it');
+ok('the consent ask renders below the day\'s content, never instead of it');
 
-// Logging a Check must never be blocked on consent -- an AI permission
-// question standing between a user and the core loop is the exact failure
-// this pass existed to remove.
+// Nothing that is not a model call may be gated. The Check in particular:
+// an AI permission question standing between a user and the core loop is the
+// exact failure this pass existed to remove, and it stays removed.
 assert.ok(
   !home.includes('Answer Sage&apos;s AI question above to continue'),
   'Check logging must not be gated on the consent answer',
 );
-ok('the Check is loggable with consent granted, denied or unanswered');
+// The question-bank row (the one navigation control Home owns) must not be
+// conditioned on consent -- it is local and never calls a model.
+const bankRow = home.slice(home.indexOf('{!fullProfileDone ? ('), home.indexOf("router.push('/intake-sweep')"));
+assert.doesNotMatch(bankRow, /consent/i);
+ok('the Check logs and the question-bank route stays open whatever the consent answer is');
+
+// Apple 5.1.2: disclosure is UNCONDITIONAL. It must be rendered outside the
+// consent card (which disappears once answered) and outside every consent
+// branch, so a yes, a no and an unanswered account all see it.
+assert.match(home, /AI_USE_DISCLOSURE/);
+const disclosureIdx = home.indexOf('{AI_USE_DISCLOSURE}');
+assert.ok(disclosureIdx > 0, 'Home must render the disclosure line itself');
+assert.ok(
+  disclosureIdx > home.indexOf('{consentOffEmpty ? ('),
+  'the disclosure must sit outside the consent ternary, not inside one arm',
+);
+assert.doesNotMatch(
+  home.slice(disclosureIdx - 200, disclosureIdx),
+  /consentGranted|consentOffEmpty|offerConsent/,
+);
+ok('the AI-use disclosure renders unconditionally, independent of the answer');
+
+// Revoking consent must wipe the cached insight the widget renders -- but a
+// null `me` is a failed profile refresh, not a revocation, and must NOT wipe
+// a granted user's widget. Both halves of that condition are pinned.
+assert.match(home, /if \(!me \|\| consentGranted \|\| !insight\) return;/);
+ok('a revoke clears the widget cache; a failed profile refresh does not');
+
+// `fullProfileDone` must wait for home_bootstrap, or someone who HAS finished
+// the intake is told to finish it for a beat on every cold open.
+assert.match(home, /const fullProfileDone =[\s\S]{0,20}bootstrapReady &&/);
+ok('intake completion is not judged before home_bootstrap lands');
 
 // --- 3. the widget keeps rendering ----------------------------------------
 // The shipped widget binary reads the card-era keys and cannot be updated over

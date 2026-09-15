@@ -448,11 +448,12 @@ function SlotReadout() {
           isSunday,
         };
         const kind = resolveTodaySlot(input).kind;
-        // 2026-09-15: AI consent gates ONLY the conversational exchange with
-        // Sage, so it can no longer empty the day. This reported `true` for
-        // every declined or never-asked account, which is now a flatly false
-        // diagnostic. Nothing empties the slot on a consent basis any more.
-        const honestEmpty = false;
+        // Consent off (declined or not yet asked) means no insight at all:
+        // the insight is model-generated with no offline lane behind it.
+        // Restored 2026-09-15 after a brief window where this was hardcoded
+        // false, which under the restored gate would misreport every
+        // unconsented account as having content coming.
+        const honestEmpty = me.ai_consent !== true;
         if (cancelled) return;
         setLines(
           [
