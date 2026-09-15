@@ -22,6 +22,7 @@ import rawCast from '@/assets/play/skins/cast/skin.json';
 import rawCraftpix from '@/assets/play/skins/craftpix-td/skin.json';
 import rawKenney from '@/assets/play/skins/kenney-td/skin.json';
 import { PLAY_ART } from '@/play/generated-play-assets';
+import { heroById, type HeroDef } from '@/play/heroes-data';
 
 export type SkinRoleId =
   | 'map.grass'
@@ -361,7 +362,7 @@ export function skinFaceArtIndex(role: SkinRoleId, face: SkinWalkFace): number {
  * Returns undefined when the clip is absent or the frame key isn't authored, so
  * callers fall back to the rotation art.
  */
-function directionalClipArt(
+export function directionalClipArt(
   clip: { dirs: number; order: readonly string[]; frames: number; base: string } | undefined,
   dirIndex: number,
   frame: number,
@@ -520,4 +521,139 @@ export function bandUnitRole(kind: string): SkinRoleId {
     default:
       return BAND_UNIT_ROLE.final;
   }
+}
+
+/* ------------------------------------------- dynamic Avatar hero role ---- */
+/* A3 — the Avatar the board draws is the hero the player set in Dress
+ * (`active_avatar_hero_id`), not a fixed Corvus role. The `unit.avatar` role
+ * stays in the cast skin as Corvus (the starter + the fallback); the helpers
+ * below build the SAME shape for any hero from its `heroes.json` def, so there
+ * is one code path and no per-hero skin.json duplication. */
+
+/** Canonical north-first rotation order — every cast hero folder ships the same
+ * 8 rotations the `unit.avatar` role lists. */
+const CAST_ROTATION_DIRS = [
+  'north',
+  'north-east',
+  'east',
+  'south-east',
+  'south',
+  'south-west',
+  'west',
+  'north-west',
+] as const;
+
+/** `footAt` (feet-line fraction of the drawn box, from the top) per hero id,
+ * matching the measured values the cast skin already carries for the same art:
+ * `unit.avatar` (Corvus) 0.7417, `unit.final` (Archangel) 0.7344,
+ * `unit.boss_scout` (Oni) 0.7447. Art-less heroes fall back to the Corvus role
+ * anyway, so this only needs the heroes whose art can actually be bundled. */
+const HERO_FOOT_AT: Readonly<Record<string, number>> = {
+  corvus: 0.7417,
+  archangel: 0.7344,
+  oni: 0.7447,
+};
+
+/** A 2-dir E/W `SkinWalk` for one of a hero's clip folders, frame count measured
+ * from the generated registry (east == west, enforced by `check:heroes`).
+ * Returns undefined when the hero omits the clip or its art is not bundled —
+ * callers fall back to idle/rotation art for that slot instead of inventing
+ * frames or a PNG. */
+function heroClipWalk(hero: HeroDef, name: string | undefined): SkinWalk | undefined {
+  if (!name) return undefined;
+  const base = `${hero.folder.replace(/^assets\/play\//, '')}/animations/${name}`;
+  let frames = 0;
+  while (PLAY_ART[`${base}/east/frame_${String(frames).padStart(3, '0')}`]) frames += 1;
+  return frames > 0 ? { dirs: 2, order: ['east', 'west'], frames, base } : undefined;
+}
+
+/**
+ * The `unit.avatar` role for the hero the player set as their Avatar.
+ *
+ * Built from the hero's `heroes.json` def — its cast folder (8 rotations) plus
+ * its authored clips as `walk` / named `anims` — with frame counts read from the
+ * generated registry, so there is no per-hero skin.json duplication and a hero
+ * whose art hasn't been copied is an honest stub. Falls back to the static
+ * Corvus `unit.avatar` role when the id is unknown or none of its art is
+ * bundled, so a stale save or an art-less hero (Aurex/Kitsune today) still
+ * draws rather than crashing or rendering blank.
+ */
+export function heroAvatarRole(heroId: string): SkinRole {
+  const fallback = resolveRole('unit.avatar');
+  const hero = heroById(heroId);
+  if (!hero) return fallback ?? { keys: [], dirs: 8, pivot: 'feet' };
+
+  const base = hero.folder.replace(/^assets\/play\//, '');
+  const keys = CAST_ROTATION_DIRS.map((dir) => `${base}/rotations/${dir}`);
+  const walk = heroClipWalk(hero, hero.clips.walk);
+  const anims: SkinRole['anims'] = {};
+  for (const clip of ['idle', 'attack', 'skill', 'hurt', 'dash'] as const) {
+    const w = heroClipWalk(hero, hero.clips[clip]);
+    if (w) anims[clip] = w;
+  }
+
+  // None of the hero's art is bundled (no clips AND no rotations) — the honest
+  // stub. Keep the Corvus role so the board always has a sprite to draw.
+  const anyArt =
+    walk != null || Object.keys(anims).length > 0 || PLAY_ART[keys[2]] != null;
+  if (!anyArt) return fallback ?? { keys: [], dirs: 8, pivot: 'feet' };
+
+  return {
+    keys,
+    dirs: 8,
+    pivot: 'feet',
+    footAt: HERO_FOOT_AT[hero.id] ?? 0.7417,
+    cellPx: 120,
+    units: 24,
+    walk,
+    anims,
+  };
+}
+
+/** Feet anchor for a role object (same clamp as `skinFootAt`). */
+export function roleFootAt(role: SkinRole | undefined): number {
+  const raw = role?.footAt;
+  return typeof raw === 'number' && raw > 0 && raw <= 1 ? raw : 1;
+}
+
+/** Static rotation art for a role object at a facing index. */
+export function roleArt(
+  role: SkinRole | undefined,
+  dirIndex = 0,
+): ImageSourcePropType | undefined {
+  if (!role || role.keys.length === 0) return undefined;
+  const key =
+    role.dirs === 1
+      ? role.keys[0]
+      : role.keys[((dirIndex % role.keys.length) + role.keys.length) % role.keys.length];
+  return key ? PLAY_ART[key] : undefined;
+}
+
+/** Index into a role object's static `keys` for one side profile (east/west). */
+export function roleFaceArtIndex(role: SkinRole | undefined, face: SkinWalkFace): number {
+  const keys = role?.keys;
+  if (!keys || keys.length === 0) return 0;
+  const re = face === 'e' ? /(?:^|\/)east$/ : /(?:^|\/)west$/;
+  const index = keys.findIndex((key) => re.test(key));
+  return index >= 0 ? index : 0;
+}
+
+/** Index into a role object's walk `order` for one side profile. */
+export function roleWalkFaceIndex(role: SkinRole | undefined, face: SkinWalkFace): number {
+  const walk = role?.walk;
+  if (!walk) return SKIN_WALK_NO_DIR;
+  const index = walk.order.indexOf(face === 'e' ? 'east' : 'west');
+  return index >= 0 ? index : SKIN_WALK_NO_DIR;
+}
+
+/** Index into a role object's named clip `order` for one side profile. */
+export function roleAnimFaceIndex(
+  role: SkinRole | undefined,
+  clip: SkinAnimClipName,
+  face: SkinWalkFace,
+): number {
+  const anim = role?.anims?.[clip];
+  if (!anim) return SKIN_WALK_NO_DIR;
+  const index = anim.order.indexOf(face === 'e' ? 'east' : 'west');
+  return index >= 0 ? index : SKIN_WALK_NO_DIR;
 }

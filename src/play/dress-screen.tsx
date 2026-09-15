@@ -38,7 +38,6 @@ import { usePacedAction } from '@/play/action-pacing';
 import { itemArtSource } from '@/play/art';
 import { allAvatarDefs, avatarDef } from '@/play/avatars';
 import {
-  DEFAULT_AVATAR_HERO_ID,
   allHeroes,
   heroById,
 } from '@/play/heroes-data';
@@ -176,7 +175,7 @@ export function DressScreen({
   onUnlockAvatar: (id: string) => void;
   /** Slice A2.5 — make an owned HERO the Avatar (the sprite + skill kit you
    * fight as). Same setter the own-sheet uses, so it also gives up that hero's
-   * tower bind if it had one. No art change until A3. */
+   * tower bind if it had one. The board now draws the hero's own sprite set. */
   onSetAvatarHero: (heroId: string) => void;
   onBackToGrove: () => void;
 }) {
@@ -735,8 +734,9 @@ function AvatarPicker({
  *
  * Owned rows call `onSetAvatarHero`, which is the same setter the own-sheet
  * uses — so exclusivity (setting an Avatar gives up that hero's tower bind) and
- * the ownership guard hold here too. Art is unchanged until A3: the board keeps
- * drawing Corvus, and the row says so plainly instead of implying otherwise.
+ * the ownership guard hold here too. The board draws the hero's own sprite set
+ * from its cast folder (A3); a hero whose art isn't bundled yet falls back to
+ * the starter's sprite on the board.
  */
 function HeroRoster({
   view,
@@ -747,9 +747,6 @@ function HeroRoster({
 }) {
   const ownedHeroes = new Set(view.ownedHeroIds);
   const activeHero = heroById(view.activeAvatarHeroId);
-  /** The Avatar's art still comes from the skin role, not the hero — say so
-   * while the two disagree (until A3's sprite swap lands). */
-  const artPending = view.activeAvatarHeroId !== DEFAULT_AVATAR_HERO_ID;
   return (
     <NeonPanel>
       <View style={styles.statRow}>
@@ -803,11 +800,6 @@ function HeroRoster({
           </View>
         );
       })}
-      {artPending ? (
-        <ThemedText type="code" themeColor="textSecondary">
-          Board art still shows Corvus until the sprite swap lands.
-        </ThemedText>
-      ) : null}
     </NeonPanel>
   );
 }

@@ -667,7 +667,18 @@ export default function PlayScreen() {
  * transition to `playStore.ts` (dev*) and a row here in that same step — do
  * not start a second debug menu. All rows run pure transitions through
  * `commit` and re-render from the same store view the real UI uses.
+ *
+ * The rows are grouped into collapsible sections (all collapsed on entry) so the
+ * kit reads as a short index instead of one long list — the same shape Defend's
+ * Dev kit uses.
  */
+
+/** One Dev kit row. */
+type DevKitRowDef = { key: string; label: string; onPress: () => void };
+
+/** The collapsible groups the Grove Dev kit folds into. */
+type GroveDevSectionId = 'dive' | 'bag' | 'tokens' | 'avatars' | 'campaign' | 'misc';
+
 function GroveDevKit({
   commit,
   onGrantRandomFind,
@@ -702,6 +713,19 @@ function GroveDevKit({
   const theme = useTheme();
   const [resetArmed, setResetArmed] = useState(false);
   const disarmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Which Dev kit sections are expanded. ALL collapsed on entry — the kit is a
+   * long list, so a tester opens just the group they need. */
+  const [openSections, setOpenSections] = useState<Record<GroveDevSectionId, boolean>>({
+    dive: false,
+    bag: false,
+    tokens: false,
+    avatars: false,
+    campaign: false,
+    misc: false,
+  });
+  const toggleSection = useCallback((id: GroveDevSectionId) => {
+    setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
+  }, []);
 
   const clearResetArm = useCallback(() => {
     if (disarmTimer.current) {
@@ -731,162 +755,209 @@ function GroveDevKit({
 
   useEffect(() => clearResetArm, [clearResetArm]);
 
-  const rows: { key: string; label: string; onPress: () => void }[] = [
+  /** The Dev kit's rows, grouped into collapsible sections (same shape as
+   * Defend's). Every action that used to sit in one flat list is still here, in
+   * the same form — only the grouping changed. */
+  const sections: { id: GroveDevSectionId; title: string; rows: DevKitRowDef[] }[] = [
     {
-      key: 'research-one',
-      label: 'Fill research (ready to Claim)',
-      onPress: () => run(devFillResearchOne),
+      id: 'dive',
+      title: 'Dive',
+      rows: [
+        { key: 'charges', label: 'Fill dive charges to 10', onPress: () => run(devFillDiveCharges) },
+        { key: 'dive-charge', label: '+1 dive charge', onPress: () => run(devAddDiveCharge) },
+        {
+          key: 'force-bust',
+          label: forceBustArmed ? 'Force bust next Deeper (armed)' : 'Force bust next Deeper',
+          onPress: () => {
+            clearResetArm();
+            onToggleForceBust();
+          },
+        },
+        {
+          key: 'skip-delays',
+          label: skipDelays ? 'Skip Dive delays (on)' : 'Skip Dive delays',
+          onPress: () => {
+            clearResetArm();
+            onToggleSkipDelays();
+          },
+        },
+      ],
     },
     {
-      key: 'research-full',
-      label: 'Fill research full (10h cap)',
-      onPress: () => run(devFillResearchFull),
-    },
-    { key: 'tokens', label: '+10 tokens', onPress: () => run(devAddTokens) },
-    {
-      key: 'charges',
-      label: 'Fill dive charges to 10',
-      onPress: () => run(devFillDiveCharges),
-    },
-    {
-      key: 'dive-charge',
-      label: '+1 dive charge',
-      onPress: () => run(devAddDiveCharge),
-    },
-    {
-      key: 'grant-find',
-      label: 'Grant random find',
-      onPress: () => {
-        clearResetArm();
-        void onGrantRandomFind();
-      },
-    },
-    {
-      key: 'grant-power',
-      label: 'Grant random Power',
-      onPress: () => {
-        clearResetArm();
-        void onGrantRandomPower();
-      },
-    },
-    {
-      key: 'grant-tide',
-      label: 'Grant 3× Tide Blade (stack test)',
-      onPress: () => {
-        clearResetArm();
-        void onGrantTideBlades();
-      },
-    },
-    {
-      key: 'sell-all-junk',
-      label: 'Sell all Junk',
-      onPress: () => {
-        clearResetArm();
-        void onSellAllJunk();
-      },
-    },
-    {
-      key: 'fill-junk',
-      label: 'Fill junk Looks (test bag-full sell)',
-      onPress: () => {
-        clearResetArm();
-        onFillJunkLooks();
-      },
-    },
-    {
-      key: 'clear-equipped',
-      label: 'Clear equipped',
-      onPress: () => {
-        clearResetArm();
-        onClearEquipped();
-      },
-    },
-    {
-      key: 'force-bust',
-      label: forceBustArmed ? 'Force bust next Deeper (armed)' : 'Force bust next Deeper',
-      onPress: () => {
-        clearResetArm();
-        onToggleForceBust();
-      },
+      id: 'bag',
+      title: 'Bag / Merge',
+      rows: [
+        {
+          key: 'grant-find',
+          label: 'Grant random find',
+          onPress: () => {
+            clearResetArm();
+            void onGrantRandomFind();
+          },
+        },
+        {
+          key: 'grant-power',
+          label: 'Grant random Power',
+          onPress: () => {
+            clearResetArm();
+            void onGrantRandomPower();
+          },
+        },
+        {
+          key: 'grant-tide',
+          label: 'Grant 3× Tide Blade (stack test)',
+          onPress: () => {
+            clearResetArm();
+            void onGrantTideBlades();
+          },
+        },
+        {
+          key: 'sell-all-junk',
+          label: 'Sell all Junk',
+          onPress: () => {
+            clearResetArm();
+            void onSellAllJunk();
+          },
+        },
+        {
+          key: 'fill-junk',
+          label: 'Fill junk Looks (test bag-full sell)',
+          onPress: () => {
+            clearResetArm();
+            onFillJunkLooks();
+          },
+        },
+        {
+          key: 'clear-equipped',
+          label: 'Clear equipped',
+          onPress: () => {
+            clearResetArm();
+            onClearEquipped();
+          },
+        },
+        {
+          key: 'force-merge-success',
+          label: forceMerge === 'success' ? 'Force merge success (armed)' : 'Force merge success',
+          onPress: () => {
+            clearResetArm();
+            onSetForceMerge(forceMerge === 'success' ? 'none' : 'success');
+          },
+        },
+        {
+          key: 'force-merge-fail',
+          label: forceMerge === 'fail' ? 'Force merge fail (armed)' : 'Force merge fail',
+          onPress: () => {
+            clearResetArm();
+            onSetForceMerge(forceMerge === 'fail' ? 'none' : 'fail');
+          },
+        },
+      ],
     },
     {
-      key: 'force-merge-success',
-      label: forceMerge === 'success' ? 'Force merge success (armed)' : 'Force merge success',
-      onPress: () => {
-        clearResetArm();
-        onSetForceMerge(forceMerge === 'success' ? 'none' : 'success');
-      },
+      id: 'tokens',
+      title: 'Tokens / Research',
+      rows: [
+        {
+          key: 'research-one',
+          label: 'Fill research (ready to Claim)',
+          onPress: () => run(devFillResearchOne),
+        },
+        {
+          key: 'research-full',
+          label: 'Fill research full (10h cap)',
+          onPress: () => run(devFillResearchFull),
+        },
+        { key: 'tokens', label: '+10 tokens', onPress: () => run(devAddTokens) },
+        {
+          key: 'shop-reset-daily',
+          label: 'Reset shop daily caps',
+          onPress: () => run(devResetShopDaily),
+        },
+      ],
     },
     {
-      key: 'force-merge-fail',
-      label: forceMerge === 'fail' ? 'Force merge fail (armed)' : 'Force merge fail',
-      onPress: () => {
-        clearResetArm();
-        onSetForceMerge(forceMerge === 'fail' ? 'none' : 'fail');
-      },
+      id: 'avatars',
+      title: 'Avatars',
+      rows: [
+        {
+          key: 'avatar-unlock',
+          label: 'Unlock stub Avatar (2nd slot)',
+          onPress: () => run((doc) => unlockAvatar(doc, STUB_AVATAR_ID).doc),
+        },
+        {
+          key: 'avatar-levels',
+          label: 'Active Avatar +4 levels',
+          onPress: () => run((doc) => devAddAvatarLevels(doc, 4)),
+        },
+        {
+          key: 'avatar-reset',
+          label: 'Reset Avatars to starter',
+          onPress: () => run(devResetAvatars),
+        },
+      ],
     },
     {
-      key: 'skip-delays',
-      label: skipDelays ? 'Skip Dive delays (on)' : 'Skip Dive delays',
-      onPress: () => {
-        clearResetArm();
-        onToggleSkipDelays();
-      },
+      id: 'campaign',
+      title: 'Campaign / Boss',
+      rows: [
+        {
+          key: 'campaign-jump-main-9',
+          label: 'Jump to Main wave 9',
+          onPress: () => run((doc) => devSetCampaignSeat(doc, 'main', 9)),
+        },
+        {
+          key: 'campaign-force-conquered',
+          label: 'Force Conquered +1',
+          onPress: () => run(devForceConquered),
+        },
+        {
+          key: 'boss-grant-fragment',
+          label: '+1 boss fragment',
+          onPress: () => run(devGrantBossFragment),
+        },
+        { key: 'boss-unlock', label: 'Unlock Bound Boss', onPress: () => run(devUnlockBoundBoss) },
+        { key: 'boss-reset', label: 'Reset Bound Bosses', onPress: () => run(devResetBoundBosses) },
+      ],
     },
     {
-      key: 'tune',
-      label: 'Tune…',
-      onPress: () => {
-        clearResetArm();
-        onToggleTune();
-      },
-    },
-    {
-      key: 'avatar-unlock',
-      label: 'Unlock stub Avatar (2nd slot)',
-      onPress: () => run((doc) => unlockAvatar(doc, STUB_AVATAR_ID).doc),
-    },
-    {
-      key: 'avatar-levels',
-      label: 'Active Avatar +4 levels',
-      onPress: () => run((doc) => devAddAvatarLevels(doc, 4)),
-    },
-    {
-      key: 'avatar-reset',
-      label: 'Reset Avatars to starter',
-      onPress: () => run(devResetAvatars),
-    },
-    {
-      key: 'shop-reset-daily',
-      label: 'Reset shop daily caps',
-      onPress: () => run(devResetShopDaily),
-    },
-    {
-      key: 'campaign-jump-main-9',
-      label: 'Jump to Main wave 9',
-      onPress: () => run((doc) => devSetCampaignSeat(doc, 'main', 9)),
-    },
-    {
-      key: 'campaign-force-conquered',
-      label: 'Force Conquered +1',
-      onPress: () => run(devForceConquered),
-    },
-    {
-      key: 'boss-grant-fragment',
-      label: '+1 boss fragment',
-      onPress: () => run(devGrantBossFragment),
-    },
-    {
-      key: 'boss-unlock',
-      label: 'Unlock Bound Boss',
-      onPress: () => run(devUnlockBoundBoss),
-    },
-    {
-      key: 'boss-reset',
-      label: 'Reset Bound Bosses',
-      onPress: () => run(devResetBoundBosses),
+      id: 'misc',
+      title: 'Misc',
+      rows: [
+        {
+          key: 'tune',
+          label: 'Tune…',
+          onPress: () => {
+            clearResetArm();
+            onToggleTune();
+          },
+        },
+      ],
     },
   ];
+
+  /** One Dev kit row. `armed` marks the one-shot force toggles so a tester can
+   * see the arm state from the section list without opening anything extra. */
+  const renderRow = (row: DevKitRowDef) => {
+    const armed =
+      (row.key === 'force-bust' && forceBustArmed) ||
+      (row.key === 'skip-delays' && skipDelays) ||
+      (row.key === 'force-merge-success' && forceMerge === 'success') ||
+      (row.key === 'force-merge-fail' && forceMerge === 'fail');
+    return (
+      <Pressable
+        key={row.key}
+        onPress={row.onPress}
+        accessibilityRole="button"
+        style={({ pressed }) => [styles.devKitRow, pressed && styles.pressed]}>
+        <ThemedText type="small" themeColor={armed ? 'emphasis' : undefined}>
+          {row.label}
+        </ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          ›
+        </ThemedText>
+      </Pressable>
+    );
+  };
 
   return (
     <ThemedView type="backgroundElement" style={styles.devKitCard}>
@@ -894,25 +965,31 @@ function GroveDevKit({
         Dev kit · testing only
       </ThemedText>
 
-      {rows.map((row) => {
-        const armed =
-          (row.key === 'force-bust' && forceBustArmed) ||
-          (row.key === 'skip-delays' && skipDelays) ||
-          (row.key === 'force-merge-success' && forceMerge === 'success') ||
-          (row.key === 'force-merge-fail' && forceMerge === 'fail');
+      {sections.map((section) => {
+        const open = openSections[section.id];
         return (
-          <Pressable
-            key={row.key}
-            onPress={row.onPress}
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.devKitRow, pressed && styles.pressed]}>
-            <ThemedText type="small" themeColor={armed ? 'emphasis' : undefined}>
-              {row.label}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              ›
-            </ThemedText>
-          </Pressable>
+          <View key={section.id}>
+            <Pressable
+              onPress={() => toggleSection(section.id)}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: open }}
+              accessibilityLabel={open ? `Collapse ${section.title}` : `Expand ${section.title}`}
+              style={({ pressed }) => [
+                styles.devKitSectionHeader,
+                { borderColor: theme.border },
+                pressed && styles.pressed,
+              ]}>
+              <ThemedText type="smallBold" themeColor="emphasis">
+                {section.title}
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {open ? '⌄' : '›'}
+              </ThemedText>
+            </Pressable>
+            {open ? (
+              <View style={styles.devKitSectionBody}>{section.rows.map(renderRow)}</View>
+            ) : null}
+          </View>
         );
       })}
 
@@ -1044,6 +1121,23 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
     paddingHorizontal: Spacing.two,
     gap: Spacing.three,
+  },
+  /** Dev kit group header — a bordered row that expands its rows. */
+  devKitSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: Spacing.two,
+    paddingVertical: Spacing.one,
+    paddingHorizontal: Spacing.two,
+    marginTop: Spacing.one,
+  },
+  /** Expanded Dev kit group body — its rows, indented under the header. */
+  devKitSectionBody: {
+    gap: Spacing.half,
+    paddingTop: Spacing.half,
+    paddingLeft: Spacing.two,
   },
   pressed: {
     opacity: 0.8,

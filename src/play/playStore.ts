@@ -623,9 +623,9 @@ export type PlayStoreDoc = {
   /** Heroes OWNED (v18, Slice A2) — hero ids from `heroes.json`. Seeded with
    * the starter hero (Corvus); a Final/Scout band clear adds its hero. */
   owned_hero_ids: string[];
-  /** Which OWNED hero the Avatar is (v18, Slice A2). The board still draws the
-   * `unit.avatar` skin role (Corvus art) until the A3 sprite swap — this is the
-   * saved intent, not yet the art. */
+  /** Which OWNED hero the Avatar is (v18, Slice A2). The Defend board draws
+   * this hero's own sprite set (A3, `heroAvatarRole`), so this id names the art
+   * AND the skill kit in play. */
   active_avatar_hero_id: string;
   /** One-shot "you own a hero" offer awaiting the player's decision (v18,
    * Slice A2). Set when a hero is first owned; the hero sheet shows it once and

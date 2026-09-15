@@ -18,8 +18,9 @@
  * both to an absent key, and callers fall back to idle art. No clip here names
  * a PNG, and `scripts/check-heroes.ts` holds this spelling to the registry.
  *
- * This module is the contract only. Nothing on the board reads it yet: the
- * Avatar draw is still the Corvus `unit.avatar` role (A3), and skill kits /
+ * The board reads this contract through `heroAvatarRole` in `src/play/skin.ts`
+ * (A3): the Defend Avatar resolves the hero set in Dress (`active_avatar_hero_id`)
+ * to its cast folder + these clips, instead of a fixed Corvus role. Skill kits /
  * Defend wiring / the Avatar-vs-Bound-Boss exclusivity are A2/A6.
  */
 import rawHeroes from './data/heroes.json';
@@ -65,7 +66,8 @@ export type HeroDef = {
  * as registry keys against `<folder>/animations/<clip>/<facing>/frame_###`. */
 const HERO_FOLDER_ROOT = 'assets/play/';
 
-/** The Avatar the board draws today. A1 keeps Corvus live; A3 swaps it. */
+/** The starter Avatar hero, and the fallback the board draws when a hero's art
+ * isn't bundled. Every fresh save starts here (A3 swaps per `heroAvatarRole`). */
 export const DEFAULT_AVATAR_HERO_ID = 'corvus';
 
 /** A validated row straight from JSON — `clips` values may be explicit nulls. */

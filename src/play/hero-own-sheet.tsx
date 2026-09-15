@@ -15,9 +15,9 @@
  * still the Avatar — lives in `playStore`'s setters, so the sheet can never
  * disagree with the save.
  *
- * Set as Avatar takes effect in the SAVE only for now: the board still draws
- * the `unit.avatar` skin role (Corvus art) until the A3 sprite swap, so the
- * sheet says so rather than pretending the board changed.
+ * Set as Avatar takes effect in the SAVE; the Defend board then draws that
+ * hero's own sprite set from its cast folder (A3), so the sheet confirms the
+ * swap rather than pretending the board stayed on the starter.
  */
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -79,7 +79,7 @@ export function HeroOwnSheet({
     setSettled({
       eyebrow: 'Avatar set',
       title: `${offer.label} is now your Avatar`,
-      body: 'Saved. The board keeps drawing Corvus until the sprite swap lands.',
+      body: 'Saved. The board now fights as them.',
     });
   }, [offer.label, onSetAvatar]);
 

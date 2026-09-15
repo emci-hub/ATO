@@ -23,7 +23,7 @@
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppState, Pressable, Share, StyleSheet, View } from 'react-native';
 import type { ImageSourcePropType } from 'react-native';
 import Animated, {
@@ -81,16 +81,19 @@ import { NeonLabel, NeonPill, NEON_ROW_LINE } from '@/play/neon-ui';
 import {
   BOARD_SKIN,
   bandUnitRole,
+  directionalClipArt,
+  heroAvatarRole,
   isPathWalker,
-  skinAnimArt,
-  skinAnimFaceIndex,
-  skinAnimFrames,
+  roleAnimFaceIndex,
+  roleArt,
+  roleFaceArtIndex,
+  roleFootAt,
+  roleWalkFaceIndex,
   skinArt,
   skinDirIndex,
   skinDirs,
   skinDrawBox,
   skinFaceArtIndex,
-  skinFootAt,
   skinScale,
   skinTone,
   skinUnits,
@@ -101,6 +104,7 @@ import {
   skinWalkFaceIndex,
   skinWalkFrames,
   type SkinAnimClipName,
+  type SkinRole,
   type SkinRoleId,
   type SkinWalkFace,
 } from '@/play/skin';
@@ -616,9 +620,19 @@ export function DefendScreen({
   const [dumpDropsOpen, setDumpDropsOpen] = useState(false);
   /** Dev kit only: dump GS + per-wave recommended (Phase D smoke aid). */
   const [gsDumpOpen, setGsDumpOpen] = useState(false);
-  /** Dev kit only: the Hero lab rows (Slice A2.5) — collapsed so ~14 hero
-   * actions don't bury the rest of the kit. */
-  const [heroLabOpen, setHeroLabOpen] = useState(false);
+  /** Dev kit only: which collapsible groups are expanded. All four start
+   * collapsed — the kit is ~30 rows, so a tester opens just the group they need
+   * instead of scrolling one flat list (the old single "Hero lab" toggle,
+   * generalised). */
+  const [devSections, setDevSections] = useState<Record<DevSectionId, boolean>>({
+    heroes: false,
+    campaign: false,
+    gear: false,
+    board: false,
+  });
+  const toggleDevSection = useCallback((id: DevSectionId) => {
+    setDevSections((prev) => ({ ...prev, [id]: !prev[id] }));
+  }, []);
   /** What the last win paid — shows the honest (possibly halved) tokens. */
   const [lastWin, setLastWin] = useState<DefendWinResult | null>(null);
   /** Slice A2 — the hero offer the sheet is showing (a local copy of the save's
@@ -745,30 +759,54 @@ export function DefendScreen({
     lockUntil: 0,
   });
   /** Bumped by the avatar anim tick purely to force the re-render that advances
-   * the Corvus frame. The value is never read. */
+   * the Avatar frame. The value is never read. */
   const [, setAvatarAnimTick] = useState(0);
 
+  /** The `unit.avatar` role for the hero set in Dress (`active_avatar_hero_id`).
+   * Rebuilt only when the hero id changes; every Avatar draw/clip read below
+   * resolves through this, so the board never hard-codes Corvus. */
+  const avatarRole = useMemo(
+    () => heroAvatarRole(view.activeAvatarHeroId),
+    [view.activeAvatarHeroId],
+  );
+
+  // Reset the clip player to idle the moment the active hero changes (Dress set
+  // / hero sheet), so a stale frame from the previous hero never shows.
+  useEffect(() => {
+    const a = avatarAnimRef.current;
+    a.clip = 'idle';
+    a.clipStartAt = Date.now();
+    a.onceEndAt = 0;
+    a.lockUntil = 0;
+    setAvatarAnimTick((n) => n + 1);
+  }, [view.activeAvatarHeroId]);
+
   /** Start an Avatar clip (attack/skill/hurt/dash) if its priority allows it.
-   * Returns false when a higher-priority one-shot is locked in, in which case
-   * nothing changes — the caller still does its gameplay work. */
+   * Returns false when the active hero does not author that clip (a null in
+   * `heroes.json` or unbundled art), or when a higher-priority one-shot is
+   * locked in — in which case nothing changes and the caller still does its
+   * gameplay work. */
   const startAvatarOnce = useCallback((clip: AvatarClip): boolean => {
+    if (avatarClipFrames(clip, avatarRole) <= 0) return false; // hero lacks this clip
     const a = avatarAnimRef.current;
     const now = Date.now();
     if (!canStartAvatarClip(a, clip, now)) return false;
     a.clip = clip;
     a.clipStartAt = now;
-    a.onceEndAt = now + Math.max(1, avatarClipFrames(clip)) * AVATAR_FRAME_MS[clip];
+    a.onceEndAt = now + Math.max(1, avatarClipFrames(clip, avatarRole)) * AVATAR_FRAME_MS[clip];
     setAvatarAnimTick((n) => n + 1); // show frame 0 of the new clip immediately
     return true;
-  }, []);
+  }, [avatarRole]);
 
   // Display-only Avatar clip tick. Runs whenever the screen is visible so idle
   // breathes in setup and on the results overlays too; it picks walk/idle from
-  // `movingRef`, retires a finished one-shot, and bumps a counter so the Corvus
-  // frame advances. While paused it slides the clip's clock forward with real
-  // time instead of rendering, which holds the exact frame the pause caught and
+  // `movingRef`, retires a finished one-shot, and bumps a counter so the Avatar
+  // frame advances. A hero with no walk clip stays on idle while moving (sticky
+  // idle). While paused it slides the clip's clock forward with real time
+  // instead of rendering, which holds the exact frame the pause caught and
   // stops a one-shot from expiring on a frozen board. Never touches engine state.
   useEffect(() => {
+    const hasWalk = (avatarRole.walk?.frames ?? 0) > 0;
     let lastTickAt = Date.now();
     let lastFrameKey = '';
     const id = setInterval(() => {
@@ -788,12 +826,12 @@ export function DefendScreen({
           // A finished skill leaves a short recovery tail so the next
           // auto-attack can't clip Root Veil's last frames.
           a.lockUntil = a.clip === 'skill' ? now + AVATAR_SKILL_RECOVER_MS : 0;
-          a.clip = movingRef.current ? 'walk' : 'idle';
+          a.clip = movingRef.current && hasWalk ? 'walk' : 'idle';
           a.clipStartAt = now;
           a.onceEndAt = 0;
         }
       } else {
-        const want: AvatarClip = movingRef.current ? 'walk' : 'idle';
+        const want: AvatarClip = movingRef.current && hasWalk ? 'walk' : 'idle';
         if (a.clip !== want) {
           a.clip = want;
           a.clipStartAt = now;
@@ -803,14 +841,14 @@ export function DefendScreen({
       // 120ms/frame, so this is ~2.4× fewer full-board renders than bumping on
       // every tick. The clip name is part of the key so a clip swap (or the
       // idle↔walk hand-off) always repaints even if the frame index matches.
-      const key = `${a.clip}:${avatarClipFrame(a, now)}`;
+      const key = `${a.clip}:${avatarClipFrame(a, now, avatarRole)}`;
       if (key !== lastFrameKey) {
         lastFrameKey = key;
         setAvatarAnimTick((n) => n + 1);
       }
     }, AVATAR_ANIM_TICK_MS);
     return () => clearInterval(id);
-  }, []);
+  }, [avatarRole]);
 
   /** Measured board size. `boardSizeRef` is the JS-thread copy (tap math);
    * `boardSize` is the SHARED copy the avatar's animated style reads. */
@@ -1592,9 +1630,10 @@ export function DefendScreen({
     [boardMap, startAvatarOnce],
   );
 
+  const avatarFootAt = roleFootAt(avatarRole);
   const avatarStyle = useAnimatedStyle(() => {
     // Read the SHARED board size (reactive) so the sprite scales with the board.
-    // The box is feet-pivoted (`AVATAR_FOOT_AT`) so Corvus's feet land on the
+    // The box is feet-pivoted (`avatarFootAt`) so the Avatar's feet land on the
     // Avatar point instead of floating a quarter-box above it.
     const size = boardSize.value || 100;
     const box = Math.max(AVATAR_MIN_PX, size * AVATAR_ART_FRAC);
@@ -1602,9 +1641,9 @@ export function DefendScreen({
       width: box,
       height: box,
       left: avatarX.value * size - box / 2,
-      top: avatarY.value * size - box * AVATAR_FOOT_AT,
+      top: avatarY.value * size - box * avatarFootAt,
     };
-  });
+  }, [avatarFootAt]);
 
   const levelBonus = avatarLevelWavePower(view.avatarLevel);
   /** Active Avatar's identity — the board draws + names the one you picked in
@@ -1617,17 +1656,17 @@ export function DefendScreen({
       ? `Cycle ${view.conqueredCycles} — foes scale ×${view.cyclePower.toFixed(2)}`
       : null;
 
-  // §19 Avatar: the cast Corvus role (idle loop / walk / attack / skill / hurt /
-  // dash clips, sticky E/W). The frame comes from the clip-player state via the
-  // shared `avatarClipFrame` (same math the anim tick uses); the face is the
-  // sticky side profile. Fails back to the static rotation when a clip frame
-  // isn't authored.
+  // A3 Avatar: the ACTIVE hero's cast role (idle loop / walk / attack / skill /
+  // hurt / dash clips, sticky E/W) resolved via `avatarRole`. The frame comes
+  // from the clip-player state via the shared `avatarClipFrame` (same math the
+  // anim tick uses); the face is the sticky side profile. Fails back to the
+  // static rotation when a clip frame (or the whole clip) isn't authored.
   const avatarAnim = avatarAnimRef.current;
-  const avatarFrame = avatarClipFrame(avatarAnim, Date.now());
+  const avatarFrame = avatarClipFrame(avatarAnim, Date.now(), avatarRole);
   const avatarFace = avatarFaceRef.current;
   const avatarFrameSource =
-    avatarClipArt(avatarAnim.clip, avatarFace, avatarFrame) ??
-    skinArt('unit.avatar', skinFaceArtIndex('unit.avatar', avatarFace));
+    avatarClipArt(avatarAnim.clip, avatarFace, avatarFrame, avatarRole) ??
+    roleArt(avatarRole, roleFaceArtIndex(avatarRole, avatarFace));
 
   /** Drops card — one shared block, collapsed by default to a single neon
    * header row. On Main it renders just above Maps; Trial keeps its previous
@@ -2934,206 +2973,217 @@ export function DefendScreen({
             <ThemedText type="smallBold" themeColor="textSecondary">
               Dev kit · defend only
             </ThemedText>
-            <DevRow
-              label="Win wave"
-              disabled={phase !== 'running'}
-              onPress={() => winWave()}
-            />
-            <DevRow
-              label="Force leak / fail"
-              disabled={phase !== 'running'}
-              onPress={() => {
-                setPhase('lost');
-                setPaused(false);
-                setSelectedPad(null);
-              }}
-            />
-            <DevRow
-              label="+40 scrap"
-              disabled={!sim}
-              onPress={() => setSim((prev) => (prev ? { ...prev, scrap: prev.scrap + 40 } : prev))}
-            />
-            <DevRow
-              label="Clear all towers"
-              disabled={!sim || sim.towers.length === 0}
-              onPress={() => setSim((prev) => (prev ? { ...prev, towers: [] } : prev))}
-            />
-            <DevRow
-              label="Clear Bound Bosses"
-              disabled={!sim || sim.boundBosses.length === 0}
-              onPress={() => setSim((prev) => (prev ? { ...prev, boundBosses: [] } : prev))}
-            />
-            <DevRow
-              label="Reset skill CD"
-              disabled={!sim}
-              onPress={() => setSim((prev) => (prev ? { ...prev, skillCooldownMs: 0 } : prev))}
-            />
-            <DevRow
-              label={godMode ? 'God mode (on)' : 'God mode'}
-              onPress={() => {
-                setGodMode((value) => {
-                  const next = !value;
-                  setKnob('godMode', next); // tune doc — applies on re-entry too
-                  void saveTune();
-                  return next;
-                });
-              }}
-            />
-            <DevRow
-              label={coachHidden ? 'Show coach' : 'Coach on'}
-              onPress={() => setCoachHidden((hidden) => !hidden)}
-            />
-            <DevRow
-              label="Reset daily clear count"
-              disabled={!sim}
-              onPress={() => {
-                onResetDailyClears();
-                setLastWin(null);
-              }}
-            />
-            <DevRow
-              label="Set clears today to 5"
-              disabled={!sim}
-              onPress={() => {
-                onSetClearsTodayFive();
-                setLastWin(null);
-              }}
-            />
-            <DevRow
-              label="Grant wave-5 milestone"
-              disabled={!sim}
-              onPress={() => {
-                void onGrantMilestoneWaveFive();
-              }}
-            />
-            <DevRow
-              label="Reset milestones"
-              disabled={!sim}
-              onPress={() => {
-                onResetMilestones();
-              }}
-            />
-            <DevRow
-              label="Reset campaign to Trial wave 1"
-              onPress={() => {
-                onResetCampaign();
-                buildSetup({ phase: 'trial', wave: 1, mode: 'campaign' });
-              }}
-            />
-            <DevRow
-              label="Jump to Main wave 9"
-              onPress={() => {
-                onJumpMain9();
-                buildSetup({ phase: 'main', wave: 9, mode: 'campaign' });
-              }}
-            />
-            <DevRow
-              label="Jump to Scout (Main wave 5)"
-              onPress={() => {
-                onJumpScout();
-                buildSetup({ phase: 'main', wave: 5, mode: 'campaign' });
-              }}
-            />
-            <DevRow
-              label="Preview boss beat (Final)"
-              disabled={!sim}
-              onPress={previewBossBeat}
-            />
-            <DevRow
-              label="Force Conquered +1"
-              onPress={() => {
-                onForceConquered();
-                buildSetup({ phase: 'main', wave: 1, mode: 'campaign' });
-              }}
-            />
-            <DevRow
-              label="Jump to Final (Main wave 10)"
-              onPress={() => {
-                onForceFinal();
-                buildSetup({ phase: 'main', wave: 10, mode: 'campaign' });
-              }}
-            />
-            <DevRow label="Grant star token" onPress={() => void onGrantStarToken()} />
-            <DevRow label="Spend star token" onPress={() => void onSpendStarToken()} />
-            {/* Slice A2/A2.5 — one "Hero lab" menu instead of a dozen rows: own
-                any/all heroes, set the Avatar (auto-owning for test speed), and
-                reset. Everything here is PRE_LAUNCH_DEV-gated by the parent. */}
-            <DevRow
-              label={heroLabOpen ? 'Hero lab (open)' : 'Hero lab'}
-              onPress={() => setHeroLabOpen((open) => !open)}
-            />
-            {heroLabOpen ? (
-              <>
-                {allHeroes().map((hero) => (
-                  <DevRow
-                    key={`own-${hero.id}`}
-                    label={`Own ${hero.name}`}
-                    onPress={() => void onDevOwnHero(hero.id)}
-                  />
-                ))}
-                <DevRow label="Own all heroes" onPress={() => void onDevOwnAllHeroes()} />
-                <DevRow label="Clear hero offer" onPress={() => void onDevClearHeroOffer()} />
+            {/* Four collapsible groups, ALL collapsed on entry (the kit is ~30
+                rows). Every row that was in the flat list is still here, in the
+                same form — only the grouping changed. */}
+            <DevSection
+              id="heroes"
+              title="Heroes"
+              open={devSections.heroes}
+              onToggle={toggleDevSection}>
+              {allHeroes().map((hero) => (
                 <DevRow
-                  label="Clear owned heroes (→ Corvus)"
-                  onPress={() => void onDevClearOwnedHeroes()}
+                  key={`own-${hero.id}`}
+                  label={`Own ${hero.name}`}
+                  onPress={() => void onDevOwnHero(hero.id)}
                 />
-                {allHeroes().map((hero) => (
-                  <DevRow
-                    key={`set-${hero.id}`}
-                    label={`Set Avatar → ${hero.name} (dev)`}
-                    onPress={() => void onDevSetAvatarHero(hero.id)}
-                  />
-                ))}
-              </>
-            ) : null}
-            <DevRow
-              label={`Cycle tint → next (${TAG_LABEL[view.cycleTint]})`}
-              onPress={() => {
-                const idx = TYPE_MATCH_CYCLE.indexOf(view.cycleTint);
-                const next = TYPE_MATCH_CYCLE[(idx + 1) % TYPE_MATCH_CYCLE.length];
-                onSetCycleTint(next);
-              }}
-            />
-            <DevRow
-              label="Reset Avatar-star cycle"
-              onPress={() => {
-                onResetAvatarStarCycle();
-                setLastWin(null);
-              }}
-            />
-            <DevRow
-              label="Set GS high (overgear)"
-              onPress={() => {
-                onDevOvergear();
-                setLastWin(null);
-              }}
-            />
-            <DevRow
-              label="Force skip offer (overgear → Trial 1)"
-              onPress={() => {
-                onDevForceSkipOffer();
-                buildSetup({ phase: 'trial', wave: 1, mode: 'campaign' });
-              }}
-            />
-            <DevRow
-              label={gsDumpOpen ? 'Hide GS vs recommended' : 'Dump GS vs recommended'}
-              onPress={() => setGsDumpOpen((open) => !open)}
-            />
-            {gsDumpOpen ? (
-              <ThemedText type="code" themeColor="textSecondary">
-                {gsDumpLines.join('\n')}
-              </ThemedText>
-            ) : null}
-            <DevRow
-              label={dumpDropsOpen ? 'Hide band drop table' : 'Dump drops for band'}
-              onPress={() => setDumpDropsOpen((open) => !open)}
-            />
-            {dumpDropsOpen ? (
-              <ThemedText type="code" themeColor="textSecondary">
-                {dropTableId}: {dropRows.length} rows
-                {dropRows.map((row) => `\n  ${row.id}${row.unique ? ' (unique)' : ''}`).join('')}
-              </ThemedText>
-            ) : null}
+              ))}
+              <DevRow label="Own all heroes" onPress={() => void onDevOwnAllHeroes()} />
+              <DevRow label="Clear hero offer" onPress={() => void onDevClearHeroOffer()} />
+              <DevRow
+                label="Clear owned heroes (→ Corvus)"
+                onPress={() => void onDevClearOwnedHeroes()}
+              />
+              {allHeroes().map((hero) => (
+                <DevRow
+                  key={`set-${hero.id}`}
+                  label={`Set Avatar → ${hero.name} (dev)`}
+                  onPress={() => void onDevSetAvatarHero(hero.id)}
+                />
+              ))}
+            </DevSection>
+
+            <DevSection
+              id="campaign"
+              title="Campaign"
+              open={devSections.campaign}
+              onToggle={toggleDevSection}>
+              <DevRow label="Win wave" disabled={phase !== 'running'} onPress={() => winWave()} />
+              <DevRow
+                label="Force leak / fail"
+                disabled={phase !== 'running'}
+                onPress={() => {
+                  setPhase('lost');
+                  setPaused(false);
+                  setSelectedPad(null);
+                }}
+              />
+              <DevRow
+                label="Reset campaign to Trial wave 1"
+                onPress={() => {
+                  onResetCampaign();
+                  buildSetup({ phase: 'trial', wave: 1, mode: 'campaign' });
+                }}
+              />
+              <DevRow
+                label="Jump to Main wave 9"
+                onPress={() => {
+                  onJumpMain9();
+                  buildSetup({ phase: 'main', wave: 9, mode: 'campaign' });
+                }}
+              />
+              <DevRow
+                label="Jump to Scout (Main wave 5)"
+                onPress={() => {
+                  onJumpScout();
+                  buildSetup({ phase: 'main', wave: 5, mode: 'campaign' });
+                }}
+              />
+              <DevRow
+                label="Jump to Final (Main wave 10)"
+                onPress={() => {
+                  onForceFinal();
+                  buildSetup({ phase: 'main', wave: 10, mode: 'campaign' });
+                }}
+              />
+              <DevRow label="Preview boss beat (Final)" disabled={!sim} onPress={previewBossBeat} />
+              <DevRow
+                label="Force Conquered +1"
+                onPress={() => {
+                  onForceConquered();
+                  buildSetup({ phase: 'main', wave: 1, mode: 'campaign' });
+                }}
+              />
+              <DevRow
+                label="Force skip offer (overgear → Trial 1)"
+                onPress={() => {
+                  onDevForceSkipOffer();
+                  buildSetup({ phase: 'trial', wave: 1, mode: 'campaign' });
+                }}
+              />
+              <DevRow
+                label="Reset daily clear count"
+                disabled={!sim}
+                onPress={() => {
+                  onResetDailyClears();
+                  setLastWin(null);
+                }}
+              />
+              <DevRow
+                label="Set clears today to 5"
+                disabled={!sim}
+                onPress={() => {
+                  onSetClearsTodayFive();
+                  setLastWin(null);
+                }}
+              />
+              <DevRow
+                label="Grant wave-5 milestone"
+                disabled={!sim}
+                onPress={() => {
+                  void onGrantMilestoneWaveFive();
+                }}
+              />
+              <DevRow
+                label="Reset milestones"
+                disabled={!sim}
+                onPress={() => {
+                  onResetMilestones();
+                }}
+              />
+            </DevSection>
+
+            <DevSection
+              id="gear"
+              title="Gear / Stars"
+              open={devSections.gear}
+              onToggle={toggleDevSection}>
+              <DevRow
+                label="Set GS high (overgear)"
+                onPress={() => {
+                  onDevOvergear();
+                  setLastWin(null);
+                }}
+              />
+              <DevRow label="Grant star token" onPress={() => void onGrantStarToken()} />
+              <DevRow label="Spend star token" onPress={() => void onSpendStarToken()} />
+              <DevRow
+                label={`Cycle tint → next (${TAG_LABEL[view.cycleTint]})`}
+                onPress={() => {
+                  const idx = TYPE_MATCH_CYCLE.indexOf(view.cycleTint);
+                  const next = TYPE_MATCH_CYCLE[(idx + 1) % TYPE_MATCH_CYCLE.length];
+                  onSetCycleTint(next);
+                }}
+              />
+              <DevRow
+                label="Reset Avatar-star cycle"
+                onPress={() => {
+                  onResetAvatarStarCycle();
+                  setLastWin(null);
+                }}
+              />
+              <DevRow
+                label={gsDumpOpen ? 'Hide GS vs recommended' : 'Dump GS vs recommended'}
+                onPress={() => setGsDumpOpen((open) => !open)}
+              />
+              {gsDumpOpen ? (
+                <ThemedText type="code" themeColor="textSecondary">
+                  {gsDumpLines.join('\n')}
+                </ThemedText>
+              ) : null}
+              <DevRow
+                label={dumpDropsOpen ? 'Hide band drop table' : 'Dump drops for band'}
+                onPress={() => setDumpDropsOpen((open) => !open)}
+              />
+              {dumpDropsOpen ? (
+                <ThemedText type="code" themeColor="textSecondary">
+                  {dropTableId}: {dropRows.length} rows
+                  {dropRows.map((row) => `\n  ${row.id}${row.unique ? ' (unique)' : ''}`).join('')}
+                </ThemedText>
+              ) : null}
+            </DevSection>
+
+            <DevSection
+              id="board"
+              title="Board / Misc"
+              open={devSections.board}
+              onToggle={toggleDevSection}>
+              <DevRow
+                label="+40 scrap"
+                disabled={!sim}
+                onPress={() => setSim((prev) => (prev ? { ...prev, scrap: prev.scrap + 40 } : prev))}
+              />
+              <DevRow
+                label="Clear all towers"
+                disabled={!sim || sim.towers.length === 0}
+                onPress={() => setSim((prev) => (prev ? { ...prev, towers: [] } : prev))}
+              />
+              <DevRow
+                label="Clear Bound Bosses"
+                disabled={!sim || sim.boundBosses.length === 0}
+                onPress={() => setSim((prev) => (prev ? { ...prev, boundBosses: [] } : prev))}
+              />
+              <DevRow
+                label="Reset skill CD"
+                disabled={!sim}
+                onPress={() => setSim((prev) => (prev ? { ...prev, skillCooldownMs: 0 } : prev))}
+              />
+              <DevRow
+                label={godMode ? 'God mode (on)' : 'God mode'}
+                onPress={() => {
+                  setGodMode((value) => {
+                    const next = !value;
+                    setKnob('godMode', next); // tune doc — applies on re-entry too
+                    void saveTune();
+                    return next;
+                  });
+                }}
+              />
+              <DevRow
+                label={coachHidden ? 'Show coach' : 'Coach on'}
+                onPress={() => setCoachHidden((hidden) => !hidden)}
+              />
+            </DevSection>
           </ThemedView>
         ) : null}
       </SafeAreaView>
@@ -3238,6 +3288,56 @@ function DevRow({ label, onPress, disabled }: { label: string; onPress: () => vo
         {label}
       </ThemedText>
     </Pressable>
+  );
+}
+
+/** The collapsible groups the Defend Dev kit folds into. */
+type DevSectionId = 'heroes' | 'campaign' | 'gear' | 'board';
+
+/**
+ * One collapsible Dev kit group — a header row that expands its `DevRow`s. The
+ * kit grew to ~30 actions, so the flat list became four groups, ALL collapsed on
+ * entry; opening one is a single tap on its header (same tap-to-expand shape the
+ * old one-off "Hero lab" toggle used). Dev-only by construction: the card this
+ * renders inside is `PRE_LAUNCH_DEV` + unlock gated by its parent.
+ */
+function DevSection({
+  id,
+  title,
+  open,
+  onToggle,
+  children,
+}: {
+  id: DevSectionId;
+  title: string;
+  open: boolean;
+  onToggle: (id: DevSectionId) => void;
+  children: ReactNode;
+}) {
+  const theme = useTheme();
+  return (
+    <>
+      <Pressable
+        onPress={() => onToggle(id)}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        accessibilityLabel={open ? `Collapse ${title}` : `Expand ${title}`}
+        style={({ pressed }) => [
+          styles.devSectionHeader,
+          { backgroundColor: theme.backgroundSelected, borderColor: controlBorderColor(theme) },
+          pressed && styles.pressed,
+        ]}>
+        <ThemedText type="smallBold" themeColor="emphasis">
+          {title}
+        </ThemedText>
+        <MaterialCommunityIcons
+          name={open ? 'chevron-up' : 'chevron-down'}
+          size={18}
+          color={theme.accent}
+        />
+      </Pressable>
+      {open ? <View style={styles.devSectionBody}>{children}</View> : null}
+    </>
   );
 }
 
@@ -3356,9 +3456,6 @@ function HitFloater({
 const AVATAR_ART_FRAC = 0.22;
 /** Floor for the art box, px (small boards). */
 const AVATAR_MIN_PX = 56;
-/** Feet anchor for the cast Avatar sprite (fraction of the drawn box, from the
- * top) — measured from Corvus's idle art so its feet land on the board point. */
-const AVATAR_FOOT_AT = skinFootAt('unit.avatar');
 
 /* ---------------------------------------------------- Avatar clip player --- */
 /** Avatar clips (display only). `walk` reads the role's `walk` clip; the rest
@@ -3422,17 +3519,17 @@ function canStartAvatarClip(
  * both read this, so the tick can skip re-renders for frames it already showed
  * without ever drifting from what the renderer would compute.
  */
-function avatarClipFrame(state: AvatarAnimState, now: number): number {
-  const frames = Math.max(1, avatarClipFrames(state.clip));
+function avatarClipFrame(state: AvatarAnimState, now: number, role: SkinRole): number {
+  const frames = Math.max(1, avatarClipFrames(state.clip, role));
   const raw = Math.floor((now - state.clipStartAt) / AVATAR_FRAME_MS[state.clip]);
   return state.onceEndAt > 0 ? Math.min(raw, frames - 1) : raw % frames;
 }
 
 /** Frame count for an Avatar clip (0 when the role omits it). */
-function avatarClipFrames(clip: AvatarClip): number {
+function avatarClipFrames(clip: AvatarClip, role: SkinRole): number {
   return clip === 'walk'
-    ? skinWalkFrames('unit.avatar')
-    : skinAnimFrames('unit.avatar', clip);
+    ? role.walk?.frames ?? 0
+    : role.anims?.[clip]?.frames ?? 0;
 }
 
 /** Art for one frame of an Avatar clip, resolved at the sticky E/W face. */
@@ -3440,11 +3537,12 @@ function avatarClipArt(
   clip: AvatarClip,
   face: SkinWalkFace,
   frame: number,
+  role: SkinRole,
 ): ImageSourcePropType | undefined {
   if (clip === 'walk') {
-    return skinWalkArt('unit.avatar', skinWalkFaceIndex('unit.avatar', face), frame);
+    return directionalClipArt(role.walk, roleWalkFaceIndex(role, face), frame);
   }
-  return skinAnimArt('unit.avatar', clip, skinAnimFaceIndex('unit.avatar', clip, face), frame);
+  return directionalClipArt(role.anims?.[clip], roleAnimFaceIndex(role, clip, face), frame);
 }
 
 /* ------------------------------------------------------- click-to-move --- */
@@ -3940,6 +4038,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: Spacing.three,
     paddingVertical: Spacing.two,
+  },
+  /** Dev kit group header — a bordered row that expands its rows (DevSection). */
+  devSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: Spacing.three,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+  },
+  /** Expanded Dev kit group body — its DevRows, tighter than the card gap. */
+  devSectionBody: {
+    gap: Spacing.one,
+    paddingTop: Spacing.one,
   },
   centerText: {
     textAlign: 'center',
