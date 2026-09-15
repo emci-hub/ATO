@@ -80,6 +80,7 @@
     "check:kenney": "tsx ./scripts/kenney-check.ts",
     "check:wave-tables": "tsx ./scripts/wave-tables-check.ts",
     "check:heroes": "tsx ./scripts/check-heroes.ts",
+    "check:towers": "tsx ./scripts/check-towers.ts",
     "prep:kenney": "tsx ./scripts/kenney-prep.ts",
     "check:talk-live": "tsx ./scripts/talk-live-check.ts",
     "check:card-live": "tsx ./scripts/card-live-check.ts",

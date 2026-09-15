@@ -103,6 +103,7 @@ import {
   skinWalkFace,
   skinWalkFaceIndex,
   skinWalkFrames,
+  towerSkinRole,
   type SkinAnimClipName,
   type SkinRole,
   type SkinRoleId,
@@ -649,6 +650,16 @@ export function DefendScreen({
   const shotSeq = useRef(0);
   /** Per-tower aim rotation (deg), keyed by tower id; kept between shots. */
   const towerFacingRef = useRef<Record<number, number>>({});
+  /** Per-tower sticky E/W side profile (K1), keyed by tower id. Reused for the
+   * clip kit's idle/attack art; `skinWalkFace` on the aim dx flips it toward the
+   * shot and keeps the last face through a near-vertical aim. */
+  const towerFaceRef = useRef<Record<number, SkinWalkFace>>({});
+  /** Per-tower clip-player state (K1), keyed by tower id: idle loop or the
+   * attack one-shot. Display only — combat/cooldowns never touch it. */
+  const towerAnimRef = useRef<Record<number, TowerAnimState>>({});
+  /** Bumped by the tower anim tick to force the re-render that advances tower
+   * frames. The value is never read. */
+  const [, setTowerAnimTick] = useState(0);
   /** Per-creep path facing (deg), keyed by puff id. Kept when a creep is nearly
    * stopped (degenerate heading) so the sprite never snaps to a default. This is
    * the TRUE path tangent (the runner's motion streak rides it); the sprite's
@@ -797,6 +808,73 @@ export function DefendScreen({
     setAvatarAnimTick((n) => n + 1); // show frame 0 of the new clip immediately
     return true;
   }, [avatarRole]);
+
+  /** Start a tower's `attack` one-shot (K1) when its shot FX fires. Returns
+   * false when the tower's skin authors no attack clip (unbundled art) — in
+   * which case nothing changes and the tower keeps its static rotation. */
+  const startTowerAttack = useCallback((towerId: number, role: SkinRole): boolean => {
+    if (towerClipFrames('attack', role) <= 0) return false;
+    const now = Date.now();
+    const state: TowerAnimState = {
+      clip: 'attack',
+      clipStartAt: now,
+      onceEndAt: now + Math.max(1, towerClipFrames('attack', role)) * TOWER_FRAME_MS.attack,
+    };
+    towerAnimRef.current[towerId] = state;
+    setTowerAnimTick((n) => n + 1); // show frame 0 of the shot immediately
+    return true;
+  }, []);
+
+  // Display-only tower clip tick (K1). Runs whenever the screen is visible so a
+  // tower breathes idle on its pad in setup too; it retires a finished attack
+  // one-shot back to idle and bumps a counter only when a tower frame changes
+  // (a tower with no idle/attack art never bumps — it stays a static rotation).
+  // While paused it slides the clip clocks forward with real time, matching the
+  // Avatar so a one-shot never expires on a frozen board. Never touches engine
+  // state.
+  useEffect(() => {
+    const lastFrameKey = new Map<number, string>();
+    let lastTickAt = Date.now();
+    const id = setInterval(() => {
+      const current = simRef.current;
+      const now = Date.now();
+      if (pausedRef.current) {
+        const dt = now - lastTickAt;
+        for (const tower of current?.towers ?? []) {
+          const s = towerAnimRef.current[tower.id];
+          if (s) {
+            s.clipStartAt += dt;
+            if (s.onceEndAt > 0) s.onceEndAt += dt;
+          }
+        }
+        lastTickAt = now;
+        return; // no bump → the frame renders frozen, matching the sim
+      }
+      lastTickAt = now;
+      if (!current || current.towers.length === 0) return;
+      let changed = false;
+      for (const tower of current.towers) {
+        const role = TOWER_KIT_ROLES[tower.kind];
+        const hasClips = towerClipFrames('idle', role) > 0 || towerClipFrames('attack', role) > 0;
+        if (!hasClips) continue; // static rotation — no clip to advance
+        const prev = towerAnimRef.current[tower.id];
+        const state: TowerAnimState = prev ?? { clip: 'idle', clipStartAt: now, onceEndAt: 0 };
+        if (state.onceEndAt > 0 && now >= state.onceEndAt) {
+          state.clip = 'idle';
+          state.clipStartAt = now;
+          state.onceEndAt = 0;
+        }
+        towerAnimRef.current[tower.id] = state;
+        const key = `${state.clip}:${towerClipFrame(state, now, role)}`;
+        if (lastFrameKey.get(tower.id) !== key) {
+          lastFrameKey.set(tower.id, key);
+          changed = true;
+        }
+      }
+      if (changed) setTowerAnimTick((n) => n + 1);
+    }, AVATAR_ANIM_TICK_MS);
+    return () => clearInterval(id);
+  }, []);
 
   // Display-only Avatar clip tick. Runs whenever the screen is visible so idle
   // breathes in setup and on the results overlays too; it picks walk/idle from
@@ -1338,9 +1416,20 @@ export function DefendScreen({
         const tx = tpos.x * 100;
         const ty = tpos.y * 100;
         towerFacingRef.current[tower.id] = aimDegrees(pad.x, pad.y, tx, ty);
+        // K1 — sticky side profile toward the shot, reused for the clip kit's
+        // idle/attack art. `skinWalkFace` on the normalized aim dx flips the
+        // face east/west and keeps the last face through a near-vertical aim.
+        const aimLen = Math.max(1, Math.hypot(tx - pad.x, ty - pad.y));
+        towerFaceRef.current[tower.id] = skinWalkFace(
+          (tx - pad.x) / aimLen,
+          towerFaceRef.current[tower.id] ?? 'e',
+        );
         const after = step.state.towers.find((t) => t.id === tower.id);
         const fired = after != null && after.cooldownMs > tower.cooldownMs + 1;
-        if (fired) spawnShot(pad.x, pad.y, tx, ty);
+        if (fired) {
+          spawnShot(pad.x, pad.y, tx, ty);
+          startTowerAttack(tower.id, TOWER_KIT_ROLES[tower.kind]);
+        }
       }
       // §9m boss warn: peek the remaining schedule and raise the banner ONCE, a
       // beat before the boss steps in (or the tick it lands, if the lead was
@@ -1376,7 +1465,7 @@ export function DefendScreen({
       }
     }, DEFEND_TICK_MS);
     return () => clearInterval(id);
-  }, [phase, paused, winWave, spawnFloaters, spawnShot, startAvatarOnce]);
+  }, [phase, paused, winWave, spawnFloaters, spawnShot, startAvatarOnce, startTowerAttack]);
 
   // Run fail → play the Avatar's HURT clip once (art only; the lost overlay is
   // already showing). Catches the leak path and the dev "force leak" button.
@@ -2027,20 +2116,47 @@ export function DefendScreen({
               ) : null}
               {/* §19 tower sprites (skin roles). Visual level is SCALE ONLY
                * (Lv1 0.70 · Lv2 0.85 · Lv3 1.0) — no number badges. Each tower
-               * is rotated toward its current target around its own centre. */}
+               * is rotated toward its current target around its own centre —
+               * unless its clip kit is bundled, in which case it plays a sticky
+               * E/W idle loop + attack one-shot (K1) with no rotate. */}
               {sim?.towers.map((tower) => {
                 const pad = boardMap.pads[tower.pad];
                 const role = TOWER_ROLE[tower.kind];
+                const kitRole = TOWER_KIT_ROLES[tower.kind];
                 const dirs = skinDirs(role);
                 const deg = towerFacingRef.current[tower.id] ?? 0;
                 const heading = headingVectorFromDeg(deg);
-                const dirIndex = skinDirIndex(role, heading.dx, heading.dy);
-                const source = skinArt(role, dirIndex);
+                const face = towerFaceRef.current[tower.id] ?? 'e';
+                const hasClips =
+                  towerClipFrames('idle', kitRole) > 0 ||
+                  towerClipFrames('attack', kitRole) > 0;
+
+                let source: ImageSourcePropType | undefined;
+                let transform: string | undefined;
+                if (hasClips) {
+                  // Stationary humanoid: the breathing idle loop, or the attack
+                  // one-shot while firing. Side-profile art → sticky E/W face,
+                  // never rotated.
+                  const anim: TowerAnimState =
+                    towerAnimRef.current[tower.id] ??
+                    { clip: 'idle', clipStartAt: Date.now(), onceEndAt: 0 };
+                  const frame = towerClipFrame(anim, Date.now(), kitRole);
+                  source =
+                    directionalClipArt(
+                      kitRole.anims?.[anim.clip],
+                      roleAnimFaceIndex(kitRole, anim.clip, face),
+                      frame,
+                    ) ?? roleArt(kitRole, roleFaceArtIndex(kitRole, face));
+                  transform = undefined;
+                } else {
+                  // No clip art yet — keep the static 8-dir rotation.
+                  const dirIndex = skinDirIndex(role, heading.dx, heading.dy);
+                  source = skinArt(role, dirIndex);
+                  transform = dirs > 1 ? undefined : `rotate(${deg} ${pad.x} ${pad.y})`;
+                }
                 if (!source) return null;
                 const size = skinUnits(role, TOWER_PAD_UNITS) * skinScale(role, tower.level);
                 const box = skinDrawBox(role, pad.x, pad.y, size);
-                const transform =
-                  dirs > 1 ? undefined : `rotate(${deg} ${pad.x} ${pad.y})`;
                 return (
                   <G key={`tower-art-${tower.id}`}>
                     <G transform={transform}>
@@ -3545,6 +3661,34 @@ function avatarClipArt(
   return directionalClipArt(role.anims?.[clip], roleAnimFaceIndex(role, clip, face), frame);
 }
 
+/* ---------------------------------------------------- tower clip kit ---- */
+/** Tower clips (display only). A tower is a stationary humanoid: `idle` loops
+ * while it isn't firing; `attack` is the SHOOT one-shot (its `fire` clip,
+ * aliased to `attack` in the loader). No walk/dash/skill on a tower. */
+type TowerClip = 'idle' | 'attack';
+/** Display-only cadence for each tower clip (ms per frame). */
+const TOWER_FRAME_MS: Record<TowerClip, number> = { idle: 120, attack: 65 };
+
+/** Tower clip-player state. `onceEndAt === 0` means the idle loop is active. */
+type TowerAnimState = {
+  clip: TowerClip;
+  clipStartAt: number;
+  onceEndAt: number;
+};
+
+/** Frame count for a tower clip (0 when the role omits it). */
+function towerClipFrames(clip: TowerClip, role: SkinRole): number {
+  return role.anims?.[clip]?.frames ?? 0;
+}
+
+/** Frame index to draw for the current tower clip state. Looping idle wraps; a
+ * one-shot attack holds its last frame. */
+function towerClipFrame(state: TowerAnimState, now: number, role: SkinRole): number {
+  const frames = Math.max(1, towerClipFrames(state.clip, role));
+  const raw = Math.floor((now - state.clipStartAt) / TOWER_FRAME_MS[state.clip]);
+  return state.onceEndAt > 0 ? Math.min(raw, frames - 1) : raw % frames;
+}
+
 /* ------------------------------------------------------- click-to-move --- */
 /** Walk speed, board units (0..100) per second. */
 const AVATAR_WALK_UNITS_PER_SEC = 42;
@@ -3560,6 +3704,15 @@ const TOWER_ROLE: Record<TowerKind, SkinRoleId> = {
   archer: 'tower.archer',
   vine: 'tower.vine',
   crystal: 'tower.crystal',
+};
+
+/** Tower draw roles with the clip kit resolved: the static cast rotation role
+ * PLUS the tower skin's idle/attack `anims` when its art is bundled. Used by the
+ * clip player + renderer; `TOWER_ROLE` above stays the metadata/static-art id. */
+const TOWER_KIT_ROLES: Record<TowerKind, SkinRole> = {
+  archer: towerSkinRole('archer'),
+  vine: towerSkinRole('vine'),
+  crystal: towerSkinRole('crystal'),
 };
 
 /** Fallback tower box, board units, when a role omits `units`. */

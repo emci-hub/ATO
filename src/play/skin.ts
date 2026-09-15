@@ -23,6 +23,7 @@ import rawCraftpix from '@/assets/play/skins/craftpix-td/skin.json';
 import rawKenney from '@/assets/play/skins/kenney-td/skin.json';
 import { PLAY_ART } from '@/play/generated-play-assets';
 import { heroById, type HeroDef } from '@/play/heroes-data';
+import { defaultTowerSkin, type TowerSkinDef, type TowerSkinRole } from '@/play/tower-skins-data';
 
 export type SkinRoleId =
   | 'map.grass'
@@ -608,6 +609,52 @@ export function heroAvatarRole(heroId: string): SkinRole {
     walk,
     anims,
   };
+}
+
+/* ------------------------------------------- tower clip-kit role ------- */
+/* K1 — towers are stationary humanoids. The board keeps the static cast
+ * rotation role (8-dir keys + footAt/units/scales) and OVERLAYS the tower
+ * skin's idle/attack clips as `anims`, so the renderer plays a breathing idle
+ * loop and a shoot one-shot when the art is bundled — and falls back to the
+ * static rotations when it is not (today: no tower animation folders exist). */
+
+/** Tower kind → cast skin role id (art only). Same mapping `defend-screen`'s
+ * `TOWER_ROLE` uses; kept here so the clip-kit builder and the renderer read
+ * one canonical role per tower kind. */
+export const TOWER_KIND_ROLE: Record<TowerSkinRole, SkinRoleId> = {
+  archer: 'tower.archer',
+  vine: 'tower.vine',
+  crystal: 'tower.crystal',
+};
+
+/** A 2-dir E/W `SkinWalk` for one of a tower skin's clip folders, frame count
+ * measured from the generated registry (east == west). Returns undefined when
+ * the skin omits the clip or its art is not bundled — callers fall back to the
+ * static rotation instead of inventing frames. */
+function towerClipWalk(skin: TowerSkinDef, name: string | undefined): SkinWalk | undefined {
+  if (!name) return undefined;
+  const base = `${skin.folder.replace(/^assets\/play\//, '')}/animations/${name}`;
+  let frames = 0;
+  while (PLAY_ART[`${base}/east/frame_${String(frames).padStart(3, '0')}`]) frames += 1;
+  return frames > 0 ? { dirs: 2, order: ['east', 'west'], frames, base } : undefined;
+}
+
+/** The draw role for a tower kind: the static cast rotation role PLUS the tower
+ * skin's idle/attack clips as `anims`. Falls back to the static role when the
+ * kind is unknown or none of the skin's clip art is bundled, so a tower whose
+ * clips haven't been copied still draws its rotation instead of crashing. */
+export function towerSkinRole(kind: TowerSkinRole): SkinRole {
+  const base = resolveRole(TOWER_KIND_ROLE[kind]);
+  if (!base) return { keys: [], dirs: 8, pivot: 'feet' };
+  const skin = defaultTowerSkin(kind);
+  if (!skin) return base;
+  const anims: SkinRole['anims'] = {};
+  for (const clip of ['idle', 'attack'] as const) {
+    const w = towerClipWalk(skin, skin.clips[clip]);
+    if (w) anims[clip] = w;
+  }
+  if (Object.keys(anims).length === 0) return base;
+  return { ...base, anims };
 }
 
 /** Feet anchor for a role object (same clamp as `skinFootAt`). */

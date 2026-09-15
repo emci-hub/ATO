@@ -1,11 +1,11 @@
 [
-  { "id": "viper", "role": "archer", "folder": "assets/play/skins/cast/towers/viper", "unlock": "free_farm", "default": true },
-  { "id": "ghost", "role": "vine", "folder": "assets/play/skins/cast/towers/ghost", "unlock": "free_farm", "default": true },
-  { "id": "lux", "role": "crystal", "folder": "assets/play/skins/cast/towers/lux", "unlock": "free_farm", "default": true },
-  { "id": "akira", "role": "archer", "folder": "assets/play/skins/cast/towers/akira", "unlock": "free_farm" },
-  { "id": "nova", "role": "archer", "folder": "assets/play/skins/cast/towers/nova", "unlock": "free_farm" },
-  { "id": "zero", "role": "crystal", "folder": "assets/play/skins/cast/towers/zero", "unlock": "free_farm" },
-  { "id": "cyber-angel", "role": "vine", "folder": "assets/play/skins/cast/towers/cyber-angel", "unlock": "free_farm" },
-  { "id": "omega", "role": "crystal", "folder": "assets/play/skins/cast/towers/omega", "unlock": "free_farm" },
-  { "id": "void", "role": "vine", "folder": "assets/play/skins/cast/towers/void", "unlock": "free_farm" }
+  { "id": "viper", "role": "archer", "folder": "assets/play/skins/cast/towers/viper", "unlock": "free_farm", "default": true, "clips": { "idle": null, "attack": null } },
+  { "id": "ghost", "role": "vine", "folder": "assets/play/skins/cast/towers/ghost", "unlock": "free_farm", "default": true, "clips": { "idle": null, "attack": null } },
+  { "id": "lux", "role": "crystal", "folder": "assets/play/skins/cast/towers/lux", "unlock": "free_farm", "default": true, "clips": { "idle": null, "attack": null } },
+  { "id": "akira", "role": "archer", "folder": "assets/play/skins/cast/towers/akira", "unlock": "free_farm", "clips": { "idle": null, "attack": null } },
+  { "id": "nova", "role": "archer", "folder": "assets/play/skins/cast/towers/nova", "unlock": "free_farm", "clips": { "idle": null, "attack": null } },
+  { "id": "zero", "role": "crystal", "folder": "assets/play/skins/cast/towers/zero", "unlock": "free_farm", "clips": { "idle": null, "attack": null } },
+  { "id": "cyber-angel", "role": "vine", "folder": "assets/play/skins/cast/towers/cyber-angel", "unlock": "free_farm", "clips": { "idle": null, "attack": null } },
+  { "id": "omega", "role": "crystal", "folder": "assets/play/skins/cast/towers/omega", "unlock": "free_farm", "clips": { "idle": null, "attack": null } },
+  { "id": "void", "role": "vine", "folder": "assets/play/skins/cast/towers/void", "unlock": "free_farm", "clips": { "idle": null, "attack": null } }
 ]

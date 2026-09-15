@@ -69,7 +69,10 @@
 import rawHeroes from './data/heroes.json';
 
 /** The clip slots a Hero's sprite set can author. `walk` is the locomotion
- * loop; `dash` / `attack` / `skill` / `hurt` are the one-shots the FSM plays. */
+ * loop; `dash` / `attack` / `skill` / `hurt` are the one-shots the FSM plays.
+ * This is the hero subset of the shared `CAST_CLIP_SLOTS` schema in
+ * `src/play/cast-kits.ts` (towers reuse `idle` + `attack`; creeps/bosses reuse
+ * `walk` + `idle` + `death` + `attack` — same slot names, no new ones). */
 export const HERO_CLIPS = ['idle', 'walk', 'dash', 'attack', 'skill', 'hurt'] as const;
 export type HeroClip = (typeof HERO_CLIPS)[number];
 
