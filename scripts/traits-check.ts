@@ -415,8 +415,10 @@ async function main() {
   ] as const) {
     assert.doesNotMatch(fold, new RegExp(token));
   }
-  assert.match(read('src/app/(tabs)/index.tsx'), /router\.push\('\/week'\)/);
-  ok('band detail has the fixed provenance line once, no axis-name or source tokens; Home links to /week');
+  // PARKED (ISOLATION_PLAN §7 Card C, 2026-09-15): the "This week" row is parked off
+  // Home, so /week has no entry point. The route itself is parked in Card F.
+  assert.doesNotMatch(read('src/app/(tabs)/index.tsx'), /router\.push\('\/week'\)/);
+  ok('band detail has the fixed provenance line once, no axis-name or source tokens; Home no longer links to /week');
 
   // --- Filled (>=1) vs settled (>=3): same column, different predicates ---
   const track = (axis: TraitAxis, answerCount: number): TraitTrack => ({

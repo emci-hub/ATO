@@ -145,7 +145,10 @@ assert.doesNotMatch(sage, /Ask Sage anything/);
 assert.doesNotMatch(sage, /Sage is writing/);
 assert.doesNotMatch(sage, /Sage · npc/);
 assert.match(home, /homeSageLede/);
-assert.match(home, /SAGE_COACH_LABEL/);
+// PARKED (ISOLATION_PLAN §7 Card C, 2026-09-15): SAGE_COACH_LABEL reached Home only
+// through the parked Ask sheet's fixtures. The two live Sage strings on Home
+// (`homeSageLede`, `homeSageLabel`) are still pinned above and below.
+assert.doesNotMatch(home, /SAGE_COACH_LABEL/);
 assert.match(home, /homeSageLabel/);
 assert.match(push, /Sage · coach/);
 assert.match(widget, /SAGE · COACH/);

@@ -40,8 +40,12 @@ ok('both reader functions contain a PRE_LAUNCH_DEV guard');
 
 assert.doesNotMatch(home, /ato\.dev\.slot-override\.v1/);
 assert.doesNotMatch(home, /ato\.dev\.ask-override\.v1/);
-assert.match(home, /readAskOverride/);
-assert.match(home, /readSlotOverride/);
+// PARKED (ISOLATION_PLAN §7 Card C, 2026-09-15): Home's Ask and slot lanes are gone —
+// the slot chooser picked between crisis / missed / reveal / ask, and only the
+// crisis branch survives, so there is nothing left for either override to
+// switch. `readAskOverride`/`readSlotOverride` keep working for dev-lab.
+assert.doesNotMatch(home, /readAskOverride/);
+assert.doesNotMatch(home, /readSlotOverride/);
 assert.doesNotMatch(home, /SLOT_OVERRIDE_KEY|ASK_OVERRIDE_KEY/);
 ok('Home reads slot and ask overrides without storing key strings');
 

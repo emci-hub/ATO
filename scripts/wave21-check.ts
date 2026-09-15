@@ -184,8 +184,11 @@ const home = read('src/app/(tabs)/index.tsx');
 const crisis = read('src/components/crisis-card.tsx');
 const widget = read('targets/widget/widgets.swift');
 const checkSwift = widget;
-assert.match(home, /CategoryTeaser/);
-assert.match(home, /canShowCategoryTeaser/);
+// PARKED (ISOLATION_PLAN §7 Card C, 2026-09-15): the Category teaser is parked off Home.
+// `canShowCategoryTeaser`'s own logic is still exercised above; the teaser
+// component has no mount site until Categories is rebuilt.
+assert.doesNotMatch(home, /CategoryTeaser/);
+assert.doesNotMatch(home, /canShowCategoryTeaser/);
 assert.doesNotMatch(home, /FullProfileFold/);
 assert.doesNotMatch(crisis, /CategoryTeaser|FullProfileFold|playfulness/);
 assert.doesNotMatch(checkSwift, /CategoryTeaser|FullProfileFold/);

@@ -93,27 +93,33 @@ const guardWindow = home.slice(home.indexOf('if (!me || !userId || !window) retu
 assert.match(guardWindow, /if \(!consentGranted\) return;/);
 ok('no consent, no model call: the guard sits above every fetch and generation');
 
-// TIMING (emci, 2026-09-15): the ask surfaces when the 50-question intake
-// finishes, not as an early blocking modal. `fullProfileDone` must be part of
-// the condition, and must be computed before it.
-assert.match(
+// TIMING, CHANGED by emci 2026-09-15 (ISOLATION_PLAN §7 Card C): the ask is
+// now part of the FIRST thing on Home, not something held back until the
+// intake finishes. Under the tap-gated flow the pre-profile screen IS the
+// consent approvals plus a button into Questions, so gating the ask on
+// `fullProfileDone` would leave a brand-new account looking at an empty Home.
+// It is still inline, and it still blocks nothing.
+assert.match(home, /const offerConsent = me != null && consent === 'pending';/);
+assert.doesNotMatch(
   home,
-  /const offerConsent = me != null && consent === 'pending' && fullProfileDone;/,
+  /const offerConsent = [^;]*fullProfileDone/,
+  'the consent ask must not wait for the profile to be finished',
 );
-assert.ok(
-  home.indexOf('const fullProfileDone') < home.indexOf('const offerConsent'),
-  'fullProfileDone must be computed before offerConsent reads it',
-);
-ok('the consent ask is surfaced at intake completion, not on day one');
+ok('the consent ask is offered as soon as it is unanswered, in both Home states');
 
 // The ask is additive: it must never be the branch that decides whether the
-// day's content renders. The content block is its own top-level ternary.
+// day's content renders. REPINNED for Card C's two-state Home — the ask now
+// lives in one shared `consentBlock` rendered in BOTH states, so the old
+// "content appears above the ask in the file" ordering no longer applies. What
+// still must hold: the ask is its own ternary, and the unlocked state's
+// content ternary is separate from it.
 assert.match(home, /\{offerConsent \? \([\s\S]{0,200}<AiConsentCard/);
+assert.match(home, /\{consentOffEmpty \? \(/);
 assert.ok(
-  home.indexOf('{consentOffEmpty ? (') < home.indexOf('{offerConsent ? ('),
-  "the day's content must render above the consent ask, not behind it",
+  home.indexOf('const consentBlock = (') > 0,
+  'the disclosure + ask must be one shared block, so both Home states show them identically',
 );
-ok('the consent ask renders below the day\'s content, never instead of it');
+ok('the consent ask is its own additive block, never the branch that decides the content');
 
 // Nothing that is not a model call may be gated. The Check in particular:
 // an AI permission question standing between a user and the core loop is the
@@ -123,10 +129,13 @@ assert.ok(
   'Check logging must not be gated on the consent answer',
 );
 // The question-bank row (the one navigation control Home owns) must not be
-// conditioned on consent -- it is local and never calls a model.
+// conditioned on the consent ANSWER -- it is local and never calls a model.
+// REPINNED (Card C): the pre-profile arm renders the shared consent block
+// above the row, so a bare /consent/i would now match that block's own name;
+// the assertion is against the consent *states* instead.
 const bankRow = home.slice(home.indexOf('{!fullProfileDone ? ('), home.indexOf("router.push('/intake-sweep')"));
-assert.doesNotMatch(bankRow, /consent/i);
-ok('the Check logs and the question-bank route stays open whatever the consent answer is');
+assert.doesNotMatch(bankRow, /consentGranted|consentOffEmpty/);
+ok('the question-bank route stays open whatever the consent answer is');
 
 // Apple 5.1.2: disclosure is UNCONDITIONAL. It must be rendered outside the
 // consent card (which disappears once answered) and outside every consent
@@ -134,9 +143,13 @@ ok('the Check logs and the question-bank route stays open whatever the consent a
 assert.match(home, /AI_USE_DISCLOSURE/);
 const disclosureIdx = home.indexOf('{AI_USE_DISCLOSURE}');
 assert.ok(disclosureIdx > 0, 'Home must render the disclosure line itself');
+// REPINNED (Card C): the disclosure now sits at the top of the shared
+// `consentBlock`, which renders unconditionally in both Home states — so what
+// is checked is that it is NOT inside a consent arm, rather than where it
+// falls relative to one.
 assert.ok(
-  disclosureIdx > home.indexOf('{consentOffEmpty ? ('),
-  'the disclosure must sit outside the consent ternary, not inside one arm',
+  home.indexOf('const consentBlock = (') < disclosureIdx,
+  'the disclosure must be part of the shared consent block, not inside a consent arm',
 );
 assert.doesNotMatch(
   home.slice(disclosureIdx - 200, disclosureIdx),
