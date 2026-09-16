@@ -1,0 +1,146 @@
+[
+  {
+    "id": "black_death_ritual",
+    "name": "Root Veil",
+    "description": "Vines slow nearby foes for a short breath.",
+    "radius": 24,
+    "damage": 0,
+    "slow_ms": 2000,
+    "slow_pct": 0.35
+  },
+  {
+    "id": "skill_archangel",
+    "name": "Celestial Veil",
+    "description": "A holy light slows and sears nearby foes.",
+    "radius": 26,
+    "damage": 4,
+    "slow_ms": 2000,
+    "slow_pct": 0.32
+  },
+  {
+    "id": "skill_aurex",
+    "name": "Dragon Veil",
+    "description": "Dragonfire slows and scorches nearby foes.",
+    "radius": 25,
+    "damage": 5,
+    "slow_ms": 2000,
+    "slow_pct": 0.33
+  },
+  {
+    "id": "skill_kitsune",
+    "name": "Foxfire Veil",
+    "description": "Foxfire slows and singes nearby foes.",
+    "radius": 23,
+    "damage": 3,
+    "slow_ms": 2000,
+    "slow_pct": 0.36
+  },
+  {
+    "id": "skill_oni",
+    "name": "Crimson Veil",
+    "description": "A crimson arc slows and cuts nearby foes.",
+    "radius": 24,
+    "damage": 4,
+    "slow_ms": 2000,
+    "slow_pct": 0.34
+  },
+  {
+    "id": "skill_cyber_shinobi",
+    "name": "Holo Veil",
+    "description": "A hologram field slows and shocks nearby foes.",
+    "radius": 24,
+    "damage": 3,
+    "slow_ms": 2000,
+    "slow_pct": 0.35
+  },
+  {
+    "id": "skill_elowen",
+    "name": "Moonlit Veil",
+    "description": "Moonlight slows and blooms over nearby foes.",
+    "radius": 26,
+    "damage": 2,
+    "slow_ms": 2000,
+    "slow_pct": 0.33
+  },
+  {
+    "id": "skill_kael",
+    "name": "EMP Veil",
+    "description": "An EMP burst slows and zaps nearby foes.",
+    "radius": 25,
+    "damage": 4,
+    "slow_ms": 2000,
+    "slow_pct": 0.34
+  },
+  {
+    "id": "skill_maldrath",
+    "name": "Soul Veil",
+    "description": "A soul nova slows and drains nearby foes.",
+    "radius": 24,
+    "damage": 5,
+    "slow_ms": 2000,
+    "slow_pct": 0.33
+  },
+  {
+    "id": "skill_morwen",
+    "name": "Eclipse Veil",
+    "description": "Eclipse magic slows and withers nearby foes.",
+    "radius": 26,
+    "damage": 3,
+    "slow_ms": 2000,
+    "slow_pct": 0.32
+  },
+  {
+    "id": "skill_neon_viper",
+    "name": "Neon Veil",
+    "description": "A neon pulse slows and burns nearby foes.",
+    "radius": 24,
+    "damage": 4,
+    "slow_ms": 2000,
+    "slow_pct": 0.35
+  },
+  {
+    "id": "skill_raven",
+    "name": "Execution Veil",
+    "description": "An execution strike slows and cleaves nearby foes.",
+    "radius": 23,
+    "damage": 5,
+    "slow_ms": 2000,
+    "slow_pct": 0.34
+  },
+  {
+    "id": "skill_sak",
+    "name": "Kingdom Veil",
+    "description": "The kingdom's ward slows and claws nearby foes.",
+    "radius": 24,
+    "damage": 2,
+    "slow_ms": 2000,
+    "slow_pct": 0.36
+  },
+  {
+    "id": "skill_frost_lich",
+    "name": "Frost Veil",
+    "description": "A frost nova slows and chills nearby foes.",
+    "radius": 27,
+    "damage": 3,
+    "slow_ms": 2000,
+    "slow_pct": 0.3
+  },
+  {
+    "id": "skill_velkhar",
+    "name": "Death Veil",
+    "description": "A death nova slows and saps nearby foes.",
+    "radius": 24,
+    "damage": 5,
+    "slow_ms": 2000,
+    "slow_pct": 0.33
+  },
+  {
+    "id": "skill_void_raven",
+    "name": "Void Veil",
+    "description": "A void pulse slows and rends nearby foes.",
+    "radius": 25,
+    "damage": 4,
+    "slow_ms": 2000,
+    "slow_pct": 0.34
+  }
+]

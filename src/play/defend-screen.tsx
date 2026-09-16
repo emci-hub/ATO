@@ -48,9 +48,6 @@ import {
   HERO_TOWER_STATS,
   type DefendMap,
   MAX_TOWERS,
-  SKILL_COOLDOWN_MS,
-  SKILL_DESCRIPTION,
-  SKILL_NAME,
   TOWER_DEFS,
   TOWER_MAX_LEVEL,
   castSlowPulse,
@@ -60,6 +57,7 @@ import {
   creepRole,
   defendDifficulty,
   boundBossHeroId,
+  heroCastSkill,
   heroTowerTarget,
   isHeroBoundTower,
   placeBoundBoss,
@@ -878,6 +876,14 @@ export function DefendScreen({
    * resolves through this, so the board never hard-codes Corvus. */
   const avatarRole = useMemo(
     () => heroAvatarRole(view.activeAvatarHeroId),
+    [view.activeAvatarHeroId],
+  );
+
+  /** The veil the active hero casts (its `skills.json` row resolved through
+   * `heroCastSkill`) — drives the skill button copy AND the cast numbers, so
+   * the Avatar's skill follows the hero it fights as. */
+  const activeSkill = useMemo(
+    () => heroCastSkill(view.activeAvatarHeroId),
     [view.activeAvatarHeroId],
   );
 
@@ -1878,11 +1884,11 @@ export function DefendScreen({
     const current = simRef.current;
     if (!current) return;
     const avatar = avatarPosRef.current;
-    const next = castSlowPulse(current, avatar);
+    const next = castSlowPulse(current, avatar, activeSkill);
     if (next) {
       simRef.current = next;
       setSim(next);
-      // Art only — the Root Veil numbers are already applied by castSlowPulse.
+      // Art only — the veil numbers are already applied by castSlowPulse.
       // skill (4) outranks attack (3), so this correctly cuts an attack clip.
       startAvatarOnce('skill');
     }
@@ -2205,7 +2211,7 @@ export function DefendScreen({
           ) : null}
           {phase !== 'running' ? (
             <ThemedText type="small" themeColor="textSecondary">
-              {SKILL_NAME}: {SKILL_DESCRIPTION} ({SKILL_COOLDOWN_MS / 1000}s cooldown)
+              {activeSkill.name}: {activeSkill.description} ({getTune().skillCooldownMs / 1000}s cooldown)
             </ThemedText>
           ) : null}
         </PlayFrame>
@@ -3226,7 +3232,7 @@ export function DefendScreen({
         {phase === 'running' && !paused ? (
           <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
             {coachHidden
-              ? `Towers fire on their own — drag your Avatar and time ${SKILL_NAME}.`
+              ? `Towers fire on their own — drag your Avatar and time ${activeSkill.name}.`
               : `Coach: ${coach.tip}`}
           </ThemedText>
         ) : null}
@@ -3269,7 +3275,7 @@ export function DefendScreen({
               onPress={castSkill}
               disabled={!skillReady}
               accessibilityRole="button"
-              accessibilityLabel={`Skill ${SKILL_NAME}`}
+              accessibilityLabel={`Skill ${activeSkill.name}`}
               style={({ pressed }) => [
                 styles.hudButton,
                 styles.bottomHudSkill,
@@ -3281,7 +3287,7 @@ export function DefendScreen({
               <ThemedText
                 type="smallBold"
                 style={{ color: skillReady ? theme.onAccent : theme.textSecondary }}>
-                {skillReady ? `Skill: ${SKILL_NAME}` : `Skill: ${SKILL_NAME} · ${skillSeconds}s`}
+                {skillReady ? `Skill: ${activeSkill.name}` : `Skill: ${activeSkill.name} · ${skillSeconds}s`}
               </ThemedText>
             </Pressable>
           </ThemedView>

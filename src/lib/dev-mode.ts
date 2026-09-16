@@ -13,3 +13,11 @@
  * re-gating checklist" for the full list of what this controls.
  */
 export const PRE_LAUNCH_DEV = true;
+
+/**
+ * Airport build — the Play loop ships with every hero FREE (owned on Play load,
+ * no Premium gate) while the app is invite-only. Mirrors `PRE_LAUNCH_DEV`, so
+ * it flips off at the same public-launch re-gate; a public build should never
+ * hand out the whole hero roster for free.
+ */
+export const PLAY_EVERYTHING_FREE = PRE_LAUNCH_DEV;

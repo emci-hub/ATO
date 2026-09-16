@@ -51,6 +51,7 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { PLAY_EVERYTHING_FREE } from '@/lib/dev-mode';
 import { STARTER_AVATAR_ID } from '@/play/avatars';
 import { cyclePower, defaultCyclePower } from '@/play/engine/cycle';
 import { bossBandFor } from '@/play/engine/bands';
@@ -3178,6 +3179,20 @@ export async function savePlayStore(doc: PlayStoreDoc): Promise<void> {
 }
 
 /**
+ * Airport free loop — own EVERY hero in `heroes.json` on Play load (no Premium
+ * gate while invite-only). Idempotent: a save that already owns the full roster
+ * is returned unchanged, and no one-shot offer is queued (a bulk grant has no
+ * single hero to offer a choice about). Gated by `PLAY_EVERYTHING_FREE`.
+ */
+function airportFree(doc: PlayStoreDoc): PlayStoreDoc {
+  if (!PLAY_EVERYTHING_FREE) return doc;
+  const owned = new Set(doc.owned_hero_ids);
+  for (const hero of allHeroes()) owned.add(hero.id);
+  if (owned.size === doc.owned_hero_ids.length) return doc;
+  return { ...doc, owned_hero_ids: [...owned] };
+}
+
+/**
  * Load the persisted doc, falling back to (and persisting) a fresh default so
  * offline timers are anchored even on a first open before any Claim.
  */
@@ -3186,12 +3201,13 @@ export async function loadPlayStore(now: number = Date.now()): Promise<PlayStore
     const raw = await AsyncStorage.getItem(PLAY_STORE_KEY);
     if (raw) {
       const parsed = parsePlayStore(raw, now);
-      if (parsed) return parsed;
+      if (parsed) return airportFree(parsed);
     }
   } catch {
     // Fall through to a fresh default below.
   }
   const fresh = defaultPlayStore(now);
-  savePlayStore(fresh).catch(() => {});
-  return fresh;
+  const result = airportFree(fresh);
+  savePlayStore(result).catch(() => {});
+  return result;
 }

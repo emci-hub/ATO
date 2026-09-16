@@ -20,14 +20,14 @@
   {
     "id": "aurex",
     "name": "Aurex",
-    "acquire": "Coming soon",
+    "acquire": "Free (airport)",
     "role": "hero",
     "folder": "assets/play/skins/cast/heroes/aurex",
-    "unlock": "starter_ticket",
+    "unlock": "free_farm",
     "skillId": "skill_aurex",
     "face": "ew",
     "clips": {
-      "idle": "DRAGON_IDLE",
+      "idle": null,
       "walk": null,
       "dash": "FLAME_DASH",
       "attack": "DRAGON_SLASH",
@@ -56,10 +56,10 @@
   {
     "id": "kitsune",
     "name": "Kitsune",
-    "acquire": "Coming soon",
+    "acquire": "Free (airport)",
     "role": "hero",
     "folder": "assets/play/skins/cast/heroes/kitsune",
-    "unlock": "starter_ticket",
+    "unlock": "free_farm",
     "skillId": "skill_kitsune",
     "face": "ew",
     "clips": {
@@ -68,7 +68,7 @@
       "dash": "Crimson_Run",
       "attack": "Attack_01_Scarlet_Moon_Slash",
       "skill": "Special_Skill_Foxfire_Step",
-      "hurt": null
+      "hurt": "Death_Animation_Fallen_Empress"
     }
   },
   {
@@ -87,6 +87,204 @@
       "attack": "ATTACK_01_Swift_Crescent_Slash",
       "skill": "BLOOD_MOON_IAIJUTSU",
       "hurt": null
+    }
+  },
+  {
+    "id": "cyber-shinobi",
+    "name": "Cyber Shinobi",
+    "acquire": "Free (airport)",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/cyber-shinobi",
+    "unlock": "free_farm",
+    "skillId": "skill_cyber_shinobi",
+    "face": "ew",
+    "clips": {
+      "idle": "Idle_11_frames",
+      "walk": "Walk_11_frames",
+      "dash": "Dash_11_frames",
+      "attack": "Attack_11_frames",
+      "skill": "Skill_17_frames",
+      "hurt": "Hurt_7_frames"
+    }
+  },
+  {
+    "id": "elowen",
+    "name": "Elowen",
+    "acquire": "Free (airport)",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/elowen",
+    "unlock": "free_farm",
+    "skillId": "skill_elowen",
+    "face": "ew",
+    "clips": {
+      "idle": "Forest_Idle",
+      "walk": "Moonlit_Walk",
+      "dash": null,
+      "attack": "Nature_Slash",
+      "skill": "Crescent_Bloom",
+      "hurt": null
+    }
+  },
+  {
+    "id": "kael",
+    "name": "Kael-09",
+    "acquire": "Free (airport)",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/kael",
+    "unlock": "free_farm",
+    "skillId": "skill_kael",
+    "face": "ew",
+    "clips": {
+      "idle": "Idle",
+      "walk": "TACTICAL_WALK",
+      "dash": "DASH_BOOST",
+      "attack": "ENERGY_SLASH",
+      "skill": "EMP_BURST",
+      "hurt": "HURT"
+    }
+  },
+  {
+    "id": "maldrath",
+    "name": "Maldrath",
+    "acquire": "Free (airport)",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/maldrath",
+    "unlock": "free_farm",
+    "skillId": "skill_maldrath",
+    "face": "ew",
+    "clips": {
+      "idle": "DARK_IDLE",
+      "walk": "CURSED_WALK",
+      "dash": "SHADOW_DASH",
+      "attack": "GREATSWORD_SLASH",
+      "skill": "SOUL_NOVA",
+      "hurt": "HURT"
+    }
+  },
+  {
+    "id": "morwen",
+    "name": "Morwen",
+    "acquire": "Free (airport)",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/morwen",
+    "unlock": "free_farm",
+    "skillId": "skill_morwen",
+    "face": "ew",
+    "clips": {
+      "idle": "ARCANE_IDLE",
+      "walk": null,
+      "dash": "TELEPORT",
+      "attack": "ARCANE_BLAST",
+      "skill": "MOON_RITUAL",
+      "hurt": "HURT"
+    }
+  },
+  {
+    "id": "neon-viper",
+    "name": "Neon Viper",
+    "acquire": "Free (airport)",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/neon-viper",
+    "unlock": "free_farm",
+    "skillId": "skill_neon_viper",
+    "face": "ew",
+    "clips": {
+      "idle": "Breathing_Idle",
+      "walk": "Walking",
+      "dash": "Jumping",
+      "attack": "Cross_Punch",
+      "skill": "Surprise_Uppercut",
+      "hurt": "Falling_Back_Death"
+    }
+  },
+  {
+    "id": "raven",
+    "name": "Raven",
+    "acquire": "Free (airport)",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/raven",
+    "unlock": "free_farm",
+    "skillId": "skill_raven",
+    "face": "ew",
+    "clips": {
+      "idle": "Idle_11_frames",
+      "walk": "Walking_11_frames",
+      "dash": "Dash_11_frames",
+      "attack": "Attack_11_frames",
+      "skill": "Heavy_attack_11_frames",
+      "hurt": "Hurt_7_frames"
+    }
+  },
+  {
+    "id": "sak",
+    "name": "Sak",
+    "acquire": "Free (airport)",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/sak",
+    "unlock": "free_farm",
+    "skillId": "skill_sak",
+    "face": "ew",
+    "clips": {
+      "idle": "Royal_Idle",
+      "walk": "Cat_Walk",
+      "dash": "Feline_Rush",
+      "attack": "Moonfang_Slash",
+      "skill": "Kingdom_of_Cats",
+      "hurt": null
+    }
+  },
+  {
+    "id": "frost-lich",
+    "name": "Frost Lich",
+    "acquire": "Free (airport)",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/frost-lich",
+    "unlock": "free_farm",
+    "skillId": "skill_frost_lich",
+    "face": "ew",
+    "clips": {
+      "idle": "Hover_Idle",
+      "walk": "Frozen_Drift",
+      "dash": null,
+      "attack": "Royal_Cleave",
+      "skill": "Frost_Nova",
+      "hurt": "Soul_Stagger"
+    }
+  },
+  {
+    "id": "velkhar",
+    "name": "Velkhar",
+    "acquire": "Free (airport)",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/velkhar",
+    "unlock": "free_farm",
+    "skillId": "skill_velkhar",
+    "face": "ew",
+    "clips": {
+      "idle": "DARK_IDLE",
+      "walk": "NECROMANCER_WALK",
+      "dash": "SOUL_DASH",
+      "attack": "BONE_SPEAR",
+      "skill": "SOUL_DRAIN",
+      "hurt": "HURT"
+    }
+  },
+  {
+    "id": "void-raven",
+    "name": "Void Raven",
+    "acquire": "Free (airport)",
+    "role": "hero",
+    "folder": "assets/play/skins/cast/heroes/void-raven",
+    "unlock": "free_farm",
+    "skillId": "skill_void_raven",
+    "face": "ew",
+    "clips": {
+      "idle": "Idle_11_frames",
+      "walk": "Walk_11_frames",
+      "dash": "Dash_11_frames",
+      "attack": "Attack_11_frames",
+      "skill": "Heavy_attack_11_frames",
+      "hurt": "Hurt_7_frames"
     }
   }
 ]

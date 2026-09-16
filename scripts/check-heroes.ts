@@ -4,7 +4,7 @@
  * Guards `src/play/data/heroes.json` — the contract the Avatar swap (A3) reads
  * to find a Hero's sprite clips. Four failure modes it catches:
  *
- *   1. IDs / required fields: five unique Hero ids, each with the folder,
+ *   1. IDs / required fields: sixteen unique Hero ids, each with the folder,
  *      unlock lane, skillId and facings the contract promises.
  *   2. A Hero's `id` drifting from its art folder slug — the folder must be
  *      exactly `assets/play/skins/cast/heroes/<id>`, since A2's copy step and
@@ -17,14 +17,12 @@
  *   5. The reusable-hero-kit template (A3): a Hero whose art IS bundled must
  *      author `attack` + `skill`, and the Avatar-reachable Heroes must author
  *      both even before their art lands — so a kit can never ship idle-only.
- *      The remaining template slots are reported, not failed. Aurex / Kitsune
- *      are exempt until their art is copied; this rule then applies to them.
+ *      The remaining template slots are reported, not failed.
  *
  * A clip is ENFORCED as soon as its Hero's art is bundled — measured against
  * the generated registry, which IS tracked (the PNGs are not yet), so the same
  * clips are enforced on any clone. A clip whose Hero has no art at all is an
- * honest stub: reported, never failed. Corvus — the live Avatar — must always
- * be enforced, all six clips, whatever the tree looks like.
+ * honest stub: reported, never failed.
  *
  * Metro `require`s can't run under tsx, so the registry is scanned as TEXT
  * (same as kenney-check); disk frames are counted as files.
@@ -80,14 +78,30 @@ import {
 } from '../src/play/defend';
 import { BOARD_MAPS } from '../src/play/board-data';
 
-/** The Batch 1 roster, in authoring order. */
-const EXPECTED_IDS = ['archangel', 'aurex', 'corvus', 'kitsune', 'oni'] as const;
+/** The full hero roster (Batch 1 + Batch 2 + Batch 3), in authoring order. */
+const EXPECTED_IDS = [
+  'archangel',
+  'aurex',
+  'corvus',
+  'kitsune',
+  'oni',
+  'cyber-shinobi',
+  'elowen',
+  'kael',
+  'maldrath',
+  'morwen',
+  'neon-viper',
+  'raven',
+  'sak',
+  'frost-lich',
+  'velkhar',
+  'void-raven',
+] as const;
 
-/** Heroes reachable as the Avatar TODAY: the starter (Corvus) plus the two the
- * campaign grants (Archangel on a Main Final clear, Crimson Oni on a Main
- * Scout clear). All three must author `attack` + `skill` whatever this tree has
- * copied — the others may still be art-less stubs. */
-const AVATAR_READY_IDS = ['archangel', 'corvus', 'oni'] as const;
+/** Heroes reachable as the Avatar TODAY: the airport free loop owns EVERY hero
+ * on Play load (`free_farm` — no Premium while PRE_LAUNCH_DEV), so all sixteen
+ * must author `attack` + `skill` whatever this tree has copied. */
+const AVATAR_READY_IDS = EXPECTED_IDS;
 
 /** The clips a Hero must author once its art is bundled. `idle`/`walk`/`dash`
  * alone make a kit that can only move; an Avatar also has to hit and cast. */
@@ -149,11 +163,11 @@ function diskFrames(dir: string): number {
 const heroes = allHeroes();
 
 // 1 — the roster itself.
-assert.equal(heroes.length, EXPECTED_IDS.length, 'Batch 1 has five Heroes');
+assert.equal(heroes.length, EXPECTED_IDS.length, 'the roster has sixteen Heroes');
 assert.deepEqual(
   [...heroes.map((hero) => hero.id)].sort(),
   [...EXPECTED_IDS].sort(),
-  'roster ids are exactly the Batch 1 heroes',
+  'roster ids are exactly the authored heroes',
 );
 assert.equal(new Set(heroes.map((hero) => hero.id)).size, heroes.length, 'ids are unique');
 ok(`roster: ${heroes.length} heroes with unique ids (${EXPECTED_IDS.join(', ')})`);
@@ -259,8 +273,8 @@ if (stubs.length > 0) {
 // 5 — the reusable-kit template (A3). Two rules, so a Hero kit can never ship
 // as "walks and idles but never hits": art that IS bundled must author attack +
 // skill, and the Avatar-reachable Heroes must author both regardless of what
-// this tree happens to have copied. Aurex / Kitsune pass for free today (no art
-// bundled) and start being held to rule 1 the moment their art lands.
+// this tree happens to have copied. Every hero is now free/owned (airport), so
+// every one is held to rule 1 the moment its art lands.
 for (const hero of heroes) {
   if (!bundledHeroIds.has(hero.id)) continue;
   for (const clip of REQUIRED_BUNDLED_CLIPS) {

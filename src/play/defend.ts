@@ -58,6 +58,7 @@ import {
 } from '@/play/engine/bound-boss';
 import { type TypeTag } from '@/play/engine/type-match';
 import { heroById } from '@/play/heroes-data';
+import { DEFAULT_SKILL_ID, skillById } from '@/play/skills-data';
 import { getTune } from '@/play/tune';
 import { ATO_ROAD_HALF, BOARD_MAPS, type BoardId, type BoardMap } from '@/play/board-data';
 import { defaultTowerSkin, towerSkillCooldownMs } from '@/play/tower-skins-data';
@@ -112,6 +113,31 @@ export const SKILL_DESCRIPTION = 'Vines slow nearby foes for a short breath.';
 export const SKILL_COOLDOWN_MS = 12_000; // §9d cooldown 12 (≥10s, Sane)
 export const SKILL_SLOW_MS = 2_000; // duration 2.0
 export const SKILL_RADIUS = 24; // §9d radius 90 art-px → ~24 board units
+
+/** A resolved hero veil — the numbers `castSlowPulse` reads for one cast. */
+export type CastSkill = {
+  name: string;
+  description: string;
+  radius: number;
+  damage: number;
+  slowMs: number;
+  slowPct: number;
+};
+
+/** The veil the ACTIVE hero casts — its `heroes.json` skillId resolved through
+ * `skills.json`, falling back to the starter Root Veil for an unknown hero. */
+export function heroCastSkill(heroId: string): CastSkill {
+  const hero = heroById(heroId);
+  const skill = skillById(hero?.skillId ?? DEFAULT_SKILL_ID);
+  return {
+    name: skill.name,
+    description: skill.description,
+    radius: skill.radius,
+    damage: skill.damage,
+    slowMs: skill.slow_ms,
+    slowPct: skill.slow_pct,
+  };
+}
 
 /**
  * §9 puff count formula — now only a FALLBACK for a wave with no authored
@@ -942,24 +968,35 @@ export function stepDefendLive(
   };
 }
 
-/** Cast the Avatar skill (slow_pulse): slow everything within `SKILL_RADIUS`
- * of the Avatar and put the skill on cooldown. Slow strength + cooldown read
- * the tune doc (§9c skill power/cooldown); duration stays the def's 2s. Null
- * when still cooling down. */
+/** Cast the Avatar skill (a hero veil): slow AND soft-damage everything within
+ * its radius and put the skill on cooldown. Slow strength + cooldown read the
+ * tune doc (§9c); radius/damage/slow-duration read the active hero's veil. A
+ * foe dropped to 0 by the veil grants scrap like any kill. Null when still
+ * cooling down. */
 export function castSlowPulse(
   state: DefendLive,
   avatar: { x: number; y: number },
+  skill?: CastSkill,
 ): DefendLive | null {
   if (state.skillCooldownMs > 0) return null;
   const map = BOARD_MAPS[state.boardId] ?? BOARD_MAPS.ato;
-  const slowFactor = 1 - getTune().skillSlowPct;
-  const puffs = state.puffs.map((puff) => {
+  const radius = skill?.radius ?? SKILL_RADIUS;
+  const slowMs = skill?.slowMs ?? SKILL_SLOW_MS;
+  const slowFactor = 1 - (skill?.slowPct ?? getTune().skillSlowPct);
+  const damage = skill?.damage ?? 0;
+  let puffs = state.puffs.map((puff) => {
     const pos = puffPosition(puff.dist, map);
     const dist = Math.hypot(pos.x * 100 - avatar.x, pos.y * 100 - avatar.y);
-    if (dist > SKILL_RADIUS) return puff;
-    return { ...puff, slowMs: SKILL_SLOW_MS, slowFactor };
+    if (dist > radius) return puff;
+    return { ...puff, slowMs, slowFactor, hp: puff.hp - damage };
   });
-  return { ...state, puffs, skillCooldownMs: getTune().skillCooldownMs };
+  let scrap = state.scrap;
+  const killed = puffs.filter((puff) => puff.hp <= 0).length;
+  if (killed > 0) {
+    scrap += killed * getTune().scrapKill;
+    puffs = puffs.filter((puff) => puff.hp > 0);
+  }
+  return { ...state, puffs, scrap, skillCooldownMs: getTune().skillCooldownMs };
 }
 
 /** Nearest enemy to the Avatar within `AVATAR_RANGE` (§9b), or null. The
