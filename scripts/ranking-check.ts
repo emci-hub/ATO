@@ -223,7 +223,6 @@ const meSrc = read('src/lib/me.ts');
 const homeTab = read('src/app/(tabs)/index.tsx');
 const sageTab = read('src/app/(tabs)/sage.tsx');
 const youTab = read('src/app/(tabs)/you.tsx');
-const talkSrc = read('src/lib/voice/talk.ts');
 const themeLab = read('src/app/theme-lab.tsx');
 
 assert.match(card, /Gesture|Pan/);
@@ -233,7 +232,6 @@ assert.match(meSrc, /self_tap/);
 assert.doesNotMatch(homeTab, /RankingCard/);
 assert.doesNotMatch(youTab, /RankingCard/);
 assert.doesNotMatch(sageTab, /RankingCard/);
-assert.doesNotMatch(talkSrc, /resolveRanking|RankingCard/);
 assert.match(themeLab, /RankingCard/);
 assert.match(themeLab, /forcePick/);
 assert.match(read('src/components/ask-sheet.tsx'), /kind === 'ranking'/);

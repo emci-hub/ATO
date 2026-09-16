@@ -4,6 +4,10 @@ Read before editing the area. Each one has bitten this repo at least once.
 
 ## Process
 
+- **`access-requests.ts` is dev-only wiring.** `listPendingAccessRequests`/`approveAccessRequest`/
+  `denyAccessRequest` (`src/lib/access-requests.ts`) are wired only into `dev-lab.tsx`. Switching
+  `app_config.signup_mode` off `invite_only` needs a real user-facing request screen and a
+  non-dev review surface built first — neither exists today.
 - **The OTA gate is the only automation.** No CI. `npm run ota:publish` runs
   typecheck + lint + every offline check and refuses to publish on failure. A bare
   `eas update` skips all of it.
@@ -123,8 +127,13 @@ Read before editing the area. Each one has bitten this repo at least once.
   chat is a separate route and stays open.
 - **`complete_signup` re-save must coalesce every field.** One overwrite slipped
   through once (`recovery_style`, fixed in wave24).
-- **Legend never-repeat is per variant**, not per figure (wave32). History FK points
-  at `legend_variants.id`.
+- **Legends' 64-archetype system has no "no match" state.** `archetypeCode()`
+  (`legends64/classify.ts`) is a straight midpoint split (>=0.5 high) on 6
+  axes — every profile, including a fully-null thin one, resolves to exactly
+  one of 64 codes. Don't reintroduce a miss/no-match branch; the old
+  0.67/0.33-banded figure-catalog matcher that had one (`legend_figures`/
+  `legend_variants`/`legend_archetypes`/`archetype_defs`/`user_legend_history`)
+  was dropped entirely in `wave57`.
 - **`trait_tracks` cannot be deleted from the client.** wave20 grants only
   select/insert/update to `authenticated` and explicitly revokes delete. Anything that
   needs to "reset" tracks must upsert over them — see the dev thin-profile preset,

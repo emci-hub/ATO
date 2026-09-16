@@ -21,7 +21,7 @@ export const GRANTABLE_DESCRIPTIONS: Record<DevCapability, string> = {
   traits: 'View your own trait/ME data in raw form',
   quota: 'View your own AI usage against caps',
   fence: 'Test text against the jargon/phrase guards manually',
-  trace: 'See real input/output from your own recent Sage/Explore/Dawn generations',
+  trace: 'See real input/output from your own recent Sage/Explore generations',
 };
 
 export const ROOT_ONLY_DESCRIPTIONS: Record<RootOnlyAction, string> = {

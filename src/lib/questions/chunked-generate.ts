@@ -21,8 +21,12 @@ import type { QuestionDraft } from './types';
 
 /** Proven-reliable size for one generation call (same size category-batch.ts and Infinite Questions already use). */
 export const CHUNK_SIZE = 5;
-/** Per-chunk retry budget for the shortfall only — never the whole chunk from scratch. */
-export const MAX_SHORTFALL_RETRIES = 2;
+/** Per-chunk retry budget for the shortfall only — never the whole chunk from
+ * scratch. Lowered from 2 to 1 (core loop redesign follow-up, 2026-09-10):
+ * each retry is a full sequential generateBatch call, and a 25-item round's
+ * worst case (up to 5 chunks) was compounding against the client's single
+ * 25s ongoing-round-start timeout (src/components/questions-fold.tsx). */
+export const MAX_SHORTFALL_RETRIES = 1;
 
 function normalizeText(text: string): string {
   return text.trim().toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ');
@@ -71,7 +75,8 @@ export interface ChunkedGenerateDeps {
   saveItems: (drafts: readonly QuestionDraft[]) => Promise<void>;
 }
 
-function subtractKept(
+/** Exported so a caller can compute what's still unmet after a fill attempt (e.g. ongoing-round.ts's bank-fallback pass). */
+export function subtractKept(
   remaining: Partial<Record<TraitAxis, number>>,
   kept: readonly QuestionDraft[],
 ): Partial<Record<TraitAxis, number>> {
@@ -84,7 +89,7 @@ function subtractKept(
   return next;
 }
 
-function totalCount(axisCounts: Partial<Record<TraitAxis, number>>): number {
+export function totalCount(axisCounts: Partial<Record<TraitAxis, number>>): number {
   return Object.values(axisCounts).reduce((sum, n) => sum + (n ?? 0), 0);
 }
 

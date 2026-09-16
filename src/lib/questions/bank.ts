@@ -508,7 +508,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
     options: [
       { text: "I panic-order whatever's closest", value: 0.2 },
       { text: 'Takes me a sec but I land on something', value: 0.5 },
-      { text: 'I ask what everyone else got', value: 0.75 },
+      { text: 'I ask what everyone else got', value: 0.8 },
     ],
   },
   {

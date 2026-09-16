@@ -9,7 +9,7 @@ import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import type { VoiceMe } from '@/lib/voice/types';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '@/lib/voice/preset';
-import { TALK_STYLE_GUIDE } from '@/lib/voice/providers/types';
+import { TALK_STYLE_GUIDE } from '@/lib/voice/talk-style';
 import { generateExploreBody } from '@/lib/explore/generate';
 import { SAGE_INSIGHT_META } from '@/lib/ai/call-sites';
 import { shouldUseLocalAi } from '@/lib/ai/override';

@@ -57,7 +57,10 @@ assert.doesNotMatch(gate, /if \(__DEV__\)|if \(!__DEV__\)/);
 ok('7-tap gate is not itself gated behind PRE_LAUNCH_DEV or __DEV__');
 
 const you = read('src/app/(tabs)/you.tsx');
-assert.match(you, /AppVersionDevUnlock/);
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You is parked down to sign
+// out, delete account and AI consent. The component's own behaviour is still
+// covered in this file; only its You mount site is gone.
+assert.doesNotMatch(you, /AppVersionDevUnlock/);
 ok('You screen renders the version-tap dev-unlock gate');
 
 const hub = read('src/app/dev-lab.tsx');

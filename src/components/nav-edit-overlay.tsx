@@ -13,6 +13,7 @@ import {
   NAV_TABS,
   NAV_TAB_IDS,
   POOL_SLOTS,
+  isTabParked,
   SLOT_COUNT,
   type BarSlotId,
   type ReorderableTabId,
@@ -108,9 +109,24 @@ export function NavEditOverlay({
                 const next = indexToKey.filter(
                   (key): key is BarSlotId => key === 'home' || key === 'sage' || key in NAV_TABS,
                 );
-                setDraftSlots(next);
+                // `indexToKey` only knows about the rows actually rendered, and
+                // parked slots are filtered out of those. Without re-adding
+                // them, any drag would commit a layout with the parked ids
+                // dropped — `normalizeNavLayout` would then re-insert Sage at
+                // its own default position, silently moving a slot the user
+                // never touched (found in review).
+                const parked = draftSlots.filter((id) => isTabParked(id));
+                setDraftSlots([...next, ...parked]);
               }}>
-              {draftSlots.map((id) => (
+              {/*
+                Parked pool ids (`around`, `circle` — ISOLATION_PLAN §7 Card F)
+                are not shown here either: they can still occupy a slot in a
+                saved layout — nothing rewrites `me.nav_layout` — but the bar
+                renders no button for them, so listing one in the editor would
+                describe a tab the user cannot see. `sage` and `legends` were
+                un-parked 2026-09-15 and render normally again.
+              */}
+              {draftSlots.filter((id) => !isTabParked(id)).map((id) => (
                 <View key={id} style={[styles.sortRow, { borderColor: controlBorderColor(theme) }]}>
                   <Sortable.Handle mode="draggable">
                     <MaterialCommunityIcons name="drag-vertical" size={22} color={theme.textSecondary} />
@@ -163,7 +179,12 @@ export function NavEditOverlay({
             </ThemedText>
 
             <View style={styles.poolList}>
-              {NAV_TAB_IDS.filter((id) => !lockedSet.has(id)).map((id) => {
+              {/*
+                Parked tabs are not offerable (ISOLATION_PLAN §7 Card F): their
+                screens are placeholders, so letting someone pin one to a slot
+                would just put a "(Rebuilt)" notice in the bar.
+              */}
+              {NAV_TAB_IDS.filter((id) => !lockedSet.has(id) && !isTabParked(id)).map((id) => {
                 const inBar = draftPool.includes(id);
                 return (
                   <View key={id} style={[styles.sortRow, { borderColor: controlBorderColor(theme) }]}>

@@ -1,7 +1,7 @@
 import { earnTokensQuiet } from '@/lib/tokens-server';
 import { localYmd } from '@/lib/local-date';
 import { supabase } from '@/lib/supabase';
-import type { CheckHistory, CheckStatus, VoiceCard, VoiceSource } from '@/lib/voice/types';
+import type { CheckHistory, CheckStatus, VoiceSource } from '@/lib/voice/types';
 
 export interface Check {
   id: string;
@@ -80,11 +80,7 @@ export interface RecordCheckInput {
   day: number;
   /** YYYY-MM-DD this Check is for, in the user's timezone. */
   loggedOn: string;
-  card: VoiceCard;
-  source: VoiceSource;
   status: CheckStatus;
-  /** Honest-empty Today: store null Read/Do. Real cards must omit this. */
-  noCard?: boolean;
 }
 
 function messageForCheckError(error: { message?: string; code?: string }): string {
@@ -101,17 +97,27 @@ function messageForCheckError(error: { message?: string; code?: string }): strin
   return 'Couldn\u2019t save your check. Try again.';
 }
 
+/**
+ * A Check is an outcome and nothing else.
+ *
+ * The Read/Do text columns are never written any more: the daily insight lives
+ * in `daily_insights` with its own lifecycle (it can be superseded without
+ * touching the Check), so copying it here would duplicate state that can drift.
+ * The columns stay on the table and stay readable — Checks logged before
+ * 2026-09-14 still carry their text, and /week and Circle still render it —
+ * but every new row takes the no-text path. There is deliberately no branch
+ * left that writes them; this is the only write path for a Check.
+ */
 export async function recordCheck(_userId: string, input: RecordCheckInput): Promise<Check> {
-  const noCard = input.noCard === true;
   const { data, error } = await supabase.rpc('record_check', {
     p_day: input.day,
     p_logged_on: input.loggedOn,
-    p_read_text: noCard ? null : input.card.read,
-    p_do_text: noCard ? null : input.card.do,
-    p_source: input.source,
+    p_read_text: null,
+    p_do_text: null,
+    p_source: 'bank',
     p_status: input.status,
-    p_nudge_text: noCard ? null : input.card.nudge?.trim() ? input.card.nudge.trim() : null,
-    p_no_card: noCard,
+    p_nudge_text: null,
+    p_no_card: true,
   });
 
   if (error) {

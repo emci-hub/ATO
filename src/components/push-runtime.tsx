@@ -3,14 +3,13 @@ import { AppState, Platform } from 'react-native';
 import { Href, router } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 
-import { fetchChecks } from '@/lib/checks';
 import { onChecksChanged } from '@/lib/checks-events';
 import { useMeContext } from '@/lib/me-context';
 import { useSession } from '@/hooks/use-session';
 import { useGrowth } from '@/hooks/use-growth';
 import { pathFromNotificationData } from '@/lib/push-copy';
-import { maybeAskNotificationPermission, syncPushSchedule } from '@/lib/push';
-import { onTodayCardChanged } from '@/lib/today-card-events';
+import { maybeAskNotificationPermission, resyncPushForUser } from '@/lib/push';
+import { onDailyInsightChanged } from '@/lib/insight/events';
 
 function openPushPath(url: string) {
   router.push(url as Href);
@@ -48,14 +47,8 @@ export function PushRuntime() {
     let active = true;
     async function sync() {
       try {
-        const checks = await fetchChecks(userId!);
         if (!active) return;
-        await syncPushSchedule({
-          checks,
-          timeZone: me!.timezone || 'UTC',
-          energyPattern: me!.energy_pattern,
-          eveningWindDown: me!.evening_wind_down,
-        });
+        await resyncPushForUser(me!);
       } catch (err) {
         console.log('[push] sync skipped:', err);
       }
@@ -63,14 +56,14 @@ export function PushRuntime() {
 
     sync();
     const unsubChecks = onChecksChanged(sync);
-    const unsubCard = onTodayCardChanged(sync);
+    const unsubInsight = onDailyInsightChanged(sync);
     const app = AppState.addEventListener('change', (next) => {
       if (next === 'active') sync();
     });
     return () => {
       active = false;
       unsubChecks();
-      unsubCard();
+      unsubInsight();
       app.remove();
     };
   }, [userId, me]);

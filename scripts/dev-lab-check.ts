@@ -48,11 +48,9 @@ assert.deepEqual([...DEV_LAB_GAPS], [1, 2, 3, 7]);
 assert.ok(DEV_LAB_PATTERNS.some((row) => row.id === 'two-skips'));
 ok('simulator exposes streak, pattern, and gap controls');
 
-assert.match(hub, /streak — Checks already logged/);
-assert.match(hub, /gap — calendar days since the last Check/);
-assert.match(hub, /Journey day/);
-assert.match(hub, /window — days that can still take a Check/);
-ok('card simulator labels say what streak, gap, window, and journey day mean');
+// The Card simulator panel went with the card lane (2026-09-14), so its label
+// copy is no longer on the hub. The simulator's pure math below still has
+// callers in other checks and is asserted unchanged.
 
 const history = buildSimHistory(7, ['done', 'skipped', 'done', 'skipped']);
 assert.equal(history.length, 7);
@@ -106,7 +104,6 @@ ok('fence tester reports the banned term that matched');
 
 assert.match(hub, /fetchSageUsage/);
 assert.match(hub, /matchingFrameworkTerms/);
-assert.match(hub, /routeVoiceCard/);
 assert.match(hub, /RunningUpdateLine/);
 assert.match(hub, /listPendingAccessRequests/);
 assert.match(hub, /approveAccessRequest/);
@@ -114,11 +111,17 @@ assert.match(hub, /denyAccessRequest/);
 ok('hub sections call the live fence, usage snapshot, card router, and access review');
 
 const you = read('src/app/(tabs)/you.tsx');
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You no longer mounts the
+// dev-tools slot — the screen is down to sign out, delete account, AI
+// consent and build/update info. RunningUpdateLine was RESTORED the same
+// day (emci: build/update info kept live) and is asserted present again.
+// The two things that MUST stay true of a public build are unchanged and
+// still asserted: the sentry/push probe cards are never imported directly,
+// and you-dev-tools guards itself.
 assert.match(you, /RunningUpdateLine/);
 assert.doesNotMatch(you, /from '@\/components\/sentry-test-card'/);
 assert.doesNotMatch(you, /from '@\/components\/push-test-card'/);
-assert.match(you, /if \(PRE_LAUNCH_DEV\) \{/);
-assert.match(you, /require\('@\/components\/you-dev-tools'\)/);
+assert.doesNotMatch(you, /require\('@\/components\/you-dev-tools'\)/);
 assert.match(read('src/components/you-dev-tools.tsx'), /if \(!PRE_LAUNCH_DEV\) return null;/);
 assert.match(read('src/components/sentry-test-card.tsx'), /if \(!PRE_LAUNCH_DEV\) return null;/);
 assert.match(read('src/components/push-test-card.tsx'), /if \(!PRE_LAUNCH_DEV\) return null;/);

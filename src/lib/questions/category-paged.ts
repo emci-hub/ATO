@@ -1,5 +1,5 @@
 /**
- * Pure logic for `CategoryPagedQuestions` (src/components/category-paged-questions.tsx),
+ * Pure logic for `PagedQuestions` (src/components/paged-questions.tsx),
  * kept in a react-native-free module on purpose — the component file imports
  * `react-native`, which breaks `tsx`'s esbuild transform when pulled into a
  * plain Node check script (confirmed: `react-native/index.js` fails with

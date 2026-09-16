@@ -1,5 +1,5 @@
 /**
- * Pre-launch: the production bundle MUST ship the You-tab crash/push probes so
+ * Pre-launch: the production bundle MUST ship the You-tab dev probes so
  * they work over OTA. Asserts the probe modules are wired through the
  * PRE_LAUNCH_DEV flag and that Metro is NOT stubbing them out of production.
  *
@@ -19,11 +19,31 @@ function ok(label: string) {
 
 const root = resolve(__dirname, '..');
 const you = readFileSync(join(root, 'src/app/(tabs)/you.tsx'), 'utf8');
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You no longer mounts the
+// dev-tools slot — the screen is down to sign out, delete account, AI consent
+// and build/update info (RunningUpdateLine, restored same day). The two
+// things that MUST stay true of a public build are unchanged and still
+// asserted: the sentry/push probe cards are never imported directly, and
+// you-dev-tools guards itself.
 assert.doesNotMatch(you, /from '@\/components\/sentry-test-card'/);
 assert.doesNotMatch(you, /from '@\/components\/push-test-card'/);
-assert.match(you, /if \(PRE_LAUNCH_DEV\) \{/);
-assert.match(you, /require\('@\/components\/you-dev-tools'\)/);
-ok('You tab loads crash/push probes via a PRE_LAUNCH_DEV-gated dynamic require');
+assert.doesNotMatch(you, /require\('@\/components\/you-dev-tools'\)/);
+ok('the parked You tab loads no crash/push probes at all');
+
+// The You tab renders the Build line for every account, and 5 taps on it push
+// /ai-lab (the AI provider switcher). Both the gesture and the route must carry
+// the dev gate — /ai-lab was the one lab on the authed stack with no guard at
+// all, and unlike the PRE_LAUNCH_DEV labs that hole would have survived the
+// flag flip into public launch.
+const runningUpdate = readFileSync(join(root, 'src/components/running-update-line.tsx'), 'utf8');
+assert.match(runningUpdate, /canSeeDevLab\(\{/);
+assert.match(runningUpdate, /if \(canOpenAiLab\) router\.push\('\/ai-lab'\)/);
+ok('Build-line 5-tap shortcut to /ai-lab is gated on canSeeDevLab');
+
+const aiLab = readFileSync(join(root, 'src/app/ai-lab.tsx'), 'utf8');
+assert.match(aiLab, /canSeeDevLab\(\{/);
+assert.match(aiLab, /return <Redirect href="\/" \/>;/);
+ok('/ai-lab redirects anyone without dev access');
 
 const metro = readFileSync(join(root, 'metro.config.js'), 'utf8');
 assert.doesNotMatch(metro, /resolveRequest/);

@@ -2,9 +2,10 @@
  * One-time "full profile unlocked" celebration flag.
  *
  * Stored in AsyncStorage, NOT on `me`: a `me` column is a schema change and
- * needs emci's sign-off first. The tradeoff is that this is per-device — a
- * person who unlocks on their phone and later opens the app on a new device
- * sees the celebration once more there. Move it to `me` if that matters.
+ * needs emci's sign-off first. Scoped per account id (same pattern
+ * `questions-fold.tsx` uses for its own storage key) so a deleted-and-recreated
+ * account on the same device doesn't inherit the prior account's flag and
+ * silently suppress its own first celebration.
  *
  * The flag only controls the celebration. The badge's unlocked state is always
  * a live read of `isProfileSettled(tracks)`, so a profile that stops being
@@ -14,9 +15,15 @@
  * Node check scripts can import this module without a React Native runtime.
  */
 
-export const FULL_PROFILE_UNLOCK_SEEN_KEY = 'ato.profile.fullUnlock.seen.v1';
+const KEY_PREFIX = 'ato.profile.fullUnlock.seen.';
+const KEY_SUFFIX = '.v1';
 
-let cached: boolean | undefined;
+export function fullProfileUnlockSeenKey(userId: string): string {
+  return `${KEY_PREFIX}${userId}${KEY_SUFFIX}`;
+}
+
+/** In-memory, keyed by userId — same reason the other question-storage modules keep one. */
+const cache = new Map<string, boolean>();
 
 async function storage(): Promise<{
   getItem: (key: string) => Promise<string | null>;
@@ -31,23 +38,26 @@ async function storage(): Promise<{
 }
 
 /** Default false — an unread flag must never suppress the first celebration. */
-export async function hasSeenFullProfileUnlock(): Promise<boolean> {
+export async function hasSeenFullProfileUnlock(userId: string): Promise<boolean> {
+  const cached = cache.get(userId);
   if (cached !== undefined) return cached;
+  let seen = false;
   try {
     const store = await storage();
-    const raw = store ? await store.getItem(FULL_PROFILE_UNLOCK_SEEN_KEY) : null;
-    cached = raw === '1';
+    const raw = store ? await store.getItem(fullProfileUnlockSeenKey(userId)) : null;
+    seen = raw === '1';
   } catch {
-    cached = false;
+    seen = false;
   }
-  return cached;
+  cache.set(userId, seen);
+  return seen;
 }
 
-export async function markFullProfileUnlockSeen(): Promise<void> {
-  cached = true;
+export async function markFullProfileUnlockSeen(userId: string): Promise<void> {
+  cache.set(userId, true);
   try {
     const store = await storage();
-    await store?.setItem(FULL_PROFILE_UNLOCK_SEEN_KEY, '1');
+    await store?.setItem(fullProfileUnlockSeenKey(userId), '1');
   } catch {
     // Storage is best-effort. Worst case the celebration replays once.
   }
@@ -55,5 +65,5 @@ export async function markFullProfileUnlockSeen(): Promise<void> {
 
 /** Tests only — the module-level cache would otherwise leak between cases. */
 export function resetFullProfileUnlockCache(): void {
-  cached = undefined;
+  cache.clear();
 }

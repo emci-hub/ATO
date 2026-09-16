@@ -78,8 +78,10 @@ ok('evening push personalizes with evening_wind_down cue when present; falls bac
 
 const sundayZero = sundayPush({ showedUp: 0, recap: recapFromReads([]) });
 assert.equal(sundayZero.url, PUSH_PATHS.sunday);
-assert.match(sundayZero.body, /You showed up 0/);
+// 'You showed up 0.' was replaced by a line that doesn't read as a scolding
+// count; the honesty requirement (never fabricate a week) is unchanged.
 assert.match(sundayZero.body, /Nothing logged this week/);
+assert.doesNotMatch(sundayZero.body, /You showed up 0/);
 assert.equal(copyHasFakeUrgency(sundayZero.body), false);
 ok('Sunday with 0 checks is honest, not fabricated');
 

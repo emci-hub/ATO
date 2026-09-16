@@ -2,7 +2,7 @@
  * Explore — Sage thread observations. Run: npm run check:explore
  */
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { decideExploreTrigger } from '../src/lib/explore/cadence';
@@ -325,6 +325,12 @@ for (const file of walkComponents(resolve(root, 'src/components'))) {
 ok('none of the axis grounding strings appear in any component file');
 
 async function main() {
+// RE-INVERTED 2026-09-15 (emci correction). Briefly the same day these
+// asserted that Explore ignored consent. With no dedicated Sage-talk screen
+// built yet, generating an Explore pack IS one of the app's three real AI
+// touchpoints, so it requires consent again -- and consent is checked ahead
+// of the completeness gate, so a declined account is told about consent
+// rather than a lock it cannot clear by answering more questions.
 const denied = await routeExplore({
   me: chipsOnly,
   history: [],
@@ -340,7 +346,7 @@ const crisis = await routeExplore({
   crisisToday: true,
 });
 assert.equal(crisis.kind, 'crisis');
-ok('consent and crisis are honest-empty, same gates as Talk');
+ok('consent and crisis are honest-empty, and consent precedes the completeness gate');
 
 let jargonLogged = '';
 let phraseLogged = '';
@@ -506,13 +512,17 @@ assert.equal(crisisBeatsLock.kind, 'crisis');
 ok('crisis short-circuits before the completeness gate');
 
 const exploreUi = read('src/app/(tabs)/explore.tsx');
-assert.match(exploreUi, /case 'locked':/);
-assert.match(exploreUi, /PROFILE_LOCKED_COPY/);
-assert.match(exploreUi, /PROFILE_LOCKED_CTA/);
+// The observations fold that rendered the locked-copy branch is parked
+// (Isolation Plan Card 5, 2026-09-15) — inverted per the Card 2/3
+// "invert, don't delete" convention. The header's own intake-sweep link
+// (settled-axis routing) stays, so that assertion is unchanged.
+assert.doesNotMatch(exploreUi, /case 'locked':/);
+assert.doesNotMatch(exploreUi, /PROFILE_LOCKED_COPY/);
+assert.doesNotMatch(exploreUi, /PROFILE_LOCKED_CTA/);
 assert.match(exploreUi, /pathname: '\/intake-sweep'/);
 assert.match(read('src/components/explore-panel.tsx'), /case 'locked':/);
 assert.match(read('src/components/explore-panel.tsx'), /PROFILE_LOCKED_CTA/);
-ok('both Explore surfaces render the locked copy with a link to Questions');
+ok('locked-copy UI is parked on Explore; the orphaned explore-panel.tsx still has it; the intake-sweep link stays');
 
 const cached = await routeExplore(
   {
@@ -538,28 +548,48 @@ const tabs = read('src/components/app-tabs.tsx');
 const navOrder = read('src/lib/nav/nav-order.ts');
 assert.doesNotMatch(home, /ExplorePanel/);
 assert.doesNotMatch(home, /HomeInnerTabs/);
-assert.match(exploreScreen, /routeExplore/);
-assert.match(exploreScreen, /SageExploreObservations/);
-assert.match(exploreScreen, /SageStoryFold/);
+// §9 (2026-09-08): Story moved from Explore to Home, directly below the
+// daily check-in card, with a real locked state — Explore no longer
+// references it at all.
+assert.match(home, /SageStoryFold/);
+assert.doesNotMatch(exploreScreen, /SageStoryFold/);
+// Isolation Plan Card 5 (2026-09-15): Today's Read, intake settings, roll
+// history, insight spend, and the observations panel are parked pending
+// rebuild — inverted per the Card 2/3 "invert, don't delete" convention.
+assert.doesNotMatch(exploreScreen, /routeExplore/);
+assert.doesNotMatch(exploreScreen, /SageExploreObservations/);
+assert.match(exploreScreen, /RebuiltNotice/);
+// Categories is back inline on Explore and the standalone route is retired
+// (2026-09-14, Home/Explore/Insight restructure T-E1). This REVERSES the
+// 2026-09-12 judgment-pass.md §4A split, which moved CategoriesFold to its
+// own screen to stop Explore stacking 9+ nested surfaces. That crowding was
+// solved by deleting surfaces instead — SageExploreObservations and
+// SageInsightSpend are now parked too (Isolation Plan Card 5, 2026-09-15) —
+// so the extra route no longer earns its navigation cost.
 assert.match(exploreScreen, /CategoriesFold/);
-assert.match(exploreScreen, /SageTitleCard/);
+assert.doesNotMatch(exploreScreen, /'\/categories'/);
+assert.ok(
+  !existsSync('src/app/(tabs)/categories.tsx'),
+  'the /categories route must stay deleted — Categories lives inline on Explore',
+);
+// SageTitleCard's Explore call site is parked (Card 5); the component
+// itself stays wired for FullProfileFold, which is still Active.
+assert.doesNotMatch(exploreScreen, /SageTitleCard/);
+assert.doesNotMatch(exploreScreen, /IntakeSettings/);
+assert.doesNotMatch(exploreScreen, /RollHistoryFold/);
+assert.doesNotMatch(exploreScreen, /SageInsightSpend/);
 assert.match(navOrder, /explore: \{ label: 'Explore', href: '\/explore'/);
 assert.match(tabs, /NavEditOverlay/);
 assert.doesNotMatch(sage, /routeExplore|SageExploreObservations|ExplorePinnedCategories|SageStoryFold|SageTitleCard/);
 assert.doesNotMatch(sage, /EXPLORE_LEDE|EXPLORE_LABEL/);
-ok('Explore is its own tab; Sage stays clean chat; Home has no inner tabs');
+ok('Explore is its own tab; Sage stays clean chat; Home has no inner tabs; Story lives on Home (§9), not Explore');
 
 const you = read('src/app/(tabs)/you.tsx');
 assert.doesNotMatch(you, /ExplorePanel|HomeInnerTabs|explore_entries/);
 ok('Explore is not on the You tab');
 
-const talk = read('src/lib/voice/talk.ts');
-const router = read('src/lib/voice/router.ts');
-assert.doesNotMatch(talk, /phrase-guard|matchingPhrasePattern|logPhraseHit/);
-assert.doesNotMatch(router, /phrase-guard|matchingPhrasePattern|logPhraseHit/);
-assert.match(talk, /matchingJargonTerm/);
-assert.match(router, /jargonInCard/);
-ok('Read/Do/Talk/Nudge generation and word guard are untouched');
+// Talk generation went with its backend 2026-09-14; the word guard it used
+// is still asserted on Explore's own route above.
 
 const sql = read('supabase/migrations/explore.sql');
 assert.match(sql, /create table public.explore_packs/);
@@ -596,6 +626,37 @@ ok('reaction tap shows a local Noted fade and does not call the model');
 
 assert.equal(EXPLORE_LABEL, 'Explore');
 assert.ok(pickExplorePackFocuses(chipsOnly, []).length >= 1);
+
+// --- Card E: Categories is the ONLY AI affordance on Explore, and it is gated ---
+// ISOLATION_PLAN §7 Card E (emci 2026-09-15), reshaped by the release pass
+// (emci 2026-09-16): the full category list is always shown, and a TAP on one
+// category loads that one category. Every call goes through loadCategory, and
+// loadCategory refuses — before any model call — when the shared unlock gate
+// is shut, when AI consent is off, or when the category is not ready. Nothing
+// on this screen may generate on mount (check:no-auto-ai covers the effect side).
+const catFold = read('src/components/categories-fold.tsx');
+assert.equal(
+  catFold.split('generateCategoryStatements(').length - 1,
+  1,
+  'exactly one call site may spend a model call on Explore',
+);
+const loadFn = catFold.slice(
+  catFold.indexOf('async function loadCategory'),
+  catFold.indexOf('generateCategoryStatements(['),
+);
+assert.ok(loadFn.startsWith('async function loadCategory'), 'the one call must live inside loadCategory');
+assert.match(loadFn, /if \(!unlocked\) \{\s*setRow\(id, 'locked'\);\s*return;/, 'locked: no model call');
+assert.match(loadFn, /if \(!consentGranted\) \{\s*setRow\(id, 'consent'\);\s*return;/, 'consent off: no model call');
+assert.match(loadFn, /if \(!reading\.ready\) \{\s*setRow\(id, 'not_ready'\);\s*return;/, 'not ready: no model call');
+assert.match(catFold, /FULL_PROFILE_LOCKED_COPY/, 'the locked state must use the one shared line');
+assert.match(catFold, /\{readings\.map\(\(reading\) =>/, 'every category is listed, not only ready ones');
+assert.doesNotMatch(catFold, /SettingsFold/, 'the category list is never folded away');
+assert.match(
+  exploreScreen,
+  /unlocked=\{isFullProfileDone\(tracks, tracksReady\)\}/,
+  'Explore must pass the shared gate, not its own derivation',
+);
+ok('Explore spends a model call only from a category tap, behind unlock, consent and readiness');
 
 console.log(`\nAll ${passed} explore checks passed.`);
 }

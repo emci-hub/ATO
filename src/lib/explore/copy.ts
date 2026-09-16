@@ -20,7 +20,7 @@ export const EXPLORE_EMPTY_TRY =
   "Couldn't land this. Try again later.";
 
 export const EXPLORE_EMPTY_CONSENT =
-  'Sage stays off until you say yes in Dawn.';
+  'Sage stays off until you turn it on in You.';
 
 export const EXPLORE_EMPTY_DENIED =
   'Sage stays off for this account.';

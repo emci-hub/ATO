@@ -13,7 +13,6 @@ import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 
-import { bankCardForMe } from '../src/lib/voice/bank';
 import { colorHueFromShowUp } from '../src/lib/color';
 import { voiceMeFrom } from '../src/lib/intake';
 
@@ -135,13 +134,13 @@ async function main() {
     if (restoreError) throw new Error(`intake restore failed: ${restoreError.message}`);
   }
 
-  const day1 = bankCardForMe(1, voiceMeFrom({ name: 'Intake Check', ...row }));
-  assert.ok(day1?.do.includes(ANSWERS.morning_cue), `Do missing cue: ${day1?.do}`);
-  assert.ok(!day1?.do.includes('{morning_cue}'));
+  // The Day-1 starter-card assertion went with the card lane — there is no
+  // written first-days bank behind the insight to check the cue against.
+  const voiceSlice = voiceMeFrom({ name: 'Intake Check', ...row });
+  assert.equal(voiceSlice.morning_cue, ANSWERS.morning_cue);
 
   console.log('ME row:', row);
-  console.log('Day 1 Do:', day1?.do);
-  console.log('\nLive intake row check PASSED — all 8 fields on ME, cue in Day 1 Do, Settings-path edit round-trips.');
+  console.log('\nLive intake row check PASSED — all 8 fields on ME, cue reaches the voice slice, Settings-path edit round-trips.');
   void data;
 }
 

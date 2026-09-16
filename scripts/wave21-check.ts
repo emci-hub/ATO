@@ -3,7 +3,7 @@
  * Run: npm run check:wave21
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { AXIS_POLES, POLE_COPY_REVIEWED, poleCopyClean } from '../src/lib/axis-poles';
@@ -184,20 +184,32 @@ const home = read('src/app/(tabs)/index.tsx');
 const crisis = read('src/components/crisis-card.tsx');
 const widget = read('targets/widget/widgets.swift');
 const checkSwift = widget;
-assert.match(home, /CategoryTeaser/);
-assert.match(home, /canShowCategoryTeaser/);
+// PARKED (ISOLATION_PLAN §7 Card C, 2026-09-15): the Category teaser is parked off Home.
+// `canShowCategoryTeaser`'s own logic is still exercised above; the teaser
+// component has no mount site until Categories is rebuilt.
+assert.doesNotMatch(home, /CategoryTeaser/);
+assert.doesNotMatch(home, /canShowCategoryTeaser/);
 assert.doesNotMatch(home, /FullProfileFold/);
 assert.doesNotMatch(crisis, /CategoryTeaser|FullProfileFold|playfulness/);
 assert.doesNotMatch(checkSwift, /CategoryTeaser|FullProfileFold/);
 ok('Home teaser is gated; crisis card and widget stay untouched');
 
 const exploreTab = read('src/app/(tabs)/explore.tsx');
+// Categories is back inline on Explore, standalone route retired
+// (2026-09-14, T-E1) — reverses the 2026-09-12 judgment-pass.md §4A split.
 assert.match(exploreTab, /CategoriesFold/);
+assert.doesNotMatch(exploreTab, /'\/categories'/);
+assert.ok(
+  !existsSync('src/app/(tabs)/categories.tsx'),
+  'the /categories route must stay deleted — Categories lives inline on Explore',
+);
 assert.match(exploreTab, /FullProfileFold/);
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): Circle is a whole-screen park, so
+// its category-share wiring and compare row are gone. `lib/circle*` and
+// CategoryCompareRow are untouched and rebuilt from when Circle comes back.
 const circle = read('src/app/(tabs)/circle.tsx');
-assert.match(circle, /setCategoryShare/);
-assert.match(circle, /close_friends_share|setCloseFriendsShare/);
-assert.match(circle, /CategoryCompareRow/);
+assert.doesNotMatch(circle, /setCategoryShare/);
+assert.doesNotMatch(circle, /CategoryCompareRow/);
 assert.doesNotMatch(circle, /FullProfileFold/);
 ok('Explore has Categories next to Full Profile; Circle compare is separate from Full Profile');
 

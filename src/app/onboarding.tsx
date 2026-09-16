@@ -12,8 +12,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BornOnFields } from '@/components/born-on-fields';
 import { CityPicker } from '@/components/city-picker';
-import { CoreIntakeSweep } from '@/components/core-intake-sweep';
-import { OptionalGate, OptionalIntakeSweep } from '@/components/optional-intake';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -23,22 +21,7 @@ import {
   signupAgeMessage,
   UNDER_16_MESSAGE,
 } from '@/lib/age';
-import {
-  joinKnocks,
-  type CoreIntakeField,
-  type CurrentFocus,
-  type EnergyPattern,
-  type KnocksChip,
-  type SupportStyle,
-} from '@/lib/intake';
-import { createMe, errorMessageForHandle, TalkStyle, updateTraits, checkHandleAvailable, handleFormatError, normalizeHandle } from '@/lib/me';
-import {
-  OPTIONAL_INTAKE_TOTAL,
-  writeForOptionalScreen,
-  type OptionalScreen,
-  type TraitAxis,
-  type TraitSource,
-} from '@/lib/traits';
+import { createMe, errorMessageForHandle, checkHandleAvailable, handleFormatError, normalizeHandle } from '@/lib/me';
 import { slugifyCity } from '@/lib/around/slug';
 import { DEFAULT_AROUND_CITY } from '@/constants/around-cities';
 import { useMeContext } from '@/lib/me-context';
@@ -52,15 +35,9 @@ import {
 import { clearLocalSession } from '@/lib/supabase';
 import { withTimeout } from '@/lib/timeout';
 
-type Phase = 'account' | 'intake' | 'optional-gate' | 'optional';
-
 export default function OnboardingScreen() {
   const theme = useTheme();
   const { refresh } = useMeContext();
-
-  const [phase, setPhase] = useState<Phase>('account');
-  const [createdUserId, setCreatedUserId] = useState<string | null>(null);
-  const [optionalAnswers, setOptionalAnswers] = useState<Partial<Record<OptionalScreen, string>>>({});
 
   const [name, setName] = useState('');
   const [handle, setHandle] = useState('');
@@ -70,15 +47,6 @@ export default function OnboardingScreen() {
   const [city, setCity] = useState(DEFAULT_AROUND_CITY.slug);
   const [inviteCode, setInviteCode] = useState('');
   const [signupMode, setSignupMode] = useState<SignupMode>('invite_only');
-
-  const [talkStyle, setTalkStyle] = useState<TalkStyle | null>(null);
-  const [showUp, setShowUp] = useState<string | null>(null);
-  const [knocksYouOff, setKnocksYouOff] = useState<KnocksChip[]>([]);
-  const [morningCue, setMorningCue] = useState<string | null>(null);
-  const [eveningWindDown, setEveningWindDown] = useState<string | null>(null);
-  const [energyPattern, setEnergyPattern] = useState<EnergyPattern | null>(null);
-  const [supportStyle, setSupportStyle] = useState<SupportStyle | null>(null);
-  const [currentFocus, setCurrentFocus] = useState<CurrentFocus | null>(null);
 
   const [handleError, setHandleError] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
@@ -168,7 +136,9 @@ export default function OnboardingScreen() {
       }
       setFormError(null);
       setHandleError(null);
-      setPhase('intake');
+      // Straight to createMe — there is no second step any more (emci
+      // 2026-09-15, ISOLATION_PLAN §7 Card G). Register ends at Home.
+      await submit();
     } finally {
       setBusy(false);
     }
@@ -183,64 +153,9 @@ export default function OnboardingScreen() {
     else setHandleError(null);
   }
 
-  function selectChip(field: CoreIntakeField, value: string) {
-    switch (field) {
-      case 'talk_style':
-        setTalkStyle(value as TalkStyle);
-        break;
-      case 'show_up':
-        setShowUp(value);
-        break;
-      case 'knocks_you_off': {
-        const chip = value as KnocksChip;
-        setKnocksYouOff((prev) =>
-          prev.includes(chip) ? prev.filter((item) => item !== chip) : [...prev, chip],
-        );
-        break;
-      }
-      case 'morning_cue':
-        setMorningCue(value);
-        break;
-      case 'evening_wind_down':
-        setEveningWindDown(value);
-        break;
-      case 'energy_pattern':
-        setEnergyPattern(value as EnergyPattern);
-        break;
-      case 'support_style':
-        setSupportStyle(value as SupportStyle);
-        break;
-      case 'current_focus':
-        setCurrentFocus(value as CurrentFocus);
-        break;
-    }
-  }
-
-  function selectedValues(field: CoreIntakeField): string[] {
-    switch (field) {
-      case 'talk_style':
-        return talkStyle ? [talkStyle] : [];
-      case 'show_up':
-        return showUp ? [showUp] : [];
-      case 'knocks_you_off':
-        return knocksYouOff;
-      case 'morning_cue':
-        return morningCue ? [morningCue] : [];
-      case 'evening_wind_down':
-        return eveningWindDown ? [eveningWindDown] : [];
-      case 'energy_pattern':
-        return energyPattern ? [energyPattern] : [];
-      case 'support_style':
-        return supportStyle ? [supportStyle] : [];
-      case 'current_focus':
-        return currentFocus ? [currentFocus] : [];
-    }
-  }
-
   async function submit() {
     const parsedBornOn = bornOnFromParts(birthYear, birthMonth, birthDay);
     if (!parsedBornOn.ok) {
-      setPhase('account');
       setAgeError(parsedBornOn.message);
       return;
     }
@@ -253,18 +168,23 @@ export default function OnboardingScreen() {
     console.log('[onboarding] submit start');
 
     try {
-      const created = await withTimeout(
+      await withTimeout(
         createMe({
           name: name.trim(),
           handle: normalizeHandle(handle),
-          show_up: showUp,
-          talk_style: talkStyle,
-          knocks_you_off: joinKnocks(knocksYouOff),
-          morning_cue: morningCue,
-          evening_wind_down: eveningWindDown,
-          energy_pattern: energyPattern,
-          support_style: supportStyle,
-          current_focus: currentFocus,
+          // The nine intake taps that used to sit between register and Home
+          // are gone (emci 2026-09-15, Q1): they write `me` context columns,
+          // not trait axes — verified — so nothing about the trait profile
+          // depends on them, and the profile itself is built in Questions.
+          // Every one of these is nullable in `complete_signup`.
+          show_up: null,
+          talk_style: null,
+          knocks_you_off: null,
+          morning_cue: null,
+          evening_wind_down: null,
+          energy_pattern: null,
+          support_style: null,
+          current_focus: null,
           timezone,
           invite_code: inviteCode,
           born_on: parsedBornOn.bornOn,
@@ -274,18 +194,15 @@ export default function OnboardingScreen() {
         'createMe',
       );
       console.log('[onboarding] createMe succeeded');
-      setCreatedUserId(created.id);
-      setPhase('optional-gate');
+      await refreshAndGoHome();
     } catch (err) {
       const e = err as { message?: string; code?: string; details?: string; hint?: string };
       console.log('[onboarding] createMe raw error:', JSON.stringify(e));
       console.log('[onboarding] message:', e.message, '| code:', e.code, '| details:', e.details, '| hint:', e.hint);
       const message = errorMessageForHandle(err);
       if (message.startsWith('That handle')) {
-        setPhase('account');
         setHandleError(message);
       } else if (message === UNDER_16_MESSAGE || message.startsWith('When were you born') || message.includes('real date')) {
-        setPhase('account');
         setAgeError(message);
       } else {
         setFormError(message);
@@ -301,46 +218,6 @@ export default function OnboardingScreen() {
     } catch (err) {
       console.log('[onboarding] refresh error:', err);
       setFormError('Saved. Open the app again if Home does not show yet.');
-    }
-  }
-
-  async function goHome() {
-    if (busy) return;
-    setBusy(true);
-    try {
-      await refreshAndGoHome();
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function submitOptional() {
-    if (!createdUserId || busy) return;
-    const incoming: Partial<Record<TraitAxis, number>> = {};
-    const allowed: TraitAxis[] = [];
-    let source: Exclude<TraitSource, 'self_confirm'> | null = null;
-    for (let i = 0; i < OPTIONAL_INTAKE_TOTAL; i++) {
-      const write = writeForOptionalScreen({
-        screen: i as OptionalScreen,
-        optionId: optionalAnswers[i as OptionalScreen] ?? null,
-      });
-      if (!write) continue;
-      Object.assign(incoming, write.incoming);
-      allowed.push(...write.allowed);
-      source = write.source;
-    }
-    setBusy(true);
-    setFormError(null);
-    try {
-      if (source && Object.keys(incoming).length > 0) {
-        await withTimeout(updateTraits(createdUserId, incoming, source, allowed), 15000, 'updateTraits');
-      }
-      await refreshAndGoHome();
-    } catch (err) {
-      console.log('[onboarding] updateTraits error:', err);
-      setFormError('Couldn\u2019t save those extra bits. Skip or try again.');
-    } finally {
-      setBusy(false);
     }
   }
 
@@ -372,7 +249,6 @@ export default function OnboardingScreen() {
                 {signingOut ? 'Signing out…' : 'Wrong account? Sign out'}
               </ThemedText>
             </Pressable>
-            {phase === 'account' ? (
               <AccountStep
                 theme={theme}
                 signupMode={signupMode}
@@ -409,47 +285,6 @@ export default function OnboardingScreen() {
                   void continueFromAccount();
                 }}
               />
-            ) : phase === 'intake' ? (
-              <CoreIntakeSweep
-                selectedFor={selectedValues}
-                onSelect={(field, value) => {
-                  setFormError(null);
-                  selectChip(field, value);
-                }}
-                busy={busy}
-                formError={formError}
-                onSubmit={() => void submit()}
-                onSkip={() => void submit()}
-                onBack={() => {
-                  setFormError(null);
-                  setPhase('account');
-                }}
-              />
-            ) : phase === 'optional-gate' ? (
-              <OptionalGate
-                busy={busy}
-                onSkip={() => void goHome()}
-                onAdd={() => {
-                  setFormError(null);
-                  setPhase('optional');
-                }}
-              />
-            ) : phase === 'optional' ? (
-              <OptionalIntakeSweep
-                answers={optionalAnswers}
-                busy={busy}
-                formError={formError}
-                onSelect={(screen, value) => {
-                  setOptionalAnswers((prev) => ({ ...prev, [screen]: value }));
-                }}
-                onSubmit={() => void submitOptional()}
-                onSkip={() => void goHome()}
-                onBack={() => {
-                  setFormError(null);
-                  setPhase('optional-gate');
-                }}
-              />
-            ) : null}
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -512,7 +347,8 @@ function AccountStep({
     <>
       <ThemedText type="subtitle">Introduce yourself</ThemedText>
       <ThemedText themeColor="textSecondary" style={styles.lede}>
-        A few facts first, then nine taps so ATO knows how to talk to you.
+        A few facts and you’re in. The questions that build your profile come later,
+        in their own tab.
       </ThemedText>
 
       {signupMode === 'invite_only' ? (
@@ -621,7 +457,7 @@ function AccountStep({
           busy && styles.disabled,
         ]}>
         <ThemedText type="smallBold" style={styles.submitText}>
-          Continue
+          {busy ? 'Creating your account…' : 'Create my account'}
         </ThemedText>
       </Pressable>
     </>

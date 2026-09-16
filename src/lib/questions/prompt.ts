@@ -3,8 +3,8 @@ import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
 import { effectiveStability, trackFor, type TraitTrack } from '@/lib/trait-stability';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '@/lib/voice/preset';
-import { TALK_STYLE_GUIDE } from '@/lib/voice/providers/types';
-import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
+import { TALK_STYLE_GUIDE } from '@/lib/voice/talk-style';
+import { leanHighLow, TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 import type { TalkStyle } from '@/lib/voice/types';
 
 import { QUESTIONS_FEW_SHOTS } from './bank';
@@ -23,7 +23,7 @@ function traitContextLines(tracks: readonly TraitTrack[]): string[] {
     if (!row) continue;
     const stability = effectiveStability(row);
     if (stability <= 0) continue;
-    const pole = row.value >= 0.5 ? TRAIT_BAND_PHRASES[axis].high : TRAIT_BAND_PHRASES[axis].low;
+    const pole = TRAIT_BAND_PHRASES[axis][leanHighLow(row.value)];
     lines.push(
       `- ${AXIS_EDITOR_COPY[axis].label}: leans toward "${pole}" (settled ${stability.toFixed(2)})`,
     );
@@ -130,7 +130,7 @@ ${priority}RULES
 6. Ground in something that already happened. Never a hypothetical, "what if," or imagined variant of a real moment.
 7. One idea, one moment per question. Never double-barrel a real event and a hypothetical variant of it in the same stem.
 8. Options must be genuinely balanced — no leading or socially-desirable "better" answer, and not near-duplicates.
-9. Do not use a skipped Check, a cut, or a lapse as grounding. Dawn owns that signal.
+9. Do not use a skipped Check, a cut, or a lapse as grounding. The daily insight owns that signal.
 10. Personal facts (something they told Sage) may quietly shape at most one scenario. Never call it out ("you mentioned to Sage that…"). Use sparingly — not every question.
 11. Mix stakes. Include genuinely low-stakes / light scenarios. Not every question should be emotionally weighty.
 12. ${recent}

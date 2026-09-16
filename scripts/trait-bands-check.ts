@@ -86,9 +86,12 @@ ok('no report track → band falls back to the me column (game writes stay on th
 
 const explore = read('src/app/(tabs)/explore.tsx');
 const fold = read('src/components/trait-bands-fold.tsx');
-const intakeIdx = explore.indexOf('<IntakeSettings');
+// IntakeSettings' Explore call site is parked (Isolation Plan Card 5,
+// 2026-09-15) — TraitBandsFold now sits right after the parked "Today's
+// Read" RebuiltNotice, ahead of ProfileFillFold.
 const bandsIdx = explore.indexOf('<TraitBandsFold');
-assert.ok(intakeIdx >= 0 && bandsIdx > intakeIdx);
+const fillIdx = explore.indexOf('<ProfileFillFold');
+assert.ok(bandsIdx >= 0 && fillIdx > bandsIdx);
 assert.match(explore, /<TraitBandsFold me=\{me\} tracks=\{tracks\} \/>/);
 assert.match(fold, /filledTraitBands\(me, tracks\)/);
 assert.match(fold, /SettingsFold title=\{TRAIT_BANDS_LABEL\}/);

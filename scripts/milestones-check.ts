@@ -146,8 +146,8 @@ ok('profile_settled metric has zero defs — legends_unlocked no longer uses it'
 
 // Wiring proof: a real 50-answered-questions TraitTrack fixture, run through
 // the actual legendsUnlocked (bankTotalProgress(tracks).answered >= 50) —
-// the SAME predicate legends.tsx's `locked` now uses — must produce a
-// crossed legends_unlocked def. Deliberately NOT isProfileSettled anymore:
+// the predicate legends.tsx's `locked` used before it was parked — must
+// produce a crossed legends_unlocked def. Deliberately NOT isProfileSettled:
 // per emci's explicit call, Q50 alone unlocks Legends, since the tiered
 // intake alone never satisfies isProfileSettled for 10 of 16 axes.
 {
@@ -327,137 +327,50 @@ const intakeSweepSrc = readFileSync(
   'utf8',
 );
 
-assert.ok(
-  intakeSweepSrc.includes("import { checkMilestones, type MilestoneDef } from '@/lib/milestones';"),
-  'intake-sweep.tsx imports checkMilestones from the shared module, not a duplicated version',
-);
-assert.ok(
-  intakeSweepSrc.includes("import { persistCelebratedMilestones } from '@/lib/me';"),
-  'intake-sweep.tsx imports persistCelebratedMilestones from the shared module',
-);
-assert.ok(
-  intakeSweepSrc.includes("import { computeStreak } from '@/lib/growth';"),
-  'intake-sweep.tsx imports computeStreak from the shared module',
-);
-assert.equal(
-  (intakeSweepSrc.match(/checkMilestones\(/g) ?? []).length,
-  4,
-  'checkMilestones should be called exactly 4 times, file-wide, once per metric group ' +
-    '(bankTotalProgress, profile_percent, current_streak, and once inside the per-axis flatMap)',
-);
-assert.equal(
-  (intakeSweepSrc.match(/crossedMilestonesFor\(/g) ?? []).length,
-  3,
-  'crossedMilestonesFor should be defined once and called from both the backfill effect and ' +
-    'refreshAfterAnswer (3 occurrences total: 1 definition + 2 call sites)',
-);
-
-const crossedMilestonesForStart = intakeSweepSrc.indexOf('function crossedMilestonesFor(');
-const crossedMilestonesForEnd = intakeSweepSrc.indexOf('export default function IntakeSweepTabScreen');
-assert.ok(
-  crossedMilestonesForStart > -1 && crossedMilestonesForEnd > crossedMilestonesForStart,
-  'expected anchors around crossedMilestonesFor were not found in intake-sweep.tsx — did it move or get renamed?',
-);
-const crossedMilestonesForBody = intakeSweepSrc.slice(crossedMilestonesForStart, crossedMilestonesForEnd);
-assert.equal(
-  (crossedMilestonesForBody.match(/checkMilestones\(/g) ?? []).length,
-  4,
-  'all 4 checkMilestones call sites (bankTotalProgress, profile_percent, current_streak, per-axis ' +
-    'flatMap) must live inside crossedMilestonesFor, not duplicated at each caller',
-);
-assert.ok(
-  /computeStreak\(\s*checks,\s*timezone\s*\)/.test(crossedMilestonesForBody),
-  'current_streak must be computed via computeStreak(checks, timezone), not a duplicated formula',
-);
-assert.ok(
-  crossedMilestonesForBody.includes("checkMilestones('current_streak'"),
-  'current_streak must be checked in crossedMilestonesFor alongside the other metrics',
-);
-assert.ok(
-  /settledCount\(\s*tracks\s*\)\s*\/\s*TRAIT_AXES\.length/.test(crossedMilestonesForBody),
-  'profile_percent must be computed as the settled-axis ratio via settledCount, at the same call ' +
-    'site bankTotalProgress already runs at — not a separately duplicated computation',
-);
-assert.ok(
-  /TRAIT_AXES\.flatMap\(\s*\(axis\)\s*=>\s*[\s\S]*?checkMilestones\(\s*`axisComplete:\$\{axis\}`,\s*axisVariant\(\s*tracks,\s*axis\s*\)/.test(
-    crossedMilestonesForBody,
-  ),
-  'axisComplete:<axis> must be checked once per TRAIT_AXES axis, passing axisVariant(tracks, axis) ' +
-    'as currentValue — not a hardcoded/partial axis list or a different value source',
-);
-assert.ok(
-  !crossedMilestonesForBody.includes('bank_percent'),
-  'bank_percent was removed along with profile_100 — it must not silently reappear',
-);
-ok('intake-sweep.tsx wires through the shared checkMilestones/persistCelebratedMilestones/crossedMilestonesFor helpers, including per-axis axisComplete checks');
-
-const backfillEffectStart = intakeSweepSrc.indexOf('backfilledRef.current = true;');
-const backfillEffectEnd = intakeSweepSrc.indexOf(
-  '}, [userId, me, tracksReady, checksReady, tracks, checks, refresh]);',
-);
-assert.ok(
-  backfillEffectStart > -1 && backfillEffectEnd > backfillEffectStart,
-  'expected anchors around the backfill effect body were not found in intake-sweep.tsx — did it move or get renamed?',
-);
-const backfillEffectBody = intakeSweepSrc.slice(backfillEffectStart, backfillEffectEnd);
-assert.ok(
-  !backfillEffectBody.includes('onMilestoneCrossed'),
-  'the backfill effect (T-04) must never call the toast placeholder — it is silent by design',
-);
-ok('backfill effect never calls onMilestoneCrossed (silent by design)');
+/**
+ * PARKED (ISOLATION_PLAN §7 Card D, 2026-09-15). Everything from here to the
+ * MilestoneToast component assertions below used to pin the Questions screen's
+ * milestone wiring: the shared-helper imports, the four `checkMilestones`
+ * metric groups inside `crossedMilestonesFor`, the silent backfill effect, and
+ * the toast queue. The whole surface is parked — the toast overlay is gone and
+ * with it every write to `me.celebrated_milestone_ids` — so those assertions
+ * are INVERTED, not deleted, per the Card 2/3/5 convention.
+ *
+ * The milestone LOGIC is untouched and still fully covered above
+ * (MILESTONE_DEFS, `checkMilestones`'s crossing rules) and below (the
+ * MilestoneToast component's own props). `computeStreak`,
+ * `persistCelebratedMilestones` and `crossedMilestonesFor` simply have no
+ * caller on this screen any more. Re-inverting these is the first thing to do
+ * when milestones are rebuilt.
+ */
+/**
+ * Scoped to real code: the screen's own docstring names what was parked and
+ * why, which is exactly the kind of comment that should survive.
+ */
+const intakeSweepCode = intakeSweepSrc
+  .replace(/\/\*[\s\S]*?\*\//g, '')
+  .split(String.fromCharCode(10))
+  .filter((line) => !line.trimStart().startsWith('//'))
+  .join(String.fromCharCode(10));
 
 assert.ok(
-  /if \(!userId \|\| !me \|\| !tracksReady \|\| !checksReady \|\| backfilledRef\.current\) return;/.test(
-    intakeSweepSrc,
-  ),
-  'the backfill effect must gate on checksReady too, not just tracksReady — otherwise it can mark ' +
-    'itself done against an empty checks array before real checks load, then wrongly treat a real ' +
-    "user's pre-existing streak as newly-crossed on their next answer",
+  !intakeSweepCode.includes('crossedMilestonesFor'),
+  'Questions must not compute milestone crossings while the toast is parked',
 );
-ok('backfill effect gates on checksReady before computing current_streak');
+assert.ok(
+  !intakeSweepCode.includes('MilestoneToast'),
+  'Questions must not mount MilestoneToast while it is parked',
+);
+assert.ok(
+  !intakeSweepCode.includes('persistCelebratedMilestones'),
+  'Questions must not write me.celebrated_milestone_ids while milestones are parked',
+);
+assert.ok(
+  !intakeSweepCode.includes('checkMilestones'),
+  'no milestone check may run on the Questions screen while the surface is parked',
+);
+ok('milestones are parked off Questions: no crossings computed, no toast mounted, no celebrated-id write');
 
-const refreshAfterAnswerStart = intakeSweepSrc.indexOf('const refreshAfterAnswer = useCallback(async () => {');
-const refreshAfterAnswerEnd = intakeSweepSrc.indexOf(
-  '}, [refresh, loadTracks, userId, me, checks, onMilestoneCrossed]);',
-);
-assert.ok(
-  refreshAfterAnswerStart > -1 && refreshAfterAnswerEnd > refreshAfterAnswerStart,
-  'expected anchors around refreshAfterAnswer were not found in intake-sweep.tsx — did it move or get renamed?',
-);
-const refreshAfterAnswerBody = intakeSweepSrc.slice(refreshAfterAnswerStart, refreshAfterAnswerEnd);
-assert.ok(
-  refreshAfterAnswerBody.includes('onMilestoneCrossed(def)'),
-  'refreshAfterAnswer (T-05) must call the toast placeholder for each newly-crossed def — removing this call should fail the suite',
-);
-ok('refreshAfterAnswer calls onMilestoneCrossed for newly-crossed defs');
-
-// --- Source assertions: MilestoneToast wiring (T-06) ---
-assert.ok(
-  intakeSweepSrc.includes("import { MilestoneToast } from '@/components/milestone-toast';"),
-  'intake-sweep.tsx imports the real MilestoneToast component',
-);
-assert.ok(
-  !intakeSweepSrc.includes("console.log('[milestones] crossed'"),
-  'the T-06 console.log placeholder for crossed milestones should be gone once the real toast is wired',
-);
-assert.ok(
-  intakeSweepSrc.includes('setToastQueue((queue) => [...queue, def]);'),
-  'onMilestoneCrossed enqueues the crossed def rather than showing it directly, so two crossings in one pass cannot clobber each other',
-);
-assert.ok(
-  /<MilestoneToast[\s\S]*?title=\{activeToast\.title\}[\s\S]*?body=\{activeToast\.body\}[\s\S]*?\/>/.test(
-    intakeSweepSrc,
-  ),
-  'MilestoneToast is rendered with the active queued def\'s title/body, not hardcoded copy',
-);
-ok('MilestoneToast is wired into onMilestoneCrossed via a queue, not hardcoded');
-
-assert.ok(
-  /<MilestoneToast[\s\S]*?key=\{activeToast\.id\}/.test(intakeSweepSrc),
-  'MilestoneToast must be keyed on activeToast.id — without a key, React reuses the same instance ' +
-    'across queued toasts and the second one never replays its fade-in effect',
-);
-ok('MilestoneToast is keyed on activeToast.id so each queued toast remounts and replays its fade');
 
 const milestoneToastSrc = readFileSync(resolve(__dirname, '../src/components/milestone-toast.tsx'), 'utf8');
 assert.ok(
@@ -471,81 +384,13 @@ assert.ok(
 ok('MilestoneToast takes title/body as props, no hardcoded MILESTONE_DEFS copy');
 
 // --- Source assertions: legends.tsx unlock-celebration wiring ---
-const legendsSrc = readFileSync(resolve(__dirname, '../src/app/(tabs)/legends.tsx'), 'utf8');
-
-assert.ok(
-  legendsSrc.includes('const locked = tracksReady && !legendsUnlocked(tracks);'),
-  "legends.tsx's lock computation must use legendsUnlocked (bankTotalProgress >= 50), retargeted " +
-    'from isProfileSettled per emci\'s explicit call (§6) — the tiered intake alone never satisfies ' +
-    'isProfileSettled for every axis, so that gate would have kept Legends locked past question 50',
-);
-assert.ok(
-  !legendsSrc.includes("import {") || !legendsSrc.match(/import \{[^}]*\bisProfileSettled\b[^}]*\} from '@\/lib\/trait-stability'/),
-  'isProfileSettled must no longer be imported in legends.tsx — comments may still reference it for history/rationale, but no code path may use it',
-);
-assert.ok(
-  legendsSrc.includes("import { MilestoneToast } from '@/components/milestone-toast';"),
-  'legends.tsx imports the real MilestoneToast component',
-);
-assert.ok(
-  legendsSrc.includes("import { persistCelebratedMilestones } from '@/lib/me';"),
-  'legends.tsx imports persistCelebratedMilestones from the shared module, not a duplicated version',
-);
-assert.ok(
-  legendsSrc.includes("import { checkMilestones, type MilestoneDef } from '@/lib/milestones';"),
-  'legends.tsx imports checkMilestones from the shared module, not a duplicated version',
-);
-
-const legendsUnlockEffectStart = legendsSrc.indexOf('const celebratingUnlockRef = useRef(false);');
-const legendsUnlockEffectEnd = legendsSrc.indexOf('}, [me, tracksReady, locked, refresh, tracks]);');
-assert.ok(
-  legendsUnlockEffectStart > -1 && legendsUnlockEffectEnd > legendsUnlockEffectStart,
-  'expected anchors around the legends-unlock celebration effect were not found in legends.tsx — did it move or get renamed?',
-);
-const legendsUnlockEffectBody = legendsSrc.slice(legendsUnlockEffectStart, legendsUnlockEffectEnd);
-assert.ok(
-  legendsUnlockEffectBody.includes('if (!me || !tracksReady || locked || celebratingUnlockRef.current) return;'),
-  'the celebration must gate on tracksReady AND locked, not `locked` alone — `locked` reads false ' +
-    'both when genuinely unlocked and while tracks are still loading (tracksReady starts false), so ' +
-    'gating on `locked` alone would fire (and permanently persist) for every unsettled profile ' +
-    'during the loading window',
-);
-assert.ok(
-  legendsUnlockEffectBody.includes("checkMilestones('bankTotalProgress', bankTotalProgress(tracks).answered, celebrated)"),
-  'the celebration must check bankTotalProgress via the shared checkMilestones, not a duplicated ' +
-    "condition on `locked` directly (which would skip the celebrated_milestone_ids guard) — retargeted " +
-    'from profile_settled alongside the lock itself, so both cross at the exact same moment',
-);
-assert.ok(
-  legendsUnlockEffectBody.includes("filter((def) => def.id === 'legends_unlocked')"),
-  "the celebration must filter to legends_unlocked specifically — bankTotalProgress at threshold 50 " +
-    "also matches answers_50/profile_fully_unlocked, which are intake-sweep.tsx's concern " +
-    "(crossedMilestonesFor), not this local effect's",
-);
-assert.ok(
-  legendsUnlockEffectBody.includes('celebratingUnlockRef.current = true;'),
-  'a ref guard must prevent double-firing while the persistCelebratedMilestones request is in ' +
-    'flight, since locked can flip within the same mounted session (me.updated_at is a dependency ' +
-    "of legends.tsx's tracks-loading effect, not just first mount)",
-);
-assert.ok(
-  legendsUnlockEffectBody.includes('celebratingUnlockRef.current = false;'),
-  'a failed persist must reset the ref so this session can retry, mirroring intake-sweep.tsx\'s ' +
-    'backfill effect — otherwise a network error silently and permanently blocks the celebration ' +
-    'for this session even though celebrated_milestone_ids never actually got the id',
-);
-assert.ok(
-  legendsUnlockEffectBody.includes('persistCelebratedMilestones(me.id,'),
-  'the celebration must persist the crossed id so it never re-fires on a later visit',
-);
-ok('legends.tsx wires the unlock celebration through the shared checkMilestones/persistCelebratedMilestones helpers, on top of the retargeted legendsUnlocked-based lock, correctly gated on tracksReady');
-
-assert.ok(
-  /<MilestoneToast[\s\S]*?key=\{unlockToast\.id\}[\s\S]*?title=\{unlockToast\.title\}[\s\S]*?body=\{unlockToast\.body\}/.test(
-    legendsSrc,
-  ),
-  'MilestoneToast must be rendered with the crossed def\'s own title/body/key, not hardcoded copy',
-);
-ok('legends.tsx renders MilestoneToast with the crossed def\'s title/body, keyed to remount cleanly');
+// legends.tsx is parked (docs/ISOLATION_PLAN.md Card 3, 2026-09-15) — it now
+// renders only RebuiltNotice, so the UI-wiring assertions that used to live
+// here (lock computation, MilestoneToast rendering, the celebration effect)
+// no longer have anything to check. The predicate they wired to,
+// legendsUnlocked (bankTotalProgress >= 50), is still fully exercised above
+// via direct TraitTrack fixtures, independent of the screen. When Legends is
+// rebuilt, restore assertions here pinning it back to legendsUnlocked, not
+// isProfileSettled (see the comment above for why that gate is wrong).
 
 console.log(`\n${passed} milestones checks passed.`);

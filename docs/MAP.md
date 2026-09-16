@@ -34,7 +34,7 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 | `(tabs)/you.tsx` | You: tone, badges, growth, weeks, support region, Full Profile, account |
 | `(tabs)/around.tsx` | Around: weekend shows by typed city, "I'm going" |
 | `(tabs)/circle.tsx` | Circle: scanned friends, peer cards, category compare |
-| `(tabs)/legends.tsx` | Legends: archetype-matched stories; dev persona strip (dev user only) |
+| `(tabs)/legends.tsx` | Legends: manual-trigger 64-archetype story, 6-skin switch, paid reroll, archive; dev persona strip (dev user only) |
 | `(tabs)/intake-sweep.tsx` | "Questions" tab: the optional fast-entry sweep |
 | `dawn.tsx` | Dawn: generate/reveal today's card, consent interstitial |
 | `week.tsx` | Weekly recap |
@@ -65,7 +65,7 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 | `profile-fill-fold.tsx` | Explore "Full profile" checklist — filled (>=1 answer) per axis, N of 16, Complete state |
 | `sage-eight-ball.tsx`, `sage-usage.tsx`, `sage-facts.tsx` | Sage chat pieces; usage line; "What Sage remembers" |
 | `core-intake-sweep.tsx`, `optional-intake.tsx`, `intake-sweep.tsx`, `intake-chips.tsx`, `intake-settings.tsx` | Intake screens/chips |
-| `questions-fold.tsx` | Question batch UI |
+| `questions-fold.tsx`, `paged-questions.tsx` | Question batch UI; flat 5-per-page book pager over the frozen 50-question intake |
 | `full-profile-fold.tsx`, `trait-bands-fold.tsx`, `axis-taps.tsx`, `axis-code-label.tsx`, `depth-dive.tsx` | Full Profile + trait editing |
 | `growth-markers.tsx`, `quest-growth-bars.tsx`, `check-milestone-badge.tsx` | Growth/badges |
 | `share-poster.tsx`, `scan-sheet.tsx`, `city-picker.tsx` | Poster + QR scan; Around city |
@@ -95,7 +95,7 @@ Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FL
 | Circle | `circle.ts`, `circle-context.tsx`, `share.ts`, `share-codec.ts` | Connections, poster link/QR |
 | Crisis | `crisis/{detect,copy,days,log,region,region-context,region-storage}.ts` | Keyword detect, static card, region |
 | Around | `around/{fetch,fixture,going,weekend,tickets,ages,slug,map-edmtrain,edmtrain-api,types}.ts` | Weekend shows, going |
-| Legends | `legends/{store,match,dev-preview}.ts` | Catalog, archetype match, dev preview |
+| Legends | `legends64/{classify,archetypes,generate-story,store}.ts` | 64-archetype classify, name content (6 skins), story generation, storage |
 | Nav | `nav/{nav-order,nav-context}.tsx` | Persisted tab order + gates |
 | Theme | `theme/{context,chrome,contrast,navigation,storage}.ts`, `color.ts` | Appearance modes |
 | Push | `push.ts`, `push-policy.ts`, `push-copy.ts` | Local schedules, copy |

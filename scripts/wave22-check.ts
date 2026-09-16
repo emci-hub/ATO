@@ -1,9 +1,9 @@
 /**
- * Wave 22: Dawn category Read, Explore category combine, Levity, The Story.
+ * Wave 22: Explore category combine, Levity, The Story.
  * Run: npm run check:wave22
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
@@ -17,12 +17,6 @@ import {
   readCategory,
 } from '../src/lib/categories';
 import { CONCEPT_COPY_REVIEWED, CATEGORY_CONCEPTS, conceptCopyClean } from '../src/lib/concept-explainers';
-import {
-  DAWN_CATEGORY_COPY_REVIEWED,
-  DAWN_READ_CATEGORY_IDS,
-  dawnReadCategoriesAreBars,
-  pickDawnReadCategory,
-} from '../src/lib/dawn-category';
 import { repeatsPinnedCategories } from '../src/lib/explore/combine';
 import {
   STORY_COPY_REVIEWED,
@@ -39,8 +33,6 @@ import {
 import { isThinProfile, settledCount, applyEwmaAnswer, type TraitTrack } from '../src/lib/trait-stability';
 import { TITLE_COPY_REVIEWED } from '../src/lib/sage-title';
 import { TRAIT_AXES } from '../src/lib/traits';
-import { buildPrompt } from '../src/lib/voice/providers/prompt';
-import type { VoiceMe } from '../src/lib/voice/types';
 
 let passed = 0;
 function ok(label: string) {
@@ -60,41 +52,9 @@ function stableReport(axis: TraitTrack['axis'], value: number): TraitTrack {
   return applyEwmaAnswer(row, axis, 'report', value, nowIso);
 }
 
-const me: VoiceMe = {
-  name: 'Sam',
-  show_up: 'steady',
-  talk_style: 'even',
-  knocks_you_off: 'sleep',
-  morning_cue: 'make coffee',
-  extraversion: 0.8,
-};
-
-console.log('PART 1 — Dawn');
-assert.equal(dawnReadCategoriesAreBars(), true);
-assert.deepEqual([...DAWN_READ_CATEGORY_IDS], ['cat_steadiness', 'cat_agency', 'cat_drive']);
-assert.equal(pickDawnReadCategory([], 1), null);
-assert.equal(pickDawnReadCategory(undefined, 1), null);
-const emptyPrompt = buildPrompt({
-  me,
-  day: 4,
-  tone: 'even',
-  history: [],
-  crisisToday: false,
-  previousHadCut: false,
-});
-assert.doesNotMatch(emptyPrompt, /DAWN CATEGORY/);
-assert.doesNotMatch(emptyPrompt, /extraversion/);
-assert.match(emptyPrompt, /After you make coffee/);
-assert.match(emptyPrompt, /AVAILABLE SIGNALS/);
-ok('unset Dawn categories fall back to knock/fact/focus; 16-axis backbone is not in the Read prompt');
-
-const promptSrc = read('src/lib/voice/providers/prompt.ts');
-const routerSrc = read('src/lib/voice/router.ts');
-const filtersSrc = read('src/lib/voice/filters.ts');
-assert.match(routerSrc, /const reason = filterCard\(candidate/);
-assert.doesNotMatch(filtersSrc, /DawnRead|dawnReadCategory/);
-assert.match(promptSrc, /exactly ONE if-then action, anchored to the morning cue/);
-ok('cut/crisis/anti-repeat still filter the card; Do if-then copy is untouched');
+// PART 1 (Dawn read-category selection) removed 2026-09-14 with the card lane.
+// dawn-category.ts still exists only because voice/providers/prompt.ts — a Talk
+// dependency — imports it; nothing reachable calls the card prompt any more.
 
 console.log('PART 2 — Explore combine');
 assert.equal(repeatsPinnedCategories('Sees a plan through and shakes a bad start off today.', [
@@ -125,7 +85,6 @@ assert.ok(fallbackForReading(readCategory(levity!, levityReady)).length > 0);
 assert.equal(CATEGORY_COPY_REVIEWED, false);
 assert.equal(CATEGORY_BAND_COPY_REVIEWED, false);
 assert.equal(CONCEPT_COPY_REVIEWED, true);
-assert.equal(DAWN_CATEGORY_COPY_REVIEWED, false);
 assert.equal(conceptCopyClean(), true);
 assert.equal(categoryBandCopyClean(), true);
 assert.ok(CATEGORY_CONCEPTS.cat_levity.length > 0);
@@ -168,16 +127,47 @@ assert.notEqual(storyFingerprint(many, null), storyFingerprint(many, 'gap'));
 ok('Story prompt is a separate holistic rewrite; fingerprint moves on told-vs-played');
 
 const fold = read('src/components/sage-story-fold.tsx');
-assert.match(fold, /if \(!story\?\.body\) return null/);
+/**
+ * REPINNED (ISOLATION_PLAN §7 Card B, 2026-09-15): the fold is now tap-only.
+ * The old shape — generate from a `useEffect`, `if (!story?.body) return null`
+ * as the silent fallback, `setStory(null)` for every failure — is gone: it
+ * spent a model call on every cold open of Home once the profile looked ready,
+ * and it never checked AI consent. The invariants those assertions protected
+ * are re-pinned here against the new shape.
+ */
 assert.match(fold, /shouldUseLocalAi/);
-assert.match(fold, /setStory\(null\)/);
 assert.doesNotMatch(fold, /fallbackBandFor|TITLE_EMPTY|composeLocal/);
 assert.match(fold, /formatStoryTensionNote/);
 assert.doesNotMatch(fold, /formatDivergenceNote/);
-assert.match(read('src/app/(tabs)/explore.tsx'), /SageStoryFold/);
+// Crisis still hides Story entirely, and must do so before anything else.
+const crisisIdx = fold.indexOf('if (crisisToday) return null;');
+const lockedIdx = fold.indexOf('if (!unlocked) {');
+assert.ok(crisisIdx > -1, 'crisis must still hide Story outright');
+assert.ok(lockedIdx > crisisIdx, 'the locked state must come after the crisis guard, never instead of it');
+// The locked state is the SHARED gate now, not Story's own settledness.
+assert.match(fold, /FULL_PROFILE_LOCKED_COPY/);
+assert.doesNotMatch(fold, /PROFILE_LOCKED_CTA/);
+// Nothing generates without a press, and an unready profile costs nothing.
+assert.doesNotMatch(fold, /void run\(\)/);
+assert.match(fold, /void loadStory\(\)/);
+assert.match(fold, /STORY_NOT_READY_COPY/);
+ok('Story is tap-only: crisis hides it, the shared gate locks it, and Load is the only thing that can spend a call');
+
+// §9 (2026-09-08): Story moved from Explore to Home, directly below the
+// daily check-in card — the assertion below moved with it. Explore no
+// longer imports SageStoryFold.
+assert.match(read('src/app/(tabs)/index.tsx'), /SageStoryFold/);
+// Categories is back inline on Explore, standalone route retired
+// (2026-09-14, T-E1) — reverses the 2026-09-12 judgment-pass.md §4A split.
 assert.match(read('src/app/(tabs)/explore.tsx'), /CategoriesFold/);
+assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /'\/categories'/);
+assert.ok(
+  !existsSync('src/app/(tabs)/categories.tsx'),
+  'the /categories route must stay deleted — Categories lives inline on Explore',
+);
+assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /SageStoryFold/);
 assert.doesNotMatch(read('src/app/(tabs)/sage.tsx'), /SageStoryFold|ExplorePinnedCategories/);
-ok('Story UI hides when Gemini is unreachable; no generic fallback paragraph');
+ok('Story UI hides when Gemini is unreachable; no generic fallback paragraph; Story now lives on Home (§9), not Explore');
 
 assert.equal(STORY_SAMPLES.every((row) => row.shape.includes('thin') || row.body.length > 0 || row.body === ''), true);
 ok('draft Story samples and tension lines exist for emci review and are not treated as reviewed');

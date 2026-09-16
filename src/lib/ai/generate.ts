@@ -1,7 +1,22 @@
+import { withTimeout } from '@/lib/timeout';
+
 import { AI_CONFIG, isRemoteReady } from './config';
 import { completeViaEdge, isEdgeProvider } from './edge';
 import { resolveActiveProvider } from './override';
 import type { AiCallMetadata, AiProviderId, GenerateRequest, RemoteAiProviderId } from './types';
+
+/** Backstop above the edge function's own 8s per-vendor-fetch timeout
+ * (supabase/functions/ai-generate/index.ts) — normally the edge function
+ * itself returns well inside this window. Without it, a stalled edge
+ * invocation (cold start, dropped connection) has no ceiling of its own and
+ * silently eats a caller's entire outer timeout budget (e.g. the
+ * ongoing-round-start wrapper in questions-fold.tsx) on a single call. Kept
+ * well above the edge function's 8s vendor ceiling (not equal to it) —
+ * auth + claim_ai_call + network overhead sit outside that 8s window, and
+ * claim_ai_call runs before the vendor call, so a client timeout that fires
+ * before the edge function's own would abandon calls that already spent a
+ * quota unit. */
+const AI_CALL_TIMEOUT_MS = 15000;
 
 async function logQuiet(provider: AiProviderId): Promise<void> {
   try {
@@ -24,7 +39,7 @@ async function completeFor(
   // Every vendor — Gemini included — is called by the ai-generate Edge
   // Function. No vendor key exists in this bundle.
   if (isEdgeProvider(provider)) {
-    return completeViaEdge(provider, request, options);
+    return withTimeout(completeViaEdge(provider, request, options), AI_CALL_TIMEOUT_MS, `ai-generate-${provider}`);
   }
   throw new Error(`Unknown AI provider: ${provider}`);
 }
@@ -44,6 +59,18 @@ export function isQuotaLimitError(err: unknown): boolean {
   if (/token/i.test(msg) && /limit|exceed|max|too long|length/i.test(msg)) return true;
   return false;
 }
+
+/** The ai-generate Edge Function refuses every content call without ai_consent = true. */
+export function isConsentRefusal(err: unknown): boolean {
+  return err instanceof Error && err.message === 'ai_consent_required';
+}
+
+/**
+ * Outer ceiling for one user TAP that may chain several generateText calls
+ * (each up to AI_CALL_TIMEOUT_MS, plus one DeepSeek fallback). Past this the
+ * button shows its error + retry instead of a spinner.
+ */
+export const AI_TAP_TIMEOUT_MS = 45000;
 
 /**
  * One-shot, non-streaming. Returns the raw model text (JSON string or prose)
@@ -66,6 +93,12 @@ export async function generateText(
     void logQuiet(provider);
     return text;
   } catch (err) {
+    // A consent refusal is the server saying no, not a vendor failure — never
+    // retry it on another vendor.
+    if (isConsentRefusal(err)) {
+      console.log('[ai] refused: ai_consent_required');
+      return null;
+    }
     // Gemini is the bundled primary. On ANY Gemini failure (quota, 404 model
     // retired, 5xx, network, empty response) retry the same request once on
     // DeepSeek; only if that also fails fall through to the normal error state.

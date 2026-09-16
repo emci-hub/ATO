@@ -120,7 +120,11 @@ assert.match(fold, /TraitBandVisual/);
 assert.match(fold, /AXIS_EDITOR_COPY/);
 assert.match(fold, /settledAxisLabel/);
 assert.match(fold, /AXIS_POLES/);
-assert.match(fold, /SageTitleCard/);
+// INVERTED (ISOLATION_PLAN §7 Card B, 2026-09-15): this fold used to mount
+// SageTitleCard, which generated a title from a `useEffect` on mount — a third
+// auto-firing model call, found by check:no-auto-ai. Explore's only AI
+// affordance in the shipped flow is "Load categories", so the call site is gone.
+assert.doesNotMatch(fold, /SageTitleCard/);
 assert.doesNotMatch(fold, /recordRanking|recordScenario|optionalFillWrite/);
 assert.doesNotMatch(fold, /applyRankingWeek|applyScenarioWeek|applyCompletenessWeek|you_slot|week_slot/);
 assert.doesNotMatch(fold, /toFixed|percent|%/);
@@ -131,10 +135,13 @@ const questionsTab = read('src/app/(tabs)/intake-sweep.tsx');
 const bandsIdx = exploreTab.indexOf('<TraitBandsFold');
 const profileIdx = exploreTab.indexOf('<FullProfileFold');
 assert.ok(bandsIdx >= 0 && profileIdx > bandsIdx);
-assert.ok(questionsTab.indexOf('<OptionalIntakeFill') >= 0);
+// PARKED (ISOLATION_PLAN §7 Card D, 2026-09-15): `OptionalIntakeFill` is off the
+// Questions tab. Its own logic is still covered by check:optional-intake; the
+// component has no mount site until the optional fill is rebuilt.
+assert.ok(questionsTab.indexOf('<OptionalIntakeFill') === -1);
 assert.match(exploreTab, /from '@\/components\/full-profile-fold'/);
 assert.match(exploreTab, /from '@\/components\/trait-bands-fold'/);
-assert.match(questionsTab, /from '@\/components\/optional-intake'/);
+assert.doesNotMatch(questionsTab, /from '@\/components\/optional-intake'/);
 assert.match(fold, /SettingsFold title=\{`\$\{FULL_PROFILE_LABEL\}/);
 ok('Full Profile sits on Explore after trait bands; fill-later lives on the Questions tab');
 
@@ -142,7 +149,6 @@ const poster = read('src/components/share-poster.tsx');
 const handlePage = read('src/app/[handle].tsx');
 const home = read('src/app/(tabs)/index.tsx');
 const sage = read('src/app/(tabs)/sage.tsx');
-const dawn = read('src/app/dawn.tsx');
 const widget = read('targets/widget/widgets.swift');
 const push = read('src/lib/push-copy.ts');
 const explore = read('src/components/explore-panel.tsx');
@@ -151,7 +157,6 @@ for (const [name, source] of [
   ['handle', handlePage],
   ['home', home],
   ['sage', sage],
-  ['dawn', dawn],
   ['widget', widget],
   ['push', push],
   ['explore', explore],
@@ -162,7 +167,11 @@ for (const [name, source] of [
     continue;
   }
   assert.doesNotMatch(source, /FullProfileFold|of \d+ answered|of \d+ settled|How you're currently leaning/);
-  assert.doesNotMatch(source, /full-profile/, `${name} must not import Full Profile`);
+  // `full-profile-fold`, not a bare `full-profile`: the shared unlock gate
+  // (`lib/full-profile-gate.ts`, ISOLATION_PLAN §7 Card A) is a boolean every
+  // screen is SUPPOSED to import. What must stay off these surfaces is the
+  // completeness fold itself.
+  assert.doesNotMatch(source, /full-profile-fold/, `${name} must not import Full Profile`);
 }
 ok('completeness fold stays off Home, Explore, widget, push, poster, public handle; Sage reuses the settled line');
 

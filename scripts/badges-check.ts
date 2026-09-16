@@ -186,7 +186,10 @@ assert.doesNotMatch(src, /Math\.random|Math\.floor\(\s*Math\.random|shuffle|loot
 assert.doesNotMatch(ui, /Math\.random|Math\.floor\(\s*Math\.random/i);
 assert.match(src, /hasCut/);
 assert.doesNotMatch(readFileSync(resolve('src/app/(tabs)/index.tsx'), 'utf8'), /MilestoneBadges/);
-assert.match(readFileSync(resolve('src/app/(tabs)/you.tsx'), 'utf8'), /MilestoneBadges/);
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You is parked down to sign
+// out, delete account and AI consent. The component's own behaviour is still
+// covered in this file; only its You mount site is gone.
+assert.doesNotMatch(readFileSync(resolve('src/app/(tabs)/you.tsx'), 'utf8'), /MilestoneBadges/);
 ok('unlock path has no randomness; badges are mounted on You, not Home');
 
 // --- full-picture predicate + one-time unlock celebration -----------------
@@ -215,7 +218,7 @@ ok('capstone predicate is all-or-nothing across every axis');
 
 // The flag is burned BEFORE the celebration renders, so a second mount in the
 // same session cannot replay it, and the ack honours reduceMotion.
-const markIdx = ui.indexOf('markFullProfileUnlockSeen()');
+const markIdx = ui.indexOf('markFullProfileUnlockSeen(userId)');
 const celebrateIdx = ui.indexOf('setCelebrate(true)');
 assert.ok(markIdx >= 0 && celebrateIdx > markIdx, 'seen flag is burned before celebrating');
 assert.match(ui, /reduceMotion/);
@@ -223,14 +226,14 @@ assert.match(ui, /FullProfileUnlockAck/);
 ok('one-time celebration burns its flag first and has a reduceMotion branch');
 
 // --- skip-the-rest must not escape the gate -------------------------------
-// "Skip the rest" defers every remaining axis into the rotating pool on the
-// same screen. It must NOT navigate to Home, where nothing asks again.
-const questionsTabSrc = readFileSync(resolve('src/app/(tabs)/intake-sweep.tsx'), 'utf8');
-assert.doesNotMatch(questionsTabSrc, /router\.replace\('\/'\)/);
-assert.match(questionsTabSrc, /function done\(\)/);
-assert.match(questionsTabSrc, /scrollRef\.current\?\.scrollTo/);
-assert.match(readFileSync(resolve('src/components/intake-sweep.tsx'), 'utf8'), /saveQuestionDeferral/);
-ok('skip-the-rest keeps the person in Questions instead of dropping them on Home');
+// REMOVED 2026-09-15 (emci): this tested the "A faster pass" full sweep's own
+// "Skip the rest" — which deferred unanswered axes onto `me.question_deferred`
+// for QuestionsFold to pick up next — a cross-surface handoff that no longer
+// exists now that the sweep itself is deleted. QuestionsFold has its own,
+// separate "Skip the rest" (`skipRest()`/`skipRestOfQuestionPack`, a same-pack
+// skip that shares nothing with the deleted mechanism but the label) — it had
+// no test coverage before this change either, and still doesn't; that gap is
+// pre-existing, not something this removal opened.
 
 /**
  * The flag defaults to false so a device that has never stored it still
@@ -238,12 +241,19 @@ ok('skip-the-rest keeps the person in Questions instead of dropping them on Home
  * Async, so it runs last — these checks transpile to CJS (no top-level await).
  */
 async function checkUnlockFlag(): Promise<void> {
+  const userId = 'badges-check-user';
+  const otherUserId = 'badges-check-other-user';
   resetFullProfileUnlockCache();
-  assert.equal(await hasSeenFullProfileUnlock(), false, 'unset flag must not suppress');
-  await markFullProfileUnlockSeen();
-  assert.equal(await hasSeenFullProfileUnlock(), true, 'marking is sticky in-session');
+  assert.equal(await hasSeenFullProfileUnlock(userId), false, 'unset flag must not suppress');
+  await markFullProfileUnlockSeen(userId);
+  assert.equal(await hasSeenFullProfileUnlock(userId), true, 'marking is sticky in-session');
+  assert.equal(
+    await hasSeenFullProfileUnlock(otherUserId),
+    false,
+    'a different account id must not inherit another account\'s flag',
+  );
   resetFullProfileUnlockCache();
-  ok('hasSeenFullProfileUnlock defaults false and sticks once marked');
+  ok('hasSeenFullProfileUnlock defaults false, sticks once marked, and is scoped per account');
 }
 
 checkUnlockFlag()

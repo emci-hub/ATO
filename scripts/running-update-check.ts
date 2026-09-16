@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
+  buildKindLabel,
   formatPublishedAt,
   formatRunningUpdate,
   groupIdFromManifest,
@@ -114,6 +115,10 @@ ok('reads group from manifest metadata or extra.eas');
 const you = read('src/app/(tabs)/you.tsx');
 const hub = read('src/app/dev-lab.tsx');
 const line = read('src/components/running-update-line.tsx');
+// RESTORED (ISOLATION_PLAN §7 Card F, 2026-09-15; build/update info restore,
+// 2026-09-15 same day). You is parked to four things now, not three — build
+// info is the fourth, load-bearing for support (which OTA is a bug report
+// running) even though it is not an App Store invariant like the other three.
 assert.match(you, /RunningUpdateLine/);
 assert.match(hub, /RunningUpdateLine/);
 assert.match(line, /expo-updates/);
@@ -123,5 +128,18 @@ assert.match(line, /Updates\.createdAt/);
 assert.match(line, /formatPublishedAt/);
 assert.match(line, /\/ai-lab/);
 ok('You Settings and Dev Tools Hub both show the running-update line');
+
+// App version + build number, no expo-application. Pinned so a later edit
+// can't quietly drop these or silently re-add the missing native dependency.
+assert.match(line, /Constants\.expoConfig/);
+assert.doesNotMatch(line, /from ['"]expo-application['"]/, 'must not import expo-application — it is not installed and adding it forces a native rebuild');
+assert.match(line, /buildKindLabel/);
+const lib = read('src/lib/running-update.ts');
+assert.match(lib, /export function buildKindLabel/);
+assert.equal(buildKindLabel('embedded'), 'Original build');
+assert.equal(buildKindLabel('local'), 'Original build');
+assert.equal(buildKindLabel('update'), 'OTA update');
+assert.equal(buildKindLabel('group'), 'OTA update');
+ok('app version/build read from expoConfig only; Original-build vs OTA-update label is exhaustive and exact');
 
 console.log(`\n${passed} running-update checks passed`);

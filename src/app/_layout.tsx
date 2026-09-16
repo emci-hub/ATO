@@ -98,7 +98,6 @@ function RootNavigator() {
 
             <Stack.Protected guard={isAuthed && hasMe}>
               <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="dawn" />
               <Stack.Screen name="week" />
               <Stack.Screen name="chat" />
               <Stack.Screen name="dev-lab" />
@@ -108,10 +107,8 @@ function RootNavigator() {
             <Stack.Protected guard={PRE_LAUNCH_DEV}>
               <Stack.Screen name="theme-lab" />
               <Stack.Screen name="around-lab" />
-              <Stack.Screen name="talk-lab" />
               <Stack.Screen name="pixel-lab" />
               <Stack.Screen name="crisis-lab" />
-              <Stack.Screen name="voice-lab" />
               {/* Play (Grove) is an in-progress module, not a dev lab: it rides
                   the same PRE_LAUNCH_DEV gate so it can never reach a public
                   build until the module is finished and the gate is lifted. */}

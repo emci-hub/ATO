@@ -76,6 +76,18 @@ export function formatPublishedAt(createdAt: Date | null): string | null {
   });
 }
 
+/**
+ * "Original build" vs "OTA update" — the plain-English label emci asked for
+ * (2026-09-15, build/update info restore). Embedded/local means the running
+ * JS is exactly what shipped in the binary from the store/TestFlight; group
+ * or update means an OTA has replaced it. Kept as its own function (not
+ * folded into formatRunningUpdate) because it answers a different question —
+ * "did an OTA land" — from the id/channel/runtime line.
+ */
+export function buildKindLabel(kind: RunningUpdateKind): 'Original build' | 'OTA update' {
+  return kind === 'group' || kind === 'update' ? 'OTA update' : 'Original build';
+}
+
 export function formatRunningUpdate(snap: RunningUpdateSnapshot): RunningUpdateLabel {
   const group = shortId(snap.groupId);
   const update = shortId(snap.updateId);

@@ -99,7 +99,6 @@ function resolveWith(
 const logic = read('src/lib/sage-knows.ts');
 const card = read('src/components/sage-knows-card.tsx');
 const meSrc = read('src/lib/me.ts');
-const talkSrc = read('src/lib/voice/talk.ts');
 const sageTab = read('src/app/(tabs)/sage.tsx');
 const homeTab = read('src/app/(tabs)/index.tsx');
 
@@ -274,7 +273,6 @@ ok('Still fits still uses confirmTraitSource — number unchanged');
 assert.match(meSrc, /recordSageKnowsFits/);
 assert.match(meSrc, /self_settings/);
 assert.match(meSrc, /recordSageKnowsCorrection/);
-assert.doesNotMatch(talkSrc, /sage-knows|resolveSageKnows|SAGE_KNOWS/);
 assert.doesNotMatch(sageTab, /SageKnowsCard/);
 assert.doesNotMatch(homeTab, /SageKnowsCard/);
 assert.match(read('src/components/ask-sheet.tsx'), /kind === 'sage_knows'/);

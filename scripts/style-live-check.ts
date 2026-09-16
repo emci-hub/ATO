@@ -21,13 +21,12 @@ async function main() {
       responseFormat: 'json',
     });
 
-  const { buildPrompt, parseGeminiCard } = await import('../src/lib/voice/providers/prompt');
+  const { buildDailyInsightPrompt, parseDailyInsight } = await import('../src/lib/insight/generate-insight');
   const { buildExplorePrompt, parseExploreBody } = await import('../src/lib/explore/prompt');
   const { buildTitlePrompt, parseCombinedBody } = await import('../src/lib/sage-title');
   const { buildStoryPrompt, parseStoryBody, formatStoryTensionNote } = await import('../src/lib/sage-story');
   const { divergingAxesFromTracks } = await import('../src/lib/trait-history');
   const { applyEwmaAnswer } = await import('../src/lib/trait-stability');
-  const { pickDawnReadCategory } = await import('../src/lib/dawn-category');
   const { TRAIT_AXES } = await import('../src/lib/traits');
 
   function stable(axis: string, track: 'report' | 'game', value: number) {
@@ -64,29 +63,26 @@ async function main() {
     { day: 3, status: 'done' as const },
   ];
 
-  const dawnPick = pickDawnReadCategory(tracks, 4);
-
-  // ---- Dawn Read (card) ----
-  const cardPrompt = buildPrompt({
-    me,
-    day: 4,
-    tone: 'even',
-    history,
-    crisisToday: false,
-    previousHadCut: false,
-    dawnReadCategory: dawnPick,
+  // ---- Daily insight ----
+  const cardPrompt = buildDailyInsightPrompt({
+    tracks,
+    currentFocus: me.current_focus,
+    recentTone: history.map((h) => (h.status === 'done' ? 'did' : 'skip')),
   });
 
   console.log('======================================================');
-  console.log('SURFACE 1 — Dawn Read (Read + Do)');
+  console.log('SURFACE 1 — Daily insight (5 fields)');
   console.log('======================================================');
   for (let i = 1; i <= 3; i += 1) {
     const raw = await callGemini(cardPrompt, 500, 1.0);
-    const parsed = parseGeminiCard(raw);
+    const parsed = parseDailyInsight(raw);
     console.log(`\n#${i} raw:`, raw.replace(/\s+/g, ' ').trim());
     if (parsed) {
-      console.log(`#${i} Read: ${parsed.read}`);
-      console.log(`#${i} Do  : ${parsed.do}`);
+      console.log(`#${i} theme     : ${parsed.theme}`);
+      console.log(`#${i} title     : ${parsed.title}`);
+      console.log(`#${i} reflection: ${parsed.reflection}`);
+      console.log(`#${i} try today : ${parsed.tryToday}`);
+      console.log(`#${i} watch for : ${parsed.watchFor}`);
     }
   }
 

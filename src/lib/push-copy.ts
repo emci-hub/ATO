@@ -9,6 +9,7 @@ import { cueAfterYou } from '@/lib/voice/cue';
 export const PUSH_PATHS = {
   morning: '/',
   evening: '/?focus=check',
+  insight: '/explore',
   sunday: '/week',
 } as const;
 
@@ -43,9 +44,24 @@ export function eveningPush(windDownCue?: string | null): PushPayload {
   };
 }
 
+/** Uses an already-generated, already-visible category statement — nothing new is generated for the push itself. */
+export function insightPush(categoryLabel: string, statementBody: string): PushPayload {
+  const body = statementBody.trim();
+  return {
+    kind: 'insight',
+    title: categoryLabel,
+    body: body.length > 0 ? body : 'A new read is ready in Categories.',
+    url: PUSH_PATHS.insight,
+  };
+}
+
 export function sundayPush(input: { showedUp: number; recap: string }): PushPayload {
   const showed =
-    input.showedUp === 1 ? 'You showed up 1.' : `You showed up ${input.showedUp}.`;
+    input.showedUp === 0
+      ? 'Nothing logged this week. That’s fine — the week is still yours.'
+      : input.showedUp === 1
+        ? 'You showed up 1.'
+        : `You showed up ${input.showedUp}.`;
   const recap = input.recap.trim();
   return {
     kind: 'sunday',
@@ -55,12 +71,21 @@ export function sundayPush(input: { showedUp: number; recap: string }): PushPayl
   };
 }
 
-/** Honest recap line from this week's logged Reads. Empty is honest, not invented. */
+/**
+ * Honest recap line from this week's logged Reads. Empty is honest, not invented.
+ *
+ * Returns '' rather than a sentence when there is no Read text, because since
+ * 2026-09-14 Checks stop carrying Read/Do — an all-null week is now the normal
+ * case for anyone who logged, not evidence that they didn't. The old
+ * 'Nothing logged this week.' string sat directly beside 'You showed up 5.'
+ * and contradicted it. Callers render the count themselves and skip an empty
+ * recap.
+ */
 export function recapFromReads(reads: Array<string | null | undefined>): string {
   const lines = reads
     .map((read) => (read ?? '').trim())
     .filter((read) => read.length > 0);
-  if (lines.length === 0) return 'Nothing logged this week.';
+  if (lines.length === 0) return '';
   const latest = lines[lines.length - 1];
   if (lines.length === 1) return latest;
   return `${lines.length} Reads. Latest: ${latest}`;

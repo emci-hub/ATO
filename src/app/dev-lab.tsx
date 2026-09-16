@@ -5,7 +5,7 @@
  * (Home, Sage, You, System), not in a shared catch-all.
  */
 import { Redirect } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -21,6 +21,10 @@ import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useMeContext } from '@/lib/me-context';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
+import {
+  clearLocalAccountData,
+  listAccountScopedKeys,
+} from '@/lib/local-account-data';
 import { useSession } from '@/hooks/use-session';
 import { useGrowth } from '@/hooks/use-growth';
 import { useTheme } from '@/hooks/use-theme';
@@ -53,11 +57,8 @@ import {
 import {
   DEV_LAB_AXIS_ORDER,
   DEV_LAB_GAPS,
-  DEV_LAB_PATTERNS,
-  DEV_LAB_STREAKS,
   buildSimHistory,
   demoTraitState,
-  simulateGapWindow,
 } from '@/lib/dev-lab';
 import {
   fetchDevTraceSession,
@@ -73,14 +74,12 @@ import { withTimeout } from '@/lib/timeout';
 import { fetchExploreMissNotes } from '@/lib/explore/store';
 import type { RouteExploreResult } from '@/lib/explore/types';
 import { voiceMeFrom } from '@/lib/intake';
-import { bankCardForMe } from '@/lib/voice/bank';
 import { localYmd, weekdayInZone } from '@/lib/local-date';
 import { supabase } from '@/lib/supabase';
 import { isDirectTraitSource, traitStateFromRow, type TraitSource } from '@/lib/traits';
 import { filledTraitBands } from '@/lib/trait-bands';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { shouldUseLocalAi } from '@/lib/ai/override';
-import { buildVoiceConfig } from '@/lib/voice/config';
 import { matchingFrameworkTerms } from '@/lib/voice/framework-fence';
 import { type SageUsageSnapshot } from '@/lib/voice/quota';
 import { claimAiCall, fetchSageUsage, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
@@ -94,8 +93,22 @@ import {
   writeAskOverride,
   writeSlotOverride,
 } from '@/lib/dev-overrides';
-import { routeVoiceCard } from '@/lib/voice/router';
-import type { VoiceCardResult, VoiceMe } from '@/lib/voice/types';
+import {
+  DEV_INTAKE_STAGES,
+  type DevIntakeStageId,
+} from '@/lib/dev-intake-stages';
+import {
+  DEV_COLLISION_HANDLE,
+  DEV_TEST_HANDLE,
+  DEV_TEST_USER_ID,
+  applyDevIntakeStagePreset,
+  resetDevTestUserToFreshSignup,
+} from '@/lib/dev-test-user';
+import { checkHandleAvailable } from '@/lib/me';
+import { bankTotalProgress } from '@/lib/questions/local';
+import { legendsUnlocked, sageUnlocked } from '@/lib/questions/progressive-unlock';
+import { fetchTraitTracks } from '@/lib/trait-tracks-store';
+import type { TraitTrack } from '@/lib/trait-stability';
 import { resolveAsk, type AskPick } from '@/lib/ask';
 import { resolveReveal } from '@/lib/reveal';
 import { parseSageKnowsState } from '@/lib/sage-knows';
@@ -104,16 +117,7 @@ import {
   clearGrowthPreview,
   readGrowthPreview,
   writeGrowthPreview,
-} from '@/app/(tabs)/you';
-
-const LAB_ME: VoiceMe = {
-  name: 'Riley',
-  show_up: 'finishing my resume',
-  talk_style: 'even',
-  knocks_you_off: 'sleep',
-  morning_cue: 'make coffee',
-  facts: ['I finish work at four'],
-};
+} from '@/lib/dev-growth-preview';
 
 const SOURCE_NOTE: Record<TraitSource, string> = {
   self_slider: 'direct — inferred cannot overwrite (historical, no longer written)',
@@ -180,7 +184,6 @@ function DevLab() {
             {canSeeHubSection('card', gate) ? (
               <>
                 <HomeOverrides />
-                <CardSimulator />
               </>
             ) : null}
             <ForceTestError message="Dev Lab test error — Home" />
@@ -196,6 +199,9 @@ function DevLab() {
           <View style={styles.section}>
             <ThemedText type="smallBold">You</ThemedText>
             {canSeeHubSection('traits', gate) ? <TraitViewer /> : null}
+            <IntakeStagePresets />
+            <ResetToFreshSignup />
+            <HandleCollisionCheck />
             <GrowthPreview />
             <BandDetailStepper />
             <ForceTestError message="Dev Lab test error — You" />
@@ -210,6 +216,7 @@ function DevLab() {
             {canSeeHubSection('profiles', gate) ? <ProfilesPanel /> : null}
             {me ? <YouDevTools timeZone={me.timezone || 'UTC'} /> : null}
             <ResetAiConsent />
+            <LocalAccountData />
             {PRE_LAUNCH_DEV ? <CrisisCardPreview /> : null}
             <ForceTestError message="Dev Lab test error — System" />
           </View>
@@ -446,10 +453,12 @@ function SlotReadout() {
           isSunday,
         };
         const kind = resolveTodaySlot(input).kind;
-        const pastDay3 = window.todayDay > 3;
-        const consentNotTrue = me.ai_consent !== true;
-        const noBankCard = bankCardForMe(window.todayDay, voiceMeFrom(me)) === null;
-        const honestEmpty = pastDay3 && consentNotTrue && noBankCard;
+        // Consent off (declined or not yet asked) means no insight at all:
+        // the insight is model-generated with no offline lane behind it.
+        // Restored 2026-09-15 after a brief window where this was hardcoded
+        // false, which under the restored gate would misreport every
+        // unconsented account as having content coming.
+        const honestEmpty = me.ai_consent !== true;
         if (cancelled) return;
         setLines(
           [
@@ -460,9 +469,6 @@ function SlotReadout() {
             `askPending: ${input.askPending}`,
             `isSunday: ${input.isSunday}`,
             `kind: ${kind}`,
-            `pastDay3: ${pastDay3}`,
-            `consentNotTrue: ${consentNotTrue}`,
-            `noBankCard: ${noBankCard}`,
             `honestEmpty: ${honestEmpty}`,
           ].join('\n'),
         );
@@ -487,170 +493,6 @@ function SlotReadout() {
         {lines}
       </ThemedText>
     </>
-  );
-}
-
-function CardSimulator() {
-  const { me } = useMeContext();
-  const [streak, setStreak] = useState<(typeof DEV_LAB_STREAKS)[number]>(4);
-  const [patternId, setPatternId] = useState(DEV_LAB_PATTERNS[0].id);
-  const [gap, setGap] = useState<(typeof DEV_LAB_GAPS)[number]>(7);
-  const [result, setResult] = useState<VoiceCardResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  const pattern = DEV_LAB_PATTERNS.find((row) => row.id === patternId) ?? DEV_LAB_PATTERNS[0];
-  const history = useMemo(
-    () => buildSimHistory(streak, pattern.cells),
-    [streak, pattern],
-  );
-  const todayYmd = localYmd(new Date(), me?.timezone?.trim() || 'UTC');
-  const window = simulateGapWindow({
-    checkCount: history.length,
-    gapDays: gap,
-    todayYmd,
-  });
-
-  useEffect(() => {
-    let cancelled = false;
-    setBusy(true);
-    setError(null);
-    const config = buildVoiceConfig({ MODEL_PROVIDER: 'local' });
-    const voiceMe = me ? voiceMeFrom(me) : LAB_ME;
-    routeVoiceCard(
-      {
-        me: voiceMe,
-        checkCount: history.length,
-        history,
-        day: window.todayDay,
-        aiConsent: true,
-      },
-      { config, isDev: true },
-    )
-      .then((next) => {
-        if (!cancelled) setResult(next);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Could not route a card.');
-      })
-      .finally(() => {
-        if (!cancelled) setBusy(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [history, window.todayDay, me]);
-
-  return (
-    <View style={styles.section}>
-      <ThemedText type="smallBold">Card simulator</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        Local generator, consent granted. Use this to preview a Read/Do/Bump without
-        spending a real quota. Streak below 3 uses the written bank, not the generator.
-      </ThemedText>
-
-      <ThemedText type="code" themeColor="textSecondary">
-        streak — Checks already logged (journey length)
-      </ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        Not a consecutive-days streak. 0–2 stay on the Day 1–3 bank; 3+ generate.
-      </ThemedText>
-      <View style={styles.tabs}>
-        {DEV_LAB_STREAKS.map((n) => (
-          <Chip key={n} label={String(n)} selected={streak === n} onPress={() => setStreak(n)} />
-        ))}
-      </View>
-
-      <ThemedText type="code" themeColor="textSecondary">
-        recent log / skip — last few days of the fake history
-      </ThemedText>
-      <View style={styles.tabs}>
-        {DEV_LAB_PATTERNS.map((row) => (
-          <Chip
-            key={row.id}
-            label={row.label}
-            selected={patternId === row.id}
-            onPress={() => setPatternId(row.id)}
-          />
-        ))}
-      </View>
-
-      <ThemedText type="code" themeColor="textSecondary">
-        gap — calendar days since the last Check
-      </ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        1–2 still leave yesterday (and 2-days-ago) loggable. 7 closes days 3–6; only
-        today and the 2-day window stay open.
-      </ThemedText>
-      <View style={styles.tabs}>
-        {DEV_LAB_GAPS.map((n) => (
-          <Chip
-            key={n}
-            label={n === 7 ? '7 (3+ closed)' : `${n} day${n === 1 ? '' : 's'}`}
-            selected={gap === n}
-            onPress={() => setGap(n)}
-          />
-        ))}
-      </View>
-
-      <ThemedView type="backgroundElement" style={styles.card}>
-        <ThemedText type="code" themeColor="textSecondary">
-          window — days that can still take a Check
-        </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          Journey day {window.todayDay} is today&apos;s number since signup day 1, not a
-          streak count.
-        </ThemedText>
-        <ThemedText type="small">
-          Open: {window.open.length === 0 ? 'none' : window.open.map((slot) => offsetLabel(slot.offset)).join(', ')}
-        </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          Closed beyond 2-day window:{' '}
-          {window.closedMissed.length === 0
-            ? 'none'
-            : window.closedMissed.map((slot) => `${offsetLabel(slot.offset)} (day ${slot.day})`).join(', ')}
-        </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          Recent: {history.map((row) => (row.status === 'done' ? 'D' : 'S')).join(' ') || '(none)'}
-        </ThemedText>
-      </ThemedView>
-
-      {busy ? (
-        <ThemedText themeColor="textSecondary">Routing…</ThemedText>
-      ) : error ? (
-        <ThemedText type="smallBold">{error}</ThemedText>
-      ) : result ? (
-        <>
-          <CardBlock
-            kicker={`read · ${result.source} · ${result.tone}${result.dev?.fromBankFile ? ' · bank' : ''}`}
-            body={result.card?.read ?? '(dropped — nothing shown)'}
-          />
-          <CardBlock kicker="do" body={result.card?.do ?? '—'} />
-          <CardBlock
-            kicker="bump"
-            body={result.nudge ?? 'none — no skip pattern, knock-in-text, or safe fact'}
-          />
-          {result.dropped.length > 0 ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              dropped: {result.dropped.join(', ')}
-            </ThemedText>
-          ) : null}
-        </>
-      ) : null}
-
-      {window.open
-        .filter((slot) => slot.offset > 0)
-        .map((slot) => (
-          <ThemedView key={slot.ymd} type="backgroundElement" style={styles.card}>
-            <ThemedText type="code" themeColor="textSecondary">
-              catch-up still open · day {slot.day} · {offsetLabel(slot.offset)}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              Home would still offer a Check for this day.
-            </ThemedText>
-          </ThemedView>
-        ))}
-    </View>
   );
 }
 
@@ -896,6 +738,238 @@ function BandDetailStepper() {
   );
 }
 
+/**
+ * Intake-stage seeding. Pre-launch only, and only while signed in as the fixed
+ * dev-test user — applyDevIntakeStagePreset refuses anything else server-side
+ * of the guard too, so this is a convenience gate, not the only one.
+ */
+function IntakeStagePresets() {
+  const { me, refresh } = useMeContext();
+  const isDevUser = !!me && me.id === DEV_TEST_USER_ID;
+  const [tracks, setTracks] = useState<TraitTrack[]>([]);
+  const [busy, setBusy] = useState<DevIntakeStageId | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isDevUser || !me) return;
+    let active = true;
+    fetchTraitTracks(me.id)
+      .then((rows) => {
+        if (active) setTracks(rows);
+      })
+      .catch(() => {
+        if (active) setTracks([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [isDevUser, me]);
+
+  if (!PRE_LAUNCH_DEV || !isDevUser) return null;
+
+  const progress = bankTotalProgress(tracks);
+
+  async function applyStage(stage: DevIntakeStageId) {
+    if (busy) return;
+    setBusy(stage);
+    setError(null);
+    try {
+      await applyDevIntakeStagePreset(stage);
+      await refresh();
+      if (me) setTracks(await fetchTraitTracks(me.id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not apply that stage.');
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Intake stage</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Seeds @atodev straight to an onboarding/intake state by writing per-axis
+        trait_tracks answer_count. The real sageUnlocked/legendsUnlocked
+        predicates then read it normally — nothing is stubbed. Pre-launch and
+        dev-test user only; invisible to every other account.
+      </ThemedText>
+      <ThemedText type="code" themeColor="textSecondary">
+        {progress.answered}/{progress.total} · Sage{' '}
+        {sageUnlocked(tracks) ? 'unlocked' : 'locked'} · Legends{' '}
+        {legendsUnlocked(tracks) ? 'unlocked' : 'locked'}
+      </ThemedText>
+      {error ? <ThemedText type="small">{error}</ThemedText> : null}
+      {DEV_INTAKE_STAGES.map((stage) => (
+        <View key={stage.stage}>
+          <Chip
+            label={busy === stage.stage ? 'applying…' : stage.label}
+            selected={false}
+            onPress={() => void applyStage(stage.stage)}
+          />
+          <ThemedText type="small" themeColor="textSecondary">
+            {stage.hint}
+          </ThemedText>
+        </View>
+      ))}
+      <ThemedText type="small" themeColor="textSecondary">
+        Fresh signup does not reopen the &quot;Introduce yourself&quot; form: that
+        screen only renders when there is no me row, and deleting the me row
+        would delete the @atodev identity itself. It resets everything the form
+        would have written.
+      </ThemedText>
+    </View>
+  );
+}
+
+/**
+ * Reset the dev-test account all the way back to before onboarding (wave66
+ * reset_dev_test_user RPC) — unlike the "Fresh signup" intake-stage preset
+ * above, this actually deletes the me row, so the real "Introduce yourself"
+ * screen renders again. Same two guards as every other dev-test-user action;
+ * requires typing the handle to confirm since it's destructive to this
+ * account's data (auth.users/the session are untouched either way).
+ */
+function ResetToFreshSignup() {
+  const theme = useTheme();
+  const { me, refresh } = useMeContext();
+  const isDevUser = !!me && me.id === DEV_TEST_USER_ID;
+  const [confirm, setConfirm] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+
+  if (!PRE_LAUNCH_DEV || !isDevUser) return null;
+
+  async function reset() {
+    if (busy || confirm !== DEV_TEST_HANDLE) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await resetDevTestUserToFreshSignup();
+      setConfirm('');
+      setDone(true);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not reset this account.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Reset to fresh signup</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Deletes the @{DEV_TEST_HANDLE} me row (traits, history, checks,
+        questions, tokens — everything scoped to this account) but keeps the
+        Supabase auth user and this session signed in, so the app routes
+        straight into the real &quot;Introduce yourself&quot; onboarding
+        screen. Irreversible for this account&apos;s data. Type{' '}
+        {DEV_TEST_HANDLE} to confirm.
+      </ThemedText>
+      {error ? <ThemedText type="small">{error}</ThemedText> : null}
+      {done ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          Done — this account has no profile now.
+        </ThemedText>
+      ) : null}
+      <TextInput
+        value={confirm}
+        onChangeText={setConfirm}
+        placeholder={DEV_TEST_HANDLE}
+        placeholderTextColor={theme.textSecondary}
+        autoCapitalize="none"
+        autoCorrect={false}
+        style={[
+          styles.input,
+          styles.searchInput,
+          { color: theme.text, backgroundColor: theme.backgroundSelected, borderColor: controlBorderColor(theme) },
+        ]}
+      />
+      <Pressable
+        disabled={busy || confirm !== DEV_TEST_HANDLE}
+        onPress={() => void reset()}
+        style={({ pressed }) => [
+          styles.chip,
+          { borderColor: controlBorderColor(theme) },
+          (busy || confirm !== DEV_TEST_HANDLE) && { opacity: 0.4 },
+          pressed && styles.pressed,
+        ]}>
+        <ThemedText type="small">{busy ? 'resetting…' : 'Reset to fresh signup'}</ThemedText>
+      </Pressable>
+    </View>
+  );
+}
+
+/**
+ * Preset 6 — handle-collision check. Read-only: calls handle_taken (wave64)
+ * against the fixed hidden/paused account provisioned by wave65
+ * (DEV_COLLISION_HANDLE, @atodev2, visible = false) and reports the result.
+ * Proves the exact bug wave64 fixed — a handle owned by a hidden account used
+ * to read as free through public_profile — stays fixed. Writes nothing;
+ * gated the same as the intake-stage panel above.
+ */
+function HandleCollisionCheck() {
+  const { me } = useMeContext();
+  const isDevUser = !!me && me.id === DEV_TEST_USER_ID;
+  const [result, setResult] = useState<'unchecked' | 'checking' | boolean>('unchecked');
+  const [error, setError] = useState<string | null>(null);
+
+  if (!PRE_LAUNCH_DEV || !isDevUser) return null;
+
+  async function check() {
+    setResult('checking');
+    setError(null);
+    try {
+      // The exact client call the onboarding account step makes — this
+      // exercises the real production path, not just the RPC underneath it.
+      // checkHandleAvailable also returns ok:false on a format error or a
+      // network/RPC failure, so "not ok" alone would read those as "taken" —
+      // check the specific message it returns for an actually-taken handle.
+      const outcome = await checkHandleAvailable(DEV_COLLISION_HANDLE);
+      if (outcome.ok) {
+        setResult(false);
+      } else if (outcome.message === 'That handle is already taken') {
+        setResult(true);
+      } else {
+        setResult('unchecked');
+        setError(outcome.message);
+      }
+    } catch (err) {
+      setResult('unchecked');
+      setError(err instanceof Error ? err.message : 'Could not check that handle.');
+    }
+  }
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Handle collision (preset 6)</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        @{DEV_COLLISION_HANDLE} is a hidden (visible = false) account
+        provisioned by wave65 (migration not yet applied → will read as
+        &quot;available&quot; here, same as before the wave64 fix). Read-only
+        — calls checkHandleAvailable, the same function onboarding calls,
+        writes nothing. Once wave65 is applied it should report taken.
+      </ThemedText>
+      {error ? <ThemedText type="small">{error}</ThemedText> : null}
+      <ThemedText type="code" themeColor="textSecondary">
+        {result === 'unchecked'
+          ? 'not checked yet'
+          : result === 'checking'
+            ? 'checking…'
+            : result
+              ? 'taken (correct, once wave65 is applied)'
+              : 'available (expected until wave65 is applied)'}
+      </ThemedText>
+      <Chip
+        label={result === 'checking' ? 'checking…' : `check @${DEV_COLLISION_HANDLE}`}
+        selected={false}
+        onPress={() => void check()}
+      />
+    </View>
+  );
+}
+
 function ResetAiConsent() {
   const { me, refresh } = useMeContext();
   const { session } = useSession();
@@ -938,6 +1012,77 @@ function ResetAiConsent() {
         label={busy ? 'resetting…' : 'reset to null'}
         selected={false}
         onPress={() => void reset()}
+      />
+    </View>
+  );
+}
+
+/**
+ * What this account has written to THIS DEVICE, and a button to erase it.
+ *
+ * The manual-verification hook for the 2026-09-15 cross-account bug: deleting
+ * an account cleared the auth session and nothing else, so a new signup on the
+ * same device read the previous account's keys back. The fix runs inside
+ * `clearLocalSession` and on sign-out, where nothing is observable — so this
+ * panel is the only way to SEE whether the device is actually clean, before a
+ * delete and after the next signup, without another blind investigation.
+ *
+ * Deliberately lists keys, never values: the point is which state survives, and
+ * some of these hold generated personal content.
+ */
+function LocalAccountData() {
+  const [keys, setKeys] = useState<string[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setKeys(await listAccountScopedKeys());
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function wipe() {
+    if (busy) return;
+    setBusy(true);
+    setNote(null);
+    try {
+      const removed = await clearLocalAccountData();
+      setNote(
+        removed.length === 0
+          ? 'Nothing to remove — device was already clean.'
+          : `Removed ${removed.length} key${removed.length === 1 ? '' : 's'}.`,
+      );
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Local account data</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Every `ato.*` key on this device that belongs to the ACCOUNT rather than
+        the phone. These are what a deleted-then-recreated account used to
+        inherit. Device preferences (theme, crisis region, push prefs, auth) are
+        excluded by design and are not listed here. Wiping touches this device
+        only — it deletes nothing on the server.
+      </ThemedText>
+      <ThemedText type="code" themeColor="textSecondary">
+        {keys === null
+          ? 'reading…'
+          : keys.length === 0
+            ? '(none — clean)'
+            : keys.join('\n')}
+      </ThemedText>
+      {note ? <ThemedText type="small">{note}</ThemedText> : null}
+      <Chip label="refresh" selected={false} onPress={() => void load()} />
+      <Chip
+        label={busy ? 'wiping…' : 'wipe local account data'}
+        selected={false}
+        onPress={() => void wipe()}
       />
     </View>
   );
@@ -1607,17 +1752,6 @@ function AccessReview() {
         ))
       )}
     </View>
-  );
-}
-
-function CardBlock({ kicker, body }: { kicker: string; body: string }) {
-  return (
-    <ThemedView type="backgroundElement" style={styles.card}>
-      <ThemedText type="code" themeColor="textSecondary">
-        {kicker}
-      </ThemedText>
-      <ThemedText>{body}</ThemedText>
-    </ThemedView>
   );
 }
 

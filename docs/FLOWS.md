@@ -65,8 +65,9 @@ line has drifted.
    `trait_tracks` (`src/lib/trait-tracks-store.ts:57`; α=0.35, stability floor 3,
    60-day idle then 90-day half-life at read — `src/lib/trait-stability.ts`).
 3. Readers: `traitStateFromRow()` (`src/lib/traits.ts:215`) for Sage/Ask; report-track
-   only for Categories (`src/lib/categories.ts`), Legends (`src/lib/legends/match.ts:91`),
-   Full Profile completeness ("N of 16 settled").
+   only for Categories (`src/lib/categories.ts`), Legends (`src/lib/legends64/classify.ts`
+   — `archetypeCode()`, straight midpoint split, no band cutoffs), Full Profile
+   completeness ("N of 16 settled").
 4. Dev-only exception: `applyDevArchetypePreset()` (`src/lib/dev-test-user.ts:159`)
    writes columns directly for the dev user (refuses any other account).
 
@@ -83,24 +84,40 @@ once) → `sage_messages`.
 - Explore: `routeExplore()` (`src/lib/explore/route.ts:67`) — cadence, cached pack,
   category grounding (`src/lib/explore/prompt.ts:122`), reactions. 25s `withTimeout`
   at every call site.
-- Questions: `src/lib/questions/route.ts`; regen 3/UTC-day via `claim_questions_batch`.
-  Gate order in `routeQuestions`: consent → crisis → cached pack → **profile
-  completeness** → quota claim → generate. An incomplete profile (any axis with
-  0 report answers, `isProfileComplete` in `trait-stability.ts`) is served from
-  the static bank with its unfilled axes first, and claims **no** quota. Tracks
-  reach the route via `(tabs)/intake-sweep.tsx` → `QuestionsFold` → `tracks`;
-  the fold is not mounted until `tracksReady`, or a complete profile could be
-  locked into a bank-only pack for the rest of the day by the cache. Sage chat
+- Questions: the 50-question bank (`src/lib/questions/local.ts`, no model call) and
+  the "Next 25 questions" round (`src/lib/questions/run-ongoing-round.ts`). The
+  Infinite Questions router (`route.ts`) and its `claim_questions_batch` regen
+  were deleted 2026-09-16 with the inline feed they served.
+  That router's gate order (consent → crisis → cached pack → profile
+  completeness → quota claim → generate) is gone with it, and with it the only
+  consent and crisis gates this screen had. The bank is local and spends
+  nothing; the round is behind its own explicit press but reads NO consent flag
+  — a pre-existing gap, flagged to emci 2026-09-16, not introduced by the
+  deletion. Tracks still reach the fold via `(tabs)/intake-sweep.tsx` →
+  `QuestionsFold` → `tracks`, and it is still not mounted until `tracksReady`.
+  Sage chat
   (`routeTalkReply`, `src/lib/voice/talk.ts`) is a separate path and is never gated.
 - Story: `src/lib/sage-story.ts`, own quota `claim_story_generate`
   (`supabase/migrations/wave22_levity_story.sql:30`), no offline fallback.
 
 ## 8. Legends
 
-`(tabs)/legends.tsx` → `fetchLegendCatalog()` (`src/lib/legends/store.ts:96`,
-`legend_variants` + `legend_figures` embed) + `fetchSeenVariantIds()` (:156) →
-`buildLegendView()` (`src/lib/legends/match.ts:91`, ≥2/3 poles per archetype, best
-unseen variant per figure) → `logShownVariants()` (:169) into `user_legend_history`.
+64-archetype system (core loop redesign §4; replaces the old figure-catalog
+matcher entirely — `legend_figures`/`legend_variants`/`legend_archetypes`/
+`archetype_defs`/`user_legend_history` are dropped, `wave57`). Manual trigger
+only, nothing auto-generates. `(tabs)/legends.tsx` → `archetypeCode(me)`
+(`src/lib/legends64/classify.ts`, straight midpoint split on 6 axes, always
+resolves to exactly one of 64 codes) → tap "let's search your legend?" →
+`generateLegendStory()` (`src/lib/legends64/generate-story.ts`, claims
+`claim_legend_story_generation()` quota first, `wave58`) →
+`saveGeneration()`/`insert_legend_generation` (`src/lib/legends64/store.ts`)
+into `legend_generations`. Display name per skin: `archetypeName(code, skin)`
+(`src/lib/legends64/archetypes.ts`) — same stored story shown under all 6
+skins, switching is pure client state, no refetch. Reroll (10 ATO tokens,
+1/day): `rerollLegend()` (`src/lib/questions/reroll.ts`) — generates the
+replacement story BEFORE spending, only saves after a successful spend.
+Archive: `LegendHistoryFold` (`src/components/legend-history-fold.tsx`),
+latest 3 + expandable, excludes the currently-shown generation.
 
 ## 9. Circle / Chat
 

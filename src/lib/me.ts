@@ -35,6 +35,7 @@ import { withoutFactAt } from '@/lib/facts';
 import { historyDiff } from '@/lib/trait-history';
 import { insertTraitHistory } from '@/lib/trait-history-store';
 import {
+  applyCountOnlyAnswer,
   applyEwmaAnswer,
   shouldWriteReportTrack,
   trackFor,
@@ -112,6 +113,8 @@ export type Me = {
   voice_preset: VoicePreset;
   /** Earned-only notes balance. Never purchased. */
   tokens: number;
+  /** Earned-only ATO tokens balance. Separate currency from tokens (Notes). */
+  ato_tokens: number;
   /** Cached Sage title from stable report-track axes. */
   sage_title: unknown;
   /** Cached Sage Story from settled categories. Empty object when none. */
@@ -163,6 +166,7 @@ export type MeInsert = Omit<
     | 'sage_knows'
     | 'visible'
     | 'tokens'
+    | 'ato_tokens'
     | 'sage_title'
     | 'sage_story'
     | 'close_friends_share'
@@ -191,6 +195,38 @@ export function aiConsentFor(me: Pick<Me, 'ai_consent'>): AiConsent {
   return 'pending';
 }
 
+/** Shown on every AI button while consent is not granted. The switch lives on Home. */
+export const AI_CONSENT_NEEDED_COPY = 'AI is off. Turn on AI in Home to load this.';
+
+/**
+ * Keeps `me.timezone` on the phone's current zone, so "today" (the daily
+ * insight, Story dates, category weeks, home_bootstrap) follows the device —
+ * someone who signed up in Canada and opens the app in Japan gets Japan's
+ * day. No-op when the zone is unreadable or already matches.
+ */
+export async function syncDeviceTimezone(me: Pick<Me, 'id' | 'timezone'>): Promise<boolean> {
+  let deviceZone: string | undefined;
+  try {
+    deviceZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // Rejects anything Intl itself can't format with.
+    if (deviceZone) new Intl.DateTimeFormat('en-US', { timeZone: deviceZone });
+  } catch {
+    return false;
+  }
+  if (!deviceZone || deviceZone === me.timezone) return false;
+  const { data, error } = await supabase
+    .from('me')
+    .update({ timezone: deviceZone })
+    .eq('id', me.id)
+    .select('id');
+  if (error) {
+    console.log('[me] timezone sync error:', error.message);
+    return false;
+  }
+  // Zero rows updated is not a sync — don't let the app believe it was.
+  return Array.isArray(data) && data.length > 0;
+}
+
 function withVisible(row: Me): Me {
   const sources =
     row.trait_sources && typeof row.trait_sources === 'object' && !Array.isArray(row.trait_sources)
@@ -209,6 +245,8 @@ function withVisible(row: Me): Me {
     sage_knows: parseSageKnowsState(row.sage_knows),
     voice_preset: voicePresetOf(row.voice_preset),
     tokens: typeof row.tokens === 'number' && Number.isFinite(row.tokens) ? Math.max(0, Math.floor(row.tokens)) : 0,
+    ato_tokens:
+      typeof row.ato_tokens === 'number' && Number.isFinite(row.ato_tokens) ? Math.max(0, Math.floor(row.ato_tokens)) : 0,
     close_friends_share: row.close_friends_share === true,
     category_spotlight: row.category_spotlight ?? {},
     nav_layout: normalizeNavLayout(row.nav_layout),
@@ -410,15 +448,19 @@ export async function updateIntake(userId: string, patch: IntakePatch): Promise<
 
 export { FACT_FRAMEWORK_MESSAGE };
 
+type TraitAnswer = {
+  axis: TraitAxis;
+  sample: number;
+  source: Exclude<TraitSource, 'self_confirm'>;
+  /** Record that the answer happened; leave value and stability alone. */
+  countOnly?: boolean;
+};
+
 async function persistMergedTraits(
   current: Me,
   merged: ReturnType<typeof mergeTraitWrite>,
   extra: Record<string, unknown> = {},
-  answers: Array<{
-    axis: TraitAxis;
-    sample: number;
-    source: Exclude<TraitSource, 'self_confirm'>;
-  }> = [],
+  answers: TraitAnswer[] = [],
 ): Promise<{ me: Me; wrote: boolean }> {
   const previous = traitStateFromRow(current);
   const nowIso = new Date().toISOString();
@@ -430,6 +472,13 @@ async function persistMergedTraits(
     for (const answer of answers) {
       const kind = trackKindForSource(answer.source);
       const prev = trackFor(tracks, answer.axis, kind);
+      if (answer.countOnly) {
+        const stored = nextMerged.values[answer.axis];
+        const seed =
+          typeof stored === 'number' && Number.isFinite(stored) ? stored : answer.sample;
+        trackUpdates.push(applyCountOnlyAnswer(prev, answer.axis, nowIso, seed));
+        continue;
+      }
       const next = applyEwmaAnswer(prev, answer.axis, kind, answer.sample, nowIso);
       trackUpdates.push(next);
       if (kind === 'report') {
@@ -448,6 +497,22 @@ async function persistMergedTraits(
     if (!updated) continue;
     if (rows.some((row) => row.axis === answer.axis && row.source === 'self_game')) continue;
     rows.push({ axis: answer.axis, value: updated.value, source: 'self_game' });
+  }
+  // A count-only self_situation answer never changes `values`, so historyDiff
+  // (value-change-only) never sees it — but the person DID answer, and
+  // claim_full_profile_complete's payout floor counts self_situation
+  // trait_history rows. Without this, an axis already owned by a direct
+  // source (grid intake, ranking taps, settings) silently never contributes
+  // to that floor no matter how many times it's answered on the Questions
+  // tab, so a normal 50-question completion could permanently fall short of
+  // the payout through no fault of the user. Same explicit-row pattern as
+  // self_game above, just keyed on countOnly instead of track kind.
+  for (const answer of answers) {
+    if (answer.source !== 'self_situation' || !answer.countOnly) continue;
+    if (rows.some((row) => row.axis === answer.axis && row.source === 'self_situation')) continue;
+    const value = nextMerged.values[answer.axis];
+    if (value == null || !Number.isFinite(value)) continue;
+    rows.push({ axis: answer.axis, value, source: 'self_situation' });
   }
 
   if (rows.length === 0 && trackUpdates.length === 0 && Object.keys(extra).length === 0) {
@@ -476,7 +541,7 @@ function reportSample(
   merged: ReturnType<typeof mergeTraitWrite>,
   axis: TraitAxis,
   source: Exclude<TraitSource, 'self_confirm' | 'self_game'>,
-): Array<{ axis: TraitAxis; sample: number; source: Exclude<TraitSource, 'self_confirm'> }> {
+): TraitAnswer[] {
   const sample = merged.values[axis];
   if (sample == null || !Number.isFinite(sample)) return [];
   return [{ axis, sample, source }];
@@ -485,7 +550,7 @@ function reportSample(
 function gameSample(
   axis: TraitAxis,
   pole: ScenarioPole,
-): Array<{ axis: TraitAxis; sample: number; source: Exclude<TraitSource, 'self_confirm'> }> {
+): TraitAnswer[] {
   return [{ axis, sample: pole === 'high' ? 0.8 : 0.2, source: 'self_game' }];
 }
 
@@ -494,12 +559,8 @@ function collectAnswers(
   incoming: Partial<Record<TraitAxis, number | null>>,
   source: Exclude<TraitSource, 'self_confirm'>,
   allowed: readonly TraitAxis[],
-): Array<{ axis: TraitAxis; sample: number; source: Exclude<TraitSource, 'self_confirm'> }> {
-  const out: Array<{
-    axis: TraitAxis;
-    sample: number;
-    source: Exclude<TraitSource, 'self_confirm'>;
-  }> = [];
+): TraitAnswer[] {
+  const out: TraitAnswer[] = [];
   for (const axis of allowed) {
     const raw = incoming[axis];
     if (raw == null || !Number.isFinite(raw)) continue;
@@ -507,7 +568,14 @@ function collectAnswers(
       out.push({ axis, sample: raw, source });
       continue;
     }
-    if (!shouldWriteReportTrack(current.sources[axis], source)) continue;
+    if (!shouldWriteReportTrack(current.sources[axis], source)) {
+      // The frozen intake still counts toward the Sage/Legends unlock on an
+      // axis a direct source already owns — recorded, but never allowed to
+      // move the number. Every other inferred source keeps being dropped.
+      if (source !== 'self_situation') continue;
+      out.push({ axis, sample: raw, source, countOnly: true });
+      continue;
+    }
     out.push({ axis, sample: raw, source });
   }
   return out;
@@ -796,7 +864,12 @@ export function handleFormatError(raw: string): string | null {
 
 /**
  * Live uniqueness check for the account step. Reserved names fail here too.
- * createMe still enforces unique/reserved at insert (race after this check).
+ *
+ * Uses handle_taken (wave64), which reads public.me directly and so sees
+ * handles owned by hidden/paused accounts. public_profile must never be used
+ * here: it is visibility-filtered, so a taken handle read as available and
+ * only failed later at insert. createMe still enforces unique/reserved at
+ * insert — that is the race guard, not the primary check.
  */
 export async function checkHandleAvailable(
   raw: string,
@@ -804,10 +877,9 @@ export async function checkHandleAvailable(
   const format = handleFormatError(raw);
   if (format) return { ok: false, message: format };
   const handle = normalizeHandle(raw);
-  const { data, error } = await supabase.rpc('public_profile', { p_handle: handle });
+  const { data, error } = await supabase.rpc('handle_taken', { p_handle: handle });
   if (error) return { ok: false, message: "Couldn't check that handle. Try again." };
-  const rows = Array.isArray(data) ? data : data ? [data] : [];
-  if (rows.length > 0) return { ok: false, message: 'That handle is already taken' };
+  if (data === true) return { ok: false, message: 'That handle is already taken' };
   return { ok: true, handle };
 }
 

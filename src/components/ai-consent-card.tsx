@@ -6,23 +6,40 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { controlBorderColor } from '@/lib/theme/chrome';
 
-export type ConsentContext = 'dawn' | 'talk';
+export type ConsentContext = 'home' | 'talk';
 
+/**
+ * Apple 5.1.2 disclosure. Rendered UNCONDITIONALLY wherever the consent card
+ * lives -- before the answer, after a yes, and after a no alike. Disclosure
+ * must never be contingent on the answer; only actual generation is.
+ * Deliberately NOT rendered inside this card: the card disappears the moment
+ * the question is answered, and a disclosure that vanishes with the answer is
+ * exactly what 5.1.2 forbids. The HOST surface renders it, unconditionally and
+ * outside every consent branch -- Home does so today. Any future surface that
+ * mounts this card owes the same line.
+ */
+export const AI_USE_DISCLOSURE = 'Sage uses AI to personalize your insights.';
+
+// Bodies rewritten 2026-09-15 (emci correction). With no dedicated Sage-talk
+// screen built yet, ai_consent gates the app's three real AI touchpoints --
+// the daily insight, the "Tell Sage more" rotation, and Explore packs. A no
+// means none of those generate. The copy has to say that, because this is the
+// Apple 5.1.2 consent surface and one flag governs all three.
 const COPY: Record<ConsentContext, { title: string; body: string }> = {
-  dawn: {
-    title: 'Can Sage use AI to write your card?',
+  home: {
+    title: 'Can Sage use AI to personalize what you see?',
     body:
-      'Once you\u2019ve logged three days, Sage writes your daily read and do using AI, ' +
-      'based on what you\u2019ve logged and told us. Sage is a coach in the app, not a person. ' +
-      'You\u2019ll only be asked once. Say no and ' +
-      'you keep the starter cards, and Sage\u2019s Talk stays off.',
+      'Sage writes your daily insight, your questions and your categories using AI, based on ' +
+      'what you’ve logged and told us. Sage is a coach in the app, not a person. ' +
+      'You’ll only be asked once. Say no and Sage writes none of them — everything ' +
+      'else, including the questions you already answer yourself, keeps working.',
   },
   talk: {
     title: 'Can Sage use AI to talk with you?',
     body:
-      'Sage replies to you using AI, in your talk style, based on what you\u2019ve logged and ' +
-      'told us. Sage is a coach in the app, not a person. You\u2019ll only be asked once. Say no and Talk stays off — your daily cards ' +
-      'keep working.',
+      'Sage replies to you using AI, in your talk style, based on what you’ve logged and ' +
+      'told us. Sage is a coach in the app, not a person. You’ll only be asked once. ' +
+      'Say no and Talk stays off, along with Sage’s written insights.',
   },
 };
 

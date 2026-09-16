@@ -50,6 +50,32 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+/** Per-vendor-call ceiling. Deno's fetch has no default timeout — a stalled
+ * vendor connection would otherwise hold this function open indefinitely,
+ * which is what let a chunked client-side caller's own 25s timeout (see
+ * ongoing-round-start, src/components/questions-fold.tsx) exhaust its whole
+ * budget on one stuck call instead of failing fast and letting the caller's
+ * own retry/fallback logic run. */
+const VENDOR_FETCH_TIMEOUT_MS = 8000;
+
+async function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), VENDOR_FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (err) {
+    // Checking controller.signal.aborted (not err.name/instanceof) so this
+    // doesn't depend on Deno's fetch throwing any particular error shape on
+    // an aborted request.
+    if (controller.signal.aborted) {
+      throw new Error(`vendor call timed out after ${VENDOR_FETCH_TIMEOUT_MS}ms`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 interface GenerateInput {
   prompt: string;
   temperature: number;
@@ -132,7 +158,7 @@ async function completeGemini(input: GenerateInput): Promise<string> {
   };
   if (input.responseFormat === 'json') generationConfig.responseMimeType = 'application/json';
 
-  const res = await fetch(
+  const res = await fetchWithTimeout(
     `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
     {
       method: 'POST',
@@ -173,7 +199,7 @@ async function completeOpenAiChat(opts: {
   if (opts.input.responseFormat === 'json' && !opts.skipJsonMode) {
     body.response_format = { type: 'json_object' };
   }
-  const res = await fetch(opts.url, {
+  const res = await fetchWithTimeout(opts.url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${opts.apiKey}` },
     body: JSON.stringify(body),
@@ -189,7 +215,7 @@ async function completeOpenAiChat(opts: {
 
 async function completeClaude(input: GenerateInput): Promise<string> {
   const apiKey = keyFor('claude');
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -324,6 +350,20 @@ Deno.serve(async (request) => {
   const maxOutputTokens = Math.min(MAX_OUTPUT_TOKENS, Math.max(1, requested));
   const responseFormat: 'json' | 'text' = payload.responseFormat === 'json' ? 'json' : 'text';
   const callType = payload.callType === 'explore' ? 'explore' : 'sage';
+
+  // AI consent is enforced HERE, for every content call, before quota is
+  // claimed or a paid key is touched — the client's own gates are UX only.
+  // Only an explicit `true` passes: declined (false) and never-asked (null)
+  // are both refused. Read as the caller, so RLS scopes it to their own row.
+  const { data: consentRow, error: consentError } = await caller
+    .from('me')
+    .select('ai_consent')
+    .eq('id', user.id)
+    .maybeSingle();
+  if (consentError) return json({ error: `consent_check_failed: ${consentError.message}` }, 500);
+  if ((consentRow as { ai_consent?: unknown } | null)?.ai_consent !== true) {
+    return json({ error: 'ai_consent_required' }, 403);
+  }
 
   // Claim one unit of the caller's daily/monthly cap BEFORE touching a paid key.
   const { data: claim, error: claimError } = await caller.rpc('claim_ai_call', {

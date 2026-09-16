@@ -69,43 +69,61 @@ function mapPack(pack: PackRow, items: ItemRow[]): QuestionPackRow {
   };
 }
 
-export async function fetchLatestQuestionPack(): Promise<QuestionPackRow | null> {
+async function fetchPackItems(packId: string): Promise<ItemRow[]> {
+  const { data, error } = await supabase
+    .from('question_items')
+    .select('id, pack_id, sort_index, axis, prompt, options, answered_option, skipped_at')
+    .eq('pack_id', packId)
+    .order('sort_index', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as ItemRow[];
+}
+
+/**
+ * Latest ongoing-round pack, scoped to `kind='ongoing_round'` (wave49:
+ * `question_packs.kind` is NOT NULL). The scoping is kept even though the
+ * Infinite Questions reader that shared this table was deleted 2026-09-16 —
+ * `kind` still distinguishes the rows already written under the old value,
+ * so an unscoped "latest pack" read would serve a stale 5-item daily pack as
+ * if it were a 25-item round.
+ */
+export async function fetchLatestOngoingRoundPack(): Promise<QuestionPackRow | null> {
   const { data: pack, error } = await supabase
     .from('question_packs')
     .select('id, generated_on, created_at')
+    .eq('kind', 'ongoing_round')
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
   if (error) throw error;
   if (!pack) return null;
 
-  const { data: items, error: itemError } = await supabase
-    .from('question_items')
-    .select('id, pack_id, sort_index, axis, prompt, options, answered_option, skipped_at')
-    .eq('pack_id', pack.id)
-    .order('sort_index', { ascending: true });
-  if (itemError) throw itemError;
-
-  return mapPack(pack as PackRow, (items ?? []) as ItemRow[]);
+  const items = await fetchPackItems(pack.id);
+  return mapPack(pack as PackRow, items);
 }
 
-export async function saveQuestionPack(input: {
-  generatedOn: string;
-  drafts: QuestionDraft[];
-}): Promise<QuestionPackRow> {
-  const payload = input.drafts.map((draft) => ({
-    axis: draft.axis,
-    prompt: draft.prompt,
-    options: draft.options,
-  }));
-  const { data, error } = await supabase.rpc('insert_question_pack', {
-    p_generated_on: input.generatedOn,
+export async function saveOngoingRoundBatch(drafts: QuestionDraft[]): Promise<QuestionPackRow> {
+  if (drafts.length === 0) {
+    throw new Error('No questions available for a new round right now.');
+  }
+  const payload = drafts.map((draft) => {
+    if (!draft.bankItemId) {
+      throw new Error('Ongoing round draft missing bankItemId.');
+    }
+    return {
+      axis: draft.axis,
+      prompt: draft.prompt,
+      options: draft.options,
+      question_bank_item_id: draft.bankItemId,
+    };
+  });
+  const { data, error } = await supabase.rpc('insert_ongoing_round_pack', {
     p_items: payload,
   });
   if (error) throw error;
-  const pack = await fetchLatestQuestionPack();
+  const pack = await fetchLatestOngoingRoundPack();
   if (!pack || pack.id !== data) {
-    throw new Error('Question pack did not save.');
+    throw new Error('Ongoing round pack did not save.');
   }
   return pack;
 }
@@ -118,21 +136,6 @@ export async function answerQuestionItem(itemId: string, optionIndex: number): P
   if (error) throw error;
 }
 
-export async function skipQuestionItem(itemId: string): Promise<void> {
-  const { error } = await supabase.rpc('skip_question_item', {
-    p_item_id: itemId,
-  });
-  if (error) throw error;
-}
-
-export async function skipRestOfQuestionPack(packId: string): Promise<void> {
-  const { error } = await supabase.rpc('skip_rest_question_pack', {
-    p_pack_id: packId,
-  });
-  if (error) throw error;
-}
-
-/** Persist the full deferred-axis set (skipped elsewhere in a questionnaire sweep). */
 export async function saveQuestionDeferral(
   userId: string,
   deferred: readonly TraitAxis[],

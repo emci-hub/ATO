@@ -3,18 +3,9 @@ import type { TraitAxis } from '@/lib/traits';
 import { TRAIT_AXES } from '@/lib/traits';
 
 import { QUESTIONS_BANK } from './bank';
-import { keepGuardedDrafts } from './guards';
 import { preferFreshAxes } from './rotation';
 import { QUESTIONS_BATCH_SIZE } from './types';
 import type { QuestionDraft } from './types';
-
-export const QUESTIONS_SWEEP_SIZE = TRAIT_AXES.length;
-
-/**
- * UNREVIEWED — same discipline as crisis card copy.
- * Flip to true only after emci signs off the full-axis set.
- */
-export const INTAKE_SWEEP_COPY_REVIEWED = false;
 
 /**
  * Every bank draft for each axis, in bank order — NOT first-wins. Callers pick
@@ -114,34 +105,6 @@ export function composeLocalQuestionBatch(
     if (out.length >= QUESTIONS_BATCH_SIZE) break;
   }
   return out;
-}
-
-/**
- * One item per axis, all TRAIT_AXES. Distinct from the 5-item rotation.
- * Each axis shows the draft its own answer count points at, so a second pass
- * over an axis is a different question. Empty `tracks` = the locked draft
- * everywhere, which is what a brand-new profile gets.
- *
- * NOTE: `IntakeSweep` filters this through `unansweredSweep`, which drops any
- * axis that already holds a trait value — so in practice the sweep fills each
- * axis once and the later variants are delivered by the rotating pool above
- * it. Passing tracks here keeps the two surfaces consistent (and covers an
- * axis whose value was cleared but whose track survives).
- */
-export function composeLocalSweep(tracks: readonly TraitTrack[] = []): QuestionDraft[] {
-  const out: QuestionDraft[] = [];
-  for (const axis of TRAIT_AXES) {
-    const draft = bankDraftFor(axis, axisVariant(tracks, axis));
-    if (draft) out.push(draft);
-  }
-  return keepGuardedDrafts(out).kept;
-}
-
-export function unansweredSweep(
-  drafts: readonly QuestionDraft[],
-  answered: ReadonlySet<TraitAxis>,
-): QuestionDraft[] {
-  return drafts.filter((draft) => !answered.has(draft.axis));
 }
 
 export type BankItemState = 'answered' | 'current' | 'locked';

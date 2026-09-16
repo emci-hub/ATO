@@ -68,6 +68,41 @@ export const NAV_TABS: Record<ReorderableTabId, NavTabMeta> = {
 
 export const NAV_TAB_IDS = Object.keys(NAV_TABS) as ReorderableTabId[];
 
+/**
+ * Tabs whose screens are PARKED behind `RebuiltNotice` (ISOLATION_PLAN §7
+ * Card F, emci 2026-09-15: "hide parked tabs from the tab bar").
+ *
+ * They stay in the registry and stay registered as routes — removing a route
+ * would mean a native build, and every deep link into one must still land
+ * somewhere, which is the notice. What this list does is keep them out of the
+ * bar, out of More, and out of the edit pool, so nobody navigates into a
+ * placeholder by accident and nobody can pin one to a slot.
+ *
+ * `PARKED_PINNED_IDS` holds parked PINNED ids (there are none right now) —
+ * a pinned id needs its own list because the slot engine always places one
+ * in slots 1–4 regardless of the pool, so `app-tabs` has to render it as a
+ * hidden trigger instead of a button when parked.
+ *
+ * Un-parking a screen = delete its id from here. Nothing else changes.
+ *
+ * **`sage` and `legends` were UN-PARKED 2026-09-15** (emci: restore both tabs
+ * with their original icons/labels; each still opens only its RebuiltNotice —
+ * no backend or AI code revived, only visibility changed). `around` and
+ * `circle` stay parked and hidden.
+ */
+export const PARKED_TAB_IDS: readonly ReorderableTabId[] = ['around', 'circle'];
+
+/** Parked pinned tabs. Same rule, different slot type. */
+export const PARKED_PINNED_IDS: readonly PinnedTabId[] = [];
+
+export function isTabParked(id: BarSlotId): boolean {
+  return (
+    (PARKED_TAB_IDS as readonly string[]).includes(id) ||
+    (PARKED_PINNED_IDS as readonly string[]).includes(id)
+  );
+}
+
+
 export const PINNED_IDS: readonly PinnedTabId[] = ['home', 'sage'];
 
 /** Slots 1–4 count (slot 5 is the fixed "More"). */
@@ -94,8 +129,16 @@ export interface NavLayout {
   slots: BarSlotId[];
 }
 
+/**
+ * `you` swapped for `legends` in the default pool slots 2026-09-15, same day
+ * `legends` was un-parked — restoring it as a visible bar tab needed one of
+ * the 2 pool slots, and `you` (parked down to sign out / delete account / AI
+ * consent / build info) was the lower-cost tab to move into More; it stays
+ * fully reachable there. This does not touch any user's SAVED layout — only
+ * the fallback a fresh account or a corrupted layout falls back to.
+ */
 export const DEFAULT_NAV_LAYOUT: NavLayout = {
-  slots: ['home', 'explore', 'sage', 'you'],
+  slots: ['home', 'explore', 'sage', 'legends'],
 };
 
 function isValidPoolId(value: unknown): value is ReorderableTabId {
@@ -140,7 +183,7 @@ export function normalizeNavLayout(raw: unknown): NavLayout {
   }
 
   // No valid incoming slots (null / unset / empty / all-invalid) → the default
-  // layout, exactly as specified (Home / Explore / Sage / You).
+  // layout, exactly as specified (Home / Explore / Sage / Legends).
   if (ordered.length === 0) {
     return { slots: [...DEFAULT_NAV_LAYOUT.slots] };
   }

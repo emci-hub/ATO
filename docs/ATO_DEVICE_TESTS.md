@@ -2,7 +2,64 @@
 
 Compiled as each box lands. Same file in the repo at `docs/ATO_DEVICE_TESTS.md`. Run this whole list on a real device before TestFlight, not per box. Ordered so earlier items don't depend on later ones.
 
-**JS for this checklist is on production OTA** group `0028d5f5-3797-417e-b345-9005cb17ca5b` (`41fcec4`, core intake one page), published Sep 1, 2026. 100% of the production channel — no staged rollout. **You must be on binary 10+** — binary 8 and earlier cannot receive OTA and will show the stale "Dev only." cold-start bug. Binary 10 is in TestFlight (build `1d0d1041`).
+> **⚠ Boxes 5–28 below are the HISTORICAL pass (Sep 1, 2026, OTA `0028d5f5`).** They were written before the Sep 4–13 work and their OTA reference is stale. The **current outstanding pass is the section immediately below** — start there.
+
+---
+
+# CURRENT PASS — outstanding as of Sep 13, 2026
+
+**What you're on:** production OTA group `bde37d37-3a2c-419a-8d18-5b2c2704d99e` (commit `03872c8`, published Sep 13, 2026). Binary 10+. **Force-quit and reopen the app** (swipe it away, don't just background it) — updates are fetched on cold start only.
+
+**New in this OTA, not yet on any checklist above — worth testing:**
+- [ ] **Sage Talk save-failure retry.** Hard to force on demand (needs an actual save failure), but if you ever see "Couldn't save this, tap to retry" under a message, confirm tapping it actually saves and the retry banner disappears.
+- [ ] **Home no longer shows a duplicate week row on Sunday.** Open Home on a Sunday (or force the `week` slot via Dev Lab override) and confirm only one "week" link renders, not two.
+- [ ] **+21 token payout.** Complete all 50 Questions-tab questions on a test account (ideally one that already has a few axes set via the intake grid or a ranking tap first, since that's the exact case that was broken) and confirm the +21 ATO tokens actually land.
+
+**Everything in sections A, B and E is now on your device.** The Sep 13 server-side work (Edge Functions / secrets / DB) was already live before this OTA. Only D (needs a new binary) remains blocked — C (`wave65`) is now applied and confirmed live, just needs the Dev Lab panel itself clicked through.
+
+## A — Server-side changes from Sep 13 (live now, no OTA needed)
+
+- [x] **`ai-generate` v9 — the one that matters most.** **CONFIRMED WORKING Sep 13, 2026** via `check:card-live` (Edge Function path, real Gemini output, provider `gemini`, 3 days generated with genuine topical variety — not bank content). The redeploy carrying the ongoing-round timeout fix (`6f6bb61`) is healthy. Note: an in-app check on a thin/day-2 account will show BANK content instead (check_count < 3 routes there regardless of `ai-generate`'s health) — that's expected, not a failure; `check:card-live` is what actually exercises the deployed function.
+- [ ] **Ongoing-round timeout (the reason for that deploy).** Finish the 50-question intake (or use a dev intake-stage preset to reach 50/50), then let the ongoing round auto-start. Confirm it releases 25 questions without a timeout/Sentry error — this is the exact failure the deploy was meant to fix.
+- [ ] **7-tap dev unlock.** You tab → tap the version number 7× → enter the `DEV_UNLOCK_PASSWORD`. Confirm it unlocks dev tools. Note the field is `autoCapitalize="none"` and the compare is exact — type the capital and the symbol deliberately. (Currently a no-op in practice since `PRE_LAUNCH_DEV` already shows dev tools; the real test is that a *wrong* password is rejected and a correct one returns `ok`.)
+- [ ] **QA override invite code.** Sign up a throwaway account using the override code. Confirm it is accepted. Also confirm the signup lands with `referred_by = null` and no `invite_codes` audit row — that's expected for the override path, not a bug.
+- [ ] **Dev-test account password.** Sign in as `ato-dev@example.com` / `@atodev` with the new password. Confirm the old `ATO-dev-user-2026` no longer works.
+
+## B — Already shipped in your current OTA, never device-verified
+
+Everything here is sitting on your phone right now and just needs exercising.
+
+- [ ] **Questions batch-save (Sep 11).** Answer questions in the 50-question intake. Confirm there is **no fade/dim on every tap** (the old per-answer save), that "Answered" stamps immediately, and that a page's answers only save when you press Next Page. Kill the app mid-page and confirm nothing is silently lost.
+- [ ] **Ongoing-round paged UI (Sep 11).** Once a round exists, confirm it renders as a real pager — "Page X of Y", 5 per page — and that it *replaces* the finished 50-question pager rather than stacking below it. Test reroll on a row and skip.
+- [ ] **Onboarding no longer shows "Add a bit more" (Sep 11).** On a fresh signup, confirm the flow is account info → 8 chip questions → Home. The 8-scenario screen should not appear.
+- [ ] **"Reset to fresh signup" for @atodev (Sep 11).** In Dev Lab → You, run it (type `atodev` to confirm). Confirm the app actually lands back on the "Introduce yourself" onboarding screen and you're still signed in.
+- [ ] **Legends "test persona" strip.** Signed in as `@atodev`, confirm the strip appears on Legends and that swapping archetypes actually changes the matched legend.
+- [ ] **Category picker + Legends gate + completeness gate (Sep 4 batch).** Confirm the Questions category picker renders that category's bank questions as a browsable list with "N of 48 answered"; confirm Legends shows the locked state with an "Answer Questions" CTA when the profile isn't settled; confirm Explore observations / Sage Title / Sage insight all lock with copy rather than degrading.
+- [ ] **Staleness fixes (Sep 4).** Settle your last axis and confirm the locked surfaces unlock **in the same session**, without backing out of the screen. This was the actual bug — they used to stay locked until unmount.
+- [ ] **Category statements prompt (Sep 10).** On an account with a long/rich profile, generate category statements and confirm they read correctly and aren't truncated or generic. Explicitly not yet tested against a real long-profile case.
+
+## C — Was blocked, now unblocked
+
+- [ ] **`wave65` handle-collision dev account (`@atodev2`).** **Migration applied Sep 13, 2026, confirmed live** — `handle_taken('atodev2')` returns `true` via a direct RPC call. Remaining: confirm the Dev Lab "Handle collision" panel itself (not just the raw RPC) shows it as taken — that's the actual UI path a dev would use.
+
+## D — Blocked: needs a NEW BINARY BUILD (not an OTA)
+
+- [ ] **EAS env var deletion (Sep 13).** `EXPO_PUBLIC_GEMINI_API_KEY` and `EXPO_PUBLIC_GEMINI_MODEL` were deleted from the production EAS environment. **Env vars are baked in at build time, so an OTA cannot test this** — it only takes effect on the next EAS build. On that build, confirm AI generation still works (the model is chosen inside `ai-generate` now, so it should be unaffected). `EXPO_PUBLIC_MODEL_PROVIDER` was deliberately **kept** — it is still read live by `src/lib/ai/config.ts:58` and `src/lib/voice/config.ts:26`.
+
+## E — Shipped in OTA `e505d827` (Sep 13)
+
+- [ ] **parse.ts silent-catch logging (commit `40a9dbc`).** Logging-only, no user-facing behavior — there is nothing to *see* in the UI. A malformed AI question response now prints `[questions] batch response was not valid JSON (rawLength=…)` instead of vanishing silently. Only observable in dev logs, so treat this as "no news is fine" rather than an active test step.
+
+## F — Open bugs with no written detail (investigate before testing)
+
+- [ ] **Gut Call regression** — listed as open in `docs/NOW.md` with no reproduction steps recorded. Needs someone to say what "regression" means before it can be tested.
+- [ ] **Live Talk failure** — same: listed as open, no detail. Note section A's Sage Talk check may already surface it.
+
+---
+
+# HISTORICAL PASS — Boxes 5–28 (Sep 1, 2026)
+
+**JS for this historical checklist was on production OTA** group `0028d5f5-3797-417e-b345-9005cb17ca5b` (`41fcec4`, core intake one page), published Sep 1, 2026. **You must be on binary 10+** — binary 8 and earlier cannot receive OTA and will show the stale "Dev only." cold-start bug. Binary 10 is in TestFlight (build `1d0d1041`).
 
 ---
 
@@ -58,11 +115,11 @@ Compiled as each box lands. Same file in the repo at `docs/ATO_DEVICE_TESTS.md`.
 - [ ] Confirm the teaser does **not** change on every app-open; it refreshes once per local day.
 - [ ] Confirm Nudge caps at one extra line — never a fourth line of text in the card block.
 - [ ] In `/dev-lab` → Home, with the slot override set to `off`, confirm the new inline readout shows the six raw inputs (crisisActive, missedCheck, noteAvailable, noteOpenedToday, askPending, isSunday) and the kind it resolved to. Use this to sanity-check *why* Home is showing what it's showing on your real test accounts.
-- [ ] Force each of the six slot kinds via the override one at a time (`crisis`, `missed_check`, `note`, `ask`, `week`, `none`) and confirm Home renders correctly for each, including `none` rendering nothing in the **primary** slot (the category teaser may still appear when it is allowed).
+- [ ] Force each of the six slot kinds via the override one at a time (`crisis`, `missed_check`, `note`, `ask`, `week`, `none`) and confirm Home renders correctly for each, including `none` **and** `week` rendering nothing extra in the **primary** slot (the category teaser may still appear when either is allowed) — `week` no longer has its own row (see below).
 - [ ] Force `crisis` and `missed_check` and confirm the category teaser is absent.
 - [ ] With two or more missed checks open on a test account, confirm only the single OLDEST one renders — not one card per missed day.
 - [ ] Confirm MilestoneBadges and QuestGrowthBars no longer appear anywhere on Home.
-- [ ] Confirm the old always-visible "This week" row is gone from Home — it should now only appear as the Sunday `'week'` slot, and only on Sunday (or via override), labeled exactly "Your week."
+- [ ] Confirm Home shows exactly one link to `/week`, the always-visible "This week" row — the Sunday-only `'week'`-slot row ("Your week.") was removed (2026-09-13) as the duplicate; `'week'` still exists as a `slotKind` value (it still un-gates the category teaser same as `note`/`ask`/`none`) but no longer renders anything of its own in the primary slot.
 - [ ] Confirm the Note ("reveal") still opens correctly from the slot and that reopening it same-day doesn't re-show it in the slot (falls through to the next slot kind instead).
 - [ ] Confirm the teaser name has a small "?" that explains the *concept* (not the person's data). Draft copy — unreviewed.
 

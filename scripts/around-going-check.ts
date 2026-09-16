@@ -61,13 +61,13 @@ async function main() {
   assert.equal(slugifyCity('fixture'), 'fixture');
   ok('typed city fixture slugifies without GPS');
 
+  // Around is parked (docs/ISOLATION_PLAN.md Card 2) — the "I'm going" toggle,
+  // honest-empty copy, and count rendering no longer live in the screen; that
+  // disconnection is enforced generically by check:rebuilt. The invariants
+  // this file actually cares about (the 18+ gate logic, honest-empty copy,
+  // no raw counts) are tested directly against their source below, not
+  // through the screen's text.
   const root = path.resolve(__dirname, '..');
-  const aroundScreen = fs.readFileSync(path.join(root, 'src/app/(tabs)/around.tsx'), 'utf8');
-  assert.match(aroundScreen, /I'm going/);
-  assert.match(aroundScreen, /aroundEmptyCopy/);
-  assert.doesNotMatch(aroundScreen, /heat map|heatmap/i);
-  assert.doesNotMatch(aroundScreen, /\$\{colors\.length\}|\$\{faces\.length\}|people going/i);
-  ok("Around has I'm going, honest empty, no heatmap, no raw counts in copy");
 
   const fetchSrc = fs.readFileSync(path.join(root, 'src/lib/around/fetch.ts'), 'utf8');
   assert.match(fetchSrc, /FIXTURE_CITY/);

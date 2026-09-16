@@ -31,10 +31,12 @@ const sites = [
   'src/components/concept-hint.tsx',
   'src/components/full-profile-fold.tsx',
   'src/components/category-teaser.tsx',
-  'src/components/categories-fold.tsx',
+  // 'src/components/categories-fold.tsx' removed 2026-09-16 (Explore release
+  // polish, emci) — the badge itself is gone from that file, not just gated.
   'src/components/sage-story-fold.tsx',
-  'src/components/intake-sweep.tsx',
   'src/components/profile-fill-fold.tsx',
+  // 'src/components/intake-sweep.tsx' removed 2026-09-15 with the "A faster
+  // pass" sweep (emci) — file deleted entirely, not just unmounted.
 ];
 
 for (const rel of sites) {

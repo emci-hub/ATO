@@ -10,23 +10,6 @@
  */
 import type { AiCallMetadata } from './types';
 
-/** Daily Read/Do card — Dawn, Home, catch-up. Prompt carries name, talk style,
- * yesterday's tone, the last 7 checks, and Library lines, so output is per-user. */
-export const DAILY_CARD_META: AiCallMetadata = {
-  personalized: true,
-  cohortShareable: false,
-  bucketShareable: false,
-  latencySensitive: true,
-};
-
-/** Talk reply — Sage chat, one reply per user message. Fully per-message. */
-export const TALK_META: AiCallMetadata = {
-  personalized: true,
-  cohortShareable: false,
-  bucketShareable: false,
-  latencySensitive: true,
-};
-
 /** Infinite Questions 5-item batch — Home fold / "Tell Sage more". Stems are
  * generic; only axis rotation + trait grounding are per-user, so one cohort
  * generation could be sliced per user. */
@@ -73,6 +56,67 @@ export const SAGE_INSIGHT_META: AiCallMetadata = {
   latencySensitive: true,
 };
 
+/** Roll generation (trait-system redesign §7) — the 11 category reads + the
+ * story item within one roll. Same bucket-shareable shape as Sage Story
+ * (pure function of trait-derived readings, no name/history baked into the
+ * prompt); not latency-sensitive since a roll computes in the background
+ * before any reveal, unlike a chat reply. */
+export const ROLL_META: AiCallMetadata = {
+  personalized: false,
+  cohortShareable: false,
+  bucketShareable: true,
+  latencySensitive: false,
+};
+
+/** Post-Full-Profile ongoing-round questions (core loop redesign §2) — each
+ * chunk's prompt is grounded in this user's completed profile + recent
+ * history/facts (same `pickQuestionGrounding` mechanism as the daily card),
+ * so personalized like Talk, but not latency-sensitive: generated as a
+ * background chunked batch (chunked-generate.ts), not a synchronous reply. */
+export const ONGOING_ROUND_META: AiCallMetadata = {
+  personalized: true,
+  cohortShareable: false,
+  bucketShareable: false,
+  latencySensitive: false,
+};
+
+/** Category statements (core loop redesign §3) — one call producing a
+ * statement per ready category, grounded in this user's settled reading for
+ * each (same shape as Roll's category-read, batched into one call). Not
+ * latency-sensitive: triggered manually, no synchronous chat-reply pressure. */
+export const CATEGORY_STATEMENTS_META: AiCallMetadata = {
+  personalized: true,
+  cohortShareable: false,
+  bucketShareable: false,
+  latencySensitive: false,
+};
+
+/** Daily insight (Home/Explore/Insight restructure) — the five-field insight
+ * that replaces the Read/Do card on Home. Prompt carries this user's settled
+ * bands, their current focus, and recent check tone, so it is per-user and
+ * never shareable. Latency-sensitive: it is the first thing Home renders. */
+export const DAILY_INSIGHT_META: AiCallMetadata = {
+  personalized: true,
+  cohortShareable: false,
+  bucketShareable: false,
+  latencySensitive: true,
+};
+
+/** Legends 64-archetype story (core loop redesign §4) — a flavor-text
+ * generation for one classify.ts archetype code, but the plan calls for a
+ * FRESH story per generation (manual trigger or paid reroll), not a
+ * pre-authored library entry reused forever — so unlike the old
+ * figure-catalog system this replaces, it's neither cohort- nor
+ * bucket-shareable even though the archetype code alone is deterministic.
+ * Manual-tap trigger, not latency-sensitive (no synchronous chat-reply
+ * pressure). */
+export const LEGEND_STORY_META: AiCallMetadata = {
+  personalized: true,
+  cohortShareable: false,
+  bucketShareable: false,
+  latencySensitive: false,
+};
+
 export interface AiCallSite {
   feature: string;
   location: string;
@@ -81,16 +125,6 @@ export interface AiCallSite {
 
 /** Display registry for the report command and the ai-provider check. */
 export const AI_CALL_SITES: readonly AiCallSite[] = [
-  {
-    feature: 'Daily card',
-    location: 'src/lib/voice/providers/remote.ts → generate()',
-    meta: DAILY_CARD_META,
-  },
-  {
-    feature: 'Talk reply',
-    location: 'src/lib/voice/providers/remote.ts → generateTalk()',
-    meta: TALK_META,
-  },
   {
     feature: 'Infinite Questions',
     location: 'src/lib/questions/generate.ts → generateQuestionBatch()',
@@ -115,5 +149,30 @@ export const AI_CALL_SITES: readonly AiCallSite[] = [
     feature: 'Sage insight spend',
     location: 'src/lib/sage-insight.ts',
     meta: SAGE_INSIGHT_META,
+  },
+  {
+    feature: 'Roll generation',
+    location: 'src/lib/rolls/generate.ts → generateRollItemText()',
+    meta: ROLL_META,
+  },
+  {
+    feature: 'Ongoing round questions',
+    location: 'src/lib/questions/generate.ts → generateOngoingRoundBatch()',
+    meta: ONGOING_ROUND_META,
+  },
+  {
+    feature: 'Legend story generation',
+    location: 'src/lib/legends64/generate-story.ts → generateLegendStory()',
+    meta: LEGEND_STORY_META,
+  },
+  {
+    feature: 'Category statements',
+    location: 'src/lib/category-statements/generate-statements.ts → generateCategoryStatements()',
+    meta: CATEGORY_STATEMENTS_META,
+  },
+  {
+    feature: 'Daily insight',
+    location: 'src/lib/insight/generate-insight.ts → generateDailyInsight()',
+    meta: DAILY_INSIGHT_META,
   },
 ];

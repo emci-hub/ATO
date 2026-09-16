@@ -200,7 +200,10 @@ assert.equal(credits[0].packUrl, 'https://kenney.nl/assets/shape-characters');
 assert.ok(fs.existsSync(path.join(assetsRoot, '..', credits[0].family)));
 assert.equal(fs.existsSync(path.resolve(__dirname, '../assets/kenney/monster')), false);
 const youTab = fs.readFileSync(path.resolve(__dirname, '../src/app/(tabs)/you.tsx'), 'utf8');
-assert.match(youTab, /KenneyCreditsCard/);
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You is parked down to sign
+// out, delete account and AI consent. The component's own behaviour is still
+// covered in this file; only its You mount site is gone.
+assert.doesNotMatch(youTab, /KenneyCreditsCard/);
 assert.doesNotMatch(youTab, /Fantasy UI|Modular Characters|1-Bit|Animal Remastered|Monster Builder/);
 ok('credits list only the registered Shape Characters pack and is wired on You');
 

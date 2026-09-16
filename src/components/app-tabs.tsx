@@ -1,4 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import type { Href } from 'expo-router';
 import { TabList, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
 import { useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
@@ -13,10 +14,13 @@ import { useTheme } from '@/hooks/use-theme';
 import { useCircleContext } from '@/lib/circle-context';
 import { useNavOrder } from '@/lib/nav/nav-context';
 import {
+  isTabParked,
   isTabUnlocked,
   lockedTabIds,
   NAV_TABS,
   NAV_TAB_IDS,
+  PARKED_PINNED_IDS,
+  PARKED_TAB_IDS,
   type BarSlotId,
   type ReorderableTabId,
 } from '@/lib/nav/nav-order';
@@ -33,6 +37,19 @@ import { controlBorderColor } from '@/lib/theme/chrome';
  * visibility are fully JS-controlled and ship via OTA. Trade-off: native tab
  * behaviors (freeze, minimize, blur, scroll-to-top on re-tap) are not kept.
  */
+
+/**
+ * Routes that live under `(tabs)/` but are never a bar/More destination —
+ * they are pushed from inside another tab (Roll, from Legends). They still
+ * need a trigger registered INSIDE `TabList`, exactly like the More-parked
+ * tabs below, or the navigator has no route to navigate to. `/roll` shipped
+ * without one and was only reachable through an `as Href` cast that hid the
+ * gap from typecheck. Deliberately NOT in `NAV_TABS`: entries there become
+ * user-placeable bar slots and show up in More and the edit pool.
+ */
+const HIDDEN_TAB_ROUTES: readonly { name: string; href: Href }[] = [
+  { name: 'roll', href: '/roll' },
+];
 export default function AppTabs() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -44,18 +61,38 @@ export default function AppTabs() {
   const lockedTabs = lockedTabIds(unlockCtx);
   const lockedSet = new Set<string>(lockedTabs);
 
-  // Slots 1–4, minus locked pool tabs (they render as empty until unlocked).
+  /*
+    Slots 1–4, minus locked pool tabs (empty until unlocked) and minus every
+    PARKED tab (ISOLATION_PLAN §7 Card F). A parked id keeps its slot in the
+    saved layout — nothing rewrites `me.nav_layout` — it just renders no
+    button, and gets a hidden trigger below so its route stays navigable. A
+    parked PINNED id (none right now — `sage` was un-parked 2026-09-15) would
+    drop out here the same way, via `PARKED_PINNED_IDS`.
+  */
   const visibleSlots = layout.slots.filter(
-    (id) => id === 'home' || id === 'sage' || !lockedSet.has(id),
+    (id) => !isTabParked(id) && (id === 'home' || id === 'sage' || !lockedSet.has(id)),
   );
 
-  // Every unlocked pool tab not currently shown in a slot → More + hidden trigger.
+  // Every unlocked, unparked pool tab not currently shown in a slot → More +
+  // hidden trigger. Parked tabs are NOT offered in More: landing on a
+  // placeholder should take a deep link, never a menu tap.
   const shownPool = visibleSlots.filter(
     (id): id is ReorderableTabId => id !== 'home' && id !== 'sage',
   );
   const moreIds = NAV_TAB_IDS.filter(
-    (id) => !shownPool.includes(id) && isTabUnlocked(id, unlockCtx),
+    (id) => !shownPool.includes(id) && isTabUnlocked(id, unlockCtx) && !isTabParked(id),
   );
+
+  /*
+    Parked tabs still need a registered trigger or the navigator has no route
+    to navigate to — the same reason HIDDEN_TAB_ROUTES exists. Without these,
+    a deep link (or a stale `router.push`) into a parked screen throws instead
+    of landing on its "(Rebuilt)" notice.
+  */
+  const parkedTriggers: { name: string; href: Href }[] = [
+    ...PARKED_TAB_IDS.map((id) => ({ name: id, href: NAV_TABS[id].href })),
+    ...PARKED_PINNED_IDS.map((id) => ({ name: id, href: `/${id}` as Href })),
+  ];
 
   function renderSlot(id: BarSlotId) {
     if (id === 'home') {
@@ -114,6 +151,26 @@ export default function AppTabs() {
               key={`hidden-${id}`}
               name={id}
               href={NAV_TABS[id].href}
+              style={styles.hidden}
+              accessible={false}
+            />
+          ))}
+
+          {parkedTriggers.map((route) => (
+            <TabTrigger
+              key={`hidden-parked-${route.name}`}
+              name={route.name}
+              href={route.href}
+              style={styles.hidden}
+              accessible={false}
+            />
+          ))}
+
+          {HIDDEN_TAB_ROUTES.map((route) => (
+            <TabTrigger
+              key={`hidden-route-${route.name}`}
+              name={route.name}
+              href={route.href}
               style={styles.hidden}
               accessible={false}
             />

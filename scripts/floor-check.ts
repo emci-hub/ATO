@@ -128,40 +128,42 @@ ok('widget PrivacyInfo declares App Group UserDefaults C56D.1');
 
 const sage = read('src/app/(tabs)/sage.tsx');
 const home = read('src/app/(tabs)/index.tsx');
-const dawn = read('src/app/dawn.tsx');
 const push = read('src/lib/push-copy.ts');
 const widget = read('targets/widget/widgets.swift');
 const copy = read('src/lib/sage-copy.ts');
 const consent = read('src/components/ai-consent-card.tsx');
 const crisis = read('src/lib/crisis/copy.ts');
 assert.match(copy, /Sage is a coach, not a person/);
-assert.match(copy, /DAWN_SAGE_LEDE/);
 assert.match(copy, /SAGE_NPC_LABEL/);
 assert.match(copy, /Sage · npc/);
-assert.match(sage, /TALK_LEDE/);
+// Sage is an inert placeholder while Talk is rebuilt; only the coach label
+// survives on it. Its own contract is pinned by scripts/sage-load-check.ts.
 assert.match(sage, /SAGE_COACH_LABEL/);
-assert.match(sage, /TALK_COMPOSER_PLACEHOLDER/);
-assert.match(sage, /useTodayCard/);
 assert.doesNotMatch(sage, /from '@\/lib\/voice\/router'/);
 assert.doesNotMatch(sage, /routeVoiceCard/);
 assert.doesNotMatch(sage, /Ask Sage anything/);
 assert.doesNotMatch(sage, /Sage is writing/);
 assert.doesNotMatch(sage, /Sage · npc/);
 assert.match(home, /homeSageLede/);
-assert.match(home, /SAGE_COACH_LABEL/);
+// PARKED (ISOLATION_PLAN §7 Card C, 2026-09-15): SAGE_COACH_LABEL reached Home only
+// through the parked Ask sheet's fixtures. The two live Sage strings on Home
+// (`homeSageLede`, `homeSageLabel`) are still pinned above and below.
+assert.doesNotMatch(home, /SAGE_COACH_LABEL/);
 assert.match(home, /homeSageLabel/);
-assert.match(dawn, /DAWN_SAGE_LEDE/);
-assert.doesNotMatch(dawn, /Sage · npc/);
 assert.match(push, /Sage · coach/);
 assert.match(widget, /SAGE · COACH/);
 assert.match(consent, /Sage is a coach in the app, not a person/);
 assert.match(crisis, /Sage is a coach, not emergency support/);
 assert.doesNotMatch(sage, /Sage listens/);
-assert.doesNotMatch(dawn, /Sage listens/);
-assert.match(read('src/app/chat.tsx'), /Sage is a coach/);
-ok('Talk, Home, Dawn, consent, crisis, push, widget, and Teach Sage label Sage as a coach; Quest Home may use npc');
+assert.doesNotMatch(home, /Sage listens/);
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): /chat is a whole-screen park
+// (it was Circle's per-peer chat, and Circle is parked). The copy rule itself
+// is unchanged and still asserted against every live surface above; this line
+// asserts the parked screen carries none of it.
+assert.doesNotMatch(read('src/app/chat.tsx'), /Sage is a coach/);
+ok('Talk, Home, consent, crisis, push, widget, and Teach Sage label Sage as a coach; Quest Home may use npc');
 
-assert.match(home, /No card yet/);
+assert.match(home, /No insight yet/);
 assert.doesNotMatch(home, /fake poster|Fake Person|open box|fake card media|fake ·/i);
 assert.doesNotMatch(home, /<PixelFace/);
 ok('Home has an honest empty card state and no Stage 1 fake fixtures');
@@ -209,59 +211,71 @@ assert.match(read('src/app/_layout.tsx'), /Sentry\.wrap/);
 ok('Sentry JS init + native crash handling + Expo plugin + wrap are wired');
 
 const youTab = read('src/app/(tabs)/you.tsx');
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You no longer mounts the
+// dev-tools slot — the screen is down to sign out, delete account, AI consent
+// and build/update info (RunningUpdateLine, restored same day). The two
+// things that MUST stay true of a public build are unchanged and still
+// asserted: the sentry/push probe cards are never imported directly, and
+// you-dev-tools guards itself.
 assert.doesNotMatch(youTab, /from '@\/components\/sentry-test-card'/);
 assert.doesNotMatch(youTab, /from '@\/components\/push-test-card'/);
-assert.match(youTab, /if \(PRE_LAUNCH_DEV\) \{/);
-assert.match(youTab, /require\('@\/components\/you-dev-tools'\)/);
+assert.doesNotMatch(youTab, /require\('@\/components\/you-dev-tools'\)/);
 assert.doesNotMatch(read('metro.config.js'), /PROBE_STUB/);
 assert.match(sentryLib, /if \(!__DEV__\) return;/);
 ok('You-tab crash/push probes are PRE_LAUNCH_DEV-gated; the native crash itself is __DEV__-only');
 
+// Moved from Dawn to Home 2026-09-14; inline (not a Modal) per emci.
+// RE-INVERTED 2026-09-15 (emci correction): the card is still inline and still
+// additive, but consent is a real gate again -- on GENERATION only. It is now
+// surfaced at 50-question intake completion via offerConsent, and the
+// unconditional Apple 5.1.2 disclosure sits outside it.
+assert.doesNotMatch(home, /<Modal[\s\S]*<AiConsentCard/);
 assert.match(
-  dawn,
-  /<Modal[\s\S]*visible=\{needsConsentPrompt\}[\s\S]*<AiConsentCard[\s\S]*context="dawn"/,
+  home,
+  /\{offerConsent \?[\s\S]{0,300}<AiConsentCard[\s\S]{0,120}context="home"/,
 );
-assert.match(
-  sage,
-  /<Modal[\s\S]*visible=\{Boolean\(me\) && consent === 'pending'\}[\s\S]*<AiConsentCard[\s\S]*context="talk"/,
-);
-assert.doesNotMatch(dawn, /needsConsentPrompt \?\s*\([\s\S]*<AiConsentCard/);
-assert.doesNotMatch(sage, /consent === 'pending' \?\s*\([\s\S]*<AiConsentCard/);
-assert.match(sage, /Talk is off/);
-assert.match(dawn, /setAiConsent/);
-assert.match(sage, /setAiConsent/);
+assert.doesNotMatch(home, /needsConsentPrompt/);
+assert.match(home, /const consentGranted = consent === 'granted';/);
+assert.match(home, /\{AI_USE_DISCLOSURE\}/);
+assert.match(consent, /AI_USE_DISCLOSURE = 'Sage uses AI to personalize your insights\.'/);
+assert.match(home, /setAiConsent/);
+assert.doesNotMatch(sage, /setAiConsent/);
+// REPINNED (ISOLATION_PLAN §7 Card F, 2026-09-15): You is parked, but AI
+// consent is one of the three controls deliberately kept alive there (with
+// sign out and delete account). It moved out of the now-gone Account fold into
+// its own "Sage's AI" fold, and the three-state row collapsed to a toggle plus
+// the full consent card while the answer is still pending — so "Not set yet"
+// is no longer a label, the card itself is that state.
 assert.match(youTab, /Sage(&apos;|')s AI/);
 assert.match(youTab, /'On'/);
 assert.match(youTab, /'Off'/);
-assert.match(youTab, /'Not set yet'/);
-assert.match(youTab, /SettingsFold title="Account"/);
-ok('AiConsentCard is a Modal interstitial on Dawn and Sage; You Account row is Sage\'s AI On/Off/Not set yet');
+assert.match(youTab, /<AiConsentCard/);
+assert.match(youTab, /setAiConsent/);
+assert.doesNotMatch(youTab, /SettingsFold title="Account"/);
+ok('AiConsentCard is inline on Home and still reachable on the parked You; the AI-use disclosure is unconditional on both');
 
-const crisisPickerIdx = youTab.indexOf('<CrisisRegionPicker');
-assert.ok(crisisPickerIdx >= 0, 'CrisisRegionPicker is present');
-ok('CrisisRegionPicker stays on You after the How Sage sounds fold');
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): the crisis REGION picker is
+// off the parked You. This is not the crisis card itself — `CrisisCard` is
+// still Active on Home (§0 decision 3), still static, and still asserted
+// elsewhere in this file. What is parked is only the per-region setting, which
+// had no effect while the picker's own region list is being rebuilt.
+assert.ok(youTab.indexOf('<CrisisRegionPicker') === -1, 'the region picker is parked with the rest of You');
+ok('the crisis REGION picker is parked; the static crisis card on Home is untouched');
 
-assert.match(home, /todayCardFromCheck/);
-assert.match(read('src/lib/today-card.ts'), /export function todayCardFromCheck/);
-ok('Home hydrates today\'s card from the Check row when on-device storage is empty');
+// Same no-flash promise, new source: the Check row no longer carries card
+// text, so Home paints from the cached insight and reconciles against
+// daily_insights behind it.
+assert.match(home, /useDailyInsight/);
+assert.match(home, /fetchTodayInsight/);
+assert.match(read('src/lib/insight/today-insight.ts'), /export async function loadCachedInsight/);
+ok('Home paints today\'s insight from cache before any fetch or generation');
 
+// Talk's quota/crisis-ordering assertions went with its backend (2026-09-14).
+// The user-facing quota copy still exists and is still the only thing shown
+// when the cap is hit, so that stays pinned; the surfaces that actually claim
+// are asserted where they live.
 const quota = read('src/lib/voice/quota.ts');
 assert.match(quota, /Sage's out of things to say for today, back tomorrow/);
-assert.match(sage, /QUOTA_EMPTY_MESSAGE/);
-assert.match(sage, /kind === 'quota'/);
-assert.match(sage, /kind === 'empty'/);
-assert.match(sage, /claimAiCall/);
-const talkSrc = read('src/lib/voice/talk.ts');
-assert.match(talkSrc, /const claim =\s+deps\.claimAiCall/);
-// The completeness gate must not consume a quota claim, and must sit AFTER the
-// crisis return so a flagged line is never routed through it.
-assert.match(talkSrc, /deps\.claimAiCall && !settledGate/);
-assert.ok(
-  talkSrc.indexOf("kind: 'crisis'") < talkSrc.indexOf('const settledGate'),
-  'crisis returns before the profile-completeness gate is evaluated',
-);
-assert.match(read('src/lib/voice/talk.ts'), /containsFrameworkTerm/);
-assert.match(read('src/lib/voice/talk.ts'), /TALK_FENCE_ATTEMPTS = 2/);
 assert.match(read('src/lib/voice/quota-server.ts'), /claim_ai_call/);
 assert.match(
   read('supabase/migrations/stage8_ai_quota.sql'),
@@ -273,9 +287,10 @@ assert.match(
 );
 ok('Talk router is rate-limited per user via claim_ai_call (20/day, 200/month)');
 
+// The usage helpers stay — Explore and Questions still read them — but the
+// Sage tab no longer renders a usage line, having nothing to spend.
 assert.match(read('src/lib/voice/quota.ts'), /formatSageUsage/);
 assert.match(read('src/lib/voice/quota-server.ts'), /fetchSageUsage/);
-assert.match(sage, /SageUsageLine/);
-ok('Talk usage is readable as a count of the cap, without claiming extra calls');
+ok('usage stays readable as a count of the cap, without claiming extra calls');
 
 console.log(`\n${passed} checks passed`);

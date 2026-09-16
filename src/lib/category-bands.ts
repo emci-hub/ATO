@@ -6,6 +6,7 @@ import type { CategoryId } from '@/lib/categories';
 import { readAllCategories } from '@/lib/categories';
 import type { CategoryCopy } from '@/lib/sage-title';
 import type { TraitTrack } from '@/lib/trait-stability';
+import { leanHighLow, TRAIT_BAND_HIGH_CUT, TRAIT_BAND_LOW_CUT } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 
 export const CATEGORY_BAND_COPY_REVIEWED = false;
@@ -20,59 +21,59 @@ export interface CategoryBand {
 /** 3–5 plain lines per category, keyed by bar 0–1 or map-quadrant score. */
 export const CATEGORY_FALLBACK_BANDS: Record<CategoryId, readonly CategoryBand[]> = {
   cat_steadiness: [
-    { min: 0, max: 0.35, lede: 'Plans stay loose. A small knock can sit for a while.' },
-    { min: 0.35, max: 0.65, lede: 'Some follow-through, some wobble. It depends on the day.' },
-    { min: 0.65, max: 1.01, lede: 'Sees a plan through and shakes a bad start off.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'Plans stay loose. A small knock can sit for a while.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Some follow-through, some wobble. It depends on the day.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'Sees a plan through and shakes a bad start off.' },
   ],
   cat_openness: [
-    { min: 0, max: 0.35, lede: 'Prefers a known path and a quieter room.' },
-    { min: 0.35, max: 0.65, lede: 'Mixes the familiar with the occasional different path.' },
-    { min: 0.65, max: 1.01, lede: 'Curious about the untried option. People around tend to help.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'Prefers a known path and a quieter room.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Mixes the familiar with the occasional different path.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'Curious about the untried option. People around tend to help.' },
   ],
   cat_drive: [
-    { min: 0, max: 0.35, lede: 'A set path is fine. A hard task can make them pause.' },
-    { min: 0.35, max: 0.65, lede: 'Some days they pick the path. Some days they take the one already there.' },
-    { min: 0.65, max: 1.01, lede: 'Would rather do it their way, and feels they can handle the hard part.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A set path is fine. A hard task can make them pause.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Some days they pick the path. Some days they take the one already there.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'Would rather do it their way, and feels they can handle the hard part.' },
   ],
   cat_agency: [
-    { min: 0, max: 0.35, lede: 'A miss can feel closed. When it falls apart, it was bound to happen.' },
-    { min: 0.35, max: 0.65, lede: 'Sometimes they look at what to change. Sometimes they let it be.' },
-    { min: 0.65, max: 1.01, lede: 'After a miss they look at what they would change. A bigger ask feels doable.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A miss can feel closed. When it falls apart, it was bound to happen.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Sometimes they look at what to change. Sometimes they let it be.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'After a miss they look at what they would change. A bigger ask feels doable.' },
   ],
   cat_social: [
-    { min: 0, max: 0.35, lede: 'Quiet time is how they reset. Jokes can wait.' },
-    { min: 0.35, max: 0.65, lede: 'People time and lightness come in when the day has room.' },
-    { min: 0.65, max: 1.01, lede: 'Would rather make the room happen, and keep it a little light.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'Quiet time is how they reset. Jokes can wait.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'People time and lightness come in when the day has room.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'Would rather make the room happen, and keep it a little light.' },
   ],
   cat_communication: [
-    { min: 0, max: 0.35, lede: 'Steps back in a disagreement. Protects their outcome first.' },
-    { min: 0.35, max: 0.65, lede: 'Sometimes they put a point on the table. Sometimes they leave room.' },
-    { min: 0.65, max: 1.01, lede: 'Puts their point on the table and still looks for something the other person can live with.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'Steps back in a disagreement. Protects their outcome first.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Sometimes they put a point on the table. Sometimes they leave room.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'Puts their point on the table and still looks for something the other person can live with.' },
   ],
   cat_love: [
-    { min: 0, max: 0.35, lede: 'A slow reply is just a slow reply. Once they are in, they stay close.' },
-    { min: 0.35, max: 0.65, lede: 'Wants a real check-in, and still keeps a little distance.' },
-    { min: 0.65, max: 1.01, lede: 'A pause can start to feel like pulling away. Lighter, over text, is easier.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A slow reply is just a slow reply. Once they are in, they stay close.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Wants a real check-in, and still keeps a little distance.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'A pause can start to feel like pulling away. Lighter, over text, is easier.' },
   ],
   cat_independence: [
-    { min: 0, max: 0.35, lede: 'A path already set is fine. A day can land without much connection.' },
-    { min: 0.35, max: 0.65, lede: 'Own way some days, a real check-in on others.' },
-    { min: 0.65, max: 1.01, lede: 'Would rather pick the path, and still needs a real connection for a day to land.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A path already set is fine. A day can land without much connection.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Own way some days, a real check-in on others.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'Would rather pick the path, and still needs a real connection for a day to land.' },
   ],
   cat_levity: [
-    { min: 0, max: 0.35, lede: 'A disagreement is a job. Lightness can wait until it is over.' },
-    { min: 0.35, max: 0.65, lede: 'Sometimes they leave a little room in a hard talk. Sometimes they do not.' },
-    { min: 0.65, max: 1.01, lede: 'A hard talk can still have a bit of air in it — not a joke, just not only a job.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A disagreement is a job. Lightness can wait until it is over.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Sometimes they leave a little room in a hard talk. Sometimes they do not.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'A hard talk can still have a bit of air in it — not a joke, just not only a job.' },
   ],
   cat_structure: [
-    { min: 0, max: 0.35, lede: 'A plan can drift once the day gets boring, and a new path does not pull that hard either.' },
-    { min: 0.35, max: 0.65, lede: 'Some days the plan holds, some days something new pulls harder.' },
-    { min: 0.65, max: 1.01, lede: 'Sees a plan through even when it drags, and still stays curious about what else is out there.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A plan can drift once the day gets boring, and a new path does not pull that hard either.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Some days the plan holds, some days something new pulls harder.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'Sees a plan through even when it drags, and still stays curious about what else is out there.' },
   ],
   cat_resilience: [
-    { min: 0, max: 0.35, lede: 'A hard task can feel like proof of doubt. A miss can feel like the end of that path.' },
-    { min: 0.35, max: 0.65, lede: 'Some days a hard task feels doable. A knock lingers, then fades.' },
-    { min: 0.65, max: 1.01, lede: 'A hard task feels handleable, a miss reads as something to learn from, and a knock fades fast.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A hard task can feel like proof of doubt. A miss can feel like the end of that path.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Some days a hard task feels doable. A knock lingers, then fades.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'A hard task feels handleable, a miss reads as something to learn from, and a knock fades fast.' },
   ],
 };
 
@@ -121,7 +122,7 @@ export function fallbackForReading(reading: {
   map: { x: number; y: number } | null;
 }): string {
   if (reading.def.shape === 'map' && reading.map) {
-    const quad: MapQuad = `${reading.map.x >= 0.5 ? 'high' : 'low'}_${reading.map.y >= 0.5 ? 'high' : 'low'}`;
+    const quad: MapQuad = `${leanHighLow(reading.map.x)}_${leanHighLow(reading.map.y)}`;
     const table =
       MAP_QUADRANT_BANDS[reading.def.id as 'cat_love' | 'cat_independence' | 'cat_structure'];
     if (table) return table[quad];

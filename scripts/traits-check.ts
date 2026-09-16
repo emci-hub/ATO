@@ -41,10 +41,6 @@ import {
   sanitizeFacts,
 } from '../src/lib/voice/framework-fence';
 import { resolveNudge } from '../src/lib/voice/nudge';
-import { buildPrompt } from '../src/lib/voice/providers/prompt';
-import { routeVoiceCard } from '../src/lib/voice/router';
-import { buildVoiceConfig } from '../src/lib/voice/config';
-import type { VoiceProvider } from '../src/lib/voice/providers/types';
 import type { VoiceMe } from '../src/lib/voice/types';
 
 let passed = 0;
@@ -238,15 +234,22 @@ async function main() {
     onboarding.indexOf('async function refreshAndGoHome()'),
   );
   assert.match(submitFn, /createMe\(/);
-  assert.match(submitFn, /setPhase\('optional-gate'\)/);
-  assert.doesNotMatch(submitFn, /refresh\(/);
-  assert.match(onboarding, /phase === 'optional-gate'/);
+  // Removed 2026-09-11: onboarding no longer routes into the 8-question
+  // "Add a bit more" scenario phase after signup — emci kept hitting it and
+  // expecting it to gate the separate 50-question Full Profile bank, which
+  // it never did (docs/NOW.md). submit() now goes straight home.
+  assert.match(submitFn, /await refreshAndGoHome\(\);/);
+  assert.doesNotMatch(onboarding, /optional-gate/, 'the optional-gate onboarding phase must stay removed');
+  assert.doesNotMatch(
+    onboarding,
+    /OptionalIntakeSweep/,
+    'onboarding must not render the scenario sweep directly — it still exists as a You-tab fill-in only',
+  );
   assert.match(optionalUi, /Skip the rest/);
   assert.match(optionalUi, /Skip this one/);
   assert.doesNotMatch(optionalUi, /Pick one to keep going/);
   assert.doesNotMatch(optionalUi, /of 8/);
-  assert.doesNotMatch(submitFn, /'Pick one to keep going\.'/);
-  ok('core 9 is skippable on one page; optional never requires; signup finishes before the extra phase');
+  ok('core 9 is skippable on one page; signup finishes right after it; the optional 8-question scenario flow is no longer part of onboarding (still a You-tab fill-in)');
 
   const signup = read('supabase/migrations/stage9_intake_core.sql');
   assert.doesNotMatch(signup, /openness|trait_sources|attachment_anxiety/);
@@ -301,24 +304,23 @@ async function main() {
   assert.deepEqual(withTraits.facts, ['I finish work at four']);
   ok('null axes stay null at read; banned facts are stripped before Sage sees them');
 
-  const prompt = buildPrompt({
-    me: withTraits,
-    day: 4,
-    tone: 'even',
-    history: [],
-    crisisToday: false,
-    previousHadCut: false,
-  });
-  // Dawn Read dropped the 16-axis backbone, so the card prompt paraphrases no
-  // individual axis — only the raw value must never leak.
-  assert.doesNotMatch(prompt, /0\.25/);
-  assert.doesNotMatch(prompt, /extraversion|openness/);
+  // The card prompt builder went with the voice provider lane (2026-09-14).
+  // The promise it carried — a raw trait value never reaches a prompt, only a
+  // paraphrase — is now the daily insight's, so it is asserted against that
+  // builder's own grounding helper instead.
+  const insightGen = read('src/lib/insight/generate-insight.ts');
+  assert.match(insightGen, /TRAIT_BAND_PHRASES\[axis\]\[leanHighLow\(row\.value\)\]/);
+  assert.doesNotMatch(insightGen, /row\.value\}|\$\{value\}/);
   const extLines = traitPromptLines({ extraversion: 0.25 });
   assert.match(extLines, /quieter time/);
   assert.doesNotMatch(extLines, /0\.25/);
+  // Only the fence itself is asserted here. The insight prompt deliberately
+  // NAMES these terms in its rules ("Never Myers-Briggs..."), so a substring
+  // check against the builder would fail on the very instruction that forbids
+  // them. What matters is that generated output carrying one is dropped, which
+  // parseDailyInsight does via containsFrameworkTerm on all five fields.
   for (const banned of BANNED) {
     assert.equal(containsFrameworkTerm(banned), true, `${banned} should be a banned term`);
-    assert.equal(prompt.toLowerCase().includes(banned.toLowerCase()), false, `prompt leaked ${banned}`);
   }
   const omitted = traitPromptLines({ extraversion: null, openness: null, autonomy: null, growth_mindset: null });
   assert.equal(omitted, '');
@@ -350,36 +352,13 @@ async function main() {
   assert.equal(containsFrameworkTerm('They picked their own way through it.'), false);
   ok('runtime fence drops generated Read/Do that names a type');
 
-  const echoProvider: VoiceProvider = {
-    id: 'local',
-    label: 'echo-test',
-    async generate() {
-      return {
-        read: 'Lean on your INFJ extraversion today.',
-        do: 'After you make coffee, stand up and drink a glass of water.',
-      };
-    },
-    async generateTalk() {
-      return { reply: 'ok' };
-    },
-  };
-  const localConfig = buildVoiceConfig({ MODEL_PROVIDER: 'local' });
-  const echoed = await routeVoiceCard(
-    {
-      me: withTraits,
-      checkCount: 3,
-      history: [
-        { day: 1, status: 'done', read: 'One.', do: 'After you make coffee, sit one minute.' },
-        { day: 2, status: 'done', read: 'Two.', do: 'After you make coffee, write one line.' },
-        { day: 3, status: 'done', read: 'Three.', do: 'After you make coffee, pick one task.' },
-      ],
-      aiConsent: true,
-    },
-    { config: localConfig, providers: { local: echoProvider, gemini: echoProvider }, isDev: true },
-  );
-  assert.equal(echoed.card, null);
-  assert.deepEqual(echoed.dropped, ['framework-echo']);
-  ok('dev provider that names a type is rejected at runtime (Gemini and local share this fence)');
+  // The end-to-end "a provider that names a type is rejected" case ran through
+  // routeVoiceCard, which went with the card lane. The fence itself is
+  // unchanged and still asserted directly above; the insight's own use of it
+  // on all five fields is covered by scripts/insight-check.ts.
+  const insightFence = read('src/lib/insight/generate-insight.ts');
+  assert.match(insightFence, /if \(containsFrameworkTerm\(trimmed\)\) return null;/);
+  ok('the daily insight runs the same framework fence over its generated fields');
 
   assert.equal(
     resolveNudge({
@@ -408,11 +387,14 @@ async function main() {
   ok('addFact rejects a leaked phrase before it is persisted');
   ok('confirmTraits persists source+timestamp only — no numeric incoming');
 
-  const talkSrc = read('src/lib/voice/talk.ts');
-  assert.match(talkSrc, /containsFrameworkTerm/);
-  assert.match(talkSrc, /TALK_FENCE_ATTEMPTS = 2/);
-  assert.match(talkSrc, /kind: 'empty'/);
-  ok('Talk replies run the same framework fence; retry is one extra generate, then honest empty');
+  // Talk's backend was deleted 2026-09-14 and the Sage tab is an inert
+  // placeholder; these assertions should be re-earned when Talk is rebuilt.
+  // Talk's own fence assertions went with its backend. The same fence still
+  // guards every generated surface that survives, which is what actually
+  // matters; asserting nothing here would print green over a real gap.
+  assert.match(insightFence, /containsFrameworkTerm/);
+  assert.match(read('src/lib/category-statements/generate-statements.ts'), /containsFrameworkTerm/);
+  ok('the surviving generated surfaces all run the framework fence');
 
   const fold = read('src/components/trait-bands-fold.tsx');
   const provenance = 'This came from a question you answered. It can change.';
@@ -433,8 +415,10 @@ async function main() {
   ] as const) {
     assert.doesNotMatch(fold, new RegExp(token));
   }
-  assert.match(read('src/app/(tabs)/index.tsx'), /router\.push\('\/week'\)/);
-  ok('band detail has the fixed provenance line once, no axis-name or source tokens; Home links to /week');
+  // PARKED (ISOLATION_PLAN §7 Card C, 2026-09-15): the "This week" row is parked off
+  // Home, so /week has no entry point. The route itself is parked in Card F.
+  assert.doesNotMatch(read('src/app/(tabs)/index.tsx'), /router\.push\('\/week'\)/);
+  ok('band detail has the fixed provenance line once, no axis-name or source tokens; Home no longer links to /week');
 
   // --- Filled (>=1) vs settled (>=3): same column, different predicates ---
   const track = (axis: TraitAxis, answerCount: number): TraitTrack => ({

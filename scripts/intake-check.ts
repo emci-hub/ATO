@@ -21,9 +21,6 @@ import {
   voiceMeFrom,
 } from '../src/lib/intake';
 import { SCENARIO_QUESTIONS } from '../src/lib/vibe-check';
-import { bankCard, bankCardForMe } from '../src/lib/voice/bank';
-import { routeVoiceCard } from '../src/lib/voice/router';
-import { buildVoiceConfig } from '../src/lib/voice/config';
 
 let passed = 0;
 function ok(label: string) {
@@ -31,8 +28,6 @@ function ok(label: string) {
   console.log(`  ✓ ${label}`);
 }
 
-const localConfig = buildVoiceConfig({ MODEL_PROVIDER: 'local' });
-const dev = { isDev: true, config: localConfig };
 
 async function main() {
   assert.equal(CORE_INTAKE_QUESTIONS.length, 8);
@@ -61,9 +56,22 @@ async function main() {
   const onboarding = readFileSync(resolve(__dirname, '../src/app/onboarding.tsx'), 'utf8');
   const coreSweep = readFileSync(resolve(__dirname, '../src/components/core-intake-sweep.tsx'), 'utf8');
   const meLib = readFileSync(resolve(__dirname, '../src/lib/me.ts'), 'utf8');
-  assert.match(onboarding, /CoreIntakeSweep/);
-  assert.match(onboarding, /phase === 'account'/);
-  assert.match(onboarding, /phase === 'optional-gate'/);
+  // REMOVED (ISOLATION_PLAN §7 Card G, emci 2026-09-15, Q1): register no longer
+  // has a second step. The nine core-intake taps wrote `me` CONTEXT columns
+  // (talk_style, show_up, knocks_you_off, morning_cue, evening_wind_down,
+  // energy_pattern, support_style, current_focus) — verified against
+  // lib/traits.ts and the trait modules: not one of them feeds trait scoring,
+  // which is why they could be dropped rather than relocated to Questions.
+  // `complete_signup` takes all eight as nullable, so no schema change.
+  // The sweep component's own copy is still asserted below; what is gone is
+  // its mount site and the phase machine around it.
+  assert.doesNotMatch(onboarding, /CoreIntakeSweep/);
+  assert.doesNotMatch(onboarding, /phase === 'account'/);
+  assert.doesNotMatch(onboarding, /setPhase/);
+  // Removed 2026-09-11: onboarding no longer has an 'optional-gate' phase —
+  // signup goes straight from the core sweep to Home. See traits-check.ts
+  // for the fuller assertion that submit() calls refreshAndGoHome directly.
+  assert.doesNotMatch(onboarding, /optional-gate/);
   assert.doesNotMatch(onboarding, /intakeIndex/);
   assert.doesNotMatch(onboarding, /intakeProgressLabel/);
   assert.match(coreSweep, /CORE_INTAKE_QUESTIONS/);
@@ -76,15 +84,9 @@ async function main() {
   assert.equal(energyQ?.helper, 'Helps us pick a good time to check in with you.');
   ok('Q6 energy-pattern question and helper match the locked copy');
 
-  const sweepUsage = onboarding.slice(
-    onboarding.indexOf('<CoreIntakeSweep'),
-    onboarding.indexOf('/>', onboarding.indexOf('<CoreIntakeSweep')) + 2,
-  );
-  assert.match(sweepUsage, /selectedFor=\{selectedValues\}/);
-  assert.match(sweepUsage, /onSubmit=\{\(\) => void submit\(\)\}/);
-  assert.match(sweepUsage, /setPhase\('account'\)/);
-  assert.doesNotMatch(sweepUsage, /setTalkStyle|setEnergyPattern|setCurrentFocus/);
-  ok('intake Back returns to the account step without clearing answers');
+  // The onboarding screen must no longer hold any of the nine answers itself.
+  assert.doesNotMatch(onboarding, /setTalkStyle|setEnergyPattern|setCurrentFocus|selectedValues/);
+  ok('register holds none of the nine intake answers — they are not collected at signup');
 
   assert.match(meLib, /export const RESERVED_HANDLES/);
   assert.match(meLib, /'ato'/);
@@ -92,7 +94,7 @@ async function main() {
   assert.match(meLib, /export function handleFormatError/);
   assert.match(meLib, /That handle is reserved/);
   assert.match(meLib, /export async function checkHandleAvailable/);
-  assert.match(meLib, /public_profile/);
+  assert.match(meLib, /rpc\('handle_taken'/);
   assert.match(onboarding, /checkHandleAvailable/);
   assert.match(onboarding, /continueFromAccount/);
   assert.match(onboarding, /onHandleBlur/);
@@ -100,32 +102,40 @@ async function main() {
     onboarding.indexOf('async function continueFromAccount()'),
     onboarding.indexOf('async function onHandleBlur()'),
   );
+  // The handle and invite checks still run BEFORE createMe — that ordering is
+  // the point, and it survived the step collapse: continueFromAccount now
+  // calls submit() itself instead of advancing to a second phase.
   assert.match(continueFn, /checkHandleAvailable/);
-  assert.match(continueFn, /setPhase\('intake'\)/);
-  assert.doesNotMatch(
-    onboarding.slice(onboarding.indexOf('async function submit()'), onboarding.indexOf('async function goHome()')),
-    /setPhase\('intake'\)/,
-  );
-  ok('handle reserved + uniqueness run on the account step, before intake questions');
+  assert.match(continueFn, /await submit\(\)/);
+  ok('handle reserved + uniqueness still run before createMe; register then goes straight to Home');
 
   const chips = readFileSync(resolve(__dirname, '../src/components/intake-chips.tsx'), 'utf8');
   const settings = readFileSync(resolve(__dirname, '../src/components/intake-settings.tsx'), 'utf8');
   const you = readFileSync(resolve(__dirname, '../src/app/(tabs)/you.tsx'), 'utf8');
-  const sage = readFileSync(resolve(__dirname, '../src/app/(tabs)/sage.tsx'), 'utf8');
   const exploreTab = readFileSync(resolve(__dirname, '../src/app/(tabs)/explore.tsx'), 'utf8');
   assert.match(chips, /accessibilityRole=\{multi \? 'checkbox' : 'radio'\}/);
-  assert.match(settings, /CORE_INTAKE_QUESTIONS/);
+  // IntakeSettings' Explore call site is parked (Isolation Plan Card 5,
+  // 2026-09-15) — the component itself is removed from intake-settings.tsx,
+  // but TalkStylePicker (same file, used on You) stays wired and untouched.
   assert.match(settings, /updateIntake/);
-  assert.match(exploreTab, /IntakeSettings/);
+  assert.match(settings, /CORE_INTAKE_QUESTIONS/);
+  assert.doesNotMatch(settings, /export function IntakeSettings/);
+  assert.match(settings, /export function TalkStylePicker/);
+  assert.doesNotMatch(exploreTab, /IntakeSettings/);
+  // PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You is parked down to sign
+  // out, delete account and AI consent. The component's own behaviour is still
+  // covered in this file; only its You mount site is gone.
+  assert.doesNotMatch(you, /TalkStylePicker/);
   assert.match(meLib, /export async function updateIntake/);
-  assert.match(sage, /useMeContext/);
-  ok('Settings edits the same 8 chips; Sage reads the shared ME row');
+  ok('IntakeSettings is parked; TalkStylePicker (shared file, You-only) stays wired');
 
   const explore = readFileSync(resolve(__dirname, '../src/app/(tabs)/explore.tsx'), 'utf8');
-  assert.match(explore, /me\?\.current_focus/);
-  assert.match(explore, /CURRENT_FOCUS_CHIPS/);
-  assert.match(explore, /Right now:/);
-  ok('current_focus surfaces as a deterministic Explore header line');
+  // Removed from Explore 2026-09-16 (release polish, emci): the "Right now:"
+  // header read as debug text. current_focus itself is still stored and read
+  // elsewhere; only this header line is gone.
+  assert.doesNotMatch(explore, /Right now:/);
+  assert.doesNotMatch(explore, /CURRENT_FOCUS_CHIPS/);
+  ok('current_focus no longer renders as an Explore header line');
 
   const joined = joinKnocks(['sleep', 'workload']);
   assert.equal(joined, 'sleep, workload');
@@ -245,25 +255,22 @@ async function main() {
     current_focus: 'show_up',
   });
 
-  const quietCard = bankCardForMe(1, quietMe)!;
-  const loudCard = bankCardForMe(1, loudMe)!;
-  assert.equal(quietCard.do, bankCard(1, 'quiet', cue)!.do);
-  assert.equal(loudCard.do, bankCard(1, 'loud', 'put on music')!.do);
-  assert.ok(quietCard.do.includes(cue), 'Do must contain the person\'s morning_cue phrase');
-  assert.ok(!quietCard.do.includes('{morning_cue}'));
-  assert.notEqual(quietCard.read, loudCard.read);
-  assert.notEqual(quietCard.do, loudCard.do);
-  ok('Day 1 Do inserts the user cue; two answer sets pick different bank cards');
-
-  const routed = await routeVoiceCard(
-    { me: quietMe, checkCount: 0, history: [] },
-    dev,
-  );
-  assert.equal(routed.source, 'bank');
-  assert.equal(routed.provider, null);
-  assert.equal(routed.dev?.fromModel, false);
-  assert.equal(routed.card?.do, quietCard.do);
-  ok('check_count < 3 still uses first_cards.md with no model call');
+  // The starter-bank assertions went with the card lane: there is no written
+  // first-days bank behind the insight, and no "no model call before day 3"
+  // path left to prove. What intake still owes the next surface is the
+  // grounding itself, so that is what is asserted now — the two answer sets
+  // must still produce materially different voice slices.
+  // voiceMeFrom is the real mapping from stored intake columns to the slice
+  // every prompt builder grounds in — assert on its output, not on the two
+  // fixtures, which would compare a literal to itself and never fail.
+  // (the two fixtures' names are historical and don't match their talk_style)
+  assert.equal(quietMe.talk_style, 'loud');
+  assert.equal(loudMe.talk_style, 'quiet');
+  assert.equal(quietMe.morning_cue, cue);
+  assert.equal(quietMe.show_up, 'building something');
+  assert.equal(loudMe.morning_cue, 'put on music');
+  assert.notEqual(quietMe.knocks_you_off, loudMe.knocks_you_off);
+  ok('voiceMeFrom carries talk style, cue and show-up through to the generation slice');
 
   console.log(`\nAll ${passed} intake checks passed.`);
 }

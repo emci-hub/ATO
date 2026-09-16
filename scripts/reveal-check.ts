@@ -236,16 +236,20 @@ assert.match(card, /revealOpenedStorageKey/);
 ok('one unfold, one short haptic, no kind-based chrome');
 
 const home = read('src/app/(tabs)/index.tsx');
-assert.match(home, /isRevealOpenedToday/);
-assert.match(home, /resolveTodaySlot/);
-assert.match(home, /RevealCard/);
-assert.match(home, /slotKind === 'note'/);
+// PARKED (ISOLATION_PLAN §7 Card C, 2026-09-15): Reveal is parked, and with it Home's
+// four-branch slot chooser — the crisis branch is now a plain
+// `{crisisToday ? <CrisisCard /> : null}`. The RevealCard component and
+// `resolveReveal` are untouched and still covered above; what is asserted here
+// is that Home no longer mounts any of it.
+assert.doesNotMatch(home, /isRevealOpenedToday/);
+assert.doesNotMatch(home, /resolveTodaySlot/);
+assert.doesNotMatch(home, /RevealCard/);
+assert.doesNotMatch(home, /slotKind/);
 assert.doesNotMatch(read('src/app/(tabs)/circle.tsx'), /RevealCard|REVEAL_LABEL/);
-assert.doesNotMatch(read('src/app/dawn.tsx'), /RevealCard/);
 assert.doesNotMatch(read('targets/widget/widgets.swift'), /RevealCard|REVEAL_/);
 assert.doesNotMatch(read('src/lib/push-copy.ts'), /REVEAL_|RevealCard/);
-assert.doesNotMatch(read('src/lib/today-card.ts'), /reveal/);
-ok('Reveal is Home-only, only as the note slot; widget/push/Circle/Dawn stay closed');
+assert.doesNotMatch(read('src/lib/insight/today-insight.ts'), /reveal/);
+ok('Reveal is Home-only, only as the note slot; widget/push/Circle stay closed');
 
 const lab = read('src/app/theme-lab.tsx');
 assert.match(lab, /THEME_REVEAL_WEEK/);

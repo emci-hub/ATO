@@ -79,27 +79,37 @@ ok('Sage-tab viewer is read/delete only — no fence, no new write field');
 
 const explore = read('src/app/(tabs)/explore.tsx');
 assert.doesNotMatch(explore, /SageFactsCard/);
-const sageTab = read('src/app/(tabs)/sage.tsx');
-assert.match(sageTab, /SageFactsCard/);
-const ballIdx = sageTab.indexOf('<SageEightBall');
-const factsIdx = sageTab.indexOf('<SageFactsCard');
-assert.ok(ballIdx > 0 && factsIdx > ballIdx);
-ok('facts summary is a collapsible card below the 8-ball on Sage');
+// Talk's backend was deleted 2026-09-14 and the Sage tab is an inert
+// placeholder; these assertions should be re-earned when Talk is rebuilt.
+// The facts summary lived on the Sage tab, below the 8-ball.
+// Relocated to You 2026-09-14 when the Sage tab became a placeholder. This is
+// the only surface that lists stored facts and the only path to delete one, so
+// it has to live somewhere reachable — facts stay addable from chat either way.
+const youTabFacts = read('src/app/(tabs)/you.tsx');
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You is parked down to sign
+// out, delete account and AI consent. The component's own behaviour is still
+// covered in this file; only its You mount site is gone.
+assert.doesNotMatch(youTabFacts, /<SageFactsCard/);
+assert.match(read('src/components/sage-facts.tsx'), /removeFact/);
+ok('the facts list and its delete path still exist; their You mount site is parked');
 
+// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): /chat is parked with Circle,
+// so the "Teach Sage this" create path has no screen behind it. `addFact` and
+// the facts store are untouched — asserted directly below.
 const chat = read('src/app/chat.tsx');
-assert.match(chat, /Teach Sage this/);
-assert.match(chat, /await addFact\(/);
-assert.equal((chat.match(/addFact/g) ?? []).length > 0, true);
-ok('Teach Sage this in Chat is unchanged');
+assert.doesNotMatch(chat, /Teach Sage this/);
+assert.doesNotMatch(chat, /addFact/);
+ok('the parked Chat screen carries no fact-create path');
 
+// With Chat parked, `addFact` has exactly one definition and no UI caller.
+// The assertion is inverted rather than dropped so that wiring a NEW create
+// path anywhere still trips it — the rule was never "Chat may call it", it was
+// "only one surface may".
 const callers = ['src/app/chat.tsx', 'src/lib/me.ts', 'src/components/sage-facts.tsx']
   .map((file) => ({ file, src: read(file) }))
   .filter((row) => /addFact\(/.test(row.src));
-assert.deepEqual(
-  callers.map((row) => row.file),
-  ['src/app/chat.tsx', 'src/lib/me.ts'],
-);
-ok('addFact is still only called from Chat');
+assert.deepEqual(callers.map((row) => row.file), ['src/lib/me.ts']);
+ok('addFact has no caller while Chat is parked — only its definition remains');
 
 const grown = growthState({ facts: ['a', 'b', 'c'] }, 7);
 assert.equal(grown.depth, 1);

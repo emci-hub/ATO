@@ -4,24 +4,16 @@
  * Cached batches of 5, self_situation damped write, own regen quota tag.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { QUESTIONS_BANK, QUESTIONS_FEW_SHOTS } from '../src/lib/questions/bank';
 import { AXIS_TIER_COUNTS } from '../src/lib/questions/tiered-axis-plan';
 import { CATEGORY_DEFS, getCategoryDefs } from '../src/lib/categories';
 import { pickQuestionGrounding } from '../src/lib/questions/context';
-import {
-  QUESTIONS_CHECKPOINT,
-  QUESTIONS_KEEP_GOING,
-  QUESTIONS_LABEL,
-  QUESTIONS_SKIP_REST,
-  QUESTIONS_SKIP_THIS,
-} from '../src/lib/questions/copy';
 import { questionDraftGuardHit } from '../src/lib/questions/guards';
 import {
   deferredUnansweredAxes,
-  mergeCategoryPriority,
   mergedDeferral,
   normalizeDeferredAxes,
 } from '../src/lib/questions/deferral';
@@ -34,8 +26,6 @@ import {
 import { parseQuestionBatch } from '../src/lib/questions/parse';
 import { buildQuestionsPrompt } from '../src/lib/questions/prompt';
 import { preferFreshAxes, recentAskedAxes } from '../src/lib/questions/rotation';
-import { nextUnansweredItem, routeQuestions } from '../src/lib/questions/route';
-import { routeQuestionSweep } from '../src/lib/questions/sweep';
 import { QUESTIONS_BATCH_SIZE, QUESTIONS_CALL_TYPE } from '../src/lib/questions/types';
 import type { QuestionDraft } from '../src/lib/questions/types';
 import { emptySageKnowsState } from '../src/lib/sage-knows';
@@ -51,21 +41,25 @@ function ok(label: string) {
 }
 
 /** Report tracks with >=1 answer on every axis — a "complete" profile. */
+/**
+ * A profile complete by BOTH gates routeQuestions now applies: every axis
+ * answered at least once (`isProfileComplete`) AND every bank question
+ * answered (`isFullProfileDone`, the shared unlock signal — ISOLATION_PLAN §7).
+ * `answerCount` was 1, which satisfies only the first — after the two gates
+ * were joined that fixture stopped reaching the paid path, so every "AI batch"
+ * assertion below would have silently tested the bank path instead. 99 is
+ * safely above the largest per-axis bank size.
+ */
 function completeTracks(): TraitTrack[] {
   return TRAIT_AXES.map((axis) => ({
     axis,
     track: 'report' as const,
     value: 0.5,
     stability: 0.5,
-    answerCount: 1,
+    answerCount: 99,
     lastTouched: '2026-09-03T12:00:00.000Z',
     lastDepthAt: null,
   }));
-}
-
-/** Complete except for the named axes, which have no row at all. */
-function tracksMissing(...axes: readonly string[]): TraitTrack[] {
-  return completeTracks().filter((row) => !axes.includes(row.axis));
 }
 
 /** One report-track row for an axis at a specific answer count. */
@@ -138,15 +132,6 @@ for (const row of QUESTIONS_BANK) {
 }
 ok('every bank question has a deterministic, resolvable category');
 
-// --- Category picker priority merge (additive axis-priority lever) --------
-// No category picked -> priority list is exactly the base list, unchanged.
-assert.deepEqual(mergeCategoryPriority([], ['openness', 'playfulness']), ['openness', 'playfulness']);
-// A category's axes lead, deduped against the base list.
-assert.deepEqual(
-  mergeCategoryPriority(['autonomy', 'competence'], ['competence', 'openness']),
-  ['autonomy', 'competence', 'openness'],
-);
-ok('category-priority merge is a no-op when unset and dedupes when set');
 
 const local = composeLocalQuestionBatch();
 assert.equal(local.length, 5);
@@ -464,8 +449,16 @@ assert.deepEqual(
 );
 
 assert.deepEqual(bankTotalProgress([]), { answered: 0, total: QUESTIONS_BANK.length });
-assert.deepEqual(bankTotalProgress(completeTracks()), {
+// One answer per axis — spelled out here rather than reusing `completeTracks`,
+// which is now bank-complete (99 per axis) so that it satisfies the shared
+// unlock gate the paid path checks.
+const onePerAxis = TRAIT_AXES.map((axis) => trackWithCount(axis, 1));
+assert.deepEqual(bankTotalProgress(onePerAxis), {
   answered: TRAIT_AXES.length,
+  total: QUESTIONS_BANK.length,
+});
+assert.deepEqual(bankTotalProgress(completeTracks()), {
+  answered: QUESTIONS_BANK.length,
   total: QUESTIONS_BANK.length,
 });
 ok('category list progress: sequential in-axis unlock, per-axis independence, total answered/total');
@@ -514,369 +507,19 @@ assert.match(deferralMigration, /question_deferred jsonb not null default '\[\]'
 ok('deferred axes lead local + rotated batches and the prompt; wave29 migration exists');
 
 async function main() {
-const routed = await routeQuestions(
-  {
-    me: {
-      name: 'Riley',
-      timezone: 'UTC',
-      talk_style: 'even',
-      voice_preset: 'close_friend',
-      sage_knows: emptySageKnowsState(),
-      facts: [],
-      ai_consent: true,
-    },
-    history: [],
-    aiConsent: true,
-  },
-  { useLocal: true },
-);
-assert.ok(routed.item);
-assert.equal(routed.pack?.items.length, 5);
-assert.equal(nextUnansweredItem(routed.pack)?.id, routed.item?.id);
-ok('opening with local deps serves a cached-shape batch of 5');
+  /*
+    REMOVED 2026-09-16 (emci): every `routeQuestions` scenario that used to run
+    here — the cached-batch open, the deferred-axis regen, the priority/
+    contradictedAxes ordering, the guard-retry, and the whole
+    profile-completeness gate around the paid call. They tested
+    `src/lib/questions/route.ts`, which was deleted with the Infinite Questions
+    inline feed it existed to drive; there is no caller and no code left to
+    assert on. The bank, the deferral helpers, the rotation and the prompt are
+    untouched and still covered above.
 
-// A just-answered deferred axis (answered in the latest pack) must not be
-// re-front-loaded by the regenerated batch even if the UI's priority list is
-// one render stale.
-const answeredPack = {
-  id: 'yesterday',
-  generatedOn: '2026-08-29',
-  createdAt: '2026-08-29T12:00:00.000Z',
-  items: [
-    {
-      id: 'old-a',
-      packId: 'yesterday',
-      sortIndex: 0,
-      axis: 'openness' as const,
-      prompt: 'One.',
-      options: [
-        { text: 'A', value: 0.8 },
-        { text: 'B', value: 0.2 },
-      ],
-      answeredOption: 0,
-      skippedAt: null,
-    },
-  ],
-};
-const afterAnswerRegen = await routeQuestions(
-  {
-    me: {
-      name: 'Riley',
-      timezone: 'UTC',
-      talk_style: 'even',
-      voice_preset: 'close_friend',
-      sage_knows: emptySageKnowsState(),
-      facts: [],
-      ai_consent: true,
-    },
-    history: [],
-    aiConsent: true,
-    priorityAxes: ['openness', 'playfulness'],
-    tracks: completeTracks(),
-  },
-  {
-    useLocal: true,
-    loadLatestPack: async () => answeredPack,
-  },
-);
-assert.ok(afterAnswerRegen.pack);
-assert.equal(afterAnswerRegen.pack.items[0]?.axis, 'playfulness');
-assert.ok(!afterAnswerRegen.pack.items.some((item) => item.axis === 'openness'));
-ok('answered deferred axis is dropped from the regen priority list');
-
-// A category pick (or focusAxis deep-link) must be able to surface a
-// different open item from TODAY's pack, not always whatever item happens to
-// be first — regression for the "picker highlights, no question changes" bug.
-const todaysOpenPack = {
-  id: 'today',
-  generatedOn: '2026-09-04',
-  createdAt: '2026-09-04T12:00:00.000Z',
-  items: [
-    {
-      id: 'open-openness',
-      packId: 'today',
-      sortIndex: 0,
-      axis: 'openness' as const,
-      prompt: 'One.',
-      options: [
-        { text: 'A', value: 0.8 },
-        { text: 'B', value: 0.2 },
-      ],
-      answeredOption: null,
-      skippedAt: null,
-    },
-    {
-      id: 'open-playfulness',
-      packId: 'today',
-      sortIndex: 1,
-      axis: 'playfulness' as const,
-      prompt: 'Two.',
-      options: [
-        { text: 'A', value: 0.8 },
-        { text: 'B', value: 0.2 },
-      ],
-      answeredOption: null,
-      skippedAt: null,
-    },
-  ],
-};
-const categoryRouted = await routeQuestions(
-  {
-    me: {
-      name: 'Riley',
-      timezone: 'UTC',
-      talk_style: 'even',
-      voice_preset: 'close_friend',
-      sage_knows: emptySageKnowsState(),
-      facts: [],
-      ai_consent: true,
-    },
-    history: [],
-    aiConsent: true,
-    now: new Date('2026-09-04T15:00:00.000Z'),
-    priorityAxes: ['playfulness'],
-  },
-  { useLocal: true, loadLatestPack: async () => todaysOpenPack },
-);
-assert.equal(categoryRouted.kind, 'cached');
-assert.equal(categoryRouted.item?.id, 'open-playfulness');
-const noPriorityRouted = await routeQuestions(
-  {
-    me: {
-      name: 'Riley',
-      timezone: 'UTC',
-      talk_style: 'even',
-      voice_preset: 'close_friend',
-      sage_knows: emptySageKnowsState(),
-      facts: [],
-      ai_consent: true,
-    },
-    history: [],
-    aiConsent: true,
-    now: new Date('2026-09-04T15:00:00.000Z'),
-  },
-  { useLocal: true, loadLatestPack: async () => todaysOpenPack },
-);
-assert.equal(noPriorityRouted.item?.id, 'open-openness');
-ok('a priority axis with an already-open match in today\'s pack is served over item order (category picker / focusAxis fix)');
-
-// A priority axis with NO open match in today's pack must not silently fall
-// back to whatever's already open (the original bug) — it must fall through
-// to a fresh, priority-led batch instead.
-const noMatchPack = {
-  id: 'today',
-  generatedOn: '2026-09-04',
-  createdAt: '2026-09-04T12:00:00.000Z',
-  items: [
-    {
-      id: 'open-openness-2',
-      packId: 'today',
-      sortIndex: 0,
-      axis: 'openness' as const,
-      prompt: 'One.',
-      options: [
-        { text: 'A', value: 0.8 },
-        { text: 'B', value: 0.2 },
-      ],
-      answeredOption: null,
-      skippedAt: null,
-    },
-  ],
-};
-const noMatchRouted = await routeQuestions(
-  {
-    me: {
-      name: 'Riley',
-      timezone: 'UTC',
-      talk_style: 'even',
-      voice_preset: 'close_friend',
-      sage_knows: emptySageKnowsState(),
-      facts: [],
-      ai_consent: true,
-    },
-    history: [],
-    aiConsent: true,
-    now: new Date('2026-09-04T15:00:00.000Z'),
-    priorityAxes: ['playfulness'],
-    tracks: completeTracks(),
-  },
-  { useLocal: true, loadLatestPack: async () => noMatchPack },
-);
-assert.equal(noMatchRouted.kind, 'item');
-assert.equal(noMatchRouted.item?.axis, 'playfulness');
-ok('a priority axis with no open match regenerates a fresh batch led by that axis, instead of serving the unrelated open item');
-
-let generateCalls = 0;
-const dirtyThenClean = await routeQuestions(
-  {
-    me: {
-      name: 'Riley',
-      timezone: 'UTC',
-      talk_style: 'even',
-      voice_preset: 'close_friend',
-      sage_knows: emptySageKnowsState(),
-      facts: [],
-      ai_consent: true,
-    },
-    history: [],
-    aiConsent: true,
-    tracks: completeTracks(),
-  },
-  {
-    claimBatch: async () => ({ ok: true }),
-    generateBatch: async () => {
-      generateCalls += 1;
-      if (generateCalls === 1) {
-        return [jargonOption, phraseOption, ...composeLocalQuestionBatch().slice(0, 3)];
-      }
-      return composeLocalQuestionBatch();
-    },
-  },
-);
-assert.equal(generateCalls, 2);
-assert.ok(dirtyThenClean.pack);
-assert.equal(
-  dirtyThenClean.pack.items.some((item) => questionDraftGuardHit(item) != null),
-  false,
-);
-ok('guard failure retries once, then skips the dirty question');
-
-// --- Profile-completeness gate -------------------------------------------
-const gateMe = {
-  name: 'Riley',
-  timezone: 'UTC',
-  talk_style: 'even' as const,
-  voice_preset: 'close_friend',
-  sage_knows: emptySageKnowsState(),
-  facts: [],
-  ai_consent: true,
-};
-
-// Incomplete profile: no model call, and no quota claim either.
-let incompleteGenerate = 0;
-let incompleteClaims = 0;
-const incomplete = await routeQuestions(
-  {
-    me: gateMe,
-    history: [],
-    aiConsent: true,
-    tracks: tracksMissing('playfulness', 'autonomy'),
-  },
-  {
-    claimBatch: async () => {
-      incompleteClaims += 1;
-      return { ok: true };
-    },
-    generateBatch: async () => {
-      incompleteGenerate += 1;
-      return composeLocalQuestionBatch();
-    },
-  },
-);
-assert.equal(incompleteGenerate, 0);
-assert.equal(incompleteClaims, 0);
-assert.ok(incomplete.pack);
-ok('incomplete profile never calls the model and never claims quota');
-
-// ...and it leads with the axes that are actually unfilled, in TRAIT_AXES order
-// (autonomy sits ahead of playfulness in that list).
-assert.equal(incomplete.pack!.items[0]?.axis, 'autonomy');
-assert.equal(incomplete.pack!.items[1]?.axis, 'playfulness');
-ok('incomplete profile serves the unfilled axes first, from the static bank');
-
-// Phase 6, T-03: contradictedAxes leads the batch like priorityAxes does,
-// ahead of the caller's own priorityAxes but after genuinely unfilled axes
-// (contradiction requires >=2 answers, so it never overlaps unfilledAxes).
-const contradictedRouted = await routeQuestions(
-  {
-    me: gateMe,
-    history: [],
-    aiConsent: true,
-    tracks: completeTracks(),
-    contradictedAxes: ['playfulness'],
-    priorityAxes: ['autonomy'],
-  },
-  {},
-);
-assert.equal(contradictedRouted.pack!.items[0]?.axis, 'playfulness');
-assert.equal(contradictedRouted.pack!.items[1]?.axis, 'autonomy');
-ok('contradictedAxes leads the batch ahead of the caller\'s own priorityAxes');
-
-// Omitting contradictedAxes entirely must be byte-identical to today.
-const withoutContradicted = await routeQuestions(
-  { me: gateMe, history: [], aiConsent: true, tracks: completeTracks(), priorityAxes: ['autonomy'] },
-  {},
-);
-const withEmptyContradicted = await routeQuestions(
-  {
-    me: gateMe,
-    history: [],
-    aiConsent: true,
-    tracks: completeTracks(),
-    contradictedAxes: [],
-    priorityAxes: ['autonomy'],
-  },
-  {},
-);
-assert.deepEqual(
-  withoutContradicted.pack!.items.map((item) => item.axis),
-  withEmptyContradicted.pack!.items.map((item) => item.axis),
-  'omitting contradictedAxes vs. passing it as an explicit empty array produce identical batches',
-);
-ok('contradictedAxes is a provable no-op when omitted/empty, same pattern as every prior additive phase');
-
-// Complete profile: the AI path is reachable exactly as before.
-let completeGenerate = 0;
-let completeClaims = 0;
-await routeQuestions(
-  { me: gateMe, history: [], aiConsent: true, tracks: completeTracks() },
-  {
-    claimBatch: async () => {
-      completeClaims += 1;
-      return { ok: true };
-    },
-    generateBatch: async () => {
-      completeGenerate += 1;
-      return composeLocalQuestionBatch();
-    },
-  },
-);
-assert.equal(completeGenerate, 1);
-assert.equal(completeClaims, 1);
-ok('complete profile reaches the model and claims quota as before');
-
-// Consent and crisis still outrank the gate — a complete profile does not
-// bypass them, and an incomplete one reports them rather than the bank.
-assert.equal(
-  (await routeQuestions({ me: gateMe, history: [], aiConsent: false, tracks: completeTracks() }, {}))
-    .kind,
-  'consent-denied',
-);
-assert.equal(
-  (
-    await routeQuestions(
-      { me: gateMe, history: [], aiConsent: true, crisisToday: true, tracks: tracksMissing('playfulness') },
-      {},
-    )
-  ).kind,
-  'crisis',
-);
-ok('consent and crisis still precede the completeness gate');
-
-// Missing tracks read as incomplete — the safe direction (no paid call).
-let noTracksGenerate = 0;
-await routeQuestions(
-  { me: gateMe, history: [], aiConsent: true },
-  {
-    claimBatch: async () => ({ ok: true }),
-    generateBatch: async () => {
-      noTracksGenerate += 1;
-      return composeLocalQuestionBatch();
-    },
-  },
-);
-assert.equal(noTracksGenerate, 0);
-ok('absent tracks read as incomplete rather than opening the AI path');
+    What replaces them is the deletion guard further down: the feed must not
+    grow back, and the bank/round path must never import a router.
+  */
 
 const asked = recentAskedAxes({
   id: 'p',
@@ -946,25 +589,17 @@ assert.doesNotMatch(you, /QuestionsFold/);
 assert.doesNotMatch(sage, /QuestionsFold/);
 assert.match(questionsScreen, /QuestionsFold/);
 assert.doesNotMatch(you, /\/questions/);
-assert.equal(QUESTIONS_LABEL, 'A few questions');
 const fold = read('src/components/questions-fold.tsx');
 assert.match(fold, /updateTraits/);
 assert.match(fold, /self_situation/);
 assert.doesNotMatch(fold, /TextInput/);
-assert.match(fold, /claimQuestionsBatch/);
-assert.match(fold, /QUESTIONS_SKIP_THIS/);
-assert.match(fold, /QUESTIONS_SKIP_REST/);
-assert.match(fold, /QUESTIONS_CHECKPOINT/);
-assert.match(fold, /QUESTIONS_KEEP_GOING/);
-assert.match(fold, /logJargonGuard/);
-assert.match(fold, /logPhraseGuard/);
 // Full Profile wiring: every question still renders straight from the
 // static bank (bankProgressForAxis/bankTotalProgress) — not routed through
 // routeQuestions/priorityAxes, and never imports anything from the
 // question_items direction, so a bad bank read can never touch the
 // persisted rotation. Re-platformed Sep 2026 onto the reusable
-// CategoryPagedQuestions component (category-per-screen, replacing the old
-// single flat 16-axis list) — `useCategoryDefs()`/`getCategoryDefs()` IS now
+// PagedQuestions component (book-style pager, 5 questions per page,
+// replacing the old single flat 16-axis list) — `useCategoryDefs()`/`getCategoryDefs()` IS now
 // expected inside this wiring (the opposite of the pre-Sep-2026 invariant
 // this block used to assert), scoped to the bank-adapter call site so a
 // stray category reference elsewhere in the file doesn't false-positive
@@ -973,37 +608,56 @@ assert.match(fold, /bankProgressForAxis/);
 assert.match(fold, /bankTotalProgress/);
 assert.doesNotMatch(fold, /bankQuestionCount/);
 assert.doesNotMatch(fold, /category_id/);
-assert.match(fold, /CategoryPagedQuestions/);
-assert.match(fold, /storageKey="full-profile"/);
+assert.match(fold, /PagedQuestions/);
+// Scoped per account (found in review: an unscoped key would leak one
+// account's answer stamps to another account signed in on the same device).
+assert.match(fold, /storageKey=\{`full-profile:\$\{me\.id\}`\}/);
 // Live-subscribed catalog, not a mount-time getCategoryDefs() snapshot — a
 // category_defs fetch swapping the list while this screen is open must be
 // reflected, same hook categories-fold.tsx/category-teaser.tsx already use.
 assert.match(fold, /useCategoryDefs\(\)/);
-assert.match(fold, /categories=\{liveCategoryDefs\}/);
+// 2026-09-11: PagedQuestions itself no longer takes categories/rowsForAxis
+// (generalized to a flat `rows` prop, T-01 of the ongoing-round pager
+// build) — the caller (here) now flattens the live category catalog into
+// `bankRows` itself via uniqueCategoryAxes/bankProgressForAxis, then passes
+// the flat result straight through.
+assert.match(fold, /uniqueCategoryAxes\(liveCategoryDefs\)/);
 {
-  const bankAdapter = fold.slice(
-    fold.indexOf('<CategoryPagedQuestions'),
-    fold.indexOf('/>', fold.indexOf('<CategoryPagedQuestions')),
+  const bankSetup = fold.slice(
+    fold.indexOf('const bankAxes = uniqueCategoryAxes(liveCategoryDefs);'),
+    fold.indexOf('<PagedQuestions'),
   );
-  assert.match(bankAdapter, /bankProgressForAxis/);
-  assert.match(bankAdapter, /locked=\{fullProfileLocked\}/);
+  assert.match(bankSetup, /bankProgressForAxis/);
+  assert.match(bankSetup, /completedAxesFrom\(bankAxes, bankRowsForAxis\)/);
+  const bankAdapter = fold.slice(
+    fold.indexOf('<PagedQuestions'),
+    fold.indexOf('/>', fold.indexOf('<PagedQuestions')),
+  );
+  assert.match(bankAdapter, /rows=\{bankRows\}/);
+  assert.match(bankAdapter, /progressLabel=\{`\$\{bankCompletedAxes\.length\} of \$\{bankAxes\.length\} axes complete`\}/);
   // routeQuestions/priorityAxes/mergeCategoryPriority belong to the default
   // rotation above this usage, never to how Full Profile is fed — a bad bank
   // read must never be able to reach the persisted daily-pack rotation.
-  assert.doesNotMatch(bankAdapter, /routeQuestions|priorityAxes|mergeCategoryPriority/);
+  assert.doesNotMatch(bankSetup + bankAdapter, /routeQuestions|priorityAxes|mergeCategoryPriority/);
 }
-ok('Full Profile renders through the reusable CategoryPagedQuestions component (live category catalog), straight from the static bank, never through routeQuestions');
+ok('Full Profile renders through the reusable PagedQuestions component (live category catalog flattened by the caller), straight from the static bank, never through routeQuestions');
 
-// CategoryPagedQuestions itself: one category's questions per screen, a
-// caller-supplied row accessor (never assumes a fixed question count or
-// where questions come from — the reusability this component was built
-// for), Back/Next/Skip category navigation, and a dedup'd axis-completion
-// count (uniqueCategoryAxes) so an axis shared by two categories is never
+// PagedQuestions itself: a flat, axis-order book pager (5 questions
+// per page, Back/Next Page only — no per-category grouping or Skip since the
+// restructure), a caller-supplied row accessor (never assumes a fixed
+// question count or where questions come from — the reusability this
+// component was built for), and a dedup'd axis-completion count
+// (uniqueCategoryAxes) so an axis shared by two categories is never
 // double-counted toward progress. Must never itself reach into
 // routeQuestions/priorityAxes/mergeCategoryPriority — those are the default
 // (Infinite Questions) rotation's concern, not this component's.
-const pagedQuestions = read('src/components/category-paged-questions.tsx');
-assert.match(pagedQuestions, /rowsForAxis: \(axis: TraitAxis\) => readonly CategoryQuestionRow\[\]/);
+const pagedQuestions = read('src/components/paged-questions.tsx');
+// Generalized 2026-09-11 (T-01, ongoing-round pager build): a flat,
+// caller-supplied `rows` list instead of categories/rowsForAxis — the axis/
+// category machinery moved out to each caller (the bank in questions-fold.tsx
+// flattens it itself; the ongoing round never had categories to begin with).
+assert.match(pagedQuestions, /rows: readonly CategoryQuestionRow\[\]/);
+assert.doesNotMatch(pagedQuestions, /rowsForAxis/);
 assert.doesNotMatch(pagedQuestions, /routeQuestions|priorityAxes|mergeCategoryPriority/);
 // uniqueCategoryAxes/completedAxesFrom live in the pure, react-native-free
 // src/lib/questions/category-paged.ts (importing an RN-touching file into a
@@ -1017,101 +671,117 @@ assert.match(categoryPagedLib, /export function uniqueCategoryAxes/);
 assert.match(categoryPagedLib, /export function completedAxesFrom/);
 assert.match(pagedQuestions, /humanizeAxis/);
 assert.match(pagedQuestions, /locked \? null :/);
-assert.match(pagedQuestions, /Category \{clampedIndex \+ 1\} of \{categories\.length\}/);
+assert.match(pagedQuestions, /Page \{clampedPage \+ 1\} of \{totalPages\}/);
 assert.match(pagedQuestions, /loadCategoryPagePosition/);
 assert.match(pagedQuestions, /saveCategoryPagePosition/);
+// No per-category grouping left post-restructure — the row list is flat and
+// axis-ordered, paged 5 at a time, no "Skip this category" control.
+assert.doesNotMatch(pagedQuestions, /current\.axes\.map/);
+assert.match(pagedQuestions, /PAGE_SIZE\s*=\s*5/);
 // Category navigation is a distinct concept from Infinite Questions' own
 // checkpoint/skip-this-item copy — must not reuse those constants.
 assert.doesNotMatch(
   pagedQuestions,
   /QUESTIONS_SKIP_THIS|QUESTIONS_SKIP_REST|QUESTIONS_CHECKPOINT|QUESTIONS_KEEP_GOING/,
 );
-ok('CategoryPagedQuestions groups by category via the existing axis-membership lookup, dedupes shared-axis progress, and persists/restores position — independent of Infinite Questions\' own copy/state');
+ok('PagedQuestions is a flat, axis-order book pager (5/page), dedupes shared-axis progress, and persists/restores page position — independent of Infinite Questions\' own copy/state');
 
-// Category-to-axis targeting (additive, unused by any caller yet — same
-// pattern as focusAxis): an optional `category` prop resolves to that
-// category's axes via getCategoryDefs and merges ahead of the base priority
-// list via the existing mergeCategoryPriority, never introducing a new
-// category concept into routeQuestions/the model/the DB — only a plain
-// TraitAxis[] crosses that boundary.
-assert.match(fold, /category\?:\s*CategoryId/);
-assert.match(fold, /getCategoryDefs\(\)\.find/);
-assert.match(fold, /mergeCategoryPriority\(categoryAxes, base\)/);
-ok('category prop resolves to axes and merges into priorityAxes, never reaching routeQuestions as a category');
 
-// T-04: the real trait_history fetch + contradictedAxes wiring must survive —
-// nothing else asserts this, so a regression here (e.g. deleting the fetch,
-// or removing the field from the routeQuestions call while leaving the
-// unused useMemo behind) would otherwise pass every other check in this
-// file. The third assertion is anchored to the actual routeQuestions call
-// site (tracks immediately followed by contradictedAxes) — a bare
-// /contradictedAxes/ substring match would still pass even with the wiring
-// line deleted, since `contradictedAxesFrom`/the useMemo declaration alone
-// also contain that substring.
-assert.match(fold, /fetchTraitHistory/);
-assert.match(fold, /contradictedAxesFrom/);
-assert.match(fold, /tracks,\s*\n\s*contradictedAxes,/);
-ok('questions-fold.tsx fetches trait_history and passes contradictedAxes into the routeQuestions call itself');
+/*
+  REMOVED 2026-09-16 (emci): the Infinite Questions inline feed on the
+  Questions screen — its single routed question, "Skip this one" / "Skip the
+  rest", the checkpoint pause and the "Tell Sage more" load press — together
+  with the card that wrapped it ("A few questions · N of 16 unanswered" /
+  "Tap when you feel like it. Not today's card."). It rendered below the
+  bank/round branch UNCONDITIONALLY, so a finished profile got a second,
+  unrelated question feed sitting under "Next 25 questions" in the same box.
 
-// Full Profile (now CategoryPagedQuestions) still never uses Infinite
-// Questions' own skip/checkpoint copy — already asserted against
-// category-paged-questions.tsx above. Confirm the reverse holds too: the
-// default rotation section of this same file (everything before the
-// CategoryPagedQuestions usage) still keeps that copy, untouched by the
-// re-platform.
-const defaultRotationSection = fold.slice(0, fold.indexOf('<CategoryPagedQuestions'));
-assert.match(defaultRotationSection, /QUESTIONS_SKIP_THIS/);
-assert.match(defaultRotationSection, /QUESTIONS_SKIP_REST/);
-assert.match(defaultRotationSection, /QUESTIONS_CHECKPOINT/);
+  These assertions used to pin that copy into the fold. Inverted: the feed and
+  its whole pipeline must stay deleted, not merely unmounted.
+*/
+assert.ok(
+  !existsSync(resolve(__dirname, '..', 'src/lib/questions/route.ts')),
+  'src/lib/questions/route.ts must stay deleted — routeQuestions drove the removed inline feed',
+);
+assert.ok(
+  !existsSync(resolve(__dirname, '..', 'src/lib/questions/copy.ts')),
+  "src/lib/questions/copy.ts must stay deleted — it was the removed feed's copy, card title and lede",
+);
+/** Strips block + line comments, so a symbol NAMED in a deletion note does not read as a live reference. */
+function codeOnly(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n')
+    .filter((line) => !line.trimStart().startsWith('//'))
+    .join('\n');
+}
+const foldCode = codeOnly(fold);
+for (const gone of [
+  'routeQuestions',
+  'QUESTIONS_SKIP_THIS',
+  'QUESTIONS_SKIP_REST',
+  'QUESTIONS_CHECKPOINT',
+  'QUESTIONS_KEEP_GOING',
+  'QUESTIONS_LOAD_MORE',
+  'QUESTIONS_LEDE',
+  'QUESTIONS_LABEL',
+  'fetchLatestQuestionPack',
+  'saveQuestionPack',
+  'skipQuestionItem',
+  'skipRestOfQuestionPack',
+]) {
+  assert.ok(
+    !foldCode.includes(gone),
+    `questions-fold.tsx must not reference ${gone} — the inline Infinite Questions feed is deleted`,
+  );
+}
+// The card chrome went with it: no wrapper, no title, no lede.
+assert.doesNotMatch(foldCode, /A few questions/);
+assert.doesNotMatch(foldCode, /Not today/);
+/*
+  NOT asserted here: that the screen never again fetches a crisis flag or reads
+  `?axis=`. Both went with the feed because it was their only consumer, but a
+  future crisis gate or axis deep-link on this screen would be a legitimate
+  feature, and a check that forbids one is a trap, not a guard.
+*/
+// "Next 25 questions" — the thing that must SURVIVE, standalone in that spot.
+assert.match(fold, /NEXT_ROUND_LABEL = 'Next 25 questions'/);
+assert.match(fold, /OngoingRoundFold/);
 // No sequential lock left to render a 'Locked' label for — every one of an
 // axis's drafts is shown and answerable at once, any order, in the new
 // component too.
 assert.doesNotMatch(pagedQuestions, /'Locked'/);
 assert.doesNotMatch(pagedQuestions, />\s*Locked\s*</);
 assert.match(pagedQuestions, />\s*Answered\s*</);
-ok('Full Profile (CategoryPagedQuestions) still never touches Infinite Questions\' skip/checkpoint copy; default rotation keeps it, unaffected; no stale per-row lock label');
-assert.equal(QUESTIONS_SKIP_THIS, 'Skip this one');
-assert.equal(QUESTIONS_SKIP_REST, 'Skip the rest');
-assert.equal(QUESTIONS_CHECKPOINT, "That's plenty for now — come back anytime");
-assert.equal(QUESTIONS_KEEP_GOING, 'Keep going');
+ok('the Infinite Questions inline feed and its card stay deleted; "Next 25 questions" survives standalone; no stale per-row lock label');
 assert.match(read('src/components/explore-panel.tsx'), /claimAiCall\('explore'\)/);
 ok('own screen from You; writes self_situation; Explore tagged separately');
 
-// "A faster pass" sweep always serves the static bank now (no model call);
-// it still gates consent → crisis first, and never claims quota.
-const sweepMe = { name: 'Riley', talk_style: 'even' as const, voice_preset: 'close_friend' };
-const sweepDenied = await routeQuestionSweep({ me: sweepMe, aiConsent: false });
-assert.equal(sweepDenied.kind, 'consent-denied');
-assert.equal(sweepDenied.drafts.length, 0);
-const sweepPending = await routeQuestionSweep({ me: sweepMe });
-assert.equal(sweepPending.kind, 'consent-pending');
-const sweepCrisis = await routeQuestionSweep({ me: sweepMe, aiConsent: true, crisisToday: true });
-assert.equal(sweepCrisis.kind, 'crisis');
-assert.equal(sweepCrisis.drafts.length, 0);
-
-let sweepClaimed = 0;
-const sweepLocal = await routeQuestionSweep({
-  me: sweepMe,
-  aiConsent: true,
-  claimBatch: async () => {
-    sweepClaimed += 1;
-    return { ok: true } as const;
-  },
-});
-assert.equal(sweepLocal.kind, 'questions');
-assert.equal(sweepLocal.drafts.length, 16);
-assert.equal(sweepClaimed, 0);
-ok('sweep gates consent → crisis, then always serves the static bank with no quota claim');
-
-const sweepSrc = read('src/lib/questions/sweep.ts');
-assert.match(sweepSrc, /aiConsent/);
-assert.match(sweepSrc, /crisisToday/);
-assert.match(sweepSrc, /composeLocalSweep/);
-assert.doesNotMatch(read('src/components/intake-sweep.tsx'), /claimQuestionsBatch|QUESTIONS_EMPTY_QUOTA/);
-assert.match(read('src/components/intake-sweep.tsx'), /QUESTIONS_EMPTY_CONSENT/);
-assert.match(read('src/components/intake-sweep.tsx'), /crisisToday/);
-assert.match(read('src/app/(tabs)/intake-sweep.tsx'), /crisisToday=\{crisisToday\}/);
-ok('sweep wiring: component passes consent/crisis, tab passes crisisToday; no dead quota-claim wiring');
+// REMOVED 2026-09-15 (emci): the "A faster pass" full sweep (`IntakeSweep`,
+// `routeQuestionSweep`, `src/lib/questions/sweep.ts`) — the 50-question bank
+// already covers the same ground via `QuestionsFold`/`PagedQuestions` above,
+// which this file still tests in full. Its own tests (consent-ignored,
+// crisis-gated, no-quota-claim wiring) are gone with the code they tested.
+assert.ok(
+  !existsSync(resolve(__dirname, '..', 'src/lib/questions/sweep.ts')),
+  'src/lib/questions/sweep.ts must stay deleted — the sweep is gone, not just unmounted',
+);
+assert.ok(
+  !existsSync(resolve(__dirname, '..', 'src/components/intake-sweep.tsx')),
+  'src/components/intake-sweep.tsx must stay deleted — the sweep is gone, not just unmounted',
+);
+const foldSrcForOpen = read('src/components/questions-fold.tsx');
+assert.match(foldSrcForOpen, /alwaysOpen\?: boolean/, 'QuestionsFold must still take an alwaysOpen prop');
+assert.match(
+  read('src/app/(tabs)/intake-sweep.tsx'),
+  /<QuestionsFold[\s\S]{0,300}alwaysOpen/,
+  'the Questions tab must pass alwaysOpen when mounting QuestionsFold — the bank list opens expanded, no tap required',
+);
+// The deleted feed's "Tell Sage more" load press is gone with it — there is no
+// second, AI-backed section left on this screen to gate. The one paid path
+// that remains is "Next 25 questions", which has always had its own press and
+// is asserted above.
+ok('the "A faster pass" sweep stays deleted and the bank list opens expanded by default');
 
 console.log(`\n${passed} question checks passed`);
 }

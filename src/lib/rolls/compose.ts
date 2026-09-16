@@ -2,14 +2,20 @@
  * Roll composition (trait-system redesign §7) — assembles one roll's exact
  * 13-item payload (1 legend + 11 categories + 1 story), matching
  * store_roll's own hard validation (wave46_trait_rolls.sql). Pure
- * orchestration: every side effect (AI generation, legend catalog/history
- * fetch) is dependency-injected, same pattern
- * composeCategoryBatch/fillAxisCountsChunked already use — no Supabase or
- * ai-generate import here.
+ * orchestration: every side effect (AI generation) is dependency-injected,
+ * same pattern composeCategoryBatch/fillAxisCountsChunked already use — no
+ * Supabase or ai-generate import here. The legend item (core loop redesign
+ * §4) computes its archetypeCode purely (classify.ts, no side effect) and
+ * generates its story through the same injected `generateRollText` as every
+ * other item — legends64/story-prompt.ts is imported specifically (not
+ * legends64/generate-story.ts) because that file pulls in store.ts ->
+ * supabase, which would break this module's no-Supabase guarantee.
  */
 import { readAllCategories, type CategoryReading } from '@/lib/categories';
-import { buildLegendView, type LegendMatch, type LegendValues } from '@/lib/legends/match';
-import type { LegendCatalog } from '@/lib/legends/store';
+import { splitArchetypeCode } from '@/lib/legends64/archetypes';
+import { archetypeCode, type LegendValues } from '@/lib/legends64/classify';
+import { buildLegendStoryPrompt, parseLegendStoryBody } from '@/lib/legends64/story-prompt';
+import { legendsUnlocked } from '@/lib/questions/progressive-unlock';
 import { hasReliableChange, snapshotFromTracks, type TraitSnapshot } from '@/lib/rci';
 import { divergingAxesFromTracks, formatDivergenceNote } from '@/lib/trait-history';
 import { buildStoryPrompt, parseStoryBody, storyReady } from '@/lib/sage-story';
@@ -30,8 +36,6 @@ export interface RollItem {
 }
 
 export interface RollComposeDeps {
-  fetchLegendCatalog: () => Promise<LegendCatalog>;
-  fetchSeenVariantIds: () => Promise<ReadonlySet<string>>;
   /**
    * One generation call — injected, same DI pattern
    * composeCategoryBatch/fillAxisCountsChunked already use; a real caller
@@ -52,11 +56,28 @@ export interface ComposedRoll {
 }
 
 /**
+ * Display-only mirror of reveal_roll_item's own pricing (wave46/47 SQL:
+ * `v_price := case v_type when 'legend' then 5 else 1 end;`) — the RPC is
+ * still the authoritative source (it returns the real `price` charged on
+ * reveal), this just lets a screen show a cost before the user taps Reveal
+ * without a round trip.
+ */
+export function rollItemPrice(type: RollItemType): number {
+  return type === 'legend' ? 5 : 1;
+}
+
+/**
  * Eligibility per §5/§7's try_roll pseudocode: a first-ever roll (no
  * snapshot yet), or a genuine RCI-detected change since the last one. Pure
- * — does not itself claim quota or write anything; the caller (Edge
- * Function) checks this BEFORE calling claim_roll(), so an ineligible
- * client can never burn quota or generate content.
+ * — does not itself claim quota or write anything.
+ *
+ * NOT independently server-enforced today: the real caller (src/lib/rolls/run.ts)
+ * checks this client-side before calling claimRoll(), which reduces
+ * unnecessary claims for an honest client but does not stop a modified
+ * client from skipping this check and calling claimRoll() directly — a
+ * known, accepted gap (see run.ts's docstring for the full reasoning and
+ * what actually still bounds the cost regardless: claimRoll +
+ * claimRollGeneration, both real server-side RPCs).
  */
 export function rollEligible(
   tracks: readonly TraitTrack[],
@@ -108,18 +129,46 @@ export async function composeRoll(
     throw new Error(`composeRoll: expected ${ROLL_CATEGORY_COUNT} distinct category ids, got ${distinctIds.size} (duplicate id in the live catalog)`);
   }
 
-  const [catalog, seenVariantIds] = await Promise.all([
-    deps.fetchLegendCatalog(),
-    deps.fetchSeenVariantIds(),
-  ]);
-  const legendView = buildLegendView(catalog, values, seenVariantIds);
-  const topLegend: LegendMatch | null = legendView.cards[0] ?? null;
-
+  // Rewired to the Legends 64-archetype system (core loop redesign §4,
+  // T-15) — the old figure-catalog matcher (legends/match.ts,
+  // legends/store.ts) is gone. archetypeCode() is always computable, but the
+  // STORY is a real AI call, so this item is now gated on `legendsUnlocked`
+  // — the SAME threshold the standalone Legends screen itself uses before
+  // it will generate anything (legends.tsx's `locked`/thin-profile checks).
+  // An earlier draft of this had NO gate at all, reasoning that the old
+  // figure-catalog system always attempted a match regardless of profile
+  // depth — caught in review as the wrong precedent to follow: that old
+  // behavior was free (no AI call), so "always attempt" cost nothing; this
+  // is a real generation, and Story's own gate right below exists for
+  // exactly this reason ("rather than asking the model to write
+  // diagnosis-adjacent prose from an empty settled-notes list") — a legend
+  // read from an all-default 'LLL-LLL' code for a brand-new profile is the
+  // same category of problem. Reuses the same `deps.generateRollText` DI
+  // every other roll item already goes through (ROLL_META), rather than a
+  // new metadata declaration, since buildLegendStoryPrompt's shape (pure
+  // function of pole phrases, no name/history) matches ROLL_META's own
+  // "bucket shareable" description — this is deliberately different from
+  // the standalone Legends screen's LEGEND_STORY_META (personalized, NOT
+  // bucket-shareable): that screen's "always fresh, never reused" is a
+  // product choice about a specific user's repeated manual taps/rerolls,
+  // not a claim that the underlying prompt itself carries per-user history.
+  let legendResult: RollItem['result'] = { ready: false, matched: false };
+  if (legendsUnlocked(tracks)) {
+    const code = archetypeCode(values);
+    const split = splitArchetypeCode(code);
+    if (split) {
+      const legendText = await deps.generateRollText(buildLegendStoryPrompt(split.core, split.modifier));
+      const story = legendText ? parseLegendStoryBody(legendText) : null;
+      if (story) {
+        legendResult = { ready: true, matched: true, archetypeCode: code, story };
+      }
+    }
+  }
   const items: RollItem[] = [
     {
       type: 'legend',
       categoryId: null,
-      result: topLegend ? { ready: true, matched: true, ...topLegend } : { ready: false, matched: false },
+      result: legendResult,
     },
   ];
 
