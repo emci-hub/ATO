@@ -63,6 +63,22 @@ import {
   recordDefendWin,
   setAvatarHero,
 } from '../src/play/playStore';
+import {
+  BOUND_BOSS_MAX_ON_BOARD,
+  HERO_TOWER_SKILL_COOLDOWN_MS,
+  HERO_TOWER_STATS,
+  TOWER_SKILL_DAMAGE_MULT,
+  boundBossHeroId,
+  createDefendLive,
+  heroTowerTarget,
+  isHeroBoundTower,
+  placeBoundBoss,
+  puffPosition,
+  removeBoundBoss,
+  stepDefendLive,
+  type Puff,
+} from '../src/play/defend';
+import { BOARD_MAPS } from '../src/play/board-data';
 
 /** The Batch 1 roster, in authoring order. */
 const EXPECTED_IDS = ['archangel', 'aurex', 'corvus', 'kitsune', 'oni'] as const;
@@ -631,5 +647,118 @@ for (const hero of heroes) {
   }
 }
 ok('boundHeroTowerClips resolves each hero to its tower subset (idle/attack/skill)');
+
+/* ------------------------------------------------------------- A6 --------
+ * Bound Boss PLACE: a hero bound as a tower places on a pad (FREE for v1),
+ * auto-attacks like a crystal/chunk tower, and auto-casts its skill when the
+ * hero authors `clips.skill` (Archangel Ultimate / Oni Iaijutsu). The engine
+ * (`defend.ts`) is pure, so the whole place/remove/combat contract is
+ * assertable offline.
+ * ------------------------------------------------------------------------- */
+
+// The documented stats pick: crystal-like, and FREE place for v1.
+assert.equal(HERO_TOWER_STATS.placeCost, 0, 'a hero tower places free for v1 (economy TBD)');
+assert.ok(HERO_TOWER_STATS.baseAttack > 0 && HERO_TOWER_STATS.cooldownMs > 0 && HERO_TOWER_STATS.range > 0, 'hero tower has a full stat block');
+assert.equal(HERO_TOWER_SKILL_COOLDOWN_MS, 12_000, 'hero tower skill CD mirrors the archer tower default');
+assert.equal(isHeroBoundTower('archangel'), true, 'archangel is a hero tower');
+assert.equal(isHeroBoundTower('oni'), true, 'oni is a hero tower');
+assert.equal(isHeroBoundTower('ember_sovereign'), false, 'the cycle boss is not a hero tower');
+assert.equal(isHeroBoundTower('nobody'), false, 'an unknown id is not a hero tower');
+ok('hero-tower stats are fixed + free, and isHeroBoundTower splits hero vs cycle boss');
+
+// Cycle-boss ART mapping (PRODUCT LOCK): the Final cycle boss draws the
+// Archangel kit; a hero tower resolves itself; an unmapped id has no hero art.
+assert.equal(boundBossHeroId('ember_sovereign'), 'archangel', 'the Final cycle boss draws Archangel');
+assert.equal(boundBossHeroId('archangel'), 'archangel', 'a hero tower resolves its own hero id');
+assert.equal(boundBossHeroId('oni'), 'oni', 'Oni resolves itself as a hero tower');
+assert.equal(boundBossHeroId('nobody'), null, 'an unmapped id has no hero art');
+ok('boundBossHeroId maps the Final cycle boss → Archangel and resolves hero towers');
+
+// Place: a hero tower lands on an empty pad free, and blocks on occupied / cap.
+const live = createDefendLive(1, { boardId: 'ato', scrap: 100 });
+const placedHero = placeBoundBoss(live, 0, 'archangel', 1);
+assert.ok(placedHero, 'a hero bound as a tower places on an empty pad');
+assert.equal(placedHero.scrap, 100, 'and places FREE — no scrap is deducted');
+assert.equal(placedHero.boundBosses[0]?.bossId, 'archangel');
+assert.equal(placeBoundBoss(placedHero, 0, 'oni', 1), null, 'an occupied pad is refused');
+const twoHeroes = placeBoundBoss(placedHero, 1, 'oni', 1);
+assert.ok(twoHeroes, 'a second hero tower places (cap is 2)');
+assert.equal(
+  placeBoundBoss(twoHeroes, 2, 'corvus', 1),
+  null,
+  `a third Bound Boss is refused at BOUND_BOSS_MAX_ON_BOARD (${BOUND_BOSS_MAX_ON_BOARD})`,
+);
+assert.equal(placeBoundBoss(live, 0, 'nobody', 1), null, 'an unknown bound-boss id is refused');
+ok('placeBoundBoss places hero towers free and enforces pad + board caps');
+
+// Remove: frees the pad, keeps the OWNED + BOUND record (store is untouched).
+const removed = removeBoundBoss(twoHeroes, twoHeroes.boundBosses[0].id);
+assert.ok(removed, 'removing a placed Bound Boss works');
+assert.equal(removed.boundBosses.length, 1, 'and lifts only that one tower');
+assert.equal(removed.boundBosses[0]?.bossId, 'oni', 'the other bound boss stays placed');
+assert.equal(removeBoundBoss(twoHeroes, 9999), null, 'removing an id not on the board is a no-op');
+ok('removeBoundBoss frees the pad and keeps the bound record');
+
+// Combat: a hero tower auto-attacks the highest-HP creep in range and casts its
+// skill on cooldown when a target is in range. Place a puff on the path within
+// the hero tower's range, step once, and read the damage + cooldowns back.
+function distNearPad(pad: { x: number; y: number }, within: number): number {
+  const map = BOARD_MAPS.ato;
+  for (let d = 0; d <= 1; d += 0.0005) {
+    const pos = puffPosition(d, map);
+    if (Math.hypot(pos.x * 100 - pad.x, pos.y * 100 - pad.y) <= within) return d;
+  }
+  return -1;
+}
+function makePuff(dist: number, hp: number, id: number): Puff {
+  return {
+    id,
+    dist,
+    hp,
+    maxHp: hp,
+    slowMs: 0,
+    slowFactor: 1,
+    kind: 'puff',
+    tint: null,
+    size: 1,
+    burstHpPct: null,
+    burstFired: false,
+    laneIndex: 0,
+  };
+}
+const pad0 = BOARD_MAPS.ato.pads[0];
+const d = distNearPad(pad0, HERO_TOWER_STATS.range - 2);
+assert.ok(d >= 0, 'found a path point within hero-tower range of pad 0');
+// Highest-HP-in-range target rule: two puffs, the fatter one wins the hit.
+const twoPuffs: Puff[] = [makePuff(d, 60, 1), makePuff(d, 100, 2)];
+const combatState = { ...placedHero, puffs: twoPuffs, schedule: [], elapsedMs: 0 };
+const target = heroTowerTarget(combatState.boundBosses[0], combatState.puffs, BOARD_MAPS.ato);
+assert.ok(target, 'a hero tower acquires a target in range');
+assert.equal(target?.id, 2, 'and picks the highest-HP creep in range');
+const stepped = stepDefendLive(
+  combatState,
+  100,
+  { wavePower: 1, towerSpeed: 1, avatarLevel: 1, typeMatch: 0, avatarStars: 0 },
+  { x: 0, y: 0 },
+);
+const afterBig = stepped.state.puffs.find((p) => p.id === 2);
+assert.ok(afterBig, 'the fat puff survives one tick');
+const expectedHp =
+  100 - HERO_TOWER_STATS.baseAttack - HERO_TOWER_STATS.baseAttack * TOWER_SKILL_DAMAGE_MULT;
+assert.ok(
+  Math.abs((afterBig?.hp ?? 0) - expectedHp) < 0.01,
+  `hero tower auto-attack + skill dropped the fat puff to ~${expectedHp.toFixed(1)} (got ${afterBig?.hp})`,
+);
+assert.equal(
+  stepped.state.boundBosses[0]?.cooldownMs,
+  HERO_TOWER_STATS.cooldownMs,
+  'the hero tower attack cooldown reset',
+);
+assert.equal(
+  stepped.state.boundBosses[0]?.skillCooldownMs,
+  HERO_TOWER_SKILL_COOLDOWN_MS,
+  'the hero tower skill (Archangel Ultimate) fired and set its cooldown',
+);
+ok('hero towers auto-attack the highest-HP creep and auto-cast their skill on CD');
 
 console.log(`\nAll ${passed} hero-contract checks passed.`);

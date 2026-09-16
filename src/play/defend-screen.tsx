@@ -45,6 +45,7 @@ import {
   AVATAR_RANGE,
   BOUND_BOSS_MAX_ON_BOARD,
   DEFEND_TICK_MS,
+  HERO_TOWER_STATS,
   type DefendMap,
   MAX_TOWERS,
   SKILL_COOLDOWN_MS,
@@ -58,8 +59,12 @@ import {
   creepLaneHalf,
   creepRole,
   defendDifficulty,
+  boundBossHeroId,
+  heroTowerTarget,
+  isHeroBoundTower,
   placeBoundBoss,
   placeTower,
+  removeBoundBoss,
   retryDefendLive,
   stepDefendLive,
   puffHeading,
@@ -74,7 +79,7 @@ import {
 } from '@/play/defend';
 import { waveDefFor } from '@/play/director';
 import { avatarDef } from '@/play/avatars';
-import { allHeroes } from '@/play/heroes-data';
+import { allHeroes, heroName } from '@/play/heroes-data';
 import { PlayFrame } from '@/play/play-frame';
 import { HeroOwnSheet } from '@/play/hero-own-sheet';
 import { NeonLabel, NeonPill, NEON_ROW_LINE } from '@/play/neon-ui';
@@ -106,6 +111,7 @@ import {
   skinWalkFace,
   skinWalkFaceIndex,
   skinWalkFrames,
+  resolveBoundHeroTowerKit,
   towerSkinRole,
   type SkinAnimClipName,
   type SkinRole,
@@ -926,6 +932,8 @@ export function DefendScreen({
   // tower breathes idle on its pad in setup too; it retires a finished attack
   // one-shot back to idle and bumps a counter only when a tower frame changes
   // (a tower with no idle/attack art never bumps — it stays a static rotation).
+  // A HERO bound as a tower (A6) rides the same tick + clip player, keyed by
+  // its own id (ids are unique across towers AND bound bosses — one `nextId`).
   // While paused it slides the clip clocks forward with real time, matching the
   // Avatar so a one-shot never expires on a frozen board. Never touches engine
   // state.
@@ -944,11 +952,18 @@ export function DefendScreen({
             if (s.onceEndAt > 0) s.onceEndAt += dt;
           }
         }
+        for (const bb of current?.boundBosses ?? []) {
+          const s = towerAnimRef.current[bb.id];
+          if (s) {
+            s.clipStartAt += dt;
+            if (s.onceEndAt > 0) s.onceEndAt += dt;
+          }
+        }
         lastTickAt = now;
         return; // no bump → the frame renders frozen, matching the sim
       }
       lastTickAt = now;
-      if (!current || current.towers.length === 0) return;
+      if (!current || (current.towers.length === 0 && current.boundBosses.length === 0)) return;
       let changed = false;
       for (const tower of current.towers) {
         const role = TOWER_KIT_ROLES[tower.kind];
@@ -968,6 +983,29 @@ export function DefendScreen({
         const key = `${state.clip}:${towerClipFrame(state, now, role)}`;
         if (lastFrameKey.get(tower.id) !== key) {
           lastFrameKey.set(tower.id, key);
+          changed = true;
+        }
+      }
+      for (const bb of current.boundBosses) {
+        const heroId = boundBossHeroId(bb.bossId);
+        if (!heroId) continue; // no hero art mapped — static placeholder only
+        const role = resolveBoundHeroTowerKit(heroId);
+        const hasClips =
+          towerClipFrames('idle', role) > 0 ||
+          towerClipFrames('attack', role) > 0 ||
+          towerClipFrames('skill', role) > 0;
+        if (!hasClips) continue; // static rotation — no clip to advance
+        const prev = towerAnimRef.current[bb.id];
+        const state: TowerAnimState = prev ?? { clip: 'idle', clipStartAt: now, onceEndAt: 0 };
+        if (state.onceEndAt > 0 && now >= state.onceEndAt) {
+          state.clip = 'idle';
+          state.clipStartAt = now;
+          state.onceEndAt = 0;
+        }
+        towerAnimRef.current[bb.id] = state;
+        const key = `${state.clip}:${towerClipFrame(state, now, role)}`;
+        if (lastFrameKey.get(bb.id) !== key) {
+          lastFrameKey.set(bb.id, key);
           changed = true;
         }
       }
@@ -1570,6 +1608,37 @@ export function DefendScreen({
           startTowerOnce('skill', tower.id, TOWER_KIT_ROLES[tower.kind]);
         }
       }
+      // A6 — a hero bound as a tower (and a cycle boss mapped to a hero, e.g.
+      // Ember Sovereign → Archangel): same shot FX + clip triggers as a tower,
+      // but resolved through the hero's own tower kit (`resolveBoundHeroTowerKit`)
+      // and targeted by `heroTowerTarget`. A cycle boss with no hero art mapped
+      // keeps its placeholder and no FX.
+      for (const bb of current.boundBosses) {
+        const heroId = boundBossHeroId(bb.bossId);
+        if (!heroId) continue;
+        const kitRole = resolveBoundHeroTowerKit(heroId);
+        const target = heroTowerTarget(bb, current.puffs, mapNow);
+        const pad = mapNow.pads[bb.pad];
+        if (!target) continue;
+        const tpos = creepDrawPosition(target, mapNow, creepLaneHalfFor(target));
+        const tx = tpos.x * 100;
+        const ty = tpos.y * 100;
+        const aimLen = Math.max(1, Math.hypot(tx - pad.x, ty - pad.y));
+        towerFaceRef.current[bb.id] = skinWalkFace(
+          (tx - pad.x) / aimLen,
+          towerFaceRef.current[bb.id] ?? 'e',
+        );
+        const after = step.state.boundBosses.find((b) => b.id === bb.id);
+        const fired = after != null && after.cooldownMs > bb.cooldownMs + 1;
+        if (fired) {
+          spawnShot(pad.x, pad.y, tx, ty);
+          startTowerOnce('attack', bb.id, kitRole);
+        }
+        const skillCast = after != null && after.skillCooldownMs > bb.skillCooldownMs + 1;
+        if (skillCast) {
+          startTowerOnce('skill', bb.id, kitRole);
+        }
+      }
       // §9m boss warn: peek the remaining schedule and raise the banner ONCE, a
       // beat before the boss steps in (or the tick it lands, if the lead was
       // skipped by a big dt). Display only — the sim keeps running under it, so
@@ -1678,12 +1747,12 @@ export function DefendScreen({
     sim && selectedPad != null
       ? sim.boundBosses.find((bb) => bb.pad === selectedPad) ?? null
       : null;
-  /** Unlocked Bound Bosses (stars ≥ 1) the player can place. A "bound boss"
-   * with no def in `bound_bosses.json` is a HERO bound as a tower (Slice A2) —
-   * its tower def is A5/A6 content, so it is listed in the save but not yet
-   * placeable; skip it rather than render a row that does nothing. */
+  /** Unlocked Bound Bosses (stars ≥ 1) the player can place — the cycle boss
+   * (a `bound_bosses.json` def) AND any HERO bound as a tower (A6, `heroById`
+   * resolves). A hero tower places FREE and draws its own idle/attack/skill
+   * clips via `resolveBoundHeroTowerKit`. */
   const unlockedBoundBosses = view.boundBosses.filter(
-    (bb) => bb.unlocked && getBoundBossDef(bb.id) != null,
+    (bb) => bb.unlocked && (getBoundBossDef(bb.id) != null || isHeroBoundTower(bb.id)),
   );
   const boundBossCount = sim?.boundBosses.length ?? 0;
   /** Board tower cap reached — pads stay open but no more towers can deploy. */
@@ -1706,7 +1775,57 @@ export function DefendScreen({
 
   const placeOnBoundBoss = (bossId: string, stars: number) => {
     if (selectedPad == null) return;
-    setSim((prev) => (prev ? placeBoundBoss(prev, selectedPad, bossId, stars) ?? prev : prev));
+    const prev = simRef.current;
+    if (!prev) return;
+    const next = placeBoundBoss(prev, selectedPad, bossId, stars);
+    if (!next) return;
+    // A6 — seed the bound boss's clip player the moment it lands so its idle
+    // loop breathes from frame 0 (hero tower OR a cycle boss mapped to a hero).
+    if (boundBossHeroId(bossId)) {
+      const placed = next.boundBosses.find((b) => b.pad === selectedPad && b.bossId === bossId);
+      if (placed) {
+        towerAnimRef.current[placed.id] = { clip: 'idle', clipStartAt: Date.now(), onceEndAt: 0 };
+        towerFaceRef.current[placed.id] = 'e';
+      }
+    }
+    simRef.current = next;
+    setSim(next);
+  };
+
+  /** Sell / remove the selected Bound Boss: frees the pad, keeps the hero (or
+   * cycle boss) OWNED + BOUND in playStore — the run's placed tower only. */
+  const removeSelectedBoundBoss = () => {
+    if (!selectedBoundBoss) return;
+    setSim((prev) => (prev ? removeBoundBoss(prev, selectedBoundBoss.id) ?? prev : prev));
+  };
+
+  /** Dev kit only (A6 smoke): place the first bound hero (or the cycle boss if
+   * no hero is bound) on the next free pad, without hand-tapping a pad. No-op
+   * when nothing is placeable or the board has no free pad. */
+  const devPlaceBoundOnNextFreePad = () => {
+    const current = simRef.current;
+    if (!current) return;
+    const candidate =
+      unlockedBoundBosses.find((bb) => isHeroBoundTower(bb.id)) ?? unlockedBoundBosses[0];
+    if (!candidate) return;
+    const occupied = new Set([
+      ...current.towers.map((t) => t.pad),
+      ...current.boundBosses.map((b) => b.pad),
+    ]);
+    const pad = boardMap.pads.findIndex((_, index) => !occupied.has(index));
+    if (pad < 0) return;
+    const next = placeBoundBoss(current, pad, candidate.id, candidate.stars);
+    if (next) {
+      if (boundBossHeroId(candidate.id)) {
+        const placed = next.boundBosses.find((b) => b.pad === pad && b.bossId === candidate.id);
+        if (placed) {
+          towerAnimRef.current[placed.id] = { clip: 'idle', clipStartAt: Date.now(), onceEndAt: 0 };
+          towerFaceRef.current[placed.id] = 'e';
+        }
+      }
+      simRef.current = next;
+      setSim(next);
+    }
   };
 
   /** Dev kit only: park the seat at the Final band and start the run with the
@@ -2262,7 +2381,9 @@ export function DefendScreen({
                     selectedTower
                       ? TOWER_DEFS[selectedTower.kind].range
                       : selectedBoundBoss
-                        ? getBoundBossDef(selectedBoundBoss.bossId)?.range ?? 18
+                        ? isHeroBoundTower(selectedBoundBoss.bossId)
+                          ? HERO_TOWER_STATS.range
+                          : getBoundBossDef(selectedBoundBoss.bossId)?.range ?? 18
                         : 18
                   }
                   fill="none"
@@ -2343,9 +2464,62 @@ export function DefendScreen({
                   </G>
                 );
               })}
-              {/* §19 Bound Boss carries the heavy Final unit sprite. */}
+              {/* §19 Bound Boss: a cycle boss with no hero art mapped keeps the
+               * heavy Final unit placeholder; a HERO bound as a tower AND a
+               * cycle boss mapped to a hero (Ember Sovereign → Archangel) draw
+               * that hero's idle/attack/skill clips through the same tower clip
+               * kit the towers use, on a sticky E/W side profile. */}
               {sim?.boundBosses.map((bb) => {
                 const pad = boardMap.pads[bb.pad];
+                const heroId = boundBossHeroId(bb.bossId);
+                if (heroId) {
+                  const kitRole = resolveBoundHeroTowerKit(heroId);
+                  const face = towerFaceRef.current[bb.id] ?? 'e';
+                  const hasClips =
+                    towerClipFrames('idle', kitRole) > 0 ||
+                    towerClipFrames('attack', kitRole) > 0 ||
+                    towerClipFrames('skill', kitRole) > 0;
+                  if (__DEV__ && !hasClips) {
+                    // A6 — a bound boss that resolved no clips draws a static
+                    // rotation. Fail loudly in dev so an un-bundled hero (or a
+                    // broken resolve) is never a silent freeze.
+                    console.warn(
+                      `[A6] bound boss "${bb.bossId}" (→ ${heroId}) resolved no idle/attack/skill clips — ` +
+                        `falling back to its static rotation. Is its hero art bundled?`,
+                    );
+                  }
+                  let source: ImageSourcePropType | undefined;
+                  if (hasClips) {
+                    const anim: TowerAnimState =
+                      towerAnimRef.current[bb.id] ??
+                      { clip: 'idle', clipStartAt: Date.now(), onceEndAt: 0 };
+                    const frame = towerClipFrame(anim, Date.now(), kitRole);
+                    source =
+                      directionalClipArt(
+                        kitRole.anims?.[anim.clip],
+                        roleAnimFaceIndex(kitRole, anim.clip, face),
+                        frame,
+                      ) ?? roleArt(kitRole, roleFaceArtIndex(kitRole, face));
+                  } else {
+                    source = roleArt(kitRole, roleFaceArtIndex(kitRole, face));
+                  }
+                  if (!source) return null;
+                  // A6 — a bound boss is tower-sized, not hero-sized: cap the
+                  // hero's natural `units` so it reads on a pad next to towers.
+                  const size = Math.min(kitRole.units ?? TOWER_PAD_UNITS, 16);
+                  const footAt = roleFootAt(kitRole);
+                  const box = { x: pad.x - size / 2, y: pad.y - size * footAt, size };
+                  return (
+                    <SvgImage
+                      key={`bb-hero-art-${bb.id}`}
+                      href={source}
+                      x={box.x}
+                      y={box.y}
+                      width={box.size}
+                      height={box.size}
+                    />
+                  );
+                }
                 const role: SkinRoleId = 'unit.final';
                 const source = skinArt(role);
                 if (!source) return null;
@@ -2372,7 +2546,7 @@ export function DefendScreen({
                     fontWeight="bold"
                     fill="#FFFFFF"
                     textAnchor="middle">
-                    {'★' + bb.stars}
+                    {isHeroBoundTower(bb.bossId) ? heroName(bb.bossId) : '★' + bb.stars}
                   </SvgText>
                 );
               })}
@@ -2710,14 +2884,28 @@ export function DefendScreen({
             ) : selectedBoundBoss ? (
               <>
                 <ThemedText type="smallBold">
-                  {getBoundBossDef(selectedBoundBoss.bossId)?.name ?? 'Bound Boss'} · ★
-                  {selectedBoundBoss.stars}
+                  {isHeroBoundTower(selectedBoundBoss.bossId)
+                    ? heroName(selectedBoundBoss.bossId)
+                    : getBoundBossDef(selectedBoundBoss.bossId)?.name ?? 'Bound Boss'}
+                  {isHeroBoundTower(selectedBoundBoss.bossId) ? ' · bound hero' : ` · ★${selectedBoundBoss.stars}`}
                 </ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
-                  Bound Boss — fixed on the pad, stars only (no scrap upgrade).{' '}
-                  {getBoundBossDef(selectedBoundBoss.bossId)?.skill.name}:{' '}
-                  {getBoundBossDef(selectedBoundBoss.bossId)?.skill.description}
+                  {isHeroBoundTower(selectedBoundBoss.bossId)
+                    ? 'Bound hero tower — auto-attacks and casts its skill on cooldown. Remove frees the pad and keeps the hero bound.'
+                    : boundBossHeroId(selectedBoundBoss.bossId)
+                      ? `${heroName(boundBossHeroId(selectedBoundBoss.bossId)!)} kit — auto-attacks and casts its skill on cooldown. Remove frees the pad and keeps the boss bound.`
+                      : `Bound Boss — fixed on the pad, stars only (no scrap upgrade). ${
+                          getBoundBossDef(selectedBoundBoss.bossId)?.skill.name
+                        }: ${getBoundBossDef(selectedBoundBoss.bossId)?.skill.description}`}
                 </ThemedText>
+                <Pressable
+                  onPress={removeSelectedBoundBoss}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [styles.hudButton, pressed && styles.pressed]}>
+                  <ThemedText type="smallBold" themeColor="textSecondary">
+                    Remove
+                  </ThemedText>
+                </Pressable>
               </>
             ) : (
               <>
@@ -2755,7 +2943,9 @@ export function DefendScreen({
                     </ThemedText>
                     {unlockedBoundBosses.map((bb) => {
                       const def = getBoundBossDef(bb.id);
-                      const affordable = def != null && scrap >= def.place_cost;
+                      const hero = isHeroBoundTower(bb.id);
+                      const placeCost = hero ? HERO_TOWER_STATS.placeCost : def?.place_cost ?? 0;
+                      const affordable = scrap >= placeCost;
                       const atCap = boundBossCount >= BOUND_BOSS_MAX_ON_BOARD;
                       return (
                         <Pressable
@@ -2776,7 +2966,8 @@ export function DefendScreen({
                           <ThemedText
                             type="smallBold"
                             themeColor={affordable && !atCap ? undefined : 'textSecondary'}>
-                            {def?.name ?? bb.id} ★{bb.stars} · {def?.place_cost ?? 0} scrap
+                            {hero ? heroName(bb.id) : def?.name ?? bb.id}
+                            {hero ? ' · free' : ` ★${bb.stars} · ${placeCost} scrap`}
                             {atCap ? ' · max 2' : ''}
                           </ThemedText>
                         </Pressable>
@@ -3330,6 +3521,10 @@ export function DefendScreen({
               <DevRow
                 label="Clear owned heroes (→ Corvus)"
                 onPress={() => void onDevClearOwnedHeroes()}
+              />
+              <DevRow
+                label="Place bound on next free pad"
+                onPress={devPlaceBoundOnNextFreePad}
               />
               {allHeroes().map((hero) => (
                 <DevRow

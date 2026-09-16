@@ -54,9 +54,9 @@ import {
   boundBossStarDamage,
   boundBossStarSkillCdScale,
   getBoundBossDef,
-  type BoundBossDef,
 } from '@/play/engine/bound-boss';
 import { type TypeTag } from '@/play/engine/type-match';
+import { heroById } from '@/play/heroes-data';
 import { getTune } from '@/play/tune';
 import { ATO_ROAD_HALF, BOARD_MAPS, type BoardId, type BoardMap } from '@/play/board-data';
 import { defaultTowerSkin, towerSkillCooldownMs } from '@/play/tower-skins-data';
@@ -331,6 +331,57 @@ export type BoundBossTower = {
 /** Max Bound Bosses on the board at once (§9k). */
 export const BOUND_BOSS_MAX_ON_BOARD = 2;
 
+/* ---------------------------------------------------- hero bound as tower --- */
+/* A6 — a HERO bound as a tower (Slice A2 bind → place here). The hero's tower
+ * def is NOT a `bound_bosses.json` row; it is one FIXED stat block shared by
+ * every hero tower (documented pick: crystal-like chunk hits, no per-hero RPG
+ * numbers) plus the hero's own sprite clips for idle/attack/skill. */
+
+/** Hero-tower stats — one block for every bound hero. Crystal-like: a chunky
+ * auto-attack that picks the highest-HP creep in range. FREE place for v1: the
+ * hero is already owned + bound, so no scrap is charged while the hero-tower
+ * economy is still undecided (GAME_SPEC §9k's `place_cost` is for the cycle
+ * boss's fragment farm, not a hero bind). No star ladder — a bound hero is ★1
+ * until a hero star path lands. */
+export const HERO_TOWER_STATS = {
+  baseAttack: 22,
+  cooldownMs: 1300,
+  range: 20,
+  placeCost: 0,
+} as const;
+
+/** Hero-tower auto-skill cooldown (A6). Mirrors the archer tower's K1b default;
+ * a hero tower only casts when its art authors `clips.skill` (Archangel
+ * Ultimate, Oni Iaijutsu) — a hero with no skill clip has no auto-skill at all
+ * (no CD ticking, no damage, no anim), matching the tower null-skill rule. */
+export const HERO_TOWER_SKILL_COOLDOWN_MS = 12_000;
+
+/** True when a bound-boss id is a HERO bound as a tower (A6) — `heroById`
+ * resolves it — rather than the cycle boss whose def lives in
+ * `bound_bosses.json`. */
+export function isHeroBoundTower(bossId: string): boolean {
+  return heroById(bossId) != null;
+}
+
+/** A cycle boss's ART hero — the Final cycle boss (Ember Sovereign) draws the
+ * Archangel hero's cast kit (idle `Hover_Idle` / attack `Attack_01_Seraph_Strike`
+ * / skill `Ultimate_Final_Judgment`); a Scout cycle boss draws Crimson Oni.
+ * Keyed by the bound-boss id; the `bound_bosses.json` LABEL is untouched — only
+ * the ART + FSM resolve to the hero (PRODUCT LOCK: Final → Archangel, Scout →
+ * Oni). */
+const CYCLE_BOSS_HERO: Readonly<Record<string, string>> = {
+  ember_sovereign: 'archangel', // Final cycle boss
+  // scout cycle boss (future pack) → 'oni'
+};
+
+/** The hero id whose cast kit a Bound Boss tower draws: a HERO-bound tower is
+ * its own hero id; a cycle boss resolves through `CYCLE_BOSS_HERO`. Null = a
+ * cycle boss with no mapped hero art (it keeps its placeholder / no hero clips). */
+export function boundBossHeroId(bossId: string): string | null {
+  if (isHeroBoundTower(bossId)) return bossId;
+  return CYCLE_BOSS_HERO[bossId] ?? null;
+}
+
 export type DefendLive = {
   /** 1-based display wave (within its phase/map — Trial or Main). */
   wave: number;
@@ -512,18 +563,22 @@ export function towerUpgradeCost(tower: Tower): number {
   return TOWER_DEFS[tower.kind].levelCostScrap[tower.level] ?? 0;
 }
 
-/** Place a Bound Boss on an empty pad (§9k), deducting its scrap place cost.
- * Blocked when the boss isn't ≥ ★1, the pad is occupied, scrap is short, or
- * the board already holds `BOUND_BOSS_MAX_ON_BOARD` Bound Bosses. */
+/** Place a Bound Boss on an empty pad (§9k / A6), deducting its place cost.
+ * Accepts the cycle boss (a `bound_bosses.json` def, scrap `place_cost`) or a
+ * HERO bound as a tower (A6 — `HERO_TOWER_STATS`, FREE place). Blocked when the
+ * boss isn't ≥ ★1, the pad is occupied, scrap is short, or the board already
+ * holds `BOUND_BOSS_MAX_ON_BOARD` Bound Bosses. */
 export function placeBoundBoss(
   state: DefendLive,
   pad: number,
   bossId: string,
   stars: number,
 ): DefendLive | null {
-  const def = getBoundBossDef(bossId);
-  if (!def || stars < 1) return null;
-  if (state.scrap < def.place_cost) return null;
+  const hero = heroById(bossId);
+  const def = hero ? null : getBoundBossDef(bossId);
+  if ((!hero && !def) || stars < 1) return null;
+  const placeCost = hero ? HERO_TOWER_STATS.placeCost : def!.place_cost;
+  if (state.scrap < placeCost) return null;
   if (
     state.towers.some((tower) => tower.pad === pad) ||
     state.boundBosses.some((bb) => bb.pad === pad)
@@ -533,7 +588,7 @@ export function placeBoundBoss(
   if (state.boundBosses.length >= BOUND_BOSS_MAX_ON_BOARD) return null;
   return {
     ...state,
-    scrap: state.scrap - def.place_cost,
+    scrap: state.scrap - placeCost,
     boundBosses: [
       ...state.boundBosses,
       {
@@ -546,6 +601,22 @@ export function placeBoundBoss(
       },
     ],
     nextId: state.nextId + 1,
+  };
+}
+
+/** Remove a placed Bound Boss from the board, freeing its pad (§9k sell /
+ * remove; A6 — preferred "keep bound, free pad"). The OWNED + BOUND record in
+ * playStore is untouched — this only lifts the run's placed tower, so the hero
+ * stays bound and can be re-placed next run. Null when the id isn't on the
+ * board. */
+export function removeBoundBoss(
+  state: DefendLive,
+  boundBossId: number,
+): DefendLive | null {
+  if (!state.boundBosses.some((bb) => bb.id === boundBossId)) return null;
+  return {
+    ...state,
+    boundBosses: state.boundBosses.filter((bb) => bb.id !== boundBossId),
   };
 }
 
@@ -725,58 +796,86 @@ export function stepDefendLive(
     }
   }
 
-  // Bound Boss towers fire (§9k): auto-attack on CD + echo skill on CD. Auto
-  // only — no second skill button. The echo maps to the closed skill
-  // primitives (burst = instant AoE around the pad); slow_pulse / focus_beam
-  // are authored with future packs, no new primitive here.
+  // Bound Boss towers fire (§9k): auto-attack on CD + skill on CD. Auto only —
+  // no second skill button. A bound-boss id is EITHER the cycle boss (a
+  // `bound_bosses.json` def, echo = burst — slow_pulse / focus_beam are future
+  // packs) OR a HERO bound as a tower (A6 — `HERO_TOWER_STATS`, auto-skill only
+  // when its art authors `clips.skill`).
   const firedBoundBosses: BoundBossTower[] = [];
   for (const bb of state.boundBosses) {
-    const def = getBoundBossDef(bb.bossId);
-    if (!def) {
+    const hero = heroById(bb.bossId);
+    const def = hero ? null : getBoundBossDef(bb.bossId);
+    if (!hero && !def) {
       firedBoundBosses.push(bb);
       continue;
     }
     const pad = map.pads[bb.pad];
+    const range = hero ? HERO_TOWER_STATS.range : def!.range;
+    const baseAttack = hero ? HERO_TOWER_STATS.baseAttack : def!.base_attack;
+    const attackCd = hero ? HERO_TOWER_STATS.cooldownMs : def!.cooldown_ms;
+    const damageMult = hero ? 1 : boundBossStarDamage(def!, bb.stars);
     let cooldownMs = bb.cooldownMs - dtMs;
-    let skillCooldownMs = bb.skillCooldownMs - dtMs;
+    let skillCooldownMs = Math.max(0, bb.skillCooldownMs - dtMs);
 
-    // Auto-attack — highest current HP in range (a boss echoes its chunk hits).
+    // Auto-attack — highest current HP in range (a boss echoes its chunk hits;
+    // a hero tower shares the same crystal/chunk target rule).
     if (cooldownMs <= 0) {
-      const target = acquireBoundBossTarget(def, pad, puffs, map);
+      const target = acquireInRangeHighestHp(pad, range, puffs, map);
       if (target) {
-        const damage = def.base_attack * boundBossStarDamage(def, bb.stars) * boardMult;
+        const damage = baseAttack * damageMult * boardMult;
         puffs = puffs.map((p) => (p.id === target.id ? { ...p, hp: p.hp - damage } : p));
         if (puffs.some((p) => p.id === target.id && p.hp <= 0)) {
           scrap += scrapPerKill;
           puffs = puffs.filter((p) => p.id !== target.id);
         }
-        cooldownMs = def.cooldown_ms;
+        cooldownMs = attackCd;
       } else {
         cooldownMs = 0;
       }
     }
 
-    // Echo skill (burst): instant AoE damage around the pad on CD.
-    if (skillCooldownMs <= 0) {
-      if (def.skill.skill_id === 'burst') {
+    // Auto-skill. A hero tower casts one pulse on CD only when its hero authors
+    // a skill clip; the cycle boss always carries its burst echo.
+    if (hero != null) {
+      if (hero.clips.skill == null) {
+        skillCooldownMs = 0; // no skill clip → no skill path at all
+      } else if (skillCooldownMs <= 0) {
         const hitAny = puffs.some(
-          (puff) => padPuffDist(pad, puff.dist, map) <= def.skill.radius,
+          (puff) => padPuffDist(pad, puff.dist, map) <= TOWER_SKILL_RADIUS,
         );
         if (hitAny) {
-          const skillDamage =
-            def.base_attack * def.skill.power * boundBossStarDamage(def, bb.stars) * boardMult;
+          const skillDamage = HERO_TOWER_STATS.baseAttack * TOWER_SKILL_DAMAGE_MULT * boardMult;
           puffs = puffs.map((puff) => {
-            if (padPuffDist(pad, puff.dist, map) > def.skill.radius) return puff;
+            if (padPuffDist(pad, puff.dist, map) > TOWER_SKILL_RADIUS) return puff;
             return { ...puff, hp: puff.hp - skillDamage };
           });
           scrap += puffs.filter((p) => p.hp <= 0).length * scrapPerKill;
           puffs = puffs.filter((p) => p.hp > 0);
-          skillCooldownMs = def.skill.cooldown_ms * boundBossStarSkillCdScale(def, bb.stars);
+          skillCooldownMs = HERO_TOWER_SKILL_COOLDOWN_MS;
+        } else {
+          skillCooldownMs = 0;
+        }
+      }
+    } else if (skillCooldownMs <= 0) {
+      if (def!.skill.skill_id === 'burst') {
+        const hitAny = puffs.some(
+          (puff) => padPuffDist(pad, puff.dist, map) <= def!.skill.radius,
+        );
+        if (hitAny) {
+          const skillDamage =
+            def!.base_attack * def!.skill.power * boundBossStarDamage(def!, bb.stars) * boardMult;
+          puffs = puffs.map((puff) => {
+            if (padPuffDist(pad, puff.dist, map) > def!.skill.radius) return puff;
+            return { ...puff, hp: puff.hp - skillDamage };
+          });
+          scrap += puffs.filter((p) => p.hp <= 0).length * scrapPerKill;
+          puffs = puffs.filter((p) => p.hp > 0);
+          skillCooldownMs = def!.skill.cooldown_ms * boundBossStarSkillCdScale(def!, bb.stars);
         } else {
           skillCooldownMs = 0;
         }
       } else {
-        skillCooldownMs = def.skill.cooldown_ms;
+        skillCooldownMs = def!.skill.cooldown_ms;
       }
     }
 
@@ -896,17 +995,25 @@ export function towerTarget(tower: Tower, puffs: Puff[], map: DefendMap): Puff |
   return inRange.reduce((a, b) => (b.dist > a.dist ? b : a));
 }
 
-/** Bound Boss auto-attack target — highest current HP in range (a boss echoes
- * its chunky hits). */
-function acquireBoundBossTarget(
-  def: BoundBossDef,
+/** Highest current-HP puff within `range` of a pad — the chunk-hit target rule
+ * the cycle boss and a hero tower share (crystal-like). */
+function acquireInRangeHighestHp(
   pad: DefendWaypoint,
+  range: number,
   puffs: Puff[],
   map: DefendMap,
 ): Puff | null {
-  const inRange = puffs.filter((puff) => padPuffDist(pad, puff.dist, map) <= def.range);
+  const inRange = puffs.filter((puff) => padPuffDist(pad, puff.dist, map) <= range);
   if (inRange.length === 0) return null;
   return inRange.reduce((a, b) => (b.hp > a.hp ? b : a));
+}
+
+/** Hero-tower auto-attack target (A6) — highest current HP in `HERO_TOWER_STATS`
+ * range. Exported so the entity presenter aims its shot at the exact enemy the
+ * engine will damage (the same no-math-drift contract as `towerTarget`). */
+export function heroTowerTarget(bb: BoundBossTower, puffs: Puff[], map: DefendMap): Puff | null {
+  const pad = map.pads[bb.pad];
+  return acquireInRangeHighestHp(pad, HERO_TOWER_STATS.range, puffs, map);
 }
 
 /** Subtract damage; vine also (re)applies its slow. Returns a new array. */
