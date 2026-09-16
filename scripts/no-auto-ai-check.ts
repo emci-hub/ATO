@@ -81,7 +81,6 @@ const GENERATORS = [
   'runOngoingRound',
   'composeOngoingRound',
   'prewarmBankPool',
-  'routeQuestions',
 ];
 
 /**

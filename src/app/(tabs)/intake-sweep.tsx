@@ -1,4 +1,3 @@
-import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,29 +8,35 @@ import { QuestionsFold } from '@/components/questions-fold';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { crisisFlagsForWindow } from '@/lib/crisis/days';
 import { isFullProfileDone } from '@/lib/full-profile-gate';
 import { useMe } from '@/hooks/use-me';
 import { useSession } from '@/hooks/use-session';
 import { type TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
-import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
 /**
  * Questions — where the full profile gets built, and the only screen that can
  * add to it (ISOLATION_PLAN §7 Card D).
  *
  * One surface: `QuestionsFold` — the 50-question bank while it is unfinished,
- * then the rotating 25-item round once it is. Renders `alwaysOpen`
+ * then the "Next 25 questions" round once it is. Renders `alwaysOpen`
  * (2026-09-15): the bank list is expanded immediately, no collapse header
- * and no tap needed — safe, since the bank is local/no-backend. Its separate
- * "Tell Sage more" 5-item rotation, which CAN reach a paid AI batch once the
- * bank is finished, keeps its own explicit "Tell Sage more" press instead of
- * loading with the rest — an always-open fold has no collapse-header tap left
- * to gate it, so it needs one of its own or it would auto-load with no press
- * behind it, exactly the bug ISOLATION_PLAN §7 Card D removed hours earlier
- * the same day (emci, after review caught the regression here). The 25-item
- * round is separately behind its own "Next 25 questions" press, unaffected.
+ * and no tap needed — safe, since the bank is local/no-backend. The 25-item
+ * round stays behind its own explicit "Next 25 questions" press.
+ *
+ * REMOVED 2026-09-16 (emci): the Infinite Questions inline feed and the card
+ * that wrapped it ("A few questions · N of 16 unanswered" / "Tap when you
+ * feel like it. Not today's card."). It rendered below the bank/round branch
+ * unconditionally, so a finished profile saw a second, unrelated question
+ * under "Next 25 questions" in the same box. Three things went with it, all
+ * of which existed only to serve it:
+ *   - the `?axis=` deep-link hint. Callers across the app still pass it and
+ *     it is now IGNORED — the bank shows every axis at once, so there is no
+ *     "next batch" left to front-load. The links still land here correctly.
+ *   - the crisis-day fetch. Crisis suppressed the FEED (inside
+ *     `routeQuestions`); the local bank and the round were never gated on it,
+ *     so nothing on this screen reads it any more.
+ *   - the empty/checkpoint/skip states, which were the feed's alone.
  *
  * REMOVED 2026-09-15 (emci): the "A faster pass" full sweep (`IntakeSweep`) —
  * the 50 bank questions above already cover the same ground. Its now-unused
@@ -50,35 +55,8 @@ export default function IntakeSweepTabScreen() {
   const { session } = useSession();
   const userId = session?.user.id;
   const { me, refresh } = useMe(userId);
-  // Every "answer questions about X" CTA in the app deep-links here with
-  // `?axis=`. It is a routing hint for the fold's next load, not an auto-load:
-  // opening the fold is what loads (Card D).
-  const params = useLocalSearchParams<{ axis?: string }>();
-  const focusAxis = (TRAIT_AXES as readonly string[]).includes(params.axis ?? '')
-    ? (params.axis as TraitAxis)
-    : undefined;
-  const [crisisToday, setCrisisToday] = useState(false);
-  const [flagsReady, setFlagsReady] = useState(false);
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [tracksReady, setTracksReady] = useState(false);
-
-  useEffect(() => {
-    if (!userId || !me) return;
-    let cancelled = false;
-    crisisFlagsForWindow(userId, me.timezone)
-      .then((flags) => {
-        if (cancelled) return;
-        setCrisisToday(flags.crisisToday);
-        setFlagsReady(true);
-      })
-      .catch((err) => {
-        console.log('[questions] crisis flags error:', err);
-        if (!cancelled) setFlagsReady(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [userId, me?.timezone]);
 
   // Tracks feed the unlock gate inside the fold. Deliberately NOT keyed on a
   // `me` field: a trait write patches only trait values / `trait_sources` /
@@ -134,13 +112,11 @@ export default function IntakeSweepTabScreen() {
             profile and hand a complete-profile user a bank-only pack to work
             through first.
           */}
-          {me && flagsReady && tracksReady ? (
+          {me && tracksReady ? (
             <QuestionsFold
               me={me}
               history={[]}
-              crisisToday={crisisToday}
               onUpdated={refreshAfterAnswer}
-              focusAxis={focusAxis}
               tracks={tracks}
               alwaysOpen
             />

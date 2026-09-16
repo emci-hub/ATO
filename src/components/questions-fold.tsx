@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import {
@@ -7,13 +7,10 @@ import {
   uniqueCategoryAxes,
   type CategoryQuestionRow,
 } from '@/components/paged-questions';
-import { SettingsFold } from '@/components/settings-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { getCategoryDefs, type CategoryId } from '@/lib/categories';
 import { useCategoryDefs } from '@/lib/category-catalog';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { updateTraits, type Me } from '@/lib/me';
@@ -22,276 +19,75 @@ import { claimOngoingRoundCompleteQuiet } from '@/lib/ato-tokens-server';
 import { ATO_TOKEN_PRICE, atoPriceLine, atoTokenBalanceOf, ATO_TOKEN_NEED_MORE } from '@/lib/ato-tokens';
 import { rerollQuestionItem } from '@/lib/questions/reroll';
 import { Sentry } from '@/lib/sentry';
-import { deferredUnansweredAxes, mergeCategoryPriority } from '@/lib/questions/deferral';
-import { contradictedAxesFrom, type TraitHistoryRow } from '@/lib/trait-history';
-import { fetchTraitHistory } from '@/lib/trait-history-store';
-import { unansweredAxisLabel, type TraitTrack } from '@/lib/trait-stability';
-import { TRAIT_AXES, traitStateFromRow, type TraitAxis } from '@/lib/traits';
-import {
-  QUESTIONS_CHECKPOINT,
-  QUESTIONS_CHECKPOINT_AFTER,
-  QUESTIONS_EMPTY_CONSENT,
-  QUESTIONS_EMPTY_CRISIS,
-  QUESTIONS_EMPTY_DENIED,
-  QUESTIONS_EMPTY_QUOTA,
-  QUESTIONS_EMPTY_TRY,
-  QUESTIONS_KEEP_GOING,
-  QUESTIONS_LABEL,
-  QUESTIONS_LEDE,
-  QUESTIONS_LOAD_MORE,
-  QUESTIONS_SKIP_REST,
-  QUESTIONS_SKIP_THIS,
-} from '@/lib/questions/copy';
+import { type TraitTrack } from '@/lib/trait-stability';
+import { type TraitAxis } from '@/lib/traits';
 import { applyQuestionAnswer } from '@/lib/questions/answer';
-import { generateQuestionBatch } from '@/lib/questions/generate';
 import { bankProgressForAxis, bankTotalProgress } from '@/lib/questions/local';
 import { isFullProfileDone } from '@/lib/full-profile-gate';
 import { runOngoingRound } from '@/lib/questions/run-ongoing-round';
 import { prewarmBankPool } from '@/lib/questions/run-prewarm';
-import { nextPlayableItem, routeQuestions } from '@/lib/questions/route';
 import { isUnansweredQuestionItem } from '@/lib/questions/rotation';
-import {
-  answerQuestionItem,
-  fetchLatestOngoingRoundPack,
-  fetchLatestQuestionPack,
-  saveQuestionPack,
-  skipQuestionItem,
-  skipRestOfQuestionPack,
-} from '@/lib/questions/store';
+import { answerQuestionItem, fetchLatestOngoingRoundPack } from '@/lib/questions/store';
 import type {
   QuestionDraft,
-  QuestionItemRow,
   QuestionOption,
   QuestionPackRow,
-  RouteQuestionsResult,
 } from '@/lib/questions/types';
 import { controlBorderColor } from '@/lib/theme/chrome';
-import { shouldUseLocalAi } from '@/lib/ai/override';
-import { claimQuestionsBatch, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
 import type { CheckHistory } from '@/lib/voice/types';
 import { withTimeout } from '@/lib/timeout';
-
-function emptyCopy(kind: RouteQuestionsResult['kind']): string | null {
-  switch (kind) {
-    case 'consent-pending':
-      return QUESTIONS_EMPTY_CONSENT;
-    case 'consent-denied':
-      return QUESTIONS_EMPTY_DENIED;
-    case 'crisis':
-      return QUESTIONS_EMPTY_CRISIS;
-    case 'quota':
-      return QUESTIONS_EMPTY_QUOTA;
-    case 'empty':
-      return QUESTIONS_EMPTY_TRY;
-    case 'paused':
-      return QUESTIONS_CHECKPOINT;
-    default:
-      return null;
-  }
-}
-
-function isLocalId(id: string): boolean {
-  return id.startsWith('local-') || id === 'local';
-}
 
 /**
  * Ongoing-round completion, matching `claim_ongoing_round_complete` (wave52)
  * exactly: every item answered, skips NOT treated as resolved. Deliberately
- * not `nextUnansweredItem` — see `isUnansweredQuestionItem` (rotation.ts) for
- * why the round path needs the stricter predicate that the Infinite
- * Questions path above does not.
+ * not a "next unanswered" scan — see `isUnansweredQuestionItem` (rotation.ts)
+ * for why the round path needs this stricter predicate. The looser one existed
+ * for the Infinite Questions feed, deleted 2026-09-16.
  */
 function roundFullyAnswered(pack: QuestionPackRow): boolean {
   return !pack.items.some((item) => isUnansweredQuestionItem(item));
 }
 
-function markSkipped(pack: QuestionPackRow, itemId: string): QuestionPackRow {
-  return {
-    ...pack,
-    items: pack.items.map((row) =>
-      row.id === itemId ? { ...row, skippedAt: new Date().toISOString() } : row,
-    ),
-  };
-}
-
-function markRestSkipped(pack: QuestionPackRow): QuestionPackRow {
-  return {
-    ...pack,
-    items: pack.items.map((row) =>
-      row.answeredOption == null && row.skippedAt == null
-        ? { ...row, skippedAt: new Date().toISOString() }
-        : row,
-    ),
-  };
-}
-
+/**
+ * REMOVED 2026-09-16 (emci): the Infinite Questions inline feed that used to
+ * render here — the single routed question, its options, "Skip this one" /
+ * "Skip the rest", the checkpoint/"Keep going" pause, the empty-state copy
+ * and the "Load more" press. It rendered UNCONDITIONALLY below the branch
+ * below, so once the profile was done it sat underneath "Next 25 questions"
+ * inside the same card, as a second, unrelated question feed nobody asked
+ * for. Its whole pipeline went with it (`routeQuestions`, the
+ * `question_packs` cache reads/writes, the skip writes) — see the deletion
+ * note in `lib/questions/route.ts`'s removal.
+ *
+ * The card chrome went too: the old title (the section label plus an
+ * unanswered-axis count) and the lede under it both described that feed,
+ * not the bank and not the round. Their strings lived in the deleted
+ * `lib/questions/copy.ts`; `check:questions` asserts neither comes back.
+ */
 export function QuestionsFold({
   me,
   history,
-  crisisToday,
   onUpdated,
   alwaysOpen = false,
-  defaultOpen = false,
-  focusAxis,
-  category,
   tracks,
 }: {
   me: Me;
   history: CheckHistory[];
-  crisisToday: boolean;
   onUpdated: () => Promise<void>;
+  /**
+   * Render with no collapse header. The only mode the Questions tab uses, and
+   * the only one left: the collapsible path existed to lazy-load the deleted
+   * Infinite Questions feed on expand.
+   */
   alwaysOpen?: boolean;
-  /**
-   * Render the fold already expanded, with its batch loaded. Set when the
-   * person arrived on a deep link that named an axis (`focusAxis`) — landing
-   * them on a collapsed fold silently threw that axis away, since `load()`
-   * only ever ran from `SettingsFold`'s `onOpen`. Unlike `alwaysOpen` this
-   * keeps the header and lets them collapse it again.
-   */
-  defaultOpen?: boolean;
-  /** Front-loads this axis in the next batch (e.g. deep-linked from Legends). */
-  focusAxis?: TraitAxis;
-  /**
-   * Front-loads a whole category's axes ahead of the base priority list (no
-   * caller passes this yet — plumbing for a future "generate for category X"
-   * entry point). Resolved to axes here, via `getCategoryDefs`; `category`
-   * never reaches `routeQuestions`/the model/the DB — only the resulting
-   * `TraitAxis[]` does, same as `focusAxis`.
-   */
-  category?: CategoryId;
-  /**
-   * Report tracks, for the profile-completeness gate in `routeQuestions`.
-   * Absent reads as incomplete: static bank only, no model call.
-   */
+  /** Report tracks — the full-profile gate, and the bank's own progress. */
   tracks?: readonly TraitTrack[];
 }) {
-  const theme = useTheme();
   // Live-subscribed catalog (same hook categories-fold.tsx/category-teaser.tsx
   // already use) — PagedQuestions needs the current list, not a
   // mount-time snapshot, since a category_defs fetch can swap the array
   // while this screen is open.
   const liveCategoryDefs = useCategoryDefs();
-  const [result, setResult] = useState<RouteQuestionsResult | null>(null);
-  // Only meaningful when `alwaysOpen`: the fold has no collapse header to
-  // tap in that mode, so `handleOpen()` needs its own explicit press instead
-  // — otherwise this section either auto-loads with no tap behind it, or
-  // sits on "Loading…" forever with nothing ever calling `load()`.
-  const [wantsMore, setWantsMore] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [sessionCount, setSessionCount] = useState(0);
-  const [checkpoint, setCheckpoint] = useState(false);
-  const [keptGoing, setKeptGoing] = useState(false);
-  // Tracks which option was just tapped so it can highlight while the
-  // answer saves — options previously gave no visual confirmation at all,
-  // which read as "it answered the wrong question" (bug report). Keyed by
-  // itemId so a stale pick from a prior question never matches once `item`
-  // advances to the next one.
-  const [pickedOption, setPickedOption] = useState<{ itemId: string; index: number } | null>(null);
-
-  // T-04: real caller of Phase 6's hasContradictedAnswers. Fetched here
-  // (route-level), not from any shared cache — none exists for trait_history
-  // anywhere in the app; every screen that reads it (e.g. full-profile-fold.tsx)
-  // fetches it fresh, unbounded, same as here — no windowing/limit is applied,
-  // matching that existing precedent, not a new tradeoff introduced by this
-  // fetch. Keyed on the whole `me` object, same convention `load` below
-  // already uses — `useMe`'s `refresh()` always returns a new `Me` object, so
-  // this re-fires after an answer lands, same pattern this codebase's other
-  // staleness fixes rely on. One caveat: `pick()`'s `load()` call below still
-  // runs against the PRE-answer `contradictedAxes` from this render's closure
-  // (the fetch is async) — a just-created contradiction leads the FOLLOWING
-  // batch, not the very next one.
-  const [traitHistory, setTraitHistory] = useState<TraitHistoryRow[]>([]);
-  useEffect(() => {
-    let cancelled = false;
-    fetchTraitHistory(me.id)
-      .then((rows) => {
-        if (!cancelled) setTraitHistory(rows);
-      })
-      .catch((err) => {
-        console.log('[questions] trait history fetch error:', err);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [me]);
-  const contradictedAxes = useMemo(() => contradictedAxesFrom(traitHistory), [traitHistory]);
-
-  const load = useCallback(async () => {
-    const deferred = deferredUnansweredAxes(
-      traitStateFromRow(me).values,
-      me.question_deferred,
-    );
-    const base =
-      focusAxis && (TRAIT_AXES as readonly string[]).includes(focusAxis)
-        ? [focusAxis, ...deferred.filter((axis) => axis !== focusAxis)]
-        : deferred;
-    const categoryAxes = category
-      ? (getCategoryDefs().find((def) => def.id === category)?.axes ?? [])
-      : [];
-    const priorityAxes = mergeCategoryPriority(categoryAxes, base);
-    const next = await withTimeout(
-      routeQuestions(
-        {
-          me: { ...me, talk_style: me.talk_style ?? 'even' },
-          history,
-          aiConsent: me.ai_consent,
-          crisisToday,
-          priorityAxes,
-          tracks,
-          contradictedAxes,
-        },
-        {
-          loadLatestPack: fetchLatestQuestionPack,
-          savePack: saveQuestionPack,
-          claimBatch: claimQuestionsBatch,
-          generateBatch: generateQuestionBatch,
-          logJargonHit: logJargonGuard,
-          logPhraseHit: logPhraseGuard,
-          useLocal: await shouldUseLocalAi(),
-        },
-      ),
-      25000,
-      'questions',
-    );
-    setResult(next);
-  }, [me, history, crisisToday, focusAxis, category, tracks, contradictedAxes]);
-
-  function handleOpen() {
-    setSessionCount(0);
-    setCheckpoint(false);
-    setKeptGoing(false);
-    void load().catch((err) => {
-      console.log('[questions] route error:', err);
-      setResult({ kind: 'empty', pack: null, item: null });
-    });
-  }
-
-  /*
-    REMOVED (ISOLATION_PLAN §7 Card D, 2026-09-15): a mount effect that called
-    `handleOpen()` whenever `alwaysOpen` was set, and a second one that
-    re-loaded when a deep-linked axis changed. `handleOpen` runs
-    `routeQuestions`, which can reach a model, so both were paths to a model
-    call with no press behind them. Loading now happens only from the fold's
-    own expand tap (`onOpen`) or "Keep going".
-  */
-
-  function handleKeepGoing() {
-    setKeptGoing(true);
-    setCheckpoint(false);
-    void load().catch((err) => {
-      console.log('[questions] route error:', err);
-      setResult({ kind: 'empty', pack: null, item: null });
-    });
-  }
-
-  /**
-   * Answers one bank question directly from the Full Profile list. Local
-   * (bank-sourced) `QuestionDraft`, never a persisted `QuestionItemRow` — so
-   * this can safely carry primaryAxes/secondaryAxes (Phase 4) via the shared
-   * `applyQuestionAnswer`, same as intake-sweep. `pick()` below (the
-   * persisted-pack path) cannot: `QuestionItemRow` has no axis-weight
-   * fields, and adding them would be a `question_items` schema change.
-   */
   /**
    * Saves a whole page's worth of Full Profile bank answers in one batch,
    * called from PagedQuestions only when Next Page is pressed (never
@@ -318,97 +114,6 @@ export function QuestionsFold({
       return false;
     }
   }
-
-  /**
-   * Answers a persisted pack item. `QuestionItemRow` (unlike `QuestionDraft`
-   * above) has no primaryAxes/secondaryAxes fields — `insert_question_pack`
-   * and this table only ever store axis/prompt/options — so this path stays
-   * single-axis until/unless a `question_items` schema change is proposed
-   * and signed off. Not done, not asked (Phase 4 decision, see
-   * PROJECT_CONTEXT.md).
-   */
-  async function pick(item: QuestionItemRow, index: number) {
-    const option = item.options[index];
-    if (!option || busy) return;
-    setBusy(true);
-    setPickedOption({ itemId: item.id, index });
-    try {
-      if (!isLocalId(item.id)) {
-        await answerQuestionItem(item.id, index);
-      }
-      await updateTraits(me.id, { [item.axis]: option.value }, 'self_situation', [item.axis]);
-      earnTokensQuiet('game_round');
-      await onUpdated();
-      const nextCount = sessionCount + 1;
-      setSessionCount(nextCount);
-      if (!keptGoing && nextCount >= QUESTIONS_CHECKPOINT_AFTER) {
-        setCheckpoint(true);
-      } else {
-        await load();
-      }
-    } catch (err) {
-      console.log('[questions] answer error:', err);
-      // A failed save must not leave the tapped option looking picked — the
-      // question stays on screen (nothing advanced), so the stale highlight
-      // would read as "saved" when it wasn't (found in review).
-      setPickedOption(null);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function skipThis(item: QuestionItemRow) {
-    if (busy) return;
-    setBusy(true);
-    try {
-      const nextCount = sessionCount + 1;
-      const pause = !keptGoing && nextCount >= QUESTIONS_CHECKPOINT_AFTER;
-      if (isLocalId(item.id) && result?.pack) {
-        const pack = markSkipped(result.pack, item.id);
-        setResult({
-          kind: nextPlayableItem(pack) ? 'cached' : 'paused',
-          pack,
-          item: nextPlayableItem(pack),
-        });
-      } else {
-        await skipQuestionItem(item.id);
-        if (!pause) await load();
-      }
-      setSessionCount(nextCount);
-      if (pause) setCheckpoint(true);
-    } catch (err) {
-      console.log('[questions] skip error:', err);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function skipRest() {
-    if (busy) return;
-    const pack = result?.pack;
-    if (!pack) {
-      setCheckpoint(false);
-      return;
-    }
-    setBusy(true);
-    try {
-      if (isLocalId(pack.id)) {
-        const next = markRestSkipped(pack);
-        setResult({ kind: 'paused', pack: next, item: null });
-      } else {
-        await skipRestOfQuestionPack(pack.id);
-        setResult({ kind: 'paused', pack, item: null });
-      }
-      setCheckpoint(false);
-    } catch (err) {
-      console.log('[questions] skip-rest error:', err);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const empty = result ? emptyCopy(result.kind) : null;
-  const item = checkpoint ? null : (result?.item ?? null);
 
   const progress = bankTotalProgress(tracks ?? []);
   // Full Profile is exactly the frozen intake's 50 questions (tiered
@@ -438,9 +143,6 @@ export function QuestionsFold({
 
   const body = (
     <View style={styles.body}>
-      <ThemedText type="small" themeColor="textSecondary">
-        {QUESTIONS_LEDE}
-      </ThemedText>
       {fullProfileLocked ? (
         // The finished 50-question bank is gone from the screen entirely
         // once a round exists — it used to stay visible (locked) with the
@@ -468,116 +170,16 @@ export function QuestionsFold({
           />
         </>
       )}
-      {checkpoint ? (
-        <>
-          <ThemedText>{QUESTIONS_CHECKPOINT}</ThemedText>
-          <ThemedPressable
-            disabled={busy}
-            onPress={handleKeepGoing}
-            style={[styles.option, { borderColor: controlBorderColor(theme) }]}>
-            <ThemedText type="smallBold">{QUESTIONS_KEEP_GOING}</ThemedText>
-          </ThemedPressable>
-          <View style={styles.skipRow}>
-            <View />
-            <Pressable
-              onPress={() => void skipRest()}
-              disabled={busy}
-              style={({ pressed }) => [
-                styles.skipLink,
-                pressed && styles.pressed,
-                busy && styles.disabled,
-              ]}>
-              <ThemedText type="smallBold">{QUESTIONS_SKIP_REST}</ThemedText>
-            </Pressable>
-          </View>
-        </>
-      ) : empty ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {empty}
-        </ThemedText>
-      ) : item ? (
-        <>
-          <ThemedText style={styles.questionPrompt}>{item.prompt}</ThemedText>
-          <View style={styles.options}>
-            {item.options.map((option, index) => {
-              const picked = pickedOption?.itemId === item.id && pickedOption.index === index;
-              return (
-                <ThemedPressable
-                  key={`${item.id}-${index}`}
-                  disabled={busy}
-                  accessibilityState={{ selected: picked }}
-                  onPress={() => void pick(item, index)}
-                  style={[
-                    styles.option,
-                    { borderColor: controlBorderColor(theme) },
-                    picked && { backgroundColor: theme.backgroundSelected },
-                  ]}>
-                  <ThemedText type="smallBold">{option.text}</ThemedText>
-                </ThemedPressable>
-              );
-            })}
-          </View>
-          <View style={styles.skipRow}>
-            <Pressable
-              onPress={() => void skipThis(item)}
-              disabled={busy}
-              style={({ pressed }) => [
-                styles.skipLink,
-                pressed && styles.pressed,
-                busy && styles.disabled,
-              ]}>
-              <ThemedText type="smallBold">{QUESTIONS_SKIP_THIS}</ThemedText>
-            </Pressable>
-            <Pressable
-              onPress={() => void skipRest()}
-              disabled={busy}
-              style={({ pressed }) => [
-                styles.skipLink,
-                pressed && styles.pressed,
-                busy && styles.disabled,
-              ]}>
-              <ThemedText type="smallBold">{QUESTIONS_SKIP_REST}</ThemedText>
-            </Pressable>
-          </View>
-        </>
-      ) : alwaysOpen && !wantsMore ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={QUESTIONS_LOAD_MORE}
-          onPress={() => {
-            setWantsMore(true);
-            handleOpen();
-          }}
-          style={({ pressed }) => [styles.option, { borderColor: controlBorderColor(theme) }, pressed && styles.pressed]}>
-          <ThemedText type="smallBold">{QUESTIONS_LOAD_MORE}</ThemedText>
-        </Pressable>
-      ) : (
-        <ThemedText themeColor="textSecondary">Loading…</ThemedText>
-      )}
     </View>
   );
 
-  const title = tracks ? `${QUESTIONS_LABEL} · ${unansweredAxisLabel(tracks)}` : QUESTIONS_LABEL;
-
-  if (alwaysOpen) {
-    // Same card chrome SettingsFold gives every other fold, minus its
-    // collapse header — losing the title along with the header would leave
-    // this section looking like unstyled text floating on the tab.
-    return (
-      <ThemedView type="backgroundElement" style={styles.alwaysOpenCard}>
-        <ThemedText type="smallBold" style={styles.alwaysOpenTitle}>
-          {title}
-        </ThemedText>
-        {body}
-      </ThemedView>
-    );
-  }
-
-  return (
-    <SettingsFold title={title} defaultOpen={defaultOpen} onOpen={handleOpen}>
-      {body}
-    </SettingsFold>
-  );
+  // No card wrapper and no title: the chrome belonged to the deleted feed.
+  // Whichever branch renders — the bank list, or "Next 25 questions" — now
+  // stands on its own in the same spot. `alwaysOpen` is kept as the prop that
+  // says "no collapse header" (the only mode the Questions tab uses, and the
+  // one `check:questions` pins); the old collapsible `SettingsFold` path went
+  // with the feed, since `onOpen` existed only to load it.
+  return body;
 }
 
 export const NEXT_ROUND_LABEL = 'Next 25 questions';
@@ -593,9 +195,10 @@ export const NEXT_ROUND_BUSY_LABEL = 'Putting together your next 25…';
  * pack. No pack yet (or the last one is fully answered) offers a "start"
  * CTA that calls `runOngoingRound` (the real `composeOngoingRound` wiring)
  * and saves the result via `saveOngoingRoundBatch`/`insert_ongoing_round_pack`
- * in one shot; otherwise it serves the pack's next unanswered item, reusing
- * the same `answerQuestionItem` + `updateTraits` write path Infinite
- * Questions' `pick()` above already uses.
+ * in one shot; otherwise it serves the pack's next unanswered item through
+ * `answerQuestionItem` + `updateTraits`. That write path used to be shared
+ * with the Infinite Questions feed above; since that feed was deleted
+ * (2026-09-16) this is its only caller.
  */
 function OngoingRoundFold({
   me,
@@ -914,14 +517,6 @@ function OngoingRoundFold({
 }
 
 const styles = StyleSheet.create({
-  alwaysOpenCard: {
-    borderRadius: Spacing.four,
-    padding: Spacing.two,
-  },
-  alwaysOpenTitle: {
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
-  },
   body: {
     gap: Spacing.three,
     paddingHorizontal: Spacing.three,
@@ -930,13 +525,6 @@ const styles = StyleSheet.create({
   // A bit larger than ThemedText's shared "default" (16/24) — local override
   // rather than changing the shared type, since that would resize default
   // body text everywhere else in the app too.
-  questionPrompt: {
-    fontSize: 18,
-    lineHeight: 26,
-  },
-  options: {
-    gap: Spacing.two,
-  },
   option: {
     borderWidth: 1,
     borderRadius: Spacing.three,

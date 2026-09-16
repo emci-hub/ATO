@@ -80,32 +80,12 @@ async function fetchPackItems(packId: string): Promise<ItemRow[]> {
 }
 
 /**
- * Latest Infinite Questions pack. Scoped to `kind='infinite_questions'`
- * (wave49: `question_packs.kind` is NOT NULL, defaulting existing/new rows to
- * 'infinite_questions') — found in review: without this filter, the moment a
- * `kind='ongoing_round'` pack exists (T-03) it would sort ahead as "the
- * latest pack" and Infinite Questions would start serving/answering/
- * skip-resting a 25-item ongoing round instead of its own daily 5-item pack.
- */
-export async function fetchLatestQuestionPack(): Promise<QuestionPackRow | null> {
-  const { data: pack, error } = await supabase
-    .from('question_packs')
-    .select('id, generated_on, created_at')
-    .eq('kind', 'infinite_questions')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
-  if (!pack) return null;
-
-  const items = await fetchPackItems(pack.id);
-  return mapPack(pack as PackRow, items);
-}
-
-/**
- * Latest ongoing-round pack (T-03, core loop redesign §2), if any — scoped to
- * `kind='ongoing_round'` so it never picks up an Infinite Questions pack
- * (kind='infinite_questions' by default, wave49).
+ * Latest ongoing-round pack, scoped to `kind='ongoing_round'` (wave49:
+ * `question_packs.kind` is NOT NULL). The scoping is kept even though the
+ * Infinite Questions reader that shared this table was deleted 2026-09-16 —
+ * `kind` still distinguishes the rows already written under the old value,
+ * so an unscoped "latest pack" read would serve a stale 5-item daily pack as
+ * if it were a 25-item round.
  */
 export async function fetchLatestOngoingRoundPack(): Promise<QuestionPackRow | null> {
   const { data: pack, error } = await supabase
@@ -122,36 +102,6 @@ export async function fetchLatestOngoingRoundPack(): Promise<QuestionPackRow | n
   return mapPack(pack as PackRow, items);
 }
 
-export async function saveQuestionPack(input: {
-  generatedOn: string;
-  drafts: QuestionDraft[];
-}): Promise<QuestionPackRow> {
-  const payload = input.drafts.map((draft) => ({
-    axis: draft.axis,
-    prompt: draft.prompt,
-    options: draft.options,
-  }));
-  const { data, error } = await supabase.rpc('insert_question_pack', {
-    p_generated_on: input.generatedOn,
-    p_items: payload,
-  });
-  if (error) throw error;
-  const pack = await fetchLatestQuestionPack();
-  if (!pack || pack.id !== data) {
-    throw new Error('Question pack did not save.');
-  }
-  return pack;
-}
-
-/**
- * Persists one composed ongoing round (T-03) as a single 25-item pack via
- * `insert_ongoing_round_pack` (wave50) — one RPC call for the whole round,
- * not per-chunk: that RPC creates exactly one new `question_packs` row per
- * call, so calling it more than once per round would create several partial
- * packs instead of one. Every draft must already carry a `bankItemId`
- * (`composeOngoingRound`'s contract — every ongoing-round item, bank-drawn or
- * freshly AI-generated, has a bank row by the time it's returned).
- */
 export async function saveOngoingRoundBatch(drafts: QuestionDraft[]): Promise<QuestionPackRow> {
   if (drafts.length === 0) {
     throw new Error('No questions available for a new round right now.');
@@ -186,21 +136,6 @@ export async function answerQuestionItem(itemId: string, optionIndex: number): P
   if (error) throw error;
 }
 
-export async function skipQuestionItem(itemId: string): Promise<void> {
-  const { error } = await supabase.rpc('skip_question_item', {
-    p_item_id: itemId,
-  });
-  if (error) throw error;
-}
-
-export async function skipRestOfQuestionPack(packId: string): Promise<void> {
-  const { error } = await supabase.rpc('skip_rest_question_pack', {
-    p_pack_id: packId,
-  });
-  if (error) throw error;
-}
-
-/** Persist the full deferred-axis set (skipped elsewhere in a questionnaire sweep). */
 export async function saveQuestionDeferral(
   userId: string,
   deferred: readonly TraitAxis[],

@@ -117,19 +117,21 @@ const story = codeOnly(read('src/components/sage-story-fold.tsx'));
 assert.match(story, /unlocked: boolean/, 'the Story fold must take the shared gate as a prop');
 
 /**
- * The paid question batch is the one gate that is not a visible button, and it
- * was the last place the two signals disagreed: `routeQuestions` allowed a
- * model call once `isProfileComplete` passed (one answer on each of the 16
- * axes, reached ~20 questions in) while every visible unlock still needed the
- * full bank. Expanding the Questions fold at that point spent a call. Both
- * must hold.
+ * `routeQuestions` used to be the one gate that was not a visible button, and
+ * the last place the two signals disagreed: it allowed a model call once
+ * `isProfileComplete` passed (one answer on each of the 16 axes, ~20 questions
+ * in) while every visible unlock still needed the full bank, so expanding the
+ * Questions fold at that point spent a call.
+ *
+ * REMOVED 2026-09-16 (emci): the inline Infinite Questions feed it served was
+ * deleted, and `src/lib/questions/route.ts` with it. The assertion is inverted
+ * rather than dropped — a re-added router would be a second paid path that
+ * nothing in this file gates.
  */
-const route = codeOnly(read('src/lib/questions/route.ts'));
-assert.match(
-  route,
-  /isProfileComplete\(input\.tracks \?\? \[\]\) && isFullProfileDone\(input\.tracks \?\? \[\], true\)/,
-  'the paid question batch must require the shared unlock gate as well as per-axis completeness',
+assert.ok(
+  !existsSync(resolve(root, 'src/lib/questions/route.ts')),
+  'src/lib/questions/route.ts must stay deleted — it was a paid question path gated separately from the shared signal',
 );
-ok('Explore, Questions, Story and the paid question batch all read the one signal');
+ok('Explore, Questions and Story read the one signal; the separately-gated paid router stays deleted');
 
 console.log(`\n${passed} full-profile-signal checks passed`);

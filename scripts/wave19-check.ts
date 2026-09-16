@@ -3,7 +3,7 @@
  * 2-letter codes, Sage thin/divergence. Run: npm run check:wave19
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { AXIS_CODE_ORDER, AXIS_CODES, axisForCode, codeForAxis } from '../src/lib/axis-codes';
@@ -195,7 +195,8 @@ assert.deepEqual(
 );
 
 // The wiring: QuestionsFold must actually pass tracks, or none of this ships.
-assert.match(read('src/lib/questions/route.ts'), /composeLocalQuestionBatch\(recentAxes, priorityAxes, input\.tracks/);
+// The route.ts half of this assertion went with the deleted Infinite Questions
+// feed (2026-09-16); the screen-level wiring below is what still ships.
 assert.match(read('src/app/(tabs)/intake-sweep.tsx'), /tracks=\{tracks\}/);
 // An answer must refresh tracks, not just `me` — otherwise the count that
 // picks the next draft never moves and the same question comes back.
@@ -368,9 +369,12 @@ assert.equal(answeredAxisCount(traitValuesFromPartial({ autonomy: 0.8 })), 1);
 
 const meSrc = read('src/lib/me.ts');
 assert.match(meSrc, /persistMergedTraits/);
-// The sweep ("A faster pass") is gone entirely (2026-09-15); this just
-// confirms routeQuestions was never entangled with it in the first place.
-assert.doesNotMatch(read('src/lib/questions/route.ts'), /routeQuestionSweep/);
-ok('routeQuestions never referenced the (now-deleted) sweep path');
+// The sweep ("A faster pass", 2026-09-15) and the Infinite Questions router
+// that this used to check against it (2026-09-16) are both gone entirely.
+assert.ok(
+  !existsSync(resolve(__dirname, '..', 'src/lib/questions/route.ts')),
+  'src/lib/questions/route.ts must stay deleted',
+);
+ok('both the sweep path and the Infinite Questions router stay deleted');
 
 console.log(`\n${passed} wave19 checks passed`);

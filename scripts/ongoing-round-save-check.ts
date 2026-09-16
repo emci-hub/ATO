@@ -53,19 +53,17 @@ assert.match(
 );
 ok('fetchLatestOngoingRoundPack scopes its query to kind=ongoing_round, never an Infinite Questions pack');
 
-// Found in review: wave49 gives question_packs.kind a NOT NULL DEFAULT
-// 'infinite_questions' — every existing/new Infinite Questions row has that
-// value, never NULL. fetchLatestQuestionPack (Infinite Questions' own
-// loadLatestPack) MUST filter on it too, or the moment any ongoing-round
-// pack exists it sorts ahead as "the latest pack" and Infinite Questions
-// starts serving/answering/skip-resting a 25-item ongoing round instead of
-// its own daily pack.
-assert.match(
-  storeSrc,
-  /export async function fetchLatestQuestionPack\(\): Promise<QuestionPackRow \| null> \{[\s\S]{0,200}\.eq\('kind', 'infinite_questions'\)/,
-  'fetchLatestQuestionPack must filter on kind=infinite_questions — this diff is what makes ongoing_round rows exist in the same table for the first time, so this scoping is load-bearing, not cosmetic',
+// REMOVED 2026-09-16 (emci): fetchLatestQuestionPack and its
+// kind=infinite_questions scoping. The Infinite Questions inline feed that
+// read it was deleted, so there is no second reader of this table left to
+// collide with ongoing_round rows — which is a stronger guarantee than the
+// scoping assertion that used to stand here, not a weaker one. The
+// ongoing_round reader is still pinned above.
+assert.ok(
+  !/fetchLatestQuestionPack/.test(storeSrc),
+  'fetchLatestQuestionPack must stay deleted — the Infinite Questions pack reader is gone',
 );
-ok('fetchLatestQuestionPack (Infinite Questions) is scoped to kind=infinite_questions, so it can never pick up an ongoing-round pack');
+ok('the Infinite Questions pack reader stays deleted, leaving ongoing_round the only reader of question_packs');
 
 // A saveOngoingRoundBatch call must never call fetchLatestQuestionPack
 // (the unscoped, any-kind reader) to verify its own save — that would
