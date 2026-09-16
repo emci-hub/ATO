@@ -1,3 +1,5 @@
+import * as Linking from 'expo-linking';
+import * as Updates from 'expo-updates';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,6 +20,9 @@ import { aiConsentFor, setAiConsent } from '@/lib/me';
 import { clearLocalAccountData } from '@/lib/local-account-data';
 import { supabase } from '@/lib/supabase';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
+
+export const FEEDBACK_EMAIL = 'support@asstrollogs.com';
+export const SEND_FEEDBACK_LABEL = 'Send feedback';
 
 /**
  * You — PARKED, with four things deliberately kept alive (emci 2026-09-15,
@@ -54,6 +59,7 @@ export default function YouScreen() {
   const [deleting, setDeleting] = useState(false);
   const [consentBusy, setConsentBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [feedbackNote, setFeedbackNote] = useState<string | null>(null);
 
   const hasAppleIdentity = !!session?.user.identities?.some(
     (identity) => identity.provider === 'apple',
@@ -72,6 +78,22 @@ export default function YouScreen() {
     setSigningOut(false);
     // The session guard in the root layout flips isAuthed to false on
     // SIGNOUT and declaratively routes back to /auth.
+  }
+
+  /** Opens a pre-addressed email. The running update id rides along so a report maps to its OTA. */
+  async function sendFeedback() {
+    setFeedbackNote(null);
+    const subject = encodeURIComponent('ATO feedback');
+    const body = encodeURIComponent(`
+
+—
+Update: ${Updates.updateId ?? 'original build'}`);
+    try {
+      await Linking.openURL(`mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`);
+    } catch (err) {
+      console.log('[you] feedback mail error:', err);
+      setFeedbackNote(`No mail app found. Email ${FEEDBACK_EMAIL}`);
+    }
   }
 
   async function saveAiConsent(value: boolean) {
@@ -135,6 +157,20 @@ export default function YouScreen() {
               {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
             </View>
           </SettingsFold>
+
+          <Pressable
+            accessibilityRole="link"
+            onPress={() => {
+              void sendFeedback();
+            }}
+            style={({ pressed }) => [styles.deleteLink, pressed && styles.pressed]}>
+            <ThemedText type="link">{SEND_FEEDBACK_LABEL}</ThemedText>
+          </Pressable>
+          {feedbackNote ? (
+            <ThemedText type="small" themeColor="textSecondary" selectable>
+              {feedbackNote}
+            </ThemedText>
+          ) : null}
 
           <Pressable
             onPress={handleSignOut}

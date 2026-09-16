@@ -92,16 +92,18 @@ export default function ExploreScreen() {
 
           {me ? (
             <>
-              <RebuiltNotice title="Today's Read" />
-              <RebuiltNotice title="How you show up" />
-              <TraitBandsFold me={me} tracks={tracks} />
-              <ProfileFillFold tracks={tracks} />
-              <FullProfileFold me={me} onUpdated={() => refreshMe()} />
+              {/* Categories first and always open: the full fixed list is the
+                  point of this tab (release pass, emci 2026-09-16). */}
               <CategoriesFold
                 me={me}
                 onUpdated={() => refreshMe()}
                 unlocked={isFullProfileDone(tracks, tracksReady)}
               />
+              <RebuiltNotice title="Today's Read" />
+              <RebuiltNotice title="How you show up" />
+              <TraitBandsFold me={me} tracks={tracks} />
+              <ProfileFillFold tracks={tracks} />
+              <FullProfileFold me={me} onUpdated={() => refreshMe()} />
               <RebuiltNotice title="Past reads" />
               <RebuiltNotice title="Insight spend" />
               <RebuiltNotice title="Observations" />

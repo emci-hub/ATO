@@ -75,7 +75,7 @@ ok('Home reads the stored insight first and only generates when the day has none
 // yet, the daily insight is a real AI touchpoint and needs consent before it
 // calls a model -- but nothing else on Home may depend on the answer.
 const CONSENT_OFF_EMPTY =
-  'No insight today. Sage only writes these with your say-so — you can turn that on any time in You.';
+  'AI is off, so there’s no insight today. Turn on AI in Home — the switch is just below.';
 
 assert.ok(home.includes(CONSENT_OFF_EMPTY), 'Home must show the exact consent-off empty line');
 // Declined and not-yet-asked are DIFFERENT states. Collapsing them is what
@@ -87,7 +87,7 @@ ok('Home distinguishes declined from not-yet-asked and shows the honest empty li
 // The generation effect must bail BEFORE any fetch, generation, cache write
 // or widget write. This is the assertion that would catch a refactor quietly
 // moving the guard below the call.
-const effectStart = home.indexOf('const existing = await fetchTodayInsight');
+const effectStart = home.indexOf('const existing = await withTimeout(fetchTodayInsight');
 assert.ok(effectStart > 0, 'the insight effect must exist');
 const guardWindow = home.slice(home.indexOf('if (!me || !userId || !window) return;'), effectStart);
 assert.match(guardWindow, /if \(!consentGranted\) return;/);

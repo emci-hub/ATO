@@ -13,7 +13,9 @@ import { useTheme } from '@/hooks/use-theme';
 import { useDailyInsight } from '@/hooks/use-daily-insight';
 import { checkWindowFor } from '@/lib/check-window';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
-import { aiConsentFor, setAiConsent } from '@/lib/me';
+import { AI_CONSENT_NEEDED_COPY, aiConsentFor, setAiConsent } from '@/lib/me';
+import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/generate';
+import { withTimeout } from '@/lib/timeout';
 import { useMeContext } from '@/lib/me-context';
 import { homeSageLabel, homeSageLede } from '@/lib/sage-copy';
 import { AiConsentCard, AI_USE_DISCLOSURE } from '@/components/ai-consent-card';
@@ -28,11 +30,11 @@ import { useSession } from '@/hooks/use-session';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
 export const INSIGHT_LOAD_LABEL = 'Load insight';
-export const INSIGHT_UNAVAILABLE_COPY = 'Couldn’t write one just now. Try again later.';
+export const INSIGHT_UNAVAILABLE_COPY = 'Couldn’t load it just now — tap to try again.';
 export const ANSWER_QUESTIONS_LABEL = 'Answer the questions';
 /** One line, one place — `check:home-hydrate` pins it verbatim. */
 export const CONSENT_OFF_EMPTY_COPY =
-  'No insight today. Sage only writes these with your say-so — you can turn that on any time in You.';
+  'AI is off, so there’s no insight today. Turn on AI in Home — the switch is just below.';
 
 /**
  * Home — two states and nothing else (ISOLATION_PLAN §7 Card C, emci 2026-09-15).
@@ -212,7 +214,7 @@ export default function HomeScreen() {
     setInsightState('loading');
 
     try {
-      const existing = await fetchTodayInsight(userId, todayYmd);
+      const existing = await withTimeout(fetchTodayInsight(userId, todayYmd), AI_TAP_TIMEOUT_MS, 'insight-fetch');
       if (existing) {
         await saveCachedInsight(cachedFromInsight(existing, userId));
         await reloadInsight();
@@ -220,13 +222,19 @@ export default function HomeScreen() {
         return;
       }
 
-      const draft = await generateDailyInsight({
-        tracks,
-        currentFocus: me.current_focus ?? null,
-        // Empty by design: recent tone came from the Check history, and the
-        // Check loop is parked. Tone only — never quoted back.
-        recentTone: [],
-      });
+      // Bounded: a slow network ends in the error + retry state, never a
+      // spinner that never stops.
+      const draft = await withTimeout(
+        generateDailyInsight({
+          tracks,
+          currentFocus: me.current_focus ?? null,
+          // Empty by design: recent tone came from the Check history, and the
+          // Check loop is parked. Tone only — never quoted back.
+          recentTone: [],
+        }),
+        AI_TAP_TIMEOUT_MS,
+        'insight-generate',
+      );
       if (!draft) {
         setInsightState('unavailable');
         return;
@@ -357,6 +365,37 @@ export default function HomeScreen() {
           onGrant={() => saveConsent(true)}
           onDeny={() => saveConsent(false)}
         />
+      ) : me ? (
+        /*
+          AI consent LIVES on Home: once answered, the same place turns it back
+          on or off. The server refuses every AI call while it is off
+          (ai-generate), so this switch is the one that matters.
+        */
+        <Pressable
+          accessibilityRole="switch"
+          accessibilityState={{ checked: consentGranted, busy: busy === 'consent' }}
+          accessibilityLabel={consentGranted ? 'AI is on. Turn off AI' : 'AI is off. Turn on AI'}
+          disabled={busy === 'consent'}
+          onPress={() => {
+            void saveConsent(!consentGranted);
+          }}
+          style={({ pressed }) => [
+            styles.answerQuestionsRow,
+            { borderColor: controlBorderColor(theme) },
+            pressed && styles.pressed,
+          ]}>
+          <View style={[styles.boxRowText, styles.flexText]}>
+            <ThemedText type="smallBold">Sage&apos;s AI · {consentGranted ? 'On' : 'Off'}</ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {consentGranted
+                ? 'Insight, story, next 25 and categories can use AI.'
+                : 'Insight, story, next 25 and categories stay off until you turn this on.'}
+            </ThemedText>
+          </View>
+          <ThemedText type="smallBold" themeColor="textSecondary">
+            {busy === 'consent' ? 'Saving…' : consentGranted ? 'Turn off' : 'Turn on AI'}
+          </ThemedText>
+        </Pressable>
       ) : null}
       {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
     </>
@@ -433,8 +472,9 @@ export default function HomeScreen() {
                 <View style={styles.boxRowText}>
                   <ThemedText type="smallBold">{ANSWER_QUESTIONS_LABEL}</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
-                    {profileProgress.answered} of {profileProgress.total} — this is what
-                    everything else is built from
+                    {profileProgress.answered} of {profileProgress.total} done. Finish all{' '}
+                    {profileProgress.total} to unlock Load insight, Load story, the next 25
+                    questions and Explore categories.
                   </ThemedText>
                 </View>
                 <ThemedText themeColor="textSecondary">›</ThemedText>
@@ -492,7 +532,7 @@ export default function HomeScreen() {
                   <ThemedText themeColor="textSecondary">
                     {consentGranted
                       ? 'Nothing is written until you ask for it.'
-                      : 'Say yes below and Sage can write today’s.'}
+                      : AI_CONSENT_NEEDED_COPY}
                   </ThemedText>
                 </ThemedView>
               )}
@@ -517,7 +557,11 @@ export default function HomeScreen() {
                   ]}>
                   <View style={styles.boxRowText}>
                     <ThemedText type="smallBold">
-                      {insightState === 'loading' ? 'Writing…' : INSIGHT_LOAD_LABEL}
+                      {insightState === 'loading'
+                      ? 'Writing…'
+                      : insightState === 'unavailable'
+                        ? 'Try again'
+                        : INSIGHT_LOAD_LABEL}
                     </ThemedText>
                     <ThemedText type="small" themeColor="textSecondary">
                       {insightState === 'unavailable'
@@ -537,6 +581,7 @@ export default function HomeScreen() {
                   tracksReady={bootstrapReady}
                   crisisToday={crisisToday}
                   unlocked={fullProfileDone}
+                  consentGranted={consentGranted}
                 />
               ) : null}
             </>
@@ -637,6 +682,10 @@ const styles = StyleSheet.create({
   },
   boxRowText: {
     gap: Spacing.half,
+  },
+  flexText: {
+    flex: 1,
+    paddingRight: Spacing.two,
   },
   pressed: {
     opacity: 0.7,

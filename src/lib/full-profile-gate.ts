@@ -52,4 +52,10 @@ export function isFullProfileDone(
 
 /** Shown wherever an unlock is still locked. One string, so it reads the same everywhere. */
 export const FULL_PROFILE_LOCKED_COPY =
-  'Answer the questions first — then this unlocks.';
+  'Locked — finish every question in the Questions tab to unlock this.';
+
+/** The locked line with the count, where the screen has tracks to count from. */
+export function fullProfileLockedLine(progress: FullProfileProgress, unlocks = 'this'): string {
+  if (progress.total <= 0) return FULL_PROFILE_LOCKED_COPY;
+  return `Locked — finish all ${progress.total} questions in the Questions tab to unlock ${unlocks} (${progress.answered} of ${progress.total} done).`;
+}

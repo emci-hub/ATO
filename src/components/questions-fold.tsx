@@ -13,7 +13,7 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useCategoryDefs } from '@/lib/category-catalog';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
-import { updateTraits, type Me } from '@/lib/me';
+import { AI_CONSENT_NEEDED_COPY, aiConsentFor, updateTraits, type Me } from '@/lib/me';
 import { earnTokensQuiet } from '@/lib/tokens-server';
 import { claimOngoingRoundCompleteQuiet } from '@/lib/ato-tokens-server';
 import { ATO_TOKEN_PRICE, atoPriceLine, atoTokenBalanceOf, ATO_TOKEN_NEED_MORE } from '@/lib/ato-tokens';
@@ -23,7 +23,7 @@ import { type TraitTrack } from '@/lib/trait-stability';
 import { type TraitAxis } from '@/lib/traits';
 import { applyQuestionAnswer } from '@/lib/questions/answer';
 import { bankProgressForAxis, bankTotalProgress } from '@/lib/questions/local';
-import { isFullProfileDone } from '@/lib/full-profile-gate';
+import { fullProfileLockedLine, isFullProfileDone } from '@/lib/full-profile-gate';
 import { runOngoingRound } from '@/lib/questions/run-ongoing-round';
 import { prewarmBankPool } from '@/lib/questions/run-prewarm';
 import { isUnansweredQuestionItem } from '@/lib/questions/rotation';
@@ -152,9 +152,14 @@ export function QuestionsFold({
       ) : (
         <>
           {progress.total > 0 ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              {progress.answered} of {progress.total} answered
-            </ThemedText>
+            <>
+              <ThemedText type="small" themeColor="textSecondary">
+                {progress.answered} of {progress.total} answered
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {fullProfileLockedLine(progress, 'your next 25, Home insight and story, and Explore categories')}
+              </ThemedText>
+            </>
           ) : null}
           <PagedQuestions
             // Scoped per account, not just per question-set — this key backs
@@ -263,8 +268,11 @@ function OngoingRoundFold({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-once load
   }, []);
 
+  const consentGranted = aiConsentFor(me) === 'granted';
+
   async function start() {
     if (starting) return;
+    if (!consentGranted) return;
     setStarting(true);
     setErrorKind(null);
     setErrorDetail(null);
@@ -424,7 +432,7 @@ function OngoingRoundFold({
         <>
           <ThemedText type="small" themeColor="textSecondary">
             {errorKind === 'start'
-              ? "Couldn't submit your answers. Try again."
+              ? "Couldn't put together your next 25 — check your connection and try again."
               : "Couldn't load your next round. Try again."}
           </ThemedText>
           {errorDetail && PRE_LAUNCH_DEV ? (
@@ -440,19 +448,7 @@ function OngoingRoundFold({
           </ThemedPressable>
         </>
       ) : !pack ? (
-        <ThemedPressable
-          disabled={starting}
-          onPress={() => void start()}
-          style={[styles.option, { borderColor: controlBorderColor(theme) }, starting && styles.disabled]}>
-          <ThemedText type="smallBold">
-            {starting ? NEXT_ROUND_BUSY_LABEL : NEXT_ROUND_LABEL}
-          </ThemedText>
-        </ThemedPressable>
-      ) : roundFullyAnswered(pack) ? (
-        <>
-          <ThemedText type="small" themeColor="textSecondary">
-            Round complete.
-          </ThemedText>
+        consentGranted ? (
           <ThemedPressable
             disabled={starting}
             onPress={() => void start()}
@@ -461,6 +457,30 @@ function OngoingRoundFold({
               {starting ? NEXT_ROUND_BUSY_LABEL : NEXT_ROUND_LABEL}
             </ThemedText>
           </ThemedPressable>
+        ) : (
+          <ThemedText type="small" themeColor="textSecondary">
+            {AI_CONSENT_NEEDED_COPY}
+          </ThemedText>
+        )
+      ) : roundFullyAnswered(pack) ? (
+        <>
+          <ThemedText type="small" themeColor="textSecondary">
+            Round complete.
+          </ThemedText>
+          {consentGranted ? (
+            <ThemedPressable
+              disabled={starting}
+              onPress={() => void start()}
+              style={[styles.option, { borderColor: controlBorderColor(theme) }, starting && styles.disabled]}>
+              <ThemedText type="smallBold">
+                {starting ? NEXT_ROUND_BUSY_LABEL : NEXT_ROUND_LABEL}
+              </ThemedText>
+            </ThemedPressable>
+          ) : (
+            <ThemedText type="small" themeColor="textSecondary">
+              {AI_CONSENT_NEEDED_COPY}
+            </ThemedText>
+          )}
         </>
       ) : (
         <PagedQuestions

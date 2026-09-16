@@ -351,6 +351,20 @@ Deno.serve(async (request) => {
   const responseFormat: 'json' | 'text' = payload.responseFormat === 'json' ? 'json' : 'text';
   const callType = payload.callType === 'explore' ? 'explore' : 'sage';
 
+  // AI consent is enforced HERE, for every content call, before quota is
+  // claimed or a paid key is touched — the client's own gates are UX only.
+  // Only an explicit `true` passes: declined (false) and never-asked (null)
+  // are both refused. Read as the caller, so RLS scopes it to their own row.
+  const { data: consentRow, error: consentError } = await caller
+    .from('me')
+    .select('ai_consent')
+    .eq('id', user.id)
+    .maybeSingle();
+  if (consentError) return json({ error: `consent_check_failed: ${consentError.message}` }, 500);
+  if ((consentRow as { ai_consent?: unknown } | null)?.ai_consent !== true) {
+    return json({ error: 'ai_consent_required' }, 403);
+  }
+
   // Claim one unit of the caller's daily/monthly cap BEFORE touching a paid key.
   const { data: claim, error: claimError } = await caller.rpc('claim_ai_call', {
     p_call_type: callType,

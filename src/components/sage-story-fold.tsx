@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { SettingsFold } from '@/components/settings-fold';
@@ -8,9 +8,11 @@ import { Spacing } from '@/constants/theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { generateStoryBody } from '@/lib/explore/generate';
 import { SAGE_STORY_META } from '@/lib/ai/call-sites';
-import { FULL_PROFILE_LOCKED_COPY } from '@/lib/full-profile-gate';
+import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/generate';
+import { FULL_PROFILE_LOCKED_COPY, fullProfileLockedLine, fullProfileProgress } from '@/lib/full-profile-gate';
 import { localYmd } from '@/lib/local-date';
-import type { Me } from '@/lib/me';
+import { AI_CONSENT_NEEDED_COPY, type Me } from '@/lib/me';
+import { withTimeout } from '@/lib/timeout';
 import {
   STORY_COPY_REVIEWED,
   STORY_LABEL,
@@ -35,7 +37,7 @@ export const STORY_LOAD_LABEL = 'Load story';
 export const STORY_RELOAD_LABEL = 'Load a new story';
 export const STORY_NOT_READY_COPY =
   'Not ready yet — your answers still need to settle. Nothing was generated.';
-export const STORY_UNAVAILABLE_COPY = 'Couldn’t write one just now. Try again later.';
+export const STORY_UNAVAILABLE_COPY = 'Couldn’t load it just now — tap to try again.';
 export const STORY_STALE_COPY = 'Your answers have moved since this was written.';
 
 type LoadState = 'idle' | 'loading' | 'not_ready' | 'unavailable';
@@ -61,15 +63,24 @@ export function SageStoryFold({
   tracksReady,
   crisisToday,
   unlocked,
+  consentGranted,
 }: {
   me: Me;
   tracks: readonly TraitTrack[];
   tracksReady: boolean;
   crisisToday: boolean;
   unlocked: boolean;
+  /** Home's consent answer. The server refuses the call without it anyway. */
+  consentGranted: boolean;
 }) {
   const [story, setStory] = useState<SageStory | null>(() => parseSageStory(me.sage_story));
   const [state, setState] = useState<LoadState>('idle');
+  // Only the newest tap may write UI state — a timed-out attempt that lands
+  // late must not flip a retry's spinner back.
+  const attemptRef = useRef(0);
+  // A timeout only stops the WAIT: the claimed, paid run keeps going and still
+  // saves. A retry joins that run instead of paying for a second one.
+  const runningRef = useRef<Promise<SageStory | null> | null>(null);
   const divergenceNote = formatStoryTensionNote(divergingAxesFromTracks(tracks));
   const fingerprint = storyFingerprint(tracks, divergenceNote);
 
@@ -82,6 +93,9 @@ export function SageStoryFold({
 
   const loadStory = useCallback(async () => {
     if (state === 'loading') return;
+    if (!consentGranted) return;
+    const attempt = attemptRef.current + 1;
+    attemptRef.current = attempt;
     setState('loading');
 
     // Readiness is judged HERE, before any call, and says so plainly — emci's
@@ -97,14 +111,11 @@ export function SageStoryFold({
       return;
     }
 
-    try {
+    const run = async (): Promise<SageStory | null> => {
       const claim = await claimStoryGenerate();
-      if (!claim.ok) {
-        setState('unavailable');
-        return;
-      }
+      if (!claim.ok) return null;
       let body: string | null = null;
-      for (let attempt = 1; attempt <= 2; attempt += 1) {
+      for (let pass = 1; pass <= 2; pass += 1) {
         const raw = await generateStoryBody(
           buildStoryPrompt({ tracks, divergenceNote }),
           SAGE_STORY_META,
@@ -116,10 +127,7 @@ export function SageStoryFold({
         body = raw;
         break;
       }
-      if (!body) {
-        setState('unavailable');
-        return;
-      }
+      if (!body) return null;
       const next: SageStory = {
         body,
         fingerprint,
@@ -127,13 +135,38 @@ export function SageStoryFold({
         categoryIds: readyCategories(tracks).map((row) => row.def.id),
       };
       await saveSageStory(me.id, next);
+      return next;
+    };
+
+    try {
+      let pending = runningRef.current;
+      if (!pending) {
+        pending = run();
+        runningRef.current = pending;
+        const mine = pending;
+        void mine.then(
+          () => {
+            if (runningRef.current === mine) runningRef.current = null;
+          },
+          () => {
+            if (runningRef.current === mine) runningRef.current = null;
+          },
+        );
+      }
+      // Bounded: slow networks end in "tap to try again", not a spinner.
+      const next = await withTimeout(pending, AI_TAP_TIMEOUT_MS, 'story-generate');
+      if (attempt !== attemptRef.current) return;
+      if (!next) {
+        setState('unavailable');
+        return;
+      }
       setStory(next);
       setState('idle');
     } catch (err) {
       console.log('[sage-story] generate error:', err);
-      setState('unavailable');
+      if (attempt === attemptRef.current) setState('unavailable');
     }
-  }, [state, tracks, divergenceNote, fingerprint, me.id, me.timezone]);
+  }, [state, consentGranted, tracks, divergenceNote, fingerprint, me.id, me.timezone]);
 
   // Crisis still suppresses Story entirely — unchanged, and the one case where
   // the fold shows nothing at all.
@@ -148,7 +181,9 @@ export function SageStoryFold({
             <ThemedText type="small" themeColor="textSecondary">
               {STORY_LEDE}
             </ThemedText>
-            <ThemedText type="smallBold">{FULL_PROFILE_LOCKED_COPY}</ThemedText>
+            <ThemedText type="smallBold">
+              {tracksReady ? fullProfileLockedLine(fullProfileProgress(tracks)) : FULL_PROFILE_LOCKED_COPY}
+            </ThemedText>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`${FULL_PROFILE_LOCKED_COPY} Answer the questions.`}
@@ -201,7 +236,11 @@ export function SageStoryFold({
             above it: generating from a half-loaded `tracks` would write a
             story against the wrong profile.
           */}
-          {tracksReady ? (
+          {!consentGranted ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {AI_CONSENT_NEEDED_COPY}
+            </ThemedText>
+          ) : tracksReady ? (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={loadLabel}
@@ -211,7 +250,7 @@ export function SageStoryFold({
               }}
               style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
               <ThemedText type="link">
-                {state === 'loading' ? 'Writing…' : loadLabel}
+                {state === 'loading' ? 'Writing…' : state === 'unavailable' ? 'Try again' : loadLabel}
               </ThemedText>
             </Pressable>
           ) : null}

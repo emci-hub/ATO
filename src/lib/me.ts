@@ -195,6 +195,38 @@ export function aiConsentFor(me: Pick<Me, 'ai_consent'>): AiConsent {
   return 'pending';
 }
 
+/** Shown on every AI button while consent is not granted. The switch lives on Home. */
+export const AI_CONSENT_NEEDED_COPY = 'AI is off. Turn on AI in Home to load this.';
+
+/**
+ * Keeps `me.timezone` on the phone's current zone, so "today" (the daily
+ * insight, Story dates, category weeks, home_bootstrap) follows the device —
+ * someone who signed up in Canada and opens the app in Japan gets Japan's
+ * day. No-op when the zone is unreadable or already matches.
+ */
+export async function syncDeviceTimezone(me: Pick<Me, 'id' | 'timezone'>): Promise<boolean> {
+  let deviceZone: string | undefined;
+  try {
+    deviceZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // Rejects anything Intl itself can't format with.
+    if (deviceZone) new Intl.DateTimeFormat('en-US', { timeZone: deviceZone });
+  } catch {
+    return false;
+  }
+  if (!deviceZone || deviceZone === me.timezone) return false;
+  const { data, error } = await supabase
+    .from('me')
+    .update({ timezone: deviceZone })
+    .eq('id', me.id)
+    .select('id');
+  if (error) {
+    console.log('[me] timezone sync error:', error.message);
+    return false;
+  }
+  // Zero rows updated is not a sync — don't let the app believe it was.
+  return Array.isArray(data) && data.length > 0;
+}
+
 function withVisible(row: Me): Me {
   const sources =
     row.trait_sources && typeof row.trait_sources === 'object' && !Array.isArray(row.trait_sources)

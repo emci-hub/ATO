@@ -60,6 +60,18 @@ export function isQuotaLimitError(err: unknown): boolean {
   return false;
 }
 
+/** The ai-generate Edge Function refuses every content call without ai_consent = true. */
+export function isConsentRefusal(err: unknown): boolean {
+  return err instanceof Error && err.message === 'ai_consent_required';
+}
+
+/**
+ * Outer ceiling for one user TAP that may chain several generateText calls
+ * (each up to AI_CALL_TIMEOUT_MS, plus one DeepSeek fallback). Past this the
+ * button shows its error + retry instead of a spinner.
+ */
+export const AI_TAP_TIMEOUT_MS = 45000;
+
 /**
  * One-shot, non-streaming. Returns the raw model text (JSON string or prose)
  * so existing parse* functions stay unchanged. Null when local / unconfigured
@@ -81,6 +93,12 @@ export async function generateText(
     void logQuiet(provider);
     return text;
   } catch (err) {
+    // A consent refusal is the server saying no, not a vendor failure — never
+    // retry it on another vendor.
+    if (isConsentRefusal(err)) {
+      console.log('[ai] refused: ai_consent_required');
+      return null;
+    }
     // Gemini is the bundled primary. On ANY Gemini failure (quota, 404 model
     // retired, 5xx, network, empty response) retry the same request once on
     // DeepSeek; only if that also fails fall through to the normal error state.

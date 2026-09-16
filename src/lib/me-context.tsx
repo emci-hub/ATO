@@ -7,10 +7,11 @@ import {
   useEffect,
   useState,
 } from 'react';
+import { AppState } from 'react-native';
 
 import { refreshCategoryCatalog } from '@/lib/category-catalog';
 import { fetchMyDevAccess, type DevAccessSnapshot } from '@/lib/dev-access-server';
-import { fetchMe, Me } from '@/lib/me';
+import { fetchMe, Me, syncDeviceTimezone } from '@/lib/me';
 import { supabase } from '@/lib/supabase';
 
 const EMPTY_DEV_ACCESS: DevAccessSnapshot = { isRoot: false, capabilities: [] };
@@ -104,6 +105,27 @@ export function MeProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, [userId]);
+
+  // Follow the phone's timezone (travel, or a signup made elsewhere). On load
+  // and whenever the app returns to the foreground; a local patch avoids a
+  // second fetch.
+  const meId = me?.id;
+  const meTimezone = me?.timezone;
+  useEffect(() => {
+    if (!meId) return;
+    const sync = () => {
+      void syncDeviceTimezone({ id: meId, timezone: meTimezone ?? '' }).then((changed) => {
+        if (!changed) return;
+        const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        setMe((prev) => (prev && prev.id === meId ? { ...prev, timezone: zone } : prev));
+      });
+    };
+    sync();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') sync();
+    });
+    return () => sub.remove();
+  }, [meId, meTimezone]);
 
   const refresh = useCallback(async () => {
     if (!userId) return;

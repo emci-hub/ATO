@@ -628,25 +628,35 @@ assert.equal(EXPLORE_LABEL, 'Explore');
 assert.ok(pickExplorePackFocuses(chipsOnly, []).length >= 1);
 
 // --- Card E: Categories is the ONLY AI affordance on Explore, and it is gated ---
-// ISOLATION_PLAN §7 Card E (emci 2026-09-15). Explore may offer exactly one
-// press that can spend a model call, it must be labelled "Load categories",
-// and it must be behind the shared unlock gate. Nothing on this screen may
-// generate on mount (check:no-auto-ai covers the effect side).
+// ISOLATION_PLAN §7 Card E (emci 2026-09-15), reshaped by the release pass
+// (emci 2026-09-16): the full category list is always shown, and a TAP on one
+// category loads that one category. Every call goes through loadCategory, and
+// loadCategory refuses — before any model call — when the shared unlock gate
+// is shut, when AI consent is off, or when the category is not ready. Nothing
+// on this screen may generate on mount (check:no-auto-ai covers the effect side).
 const catFold = read('src/components/categories-fold.tsx');
-assert.match(catFold, /CATEGORIES_LOAD_LABEL = 'Load categories'/);
-assert.match(catFold, /\{unlocked \? \(/, 'the Load button must be behind the shared unlock gate');
-assert.match(catFold, /FULL_PROFILE_LOCKED_COPY/, 'the locked state must use the one shared line');
-assert.match(
-  catFold,
-  /if \(ready\.length === 0\) \{[\s\S]{0,140}CATEGORIES_NOT_READY_COPY/,
-  'an unready profile must get the not-ready line with no model call behind it',
+assert.equal(
+  catFold.split('generateCategoryStatements(').length - 1,
+  1,
+  'exactly one call site may spend a model call on Explore',
 );
+const loadFn = catFold.slice(
+  catFold.indexOf('async function loadCategory'),
+  catFold.indexOf('generateCategoryStatements(['),
+);
+assert.ok(loadFn.startsWith('async function loadCategory'), 'the one call must live inside loadCategory');
+assert.match(loadFn, /if \(!unlocked\) \{\s*setRow\(id, 'locked'\);\s*return;/, 'locked: no model call');
+assert.match(loadFn, /if \(!consentGranted\) \{\s*setRow\(id, 'consent'\);\s*return;/, 'consent off: no model call');
+assert.match(loadFn, /if \(!reading\.ready\) \{\s*setRow\(id, 'not_ready'\);\s*return;/, 'not ready: no model call');
+assert.match(catFold, /FULL_PROFILE_LOCKED_COPY/, 'the locked state must use the one shared line');
+assert.match(catFold, /\{readings\.map\(\(reading\) =>/, 'every category is listed, not only ready ones');
+assert.doesNotMatch(catFold, /SettingsFold/, 'the category list is never folded away');
 assert.match(
   exploreScreen,
   /unlocked=\{isFullProfileDone\(tracks, tracksReady\)\}/,
   'Explore must pass the shared gate, not its own derivation',
 );
-ok('Explore has one gated AI press: Load categories, locked until the bank is finished');
+ok('Explore spends a model call only from a category tap, behind unlock, consent and readiness');
 
 console.log(`\nAll ${passed} explore checks passed.`);
 }
