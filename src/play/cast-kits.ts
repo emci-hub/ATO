@@ -65,14 +65,6 @@ export type CreepPathClip = (typeof CREEP_PATH_CLIPS)[number];
  * flickers between the two clips. */
 export const CREEP_STILL_MS = 250;
 
-/** Display cadence (ms per frame) for the two clips the board clocks itself.
- * `walk` is absent on purpose: its frames track ground travelled (the walk
- * tick's per-creep phase), never wall time. */
-export const CREEP_CLIP_FRAME_MS: Record<'idle' | 'death', number> = {
-  idle: 200, // 4f ≈ 0.8s breathing loop
-  death: 70, // 9f ≈ 0.63s one-shot, then the last frame holds
-};
-
 export type CreepClipInput = {
   /** The creep was killed: the corpse phase, which outlives its engine entry. */
   dead: boolean;
@@ -98,23 +90,4 @@ export function creepClip(input: CreepClipInput): CreepPathClip | null {
   if (input.dead) return authored('death') ? 'death' : null;
   if (input.rate > 0) return authored('walk') ? 'walk' : null;
   return authored('idle') ? 'idle' : null;
-}
-
-/**
- * Frame index for one of the wall-clock creep clips. `idle` loops; `death`
- * plays ONCE and holds its last frame, so a corpse stays down instead of
- * standing back up. `seed` slides a creep's phase so a stalled cluster does not
- * breathe in lockstep (idle only — a death never staggers).
- */
-export function creepClipFrame(
-  clip: 'idle' | 'death',
-  elapsedMs: number,
-  frames: number,
-  seed = 0,
-): number {
-  if (frames <= 1) return 0;
-  const per = CREEP_CLIP_FRAME_MS[clip];
-  const elapsed = Math.max(0, elapsedMs) + (clip === 'idle' ? seed * per : 0);
-  const raw = Math.floor(elapsed / per);
-  return clip === 'death' ? Math.min(raw, frames - 1) : raw % frames;
 }

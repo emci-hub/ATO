@@ -54,6 +54,7 @@ import {
   boundBossStarDamage,
   boundBossStarSkillCdScale,
   getBoundBossDef,
+  type BoundBossDef,
 } from '@/play/engine/bound-boss';
 import { type TypeTag } from '@/play/engine/type-match';
 import { heroById } from '@/play/heroes-data';
@@ -365,21 +366,22 @@ export function isHeroBoundTower(bossId: string): boolean {
 
 /** A cycle boss's ART hero — the Final cycle boss (Ember Sovereign) draws the
  * Archangel hero's cast kit (idle `Hover_Idle` / attack `Attack_01_Seraph_Strike`
- * / skill `Ultimate_Final_Judgment`); a Scout cycle boss draws Crimson Oni.
- * Keyed by the bound-boss id; the `bound_bosses.json` LABEL is untouched — only
- * the ART + FSM resolve to the hero (PRODUCT LOCK: Final → Archangel, Scout →
- * Oni). */
-const CYCLE_BOSS_HERO: Readonly<Record<string, string>> = {
-  ember_sovereign: 'archangel', // Final cycle boss
-  // scout cycle boss (future pack) → 'oni'
-};
+ * / skill `Ultimate_Final_Judgment`); a Scout cycle boss draws Crimson Oni. The
+ * `bound_bosses.json` LABEL is untouched — only the ART + FSM resolve to the
+ * hero (PRODUCT LOCK: Final → Archangel, Scout → Oni). A def is "Final" unless
+ * its name says it is a Scout, since the def carries no band-kind field. */
+function cycleBossHeroFor(def: BoundBossDef): string {
+  return def.name.toLowerCase().includes('scout') ? 'oni' : 'archangel';
+}
 
 /** The hero id whose cast kit a Bound Boss tower draws: a HERO-bound tower is
- * its own hero id; a cycle boss resolves through `CYCLE_BOSS_HERO`. Null = a
- * cycle boss with no mapped hero art (it keeps its placeholder / no hero clips). */
+ * its own hero id; a cycle boss resolves through `cycleBossHeroFor` (Final →
+ * Archangel, Scout → Oni). Null = a cycle boss with no def (it keeps its
+ * placeholder / no hero clips). */
 export function boundBossHeroId(bossId: string): string | null {
   if (isHeroBoundTower(bossId)) return bossId;
-  return CYCLE_BOSS_HERO[bossId] ?? null;
+  const def = getBoundBossDef(bossId);
+  return def ? cycleBossHeroFor(def) : null;
 }
 
 export type DefendLive = {

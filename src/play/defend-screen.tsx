@@ -113,7 +113,6 @@ import {
   skinWalkFrames,
   resolveBoundHeroTowerKit,
   towerSkinRole,
-  type SkinAnimClipName,
   type SkinRole,
   type SkinRoleId,
   type SkinWalkFace,
@@ -121,8 +120,17 @@ import {
 import {
   CREEP_STILL_MS,
   creepClip,
-  creepClipFrame,
 } from '@/play/cast-kits';
+import {
+  castActorClipFrames,
+  castActorCreate,
+  castActorFrame,
+  castActorIdleSeed,
+  castActorPathFrame,
+  castActorStartOnce,
+  type CastActor,
+  type CastActorClip,
+} from '@/play/cast-actor';
 import { boardDecor, roadDecor, ATO_GHOST_D } from '@/play/board-decor';
 import { BOARD_MAPS, BOARD_ORDER, boardPathD, type BoardId } from '@/play/board-data';
 import { NeonBoardChrome } from '@/play/neon-chrome';
@@ -201,10 +209,10 @@ const WALK_TICK_MS = 50;
 const WALK_RATE_MAX_MS = 250;
 
 /** How long a killed creep's corpse stays on the board (ms): the `death`
- * one-shot (~0.63s at CREEP_CLIP_FRAME_MS.death) plus a short beat holding its
- * last frame, so the kill reads without the body lingering. Only roles that
- * author death art leave a corpse at all; the rest vanish on the tick they die,
- * exactly as before. */
+ * one-shot (~0.63s at `CAST_ACTOR_FRAME_MS.path.death`) plus a short beat
+ * holding its last frame, so the kill reads without the body lingering. Only
+ * roles that author death art leave a corpse at all; the rest vanish on the
+ * tick they die, exactly as before. */
 const CREEP_CORPSE_MS = 1_100;
 
 /**
@@ -746,9 +754,10 @@ export function DefendScreen({
    * clip kit's idle/attack art; `skinWalkFace` on the aim dx flips it toward the
    * shot and keeps the last face through a near-vertical aim. */
   const towerFaceRef = useRef<Record<number, SkinWalkFace>>({});
-  /** Per-tower clip-player state (K1), keyed by tower id: idle loop or the
-   * attack one-shot. Display only — combat/cooldowns never touch it. */
-  const towerAnimRef = useRef<Record<number, TowerAnimState>>({});
+  /** Per-tower clip-player state (K1), keyed by tower id: the shared CastActor
+   * (idle loop / attack / skill one-shots). Display only — combat/cooldowns
+   * never touch it. */
+  const towerAnimRef = useRef<Record<number, CastActor>>({});
   /** Bumped by the tower anim tick to force the re-render that advances tower
    * frames. The value is never read. */
   const [, setTowerAnimTick] = useState(0);
@@ -855,16 +864,11 @@ export function DefendScreen({
   /** Which way the Avatar faces (sticky E/W side profile for the 2-dir Corvus
    * art). Aim math uses `avatarPosRef`; the DRAW uses only this face. */
   const avatarFaceRef = useRef<SkinWalkFace>('e');
-  /** Avatar clip player state: the active clip, when it began, and when a
-   * one-shot (attack/skill/hurt/dash) ends (0 = looping clip). Driven by a
-   * display-only tick; combat/cooldowns never touch it. Seeded with a live
-   * timestamp so a fresh mount breathes idle from frame 0. */
-  const avatarAnimRef = useRef<AvatarAnimState>({
-    clip: 'idle',
-    clipStartAt: Date.now(),
-    onceEndAt: 0,
-    lockUntil: 0,
-  });
+  /** Avatar clip player state — the shared CastActor (avatar mode: idle/walk
+   * loops + attack/skill/hurt/dash one-shots). Driven by a display-only tick;
+   * combat/cooldowns never touch it. Seeded with a live timestamp so a fresh
+   * mount breathes idle from frame 0. */
+  const avatarAnimRef = useRef<CastActor>(castActorCreate('avatar'));
   /** Bumped by the avatar anim tick purely to force the re-render that advances
    * the Avatar frame. The value is never read. */
   const [, setAvatarAnimTick] = useState(0);
@@ -893,16 +897,10 @@ export function DefendScreen({
    * `heroes.json` or unbundled art), or when a higher-priority one-shot is
    * locked in — in which case nothing changes and the caller still does its
    * gameplay work. */
-  const startAvatarOnce = useCallback((clip: AvatarClip): boolean => {
-    if (avatarClipFrames(clip, avatarRole) <= 0) return false; // hero lacks this clip
-    const a = avatarAnimRef.current;
-    const now = Date.now();
-    if (!canStartAvatarClip(a, clip, now)) return false;
-    a.clip = clip;
-    a.clipStartAt = now;
-    a.onceEndAt = now + Math.max(1, avatarClipFrames(clip, avatarRole)) * AVATAR_FRAME_MS[clip];
-    setAvatarAnimTick((n) => n + 1); // show frame 0 of the new clip immediately
-    return true;
+  const startAvatarOnce = useCallback((clip: AvatarOnce): boolean => {
+    const started = castActorStartOnce(avatarAnimRef.current, clip, Date.now(), avatarRole);
+    if (started) setAvatarAnimTick((n) => n + 1); // show frame 0 of the new clip immediately
+    return started;
   }, [avatarRole]);
 
   /** Start a tower one-shot clip (`attack` when its shot FX fires, `skill` when
@@ -911,17 +909,12 @@ export function DefendScreen({
    * higher-priority one-shot is locked in — in which case nothing changes and
    * the caller still does its gameplay work (shots still apply damage). */
   const startTowerOnce = useCallback(
-    (clip: TowerClip, towerId: number, role: SkinRole): boolean => {
-      if (towerClipFrames(clip, role) <= 0) return false;
+    (clip: TowerOnce, towerId: number, role: SkinRole): boolean => {
       const now = Date.now();
-      const prev = towerAnimRef.current[towerId];
-      const state: TowerAnimState = prev ?? { clip: 'idle', clipStartAt: now, onceEndAt: 0 };
-      if (!canStartTowerClip(state, clip)) return false;
-      towerAnimRef.current[towerId] = {
-        clip,
-        clipStartAt: now,
-        onceEndAt: now + Math.max(1, towerClipFrames(clip, role)) * TOWER_FRAME_MS[clip],
-      };
+      const actor =
+        towerAnimRef.current[towerId] ?? castActorCreate('tower', castActorIdleSeed(towerId, 'tower'));
+      if (!castActorStartOnce(actor, clip, now, role)) return false;
+      towerAnimRef.current[towerId] = actor;
       setTowerAnimTick((n) => n + 1); // show frame 0 of the new clip immediately
       return true;
     },
@@ -968,19 +961,20 @@ export function DefendScreen({
       for (const tower of current.towers) {
         const role = TOWER_KIT_ROLES[tower.kind];
         const hasClips =
-          towerClipFrames('idle', role) > 0 ||
-          towerClipFrames('attack', role) > 0 ||
-          towerClipFrames('skill', role) > 0;
+          castActorClipFrames('idle', role) > 0 ||
+          castActorClipFrames('attack', role) > 0 ||
+          castActorClipFrames('skill', role) > 0;
         if (!hasClips) continue; // static rotation — no clip to advance
         const prev = towerAnimRef.current[tower.id];
-        const state: TowerAnimState = prev ?? { clip: 'idle', clipStartAt: now, onceEndAt: 0 };
+        const state: CastActor =
+          prev ?? castActorCreate('tower', castActorIdleSeed(tower.id, 'tower'));
         if (state.onceEndAt > 0 && now >= state.onceEndAt) {
           state.clip = 'idle';
           state.clipStartAt = now;
           state.onceEndAt = 0;
         }
         towerAnimRef.current[tower.id] = state;
-        const key = `${state.clip}:${towerClipFrame(state, now, role)}`;
+        const key = `${state.clip}:${castActorFrame(state, now, role)}`;
         if (lastFrameKey.get(tower.id) !== key) {
           lastFrameKey.set(tower.id, key);
           changed = true;
@@ -991,19 +985,20 @@ export function DefendScreen({
         if (!heroId) continue; // no hero art mapped — static placeholder only
         const role = resolveBoundHeroTowerKit(heroId);
         const hasClips =
-          towerClipFrames('idle', role) > 0 ||
-          towerClipFrames('attack', role) > 0 ||
-          towerClipFrames('skill', role) > 0;
+          castActorClipFrames('idle', role) > 0 ||
+          castActorClipFrames('attack', role) > 0 ||
+          castActorClipFrames('skill', role) > 0;
         if (!hasClips) continue; // static rotation — no clip to advance
         const prev = towerAnimRef.current[bb.id];
-        const state: TowerAnimState = prev ?? { clip: 'idle', clipStartAt: now, onceEndAt: 0 };
+        const state: CastActor =
+          prev ?? castActorCreate('tower', castActorIdleSeed(bb.id, 'tower'));
         if (state.onceEndAt > 0 && now >= state.onceEndAt) {
           state.clip = 'idle';
           state.clipStartAt = now;
           state.onceEndAt = 0;
         }
         towerAnimRef.current[bb.id] = state;
-        const key = `${state.clip}:${towerClipFrame(state, now, role)}`;
+        const key = `${state.clip}:${castActorFrame(state, now, role)}`;
         if (lastFrameKey.get(bb.id) !== key) {
           lastFrameKey.set(bb.id, key);
           changed = true;
@@ -1047,7 +1042,7 @@ export function DefendScreen({
           a.onceEndAt = 0;
         }
       } else {
-        const want: AvatarClip = movingRef.current && hasWalk ? 'walk' : 'idle';
+        const want: CastActorClip = movingRef.current && hasWalk ? 'walk' : 'idle';
         if (a.clip !== want) {
           a.clip = want;
           a.clipStartAt = now;
@@ -1057,7 +1052,7 @@ export function DefendScreen({
       // 120ms/frame, so this is ~2.4× fewer full-board renders than bumping on
       // every tick. The clip name is part of the key so a clip swap (or the
       // idle↔walk hand-off) always repaints even if the frame index matches.
-      const key = `${a.clip}:${avatarClipFrame(a, now, avatarRole)}`;
+      const key = `${a.clip}:${castActorFrame(a, now, avatarRole)}`;
       if (key !== lastFrameKey) {
         lastFrameKey = key;
         setAvatarAnimTick((n) => n + 1);
@@ -1784,7 +1779,7 @@ export function DefendScreen({
     if (boundBossHeroId(bossId)) {
       const placed = next.boundBosses.find((b) => b.pad === selectedPad && b.bossId === bossId);
       if (placed) {
-        towerAnimRef.current[placed.id] = { clip: 'idle', clipStartAt: Date.now(), onceEndAt: 0 };
+        towerAnimRef.current[placed.id] = castActorCreate('tower', castActorIdleSeed(placed.id, 'tower'));
         towerFaceRef.current[placed.id] = 'e';
       }
     }
@@ -1819,7 +1814,7 @@ export function DefendScreen({
       if (boundBossHeroId(candidate.id)) {
         const placed = next.boundBosses.find((b) => b.pad === pad && b.bossId === candidate.id);
         if (placed) {
-          towerAnimRef.current[placed.id] = { clip: 'idle', clipStartAt: Date.now(), onceEndAt: 0 };
+          towerAnimRef.current[placed.id] = castActorCreate('tower', castActorIdleSeed(placed.id, 'tower'));
           towerFaceRef.current[placed.id] = 'e';
         }
       }
@@ -2024,14 +2019,14 @@ export function DefendScreen({
 
   // A3 Avatar: the ACTIVE hero's cast role (idle loop / walk / attack / skill /
   // hurt / dash clips, sticky E/W) resolved via `avatarRole`. The frame comes
-  // from the clip-player state via the shared `avatarClipFrame` (same math the
-  // anim tick uses); the face is the sticky side profile. Fails back to the
-  // static rotation when a clip frame (or the whole clip) isn't authored.
+  // from the shared CastActor (`castActorFrame` — same math the anim tick
+  // uses); the face is the sticky side profile. Fails back to the static
+  // rotation when a clip frame (or the whole clip) isn't authored.
   const avatarAnim = avatarAnimRef.current;
-  const avatarFrame = avatarClipFrame(avatarAnim, Date.now(), avatarRole);
+  const avatarFrame = castActorFrame(avatarAnim, Date.now(), avatarRole);
   const avatarFace = avatarFaceRef.current;
   const avatarFrameSource =
-    avatarClipArt(avatarAnim.clip, avatarFace, avatarFrame, avatarRole) ??
+    castActorFrameArt(avatarAnim, avatarFace, avatarFrame, avatarRole) ??
     roleArt(avatarRole, roleFaceArtIndex(avatarRole, avatarFace));
 
   /** Drops card — one shared block, collapsed by default to a single neon
@@ -2407,9 +2402,9 @@ export function DefendScreen({
                 const heading = headingVectorFromDeg(deg);
                 const face = towerFaceRef.current[tower.id] ?? 'e';
                 const hasClips =
-                  towerClipFrames('idle', kitRole) > 0 ||
-                  towerClipFrames('attack', kitRole) > 0 ||
-                  towerClipFrames('skill', kitRole) > 0;
+                  castActorClipFrames('idle', kitRole) > 0 ||
+                  castActorClipFrames('attack', kitRole) > 0 ||
+                  castActorClipFrames('skill', kitRole) > 0;
 
                 let source: ImageSourcePropType | undefined;
                 let transform: string | undefined;
@@ -2417,16 +2412,13 @@ export function DefendScreen({
                   // Stationary humanoid: the breathing idle loop, or the attack
                   // one-shot while firing. Side-profile art → sticky E/W face,
                   // never rotated.
-                  const anim: TowerAnimState =
+                  const anim: CastActor =
                     towerAnimRef.current[tower.id] ??
-                    { clip: 'idle', clipStartAt: Date.now(), onceEndAt: 0 };
-                  const frame = towerClipFrame(anim, Date.now(), kitRole);
+                    castActorCreate('tower', castActorIdleSeed(tower.id, 'tower'));
+                  const frame = castActorFrame(anim, Date.now(), kitRole);
                   source =
-                    directionalClipArt(
-                      kitRole.anims?.[anim.clip],
-                      roleAnimFaceIndex(kitRole, anim.clip, face),
-                      frame,
-                    ) ?? roleArt(kitRole, roleFaceArtIndex(kitRole, face));
+                    castActorFrameArt(anim, face, frame, kitRole) ??
+                    roleArt(kitRole, roleFaceArtIndex(kitRole, face));
                   transform = undefined;
                 } else {
                   // No clip art yet — keep the static 8-dir rotation.
@@ -2476,9 +2468,9 @@ export function DefendScreen({
                   const kitRole = resolveBoundHeroTowerKit(heroId);
                   const face = towerFaceRef.current[bb.id] ?? 'e';
                   const hasClips =
-                    towerClipFrames('idle', kitRole) > 0 ||
-                    towerClipFrames('attack', kitRole) > 0 ||
-                    towerClipFrames('skill', kitRole) > 0;
+                    castActorClipFrames('idle', kitRole) > 0 ||
+                    castActorClipFrames('attack', kitRole) > 0 ||
+                    castActorClipFrames('skill', kitRole) > 0;
                   if (__DEV__ && !hasClips) {
                     // A6 — a bound boss that resolved no clips draws a static
                     // rotation. Fail loudly in dev so an un-bundled hero (or a
@@ -2490,16 +2482,13 @@ export function DefendScreen({
                   }
                   let source: ImageSourcePropType | undefined;
                   if (hasClips) {
-                    const anim: TowerAnimState =
+                    const anim: CastActor =
                       towerAnimRef.current[bb.id] ??
-                      { clip: 'idle', clipStartAt: Date.now(), onceEndAt: 0 };
-                    const frame = towerClipFrame(anim, Date.now(), kitRole);
+                      castActorCreate('tower', castActorIdleSeed(bb.id, 'tower'));
+                    const frame = castActorFrame(anim, Date.now(), kitRole);
                     source =
-                      directionalClipArt(
-                        kitRole.anims?.[anim.clip],
-                        roleAnimFaceIndex(kitRole, anim.clip, face),
-                        frame,
-                      ) ?? roleArt(kitRole, roleFaceArtIndex(kitRole, face));
+                      castActorFrameArt(anim, face, frame, kitRole) ??
+                      roleArt(kitRole, roleFaceArtIndex(kitRole, face));
                   } else {
                     source = roleArt(kitRole, roleFaceArtIndex(kitRole, face));
                   }
@@ -2563,7 +2552,7 @@ export function DefendScreen({
                   corpse.role,
                   'death',
                   skinAnimFaceIndex(corpse.role, 'death', corpse.face),
-                  creepClipFrame('death', Date.now() - corpse.bornAt, deathFrames),
+                  castActorPathFrame('death', Date.now(), corpse.bornAt, 0, deathFrames),
                 );
                 if (!source) return null;
                 const box = skinDrawBox(corpse.role, corpse.x, corpse.y, corpse.size);
@@ -2664,7 +2653,7 @@ export function DefendScreen({
                         spriteRole,
                         'idle',
                         skinAnimFaceIndex(spriteRole, 'idle', walkFace),
-                        creepClipFrame('idle', Date.now(), idleFrames, puff.id),
+                        castActorPathFrame('idle', Date.now(), 0, puff.id, idleFrames),
                       )
                     : undefined;
                 const spriteSource = idleSprite ?? walkSprite ?? sprite;
@@ -3989,137 +3978,34 @@ const AVATAR_ART_FRAC = 0.22;
 /** Floor for the art box, px (small boards). */
 const AVATAR_MIN_PX = 56;
 
-/* ---------------------------------------------------- Avatar clip player --- */
-/** The Avatar's clip set: the cast's named clips MINUS `death` (the Avatar
- * never dies — a leak plays `hurt` plus the lost overlay), plus the `walk`
- * locomotion loop. `SkinAnimClipName` carries `death` for the K2 path walkers,
- * so this narrowing keeps the priority ladder and its frame map exhaustive.
- * `walk` reads the role's `walk` clip; the rest read the named `anims` clips. */
-type AvatarClip = Exclude<SkinAnimClipName, 'death'> | 'walk';
+/* ---------------------------------------------------- CastActor clip player --- */
+/** The Avatar's one-shot clips — `walk`/`idle` loops are set by the anim tick,
+ * these are the preemptable one-shots. The shared `CastActor` ladder / frame /
+ * startOnce helpers live in `src/play/cast-actor.ts`. */
+type AvatarOnce = 'dash' | 'attack' | 'skill' | 'hurt';
+/** A pad tower's one-shot clips (its `idle` is the loop). */
+type TowerOnce = 'attack' | 'skill';
 
-/**
- * Clip priority — a request only preempts a LOCKED one-shot (`onceEndAt > 0`)
- * if it strictly outranks the one playing. `idle`/`walk` are loops, so they are
- * always interruptible. This is what keeps a ~1.2s Root Veil cast from being
- * cut short by the Avatar's ~0.7s auto-attack: `attack` (3) cannot preempt
- * `skill` (4), and `hurt` (5) preempts everything.
- */
-const AVATAR_CLIP_PRIORITY: Record<AvatarClip, number> = {
-  hurt: 5,
-  skill: 4,
-  attack: 3,
-  dash: 2,
-  walk: 1,
-  idle: 0,
-};
 /** Recovery tail after a skill one-shot ends, during which the auto-attack clip
  * is also refused — the cast's last frames would otherwise be clipped. Damage
  * and cooldowns are untouched; this is the CLIP only. */
 const AVATAR_SKILL_RECOVER_MS = 150;
-/** Display-only cadence for each Avatar clip (ms per frame). */
-const AVATAR_FRAME_MS: Record<AvatarClip, number> = {
-  idle: 120, // 13f ≈ 1.56s loop
-  walk: 100, // 9f ≈ 0.9s loop
-  attack: 65, // 13f ≈ 0.85s once
-  skill: 70, // 17f ≈ 1.2s once
-  hurt: 140, // 5f ≈ 0.7s once
-  dash: 50, // 9f ≈ 0.45s once
-};
 /** Avatar anim tick (ms) — just drives the frame re-render; the frame itself is
  * time-derived so a dropped tick never desyncs. */
 const AVATAR_ANIM_TICK_MS = 50;
 
-/** Avatar clip-player state. `onceEndAt === 0` means a looping clip (idle/walk)
- * is active; `lockUntil` is the post-skill attack recovery gate. */
-type AvatarAnimState = {
-  clip: AvatarClip;
-  clipStartAt: number;
-  onceEndAt: number;
-  lockUntil: number;
-};
-
-/** Whether a clip request may preempt what's playing right now. */
-function canStartAvatarClip(
-  state: AvatarAnimState,
-  next: AvatarClip,
-  now: number,
-): boolean {
-  if (next === 'attack' && now < state.lockUntil) return false;
-  if (state.onceEndAt === 0) return true; // idle/walk loop — always interruptible
-  return AVATAR_CLIP_PRIORITY[next] > AVATAR_CLIP_PRIORITY[state.clip];
-}
-
-/**
- * Frame index to draw for the current clip state. Looping clips wrap; a one-shot
- * holds its last frame. Single source of truth — the renderer and the anim tick
- * both read this, so the tick can skip re-renders for frames it already showed
- * without ever drifting from what the renderer would compute.
- */
-function avatarClipFrame(state: AvatarAnimState, now: number, role: SkinRole): number {
-  const frames = Math.max(1, avatarClipFrames(state.clip, role));
-  const raw = Math.floor((now - state.clipStartAt) / AVATAR_FRAME_MS[state.clip]);
-  return state.onceEndAt > 0 ? Math.min(raw, frames - 1) : raw % frames;
-}
-
-/** Frame count for an Avatar clip (0 when the role omits it). */
-function avatarClipFrames(clip: AvatarClip, role: SkinRole): number {
-  return clip === 'walk'
-    ? role.walk?.frames ?? 0
-    : role.anims?.[clip]?.frames ?? 0;
-}
-
-/** Art for one frame of an Avatar clip, resolved at the sticky E/W face. */
-function avatarClipArt(
-  clip: AvatarClip,
+/** Art for one frame of a CastActor clip, resolved at the sticky E/W face.
+ * `walk` reads the role's locomotion clip; the rest read `anims`. Undefined when
+ * the clip isn't authored — callers fall back to the rotation art. */
+function castActorFrameArt(
+  actor: CastActor,
   face: SkinWalkFace,
   frame: number,
   role: SkinRole,
 ): ImageSourcePropType | undefined {
-  if (clip === 'walk') {
-    return directionalClipArt(role.walk, roleWalkFaceIndex(role, face), frame);
-  }
-  return directionalClipArt(role.anims?.[clip], roleAnimFaceIndex(role, clip, face), frame);
-}
-
-/* ---------------------------------------------------- tower clip kit ---- */
-/** Tower clips (display only). A tower is a stationary humanoid: `idle` loops
- * while it isn't firing; `attack` is the SHOOT one-shot (its `fire` clip,
- * aliased to `attack` in the loader); `skill` (K1b) is the auto-skill one-shot
- * a tower plays when its skin authors `clips.skill`. No walk/dash on a tower. */
-type TowerClip = 'idle' | 'attack' | 'skill';
-/** Display-only cadence for each tower clip (ms per frame). */
-const TOWER_FRAME_MS: Record<TowerClip, number> = { idle: 120, attack: 65, skill: 70 };
-
-/** Clip priority — a request only preempts a LOCKED one-shot (`onceEndAt > 0`)
- * if it strictly outranks it, so a skill cast is never cut short by the
- * ~0.9s attack one-shot. `idle` is a loop and always interruptible. This is the
- * tower mirror of the Avatar's `AVATAR_CLIP_PRIORITY`. */
-const TOWER_CLIP_PRIORITY: Record<TowerClip, number> = { skill: 3, attack: 2, idle: 1 };
-
-/** Whether a tower clip request may preempt what's playing right now. */
-function canStartTowerClip(state: TowerAnimState, next: TowerClip): boolean {
-  if (state.onceEndAt === 0) return true; // idle loop — always interruptible
-  return TOWER_CLIP_PRIORITY[next] > TOWER_CLIP_PRIORITY[state.clip];
-}
-
-/** Tower clip-player state. `onceEndAt === 0` means the idle loop is active. */
-type TowerAnimState = {
-  clip: TowerClip;
-  clipStartAt: number;
-  onceEndAt: number;
-};
-
-/** Frame count for a tower clip (0 when the role omits it). */
-function towerClipFrames(clip: TowerClip, role: SkinRole): number {
-  return role.anims?.[clip]?.frames ?? 0;
-}
-
-/** Frame index to draw for the current tower clip state. Looping idle wraps; a
- * one-shot attack/skill holds its last frame. */
-function towerClipFrame(state: TowerAnimState, now: number, role: SkinRole): number {
-  const frames = Math.max(1, towerClipFrames(state.clip, role));
-  const raw = Math.floor((now - state.clipStartAt) / TOWER_FRAME_MS[state.clip]);
-  return state.onceEndAt > 0 ? Math.min(raw, frames - 1) : raw % frames;
+  return actor.clip === 'walk'
+    ? directionalClipArt(role.walk, roleWalkFaceIndex(role, face), frame)
+    : directionalClipArt(role.anims?.[actor.clip], roleAnimFaceIndex(role, actor.clip, face), frame);
 }
 
 /* ------------------------------------------------------- click-to-move --- */

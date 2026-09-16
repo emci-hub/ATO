@@ -28,11 +28,11 @@
  *      path ATTACK is deliberately parked (`SLOT_FOLDER_ALIASES` names the
  *      folders that DO satisfy a slot, so nothing gets mapped to `death` by
  *      accident — a slash or a wave is not a corpse).
- *   5. The FSM ladder itself (`creepClip` / `creepClipFrame` in cast-kits.ts):
- *      death > walk > idle, a slot the art does not author is skipped rather
- *      than invented, and a death one-shot holds its last frame instead of
- *      looping back to standing. Joined per role to the declared frames, so the
- *      data and the decision table can never drift apart.
+ *   5. The FSM ladder itself (`creepClip` in cast-kits.ts + `castActorPathFrame`
+ *      in cast-actor.ts): death > walk > idle, a slot the art does not author is
+ *      skipped rather than invented, and a death one-shot holds its last frame
+ *      instead of looping back to standing. Joined per role to the declared
+ *      frames, so the data and the decision table can never drift apart.
  *
  * Metro `require`s can't run under tsx, so the registry is scanned as TEXT
  * (same as check-heroes / check-towers); disk frames are counted as files.
@@ -48,9 +48,9 @@ import {
   CREEP_PATH_CLIPS,
   CREEP_STILL_MS,
   creepClip,
-  creepClipFrame,
   type CreepPathClip,
 } from '../src/play/cast-kits';
+import { castActorPathFrame } from '../src/play/cast-actor';
 
 /**
  * Every path walker, in the art order the board maps them (see `puffUnitRole`
@@ -455,13 +455,13 @@ assert.equal(creepClip({ dead: false, rate: 0, frames: { idle: 1 } }), null, 'on
 assert.equal(creepClip({ dead: false, rate: 0, frames: {} }), null, 'no art at all ⇒ nothing to play');
 ok('creepClip resolves death > walk > idle and skips every unauthored slot');
 
-assert.equal(creepClipFrame('idle', 0, 4), 0, 'an idle loop starts at frame 0');
-assert.equal(creepClipFrame('idle', 4 * 200, 4), 0, 'an idle loop wraps (4 frames ≈ 0.8s)');
-assert.notEqual(creepClipFrame('idle', 0, 4, 1), 0, 'the idle seed slides a creep out of lockstep');
-assert.equal(creepClipFrame('death', 0, 9), 0, 'a death one-shot starts at frame 0');
-assert.equal(creepClipFrame('death', 10 * 70, 9), 8, 'a death one-shot holds its last frame — no standing back up');
-assert.equal(creepClipFrame('death', 10 * 70, 1), 0, 'a single-frame clip is always frame 0');
-ok('creepClipFrame loops the idle and holds the death one-shot on its last frame');
+assert.equal(castActorPathFrame('idle', 0, 0, 0, 4), 0, 'an idle loop starts at frame 0');
+assert.equal(castActorPathFrame('idle', 4 * 200, 0, 0, 4), 0, 'an idle loop wraps (4 frames ≈ 0.8s)');
+assert.notEqual(castActorPathFrame('idle', 0, 0, 1, 4), 0, 'the idle seed slides a creep out of lockstep');
+assert.equal(castActorPathFrame('death', 0, 0, 0, 9), 0, 'a death one-shot starts at frame 0');
+assert.equal(castActorPathFrame('death', 10 * 70, 0, 0, 9), 8, 'a death one-shot holds its last frame — no standing back up');
+assert.equal(castActorPathFrame('death', 10 * 70, 0, 0, 1), 0, 'a single-frame clip is always frame 0');
+ok('castActorPathFrame loops the idle and holds the death one-shot on its last frame');
 
 // The data ⇄ FSM join: the frames declared in the skin are what the ladder
 // answers with, per role. This is what makes a null `idle` on art that ships a
@@ -510,8 +510,8 @@ ok('the two art-less creeps still vanish on death (idle only, no faked corpse)')
 // The board must actually ASK: data + a decision table nothing calls is the
 // silent-empty failure this file exists to prevent.
 assert.match(screen, /creepClip\(/, 'defend-screen resolves a path stance through creepClip');
-assert.match(screen, /creepClipFrame\('idle'/, 'defend-screen clocks the idle loop');
-assert.match(screen, /creepClipFrame\('death'/, 'defend-screen plays the death one-shot');
+assert.match(screen, /castActorPathFrame\('idle'/, 'defend-screen clocks the idle loop through the CastActor');
+assert.match(screen, /castActorPathFrame\('death'/, 'defend-screen plays the death one-shot through the CastActor');
 ok('the board is wired to the ladder (stance + both wall-clock clips)');
 
 // A tree where NOTHING is bundled enforces nothing against the registry — say
