@@ -2469,8 +2469,9 @@ export function DefendScreen({
                 // the tick's rate flag: a creep the tick has only just seeded has
                 // no measured rate yet, and reading that as "stopped" would make
                 // every spawn breathe before it walks. A role with no idle art
-                // (every boss, today) keeps holding its walk frame, and a role
-                // with no walk art keeps the static rotation.
+                // keeps holding its walk frame, and a role with no walk art
+                // keeps the static rotation — both bosses author both slots
+                // now, so every path walker breathes when stalled.
                 const phaseEntry = walkPhaseRef.current[puff.id];
                 const creepMoving =
                   phaseEntry == null || Date.now() - phaseEntry.at <= CREEP_STILL_MS;
