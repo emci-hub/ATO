@@ -3,12 +3,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { FullProfileBanner } from '@/components/full-profile-banner';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { QuestionsFold } from '@/components/questions-fold';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { crisisFlagsForWindow } from '@/lib/crisis/days';
+import { isFullProfileDone } from '@/lib/full-profile-gate';
 import { useMe } from '@/hooks/use-me';
 import { useSession } from '@/hooks/use-session';
 import { type TraitTrack } from '@/lib/trait-stability';
@@ -112,6 +114,18 @@ export default function IntakeSweepTabScreen() {
           <View style={styles.header}>
             <ThemedText type="subtitle">Questions</ThemedText>
           </View>
+
+          {/*
+            The one-time "Full profile enabled" announcement, shown the first
+            time an account finishes the bank.
+
+            Driven by `isFullProfileDone` — the SAME signal Home's unlocked
+            state reads — so the banner and the Home unlock can never disagree:
+            if this shows, "Load insight" / "Load story" are already live. It
+            spends no model call, and it renders nothing until `tracksReady`,
+            because the gate reports false off an empty pre-fetch `tracks`.
+          */}
+          <FullProfileBanner userId={userId} done={isFullProfileDone(tracks, tracksReady)} />
 
           {/*
             `tracksReady` gates the mount: QuestionsFold generates and SAVES a
