@@ -60,8 +60,9 @@ export type SkinDirs = 1 | 4 | 8;
 export type SkinClips = { idle?: number; walk?: number; attack?: number };
 
 /** Named multi-dir clips beyond the legacy `walk` field (the Avatar's cast set:
- * idle loop, attack/skill/hurt one-shots, dash). */
-export type SkinAnimClipName = 'idle' | 'attack' | 'skill' | 'hurt' | 'dash';
+ * idle loop, attack/skill/hurt one-shots, dash — plus `death`, the path
+ * walkers' K2 one-shot, which the Avatar never plays). */
+export type SkinAnimClipName = 'idle' | 'attack' | 'skill' | 'hurt' | 'dash' | 'death';
 
 /**
  * A multi-frame directional walk clip (creep legs while moving). Towers and
@@ -109,8 +110,10 @@ export type SkinRole = {
   scales?: readonly number[];
   clips?: SkinClips;
   walk?: SkinWalk;
-  /** Named multi-dir clips (`idle`/`attack`/`skill`/`hurt`/`dash`), same shape
-   * as `walk`. The Avatar's cast role uses these for its directional cycle. */
+  /** Named multi-dir clips (`idle`/`attack`/`skill`/`hurt`/`dash`/`death`), same
+   * shape as `walk`. The Avatar's cast role uses these for its directional
+   * cycle; the creeps' `unit.*` roles use `idle` + `death` for the K2
+   * path-walker FSM (`creepClip` in cast-kits.ts). */
   anims?: Partial<Record<SkinAnimClipName, SkinWalk>>;
   /** Solid tone + casing for a ribbon role (the road), sampled from the tile. */
   tone?: string;

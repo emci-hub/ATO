@@ -89,6 +89,9 @@ import {
   roleFaceArtIndex,
   roleFootAt,
   roleWalkFaceIndex,
+  skinAnimArt,
+  skinAnimFaceIndex,
+  skinAnimFrames,
   skinArt,
   skinDirIndex,
   skinDirs,
@@ -109,6 +112,11 @@ import {
   type SkinRoleId,
   type SkinWalkFace,
 } from '@/play/skin';
+import {
+  CREEP_STILL_MS,
+  creepClip,
+  creepClipFrame,
+} from '@/play/cast-kits';
 import { boardDecor, roadDecor, ATO_GHOST_D } from '@/play/board-decor';
 import { BOARD_MAPS, BOARD_ORDER, boardPathD, type BoardId } from '@/play/board-data';
 import { NeonBoardChrome } from '@/play/neon-chrome';
@@ -162,25 +170,36 @@ const CREEP_DRAW_SCALE: Record<CreepRole, number> = {
 };
 
 /**
- * Walk-clip cadence + display clock (H1.5, display only).
+ * Walk-clip cadence + display clock (H1.5 + K2, display only).
  *
  * `WALK_FRAMES_PER_PATH` = frames played across one full path traverse
  * (dist 0→1), before the per-role gait multiplier (see `walkFramesPerPath`).
  * Creeps' `dist` only updates on the 100ms sim tick, which would quantise the
  * gait to ~10fps and read as a glide, so a 50ms display tick (`WALK_TICK_MS`)
  * advances a per-creep frame phase using that creep's own measured dist/sec:
- * legs still track ground, slowed creeps cycle slower, and a halted creep holds
- * its frame (`WALK_STOP_MS`) instead of moonwalking. Combat dt is untouched —
- * the engine still steps on `DEFEND_TICK_MS`.
+ * legs still track ground, slowed creeps cycle slower, and a halted creep stops
+ * advancing its phase (`CREEP_STILL_MS`). Combat dt is untouched — the engine
+ * still steps on `DEFEND_TICK_MS`.
+ *
+ * K2 reads that same measured rate as the creeps' stance signal: rate > 0 ⇒ the
+ * walk cycle; rate === 0 (no progress for `CREEP_STILL_MS`) ⇒ the role's
+ * `idle` breathing loop if the art authors one, else the last walk frame is
+ * held exactly as before. There is ONE stall threshold — `CREEP_STILL_MS` in
+ * cast-kits.ts, shared with `creepClip` and `scripts/check-creeps.ts`.
  */
 const WALK_FRAMES_PER_PATH = 110;
 const WALK_TICK_MS = 50;
-/** No dist change for this long ⇒ treat the creep as halted (legs hold). */
-const WALK_STOP_MS = 250;
 /** Cap the rate-measurement window so a creep resuming after a long halt
  * doesn't divide by the whole stall. The first resuming sample is approximate
  * (it under-reads the rate); the next tick re-measures and corrects it. */
 const WALK_RATE_MAX_MS = 250;
+
+/** How long a killed creep's corpse stays on the board (ms): the `death`
+ * one-shot (~0.63s at CREEP_CLIP_FRAME_MS.death) plus a short beat holding its
+ * last frame, so the kill reads without the body lingering. Only roles that
+ * author death art leave a corpse at all; the rest vanish on the tick they die,
+ * exactly as before. */
+const CREEP_CORPSE_MS = 1_100;
 
 /**
  * Per-role gait multiplier on `WALK_FRAMES_PER_PATH` (display only).
@@ -338,11 +357,78 @@ function formatHit(damage: number): string {
   return `${oneDecimal(n / 1_000_000)}M`;
 }
 
+/**
+ * K2 — the corpses a tick's kills leave behind (display only). Same diff the
+ * floaters use: a puff present before and absent after was killed (a leak
+ * freezes the sim, so a puff never leaves the array any other way mid-run). The
+ * corpse carries the pose the live sprite was last drawn in — the same role,
+ * box, lane offset and sticky side profile — so the death one-shot plays where
+ * the creep actually fell.
+ *
+ * A role whose art authors no `death` clip (`creepClip({ dead: true … })` →
+ * null) leaves NO corpse: the engine's removal is still the whole tell, exactly
+ * as before K2.
+ */
+function newCreepCorpses(
+  before: readonly Puff[],
+  after: readonly Puff[],
+  boardId: BoardId,
+  bandKind: string | undefined,
+  faces: Readonly<Record<number, SkinWalkFace>>,
+  bornAt: number,
+): CreepCorpse[] {
+  const map = BOARD_MAPS[boardId];
+  const alive = new Set(after.map((puff) => puff.id));
+  const corpses: CreepCorpse[] = [];
+  for (const puff of before) {
+    if (alive.has(puff.id)) continue;
+    const role = puffUnitRole(puff, bandKind);
+    const dead = creepClip({
+      dead: true,
+      rate: 0,
+      frames: { death: skinAnimFrames(role, 'death') },
+    });
+    if (dead !== 'death') continue;
+    const size = skinUnits(role, UNIT_BASE_UNITS) * puff.size * CREEP_DRAW_SCALE[creepRole(puff)];
+    const pos = creepDrawPosition(puff, map, creepLaneHalf(size));
+    corpses.push({
+      id: puff.id,
+      role,
+      x: pos.x * 100,
+      y: pos.y * 100,
+      size,
+      face: faces[puff.id] ?? 'e',
+      bornAt,
+    });
+  }
+  return corpses;
+}
+
 type DefendPhase = 'setup' | 'running' | 'won' | 'lost';
 
 /** Per-creep walk frame phase (H1.5, display only): a fractional frame cursor
  * plus the dist/rate sample the walk tick uses to advance it. */
 type WalkPhase = { dist: number; at: number; rate: number; phase: number };
+
+/**
+ * One killed creep's death one-shot (K2, display only). The engine removes a
+ * puff the tick it dies — there is no corpse state in the sim — so the board
+ * keeps its own short-lived copy of what it last drew: where the body fell, how
+ * big it was, which side profile it was holding, and when it died. Only created
+ * for a role whose art authors a `death` clip (`creepClip`), and dropped after
+ * `CREEP_CORPSE_MS`.
+ */
+type CreepCorpse = {
+  id: number;
+  role: SkinRoleId;
+  /** Board units (0..100) — already lane-offset, same point the live sprite used. */
+  x: number;
+  y: number;
+  /** Drawn box edge, board units. */
+  size: number;
+  face: SkinWalkFace;
+  bornAt: number;
+};
 
 /** A live shot FX (display only — damage is already applied by the engine). */
 type Shot = {
@@ -678,6 +764,10 @@ export function DefendScreen({
   /** Bumped by the walk tick purely to force the re-render that advances the
    * creep walk frames. The value is never read. */
   const [, setWalkFrameTick] = useState(0);
+  /** K2 death one-shots: the bodies the board keeps drawing after the engine
+   * has already removed their puff. Pruned by the walk tick (and by every run
+   * reset), never sent back into the sim. */
+  const [corpses, setCorpses] = useState<CreepCorpse[]>([]);
   /** §9m boss warn banner — band label + boss name, raised as the boss nears. */
   const [bossAlert, setBossAlert] = useState<{ label: string; name: string } | null>(null);
   /** Mid-run leave confirmation (one tap to confirm, Cancel stays in the fight). */
@@ -1073,6 +1163,7 @@ export function DefendScreen({
     shotsRef.current = [];
     puffFacingRef.current = {};
     puffWalkFaceRef.current = {};
+    setCorpses([]);
     setShots([]);
       setBossAlert(null);
     },
@@ -1096,6 +1187,7 @@ export function DefendScreen({
     shotsRef.current = [];
     puffFacingRef.current = {};
     puffWalkFaceRef.current = {};
+    setCorpses([]);
     setShots([]);
     }
     ensureParked(fight.phase);
@@ -1122,6 +1214,7 @@ export function DefendScreen({
     shotsRef.current = [];
     puffFacingRef.current = {};
     puffWalkFaceRef.current = {};
+    setCorpses([]);
     setShots([]);
   }, [view.cyclePower, view.cycleTint]);
 
@@ -1143,6 +1236,7 @@ export function DefendScreen({
     shotsRef.current = [];
     puffFacingRef.current = {};
     puffWalkFaceRef.current = {};
+    setCorpses([]);
     setShots([]);
     setBossAlert(null);
     bossWarnedRef.current = false; // re-arm the warn for this run
@@ -1169,6 +1263,7 @@ export function DefendScreen({
     shotsRef.current = [];
     puffFacingRef.current = {};
     puffWalkFaceRef.current = {};
+    setCorpses([]);
     setShots([]);
     setBossAlert(null);
     setLeaveConfirmOpen(false);
@@ -1227,6 +1322,7 @@ export function DefendScreen({
     shotsRef.current = [];
     puffFacingRef.current = {};
     puffWalkFaceRef.current = {};
+    setCorpses([]);
     setShots([]);
     setBossAlert(null);
   }, []);
@@ -1305,13 +1401,19 @@ export function DefendScreen({
   // Walk tick (H1.5, display only): creeps' legs. See `WALK_TICK_MS` — this
   // advances a per-creep frame phase from its own measured dist/sec and bumps a
   // counter to force the re-render. Touches no engine state: combat dt,
-  // movement and cooldowns still step only on DEFEND_TICK_MS.
+  // movement and cooldowns still step only on DEFEND_TICK_MS. K2 also ages out
+  // finished death one-shots here, so a corpse leaves the board on the same
+  // clock that animates it (before the "nothing to animate" bail, so a run whose
+  // last creep has just died still clears its body).
   useEffect(() => {
     if (phase !== 'running' || paused) return;
     const id = setInterval(() => {
+      const now = Date.now();
+      setCorpses((prev) =>
+        prev.length === 0 ? prev : prev.filter((corpse) => now - corpse.bornAt < CREEP_CORPSE_MS),
+      );
       const current = simRef.current;
       if (!current || current.puffs.length === 0) return; // nothing to animate
-      const now = Date.now();
       const dtSec = WALK_TICK_MS / 1000;
       const next: typeof walkPhaseRef.current = {};
       const bandKind = current.band?.kind;
@@ -1338,8 +1440,8 @@ export function DefendScreen({
           const elapsed = Math.max(1, Math.min(WALK_RATE_MAX_MS, now - prev.at)) / 1000;
           rate = (puff.dist - prev.dist) / elapsed;
           at = now;
-        } else if (now - prev.at > WALK_STOP_MS) {
-          rate = 0; // halted — hold the frame instead of moonwalking
+        } else if (now - prev.at > CREEP_STILL_MS) {
+          rate = 0; // halted — hold the frame (K2: the creep breathes instead)
         }
         next[puff.id] = {
           dist: puff.dist,
@@ -1353,6 +1455,25 @@ export function DefendScreen({
     }, WALK_TICK_MS);
     return () => clearInterval(id);
   }, [phase, paused]);
+
+  // K2 corpse clock — the other half of the death one-shot (display only). The
+  // walk tick above owns the corpse while the wave clock runs; this one covers
+  // the stopped clock (won / lost / paused), where nothing else re-renders the
+  // board. Without it the kill that ENDS a run would show a body frozen on its
+  // first frame for the whole results screen, and never leave: its corpse is
+  // created the same tick the run ends. Re-rendering the aging corpse is also
+  // what advances its wall-clock death frames. Runs only while a body is on the
+  // board (and not while the walk tick is already doing it), so a board with no
+  // corpses costs nothing.
+  useEffect(() => {
+    if (corpses.length === 0) return;
+    if (phase === 'running' && !paused) return; // the walk tick is already aging them
+    const id = setInterval(() => {
+      const now = Date.now();
+      setCorpses((prev) => prev.filter((corpse) => now - corpse.bornAt < CREEP_CORPSE_MS));
+    }, WALK_TICK_MS);
+    return () => clearInterval(id);
+  }, [corpses.length, phase, paused]);
 
   const winWave = useCallback(() => {
     const played = playedRef.current;
@@ -1467,6 +1588,24 @@ export function DefendScreen({
       // (killed), gets a short damage number near it. No engine changes.
       const events = diffPuffEvents(prevPuffsRef.current, step.state.puffs, step.state.boardId);
       if (events.length > 0) spawnFloaters(events);
+      // K2 death one-shots: the same vanished puffs, kept as corpses by the
+      // board for a beat (the engine has already dropped them). Roles with no
+      // death art leave nothing, so their removal stays the only tell.
+      const now = Date.now();
+      const deadCreeps = newCreepCorpses(
+        prevPuffsRef.current,
+        step.state.puffs,
+        step.state.boardId,
+        step.state.band?.kind,
+        puffWalkFaceRef.current,
+        now,
+      );
+      if (deadCreeps.length > 0) {
+        setCorpses((prev) => [
+          ...prev.filter((corpse) => now - corpse.bornAt < CREEP_CORPSE_MS),
+          ...deadCreeps,
+        ]);
+      }
       prevPuffsRef.current = step.state.puffs;
       simRef.current = step.state;
       setSim(step.state);
@@ -1608,6 +1747,7 @@ export function DefendScreen({
     shotsRef.current = [];
     puffFacingRef.current = {};
     puffWalkFaceRef.current = {};
+    setCorpses([]);
     setShots([]);
     setBossAlert(null);
     bossWarnedRef.current = false; // re-arm the warn for this preview run
@@ -2236,6 +2376,34 @@ export function DefendScreen({
                   </SvgText>
                 );
               })}
+              {/* K2 death one-shots (display only) — the creeps killed this
+               * beat, drawn UNDER the living swarm. The engine removed them the
+               * tick they died, so the board replays their `death` clip from its
+               * own copy of the pose it last drew (same role / box / lane / side
+               * profile) and holds the last frame for a short beat. A role with
+               * no death art never becomes a corpse, so its kill still reads as
+               * the instant removal it was before K2. */}
+              {corpses.map((corpse) => {
+                const deathFrames = skinAnimFrames(corpse.role, 'death');
+                const source = skinAnimArt(
+                  corpse.role,
+                  'death',
+                  skinAnimFaceIndex(corpse.role, 'death', corpse.face),
+                  creepClipFrame('death', Date.now() - corpse.bornAt, deathFrames),
+                );
+                if (!source) return null;
+                const box = skinDrawBox(corpse.role, corpse.x, corpse.y, corpse.size);
+                return (
+                  <SvgImage
+                    key={`corpse-${corpse.id}`}
+                    href={source}
+                    x={box.x}
+                    y={box.y}
+                    width={box.size}
+                    height={box.size}
+                  />
+                );
+              })}
               {sim?.puffs.map((puff) => {
                 const pct = Math.max(0, Math.min(1, puff.hp / puff.maxHp));
                 const slowed = puff.slowMs > 0;
@@ -2292,7 +2460,39 @@ export function DefendScreen({
                   walkDirs > 0 && walkFrames > 1
                     ? skinWalkArt(spriteRole, walkDirIndex, Math.floor(walkPhase))
                     : undefined;
-                const spriteSource = walkSprite ?? sprite;
+                // K2 path-walker stance: the same stall window the walk tick
+                // just used decides the clip — moving ⇒ the walk cycle above,
+                // stopped for CREEP_STILL_MS ⇒ the role's breathing `idle` loop
+                // at its own wall-clock cadence (the walk cursor is deliberately
+                // frozen while stalled, so it cannot drive the loop). The stall
+                // is read from how long ago this creep last advanced, NOT from
+                // the tick's rate flag: a creep the tick has only just seeded has
+                // no measured rate yet, and reading that as "stopped" would make
+                // every spawn breathe before it walks. A role with no idle art
+                // (every boss, today) keeps holding its walk frame, and a role
+                // with no walk art keeps the static rotation.
+                const phaseEntry = walkPhaseRef.current[puff.id];
+                const creepMoving =
+                  phaseEntry == null || Date.now() - phaseEntry.at <= CREEP_STILL_MS;
+                const idleFrames = skinAnimFrames(spriteRole, 'idle');
+                const stance =
+                  pathWalker && walkDirs > 0
+                    ? creepClip({
+                        dead: false,
+                        rate: creepMoving ? 1 : 0,
+                        frames: { walk: walkFrames, idle: idleFrames },
+                      })
+                    : null;
+                const idleSprite =
+                  stance === 'idle'
+                    ? skinAnimArt(
+                        spriteRole,
+                        'idle',
+                        skinAnimFaceIndex(spriteRole, 'idle', walkFace),
+                        creepClipFrame('idle', Date.now(), idleFrames, puff.id),
+                      )
+                    : undefined;
+                const spriteSource = idleSprite ?? walkSprite ?? sprite;
                 // Feet-pivoted sprites rise above the path point, so the body
                 // chrome (ring / bar / badge) anchors to the draw box, not the
                 // path point.
@@ -3075,6 +3275,7 @@ export function DefendScreen({
     shotsRef.current = [];
     puffFacingRef.current = {};
     puffWalkFaceRef.current = {};
+    setCorpses([]);
     setShots([]);
                   setBossAlert(null);
                 }
@@ -3593,9 +3794,13 @@ const AVATAR_ART_FRAC = 0.22;
 const AVATAR_MIN_PX = 56;
 
 /* ---------------------------------------------------- Avatar clip player --- */
-/** Avatar clips (display only). `walk` reads the role's `walk` clip; the rest
- * read the named `anims` clips. */
-type AvatarClip = SkinAnimClipName | 'walk';
+/** The Avatar's clip set: the cast's named clips MINUS `death` (the Avatar
+ * never dies — a leak plays `hurt` plus the lost overlay), plus the `walk`
+ * locomotion loop. `SkinAnimClipName` carries `death` for the K2 path walkers,
+ * so this narrowing keeps the priority ladder and its frame map exhaustive.
+ * `walk` reads the role's `walk` clip; the rest read the named `anims` clips. */
+type AvatarClip = Exclude<SkinAnimClipName, 'death'> | 'walk';
+
 /**
  * Clip priority — a request only preempts a LOCKED one-shot (`onceEndAt > 0`)
  * if it strictly outranks the one playing. `idle`/`walk` are loops, so they are

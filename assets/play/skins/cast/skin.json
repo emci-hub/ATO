@@ -1,5 +1,5 @@
 {
-  "$comment": "Cast skin (H1 → H1.5) — the PixelLab default cast on the board. Rotations are 8-dir STATIC (towers only); the creeps AND the bosses (unit.boss_scout = Oni, unit.final = Archangel) add a `walk` clip (multi-frame × dirs) played while moving, with the rotations kept as the idle/fallback art. `keys` are listed north-first canonical order: north, north-east, east, south-east, south, south-west, west, north-west (the `skinDirIndex` bucket order). A `walk` entry is { dirs: 2|4, order: [facing folder names in dirIndex order], frames: count per facing, base: registry key base }; frame keys resolve as `<base>/<order[dirIndex]>/frame_###`. Humanoid PATH WALKERS — unit.puff / unit.runner / unit.tank / unit.boss_scout / unit.final — are drawn as side profiles: they use only the east/west walk rows and the east/west rotation keys, keeping the last face through a vertical lane (sticky L/R, see `skinWalkFace` in src/play/skin.ts). The `dirs: 4` creeps keep their north/south Walk rows in the pack on purpose; those rows are simply unreferenced at runtime. cast sits FIRST on the skin stack; map/props fall to craftpix-td, and unit.avatar / fx.* fall to kenney-td. See games/grove/CAST_DROP.md + games/grove/ref/cast-source/. Every cast rotation is a square canvas with the character filling the middle ~50%, so the bottom ~25% of the PNG is transparent. `footAt` is NOT a uniform 0.75 — it is the alpha-bbox feet line measured per role (shallowest idle rotation bottom fraction), because Oni (188px) / Archangel (128px) / towers ship different padding than the 64px creeps. The three 64px creeps keep 0.75 (their rotation feet sit exactly there); bosses + towers carry their measured value so the visual feet land on the world point (pad centre / road point) instead of floating.",
+  "$comment": "Cast skin (H1 → H1.5 → K2) — the PixelLab default cast on the board. Rotations are 8-dir STATIC (towers only); the creeps AND the bosses (unit.boss_scout = Oni, unit.final = Archangel) add a `walk` clip (multi-frame × dirs) played while moving, with the rotations kept as the idle/fallback art. `keys` are listed north-first canonical order: north, north-east, east, south-east, south, south-west, west, north-west (the `skinDirIndex` bucket order). A `walk` entry is { dirs: 2|4, order: [facing folder names in dirIndex order], frames: count per facing, base: registry key base }; frame keys resolve as `<base>/<order[dirIndex]>/frame_###`. A named `anims` entry has the same shape and holds the K2 path-walker clips: `idle` (the Breathing_Idle loop, played once the creep has not advanced for CREEP_STILL_MS) and `death` (a one-shot played on kill, holding its last frame — only the Wizard authors death art today, so the other two still vanish instantly). Both are read through `skinAnimArt(role, clip, <E/W face>, frame)` exactly like the Avatar's clips; `frames` is the E/W row count and must equal what `scripts/check-creeps.ts` measures on disk. Creep ATTACK art (the Wizard's `attack`, the Knight's `Iron_Slash`) stays deliberately UNREFERENCED — no barracks, no path attack until K3. Humanoid PATH WALKERS — unit.puff / unit.runner / unit.tank / unit.boss_scout / unit.final — are drawn as side profiles: they use only the east/west walk rows, the east/west rotation keys and the east/west clip rows, keeping the last face through a vertical lane (sticky L/R, see `skinWalkFace` in src/play/skin.ts). The `dirs: 4` creeps keep their north/south Walk + idle rows in the pack on purpose; those rows are simply unreferenced at runtime. cast sits FIRST on the skin stack; map/props fall to craftpix-td, and unit.avatar / fx.* fall to kenney-td. See games/grove/CAST_DROP.md + games/grove/ref/cast-source/. Every cast rotation is a square canvas with the character filling the middle ~50%, so the bottom ~25% of the PNG is transparent. `footAt` is NOT a uniform 0.75 — it is the alpha-bbox feet line measured per role (shallowest idle rotation bottom fraction), because Oni (188px) / Archangel (128px) / towers ship different padding than the 64px creeps. The three 64px creeps keep 0.75 (their rotation feet sit exactly there); bosses + towers carry their measured value so the visual feet land on the world point (pad centre / road point) instead of floating.",
   "pack": "cast",
   "roles": {
     "unit.puff": {
@@ -23,6 +23,9 @@
         "order": ["north", "east", "south", "west"],
         "frames": 6,
         "base": "skins/cast/creeps/village-girl/animations/Walk"
+      },
+      "anims": {
+        "idle": { "dirs": 2, "order": ["east", "west"], "frames": 4, "base": "skins/cast/creeps/village-girl/animations/Breathing_Idle" }
       }
     },
     "unit.runner": {
@@ -46,6 +49,10 @@
         "order": ["east", "west"],
         "frames": 9,
         "base": "skins/cast/creeps/wizard/animations/walk"
+      },
+      "anims": {
+        "idle": { "dirs": 2, "order": ["east", "west"], "frames": 4, "base": "skins/cast/creeps/wizard/animations/Breathing_Idle" },
+        "death": { "dirs": 2, "order": ["east", "west"], "frames": 9, "base": "skins/cast/creeps/wizard/animations/death" }
       }
     },
     "unit.tank": {
@@ -69,6 +76,9 @@
         "order": ["north", "east", "south", "west"],
         "frames": 6,
         "base": "skins/cast/creeps/knight/animations/Walking"
+      },
+      "anims": {
+        "idle": { "dirs": 2, "order": ["east", "west"], "frames": 4, "base": "skins/cast/creeps/knight/animations/Breathing_Idle" }
       }
     },
     "tower.archer": {
