@@ -7,6 +7,7 @@
  * random draw).
  */
 import { readAllCategories, parseSpotlight, type CategoryReading } from '@/lib/categories';
+import { parseCategoryCard } from '@/lib/category-statements/card';
 import { CATEGORY_STATEMENTS_COPY_REVIEWED } from '@/lib/category-statements/generate-statements';
 import { fetchCurrentStatements } from '@/lib/category-statements/store';
 import type { Me } from '@/lib/me';
@@ -75,7 +76,7 @@ export async function pickInsightPayload(
   // entirely (which would otherwise silently skip every cycle).
   for (const reading of ranked) {
     const statement = statements.find((row) => row.categoryId === reading.def.id);
-    if (statement) return insightPush(reading.def.name, statement.statement);
+    if (statement) return insightPush(reading.def.name, parseCategoryCard(statement.statement).summary);
   }
   return null;
 }

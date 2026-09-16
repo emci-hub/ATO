@@ -14,7 +14,6 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { isFullProfileDone } from '@/lib/full-profile-gate';
-import { chipLabel, CURRENT_FOCUS_CHIPS } from '@/lib/intake';
 import { useMeContext } from '@/lib/me-context';
 import {
   missingAxis,
@@ -82,11 +81,6 @@ export default function ExploreScreen() {
                   {settledAxisLabel(tracks)}
                 </ThemedText>
               </Pressable>
-            ) : null}
-            {me?.current_focus ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                Right now: {chipLabel(CURRENT_FOCUS_CHIPS, me.current_focus).toLowerCase()}
-              </ThemedText>
             ) : null}
           </View>
 

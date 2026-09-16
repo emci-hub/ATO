@@ -130,10 +130,12 @@ async function main() {
   ok('IntakeSettings is parked; TalkStylePicker (shared file, You-only) stays wired');
 
   const explore = readFileSync(resolve(__dirname, '../src/app/(tabs)/explore.tsx'), 'utf8');
-  assert.match(explore, /me\?\.current_focus/);
-  assert.match(explore, /CURRENT_FOCUS_CHIPS/);
-  assert.match(explore, /Right now:/);
-  ok('current_focus surfaces as a deterministic Explore header line');
+  // Removed from Explore 2026-09-16 (release polish, emci): the "Right now:"
+  // header read as debug text. current_focus itself is still stored and read
+  // elsewhere; only this header line is gone.
+  assert.doesNotMatch(explore, /Right now:/);
+  assert.doesNotMatch(explore, /CURRENT_FOCUS_CHIPS/);
+  ok('current_focus no longer renders as an Explore header line');
 
   const joined = joinKnocks(['sleep', 'workload']);
   assert.equal(joined, 'sleep, workload');

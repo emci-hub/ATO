@@ -1,17 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { CategoryStatementArchiveFold } from '@/components/category-statement-archive-fold';
-import { CategoryVisual } from '@/components/category-visual';
-import { ConceptHint } from '@/components/concept-hint';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/generate';
-import { fallbackCategoryCopies, fallbackForReading, CATEGORY_BAND_COPY_REVIEWED } from '@/lib/category-bands';
+import { fallbackCategoryCopies, fallbackForReading } from '@/lib/category-bands';
 import { useCategoryDefs } from '@/lib/category-catalog';
 import {
-  CATEGORY_COPY_REVIEWED,
   getCategoryDefs,
   nextSpotlight,
   parseSpotlight,
@@ -19,10 +15,9 @@ import {
   type CategoryId,
   type CategoryReading,
 } from '@/lib/categories';
-import { CATEGORY_STATEMENTS_COPY_REVIEWED, generateCategoryStatements } from '@/lib/category-statements/generate-statements';
+import { parseCategoryCard } from '@/lib/category-statements/card';
+import { generateCategoryStatements } from '@/lib/category-statements/generate-statements';
 import { fetchCurrentStatements, saveCategoryStatements, type CategoryStatement } from '@/lib/category-statements/store';
-import { categoryConcept, CONCEPT_COPY_REVIEWED } from '@/lib/concept-explainers';
-import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { FULL_PROFILE_LOCKED_COPY, fullProfileLockedLine, fullProfileProgress } from '@/lib/full-profile-gate';
 import { AI_CONSENT_NEEDED_COPY, aiConsentFor, saveCategorySpotlight, type Me } from '@/lib/me';
 import { sageKnowsWeekKey } from '@/lib/sage-knows';
@@ -32,10 +27,25 @@ import { withTimeout } from '@/lib/timeout';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 
-export const CATEGORY_REWRITE_LABEL = 'Write a new one';
+export const CATEGORY_REWRITE_LABEL = 'Refresh';
 export const CATEGORY_NOT_READY_COPY =
   'Not enough settled answers behind this one yet — answering your next 25 in Questions helps. Nothing was generated.';
 export const CATEGORY_ERROR_COPY = 'Couldn’t load this one just now.';
+export const CATEGORY_ROW_NOT_READY_COPY = 'Answer a few more questions to open this one.';
+
+/**
+ * Display-only names. "Love / closeness" (attachment) and "Independence &
+ * closeness" (autonomy vs. connection) read like duplicates but are built from
+ * different traits, so they stay two categories — only the labels change.
+ */
+const CATEGORY_DISPLAY_NAMES: Partial<Record<CategoryId, string>> = {
+  cat_love: 'Love & closeness',
+  cat_independence: 'Independence',
+};
+
+function categoryDisplayName(def: { id: CategoryId; name: string }): string {
+  return CATEGORY_DISPLAY_NAMES[def.id] ?? def.name;
+}
 
 type RowState = 'loading' | 'error' | 'not_ready' | 'locked' | 'consent';
 
@@ -66,7 +76,6 @@ export function CategoriesFold({
   const [statements, setStatements] = useState<Map<CategoryId, CategoryStatement>>(new Map());
   const [statementsLoaded, setStatementsLoaded] = useState(false);
   const [rowState, setRowState] = useState<Partial<Record<CategoryId, RowState>>>({});
-  const [historyVersion, setHistoryVersion] = useState(0);
   // Per-category attempt counter: a timed-out call that lands late must not
   // overwrite a newer retry's state.
   const attemptRef = useRef<Partial<Record<CategoryId, number>>>({});
@@ -121,11 +130,6 @@ export function CategoriesFold({
     void saveCategorySpotlight(me.id, { weekKey, categoryId: next }).then(() => onUpdated?.());
   }, [me.id, weekKey, ready.length, spotlight?.weekKey, spotlight?.categoryId, onUpdated]);
 
-  const spotlightId =
-    spotlight?.weekKey === weekKey && ready.some((row) => row.def.id === spotlight.categoryId)
-      ? spotlight.categoryId
-      : null;
-
   function setRow(id: CategoryId, next: RowState | null) {
     setRowState((prev) => {
       const copy = { ...prev };
@@ -170,7 +174,6 @@ export function CategoriesFold({
       }
       await saveCategoryStatements(drafts);
       await loadStatements();
-      setHistoryVersion((v) => v + 1);
       if (attemptRef.current[id] === attempt) setRow(id, null);
     } catch (err) {
       console.log('[categories] generate statement error:', err);
@@ -199,38 +202,16 @@ export function CategoriesFold({
     <ThemedView type="backgroundElement" style={styles.card}>
       <ThemedText type="smallBold">Categories</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        Tap a category to read it. Each one is written once, then saved.
+        Tap a category to read it.
       </ThemedText>
-      {(!CATEGORY_COPY_REVIEWED ||
-        !CATEGORY_BAND_COPY_REVIEWED ||
-        !CONCEPT_COPY_REVIEWED ||
-        !CATEGORY_STATEMENTS_COPY_REVIEWED) &&
-      PRE_LAUNCH_DEV ? (
-        <ThemedText type="code" themeColor="textSecondary">
-          Draft copy — waiting on emci review.
-        </ThemedText>
-      ) : null}
-      {!unlocked ? (
-        <ThemedText type="small" themeColor="textSecondary" accessibilityLabel={FULL_PROFILE_LOCKED_COPY}>
-          {lockedLine}
-        </ThemedText>
-      ) : !consentGranted ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {AI_CONSENT_NEEDED_COPY}
-        </ThemedText>
-      ) : null}
-      {spotlightId ? (
-        <ThemedText type="code" themeColor="textSecondary">
-          This week&apos;s look · {readings.find((row) => row.def.id === spotlightId)?.def.name}
-        </ThemedText>
-      ) : null}
 
       {readings.map((reading) => {
         const id = reading.def.id;
         const open = openId === id;
         const statement = statements.get(id);
+        const card = statement ? parseCategoryCard(statement.statement) : null;
         // Gate messages are re-judged every render, so one that has since
-        // cleared (tracks landed, consent turned on) drops back to "Load".
+        // cleared (tracks landed, consent turned on) drops back.
         const rawState = rowState[id];
         const state =
           (rawState === 'locked' && unlocked) ||
@@ -239,7 +220,10 @@ export function CategoriesFold({
             ? undefined
             : rawState;
         const copy = reading.ready ? (cached?.categories[id] ?? fallback[id]) : undefined;
-        const line = reading.ready ? (copy?.line ?? fallbackForReading(reading)) : null;
+        const summary =
+          card?.summary ??
+          (reading.ready ? (copy?.line ?? fallbackForReading(reading)) : CATEGORY_ROW_NOT_READY_COPY);
+        const canRefresh = unlocked && consentGranted && reading.ready;
         return (
           <View key={id} style={styles.row}>
             <Pressable
@@ -248,28 +232,37 @@ export function CategoriesFold({
               accessibilityState={{ expanded: open, busy: state === 'loading' }}
               style={({ pressed }) => [styles.rowHeader, pressed && styles.pressed]}>
               <View style={styles.rowText}>
-                <ConceptHint explainer={categoryConcept(id)} label={reading.def.name}>
-                  <ThemedText type="smallBold">{reading.def.name}</ThemedText>
-                </ConceptHint>
-                {line ? (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {line}
+                <ThemedText type="smallBold">{categoryDisplayName(reading.def)}</ThemedText>
+                {!open ? (
+                  <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                    {summary}
                   </ThemedText>
                 ) : null}
               </View>
-              <ThemedText themeColor="textSecondary">{open ? '–' : '+'}</ThemedText>
+              <ThemedText
+                themeColor="textSecondary"
+                style={[styles.chevron, open && styles.chevronOpen]}>
+                ›
+              </ThemedText>
             </Pressable>
 
             {open ? (
-              <View style={styles.expand}>
-                {statement ? <ThemedText type="small">{statement.statement}</ThemedText> : null}
+              <ThemedView type="background" style={styles.expand}>
+                {card && state !== 'loading' ? (
+                  <>
+                    <ThemedText type="small">{card.summary}</ThemedText>
+                    {card.strength ? <CardPart label="Strength" text={card.strength} /> : null}
+                    {card.watchOut ? <CardPart label="Watch-out" text={card.watchOut} /> : null}
+                    {card.tryThis ? <CardPart label="Try this" text={card.tryThis} /> : null}
+                  </>
+                ) : null}
 
                 {state === 'loading' ? (
                   <ThemedText type="small" themeColor="textSecondary">
-                    Writing…
+                    Reading your answers…
                   </ThemedText>
                 ) : state === 'locked' ? (
-                  <ThemedText type="small" themeColor="textSecondary">
+                  <ThemedText type="small" themeColor="textSecondary" accessibilityLabel={FULL_PROFILE_LOCKED_COPY}>
                     {lockedLine}
                   </ThemedText>
                 ) : state === 'consent' ? (
@@ -281,7 +274,7 @@ export function CategoriesFold({
                     {CATEGORY_NOT_READY_COPY}
                   </ThemedText>
                 ) : state === 'error' ? (
-                  <>
+                  <View style={styles.inline}>
                     <ThemedText type="small" themeColor="textSecondary">
                       {CATEGORY_ERROR_COPY}
                     </ThemedText>
@@ -291,51 +284,63 @@ export function CategoriesFold({
                       style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
                       <ThemedText type="link">Try again</ThemedText>
                     </Pressable>
-                  </>
-                ) : !statement && !statementsLoaded ? (
+                  </View>
+                ) : !card && !statementsLoaded ? (
                   <ThemedText type="small" themeColor="textSecondary">
                     Loading…
                   </ThemedText>
-                ) : !statement ? (
+                ) : !card ? (
                   <Pressable
                     accessibilityRole="button"
                     onPress={() => void loadCategory(reading)}
                     style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
                     <ThemedText type="link">Load</ThemedText>
                   </Pressable>
-                ) : unlocked && consentGranted && reading.ready ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => void loadCategory(reading)}
-                    style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
-                    <ThemedText type="link">{CATEGORY_REWRITE_LABEL}</ThemedText>
-                  </Pressable>
                 ) : null}
 
-                {reading.ready ? (
-                  <>
-                    {copy?.full && copy.full !== line ? (
-                      <ThemedText type="small" themeColor="textSecondary">
-                        {copy.full}
-                      </ThemedText>
+                {card && statement && state !== 'loading' ? (
+                  <View style={styles.footer}>
+                    <ThemedText type="small" themeColor="textSecondary" style={styles.footerText}>
+                      Based on your answers · updated {formatUpdated(statement.createdAt)}
+                    </ThemedText>
+                    {canRefresh ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`${CATEGORY_REWRITE_LABEL} ${categoryDisplayName(reading.def)}`}
+                        hitSlop={8}
+                        onPress={() => void loadCategory(reading)}
+                        style={({ pressed }) => pressed && styles.pressed}>
+                        <ThemedText type="small" themeColor="textSecondary" style={styles.refresh}>
+                          {CATEGORY_REWRITE_LABEL}
+                        </ThemedText>
+                      </Pressable>
                     ) : null}
-                    <CategoryVisual reading={reading} />
-                  </>
+                  </View>
                 ) : null}
-                <CategoryStatementArchiveFold
-                  userId={me.id}
-                  categoryId={id}
-                  refreshSignal={historyVersion}
-                  title="Past statements"
-                  emptyCopy="No past statements yet."
-                />
-              </View>
+              </ThemedView>
             ) : null}
           </View>
         );
       })}
     </ThemedView>
   );
+}
+
+function CardPart({ label, text }: { label: string; text: string }) {
+  return (
+    <View style={styles.part}>
+      <ThemedText type="smallBold" themeColor="textSecondary">
+        {label}
+      </ThemedText>
+      <ThemedText type="small">{text}</ThemedText>
+    </View>
+  );
+}
+
+function formatUpdated(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return 'recently';
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
 const styles = StyleSheet.create({
@@ -346,7 +351,7 @@ const styles = StyleSheet.create({
   },
   row: {
     gap: Spacing.half,
-    paddingVertical: Spacing.one,
+    paddingVertical: Spacing.two,
   },
   rowHeader: {
     flexDirection: 'row',
@@ -359,8 +364,37 @@ const styles = StyleSheet.create({
     gap: Spacing.half,
   },
   expand: {
+    gap: Spacing.two,
+    marginTop: Spacing.one,
+    padding: Spacing.three,
+    borderRadius: Spacing.three,
+  },
+  part: {
+    gap: Spacing.half,
+  },
+  inline: {
     gap: Spacing.one,
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
     paddingTop: Spacing.one,
+  },
+  footerText: {
+    flex: 1,
+    fontSize: 12,
+  },
+  refresh: {
+    fontSize: 12,
+    textDecorationLine: 'underline',
+  },
+  chevron: {
+    fontSize: 20,
+  },
+  chevronOpen: {
+    transform: [{ rotate: '90deg' }],
   },
   cta: {
     alignSelf: 'flex-start',

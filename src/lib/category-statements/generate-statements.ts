@@ -13,6 +13,7 @@
  */
 import { generateText } from '@/lib/ai/generate';
 import { CATEGORY_STATEMENTS_META } from '@/lib/ai/call-sites';
+import { serializeCategoryCard } from '@/lib/category-statements/card';
 import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
 import type { CategoryReading } from '@/lib/categories';
 import { leanComparative } from '@/lib/traits';
@@ -50,12 +51,12 @@ function groundingLine(reading: CategoryReading): string {
  */
 export function buildCategoryStatementsPrompt(readings: readonly CategoryReading[]): string {
   const lines = readings.map(groundingLine).join('\n');
-  return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. These are category statements — one short personalized piece of prose per category, each read-only (no follow-up questions), shown together on the Categorize screen.
+  return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. These are category cards — one short personalized card per category, each read-only (no follow-up questions), shown on the Explore screen.
 
 VOICE REFERENCE (register only — do NOT reuse these lines):
 ${VOICE_REFERENCE}
 
-Job: write one statement per category below, grounded in that category's settled notes, in your own words, never a concatenation of the axis labels themselves.
+Job: write one card per category below, grounded in that category's settled notes, in your own words, never a concatenation of the axis labels themselves.
 
 ${STYLE_BLOCK}
 
@@ -63,15 +64,20 @@ CATEGORIES (internal — write from the meaning, never the axis label)
 ${lines}
 
 RULES
-1. One statement per category listed above, same order. Keep every statement tight: 1–2 sentences, roughly 25 words. This is a batch of up to ${readings.length} statements in one response — verbose entries risk the whole response getting cut off, so brevity matters here more than in a single-category read.
+1. One entry per category listed above, same order. Each entry has four short parts:
+   - summary: one sentence, roughly 15 words — how this area tends to go for them.
+   - strength: one sentence — what tends to work well here.
+   - watch_out: one sentence — where it can trip them up, said kindly.
+   - try_this: ONE small, concrete action they could do today or this week, under 20 words.
+   This is a batch of up to ${readings.length} entries in one response — verbose entries risk the whole response getting cut off, so brevity matters.
 2. Everyday language. Not a diagnosis, not a type, not a test result.
 3. Never Myers-Briggs, never a four-letter code, never "you are." Reflect as maybes, not facts.
-4. You MAY name the category naturally — only ever use the plain-language pole phrases given above (never a technical or internal-sounding trait label).
+4. Never use a technical or internal-sounding trait label; write from the meaning.
 5. Hedge lives inside the sentence. No bolted-on closing after a dash or period.
-6. Every statement is independent — do not reference another category or compare between them.
+6. Every entry is independent — do not reference another category or compare between them.
 
 Respond with JSON only:
-{"statements":[{"category_id":"<id>","statement":"<the statement>"}, ...]}`;
+{"statements":[{"category_id":"<id>","summary":"...","strength":"...","watch_out":"...","try_this":"..."}, ...]}`;
 }
 
 /** Validates against the real category ids passed in (the live catalog, not a hardcoded list) so a malformed or hallucinated id never reaches the DB. */
@@ -97,13 +103,22 @@ export function parseCategoryStatements(
       const categoryId = typeof (row as Record<string, unknown>).category_id === 'string'
         ? ((row as Record<string, unknown>).category_id as string)
         : '';
-      const rawStatement = typeof (row as Record<string, unknown>).statement === 'string'
-        ? ((row as Record<string, unknown>).statement as string).trim()
-        : '';
+      const field = (key: string) => {
+        const value = (row as Record<string, unknown>)[key];
+        return typeof value === 'string' ? value.trim() : '';
+      };
+      const parts = {
+        summary: field('summary'),
+        strength: field('strength'),
+        watchOut: field('watch_out'),
+        tryThis: field('try_this'),
+      };
       if (!categoryId || !validIds.has(categoryId) || seen.has(categoryId)) continue;
-      if (!rawStatement || containsFrameworkTerm(rawStatement)) continue;
+      if (Object.values(parts).some((part) => !part || containsFrameworkTerm(part))) continue;
+      const statement = serializeCategoryCard(parts);
+      if (!statement) continue;
       seen.add(categoryId);
-      drafts.push({ categoryId, statement: rawStatement.slice(0, CATEGORY_STATEMENT_MAX_CHARS) });
+      drafts.push({ categoryId, statement });
     }
     return drafts.length > 0 ? drafts : null;
   } catch {
