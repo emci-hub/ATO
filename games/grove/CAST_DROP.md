@@ -63,3 +63,25 @@ next job adds Craftpix units/towers, those roles just appear in
 
 Craftpix units/towers/heroes (Kenney cast until map smoke passes), TMX import,
 Pixel Crawler, new skill primitives, hero shop / roster UI.
+
+## Airport 2026-09-16 (commit `8fa16a3`)
+
+The Play loop shipped **free**: 16 heroes, all owned on load and playable as both
+Dress Avatar and Bound Boss (CastActor tower mode = Avatar minus walk).
+
+- **Roster** — Batch 1 (Corvus, Archangel, Oni, Aurex, Kitsune) + Batch 2/3
+  ingested (`cyber-shinobi`, `elowen`, `kael`, `maldrath`, `morwen`, `neon-viper`,
+  `raven`, `sak`, `frost-lich`, `velkhar`, `void-raven`). Each lives at
+  `assets/play/skins/cast/heroes/<slug>/` (8 rotations + E/W clip rows), names
+  normalized Corvus-style (pack `-hash` and `N._` prefix stripped).
+- **Skipped** — `INFERNA` (empty) and `masterpiece_premium_dark_fantasy_*`.
+- **Slot masks** (`CAST_ACTOR_CLIPS` in `src/play/cast-actor.ts`) — avatar:
+  idle/walk/dash/attack/skill/hurt; path (creeps/bosses on the road):
+  idle/walk/death; tower (towers + Bound Bosses): idle/attack/skill. The art is
+  shared, the slot set is not — a path walker can never ask for `attack`, a tower
+  can never ask for `walk`.
+- **Free loop** — `PLAY_EVERYTHING_FREE` (mirrors `PRE_LAUNCH_DEV`) owns every
+  hero id on Play load; no Premium gate. **Premium is parked** — everything free
+  until the owner returns. Path cast unchanged: Girl/Wizard/Knight minions +
+  Oni/Archangel enemies; Final→Archangel, Scout→Oni cycle map unchanged.
+

@@ -1,0 +1,41 @@
+---
+description: Play is a fenced mini-app. A task is EITHER Play work OR app work — never stage both (see scripts/check-play-isolation.ts).
+globs: src/play/**,assets/play/**,games/grove/**,src/app/play.tsx
+alwaysApply: true
+---
+
+# Play isolation — the Play ⇄ app fence
+
+Play / Divecore is a **mini-app**. Once inside Play, Soft/Zen/Quest/Anime do not
+apply — `src/play/neon-viper.ts` forces the Neon Viper tokens.
+
+## Allowed Play paths (game)
+`src/play/**` · `assets/play/**` · `src/play/data/**` · `scripts/check-heroes.ts` ·
+`scripts/check-creeps.ts` · `scripts/check-towers.ts` · `scripts/play-art-prep.ts` ·
+`src/play/generated-play-assets.ts` · Play docs (`games/grove/**`) · Play entries in
+`PROJECT_CONTEXT.md`.
+
+## Forbidden for Play work
+`src/app/**` (except `src/app/play.tsx` — the Play shell mount only; no Soft/Zen
+chrome or copy) · Soft/Zen/Quest/Anime screens · `src/app/copy/**` (except the
+LF-only `library.md` fix). Play never restyles the app or adds app copy.
+
+## Forbidden for App/Soft/Zen work
+`src/play/**` · `assets/play/**` · `scripts/play-art-prep.ts` · the play check
+scripts (`check-heroes` / `check-creeps` / `check-towers`). The app never edits
+the game.
+
+## AI rule (hard)
+- A task labeled **app / Soft / Zen** MUST NOT stage Play files.
+- A task labeled **Play** MUST NOT stage app files (except `src/app/play.tsx` and
+  the one LF-only `library.md` fix).
+
+`npm run check:play-isolation` (also part of `check:ota-gate`) fails any changeset
+that mixes Play paths with non-Play app paths. The allowlist (never counted):
+`src/app/play.tsx`, `src/app/copy/library.md`, `PROJECT_CONTEXT.md`, `AGENTS.md`,
+`CLAUDE.md`, `.cursor/**`, `.gitattributes`, `package.json`, `scripts/ota-gate.ts`,
+`scripts/check-play-isolation.ts`, `docs/**`.
+
+Note: `src/lib/dev-mode.ts` currently hosts BOTH `PRE_LAUNCH_DEV` (app) and
+`PLAY_EVERYTHING_FREE` (Play). Any edit to it is a deliberate cross-domain change —
+treat it as out-of-band, not a routine Play or app touch.

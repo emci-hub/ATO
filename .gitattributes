@@ -1,0 +1,4 @@
+# Force LF for files regex-parsed by offline checks. On Windows `core.autocrlf`
+# checks these out as CRLF, which breaks the parse (check:library reads
+# library.md and counts "For Sage" blocks with an LF-only regex).
+src/app/copy/library.md text eol=lf
