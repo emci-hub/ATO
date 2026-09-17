@@ -173,12 +173,12 @@ const CREEP_ROLE_COLOR: Record<CreepRole, string> = {
 
 /** Draw-size multiplier per creep role (display only, no sim impact): swarms
  * normal, runners slim, tanks fat so the three read at a glance. Bosses keep
- * their existing `puff.size` scaling (1 here). */
+ * their existing `puff.size` scaling. All ×1.25 so sprites read on a phone. */
 const CREEP_DRAW_SCALE: Record<CreepRole, number> = {
-  swarm: 1,
-  runner: 0.9,
-  tank: 1.35,
-  boss: 1,
+  swarm: 1.25,
+  runner: 1.125,
+  tank: 1.69,
+  boss: 1.25,
 };
 
 /**
@@ -709,6 +709,8 @@ export function DefendScreen({
   /** God mode — starts from the §9c tune doc (BrokenOP turns it on). */
   const [godMode, setGodMode] = useState(() => getTune().godMode);
   const [coachHidden, setCoachHidden] = useState(false);
+  /** Live-run coach starts collapsed on phones; one tap reveals the full tip. */
+  const [runCoachOpen, setRunCoachOpen] = useState(false);
   const [whyOpen, setWhyOpen] = useState(false);
   /** Type-match chart (§9f §9i "?") — open state on setup + live. */
   const [chartOpen, setChartOpen] = useState(false);
@@ -2433,7 +2435,8 @@ export function DefendScreen({
                   transform = dirs > 1 ? undefined : `rotate(${deg} ${pad.x} ${pad.y})`;
                 }
                 if (!source) return null;
-                const size = skinUnits(role, TOWER_PAD_UNITS) * skinScale(role, tower.level);
+                const size =
+                  skinUnits(role, TOWER_PAD_UNITS) * skinScale(role, tower.level) * TOWER_DRAW_SCALE;
                 const box = skinDrawBox(role, pad.x, pad.y, size);
                 return (
                   <G key={`tower-art-${tower.id}`}>
@@ -2501,7 +2504,7 @@ export function DefendScreen({
                   if (!source) return null;
                   // A6 — a bound boss is tower-sized, not hero-sized: cap the
                   // hero's natural `units` so it reads on a pad next to towers.
-                  const size = Math.min(kitRole.units ?? TOWER_PAD_UNITS, 16);
+                  const size = Math.min(kitRole.units ?? TOWER_PAD_UNITS, 16) * TOWER_DRAW_SCALE;
                   const footAt = roleFootAt(kitRole);
                   const box = { x: pad.x - size / 2, y: pad.y - size * footAt, size };
                   return (
@@ -3230,52 +3233,35 @@ export function DefendScreen({
         ) : null}
 
         {phase === 'running' && !paused ? (
-          <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-            {coachHidden
-              ? `Towers fire on their own — drag your Avatar and time ${activeSkill.name}.`
-              : `Coach: ${coach.tip}`}
-          </ThemedText>
+          <Pressable
+            onPress={() => setRunCoachOpen((value) => !value)}
+            disabled={coachHidden}
+            accessibilityRole="button"
+            accessibilityLabel={runCoachOpen ? 'Hide coach tip' : 'Show coach tip'}>
+            <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
+              {coachHidden
+                ? `Towers fire on their own — drag your Avatar and time ${activeSkill.name}.`
+                : runCoachOpen
+                  ? `Coach: ${coach.tip}`
+                  : 'Coach tip ›'}
+            </ThemedText>
+          </Pressable>
         ) : null}
 
-        {/* §9m live bottom HUD — Pause · gap · Skill (ONE button; Bound Bosses
-         * stay auto). Shown only while a run is live; setup never casts. */}
+        {/* §9m live bottom HUD — row 1: Skill (ONE button, full width; Bound
+         * Bosses stay auto). Row 2: Pause · Speed · Leave. Shown only while a
+         * run is live; setup never casts. */}
         {phase === 'running' ? (
           <ThemedView type="backgroundElement" style={styles.bottomHud}>
-            <Pressable
-              onPress={() => setPaused((value) => !value)}
-              accessibilityRole="button"
-              accessibilityLabel={paused ? 'Resume wave' : 'Pause wave'}
-              style={({ pressed }) => [
-                styles.hudButton,
-                styles.bottomHudPause,
-                { backgroundColor: theme.backgroundSelected },
-                pressed && styles.pressed,
-              ]}>
-              <ThemedText type="smallBold">{paused ? 'Resume' : 'Pause'}</ThemedText>
-            </Pressable>
-            <SpeedControl speed={speed} onChange={setSpeed} />
-            <Pressable
-              onPress={requestLeaveRun}
-              accessibilityRole="button"
-              accessibilityLabel="Leave run"
-              style={({ pressed }) => [
-                styles.hudButton,
-                styles.leaveButton,
-                {
-                  backgroundColor: theme.backgroundSelected,
-                  borderColor: controlBorderColor(theme),
-                },
-                pressed && styles.pressed,
-              ]}>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                Leave
-              </ThemedText>
-            </Pressable>
             <Pressable
               onPress={castSkill}
               disabled={!skillReady}
               accessibilityRole="button"
-              accessibilityLabel={`Skill ${activeSkill.name}`}
+              accessibilityLabel={
+                skillReady
+                  ? `Cast ${activeSkill.name}`
+                  : `Skill ${activeSkill.name} cooling, ${skillSeconds} seconds`
+              }
               style={({ pressed }) => [
                 styles.hudButton,
                 styles.bottomHudSkill,
@@ -3286,10 +3272,43 @@ export function DefendScreen({
               ]}>
               <ThemedText
                 type="smallBold"
+                numberOfLines={1}
                 style={{ color: skillReady ? theme.onAccent : theme.textSecondary }}>
-                {skillReady ? `Skill: ${activeSkill.name}` : `Skill: ${activeSkill.name} · ${skillSeconds}s`}
+                {skillReady ? `Cast · ${activeSkill.name}` : `${activeSkill.name} · ${skillSeconds}s`}
               </ThemedText>
             </Pressable>
+            <View style={styles.bottomHudRow}>
+              <Pressable
+                onPress={() => setPaused((value) => !value)}
+                accessibilityRole="button"
+                accessibilityLabel={paused ? 'Resume wave' : 'Pause wave'}
+                style={({ pressed }) => [
+                  styles.hudButton,
+                  styles.bottomHudPause,
+                  { backgroundColor: theme.backgroundSelected },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="smallBold">{paused ? 'Resume' : 'Pause'}</ThemedText>
+              </Pressable>
+              <SpeedControl speed={speed} onChange={setSpeed} />
+              <Pressable
+                onPress={requestLeaveRun}
+                accessibilityRole="button"
+                accessibilityLabel="Leave run"
+                style={({ pressed }) => [
+                  styles.hudButton,
+                  styles.leaveButton,
+                  {
+                    backgroundColor: theme.backgroundSelected,
+                    borderColor: controlBorderColor(theme),
+                  },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="smallBold" themeColor="textSecondary">
+                  Leave
+                </ThemedText>
+              </Pressable>
+            </View>
           </ThemedView>
         ) : null}
 
@@ -3980,9 +3999,9 @@ function HitFloater({
  * the Legends sprites read bigger than the old Masterpiece art, which was tiny
  * inside its 244px frame).
  */
-const AVATAR_ART_FRAC = 0.22;
+const AVATAR_ART_FRAC = 0.275;
 /** Floor for the art box, px (small boards). */
-const AVATAR_MIN_PX = 56;
+const AVATAR_MIN_PX = 70;
 
 /* ---------------------------------------------------- CastActor clip player --- */
 /** The Avatar's one-shot clips — `walk`/`idle` loops are set by the anim tick,
@@ -4041,9 +4060,13 @@ const TOWER_KIT_ROLES: Record<TowerKind, SkinRole> = {
 };
 
 /** Fallback tower box, board units, when a role omits `units`. */
-const TOWER_PAD_UNITS = 13;
+const TOWER_PAD_UNITS = 17;
+/** Display-only ×1.25 on every tower / bound-boss box (skin packs set their own
+ * `units`, so the fallback alone doesn't grow them). Feet stay on the pad via
+ * `skinDrawBox`; tap/range radii are untouched. */
+const TOWER_DRAW_SCALE = 1.25;
 /** Fallback enemy box at `puff.size === 1` when a role omits `units`. */
-const UNIT_BASE_UNITS = 15;
+const UNIT_BASE_UNITS = 20;
 
 /**
  * Board-unit width of a creep's drawn sprite box — the input the lane clamp
@@ -4405,19 +4428,28 @@ const styles = StyleSheet.create({
     color: '#FBBF24', // gold — reads as a kill on both light and dark boards
     fontSize: 14,
   },
-  /** §9m live bottom HUD bar: Pause · gap · Skill (left → right). */
+  /** §9m live bottom HUD card: Skill bar on top, Pause · Speed · Leave below. */
   bottomHud: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.four,
+    gap: Spacing.two,
     borderRadius: Spacing.four,
     padding: Spacing.two,
+  },
+  bottomHudRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
   },
   bottomHudPause: {
     paddingHorizontal: Spacing.four,
   },
+  /** Full-width primary Skill bar — never shares a row, so it can't sliver. */
   bottomHudSkill: {
-    flex: 1,
+    alignSelf: 'stretch',
+    minHeight: 52,
+    paddingVertical: Spacing.three,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   /** §9m boss alert banner — centered over the board while the boss steps in.
    * Top overlay layer (above tiles, gameplay art, and the Avatar). */
