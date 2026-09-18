@@ -1,0 +1,91 @@
+{
+  "hero": "archangel",
+  "actions": {
+    "Angelic_Flinch": {
+      "sheetKey": "sheets/cast/heroes/archangel/Angelic_Flinch",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.7734
+    },
+    "Attack_01_Seraph_Strike": {
+      "sheetKey": "sheets/cast/heroes/archangel/Attack_01_Seraph_Strike",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.8125
+    },
+    "Celestial_Drift": {
+      "sheetKey": "sheets/cast/heroes/archangel/Celestial_Drift",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.7422
+    },
+    "Celestial_Rush": {
+      "sheetKey": "sheets/cast/heroes/archangel/Celestial_Rush",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.8359
+    },
+    "Divine_Flight": {
+      "sheetKey": "sheets/cast/heroes/archangel/Divine_Flight",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 12,
+      "footAt": 0.7422
+    },
+    "Hover_Idle": {
+      "sheetKey": "sheets/cast/heroes/archangel/Hover_Idle",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.7422
+    },
+    "Ultimate_Final_Judgment": {
+      "sheetKey": "sheets/cast/heroes/archangel/Ultimate_Final_Judgment",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 17,
+      "footAt": 0.7891
+    },
+    "rotations": {
+      "sheetKey": "sheets/cast/heroes/archangel/rotations",
+      "dirs": [
+        "north",
+        "north-east",
+        "east",
+        "south-east",
+        "south",
+        "south-west",
+        "west",
+        "north-west"
+      ],
+      "frames": 1,
+      "footAt": 0.7422
+    }
+  },
+  "proposedRoles": {
+    "hurt": "Angelic_Flinch",
+    "attack": "Attack_01_Seraph_Strike",
+    "dash": "Celestial_Drift",
+    "walk": "Divine_Flight",
+    "idle": "Hover_Idle",
+    "skill": "Ultimate_Final_Judgment"
+  }
+}

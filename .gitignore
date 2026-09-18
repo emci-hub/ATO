@@ -52,3 +52,6 @@ supabase/.temp/
 # Re-download here and run scripts/play-art-prep.ts to regenerate the registry.
 assets/play/incoming/
 assets/play/.staging/
+
+# Sprite-sheet review pages: 1MB+ of inlined base64, regenerate with play-art-pack
+assets/play/sheets/**/preview.html

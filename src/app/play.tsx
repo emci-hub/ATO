@@ -22,6 +22,7 @@ import { DevUnlockRow } from '@/play/dev-unlock-row';
 import { DiveScreen } from '@/play/dive-screen';
 import { DressScreen } from '@/play/dress-screen';
 import { DefendScreen } from '@/play/defend-screen';
+import { SheetLabScreen } from '@/play/sheet-lab-screen';
 import type { TypeTag } from '@/play/engine/type-match';
 import { itemName, type ItemSlot } from '@/play/items';
 import { TunePanel } from '@/play/tune-panel';
@@ -73,7 +74,7 @@ import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
  * pre-launch builds via PRE_LAUNCH_DEV.
  */
 
-type PlayMode = 'grove' | 'dive' | 'dress' | 'defend' | 'shop' | 'about';
+type PlayMode = 'grove' | 'dive' | 'dress' | 'defend' | 'shop' | 'about' | 'sheetlab';
 
 type PlayToast =
   | { kind: 'claim'; result: ClaimResult }
@@ -566,6 +567,7 @@ export default function PlayScreen() {
                   forceMerge={forceMerge}
                   onSetForceMerge={setForceMerge}
                   onToggleTune={() => setShowTune((open) => !open)}
+                  onOpenSheetLab={() => setMode('sheetlab')}
                 />
               ) : null}
             </CommandHub>
@@ -649,6 +651,8 @@ export default function PlayScreen() {
                 />
               ) : mode === 'about' ? (
                 <AboutScreen onBackToDivecore={() => setMode('grove')} />
+              ) : mode === 'sheetlab' ? (
+                <SheetLabScreen onBack={() => setMode('grove')} />
               ) : null}
             </ScrollView>
           </SafeAreaView>
@@ -694,6 +698,7 @@ function GroveDevKit({
   forceMerge,
   onSetForceMerge,
   onToggleTune,
+  onOpenSheetLab,
 }: {
   commit: (transition: PlayTransition) => boolean;
   onGrantRandomFind: () => Promise<void>;
@@ -709,6 +714,7 @@ function GroveDevKit({
   forceMerge: 'none' | 'success' | 'fail';
   onSetForceMerge: (mode: 'none' | 'success' | 'fail') => void;
   onToggleTune: () => void;
+  onOpenSheetLab: () => void;
 }) {
   const theme = useTheme();
   const [resetArmed, setResetArmed] = useState(false);
@@ -929,6 +935,14 @@ function GroveDevKit({
           onPress: () => {
             clearResetArm();
             onToggleTune();
+          },
+        },
+        {
+          key: 'sheet-lab',
+          label: 'Sheet Lab (sprite sheets)…',
+          onPress: () => {
+            clearResetArm();
+            onOpenSheetLab();
           },
         },
       ],

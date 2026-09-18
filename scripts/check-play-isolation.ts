@@ -34,6 +34,7 @@ const PLAY: RegExp[] = [
   /^scripts\/check-creeps\.ts$/,
   /^scripts\/check-towers\.ts$/,
   /^scripts\/play-art-prep\.ts$/,
+  /^scripts\/play-art-pack\.ts$/,
 ];
 
 const NEUTRAL: RegExp[] = [
