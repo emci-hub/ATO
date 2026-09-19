@@ -15,7 +15,11 @@
  * the manifest is the frame ONLY — it never includes the gutter.
  *
  * Usage: npx tsx scripts/play-art-pack.ts --hero archangel
+ *        npx tsx scripts/play-art-pack.ts --all
  *        npx tsx scripts/play-art-pack.ts --hero archangel --preview
+ *
+ * The app-side registry is rebuilt by SCANNING every packed hero, so packing
+ * one hero can never drop the others.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -282,26 +286,71 @@ function packClip(heroDir: string, clipDirName: string, outDir: string, keyBase:
   };
 }
 
-function main() {
-  const hero = arg('hero');
-  if (!hero) throw new Error('Usage: npx tsx scripts/play-art-pack.ts --hero <id> [--preview]');
+const HEROES_ROOT = 'assets/play/skins/cast/heroes';
 
+function main() {
   const repo = path.resolve(__dirname, '..');
-  const heroDir = path.join(repo, 'assets/play/skins/cast/heroes', hero);
-  if (!fs.existsSync(heroDir)) throw new Error(`No such hero art folder: ${heroDir}`);
+  const one = arg('hero');
+  const all = process.argv.includes('--all');
+  if (!one && !all) {
+    throw new Error('Usage: npx tsx scripts/play-art-pack.ts (--hero <id> | --all) [--preview]');
+  }
+
+  const heroes = all
+    ? fs
+        .readdirSync(path.join(repo, HEROES_ROOT), { withFileTypes: true })
+        .filter((d) => d.isDirectory())
+        .map((d) => d.name)
+        .sort()
+    : [one as string];
+
+  let failures = 0;
+  for (const hero of heroes) {
+    try {
+      packHero(repo, hero);
+    } catch (err) {
+      // One bad hero folder must not abandon the rest of the library.
+      failures += 1;
+      console.log(`packed ${hero}: FAILED — ${(err as Error).message}`);
+    }
+  }
+
+  // Rebuilt from every packed hero on disk, so a single-hero run keeps the rest.
+  writeRegistry(repo);
+  if (failures > 0) {
+    console.log(`\n${failures} hero(es) failed to pack — see above.`);
+    process.exitCode = 1;
+  }
+}
+
+function packHero(repo: string, hero: string) {
+  const heroDir = path.join(repo, HEROES_ROOT, hero);
+  if (!fs.existsSync(heroDir)) throw new Error(`no art folder at ${HEROES_ROOT}/${hero}`);
 
   const keyBase = `sheets/cast/heroes/${hero}`;
   const outDir = path.join(repo, 'assets/play', keyBase);
   fs.rmSync(outDir, { recursive: true, force: true });
 
-  const clipDirs = fs
-    .readdirSync(path.join(heroDir, 'animations'), { withFileTypes: true })
-    .filter((d) => d.isDirectory())
-    .map((d) => d.name);
+  const animRoot = path.join(heroDir, 'animations');
+  const clipDirs = fs.existsSync(animRoot)
+    ? fs
+        .readdirSync(animRoot, { withFileTypes: true })
+        .filter((d) => d.isDirectory())
+        .map((d) => d.name)
+    : [];
 
-  const packed = clipDirs.map((c) => packClip(heroDir, c, outDir, keyBase));
+  const packed: PackedClip[] = [];
+  for (const clipDir of clipDirs) {
+    try {
+      packed.push(packClip(heroDir, clipDir, outDir, keyBase));
+    } catch (err) {
+      // A broken clip is reported and skipped; the hero's other actions ship.
+      console.log(`  ${clipDir.padEnd(34)} SKIPPED — ${(err as Error).message}`);
+    }
+  }
   const rotations = packRotations(heroDir, outDir, keyBase);
   if (rotations) packed.push(rotations);
+  if (packed.length === 0) throw new Error('no packable actions found');
 
   const manifest: Record<string, SheetEntry> = {};
   let framesIn = 0;
@@ -325,7 +374,6 @@ function main() {
   console.log(`manifest: ${path.relative(repo, manifestPath)}`);
 
   writeCatalog(repo, hero, keyBase, packed);
-  writeRegistry(repo, keyBase, manifest);
 
   if (process.argv.includes('--preview')) writePreview(repo, hero, keyBase, manifest);
 }
@@ -403,16 +451,32 @@ function writeCatalog(repo: string, hero: string, keyBase: string, packed: Packe
  * without a network. The hosting step replaces `PLAY_SHEET_ART` with cached
  * remote URIs; `PLAY_SHEETS` (the rects) stays exactly as it is.
  */
-function writeRegistry(repo: string, keyBase: string, manifest: Record<string, SheetEntry>) {
+function writeRegistry(repo: string) {
   const out = path.join(repo, 'src/play/generated-play-sheets.ts');
+  const sheetsRoot = path.join(repo, 'assets/play/sheets');
+
+  // Scan every `sheets.json` on disk and merge — this is what makes a
+  // single-hero run safe: unpacked heroes keep their entries.
+  const manifest: Record<string, SheetEntry> = {};
+  const walkManifests = (dir: string) => {
+    if (!fs.existsSync(dir)) return;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walkManifests(full);
+      else if (entry.name === 'sheets.json') {
+        Object.assign(manifest, JSON.parse(fs.readFileSync(full, 'utf8')));
+      }
+    }
+  };
+  walkManifests(sheetsRoot);
+
   const keys = Object.keys(manifest).sort();
   const requires = keys
     .map((k) => `  '${k}': require('@/assets/play/${manifest[k].sheet}'),`)
     .join('\n');
-  const rects = JSON.stringify(manifest, null, 2)
-    .split('\n')
-    .map((line, i) => (i === 0 ? line : `${line}`))
-    .join('\n');
+  const ordered: Record<string, SheetEntry> = {};
+  for (const k of keys) ordered[k] = manifest[k];
+  const rects = JSON.stringify(ordered, null, 2);
 
   const body = `/**
  * AUTO-GENERATED by scripts/play-art-pack.ts — do not edit by hand.

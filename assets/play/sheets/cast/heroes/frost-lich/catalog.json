@@ -1,0 +1,70 @@
+{
+  "hero": "frost-lich",
+  "actions": {
+    "Frost_Nova": {
+      "sheetKey": "sheets/cast/heroes/frost-lich/Frost_Nova",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 17,
+      "footAt": 0.8952
+    },
+    "Frozen_Drift": {
+      "sheetKey": "sheets/cast/heroes/frost-lich/Frozen_Drift",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.75
+    },
+    "Hover_Idle": {
+      "sheetKey": "sheets/cast/heroes/frost-lich/Hover_Idle",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.75
+    },
+    "Royal_Cleave": {
+      "sheetKey": "sheets/cast/heroes/frost-lich/Royal_Cleave",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 13,
+      "footAt": 0.7419
+    },
+    "Soul_Stagger": {
+      "sheetKey": "sheets/cast/heroes/frost-lich/Soul_Stagger",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.7581
+    },
+    "rotations": {
+      "sheetKey": "sheets/cast/heroes/frost-lich/rotations",
+      "dirs": [
+        "north",
+        "north-east",
+        "east",
+        "south-east",
+        "south",
+        "south-west",
+        "west",
+        "north-west"
+      ],
+      "frames": 1,
+      "footAt": 0.75
+    }
+  },
+  "proposedRoles": {
+    "dash": "Frozen_Drift",
+    "idle": "Hover_Idle",
+    "hurt": "Soul_Stagger"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "hero": "maldrath",
+  "actions": {
+    "CURSED_WALK": {
+      "sheetKey": "sheets/cast/heroes/maldrath/CURSED_WALK",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.7422
+    },
+    "DARK_IDLE": {
+      "sheetKey": "sheets/cast/heroes/maldrath/DARK_IDLE",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 13,
+      "footAt": 0.7422
+    },
+    "GREATSWORD_SLASH": {
+      "sheetKey": "sheets/cast/heroes/maldrath/GREATSWORD_SLASH",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.8203
+    },
+    "HURT": {
+      "sheetKey": "sheets/cast/heroes/maldrath/HURT",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 5,
+      "footAt": 0.7969
+    },
+    "SHADOW_DASH": {
+      "sheetKey": "sheets/cast/heroes/maldrath/SHADOW_DASH",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.7422
+    },
+    "SOUL_NOVA": {
+      "sheetKey": "sheets/cast/heroes/maldrath/SOUL_NOVA",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 17,
+      "footAt": 0.8906
+    },
+    "rotations": {
+      "sheetKey": "sheets/cast/heroes/maldrath/rotations",
+      "dirs": [
+        "north",
+        "north-east",
+        "east",
+        "south-east",
+        "south",
+        "south-west",
+        "west",
+        "north-west"
+      ],
+      "frames": 1,
+      "footAt": 0.7422
+    }
+  },
+  "proposedRoles": {
+    "walk": "CURSED_WALK",
+    "idle": "DARK_IDLE",
+    "attack": "GREATSWORD_SLASH",
+    "hurt": "HURT",
+    "dash": "SHADOW_DASH"
+  }
+}

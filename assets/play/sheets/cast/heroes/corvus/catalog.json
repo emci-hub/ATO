@@ -1,0 +1,80 @@
+{
+  "hero": "corvus",
+  "actions": {
+    "BLACK_DEATH_RITUAL": {
+      "sheetKey": "sheets/cast/heroes/corvus/BLACK_DEATH_RITUAL",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 17,
+      "footAt": 0.9333
+    },
+    "DOCTOR_WALK": {
+      "sheetKey": "sheets/cast/heroes/corvus/DOCTOR_WALK",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.7417
+    },
+    "HURT": {
+      "sheetKey": "sheets/cast/heroes/corvus/HURT",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 5,
+      "footAt": 0.7833
+    },
+    "PESTILENCE_WAVE": {
+      "sheetKey": "sheets/cast/heroes/corvus/PESTILENCE_WAVE",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 13,
+      "footAt": 0.9417
+    },
+    "PLAGUE_IDLE": {
+      "sheetKey": "sheets/cast/heroes/corvus/PLAGUE_IDLE",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 13,
+      "footAt": 0.7417
+    },
+    "SHADOW_DASH": {
+      "sheetKey": "sheets/cast/heroes/corvus/SHADOW_DASH",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.7417
+    },
+    "rotations": {
+      "sheetKey": "sheets/cast/heroes/corvus/rotations",
+      "dirs": [
+        "north",
+        "north-east",
+        "east",
+        "south-east",
+        "south",
+        "south-west",
+        "west",
+        "north-west"
+      ],
+      "frames": 1,
+      "footAt": 0.75
+    }
+  },
+  "proposedRoles": {
+    "hurt": "BLACK_DEATH_RITUAL",
+    "walk": "DOCTOR_WALK",
+    "idle": "PLAGUE_IDLE",
+    "dash": "SHADOW_DASH"
+  }
+}

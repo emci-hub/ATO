@@ -1,0 +1,81 @@
+{
+  "hero": "raven",
+  "actions": {
+    "Attack_11_frames": {
+      "sheetKey": "sheets/cast/heroes/raven/Attack_11_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.75
+    },
+    "Dash_11_frames": {
+      "sheetKey": "sheets/cast/heroes/raven/Dash_11_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.75
+    },
+    "Heavy_attack_11_frames": {
+      "sheetKey": "sheets/cast/heroes/raven/Heavy_attack_11_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.75
+    },
+    "Hurt_7_frames": {
+      "sheetKey": "sheets/cast/heroes/raven/Hurt_7_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 7,
+      "footAt": 0.75
+    },
+    "Idle_11_frames": {
+      "sheetKey": "sheets/cast/heroes/raven/Idle_11_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.75
+    },
+    "Walking_11_frames": {
+      "sheetKey": "sheets/cast/heroes/raven/Walking_11_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.75
+    },
+    "rotations": {
+      "sheetKey": "sheets/cast/heroes/raven/rotations",
+      "dirs": [
+        "north",
+        "north-east",
+        "east",
+        "south-east",
+        "south",
+        "south-west",
+        "west",
+        "north-west"
+      ],
+      "frames": 1,
+      "footAt": 0.75
+    }
+  },
+  "proposedRoles": {
+    "attack": "Attack_11_frames",
+    "dash": "Dash_11_frames",
+    "hurt": "Hurt_7_frames",
+    "idle": "Idle_11_frames",
+    "walk": "Walking_11_frames"
+  }
+}

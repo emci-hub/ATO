@@ -1,0 +1,81 @@
+{
+  "hero": "void-raven",
+  "actions": {
+    "Attack_11_frames": {
+      "sheetKey": "sheets/cast/heroes/void-raven/Attack_11_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.7656
+    },
+    "Dash_11_frames": {
+      "sheetKey": "sheets/cast/heroes/void-raven/Dash_11_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.8516
+    },
+    "Heavy_attack_11_frames": {
+      "sheetKey": "sheets/cast/heroes/void-raven/Heavy_attack_11_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.8359
+    },
+    "Hurt_7_frames": {
+      "sheetKey": "sheets/cast/heroes/void-raven/Hurt_7_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 7,
+      "footAt": 0.75
+    },
+    "Idle_11_frames": {
+      "sheetKey": "sheets/cast/heroes/void-raven/Idle_11_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.75
+    },
+    "Walk_11_frames": {
+      "sheetKey": "sheets/cast/heroes/void-raven/Walk_11_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.7578
+    },
+    "rotations": {
+      "sheetKey": "sheets/cast/heroes/void-raven/rotations",
+      "dirs": [
+        "north",
+        "north-east",
+        "east",
+        "south-east",
+        "south",
+        "south-west",
+        "west",
+        "north-west"
+      ],
+      "frames": 1,
+      "footAt": 0.75
+    }
+  },
+  "proposedRoles": {
+    "attack": "Attack_11_frames",
+    "dash": "Dash_11_frames",
+    "hurt": "Hurt_7_frames",
+    "idle": "Idle_11_frames",
+    "walk": "Walk_11_frames"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "hero": "kael",
+  "actions": {
+    "DASH_BOOST": {
+      "sheetKey": "sheets/cast/heroes/kael/DASH_BOOST",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.7661
+    },
+    "EMP_BURST": {
+      "sheetKey": "sheets/cast/heroes/kael/EMP_BURST",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.7984
+    },
+    "ENERGY_SLASH": {
+      "sheetKey": "sheets/cast/heroes/kael/ENERGY_SLASH",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.75
+    },
+    "HURT": {
+      "sheetKey": "sheets/cast/heroes/kael/HURT",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 5,
+      "footAt": 0.75
+    },
+    "Idle": {
+      "sheetKey": "sheets/cast/heroes/kael/Idle",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 13,
+      "footAt": 0.75
+    },
+    "TACTICAL_WALK": {
+      "sheetKey": "sheets/cast/heroes/kael/TACTICAL_WALK",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.75
+    },
+    "rotations": {
+      "sheetKey": "sheets/cast/heroes/kael/rotations",
+      "dirs": [
+        "north",
+        "north-east",
+        "east",
+        "south-east",
+        "south",
+        "south-west",
+        "west",
+        "north-west"
+      ],
+      "frames": 1,
+      "footAt": 0.75
+    }
+  },
+  "proposedRoles": {
+    "dash": "DASH_BOOST",
+    "attack": "ENERGY_SLASH",
+    "hurt": "HURT",
+    "idle": "Idle",
+    "walk": "TACTICAL_WALK"
+  }
+}

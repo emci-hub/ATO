@@ -1,0 +1,82 @@
+{
+  "hero": "cyber-shinobi",
+  "actions": {
+    "Attack_11_frames": {
+      "sheetKey": "sheets/cast/heroes/cyber-shinobi/Attack_11_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.75
+    },
+    "Dash_11_frames": {
+      "sheetKey": "sheets/cast/heroes/cyber-shinobi/Dash_11_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.75
+    },
+    "Hurt_7_frames": {
+      "sheetKey": "sheets/cast/heroes/cyber-shinobi/Hurt_7_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 7,
+      "footAt": 0.75
+    },
+    "Idle_11_frames": {
+      "sheetKey": "sheets/cast/heroes/cyber-shinobi/Idle_11_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.75
+    },
+    "Skill_17_frames": {
+      "sheetKey": "sheets/cast/heroes/cyber-shinobi/Skill_17_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 17,
+      "footAt": 0.75
+    },
+    "Walk_11_frames": {
+      "sheetKey": "sheets/cast/heroes/cyber-shinobi/Walk_11_frames",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.75
+    },
+    "rotations": {
+      "sheetKey": "sheets/cast/heroes/cyber-shinobi/rotations",
+      "dirs": [
+        "north",
+        "north-east",
+        "east",
+        "south-east",
+        "south",
+        "south-west",
+        "west",
+        "north-west"
+      ],
+      "frames": 1,
+      "footAt": 0.75
+    }
+  },
+  "proposedRoles": {
+    "attack": "Attack_11_frames",
+    "dash": "Dash_11_frames",
+    "hurt": "Hurt_7_frames",
+    "idle": "Idle_11_frames",
+    "skill": "Skill_17_frames",
+    "walk": "Walk_11_frames"
+  }
+}

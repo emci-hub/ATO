@@ -1,0 +1,71 @@
+{
+  "hero": "sak",
+  "actions": {
+    "Cat_Walk": {
+      "sheetKey": "sheets/cast/heroes/sak/Cat_Walk",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.75
+    },
+    "Feline_Rush": {
+      "sheetKey": "sheets/cast/heroes/sak/Feline_Rush",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 13,
+      "footAt": 0.75
+    },
+    "Kingdom_of_Cats": {
+      "sheetKey": "sheets/cast/heroes/sak/Kingdom_of_Cats",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 17,
+      "footAt": 0.8167
+    },
+    "Moonfang_Slash": {
+      "sheetKey": "sheets/cast/heroes/sak/Moonfang_Slash",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.75
+    },
+    "Royal_Idle": {
+      "sheetKey": "sheets/cast/heroes/sak/Royal_Idle",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 13,
+      "footAt": 0.75
+    },
+    "rotations": {
+      "sheetKey": "sheets/cast/heroes/sak/rotations",
+      "dirs": [
+        "north",
+        "north-east",
+        "east",
+        "south-east",
+        "south",
+        "south-west",
+        "west",
+        "north-west"
+      ],
+      "frames": 1,
+      "footAt": 0.75
+    }
+  },
+  "proposedRoles": {
+    "walk": "Cat_Walk",
+    "dash": "Feline_Rush",
+    "attack": "Moonfang_Slash",
+    "idle": "Royal_Idle"
+  }
+}

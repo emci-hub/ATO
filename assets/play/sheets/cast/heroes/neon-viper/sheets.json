@@ -1,0 +1,567 @@
+{
+  "sheets/cast/heroes/neon-viper/Breathing_Idle": {
+    "sheet": "sheets/cast/heroes/neon-viper/Breathing_Idle.png",
+    "sheetW": 515,
+    "sheetH": 257,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_001": {
+        "x": 129,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_002": {
+        "x": 258,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_003": {
+        "x": 387,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_001": {
+        "x": 129,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_002": {
+        "x": 258,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_003": {
+        "x": 387,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      }
+    }
+  },
+  "sheets/cast/heroes/neon-viper/Cross_Punch": {
+    "sheet": "sheets/cast/heroes/neon-viper/Cross_Punch.png",
+    "sheetW": 773,
+    "sheetH": 257,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_001": {
+        "x": 129,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_002": {
+        "x": 258,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_003": {
+        "x": 387,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_004": {
+        "x": 516,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_005": {
+        "x": 645,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_001": {
+        "x": 129,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_002": {
+        "x": 258,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_003": {
+        "x": 387,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_004": {
+        "x": 516,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_005": {
+        "x": 645,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      }
+    }
+  },
+  "sheets/cast/heroes/neon-viper/Falling_Back_Death": {
+    "sheet": "sheets/cast/heroes/neon-viper/Falling_Back_Death.png",
+    "sheetW": 902,
+    "sheetH": 257,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_001": {
+        "x": 129,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_002": {
+        "x": 258,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_003": {
+        "x": 387,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_004": {
+        "x": 516,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_005": {
+        "x": 645,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_006": {
+        "x": 774,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_001": {
+        "x": 129,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_002": {
+        "x": 258,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_003": {
+        "x": 387,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_004": {
+        "x": 516,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_005": {
+        "x": 645,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_006": {
+        "x": 774,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      }
+    }
+  },
+  "sheets/cast/heroes/neon-viper/Jumping": {
+    "sheet": "sheets/cast/heroes/neon-viper/Jumping.png",
+    "sheetW": 1160,
+    "sheetH": 257,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_001": {
+        "x": 129,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_002": {
+        "x": 258,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_003": {
+        "x": 387,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_004": {
+        "x": 516,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_005": {
+        "x": 645,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_006": {
+        "x": 774,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_007": {
+        "x": 903,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_008": {
+        "x": 1032,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_001": {
+        "x": 129,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_002": {
+        "x": 258,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_003": {
+        "x": 387,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_004": {
+        "x": 516,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_005": {
+        "x": 645,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_006": {
+        "x": 774,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_007": {
+        "x": 903,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_008": {
+        "x": 1032,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      }
+    }
+  },
+  "sheets/cast/heroes/neon-viper/Surprise_Uppercut": {
+    "sheet": "sheets/cast/heroes/neon-viper/Surprise_Uppercut.png",
+    "sheetW": 902,
+    "sheetH": 257,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_001": {
+        "x": 129,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_002": {
+        "x": 258,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_003": {
+        "x": 387,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_004": {
+        "x": 516,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_005": {
+        "x": 645,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_006": {
+        "x": 774,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_001": {
+        "x": 129,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_002": {
+        "x": 258,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_003": {
+        "x": 387,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_004": {
+        "x": 516,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_005": {
+        "x": 645,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_006": {
+        "x": 774,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      }
+    }
+  },
+  "sheets/cast/heroes/neon-viper/Walking": {
+    "sheet": "sheets/cast/heroes/neon-viper/Walking.png",
+    "sheetW": 773,
+    "sheetH": 257,
+    "frames": {
+      "east/frame_000": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_001": {
+        "x": 129,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_002": {
+        "x": 258,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_003": {
+        "x": 387,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_004": {
+        "x": 516,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east/frame_005": {
+        "x": 645,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_000": {
+        "x": 0,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_001": {
+        "x": 129,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_002": {
+        "x": 258,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_003": {
+        "x": 387,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_004": {
+        "x": 516,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      },
+      "west/frame_005": {
+        "x": 645,
+        "y": 129,
+        "w": 128,
+        "h": 128
+      }
+    }
+  },
+  "sheets/cast/heroes/neon-viper/rotations": {
+    "sheet": "sheets/cast/heroes/neon-viper/rotations.png",
+    "sheetW": 1031,
+    "sheetH": 128,
+    "frames": {
+      "north": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "north-east": {
+        "x": 129,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "east": {
+        "x": 258,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "south-east": {
+        "x": 387,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "south": {
+        "x": 516,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "south-west": {
+        "x": 645,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "west": {
+        "x": 774,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "north-west": {
+        "x": 903,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      }
+    }
+  }
+}

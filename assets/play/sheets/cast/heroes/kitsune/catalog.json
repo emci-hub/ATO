@@ -1,0 +1,81 @@
+{
+  "hero": "kitsune",
+  "actions": {
+    "Attack_01_Scarlet_Moon_Slash": {
+      "sheetKey": "sheets/cast/heroes/kitsune/Attack_01_Scarlet_Moon_Slash",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.859
+    },
+    "Breathing_Idle": {
+      "sheetKey": "sheets/cast/heroes/kitsune/Breathing_Idle",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 4,
+      "footAt": 0.7436
+    },
+    "Crimson_Run": {
+      "sheetKey": "sheets/cast/heroes/kitsune/Crimson_Run",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.7436
+    },
+    "Death_Animation_Fallen_Empress": {
+      "sheetKey": "sheets/cast/heroes/kitsune/Death_Animation_Fallen_Empress",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 11,
+      "footAt": 0.7692
+    },
+    "Sexy_Walk": {
+      "sheetKey": "sheets/cast/heroes/kitsune/Sexy_Walk",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 9,
+      "footAt": 0.7436
+    },
+    "Special_Skill_Foxfire_Step": {
+      "sheetKey": "sheets/cast/heroes/kitsune/Special_Skill_Foxfire_Step",
+      "dirs": [
+        "east",
+        "west"
+      ],
+      "frames": 17,
+      "footAt": 0.7692
+    },
+    "rotations": {
+      "sheetKey": "sheets/cast/heroes/kitsune/rotations",
+      "dirs": [
+        "north",
+        "north-east",
+        "east",
+        "south-east",
+        "south",
+        "south-west",
+        "west",
+        "north-west"
+      ],
+      "frames": 1,
+      "footAt": 0.7436
+    }
+  },
+  "proposedRoles": {
+    "attack": "Attack_01_Scarlet_Moon_Slash",
+    "idle": "Breathing_Idle",
+    "walk": "Crimson_Run",
+    "hurt": "Death_Animation_Fallen_Empress",
+    "skill": "Special_Skill_Foxfire_Step"
+  }
+}
