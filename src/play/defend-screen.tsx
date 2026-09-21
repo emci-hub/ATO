@@ -25,7 +25,6 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AppState, Pressable, Share, StyleSheet, View } from 'react-native';
-import type { ImageSourcePropType } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -84,7 +83,7 @@ import { NeonLabel, NeonPill, NEON_ROW_LINE } from '@/play/neon-ui';
 import {
   BOARD_SKIN,
   bandUnitRole,
-  directionalClipArt,
+  directionalClipDrawable,
   heroAvatarRole,
   isPathWalker,
   roleAnimFaceIndex,
@@ -111,10 +110,12 @@ import {
   skinWalkFrames,
   resolveBoundHeroTowerKit,
   towerSkinRole,
+  type ClipDrawable,
   type SkinRole,
   type SkinRoleId,
   type SkinWalkFace,
 } from '@/play/skin';
+import { ClipImage, ClipSprite } from '@/play/sheet-sprite';
 import {
   CREEP_STILL_MS,
   creepClip,
@@ -2033,9 +2034,12 @@ export function DefendScreen({
   const avatarAnim = avatarAnimRef.current;
   const avatarFrame = castActorFrame(avatarAnim, Date.now(), avatarRole);
   const avatarFace = avatarFaceRef.current;
-  const avatarFrameSource =
-    castActorFrameArt(avatarAnim, avatarFace, avatarFrame, avatarRole) ??
-    roleArt(avatarRole, roleFaceArtIndex(avatarRole, avatarFace));
+  const avatarDrawable: ClipDrawable | undefined = (() => {
+    const clip = castActorFrameDrawable(avatarAnim, avatarFace, avatarFrame, avatarRole);
+    if (clip) return clip;
+    const rotation = roleArt(avatarRole, roleFaceArtIndex(avatarRole, avatarFace));
+    return rotation ? { kind: 'legacy', source: rotation } : undefined;
+  })();
 
   /** Drops card — one shared block, collapsed by default to a single neon
    * header row. On Main it renders just above Maps; Trial keeps its previous
@@ -2414,7 +2418,7 @@ export function DefendScreen({
                   castActorClipFrames('attack', kitRole) > 0 ||
                   castActorClipFrames('skill', kitRole) > 0;
 
-                let source: ImageSourcePropType | undefined;
+                let drawable: ClipDrawable | undefined;
                 let transform: string | undefined;
                 if (hasClips) {
                   // Stationary humanoid: the breathing idle loop, or the attack
@@ -2424,30 +2428,27 @@ export function DefendScreen({
                     towerAnimRef.current[tower.id] ??
                     castActorCreate('tower', castActorIdleSeed(tower.id, 'tower'));
                   const frame = castActorFrame(anim, Date.now(), kitRole);
-                  source =
-                    castActorFrameArt(anim, face, frame, kitRole) ??
-                    roleArt(kitRole, roleFaceArtIndex(kitRole, face));
+                  drawable = castActorFrameDrawable(anim, face, frame, kitRole);
+                  if (!drawable) {
+                    const rotation = roleArt(kitRole, roleFaceArtIndex(kitRole, face));
+                    drawable = rotation ? { kind: 'legacy', source: rotation } : undefined;
+                  }
                   transform = undefined;
                 } else {
                   // No clip art yet — keep the static 8-dir rotation.
                   const dirIndex = skinDirIndex(role, heading.dx, heading.dy);
-                  source = skinArt(role, dirIndex);
+                  const rotation = skinArt(role, dirIndex);
+                  drawable = rotation ? { kind: 'legacy', source: rotation } : undefined;
                   transform = dirs > 1 ? undefined : `rotate(${deg} ${pad.x} ${pad.y})`;
                 }
-                if (!source) return null;
+                if (!drawable) return null;
                 const size =
                   skinUnits(role, TOWER_PAD_UNITS) * skinScale(role, tower.level) * TOWER_DRAW_SCALE;
                 const box = skinDrawBox(role, pad.x, pad.y, size);
                 return (
                   <G key={`tower-art-${tower.id}`}>
                     <G transform={transform}>
-                      <SvgImage
-                        href={source}
-                        x={box.x}
-                        y={box.y}
-                        width={box.size}
-                        height={box.size}
-                      />
+                      <ClipSprite drawable={drawable} x={box.x} y={box.y} size={box.size} />
                     </G>
                     {/* Tiny Space Mono role letter at the sprite's top-right —
                      * outside the rotate group so it never spins. Anchored to
@@ -2489,32 +2490,31 @@ export function DefendScreen({
                         `falling back to its static rotation. Is its hero art bundled?`,
                     );
                   }
-                  let source: ImageSourcePropType | undefined;
+                  let drawable: ClipDrawable | undefined;
                   if (hasClips) {
                     const anim: CastActor =
                       towerAnimRef.current[bb.id] ??
                       castActorCreate('tower', castActorIdleSeed(bb.id, 'tower'));
                     const frame = castActorFrame(anim, Date.now(), kitRole);
-                    source =
-                      castActorFrameArt(anim, face, frame, kitRole) ??
-                      roleArt(kitRole, roleFaceArtIndex(kitRole, face));
-                  } else {
-                    source = roleArt(kitRole, roleFaceArtIndex(kitRole, face));
+                    drawable = castActorFrameDrawable(anim, face, frame, kitRole);
                   }
-                  if (!source) return null;
+                  if (!drawable) {
+                    const rotation = roleArt(kitRole, roleFaceArtIndex(kitRole, face));
+                    drawable = rotation ? { kind: 'legacy', source: rotation } : undefined;
+                  }
+                  if (!drawable) return null;
                   // A6 — a bound boss is tower-sized, not hero-sized: cap the
                   // hero's natural `units` so it reads on a pad next to towers.
                   const size = Math.min(kitRole.units ?? TOWER_PAD_UNITS, 16) * TOWER_DRAW_SCALE;
                   const footAt = roleFootAt(kitRole);
                   const box = { x: pad.x - size / 2, y: pad.y - size * footAt, size };
                   return (
-                    <SvgImage
+                    <ClipSprite
                       key={`bb-hero-art-${bb.id}`}
-                      href={source}
+                      drawable={drawable}
                       x={box.x}
                       y={box.y}
-                      width={box.size}
-                      height={box.size}
+                      size={box.size}
                     />
                   );
                 }
@@ -2778,8 +2778,8 @@ export function DefendScreen({
               <View
                 style={styles.avatarArt}
                 pointerEvents="none">
-                {avatarFrameSource ? (
-                  <Image source={avatarFrameSource} contentFit="contain" style={styles.avatarImage} />
+                {avatarDrawable ? (
+                  <ClipImage drawable={avatarDrawable} />
                 ) : (
                   <View style={[styles.avatarFallback, { backgroundColor: avatarColor }]} />
                 )}
@@ -4019,18 +4019,24 @@ const AVATAR_SKILL_RECOVER_MS = 150;
  * time-derived so a dropped tick never desyncs. */
 const AVATAR_ANIM_TICK_MS = 50;
 
-/** Art for one frame of a CastActor clip, resolved at the sticky E/W face.
- * `walk` reads the role's locomotion clip; the rest read `anims`. Undefined when
- * the clip isn't authored — callers fall back to the rotation art. */
-function castActorFrameArt(
+/** Drawable for one frame of a CastActor clip, resolved at the sticky E/W
+ * face — a packed sheet crop when the hero's clip is converted, else the
+ * legacy per-frame PNG (see `directionalClipDrawable`). `walk` reads the
+ * role's locomotion clip; the rest read `anims`. Undefined when the clip
+ * isn't authored at all — callers fall back to the static rotation art. */
+function castActorFrameDrawable(
   actor: CastActor,
   face: SkinWalkFace,
   frame: number,
   role: SkinRole,
-): ImageSourcePropType | undefined {
+): ClipDrawable | undefined {
   return actor.clip === 'walk'
-    ? directionalClipArt(role.walk, roleWalkFaceIndex(role, face), frame)
-    : directionalClipArt(role.anims?.[actor.clip], roleAnimFaceIndex(role, actor.clip, face), frame);
+    ? directionalClipDrawable(role.walk, roleWalkFaceIndex(role, face), frame)
+    : directionalClipDrawable(
+        role.anims?.[actor.clip],
+        roleAnimFaceIndex(role, actor.clip, face),
+        frame,
+      );
 }
 
 /* ------------------------------------------------------- click-to-move --- */
@@ -4401,10 +4407,6 @@ const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
   },
   avatarFallback: {
     width: '100%',

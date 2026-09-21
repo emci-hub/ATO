@@ -22,6 +22,7 @@ import rawCast from '@/assets/play/skins/cast/skin.json';
 import rawCraftpix from '@/assets/play/skins/craftpix-td/skin.json';
 import rawKenney from '@/assets/play/skins/kenney-td/skin.json';
 import { PLAY_ART } from '@/play/generated-play-assets';
+import { PLAY_SHEETS } from '@/play/generated-play-sheets';
 import { heroById, type HeroDef, BOUND_HERO_TOWER_CLIPS } from '@/play/heroes-data';
 import { defaultTowerSkin, type TowerSkinDef, type TowerSkinRole } from '@/play/tower-skins-data';
 
@@ -378,6 +379,51 @@ export function directionalClipArt(
   const f = ((frame % clip.frames) + clip.frames) % clip.frames;
   const key = `${clip.base}/${dirName}/frame_${String(f).padStart(3, '0')}`;
   return PLAY_ART[key];
+}
+
+/**
+ * A hero clip's `base` (`skins/cast/heroes/<hero>/animations/<action>`) →
+ * the sheet key `play-art-pack.ts` packed it under
+ * (`sheets/cast/heroes/<hero>/<action>`). Undefined for anything that isn't a
+ * packed hero animation — creeps/towers/tiles stay on `directionalClipArt`
+ * until their categories are packed too, with no code change needed then.
+ */
+function sheetKeyForClipBase(base: string): string | undefined {
+  const m = /^skins\/cast\/heroes\/([^/]+)\/animations\/(.+)$/.exec(base);
+  return m ? `sheets/cast/heroes/${m[1]}/${m[2]}` : undefined;
+}
+
+/** One resolved frame, however it's stored — a sheet crop or a legacy PNG.
+ * The two draw components (`SheetSprite` for the SVG board, `SheetImage` for
+ * the expo-image Avatar overlay) both accept this and never care which. */
+export type ClipDrawable =
+  | { kind: 'sheet'; sheetKey: string; frameKey: string }
+  | { kind: 'legacy'; source: ImageSourcePropType };
+
+/**
+ * Sheet-aware sibling of `directionalClipArt` — tries the packed sheet first,
+ * falls back to the per-frame PNG when the clip (or this exact frame) isn't
+ * packed yet. Same frame-index math as the function it wraps, so a hero
+ * mid-conversion never skips or repeats a frame.
+ */
+export function directionalClipDrawable(
+  clip: { dirs: number; order: readonly string[]; frames: number; base: string } | undefined,
+  dirIndex: number,
+  frame: number,
+): ClipDrawable | undefined {
+  if (!clip || dirIndex < 0) return undefined;
+  const dir = ((dirIndex % clip.dirs) + clip.dirs) % clip.dirs;
+  const dirName = clip.order[dir];
+  if (!dirName) return undefined;
+  const f = ((frame % clip.frames) + clip.frames) % clip.frames;
+  const frameKey = `${dirName}/frame_${String(f).padStart(3, '0')}`;
+
+  const sheetKey = sheetKeyForClipBase(clip.base);
+  if (sheetKey && PLAY_SHEETS[sheetKey]?.frames[frameKey]) {
+    return { kind: 'sheet', sheetKey, frameKey };
+  }
+  const source = PLAY_ART[`${clip.base}/${frameKey}`];
+  return source ? { kind: 'legacy', source } : undefined;
 }
 
 /**
