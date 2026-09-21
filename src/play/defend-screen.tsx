@@ -3540,6 +3540,26 @@ export function DefendScreen({
                 label="Place bound on next free pad"
                 onPress={devPlaceBoundOnNextFreePad}
               />
+              {/* The bind sheet only ever opens from a one-time "new hero"
+                  unlock offer, which PLAY_EVERYTHING_FREE's auto-own never
+                  triggers — so a fresh dev account has no way to reach a
+                  hero-bound tower without this row. Skips the active Avatar,
+                  same refusal `onBindHeroAsTower` already enforces. */}
+              {allHeroes()
+                .filter((hero) => hero.id !== view.activeAvatarHeroId)
+                .map((hero) => (
+                  <DevRow
+                    key={`bind-${hero.id}`}
+                    label={`Bind ${hero.name} as tower (dev)`}
+                    onPress={() => {
+                      void onBindHeroAsTower(hero.id).then((reason) => {
+                        if (reason && __DEV__) {
+                          console.warn(`[dev] bind ${hero.id} refused: ${reason}`);
+                        }
+                      });
+                    }}
+                  />
+                ))}
               {allHeroes().map((hero) => (
                 <DevRow
                   key={`set-${hero.id}`}
