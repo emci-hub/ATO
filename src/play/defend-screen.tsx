@@ -3523,13 +3523,13 @@ export function DefendScreen({
               title="Heroes"
               open={devSections.heroes}
               onToggle={toggleDevSection}>
-              {allHeroes().map((hero) => (
-                <DevRow
-                  key={`own-${hero.id}`}
-                  label={`Own ${hero.name}`}
-                  onPress={() => void onDevOwnHero(hero.id)}
-                />
-              ))}
+              {/* Whole-roster actions first, then ONE compact row per hero
+                  (Own · Avatar · Bind) instead of the same 16 heroes listed
+                  three times over in three separate blocks — the flat
+                  48-row version was unreadable while testing (emci,
+                  2026-09-22). The bind chip is disabled, not hidden, for the
+                  active Avatar, so its own refusal reads as "can't, because
+                  it's your Avatar" rather than the row just being absent. */}
               <DevRow label="Own all heroes" onPress={() => void onDevOwnAllHeroes()} />
               <DevRow label="Clear hero offer" onPress={() => void onDevClearHeroOffer()} />
               <DevRow
@@ -3540,31 +3540,20 @@ export function DefendScreen({
                 label="Place bound on next free pad"
                 onPress={devPlaceBoundOnNextFreePad}
               />
-              {/* The bind sheet only ever opens from a one-time "new hero"
-                  unlock offer, which PLAY_EVERYTHING_FREE's auto-own never
-                  triggers — so a fresh dev account has no way to reach a
-                  hero-bound tower without this row. Skips the active Avatar,
-                  same refusal `onBindHeroAsTower` already enforces. */}
-              {allHeroes()
-                .filter((hero) => hero.id !== view.activeAvatarHeroId)
-                .map((hero) => (
-                  <DevRow
-                    key={`bind-${hero.id}`}
-                    label={`Bind ${hero.name} as tower (dev)`}
-                    onPress={() => {
-                      void onBindHeroAsTower(hero.id).then((reason) => {
-                        if (reason && __DEV__) {
-                          console.warn(`[dev] bind ${hero.id} refused: ${reason}`);
-                        }
-                      });
-                    }}
-                  />
-                ))}
               {allHeroes().map((hero) => (
-                <DevRow
-                  key={`set-${hero.id}`}
-                  label={`Set Avatar → ${hero.name} (dev)`}
-                  onPress={() => void onDevSetAvatarHero(hero.id)}
+                <HeroDevRow
+                  key={hero.id}
+                  name={hero.name}
+                  isActiveAvatar={hero.id === view.activeAvatarHeroId}
+                  onOwn={() => void onDevOwnHero(hero.id)}
+                  onSetAvatar={() => void onDevSetAvatarHero(hero.id)}
+                  onBind={() => {
+                    void onBindHeroAsTower(hero.id).then((reason) => {
+                      if (reason && __DEV__) {
+                        console.warn(`[dev] bind ${hero.id} refused: ${reason}`);
+                      }
+                    });
+                  }}
                 />
               ))}
             </DevSection>
@@ -3854,6 +3843,57 @@ function DevRow({ label, onPress, disabled }: { label: string; onPress: () => vo
         {label}
       </ThemedText>
     </Pressable>
+  );
+}
+
+/** One hero's dev actions as a single scannable row: the name, then three
+ * small chips (Own · Avatar · Bind) instead of three separate full-width
+ * `DevRow`s scattered across three passes over the same 16 heroes. The Bind
+ * chip is DISABLED, not omitted, for the active Avatar — `onBindHeroAsTower`
+ * itself refuses that hero, and a missing chip reads as broken where a
+ * disabled one reads as "not this one." */
+function HeroDevRow({
+  name,
+  isActiveAvatar,
+  onOwn,
+  onSetAvatar,
+  onBind,
+}: {
+  name: string;
+  isActiveAvatar: boolean;
+  onOwn: () => void;
+  onSetAvatar: () => void;
+  onBind: () => void;
+}) {
+  const theme = useTheme();
+  const chip = (label: string, onPress: () => void, disabled?: boolean) => (
+    <Pressable
+      key={label}
+      disabled={disabled}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${label} ${name}`}
+      accessibilityState={{ disabled }}
+      style={({ pressed }) => [
+        styles.devHeroChip,
+        { backgroundColor: theme.backgroundElement, borderColor: controlBorderColor(theme) },
+        pressed && !disabled && styles.pressed,
+        disabled && styles.disabled,
+      ]}>
+      <ThemedText type="small" themeColor={disabled ? 'textSecondary' : undefined}>
+        {label}
+      </ThemedText>
+    </Pressable>
+  );
+  return (
+    <View style={styles.devHeroRow}>
+      <ThemedText type="small" style={styles.devHeroName} numberOfLines={1}>
+        {name}
+      </ThemedText>
+      {chip('Own', onOwn)}
+      {chip('Avatar', onSetAvatar)}
+      {chip('Bind', onBind, isActiveAvatar)}
+    </View>
   );
 }
 
@@ -4570,6 +4610,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: Spacing.three,
     paddingVertical: Spacing.two,
+  },
+  /** One hero's dev actions: name + 3 chips, one row (HeroDevRow). */
+  devHeroRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    paddingVertical: Spacing.one,
+  },
+  devHeroName: {
+    flex: 1,
+  },
+  devHeroChip: {
+    borderWidth: 1,
+    borderRadius: Spacing.three,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
   },
   /** Dev kit group header — a bordered row that expands its rows (DevSection). */
   devSectionHeader: {
