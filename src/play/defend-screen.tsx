@@ -82,6 +82,7 @@ import { HeroOwnSheet } from '@/play/hero-own-sheet';
 import { NeonLabel, NeonPill, NEON_ROW_LINE } from '@/play/neon-ui';
 import {
   BOARD_SKIN,
+  BOARD_SKIN_LABEL,
   bandUnitRole,
   directionalClipDrawable,
   heroAvatarRole,
@@ -114,6 +115,7 @@ import {
   type ClipDrawable,
   type SkinRole,
   type SkinRoleId,
+  type BoardSkinId,
   type SkinWalkFace,
 } from '@/play/skin';
 import { ClipImage, ClipSprite } from '@/play/sheet-sprite';
@@ -241,9 +243,11 @@ function walkFramesPerPath(role: SkinRoleId): number {
 
 const AVATAR_COLOR = '#38BDF8';
 
-/** Default board paint — `neon` (procedural chrome) vs `grove-classic`
- * (Craftpix field tiles + cobble road). Paint only; geometry is untouched. */
-const NEON_CHROME = BOARD_SKIN === 'neon';
+/** Board paint — `neon` (procedural chrome) vs `grove-classic` (Craftpix field
+ * tiles + cobble road). Paint only; geometry is untouched. `BOARD_SKIN`
+ * (skin.ts) is still the SHIPPED default; the dev kit's Board section can
+ * flip it for this session only (Board / Misc → Board skin), so both painted
+ * options — both already fully bundled — can be checked without a build. */
 
 /* -------------------------------------------------------------- game speed --- */
 /** The sim clock multipliers a wave can run at. One multiplier drives the WHOLE
@@ -711,6 +715,10 @@ export function DefendScreen({
   /** God mode — starts from the §9c tune doc (BrokenOP turns it on). */
   const [godMode, setGodMode] = useState(() => getTune().godMode);
   const [coachHidden, setCoachHidden] = useState(false);
+  /** Dev-only, this session only — the shipped default is `BOARD_SKIN`
+   * (skin.ts). Both options are already fully bundled art (see the Board
+   * section's row below), so switching costs nothing to preview. */
+  const [boardSkin, setBoardSkin] = useState<BoardSkinId>(BOARD_SKIN);
   /** Live-run coach starts collapsed on phones; one tap reveals the full tip. */
   const [runCoachOpen, setRunCoachOpen] = useState(false);
   const [whyOpen, setWhyOpen] = useState(false);
@@ -2294,7 +2302,7 @@ export function DefendScreen({
                 `grove-classic` board skin only. The default `neon` chrome paints
                 its own void/corridor/brackets in the gameplay SVG below, so the
                 field tiles are bypassed entirely. */}
-            {NEON_CHROME ? null : (
+            {boardSkin === 'neon' ? null : (
               <View
                 pointerEvents="none"
                 style={[StyleSheet.absoluteFill, styles.boardTiles]}>
@@ -2329,7 +2337,7 @@ export function DefendScreen({
                 (click-to-move / pad select). */}
             <View style={styles.boardArt} pointerEvents="none">
             <Svg width="100%" height="100%" viewBox="0 0 100 100">
-              {NEON_CHROME ? (
+              {boardSkin === 'neon' ? (
                 /* Neon chrome — void/wall, ATO ghost, glowing path corridor and
                  * magenta pad brackets. Painted FIRST so every gameplay layer
                  * (pad rings, towers, enemies, shots) sits on top of it, and the
@@ -3713,6 +3721,12 @@ export function DefendScreen({
                     return next;
                   });
                 }}
+              />
+              <DevRow
+                label={`Board skin: ${BOARD_SKIN_LABEL[boardSkin]} (tap to switch)`}
+                onPress={() =>
+                  setBoardSkin((skin) => (skin === 'neon' ? 'grove-classic' : 'neon'))
+                }
               />
               <DevRow
                 label={coachHidden ? 'Show coach' : 'Coach on'}
