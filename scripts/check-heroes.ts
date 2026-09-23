@@ -120,6 +120,14 @@ const registryText = fs.readFileSync(
   path.resolve(repoRoot, 'src/play/generated-play-assets.ts'),
   'utf8',
 );
+// A packed hero's clip frames no longer bundle as loose PNGs (play-art-pack.ts
+// --all packs them into a sheet instead, and play-art-prep.ts excludes them
+// from generated-play-assets.ts to avoid doubling ~2000 files) — so "is this
+// clip actually bundled" now has two places to look, not one.
+const sheetRegistryText = fs.readFileSync(
+  path.resolve(repoRoot, 'src/play/generated-play-sheets.ts'),
+  'utf8',
+);
 
 let passed = 0;
 function ok(label: string) {
@@ -136,8 +144,41 @@ function frameKey(base: string, face: string, frame: number): string {
   return `'${base}/${face}/frame_${String(frame).padStart(3, '0')}'`;
 }
 
-/** Frames the registry bundles for one facing (`frame_000`, `frame_001`, …). */
+/** `<hero>/animations/<action>` (registry `base`) → the sheet key
+ * `play-art-pack.ts` packs it under. Mirrors `sheetKeyForClipBase` in
+ * src/play/skin.ts — kept independent so this check never trusts the code
+ * it's checking. */
+function sheetKeyFor(base: string): string | undefined {
+  const m = /^skins\/cast\/heroes\/([^/]+)\/animations\/(.+)$/.exec(base);
+  return m ? `sheets/cast/heroes/${m[1]}/${m[2]}` : undefined;
+}
+
+/** The JSON slice for one sheet key — every hero's every clip shares the same
+ * `"<face>/frame_NNN"` key shape, so counting frames by a bare substring
+ * search across the WHOLE registry would match some other hero's sheet, not
+ * this one. Scoped to between this sheet's own `"<key>": {` and the next. */
+function sheetBlock(sheetKey: string): string | undefined {
+  const marker = `"${sheetKey}": {`;
+  const start = sheetRegistryText.indexOf(marker);
+  if (start === -1) return undefined;
+  // Top-level keys are indented exactly 2 spaces; a nested value line (e.g.
+  // `"sheet": "sheets/..."`, 4 spaces) also contains the literal `"sheets/`
+  // substring, so the delimiter anchors on newline + indent, not bare text.
+  const next = sheetRegistryText.indexOf('\n  "sheets/', start + marker.length);
+  return sheetRegistryText.slice(start, next === -1 ? undefined : next);
+}
+
+/** Frames bundled for one facing — the sheet registry when this clip is
+ * packed, else the (now usually absent) loose-PNG registry, so an
+ * unconverted hero's stub detection still works exactly as before. */
 function registryFrames(base: string, face: string): number {
+  const sheetKey = sheetKeyFor(base);
+  const block = sheetKey ? sheetBlock(sheetKey) : undefined;
+  if (block) {
+    let frames = 0;
+    while (block.includes(`"${face}/frame_${String(frames).padStart(3, '0')}"`)) frames += 1;
+    if (frames > 0) return frames;
+  }
   let frames = 0;
   while (registryText.includes(frameKey(base, face, frames))) frames += 1;
   return frames;

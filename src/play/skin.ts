@@ -166,6 +166,53 @@ export function skinArt(
   return key ? PLAY_ART[key] : undefined;
 }
 
+/**
+ * A static (non-animated) art key → the flat sheet `play-art-pack.ts --family`
+ * packed it under, or the hero rotation sheet already packed alongside its
+ * clips. Two shapes today, checked in order:
+ *   `kenney-td/<file>`                      → `sheets/kenney-td`, frame `<file>`
+ *   `skins/cast/heroes/<hero>/rotations/<d>` → `sheets/cast/heroes/<hero>/rotations`, frame `<d>`
+ * Undefined for anything else — every other family stays on legacy `PLAY_ART`
+ * until it's packed too, with no code change needed then.
+ */
+function staticKeyDrawable(key: string): ClipDrawable | undefined {
+  const kenneyTd = /^kenney-td\/(.+)$/.exec(key);
+  if (kenneyTd) {
+    const frame = PLAY_SHEETS['sheets/kenney-td']?.frames[kenneyTd[1]];
+    if (frame) return { kind: 'sheet', sheetKey: 'sheets/kenney-td', frameKey: kenneyTd[1] };
+  }
+  const heroRotation = /^skins\/cast\/heroes\/([^/]+)\/rotations\/(.+)$/.exec(key);
+  if (heroRotation) {
+    const sheetKey = `sheets/cast/heroes/${heroRotation[1]}/rotations`;
+    if (PLAY_SHEETS[sheetKey]?.frames[heroRotation[2]]) {
+      return { kind: 'sheet', sheetKey, frameKey: heroRotation[2] };
+    }
+  }
+  return undefined;
+}
+
+/** Resolve one of a role's static `keys` to a drawable — sheet-aware sibling
+ * of `skinArt`, same key-selection logic. */
+function keyToDrawable(key: string | undefined): ClipDrawable | undefined {
+  if (!key) return undefined;
+  const sheet = staticKeyDrawable(key);
+  if (sheet) return sheet;
+  const source = PLAY_ART[key];
+  return source ? { kind: 'legacy', source } : undefined;
+}
+
+/** Sheet-aware sibling of `skinArt` — tries the packed sheet first, falls
+ * back to the per-frame PNG for any role/key not converted yet. */
+export function skinArtDrawable(role: SkinRoleId, dirIndex = 0): ClipDrawable | undefined {
+  const def = resolveRole(role);
+  if (!def || def.keys.length === 0) return undefined;
+  const key =
+    def.dirs === 1
+      ? def.keys[0]
+      : def.keys[((dirIndex % def.keys.length) + def.keys.length) % def.keys.length];
+  return keyToDrawable(key);
+}
+
 /** Drawn box edge for a role (board units), falling back to `fallbackUnits`. */
 export function skinUnits(role: SkinRoleId, fallbackUnits: number): number {
   const units = resolveRole(role)?.units;
@@ -438,6 +485,17 @@ export function skinWalkArt(
   return directionalClipArt(resolveRole(role)?.walk, dirIndex, frame);
 }
 
+/** Sheet-aware sibling of `skinWalkArt` — see `directionalClipDrawable`. A
+ * band role (e.g. `unit.final`) can point at a HERO's animation folder, which
+ * is packed the same way a hero's own clips are, so this covers both. */
+export function skinWalkDrawable(
+  role: SkinRoleId,
+  dirIndex: number,
+  frame: number,
+): ClipDrawable | undefined {
+  return directionalClipDrawable(resolveRole(role)?.walk, dirIndex, frame);
+}
+
 /** Number of frames in a role's named directional clip (0 when unauthored). */
 export function skinAnimFrames(role: SkinRoleId, clip: SkinAnimClipName): number {
   return resolveRole(role)?.anims?.[clip]?.frames ?? 0;
@@ -471,6 +529,16 @@ export function skinAnimArt(
   frame: number,
 ): ImageSourcePropType | undefined {
   return directionalClipArt(resolveRole(role)?.anims?.[clip], dirIndex, frame);
+}
+
+/** Sheet-aware sibling of `skinAnimArt` — see `skinWalkDrawable`. */
+export function skinAnimDrawable(
+  role: SkinRoleId,
+  clip: SkinAnimClipName,
+  dirIndex: number,
+  frame: number,
+): ClipDrawable | undefined {
+  return directionalClipDrawable(resolveRole(role)?.anims?.[clip], dirIndex, frame);
 }
 
 /**
@@ -612,8 +680,20 @@ const HERO_FOOT_AT: Readonly<Record<string, number>> = {
 function heroClipWalk(hero: HeroDef, name: string | undefined): SkinWalk | undefined {
   if (!name) return undefined;
   const base = `${hero.folder.replace(/^assets\/play\//, '')}/animations/${name}`;
+
+  // A packed hero's loose per-frame PNGs are no longer bundled (they'd double
+  // the asset count for nothing), so count frames from the sheet registry
+  // when this clip is packed; fall back to probing PLAY_ART for a hero whose
+  // art isn't converted yet — forward- AND backward-compatible with no other
+  // code change either way.
+  const sheetKey = sheetKeyForClipBase(base);
+  const sheet = sheetKey ? PLAY_SHEETS[sheetKey] : undefined;
   let frames = 0;
-  while (PLAY_ART[`${base}/east/frame_${String(frames).padStart(3, '0')}`]) frames += 1;
+  if (sheet) {
+    while (sheet.frames[`east/frame_${String(frames).padStart(3, '0')}`]) frames += 1;
+  } else {
+    while (PLAY_ART[`${base}/east/frame_${String(frames).padStart(3, '0')}`]) frames += 1;
+  }
   return frames > 0 ? { dirs: 2, order: ['east', 'west'], frames, base } : undefined;
 }
 
@@ -742,6 +822,19 @@ export function roleArt(
       ? role.keys[0]
       : role.keys[((dirIndex % role.keys.length) + role.keys.length) % role.keys.length];
   return key ? PLAY_ART[key] : undefined;
+}
+
+/** Sheet-aware sibling of `roleArt` — see `skinArtDrawable`. */
+export function roleArtDrawable(
+  role: SkinRole | undefined,
+  dirIndex = 0,
+): ClipDrawable | undefined {
+  if (!role || role.keys.length === 0) return undefined;
+  const key =
+    role.dirs === 1
+      ? role.keys[0]
+      : role.keys[((dirIndex % role.keys.length) + role.keys.length) % role.keys.length];
+  return keyToDrawable(key);
 }
 
 /** Index into a role object's static `keys` for one side profile (east/west). */

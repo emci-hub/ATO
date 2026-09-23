@@ -87,14 +87,15 @@ import {
   heroAvatarRole,
   isPathWalker,
   roleAnimFaceIndex,
-  roleArt,
+  roleArtDrawable,
   roleFaceArtIndex,
   roleFootAt,
   roleWalkFaceIndex,
-  skinAnimArt,
+  skinAnimDrawable,
   skinAnimFaceIndex,
   skinAnimFrames,
   skinArt,
+  skinArtDrawable,
   skinDirIndex,
   skinDirs,
   skinDrawBox,
@@ -102,7 +103,7 @@ import {
   skinScale,
   skinTone,
   skinUnits,
-  skinWalkArt,
+  skinWalkDrawable,
   skinWalkDirIndex,
   skinWalkDirs,
   skinWalkFace,
@@ -2034,12 +2035,9 @@ export function DefendScreen({
   const avatarAnim = avatarAnimRef.current;
   const avatarFrame = castActorFrame(avatarAnim, Date.now(), avatarRole);
   const avatarFace = avatarFaceRef.current;
-  const avatarDrawable: ClipDrawable | undefined = (() => {
-    const clip = castActorFrameDrawable(avatarAnim, avatarFace, avatarFrame, avatarRole);
-    if (clip) return clip;
-    const rotation = roleArt(avatarRole, roleFaceArtIndex(avatarRole, avatarFace));
-    return rotation ? { kind: 'legacy', source: rotation } : undefined;
-  })();
+  const avatarDrawable: ClipDrawable | undefined =
+    castActorFrameDrawable(avatarAnim, avatarFace, avatarFrame, avatarRole) ??
+    roleArtDrawable(avatarRole, roleFaceArtIndex(avatarRole, avatarFace));
 
   /** Drops card — one shared block, collapsed by default to a single neon
    * header row. On Main it renders just above Maps; Trial keeps its previous
@@ -2428,17 +2426,14 @@ export function DefendScreen({
                     towerAnimRef.current[tower.id] ??
                     castActorCreate('tower', castActorIdleSeed(tower.id, 'tower'));
                   const frame = castActorFrame(anim, Date.now(), kitRole);
-                  drawable = castActorFrameDrawable(anim, face, frame, kitRole);
-                  if (!drawable) {
-                    const rotation = roleArt(kitRole, roleFaceArtIndex(kitRole, face));
-                    drawable = rotation ? { kind: 'legacy', source: rotation } : undefined;
-                  }
+                  drawable =
+                    castActorFrameDrawable(anim, face, frame, kitRole) ??
+                    roleArtDrawable(kitRole, roleFaceArtIndex(kitRole, face));
                   transform = undefined;
                 } else {
                   // No clip art yet — keep the static 8-dir rotation.
                   const dirIndex = skinDirIndex(role, heading.dx, heading.dy);
-                  const rotation = skinArt(role, dirIndex);
-                  drawable = rotation ? { kind: 'legacy', source: rotation } : undefined;
+                  drawable = skinArtDrawable(role, dirIndex);
                   transform = dirs > 1 ? undefined : `rotate(${deg} ${pad.x} ${pad.y})`;
                 }
                 if (!drawable) return null;
@@ -2499,8 +2494,7 @@ export function DefendScreen({
                     drawable = castActorFrameDrawable(anim, face, frame, kitRole);
                   }
                   if (!drawable) {
-                    const rotation = roleArt(kitRole, roleFaceArtIndex(kitRole, face));
-                    drawable = rotation ? { kind: 'legacy', source: rotation } : undefined;
+                    drawable = roleArtDrawable(kitRole, roleFaceArtIndex(kitRole, face));
                   }
                   if (!drawable) return null;
                   // A6 — a bound boss is tower-sized, not hero-sized: cap the
@@ -2519,17 +2513,16 @@ export function DefendScreen({
                   );
                 }
                 const role: SkinRoleId = 'unit.final';
-                const source = skinArt(role);
-                if (!source) return null;
+                const drawable = skinArtDrawable(role);
+                if (!drawable) return null;
                 const box = skinDrawBox(role, pad.x, pad.y, 11);
                 return (
-                  <SvgImage
+                  <ClipSprite
                     key={`bb-art-${bb.id}`}
-                    href={source}
+                    drawable={drawable}
                     x={box.x}
                     y={box.y}
-                    width={box.size}
-                    height={box.size}
+                    size={box.size}
                   />
                 );
               })}
@@ -2557,22 +2550,21 @@ export function DefendScreen({
                * the instant removal it was before K2. */}
               {corpses.map((corpse) => {
                 const deathFrames = skinAnimFrames(corpse.role, 'death');
-                const source = skinAnimArt(
+                const drawable = skinAnimDrawable(
                   corpse.role,
                   'death',
                   skinAnimFaceIndex(corpse.role, 'death', corpse.face),
                   castActorPathFrame('death', Date.now(), corpse.bornAt, 0, deathFrames),
                 );
-                if (!source) return null;
+                if (!drawable) return null;
                 const box = skinDrawBox(corpse.role, corpse.x, corpse.y, corpse.size);
                 return (
-                  <SvgImage
+                  <ClipSprite
                     key={`corpse-${corpse.id}`}
-                    href={source}
+                    drawable={drawable}
                     x={box.x}
                     y={box.y}
-                    width={box.size}
-                    height={box.size}
+                    size={box.size}
                   />
                 );
               })}
@@ -2606,7 +2598,7 @@ export function DefendScreen({
                 const pathWalker = isPathWalker(spriteRole);
                 const walkFace = puffWalkFaceRef.current[puff.id] ?? 'e';
                 const spriteDirs = skinDirs(spriteRole);
-                const sprite = skinArt(
+                const sprite = skinArtDrawable(
                   spriteRole,
                   pathWalker
                     ? skinFaceArtIndex(spriteRole, walkFace)
@@ -2630,7 +2622,7 @@ export function DefendScreen({
                   : skinWalkDirIndex(spriteRole, heading.dx, heading.dy);
                 const walkSprite =
                   walkDirs > 0 && walkFrames > 1
-                    ? skinWalkArt(spriteRole, walkDirIndex, Math.floor(walkPhase))
+                    ? skinWalkDrawable(spriteRole, walkDirIndex, Math.floor(walkPhase))
                     : undefined;
                 // K2 path-walker stance: the same stall window the walk tick
                 // just used decides the clip — moving ⇒ the walk cycle above,
@@ -2658,19 +2650,19 @@ export function DefendScreen({
                     : null;
                 const idleSprite =
                   stance === 'idle'
-                    ? skinAnimArt(
+                    ? skinAnimDrawable(
                         spriteRole,
                         'idle',
                         skinAnimFaceIndex(spriteRole, 'idle', walkFace),
                         castActorPathFrame('idle', Date.now(), 0, puff.id, idleFrames),
                       )
                     : undefined;
-                const spriteSource = idleSprite ?? walkSprite ?? sprite;
+                const spriteDrawable = idleSprite ?? walkSprite ?? sprite;
                 // Feet-pivoted sprites rise above the path point, so the body
                 // chrome (ring / bar / badge) anchors to the draw box, not the
                 // path point.
                 const box = skinDrawBox(spriteRole, x, y, spriteSize);
-                const hasSprite = spriteSource != null;
+                const hasSprite = spriteDrawable != null;
                 const bodyCy = hasSprite ? box.y + spriteSize / 2 : y;
                 const barWidth = 8 * puff.size * drawScale;
                 // Up-facing single-sprite roles face along the road (path
@@ -2691,14 +2683,8 @@ export function DefendScreen({
                 return (
                   <G key={`puff-${puff.id}`}>
                     <G transform={spriteTransform}>
-                      {spriteSource ? (
-                        <SvgImage
-                          href={spriteSource}
-                          x={box.x}
-                          y={box.y}
-                          width={box.size}
-                          height={box.size}
-                        />
+                      {spriteDrawable ? (
+                        <ClipSprite drawable={spriteDrawable} x={box.x} y={box.y} size={box.size} />
                       ) : (
                         <Circle cx={x} cy={y} r={radius} fill={tintColor} />
                       )}
@@ -2747,20 +2733,14 @@ export function DefendScreen({
                * round, flying from the tower centre to its target's centre. */}
               {shots.map((shot) => {
                 const role: SkinRoleId = 'fx.shot';
-                const source = skinArt(role);
-                if (!source) return null;
+                const drawable = skinArtDrawable(role);
+                if (!drawable) return null;
                 const box = skinDrawBox(role, shot.x, shot.y, skinUnits(role, 4.5));
                 // Point the round along its velocity (same up-facing convention).
                 const deg = facingDegrees(shot.vx, shot.vy);
                 return (
                   <G key={`shot-${shot.id}`} transform={`rotate(${deg} ${shot.x} ${shot.y})`}>
-                    <SvgImage
-                      href={source}
-                      x={box.x}
-                      y={box.y}
-                      width={box.size}
-                      height={box.size}
-                    />
+                    <ClipSprite drawable={drawable} x={box.x} y={box.y} size={box.size} />
                   </G>
                 );
               })}

@@ -292,8 +292,17 @@ function main() {
   const repo = path.resolve(__dirname, '..');
   const one = arg('hero');
   const all = process.argv.includes('--all');
-  if (!one && !all) {
-    throw new Error('Usage: npx tsx scripts/play-art-pack.ts (--hero <id> | --all) [--preview]');
+  const family = arg('family');
+  if (!one && !all && !family) {
+    throw new Error(
+      'Usage: npx tsx scripts/play-art-pack.ts (--hero <id> | --all | --family <name>) [--preview]',
+    );
+  }
+
+  if (family) {
+    packFlatFamily(repo, family);
+    writeRegistry(repo);
+    return;
   }
 
   const heroes = all
@@ -321,6 +330,76 @@ function main() {
     console.log(`\n${failures} hero(es) failed to pack — see above.`);
     process.exitCode = 1;
   }
+}
+
+/**
+ * Pack a FLAT family (no clip/direction nesting — just N independent PNGs,
+ * e.g. `kenney-td`'s 299 tower/tile pieces) into one or more grid sheets, one
+ * cell per file, keyed by the file's own basename (no extension) — the exact
+ * tail `skinArtDrawable`/`roleArtDrawable` look up after stripping the family
+ * prefix. Requires every file in the family to share one size (true today for
+ * kenney-td: 299×64×64); a mixed-size family needs a bin packer instead and
+ * is refused rather than mis-packed.
+ */
+function packFlatFamily(repo: string, family: string) {
+  const dir = path.join(repo, 'assets/play', family);
+  if (!fs.existsSync(dir)) throw new Error(`no such family folder: assets/play/${family}`);
+
+  const files = walk(dir)
+    .filter((f) => f.toLowerCase().endsWith('.png'))
+    .sort();
+  if (files.length === 0) throw new Error(`${family}: no PNGs found`);
+
+  const pngs = files.map(readPng);
+  const sizes = new Set(pngs.map((p) => `${p.width}x${p.height}`));
+  if (sizes.size > 1) {
+    throw new Error(`${family}: mixed sizes (${[...sizes].join(', ')}) — needs a bin packer, not a grid`);
+  }
+  const cellW = pngs[0].width;
+  const cellH = pngs[0].height;
+
+  const perRow = Math.max(1, Math.floor((MAX_SHEET_PX - GUTTER) / (cellW + GUTTER)));
+  const rows = Math.ceil(files.length / perRow);
+  const sheetW = perRow * cellW + (perRow - 1) * GUTTER;
+  const sheetH = rows * cellH + (rows - 1) * GUTTER;
+  if (sheetH > MAX_SHEET_PX) {
+    throw new Error(`${family}: ${files.length} cells need ${sheetH}px tall, over the ${MAX_SHEET_PX}px cap`);
+  }
+
+  const sheet = new PNG({ width: sheetW, height: sheetH, fill: true });
+  const frames: Record<string, FrameRect> = {};
+  files.forEach((file, i) => {
+    const col = i % perRow;
+    const row = Math.floor(i / perRow);
+    const x = col * (cellW + GUTTER);
+    const y = row * (cellH + GUTTER);
+    blit(pngs[i], sheet, x, y);
+    const key = path.basename(file).replace(/\.png$/i, '');
+    frames[key] = { x, y, w: cellW, h: cellH };
+  });
+
+  const keyBase = `sheets/${family}`;
+  const outDir = path.join(repo, 'assets/play', keyBase);
+  fs.rmSync(outDir, { recursive: true, force: true });
+  fs.mkdirSync(outDir, { recursive: true });
+  fs.writeFileSync(path.join(outDir, 'atlas.png'), PNG.sync.write(sheet));
+
+  const manifest = { [keyBase]: { sheet: `${keyBase}/atlas.png`, sheetW, sheetH, frames } };
+  fs.writeFileSync(path.join(outDir, 'sheets.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+
+  console.log(
+    `packed ${family}: ${files.length} files → 1 sheet (${sheetW}x${sheetH}, ${perRow}×${rows} grid)`,
+  );
+}
+
+function walk(dir: string): string[] {
+  const out: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...walk(full));
+    else out.push(full);
+  }
+  return out;
 }
 
 function packHero(repo: string, hero: string) {

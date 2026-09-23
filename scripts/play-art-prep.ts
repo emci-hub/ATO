@@ -18,7 +18,26 @@ import path from 'node:path';
 
 import { PNG } from 'pngjs';
 
-const FAMILIES = ['skins', 'avatars', 'primal', 'kenney-ui', 'kenney-icons', 'kenney-td', 'craftpix-fields', 'craftpix-roads', 'tiles'] as const;
+// `kenney-td` is excluded: `play-art-pack.ts --family kenney-td` packs it into
+// one sheet instead (`skinArtDrawable`/`roleArtDrawable` read it from there).
+// Bundling it here too would just double it.
+//
+// `avatars` (Dungeon Legends), `primal` (Primal Dynasties) and `tiles`
+// (Scribble Dungeons) are excluded outright, not packed — `assets/play/
+// licenses/README.md` already marks all three "no longer on the board", and a
+// full-repo search confirms zero live references anywhere in `src/`. 272
+// files of pure dead weight in the bundle for nothing.
+const FAMILIES = ['skins', 'kenney-ui', 'kenney-icons', 'craftpix-fields', 'craftpix-roads'] as const;
+
+/**
+ * A hero's `animations/` and `rotations/` PNGs — `play-art-pack.ts --all`
+ * packs every hero's clips AND its rotation strip into sheets
+ * (`directionalClipDrawable`/`skinArtDrawable`/`roleArtDrawable` read them
+ * from there). Bundling the loose per-frame originals too would double
+ * ~2100 files for zero benefit. Excluded from `skins` only — every other
+ * `skins/**` path (towers, cycle bosses, fx) still bundles as before.
+ */
+const PACKED_HERO_ART = /^skins\/cast\/heroes\/[^/]+\/(animations|rotations)\//;
 const HASH_SUFFIX = /-[0-9a-f]{8}(?=\/|$)/g;
 
 /**
@@ -90,6 +109,7 @@ function main() {
     }
     for (const file of walk(dir).sort((a, b) => a.localeCompare(b))) {
       const base = keyFor(root, file);
+      if (family === 'skins' && PACKED_HERO_ART.test(base)) continue;
       let key = base;
       // Two pack folders can share a name after the hash is stripped (e.g.
       // Masterpiece ships two `Walking/.../west` variants). Keep both, stable.

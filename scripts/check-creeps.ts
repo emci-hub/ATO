@@ -116,6 +116,35 @@ const MIN_FRAMES_PER_FACING = 2;
 const FACINGS = ['east', 'west'] as const;
 
 const repoRoot = path.resolve(__dirname, '..');
+// `unit.final`'s rotation art is Archangel's — packed into a sheet
+// (play-art-pack.ts --all), so its loose PNGs are excluded from
+// generated-play-assets.ts. "Is this art bundled" has two registries to check
+// for a hero rotation key now, not one.
+const sheetRegistryText = fs.readFileSync(
+  path.resolve(__dirname, '../src/play/generated-play-sheets.ts'),
+  'utf8',
+);
+
+/** `skins/cast/heroes/<hero>/rotations/<dir>` → true when that facing is
+ * packed into the hero's rotation sheet. Mirrors `staticKeyDrawable` in
+ * src/play/skin.ts, kept independent so this check never trusts the code
+ * it's checking. */
+function heroRotationBundled(key: string): boolean {
+  const m = /^skins\/cast\/heroes\/([^/]+)\/rotations\/(.+)$/.exec(key);
+  if (!m) return false;
+  const marker = `"sheets/cast/heroes/${m[1]}/rotations": {`;
+  const start = sheetRegistryText.indexOf(marker);
+  if (start === -1) return false;
+  // Top-level keys are indented exactly 2 spaces; a nested value line (e.g.
+  // `"sheet": "sheets/..."`, 4 spaces) also contains the literal `"sheets/`
+  // substring, so the delimiter must anchor on the newline + indent, not the
+  // bare text — the earlier version matched that nested line and truncated
+  // the block after a handful of characters, hiding every real frame key.
+  const next = sheetRegistryText.indexOf('\n  "sheets/', start + marker.length);
+  const block = sheetRegistryText.slice(start, next === -1 ? undefined : next);
+  return block.includes(`"${m[2]}":`);
+}
+
 const registryText = fs.readFileSync(
   path.resolve(repoRoot, 'src/play/generated-play-assets.ts'),
   'utf8',
@@ -148,8 +177,36 @@ function frameKey(base: string, face: string, frame: number): string {
   return `'${base}/${face}/frame_${String(frame).padStart(3, '0')}'`;
 }
 
-/** Frames the registry bundles for one facing (`frame_000`, `frame_001`, …). */
+/** `<hero>/animations/<action>` → the sheet key `play-art-pack.ts` packs it
+ * under. Some band units (e.g. `unit.final`) point at a HERO's clip folder
+ * (Archangel's), which is packed and excluded from the loose registry the
+ * same way a hero's own clips are — mirrors `sheetKeyForClipBase` in
+ * src/play/skin.ts, kept independent so this check never trusts the code
+ * it's checking. */
+function sheetKeyFor(base: string): string | undefined {
+  const m = /^skins\/cast\/heroes\/([^/]+)\/animations\/(.+)$/.exec(base);
+  return m ? `sheets/cast/heroes/${m[1]}/${m[2]}` : undefined;
+}
+
+function sheetClipBlock(sheetKey: string): string | undefined {
+  const marker = `"${sheetKey}": {`;
+  const start = sheetRegistryText.indexOf(marker);
+  if (start === -1) return undefined;
+  const next = sheetRegistryText.indexOf('\n  "sheets/', start + marker.length);
+  return sheetRegistryText.slice(start, next === -1 ? undefined : next);
+}
+
+/** Frames the registry bundles for one facing (`frame_000`, `frame_001`, …) —
+ * the sheet registry when this clip is packed, else the (now usually absent)
+ * loose-PNG registry, so an unconverted role's stub detection still works. */
 function registryFrames(base: string, face: string): number {
+  const sheetKey = sheetKeyFor(base);
+  const block = sheetKey ? sheetClipBlock(sheetKey) : undefined;
+  if (block) {
+    let frames = 0;
+    while (block.includes(`"${face}/frame_${String(frames).padStart(3, '0')}"`)) frames += 1;
+    if (frames > 0) return frames;
+  }
   let frames = 0;
   while (registryText.includes(frameKey(base, face, frames))) frames += 1;
   return frames;
@@ -225,7 +282,10 @@ for (const { role, artRoot } of PATH_ROSTER) {
   for (const face of FACINGS) {
     const key = `skins/cast/${artRoot}/rotations/${face}`;
     assert.ok(def.keys.includes(key), `${role}: the ${face} rotation key is "${key}"`);
-    assert.ok(registryText.includes(`'${key}':`), `${role}: ${key} is not in the art registry`);
+    assert.ok(
+      registryText.includes(`'${key}':`) || heroRotationBundled(key),
+      `${role}: ${key} is not in the art registry`,
+    );
   }
 }
 ok('every path-walker rotation key resolves in the art registry (east + west)');
