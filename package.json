@@ -81,6 +81,7 @@
     "check:heroes": "tsx ./scripts/check-heroes.ts",
     "check:towers": "tsx ./scripts/check-towers.ts",
     "check:creeps": "tsx ./scripts/check-creeps.ts",
+    "check:sheet-sprite": "tsx ./scripts/check-sheet-sprite.ts",
     "prep:kenney": "tsx ./scripts/kenney-prep.ts",
     "check:crisis-region": "tsx ./scripts/crisis-region-check.ts",
     "check:copy-review-badges": "tsx ./scripts/copy-review-badges-check.ts",

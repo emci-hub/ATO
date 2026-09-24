@@ -1,26 +1,35 @@
 /**
  * Sheet sprite — draws ONE frame out of a packed sheet.
  *
- * The board is one big `<Svg>` in board units (0..100), so a sprite is a nested
- * `<Svg>` placed at the sprite's box: its own `viewBox` is the frame's rect in
- * SHEET pixels, so the parent only ever sees that window. The sheet image is
- * drawn at its full pixel size inside that window and everything outside the
- * viewBox is clipped away by SVG itself — no ClipPath, no extra nodes.
+ * The board is one big `<Svg>` in board units (0..100). A sprite is a `<G>`
+ * translated to the sprite's box and scaled so the frame's pixel rect fills
+ * that box, holding the whole sheet image offset so the wanted frame lands at
+ * the group's origin, clipped to exactly the frame's rect.
  *
- * Replaces one `<Image href={framePng}>` with one `<Svg><Image href={sheet}/></Svg>`,
- * so the draw-call count per sprite is unchanged.
+ * DO NOT go back to a nested `<Svg x={} y={}>` for this (the shape this file
+ * shipped with until 2026-09-23). react-native-svg renders a nested `<Svg>` as
+ * a NATIVE VIEW laid out by React Native's layout system — it reads `width`/
+ * `height` into a style and **ignores `x`/`y` entirely**
+ * (`node_modules/react-native-svg/src/elements/Svg.tsx`, `render()`), so every
+ * sheet sprite drew at the board's origin instead of its pad/lane. It looked
+ * correct in Sheet Lab only because every sprite there is drawn at x=0,y=0,
+ * where "ignores x/y" and "honours x/y" are the same picture.
  *
  * The Avatar overlay draws with `expo-image` OUTSIDE the SVG board (an
  * Animated.View, sized by Reanimated shared values), so it needs a second
  * crop technique: `ClipImage` clips an overflow-hidden `View` around an
  * `expo-image` scaled up to the sheet's full size and offset by the frame's
- * top-left, same maths as `SheetSprite`'s viewBox, expressed in CSS instead.
+ * top-left — the CSS form of the same maths. That path was never affected by
+ * the nested-`<Svg>` bug, which is why the Avatar stayed correctly placed
+ * while bound heroes piled up in the corner.
  */
+import { useId } from 'react';
 import { Image as ExpoImage } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
-import { Svg, Image as SvgImage } from 'react-native-svg';
+import { ClipPath, Defs, G, Rect, Image as SvgImage } from 'react-native-svg';
 
 import type { ClipDrawable } from '@/play/skin';
+import { sheetSpritePlacement } from '@/play/sheet-sprite-math';
 import {
   PLAY_SHEETS,
   PLAY_SHEET_ART,
@@ -62,28 +71,51 @@ type Props = {
   opacity?: number;
 };
 
-/** One frame of a packed sheet, drawn into a board-units box. */
+/**
+ * One frame of a packed sheet, drawn into a board-units box.
+ *
+ * Maths: `translate(x, y)` puts the group's origin at the sprite box's
+ * top-left, then `scale(size / rect.w, size / rect.h)` makes one FRAME pixel
+ * one box unit — so the frame's rect exactly fills `size × size` board units.
+ * Inside that space the sheet is drawn at `(-rect.x, -rect.y)`, which slides
+ * the wanted frame onto the origin, and the clip rect `(0, 0, rect.w, rect.h)`
+ * hides every neighbouring frame. Non-square frames scale per axis (a stretch);
+ * the legacy per-frame draw letterboxes instead (`xMidYMid meet`, the default).
+ * Every packed frame is square today, so the two agree — a non-square frame
+ * would be the first case where they visibly differ.
+ */
 export function SheetSprite({ frame, x, y, size, opacity }: Props) {
+  // Unique per instance: two sprites sharing a clip id would be an invalid
+  // document, and `useId` is stable across this component's re-renders.
+  const clipId = `sheetclip-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const source = playSheetArt(frame.sheetKey);
   if (!source) return null;
-  const { rect } = frame;
+  // Placement maths lives in `sheet-sprite-math.ts` so `check:sheet-sprite`
+  // can assert it at a NON-ZERO position in plain Node.
+  const place = sheetSpritePlacement(frame.rect, x, y, size);
   return (
-    <Svg
-      x={x}
-      y={y}
-      width={size}
-      height={size}
-      viewBox={`${rect.x} ${rect.y} ${rect.w} ${rect.h}`}
-      opacity={opacity}>
-      <SvgImage
-        href={source}
-        x={0}
-        y={0}
-        width={frame.sheetW}
-        height={frame.sheetH}
-        preserveAspectRatio="none"
-      />
-    </Svg>
+    <G transform={place.transform} opacity={opacity}>
+      <Defs>
+        <ClipPath id={clipId}>
+          <Rect
+            x={place.clip.x}
+            y={place.clip.y}
+            width={place.clip.width}
+            height={place.clip.height}
+          />
+        </ClipPath>
+      </Defs>
+      <G clipPath={`url(#${clipId})`}>
+        <SvgImage
+          href={source}
+          x={place.imageX}
+          y={place.imageY}
+          width={frame.sheetW}
+          height={frame.sheetH}
+          preserveAspectRatio="none"
+        />
+      </G>
+    </G>
   );
 }
 
@@ -135,7 +167,7 @@ type ClipImageProps = {
  * 100%`. Percentage layout resolves against the parent's real size at layout
  * time regardless of whether that size is animated, so this stays correct
  * frame to frame with no JS-thread involvement — the CSS form of
- * `SheetSprite`'s SVG viewBox. Assumes a square frame in a square box, true
+ * `SheetSprite`'s translate-and-clip. Assumes a square frame in a square box, true
  * for every hero sprite packed so far (128×128 samples); a non-square frame
  * would need `resizeMode`-style letterboxing this skips.
  */
