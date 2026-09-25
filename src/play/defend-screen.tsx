@@ -168,10 +168,13 @@ import {
 import { tipForWave } from '@/play/coach';
 import { getTune, saveTune, setKnob } from '@/play/tune';
 import {
+  BenchPanel,
   FpsOverlay,
   StressFxLayer,
+  benchReport,
   nextStressFxLevel,
   useFpsMeter,
+  useFxBenchmark,
   type StressFxLevel,
 } from '@/play/dev-fx-stress';
 
@@ -729,8 +732,12 @@ export function DefendScreen({
   const [stressFx, setStressFx] = useState<StressFxLevel>(0);
   const [stressTick, setStressTick] = useState(0);
   const commitCountRef = useRef(0);
+  /** Separate counter for the auto FPS test so the live meter's 1s resets
+   * never corrupt a benchmark stage. */
+  const benchCommitRef = useRef(0);
   useEffect(() => {
     commitCountRef.current += 1;
+    benchCommitRef.current += 1;
   });
   const fpsStats = useFpsMeter(fpsMeterOn, commitCountRef);
   useEffect(() => {
@@ -748,6 +755,26 @@ export function DefendScreen({
         rampFrac: 0,
         boss: null,
       }));
+      const schedule = [...prev.schedule, ...extra].sort((a, b) => a.tMs - b.tMs);
+      return { ...prev, schedule };
+    });
+  }, []);
+  /** Dev kit only (FPS test): queue swarm creeps so the board heads toward
+   * `target`, counting creeps already due in the next 2s so it never floods. */
+  const benchInjectedRef = useRef(new WeakSet<object>());
+  const devTopUpCreeps = useCallback((target: number) => {
+    setSim((prev) => {
+      if (!prev) return prev;
+      const soon = prev.schedule.filter((e) => e.tMs <= prev.elapsedMs + 2_000).length;
+      const need = target - prev.puffs.length - soon;
+      if (need <= 0) return prev;
+      const extra = Array.from({ length: need }, (_, i) => ({
+        tMs: prev.elapsedMs + i * 120,
+        role: 'swarm' as const,
+        rampFrac: 0,
+        boss: null,
+      }));
+      extra.forEach((event) => benchInjectedRef.current.add(event));
       const schedule = [...prev.schedule, ...extra].sort((a, b) => a.tMs - b.tMs);
       return { ...prev, schedule };
     });
@@ -853,6 +880,38 @@ export function DefendScreen({
   simRef.current = sim;
   godModeRef.current = godMode;
   speedRef.current = speed;
+
+  /** Dev kit only — one-tap FPS test (EFFECTS_PLAN step 1). God mode is forced
+   * on for the run so leaks never end the wave, then restored; the test's
+   * creeps are cleared at the end. */
+  const benchGodModeRef = useRef(false);
+  const bench = useFxBenchmark({
+    commitCountRef: benchCommitRef,
+    setFx: setStressFx,
+    creepCount: () => simRef.current?.puffs.length ?? 0,
+    topUpCreeps: devTopUpCreeps,
+    onStart: () => {
+      benchGodModeRef.current = godModeRef.current;
+      setGodMode(true);
+    },
+    onEnd: () => {
+      setGodMode(benchGodModeRef.current);
+      setSim((prev) =>
+        prev
+          ? {
+              ...prev,
+              puffs: [],
+              schedule: prev.schedule.filter((e) => !benchInjectedRef.current.has(e)),
+            }
+          : prev,
+      );
+    },
+  });
+  const benchRunning = bench.state.running;
+  const cancelBench = bench.cancel;
+  useEffect(() => {
+    if (benchRunning && (paused || phase !== 'running')) cancelBench();
+  }, [benchRunning, paused, phase, cancelBench]);
 
   // What this screen is fighting right now. The replay pick overrides the
   // campaign seat; the seat drives the default.
@@ -2907,6 +2966,29 @@ export function DefendScreen({
               </View>
             </View>
           ) : null}
+          {PRE_LAUNCH_DEV && devUnlocked ? (
+            <View style={styles.devStripFull}>
+              <DevRow
+                label={
+                  bench.state.running
+                    ? 'FPS test running…'
+                    : phase === 'running'
+                      ? 'Run FPS test (30s)'
+                      : 'Run FPS test — start a wave first'
+                }
+                disabled={bench.state.running || phase !== 'running' || paused}
+                onPress={bench.start}
+              />
+              <BenchPanel
+                state={bench.state}
+                onCancel={bench.cancel}
+                onShare={() => {
+                  void Share.share({ message: benchReport(bench.state.results) });
+                }}
+                onClose={bench.clear}
+              />
+            </View>
+          ) : null}
         </PlayFrame>
 
         {/* Pad action panel */}
@@ -4555,6 +4637,9 @@ const styles = StyleSheet.create({
   },
   devStripCell: {
     flex: 1,
+  },
+  devStripFull: {
+    marginTop: Spacing.one,
   },
   boardArt: {
     ...StyleSheet.absoluteFillObject,
