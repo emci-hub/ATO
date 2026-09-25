@@ -2743,7 +2743,7 @@ export function DefendScreen({
                 const role: SkinRoleId = 'fx.shot';
                 const drawable = skinArtDrawable(role);
                 if (!drawable) return null;
-                const box = skinDrawBox(role, shot.x, shot.y, skinUnits(role, 4.5));
+                const box = skinDrawBox(role, shot.x, shot.y, skinUnits(role, 4.5) * SHOT_DRAW_SCALE);
                 // Point the round along its velocity (same up-facing convention).
                 const deg = facingDegrees(shot.vx, shot.vy);
                 return (
@@ -4125,6 +4125,12 @@ const TOWER_PAD_UNITS = 17;
  * `units`, so the fallback alone doesn't grow them). Feet stay on the pad via
  * `skinDrawBox`; tap/range radii are untouched. */
 const TOWER_DRAW_SCALE = 1.25;
+/** Display-only ×2.5 on the tower shot. The Kenney shot image is a 16px dot in
+ * a 64px square (three-quarters empty), so at its skin size of 4.5 units the
+ * visible dot measured ~3pt on an iPhone board — too small to see. This makes
+ * the dot ~2.8 board units (~8pt). The centre-pivot box keeps it on its flight
+ * line; damage, speed and hit radius are untouched. */
+const SHOT_DRAW_SCALE = 2.5;
 /** Fallback enemy box at `puff.size === 1` when a role omits `units`. */
 const UNIT_BASE_UNITS = 20;
 
