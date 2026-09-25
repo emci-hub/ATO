@@ -377,13 +377,18 @@ export function benchReport(results: readonly BenchResult[]): string {
   return ['ATO FPS test', ...lines, benchVerdict(results)].join('\n');
 }
 
+/** Auto-send state for a finished run (`play_dev_logs`). */
+export type BenchSendStatus = 'sending' | 'sent' | 'failed' | null;
+
 export function BenchPanel({
   state,
+  sendStatus,
   onCancel,
   onShare,
   onClose,
 }: {
   state: BenchState;
+  sendStatus: BenchSendStatus;
   onCancel: () => void;
   onShare: () => void;
   onClose: () => void;
@@ -404,6 +409,15 @@ export function BenchPanel({
         </Text>
       ))}
       {!state.running ? <Text style={styles.verdict}>{benchVerdict(state.results)}</Text> : null}
+      {!state.running && sendStatus ? (
+        <Text style={styles.row}>
+          {sendStatus === 'sending'
+            ? 'Sending results…'
+            : sendStatus === 'sent'
+              ? 'Results sent — nothing else to do.'
+              : "Couldn't send — use Share results instead."}
+        </Text>
+      ) : null}
       <View style={styles.panelButtons}>
         {state.running ? (
           <Text onPress={onCancel} style={styles.panelButton} accessibilityRole="button">

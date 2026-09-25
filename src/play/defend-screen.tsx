@@ -168,15 +168,21 @@ import {
 import { tipForWave } from '@/play/coach';
 import { getTune, saveTune, setKnob } from '@/play/tune';
 import {
+  BENCH_MEASURE_MS,
+  BENCH_SETTLE_MS,
+  BENCH_STAGES,
   BenchPanel,
   FpsOverlay,
   StressFxLayer,
   benchReport,
+  benchVerdict,
   nextStressFxLevel,
   useFpsMeter,
   useFxBenchmark,
+  type BenchSendStatus,
   type StressFxLevel,
 } from '@/play/dev-fx-stress';
+import { sendPlayDevLog } from '@/play/dev-log';
 
 /** Placeholder creep role tints (until per-role sprites land) — W1 only. */
 const CREEP_ROLE_COLOR: Record<CreepRole, string> = {
@@ -912,6 +918,27 @@ export function DefendScreen({
   useEffect(() => {
     if (benchRunning && (paused || phase !== 'running')) cancelBench();
   }, [benchRunning, paused, phase, cancelBench]);
+  /** Auto-send each finished run once (wave73 `play_dev_logs`). */
+  const [benchSend, setBenchSend] = useState<BenchSendStatus>(null);
+  const benchSentRef = useRef<unknown>(null);
+  const benchResults = bench.state.results;
+  useEffect(() => {
+    if (benchRunning) {
+      setBenchSend(null);
+      return;
+    }
+    if (benchResults.length === 0 || benchSentRef.current === benchResults) return;
+    benchSentRef.current = benchResults;
+    setBenchSend('sending');
+    void sendPlayDevLog('fps_test', {
+      results: benchResults,
+      verdict: benchVerdict(benchResults),
+      complete: benchResults.length === BENCH_STAGES.length,
+      settleMs: BENCH_SETTLE_MS,
+      measureMs: BENCH_MEASURE_MS,
+      speed: speedRef.current,
+    }).then((ok) => setBenchSend(ok ? 'sent' : 'failed'));
+  }, [benchRunning, benchResults]);
 
   // What this screen is fighting right now. The replay pick overrides the
   // campaign seat; the seat drives the default.
@@ -2981,6 +3008,7 @@ export function DefendScreen({
               />
               <BenchPanel
                 state={bench.state}
+                sendStatus={benchSend}
                 onCancel={bench.cancel}
                 onShare={() => {
                   void Share.share({ message: benchReport(bench.state.results) });
