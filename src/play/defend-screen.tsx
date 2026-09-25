@@ -735,6 +735,20 @@ export function DefendScreen({
     const id = setInterval(() => setStressTick((n) => n + 1), FX_TICK_MS);
     return () => clearInterval(id);
   }, [stressFx, paused]);
+  /** Dev kit only: queue 20 swarm creeps into the running wave, 250ms apart. */
+  const devAddStressCreeps = useCallback(() => {
+    setSim((prev) => {
+      if (!prev) return prev;
+      const extra = Array.from({ length: 20 }, (_, i) => ({
+        tMs: prev.elapsedMs + i * 250,
+        role: 'swarm' as const,
+        rampFrac: 0,
+        boss: null,
+      }));
+      const schedule = [...prev.schedule, ...extra].sort((a, b) => a.tMs - b.tMs);
+      return { ...prev, schedule };
+    });
+  }, []);
   const [coachHidden, setCoachHidden] = useState(false);
   /** Dev-only, this session only — the shipped default is `BOARD_SKIN`
    * (skin.ts). Both options are already fully bundled art (see the Board
@@ -2860,6 +2874,32 @@ export function DefendScreen({
               </ThemedText>
             </View>
           ) : null}
+          {/* Dev kit only — the FX stress controls sit right under the board so
+              the FPS readout stays on screen while they're tapped (EFFECTS_PLAN
+              step 1). Same actions as the Board / Misc rows. */}
+          {PRE_LAUNCH_DEV && devUnlocked ? (
+            <View style={styles.devStrip}>
+              <View style={styles.devStripCell}>
+                <DevRow
+                  label={fpsMeterOn ? 'FPS: on' : 'FPS: off'}
+                  onPress={() => setFpsMeterOn((on) => !on)}
+                />
+              </View>
+              <View style={styles.devStripCell}>
+                <DevRow
+                  label={`FX: ${stressFx === 0 ? 'off' : stressFx}`}
+                  onPress={() => setStressFx((level) => nextStressFxLevel(level))}
+                />
+              </View>
+              <View style={styles.devStripCell}>
+                <DevRow
+                  label="+20 creeps"
+                  disabled={phase !== 'running' || !sim}
+                  onPress={devAddStressCreeps}
+                />
+              </View>
+            </View>
+          ) : null}
         </PlayFrame>
 
         {/* Pad action panel */}
@@ -3779,19 +3819,7 @@ export function DefendScreen({
               <DevRow
                 label="Stress wave: +20 creeps now"
                 disabled={phase !== 'running' || !sim}
-                onPress={() =>
-                  setSim((prev) => {
-                    if (!prev) return prev;
-                    const extra = Array.from({ length: 20 }, (_, i) => ({
-                      tMs: prev.elapsedMs + i * 250,
-                      role: 'swarm' as const,
-                      rampFrac: 0,
-                      boss: null,
-                    }));
-                    const schedule = [...prev.schedule, ...extra].sort((a, b) => a.tMs - b.tMs);
-                    return { ...prev, schedule };
-                  })
-                }
+                onPress={devAddStressCreeps}
               />
             </DevSection>
           </ThemedView>
@@ -4504,6 +4532,14 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   /** Gameplay SVG (path · pads · towers · enemies) — above the tiles. */
+  devStrip: {
+    flexDirection: 'row',
+    gap: Spacing.one,
+    marginTop: Spacing.one,
+  },
+  devStripCell: {
+    flex: 1,
+  },
   boardArt: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 1,
