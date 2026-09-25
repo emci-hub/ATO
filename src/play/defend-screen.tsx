@@ -166,6 +166,13 @@ import {
 } from '@/play/playStore';
 import { tipForWave } from '@/play/coach';
 import { getTune, saveTune, setKnob } from '@/play/tune';
+import {
+  FpsOverlay,
+  StressFxLayer,
+  nextStressFxLevel,
+  useFpsMeter,
+  type StressFxLevel,
+} from '@/play/dev-fx-stress';
 
 /** Placeholder creep role tints (until per-role sprites land) — W1 only. */
 const CREEP_ROLE_COLOR: Record<CreepRole, string> = {
@@ -714,6 +721,20 @@ export function DefendScreen({
   const [selectedPad, setSelectedPad] = useState<number | null>(null);
   /** God mode — starts from the §9c tune doc (BrokenOP turns it on). */
   const [godMode, setGodMode] = useState(() => getTune().godMode);
+  /** Dev kit only (EFFECTS_PLAN step 1): FPS readout + synthetic FX stress. */
+  const [fpsMeterOn, setFpsMeterOn] = useState(false);
+  const [stressFx, setStressFx] = useState<StressFxLevel>(0);
+  const [stressTick, setStressTick] = useState(0);
+  const commitCountRef = useRef(0);
+  useEffect(() => {
+    commitCountRef.current += 1;
+  });
+  const fpsStats = useFpsMeter(fpsMeterOn, commitCountRef);
+  useEffect(() => {
+    if (stressFx === 0 || paused) return;
+    const id = setInterval(() => setStressTick((n) => n + 1), FX_TICK_MS);
+    return () => clearInterval(id);
+  }, [stressFx, paused]);
   const [coachHidden, setCoachHidden] = useState(false);
   /** Dev-only, this session only — the shipped default is `BOARD_SKIN`
    * (skin.ts). Both options are already fully bundled art (see the Board
@@ -2752,8 +2773,22 @@ export function DefendScreen({
                   </G>
                 );
               })}
+              {/* Dev kit only — synthetic FX stress (EFFECTS_PLAN step 1):
+                  tower/boss pads → live creeps, display only. */}
+              {stressFx > 0 ? (
+                <StressFxLayer
+                  count={stressFx}
+                  tick={stressTick}
+                  from={[
+                    ...(sim?.towers ?? []).map((t) => boardMap.pads[t.pad]),
+                    ...(sim?.boundBosses ?? []).map((b) => boardMap.pads[b.pad]),
+                  ].filter((p) => p != null)}
+                  to={(sim?.puffs ?? []).map((p) => creepDrawPosition(p, boardMap))}
+                />
+              ) : null}
             </Svg>
             </View>
+            {fpsMeterOn ? <FpsOverlay stats={fpsStats} fxCount={stressFx} /> : null}
 
             {/* Walking Avatar overlay (§19 cast Corvus). The frame cycles
                 idle/walk and one-shots attack/skill/hurt/dash; the art is 2-dir
@@ -3731,6 +3766,32 @@ export function DefendScreen({
               <DevRow
                 label={coachHidden ? 'Show coach' : 'Coach on'}
                 onPress={() => setCoachHidden((hidden) => !hidden)}
+              />
+              {/* EFFECTS_PLAN step 1 — measure before building any effect. */}
+              <DevRow
+                label={fpsMeterOn ? 'FPS meter (on)' : 'FPS meter'}
+                onPress={() => setFpsMeterOn((on) => !on)}
+              />
+              <DevRow
+                label={`Stress effects: ${stressFx === 0 ? 'off' : stressFx} (tap to cycle)`}
+                onPress={() => setStressFx((level) => nextStressFxLevel(level))}
+              />
+              <DevRow
+                label="Stress wave: +20 creeps now"
+                disabled={phase !== 'running' || !sim}
+                onPress={() =>
+                  setSim((prev) => {
+                    if (!prev) return prev;
+                    const extra = Array.from({ length: 20 }, (_, i) => ({
+                      tMs: prev.elapsedMs + i * 250,
+                      role: 'swarm' as const,
+                      rampFrac: 0,
+                      boss: null,
+                    }));
+                    const schedule = [...prev.schedule, ...extra].sort((a, b) => a.tMs - b.tMs);
+                    return { ...prev, schedule };
+                  })
+                }
               />
             </DevSection>
           </ThemedView>

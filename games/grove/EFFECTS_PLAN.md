@@ -105,6 +105,13 @@ Matching the enemy's weakness = +25% damage, +50% status duration. Void never ma
 - Pull: distance + cooldown; hold at L3.
 - Range +0/+1/+2 except Splash and Pull. Element rider + visual step up at L3.
 
+**Attack-speed cap (emci, 2026-09-24):** every shooter has a cooldown floor of
+**600ms** (fastest today: Avatar 700ms, archer 900ms). Anything that would push a
+tower faster than the floor (level-ups, the `tower_speed` gear bucket) converts into
+damage instead, so DPS still climbs but shot count doesn't. Why: the sim math is
+trivial; the cost is drawn effects per second. 9 shooters (6 towers, 2 bosses, Avatar)
+at the floor ≈ 15 shots/s × ~0.25s life ≈ 4 live effects — well under the 12 cap.
+
 **Range ring:** keep the dashed style, stroke = element colour, show while placing as
 well as selected; Pull adds a faint filled core. Check on device: towers draw ~21 units
 vs ranges 16–20 — consider expressing ranges in tiles.
@@ -128,7 +135,7 @@ flame/explosion sprite sheet (+1 asset; optional leaf sheet +1).
 
 ## Build order
 
-1. Dev Lab FPS readout + stress preset (full wave + 12 effects). Set real caps on device.
+1. **Built 2026-09-24** — Dev kit → Board / Misc: "FPS meter", "Stress effects: off/12/24", "Stress wave: +20 creeps now" (`src/play/dev-fx-stress.tsx`). Set real caps on device.
 2. Merge display tickers into one render tick.
 3. Kit data (`behavior` + `element` per hero/tower in JSON) + Void tag + Spark recolour.
 4. Sim: status channels, targeting per behavior, weakness.
