@@ -529,6 +529,10 @@ re-gated to `__DEV__` (or removed), and the Metro `PROBE_STUB` re-added:
 13. **Play free loop (`PLAY_EVERYTHING_FREE` in `src/lib/dev-mode.ts`)** — every hero
     owned on Play load (no Premium). Mirrors `PRE_LAUNCH_DEV`, so it flips off at the
     same re-gate; a public build must not hand out the whole hero roster for free.
+14. **`public.play_dev_logs` (wave73)** — non-personal Play dev test results, anon-readable
+    so a dev machine can pull them with the public key. Drop the table (or at least the
+    anon select + authenticated insert) before `signup_mode` goes public. NOT covered by
+    the `PRE_LAUNCH_DEV` flip — this one is a database change.
 
 One flag controls all of these: `PRE_LAUNCH_DEV = true` in `src/lib/dev-mode.ts`. **`npm run check:release-mode` (wired as the EAS `eas-build-post-install` hook) refuses a production build while it is `true`.**
 
