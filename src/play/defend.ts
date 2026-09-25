@@ -59,7 +59,7 @@ import {
 import { type TypeTag } from '@/play/engine/type-match';
 import { heroById } from '@/play/heroes-data';
 import { DEFAULT_SKILL_ID, skillById } from '@/play/skills-data';
-import { getTune } from '@/play/tune';
+import { devNoCaps, getTune } from '@/play/tune';
 import { ATO_ROAD_HALF, BOARD_MAPS, type BoardId, type BoardMap } from '@/play/board-data';
 import { defaultTowerSkin, towerSkillCooldownMs } from '@/play/tower-skins-data';
 
@@ -201,6 +201,12 @@ export const TOWER_MAX_LEVEL = 3;
  * economy/board cap. Bound Bosses occupy pads separately and do not count.
  */
 export const MAX_TOWERS = 6;
+
+/** Live tower cap — `MAX_TOWERS`, or unlimited under the dev "No caps" switch
+ * (the board's pad count is then the only limit). */
+export function towerCap(): number {
+  return devNoCaps() ? Number.POSITIVE_INFINITY : MAX_TOWERS;
+}
 
 /** Placeholder stats: archer from GAME_DATA; vine/crystal tuned to its spec
  * role (stall / chunk) until the defs land. One-line changes later. */
@@ -357,6 +363,12 @@ export type BoundBossTower = {
 
 /** Max Bound Bosses on the board at once (§9k). */
 export const BOUND_BOSS_MAX_ON_BOARD = 2;
+
+/** Live bound-boss cap — `BOUND_BOSS_MAX_ON_BOARD`, or unlimited under the dev
+ * "No caps" switch. */
+export function boundBossCapOnBoard(): number {
+  return devNoCaps() ? Number.POSITIVE_INFINITY : BOUND_BOSS_MAX_ON_BOARD;
+}
 
 /* ---------------------------------------------------- hero bound as tower --- */
 /* A6 — a HERO bound as a tower (Slice A2 bind → place here). The hero's tower
@@ -554,7 +566,7 @@ export function placeTower(
 ): DefendLive | null {
   const def = TOWER_DEFS[kind];
   if (state.scrap < def.placeCost) return null;
-  if (state.towers.length >= MAX_TOWERS) return null;
+  if (state.towers.length >= towerCap()) return null;
   if (state.towers.some((tower) => tower.pad === pad)) return null;
   return {
     ...state,
@@ -613,7 +625,7 @@ export function placeBoundBoss(
   ) {
     return null;
   }
-  if (state.boundBosses.length >= BOUND_BOSS_MAX_ON_BOARD) return null;
+  if (state.boundBosses.length >= boundBossCapOnBoard()) return null;
   return {
     ...state,
     scrap: state.scrap - placeCost,

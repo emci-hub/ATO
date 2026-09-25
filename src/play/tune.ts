@@ -10,6 +10,8 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+
 export const TUNE_STORE_KEY = 'ato.play.tune.v1';
 
 export type TunePresetId = 'sane' | 'juicy' | 'brutal' | 'brokenop';
@@ -46,6 +48,9 @@ export type TuneDoc = {
   skillCooldownMs: number;
   /** God mode — leak does not fail the wave (brokenop only). */
   godMode: boolean;
+  /** Dev only — lift the tower / bound-boss / bound-hero caps for testing.
+   * Read through `devNoCaps()`, which also requires PRE_LAUNCH_DEV. */
+  devNoCaps: boolean;
   /** Forever-engine cycle-power growth step (cycle_power = 1 + cycles × this,
    * Sane 0.12). Not wired to a live system yet — tune-ready for the engine. */
   cyclePowerStep: number;
@@ -99,6 +104,7 @@ export const SANE_TUNE: TuneDoc = {
   skillSlowPct: 0.35,
   skillCooldownMs: 12_000,
   godMode: false,
+  devNoCaps: false,
   cyclePowerStep: 0.12,
   typeMatchBonus: 0.2,
   avatarStarDropPct: 0.25,
@@ -167,6 +173,11 @@ let preset: TunePresetId | 'custom' = 'sane';
 /** Current tune doc (the getTune() layer every engine reads). */
 export function getTune(): TuneDoc {
   return current;
+}
+
+/** True when the dev "No caps" switch is on (never in a public build). */
+export function devNoCaps(): boolean {
+  return PRE_LAUNCH_DEV && current.devNoCaps;
 }
 
 /** Which preset produced the current doc ('custom' after hand knobs). */

@@ -42,11 +42,12 @@ import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
 import {
   AVATAR_RANGE,
-  BOUND_BOSS_MAX_ON_BOARD,
+  boundBossCapOnBoard,
   DEFEND_TICK_MS,
   HERO_TOWER_STATS,
   type DefendMap,
   MAX_TOWERS,
+  towerCap,
   TOWER_DEFS,
   TOWER_MAX_LEVEL,
   castSlowPulse,
@@ -721,6 +722,8 @@ export function DefendScreen({
   const [selectedPad, setSelectedPad] = useState<number | null>(null);
   /** God mode — starts from the §9c tune doc (BrokenOP turns it on). */
   const [godMode, setGodMode] = useState(() => getTune().godMode);
+  /** Dev kit only: mirrors the tune doc's `devNoCaps` so the row re-renders. */
+  const [noCaps, setNoCaps] = useState(() => getTune().devNoCaps);
   /** Dev kit only (EFFECTS_PLAN step 1): FPS readout + synthetic FX stress. */
   const [fpsMeterOn, setFpsMeterOn] = useState(false);
   const [stressFx, setStressFx] = useState<StressFxLevel>(0);
@@ -1804,7 +1807,11 @@ export function DefendScreen({
   );
   const boundBossCount = sim?.boundBosses.length ?? 0;
   /** Board tower cap reached — pads stay open but no more towers can deploy. */
-  const atTowerCap = (sim?.towers.length ?? 0) >= MAX_TOWERS;
+  const atTowerCap = (sim?.towers.length ?? 0) >= towerCap();
+  /** Tower count label — `n/6`, or just `n` under the dev "No caps" switch. */
+  const towerCountLabel = Number.isFinite(towerCap())
+    ? `${sim?.towers.length ?? 0}/${MAX_TOWERS}`
+    : `${sim?.towers.length ?? 0}`;
   /** The cycle's boss family (one until pack 2) for the fragment preview. */
   const cycleBossId = defaultBoundBossId();
   const cycleBossDef = cycleBossId ? getBoundBossDef(cycleBossId) : undefined;
@@ -2972,7 +2979,7 @@ export function DefendScreen({
               <>
                 <ThemedText type="smallBold">
                   Build a tower
-                  {atTowerCap ? ` · ${MAX_TOWERS}/${MAX_TOWERS} deployed` : ` · ${sim?.towers.length ?? 0}/${MAX_TOWERS}`}
+                  {atTowerCap ? ` · ${MAX_TOWERS}/${MAX_TOWERS} deployed` : ` · ${towerCountLabel}`}
                 </ThemedText>
                 {(Object.keys(TOWER_DEFS) as TowerKind[]).map((kind) => {
                   const def = TOWER_DEFS[kind];
@@ -3007,7 +3014,7 @@ export function DefendScreen({
                       const hero = isHeroBoundTower(bb.id);
                       const placeCost = hero ? HERO_TOWER_STATS.placeCost : def?.place_cost ?? 0;
                       const affordable = scrap >= placeCost;
-                      const atCap = boundBossCount >= BOUND_BOSS_MAX_ON_BOARD;
+                      const atCap = boundBossCount >= boundBossCapOnBoard();
                       return (
                         <Pressable
                           key={bb.id}
@@ -3795,6 +3802,15 @@ export function DefendScreen({
                     void saveTune();
                     return next;
                   });
+                }}
+              />
+              <DevRow
+                label={noCaps ? 'No caps (on)' : 'No caps: towers / bosses / heroes'}
+                onPress={() => {
+                  const next = !noCaps;
+                  setKnob('devNoCaps', next); // tune doc — survives restarts
+                  void saveTune();
+                  setNoCaps(next);
                 }}
               />
               <DevRow

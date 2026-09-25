@@ -68,7 +68,7 @@ import { starMergeSuccess, starMultScale } from '@/play/engine/star-table';
 import { isTypeTag, type TypeTag } from '@/play/engine/type-match';
 import { DEFAULT_AVATAR_HERO_ID, allHeroes, heroById, heroName } from '@/play/heroes-data';
 import type { ShopTokenRow } from '@/play/shop';
-import { getTune } from '@/play/tune';
+import { devNoCaps, getTune } from '@/play/tune';
 import {
   getItemDef,
   junkLookId,
@@ -1638,7 +1638,7 @@ export function bindHeroAsTower(
   if (normalizedAvatarHeroId(doc) === heroId) {
     return { doc, ok: false, reason: 'active_avatar' };
   }
-  if (boundHeroIdsOf(doc).length >= BOUND_HERO_MAX) {
+  if (!devNoCaps() && boundHeroIdsOf(doc).length >= BOUND_HERO_MAX) {
     return { doc, ok: false, reason: 'cap' };
   }
   // A stars-0 record (fragments only, no tower yet) is upgraded in place so its
