@@ -116,7 +116,27 @@ at the floor ≈ 15 shots/s × ~0.25s life ≈ 4 live effects — well under the
 well as selected; Pull adds a faint filled core. Check on device: towers draw ~21 units
 vs ranges 16–20 — consider expressing ranges in tiles.
 
-## Performance budget (estimate — confirm with the FPS test)
+## Performance budget
+
+**Measured 2026-09-26 — iPhone 16 Pro Max, iOS 26.6.2, OTA `850284b9`, auto-logged to
+`play_dev_logs`:**
+
+| Creeps (avg) | FX | fps | worst frame | renders/s |
+|---|---|---|---|---|
+| 13 | off | 60 | 17ms | 26 |
+| 16 | 12 | 60 | 18ms | 37 |
+| 16 | 24 | 59 | 37ms | 40 |
+| 43 | off | 60 | 21ms | 26 |
+| 46 | 12 | 58 | 30ms | 35 |
+| 46 | 24 | 40 | 54ms | 36 |
+
+Verdict: **12-effect cap confirmed.** A real wave is smooth even at 24 effects; only a
+4x crowd plus 24 effects drops (40 fps). Effects cost more than crowds. This is a
+flagship phone — an older phone may run ~2x slower, so keep 12 as the cap (not 24)
+for headroom. Step 2 (merge tickers) is no longer urgent; do it if an older device
+test says so.
+
+Planned caps (now confirmed on the phone above):
 
 - ≤12 live effects, ≤~70 extra SVG primitives total; oldest cosmetic dropped first.
 - Chain ≤4 bounces, 2 paths (glow + core), 150ms life. Pull/black hole 3 primitives.
@@ -135,8 +155,8 @@ flame/explosion sprite sheet (+1 asset; optional leaf sheet +1).
 
 ## Build order
 
-1. **Built 2026-09-24** — Dev kit → Board / Misc: "FPS meter", "Stress effects: off/12/24", "Stress wave: +20 creeps now" (`src/play/dev-fx-stress.tsx`). Set real caps on device.
-2. Merge display tickers into one render tick.
+1. **Done 2026-09-26** (results above) — Dev kit → Board / Misc: "FPS meter", "Stress effects: off/12/24", "Stress wave: +20 creeps now" (`src/play/dev-fx-stress.tsx`). Set real caps on device.
+2. Merge display tickers into one render tick. *(Deferred — not needed on the test phone; revisit on an older device.)*
 3. Kit data (`behavior` + `element` per hero/tower in JSON) + Void tag + Spark recolour.
 4. Sim: status channels, targeting per behavior, weakness.
 5. FX layer: one renderer per behavior, element palette/rider on top, global cap.
