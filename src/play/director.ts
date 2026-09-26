@@ -19,6 +19,8 @@
  *
  * PURE data + scheduling — no React, no AsyncStorage, no engine imports.
  */
+import type { TypeTag } from '@/play/engine/type-match';
+
 import rawWaveTables from './data/wave-tables.json';
 
 export type SpawnRole = 'swarm' | 'runner' | 'tank' | 'boss';
@@ -32,6 +34,10 @@ export type WaveGroup = {
   /** Time from wave start until this group's first member. */
   delaySec: number;
   pattern: SpawnPattern;
+  /** Optional weakness colour for every creep in this group (EFFECTS_PLAN
+   * step 4). The attack element that beats it deals +25% and its statuses
+   * last 50% longer. Bosses ignore it — they carry the cycle tint. */
+  tint?: TypeTag;
 };
 
 export type WaveDef = {
@@ -48,6 +54,8 @@ export type SpawnEvent = {
   rampFrac: number;
   /** Boss-only: render size + enrage threshold (null for non-bosses). */
   boss: { size: number; burstHpPct: number | null } | null;
+  /** Non-boss weakness colour from the group, if authored. */
+  tint?: TypeTag;
 };
 
 /** HP multiplier vs a baseline puff (tank soaks; boss reads the band). */
@@ -63,6 +71,9 @@ const CLUSTER_GAP_SEC = 0.15;
 
 const ROLES: ReadonlySet<string> = new Set(['swarm', 'runner', 'tank', 'boss']);
 const PATTERNS: ReadonlySet<string> = new Set(['stream', 'cluster']);
+/** Same four as `TYPE_TAGS` — spelled out so this data module stays free of
+ * the tune/AsyncStorage import chain. `check:kits` pins the two together. */
+export const WAVE_TINTS: readonly TypeTag[] = ['tide', 'ember', 'root', 'spark'];
 
 function finite(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
@@ -84,12 +95,17 @@ function parseGroup(raw: unknown): WaveGroup | null {
       : 'stream';
   const gapSec = finite(raw.gapSec) ?? 1;
   const delaySec = finite(raw.delaySec) ?? 0;
+  const tint =
+    typeof raw.tint === 'string' && (WAVE_TINTS as readonly string[]).includes(raw.tint)
+      ? (raw.tint as TypeTag)
+      : undefined;
   return {
     role,
     count: Math.max(1, Math.floor(count)),
     gapSec: Math.max(0, gapSec),
     delaySec: Math.max(0, delaySec),
     pattern,
+    ...(tint ? { tint } : {}),
   };
 }
 
@@ -160,6 +176,7 @@ export function buildSchedule(
         boss: isBoss
           ? { size: boss?.size ?? 1, burstHpPct: boss?.burstHpPct ?? null }
           : null,
+        ...(!isBoss && group.tint ? { tint: group.tint } : {}),
       });
     }
   }

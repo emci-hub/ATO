@@ -58,6 +58,20 @@ import {
 } from '@/play/engine/bound-boss';
 import { type TypeTag } from '@/play/engine/type-match';
 import { heroById } from '@/play/heroes-data';
+import {
+  KIT_TUNING,
+  applySlow,
+  fireKit,
+  floorCooldown,
+  kitRange,
+  pickTarget,
+  splashRadius,
+  tickStatuses,
+  type BurstTargeting,
+  type KitHit,
+  type KitStatus,
+} from '@/play/kit-combat';
+import { TOWER_KITS, type Kit } from '@/play/kits';
 import { DEFAULT_SKILL_ID, skillById } from '@/play/skills-data';
 import { devNoCaps, getTune } from '@/play/tune';
 import { ATO_ROAD_HALF, BOARD_MAPS, type BoardId, type BoardMap } from '@/play/board-data';
@@ -188,9 +202,6 @@ export type TowerDef = {
   levelCostScrap: readonly number[];
   /** Wave-power mult per level (GAME_DATA level_mult_wave_power). */
   levelMultWavePower: readonly number[];
-  /** Vine only: slow the target this much for `slowMs` on hit. */
-  slowPct?: number;
-  slowMs?: number;
 };
 
 export const TOWER_MAX_LEVEL = 3;
@@ -230,8 +241,9 @@ export const TOWER_DEFS: Record<TowerKind, TowerDef> = {
     placeCost: 40,
     levelCostScrap: [0, 40, 90],
     levelMultWavePower: [1.0, 1.25, 1.55],
-    slowPct: 0.7,
-    slowMs: 1000,
+    // Slow comes from its kit now (Slow · Root, `kits.ts`): 30% for 1s at
+    // Lv1 — the same as the old hard-coded vine slow — scaling to 50% / 1.5s.
+    // The Root rider is new: a 300ms snare per hit and +25% damage vs tanks.
   },
   crystal: {
     kind: 'crystal',
@@ -310,7 +322,7 @@ export function creepRole(puff: Puff): CreepRole {
   return puff.role ?? 'swarm';
 }
 
-export type Puff = {
+export type Puff = KitStatus & {
   id: number;
   /** Path progress 0..1. */
   dist: number;
@@ -322,7 +334,8 @@ export type Puff = {
   slowFactor: number;
   /** Enemy archetype: normal puff, fast runner, or a fat boss. */
   kind: PuffKind;
-  /** Boss only: cycle tint (renders a tinted ring). */
+  /** Weakness colour: the cycle tint on a boss, or a wave group's optional
+   * tint on a normal creep (EFFECTS_PLAN step 4). */
   tint: TypeTag | null;
   /** Boss only: render radius scale (1 for normal enemies). */
   size: number;
@@ -458,6 +471,11 @@ export type DefendStep = {
   done: boolean;
   /** A boss spawned this tick (the screen banners the alert). */
   bossSpawned: boolean;
+  /** Every kit attack this tick (towers + hero towers), for effects and the
+   * damage numbers' element colour. Display only. */
+  hits: KitHit[];
+  /** Damage-over-time dealt this tick, per creep, with its element. */
+  dotHits: { puffId: number; damage: number; element: KitHit['element'] }[];
 };
 
 export const DEFEND_TICK_MS = 100;
@@ -726,7 +744,7 @@ export function stepDefendLive(
         slowMs: 0,
         slowFactor: 1,
         kind,
-        tint: isBoss ? state.tint : null,
+        tint: isBoss ? state.tint : (event.tint ?? null),
         size: isBoss ? (event.boss?.size ?? 1) : 1,
         burstHpPct: isBoss ? (event.boss?.burstHpPct ?? null) : null,
         burstFired: false,
@@ -742,12 +760,34 @@ export function stepDefendLive(
     spawnEvent(event);
   }
 
+  // Kit statuses (step 4): damage-over-time ticks, stun → immunity, shred and
+  // pull timers. DoT kills pay scrap like any kill.
+  const scrapPerKill = getTune().scrapKill;
+  // Stuns are read BEFORE this tick's decrement, so a 300ms snare holds a
+  // creep for the full 3 ticks (it was applied after last tick's movement).
+  const stunnedIds = new Set(puffs.filter((p) => (p.stunMs ?? 0) > 0).map((p) => p.id));
+  const statusTick = tickStatuses(puffs, dtMs);
+  puffs = statusTick.creeps;
+  const dotHits: DefendStep['dotHits'] = [...statusTick.dotDamage].map(([puffId, d]) => ({
+    puffId,
+    damage: d.damage,
+    element: d.element,
+  }));
+  {
+    const dead = puffs.filter((p) => p.hp <= 0).length;
+    if (dead > 0) {
+      scrap += dead * scrapPerKill;
+      puffs = puffs.filter((p) => p.hp > 0);
+    }
+  }
+
   // Movement (§9m boss crawl): bosses move at ~1/3 puff speed so the alert
   // beat is fightable; runners keep their faster clip; tanks crawl (soak);
-  // normal puffs are the baseline. Slowed puffs crawl on top of their base.
+  // normal puffs are the baseline. Slowed puffs crawl on top of their base;
+  // a stunned creep (Root snare, Pull hold, EMP) does not move at all.
   const bossSpeedMult = getTune().bossSpeedMult;
   puffs = puffs.map((puff) => {
-    const slow = puff.slowMs > 0 ? puff.slowFactor : 1;
+    const slow = stunnedIds.has(puff.id) ? 0 : puff.slowMs > 0 ? puff.slowFactor : 1;
     const speed =
       puff.kind === 'runner'
         ? speedBase * RUNNER_SPEED_MULT
@@ -760,27 +800,53 @@ export function stepDefendLive(
     return { ...puff, dist: puff.dist + speed * slow, slowMs };
   });
 
-  // Towers fire.
+  // Towers fire — through their kit (EFFECTS_PLAN step 4): archer Burst
+  // (first toward the exit, neutral), vine Slow · Root, crystal Burst · Spark
+  // (strongest). Plain towers keep their own damage/range stats; the kit adds
+  // targeting, the element rider and the 600ms attack floor (speed past the
+  // floor turns into damage).
   const towerSpeedBucket = Math.max(0.1, buckets.towerSpeed);
   const towerCdScale = getTune().towerCooldownScale;
-  const scrapPerKill = getTune().scrapKill;
+  const hits: KitHit[] = [];
+  const posOf = (puff: Puff) => {
+    const pos = puffPosition(puff.dist, map);
+    return { x: pos.x * 100, y: pos.y * 100 };
+  };
+  const removeDead = () => {
+    const dead = puffs.filter((p) => p.hp <= 0).length;
+    if (dead > 0) {
+      scrap += dead * scrapPerKill;
+      puffs = puffs.filter((p) => p.hp > 0);
+    }
+  };
   const firedTowers: Tower[] = [];
   for (const tower of state.towers) {
     let cooldownMs = tower.cooldownMs - dtMs;
     let skillCooldownMs = Math.max(0, tower.skillCooldownMs - dtMs);
     const skillCd = towerSkillCooldownMs(defaultTowerSkin(tower.kind));
     if (cooldownMs <= 0) {
-      const target = towerTarget(tower, puffs, map);
-      if (target) {
-        const def = TOWER_DEFS[tower.kind];
-        const damage =
-          def.baseAttack * def.levelMultWavePower[tower.level - 1] * boardMult;
-        puffs = applyHit(puffs, target.id, damage, def);
-        if (puffs.some((p) => p.id === target.id && p.hp <= 0)) {
-          scrap += scrapPerKill;
-          puffs = puffs.filter((p) => p.id !== target.id);
-        }
-        cooldownMs = (def.cooldownMs * towerCdScale) / towerSpeedBucket;
+      const def = TOWER_DEFS[tower.kind];
+      const floored = floorCooldown((def.cooldownMs * towerCdScale) / towerSpeedBucket);
+      const fired = fireKit(
+        puffs,
+        {
+          kit: TOWER_KITS[tower.kind],
+          level: tower.level,
+          damage: def.baseAttack * def.levelMultWavePower[tower.level - 1] * boardMult * floored.damageMult,
+          heroShare: false,
+          burst: TOWER_BURST_TARGETING[tower.kind],
+          source: 'tower',
+          sourceId: tower.id,
+          from: map.pads[tower.pad],
+        },
+        def.range,
+        { posOf },
+      );
+      if (fired.hit) {
+        puffs = fired.creeps;
+        hits.push(fired.hit);
+        removeDead();
+        cooldownMs = floored.cooldownMs;
       } else {
         cooldownMs = 0; // idle: retry next tick
       }
@@ -822,7 +888,10 @@ export function stepDefendLive(
     const target = acquireAvatarTarget(avatar, puffs, map);
     if (target) {
       const damage =
-        AVATAR_BASE_ATTACK * boardMult * avatarLevelWavePower(buckets.avatarLevel);
+        AVATAR_BASE_ATTACK *
+        boardMult *
+        avatarLevelWavePower(buckets.avatarLevel) *
+        floorCooldown(getTune().avatarCooldownMs).damageMult;
       puffs = puffs.map((puff) =>
         puff.id === target.id ? { ...puff, hp: puff.hp - damage } : puff,
       );
@@ -830,7 +899,7 @@ export function stepDefendLive(
         scrap += scrapPerKill;
         puffs = puffs.filter((p) => p.id !== target.id);
       }
-      avatarCooldownMs = getTune().avatarCooldownMs;
+      avatarCooldownMs = floorCooldown(getTune().avatarCooldownMs).cooldownMs;
     } else {
       avatarCooldownMs = 0;
     }
@@ -850,15 +919,78 @@ export function stepDefendLive(
       continue;
     }
     const pad = map.pads[bb.pad];
-    const range = hero ? HERO_TOWER_STATS.range : def!.range;
-    const baseAttack = hero ? HERO_TOWER_STATS.baseAttack : def!.base_attack;
-    const attackCd = hero ? HERO_TOWER_STATS.cooldownMs : def!.cooldown_ms;
-    const damageMult = hero ? 1 : boundBossStarDamage(def!, bb.stars);
     let cooldownMs = bb.cooldownMs - dtMs;
     let skillCooldownMs = Math.max(0, bb.skillCooldownMs - dtMs);
 
-    // Auto-attack — highest current HP in range (a boss echoes its chunk hits;
-    // a hero tower shares the same crystal/chunk target rule).
+    // A HERO tower fights with its kit (EFFECTS_PLAN step 4): behavior picks
+    // the target and the effect, the element adds its rider, and the ultimate
+    // (auto-skill) fires the kit at level 3 with a second element mixed in.
+    if (hero != null) {
+      const level = heroTowerLevel(bb);
+      const floored = floorCooldown(KIT_TUNING.heroCooldownMs[hero.kit.behavior]);
+      if (cooldownMs <= 0) {
+        const fired = fireKit(
+          puffs,
+          {
+            kit: hero.kit,
+            level,
+            damage: HERO_TOWER_STATS.baseAttack * boardMult * floored.damageMult,
+            heroShare: true,
+            burst: HERO_BURST_TARGETING,
+            source: 'hero',
+            sourceId: bb.id,
+            from: pad,
+          },
+          kitRange(hero.kit, level),
+          { posOf },
+        );
+        if (fired.hit) {
+          puffs = fired.creeps;
+          hits.push(fired.hit);
+          removeDead();
+          cooldownMs = floored.cooldownMs;
+        } else {
+          cooldownMs = 0;
+        }
+      }
+      if (hero.clips.skill == null) {
+        skillCooldownMs = 0; // no skill clip → no ultimate at all
+      } else if (skillCooldownMs <= 0) {
+        const fired = fireKit(
+          puffs,
+          {
+            kit: hero.kit,
+            level: 3,
+            damage: HERO_TOWER_STATS.baseAttack * boardMult,
+            heroShare: true,
+            burst: HERO_BURST_TARGETING,
+            source: 'hero',
+            sourceId: bb.id,
+            from: pad,
+            ultimate: { radius: TOWER_SKILL_RADIUS },
+          },
+          kitRange(hero.kit, 3),
+          { posOf },
+        );
+        if (fired.hit) {
+          puffs = fired.creeps;
+          hits.push(fired.hit);
+          removeDead();
+          skillCooldownMs = HERO_TOWER_SKILL_COOLDOWN_MS;
+        } else {
+          skillCooldownMs = 0;
+        }
+      }
+      firedBoundBosses.push({ ...bb, cooldownMs, skillCooldownMs });
+      continue;
+    }
+
+    const range = def!.range;
+    const baseAttack = def!.base_attack;
+    const attackCd = def!.cooldown_ms;
+    const damageMult = boundBossStarDamage(def!, bb.stars);
+
+    // Cycle boss auto-attack — highest current HP in range (its chunk echo).
     if (cooldownMs <= 0) {
       const target = acquireInRangeHighestHp(pad, range, puffs, map);
       if (target) {
@@ -874,29 +1006,8 @@ export function stepDefendLive(
       }
     }
 
-    // Auto-skill. A hero tower casts one pulse on CD only when its hero authors
-    // a skill clip; the cycle boss always carries its burst echo.
-    if (hero != null) {
-      if (hero.clips.skill == null) {
-        skillCooldownMs = 0; // no skill clip → no skill path at all
-      } else if (skillCooldownMs <= 0) {
-        const hitAny = puffs.some(
-          (puff) => padPuffDist(pad, puff.dist, map) <= TOWER_SKILL_RADIUS,
-        );
-        if (hitAny) {
-          const skillDamage = HERO_TOWER_STATS.baseAttack * TOWER_SKILL_DAMAGE_MULT * boardMult;
-          puffs = puffs.map((puff) => {
-            if (padPuffDist(pad, puff.dist, map) > TOWER_SKILL_RADIUS) return puff;
-            return { ...puff, hp: puff.hp - skillDamage };
-          });
-          scrap += puffs.filter((p) => p.hp <= 0).length * scrapPerKill;
-          puffs = puffs.filter((p) => p.hp > 0);
-          skillCooldownMs = HERO_TOWER_SKILL_COOLDOWN_MS;
-        } else {
-          skillCooldownMs = 0;
-        }
-      }
-    } else if (skillCooldownMs <= 0) {
+    // Cycle boss auto-skill: its burst echo on CD.
+    if (skillCooldownMs <= 0) {
       if (def!.skill.skill_id === 'burst') {
         const hitAny = puffs.some(
           (puff) => padPuffDist(pad, puff.dist, map) <= def!.skill.radius,
@@ -977,6 +1088,8 @@ export function stepDefendLive(
     leak,
     done: schedule.length === 0 && puffs.length === 0,
     bossSpawned,
+    hits,
+    dotHits,
   };
 }
 
@@ -1000,7 +1113,8 @@ export function castSlowPulse(
     const pos = puffPosition(puff.dist, map);
     const dist = Math.hypot(pos.x * 100 - avatar.x, pos.y * 100 - avatar.y);
     if (dist > radius) return puff;
-    return { ...puff, slowMs, slowFactor, hp: puff.hp - damage };
+    // Same stacking rule as every other slow: strongest wins, longest lasts.
+    return applySlow({ ...puff, hp: puff.hp - damage }, slowFactor, slowMs);
   });
   let scrap = state.scrap;
   const killed = puffs.filter((puff) => puff.hp <= 0).length;
@@ -1039,11 +1153,51 @@ export function towerTarget(tower: Tower, puffs: Puff[], map: DefendMap): Puff |
   const range = TOWER_DEFS[tower.kind].range;
   const pad = map.pads[tower.pad];
   const inRange = puffs.filter((puff) => padPuffDist(pad, puff.dist, map) <= range);
-  if (inRange.length === 0) return null;
-  if (tower.kind === 'crystal') {
-    return inRange.reduce((a, b) => (b.hp > a.hp ? b : a));
-  }
-  return inRange.reduce((a, b) => (b.dist > a.dist ? b : a));
+  return kitTarget(TOWER_KITS[tower.kind], tower.level, TOWER_BURST_TARGETING[tower.kind], inRange, map);
+}
+
+/** Burst targeting per plain tower (plan: archer First, crystal keeps its
+ * chunk role = Strongest). Vine is Slow, so its entry is unused. */
+const TOWER_BURST_TARGETING: Record<TowerKind, BurstTargeting> = {
+  archer: 'first',
+  vine: 'first',
+  crystal: 'strongest',
+};
+
+/** Hero Burst towers keep the chunk role they had (highest HP in range). */
+const HERO_BURST_TARGETING: BurstTargeting = 'strongest';
+
+/** A hero tower's kit level: its stars, clamped into the kit's 1..3. */
+export function heroTowerLevel(bb: BoundBossTower): number {
+  return Math.max(1, Math.min(3, bb.stars));
+}
+
+/** The target a kit would pick from creeps already in range (shared by the
+ * engine and the screen's aim, so a tower always faces what it hits). */
+function kitTarget(
+  kit: Kit,
+  level: number,
+  burst: BurstTargeting,
+  inRange: Puff[],
+  map: DefendMap,
+): Puff | null {
+  return pickTarget(kit.behavior, inRange, {
+    burst,
+    element: kit.element,
+    posOf: (puff) => {
+      const pos = puffPosition(puff.dist, map);
+      return { x: pos.x * 100, y: pos.y * 100 };
+    },
+    splashR: splashRadius(level),
+  });
+}
+
+/** A hero tower's reach (board units): its kit behavior's range at its level;
+ * a cycle boss uses its def range. For the range ring and the aim. */
+export function boundBossRange(bb: BoundBossTower): number {
+  const hero = heroById(bb.bossId);
+  if (hero) return kitRange(hero.kit, heroTowerLevel(bb));
+  return getBoundBossDef(bb.bossId)?.range ?? HERO_TOWER_STATS.range;
 }
 
 /** Highest current-HP puff within `range` of a pad — the chunk-hit target rule
@@ -1064,20 +1218,12 @@ function acquireInRangeHighestHp(
  * engine will damage (the same no-math-drift contract as `towerTarget`). */
 export function heroTowerTarget(bb: BoundBossTower, puffs: Puff[], map: DefendMap): Puff | null {
   const pad = map.pads[bb.pad];
-  return acquireInRangeHighestHp(pad, HERO_TOWER_STATS.range, puffs, map);
-}
-
-/** Subtract damage; vine also (re)applies its slow. Returns a new array. */
-function applyHit(puffs: Puff[], targetId: number, damage: number, def: TowerDef): Puff[] {
-  return puffs.map((puff) => {
-    if (puff.id !== targetId) return puff;
-    return {
-      ...puff,
-      hp: puff.hp - damage,
-      slowMs: def.slowMs ? def.slowMs : puff.slowMs,
-      slowFactor: def.slowMs ? def.slowPct ?? puff.slowFactor : puff.slowFactor,
-    };
-  });
+  const hero = heroById(bb.bossId);
+  if (!hero) return acquireInRangeHighestHp(pad, boundBossRange(bb), puffs, map);
+  const level = heroTowerLevel(bb);
+  const range = kitRange(hero.kit, level);
+  const inRange = puffs.filter((puff) => padPuffDist(pad, puff.dist, map) <= range);
+  return kitTarget(hero.kit, level, HERO_BURST_TARGETING, inRange, map);
 }
 
 /**

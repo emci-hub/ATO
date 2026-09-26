@@ -20,9 +20,9 @@
  * skill, no gear, no type match, no Avatar stars. Default `ato` board only
  * (Main's parked alternate board is not simulated).
  *
- * Every hero tower shares one stat block today (`HERO_TOWER_STATS`), so hero
- * kits change nothing here until EFFECTS_PLAN step 4 wires them into combat —
- * the "+2 hero towers" strategy stands in for all 16.
+ * Hero towers fight with their kits (EFFECTS_PLAN step 4), so the report
+ * also compares all 16 heroes: "Mixed + 2 of this hero" over every wave at
+ * cycle 0. The "+2 hero towers" column uses Archangel.
  *
  * Run: npm run sim:balance   (writes games/grove/BALANCE_REPORT.md)
  */
@@ -46,6 +46,8 @@ import {
   type TowerKind,
 } from '../src/play/defend';
 import { BOARD_MAPS } from '../src/play/board-data';
+import { allHeroes } from '../src/play/heroes-data';
+import { kitLabel } from '../src/play/kits';
 import { getTune } from '../src/play/tune';
 
 type Phase = 'trial' | 'main';
@@ -54,7 +56,7 @@ const WAVES: { phase: Phase; wave: number }[] = [
   ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((wave) => ({ phase: 'main' as const, wave })),
 ];
 
-type Strategy = { id: string; label: string; towers: TowerKind[]; heroTowers: number };
+type Strategy = { id: string; label: string; towers: TowerKind[]; heroTowers: number; heroId?: string };
 const STRATEGIES: Strategy[] = [
   { id: 'avatar', label: 'Avatar only', towers: [], heroTowers: 0 },
   { id: 'archer', label: 'Archers', towers: ['archer'], heroTowers: 0 },
@@ -66,7 +68,7 @@ const STRATEGIES: Strategy[] = [
 
 /** Conquered cycles to test (cycle power = 1 + cycles × tune.cyclePowerStep). */
 const CYCLES = [0, 2, 5];
-const HERO_ID = 'archangel'; // any hero — all share HERO_TOWER_STATS today
+const HERO_ID = 'archangel'; // the default hero for the "+2 hero towers" column
 const MAX_SIM_MS = 10 * 60_000;
 
 const map = BOARD_MAPS.ato;
@@ -117,7 +119,7 @@ function simulate(
 
   // Hero towers first (free), on the pads a 20-range tower covers best.
   const heroPads = rankedPads(HERO_TOWER_STATS.range).slice(0, strategy.heroTowers);
-  for (const pad of heroPads) s = placeBoundBoss(s, pad, HERO_ID, 1) ?? s;
+  for (const pad of heroPads) s = placeBoundBoss(s, pad, strategy.heroId ?? HERO_ID, 1) ?? s;
 
   let buildIndex = 0;
   const spend = () => {
@@ -206,6 +208,27 @@ for (const cycles of CYCLES) {
     }
   }
 }
+// Hero comparison (cycle 0): Mixed towers + 2 copies of each hero.
+const heroRows = allHeroes().map((hero) => {
+  const strat: Strategy = {
+    id: `hero:${hero.id}`,
+    label: hero.name,
+    towers: ['archer', 'vine', 'crystal'],
+    heroTowers: 2,
+    heroId: hero.id,
+  };
+  const cells = WAVES.map((w) => ({
+    w,
+    run: simulate(w.phase, w.wave, strat, 1, 1),
+    need: damageNeeded(w.phase, w.wave, strat, 1),
+  }));
+  const clearable = cells.filter((c) => c.need != null).map((c) => c.need as number);
+  const avg = clearable.length ? clearable.reduce((a, b) => a + b, 0) / clearable.length : Infinity;
+  const lost = cells.filter((c) => c.run.leaked > 0).length;
+  const hardest = [...cells].sort((a, b) => (b.need ?? 99) - (a.need ?? 99))[0];
+  return { hero, avg, lost, unclearable: cells.length - clearable.length, hardest };
+}).sort((a, b) => a.unclearable - b.unclearable || a.avg - b.avg);
+
 const secs = ((Date.now() - started) / 1000).toFixed(1);
 
 function fmtNeed(need: number | null): string {
@@ -282,6 +305,29 @@ findings.push(
     )
     .join(' · ')}.`,
 );
+
+const heroAvgs = heroRows.filter((r) => Number.isFinite(r.avg)).map((r) => r.avg);
+const spread = heroAvgs.length ? Math.max(...heroAvgs) / Math.min(...heroAvgs) : 1;
+findings.push(
+  `- **Heroes (cycle 0, Mixed + 2 of the hero):** strongest ${heroRows[0].hero.name} ` +
+    `(${kitLabel(heroRows[0].hero.kit)}, ${heroRows[0].avg.toFixed(2)}×), weakest ${heroRows[heroRows.length - 1].hero.name} ` +
+    `(${kitLabel(heroRows[heroRows.length - 1].hero.kit)}, ${heroRows[heroRows.length - 1].avg.toFixed(2)}×) — ` +
+    `a ${spread.toFixed(2)}× spread${spread > 1.5 ? ' (worth tuning: over 1.5×)' : ''}.`,
+);
+
+lines.push('## Heroes (cycle 0, Mixed towers + 2 of the hero)');
+lines.push('');
+lines.push('Lower damage needed = stronger. Ranked strongest first.');
+lines.push('');
+lines.push('| Hero | Kit | Avg damage needed | Waves lost at ×1 | Hardest wave |');
+lines.push('|---|---|---|---|---|');
+for (const r of heroRows) {
+  lines.push(
+    `| ${r.hero.name} | ${kitLabel(r.hero.kit)} | ${Number.isFinite(r.avg) ? `${r.avg.toFixed(2)}×` : '—'}` +
+      `${r.unclearable ? ` (+${r.unclearable} unclearable)` : ''} | ${r.lost} | ${waveName(r.hardest.w)} (${fmtNeed(r.hardest.need)}) |`,
+  );
+}
+lines.push('');
 
 lines.splice(6, 0, '## Findings', '', ...findings, '');
 

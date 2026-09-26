@@ -1,6 +1,6 @@
 # Attack effects system — plan of record
 
-Status: **design approved by emci 2026-09-24; steps 1 and 3 done (step 2 deferred).** Replaces the single
+Status: **built 2026-09-26 — steps 1, 3, 4, 5, 6, 8 done; step 2 deferred (not needed on the test phone); step 7 uses vector fire until the sprite art is generated.** Replaces the single
 Kenney `fx.shot` sprite with a composable kit system. Read this cold — nothing here
 depends on chat history.
 
@@ -90,7 +90,7 @@ Matching the enemy's weakness = +25% damage, +50% status duration. Void never ma
   at a path point — never free 2D movement.
 
 **Stacking (independent channels)**
-- Speed: strongest slow wins, longest duration; floor 30% speed (boss 50%).
+- Speed: strongest slow wins; an equal-or-stronger slow refreshes to the longer duration, a weaker one never extends it; floor 30% speed (boss 50%).
 - DoT: same element refreshes; different elements coexist, max 2 per enemy (oldest out).
 - Displacement: repeat within 3s is 50% as strong; bosses 25%.
 - Stun/snare: 1s immunity after it ends.
@@ -172,9 +172,11 @@ flame/explosion sprite sheet (+1 asset; optional leaf sheet +1).
 1. **Done 2026-09-26** (results above) — Dev kit → Board / Misc: "FPS meter", "Stress effects: off/12/24", "Stress wave: +20 creeps now" (`src/play/dev-fx-stress.tsx`). Set real caps on device.
 2. Merge display tickers into one render tick. *(Deferred — not needed on the test phone; revisit on an older device.)*
 3. **Done 2026-09-26** — `src/play/kits.ts` (behaviors, elements incl. Void outside the cycle, colours, base ranges, 600ms floor, plain-tower kits), `kit` on every `heroes.json` row (validated by `heroes-data.ts`), Spark → `#FACC15`, `check:kits` pins it all to the roster table.
-4. Sim: status channels, targeting per behavior, weakness, **hit attribution** (each hit records its attacker's element — needed by the Off tier).
-5. FX layer: one renderer per behavior, element palette/rider on top, global cap, **Effects Quality setting (Full / Minimal / Off)**.
-6. Element range rings. 7. Fire sprite sheet. 8. Ultimates.
+4. **Done 2026-09-26** — `src/play/kit-combat.ts` (all numbers in `KIT_TUNING`): targeting per behavior, element riders, weakness (+25% / +50% duration), status channels (slow strongest-wins with 30%/50% floor, max 2 DoTs, stun immunity, pull diminishing returns), 600ms attack floor, **hit attribution** (`DefendStep.hits` / `dotHits`). Plain towers keep their own stats and gain their kit's targeting + rider; hero towers fight with their kit. Main waves 2–9 carry one tinted group each (`wave-tables.json` `tint`). The Avatar's own attack stays neutral.
+5. **Done 2026-09-26** — `src/play/fx-layer.tsx` (one renderer per behavior, element colour + line style, per-tier cap) and `src/play/fx-quality.ts` ("Effects: Full/Minimal/Off" under the board, saved on the device). Off = no shots/effects, element-coloured damage numbers. Creep status shows in the one existing puddle (stun Root, shred Void, DoT its element, slow the old chill) plus a thin ring in the creep's weakness colour.
+6. **Done 2026-09-26** — the selected tower/hero ring is its element colour at its real kit range (`boundBossRange`); Pull kits get a faint filled core.
+7. **Partly done** — fire is drawn as vector flame licks (`fx-layer.tsx` `Accent`). The planned flame/explosion sprite sheet (+1 asset) needs art: generating it with PixelLab spends emci's credits, so it waits on emci's ok.
+8. **Done 2026-09-26** — a hero tower's auto-skill is its ultimate: the kit at level 3 × 1.75 damage, plus a second element at half strength (`ULTIMATE_SECONDARY`: Tide→Void "Frosted Gravity", Void→Ember, Ember→Spark, Spark→Root, Root→Tide); Dot/Slow/Pull ultimates hit everything within 20 of the pad.
 
 ## Balance simulator
 

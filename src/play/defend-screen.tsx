@@ -43,6 +43,7 @@ import { usePlayDevUnlocked } from '@/play/dev-lock';
 import {
   AVATAR_RANGE,
   boundBossCapOnBoard,
+  boundBossRange,
   DEFEND_TICK_MS,
   HERO_TOWER_STATS,
   type DefendMap,
@@ -77,7 +78,7 @@ import {
 } from '@/play/defend';
 import { waveDefFor } from '@/play/director';
 import { avatarDef } from '@/play/avatars';
-import { allHeroes, heroName } from '@/play/heroes-data';
+import { allHeroes, heroById, heroName } from '@/play/heroes-data';
 import { PlayFrame } from '@/play/play-frame';
 import { HeroOwnSheet } from '@/play/hero-own-sheet';
 import { NeonLabel, NeonPill, NEON_ROW_LINE } from '@/play/neon-ui';
@@ -183,6 +184,10 @@ import {
   type StressFxLevel,
 } from '@/play/dev-fx-stress';
 import { sendPlayDevLog } from '@/play/dev-log';
+import { FxLayer, FX_LIFE_MS, FX_ULTIMATE_LIFE_MS, type FxEvent, type FxPoint } from '@/play/fx-layer';
+import { FX_CAP, FX_QUALITY_LABEL, nextFxQuality, setFxQuality, useFxQuality } from '@/play/fx-quality';
+import type { KitHit } from '@/play/kit-combat';
+import { ELEMENT_COLOR, TOWER_KITS } from '@/play/kits';
 
 /** Placeholder creep role tints (until per-role sprites land) — W1 only. */
 const CREEP_ROLE_COLOR: Record<CreepRole, string> = {
@@ -343,6 +348,9 @@ type Floater = {
   top: number;
   label: string;
   kill: boolean;
+  /** Attacking element's colour (EFFECTS_PLAN: numbers stay readable, and are
+   * the only feedback when Effects Quality is Off). Undefined = neutral. */
+  color?: string;
 };
 
 /** A per-tick hit the screen derived from puff HP deltas (never sent back). */
@@ -351,6 +359,7 @@ type HitEvent = {
   y: number;
   damage: number;
   kill: boolean;
+  color?: string;
 };
 
 /**
@@ -363,6 +372,7 @@ function diffPuffEvents(
   before: readonly Puff[],
   after: readonly Puff[],
   boardId: BoardId,
+  colorById?: ReadonlyMap<number, string>,
 ): HitEvent[] {
   const map = BOARD_MAPS[boardId];
   const byId = new Map(after.map((puff) => [puff.id, puff]));
@@ -372,11 +382,11 @@ function diffPuffEvents(
     if (!now) {
       // Killed — the last visible chunk of its HP is the killing blow.
       const pos = creepDrawPosition(old, map, creepLaneHalfFor(old));
-      events.push({ x: pos.x, y: pos.y, damage: Math.round(old.hp), kill: true });
+      events.push({ x: pos.x, y: pos.y, damage: Math.round(old.hp), kill: true, color: colorById?.get(old.id) });
     } else if (now.hp < old.hp) {
       const damage = old.hp - now.hp;
       const pos = creepDrawPosition(now, map, creepLaneHalfFor(now));
-      events.push({ x: pos.x, y: pos.y, damage: Math.round(damage), kill: false });
+      events.push({ x: pos.x, y: pos.y, damage: Math.round(damage), kill: false, color: colorById?.get(now.id) });
     }
   }
   return events;
@@ -829,6 +839,13 @@ export function DefendScreen({
   const [shots, setShots] = useState<Shot[]>([]);
   const shotsRef = useRef<Shot[]>([]);
   const shotSeq = useRef(0);
+  /** Kit attack effects (EFFECTS_PLAN step 5) — display only, like shots. */
+  const [fxEvents, setFxEvents] = useState<FxEvent[]>([]);
+  const fxRef = useRef<FxEvent[]>([]);
+  const fxSeq = useRef(0);
+  const fxQuality = useFxQuality();
+  const fxQualityRef = useRef(fxQuality);
+  fxQualityRef.current = fxQuality;
   /** Per-tower aim rotation (deg), keyed by tower id; kept between shots. */
   const towerFacingRef = useRef<Record<number, number>>({});
   /** Per-tower sticky E/W side profile (K1), keyed by tower id. Reused for the
@@ -1512,6 +1529,7 @@ export function DefendScreen({
       top: event.y * size - FLOATER_OFFSET_Y,
       label: formatHit(event.damage),
       kill: event.kill,
+      color: event.color,
     }));
     setFloaters((prev) => {
       const merged = [...prev, ...created];
@@ -1547,6 +1565,46 @@ export function DefendScreen({
     setShots(next);
   }, []);
 
+  /** Draw one kit hit (EFFECTS_PLAN step 5). A neutral attack (the plain
+   * Archer) keeps the old shot sprite; an elemental one becomes an effect.
+   * Oldest effects drop first past the Effects Quality cap. */
+  const spawnHitFx = useCallback(
+    (hit: KitHit, pos: ReadonlyMap<number, FxPoint>) => {
+      const primary = pos.get(hit.primaryId);
+      if (!primary) return;
+      if (hit.element == null && !hit.ultimate) {
+        spawnShot(hit.from.x, hit.from.y, primary.x, primary.y);
+        return;
+      }
+      const ids =
+        hit.behavior === 'chain'
+          ? hit.puffIds
+          : [hit.primaryId, ...hit.puffIds.filter((id) => id !== hit.primaryId && id !== hit.arcId)];
+      const points = ids.map((id) => pos.get(id)).filter((p): p is FxPoint => p != null);
+      const fx: FxEvent = {
+        id: ++fxSeq.current,
+        bornAt: Date.now(),
+        lifeMs: hit.ultimate ? FX_ULTIMATE_LIFE_MS : FX_LIFE_MS,
+        behavior: hit.behavior,
+        element: hit.element,
+        secondary: hit.secondary,
+        ultimate: hit.ultimate,
+        from: hit.from,
+        points,
+        arc: hit.arcId != null ? (pos.get(hit.arcId) ?? null) : null,
+        radius: hit.radius,
+        center: hit.centredOnSource ? hit.from : primary,
+        centredOnSource: hit.centredOnSource,
+      };
+      const cap = FX_CAP[fxQualityRef.current];
+      const merged = [...fxRef.current, fx];
+      const next = merged.length > cap ? merged.slice(merged.length - cap) : merged;
+      fxRef.current = next;
+      setFxEvents(next);
+    },
+    [spawnShot],
+  );
+
   // FX tick: advance shot projectiles toward their aim point and despawn on
   // reach (or after a short life). Runs faster than the 100ms sim tick so the
   // shots read as motion; touches nothing in the engine.
@@ -1554,6 +1612,14 @@ export function DefendScreen({
     if (phase !== 'running' || paused) return;
     const id = setInterval(() => {
       const list = shotsRef.current;
+      // Kit effects age out on the same fast tick (their shape is drawn from
+      // their age, so a re-render each tick is what animates them).
+      if (fxRef.current.length > 0) {
+        const nowFx = Date.now();
+        const liveFx = fxRef.current.filter((fx) => nowFx - fx.bornAt < fx.lifeMs);
+        fxRef.current = liveFx;
+        setFxEvents(liveFx);
+      }
       if (list.length === 0) return;
       // Shots ride the same clock as the sim, so 2x keeps them ahead of the
       // faster creeps instead of trailing them. Display only.
@@ -1733,7 +1799,6 @@ export function DefendScreen({
         const after = step.state.towers.find((t) => t.id === tower.id);
         const fired = after != null && after.cooldownMs > tower.cooldownMs + 1;
         if (fired) {
-          spawnShot(pad.x, pad.y, tx, ty);
           startTowerOnce('attack', tower.id, TOWER_KIT_ROLES[tower.kind]);
         }
         // K1b — the auto-skill cast: the engine reset `skillCooldownMs`, so a
@@ -1768,13 +1833,29 @@ export function DefendScreen({
         const after = step.state.boundBosses.find((b) => b.id === bb.id);
         const fired = after != null && after.cooldownMs > bb.cooldownMs + 1;
         if (fired) {
-          spawnShot(pad.x, pad.y, tx, ty);
+          // Hero towers draw from the engine's kit hits; the cycle boss has
+          // no kit, so it keeps the old shot sprite.
+          if (!isHeroBoundTower(bb.bossId) && fxQualityRef.current !== 'off') {
+            spawnShot(pad.x, pad.y, tx, ty);
+          }
           startTowerOnce('attack', bb.id, kitRole);
         }
         const skillCast = after != null && after.skillCooldownMs > bb.skillCooldownMs + 1;
         if (skillCast) {
           startTowerOnce('skill', bb.id, kitRole);
         }
+      }
+      // EFFECTS_PLAN step 5 — draw every kit hit the engine reported, from the
+      // same lane-clamped positions the creeps are drawn at (a creep killed
+      // this tick is only in the pre-step list). Effects Quality Off draws no
+      // shots or effects; the coloured damage numbers below still show.
+      const drawnPos = new Map<number, FxPoint>();
+      for (const p of [...current.puffs, ...step.state.puffs]) {
+        const pos = creepDrawPosition(p, mapNow, creepLaneHalfFor(p));
+        drawnPos.set(p.id, { x: pos.x * 100, y: pos.y * 100 });
+      }
+      if (fxQualityRef.current !== 'off') {
+        for (const hit of step.hits) spawnHitFx(hit, drawnPos);
       }
       // §9m boss warn: peek the remaining schedule and raise the banner ONCE, a
       // beat before the boss steps in (or the tick it lands, if the lead was
@@ -1792,7 +1873,18 @@ export function DefendScreen({
       }
       // Display-only floaters: any puff that lost HP this tick, or vanished
       // (killed), gets a short damage number near it. No engine changes.
-      const events = diffPuffEvents(prevPuffsRef.current, step.state.puffs, step.state.boardId);
+      const hitColor = new Map<number, string>();
+      for (const d of step.dotHits) if (d.element) hitColor.set(d.puffId, ELEMENT_COLOR[d.element]);
+      for (const hit of step.hits) {
+        if (!hit.element) continue;
+        for (const pid of hit.puffIds) hitColor.set(pid, ELEMENT_COLOR[hit.element]);
+      }
+      const events = diffPuffEvents(
+        prevPuffsRef.current,
+        step.state.puffs,
+        step.state.boardId,
+        hitColor,
+      );
       if (events.length > 0) spawnFloaters(events);
       // K2 death one-shots: the same vanished puffs, kept as corpses by the
       // board for a beat (the engine has already dropped them). Roles with no
@@ -1828,7 +1920,7 @@ export function DefendScreen({
       }
     }, DEFEND_TICK_MS);
     return () => clearInterval(id);
-  }, [phase, paused, winWave, spawnFloaters, spawnShot, startAvatarOnce, startTowerOnce]);
+  }, [phase, paused, winWave, spawnFloaters, spawnHitFx, spawnShot, startAvatarOnce, startTowerOnce]);
 
   // Run fail → play the Avatar's HURT clip once (art only; the lost overlay is
   // already showing). Catches the leak path and the dev "force leak" button.
@@ -1884,6 +1976,18 @@ export function DefendScreen({
     sim && selectedPad != null
       ? sim.boundBosses.find((bb) => bb.pad === selectedPad) ?? null
       : null;
+  /** Range-ring look (EFFECTS_PLAN step 6): the selected attacker's element
+   * colour (neutral / empty pad = accent); a Pull kit also gets a faint filled
+   * core so its short reach reads as a zone. */
+  const selectedKit = selectedTower
+    ? TOWER_KITS[selectedTower.kind]
+    : selectedBoundBoss
+      ? (heroById(selectedBoundBoss.bossId)?.kit ?? null)
+      : null;
+  const selectedRing = {
+    color: selectedKit?.element ? ELEMENT_COLOR[selectedKit.element] : theme.accent,
+    pull: selectedKit?.behavior === 'pull',
+  };
   /** Unlocked Bound Bosses (stars ≥ 1) the player can place — the cycle boss
    * (a `bound_bosses.json` def) AND any HERO bound as a tower (A6, `heroById`
    * resolves). A hero tower places FREE and draws its own idle/attack/skill
@@ -2522,14 +2626,13 @@ export function DefendScreen({
                     selectedTower
                       ? TOWER_DEFS[selectedTower.kind].range
                       : selectedBoundBoss
-                        ? isHeroBoundTower(selectedBoundBoss.bossId)
-                          ? HERO_TOWER_STATS.range
-                          : getBoundBossDef(selectedBoundBoss.bossId)?.range ?? 18
+                        ? boundBossRange(selectedBoundBoss)
                         : 18
                   }
-                  fill="none"
-                  stroke={theme.accent}
-                  strokeOpacity={0.5}
+                  fill={selectedRing.pull ? selectedRing.color : 'none'}
+                  fillOpacity={0.07}
+                  stroke={selectedRing.color}
+                  strokeOpacity={0.6}
                   strokeWidth={1}
                   strokeDasharray="2 2"
                 />
@@ -2707,6 +2810,19 @@ export function DefendScreen({
               {sim?.puffs.map((puff) => {
                 const pct = Math.max(0, Math.min(1, puff.hp / puff.maxHp));
                 const slowed = puff.slowMs > 0;
+                // One status puddle, no extra shapes (plan: tint the creep's
+                // existing ring): stun → Root, shred → Void, a DoT → its
+                // element, plain slow → the old chill tint.
+                const statusFill =
+                  (puff.stunMs ?? 0) > 0
+                    ? ELEMENT_COLOR.root
+                    : (puff.shredMs ?? 0) > 0
+                      ? ELEMENT_COLOR.void
+                      : puff.dots && puff.dots.length > 0
+                        ? ELEMENT_COLOR[puff.dots[puff.dots.length - 1].element]
+                        : slowed
+                          ? theme.accentTertiary
+                          : null;
                 // §19 board cast (skin roles): runners = fast unit, bosses =
                 // tanks/heavy by band, tanks = the heavy soak unit, normal
                 // puffs = the puff unit.
@@ -2825,14 +2941,17 @@ export function DefendScreen({
                         <Circle cx={x} cy={y} r={radius} fill={tintColor} />
                       )}
                     </G>
-                    {/* Slowed overlay — a translucent puddle under the sprite
-                     * while the creep is chilled (display only, no role ring). */}
+                    {/* Status puddle under the sprite (display only) + a thin
+                     * ring in the creep's weakness colour when it has one. */}
                     <Circle
                       cx={x}
                       cy={bodyCy}
                       r={radius}
-                      fill={slowed ? theme.accentTertiary : 'none'}
+                      fill={statusFill ?? 'none'}
                       fillOpacity={0.5}
+                      stroke={puff.tint ? TAG_COLOR[puff.tint] : 'none'}
+                      strokeWidth={0.6}
+                      strokeOpacity={0.9}
                     />
                     <Rect
                       x={x - barWidth / 2}
@@ -2880,6 +2999,8 @@ export function DefendScreen({
                   </G>
                 );
               })}
+              {/* EFFECTS_PLAN step 5 — kit attack effects (Full / Minimal). */}
+              <FxLayer events={fxEvents} now={Date.now()} quality={fxQuality} />
               {/* Dev kit only — synthetic FX stress (EFFECTS_PLAN step 1):
                   tower/boss pads → live creeps, display only. */}
               {stressFx > 0 ? (
@@ -2967,6 +3088,17 @@ export function DefendScreen({
               </ThemedText>
             </View>
           ) : null}
+          {/* Effects Quality (EFFECTS_PLAN step 5): Full → Minimal → Off. Off
+              keeps the element-coloured damage numbers. */}
+          <Pressable
+            onPress={() => setFxQuality(nextFxQuality(fxQuality))}
+            accessibilityRole="button"
+            accessibilityLabel={`Effects: ${FX_QUALITY_LABEL[fxQuality]}. Tap to change.`}
+            style={({ pressed }) => [styles.fxQualityRow, pressed && styles.pressed]}>
+            <ThemedText type="small" themeColor="textSecondary">
+              {`Effects: ${FX_QUALITY_LABEL[fxQuality]}`}
+            </ThemedText>
+          </Pressable>
           {/* Dev kit only — the FX stress controls sit right under the board so
               the FPS readout stays on screen while they're tapped (EFFECTS_PLAN
               step 1). Same actions as the Board / Misc rows. */}
@@ -4242,7 +4374,7 @@ function HitFloater({
         type="code"
         style={[
           styles.floater,
-          kill ? styles.floaterKill : { color: theme.text },
+          kill ? styles.floaterKill : { color: floater.color ?? theme.text },
           { left: floater.left, top: floater.top },
         ]}>
         {floater.label}
@@ -4254,7 +4386,7 @@ function HitFloater({
       pointerEvents="none"
       style={[
         styles.floater,
-        kill ? styles.floaterKill : { color: theme.text },
+        kill ? styles.floaterKill : { color: floater.color ?? theme.text },
         { left: floater.left, top: floater.top },
         animated,
       ]}>
@@ -4658,6 +4790,11 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   /** Gameplay SVG (path · pads · towers · enemies) — above the tiles. */
+  fxQualityRow: {
+    alignSelf: 'flex-end',
+    paddingVertical: Spacing.one,
+    paddingHorizontal: Spacing.two,
+  },
   devStrip: {
     flexDirection: 'row',
     gap: Spacing.one,
