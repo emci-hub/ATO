@@ -7,6 +7,7 @@
     "folder": "assets/play/skins/cast/heroes/archangel",
     "unlock": "starter_ticket",
     "skillId": "skill_archangel",
+    "kit": { "behavior": "burst", "element": "ember" },
     "face": "ew",
     "clips": {
       "idle": "Hover_Idle",
@@ -25,6 +26,7 @@
     "folder": "assets/play/skins/cast/heroes/aurex",
     "unlock": "free_farm",
     "skillId": "skill_aurex",
+    "kit": { "behavior": "splash", "element": "ember" },
     "face": "ew",
     "clips": {
       "idle": null,
@@ -43,6 +45,7 @@
     "folder": "assets/play/skins/cast/heroes/corvus",
     "unlock": "starter_ticket",
     "skillId": "black_death_ritual",
+    "kit": { "behavior": "slow", "element": "root" },
     "face": "ew",
     "clips": {
       "idle": "PLAGUE_IDLE",
@@ -61,6 +64,7 @@
     "folder": "assets/play/skins/cast/heroes/kitsune",
     "unlock": "free_farm",
     "skillId": "skill_kitsune",
+    "kit": { "behavior": "dot", "element": "ember" },
     "face": "ew",
     "clips": {
       "idle": "Breathing_Idle",
@@ -79,6 +83,7 @@
     "folder": "assets/play/skins/cast/heroes/oni",
     "unlock": "starter_ticket",
     "skillId": "skill_oni",
+    "kit": { "behavior": "burst", "element": "spark" },
     "face": "ew",
     "clips": {
       "idle": "Breathing_Idle",
@@ -97,6 +102,7 @@
     "folder": "assets/play/skins/cast/heroes/cyber-shinobi",
     "unlock": "free_farm",
     "skillId": "skill_cyber_shinobi",
+    "kit": { "behavior": "chain", "element": "spark" },
     "face": "ew",
     "clips": {
       "idle": "Idle_11_frames",
@@ -115,6 +121,7 @@
     "folder": "assets/play/skins/cast/heroes/elowen",
     "unlock": "free_farm",
     "skillId": "skill_elowen",
+    "kit": { "behavior": "slow", "element": "tide" },
     "face": "ew",
     "clips": {
       "idle": "Forest_Idle",
@@ -133,6 +140,7 @@
     "folder": "assets/play/skins/cast/heroes/kael",
     "unlock": "free_farm",
     "skillId": "skill_kael",
+    "kit": { "behavior": "slow", "element": "spark" },
     "face": "ew",
     "clips": {
       "idle": "Idle",
@@ -151,6 +159,7 @@
     "folder": "assets/play/skins/cast/heroes/maldrath",
     "unlock": "free_farm",
     "skillId": "skill_maldrath",
+    "kit": { "behavior": "dot", "element": "void" },
     "face": "ew",
     "clips": {
       "idle": "DARK_IDLE",
@@ -169,6 +178,7 @@
     "folder": "assets/play/skins/cast/heroes/morwen",
     "unlock": "free_farm",
     "skillId": "skill_morwen",
+    "kit": { "behavior": "pull", "element": "tide" },
     "face": "ew",
     "clips": {
       "idle": "ARCANE_IDLE",
@@ -187,6 +197,7 @@
     "folder": "assets/play/skins/cast/heroes/neon-viper",
     "unlock": "free_farm",
     "skillId": "skill_neon_viper",
+    "kit": { "behavior": "dot", "element": "root" },
     "face": "ew",
     "clips": {
       "idle": "Breathing_Idle",
@@ -205,6 +216,7 @@
     "folder": "assets/play/skins/cast/heroes/raven",
     "unlock": "free_farm",
     "skillId": "skill_raven",
+    "kit": { "behavior": "burst", "element": "void" },
     "face": "ew",
     "clips": {
       "idle": "Idle_11_frames",
@@ -223,6 +235,7 @@
     "folder": "assets/play/skins/cast/heroes/sak",
     "unlock": "free_farm",
     "skillId": "skill_sak",
+    "kit": { "behavior": "splash", "element": "root" },
     "face": "ew",
     "clips": {
       "idle": "Royal_Idle",
@@ -241,6 +254,7 @@
     "folder": "assets/play/skins/cast/heroes/frost-lich",
     "unlock": "free_farm",
     "skillId": "skill_frost_lich",
+    "kit": { "behavior": "splash", "element": "tide" },
     "face": "ew",
     "clips": {
       "idle": "Hover_Idle",
@@ -259,6 +273,7 @@
     "folder": "assets/play/skins/cast/heroes/velkhar",
     "unlock": "free_farm",
     "skillId": "skill_velkhar",
+    "kit": { "behavior": "chain", "element": "void" },
     "face": "ew",
     "clips": {
       "idle": "DARK_IDLE",
@@ -277,6 +292,7 @@
     "folder": "assets/play/skins/cast/heroes/void-raven",
     "unlock": "free_farm",
     "skillId": "skill_void_raven",
+    "kit": { "behavior": "pull", "element": "void" },
     "face": "ew",
     "clips": {
       "idle": "Idle_11_frames",

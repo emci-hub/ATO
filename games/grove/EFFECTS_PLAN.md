@@ -1,6 +1,6 @@
 # Attack effects system — plan of record
 
-Status: **design approved by emci 2026-09-24, nothing built yet.** Replaces the single
+Status: **design approved by emci 2026-09-24; steps 1 and 3 done (step 2 deferred).** Replaces the single
 Kenney `fx.shot` sprite with a composable kit system. Read this cold — nothing here
 depends on chat history.
 
@@ -144,6 +144,20 @@ Planned caps (now confirmed on the phone above):
   new elements.
 - Biggest lever: merge the ~5 display `setInterval`s into one render tick.
 
+## Effects Quality setting (emci, 2026-09-26)
+
+A player setting with three tiers, built in step 5 alongside the FX layer.
+
+| Tier | What draws |
+|---|---|
+| **Full** | Everything in this plan: glow strokes, particles, impacts, charge-ups. Global cap 12 effects. |
+| **Minimal** | Core shape only — one stroke per beam/chain, one impact ring, no glow layers, no particles. Cap 6. |
+| **Off** | **No beams, particles or impacts — but never zero feedback.** Every hit still shows the existing floating damage number (`HitFloater` in `defend-screen.tsx`, max 8 on screen), **coloured by the attacking element**: Ember orange, Tide blue, Spark yellow, Void violet, Root green (`ELEMENT_COLOR` in `src/play/kits.ts`); neutral attacks (plain Archer, Avatar) keep today's colour. The standard lowest-effects pattern: numbers are cheap to draw and stay readable. |
+
+Dependency: floaters are derived today from creep HP drops, so they don't know
+who hit. Step 4 adds hit attribution (each hit records its attacker's element) —
+that is what lets Off colour the number. Default tier: Full.
+
 ## Visual technique (SVG)
 
 Glow = 3 stacked strokes (wide faint, mid, thin white core) — no blur filters.
@@ -157,7 +171,15 @@ flame/explosion sprite sheet (+1 asset; optional leaf sheet +1).
 
 1. **Done 2026-09-26** (results above) — Dev kit → Board / Misc: "FPS meter", "Stress effects: off/12/24", "Stress wave: +20 creeps now" (`src/play/dev-fx-stress.tsx`). Set real caps on device.
 2. Merge display tickers into one render tick. *(Deferred — not needed on the test phone; revisit on an older device.)*
-3. Kit data (`behavior` + `element` per hero/tower in JSON) + Void tag + Spark recolour.
-4. Sim: status channels, targeting per behavior, weakness.
-5. FX layer: one renderer per behavior, element palette/rider on top, global cap.
+3. **Done 2026-09-26** — `src/play/kits.ts` (behaviors, elements incl. Void outside the cycle, colours, base ranges, 600ms floor, plain-tower kits), `kit` on every `heroes.json` row (validated by `heroes-data.ts`), Spark → `#FACC15`, `check:kits` pins it all to the roster table.
+4. Sim: status channels, targeting per behavior, weakness, **hit attribution** (each hit records its attacker's element — needed by the Off tier).
+5. FX layer: one renderer per behavior, element palette/rider on top, global cap, **Effects Quality setting (Full / Minimal / Off)**.
 6. Element range rings. 7. Fire sprite sheet. 8. Ultimates.
+
+## Balance simulator
+
+`npm run sim:balance` runs the real Defend engine headless (no phone) over every
+wave × 6 strategies × cycles 0/2/5 and writes `games/grove/BALANCE_REPORT.md`
+(~45s, deterministic). Re-run it after any combat change; once step 4 wires
+kits into combat it compares heroes too (today all hero towers share one stat
+block).

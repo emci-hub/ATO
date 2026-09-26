@@ -35,12 +35,15 @@ export const TAG_LABEL: Record<TypeTag, string> = {
   spark: 'Spark',
 };
 
-/** Tint color for bosses + preview chips (reads on light and dark boards). */
+/** Tint color for bosses + preview chips (reads on light and dark boards).
+ * Spark is electric yellow since 2026-09-24 (EFFECTS_PLAN decision 2) so the
+ * violet is free for Void, the 5th attack element (`kits.ts`, outside this
+ * cycle). */
 export const TAG_COLOR: Record<TypeTag, string> = {
   tide: '#38BDF8',
   ember: '#FB923C',
   root: '#34D399',
-  spark: '#A78BFA',
+  spark: '#FACC15',
 };
 
 /** MaterialCommunityIcons name per tag (preview + chart). Narrowed with

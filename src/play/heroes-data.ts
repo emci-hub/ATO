@@ -66,6 +66,15 @@
  *   4. Run `npx tsx scripts/check-heroes.ts` — it holds the row to the registry,
  *      both facings, the frame counts on disk, and the attack/skill floor.
  */
+import {
+  BEHAVIORS,
+  ELEMENTS,
+  isBehavior,
+  isElement,
+  type Behavior,
+  type Element,
+} from '@/play/kits';
+
 import rawHeroes from './data/heroes.json';
 
 /** The clip slots a Hero's sprite set can author. `walk` is the locomotion
@@ -123,9 +132,15 @@ export type HeroDef = {
   unlock: HeroUnlock;
   /** The skill kit that ships WITH this Hero's sprites (no mix-and-match). */
   skillId: string;
+  /** Attack kit — one behavior + one element (EFFECTS_PLAN step 3). Every hero
+   * carries an element; only the plain Archer tower is neutral. */
+  kit: HeroKit;
   face: HeroFace;
   clips: HeroClips;
 };
+
+/** A hero's kit: like `Kit`, but a hero always has an element. */
+export type HeroKit = { behavior: Behavior; element: Element };
 
 /** A hero folder must live under the Play art root — clip names are resolved
  * as registry keys against `<folder>/animations/<clip>/<facing>/frame_###`. */
@@ -144,6 +159,7 @@ type RawHeroRow = {
   folder: string;
   unlock: HeroUnlock;
   skillId: string;
+  kit: HeroKit;
   face: HeroFace;
   clips?: Partial<Record<HeroClip, string | null>>;
 };
@@ -192,6 +208,7 @@ function normalizeHero(row: RawHeroRow): HeroDef {
     folder: row.folder,
     unlock: row.unlock,
     skillId: row.skillId,
+    kit: { behavior: row.kit.behavior, element: row.kit.element },
     face: row.face,
     clips,
   };
@@ -200,7 +217,7 @@ function normalizeHero(row: RawHeroRow): HeroDef {
 /** Shape + contract problems, one readable line each (empty = valid).
  *
  * Required per the A1 schema: unique `id`s, plus `role` / `folder` / `unlock` /
- * `skillId` / `face` on every row. `clips` is optional and may be partial —
+ * `skillId` / `kit` / `face` on every row. `clips` is optional and may be partial —
  * only a present clip is checked (a non-empty folder name or `null`). */
 function validateHeroes(raw: unknown): string[] {
   const problems: string[] = [];
@@ -244,6 +261,16 @@ function validateHeroes(raw: unknown): string[] {
     }
     if (typeof row.skillId !== 'string' || row.skillId.length === 0) {
       problems.push(`${at}: missing skillId`);
+    }
+    if (!isRecord(row.kit)) {
+      problems.push(`${at}: missing kit { behavior, element }`);
+    } else {
+      if (!isBehavior(row.kit.behavior)) {
+        problems.push(`${at}: kit.behavior must be one of ${BEHAVIORS.join('/')}`);
+      }
+      if (!isElement(row.kit.element)) {
+        problems.push(`${at}: kit.element must be one of ${ELEMENTS.join('/')}`);
+      }
     }
     if (!HERO_FACES.includes(row.face as HeroFace)) {
       problems.push(`${at}: face must be one of ${HERO_FACES.join('/')}`);
