@@ -4,25 +4,28 @@
  *
  * Pure read/view of `view`. The bag is stacks (`{ id, count, star }` — each
  * row one distinct id+star tier). Interactions delegate up through `play.tsx`
- * to the shared playStore:
- * - tap a Worn slot → unequip (the copy returns to its matching-tier stack);
- * - tap a bag row → equip one copy of that tier into its slot (Power equips
- *   into an empty slot are refused over the 80-item soft cap);
- * - Looks carry an inline "Sell · +3" that sells ONE copy from the stack.
+ * to the shared playStore.
  *
- * Risky Merge: Power rows that can merge (a Worn power with a bagged spare of
- * the same tier, or a bag stack holding ≥ 2 of its tier) offer a "Merge" chip.
- * Tapping it opens a paced confirm panel showing the honest success % for
- * ★n → ★n+1 (70/55/40/28/18) with the same searching-beat + cooldown rhythm
- * Dive uses (`usePacedAction`, "Skip Dive delays" respected). Fail spends the
- * fuel only — the main is never destroyed. No Defend. No Supabase.
+ * Every item row works the same way (2026-09-27 redesign, emci):
+ * - tap the row → it EXPANDS in place: rarity / kind / slot, its bonuses now
+ *   and at the next star, what a merge costs, and its actions (Equip, Take
+ *   off, Sell). There is no separate detail screen.
+ * - the row's own "Merge · 55%" button merges right there. A miss permanently
+ *   spends one fuel copy (the main is never lost), so it takes two taps: the
+ *   first arms it ("Tap again · 55%", lapses after a few seconds), the second
+ *   rolls with Dive's paced beat. The result — a green glow + "✓ Merged ★3",
+ *   or a red flash + shake + "✗ Missed · spare spent" — plays on the row
+ *   itself (`merge-row.tsx`). There is no detached confirm card any more.
+ *
+ * Mergeable: a Worn power with a bagged spare of the same tier, or a bag
+ * stack holding ≥ 2 of its tier; ★n → ★n+1 odds 70/55/40/28/18. No Defend.
+ * No Supabase.
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { useState } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -34,8 +37,22 @@ import {
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { usePacedAction } from '@/play/action-pacing';
 import { itemArtSource } from '@/play/art';
+import {
+  bagRowKey,
+  mergeButtonA11y,
+  mergeButtonLabel,
+  mergeFeedbackLabel,
+  wornRowKey,
+  type MergeButtonState,
+  type MergeRowFeedback,
+} from '@/play/merge-inline';
+import {
+  MERGE_MISS_COLOR,
+  MERGE_OK_COLOR,
+  MergeFeedbackRow,
+  useInlineMerge,
+} from '@/play/merge-row';
 import { allAvatarDefs, avatarDef } from '@/play/avatars';
 import {
   allHeroes,
@@ -181,8 +198,9 @@ export function DressScreen({
 }) {
   const theme = useTheme();
   const [filter, setFilter] = useState<BagFilter>('all');
-  const [mergeTarget, setMergeTarget] = useState<MergeTarget | null>(null);
-  const { act, busy, showSplash } = usePacedAction(skipDelays);
+  /** The one expanded row (a `wornRowKey` / `bagRowKey`), or null. */
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
+  const merge = useInlineMerge(skipDelays, onMerge);
 
   const totalOwned = view.totalOwned;
   const overCap = totalOwned >= INVENTORY_SOFT_CAP;
@@ -190,10 +208,8 @@ export function DressScreen({
   const anyBonuses = activeBonuses.length > 0;
   const stacks = visibleStacks(view.inventory, filter);
 
-  const handleMergePress = (target: MergeTarget) => {
-    if (busy) return;
-    setMergeTarget(target);
-  };
+  const toggleRow = (key: string) =>
+    setExpandedKey((current) => (current === key ? null : key));
 
   return (
     <>
@@ -223,14 +239,21 @@ export function DressScreen({
         <NeonLabel>Worn</NeonLabel>
         {SLOT_ORDER.map((slot) => {
           const ref = view.equipped[slot] ?? null;
+          const key = wornRowKey(slot, ref?.id ?? null);
           return (
             <SlotRow
               key={slot}
               slot={slot}
               ref={ref}
               fuelInBag={ref ? hasFuel(view, ref) : false}
+              expanded={expandedKey === key}
+              onToggle={() => toggleRow(key)}
+              mergeState={merge.buttonState(key)}
+              mergeLocked={merge.busy}
+              feedback={merge.feedbackFor(key)}
+              reduceMotion={reduceMotion}
               onUnequip={onUnequip}
-              onMerge={handleMergePress}
+              onMerge={(target) => merge.press(key, target)}
             />
           );
         })}
@@ -274,27 +297,6 @@ export function DressScreen({
         )}
       </NeonPanel>
 
-      {/* Merge confirm block sits DIRECTLY above the Bag — the fuel it
-       * consumes comes from bag spares, so the panel anchors to that card. */}
-      {mergeTarget ? (
-        <MergePanel
-          target={mergeTarget}
-          busy={busy}
-          showSplash={showSplash}
-          reduceMotion={reduceMotion}
-          onMerge={() =>
-            act('Merging…', async () => {
-              const outcome = await onMerge(mergeTarget);
-              if (outcome) setMergeTarget(null); // resolved → back to the list
-              return outcome != null;
-            })
-          }
-          onDone={() => {
-            if (!busy) setMergeTarget(null);
-          }}
-        />
-      ) : null}
-
       <NeonPanel>
         <View style={styles.statRow}>
           <NeonLabel>Bag</NeonLabel>
@@ -332,14 +334,21 @@ export function DressScreen({
             const wornRef = def ? view.equipped[def.core.slot] : undefined;
             const sameTierWorn =
               wornRef != null && wornRef.id === stack.id && wornRef.star === stack.star;
+            const key = bagRowKey(stack.id, stack.star);
             return (
               <StackRow
-                key={`${stack.id}@${stack.star}`}
+                key={key}
                 stack={stack}
                 sameTierWorn={sameTierWorn}
+                expanded={expandedKey === key}
+                onToggle={() => toggleRow(key)}
+                mergeState={merge.buttonState(key)}
+                mergeLocked={merge.busy}
+                feedback={merge.feedbackFor(key)}
+                reduceMotion={reduceMotion}
                 onEquip={onEquip}
                 onSell={onSell}
-                onMerge={handleMergePress}
+                onMerge={(target) => merge.press(key, target)}
               />
             );
           })
@@ -353,75 +362,6 @@ export function DressScreen({
 function hasFuel(view: PlayView, ref: ItemRef): boolean {
   return view.inventory.some(
     (stack) => stack.id === ref.id && stack.star === ref.star && stack.count >= 1,
-  );
-}
-
-/**
- * Merge confirm panel — Dive feel: shows the main, its honest success % for
- * ★n → ★n+1, and a paced Merge button (beat → resolve → cooldown). On resolve
- * the caller (play.tsx) toasts the result and this panel clears via `onDone`.
- */
-function MergePanel({
-  target,
-  busy,
-  showSplash,
-  reduceMotion,
-  onMerge,
-  onDone,
-}: {
-  target: MergeTarget;
-  busy: boolean;
-  showSplash: boolean;
-  reduceMotion: boolean;
-  onMerge: () => void;
-  onDone: () => void;
-}) {
-  const theme = useTheme();
-  const def = getItemDef(target.id);
-  const pct = mergeSuccessPct(target.star);
-  const fromLabel = starLabel(target.star);
-  const toLabel = starLabel(target.star + 1);
-  if (!def || pct == null) return null; // nothing mergeable anymore
-  return (
-    <NeonPanel>
-      {showSplash ? (
-        <View style={styles.splashRow}>
-          {!reduceMotion ? <ActivityIndicator size="small" color={theme.accent} /> : null}
-          <ThemedText type="smallBold">Merging…</ThemedText>
-        </View>
-      ) : (
-        <>
-          <View style={styles.statRow}>
-            <ThemedText type="smallBold">
-              Merge {def.core.name} {fromLabel} → {toLabel}
-            </ThemedText>
-            <ThemedText type="subheading" themeColor="emphasis">
-              {pct}%
-            </ThemedText>
-          </View>
-          <ThemedText type="small" themeColor="textSecondary">
-            One {def.core.name} {fromLabel || 'spare'} is spent as fuel — a higher
-            star scales its bonuses. A miss keeps your {target.main === 'worn' ? 'worn' : ''}{' '}
-            {def.core.name} and only costs the fuel.
-          </ThemedText>
-          <View style={styles.buttonRow}>
-            <NeonButton
-              label="Cancel"
-              onPress={onDone}
-              disabled={busy}
-              variant="secondary"
-              style={styles.mergeButtonCancel}
-            />
-            <NeonButton
-              label={`Merge · ${pct}%`}
-              onPress={onMerge}
-              disabled={busy}
-              style={styles.mergeButtonConfirm}
-            />
-          </View>
-        </>
-      )}
-    </NeonPanel>
   );
 }
 
@@ -457,100 +397,135 @@ function starLabel(star: number): string {
   return star > 0 ? `★${star}` : '';
 }
 
-/** One Worn slot: label + equipped item. Tap to take off; Merge when fuel. */
+/** Props every item row shares: expand-in-place + the inline merge flow. */
+type RowMergeProps = {
+  expanded: boolean;
+  onToggle: () => void;
+  mergeState: MergeButtonState;
+  /** True while any row's roll or its cooldown runs — every Merge is locked. */
+  mergeLocked: boolean;
+  feedback: MergeRowFeedback | null;
+  reduceMotion: boolean;
+  onMerge: (target: MergeTarget) => void;
+};
+
+/** One Worn slot. Tap to expand (details + Take off); Merge when a spare of
+ * the same tier is in the bag. */
 function SlotRow({
   slot,
   ref,
   fuelInBag,
+  expanded,
+  onToggle,
+  mergeState,
+  mergeLocked,
+  feedback,
+  reduceMotion,
   onUnequip,
   onMerge,
-}: {
+}: RowMergeProps & {
   slot: ItemSlot;
   ref: ItemRef | null;
   fuelInBag: boolean;
   onUnequip: (slot: ItemSlot) => void;
-  onMerge: (target: MergeTarget) => void;
 }) {
   const def = ref ? getItemDef(ref.id) : undefined;
-  const canMerge =
-    !!ref &&
-    !!def &&
-    def.core.kind === 'power' &&
-    fuelInBag &&
-    mergeSuccessPct(ref.star) != null;
+  const pct = ref ? mergeSuccessPct(ref.star) : null;
+  const canMerge = !!ref && !!def && def.core.kind === 'power' && fuelInBag && pct != null;
   return (
-    <View style={styles.slotRow}>
-      <Pressable
-        disabled={!def}
-        onPress={() => def && onUnequip(slot)}
-        accessibilityRole="button"
-        accessibilityState={{ disabled: !def }}
-        style={({ pressed }) => [styles.slotMain, pressed && def && styles.pressed]}>
-        <ItemIcon art={def?.core.art} slot={slot} />
-        <View style={styles.slotText}>
-          <ThemedText type="small" themeColor="textSecondary">
-            {SLOT_LABELS[slot]}
-          </ThemedText>
-          {def && ref ? (
-            <View style={styles.titleLine}>
-              <ThemedText type="smallBold">
-                {def.core.name}
-                {starLabel(ref.star) ? ` ${starLabel(ref.star)}` : ''}
-              </ThemedText>
-            </View>
-          ) : (
+    <MergeFeedbackRow feedback={feedback} reduceMotion={reduceMotion} style={styles.itemRow}>
+      <View style={styles.itemRowTop}>
+        <Pressable
+          disabled={!def}
+          onPress={onToggle}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !def, expanded }}
+          accessibilityLabel={
+            def ? `${def.core.name}, ${SLOT_LABELS[slot]}. ${expanded ? 'Hide' : 'Show'} details` : undefined
+          }
+          style={({ pressed }) => [styles.itemMain, pressed && def && styles.pressed]}>
+          <ItemIcon art={def?.core.art} slot={slot} />
+          <View style={styles.itemText}>
             <ThemedText type="small" themeColor="textSecondary">
-              Empty
+              {SLOT_LABELS[slot]}
             </ThemedText>
-          )}
-          {def ? (
-            <ThemedText type="code" themeColor="textSecondary">
-              {describeItem(def, ref?.star ?? 0)}
-            </ThemedText>
-          ) : null}
-        </View>
-      </Pressable>
-      {canMerge && ref && def ? (
-        <NeonButton
-          label={`Merge · ${mergeSuccessPct(ref.star)}%`}
-          onPress={() => onMerge({ id: ref.id, star: ref.star, main: 'worn' })}
-          variant="danger"
-          accessibilityLabel={`Merge ${def.core.name}`}
-          style={styles.rowAction}
-        />
+            {def && ref ? (
+              <View style={styles.itemTitleLine}>
+                <ThemedText type="smallBold">
+                  {def.core.name}
+                  {starLabel(ref.star) ? ` ${starLabel(ref.star)}` : ''}
+                </ThemedText>
+                {feedback ? <FeedbackPill feedback={feedback} /> : null}
+              </View>
+            ) : (
+              <ThemedText type="small" themeColor="textSecondary">
+                Empty
+              </ThemedText>
+            )}
+            {def && ref ? (
+              <ThemedText type="code" themeColor="textSecondary">
+                {describeItem(def, ref.star)}
+              </ThemedText>
+            ) : null}
+          </View>
+          {def ? <RowChevron expanded={expanded} /> : null}
+        </Pressable>
+        {canMerge && ref && def && pct != null ? (
+          <InlineMergeButton
+            state={mergeState}
+            locked={mergeLocked}
+            pct={pct}
+            name={def.core.name}
+            onPress={() => onMerge({ id: ref.id, star: ref.star, main: 'worn' })}
+          />
+        ) : null}
+      </View>
+      {expanded && def && ref ? (
+        <ItemDetails
+          def={def}
+          star={ref.star}
+          mergeNote={
+            canMerge
+              ? 'Merge spends one matching spare from your bag. A miss keeps this item.'
+              : null
+          }>
+          <NeonButton
+            label="Take off"
+            onPress={() => onUnequip(slot)}
+            variant="secondary"
+            accessibilityLabel={`Take off ${def.core.name}`}
+            style={styles.detailAction}
+          />
+        </ItemDetails>
       ) : null}
-      {def && ref ? (
-        <NeonButton
-          label="Take off"
-          onPress={() => onUnequip(slot)}
-          variant="secondary"
-          accessibilityLabel={`Take off ${def.core.name}`}
-          style={styles.rowAction}
-        />
-      ) : null}
-    </View>
+    </MergeFeedbackRow>
   );
 }
 
-/** One bag stack. Tap the row to equip one copy of its tier — unless that
- * exact tier is ALREADY worn (spare / merge fuel). Looks sell one at a time. */
+/** One bag stack. Tap to expand (details + Equip / Sell); Merge when the stack
+ * holds ≥ 2 of its tier. */
 function StackRow({
   stack,
   sameTierWorn,
+  expanded,
+  onToggle,
+  mergeState,
+  mergeLocked,
+  feedback,
+  reduceMotion,
   onEquip,
   onSell,
   onMerge,
-}: {
+}: RowMergeProps & {
   stack: ItemStack;
   sameTierWorn: boolean;
   onEquip: (itemId: string, star: number) => void;
   onSell: (itemId: string, star: number) => void;
-  onMerge: (target: MergeTarget) => void;
 }) {
   const def = getItemDef(stack.id);
   if (!def) {
     return (
-      <View style={styles.stackRow}>
+      <View style={styles.itemRow}>
         <ThemedText type="smallBold">
           Unknown item ×{stack.count}
           {starLabel(stack.star)}
@@ -559,60 +534,175 @@ function StackRow({
     );
   }
   const sellable = def.core.kind === 'look';
-  const isPower = def.core.kind === 'power';
+  const pct = mergeSuccessPct(stack.star);
   // A power stack with ≥ 2 of its tier can merge (one main + one fuel).
-  const canMergeAsBagMain = isPower && stack.count >= 2 && mergeSuccessPct(stack.star) != null;
-  const mergePct = mergeSuccessPct(stack.star);
+  const canMerge = def.core.kind === 'power' && stack.count >= 2 && pct != null;
   const star = starLabel(stack.star);
 
-  const icon = <ItemIcon art={def.core.art} slot={def.core.slot} />;
-  const body = (
-    <View style={styles.stackText}>
-      <View style={styles.stackTitleLine}>
-        <ThemedText type="smallBold">
-          {def.core.name}
-          {star ? ` ${star}` : ''}
-        </ThemedText>
-        {stack.count > 1 ? <NeonPill label={`×${stack.count}`} tone="emphasis" /> : null}
-        {sameTierWorn ? <NeonPill label="Spare" /> : null}
-      </View>
-      <ThemedText type="code" themeColor="textSecondary">
-        {describeItem(def, stack.star)}
-      </ThemedText>
-    </View>
-  );
-
   return (
-    <View style={styles.stackRow}>
-      {sameTierWorn ? (
-        <View style={styles.stackMain}>{icon}{body}</View>
-      ) : (
+    <MergeFeedbackRow feedback={feedback} reduceMotion={reduceMotion} style={styles.itemRow}>
+      <View style={styles.itemRowTop}>
         <Pressable
-          onPress={() => onEquip(stack.id, stack.star)}
+          onPress={onToggle}
           accessibilityRole="button"
-          accessibilityLabel={`Equip ${def.core.name}${star ? ` ${star}` : ''}`}
-          style={({ pressed }) => [styles.stackMain, pressed && styles.pressed]}>
-          {icon}{body}
+          accessibilityState={{ expanded }}
+          accessibilityLabel={`${def.core.name}${star ? ` ${star}` : ''}, ${stack.count} held. ${
+            expanded ? 'Hide' : 'Show'
+          } details`}
+          style={({ pressed }) => [styles.itemMain, pressed && styles.pressed]}>
+          <ItemIcon art={def.core.art} slot={def.core.slot} />
+          <View style={styles.itemText}>
+            <View style={styles.itemTitleLine}>
+              <ThemedText type="smallBold">
+                {def.core.name}
+                {star ? ` ${star}` : ''}
+              </ThemedText>
+              {stack.count > 1 ? <NeonPill label={`×${stack.count}`} tone="emphasis" /> : null}
+              {sameTierWorn ? <NeonPill label="Spare" /> : null}
+              {feedback ? <FeedbackPill feedback={feedback} /> : null}
+            </View>
+            <ThemedText type="code" themeColor="textSecondary">
+              {describeItem(def, stack.star)}
+            </ThemedText>
+          </View>
+          <RowChevron expanded={expanded} />
         </Pressable>
+        {canMerge && pct != null ? (
+          <InlineMergeButton
+            state={mergeState}
+            locked={mergeLocked}
+            pct={pct}
+            name={def.core.name}
+            onPress={() => onMerge({ id: stack.id, star: stack.star, main: 'bag' })}
+          />
+        ) : null}
+      </View>
+      {expanded ? (
+        <ItemDetails
+          def={def}
+          star={stack.star}
+          mergeNote={
+            canMerge ? 'Merge spends one of these as fuel. A miss keeps the rest.' : null
+          }>
+          {sameTierWorn ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              You&apos;re already wearing this tier — these are spares and merge fuel.
+            </ThemedText>
+          ) : (
+            <NeonButton
+              label="Equip"
+              onPress={() => onEquip(stack.id, stack.star)}
+              accessibilityLabel={`Equip ${def.core.name}${star ? ` ${star}` : ''}`}
+              style={styles.detailAction}
+            />
+          )}
+          {sellable ? (
+            <NeonButton
+              label={`Sell one · +${LOOK_SELL_TOKENS}`}
+              onPress={() => onSell(stack.id, stack.star)}
+              variant="secondary"
+              accessibilityLabel={`Sell one ${def.core.name}`}
+              style={styles.detailAction}
+            />
+          ) : null}
+        </ItemDetails>
+      ) : null}
+    </MergeFeedbackRow>
+  );
+}
+
+/** The row's own Merge button: two taps (arm, then roll), odds always on it. */
+function InlineMergeButton({
+  state,
+  locked,
+  pct,
+  name,
+  onPress,
+}: {
+  state: MergeButtonState;
+  locked: boolean;
+  pct: number;
+  name: string;
+  onPress: () => void;
+}) {
+  return (
+    <NeonButton
+      label={mergeButtonLabel(state, pct)}
+      onPress={onPress}
+      disabled={locked || state === 'rolling'}
+      variant={state === 'armed' ? 'primary' : 'danger'}
+      accessibilityLabel={mergeButtonA11y(state, name, pct)}
+      style={styles.rowAction}
+    />
+  );
+}
+
+/** "✓ Merged ★3" / "✗ Missed · spare spent", pinned to the row that changed. */
+function FeedbackPill({ feedback }: { feedback: MergeRowFeedback }) {
+  return (
+    <ThemedText
+      type="code"
+      accessibilityLiveRegion="polite"
+      style={{ color: feedback.success ? MERGE_OK_COLOR : MERGE_MISS_COLOR }}>
+      {mergeFeedbackLabel(feedback)}
+    </ThemedText>
+  );
+}
+
+function RowChevron({ expanded }: { expanded: boolean }) {
+  return (
+    <MaterialCommunityIcons
+      name={expanded ? 'chevron-up' : 'chevron-down'}
+      size={18}
+      color={NEON.textMuted}
+    />
+  );
+}
+
+/** The expanded half of a row: what the item is, what it does now and at the
+ * next star, what merging costs, then the row's actions. */
+function ItemDetails({
+  def,
+  star,
+  mergeNote,
+  children,
+}: {
+  def: ItemDef;
+  star: number;
+  mergeNote: string | null;
+  children: ReactNode;
+}) {
+  const now = formatItemStats(def, star);
+  const next = mergeSuccessPct(star) != null ? formatItemStats(def, star + 1) : null;
+  return (
+    <View style={styles.details}>
+      <ThemedText type="code" themeColor="textSecondary">
+        {SLOT_LABELS[def.core.slot]} slot
+      </ThemedText>
+      {def.core.kind === 'look' ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          Looks are for the eye — no bonuses.
+        </ThemedText>
+      ) : (
+        <>
+          <ThemedText type="small">
+            <ThemedText type="smallBold">Now{starLabel(star) ? ` ${starLabel(star)}` : ''}: </ThemedText>
+            {now ?? 'no bonuses'}
+          </ThemedText>
+          {next ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              <ThemedText type="smallBold">At ★{star + 1}: </ThemedText>
+              {next}
+            </ThemedText>
+          ) : null}
+        </>
       )}
-      {canMergeAsBagMain ? (
-        <NeonButton
-          label={mergePct != null ? `Merge · ${mergePct}%` : 'Merge'}
-          onPress={() => onMerge({ id: stack.id, star: stack.star, main: 'bag' })}
-          variant="danger"
-          accessibilityLabel={`Merge ${def.core.name}`}
-          style={styles.rowAction}
-        />
+      {mergeNote ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {mergeNote}
+        </ThemedText>
       ) : null}
-      {sellable ? (
-        <NeonButton
-          label={`Sell +${LOOK_SELL_TOKENS}`}
-          onPress={() => onSell(stack.id, stack.star)}
-          variant="secondary"
-          accessibilityLabel={`Sell one ${def.core.name}`}
-          style={styles.rowAction}
-        />
-      ) : null}
+      <View style={styles.detailActions}>{children}</View>
     </View>
   );
 }
@@ -823,30 +913,54 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.half,
   },
-  slotRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
+  /** One item row (Worn slot or bag stack): the tappable top line plus, when
+   * expanded, its details. The merge glow paints behind the whole row. */
+  itemRow: {
     borderBottomWidth: 1,
     borderBottomColor: NEON_ROW_LINE,
     paddingVertical: Spacing.two,
+    gap: Spacing.two,
   },
-  slotMain: {
+  itemRowTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  itemMain: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
+  },
+  itemText: {
+    flex: 1,
+    gap: Spacing.half,
+  },
+  itemTitleLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: Spacing.one,
   },
   itemIconArt: {
     width: 22,
     height: 22,
   },
-  slotText: {
-    flex: 1,
+  /** Expanded details sit under the text, indented past the 34px icon. */
+  details: {
+    gap: Spacing.one,
+    paddingLeft: 34 + Spacing.two,
   },
-  titleLine: {
+  detailActions: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
+    gap: Spacing.two,
+    marginTop: Spacing.one,
+  },
+  detailAction: {
+    minHeight: 32,
+    paddingHorizontal: Spacing.three,
   },
   bonusCategory: {
     gap: Spacing.one,
@@ -855,29 +969,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-  },
-  stackRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-    borderBottomWidth: 1,
-    borderBottomColor: NEON_ROW_LINE,
-    paddingVertical: Spacing.two,
-  },
-  stackMain: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  stackText: {
-    flex: 1,
-    gap: Spacing.half,
-  },
-  stackTitleLine: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.one,
   },
   avatarRow: {
     flexDirection: 'row',
@@ -903,23 +994,6 @@ const styles = StyleSheet.create({
     minHeight: 28,
     paddingVertical: Spacing.one,
     paddingHorizontal: Spacing.two,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: Spacing.two,
-  },
-  mergeButtonCancel: {
-    flex: 1,
-  },
-  mergeButtonConfirm: {
-    flex: 2,
-  },
-  splashRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.two,
-    paddingVertical: Spacing.one,
   },
   pressed: {
     opacity: 0.8,

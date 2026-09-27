@@ -240,28 +240,14 @@ export default function PlayScreen() {
     [sell],
   );
 
-  /** Risky Merge — Dive feel: toast like a Dive bust on the outcome. */
+  /** Risky Merge. The result is shown on the item's own Dress row (glow /
+   * flash + "✓ Merged ★3" / "✗ Missed", `merge-row.tsx`) — no toast, so the
+   * feedback lands where the player is looking. */
   const handleMerge = useCallback(
     async (target: MergeTarget): Promise<MergeOutcome | null> => {
       const force = forceMerge;
       if (force !== 'none') setForceMerge('none'); // one-shot arm consumed
-      const outcome = await mergeItems(target, force);
-      if (!outcome) return null;
-      const name = itemName(target.id) ?? target.id;
-      if (outcome.success) {
-        setToast({
-          kind: 'message',
-          title: `${name} ${'★'.repeat(outcome.toStar)}`,
-          body: `Merge succeeded — a ${name} spare was spent.`,
-        });
-      } else {
-        setToast({
-          kind: 'message',
-          title: 'Merge failed',
-          body: `${name} is untouched — one spare was spent.`,
-        });
-      }
-      return outcome;
+      return mergeItems(target, force);
     },
     [forceMerge, mergeItems],
   );

@@ -35,10 +35,11 @@ const PLAY: RegExp[] = [
   /^scripts\/check-towers\.ts$/,
   /^scripts\/play-art-prep\.ts$/,
   /^scripts\/play-art-pack\.ts$/,
+  /^scripts\/check-merge-inline\.ts$/,
 ];
 
 const NEUTRAL: RegExp[] = [
-  /^src\/app\/play\.ts$/,           // Play shell mount (allowed in either)
+  /^src\/app\/play\.tsx$/,          // Play shell mount (allowed in either) — was `play\.ts$`, which never matched the real .tsx file
   /^src\/app\/copy\/library\.md$/,  // LF-only fix (the one allowed app-copy touch)
   /^PROJECT_CONTEXT\.md$/,
   /^AGENTS\.md$/,
@@ -74,7 +75,12 @@ function gitLines(command: string): string[] {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
     });
-    return out.split(/\r?\n/).map((line) => line.trim()).filter((line) => line.length > 0);
+    // trimEnd, NOT trim: a porcelain line for a modified file starts with a
+    // SPACE (" M src/play/x.tsx"). Trimming it shifted the path left, so
+    // `parsePorcelainLine`'s fixed `slice(3)` ate its first letter
+    // ("rc/play/x.tsx") — which matched no rule and was counted NEUTRAL, so
+    // every modified file silently passed the fence.
+    return out.split(/\r?\n/).map((line) => line.trimEnd()).filter((line) => line.length > 0);
   } catch {
     return [];
   }
