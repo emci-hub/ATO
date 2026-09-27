@@ -1085,13 +1085,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     maxWidth: MaxContentWidth,
-  },
-  /** Side padding lives INSIDE the scroll content (not on the SafeAreaView):
-   * a ScrollView clips to its own bounds, so the Defend map card, which breaks
-   * out of this padding to sit near the screen edge, must still be inside the
-   * ScrollView's box. */
-  scrollContent: {
     paddingHorizontal: Spacing.four,
+  },
+  scrollContent: {
     gap: Spacing.three,
     paddingTop: Spacing.three,
     paddingBottom: Spacing.six,

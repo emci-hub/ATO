@@ -190,15 +190,12 @@ import { FxLayer, FX_LIFE_MS, FX_ULTIMATE_LIFE_MS, type FxEvent, type FxPoint } 
 import { FX_CAP, FX_QUALITY_LABEL, nextFxQuality, setFxQuality, useFxQuality } from '@/play/fx-quality';
 import { kitRange, type KitHit } from '@/play/kit-combat';
 import {
-  KEPT_BOARD_MIN_SCRAP,
+  addBankScrap,
   getSavedLayout,
   layoutKey,
-  setupBankFor,
-  setupScrapFor,
   peekBankScrap,
   reloadBoardLayouts,
   saveBoardLayout,
-  setBankScrap,
   takeBankScrap,
   useBoardLayoutsLoaded,
 } from '@/play/board-layouts';
@@ -865,8 +862,7 @@ export function DefendScreen({
   fxQualityRef.current = fxQuality;
   /** Saved board layouts (per map): loaded flag, the Bound Bosses a layout may
    * put back (id → stars, refreshed every render), the scrap a running wave
-   * started with (restored on Leave / a lost Retry), and a one-shot restore
-   * guard. */
+   * started with (for the kill-scrap bank), and a one-shot restore guard. */
   // Re-read saved layouts from the device on mount (a previous account's
   // layouts may still be in memory after a sign-out). Runs during the first
   // render, before any restore effect reads them.
@@ -1383,13 +1379,9 @@ export function DefendScreen({
     const key = layoutKey(state.mapId, state.boardId);
     const restored = restoreBoardLayout(state, getSavedLayout(key), allowedBossesRef.current);
     // Peek, not take: this board may be rebuilt before the wave starts; the
-    // bank is consumed on the first setup edit or at wave start. A kept board
-    // runs on its bank alone; start scrap is for empty boards.
-    const keptBoard = restored.towers.length + restored.boundBosses.length > 0;
-    return {
-      ...restored,
-      scrap: setupScrapFor({ keptBoard, startScrap: state.scrap, bank: peekBankScrap(key) }),
-    };
+    // bank is consumed on the first setup edit or at wave start.
+    const bank = peekBankScrap(key);
+    return bank > 0 ? { ...restored, scrap: restored.scrap + bank } : restored;
   }, []);
 
   /** Save the board's layout for its map — setup edits only (pads are locked
@@ -1397,30 +1389,16 @@ export function DefendScreen({
   const commitBoard = useCallback((next: DefendLive | null) => {
     if (!next || phaseRef.current !== 'setup') return;
     const key = layoutKey(next.mapId, next.boardId);
-    const layout = boardLayoutOf(next);
-    saveBoardLayout(key, layout);
-    // The bank follows the unspent balance through setup, so leaving Defend or
-    // rebuilding the board before the wave restores it exactly (never more).
-    const kept = layout.towers.length + layout.bosses.length > 0;
-    setBankScrap(key, setupBankFor({ keptBoard: kept, scrap: next.scrap, startScrap: getTune().startScrap }));
+    saveBoardLayout(key, boardLayoutOf(next));
+    takeBankScrap(key); // spent into this board — never paid again
   }, []);
 
   // Scrap at the moment a wave starts running — Start wave, the lost-screen
-  // Retry and the dev boss preview all enter 'running' — so a restage after a
-  // loss or Leave returns exactly what the wave started with.
+  // Retry and the dev boss preview all enter 'running' — so a won wave banks
+  // only what its kills earned.
   useEffect(() => {
     if (phase === 'running') runStartScrapRef.current = simRef.current?.scrap ?? 0;
   }, [phase]);
-
-  /** Bank a restaged board's scrap (after Leave or a loss), so leaving
-   * Defend before the next setup edit restores exactly that amount. */
-  const bankRestage = useCallback((board: DefendLive) => {
-    const kept = board.towers.length + board.boundBosses.length > 0;
-    setBankScrap(
-      layoutKey(board.mapId, board.boardId),
-      setupBankFor({ keptBoard: kept, scrap: board.scrap, startScrap: getTune().startScrap }),
-    );
-  }, []);
 
   // The first board is built before the saved layouts finish loading; put the
   // layout back once they land, if the player hasn't started building.
@@ -1541,11 +1519,7 @@ export function DefendScreen({
     if (current) {
       // Fresh board for the SAME fight carrying towers + Bound Bosses; scrap
       // returns to the run start (matches Retry semantics).
-      // Same towers, and exactly the scrap you had when you pressed Start —
-      // never a refill (Leave mid-wave must not mint scrap). Banked too, so
-      // leaving Defend before the next edit keeps it.
-      const fresh = { ...retryDefendLive(current), scrap: runStartScrapRef.current };
-      bankRestage(fresh);
+      const fresh = retryDefendLive(current);
       simRef.current = fresh;
       setSim(fresh);
     }
@@ -1562,7 +1536,7 @@ export function DefendScreen({
     setShots([]);
     setBossAlert(null);
     setLeaveConfirmOpen(false);
-  }, [bankRestage]);
+  }, []);
 
   /** Mid-run Leave — one confirmation, then `abandonRun` (the existing path:
    * towers kept, no win, no rewards, no fake leak). Opening the confirm freezes
@@ -1596,20 +1570,10 @@ export function DefendScreen({
     const current = simRef.current;
     if (current) {
       const retried = retryDefendLive(current);
-      // Won: the board runs on the banked balance (consumed at wave start).
-      // Lost: back to the scrap the wave started with, floored at one tower so
-      // a board that keeps losing is never stuck.
-      const fresh = {
-        ...retried,
-        scrap: fromWon
-          ? setupScrapFor({
-              keptBoard: retried.towers.length + retried.boundBosses.length > 0,
-              startScrap: retried.scrap,
-              bank: peekBankScrap(layoutKey(retried.mapId, retried.boardId)),
-            })
-          : Math.max(runStartScrapRef.current, KEPT_BOARD_MIN_SCRAP),
-      };
-      if (!fromWon) bankRestage(fresh);
+      // A won wave's banked kill scrap pays into this setup (consumed on the
+      // first edit or at wave start, like any fresh board).
+      const bank = fromWon ? peekBankScrap(layoutKey(retried.mapId, retried.boardId)) : 0;
+      const fresh = bank > 0 ? { ...retried, scrap: retried.scrap + bank } : retried;
       simRef.current = fresh;
       setSim(fresh);
     }
@@ -1634,7 +1598,7 @@ export function DefendScreen({
     setCorpses([]);
     setShots([]);
     setBossAlert(null);
-  }, [bankRestage]);
+  }, []);
 
   /** Push hit/kill floaters (capped + oldest dropped = pooled, no unbounded
    * growth under heavy fire). Board units → px via the measured board size. */
@@ -1835,16 +1799,12 @@ export function DefendScreen({
 
   const winWave = useCallback(() => {
     const played = playedRef.current;
-    // The whole scrap balance carries into this map's next setup (pads are
-    // locked during a wave, so kill scrap had nothing to buy mid-run). SET, not
-    // added: whatever was banked before this wave is already inside this
-    // balance (it was paid into the board).
+    // Kill scrap carries into this map's next setup (pads are locked during a
+    // wave, so it had nothing to buy mid-run). Paid out once, then cleared.
     const endState = simRef.current;
     if (endState) {
-      setBankScrap(
-        layoutKey(endState.mapId, endState.boardId),
-        Math.max(endState.scrap, KEPT_BOARD_MIN_SCRAP),
-      );
+      const earned = endState.scrap - runStartScrapRef.current;
+      if (earned > 0) addBankScrap(layoutKey(endState.mapId, endState.boardId), earned);
     }
     setPhase('won');
     setPaused(false);
@@ -2670,8 +2630,8 @@ export function DefendScreen({
         ) : null}
 
         {/* Board */}
-        <PlayFrame style={[styles.card, styles.boardCard]}>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.boardCardLabel}>
+        <PlayFrame style={styles.card}>
+          <ThemedText type="small" themeColor="textSecondary">
             {boardMap.name}
             {cycleNote ? ` · ${cycleNote}` : ''}
             {fight.mode === 'replay' ? ' · replay (half tokens)' : ''}
@@ -4002,14 +3962,7 @@ export function DefendScreen({
             <Pressable
               onPress={() => {
                 if (sim) {
-                  setSim(() => {
-                    const fresh = {
-                      ...retryDefendLive(sim),
-                      scrap: Math.max(runStartScrapRef.current, KEPT_BOARD_MIN_SCRAP),
-                    };
-                    bankRestage(fresh);
-                    return fresh;
-                  });
+                  setSim(retryDefendLive(sim));
                   setPhase('running');
                   setPaused(false);
                   setSelectedPad(null);
@@ -4870,8 +4823,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     maxWidth: MaxContentWidth,
-    // No side padding: Defend renders inside the Play shell, which already
-    // pads 24 per side (this used to double it).
+    paddingHorizontal: Spacing.four,
     gap: Spacing.three,
     paddingTop: Spacing.three,
     paddingBottom: Spacing.six,
@@ -5014,16 +4966,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: Spacing.two,
     paddingVertical: Spacing.one,
-    paddingHorizontal: Spacing.two,
-  },
-  /** The map card breaks out of the Play shell's 24pt side padding to sit
-   * 8pt from the screen edges, with a slim inner padding, so the board uses
-   * nearly the full width. Text cards keep their width. */
-  boardCard: {
-    marginHorizontal: -(Spacing.four - Spacing.two),
-    paddingHorizontal: Spacing.one,
-  },
-  boardCardLabel: {
     paddingHorizontal: Spacing.two,
   },
   board: {
