@@ -597,6 +597,66 @@ export function placeTower(
   };
 }
 
+/** A saved board layout (per campaign phase + board): pads and what sat on
+ * them. Ids, cooldowns and scrap are never saved — they are rebuilt. */
+export type BoardLayout = {
+  towers: { pad: number; kind: TowerKind; level: number }[];
+  bosses: { pad: number; bossId: string }[];
+};
+
+/**
+ * Put a saved layout back on a fresh board for FREE (same as Retry keeping
+ * towers without re-charging). Goes through `placeTower` / `placeBoundBoss`
+ * so every normal rule still applies, and drops — never throws on — anything
+ * stale: a pad this board doesn't have, an occupied pad, a full tower / Bound
+ * Boss cap, an unknown tower kind, or a Bound Boss the player can no longer
+ * place (`allowedBosses`: id → current stars; a hero since unbound or made the
+ * Avatar is simply absent). Stars come from the current save, not the layout.
+ */
+export function restoreBoardLayout(
+  state: DefendLive,
+  layout: BoardLayout | null,
+  allowedBosses: ReadonlyMap<string, number>,
+): DefendLive {
+  if (!layout) return state;
+  const map = BOARD_MAPS[state.boardId] ?? BOARD_MAPS.ato;
+  const padOk = (pad: number) => Number.isInteger(pad) && pad >= 0 && pad < map.pads.length;
+  let s = state;
+  for (const t of layout.towers) {
+    const def = TOWER_DEFS[t.kind];
+    if (!def || !padOk(t.pad)) continue;
+    if (s.boundBosses.some((bb) => bb.pad === t.pad)) continue;
+    const placed = placeTower({ ...s, scrap: s.scrap + def.placeCost }, t.pad, t.kind);
+    if (!placed) continue;
+    const level = Math.max(1, Math.min(TOWER_MAX_LEVEL, Math.floor(t.level)));
+    s = {
+      ...placed,
+      scrap: s.scrap,
+      towers: placed.towers.map((tower) =>
+        tower.pad === t.pad && tower.kind === t.kind ? { ...tower, level } : tower,
+      ),
+    };
+  }
+  for (const b of layout.bosses) {
+    const stars = allowedBosses.get(b.bossId);
+    if (stars == null || stars < 1 || !padOk(b.pad)) continue;
+    const def = heroById(b.bossId) ? null : getBoundBossDef(b.bossId);
+    const cost = def ? def.place_cost : HERO_TOWER_STATS.placeCost;
+    const placed = placeBoundBoss({ ...s, scrap: s.scrap + cost }, b.pad, b.bossId, stars);
+    if (!placed) continue;
+    s = { ...placed, scrap: s.scrap };
+  }
+  return s;
+}
+
+/** The layout of a board right now (what `restoreBoardLayout` puts back). */
+export function boardLayoutOf(state: DefendLive): BoardLayout {
+  return {
+    towers: state.towers.map((t) => ({ pad: t.pad, kind: t.kind, level: t.level })),
+    bosses: state.boundBosses.map((b) => ({ pad: b.pad, bossId: b.bossId })),
+  };
+}
+
 /** Upgrade a tower one level, deducting scrap. Null when blocked. */
 export function upgradeTower(
   state: DefendLive,

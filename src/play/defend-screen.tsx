@@ -44,6 +44,8 @@ import {
   AVATAR_RANGE,
   boundBossCapOnBoard,
   boundBossRange,
+  boardLayoutOf,
+  restoreBoardLayout,
   DEFEND_TICK_MS,
   HERO_TOWER_STATS,
   type DefendMap,
@@ -186,7 +188,17 @@ import {
 import { sendPlayDevLog } from '@/play/dev-log';
 import { FxLayer, FX_LIFE_MS, FX_ULTIMATE_LIFE_MS, type FxEvent, type FxPoint } from '@/play/fx-layer';
 import { FX_CAP, FX_QUALITY_LABEL, nextFxQuality, setFxQuality, useFxQuality } from '@/play/fx-quality';
-import type { KitHit } from '@/play/kit-combat';
+import { kitRange, type KitHit } from '@/play/kit-combat';
+import {
+  addBankScrap,
+  getSavedLayout,
+  layoutKey,
+  peekBankScrap,
+  reloadBoardLayouts,
+  saveBoardLayout,
+  takeBankScrap,
+  useBoardLayoutsLoaded,
+} from '@/play/board-layouts';
 import { ELEMENT_COLOR, TOWER_KITS } from '@/play/kits';
 
 /** Placeholder creep role tints (until per-role sprites land) — W1 only. */
@@ -846,6 +858,26 @@ export function DefendScreen({
   const fxQuality = useFxQuality();
   const fxQualityRef = useRef(fxQuality);
   fxQualityRef.current = fxQuality;
+  /** Saved board layouts (per map): loaded flag, the Bound Bosses a layout may
+   * put back (id → stars, refreshed every render), the scrap a running wave
+   * started with (for the kill-scrap bank), and a one-shot restore guard. */
+  // Re-read saved layouts from the device on mount (a previous account's
+  // layouts may still be in memory after a sign-out). Runs during the first
+  // render, before any restore effect reads them.
+  useState(() => {
+    void reloadBoardLayouts();
+    return 0;
+  });
+  const layoutsLoaded = useBoardLayoutsLoaded();
+  const allowedBossesRef = useRef<ReadonlyMap<string, number>>(new Map());
+  const runStartScrapRef = useRef(0);
+  const initialRestoreDoneRef = useRef(false);
+  /** Placement preview (press and hold a build option): the ring the choice
+   * would have on the selected pad. Avatar aim: the Avatar's range ring under
+   * the finger before release. Display only. */
+  const [placePreview, setPlacePreview] = useState<{ range: number; color: string; pull: boolean } | null>(null);
+  const [avatarAim, setAvatarAim] = useState<{ x: number; y: number } | null>(null);
+  const avatarAimAtRef = useRef(0);
   /** Per-tower aim rotation (deg), keyed by tower id; kept between shots. */
   const towerFacingRef = useRef<Record<number, number>>({});
   /** Per-tower sticky E/W side profile (K1), keyed by tower id. Reused for the
@@ -1338,13 +1370,54 @@ export function DefendScreen({
     return lines;
   }, [gs, skipPlan, view.campaign, view.cyclePower]);
 
+  /** A fresh board for a fight, with the player's saved layout for that map
+   * put back for free (like Retry keeps towers) and any banked kill scrap paid
+   * in. Stale entries are dropped by `restoreBoardLayout`. */
+  const withSavedLayout = useCallback((state: DefendLive): DefendLive => {
+    const key = layoutKey(state.mapId, state.boardId);
+    const restored = restoreBoardLayout(state, getSavedLayout(key), allowedBossesRef.current);
+    // Peek, not take: this board may be rebuilt before the wave starts; the
+    // bank is consumed on the first setup edit or at wave start.
+    const bank = peekBankScrap(key);
+    return bank > 0 ? { ...restored, scrap: restored.scrap + bank } : restored;
+  }, []);
+
+  /** Save the board's layout for its map — setup edits only (pads are locked
+   * while a wave runs). */
+  const commitBoard = useCallback((next: DefendLive | null) => {
+    if (!next || phaseRef.current !== 'setup') return;
+    const key = layoutKey(next.mapId, next.boardId);
+    saveBoardLayout(key, boardLayoutOf(next));
+    takeBankScrap(key); // spent into this board — never paid again
+  }, []);
+
+  // Scrap at the moment a wave starts running — Start wave, the lost-screen
+  // Retry and the dev boss preview all enter 'running' — so a won wave banks
+  // only what its kills earned.
+  useEffect(() => {
+    if (phase === 'running') runStartScrapRef.current = simRef.current?.scrap ?? 0;
+  }, [phase]);
+
+  // The first board is built before the saved layouts finish loading; put the
+  // layout back once they land, if the player hasn't started building.
+  useEffect(() => {
+    if (!layoutsLoaded || initialRestoreDoneRef.current) return;
+    initialRestoreDoneRef.current = true;
+    const current = simRef.current;
+    if (phaseRef.current !== 'setup' || !current) return;
+    if (current.towers.length > 0 || current.boundBosses.length > 0) return;
+    const restored = withSavedLayout(current);
+    simRef.current = restored;
+    setSim(restored);
+  }, [layoutsLoaded, withSavedLayout]);
+
   /** Rebuild a fresh board for a fight and go back to setup. */
   const buildSetup = useCallback(
     (next: Fight) => {
       setReplayPick(next.mode === 'replay' ? { phase: next.phase, wave: next.wave } : null);
       // Default board on every (re)build — maze is a deliberate Maps-UI pick.
       setBoardId('ato');
-      setSim(createDefendLive(next.wave, { mapId: next.phase, boardId: 'ato', cyclePower: view.cyclePower, tint: view.cycleTint }));
+      setSim(withSavedLayout(createDefendLive(next.wave, { mapId: next.phase, boardId: 'ato', cyclePower: view.cyclePower, tint: view.cycleTint })));
       ensureParked(next.phase);
       setPhase('setup');
       setPaused(false);
@@ -1359,7 +1432,7 @@ export function DefendScreen({
     setShots([]);
       setBossAlert(null);
     },
-    [view.cyclePower, view.cycleTint, ensureParked],
+    [view.cyclePower, view.cycleTint, ensureParked, withSavedLayout],
   );
 
   /** When the chosen fight changes while on SETUP (seat advanced after a win,
@@ -1373,7 +1446,7 @@ export function DefendScreen({
     const current = simRef.current;
     if (!(current && current.wave === fight.wave && current.mapId === fight.phase)) {
       setBoardId('ato');
-      setSim(createDefendLive(fight.wave, { mapId: fight.phase, boardId: 'ato', cyclePower: view.cyclePower, tint: view.cycleTint }));
+      setSim(withSavedLayout(createDefendLive(fight.wave, { mapId: fight.phase, boardId: 'ato', cyclePower: view.cyclePower, tint: view.cycleTint })));
       prevPuffsRef.current = [];
       setFloaters([]);
     shotsRef.current = [];
@@ -1394,12 +1467,12 @@ export function DefendScreen({
   const selectBoard = useCallback((next: BoardId) => {
     setBoardId(next);
     const f = fightRef.current;
-    setSim(createDefendLive(f.wave, {
+    setSim(withSavedLayout(createDefendLive(f.wave, {
       mapId: f.phase,
       boardId: next,
       cyclePower: view.cyclePower,
       tint: view.cycleTint,
-    }));
+    })));
     setSelectedPad(null);
     prevPuffsRef.current = [];
     setFloaters([]);
@@ -1408,12 +1481,14 @@ export function DefendScreen({
     puffWalkFaceRef.current = {};
     setCorpses([]);
     setShots([]);
-  }, [view.cyclePower, view.cycleTint]);
+  }, [view.cyclePower, view.cycleTint, withSavedLayout]);
 
   /** Start the wave on the current board — placed towers + spent scrap carry
    * into the fight (spec §9: setup place → start). */
   const startWave = useCallback(() => {
     playedRef.current = fightRef.current;
+    const starting = simRef.current;
+    if (starting) takeBankScrap(layoutKey(starting.mapId, starting.boardId));
     setSim((prev) => prev ?? createDefendLive(fightRef.current.wave, {
       mapId: fightRef.current.phase,
       boardId: fightRef.current.phase === 'main' ? boardId : 'ato',
@@ -1492,7 +1567,11 @@ export function DefendScreen({
   const leaveResultsToSetup = useCallback((fromWon: boolean) => {
     const current = simRef.current;
     if (current) {
-      const fresh = retryDefendLive(current);
+      const retried = retryDefendLive(current);
+      // A won wave's banked kill scrap pays into this setup (consumed on the
+      // first edit or at wave start, like any fresh board).
+      const bank = fromWon ? peekBankScrap(layoutKey(retried.mapId, retried.boardId)) : 0;
+      const fresh = bank > 0 ? { ...retried, scrap: retried.scrap + bank } : retried;
       simRef.current = fresh;
       setSim(fresh);
     }
@@ -1718,6 +1797,13 @@ export function DefendScreen({
 
   const winWave = useCallback(() => {
     const played = playedRef.current;
+    // Kill scrap carries into this map's next setup (pads are locked during a
+    // wave, so it had nothing to buy mid-run). Paid out once, then cleared.
+    const endState = simRef.current;
+    if (endState) {
+      const earned = endState.scrap - runStartScrapRef.current;
+      if (earned > 0) addBankScrap(layoutKey(endState.mapId, endState.boardId), earned);
+    }
     setPhase('won');
     setPaused(false);
     setSelectedPad(null);
@@ -1995,6 +2081,7 @@ export function DefendScreen({
   const unlockedBoundBosses = view.boundBosses.filter(
     (bb) => bb.unlocked && (getBoundBossDef(bb.id) != null || isHeroBoundTower(bb.id)),
   );
+  allowedBossesRef.current = new Map(unlockedBoundBosses.map((bb) => [bb.id, bb.stars]));
   const boundBossCount = sim?.boundBosses.length ?? 0;
   /** Board tower cap reached — pads stay open but no more towers can deploy. */
   const atTowerCap = (sim?.towers.length ?? 0) >= towerCap();
@@ -2015,7 +2102,12 @@ export function DefendScreen({
 
   const placeOnPad = (kind: TowerKind) => {
     if (selectedPad == null) return;
-    setSim((prev) => (prev ? placeTower(prev, selectedPad, kind) ?? prev : prev));
+    setPlacePreview(null);
+    setSim((prev) => {
+      const next = prev ? placeTower(prev, selectedPad, kind) ?? prev : prev;
+      if (next !== prev) commitBoard(next);
+      return next;
+    });
   };
 
   const placeOnBoundBoss = (bossId: string, stars: number) => {
@@ -2024,6 +2116,8 @@ export function DefendScreen({
     if (!prev) return;
     const next = placeBoundBoss(prev, selectedPad, bossId, stars);
     if (!next) return;
+    setPlacePreview(null);
+    commitBoard(next);
     // A6 — seed the bound boss's clip player the moment it lands so its idle
     // loop breathes from frame 0 (hero tower OR a cycle boss mapped to a hero).
     if (boundBossHeroId(bossId)) {
@@ -2041,7 +2135,11 @@ export function DefendScreen({
    * cycle boss) OWNED + BOUND in playStore — the run's placed tower only. */
   const removeSelectedBoundBoss = () => {
     if (!selectedBoundBoss) return;
-    setSim((prev) => (prev ? removeBoundBoss(prev, selectedBoundBoss.id) ?? prev : prev));
+    setSim((prev) => {
+      const next = prev ? removeBoundBoss(prev, selectedBoundBoss.id) ?? prev : prev;
+      if (next !== prev) commitBoard(next);
+      return next;
+    });
   };
 
   /** Dev kit only (A6 smoke): place the first bound hero (or the cycle boss if
@@ -2068,6 +2166,7 @@ export function DefendScreen({
           towerFaceRef.current[placed.id] = 'e';
         }
       }
+      commitBoard(next);
       simRef.current = next;
       setSim(next);
     }
@@ -2119,9 +2218,11 @@ export function DefendScreen({
 
   const upgradeSelected = () => {
     if (!selectedTower) return;
-    setSim((prev) =>
-      prev ? upgradeTower(prev, selectedTower.id) ?? prev : prev,
-    );
+    setSim((prev) => {
+      const next = prev ? upgradeTower(prev, selectedTower.id) ?? prev : prev;
+      if (next !== prev) commitBoard(next);
+      return next;
+    });
   };
 
   const castSkill = () => {
@@ -2217,7 +2318,10 @@ export function DefendScreen({
           hit = index;
         }
       });
-      if (hit != null) {
+      // Pads only take taps in SETUP (emci, 2026-09-26): once a wave runs (and
+      // on the result screens), every board tap moves the Avatar, so a move
+      // that lands near a pad can never open it by accident.
+      if (hit != null && phaseRef.current === 'setup') {
         setSelectedPad((prev) => (prev === hit ? null : hit));
         return;
       }
@@ -2239,6 +2343,29 @@ export function DefendScreen({
       startAvatarOnce('dash');
     },
     [boardMap, startAvatarOnce],
+  );
+
+  /** Avatar range preview under the finger (before release). Skipped for a
+   * press that will open a pad (setup only), throttled to ~20/s so a drag
+   * doesn't re-render the board on every touch event. */
+  const aimAvatarPreview = useCallback(
+    (locationX: number, locationY: number, first: boolean) => {
+      const now = Date.now();
+      if (!first && now - avatarAimAtRef.current < 50) return;
+      avatarAimAtRef.current = now;
+      const size = boardSizeRef.current || 100;
+      const bx = Math.max(0, Math.min(100, (locationX / size) * 100));
+      const by = Math.max(0, Math.min(100, (locationY / size) * 100));
+      if (phaseRef.current === 'setup') {
+        const onPad = boardMap.pads.some((pad) => Math.hypot(pad.x - bx, pad.y - by) <= PAD_TAP_RADIUS);
+        if (onPad) {
+          setAvatarAim(null);
+          return;
+        }
+      }
+      setAvatarAim({ x: bx, y: by });
+    },
+    [boardMap],
   );
 
   const avatarFootAt = roleFootAt(avatarRole);
@@ -2521,9 +2648,17 @@ export function DefendScreen({
             // back when it starts scrolling, which cancels this tap.
             onStartShouldSetResponder={() => true}
             onResponderTerminationRequest={() => true}
-            onResponderRelease={(event) =>
-              handleBoardTap(event.nativeEvent.locationX, event.nativeEvent.locationY)
-            }>
+            onResponderGrant={(event) =>
+              aimAvatarPreview(event.nativeEvent.locationX, event.nativeEvent.locationY, true)
+            }
+            onResponderMove={(event) =>
+              aimAvatarPreview(event.nativeEvent.locationX, event.nativeEvent.locationY, false)
+            }
+            onResponderTerminate={() => setAvatarAim(null)}
+            onResponderRelease={(event) => {
+              setAvatarAim(null);
+              handleBoardTap(event.nativeEvent.locationX, event.nativeEvent.locationY);
+            }}>
             {/* Terrain + prop garnish (§19 — active skin): grass floor, prop
                 garnish, and pad markers. Background only, behind every gameplay
                 layer (zIndex 0). `anchor: 'center'` tiles (pads, props) sit ON
@@ -2636,6 +2771,38 @@ export function DefendScreen({
                   strokeWidth={1}
                   strokeDasharray="2 2"
                 />
+              ) : null}
+              {/* Placement preview: press and hold a build option to see its
+               * ring on the pad before committing. */}
+              {placePreview && selectedPad != null && boardMap.pads[selectedPad] ? (
+                <Circle
+                  cx={boardMap.pads[selectedPad].x}
+                  cy={boardMap.pads[selectedPad].y}
+                  r={placePreview.range}
+                  fill={placePreview.color}
+                  fillOpacity={placePreview.pull ? 0.16 : 0.1}
+                  stroke={placePreview.color}
+                  strokeOpacity={0.9}
+                  strokeWidth={0.8}
+                  strokeDasharray="1.5 1.5"
+                />
+              ) : null}
+              {/* Avatar aim preview: its range ring under the finger. */}
+              {avatarAim ? (
+                <G>
+                  <Circle
+                    cx={avatarAim.x}
+                    cy={avatarAim.y}
+                    r={AVATAR_RANGE}
+                    fill={theme.accent}
+                    fillOpacity={0.08}
+                    stroke={theme.accent}
+                    strokeOpacity={0.8}
+                    strokeWidth={0.7}
+                    strokeDasharray="1.5 1.5"
+                  />
+                  <Circle cx={avatarAim.x} cy={avatarAim.y} r={1} fill={theme.accent} fillOpacity={0.9} />
+                </G>
               ) : null}
               {/* §19 tower sprites (skin roles). Visual level is SCALE ONLY
                * (Lv1 0.70 · Lv2 0.85 · Lv3 1.0) — no number badges. Each tower
@@ -3229,6 +3396,15 @@ export function DefendScreen({
                   return (
                     <Pressable
                       key={kind}
+                      onPressIn={() => {
+                        const kit = TOWER_KITS[kind];
+                        setPlacePreview({
+                          range: def.range,
+                          color: kit.element ? ELEMENT_COLOR[kit.element] : theme.accent,
+                          pull: false,
+                        });
+                      }}
+                      onPressOut={() => setPlacePreview(null)}
                       onPress={() => placeOnPad(kind)}
                       disabled={!affordable}
                       accessibilityRole="button"
@@ -3260,6 +3436,17 @@ export function DefendScreen({
                       return (
                         <Pressable
                           key={bb.id}
+                          onPressIn={() => {
+                            const heroKit = heroById(bb.id)?.kit;
+                            setPlacePreview({
+                              range: heroKit
+                                ? kitRange(heroKit, Math.max(1, Math.min(3, bb.stars)))
+                                : (def?.range ?? 18),
+                              color: heroKit ? ELEMENT_COLOR[heroKit.element] : theme.accent,
+                              pull: heroKit?.behavior === 'pull',
+                            });
+                          }}
+                          onPressOut={() => setPlacePreview(null)}
                           onPress={() => placeOnBoundBoss(bb.id, bb.stars)}
                           disabled={!affordable || atCap}
                           accessibilityRole="button"
@@ -4023,12 +4210,24 @@ export function DefendScreen({
               <DevRow
                 label="Clear all towers"
                 disabled={!sim || sim.towers.length === 0}
-                onPress={() => setSim((prev) => (prev ? { ...prev, towers: [] } : prev))}
+                onPress={() =>
+                  setSim((prev) => {
+                    const next = prev ? { ...prev, towers: [] } : prev;
+                    commitBoard(next);
+                    return next;
+                  })
+                }
               />
               <DevRow
                 label="Clear Bound Bosses"
                 disabled={!sim || sim.boundBosses.length === 0}
-                onPress={() => setSim((prev) => (prev ? { ...prev, boundBosses: [] } : prev))}
+                onPress={() =>
+                  setSim((prev) => {
+                    const next = prev ? { ...prev, boundBosses: [] } : prev;
+                    commitBoard(next);
+                    return next;
+                  })
+                }
               />
               <DevRow
                 label="Reset skill CD"

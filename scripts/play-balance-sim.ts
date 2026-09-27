@@ -36,12 +36,15 @@ import {
   MAX_TOWERS,
   TOWER_DEFS,
   createDefendLive,
+  boardLayoutOf,
   placeBoundBoss,
   placeTower,
+  restoreBoardLayout,
   puffPosition,
   stepDefendLive,
   towerUpgradeCost,
   upgradeTower,
+  type BoardLayout,
   type DefendLive,
   type TowerKind,
 } from '../src/play/defend';
@@ -105,7 +108,14 @@ type RunResult = {
   towersBuilt: number;
   avgLevel: number;
   scrapLeft: number;
+  /** What this wave leaves for the next one in campaign mode. */
+  endLayout: BoardLayout;
+  earned: number;
 };
+
+/** Campaign carry-over: the previous wave's layout (restored free) + banked
+ * kill scrap, exactly as the game does since saved layouts landed. */
+type Carry = { layout: BoardLayout; bank: number; noStartScrap?: boolean } | null;
 
 function simulate(
   phase: Phase,
@@ -113,8 +123,18 @@ function simulate(
   strategy: Strategy,
   cyclePower: number,
   damageMult: number,
+  carry: Carry = null,
 ): RunResult {
   let s: DefendLive = createDefendLive(wave, { mapId: phase, boardId: 'ato', cyclePower });
+  if (carry) {
+    const allowed = new Map<string, number>([[strategy.heroId ?? HERO_ID, 1]]);
+    s = restoreBoardLayout(s, carry.layout, allowed);
+    const kept = carry.layout.towers.length + carry.layout.bosses.length > 0;
+    // Variant: start scrap only on an empty board; a kept board runs on banked
+    // kill scrap alone.
+    const base = carry.noStartScrap && kept ? 0 : s.scrap;
+    s = { ...s, scrap: base + carry.bank };
+  }
   const buckets = { wavePower: damageMult, towerSpeed: 1, avatarLevel: 1, typeMatch: 0, avatarStars: 0 };
 
   // Hero towers first (free), on the pads a 20-range tower covers best.
@@ -148,7 +168,10 @@ function simulate(
 
   let leaked = 0;
   let t = 0;
+  // Build in setup only — pads lock while a wave runs (emci, 2026-09-26).
   spend();
+  const startScrap = s.scrap;
+  const endLayout = boardLayoutOf(s);
   while (t < MAX_SIM_MS) {
     const step = stepDefendLive(s, DEFEND_TICK_MS, buckets, AVATAR_SPOT);
     s = step.state;
@@ -159,7 +182,6 @@ function simulate(
       s = { ...s, puffs: s.puffs.filter((p) => p.dist < 1) };
     }
     if (s.schedule.length === 0 && s.puffs.length === 0) break;
-    spend();
   }
   return {
     leaked,
@@ -167,13 +189,21 @@ function simulate(
     towersBuilt: s.towers.length,
     avgLevel: s.towers.length ? s.towers.reduce((a, x) => a + x.level, 0) / s.towers.length : 0,
     scrapLeft: s.scrap,
+    endLayout,
+    earned: Math.max(0, s.scrap - startScrap),
   };
 }
 
 /** Smallest damage multiplier (±0.02) that clears with zero leaks, or null if
  * even 8× leaks (e.g. Avatar-only against a boss). */
-function damageNeeded(phase: Phase, wave: number, strategy: Strategy, cyclePower: number): number | null {
-  const clears = (m: number) => simulate(phase, wave, strategy, cyclePower, m).leaked === 0;
+function damageNeeded(
+  phase: Phase,
+  wave: number,
+  strategy: Strategy,
+  cyclePower: number,
+  carry: Carry = null,
+): number | null {
+  const clears = (m: number) => simulate(phase, wave, strategy, cyclePower, m, carry).leaked === 0;
   let hi = 1;
   while (!clears(hi)) {
     hi *= 2;
@@ -229,6 +259,39 @@ const heroRows = allHeroes().map((hero) => {
   return { hero, avg, lost, unclearable: cells.length - clearable.length, hardest };
 }).sort((a, b) => a.unclearable - b.unclearable || a.avg - b.avg);
 
+// Campaign mode (cycle 0): play Trial 1-5 then Main 1-10 in order, keeping
+// the board per map (free restore) and banking won-wave kill scrap — the game
+// since saved layouts. A wave's "damage needed" is measured from the board the
+// ×1 run actually had going into it.
+const campaignStrats = STRATEGIES.filter((st) => st.id === 'mixed' || st.id === 'mixed+heroes');
+const campaignVariants = campaignStrats.flatMap((strat) => [
+  { strat, noStartScrap: false, label: strat.label },
+  { strat, noStartScrap: true, label: `${strat.label}, start scrap on empty boards only` },
+]);
+const campaign = campaignVariants.map(({ strat, noStartScrap, label }) => {
+  const rows: { w: (typeof WAVES)[number]; fresh: number | null; kept: number | null; towers: number; avgLevel: number }[] = [];
+  let carry: Carry = null;
+  let lastPhase: Phase | null = null;
+  for (const w of WAVES) {
+    if (w.phase !== lastPhase) carry = null; // each map keeps its own board
+    lastPhase = w.phase;
+    const run = simulate(w.phase, w.wave, strat, 1, 1, carry);
+    rows.push({
+      w,
+      fresh: results.get(key(0, w, strat))!.need,
+      kept: damageNeeded(w.phase, w.wave, strat, 1, carry),
+      towers: run.towersBuilt,
+      avgLevel: run.avgLevel,
+    });
+    // A lost wave keeps the board but banks nothing (only wins bank scrap).
+    // Shipped rule: bank = this wave's kill scrap. The variant has no fresh
+    // start scrap, so it must carry the whole leftover balance to be fair.
+    const bank = run.leaked > 0 ? 0 : noStartScrap ? run.scrapLeft : run.earned;
+    carry = { layout: run.endLayout, bank, noStartScrap };
+  }
+  return { strat, label, rows };
+});
+
 const secs = ((Date.now() - started) / 1000).toFixed(1);
 
 function fmtNeed(need: number | null): string {
@@ -250,7 +313,7 @@ lines.push(`Generated by \`npm run sim:balance\` on ${new Date().toISOString().s
 lines.push('');
 lines.push('**How to read a cell:** `✓` = a no-gear player clears it; `✗3` = 3 creeps leak at ×1 damage (the wave is lost). The number is the **damage needed** to clear with zero leaks: under 1× is comfortable, 1×–' + gearCap.toFixed(1) + '× needs gear, over ' + gearCap.toFixed(1) + '× is beyond the gear soft cap.');
 lines.push('');
-lines.push('**Player model:** default ATO board only; fresh board each wave with ' + getTune().startScrap + ' scrap; towers on the pads covering the most path; scrap spent immediately (build to ' + MAX_TOWERS + ', then upgrade); Avatar parked at the best path spot, never casts its skill; no gear, no type match, no Avatar stars. Hero towers all share one stat block today, so one hero stands in for all 16 until effects step 4.');
+lines.push('**Player model:** default ATO board only; fresh board each wave with ' + getTune().startScrap + ' scrap (the Campaign section keeps boards instead); building happens in setup only — pads lock during a wave; towers on the pads covering the most path; setup scrap spent in full (build to ' + MAX_TOWERS + ', then upgrade); Avatar parked at the best path spot, never casts its skill; no gear, no type match, no Avatar stars. Hero towers all share one stat block today, so one hero stands in for all 16 until effects step 4.');
 lines.push('');
 
 for (const cycles of CYCLES) {
@@ -328,6 +391,29 @@ for (const r of heroRows) {
   );
 }
 lines.push('');
+
+lines.push('## Campaign with kept boards (cycle 0)');
+lines.push('');
+lines.push('Damage needed per wave on a fresh board vs. with the board kept from the previous wave (+ banked kill scrap). Towers/level = the board the ×1 run built by that wave.');
+lines.push('');
+for (const c of campaign) {
+  lines.push(`### ${c.label}`);
+  lines.push('');
+  lines.push('| Wave | Fresh board | Kept board | Towers · avg level |');
+  lines.push('|---|---|---|---|');
+  for (const r of c.rows) {
+    lines.push(`| ${waveName(r.w)} | ${fmtNeed(r.fresh)} | ${fmtNeed(r.kept)} | ${r.towers} · ${r.avgLevel.toFixed(1)} |`);
+  }
+  lines.push('');
+  const pairs = c.rows.filter((r) => r.fresh != null && r.kept != null);
+  const easier = pairs.length
+    ? pairs.reduce((a, r) => a + (r.fresh as number) / (r.kept as number), 0) / pairs.length
+    : 1;
+  findings.push(
+    `- **Kept boards, ${c.label}:** waves need on average ${easier.toFixed(2)}× less damage than on a fresh board; ` +
+      `by Main 10 the board is ${c.rows[c.rows.length - 1].towers} towers at avg level ${c.rows[c.rows.length - 1].avgLevel.toFixed(1)}.`,
+  );
+}
 
 lines.splice(6, 0, '## Findings', '', ...findings, '');
 
