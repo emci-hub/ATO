@@ -200,6 +200,8 @@ import {
   useBoardLayoutsLoaded,
 } from '@/play/board-layouts';
 import { ELEMENT_COLOR, TOWER_KITS } from '@/play/kits';
+import { StatusIconRow, WeaknessDiamond } from '@/play/status-icon-row';
+import { statusIconsFor } from '@/play/status-icons';
 
 /** Placeholder creep role tints (until per-role sprites land) — W1 only. */
 const CREEP_ROLE_COLOR: Record<CreepRole, string> = {
@@ -2976,20 +2978,9 @@ export function DefendScreen({
               })}
               {sim?.puffs.map((puff) => {
                 const pct = Math.max(0, Math.min(1, puff.hp / puff.maxHp));
-                const slowed = puff.slowMs > 0;
-                // One status puddle, no extra shapes (plan: tint the creep's
-                // existing ring): stun → Root, shred → Void, a DoT → its
-                // element, plain slow → the old chill tint.
-                const statusFill =
-                  (puff.stunMs ?? 0) > 0
-                    ? ELEMENT_COLOR.root
-                    : (puff.shredMs ?? 0) > 0
-                      ? ELEMENT_COLOR.void
-                      : puff.dots && puff.dots.length > 0
-                        ? ELEMENT_COLOR[puff.dots[puff.dots.length - 1].element]
-                        : slowed
-                          ? theme.accentTertiary
-                          : null;
+                // Status icons above the health bar (stun, DoT with stack
+                // count, slow, shred) — none when the creep is unaffected.
+                const statusIcons = statusIconsFor(puff);
                 // §19 board cast (skin roles): runners = fast unit, bosses =
                 // tanks/heavy by band, tanks = the heavy soak unit, normal
                 // puffs = the puff unit.
@@ -3099,6 +3090,9 @@ export function DefendScreen({
                 const bossBadge =
                   puff.kind === 'boss' ? (band?.kind === 'scout_mini' ? 'M' : 'B') : null;
                 const barTop = hasSprite ? box.y - 2.8 : y - radius - 4;
+                // Icons shrink with the bar so a full row of 4 never outgrows it.
+                const ICON_SIZE = Math.min(2.4, barWidth / 4.6);
+                const iconRowY = barTop - ICON_SIZE / 2 - 0.5;
                 return (
                   <G key={`puff-${puff.id}`}>
                     <G transform={spriteTransform}>
@@ -3108,18 +3102,6 @@ export function DefendScreen({
                         <Circle cx={x} cy={y} r={radius} fill={tintColor} />
                       )}
                     </G>
-                    {/* Status puddle under the sprite (display only) + a thin
-                     * ring in the creep's weakness colour when it has one. */}
-                    <Circle
-                      cx={x}
-                      cy={bodyCy}
-                      r={radius}
-                      fill={statusFill ?? 'none'}
-                      fillOpacity={0.5}
-                      stroke={puff.tint ? TAG_COLOR[puff.tint] : 'none'}
-                      strokeWidth={0.6}
-                      strokeOpacity={0.9}
-                    />
                     <Rect
                       x={x - barWidth / 2}
                       y={barTop}
@@ -3136,10 +3118,19 @@ export function DefendScreen({
                       fill="#4ADE80"
                       rx={0.8}
                     />
+                    {puff.tint ? (
+                      <WeaknessDiamond
+                        x={x - barWidth / 2 - 1.3}
+                        y={barTop + 0.8}
+                        size={1.9}
+                        color={TAG_COLOR[puff.tint]}
+                      />
+                    ) : null}
+                    <StatusIconRow icons={statusIcons} cx={x} cy={iconRowY} size={ICON_SIZE} />
                     {bossBadge ? (
                       <SvgText
                         x={x}
-                        y={barTop - 2}
+                        y={barTop - 2 - (statusIcons.length > 0 ? ICON_SIZE + 0.6 : 0)}
                         fontSize={4.5}
                         fontFamily="SpaceMono_700Bold"
                         fill="#FFFFFF"

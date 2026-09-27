@@ -49,6 +49,7 @@ import {
   type Behavior,
   type Element,
 } from '../src/play/kits';
+import { STUN_ICON_COLOR, statusIconsFor } from '../src/play/status-icons';
 
 let passed = 0;
 function ok(label: string) {
@@ -259,5 +260,30 @@ assert.equal(stepped.hits.length, 1, 'one tower shot → one hit record');
 assert.equal(stepped.hits[0].element, 'spark', 'the crystal reports its Spark element');
 assert.equal(stepped.hits[0].primaryId, 99);
 ok('the engine reports every kit hit with its element (drives effects + number colour)');
+
+// Status icons above the health bar (emci, 2026-09-26: icons, not circles).
+const plain: KitCreep = { id: 50, dist: 0.5, hp: 100, kind: 'puff', slowMs: 0, slowFactor: 1, tint: null };
+assert.deepEqual(statusIconsFor(plain), [], 'an unaffected creep shows no icons');
+const loaded = statusIconsFor({
+  ...plain,
+  slowMs: 500,
+  stunMs: 200,
+  shredMs: 1000,
+  dots: [
+    { element: 'ember', dps: 2, ms: 1000 },
+    { element: 'void', dps: 5, ms: 1000 },
+  ],
+});
+assert.deepEqual(
+  loaded.map((i) => i.kind),
+  ['stun', 'dot', 'slow', 'shred'],
+  'fixed order: stun, DoT, slow, shred',
+);
+assert.equal(loaded[0].color, STUN_ICON_COLOR);
+assert.equal(loaded[1].count, 2, 'two DoTs show a stack count of 2');
+assert.equal(loaded[1].color, ELEMENT_COLOR.void, 'the DoT icon takes the strongest DoT element');
+assert.equal(loaded[2].color, ELEMENT_COLOR.tide);
+assert.equal(loaded[3].color, ELEMENT_COLOR.void);
+ok('status icons: none when clean; stun, DoT (with stack count), slow, shred in a fixed order');
 
 console.log(`\nAll ${passed} kit checks passed.`);
