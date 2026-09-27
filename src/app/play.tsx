@@ -8,6 +8,7 @@ import { MilestoneToast } from '@/components/milestone-toast';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { useImmersiveMode } from '@/hooks/use-immersive-mode';
 import { useTheme } from '@/hooks/use-theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useAppearance } from '@/lib/theme/context';
@@ -133,6 +134,10 @@ export default function PlayScreen() {
     buyShopRow,
   } = usePlayStore();
   const [mode, setMode] = useState<PlayMode>('grove');
+  // Fullscreen while on the Defend board (setup and waves): the status bar
+  // hides and comes back on leaving Defend or exiting Play. Shared hook —
+  // any screen opts in the same way.
+  useImmersiveMode(mode === 'defend');
   const [toast, setToast] = useState<PlayToast | null>(null);
   /** Dev kit only: one-shot forced bust on the next Deeper press. */
   const [forceBustArmed, setForceBustArmed] = useState(false);

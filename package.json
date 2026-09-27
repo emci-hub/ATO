@@ -80,6 +80,7 @@
     "check:wave-tables": "tsx ./scripts/wave-tables-check.ts",
     "check:heroes": "tsx ./scripts/check-heroes.ts",
     "check:kits": "tsx ./scripts/check-kits.ts",
+    "check:immersive": "tsx ./scripts/check-immersive.ts",
     "check:board-layouts": "tsx ./scripts/check-board-layouts.ts",
     "sim:balance": "tsx ./scripts/play-balance-sim.ts",
     "check:towers": "tsx ./scripts/check-towers.ts",
