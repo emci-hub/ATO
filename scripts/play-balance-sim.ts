@@ -49,6 +49,7 @@ import {
   type TowerKind,
 } from '../src/play/defend';
 import { BOARD_MAPS } from '../src/play/board-data';
+import { KEPT_BOARD_MIN_SCRAP, setupScrapFor } from '../src/play/board-layouts';
 import { allHeroes } from '../src/play/heroes-data';
 import { kitLabel } from '../src/play/kits';
 import { getTune } from '../src/play/tune';
@@ -111,6 +112,8 @@ type RunResult = {
   /** What this wave leaves for the next one in campaign mode. */
   endLayout: BoardLayout;
   earned: number;
+  /** Scrap left after setup spending (what a lost restage returns). */
+  setupLeft: number;
 };
 
 /** Campaign carry-over: the previous wave's layout (restored free) + banked
@@ -129,11 +132,15 @@ function simulate(
   if (carry) {
     const allowed = new Map<string, number>([[strategy.heroId ?? HERO_ID, 1]]);
     s = restoreBoardLayout(s, carry.layout, allowed);
-    const kept = carry.layout.towers.length + carry.layout.bosses.length > 0;
-    // Variant: start scrap only on an empty board; a kept board runs on banked
-    // kill scrap alone.
-    const base = carry.noStartScrap && kept ? 0 : s.scrap;
-    s = { ...s, scrap: base + carry.bank };
+    const kept = s.towers.length + s.boundBosses.length > 0;
+    // Shipped rule = the game's own `setupScrapFor` (start scrap only on an
+    // empty board; a kept board runs on its bank, floored at one tower).
+    s = {
+      ...s,
+      scrap: carry.noStartScrap
+        ? setupScrapFor({ keptBoard: kept, startScrap: s.scrap, bank: carry.bank })
+        : s.scrap + carry.bank,
+    };
   }
   const buckets = { wavePower: damageMult, towerSpeed: 1, avatarLevel: 1, typeMatch: 0, avatarStars: 0 };
 
@@ -191,6 +198,7 @@ function simulate(
     scrapLeft: s.scrap,
     endLayout,
     earned: Math.max(0, s.scrap - startScrap),
+    setupLeft: startScrap,
   };
 }
 
@@ -264,9 +272,12 @@ const heroRows = allHeroes().map((hero) => {
 // since saved layouts. A wave's "damage needed" is measured from the board the
 // ×1 run actually had going into it.
 const campaignStrats = STRATEGIES.filter((st) => st.id === 'mixed' || st.id === 'mixed+heroes');
+// Shipped rule (emci, 2026-09-27): start scrap only on an empty board; a kept
+// board runs on the whole balance banked from the last win. The old rule (+start
+// scrap every wave on top of a free kept board) stays for comparison.
 const campaignVariants = campaignStrats.flatMap((strat) => [
-  { strat, noStartScrap: false, label: strat.label },
-  { strat, noStartScrap: true, label: `${strat.label}, start scrap on empty boards only` },
+  { strat, noStartScrap: true, label: `${strat.label} (shipped rule)` },
+  { strat, noStartScrap: false, label: `${strat.label}, old rule: start scrap every wave` },
 ]);
 const campaign = campaignVariants.map(({ strat, noStartScrap, label }) => {
   const rows: { w: (typeof WAVES)[number]; fresh: number | null; kept: number | null; towers: number; avgLevel: number }[] = [];
@@ -286,7 +297,14 @@ const campaign = campaignVariants.map(({ strat, noStartScrap, label }) => {
     // A lost wave keeps the board but banks nothing (only wins bank scrap).
     // Shipped rule: bank = this wave's kill scrap. The variant has no fresh
     // start scrap, so it must carry the whole leftover balance to be fair.
-    const bank = run.leaked > 0 ? 0 : noStartScrap ? run.scrapLeft : run.earned;
+    // Shipped: a win banks max(end balance, 40); a loss restages at max(scrap
+    // the wave started with, 40) — the game's one-tower floor. Old rule: kills
+    // only on a win.
+    const bank = noStartScrap
+      ? Math.max(run.leaked > 0 ? run.setupLeft : run.scrapLeft, KEPT_BOARD_MIN_SCRAP)
+      : run.leaked > 0
+        ? 0
+        : run.earned;
     carry = { layout: run.endLayout, bank, noStartScrap };
   }
   return { strat, label, rows };

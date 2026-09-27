@@ -10,13 +10,21 @@
  *   - a Bound Boss the player can no longer place (unbound hero, hero made the
  *     Avatar) is dropped; one that is allowed uses its CURRENT stars;
  *   - tower and Bound Boss caps still hold;
- *   - the kill-scrap bank survives a save and parses back.
+ *   - the scrap bank survives a save and parses back;
+ *   - setup scrap: start scrap only on an EMPTY board, a kept board runs on
+ *     its banked balance (emci, 2026-09-27 — the gentler rule).
  *
  * Run: npm run check:board-layouts
  */
 import assert from 'node:assert/strict';
 
-import { parseLayout, parseLayoutsDoc } from '../src/play/board-layouts';
+import {
+  KEPT_BOARD_MIN_SCRAP,
+  parseLayout,
+  parseLayoutsDoc,
+  setupBankFor,
+  setupScrapFor,
+} from '../src/play/board-layouts';
 import {
   BOUND_BOSS_MAX_ON_BOARD,
   MAX_TOWERS,
@@ -136,5 +144,22 @@ assert.deepEqual(parsed, {
 assert.deepEqual(parseLayoutsDoc('garbage').layouts, {}, 'an unreadable file becomes an empty doc');
 assert.equal(parseLayout({ bankScrap: -5 })?.bankScrap, 0, 'a negative bank reads as 0');
 ok('malformed rows are dropped on load; the kill-scrap bank parses back');
+
+assert.equal(setupScrapFor({ keptBoard: false, startScrap: 80, bank: 0 }), 80, 'an empty board gets start scrap');
+assert.equal(setupScrapFor({ keptBoard: false, startScrap: 80, bank: 25 }), 105, 'plus any bank');
+assert.equal(setupScrapFor({ keptBoard: true, startScrap: 80, bank: 125 }), 125, 'a kept board runs on its bank');
+assert.equal(setupScrapFor({ keptBoard: true, startScrap: 80, bank: 0 }), 0, 'a REBUILD never mints scrap (no floor here)');
+assert.equal(setupScrapFor({ keptBoard: true, startScrap: 80, bank: -3.7 }), 0, 'a bad bank never goes negative');
+assert.ok(KEPT_BOARD_MIN_SCRAP > 0, 'the one-tower floor exists for wave results');
+ok('setup scrap: start scrap only on an empty board; a kept board gets its bank exactly');
+
+// Rebuild round trips: bank what setup would give back, never more.
+const rebuild = (kept: boolean, scrap: number) =>
+  setupScrapFor({ keptBoard: kept, startScrap: 80, bank: setupBankFor({ keptBoard: kept, scrap, startScrap: 80 }) });
+assert.equal(rebuild(true, 0), 0, 'spend to 0, re-enter Defend → still 0 (no free 40)');
+assert.equal(rebuild(true, 55), 55, 'a kept board keeps its exact balance across a rebuild');
+assert.equal(rebuild(false, 130), 130, 'an emptied board with 130 gets 130 back (80 start + 50 bank)');
+assert.equal(rebuild(false, 30), 80, 'an emptied board below start scrap gets start scrap (nothing to farm: towers cannot be sold)');
+ok('a rebuild before the wave restores the exact balance (no farming by re-entering Defend)');
 
 console.log(`\nAll ${passed} board-layout checks passed.`);
