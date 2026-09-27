@@ -8,9 +8,12 @@
  * empty board. Keyed per campaign phase + board (`trial:ato`, `main:ato`,
  * `main:neon-maze`).
  *
- * Each entry also carries a small scrap bank: scrap earned from kills in a WON
- * wave carries into that map's next setup (pads lock while a wave runs, so kill
- * scrap would otherwise have nothing to buy). The bank is paid out once.
+ * Each entry also carries a scrap bank: the WHOLE scrap balance left at the end
+ * of a won wave carries into that map's next setup (pads lock while a wave
+ * runs, so kill scrap would otherwise have nothing to buy). A kept board gets
+ * ONLY that bank — fresh start scrap is for empty boards (emci, 2026-09-27:
+ * the gentler rule, so a kept board grows from what the player earns instead
+ * of +start scrap every wave). See `setupScrapFor`.
  *
  * The key lives under `ato.*`, so sign-out / delete-account clears it with
  * the rest of the account's local data (correct: it is account progress).
@@ -38,6 +41,27 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function num(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+/** After a WAVE RESULT (a win, or a real loss), a kept board never restarts
+ * below one cheapest tower's worth of scrap, so a board that keeps losing can
+ * always build its way out instead of being stuck forever. Applied ONLY where
+ * a wave result is written (win bank, lost restage) — never on a rebuild, or
+ * spending to 0 and re-entering Defend would mint free scrap. */
+export const KEPT_BOARD_MIN_SCRAP = 40;
+
+/** Scrap a setup board starts with: an empty board gets the tune's start
+ * scrap (+ any bank); a kept board runs on its bank exactly. */
+export function setupScrapFor(opts: { keptBoard: boolean; startScrap: number; bank: number }): number {
+  const bank = Math.max(0, Math.floor(opts.bank));
+  return opts.keptBoard ? bank : opts.startScrap + bank;
+}
+
+/** What a setup edit banks: a kept board banks its unspent balance; an emptied
+ * board banks only what is above the start scrap it will be given again, so a
+ * rebuild restores the exact balance either way. */
+export function setupBankFor(opts: { keptBoard: boolean; scrap: number; startScrap: number }): number {
+  return opts.keptBoard ? Math.max(0, opts.scrap) : Math.max(0, opts.scrap - opts.startScrap);
 }
 
 /** Parse one saved layout, dropping every malformed entry (never throws). */
@@ -134,21 +158,21 @@ export function saveBoardLayout(key: string, layout: BoardLayout): void {
   persist();
 }
 
-/** Add kill scrap from a won wave to a map's bank. */
-export function addBankScrap(key: string, amount: number): void {
-  if (!loaded || !(amount > 0)) return;
+/** Set a map's bank: the balance at the end of a won wave, or the unspent
+ * balance after a setup edit (so a rebuild before the wave keeps it). */
+export function setBankScrap(key: string, amount: number): void {
+  if (!loaded) return;
   const current = doc.layouts[key] ?? { towers: [], bosses: [], bankScrap: 0 };
-  doc = {
-    ...doc,
-    layouts: { ...doc.layouts, [key]: { ...current, bankScrap: current.bankScrap + Math.floor(amount) } },
-  };
+  const bankScrap = amount > 0 ? Math.floor(amount) : 0;
+  if (current.bankScrap === bankScrap && doc.layouts[key]) return;
+  doc = { ...doc, layouts: { ...doc.layouts, [key]: { ...current, bankScrap } } };
   persist();
 }
 
 /** A map's banked scrap without clearing it — a board built before the wave
- * starts may be rebuilt (seat update, board switch), so the bank is only
- * CONSUMED once it is spent (`takeBankScrap` on the first setup edit) or the
- * wave starts. */
+ * starts may be rebuilt (seat update, board switch, leaving Defend), so the
+ * bank tracks the unspent balance through setup and is only CONSUMED when the
+ * wave starts (`takeBankScrap`). */
 export function peekBankScrap(key: string): number {
   if (!loaded) return 0;
   return doc.layouts[key]?.bankScrap ?? 0;
