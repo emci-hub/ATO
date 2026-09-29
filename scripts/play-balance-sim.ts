@@ -35,6 +35,7 @@ import {
   HERO_TOWER_STATS,
   MAX_TOWERS,
   TOWER_DEFS,
+  castPetPounce,
   createDefendLive,
   boardLayoutOf,
   placeBoundBoss,
@@ -53,6 +54,7 @@ import { KEPT_BOARD_MIN_SCRAP, setupScrapFor } from '../src/play/board-layouts';
 import { allHeroes } from '../src/play/heroes-data';
 import { waveDefFor } from '../src/play/director';
 import { kitLabel, type Element } from '../src/play/kits';
+import { PET_BRANCH_POUNCE, PET_POUNCE_BASE, PET_POUNCE_RADIUS, PET_REBIRTH_CAP } from '../src/play/pet';
 import { getTune, setKnob } from '../src/play/tune';
 import rawItems from '../src/play/data/items.json';
 import { bucketMultiplier } from '../src/play/playStore';
@@ -73,6 +75,13 @@ type Strategy = {
   legend?: Element | null;
   /** The Legend's level (drives effect strength + resist recovery). */
   legendLevel?: number;
+  /** Pet pounce base damage (0/undefined = no pet). Cast once per wave the
+   * first tick 3+ foes, or a tank/boss, are within reach of the Avatar. */
+  petBase?: number;
+  /** Pet rebirth bonus (0..0.10) folded into the damage pass. */
+  rebirthBonus?: number;
+  /** Gear wave_power bucket (1 = no gear) — multiplies the tested damage. */
+  gearMult?: number;
 };
 const STRATEGIES: Strategy[] = [
   { id: 'avatar', label: 'Avatar only', towers: [], heroTowers: 0 },
@@ -156,11 +165,12 @@ function simulate(
     };
   }
   const buckets = {
-    wavePower: damageMult,
+    wavePower: damageMult * (strategy.gearMult ?? 1),
     towerSpeed: 1,
     avatarLevel: strategy.legendLevel ?? 1,
     legendElement: (strategy.legend ?? null) as Element | null,
     avatarStars: 0,
+    rebirthBonus: strategy.rebirthBonus ?? 0,
   };
 
   // Hero towers first (free), on the pads a 20-range tower covers best.
@@ -206,6 +216,16 @@ function simulate(
       const out = s.puffs.filter((p) => p.dist >= 1).length;
       leaked += out;
       s = { ...s, puffs: s.puffs.filter((p) => p.dist < 1) };
+    }
+    if (strategy.petBase && !s.petPounceUsed) {
+      const near = s.puffs.filter((p) => {
+        const q = puffPosition(p.dist, map);
+        return Math.hypot(q.x * 100 - AVATAR_SPOT.x, q.y * 100 - AVATAR_SPOT.y) <= PET_POUNCE_RADIUS;
+      });
+      if (near.length >= 3 || near.some((p) => p.kind === 'tank' || p.kind === 'boss')) {
+        const cast = castPetPounce(s, AVATAR_SPOT, strategy.petBase, null);
+        if (cast) s = cast.state;
+      }
     }
     if (s.schedule.length === 0 && s.puffs.length === 0) break;
   }
@@ -401,6 +421,80 @@ const resistLv1 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat(re
 const resistLv20 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat(resistEl, HERO_ID, 20), 1);
 const neutralLv1 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat('void', HERO_ID, 1), 1);
 
+// Pet (v20, 2026-09-29): the once-per-wave pounce per stage (Standard form,
+// and a Battle God), on the "Mixed + 2 hero towers" board over every wave.
+// Target: about 3-8% less damage needed — helps, never mandatory.
+const mixedHeroes = STRATEGIES.find((st) => st.id === 'mixed+heroes') as Strategy;
+const perWaveGain = (base: Strategy, boosted: Strategy, waves: typeof WAVES) => {
+  const ratios: number[] = [];
+  for (const w of waves) {
+    const a = damageNeeded(w.phase, w.wave, base, 1);
+    const b = damageNeeded(w.phase, w.wave, boosted, 1);
+    if (a != null && b != null) ratios.push(a / b);
+  }
+  return ratios.length ? ratios.reduce((x, y) => x + y, 0) / ratios.length : 1;
+};
+const petStages = ['child', 'teen', 'adult', 'god'] as const;
+const petRows = [
+  ...petStages.map((stage) => ({ label: stage, base: PET_POUNCE_BASE[stage] })),
+  { label: 'god (battle)', base: PET_POUNCE_BASE.god * PET_BRANCH_POUNCE.battle },
+].map((row) => ({
+  ...row,
+  gain: perWaveGain(mixedHeroes, { ...mixedHeroes, id: `pet:${row.label}`, petBase: row.base }, WAVES) - 1,
+}));
+
+// Every PERMANENT boost stacked at its max, vs a fresh player — emci asked for
+// the combined total, not just each alone (2026-09-29). Per Legend, with a
+// hero whose affinity matches it, over every wave (Trial 1-5 + Main 1-10):
+//   base  = Legend Lv1, affinity off, the same 4 Powers UNMATCHED, no pet,
+//           no rebirth;
+//   max   = Legend Lv20 + affinity + fully matched gear + a Battle God pet +
+//           rebirth +10%.
+// "Board strength" = base damage needed ÷ max damage needed, averaged per wave
+// (×1.50 = the same board clears waves needing 50% more damage).
+const GOD_BATTLE = PET_POUNCE_BASE.god * PET_BRANCH_POUNCE.battle;
+const withAffinity = <T,>(on: boolean, fn: () => T): T => {
+  const keep = getTune().heroAffinityBonus;
+  setKnob('heroAffinityBonus', on ? affinityBonus : 0);
+  try {
+    return fn();
+  } finally {
+    setKnob('heroAffinityBonus', keep);
+  }
+};
+const stackRows = LEGEND_ELEMENTS.map((legend) => {
+  const hero = allHeroes().find((h) => h.kit.element === legend) ?? allHeroes()[0];
+  const base: Strategy = { ...legendStrat(legend, hero.id, 1), id: `stack:${legend}:base`, gearMult: gearNone };
+  const max: Strategy = {
+    ...legendStrat(legend, hero.id, 20),
+    id: `stack:${legend}:max`,
+    gearMult: gearAll,
+    petBase: GOD_BATTLE,
+    rebirthBonus: PET_REBIRTH_CAP,
+  };
+  const need = (st: Strategy, affinity: boolean) =>
+    withAffinity(affinity, () => WAVES.map((w) => damageNeeded(w.phase, w.wave, st, 1)));
+  const baseNeeds = need(base, false);
+  const ratio = (needs: (number | null)[]) => {
+    const r: number[] = [];
+    needs.forEach((n, i) => {
+      const b = baseNeeds[i];
+      if (n != null && b != null) r.push(b / n);
+    });
+    return r.length ? r.reduce((x, y) => x + y, 0) / r.length : 1;
+  };
+  const singles = {
+    legendLv20: ratio(need({ ...base, legendLevel: 20 }, false)),
+    affinity: ratio(need(base, true)),
+    matchedGear: ratio(need({ ...base, gearMult: gearAll }, false)),
+    godPet: ratio(need({ ...base, petBase: GOD_BATTLE }, false)),
+    rebirth: ratio(need({ ...base, rebirthBonus: PET_REBIRTH_CAP }, false)),
+  };
+  const stacked = ratio(need(max, true));
+  const product = Object.values(singles).reduce((a, b) => a * b, 1);
+  return { legend, hero: hero.name, singles, stacked, product };
+});
+
 const secs = ((Date.now() - started) / 1000).toFixed(1);
 
 function fmtNeed(need: number | null): string {
@@ -579,6 +673,44 @@ for (const c of campaign) {
       `by Main 10 the board is ${c.rows[c.rows.length - 1].towers} towers at avg level ${c.rows[c.rows.length - 1].avgLevel.toFixed(1)}.`,
   );
 }
+
+lines.push('## Pet (v20)');
+lines.push('');
+lines.push('Once-per-wave pounce on the "Mixed + 2 hero towers" board, every wave, cycle 0. Gain = average per-wave drop in damage needed.');
+lines.push('');
+lines.push('| Pet | Pounce base | Less damage needed |');
+lines.push('|---|---|---|');
+for (const r of petRows) lines.push(`| ${r.label} | ${r.base} | ${(r.gain * 100).toFixed(1)}% |`);
+lines.push('');
+lines.push('## All permanent boosts stacked at max');
+lines.push('');
+lines.push('Board strength vs a fresh player (Legend Lv1, affinity off, same 4 Powers unmatched, no pet, no rebirth), averaged over all 15 waves. ×1.50 = clears waves needing 50% more damage.');
+lines.push('');
+lines.push('| Legend (hero) | Lv20 | Affinity | Matched gear | God pet (battle) | Rebirth +10% | Product of singles | **All stacked** |');
+lines.push('|---|---|---|---|---|---|---|---|');
+for (const r of stackRows) {
+  const s = r.singles;
+  lines.push(
+    `| ${r.legend} (${r.hero}) | ×${s.legendLv20.toFixed(2)} | ×${s.affinity.toFixed(2)} | ×${s.matchedGear.toFixed(2)} | ×${s.godPet.toFixed(2)} | ×${s.rebirth.toFixed(2)} | ×${r.product.toFixed(2)} | **×${r.stacked.toFixed(2)}** |`,
+  );
+}
+lines.push('');
+const petGod = petRows.find((r) => r.label === 'god') as (typeof petRows)[number];
+const petChild = petRows.find((r) => r.label === 'child') as (typeof petRows)[number];
+findings.push(
+  `- **Pet pounce (once per wave):** Child ${(petChild.gain * 100).toFixed(1)}% → God ${(petGod.gain * 100).toFixed(1)}% less damage needed (Battle God ${(petRows[petRows.length - 1].gain * 100).toFixed(1)}%) — ` +
+    (petChild.gain >= 0.025 && petRows.every((r) => r.gain <= 0.08)
+      ? 'inside the 3-8% target at every stage and form: helps, never mandatory.'
+      : 'outside the 3-8% target; retune PET_POUNCE_BASE / PET_BRANCH_POUNCE.'),
+);
+const stackAvg = stackRows.reduce((a, r) => a + r.stacked, 0) / stackRows.length;
+const stackMin = Math.min(...stackRows.map((r) => r.stacked));
+const stackMax = Math.max(...stackRows.map((r) => r.stacked));
+const productAvg = stackRows.reduce((a, r) => a + r.product, 0) / stackRows.length;
+findings.push(
+  `- **All permanent boosts stacked at max (Legend Lv20 + affinity + fully matched gear + Battle God pet + rebirth +10%):** ×${stackAvg.toFixed(2)} board strength on average (range ×${stackMin.toFixed(2)}-×${stackMax.toFixed(2)} across the 5 Legends) — ` +
+    `the product of each alone would be ×${productAvg.toFixed(2)}, so the boosts ${stackAvg < productAvg * 0.97 ? 'overlap (stacking is weaker than multiplying)' : stackAvg > productAvg * 1.03 ? 'compound (stacking is stronger than multiplying)' : 'stack about multiplicatively'}.`,
+);
 
 lines.splice(6, 0, '## Findings', '', ...findings, '');
 

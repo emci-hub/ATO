@@ -68,24 +68,25 @@ export const NEON_VIPER_TOKENS: AppearanceTokens = {
 };
 
 /** Where a Command Hub tile goes. A subset of Play's route modes. */
-export type HubDestination = 'defend' | 'shop' | 'dress' | 'about';
+export type HubDestination = 'defend' | 'dive' | 'pet' | 'shop' | 'dress' | 'about';
 
 export type HubTile = {
   id: string;
   label: string;
   subtitle: string;
-  icon: 'divecore' | 'shop' | 'dress' | 'more';
+  icon: 'divecore' | 'dive' | 'pet' | 'shop' | 'dress' | 'more';
   to: HubDestination;
 };
 
 /**
- * The four Command Hub tiles (visual SoT: `command-hub-target.png`).
- * Divecore opens the Defend map/board. Dive (push-your-luck) is intentionally
- * NOT on the hub for now — its screen stays in `src/app/play.tsx` but has no
- * hub entry point at this stage; it is reached by code/route only.
+ * The Command Hub tiles (visual SoT: `command-hub-target.png`). Divecore opens
+ * the Defend map/board. Dive (push-your-luck) and Pet joined the hub with the
+ * pet mode (2026-09-29) — the pet is the dive buddy, so both are one tap away.
  */
 export const HUB_TILES: HubTile[] = [
   { id: 'divecore', label: 'Divecore', subtitle: 'Enter the map', icon: 'divecore', to: 'defend' },
+  { id: 'dive', label: 'Dive', subtitle: 'Push your luck', icon: 'dive', to: 'dive' },
+  { id: 'pet', label: 'Pet', subtitle: 'Raise your buddy', icon: 'pet', to: 'pet' },
   { id: 'shop', label: 'Shop', subtitle: 'Spend scrap', icon: 'shop', to: 'shop' },
   { id: 'dress', label: 'Dress', subtitle: 'Customize', icon: 'dress', to: 'dress' },
   { id: 'more', label: 'More', subtitle: 'About & credits', icon: 'more', to: 'about' },

@@ -53,6 +53,7 @@ import {
   spendAvatarStarToken,
   startDive,
   surfaceDive,
+  touchPet,
   unequipItem,
   recordAvatarPark,
   setActiveAvatar,
@@ -101,9 +102,17 @@ export function usePlayStore() {
   const [, tick] = useReducer((n: number) => n + 1, 0);
 
   const hydrate = useCallback(async () => {
-    const next = await loadPlayStore();
+    const loaded = await loadPlayStore();
+    // Pet (v20): age the pet on every open and save the new clock high-water
+    // mark, so time away is counted once (the view alone never saves it).
+    const next = touchPet(loaded, Date.now());
     docRef.current = next;
     setDoc(next);
+    if (next !== loaded) {
+      savePlayStore(next).catch(() => {
+        // Next open re-ages from the stored mark; nothing is lost.
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -188,7 +197,9 @@ export function usePlayStore() {
   const pushDeeper = useCallback(
     async (forceBust: boolean): Promise<DeeperOutcome | null> => {
       let outcome: DeeperOutcome | null = null;
-      const ok = commit((current) => {
+      const ok = commit((stored, now) => {
+        // Age the pet first so the dive buddy's stage is the one on screen.
+        const current = touchPet(stored, now);
         const next = forceBust ? deeperDive(current, () => 0) : deeperDive(current);
         outcome = next ? next.outcome : null;
         return next ? next.doc : null;

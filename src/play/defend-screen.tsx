@@ -53,6 +53,7 @@ import {
   towerCap,
   TOWER_DEFS,
   TOWER_MAX_LEVEL,
+  castPetPounce,
   castSlowPulse,
   createDefendLive,
   creepDrawPosition,
@@ -1311,8 +1312,9 @@ export function DefendScreen({
       avatarLevel: view.avatarLevel,
       legendElement: view.legendElement,
       avatarStars: view.avatarStars,
+      rebirthBonus: view.petRebirthBonus,
     }),
-    [view.statSums, view.avatarLevel, view.avatarStars, view.legendElement],
+    [view.statSums, view.avatarLevel, view.avatarStars, view.legendElement, view.petRebirthBonus],
   );
   const bucketsRef = useRef(buckets);
   bucketsRef.current = buckets;
@@ -2285,6 +2287,33 @@ export function DefendScreen({
       startAvatarOnce('skill');
     }
   };
+
+  /** Pet pounce (v20): once per wave, foes near the Avatar. Not spent when
+   * none are in reach (the engine refuses). */
+  const castPounce = () => {
+    const current = simRef.current;
+    if (!current) return;
+    const cast = castPetPounce(
+      current,
+      avatarPosRef.current,
+      view.pet.pounceBase,
+      view.pet.aura ?? view.legendElement,
+    );
+    if (!cast) return;
+    if (fxQualityRef.current !== 'off') {
+      const mapNow = BOARD_MAPS[current.boardId] ?? BOARD_MAPS.ato;
+      const drawnPos = new Map<number, FxPoint>();
+      for (const p of current.puffs) {
+        const pos = creepDrawPosition(p, mapNow, creepLaneHalfFor(p));
+        drawnPos.set(p.id, { x: pos.x * 100, y: pos.y * 100 });
+      }
+      spawnHitFx(cast.hit, drawnPos);
+    }
+    simRef.current = cast.state;
+    setSim(cast.state);
+  };
+  const pounceAvailable = view.pet.pounceBase > 0;
+  const pounceReady = pounceAvailable && sim != null && !sim.petPounceUsed;
 
   const skillReady = (sim?.skillCooldownMs ?? 0) <= 0;
   const skillSeconds = Math.ceil((sim?.skillCooldownMs ?? 0) / 1000);
@@ -3824,6 +3853,30 @@ export function DefendScreen({
                 {skillReady ? `Cast · ${activeSkill.name}` : `${activeSkill.name} · ${skillSeconds}s`}
               </ThemedText>
             </Pressable>
+            {pounceAvailable ? (
+              <Pressable
+                onPress={castPounce}
+                disabled={!pounceReady}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  pounceReady
+                    ? 'Pet pounce, once this wave, hits foes near your Avatar'
+                    : 'Pet pounce used this wave'
+                }
+                style={({ pressed }) => [
+                  styles.hudButton,
+                  styles.bottomHudPounce,
+                  { borderColor: theme.backgroundSelected, backgroundColor: theme.backgroundElement },
+                  pressed && pounceReady && styles.pressed,
+                ]}>
+                <ThemedText
+                  type="smallBold"
+                  numberOfLines={1}
+                  themeColor={pounceReady ? undefined : 'textSecondary'}>
+                  {pounceReady ? 'Pet pounce · once this wave' : 'Pet pounce · used this wave'}
+                </ThemedText>
+              </Pressable>
+            ) : null}
             <View style={styles.bottomHudRow}>
               <Pressable
                 onPress={() => setPaused((value) => !value)}
@@ -5094,6 +5147,14 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     minHeight: 52,
     paddingVertical: Spacing.three,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  /** Pet pounce row (v20) — its own row under the Skill bar. */
+  bottomHudPounce: {
+    alignSelf: 'stretch',
+    minHeight: 44,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -9,7 +9,7 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { NEON } from '@/play/neon-viper';
 
-export type HubIconName = 'divecore' | 'shop' | 'dress' | 'more';
+export type HubIconName = 'divecore' | 'dive' | 'pet' | 'shop' | 'dress' | 'more';
 
 function svgProps(size: number, color: string) {
   return {
@@ -24,7 +24,7 @@ function svgProps(size: number, color: string) {
   };
 }
 
-/** One of the four Command Hub tile glyphs. */
+/** One of the Command Hub tile glyphs. */
 export function HubIcon({
   name,
   size = 72,
@@ -43,6 +43,24 @@ export function HubIcon({
           <Circle cx="32" cy="32" r="4" fill={color} stroke="none" />
           <Path d="M16 16 L20 16 M44 16 L48 16 M16 48 L20 48 M44 48 L48 48" strokeOpacity={0.5} />
           <Path d="M32 8 L32 12 M32 52 L32 56 M8 32 L12 32 M52 32 L56 32" strokeOpacity={0.4} />
+        </Svg>
+      );
+    case 'dive':
+      return (
+        <Svg {...svgProps(size, color)}>
+          <Path d="M10 20 Q16 16 22 20 Q28 24 34 20 Q40 16 46 20 Q52 24 54 22" strokeOpacity={0.5} />
+          <Path d="M32 26 L32 50" />
+          <Path d="M24 42 L32 50 L40 42" />
+          <Circle cx="32" cy="14" r="2" fill={color} stroke="none" />
+        </Svg>
+      );
+    case 'pet':
+      return (
+        <Svg {...svgProps(size, color)}>
+          <Path d="M32 10 C20 10 14 26 14 36 C14 47 22 54 32 54 C42 54 50 47 50 36 C50 26 44 10 32 10 Z" />
+          <Circle cx="26" cy="34" r="2" fill={color} stroke="none" />
+          <Circle cx="38" cy="34" r="2" fill={color} stroke="none" />
+          <Path d="M28 42 Q32 45 36 42" strokeOpacity={0.6} />
         </Svg>
       );
     case 'shop':

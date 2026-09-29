@@ -72,11 +72,36 @@ import { gearScore, recommendedGs } from '@/play/engine/gear-score';
 import { starMergeSuccess, starMultScale } from '@/play/engine/star-table';
 import { isTypeTag, type TypeTag } from '@/play/engine/type-match';
 import { DEFAULT_AVATAR_HERO_ID, allHeroes, heroById, heroName } from '@/play/heroes-data';
+import {
+  PET_FEED_CATCH,
+  PET_MIN_ROUND_SCORE,
+  PET_STAGES,
+  advancePet,
+  choosePetLine,
+  feedPet,
+  newPet,
+  parsePet,
+  parsePetHall,
+  petAuraElement,
+  petBustCutPp,
+  petPounceBase,
+  petRescueKeep,
+  petStageLeftMs,
+  petTokensForRound,
+  petTokensLeft,
+  petWaveCleared,
+  rebirthBonus,
+  rebirthPet,
+  trainPet,
+  type PetHallEntry,
+  type PetState,
+} from '@/play/pet';
 import type { ShopTokenRow } from '@/play/shop';
 import { devNoCaps, getTune } from '@/play/tune';
 import {
   getItemDef,
   junkLookId,
+  rarityRank,
   rollDiveFind,
   rollMilestoneLook,
   rollPowerFind,
@@ -572,7 +597,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 19;
+  version: 20;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -638,6 +663,17 @@ export type PlayStoreDoc = {
    * every action (Avatar / bind / dismiss) clears it, so it can never re-fire
    * for an already-owned hero. */
   hero_offer: HeroOffer | null;
+  /** The one active pet (v20, 2026-09-29) — see `pet.ts`. */
+  pet: PetState;
+  /** Retired pets, oldest first (v20). */
+  pet_hall: PetHallEntry[];
+  /** Rebirths so far — each is +2% permanent damage, capped at +10% (v20). */
+  pet_rebirths: number;
+  /** Mini-game tokens paid on `pet_tokens_ymd` (daily cap 30, v20). */
+  pet_tokens_today: number;
+  pet_tokens_ymd: string | null;
+  /** Opt-in gentle hunger reminder (v20, default off). */
+  pet_remind: boolean;
 };
 
 /** A queued "hero owned" offer (Slice A2). `label` is the hero's display name
@@ -746,6 +782,29 @@ export type PlayView = {
   boundHeroIds: readonly string[];
   /** The queued "hero owned" offer awaiting a decision, or null. */
   heroOffer: HeroOffer | null;
+  /** The pet as of now (aged through the clock guard, not yet saved). */
+  pet: PetView;
+  /** Rebirth damage bonus (0..0.10) — folds into every TD damage pass. */
+  petRebirthBonus: number;
+};
+
+/** Read-model of the pet for the screens. */
+export type PetView = {
+  state: PetState;
+  /** Time left in this stage (null at God). */
+  stageLeftMs: number | null;
+  /** Pounce damage at wave 1 (0 = no pounce yet). */
+  pounceBase: number;
+  /** Dive bust cut in percentage points, and finds kept on a bust. */
+  bustCutPp: number;
+  rescueKeep: number;
+  /** Most-used Legend element (God aura), or null. */
+  aura: Element | null;
+  hall: readonly PetHallEntry[];
+  rebirths: number;
+  /** Mini-game tokens still available today. */
+  tokensLeftToday: number;
+  remind: boolean;
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -762,6 +821,8 @@ export type DiveRunView = {
   bustPctNext: number | null;
   /** A Deeper press is still allowed. */
   canDeeper: boolean;
+  /** Finds the pet saves if the next Deeper busts (0 = none). */
+  rescueKeep: number;
 };
 
 export type ClaimResult = {
@@ -786,7 +847,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 19,
+    version: 20,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -817,6 +878,12 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     owned_hero_ids: [DEFAULT_AVATAR_HERO_ID],
     active_avatar_hero_id: DEFAULT_AVATAR_HERO_ID,
     hero_offer: null,
+    pet: newPet(now),
+    pet_hall: [],
+    pet_rebirths: 0,
+    pet_tokens_today: 0,
+    pet_tokens_ymd: null,
+    pet_remind: false,
   };
 }
 
@@ -863,7 +930,7 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
   return {
     tokens: doc.tokens,
     dive: diveChargeAt(doc, now),
-    diveRun: diveRunViewOf(doc),
+    diveRun: diveRunViewOf(doc, now),
     research: researchAt(doc, now),
     tendBonusAvailable: doc.last_tend_bonus_ymd !== localYmd(new Date(now)),
     inventory: doc.inventory,
@@ -901,6 +968,8 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     activeAvatarHeroId: normalizedAvatarHeroId(doc),
     boundHeroIds: boundHeroIdsOf(doc),
     heroOffer: doc.hero_offer,
+    pet: petViewOf(doc, now),
+    petRebirthBonus: rebirthBonus(doc.pet_rebirths),
     boundBosses: doc.bound_bosses.map((record) => {
       const def = getBoundBossDef(record.id);
       return {
@@ -915,9 +984,13 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
   };
 }
 
-function diveRunViewOf(doc: PlayStoreDoc): DiveRunView {
+function diveRunViewOf(doc: PlayStoreDoc, now: number): DiveRunView {
   const run = doc.dive_run;
-  if (!run) return { active: false, deepers: 0, haul: [], bustPctNext: null, canDeeper: false };
+  const pet = advancePet(doc.pet, now);
+  const rescueKeep = petRescueKeep(pet);
+  if (!run) {
+    return { active: false, deepers: 0, haul: [], bustPctNext: null, canDeeper: false, rescueKeep };
+  }
   const canDeeper = run.deepers < DIVE_DEEPER_MAX;
   const activeLegend = activeAvatarOf(doc);
   return {
@@ -929,10 +1002,120 @@ function diveRunViewOf(doc: PlayStoreDoc): DiveRunView {
           diveBustChanceAt(run.deepers),
           activeLegend.equipped,
           legendElementOf(activeLegend.id),
+          petBustCutPp(pet),
         )
       : null,
     canDeeper,
+    rescueKeep,
   };
+}
+
+/** The pet as of `now` for the screens (aged, not saved). */
+function petViewOf(doc: PlayStoreDoc, now: number): PetView {
+  const pet = advancePet(doc.pet, now);
+  return {
+    state: pet,
+    stageLeftMs: petStageLeftMs(pet),
+    pounceBase: petPounceBase(pet),
+    bustCutPp: petBustCutPp(pet),
+    rescueKeep: petRescueKeep(pet),
+    aura: petAuraElement(pet),
+    hall: doc.pet_hall,
+    rebirths: doc.pet_rebirths,
+    tokensLeftToday: petTokensLeft(localYmd(new Date(now)), doc.pet_tokens_ymd, doc.pet_tokens_today),
+    remind: doc.pet_remind,
+  };
+}
+
+/* ---------------------------------------------------------------------------
+ * Pet (v20, 2026-09-29) — doc-level transitions. The rules live in `pet.ts`;
+ * every transition first ages the pet to `now` through the clock guard, so the
+ * saved `seen_at` high-water mark moves with each write.
+ * ------------------------------------------------------------------------- */
+
+/** Age the pet to now and save the new high-water mark (app open). Returns
+ * the same doc when nothing changed. */
+export function touchPet(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const pet = advancePet(doc.pet, now);
+  return pet === doc.pet ? doc : { ...doc, pet };
+}
+
+/** Pick what hatches (egg only). Null when refused. */
+export function setPetLine(doc: PlayStoreDoc, now: number, lineId: string): PlayStoreDoc | null {
+  const pet = choosePetLine(advancePet(doc.pet, now), lineId);
+  return pet ? { ...doc, pet } : null;
+}
+
+export type PetRoundKind = 'catch' | 'train';
+export type PetRoundResult = { counted: boolean; tokensGranted: number };
+
+/**
+ * A finished mini-game round. "Catch the food" feeds (+2 hunger), "Tap to
+ * train" trains (+1 training, +2 mood). A round under `PET_MIN_ROUND_SCORE`
+ * does not count. Counted rounds pay +5 tokens up to 30 a device-local day.
+ */
+export function finishPetRound(
+  doc: PlayStoreDoc,
+  now: number,
+  kind: PetRoundKind,
+  score: number,
+): { doc: PlayStoreDoc; result: PetRoundResult } {
+  const aged = advancePet(doc.pet, now);
+  if (aged.stage === 'egg' || !(score >= PET_MIN_ROUND_SCORE)) {
+    return { doc: { ...doc, pet: aged }, result: { counted: false, tokensGranted: 0 } };
+  }
+  const pet = kind === 'catch' ? feedPet(aged, PET_FEED_CATCH) : trainPet(aged);
+  const pay = petTokensForRound(localYmd(new Date(now)), doc.pet_tokens_ymd, doc.pet_tokens_today);
+  return {
+    doc: {
+      ...doc,
+      pet,
+      tokens: doc.tokens + pay.tokens,
+      pet_tokens_today: pay.paid,
+      pet_tokens_ymd: pay.ymd,
+    },
+    result: { counted: true, tokensGranted: pay.tokens },
+  };
+}
+
+/** Rebirth a God pet: Hall entry, +2% (cap +10%), new egg. Null unless God. */
+export function rebirthPetDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | null {
+  const next = rebirthPet(advancePet(doc.pet, now), doc.pet_hall, doc.pet_rebirths, now);
+  if (!next) return null;
+  return { ...doc, pet: next.pet, pet_hall: next.hall, pet_rebirths: next.rebirths };
+}
+
+export function setPetRemind(doc: PlayStoreDoc, on: boolean): PlayStoreDoc {
+  return { ...doc, pet_remind: on };
+}
+
+/** Dev kit: jump the pet to the end of its stage (it evolves on the next
+ * age). Branch counters are kept, so a test can set them first. */
+export function devPetFinishStage(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const pet = advancePet(doc.pet, now);
+  if (pet.stage === 'god') return { ...doc, pet };
+  // One ms short of the end: the next age (1ms of real time) evolves it. The
+  // clock mark is left alone (never moved backwards).
+  const left = petStageLeftMs(pet) ?? 0;
+  return { ...doc, pet: { ...pet, stage_age_ms: pet.stage_age_ms + left - 1 } };
+}
+
+/** Dev kit: straight to a stage (fresh counters). */
+export function devPetSetStage(doc: PlayStoreDoc, now: number, stage: PetState['stage']): PlayStoreDoc {
+  if (!(PET_STAGES as readonly string[]).includes(stage)) return doc;
+  const pet = advancePet(doc.pet, now);
+  return { ...doc, pet: { ...pet, stage, stage_age_ms: 0, mistakes: 0, training: 0, waves: 0 } };
+}
+
+/** Dev kit: empty both meters (care-mistake / reminder testing). */
+export function devPetStarve(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const pet = advancePet(doc.pet, now);
+  return { ...doc, pet: { ...pet, hunger: 0, mood: 0, hunger_empty_ms: 0, mood_empty_ms: 0 } };
+}
+
+/** Dev kit: a brand-new egg (hall and rebirths kept). */
+export function devPetNewEgg(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  return { ...doc, pet: newPet(now, doc.pet.line) };
 }
 
 export function canClaimResearch(view: PlayView): boolean {
@@ -1267,6 +1450,10 @@ export function recordDefendWin(
       bound_bosses,
       owned_hero_ids: ownedHeroIds,
       hero_offer: heroOffer,
+      // Pet (v20): every cleared wave (campaign or replay) feeds the pet a
+      // heart, counts toward its Battle form and tallies the Legend element
+      // for the God aura — so TD-only players still raise it.
+      pet: petWaveCleared(advancePet(doc.pet, now), legendElementOf(active.id)),
     },
     { xp, level },
   );
@@ -2158,9 +2345,12 @@ export function effectiveBustPct(
   baseBust: number,
   equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>,
   legendElement: Element | null = null,
+  petCutPp: number = 0,
 ): number {
   const bucket = diveLuckBucket(equippedStatSums(equipped, legendElement));
-  const bent = baseBust * (1 - LUCK_BUST_BEND_PER_TIER * (bucket - 1));
+  // The pet dive buddy (v20) takes whole points off AFTER the luck bend; the
+  // 50%-of-table floor still holds, so the two together never zero it out.
+  const bent = baseBust * (1 - LUCK_BUST_BEND_PER_TIER * (bucket - 1)) - Math.max(0, petCutPp) / 100;
   const floored = Math.max(0.5 * baseBust, bent);
   return Math.round(floored * 100);
 }
@@ -2240,7 +2430,7 @@ export function claimResearch(
  * ------------------------------------------------------------------------- */
 
 export type DeeperOutcome =
-  | { busted: true; bustPct: number }
+  | { busted: true; bustPct: number; rescued: string[] }
   | { busted: false; bustPct: number; addedId: string };
 
 /**
@@ -2303,10 +2493,22 @@ export function deeperDive(
       diveBustChanceAt(run.deepers),
       activeAvatarOf(doc).equipped,
       legendElementOf(activeAvatarOf(doc).id),
+      petBustCutPp(doc.pet),
     ) / 100;
   if (rng() < bustChance) {
     const bustPct = Math.round(bustChance * 100);
-    return { doc: { ...doc, dive_run: null }, outcome: { busted: true, bustPct } };
+    // Pet rescue (v20): from Adult the pet saves the best find(s) of the lost
+    // haul (1, or 2 at God). A bust ends the dive, so this is once per dive.
+    // The pet itself is never lost.
+    const rescued = bestFinds(run.haul, petRescueKeep(doc.pet));
+    return {
+      doc: {
+        ...doc,
+        dive_run: null,
+        inventory: rescued.length > 0 ? addManyToBag(doc.inventory, rescued) : doc.inventory,
+      },
+      outcome: { busted: true, bustPct, rescued },
+    };
   }
   const addedId = rollDiveFind(rng);
   return {
@@ -2316,6 +2518,22 @@ export function deeperDive(
     },
     outcome: { busted: false, bustPct: Math.round(bustChance * 100), addedId },
   };
+}
+
+/** The `n` best finds of a haul: Powers over Looks, then rarity, then the
+ * later (deeper) find. Pure; `n` ≤ 0 → none. */
+export function bestFinds(haul: readonly string[], n: number): string[] {
+  if (n <= 0) return [];
+  const score = (id: string) => {
+    const def = getItemDef(id);
+    if (!def) return 99;
+    return (def.core.kind === 'power' ? 0 : 10) + rarityRank(def.core.rarity);
+  };
+  return haul
+    .map((id, index) => ({ id, index }))
+    .sort((a, b) => score(a.id) - score(b.id) || b.index - a.index)
+    .slice(0, n)
+    .map((row) => row.id);
 }
 
 /* ---------------------------------------------------------------------------
@@ -2831,7 +3049,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 5 && version !== 6 && version !== 7 && version !== 8 &&
       version !== 9 && version !== 10 && version !== 11 && version !== 12 &&
       version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
-      version !== 17 && version !== 18 && version !== 19
+      version !== 17 && version !== 18 && version !== 19 && version !== 20
     ) {
       return null;
     }
@@ -2928,8 +3146,12 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     const ownedHeroIds = parseOwnedHeroIds(data.owned_hero_ids);
     const activeAvatarHeroId = parseAvatarHeroId(data.active_avatar_hero_id, ownedHeroIds);
     const heroOffer = parseHeroOffer(data.hero_offer);
+    // v20 (pet, 2026-09-29): older saves get a fresh egg (seen now, so no
+    // time before the update counts), an empty Hall, no rebirths, reminder off.
+    const pet = version >= 20 ? parsePet(data.pet, now) : newPet(now);
+    const petRebirths = Math.max(0, Math.floor(finiteNumber(data.pet_rebirths) ?? 0));
     return {
-      version: 19,
+      version: 20,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -2961,6 +3183,12 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       owned_hero_ids: ownedHeroIds,
       active_avatar_hero_id: activeAvatarHeroId,
       hero_offer: heroOffer,
+      pet,
+      pet_hall: parsePetHall(data.pet_hall),
+      pet_rebirths: petRebirths,
+      pet_tokens_today: Math.max(0, Math.floor(finiteNumber(data.pet_tokens_today) ?? 0)),
+      pet_tokens_ymd: typeof data.pet_tokens_ymd === 'string' ? data.pet_tokens_ymd : null,
+      pet_remind: data.pet_remind === true,
     };
   } catch {
     return null;

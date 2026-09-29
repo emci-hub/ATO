@@ -22,6 +22,7 @@ import { usePlayDevUnlocked } from '@/play/dev-lock';
 import { DevUnlockRow } from '@/play/dev-unlock-row';
 import { DiveScreen } from '@/play/dive-screen';
 import { DressScreen } from '@/play/dress-screen';
+import { PetScreen, usePetReminderSync } from '@/play/pet-screen';
 import { DefendScreen } from '@/play/defend-screen';
 import { SheetLabScreen } from '@/play/sheet-lab-screen';
 import type { TypeTag } from '@/play/engine/type-match';
@@ -75,13 +76,13 @@ import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
  * pre-launch builds via PRE_LAUNCH_DEV.
  */
 
-type PlayMode = 'grove' | 'dive' | 'dress' | 'defend' | 'shop' | 'about' | 'sheetlab';
+type PlayMode = 'grove' | 'dive' | 'pet' | 'dress' | 'defend' | 'shop' | 'about' | 'sheetlab';
 
 type PlayToast =
   | { kind: 'claim'; result: ClaimResult }
   | { kind: 'find'; foundName: string }
   | { kind: 'surface'; itemIds: string[] }
-  | { kind: 'bust' }
+  | { kind: 'bust'; rescued: string[] }
   | { kind: 'message'; title: string; body: string };
 
 export default function PlayScreen() {
@@ -138,6 +139,9 @@ export default function PlayScreen() {
   // hides and comes back on leaving Defend or exiting Play. Shared hook —
   // any screen opts in the same way.
   useImmersiveMode(mode === 'defend');
+  // Pet (v20): keep the opt-in hunger reminder in step with the pet from
+  // anywhere in Play (a TD win feeds it too), not only the Pet screen.
+  usePetReminderSync(view?.pet ?? null);
   const [toast, setToast] = useState<PlayToast | null>(null);
   /** Dev kit only: one-shot forced bust on the next Deeper press. */
   const [forceBustArmed, setForceBustArmed] = useState(false);
@@ -207,7 +211,7 @@ export default function PlayScreen() {
   const handleDeeper = useCallback(async (): Promise<boolean> => {
     const outcome = await pushDeeper(forceBustArmed);
     if (forceBustArmed) setForceBustArmed(false); // one-shot arm consumed
-    if (outcome?.busted) setToast({ kind: 'bust' });
+    if (outcome?.busted) setToast({ kind: 'bust', rescued: outcome.rescued });
     return outcome != null;
   }, [forceBustArmed, pushDeeper]);
 
@@ -474,7 +478,9 @@ export default function PlayScreen() {
                 : toast.kind === 'surface'
                   ? `Banked ${summarizeNames(toast.itemIds)}.`
                   : toast.kind === 'bust'
-                    ? 'This haul is lost — the charge was already spent. Your Basecore is untouched.'
+                    ? toast.rescued.length > 0
+                      ? `Your pet saved ${summarizeNames(toast.rescued)} — the rest of the haul is lost.`
+                      : 'This haul is lost — the charge was already spent. Your Basecore is untouched.'
                     : toast.body,
         };
 
@@ -586,6 +592,13 @@ export default function PlayScreen() {
                   onSurface={handleSurface}
                   onDeeper={handleDeeper}
                   onBackToGrove={() => setMode('grove')}
+                />
+              ) : mode === 'pet' && view ? (
+                <PetScreen
+                  view={view}
+                  commit={commit}
+                  reduceMotion={reduceMotion}
+                  onBack={() => setMode('grove')}
                 />
               ) : mode === 'dress' && view ? (
                 <DressScreen

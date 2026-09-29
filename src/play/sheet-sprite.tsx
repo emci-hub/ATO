@@ -152,6 +152,9 @@ export function ClipSprite({ drawable, x, y, size, opacity }: ClipSpriteProps) {
 
 type ClipImageProps = {
   drawable: ClipDrawable | undefined;
+  /** Optional solid tint over every opaque pixel (the pet's colour wash
+   * draws a tinted copy at low opacity over the plain sprite). */
+  tintColor?: string;
 };
 
 /**
@@ -171,11 +174,16 @@ type ClipImageProps = {
  * for every hero sprite packed so far (128×128 samples); a non-square frame
  * would need `resizeMode`-style letterboxing this skips.
  */
-export function ClipImage({ drawable }: ClipImageProps) {
+export function ClipImage({ drawable, tintColor }: ClipImageProps) {
   if (!drawable) return null;
   if (drawable.kind === 'legacy') {
     return (
-      <ExpoImage source={drawable.source} contentFit="contain" style={styles.legacyFill} />
+      <ExpoImage
+        source={drawable.source}
+        contentFit="contain"
+        tintColor={tintColor}
+        style={styles.legacyFill}
+      />
     );
   }
   const frame = drawableFrame(drawable);
@@ -190,6 +198,7 @@ export function ClipImage({ drawable }: ClipImageProps) {
       <ExpoImage
         source={source}
         contentFit="fill"
+        tintColor={tintColor}
         style={{
           position: 'absolute',
           width: `${(frame.sheetW / rect.w) * 100}%`,

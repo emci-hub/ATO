@@ -27,6 +27,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { usePacedAction } from '@/play/action-pacing';
 import { itemArtSource } from '@/play/art';
 import { formatMult, getItemDef, type ItemDef, type ItemSlot } from '@/play/items';
+import { PET_STAGE_LABEL } from '@/play/pet';
 import { PlayFrame } from '@/play/play-frame';
 import { DIVE_CHARGE_CAP, DIVE_DEEPER_MAX, type PlayView } from '@/play/playStore';
 
@@ -36,6 +37,21 @@ const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>
   cloak: 'hanger',
   trinket: 'star-four-points',
 };
+
+/** The pet dive buddy, in one honest line (v20). */
+export function diveBuddyLine(view: PlayView): string {
+  const pet = view.pet;
+  const stage = PET_STAGE_LABEL[pet.state.stage];
+  if (pet.bustCutPp <= 0) {
+    return `Dive buddy: your pet (${stage}) — from Teen it lowers every bust chance.`;
+  }
+  const rescue =
+    pet.rescueKeep > 0
+      ? ` · on a bust it saves your best ${pet.rescueKeep === 1 ? 'find' : `${pet.rescueKeep} finds`}`
+      : ' · from Adult it saves your best find on a bust';
+  const points = `${pet.bustCutPp} ${pet.bustCutPp === 1 ? 'point' : 'points'}`;
+  return `Dive buddy: your pet (${stage}) · ${points} off every bust chance (already in the odds; never below half the table)${rescue}. It is never lost.`;
+}
 
 export function DiveScreen({
   view,
@@ -88,6 +104,9 @@ export function DiveScreen({
             {chargeText(view)}
           </ThemedText>
         </View>
+        <ThemedText type="small" themeColor="textSecondary">
+          {diveBuddyLine(view)}
+        </ThemedText>
       </PlayFrame>
 
       {run.active ? (

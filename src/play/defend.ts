@@ -77,6 +77,7 @@ import {
   type KitStatus,
 } from '@/play/kit-combat';
 import { TOWER_KITS, type Element, type Kit } from '@/play/kits';
+import { PET_POUNCE_RADIUS } from '@/play/pet';
 import { DEFAULT_SKILL_ID, skillById } from '@/play/skills-data';
 import { devNoCaps, getTune } from '@/play/tune';
 import { ATO_ROAD_HALF, BOARD_MAPS, type BoardId, type BoardMap } from '@/play/board-data';
@@ -470,6 +471,8 @@ export type DefendLive = {
   avatarCooldownMs: number;
   /** ms until the skill button is ready again. */
   skillCooldownMs: number;
+  /** The pet's pounce is spent for this wave (once per wave, v20). */
+  petPounceUsed: boolean;
 };
 
 export type DefendStep = {
@@ -534,6 +537,7 @@ export function createDefendLive(wave: number, options: DefendLiveOptions = {}):
     scrap: options.scrap ?? getTune().startScrap,
     avatarCooldownMs: 0,
     skillCooldownMs: 0,
+    petPounceUsed: false,
   };
 }
 
@@ -586,6 +590,8 @@ type DefendBuckets = {
   legendElement: Element | null;
   /** Avatar stars (→ +3% base wave_power each, `avatarStarWavePower`). */
   avatarStars: number;
+  /** Pet rebirth bonus (0..0.10, v20) — +2% board-wide damage per rebirth. */
+  rebirthBonus?: number;
 };
 
 /** Place a tower on an empty pad, deducting scrap. Null when blocked. */
@@ -777,7 +783,8 @@ export function stepDefendLive(
   // Board-wide damage mults: gear wave_power × type-match × Avatar stars.
   const boardMult =
     buckets.wavePower *
-    avatarStarWavePower(buckets.avatarStars);
+    avatarStarWavePower(buckets.avatarStars) *
+    (1 + Math.max(0, buckets.rebirthBonus ?? 0));
   // Legend-driven attacks (Avatar + hero towers): element strength and the
   // share of a resisted hit recovered both grow with the Legend's level.
   const legendMods = {
@@ -1199,6 +1206,7 @@ export function stepDefendLive(
       scrap,
       avatarCooldownMs,
       skillCooldownMs,
+      petPounceUsed: state.petPounceUsed,
     },
     leak,
     done: schedule.length === 0 && puffs.length === 0,
@@ -1238,6 +1246,60 @@ export function castSlowPulse(
     puffs = puffs.filter((puff) => puff.hp > 0);
   }
   return { ...state, puffs, scrap, skillCooldownMs: getTune().skillCooldownMs };
+}
+
+/**
+ * The pet's pounce (v20): once per wave, every foe within `PET_POUNCE_RADIUS`
+ * of the Avatar takes `base` damage scaled by this wave's creep HP (so a God
+ * pet's pounce is the same bite of a creep on Main 10 as on Trial 1). Not
+ * elemental and not boosted by gear — a small, capped helper. `element` only
+ * colours the effect. Kills pay scrap like any kill. Null when spent or the
+ * pet is too young (`base` 0) — or when no foe is in reach (not spent).
+ */
+export function castPetPounce(
+  state: DefendLive,
+  avatar: { x: number; y: number },
+  base: number,
+  element: Element | null,
+): { state: DefendLive; hit: KitHit } | null {
+  if (state.petPounceUsed || !(base > 0)) return null;
+  const map = BOARD_MAPS[state.boardId] ?? BOARD_MAPS.ato;
+  const damage = base * waveHpMult(state.wave) * state.cyclePower;
+  const ids: number[] = [];
+  const dealt: number[] = [];
+  let puffs = state.puffs.map((puff) => {
+    const pos = puffPosition(puff.dist, map);
+    if (Math.hypot(pos.x * 100 - avatar.x, pos.y * 100 - avatar.y) > PET_POUNCE_RADIUS) return puff;
+    ids.push(puff.id);
+    dealt.push(Math.min(puff.hp, damage));
+    return { ...puff, hp: puff.hp - damage };
+  });
+  // No foe close enough: nothing happens and the pounce is NOT spent.
+  if (ids.length === 0) return null;
+  let scrap = state.scrap;
+  const killed = puffs.filter((puff) => puff.hp <= 0).length;
+  if (killed > 0) {
+    scrap += killed * getTune().scrapKill;
+    puffs = puffs.filter((puff) => puff.hp > 0);
+  }
+  return {
+    state: { ...state, puffs, scrap, petPounceUsed: true },
+    hit: {
+      source: 'avatar',
+      sourceId: -2,
+      from: avatar,
+      behavior: 'splash',
+      element,
+      primaryId: ids[0] ?? -1,
+      puffIds: ids,
+      damage: dealt,
+      radius: PET_POUNCE_RADIUS,
+      centredOnSource: true,
+      ultimate: true,
+      secondary: null,
+      arcId: null,
+    },
+  };
 }
 
 /** Nearest enemy to the Avatar within `AVATAR_RANGE` (§9b), or null. The
