@@ -54,10 +54,7 @@ import {
   useInlineMerge,
 } from '@/play/merge-row';
 import { allAvatarDefs, avatarDef } from '@/play/avatars';
-import {
-  allHeroes,
-  heroById,
-} from '@/play/heroes-data';
+import { HeroGrid } from '@/play/hero-grid';
 import {
   NEON_ROW_LINE,
   NeonBackLink,
@@ -220,20 +217,24 @@ export function DressScreen({
         lede="Four slots. Equip Powers to shape your Basecore — Looks are for the eye."
       />
 
-      {/* Active Avatar picker (v16): per-Avatar level/stars/equip/park; the
-       * bag, tokens and campaign are shared. Behind Avatars show a ×2.5 EXP
-       * badge — Trial fights on them catch up until one below the top. */}
+      {/* Heroes first (2026-09-28): the grid is the real switch surface — which
+       * hero you fight as (art + Veil) and what it does if bound as a tower. */}
+      <HeroGrid
+        activeHeroId={view.activeAvatarHeroId}
+        ownedHeroIds={view.ownedHeroIds}
+        boundHeroIds={view.boundHeroIds}
+        onSetAvatarHero={onSetAvatarHero}
+      />
+
+      {/* Legends (v16 Avatar RECORDS: level/stars/equip/park) are a SEPARATE
+       * system from heroes, and 9 of the 10 are unfilled placeholders — so the
+       * panel is collapsed by default and says so, instead of sitting above the
+       * roster implying the two picks are related (red team, 2026-09-28). */}
       <AvatarPicker
         view={view}
         onActivateAvatar={onActivateAvatar}
         onUnlockAvatar={onUnlockAvatar}
       />
-
-      {/* Hero roster (A2.5) — the Avatar SWITCH surface. The Avatars above are
-       * the v16 records (level/stars/gear); this is which HERO the player fights
-       * as (sprite set + skill kit). Both write the same Avatar; this one also
-       * honours the Bound Boss exclusivity rule and says so until A3 swaps art. */}
-      <HeroRoster view={view} onSetAvatarHero={onSetAvatarHero} />
 
       <NeonPanel>
         <NeonLabel>Worn</NeonLabel>
@@ -734,19 +735,26 @@ function AvatarPicker({
 }) {
   const owned = new Map(view.avatars.map((avatar) => [avatar.id, avatar]));
   const activeDef = avatarDef(view.activeAvatarId);
+  const [open, setOpen] = useState(false);
   return (
     <NeonPanel>
-      <View style={styles.statRow}>
-        <NeonLabel>Active Avatar</NeonLabel>
+      <Pressable
+        onPress={() => setOpen((value) => !value)}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        style={styles.statRow}>
+        <NeonLabel>{open ? 'Legends — hide' : 'Legends — show'}</NeonLabel>
         <ThemedText type="smallBold" themeColor="emphasis">
           {activeDef?.name ?? view.activeAvatarId}
         </ThemedText>
-      </View>
+      </Pressable>
       <ThemedText type="small" themeColor="textSecondary">
-        Each Avatar levels, stars and equips on its own. The bag, tokens, campaign
-        and Bound Bosses are shared — swap freely.
+        A Legend is separate from your hero: it holds your level, stars and worn
+        gear. Switching Legend moves those to that Legend&apos;s own set — your
+        hero, bag, tokens and progress are untouched. Most Legends are
+        placeholders for now.
       </ThemedText>
-      {allAvatarDefs().map((def) => {
+      {open ? allAvatarDefs().map((def) => {
         const record = owned.get(def.id);
         if (!record) {
           return (
@@ -808,88 +816,7 @@ function AvatarPicker({
             )}
           </View>
         );
-      })}
-    </NeonPanel>
-  );
-}
-
-/**
- * Hero roster (Slice A2.5) — the Avatar SWITCH surface.
- *
- * A Hero is the sprite set + skill kit you fight as; this is where the player
- * picks which one. Rows come from `allHeroes()` (every Batch hero, authored
- * order), not from the owned list, so a hero the player has not earned yet is
- * visible with the hint that explains how to earn it rather than being absent
- * and undiscoverable.
- *
- * Owned rows call `onSetAvatarHero`, which is the same setter the own-sheet
- * uses — so exclusivity (setting an Avatar gives up that hero's tower bind) and
- * the ownership guard hold here too. The board draws the hero's own sprite set
- * from its cast folder (A3); a hero whose art isn't bundled yet falls back to
- * the starter's sprite on the board.
- */
-function HeroRoster({
-  view,
-  onSetAvatarHero,
-}: {
-  view: PlayView;
-  onSetAvatarHero: (heroId: string) => void;
-}) {
-  const ownedHeroes = new Set(view.ownedHeroIds);
-  const activeHero = heroById(view.activeAvatarHeroId);
-  return (
-    <NeonPanel>
-      <View style={styles.statRow}>
-        <NeonLabel>Heroes</NeonLabel>
-        <ThemedText type="smallBold" themeColor="emphasis">
-          {activeHero?.name ?? view.activeAvatarHeroId}
-        </ThemedText>
-      </View>
-      <ThemedText type="small" themeColor="textSecondary">
-        Fight as one Hero at a time. A Hero carries its own skill kit — and cannot
-        be your Avatar and a bound tower at once.
-      </ThemedText>
-      {allHeroes().map((hero) => {
-        const owned = ownedHeroes.has(hero.id);
-        const active = view.activeAvatarHeroId === hero.id;
-        if (!owned) {
-          return (
-            <View key={hero.id} style={styles.avatarRow}>
-              <View style={styles.avatarText}>
-                <ThemedText type="smallBold" themeColor="textSecondary">
-                  {hero.name}
-                </ThemedText>
-                <ThemedText type="code" themeColor="textSecondary">
-                  {hero.acquire}
-                </ThemedText>
-              </View>
-              <NeonPill label="Locked" />
-            </View>
-          );
-        }
-        return (
-          <View key={hero.id} style={styles.avatarRow}>
-            <View style={styles.avatarText}>
-              <View style={styles.avatarTitleLine}>
-                <ThemedText type="smallBold">{hero.name}</ThemedText>
-                {active ? <NeonPill label="Active" tone="emphasis" /> : null}
-              </View>
-              <ThemedText type="code" themeColor="textSecondary">
-                {hero.skillId}
-              </ThemedText>
-            </View>
-            {active ? null : (
-              <NeonButton
-                label="Set"
-                onPress={() => onSetAvatarHero(hero.id)}
-                variant="secondary"
-                accessibilityLabel={`Set ${hero.name} as your Avatar`}
-                style={styles.rowAction}
-              />
-            )}
-          </View>
-        );
-      })}
+      }) : null}
     </NeonPanel>
   );
 }

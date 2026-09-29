@@ -79,6 +79,7 @@
     "check:kenney": "tsx ./scripts/kenney-check.ts",
     "check:wave-tables": "tsx ./scripts/wave-tables-check.ts",
     "check:heroes": "tsx ./scripts/check-heroes.ts",
+    "check:hero-copy": "tsx ./scripts/check-hero-copy.ts",
     "check:kits": "tsx ./scripts/check-kits.ts",
     "check:immersive": "tsx ./scripts/check-immersive.ts",
     "check:board-layouts": "tsx ./scripts/check-board-layouts.ts",
