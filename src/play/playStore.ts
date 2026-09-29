@@ -2114,7 +2114,7 @@ export function equippedStatSums(
     // StarTable scale (×1.0 at ★0, +0.1 per star) — a ★2 copy of a Power
     // really hits harder than its ★0 twin, in display AND combat math.
     // A Power whose element matches the active Legend gets its own stats
-    // raised (tune `gearMatchBonus`, Sane 0.30) — shown on the item, never an
+    // raised (tune `gearMatchBonus`, Sane 1.0 = doubled) — shown on the item, never an
     // invisible mult.
     const scale =
       starMultScale(slot.star) *

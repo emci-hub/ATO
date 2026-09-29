@@ -140,9 +140,11 @@ export const HERO_AFFINITY_BONUS = 0.15;
 
 /** Gear match: a worn Power whose element matches the active Legend has its
  * OWN stats raised by this much (replaces the old board-wide +20% "type
- * match"; AFK-Arena-style faction gear bonus). Live value: tune knob
- * `gearMatchBonus`; this is its Sane default. */
-export const GEAR_MATCH_BONUS = 0.3;
+ * match"; AFK-Arena-style faction gear bonus). Doubled by default: the first
+ * value, +30%, measured only +6% board damage for a fully matched loadout
+ * (`sim:balance`, 2026-09-29). Live value: tune knob `gearMatchBonus`; this is
+ * its Sane default. */
+export const GEAR_MATCH_BONUS = 1;
 
 /* ---------------------------------------------------------- save migration --- */
 

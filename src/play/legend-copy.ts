@@ -85,7 +85,7 @@ export function heroAffinityMatches(hero: HeroDef, legendElement: Element): bool
 
 /* ------------------------------------------------------------------- gear --- */
 
-/** "Matches Ember Legend: stats +30%" — only for a matching Power. */
+/** "Matches Ember Legend: stats +100%" — only for a matching Power. */
 export function gearMatchLine(itemElement: TypeTag, legendElement: Element): string | null {
   if (itemElement !== legendElement) return null;
   return `Matches ${ELEMENT_LABEL[legendElement]} Legend: stats +${pct(getTune().gearMatchBonus)}%`;

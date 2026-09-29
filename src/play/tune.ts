@@ -58,8 +58,9 @@ export type TuneDoc = {
    * matches the active Legend. Sane 0.15. */
   heroAffinityBonus: number;
   /** Gear match (2026-09-28): a worn Power whose element matches the active
-   * Legend has its own stats raised by this much. Sane 0.30 (replaces the old
-   * board-wide +0.20 cycle-tint type match). */
+   * Legend has its own stats raised by this much. Sane 1.0 = doubled (a full
+   * matched loadout ≈ +20% board damage, about what the removed board-wide
+   * +0.20 cycle-tint type match gave; 0.30 measured only +6%, 2026-09-29). */
   gearMatchBonus: number;
   /** Avatar star drop chance on a Final clear (§9h, 25% once/cycle). */
   avatarStarDropPct: number;
@@ -111,7 +112,7 @@ export const SANE_TUNE: TuneDoc = {
   devNoCaps: false,
   cyclePowerStep: 0.12,
   heroAffinityBonus: 0.15,
-  gearMatchBonus: 0.3,
+  gearMatchBonus: 1,
   avatarStarDropPct: 0.25,
   avatarStarPityClears: 3,
   avatarStarWavePowerStep: 0.03,

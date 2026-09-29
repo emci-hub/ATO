@@ -415,7 +415,7 @@ function LegendFirstTip() {
   );
 }
 
-/** "Legend +30%" pill for a worn/bagged Power matching the active Legend. */
+/** "Legend +100%" pill for a worn/bagged Power matching the active Legend. */
 function GearMatchPill({ def }: { def: ItemDef }) {
   const legend = useContext(LegendElementContext);
   if (!legend || def.core.kind !== 'power' || def.core.type_tag !== legend) return null;
