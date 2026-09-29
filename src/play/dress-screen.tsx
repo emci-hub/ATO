@@ -23,8 +23,9 @@
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ComponentProps, ReactNode } from 'react';
-import { useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -54,6 +55,17 @@ import {
   useInlineMerge,
 } from '@/play/merge-row';
 import { allAvatarDefs, avatarDef } from '@/play/avatars';
+import { getTune } from '@/play/tune';
+import { ELEMENT_LABEL, type Element } from '@/play/kits';
+import {
+  LEGEND_EXPLAINER,
+  LEGEND_FIRST_TIP_BODY,
+  LEGEND_FIRST_TIP_TITLE,
+  gearMatchLine,
+  legendBoostLine,
+  legendLevelLine,
+  legendNextLine,
+} from '@/play/legend-copy';
 import { HeroGrid } from '@/play/hero-grid';
 import {
   NEON_ROW_LINE,
@@ -209,7 +221,7 @@ export function DressScreen({
     setExpandedKey((current) => (current === key ? null : key));
 
   return (
-    <>
+    <LegendElementContext.Provider value={view.legendElement}>
       <NeonBackLink onPress={onBackToGrove} />
 
       <NeonHeader
@@ -217,19 +229,21 @@ export function DressScreen({
         lede="Four slots. Equip Powers to shape your Basecore — Looks are for the eye."
       />
 
+      <LegendFirstTip />
+
       {/* Heroes first (2026-09-28): the grid is the real switch surface — which
-       * hero you fight as (art + Veil) and what it does if bound as a tower. */}
+       * hero you fight as (art + Veil), and what its attack becomes with the
+       * active Legend's element. */}
       <HeroGrid
         activeHeroId={view.activeAvatarHeroId}
         ownedHeroIds={view.ownedHeroIds}
         boundHeroIds={view.boundHeroIds}
+        legendElement={view.legendElement}
         onSetAvatarHero={onSetAvatarHero}
       />
 
-      {/* Legends (v16 Avatar RECORDS: level/stars/equip/park) are a SEPARATE
-       * system from heroes, and 9 of the 10 are unfilled placeholders — so the
-       * panel is collapsed by default and says so, instead of sitting above the
-       * roster implying the two picks are related (red team, 2026-09-28). */}
+      {/* Legends (2026-09-28): one per element. The active Legend sets the
+       * element of every attack; its record holds level, stars and worn gear. */}
       <AvatarPicker
         view={view}
         onActivateAvatar={onActivateAvatar}
@@ -355,8 +369,57 @@ export function DressScreen({
           })
         )}
       </NeonPanel>
-    </>
+    </LegendElementContext.Provider>
   );
+}
+
+/** The active Legend's element, for gear rows (a worn Power of the same
+ * element gets its stats raised — shown on the row, never invisible). */
+const LegendElementContext = createContext<Element | null>(null);
+
+/** One-time first-visit tip key (device-local; dismissing it is permanent). */
+const LEGEND_TIP_KEY = 'ato.play.tip.legends.v1';
+
+/** The first-visit tip explaining Legend → hero → gear. Hidden until the
+ * saved flag is read, so it never flashes for a player who dismissed it. */
+function LegendFirstTip() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    AsyncStorage.getItem(LEGEND_TIP_KEY)
+      .then((seen) => {
+        if (alive && !seen) setShow(true);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+  if (!show) return null;
+  return (
+    <NeonPanel>
+      <NeonLabel>{LEGEND_FIRST_TIP_TITLE}</NeonLabel>
+      <ThemedText type="small" themeColor="textSecondary">
+        {LEGEND_FIRST_TIP_BODY}
+      </ThemedText>
+      <NeonButton
+        label="Got it"
+        onPress={() => {
+          setShow(false);
+          AsyncStorage.setItem(LEGEND_TIP_KEY, '1').catch(() => {});
+        }}
+        variant="secondary"
+        accessibilityLabel="Dismiss the Legend tip"
+      />
+    </NeonPanel>
+  );
+}
+
+/** "Legend +30%" pill for a worn/bagged Power matching the active Legend. */
+function GearMatchPill({ def }: { def: ItemDef }) {
+  const legend = useContext(LegendElementContext);
+  if (!legend || def.core.kind !== 'power' || def.core.type_tag !== legend) return null;
+  return <NeonPill label={`Legend +${Math.round(getTune().gearMatchBonus * 100)}%`} tone="emphasis" />;
 }
 
 /** Does the bag hold ≥1 spare of the exact tier this worn ref is on? */
@@ -456,6 +519,7 @@ function SlotRow({
                   {def.core.name}
                   {starLabel(ref.star) ? ` ${starLabel(ref.star)}` : ''}
                 </ThemedText>
+                {def ? <GearMatchPill def={def} /> : null}
                 {feedback ? <FeedbackPill feedback={feedback} /> : null}
               </View>
             ) : (
@@ -559,6 +623,7 @@ function StackRow({
                 {star ? ` ${star}` : ''}
               </ThemedText>
               {stack.count > 1 ? <NeonPill label={`×${stack.count}`} tone="emphasis" /> : null}
+              <GearMatchPill def={def} />
               {sameTierWorn ? <NeonPill label="Spare" /> : null}
               {feedback ? <FeedbackPill feedback={feedback} /> : null}
             </View>
@@ -675,8 +740,15 @@ function ItemDetails({
 }) {
   const now = formatItemStats(def, star);
   const next = mergeSuccessPct(star) != null ? formatItemStats(def, star + 1) : null;
+  const legend = useContext(LegendElementContext);
+  const match = legend && def.core.kind === 'power' ? gearMatchLine(def.core.type_tag, legend) : null;
   return (
     <View style={styles.details}>
+      {match ? (
+        <ThemedText type="smallBold" themeColor="emphasis">
+          {match}
+        </ThemedText>
+      ) : null}
       <ThemedText type="code" themeColor="textSecondary">
         {SLOT_LABELS[def.core.slot]} slot
       </ThemedText>
@@ -719,10 +791,12 @@ function describeItem(def: ItemDef, star: number): string {
 }
 
 /**
- * Dress's Active Avatar picker (v16 — Avatar swap). One row per known def:
- * owned rows show Lv / ★ / worn slots and the ACTIVE state; rows one or more
- * levels behind the highest owned Avatar carry the ×2.5 EXP catch-up badge.
- * Locked defs show the free stub Unlock (Hero/IAP later).
+ * The Legends section (2026-09-28): one Legend per element. The ACTIVE Legend
+ * sets the element of your Avatar's and every hero's attack; levelling it makes
+ * that element stronger. Each card shows its element, what it boosts, its
+ * current level effect and what the next level adds. Rows one or more levels
+ * behind the highest owned Legend carry the ×2.5 EXP catch-up badge. Locked
+ * Legends unlock free for now (no shop yet).
  */
 function AvatarPicker({
   view,
@@ -735,7 +809,7 @@ function AvatarPicker({
 }) {
   const owned = new Map(view.avatars.map((avatar) => [avatar.id, avatar]));
   const activeDef = avatarDef(view.activeAvatarId);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   return (
     <NeonPanel>
       <Pressable
@@ -745,78 +819,71 @@ function AvatarPicker({
         style={styles.statRow}>
         <NeonLabel>{open ? 'Legends — hide' : 'Legends — show'}</NeonLabel>
         <ThemedText type="smallBold" themeColor="emphasis">
-          {activeDef?.name ?? view.activeAvatarId}
+          {activeDef ? `${activeDef.name} · ${ELEMENT_LABEL[activeDef.element]}` : view.activeAvatarId}
         </ThemedText>
       </Pressable>
       <ThemedText type="small" themeColor="textSecondary">
-        A Legend is separate from your hero: it holds your level, stars and worn
-        gear. Switching Legend moves those to that Legend&apos;s own set — your
-        hero, bag, tokens and progress are untouched. Most Legends are
-        placeholders for now.
+        {LEGEND_EXPLAINER}
       </ThemedText>
-      {open ? allAvatarDefs().map((def) => {
-        const record = owned.get(def.id);
-        if (!record) {
-          return (
-            <View key={def.id} style={styles.avatarRow}>
-              <NeonIconFrame size={34}>
-                <MaterialCommunityIcons name={def.icon} size={18} color={NEON.textMuted} />
-              </NeonIconFrame>
-              <View style={styles.avatarText}>
-                <ThemedText type="smallBold" themeColor="textSecondary">
-                  {def.name}
-                </ThemedText>
-                <ThemedText type="code" themeColor="textSecondary">
-                  {def.blurb}
-                </ThemedText>
+      {open
+        ? allAvatarDefs().map((def) => {
+            const record = owned.get(def.id);
+            return (
+              <View
+                key={def.id}
+                style={[styles.avatarRow, record?.active && { borderColor: def.color }]}>
+                <NeonIconFrame
+                  size={34}
+                  style={record?.active ? { backgroundColor: def.color, borderColor: def.color } : undefined}>
+                  <MaterialCommunityIcons
+                    name={def.icon}
+                    size={18}
+                    color={record?.active ? '#FFFFFF' : def.color}
+                  />
+                </NeonIconFrame>
+                <View style={styles.avatarText}>
+                  <View style={styles.avatarTitleLine}>
+                    <ThemedText type="smallBold" themeColor={record ? undefined : 'textSecondary'}>
+                      {def.name}
+                    </ThemedText>
+                    <NeonPill label={ELEMENT_LABEL[def.element]} />
+                    {record?.catchup ? <NeonPill label="×2.5 EXP" tone="emphasis" /> : null}
+                  </View>
+                  <ThemedText type="code" themeColor="textSecondary">
+                    {legendBoostLine(def)}
+                  </ThemedText>
+                  {record ? (
+                    <>
+                      <ThemedText type="code">{legendLevelLine(record.level)}</ThemedText>
+                      <ThemedText type="code" themeColor="textSecondary">
+                        {`${legendNextLine(record.level)} · ★${record.stars}/${AVATAR_STAR_MAX} · ${record.worn}/4 worn`}
+                      </ThemedText>
+                    </>
+                  ) : null}
+                </View>
+                {!record ? (
+                  <NeonButton
+                    label="Unlock"
+                    onPress={() => onUnlockAvatar(def.id)}
+                    variant="secondary"
+                    accessibilityLabel={`Unlock ${def.name}`}
+                    style={styles.rowAction}
+                  />
+                ) : record.active ? (
+                  <NeonPill label="Active" tone="emphasis" />
+                ) : (
+                  <NeonButton
+                    label="Use"
+                    onPress={() => onActivateAvatar(def.id)}
+                    variant="secondary"
+                    accessibilityLabel={`Use ${def.name}, ${ELEMENT_LABEL[def.element]}`}
+                    style={styles.rowAction}
+                  />
+                )}
               </View>
-              <NeonButton
-                label="Unlock"
-                onPress={() => onUnlockAvatar(def.id)}
-                variant="secondary"
-                accessibilityLabel={`Unlock ${def.name}`}
-                style={styles.rowAction}
-              />
-            </View>
-          );
-        }
-        const defColor = def.color;
-        return (
-          <View
-            key={record.id}
-            style={[styles.avatarRow, record.active && { borderColor: defColor }]}>
-            <NeonIconFrame
-              size={34}
-              style={record.active ? { backgroundColor: defColor, borderColor: defColor } : undefined}>
-              <MaterialCommunityIcons
-                name={def.icon}
-                size={18}
-                color={record.active ? '#FFFFFF' : NEON.textMuted}
-              />
-            </NeonIconFrame>
-            <View style={styles.avatarText}>
-              <View style={styles.avatarTitleLine}>
-                <ThemedText type="smallBold">{def.name}</ThemedText>
-                {record.catchup ? <NeonPill label="×2.5 EXP" tone="emphasis" /> : null}
-              </View>
-              <ThemedText type="code" themeColor="textSecondary">
-                Lv {record.level} · ★{record.stars}/{AVATAR_STAR_MAX} · {record.worn}/4 worn
-              </ThemedText>
-            </View>
-            {record.active ? (
-              <NeonPill label="Active" tone="emphasis" />
-            ) : (
-              <NeonButton
-                label="Use"
-                onPress={() => onActivateAvatar(def.id)}
-                variant="secondary"
-                accessibilityLabel={`Use ${def.name}`}
-                style={styles.rowAction}
-              />
-            )}
-          </View>
-        );
-      }) : null}
+            );
+          })
+        : null}
     </NeonPanel>
   );
 }

@@ -29,13 +29,13 @@ import {
   heroAvatarLine,
   heroDisplayName,
   heroStatusOf,
-  heroTowerLine,
   heroUnlockLine,
   setAvatarUnbinds,
   type HeroStatus,
 } from '@/play/hero-copy';
 import { allHeroes, type HeroDef } from '@/play/heroes-data';
-import { ELEMENT_COLOR } from '@/play/kits';
+import { ELEMENT_COLOR, type Element } from '@/play/kits';
+import { heroAffinityLine, heroAffinityMatches, heroWithLegendLine } from '@/play/legend-copy';
 import { ClipImage } from '@/play/sheet-sprite';
 import { heroAvatarRole, roleArtDrawable, roleFaceArtIndex } from '@/play/skin';
 
@@ -80,11 +80,14 @@ function HeroTile({
   hero,
   status,
   selected,
+  affinity,
   onPress,
 }: {
   hero: HeroDef;
   status: HeroStatus;
   selected: boolean;
+  /** The hero's affinity matches the active Legend (it hits harder). */
+  affinity: boolean;
   onPress: () => void;
 }) {
   const accent = ELEMENT_COLOR[hero.kit.element];
@@ -92,7 +95,7 @@ function HeroTile({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${hero.name}, ${HERO_STATUS_LABEL[status]}`}
+      accessibilityLabel={`${hero.name}, ${HERO_STATUS_LABEL[status]}${affinity ? ', affinity matches your Legend' : ''}`}
       style={({ pressed }) => [
         styles.tile,
         { borderColor: selected ? accent : NEON.cyanBorder },
@@ -106,6 +109,11 @@ function HeroTile({
         style={styles.tileName}>
         {hero.name}
       </ThemedText>
+      {affinity ? (
+        <ThemedText type="code" style={{ color: accent }}>
+          ✦ affinity
+        </ThemedText>
+      ) : null}
       {status === 'owned' ? (
         <View style={[styles.statusDot, { backgroundColor: accent }]} />
       ) : (
@@ -119,11 +127,13 @@ function HeroDetail({
   hero,
   status,
   armed,
+  legendElement,
   onSet,
 }: {
   hero: HeroDef;
   status: HeroStatus;
   armed: boolean;
+  legendElement: Element;
   onSet: () => void;
 }) {
   const locked = status === 'locked';
@@ -139,7 +149,12 @@ function HeroDetail({
         {`As Avatar · ${heroAvatarLine(hero)}`}
       </ThemedText>
       <ThemedText type="code" themeColor="textSecondary">
-        {`As tower · ${heroTowerLine(hero)}`}
+        {`Attack · ${heroWithLegendLine(hero, legendElement)}`}
+      </ThemedText>
+      <ThemedText
+        type="code"
+        themeColor={heroAffinityMatches(hero, legendElement) ? 'emphasis' : 'textSecondary'}>
+        {heroAffinityLine(hero, legendElement)}
       </ThemedText>
       {status === 'active' ? (
         <ThemedText type="code" themeColor="emphasis">
@@ -174,11 +189,14 @@ export function HeroGrid({
   activeHeroId,
   ownedHeroIds,
   boundHeroIds,
+  legendElement,
   onSetAvatarHero,
 }: {
   activeHeroId: string;
   ownedHeroIds: readonly string[];
   boundHeroIds: readonly string[];
+  /** The active Legend's element — what every hero's attack carries. */
+  legendElement: Element;
   onSetAvatarHero: (heroId: string) => void;
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
@@ -237,6 +255,7 @@ export function HeroGrid({
                   hero={hero}
                   status={statusOf(hero.id)}
                   selected={openId === hero.id}
+                  affinity={heroAffinityMatches(hero, legendElement)}
                   onPress={() => press(hero)}
                 />
               ))}
@@ -246,6 +265,7 @@ export function HeroGrid({
                 hero={open}
                 status={statusOf(open.id)}
                 armed={armedId === open.id}
+                legendElement={legendElement}
                 onSet={() => set(open)}
               />
             ) : null}

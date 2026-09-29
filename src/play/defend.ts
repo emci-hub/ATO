@@ -59,8 +59,13 @@ import {
 import { type TypeTag } from '@/play/engine/type-match';
 import { heroById } from '@/play/heroes-data';
 import {
+  legendResistRecovery,
+  legendRiderScale,
+} from '@/play/avatars';
+import {
   KIT_TUNING,
   applySlow,
+  strikeCreep,
   fireKit,
   floorCooldown,
   kitRange,
@@ -71,7 +76,7 @@ import {
   type KitHit,
   type KitStatus,
 } from '@/play/kit-combat';
-import { TOWER_KITS, type Kit } from '@/play/kits';
+import { TOWER_KITS, type Element, type Kit } from '@/play/kits';
 import { DEFAULT_SKILL_ID, skillById } from '@/play/skills-data';
 import { devNoCaps, getTune } from '@/play/tune';
 import { ATO_ROAD_HALF, BOARD_MAPS, type BoardId, type BoardMap } from '@/play/board-data';
@@ -446,8 +451,12 @@ export type DefendLive = {
   cyclePower: number;
   /** Boss band for this run (null = normal formula wave). */
   band: BossBand | null;
-  /** Cycle tint for this run (boss tint + type-match target). */
+  /** Cycle tint for this run (boss band colour). No longer a combat rule —
+   * the stage element below is the one element matchup (2026-09-28). */
   tint: TypeTag;
+  /** The stage's element (wave-tables `element`), or null on a neutral
+   * stage. Every creep in the wave wears it as its `tint`. */
+  stageElement: TypeTag | null;
   puffs: Puff[];
   /** Remaining spawn events, time-sorted (pop from the front as time passes). */
   schedule: readonly SpawnEvent[];
@@ -515,6 +524,7 @@ export function createDefendLive(wave: number, options: DefendLiveOptions = {}):
     cyclePower,
     band,
     tint: options.tint ?? DEFAULT_CYCLE_TINT,
+    stageElement: def?.element ?? null,
     puffs: [],
     schedule,
     elapsedMs: 0,
@@ -570,8 +580,10 @@ type DefendBuckets = {
   wavePower: number;
   towerSpeed: number;
   avatarLevel: number;
-  /** Type-match bonus fraction (0, or tune.typeMatchBonus when matched). */
-  typeMatch: number;
+  /** The active Legend's element — the Avatar's and every hero's attack use
+   * it (null = no Legend element, e.g. a check). Replaces the old board-wide
+   * +20% cycle-tint "type match" (2026-09-28). */
+  legendElement: Element | null;
   /** Avatar stars (→ +3% base wave_power each, `avatarStarWavePower`). */
   avatarStars: number;
 };
@@ -765,9 +777,13 @@ export function stepDefendLive(
   // Board-wide damage mults: gear wave_power × type-match × Avatar stars.
   const boardMult =
     buckets.wavePower *
-    (1 + buckets.typeMatch) *
     avatarStarWavePower(buckets.avatarStars);
-
+  // Legend-driven attacks (Avatar + hero towers): element strength and the
+  // share of a resisted hit recovered both grow with the Legend's level.
+  const legendMods = {
+    riderScale: legendRiderScale(buckets.avatarLevel),
+    resistRecovery: legendResistRecovery(buckets.avatarLevel),
+  };
   let schedule = state.schedule;
   let elapsedMs = state.elapsedMs + dtMs;
   let nextId = state.nextId;
@@ -804,7 +820,7 @@ export function stepDefendLive(
         slowMs: 0,
         slowFactor: 1,
         kind,
-        tint: isBoss ? state.tint : (event.tint ?? null),
+        tint: state.stageElement,
         size: isBoss ? (event.boss?.size ?? 1) : 1,
         burstHpPct: isBoss ? (event.boss?.burstHpPct ?? null) : null,
         burstFired: false,
@@ -952,9 +968,38 @@ export function stepDefendLive(
         boardMult *
         avatarLevelWavePower(buckets.avatarLevel) *
         floorCooldown(getTune().avatarCooldownMs).damageMult;
-      puffs = puffs.map((puff) =>
-        puff.id === target.id ? { ...puff, hp: puff.hp - damage } : puff,
-      );
+      // The Legend's element rides the Avatar's attack (matchup, rider,
+      // strength from the Legend's level).
+      const struck = strikeCreep(puffs, target.id, damage, buckets.legendElement, {
+        ...legendMods,
+        posOf,
+      });
+      puffs = struck.creeps;
+      if (buckets.legendElement) {
+        hits.push({
+          source: 'avatar',
+          sourceId: -1,
+          from: avatar,
+          behavior: 'burst',
+          element: buckets.legendElement,
+          primaryId: target.id,
+          puffIds: struck.arcId != null ? [target.id, struck.arcId] : [target.id],
+          damage: struck.arcId != null ? [struck.dealt, struck.arcDealt] : [struck.dealt],
+          radius: 0,
+          centredOnSource: false,
+          ultimate: false,
+          secondary: null,
+          arcId: struck.arcId,
+        });
+      }
+      // An arc can kill a second creep: pay scrap for every creep it dropped.
+      {
+        const extra = puffs.filter((p) => p.id !== target.id && p.hp <= 0).length;
+        if (extra > 0) {
+          scrap += extra * scrapPerKill;
+          puffs = puffs.filter((p) => p.id === target.id || p.hp > 0);
+        }
+      }
       if (puffs.some((p) => p.id === target.id && p.hp <= 0)) {
         scrap += scrapPerKill;
         puffs = puffs.filter((p) => p.id !== target.id);
@@ -988,20 +1033,28 @@ export function stepDefendLive(
     if (hero != null) {
       const level = heroTowerLevel(bb);
       const floored = floorCooldown(KIT_TUNING.heroCooldownMs[hero.kit.behavior]);
+      // The active Legend sets the element; the hero keeps its behavior. A
+      // hero whose own element (its affinity) matches the Legend hits harder.
+      const heroKit: Kit = {
+        behavior: hero.kit.behavior,
+        element: buckets.legendElement ?? hero.kit.element,
+      };
+      const affinity = heroAffinityMult(hero.kit.element, buckets.legendElement);
       if (cooldownMs <= 0) {
         const fired = fireKit(
           puffs,
           {
-            kit: hero.kit,
+            kit: heroKit,
             level,
-            damage: HERO_TOWER_STATS.baseAttack * boardMult * floored.damageMult,
+            damage: HERO_TOWER_STATS.baseAttack * boardMult * floored.damageMult * affinity,
             heroShare: true,
             burst: HERO_BURST_TARGETING,
             source: 'hero',
             sourceId: bb.id,
             from: pad,
+            ...legendMods,
           },
-          kitRange(hero.kit, level),
+          kitRange(heroKit, level),
           { posOf },
         );
         if (fired.hit) {
@@ -1019,17 +1072,18 @@ export function stepDefendLive(
         const fired = fireKit(
           puffs,
           {
-            kit: hero.kit,
+            kit: heroKit,
             level: 3,
-            damage: HERO_TOWER_STATS.baseAttack * boardMult,
+            damage: HERO_TOWER_STATS.baseAttack * boardMult * affinity,
             heroShare: true,
             burst: HERO_BURST_TARGETING,
             source: 'hero',
             sourceId: bb.id,
             from: pad,
             ultimate: { radius: TOWER_SKILL_RADIUS },
+            ...legendMods,
           },
-          kitRange(hero.kit, 3),
+          kitRange(heroKit, 3),
           { posOf },
         );
         if (fired.hit) {
@@ -1135,6 +1189,7 @@ export function stepDefendLive(
       cyclePower: state.cyclePower,
       band,
       tint: state.tint,
+      stageElement: state.stageElement,
       puffs,
       schedule,
       elapsedMs,
@@ -1226,6 +1281,12 @@ const TOWER_BURST_TARGETING: Record<TowerKind, BurstTargeting> = {
 
 /** Hero Burst towers keep the chunk role they had (highest HP in range). */
 const HERO_BURST_TARGETING: BurstTargeting = 'strongest';
+
+/** Hero affinity: ×(1 + tune `heroAffinityBonus`, Sane 0.15) when the hero's
+ * own element matches the active Legend's, else ×1. */
+export function heroAffinityMult(heroElement: Element, legendElement: Element | null): number {
+  return legendElement != null && heroElement === legendElement ? 1 + getTune().heroAffinityBonus : 1;
+}
 
 /** A hero tower's kit level: its stars, clamped into the kit's 1..3. */
 export function heroTowerLevel(bb: BoundBossTower): number {

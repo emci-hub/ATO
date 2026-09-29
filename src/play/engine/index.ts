@@ -39,7 +39,6 @@ export {
   TAG_LABEL,
   TypeTag,
   isTypeTag,
-  typeMatchBonus,
 } from './type-match';
 export {
   BossBand,

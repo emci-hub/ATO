@@ -1,19 +1,20 @@
 /**
  * Type match — Divecore soft elements (GAME_SPEC §9f §9h §9i; Phase C).
  *
- * Four tags (Tide / Ember / Root / Spark) drive a SOFT match, never immunity:
- * a cycle/boss carries one `type_tint`, and any equipped Power whose `type_tag`
- * matches that tint gets `type_match_bonus` (locked Sane +0.20, board-wide).
- * Mismatch = neutral (no −%). The chart (Tide → Ember → Root → Spark → Tide)
- * is display only — the combat rule is match-or-nothing, so a single match
- * never deletes the climb (cycle_power + soft-caps outpace it).
+ * Four tags (Tide / Ember / Root / Spark) plus Void (`kits.ts`, outside this
+ * cycle). The chart (Tide → Ember → Root → Spark → Tide: each beats the next)
+ * drives the ONE element-matchup rule (2026-09-28, `kit-combat.ts`
+ * `matchupMult`): a stage's element is weak to the one before it (+25%) and
+ * resists itself (−25%, softened by a levelled Legend). The old board-wide
+ * +20% "gear tag matches the cycle tint" bonus is gone — a worn Power whose
+ * tag matches the active LEGEND now gets its own stats raised instead
+ * (`playStore.ts` `gearMatchesLegend`).
  *
  * Old ATO Ink/Paper/Steel/Bloom colors map 1:1 onto these four tags in the
  * Play JSON; ATO coach colors stay elsewhere. This module is leaf-ish on
- * purpose (tags + labels + the bonus value only) so both `items.ts` and
+ * purpose (tags + labels only) so both `items.ts` and
  * `playStore.ts` can read from it without a cycle.
  */
-import { getTune } from '@/play/tune';
 
 /** Canonical element tags (locked set — never expand without a version bump). */
 export const TYPE_TAGS = ['tide', 'ember', 'root', 'spark'] as const;
@@ -55,8 +56,3 @@ export const TAG_ICON = {
   root: 'sprout',
   spark: 'lightning-bolt',
 } as const;
-
-/** Board-wide soft match bonus when a Power's type_tag == the cycle tint. */
-export function typeMatchBonus(matched: boolean): number {
-  return matched ? getTune().typeMatchBonus : 0;
-}

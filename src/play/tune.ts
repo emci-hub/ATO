@@ -54,9 +54,13 @@ export type TuneDoc = {
   /** Forever-engine cycle-power growth step (cycle_power = 1 + cycles × this,
    * Sane 0.12). Not wired to a live system yet — tune-ready for the engine. */
   cyclePowerStep: number;
-  /** Soft type-match bonus when an equipped Power's tag == the cycle tint
-   *   (§9f locked default +0.20). Mismatch stays neutral (no −%). */
-  typeMatchBonus: number;
+  /** Hero affinity (2026-09-28): extra damage for a hero whose own element
+   * matches the active Legend. Sane 0.15. */
+  heroAffinityBonus: number;
+  /** Gear match (2026-09-28): a worn Power whose element matches the active
+   * Legend has its own stats raised by this much. Sane 0.30 (replaces the old
+   * board-wide +0.20 cycle-tint type match). */
+  gearMatchBonus: number;
   /** Avatar star drop chance on a Final clear (§9h, 25% once/cycle). */
   avatarStarDropPct: number;
   /** Final clears in a cycle before the Avatar star is guaranteed (pity). */
@@ -106,7 +110,8 @@ export const SANE_TUNE: TuneDoc = {
   godMode: false,
   devNoCaps: false,
   cyclePowerStep: 0.12,
-  typeMatchBonus: 0.2,
+  heroAffinityBonus: 0.15,
+  gearMatchBonus: 0.3,
   avatarStarDropPct: 0.25,
   avatarStarPityClears: 3,
   avatarStarWavePowerStep: 0.03,

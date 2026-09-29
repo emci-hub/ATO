@@ -116,6 +116,9 @@ export const KIT_TUNING = {
   shredTaken: 1.15,
   // Weakness + status rules.
   weakDamage: 1.25,
+  /** Hitting a creep with its OWN element (the stage's element): −25%, of
+   * which a levelled Legend recovers up to half (`legendResistRecovery`). */
+  resistDamage: 0.25,
   weakDuration: 1.5,
   slowFloor: 0.3, // never slower than 30% speed
   slowFloorBoss: 0.5,
@@ -147,6 +150,24 @@ export function weaknessOf(tint: TypeTag | null): TypeTag | null {
 
 export function isWeakTo(creep: KitCreep, element: Element | null): boolean {
   return element != null && element !== 'void' && weaknessOf(creep.tint) === element;
+}
+
+/** A creep resists its own element (a fire stage shrugs off fire). Void is
+ * outside the cycle and is never resisted. */
+export function isResistedBy(creep: KitCreep, element: Element | null): boolean {
+  return element != null && element !== 'void' && creep.tint === element;
+}
+
+/** The ONE element-matchup multiplier (2026-09-28): +25% when the attack's
+ * element beats the creep's, −25% (softened by `resistRecovery`, 0..½) when
+ * it is the creep's own element, else ×1. */
+export function matchupMult(creep: KitCreep, element: Element | null, resistRecovery = 0): number {
+  if (isWeakTo(creep, element)) return KIT_TUNING.weakDamage;
+  if (isResistedBy(creep, element)) {
+    const recovery = Math.max(0, Math.min(0.5, resistRecovery));
+    return 1 - KIT_TUNING.resistDamage * (1 - recovery);
+  }
+  return 1;
 }
 
 /** Level index 0..2 from a level 1..3 (hero stars clamp into this). */
@@ -350,6 +371,11 @@ export type KitAttack = {
   from: Point;
   /** Ultimate: fire at level 3 with the damage mult + a second element. */
   ultimate?: { radius: number };
+  /** Legend-driven attacks: element effect strength from the Legend's level
+   * (`legendRiderScale`, 1..1.5) and the share of a resisted hit it recovers
+   * (`legendResistRecovery`, 0..½). Towers with a fixed element pass neither. */
+  riderScale?: number;
+  resistRecovery?: number;
 };
 
 type Ctx<T extends KitCreep> = { posOf: (c: T) => Point };
@@ -360,9 +386,9 @@ function hitOne<T extends KitCreep>(
   element: Element | null,
   strength: number,
   secondary: Element | null,
+  resistRecovery = 0,
 ): { creep: T; dealt: number } {
-  let dmg = base;
-  if (isWeakTo(creep, element)) dmg *= KIT_TUNING.weakDamage;
+  let dmg = base * matchupMult(creep, element, resistRecovery);
   if ((creep.shredMs ?? 0) > 0) dmg *= KIT_TUNING.shredTaken;
   if (element === 'root' && creep.kind === 'tank') dmg *= KIT_TUNING.rootVsTank;
   let next: T = { ...creep, hp: creep.hp - dmg };
@@ -388,6 +414,48 @@ function applyRider<T extends KitCreep>(creep: T, element: Element | null, stren
     case 'spark':
       return creep;
   }
+}
+
+/** One elemental hit on one creep — the Avatar's own attack uses this (it
+ * picks its own target; the Legend supplies the element). Same matchup,
+ * shred, tank and rider rules as every kit hit, INCLUDING the Spark arc to the
+ * nearest other creep (the Spark Legend promises single hits jump). */
+export function strikeCreep<T extends KitCreep>(
+  creeps: readonly T[],
+  targetId: number,
+  base: number,
+  element: Element | null,
+  opts: { riderScale?: number; resistRecovery?: number; posOf: (c: T) => Point },
+): { creeps: T[]; dealt: number; arcId: number | null; arcDealt: number } {
+  const target = creeps.find((c) => c.id === targetId);
+  if (!target) return { creeps: [...creeps], dealt: 0, arcId: null, arcDealt: 0 };
+  const riderScale = opts.riderScale ?? 1;
+  const recovery = opts.resistRecovery ?? 0;
+  const hit = hitOne(target, base, element, riderScale, null, recovery);
+  const byId = new Map(creeps.map((c) => [c.id, c]));
+  byId.set(target.id, hit.creep);
+  let arcId: number | null = null;
+  let arcDealt = 0;
+  if (element === 'spark') {
+    const p = opts.posOf(target);
+    let best: T | undefined;
+    let bestD = CHAIN_BOUNCE_RANGE;
+    for (const c of creeps) {
+      if (c.id === target.id || c.hp <= 0) continue;
+      const q = opts.posOf(c);
+      const d = Math.hypot(q.x - p.x, q.y - p.y);
+      if (d <= bestD) {
+        bestD = d;
+        best = c;
+      }
+    }
+    if (best) {
+      arcDealt = base * KIT_TUNING.arcShare * riderScale * matchupMult(best, element, recovery);
+      byId.set(best.id, { ...best, hp: best.hp - arcDealt });
+      arcId = best.id;
+    }
+  }
+  return { creeps: creeps.map((c) => byId.get(c.id) ?? c), dealt: hit.dealt, arcId, arcDealt };
 }
 
 /**
@@ -428,10 +496,18 @@ export function fireKit<T extends KitCreep>(
   const byId = new Map(creeps.map((c) => [c.id, c]));
   const puffIds: number[] = [];
   const damage: number[] = [];
+  const riderScale = attack.riderScale ?? 1;
   const strike = (id: number, base: number, rider = true) => {
     const c = byId.get(id);
     if (!c) return;
-    const r = hitOne(c, base, rider ? element : null, 1, rider ? secondary : null);
+    const r = hitOne(
+      c,
+      base,
+      rider ? element : null,
+      riderScale,
+      rider ? secondary : null,
+      attack.resistRecovery ?? 0,
+    );
     byId.set(id, r.creep);
     puffIds.push(id);
     damage.push(r.dealt);
@@ -520,7 +596,7 @@ export function fireKit<T extends KitCreep>(
       }
     }
     if (best) {
-      const arc = D * KIT_TUNING.arcShare;
+      const arc = D * KIT_TUNING.arcShare * riderScale * matchupMult(best, element, attack.resistRecovery ?? 0);
       byId.set(best.id, { ...best, hp: best.hp - arc });
       arcId = best.id;
       puffIds.push(best.id);

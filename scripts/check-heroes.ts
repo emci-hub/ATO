@@ -580,7 +580,7 @@ const v17 = JSON.stringify({
 });
 const migrated = parsePlayStore(v17, 0);
 assert.ok(migrated, 'a v17 save still parses');
-assert.equal(migrated.version, 18, 'and is written back as v18');
+assert.equal(migrated.version, 19, "and is written back as the current version (v19)");
 assert.equal(migrated.tokens, 1234, 'its tokens survive');
 assert.equal(migrated.lifetime_waves_cleared, 42, 'its lifetime clears survive');
 assert.equal(migrated.avatars[0]?.level, 7, 'its Avatar level survives');
@@ -793,7 +793,7 @@ assert.equal(target?.id, 2, 'and picks the highest-HP creep in range');
 const stepped = stepDefendLive(
   combatState,
   100,
-  { wavePower: 1, towerSpeed: 1, avatarLevel: 1, typeMatch: 0, avatarStars: 0 },
+  { wavePower: 1, towerSpeed: 1, avatarLevel: 1, legendElement: null, avatarStars: 0 },
   { x: 0, y: 0 },
 );
 const afterBig = stepped.state.puffs.find((p) => p.id === 2);

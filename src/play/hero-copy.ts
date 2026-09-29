@@ -9,9 +9,10 @@
  *   one slows for 2000ms; radius 23-27, slow 30-36%), so this line states the
  *   actual numbers instead of implying a unique playstyle — a red-team finding
  *   (2026-09-28): copy built on those numbers would oversell the variety.
- * - **As a bound tower** the hero's `kit` (behavior + element) is what fires
- *   (`defend.ts` only reads `kit` in the bound-boss loop), so the kit line is
- *   labelled as the tower role, never as what you get while playing as them.
+ * - **As a bound tower** the hero's BEHAVIOR fires, carrying the ACTIVE
+ *   LEGEND's element (2026-09-28 — the Legend overrides the hero's element;
+ *   the hero's own element is its affinity, a damage bonus when it matches).
+ *   So the tower line takes the Legend's element, never the hero's own.
  */
 import { heroById, type HeroDef } from '@/play/heroes-data';
 import { BEHAVIOR_LABEL, ELEMENT_LABEL, type Behavior, type Element } from '@/play/kits';
@@ -45,10 +46,12 @@ export const HERO_STATUS_LABEL: Record<HeroStatus, string> = {
   locked: 'Locked',
 };
 
-/** The hero's tower role: "Chain · Spark — arcs between foes, jumps to a second foe". */
-export function heroTowerLine(hero: HeroDef): string {
-  const { behavior, element } = hero.kit;
-  return `${BEHAVIOR_LABEL[behavior]} · ${ELEMENT_LABEL[element]} — ${BEHAVIOR_EFFECT[behavior]}, ${ELEMENT_EFFECT[element]}`;
+/** The hero's attack with the active Legend: "Chain · Fire — arcs between
+ * foes, sets them alight". The behavior is the hero's; the element is the
+ * Legend's (that is what `defend.ts` fires). */
+export function heroTowerLine(hero: HeroDef, legendElement: Element): string {
+  const behavior = hero.kit.behavior;
+  return `${BEHAVIOR_LABEL[behavior]} · ${ELEMENT_LABEL[legendElement]} — ${BEHAVIOR_EFFECT[behavior]}, ${ELEMENT_EFFECT[legendElement]}`;
 }
 
 /** The hero's Avatar role: its Veil, with the numbers that actually differ. */

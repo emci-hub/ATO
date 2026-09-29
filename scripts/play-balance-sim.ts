@@ -51,8 +51,11 @@ import {
 import { BOARD_MAPS } from '../src/play/board-data';
 import { KEPT_BOARD_MIN_SCRAP, setupScrapFor } from '../src/play/board-layouts';
 import { allHeroes } from '../src/play/heroes-data';
-import { kitLabel } from '../src/play/kits';
-import { getTune } from '../src/play/tune';
+import { waveDefFor } from '../src/play/director';
+import { kitLabel, type Element } from '../src/play/kits';
+import { getTune, setKnob } from '../src/play/tune';
+import rawItems from '../src/play/data/items.json';
+import { bucketMultiplier } from '../src/play/playStore';
 
 type Phase = 'trial' | 'main';
 const WAVES: { phase: Phase; wave: number }[] = [
@@ -60,7 +63,17 @@ const WAVES: { phase: Phase; wave: number }[] = [
   ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((wave) => ({ phase: 'main' as const, wave })),
 ];
 
-type Strategy = { id: string; label: string; towers: TowerKind[]; heroTowers: number; heroId?: string };
+type Strategy = {
+  id: string;
+  label: string;
+  towers: TowerKind[];
+  heroTowers: number;
+  heroId?: string;
+  /** The active Legend's element (null = none, the pre-Legend baseline). */
+  legend?: Element | null;
+  /** The Legend's level (drives effect strength + resist recovery). */
+  legendLevel?: number;
+};
 const STRATEGIES: Strategy[] = [
   { id: 'avatar', label: 'Avatar only', towers: [], heroTowers: 0 },
   { id: 'archer', label: 'Archers', towers: ['archer'], heroTowers: 0 },
@@ -142,7 +155,13 @@ function simulate(
         : s.scrap + carry.bank,
     };
   }
-  const buckets = { wavePower: damageMult, towerSpeed: 1, avatarLevel: 1, typeMatch: 0, avatarStars: 0 };
+  const buckets = {
+    wavePower: damageMult,
+    towerSpeed: 1,
+    avatarLevel: strategy.legendLevel ?? 1,
+    legendElement: (strategy.legend ?? null) as Element | null,
+    avatarStars: 0,
+  };
 
   // Hero towers first (free), on the pads a 20-range tower covers best.
   const heroPads = rankedPads(HERO_TOWER_STATS.range).slice(0, strategy.heroTowers);
@@ -310,6 +329,78 @@ const campaign = campaignVariants.map(({ strat, noStartScrap, label }) => {
   return { strat, label, rows };
 });
 
+// Legends (2026-09-28). Validates the three numbers emci asked about:
+//  1. stage matchup — damage needed per elemental stage with each Legend;
+//  2. hero affinity (+15%) — each hero with its matching Legend vs the same
+//     hero with a Legend that is neutral on these stages;
+//  3. a maxed Legend recovering half of a resisted stage.
+const ELEMENTAL_WAVES = WAVES.filter((w) => w.phase === 'main' && w.wave >= 4);
+const NEUTRAL_WAVES = WAVES.filter((w) => !(w.phase === 'main' && w.wave >= 4));
+const LEGEND_ELEMENTS: Element[] = ['ember', 'tide', 'spark', 'root', 'void'];
+const legendStrat = (legend: Element, heroId = HERO_ID, level = 1): Strategy => ({
+  id: `legend:${legend}:${heroId}:${level}`,
+  label: legend,
+  towers: ['archer', 'vine', 'crystal'],
+  heroTowers: 2,
+  heroId,
+  legend,
+  legendLevel: level,
+});
+const stageRows = ELEMENTAL_WAVES.map((w) => ({
+  w,
+  needs: LEGEND_ELEMENTS.map((legend) => damageNeeded(w.phase, w.wave, legendStrat(legend), 1)),
+}));
+const avgNeed = (strat: Strategy, waves: typeof WAVES) => {
+  const vals = waves.map((w) => damageNeeded(w.phase, w.wave, strat, 1)).filter((n): n is number => n != null);
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : Infinity;
+};
+// Isolated: the SAME hero with its OWN (matching) Legend, bonus on vs off (the
+// tune knob set to 0). Comparing against a different Legend would mix in that
+// element's own rider (Void's shred alone is worth about as much), which is
+// what the first version of this table did.
+const affinityBonus = getTune().heroAffinityBonus;
+const affinityRows = allHeroes().map((hero) => {
+  const own = hero.kit.element;
+  const withBonus = avgNeed(legendStrat(own, hero.id), NEUTRAL_WAVES);
+  setKnob('heroAffinityBonus', 0);
+  const withoutBonus = avgNeed(legendStrat(own, hero.id), NEUTRAL_WAVES);
+  setKnob('heroAffinityBonus', affinityBonus);
+  return { hero, own, other: 'off' as const, matchedNeed: withBonus, otherNeed: withoutBonus, gain: withoutBonus / withBonus - 1 };
+});
+
+// Gear match: a full loadout of four average-strength Powers (from items.json),
+// then the same loadout with ONE / ALL FOUR pieces matching the Legend. The
+// wave_power bucket feeds board damage directly, so the board-damage change is
+// the bucket ratio.
+type RawMult = { stat: string; value: number } | null;
+type RawItem = { core: { kind: string }; mult_a: RawMult; mult_b: RawMult };
+const itemList = (Array.isArray(rawItems) ? rawItems : Object.values(rawItems)) as unknown as RawItem[];
+const powers = itemList.filter((item) => item.core.kind === 'power');
+const avgWavePower =
+  powers
+    .flatMap((item) => [item.mult_a, item.mult_b])
+    .filter((m): m is { stat: string; value: number } => m != null && m.stat === 'wave_power')
+    .reduce((acc, m, _i, arr) => acc + m.value / arr.length, 0);
+const gearBonus = getTune().gearMatchBonus;
+const bucketFor = (matched: number) => {
+  const sum = avgWavePower * (4 - matched) + avgWavePower * (1 + gearBonus) * matched;
+  return bucketMultiplier('wave_power', {
+    wave_power: sum,
+    tower_speed: 0,
+    token_earn: 0,
+    dive_luck: 0,
+    research_yield: 0,
+  });
+};
+const gearNone = bucketFor(0);
+const gearOne = bucketFor(1);
+const gearAll = bucketFor(4);
+const resistWave = ELEMENTAL_WAVES[0];
+const resistEl = waveDefFor(resistWave.phase, resistWave.wave)?.element as Element;
+const resistLv1 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat(resistEl, HERO_ID, 1), 1);
+const resistLv20 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat(resistEl, HERO_ID, 20), 1);
+const neutralLv1 = damageNeeded(resistWave.phase, resistWave.wave, legendStrat('void', HERO_ID, 1), 1);
+
 const secs = ((Date.now() - started) / 1000).toFixed(1);
 
 function fmtNeed(need: number | null): string {
@@ -409,6 +500,62 @@ for (const r of heroRows) {
   );
 }
 lines.push('');
+
+lines.push('## Legends (cycle 0, Mixed + 2 Archangel)');
+lines.push('');
+lines.push('Damage needed on each elemental stage with each Legend at Lv1. Lower = better; the best Legend for a stage is the one its element is weak to.');
+lines.push('');
+lines.push(`| Stage | Element | ${LEGEND_ELEMENTS.map((e) => e).join(' | ')} |`);
+lines.push(`|---|---|${LEGEND_ELEMENTS.map(() => '---').join('|')}|`);
+for (const row of stageRows) {
+  const el = waveDefFor(row.w.phase, row.w.wave)?.element ?? '—';
+  lines.push(`| ${waveName(row.w)} | ${el} | ${row.needs.map(fmtNeed).join(' | ')} |`);
+}
+lines.push('');
+lines.push('### Hero affinity (neutral stages, so the stage matchup cannot confound it)');
+lines.push('');
+lines.push(`Same hero, same (matching) Legend — affinity bonus on (+${Math.round(affinityBonus * 100)}%) vs off.`);
+lines.push('');
+lines.push('| Hero | Affinity | Need, bonus on | Need, bonus off | Gain |');
+lines.push('|---|---|---|---|---|');
+for (const r of affinityRows) {
+  lines.push(`| ${r.hero.name} | ${r.own} | ${r.matchedNeed.toFixed(2)}× | ${r.otherNeed.toFixed(2)}× | ${(r.gain * 100).toFixed(0)}% |`);
+}
+lines.push('');
+lines.push(`### Gear match (+${Math.round(gearBonus * 100)}% on a matching Power's own stats)`);
+lines.push('');
+lines.push(`Four average Powers (avg wave power ${(avgWavePower * 100).toFixed(1)}% each). Board damage multiplier: none matching ×${gearNone.toFixed(3)}, one matching ×${gearOne.toFixed(3)} (+${((gearOne / gearNone - 1) * 100).toFixed(1)}%), all four ×${gearAll.toFixed(3)} (+${((gearAll / gearNone - 1) * 100).toFixed(1)}%).`);
+lines.push('');
+
+const legendBest = stageRows.map((row) => {
+  const best = row.needs.reduce<{ i: number; v: number }>(
+    (acc, v, i) => (v != null && v < acc.v ? { i, v } : acc),
+    { i: -1, v: Infinity },
+  );
+  const worst = row.needs.reduce<number>((acc, v) => (v != null && v > acc ? v : acc), 0);
+  return { w: row.w, best: LEGEND_ELEMENTS[best.i], spread: worst / best.v };
+});
+const avgSpread = legendBest.reduce((a, b) => a + b.spread, 0) / legendBest.length;
+findings.push(
+  `- **Legend choice matters on elemental stages:** best vs worst Legend differs by ${avgSpread.toFixed(2)}× damage needed on average (Main 4-10). Best picks: ${legendBest
+    .map((b) => `${waveName(b.w)} ${b.best}`)
+    .join(', ')}.`,
+);
+const gains = affinityRows.map((r) => r.gain);
+const avgGain = gains.reduce((a, b) => a + b, 0) / gains.length;
+findings.push(
+  `- **Hero affinity (+${Math.round(affinityBonus * 100)}% damage, measured bonus on vs off) is worth ${(avgGain * 100).toFixed(0)}% less damage needed on average** (range ${(Math.min(...gains) * 100).toFixed(0)}% to ${(Math.max(...gains) * 100).toFixed(0)}%) — ` +
+    (avgGain > 0.03 && avgGain < 0.2 ? 'noticeable but not mandatory, as intended.' : 'outside the 3-20% target band; retune.'),
+);
+findings.push(
+  `- **Gear match (+${Math.round(gearBonus * 100)}% on a matching Power):** one matching piece lifts board damage ${((gearOne / gearNone - 1) * 100).toFixed(1)}%, a fully matched loadout ${((gearAll / gearNone - 1) * 100).toFixed(1)}% (the old +20% type match gave +20% for ONE matching piece) — ` +
+    ((gearAll / gearNone - 1) < 0.2 ? 'a deliberate step down from the old flat bonus; gear matching is a nudge, Legend choice is the lever.' : 'comparable to the old bonus.'),
+);
+if (resistLv1 != null && resistLv20 != null && neutralLv1 != null) {
+  findings.push(
+    `- **Resisted stage (${waveName(resistWave)}, ${resistEl}):** a Lv1 ${resistEl} Legend needs ${resistLv1.toFixed(2)}×, a Lv20 one ${resistLv20.toFixed(2)}× (neutral Void: ${neutralLv1.toFixed(2)}×) — levelling recovers part of the penalty but never erases it.`,
+  );
+}
 
 lines.push('## Campaign with kept boards (cycle 0)');
 lines.push('');

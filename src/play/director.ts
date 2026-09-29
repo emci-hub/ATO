@@ -34,16 +34,17 @@ export type WaveGroup = {
   /** Time from wave start until this group's first member. */
   delaySec: number;
   pattern: SpawnPattern;
-  /** Optional weakness colour for every creep in this group (EFFECTS_PLAN
-   * step 4). The attack element that beats it deals +25% and its statuses
-   * last 50% longer. Bosses ignore it — they carry the cycle tint. */
-  tint?: TypeTag;
 };
 
 export type WaveDef = {
   phase: 'trial' | 'main';
   wave: number;
   groups: WaveGroup[];
+  /** The stage's element (2026-09-28 — the ONE element-matchup rule). Every
+   * creep in the wave wears it: the element that beats it deals +25% (and its
+   * effects last longer), the same element deals −25% (a levelled Legend
+   * recovers up to half of that). Absent = a neutral stage. */
+  element?: TypeTag;
 };
 
 /** One enemy to spawn at `tMs` into the wave. */
@@ -54,8 +55,6 @@ export type SpawnEvent = {
   rampFrac: number;
   /** Boss-only: render size + enrage threshold (null for non-bosses). */
   boss: { size: number; burstHpPct: number | null } | null;
-  /** Non-boss weakness colour from the group, if authored. */
-  tint?: TypeTag;
 };
 
 /** HP multiplier vs a baseline puff (tank soaks; boss reads the band). */
@@ -95,17 +94,12 @@ function parseGroup(raw: unknown): WaveGroup | null {
       : 'stream';
   const gapSec = finite(raw.gapSec) ?? 1;
   const delaySec = finite(raw.delaySec) ?? 0;
-  const tint =
-    typeof raw.tint === 'string' && (WAVE_TINTS as readonly string[]).includes(raw.tint)
-      ? (raw.tint as TypeTag)
-      : undefined;
   return {
     role,
     count: Math.max(1, Math.floor(count)),
     gapSec: Math.max(0, gapSec),
     delaySec: Math.max(0, delaySec),
     pattern,
-    ...(tint ? { tint } : {}),
   };
 }
 
@@ -124,7 +118,11 @@ function parseWave(raw: unknown, phase: 'trial' | 'main'): WaveDef | null {
     if (group) groups.push(group);
   }
   if (groups.length === 0) return null;
-  return { phase, wave: Math.max(1, Math.floor(wave)), groups };
+  const element =
+    typeof raw.element === 'string' && (WAVE_TINTS as readonly string[]).includes(raw.element)
+      ? (raw.element as TypeTag)
+      : undefined;
+  return { phase, wave: Math.max(1, Math.floor(wave)), groups, ...(element ? { element } : {}) };
 }
 
 /** Parsed tables keyed by `${phase}:${wave}`. */
@@ -176,7 +174,6 @@ export function buildSchedule(
         boss: isBoss
           ? { size: boss?.size ?? 1, burstHpPct: boss?.burstHpPct ?? null }
           : null,
-        ...(!isBoss && group.tint ? { tint: group.tint } : {}),
       });
     }
   }

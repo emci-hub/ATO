@@ -52,7 +52,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { PLAY_EVERYTHING_FREE } from '@/lib/dev-mode';
-import { STARTER_AVATAR_ID } from '@/play/avatars';
+import {
+  STARTER_AVATAR_ID,
+  legendElementOf,
+  migrateLegendRecords,
+} from '@/play/avatars';
+import type { Element } from '@/play/kits';
 import { cyclePower, defaultCyclePower } from '@/play/engine/cycle';
 import { bossBandFor } from '@/play/engine/bands';
 import {
@@ -567,7 +572,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 18;
+  version: 19;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -686,6 +691,9 @@ export type PlayView = {
   /** Raw additive mult sums from the ACTIVE Avatar's equipped items (§9c
    * same-stat adds, scaled +10% per worn star so a merged ★2 beats a ★1). */
   statSums: StatSums;
+  /** The active Legend's element — every Avatar + hero attack uses it, and a
+   * worn Power of the same element gets its stats raised (2026-09-28). */
+  legendElement: Element;
   /** Owned Avatar roster (v16) — the Dress picker + catch-up badges read it. */
   avatars: readonly AvatarRosterView[];
   /** The Avatar the board + Dress currently use. */
@@ -778,7 +786,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 18,
+    version: 19,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -861,7 +869,8 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     inventory: doc.inventory,
     totalOwned: totalOwnedAcrossAvatars(doc),
     equipped: active.equipped,
-    statSums: equippedStatSums(active.equipped),
+    statSums: equippedStatSums(active.equipped, legendElementOf(active.id)),
+    legendElement: legendElementOf(active.id),
     avatars: doc.avatars.map((avatar) => ({
       id: avatar.id,
       level: avatar.level,
@@ -910,13 +919,17 @@ function diveRunViewOf(doc: PlayStoreDoc): DiveRunView {
   const run = doc.dive_run;
   if (!run) return { active: false, deepers: 0, haul: [], bustPctNext: null, canDeeper: false };
   const canDeeper = run.deepers < DIVE_DEEPER_MAX;
-  const equipped = activeAvatarOf(doc).equipped;
+  const activeLegend = activeAvatarOf(doc);
   return {
     active: true,
     deepers: run.deepers,
     haul: run.haul,
     bustPctNext: canDeeper
-      ? effectiveBustPct(diveBustChanceAt(run.deepers), equipped)
+      ? effectiveBustPct(
+          diveBustChanceAt(run.deepers),
+          activeLegend.equipped,
+          legendElementOf(activeLegend.id),
+        )
       : null,
     canDeeper,
   };
@@ -1016,12 +1029,13 @@ export function equippedTypeTags(
   return tags;
 }
 
-/** True when any worn Power's type_tag matches the cycle tint (§9f). */
-export function hasTypeMatch(
-  equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>,
-  tint: TypeTag,
-): boolean {
-  return equippedTypeTags(equipped).includes(tint);
+/** True when a worn Power's element matches the active Legend — that piece's
+ * own stats are raised by `GEAR_MATCH_BONUS` (replaces the old board-wide +20%
+ * cycle-tint "type match", 2026-09-28). */
+export function gearMatchesLegend(itemId: string, legendElement: Element | null): boolean {
+  if (!legendElement) return false;
+  const def = getItemDef(itemId);
+  return def?.core.kind === 'power' && def.core.type_tag === legendElement;
 }
 
 /**
@@ -1775,7 +1789,10 @@ export function campaignNextSeat(seat: CampaignState): CampaignState | null {
  * + stars). Swap Avatars and GS follows the new active. */
 export function gearScoreOf(doc: PlayStoreDoc): number {
   const active = activeAvatarOf(doc);
-  const wavePowerBucket = bucketMultiplier('wave_power', equippedStatSums(active.equipped));
+  const wavePowerBucket = bucketMultiplier(
+    'wave_power',
+    equippedStatSums(active.equipped, legendElementOf(active.id)),
+  );
   return gearScore(wavePowerBucket, active.level, active.stars);
 }
 
@@ -2081,6 +2098,7 @@ function diveBustChanceAt(deeperIndex: number): number {
  */
 export function equippedStatSums(
   equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>,
+  legendElement: Element | null = null,
 ): StatSums {
   const sums: StatSums = {
     wave_power: 0,
@@ -2095,7 +2113,12 @@ export function equippedStatSums(
     if (!def) continue;
     // StarTable scale (×1.0 at ★0, +0.1 per star) — a ★2 copy of a Power
     // really hits harder than its ★0 twin, in display AND combat math.
-    const scale = starMultScale(slot.star);
+    // A Power whose element matches the active Legend gets its own stats
+    // raised (tune `gearMatchBonus`, Sane 0.30) — shown on the item, never an
+    // invisible mult.
+    const scale =
+      starMultScale(slot.star) *
+      (gearMatchesLegend(slot.id, legendElement) ? 1 + getTune().gearMatchBonus : 1);
     for (const mult of [def.mult_a, def.mult_b]) {
       if (mult) sums[mult.stat] += mult.value * scale;
     }
@@ -2134,8 +2157,9 @@ export function diveLuckBucket(statSums: StatSums): number {
 export function effectiveBustPct(
   baseBust: number,
   equipped: Readonly<Partial<Record<ItemSlot, ItemRef>>>,
+  legendElement: Element | null = null,
 ): number {
-  const bucket = diveLuckBucket(equippedStatSums(equipped));
+  const bucket = diveLuckBucket(equippedStatSums(equipped, legendElement));
   const bent = baseBust * (1 - LUCK_BUST_BEND_PER_TIER * (bucket - 1));
   const floored = Math.max(0.5 * baseBust, bent);
   return Math.round(floored * 100);
@@ -2275,7 +2299,11 @@ export function deeperDive(
   // §7 table at this depth + the §9c tune bust boost, bent by the ACTIVE
   // Avatar's equipped dive_luck — the same number the UI shows.
   const bustChance =
-    effectiveBustPct(diveBustChanceAt(run.deepers), activeAvatarOf(doc).equipped) / 100;
+    effectiveBustPct(
+      diveBustChanceAt(run.deepers),
+      activeAvatarOf(doc).equipped,
+      legendElementOf(activeAvatarOf(doc).id),
+    ) / 100;
   if (rng() < bustChance) {
     const bustPct = Math.round(bustChance * 100);
     return { doc: { ...doc, dive_run: null }, outcome: { busted: true, bustPct } };
@@ -2803,7 +2831,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 5 && version !== 6 && version !== 7 && version !== 8 &&
       version !== 9 && version !== 10 && version !== 11 && version !== 12 &&
       version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
-      version !== 17 && version !== 18
+      version !== 17 && version !== 18 && version !== 19
     ) {
       return null;
     }
@@ -2858,8 +2886,38 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       equipped: legacyEquipped,
       park: parseAvatarPark(data.avatar_park),
     };
+    // v19 (elemental Legends, 2026-09-28): the ten old Legend ids fold onto the
+    // five elemental ones BEFORE parsing — parseAvatars keeps any id and would
+    // otherwise add a fresh level-1 starter beside the renamed old one,
+    // splitting the player's progress. `migrateLegendRecords` merges records
+    // that land on the same Legend (highest level + its xp, max stars, the
+    // ACTIVE record's worn gear). Worn gear is NOT in the bag (equipping takes
+    // the copy out), so every loadout the merge does not keep comes back as
+    // `returnedEquipped` and is put back in the bag below — nothing is lost.
+    const legendRows =
+      version >= 16 && version < 19 && Array.isArray(data.avatars)
+        ? migrateLegendRecords(
+            data.avatars.filter(
+              (row): row is Record<string, unknown> & { id: string; xp: number; level: number; stars: number } =>
+                isRecord(row) && typeof row.id === 'string',
+            ).map((row) => ({
+              ...row,
+              id: row.id as string,
+              xp: finiteNumber(row.xp) ?? 0,
+              level: finiteNumber(row.level) ?? 1,
+              stars: finiteNumber(row.stars) ?? 0,
+              equipped: row.equipped,
+              park: row.park,
+            })),
+            typeof data.active_avatar_id === 'string' ? data.active_avatar_id : null,
+          )
+        : null;
     const { avatars, activeAvatarId } = version >= 16
-      ? parseAvatars(data.avatars, starterRecordFromLegacy(legacy), data.active_avatar_id)
+      ? parseAvatars(
+          legendRows ? legendRows.rows : data.avatars,
+          starterRecordFromLegacy(legacy),
+          legendRows ? legendRows.activeId : data.active_avatar_id,
+        )
       : { avatars: [starterRecordFromLegacy(legacy)], activeAvatarId: STARTER_AVATAR_ID };
     // v17 (Shop stubs): per-day token-shop purchase counts. Older saves default
     // to none bought today.
@@ -2871,14 +2929,17 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     const activeAvatarHeroId = parseAvatarHeroId(data.active_avatar_hero_id, ownedHeroIds);
     const heroOffer = parseHeroOffer(data.hero_offer);
     return {
-      version: 18,
+      version: 19,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
       research_started_at: researchStartedAt,
       research_accrued_ms: Math.min(RESEARCH_CAP_MS, Math.max(0, researchAccruedMs ?? 0)),
       last_tend_bonus_ymd: lastTend,
-      inventory: parseInventory(data.inventory, legacyEquipped, version < 5),
+      inventory: returnWornToBag(
+        parseInventory(data.inventory, legacyEquipped, version < 5),
+        legendRows ? legendRows.returnedEquipped : [],
+      ),
       dive_run: parseDiveRun(data.dive_run),
       highest_wave_cleared: Math.max(0, Math.floor(highestWaveCleared)),
       clears_today: Math.max(0, Math.floor(clearsToday)),
@@ -2916,6 +2977,19 @@ function starterRecordFromLegacy(legacy: {
   park: AvatarPark;
 }): AvatarRecord {
   return { id: STARTER_AVATAR_ID, ...legacy };
+}
+
+/** Put every worn item from loadouts the v19 Legend merge did not keep back
+ * into the bag (equipping removes a copy from the bag, so a dropped loadout's
+ * items would otherwise vanish). Invalid refs are skipped by `parseEquipped`. */
+function returnWornToBag(inventory: ItemStack[], loadouts: readonly unknown[]): ItemStack[] {
+  let bag = inventory;
+  for (const raw of loadouts) {
+    for (const ref of Object.values(parseEquipped(raw))) {
+      if (ref) bag = addCopiesToBag(bag, ref.id, ref.star, 1);
+    }
+  }
+  return bag;
 }
 
 /** Loose read of a v16 `avatars` array. Malformed rows are dropped; the

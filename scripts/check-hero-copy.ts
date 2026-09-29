@@ -26,7 +26,7 @@ import {
   setAvatarUnbinds,
 } from '../src/play/hero-copy';
 import { allHeroes } from '../src/play/heroes-data';
-import { BEHAVIOR_LABEL, ELEMENT_LABEL } from '../src/play/kits';
+import { BEHAVIOR_LABEL, ELEMENTS, ELEMENT_LABEL } from '../src/play/kits';
 
 let passed = 0;
 function ok(label: string) {
@@ -59,7 +59,7 @@ const LEAKS = /skill_|_veil|\b[a-z]+_[a-z]+\b|undefined|null/;
 for (const hero of heroes) {
   for (const [what, line] of [
     ['avatar', heroAvatarLine(hero)],
-    ['tower', heroTowerLine(hero)],
+    ['tower', heroTowerLine(hero, 'ember')],
     ['unlock', heroUnlockLine(hero)],
   ] as const) {
     assert.ok(line.trim().length > 0, `${hero.id}: ${what} line is empty`);
@@ -68,11 +68,19 @@ for (const hero of heroes) {
 }
 ok('every hero has an Avatar line, a tower line and an unlock hint — no internal ids');
 
+// 2026-09-28: the ACTIVE LEGEND supplies the element; the hero keeps its
+// behavior. The line must name what actually fires, never the hero's own
+// element when the Legend differs (that would be the old, now-false claim).
 for (const hero of heroes) {
-  const line = heroTowerLine(hero);
-  assert.ok(line.startsWith(`${BEHAVIOR_LABEL[hero.kit.behavior]} · ${ELEMENT_LABEL[hero.kit.element]} —`), `${hero.id}: tower line must name its real kit`);
+  for (const legend of ELEMENTS) {
+    const line = heroTowerLine(hero, legend);
+    assert.ok(
+      line.startsWith(`${BEHAVIOR_LABEL[hero.kit.behavior]} · ${ELEMENT_LABEL[legend]} —`),
+      `${hero.id} + ${legend} Legend: the attack line must name the hero's behavior and the Legend's element`,
+    );
+  }
 }
-ok('each tower line names that hero\'s real behavior and element');
+ok("each attack line names the hero's behavior and the active Legend's element");
 
 // The Veils barely differ; the Avatar line must state the numbers, not imply
 // a unique playstyle (red team, 2026-09-28).

@@ -255,7 +255,7 @@ live = {
   schedule: [],
   puffs: [{ ...base, id: 99, dist: nearD, maxHp: 1000, hp: 1000, size: 1, burstHpPct: null, burstFired: false, laneIndex: 0 }],
 };
-const stepped = stepDefendLive(live, 100, { wavePower: 1, towerSpeed: 1, avatarLevel: 1, typeMatch: 0, avatarStars: 0 }, { x: -999, y: -999 });
+const stepped = stepDefendLive(live, 100, { wavePower: 1, towerSpeed: 1, avatarLevel: 1, legendElement: null, avatarStars: 0 }, { x: -999, y: -999 });
 assert.equal(stepped.hits.length, 1, 'one tower shot → one hit record');
 assert.equal(stepped.hits[0].element, 'spark', 'the crystal reports its Spark element');
 assert.equal(stepped.hits[0].primaryId, 99);

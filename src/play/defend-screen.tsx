@@ -140,7 +140,7 @@ import {
 import { boardDecor, roadDecor, ATO_GHOST_D } from '@/play/board-decor';
 import { BOARD_MAPS, BOARD_ORDER, boardPathD, type BoardId } from '@/play/board-data';
 import { NeonBoardChrome } from '@/play/neon-chrome';
-import { BOUND_BOSS_MAX_STAR, bossBandFor, boundBossFragmentCost, defaultBoundBossId, getBoundBossDef, isUniqueDrop, previewDropTable, gearScore, recommendedGs, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, typeMatchBonus, type DropPreviewRow, type TypeTag } from '@/play/engine';
+import { BOUND_BOSS_MAX_STAR, bossBandFor, boundBossFragmentCost, defaultBoundBossId, getBoundBossDef, isUniqueDrop, previewDropTable, gearScore, recommendedGs, TAG_COLOR, TAG_ICON, TAG_LABEL, TYPE_MATCH_CYCLE, type DropPreviewRow, type TypeTag } from '@/play/engine';
 import { formatItemStats, getItemDef, type ItemSlot } from '@/play/items';
 import {
   AVATAR_STAR_MAX,
@@ -153,7 +153,6 @@ import {
   campaignNextSeat,
   campaignPhaseLabel,
   dropTableForWave,
-  hasTypeMatch,
   planSkipToEven,
   replayBands,
   xpForClear,
@@ -186,6 +185,7 @@ import {
   type StressFxLevel,
 } from '@/play/dev-fx-stress';
 import { sendPlayDevLog } from '@/play/dev-log';
+import { stageMatchupDetail, stageMatchupFor, stageMatchupShort } from '@/play/legend-copy';
 import { FxLayer, FX_LIFE_MS, FX_ULTIMATE_LIFE_MS, type FxEvent, type FxPoint } from '@/play/fx-layer';
 import { FX_CAP, FX_QUALITY_LABEL, nextFxQuality, setFxQuality, useFxQuality } from '@/play/fx-quality';
 import { kitRange, type KitHit } from '@/play/kit-combat';
@@ -1025,9 +1025,12 @@ export function DefendScreen({
 
   /** Boss band of the chosen fight (null for a normal formula wave). */
   const band = bossBandFor(fight.phase, fight.wave);
-  /** Soft type match vs the cycle tint (§9f) — board-wide +20% on a match. */
-  const typeMatchActive = hasTypeMatch(view.equipped, view.cycleTint);
-  const typeMatchPct = Math.round(typeMatchBonus(typeMatchActive) * 100);
+  /** The chosen fight's stage element and what it means for the active Legend
+   * (2026-09-28 — the one element-matchup rule; replaces the old "Type · Ember
+   * +20% match" gear bonus). Shown before Start so the player can switch
+   * Legend in Dress first. */
+  const stageElement = waveDefFor(fight.phase, fight.wave)?.element ?? null;
+  const stageMatchup = stageMatchupFor(stageElement, view.legendElement, view.avatarLevel);
   /** Drop table + honest preview rows for the chosen fight (§9i). */
   const dropTableId = dropTableForWave(fight.phase, fight.wave);
   const dropRows = previewDropTable(dropTableId, new Set(view.uniques));
@@ -1297,17 +1300,19 @@ export function DefendScreen({
     onSaveAvatarPark(mapId, avatarPosRef.current.x / 100, avatarPosRef.current.y / 100);
   }, [onSaveAvatarPark]);
 
-  // Equipped mult buckets, board-wide for towers + Avatar. Type match (§9f)
-  // and Avatar stars (§9h) fold into the same damage pass.
+  // Equipped mult buckets, board-wide for towers + Avatar (gear matching the
+  // active Legend is already raised inside statSums). Avatar stars (§9h) fold
+  // into the same damage pass; the Legend's element rides every Avatar and
+  // hero attack.
   const buckets = useMemo(
     () => ({
       wavePower: bucketMultiplier('wave_power', view.statSums),
       towerSpeed: bucketMultiplier('tower_speed', view.statSums),
       avatarLevel: view.avatarLevel,
-      typeMatch: typeMatchActive ? typeMatchBonus(true) : 0,
+      legendElement: view.legendElement,
       avatarStars: view.avatarStars,
     }),
-    [view.statSums, view.avatarLevel, view.avatarStars, typeMatchActive],
+    [view.statSums, view.avatarLevel, view.avatarStars, view.legendElement],
   );
   const bucketsRef = useRef(buckets);
   bucketsRef.current = buckets;
@@ -2599,28 +2604,40 @@ export function DefendScreen({
           ) : null}
           <View style={styles.statRow}>
             <View style={styles.typeMatchRow}>
-              <MaterialCommunityIcons
-                name={TAG_ICON[view.cycleTint]}
-                size={14}
-                color={TAG_COLOR[view.cycleTint]}
-              />
+              {stageElement ? (
+                <MaterialCommunityIcons
+                  name={TAG_ICON[stageElement]}
+                  size={14}
+                  color={TAG_COLOR[stageElement]}
+                />
+              ) : null}
               <ThemedText type="smallBold">
-                Type · {TAG_LABEL[view.cycleTint]}
+                Stage · {stageElement ? TAG_LABEL[stageElement] : 'Neutral'}
               </ThemedText>
             </View>
             <Pressable
               onPress={() => setChartOpen((open) => !open)}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel="Type match chart"
+              accessibilityLabel="Stage element matchup"
               style={({ pressed }) => [pressed && styles.pressed]}>
-              <ThemedText type="smallBold" themeColor={typeMatchActive ? 'emphasis' : 'textSecondary'}>
-                {typeMatchActive ? `+${typeMatchPct}% match` : 'no match'}
+              <ThemedText
+                type="smallBold"
+                themeColor={
+                  stageMatchup.kind === 'favoured'
+                    ? 'emphasis'
+                    : 'textSecondary'
+                }>
+                {stageMatchupShort(stageMatchup)}
               </ThemedText>
             </Pressable>
           </View>
           {chartOpen ? (
-            <TypeMatchChart tint={view.cycleTint} matched={typeMatchActive} matchPct={typeMatchPct} />
+            <ThemedView type="backgroundElement" style={styles.chartCard}>
+              <ThemedText type="small" themeColor="textSecondary">
+                {stageMatchupDetail(stageMatchup)}
+              </ThemedText>
+            </ThemedView>
           ) : null}
           {phase !== 'running' ? (
             <ThemedText type="small" themeColor="textSecondary">
@@ -4522,50 +4539,6 @@ function DevSection({
       </Pressable>
       {open ? <View style={styles.devSectionBody}>{children}</View> : null}
     </>
-  );
-}
-
-/** Type-match chart (§9f §9i "?"): Tide → Ember → Root → Spark cycle + the
- * match rule. Display only — the combat rule is match-or-nothing. */
-function TypeMatchChart({
-  tint,
-  matched,
-  matchPct,
-}: {
-  tint: TypeTag;
-  matched: boolean;
-  matchPct: number;
-}) {
-  const theme = useTheme();
-  return (
-    <ThemedView type="backgroundElement" style={styles.chartCard}>
-      <View style={styles.chartRow}>
-        {TYPE_MATCH_CYCLE.map((tag, index) => (
-          <View key={tag} style={styles.chartItem}>
-            <View
-              style={[
-                styles.chartDot,
-                { backgroundColor: TAG_COLOR[tag], borderColor: theme.background },
-              ]}>
-              {tag === tint ? <View style={styles.chartDotActive} /> : null}
-            </View>
-            <ThemedText type="code" themeColor={tag === tint ? 'emphasis' : 'textSecondary'}>
-              {TAG_LABEL[tag]}
-            </ThemedText>
-            {index < TYPE_MATCH_CYCLE.length - 1 ? (
-              <ThemedText type="code" themeColor="textSecondary">
-                →
-              </ThemedText>
-            ) : null}
-          </View>
-        ))}
-      </View>
-      <ThemedText type="small" themeColor="textSecondary">
-        {matched
-          ? `Match = +${matchPct}% board power.`
-          : 'Equip a matching Power for +20% board power. Mismatch is neutral.'}
-      </ThemedText>
-    </ThemedView>
   );
 }
 
