@@ -188,6 +188,7 @@ import {
 import { sendPlayDevLog } from '@/play/dev-log';
 import { stageMatchupDetail, stageMatchupFor, stageMatchupShort } from '@/play/legend-copy';
 import { FxLayer, FX_LIFE_MS, FX_ULTIMATE_LIFE_MS, type FxEvent, type FxPoint } from '@/play/fx-layer';
+import { defendBackStep, defendEdgeSwipe, type InnerBack } from '@/play/edge-back';
 import { FX_CAP, FX_QUALITY_LABEL, nextFxQuality, setFxQuality, useFxQuality } from '@/play/fx-quality';
 import { kitRange, type KitHit } from '@/play/kit-combat';
 import {
@@ -676,6 +677,7 @@ export function DefendScreen({
   onDevClearHeroOffer,
   onDevClearOwnedHeroes,
   onOpenDress,
+  registerBack,
   onBackToGrove,
 }: {
   view: PlayView;
@@ -732,6 +734,8 @@ export function DefendScreen({
   onDevClearOwnedHeroes: () => Promise<boolean>;
   /** Leave the sheet for the Dress Hero roster (A2.5). */
   onOpenDress: () => void;
+  /** Back one level (edge-back.ts): the Play shell asks Defend first. */
+  registerBack?: (inner: InnerBack | null) => void;
   onBackToGrove: () => void;
 }) {
   const theme = useTheme();
@@ -1587,6 +1591,24 @@ export function DefendScreen({
     if (resumeAfterLeaveCancelRef.current) setPaused(false);
     resumeAfterLeaveCancelRef.current = false;
   }, []);
+
+  // Back one level (2026-09-29): mid-wave, back never leaves silently — it
+  // opens (or closes) the same Leave confirm as the button, and our edge swipe
+  // is OFF while a wave runs (the board is near full width; edge drags stay
+  // board drags — emci). Setup / result: back goes to the hub.
+  useEffect(() => {
+    if (!registerBack) return;
+    registerBack({
+      edgeSwipe: defendEdgeSwipe(phase),
+      back: () => {
+        const step = defendBackStep(phase, leaveConfirmOpen);
+        if (step === 'close-confirm') cancelLeaveRun();
+        else if (step === 'request-leave') requestLeaveRun();
+        return step !== 'hub';
+      },
+    });
+    return () => registerBack(null);
+  }, [registerBack, phase, leaveConfirmOpen, cancelLeaveRun, requestLeaveRun]);
 
   const confirmLeaveRun = useCallback(() => {
     resumeAfterLeaveCancelRef.current = false;

@@ -20,10 +20,13 @@ const CONTENT_WIDTH = 800;
 export function CommandHub({
   scrap,
   wave,
+  diveActive = false,
   onTile,
   children,
 }: {
   scrap: number | null;
+  /** A Dive run is saved mid-way — the Dive tile says so (it is never lost). */
+  diveActive?: boolean;
   wave: number | null;
   onTile: (to: HubDestination) => void;
   children?: ReactNode;
@@ -71,7 +74,9 @@ export function CommandHub({
                 <HubIcon name={tile.icon} size={64} color={NEON.cyan} />
               </View>
               <Text style={styles.tileLabel}>{tile.label}</Text>
-              <Text style={styles.tileSub}>{tile.subtitle}</Text>
+              <Text style={styles.tileSub}>
+                {tile.to === 'dive' && diveActive ? 'Run in progress' : tile.subtitle}
+              </Text>
             </Pressable>
           ))}
         </View>

@@ -16,6 +16,7 @@ import { Fonts } from '@/constants/theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
 import { diveBuddyLine } from '@/play/dive-screen';
+import { petBackStep, type InnerBack } from '@/play/edge-back';
 import { FxLayer, FX_ULTIMATE_LIFE_MS, type FxEvent } from '@/play/fx-layer';
 import { useFxQuality } from '@/play/fx-quality';
 import { HeartIcon } from '@/play/icons';
@@ -256,11 +257,14 @@ export function usePetReminderSync(pet: PetView | null): void {
 export function PetScreen({
   view,
   commit,
+  registerBack,
   reduceMotion,
   onBack,
 }: {
   view: PlayView;
   commit: (transition: PlayTransition) => boolean;
+  /** Back one level (edge-back.ts): a running mini-game closes first. */
+  registerBack?: (inner: InnerBack | null) => void;
   reduceMotion: boolean;
   onBack: () => void;
 }) {
@@ -273,6 +277,19 @@ export function PetScreen({
   const [guideOpen, setGuideOpen] = useState(false);
   const [hallOpen, setHallOpen] = useState(false);
   const [remindNote, setRemindNote] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!registerBack) return;
+    registerBack({
+      edgeSwipe: true,
+      back: () => {
+        if (petBackStep(game != null) === 'hub') return false;
+        setGame(null); // the unfinished round does not count
+        return true;
+      },
+    });
+    return () => registerBack(null);
+  }, [registerBack, game]);
 
   useEffect(() => {
     if (!rebirthArmed) return;

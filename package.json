@@ -83,6 +83,7 @@
     "check:kits": "tsx ./scripts/check-kits.ts",
     "check:legends": "tsx ./scripts/check-legends.ts",
     "check:pet": "tsx ./scripts/check-pet.ts",
+    "check:edge-back": "tsx ./scripts/check-edge-back.ts",
     "check:immersive": "tsx ./scripts/check-immersive.ts",
     "check:board-layouts": "tsx ./scripts/check-board-layouts.ts",
     "sim:balance": "tsx ./scripts/play-balance-sim.ts",

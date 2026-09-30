@@ -1,7 +1,7 @@
-import { Redirect, router } from 'expo-router';
+import { Redirect, Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { BackHandler, PanResponder, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MilestoneToast } from '@/components/milestone-toast';
@@ -22,6 +22,13 @@ import { usePlayDevUnlocked } from '@/play/dev-lock';
 import { DevUnlockRow } from '@/play/dev-unlock-row';
 import { DiveScreen } from '@/play/dive-screen';
 import { DressScreen } from '@/play/dress-screen';
+import {
+  backDecision,
+  isEdgeSwipeComplete,
+  isEdgeSwipeStart,
+  type BackSource,
+  type InnerBack,
+} from '@/play/edge-back';
 import { PetScreen, usePetReminderSync } from '@/play/pet-screen';
 import { DefendScreen } from '@/play/defend-screen';
 import { SheetLabScreen } from '@/play/sheet-lab-screen';
@@ -142,6 +149,46 @@ export default function PlayScreen() {
   // Pet (v20): keep the opt-in hunger reminder in step with the pet from
   // anywhere in Play (a TD win feeds it too), not only the Pet screen.
   usePetReminderSync(view?.pet ?? null);
+
+  // Back one level (2026-09-29): Play is one route with its sub-screens as a
+  // `mode`, so the phone's own back used to leave Play from anywhere (and skip
+  // Defend's Leave confirm). The native swipe now only runs on the hub; on a
+  // sub-screen our left-edge swipe and Android back step back one level, the
+  // sub-screen first (`InnerBack`, registered by Defend / Pet), else the hub.
+  const innerBackRef = useRef<InnerBack | null>(null);
+  const registerBack = useCallback((inner: InnerBack | null) => {
+    innerBackRef.current = inner;
+  }, []);
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
+  const goBackOneLevel = useCallback((source: BackSource): boolean => {
+    const decision = backDecision(modeRef.current === 'grove', innerBackRef.current, source);
+    if (decision === 'native') return false;
+    if (decision === 'ignore') return true;
+    if (innerBackRef.current?.back()) return true;
+    setMode('grove');
+    return true;
+  }, []);
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => goBackOneLevel('hardware'));
+    return () => sub.remove();
+  }, [goBackOneLevel]);
+  const edgeSwipe = useMemo(
+    () =>
+      PanResponder.create({
+        // Capture only a move that starts at the left edge and runs sideways —
+        // taps, scrolls and board drags elsewhere are never claimed.
+        onMoveShouldSetPanResponderCapture: (_e, g) =>
+          modeRef.current !== 'grove' &&
+          innerBackRef.current?.edgeSwipe !== false &&
+          isEdgeSwipeStart(g.x0, g.dx, g.dy),
+        onPanResponderTerminationRequest: () => false,
+        onPanResponderRelease: (_e, g) => {
+          if (isEdgeSwipeComplete(g.dx, g.vx)) goBackOneLevel('edge');
+        },
+      }),
+    [goBackOneLevel],
+  );
   const [toast, setToast] = useState<PlayToast | null>(null);
   /** Dev kit only: one-shot forced bust on the next Deeper press. */
   const [forceBustArmed, setForceBustArmed] = useState(false);
@@ -497,10 +544,13 @@ export default function PlayScreen() {
     <PlayThemeProvider>
       {/* Forced ink chrome is dark regardless of the app-wide mode. */}
       <StatusBar style="light" />
+      {/* The phone's own swipe-back leaves Play — only from the hub. */}
+      <Stack.Screen options={{ gestureEnabled: mode === 'grove' }} />
       {mode === 'grove' ? (
         <SafeAreaView style={styles.hubSafeArea}>
           <ScrollView contentContainerStyle={styles.hubScroll} showsVerticalScrollIndicator={false}>
             <CommandHub
+              diveActive={view?.diveRun.active ?? false}
               scrap={view?.tokens ?? null}
               wave={view?.campaign.wave_in_phase ?? 1}
               onTile={(to: HubDestination) => setMode(to)}>
@@ -571,96 +621,100 @@ export default function PlayScreen() {
           </ScrollView>
         </SafeAreaView>
       ) : (
-        <ThemedView style={styles.container}>
-          <SafeAreaView style={styles.safeArea}>
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-              {toastContent ? (
-                <MilestoneToast
-                  title={toastContent.title}
-                  body={toastContent.body}
-                  reduceMotion={reduceMotion}
-                  onDone={() => setToast(null)}
-                />
-              ) : null}
+        <View style={styles.edgeWrap} {...edgeSwipe.panHandlers}>
+          <ThemedView style={styles.container}>
+            <SafeAreaView style={styles.safeArea}>
+              <ScrollView contentContainerStyle={styles.scrollContent}>
+                {toastContent ? (
+                  <MilestoneToast
+                    title={toastContent.title}
+                    body={toastContent.body}
+                    reduceMotion={reduceMotion}
+                    onDone={() => setToast(null)}
+                  />
+                ) : null}
 
-              {mode === 'dive' && view ? (
-                <DiveScreen
-                  view={view}
-                  skipDelays={skipDelays}
-                  reduceMotion={reduceMotion}
-                  onSpendCharge={handleSpendCharge}
-                  onSurface={handleSurface}
-                  onDeeper={handleDeeper}
-                  onBackToGrove={() => setMode('grove')}
-                />
-              ) : mode === 'pet' && view ? (
-                <PetScreen
-                  view={view}
-                  commit={commit}
-                  reduceMotion={reduceMotion}
-                  onBack={() => setMode('grove')}
-                />
-              ) : mode === 'dress' && view ? (
-                <DressScreen
-                  view={view}
-                  skipDelays={skipDelays}
-                  reduceMotion={reduceMotion}
-                  onEquip={handleEquip}
-                  onSell={handleSell}
-                  onUnequip={handleUnequip}
-                  onMerge={handleMerge}
-                  onActivateAvatar={handleActivateAvatar}
-                  onUnlockAvatar={(id) => void handleUnlockAvatar(id)}
-                  onSetAvatarHero={(heroId) => void setAvatarHero(heroId)}
-                  onBackToGrove={() => setMode('grove')}
-                />
-              ) : mode === 'defend' && view ? (
-                <DefendScreen
-                  view={view}
-                  reduceMotion={reduceMotion}
-                  onWin={handleRecordDefendWin}
-                  onResetDailyClears={handleResetDailyClears}
-                  onSetClearsTodayFive={handleSetClearsTodayFive}
-                  onGrantMilestoneWaveFive={handleGrantMilestoneWaveFive}
-                  onResetMilestones={handleResetMilestones}
-                  onResetCampaign={handleResetCampaign}
-                  onJumpMain9={handleJumpMain9}
-                  onJumpScout={handleJumpScout}
-                  onForceConquered={handleForceConquered}
-                  onSpendStarToken={handleSpendStarToken}
-                  onGrantStarToken={handleGrantStarToken}
-                  onSetCycleTint={handleSetCycleTint}
-                  onForceFinal={handleForceFinal}
-                  onResetAvatarStarCycle={handleResetAvatarStarCycle}
-                  onSkipToEven={handleSkipToEven}
-                  onDevOvergear={handleDevOvergear}
-                  onDevForceSkipOffer={handleDevForceSkipOffer}
-                  onSaveAvatarPark={handleSaveAvatarPark}
-                  onSetAvatarHero={setAvatarHero}
-                  onBindHeroAsTower={bindHeroAsTower}
-                  onDismissHeroOffer={() => void dismissHeroOffer()}
-                  onDevOwnHero={devOwnHero}
-                  onDevOwnAllHeroes={devOwnAllHeroes}
-                  onDevSetAvatarHero={devSetAvatarHero}
-                  onDevClearHeroOffer={devClearHeroOffer}
-                  onDevClearOwnedHeroes={devClearOwnedHeroes}
-                  onOpenDress={() => setMode('dress')}
-                  onBackToGrove={() => setMode('grove')}
-                />
-              ) : mode === 'shop' && view ? (
-                <ShopScreen
-                  view={view}
-                  onBuyToken={handleBuyShopRow}
-                  onBackToDivecore={() => setMode('grove')}
-                />
-              ) : mode === 'about' ? (
-                <AboutScreen onBackToDivecore={() => setMode('grove')} />
-              ) : mode === 'sheetlab' ? (
-                <SheetLabScreen onBack={() => setMode('grove')} />
-              ) : null}
-            </ScrollView>
-          </SafeAreaView>
-        </ThemedView>
+                {mode === 'dive' && view ? (
+                  <DiveScreen
+                    view={view}
+                    skipDelays={skipDelays}
+                    reduceMotion={reduceMotion}
+                    onSpendCharge={handleSpendCharge}
+                    onSurface={handleSurface}
+                    onDeeper={handleDeeper}
+                    onBackToGrove={() => setMode('grove')}
+                  />
+                ) : mode === 'pet' && view ? (
+                  <PetScreen
+                    view={view}
+                    commit={commit}
+                    registerBack={registerBack}
+                    reduceMotion={reduceMotion}
+                    onBack={() => setMode('grove')}
+                  />
+                ) : mode === 'dress' && view ? (
+                  <DressScreen
+                    view={view}
+                    skipDelays={skipDelays}
+                    reduceMotion={reduceMotion}
+                    onEquip={handleEquip}
+                    onSell={handleSell}
+                    onUnequip={handleUnequip}
+                    onMerge={handleMerge}
+                    onActivateAvatar={handleActivateAvatar}
+                    onUnlockAvatar={(id) => void handleUnlockAvatar(id)}
+                    onSetAvatarHero={(heroId) => void setAvatarHero(heroId)}
+                    onBackToGrove={() => setMode('grove')}
+                  />
+                ) : mode === 'defend' && view ? (
+                  <DefendScreen
+                    view={view}
+                    reduceMotion={reduceMotion}
+                    onWin={handleRecordDefendWin}
+                    onResetDailyClears={handleResetDailyClears}
+                    onSetClearsTodayFive={handleSetClearsTodayFive}
+                    onGrantMilestoneWaveFive={handleGrantMilestoneWaveFive}
+                    onResetMilestones={handleResetMilestones}
+                    onResetCampaign={handleResetCampaign}
+                    onJumpMain9={handleJumpMain9}
+                    onJumpScout={handleJumpScout}
+                    onForceConquered={handleForceConquered}
+                    onSpendStarToken={handleSpendStarToken}
+                    onGrantStarToken={handleGrantStarToken}
+                    onSetCycleTint={handleSetCycleTint}
+                    onForceFinal={handleForceFinal}
+                    onResetAvatarStarCycle={handleResetAvatarStarCycle}
+                    onSkipToEven={handleSkipToEven}
+                    onDevOvergear={handleDevOvergear}
+                    onDevForceSkipOffer={handleDevForceSkipOffer}
+                    onSaveAvatarPark={handleSaveAvatarPark}
+                    onSetAvatarHero={setAvatarHero}
+                    onBindHeroAsTower={bindHeroAsTower}
+                    onDismissHeroOffer={() => void dismissHeroOffer()}
+                    onDevOwnHero={devOwnHero}
+                    onDevOwnAllHeroes={devOwnAllHeroes}
+                    onDevSetAvatarHero={devSetAvatarHero}
+                    onDevClearHeroOffer={devClearHeroOffer}
+                    onDevClearOwnedHeroes={devClearOwnedHeroes}
+                    onOpenDress={() => setMode('dress')}
+                    registerBack={registerBack}
+                    onBackToGrove={() => setMode('grove')}
+                  />
+                ) : mode === 'shop' && view ? (
+                  <ShopScreen
+                    view={view}
+                    onBuyToken={handleBuyShopRow}
+                    onBackToDivecore={() => setMode('grove')}
+                  />
+                ) : mode === 'about' ? (
+                  <AboutScreen onBackToDivecore={() => setMode('grove')} />
+                ) : mode === 'sheetlab' ? (
+                  <SheetLabScreen onBack={() => setMode('grove')} />
+                ) : null}
+              </ScrollView>
+            </SafeAreaView>
+          </ThemedView>
+        </View>
       )}
     </PlayThemeProvider>
   );
@@ -1076,6 +1130,10 @@ function shopRefusalCopy(reason: ShopRefusal): string {
 }
 
 const styles = StyleSheet.create({
+  /** Holds the sub-screens; catches the left-edge back swipe. */
+  edgeWrap: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     flexDirection: 'row',
