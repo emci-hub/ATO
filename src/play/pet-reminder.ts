@@ -1,37 +1,50 @@
 /**
- * Pet hunger reminder — gentle and opt-in (v20, 2026-09-29).
+ * Divecore notices — the scheduler (v20 hunger reminder → v24 four notices).
  *
- * Off by default. When the player turns it on (Pet screen), ONE local
- * notification is scheduled for when the pet's hunger meter will run empty,
- * never sooner than 20h after the last one — so at most one a day, and it is
- * moved (or cancelled) every time the pet eats or the switch goes off. It has
- * its own identifier, so the app's own push schedule (`src/lib/push.ts`, which
- * cancels only its own ids) never touches it; sign-out cancels it by id there.
+ * What to send and when is planned purely in `play-notices.ts` (hunger, egg
+ * hatched / hero revealed, expedition back, dive charges full — one toggle
+ * each in Divecore Settings, quiet hours respected). This file only talks to
+ * expo-notifications: one pending notice per kind, each with its own id, so
+ * the app's own push schedule (`src/lib/push.ts`, which cancels only its own
+ * ids) never touches them; sign-out cancels these ids there too.
  *
  * Everything is best-effort: web, Expo Go without the native module, or a
- * denied permission simply means no reminder — never an error on screen.
+ * denied permission simply means no notice — never an error on screen.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
-import {
-  PET_STAGE_MS,
-  petReminderLastFired,
-  petReminderTarget,
-  type PetReminderLog,
-  type PetState,
-} from '@/play/pet';
+import { petReminderLastFired, type PetReminderLog } from '@/play/pet';
+import { planPlayNotices, type NoticeInput } from '@/play/play-notices';
+import type { NotifKind } from '@/play/play-settings';
 
-/** Same literal as the sign-out cancel in `src/lib/push.ts`. */
+/** Same literals as the sign-out cancel in `src/lib/push.ts`. */
 export const PET_HUNGER_PUSH_ID = 'ato.play.pet.hunger';
-const STATE_KEY = 'ato.play.pet.reminder.v1';
+export const PET_EGG_PUSH_ID = 'ato.play.pet.egg';
+export const PET_EXPEDITION_PUSH_ID = 'ato.play.pet.expedition';
+export const DIVE_CHARGES_PUSH_ID = 'ato.play.dive.charges';
+
+const PUSH_ID: Record<NotifKind, string> = {
+  hunger: PET_HUNGER_PUSH_ID,
+  egg: PET_EGG_PUSH_ID,
+  expedition: PET_EXPEDITION_PUSH_ID,
+  charges: DIVE_CHARGES_PUSH_ID,
+};
+
+/** Fired / pending logs for the notices with a minimum gap. */
+const LOG_KEY: Partial<Record<NotifKind, string>> = {
+  hunger: 'ato.play.pet.reminder.v1',
+  charges: 'ato.play.dive.charges.v1',
+};
 /** The app's Android channel (created the same way `push.ts` does). */
 const CHANNEL_ID = 'ato-default';
 
-async function readState(): Promise<PetReminderLog> {
+async function readLog(kind: NotifKind): Promise<PetReminderLog> {
+  const key = LOG_KEY[kind];
+  if (!key) return { lastFiredAt: null, scheduledAt: null };
   try {
-    const raw = await AsyncStorage.getItem(STATE_KEY);
+    const raw = await AsyncStorage.getItem(key);
     const parsed = raw ? (JSON.parse(raw) as Partial<PetReminderLog>) : null;
     return {
       lastFiredAt: typeof parsed?.lastFiredAt === 'number' ? parsed.lastFiredAt : null,
@@ -42,16 +55,17 @@ async function readState(): Promise<PetReminderLog> {
   }
 }
 
-async function writeState(next: PetReminderLog): Promise<void> {
+async function writeLog(kind: NotifKind, next: PetReminderLog): Promise<void> {
+  const key = LOG_KEY[kind];
+  if (!key) return;
   try {
-    await AsyncStorage.setItem(STATE_KEY, JSON.stringify(next));
+    await AsyncStorage.setItem(key, JSON.stringify(next));
   } catch {
-    // Best-effort; the worst case is one reminder sooner than a day apart.
+    // Best-effort; the worst case is one notice sooner than its gap.
   }
 }
 
-/** Ask for notification permission (only when the player turns the reminder
- * on). True when notifications are allowed. */
+/** Ask for notification permission (when a notice is switched on). */
 export async function askPetReminderPermission(): Promise<boolean> {
   if (Platform.OS === 'web') return false;
   try {
@@ -67,104 +81,69 @@ export async function askPetReminderPermission(): Promise<boolean> {
   }
 }
 
-/** Cancel the reminder (switch off, or nothing to remind about). */
-export async function cancelPetReminder(): Promise<void> {
-  if (Platform.OS === 'web') return;
+/** Whether notifications are allowed for the app right now. */
+export async function petNoticesAllowed(): Promise<boolean> {
+  if (Platform.OS === 'web') return false;
   try {
-    await Notifications.cancelScheduledNotificationAsync(PET_HUNGER_PUSH_ID);
+    return (await Notifications.getPermissionsAsync()).granted;
   } catch {
-    // Nothing scheduled / no native module.
+    return false;
   }
 }
 
-/** Re-schedule (or cancel) the one reminder for this pet state. */
-export async function syncPetReminder(on: boolean, pet: PetState, now: number): Promise<void> {
+/** Cancel every Divecore notice (reset, or nothing to send). */
+export async function cancelPlayNotices(): Promise<void> {
   if (Platform.OS === 'web') return;
-  // A pending reminder whose time has passed has fired: it becomes the
-  // "last one" the 20h gap counts from, kept apart from the next pending one.
-  const lastFiredAt = petReminderLastFired(await readState(), now);
-  await cancelPetReminder();
-  const target = on ? petReminderTarget(pet, now, lastFiredAt) : null;
-  if (target == null) {
-    await writeState({ lastFiredAt, scheduledAt: null });
-    return;
+  for (const id of Object.values(PUSH_ID)) {
+    try {
+      await Notifications.cancelScheduledNotificationAsync(id);
+    } catch {
+      // Nothing scheduled / no native module.
+    }
   }
+}
+
+/** Kept for callers from before v24 (sign-out uses push.ts's own literal). */
+export async function cancelPetReminder(): Promise<void> {
+  await cancelPlayNotices();
+}
+
+/** Re-plan and re-schedule every Divecore notice for this state. */
+export async function syncPlayNotices(input: Omit<NoticeInput, 'hungerLastFiredAt' | 'chargesLastFiredAt'>): Promise<void> {
+  if (Platform.OS === 'web') return;
+  const now = input.now;
+  // A pending notice whose time has passed has fired: it becomes the "last
+  // one" its gap counts from, kept apart from the next pending one.
+  const hungerLog = await readLog('hunger');
+  const chargesLog = await readLog('charges');
+  const hungerLast = petReminderLastFired(hungerLog, now);
+  const chargesLast = petReminderLastFired(chargesLog, now);
+  await cancelPlayNotices();
+  const plan = planPlayNotices({ ...input, hungerLastFiredAt: hungerLast, chargesLastFiredAt: chargesLast });
+  const at = (kind: NotifKind) => plan.find((n) => n.kind === kind)?.at ?? null;
+  await writeLog('hunger', { lastFiredAt: hungerLast, scheduledAt: at('hunger') });
+  await writeLog('charges', { lastFiredAt: chargesLast, scheduledAt: at('charges') });
+  if (plan.length === 0) return;
   try {
     const perm = await Notifications.getPermissionsAsync();
-    if (!perm.granted) {
-      await writeState({ lastFiredAt, scheduledAt: null });
-      return;
-    }
+    if (!perm.granted) return;
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
         name: 'ATO',
         importance: Notifications.AndroidImportance.DEFAULT,
       });
     }
-    await Notifications.scheduleNotificationAsync({
-      identifier: PET_HUNGER_PUSH_ID,
-      content: {
-        title: 'Your pet is getting hungry',
-        body: 'A cleared wave or a round of Catch the food will fill it up.',
-        sound: false,
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DATE,
-        channelId: CHANNEL_ID,
-        date: new Date(target),
-      },
-    });
-    await writeState({ lastFiredAt, scheduledAt: target });
-  } catch {
-    // No native module (Expo Go / tests) — no reminder, no error.
-  }
-}
-
-/* ------------------------------------------------ egg notices (v23) --- */
-
-/** Its own id (sign-out cancels it next to the hunger one in `push.ts`). */
-export const PET_EGG_PUSH_ID = 'ato.play.pet.egg';
-
-/** When the next egg moment lands (hatch, or the Child reveal), or null. */
-export function petEggNoticeTarget(pet: PetState, now: number): { at: number; kind: 'hatch' | 'reveal' } | null {
-  if (pet.egg == null) return null;
-  if (pet.stage === 'egg') return { at: now + Math.max(0, PET_STAGE_MS.egg - pet.stage_age_ms), kind: 'hatch' };
-  if (pet.stage === 'baby' && pet.hero == null) {
-    return { at: now + Math.max(0, PET_STAGE_MS.baby - pet.stage_age_ms), kind: 'reveal' };
-  }
-  return null;
-}
-
-/** "Your egg hatched" / "Your hero is revealed" — one pending notice, only
- * when the pet reminder is on (same opt-in, same permission). Best-effort. */
-export async function syncPetEggNotice(on: boolean, pet: PetState, now: number): Promise<void> {
-  if (Platform.OS === 'web') return;
-  try {
-    await Notifications.cancelScheduledNotificationAsync(PET_EGG_PUSH_ID);
-  } catch {
-    // Nothing scheduled / no native module.
-  }
-  const target = on ? petEggNoticeTarget(pet, now) : null;
-  if (!target || target.at <= now + 5_000) return;
-  try {
-    const perm = await Notifications.getPermissionsAsync();
-    if (!perm.granted) return;
-    await Notifications.scheduleNotificationAsync({
-      identifier: PET_EGG_PUSH_ID,
-      content: {
-        title: target.kind === 'hatch' ? 'Your egg hatched!' : 'Your hero is revealed!',
-        body:
-          target.kind === 'hatch'
-            ? 'Your Baby is here — play and feed it to raise the odds before the reveal.'
-            : 'Open Divecore to see who hatched from your egg.',
-        sound: false,
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DATE,
-        channelId: CHANNEL_ID,
-        date: new Date(target.at),
-      },
-    });
+    for (const n of plan) {
+      await Notifications.scheduleNotificationAsync({
+        identifier: PUSH_ID[n.kind],
+        content: { title: n.title, body: n.body, sound: false },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          channelId: CHANNEL_ID,
+          date: new Date(n.at),
+        },
+      });
+    }
   } catch {
     // No native module (Expo Go / tests) — no notice, no error.
   }

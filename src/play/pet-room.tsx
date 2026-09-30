@@ -52,8 +52,8 @@ import {
   EGG_TYPES,
   GRADE_COLOR,
   GRADE_LABEL,
-  GRADE_STARS,
   WARMTH_MAX,
+  gradeTag,
   type EggType,
 } from '@/play/pet-eggs';
 import { EggShape } from '@/play/pet-figure';
@@ -194,7 +194,15 @@ function GodAura({ element, size, reduceMotion }: { element: Element; size: numb
 /* ------------------------------------------------------------- bubbles --- */
 
 /** A speech bubble that types out, holds, then fades. */
-function SpeechBubble({ speech, reduceMotion }: { speech: RoomSpeech; reduceMotion: boolean }) {
+function SpeechBubble({
+  speech,
+  reduceMotion,
+  speaker = null,
+}: {
+  speech: RoomSpeech;
+  reduceMotion: boolean;
+  speaker?: string | null;
+}) {
   const [shown, setShown] = useState('');
   const opacity = useSharedValue(0);
   useEffect(() => {
@@ -229,6 +237,7 @@ function SpeechBubble({ speech, reduceMotion }: { speech: RoomSpeech; reduceMoti
   if (!speech) return null;
   return (
     <Animated.View style={[styles.speech, style]} pointerEvents="none" accessibilityLiveRegion="polite">
+      {speaker ? <Text style={styles.speaker}>{speaker}</Text> : null}
       <Text style={styles.speechText}>{shown || ' '}</Text>
     </Animated.View>
   );
@@ -254,6 +263,7 @@ export function PetRoom({
   recolor = null,
   onBadge,
   onPickEgg,
+  name = null,
 }: {
   pet: PetState;
   wear: PetWear;
@@ -278,7 +288,12 @@ export function PetRoom({
   onBadge?: () => void;
   /** v23 — the egg picker: tap one of the three eggs. */
   onPickEgg?: (egg: EggType) => void;
+  /** v24 — the name it goes by (status and speech bubbles). */
+  name?: string | null;
 }) {
+  // Effects Low (Settings): auras and sparkles hold still.
+  const fxFull = useFxQuality() === 'full';
+  const fxAnimate = !reduceMotion && fxFull;
   const [size, setSize] = useState({ width: 0, height: 0 });
   const onLayout = (e: LayoutChangeEvent) =>
     setSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height });
@@ -519,7 +534,7 @@ export function PetRoom({
             ]}
           />
           {pet.stage === 'god' && aura ? <GodAura element={aura} size={box * 1.4} reduceMotion={reduceMotion} /> : null}
-          <GradeAura grade={grade} size={box} animate={!reduceMotion} trail={act.face === 'front' ? null : act.face} />
+          <GradeAura grade={grade} size={box} animate={fxAnimate} trail={act.face === 'front' ? null : act.face} />
           <Pressable
             onPress={onTapPet}
             accessibilityRole="button"
@@ -543,7 +558,7 @@ export function PetRoom({
               />
             </Animated.View>
           </Pressable>
-          {revealed && pet.shiny ? <ShinyOverlay size={box} footAt={footAt} animate={!reduceMotion} /> : null}
+          {revealed && pet.shiny ? <ShinyOverlay size={box} footAt={footAt} animate={fxAnimate} /> : null}
           {asleep ? <Text style={[styles.zzz, { left: box * 0.6, top: box * 0.25 }]}>💤</Text> : null}
           <Animated.Text style={[styles.heart, { left: box / 2 - 10, top: box * 0.3 }, heartStyle]} pointerEvents="none">
             ❤
@@ -552,7 +567,9 @@ export function PetRoom({
           <View pointerEvents="box-none" style={[styles.bubbleAnchor, { top: box * 0.18 - 34, width: box }]}>
             <View style={styles.bubbleRow}>
               <View style={styles.statusBubble}>
-                <Text style={styles.statusText}>{label}</Text>
+                <Text style={styles.statusText} numberOfLines={1}>
+                  {name ? `${name} · ${label}` : label}
+                </Text>
               </View>
               {revealed && grade && onBadge ? (
                 <Pressable
@@ -562,8 +579,8 @@ export function PetRoom({
                   accessibilityLabel={`${GRADE_LABEL[grade]}${pet.shiny ? ' shiny' : ''} — open its card`}
                   style={[styles.badge, { borderColor: GRADE_COLOR[grade] }]}>
                   <Text style={[styles.badgeText, { color: GRADE_COLOR[grade] }]}>
-                    {'★'.repeat(GRADE_STARS[grade])}
-                    {pet.shiny ? '✨' : ''}
+                    {gradeTag(grade)}
+                    {pet.shiny ? ' ✨' : ''}
                   </Text>
                 </Pressable>
               ) : null}
@@ -572,7 +589,7 @@ export function PetRoom({
           <Animated.View
             pointerEvents="none"
             style={[styles.speechAnchor, { bottom: box - (box * 0.18 - 40), left: 0, width: speechW }, speechStyle]}>
-            <SpeechBubble speech={speech} reduceMotion={reduceMotion} />
+            <SpeechBubble speech={speech} reduceMotion={reduceMotion} speaker={name} />
           </Animated.View>
         </Animated.View>
       ) : null}
@@ -660,5 +677,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#F1FBFF',
   },
+  speaker: { fontFamily: Fonts.monoBold, fontSize: 10, color: '#0E7490', textAlign: 'center' },
   speechText: { fontFamily: Fonts.monoBold, fontSize: 13, color: '#05070D', textAlign: 'center' },
 });

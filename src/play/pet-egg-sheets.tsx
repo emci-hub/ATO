@@ -32,6 +32,7 @@ import {
   SHARDS_PER_TICKET,
   bestGrade,
   gradeOdds,
+  gradeTag,
   gradedName,
   heroOdds,
   heroStars,
@@ -42,6 +43,7 @@ import {
 import { EggShape, PetFigure } from '@/play/pet-figure';
 import {
   chooseEggDoc,
+  claimMilestone,
   releasePetDoc,
   setHeroDye,
   tradeUpShards,
@@ -66,7 +68,7 @@ export function GradeRow({ odds, label }: { odds: Record<Grade, number>; label?:
       {GRADES.map((g) => (
         <View key={g} style={[styles.gradeChip, { borderColor: GRADE_COLOR[g], opacity: odds[g] > 0 ? 1 : 0.35 }]}>
           <Text style={[styles.gradeChipText, { color: GRADE_COLOR[g] }]}>
-            {GRADE_LABEL[g]} {pct(odds[g])}
+            {gradeTag(g)} {pct(odds[g])}
           </Text>
         </View>
       ))}
@@ -120,7 +122,7 @@ export function EggPickerBody({
             {tickets.map((g) => (
               <NeonChip
                 key={g}
-                label={`${GRADE_LABEL[g]}+ ticket ×${view.pet.tickets[g]}`}
+                label={`${gradeTag(g)}+ ticket ×${view.pet.tickets[g]}`}
                 selected={ticket === g}
                 onPress={() => setTicket(g)}
               />
@@ -186,7 +188,7 @@ export function OddsPanel({ view }: { view: PlayView }) {
           <Text style={styles.body}>This pet is from before eggs — it counts as Common.</Text>
         )}
         <Text style={[styles.result, { color: GRADE_COLOR[pet.grade ?? 'common'] }]}>
-          Rolled: {gradedName(pet.grade, heroName(pet.hero))} · {GRADE_LABEL[pet.grade ?? 'common']}
+          Rolled: {gradedName(pet.grade, pet.name ?? heroName(pet.hero))} · {gradeTag(pet.grade ?? 'common')}
           {pet.shiny ? ' · ✨ shiny' : ''}
         </Text>
       </>
@@ -264,7 +266,7 @@ export function CollectionPanel({
         return (
           <View key={g} style={styles.shardRow}>
             <Text style={[styles.shardText, { color: GRADE_COLOR[g] }]}>
-              {GRADE_LABEL[g]} {shards[g]}/{SHARDS_PER_TICKET}
+              {gradeTag(g)} {shards[g]}/{SHARDS_PER_TICKET}
             </Text>
             {up ? (
               <NeonChip
@@ -295,7 +297,7 @@ export function CollectionPanel({
                 {EGG_EMOJI[egg]} {heroName(hero)} · {'★'.repeat(stars)}
                 {'☆'.repeat(5 - stars)}
                 {rec?.shinies ? ` · ✨×${rec.shinies}` : ''}
-                {best ? ` · best ${GRADE_LABEL[best]}` : ''}
+                {best ? ` · best ${gradeTag(best)}` : ''}
               </Text>
               {rec?.forms.length ? (
                 <Text style={styles.body}>Forms: {rec.forms.map((f) => f.charAt(0).toUpperCase() + f.slice(1)).join(' · ')}</Text>
@@ -337,7 +339,7 @@ export function HallCards({ view, eggColor }: { view: PlayView; eggColor: string
       <View style={styles.hallGrid}>
         {[...hall].reverse().map((entry, i) => {
           const hero = entry.hero;
-          const name = hero ? heroName(hero) : 'Pet';
+          const name = entry.name ?? (hero ? heroName(hero) : 'Pet');
           const pinned = entry.grade === 'legendary' || entry.shiny;
           return (
             <View key={`${entry.rebirth}-${i}`}>
@@ -481,5 +483,59 @@ const styles = StyleSheet.create({
   heroTitle: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.textPrimary },
   cardRow: { flexDirection: 'row', gap: 6 },
   hallGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  statRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  statValue: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.textPrimary, flexShrink: 1, textAlign: 'right' },
   hallMeta: { fontFamily: Fonts.mono, fontSize: 9, color: NEON.textMuted, textAlign: 'center', marginTop: 2, width: 96 },
 });
+
+/* ------------------------------------------------------------- journal --- */
+
+/** Info → Journal: lifetime numbers and milestones (with Claim). Counted
+ * from v24 on, except TD waves and rebirths, which were always kept. */
+export function JournalTab({ view, commit }: { view: PlayView; commit: Commit }) {
+  const st = view.stats;
+  const legends = st.pulled.legendary;
+  const rows: [string, string | number][] = [
+    ['Eggs hatched', st.eggs_hatched],
+    ['Grades pulled', GRADES.map((g) => `${gradeTag(g)} ${st.pulled[g]}`).join(' · ')],
+    ['Legendaries', legends],
+    ['Shinies', st.shinies],
+    ['Dives', st.dives],
+    ['Surfaced · busts', `${st.surfaces} · ${st.busts}`],
+    ['Best depth', st.best_depth],
+    ['Expeditions', st.expeditions],
+    ['Released · reborn', `${st.releases} · ${view.pet.rebirths}`],
+    ['TD waves cleared', view.lifetimeWavesCleared],
+    ['Days played', st.days_played],
+  ];
+  return (
+    <>
+      <Text style={styles.body}>Counted from this update on (TD waves and rebirths include everything before).</Text>
+      {rows.map(([label, value]) => (
+        <View key={label} style={styles.statRow}>
+          <Text style={styles.body}>{label}</Text>
+          <Text style={styles.statValue}>{value}</Text>
+        </View>
+      ))}
+      <NeonLabel>Milestones</NeonLabel>
+      <Text style={styles.body}>Small rewards for your Collection — looks and egg tickets only, never TD power.</Text>
+      {view.milestones.map(({ def, done, claimed }) => (
+        <View key={def.id} style={styles.statRow}>
+          <View style={styles.flex}>
+            <Text style={styles.heroTitle}>
+              {claimed ? '✅ ' : done ? '🎁 ' : '▫️ '}
+              {def.label}
+            </Text>
+            <Text style={styles.body}>{def.rewardLabel}</Text>
+          </View>
+          {done && !claimed ? (
+            <NeonChip label="Claim" selected onPress={() => commit((doc, now) => claimMilestone(doc, now, def.id))} />
+          ) : null}
+        </View>
+      ))}
+      {view.ribbons.length > 0 ? (
+        <Text style={styles.body}>Ribbons: {view.ribbons.map((r) => (r === 'collector' ? '🎖 Collector' : '🏅 Legend')).join(' · ')}</Text>
+      ) : null}
+    </>
+  );
+}

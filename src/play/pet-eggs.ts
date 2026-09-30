@@ -16,6 +16,8 @@
  *     of a grade → a ticket guaranteeing the next grade or better.
  */
 
+import { heroName } from './heroes-data';
+
 export const EGG_TYPES = ['knight', 'wizard', 'village'] as const;
 export type EggType = (typeof EGG_TYPES)[number];
 
@@ -84,6 +86,11 @@ export function gradeRank(grade: Grade): number {
 export function nextGrade(grade: Grade): Grade | null {
   const i = gradeRank(grade);
   return i + 1 < GRADES.length ? GRADES[i + 1] : null;
+}
+
+/** A grade never by colour alone: its stars AND its word ("★★★ Epic"). */
+export function gradeTag(grade: Grade): string {
+  return `${'★'.repeat(GRADE_STARS[grade])} ${GRADE_LABEL[grade]}`;
 }
 
 /** "Legendary Kitsune"; other grades just the hero's name. */
@@ -376,4 +383,16 @@ export function parseGradeCounts(raw: unknown): Record<Grade, number> {
     out[g] = typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.floor(v)) : 0;
   }
   return out;
+}
+
+/* ---------------------------------------------------------------- name --- */
+
+/** The name the pet goes by: the player's, else its hero's (once revealed),
+ * else "Your Knight egg" / "Your pet". */
+export function petShownName(pet: { name: string | null; hero: string | null; egg: EggType | null; stage: string }): string {
+  if (pet.name) return pet.name;
+  const revealed = pet.hero != null && pet.stage !== 'egg' && pet.stage !== 'baby';
+  if (revealed && pet.hero) return heroName(pet.hero);
+  if (pet.egg) return `Your ${EGG_LABEL[pet.egg]} ${pet.stage === 'egg' ? 'egg' : 'Baby'}`;
+  return 'Your pet';
 }

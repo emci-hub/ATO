@@ -37,6 +37,7 @@ export function PetReveal({
   caption,
   reduceMotion,
   onDone,
+  skip = false,
 }: {
   kind: 'hatch' | 'child';
   /** Hatch: the egg's colour. Child: the grade colour. */
@@ -49,12 +50,15 @@ export function PetReveal({
   caption: string;
   reduceMotion: boolean;
   onDone: () => void;
+  /** Settings → Skip reveal animations: the final card straight away. */
+  skip?: boolean;
 }) {
-  const [phase, setPhase] = useState<'build' | 'card'>(reduceMotion ? 'card' : 'build');
+  const instant = reduceMotion || skip;
+  const [phase, setPhase] = useState<'build' | 'card'>(instant ? 'card' : 'build');
   const wobble = useSharedValue(0);
   const glow = useSharedValue(0);
   const flash = useSharedValue(0);
-  const flip = useSharedValue(reduceMotion ? 1 : 0);
+  const flip = useSharedValue(instant ? 1 : 0);
   const fade = useSharedValue(0);
   const done = useRef(false);
   const phaseRef = useRef(phase);
@@ -62,8 +66,8 @@ export function PetReveal({
   const buildTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    fade.value = withTiming(1, { duration: reduceMotion ? 400 : 200 });
-    if (reduceMotion) {
+    fade.value = withTiming(1, { duration: skip ? 120 : reduceMotion ? 400 : 200 });
+    if (instant) {
       // A simple fade in the reveal colour.
       glow.value = withTiming(1, { duration: 400 });
       return;

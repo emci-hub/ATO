@@ -26,3 +26,12 @@ export async function saveSeenStage(stage: PetStage): Promise<void> {
     // Best effort — a missed "I grew!" line is harmless.
   }
 }
+
+/** Forget the last-seen stage (Reset Divecore). */
+export async function saveSeenStageReset(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(PET_SEEN_STAGE_KEY);
+  } catch {
+    // Best effort.
+  }
+}

@@ -22,6 +22,7 @@ export function CommandHub({
   wave,
   diveActive = false,
   onTile,
+  onSettings,
   children,
 }: {
   scrap: number | null;
@@ -29,6 +30,8 @@ export function CommandHub({
   diveActive?: boolean;
   wave: number | null;
   onTile: (to: HubDestination) => void;
+  /** v24 — the ⚙ opens Divecore Settings. */
+  onSettings?: () => void;
   children?: ReactNode;
 }) {
   const { width, height } = useWindowDimensions();
@@ -49,7 +52,19 @@ export function CommandHub({
             <Text style={styles.title}>Command Hub</Text>
           </View>
         </View>
-        <Hud scrap={scrap} wave={wave} />
+        <View style={styles.topRight}>
+          <Hud scrap={scrap} wave={wave} />
+          {onSettings ? (
+            <Pressable
+              onPress={onSettings}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Divecore settings"
+              style={({ pressed }) => [styles.gear, pressed && styles.pressed]}>
+              <Text style={styles.gearText}>⚙</Text>
+            </Pressable>
+          ) : null}
+        </View>
       </View>
 
       <View style={[styles.body, { minHeight: Math.max(360, height * 0.62) }]}>
@@ -197,6 +212,17 @@ const styles = StyleSheet.create({
     color: NEON.textMuted,
     textAlign: 'center',
   },
+  topRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  gear: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: NEON.cyanDim,
+    borderRadius: 8,
+  },
+  gearText: { fontSize: 18, color: NEON.cyan },
   badge: {
     position: 'absolute',
     top: 10,

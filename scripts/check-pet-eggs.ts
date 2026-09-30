@@ -288,7 +288,7 @@ ok('stars: one per copy, max 5; the dye unlocks at 3★ and never applies to a s
 /* ---------------------------------------------------------------- hall --- */
 
 const entry = (grade: Grade, shiny = false, n = 0): PetHallEntry => ({
-  line: 'solo_raven', branch: 'standard', aura: null, rebirth: n, days: 1, hero: 'raven', grade, shiny, egg: 'knight', released: true,
+  line: 'solo_raven', branch: 'standard', aura: null, rebirth: n, days: 1, hero: 'raven', grade, shiny, egg: 'knight', released: true, name: null,
 });
 const crowded = [
   entry('legendary', false, 1),
@@ -339,7 +339,7 @@ const v22: Record<string, unknown> = {
 };
 for (const k of ['pet_heroes', 'pet_shards', 'pet_tickets']) delete v22[k];
 const up = parsePlayStore(JSON.stringify(v22), T0)!;
-assert.equal(up.version, 23);
+assert.equal(up.version, 24);
 assert.equal(up.pet.hero, 'raven');
 assert.equal(up.pet_rebirths, 2, 'rebirths kept');
 assert.equal(up.pet_hall.length, 2, 'Hall kept');

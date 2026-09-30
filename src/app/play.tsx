@@ -31,7 +31,10 @@ import {
   type InnerBack,
 } from '@/play/edge-back';
 import { findGlow } from '@/play/dive-fx-model';
-import { PetScreen, usePetReminderSync, type PetTalkEvent } from '@/play/pet-screen';
+import { DivecoreSettingsSheet } from '@/play/divecore-settings';
+import { DivecoreTutorial } from '@/play/divecore-tutorial';
+import { resolveReduceMotion, usePlayMotionMode } from '@/play/play-motion';
+import { PetScreen, usePlayNoticesSync, type PetTalkEvent } from '@/play/pet-screen';
 import type { PetTalkSituation } from '@/play/pet-talk';
 import { DefendScreen } from '@/play/defend-screen';
 import { SheetLabScreen } from '@/play/sheet-lab-screen';
@@ -57,6 +60,7 @@ import {
   devSetCampaignSeat,
   devUnlockBoundBoss,
   markExpeditionToasted,
+  setPlaySettings,
   unlockAvatar,
   type ClaimResult,
   type AvatarParkMapId,
@@ -98,7 +102,11 @@ type PlayToast =
 
 export default function PlayScreen() {
   const theme = useTheme();
-  const { reduceMotion } = useAppearance();
+  // Reduce motion (v24): follows the phone unless overridden in Divecore
+  // Settings — Play only; the rest of the app keeps following the phone.
+  const { reduceMotion: phoneReduceMotion } = useAppearance();
+  const motionMode = usePlayMotionMode();
+  const reduceMotion = resolveReduceMotion(motionMode, phoneReduceMotion);
   const {
     view,
     claim,
@@ -153,7 +161,7 @@ export default function PlayScreen() {
   useImmersiveMode(mode === 'defend');
   // Pet (v20): keep the opt-in hunger reminder in step with the pet from
   // anywhere in Play (a TD win feeds it too), not only the Pet screen.
-  usePetReminderSync(view?.pet ?? null);
+  usePlayNoticesSync(view ?? null);
 
   // Back one level (2026-09-29): Play is one route with its sub-screens as a
   // `mode`, so the phone's own back used to leave Play from anywhere (and skip
@@ -180,7 +188,15 @@ export default function PlayScreen() {
     petTalkSeq.current += 1;
     setPetTalk({ situation, key: petTalkSeq.current });
   }, []);
+  /** v24: the hub's Settings sheet and the tutorial close first on back. */
+  const [hubSettingsOpen, setHubSettingsOpen] = useState(false);
+  const [tutorialReplay, setTutorialReplay] = useState(false);
+  const overlayRef = useRef<(() => void) | null>(null);
   const goBackOneLevel = useCallback((source: BackSource): boolean => {
+    if (overlayRef.current) {
+      overlayRef.current();
+      return true;
+    }
     const decision = backDecision(modeRef.current === 'grove', innerBackRef.current, source);
     if (decision === 'native') return false;
     if (decision === 'ignore') return true;
@@ -614,12 +630,25 @@ export default function PlayScreen() {
   const claimLabel =
     view == null ? '…' : researchReady ? 'Claim' : `~${minutesUntilLabel(view.research.nextFindAt)}`;
 
+  // v24: the tutorial shows once (a save with progress counts as seen), and
+  // whenever it is replayed from Settings.
+  const showTutorial = view != null && (tutorialReplay || !view.settings.tutorialSeen);
+  const hubOverlayOpen = hubSettingsOpen || showTutorial;
+  overlayRef.current = showTutorial
+    ? () => {
+        setTutorialReplay(false);
+        commit((doc) => (doc.play_settings.tutorialSeen ? null : setPlaySettings(doc, { tutorialSeen: true })));
+      }
+    : hubSettingsOpen && mode === 'grove'
+      ? () => setHubSettingsOpen(false)
+      : null;
+
   return (
     <PlayThemeProvider>
       {/* Forced ink chrome is dark regardless of the app-wide mode. */}
       <StatusBar style="light" />
       {/* The phone's own swipe-back leaves Play — only from the hub. */}
-      <Stack.Screen options={{ gestureEnabled: mode === 'grove' }} />
+      <Stack.Screen options={{ gestureEnabled: mode === 'grove' && !hubOverlayOpen }} />
       {mode === 'grove' ? (
         <SafeAreaView style={styles.hubSafeArea}>
           <ScrollView contentContainerStyle={styles.hubScroll} showsVerticalScrollIndicator={false}>
@@ -627,7 +656,8 @@ export default function PlayScreen() {
               diveActive={view?.diveRun.active ?? false}
               scrap={view?.tokens ?? null}
               wave={view?.campaign.wave_in_phase ?? 1}
-              onTile={(to: HubDestination) => setMode(to)}>
+              onTile={(to: HubDestination) => setMode(to)}
+              onSettings={() => setHubSettingsOpen(true)}>
               {/* Research / Claim — the token income the old Grove card carried,
                * kept reachable now that the hub replaces that card. */}
               <View style={styles.claimCard}>
@@ -723,6 +753,7 @@ export default function PlayScreen() {
                   onTalkConsumed={clearPetTalk}
                   onBack={() => setMode('grove')}
                   onGoDive={() => setMode('dive')}
+                  onReplayTutorial={() => setTutorialReplay(true)}
                 />
               )}
               {toastContent ? (
@@ -814,6 +845,24 @@ export default function PlayScreen() {
           )}
         </View>
       )}
+      {view && mode === 'grove' ? (
+        <DivecoreSettingsSheet
+          open={hubSettingsOpen}
+          onClose={() => setHubSettingsOpen(false)}
+          view={view}
+          commit={commit}
+          reduceMotion={reduceMotion}
+          onReplayTutorial={() => setTutorialReplay(true)}
+        />
+      ) : null}
+      {showTutorial ? (
+        <DivecoreTutorial
+          onDone={() => {
+            setTutorialReplay(false);
+            commit((doc) => (doc.play_settings.tutorialSeen ? null : setPlaySettings(doc, { tutorialSeen: true })));
+          }}
+        />
+      ) : null}
     </PlayThemeProvider>
   );
 }

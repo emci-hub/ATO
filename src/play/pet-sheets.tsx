@@ -14,7 +14,7 @@
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
@@ -48,7 +48,6 @@ import {
   branchFor,
   branchThresholds,
   petBustCutPp,
-  petLineById,
   petNextStage,
   petPounceBase,
   petRescueKeep,
@@ -56,13 +55,13 @@ import {
 } from '@/play/pet';
 import { COSMETICS, COSMETIC_SLOTS, cosmeticById, type CosmeticSlot } from '@/play/pet-cosmetics';
 import { CatchFoodGame, TapTrainGame, TRAIN_REPS } from '@/play/pet-games';
-import { CollectionPanel, DyePanel, EggHelp, HallCards, OddsPanel, ReleasePanel } from '@/play/pet-egg-sheets';
+import { CollectionPanel, DyePanel, EggHelp, HallCards, OddsPanel } from '@/play/pet-egg-sheets';
+import { gradeTag, petShownName } from '@/play/pet-eggs';
 import { heartsText } from '@/play/pet-status';
 import {
   buyCosmetic,
   dismissExpeditionNote,
   feedFromPantry,
-  rebirthPetDoc,
   sendPetExpedition,
   wearCosmetic,
   type PetRoundKind,
@@ -74,7 +73,6 @@ import type { PlayTransition } from '@/play/use-play-store';
 
 type Commit = (transition: PlayTransition) => boolean;
 
-const ARM_LAPSE_MS = 3500;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /* ------------------------------------------------------------ helpers --- */
@@ -272,11 +270,12 @@ export function ExpeditionSheetBody({ view, commit }: { view: PlayView; commit: 
 
 /* ---------------------------------------------------------------- Info --- */
 
-export type InfoTab = 'status' | 'book' | 'hall' | 'style' | 'help' | 'dev';
+export type InfoTab = 'status' | 'journal' | 'book' | 'hall' | 'style' | 'help' | 'dev';
 
 export function infoTabs(dev: boolean): { id: InfoTab; label: string }[] {
   const tabs: { id: InfoTab; label: string }[] = [
     { id: 'status', label: 'Status' },
+    { id: 'journal', label: 'Journal' },
     { id: 'book', label: 'Book' },
     { id: 'hall', label: 'Hall' },
     { id: 'style', label: 'Style' },
@@ -285,35 +284,9 @@ export function infoTabs(dev: boolean): { id: InfoTab; label: string }[] {
   return dev ? [...tabs, { id: 'dev', label: 'Dev' }] : tabs;
 }
 
-export function StatusTab({
-  view,
-  commit,
-  remindNote,
-  onToggleRemind,
-}: {
-  view: PlayView;
-  commit: Commit;
-  remindNote: string | null;
-  onToggleRemind: () => void;
-}) {
+export function StatusTab({ view }: { view: PlayView }) {
   const pv = view.pet;
   const pet = pv.state;
-  const [rebirthArmed, setRebirthArmed] = useState(false);
-  useEffect(() => {
-    if (!rebirthArmed) return;
-    const id = setTimeout(() => setRebirthArmed(false), ARM_LAPSE_MS);
-    return () => clearTimeout(id);
-  }, [rebirthArmed]);
-  const pressRebirth = () => {
-    if (!rebirthArmed) {
-      setRebirthArmed(true);
-      return;
-    }
-    setRebirthArmed(false);
-    commit((doc, now) => rebirthPetDoc(doc, now));
-  };
-
-  const line = petLineById(pet.line);
   const stageName = PET_STAGE_LABEL[pet.stage];
   const showBranch = pet.stage !== 'egg' && pet.stage !== 'baby';
   const title = showBranch ? `${stageName} · ${PET_BRANCH_LABEL[pet.branch]}` : stageName;
@@ -349,7 +322,10 @@ export function StatusTab({
   return (
     <>
       <Text style={styles.stageTitle}>{title}</Text>
-      <Text style={styles.subtle}>{pet.stage === 'egg' ? `Will hatch as: ${line.label}` : line.label}</Text>
+      <Text style={styles.subtle}>
+        {petShownName(pet)}
+        {pet.hero && pet.stage !== 'egg' && pet.stage !== 'baby' && pet.grade ? ` · ${gradeTag(pet.grade)}` : ''}
+      </Text>
       {pet.stage !== 'egg' ? (
         <>
           <MeterLine label="Hunger" value={pet.hunger} />
@@ -382,27 +358,7 @@ export function StatusTab({
       </Text>
 
       <OddsPanel view={view} />
-
-      <ReleasePanel view={view} commit={commit} />
-
-      {pet.stage === 'god' ? (
-        <>
-          <NeonLabel>Rebirth</NeonLabel>
-          <Text style={styles.body}>
-            Retire this God to the Hall of pets and start a new egg. Each rebirth adds +2% damage for
-            good (up to +10%). Optional — your God can stay as long as you like.
-          </Text>
-          {pv.away ? (
-            <Text style={styles.body}>Your pet is away on an expedition — rebirth once it’s back.</Text>
-          ) : (
-            <NeonButton
-              label={rebirthArmed ? 'Tap again · retire to the Hall' : 'Rebirth into a new egg'}
-              variant={rebirthArmed ? 'danger' : 'primary'}
-              onPress={pressRebirth}
-            />
-          )}
-        </>
-      ) : null}
+      <Text style={styles.body}>Name, change egg, tickets, Release and Rebirth are in the ⋯ menu.</Text>
 
       <NeonLabel>Today · one minute</NeonLabel>
       {[today.td, today.pet, today.both, today.goal].map((lineText) => (
@@ -411,8 +367,7 @@ export function StatusTab({
         </Text>
       ))}
 
-      <NeonChip label={`Hunger reminder · ${pv.remind ? 'On' : 'Off'}`} selected={pv.remind} onPress={onToggleRemind} />
-      {remindNote ? <Text style={styles.body}>{remindNote}</Text> : null}
+      <Text style={styles.body}>Notifications, quiet hours, bedtime and chatter are in ⚙ Settings.</Text>
     </>
   );
 }

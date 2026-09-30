@@ -120,6 +120,7 @@ import {
 import {
   CARE_ACT,
   SHARDS_PER_TICKET,
+  DYE_STARS,
   addToBook,
   dyeApplies,
   emptyGradeCounts,
@@ -137,6 +138,20 @@ import {
   type Grade,
   type PetHeroBook,
 } from '@/play/pet-eggs';
+import {
+  MILESTONES,
+  checkPetName,
+  countDay,
+  defaultSettings,
+  emptyStats,
+  parseSettings,
+  parseStats,
+  type MilestoneDef,
+  type MilestoneId,
+  type PlaySettings,
+  type PlayStats,
+  type Ribbon,
+} from '@/play/play-settings';
 import {
   DIVE_GEAR_COST,
   DIVE_OXYGEN_BUST,
@@ -688,7 +703,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 23;
+  version: 24;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -792,6 +807,18 @@ export type PlayStoreDoc = {
   pet_shards: Record<Grade, number>;
   /** v23 — trade-up tickets (5 shards → the next grade or better), by grade. */
   pet_tickets: Record<Grade, number>;
+  /** v24 — Divecore settings: notifications, quiet hours, bedtime, chatter,
+   * reveals, tutorial (see play-settings.ts). */
+  play_settings: PlaySettings;
+  /** v24 — Journal counters (counted from v24 on). */
+  play_stats: PlayStats;
+  /** v24 — claimed milestones, card ribbons, and heroes whose dye a milestone
+   * unlocked early. */
+  milestones: MilestoneId[];
+  ribbons: Ribbon[];
+  dye_unlocked: string[];
+  /** v24 — every charge was spent since the last "charges full" notice. */
+  charges_armed: boolean;
   /** v22 — free dives started on `free_dives_ymd` (shell fall-off). */
   free_dives_today: number;
   free_dives_ymd: string | null;
@@ -913,6 +940,15 @@ export type PlayView = {
   pet: PetView;
   /** Rebirth damage bonus (0..0.10) — folds into every TD damage pass. */
   petRebirthBonus: number;
+  /** v24 — Divecore settings, Journal, card ribbons, milestones. */
+  settings: PlaySettings;
+  stats: PlayStats;
+  ribbons: readonly Ribbon[];
+  milestones: { def: MilestoneDef; done: boolean; claimed: boolean }[];
+  /** When the charges will be full again (null = full now), and whether all
+   * were spent since the last "charges full" notice. */
+  chargesFullAt: number | null;
+  chargesArmed: boolean;
 };
 
 /** Read-model of the pet for the screens. */
@@ -1024,7 +1060,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 23,
+    version: 24,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -1074,6 +1110,12 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     pet_heroes: {},
     pet_shards: emptyGradeCounts(),
     pet_tickets: emptyGradeCounts(),
+    play_settings: defaultSettings(),
+    play_stats: emptyStats(),
+    milestones: [],
+    ribbons: [],
+    dye_unlocked: [],
+    charges_armed: false,
     free_dives_today: 0,
     free_dives_ymd: null,
   };
@@ -1165,6 +1207,12 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     heroOffer: doc.hero_offer,
     pet: petViewOf(doc, now),
     petRebirthBonus: rebirthBonus(doc.pet_rebirths),
+    settings: doc.play_settings,
+    stats: doc.play_stats,
+    ribbons: doc.ribbons,
+    milestones: milestonesOf(doc, now),
+    chargesFullAt: chargesFullAt(doc, now),
+    chargesArmed: doc.charges_armed,
     boundBosses: doc.bound_bosses.map((record) => {
       const def = getBoundBossDef(record.id);
       return {
@@ -1325,7 +1373,13 @@ export function petDyeOn(doc: PlayStoreDoc, pet: PetState = doc.pet): boolean {
   const hero = pet.hero ?? heroOfLine(pet.line);
   if (!hero || PET_STAGES.indexOf(pet.stage) < PET_STAGES.indexOf('child')) return false;
   const rec = heroBookOf(doc, pet)[hero];
-  return dyeApplies(heroStars(rec?.copies ?? 0), rec?.dye ?? false, pet.shiny);
+  const stars = doc.dye_unlocked.includes(hero) ? DYE_STARS : heroStars(rec?.copies ?? 0);
+  return dyeApplies(stars, rec?.dye ?? false, pet.shiny);
+}
+
+/** A hero's dye is unlocked: 3★, or early by a milestone. */
+export function heroDyeUnlocked(doc: PlayStoreDoc, hero: string, book: PetHeroBook = heroBookOf(doc)): boolean {
+  return doc.dye_unlocked.includes(hero) || heroStars(book[hero]?.copies ?? 0) >= DYE_STARS;
 }
 
 /** The pet aged to `now`, and whether it is still away. An expedition whose
@@ -1394,6 +1448,12 @@ export function touchPet(
   rng: () => number = Math.random,
 ): PlayStoreDoc {
   const pet = advancePet(doc.pet, now);
+  // v24 Journal: a hatch or a reveal that happened in this aging, and a day played.
+  const stats = countDay(tallyPet(doc.play_stats, doc.pet, pet), localYmd(new Date(now)));
+  const armed = doc.charges_armed && !diveChargeAt(doc, now).full;
+  if (stats !== doc.play_stats || armed !== doc.charges_armed) {
+    doc = { ...doc, play_stats: stats, charges_armed: armed };
+  }
   const exp = doc.pet_expedition;
   if (exp && expeditionLeftMs(pet, exp) <= 0) {
     // A shallow solo dive: it can't bust, it always brings back one find —
@@ -1427,6 +1487,7 @@ export function sendPetExpedition(
       ...touched,
       pet_expedition: { left_age_ms: touched.pet.total_age_ms },
       pet_expedition_ymd: today,
+      play_stats: { ...touched.play_stats, expeditions: touched.play_stats.expeditions + 1 },
     },
     result: { ok: true },
   };
@@ -1528,15 +1589,16 @@ export function chooseEggDoc(
 
 /** Tap the egg: +1 warmth (max 4). */
 export function warmEggDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | null {
-  const pet = warmEgg(advancePet(doc.pet, now));
-  return pet ? { ...doc, pet } : null;
+  const touched = touchPet(doc, now);
+  const pet = warmEgg(touched.pet);
+  return pet ? { ...touched, pet } : null;
 }
 
 /** The reveal animations were shown. */
 export function ackPetRevealsDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | null {
-  const aged = advancePet(doc.pet, now);
-  if (aged.reveals.length === 0) return aged === doc.pet ? null : { ...doc, pet: aged };
-  return { ...doc, pet: ackPetReveals(aged) };
+  const touched = touchPet(doc, now);
+  if (touched.pet.reveals.length === 0) return touched === doc ? null : touched;
+  return { ...touched, pet: ackPetReveals(touched.pet) };
 }
 
 /** A pet leaving (release / rebirth): into the Collection, and a shard of
@@ -1557,7 +1619,13 @@ export function releasePetDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | nu
   if (touched.pet_expedition) return null;
   const next = releasePet(touched.pet, touched.pet_hall, touched.pet_rebirths, now);
   if (!next) return null;
-  return { ...touched, ...recordLeaving(touched, touched.pet), pet: next.pet, pet_hall: next.hall };
+  return {
+    ...touched,
+    ...recordLeaving(touched, touched.pet),
+    pet: next.pet,
+    pet_hall: next.hall,
+    play_stats: { ...touched.play_stats, releases: touched.play_stats.releases + 1 },
+  };
 }
 
 /** Trade 5 shards of a grade for a ticket of the next grade (or better). */
@@ -1574,7 +1642,7 @@ export function tradeUpShards(doc: PlayStoreDoc, grade: Grade): PlayStoreDoc | n
 /** Wear / take off a hero's 3★ dye (it never shows on a shiny). */
 export function setHeroDye(doc: PlayStoreDoc, now: number, hero: string, on: boolean): PlayStoreDoc | null {
   const book = heroBookOf(doc, advancePet(doc.pet, now));
-  if (heroStars(book[hero]?.copies ?? 0) < 3) return null;
+  if (!heroDyeUnlocked(doc, hero, book)) return null;
   const rec = doc.pet_heroes[hero] ?? { copies: 0, shinies: 0, grades: [], forms: [], dye: false };
   return { ...doc, pet_heroes: { ...doc.pet_heroes, [hero]: { ...rec, dye: on } } };
 }
@@ -1582,8 +1650,11 @@ export function setHeroDye(doc: PlayStoreDoc, now: number, hero: string, on: boo
 /** Dev kit: hatch now / reveal now — the end of the Egg or Baby stage. */
 export function devPetEndStage(doc: PlayStoreDoc, now: number, stage: 'egg' | 'baby'): PlayStoreDoc {
   const pet = advancePet(doc.pet, now);
-  if (pet.stage !== stage || pet.egg == null) return { ...doc, pet };
-  return { ...doc, pet: advancePet({ ...pet, stage_age_ms: PET_STAGE_MS[stage] - 1, seen_at: now - 1 }, now) };
+  if (pet.stage !== stage || pet.egg == null) {
+    return { ...doc, pet, play_stats: tallyPet(doc.play_stats, doc.pet, pet) };
+  }
+  const next = advancePet({ ...pet, stage_age_ms: PET_STAGE_MS[stage] - 1, seen_at: now - 1 }, now);
+  return { ...doc, pet: next, play_stats: tallyPet(doc.play_stats, doc.pet, next) };
 }
 
 /** Dev kit: force the grade / shiny. Before Child it pre-locks the result
@@ -1634,6 +1705,133 @@ export function devGiveShards(doc: PlayStoreDoc, grade: Grade): PlayStoreDoc {
 /** Dev kit: empty the Collection, shards and tickets. */
 export function devResetCollection(doc: PlayStoreDoc): PlayStoreDoc {
   return { ...doc, pet_heroes: {}, pet_shards: emptyGradeCounts(), pet_tickets: emptyGradeCounts() };
+}
+
+/* ---------------------------------------------------------------------------
+ * Menus + settings (v24, 2026-09-30) — see play-settings.ts.
+ * ------------------------------------------------------------------------- */
+
+/** Journal: a hatch or a reveal between two ages of the same pet. */
+export function tallyPet(stats: PlayStats, prev: PetState, next: PetState): PlayStats {
+  let out = stats;
+  if (prev.stage === 'egg' && prev.egg != null && next.stage !== 'egg') {
+    out = { ...out, eggs_hatched: out.eggs_hatched + 1 };
+  }
+  if (prev.hero == null && next.hero != null && next.band != null && next.grade != null) {
+    out = {
+      ...out,
+      pulled: { ...out.pulled, [next.grade]: out.pulled[next.grade] + 1 },
+      shinies: out.shinies + (next.shiny ? 1 : 0),
+    };
+  }
+  return out;
+}
+
+/** When the dive charges will be full again (null = full now). */
+export function chargesFullAt(doc: PlayStoreDoc, now: number): number | null {
+  const dive = diveChargeAt(doc, now);
+  if (dive.full || dive.nextChargeAt == null) return null;
+  return dive.nextChargeAt + (DIVE_CHARGE_CAP - dive.current - 1) * DIVE_CHARGE_REFILL_MS;
+}
+
+function milestoneInputOf(doc: PlayStoreDoc, now: number) {
+  const book = heroBookOf(doc, advancePet(doc.pet, now));
+  const recs = Object.values(book);
+  return {
+    heroesFound: recs.filter((r) => r.copies > 0).length,
+    anyEpic: recs.some((r) => r.grades.includes('epic')),
+    anyLegendary: recs.some((r) => r.grades.includes('legendary')),
+    anyShiny: recs.some((r) => r.shinies > 0),
+    anyFiveStar: recs.some((r) => heroStars(r.copies) >= 5),
+    eggsHatched: doc.play_stats.eggs_hatched,
+  };
+}
+
+export function milestonesOf(doc: PlayStoreDoc, now: number): { def: MilestoneDef; done: boolean; claimed: boolean }[] {
+  const input = milestoneInputOf(doc, now);
+  return MILESTONES.map((def) => ({ def, done: def.done(input), claimed: doc.milestones.includes(def.id) }));
+}
+
+/** Claim a reached milestone's reward (once). Rewards are looks / egg-grade
+ * only: tickets, Wardrobe cosmetics, a dye unlocked early, a card ribbon. */
+export function claimMilestone(doc: PlayStoreDoc, now: number, id: MilestoneId): PlayStoreDoc | null {
+  const def = MILESTONES.find((m) => m.id === id);
+  if (!def || doc.milestones.includes(id) || !def.done(milestoneInputOf(doc, now))) return null;
+  const ticket = (d: PlayStoreDoc, g: Grade): PlayStoreDoc => ({ ...d, pet_tickets: { ...d.pet_tickets, [g]: d.pet_tickets[g] + 1 } });
+  let next: PlayStoreDoc = { ...doc, milestones: [...doc.milestones, id] };
+  const r = def.reward;
+  if (r.kind === 'ticket') next = ticket(next, r.grade);
+  if (r.kind === 'cosmetic') {
+    next = next.pet_cosmetics.includes(r.id) ? ticket(next, r.fallback) : { ...next, pet_cosmetics: [...next.pet_cosmetics, r.id] };
+  }
+  if (r.kind === 'dye') {
+    const book = heroBookOf(doc, advancePet(doc.pet, now));
+    const hero = Object.keys(book).find((h) => book[h].grades.includes('legendary'));
+    next = {
+      ...next,
+      dye_unlocked: hero && !next.dye_unlocked.includes(hero) ? [...next.dye_unlocked, hero] : next.dye_unlocked,
+      ribbons: next.ribbons.includes('legend') ? next.ribbons : [...next.ribbons, 'legend'],
+    };
+  }
+  if (r.kind === 'ribbon') {
+    next = { ...next, ribbons: next.ribbons.includes(r.ribbon) ? next.ribbons : [...next.ribbons, r.ribbon] };
+    if (r.plus) next = ticket(next, r.plus);
+  }
+  return next;
+}
+
+/** Change egg (menu): only while it is still an egg. Back to the egg picker —
+ * the next egg gets a fresh seed. Nothing from the old seed was ever rolled
+ * or shown (the roll happens at Child), and a spent ticket is refunded. */
+export function changeEggDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | null {
+  const touched = touchPet(doc, now);
+  const pet = touched.pet;
+  if (pet.stage !== 'egg' || pet.egg == null) return null;
+  return {
+    ...touched,
+    pet: newPet(Math.max(now, pet.seen_at)),
+    pet_tickets: pet.ticket ? { ...touched.pet_tickets, [pet.ticket]: touched.pet_tickets[pet.ticket] + 1 } : touched.pet_tickets,
+  };
+}
+
+/** Use a trade-up ticket on the current egg or Baby (before the roll). */
+export function applyTicketDoc(doc: PlayStoreDoc, now: number, grade: Grade): PlayStoreDoc | null {
+  const touched = touchPet(doc, now);
+  const pet = touched.pet;
+  if (grade === 'common' || touched.pet_tickets[grade] < 1) return null;
+  if (pet.egg == null || pet.hero != null || pet.ticket != null) return null;
+  if (pet.stage !== 'egg' && pet.stage !== 'baby') return null;
+  return {
+    ...touched,
+    pet: { ...pet, ticket: grade },
+    pet_tickets: { ...touched.pet_tickets, [grade]: touched.pet_tickets[grade] - 1 },
+  };
+}
+
+/** Name the pet (null clears it back to the default). */
+export function renamePetDoc(doc: PlayStoreDoc, now: number, raw: string | null): PlayStoreDoc | null {
+  const touched = touchPet(doc, now);
+  if (touched.pet.egg == null && touched.pet.hero == null) return null;
+  if (raw == null) return { ...touched, pet: { ...touched.pet, name: null } };
+  const checked = checkPetName(raw);
+  return checked.ok ? { ...touched, pet: { ...touched.pet, name: checked.name } } : null;
+}
+
+/** Change Divecore settings (the hunger toggle also keeps `pet_remind`). */
+export function setPlaySettings(doc: PlayStoreDoc, patch: Partial<PlaySettings>): PlayStoreDoc {
+  const settings: PlaySettings = {
+    ...doc.play_settings,
+    ...patch,
+    notif: { ...doc.play_settings.notif, ...(patch.notif ?? {}) },
+  };
+  return { ...doc, play_settings: settings, pet_remind: settings.notif.hunger };
+}
+
+/** Reset Divecore progress: a brand-new Play save that keeps the settings.
+ * Never touches the main app's data (a different store). */
+export function resetDivecore(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const fresh = defaultPlayStore(now);
+  return { ...fresh, play_settings: doc.play_settings, pet_remind: doc.play_settings.notif.hunger };
 }
 
 export type PetRoundKind = 'catch' | 'train';
@@ -1694,7 +1892,11 @@ export function rebirthPetDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | nu
 }
 
 export function setPetRemind(doc: PlayStoreDoc, on: boolean): PlayStoreDoc {
-  return { ...doc, pet_remind: on };
+  return {
+    ...doc,
+    pet_remind: on,
+    play_settings: { ...doc.play_settings, notif: { ...doc.play_settings.notif, hunger: on } },
+  };
 }
 
 /** Dev kit: jump the pet to the end of its stage (it evolves on the next
@@ -2076,6 +2278,8 @@ export function recordDefendWin(
       // heart, counts toward its Battle form and tallies the Legend element
       // for the God aura — so TD-only players still raise it.
       pet: petWaveCleared(advancePet(doc.pet, now), legendElementOf(active.id)),
+      // v24 Journal: a hatch / reveal that happens in this same aging counts.
+      play_stats: tallyPet(doc.play_stats, doc.pet, advancePet(doc.pet, now)),
     },
     { xp, level },
   );
@@ -3083,6 +3287,9 @@ export function startDive(
       // Spend one derived charge; the refill timer restarts from now.
       dive_charge: dive.current - 1,
       dive_charge_at: now,
+      // v24: the last charge spent arms the (opt-in) "charges full" notice.
+      charges_armed: touched.charges_armed || dive.current - 1 === 0,
+      play_stats: { ...touched.play_stats, dives: touched.play_stats.dives + 1 },
       dive_run: { deepers: 0, haul: [firstFind], free_n: null, next: rollNext(touched, 1, rng) },
       pet_logbook: away ? touched.pet_logbook : logFind(touched.pet_logbook, firstFind, 0),
     },
@@ -3111,6 +3318,7 @@ export function startFreeDive(
       ...touched,
       free_dives_today: n + 1,
       free_dives_ymd: localYmd(new Date(now)),
+      play_stats: { ...touched.play_stats, dives: touched.play_stats.dives + 1 },
       dive_run: { deepers: 0, haul: [firstFind], free_n: n, next: rollNext(touched, 1, rng) },
       pet_logbook: away ? touched.pet_logbook : logFind(touched.pet_logbook, firstFind, 0),
     },
@@ -3153,7 +3361,17 @@ export function surfaceDive(
     pet = petCareAct(pet, CARE_ACT.dived); // Baby care (v23)
   }
   const logbook = netFind && !away ? logFind(touched.pet_logbook, netFind, run.deepers) : touched.pet_logbook;
-  const base: PlayStoreDoc = { ...touched, dive_run: null, pet, pet_logbook: logbook };
+  const base: PlayStoreDoc = {
+    ...touched,
+    dive_run: null,
+    pet,
+    pet_logbook: logbook,
+    play_stats: {
+      ...touched.play_stats,
+      surfaces: touched.play_stats.surfaces + 1,
+      best_depth: Math.max(touched.play_stats.best_depth, run.deepers),
+    },
+  };
   let next: PlayStoreDoc;
   let shellsGained: number;
   if (free) {
@@ -3200,7 +3418,16 @@ export function deeperDive(
     // is never lost.
     const rescued = free ? [] : bestFinds(run.haul, petRescueKeep(pet, away));
     const cared = away ? touched.pet : petCareAct(petDiveBusted(touched.pet), CARE_ACT.dived);
-    const base: PlayStoreDoc = { ...touched, dive_run: null, pet: cared };
+    const base: PlayStoreDoc = {
+      ...touched,
+      dive_run: null,
+      pet: cared,
+      play_stats: {
+        ...touched.play_stats,
+        busts: touched.play_stats.busts + 1,
+        best_depth: Math.max(touched.play_stats.best_depth, run.deepers),
+      },
+    };
     return {
       doc: rescued.length > 0 ? bankFinds(base, rescued).doc : base,
       outcome: { busted: true, bustPct, rescued, petCared: cared !== touched.pet },
@@ -3218,6 +3445,7 @@ export function deeperDive(
         next: rollNext(touched, depth + 1, rng),
       },
       pet_logbook: away ? touched.pet_logbook : logFind(touched.pet_logbook, addedId, depth),
+      play_stats: { ...touched.play_stats, best_depth: Math.max(touched.play_stats.best_depth, depth) },
     },
     outcome: { busted: false, bustPct, addedId },
   };
@@ -3754,7 +3982,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 9 && version !== 10 && version !== 11 && version !== 12 &&
       version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
       version !== 17 && version !== 18 && version !== 19 && version !== 20 &&
-      version !== 21 && version !== 22 && version !== 23
+      version !== 21 && version !== 22 && version !== 23 && version !== 24
     ) {
       return null;
     }
@@ -3860,6 +4088,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     const v21 = version >= 21;
     const v22 = version >= 22;
     const v23 = version >= 23;
+    const v24 = version >= 24;
     const hall = parsePetHall(data.pet_hall);
     // v23 (eggs): the Collection becomes a per-hero book. Older saves: every
     // Hall pet counts as one copy (stars carry over), Common, with its form;
@@ -3870,7 +4099,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       : legacyHeroBook(hall, v22 ? data.pet_collection : null);
     const cosmetics = v22 ? parseOwnedCosmetics(data.pet_cosmetics) : [];
     return {
-      version: 23,
+      version: 24,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -3922,6 +4151,29 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       pet_heroes: heroBook,
       pet_shards: v23 ? parseGradeCounts(data.pet_shards) : emptyGradeCounts(),
       pet_tickets: v23 ? parseGradeCounts(data.pet_tickets) : emptyGradeCounts(),
+      // v24: older saves keep their hunger-reminder choice; egg + expedition
+      // notices on, charges full off; the tutorial is skipped for a save that
+      // already has progress.
+      play_settings: parseSettings(
+        data.play_settings,
+        v24
+          ? null
+          : {
+              remind: data.pet_remind === true,
+              hasProgress: hall.length > 0 || pet.hero != null || Math.floor(lifetimeWaves) > 0,
+            },
+      ),
+      play_stats: v24 ? parseStats(data.play_stats) : emptyStats(),
+      milestones: v24 && Array.isArray(data.milestones)
+        ? [...new Set(data.milestones.filter((m): m is MilestoneId => MILESTONES.some((d) => d.id === m)))]
+        : [],
+      ribbons: v24 && Array.isArray(data.ribbons)
+        ? [...new Set(data.ribbons.filter((r): r is Ribbon => r === 'collector' || r === 'legend'))]
+        : [],
+      dye_unlocked: v24 && Array.isArray(data.dye_unlocked)
+        ? [...new Set(data.dye_unlocked.filter((h): h is string => typeof h === 'string' && heroById(h) != null))]
+        : [],
+      charges_armed: v24 && data.charges_armed === true,
       free_dives_today: v22 ? Math.max(0, Math.floor(finiteNumber(data.free_dives_today) ?? 0)) : 0,
       free_dives_ymd: v22 && typeof data.free_dives_ymd === 'string' ? data.free_dives_ymd : null,
     };

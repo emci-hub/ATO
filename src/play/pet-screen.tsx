@@ -27,19 +27,21 @@ import Animated, {
 import { Fonts } from '@/constants/theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { PET_COACH_ICON, petCoachTip, type PetCoachIcon } from '@/play/coach';
-import { getDiveFxDevLow, setDiveFxDevLow } from '@/play/dive-fx-level';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
 import { petBackStep, type InnerBack } from '@/play/edge-back';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { NeonChip, NeonLabel } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
 import { PET_BRANCH_LABEL, PET_STAGE_LABEL } from '@/play/pet';
-import { askPetReminderPermission, syncPetEggNotice, syncPetReminder } from '@/play/pet-reminder';
+import { syncPlayNotices } from '@/play/pet-reminder';
 import { heroName } from '@/play/heroes-data';
 import { petPose } from '@/play/pet-actor';
 import { PetAnimSprite, usePetArt } from '@/play/pet-anim-sprite';
 import { PetCard, type PetCardInfo } from '@/play/pet-card';
-import { EggPickerBody, OddsPanel } from '@/play/pet-egg-sheets';
+import { DivecoreSettingsSheet } from '@/play/divecore-settings';
+import { EggPickerBody, JournalTab, OddsPanel } from '@/play/pet-egg-sheets';
+import { PetMenuBody } from '@/play/pet-menu';
+import { idleTalkDelayMs, isBedtime } from '@/play/play-settings';
 import {
   CARE_BANDS,
   CARE_BAND_LABEL,
@@ -52,6 +54,7 @@ import {
   SHARDS_PER_TICKET,
   gradedName,
   heroStars,
+  petShownName,
   type EggType,
 } from '@/play/pet-eggs';
 import { PetFigure } from '@/play/pet-figure';
@@ -73,7 +76,7 @@ import {
   roundResultLine,
   type InfoTab,
 } from '@/play/pet-sheets';
-import { PET_STATUSES, isNightHour, justEvolved, petStatus, type PetStatus } from '@/play/pet-status';
+import { PET_STATUSES, justEvolved, petStatus, type PetStatus } from '@/play/pet-status';
 import {
   PET_IDLE_TALK_MAX_MS,
   PET_IDLE_TALK_MIN_MS,
@@ -102,10 +105,8 @@ import {
   devPetSetStage,
   devPetStarve,
   finishPetRound,
-  setPetRemind,
   type PetRoundKind,
   type PetRoundResult,
-  type PetView,
   type PlayView,
 } from '@/play/playStore';
 import type { PlayTransition } from '@/play/use-play-store';
@@ -113,7 +114,7 @@ import type { PlayTransition } from '@/play/use-play-store';
 /** A pet-worthy moment the Play shell hands to the room (dive, TD, finds). */
 export type PetTalkEvent = { situation: PetTalkSituation; key: number } | null;
 
-type SheetId = 'feed' | 'play' | 'expedition' | 'info' | 'eggs' | 'card';
+type SheetId = 'feed' | 'play' | 'expedition' | 'info' | 'eggs' | 'card' | 'menu';
 
 const ICONS: { id: PetCoachIcon; emoji: string; label: string }[] = [
   { id: 'feed', emoji: '🍖', label: 'Feed' },
@@ -130,30 +131,43 @@ const SHEET_TITLE: Record<SheetId, string> = {
   info: 'Info',
   eggs: 'Choose an egg',
   card: 'Card',
+  menu: 'Your pet',
 };
 
-/** Keep the opt-in hunger reminder in step with the pet (call once from the
- * Play shell so a TD feed moves it too, not only this screen). */
-export function usePetReminderSync(pet: PetView | null): void {
-  const on = pet?.remind ?? false;
-  const stage = pet?.state.stage;
-  const hunger = pet?.state.hunger;
-  const state = pet?.state;
-  const stateRef = useRef(state);
-  stateRef.current = state;
-  const egg = pet?.state.egg;
-  const hero = pet?.state.hero;
+/** Keep every Divecore notice (hunger, egg, expedition, charges) in step with
+ * the save — call once from the Play shell so a TD feed or a dive moves them
+ * too, not only this screen. Re-plans when anything they depend on changes. */
+export function usePlayNoticesSync(view: PlayView | null): void {
+  const viewRef = useRef(view);
+  viewRef.current = view;
+  const pet = view?.pet.state;
+  const key = view
+    ? [
+        JSON.stringify(view.settings.notif),
+        JSON.stringify(view.settings.quiet),
+        pet?.stage,
+        pet?.hunger,
+        pet?.egg,
+        pet?.hero,
+        pet?.name,
+        view.pet.away,
+        view.chargesArmed,
+        view.chargesFullAt,
+      ].join('|')
+    : '';
   useEffect(() => {
-    const current = stateRef.current;
-    if (!current) return;
-    void syncPetReminder(on, current, Date.now());
-  }, [on, stage, hunger]);
-  // v23: "Your egg hatched" / "Your hero is revealed" (same opt-in).
-  useEffect(() => {
-    const current = stateRef.current;
-    if (!current) return;
-    void syncPetEggNotice(on, current, Date.now());
-  }, [on, stage, egg, hero]);
+    const v = viewRef.current;
+    if (!v) return;
+    void syncPlayNotices({
+      settings: v.settings,
+      pet: v.pet.state,
+      name: petShownName(v.pet.state),
+      expeditionBackInMs: v.pet.away ? v.pet.expeditionBackInMs : null,
+      chargesFullAt: v.chargesFullAt,
+      chargesArmed: v.chargesArmed,
+      now: Date.now(),
+    });
+  }, [key]);
 }
 
 /** The phone's clock hour, refreshed every minute. */
@@ -221,6 +235,7 @@ export function PetScreen({
   onGoDive,
   talkEvent = null,
   onTalkConsumed,
+  onReplayTutorial,
 }: {
   view: PlayView;
   commit: (transition: PlayTransition) => boolean;
@@ -234,6 +249,8 @@ export function PetScreen({
   talkEvent?: PetTalkEvent;
   /** Called once the room has said the event, so it is never replayed. */
   onTalkConsumed?: () => void;
+  /** v24 — Settings → Replay the tutorial. */
+  onReplayTutorial?: () => void;
 }) {
   const devUnlocked = usePlayDevUnlocked();
   const dev = PRE_LAUNCH_DEV && devUnlocked;
@@ -244,19 +261,18 @@ export function PetScreen({
   const [infoTab, setInfoTab] = useState<InfoTab>('status');
   const [game, setGame] = useState<PetRoundKind | null>(null);
   const [lastResult, setLastResult] = useState<string | null>(null);
-  const [remindNote, setRemindNote] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Dev-only room hooks (Info → Dev).
   const [devStatus, setDevStatus] = useState<PetStatus | null>(null);
   const [devNight, setDevNight] = useState<'auto' | 'on' | 'off'>('auto');
-  const [devFxLow, setDevFxLow] = useState(getDiveFxDevLow);
   const [shinyLook, setShinyLookState] = useState<ShinyLook>(getShinyLook);
   const [revealStep, setRevealStep] = useState(0);
   const [focusEgg, setFocusEgg] = useState<EggType | null>(null);
   const art = usePetArt(pet);
 
   const hour = useHour();
-  const night = devNight === 'auto' ? isNightHour(hour) : devNight === 'on';
+  const night = devNight === 'auto' ? isBedtime(new Date(), view.settings.bedtime) : devNight === 'on';
   const realStatus = petStatus({
     stage: pet.stage,
     hunger: pet.hunger,
@@ -360,11 +376,15 @@ export function PetScreen({
     say('expedition_back');
   }, [pv.expeditionNote, say]);
 
-  // Now and then while idle: its mood, the time of day, or chatter.
+  // Now and then while idle: its mood, the time of day, or chatter — as
+  // often as the Chatter setting says (Off: never on its own).
+  const chatter = view.settings.chatter;
   useEffect(() => {
+    const range = idleTalkDelayMs(chatter, PET_IDLE_TALK_MIN_MS, PET_IDLE_TALK_MAX_MS);
+    if (!range) return;
     let timer: ReturnType<typeof setTimeout>;
     const schedule = () => {
-      const wait = PET_IDLE_TALK_MIN_MS + Math.random() * (PET_IDLE_TALK_MAX_MS - PET_IDLE_TALK_MIN_MS);
+      const wait = range.min + Math.random() * (range.max - range.min);
       timer = setTimeout(() => {
         if (sheetRef.current == null && statusRef.current === 'chilly') {
           sayEgg('keep_warm');
@@ -378,7 +398,7 @@ export function PetScreen({
     };
     schedule();
     return () => clearTimeout(timer);
-  }, [say, sayEgg]);
+  }, [say, sayEgg, chatter]);
 
   // Shards ready to trade up: say so once per visit.
   const tradeSaidRef = useRef(false);
@@ -451,6 +471,10 @@ export function PetScreen({
     registerBack({
       edgeSwipe: true,
       back: () => {
+        if (settingsOpen) {
+          setSettingsOpen(false);
+          return true;
+        }
         const step = petBackStep(sheet != null, game != null);
         if (step === 'hub') return false;
         if (step === 'close-game') setGame(null);
@@ -459,7 +483,7 @@ export function PetScreen({
       },
     });
     return () => registerBack(null);
-  }, [registerBack, sheet, game]);
+  }, [registerBack, sheet, game, settingsOpen]);
 
   const finishRound = (kind: PetRoundKind) => (score: number) => {
     let result: PetRoundResult | null = null;
@@ -475,31 +499,17 @@ export function PetScreen({
     }
   };
 
-  const toggleRemind = async () => {
-    if (pv.remind) {
-      commit((doc) => setPetRemind(doc, false));
-      setRemindNote(null);
-      return;
-    }
-    const granted = await askPetReminderPermission();
-    if (!granted) {
-      setRemindNote('Notifications are off for ATO — turn them on in your phone’s Settings to get the reminder.');
-      return;
-    }
-    commit((doc) => setPetRemind(doc, true));
-    setRemindNote('On — one gentle nudge when your pet gets hungry, at most once a day.');
-  };
-
   const eggColor = pet.egg ? EGG_COLOR[pet.egg] : ELEMENT_COLOR[view.legendElement];
   const revealed = pet.hero != null && pet.stage !== 'egg' && pet.stage !== 'baby';
-  const heroLabel = revealed && pet.hero ? gradedName(pet.grade, heroName(pet.hero)) : null;
+  const shownName = petShownName(pet);
+  const heroLabel = revealed && pet.hero ? gradedName(pet.grade, pet.name ?? heroName(pet.hero)) : null;
   const title =
     pet.stage === 'egg'
       ? pet.egg
-        ? `${EGG_LABEL[pet.egg]} egg`
+        ? pet.name ?? `${EGG_LABEL[pet.egg]} egg`
         : 'Choose an egg'
       : pet.stage === 'baby'
-        ? `Baby${pet.egg ? ` · ${EGG_LABEL[pet.egg]}` : ''}`
+        ? `${pet.name ?? 'Baby'}${pet.egg ? ` · ${EGG_LABEL[pet.egg]}` : ''}`
         : `${heroLabel ?? PET_STAGE_LABEL[pet.stage]} · ${PET_STAGE_LABEL[pet.stage]}${
             pet.stage === 'child' ? '' : ` · ${PET_BRANCH_LABEL[pet.branch]}`
           }`;
@@ -507,7 +517,9 @@ export function PetScreen({
   const cardInfo: PetCardInfo | null =
     revealed && pet.hero
       ? {
-          name: heroName(pet.hero),
+          name: pet.name ?? heroName(pet.hero),
+          hero: pet.name ? heroName(pet.hero) : null,
+          ribbons: view.ribbons,
           grade: pet.grade,
           shiny: pet.shiny,
           stars: heroStars(pv.heroes[pet.hero]?.copies ?? 0),
@@ -565,7 +577,24 @@ export function PetScreen({
         <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
-        <View style={styles.topSpacer} />
+        <View style={styles.topActions}>
+          <Pressable
+            onPress={() => setSheet('menu')}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Pet menu"
+            style={styles.topButton}>
+            <Text style={styles.topButtonText}>⋯</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setSettingsOpen(true)}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Divecore settings"
+            style={styles.topButton}>
+            <Text style={styles.topButtonText}>⚙</Text>
+          </Pressable>
+        </View>
       </View>
 
       <PetRoom
@@ -579,6 +608,7 @@ export function PetScreen({
         pantry={pv.pantryTotal}
         stageLeftMs={pv.stageLeftMs}
         speech={speech}
+        name={shownName}
         tapKey={tapKey}
         reduceMotion={reduceMotion}
         onTapPet={tapPet}
@@ -645,6 +675,17 @@ export function PetScreen({
         ) : null}
         <OddsPanel view={view} />
       </PlaySheet>
+      <PlaySheet open={sheet === 'menu'} title={shownName} onClose={closeSheet} reduceMotion={reduceMotion}>
+        <PetMenuBody view={view} commit={commit} onViewCard={() => setSheet('card')} />
+      </PlaySheet>
+      <DivecoreSettingsSheet
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        view={view}
+        commit={commit}
+        reduceMotion={reduceMotion}
+        onReplayTutorial={() => onReplayTutorial?.()}
+      />
       <PlaySheet
         open={sheet === 'info'}
         title={SHEET_TITLE.info}
@@ -652,7 +693,9 @@ export function PetScreen({
         reduceMotion={reduceMotion}
         header={<SheetTabs tabs={infoTabs(dev)} value={infoTab} onChange={setInfoTab} />}>
         {infoTab === 'status' ? (
-          <StatusTab view={view} commit={commit} remindNote={remindNote} onToggleRemind={() => void toggleRemind()} />
+          <StatusTab view={view} />
+        ) : infoTab === 'journal' ? (
+          <JournalTab view={view} commit={commit} />
         ) : infoTab === 'book' ? (
           <BookTab view={view} commit={commit} eggColor={eggColor} />
         ) : infoTab === 'hall' ? (
@@ -716,14 +759,6 @@ export function PetScreen({
                 onPress={() => say(PET_TALK_SITUATIONS[Math.floor(Math.random() * PET_TALK_SITUATIONS.length)])}
               />
               <NeonChip label="Fake evolve (I grew!)" onPress={() => say('evolved')} />
-              <NeonChip
-                label={`Dive FX: ${devFxLow ? 'Low' : 'Full'}`}
-                selected={devFxLow}
-                onPress={() => {
-                  setDiveFxDevLow(!devFxLow);
-                  setDevFxLow(!devFxLow);
-                }}
-              />
             </View>
           </>
         ) : null}
@@ -763,6 +798,7 @@ export function PetScreen({
               : 'It hatched! Care for your Baby — its hero is revealed at 15 min.'
           }
           reduceMotion={reduceMotion}
+          skip={view.settings.skipReveals}
           onDone={finishReveal}
         />
       ) : null}
@@ -791,7 +827,9 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: NEON.textPrimary,
   },
-  topSpacer: { width: 44 },
+  topActions: { flexDirection: 'row', gap: 8 },
+  topButton: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: NEON.cyanDim, borderRadius: 8 },
+  topButtonText: { fontSize: 16, color: NEON.cyan },
   iconRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',

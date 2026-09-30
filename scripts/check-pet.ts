@@ -354,7 +354,7 @@ const v19: Record<string, unknown> = { ...defaultPlayStore(T0), version: 19 };
 for (const k of ['pet', 'pet_hall', 'pet_rebirths', 'pet_tokens_today', 'pet_tokens_ymd', 'pet_remind']) delete v19[k];
 const loaded = parsePlayStore(JSON.stringify(v19), T0 + 5 * H);
 assert.ok(loaded, 'a v19 save loads');
-assert.equal(loaded.version, 23);
+assert.equal(loaded.version, 24);
 assert.equal(loaded.pet.stage, 'egg', 'old saves get a fresh egg');
 assert.equal(loaded.pet.egg, null, '— the egg picker');
 assert.equal(loaded.pet.seen_at, T0 + 5 * H, 'seen now — no time before the update counts');
@@ -363,7 +363,7 @@ const withProgress: PlayStoreDoc = {
   ...loaded,
   pet: { ...agePet(chooseEgg(loaded.pet, 'village', 777, null, T0)!, 60 * H), element_uses: { spark: 3 } },
   pet_hall: [
-    { line: 'solo_raven', branch: 'battle', aura: 'ember', rebirth: 1, days: 10, hero: 'raven', grade: 'epic', shiny: true, egg: 'knight', released: false },
+    { line: 'solo_raven', branch: 'battle', aura: 'ember', rebirth: 1, days: 10, hero: 'raven', grade: 'epic', shiny: true, egg: 'knight', released: false, name: null },
   ],
   pet_rebirths: 1,
   pet_tokens_today: 15,
@@ -599,7 +599,7 @@ ok('away: pounce, bust cut and rescue all off (view and roll), dives not its car
   for (const k of ['pet_expedition', 'pet_expedition_ymd', 'pet_expedition_note', 'pet_logbook']) delete v20[k];
   delete (v20.pet as Record<string, unknown>).deep_surfaces;
   const up = parsePlayStore(JSON.stringify(v20), T0)!;
-  assert.equal(up.version, 23);
+  assert.equal(up.version, 24);
   assert.deepEqual(
     [up.pet_expedition, up.pet_expedition_ymd, up.pet_expedition_note, up.pet_logbook, up.pet.deep_surfaces],
     [null, null, null, {}, 0],
@@ -614,7 +614,7 @@ ok('away: pounce, bust cut and rescue all off (view and roll), dives not its car
     pet_expedition_note: lk,
     pet_logbook: { [lk]: { depth: 3, count: 2 } },
   };
-  assert.deepEqual(parsePlayStore(JSON.stringify(full), T0), full, 'v23 round-trips unchanged');
+  assert.deepEqual(parsePlayStore(JSON.stringify(full), T0), full, 'v24 round-trips unchanged');
 }
 ok('Logbook: first depth + count, busted finds kept, survives rebirth; v20 → v23 opens empty; round-trips');
 

@@ -79,4 +79,12 @@ assert.equal((shell.match(/registerBack=\{registerBack\}/g) ?? []).length, 3, 'D
 assert.match(shell, /modeRef\.current === 'dive' \? 'pet' : 'grove'/, 'Dive steps back to the Pet room');
 ok('Play shell: native swipe on hub only, Android back + edge swipe on sub-screens, Defend/Pet/Dive registered');
 
+// v24: on the hub, the Settings sheet / tutorial close first (the phone's own
+// swipe is off while one is open); in the Pet room, Settings closes first.
+assert.match(shell, /if \(overlayRef\.current\) \{\s*overlayRef\.current\(\);\s*return true;/, 'hub: an open overlay closes first');
+assert.match(shell, /gestureEnabled: mode === 'grove' && !hubOverlayOpen/, 'hub: no native swipe while an overlay is open');
+const petShell = readFileSync('src/play/pet-screen.tsx', 'utf8');
+assert.match(petShell, /if \(settingsOpen\) \{\s*setSettingsOpen\(false\);\s*return true;/, 'Pet room: Settings closes first');
+ok('hub and Pet room: Settings / the tutorial close first on back');
+
 console.log(`\ncheck:edge-back — ${passed} groups passed.`);

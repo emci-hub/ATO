@@ -25,6 +25,7 @@ import Animated, {
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { Fonts } from '@/constants/theme';
+import { useFxQuality } from '@/play/fx-quality';
 import { NEON } from '@/play/neon-viper';
 import {
   CARE_BAND_LABEL,
@@ -34,6 +35,7 @@ import {
   GRADE_LABEL,
   GRADE_STARS,
   STAR_MAX,
+  gradeTag,
   gradedName,
   type CareBand,
   type EggType,
@@ -53,6 +55,10 @@ export type PetCardInfo = {
   days: number | null;
   dye: boolean;
   shinyCount?: number;
+  /** v24 — the hero, when the pet has its own name. */
+  hero?: string | null;
+  /** v24 — milestone ribbons. */
+  ribbons?: readonly ('collector' | 'legend')[];
 };
 
 const RAINBOW = ['#FF5F6D', '#FFC371', '#F9F871', '#7CFFB2', '#5CC8FF', '#B78CFF', '#FF5FD2'];
@@ -114,12 +120,16 @@ export function PetCard({
   silhouette?: boolean;
 }) {
   const height = Math.round(width * 1.4);
+  // Effects Low (Settings): the card stays still.
+  const fxFull = useFxQuality() === 'full';
+  animate = animate && fxFull;
   const grade = info.grade ?? 'common';
   const color = GRADE_COLOR[grade];
   const small = width < 120;
   const border = grade === 'legendary' ? 3 : grade === 'common' ? 1.5 : 2.5;
   const five = info.stars >= STAR_MAX && !silhouette;
-  const gradeStars = '★'.repeat(GRADE_STARS[grade]);
+  // Never by colour alone: stars AND the word.
+  const gradeStars = small ? '★'.repeat(GRADE_STARS[grade]) : gradeTag(grade);
   const glow = !silhouette && (grade === 'rare' || grade === 'epic' || grade === 'legendary');
   return (
     <View
@@ -193,6 +203,17 @@ export function PetCard({
       <Text style={[styles.name, small && styles.nameSmall]} numberOfLines={1}>
         {silhouette ? '???' : gradedName(info.grade, info.name)}
       </Text>
+      {small ? (
+        <Text style={[styles.smallGrade, { color }]} numberOfLines={1}>
+          {GRADE_LABEL[grade]}
+        </Text>
+      ) : null}
+      {!small && !silhouette && info.hero ? <Text style={styles.meta}>{info.hero}</Text> : null}
+      {!small && !silhouette && info.ribbons && info.ribbons.length > 0 ? (
+        <Text style={styles.meta}>
+          {info.ribbons.map((r) => (r === 'collector' ? '🎖 Collector' : '🏅 Legend')).join(' · ')}
+        </Text>
+      ) : null}
       {!small ? (
         <>
           <Text style={[styles.meta, { color }]}>
@@ -252,7 +273,8 @@ const styles = StyleSheet.create({
     color: NEON.textPrimary,
     paddingHorizontal: 8,
   },
-  nameSmall: { fontSize: 8, letterSpacing: 0.2, paddingBottom: 5 },
+  nameSmall: { fontSize: 8, letterSpacing: 0.2 },
+  smallGrade: { fontFamily: Fonts.monoBold, fontSize: 7, paddingBottom: 4 },
   meta: { fontFamily: Fonts.mono, fontSize: 10, color: NEON.textMuted, textAlign: 'center', paddingHorizontal: 8, marginTop: 2 },
   forms: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 4, marginTop: 4, marginBottom: 10, paddingHorizontal: 8 },
   formBadge: {

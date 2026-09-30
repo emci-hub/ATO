@@ -84,6 +84,8 @@
     "check:legends": "tsx ./scripts/check-legends.ts",
     "check:pet": "tsx ./scripts/check-pet.ts",
     "check:pet-eggs": "tsx ./scripts/check-pet-eggs.ts",
+    "check:play-settings": "tsx ./scripts/check-play-settings.ts",
+    "check:play-dev-hidden": "tsx ./scripts/check-play-dev-hidden.ts",
     "check:pet-room": "tsx ./scripts/check-pet-room.ts",
     "check:pet-talk": "tsx ./scripts/check-pet-talk.ts",
     "check:dive-fx": "tsx ./scripts/check-dive-fx.ts",

@@ -299,6 +299,8 @@ export type PetState = {
   band: CareBand | null;
   /** Reveals not yet played on screen (they happen in aging, even offline). */
   reveals: PetReveal[];
+  /** v24 — the player's name for it (null = the hero's name / "Knight egg"). */
+  name: string | null;
 };
 
 export type PetReveal = 'hatch' | 'child';
@@ -318,6 +320,8 @@ export type PetHallEntry = {
   egg: EggType | null;
   /** Released from Child up (no rebirth bonus), vs reborn at God. */
   released: boolean;
+  /** v24 — its name, if the player gave it one. */
+  name: string | null;
 };
 
 /** A blank pet slot: the egg picker (no egg chosen, no time passes). */
@@ -354,6 +358,7 @@ export function newPet(now: number, line: string = DEFAULT_PET_LINE): PetState {
     shiny: false,
     band: null,
     reveals: [],
+    name: null,
   };
 }
 
@@ -747,6 +752,7 @@ function hallEntryOf(pet: PetState, rebirth: number, released: boolean): PetHall
     shiny: pet.shiny,
     egg: pet.egg ?? (hero ? heroEgg(hero) : null),
     released,
+    name: pet.name,
   };
 }
 
@@ -974,6 +980,7 @@ export function parsePet(raw: unknown, now: number): PetState {
     reveals: Array.isArray(raw.reveals)
       ? raw.reveals.filter((r): r is PetReveal => r === 'hatch' || r === 'child').slice(-2)
       : [],
+    name: typeof raw.name === 'string' && raw.name.length > 0 && raw.name.length <= 24 ? raw.name : null,
   };
 }
 
@@ -1055,6 +1062,7 @@ export function parsePetHall(raw: unknown): PetHallEntry[] {
         return h ? heroEgg(h) : null;
       })(),
       released: row.released === true,
+      name: typeof row.name === 'string' && row.name.length > 0 && row.name.length <= 24 ? row.name : null,
     });
   }
   return trimHall(out, PET_HALL_MAX);

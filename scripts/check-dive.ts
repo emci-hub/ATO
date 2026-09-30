@@ -279,7 +279,7 @@ ok('expedition: a Power half the time, else a Shallows find');
   }
   delete (v21.pet as Record<string, unknown>).forms;
   const up = parsePlayStore(JSON.stringify(v21), T0)!;
-  assert.equal(up.version, 23);
+  assert.equal(up.version, 24);
   assert.deepEqual(
     [up.shells, up.dive_gear, up.pet_pantry, up.pet_cosmetics, up.pet_wear, up.free_dives_today, up.free_dives_ymd],
     [0, { lamp: false, net: false, oxygen: false }, {}, [], { badge: null, tint: null, ring: null, aura: null }, 0, null],
@@ -303,7 +303,7 @@ ok('expedition: a Power half the time, else a Shallows find');
     free_dives_ymd: '2026-09-30',
     dive_run: { deepers: 1, haul: ['food_kelp'], free_n: 3, next: { safe: 'shells_3', rich: 'cos_ring_double' } },
   };
-  assert.deepEqual(parsePlayStore(JSON.stringify(full), T0), full, 'v23 round-trips unchanged');
+  assert.deepEqual(parsePlayStore(JSON.stringify(full), T0), full, 'v24 round-trips unchanged');
   const bad = parsePlayStore(JSON.stringify({ ...full, pet_pantry: { food_kelp: 50 }, pet_wear: { tint: 'cos_tint_gold' } }), T0)!;
   assert.equal(bad.pet_pantry.food_kelp, PANTRY_MAX, 'an oversized pantry is capped on load');
   assert.equal(bad.pet_wear.tint, null, 'wearing something not owned is dropped on load');
