@@ -74,6 +74,7 @@ import { isTypeTag, type TypeTag } from '@/play/engine/type-match';
 import { DEFAULT_AVATAR_HERO_ID, allHeroes, heroById, heroName } from '@/play/heroes-data';
 import {
   PET_FEED_CATCH,
+  PET_METER_MAX,
   PET_MIN_ROUND_SCORE,
   PET_STAGES,
   advancePet,
@@ -105,14 +106,48 @@ import {
   type PetHallEntry,
   type PetLogbook,
   type PetState,
+  allFormKeys,
+  formKey,
 } from '@/play/pet';
+import {
+  DIVE_GEAR_COST,
+  DIVE_OXYGEN_BUST,
+  EXPEDITION_POWER_CHANCE,
+  FOODS,
+  NET_MIN_DEPTH,
+  NO_DIVE_GEAR,
+  PANTRY_MAX,
+  PANTRY_OVERFLOW_SHELLS,
+  SHELLS_PER_CLEAR,
+  SHELLS_PER_REPLAY,
+  findKind,
+  freeDiveShells,
+  isFoodId,
+  pathBaseBust,
+  pathTier,
+  rollTier,
+  shellsOf,
+  tierAt,
+  type DiveGear,
+  type DiveGearOwned,
+  type DivePath,
+  type FoodId,
+} from '@/play/dive-loot';
+import {
+  COSMETIC_DUPE_SHELLS,
+  NO_WEAR,
+  cosmeticById,
+  parseOwnedCosmetics,
+  parsePetWear,
+  type CosmeticSlot,
+  type PetWear,
+} from '@/play/pet-cosmetics';
 import type { ShopTokenRow } from '@/play/shop';
 import { devNoCaps, getTune } from '@/play/tune';
 import {
   getItemDef,
   junkLookId,
   rarityRank,
-  rollDiveFind,
   rollMilestoneLook,
   rollPowerFind,
   rollResearchFind,
@@ -127,7 +162,8 @@ export const DIVE_CHARGE_CAP = 10;
 export const DIVE_CHARGE_REFILL_MS = 10 * 60 * 1000; // refill_seconds: 600
 
 /** Dive push-your-luck odds (GAME_SPEC §7 / GAME_DATA dive odds). */
-export const DIVE_DEEPER_MAX = 4; // dive_deeper_max
+export const DIVE_DEEPER_MAX = 4; // dive_deeper_max (5 with Oxygen, v22)
+export const DIVE_DEEPER_MAX_OXYGEN = 5;
 export const DIVE_BUST_TABLE = [0.18, 0.28, 0.4, 0.55] as const; // Deeper #1..#4
 
 /** Research idle earn (GAME_DATA research_default). */
@@ -311,10 +347,18 @@ const LUCK_BUST_BEND_PER_TIER = 0.15;
  * spent either way).
  */
 export type DiveRun = {
-  /** Deeper presses survived so far (0 on the first find card, max 4). */
+  /** Deeper presses survived so far (0 on the first find card, max 4 — 5
+   * with Oxygen). */
   deepers: number;
-  /** Item ids found this run. Surface banks all of them; a bust loses them. */
+  /** Find ids this run (items, food, shells, cosmetics — see dive-loot.ts).
+   * Surface banks all of them; a bust loses them. */
   haul: string[];
+  /** v22: a free dive's index that day (0 = first), or null for a charged
+   * dive. Free dives keep only mood, shells and Logbook sightings. */
+  free_n: number | null;
+  /** v22: the next Deeper's find for each path, rolled in advance and saved
+   * so the Lamp preview is exactly what you get (null = maxed / old save). */
+  next: { safe: string; rich: string } | null;
 };
 
 /**
@@ -360,6 +404,11 @@ export type DiveRun = {
  * (`pet_expedition`, `pet_expedition_ymd`, `pet_expedition_note`), the
  * `pet_logbook`, and `pet.deep_surfaces`. v20 saves open with all of them
  * empty (no expedition out, empty Logbook, 0 deep surfaces).
+ * v22 (Dive + Pet main game, Part B) adds `shells`, `dive_gear`, the pet
+ * `pet_pantry`, `pet_cosmetics` + `pet_wear`, the `pet_collection`, the
+ * free-dive day counter, `pet.forms`, and `dive_run.free_n` / `.next`. v21
+ * saves open with none of them (0 shells, no gear, empty pantry/wardrobe,
+ * a Collection seeded from the Hall + the current pet).
  */
 
 /** Campaign phase. `trial` (Grove Path, waves 1–5) then `main` (Divecore
@@ -611,7 +660,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 21;
+  version: 22;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -698,6 +747,21 @@ export type PlayStoreDoc = {
   pet_expedition_toasted: boolean;
   /** Every find the pet's dives / expeditions made (v21, kept through rebirth). */
   pet_logbook: PetLogbook;
+  /** v22 — Dive-gear currency (TD waves, dives, free dives). */
+  shells: number;
+  /** v22 — permanent Dive gear bought with shells. */
+  dive_gear: DiveGearOwned;
+  /** v22 — food found diving, at most PANTRY_MAX in total. */
+  pet_pantry: Partial<Record<FoodId, number>>;
+  /** v22 — owned pet cosmetics, and what the pet wears. */
+  pet_cosmetics: string[];
+  pet_wear: PetWear;
+  /** v22 — Collection: every `line:form` ever reached (Hall + retired pets;
+   * the live pet's own `forms` are added on top in the view). */
+  pet_collection: string[];
+  /** v22 — free dives started on `free_dives_ymd` (shell fall-off). */
+  free_dives_today: number;
+  free_dives_ymd: string | null;
 };
 
 /** A queued "hero owned" offer (Slice A2). `label` is the hero's display name
@@ -735,6 +799,12 @@ export type ResearchView = {
 
 export type PlayView = {
   tokens: number;
+  /** v22 — Dive-gear currency. */
+  shells: number;
+  /** v22 — Dive gear owned. */
+  diveGear: DiveGearOwned;
+  /** v22 — free dives started today (device-local). */
+  freeDivesToday: number;
   dive: DiveChargeView;
   /** In-progress Dive run view (null run → not diving). */
   diveRun: DiveRunView;
@@ -841,6 +911,16 @@ export type PetView = {
   /** That return still needs its one-time "Your pet is back" message. */
   expeditionNoteFresh: boolean;
   logbook: PetLogbook;
+  /** v22 — food in the pantry, and its total (max PANTRY_MAX). */
+  pantry: Partial<Record<FoodId, number>>;
+  pantryTotal: number;
+  /** v22 — owned cosmetics and what the pet wears. */
+  cosmetics: readonly string[];
+  wear: PetWear;
+  /** v22 — every `line:form` reached (retired pets + this one), and the
+   * number of slots in the Collection. */
+  collection: readonly string[];
+  collectionSize: number;
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -853,7 +933,7 @@ export type DiveRunView = {
   deepers: number;
   /** Finds so far this run — the haul the screen renders as find cards. */
   haul: readonly string[];
-  /** Bust % of the next Deeper press, or null when the run is maxed. */
+  /** The Safer path’s bust % (v22; before paths: the one %) — null when maxed. */
   bustPctNext: number | null;
   /** A Deeper press is still allowed. */
   canDeeper: boolean;
@@ -861,6 +941,20 @@ export type DiveRunView = {
   rescueKeep: number;
   /** The pet is away on an expedition — not diving with you (v21). */
   petAway: boolean;
+  /** v22 — exact bust % of the next Deeper for each path (null = maxed). */
+  bustPct: Record<DivePath, number> | null;
+  /** v22 — Deepers allowed this run (4, or 5 with Oxygen). */
+  maxDeepers: number;
+  /** v22 — this is a free dive (mood, shells, Logbook only). */
+  free: boolean;
+  /** v22 — Lamp: each path's next find (null without the Lamp). */
+  preview: Record<DivePath, string> | null;
+  /** v22 — Net: surfacing now adds one more find. */
+  netOn: boolean;
+  /** v22 — shells a free dive would pay if you surfaced now (null = charged). */
+  freeShellsNow: number | null;
+  /** v22 — no run and no charges: a free dive is on offer. */
+  canFreeDive: boolean;
 };
 
 export type ClaimResult = {
@@ -885,7 +979,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 21,
+    version: 22,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -927,6 +1021,14 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     pet_expedition_note: null,
     pet_expedition_toasted: true,
     pet_logbook: {},
+    shells: 0,
+    dive_gear: { ...NO_DIVE_GEAR },
+    pet_pantry: {},
+    pet_cosmetics: [],
+    pet_wear: { ...NO_WEAR },
+    pet_collection: [],
+    free_dives_today: 0,
+    free_dives_ymd: null,
   };
 }
 
@@ -972,6 +1074,9 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
   const highest = highestAvatarLevel(doc);
   return {
     tokens: doc.tokens,
+    shells: doc.shells,
+    diveGear: doc.dive_gear,
+    freeDivesToday: freeDivesTodayOf(doc, now),
     dive: diveChargeAt(doc, now),
     diveRun: diveRunViewOf(doc, now),
     research: researchAt(doc, now),
@@ -1033,31 +1138,133 @@ function diveRunViewOf(doc: PlayStoreDoc, now: number): DiveRunView {
   // time is up counts as home (the roll collects it first) — see `petAt`.
   const { pet, away } = petAt(doc, now);
   const rescueKeep = petRescueKeep(pet, away);
+  const maxDeepers = diveMaxDeepers(doc);
   if (!run) {
-    return { active: false, deepers: 0, haul: [], bustPctNext: null, canDeeper: false, rescueKeep, petAway: away };
+    return {
+      active: false,
+      deepers: 0,
+      haul: [],
+      bustPct: null,
+      bustPctNext: null,
+      canDeeper: false,
+      rescueKeep,
+      petAway: away,
+      maxDeepers,
+      free: false,
+      preview: null,
+      netOn: false,
+      freeShellsNow: null,
+      canFreeDive: diveChargeAt(doc, now).current < 1,
+    };
   }
-  const canDeeper = run.deepers < DIVE_DEEPER_MAX;
+  const canDeeper = run.deepers < maxDeepers;
+  const bustPct = canDeeper
+    ? {
+        safe: nextDeeperBustPct(doc, run, pet, away, 'safe'),
+        rich: nextDeeperBustPct(doc, run, pet, away, 'rich'),
+      }
+    : null;
   return {
     active: true,
     deepers: run.deepers,
     haul: run.haul,
-    bustPctNext: canDeeper ? nextDeeperBustPct(doc, run, pet, away) : null,
+    bustPct,
+    bustPctNext: bustPct ? bustPct.safe : null,
     canDeeper,
-    rescueKeep,
+    rescueKeep: run.free_n != null ? 0 : rescueKeep,
     petAway: away,
+    maxDeepers,
+    free: run.free_n != null,
+    preview: doc.dive_gear.lamp && canDeeper && run.next ? run.next : null,
+    netOn: doc.dive_gear.net && run.deepers >= NET_MIN_DEPTH,
+    freeShellsNow: run.free_n != null ? freeDiveShells(run.deepers, run.free_n) : null,
+    canFreeDive: false,
   };
 }
 
-/** The exact whole-% bust chance of the next Deeper — one function for the
- * screen and the roll, so what is shown is always what is rolled. */
-function nextDeeperBustPct(doc: PlayStoreDoc, run: DiveRun, pet: PetState, away: boolean): number {
+/** Deepers allowed: 4, or 5 with Oxygen (v22). */
+export function diveMaxDeepers(doc: PlayStoreDoc): number {
+  return doc.dive_gear.oxygen ? DIVE_DEEPER_MAX_OXYGEN : DIVE_DEEPER_MAX;
+}
+
+/** The exact whole-% bust chance of the next Deeper on a path — one function
+ * for the screen and the roll, so what is shown is always what is rolled. */
+function nextDeeperBustPct(
+  doc: PlayStoreDoc,
+  run: DiveRun,
+  pet: PetState,
+  away: boolean,
+  path: DivePath,
+): number {
   const active = activeAvatarOf(doc);
   return effectiveBustPct(
-    diveBustChanceAt(run.deepers),
+    pathBaseBust(diveBustChanceAt(run.deepers), path),
     active.equipped,
     legendElementOf(active.id),
     petBustCutPp(pet, away),
   );
+}
+
+function freeDivesTodayOf(doc: PlayStoreDoc, now: number): number {
+  return doc.free_dives_ymd === localYmd(new Date(now)) ? doc.free_dives_today : 0;
+}
+
+/** Pre-roll the next Deeper's find on both paths (landing at `depth`). */
+function rollNext(doc: PlayStoreDoc, depth: number, rng: () => number): { safe: string; rich: string } | null {
+  if (depth > diveMaxDeepers(doc)) return null;
+  const oxygen = doc.dive_gear.oxygen;
+  return {
+    safe: rollTier(pathTier(depth, 'safe', oxygen), rng),
+    rich: rollTier(pathTier(depth, 'rich', oxygen), rng),
+  };
+}
+
+function pantryTotal(pantry: Partial<Record<FoodId, number>>): number {
+  return Object.values(pantry).reduce<number>((a, n) => a + (n ?? 0), 0);
+}
+
+/** Bank finds of any kind: items to the bag, food to the pantry (a find that
+ * doesn't fit is 1 shell), shells to the wallet, cosmetics to the wardrobe (a
+ * duplicate is 5 shells). Returns the doc and the shells gained. */
+export function bankFinds(doc: PlayStoreDoc, ids: readonly string[]): { doc: PlayStoreDoc; shells: number } {
+  const items: string[] = [];
+  const pantry = { ...doc.pet_pantry };
+  const owned = [...doc.pet_cosmetics];
+  let shells = 0;
+  for (const id of ids) {
+    const kind = findKind(id);
+    if (kind === 'item') items.push(id);
+    else if (kind === 'food' && isFoodId(id)) {
+      if (pantryTotal(pantry) < PANTRY_MAX) pantry[id] = (pantry[id] ?? 0) + 1;
+      else shells += PANTRY_OVERFLOW_SHELLS;
+    } else if (kind === 'shells') shells += shellsOf(id);
+    else if (kind === 'cosmetic') {
+      if (owned.includes(id)) shells += COSMETIC_DUPE_SHELLS;
+      else owned.push(id);
+    }
+  }
+  return {
+    doc: {
+      ...doc,
+      inventory: items.length > 0 ? addManyToBag(doc.inventory, items) : doc.inventory,
+      pet_pantry: pantry,
+      pet_cosmetics: owned,
+      shells: doc.shells + shells,
+    },
+    shells,
+  };
+}
+
+/** Log a find the pet was there for (shells are not Logbook entries). */
+function logFind(book: PetLogbook, id: string, depth: number): PetLogbook {
+  return findKind(id) === 'shells' ? book : logPetFind(book, id, depth);
+}
+
+/** Every Collection key reached: retired pets + the live pet's forms. */
+export function petCollectionOf(doc: PlayStoreDoc, pet: PetState = doc.pet): string[] {
+  const set = new Set(doc.pet_collection);
+  for (const branch of pet.forms) set.add(formKey(pet.line, branch));
+  return [...set];
 }
 
 /** The pet aged to `now`, and whether it is still away. An expedition whose
@@ -1094,6 +1301,12 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     expeditionNote: doc.pet_expedition_note,
     expeditionNoteFresh: doc.pet_expedition_note != null && !doc.pet_expedition_toasted,
     logbook: doc.pet_logbook,
+    pantry: doc.pet_pantry,
+    pantryTotal: pantryTotal(doc.pet_pantry),
+    cosmetics: doc.pet_cosmetics,
+    wear: doc.pet_wear,
+    collection: petCollectionOf(doc, pet),
+    collectionSize: allFormKeys().length,
   };
 }
 
@@ -1115,16 +1328,16 @@ export function touchPet(
   const pet = advancePet(doc.pet, now);
   const exp = doc.pet_expedition;
   if (exp && expeditionLeftMs(pet, exp) <= 0) {
-    // A shallow solo dive: it can't bust, it always brings back one find.
-    const find = rollDiveFind(rng);
+    // A shallow solo dive: it can't bust, it always brings back one find —
+    // a Power half the time (v22), else a Shallows find.
+    const find = rng() < EXPEDITION_POWER_CHANCE ? rollPowerFind(rng) : rollTier('shallows', rng);
+    const banked = bankFinds({ ...doc, pet }, [find]).doc;
     return {
-      ...doc,
-      pet,
+      ...banked,
       pet_expedition: null,
       pet_expedition_note: find,
       pet_expedition_toasted: false,
-      inventory: addManyToBag(doc.inventory, [find]),
-      pet_logbook: logPetFind(doc.pet_logbook, find, 0),
+      pet_logbook: logFind(doc.pet_logbook, find, 0),
     };
   }
   return pet === doc.pet ? doc : { ...doc, pet };
@@ -1161,6 +1374,65 @@ export function dismissExpeditionNote(doc: PlayStoreDoc): PlayStoreDoc {
 /** The shell has shown "Your pet is back" for this return (once per return). */
 export function markExpeditionToasted(doc: PlayStoreDoc): PlayStoreDoc | null {
   return doc.pet_expedition_toasted ? null : { ...doc, pet_expedition_toasted: true };
+}
+
+/** Feed one food from the pantry (v22) — only when you tap Feed. Null when
+ * refused: egg, away, already full, or none of that food. */
+export function feedFromPantry(doc: PlayStoreDoc, now: number, food: FoodId): PlayStoreDoc | null {
+  const touched = touchPet(doc, now);
+  const { away } = petAt(touched, now);
+  const have = touched.pet_pantry[food] ?? 0;
+  if (away || touched.pet.stage === 'egg' || have < 1 || touched.pet.hunger >= PET_METER_MAX) return null;
+  return {
+    ...touched,
+    pet: feedPet(touched.pet, FOODS[food].hearts),
+    pet_pantry: { ...touched.pet_pantry, [food]: have - 1 },
+  };
+}
+
+export type CosmeticBuyResult = { ok: true } | { ok: false; reason: 'not_for_sale' | 'owned' | 'tokens' };
+
+/** Buy a Wardrobe cosmetic with tokens (v22 token sink). */
+export function buyCosmetic(doc: PlayStoreDoc, id: string): { doc: PlayStoreDoc; result: CosmeticBuyResult } {
+  const def = cosmeticById(id);
+  if (!def || def.price == null) return { doc, result: { ok: false, reason: 'not_for_sale' } };
+  if (doc.pet_cosmetics.includes(id)) return { doc, result: { ok: false, reason: 'owned' } };
+  if (doc.tokens < def.price) return { doc, result: { ok: false, reason: 'tokens' } };
+  return {
+    doc: { ...doc, tokens: doc.tokens - def.price, pet_cosmetics: [...doc.pet_cosmetics, id] },
+    result: { ok: true },
+  };
+}
+
+/** Wear an owned cosmetic in its slot, or take a slot off (`id` null). */
+export function wearCosmetic(doc: PlayStoreDoc, slot: CosmeticSlot, id: string | null): PlayStoreDoc | null {
+  if (id != null) {
+    const def = cosmeticById(id);
+    if (!def || def.slot !== slot || !doc.pet_cosmetics.includes(id)) return null;
+  }
+  if (doc.pet_wear[slot] === id) return null;
+  return { ...doc, pet_wear: { ...doc.pet_wear, [slot]: id } };
+}
+
+export type DiveGearBuyResult = { ok: true } | { ok: false; reason: 'owned' | 'shells' | 'diving' };
+
+/** Buy a permanent piece of Dive gear with shells (v22). */
+export function buyDiveGear(doc: PlayStoreDoc, gear: DiveGear): { doc: PlayStoreDoc; result: DiveGearBuyResult } {
+  if (doc.dive_gear[gear]) return { doc, result: { ok: false, reason: 'owned' } };
+  // Not mid-dive: the run's pre-rolled next finds (Lamp) and its depth limit
+  // were set with the gear it started with, so new gear starts next dive.
+  if (doc.dive_run) return { doc, result: { ok: false, reason: 'diving' } };
+  const cost = DIVE_GEAR_COST[gear];
+  if (doc.shells < cost) return { doc, result: { ok: false, reason: 'shells' } };
+  return {
+    doc: { ...doc, shells: doc.shells - cost, dive_gear: { ...doc.dive_gear, [gear]: true } },
+    result: { ok: true },
+  };
+}
+
+/** Dev kit: +100 shells. */
+export function devAddShells(doc: PlayStoreDoc): PlayStoreDoc {
+  return { ...doc, shells: doc.shells + 100 };
 }
 
 /** Pick what hatches (egg only). Null when refused. */
@@ -1211,7 +1483,14 @@ export function rebirthPetDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | nu
   if (touched.pet_expedition) return null;
   const next = rebirthPet(touched.pet, touched.pet_hall, touched.pet_rebirths, now);
   if (!next) return null;
-  return { ...touched, pet: next.pet, pet_hall: next.hall, pet_rebirths: next.rebirths };
+  return {
+    ...touched,
+    // The retiring pet's forms stay in the Collection (v22).
+    pet_collection: petCollectionOf(touched),
+    pet: next.pet,
+    pet_hall: next.hall,
+    pet_rebirths: next.rebirths,
+  };
 }
 
 export function setPetRemind(doc: PlayStoreDoc, on: boolean): PlayStoreDoc {
@@ -1275,6 +1554,8 @@ export function canClaimResearch(view: PlayView): boolean {
 /** What a Defend win paid out (the overlay shows the honest amount). */
 export type DefendWinResult = {
   tokensGranted: number;
+  /** v22 — shells for the Dive gear (campaign 4, replay 1). */
+  shellsGranted: number;
   xpGranted: number;
   /** True when this win was past the daily soft cap (tokens halved). */
   halved: boolean;
@@ -1567,10 +1848,12 @@ export function recordDefendWin(
     }
   }
 
+  const shellsGranted = isReplay ? SHELLS_PER_REPLAY : SHELLS_PER_CLEAR;
   const next: PlayStoreDoc = patchActiveAvatar(
     {
       ...doc,
       tokens: doc.tokens + tokensGranted,
+      shells: doc.shells + shellsGranted,
       highest_wave_cleared: Math.max(doc.highest_wave_cleared, Math.floor(wave)),
       lifetime_waves_cleared: lifetimeAfter,
       clears_today: clearsToday,
@@ -1600,6 +1883,7 @@ export function recordDefendWin(
     doc: next,
     result: {
       tokensGranted,
+      shellsGranted,
       xpGranted,
       halved,
       replayHalf,
@@ -2400,7 +2684,8 @@ export function devResetBoundBosses(doc: PlayStoreDoc): PlayStoreDoc {
 /** §7 bust table value at a Deeper index plus the §9c tune boost (whole-%),
  * clamped to 5%–90% so a preset can soften or spice the risk safely. */
 function diveBustChanceAt(deeperIndex: number): number {
-  const table = DIVE_BUST_TABLE[deeperIndex];
+  // Deeper #5 exists only with Oxygen (v22).
+  const table = deeperIndex < DIVE_BUST_TABLE.length ? DIVE_BUST_TABLE[deeperIndex] : DIVE_OXYGEN_BUST;
   const boost = getTune().diveBustBoostPct / 100;
   return Math.min(0.9, Math.max(0.05, table + boost));
 }
@@ -2576,10 +2861,10 @@ export type DeeperOutcome =
   | { busted: false; changed: true; bustPct: number };
 
 /**
- * Spend 1 dive charge to start a run and roll the first find. Null when there
- * is already a run in progress or no charge is available. The pet is aged
- * (and a finished expedition collected) first; if it is with you, the find
- * goes in the Logbook at depth 0.
+ * Spend 1 dive charge to start a run and roll the first find (Shallows). Null
+ * when a run is in progress or no charge is available. The pet is aged (and a
+ * finished expedition collected) first; with it along, the find goes in the
+ * Logbook at depth 0. Both paths' next finds are pre-rolled (Lamp).
  */
 export function startDive(
   doc: PlayStoreDoc,
@@ -2591,91 +2876,147 @@ export function startDive(
   if (dive.current < 1) return null;
   const touched = touchPet(doc, now, rng);
   const { away } = petAt(touched, now);
-  const firstFind = rollDiveFind(rng);
+  const firstFind = rollTier('shallows', rng);
   return {
     doc: {
       ...touched,
       // Spend one derived charge; the refill timer restarts from now.
       dive_charge: dive.current - 1,
       dive_charge_at: now,
-      dive_run: { deepers: 0, haul: [firstFind] },
-      pet_logbook: away ? touched.pet_logbook : logPetFind(touched.pet_logbook, firstFind, 0),
+      dive_run: { deepers: 0, haul: [firstFind], free_n: null, next: rollNext(touched, 1, rng) },
+      pet_logbook: away ? touched.pet_logbook : logFind(touched.pet_logbook, firstFind, 0),
     },
     firstFind,
   };
 }
 
-/** Bank the current haul into inventory (stacked) and end the run. Null when
- * idle. Dive care (v21): with the pet along, +2 mood, and a surface from 3+
- * Deepers counts toward Deep. Never training, never the stage clock. */
-export function surfaceDive(
+/**
+ * A free dive (v22) — only when there is no run and no charge. Same odds and
+ * paths; surfacing keeps only mood and shells (falling off with each free dive
+ * that day), and finds are Logbook sightings. Never counts toward Deep.
+ */
+export function startFreeDive(
   doc: PlayStoreDoc,
   now: number,
-): { doc: PlayStoreDoc; banked: string[]; petCared: boolean } | null {
-  const run = doc.dive_run;
-  if (!run) return null;
-  const touched = touchPet(doc, now);
+  rng: () => number = Math.random,
+): { doc: PlayStoreDoc; firstFind: string } | null {
+  if (doc.dive_run) return null;
+  if (diveChargeAt(doc, now).current >= 1) return null;
+  const touched = touchPet(doc, now, rng);
   const { away } = petAt(touched, now);
-  const pet = away ? touched.pet : petDiveSurfaced(touched.pet, run.deepers);
+  const n = freeDivesTodayOf(touched, now);
+  const firstFind = rollTier('shallows', rng);
   return {
     doc: {
       ...touched,
-      dive_run: null,
-      inventory: addManyToBag(touched.inventory, run.haul),
-      pet,
+      free_dives_today: n + 1,
+      free_dives_ymd: localYmd(new Date(now)),
+      dive_run: { deepers: 0, haul: [firstFind], free_n: n, next: rollNext(touched, 1, rng) },
+      pet_logbook: away ? touched.pet_logbook : logFind(touched.pet_logbook, firstFind, 0),
     },
-    banked: run.haul,
-    petCared: pet !== touched.pet,
+    firstFind,
   };
 }
 
+export type SurfaceResult = {
+  doc: PlayStoreDoc;
+  /** Everything brought up (the haul, plus the Net's find). */
+  banked: string[];
+  /** The Net's extra find, if any. */
+  netFind: string | null;
+  shellsGained: number;
+  petCared: boolean;
+  free: boolean;
+};
+
+/** Surface: bank the haul (a free dive banks only its shells) and end the
+ * run. Net (v22): +1 find from depth 2 or deeper. Dive care: with the pet
+ * along, +2 mood; a charged surface from 3+ Deepers counts toward Deep. Never
+ * training, never the stage clock. Null when idle. */
+export function surfaceDive(
+  doc: PlayStoreDoc,
+  now: number,
+  rng: () => number = Math.random,
+): SurfaceResult | null {
+  const run = doc.dive_run;
+  if (!run) return null;
+  const touched = touchPet(doc, now, rng);
+  const { away } = petAt(touched, now);
+  const free = run.free_n != null;
+  const netFind = touched.dive_gear.net && run.deepers >= NET_MIN_DEPTH ? rollTier(tierAt(run.deepers), rng) : null;
+  const brought = netFind ? [...run.haul, netFind] : run.haul;
+  let pet = touched.pet;
+  if (!away) {
+    const cared = petDiveSurfaced(pet, run.deepers);
+    // Free dives never count toward Deep (emci, Part B).
+    pet = free && cared !== pet ? { ...cared, deep_surfaces: pet.deep_surfaces } : cared;
+  }
+  const logbook = netFind && !away ? logFind(touched.pet_logbook, netFind, run.deepers) : touched.pet_logbook;
+  const base: PlayStoreDoc = { ...touched, dive_run: null, pet, pet_logbook: logbook };
+  let next: PlayStoreDoc;
+  let shellsGained: number;
+  if (free) {
+    shellsGained = freeDiveShells(run.deepers, run.free_n ?? 0);
+    next = { ...base, shells: base.shells + shellsGained };
+  } else {
+    const bankedDoc = bankFinds(base, brought);
+    next = bankedDoc.doc;
+    shellsGained = bankedDoc.shells;
+  }
+  return { doc: next, banked: brought, netFind, shellsGained, petCared: pet !== touched.pet, free };
+}
+
 /**
- * Roll one Deeper press. The pet is aged (and a finished expedition collected)
- * first, then the bust chance comes from `nextDeeperBustPct` — the exact
- * function the screen shows. Pass `expectedPct` (the % on screen): if the real
- * odds have moved since (the pet evolved or came back), nothing is rolled and
- * the outcome is `changed`, so a shown % is never different from the rolled
- * one. On a bust the whole haul is lost (the pet rescues its best finds from
- * Adult) and the pet gets +1 mood; on a safe roll another find is added and
- * logged at this depth. Null when idle or run is maxed.
+ * Roll one Deeper press on a path. The pet is aged (and a finished expedition
+ * collected) first, then the bust chance comes from `nextDeeperBustPct` — the
+ * exact function the screen shows. Pass `expectedPct` (the % on screen for
+ * that path): if the real odds moved since (the pet evolved or came back),
+ * nothing is rolled and the outcome is `changed`. On a bust the whole haul is
+ * lost (a charged dive's pet rescues its best finds from Adult) and the pet
+ * gets +1 mood; on a safe roll the path's pre-rolled find is added and logged
+ * at this depth. Null when idle or run is maxed.
  */
 export function deeperDive(
   doc: PlayStoreDoc,
   now: number,
+  path: DivePath = 'safe',
   rng: () => number = Math.random,
   expectedPct: number | null = null,
 ): { doc: PlayStoreDoc; outcome: DeeperOutcome } | null {
   const run = doc.dive_run;
-  if (!run || run.deepers >= DIVE_DEEPER_MAX) return null;
+  if (!run || run.deepers >= diveMaxDeepers(doc)) return null;
   const touched = touchPet(doc, now, rng);
   const { pet, away } = petAt(touched, now);
-  const bustPct = nextDeeperBustPct(touched, run, pet, away);
+  const bustPct = nextDeeperBustPct(touched, run, pet, away, path);
   if (expectedPct != null && expectedPct !== bustPct) {
     return { doc: touched, outcome: { busted: false, changed: true, bustPct } };
   }
+  const free = run.free_n != null;
   if (rng() < bustPct / 100) {
     // Pet rescue (v20): from Adult the pet saves the best find(s) of the lost
     // haul (1, 2 at God or Deep, never more than 2). A bust ends the dive, so
-    // this is once per dive. The pet itself is never lost.
-    const rescued = bestFinds(run.haul, petRescueKeep(pet, away));
+    // this is once per dive. Free dives have nothing to keep. The pet itself
+    // is never lost.
+    const rescued = free ? [] : bestFinds(run.haul, petRescueKeep(pet, away));
     const cared = away ? touched.pet : petDiveBusted(touched.pet);
+    const base: PlayStoreDoc = { ...touched, dive_run: null, pet: cared };
     return {
-      doc: {
-        ...touched,
-        dive_run: null,
-        inventory: rescued.length > 0 ? addManyToBag(touched.inventory, rescued) : touched.inventory,
-        pet: cared,
-      },
+      doc: rescued.length > 0 ? bankFinds(base, rescued).doc : base,
       outcome: { busted: true, bustPct, rescued, petCared: cared !== touched.pet },
     };
   }
-  const addedId = rollDiveFind(rng);
   const depth = run.deepers + 1;
+  const addedId = run.next?.[path] ?? rollTier(pathTier(depth, path, touched.dive_gear.oxygen), rng);
   return {
     doc: {
       ...touched,
-      dive_run: { deepers: depth, haul: [...run.haul, addedId] },
-      pet_logbook: away ? touched.pet_logbook : logPetFind(touched.pet_logbook, addedId, depth),
+      dive_run: {
+        deepers: depth,
+        haul: [...run.haul, addedId],
+        free_n: run.free_n,
+        next: rollNext(touched, depth + 1, rng),
+      },
+      pet_logbook: away ? touched.pet_logbook : logFind(touched.pet_logbook, addedId, depth),
     },
     outcome: { busted: false, bustPct, addedId },
   };
@@ -2687,7 +3028,8 @@ export function bestFinds(haul: readonly string[], n: number): string[] {
   if (n <= 0) return [];
   const score = (id: string) => {
     const def = getItemDef(id);
-    if (!def) return 99;
+    // v22: cosmetics, then food, then shells rank after every item.
+    if (!def) return findKind(id) === 'cosmetic' ? 50 : findKind(id) === 'food' ? 60 : 70 + shellsOf(id) * -0.01;
     return (def.core.kind === 'power' ? 0 : 10) + rarityRank(def.core.rarity);
   };
   return haul
@@ -3211,7 +3553,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 9 && version !== 10 && version !== 11 && version !== 12 &&
       version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
       version !== 17 && version !== 18 && version !== 19 && version !== 20 &&
-      version !== 21
+      version !== 21 && version !== 22
     ) {
       return null;
     }
@@ -3315,8 +3657,11 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     // v21 (Dive + Pet loop): expedition, its day and note, and the Logbook.
     // Older saves: none out, never sent, no note, empty Logbook.
     const v21 = version >= 21;
+    const v22 = version >= 22;
+    const hall = parsePetHall(data.pet_hall);
+    const cosmetics = v22 ? parseOwnedCosmetics(data.pet_cosmetics) : [];
     return {
-      version: 21,
+      version: 22,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -3349,7 +3694,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       active_avatar_hero_id: activeAvatarHeroId,
       hero_offer: heroOffer,
       pet,
-      pet_hall: parsePetHall(data.pet_hall),
+      pet_hall: hall,
       pet_rebirths: petRebirths,
       pet_tokens_today: Math.max(0, Math.floor(finiteNumber(data.pet_tokens_today) ?? 0)),
       pet_tokens_ymd: typeof data.pet_tokens_ymd === 'string' ? data.pet_tokens_ymd : null,
@@ -3360,6 +3705,18 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       // Missing = already announced (never re-toast an old note).
       pet_expedition_toasted: !(v21 && data.pet_expedition_toasted === false),
       pet_logbook: v21 ? parsePetLogbook(data.pet_logbook) : {},
+      shells: v22 ? Math.max(0, Math.floor(finiteNumber(data.shells) ?? 0)) : 0,
+      dive_gear: v22 ? parseDiveGear(data.dive_gear) : { ...NO_DIVE_GEAR },
+      pet_pantry: v22 ? parsePantry(data.pet_pantry) : {},
+      pet_cosmetics: cosmetics,
+      pet_wear: v22 ? parsePetWear(data.pet_wear, cosmetics) : { ...NO_WEAR },
+      // Older saves: seed the Collection from the Hall (the live pet's
+      // current form is credited by parsePet's `forms`).
+      pet_collection: v22
+        ? parseCollection(data.pet_collection)
+        : parseCollection(hall.map((h) => formKey(h.line, h.branch))),
+      free_dives_today: v22 ? Math.max(0, Math.floor(finiteNumber(data.free_dives_today) ?? 0)) : 0,
+      free_dives_ymd: v22 && typeof data.free_dives_ymd === 'string' ? data.free_dives_ymd : null,
     };
   } catch {
     return null;
@@ -3623,16 +3980,50 @@ function parseEquipped(raw: unknown): Partial<Record<ItemSlot, ItemRef>> {
   return equipped;
 }
 
-/** Loose-shape read of the persisted run; anything malformed → no run. */
+/** Loose-shape read of the persisted run; anything malformed → no run. v21
+ * runs have no `free_n` / `next`: a charged dive with no preview. */
 function parseDiveRun(raw: unknown): DiveRun | null {
   if (!isRecord(raw)) return null;
   if (typeof raw.deepers !== 'number' || !Number.isFinite(raw.deepers)) return null;
-  const deepers = clampInt(raw.deepers, 0, DIVE_DEEPER_MAX);
+  const deepers = clampInt(raw.deepers, 0, DIVE_DEEPER_MAX_OXYGEN);
   const haul = Array.isArray(raw.haul)
     ? raw.haul.filter((id): id is string => typeof id === 'string')
     : [];
   if (haul.length === 0) return null;
-  return { deepers, haul };
+  const freeN = finiteNumber(raw.free_n);
+  const next =
+    isRecord(raw.next) && typeof raw.next.safe === 'string' && typeof raw.next.rich === 'string'
+      ? { safe: raw.next.safe, rich: raw.next.rich }
+      : null;
+  return { deepers, haul, free_n: freeN == null ? null : Math.max(0, Math.floor(freeN)), next };
+}
+
+function parseDiveGear(raw: unknown): DiveGearOwned {
+  const out = { ...NO_DIVE_GEAR };
+  if (!isRecord(raw)) return out;
+  for (const k of Object.keys(out) as DiveGear[]) out[k] = raw[k] === true;
+  return out;
+}
+
+function parsePantry(raw: unknown): Partial<Record<FoodId, number>> {
+  const out: Partial<Record<FoodId, number>> = {};
+  if (!isRecord(raw)) return out;
+  let total = 0;
+  for (const [id, n] of Object.entries(raw)) {
+    if (!isFoodId(id)) continue;
+    const count = Math.min(PANTRY_MAX - total, Math.max(0, Math.floor(finiteNumber(n) ?? 0)));
+    if (count > 0) {
+      out[id] = count;
+      total += count;
+    }
+  }
+  return out;
+}
+
+function parseCollection(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  const valid = new Set(allFormKeys());
+  return [...new Set(raw.filter((k): k is string => typeof k === 'string' && valid.has(k)))];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

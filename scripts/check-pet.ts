@@ -33,7 +33,8 @@ import {
   type DefendLive,
 } from '../src/play/defend';
 import { BOARD_MAPS } from '../src/play/board-data';
-import { diveFindIds, junkLookId, rollPowerFind } from '../src/play/items';
+import { junkLookId, rollPowerFind } from '../src/play/items';
+import { diveCollectibleIds } from '../src/play/dive-loot';
 import {
   PET_GRACE_MS,
   PET_HUNGER_TICK_MS,
@@ -90,6 +91,11 @@ function ok(label: string) {
 }
 
 const H = 60 * 60 * 1000;
+
+/** A v22 dive run (charged, no pre-rolled next). */
+function diveRun(deepers: number, haul: string[]): PlayStoreDoc['dive_run'] {
+  return { deepers, haul, free_n: null, next: null };
+}
 const T0 = Date.UTC(2026, 8, 29, 12, 0, 0);
 
 function stageAt(pet: PetState, hours: number): PetState {
@@ -268,10 +274,10 @@ assert.deepEqual(bestFinds([look, power], 0), [], 'no rescue below Adult');
 function bustWith(stage: PetState['stage']): { doc: PlayStoreDoc; rescued: string[] } {
   const doc: PlayStoreDoc = {
     ...docWithPet({ ...newPet(T0), stage }),
-    dive_run: { deepers: 1, haul: [look, power, look] },
+    dive_run: diveRun(1, [look, power, look]),
     inventory: [],
   };
-  const res = deeperDive(doc, T0, () => 0)!;
+  const res = deeperDive(doc, T0, 'safe', () => 0)!;
   assert.ok(res.outcome.busted, 'forced bust');
   return { doc: res.doc, rescued: res.outcome.busted ? res.outcome.rescued : [] };
 }
@@ -340,7 +346,7 @@ const v19: Record<string, unknown> = { ...defaultPlayStore(T0), version: 19 };
 for (const k of ['pet', 'pet_hall', 'pet_rebirths', 'pet_tokens_today', 'pet_tokens_ymd', 'pet_remind']) delete v19[k];
 const loaded = parsePlayStore(JSON.stringify(v19), T0 + 5 * H);
 assert.ok(loaded, 'a v19 save loads');
-assert.equal(loaded.version, 21);
+assert.equal(loaded.version, 22);
 assert.equal(loaded.pet.stage, 'egg', 'old saves get a fresh egg');
 assert.equal(loaded.pet.seen_at, T0 + 5 * H, 'seen now — no time before the update counts');
 assert.deepEqual([loaded.pet_hall, loaded.pet_rebirths, loaded.pet_remind], [[], 0, false]);
@@ -358,7 +364,7 @@ assert.equal(parsePet({ stage: 'nope' }, T0).stage, 'egg', 'a corrupt pet become
 const touched = touchPet(loaded, T0 + 7 * H);
 assert.equal(touched.pet.total_age_ms, 2 * H, 'opening the app ages the pet from the saved mark');
 assert.equal(touchPet(touched, T0 + 7 * H), touched, 'and a second touch at the same time is a no-op');
-ok('save v19 → v21: fresh egg seen now; round-trips; corrupt pet → egg');
+ok('save v19 → v22: fresh egg seen now; round-trips; corrupt pet → egg');
 
 /* ============================================ v21 — Dive + Pet loop ===== */
 
@@ -412,9 +418,8 @@ assert.equal(petRescueKeep(petOf({ stage: 'god', branch: 'deep' })), PET_RESCUE_
 assert.equal(PET_RESCUE_MAX, 2);
 const pwr = rollPowerFind(() => 0);
 const lk = junkLookId();
-const godDeepBust = deeperDive(
-  { ...docWithPet(petOf({ stage: 'god', branch: 'deep' })), dive_run: { deepers: 3, haul: [lk, pwr, lk, pwr, lk] }, inventory: [] },
-  T0,
+const godDeepBust = deeperDive({ ...docWithPet(petOf({ stage: 'god', branch: 'deep' })), dive_run: diveRun(3, [lk, pwr, lk, pwr, lk]), inventory: [] },
+  T0, 'safe',
   () => 0,
 )!;
 assert.ok(godDeepBust.outcome.busted && godDeepBust.outcome.rescued.length === 2, 'a God Deep bust saves exactly 2');
@@ -423,7 +428,7 @@ ok('Deep perks: +1 bust point (floor kept); +1 rescue at Adult/God, never above 
 /* ------------------------------------------------------------ Dive care --- */
 
 function diving(pet: PetState, deepers: number): PlayStoreDoc {
-  return { ...docWithPet(pet), dive_run: { deepers, haul: [lk] }, inventory: [] };
+  return { ...docWithPet(pet), dive_run: diveRun(deepers, [lk]), inventory: [] };
 }
 const moody = petOf({ stage: 'child', mood: 1, training: 0 });
 const s3 = surfaceDive(diving(moody, 3), T0)!.doc.pet;
@@ -435,7 +440,7 @@ assert.equal(s2.deep_surfaces, 0, 'from 2 Deepers it does not');
 assert.equal(s2.mood, 3);
 const s0 = surfaceDive(diving(petOf({ stage: 'child', mood: 4 }), 0), T0)!.doc.pet;
 assert.equal(s0.mood, 4, 'mood caps at 4');
-const b = deeperDive(diving(moody, 1), T0, () => 0)!;
+const b = deeperDive(diving(moody, 1), T0, 'safe', () => 0)!;
 assert.ok(b.outcome.busted);
 assert.equal(b.doc.pet.mood, 2, 'a bust: +1 mood');
 assert.equal(b.doc.pet.training, 0, 'a bust never adds training');
@@ -444,7 +449,7 @@ const eggSurf = surfaceDive(diving(newPet(T0), 4), T0)!.doc.pet;
 assert.deepEqual(eggSurf, newPet(T0), 'an egg is not cared for by dives');
 assert.equal(surfaceDive(diving(moody, 3), T0)!.petCared, true, 'petCared reports the mood lift');
 assert.equal(surfaceDive(diving(newPet(T0), 3), T0)!.petCared, false, 'and not for an egg');
-const bustCared = deeperDive(diving(moody, 1), T0, () => 0)!.outcome;
+const bustCared = deeperDive(diving(moody, 1), T0, 'safe', () => 0)!.outcome;
 assert.ok(bustCared.busted && bustCared.petCared, 'a bust reports its +1 too');
 ok('Dive care: surface +2 mood, bust +1 mood, never training; deep_surfaces only from 3+ Deepers');
 
@@ -459,7 +464,7 @@ ok('Dive care: surface +2 mood, bust +1 mood, never training; deep_surfaces only
     if (!started) break;
     doc = started.doc;
     for (let d = 0; d < 4 && doc.dive_run; d += 1) {
-      const r = deeperDive(doc, now, () => (i % 3 === 0 ? 0 : 0.99));
+      const r = deeperDive(doc, now, 'safe', () => (i % 3 === 0 ? 0 : 0.99));
       if (r) doc = r.doc;
     }
     if (doc.dive_run) doc = surfaceDive(doc, now)!.doc;
@@ -492,7 +497,7 @@ ok('Dive never changes stage_age_ms: a full bar of dives at one moment = no time
   const back = touchPet(early, T0 + H, () => 0); // rng 0 busts any real dive
   assert.equal(back.pet_expedition, null, 'at 1h it is collected');
   assert.equal(back.inventory.reduce((a, st) => a + st.count, 0), bagBefore + 1, 'exactly one find, even with a busting rng');
-  assert.ok(back.pet_expedition_note && diveFindIds().includes(back.pet_expedition_note), 'the note names a dive find');
+  assert.ok(back.pet_expedition_note && diveCollectibleIds().includes(back.pet_expedition_note), 'the note names a dive find');
   assert.deepEqual(back.pet_logbook[back.pet_expedition_note!], { depth: 0, count: 1 }, 'logged at depth 0');
   const twice = touchPet(back, T0 + 2 * H, () => 0);
   assert.equal(twice.inventory.reduce((a, st) => a + st.count, 0), bagBefore + 1, 'collected once, never twice');
@@ -536,15 +541,15 @@ ok('expedition: Child+, once a day, away ≥ 1h (counted time), can’t bust, on
   const v = playView(out, T0 + 10 * 60 * 1000);
   assert.equal(v.pet.away, true);
   assert.deepEqual([v.pet.pounceBase, v.pet.bustCutPp, v.pet.rescueKeep], [0, 0, 0], 'away: no pounce, no bust cut, no rescue');
-  const running = { ...out, dive_run: { deepers: 1, haul: [lk, pwr] }, inventory: [] };
+  const running = { ...out, dive_run: diveRun(1, [lk, pwr]), inventory: [] };
   const shown = playView(running, T0 + 10 * 60 * 1000).diveRun;
   assert.equal(shown.petAway, true);
-  assert.equal(shown.bustPctNext, 28, 'away: the plain table % (no cut)');
-  const bustAway = deeperDive(running, T0 + 10 * 60 * 1000, () => 0)!;
+  assert.equal(shown.bustPctNext, 20, 'away: the plain Safer % (28 − 8, no cut)');
+  const bustAway = deeperDive(running, T0 + 10 * 60 * 1000, 'safe', () => 0)!;
   assert.ok(bustAway.outcome.busted && bustAway.outcome.rescued.length === 0, 'away: nothing rescued');
   const moodBefore = advancePet(out.pet, T0 + 10 * 60 * 1000).mood;
   assert.equal(bustAway.doc.pet.mood, moodBefore, 'away: dives are not its care');
-  const safeAway = deeperDive(running, T0 + 10 * 60 * 1000, () => 0.99)!;
+  const safeAway = deeperDive(running, T0 + 10 * 60 * 1000, 'safe', () => 0.99)!;
   assert.ok(!safeAway.outcome.busted && !safeAway.outcome.changed);
   assert.deepEqual(safeAway.doc.pet_logbook, out.pet_logbook, 'away: its Logbook does not change');
   const home = playView(out, T0 + H);
@@ -564,25 +569,25 @@ ok('away: pounce, bust cut and rescue all off (view and roll), dives not its car
 
   const start = startDive(docWithPet(petOf({ stage: 'teen' })), T0, () => 0.5)!;
   assert.deepEqual(start.doc.pet_logbook[start.firstFind], { depth: 0, count: 1 }, 'the first card is depth 0');
-  const deeper = deeperDive(start.doc, T0, () => 0.99)!;
+  const deeper = deeperDive(start.doc, T0, 'safe', () => 0.99)!;
   assert.ok(!deeper.outcome.busted && !deeper.outcome.changed);
   const added = (deeper.outcome as { addedId: string }).addedId;
   assert.equal(deeper.doc.pet_logbook[added].depth, added === start.firstFind ? 0 : 1, 'a Deeper find is logged at its depth');
-  const lost = deeperDive(deeper.doc, T0, () => 0)!;
+  const lost = deeperDive(deeper.doc, T0, 'safe', () => 0)!;
   assert.ok(lost.outcome.busted);
   assert.deepEqual(lost.doc.pet_logbook, deeper.doc.pet_logbook, 'finds lost to a bust stay in the Logbook');
 
   const godWithBook = { ...docWithPet(petOf({ stage: 'god' })), pet_logbook: { [lk]: { depth: 2, count: 5 } } };
   assert.deepEqual(rebirthPetDoc(godWithBook, T0)!.pet_logbook, godWithBook.pet_logbook, 'the Logbook survives a rebirth');
 
-  assert.ok(diveFindIds().length >= 5 && diveFindIds().includes('item_deep_pearl_01'), 'the Logbook slots are the Dive table');
+  assert.ok(diveCollectibleIds().length >= 5 && diveCollectibleIds().includes('item_deep_pearl_01'), 'the Logbook slots are the Dive table');
 }
 {
   const v20: Record<string, unknown> = { ...defaultPlayStore(T0), version: 20, pet: { ...petOf({ stage: 'teen' }) } };
   for (const k of ['pet_expedition', 'pet_expedition_ymd', 'pet_expedition_note', 'pet_logbook']) delete v20[k];
   delete (v20.pet as Record<string, unknown>).deep_surfaces;
   const up = parsePlayStore(JSON.stringify(v20), T0)!;
-  assert.equal(up.version, 21);
+  assert.equal(up.version, 22);
   assert.deepEqual(
     [up.pet_expedition, up.pet_expedition_ymd, up.pet_expedition_note, up.pet_logbook, up.pet.deep_surfaces],
     [null, null, null, {}, 0],
@@ -597,30 +602,30 @@ ok('away: pounce, bust cut and rescue all off (view and roll), dives not its car
     pet_expedition_note: lk,
     pet_logbook: { [lk]: { depth: 3, count: 2 } },
   };
-  assert.deepEqual(parsePlayStore(JSON.stringify(full), T0), full, 'v21 round-trips unchanged');
+  assert.deepEqual(parsePlayStore(JSON.stringify(full), T0), full, 'v22 round-trips unchanged');
 }
-ok('Logbook: first depth + count, busted finds kept, survives rebirth; v20 → v21 opens empty; v21 round-trips');
+ok('Logbook: first depth + count, busted finds kept, survives rebirth; v20 → v22 opens empty; round-trips');
 
 /* --------------------------------------------- shown % = rolled % --- */
 
 {
   // Adult, 1 Deeper done: the view's % must be the exact roll threshold.
-  const doc = { ...docWithPet(petOf({ stage: 'adult', branch: 'deep' })), dive_run: { deepers: 1, haul: [lk, pwr] }, inventory: [] };
+  const doc = { ...docWithPet(petOf({ stage: 'adult', branch: 'deep' })), dive_run: diveRun(1, [lk, pwr]), inventory: [] };
   const shown = playView(doc, T0).diveRun.bustPctNext!;
-  assert.equal(shown, 25, 'Deeper #2 (28%) − 3 Adult Deep points');
-  const justUnder = deeperDive(doc, T0, () => shown / 100 - 1e-9, shown)!;
+  assert.equal(shown, 17, 'Deeper #2 Safer (28 − 8 = 20%) − 3 Adult Deep points');
+  const justUnder = deeperDive(doc, T0, 'safe', () => shown / 100 - 1e-9, shown)!;
   assert.ok(justUnder.outcome.busted, 'a roll just under the shown % busts');
-  const atIt = deeperDive(doc, T0, () => shown / 100, shown)!;
+  const atIt = deeperDive(doc, T0, 'safe', () => shown / 100, shown)!;
   assert.ok(!atIt.outcome.busted && !atIt.outcome.changed, 'a roll at the shown % is safe');
 
   // The pet evolves between showing and pressing: nothing is rolled.
   const teenEdge = {
     ...docWithPet(petOf({ stage: 'teen', stage_age_ms: PET_STAGE_MS.teen - 60_000 })),
-    dive_run: { deepers: 1, haul: [lk] },
+    dive_run: diveRun(1, [lk]),
     inventory: [],
   };
   const shownThen = playView(teenEdge, T0).diveRun.bustPctNext!;
-  const pressedLater = deeperDive(teenEdge, T0 + 2 * 60_000, () => 0, shownThen)!;
+  const pressedLater = deeperDive(teenEdge, T0 + 2 * 60_000, 'safe', () => 0, shownThen)!;
   assert.ok(pressedLater.outcome.changed, 'odds moved (Teen → Adult) → changed, no roll');
   assert.notEqual(pressedLater.outcome.bustPct, shownThen);
   assert.deepEqual(pressedLater.doc.dive_run, teenEdge.dive_run, 'the haul is untouched');

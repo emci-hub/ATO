@@ -2,12 +2,21 @@
  * Pet figure (v21) — the pet drawn from existing art only, shared by the Pet
  * screen and the Dive scene: the stage's creep or hero sprite at the stage's
  * scale, a tinted copy at low opacity for the care branch, or a vector egg in
- * the Legend's colour. No ring, no aura — the screens add their own framing.
+ * the Legend's colour. No ring — the screens add their own framing.
+ *
+ * v22 cosmetics (existing art only): a worn tint replaces the branch wash, a
+ * badge draws a Look's item art small on the shoulder, and an aura draws a
+ * soft static glow in its element colour behind the pet.
  */
+import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, Ellipse, Path } from 'react-native-svg';
 
+import { itemArtSource } from '@/play/art';
+import { getItemDef } from '@/play/items';
+import { ELEMENT_COLOR } from '@/play/kits';
 import { PET_BRANCH_TINT, PET_STAGE_SCALE, petLookFor, type PetLook, type PetState } from '@/play/pet';
+import { NO_WEAR, wornLook, type PetWear } from '@/play/pet-cosmetics';
 import { ClipImage } from '@/play/sheet-sprite';
 import { getSkinRole, heroAvatarRole, roleArtDrawable, roleFaceArtIndex } from '@/play/skin';
 
@@ -41,19 +50,56 @@ export function petBoxSize(pet: PetState, baseBox: number): number {
   return Math.round(baseBox * PET_STAGE_SCALE[pet.stage]);
 }
 
-/** The pet at `petBoxSize(pet, baseBox)` — sprite + branch wash, or the egg. */
-export function PetFigure({ pet, baseBox, eggColor }: { pet: PetState; baseBox: number; eggColor: string }) {
+/** The pet at `petBoxSize(pet, baseBox)` — sprite + wash (+ cosmetics), or
+ * the egg. `silhouette` draws it all black (the Collection's unfound slots). */
+export function PetFigure({
+  pet,
+  baseBox,
+  eggColor,
+  wear = NO_WEAR,
+  silhouette = false,
+}: {
+  pet: PetState;
+  baseBox: number;
+  eggColor: string;
+  wear?: PetWear;
+  silhouette?: boolean;
+}) {
   const box = petBoxSize(pet, baseBox);
-  if (pet.stage === 'egg') return <EggShape size={box} color={eggColor} />;
-  const tint = PET_BRANCH_TINT[pet.branch];
+  if (pet.stage === 'egg') return <EggShape size={box} color={silhouette ? '#000000' : eggColor} />;
+  const look = wornLook(wear);
   const drawable = lookDrawable(petLookFor(pet.line, pet.stage));
+  if (silhouette) {
+    return (
+      <View style={[{ width: box, height: box }, styles.silhouette]}>
+        <ClipImage drawable={drawable} tintColor="#000000" />
+      </View>
+    );
+  }
+  const tint = look.tint ?? PET_BRANCH_TINT[pet.branch];
+  const badgeArt = look.badgeItemId ? itemArtSource(getItemDef(look.badgeItemId)?.core.art ?? '') : undefined;
+  const badge = Math.max(14, Math.round(box * 0.3));
   return (
     <View style={{ width: box, height: box }}>
+      {look.aura ? (
+        <Svg width={box * 1.5} height={box * 1.5} viewBox="0 0 100 100" style={[styles.aura, { left: -box * 0.25, top: -box * 0.25 }]} pointerEvents="none">
+          <Circle cx="50" cy="50" r="48" fill={ELEMENT_COLOR[look.aura]} fillOpacity={0.1} />
+          <Circle cx="50" cy="50" r="38" fill={ELEMENT_COLOR[look.aura]} fillOpacity={0.14} />
+        </Svg>
+      ) : null}
       <ClipImage drawable={drawable} />
       {tint ? (
         <View style={[StyleSheet.absoluteFill, styles.wash]} pointerEvents="none">
           <ClipImage drawable={drawable} tintColor={tint} />
         </View>
+      ) : null}
+      {badgeArt ? (
+        <Image
+          source={badgeArt}
+          contentFit="contain"
+          style={[styles.badge, { width: badge, height: badge }]}
+          accessibilityIgnoresInvertColors
+        />
       ) : null}
     </View>
   );
@@ -61,4 +107,7 @@ export function PetFigure({ pet, baseBox, eggColor }: { pet: PetState; baseBox: 
 
 const styles = StyleSheet.create({
   wash: { opacity: 0.35 },
+  silhouette: { opacity: 0.55 },
+  aura: { position: 'absolute' },
+  badge: { position: 'absolute', right: -2, top: -2 },
 });

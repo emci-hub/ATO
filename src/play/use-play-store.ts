@@ -53,6 +53,7 @@ import {
   skipCampaignToEven as persistSkipToEven,
   spendAvatarStarToken,
   startDive,
+  startFreeDive,
   surfaceDive,
   touchPet,
   unequipItem,
@@ -86,7 +87,9 @@ import {
   type SellOutcome,
   type ShopPurchaseResult,
   type SkipRewardResult,
+  type SurfaceResult,
 } from '@/play/playStore';
+import type { DivePath } from '@/play/dive-loot';
 import type { TypeTag } from '@/play/engine/type-match';
 import type { ShopTokenRow } from '@/play/shop';
 
@@ -190,14 +193,27 @@ export function usePlayStore() {
     return started;
   }, [commit]);
 
-  /** Surface: bank the whole haul into inventory. Returns the banked ids and
-   * whether the pet was along to enjoy it (+2 mood, v21). */
-  const surfaceRun = useCallback(async (): Promise<{ banked: string[]; petCared: boolean } | null> => {
-    let result: { banked: string[]; petCared: boolean } | null = null;
+  /** A free dive (v22): only with no charges and no run. */
+  const beginFreeDive = useCallback(async (): Promise<boolean> => {
+    let started = false;
+    commit((current, now) => {
+      const next = startFreeDive(current, now);
+      started = next != null;
+      return next ? next.doc : null;
+    });
+    return started;
+  }, [commit]);
+
+  /** Surface: bank the haul (a free dive keeps only its shells). Returns what
+   * came up, the shells, and whether the pet was along (+2 mood). */
+  const surfaceRun = useCallback(async (): Promise<Omit<SurfaceResult, 'doc'> | null> => {
+    let result: Omit<SurfaceResult, 'doc'> | null = null;
     const ok = commit((current, now) => {
       const next = surfaceDive(current, now);
-      result = next ? { banked: next.banked, petCared: next.petCared } : null;
-      return next ? next.doc : null;
+      if (!next) return null;
+      const { doc: nextDoc, ...rest } = next;
+      result = rest;
+      return nextDoc;
     });
     return ok ? result : null;
   }, [commit]);
@@ -209,12 +225,12 @@ export function usePlayStore() {
    * (pet evolved / came back), nothing is rolled (`changed`).
    */
   const pushDeeper = useCallback(
-    async (forceBust: boolean, expectedPct: number | null = null): Promise<DeeperOutcome | null> => {
+    async (forceBust: boolean, path: DivePath, expectedPct: number | null = null): Promise<DeeperOutcome | null> => {
       let outcome: DeeperOutcome | null = null;
       const ok = commit((current, now) => {
         // deeperDive ages the pet (and collects an expedition) first, so the
         // dive buddy's stage is the one on screen.
-        const next = deeperDive(current, now, forceBust ? () => 0 : Math.random, expectedPct);
+        const next = deeperDive(current, now, path, forceBust ? () => 0 : Math.random, expectedPct);
         outcome = next ? next.outcome : null;
         return next ? next.doc : null;
       });
@@ -730,6 +746,7 @@ export function usePlayStore() {
     commit,
     grantRandomFind,
     beginDive,
+    beginFreeDive,
     surfaceRun,
     pushDeeper,
     equip,

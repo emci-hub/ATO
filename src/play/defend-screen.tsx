@@ -3949,7 +3949,7 @@ export function DefendScreen({
             {lastWin ? (
               <>
                 <ThemedText type="small" themeColor="textSecondary">
-                  +{lastWin.tokensGranted} tokens · +{lastWin.xpGranted} XP
+                  +{lastWin.tokensGranted} tokens · +{lastWin.shellsGranted} shells · +{lastWin.xpGranted} XP
                   {lastWin.milestoneLook
                     ? ` · ${ordinal(lastWin.milestoneLook.count)} clear — found a Rare Look!`
                     : ''}

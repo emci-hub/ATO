@@ -8,6 +8,7 @@
  * Legend's colour; and a God aura drawn by the attack-effects layer in the
  * most-used Legend element (a static glow when Effects Quality is Off).
  */
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -21,7 +22,18 @@ import { petBackStep, type InnerBack } from '@/play/edge-back';
 import { FxLayer, FX_ULTIMATE_LIFE_MS, type FxEvent } from '@/play/fx-layer';
 import { useFxQuality } from '@/play/fx-quality';
 import { HeartIcon } from '@/play/icons';
-import { diveFindIds, getItemDef, itemName } from '@/play/items';
+import {
+  DIVE_TIER_LABEL,
+  FOOD_IDS,
+  FOODS,
+  PANTRY_MAX,
+  diveCollectibleIds,
+  findKind,
+  findName,
+  firstTierOf,
+  type FoodId,
+} from '@/play/dive-loot';
+import { getItemDef } from '@/play/items';
 import { ELEMENT_COLOR, ELEMENT_LABEL, type Element } from '@/play/kits';
 import {
   NeonBackLink,
@@ -53,27 +65,43 @@ import {
   petPounceBase,
   petRescueKeep,
   type PetState,
+  PET_BRANCHES,
+  formKey,
+  newPet,
 } from '@/play/pet';
+import {
+  COSMETICS,
+  COSMETIC_SLOTS,
+  cosmeticById,
+  wornLook,
+  type CosmeticSlot,
+  type PetWear,
+} from '@/play/pet-cosmetics';
 import { PetFigure, petBoxSize } from '@/play/pet-figure';
 import { CatchFoodGame, TapTrainGame, TRAIN_REPS } from '@/play/pet-games';
 import { askPetReminderPermission, syncPetReminder } from '@/play/pet-reminder';
 import {
+  buyCosmetic,
+  devAddShells,
   devPetExpeditionReset,
   devPetFinishStage,
   devPetNewEgg,
   devPetSetStage,
   devPetStarve,
   dismissExpeditionNote,
+  feedFromPantry,
   finishPetRound,
   rebirthPetDoc,
   sendPetExpedition,
   setPetLine,
   setPetRemind,
+  wearCosmetic,
   type PetRoundKind,
   type PetRoundResult,
   type PetView,
   type PlayView,
 } from '@/play/playStore';
+import { todayPlan } from '@/play/today-plan';
 import type { PlayTransition } from '@/play/use-play-store';
 
 const FRAME = 240;
@@ -139,16 +167,22 @@ function PetSprite({
   pet,
   aura,
   eggColor,
+  wear,
   reduceMotion,
 }: {
   pet: PetState;
   aura: Element | null;
   eggColor: string;
+  wear: PetWear;
   reduceMotion: boolean;
 }) {
   const box = petBoxSize(pet, BASE_BOX);
+  // The ring keeps the branch colour (the form stays readable); a worn ring
+  // cosmetic only changes its style (v22).
   const tint = PET_BRANCH_TINT[pet.branch];
+  const ringStyle = wornLook(wear).ring;
   const ring = Math.min(FRAME - 8, Math.round(box * 1.12));
+  const ringColor = tint ?? NEON.cyanBorder;
   return (
     <View style={styles.frame}>
       {pet.stage === 'god' && aura ? <GodAura element={aura} reduceMotion={reduceMotion} /> : null}
@@ -160,11 +194,22 @@ function PetSprite({
             width: ring,
             height: ring,
             borderRadius: ring / 2,
-            borderColor: tint ?? NEON.cyanBorder,
+            borderColor: ringColor,
+            borderWidth: ringStyle === 'thick' ? 5 : 2,
+            borderStyle: ringStyle === 'dashed' ? 'dashed' : 'solid',
           },
         ]}
       />
-      <PetFigure pet={pet} baseBox={BASE_BOX} eggColor={eggColor} />
+      {ringStyle === 'double' ? (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.ring,
+            { width: ring + 12, height: ring + 12, borderRadius: (ring + 12) / 2, borderColor: ringColor, borderWidth: 1 },
+          ]}
+        />
+      ) : null}
+      <PetFigure pet={pet} baseBox={BASE_BOX} eggColor={eggColor} wear={wear} />
     </View>
   );
 }
@@ -243,11 +288,28 @@ function roundResultLine(kind: PetRoundKind, score: number, result: PetRoundResu
   return care + pay;
 }
 
+/** Art for any find: an item's own art, a badge's Look art, else null. */
+function findArt(id: string) {
+  const kind = findKind(id);
+  if (kind === 'item') return itemArtSource(getItemDef(id)?.core.art ?? '');
+  const badgeItem = kind === 'cosmetic' ? cosmeticById(id)?.itemId : undefined;
+  return badgeItem ? itemArtSource(getItemDef(badgeItem)?.core.art ?? '') : undefined;
+}
+
+/** Colour for a find drawn as an icon (tints, auras), else cyan. */
+function findColor(id: string): string {
+  const cos = cosmeticById(id);
+  if (cos?.color) return cos.color;
+  if (cos?.element) return ELEMENT_COLOR[cos.element];
+  return NEON.cyan;
+}
+
 /** One Logbook slot: found → art, name, "found ×N · first at depth D";
- * not found yet → a dark silhouette of the same art and "???". */
+ * not found yet → a dark silhouette and "???" with where to look. */
 function LogRow({ id, entry }: { id: string; entry: { depth: number; count: number } | null }) {
-  const def = getItemDef(id);
-  const art = def ? itemArtSource(def.core.art) : undefined;
+  const art = findArt(id);
+  const kind = findKind(id);
+  const tier = firstTierOf(id);
   return (
     <View style={styles.logRow}>
       <View style={styles.logIcon}>
@@ -259,17 +321,124 @@ function LogRow({ id, entry }: { id: string; entry: { depth: number; count: numb
             style={[styles.logArt, !entry && styles.silhouette]}
           />
         ) : (
-          <Text style={styles.subtle}>?</Text>
+          <MaterialCommunityIcons
+            name={kind === 'food' ? 'fish' : 'palette'}
+            size={22}
+            color={entry ? findColor(id) : '#000000'}
+            style={!entry ? styles.silhouette : undefined}
+          />
         )}
       </View>
       <View style={styles.flex}>
-        <Text style={styles.logName}>{entry ? (def?.core.name ?? id) : '???'}</Text>
+        <Text style={styles.logName}>{entry ? findName(id) : '???'}</Text>
         <Text style={styles.subtle}>
           {entry
             ? `found ×${entry.count} · first at ${entry.depth === 0 ? 'the surface' : `depth ${entry.depth}`}`
-            : 'not found yet'}
+            : `not found yet${tier ? ` · look from the ${DIVE_TIER_LABEL[tier]}` : ''}`}
         </Text>
       </View>
+    </View>
+  );
+}
+
+const SLOT_LABEL: Record<CosmeticSlot, string> = { badge: 'Badges', tint: 'Tints', ring: 'Rings', aura: 'Auras' };
+
+/** Wardrobe (v22): wear / take off what you own; buy tints and badges with
+ * tokens; rings and auras only come from deep dives. */
+function Wardrobe({
+  view,
+  commit,
+}: {
+  view: PlayView;
+  commit: (transition: PlayTransition) => boolean;
+}) {
+  const pv = view.pet;
+  const [note, setNote] = useState<string | null>(null);
+  const buy = (id: string) => {
+    let msg = '';
+    commit((doc) => {
+      const res = buyCosmetic(doc, id);
+      msg = res.result.ok
+        ? `${cosmeticById(id)?.name ?? 'It'} is yours.`
+        : res.result.reason === 'tokens'
+          ? 'Not enough tokens yet.'
+          : 'Not for sale.';
+      return res.result.ok ? res.doc : null;
+    });
+    setNote(msg);
+  };
+  return (
+    <View style={styles.logList}>
+      <Text style={styles.body}>
+        Tokens: {view.tokens}. Tints and badges are in the Wardrobe; rings come from the Trench and
+        deeper, auras from the Abyss and deeper.
+      </Text>
+      {COSMETIC_SLOTS.map((slot) => (
+        <View key={slot} style={styles.wardSlot}>
+          <Text style={styles.logName}>{SLOT_LABEL[slot]}</Text>
+          {COSMETICS.filter((c) => c.slot === slot).map((c) => {
+            const owned = pv.cosmetics.includes(c.id);
+            const worn = pv.wear[slot] === c.id;
+            return (
+              <View key={c.id} style={styles.logRow}>
+                <View style={styles.logIcon}>
+                  <MaterialCommunityIcons
+                    name={slot === 'ring' ? 'circle-outline' : slot === 'aura' ? 'weather-sunny' : 'palette'}
+                    size={20}
+                    color={owned ? findColor(c.id) : NEON.textMuted}
+                  />
+                </View>
+                <Text style={[styles.body, styles.flex]}>{c.name}</Text>
+                {owned ? (
+                  <NeonChip
+                    label={worn ? 'Take off' : 'Wear'}
+                    selected={worn}
+                    onPress={() => commit((doc) => wearCosmetic(doc, slot, worn ? null : c.id))}
+                  />
+                ) : c.price != null ? (
+                  <NeonChip label={`Buy · ${c.price} tokens`} onPress={() => buy(c.id)} />
+                ) : (
+                  <Text style={styles.subtle}>Dive find</Text>
+                )}
+              </View>
+            );
+          })}
+        </View>
+      ))}
+      {note ? <Text style={styles.result}>{note}</Text> : null}
+    </View>
+  );
+}
+
+/** Collection (v22): every form of every pet line — found ones drawn, the
+ * rest as silhouettes. */
+function Collection({ view, eggColor }: { view: PlayView; eggColor: string }) {
+  const found = new Set(view.pet.collection);
+  return (
+    <View style={styles.logList}>
+      <Text style={styles.body}>
+        Every form each pet line can take. A form counts once a pet reaches it (from Child). Cosmetics
+        owned: {view.pet.cosmetics.length}/{COSMETICS.length}.
+      </Text>
+      {petLines().map((line) => (
+        <View key={line.id} style={styles.collRow}>
+          <Text style={[styles.subtle, styles.collLabel]} numberOfLines={2}>
+            {line.label}
+          </Text>
+          <View style={styles.collForms}>
+            {PET_BRANCHES.map((branch) => {
+              const has = found.has(formKey(line.id, branch));
+              const sample: PetState = { ...newPet(0, line.id), stage: 'teen', branch };
+              return (
+                <View key={branch} style={styles.collCell} accessibilityLabel={`${line.label} ${PET_BRANCH_LABEL[branch]}${has ? '' : ', not found'}`}>
+                  <PetFigure pet={sample} baseBox={34} eggColor={eggColor} silhouette={!has} />
+                  <Text style={styles.collName}>{has ? PET_BRANCH_LABEL[branch] : '???'}</Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      ))}
     </View>
   );
 }
@@ -318,6 +487,9 @@ export function PetScreen({
   const [guideOpen, setGuideOpen] = useState(false);
   const [hallOpen, setHallOpen] = useState(false);
   const [logbookOpen, setLogbookOpen] = useState(false);
+  const [wardrobeOpen, setWardrobeOpen] = useState(false);
+  const [collectionOpen, setCollectionOpen] = useState(false);
+  const [feedNote, setFeedNote] = useState<string | null>(null);
   const [remindNote, setRemindNote] = useState<string | null>(null);
 
   useEffect(() => {
@@ -415,8 +587,19 @@ export function PetScreen({
         : pv.expedition === 'away'
           ? `Away on expedition — back in ${durationLabel(pv.expeditionBackInMs ?? 0)}.`
           : 'Expedition: back tomorrow — once a day.';
-  const noteName = pv.expeditionNote ? (itemName(pv.expeditionNote) ?? 'a find') : null;
-  const logIds = diveFindIds();
+  const noteName = pv.expeditionNote ? findName(pv.expeditionNote) : null;
+  const logIds = diveCollectibleIds();
+  const today = todayPlan(view);
+  const feed = (food: FoodId) => {
+    const ok = commit((doc, now) => feedFromPantry(doc, now, food));
+    setFeedNote(
+      ok
+        ? `Fed ${FOODS[food].name} — +${FOODS[food].hearts} hunger.`
+        : pv.away
+          ? 'It’s away on an expedition.'
+          : 'It’s full — save it for later.',
+    );
+  };
   const logFound = logIds.filter((id) => pv.logbook[id]).length;
 
   return (
@@ -432,6 +615,7 @@ export function PetScreen({
           pet={pet}
           aura={pv.aura ?? view.legendElement}
           eggColor={ELEMENT_COLOR[view.legendElement]}
+          wear={pv.wear}
           reduceMotion={reduceMotion}
         />
         <Text style={styles.stageTitle}>{title}</Text>
@@ -471,7 +655,7 @@ export function PetScreen({
         <Text style={styles.body}>{expeditionLine}</Text>
         {noteName ? (
           <View style={styles.noteRow}>
-            <Text style={styles.result}>Your pet brought back {noteName}! It’s in your bag.</Text>
+            <Text style={styles.result}>Your pet brought back {noteName}!</Text>
             <NeonChip label="Nice" onPress={() => commit((doc) => dismissExpeditionNote(doc))} />
           </View>
         ) : null}
@@ -486,6 +670,15 @@ export function PetScreen({
           ) : null}
           <NeonButton label="Go diving" onPress={onGoDive} style={styles.flex} />
         </View>
+      </NeonPanel>
+
+      <NeonPanel>
+        <NeonLabel>Today · one minute</NeonLabel>
+        {[today.td, today.pet, today.both, today.goal].map((lineText) => (
+          <Text key={lineText} style={styles.body}>
+            {lineText}
+          </Text>
+        ))}
       </NeonPanel>
 
       {pet.stage === 'egg' ? (
@@ -528,6 +721,28 @@ export function PetScreen({
                 />
               </View>
               {lastResult ? <Text style={styles.result}>{lastResult}</Text> : null}
+              <Text style={styles.body}>
+                Pantry ({pv.pantryTotal}/{PANTRY_MAX}):{' '}
+                {pv.pantryTotal === 0
+                  ? 'empty — dives find Kelp snacks and Glow shrimp.'
+                  : FOOD_IDS.filter((f) => (pv.pantry[f] ?? 0) > 0)
+                      .map((f) => `${FOODS[f].name} ×${pv.pantry[f]}`)
+                      .join(' · ')}
+              </Text>
+              {pv.pantryTotal > 0 ? (
+                <View style={styles.buttons}>
+                  {FOOD_IDS.filter((f) => (pv.pantry[f] ?? 0) > 0).map((f) => (
+                    <NeonButton
+                      key={f}
+                      label={`Feed ${FOODS[f].name} (+${FOODS[f].hearts})`}
+                      variant="secondary"
+                      onPress={() => feed(f)}
+                      style={styles.flex}
+                    />
+                  ))}
+                </View>
+              ) : null}
+              {feedNote ? <Text style={styles.result}>{feedNote}</Text> : null}
             </>
           )}
         </NeonPanel>
@@ -592,6 +807,24 @@ export function PetScreen({
 
       <NeonPanel>
         <NeonChip
+          label={`Wardrobe · ${pv.cosmetics.length}/${COSMETICS.length}`}
+          selected={wardrobeOpen}
+          onPress={() => setWardrobeOpen((open) => !open)}
+        />
+        {wardrobeOpen ? <Wardrobe view={view} commit={commit} /> : null}
+      </NeonPanel>
+
+      <NeonPanel>
+        <NeonChip
+          label={`Collection · ${pv.collection.length}/${pv.collectionSize}`}
+          selected={collectionOpen}
+          onPress={() => setCollectionOpen((open) => !open)}
+        />
+        {collectionOpen ? <Collection view={view} eggColor={ELEMENT_COLOR[view.legendElement]} /> : null}
+      </NeonPanel>
+
+      <NeonPanel>
+        <NeonChip
           label={`Hunger reminder · ${pv.remind ? 'On' : 'Off'}`}
           selected={pv.remind}
           onPress={() => void toggleRemind()}
@@ -639,6 +872,25 @@ export function PetScreen({
               found and how many times. It stays through rebirths.
             </Text>
             <Text style={styles.body}>
+              • Dive levels: Shallows, Reef, Trench, Abyss (and the Hadal with Oxygen). Deeper levels
+              hold more Powers and the only rings and auras. Each Deeper has two paths — Safer (8
+              points less bust, finds from one level up) and Richer (8 more, one level down) — and
+              both show their exact %.
+            </Text>
+            <Text style={styles.body}>
+              • Shells come from TD waves and dives and buy Dive gear for good: Lamp (see each path’s
+              next find), Net (+1 find when you surface from depth 2+), Oxygen (a 5th Deeper).
+            </Text>
+            <Text style={styles.body}>
+              • Out of charges? Free dives keep only shells (the first 10 a day pay full, then fewer)
+              and mood; their finds are Logbook sightings. They never count toward the Deep form.
+            </Text>
+            <Text style={styles.body}>
+              • Food found diving goes to the pantry (up to {PANTRY_MAX}) — your pet only eats when you
+              tap Feed. Cosmetics (badge, tint, ring, aura) are in the Wardrobe; the Collection shows
+              every form each pet line can take.
+            </Text>
+            <Text style={styles.body}>
               • The God form glows in the Legend element you played TD with most. Rebirth is optional
               and adds +2% damage for good (max +10%).
             </Text>
@@ -663,6 +915,7 @@ export function PetScreen({
               label="Expedition: back now + reset day"
               onPress={() => commit((doc, now) => devPetExpeditionReset(doc, now))}
             />
+            <NeonChip label="+100 shells" onPress={() => commit((doc) => devAddShells(doc))} />
           </View>
         </NeonPanel>
       ) : null}
@@ -697,6 +950,16 @@ const styles = StyleSheet.create({
   logIcon: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
   logArt: { width: 28, height: 28 },
   silhouette: { opacity: 0.55 },
+  wardSlot: { gap: 6, marginTop: 6 },
+  collRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  collLabel: { width: 72, textAlign: 'left' },
+  collForms: { flexDirection: 'row', flex: 1, justifyContent: 'space-between' },
+  collCell: { alignItems: 'center', width: 44 },
+  collName: {
+    fontFamily: Fonts.mono,
+    fontSize: 8,
+    color: NEON.textMuted,
+  },
   logName: {
     fontFamily: Fonts.monoBold,
     fontSize: 12,

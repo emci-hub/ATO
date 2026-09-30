@@ -20,7 +20,8 @@ import { PlayThemeProvider } from '@/play/play-theme';
 import { SaveDumpRow } from '@/play/dev-dump';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
 import { DevUnlockRow } from '@/play/dev-unlock-row';
-import { DiveScreen } from '@/play/dive-screen';
+import { DiveScreen, type DiveDeeperResult, type DiveSurfaceSummary } from '@/play/dive-screen';
+import { findName, type DivePath } from '@/play/dive-loot';
 import { DressScreen } from '@/play/dress-screen';
 import {
   backDecision,
@@ -89,7 +90,7 @@ type PlayMode = 'grove' | 'dive' | 'pet' | 'dress' | 'defend' | 'shop' | 'about'
 type PlayToast =
   | { kind: 'claim'; result: ClaimResult }
   | { kind: 'find'; foundName: string }
-  | { kind: 'surface'; itemIds: string[]; petMood: boolean }
+  | { kind: 'surface'; itemIds: string[]; petMood: boolean; shells: number; free: boolean; netFind: string | null }
   | { kind: 'bust'; rescued: string[]; petMood: boolean }
   | { kind: 'message'; title: string; body: string };
 
@@ -102,6 +103,7 @@ export default function PlayScreen() {
     commit,
     grantRandomFind,
     beginDive,
+    beginFreeDive,
     surfaceRun,
     pushDeeper,
     equip,
@@ -257,6 +259,7 @@ export default function PlayScreen() {
 
   /** Dive view handlers — commit through the shared store, toast on results. */
   const handleSpendCharge = useCallback(async (): Promise<boolean> => beginDive(), [beginDive]);
+  const handleFreeDive = useCallback(async (): Promise<boolean> => beginFreeDive(), [beginFreeDive]);
 
   /** Expedition return (v21): announce it once per return, wherever you are
    * in Play (the save remembers it was shown). On the Pet screen the note
@@ -269,34 +272,44 @@ export default function PlayScreen() {
       setToast({
         kind: 'message',
         title: 'Your pet is back',
-        body: `It brought back ${itemName(expeditionNote) ?? 'a find'} — it’s in your bag.`,
+        body: `It brought back ${findName(expeditionNote)} — it’s waiting for you.`,
       });
     }
     commit((doc) => markExpeditionToasted(doc));
   }, [commit, expeditionNote, expeditionNoteFresh, mode]);
 
-  const handleSurface = useCallback(async (): Promise<boolean> => {
+  /** Surface: returns what the Dive scene counts up (finds + shells). */
+  const handleSurface = useCallback(async (): Promise<DiveSurfaceSummary | null> => {
     const surfaced = await surfaceRun();
-    if (surfaced) setToast({ kind: 'surface', itemIds: surfaced.banked, petMood: surfaced.petCared });
-    return surfaced != null;
+    if (!surfaced) return null;
+    setToast({
+      kind: 'surface',
+      itemIds: surfaced.banked,
+      petMood: surfaced.petCared,
+      shells: surfaced.shellsGained,
+      free: surfaced.free,
+      netFind: surfaced.netFind,
+    });
+    return { finds: surfaced.free ? 0 : surfaced.banked.length, shells: surfaced.shellsGained };
   }, [surfaceRun]);
 
-  /** `shownPct` is the bust % on screen when Deeper was pressed; if the real
-   * odds moved since, nothing is rolled and the new % is shown instead. */
+  /** `shownPct` is the bust % on screen for that path when Deeper was
+   * pressed; if the real odds moved since, nothing is rolled and the new % is
+   * shown instead. */
   const handleDeeper = useCallback(
-    async (shownPct: number | null): Promise<boolean> => {
-      const outcome = await pushDeeper(forceBustArmed, shownPct);
+    async (path: DivePath, shownPct: number | null): Promise<DiveDeeperResult> => {
+      const outcome = await pushDeeper(forceBustArmed, path, shownPct);
       if (outcome?.changed) {
         setToast({
           kind: 'message',
           title: 'Odds updated',
-          body: `Your pet changed, so the next Deeper is now ${outcome.bustPct}%. Nothing was rolled — check it and tap again.`,
+          body: `Your pet changed, so this path is now ${outcome.bustPct}%. Nothing was rolled — check it and tap again.`,
         });
-        return true;
+        return 'changed';
       }
       if (forceBustArmed) setForceBustArmed(false); // one-shot arm consumed
       if (outcome?.busted) setToast({ kind: 'bust', rescued: outcome.rescued, petMood: outcome.petCared });
-      return outcome != null;
+      return outcome == null ? null : outcome.busted ? 'bust' : 'safe';
     },
     [forceBustArmed, pushDeeper],
   );
@@ -562,7 +575,10 @@ export default function PlayScreen() {
               : toast.kind === 'find'
                 ? toast.foundName
                 : toast.kind === 'surface'
-                  ? `Banked ${summarizeNames(toast.itemIds)}.${toast.petMood ? ' Your pet loved it (+2 mood).' : ''}`
+                  ? (toast.free
+                      ? `Free dive: +${toast.shells} shells. Sightings are in your pet’s Logbook.`
+                      : `Brought up ${summarizeNames(toast.itemIds)}.${toast.netFind ? ` The Net caught ${findName(toast.netFind)}.` : ''}${toast.shells > 0 ? ` +${toast.shells} shells (food that didn’t fit and duplicate cosmetics count as shells).` : ''}`) +
+                    (toast.petMood ? ' Your pet loved it (+2 mood).' : '')
                   : toast.kind === 'bust'
                     ? (toast.rescued.length > 0
                         ? `Your pet saved ${summarizeNames(toast.rescued)} — the rest of the haul is lost.`
@@ -680,6 +696,8 @@ export default function PlayScreen() {
                     skipDelays={skipDelays}
                     reduceMotion={reduceMotion}
                     onSpendCharge={handleSpendCharge}
+                    onFreeDive={handleFreeDive}
+                    commit={commit}
                     onSurface={handleSurface}
                     onDeeper={handleDeeper}
                     onBackToGrove={leaveSubScreen}
@@ -1141,7 +1159,7 @@ function summarizeNames(itemIds: readonly string[]): string {
   const shown = Math.min(itemIds.length, 3);
   const names = itemIds
     .slice(0, shown)
-    .map((id) => itemName(id) ?? id)
+    .map((id) => findName(id))
     .join(', ');
   const hidden = itemIds.length - shown;
   return hidden > 0 ? `${names} +${hidden} more` : names;

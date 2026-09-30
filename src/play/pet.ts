@@ -246,6 +246,9 @@ export type PetState = {
   waves: number;
   /** Dive surfaces at `PET_DEEP_MIN_DEPTH`+ this stage (v21). */
   deep_surfaces: number;
+  /** Forms this pet has reached from Child up, in order (v22 — feeds the
+   * Collection; a form reached twice is listed once). */
+  forms: PetBranch[];
   /** TD waves cleared with each Legend element, over this pet's life — the
    * most used one colours the God aura. */
   element_uses: Partial<Record<Element, number>>;
@@ -280,6 +283,7 @@ export function newPet(now: number, line: string = DEFAULT_PET_LINE): PetState {
     training: 0,
     waves: 0,
     deep_surfaces: 0,
+    forms: [],
     element_uses: {},
     seen_at: now,
   };
@@ -341,10 +345,14 @@ function evolve(pet: PetState): PetState {
   if (pet.stage === 'god') return pet;
   const from = pet.stage;
   const hatching = from === 'egg';
+  const branch = branchFor(from, pet);
+  // Hatching (Egg → Baby) has no form yet; every later stage's form counts.
+  const forms = hatching || pet.forms.includes(branch) ? pet.forms : [...pet.forms, branch];
   return {
     ...pet,
     stage: nextStage(from),
-    branch: branchFor(from, pet),
+    branch,
+    forms,
     stage_age_ms: 0,
     mistakes: 0,
     training: 0,
@@ -757,9 +765,27 @@ export function parsePet(raw: unknown, now: number): PetState {
     training: count(raw.training),
     waves: count(raw.waves),
     deep_surfaces: count(raw.deep_surfaces),
+    forms: parseForms(raw.forms, stage, isBranch(raw.branch) ? raw.branch : 'standard'),
     element_uses: uses,
     seen_at: num(raw.seen_at, now),
   };
+}
+
+/** Stored forms; a pre-v22 pet (no list) at Child or later gets credit for
+ * the form it is in now. */
+function parseForms(raw: unknown, stage: PetStage, branch: PetBranch): PetBranch[] {
+  if (Array.isArray(raw)) return [...new Set(raw.filter(isBranch))];
+  return PET_STAGES.indexOf(stage) >= PET_STAGES.indexOf('child') ? [branch] : [];
+}
+
+/** A Collection key: one form of one pet line. */
+export function formKey(line: string, branch: PetBranch): string {
+  return `${line}:${branch}`;
+}
+
+/** Every Collection slot: each line × each form. */
+export function allFormKeys(): string[] {
+  return petLines().flatMap((line) => PET_BRANCHES.map((branch) => formKey(line.id, branch)));
 }
 
 export function parsePetHall(raw: unknown): PetHallEntry[] {

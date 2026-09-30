@@ -9,6 +9,11 @@
  * bust. It reacts to the SHOWN bust % only — calm bob under 25%, nervous
  * wiggle 25-40%, shake over 40% — and never touches the odds or the % text.
  * Reduced motion = still poses (position snaps, no loops).
+ *
+ * v22: depth 5 (Oxygen) is the Hadal; the pet wears its cosmetics; a shells
+ * counter sits top-right; surfacing plays the feedback — the haul counts up,
+ * the shells fly to the counter, and the pet hops (reduced motion: the
+ * numbers only).
  */
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
@@ -27,6 +32,7 @@ import { Image } from 'expo-image';
 import { Fonts } from '@/constants/theme';
 import { NEON } from '@/play/neon-viper';
 import type { PetState } from '@/play/pet';
+import type { PetWear } from '@/play/pet-cosmetics';
 import { PetFigure, petBoxSize } from '@/play/pet-figure';
 import { skinArt } from '@/play/skin';
 
@@ -35,16 +41,17 @@ const TILE_COLS = 8;
 const PET_BASE_BOX = 80;
 const TOP_PAD = 10;
 const BOTTOM_PAD = 16;
-const MAX_DEPTH = 4;
+const MAX_DEPTH = 5;
 
-export type DiveZone = 'Shallows' | 'Reef' | 'Trench' | 'Abyss';
+export type DiveZone = 'Shallows' | 'Reef' | 'Trench' | 'Abyss' | 'Hadal';
 
-/** Depth (Deepers survived) → zone. Abyss is the last Deeper (depth 4). */
+/** Depth (Deepers survived) → zone. Abyss is depth 4; Hadal (5) needs Oxygen. */
 export function diveZone(depth: number): DiveZone {
   if (depth <= 0) return 'Shallows';
   if (depth <= 2) return 'Reef';
   if (depth === 3) return 'Trench';
-  return 'Abyss';
+  if (depth === 4) return 'Abyss';
+  return 'Hadal';
 }
 
 /** How the pet reacts to the shown bust % (null = no Deeper on offer). */
@@ -61,27 +68,34 @@ const ZONE_TINT: Record<DiveZone, number> = {
   Reef: 0.42,
   Trench: 0.8,
   Abyss: 0.9,
+  Hadal: 0.95,
 };
 const WATER = '3, 26, 51';
 
-export type DiveSceneEvent = { kind: 'bust' | 'surface'; key: number } | null;
+/** The last surface / bust. `finds` and `shells` drive the count-up. */
+export type DiveSceneEvent = { kind: 'bust' | 'surface'; key: number; finds: number; shells: number } | null;
 
 export function DiveScene({
   pet,
+  wear,
   eggColor,
   depth,
   bustPct,
   away,
+  shells,
   event,
   reduceMotion,
 }: {
   pet: PetState;
+  wear: PetWear;
   eggColor: string;
   /** Deepers survived in the active run (0 when not diving). */
   depth: number;
   /** The bust % shown for the next Deeper, or null. */
   bustPct: number | null;
   away: boolean;
+  /** Shells owned (the counter the surfacing shells fly to). */
+  shells: number;
   /** The last surface / bust, to play the rise or the pop-up once. */
   event: DiveSceneEvent;
   reduceMotion: boolean;
@@ -99,6 +113,44 @@ export function DiveScene({
   // new % never restarts the sinking, and vice versa.
   const y = useSharedValue(targetY);
   const loop = useSharedValue(0);
+  const hop = useSharedValue(0);
+  const fly = useSharedValue(0);
+  const [shown, setShown] = useState<{ finds: number; shells: number } | null>(null);
+
+  // Surfacing feedback: count the haul up, fly the shells to the counter, and
+  // hop. Reduced motion shows the final numbers at once, no movement.
+  useEffect(() => {
+    if (event?.kind !== 'surface') {
+      setShown(null);
+      return;
+    }
+    const target = { finds: event.finds, shells: event.shells };
+    if (reduceMotion) {
+      setShown(target);
+      return;
+    }
+    hop.value = withSequence(
+      withTiming(-14, { duration: 180, easing: Easing.out(Easing.quad) }),
+      withTiming(0, { duration: 260, easing: Easing.bounce }),
+    );
+    fly.value = 0;
+    fly.value = withTiming(1, { duration: 900, easing: Easing.inOut(Easing.cubic) });
+    const steps = Math.max(target.finds, 1);
+    let i = 0;
+    setShown({ finds: 0, shells: 0 });
+    const id = setInterval(() => {
+      i += 1;
+      const t = Math.min(1, i / steps);
+      setShown({ finds: Math.round(target.finds * t), shells: Math.round(target.shells * t) });
+      if (t >= 1) clearInterval(id);
+    }, 160);
+    return () => clearInterval(id);
+  }, [event?.key, event?.kind, event?.finds, event?.shells, fly, hop, reduceMotion]);
+
+  const flyStyle = useAnimatedStyle(() => ({
+    opacity: fly.value > 0 && fly.value < 1 ? 1 : 0,
+    transform: [{ translateX: fly.value * (width / 2 - 36) }, { translateY: -fly.value * (SCENE_H / 2 - 18) }],
+  }));
 
   useEffect(() => {
     if (reduceMotion) {
@@ -134,9 +186,10 @@ export function DiveScene({
 
   const petStyle = useAnimatedStyle(() => {
     const t = loop.value;
-    if (mood === 'calm') return { transform: [{ translateY: y.value + t * 3 }] };
-    if (mood === 'nervous') return { transform: [{ translateY: y.value }, { rotate: `${t * 6}deg` }] };
-    return { transform: [{ translateY: y.value }, { translateX: t * 2.5 }] };
+    const base = y.value + hop.value;
+    if (mood === 'calm') return { transform: [{ translateY: base + t * 3 }] };
+    if (mood === 'nervous') return { transform: [{ translateY: base }, { rotate: `${t * 6}deg` }] };
+    return { transform: [{ translateY: base }, { translateX: t * 2.5 }] };
   });
 
   const tile = width > 0 ? width / TILE_COLS : 0;
@@ -151,7 +204,9 @@ export function DiveScene({
       : event?.kind === 'bust' && depth === 0
         ? 'Popped up empty-handed.'
         : event?.kind === 'surface' && depth === 0
-          ? 'Back up with the haul!'
+          ? shown
+            ? `Back up! ${shown.finds} ${shown.finds === 1 ? 'find' : 'finds'}${shown.shells > 0 ? ` · +${shown.shells} shells` : ''}`
+            : 'Back up with the haul!'
           : null;
 
   return (
@@ -209,11 +264,20 @@ export function DiveScene({
         <Animated.View
           pointerEvents="none"
           style={[styles.pet, { left: width / 2 - box / 2, width: box, height: box }, petStyle]}>
-          <PetFigure pet={pet} baseBox={PET_BASE_BOX} eggColor={eggColor} />
+          <PetFigure pet={pet} baseBox={PET_BASE_BOX} eggColor={eggColor} wear={wear} />
+        </Animated.View>
+      ) : null}
+
+      {event?.kind === 'surface' && event.shells > 0 && !reduceMotion && width > 0 ? (
+        <Animated.View pointerEvents="none" style={[styles.flyer, { left: width / 2 - 14, top: SCENE_H / 2 }, flyStyle]}>
+          <Text style={styles.flyerText}>+{event.shells}</Text>
         </Animated.View>
       ) : null}
 
       <Text style={styles.zone}>{zone}</Text>
+      <Text style={styles.shells} accessibilityLabel={`${shells} shells`}>
+        {shells} shells
+      </Text>
       {caption ? <Text style={styles.caption}>{caption}</Text> : null}
     </View>
   );
@@ -241,6 +305,22 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textTransform: 'uppercase',
     color: '#FFFFFF',
+  },
+  shells: {
+    position: 'absolute',
+    top: 8,
+    right: 10,
+    fontFamily: Fonts.monoBold,
+    fontSize: 12,
+    color: '#FFE9A8',
+  },
+  flyer: {
+    position: 'absolute',
+  },
+  flyerText: {
+    fontFamily: Fonts.monoBold,
+    fontSize: 14,
+    color: '#FFE9A8',
   },
   caption: {
     position: 'absolute',

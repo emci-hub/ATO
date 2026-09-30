@@ -19,10 +19,14 @@
  * v21: a scene (`dive-scene.tsx`) above the cards shows the pet diving; it
  * only reads the shown %, never changes it. Deeper sends the % on screen so
  * the store can refuse a roll whose real odds moved in the meantime.
+ *
+ * v22 (Part B): two paths per Deeper (Safer / Richer, each with its exact %),
+ * the Lamp preview, the Net note, free dives, shells + the Dive-gear shop,
+ * finds of every kind (gear, food, shells, cosmetics), and the "Today" card.
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
-import { useEffect, useRef, useState, type ComponentProps } from 'react';
+import { useState, type ComponentProps } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -30,12 +34,27 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { usePacedAction } from '@/play/action-pacing';
 import { itemArtSource } from '@/play/art';
+import {
+  DIVE_GEAR,
+  DIVE_GEAR_BLURB,
+  DIVE_GEAR_COST,
+  DIVE_GEAR_LABEL,
+  DIVE_PATHS,
+  DIVE_PATH_LABEL,
+  findKind,
+  findName,
+  type DiveGear,
+  type DivePath,
+} from '@/play/dive-loot';
 import { DiveScene, type DiveSceneEvent } from '@/play/dive-scene';
 import { formatMult, getItemDef, type ItemDef, type ItemSlot } from '@/play/items';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { PET_BRANCH_LABEL, PET_STAGE_LABEL } from '@/play/pet';
+import { cosmeticById } from '@/play/pet-cosmetics';
 import { PlayFrame } from '@/play/play-frame';
-import { DIVE_CHARGE_CAP, DIVE_DEEPER_MAX, type PlayView } from '@/play/playStore';
+import { DIVE_CHARGE_CAP, buyDiveGear, type PlayView } from '@/play/playStore';
+import { todayPlan } from '@/play/today-plan';
+import type { PlayTransition } from '@/play/use-play-store';
 
 const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>['name']> = {
   weapon: 'sword',
@@ -48,6 +67,9 @@ const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>
 export function diveBuddyLine(view: PlayView): string {
   const pet = view.pet;
   const st = pet.state;
+  if (view.diveRun.active && view.diveRun.free && !pet.away) {
+    return 'Free dive: your pet comes along for the fun (+2 mood on a surface, +1 on a bust) — there is nothing to rescue, and it never counts toward the Deep form.';
+  }
   if (pet.away) {
     return 'Dive buddy: away on expedition — no bust cut or rescue until it’s back, and these dives don’t count as its care.';
   }
@@ -70,54 +92,84 @@ export function diveBuddyLine(view: PlayView): string {
   return `Dive buddy: your pet (${form}) · ${points} off every bust chance (already in the odds; never below half the table)${rescue}. ${care} It is never lost.`;
 }
 
+export type DiveSurfaceSummary = { finds: number; shells: number };
+export type DiveDeeperResult = 'bust' | 'safe' | 'changed' | null;
+
 export function DiveScreen({
   view,
   skipDelays,
   reduceMotion,
   onSpendCharge,
+  onFreeDive,
   onSurface,
   onDeeper,
   onBackToGrove,
+  commit,
 }: {
   view: PlayView;
   /** Dev kit only — resolve every action instantly (no beat, no cooldown). */
   skipDelays: boolean;
   reduceMotion: boolean;
   onSpendCharge: () => Promise<boolean>;
-  onSurface: () => Promise<boolean>;
-  /** `shownPct` = the bust % on screen when Deeper was pressed. */
-  onDeeper: (shownPct: number | null) => Promise<boolean>;
+  /** v22 — a free dive (no charges left). */
+  onFreeDive: () => Promise<boolean>;
+  onSurface: () => Promise<DiveSurfaceSummary | null>;
+  /** `shownPct` = the bust % on screen for that path when Deeper was pressed. */
+  onDeeper: (path: DivePath, shownPct: number | null) => Promise<DiveDeeperResult>;
   onBackToGrove: () => void;
+  /** v22 — Dive-gear purchases go straight through the store. */
+  commit: (transition: PlayTransition) => boolean;
 }) {
   const theme = useTheme();
   const charges = view.dive.current;
   const run = view.diveRun;
   const canSpend = !run.active && charges >= 1;
+  const today = todayPlan(view);
 
   // -- Pacing (shared with Merge: beat → resolve → cooldown; skip in dev) ----
   const { act, busy, splashCopy, showSplash } = usePacedAction(skipDelays);
 
-  // -- Scene events (v21): a run that ends after a Deeper press busted; after
-  // a Surface press it was banked. The scene plays the pop-up / rise once.
-  const lastPressRef = useRef<'deeper' | 'surface' | null>(null);
-  const wasActiveRef = useRef(run.active);
+  // -- Scene events: the scene plays the rise (with the count-up) or the
+  // bust pop-up once, straight from the action's own result.
   const [sceneEvent, setSceneEvent] = useState<DiveSceneEvent>(null);
-  useEffect(() => {
-    if (wasActiveRef.current && !run.active && lastPressRef.current) {
-      const kind = lastPressRef.current === 'deeper' ? 'bust' : 'surface';
-      setSceneEvent((prev) => ({ kind, key: (prev?.key ?? 0) + 1 }));
-    }
-    if (!wasActiveRef.current && run.active) setSceneEvent(null);
-    wasActiveRef.current = run.active;
-  }, [run.active]);
-  const pressDeeper = () => {
-    const shown = run.bustPctNext;
-    lastPressRef.current = 'deeper';
-    act('Going deeper…', () => onDeeper(shown));
+  const bump = (event: Omit<NonNullable<DiveSceneEvent>, 'key'>) =>
+    setSceneEvent((prev) => ({ ...event, key: (prev?.key ?? 0) + 1 }));
+  const startWith = (label: string, start: () => Promise<boolean>) =>
+    act(label, async () => {
+      const ok = await start();
+      if (ok) setSceneEvent(null);
+      return ok;
+    });
+  const pressDeeper = (path: DivePath) => {
+    const shown = run.bustPct ? run.bustPct[path] : null;
+    act('Going deeper…', async () => {
+      const result = await onDeeper(path, shown);
+      if (result === 'bust') bump({ kind: 'bust', finds: 0, shells: 0 });
+      return result != null;
+    });
   };
   const pressSurface = () => {
-    lastPressRef.current = 'surface';
-    act('Heading up…', onSurface);
+    act('Heading up…', async () => {
+      const summary = await onSurface();
+      if (summary) bump({ kind: 'surface', finds: summary.finds, shells: summary.shells });
+      return summary != null;
+    });
+  };
+  const [gearNote, setGearNote] = useState<string | null>(null);
+  const buyGear = (gear: DiveGear) => {
+    let note = '';
+    commit((doc) => {
+      const res = buyDiveGear(doc, gear);
+      note = res.result.ok
+        ? `${DIVE_GEAR_LABEL[gear]} is yours — for good.`
+        : res.result.reason === 'shells'
+          ? `Not enough shells yet (${DIVE_GEAR_COST[gear]} needed).`
+          : res.result.reason === 'diving'
+            ? 'Finish this dive first — new gear starts on your next dive.'
+            : 'Already owned.';
+      return res.result.ok ? res.doc : null;
+    });
+    setGearNote(note);
   };
 
   return (
@@ -135,15 +187,17 @@ export function DiveScreen({
 
       <ThemedText type="subtitle">Dive</ThemedText>
       <ThemedText themeColor="textSecondary" style={styles.lede}>
-        Push your luck for finds. Surface banks the haul — Deeper risks it.
+        Dive for finds with your pet. Surface banks the haul — Deeper risks it for more.
       </ThemedText>
 
       <DiveScene
         pet={view.pet.state}
+        wear={view.pet.wear}
         eggColor={ELEMENT_COLOR[view.legendElement]}
         depth={run.active ? run.deepers : 0}
         bustPct={run.active ? run.bustPctNext : null}
         away={run.petAway}
+        shells={view.shells}
         event={sceneEvent}
         reduceMotion={reduceMotion}
       />
@@ -155,6 +209,12 @@ export function DiveScreen({
             {chargeText(view)}
           </ThemedText>
         </View>
+        <View style={styles.statRow}>
+          <ThemedText type="smallBold">Shells</ThemedText>
+          <ThemedText type="subheading" themeColor="emphasis">
+            {view.shells}
+          </ThemedText>
+        </View>
         <ThemedText type="small" themeColor="textSecondary">
           {diveBuddyLine(view)}
         </ThemedText>
@@ -164,8 +224,15 @@ export function DiveScreen({
         <>
           <PlayFrame style={styles.card}>
             <ThemedText type="smallBold">
-              Haul so far {run.deepers > 0 ? `· ${run.deepers}/${DIVE_DEEPER_MAX} deep` : '· first find'}
+              {run.free ? 'Free dive · ' : ''}Haul so far{' '}
+              {run.deepers > 0 ? `· ${run.deepers}/${run.maxDeepers} deep` : '· first find'}
             </ThemedText>
+            {run.free ? (
+              <ThemedText type="small" themeColor="textSecondary">
+                A free dive keeps no gear, food or cosmetics — these are sightings for the Logbook.
+                Surfacing now pays {run.freeShellsNow ?? 0} shells.
+              </ThemedText>
+            ) : null}
             {run.haul.map((id, index) => (
               <FindRow key={`${id}-${index}`} id={id} index={index} />
             ))}
@@ -177,67 +244,67 @@ export function DiveScreen({
             ) : (
               <>
                 <ThemedText type="smallBold">Next move</ThemedText>
-                {run.canDeeper && run.bustPctNext != null ? (
+                {run.canDeeper && run.bustPct ? (
                   <>
                     <ThemedText type="small" themeColor="textSecondary">
-                      Deeper adds another find to this haul — {run.bustPctNext}% to lose it all.
-                      Surface keeps every find and banks it to your bag.
+                      Deeper adds another find to this haul — pick a path. Safer: {run.bustPct.safe}% to
+                      lose it all, finds from one level up. Richer: {run.bustPct.rich}% to lose it all,
+                      finds from one level down. Surface keeps every find.
                     </ThemedText>
+                    {run.preview ? (
+                      <ThemedText type="small" themeColor="textSecondary">
+                        Lamp: Safer holds {findName(run.preview.safe)} · Richer holds{' '}
+                        {findName(run.preview.rich)}.
+                      </ThemedText>
+                    ) : null}
                     <View style={styles.buttonRow}>
-                      <Pressable
-                        onPress={pressDeeper}
-                        disabled={busy}
-                        accessibilityRole="button"
-                        accessibilityState={{ disabled: busy }}
-                        style={({ pressed }) => [
-                          styles.button,
-                          styles.rowButton,
-                          { backgroundColor: theme.backgroundSelected },
-                          pressed && !busy && styles.pressed,
-                          busy && styles.disabled,
-                        ]}>
-                        <ThemedText type="smallBold">Deeper</ThemedText>
-                      </Pressable>
-                      <Pressable
-                        onPress={pressSurface}
-                        disabled={busy}
-                        accessibilityRole="button"
-                        accessibilityState={{ disabled: busy }}
-                        style={({ pressed }) => [
-                          styles.button,
-                          styles.rowButtonPrimary,
-                          { backgroundColor: theme.accentFill },
-                          pressed && !busy && styles.pressed,
-                          busy && styles.disabled,
-                        ]}>
-                        <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                          Surface
-                        </ThemedText>
-                      </Pressable>
+                      {DIVE_PATHS.map((path) => (
+                        <Pressable
+                          key={path}
+                          onPress={() => pressDeeper(path)}
+                          disabled={busy}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Deeper, ${DIVE_PATH_LABEL[path]}, ${run.bustPct?.[path]} percent to lose the haul`}
+                          accessibilityState={{ disabled: busy }}
+                          style={({ pressed }) => [
+                            styles.button,
+                            styles.rowButton,
+                            { backgroundColor: theme.backgroundSelected },
+                            pressed && !busy && styles.pressed,
+                            busy && styles.disabled,
+                          ]}>
+                          <ThemedText type="smallBold">
+                            {DIVE_PATH_LABEL[path]} · {run.bustPct?.[path]}%
+                          </ThemedText>
+                        </Pressable>
+                      ))}
                     </View>
                   </>
                 ) : (
-                  <>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      Max depth — this haul has reached its last Deeper. Surface to keep it.
-                    </ThemedText>
-                    <Pressable
-                      onPress={pressSurface}
-                      disabled={busy}
-                      accessibilityRole="button"
-                      accessibilityState={{ disabled: busy }}
-                      style={({ pressed }) => [
-                        styles.button,
-                        { backgroundColor: theme.accentFill },
-                        pressed && !busy && styles.pressed,
-                        busy && styles.disabled,
-                      ]}>
-                      <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                        Surface
-                      </ThemedText>
-                    </Pressable>
-                  </>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Max depth — this haul has reached its last Deeper. Surface to keep it.
+                  </ThemedText>
                 )}
+                {run.netOn && !run.free ? (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Net: surfacing now adds one more find.
+                  </ThemedText>
+                ) : null}
+                <Pressable
+                  onPress={pressSurface}
+                  disabled={busy}
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: busy }}
+                  style={({ pressed }) => [
+                    styles.button,
+                    { backgroundColor: theme.accentFill },
+                    pressed && !busy && styles.pressed,
+                    busy && styles.disabled,
+                  ]}>
+                  <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
+                    Surface
+                  </ThemedText>
+                </Pressable>
               </>
             )}
           </PlayFrame>
@@ -250,13 +317,14 @@ export function DiveScreen({
             <>
               <ThemedText type="smallBold">One charge, one find</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
-                A dive starts with a single find. Each Deeper adds another, and the
-                bust chance climbs with it — 18%, then 28%, 40%, up to 55%. Surface
-                any time to keep what you have.
+                A dive starts with a single find in the Shallows. Each Deeper adds another and the bust
+                chance climbs — 18%, 28%, 40%, 55%{view.diveGear.oxygen ? ', then 65% with Oxygen' : ''}
+                — 8 points lower on the Safer path, 8 higher on the Richer one. Deeper levels hold more
+                Powers, and the only rings and auras. Surface any time to keep what you have.
               </ThemedText>
               {canSpend ? (
                 <Pressable
-                  onPress={() => act('Searching…', onSpendCharge)}
+                  onPress={() => startWith('Searching…', onSpendCharge)}
                   disabled={busy}
                   accessibilityRole="button"
                   accessibilityState={{ disabled: busy }}
@@ -272,22 +340,85 @@ export function DiveScreen({
                 </Pressable>
               ) : (
                 <Pressable
-                  disabled
+                  onPress={() => startWith('Searching…', onFreeDive)}
+                  disabled={busy}
                   accessibilityRole="button"
-                  accessibilityState={{ disabled: true }}
-                  style={[styles.button, { backgroundColor: theme.backgroundSelected }]}>
-                  <ThemedText type="smallBold" themeColor="textSecondary">
-                    No dive charges
-                  </ThemedText>
+                  accessibilityState={{ disabled: busy }}
+                  style={({ pressed }) => [
+                    styles.button,
+                    { backgroundColor: theme.backgroundSelected },
+                    pressed && !busy && styles.pressed,
+                    busy && styles.disabled,
+                  ]}>
+                  <ThemedText type="smallBold">Free dive · shells + mood</ThemedText>
                 </Pressable>
               )}
               <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-                Charges refill every ~10 minutes, and a Research claim can grant one too.
+                {canSpend
+                  ? 'Charges refill every ~10 minutes, and a Research claim can grant one too.'
+                  : `No charges — a free dive keeps no gear, food or cosmetics, only shells (the first 10 a day pay full; ${view.freeDivesToday} so far) and mood.`}
               </ThemedText>
             </>
           )}
         </PlayFrame>
       )}
+
+      <PlayFrame style={styles.card}>
+        <ThemedText type="smallBold">Dive gear · bought with shells, yours for good</ThemedText>
+        {DIVE_GEAR.map((gear) => {
+          const owned = view.diveGear[gear];
+          const cost = DIVE_GEAR_COST[gear];
+          const affordable = view.shells >= cost;
+          return (
+            <View key={gear} style={styles.gearRow}>
+              <View style={styles.findText}>
+                <ThemedText type="smallBold">{DIVE_GEAR_LABEL[gear]}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {DIVE_GEAR_BLURB[gear]}
+                </ThemedText>
+              </View>
+              {owned ? (
+                <ThemedText type="smallBold" themeColor="emphasis">
+                  Owned
+                </ThemedText>
+              ) : run.active ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  After this dive
+                </ThemedText>
+              ) : (
+                <Pressable
+                  onPress={() => buyGear(gear)}
+                  disabled={!affordable}
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: !affordable }}
+                  style={({ pressed }) => [
+                    styles.button,
+                    { backgroundColor: affordable ? theme.accentFill : theme.backgroundSelected },
+                    pressed && affordable && styles.pressed,
+                  ]}>
+                  <ThemedText type="smallBold" style={affordable ? { color: theme.onAccent } : undefined}>
+                    {cost} shells
+                  </ThemedText>
+                </Pressable>
+              )}
+            </View>
+          );
+        })}
+        {gearNote ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            {gearNote}
+          </ThemedText>
+        ) : null}
+      </PlayFrame>
+
+      <PlayFrame style={styles.card}>
+        <ThemedText type="smallBold">Today · one minute</ThemedText>
+        {[today.td, today.pet, today.both, today.goal].map((line) => (
+          <ThemedText key={line} type="small" themeColor="textSecondary">
+            {line}
+          </ThemedText>
+        ))}
+      </PlayFrame>
     </>
   );
 }
@@ -303,9 +434,48 @@ function SplashRow({ label, showSpinner }: { label: string; showSpinner: boolean
   );
 }
 
-/** One find in the haul: icon, name, kind/rarity, and Power mult lines. */
+const KIND_ICONS: Record<'food' | 'shells' | 'cosmetic', ComponentProps<typeof MaterialCommunityIcons>['name']> = {
+  food: 'fish',
+  shells: 'circle-multiple',
+  cosmetic: 'palette',
+};
+
+/** One find in the haul: gear (icon, name, kind/rarity, Power mults), or
+ * food / shells / a cosmetic (v22). */
 function FindRow({ id, index }: { id: string; index: number }) {
   const theme = useTheme();
+  const kind = findKind(id);
+  if (kind === 'food' || kind === 'shells' || kind === 'cosmetic') {
+    const cos = kind === 'cosmetic' ? cosmeticById(id) : undefined;
+    const badgeArt = cos?.itemId ? itemArtSource(getItemDef(cos.itemId)?.core.art ?? '') : undefined;
+    const sub =
+      kind === 'food'
+        ? 'Pet food · goes to the pantry'
+        : kind === 'shells'
+          ? 'Shells · for Dive gear'
+          : `Pet cosmetic · ${cos?.slot ?? ''}`;
+    return (
+      <View style={styles.findRow}>
+        <View style={[styles.findIcon, { backgroundColor: theme.backgroundSelected }]}>
+          {badgeArt ? (
+            <Image source={badgeArt} contentFit="contain" style={styles.findIconArt} />
+          ) : (
+            <MaterialCommunityIcons
+              name={KIND_ICONS[kind]}
+              size={18}
+              color={cos?.color ?? (cos?.element ? ELEMENT_COLOR[cos.element] : theme.accent)}
+            />
+          )}
+        </View>
+        <View style={styles.findText}>
+          <ThemedText type="smallBold">{findName(id)}</ThemedText>
+          <ThemedText type="code" themeColor="textSecondary">
+            {sub}
+          </ThemedText>
+        </View>
+      </View>
+    );
+  }
   const def = getItemDef(id);
   if (!def) {
     return (
@@ -398,6 +568,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.two,
   },
+  gearRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
   button: {
     alignItems: 'center',
     borderRadius: Spacing.three,
@@ -406,9 +581,6 @@ const styles = StyleSheet.create({
   },
   rowButton: {
     flex: 1,
-  },
-  rowButtonPrimary: {
-    flex: 2,
   },
   disabled: {
     opacity: 0.5,
