@@ -563,13 +563,22 @@ export function PetRoom({
           <Animated.Text style={[styles.heart, { left: box / 2 - 10, top: box * 0.3 }, heartStyle]} pointerEvents="none">
             ❤
           </Animated.Text>
-          {/* Status bubble: follows the pet, readable at any size. */}
-          <View pointerEvents="box-none" style={[styles.bubbleAnchor, { top: box * 0.18 - 34, width: box }]}>
+          {/* Speech on top, then the status bubble — one column anchored just
+              above the pet's head, wider than the pet (so nothing truncates at
+              Baby size) and kept inside the room. The name sits on its own
+              line over the status. */}
+          <Animated.View
+            pointerEvents="box-none"
+            style={[styles.bubbleColumn, { bottom: box - box * 0.18 + 6, left: 0, width: speechW }, speechStyle]}>
+            <SpeechBubble speech={speech} reduceMotion={reduceMotion} speaker={name} />
             <View style={styles.bubbleRow}>
               <View style={styles.statusBubble}>
-                <Text style={styles.statusText} numberOfLines={1}>
-                  {name ? `${name} · ${label}` : label}
-                </Text>
+                {name ? (
+                  <Text style={styles.statusName} numberOfLines={1}>
+                    {name}
+                  </Text>
+                ) : null}
+                <Text style={styles.statusText}>{label}</Text>
               </View>
               {revealed && grade && onBadge ? (
                 <Pressable
@@ -585,11 +594,6 @@ export function PetRoom({
                 </Pressable>
               ) : null}
             </View>
-          </View>
-          <Animated.View
-            pointerEvents="none"
-            style={[styles.speechAnchor, { bottom: box - (box * 0.18 - 40), left: 0, width: speechW }, speechStyle]}>
-            <SpeechBubble speech={speech} reduceMotion={reduceMotion} speaker={name} />
           </Animated.View>
         </Animated.View>
       ) : null}
@@ -643,15 +647,15 @@ const styles = StyleSheet.create({
   ring: { position: 'absolute', height: 14, borderRadius: 999, opacity: 0.7 },
   zzz: { position: 'absolute', fontSize: 18 },
   heart: { position: 'absolute', fontSize: 20, color: '#FF5A8A' },
-  bubbleAnchor: { position: 'absolute', left: 0, alignItems: 'center' },
   bubbleRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   badge: { paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10, borderWidth: 1, backgroundColor: 'rgba(5, 7, 13, 0.85)' },
   badgeText: { fontFamily: Fonts.monoBold, fontSize: 11 },
   eggRow: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-around' },
   eggPick: { alignItems: 'center', gap: 4 },
   eggPickLabel: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.textPrimary },
-  speechAnchor: { position: 'absolute', alignItems: 'center' },
+  bubbleColumn: { position: 'absolute', alignItems: 'center', gap: 6 },
   statusBubble: {
+    alignItems: 'center',
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 12,
@@ -670,6 +674,7 @@ const styles = StyleSheet.create({
     borderColor: NEON.cyanBorder,
   },
   statusText: { fontFamily: Fonts.monoBold, fontSize: 13, color: NEON.textPrimary },
+  statusName: { fontFamily: Fonts.monoBold, fontSize: 11, color: NEON.cyan },
   speech: {
     minWidth: 60,
     paddingVertical: 6,
