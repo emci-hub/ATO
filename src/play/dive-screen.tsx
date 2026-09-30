@@ -1,39 +1,27 @@
 /**
  * Dive — push-your-luck (Play step 3, GAME_SPEC §7, §11 screen 2).
  *
- * Renders the whole Dive decision surface off `view.diveRun`:
- * - no run → "Dive · 1 charge" CTA (disabled at 0 charges with an honest note);
- * - run active → the haul as find cards + a "next move" card showing the exact
- *   effective bust % of the next Deeper (§7, already bent by equipped
- *   dive_luck, never hidden) with Surface and Deeper buttons.
+ * Overhaul (2026-09-29): the scene IS the screen (`dive-scene.tsx`) — its top
+ * bar shows the zone, a depth meter, charges and shells; the haul is one row
+ * of item icons along the bottom of the scene with a rarity glow. Under it,
+ * one compact control strip: Deeper (Safer / Richer, each with its exact %)
+ * and Surface, or Dive / Free dive. The buddy explanation and the odds text
+ * live in the Info sheet, the gear shop in the Gear sheet. No stacked cards.
+ * Dive opens from the Pet room; back closes a sheet, then returns there.
  *
- * All mutations go through the callbacks (which live in `play.tsx` and commit
- * through the shared playStore), so this stays a read-only view of store
- * truth. Dive actions are paced against mash via `usePacedAction` — a short
- * "searching…" beat locks the buttons before the result lands, then a cooldown
- * still holds them; the Dev kit's "Skip Dive delays" toggle makes it instant.
+ * Unchanged rules: every mutation goes through the callbacks (store truth);
+ * actions are paced by `usePacedAction` (beat → resolve → cooldown); Deeper
+ * sends the % on screen so the store refuses a roll whose odds moved. The
+ * scene only reads the SHOWN % and never delays an action.
  *
  * Copy never uses gamble / casino / jackpot / bet — Dive / Surface / Deeper /
  * bust only (GAME_SPEC §7).
- *
- * v21: a scene (`dive-scene.tsx`) above the cards shows the pet diving; it
- * only reads the shown %, never changes it. Deeper sends the % on screen so
- * the store can refuse a roll whose real odds moved in the meantime.
- *
- * v22 (Part B): two paths per Deeper (Safer / Richer, each with its exact %),
- * the Lamp preview, the Net note, free dives, shells + the Dive-gear shop,
- * finds of every kind (gear, food, shells, cosmetics), and the "Today" card.
  */
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Image } from 'expo-image';
-import { useState, type ComponentProps } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Fonts } from '@/constants/theme';
 import { usePacedAction } from '@/play/action-pacing';
-import { itemArtSource } from '@/play/art';
 import {
   DIVE_GEAR,
   DIVE_GEAR_BLURB,
@@ -41,27 +29,23 @@ import {
   DIVE_GEAR_LABEL,
   DIVE_PATHS,
   DIVE_PATH_LABEL,
-  findKind,
   findName,
   type DiveGear,
   type DivePath,
 } from '@/play/dive-loot';
-import { DiveScene, type DiveSceneEvent } from '@/play/dive-scene';
-import { formatMult, getItemDef, type ItemDef, type ItemSlot } from '@/play/items';
+import { useDiveFxLevel } from '@/play/dive-fx-level';
+import { findGlow } from '@/play/dive-fx-model';
+import { DiveTopBar } from '@/play/dive-hud';
+import { DiveScene, diveZone, type DiveReveal, type DiveSceneEvent } from '@/play/dive-scene';
+import { diveBackStep, type InnerBack } from '@/play/edge-back';
 import { ELEMENT_COLOR } from '@/play/kits';
+import { NeonLabel } from '@/play/neon-ui';
+import { NEON } from '@/play/neon-viper';
 import { PET_BRANCH_LABEL, PET_STAGE_LABEL } from '@/play/pet';
-import { cosmeticById } from '@/play/pet-cosmetics';
-import { PlayFrame } from '@/play/play-frame';
+import { PlaySheet } from '@/play/play-sheet';
 import { DIVE_CHARGE_CAP, buyDiveGear, type PlayView } from '@/play/playStore';
 import { todayPlan } from '@/play/today-plan';
 import type { PlayTransition } from '@/play/use-play-store';
-
-const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>['name']> = {
-  weapon: 'sword',
-  armor: 'shield-outline',
-  cloak: 'hanger',
-  trinket: 'star-four-points',
-};
 
 /** The pet dive buddy, in one honest line (v20; away + Dive care in v21). */
 export function diveBuddyLine(view: PlayView): string {
@@ -92,8 +76,22 @@ export function diveBuddyLine(view: PlayView): string {
   return `Dive buddy: your pet (${form}) · ${points} off every bust chance (already in the odds; never below half the table)${rescue}. ${care} It is never lost.`;
 }
 
-export type DiveSurfaceSummary = { finds: number; shells: number };
-export type DiveDeeperResult = 'bust' | 'safe' | 'changed' | null;
+export type DiveSurfaceSummary = { finds: number; shells: number; ids: readonly string[] };
+/** A Deeper's result — `rescued` = the finds the pet saved on a bust. */
+export type DiveDeeperResult = { outcome: 'bust' | 'safe' | 'changed'; rescued: readonly string[] } | null;
+
+/** The haul minus the saved finds (one each, duplicates respected). */
+function lostFinds(haul: readonly string[], saved: readonly string[]): string[] {
+  const left = [...saved];
+  return haul.filter((id) => {
+    const i = left.indexOf(id);
+    if (i < 0) return true;
+    left.splice(i, 1);
+    return false;
+  });
+}
+
+type SheetId = 'info' | 'gear';
 
 export function DiveScreen({
   view,
@@ -103,7 +101,8 @@ export function DiveScreen({
   onFreeDive,
   onSurface,
   onDeeper,
-  onBackToGrove,
+  onBack,
+  registerBack,
   commit,
 }: {
   view: PlayView;
@@ -116,24 +115,58 @@ export function DiveScreen({
   onSurface: () => Promise<DiveSurfaceSummary | null>;
   /** `shownPct` = the bust % on screen for that path when Deeper was pressed. */
   onDeeper: (path: DivePath, shownPct: number | null) => Promise<DiveDeeperResult>;
-  onBackToGrove: () => void;
+  /** Back to the Pet room. */
+  onBack: () => void;
+  /** Back one level (edge-back.ts): an open sheet closes first. */
+  registerBack?: (inner: InnerBack | null) => void;
   /** v22 — Dive-gear purchases go straight through the store. */
   commit: (transition: PlayTransition) => boolean;
 }) {
-  const theme = useTheme();
   const charges = view.dive.current;
   const run = view.diveRun;
   const canSpend = !run.active && charges >= 1;
   const today = todayPlan(view);
+  const fxLevel = useDiveFxLevel();
+  const [sheet, setSheet] = useState<SheetId | null>(null);
+
+  useEffect(() => {
+    if (!registerBack) return;
+    registerBack({
+      edgeSwipe: true,
+      back: () => {
+        if (diveBackStep(sheet != null) === 'room') return false;
+        setSheet(null);
+        return true;
+      },
+    });
+    return () => registerBack(null);
+  }, [registerBack, sheet]);
 
   // -- Pacing (shared with Merge: beat → resolve → cooldown; skip in dev) ----
   const { act, busy, splashCopy, showSplash } = usePacedAction(skipDelays);
 
-  // -- Scene events: the scene plays the rise (with the count-up) or the
-  // bust pop-up once, straight from the action's own result.
+  // -- Scene events: surface / bust play once, straight from the result.
   const [sceneEvent, setSceneEvent] = useState<DiveSceneEvent>(null);
-  const bump = (event: Omit<NonNullable<DiveSceneEvent>, 'key'>) =>
-    setSceneEvent((prev) => ({ ...event, key: (prev?.key ?? 0) + 1 }));
+  // Keys only ever go up (a new dive clears the event), so the scene replays
+  // every surface / bust, not just the first.
+  const eventSeq = useRef(0);
+  const bump = (event: Omit<NonNullable<DiveSceneEvent>, 'key'>) => {
+    eventSeq.current += 1;
+    setSceneEvent({ ...event, key: eventSeq.current });
+  };
+
+  // -- A find joined the haul → reveal it (rises from the pet into its slot).
+  const [reveal, setReveal] = useState<DiveReveal>(null);
+  const prevLen = useRef(run.haul.length);
+  useEffect(() => {
+    const len = run.active ? run.haul.length : 0;
+    if (len > prevLen.current && len > 0) {
+      const id = run.haul[len - 1];
+      setReveal((prev) => ({ id, key: (prev?.key ?? 0) + 1, glow: findGlow(id), slot: len - 1 }));
+    }
+    prevLen.current = len;
+  }, [run.active, run.haul]);
+
   const startWith = (label: string, start: () => Promise<boolean>) =>
     act(label, async () => {
       const ok = await start();
@@ -142,16 +175,28 @@ export function DiveScreen({
     });
   const pressDeeper = (path: DivePath) => {
     const shown = run.bustPct ? run.bustPct[path] : null;
+    const before = [...run.haul];
     act('Going deeper…', async () => {
       const result = await onDeeper(path, shown);
-      if (result === 'bust') bump({ kind: 'bust', finds: 0, shells: 0 });
+      if (result?.outcome === 'bust') {
+        bump({
+          kind: 'bust',
+          finds: 0,
+          shells: 0,
+          ids: [],
+          saved: result.rescued,
+          lost: lostFinds(before, result.rescued),
+        });
+      }
       return result != null;
     });
   };
   const pressSurface = () => {
     act('Heading up…', async () => {
       const summary = await onSurface();
-      if (summary) bump({ kind: 'surface', finds: summary.finds, shells: summary.shells });
+      if (summary) {
+        bump({ kind: 'surface', finds: summary.finds, shells: summary.shells, ids: summary.ids, saved: [], lost: [] });
+      }
       return summary != null;
     });
   };
@@ -172,219 +217,150 @@ export function DiveScreen({
     setGearNote(note);
   };
 
+  const depth = run.active ? run.deepers : 0;
+  const maxDepth = run.active ? run.maxDeepers : view.diveGear.oxygen ? 5 : 4;
+
   return (
-    <>
-      <View style={styles.topRow}>
-        <Pressable
-          onPress={onBackToGrove}
-          hitSlop={12}
-          style={({ pressed }) => [pressed && styles.pressed]}>
-          <ThemedText type="smallBold" themeColor="textSecondary">
-            ‹ Divecore
-          </ThemedText>
-        </Pressable>
-      </View>
-
-      <ThemedText type="subtitle">Dive</ThemedText>
-      <ThemedText themeColor="textSecondary" style={styles.lede}>
-        Dive for finds with your pet. Surface banks the haul — Deeper risks it for more.
-      </ThemedText>
-
+    <View style={styles.screen}>
       <DiveScene
         pet={view.pet.state}
         wear={view.pet.wear}
         eggColor={ELEMENT_COLOR[view.legendElement]}
-        depth={run.active ? run.deepers : 0}
+        depth={depth}
+        maxDepth={maxDepth}
         bustPct={run.active ? run.bustPctNext : null}
-        away={run.petAway}
-        shells={view.shells}
+        away={view.pet.away}
+        haul={run.active ? run.haul : []}
+        reveal={reveal}
         event={sceneEvent}
         reduceMotion={reduceMotion}
-      />
+        fxLevel={fxLevel}>
+        <DiveTopBar
+          zone={diveZone(depth)}
+          depth={depth}
+          maxDepth={maxDepth}
+          charges={chargeText(view)}
+          shells={view.shells}
+          onBack={onBack}
+          onInfo={() => setSheet('info')}
+          onGear={() => setSheet('gear')}
+        />
+      </DiveScene>
 
-      <PlayFrame style={styles.card}>
-        <View style={styles.statRow}>
-          <ThemedText type="smallBold">Dive charges</ThemedText>
-          <ThemedText type="subheading" themeColor="emphasis">
-            {chargeText(view)}
-          </ThemedText>
-        </View>
-        <View style={styles.statRow}>
-          <ThemedText type="smallBold">Shells</ThemedText>
-          <ThemedText type="subheading" themeColor="emphasis">
-            {view.shells}
-          </ThemedText>
-        </View>
-        <ThemedText type="small" themeColor="textSecondary">
-          {diveBuddyLine(view)}
-        </ThemedText>
-      </PlayFrame>
-
-      {run.active ? (
-        <>
-          <PlayFrame style={styles.card}>
-            <ThemedText type="smallBold">
-              {run.free ? 'Free dive · ' : ''}Haul so far{' '}
-              {run.deepers > 0 ? `· ${run.deepers}/${run.maxDeepers} deep` : '· first find'}
-            </ThemedText>
+      <View style={styles.controls}>
+        {showSplash ? (
+          <View style={styles.splashRow}>
+            {!reduceMotion ? <ActivityIndicator size="small" color={NEON.cyan} /> : null}
+            <Text style={styles.strong}>{splashCopy ?? 'Searching…'}</Text>
+          </View>
+        ) : run.active ? (
+          <>
             {run.free ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                A free dive keeps no gear, food or cosmetics — these are sightings for the Logbook.
-                Surfacing now pays {run.freeShellsNow ?? 0} shells.
-              </ThemedText>
+              <Text style={styles.note}>
+                Free dive — finds are Logbook sightings; surfacing now pays {run.freeShellsNow ?? 0} shells.
+              </Text>
             ) : null}
-            {run.haul.map((id, index) => (
-              <FindRow key={`${id}-${index}`} id={id} index={index} />
-            ))}
-          </PlayFrame>
-
-          <PlayFrame style={styles.card}>
-            {showSplash ? (
-              <SplashRow label={splashCopy ?? 'Searching…'} showSpinner={!reduceMotion} />
-            ) : (
+            {run.canDeeper && run.bustPct ? (
               <>
-                <ThemedText type="smallBold">Next move</ThemedText>
-                {run.canDeeper && run.bustPct ? (
-                  <>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      Deeper adds another find to this haul — pick a path. Safer: {run.bustPct.safe}% to
-                      lose it all, finds from one level up. Richer: {run.bustPct.rich}% to lose it all,
-                      finds from one level down. Surface keeps every find.
-                    </ThemedText>
-                    {run.preview ? (
-                      <ThemedText type="small" themeColor="textSecondary">
-                        Lamp: Safer holds {findName(run.preview.safe)} · Richer holds{' '}
-                        {findName(run.preview.rich)}.
-                      </ThemedText>
-                    ) : null}
-                    <View style={styles.buttonRow}>
-                      {DIVE_PATHS.map((path) => (
-                        <Pressable
-                          key={path}
-                          onPress={() => pressDeeper(path)}
-                          disabled={busy}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Deeper, ${DIVE_PATH_LABEL[path]}, ${run.bustPct?.[path]} percent to lose the haul`}
-                          accessibilityState={{ disabled: busy }}
-                          style={({ pressed }) => [
-                            styles.button,
-                            styles.rowButton,
-                            { backgroundColor: theme.backgroundSelected },
-                            pressed && !busy && styles.pressed,
-                            busy && styles.disabled,
-                          ]}>
-                          <ThemedText type="smallBold">
-                            {DIVE_PATH_LABEL[path]} · {run.bustPct?.[path]}%
-                          </ThemedText>
-                        </Pressable>
-                      ))}
-                    </View>
-                  </>
-                ) : (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    Max depth — this haul has reached its last Deeper. Surface to keep it.
-                  </ThemedText>
-                )}
-                {run.netOn && !run.free ? (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    Net: surfacing now adds one more find.
-                  </ThemedText>
+                <View style={styles.buttonRow}>
+                  {DIVE_PATHS.map((path) => (
+                    <Pressable
+                      key={path}
+                      onPress={() => pressDeeper(path)}
+                      disabled={busy}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Deeper, ${DIVE_PATH_LABEL[path]}, ${run.bustPct?.[path]} percent to lose the haul`}
+                      accessibilityState={{ disabled: busy }}
+                      style={({ pressed }) => [styles.button, styles.deeper, pressed && !busy && styles.pressed, busy && styles.disabled]}>
+                      <Text style={styles.strong}>
+                        Deeper · {DIVE_PATH_LABEL[path]} · {run.bustPct?.[path]}%
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+                <Text style={styles.note}>
+                  % = chance to lose this haul. Safer finds come from one level up, Richer from one level down.
+                </Text>
+                {run.preview ? (
+                  <Text style={styles.note}>
+                    Lamp: Safer holds {findName(run.preview.safe)} · Richer holds {findName(run.preview.rich)}.
+                  </Text>
                 ) : null}
-                <Pressable
-                  onPress={pressSurface}
-                  disabled={busy}
-                  accessibilityRole="button"
-                  accessibilityState={{ disabled: busy }}
-                  style={({ pressed }) => [
-                    styles.button,
-                    { backgroundColor: theme.accentFill },
-                    pressed && !busy && styles.pressed,
-                    busy && styles.disabled,
-                  ]}>
-                  <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                    Surface
-                  </ThemedText>
-                </Pressable>
               </>
+            ) : (
+              <Text style={styles.note}>Max depth — this haul has reached its last Deeper. Surface to keep it.</Text>
             )}
-          </PlayFrame>
-        </>
-      ) : (
-        <PlayFrame style={styles.card}>
-          {showSplash ? (
-            <SplashRow label={splashCopy ?? 'Searching…'} showSpinner={!reduceMotion} />
-          ) : (
-            <>
-              <ThemedText type="smallBold">One charge, one find</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                A dive starts with a single find in the Shallows. Each Deeper adds another and the bust
-                chance climbs — 18%, 28%, 40%, 55%{view.diveGear.oxygen ? ', then 65% with Oxygen' : ''}
-                — 8 points lower on the Safer path, 8 higher on the Richer one. Deeper levels hold more
-                Powers, and the only rings and auras. Surface any time to keep what you have.
-              </ThemedText>
-              {canSpend ? (
-                <Pressable
-                  onPress={() => startWith('Searching…', onSpendCharge)}
-                  disabled={busy}
-                  accessibilityRole="button"
-                  accessibilityState={{ disabled: busy }}
-                  style={({ pressed }) => [
-                    styles.button,
-                    { backgroundColor: theme.accentFill },
-                    pressed && !busy && styles.pressed,
-                    busy && styles.disabled,
-                  ]}>
-                  <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
-                    Dive · 1 charge
-                  </ThemedText>
-                </Pressable>
-              ) : (
-                <Pressable
-                  onPress={() => startWith('Searching…', onFreeDive)}
-                  disabled={busy}
-                  accessibilityRole="button"
-                  accessibilityState={{ disabled: busy }}
-                  style={({ pressed }) => [
-                    styles.button,
-                    { backgroundColor: theme.backgroundSelected },
-                    pressed && !busy && styles.pressed,
-                    busy && styles.disabled,
-                  ]}>
-                  <ThemedText type="smallBold">Free dive · shells + mood</ThemedText>
-                </Pressable>
-              )}
-              <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-                {canSpend
-                  ? 'Charges refill every ~10 minutes, and a Research claim can grant one too.'
-                  : `No charges — a free dive keeps no gear, food or cosmetics, only shells (the first 10 a day pay full; ${view.freeDivesToday} so far) and mood.`}
-              </ThemedText>
-            </>
-          )}
-        </PlayFrame>
-      )}
+            {run.netOn && !run.free ? <Text style={styles.note}>Net: surfacing now adds one more find.</Text> : null}
+            <Pressable
+              onPress={pressSurface}
+              disabled={busy}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: busy }}
+              style={({ pressed }) => [styles.button, styles.primary, pressed && !busy && styles.pressed, busy && styles.disabled]}>
+              <Text style={styles.primaryText}>Surface · keep the haul</Text>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <Pressable
+              onPress={() => (canSpend ? startWith('Searching…', onSpendCharge) : startWith('Searching…', onFreeDive))}
+              disabled={busy}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: busy }}
+              style={({ pressed }) => [
+                styles.button,
+                canSpend ? styles.primary : styles.deeper,
+                pressed && !busy && styles.pressed,
+                busy && styles.disabled,
+              ]}>
+              <Text style={canSpend ? styles.primaryText : styles.strong}>
+                {canSpend ? 'Dive · 1 charge' : 'Free dive · shells + mood'}
+              </Text>
+            </Pressable>
+            <Text style={styles.note}>
+              {canSpend
+                ? 'One charge, one find to start. Each Deeper adds a find and a bust chance — Surface any time to keep it.'
+                : `No charges — a free dive keeps only shells (the first 10 a day pay full; ${view.freeDivesToday} so far) and mood.`}
+            </Text>
+          </>
+        )}
+      </View>
 
-      <PlayFrame style={styles.card}>
-        <ThemedText type="smallBold">Dive gear · bought with shells, yours for good</ThemedText>
+      <PlaySheet open={sheet === 'info'} title="Dive · how it works" onClose={() => setSheet(null)} reduceMotion={reduceMotion}>
+        <Text style={styles.body}>{diveBuddyLine(view)}</Text>
+        <Text style={styles.body}>
+          A dive starts with a single find in the Shallows. Each Deeper adds another and the bust chance climbs —
+          18%, 28%, 40%, 55%{view.diveGear.oxygen ? ', then 65% with Oxygen' : ''} — 8 points lower on the Safer
+          path, 8 higher on the Richer one. The % on each button is always the exact one. Deeper levels hold more
+          Powers, and the only rings and auras. Surface any time to keep what you have.
+        </Text>
+        <Text style={styles.body}>
+          Charges: {chargeText(view)}. They refill every ~10 minutes, and a Research claim can grant one too.
+        </Text>
+        <NeonLabel>Today · one minute</NeonLabel>
+        {[today.td, today.pet, today.both, today.goal].map((line) => (
+          <Text key={line} style={styles.body}>
+            {line}
+          </Text>
+        ))}
+      </PlaySheet>
+
+      <PlaySheet open={sheet === 'gear'} title="Dive gear" onClose={() => setSheet(null)} reduceMotion={reduceMotion}>
+        <Text style={styles.body}>Bought with shells, yours for good. You have {view.shells} shells.</Text>
         {DIVE_GEAR.map((gear) => {
           const owned = view.diveGear[gear];
           const cost = DIVE_GEAR_COST[gear];
           const affordable = view.shells >= cost;
           return (
             <View key={gear} style={styles.gearRow}>
-              <View style={styles.findText}>
-                <ThemedText type="smallBold">{DIVE_GEAR_LABEL[gear]}</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {DIVE_GEAR_BLURB[gear]}
-                </ThemedText>
+              <View style={styles.flex}>
+                <Text style={styles.strong}>{DIVE_GEAR_LABEL[gear]}</Text>
+                <Text style={styles.body}>{DIVE_GEAR_BLURB[gear]}</Text>
               </View>
               {owned ? (
-                <ThemedText type="smallBold" themeColor="emphasis">
-                  Owned
-                </ThemedText>
+                <Text style={styles.owned}>Owned</Text>
               ) : run.active ? (
-                <ThemedText type="small" themeColor="textSecondary">
-                  After this dive
-                </ThemedText>
+                <Text style={styles.body}>After this dive</Text>
               ) : (
                 <Pressable
                   onPress={() => buyGear(gear)}
@@ -392,128 +368,20 @@ export function DiveScreen({
                   accessibilityRole="button"
                   accessibilityState={{ disabled: !affordable }}
                   style={({ pressed }) => [
-                    styles.button,
-                    { backgroundColor: affordable ? theme.accentFill : theme.backgroundSelected },
+                    styles.buyButton,
+                    affordable ? styles.primary : styles.deeper,
                     pressed && affordable && styles.pressed,
                   ]}>
-                  <ThemedText type="smallBold" style={affordable ? { color: theme.onAccent } : undefined}>
-                    {cost} shells
-                  </ThemedText>
+                  <Text style={affordable ? styles.primaryText : styles.strong}>{cost} shells</Text>
                 </Pressable>
               )}
             </View>
           );
         })}
-        {gearNote ? (
-          <ThemedText type="small" themeColor="textSecondary">
-            {gearNote}
-          </ThemedText>
-        ) : null}
-      </PlayFrame>
-
-      <PlayFrame style={styles.card}>
-        <ThemedText type="smallBold">Today · one minute</ThemedText>
-        {[today.td, today.pet, today.both, today.goal].map((line) => (
-          <ThemedText key={line} type="small" themeColor="textSecondary">
-            {line}
-          </ThemedText>
-        ))}
-      </PlayFrame>
-    </>
-  );
-}
-
-/** Small "searching…" beat row — spinner when motion is fine, copy alone when not. */
-function SplashRow({ label, showSpinner }: { label: string; showSpinner: boolean }) {
-  const theme = useTheme();
-  return (
-    <View style={styles.splashRow}>
-      {showSpinner ? <ActivityIndicator size="small" color={theme.accent} /> : null}
-      <ThemedText type="smallBold">{label}</ThemedText>
+        {gearNote ? <Text style={styles.body}>{gearNote}</Text> : null}
+      </PlaySheet>
     </View>
   );
-}
-
-const KIND_ICONS: Record<'food' | 'shells' | 'cosmetic', ComponentProps<typeof MaterialCommunityIcons>['name']> = {
-  food: 'fish',
-  shells: 'circle-multiple',
-  cosmetic: 'palette',
-};
-
-/** One find in the haul: gear (icon, name, kind/rarity, Power mults), or
- * food / shells / a cosmetic (v22). */
-function FindRow({ id, index }: { id: string; index: number }) {
-  const theme = useTheme();
-  const kind = findKind(id);
-  if (kind === 'food' || kind === 'shells' || kind === 'cosmetic') {
-    const cos = kind === 'cosmetic' ? cosmeticById(id) : undefined;
-    const badgeArt = cos?.itemId ? itemArtSource(getItemDef(cos.itemId)?.core.art ?? '') : undefined;
-    const sub =
-      kind === 'food'
-        ? 'Pet food · goes to the pantry'
-        : kind === 'shells'
-          ? 'Shells · for Dive gear'
-          : `Pet cosmetic · ${cos?.slot ?? ''}`;
-    return (
-      <View style={styles.findRow}>
-        <View style={[styles.findIcon, { backgroundColor: theme.backgroundSelected }]}>
-          {badgeArt ? (
-            <Image source={badgeArt} contentFit="contain" style={styles.findIconArt} />
-          ) : (
-            <MaterialCommunityIcons
-              name={KIND_ICONS[kind]}
-              size={18}
-              color={cos?.color ?? (cos?.element ? ELEMENT_COLOR[cos.element] : theme.accent)}
-            />
-          )}
-        </View>
-        <View style={styles.findText}>
-          <ThemedText type="smallBold">{findName(id)}</ThemedText>
-          <ThemedText type="code" themeColor="textSecondary">
-            {sub}
-          </ThemedText>
-        </View>
-      </View>
-    );
-  }
-  const def = getItemDef(id);
-  if (!def) {
-    return (
-      <View style={styles.findRow}>
-        <ThemedText type="code" themeColor="textSecondary">
-          #{index + 1}
-        </ThemedText>
-        <View style={styles.findText}>
-          <ThemedText type="smallBold">Unknown find</ThemedText>
-        </View>
-      </View>
-    );
-  }
-  const mults = [def.mult_a, def.mult_b].filter(
-    (mult): mult is NonNullable<ItemDef['mult_a']> => mult != null,
-  );
-  return (
-    <View style={styles.findRow}>
-      <View style={[styles.findIcon, { backgroundColor: theme.backgroundSelected }]}>
-        {itemArtSource(def.core.art) ? (
-          <Image source={itemArtSource(def.core.art)} contentFit="contain" style={styles.findIconArt} />
-        ) : (
-          <MaterialCommunityIcons name={SLOT_ICONS[def.core.slot]} size={18} color={theme.accent} />
-        )}
-      </View>
-      <View style={styles.findText}>
-        <ThemedText type="smallBold">{def.core.name}</ThemedText>
-        <ThemedText type="code" themeColor="textSecondary">
-          {capitalize(def.core.rarity)} {capitalize(def.core.kind)}
-          {mults.length > 0 ? ` · ${mults.map(formatMult).join(' · ')}` : ''}
-        </ThemedText>
-      </View>
-    </View>
-  );
-}
-
-function capitalize(word: string): string {
-  return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
 /** "7/10" or "7/10 · +1 ~12m" — same charge line the Grove row shows. */
@@ -526,76 +394,29 @@ function chargeText(view: PlayView): string {
 }
 
 const styles = StyleSheet.create({
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  screen: { flex: 1, backgroundColor: NEON.ink },
+  controls: {
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 12,
+    gap: 8,
+    borderTopWidth: 1,
+    borderTopColor: NEON.cyanDim,
+    backgroundColor: NEON.panel,
   },
-  lede: {
-    marginTop: -Spacing.one,
-  },
-  card: {
-    borderRadius: Spacing.four,
-    padding: Spacing.three,
-    gap: Spacing.three,
-    alignItems: 'stretch',
-  },
-  statRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-  },
-  findRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-  },
-  findIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  findIconArt: {
-    width: 22,
-    height: 22,
-  },
-  findText: {
-    flex: 1,
-    gap: Spacing.half,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: Spacing.two,
-  },
-  gearRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-  },
-  button: {
-    alignItems: 'center',
-    borderRadius: Spacing.three,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
-  },
-  rowButton: {
-    flex: 1,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  splashRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.two,
-    paddingVertical: Spacing.one,
-  },
-  centerText: {
-    textAlign: 'center',
-  },
-  pressed: {
-    opacity: 0.8,
-  },
+  buttonRow: { flexDirection: 'row', gap: 8 },
+  button: { flex: 1, alignItems: 'center', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 8 },
+  primary: { backgroundColor: '#0E7490' },
+  deeper: { backgroundColor: '#121A2B', borderWidth: 1, borderColor: NEON.cyanBorder },
+  primaryText: { fontFamily: Fonts.monoBold, fontSize: 13, color: '#FFFFFF' },
+  strong: { fontFamily: Fonts.monoBold, fontSize: 13, color: NEON.textPrimary, textAlign: 'center' },
+  note: { fontFamily: Fonts.mono, fontSize: 11, lineHeight: 16, color: NEON.textMuted, textAlign: 'center' },
+  body: { fontFamily: Fonts.mono, fontSize: 12, lineHeight: 18, color: NEON.textMuted },
+  owned: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.cyan },
+  gearRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  buyButton: { borderRadius: 10, paddingVertical: 8, paddingHorizontal: 12 },
+  splashRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14 },
+  flex: { flex: 1 },
+  pressed: { opacity: 0.8 },
+  disabled: { opacity: 0.5 },
 });

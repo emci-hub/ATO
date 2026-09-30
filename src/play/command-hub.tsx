@@ -25,7 +25,7 @@ export function CommandHub({
   children,
 }: {
   scrap: number | null;
-  /** A Dive run is saved mid-way — the Dive tile says so (it is never lost). */
+  /** A Dive run is saved mid-way — the Pet tile says so (it is never lost). */
   diveActive?: boolean;
   wave: number | null;
   onTile: (to: HubDestination) => void;
@@ -75,8 +75,11 @@ export function CommandHub({
               </View>
               <Text style={styles.tileLabel}>{tile.label}</Text>
               <Text style={styles.tileSub}>
-                {tile.to === 'dive' && diveActive ? 'Run in progress' : tile.subtitle}
+                {tile.to === 'pet' && diveActive ? '🤿 Dive in progress' : tile.subtitle}
               </Text>
+              {tile.to === 'pet' && diveActive ? (
+                <View style={styles.badge} accessibilityLabel="Dive in progress" />
+              ) : null}
             </Pressable>
           ))}
         </View>
@@ -193,6 +196,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     color: NEON.textMuted,
     textAlign: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: NEON.pink,
   },
   pressed: {
     opacity: 0.7,

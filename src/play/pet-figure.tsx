@@ -18,7 +18,13 @@ import { ELEMENT_COLOR } from '@/play/kits';
 import { PET_BRANCH_TINT, PET_STAGE_SCALE, petLookFor, type PetLook, type PetState } from '@/play/pet';
 import { NO_WEAR, wornLook, type PetWear } from '@/play/pet-cosmetics';
 import { ClipImage } from '@/play/sheet-sprite';
-import { getSkinRole, heroAvatarRole, roleArtDrawable, roleFaceArtIndex } from '@/play/skin';
+import {
+  getSkinRole,
+  heroAvatarRole,
+  roleArtDrawable,
+  roleFaceArtIndex,
+  type ClipDrawable,
+} from '@/play/skin';
 
 export function lookDrawable(look: PetLook | null) {
   if (!look) return undefined;
@@ -58,17 +64,23 @@ export function PetFigure({
   eggColor,
   wear = NO_WEAR,
   silhouette = false,
+  frame,
+  box: boxOverride,
 }: {
   pet: PetState;
   baseBox: number;
   eggColor: string;
   wear?: PetWear;
   silhouette?: boolean;
+  /** Animated frame to draw instead of the still pose (room + dive, 2026-09-29). */
+  frame?: ClipDrawable;
+  /** Exact drawn size (the room snaps it to whole device pixels). */
+  box?: number;
 }) {
-  const box = petBoxSize(pet, baseBox);
+  const box = boxOverride ?? petBoxSize(pet, baseBox);
   if (pet.stage === 'egg') return <EggShape size={box} color={silhouette ? '#000000' : eggColor} />;
   const look = wornLook(wear);
-  const drawable = lookDrawable(petLookFor(pet.line, pet.stage));
+  const drawable = frame ?? lookDrawable(petLookFor(pet.line, pet.stage));
   if (silhouette) {
     return (
       <View style={[{ width: box, height: box }, styles.silhouette]}>

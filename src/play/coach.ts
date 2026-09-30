@@ -11,6 +11,8 @@
  * mid 4–8 (vines + archer levels), late 9+ (crystals for fat HP, Avatar near
  * the exit, skill on clusters).
  */
+import type { PetStatus } from './pet-status';
+
 export type CoachTowerCounts = {
   archer: number;
   vine: number;
@@ -96,4 +98,91 @@ export function tipForWave(
     tip: `Wave ${w}: keep your Avatar near the exit and cast Root Veil when the path is thick.`,
     why: 'Your Avatar auto-attacks the nearest enemy; the slow lets every tower land more hits.',
   };
+}
+
+/* ------------------------------------------------------------ pet coach --- */
+/*
+ * Pet coach (room overhaul, 2026-09-29) — one line under the pet's status
+ * saying what it needs, plus the button that does it. The matching icon in
+ * the room's row pulses while the tip applies. Static copy (no AI), and the
+ * pet says the same line out loud when tapped.
+ */
+
+/** What the coach button does. */
+export type PetCoachAction = 'feed' | 'catch' | 'play' | 'dive' | 'expedition' | 'hatch';
+
+/** The room icon (and sheet) each action opens — that icon pulses. */
+export type PetCoachIcon = 'feed' | 'play' | 'dive' | 'expedition' | 'info';
+
+export const PET_COACH_ICON: Record<PetCoachAction, PetCoachIcon> = {
+  feed: 'feed',
+  catch: 'play', // Catch the food lives in the Play sheet
+  play: 'play',
+  dive: 'dive',
+  expedition: 'expedition',
+  hatch: 'info', // "Choose what hatches" lives in Info → Status
+};
+
+export type PetCoachInput = {
+  status: PetStatus;
+  hunger: number;
+  pantryTotal: number;
+  expeditionReady: boolean;
+  diveCharges: number;
+  tokensLeftToday: number;
+  /** "3h 10m" while away, else null. */
+  backIn: string | null;
+};
+
+export type PetCoachTip = {
+  tip: string;
+  action: PetCoachAction | null;
+  /** Button label (null when there is nothing to press). */
+  button: string | null;
+};
+
+/** Hunger at or below this makes a sleepy pet ask for a bedtime snack. */
+export const PET_BEDTIME_HUNGER = 2;
+
+function foodTip(pantryTotal: number, fed: string, empty: string): PetCoachTip {
+  return pantryTotal > 0
+    ? { tip: fed, action: 'feed', button: 'Feed' }
+    : { tip: empty, action: 'catch', button: 'Catch the food' };
+}
+
+/** The one coaching line for the pet's current status. Pure. */
+export function petCoachTip(input: PetCoachInput): PetCoachTip {
+  const pantry = `${input.pantryTotal} in the pantry`;
+  switch (input.status) {
+    case 'away':
+      return {
+        tip: input.backIn ? `Out exploring — back in ${input.backIn}.` : 'Out exploring — back soon.',
+        action: null,
+        button: null,
+      };
+    case 'egg':
+      return { tip: 'Pick what I’ll hatch into!', action: 'hatch', button: 'Choose' };
+    case 'starving':
+    case 'hungry':
+      return foodTip(
+        input.pantryTotal,
+        `I need food! ${pantry}.`,
+        'Pantry’s empty — catch food, or dive for snacks.',
+      );
+    case 'very_sad':
+    case 'sad':
+      return { tip: 'I’m feeling low. Play with me?', action: 'play', button: 'Play' };
+    case 'sleepy':
+      return input.hunger <= PET_BEDTIME_HUNGER
+        ? foodTip(input.pantryTotal, `Feed me before bed? ${pantry}.`, 'Tummy’s rumbling — catch me a bedtime snack?')
+        : { tip: 'Zzz… see you in the morning.', action: null, button: null };
+    case 'evolving':
+      return { tip: 'I’m about to grow — keep my hearts up!', action: null, button: null };
+    case 'happy':
+    case 'okay':
+      if (input.expeditionReady) return { tip: 'All good! I could go exploring.', action: 'expedition', button: 'Send me' };
+      if (input.diveCharges >= 1) return { tip: 'All good! Up for a dive?', action: 'dive', button: 'Dive' };
+      if (input.tokensLeftToday > 0) return { tip: 'All good! Fancy a game?', action: 'play', button: 'Play' };
+      return { tip: 'All good!', action: null, button: null };
+  }
 }

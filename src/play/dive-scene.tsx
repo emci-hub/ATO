@@ -1,47 +1,72 @@
 /**
- * Dive scene (v21) — the pet diving, drawn from existing art only.
+ * Dive scene (v21 → overhaul 2026-09-29) — the scene IS the Dive screen
+ * (Dave the Diver / Downwell feel), drawn in code + existing art only.
  *
- * Board grass tiles (with a strip of pad tiles on the floor) under a depth
- * tint: Shallows (no Deepers yet) → Reef (1-2) → Trench (3) → Abyss (4, the
- * last Deeper). At Trench and Abyss the tiles go dark except a soft light
- * around the pet. The pet (line look + branch tint + stage scale) sinks one
- * step per Deeper, rises when a haul is banked, and pops up empty-handed on a
- * bust. It reacts to the SHOWN bust % only — calm bob under 25%, nervous
- * wiggle 25-40%, shake over 40% — and never touches the odds or the % text.
- * Reduced motion = still poses (position snaps, no loops).
+ *   - Camera: Deeper scrolls the world down one zone band; a mid layer of
+ *     plankton/specks moves faster (parallax), so it feels like sinking.
+ *   - Zones (neon): Shallows light blue with light rays, Reef teal, Trench
+ *     navy, Abyss near-black with drifting specks, Hadal violet-black.
+ *   - Life: rising bubbles, up to 5 faint fish outlines (react-native-svg),
+ *     the pet swimming on its walk clip with a bubble trail.
+ *   - Finds rise from the pet, glow in their rarity colour and fly into the
+ *     haul row; rare-or-better also flash (inside the existing cooldown).
+ *   - Tension: the edges close in as the SHOWN bust % climbs, with a slow
+ *     heartbeat over 40%.
+ *   - Bust: shake, the pet's hurt clip (or a red flash), lost finds sink into
+ *     the dark, saved ones stay glowing, then the pet dashes back up.
+ *   - Surface: a splash and sunlight, the haul counts up, shells fly to the
+ *     counter, the pet's skill clip as a victory pose.
  *
- * v22: depth 5 (Oxygen) is the Hadal; the pet wears its cosmetics; a shells
- * counter sits top-right; surfacing plays the feedback — the haul counts up,
- * the shells fly to the counter, and the pet hops (reduced motion: the
- * numbers only).
+ * It only READS the shown %; it never computes or changes odds, and nothing
+ * here waits on an animation before Surface/Deeper can resolve.
+ * Reduced motion: no parallax, shake, pulse, bubbles or fish — simple fades.
+ * FX Low (dive-fx-level.ts): the cut list — fish, parallax, bubble count and
+ * trail, rays, the pulse.
  */
-import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { PixelRatio, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
+  interpolate,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withRepeat,
   withSequence,
   withTiming,
+  Extrapolation,
 } from 'react-native-reanimated';
-import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
-import { Image } from 'expo-image';
+import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { Fonts } from '@/constants/theme';
-import { NEON } from '@/play/neon-viper';
+import type { DiveFxLevel } from '@/play/dive-fx-level';
+import {
+  DIVE_MAX_DEPTH,
+  GLOW_COLOR,
+  RAYS_UNTIL_DEPTH,
+  REVEAL_FLASH_MS,
+  REVEAL_FLY_MS,
+  REVEAL_HOLD_RARE_MS,
+  REVEAL_RISE_MS,
+  SPECKS_FROM_DEPTH,
+  ZONE_BANDS,
+  isRareOrBetter,
+  revealMs,
+  vignetteFor,
+  type FindGlow,
+} from '@/play/dive-fx-model';
+import { FindIcon } from '@/play/dive-hud';
+import { findName } from '@/play/dive-loot';
 import type { PetState } from '@/play/pet';
+import { petPose, sharpPetBox, type PetPose } from '@/play/pet-actor';
+import { PetAnimSprite, usePetArt, type PetArt, type PetFace } from '@/play/pet-anim-sprite';
 import type { PetWear } from '@/play/pet-cosmetics';
-import { PetFigure, petBoxSize } from '@/play/pet-figure';
-import { skinArt } from '@/play/skin';
 
-const SCENE_H = 210;
-const TILE_COLS = 8;
-const PET_BASE_BOX = 80;
-const TOP_PAD = 10;
-const BOTTOM_PAD = 16;
-const MAX_DEPTH = 5;
+const PET_WANT_BOX = 112;
+const SLOT = 40;
+const ROW_PAD = 12;
+const ICON = 34;
 
 export type DiveZone = 'Shallows' | 'Reef' | 'Trench' | 'Abyss' | 'Hadal';
 
@@ -62,274 +87,613 @@ export function diveMood(bustPct: number | null): DiveMood {
   return 'shake';
 }
 
-/** Flat tint for the lit zones; Trench/Abyss use the lamp gradient instead. */
-const ZONE_TINT: Record<DiveZone, number> = {
-  Shallows: 0.2,
-  Reef: 0.42,
-  Trench: 0.8,
-  Abyss: 0.9,
-  Hadal: 0.95,
-};
-const WATER = '3, 26, 51';
+/** The last surface / bust. `lost` sink away, `saved` stay (a bust); `ids`
+ * is the banked haul (a surface). `finds` / `shells` drive the count-up. */
+export type DiveSceneEvent = {
+  kind: 'bust' | 'surface';
+  key: number;
+  finds: number;
+  shells: number;
+  ids: readonly string[];
+  lost: readonly string[];
+  saved: readonly string[];
+} | null;
 
-/** The last surface / bust. `finds` and `shells` drive the count-up. */
-export type DiveSceneEvent = { kind: 'bust' | 'surface'; key: number; finds: number; shells: number } | null;
+/** A new find to reveal: rises from the pet into haul slot `slot`. */
+export type DiveReveal = { id: string; key: number; glow: FindGlow; slot: number } | null;
+
+/* --------------------------------------------------------------- life --- */
+
+function Bubble({ x, height, r, dur, delay }: { x: number; height: number; r: number; dur: number; delay: number }) {
+  const t = useSharedValue(0);
+  useEffect(() => {
+    t.value = withDelay(delay, withRepeat(withTiming(1, { duration: dur, easing: Easing.linear }), -1));
+    return () => cancelAnimation(t);
+  }, [t, dur, delay]);
+  const style = useAnimatedStyle(() => ({
+    opacity: t.value > 0 ? 0.55 * (1 - t.value * 0.6) : 0,
+    transform: [{ translateY: height - t.value * (height + 30) }, { translateX: Math.sin(t.value * 12) * 4 }],
+  }));
+  return (
+    <Animated.View pointerEvents="none" style={[styles.abs, { left: x, top: 0 }, style]}>
+      <View style={{ width: r * 2, height: r * 2, borderRadius: r, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)' }} />
+    </Animated.View>
+  );
+}
+
+function Fish({ y, width, size, dur, delay, rightward }: { y: number; width: number; size: number; dur: number; delay: number; rightward: boolean }) {
+  const t = useSharedValue(0);
+  useEffect(() => {
+    t.value = withDelay(delay, withRepeat(withTiming(1, { duration: dur, easing: Easing.linear }), -1));
+    return () => cancelAnimation(t);
+  }, [t, dur, delay]);
+  const style = useAnimatedStyle(() => {
+    const p = rightward ? t.value : 1 - t.value;
+    return {
+      transform: [
+        { translateX: -size * 2 + p * (width + size * 4) },
+        { translateY: Math.sin(t.value * 18) * 3 },
+        { scaleX: rightward ? 1 : -1 },
+      ],
+    };
+  });
+  return (
+    <Animated.View pointerEvents="none" style={[styles.abs, { top: y, left: 0, opacity: 0.22 }, style]}>
+      <Svg width={size * 2} height={size} viewBox="0 0 40 20">
+        <Path d="M4 10 Q14 1 26 10 Q14 19 4 10 Z" fill="none" stroke="#E8FBFF" strokeWidth={1.4} />
+        <Path d="M26 10 L36 3 L34 10 L36 17 Z" fill="none" stroke="#E8FBFF" strokeWidth={1.4} />
+        <Circle cx="10" cy="9" r="1.2" fill="#E8FBFF" />
+      </Svg>
+    </Animated.View>
+  );
+}
+
+/** A lost find sinking into the dark (bust). */
+function Sinking({ id, left, top, drop, reduceMotion }: { id: string; left: number; top: number; drop: number; reduceMotion: boolean }) {
+  const t = useSharedValue(0);
+  useEffect(() => {
+    t.value = withDelay(reduceMotion ? 0 : 250, withTiming(1, { duration: reduceMotion ? 400 : 1000, easing: Easing.in(Easing.quad) }));
+  }, [t, reduceMotion]);
+  const style = useAnimatedStyle(() => ({
+    opacity: 1 - t.value,
+    transform: reduceMotion ? [] : [{ translateY: t.value * drop }, { rotate: `${t.value * 40}deg` }],
+  }));
+  return (
+    <Animated.View pointerEvents="none" style={[styles.abs, { left, top }, style]}>
+      <FindIcon id={id} size={ICON} dim />
+    </Animated.View>
+  );
+}
+
+/** The pet in the water: turns left/right in step with the sway, with a
+ * bubble trail behind it. Its own state, so a turn never redraws the scene. */
+function SwimmingPet({
+  pet,
+  art,
+  wear,
+  eggColor,
+  pose,
+  box,
+  turn,
+  trail,
+}: {
+  pet: PetState;
+  art: PetArt;
+  wear: PetWear;
+  eggColor: string;
+  pose: { pose: PetPose | null; loop: boolean; at: number };
+  box: number;
+  turn: boolean;
+  trail: boolean;
+}) {
+  const [face, setFace] = useState<PetFace>('e');
+  useEffect(() => {
+    if (!turn) return;
+    const id = setInterval(() => setFace((f) => (f === 'e' ? 'w' : 'e')), 1300);
+    return () => clearInterval(id);
+  }, [turn]);
+  return (
+    <>
+      {trail
+        ? [0, 1, 2].map((i) => (
+            <Bubble key={i} x={face === 'e' ? box * 0.2 : box * 0.75} height={box * 0.6} r={1.5 + i * 0.5} dur={1400 + i * 300} delay={i * 450} />
+          ))
+        : null}
+      <PetAnimSprite
+        pet={pet}
+        art={art}
+        wear={wear}
+        eggColor={eggColor}
+        pose={pose.pose}
+        face={face}
+        startedAt={pose.at}
+        loop={pose.loop}
+        box={box}
+        animate
+      />
+    </>
+  );
+}
+
+/* -------------------------------------------------------------- scene --- */
 
 export function DiveScene({
   pet,
   wear,
   eggColor,
   depth,
+  maxDepth,
   bustPct,
   away,
-  shells,
+  haul,
+  reveal,
   event,
   reduceMotion,
+  fxLevel,
+  children,
 }: {
   pet: PetState;
   wear: PetWear;
   eggColor: string;
   /** Deepers survived in the active run (0 when not diving). */
   depth: number;
-  /** The bust % shown for the next Deeper, or null. */
+  /** Deepers this run allows (4, or 5 with Oxygen). */
+  maxDepth: number;
+  /** The SHOWN bust % of the next Deeper (Safer path), or null. */
   bustPct: number | null;
   away: boolean;
-  /** Shells owned (the counter the surfacing shells fly to). */
-  shells: number;
-  /** The last surface / bust, to play the rise or the pop-up once. */
+  /** The active run's haul (empty when not diving). */
+  haul: readonly string[];
+  reveal: DiveReveal;
+  /** The last surface / bust, to play it once. */
   event: DiveSceneEvent;
   reduceMotion: boolean;
+  fxLevel: DiveFxLevel;
+  /** HUD drawn over the scene (top bar). */
+  children?: ReactNode;
 }) {
-  const [width, setWidth] = useState(0);
-  const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const onLayout = (e: LayoutChangeEvent) =>
+    setSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height });
+  const { width, height } = size;
+  const full = fxLevel === 'full' && !reduceMotion;
+  const band = Math.max(1, height * 0.9);
 
-  const zone = diveZone(depth);
-  const box = petBoxSize(pet, PET_BASE_BOX);
-  const travel = Math.max(0, SCENE_H - box - TOP_PAD - BOTTOM_PAD);
-  const targetY = TOP_PAD + (Math.min(MAX_DEPTH, depth) / MAX_DEPTH) * travel;
-  const mood = diveMood(bustPct);
-
-  // Position (sink / rise / pop) and the mood loop are separate values so a
-  // new % never restarts the sinking, and vice versa.
-  const y = useSharedValue(targetY);
-  const loop = useSharedValue(0);
-  const hop = useSharedValue(0);
-  const fly = useSharedValue(0);
-  const [shown, setShown] = useState<{ finds: number; shells: number } | null>(null);
-
-  // Surfacing feedback: count the haul up, fly the shells to the counter, and
-  // hop. Reduced motion shows the final numbers at once, no movement.
+  // -- Camera: one band per Deeper; after a bust it waits for the pet to
+  // shoot up, then rises. Reduced motion snaps.
+  const cam = useSharedValue(depth);
+  const lastEventKey = useRef(event?.key ?? 0);
   useEffect(() => {
-    if (event?.kind !== 'surface') {
-      setShown(null);
-      return;
-    }
-    const target = { finds: event.finds, shells: event.shells };
+    const freshBust = event?.kind === 'bust' && event.key !== lastEventKey.current;
     if (reduceMotion) {
-      setShown(target);
+      cam.value = depth;
       return;
     }
-    hop.value = withSequence(
-      withTiming(-14, { duration: 180, easing: Easing.out(Easing.quad) }),
-      withTiming(0, { duration: 260, easing: Easing.bounce }),
-    );
-    fly.value = 0;
-    fly.value = withTiming(1, { duration: 900, easing: Easing.inOut(Easing.cubic) });
-    const steps = Math.max(target.finds, 1);
-    let i = 0;
-    setShown({ finds: 0, shells: 0 });
-    const id = setInterval(() => {
-      i += 1;
-      const t = Math.min(1, i / steps);
-      setShown({ finds: Math.round(target.finds * t), shells: Math.round(target.shells * t) });
-      if (t >= 1) clearInterval(id);
-    }, 160);
-    return () => clearInterval(id);
-  }, [event?.key, event?.kind, event?.finds, event?.shells, fly, hop, reduceMotion]);
+    cam.value = freshBust
+      ? withDelay(750, withTiming(depth, { duration: 650, easing: Easing.inOut(Easing.cubic) }))
+      : withTiming(depth, { duration: 800, easing: Easing.inOut(Easing.cubic) });
+  }, [cam, depth, event?.key, event?.kind, reduceMotion]);
 
-  const flyStyle = useAnimatedStyle(() => ({
-    opacity: fly.value > 0 && fly.value < 1 ? 1 : 0,
-    transform: [{ translateX: fly.value * (width / 2 - 36) }, { translateY: -fly.value * (SCENE_H / 2 - 18) }],
+  const worldStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -cam.value * band }] }));
+  const midStyle = useAnimatedStyle(() => {
+    if (!full || height <= 0) return { transform: [] };
+    const shift = (cam.value * band * 1.5) % height;
+    return { transform: [{ translateY: -shift }] };
+  });
+  const speckStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(cam.value, [SPECKS_FROM_DEPTH - 0.7, SPECKS_FROM_DEPTH], [0, 1], Extrapolation.CLAMP),
+  }));
+  const raysStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(cam.value, [0, RAYS_UNTIL_DEPTH], [0.9, 0], Extrapolation.CLAMP),
   }));
 
-  useEffect(() => {
-    if (reduceMotion) {
-      y.value = targetY;
-      return;
-    }
-    if (event?.kind === 'bust' && depth === 0) {
-      // Pop up empty-handed: a quick overshoot to the surface.
-      y.value = withSequence(
-        withTiming(TOP_PAD - 8, { duration: 320, easing: Easing.out(Easing.quad) }),
-        withTiming(targetY, { duration: 220, easing: Easing.inOut(Easing.quad) }),
-      );
-      return;
-    }
-    y.value = withTiming(targetY, { duration: 650, easing: Easing.inOut(Easing.cubic) });
-  }, [depth, event?.key, event?.kind, reduceMotion, targetY, y]);
+  // -- The pet: swims (walk clip) with a gentle sway; reacts to the shown %.
+  const art = usePetArt(pet);
+  const box = pet.stage === 'egg' ? 70 : sharpPetBox(PET_WANT_BOX, art.cellPx, PixelRatio.get());
+  const petX = width / 2;
+  const petY = height * 0.42;
+  const swimPose = petPose(art.kit, 'walk');
+  const [pose, setPose] = useState<{ pose: PetPose | null; loop: boolean; at: number }>(() => ({ pose: swimPose, loop: true, at: Date.now() }));
+  const [hurtFlash, setHurtFlash] = useState(false);
+  const sway = useSharedValue(0);
+  const lift = useSharedValue(0);
+  const wiggle = useSharedValue(0);
+  const shake = useSharedValue(0);
+  const mood = diveMood(bustPct);
 
   useEffect(() => {
-    cancelAnimation(loop);
-    loop.value = 0;
+    cancelAnimation(sway);
+    sway.value = 0;
     if (reduceMotion || away) return;
-    const half = mood === 'calm' ? 900 : mood === 'nervous' ? 200 : 55;
-    loop.value = withRepeat(
+    sway.value = withRepeat(
       withSequence(
-        withTiming(1, { duration: half, easing: Easing.inOut(Easing.sin) }),
-        withTiming(-1, { duration: half * 2, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: half, easing: Easing.inOut(Easing.sin) }),
+        withTiming(18, { duration: 1300, easing: Easing.inOut(Easing.sin) }),
+        withTiming(-18, { duration: 1300, easing: Easing.inOut(Easing.sin) }),
       ),
       -1,
     );
-    return () => cancelAnimation(loop);
-  }, [away, loop, mood, reduceMotion]);
+    return () => cancelAnimation(sway);
+  }, [sway, reduceMotion, away]);
+
+  useEffect(() => {
+    cancelAnimation(wiggle);
+    wiggle.value = 0;
+    if (reduceMotion || away || mood === 'calm') return;
+    const half = mood === 'nervous' ? 200 : 60;
+    wiggle.value = withRepeat(
+      withSequence(withTiming(1, { duration: half }), withTiming(-1, { duration: half * 2 }), withTiming(0, { duration: half })),
+      -1,
+    );
+    return () => cancelAnimation(wiggle);
+  }, [wiggle, mood, reduceMotion, away]);
+
+  // -- Bust / surface sequences, once per event.
+  const [shown, setShown] = useState<{ finds: number; shells: number } | null>(null);
+  const sun = useSharedValue(0);
+  const splash = useSharedValue(0);
+  const fly = useSharedValue(0);
+  useEffect(() => {
+    if (!event || event.key === lastEventKey.current) return;
+    lastEventKey.current = event.key;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const now = () => Date.now();
+    if (event.kind === 'bust') {
+      setShown(null);
+      const hurt = petPose(art.kit, 'hurt');
+      if (hurt) setPose({ pose: hurt, loop: false, at: now() });
+      else setHurtFlash(true);
+      if (!reduceMotion) {
+        shake.value = withSequence(
+          ...[8, -8, 6, -6, 4, -4, 0].map((v) => withTiming(v, { duration: 45 })),
+        );
+        lift.value = withSequence(
+          withDelay(500, withTiming(-height * 0.5, { duration: 320, easing: Easing.out(Easing.quad) })),
+          withDelay(450, withTiming(0, { duration: 420, easing: Easing.inOut(Easing.quad) })),
+        );
+      }
+      timers.push(
+        setTimeout(() => {
+          setHurtFlash(false);
+          setPose({ pose: petPose(art.kit, 'dash'), loop: true, at: now() });
+        }, 500),
+      );
+      timers.push(setTimeout(() => setPose({ pose: swimPose, loop: true, at: now() }), 1700));
+    } else {
+      const target = { finds: event.finds, shells: event.shells };
+      const victory = petPose(art.kit, 'skill');
+      setPose({ pose: victory ?? swimPose, loop: victory == null, at: now() });
+      timers.push(setTimeout(() => setPose({ pose: swimPose, loop: true, at: now() }), 1800));
+      sun.value = withSequence(withTiming(0.55, { duration: 300 }), withDelay(600, withTiming(0, { duration: 900 })));
+      if (reduceMotion) {
+        setShown(target);
+      } else {
+        splash.value = 0;
+        splash.value = withTiming(1, { duration: 700, easing: Easing.out(Easing.quad) });
+        fly.value = 0;
+        fly.value = withTiming(1, { duration: 900, easing: Easing.inOut(Easing.cubic) });
+        lift.value = withSequence(withTiming(-14, { duration: 180 }), withTiming(0, { duration: 260, easing: Easing.bounce }));
+        const steps = Math.max(target.finds, 1);
+        let i = 0;
+        setShown({ finds: 0, shells: 0 });
+        const id = setInterval(() => {
+          i += 1;
+          const t = Math.min(1, i / steps);
+          setShown({ finds: Math.round(target.finds * t), shells: Math.round(target.shells * t) });
+          if (t >= 1) clearInterval(id);
+        }, 160);
+        timers.push(id as unknown as ReturnType<typeof setTimeout>);
+      }
+    }
+    return () => timers.forEach((t) => clearTimeout(t));
+    // swimPose/art are stable per pet; replay keyed on the event only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event?.key]);
+
+  // A new dive clears the last result.
+  useEffect(() => {
+    if (haul.length > 0) setShown(null);
+  }, [haul.length]);
 
   const petStyle = useAnimatedStyle(() => {
-    const t = loop.value;
-    const base = y.value + hop.value;
-    if (mood === 'calm') return { transform: [{ translateY: base + t * 3 }] };
-    if (mood === 'nervous') return { transform: [{ translateY: base }, { rotate: `${t * 6}deg` }] };
-    return { transform: [{ translateY: base }, { translateX: t * 2.5 }] };
+    const t = wiggle.value;
+    return {
+      transform: [
+        { translateX: sway.value + (mood === 'shake' ? t * 2.5 : 0) },
+        { translateY: lift.value + (mood === 'calm' ? 0 : 0) },
+        { rotate: mood === 'nervous' ? `${t * 6}deg` : '0deg' },
+      ],
+    };
   });
+  const shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }] }));
+  const sunStyle = useAnimatedStyle(() => ({ opacity: sun.value }));
+  const splashStyle = useAnimatedStyle(() => ({ opacity: splash.value > 0 && splash.value < 1 ? 1 - splash.value : 0 }));
+  const flyStyle = useAnimatedStyle(() => ({
+    opacity: fly.value > 0 && fly.value < 1 ? 1 : 0,
+    transform: [{ translateX: fly.value * (width / 2 - 40) }, { translateY: -fly.value * (petY - 30) }],
+  }));
 
-  const tile = width > 0 ? width / TILE_COLS : 0;
-  const rows = tile > 0 ? Math.ceil(SCENE_H / tile) : 0;
-  const grass = skinArt('map.grass');
-  const pad = skinArt('map.pad');
-  const lamp = zone === 'Trench' || zone === 'Abyss';
-  const lampCy = targetY + box / 2;
-  const caption =
-    away
-      ? 'Your pet is away on an expedition.'
-      : event?.kind === 'bust' && depth === 0
-        ? 'Popped up empty-handed.'
-        : event?.kind === 'surface' && depth === 0
-          ? shown
-            ? `Back up! ${shown.finds} ${shown.finds === 1 ? 'find' : 'finds'}${shown.shells > 0 ? ` · +${shown.shells} shells` : ''}`
-            : 'Back up with the haul!'
+  // -- Find reveal: rise from the pet, glow, (rare: flash + hold), fly to the
+  // haul row. The slot shows the find once the reveal lands.
+  const rv = useSharedValue(0);
+  const flash = useSharedValue(0);
+  const [landedKey, setLandedKey] = useState(reveal?.key ?? 0);
+  const rowY = height - ROW_PAD - ICON;
+  const slotX = (slot: number) => ROW_PAD + slot * SLOT;
+  useEffect(() => {
+    if (!reveal) return;
+    if (reduceMotion) {
+      setLandedKey(reveal.key);
+      return;
+    }
+    const rare = isRareOrBetter(reveal.glow);
+    rv.value = 0;
+    rv.value = withSequence(
+      withTiming(1, { duration: REVEAL_RISE_MS, easing: Easing.out(Easing.quad) }),
+      withDelay(rare ? REVEAL_HOLD_RARE_MS : 0, withTiming(2, { duration: REVEAL_FLY_MS, easing: Easing.in(Easing.quad) })),
+    );
+    if (rare && fxLevel === 'full') {
+      flash.value = withSequence(withTiming(0.4, { duration: REVEAL_FLASH_MS / 2 }), withTiming(0, { duration: REVEAL_FLASH_MS / 2 }));
+    }
+    const id = setTimeout(() => setLandedKey(reveal.key), revealMs(reveal.glow));
+    return () => clearTimeout(id);
+  }, [reveal, reduceMotion, rv, flash, fxLevel]);
+  const revealTo = reveal ? slotX(reveal.slot) : 0;
+  const revealStyle = useAnimatedStyle(() => {
+    const v = rv.value;
+    const startX = petX - ICON / 2;
+    const startY = petY - ICON / 2;
+    const riseY = startY - 56;
+    const x = v <= 1 ? startX : startX + (revealTo - startX) * (v - 1);
+    const y = v <= 1 ? startY + (riseY - startY) * v : riseY + (rowY - riseY) * (v - 1);
+    return {
+      opacity: v > 0 && v < 2 ? 1 : 0,
+      transform: [{ translateX: x }, { translateY: y }, { scale: v <= 1 ? 0.6 + v * 0.6 : 1.2 - (v - 1) * 0.2 }],
+    };
+  });
+  const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
+
+  // -- Tension: edges close in with the shown %, a heartbeat over 40%.
+  const vig = vignetteFor(bustPct);
+  const beat = useSharedValue(1);
+  useEffect(() => {
+    cancelAnimation(beat);
+    beat.value = 1;
+    if (!vig.pulse || !full) return;
+    beat.value = withRepeat(
+      withSequence(
+        withTiming(0.72, { duration: 120 }),
+        withTiming(1, { duration: 140 }),
+        withTiming(0.82, { duration: 110 }),
+        withTiming(1, { duration: 480 }),
+      ),
+      -1,
+    );
+    return () => cancelAnimation(beat);
+  }, [beat, vig.pulse, full]);
+  const vigStyle = useAnimatedStyle(() => ({ opacity: beat.value }));
+
+  // -- What the haul row shows.
+  const revealing = reveal != null && reveal.key !== landedKey;
+  const rowItems: { id: string; hidden: boolean }[] =
+    haul.length > 0
+      ? haul.map((id, i) => ({ id, hidden: revealing && reveal?.slot === i }))
+      : event?.kind === 'surface' && shown
+        ? event.ids.map((id) => ({ id, hidden: false }))
+        : event?.kind === 'bust'
+          ? event.saved.map((id) => ({ id, hidden: false }))
+          : [];
+  const sinking = haul.length === 0 && event?.kind === 'bust' ? event.lost : [];
+
+  const caption = away
+    ? 'Your pet is away on an expedition — diving solo.'
+    : haul.length > 0
+      ? revealing
+        ? null
+        : `Found ${findName(haul[haul.length - 1])}`
+      : event?.kind === 'bust'
+        ? event.saved.length > 0
+          ? `Bust — the haul sank. Your pet saved ${event.saved.length === 1 ? 'your best find' : `${event.saved.length} finds`}.`
+          : 'Bust — the haul sank. Your pet is fine.'
+        : event?.kind === 'surface' && shown && event.finds === 0 && event.ids.length > 0
+          ? `Back up! ${event.ids.length} ${event.ids.length === 1 ? 'sighting' : 'sightings'} for the Logbook${shown.shells > 0 ? ` · +${shown.shells} shells` : ''}`
+        : event?.kind === 'surface' && shown
+          ? `Back up! ${shown.finds} ${shown.finds === 1 ? 'find' : 'finds'}${shown.shells > 0 ? ` · +${shown.shells} shells` : ''}`
           : null;
 
+  const worldH = band * (DIVE_MAX_DEPTH + 1) + height;
+  const bubbleCount = reduceMotion ? 0 : full ? 8 : 4;
+  const fishCount = full ? Math.min(5, 3 + Math.floor(Math.min(depth, 4) / 2)) : 0;
+
   return (
-    <View
-      style={styles.scene}
-      onLayout={onLayout}
-      accessibilityLabel={`${zone}${away ? ', your pet is away' : ''}`}>
-      {tile > 0 ? (
-        <View style={StyleSheet.absoluteFill} pointerEvents="none">
-          {Array.from({ length: rows * TILE_COLS }, (_, i) => {
-            const row = Math.floor(i / TILE_COLS);
-            const col = i % TILE_COLS;
-            const floor = row === rows - 1 && pad != null;
-            const source = floor ? pad : grass;
-            if (!source) return null;
-            return (
-              <Image
-                key={i}
-                source={source}
-                contentFit="fill"
-                style={{ position: 'absolute', left: col * tile, top: row * tile, width: tile + 0.5, height: tile + 0.5 }}
+    <Animated.View style={[styles.scene, shakeStyle]} onLayout={onLayout} accessibilityLabel={`${diveZone(depth)}, depth ${depth} of ${maxDepth}`}>
+      {width > 0 ? (
+        <>
+          {/* Back layer: the water column, one band per depth. */}
+          <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0, width, height: worldH }, worldStyle]}>
+            <Svg width={width} height={worldH}>
+              <Defs>
+                {ZONE_BANDS.map((z, i) => (
+                  <LinearGradient key={i} id={`zone${i}`} x1="0" y1="0" x2="0" y2="1">
+                    <Stop offset="0" stopColor={z.top} />
+                    <Stop offset="1" stopColor={z.bottom} />
+                  </LinearGradient>
+                ))}
+              </Defs>
+              {ZONE_BANDS.map((_, i) => (
+                <Rect key={i} x={0} y={i * band} width={width} height={band + 1} fill={`url(#zone${i})`} />
+              ))}
+              <Rect x={0} y={ZONE_BANDS.length * band} width={width} height={height} fill={ZONE_BANDS[ZONE_BANDS.length - 1].bottom} />
+            </Svg>
+          </Animated.View>
+
+          {/* Light rays in the sunlit water. */}
+          {fxLevel === 'full' ? (
+            <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, raysStyle]}>
+              <Svg width={width} height={height}>
+                {[0.12, 0.34, 0.58, 0.8].map((x, i) => (
+                  <Polygon
+                    key={x}
+                    points={`${width * x},0 ${width * x + 26},0 ${width * (x + 0.12) + 40},${height} ${width * (x + 0.12) - 10},${height}`}
+                    fill="#FFFFFF"
+                    fillOpacity={0.08 + (i % 2) * 0.04}
+                  />
+                ))}
+              </Svg>
+            </Animated.View>
+          ) : null}
+
+          {/* Mid layer: plankton everywhere, specks from the Abyss — moves
+           * faster than the water (parallax); still when motion is reduced. */}
+          <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0, width, height: height * 2 }, midStyle]}>
+            <Svg width={width} height={height * 2}>
+              {Array.from({ length: 28 }, (_, i) => (
+                <Circle key={i} cx={((i * 73) % 100) * (width / 100)} cy={((i * 41) % 100) * (height / 50)} r={1 + (i % 3) * 0.5} fill="#FFFFFF" fillOpacity={0.12} />
+              ))}
+            </Svg>
+            <Animated.View style={[StyleSheet.absoluteFill, speckStyle]}>
+              <Svg width={width} height={height * 2}>
+                {Array.from({ length: 36 }, (_, i) => (
+                  <Circle key={i} cx={((i * 37 + 11) % 100) * (width / 100)} cy={((i * 59 + 7) % 100) * (height / 50)} r={1.2} fill="#9FE7FF" fillOpacity={0.55} />
+                ))}
+              </Svg>
+            </Animated.View>
+          </Animated.View>
+
+          {Array.from({ length: fishCount }, (_, i) => (
+            <Fish
+              key={i}
+              y={height * (0.18 + ((i * 0.17) % 0.55))}
+              width={width}
+              size={10 + (i % 3) * 4}
+              dur={9000 + i * 2300}
+              delay={i * 1700}
+              rightward={i % 2 === 0}
+            />
+          ))}
+          {Array.from({ length: bubbleCount }, (_, i) => (
+            <Bubble key={i} x={((i * 29 + 7) % 90) * (width / 100) + 8} height={height} r={2 + (i % 3)} dur={4200 + (i % 4) * 900} delay={i * 600} />
+          ))}
+
+          {/* The pet (not while it's away on an expedition). */}
+          {!away ? (
+            <Animated.View pointerEvents="none" style={[styles.abs, { left: petX - box / 2, top: petY - box / 2, width: box, height: box }, petStyle]}>
+              <SwimmingPet
+                pet={pet}
+                art={art}
+                wear={wear}
+                eggColor={eggColor}
+                pose={pose}
+                box={box}
+                turn={!reduceMotion}
+                trail={full && pet.stage !== 'egg'}
               />
-            );
-          })}
-        </View>
+              {hurtFlash ? <View style={[StyleSheet.absoluteFill, styles.hurt]} /> : null}
+            </Animated.View>
+          ) : null}
+
+          {/* Sunlight + splash on a surface. */}
+          <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, sunStyle]}>
+            <Svg width={width} height={height}>
+              <Defs>
+                <LinearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+                  <Stop offset="0" stopColor="#FFF6C8" stopOpacity={1} />
+                  <Stop offset="0.6" stopColor="#FFF6C8" stopOpacity={0} />
+                </LinearGradient>
+              </Defs>
+              <Rect x={0} y={0} width={width} height={height} fill="url(#sun)" />
+            </Svg>
+          </Animated.View>
+          <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0, width, height: 90 }, splashStyle]}>
+            <Svg width={width} height={90}>
+              {[-3, -2, -1, 1, 2, 3].map((k) => (
+                <Ellipse key={k} cx={width / 2 + k * 22} cy={60 - Math.abs(k) * 6} rx={4} ry={7} fill="#FFFFFF" fillOpacity={0.8} />
+              ))}
+              <Ellipse cx={width / 2} cy={70} rx={60} ry={8} fill="none" stroke="#FFFFFF" strokeOpacity={0.7} strokeWidth={2} />
+            </Svg>
+          </Animated.View>
+
+          {/* Tension: edges close in with the shown %. */}
+          <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, vigStyle]}>
+            <Svg width={width} height={height}>
+              <Defs>
+                <RadialGradient id="vig" cx={width / 2} cy={height / 2} rx={width * 0.85} ry={height * 0.75} gradientUnits="userSpaceOnUse">
+                  <Stop offset="0" stopColor="#000000" stopOpacity={0} />
+                  <Stop offset={String(vig.clear)} stopColor="#000000" stopOpacity={0} />
+                  <Stop offset="1" stopColor="#000000" stopOpacity={vig.edge} />
+                </RadialGradient>
+              </Defs>
+              <Rect x={0} y={0} width={width} height={height} fill="url(#vig)" />
+            </Svg>
+          </Animated.View>
+
+          {/* A rare find's flash. */}
+          <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.flash, flashStyle]} />
+
+          {/* The find on its way to the haul row. */}
+          {reveal && revealing ? (
+            <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0 }, revealStyle]}>
+              <View style={[styles.revealGlow, { backgroundColor: GLOW_COLOR[reveal.glow] }]} />
+              <FindIcon id={reveal.id} size={ICON} />
+            </Animated.View>
+          ) : null}
+
+          {/* Shells flying to the counter on a surface. */}
+          {event?.kind === 'surface' && event.shells > 0 && !reduceMotion ? (
+            <Animated.View pointerEvents="none" style={[styles.abs, { left: width / 2 - 14, top: petY }, flyStyle]}>
+              <Text style={styles.flyer}>+{event.shells} 🐚</Text>
+            </Animated.View>
+          ) : null}
+
+          {/* The haul row, along the bottom. */}
+          <View pointerEvents="none" style={[styles.row, { top: rowY }]}>
+            {rowItems.map((item, i) => (
+              <View
+                key={`${item.id}-${i}`}
+                style={[styles.slot, item.hidden && styles.hidden]}
+                accessible
+                accessibilityLabel={findName(item.id)}>
+                <FindIcon id={item.id} size={ICON} />
+              </View>
+            ))}
+          </View>
+          {sinking.map((id, i) => (
+            <Sinking key={`${id}-${i}-${event?.key}`} id={id} left={slotX(event?.saved.length ?? 0) + i * SLOT} top={rowY} drop={height * 0.4} reduceMotion={reduceMotion} />
+          ))}
+          {caption ? <Text style={[styles.caption, { bottom: ROW_PAD + ICON + 10 }]}>{caption}</Text> : null}
+        </>
       ) : null}
-
-      {lamp && width > 0 ? (
-        <Svg width={width} height={SCENE_H} style={StyleSheet.absoluteFill} pointerEvents="none">
-          <Defs>
-            <RadialGradient
-              id="diveLamp"
-              cx={width / 2}
-              cy={lampCy}
-              rx={Math.max(box, 70) * 1.25}
-              ry={Math.max(box, 70) * 1.25}
-              fx={width / 2}
-              fy={lampCy}
-              gradientUnits="userSpaceOnUse">
-              <Stop offset="0" stopColor={`rgb(${WATER})`} stopOpacity={0.12} />
-              <Stop offset="0.55" stopColor={`rgb(${WATER})`} stopOpacity={0.45} />
-              <Stop offset="1" stopColor={`rgb(${WATER})`} stopOpacity={ZONE_TINT[zone]} />
-            </RadialGradient>
-          </Defs>
-          <Rect x={0} y={0} width={width} height={SCENE_H} fill="url(#diveLamp)" />
-        </Svg>
-      ) : (
-        <View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { backgroundColor: `rgba(${WATER}, ${ZONE_TINT[zone]})` }]}
-        />
-      )}
-
-      {!away ? (
-        <Animated.View
-          pointerEvents="none"
-          style={[styles.pet, { left: width / 2 - box / 2, width: box, height: box }, petStyle]}>
-          <PetFigure pet={pet} baseBox={PET_BASE_BOX} eggColor={eggColor} wear={wear} />
-        </Animated.View>
-      ) : null}
-
-      {event?.kind === 'surface' && event.shells > 0 && !reduceMotion && width > 0 ? (
-        <Animated.View pointerEvents="none" style={[styles.flyer, { left: width / 2 - 14, top: SCENE_H / 2 }, flyStyle]}>
-          <Text style={styles.flyerText}>+{event.shells}</Text>
-        </Animated.View>
-      ) : null}
-
-      <Text style={styles.zone}>{zone}</Text>
-      <Text style={styles.shells} accessibilityLabel={`${shells} shells`}>
-        {shells} shells
-      </Text>
-      {caption ? <Text style={styles.caption}>{caption}</Text> : null}
-    </View>
+      {children}
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  scene: {
-    height: SCENE_H,
-    borderRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: `rgb(${WATER})`,
-    borderWidth: 1,
-    borderColor: NEON.cyanBorder,
-  },
-  pet: {
+  scene: { flex: 1, overflow: 'hidden', backgroundColor: ZONE_BANDS[0].bottom },
+  abs: { position: 'absolute' },
+  hurt: { backgroundColor: '#FF3B5C', opacity: 0.35, borderRadius: 999 },
+  flash: { backgroundColor: '#FFFFFF' },
+  revealGlow: {
     position: 'absolute',
-    top: 0,
+    left: -8,
+    top: -8,
+    width: ICON + 16,
+    height: ICON + 16,
+    borderRadius: (ICON + 16) / 2,
+    opacity: 0.35,
   },
-  zone: {
-    position: 'absolute',
-    top: 8,
-    left: 10,
-    fontFamily: Fonts.monoBold,
-    fontSize: 12,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: '#FFFFFF',
-  },
-  shells: {
-    position: 'absolute',
-    top: 8,
-    right: 10,
-    fontFamily: Fonts.monoBold,
-    fontSize: 12,
-    color: '#FFE9A8',
-  },
-  flyer: {
-    position: 'absolute',
-  },
-  flyerText: {
-    fontFamily: Fonts.monoBold,
-    fontSize: 14,
-    color: '#FFE9A8',
-  },
+  row: { position: 'absolute', left: ROW_PAD, right: ROW_PAD, flexDirection: 'row' },
+  slot: { width: SLOT },
+  hidden: { opacity: 0 },
+  flyer: { fontFamily: Fonts.monoBold, fontSize: 14, color: '#FFE9A8' },
   caption: {
     position: 'absolute',
-    bottom: 8,
-    left: 10,
-    right: 10,
-    fontFamily: Fonts.mono,
-    fontSize: 12,
+    left: 12,
+    right: 12,
+    fontFamily: Fonts.monoBold,
+    fontSize: 13,
     color: '#FFFFFF',
     textAlign: 'center',
+    textShadowColor: '#000000',
+    textShadowRadius: 4,
   },
 });

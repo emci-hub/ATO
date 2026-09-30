@@ -30,7 +30,9 @@ import {
   type BackSource,
   type InnerBack,
 } from '@/play/edge-back';
-import { PetScreen, usePetReminderSync } from '@/play/pet-screen';
+import { findGlow } from '@/play/dive-fx-model';
+import { PetScreen, usePetReminderSync, type PetTalkEvent } from '@/play/pet-screen';
+import type { PetTalkSituation } from '@/play/pet-talk';
 import { DefendScreen } from '@/play/defend-screen';
 import { SheetLabScreen } from '@/play/sheet-lab-screen';
 import type { TypeTag } from '@/play/engine/type-match';
@@ -164,13 +166,19 @@ export default function PlayScreen() {
   }, []);
   const modeRef = useRef(mode);
   modeRef.current = mode;
-  /** Dive opened from the Pet screen's "Go diving" (v21) steps back to Pet. */
-  const diveFromPetRef = useRef(false);
-  useEffect(() => {
-    if (mode !== 'dive') diveFromPetRef.current = false;
-  }, [mode]);
+  /** Dive only opens from the Pet room now (overhaul, 2026-09-29), so its
+   * back always returns to the room; every other sub-screen goes to the hub. */
   const leaveSubScreen = useCallback(() => {
-    setMode(modeRef.current === 'dive' && diveFromPetRef.current ? 'pet' : 'grove');
+    setMode(modeRef.current === 'dive' ? 'pet' : 'grove');
+  }, []);
+  /** A dive / TD / find moment for the pet to talk about once (room overhaul). */
+  const [petTalk, setPetTalk] = useState<PetTalkEvent>(null);
+  const clearPetTalk = useCallback(() => setPetTalk(null), []);
+  // Keys only ever go up, so a cleared event can never be mistaken for a new one.
+  const petTalkSeq = useRef(0);
+  const nudgePet = useCallback((situation: PetTalkSituation) => {
+    petTalkSeq.current += 1;
+    setPetTalk({ situation, key: petTalkSeq.current });
   }, []);
   const goBackOneLevel = useCallback((source: BackSource): boolean => {
     const decision = backDecision(modeRef.current === 'grove', innerBackRef.current, source);
@@ -290,8 +298,13 @@ export default function PlayScreen() {
       free: surfaced.free,
       netFind: surfaced.netFind,
     });
-    return { finds: surfaced.free ? 0 : surfaced.banked.length, shells: surfaced.shellsGained };
-  }, [surfaceRun]);
+    nudgePet(surfaced.banked.some((id) => findGlow(id) !== 'common') ? 'rare_find' : 'surfaced');
+    return {
+      finds: surfaced.free ? 0 : surfaced.banked.length,
+      shells: surfaced.shellsGained,
+      ids: surfaced.banked,
+    };
+  }, [nudgePet, surfaceRun]);
 
   /** `shownPct` is the bust % on screen for that path when Deeper was
    * pressed; if the real odds moved since, nothing is rolled and the new % is
@@ -305,13 +318,17 @@ export default function PlayScreen() {
           title: 'Odds updated',
           body: `Your pet changed, so this path is now ${outcome.bustPct}%. Nothing was rolled — check it and tap again.`,
         });
-        return 'changed';
+        return { outcome: 'changed', rescued: [] };
       }
       if (forceBustArmed) setForceBustArmed(false); // one-shot arm consumed
-      if (outcome?.busted) setToast({ kind: 'bust', rescued: outcome.rescued, petMood: outcome.petCared });
-      return outcome == null ? null : outcome.busted ? 'bust' : 'safe';
+      if (outcome?.busted) {
+        setToast({ kind: 'bust', rescued: outcome.rescued, petMood: outcome.petCared });
+        nudgePet('busted');
+      }
+      if (outcome == null) return null;
+      return { outcome: outcome.busted ? 'bust' : 'safe', rescued: outcome.busted ? outcome.rescued : [] };
     },
-    [forceBustArmed, pushDeeper],
+    [forceBustArmed, nudgePet, pushDeeper],
   );
 
   /** Dress handlers. Equip/sell failures surface as honest message toasts. */
@@ -368,6 +385,7 @@ export default function PlayScreen() {
   const handleRecordDefendWin = useCallback(
     async (ctx: DefendWinContext) => {
       const result = await recordDefendWin(ctx);
+      if (result) nudgePet('waves_cleared');
       if (result?.milestoneLook) {
         const name =
           itemName(result.milestoneLook.itemId) ?? result.milestoneLook.itemId;
@@ -382,7 +400,7 @@ export default function PlayScreen() {
       // toast here — one surface, so the two never stack.
       return result;
     },
-    [recordDefendWin],
+    [nudgePet, recordDefendWin],
   );
 
   /** Defend dev rows — milestone testing. */
@@ -678,6 +696,47 @@ export default function PlayScreen() {
         </SafeAreaView>
       ) : (
         <View style={styles.edgeWrap} {...edgeSwipe.panHandlers}>
+          {(mode === 'dive' || mode === 'pet') && view ? (
+            // Pet room + Dive own the whole screen (overhaul, 2026-09-29):
+            // no scroll view, the toast floats over the top.
+            <SafeAreaView style={styles.fullSafeArea}>
+              {mode === 'dive' ? (
+                <DiveScreen
+                  view={view}
+                  skipDelays={skipDelays}
+                  reduceMotion={reduceMotion}
+                  onSpendCharge={handleSpendCharge}
+                  onFreeDive={handleFreeDive}
+                  commit={commit}
+                  onSurface={handleSurface}
+                  onDeeper={handleDeeper}
+                  registerBack={registerBack}
+                  onBack={leaveSubScreen}
+                />
+              ) : (
+                <PetScreen
+                  view={view}
+                  commit={commit}
+                  registerBack={registerBack}
+                  reduceMotion={reduceMotion}
+                  talkEvent={petTalk}
+                  onTalkConsumed={clearPetTalk}
+                  onBack={() => setMode('grove')}
+                  onGoDive={() => setMode('dive')}
+                />
+              )}
+              {toastContent ? (
+                <View style={styles.toastOverlay} pointerEvents="box-none">
+                  <MilestoneToast
+                    title={toastContent.title}
+                    body={toastContent.body}
+                    reduceMotion={reduceMotion}
+                    onDone={() => setToast(null)}
+                  />
+                </View>
+              ) : null}
+            </SafeAreaView>
+          ) : (
           <ThemedView style={styles.container}>
             <SafeAreaView style={styles.safeArea}>
               <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -690,31 +749,7 @@ export default function PlayScreen() {
                   />
                 ) : null}
 
-                {mode === 'dive' && view ? (
-                  <DiveScreen
-                    view={view}
-                    skipDelays={skipDelays}
-                    reduceMotion={reduceMotion}
-                    onSpendCharge={handleSpendCharge}
-                    onFreeDive={handleFreeDive}
-                    commit={commit}
-                    onSurface={handleSurface}
-                    onDeeper={handleDeeper}
-                    onBackToGrove={leaveSubScreen}
-                  />
-                ) : mode === 'pet' && view ? (
-                  <PetScreen
-                    view={view}
-                    commit={commit}
-                    registerBack={registerBack}
-                    reduceMotion={reduceMotion}
-                    onBack={() => setMode('grove')}
-                    onGoDive={() => {
-                      diveFromPetRef.current = true;
-                      setMode('dive');
-                    }}
-                  />
-                ) : mode === 'dress' && view ? (
+                {mode === 'dress' && view ? (
                   <DressScreen
                     view={view}
                     skipDelays={skipDelays}
@@ -776,6 +811,7 @@ export default function PlayScreen() {
               </ScrollView>
             </SafeAreaView>
           </ThemedView>
+          )}
         </View>
       )}
     </PlayThemeProvider>
@@ -1192,6 +1228,18 @@ function shopRefusalCopy(reason: ShopRefusal): string {
 }
 
 const styles = StyleSheet.create({
+  /** Pet room + Dive: the whole screen, ink behind the safe area. */
+  fullSafeArea: {
+    flex: 1,
+    backgroundColor: NEON.ink,
+  },
+  toastOverlay: {
+    position: 'absolute',
+    top: 8,
+    left: 16,
+    right: 16,
+    zIndex: 10,
+  },
   /** Holds the sub-screens; catches the left-edge back swipe. */
   edgeWrap: {
     flex: 1,

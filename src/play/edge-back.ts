@@ -72,8 +72,15 @@ export function defendEdgeSwipe(phase: 'setup' | 'running' | 'won' | 'lost'): bo
   return phase !== 'running';
 }
 
-/** Pet's one level: a running mini-game closes first (the round does not
- * count), then the hub. */
-export function petBackStep(gameOpen: boolean): 'close-game' | 'hub' {
-  return gameOpen ? 'close-game' : 'hub';
+/** Pet room (overhaul, 2026-09-29): a running mini-game stops first (the
+ * round does not count), then an open sheet closes, then the hub. */
+export function petBackStep(sheetOpen: boolean, gameOpen: boolean): 'close-game' | 'close-sheet' | 'hub' {
+  if (gameOpen) return 'close-game';
+  return sheetOpen ? 'close-sheet' : 'hub';
+}
+
+/** Dive (overhaul): an open sheet (Info / Gear) closes first, then back to
+ * the Pet room — Dive only opens from the room now. */
+export function diveBackStep(sheetOpen: boolean): 'close-sheet' | 'room' {
+  return sheetOpen ? 'close-sheet' : 'room';
 }

@@ -19,6 +19,7 @@ import {
   defendEdgeSwipe,
   isEdgeSwipeComplete,
   isEdgeSwipeStart,
+  diveBackStep,
   petBackStep,
 } from '../src/play/edge-back';
 
@@ -49,9 +50,15 @@ assert.equal(defendBackStep('setup', false), 'hub', 'setup back = hub');
 assert.equal(defendBackStep('lost', false), 'hub');
 ok('Defend: mid-wave edge swipe off, back opens/closes the Leave confirm; setup back → hub');
 
-assert.equal(petBackStep(true), 'close-game', 'a running mini-game closes first');
-assert.equal(petBackStep(false), 'hub');
-ok('Pet: back closes a running mini-game first, then the hub');
+assert.equal(petBackStep(true, true), 'close-game', 'a running mini-game stops first');
+assert.equal(petBackStep(false, true), 'close-game');
+assert.equal(petBackStep(true, false), 'close-sheet', 'then an open sheet closes');
+assert.equal(petBackStep(false, false), 'hub', 'then the room goes back to the hub');
+ok('Pet room: back stops a mini-game, then closes a sheet, then the hub');
+
+assert.equal(diveBackStep(true), 'close-sheet', 'a Dive sheet closes first');
+assert.equal(diveBackStep(false), 'room', 'then Dive goes back to the Pet room');
+ok('Dive: back closes a sheet first, then returns to the Pet room');
 
 // The gesture: starts at the edge, runs sideways, goes far enough.
 assert.equal(isEdgeSwipeStart(10, 20, 2), true);
@@ -68,7 +75,8 @@ const shell = readFileSync('src/app/play.tsx', 'utf8');
 assert.match(shell, /gestureEnabled: mode === 'grove'/, 'native swipe-back only on the hub');
 assert.match(shell, /BackHandler\.addEventListener\('hardwareBackPress'/, 'Android back handled');
 assert.match(shell, /\{\.\.\.edgeSwipe\.panHandlers\}/, 'edge swipe attached to the sub-screens');
-assert.equal((shell.match(/registerBack=\{registerBack\}/g) ?? []).length, 2, 'Defend and Pet register their back');
-ok('Play shell: native swipe on hub only, Android back + edge swipe on sub-screens, Defend/Pet registered');
+assert.equal((shell.match(/registerBack=\{registerBack\}/g) ?? []).length, 3, 'Defend, Pet and Dive register their back');
+assert.match(shell, /modeRef\.current === 'dive' \? 'pet' : 'grove'/, 'Dive steps back to the Pet room');
+ok('Play shell: native swipe on hub only, Android back + edge swipe on sub-screens, Defend/Pet/Dive registered');
 
 console.log(`\ncheck:edge-back — ${passed} groups passed.`);

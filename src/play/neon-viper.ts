@@ -80,12 +80,12 @@ export type HubTile = {
 
 /**
  * The Command Hub tiles (visual SoT: `command-hub-target.png`). Divecore opens
- * the Defend map/board. Dive (push-your-luck) and Pet joined the hub with the
- * pet mode (2026-09-29) — the pet is the dive buddy, so both are one tap away.
+ * the Defend map/board. Since the room overhaul (2026-09-29) Dive opens from
+ * the Pet room's Dive icon, not its own tile — the Pet tile says when a dive
+ * is in progress.
  */
 export const HUB_TILES: HubTile[] = [
   { id: 'divecore', label: 'Divecore', subtitle: 'Enter the map', icon: 'divecore', to: 'defend' },
-  { id: 'dive', label: 'Dive', subtitle: 'Push your luck', icon: 'dive', to: 'dive' },
   { id: 'pet', label: 'Pet', subtitle: 'Raise your buddy', icon: 'pet', to: 'pet' },
   { id: 'shop', label: 'Shop', subtitle: 'Spend scrap', icon: 'shop', to: 'shop' },
   { id: 'dress', label: 'Dress', subtitle: 'Customize', icon: 'dress', to: 'dress' },
