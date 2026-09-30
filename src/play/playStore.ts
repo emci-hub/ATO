@@ -77,6 +77,7 @@ import {
   PET_METER_MAX,
   PET_MIN_ROUND_SCORE,
   PET_STAGES,
+  PET_STAGE_MS,
   advancePet,
   expeditionBlock,
   expeditionLeftMs,
@@ -85,7 +86,16 @@ import {
   parsePetLogbook,
   petDiveBusted,
   petDiveSurfaced,
-  choosePetLine,
+  ackPetReveals,
+  canReleasePet,
+  chooseEgg,
+  petCareAct,
+  petCareBand,
+  petCareScore,
+  petCareSkill,
+  petOddsOpen,
+  releasePet,
+  warmEgg,
   feedPet,
   newPet,
   parsePet,
@@ -106,9 +116,27 @@ import {
   type PetHallEntry,
   type PetLogbook,
   type PetState,
-  allFormKeys,
-  formKey,
 } from '@/play/pet';
+import {
+  CARE_ACT,
+  SHARDS_PER_TICKET,
+  addToBook,
+  dyeApplies,
+  emptyGradeCounts,
+  gradeOdds,
+  heroOfLine,
+  heroStars,
+  newEggSeed,
+  nextGrade,
+  parseGradeCounts,
+  parseHeroBook,
+  rollPet,
+  roundSkillPoints,
+  type CareBand,
+  type EggType,
+  type Grade,
+  type PetHeroBook,
+} from '@/play/pet-eggs';
 import {
   DIVE_GEAR_COST,
   DIVE_OXYGEN_BUST,
@@ -660,7 +688,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 22;
+  version: 23;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -756,9 +784,14 @@ export type PlayStoreDoc = {
   /** v22 — owned pet cosmetics, and what the pet wears. */
   pet_cosmetics: string[];
   pet_wear: PetWear;
-  /** v22 — Collection: every `line:form` ever reached (Hall + retired pets;
-   * the live pet's own `forms` are added on top in the view). */
-  pet_collection: string[];
+  /** v23 — Collection: per hero, every pet that has left (released / reborn):
+   * copies (stars), shinies, grades and forms reached, and the 3★ dye switch.
+   * The live pet is added on top in the view (`heroBookOf`). */
+  pet_heroes: PetHeroBook;
+  /** v23 — shards left by released / reborn pets, by grade. */
+  pet_shards: Record<Grade, number>;
+  /** v23 — trade-up tickets (5 shards → the next grade or better), by grade. */
+  pet_tickets: Record<Grade, number>;
   /** v22 — free dives started on `free_dives_ymd` (shell fall-off). */
   free_dives_today: number;
   free_dives_ymd: string | null;
@@ -917,10 +950,22 @@ export type PetView = {
   /** v22 — owned cosmetics and what the pet wears. */
   cosmetics: readonly string[];
   wear: PetWear;
-  /** v22 — every `line:form` reached (retired pets + this one), and the
-   * number of slots in the Collection. */
-  collection: readonly string[];
-  collectionSize: number;
+  /** v23 — the Collection (every pet that has left + this one once revealed). */
+  heroes: PetHeroBook;
+  /** v23 — shards and trade-up tickets, by grade. */
+  shards: Record<Grade, number>;
+  tickets: Record<Grade, number>;
+  /** v23 — care score (0-100) and band: live in Egg/Baby, locked at Child. */
+  careScore: number;
+  careBand: CareBand;
+  /** v23 — the odds can still move (Egg/Baby, not yet revealed). */
+  oddsOpen: boolean;
+  /** v23 — the grade odds for this pet right now (the ones the roll uses). */
+  gradeOdds: Record<Grade, number>;
+  /** v23 — the live pet wears its hero's 3★ dye. */
+  dyeOn: boolean;
+  /** v23 — Release is on offer (Child and up, not away). */
+  canRelease: boolean;
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -979,7 +1024,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 22,
+    version: 23,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -1026,7 +1071,9 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     pet_pantry: {},
     pet_cosmetics: [],
     pet_wear: { ...NO_WEAR },
-    pet_collection: [],
+    pet_heroes: {},
+    pet_shards: emptyGradeCounts(),
+    pet_tickets: emptyGradeCounts(),
     free_dives_today: 0,
     free_dives_ymd: null,
   };
@@ -1260,11 +1307,25 @@ function logFind(book: PetLogbook, id: string, depth: number): PetLogbook {
   return findKind(id) === 'shells' ? book : logPetFind(book, id, depth);
 }
 
-/** Every Collection key reached: retired pets + the live pet's forms. */
-export function petCollectionOf(doc: PlayStoreDoc, pet: PetState = doc.pet): string[] {
-  const set = new Set(doc.pet_collection);
-  for (const branch of pet.forms) set.add(formKey(pet.line, branch));
-  return [...set];
+/** A pet with its hero revealed, as a Collection entry (null before Child). */
+function bookEntryOf(pet: PetState): { hero: string; grade: Grade; shiny: boolean; forms: string[] } | null {
+  const hero = pet.hero ?? heroOfLine(pet.line);
+  if (!hero || PET_STAGES.indexOf(pet.stage) < PET_STAGES.indexOf('child')) return null;
+  return { hero, grade: pet.grade ?? 'common', shiny: pet.shiny, forms: pet.forms };
+}
+
+/** The Collection: every pet that has left + the live pet (once revealed). */
+export function heroBookOf(doc: PlayStoreDoc, pet: PetState = doc.pet): PetHeroBook {
+  const entry = bookEntryOf(pet);
+  return entry ? addToBook(doc.pet_heroes, entry) : doc.pet_heroes;
+}
+
+/** Does the live pet wear its hero's 3★ dye? (Never on a shiny.) */
+export function petDyeOn(doc: PlayStoreDoc, pet: PetState = doc.pet): boolean {
+  const hero = pet.hero ?? heroOfLine(pet.line);
+  if (!hero || PET_STAGES.indexOf(pet.stage) < PET_STAGES.indexOf('child')) return false;
+  const rec = heroBookOf(doc, pet)[hero];
+  return dyeApplies(heroStars(rec?.copies ?? 0), rec?.dye ?? false, pet.shiny);
 }
 
 /** The pet aged to `now`, and whether it is still away. An expedition whose
@@ -1305,8 +1366,15 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     pantryTotal: pantryTotal(doc.pet_pantry),
     cosmetics: doc.pet_cosmetics,
     wear: doc.pet_wear,
-    collection: petCollectionOf(doc, pet),
-    collectionSize: allFormKeys().length,
+    heroes: heroBookOf(doc, pet),
+    shards: doc.pet_shards,
+    tickets: doc.pet_tickets,
+    careScore: petCareScore(pet),
+    careBand: petCareBand(pet),
+    oddsOpen: petOddsOpen(pet),
+    gradeOdds: gradeOdds(petCareBand(pet), pet.ticket),
+    dyeOn: petDyeOn(doc, pet),
+    canRelease: canReleasePet(pet) && !away,
   };
 }
 
@@ -1385,7 +1453,7 @@ export function feedFromPantry(doc: PlayStoreDoc, now: number, food: FoodId): Pl
   if (away || touched.pet.stage === 'egg' || have < 1 || touched.pet.hunger >= PET_METER_MAX) return null;
   return {
     ...touched,
-    pet: feedPet(touched.pet, FOODS[food].hearts),
+    pet: petCareAct(feedPet(touched.pet, FOODS[food].hearts), CARE_ACT.fed),
     pet_pantry: { ...touched.pet_pantry, [food]: have - 1 },
   };
 }
@@ -1435,10 +1503,137 @@ export function devAddShells(doc: PlayStoreDoc): PlayStoreDoc {
   return { ...doc, shells: doc.shells + 100 };
 }
 
-/** Pick what hatches (egg only). Null when refused. */
-export function setPetLine(doc: PlayStoreDoc, now: number, lineId: string): PlayStoreDoc | null {
-  const pet = choosePetLine(advancePet(doc.pet, now), lineId);
+/* ---------------------------------------------------------------------------
+ * Eggs (v23, 2026-09-30) — see `pet-eggs.ts` for the rules and odds.
+ * ------------------------------------------------------------------------- */
+
+/** Choose an egg from the empty picker, optionally spending a trade-up ticket
+ * (the grade can't roll below it). The seed is stored now. Null when refused. */
+export function chooseEggDoc(
+  doc: PlayStoreDoc,
+  now: number,
+  egg: EggType,
+  ticket: Grade | null,
+  rng: () => number = Math.random,
+): PlayStoreDoc | null {
+  if (ticket != null && (ticket === 'common' || doc.pet_tickets[ticket] < 1)) return null;
+  const pet = chooseEgg(advancePet(doc.pet, now), egg, newEggSeed(rng), ticket, now);
+  if (!pet) return null;
+  return {
+    ...doc,
+    pet,
+    pet_tickets: ticket ? { ...doc.pet_tickets, [ticket]: doc.pet_tickets[ticket] - 1 } : doc.pet_tickets,
+  };
+}
+
+/** Tap the egg: +1 warmth (max 4). */
+export function warmEggDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | null {
+  const pet = warmEgg(advancePet(doc.pet, now));
   return pet ? { ...doc, pet } : null;
+}
+
+/** The reveal animations were shown. */
+export function ackPetRevealsDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | null {
+  const aged = advancePet(doc.pet, now);
+  if (aged.reveals.length === 0) return aged === doc.pet ? null : { ...doc, pet: aged };
+  return { ...doc, pet: ackPetReveals(aged) };
+}
+
+/** A pet leaving (release / rebirth): into the Collection, and a shard of
+ * its grade (none before Child — the callers refuse that). */
+function recordLeaving(doc: PlayStoreDoc, pet: PetState): Pick<PlayStoreDoc, 'pet_heroes' | 'pet_shards'> {
+  const entry = bookEntryOf(pet);
+  if (!entry) return { pet_heroes: doc.pet_heroes, pet_shards: doc.pet_shards };
+  return {
+    pet_heroes: addToBook(doc.pet_heroes, entry),
+    pet_shards: { ...doc.pet_shards, [entry.grade]: doc.pet_shards[entry.grade] + 1 },
+  };
+}
+
+/** Release a Child-or-older pet: Hall + Collection + 1 shard of its grade, no
+ * rebirth bonus, back to the egg picker. Not while away. Null when refused. */
+export function releasePetDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | null {
+  const touched = touchPet(doc, now);
+  if (touched.pet_expedition) return null;
+  const next = releasePet(touched.pet, touched.pet_hall, touched.pet_rebirths, now);
+  if (!next) return null;
+  return { ...touched, ...recordLeaving(touched, touched.pet), pet: next.pet, pet_hall: next.hall };
+}
+
+/** Trade 5 shards of a grade for a ticket of the next grade (or better). */
+export function tradeUpShards(doc: PlayStoreDoc, grade: Grade): PlayStoreDoc | null {
+  const up = nextGrade(grade);
+  if (!up || doc.pet_shards[grade] < SHARDS_PER_TICKET) return null;
+  return {
+    ...doc,
+    pet_shards: { ...doc.pet_shards, [grade]: doc.pet_shards[grade] - SHARDS_PER_TICKET },
+    pet_tickets: { ...doc.pet_tickets, [up]: doc.pet_tickets[up] + 1 },
+  };
+}
+
+/** Wear / take off a hero's 3★ dye (it never shows on a shiny). */
+export function setHeroDye(doc: PlayStoreDoc, now: number, hero: string, on: boolean): PlayStoreDoc | null {
+  const book = heroBookOf(doc, advancePet(doc.pet, now));
+  if (heroStars(book[hero]?.copies ?? 0) < 3) return null;
+  const rec = doc.pet_heroes[hero] ?? { copies: 0, shinies: 0, grades: [], forms: [], dye: false };
+  return { ...doc, pet_heroes: { ...doc.pet_heroes, [hero]: { ...rec, dye: on } } };
+}
+
+/** Dev kit: hatch now / reveal now — the end of the Egg or Baby stage. */
+export function devPetEndStage(doc: PlayStoreDoc, now: number, stage: 'egg' | 'baby'): PlayStoreDoc {
+  const pet = advancePet(doc.pet, now);
+  if (pet.stage !== stage || pet.egg == null) return { ...doc, pet };
+  return { ...doc, pet: advancePet({ ...pet, stage_age_ms: PET_STAGE_MS[stage] - 1, seen_at: now - 1 }, now) };
+}
+
+/** Dev kit: force the grade / shiny. Before Child it pre-locks the result
+ * (the hero from the seed), so the reveal shows it. */
+export function devPetForce(doc: PlayStoreDoc, now: number, force: { grade?: Grade; shiny?: boolean }): PlayStoreDoc {
+  const pet = advancePet(doc.pet, now);
+  if (pet.egg == null) return { ...doc, pet };
+  const hero = pet.hero ?? rollPetHero(pet);
+  return {
+    ...doc,
+    pet: {
+      ...pet,
+      hero,
+      grade: force.grade ?? pet.grade ?? 'common',
+      shiny: force.shiny ?? pet.shiny,
+      band: pet.band ?? petCareBand(pet),
+    },
+  };
+}
+
+function rollPetHero(pet: PetState): string {
+  // Same first draw `rollPet` makes: the seed's hero.
+  return rollPetFor(pet).hero;
+}
+
+function rollPetFor(pet: PetState) {
+  return rollPet(pet.seed, pet.egg ?? 'knight', petCareBand(pet), pet.ticket);
+}
+
+/** Dev kit: set the Egg/Baby care to land in a band. */
+export function devPetSetBand(doc: PlayStoreDoc, now: number, band: CareBand): PlayStoreDoc {
+  const pet = advancePet(doc.pet, now);
+  const eggMs = PET_STAGE_MS.egg;
+  const set = {
+    poor: { warm_ms: 0, care_skill: 0, care_acts: 0 },
+    good: { warm_ms: eggMs, care_skill: 0, care_acts: 0 },
+    great: { warm_ms: eggMs, care_skill: 12, care_acts: CARE_ACT.fed },
+    perfect: { warm_ms: eggMs, care_skill: 25, care_acts: CARE_ACT.fed | CARE_ACT.trained | CARE_ACT.dived },
+  }[band];
+  return { ...doc, pet: { ...pet, ...set } };
+}
+
+/** Dev kit: +5 shards of a grade. */
+export function devGiveShards(doc: PlayStoreDoc, grade: Grade): PlayStoreDoc {
+  return { ...doc, pet_shards: { ...doc.pet_shards, [grade]: doc.pet_shards[grade] + SHARDS_PER_TICKET } };
+}
+
+/** Dev kit: empty the Collection, shards and tickets. */
+export function devResetCollection(doc: PlayStoreDoc): PlayStoreDoc {
+  return { ...doc, pet_heroes: {}, pet_shards: emptyGradeCounts(), pet_tickets: emptyGradeCounts() };
 }
 
 export type PetRoundKind = 'catch' | 'train';
@@ -1461,7 +1656,12 @@ export function finishPetRound(
   if (aged.stage === 'egg' || !(score >= PET_MIN_ROUND_SCORE)) {
     return { doc: touchedDoc, result: { counted: false, tokensGranted: 0 } };
   }
-  const pet = kind === 'catch' ? feedPet(aged, PET_FEED_CATCH) : trainPet(aged);
+  // Baby care (v23): the round's skill points and its activity.
+  const cared = petCareAct(
+    petCareSkill(aged, roundSkillPoints(kind, score, PET_MIN_ROUND_SCORE)),
+    kind === 'catch' ? CARE_ACT.fed : CARE_ACT.trained,
+  );
+  const pet = kind === 'catch' ? feedPet(cared, PET_FEED_CATCH) : trainPet(cared);
   const pay = petTokensForRound(localYmd(new Date(now)), doc.pet_tokens_ymd, doc.pet_tokens_today);
   return {
     doc: {
@@ -1485,8 +1685,8 @@ export function rebirthPetDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | nu
   if (!next) return null;
   return {
     ...touched,
-    // The retiring pet's forms stay in the Collection (v22).
-    pet_collection: petCollectionOf(touched),
+    // The retiring pet goes to the Collection and leaves a shard (v23).
+    ...recordLeaving(touched, touched.pet),
     pet: next.pet,
     pet_hall: next.hall,
     pet_rebirths: next.rebirths,
@@ -2950,6 +3150,7 @@ export function surfaceDive(
     const cared = petDiveSurfaced(pet, run.deepers);
     // Free dives never count toward Deep (emci, Part B).
     pet = free && cared !== pet ? { ...cared, deep_surfaces: pet.deep_surfaces } : cared;
+    pet = petCareAct(pet, CARE_ACT.dived); // Baby care (v23)
   }
   const logbook = netFind && !away ? logFind(touched.pet_logbook, netFind, run.deepers) : touched.pet_logbook;
   const base: PlayStoreDoc = { ...touched, dive_run: null, pet, pet_logbook: logbook };
@@ -2998,7 +3199,7 @@ export function deeperDive(
     // this is once per dive. Free dives have nothing to keep. The pet itself
     // is never lost.
     const rescued = free ? [] : bestFinds(run.haul, petRescueKeep(pet, away));
-    const cared = away ? touched.pet : petDiveBusted(touched.pet);
+    const cared = away ? touched.pet : petCareAct(petDiveBusted(touched.pet), CARE_ACT.dived);
     const base: PlayStoreDoc = { ...touched, dive_run: null, pet: cared };
     return {
       doc: rescued.length > 0 ? bankFinds(base, rescued).doc : base,
@@ -3553,7 +3754,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 9 && version !== 10 && version !== 11 && version !== 12 &&
       version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
       version !== 17 && version !== 18 && version !== 19 && version !== 20 &&
-      version !== 21 && version !== 22
+      version !== 21 && version !== 22 && version !== 23
     ) {
       return null;
     }
@@ -3658,10 +3859,18 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     // Older saves: none out, never sent, no note, empty Logbook.
     const v21 = version >= 21;
     const v22 = version >= 22;
+    const v23 = version >= 23;
     const hall = parsePetHall(data.pet_hall);
+    // v23 (eggs): the Collection becomes a per-hero book. Older saves: every
+    // Hall pet counts as one copy (stars carry over), Common, with its form;
+    // the old `line:form` Collection keys add their forms. The live pet is
+    // added on top in the view.
+    const heroBook = v23
+      ? parseHeroBook(data.pet_heroes, (id) => heroById(id) != null)
+      : legacyHeroBook(hall, v22 ? data.pet_collection : null);
     const cosmetics = v22 ? parseOwnedCosmetics(data.pet_cosmetics) : [];
     return {
-      version: 22,
+      version: 23,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -3710,11 +3919,9 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       pet_pantry: v22 ? parsePantry(data.pet_pantry) : {},
       pet_cosmetics: cosmetics,
       pet_wear: v22 ? parsePetWear(data.pet_wear, cosmetics) : { ...NO_WEAR },
-      // Older saves: seed the Collection from the Hall (the live pet's
-      // current form is credited by parsePet's `forms`).
-      pet_collection: v22
-        ? parseCollection(data.pet_collection)
-        : parseCollection(hall.map((h) => formKey(h.line, h.branch))),
+      pet_heroes: heroBook,
+      pet_shards: v23 ? parseGradeCounts(data.pet_shards) : emptyGradeCounts(),
+      pet_tickets: v23 ? parseGradeCounts(data.pet_tickets) : emptyGradeCounts(),
       free_dives_today: v22 ? Math.max(0, Math.floor(finiteNumber(data.free_dives_today) ?? 0)) : 0,
       free_dives_ymd: v22 && typeof data.free_dives_ymd === 'string' ? data.free_dives_ymd : null,
     };
@@ -4020,10 +4227,25 @@ function parsePantry(raw: unknown): Partial<Record<FoodId, number>> {
   return out;
 }
 
-function parseCollection(raw: unknown): string[] {
-  if (!Array.isArray(raw)) return [];
-  const valid = new Set(allFormKeys());
-  return [...new Set(raw.filter((k): k is string => typeof k === 'string' && valid.has(k)))];
+/** v22 → v23: the hero book from the Hall (one copy each, Common, its form)
+ * and the old `line:form` Collection keys (forms only). Nothing is lost. */
+function legacyHeroBook(hall: readonly PetHallEntry[], collection: unknown): PetHeroBook {
+  let book: PetHeroBook = {};
+  for (const h of hall) {
+    if (!h.hero || heroById(h.hero) == null) continue;
+    book = addToBook(book, { hero: h.hero, grade: h.grade, shiny: h.shiny, forms: [h.branch] });
+  }
+  if (Array.isArray(collection)) {
+    for (const key of collection) {
+      if (typeof key !== 'string') continue;
+      const [line, branch] = key.split(':');
+      const hero = heroOfLine(line ?? '');
+      if (!hero || heroById(hero) == null || !branch) continue;
+      const rec = book[hero] ?? { copies: 0, shinies: 0, grades: [], forms: [], dye: false };
+      book = { ...book, [hero]: { ...rec, forms: [...new Set([...rec.forms, branch])] } };
+    }
+  }
+  return book;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

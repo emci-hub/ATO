@@ -16,6 +16,7 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import {
+  PET_STAGE_MS,
   petReminderLastFired,
   petReminderTarget,
   type PetReminderLog,
@@ -116,5 +117,55 @@ export async function syncPetReminder(on: boolean, pet: PetState, now: number): 
     await writeState({ lastFiredAt, scheduledAt: target });
   } catch {
     // No native module (Expo Go / tests) — no reminder, no error.
+  }
+}
+
+/* ------------------------------------------------ egg notices (v23) --- */
+
+/** Its own id (sign-out cancels it next to the hunger one in `push.ts`). */
+export const PET_EGG_PUSH_ID = 'ato.play.pet.egg';
+
+/** When the next egg moment lands (hatch, or the Child reveal), or null. */
+export function petEggNoticeTarget(pet: PetState, now: number): { at: number; kind: 'hatch' | 'reveal' } | null {
+  if (pet.egg == null) return null;
+  if (pet.stage === 'egg') return { at: now + Math.max(0, PET_STAGE_MS.egg - pet.stage_age_ms), kind: 'hatch' };
+  if (pet.stage === 'baby' && pet.hero == null) {
+    return { at: now + Math.max(0, PET_STAGE_MS.baby - pet.stage_age_ms), kind: 'reveal' };
+  }
+  return null;
+}
+
+/** "Your egg hatched" / "Your hero is revealed" — one pending notice, only
+ * when the pet reminder is on (same opt-in, same permission). Best-effort. */
+export async function syncPetEggNotice(on: boolean, pet: PetState, now: number): Promise<void> {
+  if (Platform.OS === 'web') return;
+  try {
+    await Notifications.cancelScheduledNotificationAsync(PET_EGG_PUSH_ID);
+  } catch {
+    // Nothing scheduled / no native module.
+  }
+  const target = on ? petEggNoticeTarget(pet, now) : null;
+  if (!target || target.at <= now + 5_000) return;
+  try {
+    const perm = await Notifications.getPermissionsAsync();
+    if (!perm.granted) return;
+    await Notifications.scheduleNotificationAsync({
+      identifier: PET_EGG_PUSH_ID,
+      content: {
+        title: target.kind === 'hatch' ? 'Your egg hatched!' : 'Your hero is revealed!',
+        body:
+          target.kind === 'hatch'
+            ? 'Your Baby is here — play and feed it to raise the odds before the reveal.'
+            : 'Open Divecore to see who hatched from your egg.',
+        sound: false,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        channelId: CHANNEL_ID,
+        date: new Date(target.at),
+      },
+    });
+  } catch {
+    // No native module (Expo Go / tests) — no notice, no error.
   }
 }

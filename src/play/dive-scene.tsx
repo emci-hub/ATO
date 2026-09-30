@@ -61,6 +61,8 @@ import { findName } from '@/play/dive-loot';
 import type { PetState } from '@/play/pet';
 import { petPose, sharpPetBox, type PetPose } from '@/play/pet-actor';
 import { PetAnimSprite, usePetArt, type PetArt, type PetFace } from '@/play/pet-anim-sprite';
+import type { Grade } from '@/play/pet-eggs';
+import { GradeAura, ShinyOverlay } from '@/play/pet-looks';
 import type { PetWear } from '@/play/pet-cosmetics';
 
 const PET_WANT_BOX = 112;
@@ -176,6 +178,9 @@ function SwimmingPet({
   box,
   turn,
   trail,
+  grade,
+  shiny,
+  recolor,
 }: {
   pet: PetState;
   art: PetArt;
@@ -185,6 +190,10 @@ function SwimmingPet({
   box: number;
   turn: boolean;
   trail: boolean;
+  /** v23 — looks only: the grade glow, a shiny's colours, a 3★ dye. */
+  grade: Grade | null;
+  shiny: boolean;
+  recolor: string | null;
 }) {
   const [face, setFace] = useState<PetFace>('e');
   useEffect(() => {
@@ -194,6 +203,7 @@ function SwimmingPet({
   }, [turn]);
   return (
     <>
+      <GradeAura grade={grade} size={box} animate={turn} trail={face === 'front' ? null : face} />
       {trail
         ? [0, 1, 2].map((i) => (
             <Bubble key={i} x={face === 'e' ? box * 0.2 : box * 0.75} height={box * 0.6} r={1.5 + i * 0.5} dur={1400 + i * 300} delay={i * 450} />
@@ -210,7 +220,10 @@ function SwimmingPet({
         loop={pose.loop}
         box={box}
         animate
+        recolor={recolor}
+        lockColour={shiny}
       />
+      {shiny ? <ShinyOverlay size={box} footAt={0.75} animate={turn} /> : null}
     </>
   );
 }
@@ -231,6 +244,9 @@ export function DiveScene({
   reduceMotion,
   fxLevel,
   children,
+  grade = null,
+  shiny = false,
+  recolor = null,
 }: {
   pet: PetState;
   wear: PetWear;
@@ -251,6 +267,10 @@ export function DiveScene({
   fxLevel: DiveFxLevel;
   /** HUD drawn over the scene (top bar). */
   children?: ReactNode;
+  /** v23 — the pet's grade glow and shiny / dye colours (looks only). */
+  grade?: Grade | null;
+  shiny?: boolean;
+  recolor?: string | null;
 }) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const onLayout = (e: LayoutChangeEvent) =>
@@ -586,6 +606,9 @@ export function DiveScene({
                 box={box}
                 turn={!reduceMotion}
                 trail={full && pet.stage !== 'egg'}
+                grade={grade}
+                shiny={shiny}
+                recolor={recolor}
               />
               {hurtFlash ? <View style={[StyleSheet.absoluteFill, styles.hurt]} /> : null}
             </Animated.View>

@@ -15,6 +15,8 @@ import { PET_STATUSES } from '../src/play/pet-status';
 import {
   PET_BANNED_WORDS,
   PET_EGG_LINES,
+  PET_EGG_TALK,
+  PET_EGG_TALK_LINES,
   PET_TALK_BIG,
   PET_TALK_LINES,
   PET_TALK_MAX_CHARS,
@@ -22,6 +24,7 @@ import {
   PET_TALK_MIN_BIG,
   PET_TALK_SITUATIONS,
   pickEggLine,
+  pickEggTalk,
   pickPetLine,
   talkSituationForStatus,
   timeOfDaySituation,
@@ -112,5 +115,22 @@ assert.equal(timeOfDaySituation(19), 'evening');
 assert.equal(timeOfDaySituation(23), null);
 assert.equal(timeOfDaySituation(3), null);
 ok('every status and time of day maps to a situation with lines');
+
+for (const moment of PET_EGG_TALK) {
+  const pool = PET_EGG_TALK_LINES[moment];
+  assert.ok(pool.length >= PET_TALK_MIN, `egg/${moment}: ${pool.length} lines, needs ${PET_TALK_MIN}`);
+  for (const line of pool) {
+    assert.ok(line.length <= PET_TALK_MAX_CHARS, `egg/${moment}: "${line}" too long`);
+    assert.ok(!banned.test(line), `egg/${moment}: "${line}" uses a banned word`);
+  }
+  let last: string | null = null;
+  for (let i = 0; i < 300; i += 1) {
+    const line = pickEggTalk(moment, last, rng);
+    assert.notEqual(line, last, `egg/${moment}: repeated`);
+    last = line;
+  }
+}
+for (const g of ['common', 'rare', 'epic', 'legendary']) assert.ok(PET_EGG_TALK.includes(`reveal_${g}` as never), `a reveal line for ${g}`);
+ok('egg-stage lines: keep warm, hatching, hatched, a reveal per grade, shiny, trade-up — 3+ each, no repeats, no banned words');
 
 console.log(`\ncheck:pet-talk — ${passed} groups passed.`);

@@ -20,6 +20,7 @@ import {
   type PetPose,
 } from '@/play/pet-actor';
 import { PetFigure } from '@/play/pet-figure';
+import { useBlendRecolor } from '@/play/pet-looks';
 import type { PetWear } from '@/play/pet-cosmetics';
 import {
   directionalClipDrawable,
@@ -133,6 +134,8 @@ export function PetAnimSprite({
   asleep = false,
   box,
   animate,
+  recolor = null,
+  lockColour = false,
 }: {
   pet: PetState;
   art: PetArt;
@@ -148,11 +151,27 @@ export function PetAnimSprite({
   box: number;
   /** False = hold frame 0 (reduced motion keeps its idle, just slower). */
   animate: boolean;
+  /** v23 — shiny / dye recolour, and a shiny's locked colour. */
+  recolor?: string | null;
+  lockColour?: boolean;
 }) {
+  const blend = useBlendRecolor();
   const ticking = animate && pose != null && !pose.hold && pet.stage !== 'egg';
   const now = usePetClock(ticking);
   const slow = asleep ? PET_SLEEP_SLOWDOWN : 1;
   const index = ticking ? petFrameAt(art.kit, pose, now - startedAt, loop, slow) : 0;
   const drawable = pet.stage === 'egg' ? undefined : poseDrawable(art.role, pose, face, index);
-  return <PetFigure pet={pet} baseBox={box} box={box} eggColor={eggColor} wear={wear} frame={drawable} />;
+  return (
+    <PetFigure
+      pet={pet}
+      baseBox={box}
+      box={box}
+      eggColor={eggColor}
+      wear={wear}
+      frame={drawable}
+      recolor={recolor}
+      blend={blend}
+      lockColour={lockColour}
+    />
+  );
 }

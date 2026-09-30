@@ -178,6 +178,9 @@ const HOUR = 3600_000;
 const base: PetStatusInput = { stage: 'teen', hunger: 4, mood: 4, away: false, night: false, stageLeftMs: 40 * HOUR };
 const cases: [Partial<PetStatusInput>, PetStatus][] = [
   [{ away: true, hunger: 0, mood: 0, night: true }, 'away'],
+  [{ stage: 'egg', eggChosen: false, warmth: 0 }, 'choose_egg'],
+  [{ stage: 'egg', eggChosen: true, warmth: 1 }, 'chilly'],
+  [{ stage: 'egg', eggChosen: true, warmth: 2, stageLeftMs: 60_000 }, 'egg'],
   [{ stage: 'egg', hunger: 0, stageLeftMs: 50 * 60_000 }, 'egg'],
   [{ stage: 'egg', stageLeftMs: 10 * 60_000 }, 'egg'],
   [{ hunger: 0, mood: 0, night: true, stageLeftMs: 1 }, 'starving'],
@@ -196,12 +199,12 @@ for (const [patch, want] of cases) {
 const covered = new Set(cases.map(([, s]) => s));
 for (const s of PET_STATUSES) assert.ok(covered.has(s), `status ${s} is covered`);
 assert.equal(petStatusLabel('hungry', 'teen'), '😋 Hungry');
-assert.equal(petStatusLabel('egg', 'egg', 10 * 60_000), '✨ Hatching soon', 'an egg about to hatch keeps its Choose button');
-assert.equal(petStatusLabel('egg', 'egg', 50 * 60_000), '🥚 Egg');
+assert.equal(petStatusLabel('egg', 'egg', 60_000), '✨ Hatching soon', 'an egg in its last 75s reads Hatching soon (and keeps its status)');
+assert.equal(petStatusLabel('egg', 'egg', 4 * 60_000), '🥚 Egg');
 assert.equal(petStatusLabel('evolving', 'teen', 1), '✨ Evolving soon');
 assert.equal(heartsText(3), '❤❤❤♡');
 assert.equal(heartsText(0), '♡♡♡♡');
-ok('status: priority order Away › Egg › Starving › Very sad › Hungry › Sad › Sleepy › Evolving › Happy › Okay');
+ok('status: priority order Away › Pick an egg › Chilly › Egg › Starving › Very sad › Hungry › Sad › Sleepy › Evolving › Happy › Okay');
 
 for (let h = 0; h < 24; h += 1) assert.equal(isNightHour(h), h >= 22 || h < 7, `hour ${h}`);
 for (const stage of PET_STAGES) {
@@ -212,8 +215,8 @@ for (const stage of PET_STAGES) {
   }
   assert.equal(w, Math.min(12 * HOUR, PET_STAGE_MS[stage] * 0.25), `${stage} evolving-soon window`);
 }
-assert.equal(evolvingSoonWindowMs('egg'), 15 * 60_000, 'Egg (1h): 15 minutes');
-assert.equal(evolvingSoonWindowMs('baby'), 3 * HOUR, 'Baby (12h): 3 hours');
+assert.equal(evolvingSoonWindowMs('egg'), 75_000, 'Egg (5 min): 75 seconds');
+assert.equal(evolvingSoonWindowMs('baby'), 150_000, 'Baby (10 min): 2.5 minutes');
 assert.equal(evolvingSoonWindowMs('adult'), 12 * HOUR, 'Adult (5d): capped at 12 hours');
 assert.equal(justEvolved('child', 'teen'), true);
 assert.equal(justEvolved('god', 'egg'), false, 'a rebirth is not an evolution');
@@ -257,7 +260,6 @@ assert.match(coach({ status: 'evolving' }).tip, /hearts up/);
 assert.equal(coach({ status: 'happy', expeditionReady: true, diveCharges: 3 }).action, 'expedition', 'expedition first');
 assert.match(coach({ status: 'happy' }).tip, /^All good!/);
 assert.equal(coach({ status: 'okay', diveCharges: 1 }).action, 'dive');
-assert.equal(coach({ status: 'egg' }).action, 'hatch');
 assert.equal(coach({ status: 'away', backIn: '2h 5m' }).tip, 'Out exploring — back in 2h 5m.');
 // The button opens the right sheet (and that icon pulses).
 assert.equal(PET_COACH_ICON.feed, 'feed');
@@ -265,7 +267,12 @@ assert.equal(PET_COACH_ICON.catch, 'play');
 assert.equal(PET_COACH_ICON.play, 'play');
 assert.equal(PET_COACH_ICON.dive, 'dive');
 assert.equal(PET_COACH_ICON.expedition, 'expedition');
-assert.equal(PET_COACH_ICON.hatch, 'info');
+assert.equal(PET_COACH_ICON.hatch, null, 'the egg picker is in the room');
+assert.equal(PET_COACH_ICON.warm, null, 'warming is a tap on the egg');
+assert.equal(coach({ status: 'choose_egg' }).action, 'hatch');
+assert.equal(coach({ status: 'chilly' }).action, 'warm');
+assert.match(coach({ status: 'chilly' }).tip, /warm/i);
+assert.equal(coach({ status: 'egg' }).action, null, 'a warm egg needs nothing');
 ok('coach: every status has a tip, buttons go to the right sheet, empty pantry → Catch the food');
 
 /* -------------------------------------------------------- sharp box --- */

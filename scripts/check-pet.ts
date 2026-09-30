@@ -45,6 +45,7 @@ import {
   PET_RESCUE_MAX,
   advancePet,
   agePet,
+  chooseEgg,
   branchFor,
   branchThresholds,
   feedPet,
@@ -104,18 +105,22 @@ function stageAt(pet: PetState, hours: number): PetState {
 
 /* ------------------------------------------------------------ time maths --- */
 
+const MIN = 60 * 1000;
 const total = PET_STAGE_MS.egg + PET_STAGE_MS.baby + PET_STAGE_MS.child + PET_STAGE_MS.teen + PET_STAGE_MS.adult;
-assert.equal(total / H, 241, 'Egg → God is 241h');
-assert.ok(total / (24 * H) > 9.9 && total / (24 * H) < 10.2, 'about 10 days to God');
-const egg = newPet(T0);
-assert.equal(stageAt(egg, 0.99).stage, 'egg');
-assert.equal(stageAt(egg, 1).stage, 'baby', 'hatches at 1h');
-assert.equal(stageAt(egg, 13).stage, 'child');
-assert.equal(stageAt(egg, 49).stage, 'teen');
-assert.equal(stageAt(egg, 121).stage, 'adult');
-assert.equal(stageAt(egg, 241).stage, 'god', 'God at 241h even with zero care');
+assert.equal(total / H, 228.25, 'Egg → God is 228.25h (5 min + 10 min + 36h + 72h + 120h)');
+assert.ok(total / (24 * H) > 9.4 && total / (24 * H) < 9.7, 'about 9.5 days to God');
+/** A chosen Knight egg (a blank picker slot never ages). */
+const egg = chooseEgg(newPet(T0), 'knight', 12345, null, T0)!;
+assert.equal(agePet(newPet(T0), 100 * H).total_age_ms, 0, 'the egg picker: no egg chosen, no time passes');
+assert.equal(agePet(egg, 5 * MIN - 1).stage, 'egg');
+assert.equal(agePet(egg, 5 * MIN).stage, 'baby', 'hatches at 5 min');
+assert.equal(agePet(egg, 15 * MIN - 1).stage, 'baby');
+assert.equal(agePet(egg, 15 * MIN).stage, 'child', 'Child (hero revealed) at 15 min');
+assert.equal(stageAt(egg, 36.25).stage, 'teen');
+assert.equal(stageAt(egg, 108.25).stage, 'adult');
+assert.equal(stageAt(egg, 228.25).stage, 'god', 'God at 228.25h even with zero care');
 assert.equal(stageAt(egg, 5000).stage, 'god', 'and God is the last stage');
-ok('stages: Egg 1h → Baby 12h → Child 36h → Teen 72h → Adult 120h → God (≈10 days), never dies');
+ok('stages: Egg 5 min → Baby 10 min → Child 36h → Teen 72h → Adult 120h → God (≈9.5 days), never dies');
 
 // Split-proof: many small visits land on the same state as one long one.
 const once = agePet(egg, 97 * H);
@@ -126,7 +131,7 @@ ok('aging is exact and split-proof (97h in 8 visits == 97h at once)');
 
 /* ---------------------------------------------------------- clock guard --- */
 
-const seen = { ...newPet(T0) };
+const seen = { ...egg };
 assert.equal(advancePet(seen, T0 - 5 * H), seen, 'clock set back: nothing passes (same object)');
 assert.equal(advancePet(seen, T0).seen_at, T0, 'no time: nothing passes');
 const jumped = advancePet(seen, T0 + 30 * 24 * H);
@@ -162,7 +167,7 @@ assert.equal(agePet(fedAfter, PET_HUNGER_TICK_MS + PET_GRACE_MS).mistakes, 1, 'a
 assert.equal(agePet(fedAfter, PET_MISTAKE_GAP_MS).mistakes, 2, 'the next one lands 6h after the last, fed or not');
 const longFed = agePet(feedPet(m1, 4), 5 * H);
 assert.equal(longFed.hunger_empty_ms, 0, 'while fed, the gap runs out on its own (no stale gap later)');
-const eggCare = agePet({ ...newPet(T0), hunger: 1 }, 0.9 * H);
+const eggCare = agePet({ ...egg, hunger: 1 }, 4 * MIN);
 assert.equal(eggCare.hunger, 1, 'an egg does not get hungry');
 ok('care: −1 hunger/3h, 2h grace, then at most one mistake per meter every 6h; eggs never decay');
 
@@ -173,6 +178,8 @@ assert.equal(branchFor('child', { mistakes: 0, training: 9, waves: 6 }), 'battle
 assert.equal(branchFor('child', { mistakes: 1, training: 3, waves: 5 }), 'bright', 'care + training → Bright');
 assert.equal(branchFor('child', { mistakes: 2, training: 3, waves: 0 }), 'standard', 'otherwise Standard');
 assert.equal(branchFor('egg', { mistakes: 99, training: 0, waves: 0 }), 'standard', 'hatching has no branch');
+assert.equal(branchFor('baby', { mistakes: 0, training: 1, waves: 0 }), 'standard', 'one round in a 10-min Baby is not Bright');
+assert.equal(branchFor('baby', { mistakes: 9, training: 9, waves: 99, deep_surfaces: 9 }), 'standard', 'every Child starts Standard');
 const almost: PetState = {
   ...newPet(T0),
   stage: 'child',
@@ -185,7 +192,7 @@ const evolved = agePet(almost, 1000);
 assert.equal(evolved.stage, 'teen');
 assert.equal(evolved.branch, 'bright', 'the ending stage’s care picks the form');
 assert.deepEqual([evolved.mistakes, evolved.training, evolved.waves], [0, 0, 0], 'counters reset each stage');
-ok('branches: Scruffy > Battle > Bright > Standard, decided at evolution; counters reset');
+ok('branches: Scruffy > Battle > Bright > Standard, decided at evolution (first at Teen); counters reset');
 
 /* ----------------------------------------------------------------- lines --- */
 
@@ -317,6 +324,7 @@ const god = docWithPet({ ...newPet(T0), stage: 'god', element_uses: { tide: 4, e
 assert.equal(rebirthPetDoc(docWithPet({ ...newPet(T0), stage: 'adult' }), T0), null, 'rebirth only from God');
 const reborn = rebirthPetDoc(god, T0 + 1)!;
 assert.equal(reborn.pet.stage, 'egg');
+assert.equal(reborn.pet.egg, null, 'back to the egg picker');
 assert.equal(reborn.pet_rebirths, 1);
 assert.equal(reborn.pet_hall.length, 1);
 assert.equal(reborn.pet_hall[0].aura, 'tide', 'the Hall keeps the aura element');
@@ -346,14 +354,17 @@ const v19: Record<string, unknown> = { ...defaultPlayStore(T0), version: 19 };
 for (const k of ['pet', 'pet_hall', 'pet_rebirths', 'pet_tokens_today', 'pet_tokens_ymd', 'pet_remind']) delete v19[k];
 const loaded = parsePlayStore(JSON.stringify(v19), T0 + 5 * H);
 assert.ok(loaded, 'a v19 save loads');
-assert.equal(loaded.version, 22);
+assert.equal(loaded.version, 23);
 assert.equal(loaded.pet.stage, 'egg', 'old saves get a fresh egg');
+assert.equal(loaded.pet.egg, null, '— the egg picker');
 assert.equal(loaded.pet.seen_at, T0 + 5 * H, 'seen now — no time before the update counts');
 assert.deepEqual([loaded.pet_hall, loaded.pet_rebirths, loaded.pet_remind], [[], 0, false]);
 const withProgress: PlayStoreDoc = {
   ...loaded,
-  pet: { ...agePet(loaded.pet, 60 * H), element_uses: { spark: 3 } },
-  pet_hall: [{ line: 'solo_raven', branch: 'battle', aura: 'ember', rebirth: 1, days: 10 }],
+  pet: { ...agePet(chooseEgg(loaded.pet, 'village', 777, null, T0)!, 60 * H), element_uses: { spark: 3 } },
+  pet_hall: [
+    { line: 'solo_raven', branch: 'battle', aura: 'ember', rebirth: 1, days: 10, hero: 'raven', grade: 'epic', shiny: true, egg: 'knight', released: false },
+  ],
   pet_rebirths: 1,
   pet_tokens_today: 15,
   pet_tokens_ymd: '2026-09-29',
@@ -361,10 +372,11 @@ const withProgress: PlayStoreDoc = {
 };
 assert.deepEqual(parsePlayStore(JSON.stringify(withProgress), T0), withProgress, 'v20 round-trips unchanged');
 assert.equal(parsePet({ stage: 'nope' }, T0).stage, 'egg', 'a corrupt pet becomes a fresh egg');
-const touched = touchPet(loaded, T0 + 7 * H);
+const loadedEgg = { ...loaded, pet: chooseEgg(loaded.pet, 'knight', 1, null, T0 + 5 * H)! };
+const touched = touchPet(loadedEgg, T0 + 7 * H);
 assert.equal(touched.pet.total_age_ms, 2 * H, 'opening the app ages the pet from the saved mark');
 assert.equal(touchPet(touched, T0 + 7 * H), touched, 'and a second touch at the same time is a no-op');
-ok('save v19 → v22: fresh egg seen now; round-trips; corrupt pet → egg');
+ok('save v19 → v23: the egg picker, seen now; round-trips; corrupt pet → egg');
 
 /* ============================================ v21 — Dive + Pet loop ===== */
 
@@ -587,7 +599,7 @@ ok('away: pounce, bust cut and rescue all off (view and roll), dives not its car
   for (const k of ['pet_expedition', 'pet_expedition_ymd', 'pet_expedition_note', 'pet_logbook']) delete v20[k];
   delete (v20.pet as Record<string, unknown>).deep_surfaces;
   const up = parsePlayStore(JSON.stringify(v20), T0)!;
-  assert.equal(up.version, 22);
+  assert.equal(up.version, 23);
   assert.deepEqual(
     [up.pet_expedition, up.pet_expedition_ymd, up.pet_expedition_note, up.pet_logbook, up.pet.deep_surfaces],
     [null, null, null, {}, 0],
@@ -602,9 +614,9 @@ ok('away: pounce, bust cut and rescue all off (view and roll), dives not its car
     pet_expedition_note: lk,
     pet_logbook: { [lk]: { depth: 3, count: 2 } },
   };
-  assert.deepEqual(parsePlayStore(JSON.stringify(full), T0), full, 'v22 round-trips unchanged');
+  assert.deepEqual(parsePlayStore(JSON.stringify(full), T0), full, 'v23 round-trips unchanged');
 }
-ok('Logbook: first depth + count, busted finds kept, survives rebirth; v20 → v22 opens empty; round-trips');
+ok('Logbook: first depth + count, busted finds kept, survives rebirth; v20 → v23 opens empty; round-trips');
 
 /* --------------------------------------------- shown % = rolled % --- */
 

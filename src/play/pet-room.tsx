@@ -45,6 +45,19 @@ import {
   type PetStep,
 } from '@/play/pet-actor';
 import { PetAnimSprite, usePetArt, type PetFace } from '@/play/pet-anim-sprite';
+import {
+  EGG_COLOR,
+  EGG_EMOJI,
+  EGG_LABEL,
+  EGG_TYPES,
+  GRADE_COLOR,
+  GRADE_LABEL,
+  GRADE_STARS,
+  WARMTH_MAX,
+  type EggType,
+} from '@/play/pet-eggs';
+import { EggShape } from '@/play/pet-figure';
+import { GradeAura, ShinyOverlay } from '@/play/pet-looks';
 import { wornLook, type PetWear } from '@/play/pet-cosmetics';
 import { heartsText, petStatusLabel, type PetStatus } from '@/play/pet-status';
 import { PET_TALK_HOLD_MS, PET_TALK_TYPE_MS } from '@/play/pet-talk';
@@ -238,6 +251,9 @@ export function PetRoom({
   reduceMotion,
   onTapPet,
   onCoach,
+  recolor = null,
+  onBadge,
+  onPickEgg,
 }: {
   pet: PetState;
   wear: PetWear;
@@ -256,6 +272,12 @@ export function PetRoom({
   reduceMotion: boolean;
   onTapPet: () => void;
   onCoach: () => void;
+  /** v23 — shiny / 3★ dye recolour of the sprite. */
+  recolor?: string | null;
+  /** v23 — tap the star badge: open the pet's card. */
+  onBadge?: () => void;
+  /** v23 — the egg picker: tap one of the three eggs. */
+  onPickEgg?: (egg: EggType) => void;
 }) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const onLayout = (e: LayoutChangeEvent) =>
@@ -271,6 +293,9 @@ export function PetRoom({
   const top = floorY - footAt * box;
   const mood = petMoodKind(pet.hunger, pet.mood, night);
   const asleep = mood === 'asleep' && !egg;
+  const picking = egg && pet.egg == null;
+  const revealed = pet.hero != null && !egg && pet.stage !== 'baby';
+  const grade = revealed ? pet.grade : null;
 
   // What it is doing (React: which clip) and where (Reanimated: position).
   const [act, setAct] = useState<{ pose: PetPose | null; loop: boolean; startedAt: number; face: PetFace; squash: boolean }>(
@@ -421,8 +446,12 @@ export function PetRoom({
 
       {/* Corner: both meters, always. */}
       <View style={styles.meters} accessible accessibilityLabel={`Hunger ${pet.hunger} of ${PET_METER_MAX}, mood ${pet.mood} of ${PET_METER_MAX}`}>
-        {egg ? (
-          <Text style={styles.meterText}>Egg</Text>
+        {picking ? (
+          <Text style={styles.meterText}>Pick an egg</Text>
+        ) : egg ? (
+          <Text style={styles.meterText} accessibilityLabel={`Warmth ${pet.warmth} of ${WARMTH_MAX}`}>
+            Warmth <Text style={styles.heartsText}>{'🔥'.repeat(pet.warmth)}{'·'.repeat(WARMTH_MAX - pet.warmth)}</Text>
+          </Text>
         ) : (
           <>
             <Text style={styles.meterText}>
@@ -450,13 +479,29 @@ export function PetRoom({
         ) : null}
       </View>
 
+      {width > 0 && picking && onPickEgg ? (
+        <View style={[styles.eggRow, { top: floorY - 96 }]}>
+          {EGG_TYPES.map((e) => (
+            <Pressable
+              key={e}
+              onPress={() => onPickEgg(e)}
+              accessibilityRole="button"
+              accessibilityLabel={`${EGG_LABEL[e]} egg — see its heroes and odds`}
+              style={({ pressed }) => [styles.eggPick, pressed && styles.pressed]}>
+              <EggShape size={70} color={EGG_COLOR[e]} />
+              <Text style={styles.eggPickLabel}>{EGG_EMOJI[e]} {EGG_LABEL[e]}</Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+
       {width > 0 && away ? (
         <View style={[styles.awayBubble, { left: width * PET_BED_X - 50, top: floorY - 60 }]}>
           <Text style={styles.statusText}>{label}</Text>
         </View>
       ) : null}
 
-      {width > 0 && !away ? (
+      {width > 0 && !away && !picking ? (
         <Animated.View style={[styles.petWrap, { top, width: box, height: box }, petStyle]}>
           {/* Floor ring (form colour; a worn ring cosmetic changes its style). */}
           <View
@@ -474,6 +519,7 @@ export function PetRoom({
             ]}
           />
           {pet.stage === 'god' && aura ? <GodAura element={aura} size={box * 1.4} reduceMotion={reduceMotion} /> : null}
+          <GradeAura grade={grade} size={box} animate={!reduceMotion} trail={act.face === 'front' ? null : act.face} />
           <Pressable
             onPress={onTapPet}
             accessibilityRole="button"
@@ -492,17 +538,35 @@ export function PetRoom({
                 asleep={asleep}
                 box={box}
                 animate
+                recolor={revealed ? recolor : null}
+                lockColour={revealed && pet.shiny}
               />
             </Animated.View>
           </Pressable>
+          {revealed && pet.shiny ? <ShinyOverlay size={box} footAt={footAt} animate={!reduceMotion} /> : null}
           {asleep ? <Text style={[styles.zzz, { left: box * 0.6, top: box * 0.25 }]}>💤</Text> : null}
           <Animated.Text style={[styles.heart, { left: box / 2 - 10, top: box * 0.3 }, heartStyle]} pointerEvents="none">
             ❤
           </Animated.Text>
           {/* Status bubble: follows the pet, readable at any size. */}
-          <View pointerEvents="none" style={[styles.bubbleAnchor, { top: box * 0.18 - 34, width: box }]}>
-            <View style={styles.statusBubble}>
-              <Text style={styles.statusText}>{label}</Text>
+          <View pointerEvents="box-none" style={[styles.bubbleAnchor, { top: box * 0.18 - 34, width: box }]}>
+            <View style={styles.bubbleRow}>
+              <View style={styles.statusBubble}>
+                <Text style={styles.statusText}>{label}</Text>
+              </View>
+              {revealed && grade && onBadge ? (
+                <Pressable
+                  onPress={onBadge}
+                  hitSlop={10}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${GRADE_LABEL[grade]}${pet.shiny ? ' shiny' : ''} — open its card`}
+                  style={[styles.badge, { borderColor: GRADE_COLOR[grade] }]}>
+                  <Text style={[styles.badgeText, { color: GRADE_COLOR[grade] }]}>
+                    {'★'.repeat(GRADE_STARS[grade])}
+                    {pet.shiny ? '✨' : ''}
+                  </Text>
+                </Pressable>
+              ) : null}
             </View>
           </View>
           <Animated.View
@@ -563,6 +627,12 @@ const styles = StyleSheet.create({
   zzz: { position: 'absolute', fontSize: 18 },
   heart: { position: 'absolute', fontSize: 20, color: '#FF5A8A' },
   bubbleAnchor: { position: 'absolute', left: 0, alignItems: 'center' },
+  bubbleRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  badge: { paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10, borderWidth: 1, backgroundColor: 'rgba(5, 7, 13, 0.85)' },
+  badgeText: { fontFamily: Fonts.monoBold, fontSize: 11 },
+  eggRow: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-around' },
+  eggPick: { alignItems: 'center', gap: 4 },
+  eggPickLabel: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.textPrimary },
   speechAnchor: { position: 'absolute', alignItems: 'center' },
   statusBubble: {
     paddingVertical: 4,

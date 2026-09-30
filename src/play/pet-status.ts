@@ -2,7 +2,7 @@
  * Pet status (room overhaul, 2026-09-29) — the ONE state the bubble over the
  * pet shows, as a phone emoji + a word, most urgent first:
  *
- *   Away › (Egg) › Starving › Very sad › Hungry › Sad › Sleepy ›
+ *   Away › Pick an egg › Chilly (egg warmth ≤ 1) › (Egg) › Starving › Very sad › Hungry › Sad › Sleepy ›
  *   Evolving soon › Happy › Okay
  *
  * Empty meter = 0 hearts, low = 1 heart. Sleepy = 22:00-07:00 on the phone's
@@ -13,6 +13,8 @@ import { PET_METER_MAX, PET_STAGES, PET_STAGE_MS, type PetStage } from './pet';
 
 export const PET_STATUSES = [
   'away',
+  'choose_egg',
+  'chilly',
   'egg',
   'starving',
   'very_sad',
@@ -27,6 +29,8 @@ export type PetStatus = (typeof PET_STATUSES)[number];
 
 export const PET_STATUS_EMOJI: Record<PetStatus, string> = {
   away: '🧭',
+  choose_egg: '🥚',
+  chilly: '🥶',
   egg: '🥚',
   starving: '😫',
   very_sad: '😭',
@@ -40,6 +44,8 @@ export const PET_STATUS_EMOJI: Record<PetStatus, string> = {
 
 export const PET_STATUS_WORD: Record<PetStatus, string> = {
   away: 'Away',
+  choose_egg: 'Pick an egg',
+  chilly: 'Chilly',
   egg: 'Egg',
   starving: 'Starving',
   very_sad: 'Very sad',
@@ -82,11 +88,20 @@ export type PetStatusInput = {
   away: boolean;
   night: boolean;
   stageLeftMs: number | null;
+  /** v23 — an egg has been chosen (false = the egg picker). */
+  eggChosen?: boolean;
+  /** v23 — egg warmth pips (0-4). */
+  warmth?: number;
 };
+
+/** Egg warmth at or below this reads Chilly. */
+export const PET_CHILLY_WARMTH = 1;
 
 /** The one status to show — the most urgent first (see the header). */
 export function petStatus(input: PetStatusInput): PetStatus {
   if (input.away) return 'away';
+  if (input.stage === 'egg' && input.eggChosen === false) return 'choose_egg';
+  if (input.stage === 'egg' && (input.warmth ?? 4) <= PET_CHILLY_WARMTH) return 'chilly';
   // An egg stays "Egg" (so "Choose what hatches" is offered until it hatches);
   // its label reads "Hatching soon" in its last minutes (petStatusLabel).
   if (input.stage === 'egg') return 'egg';

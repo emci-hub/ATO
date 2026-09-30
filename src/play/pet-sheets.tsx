@@ -31,11 +31,10 @@ import {
   type FoodId,
 } from '@/play/dive-loot';
 import { getItemDef } from '@/play/items';
-import { ELEMENT_COLOR, ELEMENT_LABEL } from '@/play/kits';
+import { ELEMENT_COLOR } from '@/play/kits';
 import { NeonButton, NeonChip, NeonLabel } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
 import {
-  PET_BRANCHES,
   PET_BRANCH_LABEL,
   PET_DEEP_MIN_DEPTH,
   PET_METER_MAX,
@@ -48,19 +47,16 @@ import {
   PET_TOKENS_PER_ROUND,
   branchFor,
   branchThresholds,
-  formKey,
-  newPet,
   petBustCutPp,
   petLineById,
-  petLines,
   petNextStage,
   petPounceBase,
   petRescueKeep,
   type PetState,
 } from '@/play/pet';
 import { COSMETICS, COSMETIC_SLOTS, cosmeticById, type CosmeticSlot } from '@/play/pet-cosmetics';
-import { PetFigure } from '@/play/pet-figure';
 import { CatchFoodGame, TapTrainGame, TRAIN_REPS } from '@/play/pet-games';
+import { CollectionPanel, DyePanel, EggHelp, HallCards, OddsPanel, ReleasePanel } from '@/play/pet-egg-sheets';
 import { heartsText } from '@/play/pet-status';
 import {
   buyCosmetic,
@@ -68,7 +64,6 @@ import {
   feedFromPantry,
   rebirthPetDoc,
   sendPetExpedition,
-  setPetLine,
   wearCosmetic,
   type PetRoundKind,
   type PetRoundResult,
@@ -386,24 +381,9 @@ export function StatusTab({
         {Math.round(PET_REBIRTH_CAP * 100)}%).
       </Text>
 
-      {pet.stage === 'egg' ? (
-        <>
-          <NeonLabel>Choose what hatches</NeonLabel>
-          <Text style={styles.body}>
-            You can change it until the egg hatches. The three minion lines grow into a hero at Teen.
-          </Text>
-          <View style={styles.chips}>
-            {petLines().map((option) => (
-              <NeonChip
-                key={option.id}
-                label={option.label}
-                selected={option.id === pet.line}
-                onPress={() => commit((doc, now) => setPetLine(doc, now, option.id))}
-              />
-            ))}
-          </View>
-        </>
-      ) : null}
+      <OddsPanel view={view} />
+
+      <ReleasePanel view={view} commit={commit} />
 
       {pet.stage === 'god' ? (
         <>
@@ -474,11 +454,10 @@ function LogRow({ id, entry }: { id: string; entry: { depth: number; count: numb
   );
 }
 
-export function BookTab({ view, eggColor }: { view: PlayView; eggColor: string }) {
+export function BookTab({ view, commit, eggColor }: { view: PlayView; commit: Commit; eggColor: string }) {
   const pv = view.pet;
   const logIds = diveCollectibleIds();
   const logFound = logIds.filter((id) => pv.logbook[id]).length;
-  const found = new Set(pv.collection);
   return (
     <>
       <NeonLabel>
@@ -490,52 +469,13 @@ export function BookTab({ view, eggColor }: { view: PlayView; eggColor: string }
       {logIds.map((id) => (
         <LogRow key={id} id={id} entry={pv.logbook[id] ?? null} />
       ))}
-      <NeonLabel>
-        Collection · {pv.collection.length}/{pv.collectionSize}
-      </NeonLabel>
-      <Text style={styles.body}>
-        Every form each pet line can take. A form counts once a pet reaches it (from Child). Cosmetics
-        owned: {pv.cosmetics.length}/{COSMETICS.length}.
-      </Text>
-      {petLines().map((line) => (
-        <View key={line.id} style={styles.collRow}>
-          <Text style={[styles.subtle, styles.collLabel]} numberOfLines={2}>
-            {line.label}
-          </Text>
-          <View style={styles.collForms}>
-            {PET_BRANCHES.map((branch) => {
-              const has = found.has(formKey(line.id, branch));
-              const sample: PetState = { ...newPet(0, line.id), stage: 'teen', branch };
-              return (
-                <View
-                  key={branch}
-                  style={styles.collCell}
-                  accessibilityLabel={`${line.label} ${PET_BRANCH_LABEL[branch]}${has ? '' : ', not found'}`}>
-                  <PetFigure pet={sample} baseBox={34} eggColor={eggColor} silhouette={!has} />
-                  <Text style={styles.collName}>{has ? PET_BRANCH_LABEL[branch] : '???'}</Text>
-                </View>
-              );
-            })}
-          </View>
-        </View>
-      ))}
+      <CollectionPanel view={view} commit={commit} eggColor={eggColor} />
     </>
   );
 }
 
-export function HallTab({ view }: { view: PlayView }) {
-  const hall = view.pet.hall;
-  if (hall.length === 0) return <Text style={styles.body}>Empty for now — a pet joins after its rebirth.</Text>;
-  return (
-    <>
-      {[...hall].reverse().map((entry, i) => (
-        <Text key={`${entry.rebirth}-${i}`} style={styles.body}>
-          #{entry.rebirth} {petLineById(entry.line).label} · {PET_BRANCH_LABEL[entry.branch]}
-          {entry.aura ? ` · ${ELEMENT_LABEL[entry.aura]} aura` : ''} · {entry.days}d
-        </Text>
-      ))}
-    </>
-  );
+export function HallTab({ view, eggColor }: { view: PlayView; eggColor: string }) {
+  return <HallCards view={view} eggColor={eggColor} />;
 }
 
 const SLOT_LABEL: Record<CosmeticSlot, string> = { badge: 'Badges', tint: 'Tints', ring: 'Rings', aura: 'Auras' };
@@ -560,6 +500,10 @@ export function StyleTab({ view, commit }: { view: PlayView; commit: Commit }) {
   };
   return (
     <>
+      <DyePanel view={view} commit={commit} />
+      {pv.state.shiny ? (
+        <Text style={styles.body}>✨ Your shiny keeps its own colour — tints don’t show on it.</Text>
+      ) : null}
       <Text style={styles.body}>
         Tokens: {view.tokens}. Wardrobe · {pv.cosmetics.length}/{COSMETICS.length}. Tints and badges are for
         sale; rings come from the Trench and deeper, auras from the Abyss and deeper.
@@ -604,9 +548,11 @@ export function StyleTab({ view, commit }: { view: PlayView; commit: Commit }) {
 export function HelpTab() {
   return (
     <>
+      <EggHelp />
+      <NeonLabel>Raising your pet</NeonLabel>
       <Text style={styles.body}>
-        • It grows on real time: Egg (1h) → Baby (12h) → Child (1.5 days) → Teen (3 days) → Adult (5 days) →
-        God. About 10 days in all, even if you only play TD.
+        • It grows on real time: Egg (5 min) → Baby (10 min) → Child (1.5 days) → Teen (3 days) → Adult (5
+        days) → God. About 9.5 days in all, even if you only play TD. Its form is first picked at Teen.
       </Text>
       <Text style={styles.body}>
         • Hunger drops a heart every 3h, mood every 4h. Leaving one empty for over 2h is a care mistake.

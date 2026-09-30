@@ -66,6 +66,9 @@ export function PetFigure({
   silhouette = false,
   frame,
   box: boxOverride,
+  recolor = null,
+  blend = false,
+  lockColour = false,
 }: {
   pet: PetState;
   baseBox: number;
@@ -76,6 +79,12 @@ export function PetFigure({
   frame?: ClipDrawable;
   /** Exact drawn size (the room snaps it to whole device pixels). */
   box?: number;
+  /** v23 — shiny / 3★ dye recolour (a hue swap; see pet-looks.tsx). */
+  recolor?: string | null;
+  /** Use the hue blend (else the tint wash at ~38%). */
+  blend?: boolean;
+  /** A shiny's colour is its own: no form wash or Wardrobe tint on top. */
+  lockColour?: boolean;
 }) {
   const box = boxOverride ?? petBoxSize(pet, baseBox);
   if (pet.stage === 'egg') return <EggShape size={box} color={silhouette ? '#000000' : eggColor} />;
@@ -88,11 +97,11 @@ export function PetFigure({
       </View>
     );
   }
-  const tint = look.tint ?? PET_BRANCH_TINT[pet.branch];
+  const tint = lockColour ? null : (look.tint ?? PET_BRANCH_TINT[pet.branch]);
   const badgeArt = look.badgeItemId ? itemArtSource(getItemDef(look.badgeItemId)?.core.art ?? '') : undefined;
   const badge = Math.max(14, Math.round(box * 0.3));
   return (
-    <View style={{ width: box, height: box }}>
+    <View style={[{ width: box, height: box }, recolor && blend ? styles.isolate : null]}>
       {look.aura ? (
         <Svg width={box * 1.5} height={box * 1.5} viewBox="0 0 100 100" style={[styles.aura, { left: -box * 0.25, top: -box * 0.25 }]} pointerEvents="none">
           <Circle cx="50" cy="50" r="48" fill={ELEMENT_COLOR[look.aura]} fillOpacity={0.1} />
@@ -100,6 +109,13 @@ export function PetFigure({
         </Svg>
       ) : null}
       <ClipImage drawable={drawable} />
+      {recolor ? (
+        <View
+          style={[StyleSheet.absoluteFill, blend ? styles.hue : styles.recolorWash]}
+          pointerEvents="none">
+          <ClipImage drawable={drawable} tintColor={recolor} />
+        </View>
+      ) : null}
       {tint ? (
         <View style={[StyleSheet.absoluteFill, styles.wash]} pointerEvents="none">
           <ClipImage drawable={drawable} tintColor={tint} />
@@ -119,6 +135,10 @@ export function PetFigure({
 
 const styles = StyleSheet.create({
   wash: { opacity: 0.35 },
+  /** The shiny / dye recolour: a hue swap, or the wash fallback. */
+  hue: { mixBlendMode: 'hue' },
+  recolorWash: { opacity: 0.38 },
+  isolate: { isolation: 'isolate' },
   silhouette: { opacity: 0.55 },
   aura: { position: 'absolute' },
   badge: { position: 'absolute', right: -2, top: -2 },

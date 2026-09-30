@@ -109,18 +109,21 @@ export function tipForWave(
  */
 
 /** What the coach button does. */
-export type PetCoachAction = 'feed' | 'catch' | 'play' | 'dive' | 'expedition' | 'hatch';
+export type PetCoachAction = 'feed' | 'catch' | 'play' | 'dive' | 'expedition' | 'hatch' | 'warm';
 
 /** The room icon (and sheet) each action opens — that icon pulses. */
 export type PetCoachIcon = 'feed' | 'play' | 'dive' | 'expedition' | 'info';
 
-export const PET_COACH_ICON: Record<PetCoachAction, PetCoachIcon> = {
+/** Null = the action happens in the room itself (the egg picker's eggs,
+ * tapping the egg to warm it) — no icon pulses. */
+export const PET_COACH_ICON: Record<PetCoachAction, PetCoachIcon | null> = {
   feed: 'feed',
   catch: 'play', // Catch the food lives in the Play sheet
   play: 'play',
   dive: 'dive',
   expedition: 'expedition',
-  hatch: 'info', // "Choose what hatches" lives in Info → Status
+  hatch: null, // the egg picker
+  warm: null, // tap the egg
 };
 
 export type PetCoachInput = {
@@ -160,8 +163,12 @@ export function petCoachTip(input: PetCoachInput): PetCoachTip {
         action: null,
         button: null,
       };
+    case 'choose_egg':
+      return { tip: 'Pick an egg — Knight, Wizard or Village.', action: 'hatch', button: 'Choose' };
+    case 'chilly':
+      return { tip: 'Brr… tap me to keep me warm!', action: 'warm', button: 'Warm' };
     case 'egg':
-      return { tip: 'Pick what I’ll hatch into!', action: 'hatch', button: 'Choose' };
+      return { tip: 'Toasty! Tap me now and then to keep it that way.', action: null, button: null };
     case 'starving':
     case 'hungry':
       return foodTip(

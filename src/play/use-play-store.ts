@@ -241,6 +241,25 @@ export function usePlayStore() {
 
   const view: PlayView | null = doc ? playView(doc, Date.now()) : null;
 
+  // Eggs (v23): the view ages the pet on every render, so a hatch or the Child
+  // reveal (hero, grade, shiny) can appear on screen before any action saves
+  // it. Save it the moment it shows — otherwise a player could see the grade,
+  // set the clock back (no time passes, still a Baby), add care, and roll the
+  // same seed against a better band. Once saved, the roll is locked for good.
+  const unsavedReveal = doc != null && view != null && view.pet.state.reveals.length > doc.pet.reveals.length;
+  useEffect(() => {
+    if (!unsavedReveal) return;
+    const current = docRef.current;
+    if (!current) return;
+    const next = touchPet(current, Date.now());
+    if (next === current) return;
+    docRef.current = next;
+    setDoc(next);
+    savePlayStore(next).catch(() => {
+      // Best effort; the next action saves it too.
+    });
+  }, [unsavedReveal]);
+
   /** Equip one owned (bagged) copy of (itemId, star) into its slot. */
   const equip = useCallback(
     async (itemId: string, star: number): Promise<EquipOutcome> => {

@@ -36,7 +36,8 @@ import {
   tierAt,
 } from '../src/play/dive-loot';
 import { getItemDef, rollPowerFind } from '../src/play/items';
-import { PET_POUNCE_BASE, agePet, allFormKeys, formKey, newPet, type PetState } from '../src/play/pet';
+import { PET_POUNCE_BASE, PET_STAGE_MS, agePet, newPet, type PetState } from '../src/play/pet';
+import { EGG_POOLS } from '../src/play/pet-eggs';
 import {
   buyCosmetic,
   buyDiveGear,
@@ -235,17 +236,20 @@ ok('cosmetics: found → owned, duplicate → 5 shells; tints/badges for tokens,
 /* -------------------------------------------------------- Collection --- */
 
 {
-  assert.equal(allFormKeys().length, 19 * 5, '19 lines × 5 forms');
-  const baby = pet({ stage: 'baby', line: 'line_knight', stage_age_ms: 12 * H - 1, mood: 4, hunger: 4 });
+  const baby = pet({ stage: 'baby', egg: 'knight', seed: 123, line: 'line_knight', stage_age_ms: PET_STAGE_MS.baby - 1, mood: 4, hunger: 4 });
   const child = agePet(baby, 1);
   assert.deepEqual(child.forms, ['standard'], 'Baby → Child records its form');
+  assert.ok(child.hero != null && EGG_POOLS.knight.includes(child.hero), 'the hero comes from the Knight pool');
+  const hero = child.hero!;
   const d = doc({ pet: { ...child, stage: 'god' } });
-  assert.ok(playView(d, T0).pet.collection.includes(formKey('line_knight', 'standard')));
+  assert.equal(playView(d, T0).pet.heroes[hero]?.copies, 1, 'the live pet counts in the Collection');
   const reborn = rebirthPetDoc(d, T0)!;
-  assert.ok(reborn.pet_collection.includes(formKey('line_knight', 'standard')), 'kept through rebirth');
-  assert.deepEqual(reborn.pet.forms, [], 'the new egg starts empty');
+  assert.equal(reborn.pet_heroes[hero]?.copies, 1, 'kept through rebirth');
+  assert.deepEqual(reborn.pet_heroes[hero]?.forms, ['standard']);
+  assert.equal(reborn.pet.egg, null, 'back to the egg picker');
+  assert.deepEqual(reborn.pet.forms, [], 'the next pet starts empty');
 }
-ok('Collection: 95 slots; forms recorded at evolution from Child; kept through rebirth');
+ok('Collection (v23): per hero; forms recorded from Child; kept through rebirth');
 
 /* -------------------------------------------------------- expedition --- */
 
@@ -269,16 +273,20 @@ ok('expedition: a Power half the time, else a Shallows find');
     pet_hall: [{ line: 'solo_raven', branch: 'deep', aura: null, rebirth: 1, days: 10 }],
     dive_run: { deepers: 2, haul: ['item_leaf_cape_01'] },
   };
-  for (const k of ['shells', 'dive_gear', 'pet_pantry', 'pet_cosmetics', 'pet_wear', 'pet_collection', 'free_dives_today', 'free_dives_ymd']) delete v21[k];
+  for (const k of ['shells', 'dive_gear', 'pet_pantry', 'pet_cosmetics', 'pet_wear', 'pet_heroes', 'pet_shards', 'pet_tickets', 'free_dives_today', 'free_dives_ymd']) delete v21[k];
+  for (const k of ['egg', 'seed', 'ticket', 'warmth', 'warmth_acc_ms', 'warm_ms', 'care_skill', 'care_acts', 'hero', 'grade', 'shiny', 'band', 'reveals']) {
+    delete (v21.pet as Record<string, unknown>)[k];
+  }
   delete (v21.pet as Record<string, unknown>).forms;
   const up = parsePlayStore(JSON.stringify(v21), T0)!;
-  assert.equal(up.version, 22);
+  assert.equal(up.version, 23);
   assert.deepEqual(
     [up.shells, up.dive_gear, up.pet_pantry, up.pet_cosmetics, up.pet_wear, up.free_dives_today, up.free_dives_ymd],
     [0, { lamp: false, net: false, oxygen: false }, {}, [], { badge: null, tint: null, ring: null, aura: null }, 0, null],
     'a v21 save opens with safe empty defaults',
   );
-  assert.deepEqual(up.pet_collection, ['solo_raven:deep'], 'the Collection is seeded from the Hall');
+  assert.equal(up.pet_heroes.raven?.copies, 1, 'the Collection is seeded from the Hall');
+  assert.deepEqual(up.pet_heroes.raven?.forms, ['deep']);
   assert.deepEqual(up.pet.forms, ['battle'], 'and the live pet is credited for its current form');
   assert.deepEqual(up.dive_run, { deepers: 2, haul: ['item_leaf_cape_01'], free_n: null, next: null }, 'an old run stays a charged run');
   const full: PlayStoreDoc = {
@@ -288,17 +296,19 @@ ok('expedition: a Power half the time, else a Shallows find');
     pet_pantry: { food_kelp: 3, food_shrimp: 1 },
     pet_cosmetics: ['cos_tint_ice', 'cos_ring_thick'],
     pet_wear: { badge: null, tint: 'cos_tint_ice', ring: 'cos_ring_thick', aura: null },
-    pet_collection: ['solo_raven:deep', 'line_knight:bright'],
+    pet_heroes: { raven: { copies: 2, shinies: 1, grades: ['common', 'epic'], forms: ['deep', 'bright'], dye: true } },
+    pet_shards: { common: 3, rare: 0, epic: 1, legendary: 0 },
+    pet_tickets: { common: 0, rare: 1, epic: 0, legendary: 0 },
     free_dives_today: 4,
     free_dives_ymd: '2026-09-30',
     dive_run: { deepers: 1, haul: ['food_kelp'], free_n: 3, next: { safe: 'shells_3', rich: 'cos_ring_double' } },
   };
-  assert.deepEqual(parsePlayStore(JSON.stringify(full), T0), full, 'v22 round-trips unchanged');
+  assert.deepEqual(parsePlayStore(JSON.stringify(full), T0), full, 'v23 round-trips unchanged');
   const bad = parsePlayStore(JSON.stringify({ ...full, pet_pantry: { food_kelp: 50 }, pet_wear: { tint: 'cos_tint_gold' } }), T0)!;
   assert.equal(bad.pet_pantry.food_kelp, PANTRY_MAX, 'an oversized pantry is capped on load');
   assert.equal(bad.pet_wear.tint, null, 'wearing something not owned is dropped on load');
 }
-ok('save v21 → v22: safe empty defaults, Collection seeded, old run kept; v22 round-trips; bad values cleaned');
+ok('save v21 → v23: safe empty defaults, Collection seeded, old run kept; v23 round-trips; bad values cleaned');
 
 /* ----------------------------------------------------------- TD band --- */
 

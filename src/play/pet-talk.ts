@@ -309,3 +309,39 @@ export const PET_IDLE_TALK_MAX_MS = 32_000;
 /** A bubble types out at this pace, then stays, then fades. */
 export const PET_TALK_TYPE_MS = 28;
 export const PET_TALK_HOLD_MS = 2600;
+
+/* ------------------------------------------------ egg stages (v23) --- */
+
+/** Egg-stage moments — one shared voice (the form is only picked at Teen). */
+export const PET_EGG_TALK = [
+  'keep_warm',
+  'hatching_soon',
+  'hatched',
+  'reveal_common',
+  'reveal_rare',
+  'reveal_epic',
+  'reveal_legendary',
+  'shiny',
+  'trade_ready',
+] as const;
+export type PetEggTalk = (typeof PET_EGG_TALK)[number];
+
+export const PET_EGG_TALK_LINES: Record<PetEggTalk, readonly string[]> = {
+  keep_warm: ['*shiver* Keep me warm…', 'Brr! A little warmth?', '*wobble* It’s chilly in here.'],
+  hatching_soon: ['*crack* Almost out!', '*tap tap* Nearly there…', 'I can hear you out there!'],
+  hatched: ['Peep! Hello, world!', 'I’m out! Feed me? Play?', 'Hi! I’m new here.'],
+  reveal_common: ['Look, it’s me!', 'Nice to meet you properly!', 'This is who I am!'],
+  reveal_rare: ['Ooh, I’ve got a glow!', 'Rare and ready!', 'See my shine?'],
+  reveal_epic: ['Whoa — purple sparks!', 'Epic, right?!', 'I feel powerful!'],
+  reveal_legendary: ['A LEGEND is born!', 'Gold! I’m Legendary!', 'They’ll tell stories about me!'],
+  shiny: ['I’m… sparkly?!', 'A shiny! One in fifty!', 'Look at my colours!'],
+  trade_ready: ['Your shards can trade up!', 'Five shards — trade them up!', 'A better egg is waiting!'],
+};
+
+/** An egg-stage line that is never `last`. */
+export function pickEggTalk(moment: PetEggTalk, last: string | null, rng: () => number = Math.random): string {
+  const pool = PET_EGG_TALK_LINES[moment];
+  const options = pool.filter((line) => line !== last);
+  const from = options.length > 0 ? options : pool;
+  return from[Math.min(from.length - 1, Math.floor(rng() * from.length))];
+}

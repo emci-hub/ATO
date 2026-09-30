@@ -23,6 +23,26 @@
  */
 import { ELEMENTS, type Element } from '@/play/kits';
 import { allHeroes, heroById } from '@/play/heroes-data';
+import {
+  CARE_BANDS,
+  CARE_SKILL_POINTS,
+  EGG_LINE,
+  EGG_TYPES,
+  GRADES,
+  WARMTH_DROP_MS,
+  WARMTH_MAX,
+  WARMTH_START,
+  WARMTH_WARM,
+  careBand,
+  careScore,
+  heroEgg,
+  heroOfLine,
+  rollPet,
+  trimHall,
+  type CareBand,
+  type EggType,
+  type Grade,
+} from '@/play/pet-eggs';
 
 /* ------------------------------------------------------------ numbers --- */
 
@@ -31,11 +51,14 @@ const HOUR = 60 * 60 * 1000;
 export const PET_STAGES = ['egg', 'baby', 'child', 'teen', 'adult', 'god'] as const;
 export type PetStage = (typeof PET_STAGES)[number];
 
+const MINUTE = 60 * 1000;
+
 /** How long each stage lasts before it evolves (God is the last stage).
- * 1 + 12 + 36 + 72 + 120 h ≈ 10 days to God. */
+ * Eggs (2026-09-30): the egg hatches in 5 min, the Baby (its egg's creep)
+ * reveals its hero at Child 10 min later; then 36 + 72 + 120 h ≈ 9.6 days. */
 export const PET_STAGE_MS: Record<Exclude<PetStage, 'god'>, number> = {
-  egg: 1 * HOUR,
-  baby: 12 * HOUR,
+  egg: 5 * MINUTE,
+  baby: 10 * MINUTE,
   child: 36 * HOUR,
   teen: 72 * HOUR,
   adult: 120 * HOUR,
@@ -254,18 +277,50 @@ export type PetState = {
   element_uses: Partial<Record<Element, number>>;
   /** High-water mark of the device clock (see the header). */
   seen_at: number;
+  /* ---- eggs (v23, 2026-09-30) — see pet-eggs.ts ---- */
+  /** The chosen egg; null = no egg picked yet (the egg picker; time stands still). */
+  egg: EggType | null;
+  /** Stored when the egg is chosen; hero, grade and shiny all come from it. */
+  seed: number;
+  /** A trade-up ticket used on this egg: the grade can't roll below it. */
+  ticket: Grade | null;
+  /** Egg warmth pips (0-4) and time toward the next lost pip. */
+  warmth: number;
+  warmth_acc_ms: number;
+  /** Egg time spent at 3+ warmth (care score). */
+  warm_ms: number;
+  /** Baby care: best round skill points (0/12/25) and activity bit flags. */
+  care_skill: number;
+  care_acts: number;
+  /** Locked at Child (null before, and for a pet from before v23: band). */
+  hero: string | null;
+  grade: Grade | null;
+  shiny: boolean;
+  band: CareBand | null;
+  /** Reveals not yet played on screen (they happen in aging, even offline). */
+  reveals: PetReveal[];
 };
+
+export type PetReveal = 'hatch' | 'child';
 
 export type PetHallEntry = {
   line: string;
   branch: PetBranch;
   aura: Element | null;
-  /** Which rebirth retired it (1 = the first). */
+  /** Which rebirth retired it (1 = the first; a release keeps the count). */
   rebirth: number;
   /** Days it lived (egg to rebirth, as counted by the clock guard). */
   days: number;
+  /* v23 */
+  hero: string | null;
+  grade: Grade;
+  shiny: boolean;
+  egg: EggType | null;
+  /** Released from Child up (no rebirth bonus), vs reborn at God. */
+  released: boolean;
 };
 
+/** A blank pet slot: the egg picker (no egg chosen, no time passes). */
 export function newPet(now: number, line: string = DEFAULT_PET_LINE): PetState {
   return {
     line,
@@ -286,7 +341,71 @@ export function newPet(now: number, line: string = DEFAULT_PET_LINE): PetState {
     forms: [],
     element_uses: {},
     seen_at: now,
+    egg: null,
+    seed: 0,
+    ticket: null,
+    warmth: WARMTH_START,
+    warmth_acc_ms: 0,
+    warm_ms: 0,
+    care_skill: 0,
+    care_acts: 0,
+    hero: null,
+    grade: null,
+    shiny: false,
+    band: null,
+    reveals: [],
   };
+}
+
+/** Choose an egg (only from the empty picker). The seed is stored now; the
+ * pet's hero, grade and shiny come from it at Child. */
+export function chooseEgg(
+  pet: PetState,
+  egg: EggType,
+  seed: number,
+  ticket: Grade | null,
+  now: number,
+): PetState | null {
+  if (pet.stage !== 'egg' || pet.egg != null) return null;
+  return { ...newPet(Math.max(now, pet.seen_at), EGG_LINE[egg]), egg, seed: seed >>> 0, ticket };
+}
+
+/** Tap the egg: +1 warmth pip (max 4). */
+export function warmEgg(pet: PetState): PetState | null {
+  if (pet.stage !== 'egg' || pet.egg == null || pet.warmth >= WARMTH_MAX) return null;
+  return { ...pet, warmth: pet.warmth + 1 };
+}
+
+/** Baby care: an activity (fed / trained / dived) — each counts once. */
+export function petCareAct(pet: PetState, bit: number): PetState {
+  if (pet.stage !== 'baby' || (pet.care_acts & bit) === bit) return pet;
+  return { ...pet, care_acts: pet.care_acts | bit };
+}
+
+/** Baby care: keep the best round's skill points. */
+export function petCareSkill(pet: PetState, points: number): PetState {
+  if (pet.stage !== 'baby' || points <= pet.care_skill) return pet;
+  return { ...pet, care_skill: Math.min(CARE_SKILL_POINTS, points) };
+}
+
+/** The care score so far (Egg + Baby). */
+export function petCareScore(pet: PetState): number {
+  return careScore({ warmMs: pet.warm_ms, eggMs: PET_STAGE_MS.egg, skill: pet.care_skill, acts: pet.care_acts });
+}
+
+/** The care band: live during Egg/Baby, locked once revealed. */
+export function petCareBand(pet: PetState): CareBand {
+  return pet.band ?? careBand(petCareScore(pet));
+}
+
+/** Egg and Baby care is still open (the odds can still move). */
+export function petOddsOpen(pet: PetState): boolean {
+  return pet.egg != null && pet.hero == null && (pet.stage === 'egg' || pet.stage === 'baby');
+}
+
+/** Mark reveals as played on screen. */
+export function ackPetReveals(pet: PetState): PetState {
+  return pet.reveals.length === 0 ? pet : { ...pet, reveals: [] };
 }
 
 /* ---------------------------------------------------------- evolution --- */
@@ -323,7 +442,10 @@ export function branchFor(
   stage: Exclude<PetStage, 'god'>,
   counters: { mistakes: number; training: number; waves: number; deep_surfaces?: number },
 ): PetBranch {
-  if (stage === 'egg') return 'standard';
+  // Egg (5 min) and Baby (10 min) are too short to judge fairly (no care
+  // mistake can even happen): every Child starts Standard, and the first form
+  // is picked at Teen from Child's care (2026-09-30).
+  if (stage === 'egg' || stage === 'baby') return 'standard';
   const t = branchThresholds(stage);
   if (counters.mistakes >= t.scruffyMistakes) return 'scruffy';
   const deep = counters.deep_surfaces ?? 0;
@@ -348,8 +470,27 @@ function evolve(pet: PetState): PetState {
   const branch = branchFor(from, pet);
   // Hatching (Egg → Baby) has no form yet; every later stage's form counts.
   const forms = hatching || pet.forms.includes(branch) ? pet.forms : [...pet.forms, branch];
+  // Baby → Child: the hero, grade and shiny are decided ONCE, from the stored
+  // seed and the care band right now, and never rolled again. A pet from
+  // before eggs already has its hero (and stays Common).
+  let reveal: Partial<PetState> = {};
+  if (from === 'egg') reveal = { reveals: [...pet.reveals, 'hatch'] };
+  if (from === 'baby') {
+    if (pet.hero == null && pet.egg != null) {
+      const band = careBand(petCareScore(pet));
+      const roll = rollPet(pet.seed, pet.egg, band, pet.ticket);
+      reveal = { hero: roll.hero, grade: roll.grade, shiny: roll.shiny, band };
+    }
+    const hero = (reveal.hero ?? pet.hero) as string | null;
+    reveal = {
+      ...reveal,
+      ...(hero ? { line: `solo_${hero}` } : {}),
+      reveals: [...pet.reveals, 'child'],
+    };
+  }
   return {
     ...pet,
+    ...reveal,
     stage: nextStage(from),
     branch,
     forms,
@@ -370,14 +511,31 @@ function evolve(pet: PetState): PetState {
 /** Age the pet by `ms` of counted time. Exact and split-proof: aging by 5h
  * then 3h lands on the same state as aging by 8h once. */
 export function agePet(pet: PetState, ms: number): PetState {
+  // No egg chosen yet (the picker): time stands still.
+  if (pet.stage === 'egg' && pet.egg == null) return pet;
   let p = { ...pet };
   let remaining = Math.max(0, ms);
-  // Each loop reaches one event (a heart lost, a mistake, an evolution) or
-  // the end — a 48h gap is a few dozen iterations. The cap is a safety net.
+  // Each loop reaches one event (a heart lost, a mistake, a warmth pip lost,
+  // an evolution) or the end — a 48h gap is a few dozen iterations. The cap
+  // is a safety net.
   for (let guard = 0; remaining > 0 && guard < 10_000; guard += 1) {
     const decays = p.stage !== 'egg';
+    const warming = p.stage === 'egg' && p.warmth > 0;
     let dt = remaining;
     if (p.stage !== 'god') dt = Math.min(dt, PET_STAGE_MS[p.stage] - p.stage_age_ms);
+    if (warming) dt = Math.min(dt, WARMTH_DROP_MS - p.warmth_acc_ms);
+    if (p.stage === 'egg') {
+      // Egg warmth (split-proof like the meters): warm time counts while at
+      // 3+ pips, and one pip is lost per 90s of egg time.
+      if (p.warmth >= WARMTH_WARM) p.warm_ms += Math.max(0, dt);
+      if (warming) {
+        p.warmth_acc_ms += Math.max(0, dt);
+        if (p.warmth_acc_ms >= WARMTH_DROP_MS) {
+          p.warmth -= 1;
+          p.warmth_acc_ms -= WARMTH_DROP_MS;
+        }
+      }
+    }
     if (decays) {
       dt = Math.min(
         dt,
@@ -496,13 +654,6 @@ export function petWaveCleared(pet: PetState, legendElement: Element | null): Pe
   return { ...feedPet(pet, PET_FEED_WAVE), waves: pet.waves + 1, element_uses: uses };
 }
 
-/** Pick what hatches — only while it is still an egg. */
-export function choosePetLine(pet: PetState, lineId: string): PetState | null {
-  if (pet.stage !== 'egg') return null;
-  if (!petLines().some((line) => line.id === lineId)) return null;
-  return { ...pet, line: lineId };
-}
-
 /* -------------------------------------------------------------- links --- */
 
 /** The element TD was played with most (ties: element order), or null. */
@@ -582,7 +733,25 @@ export function petTokensLeft(today: string, storedYmd: string | null, paidToday
   return Math.max(0, PET_TOKENS_DAILY_CAP - (sameOrBack ? paidToday : 0));
 }
 
-/** Retire a God pet to the Hall and start a new egg. Null unless God. */
+/** The Hall entry for a pet leaving (rebirth or release). */
+function hallEntryOf(pet: PetState, rebirth: number, released: boolean): PetHallEntry {
+  const hero = pet.hero ?? heroOfLine(pet.line);
+  return {
+    line: pet.line,
+    branch: pet.branch,
+    aura: petAuraElement(pet),
+    rebirth,
+    days: Math.round((pet.total_age_ms / (24 * HOUR)) * 10) / 10,
+    hero,
+    grade: pet.grade ?? 'common',
+    shiny: pet.shiny,
+    egg: pet.egg ?? (hero ? heroEgg(hero) : null),
+    released,
+  };
+}
+
+/** Retire a God pet to the Hall and go back to the egg picker. Null unless
+ * God. (The shard and the Collection are recorded by the store.) */
 export function rebirthPet(
   pet: PetState,
   hall: readonly PetHallEntry[],
@@ -590,17 +759,30 @@ export function rebirthPet(
   now: number,
 ): { pet: PetState; hall: PetHallEntry[]; rebirths: number } | null {
   if (pet.stage !== 'god') return null;
-  const entry: PetHallEntry = {
-    line: pet.line,
-    branch: pet.branch,
-    aura: petAuraElement(pet),
-    rebirth: rebirths + 1,
-    days: Math.round((pet.total_age_ms / (24 * HOUR)) * 10) / 10,
-  };
   return {
-    pet: newPet(Math.max(now, pet.seen_at), pet.line),
-    hall: [...hall, entry].slice(-PET_HALL_MAX),
+    pet: newPet(Math.max(now, pet.seen_at)),
+    hall: trimHall([...hall, hallEntryOf(pet, rebirths + 1, false)], PET_HALL_MAX),
     rebirths: rebirths + 1,
+  };
+}
+
+/** Can this pet be released? Child and up only (Egg and Baby can't). */
+export function canReleasePet(pet: PetState): boolean {
+  return PET_STAGES.indexOf(pet.stage) >= PET_STAGES.indexOf('child');
+}
+
+/** Release a Child-or-older pet to the Hall (no rebirth bonus) and go back to
+ * the egg picker. Null for an Egg or Baby. */
+export function releasePet(
+  pet: PetState,
+  hall: readonly PetHallEntry[],
+  rebirths: number,
+  now: number,
+): { pet: PetState; hall: PetHallEntry[] } | null {
+  if (!canReleasePet(pet)) return null;
+  return {
+    pet: newPet(Math.max(now, pet.seen_at)),
+    hall: trimHall([...hall, hallEntryOf(pet, rebirths, true)], PET_HALL_MAX),
   };
 }
 
@@ -732,9 +914,71 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v != null && !Array.isArray(v);
 }
 
-/** Loose read of a stored pet; anything unreadable becomes a fresh egg. */
+function isEgg(v: unknown): v is EggType {
+  return typeof v === 'string' && (EGG_TYPES as readonly string[]).includes(v);
+}
+
+function isGrade(v: unknown): v is Grade {
+  return typeof v === 'string' && (GRADES as readonly string[]).includes(v);
+}
+
+function isBand(v: unknown): v is CareBand {
+  return typeof v === 'string' && (CARE_BANDS as readonly string[]).includes(v);
+}
+
+/** Loose read of a stored pet; anything unreadable becomes a blank egg slot.
+ *
+ * Eggs (v23): a pet saved before eggs (no `egg` key) that is still an EGG goes
+ * to the egg picker (nothing to lose). One that has hatched keeps its hero —
+ * a themed line's grown hero or its solo hero — counts as revealed and is
+ * Common. */
 export function parsePet(raw: unknown, now: number): PetState {
   if (!isRecord(raw) || !isStage(raw.stage)) return newPet(now);
+  const legacy = !('egg' in raw);
+  if (legacy && raw.stage === 'egg') return newPet(num(raw.seen_at, now));
+  const base = parsePetCore(raw, now);
+  if (legacy) {
+    const hero = heroOfLine(base.line);
+    const grown = PET_STAGES.indexOf(base.stage) >= PET_STAGES.indexOf('child');
+    return {
+      ...base,
+      egg: hero ? heroEgg(hero) : null,
+      hero,
+      grade: 'common',
+      shiny: false,
+      band: null,
+      warmth: 0,
+      // From Child up it looks like its hero from now on.
+      ...(grown && hero ? { line: `solo_${hero}` } : {}),
+    };
+  }
+  const egg = isEgg(raw.egg) ? raw.egg : null;
+  // An Egg with no egg type is the picker; past Egg, a missing type is kept
+  // (never wipe a grown pet over a label — its hero comes from its line).
+  if (egg == null && base.stage === 'egg') return { ...newPet(num(raw.seen_at, now)) };
+  const hero = typeof raw.hero === 'string' && heroById(raw.hero) != null ? raw.hero : null;
+  return {
+    ...base,
+    egg,
+    seed: Math.floor(num(raw.seed, 0)) >>> 0,
+    ticket: isGrade(raw.ticket) ? raw.ticket : null,
+    warmth: Math.max(0, Math.min(WARMTH_MAX, Math.floor(num(raw.warmth, WARMTH_START)))),
+    warmth_acc_ms: Math.max(0, Math.min(WARMTH_DROP_MS, num(raw.warmth_acc_ms, 0))),
+    warm_ms: Math.max(0, Math.min(PET_STAGE_MS.egg, num(raw.warm_ms, 0))),
+    care_skill: Math.max(0, Math.min(CARE_SKILL_POINTS, Math.floor(num(raw.care_skill, 0)))),
+    care_acts: Math.max(0, Math.min(7, Math.floor(num(raw.care_acts, 0)))),
+    hero,
+    grade: hero && isGrade(raw.grade) ? raw.grade : hero ? 'common' : null,
+    shiny: hero != null && raw.shiny === true,
+    band: isBand(raw.band) ? raw.band : null,
+    reveals: Array.isArray(raw.reveals)
+      ? raw.reveals.filter((r): r is PetReveal => r === 'hatch' || r === 'child').slice(-2)
+      : [],
+  };
+}
+
+function parsePetCore(raw: Record<string, unknown>, now: number): PetState {
+  if (!isStage(raw.stage)) return newPet(now);
   const lineId = typeof raw.line === 'string' && petLines().some((l) => l.id === raw.line)
     ? raw.line
     : DEFAULT_PET_LINE;
@@ -750,6 +994,7 @@ export function parsePet(raw: unknown, now: number): PetState {
   const stage = raw.stage;
   const stageCap = stage === 'god' ? Number.MAX_SAFE_INTEGER : PET_STAGE_MS[stage];
   return {
+    ...newPet(now),
     line: lineId,
     stage,
     branch: isBranch(raw.branch) ? raw.branch : 'standard',
@@ -799,9 +1044,18 @@ export function parsePetHall(raw: unknown): PetHallEntry[] {
       aura: typeof row.aura === 'string' && (ELEMENTS as readonly string[]).includes(row.aura)
         ? (row.aura as Element)
         : null,
-      rebirth: Math.max(1, Math.floor(num(row.rebirth, 1))),
+      rebirth: Math.max(0, Math.floor(num(row.rebirth, 1))),
       days: Math.max(0, num(row.days, 0)),
+      // v23: a pre-egg entry gets its hero from its line, and is Common.
+      hero: typeof row.hero === 'string' && heroById(row.hero) != null ? row.hero : heroOfLine(row.line),
+      grade: isGrade(row.grade) ? row.grade : 'common',
+      shiny: row.shiny === true,
+      egg: isEgg(row.egg) ? row.egg : (() => {
+        const h = typeof row.hero === 'string' ? row.hero : heroOfLine(row.line);
+        return h ? heroEgg(h) : null;
+      })(),
+      released: row.released === true,
     });
   }
-  return out.slice(-PET_HALL_MAX);
+  return trimHall(out, PET_HALL_MAX);
 }

@@ -42,6 +42,7 @@ import { ELEMENT_COLOR } from '@/play/kits';
 import { NeonLabel } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
 import { PET_BRANCH_LABEL, PET_STAGE_LABEL } from '@/play/pet';
+import { petRecolor } from '@/play/pet-looks';
 import { PlaySheet } from '@/play/play-sheet';
 import { DIVE_CHARGE_CAP, buyDiveGear, type PlayView } from '@/play/playStore';
 import { todayPlan } from '@/play/today-plan';
@@ -218,6 +219,8 @@ export function DiveScreen({
   };
 
   const depth = run.active ? run.deepers : 0;
+  const st = view.pet.state;
+  const revealed = st.hero != null && st.stage !== 'egg' && st.stage !== 'baby';
   const maxDepth = run.active ? run.maxDeepers : view.diveGear.oxygen ? 5 : 4;
 
   return (
@@ -234,7 +237,10 @@ export function DiveScreen({
         reveal={reveal}
         event={sceneEvent}
         reduceMotion={reduceMotion}
-        fxLevel={fxLevel}>
+        fxLevel={fxLevel}
+        grade={revealed ? view.pet.state.grade : null}
+        shiny={revealed && view.pet.state.shiny}
+        recolor={revealed ? petRecolor(view.pet.state.hero, view.pet.state.shiny, view.pet.dyeOn) : null}>
         <DiveTopBar
           zone={diveZone(depth)}
           depth={depth}
