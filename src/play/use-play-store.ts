@@ -45,6 +45,7 @@ import {
   equipItem,
   loadPlayStore,
   mergeItem,
+  petAt,
   playView,
   recordDefendWin as persistDefendWin,
   savePlayStore,
@@ -119,7 +120,17 @@ export function usePlayStore() {
     let alive = true;
     hydrate();
     const interval = setInterval(() => {
-      if (alive) tick();
+      if (!alive) return;
+      // v21: an expedition whose time is up comes home while the app stays
+      // open too (not only on the next open), so its perks return on their own.
+      const current = docRef.current;
+      if (current?.pet_expedition && !petAt(current, Date.now()).away) {
+        const next = touchPet(current, Date.now());
+        docRef.current = next;
+        setDoc(next);
+        savePlayStore(next).catch(() => {});
+      }
+      tick();
     }, TICK_MS);
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') hydrate();
@@ -179,28 +190,31 @@ export function usePlayStore() {
     return started;
   }, [commit]);
 
-  /** Surface: bank the whole haul into inventory. Returns the banked ids. */
-  const surfaceRun = useCallback(async (): Promise<string[] | null> => {
-    let banked: string[] | null = null;
-    const ok = commit((current) => {
-      const next = surfaceDive(current);
-      banked = next ? next.banked : null;
+  /** Surface: bank the whole haul into inventory. Returns the banked ids and
+   * whether the pet was along to enjoy it (+2 mood, v21). */
+  const surfaceRun = useCallback(async (): Promise<{ banked: string[]; petCared: boolean } | null> => {
+    let result: { banked: string[]; petCared: boolean } | null = null;
+    const ok = commit((current, now) => {
+      const next = surfaceDive(current, now);
+      result = next ? { banked: next.banked, petCared: next.petCared } : null;
       return next ? next.doc : null;
     });
-    return ok ? banked : null;
+    return ok ? result : null;
   }, [commit]);
 
   /**
    * Roll one Deeper press. Pass `forceBust` only from the Dev kit's "force
    * bust next Deeper" toggle — it swaps in a rng that always busts.
+   * `expectedPct` is the % the screen showed: if the real odds moved since
+   * (pet evolved / came back), nothing is rolled (`changed`).
    */
   const pushDeeper = useCallback(
-    async (forceBust: boolean): Promise<DeeperOutcome | null> => {
+    async (forceBust: boolean, expectedPct: number | null = null): Promise<DeeperOutcome | null> => {
       let outcome: DeeperOutcome | null = null;
-      const ok = commit((stored, now) => {
-        // Age the pet first so the dive buddy's stage is the one on screen.
-        const current = touchPet(stored, now);
-        const next = forceBust ? deeperDive(current, () => 0) : deeperDive(current);
+      const ok = commit((current, now) => {
+        // deeperDive ages the pet (and collects an expedition) first, so the
+        // dive buddy's stage is the one on screen.
+        const next = deeperDive(current, now, forceBust ? () => 0 : Math.random, expectedPct);
         outcome = next ? next.outcome : null;
         return next ? next.doc : null;
       });

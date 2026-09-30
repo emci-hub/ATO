@@ -15,10 +15,14 @@
  *
  * Copy never uses gamble / casino / jackpot / bet — Dive / Surface / Deeper /
  * bust only (GAME_SPEC §7).
+ *
+ * v21: a scene (`dive-scene.tsx`) above the cards shows the pet diving; it
+ * only reads the shown %, never changes it. Deeper sends the % on screen so
+ * the store can refuse a roll whose real odds moved in the meantime.
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
-import type { ComponentProps } from 'react';
+import { useEffect, useRef, useState, type ComponentProps } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -26,8 +30,10 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { usePacedAction } from '@/play/action-pacing';
 import { itemArtSource } from '@/play/art';
+import { DiveScene, type DiveSceneEvent } from '@/play/dive-scene';
 import { formatMult, getItemDef, type ItemDef, type ItemSlot } from '@/play/items';
-import { PET_STAGE_LABEL } from '@/play/pet';
+import { ELEMENT_COLOR } from '@/play/kits';
+import { PET_BRANCH_LABEL, PET_STAGE_LABEL } from '@/play/pet';
 import { PlayFrame } from '@/play/play-frame';
 import { DIVE_CHARGE_CAP, DIVE_DEEPER_MAX, type PlayView } from '@/play/playStore';
 
@@ -38,19 +44,30 @@ const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>
   trinket: 'star-four-points',
 };
 
-/** The pet dive buddy, in one honest line (v20). */
+/** The pet dive buddy, in one honest line (v20; away + Dive care in v21). */
 export function diveBuddyLine(view: PlayView): string {
   const pet = view.pet;
-  const stage = PET_STAGE_LABEL[pet.state.stage];
+  const st = pet.state;
+  if (pet.away) {
+    return 'Dive buddy: away on expedition — no bust cut or rescue until it’s back, and these dives don’t count as its care.';
+  }
+  const form =
+    st.stage === 'egg' || st.stage === 'baby'
+      ? PET_STAGE_LABEL[st.stage]
+      : `${PET_STAGE_LABEL[st.stage]} · ${PET_BRANCH_LABEL[st.branch]}`;
+  if (st.stage === 'egg') {
+    return `Dive buddy: your pet (${form}) — once it hatches, surfacing gives it +2 mood; from Teen it lowers every bust chance.`;
+  }
+  const care = 'Surfacing gives it +2 mood, a bust +1.';
   if (pet.bustCutPp <= 0) {
-    return `Dive buddy: your pet (${stage}) — from Teen it lowers every bust chance.`;
+    return `Dive buddy: your pet (${form}). ${care} From Teen it lowers every bust chance.`;
   }
   const rescue =
     pet.rescueKeep > 0
       ? ` · on a bust it saves your best ${pet.rescueKeep === 1 ? 'find' : `${pet.rescueKeep} finds`}`
       : ' · from Adult it saves your best find on a bust';
   const points = `${pet.bustCutPp} ${pet.bustCutPp === 1 ? 'point' : 'points'}`;
-  return `Dive buddy: your pet (${stage}) · ${points} off every bust chance (already in the odds; never below half the table)${rescue}. It is never lost.`;
+  return `Dive buddy: your pet (${form}) · ${points} off every bust chance (already in the odds; never below half the table)${rescue}. ${care} It is never lost.`;
 }
 
 export function DiveScreen({
@@ -68,7 +85,8 @@ export function DiveScreen({
   reduceMotion: boolean;
   onSpendCharge: () => Promise<boolean>;
   onSurface: () => Promise<boolean>;
-  onDeeper: () => Promise<boolean>;
+  /** `shownPct` = the bust % on screen when Deeper was pressed. */
+  onDeeper: (shownPct: number | null) => Promise<boolean>;
   onBackToGrove: () => void;
 }) {
   const theme = useTheme();
@@ -78,6 +96,29 @@ export function DiveScreen({
 
   // -- Pacing (shared with Merge: beat → resolve → cooldown; skip in dev) ----
   const { act, busy, splashCopy, showSplash } = usePacedAction(skipDelays);
+
+  // -- Scene events (v21): a run that ends after a Deeper press busted; after
+  // a Surface press it was banked. The scene plays the pop-up / rise once.
+  const lastPressRef = useRef<'deeper' | 'surface' | null>(null);
+  const wasActiveRef = useRef(run.active);
+  const [sceneEvent, setSceneEvent] = useState<DiveSceneEvent>(null);
+  useEffect(() => {
+    if (wasActiveRef.current && !run.active && lastPressRef.current) {
+      const kind = lastPressRef.current === 'deeper' ? 'bust' : 'surface';
+      setSceneEvent((prev) => ({ kind, key: (prev?.key ?? 0) + 1 }));
+    }
+    if (!wasActiveRef.current && run.active) setSceneEvent(null);
+    wasActiveRef.current = run.active;
+  }, [run.active]);
+  const pressDeeper = () => {
+    const shown = run.bustPctNext;
+    lastPressRef.current = 'deeper';
+    act('Going deeper…', () => onDeeper(shown));
+  };
+  const pressSurface = () => {
+    lastPressRef.current = 'surface';
+    act('Heading up…', onSurface);
+  };
 
   return (
     <>
@@ -96,6 +137,16 @@ export function DiveScreen({
       <ThemedText themeColor="textSecondary" style={styles.lede}>
         Push your luck for finds. Surface banks the haul — Deeper risks it.
       </ThemedText>
+
+      <DiveScene
+        pet={view.pet.state}
+        eggColor={ELEMENT_COLOR[view.legendElement]}
+        depth={run.active ? run.deepers : 0}
+        bustPct={run.active ? run.bustPctNext : null}
+        away={run.petAway}
+        event={sceneEvent}
+        reduceMotion={reduceMotion}
+      />
 
       <PlayFrame style={styles.card}>
         <View style={styles.statRow}>
@@ -134,7 +185,7 @@ export function DiveScreen({
                     </ThemedText>
                     <View style={styles.buttonRow}>
                       <Pressable
-                        onPress={() => act('Going deeper…', onDeeper)}
+                        onPress={pressDeeper}
                         disabled={busy}
                         accessibilityRole="button"
                         accessibilityState={{ disabled: busy }}
@@ -148,7 +199,7 @@ export function DiveScreen({
                         <ThemedText type="smallBold">Deeper</ThemedText>
                       </Pressable>
                       <Pressable
-                        onPress={() => act('Heading up…', onSurface)}
+                        onPress={pressSurface}
                         disabled={busy}
                         accessibilityRole="button"
                         accessibilityState={{ disabled: busy }}
@@ -171,7 +222,7 @@ export function DiveScreen({
                       Max depth — this haul has reached its last Deeper. Surface to keep it.
                     </ThemedText>
                     <Pressable
-                      onPress={() => act('Heading up…', onSurface)}
+                      onPress={pressSurface}
                       disabled={busy}
                       accessibilityRole="button"
                       accessibilityState={{ disabled: busy }}

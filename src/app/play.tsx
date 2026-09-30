@@ -53,6 +53,7 @@ import {
   devAddAvatarLevels,
   devSetCampaignSeat,
   devUnlockBoundBoss,
+  markExpeditionToasted,
   unlockAvatar,
   type ClaimResult,
   type AvatarParkMapId,
@@ -88,8 +89,8 @@ type PlayMode = 'grove' | 'dive' | 'pet' | 'dress' | 'defend' | 'shop' | 'about'
 type PlayToast =
   | { kind: 'claim'; result: ClaimResult }
   | { kind: 'find'; foundName: string }
-  | { kind: 'surface'; itemIds: string[] }
-  | { kind: 'bust'; rescued: string[] }
+  | { kind: 'surface'; itemIds: string[]; petMood: boolean }
+  | { kind: 'bust'; rescued: string[]; petMood: boolean }
   | { kind: 'message'; title: string; body: string };
 
 export default function PlayScreen() {
@@ -161,14 +162,22 @@ export default function PlayScreen() {
   }, []);
   const modeRef = useRef(mode);
   modeRef.current = mode;
+  /** Dive opened from the Pet screen's "Go diving" (v21) steps back to Pet. */
+  const diveFromPetRef = useRef(false);
+  useEffect(() => {
+    if (mode !== 'dive') diveFromPetRef.current = false;
+  }, [mode]);
+  const leaveSubScreen = useCallback(() => {
+    setMode(modeRef.current === 'dive' && diveFromPetRef.current ? 'pet' : 'grove');
+  }, []);
   const goBackOneLevel = useCallback((source: BackSource): boolean => {
     const decision = backDecision(modeRef.current === 'grove', innerBackRef.current, source);
     if (decision === 'native') return false;
     if (decision === 'ignore') return true;
     if (innerBackRef.current?.back()) return true;
-    setMode('grove');
+    leaveSubScreen();
     return true;
-  }, []);
+  }, [leaveSubScreen]);
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => goBackOneLevel('hardware'));
     return () => sub.remove();
@@ -249,18 +258,48 @@ export default function PlayScreen() {
   /** Dive view handlers — commit through the shared store, toast on results. */
   const handleSpendCharge = useCallback(async (): Promise<boolean> => beginDive(), [beginDive]);
 
+  /** Expedition return (v21): announce it once per return, wherever you are
+   * in Play (the save remembers it was shown). On the Pet screen the note
+   * itself is the announcement. The note stays there until dismissed. */
+  const expeditionNote = view?.pet.expeditionNote ?? null;
+  const expeditionNoteFresh = view?.pet.expeditionNoteFresh ?? false;
+  useEffect(() => {
+    if (!expeditionNote || !expeditionNoteFresh) return;
+    if (mode !== 'pet') {
+      setToast({
+        kind: 'message',
+        title: 'Your pet is back',
+        body: `It brought back ${itemName(expeditionNote) ?? 'a find'} — it’s in your bag.`,
+      });
+    }
+    commit((doc) => markExpeditionToasted(doc));
+  }, [commit, expeditionNote, expeditionNoteFresh, mode]);
+
   const handleSurface = useCallback(async (): Promise<boolean> => {
-    const banked = await surfaceRun();
-    if (banked) setToast({ kind: 'surface', itemIds: banked });
-    return banked != null;
+    const surfaced = await surfaceRun();
+    if (surfaced) setToast({ kind: 'surface', itemIds: surfaced.banked, petMood: surfaced.petCared });
+    return surfaced != null;
   }, [surfaceRun]);
 
-  const handleDeeper = useCallback(async (): Promise<boolean> => {
-    const outcome = await pushDeeper(forceBustArmed);
-    if (forceBustArmed) setForceBustArmed(false); // one-shot arm consumed
-    if (outcome?.busted) setToast({ kind: 'bust', rescued: outcome.rescued });
-    return outcome != null;
-  }, [forceBustArmed, pushDeeper]);
+  /** `shownPct` is the bust % on screen when Deeper was pressed; if the real
+   * odds moved since, nothing is rolled and the new % is shown instead. */
+  const handleDeeper = useCallback(
+    async (shownPct: number | null): Promise<boolean> => {
+      const outcome = await pushDeeper(forceBustArmed, shownPct);
+      if (outcome?.changed) {
+        setToast({
+          kind: 'message',
+          title: 'Odds updated',
+          body: `Your pet changed, so the next Deeper is now ${outcome.bustPct}%. Nothing was rolled — check it and tap again.`,
+        });
+        return true;
+      }
+      if (forceBustArmed) setForceBustArmed(false); // one-shot arm consumed
+      if (outcome?.busted) setToast({ kind: 'bust', rescued: outcome.rescued, petMood: outcome.petCared });
+      return outcome != null;
+    },
+    [forceBustArmed, pushDeeper],
+  );
 
   /** Dress handlers. Equip/sell failures surface as honest message toasts. */
   const handleEquip = useCallback(
@@ -523,11 +562,12 @@ export default function PlayScreen() {
               : toast.kind === 'find'
                 ? toast.foundName
                 : toast.kind === 'surface'
-                  ? `Banked ${summarizeNames(toast.itemIds)}.`
+                  ? `Banked ${summarizeNames(toast.itemIds)}.${toast.petMood ? ' Your pet loved it (+2 mood).' : ''}`
                   : toast.kind === 'bust'
-                    ? toast.rescued.length > 0
-                      ? `Your pet saved ${summarizeNames(toast.rescued)} — the rest of the haul is lost.`
-                      : 'This haul is lost — the charge was already spent. Your Basecore is untouched.'
+                    ? (toast.rescued.length > 0
+                        ? `Your pet saved ${summarizeNames(toast.rescued)} — the rest of the haul is lost.`
+                        : 'This haul is lost — the charge was already spent. Your Basecore is untouched.') +
+                      (toast.petMood ? ' Your pet still had fun (+1 mood).' : '')
                     : toast.body,
         };
 
@@ -642,7 +682,7 @@ export default function PlayScreen() {
                     onSpendCharge={handleSpendCharge}
                     onSurface={handleSurface}
                     onDeeper={handleDeeper}
-                    onBackToGrove={() => setMode('grove')}
+                    onBackToGrove={leaveSubScreen}
                   />
                 ) : mode === 'pet' && view ? (
                   <PetScreen
@@ -651,6 +691,10 @@ export default function PlayScreen() {
                     registerBack={registerBack}
                     reduceMotion={reduceMotion}
                     onBack={() => setMode('grove')}
+                    onGoDive={() => {
+                      diveFromPetRef.current = true;
+                      setMode('dive');
+                    }}
                   />
                 ) : mode === 'dress' && view ? (
                   <DressScreen

@@ -13,7 +13,7 @@
  * the stub table; Dive (step 3) brings its own weighted odds.
  */
 import rawItems from './data/items.json';
-import { rollDropById } from './engine/drop-table';
+import { getDropTable, rollDropById } from './engine/drop-table';
 import { starMultScale } from './engine/star-table';
 import { isTypeTag, type TypeTag } from './engine/type-match';
 
@@ -86,6 +86,14 @@ export function rollPowerFind(rng: () => number = Math.random): string {
  */
 export function rollDiveFind(rng: () => number = Math.random): string {
   return rollDropById('drop_dive_step', rng) ?? rollResearchFind(rng);
+}
+
+/** Every item a dive (or a pet expedition) can find, in table order — the
+ * Pet Logbook's slots (v21). Only ids that are real item defs. */
+export function diveFindIds(): string[] {
+  const table = getDropTable('drop_dive_step');
+  const ids = table ? table.rolls.map((roll) => roll.id) : [];
+  return [...new Set(ids)].filter((id) => ITEM_BY_ID.has(id));
 }
 
 /** A stable common Look — the Dev kit's junk-fill fodder (auto-sell source). */

@@ -41,7 +41,7 @@ export const PET_STAGE_MS: Record<Exclude<PetStage, 'god'>, number> = {
   adult: 120 * HOUR,
 };
 
-export const PET_BRANCHES = ['standard', 'bright', 'battle', 'scruffy'] as const;
+export const PET_BRANCHES = ['standard', 'bright', 'battle', 'scruffy', 'deep'] as const;
 export type PetBranch = (typeof PET_BRANCHES)[number];
 
 /** Hearts per meter. */
@@ -78,6 +78,9 @@ export const PET_BRANCH_POUNCE: Record<PetBranch, number> = {
   bright: 1,
   battle: 1.1,
   scruffy: 0.8,
+  // v21: Deep is a Dive form — its pounce stays at Standard strength, so the
+  // TD sim band above is unchanged.
+  deep: 1,
 };
 
 /** Dive buddy: bust chance cut, whole percentage points (floor still holds). */
@@ -98,6 +101,22 @@ export const PET_RESCUE_KEEP: Record<PetStage, number> = {
   adult: 1,
   god: 2,
 };
+
+/** Deep form (v21): +1 more bust-cut point (the half-table floor still holds)
+ * and +1 rescue keep at Adult/God — but never more than 2 finds saved. */
+export const PET_DEEP_BUST_CUT_PP = 1;
+export const PET_RESCUE_MAX = 2;
+
+/** Dive care (v21, emci 2026-09-29): Dive is mood only — training stays with
+ * Tap to train. A surface at this depth or deeper counts toward Deep. */
+export const PET_DIVE_SURFACE_MOOD = 2;
+export const PET_DIVE_BUST_MOOD = 1;
+export const PET_DEEP_MIN_DEPTH = 3;
+
+/** Solo expedition (v21): Child and up, once per device-local day; away at
+ * least this much counted time, can't bust, brings back one find. */
+export const PET_EXPEDITION_MIN_MS = 1 * HOUR;
+export const PET_EXPEDITION_MIN_STAGE: PetStage = 'child';
 
 /** Mini-game token trickle: per finished round, capped per device-local day. */
 export const PET_TOKENS_PER_ROUND = 5;
@@ -181,6 +200,7 @@ export const PET_BRANCH_TINT: Record<PetBranch, string | null> = {
   bright: '#FFD86B',
   battle: '#FF5A4E',
   scruffy: '#8A7F6A',
+  deep: '#2FD4C4',
 };
 
 export const PET_STAGE_LABEL: Record<PetStage, string> = {
@@ -197,6 +217,7 @@ export const PET_BRANCH_LABEL: Record<PetBranch, string> = {
   bright: 'Bright',
   battle: 'Battle',
   scruffy: 'Scruffy',
+  deep: 'Deep',
 };
 
 /* -------------------------------------------------------------- state --- */
@@ -223,6 +244,8 @@ export type PetState = {
   mistakes: number;
   training: number;
   waves: number;
+  /** Dive surfaces at `PET_DEEP_MIN_DEPTH`+ this stage (v21). */
+  deep_surfaces: number;
   /** TD waves cleared with each Legend element, over this pet's life — the
    * most used one colours the God aura. */
   element_uses: Partial<Record<Element, number>>;
@@ -256,6 +279,7 @@ export function newPet(now: number, line: string = DEFAULT_PET_LINE): PetState {
     mistakes: 0,
     training: 0,
     waves: 0,
+    deep_surfaces: 0,
     element_uses: {},
     seen_at: now,
   };
@@ -274,26 +298,36 @@ export function branchThresholds(stage: Exclude<PetStage, 'god'>): {
   battleWaves: number;
   brightMaxMistakes: number;
   brightTraining: number;
+  deepSurfaces: number;
 } {
   const d = stageDays(stage);
   return {
     scruffyMistakes: Math.max(2, Math.ceil(d * 2)),
     battleWaves: Math.max(3, Math.ceil(d * 4)),
+    // Same formula as battleWaves (emci 2026-09-29).
+    deepSurfaces: Math.max(3, Math.ceil(d * 4)),
     brightMaxMistakes: Math.max(1, Math.floor(d)),
     brightTraining: Math.max(1, Math.ceil(d * 2)),
   };
 }
 
 /** Which form the ending stage's care earns. Neglect first (it wins over
- * everything), then lots of TD, then good care + training. */
+ * everything), then lots of TD (Battle) or lots of deep Dive surfaces (Deep) —
+ * when both qualify, the one passed by the bigger margin (count / threshold)
+ * wins, ties to Battle — then good care + training. */
 export function branchFor(
   stage: Exclude<PetStage, 'god'>,
-  counters: { mistakes: number; training: number; waves: number },
+  counters: { mistakes: number; training: number; waves: number; deep_surfaces?: number },
 ): PetBranch {
   if (stage === 'egg') return 'standard';
   const t = branchThresholds(stage);
   if (counters.mistakes >= t.scruffyMistakes) return 'scruffy';
-  if (counters.waves >= t.battleWaves) return 'battle';
+  const deep = counters.deep_surfaces ?? 0;
+  const battleOk = counters.waves >= t.battleWaves;
+  const deepOk = deep >= t.deepSurfaces;
+  // Cross-multiplied margin compare (no float ties): deep/dT > waves/bT.
+  if (deepOk && (!battleOk || deep * t.battleWaves > counters.waves * t.deepSurfaces)) return 'deep';
+  if (battleOk) return 'battle';
   if (counters.mistakes <= t.brightMaxMistakes && counters.training >= t.brightTraining) return 'bright';
   return 'standard';
 }
@@ -315,6 +349,7 @@ function evolve(pet: PetState): PetState {
     mistakes: 0,
     training: 0,
     waves: 0,
+    deep_surfaces: 0,
     // A fresh hatchling starts full; later stages keep their meters.
     ...(hatching
       ? { hunger: PET_METER_MAX, mood: PET_METER_MAX, hunger_acc_ms: 0, mood_acc_ms: 0, hunger_empty_ms: 0, mood_empty_ms: 0 }
@@ -421,6 +456,29 @@ export function trainPet(pet: PetState): PetState {
   };
 }
 
+/** Dive care (v21): surfacing a haul lifts mood +2 (never training — that
+ * stays with Tap to train); a surface from `PET_DEEP_MIN_DEPTH`+ Deepers counts
+ * toward Deep. Never touches the stage clock. */
+export function petDiveSurfaced(pet: PetState, deepers: number): PetState {
+  if (pet.stage === 'egg') return pet;
+  return {
+    ...pet,
+    mood: fillMeter(pet.mood, PET_DIVE_SURFACE_MOOD),
+    mood_empty_ms: Math.min(0, pet.mood_empty_ms),
+    deep_surfaces: pet.deep_surfaces + (deepers >= PET_DEEP_MIN_DEPTH ? 1 : 0),
+  };
+}
+
+/** Dive care (v21): a bust still cheers it a little (+1 mood). */
+export function petDiveBusted(pet: PetState): PetState {
+  if (pet.stage === 'egg') return pet;
+  return {
+    ...pet,
+    mood: fillMeter(pet.mood, PET_DIVE_BUST_MOOD),
+    mood_empty_ms: Math.min(0, pet.mood_empty_ms),
+  };
+}
+
 /** A TD wave cleared with the pet: it eats (+1 hunger), counts the wave, and
  * tallies the Legend element toward the God aura. */
 export function petWaveCleared(pet: PetState, legendElement: Element | null): PetState {
@@ -453,17 +511,33 @@ export function petAuraElement(pet: PetState): Element | null {
   return best;
 }
 
+/* Every perk below is off while the pet is away on an expedition (v21):
+ * it is not with you, so no pounce, no bust cut, no rescue until collected. */
+
 /** Pounce damage at wave 1 (the engine scales it with creep HP), or 0. */
-export function petPounceBase(pet: PetState): number {
+export function petPounceBase(pet: PetState, away = false): number {
+  if (away) return 0;
   return PET_POUNCE_BASE[pet.stage] * PET_BRANCH_POUNCE[pet.branch];
 }
 
-export function petBustCutPp(pet: PetState): number {
-  return PET_BUST_CUT_PP[pet.stage];
+/** Whole bust points off. Deep adds one (the half-table floor is applied in
+ * `effectiveBustPct`, so this can never zero the odds). */
+export function petBustCutPp(pet: PetState, away = false): number {
+  if (away) return 0;
+  return PET_BUST_CUT_PP[pet.stage] + (pet.branch === 'deep' ? PET_DEEP_BUST_CUT_PP : 0);
 }
 
-export function petRescueKeep(pet: PetState): number {
-  return PET_RESCUE_KEEP[pet.stage];
+/** Best finds saved on a bust. Deep adds one at Adult/God, capped at 2. */
+export function petRescueKeep(pet: PetState, away = false): number {
+  if (away) return 0;
+  const base = PET_RESCUE_KEEP[pet.stage];
+  const deep = pet.branch === 'deep' && base > 0 ? 1 : 0;
+  return Math.min(PET_RESCUE_MAX, base + deep);
+}
+
+/** The stage after this one (God stays God). */
+export function petNextStage(stage: PetStage): PetStage {
+  return nextStage(stage);
 }
 
 export function rebirthBonus(rebirths: number): number {
@@ -474,20 +548,20 @@ export function rebirthBonus(rebirths: number): number {
  * (clock set back a little: the cap never resets early). Further ahead means
  * the clock was once set far forward — start fresh rather than lock the cap
  * until that date. */
-function tokenDayHolds(today: string, storedYmd: string | null): storedYmd is string {
+export function petDayHolds(today: string, storedYmd: string | null): storedYmd is string {
   if (storedYmd == null || storedYmd < today) return false;
   const ahead = (Date.parse(`${storedYmd}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / (24 * HOUR);
   return Number.isFinite(ahead) && ahead <= 2;
 }
 
 /** Token trickle: how many a finished round pays right now, given what was
- * already paid today (see `tokenDayHolds` for which day counts). */
+ * already paid today (see `petDayHolds` for which day counts). */
 export function petTokensForRound(
   today: string,
   storedYmd: string | null,
   paidToday: number,
 ): { tokens: number; ymd: string; paid: number } {
-  const sameOrBack = tokenDayHolds(today, storedYmd);
+  const sameOrBack = petDayHolds(today, storedYmd);
   const ymd = sameOrBack ? (storedYmd as string) : today;
   const paid = sameOrBack ? paidToday : 0;
   const tokens = Math.max(0, Math.min(PET_TOKENS_PER_ROUND, PET_TOKENS_DAILY_CAP - paid));
@@ -496,7 +570,7 @@ export function petTokensForRound(
 
 /** Tokens still available today from mini-games. */
 export function petTokensLeft(today: string, storedYmd: string | null, paidToday: number): number {
-  const sameOrBack = tokenDayHolds(today, storedYmd);
+  const sameOrBack = petDayHolds(today, storedYmd);
   return Math.max(0, PET_TOKENS_DAILY_CAP - (sameOrBack ? paidToday : 0));
 }
 
@@ -564,6 +638,74 @@ export function petReminderLastFired(log: PetReminderLog, now: number): number |
   return log.lastFiredAt == null ? fired : Math.max(log.lastFiredAt, fired);
 }
 
+/* ------------------------------------------- expedition + logbook --- */
+
+/** A solo expedition in progress (v21). "Away at least 1h" is measured in the
+ * pet's own counted time (`total_age_ms`), so the clock guard covers it too:
+ * setting the phone forward can't bring it back early by more than a normal
+ * 48h gap, and setting it back never does. */
+export type PetExpedition = {
+  /** The pet's `total_age_ms` when it left. */
+  left_age_ms: number;
+};
+
+export type PetExpeditionBlock = 'egg_or_baby' | 'away' | 'done_today';
+
+/** Why the pet can't leave right now, or null when it can. Once per
+ * device-local day (same day rule as the token cap), Child and up. */
+export function expeditionBlock(
+  pet: PetState,
+  expedition: PetExpedition | null,
+  today: string,
+  lastYmd: string | null,
+): PetExpeditionBlock | null {
+  if (PET_STAGES.indexOf(pet.stage) < PET_STAGES.indexOf(PET_EXPEDITION_MIN_STAGE)) return 'egg_or_baby';
+  if (expedition) return 'away';
+  if (petDayHolds(today, lastYmd)) return 'done_today';
+  return null;
+}
+
+/** Counted time still needed before it can come back (0 = ready). */
+export function expeditionLeftMs(pet: PetState, expedition: PetExpedition): number {
+  // A rebirth resets total_age_ms — callers refuse a rebirth while away, but
+  // a smaller age than at departure still reads as "ready", never stuck.
+  const away = pet.total_age_ms - expedition.left_age_ms;
+  if (away < 0) return 0;
+  return Math.max(0, PET_EXPEDITION_MIN_MS - away);
+}
+
+/** The Logbook (v21): every item the pet's dives or expeditions found, with
+ * the depth of the FIRST find (0 = the first card / an expedition, 1-4 = the
+ * Deeper that found it) and how many times it has been found. */
+export type PetLogEntry = { depth: number; count: number };
+export type PetLogbook = Record<string, PetLogEntry>;
+
+export function logPetFind(book: PetLogbook, id: string, depth: number): PetLogbook {
+  const prev = book[id];
+  return {
+    ...book,
+    [id]: prev ? { depth: prev.depth, count: prev.count + 1 } : { depth: Math.max(0, Math.floor(depth)), count: 1 },
+  };
+}
+
+export function parsePetExpedition(raw: unknown): PetExpedition | null {
+  if (!isRecord(raw)) return null;
+  const left = num(raw.left_age_ms, Number.NaN);
+  return Number.isFinite(left) && left >= 0 ? { left_age_ms: left } : null;
+}
+
+export function parsePetLogbook(raw: unknown): PetLogbook {
+  const out: PetLogbook = {};
+  if (!isRecord(raw)) return out;
+  for (const [id, row] of Object.entries(raw)) {
+    if (!isRecord(row)) continue;
+    const count = Math.max(0, Math.floor(num(row.count, 0)));
+    if (count < 1) continue;
+    out[id] = { depth: Math.max(0, Math.floor(num(row.depth, 0))), count };
+  }
+  return out;
+}
+
 /* -------------------------------------------------------------- parse --- */
 
 function num(v: unknown, fallback: number): number {
@@ -614,6 +756,7 @@ export function parsePet(raw: unknown, now: number): PetState {
     mistakes: count(raw.mistakes),
     training: count(raw.training),
     waves: count(raw.waves),
+    deep_surfaces: count(raw.deep_surfaces),
     element_uses: uses,
     seen_at: num(raw.seen_at, now),
   };

@@ -77,6 +77,13 @@ import {
   PET_MIN_ROUND_SCORE,
   PET_STAGES,
   advancePet,
+  expeditionBlock,
+  expeditionLeftMs,
+  logPetFind,
+  parsePetExpedition,
+  parsePetLogbook,
+  petDiveBusted,
+  petDiveSurfaced,
   choosePetLine,
   feedPet,
   newPet,
@@ -93,7 +100,10 @@ import {
   rebirthBonus,
   rebirthPet,
   trainPet,
+  type PetExpedition,
+  type PetExpeditionBlock,
   type PetHallEntry,
+  type PetLogbook,
   type PetState,
 } from '@/play/pet';
 import type { ShopTokenRow } from '@/play/shop';
@@ -346,6 +356,10 @@ export type DiveRun = {
  * `park` (per map, board fractions) so swapping Avatars never yanks the board
  * position. Legacy root fields (xp / avatar_level / avatar_stars /
  * avatar_park) migrate into the starter record. The starter is always owned.
+ * v21 (Dive + Pet loop, 2026-09-29) adds the solo expedition
+ * (`pet_expedition`, `pet_expedition_ymd`, `pet_expedition_note`), the
+ * `pet_logbook`, and `pet.deep_surfaces`. v20 saves open with all of them
+ * empty (no expedition out, empty Logbook, 0 deep surfaces).
  */
 
 /** Campaign phase. `trial` (Grove Path, waves 1–5) then `main` (Divecore
@@ -597,7 +611,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 20;
+  version: 21;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -674,6 +688,16 @@ export type PlayStoreDoc = {
   pet_tokens_ymd: string | null;
   /** Opt-in gentle hunger reminder (v20, default off). */
   pet_remind: boolean;
+  /** Solo expedition out right now, or null (v21). */
+  pet_expedition: PetExpedition | null;
+  /** Device-local day the last expedition was sent (once a day, v21). */
+  pet_expedition_ymd: string | null;
+  /** Item id the last expedition brought back, until the note is dismissed. */
+  pet_expedition_note: string | null;
+  /** The Play shell has already announced that return (once per return). */
+  pet_expedition_toasted: boolean;
+  /** Every find the pet's dives / expeditions made (v21, kept through rebirth). */
+  pet_logbook: PetLogbook;
 };
 
 /** A queued "hero owned" offer (Slice A2). `label` is the hero's display name
@@ -805,6 +829,18 @@ export type PetView = {
   /** Mini-game tokens still available today. */
   tokensLeftToday: number;
   remind: boolean;
+  /** Away on an expedition right now (v21) — every perk above reads 0. */
+  away: boolean;
+  /** Expedition status for the card: can go now / out / already went today /
+   * too young (Egg, Baby). */
+  expedition: 'ready' | 'away' | 'done_today' | 'locked';
+  /** Counted time until it's back (only while away). */
+  expeditionBackInMs: number | null;
+  /** "Your pet brought back X" — item id, until dismissed. */
+  expeditionNote: string | null;
+  /** That return still needs its one-time "Your pet is back" message. */
+  expeditionNoteFresh: boolean;
+  logbook: PetLogbook;
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -823,6 +859,8 @@ export type DiveRunView = {
   canDeeper: boolean;
   /** Finds the pet saves if the next Deeper busts (0 = none). */
   rescueKeep: number;
+  /** The pet is away on an expedition — not diving with you (v21). */
+  petAway: boolean;
 };
 
 export type ClaimResult = {
@@ -847,7 +885,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 20,
+    version: 21,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -884,6 +922,11 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     pet_tokens_today: 0,
     pet_tokens_ymd: null,
     pet_remind: false,
+    pet_expedition: null,
+    pet_expedition_ymd: null,
+    pet_expedition_note: null,
+    pet_expedition_toasted: true,
+    pet_logbook: {},
   };
 }
 
@@ -986,44 +1029,71 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
 
 function diveRunViewOf(doc: PlayStoreDoc, now: number): DiveRunView {
   const run = doc.dive_run;
-  const pet = advancePet(doc.pet, now);
-  const rescueKeep = petRescueKeep(pet);
+  // Same pet the Deeper roll will use: aged to now, and an expedition whose
+  // time is up counts as home (the roll collects it first) — see `petAt`.
+  const { pet, away } = petAt(doc, now);
+  const rescueKeep = petRescueKeep(pet, away);
   if (!run) {
-    return { active: false, deepers: 0, haul: [], bustPctNext: null, canDeeper: false, rescueKeep };
+    return { active: false, deepers: 0, haul: [], bustPctNext: null, canDeeper: false, rescueKeep, petAway: away };
   }
   const canDeeper = run.deepers < DIVE_DEEPER_MAX;
-  const activeLegend = activeAvatarOf(doc);
   return {
     active: true,
     deepers: run.deepers,
     haul: run.haul,
-    bustPctNext: canDeeper
-      ? effectiveBustPct(
-          diveBustChanceAt(run.deepers),
-          activeLegend.equipped,
-          legendElementOf(activeLegend.id),
-          petBustCutPp(pet),
-        )
-      : null,
+    bustPctNext: canDeeper ? nextDeeperBustPct(doc, run, pet, away) : null,
     canDeeper,
     rescueKeep,
+    petAway: away,
   };
+}
+
+/** The exact whole-% bust chance of the next Deeper — one function for the
+ * screen and the roll, so what is shown is always what is rolled. */
+function nextDeeperBustPct(doc: PlayStoreDoc, run: DiveRun, pet: PetState, away: boolean): number {
+  const active = activeAvatarOf(doc);
+  return effectiveBustPct(
+    diveBustChanceAt(run.deepers),
+    active.equipped,
+    legendElementOf(active.id),
+    petBustCutPp(pet, away),
+  );
+}
+
+/** The pet aged to `now`, and whether it is still away. An expedition whose
+ * time is up counts as home here — every transition collects it first
+ * (`touchPet`), so the view and the rolls agree. */
+export function petAt(doc: PlayStoreDoc, now: number): { pet: PetState; away: boolean } {
+  const pet = advancePet(doc.pet, now);
+  const away = doc.pet_expedition != null && expeditionLeftMs(pet, doc.pet_expedition) > 0;
+  return { pet, away };
 }
 
 /** The pet as of `now` for the screens (aged, not saved). */
 function petViewOf(doc: PlayStoreDoc, now: number): PetView {
-  const pet = advancePet(doc.pet, now);
+  const { pet, away } = petAt(doc, now);
+  const today = localYmd(new Date(now));
+  const block: PetExpeditionBlock | null = away
+    ? 'away'
+    : expeditionBlock(pet, null, today, doc.pet_expedition_ymd);
   return {
     state: pet,
     stageLeftMs: petStageLeftMs(pet),
-    pounceBase: petPounceBase(pet),
-    bustCutPp: petBustCutPp(pet),
-    rescueKeep: petRescueKeep(pet),
+    pounceBase: petPounceBase(pet, away),
+    bustCutPp: petBustCutPp(pet, away),
+    rescueKeep: petRescueKeep(pet, away),
     aura: petAuraElement(pet),
     hall: doc.pet_hall,
     rebirths: doc.pet_rebirths,
-    tokensLeftToday: petTokensLeft(localYmd(new Date(now)), doc.pet_tokens_ymd, doc.pet_tokens_today),
+    tokensLeftToday: petTokensLeft(today, doc.pet_tokens_ymd, doc.pet_tokens_today),
     remind: doc.pet_remind,
+    away,
+    expedition:
+      block == null ? 'ready' : block === 'away' ? 'away' : block === 'done_today' ? 'done_today' : 'locked',
+    expeditionBackInMs: away && doc.pet_expedition ? expeditionLeftMs(pet, doc.pet_expedition) : null,
+    expeditionNote: doc.pet_expedition_note,
+    expeditionNoteFresh: doc.pet_expedition_note != null && !doc.pet_expedition_toasted,
+    logbook: doc.pet_logbook,
   };
 }
 
@@ -1033,11 +1103,64 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
  * saved `seen_at` high-water mark moves with each write.
  * ------------------------------------------------------------------------- */
 
-/** Age the pet to now and save the new high-water mark (app open). Returns
+/** Age the pet to now and save the new high-water mark (app open), and
+ * collect an expedition whose time is up: one find to the bag, a Logbook
+ * entry (depth 0), and the "brought back" note (v21). Returns
  * the same doc when nothing changed. */
-export function touchPet(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+export function touchPet(
+  doc: PlayStoreDoc,
+  now: number,
+  rng: () => number = Math.random,
+): PlayStoreDoc {
   const pet = advancePet(doc.pet, now);
+  const exp = doc.pet_expedition;
+  if (exp && expeditionLeftMs(pet, exp) <= 0) {
+    // A shallow solo dive: it can't bust, it always brings back one find.
+    const find = rollDiveFind(rng);
+    return {
+      ...doc,
+      pet,
+      pet_expedition: null,
+      pet_expedition_note: find,
+      pet_expedition_toasted: false,
+      inventory: addManyToBag(doc.inventory, [find]),
+      pet_logbook: logPetFind(doc.pet_logbook, find, 0),
+    };
+  }
   return pet === doc.pet ? doc : { ...doc, pet };
+}
+
+export type ExpeditionSendResult = { ok: true } | { ok: false; reason: PetExpeditionBlock };
+
+/** Send the pet on its once-a-day solo expedition (Child and up). */
+export function sendPetExpedition(
+  doc: PlayStoreDoc,
+  now: number,
+): { doc: PlayStoreDoc; result: ExpeditionSendResult } {
+  const touched = touchPet(doc, now);
+  const today = localYmd(new Date(now));
+  const block = expeditionBlock(touched.pet, touched.pet_expedition, today, touched.pet_expedition_ymd);
+  if (block) return { doc: touched, result: { ok: false, reason: block } };
+  return {
+    doc: {
+      ...touched,
+      pet_expedition: { left_age_ms: touched.pet.total_age_ms },
+      pet_expedition_ymd: today,
+    },
+    result: { ok: true },
+  };
+}
+
+/** Clear the "Your pet brought back X" note. */
+export function dismissExpeditionNote(doc: PlayStoreDoc): PlayStoreDoc {
+  return doc.pet_expedition_note == null
+    ? doc
+    : { ...doc, pet_expedition_note: null, pet_expedition_toasted: true };
+}
+
+/** The shell has shown "Your pet is back" for this return (once per return). */
+export function markExpeditionToasted(doc: PlayStoreDoc): PlayStoreDoc | null {
+  return doc.pet_expedition_toasted ? null : { ...doc, pet_expedition_toasted: true };
 }
 
 /** Pick what hatches (egg only). Null when refused. */
@@ -1060,15 +1183,17 @@ export function finishPetRound(
   kind: PetRoundKind,
   score: number,
 ): { doc: PlayStoreDoc; result: PetRoundResult } {
-  const aged = advancePet(doc.pet, now);
+  // touchPet also brings home an expedition whose time is up (v21).
+  const touchedDoc = touchPet(doc, now);
+  const aged = touchedDoc.pet;
   if (aged.stage === 'egg' || !(score >= PET_MIN_ROUND_SCORE)) {
-    return { doc: { ...doc, pet: aged }, result: { counted: false, tokensGranted: 0 } };
+    return { doc: touchedDoc, result: { counted: false, tokensGranted: 0 } };
   }
   const pet = kind === 'catch' ? feedPet(aged, PET_FEED_CATCH) : trainPet(aged);
   const pay = petTokensForRound(localYmd(new Date(now)), doc.pet_tokens_ymd, doc.pet_tokens_today);
   return {
     doc: {
-      ...doc,
+      ...touchedDoc,
       pet,
       tokens: doc.tokens + pay.tokens,
       pet_tokens_today: pay.paid,
@@ -1080,9 +1205,13 @@ export function finishPetRound(
 
 /** Rebirth a God pet: Hall entry, +2% (cap +10%), new egg. Null unless God. */
 export function rebirthPetDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | null {
-  const next = rebirthPet(advancePet(doc.pet, now), doc.pet_hall, doc.pet_rebirths, now);
+  const touched = touchPet(doc, now);
+  // Not while it is away: the new egg would reset the age the expedition is
+  // timed against (v21). Wait for it to come back.
+  if (touched.pet_expedition) return null;
+  const next = rebirthPet(touched.pet, touched.pet_hall, touched.pet_rebirths, now);
   if (!next) return null;
-  return { ...doc, pet: next.pet, pet_hall: next.hall, pet_rebirths: next.rebirths };
+  return { ...touched, pet: next.pet, pet_hall: next.hall, pet_rebirths: next.rebirths };
 }
 
 export function setPetRemind(doc: PlayStoreDoc, on: boolean): PlayStoreDoc {
@@ -1104,7 +1233,7 @@ export function devPetFinishStage(doc: PlayStoreDoc, now: number): PlayStoreDoc 
 export function devPetSetStage(doc: PlayStoreDoc, now: number, stage: PetState['stage']): PlayStoreDoc {
   if (!(PET_STAGES as readonly string[]).includes(stage)) return doc;
   const pet = advancePet(doc.pet, now);
-  return { ...doc, pet: { ...pet, stage, stage_age_ms: 0, mistakes: 0, training: 0, waves: 0 } };
+  return { ...doc, pet: { ...pet, stage, stage_age_ms: 0, mistakes: 0, training: 0, waves: 0, deep_surfaces: 0 } };
 }
 
 /** Dev kit: empty both meters (care-mistake / reminder testing). */
@@ -1115,7 +1244,17 @@ export function devPetStarve(doc: PlayStoreDoc, now: number): PlayStoreDoc {
 
 /** Dev kit: a brand-new egg (hall and rebirths kept). */
 export function devPetNewEgg(doc: PlayStoreDoc, now: number): PlayStoreDoc {
-  return { ...doc, pet: newPet(now, doc.pet.line) };
+  return { ...doc, pet: newPet(now, doc.pet.line), pet_expedition: null };
+}
+
+/** Dev kit: bring an expedition back on the next action, and allow another
+ * one today. */
+export function devPetExpeditionReset(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const pet = advancePet(doc.pet, now);
+  // A departure age above the current age reads as "ready" (expeditionLeftMs),
+  // so this works even for a pet younger than the 1h minimum.
+  const exp = doc.pet_expedition ? { left_age_ms: pet.total_age_ms + 1 } : null;
+  return { ...doc, pet, pet_expedition: exp, pet_expedition_ymd: null };
 }
 
 export function canClaimResearch(view: PlayView): boolean {
@@ -2430,12 +2569,17 @@ export function claimResearch(
  * ------------------------------------------------------------------------- */
 
 export type DeeperOutcome =
-  | { busted: true; bustPct: number; rescued: string[] }
-  | { busted: false; bustPct: number; addedId: string };
+  | { busted: true; changed?: false; bustPct: number; rescued: string[]; petCared: boolean }
+  | { busted: false; changed?: false; bustPct: number; addedId: string }
+  /** Nothing rolled: the real odds moved since the screen showed them (the
+   * pet evolved or came back). The screen re-renders the new exact %. */
+  | { busted: false; changed: true; bustPct: number };
 
 /**
  * Spend 1 dive charge to start a run and roll the first find. Null when there
- * is already a run in progress or no charge is available.
+ * is already a run in progress or no charge is available. The pet is aged
+ * (and a finished expedition collected) first; if it is with you, the find
+ * goes in the Logbook at depth 0.
  */
 export function startDive(
   doc: PlayStoreDoc,
@@ -2445,78 +2589,95 @@ export function startDive(
   if (doc.dive_run) return null;
   const dive = diveChargeAt(doc, now);
   if (dive.current < 1) return null;
+  const touched = touchPet(doc, now, rng);
+  const { away } = petAt(touched, now);
   const firstFind = rollDiveFind(rng);
   return {
     doc: {
-      ...doc,
+      ...touched,
       // Spend one derived charge; the refill timer restarts from now.
       dive_charge: dive.current - 1,
       dive_charge_at: now,
       dive_run: { deepers: 0, haul: [firstFind] },
+      pet_logbook: away ? touched.pet_logbook : logPetFind(touched.pet_logbook, firstFind, 0),
     },
     firstFind,
   };
 }
 
-/** Bank the current haul into inventory (stacked) and end the run. Null when idle. */
+/** Bank the current haul into inventory (stacked) and end the run. Null when
+ * idle. Dive care (v21): with the pet along, +2 mood, and a surface from 3+
+ * Deepers counts toward Deep. Never training, never the stage clock. */
 export function surfaceDive(
   doc: PlayStoreDoc,
-): { doc: PlayStoreDoc; banked: string[] } | null {
+  now: number,
+): { doc: PlayStoreDoc; banked: string[]; petCared: boolean } | null {
   const run = doc.dive_run;
   if (!run) return null;
+  const touched = touchPet(doc, now);
+  const { away } = petAt(touched, now);
+  const pet = away ? touched.pet : petDiveSurfaced(touched.pet, run.deepers);
   return {
     doc: {
-      ...doc,
+      ...touched,
       dive_run: null,
-      inventory: addManyToBag(doc.inventory, run.haul),
+      inventory: addManyToBag(touched.inventory, run.haul),
+      pet,
     },
     banked: run.haul,
+    petCared: pet !== touched.pet,
   };
 }
 
 /**
- * Roll one Deeper press. Bust chance is the §7 table value at this run's depth
- * (Deeper # = deepers + 1), bent by equipped `dive_luck` via `effectiveBustPct`
- * — the same number the UI shows. On a bust the whole haul is lost and the run
- * ends. On a safe roll another find is added. Null when idle or run is maxed.
+ * Roll one Deeper press. The pet is aged (and a finished expedition collected)
+ * first, then the bust chance comes from `nextDeeperBustPct` — the exact
+ * function the screen shows. Pass `expectedPct` (the % on screen): if the real
+ * odds have moved since (the pet evolved or came back), nothing is rolled and
+ * the outcome is `changed`, so a shown % is never different from the rolled
+ * one. On a bust the whole haul is lost (the pet rescues its best finds from
+ * Adult) and the pet gets +1 mood; on a safe roll another find is added and
+ * logged at this depth. Null when idle or run is maxed.
  */
 export function deeperDive(
   doc: PlayStoreDoc,
+  now: number,
   rng: () => number = Math.random,
+  expectedPct: number | null = null,
 ): { doc: PlayStoreDoc; outcome: DeeperOutcome } | null {
   const run = doc.dive_run;
   if (!run || run.deepers >= DIVE_DEEPER_MAX) return null;
-  // §7 table at this depth + the §9c tune bust boost, bent by the ACTIVE
-  // Avatar's equipped dive_luck — the same number the UI shows.
-  const bustChance =
-    effectiveBustPct(
-      diveBustChanceAt(run.deepers),
-      activeAvatarOf(doc).equipped,
-      legendElementOf(activeAvatarOf(doc).id),
-      petBustCutPp(doc.pet),
-    ) / 100;
-  if (rng() < bustChance) {
-    const bustPct = Math.round(bustChance * 100);
+  const touched = touchPet(doc, now, rng);
+  const { pet, away } = petAt(touched, now);
+  const bustPct = nextDeeperBustPct(touched, run, pet, away);
+  if (expectedPct != null && expectedPct !== bustPct) {
+    return { doc: touched, outcome: { busted: false, changed: true, bustPct } };
+  }
+  if (rng() < bustPct / 100) {
     // Pet rescue (v20): from Adult the pet saves the best find(s) of the lost
-    // haul (1, or 2 at God). A bust ends the dive, so this is once per dive.
-    // The pet itself is never lost.
-    const rescued = bestFinds(run.haul, petRescueKeep(doc.pet));
+    // haul (1, 2 at God or Deep, never more than 2). A bust ends the dive, so
+    // this is once per dive. The pet itself is never lost.
+    const rescued = bestFinds(run.haul, petRescueKeep(pet, away));
+    const cared = away ? touched.pet : petDiveBusted(touched.pet);
     return {
       doc: {
-        ...doc,
+        ...touched,
         dive_run: null,
-        inventory: rescued.length > 0 ? addManyToBag(doc.inventory, rescued) : doc.inventory,
+        inventory: rescued.length > 0 ? addManyToBag(touched.inventory, rescued) : touched.inventory,
+        pet: cared,
       },
-      outcome: { busted: true, bustPct, rescued },
+      outcome: { busted: true, bustPct, rescued, petCared: cared !== touched.pet },
     };
   }
   const addedId = rollDiveFind(rng);
+  const depth = run.deepers + 1;
   return {
     doc: {
-      ...doc,
-      dive_run: { deepers: run.deepers + 1, haul: [...run.haul, addedId] },
+      ...touched,
+      dive_run: { deepers: depth, haul: [...run.haul, addedId] },
+      pet_logbook: away ? touched.pet_logbook : logPetFind(touched.pet_logbook, addedId, depth),
     },
-    outcome: { busted: false, bustPct: Math.round(bustChance * 100), addedId },
+    outcome: { busted: false, bustPct, addedId },
   };
 }
 
@@ -3049,7 +3210,8 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 5 && version !== 6 && version !== 7 && version !== 8 &&
       version !== 9 && version !== 10 && version !== 11 && version !== 12 &&
       version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
-      version !== 17 && version !== 18 && version !== 19 && version !== 20
+      version !== 17 && version !== 18 && version !== 19 && version !== 20 &&
+      version !== 21
     ) {
       return null;
     }
@@ -3150,8 +3312,11 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     // time before the update counts), an empty Hall, no rebirths, reminder off.
     const pet = version >= 20 ? parsePet(data.pet, now) : newPet(now);
     const petRebirths = Math.max(0, Math.floor(finiteNumber(data.pet_rebirths) ?? 0));
+    // v21 (Dive + Pet loop): expedition, its day and note, and the Logbook.
+    // Older saves: none out, never sent, no note, empty Logbook.
+    const v21 = version >= 21;
     return {
-      version: 20,
+      version: 21,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -3189,6 +3354,12 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       pet_tokens_today: Math.max(0, Math.floor(finiteNumber(data.pet_tokens_today) ?? 0)),
       pet_tokens_ymd: typeof data.pet_tokens_ymd === 'string' ? data.pet_tokens_ymd : null,
       pet_remind: data.pet_remind === true,
+      pet_expedition: v21 ? parsePetExpedition(data.pet_expedition) : null,
+      pet_expedition_ymd: v21 && typeof data.pet_expedition_ymd === 'string' ? data.pet_expedition_ymd : null,
+      pet_expedition_note: v21 && typeof data.pet_expedition_note === 'string' ? data.pet_expedition_note : null,
+      // Missing = already announced (never re-toast an old note).
+      pet_expedition_toasted: !(v21 && data.pet_expedition_toasted === false),
+      pet_logbook: v21 ? parsePetLogbook(data.pet_logbook) : {},
     };
   } catch {
     return null;
