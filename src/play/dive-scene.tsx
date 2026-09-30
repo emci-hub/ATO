@@ -22,6 +22,14 @@
  * Reduced motion: no parallax, shake, pulse, bubbles or fish — simple fades.
  * FX Low (dive-fx-level.ts): the cut list — fish, parallax, bubble count and
  * trail, rays, the pulse.
+ *
+ * v25 (2026-09-30) — a sunken ruin (dive-world.tsx): the dive starts at the
+ * surface (sky, waterline, the pet on the rim), the pet jumps in with a
+ * splash and the camera follows; a shaft of dungeon walls (parallax) and
+ * props per zone, the Abyss dragon, the Shark Tide Knight in the Reef and
+ * Trench; the pet tilts head-down as it sinks and bobs while you decide;
+ * finds burst out of a crate / chest. Cut order on Low: shark, dragon,
+ * parallax (then props, trail) — see `diveWorldCuts`.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { PixelRatio, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
@@ -37,6 +45,7 @@ import Animated, {
   withTiming,
   Extrapolation,
 } from 'react-native-reanimated';
+import type { SharedValue } from 'react-native-reanimated';
 import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { Fonts } from '@/constants/theme';
@@ -49,14 +58,18 @@ import {
   REVEAL_FLY_MS,
   REVEAL_HOLD_RARE_MS,
   REVEAL_RISE_MS,
+  SHARK_DEPTHS,
   SPECKS_FROM_DEPTH,
   ZONE_BANDS,
+  diveWorldCuts,
+  findBoxArt,
   isRareOrBetter,
   revealMs,
   vignetteFor,
   type FindGlow,
 } from '@/play/dive-fx-model';
 import { FindIcon } from '@/play/dive-hud';
+import { AbyssDragon, BOX_OPEN, FindBox, ShaftWalls, SharkGlide, SurfaceSky, WALL_W, WATERLINE, ZoneProps } from '@/play/dive-world';
 import { findName } from '@/play/dive-loot';
 import type { PetState } from '@/play/pet';
 import { petPose, sharpPetBox, type PetPose } from '@/play/pet-actor';
@@ -69,6 +82,7 @@ const PET_WANT_BOX = 112;
 const SLOT = 40;
 const ROW_PAD = 12;
 const ICON = 34;
+const FIND_BOX = 44;
 
 export type DiveZone = 'Shallows' | 'Reef' | 'Trench' | 'Abyss' | 'Hadal';
 
@@ -181,6 +195,7 @@ function SwimmingPet({
   grade,
   shiny,
   recolor,
+  tilt,
 }: {
   pet: PetState;
   art: PetArt;
@@ -194,8 +209,12 @@ function SwimmingPet({
   grade: Grade | null;
   shiny: boolean;
   recolor: string | null;
+  /** v25 — 0..1 head-down while sinking. */
+  tilt: SharedValue<number>;
 }) {
   const [face, setFace] = useState<PetFace>('e');
+  const facingEast = face === 'e';
+  const tiltStyle = useAnimatedStyle(() => ({ transform: [{ rotate: `${tilt.value * (facingEast ? 32 : -32)}deg` }] }));
   useEffect(() => {
     if (!turn) return;
     const id = setInterval(() => setFace((f) => (f === 'e' ? 'w' : 'e')), 1300);
@@ -209,20 +228,22 @@ function SwimmingPet({
             <Bubble key={i} x={face === 'e' ? box * 0.2 : box * 0.75} height={box * 0.6} r={1.5 + i * 0.5} dur={1400 + i * 300} delay={i * 450} />
           ))
         : null}
-      <PetAnimSprite
-        pet={pet}
-        art={art}
-        wear={wear}
-        eggColor={eggColor}
-        pose={pose.pose}
-        face={face}
-        startedAt={pose.at}
-        loop={pose.loop}
-        box={box}
-        animate
-        recolor={recolor}
-        lockColour={shiny}
-      />
+      <Animated.View style={tiltStyle}>
+        <PetAnimSprite
+          pet={pet}
+          art={art}
+          wear={wear}
+          eggColor={eggColor}
+          pose={pose.pose}
+          face={face}
+          startedAt={pose.at}
+          loop={pose.loop}
+          box={box}
+          animate
+          recolor={recolor}
+          lockColour={shiny}
+        />
+      </Animated.View>
       {shiny ? <ShinyOverlay size={box} footAt={0.75} animate={turn} /> : null}
     </>
   );
@@ -247,6 +268,7 @@ export function DiveScene({
   grade = null,
   shiny = false,
   recolor = null,
+  atSurface = false,
 }: {
   pet: PetState;
   wear: PetWear;
@@ -271,13 +293,17 @@ export function DiveScene({
   grade?: Grade | null;
   shiny?: boolean;
   recolor?: string | null;
+  /** v25 — no run: the pet waits on the rim above the water. */
+  atSurface?: boolean;
 }) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const onLayout = (e: LayoutChangeEvent) =>
     setSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height });
   const { width, height } = size;
   const full = fxLevel === 'full' && !reduceMotion;
+  const cuts = diveWorldCuts(fxLevel, reduceMotion);
   const band = Math.max(1, height * 0.9);
+  const wallSpeed = cuts.parallax ? 1.25 : 1;
 
   // -- Camera: one band per Deeper; after a bust it waits for the pet to
   // shoot up, then rises. Reduced motion snaps.
@@ -295,6 +321,7 @@ export function DiveScene({
   }, [cam, depth, event?.key, event?.kind, reduceMotion]);
 
   const worldStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -cam.value * band }] }));
+  const wallStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -cam.value * band * wallSpeed }] }));
   const midStyle = useAnimatedStyle(() => {
     if (!full || height <= 0) return { transform: [] };
     const shift = (cam.value * band * 1.5) % height;
@@ -312,6 +339,8 @@ export function DiveScene({
   const box = pet.stage === 'egg' ? 70 : sharpPetBox(PET_WANT_BOX, art.cellPx, PixelRatio.get());
   const petX = width / 2;
   const petY = height * 0.42;
+  const edgeX = Math.max(WALL_W + box / 2, width * 0.24);
+  const edgeY = height * WATERLINE - box * 0.42;
   const swimPose = petPose(art.kit, 'walk');
   const [pose, setPose] = useState<{ pose: PetPose | null; loop: boolean; at: number }>(() => ({ pose: swimPose, loop: true, at: Date.now() }));
   const [hurtFlash, setHurtFlash] = useState(false);
@@ -320,6 +349,58 @@ export function DiveScene({
   const wiggle = useSharedValue(0);
   const shake = useSharedValue(0);
   const mood = diveMood(bustPct);
+
+  // -- v25: the surface. perch 1 = on the rim, 0 = in the water; sky 1 =
+  // above the waterline in view. A dive start jumps in with a splash and the
+  // camera follows under; the end of a dive climbs back out.
+  const perch = useSharedValue(atSurface ? 1 : 0);
+  const sky = useSharedValue(atSurface ? 1 : 0);
+  const skySplash = useSharedValue(0);
+  const lastSurface = useRef(atSurface);
+  useEffect(() => {
+    if (lastSurface.current === atSurface) return;
+    lastSurface.current = atSurface;
+    const to = atSurface ? 1 : 0;
+    if (reduceMotion) {
+      perch.value = to;
+      sky.value = to;
+      return;
+    }
+    if (atSurface) {
+      // After the surface / bust beat has played in the water.
+      sky.value = withDelay(1900, withTiming(1, { duration: 600, easing: Easing.out(Easing.cubic) }));
+      perch.value = withDelay(2100, withTiming(1, { duration: 700, easing: Easing.inOut(Easing.quad) }));
+    } else {
+      perch.value = withTiming(0, { duration: 750, easing: Easing.inOut(Easing.quad) });
+      skySplash.value = 0;
+      skySplash.value = withDelay(420, withTiming(1, { duration: 600, easing: Easing.out(Easing.quad) }));
+      sky.value = withDelay(550, withTiming(0, { duration: 650, easing: Easing.inOut(Easing.cubic) }));
+    }
+  }, [atSurface, perch, reduceMotion, sky, skySplash]);
+
+  // -- v25: head-down while sinking (a Deeper), a gentle bob while deciding.
+  const tilt = useSharedValue(0);
+  const bob = useSharedValue(0);
+  const lastDepth = useRef(depth);
+  useEffect(() => {
+    const deeper = depth > lastDepth.current;
+    lastDepth.current = depth;
+    if (!deeper || !cuts.motion) return;
+    tilt.value = withSequence(withTiming(1, { duration: 220 }), withDelay(450, withTiming(0, { duration: 350 })));
+  }, [depth, tilt, cuts.motion]);
+  useEffect(() => {
+    cancelAnimation(bob);
+    bob.value = 0;
+    if (!cuts.motion || away) return;
+    bob.value = withRepeat(
+      withSequence(
+        withTiming(5, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
+        withTiming(-5, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
+      ),
+      -1,
+    );
+    return () => cancelAnimation(bob);
+  }, [bob, cuts.motion, away]);
 
   useEffect(() => {
     cancelAnimation(sway);
@@ -416,10 +497,14 @@ export function DiveScene({
 
   const petStyle = useAnimatedStyle(() => {
     const t = wiggle.value;
+    const p = perch.value;
+    const water = 1 - p;
+    // The jump / climb arcs up over the rim between the two spots.
+    const arc = p > 0 && p < 1 ? -Math.sin(Math.PI * p) * 70 : 0;
     return {
       transform: [
-        { translateX: sway.value + (mood === 'shake' ? t * 2.5 : 0) },
-        { translateY: lift.value + (mood === 'calm' ? 0 : 0) },
+        { translateX: (sway.value + (mood === 'shake' ? t * 2.5 : 0)) * water + (edgeX - petX) * p },
+        { translateY: lift.value + bob.value * water + (edgeY - petY) * p + arc },
         { rotate: mood === 'nervous' ? `${t * 6}deg` : '0deg' },
       ],
     };
@@ -458,16 +543,21 @@ export function DiveScene({
     return () => clearTimeout(id);
   }, [reveal, reduceMotion, rv, flash, fxLevel]);
   const revealTo = reveal ? slotX(reveal.slot) : 0;
+  // v25: the find bursts out of a crate / chest on the right-hand ledge.
+  const boxX = width - WALL_W - FIND_BOX - 8;
+  const boxY = petY + 24;
   const revealStyle = useAnimatedStyle(() => {
     const v = rv.value;
-    const startX = petX - ICON / 2;
-    const startY = petY - ICON / 2;
-    const riseY = startY - 56;
+    const startX = boxX + (FIND_BOX - ICON) / 2;
+    const startY = boxY;
+    const riseY = startY - 64;
+    // Hidden while the box shakes; rises out once it bursts.
+    const r = v <= BOX_OPEN ? 0 : Math.min(1, (v - BOX_OPEN) / (1 - BOX_OPEN));
     const x = v <= 1 ? startX : startX + (revealTo - startX) * (v - 1);
-    const y = v <= 1 ? startY + (riseY - startY) * v : riseY + (rowY - riseY) * (v - 1);
+    const y = v <= 1 ? startY + (riseY - startY) * r : riseY + (rowY - riseY) * (v - 1);
     return {
-      opacity: v > 0 && v < 2 ? 1 : 0,
-      transform: [{ translateX: x }, { translateY: y }, { scale: v <= 1 ? 0.6 + v * 0.6 : 1.2 - (v - 1) * 0.2 }],
+      opacity: v > BOX_OPEN && v < 2 ? 1 : 0,
+      transform: [{ translateX: x }, { translateY: y }, { scale: v <= 1 ? 0.6 + r * 0.6 : 1.2 - (v - 1) * 0.2 }],
     };
   });
   const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
@@ -544,7 +634,20 @@ export function DiveScene({
               ))}
               <Rect x={0} y={ZONE_BANDS.length * band} width={width} height={height} fill={ZONE_BANDS[ZONE_BANDS.length - 1].bottom} />
             </Svg>
+            {cuts.dragon ? <AbyssDragon width={width} band={band} /> : null}
+            {cuts.props ? <ZoneProps width={width} band={band} depth={depth} /> : null}
           </Animated.View>
+
+          {/* v25: the shaft — dungeon walls down both sides, faster than the
+           * water when parallax is on. */}
+          <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0, width, height: worldH * wallSpeed }, wallStyle]}>
+            <ShaftWalls width={width} band={band} depth={depth} speed={wallSpeed} />
+          </Animated.View>
+
+          {/* v25: the Shark Tide Knight, faint, in the Reef and the Trench. */}
+          {cuts.shark && !atSurface && SHARK_DEPTHS.includes(depth) ? (
+            <SharkGlide key={depth} width={width} height={height} rightward={depth % 2 === 1} />
+          ) : null}
 
           {/* Light rays in the sunlit water. */}
           {fxLevel === 'full' ? (
@@ -594,6 +697,9 @@ export function DiveScene({
             <Bubble key={i} x={((i * 29 + 7) % 90) * (width / 100) + 8} height={height} r={2 + (i % 3)} dur={4200 + (i % 4) * 900} delay={i * 600} />
           ))}
 
+          {/* v25: the surface — sky, sun, the rim and the waterline. */}
+          <SurfaceSky width={width} height={height} sky={sky} splash={skySplash} edgeX={edgeX} />
+
           {/* The pet (not while it's away on an expedition). */}
           {!away ? (
             <Animated.View pointerEvents="none" style={[styles.abs, { left: petX - box / 2, top: petY - box / 2, width: box, height: box }, petStyle]}>
@@ -605,7 +711,8 @@ export function DiveScene({
                 pose={pose}
                 box={box}
                 turn={!reduceMotion}
-                trail={full && pet.stage !== 'egg'}
+                trail={cuts.trail && pet.stage !== 'egg'}
+                tilt={tilt}
                 grade={grade}
                 shiny={shiny}
                 recolor={recolor}
@@ -652,7 +759,18 @@ export function DiveScene({
           {/* A rare find's flash. */}
           <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.flash, flashStyle]} />
 
-          {/* The find on its way to the haul row. */}
+          {/* The find on its way to the haul row, out of its crate / chest. */}
+          {reveal && revealing ? (
+            <FindBox
+              art={findBoxArt(depth)}
+              x={boxX}
+              y={boxY}
+              size={FIND_BOX}
+              tint={depth >= 3 ? '#BFD4FF' : '#FFF3D6'}
+              glow={GLOW_COLOR[reveal.glow]}
+              rv={rv}
+            />
+          ) : null}
           {reveal && revealing ? (
             <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0 }, revealStyle]}>
               <View style={[styles.revealGlow, { backgroundColor: GLOW_COLOR[reveal.glow] }]} />

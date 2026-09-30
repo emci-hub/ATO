@@ -130,12 +130,11 @@ export const WARMTH_START = 3;
 export const WARMTH_WARM = 3;
 export const WARMTH_DROP_MS = 90_000;
 export const CARE_EGG_POINTS = 50;
-/** Baby skill: a skilled round (Catch ≥ 14, or Tap to train ≥ 8/10) = 25, any
- * counted round = 12. */
+/** Baby skill (v25): a round PASSED with 70%+ = 25, any other pass = 12, a
+ * fail = 0 (mashing fails now, so it can never reach Perfect). */
 export const CARE_SKILL_POINTS = 25;
 export const CARE_ROUND_POINTS = 12;
-export const CARE_SKILL_CATCH = 14;
-export const CARE_SKILL_TRAIN = 8;
+export const CARE_SKILL_SHARE = 0.7;
 /** Baby activity: +5 each for fed, trained, dived (bit flags). */
 export const CARE_ACT = { fed: 1, trained: 2, dived: 4 } as const;
 export const CARE_ACT_POINTS = 5;
@@ -166,11 +165,10 @@ export function careBand(score: number): CareBand {
   return 'poor';
 }
 
-/** Skill points a finished Baby round earns. */
-export function roundSkillPoints(kind: 'catch' | 'train', score: number, minCounted: number): number {
-  if (!(score >= minCounted)) return 0;
-  const skilled = kind === 'catch' ? score >= CARE_SKILL_CATCH : score >= CARE_SKILL_TRAIN;
-  return skilled ? CARE_SKILL_POINTS : CARE_ROUND_POINTS;
+/** Skill points a finished Baby round earns: a pass with 70%+ is skilled. */
+export function roundSkillPoints(outcome: { pass: boolean; quality: number }): number {
+  if (!outcome.pass) return 0;
+  return outcome.quality >= CARE_SKILL_SHARE ? CARE_SKILL_POINTS : CARE_ROUND_POINTS;
 }
 
 /* ---------------------------------------------------------------- odds --- */

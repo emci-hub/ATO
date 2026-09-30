@@ -302,21 +302,23 @@ ok('dive buddy: −1/−2/−3 points (floor kept), rescue 1 (Adult) / 2 (God) b
 
 /* --------------------------------------------------------------- economy --- */
 
+/** A passed round (55%). */
+const PASS = { pass: true, quality: 0.55, got: 11, of: 20 };
 let econ = docWithPet({ ...newPet(T0), stage: 'child' });
 let paid = 0;
 for (let i = 0; i < 8; i += 1) {
-  const r = finishPetRound(econ, T0 + i * 1000, i % 2 ? 'catch' : 'train', 5);
+  const r = finishPetRound(econ, T0 + i * 1000, i % 2 ? 'catch' : 'train', PASS);
   econ = r.doc;
   paid += r.result.tokensGranted;
 }
 assert.equal(paid, 30, 'eight rounds pay 30 — the daily cap');
-const low = finishPetRound(econ, T0 + 9000, 'catch', 2);
-assert.equal(low.result.counted, false, 'a round under the minimum does not count');
-const nextDay = finishPetRound(econ, T0 + 24 * H, 'catch', 5);
+const low = finishPetRound(econ, T0 + 9000, 'catch', { pass: false, quality: 0.2, got: 2, of: 10 });
+assert.equal(low.result.counted, false, 'a failed round (under 50%) does not count');
+const nextDay = finishPetRound(econ, T0 + 24 * H, 'catch', PASS);
 assert.equal(nextDay.result.tokensGranted, 5, 'a new day pays again');
 assert.equal(petTokensForRound('2026-09-28', '2026-09-29', 30).tokens, 0, 'clock set back a day: the cap does not reset');
 assert.equal(petTokensForRound('2026-09-29', '2027-09-29', 30).tokens, 5, 'a far-future stored day (clock once set a year ahead) does not lock the cap for a year');
-const eggRound = finishPetRound(docWithPet(newPet(T0)), T0, 'catch', 9);
+const eggRound = finishPetRound(docWithPet(newPet(T0)), T0, 'catch', PASS);
 assert.equal(eggRound.result.counted, false, 'no mini-games for an egg');
 ok('tokens: +5 a round, 30 a day, day guard against a rewound clock');
 
@@ -354,7 +356,7 @@ const v19: Record<string, unknown> = { ...defaultPlayStore(T0), version: 19 };
 for (const k of ['pet', 'pet_hall', 'pet_rebirths', 'pet_tokens_today', 'pet_tokens_ymd', 'pet_remind']) delete v19[k];
 const loaded = parsePlayStore(JSON.stringify(v19), T0 + 5 * H);
 assert.ok(loaded, 'a v19 save loads');
-assert.equal(loaded.version, 24);
+assert.equal(loaded.version, 25);
 assert.equal(loaded.pet.stage, 'egg', 'old saves get a fresh egg');
 assert.equal(loaded.pet.egg, null, '— the egg picker');
 assert.equal(loaded.pet.seen_at, T0 + 5 * H, 'seen now — no time before the update counts');
@@ -491,40 +493,47 @@ ok('Dive never changes stage_age_ms: a full bar of dives at one moment = no time
 
 /* ----------------------------------------------------------- expedition --- */
 
+/** A doc whose next trip today is ladder step `step` (0 = the 1-min trip). */
+function atStep(d: PlayStoreDoc, step: number): PlayStoreDoc {
+  return { ...d, pet_expedition_ymd: localYmd(new Date(T0)), pet_expedition_steps: step };
+}
+
 {
   const child = docWithPet(petOf({ stage: 'child', total_age_ms: 20 * H, seen_at: T0 }));
   const sent = sendPetExpedition(child, T0);
   assert.ok(sent.result.ok, 'a Child can go');
   assert.ok(sent.doc.pet_expedition, 'it is out');
+  assert.equal(sent.doc.pet_expedition?.len_ms, 60_000, 'the first trip of the day is 1 min');
   assert.equal(sent.doc.pet_expedition_ymd, localYmd(new Date(T0)));
   const again = sendPetExpedition(sent.doc, T0 + 1000);
   assert.deepEqual(again.result, { ok: false, reason: 'away' }, 'not while it is out');
   const baby = sendPetExpedition(docWithPet(petOf({ stage: 'baby' })), T0);
   assert.deepEqual(baby.result, { ok: false, reason: 'egg_or_baby' }, 'Child and up only');
 
-  const early = touchPet(sent.doc, T0 + 59 * 60 * 1000, () => 0);
-  assert.ok(early.pet_expedition, 'at 59 minutes it is still away');
+  const early = touchPet(sent.doc, T0 + 59_000, () => 0);
+  assert.ok(early.pet_expedition, 'at 59 seconds it is still away');
   assert.equal(early.pet_expedition_note, null);
-  const bagBefore = early.inventory.reduce((a, st) => a + st.count, 0);
-  const back = touchPet(early, T0 + H, () => 0); // rng 0 busts any real dive
-  assert.equal(back.pet_expedition, null, 'at 1h it is collected');
-  assert.equal(back.inventory.reduce((a, st) => a + st.count, 0), bagBefore + 1, 'exactly one find, even with a busting rng');
-  assert.ok(back.pet_expedition_note && diveCollectibleIds().includes(back.pet_expedition_note), 'the note names a dive find');
-  assert.deepEqual(back.pet_logbook[back.pet_expedition_note!], { depth: 0, count: 1 }, 'logged at depth 0');
+  const back = touchPet(early, T0 + 60_000, () => 0); // rng 0 busts any real dive
+  assert.equal(back.pet_expedition, null, 'at 1 min it is collected');
+  assert.equal(back.pet_expedition_note, 'food_kelp', 'the 1-min trip brings back food or a shell');
+  assert.equal(back.pet_pantry.food_kelp, 1, 'exactly one find, even with a busting rng');
   const twice = touchPet(back, T0 + 2 * H, () => 0);
-  assert.equal(twice.inventory.reduce((a, st) => a + st.count, 0), bagBefore + 1, 'collected once, never twice');
+  assert.equal(twice.pet_pantry.food_kelp, 1, 'collected once, never twice');
 
   const rewound = touchPet(sent.doc, T0 - 5 * H, () => 0);
   assert.ok(rewound.pet_expedition, 'setting the clock back never brings it home');
 
-  const sameDay = sendPetExpedition(back, T0 + 2 * H);
-  assert.deepEqual(sameDay.result, { ok: false, reason: 'done_today' }, 'once a device-local day');
-  const nextDay = sendPetExpedition(back, T0 + D);
-  assert.ok(nextDay.result.ok, 'the next day it can go again');
+  const second = sendPetExpedition(back, T0 + 2 * 60_000);
+  assert.ok(second.result.ok, 'the ladder: another trip the same day');
+  assert.equal(second.doc.pet_expedition?.len_ms, 5 * 60_000, 'and it is longer (5 min)');
 
-  const godAway = sendPetExpedition(docWithPet(petOf({ stage: 'god', total_age_ms: 250 * H })), T0).doc;
+  const doneDoc = atStep(back, 7);
+  assert.deepEqual(sendPetExpedition(doneDoc, T0 + 2 * H).result, { ok: false, reason: 'done_today' }, 'after the 4h trip: done for today');
+  assert.ok(sendPetExpedition(doneDoc, T0 + D).result.ok, 'the next day the ladder starts again');
+
+  const godAway = sendPetExpedition(atStep(docWithPet(petOf({ stage: 'god', total_age_ms: 250 * H })), 6), T0).doc;
   assert.equal(rebirthPetDoc(godAway, T0 + 10 * 60 * 1000), null, 'no rebirth while it is away');
-  assert.ok(rebirthPetDoc(godAway, T0 + H), 'rebirth works once it is back (collected first)');
+  assert.ok(rebirthPetDoc(godAway, T0 + 4 * H), 'rebirth works once it is back (collected first)');
 }
 {
   // Announced once per return: collection marks it fresh, the shell marks it
@@ -537,18 +546,18 @@ ok('Dive never changes stage_age_ms: a full bar of dives at one moment = no time
   assert.equal(markExpeditionToasted(shown), null, 'and never again');
   assert.equal(playView(shown, T0 + H).pet.expeditionNote, home.pet_expedition_note, 'the note stays until dismissed');
   assert.equal(dismissExpeditionNote(shown).pet_expedition_note, null);
-  // Dev "back now" works even for a pet younger than the 1h minimum.
-  const young = sendPetExpedition(docWithPet(petOf({ stage: 'child', total_age_ms: 10 * 60 * 1000 })), T0).doc;
+  // Dev "back now" works for any trip.
+  const young = sendPetExpedition(atStep(docWithPet(petOf({ stage: 'child', total_age_ms: 10 * 60 * 1000 })), 6), T0).doc;
   const reset = devPetExpeditionReset(young, T0 + 1000);
   assert.equal(petAt(reset, T0 + 1000).away, false, 'dev reset: counts as back');
   assert.equal(touchPet(reset, T0 + 1000, () => 0.5).pet_expedition, null, 'and is collected on the next touch');
 }
-ok('expedition: Child+, once a day, away ≥ 1h (counted time), can’t bust, one find, collected once, announced once, no rebirth while out');
+ok('expedition: Child+, the daily ladder (1 min first, longer each time, done after 4h, resets next day), counted time, one find, collected once, announced once, no rebirth while out');
 
 /* --------------------------------------------------------- away rule --- */
 
 {
-  const godDoc = docWithPet(petOf({ stage: 'god', branch: 'deep', total_age_ms: 250 * H }));
+  const godDoc = atStep(docWithPet(petOf({ stage: 'god', branch: 'deep', total_age_ms: 250 * H })), 6);
   const out = sendPetExpedition(godDoc, T0).doc;
   const v = playView(out, T0 + 10 * 60 * 1000);
   assert.equal(v.pet.away, true);
@@ -564,10 +573,10 @@ ok('expedition: Child+, once a day, away ≥ 1h (counted time), can’t bust, on
   const safeAway = deeperDive(running, T0 + 10 * 60 * 1000, 'safe', () => 0.99)!;
   assert.ok(!safeAway.outcome.busted && !safeAway.outcome.changed);
   assert.deepEqual(safeAway.doc.pet_logbook, out.pet_logbook, 'away: its Logbook does not change');
-  const home = playView(out, T0 + H);
-  assert.equal(home.pet.away, false, 'once its time is up it counts as home');
+  const home = playView(out, T0 + 4 * H);
+  assert.equal(home.pet.away, false, 'once its time is up (the 4h trip) it counts as home');
   assert.ok(home.pet.pounceBase > 0 && home.pet.bustCutPp === 4 && home.pet.rescueKeep === 2, 'and every perk is back');
-  assert.equal(petAt(out, T0 + H).away, false);
+  assert.equal(petAt(out, T0 + 4 * H).away, false);
 }
 ok('away: pounce, bust cut and rescue all off (view and roll), dives not its care, perks back when it returns');
 
@@ -599,7 +608,7 @@ ok('away: pounce, bust cut and rescue all off (view and roll), dives not its car
   for (const k of ['pet_expedition', 'pet_expedition_ymd', 'pet_expedition_note', 'pet_logbook']) delete v20[k];
   delete (v20.pet as Record<string, unknown>).deep_surfaces;
   const up = parsePlayStore(JSON.stringify(v20), T0)!;
-  assert.equal(up.version, 24);
+  assert.equal(up.version, 25);
   assert.deepEqual(
     [up.pet_expedition, up.pet_expedition_ymd, up.pet_expedition_note, up.pet_logbook, up.pet.deep_surfaces],
     [null, null, null, {}, 0],
@@ -609,12 +618,12 @@ ok('away: pounce, bust cut and rescue all off (view and roll), dives not its car
   const full: PlayStoreDoc = {
     ...up,
     pet: { ...up.pet, deep_surfaces: 4 },
-    pet_expedition: { left_age_ms: 12345 },
+    pet_expedition: { left_age_ms: 12345, len_ms: 3_600_000, step: -1 },
     pet_expedition_ymd: '2026-09-29',
     pet_expedition_note: lk,
     pet_logbook: { [lk]: { depth: 3, count: 2 } },
   };
-  assert.deepEqual(parsePlayStore(JSON.stringify(full), T0), full, 'v24 round-trips unchanged');
+  assert.deepEqual(parsePlayStore(JSON.stringify(full), T0), full, 'v25 round-trips unchanged');
 }
 ok('Logbook: first depth + count, busted finds kept, survives rebirth; v20 → v23 opens empty; round-trips');
 

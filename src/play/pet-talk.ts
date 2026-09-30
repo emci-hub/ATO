@@ -345,3 +345,21 @@ export function pickEggTalk(moment: PetEggTalk, last: string | null, rng: () => 
   const from = options.length > 0 ? options : pool;
   return from[Math.min(from.length - 1, Math.floor(rng() * from.length))];
 }
+
+/* ------------------------------------------------ mini-game rounds (v25) --- */
+
+/** After a round — one shared voice. */
+export const PET_ROUND_TALK = {
+  pass: ['We did it!', 'Nice moves!', 'That was fun — again?'],
+  skilled: ['Wow, you’re good at this!', 'Perfect rhythm!', 'Top marks!'],
+  fail: ['So close — one more go?', 'Tricky one! Try again?', 'Almost! I believe in you.'],
+  bombs: ['Ouch — those bombs!', 'Watch out for the 💣!', 'Too many bombs… again?'],
+} as const;
+export type PetRoundTalk = keyof typeof PET_ROUND_TALK;
+
+export function pickRoundTalk(kind: PetRoundTalk, last: string | null, rng: () => number = Math.random): string {
+  const pool = PET_ROUND_TALK[kind];
+  const options = pool.filter((line) => line !== last);
+  const from = options.length > 0 ? options : pool;
+  return from[Math.min(from.length - 1, Math.floor(rng() * from.length))];
+}

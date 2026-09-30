@@ -27,12 +27,11 @@ import {
   DIVE_GEAR_BLURB,
   DIVE_GEAR_COST,
   DIVE_GEAR_LABEL,
-  DIVE_PATHS,
-  DIVE_PATH_LABEL,
   findName,
   type DiveGear,
   type DivePath,
 } from '@/play/dive-loot';
+import { diveButtons, type DiveButton } from '@/play/dive-buttons';
 import { useDiveFxLevel } from '@/play/dive-fx-level';
 import { findGlow } from '@/play/dive-fx-model';
 import { DiveTopBar } from '@/play/dive-hud';
@@ -219,6 +218,32 @@ export function DiveScreen({
   };
 
   const depth = run.active ? run.deepers : 0;
+  // The control strip, from one pure model (every state has a real label —
+  // check:dive-fx holds it). The % is run.bustPct exactly.
+  const buttons = diveButtons({
+    active: run.active,
+    canDeeper: run.canDeeper,
+    bustPct: run.bustPct,
+    charges,
+    nextChargeInMs: view.dive.nextChargeAt != null ? view.dive.nextChargeAt - Date.now() : null,
+  });
+  const buttonRows = [...new Set(buttons.map((b) => b.row))].map((r) => buttons.filter((b) => b.row === r));
+  const pressButton = (b: DiveButton) => {
+    if (b.id === 'dive') startWith('Searching…', onSpendCharge);
+    else if (b.id === 'free') startWith('Searching…', onFreeDive);
+    else if (b.id === 'deeper_safe') pressDeeper('safe');
+    else if (b.id === 'deeper_rich') pressDeeper('rich');
+    else if (b.id === 'surface') pressSurface();
+  };
+  const hint = run.active
+    ? run.free
+      ? `Free dive — finds are Logbook sightings; surfacing now pays ${run.freeShellsNow ?? 0} shells.`
+      : run.canDeeper
+        ? '% = the chance to lose this haul. Safer finds come from one level up, Richer from one level down.'
+        : 'Max depth — this haul has reached its last Deeper. Surface to keep it.'
+    : canSpend
+      ? 'One charge, one find to start. Each Deeper adds a find and a chance to lose the haul — Surface any time to keep it.'
+      : `Out of charges — a free dive keeps only shells (the first 10 a day pay full; ${view.freeDivesToday} so far) and mood.`;
   const st = view.pet.state;
   const revealed = st.hero != null && st.stage !== 'egg' && st.stage !== 'baby';
   const maxDepth = run.active ? run.maxDeepers : view.diveGear.oxygen ? 5 : 4;
@@ -240,7 +265,8 @@ export function DiveScreen({
         fxLevel={fxLevel}
         grade={revealed ? view.pet.state.grade : null}
         shiny={revealed && view.pet.state.shiny}
-        recolor={revealed ? petRecolor(view.pet.state.hero, view.pet.state.shiny, view.pet.dyeOn) : null}>
+        recolor={revealed ? petRecolor(view.pet.state.hero, view.pet.state.shiny, view.pet.dyeOn) : null}
+        atSurface={!run.active}>
         <DiveTopBar
           zone={diveZone(depth)}
           depth={depth}
@@ -259,75 +285,40 @@ export function DiveScreen({
             {!reduceMotion ? <ActivityIndicator size="small" color={NEON.cyan} /> : null}
             <Text style={styles.strong}>{splashCopy ?? 'Searching…'}</Text>
           </View>
-        ) : run.active ? (
-          <>
-            {run.free ? (
-              <Text style={styles.note}>
-                Free dive — finds are Logbook sightings; surfacing now pays {run.freeShellsNow ?? 0} shells.
-              </Text>
-            ) : null}
-            {run.canDeeper && run.bustPct ? (
-              <>
-                <View style={styles.buttonRow}>
-                  {DIVE_PATHS.map((path) => (
-                    <Pressable
-                      key={path}
-                      onPress={() => pressDeeper(path)}
-                      disabled={busy}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Deeper, ${DIVE_PATH_LABEL[path]}, ${run.bustPct?.[path]} percent to lose the haul`}
-                      accessibilityState={{ disabled: busy }}
-                      style={({ pressed }) => [styles.button, styles.deeper, pressed && !busy && styles.pressed, busy && styles.disabled]}>
-                      <Text style={styles.strong}>
-                        Deeper · {DIVE_PATH_LABEL[path]} · {run.bustPct?.[path]}%
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-                <Text style={styles.note}>
-                  % = chance to lose this haul. Safer finds come from one level up, Richer from one level down.
-                </Text>
-                {run.preview ? (
-                  <Text style={styles.note}>
-                    Lamp: Safer holds {findName(run.preview.safe)} · Richer holds {findName(run.preview.rich)}.
-                  </Text>
-                ) : null}
-              </>
-            ) : (
-              <Text style={styles.note}>Max depth — this haul has reached its last Deeper. Surface to keep it.</Text>
-            )}
-            {run.netOn && !run.free ? <Text style={styles.note}>Net: surfacing now adds one more find.</Text> : null}
-            <Pressable
-              onPress={pressSurface}
-              disabled={busy}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: busy }}
-              style={({ pressed }) => [styles.button, styles.primary, pressed && !busy && styles.pressed, busy && styles.disabled]}>
-              <Text style={styles.primaryText}>Surface · keep the haul</Text>
-            </Pressable>
-          </>
         ) : (
           <>
-            <Pressable
-              onPress={() => (canSpend ? startWith('Searching…', onSpendCharge) : startWith('Searching…', onFreeDive))}
-              disabled={busy}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: busy }}
-              style={({ pressed }) => [
-                styles.button,
-                canSpend ? styles.primary : styles.deeper,
-                pressed && !busy && styles.pressed,
-                busy && styles.disabled,
-              ]}>
-              <Text style={canSpend ? styles.primaryText : styles.strong}>
-                {canSpend ? 'Dive · 1 charge' : 'Free dive · shells + mood'}
+            {buttonRows.map((row, i) => (
+              <View key={i} style={styles.buttonRow}>
+                {row.map((b) => (
+                  <Pressable
+                    key={b.id}
+                    onPress={() => pressButton(b)}
+                    disabled={busy || !b.enabled}
+                    accessibilityRole="button"
+                    accessibilityLabel={b.label.toLowerCase()}
+                    accessibilityState={{ disabled: busy || !b.enabled }}
+                    style={({ pressed }) => [
+                      styles.button,
+                      b.tone === 'primary' ? styles.primary : b.tone === 'secondary' ? styles.deeper : styles.muted,
+                      pressed && !busy && b.enabled && styles.pressed,
+                      busy && styles.disabled,
+                    ]}>
+                    <Text
+                      style={b.tone === 'primary' ? styles.primaryText : b.tone === 'muted' ? styles.mutedText : styles.strong}
+                      numberOfLines={2}>
+                      {b.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            ))}
+            <Text style={styles.note}>{hint}</Text>
+            {run.active && run.preview ? (
+              <Text style={styles.note}>
+                Lamp: Safer holds {findName(run.preview.safe)} · Richer holds {findName(run.preview.rich)}.
               </Text>
-            </Pressable>
-            <Text style={styles.note}>
-              {canSpend
-                ? 'One charge, one find to start. Each Deeper adds a find and a bust chance — Surface any time to keep it.'
-                : `No charges — a free dive keeps only shells (the first 10 a day pay full; ${view.freeDivesToday} so far) and mood.`}
-            </Text>
+            ) : null}
+            {run.active && run.netOn && !run.free ? <Text style={styles.note}>Net: surfacing now adds one more find.</Text> : null}
           </>
         )}
       </View>
@@ -410,13 +401,27 @@ const styles = StyleSheet.create({
     borderTopColor: NEON.cyanDim,
     backgroundColor: NEON.panel,
   },
-  buttonRow: { flexDirection: 'row', gap: 8 },
-  button: { flex: 1, alignItems: 'center', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 8 },
+  // Each row is a real row; the buttons share its width. (Before: a flex:1
+  // button placed straight in the column strip could collapse and hide its
+  // label.) Explicit min height so the text always has room.
+  buttonRow: { flexDirection: 'row', gap: 8, alignSelf: 'stretch' },
+  button: {
+    flexGrow: 1,
+    flexBasis: 0,
+    minHeight: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+  },
+  muted: { backgroundColor: '#161C2A', borderWidth: 1, borderColor: 'rgba(143, 163, 191, 0.35)' },
+  mutedText: { fontFamily: Fonts.monoBold, fontSize: 13, color: '#8FA3BF', textAlign: 'center' },
   primary: { backgroundColor: '#0E7490' },
   deeper: { backgroundColor: '#121A2B', borderWidth: 1, borderColor: NEON.cyanBorder },
-  primaryText: { fontFamily: Fonts.monoBold, fontSize: 13, color: '#FFFFFF' },
-  strong: { fontFamily: Fonts.monoBold, fontSize: 13, color: NEON.textPrimary, textAlign: 'center' },
-  note: { fontFamily: Fonts.mono, fontSize: 11, lineHeight: 16, color: NEON.textMuted, textAlign: 'center' },
+  primaryText: { fontFamily: Fonts.monoBold, fontSize: 14, letterSpacing: 0.5, color: '#FFFFFF', textAlign: 'center' },
+  strong: { fontFamily: Fonts.monoBold, fontSize: 13, letterSpacing: 0.3, color: NEON.textPrimary, textAlign: 'center' },
+  note: { fontFamily: Fonts.mono, fontSize: 13, lineHeight: 19, color: '#C9D6E6', textAlign: 'center' },
   body: { fontFamily: Fonts.mono, fontSize: 12, lineHeight: 18, color: NEON.textMuted },
   owned: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.cyan },
   gearRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },

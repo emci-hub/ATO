@@ -38,7 +38,6 @@ import {
   PET_BRANCH_LABEL,
   PET_DEEP_MIN_DEPTH,
   PET_METER_MAX,
-  PET_MIN_ROUND_SCORE,
   PET_REBIRTH_CAP,
   PET_RESCUE_MAX,
   PET_STAGE_LABEL,
@@ -54,10 +53,12 @@ import {
   type PetState,
 } from '@/play/pet';
 import { COSMETICS, COSMETIC_SLOTS, cosmeticById, type CosmeticSlot } from '@/play/pet-cosmetics';
-import { CatchFoodGame, TapTrainGame, TRAIN_REPS } from '@/play/pet-games';
+import { CatchFoodGame, TapTrainGame } from '@/play/pet-games';
+import { outcomeLine, type RoundOutcome } from '@/play/pet-game-rules';
 import { CollectionPanel, DyePanel, EggHelp, HallCards, OddsPanel } from '@/play/pet-egg-sheets';
 import { gradeTag, petShownName } from '@/play/pet-eggs';
 import { heartsText } from '@/play/pet-status';
+import { EXPEDITION_STEPS, tripLabel } from '@/play/expedition-ladder';
 import {
   buyCosmetic,
   dismissExpeditionNote,
@@ -120,17 +121,17 @@ function nextUnlockText(pet: PetState): string | null {
   const keepNow = petRescueKeep(pet);
   const keepNext = petRescueKeep(nextPet);
   if (keepNext > keepNow) gains.push(`saves ${keepNext === 1 ? 'your best find' : `${keepNext} finds`} on a bust`);
-  if (next === 'child') gains.push('the daily solo expedition');
+  if (next === 'child') gains.push('solo expeditions');
   if (next === 'god') gains.push('the God aura and rebirth');
   return `${PET_STAGE_LABEL[next]}: ${gains.length > 0 ? gains.join(' · ') : 'grows bigger'}`;
 }
 
-export function roundResultLine(kind: PetRoundKind, score: number, result: PetRoundResult): string {
+export function roundResultLine(kind: PetRoundKind, outcome: RoundOutcome, result: PetRoundResult): string {
+  const line = outcomeLine(kind, outcome);
   if (!result.counted) {
-    return `Scored ${score} — a round needs ${PET_MIN_ROUND_SCORE} to count. Try again!`;
+    return `${line} — you need 50% to pass. Try again!`;
   }
-  const care =
-    kind === 'catch' ? `Caught ${score} — +2 hunger` : `${score}/${TRAIN_REPS} hits — +1 training, +2 mood`;
+  const care = kind === 'catch' ? `${line} — +2 hunger` : `${line} — +1 training, +2 mood`;
   const pay =
     result.tokensGranted > 0 ? ` · +${result.tokensGranted} tokens` : ' · daily token cap reached';
   return care + pay;
@@ -210,7 +211,7 @@ export function PlaySheetBody({
   view: PlayView;
   game: PetRoundKind | null;
   onStart: (kind: PetRoundKind) => void;
-  onRoundDone: (kind: PetRoundKind) => (score: number) => void;
+  onRoundDone: (kind: PetRoundKind) => (outcome: RoundOutcome) => void;
   lastResult: string | null;
 }) {
   const pv = view.pet;
@@ -224,8 +225,9 @@ export function PlaySheetBody({
       <MeterLine label="Hunger" value={pv.state.hunger} />
       <MeterLine label="Mood" value={pv.state.mood} />
       <Text style={styles.body}>
-        Catch the food feeds it (+2 hunger); Tap to train cheers it up (+2 mood). +{PET_TOKENS_PER_ROUND}{' '}
-        tokens a round · {pv.tokensLeftToday}/{PET_TOKENS_DAILY_CAP} left today. TD stays the main way to earn.
+        Catch the food feeds it (+2 hunger); Tap to train cheers it up (+2 mood) — only if you pass (50%+).
+        +{PET_TOKENS_PER_ROUND} tokens a passed round · {pv.tokensLeftToday}/{PET_TOKENS_DAILY_CAP} left today. TD
+        stays the main way to earn.
       </Text>
       <View style={styles.buttons}>
         <NeonButton label="Catch the food" onPress={() => onStart('catch')} style={styles.flex} />
@@ -243,15 +245,19 @@ export function ExpeditionSheetBody({ view, commit }: { view: PlayView; commit: 
   const line =
     pv.expedition === 'locked'
       ? 'Expeditions unlock at Child.'
-      : pv.expedition === 'ready'
-        ? 'Ready — it dives the shallows alone for at least an hour, can’t bust, and brings back 1 find.'
+      : pv.expedition === 'ready' && pv.nextTripMs != null
+        ? `Next trip: ${tripLabel(pv.nextTripMs)}. It dives alone, can’t bust, and brings back 1 find — longer trips bring back better things.`
         : pv.expedition === 'away'
-          ? `Away on expedition — back in ${durationLabel(pv.expeditionBackInMs ?? 0)}.`
-          : 'Back tomorrow — once a day.';
+          ? `Away on a ${tripLabel(pv.expeditionTripMs ?? 0)} trip — back in ${durationLabel(pv.expeditionBackInMs ?? 0)}.`
+          : 'Done for today — the next trip (1m) is at midnight.';
   const noteName = pv.expeditionNote ? findName(pv.expeditionNote) : null;
   return (
     <>
       <Text style={styles.body}>{line}</Text>
+      <Text style={styles.body}>
+        Trips today: {pv.tripsToday}/{EXPEDITION_STEPS}. Each is longer than the last: 1m · 5m · 15m (food or shells) ·
+        30m · 1h (a find) · 2h · 4h (a chance of a Power). Starts over at midnight.
+      </Text>
       <Text style={styles.body}>
         While it’s away there’s no pounce, bust cut or rescue, and your dives don’t count as its care.
       </Text>
@@ -514,6 +520,15 @@ export function HelpTab() {
         Feed it from the pantry, with Catch the food or by clearing TD waves; cheer it up with Tap to train.
       </Text>
       <Text style={styles.body}>
+        • Catch the food (25s): tap the food as it falls — faster and faster. Golden food is +3, three quick
+        catches in a row +1. Dodge the 💣: each one is −3 and a strike, and 3 strikes end the round. Pass =
+        you caught at least half the food that fell.
+      </Text>
+      <Text style={styles.body}>
+        • Tap to train (15 taps): tap when the marker is in the lit zone. Each hit shrinks the zone and speeds
+        the marker up; 3 misses in a row end the round. Pass = 8 hits. A failed round gives nothing.
+      </Text>
+      <Text style={styles.body}>
         • The bubble over its head shows how it feels, the most urgent first; the line under it says what
         it needs, and the matching icon glows. It sleeps from 22:00 to 07:00 on your phone’s clock — that’s
         just for looks, hunger still drops overnight.
@@ -536,14 +551,21 @@ export function HelpTab() {
         never lost.
       </Text>
       <Text style={styles.body}>
-        • Expedition (Child and up, once a day): it dives the shallows alone for at least an hour, can’t
-        bust, and brings back one find — collected the next time you open the app after that. While it’s
-        away there’s no pounce, bust cut or rescue, and your dives don’t count as its care or go in its
-        Logbook.
+        • Expeditions (Child and up): up to 7 trips a day, each longer than the last — 1m, 5m, 15m (food or
+        shells), 30m, 1h (a find), 2h, 4h (a find — 20% / 35% of the time a Power). The ladder starts
+        again at 1m after midnight on your phone. It can’t bust; the find is collected the next time you
+        open the app once its time is up (only time that really passed counts). While it’s away there’s no
+        pounce, bust cut or rescue, you can’t release it, and your dives don’t count as its care or go in
+        its Logbook. Trips of 30m or longer can send a notification when it’s back.
       </Text>
       <Text style={styles.body}>
         • Logbook: every find from your pet’s dives and expeditions, with how deep it was first found and
         how many times. It stays through rebirths.
+      </Text>
+      <Text style={styles.body}>
+        • Diving: your pet waits on the rim, jumps in when you press Dive and sinks down a sunken ruin —
+        sunny Shallows, the kelp and coral of the Reef, the ruined Trench, the dark Abyss. Finds burst out of
+        crates and chests. The scenery is just for looks; it never changes the %.
       </Text>
       <Text style={styles.body}>
         • Dive levels: Shallows, Reef, Trench, Abyss (and the Hadal with Oxygen). Deeper levels hold more

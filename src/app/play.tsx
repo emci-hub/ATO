@@ -1,10 +1,9 @@
 import { Redirect, Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { BackHandler, PanResponder, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { MilestoneToast } from '@/components/milestone-toast';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -17,6 +16,17 @@ import { STUB_AVATAR_ID, avatarDef } from '@/play/avatars';
 import { CommandHub } from '@/play/command-hub';
 import { NEON, type HubDestination } from '@/play/neon-viper';
 import { PlayThemeProvider } from '@/play/play-theme';
+import { PlayBanner } from '@/play/play-banner';
+import {
+  EMPTY_BANNERS,
+  bannerEvents,
+  currentBanner,
+  dismissBanner,
+  enqueueBanner,
+  type Banner,
+  type BannerQueue,
+  type BannerWatch,
+} from '@/play/play-banner-queue';
 import { SaveDumpRow } from '@/play/dev-dump';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
 import { DevUnlockRow } from '@/play/dev-unlock-row';
@@ -99,6 +109,14 @@ type PlayToast =
   | { kind: 'surface'; itemIds: string[]; petMood: boolean; shells: number; free: boolean; netFind: string | null }
   | { kind: 'bust'; rescued: string[]; petMood: boolean }
   | { kind: 'message'; title: string; body: string };
+
+/** v25: every Play notice goes through one queued floating banner. */
+type BannerAction = PlayToast | { kind: 'banner'; banner: Omit<Banner, 'id'> } | { kind: 'dismiss'; id: number };
+
+function bannerReducer(q: BannerQueue, action: BannerAction): BannerQueue {
+  if (action.kind === 'dismiss') return dismissBanner(q, action.id);
+  return enqueueBanner(q, action.kind === 'banner' ? action.banner : toastBanner(action));
+}
 
 export default function PlayScreen() {
   const theme = useTheme();
@@ -224,7 +242,12 @@ export default function PlayScreen() {
       }),
     [goBackOneLevel],
   );
-  const [toast, setToast] = useState<PlayToast | null>(null);
+  // v25: `setToast` queues a floating banner (a stable reducer dispatch).
+  const [banners, setToast] = useReducer(bannerReducer, EMPTY_BANNERS);
+  const banner = currentBanner(banners);
+  /** A banner tapped through to the Journal (Pet → Info → Journal), until used. */
+  const [openJournal, setOpenJournal] = useState(false);
+  const journalOpened = useCallback(() => setOpenJournal(false), []);
   /** Dev kit only: one-shot forced bust on the next Deeper press. */
   const [forceBustArmed, setForceBustArmed] = useState(false);
   /** Dev kit only: skip the Dive searching beat + cooldown for fast testing. */
@@ -294,13 +317,28 @@ export default function PlayScreen() {
     if (!expeditionNote || !expeditionNoteFresh) return;
     if (mode !== 'pet') {
       setToast({
-        kind: 'message',
-        title: 'Your pet is back',
-        body: `It brought back ${findName(expeditionNote)} — it’s waiting for you.`,
+        kind: 'banner',
+        banner: {
+          title: 'Your pet is back',
+          body: `It brought back ${findName(expeditionNote)} — it’s waiting for you.`,
+          target: 'pet',
+        },
       });
     }
     commit((doc) => markExpeditionToasted(doc));
   }, [commit, expeditionNote, expeditionNoteFresh, mode]);
+
+  /** v25: hatch / reveal / milestone-ready news → banners (see bannerEvents). */
+  const watchRef = useRef<BannerWatch | null>(null);
+  const watchStage = view?.pet.state.stage ?? null;
+  const watchOdds = view?.pet.oddsOpen ?? false;
+  const watchReady = view ? view.milestones.filter((m) => m.done && !m.claimed).length : 0;
+  useEffect(() => {
+    if (watchStage == null) return;
+    const next: BannerWatch = { stage: watchStage, oddsOpen: watchOdds, milestonesReady: watchReady };
+    for (const b of bannerEvents(watchRef.current, next, mode === 'pet')) setToast({ kind: 'banner', banner: b });
+    watchRef.current = next;
+  }, [mode, watchOdds, watchReady, watchStage]);
 
   /** Surface: returns what the Dive scene counts up (finds + shells). */
   const handleSurface = useCallback(async (): Promise<DiveSurfaceSummary | null> => {
@@ -589,38 +627,6 @@ export default function PlayScreen() {
     return <Redirect href="/" />;
   }
 
-  const toastContent =
-    toast == null
-      ? null
-      : {
-          title:
-            toast.kind === 'claim'
-              ? `Claimed +${toast.result.tendTokens + toast.result.dailyBonusTokens} tokens`
-              : toast.kind === 'find'
-                ? 'Found'
-                : toast.kind === 'surface'
-                  ? 'Surfaced'
-                  : toast.kind === 'bust'
-                    ? 'Bust'
-                    : toast.title,
-          body:
-            toast.kind === 'claim'
-              ? claimToastBody(toast.result)
-              : toast.kind === 'find'
-                ? toast.foundName
-                : toast.kind === 'surface'
-                  ? (toast.free
-                      ? `Free dive: +${toast.shells} shells. Sightings are in your pet’s Logbook.`
-                      : `Brought up ${summarizeNames(toast.itemIds)}.${toast.netFind ? ` The Net caught ${findName(toast.netFind)}.` : ''}${toast.shells > 0 ? ` +${toast.shells} shells (food that didn’t fit and duplicate cosmetics count as shells).` : ''}`) +
-                    (toast.petMood ? ' Your pet loved it (+2 mood).' : '')
-                  : toast.kind === 'bust'
-                    ? (toast.rescued.length > 0
-                        ? `Your pet saved ${summarizeNames(toast.rescued)} — the rest of the haul is lost.`
-                        : 'This haul is lost — the charge was already spent. Your Basecore is untouched.') +
-                      (toast.petMood ? ' Your pet still had fun (+1 mood).' : '')
-                    : toast.body,
-        };
-
   const researchLine =
     view == null
       ? '…'
@@ -728,7 +734,7 @@ export default function PlayScreen() {
         <View style={styles.edgeWrap} {...edgeSwipe.panHandlers}>
           {(mode === 'dive' || mode === 'pet') && view ? (
             // Pet room + Dive own the whole screen (overhaul, 2026-09-29):
-            // no scroll view, the toast floats over the top.
+            // no scroll view; the banner floats over every mode (below).
             <SafeAreaView style={styles.fullSafeArea}>
               {mode === 'dive' ? (
                 <DiveScreen
@@ -754,32 +760,15 @@ export default function PlayScreen() {
                   onBack={() => setMode('grove')}
                   onGoDive={() => setMode('dive')}
                   onReplayTutorial={() => setTutorialReplay(true)}
+                  openJournal={openJournal}
+                  onJournalOpened={journalOpened}
                 />
               )}
-              {toastContent ? (
-                <View style={styles.toastOverlay} pointerEvents="box-none">
-                  <MilestoneToast
-                    title={toastContent.title}
-                    body={toastContent.body}
-                    reduceMotion={reduceMotion}
-                    onDone={() => setToast(null)}
-                  />
-                </View>
-              ) : null}
             </SafeAreaView>
           ) : (
           <ThemedView style={styles.container}>
             <SafeAreaView style={styles.safeArea}>
               <ScrollView contentContainerStyle={styles.scrollContent}>
-                {toastContent ? (
-                  <MilestoneToast
-                    title={toastContent.title}
-                    body={toastContent.body}
-                    reduceMotion={reduceMotion}
-                    onDone={() => setToast(null)}
-                  />
-                ) : null}
-
                 {mode === 'dress' && view ? (
                   <DressScreen
                     view={view}
@@ -845,6 +834,23 @@ export default function PlayScreen() {
           )}
         </View>
       )}
+      {banner ? (
+        <PlayBanner
+          key={banner.id}
+          banner={banner}
+          reduceMotion={reduceMotion}
+          onDismiss={(id) => setToast({ kind: 'dismiss', id })}
+          onTap={(b) => {
+            setToast({ kind: 'dismiss', id: b.id });
+            if (b.target === 'dive') setMode('dive');
+            else if (b.target === 'pet') setMode('pet');
+            else if (b.target === 'journal') {
+              setMode('pet');
+              setOpenJournal(true);
+            }
+          }}
+        />
+      ) : null}
       {view && mode === 'grove' ? (
         <DivecoreSettingsSheet
           open={hubSettingsOpen}
@@ -1240,6 +1246,39 @@ function minutesUntilLabel(nextAt: number | null): string {
 }
 
 /** Names for a haul, capped at 3 so a long claim/bank stays readable. */
+/** A Play result / message → the floating banner (no tap target). */
+function toastBanner(toast: PlayToast): Omit<Banner, 'id'> {
+  return {
+    title:
+      toast.kind === 'claim'
+        ? `Claimed +${toast.result.tendTokens + toast.result.dailyBonusTokens} tokens`
+        : toast.kind === 'find'
+          ? 'Found'
+          : toast.kind === 'surface'
+            ? 'Surfaced'
+            : toast.kind === 'bust'
+              ? 'Bust'
+              : toast.title,
+    body:
+      toast.kind === 'claim'
+        ? claimToastBody(toast.result)
+        : toast.kind === 'find'
+          ? toast.foundName
+          : toast.kind === 'surface'
+            ? (toast.free
+                ? `Free dive: +${toast.shells} shells. Sightings are in your pet’s Logbook.`
+                : `Brought up ${summarizeNames(toast.itemIds)}.${toast.netFind ? ` The Net caught ${findName(toast.netFind)}.` : ''}${toast.shells > 0 ? ` +${toast.shells} shells (food that didn’t fit and duplicate cosmetics count as shells).` : ''}`) +
+              (toast.petMood ? ' Your pet loved it (+2 mood).' : '')
+            : toast.kind === 'bust'
+              ? (toast.rescued.length > 0
+                  ? `Your pet saved ${summarizeNames(toast.rescued)} — the rest of the haul is lost.`
+                  : 'This haul is lost — the charge was already spent. Your Basecore is untouched.') +
+                (toast.petMood ? ' Your pet still had fun (+1 mood).' : '')
+              : toast.body,
+    target: null,
+  };
+}
+
 function summarizeNames(itemIds: readonly string[]): string {
   const shown = Math.min(itemIds.length, 3);
   const names = itemIds
@@ -1281,13 +1320,6 @@ const styles = StyleSheet.create({
   fullSafeArea: {
     flex: 1,
     backgroundColor: NEON.ink,
-  },
-  toastOverlay: {
-    position: 'absolute',
-    top: 8,
-    left: 16,
-    right: 16,
-    zIndex: 10,
   },
   /** Holds the sub-screens; catches the left-edge back swipe. */
   edgeWrap: {

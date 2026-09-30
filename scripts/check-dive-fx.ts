@@ -17,6 +17,10 @@
  *   4. Wording — no gamble / casino / jackpot / bet in any Dive or Pet UI copy
  *      (GAME_SPEC §7).
  *   5. Hub — the Dive tile is gone; Dive opens from the Pet room.
+ *   6. The sunken ruin (v25) — every prop / wall / chest / shark is an art
+ *      key that is actually bundled; the shark only in the Reef and Trench;
+ *      Effects Low cuts shark → dragon → parallax first; reduced motion drops
+ *      everything that moves on its own; the find chest never picks by a roll.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -25,12 +29,20 @@ import { ACTION_COOLDOWN_MS, ACTION_SPLASH_MS } from '../src/play/action-pacing'
 import {
   GLOW_COLOR,
   HEARTBEAT_OVER_PCT,
+  DIVE_CUT_ORDER,
+  DIVE_PROPS,
+  DRAGON_DEPTH,
   REVEAL_BUDGET_MS,
+  SHAFT_TINT,
+  SHARK_DEPTHS,
   ZONE_BANDS,
+  diveWorldCuts,
+  findBoxArt,
   findGlow,
   revealMs,
   vignetteFor,
 } from '../src/play/dive-fx-model';
+import { diveButtons } from '../src/play/dive-buttons';
 import { COSMETICS } from '../src/play/pet-cosmetics';
 import { HUB_TILES } from '../src/play/neon-viper';
 
@@ -45,8 +57,10 @@ const UI_FILES = [
   'src/play/dive-screen.tsx',
   'src/play/dive-scene.tsx',
   'src/play/dive-hud.tsx',
+  'src/play/dive-buttons.ts',
   'src/play/dive-fx-model.ts',
   'src/play/dive-fx-level.ts',
+  'src/play/dive-world.tsx',
 ];
 const ODDS_NAMES = [
   'pathBaseBust',
@@ -68,7 +82,35 @@ for (const file of UI_FILES) {
 const screen = read('src/play/dive-screen.tsx');
 assert.match(screen, /const shown = run\.bustPct \? run\.bustPct\[path\] : null;/, 'Deeper sends the shown % from the view');
 assert.match(screen, /onDeeper\(path, shown\)/, 'Deeper passes the shown % to the store');
-assert.match(screen, /\{run\.bustPct\?\.\[path\]\}%/, 'the button shows run.bustPct[path]');
+assert.match(screen, /bustPct: run\.bustPct,/, 'the buttons are built from run.bustPct');
+{
+  // Every button state has a real, non-empty label; the % shown is the input % exactly.
+  const pct = { safe: 20, rich: 36 };
+  const states = {
+    before: diveButtons({ active: false, canDeeper: false, bustPct: null, charges: 3, nextChargeInMs: null }),
+    during: diveButtons({ active: true, canDeeper: true, bustPct: pct, charges: 2, nextChargeInMs: 60_000 }),
+    max: diveButtons({ active: true, canDeeper: false, bustPct: null, charges: 2, nextChargeInMs: null }),
+    empty: diveButtons({ active: false, canDeeper: false, bustPct: null, charges: 0, nextChargeInMs: 7 * 60_000 }),
+  };
+  for (const [name, list] of Object.entries(states)) {
+    assert.ok(list.length > 0, `${name}: at least one button`);
+    for (const b of list) assert.ok(b.label.trim().length >= 4, `${name}/${b.id}: a real label`);
+  }
+  assert.deepEqual(states.before.map((b) => b.label), ['DIVE · 1 CHARGE']);
+  assert.deepEqual(states.during.map((b) => b.label), ['DEEPER · SAFER 20%', 'DEEPER · RICHER 36%', 'SURFACE']);
+  assert.deepEqual(states.max.map((b) => b.label), ['SURFACE'], 'max depth: Surface only');
+  assert.deepEqual(
+    states.empty.map((b) => [b.label, b.enabled]),
+    [
+      ['NO CHARGES · NEXT IN 7M', false],
+      ['FREE DIVE · SHELLS + MOOD', true],
+    ],
+    'out of charges: greyed + free dive',
+  );
+  // The button layout never uses a bare flex:1 (that could collapse the label).
+  assert.ok(!screen.includes('button: { flex: 1'), 'no flex:1 button outside a row');
+  assert.ok(screen.includes('minHeight: 50'), 'buttons keep room for their text');
+}
 assert.match(screen, /bustPct=\{run\.active \? run\.bustPctNext : null\}/, 'the scene reads the shown % only');
 ok('odds isolation: Dive UI never touches the rolls; the % shown is the % sent');
 
@@ -130,5 +172,38 @@ assert.ok(!HUB_TILES.some((t) => t.to === 'dive'), 'no Dive tile on the hub');
 assert.ok(HUB_TILES.some((t) => t.to === 'pet'), 'the Pet tile stays');
 assert.match(read('src/play/command-hub.tsx'), /Dive in progress/, 'the Pet tile shows a dive in progress');
 ok('hub: Dive tile gone, Pet tile shows a dive in progress');
+
+{
+  const registry = read('src/play/generated-play-assets.ts');
+  const bundled = (key: string) => registry.includes(`'${key}': require(`);
+  const world = read('src/play/dive-world.tsx');
+  const keys = [
+    ...DIVE_PROPS.flat().map((pr) => pr.art),
+    ...[0, 1, 2, 3, 4, 5].map(findBoxArt),
+    ...(world.match(/'(?:tiles|primal)\/[^']+'/g) ?? []).map((k) => k.slice(1, -1)),
+  ];
+  for (const key of keys) assert.ok(bundled(key), `${key} is bundled`);
+  assert.ok(keys.includes('primal/shark_tide_knight/Idle/rotations/east'), 'the shark art is used');
+  assert.equal(DIVE_PROPS.length, ZONE_BANDS.length, 'props for every zone');
+  assert.equal(SHAFT_TINT.length, ZONE_BANDS.length, 'a wall tint for every zone');
+  assert.deepEqual([...SHARK_DEPTHS], [1, 2, 3], 'the shark: Reef (1-2) and Trench (3) only');
+  assert.equal(DRAGON_DEPTH, 4, 'the dragon: the Abyss');
+  // Walls get darker with depth.
+  const lum = (hex: string) => parseInt(hex.slice(1, 3), 16) + parseInt(hex.slice(3, 5), 16) + parseInt(hex.slice(5, 7), 16);
+  for (let i = 1; i < 5; i += 1) assert.ok(lum(SHAFT_TINT[i]) < lum(SHAFT_TINT[i - 1]), `walls darken at depth ${i}`);
+  // Cut order: Low drops shark, dragon, parallax first; props stay.
+  assert.deepEqual([...DIVE_CUT_ORDER], ['shark', 'dragon', 'parallax', 'props', 'trail']);
+  const full = diveWorldCuts('full', false);
+  const low = diveWorldCuts('low', false);
+  const still = diveWorldCuts('full', true);
+  assert.ok(full.shark && full.dragon && full.parallax && full.props && full.trail && full.motion, 'full draws it all');
+  assert.ok(!low.shark && !low.dragon && !low.parallax && low.props, 'Low cuts shark, dragon, parallax; keeps props');
+  assert.ok(!still.shark && !still.parallax && !still.trail && !still.motion && still.props, 'reduced motion: scenery only');
+  const scene = read('src/play/dive-scene.tsx');
+  assert.match(scene, /cuts\.shark && !atSurface && SHARK_DEPTHS\.includes\(depth\)/, 'the shark obeys the cut and the zones');
+  assert.match(scene, /findBoxArt\(depth\)/, 'the chest is picked by depth, not a roll');
+  assert.match(read('src/play/dive-screen.tsx'), /atSurface=\{!run\.active\}/, 'the surface start shows before a dive');
+}
+ok('sunken ruin: bundled art only, shark in Reef/Trench, Low cuts shark → dragon → parallax');
 
 console.log(`\ncheck:dive-fx — ${passed} groups passed.`);

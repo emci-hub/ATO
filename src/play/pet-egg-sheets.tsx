@@ -17,8 +17,7 @@ import {
   CARE_BANDS,
   CARE_BAND_LABEL,
   CARE_BAND_MIN,
-  CARE_SKILL_CATCH,
-  CARE_SKILL_TRAIN,
+  CARE_SKILL_SHARE,
   DYE_STARS,
   EGG_BLURB,
   EGG_COLOR,
@@ -428,8 +427,8 @@ export function EggHelp() {
       ))}
       <Text style={styles.body}>
         • Care score (0-100): the egg’s warmth up to 50 (it loses a pip every 90s — tap to warm it; time away
-        counts, so leaving the app lets it go cold), a skilled Baby round 25 (Catch the food {CARE_SKILL_CATCH}+ or
-        Tap to train {CARE_SKILL_TRAIN}/10; any counted round 12), and 5 each for feeding, training and diving.
+        counts, so leaving the app lets it go cold), a skilled Baby round 25 (a mini-game passed with
+        {Math.round(CARE_SKILL_SHARE * 100)}%+; any other pass 12, a fail 0), and 5 each for feeding, training and diving.
         Perfect needs warmth AND skill — tapping alone tops out at Great.
       </Text>
       <Text style={styles.body}>

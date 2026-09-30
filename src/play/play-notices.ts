@@ -12,6 +12,7 @@
  * Anything landing inside quiet hours waits until they end. The pet's name
  * (or the hero's) is used in the text.
  */
+import { EXPEDITION_NOTICE_MIN_MS } from './expedition-ladder';
 import { PET_STAGE_MS, petReminderTarget, type PetState } from './pet';
 import { chargesNoticeAt, deferForQuiet, type NotifKind, type PlaySettings } from './play-settings';
 
@@ -24,6 +25,8 @@ export type NoticeInput = {
   name: string;
   /** Counted time until the expedition is back (null = not away). */
   expeditionBackInMs: number | null;
+  /** v25 — the current trip's length (a phone notice only from 30 min). */
+  expeditionTripMs: number | null;
   chargesFullAt: number | null;
   chargesArmed: boolean;
   /** Last fired hunger / charges notices (device log). */
@@ -68,7 +71,13 @@ export function planPlayNotices(input: NoticeInput): PlannedNotice[] {
     }
   }
 
-  if (settings.notif.expedition && input.expeditionBackInMs != null && input.expeditionBackInMs > 0) {
+  // Short trips (under 30 min) only show the in-app banner.
+  if (
+    settings.notif.expedition &&
+    input.expeditionBackInMs != null &&
+    input.expeditionBackInMs > 0 &&
+    (input.expeditionTripMs ?? 0) >= EXPEDITION_NOTICE_MIN_MS
+  ) {
     out.push({
       kind: 'expedition',
       at: quiet(now + input.expeditionBackInMs),

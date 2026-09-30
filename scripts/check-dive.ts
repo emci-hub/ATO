@@ -44,6 +44,7 @@ import {
   defaultPlayStore,
   deeperDive,
   feedFromPantry,
+  localYmd,
   parsePlayStore,
   playView,
   rebirthPetDoc,
@@ -206,7 +207,7 @@ ok('free dives: only with no charges; only shells kept (full ×10, then ×0.7); 
   assert.equal(feedFromPantry(doc({ pet: pet({ stage: 'teen', hunger: 4 }), pet_pantry: { food_kelp: 1 } }), T0, 'food_kelp'), null, 'full → refused');
   assert.equal(feedFromPantry(doc({ pet: newPet(T0), pet_pantry: { food_kelp: 1 } }), T0, 'food_kelp'), null, 'egg → refused');
   const away = sendPetExpedition(doc({ pet: pet({ stage: 'teen', hunger: 1, total_age_ms: 60 * H }), pet_pantry: { food_kelp: 1 } }), T0).doc;
-  assert.equal(feedFromPantry(away, T0 + 60_000, 'food_kelp'), null, 'away → refused');
+  assert.equal(feedFromPantry(away, T0 + 30_000, 'food_kelp'), null, 'away (the first trip is 1 min) → refused');
   const full = doc({ pet_pantry: { food_kelp: PANTRY_MAX }, dive_run: run(0, ['food_shrimp', 'food_kelp']) });
   const over = surfaceDive(full, T0)!;
   assert.equal(over.doc.pet_pantry.food_kelp, PANTRY_MAX, 'the pantry holds at most 8');
@@ -254,14 +255,20 @@ ok('Collection (v23): per hero; forms recorded from Child; kept through rebirth'
 /* -------------------------------------------------------- expedition --- */
 
 {
-  const out = sendPetExpedition(doc({ pet: pet({ stage: 'child', total_age_ms: 20 * H }) }), T0).doc;
-  const back = touchPet(out, T0 + H, () => 0.1);
-  assert.equal(getItemDef(back.pet_expedition_note!)?.core.kind, 'power', 'first roll under 50% → a Power');
-  assert.equal(back.pet_expedition_note, rollPowerFind(() => 0.1));
-  const shallow = touchPet(out, T0 + H, () => 0.9);
-  assert.notEqual(findKind(shallow.pet_expedition_note!), 'unknown', 'otherwise a Shallows find');
+  // v25 ladder: the 4h trip (step 7) is the only one with the best Power chance.
+  const at4h = { ...doc({ pet: pet({ stage: 'child', total_age_ms: 20 * H }) }), pet_expedition_ymd: localYmd(new Date(T0)), pet_expedition_steps: 6 };
+  const out = sendPetExpedition(at4h, T0).doc;
+  assert.equal(out.pet_expedition?.len_ms, 4 * H);
+  const back = touchPet(out, T0 + 4 * H, () => 0.1);
+  assert.equal(getItemDef(back.pet_expedition_note!)?.core.kind, 'power', 'the 4h trip: under 35% → a Power');
+  const other = touchPet(out, T0 + 4 * H, () => 0.9);
+  assert.notEqual(findKind(other.pet_expedition_note!), 'unknown', 'otherwise a Trench find');
+  assert.notEqual(getItemDef(other.pet_expedition_note!)?.core.kind, 'power');
+  // A trip from before the ladder (no len/step) keeps the old rule: 1h, half the time a Power.
+  const legacy = { ...doc({ pet: pet({ stage: 'child', total_age_ms: 20 * H }) }), pet_expedition: { left_age_ms: 20 * H, len_ms: H, step: -1 } };
+  assert.equal(touchPet(legacy, T0 + H, () => 0.1).pet_expedition_note, rollPowerFind(() => 0.1), 'an old trip keeps the old reward');
 }
-ok('expedition: a Power half the time, else a Shallows find');
+ok('expedition: the 4h trip can bring a Power (35%), else a Trench find; an old trip keeps its old rule');
 
 /* -------------------------------------------------------------- save --- */
 
@@ -279,7 +286,7 @@ ok('expedition: a Power half the time, else a Shallows find');
   }
   delete (v21.pet as Record<string, unknown>).forms;
   const up = parsePlayStore(JSON.stringify(v21), T0)!;
-  assert.equal(up.version, 24);
+  assert.equal(up.version, 25);
   assert.deepEqual(
     [up.shells, up.dive_gear, up.pet_pantry, up.pet_cosmetics, up.pet_wear, up.free_dives_today, up.free_dives_ymd],
     [0, { lamp: false, net: false, oxygen: false }, {}, [], { badge: null, tint: null, ring: null, aura: null }, 0, null],
@@ -303,7 +310,7 @@ ok('expedition: a Power half the time, else a Shallows find');
     free_dives_ymd: '2026-09-30',
     dive_run: { deepers: 1, haul: ['food_kelp'], free_n: 3, next: { safe: 'shells_3', rich: 'cos_ring_double' } },
   };
-  assert.deepEqual(parsePlayStore(JSON.stringify(full), T0), full, 'v24 round-trips unchanged');
+  assert.deepEqual(parsePlayStore(JSON.stringify(full), T0), full, 'v25 round-trips unchanged');
   const bad = parsePlayStore(JSON.stringify({ ...full, pet_pantry: { food_kelp: 50 }, pet_wear: { tint: 'cos_tint_gold' } }), T0)!;
   assert.equal(bad.pet_pantry.food_kelp, PANTRY_MAX, 'an oversized pantry is capped on load');
   assert.equal(bad.pet_wear.tint, null, 'wearing something not owned is dropped on load');

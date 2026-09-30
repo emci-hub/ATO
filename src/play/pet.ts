@@ -43,6 +43,7 @@ import {
   type EggType,
   type Grade,
 } from '@/play/pet-eggs';
+import { EXPEDITION_LADDER_MS, EXPEDITION_STEPS, LEGACY_EXPEDITION_MS } from '@/play/expedition-ladder';
 
 /* ------------------------------------------------------------ numbers --- */
 
@@ -136,8 +137,8 @@ export const PET_DIVE_SURFACE_MOOD = 2;
 export const PET_DIVE_BUST_MOOD = 1;
 export const PET_DEEP_MIN_DEPTH = 3;
 
-/** Solo expedition (v21): Child and up, once per device-local day; away at
- * least this much counted time, can't bust, brings back one find. */
+/** Solo expedition (v21; v25 the ladder in expedition-ladder.ts): Child and up; away at
+ * least its trip length of counted time (this = a pre-v25 trip), can't bust, brings back one find. */
 export const PET_EXPEDITION_MIN_MS = 1 * HOUR;
 export const PET_EXPEDITION_MIN_STAGE: PetStage = 'child';
 
@@ -843,21 +844,33 @@ export function petReminderLastFired(log: PetReminderLog, now: number): number |
 export type PetExpedition = {
   /** The pet's `total_age_ms` when it left. */
   left_age_ms: number;
+  /** v25 — this trip's counted length (the ladder step's; 1h for a trip
+   * from before the ladder). */
+  len_ms: number;
+  /** v25 — its ladder step (0-6), or -1 for a trip from before the ladder. */
+  step: number;
 };
 
 export type PetExpeditionBlock = 'egg_or_baby' | 'away' | 'done_today';
 
-/** Why the pet can't leave right now, or null when it can. Once per
- * device-local day (same day rule as the token cap), Child and up. */
+/** Trips already started today (the ladder restarts at the local day
+ * reset — the same day rule as the token cap). */
+export function expeditionStepsToday(today: string, lastYmd: string | null, steps: number): number {
+  return petDayHolds(today, lastYmd) ? Math.max(0, Math.floor(steps)) : 0;
+}
+
+/** Why the pet can't leave right now, or null when it can. Child and up;
+ * up to the full ladder of trips per device-local day (v25). */
 export function expeditionBlock(
   pet: PetState,
   expedition: PetExpedition | null,
   today: string,
   lastYmd: string | null,
+  stepsTaken = 0,
 ): PetExpeditionBlock | null {
   if (PET_STAGES.indexOf(pet.stage) < PET_STAGES.indexOf(PET_EXPEDITION_MIN_STAGE)) return 'egg_or_baby';
   if (expedition) return 'away';
-  if (petDayHolds(today, lastYmd)) return 'done_today';
+  if (expeditionStepsToday(today, lastYmd, stepsTaken) >= EXPEDITION_STEPS) return 'done_today';
   return null;
 }
 
@@ -867,7 +880,7 @@ export function expeditionLeftMs(pet: PetState, expedition: PetExpedition): numb
   // a smaller age than at departure still reads as "ready", never stuck.
   const away = pet.total_age_ms - expedition.left_age_ms;
   if (away < 0) return 0;
-  return Math.max(0, PET_EXPEDITION_MIN_MS - away);
+  return Math.max(0, (expedition.len_ms > 0 ? expedition.len_ms : PET_EXPEDITION_MIN_MS) - away);
 }
 
 /** The Logbook (v21): every item the pet's dives or expeditions found, with
@@ -887,7 +900,15 @@ export function logPetFind(book: PetLogbook, id: string, depth: number): PetLogb
 export function parsePetExpedition(raw: unknown): PetExpedition | null {
   if (!isRecord(raw)) return null;
   const left = num(raw.left_age_ms, Number.NaN);
-  return Number.isFinite(left) && left >= 0 ? { left_age_ms: left } : null;
+  if (!(Number.isFinite(left) && left >= 0)) return null;
+  // A trip from before the ladder keeps the old rule: 1h, the old reward.
+  const len = num(raw.len_ms, LEGACY_EXPEDITION_MS);
+  const step = Math.floor(num(raw.step, -1));
+  return {
+    left_age_ms: left,
+    len_ms: EXPEDITION_LADDER_MS.includes(len) || len === LEGACY_EXPEDITION_MS ? len : LEGACY_EXPEDITION_MS,
+    step: step >= 0 && step < EXPEDITION_STEPS ? step : -1,
+  };
 }
 
 export function parsePetLogbook(raw: unknown): PetLogbook {

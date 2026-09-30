@@ -30,6 +30,35 @@ import { PNG } from 'pngjs';
 const FAMILIES = ['skins', 'kenney-ui', 'kenney-icons', 'craftpix-fields', 'craftpix-roads'] as const;
 
 /**
+ * v25 (2026-09-30) — the Dive's sunken ruin: a small whitelist from the two
+ * excluded packs, not the whole folders. Scribble Dungeons (Kenney, CC0) for
+ * the shaft walls and props; the Shark Tide Knight's east/west stills (licence
+ * approved by emci for the released app) for the faint Reef/Trench glide.
+ */
+const EXTRA_FILES = [
+  ...[
+    'wall',
+    'wall_damaged',
+    'wall_half',
+    'wall_corner',
+    'tiles_cracked',
+    'stairs_down',
+    'chest',
+    'crate',
+    'crate_small',
+    'barrel',
+    'barrels',
+    'coffin',
+    'plants',
+    'tree',
+    'puddle',
+    'dragon',
+  ].map((f) => `tiles/scribble-dungeons/${f}.png`),
+  'primal/shark_tide_knight/Idle/rotations/east.png',
+  'primal/shark_tide_knight/Idle/rotations/west.png',
+] as const;
+
+/**
  * A hero's `animations/` and `rotations/` PNGs — `play-art-pack.ts --all`
  * packs every hero's clips AND its rotation strip into sheets
  * (`directionalClipDrawable`/`skinArtDrawable`/`roleArtDrawable` read them
@@ -119,6 +148,12 @@ function main() {
       if (keys.has(key)) continue;
       keys.set(key, file);
     }
+  }
+
+  for (const rel of EXTRA_FILES) {
+    const file = path.join(root, ...rel.split('/'));
+    if (!fs.existsSync(file)) throw new Error(`Missing Dive art file: ${file}`);
+    keys.set(keyFor(root, file), file);
   }
 
   const sorted = [...keys.entries()].sort(([a], [b]) => a.localeCompare(b));

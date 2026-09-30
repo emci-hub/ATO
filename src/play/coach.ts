@@ -131,6 +131,8 @@ export type PetCoachInput = {
   hunger: number;
   pantryTotal: number;
   expeditionReady: boolean;
+  /** v25 — the next trip's length ("15m"), when one is ready. */
+  nextTrip?: string | null;
   diveCharges: number;
   tokensLeftToday: number;
   /** "3h 10m" while away, else null. */
@@ -187,7 +189,13 @@ export function petCoachTip(input: PetCoachInput): PetCoachTip {
       return { tip: 'I’m about to grow — keep my hearts up!', action: null, button: null };
     case 'happy':
     case 'okay':
-      if (input.expeditionReady) return { tip: 'All good! I could go exploring.', action: 'expedition', button: 'Send me' };
+      if (input.expeditionReady) {
+        return {
+          tip: input.nextTrip ? `All good! I could go exploring (${input.nextTrip}).` : 'All good! I could go exploring.',
+          action: 'expedition',
+          button: 'Send me',
+        };
+      }
       if (input.diveCharges >= 1) return { tip: 'All good! Up for a dive?', action: 'dive', button: 'Dive' };
       if (input.tokensLeftToday > 0) return { tip: 'All good! Fancy a game?', action: 'play', button: 'Play' };
       return { tip: 'All good!', action: null, button: null };

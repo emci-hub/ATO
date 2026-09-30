@@ -228,7 +228,7 @@ const babyDoc = { ...d, pet: agePet(d.pet, EGG) };
 assert.equal(babyDoc.pet.stage, 'baby');
 assert.equal(releasePetDoc(babyDoc, T0), null, 'a Baby can’t be released');
 // Baby care: a skilled round counts toward the band.
-const played = finishPetRound(babyDoc, T0, 'catch', 15).doc;
+const played = finishPetRound(babyDoc, T0, 'catch', { pass: true, quality: 0.8, got: 16, of: 20 }).doc;
 assert.equal(played.pet.care_skill, 25);
 assert.equal(played.pet.care_acts & CARE_ACT.fed, CARE_ACT.fed);
 // Child: release → Hall + Collection + 1 shard of its grade, back to the picker.
@@ -242,7 +242,7 @@ assert.equal(released.pet_hall.at(-1)?.released, true);
 assert.equal(released.pet_rebirths, childDoc.pet_rebirths, 'no rebirth bonus');
 assert.equal(released.pet_heroes[childDoc.pet.hero!]?.copies, 1, 'into the Collection');
 assert.equal(
-  releasePetDoc({ ...childDoc, pet_expedition: { left_age_ms: childDoc.pet.total_age_ms } }, T0),
+  releasePetDoc({ ...childDoc, pet_expedition: { left_age_ms: childDoc.pet.total_age_ms, len_ms: 3_600_000, step: -1 } }, T0),
   null,
   'not while away',
 );
@@ -339,7 +339,7 @@ const v22: Record<string, unknown> = {
 };
 for (const k of ['pet_heroes', 'pet_shards', 'pet_tickets']) delete v22[k];
 const up = parsePlayStore(JSON.stringify(v22), T0)!;
-assert.equal(up.version, 24);
+assert.equal(up.version, 25);
 assert.equal(up.pet.hero, 'raven');
 assert.equal(up.pet_rebirths, 2, 'rebirths kept');
 assert.equal(up.pet_hall.length, 2, 'Hall kept');
@@ -395,7 +395,7 @@ ok('clock guard holds for the 5- and 10-minute stages');
   const locked = [saved.pet.hero, saved.pet.grade, saved.pet.shiny, saved.pet.band];
   const reloaded = parsePlayStore(JSON.stringify(saved), T0 + 2 * MIN)!;
   // Clock set back before Child, extra care, then forward again: unchanged.
-  const rewound = finishPetRound(reloaded, T0 - 5 * MIN, 'catch', 20).doc;
+  const rewound = finishPetRound(reloaded, T0 - 5 * MIN, 'catch', { pass: true, quality: 0.9, got: 18, of: 20 }).doc;
   const forward = touchPetForCheck(rewound, T0 + 60 * MIN);
   assert.deepEqual([forward.pet.hero, forward.pet.grade, forward.pet.shiny, forward.pet.band], locked, 'a saved roll never changes');
   // The store hook saves a reveal the moment the view shows it.

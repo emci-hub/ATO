@@ -41,7 +41,9 @@ import { PetCard, type PetCardInfo } from '@/play/pet-card';
 import { DivecoreSettingsSheet } from '@/play/divecore-settings';
 import { EggPickerBody, JournalTab, OddsPanel } from '@/play/pet-egg-sheets';
 import { PetMenuBody } from '@/play/pet-menu';
+import type { RoundOutcome } from '@/play/pet-game-rules';
 import { idleTalkDelayMs, isBedtime } from '@/play/play-settings';
+import { tripLabel } from '@/play/expedition-ladder';
 import {
   CARE_BANDS,
   CARE_BAND_LABEL,
@@ -84,6 +86,7 @@ import {
   pickEggLine,
   pickEggTalk,
   pickPetLine,
+  pickRoundTalk,
   talkSituationForStatus,
   timeOfDaySituation,
   type PetEggTalk,
@@ -151,6 +154,7 @@ export function usePlayNoticesSync(view: PlayView | null): void {
         pet?.hero,
         pet?.name,
         view.pet.away,
+        view.pet.expeditionTripMs,
         view.chargesArmed,
         view.chargesFullAt,
       ].join('|')
@@ -163,6 +167,7 @@ export function usePlayNoticesSync(view: PlayView | null): void {
       pet: v.pet.state,
       name: petShownName(v.pet.state),
       expeditionBackInMs: v.pet.away ? v.pet.expeditionBackInMs : null,
+      expeditionTripMs: v.pet.expeditionTripMs,
       chargesFullAt: v.chargesFullAt,
       chargesArmed: v.chargesArmed,
       now: Date.now(),
@@ -236,6 +241,8 @@ export function PetScreen({
   talkEvent = null,
   onTalkConsumed,
   onReplayTutorial,
+  openJournal = false,
+  onJournalOpened,
 }: {
   view: PlayView;
   commit: (transition: PlayTransition) => boolean;
@@ -251,6 +258,10 @@ export function PetScreen({
   onTalkConsumed?: () => void;
   /** v24 — Settings → Replay the tutorial. */
   onReplayTutorial?: () => void;
+  /** v25 — a "Milestone ready" banner was tapped: open Info → Journal once,
+   * then `onJournalOpened` clears the request. */
+  openJournal?: boolean;
+  onJournalOpened?: () => void;
 }) {
   const devUnlocked = usePlayDevUnlocked();
   const dev = PRE_LAUNCH_DEV && devUnlocked;
@@ -259,6 +270,13 @@ export function PetScreen({
 
   const [sheet, setSheet] = useState<SheetId | null>(null);
   const [infoTab, setInfoTab] = useState<InfoTab>('status');
+  useEffect(() => {
+    if (!openJournal) return;
+    setGame(null);
+    setInfoTab('journal');
+    setSheet('info');
+    onJournalOpened?.();
+  }, [openJournal, onJournalOpened]);
   const [game, setGame] = useState<PetRoundKind | null>(null);
   const [lastResult, setLastResult] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -289,6 +307,7 @@ export function PetScreen({
     hunger: pet.hunger,
     pantryTotal: pv.pantryTotal,
     expeditionReady: pv.expedition === 'ready',
+    nextTrip: pv.nextTripMs != null ? tripLabel(pv.nextTripMs) : null,
     diveCharges: view.dive.current,
     tokensLeftToday: pv.tokensLeftToday,
     backIn: pv.expeditionBackInMs != null ? durationLabel(pv.expeditionBackInMs) : null,
@@ -485,17 +504,25 @@ export function PetScreen({
     return () => registerBack(null);
   }, [registerBack, sheet, game, settingsOpen]);
 
-  const finishRound = (kind: PetRoundKind) => (score: number) => {
+  const finishRound = (kind: PetRoundKind) => (outcome: RoundOutcome) => {
     let result: PetRoundResult | null = null;
     commit((doc, now) => {
-      const next = finishPetRound(doc, now, kind, score);
+      const next = finishPetRound(doc, now, kind, outcome);
       result = next.result;
       return next.doc;
     });
     setGame(null);
     if (result) {
-      setLastResult(roundResultLine(kind, score, result));
-      if ((result as PetRoundResult).counted) say('happy');
+      setLastResult(roundResultLine(kind, outcome, result));
+      // v25: it reacts to a pass, a skilled pass, a fail, or a bomb-out.
+      const talk = !outcome.pass
+        ? (outcome.bombs ?? 0) >= 3
+          ? 'bombs'
+          : 'fail'
+        : outcome.quality >= 0.7
+          ? 'skilled'
+          : 'pass';
+      if (!awayRef.current) sayText(pickRoundTalk(talk, lastLineRef.current));
     }
   };
 

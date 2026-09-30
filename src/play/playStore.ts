@@ -75,11 +75,11 @@ import { DEFAULT_AVATAR_HERO_ID, allHeroes, heroById, heroName } from '@/play/he
 import {
   PET_FEED_CATCH,
   PET_METER_MAX,
-  PET_MIN_ROUND_SCORE,
   PET_STAGES,
   PET_STAGE_MS,
   advancePet,
   expeditionBlock,
+  expeditionStepsToday,
   expeditionLeftMs,
   logPetFind,
   parsePetExpedition,
@@ -152,10 +152,11 @@ import {
   type PlayStats,
   type Ribbon,
 } from '@/play/play-settings';
+import type { RoundOutcome } from '@/play/pet-game-rules';
+import { EXPEDITION_STEPS, expeditionLengthMs, rollExpeditionReward } from '@/play/expedition-ladder';
 import {
   DIVE_GEAR_COST,
   DIVE_OXYGEN_BUST,
-  EXPEDITION_POWER_CHANCE,
   FOODS,
   NET_MIN_DEPTH,
   NO_DIVE_GEAR,
@@ -703,7 +704,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 24;
+  version: 25;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -782,8 +783,10 @@ export type PlayStoreDoc = {
   pet_remind: boolean;
   /** Solo expedition out right now, or null (v21). */
   pet_expedition: PetExpedition | null;
-  /** Device-local day the last expedition was sent (once a day, v21). */
+  /** Device-local day the last expedition was sent (v21; v25 the ladder day). */
   pet_expedition_ymd: string | null;
+  /** v25 — trips started on `pet_expedition_ymd` (the ladder step). */
+  pet_expedition_steps: number;
   /** Item id the last expedition brought back, until the note is dismissed. */
   pet_expedition_note: string | null;
   /** The Play shell has already announced that return (once per return). */
@@ -975,6 +978,12 @@ export type PetView = {
   expedition: 'ready' | 'away' | 'done_today' | 'locked';
   /** Counted time until it's back (only while away). */
   expeditionBackInMs: number | null;
+  /** v25 — the current trip's length (null when home). */
+  expeditionTripMs: number | null;
+  /** v25 — the next trip's length today (null = the ladder is done for today). */
+  nextTripMs: number | null;
+  /** v25 — trips started today (0-7). */
+  tripsToday: number;
   /** "Your pet brought back X" — item id, until dismissed. */
   expeditionNote: string | null;
   /** That return still needs its one-time "Your pet is back" message. */
@@ -1060,7 +1069,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 24,
+    version: 25,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -1099,6 +1108,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     pet_remind: false,
     pet_expedition: null,
     pet_expedition_ymd: null,
+    pet_expedition_steps: 0,
     pet_expedition_note: null,
     pet_expedition_toasted: true,
     pet_logbook: {},
@@ -1397,7 +1407,8 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
   const today = localYmd(new Date(now));
   const block: PetExpeditionBlock | null = away
     ? 'away'
-    : expeditionBlock(pet, null, today, doc.pet_expedition_ymd);
+    : expeditionBlock(pet, null, today, doc.pet_expedition_ymd, doc.pet_expedition_steps);
+  const stepsToday = expeditionStepsToday(today, doc.pet_expedition_ymd, doc.pet_expedition_steps);
   return {
     state: pet,
     stageLeftMs: petStageLeftMs(pet),
@@ -1413,6 +1424,9 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     expedition:
       block == null ? 'ready' : block === 'away' ? 'away' : block === 'done_today' ? 'done_today' : 'locked',
     expeditionBackInMs: away && doc.pet_expedition ? expeditionLeftMs(pet, doc.pet_expedition) : null,
+    expeditionTripMs: doc.pet_expedition ? doc.pet_expedition.len_ms : null,
+    nextTripMs: stepsToday < EXPEDITION_STEPS ? expeditionLengthMs(stepsToday) : null,
+    tripsToday: stepsToday,
     expeditionNote: doc.pet_expedition_note,
     expeditionNoteFresh: doc.pet_expedition_note != null && !doc.pet_expedition_toasted,
     logbook: doc.pet_logbook,
@@ -1456,9 +1470,10 @@ export function touchPet(
   }
   const exp = doc.pet_expedition;
   if (exp && expeditionLeftMs(pet, exp) <= 0) {
-    // A shallow solo dive: it can't bust, it always brings back one find —
-    // a Power half the time (v22), else a Shallows find.
-    const find = rng() < EXPEDITION_POWER_CHANCE ? rollPowerFind(rng) : rollTier('shallows', rng);
+    // A solo dive: it can't bust, it always brings back one find — what, by
+    // the ladder step (v25): food/shells early, finds later, a chance of a
+    // Power only on the 2h and 4h trips (a trip from before keeps the old rule).
+    const find = rollExpeditionReward(exp.step, rng);
     const banked = bankFinds({ ...doc, pet }, [find]).doc;
     return {
       ...banked,
@@ -1473,20 +1488,30 @@ export function touchPet(
 
 export type ExpeditionSendResult = { ok: true } | { ok: false; reason: PetExpeditionBlock };
 
-/** Send the pet on its once-a-day solo expedition (Child and up). */
+/** Send the pet on its next expedition of the day (Child and up) — each
+ * trip longer than the last: 1m → 5m → 15m → 30m → 1h → 2h → 4h, then done
+ * until the local day reset (v25). */
 export function sendPetExpedition(
   doc: PlayStoreDoc,
   now: number,
 ): { doc: PlayStoreDoc; result: ExpeditionSendResult } {
   const touched = touchPet(doc, now);
   const today = localYmd(new Date(now));
-  const block = expeditionBlock(touched.pet, touched.pet_expedition, today, touched.pet_expedition_ymd);
+  const block = expeditionBlock(
+    touched.pet,
+    touched.pet_expedition,
+    today,
+    touched.pet_expedition_ymd,
+    touched.pet_expedition_steps,
+  );
   if (block) return { doc: touched, result: { ok: false, reason: block } };
+  const step = expeditionStepsToday(today, touched.pet_expedition_ymd, touched.pet_expedition_steps);
   return {
     doc: {
       ...touched,
-      pet_expedition: { left_age_ms: touched.pet.total_age_ms },
+      pet_expedition: { left_age_ms: touched.pet.total_age_ms, len_ms: expeditionLengthMs(step), step },
       pet_expedition_ymd: today,
+      pet_expedition_steps: step + 1,
       play_stats: { ...touched.play_stats, expeditions: touched.play_stats.expeditions + 1 },
     },
     result: { ok: true },
@@ -1838,25 +1863,26 @@ export type PetRoundKind = 'catch' | 'train';
 export type PetRoundResult = { counted: boolean; tokensGranted: number };
 
 /**
- * A finished mini-game round. "Catch the food" feeds (+2 hunger), "Tap to
- * train" trains (+1 training, +2 mood). A round under `PET_MIN_ROUND_SCORE`
- * does not count. Counted rounds pay +5 tokens up to 30 a device-local day.
+ * A finished mini-game round (v25: pass / fail — see pet-game-rules.ts).
+ * A PASS counts: "Catch the food" feeds (+2 hunger), "Tap to train" trains
+ * (+1 training, +2 mood), Baby care, and +5 tokens up to 30 a device-local
+ * day. A fail counts for nothing.
  */
 export function finishPetRound(
   doc: PlayStoreDoc,
   now: number,
   kind: PetRoundKind,
-  score: number,
+  outcome: RoundOutcome,
 ): { doc: PlayStoreDoc; result: PetRoundResult } {
   // touchPet also brings home an expedition whose time is up (v21).
   const touchedDoc = touchPet(doc, now);
   const aged = touchedDoc.pet;
-  if (aged.stage === 'egg' || !(score >= PET_MIN_ROUND_SCORE)) {
+  if (aged.stage === 'egg' || !outcome.pass) {
     return { doc: touchedDoc, result: { counted: false, tokensGranted: 0 } };
   }
-  // Baby care (v23): the round's skill points and its activity.
+  // Baby care (v23 → v25): skilled = passed with 70%+; and its activity.
   const cared = petCareAct(
-    petCareSkill(aged, roundSkillPoints(kind, score, PET_MIN_ROUND_SCORE)),
+    petCareSkill(aged, roundSkillPoints(outcome)),
     kind === 'catch' ? CARE_ACT.fed : CARE_ACT.trained,
   );
   const pet = kind === 'catch' ? feedPet(cared, PET_FEED_CATCH) : trainPet(cared);
@@ -1934,8 +1960,8 @@ export function devPetExpeditionReset(doc: PlayStoreDoc, now: number): PlayStore
   const pet = advancePet(doc.pet, now);
   // A departure age above the current age reads as "ready" (expeditionLeftMs),
   // so this works even for a pet younger than the 1h minimum.
-  const exp = doc.pet_expedition ? { left_age_ms: pet.total_age_ms + 1 } : null;
-  return { ...doc, pet, pet_expedition: exp, pet_expedition_ymd: null };
+  const exp = doc.pet_expedition ? { ...doc.pet_expedition, left_age_ms: pet.total_age_ms + doc.pet_expedition.len_ms + 1 } : null;
+  return { ...doc, pet, pet_expedition: exp, pet_expedition_ymd: null, pet_expedition_steps: 0 };
 }
 
 export function canClaimResearch(view: PlayView): boolean {
@@ -3982,7 +4008,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 9 && version !== 10 && version !== 11 && version !== 12 &&
       version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
       version !== 17 && version !== 18 && version !== 19 && version !== 20 &&
-      version !== 21 && version !== 22 && version !== 23 && version !== 24
+      version !== 21 && version !== 22 && version !== 23 && version !== 24 && version !== 25
     ) {
       return null;
     }
@@ -4099,7 +4125,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       : legacyHeroBook(hall, v22 ? data.pet_collection : null);
     const cosmetics = v22 ? parseOwnedCosmetics(data.pet_cosmetics) : [];
     return {
-      version: 24,
+      version: 25,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -4139,6 +4165,14 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       pet_remind: data.pet_remind === true,
       pet_expedition: v21 ? parsePetExpedition(data.pet_expedition) : null,
       pet_expedition_ymd: v21 && typeof data.pet_expedition_ymd === 'string' ? data.pet_expedition_ymd : null,
+      // v25: older saves — the day's one trip counts as step 1 (no bonus
+      // ladder on top of it); another day's date resets it anyway.
+      pet_expedition_steps:
+        version >= 25
+          ? Math.max(0, Math.min(7, Math.floor(finiteNumber(data.pet_expedition_steps) ?? 0)))
+          : v21 && typeof data.pet_expedition_ymd === 'string'
+            ? 1
+            : 0,
       pet_expedition_note: v21 && typeof data.pet_expedition_note === 'string' ? data.pet_expedition_note : null,
       // Missing = already announced (never re-toast an old note).
       pet_expedition_toasted: !(v21 && data.pet_expedition_toasted === false),

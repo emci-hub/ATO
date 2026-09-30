@@ -1,5 +1,6 @@
 /**
- * Pet mini-games (v20, 2026-09-29) — two short vector rounds, no new art.
+ * Pet mini-games (v20 → v25 harder, 2026-09-30) — two short vector rounds, no
+ * new art. Both can be failed now; the rules live in `pet-game-rules.ts`.
  *
  *   Catch the food — food falls for 20s; tap a piece to catch it. Counts as
  *                    feeding (+2 hunger).
@@ -16,22 +17,41 @@ import Svg, { Circle, Path } from 'react-native-svg';
 
 import { Fonts } from '@/constants/theme';
 import { NEON } from '@/play/neon-viper';
+import {
+  CATCH,
+  EMPTY_CATCH,
+  START_TRAIN,
+  TRAIN,
+  catchFood,
+  catchOutcome,
+  catchSpawnGapMs,
+  catchSpawnKind,
+  catchSpeedMult,
+  missFood,
+  tapBomb,
+  trainOutcome,
+  trainTap,
+  type CatchTally,
+  type RoundOutcome,
+  type SpawnKind,
+  type TrainTally,
+} from '@/play/pet-game-rules';
 
 const TICK_MS = 40;
 
 /* ------------------------------------------------------ Catch the food --- */
 
-export const CATCH_ROUND_MS = 20_000;
-const CATCH_SPAWN_MS = 650;
+export const CATCH_ROUND_MS = CATCH.roundMs;
 const CATCH_AREA_H = 300;
 const FOOD_SIZE = 40;
 const FOOD_COLORS = ['#FF6B6B', '#FFD86B', '#7CE38B'] as const;
 
-type Food = { id: number; x: number; y: number; speed: number; color: string };
+type Food = { id: number; x: number; y: number; speed: number; color: string; kind: SpawnKind };
 
-function FoodShape({ color }: { color: string }) {
+function FoodShape({ color, golden = false }: { color: string; golden?: boolean }) {
   return (
     <Svg width={FOOD_SIZE} height={FOOD_SIZE} viewBox="0 0 40 40">
+      {golden ? <Circle cx="20" cy="23" r="17" fill="#FFF3B0" fillOpacity={0.5} /> : null}
       <Circle cx="20" cy="23" r="13" fill={color} />
       <Circle cx="15" cy="19" r="3.5" fill="#FFFFFF" fillOpacity={0.45} />
       <Path d="M20 10 Q24 4 29 6 Q26 11 20 10 Z" fill="#7CE38B" />
@@ -39,117 +59,145 @@ function FoodShape({ color }: { color: string }) {
   );
 }
 
-export function CatchFoodGame({ onDone }: { onDone: (score: number) => void }) {
+export function CatchFoodGame({ onDone }: { onDone: (outcome: RoundOutcome) => void }) {
   const [width, setWidth] = useState(0);
-  const [foods, setFoods] = useState<Food[]>([]);
-  const [score, setScore] = useState(0);
-  const [leftMs, setLeftMs] = useState(CATCH_ROUND_MS);
-  const foodsRef = useRef<Food[]>([]);
-  const scoreRef = useRef(0);
+  const [items, setItems] = useState<Food[]>([]);
+  const [tally, setTally] = useState<CatchTally>(EMPTY_CATCH);
+  const [leftMs, setLeftMs] = useState<number>(CATCH.roundMs);
+  const [flash, setFlash] = useState<'bomb' | 'combo' | null>(null);
+  const itemsRef = useRef<Food[]>([]);
+  const tallyRef = useRef<CatchTally>(EMPTY_CATCH);
+  const elapsedRef = useRef(0);
   const doneRef = useRef(false);
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
 
+  const setT = (next: CatchTally) => {
+    tallyRef.current = next;
+    setTally(next);
+  };
+  const finish = () => {
+    if (doneRef.current) return;
+    doneRef.current = true;
+    onDoneRef.current(catchOutcome(tallyRef.current));
+  };
+
   useEffect(() => {
     let nextId = 0;
-    let sinceSpawn = CATCH_SPAWN_MS;
-    let elapsed = 0;
+    let sinceSpawn = 0;
     const id = setInterval(() => {
       if (doneRef.current) return;
-      elapsed += TICK_MS;
+      elapsedRef.current += TICK_MS;
+      const elapsed = elapsedRef.current;
       sinceSpawn += TICK_MS;
-      let next = foodsRef.current
+      let missed = 0;
+      let next = itemsRef.current
         .map((f) => ({ ...f, y: f.y + (f.speed * TICK_MS) / 1000 }))
-        .filter((f) => f.y < 1.05);
-      if (sinceSpawn >= CATCH_SPAWN_MS && elapsed < CATCH_ROUND_MS - 800) {
+        .filter((f) => {
+          if (f.y < 1.05) return true;
+          if (f.kind !== 'bomb') missed += 1; // food that fell past = a miss
+          return false;
+        });
+      if (sinceSpawn >= catchSpawnGapMs(elapsed) && elapsed < CATCH.roundMs - 800) {
         sinceSpawn = 0;
-        // Falls a little faster as the round goes on.
-        const speed = 0.32 + 0.28 * (elapsed / CATCH_ROUND_MS) + Math.random() * 0.08;
-        next = [
-          ...next,
-          {
-            id: nextId++,
-            x: 0.08 + Math.random() * 0.84,
-            y: -0.1,
-            speed,
-            color: FOOD_COLORS[nextId % FOOD_COLORS.length],
-          },
-        ];
+        const kind = catchSpawnKind(elapsed, Math.random());
+        const speed = (0.32 + Math.random() * 0.08) * catchSpeedMult(elapsed);
+        next = [...next, { id: nextId++, x: 0.08 + Math.random() * 0.84, y: -0.1, speed, kind, color: FOOD_COLORS[nextId % FOOD_COLORS.length] }];
       }
-      foodsRef.current = next;
-      setFoods(next);
-      const left = Math.max(0, CATCH_ROUND_MS - elapsed);
+      itemsRef.current = next;
+      setItems(next);
+      if (missed > 0) {
+        let t = tallyRef.current;
+        for (let i = 0; i < missed; i += 1) t = missFood(t);
+        setT(t);
+      }
+      const left = Math.max(0, CATCH.roundMs - elapsed);
       setLeftMs(left);
-      if (left <= 0) {
-        doneRef.current = true;
-        onDoneRef.current(scoreRef.current);
-      }
+      if (left <= 0) finish();
     }, TICK_MS);
     return () => clearInterval(id);
   }, []);
 
-  const catchFood = (foodId: number) => {
+  const tapItem = (itemId: number) => {
     if (doneRef.current) return;
-    if (!foodsRef.current.some((f) => f.id === foodId)) return;
-    foodsRef.current = foodsRef.current.filter((f) => f.id !== foodId);
-    setFoods(foodsRef.current);
-    scoreRef.current += 1;
-    setScore(scoreRef.current);
+    const item = itemsRef.current.find((f) => f.id === itemId);
+    if (!item) return;
+    itemsRef.current = itemsRef.current.filter((f) => f.id !== itemId);
+    setItems(itemsRef.current);
+    if (item.kind === 'bomb') {
+      const next = tapBomb(tallyRef.current);
+      setT(next);
+      setFlash('bomb');
+      setTimeout(() => setFlash(null), 250);
+      if (next.over) finish();
+      return;
+    }
+    const next = catchFood(tallyRef.current, elapsedRef.current, item.kind === 'golden');
+    setT(next);
+    if (next.chain > 0 && next.chain % CATCH.comboEvery === 0) {
+      setFlash('combo');
+      setTimeout(() => setFlash(null), 350);
+    }
   };
 
   return (
     <View>
       <View style={styles.hudRow}>
-        <Text style={styles.hudText}>Caught {score}</Text>
-        <Text style={styles.hudText}>{Math.ceil(leftMs / 1000)}s</Text>
+        <Text style={styles.hudText}>
+          Caught {tally.caught} · {tally.points} pts
+        </Text>
+        <Text style={styles.hudText}>
+          💣 {tally.strikes}/{CATCH.bombStrikes} · {Math.ceil(leftMs / 1000)}s
+        </Text>
       </View>
-      <View
-        style={[styles.area, { height: CATCH_AREA_H }]}
-        onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+      <View style={[styles.area, { height: CATCH_AREA_H }]} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
         {width > 0
-          ? foods.map((f) => (
+          ? items.map((f) => (
               <Pressable
                 key={f.id}
-                onPressIn={() => catchFood(f.id)}
-                hitSlop={10}
+                onPressIn={() => tapItem(f.id)}
+                hitSlop={8}
                 accessibilityRole="button"
-                accessibilityLabel="Catch food"
-                style={[
-                  styles.food,
-                  {
-                    left: f.x * (width - FOOD_SIZE),
-                    top: f.y * (CATCH_AREA_H - FOOD_SIZE),
-                  },
-                ]}>
-                <FoodShape color={f.color} />
+                accessibilityLabel={f.kind === 'bomb' ? 'Bomb — don’t tap' : f.kind === 'golden' ? 'Golden food' : 'Catch food'}
+                style={[styles.food, { left: f.x * (width - FOOD_SIZE), top: f.y * (CATCH_AREA_H - FOOD_SIZE) }]}>
+                {f.kind === 'bomb' ? (
+                  <Text style={styles.emojiItem}>💣</Text>
+                ) : (
+                  <FoodShape color={f.kind === 'golden' ? '#FFD700' : f.color} golden={f.kind === 'golden'} />
+                )}
               </Pressable>
             ))
           : null}
+        {flash === 'bomb' ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.bombFlash]} /> : null}
+        {flash === 'combo' ? (
+          <Text pointerEvents="none" style={styles.comboText}>
+            Combo +1!
+          </Text>
+        ) : null}
       </View>
-      <Text style={styles.hint}>Tap the food before it falls away.</Text>
+      <Text style={styles.hint}>
+        Catch half of the food to pass. Golden = +3. Don’t tap 💣 — three ends the round.
+      </Text>
     </View>
   );
 }
 
 /* -------------------------------------------------------- Tap to train --- */
 
-export const TRAIN_REPS = 10;
-const ZONE_WIDTH = 0.22;
+export const TRAIN_REPS = TRAIN.taps;
 
-function randomZone(): number {
-  return ZONE_WIDTH / 2 + 0.05 + Math.random() * (1 - ZONE_WIDTH - 0.1);
+function randomZone(width: number): number {
+  return width / 2 + 0.05 + Math.random() * (1 - width - 0.1);
 }
 
-export function TapTrainGame({ onDone }: { onDone: (score: number) => void }) {
+export function TapTrainGame({ onDone }: { onDone: (outcome: RoundOutcome) => void }) {
   const [marker, setMarker] = useState(0);
-  const [zone, setZone] = useState(randomZone);
-  const [rep, setRep] = useState(0);
-  const [score, setScore] = useState(0);
+  const [tally, setTally] = useState<TrainTally>(START_TRAIN);
+  const [zone, setZone] = useState(() => randomZone(TRAIN.zoneStart));
   const [flash, setFlash] = useState<'hit' | 'miss' | null>(null);
   const markerRef = useRef(0);
   const dirRef = useRef(1);
-  const repRef = useRef(0);
-  const scoreRef = useRef(0);
+  const tallyRef = useRef<TrainTally>(START_TRAIN);
   const zoneRef = useRef(zone);
   const doneRef = useRef(false);
   const onDoneRef = useRef(onDone);
@@ -158,9 +206,7 @@ export function TapTrainGame({ onDone }: { onDone: (score: number) => void }) {
   useEffect(() => {
     const id = setInterval(() => {
       if (doneRef.current) return;
-      // Sweeps faster with every try.
-      const speed = 0.9 + repRef.current * 0.09;
-      let p = markerRef.current + (dirRef.current * speed * TICK_MS) / 1000;
+      let p = markerRef.current + (dirRef.current * tallyRef.current.speed * TICK_MS) / 1000;
       if (p >= 1) {
         p = 1;
         dirRef.current = -1;
@@ -176,42 +222,42 @@ export function TapTrainGame({ onDone }: { onDone: (score: number) => void }) {
 
   const tap = () => {
     if (doneRef.current) return;
-    const hit = Math.abs(markerRef.current - zoneRef.current) <= ZONE_WIDTH / 2;
-    if (hit) {
-      scoreRef.current += 1;
-      setScore(scoreRef.current);
-    }
+    const width = tallyRef.current.zone;
+    const hit = Math.abs(markerRef.current - zoneRef.current) <= width / 2;
+    const next = trainTap(tallyRef.current, hit);
+    tallyRef.current = next;
+    setTally(next);
     setFlash(hit ? 'hit' : 'miss');
-    repRef.current += 1;
-    setRep(repRef.current);
-    const nextZone = randomZone();
+    const nextZone = randomZone(next.zone);
     zoneRef.current = nextZone;
     setZone(nextZone);
-    if (repRef.current >= TRAIN_REPS) {
+    if (next.over) {
       doneRef.current = true;
-      onDoneRef.current(scoreRef.current);
+      onDoneRef.current(trainOutcome(next));
     }
   };
 
   return (
     <View>
       <View style={styles.hudRow}>
-        <Text style={styles.hudText}>Hits {score}</Text>
         <Text style={styles.hudText}>
-          Try {Math.min(rep + 1, TRAIN_REPS)}/{TRAIN_REPS}
+          Hits {tally.hits} · need {TRAIN.passHits}
+        </Text>
+        <Text style={styles.hudText}>
+          Tap {Math.min(tally.taps + 1, TRAIN.taps)}/{TRAIN.taps}
+          {tally.missStreak > 0 ? ` · misses ${tally.missStreak}/${TRAIN.missStreakEnd}` : ''}
         </Text>
       </View>
       <View style={styles.bar}>
-        <View
-          style={[
-            styles.zone,
-            { left: `${(zone - ZONE_WIDTH / 2) * 100}%`, width: `${ZONE_WIDTH * 100}%` },
-          ]}
-        />
+        <View style={[styles.zone, { left: `${(zone - tally.zone / 2) * 100}%`, width: `${tally.zone * 100}%` }]} />
         <View style={[styles.marker, { left: `${marker * 100}%` }]} />
       </View>
       <Text style={[styles.hint, flash === 'hit' && styles.hit, flash === 'miss' && styles.miss]}>
-        {flash === 'hit' ? 'Nice!' : flash === 'miss' ? 'Missed — next one.' : 'Tap when the marker is in the lit zone.'}
+        {flash === 'hit'
+          ? 'Nice! The zone shrinks…'
+          : flash === 'miss'
+            ? `Missed — ${TRAIN.missStreakEnd} in a row ends it.`
+            : `Tap in the lit zone. ${TRAIN.passHits} hits out of ${TRAIN.taps} to pass.`}
       </Text>
       <Pressable
         onPressIn={tap}
@@ -295,4 +341,14 @@ const styles = StyleSheet.create({
     color: NEON.cyan,
   },
   pressed: { opacity: 0.7 },
+  emojiItem: { fontSize: 30, textAlign: 'center' },
+  bombFlash: { backgroundColor: 'rgba(255, 60, 80, 0.35)' },
+  comboText: {
+    position: 'absolute',
+    top: 8,
+    alignSelf: 'center',
+    fontFamily: Fonts.monoBold,
+    fontSize: 16,
+    color: '#FFD700',
+  },
 });
