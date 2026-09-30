@@ -209,6 +209,8 @@ export async function cancelAllScheduledPush(): Promise<void> {
     // Play's opt-in pet hunger reminder (same literal as PET_HUNGER_PUSH_ID in
     // src/play/pet-reminder.ts — kept as a string so app code never imports Play).
     await Notifications.cancelScheduledNotificationAsync('ato.play.pet.hunger').catch(() => {});
+    // …and its egg hatch / reveal notice (PET_EGG_PUSH_ID).
+    await Notifications.cancelScheduledNotificationAsync('ato.play.pet.egg').catch(() => {});
   } catch (err) {
     console.log('[push] cancelAllScheduledPush failed:', err);
   }
