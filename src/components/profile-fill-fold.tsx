@@ -83,7 +83,7 @@ function ProfileFillRow({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${label}. ${filled ? PROFILE_FILL_ROW_FILLED : NOT_ANSWERED_YET}.`}
-      onPress={() => router.push({ pathname: '/intake-sweep', params: { axis } })}
+      onPress={() => router.push('/intake-sweep')}
       style={styles.row}>
       <MaterialCommunityIcons
         name={filled ? 'check-circle' : 'circle-outline'}

@@ -2,6 +2,8 @@
 
 Generated 2026-09-02 from the tree. Purpose only; for how things connect see `FLOWS.md`.
 
+> **Stale for screens and questions (noted 2026-10-01).** This list predates the isolation pass: it names files that no longer exist (`dawn.tsx`, `questions.tsx`, `questions/route.ts`, `questions/sweep.ts`) and tables with no app code (chat, moderation). For what is live, parked or dead today, open `docs/system-map.html` (facts in `docs/system-map.data.js`).
+
 ## Root
 
 | File | Purpose |

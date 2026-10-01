@@ -13,9 +13,12 @@ import {
   DEFAULT_NAV_LAYOUT,
   NAV_TABS,
   NAV_TAB_IDS,
+  PARKED_PINNED_IDS,
   PINNED_IDS,
   POOL_SLOTS,
   SLOT_COUNT,
+  VISIBLE_SLOT_COUNT,
+  isTabParked,
   isTabUnlocked,
   lockedTabIds,
   normalizeNavLayout,
@@ -44,16 +47,27 @@ for (const id of NAV_TAB_IDS) {
 assert.deepEqual(PINNED_IDS, ['home', 'sage']);
 ok('Home and Sage are pinned ids, never pool tabs');
 
-assert.equal(SLOT_COUNT, 4);
-assert.equal(POOL_SLOTS, 2);
+// REPINNED 2026-10-01 (emci): the bar shows what works. A layout now carries
+// home + sage + 3 pool tabs; sage is PARKED (a placeholder must not hold a main
+// slot), so it draws no button and the bar shows 4 tabs + More.
+assert.equal(SLOT_COUNT, 5);
+assert.equal(POOL_SLOTS, 3);
+assert.deepEqual(PARKED_PINNED_IDS, ['sage']);
+assert.equal(VISIBLE_SLOT_COUNT, 4);
 // REPINNED 2026-09-15: `legends` swapped in for `you` the same day Sage and
 // Legends were un-parked (emci: restore both tabs with their original
 // icon/label). `you` stays a fully working registry entry — it is only no
 // longer one of the two default pool slots, and remains reachable via More
 // or a user's own saved layout.
-assert.deepEqual(DEFAULT_NAV_LAYOUT, { slots: ['home', 'explore', 'sage', 'legends'] });
+assert.deepEqual(DEFAULT_NAV_LAYOUT, { slots: ['home', 'questions', 'explore', 'you', 'sage'] });
+assert.deepEqual(
+  DEFAULT_NAV_LAYOUT.slots.filter((id) => !isTabParked(id)),
+  ['home', 'questions', 'explore', 'you'],
+  'what the bar actually shows: Home, Questions, Explore, You',
+);
+assert.ok(!isTabParked('legends') && !poolIdsInLayout(DEFAULT_NAV_LAYOUT).includes('legends'), 'Legends is unparked and off the default bar, so it lands in More');
 assert.equal(DEFAULT_NAV_LAYOUT.slots.length, SLOT_COUNT);
-ok('5-slot bar: 4 draggable slots (home + sage + 2 pool) + fixed More; default is Home/Explore/Sage/Legends');
+ok('bar shows Home / Questions / Explore / You + fixed More; Sage (parked) and Legends are in More');
 
 // The default layout carries home + sage exactly once and exactly POOL_SLOTS pool ids.
 const defaultPool = poolIdsInLayout(DEFAULT_NAV_LAYOUT);
@@ -61,7 +75,7 @@ assert.equal(defaultPool.length, POOL_SLOTS);
 assert.equal(DEFAULT_NAV_LAYOUT.slots.filter((s) => s === 'home').length, 1);
 assert.equal(DEFAULT_NAV_LAYOUT.slots.filter((s) => s === 'sage').length, 1);
 assert.ok(defaultPool.every((id) => NAV_TAB_IDS.includes(id)));
-ok('default layout has home + sage once each and 2 registry pool tabs');
+ok('default layout has home + sage once each and 3 registry pool tabs');
 
 // normalizeNavLayout: null/empty → the exact default (Home/Explore/Sage/Legends).
 assert.deepEqual(normalizeNavLayout(null).slots, DEFAULT_NAV_LAYOUT.slots);
@@ -71,20 +85,40 @@ assert.deepEqual(normalizeNavLayout(['nope', 7]).slots, DEFAULT_NAV_LAYOUT.slots
 ok('normalizeNavLayout(null/empty/invalid) yields the exact default layout');
 
 // Interleaving is preserved (home/sage can sit anywhere in slots 1–4).
-const interleaved = normalizeNavLayout({ slots: ['explore', 'home', 'you', 'sage'] });
-assert.deepEqual(interleaved.slots, ['explore', 'home', 'you', 'sage']);
-const sageFirst = normalizeNavLayout({ slots: ['sage', 'you', 'home', 'around'] });
-assert.deepEqual(sageFirst.slots, ['sage', 'you', 'home', 'around']);
+const interleaved = normalizeNavLayout({ slots: ['explore', 'home', 'you', 'sage', 'questions'] });
+assert.deepEqual(interleaved.slots, ['explore', 'home', 'you', 'sage', 'questions']);
+const sageFirst = normalizeNavLayout({ slots: ['sage', 'you', 'home', 'around', 'legends'] });
+assert.deepEqual(sageFirst.slots, ['sage', 'you', 'home', 'around', 'legends']);
 ok('normalizeNavLayout preserves home/sage interleaving within slots 1–4');
 
 // Bare array shape is accepted too.
-assert.deepEqual(normalizeNavLayout(['home', 'sage', 'legends', 'questions']).slots, [
+assert.deepEqual(normalizeNavLayout(['home', 'sage', 'legends', 'questions', 'you']).slots, [
   'home',
   'sage',
   'legends',
   'questions',
+  'you',
 ]);
 ok('normalizeNavLayout accepts a bare array as well as { slots }');
+
+// A layout saved before 2026-10-01 holds 2 pool tabs. It resets ONCE to the new
+// default instead of being padded — otherwise an existing account would keep
+// Sage/Legends placeholders on its bar. A full (3-pool) layout is a real choice
+// and is kept as saved.
+assert.deepEqual(normalizeNavLayout({ slots: ['home', 'explore', 'sage', 'legends'] }).slots, DEFAULT_NAV_LAYOUT.slots);
+assert.deepEqual(normalizeNavLayout({ slots: ['home', 'explore', 'sage', 'you'] }).slots, DEFAULT_NAV_LAYOUT.slots);
+assert.deepEqual(
+  normalizeNavLayout({ slots: ['home', 'legends', 'explore', 'you', 'sage'] }).slots,
+  ['home', 'legends', 'explore', 'you', 'sage'],
+  'a full layout the user chose is never overridden',
+);
+// The reset is a READ rule. A layout the user just edited down to 2 tabs is
+// PADDED on write, never thrown away.
+const edited = normalizeNavLayout({ slots: ['home', 'legends', 'explore', 'sage'] }, { resetShort: false });
+assert.deepEqual(edited.slots.slice(0, 4), ['home', 'legends', 'explore', 'sage'], 'the user’s order is kept on write');
+assert.equal(poolIdsInLayout(edited).length, POOL_SLOTS, 'and padded back to a full bar');
+assert.match(read('src/lib/me.ts'), /normalizeNavLayout\(layout, \{ resetShort: false \}\)/, 'saveNavLayout writes without the reset rule');
+ok('an old 2-pool saved layout resets once to the new default; a full layout is kept; an edited one is padded');
 
 // Duplicates dropped; invalid ids dropped; too many pool ids trimmed to POOL_SLOTS.
 const duped = normalizeNavLayout({ slots: ['home', 'home', 'sage', 'explore', 'explore', 'you', 'around', 'nope'] });
@@ -92,7 +126,7 @@ assert.equal(duped.slots.length, SLOT_COUNT);
 assert.equal(duped.slots.filter((s) => s === 'home').length, 1);
 assert.equal(poolIdsInLayout(duped).length, POOL_SLOTS);
 assert.ok(!duped.slots.includes('nope' as never));
-ok('normalizeNavLayout drops duplicates/invalid ids and caps pool at 2');
+ok('normalizeNavLayout drops duplicates/invalid ids and caps pool at 3');
 
 // Gaps backfill from default first, then registry — result is always complete.
 const empty = normalizeNavLayout({ slots: [] });
@@ -192,14 +226,16 @@ assert.match(overlay, /Pinned/);
 assert.doesNotMatch(overlay, /id !== 'circle'/);
 assert.doesNotMatch(overlay, /main\.push|more\.push/);
 assert.doesNotMatch(overlay, /homeFirst/);
-ok('edit overlay drags 4 slots via Sortable.Flex, enforces the 2-pool cap, and commits atomically');
+ok('edit overlay drags the visible slots via Sortable.Flex, enforces the 3-pool cap, and commits atomically');
 
 const sheet = read('src/components/nav-more-sheet.tsx');
 assert.match(sheet, /moreIds/);
 assert.match(sheet, /router\.push\(NAV_TABS\[id\]\.href[\s\S]*?onClose\(\)/);
 assert.match(sheet, /backdropDismiss/);
 assert.match(sheet, /SafeAreaProvider/);
-ok('More sheet lists pool leftovers, navigates on tap, and uses SafeAreaProvider');
+assert.ok(sheet.includes("router.push('/sage');"), 'More offers Sage while it is off the bar');
+assert.ok(tabs.includes("showSage={isTabParked('sage')}"), 'the Sage row shows exactly while Sage is parked');
+ok('More sheet lists pool leftovers plus Sage, navigates on tap, and uses SafeAreaProvider');
 
 // Long-pressing a More row must not call onClose() and startEditing() in the
 // same tick — two sibling RN Modals toggling together desyncs the native

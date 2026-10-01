@@ -169,13 +169,18 @@ for (const { rel, label } of PARKED_SCREENS) {
 const YOU = 'src/app/(tabs)/you.tsx';
 const youCode = codeOnly(read(YOU));
 
-assert.match(youCode, /<RebuiltNotice/, 'You must still read as parked');
+// INVERTED 2026-10-01 (was: You must still read as parked). emci un-parked You:
+// a full-screen "Rebuilt" notice over a half-working screen made the working
+// half look broken. The App Store controls below are still pinned.
+assert.doesNotMatch(youCode, /<RebuiltNotice/, 'You no longer shows a Rebuilt notice');
+assert.ok(youCode.includes('<AtoTokenCard me={me} />'), 'the token balance is visible on You');
+assert.ok(youCode.includes('<SageFactsCard me={me} onUpdated={refresh} />'), 'saved facts can be seen and deleted on You');
 assert.match(youCode, /<DeleteAccountSheet/, 'delete account must stay reachable on You (App Store 5.1.1(v))');
 assert.match(youCode, /Delete account/, 'the delete-account control must be labelled');
 assert.match(youCode, /supabase\.auth\.signOut\(\)/, 'sign out must stay reachable on You');
 assert.match(youCode, /clearLocalAccountData\(\)/, "signing out must still clear this account's local keys");
 assert.match(youCode, /setAiConsent\(/, 'AI consent must stay changeable on You (Apple 5.1.2)');
 assert.match(youCode, /\{AI_USE_DISCLOSURE\}/, 'the AI-use disclosure must RENDER beside the consent control, not just be imported');
-ok('You is parked but keeps delete account, sign out and AI consent');
+ok('You keeps delete account, sign out and AI consent, and shows tokens + saved facts');
 
 console.log(`\n${passed} rebuilt checks passed`);

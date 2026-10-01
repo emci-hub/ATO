@@ -118,6 +118,7 @@
     "check:merge-inline": "tsx ./scripts/check-merge-inline.ts",
     "prep:kenney": "tsx ./scripts/kenney-prep.ts",
     "check:crisis-region": "tsx ./scripts/crisis-region-check.ts",
+    "check:crisis-local": "tsx ./scripts/crisis-local-check.ts",
     "check:copy-review-badges": "tsx ./scripts/copy-review-badges-check.ts",
     "check:window": "tsx ./scripts/check-window-check.ts",
     "check:nudge": "tsx ./scripts/nudge-check.ts",

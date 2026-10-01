@@ -58,7 +58,10 @@ async function run() {
 
     assert.equal(drafts.length, TIERED_ROUND_SIZE, 'an ongoing round generates the full 25-question tiered allocation');
     assert.equal(generated.size, TIERED_ROUND_SIZE, 'every generated draft is saved immediately, not batched at the end');
-    assert.ok(sawGroundingFact.value, 'a stored fact reaches the prompt via the existing pickQuestionGrounding mechanism (§3 layer 3)');
+    // INVERTED 2026-10-01 (was: a stored fact reaches the prompt). Every question
+    // from this prompt is saved to the SHARED question_bank_pool, so text the
+    // user typed must never enter it — one user's words could reach another's.
+    assert.equal(sawGroundingFact.value, false, 'a stored (user-typed) fact must NOT reach a prompt whose output is saved to the shared pool');
     assert.ok(
       drafts.every((d) => typeof d.bankItemId === 'string' && d.bankItemId.length > 0),
       'every AI-generated draft is written into the bank pool first and carries a bankItemId (§2 Q9)',

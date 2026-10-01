@@ -6,7 +6,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CategoriesFold } from '@/components/categories-fold';
 import { FullProfileFold } from '@/components/full-profile-fold';
 import { ProfileFillFold } from '@/components/profile-fill-fold';
-import { RebuiltNotice } from '@/components/rebuilt-notice';
 import { TraitBandsFold } from '@/components/trait-bands-fold';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -15,13 +14,8 @@ import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { isFullProfileDone } from '@/lib/full-profile-gate';
 import { useMeContext } from '@/lib/me-context';
-import {
-  missingAxis,
-  settledAxisLabel,
-  type TraitTrack,
-} from '@/lib/trait-stability';
+import { settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
-import { traitStateFromRow } from '@/lib/traits';
 import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
 /**
@@ -70,12 +64,9 @@ export default function ExploreScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={`${settledAxisLabel(tracks)}. Tap to answer more.`}
                 onPress={() => {
-                  const axis = missingAxis(traitStateFromRow(me).values, tracks);
-                  router.push(
-                    axis
-                      ? { pathname: '/intake-sweep', params: { axis } }
-                      : { pathname: '/intake-sweep' },
-                  );
+                  // Questions ignores an ?axis= (the per-axis feed was removed), so
+                  // the link no longer pretends to target one.
+                  router.push('/intake-sweep');
                 }}>
                 <ThemedText type="small" themeColor="textSecondary">
                   {settledAxisLabel(tracks)}
@@ -93,14 +84,15 @@ export default function ExploreScreen() {
                 onUpdated={() => refreshMe()}
                 unlocked={isFullProfileDone(tracks, tracksReady)}
               />
-              <RebuiltNotice title="Today's Read" />
-              <RebuiltNotice title="How you show up" />
               <TraitBandsFold me={me} tracks={tracks} />
               <ProfileFillFold tracks={tracks} />
               <FullProfileFold me={me} onUpdated={() => refreshMe()} />
-              <RebuiltNotice title="Past reads" />
-              <RebuiltNotice title="Insight spend" />
-              <RebuiltNotice title="Observations" />
+              {/* The five "being rebuilt" placeholders that sat here (Today's Read, How
+                  you show up, Past reads, Insight spend, Observations) were removed
+                  2026-10-01: a live screen shows only what works. */}
+              <ThemedText type="small" themeColor="textSecondary" style={styles.moreSoon}>
+                More is coming to this screen.
+              </ThemedText>
             </>
           ) : (
             <ThemedView type="backgroundElement" style={styles.emptyCard}>
@@ -132,6 +124,7 @@ const styles = StyleSheet.create({
   header: {
     gap: Spacing.half,
   },
+  moreSoon: { textAlign: 'center', paddingVertical: Spacing.two },
   emptyCard: {
     borderRadius: Spacing.four,
     padding: Spacing.four,

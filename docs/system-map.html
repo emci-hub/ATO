@@ -156,9 +156,28 @@
   .poles .hi { text-align: right; }
 
   /* Red-team */
-  #redteam { padding: 20px; max-width: 1080px; margin: 0 auto; display: none; }
-  body.rt #redteam { display: block; }
-  body.rt #mapview { display: none; }
+  #redteam { padding: 20px; max-width: 1080px; margin: 0 auto; }
+  #simple, #mapview, #redteam { display: none; }
+  body[data-view="simple"] #simple, body[data-view="map"] #mapview, body[data-view="redteam"] #redteam { display: block; }
+
+  /* Simple view: the user journey, five steps */
+  #simple { padding: 20px; max-width: 760px; margin: 0 auto; }
+  #simple .lede { color: var(--muted); margin: 0 0 16px; }
+  .step { background: var(--surface); border: 1px solid var(--line); border-left: 6px solid var(--c); border-radius: 12px; padding: 16px 18px; margin-bottom: 8px; }
+  .step.works { --c: var(--live); } .step.gap { --c: var(--notwired); } .step.broken { --c: var(--dead); }
+  .step-head { display: flex; align-items: baseline; gap: 12px; }
+  .step-num { font-size: 26px; font-weight: 700; color: var(--c); font-variant-numeric: tabular-nums; }
+  .step h2 { font-size: 18px; flex: 1; }
+  .step-state { font-size: 11px; font-weight: 700; letter-spacing: .05em; color: var(--c); white-space: nowrap; }
+  .step p { margin: 4px 0 10px; color: var(--muted); }
+  .step ul { list-style: none; margin: 0; padding: 0; }
+  .step li { display: grid; grid-template-columns: 22px 1fr; gap: 6px; padding: 3px 0; }
+  .step .details { margin-top: 10px; }
+  .down { text-align: center; color: var(--muted); margin: 0 0 8px; }
+  .tally { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+  .tally span { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: 13px; }
+  .fixed { color: var(--live); background: var(--live-bg); }
+  .finding.done h4 { text-decoration: line-through; text-decoration-color: var(--muted); }
   #redteam section { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin-bottom: 18px; }
   #redteam h2 { font-size: 17px; margin-bottom: 4px; }
   #redteam .lede { color: var(--muted); margin: 0 0 12px; max-width: 75ch; }
@@ -203,7 +222,7 @@
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
-<body>
+<body data-view="simple">
 
 <header class="top">
   <div>
@@ -211,10 +230,13 @@
     <div class="meta" id="meta"></div>
   </div>
   <div class="tabs" role="tablist">
-    <button class="tab" role="tab" id="tab-map" aria-selected="true">Flow map</button>
+    <button class="tab" role="tab" id="tab-simple" aria-selected="true">Simple view</button>
+    <button class="tab" role="tab" id="tab-map" aria-selected="false">Detailed map</button>
     <button class="tab" role="tab" id="tab-rt" aria-selected="false">Red-team</button>
   </div>
 </header>
+
+<main id="simple"></main>
 
 <div id="mapview">
   <div class="toolbar" id="toolbar">
@@ -246,7 +268,7 @@
 (function () {
   "use strict";
   if (typeof SYSTEM_MAP === "undefined") {
-    document.getElementById("mapview").innerHTML =
+    document.getElementById("simple").innerHTML =
       '<div class="err"><b>Could not load system-map.data.js.</b><br>Keep it in the same folder as this file, and check it for a typo (a missing comma or quote stops the whole file loading).</div>';
     return;
   }
@@ -551,15 +573,41 @@
   });
 
   /* ---------- tabs ---------- */
-  function showTab(rt) {
-    document.body.classList.toggle("rt", rt);
-    $("tab-map").setAttribute("aria-selected", rt ? "false" : "true");
-    $("tab-rt").setAttribute("aria-selected", rt ? "true" : "false");
-    if (rt) { state.sel = null; closePanel(); }
+  var TABS = { simple: "tab-simple", map: "tab-map", redteam: "tab-rt" };
+  function showTab(view) {
+    document.body.setAttribute("data-view", view);
+    Object.keys(TABS).forEach(function (k) { $(TABS[k]).setAttribute("aria-selected", k === view ? "true" : "false"); });
+    if (view !== "map") { state.sel = null; closePanel(); }
     apply();
   }
-  $("tab-map").addEventListener("click", function () { showTab(false); });
-  $("tab-rt").addEventListener("click", function () { showTab(true); });
+  Object.keys(TABS).forEach(function (k) { $(TABS[k]).addEventListener("click", function () { showTab(k); }); });
+
+  /* ---------- simple view ---------- */
+  (function renderSimple() {
+    var J = D.journey;
+    if (!J) { $("simple").innerHTML = "<p class='lede'>No journey in the data file.</p>"; return; }
+    var mark = { works: "🟢", gap: "🟡", missing: "⚪", broken: "🔴" };
+    var word = { works: "WORKS", gap: "WORKS, WITH GAPS", broken: "BROKEN" };
+    var count = { works: 0, gap: 0, missing: 0, broken: 0 };
+    J.steps.forEach(function (st) { st.items.forEach(function (i) { count[i.s] = (count[i.s] || 0) + 1; }); });
+    var h = "<p class='lede'>" + esc(J.intro) + "</p>";
+    h += "<div class='tally'><span>🟢 " + count.works + " working</span><span>🟡 " + count.gap + " with a gap</span><span>⚪ " + count.missing + " not built</span>" +
+      (count.broken ? "<span>🔴 " + count.broken + " broken</span>" : "") + "</div>";
+    J.steps.forEach(function (st, i) {
+      h += "<section class='step " + esc(st.status) + "'><div class='step-head'><span class='step-num'>" + (i + 1) + "</span><h2>" + esc(st.title) +
+        "</h2><span class='step-state'>" + esc(word[st.status] || st.status) + "</span></div><p>" + esc(st.plain) + "</p><ul>" +
+        st.items.map(function (it) { return "<li><span>" + (mark[it.s] || "") + "</span><span>" + esc(it.t) + "</span></li>"; }).join("") +
+        "</ul>" + (st.node && byId[st.node] ? "<button class='btn details' data-node='" + esc(st.node) + "'>Details on the map</button>" : "") + "</section>";
+      if (i < J.steps.length - 1) h += "<div class='down' aria-hidden='true'>↓</div>";
+    });
+    $("simple").innerHTML = h;
+    $("simple").addEventListener("click", function (e) {
+      var b = e.target.closest("[data-node]"); if (!b) return;
+      showTab("map");
+      state.sel = b.dataset.node; openPanel(); apply();
+      var el = elById[state.sel]; if (el && el.scrollIntoView) el.scrollIntoView({ block: "center", inline: "center" });
+    });
+  })();
 
   /* ---------- red-team tab ---------- */
   (function renderRedteam() {
@@ -604,7 +652,8 @@
       var list = R.findings.filter(function (f) { return f.kind === k[0]; });
       h += "<section><h2>" + k[1] + "</h2><p class='lede'>Ranked. " + list.length + " item" + (list.length === 1 ? "" : "s") + ".</p>" +
         list.map(function (f, i) {
-          return "<div class='finding'><div class='n'>" + (i + 1) + "</div><div><h4>" + esc(f.title) + "<span class='sev " + f.severity + "'>" + f.severity.toUpperCase() + "</span></h4><p>" + esc(f.detail) + "</p>" +
+          return "<div class='finding" + (f.fixed ? " done" : "") + "'><div class='n'>" + (i + 1) + "</div><div><h4>" + esc(f.title) + "<span class='sev " + f.severity + "'>" + f.severity.toUpperCase() + "</span>" +
+            (f.fixed ? "<span class='sev fixed'>DONE</span>" : "") + "</h4>" + (f.fixed ? "<p class='fix'><b>" + esc(f.fixed) + "</b></p>" : "") + "<p>" + esc(f.detail) + "</p>" +
             (f.fix ? "<p class='fix'><b>Fix:</b> " + esc(f.fix) + "</p>" : "") + "<p class='files'>" + esc(f.files) + "</p></div></div>";
         }).join("") + "</section>";
     });
@@ -612,7 +661,7 @@
   })();
 
   /* ---------- go ---------- */
-  apply();
+  showTab("simple");
   window.addEventListener("resize", drawLinks);
   window.addEventListener("load", drawLinks);
   if (window.ResizeObserver) new ResizeObserver(drawLinks).observe($("map-inner"));

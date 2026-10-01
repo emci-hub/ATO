@@ -68,4 +68,82 @@ assert.match(serverSrc, /supabase\.rpc\('spend_ato_tokens_category_reroll', \{\s
 assert.match(serverSrc, /supabase\.rpc\('spend_ato_tokens_question_reroll', \{\s*\n\s*p_question_item_id: questionItemId,\s*\n\s*\}\)/);
 ok('ato-tokens-server.ts wraps all 5 RPCs with the correct names and argument shapes');
 
+// --- the two EARN sites are actually wired (2026-10-01) -----------------------
+// Design: +21 for finishing the 50-question intake (once ever) and +21 per
+// finished 25-question round (once per round). Both were priced correctly, but
+// the intake one had NO caller, so it was never paid.
+const src = (rel: string) => readFileSync(resolve(__dirname, '..', rel), 'utf8').replace(/\r\n/g, '\n');
+const foldSrc = src('src/components/questions-fold.tsx');
+const wave51 = src('supabase/migrations/wave51_ato_tokens.sql');
+const wave52 = src('supabase/migrations/wave52_ato_tokens_fixes.sql');
+
+// 1) Intake: asked from the Questions screen once the profile is done.
+assert.ok(serverSrc.includes('export function claimFullProfileCompleteQuiet('), 'a fire-and-forget intake claim exists');
+assert.match(
+  foldSrc,
+  /if \(!fullProfileLocked \|\| intakeClaimAsked\.current\) return;\s*intakeClaimAsked\.current = true;\s*claimFullProfileCompleteQuiet\(/,
+  'the intake +21 is claimed when the profile is done, once per mount',
+);
+assert.equal(foldSrc.split('claimFullProfileCompleteQuiet(').length - 1, 1, 'exactly one intake claim site');
+// Paid once EVER: the server's unique index is the guarantee, not the client.
+assert.ok((wave51 + wave52).includes('ato_token_events_full_profile_once'), 'the intake payout is unique per user on the server');
+ok('EARN site 1: finishing the 50 claims +21 from the Questions screen; the server pays it once ever');
+
+// 2) Round: claimed when the last of the 25 is answered, and retried on load.
+assert.equal(
+  foldSrc.split('claimOngoingRoundCompleteQuiet(').length - 1,
+  2,
+  'the round +21 is claimed in exactly two places: on the last answer, and as a retry on load',
+);
+assert.match(
+  foldSrc,
+  /if \(existing && roundFullyAnswered\(existing\)\) \{\s*claimOngoingRoundCompleteQuiet\(existing\.id\);/,
+  'the retry on load only fires for a fully answered round',
+);
+assert.match(foldSrc, /claimOngoingRoundCompleteQuiet\(\s*pack\.id\s*\)|claimOngoingRoundCompleteQuiet\(\s*\w+\.id\s*\)/, 'the claim passes the round id');
+assert.ok(wave52.includes('claim_ongoing_round_complete'), 'the round claim RPC is defined');
+// Paid once PER ROUND: two client calls for one round can never pay twice.
+assert.match(wave51 + wave52, /unique index[^;]*\(user_id, pack_id\)/i, 'one payout per (user, round) on the server');
+ok('EARN site 2: a finished round of 25 claims +21; the server pays once per round');
+
+// The old "notes" currency no longer earns or spends anywhere a user can reach.
+for (const rel of ['src/components/questions-fold.tsx', 'src/components/depth-dive.tsx', 'src/components/full-profile-fold.tsx', 'src/lib/me.ts']) {
+  // Lookbehinds keep the NEW currency's own names (atoTokenBalanceOf, ATO_TOKEN_PRICE) out of the match.
+  assert.doesNotMatch(
+    src(rel),
+    /earnTokensQuiet\(|spendTokens\(|(?<![A-Za-z_])tokenBalanceOf\(|(?<![A-Z_])TOKEN_PRICE\b/,
+    `${rel} no longer touches the old notes currency`,
+  );
+}
+assert.doesNotMatch(src('src/components/depth-dive.tsx'), /notes/i, 'Depth dive is free and says nothing about notes');
+ok('the old notes currency is retired from live code; Depth dive is free');
+
+// The balance is visible.
+const cardSrc = src('src/components/ato-token-card.tsx');
+assert.ok(cardSrc.includes('atoTokenBalanceOf(me)') && cardSrc.includes('fetchAtoTokenEvents(5)'), 'the card shows balance + recent history');
+for (const reason of [...Object.keys(ATO_TOKEN_EARN), ...Object.keys(ATO_TOKEN_PRICE)]) {
+  assert.ok(cardSrc.includes(`${reason}:`), `the history names ${reason} in plain words`);
+}
+ok('the token balance and recent history have a card (mounted on You — pinned by check:rebuilt)');
+
+// Category reroll: 1 token, once per category per day; spend only after a new
+// statement exists; refuse before any model call when the answer is known.
+const catSrc = src('src/components/categories-fold.tsx');
+assert.ok(catSrc.includes('onPress={() => void loadCategory(reading, true)}'), 'the reroll control goes through loadCategory (the one model call site)');
+// A failed reroll must not be retried for free: `reroll` defaults to "a saved
+// statement already exists", so the error row's Try again is priced like the
+// tap that started it. (Found in review 2026-10-01.)
+assert.ok(
+  catSrc.includes('async function loadCategory(reading: CategoryReading, reroll = statements.has(reading.def.id))'),
+  'reroll defaults to whether a statement is already saved',
+);
+const rerollGate = catSrc.slice(catSrc.indexOf('if (reroll) {'), catSrc.indexOf('// Gates, in order'));
+assert.ok(rerollGate.includes('rerolledTodayRef.current.has(id)'), 'a known "already today" is refused before any call');
+assert.ok(rerollGate.includes('atoTokenBalanceOf(me) < ATO_TOKEN_PRICE.category_reroll'), 'an empty balance is refused before any call');
+const genAt = catSrc.indexOf('generateCategoryStatements([');
+const spendAt = catSrc.indexOf('await spendCategoryReroll(id)');
+const saveAt = catSrc.indexOf('await saveCategoryStatements(drafts)');
+assert.ok(genAt > 0 && genAt < spendAt && spendAt < saveAt, 'generate, then spend, then save — a failed write never costs a token');
+ok('category reroll: 1 token via loadCategory, refused early when known, spent only after a new statement exists');
+
 console.log(`\n${passed} ato-tokens checks passed`);

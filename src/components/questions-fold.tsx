@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import {
@@ -14,8 +14,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useCategoryDefs } from '@/lib/category-catalog';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { AI_CONSENT_NEEDED_COPY, aiConsentFor, updateTraits, type Me } from '@/lib/me';
-import { earnTokensQuiet } from '@/lib/tokens-server';
-import { claimOngoingRoundCompleteQuiet } from '@/lib/ato-tokens-server';
+import { claimFullProfileCompleteQuiet, claimOngoingRoundCompleteQuiet } from '@/lib/ato-tokens-server';
 import { ATO_TOKEN_PRICE, atoPriceLine, atoTokenBalanceOf, ATO_TOKEN_NEED_MORE } from '@/lib/ato-tokens';
 import { rerollQuestionItem } from '@/lib/questions/reroll';
 import { Sentry } from '@/lib/sentry';
@@ -106,7 +105,6 @@ export function QuestionsFold({
       for (const { draft, option } of answers) {
         await applyQuestionAnswer(me.id, draft, option, tracks ?? []);
       }
-      earnTokensQuiet('game_round');
       await onUpdated();
       return true;
     } catch (err) {
@@ -126,6 +124,17 @@ export function QuestionsFold({
   // The ONE gate (lib/full-profile-gate.ts) — `tracks == null` means they
   // haven't loaded yet, which is exactly the not-ready case the flag is for.
   const fullProfileLocked = isFullProfileDone(tracks ?? [], tracks != null);
+
+  // ATO tokens: +21 for finishing the 50, once ever. The server enforces the
+  // once (and that 50 answers exist), so asking again on a later visit is a
+  // harmless no-op that also back-pays an account that finished earlier. Not an
+  // AI call. One ask per mount.
+  const intakeClaimAsked = useRef(false);
+  useEffect(() => {
+    if (!fullProfileLocked || intakeClaimAsked.current) return;
+    intakeClaimAsked.current = true;
+    claimFullProfileCompleteQuiet(() => void onUpdated());
+  }, [fullProfileLocked, onUpdated]);
 
   const bankAxes = uniqueCategoryAxes(liveCategoryDefs);
   const bankRowsForAxis = useCallback(
@@ -331,7 +340,6 @@ function OngoingRoundFold({
         await answerQuestionItem(key, optIndex);
         await updateTraits(me.id, { [draft.axis]: option.value }, 'self_situation', [draft.axis]);
       }
-      earnTokensQuiet('game_round');
       await onUpdated();
       // Functional update, not a closure read of `pack` — background saves
       // for different pages (or a concurrent reroll) can resolve in any

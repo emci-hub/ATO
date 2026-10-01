@@ -178,7 +178,12 @@ export default function AppTabs() {
         </TabList>
       </Tabs>
 
-      <NavMoreSheet open={moreOpen} moreIds={moreIds} onClose={() => setMoreOpen(false)} />
+      <NavMoreSheet
+        open={moreOpen}
+        moreIds={moreIds}
+        showSage={isTabParked('sage')}
+        onClose={() => setMoreOpen(false)}
+      />
       {editing ? <NavEditOverlay lockedTabs={lockedTabs} /> : null}
     </>
   );

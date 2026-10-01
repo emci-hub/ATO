@@ -12,6 +12,7 @@ import { useNavOrder } from '@/lib/nav/nav-context';
 import {
   NAV_TABS,
   NAV_TAB_IDS,
+  PARKED_PINNED_IDS,
   POOL_SLOTS,
   isTabParked,
   SLOT_COUNT,
@@ -85,14 +86,13 @@ export function NavEditOverlay({
 
           <ScrollView contentContainerStyle={styles.body}>
             <ThemedText type="small" themeColor="textSecondary">
-              Home and Sage always stay in slots 1–4 — drag to move them. Pick {POOL_SLOTS} more
-              from below.
+              Home always stays on the bar — drag to move it. Pick {POOL_SLOTS} more from below.
             </ThemedText>
 
             <ThemedText type="smallBold">Your bar</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              {SLOT_COUNT} slots · drag to reorder. Tap a tab to remove it back to the pool (Home
-              and Sage stay).
+              {SLOT_COUNT - PARKED_PINNED_IDS.length} slots · drag to reorder. Tap a tab to remove
+              it back to the pool (Home stays).
             </ThemedText>
 
             {barFullNote ? (
@@ -175,7 +175,7 @@ export function NavEditOverlay({
 
             <ThemedText type="smallBold">Add to the bar</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              Pick {POOL_SLOTS} tabs total for slots 1–4, alongside Home and Sage.
+              Pick {POOL_SLOTS} tabs total, alongside Home.
             </ThemedText>
 
             <View style={styles.poolList}>

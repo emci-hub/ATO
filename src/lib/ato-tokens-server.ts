@@ -52,3 +52,33 @@ export async function spendAtoTokensQuestionReroll(questionItemId: string): Prom
   if (error) throw error;
   return parseAtoTokenResult(data);
 }
+
+/**
+ * Fire-and-forget +21 for finishing the 50-question intake. Safe to call every
+ * time the Questions screen sees a finished profile: the server pays once ever
+ * (unique index) and answers `already` after that, so this also back-pays an
+ * account that finished before the call existed. `onPaid` runs only on a fresh
+ * payout, so the caller can refresh the balance. Never fails the caller.
+ */
+export function claimFullProfileCompleteQuiet(onPaid?: () => void): void {
+  void claimFullProfileComplete()
+    .then((result) => {
+      if (result.ok && !result.already) onPaid?.();
+    })
+    .catch((err) => {
+      console.log('[ato-tokens] claim full profile complete error:', err);
+    });
+}
+
+export type AtoTokenEvent = { id: string; delta: number; reason: string; created_at: string };
+
+/** The caller's own recent ledger rows, newest first (RLS: owner select only). */
+export async function fetchAtoTokenEvents(limit = 5): Promise<AtoTokenEvent[]> {
+  const { data, error } = await supabase
+    .from('ato_token_events')
+    .select('id, delta, reason, created_at')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as AtoTokenEvent[];
+}

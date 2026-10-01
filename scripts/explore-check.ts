@@ -519,7 +519,10 @@ const exploreUi = read('src/app/(tabs)/explore.tsx');
 assert.doesNotMatch(exploreUi, /case 'locked':/);
 assert.doesNotMatch(exploreUi, /PROFILE_LOCKED_COPY/);
 assert.doesNotMatch(exploreUi, /PROFILE_LOCKED_CTA/);
-assert.match(exploreUi, /pathname: '\/intake-sweep'/);
+// 2026-10-01: the link stays but no longer carries an ?axis= — Questions ignores
+// it since the per-axis feed was removed, so the param was a promise it broke.
+assert.ok(exploreUi.includes("router.push('/intake-sweep')"), 'the intake-sweep link stays');
+assert.ok(!exploreUi.includes('params: { axis }'), 'no dead ?axis= param');
 assert.match(read('src/components/explore-panel.tsx'), /case 'locked':/);
 assert.match(read('src/components/explore-panel.tsx'), /PROFILE_LOCKED_CTA/);
 ok('locked-copy UI is parked on Explore; the orphaned explore-panel.tsx still has it; the intake-sweep link stays');
@@ -558,7 +561,11 @@ assert.doesNotMatch(exploreScreen, /SageStoryFold/);
 // rebuild — inverted per the Card 2/3 "invert, don't delete" convention.
 assert.doesNotMatch(exploreScreen, /routeExplore/);
 assert.doesNotMatch(exploreScreen, /SageExploreObservations/);
-assert.match(exploreScreen, /RebuiltNotice/);
+// INVERTED 2026-10-01 (was: Explore shows RebuiltNotice placeholders). emci: a
+// live screen shows only what works — the five placeholders are gone, and the
+// parked features must not quietly come back with them.
+assert.doesNotMatch(exploreScreen, /RebuiltNotice/);
+assert.match(exploreScreen, /More is coming to this screen./);
 // Categories is back inline on Explore and the standalone route is retired
 // (2026-09-14, Home/Explore/Insight restructure T-E1). This REVERSES the
 // 2026-09-12 judgment-pass.md §4A split, which moved CategoriesFold to its

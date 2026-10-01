@@ -10,7 +10,9 @@ export const PUSH_PATHS = {
   morning: '/',
   evening: '/?focus=check',
   insight: '/explore',
-  sunday: '/week',
+  // Was '/week' — that screen is a "Rebuilt" placeholder, so the weekly push
+  // landed on a dead end. Home until the week view is rebuilt (2026-10-01).
+  sunday: '/',
 } as const;
 
 export type PushKind = keyof typeof PUSH_PATHS;

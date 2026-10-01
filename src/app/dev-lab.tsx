@@ -31,6 +31,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { checkWindowFor, offsetLabel } from '@/lib/check-window';
 import { checksToHistory, fetchChecks } from '@/lib/checks';
 import { crisisFlagsForWindow } from '@/lib/crisis/days';
+import { clearCrisisLocalFlag, noteCrisisText } from '@/lib/crisis/local-flag';
 import {
   approveAccessRequest,
   denyAccessRequest,
@@ -218,6 +219,7 @@ function DevLab() {
             <ResetAiConsent />
             <LocalAccountData />
             {PRE_LAUNCH_DEV ? <CrisisCardPreview /> : null}
+            {PRE_LAUNCH_DEV ? <CrisisLocalFlagTest /> : null}
             <ForceTestError message="Dev Lab test error — System" />
           </View>
         </ScrollView>
@@ -1084,6 +1086,37 @@ function LocalAccountData() {
         selected={false}
         onPress={() => void wipe()}
       />
+    </View>
+  );
+}
+
+/** Dev test for the on-device crisis signal: flag today / clear, then open Home. */
+function CrisisLocalFlagTest() {
+  const [note, setNote] = useState<string | null>(null);
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Crisis card on Home (local signal)</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Runs a test phrase through the same keyword check typed text goes through, and marks
+        today on this phone only. Open Home to see the static card. Clear to remove it.
+      </ThemedText>
+      <Chip
+        label="Flag today (test phrase)"
+        selected={false}
+        onPress={() => {
+          void noteCrisisText('I want to kill myself').then((hit) =>
+            setNote(hit ? 'Flagged for today. Open Home.' : 'The keyword check did not match.'),
+          );
+        }}
+      />
+      <Chip
+        label="Clear the local flag"
+        selected={false}
+        onPress={() => {
+          void clearCrisisLocalFlag().then(() => setNote('Cleared. Reopen Home.'));
+        }}
+      />
+      {note ? <ThemedText type="small">{note}</ThemedText> : null}
     </View>
   );
 }

@@ -32,6 +32,8 @@ deleting, rewiring, and breaking parked behavior is explicitly fair game.
 
 1. **The daily Check loop is parked, knowingly.** `record_check` ends up with zero
    client callers. Confirmed intended; it comes back when the loop is rebuilt.
+> **SUPERSEDED 2026-10-01:** the ATO token economy IS designed (emci). See `PROJECT_CONTEXT.md` ("Token economy — DESIGNED") and `docs/system-map.html`. The next lines are kept as history.
+
 2. **Tokens: Story is free while parked.** The token system is **not designed yet** —
    emci is researching it separately. So do NOT move the earn site, do NOT write a
    balance migration, and do NOT treat the economy as real. Story generates without
@@ -39,6 +41,8 @@ deleting, rewiring, and breaking parked behavior is explicitly fair game.
 3. **`CrisisCard` stays Active.** Not parked.
 4. **`AiConsentCard` stays Active on Home**, as Insight infrastructure.
 5. **`ProfileFillFold` stays Active** on Explore — it counts as part of "full profile".
+
+> **SUPERSEDED 2026-10-01:** the ATO token economy IS designed (emci). See `PROJECT_CONTEXT.md` ("Token economy — DESIGNED") and `docs/system-map.html`. The next lines are kept as history.
 
 **Standing reminder for emci: the ATO token system still needs to be researched and
 designed from scratch.** Nothing in this plan should be read as endorsing the current
@@ -220,6 +224,8 @@ The rule, in order of preference:
 
 **Risk 1 — `AiConsentCard` cannot be parked, and Insight depends on it.** The card lives on both Home and You; You is off-limits. Worse, the *active* Insight card is gated on `consentGranted`. So Home cannot be reduced to literally "Insight + Story" — the consent card is load-bearing infrastructure for Insight. **Recommendation: keep it on Home, tagged Active, and treat it as part of the Insight feature rather than a separate element.** The alternative — consent grantable only from You — makes Home dead for any new account and is worse. This is the one place the stated scope has to bend.
 
+> **SUPERSEDED 2026-10-01:** the ATO token economy IS designed (emci). See `PROJECT_CONTEXT.md` ("Token economy — DESIGNED") and `docs/system-map.html`. The next lines are kept as history.
+
 **Risk 2 — the token economy breaks silently (§2.6). RESOLVED: Story is free while parked.** Parking Legends removes the only wired earn site while Story and Categories reroll keep spending, which would leave Story permanently unaffordable. emci's call (2026-09-15): the token system is not designed yet, so it is not worth preserving — make Story free rather than inventing an earn path.
 
 **Mechanism, decided at Card 4 not before:** `claimStoryGenerate()` (`lib/sage-story-store.ts:12`) calls the `claim_story_generate` RPC, which does both the token spend *and* plausibly a quota/rate guard. Do **not** blanket-remove the call — check first whether it is the only thing bounding Story generation. Preferred order: (a) if the RPC is purely a token spend, skip it client-side and generate directly; (b) if it also guards quota, keep calling it and make the price zero. A price change means a migration, which per locked decision 6 stops for emci's review. Categories reroll (`spendAtoTokensCategoryReroll`) is a *reroll*, not a required path — leaving it unaffordable is acceptable and is not a blocker.
@@ -290,6 +296,8 @@ check script, following the `explore-check.ts` pattern.
 ## 6. Open questions
 
 None outstanding — all five resolved in §0 on 2026-09-15.
+
+> **SUPERSEDED 2026-10-01:** the ATO token economy IS designed (emci). See `PROJECT_CONTEXT.md` ("Token economy — DESIGNED") and `docs/system-map.html`. The next lines are kept as history.
 
 The one thing deliberately left undesigned: **the ATO token system itself.** emci is
 researching it separately. Until then, treat every `ato_tokens` earn/spend in the

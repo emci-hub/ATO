@@ -93,7 +93,12 @@ export const NAV_TAB_IDS = Object.keys(NAV_TABS) as ReorderableTabId[];
 export const PARKED_TAB_IDS: readonly ReorderableTabId[] = ['around', 'circle'];
 
 /** Parked pinned tabs. Same rule, different slot type. */
-export const PARKED_PINNED_IDS: readonly PinnedTabId[] = [];
+/**
+ * `sage` is parked again (2026-10-01, emci): a placeholder must not hold a main
+ * slot. It keeps its route (hidden trigger) and is offered in More as a plain
+ * row, so it is still reachable — it just is not on the bar.
+ */
+export const PARKED_PINNED_IDS: readonly PinnedTabId[] = ['sage'];
 
 export function isTabParked(id: BarSlotId): boolean {
   return (
@@ -105,11 +110,18 @@ export function isTabParked(id: BarSlotId): boolean {
 
 export const PINNED_IDS: readonly PinnedTabId[] = ['home', 'sage'];
 
-/** Slots 1–4 count (slot 5 is the fixed "More"). */
-export const SLOT_COUNT = 4;
+/**
+ * Entries in a layout: Home + Sage + POOL_SLOTS pool tabs. Sage is parked, so
+ * it holds an entry but draws no button — the bar SHOWS VISIBLE_SLOT_COUNT
+ * tabs, then the fixed "More".
+ */
+export const SLOT_COUNT = 5;
 
-/** How many of slots 1–4 hold pool tabs (the other 2 are Home + Sage). */
-export const POOL_SLOTS = 2;
+/** How many entries hold pool tabs (the other 2 are Home + Sage). */
+export const POOL_SLOTS = 3;
+
+/** Buttons the bar actually draws before "More" (parked pinned ids draw none). */
+export const VISIBLE_SLOT_COUNT = SLOT_COUNT - PARKED_PINNED_IDS.length;
 
 /** Tabs whose `isUnlocked` check fails. Tabs without a check are always open. */
 export function lockedTabIds(ctx: NavUnlockContext): ReorderableTabId[] {
@@ -137,8 +149,14 @@ export interface NavLayout {
  * fully reachable there. This does not touch any user's SAVED layout — only
  * the fallback a fresh account or a corrupted layout falls back to.
  */
+/*
+ * 2026-10-01 (emci): the bar shows what works — Home, Questions, Explore, You.
+ * Questions is the core loop and was two taps deep in More; Sage and Legends
+ * are placeholders and move to More until they are rebuilt. `sage` stays in the
+ * layout (the slot engine always carries it) but is parked, so it draws nothing.
+ */
 export const DEFAULT_NAV_LAYOUT: NavLayout = {
-  slots: ['home', 'explore', 'sage', 'legends'],
+  slots: ['home', 'questions', 'explore', 'you', 'sage'],
 };
 
 function isValidPoolId(value: unknown): value is ReorderableTabId {
@@ -157,7 +175,11 @@ export function poolIdsInLayout(layout: NavLayout): ReorderableTabId[] {
  * default layout first, then the registry. Accepts both the stored
  * `{ slots: [...] }` object shape and a bare array for robustness.
  */
-export function normalizeNavLayout(raw: unknown): NavLayout {
+export function normalizeNavLayout(raw: unknown, opts: { resetShort?: boolean } = {}): NavLayout {
+  // On READ (the default) a layout with fewer than POOL_SLOTS pool tabs is an old
+  // one and resets to the new default. On WRITE the caller passes
+  // `resetShort: false`, so a bar the user just edited is padded, never thrown away.
+  const resetShort = opts.resetShort !== false;
   let incoming: unknown = raw;
   if (
     raw &&
@@ -183,8 +205,16 @@ export function normalizeNavLayout(raw: unknown): NavLayout {
   }
 
   // No valid incoming slots (null / unset / empty / all-invalid) → the default
-  // layout, exactly as specified (Home / Explore / Sage / Legends).
+  // layout, exactly as specified (Home / Questions / Explore / You).
   if (ordered.length === 0) {
+    return { slots: [...DEFAULT_NAV_LAYOUT.slots] };
+  }
+
+  // A saved layout from before 2026-10-01 holds 2 pool tabs; the bar now holds
+  // POOL_SLOTS. Anything short of a full set resets ONCE to the new default
+  // rather than being padded into a bar nobody chose. A layout saved from the
+  // edit screen always has the full set, so a real choice is never overridden.
+  if (resetShort && ordered.filter((id) => id !== 'home' && id !== 'sage').length < POOL_SLOTS) {
     return { slots: [...DEFAULT_NAV_LAYOUT.slots] };
   }
 

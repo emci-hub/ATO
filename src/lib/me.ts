@@ -43,7 +43,6 @@ import {
   type TraitTrack,
 } from '@/lib/trait-stability';
 import { fetchTraitTracks, upsertTraitTracks } from '@/lib/trait-tracks-store';
-import { earnTokensQuiet } from '@/lib/tokens-server';
 import { containsFrameworkTerm, FACT_FRAMEWORK_MESSAGE } from '@/lib/voice/framework-fence';
 import { voicePresetOf, type VoicePreset } from '@/lib/voice/preset';
 
@@ -411,7 +410,7 @@ export async function saveCategorySpotlight(
 export async function saveNavLayout(userId: string, layout: NavLayout): Promise<Me> {
   const { data, error } = await supabase
     .from('me')
-    .update({ nav_layout: normalizeNavLayout(layout) })
+    .update({ nav_layout: normalizeNavLayout(layout, { resetShort: false }) })
     .eq('id', userId)
     .select()
     .single();
@@ -705,13 +704,12 @@ export async function recordRanking(
     weekKeyFor(current, now),
     'answered',
   );
-  const { me: next, wrote } = await persistMergedTraits(
+  const { me: next } = await persistMergedTraits(
     current,
     merged,
     { sage_knows: knows },
     reportSample(merged, axis, 'self_tap'),
   );
-  if (wrote) earnTokensQuiet('game_round');
   return next;
 }
 
@@ -749,13 +747,12 @@ export async function recordScenario(
     weekKeyFor(current, now),
     'answered',
   );
-  const { me: next, wrote } = await persistMergedTraits(
+  const { me: next } = await persistMergedTraits(
     current,
     merged,
     { sage_knows: knows },
     gameSample(axis, pole),
   );
-  if (wrote) earnTokensQuiet('game_round');
   return next;
 }
 
@@ -773,13 +770,12 @@ export async function recordStandaloneRanking(
     order,
     new Date().toISOString(),
   );
-  const { me: next, wrote } = await persistMergedTraits(
+  const { me: next } = await persistMergedTraits(
     current,
     merged,
     {},
     reportSample(merged, axis, 'self_tap'),
   );
-  if (wrote) earnTokensQuiet('game_round');
   return next;
 }
 
@@ -803,7 +799,6 @@ export async function recordForcedPick(
     {},
     reportSample(merged, axis, 'self_tap'),
   );
-  if (result.wrote) earnTokensQuiet('game_round');
   return result;
 }
 export async function recordStandaloneScenario(
@@ -820,7 +815,6 @@ export async function recordStandaloneScenario(
     new Date().toISOString(),
   );
   const result = await persistMergedTraits(current, merged, {}, gameSample(axis, pole));
-  if (result.wrote) earnTokensQuiet('game_round');
   return result;
 }
 
@@ -948,6 +942,10 @@ export async function addFact(userId: string, fact: string): Promise<Me> {
   const trimmed = fact.trim();
   if (!trimmed) throw new Error('Fact cannot be empty');
   if (containsFrameworkTerm(trimmed)) throw new Error(FACT_FRAMEWORK_MESSAGE);
+  // Typed text → the keyword crisis check (no model). A hit raises the static
+  // card on Home today. Loaded lazily so this module stays Node-safe for the
+  // check scripts.
+  void import('@/lib/crisis/local-flag').then((m) => m.noteCrisisText(trimmed)).catch(() => {});
 
   const { data: current } = await supabase
     .from('me')

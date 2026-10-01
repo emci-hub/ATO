@@ -36,7 +36,10 @@ import {
   traitStateFromRow,
   type TraitAxis,
 } from '@/lib/traits';
-import { TOKEN_DEPTH_HINT, TOKEN_DEPTH_LABEL, TOKEN_NEED_MORE, TOKEN_PRICE, tokenBalanceOf } from '@/lib/tokens';
+import { TOKEN_DEPTH_LABEL } from '@/lib/tokens';
+
+/** Depth dive is free (2026-10-01): the old "notes" currency is retired. */
+const DEPTH_FREE_HINT = 'Free. Answer this one again, a different way.';
 
 export function FullProfileFold({
   me,
@@ -85,9 +88,6 @@ export function FullProfileFold({
       setBusy(false);
     }
   }
-
-  const notes = tokenBalanceOf(me);
-  const canDepth = notes >= TOKEN_PRICE.profile_depth;
 
   return (
     <SettingsFold title={`${FULL_PROFILE_LABEL} · ${settledAxisLabel(tracks)}`}>
@@ -228,21 +228,16 @@ export function FullProfileFold({
                 <ThemedPressable
                   accessibilityRole="button"
                   accessibilityLabel={TOKEN_DEPTH_LABEL}
-                  onPress={() => {
-                    if (!canDepth) return;
-                    setDiving(axis);
-                  }}
-                  disabled={busy || !canDepth}
+                  onPress={() => setDiving(axis)}
+                  disabled={busy}
                   style={styles.edit}>
                   <ThemedText type="small" themeColor="textSecondary">
-                    {canDepth
-                      ? `${TOKEN_DEPTH_LABEL} · ${TOKEN_PRICE.profile_depth}`
-                      : TOKEN_NEED_MORE}
+                    {TOKEN_DEPTH_LABEL}
                   </ThemedText>
                 </ThemedPressable>
               )}
               <ThemedText type="code" themeColor="textSecondary">
-                {TOKEN_DEPTH_HINT}
+                {DEPTH_FREE_HINT}
               </ThemedText>
             </View>
           );

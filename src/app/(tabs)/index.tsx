@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 
 import { CrisisCard } from '@/components/crisis-card';
+import { crisisNotedToday } from '@/lib/crisis/local-flag';
 import { SageStoryFold } from '@/components/sage-story-fold';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -24,6 +25,7 @@ import { fetchTodayInsight, saveInsight } from '@/lib/insight/store';
 import { fullProfileProgress, isFullProfileDone } from '@/lib/full-profile-gate';
 import { cachedFromInsight, saveCachedInsight } from '@/lib/insight/today-insight';
 import type { TraitTrack } from '@/lib/trait-stability';
+import { ATO_TOKEN_EARN } from '@/lib/ato-tokens';
 import { canSeeDevLab } from '@/lib/dev-access';
 import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
 import { useSession } from '@/hooks/use-session';
@@ -32,6 +34,11 @@ import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 export const INSIGHT_LOAD_LABEL = 'Load insight';
 export const INSIGHT_UNAVAILABLE_COPY = 'Couldn’t load it just now — tap to try again.';
 export const ANSWER_QUESTIONS_LABEL = 'Answer the questions';
+/** Shown on an insight that is not today's (it stays up until today's is loaded). */
+export const INSIGHT_EARLIER_DAY_COPY = 'From an earlier day. Load insight writes today’s.';
+/** Home's one next step once the profile is done and there is nothing to load. */
+export const NEXT_ROUND_ROW_LABEL = 'Next 25 questions';
+export const NEXT_ROUND_ROW_COPY = `Each finished round sharpens your profile and earns ${ATO_TOKEN_EARN.ongoing_round_complete} ATO tokens.`;
 /** One line, one place — `check:home-hydrate` pins it verbatim. */
 export const CONSENT_OFF_EMPTY_COPY =
   'AI is off, so there’s no insight today. Turn on AI in Home — the switch is just below.';
@@ -111,12 +118,19 @@ export default function HomeScreen() {
       if (requestId !== requestIdRef.current) return;
       loadedOnceRef.current = true;
       setTracks(next.tracks);
-      setCrisisToday(next.crisisToday);
+      // Server flag OR the on-device one (crisis/local-flag.ts): the server table
+      // has no writer since Talk was removed, so the local signal is what can
+      // actually raise the card today.
+      const crisisLocal = await crisisNotedToday();
+      if (requestId !== requestIdRef.current) return;
+      setCrisisToday(next.crisisToday || crisisLocal);
       setBootstrapFailed(false);
     } catch (err) {
       console.log('[home] bootstrap error:', err);
       if (requestId !== requestIdRef.current) return;
       if (!loadedOnceRef.current) setBootstrapFailed(true);
+      // Safety does not wait for the network.
+      if (await crisisNotedToday()) setCrisisToday(true);
     } finally {
       if (requestId === requestIdRef.current) setBootstrapReady(true);
     }
@@ -503,6 +517,13 @@ export default function HomeScreen() {
                   <ThemedText type="code" themeColor="textSecondary" style={styles.sageKicker}>
                     {homeSageLabel(theme.id)} · {insight.theme}
                   </ThemedText>
+                  {/* An earlier day's insight stays up until today's is loaded, so Home is
+                      never an empty card — and says plainly that it is not today's. */}
+                  {insight.ymd !== window?.todayYmd ? (
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {INSIGHT_EARLIER_DAY_COPY}
+                    </ThemedText>
+                  ) : null}
                   <ThemedText style={styles.heroRead}>{insight.title}</ThemedText>
                   <ThemedText themeColor="textSecondary" style={styles.reflectionText}>
                     {insight.reflection}
@@ -570,7 +591,30 @@ export default function HomeScreen() {
                     </ThemedText>
                   </View>
                 </Pressable>
-              ) : null}
+              ) : (
+                /*
+                 * ONE next step. When there is nothing to load (today's insight is
+                 * up, or AI is off), the step is the next round of questions —
+                 * never both rows at once. No model call: it only opens Questions.
+                 */
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={NEXT_ROUND_ROW_LABEL}
+                  onPress={() => router.push('/intake-sweep')}
+                  style={({ pressed }) => [
+                    styles.answerQuestionsRow,
+                    { borderColor: controlBorderColor(theme) },
+                    pressed && styles.pressed,
+                  ]}>
+                  <View style={styles.boxRowText}>
+                    <ThemedText type="smallBold">{NEXT_ROUND_ROW_LABEL}</ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {NEXT_ROUND_ROW_COPY}
+                    </ThemedText>
+                  </View>
+                  <ThemedText themeColor="textSecondary">›</ThemedText>
+                </Pressable>
+              )}
 
               {consentBlock}
 

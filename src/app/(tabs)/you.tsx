@@ -6,8 +6,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AiConsentCard, AI_USE_DISCLOSURE } from '@/components/ai-consent-card';
 import { DeleteAccountSheet } from '@/components/delete-account-sheet';
-import { RebuiltNotice } from '@/components/rebuilt-notice';
+import { AtoTokenCard } from '@/components/ato-token-card';
 import { RunningUpdateLine } from '@/components/running-update-line';
+import { SageFactsCard } from '@/components/sage-facts';
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -25,7 +26,12 @@ export const FEEDBACK_EMAIL = 'support@asstrollogs.com';
 export const SEND_FEEDBACK_LABEL = 'Send feedback';
 
 /**
- * You — PARKED, with four things deliberately kept alive (emci 2026-09-15,
+ * You — no longer shown as parked (2026-10-01, emci): the full-screen "Rebuilt"
+ * notice is gone because half the screen works. It now also shows the ATO token
+ * balance + recent history, and what Sage has saved about you (see / delete).
+ * The rest below is the history of what was kept alive while it was parked.
+ *
+ * Was: PARKED, with four things deliberately kept alive (emci 2026-09-15,
  * ISOLATION_PLAN §7 Card F / O-1; build/update info restored 2026-09-15).
  *
  * Everything this screen used to hold is gone pending rebuild: the profile
@@ -119,10 +125,11 @@ Update: ${Updates.updateId ?? 'original build'}`);
             <ThemedText type="subtitle">You</ThemedText>
           </View>
 
-          <RebuiltNotice
-            title="You"
-            note="Your account controls below still work: AI consent, sign out, and deleting your account."
-          />
+          {/* Tokens: the balance and the last few earns / spends. */}
+          {me ? <AtoTokenCard me={me} /> : null}
+
+          {/* What Sage has saved about you — the only place to see and delete it. */}
+          {me ? <SageFactsCard me={me} onUpdated={refresh} /> : null}
 
           <RunningUpdateLine />
 

@@ -60,12 +60,15 @@ export function buildQuestionsPrompt(input: {
    */
   excludeText?: readonly string[];
 }): string {
+  // SHARED-POOL RULE (2026-10-01): every question this prompt produces is saved
+  // to question_bank_pool, which OTHER users are served from. So nothing the
+  // user typed may enter it — not their name, not a stored fact. A 'fact'
+  // grounding is treated as no grounding here; scripts/ongoing-round-check.ts
+  // and questions-check.ts pin both.
   const ground =
-    input.grounding.kind === 'none' || !input.grounding.detail
+    input.grounding.kind === 'none' || input.grounding.kind === 'fact' || !input.grounding.detail
       ? 'No specific recent moment. Write plain, grounded questions anyway — never invent a skip or a lapse.'
-      : input.grounding.kind === 'fact'
-        ? `A stored fact may quietly shape at most one scenario (do not quote it, never "you mentioned to Sage"): ${input.grounding.detail}`
-        : `Ground at least one question in this recent moment (${input.grounding.kind}): ${input.grounding.detail}`;
+      : `Ground at least one question in this recent moment (${input.grounding.kind}): ${input.grounding.detail}`;
 
   const recent =
     input.recentAxes && input.recentAxes.length > 0
@@ -111,7 +114,6 @@ LOCKED EXAMPLES (use as the few-shot set, exactly this wording as the shape to m
 ${QUESTIONS_FEW_SHOTS}
 
 TODAY
-- User: ${input.me.name}
 - Talk style: ${TALK_STYLE_GUIDE[input.me.talk_style]}
 - Voice: ${VOICE_PRESET_GUIDE[voicePresetOf(input.me.voice_preset)]}
 

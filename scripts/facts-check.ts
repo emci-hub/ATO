@@ -89,9 +89,12 @@ const youTabFacts = read('src/app/(tabs)/you.tsx');
 // PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You is parked down to sign
 // out, delete account and AI consent. The component's own behaviour is still
 // covered in this file; only its You mount site is gone.
-assert.doesNotMatch(youTabFacts, /<SageFactsCard/);
+// RE-INVERTED 2026-10-01 (was: the You mount site is parked). emci un-parked You:
+// saved facts are user data that feed prompts, so the one place to SEE and
+// DELETE them must be reachable. It is back on You.
+assert.match(youTabFacts, /<SageFactsCard/);
 assert.match(read('src/components/sage-facts.tsx'), /removeFact/);
-ok('the facts list and its delete path still exist; their You mount site is parked');
+ok('the facts list and its delete path exist and are mounted on You');
 
 // PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): /chat is parked with Circle,
 // so the "Teach Sage this" create path has no screen behind it. `addFact` and

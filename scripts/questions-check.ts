@@ -193,6 +193,16 @@ assert.match(prompt, /socially-desirable/);
 assert.match(prompt, /Mix stakes/);
 assert.match(prompt, /same sentence shape/);
 assert.match(prompt, /you mentioned to Sage/);
+// Shared-pool rule (2026-10-01): the output is saved where other users are served
+// from, so nothing the user typed may be in the prompt — not the name, not a fact.
+assert.doesNotMatch(prompt, /Riley/, 'the user name never enters a shared-pool prompt');
+assert.doesNotMatch(prompt, /- User:/, 'no User line at all');
+const factPrompt = buildQuestionsPrompt({
+  me: { name: 'Riley', talk_style: 'even', voice_preset: 'close_friend' },
+  grounding: { kind: 'fact', detail: 'Trains for a 10k with ZZTOP.' },
+});
+assert.doesNotMatch(factPrompt, /ZZTOP|Riley/, 'a stored fact never enters a shared-pool prompt');
+assert.match(factPrompt, /No specific recent moment/, 'a fact grounding reads as no grounding');
 assert.doesNotMatch(prompt, /TextInput/);
 assert.doesNotMatch(prompt, /TRAIT CONTEXT/, 'no tracks -> no trait context section at all');
 ok('prompt is multiple-choice, includes the locked few-shots');

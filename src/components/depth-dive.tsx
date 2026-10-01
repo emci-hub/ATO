@@ -10,16 +10,15 @@ import { forcedPickForAxis } from '@/lib/ranking';
 import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
 import { isExtraAxis, scenarioForAxis } from '@/lib/scenario';
 import { depthKindFor } from '@/lib/depth-dive';
-import { TOKEN_PRICE } from '@/lib/tokens';
-import { spendTokens } from '@/lib/tokens-server';
 import type { TraitAxis } from '@/lib/traits';
 import { DEPTH_COOLDOWN_HOURS, depthReady } from '@/lib/trait-stability';
 import { stampAxisDepth } from '@/lib/trait-tracks-store';
 import { controlBorderColor } from '@/lib/theme/chrome';
 
 /**
- * Token-spent capture. Ranking pick for core axes; gut-call for EXTRA_AXES.
- * Spends only after a successful write. Skip spends nothing.
+ * A second, deeper answer on one axis. Ranking pick for core axes; gut-call for
+ * EXTRA_AXES. FREE since 2026-10-01 (emci): the old earned currency is retired
+ * and Depth dive is not a spend in the ATO token design.
  */
 export function DepthDive({
   me,
@@ -45,10 +44,6 @@ export function DepthDive({
     await stampAxisDepth(me.id, axis).catch((err) => {
       console.log('[depth] stamp error:', err);
     });
-    const spent = await spendTokens('profile_depth');
-    if (!spent.ok) {
-      setError('Could not spend notes. The answer still saved.');
-    }
     await onUpdated();
     onClose();
   }
@@ -64,7 +59,7 @@ export function DepthDive({
     try {
       const { wrote } = await recordForcedPick(me.id, axis, pole);
       if (!wrote) {
-        setError('Nothing new to save here. No notes spent.');
+        setError('Nothing new to save here.');
         return;
       }
       await afterWrite();
@@ -87,7 +82,7 @@ export function DepthDive({
     try {
       const { wrote } = await recordStandaloneScenario(me.id, axis, pole);
       if (!wrote) {
-        setError('A told answer already sits here, so this did not change it. No notes spent.');
+        setError('A told answer already sits here, so this did not change it.');
         return;
       }
       await afterWrite();
@@ -108,8 +103,8 @@ export function DepthDive({
       <ThemedText type="smallBold">{copy.label}</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
         {ready
-          ? `${TOKEN_PRICE.profile_depth} notes if you pick. Skip costs nothing.`
-          : `Another pass on this one waits ${DEPTH_COOLDOWN_HOURS} hours. Skip costs nothing.`}
+          ? 'Pick the one that fits. It is free.'
+          : `Another pass on this one waits ${DEPTH_COOLDOWN_HOURS} hours.`}
       </ThemedText>
       {ranking ? (
         <View style={styles.choices}>

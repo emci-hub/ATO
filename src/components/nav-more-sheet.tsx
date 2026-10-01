@@ -27,10 +27,13 @@ const MODAL_FADE_MS = 300;
 export function NavMoreSheet({
   open,
   moreIds,
+  showSage = false,
   onClose,
 }: {
   open: boolean;
   moreIds: ReorderableTabId[];
+  /** Sage is off the bar while it is a placeholder; More keeps it reachable. */
+  showSage?: boolean;
   onClose: () => void;
 }) {
   const theme = useTheme();
@@ -55,7 +58,7 @@ export function NavMoreSheet({
             </Pressable>
           </View>
 
-          {moreIds.length === 0 && !PRE_LAUNCH_DEV ? (
+          {moreIds.length === 0 && !showSage && !PRE_LAUNCH_DEV ? (
             <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
               Nothing here. Long-press a tab to edit the bar.
             </ThemedText>
@@ -96,6 +99,30 @@ export function NavMoreSheet({
                   </ThemedText>
                 </Pressable>
               ))}
+
+              {showSage ? (
+                <Pressable
+                  key="sage"
+                  accessibilityRole="button"
+                  accessibilityLabel="Open Sage"
+                  onPress={() => {
+                    router.push('/sage');
+                    onClose();
+                  }}
+                  style={({ pressed }) => [
+                    styles.row,
+                    { borderColor: controlBorderColor(theme) },
+                    pressed && styles.pressed,
+                  ]}>
+                  <MaterialCommunityIcons name="chat-outline" size={22} color={theme.text} />
+                  <ThemedText type="small" style={styles.rowLabel}>
+                    Sage
+                  </ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    ›
+                  </ThemedText>
+                </Pressable>
+              ) : null}
 
               {PRE_LAUNCH_DEV ? (
                 <Pressable

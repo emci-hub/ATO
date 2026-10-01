@@ -1,0 +1,61 @@
+diff --git a/supabase/functions/ai-generate/index.ts b/supabase/functions/ai-generate/index.ts
+index 9ff3eef..406bf96 100644
+--- a/supabase/functions/ai-generate/index.ts
++++ b/supabase/functions/ai-generate/index.ts
+@@ -373,17 +373,46 @@ Deno.serve(async (request) => {
+   const ok = claim && typeof claim === 'object' && (claim as { ok?: unknown }).ok === true;
+   if (!ok) return json({ error: 'quota' }, 429);
+ 
++  const input = { prompt: clampedPrompt, temperature, maxOutputTokens, responseFormat };
++
++  // ONE claim covers ONE answer. If the first vendor fails, the fallback runs
++  // here under the same claim (the app used to retry with a second request,
++  // which claimed a second unit). Gemini falls back to DeepSeek — the same pair
++  // the client used. Any other provider has no fallback.
++  let firstError = 'generate_failed';
+   try {
+-    const text = await complete(provider as ProviderId, {
+-      prompt: clampedPrompt,
+-      temperature,
+-      maxOutputTokens,
+-      responseFormat,
+-    });
+-    return json({ text });
++    const text = await complete(provider as ProviderId, input);
++    return json({ text, provider });
+   } catch (err) {
+-    const message = err instanceof Error ? err.message : 'generate_failed';
+-    const status = /key_missing/.test(message) ? 503 : 502;
+-    return json({ error: message }, status);
++    firstError = err instanceof Error ? err.message : 'generate_failed';
++  }
++
++  if (provider === 'gemini') {
++    try {
++      const text = await complete('deepseek', input);
++      return json({ text, provider: 'deepseek', fallback: true });
++    } catch {
++      // Report the first vendor's error below; it is the more useful one.
++    }
+   }
++
++  // Nothing came back: hand the claimed unit back, so a failure costs nothing.
++  // service-role only — a caller-scoped refund could be abused to dodge the cap.
++  let refunded = false;
++  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
++  if (serviceRoleKey) {
++    const admin = createClient(Deno.env.get('SUPABASE_URL')!, serviceRoleKey, {
++      auth: { persistSession: false },
++    });
++    const { error: refundError } = await admin.rpc('refund_ai_call', {
++      p_user_id: user.id,
++      p_call_type: callType,
++    });
++    refunded = !refundError;
++  }
++
++  const status = /key_missing/.test(firstError) ? 503 : 502;
++  // fallback_tried tells the app not to retry on its own (it would only fail
++  // again, and before the refund existed it cost a second unit).
++  return json({ error: firstError, refunded, fallback_tried: provider === 'gemini' }, status);
+ });

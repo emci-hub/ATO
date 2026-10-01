@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/generate';
+import { ATO_TOKEN_NEED_MORE, ATO_TOKEN_PRICE, atoPriceLine, atoTokenBalanceOf } from '@/lib/ato-tokens';
 import { fallbackCategoryCopies, fallbackForReading } from '@/lib/category-bands';
 import { useCategoryDefs } from '@/lib/category-catalog';
 import {
@@ -17,6 +18,7 @@ import {
 } from '@/lib/categories';
 import { parseCategoryCard } from '@/lib/category-statements/card';
 import { generateCategoryStatements } from '@/lib/category-statements/generate-statements';
+import { spendCategoryReroll } from '@/lib/category-statements/reroll-spend';
 import { fetchCurrentStatements, saveCategoryStatements, type CategoryStatement } from '@/lib/category-statements/store';
 import { FULL_PROFILE_LOCKED_COPY, fullProfileLockedLine, fullProfileProgress } from '@/lib/full-profile-gate';
 import { AI_CONSENT_NEEDED_COPY, aiConsentFor, saveCategorySpotlight, type Me } from '@/lib/me';
@@ -27,7 +29,9 @@ import { withTimeout } from '@/lib/timeout';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 
-export const CATEGORY_REWRITE_LABEL = 'Refresh';
+/** A reroll writes this category again: 1 ATO token, once per category per day. */
+export const CATEGORY_REWRITE_LABEL = `Reroll · ${atoPriceLine('category_reroll')}`;
+export const CATEGORY_REROLL_ALREADY_COPY = 'Already rerolled today. It opens again tomorrow.';
 export const CATEGORY_NOT_READY_COPY =
   'Not enough settled answers behind this one yet — answering your next 25 in Questions helps. Nothing was generated.';
 export const CATEGORY_ERROR_COPY = 'Couldn’t load this one just now.';
@@ -81,6 +85,10 @@ export function CategoriesFold({
   const attemptRef = useRef<Partial<Record<CategoryId, number>>>({});
   // Synchronous in-flight guard: render-time state can't stop a fast double tap.
   const inFlightRef = useRef<Set<CategoryId>>(new Set());
+  // Reroll (1 ATO token, once per category per day): the note under a row, and
+  // the categories the server already refused today (so we stop asking it).
+  const [rerollNote, setRerollNote] = useState<Partial<Record<CategoryId, string>>>({});
+  const rerolledTodayRef = useRef<Set<CategoryId>>(new Set());
   useCategoryDefs();
 
   const consentGranted = aiConsentFor(me) === 'granted';
@@ -139,10 +147,30 @@ export function CategoriesFold({
     });
   }
 
-  /** The only path to a model call on Explore. Always from a tap. */
-  async function loadCategory(reading: CategoryReading) {
+  /**
+   * The only path to a model call on Explore. Always from a tap.
+   * `reroll` = writing an already-loaded category again: that costs 1 ATO token,
+   * once per category per day. The first load of a category is free.
+   *
+   * It DEFAULTS to "is there already a saved statement?", so every retry path
+   * (the error row's Try again, a second tap) is priced the same as the tap that
+   * started it — a failed reroll can never be retried for free.
+   */
+  async function loadCategory(reading: CategoryReading, reroll = statements.has(reading.def.id)) {
     const id = reading.def.id;
     if (inFlightRef.current.has(id)) return;
+    if (reroll) {
+      // Refuse BEFORE any model call when we already know the answer.
+      if (rerolledTodayRef.current.has(id)) {
+        setRerollNote((prev) => ({ ...prev, [id]: CATEGORY_REROLL_ALREADY_COPY }));
+        return;
+      }
+      if (atoTokenBalanceOf(me) < ATO_TOKEN_PRICE.category_reroll) {
+        setRerollNote((prev) => ({ ...prev, [id]: ATO_TOKEN_NEED_MORE }));
+        return;
+      }
+      setRerollNote((prev) => ({ ...prev, [id]: undefined }));
+    }
     // Gates, in order, each reported plainly with no call behind it.
     if (!unlocked) {
       setRow(id, 'locked');
@@ -172,8 +200,24 @@ export function CategoriesFold({
         setRow(id, 'error');
         return;
       }
+      if (reroll) {
+        // Spend only once a new statement exists, so a failed write never costs
+        // a token. A refusal keeps the statement already on screen.
+        const spend = await spendCategoryReroll(id);
+        if (spend !== 'spent') {
+          if (spend === 'already_today') rerolledTodayRef.current.add(id);
+          setRerollNote((prev) => ({
+            ...prev,
+            [id]: spend === 'already_today' ? CATEGORY_REROLL_ALREADY_COPY : ATO_TOKEN_NEED_MORE,
+          }));
+          if (attemptRef.current[id] === attempt) setRow(id, null);
+          return;
+        }
+        rerolledTodayRef.current.add(id);
+      }
       await saveCategoryStatements(drafts);
       await loadStatements();
+      if (reroll) void onUpdated?.(); // refresh the token balance
       if (attemptRef.current[id] === attempt) setRow(id, null);
     } catch (err) {
       console.log('[categories] generate statement error:', err);
@@ -292,7 +336,7 @@ export function CategoriesFold({
                 ) : !card ? (
                   <Pressable
                     accessibilityRole="button"
-                    onPress={() => void loadCategory(reading)}
+                    onPress={() => void loadCategory(reading, false)}
                     style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
                     <ThemedText type="link">Load</ThemedText>
                   </Pressable>
@@ -308,7 +352,7 @@ export function CategoriesFold({
                         accessibilityRole="button"
                         accessibilityLabel={`${CATEGORY_REWRITE_LABEL} ${categoryDisplayName(reading.def)}`}
                         hitSlop={8}
-                        onPress={() => void loadCategory(reading)}
+                        onPress={() => void loadCategory(reading, true)}
                         style={({ pressed }) => pressed && styles.pressed}>
                         <ThemedText type="small" themeColor="textSecondary" style={styles.refresh}>
                           {CATEGORY_REWRITE_LABEL}
@@ -316,6 +360,11 @@ export function CategoriesFold({
                       </Pressable>
                     ) : null}
                   </View>
+                ) : null}
+                {rerollNote[id] && state !== 'loading' ? (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {rerollNote[id]}
+                  </ThemedText>
                 ) : null}
               </ThemedView>
             ) : null}

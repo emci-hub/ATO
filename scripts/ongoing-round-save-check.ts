@@ -181,13 +181,15 @@ assert.match(
   saveRoundAnswersBody,
   /await updateTraits\(me\.id, \{ \[draft\.axis\]: option\.value \}, 'self_situation', \[draft\.axis\]\);/,
 );
-assert.match(saveRoundAnswersBody, /earnTokensQuiet\('game_round'\);/);
+// INVERTED 2026-10-01 (was: the batch also earns the old currency). The old
+// currency is retired; a round now earns only its +21 ATO tokens on completion.
+assert.doesNotMatch(saveRoundAnswersBody, /earnTokensQuiet\(/);
 assert.match(saveRoundAnswersBody, /await onUpdated\(\);/);
 // Sequential, not Promise.all — same discipline saveBankAnswers already
 // uses, since each item can carry a different axis and updateTraits is a
 // read-modify-write against the same user row.
 assert.doesNotMatch(saveRoundAnswersBody, /Promise\.all/);
-ok('saveRoundAnswers answers a whole batch through the same answerQuestionItem + updateTraits + earnTokensQuiet + onUpdated path Infinite Questions already uses, sequentially not concurrently');
+ok('saveRoundAnswers answers a whole batch through the same answerQuestionItem + updateTraits + onUpdated path Infinite Questions already uses, sequentially not concurrently');
 
 // Completion is checked once per batch, not per item, via the same
 // dedup-on-pack-id RPC as before — and via a functional setPack update

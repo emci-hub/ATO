@@ -1,7 +1,7 @@
 # ATO — map for agents
 
-ATO is an invite-only iOS app (Expo SDK 54 / expo-router / Supabase): one daily card
-(Read + Do), a 16-axis trait profile that every AI surface reads from, and a small
+ATO is an invite-only iOS app (Expo SDK 54 / expo-router / Supabase): one daily insight
+(loaded on a tap; it replaced the old Read + Do card), a 16-axis trait profile that every AI surface reads from, and a small
 scanned-in Circle. `PROJECT_CONTEXT.md` is the memory; `docs/NOW.md` is live status.
 
 ## Commands
