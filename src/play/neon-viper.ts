@@ -12,6 +12,7 @@
  * treatment with no bespoke styling.
  */
 import type { AppearanceTokens } from '@/constants/appearance';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 
 /** Raw palette for chrome the token set does not cover (borders, watermark). */
 export const NEON = {
@@ -91,3 +92,14 @@ export const HUB_TILES: HubTile[] = [
   { id: 'dress', label: 'Dress', subtitle: 'Customize', icon: 'dress', to: 'dress' },
   { id: 'more', label: 'More', subtitle: 'About & credits', icon: 'more', to: 'about' },
 ];
+
+/** v27 (Part D): the Shop is hidden — reachable only with the Play dev
+ * unlock in a pre-launch build. */
+export function shopUnlocked(devUnlocked: boolean, preLaunch: boolean = PRE_LAUNCH_DEV): boolean {
+  return preLaunch && devUnlocked;
+}
+
+/** The Command Hub tiles to show: the Shop tile only when it is unlocked. */
+export function hubTilesFor(devUnlocked: boolean, preLaunch: boolean = PRE_LAUNCH_DEV): HubTile[] {
+  return HUB_TILES.filter((t) => t.to !== 'shop' || shopUnlocked(devUnlocked, preLaunch));
+}

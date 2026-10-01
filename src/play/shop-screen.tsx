@@ -4,9 +4,13 @@
  * Two tabs over the JSON catalogs in `data/shops/`:
  * - **Token** — spends soft `tokens` through the shared store
  *   (`purchaseShopRow`); a real effect now (one Dive charge, a merge-fuel
- *   Power crate) or a "Coming soon" stub. Daily caps are enforced store-side.
+ *   Power crate, a Shine Stone — one a week) or a "Coming soon" stub. Daily
+ *   and weekly caps are enforced store-side.
  * - **Paid** — STUBS ONLY in v0. Rows show a display price and a "Soon" pill;
- *   nothing here charges Apple. `available: false` in `paid.json`.
+ *   nothing here charges Apple. `available: false` in `paid.json`. The Prism
+ *   Stone preview shows its style odds (`PRISM_STYLE_ODDS`).
+ *
+ * v27: the Shop is hidden — only the dev unlock reaches it (`shopUnlocked`).
  *
  * The token shelf never sells wave_power or a cycle_power skip (§9i): both
  * would break the Conquered climb, so no such row exists in the catalog.
@@ -35,6 +39,7 @@ import {
   NeonPill,
 } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
+import { PRISM_STYLES, PRISM_STYLE_ODDS, SHINY_STYLE_LABEL } from '@/play/pet-eggs';
 import { DIVE_CHARGE_CAP, type PlayView, type ShopPurchaseResult } from '@/play/playStore';
 import {
   paidShopRows,
@@ -51,6 +56,7 @@ type ShopIcon = ComponentProps<typeof MaterialCommunityIcons>['name'];
 const TOKEN_ICONS: Record<ShopTokenRow['kind'], ShopIcon> = {
   dive_charge: 'waves',
   merge_crate: 'package-variant-closed',
+  shine_stone: 'diamond-stone',
   stub: 'palette-swatch',
 };
 
@@ -58,18 +64,22 @@ const TOKEN_ICONS: Record<ShopTokenRow['kind'], ShopIcon> = {
 const PAID_ICONS: Record<ShopPaidRow['kind'], ShopIcon> = {
   paid_unique: 'star-four-points',
   hero: 'account-star',
+  prism_stone: 'diamond',
   stub: 'storefront-outline',
 };
 
-/** Kenney Cursor Pack file per row kind (§19 item/shop icons). */
-const TOKEN_ICON_FILES: Record<ShopTokenRow['kind'], string> = {
+/** Kenney Cursor Pack file per row kind (§19 item/shop icons); null = the
+ * glyph (no pack art fits a Stone). */
+const TOKEN_ICON_FILES: Record<ShopTokenRow['kind'], string | null> = {
   dive_charge: 'target_round_a',
   merge_crate: 'tool_hammer',
+  shine_stone: null,
   stub: 'tool_wand',
 };
-const PAID_ICON_FILES: Record<ShopPaidRow['kind'], string> = {
+const PAID_ICON_FILES: Record<ShopPaidRow['kind'], string | null> = {
   paid_unique: 'tool_sword_a',
   hero: 'gauntlet_default',
+  prism_stone: null,
   stub: 'tool_torch',
 };
 
@@ -79,11 +89,11 @@ function ShopRowIcon({
   fallback,
   color,
 }: {
-  file: string;
+  file: string | null;
   fallback: ShopIcon;
   color: string;
 }) {
-  const source = cursorIcon(file);
+  const source = file ? cursorIcon(file) : undefined;
   return (
     <NeonIconFrame size={34}>
       {source ? (
@@ -101,6 +111,7 @@ type TokenRowState = {
   boughtToday: number;
   dailyLeft: number | null;
   dailyCapped: boolean;
+  weeklyCapped: boolean;
   diveFull: boolean;
   affordable: boolean;
   note: string | null;
@@ -114,6 +125,8 @@ function tokenRowState(view: PlayView, row: ShopTokenRow, busy: boolean): TokenR
   const dailyLeft =
     row.daily_limit == null ? null : Math.max(0, row.daily_limit - boughtToday);
   const dailyCapped = dailyLeft != null && dailyLeft <= 0;
+  const boughtWeek = view.shopWeekCounts[row.id] ?? 0;
+  const weeklyCapped = row.weekly_limit != null && boughtWeek >= row.weekly_limit;
   const diveFull = row.kind === 'dive_charge' && view.dive.full;
   const affordable = priced && view.tokens >= (row.price ?? 0);
 
@@ -121,6 +134,7 @@ function tokenRowState(view: PlayView, row: ShopTokenRow, busy: boolean): TokenR
   if (!priced) actionLabel = 'Coming soon';
   else if (diveFull) actionLabel = 'Charges full';
   else if (dailyCapped) actionLabel = 'Daily limit reached';
+  else if (weeklyCapped) actionLabel = 'Weekly limit reached';
   else if (!affordable) actionLabel = `Need ${row.price} tokens`;
   else actionLabel = `Buy · ${row.price} tokens`;
 
@@ -129,6 +143,8 @@ function tokenRowState(view: PlayView, row: ShopTokenRow, busy: boolean): TokenR
     note = `${view.dive.current}/${DIVE_CHARGE_CAP} charges now`;
   } else if (row.daily_limit != null) {
     note = `${boughtToday}/${row.daily_limit} bought today`;
+  } else if (row.weekly_limit != null) {
+    note = `${boughtWeek}/${row.weekly_limit} bought this week · ${view.pet.stones.held} held`;
   }
 
   return {
@@ -136,11 +152,12 @@ function tokenRowState(view: PlayView, row: ShopTokenRow, busy: boolean): TokenR
     boughtToday,
     dailyLeft,
     dailyCapped,
+    weeklyCapped,
     diveFull,
     affordable,
     note,
     actionLabel,
-    disabled: busy || !priced || diveFull || dailyCapped || !affordable,
+    disabled: busy || !priced || diveFull || dailyCapped || weeklyCapped || !affordable,
   };
 }
 
@@ -268,6 +285,11 @@ export function ShopScreen({
                 {row.blurb ? (
                   <ThemedText type="small" themeColor="textSecondary">
                     {row.blurb}
+                  </ThemedText>
+                ) : null}
+                {row.kind === 'prism_stone' ? (
+                  <ThemedText type="code" themeColor="textSecondary">
+                    {PRISM_STYLES.map((s) => `${SHINY_STYLE_LABEL[s]} ${PRISM_STYLE_ODDS[s]}%`).join(' · ')}
                   </ThemedText>
                 ) : null}
                 <ThemedText type="code" themeColor="textSecondary">

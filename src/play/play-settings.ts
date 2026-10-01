@@ -14,6 +14,7 @@
  *     Wardrobe cosmetics, a hero's dye unlocked early, a card ribbon. Never
  *     tokens or shells (those buy TD Powers).
  */
+import { petDayHolds } from '@/play/pet';
 import type { Grade } from './pet-eggs';
 
 /* ------------------------------------------------------------ settings --- */
@@ -256,9 +257,11 @@ export function parseStats(raw: unknown): PlayStats {
   };
 }
 
-/** Count a day played (once per local day). */
+/** Count a day played (once per local day, by `petDayHolds` — v27: a clock
+ * set back a day or two can't count the same days again, now that every 5th
+ * day gives a Shine Stone). */
 export function countDay(stats: PlayStats, ymd: string): PlayStats {
-  if (stats.last_play_ymd === ymd) return stats;
+  if (petDayHolds(ymd, stats.last_play_ymd)) return stats;
   return { ...stats, days_played: stats.days_played + 1, last_play_ymd: ymd };
 }
 
@@ -268,7 +271,9 @@ export type MilestoneReward =
   | { kind: 'ticket'; grade: Exclude<Grade, 'common'> }
   | { kind: 'cosmetic'; id: string; fallback: Exclude<Grade, 'common'> }
   | { kind: 'dye'; hero: 'first_legendary' }
-  | { kind: 'ribbon'; ribbon: 'collector' | 'legend'; plus?: Exclude<Grade, 'common'> };
+  | { kind: 'ribbon'; ribbon: 'collector' | 'legend'; plus?: Exclude<Grade, 'common'> }
+  /** v27 — a Shine Stone (looks only). */
+  | { kind: 'stone' };
 
 export type MilestoneId =
   | 'heroes_4'
@@ -278,7 +283,8 @@ export type MilestoneId =
   | 'first_legendary'
   | 'first_shiny'
   | 'five_star'
-  | 'eggs_10';
+  | 'eggs_10'
+  | 'insane_gold';
 
 export type MilestoneInput = {
   heroesFound: number;
@@ -287,6 +293,8 @@ export type MilestoneInput = {
   anyShiny: boolean;
   anyFiveStar: boolean;
   eggsHatched: number;
+  /** v27 — a Gold medal on Insane in either mini-game. */
+  insaneGold: boolean;
 };
 
 export type MilestoneDef = {
@@ -295,6 +303,8 @@ export type MilestoneDef = {
   reward: MilestoneReward;
   rewardLabel: string;
   done: (m: MilestoneInput) => boolean;
+  /** v27 — Shine Stones on top of the reward. */
+  stones?: number;
 };
 
 export const MILESTONES: readonly MilestoneDef[] = [
@@ -324,12 +334,21 @@ export const MILESTONES: readonly MilestoneDef[] = [
     id: 'first_legendary',
     label: 'Pull your first Legendary',
     reward: { kind: 'dye', hero: 'first_legendary' },
-    rewardLabel: 'That hero’s dye, unlocked now + Legend ribbon',
+    rewardLabel: 'That hero’s dye, unlocked now + Legend ribbon + a Shine Stone',
     done: (m) => m.anyLegendary,
+    stones: 1,
   },
   { id: 'first_shiny', label: 'Find your first shiny', reward: { kind: 'ticket', grade: 'epic' }, rewardLabel: 'Epic+ ticket', done: (m) => m.anyShiny },
   { id: 'five_star', label: 'Take a hero to 5★', reward: { kind: 'ticket', grade: 'epic' }, rewardLabel: 'Epic+ ticket', done: (m) => m.anyFiveStar },
-  { id: 'eggs_10', label: 'Hatch 10 eggs', reward: { kind: 'ticket', grade: 'rare' }, rewardLabel: 'Rare+ ticket', done: (m) => m.eggsHatched >= 10 },
+  {
+    id: 'eggs_10',
+    label: 'Hatch 10 eggs',
+    reward: { kind: 'ticket', grade: 'rare' },
+    rewardLabel: 'Rare+ ticket + a Shine Stone',
+    done: (m) => m.eggsHatched >= 10,
+    stones: 1,
+  },
+  { id: 'insane_gold', label: 'Win Gold on Insane', reward: { kind: 'stone' }, rewardLabel: 'A Shine Stone', done: (m) => m.insaneGold },
 ];
 
 export type Ribbon = 'collector' | 'legend';

@@ -102,6 +102,7 @@
     "sim:balance": "tsx ./scripts/play-balance-sim.ts",
     "sim:dive": "tsx ./scripts/dive-ev-sim.ts",
     "sim:games": "tsx ./scripts/games-sim.ts",
+    "sim:collect": "tsx ./scripts/collect-sim.ts",
     "check:towers": "tsx ./scripts/check-towers.ts",
     "check:creeps": "tsx ./scripts/check-creeps.ts",
     "check:sheet-sprite": "tsx ./scripts/check-sheet-sprite.ts",
