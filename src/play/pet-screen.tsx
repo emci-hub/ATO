@@ -47,6 +47,7 @@ import { DIFFICULTY_LABEL, type RoundOutcome } from '@/play/pet-game-rules';
 import type { GamePet } from '@/play/pet-games';
 import { BUFF_HOW, BUFF_ICON, BUFF_LABEL } from '@/play/play-buffs';
 import { useFxQuality } from '@/play/fx-quality';
+import { isStrongResult } from '@/play/score-burst-model';
 import type { GuideSection } from '@/play/guide-content';
 import { GuideLink } from '@/play/guide-sheet';
 import { idleTalkDelayMs, isBedtime } from '@/play/play-settings';
@@ -332,6 +333,7 @@ export function PetScreen({
   }, [openJournal, onJournalOpened]);
   const [game, setGame] = useState<GameRun | null>(null);
   const [lastResult, setLastResult] = useState<string | null>(null);
+  const [lastRound, setLastRound] = useState<{ key: string; score: number; strong: boolean } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Dev-only room hooks (Info → Dev).
@@ -594,7 +596,10 @@ export function PetScreen({
       const r: PetRoundResult = result;
       // A replay of the same round (background retry) comes back uncounted
       // and must not wipe the line the real win already showed.
-      if (r.counted) setLastResult(roundResultLine(kind, outcome, r));
+      if (r.counted) {
+        setLastResult(roundResultLine(kind, outcome, r));
+        setLastRound({ key: roundClaim.current.key, score: r.score, strong: isStrongResult(r) });
+      }
       // v26: a new record / unlock / buff gets the floating banner, and the
       // pet cheers (the tap hop + heart).
       if (r.newRecord) {
@@ -804,6 +809,7 @@ export function PetScreen({
           onStart={setGame}
           onRoundDone={finishRound}
           lastResult={lastResult}
+          lastRound={lastRound}
           gamePet={gamePet}
           still={reduceMotion || fxQuality !== 'full'}
           onGuide={() => openGuide('games')}

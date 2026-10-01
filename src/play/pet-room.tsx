@@ -65,6 +65,10 @@ import { roleFootAt, skinArt } from '@/play/skin';
 
 /** Feet line, as a share of the room height. */
 const FLOOR_AT = 0.8;
+// The nameplate hangs BELOW the feet line. The floor ring runs from feet-8 to
+// feet+6, so +8 clears it and the sprite for every stage (it used to sit at -4
+// and covered the pet's feet — Crimson Oni, Child).
+const PLATE_BELOW_FEET = 8;
 /** v26 nameplate text size (it may shrink a touch to fit, never below 90%). */
 export const NAMEPLATE_FONT = 11;
 
@@ -651,7 +655,7 @@ export function PetRoom({
           {revealed && grade ? (
             <Animated.View
               pointerEvents="box-none"
-              style={[styles.plateWrap, { top: footAt * box - 4, left: 0, width: plateW }, plateStyle]}>
+              style={[styles.plateWrap, { top: footAt * box + PLATE_BELOW_FEET, left: 0, width: plateW }, plateStyle]}>
               <Pressable
                 onPress={onBadge}
                 disabled={!onBadge}

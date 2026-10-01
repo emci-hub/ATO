@@ -78,6 +78,7 @@ import { GuideLink, GuideView } from '@/play/guide-sheet';
 import { stagePowerLine, type GuideSection } from '@/play/guide-content';
 import { gradeTag, petShownName } from '@/play/pet-eggs';
 import { heartsText } from '@/play/pet-status';
+import { ScoreBurst } from '@/play/score-burst';
 import { EXPEDITION_STEPS, tripLabel } from '@/play/expedition-ladder';
 import {
   buyCosmetic,
@@ -239,6 +240,7 @@ export function PlaySheetBody({
   onStart,
   onRoundDone,
   lastResult,
+  lastRound = null,
   gamePet,
   still,
   onGuide,
@@ -248,6 +250,8 @@ export function PlaySheetBody({
   onStart: (run: GameRun) => void;
   onRoundDone: (run: GameRun) => (outcome: RoundOutcome, score: number) => void;
   lastResult: string | null;
+  /** The last counted round's score, for the count-up + confetti. */
+  lastRound?: { key: string; score: number; strong: boolean } | null;
   gamePet: GamePet | null;
   /** Reduced motion or Effects Low: still poses in the games. */
   still: boolean;
@@ -328,6 +332,9 @@ export function PlaySheetBody({
         );
       })}
       {hint ? <Text style={styles.result}>{hint}</Text> : null}
+      {lastRound ? (
+        <ScoreBurst score={lastRound.score} strong={lastRound.strong} runKey={lastRound.key} animate={!still} />
+      ) : null}
       {lastResult ? <Text style={styles.result}>{lastResult}</Text> : null}
       {onGuide ? <NeonChip label="? Mini-games in the Guide" onPress={onGuide} /> : null}
     </>

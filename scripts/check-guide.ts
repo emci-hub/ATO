@@ -207,6 +207,12 @@ ok('every section has text; every "?" opens a real section; Settings + tutorial 
   const room = fs.readFileSync(path.join(ROOT, 'src/play/pet-room.tsx'), 'utf8');
   assert.ok(room.includes('nameplateText(grade, pet.shiny)'), 'the room draws the nameplate text');
   assert.ok(!/bubbleRow[\s\S]{0,400}gradeTag\(grade\)/.test(room), 'the grade is no longer in the bubble row');
+  // The plate hangs BELOW the feet (the floor ring ends at feet+6): a plate at
+  // feet-4 covered the sprite's feet (Crimson Oni, Child).
+  const below = /const PLATE_BELOW_FEET = (\d+);/.exec(room);
+  assert.ok(below && Number(below[1]) >= 6, 'PLATE_BELOW_FEET clears the floor ring (feet+6)');
+  assert.ok(room.includes('top: footAt * box + PLATE_BELOW_FEET'), 'the plate is positioned below the feet line');
+  assert.ok(!room.includes('top: footAt * box - 4'), 'the plate no longer straddles the feet');
 }
 ok('nameplate: stars AND the word for every grade (never colour alone); the bubble keeps only name + mood');
 
