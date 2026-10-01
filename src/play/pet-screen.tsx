@@ -259,6 +259,7 @@ function RoomIcon({
 export function PetScreen({
   view,
   commit,
+  commitSaved,
   registerBack,
   reduceMotion,
   onBack,
@@ -274,6 +275,8 @@ export function PetScreen({
 }: {
   view: PlayView;
   commit: (transition: PlayTransition) => boolean;
+  /** Stone sheet: show the result only after the save lands. */
+  commitSaved: (transition: PlayTransition) => Promise<boolean>;
   /** Back one level (edge-back.ts): a mini-game, then a sheet, then the hub. */
   registerBack?: (inner: InnerBack | null) => void;
   reduceMotion: boolean;
@@ -842,7 +845,7 @@ export function PetScreen({
         <GuideLink section="den" onOpen={openGuide} />
       </PlaySheet>
       <PlaySheet open={sheet === 'stone'} title={SHEET_TITLE.stone} onClose={closeSheet} reduceMotion={reduceMotion}>
-        <StoneSheetBody view={view} commit={commit} initialUid={stoneUid} />
+        <StoneSheetBody view={view} commitSaved={commitSaved} initialUid={stoneUid} />
         <GuideLink section="stones" onOpen={openGuide} />
       </PlaySheet>
       <DivecoreSettingsSheet

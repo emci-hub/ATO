@@ -174,6 +174,7 @@ import {
   MILESTONES,
   checkPetName,
   countDay,
+  retroShineStones,
   defaultSettings,
   emptyStats,
   parseSettings,
@@ -1583,21 +1584,41 @@ function bookEntryOf(
 }
 
 /** The Collection: every pet that has left + the live pet and every Den pet
- * (once revealed) — v27: resting pets count too. */
+ * (once revealed) — v27: resting pets count too. Each uid is counted once.
+ * The passed pet wins over the stored copy (it may be aged). A resting pet
+ * passed in still includes the active pet, and is not added a second time
+ * from `pet_den`. uid 0 is the blank picker — one of those, never a row. */
 export function heroBookOf(doc: PlayStoreDoc, pet: PetState = doc.pet): PetHeroBook {
   let book = doc.pet_heroes;
-  for (const p of [pet, ...doc.pet_den]) {
+  const seen = new Set<number>();
+  let blank = false;
+  const pets: PetState[] = [];
+  const push = (p: PetState) => {
+    if (p.uid > 0) {
+      if (seen.has(p.uid)) return;
+      seen.add(p.uid);
+    } else if (blank) return;
+    else blank = true;
+    pets.push(p);
+  };
+  push(pet);
+  push(doc.pet);
+  for (const p of doc.pet_den) push(p);
+  for (const p of pets) {
     const entry = bookEntryOf(p);
     if (entry) book = addToBook(book, entry);
   }
   return book;
 }
 
-/** Does the live pet wear its hero's 3★ dye? (Never on a shiny.) */
-export function petDyeOn(doc: PlayStoreDoc, pet: PetState = doc.pet): boolean {
+/** Does this pet wear its hero's 3★ dye? (Never on a shiny.) `book` is the
+ * full Collection (active + Den, each once) — pass the view's book so a
+ * resting pet is not scored against a book that double-counts it and misses
+ * the active pet. */
+export function petDyeOn(doc: PlayStoreDoc, pet: PetState = doc.pet, book?: PetHeroBook): boolean {
   const hero = pet.hero ?? heroOfLine(pet.line);
   if (!hero || PET_STAGES.indexOf(pet.stage) < PET_STAGES.indexOf('child')) return false;
-  const rec = heroBookOf(doc, pet)[hero];
+  const rec = (book ?? heroBookOf(doc, pet))[hero];
   const stars = doc.dye_unlocked.includes(hero) ? DYE_STARS : heroStars(rec?.copies ?? 0);
   return dyeApplies(stars, rec?.dye ?? false, pet.shiny);
 }
@@ -1630,6 +1651,7 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     ? 'away'
     : expeditionBlock(pet, null, today, doc.pet_expedition_ymd, doc.pet_expedition_steps);
   const stepsToday = expeditionStepsToday(today, doc.pet_expedition_ymd, doc.pet_expedition_steps);
+  const heroes = heroBookOf(doc, pet);
   return {
     state: pet,
     stageLeftMs: petStageLeftMs(pet),
@@ -1663,14 +1685,14 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     pantryTotal: pantryTotal(doc.pet_pantry),
     cosmetics: doc.pet_cosmetics,
     wear: doc.pet_wear,
-    heroes: heroBookOf(doc, pet),
+    heroes,
     shards: doc.pet_shards,
     tickets: doc.pet_tickets,
     careScore: petCareScore(pet),
     careBand: petCareBand(pet),
     oddsOpen: petOddsOpen(pet),
     gradeOdds: gradeOdds(petCareBand(pet), pet.ticket, pet.pity_from),
-    dyeOn: petDyeOn(doc, pet),
+    dyeOn: petDyeOn(doc, pet, heroes),
     canRelease: canReleasePet(pet) && !away,
     buffs: doc.buffs,
     pumped: pumpedPounce(petPounceBase(pet, away), doc.buffs.pumped),
@@ -1689,7 +1711,7 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
       used: denUsed(doc.pet_den),
       nextSlotPrice: denSlotPrice(doc.den_slots),
       block: denSwapBlock({ diving: doc.dive_run != null, away, gameOpen: false, active: doc.pet }),
-      dyeOn: Object.fromEntries(doc.pet_den.map((p) => [p.uid, petDyeOn(doc, p)])),
+      dyeOn: Object.fromEntries(doc.pet_den.map((p) => [p.uid, petDyeOn(doc, p, heroes)])),
     },
     eggDay: eggDayOf(doc, now),
     pity: {
@@ -4863,6 +4885,13 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       ? parseHeroBook(data.pet_heroes, (id) => heroById(id) != null)
       : legacyHeroBook(hall, v22 ? data.pet_collection : null);
     const cosmetics = v22 ? parseOwnedCosmetics(data.pet_cosmetics) : [];
+    const milestones: MilestoneId[] =
+      v24 && Array.isArray(data.milestones)
+        ? [...new Set(data.milestones.filter((m): m is MilestoneId => MILESTONES.some((d) => d.id === m)))]
+        : [];
+    const shineStones =
+      (v27 ? Math.max(0, Math.floor(finiteNumber(data.shine_stones) ?? 0)) : 0) +
+      retroShineStones(typeof version === 'number' ? version : 27, milestones);
     return {
       version: 27,
       tokens: Math.max(0, Math.floor(tokens)),
@@ -4937,9 +4966,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
             },
       ),
       play_stats: v24 ? parseStats(data.play_stats) : emptyStats(),
-      milestones: v24 && Array.isArray(data.milestones)
-        ? [...new Set(data.milestones.filter((m): m is MilestoneId => MILESTONES.some((d) => d.id === m)))]
-        : [],
+      milestones,
       ribbons: v24 && Array.isArray(data.ribbons)
         ? [...new Set(data.ribbons.filter((r): r is Ribbon => r === 'collector' || r === 'legend'))]
         : [],
@@ -4965,7 +4992,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       eggs_since_legendary: v27
         ? Math.max(0, Math.min(PITY_HARD - 1, Math.floor(finiteNumber(data.eggs_since_legendary) ?? 0)))
         : 0,
-      shine_stones: v27 ? Math.max(0, Math.floor(finiteNumber(data.shine_stones) ?? 0)) : 0,
+      shine_stones: shineStones,
       glimmers: v27 ? Math.max(0, Math.min(GLIMMER_PITY, Math.floor(finiteNumber(data.glimmers) ?? 0))) : 0,
       stones_used: v27 ? Math.max(0, Math.floor(finiteNumber(data.stones_used) ?? 0)) : 0,
       stone_seq: v27 && finiteNumber(data.stone_seq) != null ? (finiteNumber(data.stone_seq) as number) >>> 0 : newEggSeed(),

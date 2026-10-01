@@ -99,6 +99,7 @@
     "check:den": "tsx ./scripts/check-den.ts",
     "check:pity": "tsx ./scripts/check-pity.ts",
     "check:stones": "tsx ./scripts/check-stones.ts",
+    "check:play-save": "tsx ./scripts/check-play-save.ts",
     "check:shop-hidden": "tsx ./scripts/check-shop-hidden.ts",
     "check:edge-back": "tsx ./scripts/check-edge-back.ts",
     "check:immersive": "tsx ./scripts/check-immersive.ts",

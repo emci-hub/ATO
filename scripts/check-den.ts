@@ -43,8 +43,10 @@ import {
   devPetEndStage,
   devPetSetStage,
   devPetStarve,
+  heroBookOf,
   newEggDoc,
   parsePlayStore,
+  petDyeOn,
   playView,
   releaseDenPet,
   renameDenPet,
@@ -292,36 +294,121 @@ ok('full Den refuses a new egg; a bought slot makes room; release → Hall + sha
 }
 ok('resting pets count in the Collection (copies, grades)');
 
+{
+  const grown = revealActive(pick(defaultPlayStore(T0), T0, 'knight'), T0 + MIN);
+  const active = { ...grown.pet, hero: 'kitsune', line: 'solo_kitsune', uid: 1, shiny: false };
+  const resting = { ...grown.pet, hero: 'raven', line: 'solo_raven', uid: 2, shiny: false };
+  const doc: PlayStoreDoc = {
+    ...grown,
+    pet: active,
+    pet_den: [resting],
+    pet_heroes: {
+      raven: { copies: 1, shinies: 0, grades: ['rare'], forms: [], dye: true, styles: [] },
+      kitsune: { copies: 2, shinies: 0, grades: ['common'], forms: [], dye: true, styles: [] },
+    },
+  };
+  assert.equal(heroBookOf(doc, resting).raven.copies, 2, 'a resting pet is not counted twice');
+  assert.equal(heroBookOf(doc, resting).kitsune.copies, 3, 'the active pet is still in the book');
+  assert.equal(heroBookOf(doc).kitsune.copies, 3, 'the active pet itself is not counted twice');
+  assert.equal(petDyeOn(doc, resting), false, '2★ on the resting hero: dye stays off');
+  assert.equal(petDyeOn(doc, active), true, 'the active hero’s third copy turns dye on');
+  const view = playView(doc, T0 + MIN);
+  assert.equal(view.pet.den.dyeOn[resting.uid], false, 'Den dye uses the same book');
+  assert.equal(view.pet.dyeOn, true);
+}
+ok('Collection book: one count per pet; Den dye includes the active pet and does not double-count');
+
 /* ------------------------------------------------------ 7. old saves --- */
 
 {
-  const v27 = revealActive(pick(defaultPlayStore(T0), T0), T0 + MIN);
-  const raw = JSON.parse(JSON.stringify(v27)) as Record<string, unknown>;
-  raw.version = 26;
-  for (const k of ['pet_den', 'den_slots', 'pet_uid_next', 'eggs_today', 'eggs_ymd', 'eggs_since_legendary', 'shine_stones', 'glimmers', 'stones_used', 'stone_seq', 'prism_stones', 'shop_weekly']) delete raw[k];
-  const pet = raw.pet as Record<string, unknown>;
-  for (const k of ['uid', 'pity_from', 'shiny_style', 'glimmer', 'fav', 'prepaid']) delete pet[k];
-  const up = parsePlayStore(JSON.stringify(raw), T0 + MIN)!;
+  // A v26 document as it was stored: no Den, no pity, no Stone fields, and a
+  // shiny Collection row that has no `styles` key. Not a v27 doc with keys deleted.
+  const v26 = {
+    version: 26,
+    tokens: 12,
+    dive_charge: 4,
+    dive_charge_at: T0,
+    research_started_at: T0 - D,
+    shells: 40,
+    milestones: ['first_legendary', 'eggs_10'],
+    pet_hall: [
+      {
+        line: 'solo_raven',
+        branch: 'bright',
+        aura: null,
+        rebirth: 1,
+        days: 3,
+        hero: 'raven',
+        grade: 'rare',
+        shiny: true,
+        egg: 'knight',
+        released: true,
+        name: 'Pip',
+      },
+    ],
+    pet_heroes: {
+      raven: { copies: 2, shinies: 1, grades: ['rare'], forms: ['bright'], dye: false },
+    },
+    pet: {
+      stage: 'child',
+      line: 'solo_kitsune',
+      branch: 'standard',
+      seen_at: T0,
+      total_age_ms: 900_000,
+      stage_age_ms: 1000,
+      hunger: 3,
+      mood: 2,
+      egg: 'village',
+      hero: 'kitsune',
+      grade: 'legendary',
+      shiny: false,
+      seed: 42,
+      reveals: ['hatch', 'child'],
+    },
+  };
+  assert.ok(!JSON.stringify(v26).includes('styles'), 'the v26 Collection row has no styles');
+  assert.ok(!('pet_den' in v26) && !('shine_stones' in v26));
+  const up = parsePlayStore(JSON.stringify(v26), T0 + MIN)!;
   assert.ok(up, 'a v26 save loads');
   assert.equal(up.version, 27);
   assert.deepEqual(up.pet_den, [], 'Den empty');
   assert.equal(up.den_slots, DEN_START_SLOTS, '6 slots');
   assert.equal(up.pet.uid, 1, 'the current pet is active in slot 1');
   assert.equal(up.pet_uid_next, 2);
-  for (const k of ['hero', 'grade', 'shiny', 'stage', 'total_age_ms', 'hunger', 'mood', 'seed', 'egg', 'forms'] as const) {
-    assert.deepEqual(up.pet[k], v27.pet[k], `the pet's ${k} is kept`);
-  }
-  assert.deepEqual(up.pet_hall, v27.pet_hall, 'Hall unchanged');
-  assert.deepEqual(up.pet_heroes, v27.pet_heroes, 'Collection unchanged');
+  assert.equal(up.pet.hero, 'kitsune');
+  assert.equal(up.pet.grade, 'legendary');
+  assert.equal(up.pet.stage, 'child');
+  assert.equal(up.pet.hunger, 3);
+  assert.equal(up.pet.mood, 2);
+  assert.equal(up.pet.seed, 42);
+  assert.equal(up.pet.total_age_ms, 900_000);
+  assert.equal(up.pet.shiny, false);
+  assert.equal(up.shells, 40, 'shells kept');
+  assert.equal(up.pet_hall.length, 1);
+  assert.equal(up.pet_hall[0].name, 'Pip');
+  assert.equal(up.pet_hall[0].shiny, true);
+  assert.deepEqual(up.pet_heroes.raven.styles, ['classic'], 'a shiny row with no styles becomes Classic');
+  assert.equal(up.pet_heroes.raven.copies, 2);
+  assert.equal(up.shine_stones, 2, 'already-claimed first Legendary and 10 eggs each grant their Stone');
   assert.equal(up.eggs_since_legendary, 0, 'pity starts at 0');
-  assert.equal(up.shells, v27.shells);
+  const again = parsePlayStore(JSON.stringify(up), T0 + MIN)!;
+  assert.equal(again.shine_stones, 2, 'a v27 reparse does not grant those Stones again');
+  assert.deepEqual(again.pet_heroes.raven.styles, ['classic']);
+  const unclaimed = parsePlayStore(JSON.stringify({ ...v26, milestones: [] }), T0)!;
+  assert.equal(unclaimed.shine_stones, 0, 'an unclaimed v26 save does not mint Stones');
   // A blank picker on a v26 save keeps uid 0 (nothing to number yet).
-  const blankRaw = JSON.parse(JSON.stringify(defaultPlayStore(T0))) as Record<string, unknown>;
-  blankRaw.version = 26;
-  delete blankRaw.pet_den;
-  assert.equal(parsePlayStore(JSON.stringify(blankRaw), T0)!.pet.egg, null);
+  const blank = {
+    version: 26,
+    tokens: 0,
+    dive_charge: 10,
+    dive_charge_at: T0,
+    research_started_at: T0,
+    pet: { stage: 'egg', line: 'solo_raven', seen_at: T0, egg: null },
+  };
+  assert.equal(parsePlayStore(JSON.stringify(blank), T0)!.pet.egg, null);
 
   // Broken Den rows: blanks dropped, duplicate / missing ids renumbered, at most 11 resting.
+  const v27 = revealActive(pick(defaultPlayStore(T0), T0), T0 + MIN);
   const full = devFillDen({ ...v27, den_slots: 12 }, T0 + MIN, rng);
   const broken = JSON.parse(JSON.stringify(full)) as Record<string, unknown>;
   const rows = broken.pet_den as Record<string, unknown>[];

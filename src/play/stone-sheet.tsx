@@ -21,7 +21,7 @@ import { petRecolor } from '@/play/pet-looks';
 import { applyShineStone, type PlayView, type StoneRefusal, type StoneResult } from '@/play/playStore';
 import type { PlayTransition } from '@/play/use-play-store';
 
-type Commit = (transition: PlayTransition) => boolean;
+type CommitSaved = (transition: PlayTransition) => Promise<boolean>;
 
 export const STONE_REFUSAL: Record<StoneRefusal, string> = {
   no_stones: 'No Shine Stones left.',
@@ -37,11 +37,12 @@ export function nextStoneChance(glimmers: number): number {
 
 export function StoneSheetBody({
   view,
-  commit,
+  commitSaved,
   initialUid,
 }: {
   view: PlayView;
-  commit: Commit;
+  /** Resolves after the Stone is in storage. The result line waits on it. */
+  commitSaved: CommitSaved;
   /** The pet the Den (or the menu) opened this for. */
   initialUid: number | null;
 }) {
@@ -50,6 +51,7 @@ export function StoneSheetBody({
   const pets: PetState[] = [pv.state, ...pv.den.resting].filter((p) => p.uid > 0 && petRevealed(p) && !p.shiny);
   const [uid, setUid] = useState<number | null>(initialUid);
   const [line, setLine] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
   useEffect(() => {
     setUid(initialUid);
     setLine(null);
@@ -59,20 +61,32 @@ export function StoneSheetBody({
   const dyeFor = (p: PetState) => (p.uid === pv.state.uid ? pv.dyeOn : pv.den.dyeOn[p.uid] ?? false);
 
   const use = () => {
-    if (!chosen) return;
+    if (!chosen || pending) return;
     const name = petShownName(chosen);
-    let result: StoneResult | null = null;
-    commit((doc, now) => {
-      const next = applyShineStone(doc, now, chosen.uid);
-      result = next.result;
-      return next.doc;
-    });
-    const r = result as StoneResult | null;
-    if (!r) return;
-    if (!r.ok) setLine(STONE_REFUSAL[r.reason]);
-    else if (r.shiny) setLine(`✨ It worked — ${name} is shiny (${SHINY_STYLE_LABEL.classic})!`);
-    else if (r.glimmers >= GLIMMER_PITY) setLine(`No shine this time — glimmer ${r.glimmers}/${GLIMMER_PITY}. Your next Stone is certain.`);
-    else setLine(`No shine this time — glimmer ${r.glimmers}/${GLIMMER_PITY}. ${GLIMMER_PITY - r.glimmers} more and the next Stone is certain.`);
+    const target = chosen.uid;
+    setPending(true);
+    setLine(null);
+    void (async () => {
+      const box: { result: StoneResult | null } = { result: null };
+      const saved = await commitSaved((doc, now) => {
+        const next = applyShineStone(doc, now, target);
+        box.result = next.result;
+        return next.doc;
+      });
+      setPending(false);
+      const result = box.result;
+      // The line is the first thing the player sees. It is set only after the
+      // write finishes, so a hit they have read cannot be aimed at another pet.
+      if (!saved || !result) {
+        setLine('Couldn’t save that Stone. Nothing was spent — try again.');
+        return;
+      }
+      const r = result;
+      if (!r.ok) setLine(STONE_REFUSAL[r.reason]);
+      else if (r.shiny) setLine(`✨ It worked — ${name} is shiny (${SHINY_STYLE_LABEL.classic})!`);
+      else if (r.glimmers >= GLIMMER_PITY) setLine(`No shine this time — glimmer ${r.glimmers}/${GLIMMER_PITY}. Your next Stone is certain.`);
+      else setLine(`No shine this time — glimmer ${r.glimmers}/${GLIMMER_PITY}. ${GLIMMER_PITY - r.glimmers} more and the next Stone is certain.`);
+    })();
   };
 
   return (
@@ -123,7 +137,7 @@ export function StoneSheetBody({
           <NeonButton
             label={st.held > 0 && chosen ? `Use a Shine Stone on ${petShownName(chosen)}` : 'No Shine Stones'}
             variant="primary"
-            disabled={st.held < 1 || !chosen}
+            disabled={pending || st.held < 1 || !chosen}
             onPress={use}
           />
         </>

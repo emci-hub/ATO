@@ -353,4 +353,20 @@ export const MILESTONES: readonly MilestoneDef[] = [
   { id: 'insane_gold', label: 'Win Gold on Insane', reward: { kind: 'stone' }, rewardLabel: 'A Shine Stone', done: (m) => m.insaneGold },
 ];
 
+/** Shine Stones a save from before v27 already earned. `first_legendary` and
+ *  `eggs_10` paid their dye / ticket at claim time; the Stone was added on
+ *  top in v27, so a save that already lists them gets those Stones once, on
+ *  the way to v27. `insane_gold` did not exist before v27 — its whole reward
+ *  is the Stone, granted when it is claimed, not here. A v27 doc is left
+ *  alone, so loading the migrated save again does not grant them twice. */
+export function retroShineStones(version: number, claimed: readonly string[]): number {
+  if (version >= 27) return 0;
+  let n = 0;
+  for (const id of claimed) {
+    if (id !== 'first_legendary' && id !== 'eggs_10') continue;
+    n += MILESTONES.find((m) => m.id === id)?.stones ?? 0;
+  }
+  return n;
+}
+
 export type Ribbon = 'collector' | 'legend';

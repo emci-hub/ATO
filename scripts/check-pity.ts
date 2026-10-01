@@ -1,8 +1,8 @@
 /**
  * Legendary pity + egg pacing checks (v27, Part D · T-D7). Run: npm run check:pity
  *
- *   1. The curve: base odds to egg 29, a straight climb from egg 30, egg 40
- *      always Legendary; every table still sums to 100.
+ *   1. The curve: base odds to egg 29, +1 point each egg from 30 through 39,
+ *      egg 40 always Legendary; every table still sums to 100.
  *   2. Odds shown = odds rolled: `rollPet` over many seeds lands on
  *      `gradeOdds` at every pity position (with and without a ticket).
  *   3. Through the store: a Legendary by the 40th egg, every time; the
@@ -29,6 +29,7 @@ import {
   gradeOdds,
   nextEggPrice,
   pityAfterReveal,
+  PITY_SOFT_STEP_PP,
   pityLegendaryPct,
   rollPet,
   seededRng,
@@ -90,15 +91,19 @@ const rng = seededRng(4040);
       }
     }
   }
-  // Egg 30 is one step of eleven up; the steps are even.
+  // Egg 30 is +1 point, each later egg another point, egg 39 is +10, egg 40 is 100%.
   const b = gradeOdds('poor').legendary;
-  assert.ok(close(pityLegendaryPct(b, PITY_SOFT_FROM - 1), b + (100 - b) / 11));
+  assert.equal(PITY_SOFT_STEP_PP, 1);
+  assert.ok(close(pityLegendaryPct(b, PITY_SOFT_FROM - 1), b + PITY_SOFT_STEP_PP));
+  assert.ok(close(pityLegendaryPct(b, PITY_SOFT_FROM), b + 2 * PITY_SOFT_STEP_PP));
+  assert.ok(close(pityLegendaryPct(b, PITY_HARD - 2), b + 10 * PITY_SOFT_STEP_PP));
+  assert.ok(pityLegendaryPct(b, PITY_HARD - 2) < 100, 'egg 39 is still short of the guarantee');
   assert.ok(close(pityLegendaryPct(b, PITY_HARD - 1), 100));
   assert.equal(pityAfterReveal(5, 'legendary'), 0);
   assert.equal(pityAfterReveal(5, 'epic'), 6);
   assert.equal(pityAfterReveal(39, 'rare'), 39, 'never past the guaranteed egg');
 }
-ok('curve: normal odds to egg 29, a straight climb from 30, egg 40 = 100% Legendary; every table sums to 100');
+ok('curve: normal odds to egg 29, +1 point each egg from 30 through 39, egg 40 = 100% Legendary; every table sums to 100');
 
 /* ---------------------------------------------- 2. odds shown = odds rolled --- */
 

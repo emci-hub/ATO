@@ -265,28 +265,41 @@ console.log('| Player | Eggs a day | Legendary 90% (worst) before | after | Shin
 console.log('|---|---|---|---|---|---|---|');
 for (const r of rows) console.log(r);
 
-// The Guide's plain words (COLLECT_TIMELINES) must stay true.
+// The Guide's plain words (COLLECT_TIMELINES) must name the measured day, and
+// the plan's targets are two-sided: faster than the band fails as well as slower.
 let ok = true;
 const check = (label: string, cond: boolean) => {
   console.log(`${cond ? '✓' : '✗'} ${label}`);
   if (!cond) ok = false;
 };
+const inBand = (n: number, lo: number, hi: number) => n >= lo && n <= hi;
 console.log('');
 check(
-  `Guide: playing every day, 90% of Regular players find a Legendary within ${COLLECT_TIMELINES.legendaryRegularDays} days`,
-  results.Regular.leg90 <= COLLECT_TIMELINES.legendaryRegularDays,
+  `Guide: playing every day, 90% of Regular players find a Legendary in ${COLLECT_TIMELINES.legendaryRegularDays} days`,
+  results.Regular.leg90 === COLLECT_TIMELINES.legendaryRegularDays,
 );
 check(
   `Guide: with the free eggs only, a Legendary is certain within ${COLLECT_TIMELINES.legendaryCertainDays} days`,
   results.Casual.legMax <= COLLECT_TIMELINES.legendaryCertainDays && results.Poor.legMax <= COLLECT_TIMELINES.legendaryCertainDays,
 );
 check(
-  `Guide: with a Stone every few days, most players get a shiny within ${COLLECT_TIMELINES.shinyRegularDays} days`,
-  results.Regular.shiny50 <= COLLECT_TIMELINES.shinyRegularDays,
+  `Guide: with a Stone every few days, most players get a shiny in ${COLLECT_TIMELINES.shinyRegularDays} days`,
+  results.Regular.shiny50 === COLLECT_TIMELINES.shinyRegularDays,
 );
-check('targets: Legendary 90% Pro ≤ ~5d, Regular ≤ ~10d, Casual ≤ ~20d; nobody > ~20d', results.Pro.leg90 <= 6 && results.Regular.leg90 <= 11 && results.Casual.leg90 <= 20 && results.Poor.legMax <= 20);
+check('target: Pro Legendary 90% in 4–6d (~5d)', inBand(results.Pro.leg90, 4, 6));
+check('target: Regular Legendary 90% in 9–11d (~10d)', inBand(results.Regular.leg90, 9, 11));
+check('target: Casual Legendary 90% ≤ 20d', results.Casual.leg90 <= 20);
+check(
+  'target: nobody’s worst Legendary is over 20d',
+  PLAYERS.every((p) => results[p.name].legMax <= 20),
+);
 check('target: shiny 90% Casual ≤ ~24d', results.Casual.shiny90 <= 25);
 if (!ok) {
   console.log('\nFIX: a target or a Guide timeline drifted — retune, or update COLLECT_TIMELINES and the Guide words.');
+  if (!inBand(results.Regular.leg90, 9, 11)) {
+    console.log(
+      `Regular 90% is ${results.Regular.leg90}d, outside 9–11d. Soft pity cannot close that while BAND_WEIGHTS, the daily egg, the egg-30 start and the egg-40 guarantee stay. Options: drop the daily egg from the Regular day, lower the base Legendary share, or accept this day.`,
+    );
+  }
   process.exit(1);
 }

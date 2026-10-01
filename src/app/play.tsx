@@ -141,6 +141,7 @@ export default function PlayScreen() {
     view,
     claim,
     commit,
+    commitSaved,
     grantRandomFind,
     beginDive,
     beginFreeDive,
@@ -774,6 +775,7 @@ export default function PlayScreen() {
                 <PetScreen
                   view={view}
                   commit={commit}
+                  commitSaved={commitSaved}
                   registerBack={registerBack}
                   reduceMotion={reduceMotion}
                   talkEvent={petTalk}

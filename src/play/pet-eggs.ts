@@ -204,15 +204,25 @@ export function eggsUntilLegendary(since: number): number {
   return Math.max(1, PITY_HARD - Math.max(0, Math.floor(since)));
 }
 
+/** Percentage points added on each egg from 30 through 39. Egg 40 is the hard
+ * guarantee (100%), not another step of this climb.
+ *
+ * This is the slowest rise that still goes up on every egg 30→39. A steeper
+ * climb (the old one-eleventh line up to 100%) only shortens the tail. It
+ * cannot move a Regular player's 90% time toward ~10 days: with the daily egg
+ * and the unchanged base odds, 9 in 10 already have a Legendary before soft
+ * pity does much. `sim:collect` keeps the 9–11 day bar and fails on the gap. */
+export const PITY_SOFT_STEP_PP = 1;
+
 /** The Legendary share (percent) at a pity position: the base share up to
- * egg 29, then a straight climb so egg 30 is one step of eleven up and egg 40
- * is 100%. */
+ * egg 29, then +`PITY_SOFT_STEP_PP` each egg from 30 through 39, and 100% at
+ * egg 40. */
 export function pityLegendaryPct(basePct: number, since: number): number {
   const n = pityEggNumber(since);
   if (n >= PITY_HARD) return 100;
   if (n < PITY_SOFT_FROM) return basePct;
-  const step = (n - PITY_SOFT_FROM + 1) / (PITY_HARD - PITY_SOFT_FROM + 1);
-  return basePct + (100 - basePct) * step;
+  const steps = n - PITY_SOFT_FROM + 1;
+  return Math.min(100, basePct + steps * PITY_SOFT_STEP_PP);
 }
 
 /** The counter after a reveal: back to 0 on a Legendary, else one more
@@ -285,12 +295,14 @@ export const STONE_EVERY_DAYS = 5;
 /** The Guide's plain-word timelines (days), from `npm run sim:collect` — the
  * sim fails when its results drift past them, so the words stay true. */
 export const COLLECT_TIMELINES = {
-  /** Playing every day (a few eggs + the daily egg), 9 in 10 find a Legendary by then. */
-  legendaryRegularDays: 7,
+  /** Playing every day (a few eggs + the daily egg), 9 in 10 find a Legendary by then.
+   *  Measured by `sim:collect` (Great care, 4 eggs a day). The ~10 day target
+   *  is not reachable without changing a locked call; this is the measured day. */
+  legendaryRegularDays: 6,
   /** With the free eggs only, a Legendary is certain by then (the hard pity). */
   legendaryCertainDays: Math.ceil(PITY_HARD / FREE_EGGS_PER_DAY),
-  /** With a Shine Stone every few days, most players have a shiny by then. */
-  shinyRegularDays: 7,
+  /** With a Shine Stone every few days, most Regular players have a shiny by then (the median). */
+  shinyRegularDays: 6,
 } as const;
 
 /** The roll for the `used`-th Stone ever (0-based), from the saved sequence
