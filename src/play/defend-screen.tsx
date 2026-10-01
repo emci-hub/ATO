@@ -189,6 +189,7 @@ import { sendPlayDevLog } from '@/play/dev-log';
 import { stageMatchupDetail, stageMatchupFor, stageMatchupShort } from '@/play/legend-copy';
 import { FxLayer, FX_LIFE_MS, FX_ULTIMATE_LIFE_MS, type FxEvent, type FxPoint } from '@/play/fx-layer';
 import { defendBackStep, defendEdgeSwipe, type InnerBack } from '@/play/edge-back';
+import { DevSlotFill } from '@/play/dev-slot';
 import { FX_CAP, FX_QUALITY_LABEL, nextFxQuality, setFxQuality, useFxQuality } from '@/play/fx-quality';
 import { kitRange, type KitHit } from '@/play/kit-combat';
 import {
@@ -4215,7 +4216,10 @@ export function DefendScreen({
           </ThemedView>
         ) : null}
 
+        {/* The Defend dev kit is built here (it acts on the live board) but SHOWS in
+            the floating DEV kit — DevSlotFill hands it over and renders nothing. */}
         {PRE_LAUNCH_DEV && devUnlocked ? (
+          <DevSlotFill>
           <ThemedView type="backgroundElement" style={styles.card}>
             <ThemedText type="smallBold" themeColor="textSecondary">
               Dev kit · defend only
@@ -4486,6 +4490,7 @@ export function DefendScreen({
               />
             </DevSection>
           </ThemedView>
+          </DevSlotFill>
         ) : null}
       </SafeAreaView>
 

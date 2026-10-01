@@ -118,6 +118,22 @@ ok('wiring: Play-only mount, Modal Grove kit, existing libraries only');
     assert.ok(panel.includes(fn), `${fn} is still on the panel`);
   }
 }
+{
+  // Defend's kit acts on the live board, so it is BUILT in the Defend screen
+  // and SHOWN in the floating kit through the dev slot.
+  const defend = read('src/play/defend-screen.tsx');
+  assert.ok(/PRE_LAUNCH_DEV && devUnlocked \? \(\s*<DevSlotFill>/.test(defend), 'Defend hands its Dev kit to the slot, still behind the gate');
+  assert.equal((defend.match(/<DevSlotFill>/g) ?? []).length, 1, 'one slot fill in Defend');
+  for (const title of ['Heroes', 'Campaign', 'Gear / Stars', 'Board / Misc']) {
+    assert.ok(defend.includes(`title="${title}"`), `Defend group kept: ${title}`);
+  }
+  const play = read('src/app/play.tsx');
+  assert.ok(play.includes('<DevSlotOutlet />'), 'the floating kit draws the slot');
+  const slot = read('src/play/dev-slot.tsx');
+  assert.ok(slot.includes('useEffect(() => () => setSlot(null), [])'), 'the slot empties when its screen leaves');
+}
+ok('Defend: its Dev kit shows in the floating kit (dev slot), all four groups kept');
+
 ok('mode-aware: Pet mode shows Pet / Eggs / Room tools in six groups, one shared panel, nothing dropped');
 
 console.log(`\ncheck:dev-fab — ${passed} groups passed.`);

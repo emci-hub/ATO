@@ -5,6 +5,7 @@ import { BackHandler, PanResponder, Pressable, ScrollView, StyleSheet, View } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PlayDevFab } from '@/components/play-dev-fab';
+import { DevSlotOutlet } from '@/play/dev-slot';
 import { PetDevPanel } from '@/play/pet-dev-panel';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -979,11 +980,8 @@ export default function PlayScreen() {
               {mode === 'pet' && view ? (
                 <PetDevPanel pet={view.pet.state} commit={commit} startOpen={['pet', 'eggs', 'room']} />
               ) : null}
-              {mode === 'defend' ? (
-                <ThemedText type="small" themeColor="textSecondary">
-                  Defend has its own Dev kit on the Defend screen (waves, heroes, skip offer).
-                </ThemedText>
-              ) : null}
+              {/* A screen that owns live state (Defend) hands its buttons over here. */}
+              <DevSlotOutlet />
               {groveDevKitPanel(closeDevKit, devFocusForMode(mode))}
             </View>
           }
