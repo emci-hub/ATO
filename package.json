@@ -97,6 +97,7 @@
     "check:buffs": "tsx ./scripts/check-buffs.ts",
     "check:guide": "tsx ./scripts/check-guide.ts",
     "check:score-burst": "tsx ./scripts/score-burst-check.ts",
+    "check:dev-fab": "tsx ./scripts/dev-fab-check.ts",
     "check:den": "tsx ./scripts/check-den.ts",
     "check:pity": "tsx ./scripts/check-pity.ts",
     "check:tide": "tsx ./scripts/check-tide.ts",
