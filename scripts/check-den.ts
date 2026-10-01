@@ -42,6 +42,7 @@ import {
   devGrantAllBuffs,
   devPetEndStage,
   devPetSetStage,
+  devPetStarve,
   newEggDoc,
   parsePlayStore,
   playView,
@@ -132,7 +133,11 @@ assert.equal(base.pet.uid, 1, 'the first pet gets id 1');
 
   // A revealed pet resting: no hunger / mood loss, no care mistakes.
   let grown = revealActive(pick(defaultPlayStore(T0), T0), T0 + MIN);
-  grown = devPetSetStage(grown, T0 + MIN, 'adult');
+  grown = devPetStarve(devPetSetStage(grown, T0 + MIN, 'adult'), T0 + MIN);
+  // Control: the same starving pet left ACTIVE does make care mistakes.
+  let control = grown;
+  for (let t = T0 + H; t <= T0 + 5 * D; t += 12 * H) control = touchPet(control, t);
+  assert.ok(control.pet.mistakes > grown.pet.mistakes, 'an active starving pet makes care mistakes');
   const r2 = newEggDoc(grown, T0 + 2 * MIN);
   assert.ok(r2.result.ok);
   // Aged up to the moment it went to rest, then never again.
@@ -143,7 +148,7 @@ assert.equal(base.pet.uid, 1, 'the first pet gets id 1');
   const frozen = later.pet_den.find((p) => p.uid === adult.uid)!;
   assert.equal(frozen.hunger, adult.hunger, 'no hunger lost');
   assert.equal(frozen.mood, adult.mood, 'no mood lost');
-  assert.equal(frozen.care_mistakes, adult.care_mistakes, 'no care mistakes');
+  assert.equal(frozen.mistakes, adult.mistakes, 'no care mistakes');
   assert.equal(frozen.total_age_ms, adult.total_age_ms, 'no growth');
   assert.equal(frozen.stage, adult.stage);
   assert.deepEqual(frozen, adult, 'nothing about it changed');
