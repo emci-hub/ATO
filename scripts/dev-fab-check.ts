@@ -181,8 +181,46 @@ ok('mode-aware: Pet mode shows Pet / Eggs / Room tools in six groups, one shared
   // PRE_LAUNCH_DEV alone must not open the app button: every invited tester
   // would get one-tap account resets. Same rule as Home's Hub row.
   assert.ok(!fab.includes('PRE_LAUNCH_DEV'), 'the app button is not opened by PRE_LAUNCH_DEV');
-  assert.ok(fab.includes('isDev: __DEV__ || devUnlocked,'), 'isDev = a dev build or the session unlock');
+  // 2026-10-01 (emci): the normal way in is the dev PIN — Divecore's existing local
+  // lock, shared — instead of needing root or the old server password.
+  assert.ok(fab.includes('isDev: __DEV__ || devUnlocked || pinUnlocked,'), 'isDev = a dev build, the session unlock, or the dev PIN');
 }
 ok('app button: root / grant / unlock only (not PRE_LAUNCH_DEV), hidden on Play, per-screen tools from the Hub’s own sections');
+
+/* ---------------------------------------------------------------- 7 --- */
+{
+  // ONE lock: the app reuses Divecore's (no second PIN, no server call).
+  const pin = read('src/lib/dev-pin.ts');
+  assert.ok(pin.includes("import { usePlayDevUnlocked } from '@/play/dev-lock';"), 'the app lock IS Divecore’s lock');
+  assert.ok(pin.includes('return PRE_LAUNCH_DEV && unlocked;'), 'the PIN door is pre-launch only');
+  assert.doesNotMatch(pin, /supabase|functions\.invoke|fetch\(|AsyncStorage|SecureStore/, 'no server call, nothing stored');
+  assert.doesNotMatch(pin, /String\.fromCharCode|PLAY_DEV_PIN/, 'the PIN itself is not copied into the app lock');
+
+  // The box on You is the same component Divecore shows, and it goes away once unlocked.
+  const you = read('src/app/(tabs)/you.tsx');
+  assert.ok(you.includes("import { DevUnlockRow } from '@/play/dev-unlock-row';"), 'You shows Divecore’s own PIN box');
+  assert.ok(you.includes('{DEV_PIN_AVAILABLE && !pinUnlocked ? <DevUnlockRow /> : null}'), 'shown only pre-launch and only while locked');
+  assert.ok(!you.includes('AppVersionDevUnlock') && !you.includes('verifyDevUnlockPassword'), 'the old server-password door is not on You');
+
+  // The Hub opens with the PIN; the pre-launch flag alone no longer opens it.
+  const hub = read('src/app/dev-lab.tsx');
+  const entry = hub.slice(hub.indexOf('export default function DevLabScreen()'), hub.indexOf('function DevLab()'));
+  assert.ok(entry.includes('isDev: __DEV__ || devUnlocked || pinUnlocked,'), 'Hub entry: dev build, session unlock, or the dev PIN');
+  assert.ok(!entry.includes('isDev: PRE_LAUNCH_DEV'), 'Hub entry: the pre-launch flag alone does not open it');
+  assert.ok(entry.includes('isRoot: devAccess.isRoot,'), 'Hub entry: root still walks in — but is no longer required');
+  assert.ok(entry.includes('return <Redirect href="/" />;'), 'a locked Hub sends you Home');
+
+  // Divecore itself is untouched: same lock file, same row, same gate.
+  const play = read('src/app/play.tsx');
+  assert.ok(play.includes('PRE_LAUNCH_DEV && !devUnlocked ? <DevUnlockRow />'), 'Divecore still shows its PIN box while locked');
+
+  // The Clear button's protection is the server's, not this lock's.
+  const wave75 = read('supabase/migrations/wave75_reset_my_test_data.sql');
+  assert.ok(wave75.includes('if not public.is_root() then'), 'clear-all stays root-only on the server');
+  const clearAt = hub.indexOf('Clear all my questions (full)');
+  assert.ok(clearAt > 0 && hub.lastIndexOf('{devAccess.isRoot ? (', clearAt) > hub.lastIndexOf('function IntakeStagePresets()', clearAt), 'and its button still sits inside the root-only block');
+  assert.ok(you.includes('automaticallyAdjustKeyboardInsets') && you.includes('keyboardShouldPersistTaps="handled"'), 'the PIN box on You is not hidden by the keyboard');
+}
+ok('dev PIN: one shared lock (Divecore’s), PIN box on You, opens the bubble and the Hub; root no longer needed to get in');
 
 console.log(`\ncheck:dev-fab — ${passed} groups passed.`);

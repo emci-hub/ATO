@@ -22,6 +22,7 @@ import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useMeContext } from '@/lib/me-context';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
+import { useDevPinUnlocked } from '@/lib/dev-pin';
 import {
   clearLocalAccountData,
   listAccountScopedKeys,
@@ -136,6 +137,7 @@ const SOURCE_NOTE: Record<TraitSource, string> = {
 export default function DevLabScreen() {
   const { devAccess, devAccessLoading } = useMeContext();
   const devUnlocked = useDevAccessUnlocked();
+  const pinUnlocked = useDevPinUnlocked();
   if (devAccessLoading) {
     return (
       <ThemedView style={styles.container}>
@@ -145,9 +147,13 @@ export default function DevLabScreen() {
       </ThemedView>
     );
   }
+  // ENTRY (2026-10-01, emci): the Hub opens once the dev PIN is entered — the box at
+  // the bottom of You, the same PIN and lock as Divecore (lib/dev-pin.ts). Root and
+  // granted testers still walk in. The pre-launch flag alone no longer opens it, and
+  // nobody needs root just to open the Hub or see the Inspector.
   if (
     !canSeeDevLab({
-      isDev: PRE_LAUNCH_DEV || devUnlocked,
+      isDev: __DEV__ || devUnlocked || pinUnlocked,
       isRoot: devAccess.isRoot,
       capabilities: devAccess.capabilities,
     })
@@ -176,7 +182,8 @@ function DevLab() {
           <View style={styles.header}>
             <ThemedText type="subtitle">Dev Tools Hub</ThemedText>
             <ThemedText themeColor="textSecondary">
-              Root and granted testers in TestFlight. Local PRE_LAUNCH_DEV always opens it.
+              Opens once the dev PIN is entered on You (this session only), or for root and
+              granted testers.
               Access, grants, and profile pause/delete stay root-only.
             </ThemedText>
             <RunningUpdateLine />

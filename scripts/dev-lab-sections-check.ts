@@ -102,11 +102,15 @@ assert.doesNotMatch(sage, /CrisisCardPreview/);
 assert.doesNotMatch(sage, /Preview crisis card/);
 ok('System crisis-card preview is fenced to /dev-lab and absent from Home and Sage');
 
+// CHANGED 2026-10-01 (was: isDev: PRE_LAUNCH_DEV || devUnlocked — the pre-launch
+// flag alone opened the Hub for every signed-in tester). emci: the Hub now opens
+// once the dev PIN is entered (Divecore's lock, shared — lib/dev-pin.ts), or for
+// root / granted testers. The pre-launch flag alone no longer opens it.
 assert.match(
   hub,
-  /!canSeeDevLab\(\{\s*isDev: PRE_LAUNCH_DEV \|\| devUnlocked,\s*isRoot: devAccess\.isRoot,\s*capabilities: devAccess\.capabilities,\s*\}\)/,
+  /!canSeeDevLab\(\{\s*isDev: __DEV__ \|\| devUnlocked \|\| pinUnlocked,\s*isRoot: devAccess\.isRoot,\s*capabilities: devAccess\.capabilities,\s*\}\)/,
 );
 assert.match(hub, /Redirect href="\/"/);
-ok('access guard also accepts the session-only dev-unlock alongside PRE_LAUNCH_DEV');
+ok('access guard accepts the dev PIN and the session dev-unlock; the pre-launch flag alone does not open the Hub');
 
 console.log(`\nAll ${passed} dev-lab-sections checks passed.`);

@@ -16,7 +16,9 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
+import { DEV_PIN_AVAILABLE, useDevPinUnlocked } from '@/lib/dev-pin';
 import { useMeContext } from '@/lib/me-context';
+import { DevUnlockRow } from '@/play/dev-unlock-row';
 import { aiConsentFor, setAiConsent } from '@/lib/me';
 import { clearLocalAccountData } from '@/lib/local-account-data';
 import { supabase } from '@/lib/supabase';
@@ -61,6 +63,7 @@ export default function YouScreen() {
   const theme = useTheme();
   const { session } = useSession();
   const { me, refresh } = useMeContext();
+  const pinUnlocked = useDevPinUnlocked();
   const [signingOut, setSigningOut] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [consentBusy, setConsentBusy] = useState(false);
@@ -120,7 +123,13 @@ Update: ${Updates.updateId ?? 'original build'}`);
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ScrollView {...NO_PINCH_ZOOM} contentContainerStyle={styles.scrollContent}>
+        {/* The dev PIN box is the last thing on this screen: lift it above the keyboard,
+            and let Unlock take the first tap instead of only dismissing the keyboard. */}
+        <ScrollView
+          {...NO_PINCH_ZOOM}
+          automaticallyAdjustKeyboardInsets
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <ThemedText type="subtitle">You</ThemedText>
           </View>
@@ -202,6 +211,16 @@ Update: ${Updates.updateId ?? 'original build'}`);
               Delete account
             </ThemedText>
           </Pressable>
+
+          {/* The dev PIN box — the SAME component, PIN and lock as Divecore's hub.
+              Entering it shows the DEV bubble on every screen (and unlocks Divecore's
+              kit too). Gone once unlocked, and never shown outside pre-launch. */}
+          {DEV_PIN_AVAILABLE && !pinUnlocked ? <DevUnlockRow /> : null}
+          {pinUnlocked ? (
+            <ThemedText type="small" themeColor="textSecondary" style={styles.deleteLinkText}>
+              Dev tools unlocked — use the DEV button.
+            </ThemedText>
+          ) : null}
         </ScrollView>
       </SafeAreaView>
 

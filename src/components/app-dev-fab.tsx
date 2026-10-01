@@ -9,8 +9,9 @@
  *
  * The sections ARE the Hub's own components (`app/dev-lab`), not copies, and
  * the per-capability gates are the Hub's (`canSeeHubSection`). Who sees the
- * button at all: `appDevFabVisible` — root, a granted capability, a dev build or
- * the session unlock (NOT every invited tester), and never on /play.
+ * button at all: `appDevFabVisible` — anyone who has entered the dev PIN this
+ * session (the box at the bottom of You — the same PIN and lock as Divecore), plus
+ * root, a granted capability or a dev build. Never on /play (it has its own).
  */
 import { usePathname, useRouter } from 'expo-router';
 import { useMemo, useState, type ReactNode } from 'react';
@@ -40,6 +41,7 @@ import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { canSeeDevLab, canSeeHubSection, type DevCapability } from '@/lib/dev-access';
 import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
+import { useDevPinUnlocked } from '@/lib/dev-pin';
 import {
   appDevEverywhere,
   appDevFabVisible,
@@ -62,17 +64,19 @@ export function AppDevFab() {
   const { me, devAccess, devAccessLoading } = useMeContext();
   const { session } = useSession();
   const devUnlocked = useDevAccessUnlocked();
+  // The dev PIN (Divecore's lock, shared — lib/dev-pin.ts). This is the normal way in.
+  const pinUnlocked = useDevPinUnlocked();
   const [open, setOpen] = useState(false);
   const gate = useMemo(
     () => ({
-      // Same as Home's Hub row: the pre-launch flag alone does NOT open it, so an invited
-      // tester never sees the bubble. Root, a granted capability, a dev build, or
-      // the session unlock does.
-      isDev: __DEV__ || devUnlocked,
+      // The pre-launch flag alone does NOT open it, so a tester who has not entered
+      // the PIN never sees the bubble. The PIN, root, a granted capability or a dev
+      // build does.
+      isDev: __DEV__ || devUnlocked || pinUnlocked,
       isRoot: devAccess.isRoot,
       capabilities: devAccess.capabilities,
     }),
-    [devUnlocked, devAccess.isRoot, devAccess.capabilities],
+    [devUnlocked, pinUnlocked, devAccess.isRoot, devAccess.capabilities],
   );
   const visible = appDevFabVisible({
     isAuthed: !!session,
