@@ -16,6 +16,7 @@ Pointer only below this. Live status lives in the three tracked docs — keep th
 | `docs/GOTCHAS.md` | Known traps — read before editing an area |
 | `docs/archive/OLD_PLAN.md` | Old plan — reference only, suggestions not rules |
 | `docs/BUSINESS.md` | Legal / brand / cost |
+| `docs/system-map.html` + `docs/system-map.data.js` | Interactive system map (double-click the .html). All facts live in the `.data.js` file — see the House convention below |
 
 Expo SDK **54** in this repo (`CLAUDE.md` / `AGENTS.md` point at the v54 docs).
 
@@ -23,6 +24,7 @@ Do not commit `.env.local` or API keys. Do not change dependencies, schemas, aut
 
 ## House conventions
 
+- **After any change to axes, questions, AI calls, storage or screens, update docs/system-map.data.js in the same commit.** (Sep 30, 2026, emci explicit.) `docs/system-map.html` only draws what that file says, so the map is wrong the moment the data file is stale.
 - **Every response — not just a final "done" report — must end with an explicit, unmissable "what's needed from emci / what happens next" line.** (Sep 13, 2026, emci explicit: "when code outputs I want it to tell me whats needed from me or whats next?? ... it just stops there.") Never end a substantive turn on just a status summary, buried "Next action:" line, or a vague "otherwise this is a good stopping point." Concretely:
   - If nothing is needed and work continues automatically: say so plainly ("Nothing needed — continuing to the next screen now.").
   - If emci needs to decide something: ask it as a direct question, not a buried footnote.
@@ -85,10 +87,16 @@ live-music tab) — not a guess. `around-lab.tsx` is its dev harness;
 **Decisions LOCKED by emci 2026-09-15 (Card 0 done — do not re-litigate):**
 1. **Daily Check loop is parked knowingly** — `record_check` ends up with zero client
    callers. Intended; it returns when the loop is rebuilt.
-2. **Tokens: Story is free while parked.** The **token system is not designed yet** —
+2. **Tokens: Story is free while parked.** ~~The token system is not designed yet —
    emci is researching it separately. Do not move the earn site, do not write a balance
-   migration, do not treat the current earn/spend wiring as a contract. **Remind emci
-   that the ATO token system still needs research/design from scratch.**
+   migration, do not treat the current earn/spend wiring as a contract. Remind emci
+   that the ATO token system still needs research/design from scratch.~~
+   **SUPERSEDED 2026-09-30 — the ATO token economy IS designed (emci explicit):**
+   earn +21 on finishing the 50-question intake and +21 per finished 25-question round;
+   spend 10 per Legends reroll, 1 per Categorize category reroll, 1 per question reroll;
+   max 1 reroll per item per day; no reroll on intake questions. Where the code differs
+   from this is listed in `docs/system-map.html` → Red-team → "Token economy: design vs
+   code" (not fixed yet).
 3. **`CrisisCard` stays Active** — so Home keeps consuming `home_bootstrap`'s `crisis*`
    fields; only `checks` is dropped.
 4. **`AiConsentCard` stays Active on Home** as Insight infrastructure.
@@ -213,7 +221,19 @@ park `RollHistoryFold` per call site, never wholesale, or Card 4 silently change
 ship Cards 3+4 together, or Story spends tokens that can no longer be earned; and never add
 Home/Explore/Questions to `PARKED_SCREENS` — that check assumes a whole-file park.
 
-**Token economy — researched 2026-09-15, NOT built, NOT approved.** emci ran the design
+**Token economy — DESIGNED, confirmed by emci 2026-09-30 (supersedes the 2026-09-15
+research note that follows).** Earn +21 on finishing the 50 intake, +21 per finished
+25-question round. Spend 10 per Legends reroll, 1 per category reroll, 1 per question
+reroll. Max 1 reroll per item per day. No reroll on intake questions. This matches the
+`ato_tokens` prices already in wave51/wave52. Gaps found by the 2026-09-30 audit, none
+fixed yet: the +21 intake earn is never paid (`claimFullProfileComplete` has no caller);
+category reroll has no UI; Legends reroll is unreachable and its daily cap is per user,
+not per item; no balance is shown anywhere; the OLD `me.tokens` "notes" currency still
+earns (+5 `game_round` in `questions-fold.tsx`) and spends (12 `profile_depth` in
+`depth-dive.tsx`). `docs/ISOLATION_PLAN.md` lines 35/43/223/294 still say "not designed"
+— stale, not yet corrected.
+
+**Earlier research note (2026-09-15), kept for history — its numbers are NOT the design:** emci ran the design
 research separately. Headline: non-monetary v1, never sell tokens directly, core self-insight
 always free, earn from completed reflection (no streak multipliers), append-only `token_ledger`
 with `SUM` balance + per-event idempotency key, daily earn cap 40, soft cap 500, no transfers,
