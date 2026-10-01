@@ -287,7 +287,8 @@ check(
   results.Regular.shiny50 === COLLECT_TIMELINES.shinyRegularDays,
 );
 check('target: Pro Legendary 90% in 4–6d (~5d)', inBand(results.Pro.leg90, 4, 6));
-check('target: Regular Legendary 90% in 9–11d (~10d)', inBand(results.Regular.leg90, 9, 11));
+check('target: Regular Legendary 90% in 5–7d (~6d)', inBand(results.Regular.leg90, 5, 7));
+check('target: Regular worst Legendary ≤ ~10d', results.Regular.legMax <= 10);
 check('target: Casual Legendary 90% ≤ 20d', results.Casual.leg90 <= 20);
 check(
   'target: nobody’s worst Legendary is over 20d',
@@ -296,9 +297,9 @@ check(
 check('target: shiny 90% Casual ≤ ~24d', results.Casual.shiny90 <= 25);
 if (!ok) {
   console.log('\nFIX: a target or a Guide timeline drifted — retune, or update COLLECT_TIMELINES and the Guide words.');
-  if (!inBand(results.Regular.leg90, 9, 11)) {
+  if (!inBand(results.Regular.leg90, 5, 7) || results.Regular.legMax > 10) {
     console.log(
-      `Regular 90% is ${results.Regular.leg90}d, outside 9–11d. Soft pity cannot close that while BAND_WEIGHTS, the daily egg, the egg-30 start and the egg-40 guarantee stay. Options: drop the daily egg from the Regular day, lower the base Legendary share, or accept this day.`,
+      `Regular 90% is ${results.Regular.leg90}d (worst ${results.Regular.legMax}d), outside 5–7d / worst ≤ 10d. Emci accepted ~6d on 2026-09-30; do not widen this band to hide a drift.`,
     );
   }
   process.exit(1);
