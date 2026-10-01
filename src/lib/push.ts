@@ -214,6 +214,9 @@ export async function cancelAllScheduledPush(): Promise<void> {
     // …and the expedition-back and dive-charges-full notices (v24).
     await Notifications.cancelScheduledNotificationAsync('ato.play.pet.expedition').catch(() => {});
     await Notifications.cancelScheduledNotificationAsync('ato.play.dive.charges').catch(() => {});
+    // …and Tide Pass + free-eggs-ready notices (Part E; same literals as play-notices).
+    await Notifications.cancelScheduledNotificationAsync('ato.play.pet.tide').catch(() => {});
+    await Notifications.cancelScheduledNotificationAsync('ato.play.pet.eggs').catch(() => {});
   } catch (err) {
     console.log('[push] cancelAllScheduledPush failed:', err);
   }
