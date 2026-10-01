@@ -1,8 +1,8 @@
 /**
- * Floating dev button for Divecore/Play only — mounted from `src/app/play.tsx`.
- * Tap opens the Grove Dev kit in a Modal over the current Play screen (pet,
- * dive, defend, etc.). Not used outside Play; the app Dev Tools Hub keeps its
- * existing entry points.
+ * Floating dev button shell — a draggable DEV bubble that opens a Modal over
+ * the current screen. Two users: Play (`src/app/play.tsx`, the Play dev kit)
+ * and the app (`app-dev-fab.tsx`, the Dev Tools Hub sections for the screen
+ * you are on). Never both at once: the app one hides on /play.
  */
 import type { ReactNode } from 'react';
 import { useEffect, useMemo } from 'react';
@@ -24,7 +24,10 @@ export function PlayDevFab({
   panel,
   open,
   onOpenChange,
+  title = 'Play dev kit',
 }: {
+  /** Heading of the panel (the app kit names the screen). */
+  title?: string;
   panel: ReactNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -80,7 +83,7 @@ export function PlayDevFab({
           <Animated.View
             accessible
             accessibilityRole="button"
-            accessibilityLabel="Play dev kit"
+            accessibilityLabel={title}
             style={[styles.fab, style]}>
             <Text style={styles.fabText}>DEV</Text>
           </Animated.View>
@@ -91,7 +94,7 @@ export function PlayDevFab({
           <Pressable style={StyleSheet.absoluteFill} onPress={() => onOpenChange(false)} accessibilityLabel="Close dev kit" />
           <View style={[styles.panel, { backgroundColor: theme.background, borderColor: theme.textSecondary }]}>
             <View style={styles.head}>
-              <Text style={[styles.title, { color: theme.text }]}>Play dev kit</Text>
+              <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
               <Pressable onPress={() => onOpenChange(false)} hitSlop={10} accessibilityRole="button" accessibilityLabel="Close">
                 <Text style={[styles.close, { color: theme.text }]}>✕</Text>
               </Pressable>

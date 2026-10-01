@@ -41,3 +41,67 @@ export function snapFabX(x: number, width: number): number {
 export function defaultFabPosition(b: FabBounds): { x: number; y: number } {
   return clampFab({ x: b.width, y: b.top + 150 }, b);
 }
+
+/* ------------------------------------------------------------------------
+ * The APP floating dev button (outside Play). Same shell as the Play one; it
+ * shows the Dev Tools Hub sections that belong to the screen you are on.
+ * ---------------------------------------------------------------------- */
+
+/** Hub sections the app kit can show (each is a component in `app/dev-lab`). */
+export type AppDevSection =
+  | 'home-overrides'
+  | 'quota'
+  | 'explore-regen'
+  | 'traits'
+  | 'band-stepper'
+  | 'intake-presets'
+  | 'fresh-signup'
+  | 'handle-check'
+  | 'growth'
+  | 'you-tools'
+  | 'ai-consent'
+  | 'local-data'
+  | 'fence'
+  | 'trace';
+
+/** Per screen: its name in the kit and the sections that test it. */
+export const APP_DEV_SCREENS: Record<string, { label: string; sections: readonly AppDevSection[] }> = {
+  '/': { label: 'Home', sections: ['home-overrides', 'ai-consent'] },
+  '/explore': { label: 'Explore', sections: ['traits', 'band-stepper', 'explore-regen'] },
+  '/intake-sweep': { label: 'Questions', sections: ['intake-presets', 'fresh-signup', 'traits'] },
+  '/sage': { label: 'Sage', sections: ['quota', 'fence', 'trace'] },
+  '/you': { label: 'You', sections: ['growth', 'you-tools', 'handle-check', 'ai-consent', 'local-data'] },
+};
+
+/** Useful on any screen; shown under the screen's own tools, collapsed. */
+export const APP_DEV_EVERYWHERE: readonly AppDevSection[] = ['quota', 'trace', 'fence'];
+
+/** Screens with their own dev surface — the app button stays out of the way. */
+export const APP_DEV_HIDDEN_PATHS: readonly string[] = ['/play', '/dev-lab', '/ai-lab'];
+
+export function appDevScreen(pathname: string): { label: string; sections: readonly AppDevSection[] } | null {
+  return APP_DEV_SCREENS[pathname] ?? null;
+}
+
+/** "Everywhere" sections not already listed for this screen. */
+export function appDevEverywhere(pathname: string): readonly AppDevSection[] {
+  const own = appDevScreen(pathname)?.sections ?? [];
+  return APP_DEV_EVERYWHERE.filter((s) => !own.includes(s));
+}
+
+/**
+ * Who sees the app button: exactly who may open the Dev Tools Hub — never
+ * signed out, mid-onboarding or while access is loading — and never on a screen
+ * that has its own dev surface (Play has its own button).
+ */
+export function appDevFabVisible(input: {
+  isAuthed: boolean;
+  hasMe: boolean;
+  devAccessLoading: boolean;
+  canSeeHub: boolean;
+  pathname: string;
+}): boolean {
+  if (!input.isAuthed || !input.hasMe || input.devAccessLoading) return false;
+  if (APP_DEV_HIDDEN_PATHS.includes(input.pathname)) return false;
+  return input.canSeeHub;
+}

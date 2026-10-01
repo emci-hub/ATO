@@ -13,6 +13,7 @@ import {
 import { SpaceMono_400Regular, SpaceMono_700Bold } from '@expo-google-fonts/space-mono';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { AppDevFab } from '@/components/app-dev-fab';
 import { PushRuntime } from '@/components/push-runtime';
 import { useTheme } from '@/hooks/use-theme';
 import { CrisisRegionProvider } from '@/lib/crisis/region-context';
@@ -115,6 +116,9 @@ function RootNavigator() {
               <Stack.Screen name="play" />
             </Stack.Protected>
           </Stack>
+          {/* Floating dev button over every app screen; gated inside (the Hub's
+              rule) and hidden on /play, which has its own. */}
+          <AppDevFab />
         </>
       )}
     </>

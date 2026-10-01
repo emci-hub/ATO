@@ -17,6 +17,12 @@ import {
   DEV_FAB_SIZE,
   clampFab,
   defaultFabPosition,
+  APP_DEV_EVERYWHERE,
+  APP_DEV_HIDDEN_PATHS,
+  APP_DEV_SCREENS,
+  appDevEverywhere,
+  appDevFabVisible,
+  appDevScreen,
   playDevFabVisible,
   snapFabX,
 } from '../src/lib/dev-fab-model';
@@ -78,7 +84,8 @@ ok('clampFab and snapFabX are worklets');
 /* ---------------------------------------------------------------- 4 --- */
 {
   const layout = read('src/app/_layout.tsx');
-  assert.ok(!layout.includes('<DevFab'), 'not mounted in the root layout');
+  assert.equal((layout.match(/<AppDevFab \/>/g) ?? []).length, 1, 'the app button is mounted once, in the root layout');
+  assert.ok(layout.indexOf('</Stack>') < layout.indexOf('<AppDevFab />'), 'after the Stack, so it sits over every app screen');
   const play = read('src/app/play.tsx');
   assert.ok(play.includes('<PlayDevFab'), 'mounted from the Play shell');
   assert.ok(play.includes('playDevFabVisible('), 'gated by the shared Play visibility rule');
@@ -91,7 +98,7 @@ ok('clampFab and snapFabX are worklets');
   const bad = Object.keys(all).filter((d) => /dev-menu|api-debugger|shake|flipper|reactotron/i.test(d));
   assert.deepEqual(bad, [], 'no dev-menu / debugger / shake dependency was added');
 }
-ok('wiring: Play-only mount, Modal Grove kit, existing libraries only');
+ok('wiring: Play button from the Play shell, app button from the root layout, one Modal shell, existing libraries only');
 
 /* ---------------------------------------------------------------- 5 --- */
 {
@@ -135,5 +142,47 @@ ok('wiring: Play-only mount, Modal Grove kit, existing libraries only');
 ok('Defend: its Dev kit shows in the floating kit (dev slot), all four groups kept');
 
 ok('mode-aware: Pet mode shows Pet / Eggs / Room tools in six groups, one shared panel, nothing dropped');
+
+/* ---------------------------------------------------------------- 6 --- */
+{
+  const base = { isAuthed: true, hasMe: true, devAccessLoading: false, canSeeHub: true, pathname: '/' };
+  assert.equal(appDevFabVisible(base), true, 'a Hub user sees it on Home');
+  assert.equal(appDevFabVisible({ ...base, canSeeHub: false }), false, 'a plain user never sees it');
+  assert.equal(appDevFabVisible({ ...base, isAuthed: false }), false, 'never signed out');
+  assert.equal(appDevFabVisible({ ...base, hasMe: false }), false, 'never mid-onboarding');
+  assert.equal(appDevFabVisible({ ...base, devAccessLoading: true }), false, 'never while access is loading');
+  for (const p of APP_DEV_HIDDEN_PATHS) assert.equal(appDevFabVisible({ ...base, pathname: p }), false, `hidden on ${p}`);
+  assert.ok(APP_DEV_HIDDEN_PATHS.includes('/play'), 'Play keeps its own button — never two at once');
+  for (const p of ['/', '/explore', '/intake-sweep', '/sage', '/you']) {
+    const s = appDevScreen(p);
+    assert.ok(s && s.sections.length > 0, `${p} has its own tools`);
+    assert.equal(new Set(s.sections).size, s.sections.length, `${p}: no section twice`);
+    for (const e of appDevEverywhere(p)) assert.ok(!s.sections.includes(e), `${p}: an everywhere tool is not repeated`);
+  }
+  assert.equal(appDevScreen('/legends'), null, 'a screen with no tools of its own');
+  assert.deepEqual([...appDevEverywhere('/legends')], [...APP_DEV_EVERYWHERE], 'it still gets the everywhere tools');
+  const fab = read('src/components/app-dev-fab.tsx');
+  assert.ok(fab.includes("from '@/app/dev-lab'"), 'the sections are the Hub’s own components, not copies');
+  assert.ok(fab.includes('canSeeHubSection(cap, gate)'), 'per-capability gates are the Hub’s');
+  assert.ok(fab.includes('appDevFabVisible('), 'gated by the shared rule');
+  assert.ok(fab.includes('<PlayDevFab'), 'one bubble shell for Play and the app');
+  const used = [...Object.values(APP_DEV_SCREENS).flatMap((x) => [...x.sections]), ...APP_DEV_EVERYWHERE];
+  for (const s of used) assert.ok(fab.includes(`case '${s}':`), `the panel can draw ${s}`);
+  const hub = read('src/app/dev-lab.tsx');
+  for (const n of ['HomeOverrides', 'TraitViewer', 'IntakeStagePresets', 'GrowthPreview', 'QuotaDashboard', 'FenceTester', 'TraceCapture']) {
+    assert.ok(new RegExp('export \\{[^}]*\\b' + n + ',').test(hub), `${n} is exported from the Hub`);
+    assert.ok(hub.includes(`\nfunction ${n}() {`), `${n} keeps its plain declaration (other checks slice on it)`);
+  }
+  const exportBlock = hub.slice(hub.lastIndexOf('export {'));
+  assert.ok(exportBlock.includes('HomeOverrides'), 'the export list was found');
+  for (const rootOnly of ['AccessReview', 'GrantsPanel', 'ProfilesPanel']) {
+    assert.ok(hub.includes('<' + rootOnly + ' />') && !exportBlock.includes(rootOnly), rootOnly + ' stays inside the Hub (root-only)');
+  }
+  // PRE_LAUNCH_DEV alone must not open the app button: every invited tester
+  // would get one-tap account resets. Same rule as Home's Hub row.
+  assert.ok(!fab.includes('PRE_LAUNCH_DEV'), 'the app button is not opened by PRE_LAUNCH_DEV');
+  assert.ok(fab.includes('isDev: __DEV__ || devUnlocked,'), 'isDev = a dev build or the session unlock');
+}
+ok('app button: root / grant / unlock only (not PRE_LAUNCH_DEV), hidden on Play, per-screen tools from the Hub’s own sections');
 
 console.log(`\ncheck:dev-fab — ${passed} groups passed.`);

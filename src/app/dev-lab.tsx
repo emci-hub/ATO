@@ -1903,3 +1903,22 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
 });
+
+/* The floating dev button (components/app-dev-fab.tsx) shows these same sections
+ * on the screen they test. Exported in one place so the declarations above keep
+ * their plain `function Name()` form (several check scripts slice on it). */
+export {
+  ExploreRegen,
+  HomeOverrides,
+  TraitViewer,
+  GrowthPreview,
+  BandDetailStepper,
+  IntakeStagePresets,
+  ResetToFreshSignup,
+  HandleCollisionCheck,
+  ResetAiConsent,
+  LocalAccountData,
+  QuotaDashboard,
+  FenceTester,
+  TraceCapture,
+};
