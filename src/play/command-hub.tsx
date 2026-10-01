@@ -12,7 +12,7 @@ import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-na
 import { Fonts } from '@/constants/theme';
 import { Hud } from '@/play/hud';
 import { HubIcon } from '@/play/icons';
-import { HUB_TILES, NEON, type HubDestination } from '@/play/neon-viper';
+import { NEON, hubTilesFor, type HubDestination } from '@/play/neon-viper';
 
 const GAP = 16;
 const CONTENT_WIDTH = 800;
@@ -21,6 +21,7 @@ export function CommandHub({
   scrap,
   wave,
   diveActive = false,
+  devUnlocked = false,
   onTile,
   onSettings,
   children,
@@ -28,6 +29,8 @@ export function CommandHub({
   scrap: number | null;
   /** A Dive run is saved mid-way — the Pet tile says so (it is never lost). */
   diveActive?: boolean;
+  /** v27 — the Play dev unlock: the hidden Shop tile shows only with it. */
+  devUnlocked?: boolean;
   wave: number | null;
   onTile: (to: HubDestination) => void;
   /** v24 — the ⚙ opens Divecore Settings. */
@@ -74,7 +77,7 @@ export function CommandHub({
           ATO
         </Text>
         <View style={[styles.tiles, { maxWidth: CONTENT_WIDTH }]}>
-          {HUB_TILES.map((tile) => (
+          {hubTilesFor(devUnlocked).map((tile) => (
             <Pressable
               key={tile.id}
               onPress={() => onTile(tile.to)}

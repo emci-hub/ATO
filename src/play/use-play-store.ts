@@ -19,6 +19,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
 import type { ItemSlot } from '@/play/items';
+import { bumpSaveEpoch, enqueuePlaySave, saveEpoch, saveIsCurrent, whenPlaySavesSettled } from '@/play/play-save';
 import {
   claimResearch,
   clearHeroOffer,
@@ -105,15 +106,32 @@ export function usePlayStore() {
   const docRef = useRef<PlayStoreDoc | null>(null);
   const [, tick] = useReducer((n: number) => n + 1, 0);
 
+  /** Publish `next` as the latest commit and queue its save. `paint` updates
+   * the screen now; the Stone path paints only after the save resolves. */
+  const remember = useCallback((next: PlayStoreDoc, paint: boolean): Promise<void> => {
+    bumpSaveEpoch();
+    docRef.current = next;
+    if (paint) setDoc(next);
+    return enqueuePlaySave(() => savePlayStore(next));
+  }, []);
+
   const hydrate = useCallback(async () => {
+    // A reload that began before the latest commit is dropped, even if the
+    // read itself started first and the commit landed while it was in flight.
+    const started = saveEpoch();
+    await whenPlaySavesSettled();
+    if (!saveIsCurrent(started)) return;
     const loaded = await loadPlayStore();
+    if (!saveIsCurrent(started)) return;
     // Pet (v20): age the pet on every open and save the new clock high-water
     // mark, so time away is counted once (the view alone never saves it).
     const next = touchPet(loaded, Date.now());
+    if (!saveIsCurrent(started)) return;
     docRef.current = next;
     setDoc(next);
     if (next !== loaded) {
-      savePlayStore(next).catch(() => {
+      bumpSaveEpoch();
+      enqueuePlaySave(() => savePlayStore(next)).catch(() => {
         // Next open re-ages from the stored mark; nothing is lost.
       });
     }
@@ -129,9 +147,7 @@ export function usePlayStore() {
       const current = docRef.current;
       if (current?.pet_expedition && !petAt(current, Date.now()).away) {
         const next = touchPet(current, Date.now());
-        docRef.current = next;
-        setDoc(next);
-        savePlayStore(next).catch(() => {});
+        void remember(next, true).catch(() => {});
       }
       tick();
     }, TICK_MS);
@@ -143,7 +159,7 @@ export function usePlayStore() {
       clearInterval(interval);
       sub.remove();
     };
-  }, [hydrate]);
+  }, [hydrate, remember]);
 
   /** Run a pure transition, persist the result, re-render. False when no doc yet
    * or the transition refused. */
@@ -152,13 +168,30 @@ export function usePlayStore() {
     if (!current) return false;
     const next = transition(current, Date.now());
     if (!next) return false;
-    docRef.current = next;
-    setDoc(next);
-    savePlayStore(next).catch(() => {
+    void remember(next, true).catch(() => {
       // Keep the in-memory economy on save failure; next open re-reads storage.
     });
     return true;
-  }, []);
+  }, [remember]);
+
+  /** Like `commit`, but resolves only after this doc has been written. The
+   * screen stays on the previous doc until then, so a hit is never shown for
+   * a write that did not land. A newer commit that already includes this one
+   * still counts as saved. */
+  const commitSaved = useCallback(async (transition: PlayTransition): Promise<boolean> => {
+    const current = docRef.current;
+    if (!current) return false;
+    const next = transition(current, Date.now());
+    if (!next) return false;
+    try {
+      await remember(next, false);
+    } catch {
+      if (docRef.current === next) docRef.current = current;
+      return false;
+    }
+    if (docRef.current === next) setDoc(next);
+    return true;
+  }, [remember]);
 
   const claim = useCallback(async (): Promise<ClaimResult | null> => {
     let result: ClaimResult | null = null;
@@ -253,12 +286,10 @@ export function usePlayStore() {
     if (!current) return;
     const next = touchPet(current, Date.now());
     if (next === current) return;
-    docRef.current = next;
-    setDoc(next);
-    savePlayStore(next).catch(() => {
+    void remember(next, true).catch(() => {
       // Best effort; the next action saves it too.
     });
-  }, [unsavedReveal]);
+  }, [unsavedReveal, remember]);
 
   /** Equip one owned (bagged) copy of (itemId, star) into its slot. */
   const equip = useCallback(
@@ -763,6 +794,7 @@ export function usePlayStore() {
     view,
     claim,
     commit,
+    commitSaved,
     grantRandomFind,
     beginDive,
     beginFreeDive,

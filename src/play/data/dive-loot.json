@@ -1,5 +1,5 @@
 {
-  "_note": "Dive loot by depth tier (v22). Weights are relative and each tier sums to 100. Ids: item_* = bag items (items.json), food_* = pantry, shells_N = N shells, cos_* = pet cosmetics (pet-cosmetics.ts). Uniques never drop here.",
+  "_note": "Dive loot by depth tier (v22). Weights are relative and each tier sums to 100. Ids: item_* = bag items (items.json), food_* = pantry, shells_N = N shells, cos_* = pet cosmetics (pet-cosmetics.ts), shine_stone = a Shine Stone (v27: Abyss 2, Hadal 5, taken from shell weight). Uniques never drop here.",
   "tiers": [
     {
       "id": "shallows",
@@ -65,7 +65,8 @@
         { "id": "item_deep_pearl_01", "weight": 6 },
         { "id": "food_shrimp", "weight": 10 },
         { "id": "shells_12", "weight": 12 },
-        { "id": "shells_5", "weight": 8 },
+        { "id": "shells_5", "weight": 6 },
+        { "id": "shine_stone", "weight": 2 },
         { "id": "cos_ring_thick", "weight": 5 },
         { "id": "cos_aura_tide", "weight": 3 },
         { "id": "cos_aura_void", "weight": 3 },
@@ -80,7 +81,8 @@
         { "id": "item_bark_aegis_01", "weight": 15 },
         { "id": "item_copper_keeper_01", "weight": 8 },
         { "id": "item_curator_cloak_01", "weight": 8 },
-        { "id": "shells_12", "weight": 20 },
+        { "id": "shells_12", "weight": 15 },
+        { "id": "shine_stone", "weight": 5 },
         { "id": "food_shrimp", "weight": 8 },
         { "id": "cos_aura_ember", "weight": 5 },
         { "id": "cos_aura_spark", "weight": 5 },

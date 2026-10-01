@@ -43,8 +43,11 @@ here plus the code. Do not rely on chat history.
 ## 1. Locked calls (emci — don't re-litigate)
 
 1. Keep the current Legendary odds (`BAND_WEIGHTS` in `pet-eggs.ts`). Targets are the
-   **90% times** to a first Legendary: Pro ~5 days, Regular ~10, Casual ~19; pity caps
-   everyone at ~20 days.
+   **90% times** to a first Legendary: Pro ~5 days, Regular ~6 days, Casual ~19; pity caps
+   everyone at ~20 days. **Regular ~6d was accepted by emci on 2026-09-30** (sim band
+   5–7 days, worst ≤ ~10 days). The earlier ~10 day figure is impossible under these
+   locks: the daily egg plus ticket recycling already land 9 in 10 Regular players
+   inside a week, and soft pity can only make that faster.
 2. **Pity:** a Legendary is guaranteed on the **40th egg** since your last Legendary,
    with **soft pity from egg 30** (Legendary odds rise each egg 30→39; the odds shown =
    the odds used; 100% at 40).
@@ -182,8 +185,10 @@ Baseline from the planning sim (today's odds, hard pity 40, glimmer pity 5):
 | Poor | 20d (20d) | — |
 
 **Targets after adding soft pity + the daily egg:** Legendary 90% Pro ~5d, Regular
-~10d, Casual ≤ ~20d; nobody > ~20d. Shiny 90% Casual ≤ ~24d. Show before/after and
-say what you tuned.
+~6d (two-sided 5–7d, worst ≤ ~10d), Casual ≤ ~20d; nobody > ~20d. Shiny 90% Casual
+≤ ~24d. **Regular ~6d accepted by emci 2026-09-30**, replacing ~10d, because the
+daily egg + tickets make ~10d impossible under the locks in §1. Show before/after
+and say what you tuned.
 
 ## 5. Task cards (build order)
 

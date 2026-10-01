@@ -127,6 +127,18 @@ import {
   CARE_ACT,
   SHARDS_PER_TICKET,
   DYE_STARS,
+  DAILY_EGG_BONUS,
+  EGGS_PER_DAY_MAX,
+  EGG_TYPES,
+  EMPTY_HERO_RECORD,
+  FREE_EGGS_PER_DAY,
+  GLIMMER_PITY,
+  PITY_HARD,
+  STONE_EVERY_DAYS,
+  eggsUntilLegendary,
+  nextEggPrice,
+  pityAfterReveal,
+  stoneSucceeds,
   addToBook,
   dyeApplies,
   emptyGradeCounts,
@@ -144,11 +156,25 @@ import {
   type EggType,
   type Grade,
   type PetHeroBook,
+  type ShinyStyle,
 } from '@/play/pet-eggs';
+import {
+  DEN_MAX_SLOTS,
+  DEN_START_SLOTS,
+  clampDenSlots,
+  denSlotPrice,
+  denSwapBlock,
+  denUsed,
+  isBlankSlot,
+  petRevealed,
+  wakePet,
+  type DenSwapBlock,
+} from '@/play/den';
 import {
   MILESTONES,
   checkPetName,
   countDay,
+  retroShineStones,
   defaultSettings,
   emptyStats,
   parseSettings,
@@ -209,7 +235,9 @@ import {
 import {
   DAILY_LEVEL,
   dailyFor,
+  dailyRewards,
   emptyRecords,
+  medalFor,
   levelUnlocked,
   parseDaily,
   parseRecords,
@@ -750,7 +778,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 26;
+  version: 27;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -879,6 +907,28 @@ export type PlayStoreDoc = {
   daily_games: DailyGames;
   /** v26 — Powers banked from Divecore on `ymd` (the daily ceiling). */
   powers_today: { ymd: string | null; n: number };
+  /* ---- v27 (Part D): the Den, egg pacing, Legendary pity, Shine Stones ---- */
+  /** Resting pets (frozen — nothing ages them). The active pet is `pet`. */
+  pet_den: PetState[];
+  /** Den slots owned (the active pet counts as one; 6..12). */
+  den_slots: number;
+  /** Next Den id to hand out (a pet's `uid`). */
+  pet_uid_next: number;
+  /** Eggs picked on `eggs_ymd` (ticket eggs and "Change egg" not counted). */
+  eggs_today: number;
+  eggs_ymd: string | null;
+  /** Eggs revealed since the last Legendary (any egg, tickets too). */
+  eggs_since_legendary: number;
+  /** Shine Stones held, misses since the last success (per player), Stones
+   * ever used, and the seed of the saved Stone roll sequence. */
+  shine_stones: number;
+  glimmers: number;
+  stones_used: number;
+  stone_seq: number;
+  /** Prism Stones — a Shop preview only; always 0 in this build. */
+  prism_stones: number;
+  /** Token-shop buys this week (Monday's YYYY-MM-DD), row id → count. */
+  shop_weekly: ShopDaily;
 };
 
 /** A queued "hero owned" offer (Slice A2). `label` is the hero's display name
@@ -983,6 +1033,8 @@ export type PlayView = {
   /** Token-shop buys made TODAY (device-local), row id → count. A stale stored
    * day reads as empty, so the shop's daily caps reset at local midnight. */
   shopCounts: Readonly<Record<string, number>>;
+  /** v27 — token-shop buys made this week (the weekly caps). */
+  shopWeekCounts: Readonly<Record<string, number>>;
   /** Heroes OWNED (Slice A2) — hero ids the player can set as Avatar or bind. */
   ownedHeroIds: readonly string[];
   /** The hero the player has set as their Avatar (Slice A2). Falls back to the
@@ -1078,6 +1130,27 @@ export type PetView = {
   records: GameRecords;
   ranks: Record<'catch' | 'train', string>;
   daily: DailyGames;
+  /** v27 — the Den: resting pets (frozen), slots owned / in use, the next
+   * slot's price (null = at the most), and why a swap is blocked right now
+   * (the mini-game overlay is added by the screen). */
+  den: {
+    resting: readonly PetState[];
+    slots: number;
+    used: number;
+    nextSlotPrice: number | null;
+    block: DenSwapBlock | null;
+    /** Each resting pet's dye (by uid), the same rule as the active pet's. */
+    dyeOn: Readonly<Record<number, boolean>>;
+  };
+  /** v27 — today's eggs (free, prices, the most). */
+  eggDay: EggDayView;
+  /** v27 — Legendary pity: eggs since the last Legendary, eggs until one is
+   * certain (counting the next), and the Legendary % the NEXT picked egg
+   * would roll with today's care band (the picker's odds). */
+  pity: { since: number; untilLegendary: number; nextOdds: Record<Grade, number> };
+  /** v27 — Shine Stones held, glimmers (5 = the next one is certain), Stones
+   * ever used. */
+  stones: { held: number; glimmers: number; used: number };
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -1143,7 +1216,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 26,
+    version: 27,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -1206,6 +1279,18 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     game_records: emptyRecords(),
     daily_games: { ...EMPTY_DAILY },
     powers_today: { ymd: null, n: 0 },
+    pet_den: [],
+    den_slots: DEN_START_SLOTS,
+    pet_uid_next: 1,
+    eggs_today: 0,
+    eggs_ymd: null,
+    eggs_since_legendary: 0,
+    shine_stones: 0,
+    glimmers: 0,
+    stones_used: 0,
+    stone_seq: newEggSeed(),
+    prism_stones: 0,
+    shop_weekly: { ymd: null, counts: {} },
   };
 }
 
@@ -1288,6 +1373,7 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     cycleTint: doc.cycle_tint,
     shopCounts:
       doc.shop_daily.ymd === localYmd(new Date(now)) ? doc.shop_daily.counts : {},
+    shopWeekCounts: shopWeekCountsOf(doc, now),
     avatarPark: active.park,
     ownedHeroIds: doc.owned_hero_ids,
     activeAvatarHeroId: normalizedAvatarHeroId(doc),
@@ -1444,6 +1530,7 @@ export function bankFinds(
   let powers = holds ? doc.powers_today.n : 0;
   let powersConverted = 0;
   let shells = 0;
+  let stones = 0;
   for (const id of ids) {
     const kind = findKind(id);
     if (kind === 'item' && isPowerFind(id)) {
@@ -1459,6 +1546,7 @@ export function bankFinds(
       if (pantryTotal(pantry) < PANTRY_MAX) pantry[id] = (pantry[id] ?? 0) + 1;
       else shells += PANTRY_OVERFLOW_SHELLS;
     } else if (kind === 'shells') shells += shellsOf(id);
+    else if (kind === 'stone') stones += 1;
     else if (kind === 'cosmetic') {
       if (owned.includes(id)) shells += COSMETIC_DUPE_SHELLS;
       else owned.push(id);
@@ -1471,6 +1559,7 @@ export function bankFinds(
       pet_pantry: pantry,
       pet_cosmetics: owned,
       shells: doc.shells + shells,
+      shine_stones: doc.shine_stones + stones,
       powers_today: { ymd: holds ? (doc.powers_today.ymd as string) : today, n: powers },
     },
     shells,
@@ -1478,29 +1567,58 @@ export function bankFinds(
   };
 }
 
-/** Log a find the pet was there for (shells are not Logbook entries). */
+/** Log a find the pet was there for (shells and Shine Stones are not Logbook
+ * entries). */
 function logFind(book: PetLogbook, id: string, depth: number): PetLogbook {
-  return findKind(id) === 'shells' ? book : logPetFind(book, id, depth);
+  const kind = findKind(id);
+  return kind === 'shells' || kind === 'stone' ? book : logPetFind(book, id, depth);
 }
 
 /** A pet with its hero revealed, as a Collection entry (null before Child). */
-function bookEntryOf(pet: PetState): { hero: string; grade: Grade; shiny: boolean; forms: string[] } | null {
+function bookEntryOf(
+  pet: PetState,
+): { hero: string; grade: Grade; shiny: boolean; forms: string[]; style: ShinyStyle | null } | null {
   const hero = pet.hero ?? heroOfLine(pet.line);
   if (!hero || PET_STAGES.indexOf(pet.stage) < PET_STAGES.indexOf('child')) return null;
-  return { hero, grade: pet.grade ?? 'common', shiny: pet.shiny, forms: pet.forms };
+  return { hero, grade: pet.grade ?? 'common', shiny: pet.shiny, forms: pet.forms, style: pet.shiny_style };
 }
 
-/** The Collection: every pet that has left + the live pet (once revealed). */
+/** The Collection: every pet that has left + the live pet and every Den pet
+ * (once revealed) — v27: resting pets count too. Each uid is counted once.
+ * The passed pet wins over the stored copy (it may be aged). A resting pet
+ * passed in still includes the active pet, and is not added a second time
+ * from `pet_den`. uid 0 is the blank picker — one of those, never a row. */
 export function heroBookOf(doc: PlayStoreDoc, pet: PetState = doc.pet): PetHeroBook {
-  const entry = bookEntryOf(pet);
-  return entry ? addToBook(doc.pet_heroes, entry) : doc.pet_heroes;
+  let book = doc.pet_heroes;
+  const seen = new Set<number>();
+  let blank = false;
+  const pets: PetState[] = [];
+  const push = (p: PetState) => {
+    if (p.uid > 0) {
+      if (seen.has(p.uid)) return;
+      seen.add(p.uid);
+    } else if (blank) return;
+    else blank = true;
+    pets.push(p);
+  };
+  push(pet);
+  push(doc.pet);
+  for (const p of doc.pet_den) push(p);
+  for (const p of pets) {
+    const entry = bookEntryOf(p);
+    if (entry) book = addToBook(book, entry);
+  }
+  return book;
 }
 
-/** Does the live pet wear its hero's 3★ dye? (Never on a shiny.) */
-export function petDyeOn(doc: PlayStoreDoc, pet: PetState = doc.pet): boolean {
+/** Does this pet wear its hero's 3★ dye? (Never on a shiny.) `book` is the
+ * full Collection (active + Den, each once) — pass the view's book so a
+ * resting pet is not scored against a book that double-counts it and misses
+ * the active pet. */
+export function petDyeOn(doc: PlayStoreDoc, pet: PetState = doc.pet, book?: PetHeroBook): boolean {
   const hero = pet.hero ?? heroOfLine(pet.line);
   if (!hero || PET_STAGES.indexOf(pet.stage) < PET_STAGES.indexOf('child')) return false;
-  const rec = heroBookOf(doc, pet)[hero];
+  const rec = (book ?? heroBookOf(doc, pet))[hero];
   const stars = doc.dye_unlocked.includes(hero) ? DYE_STARS : heroStars(rec?.copies ?? 0);
   return dyeApplies(stars, rec?.dye ?? false, pet.shiny);
 }
@@ -1533,6 +1651,7 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     ? 'away'
     : expeditionBlock(pet, null, today, doc.pet_expedition_ymd, doc.pet_expedition_steps);
   const stepsToday = expeditionStepsToday(today, doc.pet_expedition_ymd, doc.pet_expedition_steps);
+  const heroes = heroBookOf(doc, pet);
   return {
     state: pet,
     stageLeftMs: petStageLeftMs(pet),
@@ -1566,14 +1685,14 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     pantryTotal: pantryTotal(doc.pet_pantry),
     cosmetics: doc.pet_cosmetics,
     wear: doc.pet_wear,
-    heroes: heroBookOf(doc, pet),
+    heroes,
     shards: doc.pet_shards,
     tickets: doc.pet_tickets,
     careScore: petCareScore(pet),
     careBand: petCareBand(pet),
     oddsOpen: petOddsOpen(pet),
-    gradeOdds: gradeOdds(petCareBand(pet), pet.ticket),
-    dyeOn: petDyeOn(doc, pet),
+    gradeOdds: gradeOdds(petCareBand(pet), pet.ticket, pet.pity_from),
+    dyeOn: petDyeOn(doc, pet, heroes),
     canRelease: canReleasePet(pet) && !away,
     buffs: doc.buffs,
     pumped: pumpedPounce(petPounceBase(pet, away), doc.buffs.pumped),
@@ -1586,6 +1705,21 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     records: doc.game_records,
     ranks: { catch: rankTitle(doc.game_records, 'catch'), train: rankTitle(doc.game_records, 'train') },
     daily: dailyFor(doc.daily_games, today),
+    den: {
+      resting: doc.pet_den,
+      slots: doc.den_slots,
+      used: denUsed(doc.pet_den),
+      nextSlotPrice: denSlotPrice(doc.den_slots),
+      block: denSwapBlock({ diving: doc.dive_run != null, away, gameOpen: false, active: doc.pet }),
+      dyeOn: Object.fromEntries(doc.pet_den.map((p) => [p.uid, petDyeOn(doc, p, heroes)])),
+    },
+    eggDay: eggDayOf(doc, now),
+    pity: {
+      since: doc.eggs_since_legendary,
+      untilLegendary: eggsUntilLegendary(doc.eggs_since_legendary),
+      nextOdds: gradeOdds(petCareBand(pet), null, doc.eggs_since_legendary),
+    },
+    stones: { held: doc.shine_stones, glimmers: doc.glimmers, used: doc.stones_used },
   };
 }
 
@@ -1605,12 +1739,11 @@ export function touchPet(
   rng: () => number = Math.random,
 ): PlayStoreDoc {
   const pet = advancePet(doc.pet, now);
-  // v24 Journal: a hatch or a reveal that happened in this aging, and a day played.
-  const stats = countDay(tallyPet(doc.play_stats, doc.pet, pet), localYmd(new Date(now)));
+  // v24 Journal: a hatch or a reveal that happened in this aging, and a day
+  // played; v27 the pity counter at a reveal and the every-5th-day Stone.
+  doc = countPlayDay(settlePetAging(doc, doc.pet, pet), now);
   const armed = doc.charges_armed && !diveChargeAt(doc, now).full;
-  if (stats !== doc.play_stats || armed !== doc.charges_armed) {
-    doc = { ...doc, play_stats: stats, charges_armed: armed };
-  }
+  if (armed !== doc.charges_armed) doc = { ...doc, charges_armed: armed };
   const exp = doc.pet_expedition;
   if (exp && expeditionLeftMs(pet, exp) <= 0) {
     // A solo dive: it can't bust, it always brings back one find — what, by
@@ -1629,6 +1762,39 @@ export function touchPet(
     };
   }
   return pet === doc.pet ? doc : { ...doc, pet };
+}
+
+/** v27: did this aging reveal an egg's pet (Baby → Child)? */
+function revealedIn(prev: PetState, next: PetState): boolean {
+  const child = PET_STAGES.indexOf('child');
+  return prev.egg != null && PET_STAGES.indexOf(prev.stage) < child && PET_STAGES.indexOf(next.stage) >= child && next.grade != null;
+}
+
+/** Everything that rides on one aging of the ACTIVE pet (the only pet that
+ * ever ages): the Journal's hatch / reveal tally and, at a reveal, the
+ * Legendary pity counter (+1, or back to 0 on a Legendary). Does not store
+ * `next` — the caller does. */
+function settlePetAging(doc: PlayStoreDoc, prev: PetState, next: PetState): PlayStoreDoc {
+  const stats = tallyPet(doc.play_stats, prev, next);
+  const since = revealedIn(prev, next)
+    ? pityAfterReveal(doc.eggs_since_legendary, next.grade as Grade)
+    : doc.eggs_since_legendary;
+  if (stats === doc.play_stats && since === doc.eggs_since_legendary) return doc;
+  return { ...doc, play_stats: stats, eggs_since_legendary: since };
+}
+
+/** The Journal + pity fields after aging the active pet to `now`. */
+function settledPetFields(doc: PlayStoreDoc, now: number): Pick<PlayStoreDoc, 'play_stats' | 'eggs_since_legendary'> {
+  const settled = settlePetAging(doc, doc.pet, advancePet(doc.pet, now));
+  return { play_stats: settled.play_stats, eggs_since_legendary: settled.eggs_since_legendary };
+}
+
+/** A day played (the Journal), and a Shine Stone on every 5th one (v27). */
+function countPlayDay(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const stats = countDay(doc.play_stats, localYmd(new Date(now)));
+  if (stats === doc.play_stats) return doc;
+  const stone = stats.days_played > doc.play_stats.days_played && stats.days_played % STONE_EVERY_DAYS === 0;
+  return { ...doc, play_stats: stats, shine_stones: doc.shine_stones + (stone ? 1 : 0) };
 }
 
 export type ExpeditionSendResult = { ok: true } | { ok: false; reason: PetExpeditionBlock };
@@ -1750,8 +1916,59 @@ export function devAddShells(doc: PlayStoreDoc): PlayStoreDoc {
  * Eggs (v23, 2026-09-30) — see `pet-eggs.ts` for the rules and odds.
  * ------------------------------------------------------------------------- */
 
+/** Eggs picked today (by the day rule — a clock set back can't reopen them). */
+function eggsTodayOf(doc: PlayStoreDoc, now: number): number {
+  return petDayHolds(localYmd(new Date(now)), doc.eggs_ymd) ? doc.eggs_today : 0;
+}
+
+/** Today's egg pacing for the picker (v27): eggs used, the free allowance
+ * (2, or 3 once today's daily challenge is passed), the next egg's price
+ * (0 = free, null = none left today) and the day's most. A ticket egg or a
+ * "Change egg" blank brings its own egg — `prepaid` says so. */
+export type EggDayView = {
+  used: number;
+  free: number;
+  dailyEgg: boolean;
+  nextPrice: number | null;
+  max: number;
+  prepaid: boolean;
+};
+
+export function eggDayOf(doc: PlayStoreDoc, now: number): EggDayView {
+  const used = eggsTodayOf(doc, now);
+  const dailyEgg = dailyFor(doc.daily_games, localYmd(new Date(now))).egg;
+  return {
+    used,
+    free: FREE_EGGS_PER_DAY + (dailyEgg ? DAILY_EGG_BONUS : 0),
+    dailyEgg,
+    nextPrice: nextEggPrice(used, dailyEgg),
+    max: EGGS_PER_DAY_MAX,
+    prepaid: isBlankSlot(doc.pet) && doc.pet.prepaid,
+  };
+}
+
+export type EggPickRefusal = 'not_blank' | 'ticket' | 'no_eggs_left' | 'shells';
+
+/** What picking an egg now would cost, or why it can't: a ticket egg and a
+ * "Change egg" blank are free and don't count; otherwise today's pacing. */
+export function eggPickCost(
+  doc: PlayStoreDoc,
+  now: number,
+  ticket: Grade | null,
+): { ok: true; shells: number; counts: boolean } | { ok: false; reason: EggPickRefusal } {
+  if (!isBlankSlot(doc.pet)) return { ok: false, reason: 'not_blank' };
+  if (ticket != null && (ticket === 'common' || doc.pet_tickets[ticket] < 1)) return { ok: false, reason: 'ticket' };
+  if (ticket != null || doc.pet.prepaid) return { ok: true, shells: 0, counts: false };
+  const price = eggDayOf(doc, now).nextPrice;
+  if (price == null) return { ok: false, reason: 'no_eggs_left' };
+  if (doc.shells < price) return { ok: false, reason: 'shells' };
+  return { ok: true, shells: price, counts: true };
+}
+
 /** Choose an egg from the empty picker, optionally spending a trade-up ticket
- * (the grade can't roll below it). The seed is stored now. Null when refused. */
+ * (the grade can't roll below it). The seed is stored now, and the pity
+ * position stamped. v27: today's free eggs first, then shells, at most six a
+ * day. Null when refused. */
 export function chooseEggDoc(
   doc: PlayStoreDoc,
   now: number,
@@ -1759,13 +1976,23 @@ export function chooseEggDoc(
   ticket: Grade | null,
   rng: () => number = Math.random,
 ): PlayStoreDoc | null {
-  if (ticket != null && (ticket === 'common' || doc.pet_tickets[ticket] < 1)) return null;
-  const pet = chooseEgg(advancePet(doc.pet, now), egg, newEggSeed(rng), ticket, now);
-  if (!pet) return null;
+  const touched = touchPet(doc, now);
+  const cost = eggPickCost(touched, now, ticket);
+  if (!cost.ok) return null;
+  const chosen = chooseEgg(touched.pet, egg, newEggSeed(rng), ticket, now);
+  if (!chosen) return null;
+  const today = localYmd(new Date(now));
+  const holds = petDayHolds(today, touched.eggs_ymd);
+  const used = holds ? touched.eggs_today : 0;
+  const uid = Math.max(1, touched.pet_uid_next);
   return {
-    ...doc,
-    pet,
-    pet_tickets: ticket ? { ...doc.pet_tickets, [ticket]: doc.pet_tickets[ticket] - 1 } : doc.pet_tickets,
+    ...touched,
+    pet: { ...chosen, uid, pity_from: touched.eggs_since_legendary },
+    pet_uid_next: uid + 1,
+    shells: touched.shells - cost.shells,
+    eggs_today: used + (cost.counts ? 1 : 0),
+    eggs_ymd: holds ? touched.eggs_ymd : today,
+    pet_tickets: ticket ? { ...touched.pet_tickets, [ticket]: touched.pet_tickets[ticket] - 1 } : touched.pet_tickets,
   };
 }
 
@@ -1825,7 +2052,7 @@ export function tradeUpShards(doc: PlayStoreDoc, grade: Grade): PlayStoreDoc | n
 export function setHeroDye(doc: PlayStoreDoc, now: number, hero: string, on: boolean): PlayStoreDoc | null {
   const book = heroBookOf(doc, advancePet(doc.pet, now));
   if (!heroDyeUnlocked(doc, hero, book)) return null;
-  const rec = doc.pet_heroes[hero] ?? { copies: 0, shinies: 0, grades: [], forms: [], dye: false };
+  const rec = doc.pet_heroes[hero] ?? EMPTY_HERO_RECORD;
   return { ...doc, pet_heroes: { ...doc.pet_heroes, [hero]: { ...rec, dye: on } } };
 }
 
@@ -1833,10 +2060,10 @@ export function setHeroDye(doc: PlayStoreDoc, now: number, hero: string, on: boo
 export function devPetEndStage(doc: PlayStoreDoc, now: number, stage: 'egg' | 'baby'): PlayStoreDoc {
   const pet = advancePet(doc.pet, now);
   if (pet.stage !== stage || pet.egg == null) {
-    return { ...doc, pet, play_stats: tallyPet(doc.play_stats, doc.pet, pet) };
+    return { ...settlePetAging(doc, doc.pet, pet), pet };
   }
   const next = advancePet({ ...pet, stage_age_ms: PET_STAGE_MS[stage] - 1, seen_at: now - 1 }, now);
-  return { ...doc, pet: next, play_stats: tallyPet(doc.play_stats, doc.pet, next) };
+  return { ...settlePetAging(doc, doc.pet, next), pet: next };
 }
 
 /** Dev kit: force the grade / shiny. Before Child it pre-locks the result
@@ -1852,6 +2079,7 @@ export function devPetForce(doc: PlayStoreDoc, now: number, force: { grade?: Gra
       hero,
       grade: force.grade ?? pet.grade ?? 'common',
       shiny: force.shiny ?? pet.shiny,
+      shiny_style: (force.shiny ?? pet.shiny) ? (pet.shiny_style ?? 'classic') : null,
       band: pet.band ?? petCareBand(pet),
     },
   };
@@ -1863,7 +2091,7 @@ function rollPetHero(pet: PetState): string {
 }
 
 function rollPetFor(pet: PetState) {
-  return rollPet(pet.seed, pet.egg ?? 'knight', petCareBand(pet), pet.ticket);
+  return rollPet(pet.seed, pet.egg ?? 'knight', petCareBand(pet), pet.ticket, pet.pity_from);
 }
 
 /** Dev kit: set the Egg/Baby care to land in a band. */
@@ -1926,6 +2154,7 @@ function milestoneInputOf(doc: PlayStoreDoc, now: number) {
     anyShiny: recs.some((r) => r.shinies > 0),
     anyFiveStar: recs.some((r) => heroStars(r.copies) >= 5),
     eggsHatched: doc.play_stats.eggs_hatched,
+    insaneGold: doc.game_records.catch.insane.medal === 'gold' || doc.game_records.train.insane.medal === 'gold',
   };
 }
 
@@ -1942,6 +2171,8 @@ export function claimMilestone(doc: PlayStoreDoc, now: number, id: MilestoneId):
   const ticket = (d: PlayStoreDoc, g: Grade): PlayStoreDoc => ({ ...d, pet_tickets: { ...d.pet_tickets, [g]: d.pet_tickets[g] + 1 } });
   let next: PlayStoreDoc = { ...doc, milestones: [...doc.milestones, id] };
   const r = def.reward;
+  const stones = (def.stones ?? 0) + (r.kind === 'stone' ? 1 : 0);
+  if (stones > 0) next = { ...next, shine_stones: next.shine_stones + stones };
   if (r.kind === 'ticket') next = ticket(next, r.grade);
   if (r.kind === 'cosmetic') {
     next = next.pet_cosmetics.includes(r.id) ? ticket(next, r.fallback) : { ...next, pet_cosmetics: [...next.pet_cosmetics, r.id] };
@@ -1971,8 +2202,164 @@ export function changeEggDoc(doc: PlayStoreDoc, now: number): PlayStoreDoc | nul
   if (pet.stage !== 'egg' || pet.egg == null) return null;
   return {
     ...touched,
-    pet: newPet(Math.max(now, pet.seen_at)),
+    // v27: the egg was already paid for (a free or bought egg), so the new
+    // pick is free and doesn't count; a ticket egg gets its ticket back
+    // instead.
+    pet: { ...newPet(Math.max(now, pet.seen_at)), prepaid: pet.ticket == null },
     pet_tickets: pet.ticket ? { ...touched.pet_tickets, [pet.ticket]: touched.pet_tickets[pet.ticket] + 1 } : touched.pet_tickets,
+  };
+}
+
+/* ---------------------------------------------------------------------------
+ * The Den (v27, Part D) — see `den.ts`. One active pet ages; resting pets are
+ * frozen (nothing here ever ages a pet in `pet_den`).
+ * ------------------------------------------------------------------------- */
+
+/** Why the active pet can't change right now (null = it can). The mini-game
+ * overlay is UI state, so the screen passes `gameOpen`. */
+export function denBlockOf(doc: PlayStoreDoc, now: number, gameOpen = false): DenSwapBlock | null {
+  return denSwapBlock({ diving: doc.dive_run != null, away: petAt(doc, now).away, gameOpen, active: doc.pet });
+}
+
+export type DenRefusal = DenSwapBlock | 'full' | 'blank' | 'missing';
+export type DenResult = { ok: true } | { ok: false; reason: DenRefusal };
+
+/** A new egg: needs a free slot; the active pet rests in the Den and an empty
+ * picker becomes the active pet. Nothing is spent until an egg is picked. */
+export function newEggDoc(
+  doc: PlayStoreDoc,
+  now: number,
+  gameOpen = false,
+): { doc: PlayStoreDoc; result: DenResult } {
+  const touched = touchPet(doc, now);
+  const block = denBlockOf(touched, now, gameOpen);
+  if (block) return { doc: touched, result: { ok: false, reason: block } };
+  if (isBlankSlot(touched.pet)) return { doc: touched, result: { ok: false, reason: 'blank' } };
+  if (denUsed(touched.pet_den) + 1 > touched.den_slots) return { doc: touched, result: { ok: false, reason: 'full' } };
+  return {
+    doc: {
+      ...touched,
+      pet_den: [...touched.pet_den, touched.pet],
+      pet: newPet(Math.max(now, touched.pet.seen_at)),
+    },
+    result: { ok: true },
+  };
+}
+
+/** Make a resting pet the active one. The active pet rests (an empty picker
+ * that wasn't paid for is just closed). Waking: no time passed while it
+ * rested, and before Child it takes today's pity position. */
+export function activateDenPet(
+  doc: PlayStoreDoc,
+  now: number,
+  uid: number,
+  gameOpen = false,
+): { doc: PlayStoreDoc; result: DenResult } {
+  const touched = touchPet(doc, now);
+  const block = denBlockOf(touched, now, gameOpen);
+  if (block) return { doc: touched, result: { ok: false, reason: block } };
+  const i = touched.pet_den.findIndex((p) => p.uid === uid);
+  if (i < 0) return { doc: touched, result: { ok: false, reason: 'missing' } };
+  const rest = touched.pet_den.filter((_, k) => k !== i);
+  const outgoing = isBlankSlot(touched.pet) ? [] : [touched.pet];
+  return {
+    doc: {
+      ...touched,
+      pet: wakePet(touched.pet_den[i], now, touched.eggs_since_legendary),
+      pet_den: [...rest, ...outgoing],
+    },
+    result: { ok: true },
+  };
+}
+
+/** Release a resting Child-or-older pet: Hall + Collection + 1 shard of its
+ * grade, exactly like releasing the active pet. Null when refused. */
+export function releaseDenPet(doc: PlayStoreDoc, now: number, uid: number): PlayStoreDoc | null {
+  const touched = touchPet(doc, now);
+  const pet = touched.pet_den.find((p) => p.uid === uid);
+  if (!pet) return null;
+  const left = releasePet(pet, touched.pet_hall, touched.pet_rebirths, now);
+  if (!left) return null;
+  return {
+    ...touched,
+    ...recordLeaving(touched, pet),
+    pet_den: touched.pet_den.filter((p) => p.uid !== uid),
+    pet_hall: left.hall,
+    play_stats: { ...touched.play_stats, releases: touched.play_stats.releases + 1 },
+  };
+}
+
+export type DenSlotResult = { ok: true } | { ok: false; reason: 'max' | 'shells' };
+
+/** Buy the next Den slot with shells (7th 100 … 12th 750). */
+export function buyDenSlot(doc: PlayStoreDoc): { doc: PlayStoreDoc; result: DenSlotResult } {
+  const price = denSlotPrice(doc.den_slots);
+  if (price == null) return { doc, result: { ok: false, reason: 'max' } };
+  if (doc.shells < price) return { doc, result: { ok: false, reason: 'shells' } };
+  return { doc: { ...doc, shells: doc.shells - price, den_slots: doc.den_slots + 1 }, result: { ok: true } };
+}
+
+/** Change one pet — the active one or a resting one — by its Den id. Never
+ * ages a resting pet. Null when no pet has that id. */
+function withPetByUid(doc: PlayStoreDoc, uid: number, fn: (pet: PetState) => PetState | null): PlayStoreDoc | null {
+  if (uid <= 0) return null;
+  if (doc.pet.uid === uid) {
+    const pet = fn(doc.pet);
+    return pet ? { ...doc, pet } : null;
+  }
+  const i = doc.pet_den.findIndex((p) => p.uid === uid);
+  if (i < 0) return null;
+  const pet = fn(doc.pet_den[i]);
+  return pet ? { ...doc, pet_den: doc.pet_den.map((p, k) => (k === i ? pet : p)) } : null;
+}
+
+/** Favourite / unfavourite a pet (the Den sorts favourites first). */
+export function setPetFav(doc: PlayStoreDoc, now: number, uid: number, on: boolean): PlayStoreDoc | null {
+  return withPetByUid(touchPet(doc, now), uid, (p) => (p.fav === on ? null : { ...p, fav: on }));
+}
+
+/** Name a resting pet (null clears it back to the default). */
+export function renameDenPet(doc: PlayStoreDoc, now: number, uid: number, raw: string | null): PlayStoreDoc | null {
+  if (raw == null) return withPetByUid(touchPet(doc, now), uid, (p) => ({ ...p, name: null }));
+  const checked = checkPetName(raw);
+  return checked.ok ? withPetByUid(touchPet(doc, now), uid, (p) => ({ ...p, name: checked.name })) : null;
+}
+
+/* ---------------------------------------------------------------------------
+ * Shine Stones (v27, Part D) — see `pet-eggs.ts`.
+ * ------------------------------------------------------------------------- */
+
+export type StoneRefusal = 'no_stones' | 'missing' | 'not_revealed' | 'shiny';
+export type StoneResult = { ok: true; shiny: boolean; glimmers: number } | { ok: false; reason: StoneRefusal };
+
+/** Can this pet take a Shine Stone? (Revealed, not shiny.) */
+export function stoneRefusal(doc: PlayStoreDoc, pet: PetState | undefined): StoneRefusal | null {
+  if (!pet) return 'missing';
+  if (!petRevealed(pet)) return 'not_revealed';
+  if (pet.shiny) return 'shiny';
+  if (doc.shine_stones < 1) return 'no_stones';
+  return null;
+}
+
+/** Use a Shine Stone on a pet (active or resting). The roll is the next one
+ * in the saved sequence — the same Stone always rolls the same, so closing
+ * the app can't redo it. Hit: shiny (Classic), glimmers back to 0. Miss: a
+ * glimmer (per player) and a glimmer glow on that pet. With 5 glimmers the
+ * next Stone always works. */
+export function applyShineStone(doc: PlayStoreDoc, now: number, uid: number): { doc: PlayStoreDoc; result: StoneResult } {
+  const touched = touchPet(doc, now);
+  const pet = touched.pet.uid === uid && uid > 0 ? touched.pet : touched.pet_den.find((p) => p.uid === uid);
+  const refusal = stoneRefusal(touched, pet);
+  if (refusal) return { doc: touched, result: { ok: false, reason: refusal } };
+  const hit = stoneSucceeds(touched.stone_seq, touched.stones_used, touched.glimmers);
+  const glimmers = hit ? 0 : touched.glimmers + 1;
+  const next = withPetByUid(touched, uid, (p) =>
+    hit ? { ...p, shiny: true, shiny_style: 'classic', glimmer: false } : { ...p, glimmer: true },
+  );
+  if (!next) return { doc: touched, result: { ok: false, reason: 'missing' } };
+  return {
+    doc: { ...next, shine_stones: touched.shine_stones - 1, stones_used: touched.stones_used + 1, glimmers },
+    result: { ok: true, shiny: hit, glimmers },
   };
 }
 
@@ -2033,6 +2420,10 @@ export type PetRoundResult = {
   daily: boolean;
   dailyBest: boolean;
   dailyBonusShells: number;
+  /** v27 — this daily pass earned today's free egg / the first daily Gold's
+   * Shine Stone. */
+  dailyEgg: boolean;
+  dailyStone: boolean;
 };
 
 /** v26 — how a round was played (Normal, score 0 when not given). */
@@ -2073,6 +2464,8 @@ export function finishPetRound(
     daily: meta.daily,
     dailyBest: false,
     dailyBonusShells: 0,
+    dailyEgg: false,
+    dailyStone: false,
   };
   if (aged.stage === 'egg' || !outcome.pass) {
     return { doc: touchedDoc, result: empty };
@@ -2096,9 +2489,15 @@ export function finishPetRound(
     ? recordRound(touchedDoc.game_records, kind, level, score, true)
     : { records: touchedDoc.game_records, medal: null, newRecord: false, prevBest: empty.prevBest, rankUp: false, unlocked: null };
   const buff = buffForMedal(kind, rec.medal);
+  const today = localYmd(new Date(now));
   const daily = meta.daily
-    ? recordDaily(touchedDoc.daily_games, localYmd(new Date(now)), kind, score, true)
+    ? recordDaily(touchedDoc.daily_games, today, kind, score, true)
     : { daily: touchedDoc.daily_games, newBest: false, bonusShells: 0 };
+  // v27: a daily pass earns today's free egg (once a day); the first daily
+  // Gold of the day (either game, on the daily's own rules) a Shine Stone.
+  const rewards = meta.daily
+    ? dailyRewards(daily.daily, today, medalFor(kind, DAILY_LEVEL, score, true))
+    : { daily: daily.daily, egg: false, stone: false };
   return {
     doc: {
       ...touchedDoc,
@@ -2108,8 +2507,9 @@ export function finishPetRound(
       pet_tokens_ymd: pay.ymd,
       game_records: rec.records,
       buffs: buff ? grantBuff(touchedDoc.buffs, buff) : touchedDoc.buffs,
-      daily_games: daily.daily,
+      daily_games: rewards.daily,
       shells: touchedDoc.shells + daily.bonusShells,
+      shine_stones: touchedDoc.shine_stones + (rewards.stone ? 1 : 0),
     },
     result: {
       ...empty,
@@ -2124,6 +2524,8 @@ export function finishPetRound(
       buff,
       dailyBest: daily.newBest,
       dailyBonusShells: daily.bonusShells,
+      dailyEgg: rewards.egg,
+      dailyStone: rewards.stone,
     },
   };
 }
@@ -2195,6 +2597,35 @@ export function devPetStarve(doc: PlayStoreDoc, now: number): PlayStoreDoc {
 /** Dev kit: a brand-new egg (hall and rebirths kept). */
 export function devPetNewEgg(doc: PlayStoreDoc, now: number): PlayStoreDoc {
   return { ...doc, pet: newPet(now, doc.pet.line), pet_expedition: null };
+}
+
+/** Dev kit (v27): +5 Shine Stones. */
+export function devAddStones(doc: PlayStoreDoc): PlayStoreDoc {
+  return { ...doc, shine_stones: doc.shine_stones + 5 };
+}
+
+/** Dev kit (v27): set the pity counter (eggs since the last Legendary); an
+ * active pet before Child takes the new position, as on activation. */
+export function devSetPity(doc: PlayStoreDoc, now: number, since: number): PlayStoreDoc {
+  const n = Math.max(0, Math.min(PITY_HARD - 1, Math.floor(since)));
+  const pet = advancePet(doc.pet, now);
+  return { ...settlePetAging(doc, doc.pet, pet), eggs_since_legendary: n, pet: wakePet(pet, now, n) };
+}
+
+/** Dev kit (v27): fill every free Den slot with a revealed Child (random
+ * eggs, no care). Never touches the pity counter or the active pet. */
+export function devFillDen(doc: PlayStoreDoc, now: number, rng: () => number = Math.random): PlayStoreDoc {
+  const den = [...doc.pet_den];
+  let uid = doc.pet_uid_next;
+  while (denUsed(den) < doc.den_slots) {
+    const egg = EGG_TYPES[Math.min(EGG_TYPES.length - 1, Math.floor(rng() * EGG_TYPES.length))];
+    const picked = chooseEgg(newPet(now), egg, newEggSeed(rng), null, now);
+    if (!picked) break;
+    const baby: PetState = { ...picked, stage: 'baby', stage_age_ms: PET_STAGE_MS.baby - 1, seen_at: now - 1, uid };
+    den.push(advancePet(baby, now));
+    uid += 1;
+  }
+  return { ...doc, pet_den: den, pet_uid_next: uid };
 }
 
 /** Dev kit: bring an expedition back on the next action, and allow another
@@ -2550,8 +2981,9 @@ export function recordDefendWin(
       // v26 Pumped: a use only on a wave where it actually changed the pounce
       // (never while it is a "Maxed aura", or with no pounce).
       buffs: pumpedStateOf(doc, now).boosted ? spendBuff(doc.buffs, 'pumped') : doc.buffs,
-      // v24 Journal: a hatch / reveal that happens in this same aging counts.
-      play_stats: tallyPet(doc.play_stats, doc.pet, advancePet(doc.pet, now)),
+      // v24 Journal: a hatch / reveal that happens in this same aging counts;
+      // v27 and so does its pity step.
+      ...settledPetFields(doc, now),
     },
     { xp, level },
   );
@@ -3764,8 +4196,12 @@ export function bestFinds(haul: readonly string[], n: number): string[] {
   if (n <= 0) return [];
   const score = (id: string) => {
     const def = getItemDef(id);
-    // v22: cosmetics, then food, then shells rank after every item.
-    if (!def) return findKind(id) === 'cosmetic' ? 50 : findKind(id) === 'food' ? 60 : 70 + shellsOf(id) * -0.01;
+    // v22: cosmetics, then food, then shells rank after every item; v27 a
+    // Shine Stone right after the items.
+    if (!def) {
+      const kind = findKind(id);
+      return kind === 'stone' ? 45 : kind === 'cosmetic' ? 50 : kind === 'food' ? 60 : 70 + shellsOf(id) * -0.01;
+    }
     return (def.core.kind === 'power' ? 0 : 10) + rarityRank(def.core.rarity);
   };
   return haul
@@ -4025,6 +4461,8 @@ export type ShopRefusal =
   | 'insufficient'
   /** Hit this row's per-day cap. */
   | 'daily_cap'
+  /** v27 — hit this row's per-week cap. */
+  | 'weekly_cap'
   /** Dive charges already at the 10 cap — buying would waste it. */
   | 'dive_full';
 
@@ -4040,6 +4478,8 @@ export type ShopPurchaseResult =
       diveChargeNow: number;
       /** Buys of this row made today AFTER this one. */
       boughtToday: number;
+      /** v27 — Shine Stones held after the buy. */
+      shineStonesNow: number;
     }
   | { ok: false; reason: ShopRefusal };
 
@@ -4064,6 +4504,12 @@ export function purchaseShopRow(
   if (row.daily_limit != null && bought >= row.daily_limit) {
     return { doc, result: { ok: false, reason: 'daily_cap' } };
   }
+  const week = localWeekYmd(now);
+  const weekly = weekHolds(week, doc.shop_weekly.ymd) ? doc.shop_weekly.counts : {};
+  const boughtWeek = Math.max(0, Math.floor(weekly[row.id] ?? 0));
+  if (row.weekly_limit != null && boughtWeek >= row.weekly_limit) {
+    return { doc, result: { ok: false, reason: 'weekly_cap' } };
+  }
   if (doc.tokens < row.price) {
     return { doc, result: { ok: false, reason: 'insufficient' } };
   }
@@ -4087,6 +4533,8 @@ export function purchaseShopRow(
       ...next,
       inventory: addCopiesToBag(next.inventory, grantedItemId, 0, row.amount),
     };
+  } else if (row.kind === 'shine_stone') {
+    next = { ...next, shine_stones: next.shine_stones + row.amount };
   }
 
   next = {
@@ -4095,6 +4543,10 @@ export function purchaseShopRow(
     shop_daily: {
       ymd: todayYmd,
       counts: { ...counts, [row.id]: bought + 1 },
+    },
+    shop_weekly: {
+      ymd: weekHolds(week, doc.shop_weekly.ymd) ? doc.shop_weekly.ymd : week,
+      counts: { ...weekly, [row.id]: boughtWeek + 1 },
     },
   };
   return {
@@ -4107,8 +4559,29 @@ export function purchaseShopRow(
       tokensNow: next.tokens,
       diveChargeNow: next.dive_charge,
       boughtToday: bought + 1,
+      shineStonesNow: next.shine_stones,
     },
   };
+}
+
+/** The Monday (device-local YYYY-MM-DD) of `now`'s week — the weekly limit's key. */
+export function localWeekYmd(now: number): string {
+  const d = new Date(now);
+  return localYmd(new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7)));
+}
+
+/** The stored week still counts: this week, or up to two weeks ahead (a
+ * clock set back can't reopen a week; set far forward once, it starts
+ * fresh) — the weekly twin of `petDayHolds`. */
+export function weekHolds(thisWeek: string, storedWeek: string | null): boolean {
+  if (storedWeek == null || storedWeek < thisWeek) return false;
+  const ahead = (Date.parse(`${storedWeek}T00:00:00Z`) - Date.parse(`${thisWeek}T00:00:00Z`)) / 86_400_000;
+  return Number.isFinite(ahead) && ahead <= 14;
+}
+
+/** Token-shop buys made this week, row id → count (the weekly caps). */
+export function shopWeekCountsOf(doc: PlayStoreDoc, now: number): Readonly<Record<string, number>> {
+  return weekHolds(localWeekYmd(now), doc.shop_weekly.ymd) ? doc.shop_weekly.counts : {};
 }
 
 /* ---------------------------------------------------------------------------
@@ -4290,7 +4763,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
       version !== 17 && version !== 18 && version !== 19 && version !== 20 &&
       version !== 21 && version !== 22 && version !== 23 && version !== 24 && version !== 25 &&
-      version !== 26
+      version !== 26 && version !== 27
     ) {
       return null;
     }
@@ -4398,7 +4871,12 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     const v23 = version >= 23;
     const v24 = version >= 24;
     const v26 = version >= 26;
+    const v27 = version >= 27;
     const hall = parsePetHall(data.pet_hall);
+    // v27 (Part D): older saves — the pet is the active one in slot 1 and the
+    // Den is empty with 6 slots; the pity counter, eggs today, Stones and
+    // glimmers all start at 0.
+    const den = parseDen(v27 ? data.pet_den : null, pet, now, v27 ? finiteNumber(data.pet_uid_next) : null);
     // v23 (eggs): the Collection becomes a per-hero book. Older saves: every
     // Hall pet counts as one copy (stars carry over), Common, with its form;
     // the old `line:form` Collection keys add their forms. The live pet is
@@ -4407,8 +4885,15 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       ? parseHeroBook(data.pet_heroes, (id) => heroById(id) != null)
       : legacyHeroBook(hall, v22 ? data.pet_collection : null);
     const cosmetics = v22 ? parseOwnedCosmetics(data.pet_cosmetics) : [];
+    const milestones: MilestoneId[] =
+      v24 && Array.isArray(data.milestones)
+        ? [...new Set(data.milestones.filter((m): m is MilestoneId => MILESTONES.some((d) => d.id === m)))]
+        : [];
+    const shineStones =
+      (v27 ? Math.max(0, Math.floor(finiteNumber(data.shine_stones) ?? 0)) : 0) +
+      retroShineStones(typeof version === 'number' ? version : 27, milestones);
     return {
-      version: 26,
+      version: 27,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -4440,7 +4925,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       owned_hero_ids: ownedHeroIds,
       active_avatar_hero_id: activeAvatarHeroId,
       hero_offer: heroOffer,
-      pet,
+      pet: den.pet,
       pet_hall: hall,
       pet_rebirths: petRebirths,
       pet_tokens_today: Math.max(0, Math.floor(finiteNumber(data.pet_tokens_today) ?? 0)),
@@ -4481,9 +4966,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
             },
       ),
       play_stats: v24 ? parseStats(data.play_stats) : emptyStats(),
-      milestones: v24 && Array.isArray(data.milestones)
-        ? [...new Set(data.milestones.filter((m): m is MilestoneId => MILESTONES.some((d) => d.id === m)))]
-        : [],
+      milestones,
       ribbons: v24 && Array.isArray(data.ribbons)
         ? [...new Set(data.ribbons.filter((r): r is Ribbon => r === 'collector' || r === 'legend'))]
         : [],
@@ -4500,10 +4983,57 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       game_records: v26 ? parseRecords(data.game_records) : emptyRecords(),
       daily_games: v26 ? parseDaily(data.daily_games) : { ...EMPTY_DAILY },
       powers_today: v26 ? parsePowersToday(data.powers_today) : { ymd: null, n: 0 },
+      pet_den: den.resting,
+      // Never fewer slots than the pets held (nothing is lost).
+      den_slots: Math.max(clampDenSlots(v27 ? data.den_slots : null), Math.min(DEN_MAX_SLOTS, denUsed(den.resting))),
+      pet_uid_next: den.uidNext,
+      eggs_today: v27 ? Math.max(0, Math.min(EGGS_PER_DAY_MAX, Math.floor(finiteNumber(data.eggs_today) ?? 0))) : 0,
+      eggs_ymd: v27 && typeof data.eggs_ymd === 'string' ? data.eggs_ymd : null,
+      eggs_since_legendary: v27
+        ? Math.max(0, Math.min(PITY_HARD - 1, Math.floor(finiteNumber(data.eggs_since_legendary) ?? 0)))
+        : 0,
+      shine_stones: shineStones,
+      glimmers: v27 ? Math.max(0, Math.min(GLIMMER_PITY, Math.floor(finiteNumber(data.glimmers) ?? 0))) : 0,
+      stones_used: v27 ? Math.max(0, Math.floor(finiteNumber(data.stones_used) ?? 0)) : 0,
+      stone_seq: v27 && finiteNumber(data.stone_seq) != null ? (finiteNumber(data.stone_seq) as number) >>> 0 : newEggSeed(),
+      prism_stones: 0,
+      shop_weekly: v27 ? parseShopDaily(data.shop_weekly) : { ymd: null, counts: {} },
     };
   } catch {
     return null;
   }
+}
+
+/** v27: the Den's resting pets, and Den ids made whole — every chosen pet
+ * gets a unique id (an old save's pet becomes id 1). A blank picker never
+ * rests, and the Den never holds more than its most. */
+function parseDen(
+  raw: unknown,
+  active: PetState,
+  now: number,
+  storedNext: number | null,
+): { pet: PetState; resting: PetState[]; uidNext: number } {
+  const rows = Array.isArray(raw) ? raw : [];
+  const resting = rows
+    .filter(isRecord)
+    .map((row) => parsePet(row, now))
+    .filter((p) => !isBlankSlot(p))
+    .slice(0, DEN_MAX_SLOTS - 1);
+  const seen = new Set<number>();
+  let next = Math.max(1, Math.floor(storedNext ?? 1));
+  for (const p of [active, ...resting]) if (p.uid > 0) next = Math.max(next, p.uid + 1);
+  const fix = (p: PetState): PetState => {
+    if (isBlankSlot(p)) return p.uid === 0 ? p : { ...p, uid: 0 };
+    if (p.uid > 0 && !seen.has(p.uid)) {
+      seen.add(p.uid);
+      return p;
+    }
+    const uid = next++;
+    seen.add(uid);
+    return { ...p, uid };
+  };
+  const pet = fix(active);
+  return { pet, resting: resting.map(fix), uidNext: next };
 }
 
 /** The legacy (≤ v15) single Avatar as a starter record — the migration seed

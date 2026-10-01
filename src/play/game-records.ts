@@ -73,7 +73,9 @@ export const DAILY_BONUS_SHELLS = 3;
 export type LevelRecord = { best: number; medal: Medal | null };
 export type GameRecords = Record<Game, Record<Difficulty, LevelRecord>>;
 export type DailyEntry = { best: number; bonus: boolean };
-export type DailyGames = { ymd: string | null; catch: DailyEntry; train: DailyEntry };
+/** v27: `egg` = today's daily-challenge free egg was earned (a pass);
+ * `stone` = today's first daily Gold already gave its Shine Stone. */
+export type DailyGames = { ymd: string | null; catch: DailyEntry; train: DailyEntry; egg: boolean; stone: boolean };
 
 const EMPTY_LEVEL: LevelRecord = { best: 0, medal: null };
 export function emptyRecords(): GameRecords {
@@ -81,7 +83,13 @@ export function emptyRecords(): GameRecords {
     Object.fromEntries(DIFFICULTIES.map((d) => [d, { ...EMPTY_LEVEL }])) as Record<Difficulty, LevelRecord>;
   return { catch: one(), train: one() };
 }
-export const EMPTY_DAILY: DailyGames = { ymd: null, catch: { best: 0, bonus: false }, train: { best: 0, bonus: false } };
+export const EMPTY_DAILY: DailyGames = {
+  ymd: null,
+  catch: { best: 0, bonus: false },
+  train: { best: 0, bonus: false },
+  egg: false,
+  stone: false,
+};
 
 function medalRank(m: Medal | null): number {
   return m == null ? 0 : MEDALS.indexOf(m) + 1;
@@ -209,5 +217,24 @@ export function parseDaily(raw: unknown): DailyGames {
       bonus: e.bonus === true,
     };
   };
-  return { ymd: typeof r.ymd === 'string' ? r.ymd : null, catch: entry(r.catch), train: entry(r.train) };
+  return {
+    ymd: typeof r.ymd === 'string' ? r.ymd : null,
+    catch: entry(r.catch),
+    train: entry(r.train),
+    egg: r.egg === true,
+    stone: r.stone === true,
+  };
+}
+
+/** v27 (Part D): a PASSED daily-challenge round earns today's free egg (once
+ * a day, either game), and the first daily Gold of the day a Shine Stone. */
+export function dailyRewards(
+  daily: DailyGames,
+  today: string,
+  medal: Medal | null,
+): { daily: DailyGames; egg: boolean; stone: boolean } {
+  const d = dailyFor(daily, today);
+  const egg = !d.egg;
+  const stone = medal === 'gold' && !d.stone;
+  return { daily: egg || stone ? { ...d, egg: true, stone: d.stone || stone } : d, egg, stone };
 }

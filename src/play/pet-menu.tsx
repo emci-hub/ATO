@@ -6,7 +6,7 @@
  *   the next egg gets a fresh seed; nothing from the old seed was ever rolled
  *   or shown, and a spent ticket is refunded) · Use a trade-up ticket (Egg or
  *   Baby, before the roll) · Release (Child+) / Rebirth (God), same rules and
- *   double confirms as before.
+ *   double confirms as before. v27: Open the Den · Use a Shine Stone.
  */
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
@@ -24,7 +24,7 @@ type Commit = (transition: PlayTransition) => boolean;
 
 const ARM_LAPSE_MS = 3500;
 
-function useArm(): [boolean, () => boolean, () => void] {
+export function useArm(): [boolean, () => boolean, () => void] {
   const [armed, setArmed] = useState(false);
   useEffect(() => {
     if (!armed) return;
@@ -54,10 +54,16 @@ export function PetMenuBody({
   view,
   commit,
   onViewCard,
+  onOpenDen,
+  onOpenStone,
 }: {
   view: PlayView;
   commit: Commit;
   onViewCard: () => void;
+  /** v27 — the Den (every pet you keep). */
+  onOpenDen: () => void;
+  /** v27 — the Shine Stone sheet, this pet picked. */
+  onOpenStone: () => void;
 }) {
   const pv = view.pet;
   const pet = pv.state;
@@ -86,6 +92,10 @@ export function PetMenuBody({
   return (
     <>
       {revealed ? <NeonButton label="View card" onPress={onViewCard} /> : null}
+      <NeonButton label={`Open the Den · ${pv.den.used}/${pv.den.slots}`} variant="secondary" onPress={onOpenDen} />
+      {revealed && !pet.shiny ? (
+        <NeonButton label={`Use a Shine Stone · ${pv.stones.held} held`} variant="secondary" onPress={onOpenStone} />
+      ) : null}
 
       {pet.egg != null || pet.hero != null ? (
         <>

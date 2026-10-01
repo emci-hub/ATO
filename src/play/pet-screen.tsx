@@ -41,6 +41,8 @@ import { PetCard, type PetCardInfo } from '@/play/pet-card';
 import { DivecoreSettingsSheet } from '@/play/divecore-settings';
 import { EggPickerBody, JournalTab, OddsPanel } from '@/play/pet-egg-sheets';
 import { PetMenuBody } from '@/play/pet-menu';
+import { DenSheetBody } from '@/play/den-sheet';
+import { StoneSheetBody } from '@/play/stone-sheet';
 import { DIFFICULTY_LABEL, type RoundOutcome } from '@/play/pet-game-rules';
 import type { GamePet } from '@/play/pet-games';
 import { BUFF_HOW, BUFF_ICON, BUFF_LABEL } from '@/play/play-buffs';
@@ -58,9 +60,13 @@ import {
   GRADES,
   GRADE_COLOR,
   GRADE_LABEL,
+  PITY_HARD,
+  PITY_SOFT_FROM,
   SHARDS_PER_TICKET,
+  SHINY_STYLE_LABEL,
   gradedName,
   heroStars,
+  ownsAllStyles,
   petShownName,
   type EggType,
 } from '@/play/pet-eggs';
@@ -102,6 +108,9 @@ import { PlaySheet, SheetTabs } from '@/play/play-sheet';
 import {
   ackPetRevealsDoc,
   devAddShells,
+  devAddStones,
+  devFillDen,
+  devSetPity,
   devGoldAllGames,
   devGrantAllBuffs,
   devGiveShards,
@@ -125,7 +134,7 @@ import type { PlayTransition } from '@/play/use-play-store';
 /** A pet-worthy moment the Play shell hands to the room (dive, TD, finds). */
 export type PetTalkEvent = { situation: PetTalkSituation; key: number } | null;
 
-type SheetId = 'feed' | 'play' | 'expedition' | 'info' | 'eggs' | 'card' | 'menu';
+type SheetId = 'feed' | 'play' | 'expedition' | 'info' | 'eggs' | 'card' | 'menu' | 'den' | 'stone';
 
 const ICONS: { id: PetCoachIcon; emoji: string; label: string }[] = [
   { id: 'feed', emoji: '🍖', label: 'Feed' },
@@ -135,6 +144,10 @@ const ICONS: { id: PetCoachIcon; emoji: string; label: string }[] = [
   { id: 'info', emoji: 'ℹ️', label: 'Info' },
 ];
 
+/** Dev kit: jump the pity counter (eggs since the last Legendary) — before,
+ * at and deep in the soft pity, and the guaranteed egg. */
+const DEV_PITY_PRESETS = [0, PITY_SOFT_FROM - 1, PITY_SOFT_FROM + 4, PITY_HARD - 1] as const;
+
 const SHEET_TITLE: Record<SheetId, string> = {
   feed: 'Feed',
   play: 'Play',
@@ -143,6 +156,8 @@ const SHEET_TITLE: Record<SheetId, string> = {
   eggs: 'Choose an egg',
   card: 'Card',
   menu: 'Your pet',
+  den: 'The Den',
+  stone: 'Shine Stone',
 };
 
 /** Keep every Divecore notice (hunger, egg, expedition, charges) in step with
@@ -244,6 +259,7 @@ function RoomIcon({
 export function PetScreen({
   view,
   commit,
+  commitSaved,
   registerBack,
   reduceMotion,
   onBack,
@@ -259,6 +275,8 @@ export function PetScreen({
 }: {
   view: PlayView;
   commit: (transition: PlayTransition) => boolean;
+  /** Stone sheet: show the result only after the save lands. */
+  commitSaved: (transition: PlayTransition) => Promise<boolean>;
   /** Back one level (edge-back.ts): a mini-game, then a sheet, then the hub. */
   registerBack?: (inner: InnerBack | null) => void;
   reduceMotion: boolean;
@@ -287,6 +305,11 @@ export function PetScreen({
   const pet = pv.state;
 
   const [sheet, setSheet] = useState<SheetId | null>(null);
+  const [stoneUid, setStoneUid] = useState<number | null>(null);
+  const openStone = (uid: number | null) => {
+    setStoneUid(uid);
+    setSheet('stone');
+  };
   const [infoTab, setInfoTab] = useState<InfoTab>('status');
   useEffect(() => {
     if (!openJournal) return;
@@ -563,6 +586,8 @@ export function PetScreen({
       if (r.unlocked) onBanner?.({ title: `${DIFFICULTY_LABEL[r.unlocked]} unlocked`, body: 'A harder level is open in Play.' });
       if (r.buff) onBanner?.({ title: `${BUFF_ICON[r.buff]} ${BUFF_LABEL[r.buff]}`, body: BUFF_HOW[r.buff] });
       if (r.dailyBonusShells > 0) onBanner?.({ title: 'Daily best!', body: `+${r.dailyBonusShells} shells — come back tomorrow for a new pattern.` });
+      if (r.dailyEgg) onBanner?.({ title: '🥚 Daily egg', body: 'Daily challenge passed — one more free egg today.' });
+      if (r.dailyStone) onBanner?.({ title: '💎 Shine Stone', body: 'Your first daily Gold today — a Shine Stone is yours.' });
       // v25: it reacts to a pass, a skilled pass, a fail, or a bomb-out.
       const talk = !outcome.pass
         ? (outcome.bombs ?? 0) >= 3
@@ -583,7 +608,7 @@ export function PetScreen({
     art,
     wear: pv.wear,
     eggColor,
-    recolor: revealed ? petRecolor(pet.hero, pet.shiny, pv.dyeOn) : null,
+    recolor: revealed ? petRecolor(pet.hero, pet.shiny, pv.dyeOn, pet.shiny_style) : null,
     glow: revealed && pet.grade ? GRADE_COLOR[pet.grade] : ELEMENT_COLOR[view.legendElement],
   };
   const shownName = petShownName(pet);
@@ -598,7 +623,7 @@ export function PetScreen({
         : `${heroLabel ?? PET_STAGE_LABEL[pet.stage]} · ${PET_STAGE_LABEL[pet.stage]}${
             pet.stage === 'child' ? '' : ` · ${PET_BRANCH_LABEL[pet.branch]}`
           }`;
-  const recolor = revealed ? petRecolor(pet.hero, pet.shiny, pv.dyeOn) : null;
+  const recolor = revealed ? petRecolor(pet.hero, pet.shiny, pv.dyeOn, pet.shiny_style) : null;
   const cardInfo: PetCardInfo | null =
     revealed && pet.hero
       ? {
@@ -614,6 +639,8 @@ export function PetScreen({
           days: Math.round((pet.total_age_ms / 86_400_000) * 10) / 10,
           dye: pv.dyeOn,
           ranks: pv.ranks,
+          allStyles: ownsAllStyles(pv.heroes[pet.hero]),
+          styleLabel: pet.shiny && pet.shiny_style ? SHINY_STYLE_LABEL[pet.shiny_style] : null,
         }
       : null;
   // v26: the active medal buffs for the room corner (uses left, or Maxed aura).
@@ -675,6 +702,14 @@ export function PetScreen({
           {title}
         </Text>
         <View style={styles.topActions}>
+          <Pressable
+            onPress={() => setSheet('den')}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={`The Den, ${pv.den.used} of ${pv.den.slots} slots`}
+            style={styles.topButton}>
+            <Text style={styles.topButtonText}>🏠</Text>
+          </Pressable>
           <Pressable
             onPress={() => setSheet('menu')}
             hitSlop={10}
@@ -786,7 +821,32 @@ export function PetScreen({
         <OddsPanel view={view} />
       </PlaySheet>
       <PlaySheet open={sheet === 'menu'} title={shownName} onClose={closeSheet} reduceMotion={reduceMotion}>
-        <PetMenuBody view={view} commit={commit} onViewCard={() => setSheet('card')} />
+        <PetMenuBody
+          view={view}
+          commit={commit}
+          onViewCard={() => setSheet('card')}
+          onOpenDen={() => setSheet('den')}
+          onOpenStone={() => openStone(pet.uid > 0 ? pet.uid : null)}
+        />
+      </PlaySheet>
+      <PlaySheet open={sheet === 'den'} title={SHEET_TITLE.den} onClose={closeSheet} reduceMotion={reduceMotion}>
+        <DenSheetBody
+          view={view}
+          commit={commit}
+          gameOpen={game != null}
+          reduceMotion={reduceMotion}
+          onNewEgg={() => {
+            setFocusEgg(null);
+            setSheet('eggs');
+          }}
+          onOpenStone={(uid) => openStone(uid)}
+          onViewActiveCard={() => setSheet('card')}
+        />
+        <GuideLink section="den" onOpen={openGuide} />
+      </PlaySheet>
+      <PlaySheet open={sheet === 'stone'} title={SHEET_TITLE.stone} onClose={closeSheet} reduceMotion={reduceMotion}>
+        <StoneSheetBody view={view} commitSaved={commitSaved} initialUid={stoneUid} />
+        <GuideLink section="stones" onOpen={openGuide} />
       </PlaySheet>
       <DivecoreSettingsSheet
         open={settingsOpen}
@@ -850,6 +910,9 @@ export function PetScreen({
               {CARE_BANDS.map((b) => devBtn(`Care ${CARE_BAND_LABEL[b]}`, (doc, now) => devPetSetBand(doc, now, b)))}
               {GRADES.map((g) => devBtn(`+5 ${GRADE_LABEL[g]} shards`, (doc) => devGiveShards(doc, g)))}
               {devBtn('Reset Collection', (doc) => devResetCollection(doc))}
+              {devBtn('+5 Shine Stones', (doc) => devAddStones(doc))}
+              {DEV_PITY_PRESETS.map((n) => devBtn(`Pity: egg ${n + 1}`, (doc, now) => devSetPity(doc, now, n)))}
+              {devBtn('Fill the Den', (doc, now) => devFillDen(doc, now))}
               <NeonChip
                 label={`Shiny look: ${shinyLook}`}
                 onPress={() => {

@@ -9,7 +9,7 @@
  *   4     30 min  a Shallows find (never a Power)
  *   5     1 h     a Reef find (never a Power)
  *   6     2 h     20% a Power, else a Reef find
- *   7     4 h     35% a Power, else a Trench find
+ *   7     4 h     35% a Power, 20% a Shine Stone (v27), else a Trench find
  *
  * The ladder ENDS after the 4h trip (it doesn't repeat) and starts again at
  * the local day reset — so Powers from expeditions stay ≈ 0.55 a day, next to
@@ -30,10 +30,13 @@
  *   5     a Reef find               a Trench find (never a Power)
  *   6     20% Power, else Reef      20% Power, else Trench
  *   7     35% Power, else Trench    35% Power, else Abyss
+ * v27 (Part D): the 4h trip's Shine Stone comes out of the non-Power part
+ * only (35% Power is untouched); the rest is re-rolled away from Stones, so
+ * the Stone chance is exactly `EXPEDITION_STONE_CHANCE` at any stage.
  * (Trip LENGTH by stage — Teen 90%, Adult 80%, God 70% — and the Focused buff
  * are applied when the trip is sent; see playStore `sendPetExpedition`.)
  */
-import { rollTier, type DiveTier } from './dive-loot';
+import { STONE_FIND, findKind, rollTier, type DiveTier } from './dive-loot';
 import { getItemDef, rollPowerFind } from './items';
 
 const MIN = 60 * 1000;
@@ -45,6 +48,10 @@ export const LEGACY_EXPEDITION_MS = 60 * MIN;
 export const EXPEDITION_NOTICE_MIN_MS = 30 * MIN;
 /** Power chance for the 2h and 4h trips. */
 export const EXPEDITION_POWER_BY_STEP: Readonly<Record<number, number>> = { 5: 0.2, 6: 0.35 };
+/** v27 — the 4h trip (step 7, index 6): a Shine Stone chance, from the
+ * non-Power part. */
+export const EXPEDITION_STONE_STEP = 6;
+export const EXPEDITION_STONE_CHANCE = 0.2;
 
 export function expeditionLengthMs(step: number): number {
   return EXPEDITION_LADDER_MS[Math.max(0, Math.min(EXPEDITION_STEPS - 1, step))];
@@ -56,13 +63,22 @@ export function tripLabel(ms: number): string {
   return m >= 60 ? `${m / 60}h` : `${m}m`;
 }
 
-/** A tier roll that never lands on a Power (re-rolled; shells at worst). */
+/** A tier roll that never lands on a Power or a Shine Stone (re-rolled;
+ * shells at worst) — a trip's Stone chance is its own, never the zone's. */
 export function rollNoPower(tier: DiveTier, rng: () => number): string {
   for (let i = 0; i < 24; i += 1) {
     const id = rollTier(tier, rng);
-    if (getItemDef(id)?.core.kind !== 'power') return id;
+    if (getItemDef(id)?.core.kind !== 'power' && findKind(id) !== 'stone') return id;
   }
   return 'shells_2';
+}
+
+/** The 4h trip: Power first (its chance unchanged), then the Stone. */
+function fourHour(r: number, rng: () => number, tier: DiveTier): string {
+  const power = EXPEDITION_POWER_BY_STEP[EXPEDITION_STONE_STEP];
+  if (r < power) return rollPowerFind(rng);
+  if (r < power + EXPEDITION_STONE_CHANCE) return STONE_FIND;
+  return rollNoPower(tier, rng);
 }
 
 /** What a finished trip of ladder `step` (0-based; -1 = a legacy trip) brings
@@ -84,7 +100,7 @@ export function rollExpeditionReward(step: number, rng: () => number = Math.rand
       case 5:
         return r < EXPEDITION_POWER_BY_STEP[5] ? rollPowerFind(rng) : rollNoPower('trench', rng);
       case 6:
-        return r < EXPEDITION_POWER_BY_STEP[6] ? rollPowerFind(rng) : rollNoPower('abyss', rng);
+        return fourHour(r, rng, 'abyss');
       default:
         break; // a legacy trip keeps its old reward
     }
@@ -103,7 +119,7 @@ export function rollExpeditionReward(step: number, rng: () => number = Math.rand
     case 5:
       return r < EXPEDITION_POWER_BY_STEP[5] ? rollPowerFind(rng) : rollNoPower('reef', rng);
     case 6:
-      return r < EXPEDITION_POWER_BY_STEP[6] ? rollPowerFind(rng) : rollNoPower('trench', rng);
+      return fourHour(r, rng, 'trench');
     default:
       // A trip from before the ladder keeps the old reward: half the time a Power.
       return r < 0.5 ? rollPowerFind(rng) : rollTier('shallows', rng);

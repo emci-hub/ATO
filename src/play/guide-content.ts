@@ -1,5 +1,6 @@
 /**
- * The Divecore Guide (v26, Part C) — one place to learn everything.
+ * The Divecore Guide (v26, Part C; v27 Part D adds the Den, egg pacing, pity,
+ * Shine Stones and styles) — one place to learn everything.
  *
  * EVERY number here comes from the same code constant the game uses: the
  * prose has no digits of its own (`check:guide` scans this file's strings and
@@ -24,11 +25,17 @@ import {
   POWER_OVERFLOW_SHELLS,
   SHELLS_PER_CLEAR,
   SHELLS_PER_REPLAY,
+  diveTierRolls,
+  findKind,
+  type DiveTier,
 } from '@/play/dive-loot';
+import { DEN_MAX_SLOTS, DEN_SLOT_PRICES, DEN_START_SLOTS } from '@/play/den';
 import {
   EXPEDITION_LADDER_MS,
   EXPEDITION_POWER_BY_STEP,
   EXPEDITION_STEPS,
+  EXPEDITION_STONE_CHANCE,
+  EXPEDITION_STONE_STEP,
   expectedPowersPerDay,
   tripLabel,
 } from '@/play/expedition-ladder';
@@ -77,15 +84,28 @@ import {
   CARE_ROUND_POINTS,
   CARE_SKILL_POINTS,
   CARE_SKILL_SHARE,
+  COLLECT_TIMELINES,
+  DAILY_EGG_BONUS,
   DYE_STARS,
+  EGGS_PER_DAY_MAX,
   EGG_LABEL,
   EGG_POOLS,
   EGG_TYPES,
+  EXTRA_EGG_PRICES,
+  FREE_EGGS_PER_DAY,
+  GLIMMER_PITY,
   GRADES,
   GRADE_LABEL,
+  PITY_HARD,
+  PITY_SOFT_FROM,
+  PRISM_STYLES,
+  PRISM_STYLE_ODDS,
   SHARDS_PER_TICKET,
   SHINY_ODDS,
+  SHINY_STYLE_LABEL,
   STAR_MAX,
+  STONE_EVERY_DAYS,
+  STONE_ODDS,
   WARMTH_DROP_MS,
   WARMTH_MAX,
   gradeTag,
@@ -109,16 +129,18 @@ import {
   PET_POUNCE_CAP,
   TD_HELP_BAND,
 } from '@/play/play-buffs';
-import { DEFAULT_WINDOW } from '@/play/play-settings';
+import { DEFAULT_WINDOW, MILESTONES } from '@/play/play-settings';
 import { DIVE_BUST_FLOOR, DIVE_BUST_TABLE, DIVE_CHARGE_CAP, DIVE_CHARGE_REFILL_MS } from '@/play/playStore';
 import { heroName } from '@/play/heroes-data';
 
-export const GUIDE_SECTIONS = ['pet', 'eggs', 'dive', 'expeditions', 'games', 'buffs', 'collection', 'td'] as const;
+export const GUIDE_SECTIONS = ['pet', 'eggs', 'den', 'stones', 'dive', 'expeditions', 'games', 'buffs', 'collection', 'td'] as const;
 export type GuideSection = (typeof GUIDE_SECTIONS)[number];
 
 export const GUIDE_TITLE: Record<GuideSection, string> = {
   pet: 'Your pet',
   eggs: 'Eggs & grades',
+  den: 'The Den',
+  stones: 'Shine Stones & styles',
   dive: 'Dive',
   expeditions: 'Expeditions',
   games: 'Mini-games',
@@ -141,6 +163,19 @@ function span(ms: number): string {
 const clock = (minuteOfDay: number) =>
   `${String(Math.floor(minuteOfDay / 60)).padStart(2, '0')}:${String(minuteOfDay % 60).padStart(2, '0')}`;
 const grown = PET_STAGES.filter((s): s is Exclude<PetStage, 'egg'> => s !== 'egg');
+const WEEK_WORDS = ['a week', 'two weeks', 'three weeks', 'four weeks', 'five weeks'];
+/** A day count in plain words ("about three weeks"). */
+function aboutWeeks(days: number): string {
+  const w = Math.max(1, Math.min(WEEK_WORDS.length, Math.round(days / 7)));
+  return `about ${WEEK_WORDS[w - 1]}`;
+}
+const ordinal = (n: number) => `${n}${n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th'}`;
+/** The Shine Stone share of a zone's finds (from the loot table itself). */
+function stoneShare(tier: DiveTier): number {
+  const rolls = diveTierRolls(tier);
+  const total = rolls.reduce((a, r) => a + r.weight, 0);
+  return total > 0 ? rolls.filter((r) => findKind(r.id) === 'stone').reduce((a, r) => a + r.weight, 0) / total : 0;
+}
 
 /* ---------------------------------------------------------- sections --- */
 
@@ -171,6 +206,33 @@ function eggsSection(): string[] {
     `Shiny: one in ${Math.round(1 / SHINY_ODDS)}, any hero, any grade.`,
     `Stars: every copy of a hero adds a star, up to ${STAR_MAX}★; ${DYE_STARS}★ unlocks its dye.`,
     `Shards: a pet that leaves gives a shard of its grade; ${SHARDS_PER_TICKET} shards trade up to a ticket for the next grade or better on your next egg.`,
+    `Eggs a day: the first ${FREE_EGGS_PER_DAY} are free, then ${EXTRA_EGG_PRICES.join(', ')} shells — ${EGGS_PER_DAY_MAX} at most, starting over at local midnight. Passing a daily challenge adds ${DAILY_EGG_BONUS} free egg, once a day (it counts toward the ${EGGS_PER_DAY_MAX}). A ticket egg is always free and never counts. "Change egg" keeps the egg you paid for — pick again at no cost.`,
+    `Legendary pity: every egg that reaches ${PET_STAGE_LABEL.child} without a Legendary adds one to the count; a Legendary sets it back to zero. Release, swaps, rebirth and the clock never change it. From egg ${PITY_SOFT_FROM} the Legendary share climbs each egg, and egg ${PITY_HARD} is always Legendary. The odds the picker shows already include it.`,
+    `How long: playing every day with a few eggs and the daily egg, most players find a Legendary in ${aboutWeeks(COLLECT_TIMELINES.legendaryRegularDays)}. With only the free eggs, one is certain within ${COLLECT_TIMELINES.legendaryCertainDays} days (${aboutWeeks(COLLECT_TIMELINES.legendaryCertainDays)}).`,
+  ];
+}
+
+function denSection(): string[] {
+  const prices = DEN_SLOT_PRICES.map((p, i) => `${ordinal(DEN_START_SLOTS + i + 1)} ${p}`).join(', ');
+  return [
+    `The Den keeps your pets: ${DEN_START_SLOTS} slots to start (the active pet counts as one). More slots cost shells — ${prices}; ${DEN_MAX_SLOTS} at most.`,
+    `One pet is active: it lives in the room and gives the perks, the pounce and Pumped. The others rest, frozen — they don't grow, get hungry, lose mood or lose warmth, and an egg's care only counts while it is active.`,
+    `Swap from the Den any time except during a dive, while your pet is away on an expedition, or while a mini-game is open. Buffs, the expedition ladder, tokens, the Power ceiling, records and pity are yours — a swap never changes them.`,
+    `A new egg needs a free slot; it becomes the active pet and the old one rests. From the Den you can also view a card, rename, favourite (★ sorts to the top), sort by grade or shiny, and release (a shard, as always). Resting pets count in the Collection.`,
+  ];
+}
+
+function stonesSection(): string[] {
+  const rewards = MILESTONES.filter((m) => m.reward.kind === 'stone' || (m.stones ?? 0) > 0)
+    .map((m) => m.label)
+    .join(', ');
+  const prism = PRISM_STYLES.map((s) => `${SHINY_STYLE_LABEL[s]} ${PRISM_STYLE_ODDS[s]}%`).join(' · ');
+  return [
+    `A Shine Stone gives a revealed pet (${PET_STAGE_LABEL.child} and up) a ${pct(STONE_ODDS)} chance to turn shiny — your active pet or one resting in the Den, never one that is already shiny. Looks only: it never changes stats.`,
+    `Glimmers: every miss adds a glimmer (they are yours, not the pet's) and that pet keeps a faint glow. With ${GLIMMER_PITY} glimmers the next Stone always works; a success clears them. Each Stone's roll is set in advance, so closing the app can't change it.`,
+    `Where Stones come from: the first daily-challenge Gold each day (either game) · the ${tripLabel(EXPEDITION_LADDER_MS[EXPEDITION_STONE_STEP])} expedition, ${pct(EXPEDITION_STONE_CHANCE)} (its Power chance is unchanged) · ${DIVE_TIER_LABEL.abyss} ${pct(stoneShare('abyss'))} and ${DIVE_TIER_LABEL.hadal} ${pct(stoneShare('hadal'))} of charged-dive finds · every ${ordinal(STONE_EVERY_DAYS)} day you play · milestones: ${rewards}.`,
+    `Shiny styles: ${SHINY_STYLE_LABEL.classic} is the hero's own shiny colour — natural shinies and Shine Stones. The other styles will come from a Prism Stone, which isn't available yet; it will roll: ${prism}. Styles are looks only, and dyes never cover a shiny. The Collection shows the styles each hero has.`,
+    `How long: with a Stone every few days, most players have a shiny in ${aboutWeeks(COLLECT_TIMELINES.shinyRegularDays)} (natural shinies are one in ${Math.round(1 / SHINY_ODDS)}).`,
   ];
 }
 
@@ -242,10 +304,10 @@ function buffsSection(): string[] {
 
 function collectionSection(): string[] {
   return [
-    `Collection: every hero you've raised, its copies and stars, grades, shinies and the forms it reached.`,
+    `Collection: every hero you've raised — the active pet and every pet resting in the Den — its copies and stars, grades, shinies, shiny styles and the forms it reached. A hero with every style gets a foil frame.`,
     `Hall: up to ${PET_HALL_MAX} retired pets (Legendary and shiny ones are always kept).`,
     `Logbook: every find your pet's dives and expeditions turned up, with how deep it was first found.`,
-    `Journal: your Divecore numbers — dives, surfaces, busts, eggs, mini-game ranks and milestones.`,
+    `Journal: your Divecore numbers — dives, surfaces, busts, eggs, eggs since your last Legendary, Shine Stones and glimmers, styles owned, mini-game ranks and milestones.`,
   ];
 }
 
@@ -267,6 +329,8 @@ export function guideSections(): { id: GuideSection; title: string; lines: strin
   const body: Record<GuideSection, () => string[]> = {
     pet: petSection,
     eggs: eggsSection,
+    den: denSection,
+    stones: stonesSection,
     dive: diveSection,
     expeditions: expeditionsSection,
     games: gamesSection,

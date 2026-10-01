@@ -286,7 +286,7 @@ ok('expedition: the 4h trip can bring a Power (35%), else a Trench find; an old 
   }
   delete (v21.pet as Record<string, unknown>).forms;
   const up = parsePlayStore(JSON.stringify(v21), T0)!;
-  assert.equal(up.version, 26);
+  assert.equal(up.version, 27);
   assert.deepEqual(
     [up.shells, up.dive_gear, up.pet_pantry, up.pet_cosmetics, up.pet_wear, up.free_dives_today, up.free_dives_ymd],
     [0, { lamp: false, net: false, oxygen: false }, {}, [], { badge: null, tint: null, ring: null, aura: null }, 0, null],
@@ -303,7 +303,7 @@ ok('expedition: the 4h trip can bring a Power (35%), else a Trench find; an old 
     pet_pantry: { food_kelp: 3, food_shrimp: 1 },
     pet_cosmetics: ['cos_tint_ice', 'cos_ring_thick'],
     pet_wear: { badge: null, tint: 'cos_tint_ice', ring: 'cos_ring_thick', aura: null },
-    pet_heroes: { raven: { copies: 2, shinies: 1, grades: ['common', 'epic'], forms: ['deep', 'bright'], dye: true } },
+    pet_heroes: { raven: { copies: 2, shinies: 1, grades: ['common', 'epic'], forms: ['deep', 'bright'], dye: true, styles: ['classic'] } },
     pet_shards: { common: 3, rare: 0, epic: 1, legendary: 0 },
     pet_tickets: { common: 0, rare: 1, epic: 0, legendary: 0 },
     free_dives_today: 4,

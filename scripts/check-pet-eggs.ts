@@ -275,7 +275,7 @@ assert.equal(dyeApplies(3, true, false), true, 'the dye at 3★');
 assert.equal(dyeApplies(2, true, false), false, 'not before 3★');
 assert.equal(dyeApplies(5, true, true), false, 'never on a shiny');
 const hero = childDoc.pet.hero!;
-const twoCopies = doc({ pet_heroes: { [hero]: { copies: 2, shinies: 0, grades: ['common'], forms: [], dye: false } } });
+const twoCopies = doc({ pet_heroes: { [hero]: { copies: 2, shinies: 0, grades: ['common'], forms: [], dye: false, styles: [] } } });
 assert.equal(setHeroDye(twoCopies, T0, hero, true), null, 'two stars: no dye yet');
 const threeStars: PlayStoreDoc = { ...twoCopies, pet: { ...childDoc.pet, shiny: false } };
 const dyed = setHeroDye(threeStars, T0, hero, true)!;
@@ -339,7 +339,7 @@ const v22: Record<string, unknown> = {
 };
 for (const k of ['pet_heroes', 'pet_shards', 'pet_tickets']) delete v22[k];
 const up = parsePlayStore(JSON.stringify(v22), T0)!;
-assert.equal(up.version, 26);
+assert.equal(up.version, 27);
 assert.equal(up.pet.hero, 'raven');
 assert.equal(up.pet_rebirths, 2, 'rebirths kept');
 assert.equal(up.pet_hall.length, 2, 'Hall kept');

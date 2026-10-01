@@ -3,12 +3,13 @@
  *
  * Two shelves, both authored as JSON under `src/play/data/shops/`:
  * - `token.json` — the soft-`tokens` shop. Rows buy a real effect now
- *   (one Dive charge, a merge-fuel Power crate) or sit as "Coming soon"
- *   stubs (cosmetic / decor). It NEVER sells uncapped wave_power or a
+ *   (one Dive charge, a merge-fuel Power crate, a Shine Stone — v27, looks
+ *   only, one a week) or sit as "Coming soon" stubs (cosmetic / decor). It NEVER sells uncapped wave_power or a
  *   cycle_power skip — those would break the Conquered climb (§9i).
  * - `paid.json` — the Apple IAP shelf. v0 is STUBS ONLY: every row carries a
  *   display price label and `available: false`, so the UI shows "Soon" and
- *   nothing ever charges Apple. Fill real products later.
+ *   nothing ever charges Apple. Fill real products later. v27: the Prism
+ *   Stone row is a preview (its style odds come from `PRISM_STYLE_ODDS`).
  *
  * Pure data + parse: no store import, no side effects. `playStore.purchaseShopRow`
  * consumes a `ShopTokenRow`, and the shop screen renders both shelves.
@@ -22,6 +23,8 @@ export type ShopEffectKind =
   | 'dive_charge'
   /** Grant `amount` random Power item(s) — the merge-fuel crate. */
   | 'merge_crate'
+  /** v27 — `amount` Shine Stone(s): looks only (a chance at a shiny). */
+  | 'shine_stone'
   /** No effect yet — a "Coming soon" cosmetic/decor row. */
   | 'stub';
 
@@ -36,12 +39,14 @@ export type ShopTokenRow = {
   /** Max buys per device-local day; null = no daily cap (the effect itself
    * may still bound it, e.g. the Dive charge cap). */
   daily_limit: number | null;
+  /** v27 — max buys per week (Monday to Sunday, device-local); null = none. */
+  weekly_limit: number | null;
   /** Units granted per buy. */
   amount: number;
 };
 
 /** What a paid row would sell once real IAP lands. All v0 rows are stubs. */
-export type ShopPaidKind = 'paid_unique' | 'hero' | 'stub';
+export type ShopPaidKind = 'paid_unique' | 'hero' | 'prism_stone' | 'stub';
 
 export type ShopPaidRow = {
   id: string;
@@ -59,8 +64,8 @@ export type ShopPaidRow = {
 /** Valid effect kinds for a token row. Declared BEFORE the module-eval
  * `TOKEN_ROWS` / `PAID_ROWS` initializers below, which run at import time and
  * read this (calling a parser earlier would hit the temporal dead zone). */
-const TOKEN_KINDS: readonly ShopEffectKind[] = ['dive_charge', 'merge_crate', 'stub'];
-const PAID_KINDS: readonly ShopPaidKind[] = ['paid_unique', 'hero', 'stub'];
+const TOKEN_KINDS: readonly ShopEffectKind[] = ['dive_charge', 'merge_crate', 'shine_stone', 'stub'];
+const PAID_KINDS: readonly ShopPaidKind[] = ['paid_unique', 'hero', 'prism_stone', 'stub'];
 
 const TOKEN_ROWS: readonly ShopTokenRow[] = parseTokenRows(rawToken);
 const PAID_ROWS: readonly ShopPaidRow[] = parsePaidRows(rawPaid);
@@ -103,6 +108,7 @@ function parseTokenRows(raw: unknown): readonly ShopTokenRow[] {
     seen.add(id);
     const price = finite(entry.price);
     const daily = finite(entry.daily_limit);
+    const weekly = finite(entry.weekly_limit);
     const amount = finite(entry.amount);
     rows.push({
       id,
@@ -112,6 +118,7 @@ function parseTokenRows(raw: unknown): readonly ShopTokenRow[] {
       // A missing/negative price means "not priced yet" → Coming soon.
       price: price != null && price > 0 ? Math.floor(price) : null,
       daily_limit: daily != null && daily > 0 ? Math.floor(daily) : null,
+      weekly_limit: weekly != null && weekly > 0 ? Math.floor(weekly) : null,
       // Never 0 — a fractional/zero amount still grants at least one unit.
       amount: amount != null && amount > 0 ? Math.max(1, Math.floor(amount)) : 1,
     });
@@ -140,8 +147,9 @@ function parsePaidRows(raw: unknown): readonly ShopPaidRow[] {
         typeof entry.price_label === 'string' && entry.price_label.length > 0
           ? entry.price_label
           : '—',
-      // v0 is stub-only: anything not explicitly `true` stays disabled.
-      available: entry.available === true,
+      // v0 is stub-only: anything not explicitly `true` stays disabled. A
+      // Prism Stone is a preview in this build — never for sale.
+      available: kind !== 'prism_stone' && entry.available === true,
       badge: typeof entry.badge === 'string' && entry.badge.length > 0 ? entry.badge : null,
     });
   }

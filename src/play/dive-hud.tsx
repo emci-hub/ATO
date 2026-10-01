@@ -43,7 +43,9 @@ export function FindIcon({ id, size = 34, dim = false }: { id: string; size?: nu
         ? 'circle-multiple'
         : kind === 'cosmetic'
           ? 'palette'
-          : def
+          : kind === 'stone'
+            ? 'diamond-stone'
+            : def
             ? SLOT_ICONS[def.core.slot]
             : 'help';
   return (

@@ -12,6 +12,8 @@
  *   food_*    → the pet pantry (max 8, fed only when you tap Feed)
  *   shells_N  → N shells (the Dive-gear currency)
  *   cos_*     → a pet cosmetic (pet-cosmetics.ts)
+ *   shine_stone → a Shine Stone (v27, Part D — Abyss and Hadal only, in
+ *               place of some shell weight; never a Logbook slot)
  *
  * Two paths per Deeper: Safer (bust −8 points, finds from one tier shallower)
  * or Richer (bust +8 points, one tier deeper). Both show their exact %.
@@ -101,7 +103,10 @@ export function rollTier(tier: DiveTier, rng: () => number = Math.random): strin
 
 /* ------------------------------------------------------------- finds --- */
 
-export type FindKind = 'item' | 'food' | 'shells' | 'cosmetic' | 'unknown';
+export type FindKind = 'item' | 'food' | 'shells' | 'cosmetic' | 'stone' | 'unknown';
+
+/** v27 — the Shine Stone find (looks only: it can make a pet shiny). */
+export const STONE_FIND = 'shine_stone';
 
 export const FOODS = {
   food_kelp: { name: 'Kelp snack', hearts: 1 },
@@ -124,6 +129,7 @@ export function findKind(id: string): FindKind {
   if (isFoodId(id)) return 'food';
   if (shellsOf(id) > 0) return 'shells';
   if (id.startsWith('cos_')) return cosmeticById(id) ? 'cosmetic' : 'unknown';
+  if (id === STONE_FIND) return 'stone';
   return 'unknown';
 }
 
@@ -134,15 +140,16 @@ export function findName(id: string): string {
   if (kind === 'food') return FOODS[id as FoodId].name;
   if (kind === 'shells') return `${shellsOf(id)} shells`;
   if (kind === 'cosmetic') return cosmeticById(id)?.name ?? id;
+  if (kind === 'stone') return 'Shine Stone';
   return 'Unknown find';
 }
 
-/** Every collectible Dive find (no shells), deepest-first tiers last — the
- * Logbook's slots. */
+/** Every collectible Dive find (no shells, no Stones), deepest-first tiers
+ * last — the Logbook's slots. */
 export function diveCollectibleIds(): string[] {
   const seen = new Set<string>();
   for (const tier of DIVE_TIERS) {
-    for (const r of tierRolls()[tier]) if (findKind(r.id) !== 'shells') seen.add(r.id);
+    for (const r of tierRolls()[tier]) if (findKind(r.id) !== 'shells' && findKind(r.id) !== 'stone') seen.add(r.id);
   }
   return [...seen];
 }

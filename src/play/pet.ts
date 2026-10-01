@@ -37,11 +37,13 @@ import {
   careScore,
   heroEgg,
   heroOfLine,
+  isShinyStyle,
   rollPet,
   trimHall,
   type CareBand,
   type EggType,
   type Grade,
+  type ShinyStyle,
 } from '@/play/pet-eggs';
 import { EXPEDITION_LADDER_MS, EXPEDITION_STEPS, LEGACY_EXPEDITION_MS } from '@/play/expedition-ladder';
 
@@ -330,6 +332,20 @@ export type PetState = {
   reveals: PetReveal[];
   /** v24 — the player's name for it (null = the hero's name / "Knight egg"). */
   name: string | null;
+  /* ---- Den, pity and Shine Stones (v27, Part D) ---- */
+  /** Pity stamp: eggs since the last Legendary, set each time this pet becomes
+   * the active pet before Child. Its roll at Child uses this position. */
+  pity_from: number;
+  /** The shiny's style (null unless shiny; a natural shiny is Classic). */
+  shiny_style: ShinyStyle | null;
+  /** A Shine Stone missed on it: a glimmer glow (looks only). */
+  glimmer: boolean;
+  /** A Den favourite (sorted first). */
+  fav: boolean;
+  /** Den id, set when its egg is chosen (0 = a blank slot). */
+  uid: number;
+  /** A blank slot from "Change egg": its egg is already paid for. */
+  prepaid: boolean;
 };
 
 export type PetReveal = 'hatch' | 'child';
@@ -388,6 +404,12 @@ export function newPet(now: number, line: string = DEFAULT_PET_LINE): PetState {
     band: null,
     reveals: [],
     name: null,
+    pity_from: 0,
+    shiny_style: null,
+    glimmer: false,
+    fav: false,
+    uid: 0,
+    prepaid: false,
   };
 }
 
@@ -512,8 +534,8 @@ function evolve(pet: PetState): PetState {
   if (from === 'baby') {
     if (pet.hero == null && pet.egg != null) {
       const band = careBand(petCareScore(pet));
-      const roll = rollPet(pet.seed, pet.egg, band, pet.ticket);
-      reveal = { hero: roll.hero, grade: roll.grade, shiny: roll.shiny, band };
+      const roll = rollPet(pet.seed, pet.egg, band, pet.ticket, pet.pity_from);
+      reveal = { hero: roll.hero, grade: roll.grade, shiny: roll.shiny, band, shiny_style: roll.shiny ? 'classic' : null };
     }
     const hero = (reveal.hero ?? pet.hero) as string | null;
     reveal = {
@@ -1031,8 +1053,9 @@ export function parsePet(raw: unknown, now: number): PetState {
   const egg = isEgg(raw.egg) ? raw.egg : null;
   // An Egg with no egg type is the picker; past Egg, a missing type is kept
   // (never wipe a grown pet over a label — its hero comes from its line).
-  if (egg == null && base.stage === 'egg') return { ...newPet(num(raw.seen_at, now)) };
+  if (egg == null && base.stage === 'egg') return { ...newPet(num(raw.seen_at, now)), prepaid: raw.prepaid === true };
   const hero = typeof raw.hero === 'string' && heroById(raw.hero) != null ? raw.hero : null;
+  const shiny = hero != null && raw.shiny === true;
   return {
     ...base,
     egg,
@@ -1045,12 +1068,18 @@ export function parsePet(raw: unknown, now: number): PetState {
     care_acts: Math.max(0, Math.min(7, Math.floor(num(raw.care_acts, 0)))),
     hero,
     grade: hero && isGrade(raw.grade) ? raw.grade : hero ? 'common' : null,
-    shiny: hero != null && raw.shiny === true,
+    shiny,
     band: isBand(raw.band) ? raw.band : null,
     reveals: Array.isArray(raw.reveals)
       ? raw.reveals.filter((r): r is PetReveal => r === 'hatch' || r === 'child').slice(-2)
       : [],
     name: typeof raw.name === 'string' && raw.name.length > 0 && raw.name.length <= 24 ? raw.name : null,
+    // v27: a shiny from before styles is Classic; a non-shiny has none.
+    shiny_style: shiny ? (isShinyStyle(raw.shiny_style) ? raw.shiny_style : 'classic') : null,
+    pity_from: Math.max(0, Math.floor(num(raw.pity_from, 0))),
+    glimmer: !shiny && raw.glimmer === true,
+    fav: raw.fav === true,
+    uid: Math.max(0, Math.floor(num(raw.uid, 0))),
   };
 }
 

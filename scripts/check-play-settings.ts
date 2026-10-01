@@ -222,7 +222,7 @@ assert.equal(parseSettings(undefined, { remind: false, hasProgress: false }).tut
   const v23: Record<string, unknown> = { ...defaultPlayStore(T0), version: 23, pet_remind: false };
   for (const k of ['play_settings', 'play_stats', 'milestones', 'ribbons', 'dye_unlocked', 'charges_armed']) delete v23[k];
   const up = parsePlayStore(JSON.stringify(v23), T0)!;
-  assert.equal(up.version, 26);
+  assert.equal(up.version, 27);
   assert.equal(up.play_settings.notif.hunger, false, 'v23 → v24 keeps a hunger reminder that was off');
   assert.deepEqual(up.play_settings.quiet, { from: 22 * 60, to: 7 * 60 }, 'quiet hours 22:00-07:00');
   assert.equal(up.play_settings.chatter, 'normal');
@@ -272,7 +272,7 @@ ok('journal: hatches, reveals by grade, dives, surfaces, busts, best depth, expe
 
 {
   const four = doc({
-    pet_heroes: Object.fromEntries(['aurex', 'oni', 'raven', 'kitsune'].map((h) => [h, { copies: 1, shinies: 0, grades: ['common' as const], forms: [], dye: false }])),
+    pet_heroes: Object.fromEntries(['aurex', 'oni', 'raven', 'kitsune'].map((h) => [h, { copies: 1, shinies: 0, grades: ['common' as const], forms: [], dye: false, styles: [] }])),
   });
   const before = { tokens: four.tokens, shells: four.shells };
   const claimed = claimMilestone(four, T0, 'heroes_4')!;
@@ -280,11 +280,12 @@ ok('journal: hatches, reveals by grade, dives, surfaces, busts, best depth, expe
   assert.deepEqual({ tokens: claimed.tokens, shells: claimed.shells }, before, 'never tokens or shells');
   assert.equal(claimMilestone(claimed, T0, 'heroes_4'), null, 'once');
   assert.equal(claimMilestone(four, T0, 'heroes_8'), null, 'not before it is reached');
-  const legend = doc({ pet_heroes: { kitsune: { copies: 1, shinies: 0, grades: ['legendary'], forms: [], dye: false } } });
+  const legend = doc({ pet_heroes: { kitsune: { copies: 1, shinies: 0, grades: ['legendary'], forms: [], dye: false, styles: [] } } });
   const dyed = claimMilestone(legend, T0, 'first_legendary')!;
   assert.deepEqual(dyed.dye_unlocked, ['kitsune'], 'first Legendary unlocks that hero’s dye');
   assert.ok(dyed.ribbons.includes('legend'));
-  for (const m of MILESTONES) assert.ok(['ticket', 'cosmetic', 'dye', 'ribbon'].includes(m.reward.kind), `${m.id}: looks / egg-grade reward only`);
+  // v27: a Shine Stone is a looks-only reward too (it can only make a pet shiny).
+  for (const m of MILESTONES) assert.ok(['ticket', 'cosmetic', 'dye', 'ribbon', 'stone'].includes(m.reward.kind), `${m.id}: looks / egg-grade reward only`);
   assert.equal(playView(dyed, T0).milestones.find((m) => m.def.id === 'first_legendary')?.claimed, true);
 }
 ok('milestones: claim once when reached; tickets, cosmetics, a dye or a ribbon — never tokens or shells');

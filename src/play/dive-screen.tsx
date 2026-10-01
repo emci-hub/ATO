@@ -269,7 +269,7 @@ export function DiveScreen({
         fxLevel={fxLevel}
         grade={revealed ? view.pet.state.grade : null}
         shiny={revealed && view.pet.state.shiny}
-        recolor={revealed ? petRecolor(view.pet.state.hero, view.pet.state.shiny, view.pet.dyeOn) : null}
+        recolor={revealed ? petRecolor(view.pet.state.hero, view.pet.state.shiny, view.pet.dyeOn, view.pet.state.shiny_style) : null}
         atSurface={!run.active}>
         <DiveTopBar
           zone={diveZone(depth)}

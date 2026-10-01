@@ -14,6 +14,12 @@
  *   - Grade and shiny are looks only (never a stat, never the sprite colour
  *     for grade). Release / rebirth leave a shard of the pet's grade; 5 shards
  *     of a grade → a ticket guaranteeing the next grade or better.
+ *   - v27 (Part D): Legendary pity — the 40th egg since your last Legendary
+ *     is Legendary, soft from the 30th; `gradeOdds` takes the position, so
+ *     the odds shown are still the odds rolled. Egg pacing: 2 free a day,
+ *     then 10/20/40/80 shells, at most 6. Shine Stones: 10% shiny, certain
+ *     after 5 glimmers, each roll fixed by a saved sequence. Shiny styles
+ *     (Classic, and the Prism styles — a preview, never usable yet).
  */
 
 import { heroName } from './heroes-data';
@@ -179,17 +185,71 @@ export function roundSkillPoints(outcome: { pass: boolean; quality: number }): n
 
 /* ---------------------------------------------------------------- odds --- */
 
+/* --------------------------------------------------------------- pity --- */
+
+/** Legendary pity (Part D): the 40th egg since your last Legendary is always
+ * Legendary; from the 30th the Legendary share climbs a step each egg. The
+ * position is "eggs since the last Legendary" before this egg reveals. */
+export const PITY_HARD = 40;
+export const PITY_SOFT_FROM = 30;
+
+/** Which egg this is since the last Legendary (1 = the first one after it). */
+export function pityEggNumber(since: number): number {
+  return Math.max(0, Math.floor(since)) + 1;
+}
+
+/** Eggs left until a Legendary is certain, counting the next one (1 = the
+ * next egg is guaranteed). */
+export function eggsUntilLegendary(since: number): number {
+  return Math.max(1, PITY_HARD - Math.max(0, Math.floor(since)));
+}
+
+/** Percentage points added on each egg from 30 through 39. Egg 40 is the hard
+ * guarantee (100%), not another step of this climb.
+ *
+ * This is the slowest rise that still goes up on every egg 30→39. A steeper
+ * climb (the old one-eleventh line up to 100%) only shortens the tail. It
+ * cannot move a Regular player's 90% time toward ~10 days: with the daily egg
+ * and the unchanged base odds, 9 in 10 already have a Legendary before soft
+ * pity does much. `sim:collect` keeps the 9–11 day bar and fails on the gap. */
+export const PITY_SOFT_STEP_PP = 1;
+
+/** The Legendary share (percent) at a pity position: the base share up to
+ * egg 29, then +`PITY_SOFT_STEP_PP` each egg from 30 through 39, and 100% at
+ * egg 40. */
+export function pityLegendaryPct(basePct: number, since: number): number {
+  const n = pityEggNumber(since);
+  if (n >= PITY_HARD) return 100;
+  if (n < PITY_SOFT_FROM) return basePct;
+  const steps = n - PITY_SOFT_FROM + 1;
+  return Math.min(100, basePct + steps * PITY_SOFT_STEP_PP);
+}
+
+/** The counter after a reveal: back to 0 on a Legendary, else one more
+ * (never past the guaranteed egg). */
+export function pityAfterReveal(since: number, grade: Grade): number {
+  return grade === 'legendary' ? 0 : Math.min(PITY_HARD - 1, Math.max(0, Math.floor(since)) + 1);
+}
+
 /**
  * Grade odds (percent) for a band, with an optional ticket's minimum grade:
- * grades below it are removed and the rest scaled back up to 100. This is
- * exactly what `rollPet` rolls against.
+ * grades below it are removed and the rest scaled back up to 100. Then pity
+ * (`since` = eggs since the last Legendary) lifts the Legendary share and
+ * scales the others down to make room. This is exactly what `rollPet` rolls
+ * against.
  */
-export function gradeOdds(band: CareBand, minGrade: Grade | null = null): Record<Grade, number> {
+export function gradeOdds(band: CareBand, minGrade: Grade | null = null, since = 0): Record<Grade, number> {
   const w = BAND_WEIGHTS[band];
   const floor = minGrade ? gradeRank(minGrade) : 0;
   const total = GRADES.reduce((sum, g) => sum + (gradeRank(g) >= floor ? w[g] : 0), 0);
   const out = {} as Record<Grade, number>;
   for (const g of GRADES) out[g] = gradeRank(g) >= floor ? (w[g] / total) * 100 : 0;
+  if (pityEggNumber(since) >= PITY_HARD) return { common: 0, rare: 0, epic: 0, legendary: 100 };
+  const legend = pityLegendaryPct(out.legendary, since);
+  if (legend === out.legendary) return out;
+  const rest = 100 - out.legendary;
+  const k = rest > 0 ? (100 - legend) / rest : 0;
+  for (const g of GRADES) out[g] = g === 'legendary' ? legend : out[g] * k;
   return out;
 }
 
@@ -200,6 +260,113 @@ export function heroOdds(egg: EggType): { hero: string; pct: number }[] {
 }
 
 export const SHINY_ODDS = 1 / 50;
+
+/* ------------------------------------------------------- egg pacing --- */
+
+/** Eggs a day (Part D): the first two are free, then each costs more shells;
+ * at most six a day. Passing the daily challenge adds one free egg (once a
+ * day). An egg picked with a trade-up ticket brings its own egg and never
+ * counts. */
+export const FREE_EGGS_PER_DAY = 2;
+export const DAILY_EGG_BONUS = 1;
+export const EXTRA_EGG_PRICES: readonly number[] = [10, 20, 40, 80];
+export const EGGS_PER_DAY_MAX = FREE_EGGS_PER_DAY + EXTRA_EGG_PRICES.length;
+
+/** What the next egg costs today: 0 = free, a shell price, or null = none
+ * left today. `used` = eggs already picked today (tickets not counted). */
+export function nextEggPrice(used: number, dailyEgg: boolean): number | null {
+  const n = Math.max(0, Math.floor(used));
+  if (n >= EGGS_PER_DAY_MAX) return null;
+  const free = FREE_EGGS_PER_DAY + (dailyEgg ? DAILY_EGG_BONUS : 0);
+  if (n < free) return 0;
+  return EXTRA_EGG_PRICES[Math.min(EXTRA_EGG_PRICES.length - 1, n - free)];
+}
+
+/* ------------------------------------------------- shine stones + styles --- */
+
+/** A Shine Stone (Part D): a 10% chance to make a revealed non-shiny pet
+ * shiny. Every miss adds a glimmer (per player); with 5 glimmers the next
+ * Stone always works, and a success clears them. */
+export const STONE_ODDS = 0.1;
+export const GLIMMER_PITY = 5;
+/** Every 5th day played gives a Shine Stone. */
+export const STONE_EVERY_DAYS = 5;
+
+/** The Guide's plain-word timelines (days), from `npm run sim:collect` — the
+ * sim fails when its results drift past them, so the words stay true. */
+export const COLLECT_TIMELINES = {
+  /** Playing every day (a few eggs + the daily egg), 9 in 10 find a Legendary by then.
+   *  Measured by `sim:collect` (Great care, 4 eggs a day). The ~10 day target
+   *  is not reachable without changing a locked call; this is the measured day. */
+  legendaryRegularDays: 6,
+  /** With the free eggs only, a Legendary is certain by then (the hard pity). */
+  legendaryCertainDays: Math.ceil(PITY_HARD / FREE_EGGS_PER_DAY),
+  /** With a Shine Stone every few days, most Regular players have a shiny by then (the median). */
+  shinyRegularDays: 6,
+} as const;
+
+/** The roll for the `used`-th Stone ever (0-based), from the saved sequence
+ * seed — the same Stone always rolls the same, so closing the app can't
+ * change it. */
+export function stoneRoll(seq: number, used: number): number {
+  return seededRng((seq ^ Math.imul(Math.max(0, Math.floor(used)) + 1, 0x9e3779b1)) >>> 0)();
+}
+
+export function stoneSucceeds(seq: number, used: number, glimmers: number): boolean {
+  return glimmers >= GLIMMER_PITY || stoneRoll(seq, used) < STONE_ODDS;
+}
+
+/** Shiny styles: `classic` is the hero's own shiny colour (natural shinies
+ * and Shine Stones); the rest only come from a Prism Stone, which is a Shop
+ * preview in this build — never usable. */
+export const SHINY_STYLES = ['classic', 'aurora', 'ember', 'frost', 'void', 'gold', 'prism'] as const;
+export type ShinyStyle = (typeof SHINY_STYLES)[number];
+export type PrismStyle = Exclude<ShinyStyle, 'classic'>;
+export const PRISM_STYLES: readonly PrismStyle[] = ['aurora', 'ember', 'frost', 'void', 'gold', 'prism'];
+
+export const SHINY_STYLE_LABEL: Record<ShinyStyle, string> = {
+  classic: 'Classic',
+  aurora: 'Aurora',
+  ember: 'Ember',
+  frost: 'Frost',
+  void: 'Void',
+  gold: 'Gold',
+  prism: 'Prism',
+};
+/** Prism Stone odds (percent, sum 100) — shown on the Shop preview. */
+export const PRISM_STYLE_ODDS: Record<PrismStyle, number> = { aurora: 24, ember: 22, frost: 22, void: 16, gold: 10, prism: 6 };
+export const PRISM_STYLE_COLOR: Record<PrismStyle, string> = {
+  aurora: '#4FFFD2',
+  ember: '#FF6A3D',
+  frost: '#9FD8FF',
+  void: '#7B4DFF',
+  gold: '#FFC83D',
+  prism: '#FF4FD8',
+};
+/** Sparkle colour per style (Prism: rainbow, drawn by the overlay). */
+export const SHINY_SPARKLE: Record<ShinyStyle, string> = {
+  classic: '#FFF6C8',
+  aurora: '#C9FFF0',
+  ember: '#FFD2B8',
+  frost: '#E6F6FF',
+  void: '#D9C9FF',
+  gold: '#FFF0B8',
+  prism: 'rainbow',
+};
+
+/** A Prism style from a uniform draw u in [0, 1) — `PRISM_STYLE_ODDS` exactly. */
+export function prismStyleFor(u: number): PrismStyle {
+  let x = Math.max(0, Math.min(0.999999, u)) * 100;
+  for (const s of PRISM_STYLES) {
+    if (x < PRISM_STYLE_ODDS[s]) return s;
+    x -= PRISM_STYLE_ODDS[s];
+  }
+  return PRISM_STYLES[PRISM_STYLES.length - 1];
+}
+
+export function isShinyStyle(v: unknown): v is ShinyStyle {
+  return typeof v === 'string' && (SHINY_STYLES as readonly string[]).includes(v);
+}
 
 /* ---------------------------------------------------------------- roll --- */
 
@@ -223,15 +390,22 @@ export function newEggSeed(rng: () => number = Math.random): number {
 export type PetRoll = { hero: string; grade: Grade; shiny: boolean };
 
 /**
- * The pet's hero, grade and shiny — from the stored seed and the care band
- * at Child. Pure and deterministic: the same inputs always give the same pet.
- * Draw order is fixed (hero, grade, shiny).
+ * The pet's hero, grade and shiny — from the stored seed, the care band at
+ * Child and the pity position stamped on the pet. Pure and deterministic:
+ * the same inputs always give the same pet. Draw order is fixed (hero,
+ * grade, shiny).
  */
-export function rollPet(seed: number, egg: EggType, band: CareBand, minGrade: Grade | null = null): PetRoll {
+export function rollPet(
+  seed: number,
+  egg: EggType,
+  band: CareBand,
+  minGrade: Grade | null = null,
+  since = 0,
+): PetRoll {
   const rng = seededRng(seed);
   const pool = EGG_POOLS[egg];
   const hero = pool[Math.min(pool.length - 1, Math.floor(rng() * pool.length))];
-  const odds = gradeOdds(band, minGrade);
+  const odds = gradeOdds(band, minGrade, since);
   let u = rng() * 100;
   let grade: Grade = GRADES[GRADES.length - 1];
   for (const g of GRADES) {
@@ -300,6 +474,12 @@ export const HERO_DYE_COLOR: Record<string, string> = {
   kitsune: '#B98CFF',
 };
 
+/** A shiny's colour: its hero's own for Classic, else the Prism style's. */
+export function shinyColorFor(hero: string, style: ShinyStyle | null): string | null {
+  if (style == null || style === 'classic') return HERO_SHINY_COLOR[hero] ?? null;
+  return PRISM_STYLE_COLOR[style];
+}
+
 /* --------------------------------------------------------------- hall --- */
 
 /** Hall cap: when over, drop the oldest Common, then Rare, then Epic.
@@ -320,25 +500,29 @@ export function trimHall<T extends { grade: Grade; shiny: boolean }>(entries: re
 /* -------------------------------------------------------- the hero book --- */
 
 /** One hero's Collection record: every pet of it that has left (released or
- * reborn) — copies (stars), shinies, grades and forms reached — plus the 3★
- * dye switch. The live pet is added on top for the view. */
+ * reborn) — copies (stars), shinies, grades, forms reached and shiny styles
+ * owned — plus the 3★ dye switch. The live pet and the Den's pets are added on
+ * top for the view. */
 export type PetHeroRecord = {
   copies: number;
   shinies: number;
   grades: Grade[];
   forms: string[];
   dye: boolean;
+  /** v27 — shiny styles owned (Classic from a natural shiny or a Stone). */
+  styles: ShinyStyle[];
 };
 export type PetHeroBook = Record<string, PetHeroRecord>;
 
-export const EMPTY_HERO_RECORD: PetHeroRecord = { copies: 0, shinies: 0, grades: [], forms: [], dye: false };
+export const EMPTY_HERO_RECORD: PetHeroRecord = { copies: 0, shinies: 0, grades: [], forms: [], dye: false, styles: [] };
 
 /** Add one pet of `hero` to the book. */
 export function addToBook(
   book: PetHeroBook,
-  pet: { hero: string; grade: Grade; shiny: boolean; forms: readonly string[] },
+  pet: { hero: string; grade: Grade; shiny: boolean; forms: readonly string[]; style?: ShinyStyle | null },
 ): PetHeroBook {
   const prev = book[pet.hero] ?? EMPTY_HERO_RECORD;
+  const style = pet.shiny ? (pet.style ?? 'classic') : null;
   return {
     ...book,
     [pet.hero]: {
@@ -347,8 +531,14 @@ export function addToBook(
       grades: GRADES.filter((g) => prev.grades.includes(g) || g === pet.grade),
       forms: [...new Set([...prev.forms, ...pet.forms])],
       dye: prev.dye,
+      styles: SHINY_STYLES.filter((s) => prev.styles.includes(s) || s === style),
     },
   };
+}
+
+/** Every shiny style of a hero owned — the looks-only all-styles card frame. */
+export function ownsAllStyles(record: PetHeroRecord | undefined): boolean {
+  return record != null && SHINY_STYLES.every((s) => record.styles.includes(s));
 }
 
 /** The best grade a hero has reached (null = never found). */
@@ -364,12 +554,20 @@ export function parseHeroBook(raw: unknown, validHero: (id: string) => boolean):
     if (!validHero(hero) || typeof row !== 'object' || row == null) continue;
     const r = row as Record<string, unknown>;
     const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.floor(v)) : 0);
+    const shinies = n(r.shinies);
+    // v27: a record from before styles owns Classic if it has any shiny.
+    const styles = Array.isArray(r.styles)
+      ? SHINY_STYLES.filter((s) => (r.styles as unknown[]).includes(s))
+      : shinies > 0
+        ? (['classic'] as ShinyStyle[])
+        : [];
     out[hero] = {
       copies: n(r.copies),
-      shinies: n(r.shinies),
+      shinies,
       grades: Array.isArray(r.grades) ? GRADES.filter((g) => (r.grades as unknown[]).includes(g)) : [],
       forms: Array.isArray(r.forms) ? [...new Set((r.forms as unknown[]).filter((f): f is string => typeof f === 'string'))] : [],
       dye: r.dye === true,
+      styles,
     };
   }
   return out;

@@ -14,7 +14,7 @@ import { useAppearance } from '@/lib/theme/context';
 import { AboutScreen } from '@/play/about-screen';
 import { STUB_AVATAR_ID, avatarDef } from '@/play/avatars';
 import { CommandHub } from '@/play/command-hub';
-import { NEON, type HubDestination } from '@/play/neon-viper';
+import { NEON, shopUnlocked, type HubDestination } from '@/play/neon-viper';
 import { PlayThemeProvider } from '@/play/play-theme';
 import { PlayBanner } from '@/play/play-banner';
 import {
@@ -141,6 +141,7 @@ export default function PlayScreen() {
     view,
     claim,
     commit,
+    commitSaved,
     grantRandomFind,
     beginDive,
     beginFreeDive,
@@ -678,9 +679,12 @@ export default function PlayScreen() {
           <ScrollView contentContainerStyle={styles.hubScroll} showsVerticalScrollIndicator={false}>
             <CommandHub
               diveActive={view?.diveRun.active ?? false}
+              devUnlocked={devUnlocked}
               scrap={view?.tokens ?? null}
               wave={view?.campaign.wave_in_phase ?? 1}
-              onTile={(to: HubDestination) => setMode(to)}
+              onTile={(to: HubDestination) => {
+                if (to !== 'shop' || shopUnlocked(devUnlocked)) setMode(to);
+              }}
               onSettings={() => setHubSettingsOpen(true)}>
               {/* Research / Claim — the token income the old Grove card carried,
                * kept reachable now that the hub replaces that card. */}
@@ -771,6 +775,7 @@ export default function PlayScreen() {
                 <PetScreen
                   view={view}
                   commit={commit}
+                  commitSaved={commitSaved}
                   registerBack={registerBack}
                   reduceMotion={reduceMotion}
                   talkEvent={petTalk}
@@ -838,7 +843,7 @@ export default function PlayScreen() {
                     registerBack={registerBack}
                     onBackToGrove={() => setMode('grove')}
                   />
-                ) : mode === 'shop' && view ? (
+                ) : mode === 'shop' && view && shopUnlocked(devUnlocked) ? (
                   <ShopScreen
                     view={view}
                     onBuyToken={handleBuyShopRow}
@@ -1341,6 +1346,8 @@ function shopRefusalCopy(reason: ShopRefusal): string {
       return 'Not enough tokens — Claim or clear a wave to earn more.';
     case 'daily_cap':
       return 'Daily limit reached — come back tomorrow.';
+    case 'weekly_cap':
+      return 'Weekly limit reached — come back next week.';
     case 'dive_full':
       return 'Dive charges are already full — nothing to add.';
   }

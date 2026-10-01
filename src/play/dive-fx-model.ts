@@ -20,10 +20,11 @@ import { cosmeticById } from './pet-cosmetics';
 export type FindGlow = 'common' | 'rare' | 'epic';
 
 /** Rare-or-better: Rare gear and every Power; tint/badge cosmetics are rare,
- * rings and auras (Trench and deeper only) are epic. Food and shells are
- * common. */
+ * rings and auras (Trench and deeper only) and Shine Stones are epic. Food
+ * and shells are common. */
 export function findGlow(id: string): FindGlow {
   const kind = findKind(id);
+  if (kind === 'stone') return 'epic';
   if (kind === 'cosmetic') {
     const slot = cosmeticById(id)?.slot;
     return slot === 'ring' || slot === 'aura' ? 'epic' : 'rare';

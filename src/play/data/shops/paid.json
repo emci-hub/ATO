@@ -27,6 +27,15 @@
       "price_label": "$4.99",
       "available": false,
       "badge": "Hero"
+    },
+    {
+      "id": "paid_prism_stone",
+      "kind": "prism_stone",
+      "name": "Prism Stone",
+      "blurb": "Makes a revealed pet shiny in a random style. Looks only. Not for sale yet.",
+      "price_label": "$0.99",
+      "available": false,
+      "badge": "Preview"
     }
   ]
 }
