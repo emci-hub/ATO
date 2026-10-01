@@ -730,7 +730,7 @@ var SYSTEM_MAP = {
       id: "sc-dev", col: "screens", title: "Dev tools (labs)", status: "live", flag: true,
       summary: "dev-lab, ai-lab, crisis-lab, pixel-lab, theme-lab, around-lab, plus a floating DEV button over every screen that opens a panel (screen, access, AI usage, update) without leaving the screen. Open to more people than intended while pre-launch mode is on.",
       differs: ["PRE_LAUNCH_DEV is true, and over-the-air updates do not run the release check — so every update ships with dev tooling un-gated.", "The 7-tap password unlock (dev-unlock-gate.tsx) is not mounted anywhere.", "theme-lab and around-lab were flagged for deletion on 2026-09-08 and are still there."],
-      files: ["src/components/dev-fab.tsx", "src/lib/dev-fab-model.ts", "src/lib/dev-mode.ts:15", "src/app/dev-lab.tsx", "src/app/ai-lab.tsx", "scripts/release-mode-check.ts:22-31"]
+      files: ["src/components/play-dev-fab.tsx", "src/lib/dev-fab-model.ts", "src/lib/dev-mode.ts:15", "src/app/play.tsx", "src/app/dev-lab.tsx", "src/app/ai-lab.tsx", "scripts/release-mode-check.ts:22-31"]
     },
     {
       id: "sc-entry", col: "screens", title: "Sign-up, login, public profile", status: "live",

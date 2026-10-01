@@ -1,15 +1,12 @@
 /**
- * Floating dev button checks. Run: npm run check:dev-fab
+ * Play floating dev button checks. Run: npm run check:dev-fab
  *
- *   1. Visibility = the Dev Tools Hub rule: never signed out / mid-onboarding /
- *      while access is loading; root, a granted capability, or PRE_LAUNCH_DEV /
- *      the session unlock opens it; a plain user never sees it.
+ *   1. Visibility = PRE_LAUNCH_DEV and the Play dev-kit PIN unlock only.
  *   2. The button always stays fully on screen (clamp), rests on a side edge
  *      (snap), and starts clear of the status bar.
  *   3. The drag helpers are worklets (they run on the UI thread).
- *   4. Wiring: mounted once in the root layout, panel is a Modal (nothing
- *      navigates away), uses the gesture + reanimated libraries already in the
- *      app, and no dev-menu / debugger dependency was added.
+ *   4. Wiring: mounted from the Play shell only, not the root layout; panel is a
+ *      Modal with the Grove Dev kit; uses gesture + reanimated already in the app.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -20,7 +17,7 @@ import {
   DEV_FAB_SIZE,
   clampFab,
   defaultFabPosition,
-  devFabVisible,
+  playDevFabVisible,
   snapFabX,
 } from '../src/lib/dev-fab-model';
 
@@ -32,20 +29,13 @@ const ok = (msg: string) => {
   console.log(`  ✓ ${msg}`);
 };
 
-const base = { isAuthed: true, hasMe: true, devAccessLoading: false, isDev: false, isRoot: false, capabilities: [] as string[] };
-
 /* ---------------------------------------------------------------- 1 --- */
 {
-  assert.equal(devFabVisible(base), false, 'a plain user never sees it');
-  assert.equal(devFabVisible({ ...base, isDev: true }), true, 'PRE_LAUNCH_DEV / session unlock opens it');
-  assert.equal(devFabVisible({ ...base, isRoot: true }), true, 'root opens it');
-  assert.equal(devFabVisible({ ...base, capabilities: ['quota'] }), true, 'a granted capability opens it');
-  assert.equal(devFabVisible({ ...base, capabilities: ['nonsense'] }), false, 'an unknown capability does not');
-  assert.equal(devFabVisible({ ...base, isDev: true, isAuthed: false }), false, 'never signed out');
-  assert.equal(devFabVisible({ ...base, isDev: true, hasMe: false }), false, 'never mid-onboarding');
-  assert.equal(devFabVisible({ ...base, isRoot: true, devAccessLoading: true }), false, 'never while access is loading');
+  assert.equal(playDevFabVisible({ preLaunchDev: false, playDevUnlocked: true }), false, 'off when not pre-launch');
+  assert.equal(playDevFabVisible({ preLaunchDev: true, playDevUnlocked: false }), false, 'off when Play dev kit locked');
+  assert.equal(playDevFabVisible({ preLaunchDev: true, playDevUnlocked: true }), true, 'on when both gates pass');
 }
-ok('visible exactly when the Dev Tools Hub would open; never signed out, onboarding or loading');
+ok('visible only for PRE_LAUNCH_DEV + Play dev-kit unlock');
 
 /* ---------------------------------------------------------------- 2 --- */
 {
@@ -88,18 +78,19 @@ ok('clampFab and snapFabX are worklets');
 /* ---------------------------------------------------------------- 4 --- */
 {
   const layout = read('src/app/_layout.tsx');
-  assert.equal((layout.match(/<DevFab \/>/g) ?? []).length, 1, 'mounted exactly once, in the root layout');
-  assert.ok(layout.indexOf('</Stack>') < layout.indexOf('<DevFab />'), 'rendered after the Stack so it sits over every screen');
-  const fab = read('src/components/dev-fab.tsx');
+  assert.ok(!layout.includes('<DevFab'), 'not mounted in the root layout');
+  const play = read('src/app/play.tsx');
+  assert.ok(play.includes('<PlayDevFab'), 'mounted from the Play shell');
+  assert.ok(play.includes('playDevFabVisible('), 'gated by the shared Play visibility rule');
+  assert.ok(play.includes('groveDevKitPanel'), 'panel is the Grove Dev kit');
+  const fab = read('src/components/play-dev-fab.tsx');
   assert.ok(fab.includes("from 'react-native-gesture-handler'") && fab.includes("from 'react-native-reanimated'"), 'built on the gesture + reanimated libraries already in the app');
   assert.ok(/<Modal[^>]*visible=\{open\}/.test(fab), 'the panel is a Modal over the current screen');
-  assert.ok(fab.includes('devFabVisible('), 'gated by the shared visibility rule');
-  assert.ok(fab.includes('fetchSageUsage()'), 'shows real AI usage in place');
   const pkg = JSON.parse(read('package.json')) as { dependencies: Record<string, string>; devDependencies?: Record<string, string> };
   const all = { ...pkg.dependencies, ...(pkg.devDependencies ?? {}) };
   const bad = Object.keys(all).filter((d) => /dev-menu|api-debugger|shake|flipper|reactotron/i.test(d));
   assert.deepEqual(bad, [], 'no dev-menu / debugger / shake dependency was added');
 }
-ok('wiring: mounted once over every screen, Modal panel, existing libraries only');
+ok('wiring: Play-only mount, Modal Grove kit, existing libraries only');
 
 console.log(`\ncheck:dev-fab — ${passed} groups passed.`);
