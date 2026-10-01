@@ -32,6 +32,32 @@ import {
 } from '../src/play/pet-game-rules';
 import { PET_STAGE_MS } from '../src/play/pet';
 import { chooseEggDoc, defaultPlayStore, finishPetRound } from '../src/play/playStore';
+import {
+  CATCH_LEVELS,
+  DIFFICULTIES,
+  SCORE_MULT,
+  TRAIN_LEVELS,
+  catchScore,
+  comboMult,
+  dailySeed,
+  seededRng,
+  startTrain,
+  trainScore,
+} from '../src/play/pet-game-rules';
+import {
+  DAILY_BONUS_SHELLS,
+  MEDAL_SCORES,
+  RANK_TITLES,
+  emptyRecords,
+  levelUnlocked,
+  medalFor,
+  rankIndex,
+  rankTitle,
+  recordDaily,
+  recordRound,
+  unlockHint,
+  EMPTY_DAILY,
+} from '../src/play/game-records';
 
 let passed = 0;
 function ok(label: string) {
@@ -75,12 +101,13 @@ ok('Catch: a bomb is −3 and a strike; 3 strikes end the round as a FAIL; bombs
 
 {
   let t: CatchTally = EMPTY_CATCH;
-  t = catchFood(t, 0, false);
-  t = catchFood(t, 300, false);
-  t = catchFood(t, 600, false); // 3rd quick catch: +1
-  assert.equal(t.points, 4, 'a combo of 3 quick catches = +1');
-  t = catchFood(t, 5000, false); // chain broken
-  assert.equal(t.chain, 1);
+  // v26: the combo is a streak multiplier (×1 → ×2 at 5 → ×3 at 10 → ×5 at
+  // 20); only a miss or a bomb breaks it — time gaps no longer do.
+  for (let i = 0; i < 5; i += 1) t = catchFood(t, i * 5000, false);
+  assert.equal(t.points, 4 + 2, 'four catches at ×1, the 5th at ×2');
+  assert.equal(t.chain, 5, 'slow catches still keep the streak');
+  t = missFood(t);
+  assert.equal(t.chain, 0, 'a miss resets it');
   const golden = catchFood(EMPTY_CATCH, 0, true);
   assert.equal(golden.points, CATCH.goldenPoints, 'golden food = +3');
   assert.equal(golden.caught, 1, 'but one food for the %');
@@ -100,7 +127,7 @@ ok('Catch: a bomb is −3 and a strike; 3 strikes end the round as a FAIL; bombs
   assert.ok(Math.abs(bombs / 100_000 - 0.15) < 0.01, '15% bombs');
   assert.ok(Math.abs(golds / (100_000 - bombs) - 0.05) < 0.01, '5% of food is golden');
 }
-ok('Catch: combo +1 every 3rd quick catch; golden +3; spawns and falls speed up; 15% bombs after 3s');
+ok('Catch: the streak combo (v26); golden +3; spawns and falls speed up; 15% bombs after 3s');
 
 /* --------------------------------------------------------------- Train --- */
 
@@ -172,5 +199,154 @@ ok('mashing: Train passes < 2% and is almost never skilled; Perfect still needs 
   assert.equal(pass.doc.pet.care_skill, 25, 'a 75% pass is skilled');
 }
 ok('a fail pays nothing (no tokens, care or food); a pass counts as before');
+
+
+/* ============================================== v26 — Part C games ===== */
+
+{
+  // Normal is exactly the v25 round.
+  assert.deepEqual(CATCH_LEVELS.normal, {
+    spawnStartMs: CATCH.spawnStartMs,
+    spawnEndMs: CATCH.spawnEndMs,
+    speedEndMult: CATCH.speedEndMult,
+    bombShare: CATCH.bombShare,
+  });
+  assert.equal(TRAIN_LEVELS.normal.zoneStart, TRAIN.zoneStart);
+  assert.equal(TRAIN_LEVELS.normal.zoneMin, TRAIN.zoneMin);
+  assert.equal(TRAIN_LEVELS.normal.speedUp, TRAIN.speedUp);
+  assert.deepEqual(startTrain('normal'), START_TRAIN);
+  // Harder = faster, more bombs, smaller zone, bigger multiplier.
+  for (let i = 1; i < DIFFICULTIES.length; i += 1) {
+    const lo = DIFFICULTIES[i - 1];
+    const hi = DIFFICULTIES[i];
+    assert.ok(CATCH_LEVELS[hi].spawnEndMs < CATCH_LEVELS[lo].spawnEndMs, `${hi}: spawns faster`);
+    assert.ok(CATCH_LEVELS[hi].bombShare > CATCH_LEVELS[lo].bombShare, `${hi}: more bombs`);
+    assert.ok(TRAIN_LEVELS[hi].zoneStart < TRAIN_LEVELS[lo].zoneStart, `${hi}: smaller zone`);
+    assert.ok(SCORE_MULT.catch[hi] > SCORE_MULT.catch[lo] && SCORE_MULT.train[hi] > SCORE_MULT.train[lo], `${hi}: bigger multiplier`);
+    for (let m = 0; m < 3; m += 1) {
+      assert.ok(MEDAL_SCORES.catch[hi][m] >= MEDAL_SCORES.catch[lo][m], `catch ${hi} medal bars rise`);
+      assert.ok(MEDAL_SCORES.train[hi][m] >= MEDAL_SCORES.train[lo][m], `train ${hi} medal bars rise`);
+    }
+  }
+  assert.equal(catchSpawnGapMs(0, 'insane'), CATCH_LEVELS.insane.spawnStartMs);
+  assert.equal(catchSpawnKind(5000, 0.2, 'insane'), 'bomb', '25% bombs on Insane');
+  assert.equal(catchSpawnKind(5000, 0.2, 'normal'), 'food', 'not on Normal');
+}
+ok('levels: Normal = the v25 round exactly; each harder level is faster, has more bombs / a smaller zone, a bigger multiplier, and higher medal bars');
+
+{
+  assert.deepEqual([0, 4, 5, 9, 10, 19, 20, 99].map((n) => comboMult('catch', n)), [1, 1, 2, 2, 3, 3, 5, 5]);
+  assert.deepEqual([0, 2, 3, 5, 6, 9, 10].map((n) => comboMult('train', n)), [1, 1, 2, 2, 3, 3, 5]);
+  let t = EMPTY_CATCH;
+  for (let i = 0; i < 6; i += 1) t = catchFood(t, i, false);
+  t = tapBomb(t);
+  assert.equal(t.chain, 0, 'a bomb resets the combo');
+  assert.equal(t.bestChain, 6);
+  assert.equal(catchScore(t, 'normal'), Math.round((4 + 2 * 2 - 3) * 1.5), 'score = points × level multiplier');
+  assert.equal(catchScore(tapBomb(EMPTY_CATCH), 'hard'), 0, 'a score is never below 0');
+  let tr = startTrain('normal');
+  for (let i = 0; i < 3; i += 1) tr = trainTap(tr, true, 'normal', i === 2);
+  assert.equal(tr.points, 10 + 10 + (10 + 5) * 2, 'hits 10, a perfect +5, the 3rd in a row ×2');
+  tr = trainTap(tr, false);
+  assert.equal(tr.streak, 0, 'a miss resets the Train combo');
+  assert.equal(trainScore(tr, 'hard'), Math.round(tr.points * SCORE_MULT.train.hard));
+}
+ok('combo: ×1 → ×2 → ×3 → ×5 by streak (Catch 5/10/20, Train 3/6/10); a miss or bomb resets it; score = points × level');
+
+{
+  // Pass / fail is the share rule on every level — nothing about the level changes it.
+  for (const level of DIFFICULTIES) {
+    let t = EMPTY_CATCH;
+    for (let i = 0; i < 10; i += 1) t = catchFood(t, i, false);
+    for (let i = 0; i < 10; i += 1) t = missFood(t);
+    assert.equal(catchOutcome(t).pass, true, `${level}: 50% passes`);
+    let tr = startTrain(level);
+    for (let i = 0; i < TRAIN.taps; i += 1) tr = trainTap(tr, i % 2 === 0, level);
+    assert.equal(trainOutcome(tr).pass, true, `${level}: 8 hits pass`);
+  }
+  // Easy can't farm the egg care score: 70%+ on Easy is a plain pass.
+  const egg = chooseEggDoc(defaultPlayStore(0), 0, 'knight', null)!;
+  const baby = { ...egg, pet: { ...egg.pet, stage: 'baby' as const, stage_age_ms: 0, seen_at: 0 } };
+  const great = { pass: true, quality: 0.9, got: 18, of: 20 };
+  const easy = finishPetRound(baby, 1000, 'catch', great, { level: 'easy', score: 50, daily: false });
+  assert.equal(easy.doc.pet.care_skill, 12, 'Easy 90%: a plain pass (12), never skilled');
+  const normal = finishPetRound(baby, 1000, 'catch', great, { level: 'normal', score: 50, daily: false });
+  assert.equal(normal.doc.pet.care_skill, 25, 'Normal 90%: skilled (25) as before');
+  const insane = finishPetRound(baby, 1000, 'catch', great, { level: 'insane', score: 500, daily: false });
+  assert.equal(insane.doc.pet.care_skill, 25, 'Insane never gives more than Normal');
+  assert.equal(easy.result.tokensGranted, normal.result.tokensGranted, 'tokens are the same on every level');
+}
+ok('care: pass/fail unchanged on every level; only Normal+ can be skilled (Easy can’t farm care); harder never gives more care');
+
+{
+  let r = emptyRecords();
+  assert.deepEqual(DIFFICULTIES.map((d) => levelUnlocked(r, 'catch', d)), [true, true, false, false], 'a new save: Easy + Normal open');
+  assert.equal(unlockHint('hard'), 'Get Silver on Normal to unlock');
+  assert.equal(unlockHint('insane'), 'Get Gold on Hard to unlock');
+  const [, silver, gold] = MEDAL_SCORES.catch.normal;
+  const failed = recordRound(r, 'catch', 'normal', gold + 100, false);
+  assert.equal(failed.records, r, 'a failed round sets nothing');
+  const bronze = recordRound(r, 'catch', 'normal', MEDAL_SCORES.catch.normal[0], true);
+  assert.equal(bronze.medal, 'bronze');
+  assert.equal(levelUnlocked(bronze.records, 'catch', 'hard'), false, 'Bronze does not open Hard');
+  const sil = recordRound(bronze.records, 'catch', 'normal', silver, true);
+  assert.equal(sil.unlocked, 'hard', 'Silver on Normal opens Hard');
+  assert.equal(sil.newRecord, true);
+  assert.equal(sil.prevBest, MEDAL_SCORES.catch.normal[0]);
+  assert.equal(levelUnlocked(sil.records, 'train', 'hard'), false, 'per game');
+  const lower = recordRound(sil.records, 'catch', 'normal', 1, true);
+  assert.equal(lower.records.catch.normal.best, silver, 'a lower score never lowers the best');
+  assert.equal(lower.records.catch.normal.medal, 'silver', 'nor the medal');
+  assert.equal(lower.newRecord, false);
+  assert.equal(levelUnlocked(sil.records, 'catch', 'insane'), false);
+  const hardGold = recordRound(sil.records, 'catch', 'hard', MEDAL_SCORES.catch.hard[2], true);
+  assert.equal(hardGold.unlocked, 'insane', 'Gold on Hard opens Insane');
+  r = hardGold.records;
+  assert.equal(rankTitle(r, 'catch'), RANK_TITLES.catch[2], 'Silver Normal + Gold Hard = third rank');
+  assert.equal(rankIndex(emptyRecords(), 'train'), 0);
+  const top = recordRound(r, 'catch', 'insane', MEDAL_SCORES.catch.insane[2], true);
+  assert.equal(top.rankUp, true);
+  assert.equal(rankTitle(top.records, 'catch'), 'Legendary Chef');
+  assert.equal(medalFor('train', 'normal', 99_999, false), null, 'no medal without a pass');
+  // A locked level (e.g. after Reset Divecore) earns no record, medal or buff.
+  const egg = chooseEggDoc(defaultPlayStore(0), 0, 'knight', null)!;
+  const child = { ...egg, pet: { ...egg.pet, stage: 'child' as const, stage_age_ms: 0, seen_at: 0 } };
+  const locked = finishPetRound(child, 1000, 'catch', { pass: true, quality: 0.9, got: 18, of: 20 }, { level: 'insane', score: 9999, daily: false });
+  assert.equal(locked.result.counted, true, 'it still counts as a pass (care, tokens)');
+  assert.equal(locked.result.medal, null, 'but no medal on a locked level');
+  assert.equal(locked.doc.game_records.catch.insane.best, 0, 'and no record');
+  assert.equal(locked.doc.buffs.hearty, 0, 'and no buff');
+}
+ok('records: best only rises; medals by score (pass only); Hard needs Silver on Normal, Insane Gold on Hard, per game; ranks from medals');
+
+{
+  const a = seededRng(dailySeed('2026-09-30', 'catch'));
+  const b = seededRng(dailySeed('2026-09-30', 'catch'));
+  const seqA = Array.from({ length: 50 }, a);
+  assert.deepEqual(seqA, Array.from({ length: 50 }, b), 'the same date = the same pattern');
+  const other = Array.from({ length: 50 }, seededRng(dailySeed('2026-10-01', 'catch')));
+  assert.notDeepEqual(seqA, other, 'the next day is a new pattern');
+  const train = Array.from({ length: 50 }, seededRng(dailySeed('2026-09-30', 'train')));
+  assert.notDeepEqual(seqA, train, 'each game has its own');
+  assert.ok(seqA.every((x) => x >= 0 && x < 1));
+
+  let d = { ...EMPTY_DAILY };
+  const first = recordDaily(d, '2026-09-30', 'catch', 40, true);
+  assert.equal(first.bonusShells, DAILY_BONUS_SHELLS, 'beating your daily best the first time today: the bonus');
+  d = first.daily;
+  const again = recordDaily(d, '2026-09-30', 'catch', 60, true);
+  assert.equal(again.newBest, true);
+  assert.equal(again.bonusShells, 0, 'only once a day');
+  const lowerDaily = recordDaily(again.daily, '2026-09-30', 'catch', 10, true);
+  assert.equal(lowerDaily.newBest, false, 'replays only count when better');
+  const failDaily = recordDaily(again.daily, '2026-09-30', 'catch', 999, false);
+  assert.equal(failDaily.newBest, false, 'a failed daily round counts for nothing');
+  const rewound = recordDaily(again.daily, '2026-09-29', 'catch', 999, true);
+  assert.equal(rewound.bonusShells, 0, 'setting the clock back does not reopen a day');
+  const tomorrow = recordDaily(again.daily, '2026-10-01', 'catch', 5, true);
+  assert.equal(tomorrow.bonusShells, DAILY_BONUS_SHELLS, 'a new day: a new best and a new bonus');
+  assert.equal(recordDaily(again.daily, '2026-09-30', 'train', 5, true).bonusShells, DAILY_BONUS_SHELLS, 'per game');
+}
+ok('daily challenge: one fixed pattern per date and game; best only rises; bonus once a day per game; clock-back safe');
 
 console.log(`\ncheck:pet-games — ${passed} groups passed.`);

@@ -34,7 +34,9 @@ import {
 } from '../src/play/dive-loot';
 import { getItemDef } from '../src/play/items';
 import { DIVE_BUST_TABLE, effectiveBustPct } from '../src/play/playStore';
-import { DIVE_OXYGEN_BUST } from '../src/play/dive-loot';
+import { DIVE_OXYGEN_BUST, DIVECORE_POWERS_PER_DAY } from '../src/play/dive-loot';
+import { PET_BUST_CUT_PP, PET_STAGES } from '../src/play/pet';
+import { expectedPowersPerDay as expeditionPowersPerDay } from '../src/play/expedition-ladder';
 
 type Vec = { finds: number; powers: number; shells: number; food: number; cosmetics: number };
 const ZERO: Vec = { finds: 0, powers: 0, shells: 0, food: 0, cosmetics: 0 };
@@ -157,3 +159,29 @@ console.log('Dive gear and shells never enter TD maths. Powers from Dive only fi
 console.log('under the same gear soft cap — they reach the cap sooner, never past it. The pet’s in-run');
 console.log('TD power is the pounce alone: see `npm run sim:balance` (Child 3.0% → God 5.9%, Battle God 6.7%).');
 console.log('Rebirth (+10% max) is long-term progress, outside the band (emci, Part B).');
+
+console.log('\n## 4. Stage power (v26) — Powers a day by stage, and the daily ceiling\n');
+console.log(`Bust cut by stage: ${PET_STAGES.map((st) => `${st} −${PET_BUST_CUT_PP[st]}`).join(' · ')}; ceiling ${DIVECORE_POWERS_PER_DAY}/day.`);
+console.log('(best stop per stage, Safer or Richer; + the expedition ladder 0.55; before = the v25 cuts 0/0/0/1/2/3)');
+const OLD_CUT: Record<string, number> = { egg: 0, baby: 0, child: 0, teen: 1, adult: 2, god: 3 };
+for (const net of [false, true]) {
+  console.log(net ? '### with Net' : '### no Net');
+  for (const st of PET_STAGES.filter((x) => x !== 'egg')) {
+    const bestFor = (cut: number) => {
+      let b = { finds: 0, powers: 0 };
+      for (const path of ['safe', 'rich'] as const)
+        for (let k = 0; k <= 4; k += 1) {
+          const { ev } = chargedDive(k, path, { cut, keep: 0, net, oxygen: false });
+          if (ev.finds > b.finds) b = { finds: ev.finds, powers: ev.powers };
+        }
+      return b;
+    };
+    const before = bestFor(OLD_CUT[st]);
+    const after = bestFor(PET_BUST_CUT_PP[st]);
+    const day = (p: number, n: number) => n * p + expeditionPowersPerDay();
+    const cells = [4, 15, 40].map(
+      (n) => `${n} dives ${f(day(before.powers, n))} → ${f(day(after.powers, n))} (cap ${f(Math.min(DIVECORE_POWERS_PER_DAY, day(after.powers, n)))})`,
+    );
+    console.log(`${st.padEnd(6)} ${cells.join(' | ')}`);
+  }
+}

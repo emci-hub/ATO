@@ -38,7 +38,7 @@ export const TUTORIAL_STEPS: readonly { emoji: string; title: string; body: stri
   },
 ];
 
-export function DivecoreTutorial({ onDone }: { onDone: () => void }) {
+export function DivecoreTutorial({ onDone, onGuide }: { onDone: () => void; onGuide?: () => void }) {
   const [i, setI] = useState(0);
   const step = TUTORIAL_STEPS[i];
   const last = i === TUTORIAL_STEPS.length - 1;
@@ -58,6 +58,9 @@ export function DivecoreTutorial({ onDone }: { onDone: () => void }) {
           {step.title}
         </Text>
         <Text style={styles.body}>{step.body}</Text>
+        {last && onGuide ? (
+          <NeonButton label="Open the Guide — everything, in one place" variant="secondary" onPress={onGuide} />
+        ) : null}
         <View style={styles.dots}>
           {TUTORIAL_STEPS.map((s, n) => (
             <View key={s.title} style={[styles.dot, n === i && styles.dotOn]} />

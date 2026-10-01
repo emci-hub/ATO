@@ -59,6 +59,8 @@ export type PetCardInfo = {
   hero?: string | null;
   /** v24 — milestone ribbons. */
   ribbons?: readonly ('collector' | 'legend')[];
+  /** v26 — your mini-game rank titles (the live pet's card). */
+  ranks?: { catch: string; train: string } | null;
 };
 
 const RAINBOW = ['#FF5F6D', '#FFC371', '#F9F871', '#7CFFB2', '#5CC8FF', '#B78CFF', '#FF5FD2'];
@@ -209,6 +211,11 @@ export function PetCard({
         </Text>
       ) : null}
       {!small && !silhouette && info.hero ? <Text style={styles.meta}>{info.hero}</Text> : null}
+      {!small && !silhouette && info.ranks ? (
+        <Text style={styles.meta} numberOfLines={1}>
+          🍎 {info.ranks.catch} · 🎯 {info.ranks.train}
+        </Text>
+      ) : null}
       {!small && !silhouette && info.ribbons && info.ribbons.length > 0 ? (
         <Text style={styles.meta}>
           {info.ribbons.map((r) => (r === 'collector' ? '🎖 Collector' : '🏅 Legend')).join(' · ')}

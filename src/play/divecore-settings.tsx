@@ -96,6 +96,7 @@ export function DivecoreSettingsSheet({
   commit,
   reduceMotion,
   onReplayTutorial,
+  onOpenGuide,
 }: {
   open: boolean;
   onClose: () => void;
@@ -103,6 +104,8 @@ export function DivecoreSettingsSheet({
   commit: Commit;
   reduceMotion: boolean;
   onReplayTutorial: () => void;
+  /** v26 — open the Guide (Pet → Info → Guide). */
+  onOpenGuide?: () => void;
 }) {
   const settings = view.settings;
   const fx = useFxQuality();
@@ -226,6 +229,15 @@ export function DivecoreSettingsSheet({
       </Text>
 
       <NeonLabel>Help</NeonLabel>
+      {onOpenGuide ? (
+        <NeonButton
+          label="Open the Guide"
+          onPress={() => {
+            onClose();
+            onOpenGuide();
+          }}
+        />
+      ) : null}
       <NeonButton
         label="Replay the tutorial"
         variant="secondary"

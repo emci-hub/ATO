@@ -1,0 +1,160 @@
+/**
+ * Guide check (v26, Part C · T-C7).
+ *
+ *   1. No hand-typed numbers: every string / template text in
+ *      `src/play/guide-content.ts` is scanned (code inside `${…}` is skipped);
+ *      a digit there fails — every number must come from a code constant.
+ *   2. The rendered Guide shows the live constants (spot values: stage cuts,
+ *      the bust table, the Power ceiling, medal bars, buffs, the pounce cap).
+ *   3. Every section exists and has text; every "?" link in the app points at
+ *      a real section; the old scattered "How it works" text is gone.
+ *   4. The room nameplate: stars AND the word for every grade (never colour
+ *      alone), shiny or not.
+ *
+ * Run: npm run check:guide
+ */
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+
+import { DIVECORE_POWERS_PER_DAY, POWER_OVERFLOW_SHELLS } from '../src/play/dive-loot';
+import { MEDAL_SCORES } from '../src/play/game-records';
+import { GUIDE_SECTIONS, guideSections } from '../src/play/guide-content';
+import { PET_BUST_CUT_PP, PET_POUNCE_BASE } from '../src/play/pet';
+import { GRADES, GRADE_LABEL, GRADE_STARS, nameplateText } from '../src/play/pet-eggs';
+import { BUFF_USES, PET_POUNCE_CAP } from '../src/play/play-buffs';
+import { DIVE_BUST_TABLE } from '../src/play/playStore';
+
+let passed = 0;
+function ok(label: string) {
+  passed += 1;
+  console.log(`  ✓ ${label}`);
+}
+const ROOT = path.join(__dirname, '..');
+
+/* ---------------------------------------------- 1. no hand-typed numbers --- */
+
+/** The literal text of every string / template in a TS source (code in
+ * `${…}` replaced by a space). Comments are skipped. */
+function stringTexts(src: string): string[] {
+  const out: string[] = [];
+  let i = 0;
+  const n = src.length;
+  while (i < n) {
+    const c = src[i];
+    if (c === '/' && src[i + 1] === '/') {
+      while (i < n && src[i] !== '\n') i += 1;
+    } else if (c === '/' && src[i + 1] === '*') {
+      i = src.indexOf('*/', i + 2) + 2;
+    } else if (c === "'" || c === '"') {
+      let j = i + 1;
+      let text = '';
+      while (j < n && src[j] !== c) {
+        if (src[j] === '\\') j += 1;
+        text += src[j];
+        j += 1;
+      }
+      out.push(text);
+      i = j + 1;
+    } else if (c === '`') {
+      let j = i + 1;
+      let text = '';
+      while (j < n && src[j] !== '`') {
+        if (src[j] === '\\') {
+          text += src[j + 1];
+          j += 2;
+          continue;
+        }
+        if (src[j] === '$' && src[j + 1] === '{') {
+          // skip the expression (balanced braces; nested templates are rare here)
+          let depth = 1;
+          j += 2;
+          while (j < n && depth > 0) {
+            if (src[j] === '{') depth += 1;
+            else if (src[j] === '}') depth -= 1;
+            j += 1;
+          }
+          text += ' ';
+          continue;
+        }
+        text += src[j];
+        j += 1;
+      }
+      out.push(text);
+      i = j + 1;
+    } else i += 1;
+  }
+  return out;
+}
+
+{
+  const src = fs.readFileSync(path.join(ROOT, 'src/play/guide-content.ts'), 'utf8');
+  const texts = stringTexts(src);
+  // Module paths and padding helpers are code, not prose.
+  const prose = texts.filter((t) => !t.startsWith('@/') && t !== '0');
+  const bad = prose.filter((t) => /\d/.test(t));
+  assert.deepEqual(bad, [], `hand-typed numbers in the Guide: ${JSON.stringify(bad)}`);
+  assert.ok(prose.length > 40, 'the scan found the Guide text');
+  // And the scanner itself catches one.
+  assert.deepEqual(stringTexts('const a = `Lamp costs 60 ${x} shells`; const b = "5 min";').filter((t) => /\d/.test(t)).length, 2);
+}
+ok('no hand-typed numbers: every number in the Guide comes from a code constant');
+
+/* -------------------------------------------- 2. live constants shown --- */
+
+{
+  const all = guideSections();
+  const text = (id: string) => all.find((s) => s.id === id)!.lines.join('\n');
+  const dive = text('dive');
+  for (const st of ['child', 'teen', 'adult', 'god'] as const) assert.ok(dive.includes(`−${PET_BUST_CUT_PP[st]}`), `dive: stage cut ${st}`);
+  assert.ok(dive.includes(DIVE_BUST_TABLE.map((x) => `${Math.round(x * 100)}%`).join(', ')), 'dive: the bust table');
+  assert.ok(dive.includes(`at most ${DIVECORE_POWERS_PER_DAY} Powers a day`) && dive.includes(`${POWER_OVERFLOW_SHELLS} shells`), 'dive: the Power ceiling');
+  assert.ok(dive.includes('Powers today'), 'dive: names the "Powers today" line');
+  const games = text('games');
+  assert.ok(games.includes(MEDAL_SCORES.catch.insane.join('/')) && games.includes(MEDAL_SCORES.train.hard.join('/')), 'games: medal bars');
+  assert.ok(games.includes('Get Silver on Normal to unlock') && games.includes('Get Gold on Hard to unlock'), 'games: unlock rules');
+  const buffs = text('buffs');
+  assert.ok(buffs.includes('Maxed aura') && buffs.includes(String(PET_POUNCE_CAP)) && buffs.includes(String(BUFF_USES.pumped)), 'buffs: Maxed aura');
+  const td = text('td');
+  assert.ok(td.includes(String(PET_POUNCE_BASE.god)) && td.includes('3%') && td.includes('8%'), 'td: pounce + the band');
+  assert.ok(td.includes(`at most ${DIVECORE_POWERS_PER_DAY} a day`), 'td: the Power ceiling');
+}
+ok('the Guide shows the live constants (stage cuts, bust table, Power ceiling, medals, unlocks, Maxed aura, the TD band)');
+
+/* -------------------------------------- 3. sections + "?" + old text gone --- */
+
+{
+  const all = guideSections();
+  assert.deepEqual(all.map((s) => s.id), [...GUIDE_SECTIONS]);
+  for (const s of all) assert.ok(s.lines.length >= 3 && s.lines.every((l) => l.length > 20), `${s.id}: has real text`);
+  const files = ['pet-screen.tsx', 'pet-sheets.tsx', 'dive-screen.tsx', 'divecore-settings.tsx', 'divecore-tutorial.tsx'].map((f) =>
+    fs.readFileSync(path.join(ROOT, 'src/play', f), 'utf8'),
+  );
+  const linked = new Set<string>();
+  for (const src of files) {
+    for (const m of src.matchAll(/section="([a-z]+)"|openGuide\('([a-z]+)'\)|initial="([a-z]+)"/g)) linked.add(m[1] ?? m[2] ?? m[3]);
+  }
+  for (const id of linked) assert.ok((GUIDE_SECTIONS as readonly string[]).includes(id), `"?" link to a real section: ${id}`);
+  for (const want of ['pet', 'eggs', 'dive', 'expeditions', 'games', 'buffs', 'collection']) assert.ok(linked.has(want), `a "?" opens ${want}`);
+  const all3 = files.join('\n') + fs.readFileSync(path.join(ROOT, 'src/play/pet-egg-sheets.tsx'), 'utf8');
+  assert.ok(!/How it works|how it works"|EggHelp/.test(all3), 'the old scattered "How it works" text is gone');
+  assert.ok(files[3].includes('Open the Guide') && files[4].includes('Open the Guide'), 'linked from ⚙ Settings and the tutorial');
+}
+ok('every section has text; every "?" opens a real section; Settings + tutorial link it; the old "How it works" text is gone');
+
+/* --------------------------------------------------------- 4. nameplate --- */
+
+{
+  for (const g of GRADES) {
+    for (const shiny of [false, true]) {
+      const t = nameplateText(g, shiny);
+      assert.ok(t.includes('★'.repeat(GRADE_STARS[g])) && t.includes(GRADE_LABEL[g]), `${g}${shiny ? ' shiny' : ''}: stars + word`);
+    }
+  }
+  const room = fs.readFileSync(path.join(ROOT, 'src/play/pet-room.tsx'), 'utf8');
+  assert.ok(room.includes('nameplateText(grade, pet.shiny)'), 'the room draws the nameplate text');
+  assert.ok(!/bubbleRow[\s\S]{0,400}gradeTag\(grade\)/.test(room), 'the grade is no longer in the bubble row');
+}
+ok('nameplate: stars AND the word for every grade (never colour alone); the bubble keeps only name + mood');
+
+console.log(`\ncheck:guide — ${passed} groups passed.`);

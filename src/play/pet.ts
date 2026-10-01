@@ -107,15 +107,43 @@ export const PET_BRANCH_POUNCE: Record<PetBranch, number> = {
   deep: 1,
 };
 
-/** Dive buddy: bust chance cut, whole percentage points (floor still holds). */
+/** Dive buddy: bust chance cut, whole percentage points (floor still holds).
+ * v26 stage power (emci, Part C): an older pet makes every dive safer —
+ * was 0/0/1/2/3. */
 export const PET_BUST_CUT_PP: Record<PetStage, number> = {
   egg: 0,
   baby: 0,
-  child: 0,
-  teen: 1,
-  adult: 2,
-  god: 3,
+  child: 2,
+  teen: 4,
+  adult: 7,
+  god: 10,
 };
+
+/** v26 stage power: the chance a NON-Power dive find comes up one step
+ * better (see `luckyUpgrade` in dive-loot.ts). Powers are never created or
+ * upgraded by it, so TD gear inflow is untouched. */
+export const PET_LUCKY_UPGRADE: Record<PetStage, number> = {
+  egg: 0,
+  baby: 0,
+  child: 0,
+  teen: 0.1,
+  adult: 0.25,
+  god: 0.45,
+};
+
+/** v26 stage power: expedition trip length (share of the ladder's length). */
+export const PET_TRIP_MULT: Record<PetStage, number> = {
+  egg: 1,
+  baby: 1,
+  child: 1,
+  teen: 0.9,
+  adult: 0.8,
+  god: 0.7,
+};
+
+/** v26 stage power: from this stage a trip's reward is one step better (the
+ * non-Power part only — Power chances per step never change). */
+export const PET_TRIP_BETTER_FROM: PetStage = 'adult';
 /** Dive buddy: best finds kept when a dive busts (once per dive). */
 export const PET_RESCUE_KEEP: Record<PetStage, number> = {
   egg: 0,
@@ -700,6 +728,21 @@ export function petRescueKeep(pet: PetState, away = false): number {
   return Math.min(PET_RESCUE_MAX, base + deep);
 }
 
+/** v26: the chance a non-Power find is upgraded one step (0 while away). */
+export function petLuckyChance(pet: PetState, away = false): number {
+  return away ? 0 : PET_LUCKY_UPGRADE[pet.stage];
+}
+
+/** v26: a trip sent now lasts this share of the ladder length. */
+export function petTripMult(pet: PetState): number {
+  return PET_TRIP_MULT[pet.stage];
+}
+
+/** v26: a trip sent now brings back one step better (Adult and God). */
+export function petTripBetter(pet: PetState): boolean {
+  return PET_STAGES.indexOf(pet.stage) >= PET_STAGES.indexOf(PET_TRIP_BETTER_FROM);
+}
+
 /** The stage after this one (God stays God). */
 export function petNextStage(stage: PetStage): PetStage {
   return nextStage(stage);
@@ -849,6 +892,8 @@ export type PetExpedition = {
   len_ms: number;
   /** v25 — its ladder step (0-6), or -1 for a trip from before the ladder. */
   step: number;
+  /** v26 — sent by an Adult/God pet: the reward is one step better. */
+  better?: boolean;
 };
 
 export type PetExpeditionBlock = 'egg_or_baby' | 'away' | 'done_today';
@@ -904,10 +949,14 @@ export function parsePetExpedition(raw: unknown): PetExpedition | null {
   // A trip from before the ladder keeps the old rule: 1h, the old reward.
   const len = num(raw.len_ms, LEGACY_EXPEDITION_MS);
   const step = Math.floor(num(raw.step, -1));
+  // v26: stage power + Focused shorten a trip, so any length from 1 second
+  // up to the longest step is valid (a bad value falls back to the old 1h).
+  const longest = Math.max(...EXPEDITION_LADDER_MS, LEGACY_EXPEDITION_MS);
   return {
     left_age_ms: left,
-    len_ms: EXPEDITION_LADDER_MS.includes(len) || len === LEGACY_EXPEDITION_MS ? len : LEGACY_EXPEDITION_MS,
+    len_ms: len >= 1000 && len <= longest ? len : LEGACY_EXPEDITION_MS,
     step: step >= 0 && step < EXPEDITION_STEPS ? step : -1,
+    ...(raw.better === true ? { better: true } : {}),
   };
 }
 

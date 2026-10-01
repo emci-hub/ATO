@@ -31,7 +31,7 @@ import { SaveDumpRow } from '@/play/dev-dump';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
 import { DevUnlockRow } from '@/play/dev-unlock-row';
 import { DiveScreen, type DiveDeeperResult, type DiveSurfaceSummary } from '@/play/dive-screen';
-import { findName, type DivePath } from '@/play/dive-loot';
+import { DIVECORE_POWERS_PER_DAY, POWER_OVERFLOW_SHELLS, findName, type DivePath } from '@/play/dive-loot';
 import { DressScreen } from '@/play/dress-screen';
 import {
   backDecision,
@@ -106,7 +106,19 @@ type PlayMode = 'grove' | 'dive' | 'pet' | 'dress' | 'defend' | 'shop' | 'about'
 type PlayToast =
   | { kind: 'claim'; result: ClaimResult }
   | { kind: 'find'; foundName: string }
-  | { kind: 'surface'; itemIds: string[]; petMood: boolean; shells: number; free: boolean; netFind: string | null }
+  | {
+      kind: 'surface';
+      itemIds: string[];
+      petMood: boolean;
+      shells: number;
+      free: boolean;
+      netFind: string | null;
+      /** v26 — the Hearty meal's find, Powers past today's ceiling, and the
+       * Powers-today count after this surface. */
+      heartyFind: string | null;
+      powersConverted: number;
+      powersToday: number;
+    }
   | { kind: 'bust'; rescued: string[]; petMood: boolean }
   | { kind: 'message'; title: string; body: string };
 
@@ -248,6 +260,9 @@ export default function PlayScreen() {
   /** A banner tapped through to the Journal (Pet → Info → Journal), until used. */
   const [openJournal, setOpenJournal] = useState(false);
   const journalOpened = useCallback(() => setOpenJournal(false), []);
+  /** v26: open Pet → Info → Guide from the hub ⚙ or the tutorial. */
+  const [openGuide, setOpenGuide] = useState(false);
+  const guideOpened = useCallback(() => setOpenGuide(false), []);
   /** Dev kit only: one-shot forced bust on the next Deeper press. */
   const [forceBustArmed, setForceBustArmed] = useState(false);
   /** Dev kit only: skip the Dive searching beat + cooldown for fast testing. */
@@ -351,6 +366,9 @@ export default function PlayScreen() {
       shells: surfaced.shellsGained,
       free: surfaced.free,
       netFind: surfaced.netFind,
+      heartyFind: surfaced.heartyFind,
+      powersConverted: surfaced.powersConverted,
+      powersToday: surfaced.powersToday,
     });
     nudgePet(surfaced.banked.some((id) => findGlow(id) !== 'common') ? 'rare_find' : 'surfaced');
     return {
@@ -762,6 +780,9 @@ export default function PlayScreen() {
                   onReplayTutorial={() => setTutorialReplay(true)}
                   openJournal={openJournal}
                   onJournalOpened={journalOpened}
+                  openGuide={openGuide}
+                  onGuideOpened={guideOpened}
+                  onBanner={(b) => setToast({ kind: 'banner', banner: { ...b, target: null } })}
                 />
               )}
             </SafeAreaView>
@@ -859,6 +880,10 @@ export default function PlayScreen() {
           commit={commit}
           reduceMotion={reduceMotion}
           onReplayTutorial={() => setTutorialReplay(true)}
+          onOpenGuide={() => {
+            setMode('pet');
+            setOpenGuide(true);
+          }}
         />
       ) : null}
       {showTutorial ? (
@@ -866,6 +891,12 @@ export default function PlayScreen() {
           onDone={() => {
             setTutorialReplay(false);
             commit((doc) => (doc.play_settings.tutorialSeen ? null : setPlaySettings(doc, { tutorialSeen: true })));
+          }}
+          onGuide={() => {
+            setTutorialReplay(false);
+            commit((doc) => (doc.play_settings.tutorialSeen ? null : setPlaySettings(doc, { tutorialSeen: true })));
+            setMode('pet');
+            setOpenGuide(true);
           }}
         />
       ) : null}
@@ -1267,7 +1298,7 @@ function toastBanner(toast: PlayToast): Omit<Banner, 'id'> {
           : toast.kind === 'surface'
             ? (toast.free
                 ? `Free dive: +${toast.shells} shells. Sightings are in your pet’s Logbook.`
-                : `Brought up ${summarizeNames(toast.itemIds)}.${toast.netFind ? ` The Net caught ${findName(toast.netFind)}.` : ''}${toast.shells > 0 ? ` +${toast.shells} shells (food that didn’t fit and duplicate cosmetics count as shells).` : ''}`) +
+                : `Brought up ${summarizeNames(toast.itemIds)}.${toast.netFind ? ` The Net caught ${findName(toast.netFind)}.` : ''}${toast.heartyFind ? ` Hearty meal: +${findName(toast.heartyFind)}.` : ''} Powers today: ${toast.powersToday}/${DIVECORE_POWERS_PER_DAY}${toast.powersConverted > 0 ? ` — ${toast.powersConverted} more became ${toast.powersConverted * POWER_OVERFLOW_SHELLS} shells` : ''}.${toast.shells > 0 ? ` +${toast.shells} shells.` : ''}`) +
               (toast.petMood ? ' Your pet loved it (+2 mood).' : '')
             : toast.kind === 'bust'
               ? (toast.rescued.length > 0

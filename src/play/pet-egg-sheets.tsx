@@ -16,8 +16,6 @@ import { PetCard } from '@/play/pet-card';
 import {
   CARE_BANDS,
   CARE_BAND_LABEL,
-  CARE_BAND_MIN,
-  CARE_SKILL_SHARE,
   DYE_STARS,
   EGG_BLURB,
   EGG_COLOR,
@@ -404,58 +402,6 @@ export function DyePanel({ view, commit }: { view: PlayView; commit: Commit }) {
 
 /* ---------------------------------------------------------------- help --- */
 
-export function EggHelp() {
-  return (
-    <>
-      <NeonLabel>How eggs work</NeonLabel>
-      {EGG_TYPES.map((egg) => (
-        <Text key={egg} style={styles.body}>
-          • {EGG_EMOJI[egg]} {EGG_LABEL[egg]} egg: {EGG_POOLS[egg].map((h) => heroName(h)).join(', ')} — an even
-          chance each.
-        </Text>
-      ))}
-      <Text style={styles.body}>
-        • Timeline: the egg hatches in 5 min, the Baby (its egg’s creep) reveals its hero at 15 min. Then Child
-        36h → Teen 72h → Adult 120h → God, as before.
-      </Text>
-      <Text style={styles.body}>
-        • Grade (looks only — never a stat): Common grey ★, Rare blue ★★, Epic purple ★★★, Legendary gold ★★★★.
-        It’s rolled for each pet at Child, from the care band:
-      </Text>
-      {CARE_BANDS.map((band) => (
-        <GradeRow key={band} label={`${CARE_BAND_LABEL[band]} ${CARE_BAND_MIN[band]}+`} odds={gradeOdds(band)} />
-      ))}
-      <Text style={styles.body}>
-        • Care score (0-100): the egg’s warmth up to 50 (it loses a pip every 90s — tap to warm it; time away
-        counts, so leaving the app lets it go cold), a skilled Baby round 25 (a mini-game passed with
-        {Math.round(CARE_SKILL_SHARE * 100)}%+; any other pass 12, a fail 0), and 5 each for feeding, training and diving.
-        Perfect needs warmth AND skill — tapping alone tops out at Great.
-      </Text>
-      <Text style={styles.body}>
-        • The roll is fixed: a seed is saved when you pick the egg, and the hero, grade and shiny are decided once
-        at Child. Reopening the app or changing the clock never changes them. The odds shown are the real ones.
-      </Text>
-      <Text style={styles.body}>• Shiny: 1 in 50, any hero, any grade — its own colours, sparkles and a gold ring.</Text>
-      <Text style={styles.body}>
-        • Stars: every copy of a hero adds a star to its Collection card, up to 5★. 3★ unlocks that hero’s dye
-        (Style); 5★ gets a special frame. Stars are looks only.
-      </Text>
-      <Text style={styles.body}>
-        • Shards: Release (Child and up) or Rebirth (God) leaves 1 shard of the pet’s grade. {SHARDS_PER_TICKET} of a
-        grade → a ticket for the next grade or better on your next egg (the hero is still an even chance). Worst
-        case to a Legendary ticket: 125 Commons.
-      </Text>
-      <Text style={styles.body}>
-        • Release vs Rebirth: Release sends the pet to the Hall with no bonus; Rebirth at God adds +2% TD damage
-        for good (max +10%). Both go back to the egg picker. An Egg or Baby can’t be released.
-      </Text>
-      <Text style={styles.body}>
-        • Hall: up to 60 pets; when full the oldest Common goes first, then Rare, then Epic. Legendary and shiny
-        pets are pinned and never leave.
-      </Text>
-    </>
-  );
-}
 
 const styles = StyleSheet.create({
   body: { fontFamily: Fonts.mono, fontSize: 12, lineHeight: 18, color: NEON.textMuted },
@@ -506,6 +452,9 @@ export function JournalTab({ view, commit }: { view: PlayView; commit: Commit })
     ['Released · reborn', `${st.releases} · ${view.pet.rebirths}`],
     ['TD waves cleared', view.lifetimeWavesCleared],
     ['Days played', st.days_played],
+    // v26: mini-game ranks + bests.
+    ['Catch rank', `${view.pet.ranks.catch} · best ${Math.max(...Object.values(view.pet.records.catch).map((r) => r.best))}`],
+    ['Train rank', `${view.pet.ranks.train} · best ${Math.max(...Object.values(view.pet.records.train).map((r) => r.best))}`],
   ];
   return (
     <>

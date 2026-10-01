@@ -53,7 +53,7 @@ import {
   GRADE_COLOR,
   GRADE_LABEL,
   WARMTH_MAX,
-  gradeTag,
+  nameplateText,
   type EggType,
 } from '@/play/pet-eggs';
 import { EggShape } from '@/play/pet-figure';
@@ -65,6 +65,42 @@ import { roleFootAt, skinArt } from '@/play/skin';
 
 /** Feet line, as a share of the room height. */
 const FLOOR_AT = 0.8;
+/** v26 nameplate text size (it may shrink a touch to fit, never below 90%). */
+export const NAMEPLATE_FONT = 11;
+
+
+/** v26 "Maxed aura": Pumped can't add more pounce, so the pet glows gold. */
+function MaxedAura({ size, animate }: { size: number; animate: boolean }) {
+  const pulse = useSharedValue(0);
+  useEffect(() => {
+    cancelAnimation(pulse);
+    pulse.value = 0;
+    if (!animate) return;
+    pulse.value = withRepeat(withSequence(withTiming(1, { duration: 900 }), withTiming(0, { duration: 900 })), -1);
+    return () => cancelAnimation(pulse);
+  }, [animate, pulse]);
+  const style = useAnimatedStyle(() => ({ opacity: 0.22 + pulse.value * 0.18 }));
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        {
+          position: 'absolute',
+          left: -size * 0.1,
+          top: -size * 0.1,
+          width: size * 1.2,
+          height: size * 1.2,
+          borderRadius: size,
+          backgroundColor: '#FFD700',
+          shadowColor: '#FFD700',
+          shadowOpacity: 0.9,
+          shadowRadius: 16,
+        },
+        style,
+      ]}
+    />
+  );
+}
 const HORIZON_AT = 0.6;
 const TAP_FACE_MS = 1400;
 const AURA_EVERY_MS = 1400;
@@ -264,6 +300,8 @@ export function PetRoom({
   onBadge,
   onPickEgg,
   name = null,
+  buffs = [],
+  maxedAura = false,
 }: {
   pet: PetState;
   wear: PetWear;
@@ -290,6 +328,10 @@ export function PetRoom({
   onPickEgg?: (egg: EggType) => void;
   /** v24 — the name it goes by (status and speech bubbles). */
   name?: string | null;
+  /** v26 — active medal buffs for the corner (icon + uses / "Maxed aura"). */
+  buffs?: readonly { key: string; text: string; a11y: string }[];
+  /** v26 — Pumped is a "Maxed aura": a gold glow behind the pet. */
+  maxedAura?: boolean;
 }) {
   // Effects Low (Settings): auras and sparkles hold still.
   const fxFull = useFxQuality() === 'full';
@@ -444,6 +486,15 @@ export function PetRoom({
     return { transform: [{ translateX: want - (center - box / 2) }] };
   });
 
+  // v26 nameplate: on the ring at the pet's feet, walking with it; wider than
+  // a small pet so "★★★★ Legendary" always fits, and kept inside the room.
+  const plateW = Math.min(Math.max(120, box), Math.max(120, width - 16));
+  const plateStyle = useAnimatedStyle(() => {
+    const center = x.value * width;
+    const want = Math.min(Math.max(8, center - plateW / 2), Math.max(8, width - 8 - plateW));
+    return { transform: [{ translateX: want - (center - box / 2) }] };
+  });
+
   return (
     <View style={styles.room} onLayout={onLayout}>
       {width > 0 ? <RoomBackdrop width={width} height={height} night={night} pantry={pantry} /> : null}
@@ -459,7 +510,8 @@ export function PetRoom({
         <Text style={[styles.bowlFood, { left: width * 0.16 - 11, top: floorY - 16 }]}>🍤</Text>
       ) : null}
 
-      {/* Corner: both meters, always. */}
+      {/* Corner: both meters, always — and the active medal buffs (v26). */}
+      <View style={styles.corner} pointerEvents="box-none">
       <View style={styles.meters} accessible accessibilityLabel={`Hunger ${pet.hunger} of ${PET_METER_MAX}, mood ${pet.mood} of ${PET_METER_MAX}`}>
         {picking ? (
           <Text style={styles.meterText}>Pick an egg</Text>
@@ -477,6 +529,12 @@ export function PetRoom({
             </Text>
           </>
         )}
+      </View>
+      {buffs.map((b) => (
+        <View key={b.key} style={styles.buffChip} accessible accessibilityLabel={b.a11y}>
+          <Text style={styles.buffText}>{b.text}</Text>
+        </View>
+      ))}
       </View>
 
       {/* Coach: what it needs, and the button that does it. */}
@@ -534,6 +592,7 @@ export function PetRoom({
             ]}
           />
           {pet.stage === 'god' && aura ? <GodAura element={aura} size={box * 1.4} reduceMotion={reduceMotion} /> : null}
+          {maxedAura ? <MaxedAura size={box} animate={fxAnimate} /> : null}
           <GradeAura grade={grade} size={box} animate={fxAnimate} trail={act.face === 'front' ? null : act.face} />
           <Pressable
             onPress={onTapPet}
@@ -580,21 +639,32 @@ export function PetRoom({
                 ) : null}
                 <Text style={styles.statusText}>{label}</Text>
               </View>
-              {revealed && grade && onBadge ? (
-                <Pressable
-                  onPress={onBadge}
-                  hitSlop={10}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${GRADE_LABEL[grade]}${pet.shiny ? ' shiny' : ''} — open its card`}
-                  style={[styles.badge, { borderColor: GRADE_COLOR[grade] }]}>
-                  <Text style={[styles.badgeText, { color: GRADE_COLOR[grade] }]}>
-                    {gradeTag(grade)}
-                    {pet.shiny ? ' ✨' : ''}
-                  </Text>
-                </Pressable>
-              ) : null}
             </View>
           </Animated.View>
+          {/* v26: the grade is a nameplate on the ring at its feet — stars AND
+              the word, always (never colour alone). The bubble above keeps only
+              the name and mood. Tap: the pet's card. */}
+          {revealed && grade ? (
+            <Animated.View
+              pointerEvents="box-none"
+              style={[styles.plateWrap, { top: footAt * box - 4, left: 0, width: plateW }, plateStyle]}>
+              <Pressable
+                onPress={onBadge}
+                disabled={!onBadge}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={`${GRADE_LABEL[grade]}${pet.shiny ? ' shiny' : ''} — open its card`}
+                style={[styles.badge, { borderColor: GRADE_COLOR[grade] }]}>
+                <Text
+                  style={[styles.badgeText, { color: GRADE_COLOR[grade] }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.9}>
+                  {nameplateText(grade, pet.shiny)}
+                </Text>
+              </Pressable>
+            </Animated.View>
+          ) : null}
         </Animated.View>
       ) : null}
     </View>
@@ -605,10 +675,18 @@ const styles = StyleSheet.create({
   room: { flex: 1, overflow: 'hidden', backgroundColor: NEON.ink },
   plant: { position: 'absolute', width: 56, height: 56 },
   bowlFood: { position: 'absolute', fontSize: 16 },
+  corner: { position: 'absolute', top: 10, right: 10, alignItems: 'flex-end', gap: 4 },
+  buffChip: {
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    backgroundColor: 'rgba(5, 7, 13, 0.72)',
+    borderWidth: 1,
+    borderColor: '#FFD700',
+  },
+  buffText: { fontFamily: Fonts.monoBold, fontSize: 11, color: '#FFE9A8' },
+  plateWrap: { position: 'absolute', alignItems: 'center' },
   meters: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 10,
@@ -649,7 +727,7 @@ const styles = StyleSheet.create({
   heart: { position: 'absolute', fontSize: 20, color: '#FF5A8A' },
   bubbleRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   badge: { paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10, borderWidth: 1, backgroundColor: 'rgba(5, 7, 13, 0.85)' },
-  badgeText: { fontFamily: Fonts.monoBold, fontSize: 11 },
+  badgeText: { fontFamily: Fonts.monoBold, fontSize: NAMEPLATE_FONT },
   eggRow: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-around' },
   eggPick: { alignItems: 'center', gap: 4 },
   eggPickLabel: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.textPrimary },

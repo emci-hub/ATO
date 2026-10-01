@@ -7,7 +7,8 @@
  *   Expedition  — status, the returned find, Send on expedition.
  *   Info        — tabs: Status (form, timers, perks, Today, what hatches,
  *                 rebirth, reminder) · Book (Logbook + Collection) · Hall ·
- *                 Style (Wardrobe) · Help (How it works) · Dev (dev builds).
+ *                 Style (Wardrobe) · Guide (v26: everything, from the code's own
+ *                 numbers) · Dev (dev builds).
  *
  * Rules and transitions are unchanged — everything still commits through the
  * same `playStore.ts` transitions the old cards used.
@@ -36,7 +37,6 @@ import { NeonButton, NeonChip, NeonLabel } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
 import {
   PET_BRANCH_LABEL,
-  PET_DEEP_MIN_DEPTH,
   PET_METER_MAX,
   PET_REBIRTH_CAP,
   PET_RESCUE_MAX,
@@ -53,9 +53,29 @@ import {
   type PetState,
 } from '@/play/pet';
 import { COSMETICS, COSMETIC_SLOTS, cosmeticById, type CosmeticSlot } from '@/play/pet-cosmetics';
-import { CatchFoodGame, TapTrainGame } from '@/play/pet-games';
-import { outcomeLine, type RoundOutcome } from '@/play/pet-game-rules';
-import { CollectionPanel, DyePanel, EggHelp, HallCards, OddsPanel } from '@/play/pet-egg-sheets';
+import { CatchFoodGame, TapTrainGame, type GamePet } from '@/play/pet-games';
+import {
+  DIFFICULTIES,
+  DIFFICULTY_LABEL,
+  dailySeed,
+  outcomeLine,
+  seededRng,
+  type Difficulty,
+  type RoundOutcome,
+} from '@/play/pet-game-rules';
+import {
+  GAME_LABEL,
+  MEDAL_ICON,
+  MEDAL_LABEL,
+  MEDAL_SCORES,
+  levelUnlocked,
+  unlockHint,
+  type Game,
+} from '@/play/game-records';
+import { BUFF_ICON, BUFF_LABEL, FOCUSED_TRIP_MULT, SNACK_BUST_PP, buffForMedal } from '@/play/play-buffs';
+import { CollectionPanel, DyePanel, HallCards, OddsPanel } from '@/play/pet-egg-sheets';
+import { GuideLink, GuideView } from '@/play/guide-sheet';
+import { stagePowerLine, type GuideSection } from '@/play/guide-content';
 import { gradeTag, petShownName } from '@/play/pet-eggs';
 import { heartsText } from '@/play/pet-status';
 import { EXPEDITION_STEPS, tripLabel } from '@/play/expedition-ladder';
@@ -134,7 +154,15 @@ export function roundResultLine(kind: PetRoundKind, outcome: RoundOutcome, resul
   const care = kind === 'catch' ? `${line} — +2 hunger` : `${line} — +1 training, +2 mood`;
   const pay =
     result.tokensGranted > 0 ? ` · +${result.tokensGranted} tokens` : ' · daily token cap reached';
-  return care + pay;
+  // v26: score, medal, record, buff, daily challenge, unlock, rank.
+  const bits: string[] = [`${result.score} pts on ${DIFFICULTY_LABEL[result.level]}${result.daily ? ' (daily)' : ''}`];
+  if (result.medal) bits.push(`${MEDAL_ICON[result.medal]} ${MEDAL_LABEL[result.medal]}`);
+  if (result.newRecord) bits.push(`NEW RECORD (was ${result.prevBest})`);
+  if (result.buff) bits.push(`${BUFF_ICON[result.buff]} ${BUFF_LABEL[result.buff]}`);
+  if (result.dailyBest) bits.push(`new daily best${result.dailyBonusShells > 0 ? ` · +${result.dailyBonusShells} shells` : ''}`);
+  if (result.unlocked) bits.push(`${DIFFICULTY_LABEL[result.unlocked]} unlocked!`);
+  if (result.rankUp) bits.push(`rank: ${result.rank}`);
+  return `${care}${pay}\n${bits.join(' · ')}`;
 }
 
 /** Art for any find: an item's own art, a badge's Look art, else null. */
@@ -201,25 +229,41 @@ export function FeedSheetBody({ view, commit }: { view: PlayView; commit: Commit
 
 /* ---------------------------------------------------------------- Play --- */
 
+/** v26 — a round being played: which game, at which level, daily or not. */
+export type GameRun = { kind: PetRoundKind; level: Difficulty; daily: boolean };
+
 export function PlaySheetBody({
   view,
   game,
   onStart,
   onRoundDone,
   lastResult,
+  gamePet,
+  still,
+  onGuide,
 }: {
   view: PlayView;
-  game: PetRoundKind | null;
-  onStart: (kind: PetRoundKind) => void;
-  onRoundDone: (kind: PetRoundKind) => (outcome: RoundOutcome) => void;
+  game: GameRun | null;
+  onStart: (run: GameRun) => void;
+  onRoundDone: (run: GameRun) => (outcome: RoundOutcome, score: number) => void;
   lastResult: string | null;
+  gamePet: GamePet | null;
+  /** Reduced motion or Effects Low: still poses in the games. */
+  still: boolean;
+  onGuide?: () => void;
 }) {
   const pv = view.pet;
+  const [level, setLevel] = useState<Record<Game, Difficulty>>({ catch: 'normal', train: 'normal' });
+  const [hint, setHint] = useState<string | null>(null);
   if (pv.state.stage === 'egg') {
     return <Text style={styles.body}>Games start once it hatches. For now, pick what it hatches into in Info.</Text>;
   }
-  if (game === 'catch') return <CatchFoodGame onDone={onRoundDone('catch')} />;
-  if (game === 'train') return <TapTrainGame onDone={onRoundDone('train')} />;
+  if (game) {
+    // The daily challenge is one fixed pattern per local date (same for everyone).
+    const rng = game.daily ? seededRng(dailySeed(pv.daily.ymd ?? '', game.kind)) : Math.random;
+    const props = { onDone: onRoundDone(game), level: game.level, rng, gamePet, still };
+    return game.kind === 'catch' ? <CatchFoodGame {...props} /> : <TapTrainGame {...props} />;
+  }
   return (
     <>
       <MeterLine label="Hunger" value={pv.state.hunger} />
@@ -229,18 +273,103 @@ export function PlaySheetBody({
         +{PET_TOKENS_PER_ROUND} tokens a passed round · {pv.tokensLeftToday}/{PET_TOKENS_DAILY_CAP} left today. TD
         stays the main way to earn.
       </Text>
-      <View style={styles.buttons}>
-        <NeonButton label="Catch the food" onPress={() => onStart('catch')} style={styles.flex} />
-        <NeonButton label="Tap to train" variant="secondary" onPress={() => onStart('train')} style={styles.flex} />
-      </View>
+      {(['catch', 'train'] as const).map((g) => {
+        // A level picked earlier may have closed again (Reset Divecore): fall back to Normal.
+        const lv = levelUnlocked(pv.records, g, level[g]) ? level[g] : 'normal';
+        const rec = pv.records[g][lv];
+        const [b, sv, gd] = MEDAL_SCORES[g][lv];
+        const silverBuff = buffForMedal(g, 'silver');
+        const goldBuff = buffForMedal(g, 'gold');
+        const daily = pv.daily[g];
+        return (
+          <View key={g} style={styles.gameCard}>
+            <Text style={styles.gameTitle}>
+              {GAME_LABEL[g]} · <Text style={styles.rank}>{pv.ranks[g]}</Text>
+            </Text>
+            <View style={styles.chips}>
+              {DIFFICULTIES.map((d) => {
+                const open = levelUnlocked(pv.records, g, d);
+                const r = pv.records[g][d];
+                return (
+                  <NeonChip
+                    key={d}
+                    label={`${open ? '' : '🔒 '}${DIFFICULTY_LABEL[d]}${r.medal ? ` ${MEDAL_ICON[r.medal]}` : ''}`}
+                    selected={open && lv === d}
+                    onPress={() => {
+                      if (open) {
+                        setLevel((prev) => ({ ...prev, [g]: d }));
+                        setHint(null);
+                      } else setHint(`${GAME_LABEL[g]} · ${DIFFICULTY_LABEL[d]}: ${unlockHint(d)}.`);
+                    }}
+                  />
+                );
+              })}
+            </View>
+            <Text style={styles.subtle}>
+              Best on {DIFFICULTY_LABEL[lv]}: {rec.best > 0 ? rec.best : '—'} · 🥉 {b} · 🥈 {sv} (
+              {silverBuff ? BUFF_LABEL[silverBuff] : ''}) · 🥇 {gd} ({goldBuff ? BUFF_LABEL[goldBuff] : ''})
+            </Text>
+            <View style={styles.buttons}>
+              <NeonButton
+                label={`Play · ${DIFFICULTY_LABEL[lv]}`}
+                variant={g === 'catch' ? 'primary' : 'secondary'}
+                onPress={() => onStart({ kind: g, level: lv, daily: false })}
+                style={styles.flex}
+              />
+              <NeonButton
+                label={`Daily${daily.best > 0 ? ` · best ${daily.best}` : ''}`}
+                variant="secondary"
+                onPress={() => onStart({ kind: g, level: 'normal', daily: true })}
+                style={styles.flex}
+              />
+            </View>
+          </View>
+        );
+      })}
+      {hint ? <Text style={styles.result}>{hint}</Text> : null}
       {lastResult ? <Text style={styles.result}>{lastResult}</Text> : null}
+      {onGuide ? <NeonChip label="? Mini-games in the Guide" onPress={onGuide} /> : null}
     </>
   );
 }
 
 /* ---------------------------------------------------------- Expedition --- */
 
-export function ExpeditionSheetBody({ view, commit }: { view: PlayView; commit: Commit }) {
+/** v26 — the active medal buffs as plain lines (nothing when none). */
+export function BuffLines({ view }: { view: PlayView }) {
+  const b = view.pet.buffs;
+  const lines: string[] = [];
+  if (b.hearty > 0) lines.push(`${BUFF_ICON.hearty} ${BUFF_LABEL.hearty}: +1 find on ${b.hearty} more dive surface${b.hearty === 1 ? '' : 's'}`);
+  if (b.snack > 0) lines.push(`${BUFF_ICON.snack} ${BUFF_LABEL.snack}: −${SNACK_BUST_PP} bust points on your next dive`);
+  if (b.pumped > 0) {
+    lines.push(
+      view.pet.pumped.maxed
+        ? `${BUFF_ICON.pumped} Maxed aura: your pet's pounce is already at the top of the band — Pumped adds nothing, so it glows instead and keeps its ${b.pumped} uses`
+        : `${BUFF_ICON.pumped} ${BUFF_LABEL.pumped}: stronger pounce for ${b.pumped} more TD wave${b.pumped === 1 ? '' : 's'}`,
+    );
+  }
+  if (b.focused > 0) lines.push(`${BUFF_ICON.focused} ${BUFF_LABEL.focused}: your next expedition is ${Math.round((1 - FOCUSED_TRIP_MULT) * 100)}% shorter`);
+  if (lines.length === 0) return null;
+  return (
+    <>
+      {lines.map((l) => (
+        <Text key={l} style={styles.body}>
+          {l}
+        </Text>
+      ))}
+    </>
+  );
+}
+
+export function ExpeditionSheetBody({
+  view,
+  commit,
+  onGuide,
+}: {
+  view: PlayView;
+  commit: Commit;
+  onGuide?: (s: GuideSection) => void;
+}) {
   const pv = view.pet;
   const line =
     pv.expedition === 'locked'
@@ -261,6 +390,13 @@ export function ExpeditionSheetBody({ view, commit }: { view: PlayView; commit: 
       <Text style={styles.body}>
         While it’s away there’s no pounce, bust cut or rescue, and your dives don’t count as its care.
       </Text>
+      {pv.state.stage !== 'egg' ? <Text style={styles.body}>{stagePowerLine(pv.stagePower)}</Text> : null}
+      {pv.buffs.focused > 0 ? (
+        <Text style={styles.result}>
+          {BUFF_ICON.focused} Focused: this next trip is {Math.round((1 - FOCUSED_TRIP_MULT) * 100)}% shorter.
+        </Text>
+      ) : null}
+      {onGuide ? <GuideLink section="expeditions" onOpen={onGuide} /> : null}
       {noteName ? (
         <View style={styles.noteRow}>
           <Text style={styles.result}>Your pet brought back {noteName}!</Text>
@@ -276,7 +412,7 @@ export function ExpeditionSheetBody({ view, commit }: { view: PlayView; commit: 
 
 /* ---------------------------------------------------------------- Info --- */
 
-export type InfoTab = 'status' | 'journal' | 'book' | 'hall' | 'style' | 'help' | 'dev';
+export type InfoTab = 'status' | 'journal' | 'book' | 'hall' | 'style' | 'guide' | 'dev';
 
 export function infoTabs(dev: boolean): { id: InfoTab; label: string }[] {
   const tabs: { id: InfoTab; label: string }[] = [
@@ -285,12 +421,12 @@ export function infoTabs(dev: boolean): { id: InfoTab; label: string }[] {
     { id: 'book', label: 'Book' },
     { id: 'hall', label: 'Hall' },
     { id: 'style', label: 'Style' },
-    { id: 'help', label: 'Help' },
+    { id: 'guide', label: 'Guide' },
   ];
   return dev ? [...tabs, { id: 'dev', label: 'Dev' }] : tabs;
 }
 
-export function StatusTab({ view }: { view: PlayView }) {
+export function StatusTab({ view, onGuide }: { view: PlayView; onGuide?: (s: GuideSection) => void }) {
   const pv = view.pet;
   const pet = pv.state;
   const stageName = PET_STAGE_LABEL[pet.stage];
@@ -356,6 +492,14 @@ export function StatusTab({ view }: { view: PlayView }) {
         <View style={[styles.barFill, { width: `${Math.round(progress * 100)}%` }]} />
       </View>
       <Text style={styles.body}>Right now: {perksNow}</Text>
+      {pet.stage !== 'egg' ? <Text style={styles.body}>{stagePowerLine(pv.stagePower)}</Text> : null}
+      <BuffLines view={view} />
+      {onGuide ? (
+        <View style={styles.chips}>
+          <GuideLink section="pet" onOpen={onGuide} />
+          <GuideLink section="buffs" onOpen={onGuide} />
+        </View>
+      ) : null}
       {formNote ? <Text style={styles.body}>{formNote}</Text> : null}
       {nextUnlock ? <Text style={styles.body}>Next — {nextUnlock}</Text> : null}
       <Text style={styles.body}>
@@ -506,95 +650,10 @@ export function StyleTab({ view, commit }: { view: PlayView; commit: Commit }) {
   );
 }
 
-export function HelpTab() {
-  return (
-    <>
-      <EggHelp />
-      <NeonLabel>Raising your pet</NeonLabel>
-      <Text style={styles.body}>
-        • It grows on real time: Egg (5 min) → Baby (10 min) → Child (1.5 days) → Teen (3 days) → Adult (5
-        days) → God. About 9.5 days in all, even if you only play TD. Its form is first picked at Teen.
-      </Text>
-      <Text style={styles.body}>
-        • Hunger drops a heart every 3h, mood every 4h. Leaving one empty for over 2h is a care mistake.
-        Feed it from the pantry, with Catch the food or by clearing TD waves; cheer it up with Tap to train.
-      </Text>
-      <Text style={styles.body}>
-        • Catch the food (25s): tap the food as it falls — faster and faster. Golden food is +3, three quick
-        catches in a row +1. Dodge the 💣: each one is −3 and a strike, and 3 strikes end the round. Pass =
-        you caught at least half the food that fell.
-      </Text>
-      <Text style={styles.body}>
-        • Tap to train (15 taps): tap when the marker is in the lit zone. Each hit shrinks the zone and speeds
-        the marker up; 3 misses in a row end the round. Pass = 8 hits. A failed round gives nothing.
-      </Text>
-      <Text style={styles.body}>
-        • The bubble over its head shows how it feels, the most urgent first; the line under it says what
-        it needs, and the matching icon glows. It sleeps from 22:00 to 07:00 on your phone’s clock — that’s
-        just for looks, hunger still drops overnight.
-      </Text>
-      <Text style={styles.body}>
-        • Diving is care too: surfacing a haul with your pet along gives +2 mood, a bust still gives +1.
-        Diving never adds training and never speeds up the timer.
-      </Text>
-      <Text style={styles.body}>
-        • At each evolution this stage’s care picks the form: lots of mistakes → Scruffy; lots of TD waves →
-        Battle (stronger pounce); lots of surfaces from {PET_DEEP_MIN_DEPTH}+ Deepers → Deep (if it earned both
-        Battle and Deep, the one it beat by more wins, ties go to Battle); good care + training → Bright;
-        otherwise Standard. Counters reset every stage.
-      </Text>
-      <Text style={styles.body}>
-        • TD: from Child it pounces once per wave, and every cleared wave feeds it one heart. Dive: from Teen
-        it lowers the bust chance, from Adult it saves your best find on a bust (two at God). A Deep pet
-        takes one more point off at every stage (so a Deep Child already helps) and saves one more find at
-        Adult/God (never more than {PET_RESCUE_MAX}). The % shown is always the real one, and the pet is
-        never lost.
-      </Text>
-      <Text style={styles.body}>
-        • Expeditions (Child and up): up to 7 trips a day, each longer than the last — 1m, 5m, 15m (food or
-        shells), 30m, 1h (a find), 2h, 4h (a find — 20% / 35% of the time a Power). The ladder starts
-        again at 1m after midnight on your phone. It can’t bust; the find is collected the next time you
-        open the app once its time is up (only time that really passed counts). While it’s away there’s no
-        pounce, bust cut or rescue, you can’t release it, and your dives don’t count as its care or go in
-        its Logbook. Trips of 30m or longer can send a notification when it’s back.
-      </Text>
-      <Text style={styles.body}>
-        • Logbook: every find from your pet’s dives and expeditions, with how deep it was first found and
-        how many times. It stays through rebirths.
-      </Text>
-      <Text style={styles.body}>
-        • Diving: your pet waits on the rim, jumps in when you press Dive and sinks down a sunken ruin —
-        sunny Shallows, the kelp and coral of the Reef, the ruined Trench, the dark Abyss. Finds burst out of
-        crates and chests. The scenery is just for looks; it never changes the %.
-      </Text>
-      <Text style={styles.body}>
-        • Dive levels: Shallows, Reef, Trench, Abyss (and the Hadal with Oxygen). Deeper levels hold more
-        Powers and the only rings and auras. Each Deeper has two paths — Safer (8 points less bust, finds
-        from one level up) and Richer (8 more, one level down) — and both show their exact %.
-      </Text>
-      <Text style={styles.body}>
-        • Shells come from TD waves and dives and buy Dive gear for good: Lamp (see each path’s next find),
-        Net (+1 find when you surface from depth 2+), Oxygen (a 5th Deeper).
-      </Text>
-      <Text style={styles.body}>
-        • Out of charges? Free dives keep only shells (the first 10 a day pay full, then fewer) and mood;
-        their finds are Logbook sightings. They never count toward the Deep form.
-      </Text>
-      <Text style={styles.body}>
-        • Food found diving goes to the pantry (up to {PANTRY_MAX}) — your pet only eats when you tap Feed.
-        Cosmetics (badge, tint, ring, aura) are in Style; the Collection in Book shows every form each pet
-        line can take.
-      </Text>
-      <Text style={styles.body}>
-        • The God form glows in the Legend element you played TD with most. Rebirth is optional and adds
-        +2% damage for good (max +10%).
-      </Text>
-      <Text style={styles.body}>
-        • Time only counts forward: changing the phone’s clock back does nothing, and at most 2 days count
-        between visits.
-      </Text>
-    </>
-  );
+/** Info → Guide (v26): the one place to learn everything — replaces the old
+ * scattered help text. Opens at `section` when a "?" sent you. */
+export function HelpTab({ section = null }: { section?: GuideSection | null }) {
+  return <GuideView initial={section} />;
 }
 
 const styles = StyleSheet.create({
@@ -632,6 +691,14 @@ const styles = StyleSheet.create({
   body: { fontFamily: Fonts.mono, fontSize: 12, lineHeight: 18, color: NEON.textMuted },
   result: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.cyan },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  gameCard: {
+    gap: 8,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: NEON.cyanDim,
+  },
+  gameTitle: { fontFamily: Fonts.monoBold, fontSize: 14, color: NEON.textPrimary },
+  rank: { color: '#FFD700' },
   buttons: { flexDirection: 'row', gap: 10 },
   flex: { flex: 1 },
 });

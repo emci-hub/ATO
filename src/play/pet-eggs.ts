@@ -93,7 +93,13 @@ export function gradeTag(grade: Grade): string {
   return `${'★'.repeat(GRADE_STARS[grade])} ${GRADE_LABEL[grade]}`;
 }
 
+/** v26 room nameplate: stars + the grade word, always (never colour alone). */
+export function nameplateText(grade: Grade, shiny: boolean): string {
+  return `${gradeTag(grade)}${shiny ? ' ✨' : ''}`;
+}
+
 /** "Legendary Kitsune"; other grades just the hero's name. */
+
 export function gradedName(grade: Grade | null, name: string): string {
   return grade === 'legendary' ? `Legendary ${name}` : name;
 }

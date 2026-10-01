@@ -55,6 +55,7 @@ import { allHeroes } from '../src/play/heroes-data';
 import { waveDefFor } from '../src/play/director';
 import { kitLabel, type Element } from '../src/play/kits';
 import { PET_BRANCH_POUNCE, PET_POUNCE_BASE, PET_POUNCE_RADIUS, PET_REBIRTH_CAP } from '../src/play/pet';
+import { BUFF_USES, pumpedPounce } from '../src/play/play-buffs';
 import { getTune, setKnob } from '../src/play/tune';
 import rawItems from '../src/play/data/items.json';
 import { bucketMultiplier } from '../src/play/playStore';
@@ -442,6 +443,19 @@ const petRows = [
   ...row,
   gain: perWaveGain(mixedHeroes, { ...mixedHeroes, id: `pet:${row.label}`, petBase: row.base }, WAVES) - 1,
 }));
+// v26 Pumped (Train Gold): pounce ×1.25, capped at PET_POUNCE_CAP — the pet's
+// in-run TD help (pounce + buff) must stay inside the 3-8% band. A capped-out
+// Pumped is a "Maxed aura" (no change), so its row equals the plain one.
+const pumpedRows = petRows.map((row) => {
+  const pumped = pumpedPounce(row.base, BUFF_USES.pumped);
+  return {
+    label: `${row.label} + Pumped${pumped.maxed ? ' (Maxed aura)' : ''}`,
+    base: Number(pumped.pounce.toFixed(2)),
+    gain: pumped.pounce === row.base
+      ? row.gain
+      : perWaveGain(mixedHeroes, { ...mixedHeroes, id: `pump:${row.label}`, petBase: pumped.pounce }, WAVES) - 1,
+  };
+});
 
 // Every PERMANENT boost stacked at its max, vs a fresh player — emci asked for
 // the combined total, not just each alone (2026-09-29). Per Legend, with a
@@ -680,7 +694,7 @@ lines.push('Once-per-wave pounce on the "Mixed + 2 hero towers" board, every wav
 lines.push('');
 lines.push('| Pet | Pounce base | Less damage needed |');
 lines.push('|---|---|---|');
-for (const r of petRows) lines.push(`| ${r.label} | ${r.base} | ${(r.gain * 100).toFixed(1)}% |`);
+for (const r of [...petRows, ...pumpedRows]) lines.push(`| ${r.label} | ${r.base} | ${(r.gain * 100).toFixed(1)}% |`);
 lines.push('');
 lines.push('## All permanent boosts stacked at max');
 lines.push('');
@@ -695,11 +709,12 @@ for (const r of stackRows) {
   );
 }
 lines.push('');
+const pumpedWorst = Math.max(...pumpedRows.map((r) => r.gain));
 const petGod = petRows.find((r) => r.label === 'god') as (typeof petRows)[number];
 const petChild = petRows.find((r) => r.label === 'child') as (typeof petRows)[number];
 findings.push(
-  `- **Pet pounce (once per wave):** Child ${(petChild.gain * 100).toFixed(1)}% → God ${(petGod.gain * 100).toFixed(1)}% less damage needed (Battle God ${(petRows[petRows.length - 1].gain * 100).toFixed(1)}%) — ` +
-    (petChild.gain >= 0.025 && petRows.every((r) => r.gain <= 0.08)
+  `- **Pet pounce (once per wave):** Child ${(petChild.gain * 100).toFixed(1)}% → God ${(petGod.gain * 100).toFixed(1)}% less damage needed (Battle God ${(petRows[petRows.length - 1].gain * 100).toFixed(1)}%; worst case with the Pumped buff ${(pumpedWorst * 100).toFixed(1)}%) — ` +
+    (petChild.gain >= 0.025 && [...petRows, ...pumpedRows].every((r) => r.gain <= 0.08)
       ? 'inside the 3-8% target at every stage and form: helps, never mandatory.'
       : 'outside the 3-8% target; retune PET_POUNCE_BASE / PET_BRANCH_POUNCE.'),
 );

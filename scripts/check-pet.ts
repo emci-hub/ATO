@@ -269,8 +269,8 @@ ok('rebirth: +2% per rebirth into the damage pass, capped at +10%');
 /* ------------------------------------------------------------ Dive links --- */
 
 assert.equal(effectiveBustPct(0.18, {}, null, 0), 18);
-assert.equal(effectiveBustPct(0.18, {}, null, 3), 15, 'God: −3 points');
-assert.equal(effectiveBustPct(0.55, {}, null, 2), 53, 'Adult: −2 points');
+assert.equal(effectiveBustPct(0.18, {}, null, 3), 15, 'a 3-point cut: 18 → 15');
+assert.equal(effectiveBustPct(0.55, {}, null, 7), 48, 'Adult (v26): −7 points, 55 → 48');
 assert.equal(effectiveBustPct(0.18, {}, null, 50), 9, 'the 50%-of-table floor still holds');
 
 const power = rollPowerFind(() => 0);
@@ -298,7 +298,7 @@ const godBust = bustWith('god');
 assert.equal(godBust.rescued.length, 2, 'God: saves two');
 assert.equal(godBust.doc.dive_run, null, 'the dive still ends');
 assert.equal(godBust.doc.pet.stage, 'god', 'the pet is never lost');
-ok('dive buddy: −1/−2/−3 points (floor kept), rescue 1 (Adult) / 2 (God) best finds, pet never lost');
+ok('dive buddy: bust points off (floor kept), rescue 1 (Adult) / 2 (God) best finds, pet never lost');
 
 /* --------------------------------------------------------------- economy --- */
 
@@ -356,7 +356,7 @@ const v19: Record<string, unknown> = { ...defaultPlayStore(T0), version: 19 };
 for (const k of ['pet', 'pet_hall', 'pet_rebirths', 'pet_tokens_today', 'pet_tokens_ymd', 'pet_remind']) delete v19[k];
 const loaded = parsePlayStore(JSON.stringify(v19), T0 + 5 * H);
 assert.ok(loaded, 'a v19 save loads');
-assert.equal(loaded.version, 25);
+assert.equal(loaded.version, 26);
 assert.equal(loaded.pet.stage, 'egg', 'old saves get a fresh egg');
 assert.equal(loaded.pet.egg, null, '— the egg picker');
 assert.equal(loaded.pet.seen_at, T0 + 5 * H, 'seen now — no time before the update counts');
@@ -419,10 +419,10 @@ ok('Deep branch: threshold = battleWaves formula; scruffy → deep/battle by mar
 
 /* --------------------------------------------------------- Deep perks --- */
 
-assert.equal(petBustCutPp(petOf({ stage: 'child', branch: 'deep' })), 1, 'Child Deep: 1 point');
-assert.equal(petBustCutPp(petOf({ stage: 'teen', branch: 'deep' })), 2, 'Teen Deep: 1 + 1');
-assert.equal(petBustCutPp(petOf({ stage: 'god', branch: 'deep' })), 4, 'God Deep: 3 + 1');
-assert.equal(effectiveBustPct(0.18, {}, null, 4), 14, 'God Deep on Deeper #1: 18 → 14');
+assert.equal(petBustCutPp(petOf({ stage: 'child', branch: 'deep' })), 3, 'Child Deep (v26): 2 + 1');
+assert.equal(petBustCutPp(petOf({ stage: 'teen', branch: 'deep' })), 5, 'Teen Deep (v26): 4 + 1');
+assert.equal(petBustCutPp(petOf({ stage: 'god', branch: 'deep' })), 11, 'God Deep (v26): 10 + 1');
+assert.equal(effectiveBustPct(0.18, {}, null, 11), 9, 'God Deep on Deeper #1: 18 − 11 → held at the 9% floor');
 assert.equal(effectiveBustPct(0.18, {}, null, 40), 9, 'the half-table floor still holds');
 assert.equal(petRescueKeep(petOf({ stage: 'teen', branch: 'deep' })), 0, 'no rescue before Adult, even Deep');
 assert.equal(petRescueKeep(petOf({ stage: 'adult', branch: 'standard' })), 1);
@@ -575,7 +575,7 @@ ok('expedition: Child+, the daily ladder (1 min first, longer each time, done af
   assert.deepEqual(safeAway.doc.pet_logbook, out.pet_logbook, 'away: its Logbook does not change');
   const home = playView(out, T0 + 4 * H);
   assert.equal(home.pet.away, false, 'once its time is up (the 4h trip) it counts as home');
-  assert.ok(home.pet.pounceBase > 0 && home.pet.bustCutPp === 4 && home.pet.rescueKeep === 2, 'and every perk is back');
+  assert.ok(home.pet.pounceBase > 0 && home.pet.bustCutPp === 11 && home.pet.rescueKeep === 2, 'and every perk is back');
   assert.equal(petAt(out, T0 + 4 * H).away, false);
 }
 ok('away: pounce, bust cut and rescue all off (view and roll), dives not its care, perks back when it returns');
@@ -608,7 +608,7 @@ ok('away: pounce, bust cut and rescue all off (view and roll), dives not its car
   for (const k of ['pet_expedition', 'pet_expedition_ymd', 'pet_expedition_note', 'pet_logbook']) delete v20[k];
   delete (v20.pet as Record<string, unknown>).deep_surfaces;
   const up = parsePlayStore(JSON.stringify(v20), T0)!;
-  assert.equal(up.version, 25);
+  assert.equal(up.version, 26);
   assert.deepEqual(
     [up.pet_expedition, up.pet_expedition_ymd, up.pet_expedition_note, up.pet_logbook, up.pet.deep_surfaces],
     [null, null, null, {}, 0],
@@ -633,7 +633,7 @@ ok('Logbook: first depth + count, busted finds kept, survives rebirth; v20 → v
   // Adult, 1 Deeper done: the view's % must be the exact roll threshold.
   const doc = { ...docWithPet(petOf({ stage: 'adult', branch: 'deep' })), dive_run: diveRun(1, [lk, pwr]), inventory: [] };
   const shown = playView(doc, T0).diveRun.bustPctNext!;
-  assert.equal(shown, 17, 'Deeper #2 Safer (28 − 8 = 20%) − 3 Adult Deep points');
+  assert.equal(shown, 12, 'Deeper #2 Safer (28 − 8 = 20%) − 8 Adult Deep points (v26: 7 + 1)');
   const justUnder = deeperDive(doc, T0, 'safe', () => shown / 100 - 1e-9, shown)!;
   assert.ok(justUnder.outcome.busted, 'a roll just under the shown % busts');
   const atIt = deeperDive(doc, T0, 'safe', () => shown / 100, shown)!;

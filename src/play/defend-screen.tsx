@@ -2335,6 +2335,14 @@ export function DefendScreen({
     setSim(cast.state);
   };
   const pounceAvailable = view.pet.pounceBase > 0;
+  // v26 Pumped (Train Gold): ×N waves left, or a "Maxed aura" when the cap
+  // leaves it nothing to add (then it glows and spends no uses).
+  const pumpedOn = view.pet.buffs.pumped > 0 && pounceAvailable;
+  const pumpedLabel = !pumpedOn
+    ? ''
+    : view.pet.pumped.maxed
+      ? ' · ✨ Maxed aura'
+      : ` · 💪 Pumped ×${view.pet.buffs.pumped}`;
   const pounceReady = pounceAvailable && sim != null && !sim.petPounceUsed;
 
   const skillReady = (sim?.skillCooldownMs ?? 0) <= 0;
@@ -3889,6 +3897,8 @@ export function DefendScreen({
                   styles.hudButton,
                   styles.bottomHudPounce,
                   { borderColor: theme.backgroundSelected, backgroundColor: theme.backgroundElement },
+                  // v26: an active Pumped (or its Maxed aura) glows gold.
+                  pumpedOn && styles.pounceGold,
                   pressed && pounceReady && styles.pressed,
                 ]}>
                 <ThemedText
@@ -3896,6 +3906,7 @@ export function DefendScreen({
                   numberOfLines={1}
                   themeColor={pounceReady ? undefined : 'textSecondary'}>
                   {pounceReady ? 'Pet pounce · once this wave' : 'Pet pounce · used this wave'}
+                  {pumpedLabel}
                 </ThemedText>
               </Pressable>
             ) : null}
@@ -5179,6 +5190,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  /** v26 Pumped / Maxed aura: a gold glow on the pounce row (static — the
+   * shadow never animates, so Effects Low needs nothing extra). */
+  pounceGold: {
+    borderColor: '#FFD700',
+    borderWidth: 2,
+    shadowColor: '#FFD700',
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
   },
   /** §9m boss alert banner — centered over the board while the boss steps in.
    * Top overlay layer (above tiles, gameplay art, and the Avatar). */

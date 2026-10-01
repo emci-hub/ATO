@@ -233,3 +233,58 @@ export function freeDiveShells(depth: number, n: number): number {
 
 /** Expedition (v22): half the time a Power, else a Shallows find. */
 export const EXPEDITION_POWER_CHANCE = 0.5;
+
+/* ------------------------------------------------- v26 stage power --- */
+
+/**
+ * Lucky upgrade (v26, Part C): an older pet sometimes brings a find up one
+ * step. NON-Power finds only — a Power is never created or improved here, so
+ * the TD gear inflow is untouched (emci's guardrail). One step:
+ *   shells 1→2, 2→3, 3→5, 4→5, 5→12, 6→12 (12 stays 12)
+ *   Kelp snack → Glow shrimp (shrimp stays)
+ *   a common Look → a rare Look (from this zone if it has one)
+ *   a rare Look → this zone's cosmetic (if it has one; else it stays)
+ *   cosmetics and Powers stay as they are.
+ * Rolled at the same moment as the find itself, so a Lamp preview already
+ * shows the upgraded find — what you see is what lands.
+ */
+const SHELL_STEP: Record<number, number> = { 1: 2, 2: 3, 3: 5, 4: 5, 5: 12, 6: 12 };
+const RARE_LOOKS = ['item_glowveil_cloak_01', 'item_salt_helm_01', 'item_deep_pearl_01'] as const;
+
+export function luckyUpgrade(id: string, tier: DiveTier, rng: () => number): string {
+  const kind = findKind(id);
+  if (kind === 'shells') {
+    const next = SHELL_STEP[shellsOf(id)];
+    return next ? `shells_${next}` : id;
+  }
+  if (kind === 'food') return id === 'food_kelp' ? 'food_shrimp' : id;
+  if (kind !== 'item') return id;
+  const def = getItemDef(id);
+  if (!def || def.core.kind !== 'look') return id; // Powers: never
+  const rolls = tierRolls()[tier];
+  if (def.core.rarity === 'common') {
+    const here = rolls.map((r) => r.id).filter((r) => (RARE_LOOKS as readonly string[]).includes(r));
+    const pool = here.length > 0 ? here : [...RARE_LOOKS];
+    return pool[Math.floor(rng() * pool.length) % pool.length];
+  }
+  const cos = rolls.map((r) => r.id).filter((r) => findKind(r) === 'cosmetic');
+  return cos.length > 0 ? cos[Math.floor(rng() * cos.length) % cos.length] : id;
+}
+
+/** A tier roll plus the pet's lucky upgrade chance (0 = a plain roll). The
+ * upgrade draw is always taken, so the rng sequence doesn't depend on it. */
+export function rollTierLucky(tier: DiveTier, luck: number, rng: () => number = Math.random): string {
+  const id = rollTier(tier, rng);
+  const u = rng();
+  return luck > 0 && u < luck ? luckyUpgrade(id, tier, rng) : id;
+}
+
+/** v26 daily Power ceiling (emci: 6): Powers from ALL of Divecore — dive
+ * surfaces, rescues, the Net, Hearty meal finds and expeditions — per
+ * device-local day. Past it, each Power becomes this many shells. */
+export const DIVECORE_POWERS_PER_DAY = 6;
+export const POWER_OVERFLOW_SHELLS = 6;
+
+export function isPowerFind(id: string): boolean {
+  return findKind(id) === 'item' && getItemDef(id)?.core.kind === 'power';
+}

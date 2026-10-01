@@ -101,7 +101,13 @@ import {
   parsePet,
   parsePetHall,
   petAuraElement,
+  PET_BUST_CUT_PP,
+  PET_LUCKY_UPGRADE,
   petBustCutPp,
+  petDayHolds,
+  petLuckyChance,
+  petTripBetter,
+  petTripMult,
   petPounceBase,
   petRescueKeep,
   petStageLeftMs,
@@ -133,6 +139,7 @@ import {
   parseHeroBook,
   rollPet,
   roundSkillPoints,
+  CARE_SKILL_SHARE,
   type CareBand,
   type EggType,
   type Grade,
@@ -152,7 +159,7 @@ import {
   type PlayStats,
   type Ribbon,
 } from '@/play/play-settings';
-import type { RoundOutcome } from '@/play/pet-game-rules';
+import type { Difficulty, RoundOutcome } from '@/play/pet-game-rules';
 import { EXPEDITION_STEPS, expeditionLengthMs, rollExpeditionReward } from '@/play/expedition-ladder';
 import {
   DIVE_GEAR_COST,
@@ -169,7 +176,6 @@ import {
   isFoodId,
   pathBaseBust,
   pathTier,
-  rollTier,
   shellsOf,
   tierAt,
   type DiveGear,
@@ -186,6 +192,41 @@ import {
   type CosmeticSlot,
   type PetWear,
 } from '@/play/pet-cosmetics';
+import {
+  BUFF_USES,
+  FOCUSED_TRIP_MULT,
+  NO_BUFFS,
+  SNACK_BUST_PP,
+  buffForMedal,
+  grantBuff,
+  parseBuffs,
+  pumpedPounce,
+  spendBuff,
+  type BuffId,
+  type Buffs,
+  type PumpedState,
+} from '@/play/play-buffs';
+import {
+  DAILY_LEVEL,
+  dailyFor,
+  emptyRecords,
+  levelUnlocked,
+  parseDaily,
+  parseRecords,
+  rankTitle,
+  recordDaily,
+  recordRound,
+  EMPTY_DAILY,
+  type DailyGames,
+  type GameRecords,
+  type Medal,
+} from '@/play/game-records';
+import {
+  DIVECORE_POWERS_PER_DAY,
+  POWER_OVERFLOW_SHELLS,
+  isPowerFind,
+  rollTierLucky,
+} from '@/play/dive-loot';
 import type { ShopTokenRow } from '@/play/shop';
 import { devNoCaps, getTune } from '@/play/tune';
 import {
@@ -209,6 +250,9 @@ export const DIVE_CHARGE_REFILL_MS = 10 * 60 * 1000; // refill_seconds: 600
 export const DIVE_DEEPER_MAX = 4; // dive_deeper_max (5 with Oxygen, v22)
 export const DIVE_DEEPER_MAX_OXYGEN = 5;
 export const DIVE_BUST_TABLE = [0.18, 0.28, 0.4, 0.55] as const; // Deeper #1..#4
+/** §7 floor: luck, the pet and buffs never take a bust chance below this
+ * share of its table (path) value. */
+export const DIVE_BUST_FLOOR = 0.5;
 
 /** Research idle earn (GAME_DATA research_default). */
 export const RESEARCH_CYCLE_MS = 30 * 60 * 1000; // duration_seconds: 1800
@@ -391,6 +435,8 @@ const LUCK_BUST_BEND_PER_TIER = 0.15;
  * spent either way).
  */
 export type DiveRun = {
+  /** v26 — a Snack buff rides this whole dive (−2 bust points). */
+  snack?: boolean;
   /** Deeper presses survived so far (0 on the first find card, max 4 — 5
    * with Oxygen). */
   deepers: number;
@@ -704,7 +750,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 25;
+  version: 26;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -825,6 +871,14 @@ export type PlayStoreDoc = {
   /** v22 — free dives started on `free_dives_ymd` (shell fall-off). */
   free_dives_today: number;
   free_dives_ymd: string | null;
+  /** v26 — medal buffs (uses left each). */
+  buffs: Buffs;
+  /** v26 — mini-game bests + medals per game per level. */
+  game_records: GameRecords;
+  /** v26 — the daily challenge (its day, bests and bonus flags). */
+  daily_games: DailyGames;
+  /** v26 — Powers banked from Divecore on `ymd` (the daily ceiling). */
+  powers_today: { ymd: string | null; n: number };
 };
 
 /** A queued "hero owned" offer (Slice A2). `label` is the hero's display name
@@ -980,6 +1034,8 @@ export type PetView = {
   expeditionBackInMs: number | null;
   /** v25 — the current trip's length (null when home). */
   expeditionTripMs: number | null;
+  /** v26 — the trip out's ladder length (before stage power / Focused). */
+  expeditionStepMs: number | null;
   /** v25 — the next trip's length today (null = the ladder is done for today). */
   nextTripMs: number | null;
   /** v25 — trips started today (0-7). */
@@ -1011,6 +1067,17 @@ export type PetView = {
   dyeOn: boolean;
   /** v23 — Release is on offer (Child and up, not away). */
   canRelease: boolean;
+  /** v26 — medal buffs (uses left), and Pumped's effect on the pounce right
+   * now (`maxed` = a "Maxed aura": the cap leaves it nothing to add). */
+  buffs: Buffs;
+  pumped: PumpedState;
+  /** v26 — what the pet's stage gives: bust points off (stage only, before
+   * Deep/Snack), the lucky-upgrade chance, trip length share, better trips. */
+  stagePower: { bustPp: number; lucky: number; tripMult: number; tripBetter: boolean };
+  /** v26 — mini-game records, rank titles and today's daily challenge. */
+  records: GameRecords;
+  ranks: Record<'catch' | 'train', string>;
+  daily: DailyGames;
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -1045,6 +1112,13 @@ export type DiveRunView = {
   freeShellsNow: number | null;
   /** v22 — no run and no charges: a free dive is on offer. */
   canFreeDive: boolean;
+  /** v26 — a Snack buff rides this dive (its −2 is already in `bustPct`). */
+  snack: boolean;
+  /** v26 — Hearty meal uses left (+1 find on a charged surface). */
+  hearty: number;
+  /** v26 — Powers banked from Divecore today, and the daily ceiling. */
+  powersToday: number;
+  powersCap: number;
 };
 
 export type ClaimResult = {
@@ -1069,7 +1143,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 25,
+    version: 26,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -1128,6 +1202,10 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     charges_armed: false,
     free_dives_today: 0,
     free_dives_ymd: null,
+    buffs: { ...NO_BUFFS },
+    game_records: emptyRecords(),
+    daily_games: { ...EMPTY_DAILY },
+    powers_today: { ymd: null, n: 0 },
   };
 }
 
@@ -1260,6 +1338,10 @@ function diveRunViewOf(doc: PlayStoreDoc, now: number): DiveRunView {
       netOn: false,
       freeShellsNow: null,
       canFreeDive: diveChargeAt(doc, now).current < 1,
+      snack: doc.buffs.snack > 0,
+      hearty: doc.buffs.hearty,
+      powersToday: powersTodayOf(doc, now),
+      powersCap: DIVECORE_POWERS_PER_DAY,
     };
   }
   const canDeeper = run.deepers < maxDeepers;
@@ -1284,6 +1366,10 @@ function diveRunViewOf(doc: PlayStoreDoc, now: number): DiveRunView {
     netOn: doc.dive_gear.net && run.deepers >= NET_MIN_DEPTH,
     freeShellsNow: run.free_n != null ? freeDiveShells(run.deepers, run.free_n) : null,
     canFreeDive: false,
+    snack: run.snack === true,
+    hearty: doc.buffs.hearty,
+    powersToday: powersTodayOf(doc, now),
+    powersCap: DIVECORE_POWERS_PER_DAY,
   };
 }
 
@@ -1302,11 +1388,12 @@ function nextDeeperBustPct(
   path: DivePath,
 ): number {
   const active = activeAvatarOf(doc);
+  // v26: a Snack buff rides the whole dive; the half-table floor still holds.
   return effectiveBustPct(
     pathBaseBust(diveBustChanceAt(run.deepers), path),
     active.equipped,
     legendElementOf(active.id),
-    petBustCutPp(pet, away),
+    petBustCutPp(pet, away) + (run.snack ? SNACK_BUST_PP : 0),
   );
 }
 
@@ -1314,13 +1401,19 @@ function freeDivesTodayOf(doc: PlayStoreDoc, now: number): number {
   return doc.free_dives_ymd === localYmd(new Date(now)) ? doc.free_dives_today : 0;
 }
 
-/** Pre-roll the next Deeper's find on both paths (landing at `depth`). */
-function rollNext(doc: PlayStoreDoc, depth: number, rng: () => number): { safe: string; rich: string } | null {
+/** Pre-roll the next Deeper's find on both paths (landing at `depth`). v26:
+ * with the pet's lucky upgrade already in, so the Lamp shows what lands. */
+function rollNext(
+  doc: PlayStoreDoc,
+  depth: number,
+  rng: () => number,
+  luck = 0,
+): { safe: string; rich: string } | null {
   if (depth > diveMaxDeepers(doc)) return null;
   const oxygen = doc.dive_gear.oxygen;
   return {
-    safe: rollTier(pathTier(depth, 'safe', oxygen), rng),
-    rich: rollTier(pathTier(depth, 'rich', oxygen), rng),
+    safe: rollTierLucky(pathTier(depth, 'safe', oxygen), luck, rng),
+    rich: rollTierLucky(pathTier(depth, 'rich', oxygen), luck, rng),
   };
 }
 
@@ -1328,17 +1421,40 @@ function pantryTotal(pantry: Partial<Record<FoodId, number>>): number {
   return Object.values(pantry).reduce<number>((a, n) => a + (n ?? 0), 0);
 }
 
+/** Powers banked from Divecore today (the v26 ceiling), by the token-cap day rule. */
+export function powersTodayOf(doc: PlayStoreDoc, now: number): number {
+  return petDayHolds(localYmd(new Date(now)), doc.powers_today.ymd) ? doc.powers_today.n : 0;
+}
+
 /** Bank finds of any kind: items to the bag, food to the pantry (a find that
  * doesn't fit is 1 shell), shells to the wallet, cosmetics to the wardrobe (a
- * duplicate is 5 shells). Returns the doc and the shells gained. */
-export function bankFinds(doc: PlayStoreDoc, ids: readonly string[]): { doc: PlayStoreDoc; shells: number } {
+ * duplicate is 5 shells). v26: Powers count toward the daily Divecore ceiling
+ * (DIVECORE_POWERS_PER_DAY); each Power past it becomes POWER_OVERFLOW_SHELLS
+ * shells. Returns the doc, the shells gained and the Powers converted. */
+export function bankFinds(
+  doc: PlayStoreDoc,
+  ids: readonly string[],
+  now: number = Date.now(),
+): { doc: PlayStoreDoc; shells: number; powersConverted: number } {
   const items: string[] = [];
   const pantry = { ...doc.pet_pantry };
   const owned = [...doc.pet_cosmetics];
+  const today = localYmd(new Date(now));
+  const holds = petDayHolds(today, doc.powers_today.ymd);
+  let powers = holds ? doc.powers_today.n : 0;
+  let powersConverted = 0;
   let shells = 0;
   for (const id of ids) {
     const kind = findKind(id);
-    if (kind === 'item') items.push(id);
+    if (kind === 'item' && isPowerFind(id)) {
+      if (powers < DIVECORE_POWERS_PER_DAY) {
+        powers += 1;
+        items.push(id);
+      } else {
+        powersConverted += 1;
+        shells += POWER_OVERFLOW_SHELLS;
+      }
+    } else if (kind === 'item') items.push(id);
     else if (kind === 'food' && isFoodId(id)) {
       if (pantryTotal(pantry) < PANTRY_MAX) pantry[id] = (pantry[id] ?? 0) + 1;
       else shells += PANTRY_OVERFLOW_SHELLS;
@@ -1355,8 +1471,10 @@ export function bankFinds(doc: PlayStoreDoc, ids: readonly string[]): { doc: Pla
       pet_pantry: pantry,
       pet_cosmetics: owned,
       shells: doc.shells + shells,
+      powers_today: { ymd: holds ? (doc.powers_today.ymd as string) : today, n: powers },
     },
     shells,
+    powersConverted,
   };
 }
 
@@ -1392,6 +1510,12 @@ export function heroDyeUnlocked(doc: PlayStoreDoc, hero: string, book: PetHeroBo
   return doc.dye_unlocked.includes(hero) || heroStars(book[hero]?.copies ?? 0) >= DYE_STARS;
 }
 
+/** Pumped's effect on the pounce right now (v26). */
+export function pumpedStateOf(doc: PlayStoreDoc, now: number): PumpedState {
+  const { pet, away } = petAt(doc, now);
+  return pumpedPounce(petPounceBase(pet, away), doc.buffs.pumped);
+}
+
 /** The pet aged to `now`, and whether it is still away. An expedition whose
  * time is up counts as home here — every transition collects it first
  * (`touchPet`), so the view and the rolls agree. */
@@ -1412,7 +1536,8 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
   return {
     state: pet,
     stageLeftMs: petStageLeftMs(pet),
-    pounceBase: petPounceBase(pet, away),
+    // v26: the pounce TD uses, Pumped included (capped; see play-buffs.ts).
+    pounceBase: pumpedPounce(petPounceBase(pet, away), doc.buffs.pumped).pounce,
     bustCutPp: petBustCutPp(pet, away),
     rescueKeep: petRescueKeep(pet, away),
     aura: petAuraElement(pet),
@@ -1425,7 +1550,14 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
       block == null ? 'ready' : block === 'away' ? 'away' : block === 'done_today' ? 'done_today' : 'locked',
     expeditionBackInMs: away && doc.pet_expedition ? expeditionLeftMs(pet, doc.pet_expedition) : null,
     expeditionTripMs: doc.pet_expedition ? doc.pet_expedition.len_ms : null,
-    nextTripMs: stepsToday < EXPEDITION_STEPS ? expeditionLengthMs(stepsToday) : null,
+    // v26: the REAL next trip (stage power + a waiting Focused), and the
+    // ladder length of the trip out (the phone notice is per ladder step).
+    nextTripMs: stepsToday < EXPEDITION_STEPS ? tripLengthMs(stepsToday, pet, doc.buffs.focused > 0) : null,
+    expeditionStepMs: doc.pet_expedition
+      ? doc.pet_expedition.step >= 0
+        ? expeditionLengthMs(doc.pet_expedition.step)
+        : doc.pet_expedition.len_ms
+      : null,
     tripsToday: stepsToday,
     expeditionNote: doc.pet_expedition_note,
     expeditionNoteFresh: doc.pet_expedition_note != null && !doc.pet_expedition_toasted,
@@ -1443,6 +1575,17 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     gradeOdds: gradeOdds(petCareBand(pet), pet.ticket),
     dyeOn: petDyeOn(doc, pet),
     canRelease: canReleasePet(pet) && !away,
+    buffs: doc.buffs,
+    pumped: pumpedPounce(petPounceBase(pet, away), doc.buffs.pumped),
+    stagePower: {
+      bustPp: PET_BUST_CUT_PP[pet.stage],
+      lucky: PET_LUCKY_UPGRADE[pet.stage],
+      tripMult: petTripMult(pet),
+      tripBetter: petTripBetter(pet),
+    },
+    records: doc.game_records,
+    ranks: { catch: rankTitle(doc.game_records, 'catch'), train: rankTitle(doc.game_records, 'train') },
+    daily: dailyFor(doc.daily_games, today),
   };
 }
 
@@ -1473,12 +1616,14 @@ export function touchPet(
     // A solo dive: it can't bust, it always brings back one find — what, by
     // the ladder step (v25): food/shells early, finds later, a chance of a
     // Power only on the 2h and 4h trips (a trip from before keeps the old rule).
-    const find = rollExpeditionReward(exp.step, rng);
-    const banked = bankFinds({ ...doc, pet }, [find]).doc;
+    const find = rollExpeditionReward(exp.step, rng, exp.better === true);
+    const bankedRes = bankFinds({ ...doc, pet }, [find], now);
+    const banked = bankedRes.doc;
     return {
       ...banked,
       pet_expedition: null,
-      pet_expedition_note: find,
+      // v26: a Power past today's ceiling came back as shells — say so.
+      pet_expedition_note: bankedRes.powersConverted > 0 ? `shells_${POWER_OVERFLOW_SHELLS}` : find,
       pet_expedition_toasted: false,
       pet_logbook: logFind(doc.pet_logbook, find, 0),
     };
@@ -1506,16 +1651,28 @@ export function sendPetExpedition(
   );
   if (block) return { doc: touched, result: { ok: false, reason: block } };
   const step = expeditionStepsToday(today, touched.pet_expedition_ymd, touched.pet_expedition_steps);
+  // v26: stage power shortens the trip (Teen 90% · Adult 80% · God 70%) and
+  // Adult/God bring back one step better; a Focused buff takes 25% more off.
+  // Fixed now, so evolving or a clock change mid-trip can't change it.
+  const focused = touched.buffs.focused > 0;
+  const len = tripLengthMs(step, touched.pet, focused);
   return {
     doc: {
       ...touched,
-      pet_expedition: { left_age_ms: touched.pet.total_age_ms, len_ms: expeditionLengthMs(step), step },
+      buffs: focused ? spendBuff(touched.buffs, 'focused') : touched.buffs,
+      pet_expedition: { left_age_ms: touched.pet.total_age_ms, len_ms: len, step, better: petTripBetter(touched.pet) },
       pet_expedition_ymd: today,
       pet_expedition_steps: step + 1,
       play_stats: { ...touched.play_stats, expeditions: touched.play_stats.expeditions + 1 },
     },
     result: { ok: true },
   };
+}
+
+/** v26: a trip's real length — the ladder step × stage power × Focused. No
+ * floor above a second, so "25% shorter" is true even on the 1-minute trip. */
+export function tripLengthMs(step: number, pet: PetState, focused: boolean): number {
+  return Math.max(1000, Math.round(expeditionLengthMs(step) * petTripMult(pet) * (focused ? FOCUSED_TRIP_MULT : 1)));
 }
 
 /** Clear the "Your pet brought back X" note. */
@@ -1860,7 +2017,27 @@ export function resetDivecore(doc: PlayStoreDoc, now: number): PlayStoreDoc {
 }
 
 export type PetRoundKind = 'catch' | 'train';
-export type PetRoundResult = { counted: boolean; tokensGranted: number };
+export type PetRoundResult = {
+  counted: boolean;
+  tokensGranted: number;
+  /** v26 — the round's level and score, and what it earned. */
+  level: Difficulty;
+  score: number;
+  medal: Medal | null;
+  newRecord: boolean;
+  prevBest: number;
+  rankUp: boolean;
+  rank: string;
+  unlocked: Difficulty | null;
+  buff: BuffId | null;
+  daily: boolean;
+  dailyBest: boolean;
+  dailyBonusShells: number;
+};
+
+/** v26 — how a round was played (Normal, score 0 when not given). */
+export type RoundMeta = { level: Difficulty; score: number; daily: boolean };
+const PLAIN_ROUND: RoundMeta = { level: 'normal', score: 0, daily: false };
 
 /**
  * A finished mini-game round (v25: pass / fail — see pet-game-rules.ts).
@@ -1873,20 +2050,55 @@ export function finishPetRound(
   now: number,
   kind: PetRoundKind,
   outcome: RoundOutcome,
+  meta: RoundMeta = PLAIN_ROUND,
 ): { doc: PlayStoreDoc; result: PetRoundResult } {
   // touchPet also brings home an expedition whose time is up (v21).
   const touchedDoc = touchPet(doc, now);
   const aged = touchedDoc.pet;
+  // The daily challenge is always played on its fixed (Normal) rules.
+  const level: Difficulty = meta.daily ? DAILY_LEVEL : meta.level;
+  const score = Math.max(0, Math.floor(meta.score));
+  const empty: PetRoundResult = {
+    counted: false,
+    tokensGranted: 0,
+    level,
+    score,
+    medal: null,
+    newRecord: false,
+    prevBest: touchedDoc.game_records[kind][level].best,
+    rankUp: false,
+    rank: rankTitle(touchedDoc.game_records, kind),
+    unlocked: null,
+    buff: null,
+    daily: meta.daily,
+    dailyBest: false,
+    dailyBonusShells: 0,
+  };
   if (aged.stage === 'egg' || !outcome.pass) {
-    return { doc: touchedDoc, result: { counted: false, tokensGranted: 0 } };
+    return { doc: touchedDoc, result: empty };
   }
-  // Baby care (v23 → v25): skilled = passed with 70%+; and its activity.
+  // Baby care (v23 → v25): skilled = passed with 70%+; and its activity. v26:
+  // an Easy pass counts as a plain pass even at 70%+ — only Normal or harder
+  // can be "skilled", so the easier level can't farm the egg care score (and
+  // Hard/Insane never give more than Normal).
+  const skillOutcome = level === 'easy' ? { pass: true, quality: Math.min(outcome.quality, CARE_SKILL_SHARE - 0.01) } : outcome;
   const cared = petCareAct(
-    petCareSkill(aged, roundSkillPoints(outcome)),
+    petCareSkill(aged, roundSkillPoints(skillOutcome)),
     kind === 'catch' ? CARE_ACT.fed : CARE_ACT.trained,
   );
   const pet = kind === 'catch' ? feedPet(cared, PET_FEED_CATCH) : trainPet(cared);
   const pay = petTokensForRound(localYmd(new Date(now)), doc.pet_tokens_ymd, doc.pet_tokens_today);
+  // v26: records, medal → buff (refreshed, never stacked), daily challenge.
+  // A level that isn't open (e.g. after a reset) earns no record, medal,
+  // buff or unlock — care and tokens still count as a normal pass.
+  const open = levelUnlocked(touchedDoc.game_records, kind, level);
+  const rec = open
+    ? recordRound(touchedDoc.game_records, kind, level, score, true)
+    : { records: touchedDoc.game_records, medal: null, newRecord: false, prevBest: empty.prevBest, rankUp: false, unlocked: null };
+  const buff = buffForMedal(kind, rec.medal);
+  const daily = meta.daily
+    ? recordDaily(touchedDoc.daily_games, localYmd(new Date(now)), kind, score, true)
+    : { daily: touchedDoc.daily_games, newBest: false, bonusShells: 0 };
   return {
     doc: {
       ...touchedDoc,
@@ -1894,9 +2106,40 @@ export function finishPetRound(
       tokens: doc.tokens + pay.tokens,
       pet_tokens_today: pay.paid,
       pet_tokens_ymd: pay.ymd,
+      game_records: rec.records,
+      buffs: buff ? grantBuff(touchedDoc.buffs, buff) : touchedDoc.buffs,
+      daily_games: daily.daily,
+      shells: touchedDoc.shells + daily.bonusShells,
     },
-    result: { counted: true, tokensGranted: pay.tokens },
+    result: {
+      ...empty,
+      counted: true,
+      tokensGranted: pay.tokens,
+      medal: rec.medal,
+      newRecord: rec.newRecord,
+      prevBest: rec.prevBest,
+      rankUp: rec.rankUp,
+      rank: rankTitle(rec.records, kind),
+      unlocked: rec.unlocked,
+      buff,
+      dailyBest: daily.newBest,
+      dailyBonusShells: daily.bonusShells,
+    },
   };
+}
+
+/** Dev kit: every buff at full uses. */
+export function devGrantAllBuffs(doc: PlayStoreDoc): PlayStoreDoc {
+  return { ...doc, buffs: { ...BUFF_USES } };
+}
+
+/** Dev kit: Gold on every level of both games (opens everything). */
+export function devGoldAllGames(doc: PlayStoreDoc): PlayStoreDoc {
+  const records = emptyRecords();
+  for (const g of ['catch', 'train'] as const) {
+    for (const d of Object.keys(records[g]) as Difficulty[]) records[g][d] = { best: 1, medal: 'gold' };
+  }
+  return { ...doc, game_records: records };
 }
 
 /** Rebirth a God pet: Hall entry, +2% (cap +10%), new egg. Null unless God. */
@@ -2304,6 +2547,9 @@ export function recordDefendWin(
       // heart, counts toward its Battle form and tallies the Legend element
       // for the God aura — so TD-only players still raise it.
       pet: petWaveCleared(advancePet(doc.pet, now), legendElementOf(active.id)),
+      // v26 Pumped: a use only on a wave where it actually changed the pounce
+      // (never while it is a "Maxed aura", or with no pounce).
+      buffs: pumpedStateOf(doc, now).boosted ? spendBuff(doc.buffs, 'pumped') : doc.buffs,
       // v24 Journal: a hatch / reveal that happens in this same aging counts.
       play_stats: tallyPet(doc.play_stats, doc.pet, advancePet(doc.pet, now)),
     },
@@ -3205,7 +3451,7 @@ export function effectiveBustPct(
   // The pet dive buddy (v20) takes whole points off AFTER the luck bend; the
   // 50%-of-table floor still holds, so the two together never zero it out.
   const bent = baseBust * (1 - LUCK_BUST_BEND_PER_TIER * (bucket - 1)) - Math.max(0, petCutPp) / 100;
-  const floored = Math.max(0.5 * baseBust, bent);
+  const floored = Math.max(DIVE_BUST_FLOOR * baseBust, bent);
   return Math.round(floored * 100);
 }
 
@@ -3305,18 +3551,21 @@ export function startDive(
   const dive = diveChargeAt(doc, now);
   if (dive.current < 1) return null;
   const touched = touchPet(doc, now, rng);
-  const { away } = petAt(touched, now);
-  const firstFind = rollTier('shallows', rng);
+  const { pet, away } = petAt(touched, now);
+  const luck = petLuckyChance(pet, away);
+  const firstFind = rollTierLucky('shallows', luck, rng);
+  const snack = touched.buffs.snack > 0;
   return {
     doc: {
       ...touched,
+      buffs: snack ? spendBuff(touched.buffs, 'snack') : touched.buffs,
       // Spend one derived charge; the refill timer restarts from now.
       dive_charge: dive.current - 1,
       dive_charge_at: now,
       // v24: the last charge spent arms the (opt-in) "charges full" notice.
       charges_armed: touched.charges_armed || dive.current - 1 === 0,
       play_stats: { ...touched.play_stats, dives: touched.play_stats.dives + 1 },
-      dive_run: { deepers: 0, haul: [firstFind], free_n: null, next: rollNext(touched, 1, rng) },
+      dive_run: { deepers: 0, haul: [firstFind], free_n: null, next: rollNext(touched, 1, rng, luck), ...(snack ? { snack: true } : {}) },
       pet_logbook: away ? touched.pet_logbook : logFind(touched.pet_logbook, firstFind, 0),
     },
     firstFind,
@@ -3336,16 +3585,19 @@ export function startFreeDive(
   if (doc.dive_run) return null;
   if (diveChargeAt(doc, now).current >= 1) return null;
   const touched = touchPet(doc, now, rng);
-  const { away } = petAt(touched, now);
+  const { pet, away } = petAt(touched, now);
+  const luck = petLuckyChance(pet, away);
   const n = freeDivesTodayOf(touched, now);
-  const firstFind = rollTier('shallows', rng);
+  const firstFind = rollTierLucky('shallows', luck, rng);
+  const snack = touched.buffs.snack > 0;
   return {
     doc: {
       ...touched,
+      buffs: snack ? spendBuff(touched.buffs, 'snack') : touched.buffs,
       free_dives_today: n + 1,
       free_dives_ymd: localYmd(new Date(now)),
       play_stats: { ...touched.play_stats, dives: touched.play_stats.dives + 1 },
-      dive_run: { deepers: 0, haul: [firstFind], free_n: n, next: rollNext(touched, 1, rng) },
+      dive_run: { deepers: 0, haul: [firstFind], free_n: n, next: rollNext(touched, 1, rng, luck), ...(snack ? { snack: true } : {}) },
       pet_logbook: away ? touched.pet_logbook : logFind(touched.pet_logbook, firstFind, 0),
     },
     firstFind,
@@ -3358,7 +3610,13 @@ export type SurfaceResult = {
   banked: string[];
   /** The Net's extra find, if any. */
   netFind: string | null;
+  /** v26 — the Hearty meal's extra find, if any. */
+  heartyFind: string | null;
   shellsGained: number;
+  /** v26 — Powers past today's ceiling that became shells, and the count
+   * after this surface (for "Powers today X/6"). */
+  powersConverted: number;
+  powersToday: number;
   petCared: boolean;
   free: boolean;
 };
@@ -3376,9 +3634,13 @@ export function surfaceDive(
   if (!run) return null;
   const touched = touchPet(doc, now, rng);
   const { away } = petAt(touched, now);
+  const luck = petLuckyChance(touched.pet, away);
   const free = run.free_n != null;
-  const netFind = touched.dive_gear.net && run.deepers >= NET_MIN_DEPTH ? rollTier(tierAt(run.deepers), rng) : null;
-  const brought = netFind ? [...run.haul, netFind] : run.haul;
+  const netFind =
+    touched.dive_gear.net && run.deepers >= NET_MIN_DEPTH ? rollTierLucky(tierAt(run.deepers), luck, rng) : null;
+  // v26 Hearty meal: +1 find on a charged-dive surface (a use per surface).
+  const heartyFind = !free && touched.buffs.hearty > 0 ? rollTierLucky(tierAt(run.deepers), luck, rng) : null;
+  const brought = [...run.haul, ...(netFind ? [netFind] : []), ...(heartyFind ? [heartyFind] : [])];
   let pet = touched.pet;
   if (!away) {
     const cared = petDiveSurfaced(pet, run.deepers);
@@ -3386,12 +3648,17 @@ export function surfaceDive(
     pet = free && cared !== pet ? { ...cared, deep_surfaces: pet.deep_surfaces } : cared;
     pet = petCareAct(pet, CARE_ACT.dived); // Baby care (v23)
   }
-  const logbook = netFind && !away ? logFind(touched.pet_logbook, netFind, run.deepers) : touched.pet_logbook;
+  let logbook = touched.pet_logbook;
+  if (!away) {
+    if (netFind) logbook = logFind(logbook, netFind, run.deepers);
+    if (heartyFind) logbook = logFind(logbook, heartyFind, run.deepers);
+  }
   const base: PlayStoreDoc = {
     ...touched,
     dive_run: null,
     pet,
     pet_logbook: logbook,
+    buffs: heartyFind ? spendBuff(touched.buffs, 'hearty') : touched.buffs,
     play_stats: {
       ...touched.play_stats,
       surfaces: touched.play_stats.surfaces + 1,
@@ -3400,15 +3667,27 @@ export function surfaceDive(
   };
   let next: PlayStoreDoc;
   let shellsGained: number;
+  let powersConverted = 0;
   if (free) {
     shellsGained = freeDiveShells(run.deepers, run.free_n ?? 0);
     next = { ...base, shells: base.shells + shellsGained };
   } else {
-    const bankedDoc = bankFinds(base, brought);
+    const bankedDoc = bankFinds(base, brought, now);
     next = bankedDoc.doc;
     shellsGained = bankedDoc.shells;
+    powersConverted = bankedDoc.powersConverted;
   }
-  return { doc: next, banked: brought, netFind, shellsGained, petCared: pet !== touched.pet, free };
+  return {
+    doc: next,
+    banked: brought,
+    netFind,
+    heartyFind,
+    shellsGained,
+    powersConverted,
+    powersToday: powersTodayOf(next, now),
+    petCared: pet !== touched.pet,
+    free,
+  };
 }
 
 /**
@@ -3455,12 +3734,13 @@ export function deeperDive(
       },
     };
     return {
-      doc: rescued.length > 0 ? bankFinds(base, rescued).doc : base,
+      doc: rescued.length > 0 ? bankFinds(base, rescued, now).doc : base,
       outcome: { busted: true, bustPct, rescued, petCared: cared !== touched.pet },
     };
   }
   const depth = run.deepers + 1;
-  const addedId = run.next?.[path] ?? rollTier(pathTier(depth, path, touched.dive_gear.oxygen), rng);
+  const luck = petLuckyChance(pet, away);
+  const addedId = run.next?.[path] ?? rollTierLucky(pathTier(depth, path, touched.dive_gear.oxygen), luck, rng);
   return {
     doc: {
       ...touched,
@@ -3468,7 +3748,8 @@ export function deeperDive(
         deepers: depth,
         haul: [...run.haul, addedId],
         free_n: run.free_n,
-        next: rollNext(touched, depth + 1, rng),
+        next: rollNext(touched, depth + 1, rng, luck),
+        ...(run.snack ? { snack: true } : {}),
       },
       pet_logbook: away ? touched.pet_logbook : logFind(touched.pet_logbook, addedId, depth),
       play_stats: { ...touched.play_stats, best_depth: Math.max(touched.play_stats.best_depth, depth) },
@@ -4008,7 +4289,8 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 9 && version !== 10 && version !== 11 && version !== 12 &&
       version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
       version !== 17 && version !== 18 && version !== 19 && version !== 20 &&
-      version !== 21 && version !== 22 && version !== 23 && version !== 24 && version !== 25
+      version !== 21 && version !== 22 && version !== 23 && version !== 24 && version !== 25 &&
+      version !== 26
     ) {
       return null;
     }
@@ -4115,6 +4397,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     const v22 = version >= 22;
     const v23 = version >= 23;
     const v24 = version >= 24;
+    const v26 = version >= 26;
     const hall = parsePetHall(data.pet_hall);
     // v23 (eggs): the Collection becomes a per-hero book. Older saves: every
     // Hall pet counts as one copy (stars carry over), Common, with its form;
@@ -4125,7 +4408,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       : legacyHeroBook(hall, v22 ? data.pet_collection : null);
     const cosmetics = v22 ? parseOwnedCosmetics(data.pet_cosmetics) : [];
     return {
-      version: 25,
+      version: 26,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -4210,6 +4493,13 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       charges_armed: v24 && data.charges_armed === true,
       free_dives_today: v22 ? Math.max(0, Math.floor(finiteNumber(data.free_dives_today) ?? 0)) : 0,
       free_dives_ymd: v22 && typeof data.free_dives_ymd === 'string' ? data.free_dives_ymd : null,
+      // v26 (Part C): older saves start with no buffs, no records (Easy and
+      // Normal open), no daily bests, and nothing counted toward today's
+      // Power ceiling.
+      buffs: v26 ? parseBuffs(data.buffs) : { ...NO_BUFFS },
+      game_records: v26 ? parseRecords(data.game_records) : emptyRecords(),
+      daily_games: v26 ? parseDaily(data.daily_games) : { ...EMPTY_DAILY },
+      powers_today: v26 ? parsePowersToday(data.powers_today) : { ymd: null, n: 0 },
     };
   } catch {
     return null;
@@ -4488,7 +4778,18 @@ function parseDiveRun(raw: unknown): DiveRun | null {
     isRecord(raw.next) && typeof raw.next.safe === 'string' && typeof raw.next.rich === 'string'
       ? { safe: raw.next.safe, rich: raw.next.rich }
       : null;
-  return { deepers, haul, free_n: freeN == null ? null : Math.max(0, Math.floor(freeN)), next };
+  const run: DiveRun = { deepers, haul, free_n: freeN == null ? null : Math.max(0, Math.floor(freeN)), next };
+  if (raw.snack === true) run.snack = true;
+  return run;
+}
+
+function parsePowersToday(raw: unknown): { ymd: string | null; n: number } {
+  if (!isRecord(raw)) return { ymd: null, n: 0 };
+  const n = finiteNumber(raw.n);
+  return {
+    ymd: typeof raw.ymd === 'string' ? raw.ymd : null,
+    n: n == null ? 0 : Math.max(0, Math.min(DIVECORE_POWERS_PER_DAY, Math.floor(n))),
+  };
 }
 
 function parseDiveGear(raw: unknown): DiveGearOwned {

@@ -41,7 +41,12 @@ import { PetCard, type PetCardInfo } from '@/play/pet-card';
 import { DivecoreSettingsSheet } from '@/play/divecore-settings';
 import { EggPickerBody, JournalTab, OddsPanel } from '@/play/pet-egg-sheets';
 import { PetMenuBody } from '@/play/pet-menu';
-import type { RoundOutcome } from '@/play/pet-game-rules';
+import { DIFFICULTY_LABEL, type RoundOutcome } from '@/play/pet-game-rules';
+import type { GamePet } from '@/play/pet-games';
+import { BUFF_HOW, BUFF_ICON, BUFF_LABEL } from '@/play/play-buffs';
+import { useFxQuality } from '@/play/fx-quality';
+import type { GuideSection } from '@/play/guide-content';
+import { GuideLink } from '@/play/guide-sheet';
 import { idleTalkDelayMs, isBedtime } from '@/play/play-settings';
 import { tripLabel } from '@/play/expedition-ladder';
 import {
@@ -71,6 +76,7 @@ import {
   HallTab,
   HelpTab,
   PlaySheetBody,
+  type GameRun,
   StatusTab,
   StyleTab,
   durationLabel,
@@ -96,6 +102,8 @@ import { PlaySheet, SheetTabs } from '@/play/play-sheet';
 import {
   ackPetRevealsDoc,
   devAddShells,
+  devGoldAllGames,
+  devGrantAllBuffs,
   devGiveShards,
   devPetEndStage,
   devPetForce,
@@ -154,7 +162,7 @@ export function usePlayNoticesSync(view: PlayView | null): void {
         pet?.hero,
         pet?.name,
         view.pet.away,
-        view.pet.expeditionTripMs,
+        view.pet.expeditionStepMs,
         view.chargesArmed,
         view.chargesFullAt,
       ].join('|')
@@ -167,7 +175,9 @@ export function usePlayNoticesSync(view: PlayView | null): void {
       pet: v.pet.state,
       name: petShownName(v.pet.state),
       expeditionBackInMs: v.pet.away ? v.pet.expeditionBackInMs : null,
-      expeditionTripMs: v.pet.expeditionTripMs,
+      // v26: the notice follows the ladder step (a Teen's 27m "30m trip"
+      // still gets its notice), not the stage-shortened length.
+      expeditionTripMs: v.pet.expeditionStepMs,
       chargesFullAt: v.chargesFullAt,
       chargesArmed: v.chargesArmed,
       now: Date.now(),
@@ -243,6 +253,9 @@ export function PetScreen({
   onReplayTutorial,
   openJournal = false,
   onJournalOpened,
+  onBanner,
+  openGuide: openGuideReq = false,
+  onGuideOpened,
 }: {
   view: PlayView;
   commit: (transition: PlayTransition) => boolean;
@@ -262,6 +275,11 @@ export function PetScreen({
    * then `onJournalOpened` clears the request. */
   openJournal?: boolean;
   onJournalOpened?: () => void;
+  /** v26 — open Info → Guide (from the hub ⚙ or the tutorial). */
+  openGuide?: boolean;
+  onGuideOpened?: () => void;
+  /** v26 — post a floating banner (NEW RECORD!, unlocks, buffs). */
+  onBanner?: (b: { title: string; body: string }) => void;
 }) {
   const devUnlocked = usePlayDevUnlocked();
   const dev = PRE_LAUNCH_DEV && devUnlocked;
@@ -277,7 +295,7 @@ export function PetScreen({
     setSheet('info');
     onJournalOpened?.();
   }, [openJournal, onJournalOpened]);
-  const [game, setGame] = useState<PetRoundKind | null>(null);
+  const [game, setGame] = useState<GameRun | null>(null);
   const [lastResult, setLastResult] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -288,6 +306,26 @@ export function PetScreen({
   const [revealStep, setRevealStep] = useState(0);
   const [focusEgg, setFocusEgg] = useState<EggType | null>(null);
   const art = usePetArt(pet);
+  const fxQuality = useFxQuality();
+  // v26 Guide: "?" buttons open Info → Guide at a section.
+  const [guideSection, setGuideSection] = useState<GuideSection | null>(null);
+  // Bumped on every "?" tap so the same section re-opens after you browsed away.
+  const [guideNonce, setGuideNonce] = useState(0);
+  const openGuide = (section: GuideSection) => {
+    setGame(null);
+    setGuideSection(section);
+    setGuideNonce((n) => n + 1);
+    setInfoTab('guide');
+    setSheet('info');
+  };
+  useEffect(() => {
+    if (!openGuideReq) return;
+    setGame(null);
+    setGuideSection('pet');
+    setInfoTab('guide');
+    setSheet('info');
+    onGuideOpened?.();
+  }, [openGuideReq, onGuideOpened]);
 
   const hour = useHour();
   const night = devNight === 'auto' ? isBedtime(new Date(), view.settings.bedtime) : devNight === 'on';
@@ -474,7 +512,7 @@ export function PetScreen({
     }
     if (coach.action === 'catch') {
       setSheet('play');
-      setGame('catch');
+      setGame({ kind: 'catch', level: 'normal', daily: false });
       return;
     }
     const icon = PET_COACH_ICON[coach.action];
@@ -504,16 +542,27 @@ export function PetScreen({
     return () => registerBack(null);
   }, [registerBack, sheet, game, settingsOpen]);
 
-  const finishRound = (kind: PetRoundKind) => (outcome: RoundOutcome) => {
+  const finishRound = (run: GameRun) => (outcome: RoundOutcome, score: number) => {
+    const kind: PetRoundKind = run.kind;
     let result: PetRoundResult | null = null;
     commit((doc, now) => {
-      const next = finishPetRound(doc, now, kind, outcome);
+      const next = finishPetRound(doc, now, kind, outcome, { level: run.level, score, daily: run.daily });
       result = next.result;
       return next.doc;
     });
     setGame(null);
     if (result) {
-      setLastResult(roundResultLine(kind, outcome, result));
+      const r: PetRoundResult = result;
+      setLastResult(roundResultLine(kind, outcome, r));
+      // v26: a new record / unlock / buff gets the floating banner, and the
+      // pet cheers (the tap hop + heart).
+      if (r.newRecord) {
+        onBanner?.({ title: 'NEW RECORD!', body: `${r.score} pts on ${DIFFICULTY_LABEL[r.level]} (was ${r.prevBest}).` });
+        tapPet();
+      }
+      if (r.unlocked) onBanner?.({ title: `${DIFFICULTY_LABEL[r.unlocked]} unlocked`, body: 'A harder level is open in Play.' });
+      if (r.buff) onBanner?.({ title: `${BUFF_ICON[r.buff]} ${BUFF_LABEL[r.buff]}`, body: BUFF_HOW[r.buff] });
+      if (r.dailyBonusShells > 0) onBanner?.({ title: 'Daily best!', body: `+${r.dailyBonusShells} shells — come back tomorrow for a new pattern.` });
       // v25: it reacts to a pass, a skilled pass, a fail, or a bomb-out.
       const talk = !outcome.pass
         ? (outcome.bombs ?? 0) >= 3
@@ -528,6 +577,15 @@ export function PetScreen({
 
   const eggColor = pet.egg ? EGG_COLOR[pet.egg] : ELEMENT_COLOR[view.legendElement];
   const revealed = pet.hero != null && pet.stage !== 'egg' && pet.stage !== 'baby';
+  // v26: the pet as the mini-games draw it (existing clips only).
+  const gamePet: GamePet = {
+    pet,
+    art,
+    wear: pv.wear,
+    eggColor,
+    recolor: revealed ? petRecolor(pet.hero, pet.shiny, pv.dyeOn) : null,
+    glow: revealed && pet.grade ? GRADE_COLOR[pet.grade] : ELEMENT_COLOR[view.legendElement],
+  };
   const shownName = petShownName(pet);
   const heroLabel = revealed && pet.hero ? gradedName(pet.grade, pet.name ?? heroName(pet.hero)) : null;
   const title =
@@ -555,8 +613,20 @@ export function PetScreen({
           band: pet.band,
           days: Math.round((pet.total_age_ms / 86_400_000) * 10) / 10,
           dye: pv.dyeOn,
+          ranks: pv.ranks,
         }
       : null;
+  // v26: the active medal buffs for the room corner (uses left, or Maxed aura).
+  const roomBuffs = [
+    pv.buffs.hearty > 0 ? { key: 'hearty', text: `${BUFF_ICON.hearty} ×${pv.buffs.hearty}`, a11y: `${BUFF_LABEL.hearty}: ${pv.buffs.hearty} dive surfaces left` } : null,
+    pv.buffs.snack > 0 ? { key: 'snack', text: `${BUFF_ICON.snack} next dive`, a11y: `${BUFF_LABEL.snack}: on your next dive` } : null,
+    pv.buffs.pumped > 0
+      ? pv.pumped.maxed
+        ? { key: 'pumped', text: `${BUFF_ICON.pumped} Maxed aura`, a11y: 'Maxed aura: Pumped adds nothing at this pounce, so it glows instead' }
+        : { key: 'pumped', text: `${BUFF_ICON.pumped} ×${pv.buffs.pumped}`, a11y: `${BUFF_LABEL.pumped}: ${pv.buffs.pumped} TD waves left` }
+      : null,
+    pv.buffs.focused > 0 ? { key: 'focused', text: `${BUFF_ICON.focused} next trip`, a11y: `${BUFF_LABEL.focused}: on your next expedition` } : null,
+  ].filter((b): b is { key: string; text: string; a11y: string } => b != null);
   const cardSprite = (
     <PetAnimSprite
       pet={pet}
@@ -642,6 +712,8 @@ export function PetScreen({
         onCoach={pressCoach}
         recolor={recolor}
         onBadge={() => setSheet('card')}
+        buffs={roomBuffs}
+        maxedAura={pv.pumped.maxed}
         onPickEgg={(e) => {
           setFocusEgg(e);
           setSheet('eggs');
@@ -668,16 +740,26 @@ export function PetScreen({
         ) : (
           <FeedSheetBody view={view} commit={commit} />
         )}
+        <GuideLink section="pet" onOpen={openGuide} />
       </PlaySheet>
       <PlaySheet open={sheet === 'play'} title={SHEET_TITLE.play} onClose={closeSheet} reduceMotion={reduceMotion}>
-        <PlaySheetBody view={view} game={game} onStart={setGame} onRoundDone={finishRound} lastResult={lastResult} />
+        <PlaySheetBody
+          view={view}
+          game={game}
+          onStart={setGame}
+          onRoundDone={finishRound}
+          lastResult={lastResult}
+          gamePet={gamePet}
+          still={reduceMotion || fxQuality !== 'full'}
+          onGuide={() => openGuide('games')}
+        />
       </PlaySheet>
       <PlaySheet
         open={sheet === 'expedition'}
         title={SHEET_TITLE.expedition}
         onClose={closeSheet}
         reduceMotion={reduceMotion}>
-        <ExpeditionSheetBody view={view} commit={commit} />
+        <ExpeditionSheetBody view={view} commit={commit} onGuide={openGuide} />
       </PlaySheet>
       <PlaySheet open={sheet === 'eggs'} title={SHEET_TITLE.eggs} onClose={closeSheet} reduceMotion={reduceMotion}>
         {pet.egg == null ? (
@@ -693,6 +775,7 @@ export function PetScreen({
         ) : (
           <OddsPanel view={view} />
         )}
+        <GuideLink section="eggs" onOpen={openGuide} />
       </PlaySheet>
       <PlaySheet open={sheet === 'card'} title={heroLabel ?? SHEET_TITLE.card} onClose={closeSheet} reduceMotion={reduceMotion}>
         {cardInfo ? (
@@ -712,6 +795,7 @@ export function PetScreen({
         commit={commit}
         reduceMotion={reduceMotion}
         onReplayTutorial={() => onReplayTutorial?.()}
+        onOpenGuide={() => openGuide('pet')}
       />
       <PlaySheet
         open={sheet === 'info'}
@@ -720,17 +804,26 @@ export function PetScreen({
         reduceMotion={reduceMotion}
         header={<SheetTabs tabs={infoTabs(dev)} value={infoTab} onChange={setInfoTab} />}>
         {infoTab === 'status' ? (
-          <StatusTab view={view} />
+          <StatusTab view={view} onGuide={openGuide} />
         ) : infoTab === 'journal' ? (
-          <JournalTab view={view} commit={commit} />
+          <>
+            <JournalTab view={view} commit={commit} />
+            <GuideLink section="collection" onOpen={openGuide} />
+          </>
         ) : infoTab === 'book' ? (
-          <BookTab view={view} commit={commit} eggColor={eggColor} />
+          <>
+            <BookTab view={view} commit={commit} eggColor={eggColor} />
+            <GuideLink section="collection" onOpen={openGuide} />
+          </>
         ) : infoTab === 'hall' ? (
-          <HallTab view={view} eggColor={eggColor} />
+          <>
+            <HallTab view={view} eggColor={eggColor} />
+            <GuideLink section="collection" onOpen={openGuide} />
+          </>
         ) : infoTab === 'style' ? (
           <StyleTab view={view} commit={commit} />
-        ) : infoTab === 'help' ? (
-          <HelpTab />
+        ) : infoTab === 'guide' ? (
+          <HelpTab key={guideNonce} section={guideSection} />
         ) : dev ? (
           <>
             <NeonLabel>Dev · pet</NeonLabel>
@@ -745,6 +838,8 @@ export function PetScreen({
                 onPress={() => commit((doc, now) => devPetExpeditionReset(doc, now))}
               />
               <NeonChip label="+100 shells" onPress={() => commit((doc) => devAddShells(doc))} />
+              <NeonChip label="All buffs" onPress={() => commit((doc) => devGrantAllBuffs(doc))} />
+              <NeonChip label="Gold on every level" onPress={() => commit((doc) => devGoldAllGames(doc))} />
             </View>
             <NeonLabel>Dev · eggs</NeonLabel>
             <View style={styles.chips}>

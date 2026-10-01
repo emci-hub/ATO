@@ -27,6 +27,7 @@ import {
   DIVE_GEAR_BLURB,
   DIVE_GEAR_COST,
   DIVE_GEAR_LABEL,
+  POWER_OVERFLOW_SHELLS,
   findName,
   type DiveGear,
   type DivePath,
@@ -45,6 +46,9 @@ import { petRecolor } from '@/play/pet-looks';
 import { PlaySheet } from '@/play/play-sheet';
 import { DIVE_CHARGE_CAP, buyDiveGear, type PlayView } from '@/play/playStore';
 import { todayPlan } from '@/play/today-plan';
+import { GuideView } from '@/play/guide-sheet';
+import { stagePowerLine } from '@/play/guide-content';
+import { BUFF_ICON, SNACK_BUST_PP } from '@/play/play-buffs';
 import type { PlayTransition } from '@/play/use-play-store';
 
 /** The pet dive buddy, in one honest line (v20; away + Dive care in v21). */
@@ -319,20 +323,22 @@ export function DiveScreen({
               </Text>
             ) : null}
             {run.active && run.netOn && !run.free ? <Text style={styles.note}>Net: surfacing now adds one more find.</Text> : null}
+            {/* v26: today's Power ceiling, and the buffs riding this dive. */}
+            <Text style={styles.note}>
+              Powers today: {run.powersToday}/{run.powersCap}
+              {run.snack ? ` · ${BUFF_ICON.snack} Snack: −${SNACK_BUST_PP} in every %` : ''}
+              {run.hearty > 0 && !run.free ? ` · ${BUFF_ICON.hearty} +1 find on surface (×${run.hearty})` : ''}
+            </Text>
           </>
         )}
       </View>
 
-      <PlaySheet open={sheet === 'info'} title="Dive · how it works" onClose={() => setSheet(null)} reduceMotion={reduceMotion}>
+      <PlaySheet open={sheet === 'info'} title="Dive · info" onClose={() => setSheet(null)} reduceMotion={reduceMotion}>
         <Text style={styles.body}>{diveBuddyLine(view)}</Text>
+        {view.pet.state.stage !== 'egg' ? <Text style={styles.body}>{stagePowerLine(view.pet.stagePower)}</Text> : null}
         <Text style={styles.body}>
-          A dive starts with a single find in the Shallows. Each Deeper adds another and the bust chance climbs —
-          18%, 28%, 40%, 55%{view.diveGear.oxygen ? ', then 65% with Oxygen' : ''} — 8 points lower on the Safer
-          path, 8 higher on the Richer one. The % on each button is always the exact one. Deeper levels hold more
-          Powers, and the only rings and auras. Surface any time to keep what you have.
-        </Text>
-        <Text style={styles.body}>
-          Charges: {chargeText(view)}. They refill every ~10 minutes, and a Research claim can grant one too.
+          Charges: {chargeText(view)} · Powers today: {run.powersToday}/{run.powersCap} (each one past that becomes{' '}
+          {POWER_OVERFLOW_SHELLS} shells).
         </Text>
         <NeonLabel>Today · one minute</NeonLabel>
         {[today.td, today.pet, today.both, today.goal].map((line) => (
@@ -340,6 +346,7 @@ export function DiveScreen({
             {line}
           </Text>
         ))}
+        <GuideView initial="dive" />
       </PlaySheet>
 
       <PlaySheet open={sheet === 'gear'} title="Dive gear" onClose={() => setSheet(null)} reduceMotion={reduceMotion}>

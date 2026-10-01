@@ -222,7 +222,7 @@ assert.equal(parseSettings(undefined, { remind: false, hasProgress: false }).tut
   const v23: Record<string, unknown> = { ...defaultPlayStore(T0), version: 23, pet_remind: false };
   for (const k of ['play_settings', 'play_stats', 'milestones', 'ribbons', 'dye_unlocked', 'charges_armed']) delete v23[k];
   const up = parsePlayStore(JSON.stringify(v23), T0)!;
-  assert.equal(up.version, 25);
+  assert.equal(up.version, 26);
   assert.equal(up.play_settings.notif.hunger, false, 'v23 → v24 keeps a hunger reminder that was off');
   assert.deepEqual(up.play_settings.quiet, { from: 22 * 60, to: 7 * 60 }, 'quiet hours 22:00-07:00');
   assert.equal(up.play_settings.chatter, 'normal');

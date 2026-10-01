@@ -1,48 +1,175 @@
 /**
- * Pet mini-games (v20 → v25 harder, 2026-09-30) — two short vector rounds, no
- * new art. Both can be failed now; the rules live in `pet-game-rules.ts`.
+ * Pet mini-games (v20 → v25 harder → v26 Part C, 2026-09-30) — two short
+ * vector rounds. Rules live in `pet-game-rules.ts`; records in game-records.ts.
  *
- *   Catch the food — food falls for 20s; tap a piece to catch it. Counts as
- *                    feeding (+2 hunger).
- *   Tap to train   — a marker sweeps a bar; tap while it is inside the lit
- *                    zone, 10 tries that speed up. Counts as training
- *                    (+1 training, +2 mood).
+ *   Catch the food — food falls; tap it to catch it. Counts as feeding.
+ *   Tap to train   — a marker sweeps a bar; tap inside the lit zone. Counts
+ *                    as training.
  *
- * Each game only reports its score once, when the round ends; the rules
- * (minimum score, tokens, daily cap) live in `finishPetRound`.
+ * v26: a level (Easy / Normal / Hard / Insane), a combo multiplier shown big
+ * (×2 / ×3 / ×5), a live score, and the pet ON SCREEN (existing clips only):
+ *   - Catch: it stands at the bottom, dashes toward each catch and hops; a
+ *     bomb plays its hurt clip (or a red flash when it has none); at ×3 and up
+ *     it glows.
+ *   - Train: a dungeon crate is the training dummy; a hit plays the pet's
+ *     attack clip and knocks the crate back; a miss makes it stumble; a
+ *     perfect hit (the middle of the zone) adds a flash and a small shake.
+ *   - Reduced motion or Effects Low: still poses, no shake.
+ * The daily challenge passes a seeded `rng`, so its pattern is fixed per date.
+ * Each game reports once, when the round ends: the outcome and its score.
  */
-import { useEffect, useRef, useState } from 'react';
+import { Image } from 'expo-image';
+import { memo, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { Fonts } from '@/constants/theme';
+import { PLAY_ART } from '@/play/generated-play-assets';
 import { NEON } from '@/play/neon-viper';
+import type { PetState } from '@/play/pet';
+import { petPose, petPoseMs, type PetPose } from '@/play/pet-actor';
+import { PetAnimSprite, type PetArt, type PetFace } from '@/play/pet-anim-sprite';
+import type { PetWear } from '@/play/pet-cosmetics';
 import {
   CATCH,
   EMPTY_CATCH,
-  START_TRAIN,
   TRAIN,
+  TRAIN_PERFECT_SHARE,
   catchFood,
   catchOutcome,
+  catchScore,
   catchSpawnGapMs,
   catchSpawnKind,
   catchSpeedMult,
+  comboMult,
   missFood,
+  startTrain,
   tapBomb,
   trainOutcome,
+  trainScore,
   trainTap,
   type CatchTally,
+  type Difficulty,
   type RoundOutcome,
   type SpawnKind,
   type TrainTally,
 } from '@/play/pet-game-rules';
 
 const TICK_MS = 40;
+const GAME_PET_BOX = 64;
+
+/** What the games need to draw the pet (existing art only). */
+export type GamePet = {
+  pet: PetState;
+  art: PetArt;
+  wear: PetWear;
+  eggColor: string;
+  recolor: string | null;
+  /** Its glow colour (the Legend element / grade colour). */
+  glow: string;
+};
+
+export type GameProps = {
+  onDone: (outcome: RoundOutcome, score: number) => void;
+  level?: Difficulty;
+  /** Seeded for the daily challenge; Math.random otherwise. */
+  rng?: () => number;
+  gamePet?: GamePet | null;
+  /** Reduced motion or Effects Low: still poses, no shake. */
+  still?: boolean;
+};
+
+/* ---------------------------------------------------------- the pet --- */
+
+type Act = { pose: PetPose | null; face: PetFace; startedAt: number; loop: boolean };
+
+/** The pet in a game: holds an idle loop, plays one-shots on request. */
+function useGameActor(gp: GamePet | null | undefined) {
+  const idle = gp ? petPose(gp.art.kit, 'idle') : null;
+  const [act, setAct] = useState<Act>({ pose: idle, face: 'e', startedAt: Date.now(), loop: true });
+  const [flash, setFlash] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
+  }, []);
+  const play = (want: 'dash' | 'attack' | 'hurt', face: PetFace) => {
+    if (!gp) return;
+    const pose = petPose(gp.art.kit, want);
+    if (!pose) {
+      // No such clip: a hurt is a red flash; anything else just faces.
+      if (want === 'hurt') {
+        setFlash(true);
+        if (timer.current) clearTimeout(timer.current);
+        timer.current = setTimeout(() => setFlash(false), 260);
+      }
+      setAct((a) => ({ ...a, face }));
+      return;
+    }
+    setAct({ pose, face, startedAt: Date.now(), loop: false });
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(
+      () => setAct({ pose: idle, face, startedAt: Date.now(), loop: true }),
+      petPoseMs(gp.art.kit, pose),
+    );
+  };
+  return { act, flash, play };
+}
+
+/** Memoized: the games re-render every tick; the pet only when its act changes. */
+const GamePetSprite = memo(function GamePetSprite({
+  gp,
+  act,
+  flash,
+  still,
+  glow,
+}: {
+  gp: GamePet;
+  act: Act;
+  flash: boolean;
+  still: boolean;
+  glow: boolean;
+}) {
+  return (
+    <View style={{ width: GAME_PET_BOX, height: GAME_PET_BOX }}>
+      {glow ? (
+        <View
+          pointerEvents="none"
+          style={[styles.glow, { backgroundColor: gp.glow, shadowColor: gp.glow }, still && styles.glowStill]}
+        />
+      ) : null}
+      <PetAnimSprite
+        pet={gp.pet}
+        art={gp.art}
+        wear={gp.wear}
+        eggColor={gp.eggColor}
+        pose={act.pose}
+        face={act.face}
+        startedAt={act.startedAt}
+        loop={act.loop}
+        box={GAME_PET_BOX}
+        animate={!still}
+        recolor={gp.recolor}
+      />
+      {flash ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.hurtFlash]} /> : null}
+    </View>
+  );
+});
+
+/** The big combo badge (only while ×2 or more). */
+function ComboBadge({ mult }: { mult: number }) {
+  if (mult <= 1) return null;
+  return (
+    <Text pointerEvents="none" style={[styles.combo, mult >= 5 && styles.comboTop]} accessibilityLabel={`Combo times ${mult}`}>
+      ×{mult} COMBO
+    </Text>
+  );
+}
 
 /* ------------------------------------------------------ Catch the food --- */
 
 export const CATCH_ROUND_MS = CATCH.roundMs;
-const CATCH_AREA_H = 300;
+const CATCH_AREA_H = 320;
 const FOOD_SIZE = 40;
 const FOOD_COLORS = ['#FF6B6B', '#FFD86B', '#7CE38B'] as const;
 
@@ -59,18 +186,22 @@ function FoodShape({ color, golden = false }: { color: string; golden?: boolean 
   );
 }
 
-export function CatchFoodGame({ onDone }: { onDone: (outcome: RoundOutcome) => void }) {
+export function CatchFoodGame({ onDone, level = 'normal', rng = Math.random, gamePet = null, still = false }: GameProps) {
   const [width, setWidth] = useState(0);
   const [items, setItems] = useState<Food[]>([]);
   const [tally, setTally] = useState<CatchTally>(EMPTY_CATCH);
   const [leftMs, setLeftMs] = useState<number>(CATCH.roundMs);
-  const [flash, setFlash] = useState<'bomb' | 'combo' | null>(null);
+  const [bombFlash, setBombFlash] = useState(false);
   const itemsRef = useRef<Food[]>([]);
   const tallyRef = useRef<CatchTally>(EMPTY_CATCH);
   const elapsedRef = useRef(0);
   const doneRef = useRef(false);
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
+  const rngRef = useRef(rng);
+  const { act, flash, play } = useGameActor(gamePet);
+  const petX = useSharedValue(0.5);
+  const petHop = useSharedValue(0);
 
   const setT = (next: CatchTally) => {
     tallyRef.current = next;
@@ -79,12 +210,13 @@ export function CatchFoodGame({ onDone }: { onDone: (outcome: RoundOutcome) => v
   const finish = () => {
     if (doneRef.current) return;
     doneRef.current = true;
-    onDoneRef.current(catchOutcome(tallyRef.current));
+    onDoneRef.current(catchOutcome(tallyRef.current), catchScore(tallyRef.current, level));
   };
 
   useEffect(() => {
     let nextId = 0;
     let sinceSpawn = 0;
+    const r = rngRef.current;
     const id = setInterval(() => {
       if (doneRef.current) return;
       elapsedRef.current += TICK_MS;
@@ -98,11 +230,11 @@ export function CatchFoodGame({ onDone }: { onDone: (outcome: RoundOutcome) => v
           if (f.kind !== 'bomb') missed += 1; // food that fell past = a miss
           return false;
         });
-      if (sinceSpawn >= catchSpawnGapMs(elapsed) && elapsed < CATCH.roundMs - 800) {
+      if (sinceSpawn >= catchSpawnGapMs(elapsed, level) && elapsed < CATCH.roundMs - 800) {
         sinceSpawn = 0;
-        const kind = catchSpawnKind(elapsed, Math.random());
-        const speed = (0.32 + Math.random() * 0.08) * catchSpeedMult(elapsed);
-        next = [...next, { id: nextId++, x: 0.08 + Math.random() * 0.84, y: -0.1, speed, kind, color: FOOD_COLORS[nextId % FOOD_COLORS.length] }];
+        const kind = catchSpawnKind(elapsed, r(), level);
+        const speed = (0.32 + r() * 0.08) * catchSpeedMult(elapsed, level);
+        next = [...next, { id: nextId++, x: 0.08 + r() * 0.84, y: -0.1, speed, kind, color: FOOD_COLORS[nextId % FOOD_COLORS.length] }];
       }
       itemsRef.current = next;
       setItems(next);
@@ -116,6 +248,8 @@ export function CatchFoodGame({ onDone }: { onDone: (outcome: RoundOutcome) => v
       if (left <= 0) finish();
     }, TICK_MS);
     return () => clearInterval(id);
+    // The round's level and rng are fixed for its whole life.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const tapItem = (itemId: number) => {
@@ -127,30 +261,46 @@ export function CatchFoodGame({ onDone }: { onDone: (outcome: RoundOutcome) => v
     if (item.kind === 'bomb') {
       const next = tapBomb(tallyRef.current);
       setT(next);
-      setFlash('bomb');
-      setTimeout(() => setFlash(null), 250);
+      setBombFlash(true);
+      setTimeout(() => setBombFlash(false), 250);
+      play('hurt', 'front');
       if (next.over) finish();
       return;
     }
     const next = catchFood(tallyRef.current, elapsedRef.current, item.kind === 'golden');
     setT(next);
-    if (next.chain > 0 && next.chain % CATCH.comboEvery === 0) {
-      setFlash('combo');
-      setTimeout(() => setFlash(null), 350);
+    // The pet dashes toward the catch and hops.
+    const toward = Math.max(0.08, Math.min(0.92, item.x + 0.04));
+    play('dash', toward < petX.value ? 'w' : 'e');
+    if (!still) {
+      petX.value = withTiming(toward, { duration: 220, easing: Easing.out(Easing.quad) });
+      petHop.value = withSequence(withTiming(-12, { duration: 120 }), withTiming(0, { duration: 180, easing: Easing.bounce }));
+    } else {
+      petX.value = toward;
     }
   };
+
+  const petStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: petX.value * Math.max(0, width - GAME_PET_BOX) }, { translateY: petHop.value }],
+  }));
+  const mult = comboMult('catch', tally.chain);
 
   return (
     <View>
       <View style={styles.hudRow}>
         <Text style={styles.hudText}>
-          Caught {tally.caught} · {tally.points} pts
+          {catchScore(tally, level)} pts · caught {tally.caught}
         </Text>
         <Text style={styles.hudText}>
           💣 {tally.strikes}/{CATCH.bombStrikes} · {Math.ceil(leftMs / 1000)}s
         </Text>
       </View>
       <View style={[styles.area, { height: CATCH_AREA_H }]} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+        {gamePet && width > 0 ? (
+          <Animated.View pointerEvents="none" style={[styles.catchPet, petStyle]}>
+            <GamePetSprite gp={gamePet} act={act} flash={flash} still={still} glow={mult >= 3} />
+          </Animated.View>
+        ) : null}
         {width > 0
           ? items.map((f) => (
               <Pressable
@@ -168,15 +318,12 @@ export function CatchFoodGame({ onDone }: { onDone: (outcome: RoundOutcome) => v
               </Pressable>
             ))
           : null}
-        {flash === 'bomb' ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.bombFlash]} /> : null}
-        {flash === 'combo' ? (
-          <Text pointerEvents="none" style={styles.comboText}>
-            Combo +1!
-          </Text>
-        ) : null}
+        {bombFlash ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.bombFlash]} /> : null}
+        <ComboBadge mult={mult} />
       </View>
       <Text style={styles.hint}>
-        Catch half of the food to pass. Golden = +3. Don’t tap 💣 — three ends the round.
+        Catch half of the food to pass. Golden = +{CATCH.goldenPoints}. Catches in a row build the combo — a miss or a 💣
+        resets it. {CATCH.bombStrikes} 💣 end the round.
       </Text>
     </View>
   );
@@ -185,23 +332,30 @@ export function CatchFoodGame({ onDone }: { onDone: (outcome: RoundOutcome) => v
 /* -------------------------------------------------------- Tap to train --- */
 
 export const TRAIN_REPS = TRAIN.taps;
+const CRATE_ART = PLAY_ART['tiles/scribble-dungeons/crate'];
 
-function randomZone(width: number): number {
-  return width / 2 + 0.05 + Math.random() * (1 - width - 0.1);
+function randomZone(width: number, r: () => number): number {
+  return width / 2 + 0.05 + r() * (1 - width - 0.1);
 }
 
-export function TapTrainGame({ onDone }: { onDone: (outcome: RoundOutcome) => void }) {
+export function TapTrainGame({ onDone, level = 'normal', rng = Math.random, gamePet = null, still = false }: GameProps) {
+  const start = startTrain(level);
   const [marker, setMarker] = useState(0);
-  const [tally, setTally] = useState<TrainTally>(START_TRAIN);
-  const [zone, setZone] = useState(() => randomZone(TRAIN.zoneStart));
-  const [flash, setFlash] = useState<'hit' | 'miss' | null>(null);
+  const [tally, setTally] = useState<TrainTally>(start);
+  const rngRef = useRef(rng);
+  const [zone, setZone] = useState(() => randomZone(start.zone, rngRef.current));
+  const [flash, setFlashState] = useState<'hit' | 'perfect' | 'miss' | null>(null);
   const markerRef = useRef(0);
   const dirRef = useRef(1);
-  const tallyRef = useRef<TrainTally>(START_TRAIN);
+  const tallyRef = useRef<TrainTally>(start);
   const zoneRef = useRef(zone);
   const doneRef = useRef(false);
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
+  const { act, flash: hurtFlash, play } = useGameActor(gamePet);
+  const knock = useSharedValue(0);
+  const stumble = useSharedValue(0);
+  const shake = useSharedValue(0);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -223,41 +377,87 @@ export function TapTrainGame({ onDone }: { onDone: (outcome: RoundOutcome) => vo
   const tap = () => {
     if (doneRef.current) return;
     const width = tallyRef.current.zone;
-    const hit = Math.abs(markerRef.current - zoneRef.current) <= width / 2;
-    const next = trainTap(tallyRef.current, hit);
+    const off = Math.abs(markerRef.current - zoneRef.current);
+    const hit = off <= width / 2;
+    const perfect = hit && off <= width * TRAIN_PERFECT_SHARE;
+    const next = trainTap(tallyRef.current, hit, level, perfect);
     tallyRef.current = next;
     setTally(next);
-    setFlash(hit ? 'hit' : 'miss');
-    const nextZone = randomZone(next.zone);
+    setFlashState(perfect ? 'perfect' : hit ? 'hit' : 'miss');
+    if (hit) {
+      play('attack', 'e');
+      if (!still) {
+        knock.value = withSequence(withTiming(18, { duration: 90 }), withTiming(0, { duration: 260, easing: Easing.bounce }));
+        if (perfect) {
+          shake.value = withSequence(
+            withTiming(4, { duration: 40 }),
+            withTiming(-4, { duration: 60 }),
+            withTiming(0, { duration: 40 }),
+          );
+        }
+      }
+    } else if (!still) {
+      stumble.value = withSequence(withTiming(-8, { duration: 90 }), withTiming(0, { duration: 200 }));
+    }
+    const nextZone = randomZone(next.zone, rngRef.current);
     zoneRef.current = nextZone;
     setZone(nextZone);
     if (next.over) {
       doneRef.current = true;
-      onDoneRef.current(trainOutcome(next));
+      onDoneRef.current(trainOutcome(next), trainScore(next, level));
     }
   };
 
+  const crateStyle = useAnimatedStyle(() => ({ transform: [{ translateX: knock.value }, { rotate: `${knock.value * 0.6}deg` }] }));
+  const petStyle = useAnimatedStyle(() => ({ transform: [{ translateX: stumble.value }] }));
+  const shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }] }));
+  const mult = comboMult('train', tally.streak);
+
   return (
-    <View>
+    <Animated.View style={shakeStyle}>
       <View style={styles.hudRow}>
         <Text style={styles.hudText}>
-          Hits {tally.hits} · need {TRAIN.passHits}
+          {trainScore(tally, level)} pts · hits {tally.hits}/{TRAIN.passHits}
         </Text>
         <Text style={styles.hudText}>
           Tap {Math.min(tally.taps + 1, TRAIN.taps)}/{TRAIN.taps}
           {tally.missStreak > 0 ? ` · misses ${tally.missStreak}/${TRAIN.missStreakEnd}` : ''}
         </Text>
       </View>
+      <View style={styles.arena}>
+        {gamePet ? (
+          <Animated.View style={petStyle}>
+            <GamePetSprite gp={gamePet} act={act} flash={hurtFlash} still={still} glow={mult >= 3} />
+          </Animated.View>
+        ) : (
+          <View style={{ width: GAME_PET_BOX }} />
+        )}
+        {CRATE_ART ? (
+          <Animated.View style={crateStyle}>
+            <Image source={CRATE_ART} contentFit="contain" style={styles.crate} accessibilityLabel="Training dummy" />
+          </Animated.View>
+        ) : null}
+        {flash === 'perfect' ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.perfectFlash]} /> : null}
+        <ComboBadge mult={mult} />
+      </View>
       <View style={styles.bar}>
         <View style={[styles.zone, { left: `${(zone - tally.zone / 2) * 100}%`, width: `${tally.zone * 100}%` }]} />
+        <View
+          style={[
+            styles.zoneCore,
+            { left: `${(zone - tally.zone * TRAIN_PERFECT_SHARE) * 100}%`, width: `${tally.zone * TRAIN_PERFECT_SHARE * 2 * 100}%` },
+          ]}
+        />
         <View style={[styles.marker, { left: `${marker * 100}%` }]} />
       </View>
-      <Text style={[styles.hint, flash === 'hit' && styles.hit, flash === 'miss' && styles.miss]}>
-        {flash === 'hit'
-          ? 'Nice! The zone shrinks…'
-          : flash === 'miss'
-            ? `Missed — ${TRAIN.missStreakEnd} in a row ends it.`
-            : `Tap in the lit zone. ${TRAIN.passHits} hits out of ${TRAIN.taps} to pass.`}
+      <Text style={[styles.hint, (flash === 'hit' || flash === 'perfect') && styles.hit, flash === 'miss' && styles.miss]}>
+        {flash === 'perfect'
+          ? 'PERFECT! Right in the middle.'
+          : flash === 'hit'
+            ? 'Hit! The zone shrinks…'
+            : flash === 'miss'
+              ? `Missed — ${TRAIN.missStreakEnd} in a row ends it.`
+              : `Tap in the lit zone (the bright middle is a perfect hit). ${TRAIN.passHits} hits out of ${TRAIN.taps} to pass.`}
       </Text>
       <Pressable
         onPressIn={tap}
@@ -266,7 +466,7 @@ export function TapTrainGame({ onDone }: { onDone: (outcome: RoundOutcome) => vo
         style={({ pressed }) => [styles.tapButton, pressed && styles.pressed]}>
         <Text style={styles.tapText}>TAP</Text>
       </Pressable>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -288,6 +488,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: 'rgba(0, 234, 255, 0.04)',
   },
+  catchPet: { position: 'absolute', left: 0, bottom: 4 },
   food: {
     position: 'absolute',
     width: FOOD_SIZE,
@@ -302,6 +503,20 @@ const styles = StyleSheet.create({
   },
   hit: { color: '#7CE38B' },
   miss: { color: NEON.pink },
+  arena: {
+    height: 110,
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-around',
+    borderWidth: 1,
+    borderColor: NEON.cyanDim,
+    borderRadius: 4,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(0, 234, 255, 0.04)',
+    paddingBottom: 6,
+  },
+  crate: { width: 56, height: 56 },
   bar: {
     height: 36,
     borderWidth: 1,
@@ -315,6 +530,12 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     backgroundColor: 'rgba(124, 227, 139, 0.35)',
+  },
+  zoneCore: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(124, 227, 139, 0.45)',
   },
   marker: {
     position: 'absolute',
@@ -343,12 +564,30 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.7 },
   emojiItem: { fontSize: 30, textAlign: 'center' },
   bombFlash: { backgroundColor: 'rgba(255, 60, 80, 0.35)' },
-  comboText: {
+  perfectFlash: { backgroundColor: 'rgba(255, 255, 255, 0.28)' },
+  hurtFlash: { backgroundColor: 'rgba(255, 60, 80, 0.45)', borderRadius: 999 },
+  glow: {
+    position: 'absolute',
+    left: -8,
+    top: -8,
+    right: -8,
+    bottom: -8,
+    borderRadius: 999,
+    opacity: 0.28,
+    shadowOpacity: 0.9,
+    shadowRadius: 12,
+  },
+  glowStill: { opacity: 0.22 },
+  combo: {
     position: 'absolute',
     top: 8,
     alignSelf: 'center',
     fontFamily: Fonts.monoBold,
-    fontSize: 16,
+    fontSize: 26,
+    letterSpacing: 2,
     color: '#FFD700',
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowRadius: 4,
   },
+  comboTop: { fontSize: 32, color: '#FF7AF0' },
 });

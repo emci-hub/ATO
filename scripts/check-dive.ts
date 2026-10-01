@@ -109,7 +109,7 @@ assert.deepEqual([pathTier(4, 'rich', false), pathTier(4, 'rich', true)], ['abys
 {
   const d = doc({ pet: pet({ stage: 'adult' }), dive_run: run(1, ['food_kelp'], { next: { safe: 'food_kelp', rich: 'shells_5' } }) });
   const v = playView(d, T0).diveRun;
-  assert.deepEqual(v.bustPct, { safe: 18, rich: 34 }, 'Deeper #2: 28 ∓ 8, minus 2 Adult points');
+  assert.deepEqual(v.bustPct, { safe: 13, rich: 29 }, 'Deeper #2: 28 ∓ 8, minus 7 Adult points (v26 stage power)');
   for (const path of ['safe', 'rich'] as const) {
     const pcts: Record<"safe" | "rich", number> = v.bustPct!;
     const shown: number = pcts[path];
@@ -286,7 +286,7 @@ ok('expedition: the 4h trip can bring a Power (35%), else a Trench find; an old 
   }
   delete (v21.pet as Record<string, unknown>).forms;
   const up = parsePlayStore(JSON.stringify(v21), T0)!;
-  assert.equal(up.version, 25);
+  assert.equal(up.version, 26);
   assert.deepEqual(
     [up.shells, up.dive_gear, up.pet_pantry, up.pet_cosmetics, up.pet_wear, up.free_dives_today, up.free_dives_ymd],
     [0, { lamp: false, net: false, oxygen: false }, {}, [], { badge: null, tint: null, ring: null, aura: null }, 0, null],

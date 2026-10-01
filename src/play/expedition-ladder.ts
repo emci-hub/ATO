@@ -18,6 +18,20 @@
  *
  * Phone notifications: only for trips of 30 min or longer (and only with the
  * toggle on); shorter trips just show the in-app banner.
+ *
+ * v26 stage power (Part C): an Adult or God pet brings back ONE STEP BETTER —
+ * the non-Power part only; the Power chance of every step is unchanged, so
+ * expedition Powers stay ≈ 0.55 a day:
+ *   step  normal                    one step better
+ *   1     Kelp / 1 shell            Kelp / Glow shrimp / 2 shells
+ *   2     Kelp / shrimp / 2 shells  Glow shrimp / 4 shells
+ *   3     shrimp / 4 shells         Glow shrimp / 6 shells
+ *   4     a Shallows find           a Reef find (never a Power)
+ *   5     a Reef find               a Trench find (never a Power)
+ *   6     20% Power, else Reef      20% Power, else Trench
+ *   7     35% Power, else Trench    35% Power, else Abyss
+ * (Trip LENGTH by stage — Teen 90%, Adult 80%, God 70% — and the Focused buff
+ * are applied when the trip is sent; see playStore `sendPetExpedition`.)
  */
 import { rollTier, type DiveTier } from './dive-loot';
 import { getItemDef, rollPowerFind } from './items';
@@ -51,9 +65,30 @@ export function rollNoPower(tier: DiveTier, rng: () => number): string {
   return 'shells_2';
 }
 
-/** What a finished trip of ladder `step` (0-based; -1 = a legacy trip) brings back. */
-export function rollExpeditionReward(step: number, rng: () => number = Math.random): string {
+/** What a finished trip of ladder `step` (0-based; -1 = a legacy trip) brings
+ * back. `better` (v26, Adult/God at send time) = one step better. */
+export function rollExpeditionReward(step: number, rng: () => number = Math.random, better = false): string {
   const r = rng();
+  if (better) {
+    switch (step) {
+      case 0:
+        return r < 1 / 3 ? 'food_kelp' : r < 2 / 3 ? 'food_shrimp' : 'shells_2';
+      case 1:
+        return r < 0.5 ? 'food_shrimp' : 'shells_4';
+      case 2:
+        return r < 0.5 ? 'food_shrimp' : 'shells_6';
+      case 3:
+        return rollNoPower('reef', rng);
+      case 4:
+        return rollNoPower('trench', rng);
+      case 5:
+        return r < EXPEDITION_POWER_BY_STEP[5] ? rollPowerFind(rng) : rollNoPower('trench', rng);
+      case 6:
+        return r < EXPEDITION_POWER_BY_STEP[6] ? rollPowerFind(rng) : rollNoPower('abyss', rng);
+      default:
+        break; // a legacy trip keeps its old reward
+    }
+  }
   switch (step) {
     case 0:
       return r < 0.5 ? 'food_kelp' : 'shells_1';
