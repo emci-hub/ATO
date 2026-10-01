@@ -577,18 +577,24 @@ export function PetScreen({
     return () => registerBack(null);
   }, [registerBack, sheet, game, settingsOpen]);
 
+  const roundClaim = useRef<{ run: GameRun | null; key: string }>({ run: null, key: '' });
   const finishRound = (run: GameRun) => (outcome: RoundOutcome, score: number) => {
+    if (roundClaim.current.run !== run) {
+      roundClaim.current = { run, key: `pet:${run.kind}:${run.level}:${run.daily ? 'daily' : 'free'}:${Date.now()}` };
+    }
     const kind: PetRoundKind = run.kind;
     let result: PetRoundResult | null = null;
     commit((doc, now) => {
-      const next = finishPetRound(doc, now, kind, outcome, { level: run.level, score, daily: run.daily });
+      const next = finishPetRound(doc, now, kind, outcome, { level: run.level, score, daily: run.daily }, roundClaim.current.key);
       result = next.result;
       return next.doc;
     });
     setGame(null);
     if (result) {
       const r: PetRoundResult = result;
-      setLastResult(roundResultLine(kind, outcome, r));
+      // A replay of the same round (background retry) comes back uncounted
+      // and must not wipe the line the real win already showed.
+      if (r.counted) setLastResult(roundResultLine(kind, outcome, r));
       // v26: a new record / unlock / buff gets the floating banner, and the
       // pet cheers (the tap hop + heart).
       if (r.newRecord) {

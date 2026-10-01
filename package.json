@@ -100,6 +100,7 @@
     "check:pity": "tsx ./scripts/check-pity.ts",
     "check:tide": "tsx ./scripts/check-tide.ts",
     "check:stones": "tsx ./scripts/check-stones.ts",
+    "check:swords": "tsx ./scripts/check-swords.ts",
     "check:play-save": "tsx ./scripts/check-play-save.ts",
     "check:shop-hidden": "tsx ./scripts/check-shop-hidden.ts",
     "check:edge-back": "tsx ./scripts/check-edge-back.ts",

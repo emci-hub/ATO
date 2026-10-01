@@ -48,6 +48,8 @@ import { PetScreen, usePlayNoticesSync, type PetTalkEvent } from '@/play/pet-scr
 import type { PetTalkSituation } from '@/play/pet-talk';
 import { DefendScreen } from '@/play/defend-screen';
 import { SheetLabScreen } from '@/play/sheet-lab-screen';
+import { SwordForgeScreen } from '@/play/sword-forge-screen';
+import { SwordLabScreen } from '@/play/sword-lab-screen';
 import type { TypeTag } from '@/play/engine/type-match';
 import { itemName, type ItemSlot } from '@/play/items';
 import { TunePanel } from '@/play/tune-panel';
@@ -69,7 +71,10 @@ import {
   devAddAvatarLevels,
   devSetCampaignSeat,
   devUnlockBoundBoss,
+  applySwordAction,
+  devEquipSword,
   markExpeditionToasted,
+  noteDefendLeak,
   setPlaySettings,
   unlockAvatar,
   type ClaimResult,
@@ -80,7 +85,9 @@ import {
   type ShopPurchaseResult,
   type ShopRefusal,
   type SkipRewardResult,
+  type SwordAction,
 } from '@/play/playStore';
+import type { SwordTier } from '@/play/swords';
 import type { ShopTokenRow } from '@/play/shop';
 import { ShopScreen } from '@/play/shop-screen';
 import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
@@ -101,7 +108,7 @@ import { usePlayStore, type PlayTransition } from '@/play/use-play-store';
  * pre-launch builds via PRE_LAUNCH_DEV.
  */
 
-type PlayMode = 'grove' | 'dive' | 'pet' | 'dress' | 'defend' | 'shop' | 'about' | 'sheetlab';
+type PlayMode = 'grove' | 'dive' | 'pet' | 'dress' | 'defend' | 'shop' | 'about' | 'sheetlab' | 'swords' | 'swordlab';
 
 type PlayToast =
   | { kind: 'claim'; result: ClaimResult }
@@ -118,6 +125,7 @@ type PlayToast =
       heartyFind: string | null;
       powersConverted: number;
       powersToday: number;
+      swordDrop: string | null;
     }
   | { kind: 'bust'; rescued: string[]; petMood: boolean }
   | { kind: 'message'; title: string; body: string };
@@ -272,6 +280,7 @@ export default function PlayScreen() {
   const [forceMerge, setForceMerge] = useState<'none' | 'success' | 'fail'>('none');
   /** Dev kit only: §9c Tune panel open state (PRE_LAUNCH_DEV hides the entry). */
   const [showTune, setShowTune] = useState(false);
+  const [swordNotice, setSwordNotice] = useState<string | null>(null);
   /** Dev kit only: PIN-unlocked this session? (soft gate — dev-lock.ts). */
   const devUnlocked = usePlayDevUnlocked();
 
@@ -378,6 +387,7 @@ export default function PlayScreen() {
       heartyFind: surfaced.heartyFind,
       powersConverted: surfaced.powersConverted,
       powersToday: surfaced.powersToday,
+      swordDrop: surfaced.swordDrop,
     });
     nudgePet(surfaced.banked.some((id) => findGlow(id) !== 'common') ? 'rare_find' : 'surfaced');
     return {
@@ -466,6 +476,7 @@ export default function PlayScreen() {
   const handleRecordDefendWin = useCallback(
     async (ctx: DefendWinContext) => {
       const result = await recordDefendWin(ctx);
+      if (result?.duplicate) return null;
       if (result) nudgePet('waves_cleared');
       if (result?.milestoneLook) {
         const name =
@@ -758,6 +769,7 @@ export default function PlayScreen() {
                   onSetForceMerge={setForceMerge}
                   onToggleTune={() => setShowTune((open) => !open)}
                   onOpenSheetLab={() => setMode('sheetlab')}
+                  onOpenSwordLab={() => setMode('swordlab')}
                 />
               ) : null}
             </CommandHub>
@@ -851,6 +863,8 @@ export default function PlayScreen() {
                     onDevClearHeroOffer={devClearHeroOffer}
                     onDevClearOwnedHeroes={devClearOwnedHeroes}
                     onOpenDress={() => setMode('dress')}
+                    onOpenSwords={() => setMode('swords')}
+                    onLeak={() => commit(noteDefendLeak)}
                     registerBack={registerBack}
                     onBackToGrove={() => setMode('grove')}
                   />
@@ -864,6 +878,23 @@ export default function PlayScreen() {
                   <AboutScreen onBackToDivecore={() => setMode('grove')} />
                 ) : mode === 'sheetlab' ? (
                   <SheetLabScreen onBack={() => setMode('grove')} />
+                ) : mode === 'swords' && view ? (
+                  <SwordForgeScreen
+                    swords={view.swords}
+                    notice={swordNotice}
+                    onAction={(action: SwordAction) => {
+                      const ok = commit((doc) => applySwordAction(doc, action));
+                      setSwordNotice(ok ? null : 'Could not do that. Unequip it, or bring more copies.');
+                    }}
+                    onBack={() => setMode('defend')}
+                  />
+                ) : mode === 'swordlab' && PRE_LAUNCH_DEV && devUnlocked ? (
+                  <SwordLabScreen
+                    onBack={() => setMode('grove')}
+                    onEquip={(element: string, tier: SwordTier) => {
+                      commit((doc) => devEquipSword(doc, element, tier));
+                    }}
+                  />
                 ) : null}
               </ScrollView>
             </SafeAreaView>
@@ -957,6 +988,7 @@ function GroveDevKit({
   onSetForceMerge,
   onToggleTune,
   onOpenSheetLab,
+  onOpenSwordLab,
 }: {
   commit: (transition: PlayTransition) => boolean;
   onGrantRandomFind: () => Promise<void>;
@@ -973,6 +1005,7 @@ function GroveDevKit({
   onSetForceMerge: (mode: 'none' | 'success' | 'fail') => void;
   onToggleTune: () => void;
   onOpenSheetLab: () => void;
+  onOpenSwordLab: () => void;
 }) {
   const theme = useTheme();
   const [resetArmed, setResetArmed] = useState(false);
@@ -1203,6 +1236,14 @@ function GroveDevKit({
             onOpenSheetLab();
           },
         },
+        {
+          key: 'sword-lab',
+          label: 'Sword lab (equip any sword)…',
+          onPress: () => {
+            clearResetArm();
+            onOpenSwordLab();
+          },
+        },
       ],
     },
   ];
@@ -1313,8 +1354,8 @@ function toastBanner(toast: PlayToast): Omit<Banner, 'id'> {
           ? toast.foundName
           : toast.kind === 'surface'
             ? (toast.free
-                ? `Free dive: +${toast.shells} shells. Sightings are in your pet’s Logbook.`
-                : `Brought up ${summarizeNames(toast.itemIds)}.${toast.netFind ? ` The Net caught ${findName(toast.netFind)}.` : ''}${toast.heartyFind ? ` Hearty meal: +${findName(toast.heartyFind)}.` : ''} Powers today: ${toast.powersToday}/${DIVECORE_POWERS_PER_DAY}${toast.powersConverted > 0 ? ` — ${toast.powersConverted} more became ${toast.powersConverted * POWER_OVERFLOW_SHELLS} shells` : ''}.${toast.shells > 0 ? ` +${toast.shells} shells.` : ''}`) +
+                ? `Free dive: +${toast.shells} shells. Sightings are in your pet’s Logbook.${toast.swordDrop ? ` Sword: ${toast.swordDrop}.` : ''}`
+                : `Brought up ${summarizeNames(toast.itemIds)}.${toast.netFind ? ` The Net caught ${findName(toast.netFind)}.` : ''}${toast.heartyFind ? ` Hearty meal: +${findName(toast.heartyFind)}.` : ''}${toast.swordDrop ? ` Sword: ${toast.swordDrop}.` : ''} Powers today: ${toast.powersToday}/${DIVECORE_POWERS_PER_DAY}${toast.powersConverted > 0 ? ` — ${toast.powersConverted} more became ${toast.powersConverted * POWER_OVERFLOW_SHELLS} shells` : ''}.${toast.shells > 0 ? ` +${toast.shells} shells.` : ''}`) +
               (toast.petMood ? ' Your pet loved it (+2 mood).' : '')
             : toast.kind === 'bust'
               ? (toast.rescued.length > 0
