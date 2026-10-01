@@ -309,9 +309,10 @@ export function emptyStreak(): StreakState {
 export type StreakAdvance = { streak: StreakState; reward: StreakReward | null; day: number };
 
 /** Advance one calendar day on a new local day. Null when today already counted
- * (a clock set back can't claim the day twice). A gap in the dates does not
- * change `next`. */
+ * or the clock was set back before the last advance (oscillating forward then
+ * back can't walk the calendar). A gap in the dates does not change `next`. */
 export function advanceStreak(streak: StreakState, today: string): StreakAdvance | null {
+  if (streak.ymd != null && today <= streak.ymd) return null;
   if (petDayHolds(today, streak.ymd)) return null;
   const day = Math.min(STREAK_DAYS, Math.max(1, Math.floor(streak.next) || 1));
   const reward = STREAK_REWARDS[day] ?? null;

@@ -11,10 +11,10 @@ import path from 'node:path';
 
 import { DIVECORE_POWERS_PER_DAY, POWER_OVERFLOW_SHELLS } from '../src/play/dive-loot';
 import { wakePet } from '../src/play/den';
-import { EGGS_PER_DAY_MAX, PITY_HARD, PRISM_STYLES, STAR_PEARL_PITY, nextEggPrice } from '../src/play/pet-eggs';
+import { EGGS_PER_DAY_MAX, PITY_HARD, PRISM_STYLES, STAR_PEARL_PITY, eggsUntilLegendary, nextEggPrice } from '../src/play/pet-eggs';
 import { newPet, petDayHolds } from '../src/play/pet';
 import { planPlayNotices, type NoticeInput } from '../src/play/play-notices';
-import { STREAK_DAYS, STREAK_SHELLS, defaultSettings } from '../src/play/play-settings';
+import { STREAK_DAYS, STREAK_SHELLS, advanceStreak, emptyStreak, defaultSettings } from '../src/play/play-settings';
 import {
   activateDenPet,
   applyPrismStone,
@@ -27,8 +27,10 @@ import {
   localYmd,
   newEggDoc,
   parsePlayStore,
+  playView,
   purchaseShopRow,
   touchPet,
+  devFillDen,
   type PlayStoreDoc,
 } from '../src/play/playStore';
 import { TD_HELP_BAND } from '../src/play/play-buffs';
@@ -153,7 +155,11 @@ ok('an egg incubating when the pass ends keeps its step; one woken after the pas
 /* ------------------------------------------------------------ saves --- */
 
 {
-  const raw = JSON.parse(JSON.stringify(defaultPlayStore(T0))) as Record<string, unknown>;
+  let seeded = chooseEggDoc({ ...defaultPlayStore(T0), eggs_since_legendary: 15 }, T0, 'knight', null, () => 0.2)!;
+  seeded = devFillDen(seeded, T0, () => 0.5);
+  const denLen = seeded.pet_den.length;
+  assert.ok(denLen > 0);
+  const raw = JSON.parse(JSON.stringify(seeded)) as Record<string, unknown>;
   raw.version = 27;
   raw.tokens = 77;
   raw.prism_stones = 5;
@@ -161,6 +167,8 @@ ok('an egg incubating when the pass ends keeps its step; one woken after the pas
   const old = parsePlayStore(JSON.stringify(raw), T0)!;
   assert.equal(old.version, 28);
   assert.equal(old.tokens, 77, 'nothing else is lost');
+  assert.equal(old.eggs_since_legendary, 15, 'the pity counter survives');
+  assert.equal(old.pet_den.length, denLen, 'Den pets survive');
   assert.equal(old.prism_stones, 0);
   assert.deepEqual(old.tide, emptyTide());
   assert.equal(old.streak.next, 1);
@@ -224,22 +232,51 @@ ok('a merge-crate Power counts toward Powers today; past the ceiling it is shell
   };
   const pearl = tideShopRows().find((r) => r.kind === 'star_pearl')!;
   const prism = tideShopRows().find((r) => r.kind === 'prism_stone')!;
-  const bought = purchaseShopRow(doc, pearl, T0);
+  let incubating = chooseEggDoc(
+    { ...defaultPlayStore(T0), tokens: 500, eggs_since_legendary: 2 },
+    T0,
+    'knight',
+    null,
+    () => 0.2,
+  )!;
+  incubating = devGrantTide(incubating, T0);
+  const stampBefore = incubating.pet.pity_from;
+  const bought = purchaseShopRow(incubating, pearl, T0);
   assert.equal(bought.result.ok, true);
-  assert.equal(bought.doc.eggs_since_legendary, 10 + STAR_PEARL_PITY);
-  assert.equal(bought.doc.dive_charge, before.charge);
-  assert.equal(bought.doc.powers_today.n, before.powers);
-  assert.equal(bought.doc.pet.stage, before.stage);
-  assert.equal(bought.doc.pet.stage_age_ms, before.age);
-  assert.equal(bought.doc.eggs_today, before.eggs);
+  assert.equal(bought.doc.eggs_since_legendary, 2 + STAR_PEARL_PITY);
+  assert.equal(bought.doc.pet.pity_from, bought.doc.eggs_since_legendary, 'Star Pearl re-stamps the egg in hand');
+  assert.notEqual(bought.doc.pet.pity_from, stampBefore);
+  const viewPearl = playView(bought.doc, T0).pet.pity;
+  assert.equal(viewPearl.since, bought.doc.pet.pity_from);
+  assert.equal(viewPearl.untilLegendary, eggsUntilLegendary(bought.doc.pet.pity_from, bought.doc.pet.pity_step));
+
+  const passEgg = chooseEggDoc(defaultPlayStore(T0), T0, 'village', null, () => 0.3)!;
+  assert.equal(passEgg.pet.pity_step, 1);
+  const passStart = devGrantTide(passEgg, T0);
+  assert.equal(passStart.pet.pity_step, TIDE_PITY_STEP);
+  assert.equal(passStart.pet.pity_from, passStart.eggs_since_legendary, 'pass start re-stamps like a Den wake');
+  const ended = devEndTide(passStart, T0);
+  assert.equal(ended.pet.pity_step, TIDE_PITY_STEP, 'mid-incubation pass end keeps the stamp');
+  const viewEnd = playView(ended, T0).pet.pity;
+  assert.equal(viewEnd.step, ended.pet.pity_step);
+  assert.equal(viewEnd.since, ended.pet.pity_from);
+
+  const boughtDoc = purchaseShopRow(doc, pearl, T0);
+  assert.equal(boughtDoc.result.ok, true);
+  assert.equal(boughtDoc.doc.eggs_since_legendary, 10 + STAR_PEARL_PITY);
+  assert.equal(boughtDoc.doc.dive_charge, before.charge);
+  assert.equal(boughtDoc.doc.powers_today.n, before.powers);
+  assert.equal(boughtDoc.doc.pet.stage, before.stage);
+  assert.equal(boughtDoc.doc.pet.stage_age_ms, before.age);
+  assert.equal(boughtDoc.doc.eggs_today, before.eggs);
   const clamped = purchaseShopRow({ ...doc, eggs_since_legendary: PITY_HARD - 2 }, pearl, T0);
   assert.equal(clamped.doc.eggs_since_legendary, PITY_HARD - 1, 'a Star Pearl never skips the guarantee');
-  const capped = purchaseShopRow(bought.doc, pearl, T0);
+  const capped = purchaseShopRow(boughtDoc.doc, pearl, T0);
   assert.equal(capped.result.ok, false);
   if (!capped.result.ok) assert.equal(capped.result.reason, 'pass_cap');
-  const stones = purchaseShopRow(bought.doc, prism, T0);
+  const stones = purchaseShopRow(boughtDoc.doc, prism, T0);
   assert.equal(stones.result.ok, true);
-  assert.equal(stones.doc.prism_stones, bought.doc.prism_stones + prism.amount);
+  assert.equal(stones.doc.prism_stones, boughtDoc.doc.prism_stones + prism.amount);
   const cappedStone = purchaseShopRow(stones.doc, prism, T0);
   assert.equal(cappedStone.result.ok, false);
   if (!cappedStone.result.ok) assert.equal(cappedStone.result.reason, 'pass_cap');
@@ -279,6 +316,15 @@ ok('the pass, the Tide shelf and paid rows never touch Powers, charges, growth o
   assert.equal(skipped.streak.last, 2, 'a missed day pauses on the next day');
   assert.equal(skipped.streak.next, 3);
   assert.equal(touchPet(skipped, T0 + 2 * D).streak.last, 2, 'the clock set back cannot claim the day twice');
+
+  let streak = emptyStreak();
+  const jumped = advanceStreak(streak, ymd(5));
+  assert.ok(jumped);
+  streak = jumped!.streak;
+  assert.equal(advanceStreak(streak, ymd(0)), null, 'oscillating the clock back cannot advance again');
+  const later = advanceStreak(streak, ymd(6));
+  assert.ok(later);
+  assert.equal(later!.day, 2, 'a later calendar day still advances once');
 
   const day7 = devSetStreakDay(defaultPlayStore(T0), T0, STREAK_DAYS);
   assert.equal(day7.streak.last, STREAK_DAYS);

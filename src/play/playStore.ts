@@ -1691,6 +1691,9 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     ? 'away'
     : expeditionBlock(pet, null, today, doc.pet_expedition_ymd, doc.pet_expedition_steps);
   const stepsToday = expeditionStepsToday(today, doc.pet_expedition_ymd, doc.pet_expedition_steps);
+  const incubating = PET_STAGES.indexOf(pet.stage) < PET_STAGES.indexOf('child') && !isBlankSlot(pet);
+  const pitySince = incubating ? pet.pity_from : doc.eggs_since_legendary;
+  const pityStep = incubating ? pet.pity_step || 1 : tidePityStep(doc.tide, today);
   const heroes = heroBookOf(doc, pet);
   return {
     state: pet,
@@ -1755,10 +1758,10 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     },
     eggDay: eggDayOf(doc, now),
     pity: {
-      since: doc.eggs_since_legendary,
-      step: tidePityStep(doc.tide, today),
-      untilLegendary: eggsUntilLegendary(doc.eggs_since_legendary, tidePityStep(doc.tide, today)),
-      nextOdds: gradeOdds(petCareBand(pet), null, doc.eggs_since_legendary, tidePityStep(doc.tide, today)),
+      since: pitySince,
+      step: pityStep,
+      untilLegendary: eggsUntilLegendary(pitySince, pityStep),
+      nextOdds: gradeOdds(petCareBand(pet), null, pitySince, pityStep),
     },
     stones: { held: doc.shine_stones, glimmers: doc.glimmers, used: doc.stones_used, prism: doc.prism_stones },
     tide: {
@@ -1843,6 +1846,22 @@ function settledPetFields(doc: PlayStoreDoc, now: number): Pick<PlayStoreDoc, 'p
   return { play_stats: settled.play_stats, eggs_since_legendary: settled.eggs_since_legendary };
 }
 
+/** Before Child, align the active pet's pity stamp with the doc counter and
+ * today's Tide step (Den wake, Star Pearl, pass start). */
+function restampActivePity(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const pet = advancePet(doc.pet, now);
+  const today = localYmd(new Date(now));
+  const stamped = wakePet(pet, now, doc.eggs_since_legendary, tidePityStep(doc.tide, today));
+  if (
+    stamped.pity_from === pet.pity_from &&
+    stamped.pity_step === pet.pity_step &&
+    stamped.seen_at === pet.seen_at
+  ) {
+    return doc;
+  }
+  return { ...doc, pet: stamped };
+}
+
 /** A day played (the Journal), a Shine Stone on every 5th one (v27), one Tide
  * day if a pass is held (v28), and one Tide-calendar day (a miss pauses it). */
 function countPlayDay(doc: PlayStoreDoc, now: number): PlayStoreDoc {
@@ -1858,24 +1877,26 @@ function countPlayDay(doc: PlayStoreDoc, now: number): PlayStoreDoc {
     play_stats: stats,
     shine_stones: doc.shine_stones + (stone ? 1 : 0),
   };
-  if (streakStep) next = applyStreakReward(next, streakStep, today);
+  if (streakStep) next = applyStreakReward(next, streakStep, today, now);
   return next;
 }
 
 /** Add pass days. A new pass gifts a Prism Stone and the Tide Friend ribbon,
  * and resets the Tide shelf's per-pass counts. If today is not a pass day
  * yet, this open spends one of the new days. */
-function withTideGrant(doc: PlayStoreDoc, today: string, days: number, source: TideSource): PlayStoreDoc {
+function withTideGrant(doc: PlayStoreDoc, today: string, days: number, source: TideSource, now: number): PlayStoreDoc {
   const g = grantTide(doc.tide, today, days, source);
   let tide = g.tide;
   if (g.added > 0 && !tideActive(tide, today)) tide = openTideDay(tide, today);
   const ribbons = g.started && !doc.ribbons.includes('tide') ? [...doc.ribbons, 'tide' as const] : doc.ribbons;
   const shop_pass = g.started ? { pass: tide.passes_started, counts: {} } : doc.shop_pass;
   if (tide === doc.tide && g.prismGift === 0) return doc;
-  return { ...doc, tide, prism_stones: doc.prism_stones + g.prismGift, ribbons, shop_pass };
+  let next: PlayStoreDoc = { ...doc, tide, prism_stones: doc.prism_stones + g.prismGift, ribbons, shop_pass };
+  if (g.started) next = restampActivePity(next, now);
+  return next;
 }
 
-function applyStreakReward(doc: PlayStoreDoc, step: StreakAdvance, today: string): PlayStoreDoc {
+function applyStreakReward(doc: PlayStoreDoc, step: StreakAdvance, today: string, now: number): PlayStoreDoc {
   let next: PlayStoreDoc = { ...doc, streak: step.streak };
   const reward = step.reward;
   if (!reward) return next;
@@ -1883,7 +1904,7 @@ function applyStreakReward(doc: PlayStoreDoc, step: StreakAdvance, today: string
   else if (reward.kind === 'stone') next = { ...next, shine_stones: next.shine_stones + 1 };
   else if (reward.kind === 'ticket') {
     next = { ...next, pet_tickets: { ...next.pet_tickets, rare: next.pet_tickets.rare + 1 } };
-  } else next = withTideGrant(next, today, reward.days, 'streak');
+  } else next = withTideGrant(next, today, reward.days, 'streak', now);
   return next;
 }
 
@@ -2750,7 +2771,7 @@ export function devSetPity(doc: PlayStoreDoc, now: number, since: number): PlayS
 /** Dev kit (v28): grant a Tide Pass (`TIDE_PASS_DAYS` play-days). Today counts. */
 export function devGrantTide(doc: PlayStoreDoc, now: number, days: number = TIDE_PASS_DAYS): PlayStoreDoc {
   const touched = touchPet(doc, now);
-  return withTideGrant(touched, localYmd(new Date(now)), days, 'dev');
+  return withTideGrant(touched, localYmd(new Date(now)), days, 'dev', now);
 }
 
 /** Dev kit (v28): end the Tide Pass, including a day already opened. */
@@ -2772,7 +2793,7 @@ export function devSetStreakDay(doc: PlayStoreDoc, now: number, day: number): Pl
   const d = Math.min(STREAK_DAYS, Math.max(1, Math.floor(day)));
   const step = advanceStreak({ next: d, ymd: null, last: null }, today);
   if (!step) return doc;
-  return applyStreakReward(doc, step, today);
+  return applyStreakReward(doc, step, today, now);
 }
 
 /** Dev kit (v27): fill every free Den slot with a revealed Child (random
@@ -4739,6 +4760,7 @@ export function purchaseShopRow(
       ...next,
       eggs_since_legendary: Math.min(PITY_HARD - 1, next.eggs_since_legendary + STAR_PEARL_PITY),
     };
+    next = restampActivePity(next, now);
   }
 
   next = {
