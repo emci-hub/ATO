@@ -28,9 +28,10 @@ import { Fonts } from '@/constants/theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { PET_COACH_ICON, petCoachTip, type PetCoachIcon } from '@/play/coach';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
+import { PetDevPanel } from '@/play/pet-dev-panel';
+import { usePetDevRoom } from '@/play/pet-dev-state';
 import { petBackStep, type InnerBack } from '@/play/edge-back';
 import { ELEMENT_COLOR } from '@/play/kits';
-import { NeonChip, NeonLabel } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
 import { PET_BRANCH_LABEL, PET_STAGE_LABEL } from '@/play/pet';
 import { syncPlayNotices } from '@/play/pet-reminder';
@@ -53,16 +54,12 @@ import { GuideLink } from '@/play/guide-sheet';
 import { idleTalkDelayMs, isBedtime } from '@/play/play-settings';
 import { tripLabel } from '@/play/expedition-ladder';
 import {
-  CARE_BANDS,
-  CARE_BAND_LABEL,
   EGG_COLOR,
   EGG_LABEL,
   EGG_LINE,
   GRADES,
   GRADE_COLOR,
   GRADE_LABEL,
-  PITY_HARD,
-  PITY_SOFT_FROM,
   SHARDS_PER_TICKET,
   SHINY_STYLE_LABEL,
   gradedName,
@@ -72,7 +69,7 @@ import {
   type EggType,
 } from '@/play/pet-eggs';
 import { PetFigure } from '@/play/pet-figure';
-import { getShinyLook, petRecolor, setShinyLook, type ShinyLook } from '@/play/pet-looks';
+import { petRecolor } from '@/play/pet-looks';
 import { PetReveal } from '@/play/pet-reveal';
 import { PetRoom, type RoomSpeech } from '@/play/pet-room';
 import { loadSeenStage, saveSeenStage } from '@/play/pet-seen';
@@ -91,11 +88,10 @@ import {
   roundResultLine,
   type InfoTab,
 } from '@/play/pet-sheets';
-import { PET_STATUSES, justEvolved, petStatus, type PetStatus } from '@/play/pet-status';
+import { justEvolved, petStatus } from '@/play/pet-status';
 import {
   PET_IDLE_TALK_MAX_MS,
   PET_IDLE_TALK_MIN_MS,
-  PET_TALK_SITUATIONS,
   pickEggLine,
   pickEggTalk,
   pickPetLine,
@@ -108,27 +104,7 @@ import {
 import { PlaySheet, SheetTabs } from '@/play/play-sheet';
 import {
   ackPetRevealsDoc,
-  devAddPrism,
-  devAddShells,
-  devAddStones,
-  devEndTide,
-  devFillDen,
-  devGrantTide,
-  devSetPity,
-  devSetStreakDay,
-  devGoldAllGames,
-  devGrantAllBuffs,
-  devGiveShards,
-  devPetEndStage,
-  devPetForce,
-  devPetSetBand,
-  devResetCollection,
   warmEggDoc,
-  devPetExpeditionReset,
-  devPetFinishStage,
-  devPetNewEgg,
-  devPetSetStage,
-  devPetStarve,
   finishPetRound,
   type PetRoundKind,
   type PetRoundResult,
@@ -149,9 +125,6 @@ const ICONS: { id: PetCoachIcon; emoji: string; label: string }[] = [
   { id: 'info', emoji: 'ℹ️', label: 'Info' },
 ];
 
-/** Dev kit: jump the pity counter (eggs since the last Legendary) — before,
- * at and deep in the soft pity, and the guaranteed egg. */
-const DEV_PITY_PRESETS = [0, PITY_SOFT_FROM - 1, PITY_SOFT_FROM + 4, PITY_HARD - 1] as const;
 
 const SHEET_TITLE: Record<SheetId, string> = {
   feed: 'Feed',
@@ -337,9 +310,8 @@ export function PetScreen({
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Dev-only room hooks (Info → Dev).
-  const [devStatus, setDevStatus] = useState<PetStatus | null>(null);
-  const [devNight, setDevNight] = useState<'auto' | 'on' | 'off'>('auto');
-  const [shinyLook, setShinyLookState] = useState<ShinyLook>(getShinyLook);
+  // Dev room toggles live in a store so the floating DEV kit can drive them too.
+  const { status: devStatus, night: devNight, say: devSay } = usePetDevRoom();
   const [revealStep, setRevealStep] = useState(0);
   const [focusEgg, setFocusEgg] = useState<EggType | null>(null);
   const art = usePetArt(pet);
@@ -416,6 +388,14 @@ export function PetScreen({
     },
     [sayText],
   );
+  // A "say this" press from the dev panel (wherever it is shown).
+  const devSayNonce = devSay?.nonce ?? 0;
+  const devSaySeen = useRef(devSayNonce);
+  useEffect(() => {
+    if (!devSay || devSaySeen.current === devSay.nonce) return;
+    devSaySeen.current = devSay.nonce;
+    say(devSay.situation);
+  }, [devSay, say]);
   const sayEgg = useCallback(
     (moment: PetEggTalk) => {
       if (awayRef.current) return;
@@ -712,10 +692,6 @@ export function PetScreen({
     if (kind === 'child' && pet.grade) sayEgg(pet.shiny ? 'shiny' : (`reveal_${pet.grade}` as PetEggTalk));
   };
 
-  const devBtn = (label: string, fn: PlayTransition) => (
-    <NeonChip key={label} label={label} onPress={() => commit(fn)} />
-  );
-
   return (
     <View style={styles.screen}>
       <View style={styles.topBar}>
@@ -923,73 +899,7 @@ export function PetScreen({
         ) : infoTab === 'guide' ? (
           <HelpTab key={guideNonce} section={guideSection} />
         ) : dev ? (
-          <>
-            <NeonLabel>Dev · pet</NeonLabel>
-            <View style={styles.chips}>
-              <NeonChip label="Finish stage" onPress={() => commit((doc, now) => devPetFinishStage(doc, now))} />
-              <NeonChip label="Starve" onPress={() => commit((doc, now) => devPetStarve(doc, now))} />
-              <NeonChip label="Set Adult" onPress={() => commit((doc, now) => devPetSetStage(doc, now, 'adult'))} />
-              <NeonChip label="Set God" onPress={() => commit((doc, now) => devPetSetStage(doc, now, 'god'))} />
-              <NeonChip label="New egg" onPress={() => commit((doc, now) => devPetNewEgg(doc, now))} />
-              <NeonChip
-                label="Expedition: back now + reset day"
-                onPress={() => commit((doc, now) => devPetExpeditionReset(doc, now))}
-              />
-              <NeonChip label="+100 shells" onPress={() => commit((doc) => devAddShells(doc))} />
-              <NeonChip label="All buffs" onPress={() => commit((doc) => devGrantAllBuffs(doc))} />
-              <NeonChip label="Gold on every level" onPress={() => commit((doc) => devGoldAllGames(doc))} />
-            </View>
-            <NeonLabel>Dev · eggs</NeonLabel>
-            <View style={styles.chips}>
-              {devBtn('Hatch now', (doc, now) => devPetEndStage(doc, now, 'egg'))}
-              {devBtn('Reveal now', (doc, now) => devPetEndStage(doc, now, 'baby'))}
-              {GRADES.map((g) => devBtn(`Force ${GRADE_LABEL[g]}`, (doc, now) => devPetForce(doc, now, { grade: g })))}
-              {devBtn(pet.shiny ? 'Shiny: off' : 'Force shiny', (doc, now) => devPetForce(doc, now, { shiny: !pet.shiny }))}
-              {CARE_BANDS.map((b) => devBtn(`Care ${CARE_BAND_LABEL[b]}`, (doc, now) => devPetSetBand(doc, now, b)))}
-              {GRADES.map((g) => devBtn(`+5 ${GRADE_LABEL[g]} shards`, (doc) => devGiveShards(doc, g)))}
-              {devBtn('Reset Collection', (doc) => devResetCollection(doc))}
-              {devBtn('+5 Shine Stones', (doc) => devAddStones(doc))}
-              {devBtn('Grant Tide (5 days)', (doc, now) => devGrantTide(doc, now))}
-              {devBtn('End Tide', (doc, now) => devEndTide(doc, now))}
-              {devBtn('+Prism Stone', (doc) => devAddPrism(doc))}
-              {devBtn('Streak day 1', (doc, now) => devSetStreakDay(doc, now, 1))}
-              {devBtn('Streak day 6', (doc, now) => devSetStreakDay(doc, now, 6))}
-              {devBtn('Streak day 7', (doc, now) => devSetStreakDay(doc, now, 7))}
-              {DEV_PITY_PRESETS.map((n) => devBtn(`Pity: egg ${n + 1}`, (doc, now) => devSetPity(doc, now, n)))}
-              {devBtn('Fill the Den', (doc, now) => devFillDen(doc, now))}
-              <NeonChip
-                label={`Shiny look: ${shinyLook}`}
-                onPress={() => {
-                  const next: ShinyLook = shinyLook === 'auto' ? 'blend' : shinyLook === 'blend' ? 'wash' : 'auto';
-                  setShinyLook(next);
-                  setShinyLookState(next);
-                }}
-              />
-            </View>
-            <NeonLabel>Dev · room</NeonLabel>
-            <View style={styles.chips}>
-              <NeonChip
-                label={`Status: ${devStatus ?? 'real'}`}
-                selected={devStatus != null}
-                onPress={() =>
-                  setDevStatus((cur) => {
-                    const i = cur == null ? -1 : PET_STATUSES.indexOf(cur);
-                    return i + 1 >= PET_STATUSES.length ? null : PET_STATUSES[i + 1];
-                  })
-                }
-              />
-              <NeonChip
-                label={`Night: ${devNight}`}
-                selected={devNight !== 'auto'}
-                onPress={() => setDevNight((n) => (n === 'auto' ? 'on' : n === 'on' ? 'off' : 'auto'))}
-              />
-              <NeonChip
-                label="Say a line"
-                onPress={() => say(PET_TALK_SITUATIONS[Math.floor(Math.random() * PET_TALK_SITUATIONS.length)])}
-              />
-              <NeonChip label="Fake evolve (I grew!)" onPress={() => say('evolved')} />
-            </View>
-          </>
+          <PetDevPanel pet={pet} commit={commit} startOpen={['pet', 'eggs']} />
         ) : null}
       </PlaySheet>
       {pendingReveal ? (
@@ -1093,6 +1003,5 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.75 },
   body: { fontFamily: Fonts.mono, fontSize: 12, lineHeight: 18, color: NEON.textMuted },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   cardCenter: { alignItems: 'center', paddingVertical: 8 },
 });

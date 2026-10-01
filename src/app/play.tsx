@@ -5,6 +5,7 @@ import { BackHandler, PanResponder, Pressable, ScrollView, StyleSheet, View } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PlayDevFab } from '@/components/play-dev-fab';
+import { PetDevPanel } from '@/play/pet-dev-panel';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -695,8 +696,9 @@ export default function PlayScreen() {
       ? () => setHubSettingsOpen(false)
       : null;
 
-  const groveDevKitPanel = (afterNavigate?: () => void) => (
+  const groveDevKitPanel = (afterNavigate?: () => void, focus: readonly GroveDevSectionId[] = []) => (
     <GroveDevKit
+      focus={focus}
       commit={commit}
       onGrantRandomFind={handleGrantRandomFind}
       onGrantRandomPower={handleGrantRandomPower}
@@ -964,7 +966,28 @@ export default function PlayScreen() {
         />
       ) : null}
       {showPlayDevFab ? (
-        <PlayDevFab open={devKitOpen} onOpenChange={setDevKitOpen} panel={groveDevKitPanel(closeDevKit)} />
+        <PlayDevFab
+          open={devKitOpen}
+          onOpenChange={setDevKitOpen}
+          panel={
+            // The tools for the mode you are in come first; the general kit follows,
+            // with that mode's group already open.
+            <View key={mode} style={styles.devFabPanel}>
+              <ThemedText type="smallBold" themeColor="emphasis">
+                {DEV_MODE_LABEL[mode]} tools
+              </ThemedText>
+              {mode === 'pet' && view ? (
+                <PetDevPanel pet={view.pet.state} commit={commit} startOpen={['pet', 'eggs', 'room']} />
+              ) : null}
+              {mode === 'defend' ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  Defend has its own Dev kit on the Defend screen (waves, heroes, skip offer).
+                </ThemedText>
+              ) : null}
+              {groveDevKitPanel(closeDevKit, devFocusForMode(mode))}
+            </View>
+          }
+        />
       ) : null}
     </PlayThemeProvider>
   );
@@ -991,7 +1014,31 @@ type DevKitRowDef = { key: string; label: string; onPress: () => void };
 /** The collapsible groups the Grove Dev kit folds into. */
 type GroveDevSectionId = 'dive' | 'bag' | 'tokens' | 'avatars' | 'campaign' | 'misc';
 
+/** What the floating DEV kit calls each mode. */
+const DEV_MODE_LABEL: Record<PlayMode, string> = {
+  grove: 'Hub',
+  dive: 'Dive',
+  pet: 'Pet',
+  dress: 'Bag',
+  defend: 'Defend',
+  shop: 'Shop',
+  about: 'About',
+  sheetlab: 'Sheet lab',
+  swords: 'Swords',
+  swordlab: 'Sword lab',
+};
+
+/** The general-kit groups that matter in each mode — opened on entry. */
+function devFocusForMode(mode: PlayMode): readonly GroveDevSectionId[] {
+  if (mode === 'dive') return ['dive'];
+  if (mode === 'dress') return ['bag', 'avatars'];
+  if (mode === 'defend' || mode === 'swords') return ['campaign'];
+  if (mode === 'shop') return ['tokens'];
+  return [];
+}
+
 function GroveDevKit({
+  focus = [],
   commit,
   onGrantRandomFind,
   onGrantRandomPower,
@@ -1009,6 +1056,8 @@ function GroveDevKit({
   onOpenSheetLab,
   onOpenSwordLab,
 }: {
+  /** Groups open on entry (the floating kit opens the current mode's). */
+  focus?: readonly GroveDevSectionId[];
   commit: (transition: PlayTransition) => boolean;
   onGrantRandomFind: () => Promise<void>;
   onGrantRandomPower: () => Promise<void>;
@@ -1032,12 +1081,12 @@ function GroveDevKit({
   /** Which Dev kit sections are expanded. ALL collapsed on entry — the kit is a
    * long list, so a tester opens just the group they need. */
   const [openSections, setOpenSections] = useState<Record<GroveDevSectionId, boolean>>({
-    dive: false,
-    bag: false,
-    tokens: false,
-    avatars: false,
-    campaign: false,
-    misc: false,
+    dive: focus.includes('dive'),
+    bag: focus.includes('bag'),
+    tokens: focus.includes('tokens'),
+    avatars: focus.includes('avatars'),
+    campaign: focus.includes('campaign'),
+    misc: focus.includes('misc'),
   });
   const toggleSection = useCallback((id: GroveDevSectionId) => {
     setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -1491,6 +1540,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     paddingHorizontal: Spacing.three,
   },
+  devFabPanel: { gap: Spacing.two },
   devKitCard: {
     borderRadius: Spacing.four,
     paddingVertical: Spacing.two,

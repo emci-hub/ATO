@@ -93,4 +93,31 @@ ok('clampFab and snapFabX are worklets');
 }
 ok('wiring: Play-only mount, Modal Grove kit, existing libraries only');
 
+/* ---------------------------------------------------------------- 5 --- */
+{
+  // The floating kit follows the mode: in the Pet room it shows the pet / egg /
+  // room tools (one shared panel, also the Info sheet's Dev tab).
+  const play = read('src/app/play.tsx');
+  assert.ok(/mode === 'pet' && view \? \(\s*<PetDevPanel/.test(play), 'Pet mode: the floating kit shows the Pet dev panel');
+  assert.ok(play.includes('devFocusForMode(mode)'), 'the general kit opens the current mode’s group');
+  assert.ok(play.includes('<View key={mode}'), 'the panel remounts per mode, so the right groups are open');
+  const screen = read('src/play/pet-screen.tsx');
+  assert.ok(/\) : dev \? \(\s*<PetDevPanel/.test(screen), 'the Info sheet Dev tab renders the same panel');
+  assert.ok(!/\bdev(?:Pet|Add|Give|Set|Fill|Grant|End|Gold|Reset)\w*\(/.test(screen), 'no second copy of the pet dev buttons in the Pet screen');
+  assert.ok(screen.includes('usePetDevRoom()'), 'room toggles come from the shared store');
+  const panel = read('src/play/pet-dev-panel.tsx');
+  assert.ok(panel.includes('if (!PRE_LAUNCH_DEV) return null;'), 'the panel renders nothing outside pre-launch');
+  for (const title of ['Pet · stage & care', 'Eggs · hatch & grade', 'Collection & stones', 'Tide & streak', 'Pity & Den', 'Room · look & talk']) {
+    assert.ok(panel.includes(`title: '${title}'`), `group: ${title}`);
+  }
+  // Nothing was dropped in the regroup: every pet dev action is still wired.
+  for (const fn of ['devPetFinishStage', 'devPetStarve', 'devPetSetStage', 'devPetNewEgg', 'devPetExpeditionReset', 'devAddShells', 'devGrantAllBuffs', 'devGoldAllGames', 'devPetEndStage', 'devPetForce', 'devPetSetBand', 'devGiveShards', 'devResetCollection', 'devAddStones', 'devGrantTide', 'devEndTide', 'devAddPrism', 'devSetStreakDay', 'devSetPity', 'devFillDen']) {
+    assert.ok(panel.includes(`${fn}(`), `${fn} is still on the panel`);
+  }
+  for (const fn of ['cycleDevStatus', 'cycleDevNight', 'cycleShinyLook', 'requestDevSay']) {
+    assert.ok(panel.includes(fn), `${fn} is still on the panel`);
+  }
+}
+ok('mode-aware: Pet mode shows Pet / Eggs / Room tools in six groups, one shared panel, nothing dropped');
+
 console.log(`\ncheck:dev-fab — ${passed} groups passed.`);
