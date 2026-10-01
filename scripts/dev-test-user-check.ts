@@ -479,7 +479,8 @@ function main() {
   const intakePanel = hubSrc.slice(hubSrc.indexOf('function IntakeStagePresets()'), hubSrc.indexOf('function ResetToFreshSignup()'));
   assert.match(intakePanel, /if \(!PRE_LAUNCH_DEV \|\| !canSeed\) return null/);
   assert.doesNotMatch(intakePanel, /!isDevUser/);
-  assert.match(intakePanel, /if \(!isDevTestAccount && armed !== stage\) \{\s*setArmed\(stage\);\s*return;/, 'a real account confirms with a second tap');
+  assert.match(intakePanel, /if \(!isDevTestAccount && armed !== stage\) \{\s*setArmed\(stage\);[\s\S]{0,260}?return;\s*\}/, 'a real account confirms with a second tap');
+  assert.match(intakePanel, /setTimeout\(\(\) => setArmed\(\(cur\) => \(cur === stage \? null : cur\)\), 5000\)/, 'the confirm disarms itself');
   assert.match(hubSrc, /me\.id === DEV_TEST_USER_ID/);
   assert.match(hubSrc, /applyDevIntakeStagePreset/);
   ok('Dev Lab intake-stage panel: pre-launch, any signed-in account, two taps on a real one');
