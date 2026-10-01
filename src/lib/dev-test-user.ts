@@ -385,12 +385,15 @@ export async function applyDevIntakeStagePreset(
 ): Promise<void> {
   if (!PRE_LAUNCH_DEV) throw new Error('Dev intake presets are pre-launch only');
 
+  // RULE LIFTED 2026-10-01 (emci): this used to refuse every account but the
+  // fixed dev-test user. It now seeds whichever account is signed in — its OWN
+  // rows only (RLS scopes the writes) — so emci can test stages on a real
+  // account without deleting and recreating it. Still pre-launch only. The
+  // archetype / thin-profile presets and the full reset below stay dev-test-only.
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user || user.id !== DEV_TEST_USER_ID) {
-    throw new Error('Dev intake presets only apply to the fixed dev-test user');
-  }
+  if (!user) throw new Error('Sign in to use the intake presets');
 
   const stage = devIntakeStageById(stageId);
   if (!stage) throw new Error(`Unknown dev intake stage: ${stageId}`);

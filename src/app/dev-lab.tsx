@@ -747,13 +747,18 @@ function BandDetailStepper() {
  */
 function IntakeStagePresets() {
   const { me, refresh } = useMeContext();
-  const isDevUser = !!me && me.id === DEV_TEST_USER_ID;
+  // Rule lifted 2026-10-01 (emci): any signed-in account may seed ITS OWN intake
+  // state pre-launch, not only the dev-test user.
+  const canSeed = !!me;
+  const isDevTestAccount = !!me && me.id === DEV_TEST_USER_ID;
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [busy, setBusy] = useState<DevIntakeStageId | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // On a real account a stage OVERWRITES real answers, so it takes two taps.
+  const [armed, setArmed] = useState<DevIntakeStageId | null>(null);
 
   useEffect(() => {
-    if (!isDevUser || !me) return;
+    if (!canSeed || !me) return;
     let active = true;
     fetchTraitTracks(me.id)
       .then((rows) => {
@@ -765,14 +770,21 @@ function IntakeStagePresets() {
     return () => {
       active = false;
     };
-  }, [isDevUser, me]);
+  }, [canSeed, me]);
 
-  if (!PRE_LAUNCH_DEV || !isDevUser) return null;
+  if (!PRE_LAUNCH_DEV || !canSeed) return null;
 
   const progress = bankTotalProgress(tracks);
 
   async function applyStage(stage: DevIntakeStageId) {
     if (busy) return;
+    if (!isDevTestAccount && armed !== stage) {
+      setArmed(stage);
+      // Disarm by itself, so a stale confirm never turns a later single tap into a write.
+      setTimeout(() => setArmed((cur) => (cur === stage ? null : cur)), 5000);
+      return;
+    }
+    setArmed(null);
     setBusy(stage);
     setError(null);
     try {
@@ -790,10 +802,13 @@ function IntakeStagePresets() {
     <View style={styles.section}>
       <ThemedText type="smallBold">Intake stage</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        Seeds @atodev straight to an onboarding/intake state by writing per-axis
-        trait_tracks answer_count. The real sageUnlocked/legendsUnlocked
-        predicates then read it normally — nothing is stubbed. Pre-launch and
-        dev-test user only; invisible to every other account.
+        Jumps THIS account{me?.handle ? ` (@${me.handle})` : ''} straight to a point in the 50
+        questions, without answering them. &quot;Fresh signup&quot; clears all questions
+        (0/50); the others fill them to that stage. It overwrites this account&apos;s current
+        answers and trait scores, so on a real account each one takes a second tap to confirm.
+        The filled stages write PRESET trait scores (not yours), so Insight, Story and the
+        categories read those until you answer again. Tokens and old rounds are not cleared.
+        Pre-launch only.
       </ThemedText>
       <ThemedText type="code" themeColor="textSecondary">
         {progress.answered}/{progress.total} · Sage{' '}
@@ -804,7 +819,13 @@ function IntakeStagePresets() {
       {DEV_INTAKE_STAGES.map((stage) => (
         <View key={stage.stage}>
           <Chip
-            label={busy === stage.stage ? 'applying…' : stage.label}
+            label={
+              busy === stage.stage
+                ? 'applying…'
+                : armed === stage.stage
+                  ? `Tap again to overwrite this account — ${stage.label}`
+                  : stage.label
+            }
             selected={false}
             onPress={() => void applyStage(stage.stage)}
           />

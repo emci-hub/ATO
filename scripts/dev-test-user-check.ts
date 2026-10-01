@@ -444,7 +444,14 @@ function main() {
   assert.ok(intakeStart >= 0, 'applyDevIntakeStagePreset must exist');
   const intakeBody = moduleSrc.slice(intakeStart);
   assert.match(intakeBody, /if \(!PRE_LAUNCH_DEV\) throw new Error/);
-  assert.match(intakeBody, /user\.id !== DEV_TEST_USER_ID/);
+  // INVERTED 2026-10-01 (was: the intake preset refuses every account but the
+  // dev-test user). emci lifted that rule: the preset seeds whichever account
+  // is signed in (its own rows only), so stages can be tested on a real account
+  // without deleting it. Pre-launch only is still enforced above.
+  const intakeOnly = intakeBody.slice(0, intakeBody.indexOf('export async function resetDevTestUserToFreshSignup'));
+  assert.ok(intakeOnly.length > 0, 'could not isolate applyDevIntakeStagePreset');
+  assert.doesNotMatch(intakeOnly, /user\.id !== DEV_TEST_USER_ID/, 'the intake preset is no longer dev-test-user only');
+  assert.match(intakeOnly, /if \(!user\) throw new Error/, 'it still needs a signed-in account');
   assert.match(intakeBody, /upsertTraitTracks/);
   assert.equal(
     intakeBody.match(/\.from\('trait_tracks'\)[\s\S]{0,80}?\.delete\(\)/),
@@ -457,7 +464,7 @@ function main() {
     'intake preset must never delete the me row',
   );
   assert.match(intakeBody, /celebrated_milestone_ids = \[\]/);
-  ok('applyDevIntakeStagePreset carries both guards, upserts tracks, deletes nothing, and resets milestone celebrations on fresh');
+  ok('applyDevIntakeStagePreset is pre-launch only, works on the signed-in account, upserts tracks, deletes nothing, and resets milestone celebrations on fresh');
 
   // The pure module must stay importable by this check — no supabase client.
   assert.doesNotMatch(stagesSrc, /from '@\/lib\/supabase'/);
@@ -466,10 +473,16 @@ function main() {
   // The Dev Lab surface is gated twice: pre-launch, and the dev-test user.
   const hubSrc = read('src/app/dev-lab.tsx');
   assert.match(hubSrc, /function IntakeStagePresets\(\)/);
-  assert.match(hubSrc, /if \(!PRE_LAUNCH_DEV \|\| !isDevUser\) return null/);
+  // INVERTED 2026-10-01 (was: gated on the dev-test user id). The panel now
+  // shows for any signed-in account pre-launch, and a real account must tap
+  // twice before a stage overwrites its answers.
+  const intakePanel = hubSrc.slice(hubSrc.indexOf('function IntakeStagePresets()'), hubSrc.indexOf('function ResetToFreshSignup()'));
+  assert.match(intakePanel, /if \(!PRE_LAUNCH_DEV \|\| !canSeed\) return null/);
+  assert.doesNotMatch(intakePanel, /!isDevUser/);
+  assert.match(intakePanel, /if \(!isDevTestAccount && armed !== stage\) \{\s*setArmed\(stage\);\s*return;/, 'a real account confirms with a second tap');
   assert.match(hubSrc, /me\.id === DEV_TEST_USER_ID/);
   assert.match(hubSrc, /applyDevIntakeStagePreset/);
-  ok('Dev Lab intake-stage panel is gated on PRE_LAUNCH_DEV and the dev-test user id');
+  ok('Dev Lab intake-stage panel: pre-launch, any signed-in account, two taps on a real one');
 
   /* -------------------------------------------------------------------------
    * Reset to fresh signup (wave66) — deletes the me row, unlike every

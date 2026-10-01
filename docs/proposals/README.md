@@ -8,6 +8,7 @@ until it is deliberately moved and applied.
 |---|---|---|
 | `wave74_bank_pool_owner_and_ai_refund.sql` | Database change | NOT applied |
 | `ai-generate-refund-and-fallback.patch` | Change to the `ai-generate` Edge Function | NOT deployed |
+| `wave75_reset_my_test_data.sql` | Database change (test tool) | NOT applied |
 
 ## 1. Shared question pool lock (the SQL file, part 1)
 
@@ -39,6 +40,22 @@ without the SQL, the function still works; it just cannot refund.
 16 seconds (two 8-second tries); the app gives up at 15. Raise the app's wait to
 about 20 seconds and have it skip its own retry when the function says it
 already tried (`fallback_tried`). Both are small app changes, not yet made.
+
+## 3. Reset my own test data (`wave75_reset_my_test_data.sql`)
+
+**Problem.** Testing the 50 questions again means deleting the account and making
+a new one. The app can already jump an account to any stage (Dev tools → Intake
+stage), but it cannot wipe the token history, so the +21 for finishing the 50 —
+paid once ever — never pays a second time, and old rounds, insights and category
+reads stay behind.
+
+**Fix.** One function, "clear all my questions": it wipes the caller's OWN answers,
+trait scores, rounds, tokens and generated content, and keeps the profile. Root
+accounts only (so an invited tester cannot loop it to re-earn tokens), it cannot be
+aimed at anyone else, and it switches itself off once sign-up is public. It leaves
+today's AI call count, Check history and safety rows alone.
+
+**After applying**, the app needs one small button wired to it (not built yet).
 
 ## To apply (only after review)
 

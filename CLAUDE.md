@@ -32,12 +32,17 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
 - **`record_check` is the only write path for a Check.** Today or up to 2 days back;
   day 3+ is closed. Read/Do text lives 7 days; did/skip forever.
 - **Trait writes go through `mergeTraitWrite` → `updateTraits`** (EWMA, direct sources
-  sticky over inferred). Direct writes to trait columns are dev-user-only.
+  sticky over inferred). Direct writes to trait columns are dev tooling only (the
+  intake stage presets; see the dev-testing rule below).
 - **`PRE_LAUNCH_DEV`** (`src/lib/dev-mode.ts`) un-gates dev tooling while invite-only.
   Must be `false` before a public build — `check:release-mode` enforces it.
 - **Crisis card is static** — never a generated number, never a guessed region.
 - **Dev testing uses the dev-test user** (`ato-dev@example.com` / `@atodev`) and its
-  persona presets. Never a real login, never a real account's traits.
+  persona presets. **One exception, lifted by emci 2026-10-01:** the intake stage
+  presets (`applyDevIntakeStagePreset`) may seed or clear the SIGNED-IN account's own
+  answers pre-launch, so stages can be tested without deleting an account. Everything
+  else (archetype presets, the full reset RPC) stays dev-test-user only. Agents still
+  never sign in as, or write to, a real account themselves.
 - **Unreviewed copy ships behind `*_COPY_REVIEWED = false` flags.** Story / Levity are
   diagnosis-adjacent; not shippable as reviewed without emci's read.
 - Do not change dependencies, schemas, auth, env config, or secrets without emci's ok.
