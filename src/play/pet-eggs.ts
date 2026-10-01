@@ -14,6 +14,12 @@
  *   - Grade and shiny are looks only (never a stat, never the sprite colour
  *     for grade). Release / rebirth leave a shard of the pet's grade; 5 shards
  *     of a grade → a ticket guaranteeing the next grade or better.
+ *   - v27 (Part D): Legendary pity — the 40th egg since your last Legendary
+ *     is Legendary, soft from the 30th; `gradeOdds` takes the position, so
+ *     the odds shown are still the odds rolled. Egg pacing: 2 free a day,
+ *     then 10/20/40/80 shells, at most 6. Shine Stones: 10% shiny, certain
+ *     after 5 glimmers, each roll fixed by a saved sequence. Shiny styles
+ *     (Classic, and the Prism styles — a preview, never usable yet).
  */
 
 import { heroName } from './heroes-data';

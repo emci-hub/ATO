@@ -2,7 +2,8 @@
  * Egg sheets (2026-09-30) — the egg picker, the live / final odds, Release,
  * the Collection (16 heroes × 4 grades) with shards + Trade up, the Hall as
  * cards, the 3★ dye, and "How eggs work". Every odds number here comes from
- * `gradeOdds` / `heroOdds` — the same functions the roll uses.
+ * `gradeOdds` / `heroOdds` — the same functions the roll uses (v27: with the
+ * Legendary pity position, so the soft-pity odds shown are the ones rolled).
  */
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -23,12 +24,19 @@ import {
   EGG_LABEL,
   EGG_POOLS,
   EGG_TYPES,
+  GLIMMER_PITY,
   GRADES,
   GRADE_COLOR,
   GRADE_LABEL,
+  PITY_HARD,
+  PITY_SOFT_FROM,
   SHARDS_PER_TICKET,
+  SHINY_STYLES,
+  SHINY_STYLE_LABEL,
   bestGrade,
+  eggsUntilLegendary,
   gradeOdds,
+  ownsAllStyles,
   gradeTag,
   gradedName,
   heroOdds,
@@ -83,6 +91,31 @@ function HeroOddsLine({ egg }: { egg: EggType }) {
   );
 }
 
+/* ---------------------------------------------------------- the pity --- */
+
+/** "Legendary guaranteed in X eggs" + a bar: eggs since the last Legendary
+ * out of the hard pity, the soft-pity stretch marked. */
+export function PityBar({ since }: { since: number }) {
+  const until = eggsUntilLegendary(since);
+  const soft = since + 1 >= PITY_SOFT_FROM;
+  return (
+    <View style={styles.pity} accessible accessibilityLabel={`Legendary guaranteed in ${until} eggs`}>
+      <Text style={styles.pityText}>
+        {until === 1 ? 'Your next egg is a guaranteed Legendary' : `Legendary guaranteed in ${until} eggs`}
+        {soft && until > 1 ? ' · odds rising' : ''}
+      </Text>
+      <View style={styles.pityTrack}>
+        <View style={[styles.pitySoft, { left: `${((PITY_SOFT_FROM - 1) / PITY_HARD) * 100}%` }]} />
+        <View style={[styles.pityFill, { width: `${(Math.min(PITY_HARD, since + 1) / PITY_HARD) * 100}%` }]} />
+      </View>
+      <Text style={styles.body}>
+        Egg {since + 1} of {PITY_HARD} since your last Legendary. From egg {PITY_SOFT_FROM} the Legendary odds rise
+        each egg; egg {PITY_HARD} is always Legendary.
+      </Text>
+    </View>
+  );
+}
+
 /* ---------------------------------------------------------- the picker --- */
 
 /** Choose an egg: its hero pool, the grade table at every care band, and
@@ -101,16 +134,48 @@ export function EggPickerBody({
 }) {
   const [ticket, setTicket] = useState<Grade | null>(null);
   const tickets = GRADES.filter((g) => g !== 'common' && view.pet.tickets[g] > 0);
+  const day = view.pet.eggDay;
+  const since = view.pet.pity.since;
+  const free = ticket != null || day.prepaid;
+  const price = free ? 0 : day.nextPrice;
+  const short = price != null && price > view.shells;
   const choose = (egg: EggType) => {
     const ok = commit((doc, now) => chooseEggDoc(doc, now, egg, ticket));
     if (ok) onChosen();
   };
+  const chooseLabel = (egg: EggType) =>
+    price == null
+      ? 'No eggs left today'
+      : short
+        ? `Need ${price} shells`
+        : `Choose the ${EGG_LABEL[egg]} egg · ${price === 0 ? 'free' : `${price} shells`}`;
   return (
     <>
       <Text style={styles.body}>
         Pick an egg. Its hero is an even chance from that egg’s pool; its grade is rolled when it becomes a
         Child (15 min) — keep the egg warm and care for the Baby to raise the odds.
       </Text>
+      <NeonLabel>Eggs today</NeonLabel>
+      <Text style={styles.eggsToday}>
+        Free eggs today: {Math.min(day.used, day.free)}/{day.free} · {day.used}/{day.max} eggs today
+      </Text>
+      <Text style={styles.body}>
+        {day.prepaid
+          ? 'This egg is already paid for (you changed eggs) — picking it is free and doesn’t count.'
+          : ticket != null
+            ? 'A ticket egg brings its own egg — free, and it doesn’t count toward today.'
+            : day.nextPrice == null
+              ? `That’s all ${day.max} eggs for today — come back tomorrow (a ticket egg still works).`
+              : day.nextPrice === 0
+                ? `This egg is free. After the free ones, extra eggs cost shells (you have ${view.shells}).`
+                : `Next egg: ${day.nextPrice} shells (you have ${view.shells}).`}
+      </Text>
+      <Text style={styles.body}>
+        {day.dailyEgg
+          ? '✓ +1 free egg from today’s daily challenge.'
+          : 'Pass today’s daily challenge (Play) for +1 free egg.'}
+      </Text>
+      <PityBar since={since} />
       {tickets.length > 0 ? (
         <>
           <NeonLabel>Trade-up tickets</NeonLabel>
@@ -139,11 +204,14 @@ export function EggPickerBody({
             </View>
           </View>
           <HeroOddsLine egg={egg} />
-          <Text style={styles.body}>Grade by care{ticket ? ` (with a ${GRADE_LABEL[ticket]}+ ticket)` : ''}:</Text>
+          <Text style={styles.body}>
+            Grade by care{ticket ? ` (with a ${GRADE_LABEL[ticket]}+ ticket)` : ''}
+            {since + 1 >= PITY_SOFT_FROM ? ` (egg ${since + 1} since your last Legendary)` : ''}:
+          </Text>
           {CARE_BANDS.map((band) => (
-            <GradeRow key={band} label={CARE_BAND_LABEL[band]} odds={gradeOdds(band, ticket)} />
+            <GradeRow key={band} label={CARE_BAND_LABEL[band]} odds={gradeOdds(band, ticket, since)} />
           ))}
-          <NeonButton label={`Choose the ${EGG_LABEL[egg]} egg`} onPress={() => choose(egg)} />
+          <NeonButton label={chooseLabel(egg)} disabled={price == null || short} onPress={() => choose(egg)} />
         </View>
       ))}
     </>
@@ -168,6 +236,7 @@ export function OddsPanel({ view }: { view: PlayView }) {
         <HeroOddsLine egg={pet.egg} />
         <GradeRow odds={pv.gradeOdds} />
         {pet.ticket ? <Text style={styles.body}>Ticket: {GRADE_LABEL[pet.ticket]} or better, guaranteed.</Text> : null}
+        <PityBar since={pet.pity_from} />
       </>
     );
   }
@@ -186,8 +255,9 @@ export function OddsPanel({ view }: { view: PlayView }) {
         )}
         <Text style={[styles.result, { color: GRADE_COLOR[pet.grade ?? 'common'] }]}>
           Rolled: {gradedName(pet.grade, pet.name ?? heroName(pet.hero))} · {gradeTag(pet.grade ?? 'common')}
-          {pet.shiny ? ' · ✨ shiny' : ''}
+          {pet.shiny ? ` · ✨ shiny (${SHINY_STYLE_LABEL[pet.shiny_style ?? 'classic']})` : ''}
         </Text>
+        <PityBar since={pv.pity.since} />
       </>
     );
   }
@@ -296,6 +366,12 @@ export function CollectionPanel({
                 {rec?.shinies ? ` · ✨×${rec.shinies}` : ''}
                 {best ? ` · best ${gradeTag(best)}` : ''}
               </Text>
+              {rec?.styles.length ? (
+                <Text style={styles.body}>
+                  Shiny styles {rec.styles.length}/{SHINY_STYLES.length}: {rec.styles.map((st) => SHINY_STYLE_LABEL[st]).join(' · ')}
+                  {ownsAllStyles(rec) ? ' · ◈ every style' : ''}
+                </Text>
+              ) : null}
               {rec?.forms.length ? (
                 <Text style={styles.body}>Forms: {rec.forms.map((f) => f.charAt(0).toUpperCase() + f.slice(1)).join(' · ')}</Text>
               ) : null}
@@ -308,7 +384,7 @@ export function CollectionPanel({
                       width={70}
                       animate={false}
                       silhouette={!has}
-                      info={{ name: heroName(hero), grade: g, shiny: false, stars, egg, forms: [], band: null, days: null, dye: false }}
+                      info={{ name: heroName(hero), grade: g, shiny: false, stars, egg, forms: [], band: null, days: null, dye: false, allStyles: ownsAllStyles(rec) }}
                       sprite={<PetFigure pet={heroSample(hero, g)} baseBox={44} eggColor={eggColor} silhouette={!has} />}
                     />
                   );
@@ -431,6 +507,12 @@ const styles = StyleSheet.create({
   statRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   statValue: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.textPrimary, flexShrink: 1, textAlign: 'right' },
   hallMeta: { fontFamily: Fonts.mono, fontSize: 9, color: NEON.textMuted, textAlign: 'center', marginTop: 2, width: 96 },
+  eggsToday: { fontFamily: Fonts.monoBold, fontSize: 13, color: NEON.cyan },
+  pity: { gap: 4 },
+  pityText: { fontFamily: Fonts.monoBold, fontSize: 12, color: GRADE_COLOR.legendary },
+  pityTrack: { height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.08)', overflow: 'hidden' },
+  pityFill: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: GRADE_COLOR.legendary, opacity: 0.85 },
+  pitySoft: { position: 'absolute', top: 0, bottom: 0, right: 0, backgroundColor: 'rgba(255, 216, 107, 0.18)' },
 });
 
 /* ------------------------------------------------------------- journal --- */
@@ -452,6 +534,11 @@ export function JournalTab({ view, commit }: { view: PlayView; commit: Commit })
     ['Released · reborn', `${st.releases} · ${view.pet.rebirths}`],
     ['TD waves cleared', view.lifetimeWavesCleared],
     ['Days played', st.days_played],
+    // v27: pity, Stones and shiny styles.
+    ['Eggs since last Legendary', `${view.pet.pity.since} · guaranteed in ${view.pet.pity.untilLegendary}`],
+    ['Shine Stones', `${view.pet.stones.held} held · ${view.pet.stones.used} used`],
+    ['Glimmers', `${view.pet.stones.glimmers}/${GLIMMER_PITY}`],
+    ['Shiny styles owned', Object.values(view.pet.heroes).reduce((n, r) => n + r.styles.length, 0)],
     // v26: mini-game ranks + bests.
     ['Catch rank', `${view.pet.ranks.catch} · best ${Math.max(...Object.values(view.pet.records.catch).map((r) => r.best))}`],
     ['Train rank', `${view.pet.ranks.train} · best ${Math.max(...Object.values(view.pet.records.train).map((r) => r.best))}`],

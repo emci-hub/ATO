@@ -10,6 +10,10 @@
  *     (old architecture), it falls back to the tint wash (the same copy at
  *     ~38% opacity, as the form tints already work). Dev can force either.
  *   - A shiny's colour is its own: dyes and Wardrobe tints never apply.
+ *   - v27: a shiny's style picks the colour — Classic = the hero's own shiny
+ *     colour; a Prism style (preview only in this build) its own colour and
+ *     sparkle (Prism: rainbow sparkles). A pet that missed a Shine Stone
+ *     wears a soft glimmer glow until it turns shiny.
  */
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -25,7 +29,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Circle, Defs, Ellipse, RadialGradient, Stop } from 'react-native-svg';
 
-import { GRADE_COLOR, HERO_DYE_COLOR, HERO_SHINY_COLOR, type Grade } from '@/play/pet-eggs';
+import { GRADE_COLOR, HERO_DYE_COLOR, SHINY_SPARKLE, shinyColorFor, type Grade, type ShinyStyle } from '@/play/pet-eggs';
 
 /* --------------------------------------------------------- blend mode --- */
 
@@ -60,10 +64,16 @@ export function useBlendRecolor(): boolean {
   return BLEND_SUPPORTED;
 }
 
-/** The sprite recolour for a pet: shiny first, else a worn 3★ dye, else none. */
-export function petRecolor(hero: string | null, shiny: boolean, dyeOn: boolean): string | null {
+/** The sprite recolour for a pet: shiny first (its style's colour), else a
+ * worn 3★ dye, else none. A dye never shows on a shiny. */
+export function petRecolor(
+  hero: string | null,
+  shiny: boolean,
+  dyeOn: boolean,
+  style: ShinyStyle | null = null,
+): string | null {
   if (!hero) return null;
-  if (shiny) return HERO_SHINY_COLOR[hero] ?? null;
+  if (shiny) return shinyColorFor(hero, style ?? 'classic');
   return dyeOn ? (HERO_DYE_COLOR[hero] ?? null) : null;
 }
 
@@ -137,7 +147,14 @@ export function GradeAura({
 
 /* ------------------------------------------------------------- shiny --- */
 
-function Twinkle({ x, y, delay }: { x: number; y: number; delay: number }) {
+const RAINBOW_SPARKLES = ['#FF5F6D', '#FFC371', '#7CFFB2', '#5CC8FF', '#B78CFF'];
+
+function sparkleColor(style: ShinyStyle | null, i: number): string {
+  const c = SHINY_SPARKLE[style ?? 'classic'];
+  return c === 'rainbow' ? RAINBOW_SPARKLES[i % RAINBOW_SPARKLES.length] : c;
+}
+
+function Twinkle({ x, y, delay, color }: { x: number; y: number; delay: number; color: string }) {
   const t = useSharedValue(0);
   useEffect(() => {
     t.value = withDelay(
@@ -149,13 +166,24 @@ function Twinkle({ x, y, delay }: { x: number; y: number; delay: number }) {
   const style = useAnimatedStyle(() => ({ opacity: t.value, transform: [{ scale: 0.6 + t.value * 0.6 }] }));
   return (
     <Animated.View pointerEvents="none" style={[styles.twinkle, { left: x, top: y }, style]}>
-      <Text style={styles.twinkleText}>✦</Text>
+      <Text style={[styles.twinkleText, { color }]}>✦</Text>
     </Animated.View>
   );
 }
 
-/** A shiny's sparkles and the gold ring at its feet (still when not animating). */
-export function ShinyOverlay({ size, footAt, animate }: { size: number; footAt: number; animate: boolean }) {
+/** A shiny's sparkles (its style's colour) and the gold ring at its feet
+ * (still when not animating). */
+export function ShinyOverlay({
+  size,
+  footAt,
+  animate,
+  style = null,
+}: {
+  size: number;
+  footAt: number;
+  animate: boolean;
+  style?: ShinyStyle | null;
+}) {
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
@@ -176,11 +204,41 @@ export function ShinyOverlay({ size, footAt, animate }: { size: number; footAt: 
             [0.72, 0.28],
             [0.3, 0.6],
             [0.8, 0.62],
-          ].map(([x, y], i) => <Twinkle key={i} x={x * size} y={y * size} delay={i * 420} />)
+          ].map(([x, y], i) => <Twinkle key={i} x={x * size} y={y * size} delay={i * 420} color={sparkleColor(style, i)} />)
         : (
-          <Text style={[styles.twinkleText, styles.twinkleStill, { left: size * 0.72, top: size * 0.22 }]}>✦</Text>
+          <Text style={[styles.twinkleText, styles.twinkleStill, { left: size * 0.72, top: size * 0.22, color: sparkleColor(style, 0) }]}>
+            ✦
+          </Text>
         )}
     </View>
+  );
+}
+
+/** v27 — the glimmer glow: a pet that missed a Shine Stone shimmers softly at
+ * its feet (looks only; it goes when the pet turns shiny). */
+export function GlimmerGlow({ size, footAt, animate }: { size: number; footAt: number; animate: boolean }) {
+  const t = useSharedValue(0.5);
+  useEffect(() => {
+    if (!animate) {
+      t.value = 0.5;
+      return;
+    }
+    t.value = withRepeat(withSequence(withTiming(1, { duration: 1400 }), withTiming(0.25, { duration: 1400 })), -1);
+    return () => cancelAnimation(t);
+  }, [t, animate]);
+  const pulse = useAnimatedStyle(() => ({ opacity: t.value }));
+  return (
+    <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, pulse]}>
+      <Svg width={size} height={size}>
+        <Defs>
+          <RadialGradient id="glimmer" cx="50%" cy="50%" r="50%">
+            <Stop offset="0" stopColor="#E9F7FF" stopOpacity={0.55} />
+            <Stop offset="1" stopColor="#9FD8FF" stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Ellipse cx={size / 2} cy={footAt * size} rx={size * 0.34} ry={size * 0.1} fill="url(#glimmer)" />
+      </Svg>
+    </Animated.View>
   );
 }
 

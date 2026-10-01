@@ -6,7 +6,8 @@
  * purple with glow + drifting sparkles; Legendary gold with a holo shine
  * sweeping across. Shiny adds a rainbow foil edge and a shine on top; 5★ adds
  * an inner gold frame with corner gems. Silhouette = a missing Collection slot
- * (black sprite, "???", its grade frame dimmed).
+ * (black sprite, "???", its grade frame dimmed). v27: owning every shiny style
+ * of a hero adds a looks-only prism frame; a resting pet's card says so.
  *
  * Perf: only a card with `animate` moves (the reveal, the opened card); grids
  * pass `animate={false}` so a full Collection is static.
@@ -61,6 +62,12 @@ export type PetCardInfo = {
   ribbons?: readonly ('collector' | 'legend')[];
   /** v26 — your mini-game rank titles (the live pet's card). */
   ranks?: { catch: string; train: string } | null;
+  /** v27 — resting in the Den (frozen). */
+  resting?: boolean;
+  /** v27 — every shiny style of this hero owned: the prism frame (looks only). */
+  allStyles?: boolean;
+  /** v27 — the shiny's style label ("Classic"), shown next to ✨. */
+  styleLabel?: string | null;
 };
 
 const RAINBOW = ['#FF5F6D', '#FFC371', '#F9F871', '#7CFFB2', '#5CC8FF', '#B78CFF', '#FF5FD2'];
@@ -146,7 +153,9 @@ export function PetCard({
       accessibilityLabel={
         silhouette
           ? `${GRADE_LABEL[grade]} card, not found yet`
-          : `${gradedName(info.grade, info.name)}, ${GRADE_LABEL[grade]}${info.shiny ? ', shiny' : ''}, ${info.stars} of 5 stars`
+          : `${gradedName(info.grade, info.name)}, ${GRADE_LABEL[grade]}${info.shiny ? ', shiny' : ''}, ${info.stars} of 5 stars${
+              info.allStyles ? ', every shiny style' : ''
+            }${info.resting ? ', resting in the Den' : ''}`
       }>
       {/* Frame: grade colour; shiny = rainbow foil. */}
       <Svg width={width} height={height} style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -172,6 +181,19 @@ export function PetCard({
           stroke={info.shiny && !silhouette ? 'url(#foil)' : color}
           strokeWidth={info.shiny && !silhouette ? border + 1 : border}
         />
+        {info.allStyles && !silhouette ? (
+          <Rect
+            x={border + 1.5}
+            y={border + 1.5}
+            width={width - 2 * (border + 1.5)}
+            height={height - 2 * (border + 1.5)}
+            rx={small ? 7 : 12}
+            fill="none"
+            stroke="url(#foil)"
+            strokeWidth={1.5}
+            strokeDasharray="2 2"
+          />
+        ) : null}
         {five ? (
           <Rect
             x={border + 4}
@@ -211,6 +233,8 @@ export function PetCard({
         </Text>
       ) : null}
       {!small && !silhouette && info.hero ? <Text style={styles.meta}>{info.hero}</Text> : null}
+      {!small && !silhouette && info.resting ? <Text style={[styles.meta, styles.resting]}>💤 Resting in the Den</Text> : null}
+      {!small && !silhouette && info.allStyles ? <Text style={[styles.meta, styles.resting]}>◈ Every shiny style</Text> : null}
       {!small && !silhouette && info.ranks ? (
         <Text style={styles.meta} numberOfLines={1}>
           🍎 {info.ranks.catch} · 🎯 {info.ranks.train}
@@ -234,6 +258,7 @@ export function PetCard({
               {info.days != null ? ` · ${info.days}d` : ''}
               {info.dye ? ' · 🎨 dye' : ''}
               {info.shinyCount ? ` · ✨×${info.shinyCount}` : ''}
+              {info.shiny && info.styleLabel ? ` · ✨ ${info.styleLabel}` : ''}
             </Text>
           ) : null}
           {info.forms.length > 0 && !silhouette ? (
@@ -295,6 +320,7 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   gem: { position: 'absolute', color: '#FFE9A8', fontSize: 10 },
+  resting: { color: NEON.cyan },
   sweep: { position: 'absolute', left: 0 },
   sparkle: { position: 'absolute', fontSize: 12 },
 });

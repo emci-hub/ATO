@@ -57,7 +57,7 @@ import {
   type EggType,
 } from '@/play/pet-eggs';
 import { EggShape } from '@/play/pet-figure';
-import { GradeAura, ShinyOverlay } from '@/play/pet-looks';
+import { GlimmerGlow, GradeAura, ShinyOverlay } from '@/play/pet-looks';
 import { wornLook, type PetWear } from '@/play/pet-cosmetics';
 import { heartsText, petStatusLabel, type PetStatus } from '@/play/pet-status';
 import { PET_TALK_HOLD_MS, PET_TALK_TYPE_MS } from '@/play/pet-talk';
@@ -617,7 +617,8 @@ export function PetRoom({
               />
             </Animated.View>
           </Pressable>
-          {revealed && pet.shiny ? <ShinyOverlay size={box} footAt={footAt} animate={fxAnimate} /> : null}
+          {revealed && pet.shiny ? <ShinyOverlay size={box} footAt={footAt} animate={fxAnimate} style={pet.shiny_style} /> : null}
+          {revealed && !pet.shiny && pet.glimmer ? <GlimmerGlow size={box} footAt={footAt} animate={fxAnimate} /> : null}
           {asleep ? <Text style={[styles.zzz, { left: box * 0.6, top: box * 0.25 }]}>💤</Text> : null}
           <Animated.Text style={[styles.heart, { left: box / 2 - 10, top: box * 0.3 }, heartStyle]} pointerEvents="none">
             ❤

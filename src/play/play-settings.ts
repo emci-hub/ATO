@@ -11,8 +11,10 @@
  *   - Journal counters start when this ships (older numbers aren't stored),
  *     except TD waves and rebirths, which were always kept.
  *   - Milestone rewards are looks / egg-grade only: trade-up tickets, existing
- *     Wardrobe cosmetics, a hero's dye unlocked early, a card ribbon. Never
- *     tokens or shells (those buy TD Powers).
+ *     Wardrobe cosmetics, a hero's dye unlocked early, a card ribbon, and
+ *     (v27) Shine Stones. Never tokens or shells (those buy TD Powers).
+ *   - Days played (v27) use the pet's day rule (`petDayHolds`), so setting
+ *     the clock back and forth can't farm the every-5th-day Shine Stone.
  */
 import { petDayHolds } from '@/play/pet';
 import type { Grade } from './pet-eggs';

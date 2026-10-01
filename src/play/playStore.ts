@@ -1132,7 +1132,15 @@ export type PetView = {
   /** v27 — the Den: resting pets (frozen), slots owned / in use, the next
    * slot's price (null = at the most), and why a swap is blocked right now
    * (the mini-game overlay is added by the screen). */
-  den: { resting: readonly PetState[]; slots: number; used: number; nextSlotPrice: number | null; block: DenSwapBlock | null };
+  den: {
+    resting: readonly PetState[];
+    slots: number;
+    used: number;
+    nextSlotPrice: number | null;
+    block: DenSwapBlock | null;
+    /** Each resting pet's dye (by uid), the same rule as the active pet's. */
+    dyeOn: Readonly<Record<number, boolean>>;
+  };
   /** v27 — today's eggs (free, prices, the most). */
   eggDay: EggDayView;
   /** v27 — Legendary pity: eggs since the last Legendary, eggs until one is
@@ -1681,6 +1689,7 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
       used: denUsed(doc.pet_den),
       nextSlotPrice: denSlotPrice(doc.den_slots),
       block: denSwapBlock({ diving: doc.dive_run != null, away, gameOpen: false, active: doc.pet }),
+      dyeOn: Object.fromEntries(doc.pet_den.map((p) => [p.uid, petDyeOn(doc, p)])),
     },
     eggDay: eggDayOf(doc, now),
     pity: {
@@ -2048,6 +2057,7 @@ export function devPetForce(doc: PlayStoreDoc, now: number, force: { grade?: Gra
       hero,
       grade: force.grade ?? pet.grade ?? 'common',
       shiny: force.shiny ?? pet.shiny,
+      shiny_style: (force.shiny ?? pet.shiny) ? (pet.shiny_style ?? 'classic') : null,
       band: pet.band ?? petCareBand(pet),
     },
   };
