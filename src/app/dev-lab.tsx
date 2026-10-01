@@ -103,6 +103,7 @@ import {
   DEV_TEST_HANDLE,
   DEV_TEST_USER_ID,
   applyDevIntakeStagePreset,
+  resetMyTestData,
   resetDevTestUserToFreshSignup,
 } from '@/lib/dev-test-user';
 import { checkHandleAvailable } from '@/lib/me';
@@ -746,7 +747,7 @@ function BandDetailStepper() {
  * of the guard too, so this is a convenience gate, not the only one.
  */
 function IntakeStagePresets() {
-  const { me, refresh } = useMeContext();
+  const { me, refresh, devAccess } = useMeContext();
   // Rule lifted 2026-10-01 (emci): any signed-in account may seed ITS OWN intake
   // state pre-launch, not only the dev-test user.
   const canSeed = !!me;
@@ -756,6 +757,32 @@ function IntakeStagePresets() {
   const [error, setError] = useState<string | null>(null);
   // On a real account a stage OVERWRITES real answers, so it takes two taps.
   const [armed, setArmed] = useState<DevIntakeStageId | null>(null);
+  // The full clear (server-side, wave75): root only, always two taps.
+  const [clearArmed, setClearArmed] = useState(false);
+  const [clearBusy, setClearBusy] = useState(false);
+  const [clearNote, setClearNote] = useState<string | null>(null);
+
+  async function clearEverything() {
+    if (clearBusy) return;
+    if (!clearArmed) {
+      setClearArmed(true);
+      setTimeout(() => setClearArmed(false), 5000);
+      return;
+    }
+    setClearArmed(false);
+    setClearBusy(true);
+    setClearNote(null);
+    try {
+      await resetMyTestData();
+      await refresh();
+      if (me) setTracks(await fetchTraitTracks(me.id));
+      setClearNote('Cleared. This account is back at 0 of 50, with no tokens.');
+    } catch (err) {
+      setClearNote(err instanceof Error ? err.message : 'Could not clear this account.');
+    } finally {
+      setClearBusy(false);
+    }
+  }
 
   useEffect(() => {
     if (!canSeed || !me) return;
@@ -834,6 +861,27 @@ function IntakeStagePresets() {
           </ThemedText>
         </View>
       ))}
+      {devAccess.isRoot ? (
+        <View>
+          <Chip
+            label={
+              clearBusy
+                ? 'clearing…'
+                : clearArmed
+                  ? 'Tap again to clear EVERYTHING on this account'
+                  : 'Clear all my questions (full)'
+            }
+            selected={false}
+            onPress={() => void clearEverything()}
+          />
+          <ThemedText type="small" themeColor="textSecondary">
+            Root only. Wipes this account&apos;s answers, trait scores, saved rounds, token
+            history and balance, insights, category reads and story — so the +21 can be earned
+            again. Keeps your profile. Cannot be undone.
+          </ThemedText>
+          {clearNote ? <ThemedText type="small">{clearNote}</ThemedText> : null}
+        </View>
+      ) : null}
       <ThemedText type="small" themeColor="textSecondary">
         Fresh signup does not reopen the &quot;Introduce yourself&quot; form: that
         screen only renders when there is no me row, and deleting the me row

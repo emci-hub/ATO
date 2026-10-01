@@ -485,6 +485,20 @@ function main() {
   assert.match(hubSrc, /applyDevIntakeStagePreset/);
   ok('Dev Lab intake-stage panel: pre-launch, any signed-in account, two taps on a real one');
 
+  // The FULL clear (wave75) is a server function; the app only calls it. The
+  // button is root only and always takes two taps; the server enforces root,
+  // own-account and invite-only again, so the client gate is a convenience.
+  assert.match(intakePanel, /\{devAccess\.isRoot \? \(/, 'the full-clear button shows for root only');
+  assert.match(intakePanel, /if \(!clearArmed\) \{\s*setClearArmed\(true\);/, 'the full clear takes a second tap');
+  assert.match(moduleSrc, /export async function resetMyTestData\(\)/);
+  assert.match(moduleSrc, /supabase\.rpc\('reset_my_test_data'\)/, 'no account id is passed — the server uses the caller');
+  const wave75 = read('supabase/migrations/wave75_reset_my_test_data.sql');
+  assert.match(wave75, /if not public\.is_root\(\) then/, 'server: root only');
+  assert.match(wave75, /uid uuid := auth\.uid\(\)/, 'server: the caller\'s own account');
+  assert.match(wave75, /v_mode is distinct from 'invite_only'/, 'server: refuses once sign-up is public');
+  assert.doesNotMatch(wave75, /delete from public\.(ai_usage|checks|crisis_flags|me)\b/, 'server: leaves AI usage, Checks, safety rows and the profile alone');
+  ok('full clear: root-only button, two taps, server enforces root + own account + invite-only');
+
   /* -------------------------------------------------------------------------
    * Reset to fresh signup (wave66) — deletes the me row, unlike every
    * intake-stage preset above.

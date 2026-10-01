@@ -461,3 +461,28 @@ export async function resetDevTestUserToFreshSignup(): Promise<void> {
   const { error } = await supabase.rpc('reset_dev_test_user');
   if (error) throw error;
 }
+
+/** Shown when the server function behind "Clear all my questions" is not there yet. */
+export const RESET_MY_TEST_DATA_NOT_APPLIED =
+  'This needs the wave75 database change, which is not applied yet.';
+export const RESET_MY_TEST_DATA_NOT_ROOT = 'Only a root account can clear everything.';
+
+/**
+ * "Clear all my questions" — the FULL clear for the signed-in account: answers,
+ * trait scores, saved rounds, both token ledgers (so the once-ever +21 can be
+ * earned again) and generated content. Keeps the profile. The server does the
+ * work and enforces the rules (root only, own account only, invite-only phase):
+ * `reset_my_test_data()`, wave75. Rule lifted by emci 2026-10-01 — this is NOT
+ * limited to the dev-test user.
+ */
+export async function resetMyTestData(): Promise<void> {
+  if (!PRE_LAUNCH_DEV) throw new Error('Clearing test data is pre-launch only');
+  const { error } = await supabase.rpc('reset_my_test_data');
+  if (!error) return;
+  const text = `${error.code ?? ''} ${error.message ?? ''}`;
+  // PostgREST answers PGRST202 / "Could not find the function" until wave75 is applied.
+  if (/PGRST202|Could not find the function/i.test(text)) throw new Error(RESET_MY_TEST_DATA_NOT_APPLIED);
+  if (/root only/i.test(text)) throw new Error(RESET_MY_TEST_DATA_NOT_ROOT);
+  // A real Error, so the panel shows the server's own reason (e.g. sign-up is public).
+  throw new Error(error.message || 'Could not clear this account.');
+}

@@ -1,14 +1,17 @@
-# Proposals — written, NOT applied
+# Proposals
 
-Two server-side fixes, drafted on 2026-10-01 and waiting for emci's review.
-Nothing in this folder runs. Nothing here is a migration or a deployed function
-until it is deliberately moved and applied.
+Server-side fixes drafted on 2026-10-01.
 
 | File | What it is | Status |
 |---|---|---|
-| `wave74_bank_pool_owner_and_ai_refund.sql` | Database change | NOT applied |
-| `ai-generate-refund-and-fallback.patch` | Change to the `ai-generate` Edge Function | NOT deployed |
-| `wave75_reset_my_test_data.sql` | Database change (test tool) | NOT applied |
+| `supabase/migrations/wave74_bank_pool_owner_and_ai_refund.sql` | Database change | APPROVED by emci 2026-10-01 — **not applied yet** (moved out of this folder) |
+| `supabase/migrations/wave75_reset_my_test_data.sql` | Database change (test tool) | APPROVED by emci 2026-10-01 — **not applied yet** (moved out of this folder) |
+| `ai-generate-refund-and-fallback.patch` | Change to the `ai-generate` Edge Function | NOT approved, NOT deployed |
+
+The two approved files could not be applied by the session that wrote them (it
+was not permitted to touch the live database). To apply: Supabase dashboard →
+SQL editor → paste the whole file → Run. wave74 first, then wave75. For wave75
+the account you test on must be root (`me.is_root = true`).
 
 ## 1. Shared question pool lock (the SQL file, part 1)
 
@@ -59,6 +62,6 @@ today's AI call count, Check history and safety rows alone.
 
 ## To apply (only after review)
 
-1. Copy the SQL to `supabase/migrations/wave74_bank_pool_owner_and_ai_refund.sql` and apply it.
+1. Apply `supabase/migrations/wave74_bank_pool_owner_and_ai_refund.sql` (approved; see the top of this file).
 2. `git apply docs/proposals/ai-generate-refund-and-fallback.patch`, then deploy `ai-generate`.
 3. Make the two small app changes above and ship them over the air.

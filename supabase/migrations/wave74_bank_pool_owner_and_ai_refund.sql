@@ -1,9 +1,12 @@
 -- ============================================================================
--- DRAFT — NOT APPLIED. NOT A MIGRATION YET.
--- Lives in docs/proposals/ on purpose so nothing applies it by accident.
--- To use it: emci reviews, then it is copied to
---   supabase/migrations/wave74_bank_pool_owner_and_ai_refund.sql
--- and applied. Written 2026-10-01.
+-- APPROVED by emci 2026-10-01 ("Apply"). ⚠️ NOT APPLIED YET.
+-- The session that wrote it was not permitted to read or change the live
+-- database, so it must be run by hand (Supabase dashboard → SQL editor → paste
+-- this whole file → Run) or by a session that is allowed to. Update this header
+-- and docs/NOW.md once it has run.
+--
+-- Part 2 (refund_ai_call) is safe to apply now but does nothing until the
+-- ai-generate patch in docs/proposals/ is deployed — which is NOT approved yet.
 -- ============================================================================
 --
 -- PART 1 — SHARED QUESTION POOL: one user's AI questions stop reaching others.

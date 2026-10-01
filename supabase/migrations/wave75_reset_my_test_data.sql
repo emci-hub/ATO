@@ -1,9 +1,9 @@
 -- ============================================================================
--- DRAFT — NOT APPLIED. NOT A MIGRATION YET.
--- Lives in docs/proposals/ on purpose so nothing applies it by accident.
--- To use it: emci reviews, then it is copied to
---   supabase/migrations/wave75_reset_my_test_data.sql
--- and applied. Written 2026-10-01; tightened after review the same day.
+-- APPROVED by emci 2026-10-01 ("Apply"). ⚠️ NOT APPLIED YET.
+-- The session that wrote it was not permitted to read or change the live
+-- database, so it must be run by hand (Supabase dashboard → SQL editor → paste
+-- this whole file → Run) or by a session that is allowed to. Update this header
+-- and docs/NOW.md once it has run.
 -- ============================================================================
 --
 -- WHY. emci lifted the "dev-test user only" rule (2026-10-01) so testing can
@@ -124,5 +124,7 @@ comment on function public.reset_my_test_data() is
 --      function refuses; set is_root on it first, or test on the root account.
 --   2. Any table added after wave73 that holds per-user question / trait / token
 --      rows is added to the list above.
---   3. After applying, the app needs one small button wired to this function
---      (not built yet), and that button must be shown to root only.
+--   3. The app button is built: Dev Tools Hub → Intake stage → "Clear all my
+--      questions (full)", root only. Still to do in the app: also clear the
+--      on-device caches after a clear (cached insight, answered-option stamps,
+--      page position), or a re-test can show stale screens until a restart.
