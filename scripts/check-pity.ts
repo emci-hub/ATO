@@ -29,6 +29,7 @@ import {
   gradeOdds,
   nextEggPrice,
   pityAfterReveal,
+  pityEggNumber,
   PITY_SOFT_STEP_PP,
   pityLegendaryPct,
   rollPet,
@@ -36,11 +37,13 @@ import {
   type Grade,
 } from '../src/play/pet-eggs';
 import type { RoundOutcome } from '../src/play/pet-game-rules';
+import { TIDE_PITY_STEP } from '../src/play/tide';
 import {
   activateDenPet,
   changeEggDoc,
   chooseEggDoc,
   defaultPlayStore,
+  devGrantTide,
   devPetEndStage,
   devPetSetStage,
   eggDayOf,
@@ -63,6 +66,11 @@ function ok(label: string) {
 }
 
 const T0 = new Date(2026, 9, 1, 12, 0, 0).getTime();
+
+/** Streak already claimed today, so shell math below is the egg price alone. */
+function claimedToday(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  return { ...doc, streak: { next: 2, ymd: localYmd(new Date(now)), last: 1 } };
+}
 const MIN = 60_000;
 const D = 24 * 60 * MIN;
 const close = (a: number, b: number, eps = 1e-9) => Math.abs(a - b) < eps;
@@ -157,7 +165,10 @@ function hatch(doc: PlayStoreDoc, now: number): PlayStoreDoc {
     doc = hatch(doc, now + MIN);
     gap += 1;
     const grade = doc.pet.grade!;
-    assert.equal(doc.eggs_since_legendary, grade === 'legendary' ? 0 : before + 1, 'counter: +1, or 0 on a Legendary');
+    const step = doc.pet.pity_step;
+    assert.ok(step === 1 || step === 2);
+    assert.equal(doc.eggs_since_legendary, grade === 'legendary' ? 0 : before + step, 'counter moves by the stamped step, or 0 on a Legendary');
+    if (before + step >= PITY_HARD) assert.equal(grade, 'legendary', 'a step that lands on egg 40 is Legendary');
     if (grade === 'legendary') {
       legends += 1;
       worst = Math.max(worst, gap);
@@ -257,7 +268,7 @@ ok('a ticket Legendary resets it; swap / rebirth / the clock / old saves never d
     }
     return { doc, paid };
   };
-  const first = day({ ...defaultPlayStore(T0), shells: 1000, den_slots: 12 }, T0);
+  const first = day(claimedToday({ ...defaultPlayStore(T0), shells: 1000, den_slots: 12 }, T0), T0);
   assert.deepEqual(first.paid, [0, 0, 10, 20, 40, 80]);
   assert.deepEqual(eggPickCost(first.doc, T0 + 10 * MIN, null), { ok: false, reason: 'no_eggs_left' });
   assert.equal(chooseEggDoc(first.doc, T0 + 10 * MIN, 'knight', null, rng), null, 'a 7th egg is refused');
@@ -267,7 +278,7 @@ ok('a ticket Legendary resets it; swap / rebirth / the clock / old saves never d
   // The clock can't reopen free eggs: set it back a day or two, or forward and back.
   assert.equal(eggDayOf(first.doc, T0 - D).used, 6, 'a day back: still used up');
   assert.equal(eggDayOf(first.doc, T0 - 2 * D).used, 6);
-  let fwd = chooseEggDoc({ ...defaultPlayStore(T0), shells: 0 }, T0 + D, 'knight', null, rng)!;
+  let fwd = chooseEggDoc(claimedToday({ ...defaultPlayStore(T0), shells: 0 }, T0 + D), T0 + D, 'knight', null, rng)!;
   fwd = newEggDoc(fwd, T0 + D + 1).doc;
   fwd = chooseEggDoc(fwd, T0 + D + 2, 'knight', null, rng)!;
   fwd = newEggDoc(fwd, T0 + D + 3).doc;
@@ -290,14 +301,14 @@ ok('pacing: 2 free, then 10/20/40/80, 6 max; resets next day; the clock (back, o
   };
   const used = eggDayOf(doc, T0).used;
   assert.equal(used, 6);
-  const t = chooseEggDoc({ ...doc, shells: 0 }, T0, 'wizard', 'rare', rng)!;
+  const t = chooseEggDoc(claimedToday({ ...doc, shells: 0 }, T0), T0, 'wizard', 'rare', rng)!;
   assert.ok(t, 'a ticket egg works even with no eggs left today');
   assert.equal(t.shells, 0);
   assert.equal(t.eggs_today, doc.eggs_today, 'and doesn’t count');
   assert.equal(eggDayOf(t, T0).used, used);
 
   // "Change egg": the blank is prepaid — picking again is free and doesn't count.
-  const one = chooseEggDoc({ ...defaultPlayStore(T0), shells: 100 }, T0, 'knight', null, rng)!;
+  const one = chooseEggDoc(claimedToday({ ...defaultPlayStore(T0), shells: 100 }, T0), T0, 'knight', null, rng)!;
   const two = chooseEggDoc(newEggDoc(one, T0 + 1).doc, T0 + 2, 'knight', null, rng)!;
   const three = chooseEggDoc(newEggDoc(two, T0 + 3).doc, T0 + 4, 'knight', null, rng)!;
   assert.equal(three.shells, 90, 'the 3rd egg cost 10');
@@ -328,5 +339,68 @@ ok('a ticket egg and a "Change egg" pick are free and never count');
   assert.equal(finishPetRound(doc, T0 - D, 'catch', pass, { level: 'normal', score: 40, daily: true }).result.dailyEgg, false, 'the clock set back can’t earn it again');
 }
 ok('the daily-challenge egg: once a day on a pass (either game), not on a fail or a normal round, not by setting the clock back');
+
+/* ------------------------------------------------- step 2 (Tide Pass) --- */
+
+{
+  assert.equal(TIDE_PITY_STEP, 2);
+  assert.equal(pityEggNumber(0, 1), 1, 'step 1 is still Part D');
+  assert.equal(pityEggNumber(0, 2), 2);
+  assert.equal(eggsUntilLegendary(0, 2), 20, 'from zero, egg 20 is the guarantee');
+  assert.equal(eggsUntilLegendary(38, 2), 1);
+  assert.equal(pityAfterReveal(38, 'rare', 2), 39, 'step 2 from 38 clamps at 39');
+  assert.equal(pityAfterReveal(38, 'rare', 1), 39);
+  assert.equal(pityAfterReveal(pityAfterReveal(0, 'epic', 2), 'rare', 1), 3, 'mixed steps add, they do not restart');
+  const base = gradeOdds('poor', null, 0, 1).legendary;
+  assert.ok(close(gradeOdds('poor', null, 0, 2).legendary, base), 'step 2 does not change the odds table before soft pity');
+  assert.ok(close(gradeOdds('poor', null, 28, 1).legendary, base), 'step 1 at 28 is still egg 29');
+  assert.ok(close(gradeOdds('poor', null, 28, 2).legendary, base + 1), 'step 2 at 28 is egg 30, the first soft step');
+  assert.equal(gradeOdds('poor', null, 38, 2).legendary, 100);
+  assert.equal(gradeOdds('poor', null, 39, 2).legendary, 100);
+  let since = 0;
+  for (let egg = 1; egg <= 19; egg += 1) {
+    assert.ok(gradeOdds('poor', null, since, 2).legendary < 100, `egg ${egg} is not yet certain`);
+    since = pityAfterReveal(since, 'epic', 2);
+  }
+  assert.equal(since, 38);
+  assert.equal(gradeOdds('poor', null, since, 2).legendary, 100, 'the 20th egg is Legendary');
+  for (let seed = 1; seed <= 40; seed += 1) {
+    assert.equal(rollPet(seed, 'knight', 'poor', null, 38, 2).grade, 'legendary');
+    assert.equal(rollPet(seed, 'knight', 'poor', null, 39, 1).grade, 'legendary');
+  }
+
+  const N = 8_000;
+  const seeds = seededRng(909);
+  for (const step of [1, 2] as const) {
+    for (let pos = 0; pos < PITY_HARD; pos += 1) {
+      const odds = gradeOdds('poor', null, pos, step);
+      const seen: Record<Grade, number> = { common: 0, rare: 0, epic: 0, legendary: 0 };
+      for (let i = 0; i < N; i += 1) seen[rollPet(Math.floor(seeds() * 2 ** 32), 'knight', 'poor', null, pos, step).grade] += 1;
+      for (const g of GRADES) {
+        if (odds[g] === 0 || odds[g] === 100) {
+          assert.equal(seen[g], odds[g] === 100 ? N : 0, `step ${step} at ${pos}: ${g} is certain`);
+        } else {
+          const got = (seen[g] / N) * 100;
+          assert.ok(Math.abs(got - odds[g]) < 2, `step ${step} at ${pos}: ${g} rolled ${got.toFixed(2)}% vs shown ${odds[g].toFixed(2)}%`);
+        }
+      }
+    }
+  }
+
+  let tideDoc = devGrantTide({ ...defaultPlayStore(T0), eggs_since_legendary: 10 }, T0);
+  const view = playView(tideDoc, T0).pet;
+  assert.equal(view.pity.step, TIDE_PITY_STEP);
+  assert.deepEqual(view.pity.nextOdds, gradeOdds('poor', null, 10, TIDE_PITY_STEP), 'the picker shows the step it will roll');
+  tideDoc = chooseEggDoc(tideDoc, T0, 'knight', null, rng)!;
+  assert.equal(tideDoc.pet.pity_step, TIDE_PITY_STEP, 'the pick stamps the live step');
+  const stamped = tideDoc.pet.pity_from;
+  tideDoc = hatch(tideDoc, T0 + MIN);
+  assert.equal(
+    tideDoc.eggs_since_legendary,
+    tideDoc.pet.grade === 'legendary' ? 0 : stamped + TIDE_PITY_STEP,
+    'the reveal spends the stamped step',
+  );
+}
+ok('step 2: egg 20 is guaranteed, step 2 from 38 still guarantees the next egg, shown odds are the rolled odds at every position 0–39');
 
 console.log(`\ncheck:pity — ${passed} groups passed.`);

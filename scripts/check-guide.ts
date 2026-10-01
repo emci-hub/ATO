@@ -36,7 +36,7 @@ import {
   PITY_HARD,
   PITY_SOFT_FROM,
   PRISM_STYLES,
-  PRISM_STYLE_ODDS,
+  PRISM_STYLE_COST,
   SHINY_STYLE_LABEL,
   STONE_EVERY_DAYS,
   STONE_ODDS,
@@ -150,7 +150,12 @@ ok('no hand-typed numbers: every number in the Guide comes from a code constant'
   assert.ok(den.includes('frozen') && den.includes('during a dive') && den.includes('expedition') && den.includes('mini-game'), 'den: freeze + swap blocks');
   const stones = text('stones');
   assert.ok(stones.includes(`${Math.round(STONE_ODDS * 100)}% chance`) && stones.includes(`With ${GLIMMER_PITY} glimmers`), 'stones: odds + glimmer pity');
-  for (const s of PRISM_STYLES) assert.ok(stones.includes(`${SHINY_STYLE_LABEL[s]} ${PRISM_STYLE_ODDS[s]}%`), `stones: Prism ${s}`);
+  assert.ok(stones.includes('never sold') && stones.includes('Tide Pass & Shop'), 'stones: Classic is never sold; Prism points at Tide');
+  assert.ok(!stones.includes('24%'), 'stones: no random Prism odds');
+  const tide = text('tide');
+  assert.ok(tide.includes('Tide Pass') && tide.includes('not for sale yet'), 'tide: what it is, and not for sale');
+  for (const s of PRISM_STYLES) assert.ok(tide.includes(`${SHINY_STYLE_LABEL[s]} ${PRISM_STYLE_COST[s]}`), `tide: ${s} cost`);
+  assert.ok(eggs.includes('Tide Pass & Shop'), 'eggs: one line points at Tide');
   assert.ok(stones.includes(`${Math.round(EXPEDITION_STONE_CHANCE * 100)}%`) && stones.includes(`every ${STONE_EVERY_DAYS}th day`), 'stones: sources');
   assert.ok(stones.includes('Abyss 2%') && stones.includes('Hadal 5%'), 'stones: Abyss/Hadal shares from the loot table');
 }
@@ -170,18 +175,20 @@ ok('the Guide shows the live constants (stage cuts, bust table, Power ceiling, m
     'divecore-tutorial.tsx',
     'den-sheet.tsx',
     'stone-sheet.tsx',
+    'shop-screen.tsx',
   ].map((f) => fs.readFileSync(path.join(ROOT, 'src/play', f), 'utf8'));
   const linked = new Set<string>();
   for (const src of files) {
     for (const m of src.matchAll(/section="([a-z]+)"|openGuide\('([a-z]+)'\)|initial="([a-z]+)"/g)) linked.add(m[1] ?? m[2] ?? m[3]);
   }
   for (const id of linked) assert.ok((GUIDE_SECTIONS as readonly string[]).includes(id), `"?" link to a real section: ${id}`);
-  for (const want of ['pet', 'eggs', 'den', 'stones', 'dive', 'expeditions', 'games', 'buffs', 'collection']) assert.ok(linked.has(want), `a "?" opens ${want}`);
+  for (const want of ['pet', 'eggs', 'den', 'stones', 'tide', 'dive', 'expeditions', 'games', 'buffs', 'collection']) assert.ok(linked.has(want), `a "?" opens ${want}`);
   // v27: the "?" sits on the Den, the egg picker and the Stone sheet themselves.
   const screen = files[0];
-  for (const [sheet, section] of [['den', 'den'], ['stone', 'stones'], ['eggs', 'eggs']] as const) {
+  for (const [sheet, section] of [['den', 'den'], ['stone', 'stones'], ['eggs', 'eggs'], ['prism', 'tide']] as const) {
     assert.ok(new RegExp(`sheet === '${sheet}'[\\s\\S]{0,1200}?section="${section}"`).test(screen), `the ${sheet} sheet has a "?" to ${section}`);
   }
+  assert.ok(files[files.length - 1].includes('initial="tide"'), 'the Shop Tide shelf and pass card open the Tide section');
   const all3 = files.join('\n') + fs.readFileSync(path.join(ROOT, 'src/play/pet-egg-sheets.tsx'), 'utf8');
   assert.ok(!/How it works|how it works"|EggHelp/.test(all3), 'the old scattered "How it works" text is gone');
   assert.ok(files[3].includes('Open the Guide') && files[4].includes('Open the Guide'), 'linked from ⚙ Settings and the tutorial');

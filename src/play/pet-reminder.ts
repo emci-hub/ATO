@@ -24,12 +24,16 @@ export const PET_HUNGER_PUSH_ID = 'ato.play.pet.hunger';
 export const PET_EGG_PUSH_ID = 'ato.play.pet.egg';
 export const PET_EXPEDITION_PUSH_ID = 'ato.play.pet.expedition';
 export const DIVE_CHARGES_PUSH_ID = 'ato.play.dive.charges';
+export const TIDE_PASS_PUSH_ID = 'ato.play.pet.tide';
+export const FREE_EGGS_PUSH_ID = 'ato.play.pet.eggs';
 
 const PUSH_ID: Record<NotifKind, string> = {
   hunger: PET_HUNGER_PUSH_ID,
   egg: PET_EGG_PUSH_ID,
   expedition: PET_EXPEDITION_PUSH_ID,
   charges: DIVE_CHARGES_PUSH_ID,
+  tide: TIDE_PASS_PUSH_ID,
+  eggs_ready: FREE_EGGS_PUSH_ID,
 };
 
 /** Fired / pending logs for the notices with a minimum gap. */

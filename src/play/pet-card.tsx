@@ -58,8 +58,10 @@ export type PetCardInfo = {
   shinyCount?: number;
   /** v24 — the hero, when the pet has its own name. */
   hero?: string | null;
-  /** v24 — milestone ribbons. */
-  ribbons?: readonly ('collector' | 'legend')[];
+  /** v24 — milestone ribbons. v28 adds Tide Friend. */
+  ribbons?: readonly ('collector' | 'legend' | 'tide')[];
+  /** v28 — a looks-only Tide frame while a Tide Pass is on. */
+  tide?: boolean;
   /** v26 — your mini-game rank titles (the live pet's card). */
   ranks?: { catch: string; train: string } | null;
   /** v27 — resting in the Den (frozen). */
@@ -181,6 +183,18 @@ export function PetCard({
           stroke={info.shiny && !silhouette ? 'url(#foil)' : color}
           strokeWidth={info.shiny && !silhouette ? border + 1 : border}
         />
+        {info.tide && !silhouette ? (
+          <Rect
+            x={border + 3}
+            y={border + 3}
+            width={width - 2 * (border + 3)}
+            height={height - 2 * (border + 3)}
+            rx={small ? 6 : 11}
+            fill="none"
+            stroke="#4FFFD2"
+            strokeWidth={2}
+          />
+        ) : null}
         {info.allStyles && !silhouette ? (
           <Rect
             x={border + 1.5}
@@ -242,7 +256,7 @@ export function PetCard({
       ) : null}
       {!small && !silhouette && info.ribbons && info.ribbons.length > 0 ? (
         <Text style={styles.meta}>
-          {info.ribbons.map((r) => (r === 'collector' ? '🎖 Collector' : '🏅 Legend')).join(' · ')}
+          {info.ribbons.map((r) => (r === 'collector' ? '🎖 Collector' : r === 'legend' ? '🏅 Legend' : '🌊 Tide Friend')).join(' · ')}
         </Text>
       ) : null}
       {!small ? (

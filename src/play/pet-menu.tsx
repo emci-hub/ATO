@@ -56,6 +56,7 @@ export function PetMenuBody({
   onViewCard,
   onOpenDen,
   onOpenStone,
+  onOpenPrism,
 }: {
   view: PlayView;
   commit: Commit;
@@ -64,6 +65,8 @@ export function PetMenuBody({
   onOpenDen: () => void;
   /** v27 — the Shine Stone sheet, this pet picked. */
   onOpenStone: () => void;
+  /** v28 — the Prism Stone sheet, this pet picked. */
+  onOpenPrism: () => void;
 }) {
   const pv = view.pet;
   const pet = pv.state;
@@ -95,6 +98,9 @@ export function PetMenuBody({
       <NeonButton label={`Open the Den · ${pv.den.used}/${pv.den.slots}`} variant="secondary" onPress={onOpenDen} />
       {revealed && !pet.shiny ? (
         <NeonButton label={`Use a Shine Stone · ${pv.stones.held} held`} variant="secondary" onPress={onOpenStone} />
+      ) : null}
+      {revealed && !pet.shiny ? (
+        <NeonButton label={`Use a Prism Stone · ${pv.stones.prism} held`} variant="secondary" onPress={onOpenPrism} />
       ) : null}
 
       {pet.egg != null || pet.hero != null ? (

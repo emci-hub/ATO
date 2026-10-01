@@ -32,14 +32,20 @@ import { DAILY_LEVEL, medalFor } from '../src/play/game-records';
 import {
   COLLECT_TIMELINES,
   DAILY_EGG_BONUS,
+  EGG_POOLS,
   EGG_TYPES,
   FREE_EGGS_PER_DAY,
   GLIMMER_PITY,
+  GRADES,
   PITY_HARD,
   PITY_SOFT_FROM,
+  PRISM_STYLES,
+  PRISM_STYLE_COST,
   SHARDS_PER_TICKET,
+  SHINY_ODDS,
   STONE_EVERY_DAYS,
   STONE_ODDS,
+  gradeOdds,
   nextEggPrice,
   nextGrade,
   pityAfterReveal,
@@ -47,8 +53,10 @@ import {
   seededRng,
   stoneSucceeds,
   type CareBand,
+  type EggType,
   type Grade,
 } from '../src/play/pet-eggs';
+import { TIDE_PASS_DAYS, TIDE_PITY_STEP, TIDE_PRISM_GIFT } from '../src/play/tide';
 import {
   CATCH,
   EMPTY_CATCH,
@@ -295,6 +303,149 @@ check(
   PLAYERS.every((p) => results[p.name].legMax <= 20),
 );
 check('target: shiny 90% Casual ≤ ~24d', results.Casual.shiny90 <= 25);
+
+/* ------------------------------------------------- Tide Pass (v28) --- */
+/** Rejected comparison: the same pity, with the Legendary share doubled. */
+
+function rollOddsDoubled(seed: number, egg: EggType, band: CareBand, minGrade: Grade | null, since: number): Grade {
+  const rng = seededRng(seed);
+  const pool = EGG_POOLS[egg];
+  void pool[Math.min(pool.length - 1, Math.floor(rng() * pool.length))];
+  const odds = gradeOdds(band, minGrade, since, 1);
+  const legend = Math.min(100, odds.legendary * 2);
+  const rest = 100 - odds.legendary;
+  const k = rest > 0 ? (100 - legend) / rest : 0;
+  let u = rng() * 100;
+  let grade: Grade = GRADES[GRADES.length - 1];
+  for (const g of GRADES) {
+    const share = g === 'legendary' ? legend : odds[g] * k;
+    if (share <= 0) continue;
+    if (u < share) {
+      grade = g;
+      break;
+    }
+    u -= share;
+  }
+  void (rng() < SHINY_ODDS);
+  return grade;
+}
+
+type PassMode = 'free' | 'one' | 'always' | 'odds';
+
+function passStep(mode: PassMode, day: number): number {
+  if (mode === 'always') return TIDE_PITY_STEP;
+  if (mode === 'one' && day <= TIDE_PASS_DAYS) return TIDE_PITY_STEP;
+  return 1;
+}
+
+/** Days to the first Legendary, and Legendaries over 30 days, with a pass mode. */
+function passRun(p: Player, mode: PassMode): { days: number[]; per30: number[] } {
+  const seed = `tide:${p.name}:${mode}`.split('').reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261);
+  const rng = seededRng(seed);
+  const days: number[] = [];
+  const per30: number[] = [];
+  for (let t = 0; t < N; t += 1) {
+    let since = 0;
+    const shards: Record<Grade, number> = { common: 0, rare: 0, epic: 0, legendary: 0 };
+    const tickets: Grade[] = [];
+    let first = Infinity;
+    let legends = 0;
+    for (let day = 1; day <= 30; day += 1) {
+      const dailyEgg = p.dailyEgg;
+      const free = FREE_EGGS_PER_DAY + (dailyEgg ? DAILY_EGG_BONUS : 0);
+      let eggs = 0;
+      while (true) {
+        const price = nextEggPrice(eggs, dailyEgg);
+        if (price == null || (price > 0 && eggs >= free + p.bought)) break;
+        eggs += 1;
+      }
+      const step = passStep(mode, day);
+      const hatchOne = (minGrade: Grade | null) => {
+        const egg = EGG_TYPES[Math.floor(rng() * EGG_TYPES.length)];
+        const seed = (rng() * 2 ** 32) >>> 0;
+        const grade = mode === 'odds' ? rollOddsDoubled(seed, egg, p.band, minGrade, since) : rollPet(seed, egg, p.band, minGrade, since, step).grade;
+        since = pityAfterReveal(since, grade, step);
+        if (grade === 'legendary') {
+          legends += 1;
+          first = Math.min(first, day);
+        }
+        if (grade === 'common' || grade === 'rare') {
+          shards[grade] += 1;
+          if (shards[grade] >= SHARDS_PER_TICKET) {
+            shards[grade] -= SHARDS_PER_TICKET;
+            tickets.push(nextGrade(grade) as Grade);
+          }
+        }
+      };
+      for (let e = 0; e < eggs; e += 1) hatchOne(null);
+      while (tickets.length > 0) hatchOne(tickets.shift() as Grade);
+    }
+    days.push(first);
+    per30.push(legends);
+  }
+  return { days, per30 };
+}
+
+const mean = (a: number[]) => a.reduce((s, n) => s + n, 0) / a.length;
+const passRows: string[] = [];
+const one: Record<string, { leg90: number; legMax: number }> = {};
+const always: Record<string, { legMax: number; per30: number }> = {};
+const odds: Record<string, { leg90: number; legMax: number; per30: number }> = {};
+const free30: Record<string, number> = {};
+console.log('\n# Tide Pass (v28) — ×2 progress vs the rejected ×2 odds\n');
+for (const p of PLAYERS) {
+  const freePace = passRun(p, 'free');
+  const onePass = passRun(p, 'one');
+  const alwaysPass = passRun(p, 'always');
+  const oddsPass = passRun(p, 'odds');
+  free30[p.name] = mean(freePace.per30);
+  one[p.name] = { leg90: q(onePass.days, 0.9), legMax: Math.max(...onePass.days) };
+  always[p.name] = { legMax: Math.max(...alwaysPass.days), per30: mean(alwaysPass.per30) };
+  odds[p.name] = { leg90: q(oddsPass.days, 0.9), legMax: Math.max(...oddsPass.days), per30: mean(oddsPass.per30) };
+}
+
+for (const p of PLAYERS) {
+  const eggsDay = FREE_EGGS_PER_DAY + (p.dailyEgg ? DAILY_EGG_BONUS : 0) + p.bought;
+  const pct = (n: number) => `${n >= 0 ? '+' : ''}${Math.round((n / free30[p.name]) * 100)}%`;
+  passRows.push(
+    `| ${p.name} | ${d(results[p.name].leg90)} (${d(results[p.name].legMax)}) | ${d(one[p.name].leg90)} (${d(one[p.name].legMax)}) | ${d(odds[p.name].leg90)} (${d(odds[p.name].legMax)}) | ` +
+      `${free30[p.name].toFixed(1)} → ${always[p.name].per30.toFixed(1)} (${pct(always[p.name].per30 - free30[p.name])}) → ${odds[p.name].per30.toFixed(1)} (${pct(odds[p.name].per30 - free30[p.name])}) | ${eggsDay} |`,
+  );
+}
+console.log('| Player | Free 90% (worst) | One pass ×2 progress | One pass ×2 odds (rejected) | Legendaries/30d free → always-on ×2 progress → always-on ×2 odds | Eggs/day |');
+console.log('|---|---|---|---|---|---|');
+for (const r of passRows) console.log(r);
+console.log('');
+
+const cheapestPrism = Math.min(...PRISM_STYLES.map((s) => PRISM_STYLE_COST[s]));
+check('pass gift: a Prism shiny is possible on day 1', TIDE_PRISM_GIFT >= cheapestPrism);
+// The planning sim's "≤ 60% of free" assumed a longer free tail (Regular ~7d → ~4d).
+// On the accepted free pace (Regular 90% = 6d, already inside the 5 pass days),
+// one pass shortens that 90% by a day. Lock the measured day in the Guide, and
+// fail if a pass stops being strictly faster than free.
+check(
+  `one pass: Regular 90% ${one.Regular.leg90}d is at least a day under free ${results.Regular.leg90}d`,
+  one.Regular.leg90 <= results.Regular.leg90 - 1,
+);
+for (const p of PLAYERS) {
+  const shorter = Math.floor(results[p.name].legMax * 0.8);
+  check(
+    `one pass: ${p.name} worst ${one[p.name].legMax}d ≤ ${shorter}d (20% shorter than free ${results[p.name].legMax}d)`,
+    one[p.name].legMax <= shorter,
+  );
+  const eggsDay = FREE_EGGS_PER_DAY + (p.dailyEgg ? DAILY_EGG_BONUS : 0) + p.bought;
+  const cap = Math.ceil(Math.ceil(PITY_HARD / TIDE_PITY_STEP) / eggsDay) + 1;
+  check(`always-on: ${p.name} worst ${always[p.name].legMax}d ≤ ${cap}d`, always[p.name].legMax <= cap);
+}
+for (const name of ['Pro', 'Regular'] as const) {
+  const bump = (always[name].per30 - free30[name]) / free30[name];
+  check(`always-on: ${name} Legendaries/30d ${Math.round(bump * 100)}% ≤ +35%`, bump <= 0.35);
+}
+check(
+  `Guide: one Tide Pass, Regular Legendary 90% is ${COLLECT_TIMELINES.legendaryTideDays}d (measured ${one.Regular.leg90}d)`,
+  one.Regular.leg90 === COLLECT_TIMELINES.legendaryTideDays,
+);
+
 if (!ok) {
   console.log('\nFIX: a target or a Guide timeline drifted — retune, or update COLLECT_TIMELINES and the Guide words.');
   if (!inBand(results.Regular.leg90, 5, 7) || results.Regular.legMax > 10) {

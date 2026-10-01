@@ -4,6 +4,9 @@ Read `CLAUDE.md` first — it is the map (commands, hard invariants, where thing
 
 **Active approved plan:** `docs/PLAN_PART_D.md` (Divecore Den, egg pacing, Legendary pity,
 Shine Stones — approved, not built). If you were asked to build it, follow that file.
+**Part E:** `docs/PLAN_PART_E.md` (Tide Pass, Tide shelf, Prism Stones you pick, login
+streak, reminders — approved; no real money in this build, T-E8 payments stays gated).
+Built on this branch (save v28), not shipped, no OTA. It sits on Part D.
 
 This repo is on **Expo SDK 54** (`package.json`). Read the versioned docs at
 https://docs.expo.dev/versions/v54.0.0/ before writing Expo code; do not assume a newer

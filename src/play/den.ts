@@ -9,8 +9,10 @@
  *     Waking one sets `seen_at = max(now, seen_at)`, so no time passes while it
  *     rested; a clock set back can't add any either.
  *   - Waking a pet before Child re-stamps its pity position to the counter
- *     now (`pity_from`); only the active pet ever reveals, so the counter can
- *     only move through the pet that holds the stamp.
+ *     now (`pity_from`) and its step (`pity_step`, 2 only while a Tide Pass
+ *     is on). An egg that is still incubating keeps the step it was stamped
+ *     with. Only the active pet ever reveals, so the counter can only move
+ *     through the pet that holds the stamp.
  *   - Swapping is refused mid-dive, while the active pet is away on an
  *     expedition, and while a mini-game is open (the Den lives in the Pet room,
  *     so TD can never run at the same time).
@@ -62,13 +64,15 @@ export function denSwapBlock(s: { diving: boolean; away: boolean; gameOpen: bool
 }
 
 /** A pet waking up in the Den: no time passed while it rested, and before
- * Child it takes the pity position as of now. */
-export function wakePet(pet: PetState, now: number, since: number): PetState {
+ * Child it takes the pity position and step as of now. `step` is 1, or 2
+ * while a Tide Pass is on — an egg woken after the pass ends goes back to 1. */
+export function wakePet(pet: PetState, now: number, since: number, step = 1): PetState {
   const preChild = PET_STAGES.indexOf(pet.stage) < PET_STAGES.indexOf('child');
   return {
     ...pet,
     seen_at: Math.max(now, pet.seen_at),
     pity_from: preChild ? Math.max(0, Math.floor(since)) : pet.pity_from,
+    pity_step: preChild ? (Math.floor(step) >= 2 ? 2 : 1) : pet.pity_step,
   };
 }
 

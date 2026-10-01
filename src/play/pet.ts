@@ -336,6 +336,9 @@ export type PetState = {
   /** Pity stamp: eggs since the last Legendary, set each time this pet becomes
    * the active pet before Child. Its roll at Child uses this position. */
   pity_from: number;
+  /** How many the counter moves when this egg reveals (1, or 2 if it was
+   * picked or woken while a Tide Pass was on). Re-stamped on every wake. */
+  pity_step: number;
   /** The shiny's style (null unless shiny; a natural shiny is Classic). */
   shiny_style: ShinyStyle | null;
   /** A Shine Stone missed on it: a glimmer glow (looks only). */
@@ -405,6 +408,7 @@ export function newPet(now: number, line: string = DEFAULT_PET_LINE): PetState {
     reveals: [],
     name: null,
     pity_from: 0,
+    pity_step: 1,
     shiny_style: null,
     glimmer: false,
     fav: false,
@@ -534,7 +538,7 @@ function evolve(pet: PetState): PetState {
   if (from === 'baby') {
     if (pet.hero == null && pet.egg != null) {
       const band = careBand(petCareScore(pet));
-      const roll = rollPet(pet.seed, pet.egg, band, pet.ticket, pet.pity_from);
+      const roll = rollPet(pet.seed, pet.egg, band, pet.ticket, pet.pity_from, pet.pity_step);
       reveal = { hero: roll.hero, grade: roll.grade, shiny: roll.shiny, band, shiny_style: roll.shiny ? 'classic' : null };
     }
     const hero = (reveal.hero ?? pet.hero) as string | null;
@@ -1077,6 +1081,7 @@ export function parsePet(raw: unknown, now: number): PetState {
     // v27: a shiny from before styles is Classic; a non-shiny has none.
     shiny_style: shiny ? (isShinyStyle(raw.shiny_style) ? raw.shiny_style : 'classic') : null,
     pity_from: Math.max(0, Math.floor(num(raw.pity_from, 0))),
+    pity_step: Math.floor(num(raw.pity_step, 1)) >= 2 ? 2 : 1,
     glimmer: !shiny && raw.glimmer === true,
     fav: raw.fav === true,
     uid: Math.max(0, Math.floor(num(raw.uid, 0))),

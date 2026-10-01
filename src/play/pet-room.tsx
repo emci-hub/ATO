@@ -299,6 +299,7 @@ export function PetRoom({
   recolor = null,
   onBadge,
   onPickEgg,
+  tide = false,
   name = null,
   buffs = [],
   maxedAura = false,
@@ -326,6 +327,8 @@ export function PetRoom({
   onBadge?: () => void;
   /** v23 — the egg picker: tap one of the three eggs. */
   onPickEgg?: (egg: EggType) => void;
+  /** v28 — Tide Pass is on: a looks-only pill by the nameplate. */
+  tide?: boolean;
   /** v24 — the name it goes by (status and speech bubbles). */
   name?: string | null;
   /** v26 — active medal buffs for the corner (icon + uses / "Maxed aura"). */
@@ -664,6 +667,11 @@ export function PetRoom({
                   {nameplateText(grade, pet.shiny)}
                 </Text>
               </Pressable>
+              {tide ? (
+                <View style={styles.tidePill} accessibilityLabel="Tide Pass on">
+                  <Text style={styles.tideText}>🌊 Tide</Text>
+                </View>
+              ) : null}
             </Animated.View>
           ) : null}
         </Animated.View>
@@ -729,6 +737,17 @@ const styles = StyleSheet.create({
   bubbleRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   badge: { paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10, borderWidth: 1, backgroundColor: 'rgba(5, 7, 13, 0.85)' },
   badgeText: { fontFamily: Fonts.monoBold, fontSize: NAMEPLATE_FONT },
+  tidePill: {
+    marginTop: 4,
+    alignSelf: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#4FFFD2',
+    backgroundColor: 'rgba(79, 255, 210, 0.12)',
+  },
+  tideText: { fontFamily: Fonts.monoBold, fontSize: 10, color: '#4FFFD2' },
   eggRow: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-around' },
   eggPick: { alignItems: 'center', gap: 4 },
   eggPickLabel: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.textPrimary },

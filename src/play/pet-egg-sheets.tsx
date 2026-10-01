@@ -13,6 +13,7 @@ import { heroName } from '@/play/heroes-data';
 import { NeonButton, NeonChip, NeonLabel } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
 import { newPet, type PetState } from '@/play/pet';
+import { STREAK_DAYS, streakRewardLabel } from '@/play/play-settings';
 import { PetCard } from '@/play/pet-card';
 import {
   CARE_BANDS,
@@ -94,22 +95,25 @@ function HeroOddsLine({ egg }: { egg: EggType }) {
 /* ---------------------------------------------------------- the pity --- */
 
 /** "Legendary guaranteed in X eggs" + a bar: eggs since the last Legendary
- * out of the hard pity, the soft-pity stretch marked. */
-export function PityBar({ since }: { since: number }) {
-  const until = eggsUntilLegendary(since);
-  const soft = since + 1 >= PITY_SOFT_FROM;
+ * out of the hard pity, the soft-pity stretch marked. `step` 2 (Tide) fills
+ * the bar two eggs at a time; the odds table does not change. */
+export function PityBar({ since, step = 1 }: { since: number; step?: number }) {
+  const until = eggsUntilLegendary(since, step);
+  const n = Math.min(PITY_HARD, since + step);
+  const soft = n >= PITY_SOFT_FROM;
+  const tide = step > 1 ? ` (×${step} Tide)` : '';
   return (
-    <View style={styles.pity} accessible accessibilityLabel={`Legendary guaranteed in ${until} eggs`}>
+    <View style={styles.pity} accessible accessibilityLabel={`Legendary guaranteed in ${until} eggs${tide}`}>
       <Text style={styles.pityText}>
-        {until === 1 ? 'Your next egg is a guaranteed Legendary' : `Legendary guaranteed in ${until} eggs`}
+        {until === 1 ? 'Your next egg is a guaranteed Legendary' : `Legendary guaranteed in ${until} eggs${tide}`}
         {soft && until > 1 ? ' · odds rising' : ''}
       </Text>
       <View style={styles.pityTrack}>
         <View style={[styles.pitySoft, { left: `${((PITY_SOFT_FROM - 1) / PITY_HARD) * 100}%` }]} />
-        <View style={[styles.pityFill, { width: `${(Math.min(PITY_HARD, since + 1) / PITY_HARD) * 100}%` }]} />
+        <View style={[styles.pityFill, { width: `${(n / PITY_HARD) * 100}%` }]} />
       </View>
       <Text style={styles.body}>
-        Egg {since + 1} of {PITY_HARD} since your last Legendary. From egg {PITY_SOFT_FROM} the Legendary odds rise
+        Egg {n} of {PITY_HARD} since your last Legendary. From egg {PITY_SOFT_FROM} the Legendary odds rise
         each egg; egg {PITY_HARD} is always Legendary.
       </Text>
     </View>
@@ -136,6 +140,7 @@ export function EggPickerBody({
   const tickets = GRADES.filter((g) => g !== 'common' && view.pet.tickets[g] > 0);
   const day = view.pet.eggDay;
   const since = view.pet.pity.since;
+  const step = view.pet.pity.step;
   const free = ticket != null || day.prepaid;
   const price = free ? 0 : day.nextPrice;
   const short = price != null && price > view.shells;
@@ -175,7 +180,7 @@ export function EggPickerBody({
           ? '✓ +1 free egg from today’s daily challenge.'
           : 'Pass today’s daily challenge (Play) for +1 free egg.'}
       </Text>
-      <PityBar since={since} />
+      <PityBar since={since} step={step} />
       {tickets.length > 0 ? (
         <>
           <NeonLabel>Trade-up tickets</NeonLabel>
@@ -206,10 +211,10 @@ export function EggPickerBody({
           <HeroOddsLine egg={egg} />
           <Text style={styles.body}>
             Grade by care{ticket ? ` (with a ${GRADE_LABEL[ticket]}+ ticket)` : ''}
-            {since + 1 >= PITY_SOFT_FROM ? ` (egg ${since + 1} since your last Legendary)` : ''}:
+            {since + step >= PITY_SOFT_FROM ? ` (egg ${since + step} since your last Legendary)` : ''}:
           </Text>
           {CARE_BANDS.map((band) => (
-            <GradeRow key={band} label={CARE_BAND_LABEL[band]} odds={gradeOdds(band, ticket, since)} />
+            <GradeRow key={band} label={CARE_BAND_LABEL[band]} odds={gradeOdds(band, ticket, since, step)} />
           ))}
           <NeonButton label={chooseLabel(egg)} disabled={price == null || short} onPress={() => choose(egg)} />
         </View>
@@ -236,7 +241,7 @@ export function OddsPanel({ view }: { view: PlayView }) {
         <HeroOddsLine egg={pet.egg} />
         <GradeRow odds={pv.gradeOdds} />
         {pet.ticket ? <Text style={styles.body}>Ticket: {GRADE_LABEL[pet.ticket]} or better, guaranteed.</Text> : null}
-        <PityBar since={pet.pity_from} />
+        <PityBar since={pet.pity_from} step={pet.pity_step} />
       </>
     );
   }
@@ -257,7 +262,7 @@ export function OddsPanel({ view }: { view: PlayView }) {
           Rolled: {gradedName(pet.grade, pet.name ?? heroName(pet.hero))} · {gradeTag(pet.grade ?? 'common')}
           {pet.shiny ? ` · ✨ shiny (${SHINY_STYLE_LABEL[pet.shiny_style ?? 'classic']})` : ''}
         </Text>
-        <PityBar since={pv.pity.since} />
+        <PityBar since={pv.pity.since} step={pv.pity.step} />
       </>
     );
   }
@@ -535,7 +540,13 @@ export function JournalTab({ view, commit }: { view: PlayView; commit: Commit })
     ['TD waves cleared', view.lifetimeWavesCleared],
     ['Days played', st.days_played],
     // v27: pity, Stones and shiny styles.
-    ['Eggs since last Legendary', `${view.pet.pity.since} · guaranteed in ${view.pet.pity.untilLegendary}`],
+    ['Eggs since last Legendary', `${view.pet.pity.since} · guaranteed in ${view.pet.pity.untilLegendary}${view.pet.tide.active ? ` · ×${view.pet.tide.step} Tide` : ''}`],
+    [
+      'Tide Pass',
+      view.pet.tide.active
+        ? `${view.pet.tide.daysHeld} days left · Legendary progress ×${view.pet.tide.step}`
+        : 'Not on',
+    ],
     ['Shine Stones', `${view.pet.stones.held} held · ${view.pet.stones.used} used`],
     ['Glimmers', `${view.pet.stones.glimmers}/${GLIMMER_PITY}`],
     ['Shiny styles owned', Object.values(view.pet.heroes).reduce((n, r) => n + r.styles.length, 0)],
@@ -552,6 +563,28 @@ export function JournalTab({ view, commit }: { view: PlayView; commit: Commit })
           <Text style={styles.statValue}>{value}</Text>
         </View>
       ))}
+      <NeonLabel>Tide calendar</NeonLabel>
+      <Text style={styles.body}>
+        {view.pet.streak.claimedToday
+          ? `Day ${view.pet.streak.last ?? view.pet.streak.next} today. A missed day pauses here — it never goes back to day 1.`
+          : `Next is day ${view.pet.streak.next}. A missed day pauses here — it never goes back to day 1.`}
+      </Text>
+      <View style={styles.chips}>
+        {Array.from({ length: STREAK_DAYS }, (_, i) => i + 1).map((day) => {
+          const reward = streakRewardLabel(day);
+          const done = view.pet.streak.claimedToday
+            ? view.pet.streak.next === 1
+              ? view.pet.streak.last === STREAK_DAYS
+              : day < view.pet.streak.next
+            : day < view.pet.streak.next;
+          return (
+            <Text key={day} style={styles.body}>
+              {done ? '✓' : '·'} Day {day}
+              {reward ? ` — ${reward}` : ''}
+            </Text>
+          );
+        })}
+      </View>
       <NeonLabel>Milestones</NeonLabel>
       <Text style={styles.body}>Small rewards for your Collection — looks and egg tickets only, never TD power.</Text>
       {view.milestones.map(({ def, done, claimed }) => (
@@ -569,7 +602,12 @@ export function JournalTab({ view, commit }: { view: PlayView; commit: Commit })
         </View>
       ))}
       {view.ribbons.length > 0 ? (
-        <Text style={styles.body}>Ribbons: {view.ribbons.map((r) => (r === 'collector' ? '🎖 Collector' : '🏅 Legend')).join(' · ')}</Text>
+        <Text style={styles.body}>
+          Ribbons:{' '}
+          {view.ribbons
+            .map((r) => (r === 'collector' ? '🎖 Collector' : r === 'legend' ? '🏅 Legend' : '🌊 Tide Friend'))
+            .join(' · ')}
+        </Text>
       ) : null}
     </>
   );

@@ -18,6 +18,9 @@ import { chargesNoticeAt, deferForQuiet, type NotifKind, type PlaySettings } fro
 
 export type PlannedNotice = { kind: NotifKind; at: number; title: string; body: string };
 
+/** How far out a "still true if you haven't come back" nudge sits. */
+const NUDGE_MS = 60 * 60 * 1000;
+
 export type NoticeInput = {
   settings: PlaySettings;
   pet: PetState;
@@ -33,6 +36,11 @@ export type NoticeInput = {
   hungerLastFiredAt: number | null;
   chargesLastFiredAt: number | null;
   now: number;
+  /** v28 — Tide Pass is on, and how many play-days are still held (today included). */
+  tideActive?: boolean;
+  tideDaysHeld?: number;
+  /** v28 — the egg picker is up and the next egg is free. */
+  freeEggsReady?: boolean;
 };
 
 /** Every notice to schedule right now (after quiet hours). */
@@ -95,6 +103,24 @@ export function planPlayNotices(input: NoticeInput): PlannedNotice[] {
   });
   if (charges != null) {
     out.push({ kind: 'charges', at: quiet(charges), title: 'Dive charges full', body: 'Every charge is back — time for a dive.' });
+  }
+
+  // v28: the last play-day of a Tide Pass, and free eggs still waiting.
+  if (settings.notif.tide && input.tideActive && input.tideDaysHeld === 1) {
+    out.push({
+      kind: 'tide',
+      at: quiet(now + NUDGE_MS),
+      title: 'Tide Pass: last day',
+      body: 'Legendary progress ×2 ends after today. Days you skip are not used.',
+    });
+  }
+  if (settings.notif.eggs_ready && input.freeEggsReady) {
+    out.push({
+      kind: 'eggs_ready',
+      at: quiet(now + NUDGE_MS),
+      title: 'Free eggs ready',
+      body: 'Today’s free eggs are waiting in the Pet room.',
+    });
   }
 
   // Never schedule into the past (a few seconds out at least).

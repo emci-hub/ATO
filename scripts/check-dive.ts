@@ -167,7 +167,14 @@ ok('shells: TD campaign +4 / replay +1; Lamp 60 · Net 150 · Oxygen 300; refuse
 /* -------------------------------------------------------- free dives --- */
 
 {
-  const empty = doc({ dive_charge: 0, dive_charge_at: T0, pet: pet({ stage: 'teen', mood: 1 }) });
+  // The Tide calendar's first day pays shells on the first open. Claim it
+  // first so this assertion is the free-dive shells alone.
+  const empty = doc({
+    dive_charge: 0,
+    dive_charge_at: T0,
+    pet: pet({ stage: 'teen', mood: 1 }),
+    streak: { next: 2, ymd: localYmd(new Date(T0)), last: 1 },
+  });
   assert.equal(startFreeDive(doc(), T0), null, 'no free dive while a charge is left');
   const started = startFreeDive(empty, T0, () => 0.5)!;
   assert.equal(started.doc.dive_run!.free_n, 0);
@@ -286,7 +293,7 @@ ok('expedition: the 4h trip can bring a Power (35%), else a Trench find; an old 
   }
   delete (v21.pet as Record<string, unknown>).forms;
   const up = parsePlayStore(JSON.stringify(v21), T0)!;
-  assert.equal(up.version, 27);
+  assert.equal(up.version, 28);
   assert.deepEqual(
     [up.shells, up.dive_gear, up.pet_pantry, up.pet_cosmetics, up.pet_wear, up.free_dives_today, up.free_dives_ymd],
     [0, { lamp: false, net: false, oxygen: false }, {}, [], { badge: null, tint: null, ring: null, aura: null }, 0, null],
