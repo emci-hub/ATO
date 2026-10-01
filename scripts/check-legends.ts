@@ -118,7 +118,7 @@ const saveA = parsePlayStore(
   0,
 );
 assert.ok(saveA, 'case A parses');
-assert.equal(saveA.version, 28, 'and becomes the current version (v28 since the Tide Pass)');
+assert.equal(saveA.version, 29, 'and becomes the current version (v29 since element swords)');
 assert.equal(saveA.avatars.length, 1, 'no extra record appears (the old split-progress trap)');
 assert.equal(saveA.avatars[0].id, 'legend_root');
 assert.equal(saveA.avatars[0].level, 7, 'level kept');
@@ -147,7 +147,7 @@ const saveB = parsePlayStore(
   0,
 );
 assert.ok(saveB, 'case B parses');
-assert.equal(saveB.version, 28);
+assert.equal(saveB.version, 29);
 const byId = new Map(saveB.avatars.map((a) => [a.id, a]));
 assert.deepEqual([...byId.keys()].sort(), ['legend_ember', 'legend_root', 'legend_tide', 'legend_void'], 'five old records fold onto four Legends');
 assert.equal(byId.get('legend_root')?.level, 4, 'starter progress kept');

@@ -339,7 +339,7 @@ const v22: Record<string, unknown> = {
 };
 for (const k of ['pet_heroes', 'pet_shards', 'pet_tickets']) delete v22[k];
 const up = parsePlayStore(JSON.stringify(v22), T0)!;
-assert.equal(up.version, 28);
+assert.equal(up.version, 29);
 assert.equal(up.pet.hero, 'raven');
 assert.equal(up.pet_rebirths, 2, 'rebirths kept');
 assert.equal(up.pet_hall.length, 2, 'Hall kept');

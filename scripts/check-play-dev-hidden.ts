@@ -27,8 +27,8 @@ function walk(dir: string): string[] {
   });
 }
 
-const DEV_UI = /\bdev(?:Pet|Add|Give|Reset|Set|Own|Clear|Unlock|Jump|Force)\w*\(|<(?:DevUnlockRow|GroveDevKit|DevFxStress|DevDump|TunePanel|SheetLabScreen)\b/;
-const DEV_COMPONENT_FILES = ['dev-unlock-row.tsx', 'dev-dump.tsx', 'dev-fx-stress.tsx', 'sheet-lab-screen.tsx'];
+const DEV_UI = /\bdev(?:Pet|Add|Give|Reset|Set|Own|Clear|Unlock|Jump|Force|EquipSword)\w*\(|<(?:DevUnlockRow|GroveDevKit|DevFxStress|DevDump|TunePanel|SheetLabScreen|SwordLabScreen)\b/;
+const DEV_COMPONENT_FILES = ['dev-unlock-row.tsx', 'dev-dump.tsx', 'dev-fx-stress.tsx', 'sheet-lab-screen.tsx', 'sword-lab-screen.tsx'];
 
 const files = [...walk('src/play'), 'src/app/play.tsx'].map((f) => f.replace(/\\/g, '/'));
 const offenders: string[] = [];

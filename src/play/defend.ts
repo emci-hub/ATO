@@ -77,6 +77,8 @@ import {
   type KitStatus,
 } from '@/play/kit-combat';
 import { TOWER_KITS, type Element, type Kit } from '@/play/kits';
+import { applyAuraHit, applySwordHit, applySwordSuper, auraReaches } from '@/play/sword-combat';
+import type { SwordRuntime } from '@/play/swords';
 import { PET_POUNCE_RADIUS } from '@/play/pet';
 import { DEFAULT_SKILL_ID, skillById } from '@/play/skills-data';
 import { devNoCaps, getTune } from '@/play/tune';
@@ -473,6 +475,8 @@ export type DefendLive = {
   skillCooldownMs: number;
   /** The pet's pounce is spent for this wave (once per wave, v20). */
   petPounceUsed: boolean;
+  /** Divine sword pulse already fired this wave. */
+  swordSuperUsed: boolean;
 };
 
 export type DefendStep = {
@@ -538,6 +542,7 @@ export function createDefendLive(wave: number, options: DefendLiveOptions = {}):
     avatarCooldownMs: 0,
     skillCooldownMs: 0,
     petPounceUsed: false,
+    swordSuperUsed: false,
   };
 }
 
@@ -592,6 +597,8 @@ type DefendBuckets = {
   avatarStars: number;
   /** Pet rebirth bonus (0..0.10, v20) — +2% board-wide damage per rebirth. */
   rebirthBonus?: number;
+  /** Equipped element sword. Absent = the Avatar attacks as before. */
+  sword?: SwordRuntime | null;
 };
 
 /** Place a tower on an empty pad, deducting scrap. Null when blocked. */
@@ -903,30 +910,47 @@ export function stepDefendLive(
     }
   };
   const firedTowers: Tower[] = [];
+  const sword = buckets.sword ?? null;
   for (const tower of state.towers) {
     let cooldownMs = tower.cooldownMs - dtMs;
     let skillCooldownMs = Math.max(0, tower.skillCooldownMs - dtMs);
     const skillCd = towerSkillCooldownMs(defaultTowerSkin(tower.kind));
+    const pad = map.pads[tower.pad];
+    const inAura = sword != null && pad != null && auraReaches(pad, avatar, sword.auraRadius);
     if (cooldownMs <= 0) {
       const def = TOWER_DEFS[tower.kind];
-      const floored = floorCooldown((def.cooldownMs * towerCdScale) / towerSpeedBucket);
+      const speedHere = towerSpeedBucket * (inAura && sword ? sword.auraSpeed : 1);
+      const floored = floorCooldown((def.cooldownMs * towerCdScale) / speedHere);
+      let damage = def.baseAttack * def.levelMultWavePower[tower.level - 1] * boardMult * floored.damageMult;
+      if (inAura && sword) {
+        damage *= sword.auraDamage;
+        if (sword.auraBoss > 1) {
+          const peek = towerTarget(tower, puffs, map);
+          if (peek?.kind === 'boss') damage *= sword.auraBoss;
+        }
+      }
       const fired = fireKit(
         puffs,
         {
           kit: TOWER_KITS[tower.kind],
           level: tower.level,
-          damage: def.baseAttack * def.levelMultWavePower[tower.level - 1] * boardMult * floored.damageMult,
+          damage,
           heroShare: false,
           burst: TOWER_BURST_TARGETING[tower.kind],
           source: 'tower',
           sourceId: tower.id,
-          from: map.pads[tower.pad],
+          from: pad,
         },
         def.range,
         { posOf },
       );
       if (fired.hit) {
         puffs = fired.creeps;
+        if (inAura && sword) {
+          const auraHit = applyAuraHit(puffs, fired.hit.primaryId, damage, sword, posOf);
+          puffs = auraHit.creeps;
+          scrap += auraHit.scrap;
+        }
         hits.push(fired.hit);
         removeDead();
         cooldownMs = floored.cooldownMs;
@@ -966,15 +990,21 @@ export function stepDefendLive(
   }
 
   // Avatar auto-attack: nearest enemy in range (§9b), 0.7s cooldown.
+  // An equipped sword scales the cooldown (still through the 600ms floor)
+  // and adds its element riders after the Legend's own strike.
   let avatarCooldownMs = state.avatarCooldownMs - dtMs;
+  let swordSuperUsed = state.swordSuperUsed;
   if (avatarCooldownMs <= 0) {
     const target = acquireAvatarTarget(avatar, puffs, map);
     if (target) {
+      const tuned = floorCooldown(getTune().avatarCooldownMs * (sword?.cooldownMult ?? 1));
       const damage =
         AVATAR_BASE_ATTACK *
         boardMult *
         avatarLevelWavePower(buckets.avatarLevel) *
-        floorCooldown(getTune().avatarCooldownMs).damageMult;
+        tuned.damageMult *
+        (sword?.strikeMult ?? 1) *
+        (sword && target.kind === 'boss' ? sword.bossMult : 1);
       // The Legend's element rides the Avatar's attack (matchup, rider,
       // strength from the Legend's level).
       const struck = strikeCreep(puffs, target.id, damage, buckets.legendElement, {
@@ -982,6 +1012,15 @@ export function stepDefendLive(
         posOf,
       });
       puffs = struck.creeps;
+      if (sword) {
+        const ridden = applySwordHit(puffs, target.id, damage, sword, posOf);
+        puffs = ridden.creeps;
+        scrap += ridden.scrap;
+        if (sword.divine && !swordSuperUsed) {
+          puffs = applySwordSuper(puffs, posOf(target), damage, sword, posOf);
+          swordSuperUsed = true;
+        }
+      }
       if (buckets.legendElement) {
         hits.push({
           source: 'avatar',
@@ -1011,7 +1050,7 @@ export function stepDefendLive(
         scrap += scrapPerKill;
         puffs = puffs.filter((p) => p.id !== target.id);
       }
-      avatarCooldownMs = floorCooldown(getTune().avatarCooldownMs).cooldownMs;
+      avatarCooldownMs = tuned.cooldownMs;
     } else {
       avatarCooldownMs = 0;
     }
@@ -1207,6 +1246,7 @@ export function stepDefendLive(
       avatarCooldownMs,
       skillCooldownMs,
       petPounceUsed: state.petPounceUsed,
+      swordSuperUsed,
     },
     leak,
     done: schedule.length === 0 && puffs.length === 0,

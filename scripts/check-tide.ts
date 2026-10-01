@@ -165,7 +165,7 @@ ok('an egg incubating when the pass ends keeps its step; one woken after the pas
   raw.prism_stones = 5;
   raw.tide = { days_left: 4, day_ymd: ymd(0), passes_started: 2, source_last: 'dev' };
   const old = parsePlayStore(JSON.stringify(raw), T0)!;
-  assert.equal(old.version, 28);
+  assert.equal(old.version, 29);
   assert.equal(old.tokens, 77, 'nothing else is lost');
   assert.equal(old.eggs_since_legendary, 15, 'the pity counter survives');
   assert.equal(old.pet_den.length, denLen, 'Den pets survive');
@@ -182,7 +182,7 @@ ok('an egg incubating when the pass ends keeps its step; one woken after the pas
   assert.equal(kept.tide.passes_started, 2);
   assert.ok(kept.ribbons.includes('tide'));
 }
-ok('v27 → v28: no pass and no Prism Stones, nothing else lost; a v28 save keeps both');
+ok('v27 → v29: no pass and no Prism Stones, nothing else lost; a v28 save keeps both');
 
 /* ---------------------------------------------------- crate ceiling --- */
 

@@ -8,6 +8,12 @@ Shine Stones — approved, not built). If you were asked to build it, follow tha
 streak, reminders — approved; no real money in this build, T-E8 payments stays gated).
 Built on this branch (save v28), not shipped, no OTA. It sits on Part D.
 
+**Element swords (save v29):** mix, merge, undo, drops, hero attack, tower aura.
+Config is `src/play/data/swords.json`. Logic is `src/play/swords.ts`. Combat is
+`src/play/sword-combat.ts`. The Supabase table is not applied — Play progress
+is still the local save. `src/play/data/sword-ledger.sql` is the RLS + claim/merge
+RPC to copy into `supabase/migrations` when that bag moves server-side. Not shipped, no OTA.
+
 This repo is on **Expo SDK 54** (`package.json`). Read the versioned docs at
 https://docs.expo.dev/versions/v54.0.0/ before writing Expo code; do not assume a newer
 SDK's API.

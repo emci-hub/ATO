@@ -58,6 +58,27 @@ import {
   migrateLegendRecords,
 } from '@/play/avatars';
 import type { Element } from '@/play/kits';
+import {
+  breakSwordStreak,
+  devGrantSword,
+  emptySwordBag,
+  equipSword,
+  forgeDivine,
+  forgeLegendary,
+  grantSwordDrop,
+  mergeFive,
+  mergeThree,
+  mixSwords,
+  parseSwordBag,
+  swordConfig,
+  swordPanel,
+  undoMerge,
+  unequipSword,
+  type SwordBag,
+  type SwordGrant,
+  type SwordPanel,
+  type SwordTier,
+} from '@/play/swords';
 import { cyclePower, defaultCyclePower } from '@/play/engine/cycle';
 import { bossBandFor } from '@/play/engine/bands';
 import {
@@ -801,7 +822,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 28;
+  version: 29;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -958,6 +979,8 @@ export type PlayStoreDoc = {
   shop_pass: { pass: number; counts: Record<string, number> };
   /** v28 — the 7-day Tide calendar. A missed day pauses it. */
   streak: StreakState;
+  /** v29 — element swords, relics, the equipped uid, and the last-merge undo. */
+  sword_bag: SwordBag;
 };
 
 /** A queued "hero owned" offer (Slice A2). `label` is the hero's display name
@@ -1089,6 +1112,8 @@ export type PlayView = {
    * were spent since the last "charges full" notice. */
   chargesFullAt: number | null;
   chargesArmed: boolean;
+  /** v29 — element swords (bag, equipped, relics, undo). */
+  swords: SwordPanel;
 };
 
 /** Read-model of the pet for the screens. */
@@ -1252,7 +1277,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 28,
+    version: 29,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -1330,6 +1355,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     tide: emptyTide(),
     shop_pass: { pass: 0, counts: {} },
     streak: emptyStreak(),
+    sword_bag: emptySwordBag(),
   };
 }
 
@@ -1427,6 +1453,7 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     milestones: milestonesOf(doc, now),
     chargesFullAt: chargesFullAt(doc, now),
     chargesArmed: doc.charges_armed,
+    swords: swordPanel(doc.sword_bag),
     boundBosses: doc.bound_bosses.map((record) => {
       const def = getBoundBossDef(record.id);
       return {
@@ -2575,6 +2602,8 @@ export type PetRoundResult = {
    * Shine Stone. */
   dailyEgg: boolean;
   dailyStone: boolean;
+  /** v29 — element sword or relic from this pass, or null. */
+  swordDrop: string | null;
 };
 
 /** v26 — how a round was played (Normal, score 0 when not given). */
@@ -2593,6 +2622,7 @@ export function finishPetRound(
   kind: PetRoundKind,
   outcome: RoundOutcome,
   meta: RoundMeta = PLAIN_ROUND,
+  claimKey?: string,
 ): { doc: PlayStoreDoc; result: PetRoundResult } {
   // touchPet also brings home an expedition whose time is up (v21).
   const touchedDoc = touchPet(doc, now);
@@ -2617,8 +2647,16 @@ export function finishPetRound(
     dailyBonusShells: 0,
     dailyEgg: false,
     dailyStone: false,
+    swordDrop: null,
   };
-  if (aged.stage === 'egg' || !outcome.pass) {
+  if (!outcome.pass) {
+    return {
+      doc: { ...touchedDoc, sword_bag: breakSwordStreak(touchedDoc.sword_bag) },
+      result: empty,
+    };
+  }
+  if (aged.stage === 'egg') return { doc: touchedDoc, result: empty };
+  if (claimKey && touchedDoc.sword_bag.claimed.includes(claimKey)) {
     return { doc: touchedDoc, result: empty };
   }
   // Baby care (v23 → v25): skilled = passed with 70%+; and its activity. v26:
@@ -2649,9 +2687,23 @@ export function finishPetRound(
   const rewards = meta.daily
     ? dailyRewards(daily.daily, today, medalFor(kind, DAILY_LEVEL, score, true))
     : { daily: daily.daily, egg: false, stone: false };
+  const swordKey = claimKey ?? `pet:${kind}:${touchedDoc.sword_bag.dropSeq}`;
+  const sworded = grantSwordDrop(touchedDoc.sword_bag, swordKey, {
+    source: 'minigame',
+    boss: false,
+    highWave: false,
+    deep: false,
+    ymd: today,
+  });
+  const swordDrop = sworded.grant
+    ? sworded.grant.bagFull
+      ? `${sworded.grant.name} (bag full)`
+      : sworded.grant.name
+    : null;
   return {
     doc: {
       ...touchedDoc,
+      sword_bag: sworded.bag,
       pet,
       tokens: doc.tokens + pay.tokens,
       pet_tokens_today: pay.paid,
@@ -2677,6 +2729,7 @@ export function finishPetRound(
       dailyBonusShells: daily.bonusShells,
       dailyEgg: rewards.egg,
       dailyStone: rewards.stone,
+      swordDrop,
     },
   };
 }
@@ -2869,6 +2922,10 @@ export type DefendWinResult = {
   catchupXp: boolean;
   /** Item ids dropped from this wave's drop table (rolled on the win). */
   dropItems: string[];
+  /** v29 — element sword or relic from this win. Null when nothing or a replay of the same claim. */
+  swordDrop: string | null;
+  /** v29 — this claim key was already paid. The doc is unchanged. */
+  duplicate: boolean;
   /** Hero first owned by this win (Slice A2) — a Main Scout band clear grants
    * Oni, a Main Final band clear grants Archangel. Null when this win granted no
    * hero (a replay, a non-band wave, or a band whose hero was already owned).
@@ -2897,6 +2954,8 @@ export type DefendWinContext = {
   phase: CampaignPhase;
   wave: number;
   mode: DefendWinMode;
+  /** Stable id for this run. A second call with the same key pays nothing. */
+  claimKey?: string;
 };
 
 /** The drop table a Defend wave rolls from (boss bands have their own; normal
@@ -2959,6 +3018,32 @@ export function recordDefendWin(
   const tune = getTune();
   const todayYmd = localYmd(new Date(now));
   const { phase, wave, mode } = ctx;
+  if (ctx.claimKey && doc.sword_bag.claimed.includes(ctx.claimKey)) {
+    return {
+      doc,
+      result: {
+        tokensGranted: 0,
+        shellsGranted: 0,
+        xpGranted: 0,
+        halved: false,
+        replayHalf: false,
+        clearsToday: doc.clears_today,
+        milestoneLook: null,
+        conquered: false,
+        conqueredCycles: doc.conquered_cycles,
+        cyclePower: doc.cycle_power,
+        campaign: doc.campaign,
+        starTokenGranted: false,
+        avatarStarTokens: doc.avatar_star_tokens,
+        catchupXp: false,
+        dropItems: [],
+        swordDrop: null,
+        duplicate: true,
+        heroOwned: null,
+        bossFragment: null,
+      },
+    };
+  }
   const isReplay = mode === 'replay';
   const isFinalBand = phase === 'main' && Math.floor(wave) >= MAIN_WAVE_COUNT;
 
@@ -3135,6 +3220,22 @@ export function recordDefendWin(
   }
 
   const shellsGranted = isReplay ? SHELLS_PER_REPLAY : SHELLS_PER_CLEAR;
+  const sworded = grantSwordDrop(
+    doc.sword_bag,
+    ctx.claimKey ?? `defend:${phase}:${Math.floor(wave)}:${mode}:${doc.sword_bag.dropSeq}`,
+    {
+      source: 'defend',
+      boss: band != null,
+      highWave: Math.floor(wave) >= swordConfig().drops.highWaveAt,
+      deep: false,
+      ymd: todayYmd,
+    },
+  );
+  const swordDrop = sworded.grant
+    ? sworded.grant.bagFull
+      ? `${sworded.grant.name} (bag full)`
+      : sworded.grant.name
+    : null;
   const next: PlayStoreDoc = patchActiveAvatar(
     {
       ...doc,
@@ -3158,6 +3259,7 @@ export function recordDefendWin(
       bound_bosses,
       owned_hero_ids: ownedHeroIds,
       hero_offer: heroOffer,
+      sword_bag: sworded.bag,
       // Pet (v20): every cleared wave (campaign or replay) feeds the pet a
       // heart, counts toward its Battle form and tallies the Legend element
       // for the God aura — so TD-only players still raise it.
@@ -3190,6 +3292,8 @@ export function recordDefendWin(
       starTokenGranted,
       avatarStarTokens: avatar_star_tokens,
       dropItems,
+      swordDrop,
+      duplicate: false,
       heroOwned,
       bossFragment,
       catchupXp,
@@ -4235,6 +4339,8 @@ export type SurfaceResult = {
   powersToday: number;
   petCared: boolean;
   free: boolean;
+  /** v29 — element sword or relic from this surface. */
+  swordDrop: string | null;
 };
 
 /** Surface: bank the haul (a free dive banks only its shells) and end the
@@ -4293,8 +4399,20 @@ export function surfaceDive(
     shellsGained = bankedDoc.shells;
     powersConverted = bankedDoc.powersConverted;
   }
+  const sworded = grantSwordDrop(next.sword_bag, `dive:${doc.play_stats.surfaces}`, {
+    source: 'dive',
+    boss: false,
+    highWave: false,
+    deep: run.deepers >= swordConfig().drops.deepAt,
+    ymd: localYmd(new Date(now)),
+  });
+  const swordDrop = sworded.grant
+    ? sworded.grant.bagFull
+      ? `${sworded.grant.name} (bag full)`
+      : sworded.grant.name
+    : null;
   return {
-    doc: next,
+    doc: { ...next, sword_bag: sworded.bag },
     banked: brought,
     netFind,
     heartyFind,
@@ -4303,6 +4421,7 @@ export function surfaceDive(
     powersToday: powersTodayOf(next, now),
     petCared: pet !== touched.pet,
     free,
+    swordDrop,
   };
 }
 
@@ -4970,6 +5089,53 @@ function snapshotDive(
   return { dive_charge: dive.current, dive_charge_at: lastLand };
 }
 
+/** A leak ends the defend win streak (relic odds). Idempotent when already 0. */
+export function noteDefendLeak(doc: PlayStoreDoc): PlayStoreDoc {
+  const next = breakSwordStreak(doc.sword_bag);
+  if (next === doc.sword_bag) return doc;
+  return { ...doc, sword_bag: next };
+}
+
+export type SwordAction =
+  | { op: 'equip'; uid: number }
+  | { op: 'unequip' }
+  | { op: 'undo' }
+  | { op: 'upgrade3'; element: string; tier: SwordTier }
+  | { op: 'upgrade5'; element: string; tier: SwordTier }
+  | { op: 'mix'; a: string; b: string; tier: SwordTier }
+  | { op: 'legendary'; element: string }
+  | { op: 'divine'; element: string };
+
+/** Bag merge / equip. Null refuses (the bag is unchanged). */
+export function applySwordAction(doc: PlayStoreDoc, action: SwordAction): PlayStoreDoc | null {
+  const bag = doc.sword_bag;
+  const result =
+    action.op === 'equip'
+      ? equipSword(bag, action.uid)
+      : action.op === 'unequip'
+        ? unequipSword(bag)
+        : action.op === 'undo'
+          ? undoMerge(bag)
+          : action.op === 'upgrade3'
+            ? mergeThree(bag, action.element, action.tier)
+            : action.op === 'upgrade5'
+              ? mergeFive(bag, action.element, action.tier)
+              : action.op === 'mix'
+                ? mixSwords(bag, action.a, action.b, action.tier)
+                : action.op === 'legendary'
+                  ? forgeLegendary(bag, action.element)
+                  : forgeDivine(bag, action.element);
+  if (!result.ok) return null;
+  return { ...doc, sword_bag: result.bag };
+}
+
+/** Dev kit only: put any element/tier sword in the bag and equip it. */
+export function devEquipSword(doc: PlayStoreDoc, element: string, tier: SwordTier): PlayStoreDoc | null {
+  const result = devGrantSword(doc.sword_bag, element, tier);
+  if (!result.ok) return null;
+  return { ...doc, sword_bag: result.bag };
+}
+
 /**
  * Parse a persisted doc, migrating any older version forward (v1 … v18).
  *
@@ -4999,7 +5165,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
       version !== 17 && version !== 18 && version !== 19 && version !== 20 &&
       version !== 21 && version !== 22 && version !== 23 && version !== 24 && version !== 25 &&
-      version !== 26 && version !== 27 && version !== 28
+      version !== 26 && version !== 27 && version !== 28 && version !== 29
     ) {
       return null;
     }
@@ -5109,6 +5275,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     const v26 = version >= 26;
     const v27 = version >= 27;
     const v28 = version >= 28;
+    const v29 = version >= 29;
     const hall = parsePetHall(data.pet_hall);
     // v27 (Part D): older saves — the pet is the active one in slot 1 and the
     // Den is empty with 6 slots; the pity counter, eggs today, Stones and
@@ -5130,7 +5297,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       (v27 ? Math.max(0, Math.floor(finiteNumber(data.shine_stones) ?? 0)) : 0) +
       retroShineStones(typeof version === 'number' ? version : 28, milestones);
     return {
-      version: 28,
+      version: 29,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -5238,6 +5405,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       tide: v28 ? parseTide(data.tide) : emptyTide(),
       shop_pass: v28 ? parseShopPass(data.shop_pass) : { pass: 0, counts: {} },
       streak: v28 ? parseStreak(data.streak) : emptyStreak(),
+      sword_bag: v29 ? parseSwordBag(data.sword_bag) : emptySwordBag(),
     };
   } catch {
     return null;

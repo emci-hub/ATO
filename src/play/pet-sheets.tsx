@@ -162,6 +162,7 @@ export function roundResultLine(kind: PetRoundKind, outcome: RoundOutcome, resul
   if (result.dailyBest) bits.push(`new daily best${result.dailyBonusShells > 0 ? ` · +${result.dailyBonusShells} shells` : ''}`);
   if (result.unlocked) bits.push(`${DIFFICULTY_LABEL[result.unlocked]} unlocked!`);
   if (result.rankUp) bits.push(`rank: ${result.rank}`);
+  if (result.swordDrop) bits.push(`Sword: ${result.swordDrop}`);
   return `${care}${pay}\n${bits.join(' · ')}`;
 }
 

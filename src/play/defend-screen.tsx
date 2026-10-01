@@ -205,6 +205,7 @@ import {
   useBoardLayoutsLoaded,
 } from '@/play/board-layouts';
 import { ELEMENT_COLOR, TOWER_KITS } from '@/play/kits';
+import { swordRuntime } from '@/play/swords';
 import { StatusIconRow, WeaknessDiamond } from '@/play/status-icon-row';
 import { statusIconsFor } from '@/play/status-icons';
 
@@ -677,6 +678,8 @@ export function DefendScreen({
   onDevClearHeroOffer,
   onDevClearOwnedHeroes,
   onOpenDress,
+  onOpenSwords,
+  onLeak,
   registerBack,
   onBackToGrove,
 }: {
@@ -734,6 +737,10 @@ export function DefendScreen({
   onDevClearOwnedHeroes: () => Promise<boolean>;
   /** Leave the sheet for the Dress Hero roster (A2.5). */
   onOpenDress: () => void;
+  /** Element swords — mix, merge, equip. */
+  onOpenSwords: () => void;
+  /** A leak breaks the sword win streak. Called once per failed run. */
+  onLeak: () => void;
   /** Back one level (edge-back.ts): the Play shell asks Defend first. */
   registerBack?: (inner: InnerBack | null) => void;
   onBackToGrove: () => void;
@@ -1010,6 +1017,12 @@ export function DefendScreen({
   fightRef.current = fight;
   /** The fight that started the CURRENT run (won overlay actions key off it). */
   const playedRef = useRef<Fight>(fight);
+  /** One pay and one streak break per run. The tick can fire again before React leaves `running`. */
+  const winPaidRef = useRef(false);
+  const leakNotedRef = useRef(false);
+  const claimKeyRef = useRef('');
+  const onLeakRef = useRef(onLeak);
+  onLeakRef.current = onLeak;
 
   const displayedWave = sim?.wave ?? fight.wave;
   /** The phase of the CURRENT board — the sim's run wins while one exists, so
@@ -1317,8 +1330,11 @@ export function DefendScreen({
       legendElement: view.legendElement,
       avatarStars: view.avatarStars,
       rebirthBonus: view.petRebirthBonus,
+      sword: view.swords.equipped
+        ? swordRuntime(view.swords.equipped.element, view.swords.equipped.tier)
+        : null,
     }),
-    [view.statSums, view.avatarLevel, view.avatarStars, view.legendElement, view.petRebirthBonus],
+    [view.statSums, view.avatarLevel, view.avatarStars, view.legendElement, view.petRebirthBonus, view.swords.equipped],
   );
   const bucketsRef = useRef(buckets);
   bucketsRef.current = buckets;
@@ -1522,6 +1538,9 @@ export function DefendScreen({
    * into the fight (spec §9: setup place → start). */
   const startWave = useCallback(() => {
     playedRef.current = fightRef.current;
+    winPaidRef.current = false;
+    leakNotedRef.current = false;
+    claimKeyRef.current = `defend:${fightRef.current.phase}:${fightRef.current.wave}:${Date.now()}`;
     const starting = simRef.current;
     if (starting) takeBankScrap(layoutKey(starting.mapId, starting.boardId));
     setSim((prev) => prev ?? createDefendLive(fightRef.current.wave, {
@@ -1863,6 +1882,8 @@ export function DefendScreen({
   }, [corpses.length, phase, paused]);
 
   const winWave = useCallback(() => {
+    if (winPaidRef.current) return;
+    winPaidRef.current = true;
     const played = playedRef.current;
     // The whole scrap balance carries into this map's next setup (pads are
     // locked during a wave, so kill scrap had nothing to buy mid-run). SET, not
@@ -1878,7 +1899,8 @@ export function DefendScreen({
     setPhase('won');
     setPaused(false);
     setSelectedPad(null);
-    void onWin({ phase: played.phase, wave: played.wave, mode: played.mode }).then((result) => {
+    const claimKey = claimKeyRef.current || `defend:${played.phase}:${played.wave}:${played.mode}`;
+    void onWin({ phase: played.phase, wave: played.wave, mode: played.mode, claimKey }).then((result) => {
       if (result) setLastWin(result);
     });
   }, [onWin]);
@@ -2065,6 +2087,10 @@ export function DefendScreen({
       simRef.current = step.state;
       setSim(step.state);
       if (step.leak && !godModeRef.current) {
+        if (!leakNotedRef.current) {
+          leakNotedRef.current = true;
+          onLeakRef.current();
+        }
         setPhase('lost');
         setPaused(false);
         setSelectedPad(null);
@@ -2273,6 +2299,9 @@ export function DefendScreen({
     simRef.current = preview;
     setSim(preview);
     ensureParked('main');
+    winPaidRef.current = false;
+    leakNotedRef.current = false;
+    claimKeyRef.current = `defend:main:${preview.wave}:preview:${Date.now()}`;
     setPhase('running');
     setPaused(false);
     setSelectedPad(null);
@@ -2475,6 +2504,20 @@ export function DefendScreen({
   );
 
   const avatarFootAt = roleFootAt(avatarRole);
+  const equippedSword = view.swords.equipped;
+  const swordFx = equippedSword ? swordRuntime(equippedSword.element, equippedSword.tier) : null;
+  const auraRadius = swordFx?.auraRadius ?? 0;
+  const swordAuraStyle = useAnimatedStyle(() => {
+    const size = boardSize.value || 100;
+    const diameter = (auraRadius / 100) * size * 2;
+    return {
+      width: diameter,
+      height: diameter,
+      borderRadius: diameter / 2,
+      left: avatarX.value * size - diameter / 2,
+      top: avatarY.value * size - diameter / 2,
+    };
+  }, [auraRadius]);
   const avatarStyle = useAnimatedStyle(() => {
     // Read the SHARED board size (reactive) so the sprite scales with the board.
     // The box is feet-pivoted (`avatarFootAt`) so the Avatar's feet land on the
@@ -2594,6 +2637,16 @@ export function DefendScreen({
               <ThemedText type="smallBold" themeColor="textSecondary">
                 ‹ Divecore
               </ThemedText>
+          </Pressable>
+          <Pressable
+            onPress={onOpenSwords}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Swords"
+            style={({ pressed }) => [pressed && styles.pressed]}>
+            <ThemedText type="smallBold" themeColor="textSecondary">
+              Swords
+            </ThemedText>
           </Pressable>
         </View>
 
@@ -3292,6 +3345,12 @@ export function DefendScreen({
             </View>
             {fpsMeterOn ? <FpsOverlay stats={fpsStats} fxCount={stressFx} /> : null}
 
+            {phase === 'running' && swordFx ? (
+              <Animated.View
+                pointerEvents="none"
+                style={[styles.swordAura, swordAuraStyle, { borderColor: swordFx.color, backgroundColor: swordFx.color }]}
+              />
+            ) : null}
             {/* Walking Avatar overlay (§19 cast Corvus). The frame cycles
                 idle/walk and one-shots attack/skill/hurt/dash; the art is 2-dir
                 (sticky E/W), so no rotate is applied. pointerEvents none so
@@ -3845,11 +3904,13 @@ export function DefendScreen({
             accessibilityRole="button"
             accessibilityLabel={runCoachOpen ? 'Hide coach tip' : 'Show coach tip'}>
             <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
-              {coachHidden
-                ? `Towers fire on their own — drag your Avatar and time ${activeSkill.name}.`
-                : runCoachOpen
-                  ? `Coach: ${coach.tip}`
-                  : 'Coach tip ›'}
+              {swordFx
+                ? `Aura: ${swordFx.name} — ${swordFx.auraLabel}.`
+                : coachHidden
+                  ? `Towers fire on their own — drag your Avatar and time ${activeSkill.name}.`
+                  : runCoachOpen
+                    ? `Coach: ${coach.tip}`
+                    : 'Coach tip ›'}
             </ThemedText>
           </Pressable>
         ) : null}
@@ -3961,6 +4022,7 @@ export function DefendScreen({
               <>
                 <ThemedText type="small" themeColor="textSecondary">
                   +{lastWin.tokensGranted} tokens · +{lastWin.shellsGranted} shells · +{lastWin.xpGranted} XP
+                  {lastWin.swordDrop ? ` · ${lastWin.swordDrop}` : ''}
                   {lastWin.milestoneLook
                     ? ` · ${ordinal(lastWin.milestoneLook.count)} clear — found a Rare Look!`
                     : ''}
@@ -4113,6 +4175,9 @@ export function DefendScreen({
                     bankRestage(fresh);
                     return fresh;
                   });
+                  winPaidRef.current = false;
+                  leakNotedRef.current = false;
+                  claimKeyRef.current = `defend:${playedRef.current.phase}:${playedRef.current.wave}:retry:${Date.now()}`;
                   setPhase('running');
                   setPaused(false);
                   setSelectedPad(null);
@@ -4938,6 +5003,7 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   lede: {
     marginTop: -Spacing.one,
@@ -5121,6 +5187,12 @@ const styles = StyleSheet.create({
   pausedBox: {
     gap: Spacing.two,
     marginTop: Spacing.two,
+  },
+  swordAura: {
+    position: 'absolute',
+    borderWidth: 3,
+    opacity: 0.28,
+    zIndex: 4,
   },
   avatar: {
     position: 'absolute',
