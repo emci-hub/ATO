@@ -4,11 +4,13 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'r
 import { BackHandler, PanResponder, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { PlayDevFab } from '@/components/play-dev-fab';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useImmersiveMode } from '@/hooks/use-immersive-mode';
 import { useTheme } from '@/hooks/use-theme';
+import { playDevFabVisible } from '@/lib/dev-fab-model';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { useAppearance } from '@/lib/theme/context';
 import { AboutScreen } from '@/play/about-screen';
@@ -283,6 +285,9 @@ export default function PlayScreen() {
   const [swordNotice, setSwordNotice] = useState<string | null>(null);
   /** Dev kit only: PIN-unlocked this session? (soft gate — dev-lock.ts). */
   const devUnlocked = usePlayDevUnlocked();
+  const [devKitOpen, setDevKitOpen] = useState(false);
+  const closeDevKit = useCallback(() => setDevKitOpen(false), []);
+  const showPlayDevFab = playDevFabVisible({ preLaunchDev: PRE_LAUNCH_DEV, playDevUnlocked: devUnlocked });
 
   // Hydrate the local tune doc once so persisted presets survive app kills.
   useEffect(() => {
@@ -690,6 +695,36 @@ export default function PlayScreen() {
       ? () => setHubSettingsOpen(false)
       : null;
 
+  const groveDevKitPanel = (afterNavigate?: () => void) => (
+    <GroveDevKit
+      commit={commit}
+      onGrantRandomFind={handleGrantRandomFind}
+      onGrantRandomPower={handleGrantRandomPower}
+      onGrantTideBlades={handleGrantTideBlades}
+      onSellAllJunk={handleSellAllJunk}
+      onClearEquipped={() => void clearEquipped()}
+      onFillJunkLooks={() => void fillJunkLooks()}
+      forceBustArmed={forceBustArmed}
+      onToggleForceBust={() => setForceBustArmed((armed) => !armed)}
+      skipDelays={skipDelays}
+      onToggleSkipDelays={() => setSkipDelays((skip) => !skip)}
+      forceMerge={forceMerge}
+      onSetForceMerge={setForceMerge}
+      onToggleTune={() => {
+        afterNavigate?.();
+        setShowTune((open) => !open);
+      }}
+      onOpenSheetLab={() => {
+        afterNavigate?.();
+        setMode('sheetlab');
+      }}
+      onOpenSwordLab={() => {
+        afterNavigate?.();
+        setMode('swordlab');
+      }}
+    />
+  );
+
   return (
     <PlayThemeProvider>
       {/* Forced ink chrome is dark regardless of the app-wide mode. */}
@@ -752,26 +787,7 @@ export default function PlayScreen() {
               {showTune ? <TunePanel onClose={() => setShowTune(false)} /> : null}
 
               {PRE_LAUNCH_DEV && !devUnlocked ? <DevUnlockRow /> : null}
-              {PRE_LAUNCH_DEV && devUnlocked ? (
-                <GroveDevKit
-                  commit={commit}
-                  onGrantRandomFind={handleGrantRandomFind}
-                  onGrantRandomPower={handleGrantRandomPower}
-                  onGrantTideBlades={handleGrantTideBlades}
-                  onSellAllJunk={handleSellAllJunk}
-                  onClearEquipped={() => void clearEquipped()}
-                  onFillJunkLooks={() => void fillJunkLooks()}
-                  forceBustArmed={forceBustArmed}
-                  onToggleForceBust={() => setForceBustArmed((armed) => !armed)}
-                  skipDelays={skipDelays}
-                  onToggleSkipDelays={() => setSkipDelays((skip) => !skip)}
-                  forceMerge={forceMerge}
-                  onSetForceMerge={setForceMerge}
-                  onToggleTune={() => setShowTune((open) => !open)}
-                  onOpenSheetLab={() => setMode('sheetlab')}
-                  onOpenSwordLab={() => setMode('swordlab')}
-                />
-              ) : null}
+              {PRE_LAUNCH_DEV && devUnlocked ? groveDevKitPanel() : null}
             </CommandHub>
           </ScrollView>
         </SafeAreaView>
@@ -946,6 +962,9 @@ export default function PlayScreen() {
             setOpenGuide(true);
           }}
         />
+      ) : null}
+      {showPlayDevFab ? (
+        <PlayDevFab open={devKitOpen} onOpenChange={setDevKitOpen} panel={groveDevKitPanel(closeDevKit)} />
       ) : null}
     </PlayThemeProvider>
   );

@@ -1,25 +1,17 @@
 /**
- * The floating dev button — pure rules (scripts/dev-fab-check.ts pins them).
+ * Play floating dev button — pure rules (scripts/dev-fab-check.ts pins them).
  *
- * Who sees it is exactly who may open the Dev Tools Hub (`canSeeDevLab`):
- * PRE_LAUNCH_DEV or the session unlock, root, or a granted capability. It is
- * never shown signed out, mid-onboarding, or while the app is still resolving.
+ * Shown only inside Divecore/Play, and only when the Play dev kit is unlocked
+ * (`PRE_LAUNCH_DEV` plus the session PIN). Release builds strip Play entirely.
  */
-import { canSeeDevLab } from '@/lib/dev-access';
-
 export const DEV_FAB_SIZE = 44;
 export const DEV_FAB_EDGE = 8;
 
-export function devFabVisible(input: {
-  isAuthed: boolean;
-  hasMe: boolean;
-  devAccessLoading: boolean;
-  isDev: boolean;
-  isRoot: boolean;
-  capabilities: readonly string[];
+export function playDevFabVisible(input: {
+  preLaunchDev: boolean;
+  playDevUnlocked: boolean;
 }): boolean {
-  if (!input.isAuthed || !input.hasMe || input.devAccessLoading) return false;
-  return canSeeDevLab({ isDev: input.isDev, isRoot: input.isRoot, capabilities: input.capabilities });
+  return input.preLaunchDev && input.playDevUnlocked;
 }
 
 export type FabBounds = { width: number; height: number; top: number; bottom: number };

@@ -61,7 +61,7 @@ const sheets = fs.readFileSync('src/play/pet-sheets.tsx', 'utf8');
 assert.ok(sheets.includes("return dev ? [...tabs, { id: 'dev', label: 'Dev' }] : tabs;"), 'infoTabs adds the Dev tab only when dev');
 assert.equal((sheets.match(/id: 'dev'/g) ?? []).length, 1, 'the Dev tab is added in one place only');
 const shell = fs.readFileSync('src/app/play.tsx', 'utf8');
-assert.match(shell, /PRE_LAUNCH_DEV && devUnlocked \? \(\s*<GroveDevKit/, 'hub: the Dev kit only when PRE_LAUNCH_DEV && devUnlocked');
+assert.match(shell, /PRE_LAUNCH_DEV && devUnlocked \? groveDevKitPanel\(\)/, 'hub: the Dev kit only when PRE_LAUNCH_DEV && devUnlocked');
 assert.match(shell, /PRE_LAUNCH_DEV && !devUnlocked \? <DevUnlockRow/, 'hub: the unlock row only pre-launch');
 ok('known gates pinned: Pet Dev tab, hub Dev kit and unlock row');
 
