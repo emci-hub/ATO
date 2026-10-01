@@ -1,9 +1,8 @@
 -- ============================================================================
--- APPROVED by emci 2026-10-01 ("Apply"). ⚠️ NOT APPLIED YET.
--- The session that wrote it was not permitted to read or change the live
--- database, so it must be run by hand (Supabase dashboard → SQL editor → paste
--- this whole file → Run) or by a session that is allowed to. Update this header
--- and docs/NOW.md once it has run.
+-- APPLIED 2026-10-01 by emci, by hand in the Supabase SQL editor (via
+-- docs/RUN_IN_SUPABASE.sql, which is this file + its sibling in one transaction).
+-- Confirmed by the bundle's own check: pool_lock_applied, refund_function_ready
+-- and clear_function_ready all returned true.
 --
 -- Part 2 (refund_ai_call) is safe to apply now but does nothing until the
 -- ai-generate patch in docs/proposals/ is deployed — which is NOT approved yet.

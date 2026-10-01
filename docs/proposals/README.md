@@ -4,14 +4,14 @@ Server-side fixes drafted on 2026-10-01.
 
 | File | What it is | Status |
 |---|---|---|
-| `supabase/migrations/wave74_bank_pool_owner_and_ai_refund.sql` | Database change | APPROVED by emci 2026-10-01 — **not applied yet** (moved out of this folder) |
-| `supabase/migrations/wave75_reset_my_test_data.sql` | Database change (test tool) | APPROVED by emci 2026-10-01 — **not applied yet** (moved out of this folder) |
+| `supabase/migrations/wave74_bank_pool_owner_and_ai_refund.sql` | Database change | **APPLIED 2026-10-01** (emci, by hand) |
+| `supabase/migrations/wave75_reset_my_test_data.sql` | Database change (test tool) | **APPLIED 2026-10-01** (emci, by hand) |
 | `ai-generate-refund-and-fallback.patch` | Change to the `ai-generate` Edge Function | NOT approved, NOT deployed |
 
-The two approved files could not be applied by the session that wrote them (it
-was not permitted to touch the live database). To apply: Supabase dashboard →
-SQL editor → paste the whole file → Run. wave74 first, then wave75. For wave75
-the account you test on must be root (`me.is_root = true`).
+Both were applied by emci on 2026-10-01 by pasting `docs/RUN_IN_SUPABASE.sql` into
+the Supabase SQL editor; its check returned three `true` values. For wave75 the
+account you test on must be root (`me.is_root = true`). The only thing still
+waiting here is the `ai-generate` patch.
 
 ## 1. Shared question pool lock (the SQL file, part 1)
 

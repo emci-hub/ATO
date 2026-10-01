@@ -374,7 +374,7 @@ var SYSTEM_MAP = {
       "col": "questions",
       "title": "Shared question bank pool",
       "status": "live",
-      "flag": true,
+      "flag": false,
       "axes": "all",
       "summary": "One global table of questions shared by every user. The 25-question rounds draw from it, and AI-written questions are added to it.",
       "facts": [
@@ -400,8 +400,8 @@ var SYSTEM_MAP = {
         ]
       ],
       "differs": [
-        "FIXED in the app (2026-10-01): text the user typed (their name, a saved fact) no longer goes into the prompt whose output is saved here.",
-        "STILL OPEN on the server: any signed-in user can call the write function directly with any text, and other users are then served it. A fix is drafted in docs/proposals/wave74_bank_pool_owner_and_ai_refund.sql — NOT applied."
+        "FIXED in the app (2026-10-01): text the user typed no longer goes into the prompt whose output is saved here.",
+        "FIXED on the server (wave74, applied 2026-10-01): an AI-written question is served only to the account that generated it. The hand-written bank stays shared. Older AI rows have no owner and are no longer served."
       ],
       "files": [
         "src/lib/questions/bank-pool.ts:60-123",
@@ -1291,9 +1291,7 @@ var SYSTEM_MAP = {
           "Questions."
         ]
       ],
-      "differs": [
-        "The server still lets a user write to the shared pool directly. Fix drafted, not applied (docs/proposals)."
-      ],
+      "differs": [],
       "files": [
         "src/lib/questions/prompt.ts:34-136",
         "src/lib/questions/context.ts:7-27",
@@ -2907,8 +2905,9 @@ var SYSTEM_MAP = {
         "severity": "high",
         "title": "Any signed-in user can write straight into the shared question pool",
         "detail": "insert_bank_pool_items can be called directly by any logged-in account, with any prompt text and any axis, up to 25 at a time. Same pool, no AI needed. An existing prompt with the same text is overwritten.",
-        "fix": "Drafted, NOT applied: docs/proposals/wave74_bank_pool_owner_and_ai_refund.sql — AI rows are served only to the account that generated them.",
-        "files": "supabase/migrations/wave63_fix_insert_bank_pool_items_ambiguous_prompt.sql:26-72"
+        "fix": "",
+        "files": "supabase/migrations/wave63_fix_insert_bank_pool_items_ambiguous_prompt.sql:26-72",
+        "fixed": "Fixed 2026-10-01 (wave74 applied): a user can still write rows, but only that same user is ever served them."
       },
       {
         "kind": "security",
@@ -3204,8 +3203,8 @@ var SYSTEM_MAP = {
             "t": "Their name and saved facts no longer go into questions other users can see."
           },
           {
-            "s": "gap",
-            "t": "The database still lets a user write to the shared question pool directly. A fix is written and waiting for your OK."
+            "s": "works",
+            "t": "AI-written questions are only ever served to the account that generated them."
           },
           {
             "s": "gap",
