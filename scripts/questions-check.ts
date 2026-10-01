@@ -26,6 +26,7 @@ import {
 import { parseQuestionBatch } from '../src/lib/questions/parse';
 import { buildQuestionsPrompt } from '../src/lib/questions/prompt';
 import { preferFreshAxes, recentAskedAxes } from '../src/lib/questions/rotation';
+import { unansweredRowKeys } from '../src/lib/questions/category-paged';
 import { QUESTIONS_BATCH_SIZE, QUESTIONS_CALL_TYPE } from '../src/lib/questions/types';
 import type { QuestionDraft } from '../src/lib/questions/types';
 import { emptySageKnowsState } from '../src/lib/sage-knows';
@@ -644,7 +645,7 @@ assert.match(fold, /uniqueCategoryAxes\(liveCategoryDefs\)/);
     fold.indexOf('/>', fold.indexOf('<PagedQuestions')),
   );
   assert.match(bankAdapter, /rows=\{bankRows\}/);
-  assert.match(bankAdapter, /progressLabel=\{`\$\{bankCompletedAxes\.length\} of \$\{bankAxes\.length\} axes complete`\}/);
+  assert.match(bankAdapter, /progressLabel=\{`\$\{bankCompletedAxes\.length\} of \$\{bankAxes\.length\} traits covered`\}/);
   // routeQuestions/priorityAxes/mergeCategoryPriority belong to the default
   // rotation above this usage, never to how Full Profile is fed — a bad bank
   // read must never be able to reach the persisted daily-pack rotation.
@@ -679,7 +680,13 @@ assert.match(pagedQuestions, /export \{ completedAxesFrom, uniqueCategoryAxes \}
 const categoryPagedLib = read('src/lib/questions/category-paged.ts');
 assert.match(categoryPagedLib, /export function uniqueCategoryAxes/);
 assert.match(categoryPagedLib, /export function completedAxesFrom/);
-assert.match(pagedQuestions, /humanizeAxis/);
+// 2026-10-01: the label above each question is the reviewed plain-language
+// AXIS_EDITOR_COPY label, not humanizeAxis's placeholder ("attachment anxiety").
+assert.match(pagedQuestions, /AXIS_EDITOR_COPY\[row\.axis\]\.label/);
+assert.doesNotMatch(pagedQuestions, /humanizeAxis/);
+// Finish with questions left over flags them and jumps to the first one.
+assert.match(pagedQuestions, /unansweredRowKeys\(/);
+assert.match(pagedQuestions, /if \(atLast && firstMissingIndex >= 0\)/);
 assert.match(pagedQuestions, /locked \? null :/);
 assert.match(pagedQuestions, /Page \{clampedPage \+ 1\} of \{totalPages\}/);
 assert.match(pagedQuestions, /loadCategoryPagePosition/);
@@ -792,6 +799,34 @@ assert.match(
 // that remains is "Next 25 questions", which has always had its own press and
 // is asserted above.
 ok('the "A faster pass" sweep stays deleted and the bank list opens expanded by default');
+
+// --- unansweredRowKeys: which rows to flag when Finish is pressed early ---
+{
+  const draft: QuestionDraft = { axis: 'openness', prompt: 'p', options: [{ text: 'a', value: 0.2 }, { text: 'b', value: 0.8 }] };
+  const row = (key: string, axis: TraitAxis, answered: boolean) => ({ key, axis, draft: { ...draft, axis }, answered });
+  const none = new Set<string>();
+
+  // Bank rows read "answered" by the axis COUNT (first N rows). Row 1 was
+  // skipped and row 2 answered: the count is 1, so row 1 reads answered and
+  // row 2 does not — but the local pick is on row 2. Row 1 is the open one.
+  const skippedFirst = [row('openness-0', 'openness', true), row('openness-1', 'openness', false)];
+  assert.deepEqual([...unansweredRowKeys(skippedFirst, new Set(['openness-1']), none)], ['openness-0']);
+  // Same pick, still saving (count not bumped yet): still row 1.
+  const bothOpen = [row('openness-0', 'openness', false), row('openness-1', 'openness', false)];
+  assert.deepEqual([...unansweredRowKeys(bothOpen, new Set(['openness-1']), new Set(['openness-1']))], ['openness-0']);
+  // Fresh install: no local picks, count says 1 of 2 — the row past the count.
+  assert.deepEqual([...unansweredRowKeys(skippedFirst, none, none)], ['openness-1']);
+  // Everything answered, or nothing left once pending picks land: nothing flagged.
+  assert.equal(unansweredRowKeys([row('a', 'openness', true), row('b', 'autonomy', true)], none, none).size, 0);
+  assert.equal(unansweredRowKeys(bothOpen, new Set(['openness-0', 'openness-1']), new Set(['openness-0', 'openness-1'])).size, 0);
+  // Round rows carry a real per-item `answered`: exactly the unanswered, unpicked ones.
+  const round = [row('i1', 'autonomy', true), row('i2', 'autonomy', false), row('i3', 'playfulness', false)];
+  assert.deepEqual([...unansweredRowKeys(round, new Set(['i3']), new Set(['i3']))], ['i2']);
+  // Stamps that outlived their answers (account cleared, same device): every
+  // row has a pick, none is answered — still flagged, never a silent Finish.
+  assert.deepEqual([...unansweredRowKeys(bothOpen, new Set(['openness-0', 'openness-1']), none)], ['openness-0', 'openness-1']);
+  ok('unansweredRowKeys flags the row that is really open, including a skipped first question on an axis');
+}
 
 console.log(`\n${passed} question checks passed`);
 }

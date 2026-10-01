@@ -14,7 +14,7 @@
 import type { BankCandidate } from './bank-pool';
 import { pickQuestionGrounding } from './context';
 import { buildQuestionsPrompt } from './prompt';
-import { tieredAxisCounts } from './tiered-axis-plan';
+import { roundAxisCounts } from './tiered-axis-plan';
 import {
   fillAxisCountsChunked,
   isNearDuplicate,
@@ -136,7 +136,9 @@ export async function composeOngoingRound(
   const recentText = await deps.fetchRecentTexts();
 
   const { drafts: bankDrafts, remaining, excludeText } = await fillFromBank(
-    tieredAxisCounts(),
+    // Lagging axes (under 3 answers) first and heaviest; the plain tiered plan
+    // once every axis is at the floor. See `roundAxisCounts`.
+    roundAxisCounts(tracks),
     recentText,
     deps,
   );

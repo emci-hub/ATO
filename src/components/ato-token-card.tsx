@@ -9,7 +9,7 @@ import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { ATO_TOKEN_LABEL, ATO_TOKEN_LEDE, atoTokenBalanceOf } from '@/lib/ato-tokens';
+import { ATO_TOKEN_HOW_LINES, ATO_TOKEN_LABEL, ATO_TOKEN_LEDE, atoTokenBalanceOf } from '@/lib/ato-tokens';
 import { fetchAtoTokenEvents, type AtoTokenEvent } from '@/lib/ato-tokens-server';
 
 /** Plain words for each ledger reason. An unknown reason shows as "Tokens". */
@@ -57,6 +57,13 @@ export function AtoTokenCard({ me }: { me: { id: string; ato_tokens?: number | n
       <ThemedText type="small" themeColor="textSecondary">
         {ATO_TOKEN_LEDE}
       </ThemedText>
+      <View style={styles.events}>
+        {ATO_TOKEN_HOW_LINES.map((line) => (
+          <ThemedText key={line} type="small" themeColor="textSecondary">
+            {line}
+          </ThemedText>
+        ))}
+      </View>
       {events && events.length > 0 ? (
         <View style={styles.events}>
           {events.map((event) => (

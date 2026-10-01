@@ -15,9 +15,14 @@ import {
   applyEwmaAnswer,
   directEvidenceCountFor,
   effectiveStability,
+  isAxisSettled,
   isInconsistentAnswerer,
   isProfileSettled,
   nudgedSecondaryValue,
+  settledAxisCount,
+  settledAxisLabel,
+  settledCount,
+  settlingLine,
   totalEvidenceCountFor,
   trackFor,
   type TraitTrack,
@@ -293,5 +298,36 @@ assert.deepEqual(
 );
 assert.deepEqual(contradictedAxesFrom([]), [], 'no history at all yields no contradicted axes');
 ok('contradictedAxesFrom (T-04) correctly wires hasContradictedAnswers to real trait_history rows, report-track only');
+
+// --- "N of 16 settled" is a count of axes (2026-10-01) ---
+// It used to be Math.round of the stability SUM: six settled axes read as
+// about five, and a fully settled profile almost never read 16.
+{
+  const at = '2026-10-01T00:00:00.000Z';
+  const now = new Date(at);
+  const answered = (axis: (typeof TRAIT_AXES)[number], samples: number[]) =>
+    samples.reduce<TraitTrack | null>((row, s) => applyEwmaAnswer(row, axis, 'report', s, at), null)!;
+
+  // The intake's shape: 6/6/6, 4/4/4, then ten axes on 2 — all agreeing.
+  const afterIntake = TRAIT_AXES.map((axis, i) => answered(axis, Array(i < 3 ? 6 : i < 6 ? 4 : 2).fill(0.8)));
+  assert.equal(settledAxisCount(afterIntake, now), 6, 'six axes have 3+ agreeing answers after the 50');
+  assert.equal(settledAxisLabel(afterIntake, now), `6 of ${TRAIT_AXES.length} settled`);
+  assert.ok(settledCount(afterIntake, now) < 6, 'the stability sum under-reads the same profile — why it is no longer the label');
+
+  const afterRoundOne = TRAIT_AXES.map((axis) => answered(axis, [0.8, 0.8, 0.8]));
+  assert.equal(settledAxisLabel(afterRoundOne, now), `${TRAIT_AXES.length} of ${TRAIT_AXES.length} settled`);
+  assert.equal(isProfileSettled(afterRoundOne, now), true, 'the label reads 16 of 16 exactly when isProfileSettled is true');
+  ok('settledAxisLabel counts settled axes: 6 of 16 after the 50, 16 of 16 once every axis has three agreeing answers');
+
+  const two = answered('openness', [0.8, 0.8]);
+  assert.match(settlingLine(two, now) ?? '', /2 of 3 answers\. 1 more/);
+  // Past the answer floor with no agreement built up (below the 8-answer override).
+  const clashing: TraitTrack = { ...two, answerCount: 4, stability: 0 };
+  assert.match(settlingLine(clashing, now) ?? '', /point different ways/, 'past the floor, only disagreement holds an axis unsettled — and the line says so');
+  assert.equal(settlingLine(answered('openness', [0.8, 0.8, 0.8]), now), null, 'a settled axis has no settling line');
+  assert.equal(settlingLine(null, now), null, 'an unanswered axis has no settling line (it shows "Not answered yet")');
+  assert.equal(isAxisSettled(two, now), false);
+  ok('settlingLine says how many answers are left, or that the answers disagree; null once settled');
+}
 
 console.log(`\n${passed} trait-stability floor checks passed`);

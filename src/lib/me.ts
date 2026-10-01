@@ -913,11 +913,13 @@ export async function setAiConsent(userId: string, consent: boolean): Promise<Me
  * ids are new; this just dedupes and writes.
  */
 export async function persistCelebratedMilestones(userId: string, ids: readonly string[]): Promise<Me> {
-  const { data: current } = await supabase
+  const { data: current, error: readError } = await supabase
     .from('me')
     .select('celebrated_milestone_ids')
     .eq('id', userId)
     .single();
+  // A failed read would otherwise write `ids` alone over the stored array.
+  if (readError) throw readError;
   const existing = Array.isArray(current?.celebrated_milestone_ids)
     ? (current.celebrated_milestone_ids as string[])
     : [];

@@ -7,14 +7,32 @@ import assert from 'node:assert/strict';
 import type { BankCandidate } from '../src/lib/questions/bank-pool';
 import { composeOngoingRound, type ComposeOngoingRoundDeps } from '../src/lib/questions/ongoing-round';
 import { TIERED_ROUND_SIZE } from '../src/lib/questions/tiered-axis-plan';
+import type { TraitTrack } from '../src/lib/trait-stability';
 import type { QuestionDraft } from '../src/lib/questions/types';
-import type { TraitAxis } from '../src/lib/traits';
+import { TRAIT_AXES, type TraitAxis } from '../src/lib/traits';
 
 let passed = 0;
 function ok(label: string) {
   passed += 1;
   console.log(`  ✓ ${label}`);
 }
+
+/**
+ * Every axis at the 3-answer floor: the steady state, where a round is the
+ * plain tiered plan (AXIS_TIER_COUNTS). The blocks below pin that plan's
+ * per-axis counts, so they run against this, not an empty profile — since
+ * 2026-10-01 a profile with axes under the floor gets the lagging-first
+ * allocation instead (pinned in tiered-axis-plan-check.ts and at the end here).
+ */
+const settledTracks: TraitTrack[] = TRAIT_AXES.map((axis) => ({
+  axis,
+  track: 'report',
+  value: 0.5,
+  stability: 0.5,
+  answerCount: 3,
+  lastTouched: '2026-10-01T00:00:00.000Z',
+  lastDepthAt: null,
+}));
 
 const me = { name: 'Ari', talk_style: 'even' as const, voice_preset: 'default', sage_knows: {}, facts: ['Trains for a 10k.'] };
 
@@ -54,7 +72,7 @@ async function run() {
   {
     const sawGroundingFact = { value: false };
     const generated = new Map<string, number>();
-    const drafts = await composeOngoingRound(me, [], [], noBankDeps(generated, sawGroundingFact));
+    const drafts = await composeOngoingRound(me, [], settledTracks, noBankDeps(generated, sawGroundingFact));
 
     assert.equal(drafts.length, TIERED_ROUND_SIZE, 'an ongoing round generates the full 25-question tiered allocation');
     assert.equal(generated.size, TIERED_ROUND_SIZE, 'every generated draft is saved immediately, not batched at the end');
@@ -83,7 +101,7 @@ async function run() {
     const recordedUsage: string[][] = [];
     let sawPlayfulnessInPrompt = false;
 
-    const drafts = await composeOngoingRound(me, [], [], {
+    const drafts = await composeOngoingRound(me, [], settledTracks, {
       fetchRecentTexts: async () => [],
       fetchBankCandidates: async (axis) => (axis === 'playfulness' ? [bankCandidate] : []),
       recordBankUsage: async (ids) => {
@@ -131,7 +149,7 @@ async function run() {
     const generated = new Map<string, number>();
     let sawPlayfulnessInPrompt = false;
 
-    await composeOngoingRound(me, [], [], {
+    await composeOngoingRound(me, [], settledTracks, {
       fetchRecentTexts: async () => ['already asked this one'],
       fetchBankCandidates: async (axis) => (axis === 'playfulness' ? [{ id: 'bank-dup', draft: dupDraft }] : []),
       recordBankUsage: async () => {},
@@ -171,7 +189,7 @@ async function run() {
     let conscientiousnessRequestedCount = 0;
     let seq = 0;
 
-    const drafts = await composeOngoingRound(me, [], [], {
+    const drafts = await composeOngoingRound(me, [], settledTracks, {
       fetchRecentTexts: async () => [],
       fetchBankCandidates: async (axis) =>
         axis === 'conscientiousness' ? [{ id: 'bank-partial', draft: bankDraft }] : [],
@@ -224,7 +242,7 @@ async function run() {
     };
 
     let seq = 0;
-    const drafts = await composeOngoingRound(me, [], [], {
+    const drafts = await composeOngoingRound(me, [], settledTracks, {
       fetchRecentTexts: async () => [],
       fetchBankCandidates: async (axis) =>
         axis === 'playfulness' ? [{ id: 'bank-fails-usage', draft: bankDraft }] : [],
@@ -272,7 +290,7 @@ async function run() {
     };
     let seq = 0;
 
-    const drafts = await composeOngoingRound(me, [], [], {
+    const drafts = await composeOngoingRound(me, [], settledTracks, {
       fetchRecentTexts: async () => [],
       fetchBankCandidates: async (axis) => {
         if (axis !== 'playfulness') return [];
@@ -312,6 +330,29 @@ async function run() {
       'the fallback pass actually pulls the missing axis from the bank pool',
     );
     ok('composeOngoingRound: AI persistently fails an axis → bank-fallback pass fills it, round still lands on the full tiered size');
+  }
+
+  {
+    // 2026-10-01: straight after the 50, ten axes sit on 2 answers. The round
+    // composed for that profile must serve them first and give each 2.
+    const afterIntake: TraitTrack[] = settledTracks.map((row) => ({
+      ...row,
+      answerCount: ['openness', 'conscientiousness', 'extraversion'].includes(row.axis)
+        ? 6
+        : ['agreeableness', 'conflict_assertiveness', 'relatedness'].includes(row.axis)
+          ? 4
+          : 2,
+    }));
+    const lagging = new Set(afterIntake.filter((row) => row.answerCount < 3).map((row) => row.axis));
+    assert.equal(lagging.size, 10);
+    const generated = new Map<string, number>();
+    const drafts = await composeOngoingRound(me, [], afterIntake, noBankDeps(generated, { value: false }));
+    assert.equal(drafts.length, TIERED_ROUND_SIZE, 'a lagging-first round is still 25 questions');
+    for (const axis of lagging) {
+      assert.equal(drafts.filter((d) => d.axis === axis).length, 2, `${axis} gets 2 questions in the round after the 50`);
+    }
+    assert.equal(drafts.filter((d) => !lagging.has(d.axis)).length, 5, 'axes already at the floor share the other 5');
+    ok('composeOngoingRound: the round after the 50 gives each of the ten 2-answer axes 2 questions');
   }
 
   console.log(`\n${passed} ongoing-round checks passed`);

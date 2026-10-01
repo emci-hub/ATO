@@ -451,8 +451,11 @@ async function main() {
   ok('answerCount 0 and game-track rows never count toward filled');
 
   assert.equal(profileFillCopyClean(), true);
-  assert.equal(PROFILE_FILL_COPY_REVIEWED, true);
-  ok('Full profile checklist copy passes the framework fence and stays marked reviewed');
+  // Flipped 2026-10-01: the label and complete label were rewritten ("Full
+  // profile · Complete" contradicted the locked and settled lines), so the
+  // copy is draft again until emci reads it. Flip back with that read.
+  assert.equal(PROFILE_FILL_COPY_REVIEWED, false);
+  ok('Traits-answered checklist copy passes the framework fence and is marked draft until re-read');
 
   console.log(`\nAll ${passed} trait checks passed.`);
 }

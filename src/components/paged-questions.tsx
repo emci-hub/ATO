@@ -6,7 +6,6 @@ import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { humanizeAxis } from '@/lib/milestones';
 import {
   loadAnsweredOptions,
   saveAnsweredOption,
@@ -17,10 +16,12 @@ import {
 } from '@/lib/questions/category-page-position';
 import {
   completedAxesFrom,
+  unansweredRowKeys,
   uniqueCategoryAxes,
   type CategoryQuestionRow,
 } from '@/lib/questions/category-paged';
 import type { QuestionDraft, QuestionOption } from '@/lib/questions/types';
+import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { hexToRgb } from '@/lib/theme/contrast';
 
@@ -142,6 +143,10 @@ export function PagedQuestions({
     readonly { id: number; rows: readonly { key: string; draft: QuestionDraft; option: QuestionOption; optIndex: number }[] }[]
   >([]);
   const nextFailedBatchId = useRef(0);
+  // Turned on by pressing Finish with questions left over. Until then nothing
+  // is flagged — every row starts out unanswered, so marking them up front
+  // would mark the whole list.
+  const [showMissing, setShowMissing] = useState(false);
 
   function runBatchSave(
     rows: readonly { key: string; draft: QuestionDraft; option: QuestionOption; optIndex: number }[],
@@ -227,6 +232,10 @@ export function PagedQuestions({
   const atFirst = clampedPage === 0;
   const atLast = clampedPage >= totalPages - 1;
   const pageRows = rows.slice(clampedPage * PAGE_SIZE, clampedPage * PAGE_SIZE + PAGE_SIZE);
+  const missing = locked
+    ? new Set<string>()
+    : unansweredRowKeys(rows, new Set(Object.keys(pickedByRow)), new Set(Object.keys(pendingByRow)));
+  const firstMissingIndex = rows.findIndex((row) => missing.has(row.key));
 
   return (
     <View style={styles.container}>
@@ -242,8 +251,11 @@ export function PagedQuestions({
         {pageRows.map((row) => (
           <View key={row.key} style={styles.axisItem}>
             <ThemedText type="small" themeColor="textSecondary">
-              {humanizeAxis(row.axis)}
+              {AXIS_EDITOR_COPY[row.axis].label}
             </ThemedText>
+            {showMissing && missing.has(row.key) ? (
+              <ThemedText type="smallBold">Still needs an answer</ThemedText>
+            ) : null}
             <ThemedText style={styles.questionPrompt}>{row.draft.prompt}</ThemedText>
             {locked ? null : (
               <View style={styles.options}>
@@ -291,6 +303,11 @@ export function PagedQuestions({
           </View>
         ))}
       </View>
+      {showMissing && missing.size > 0 ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {missing.size} question{missing.size === 1 ? '' : 's'} still need{missing.size === 1 ? 's' : ''} an answer.
+        </ThemedText>
+      ) : null}
       {savingCount > 0 ? (
         <ThemedText type="small" themeColor="textSecondary">
           Saving…
@@ -335,6 +352,13 @@ export function PagedQuestions({
             // than waiting on the network round trip. A failed batch surfaces
             // in `failedBatches` (with its own retry) instead of blocking here.
             if (pending.length > 0) runBatchSave(pending);
+            // Finish with questions left over used to do nothing at all, and
+            // nothing said which ones were left. Flag them and go to the first.
+            if (atLast && firstMissingIndex >= 0) {
+              setShowMissing(true);
+              goTo(Math.floor(firstMissingIndex / PAGE_SIZE));
+              return;
+            }
             goTo(clampedPage + 1);
           }}
           style={[

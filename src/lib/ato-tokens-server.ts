@@ -21,11 +21,24 @@ export async function claimOngoingRoundComplete(packId: string): Promise<AtoToke
   return parseAtoTokenResult(data);
 }
 
-/** Fire-and-forget claim. Never fail the calling write (mirrors earnTokensQuiet). */
-export function claimOngoingRoundCompleteQuiet(packId: string): void {
-  void claimOngoingRoundComplete(packId).catch((err) => {
-    console.log('[ato-tokens] claim ongoing round complete error:', err);
-  });
+/**
+ * Fire-and-forget claim. Never fail the calling write (mirrors earnTokensQuiet).
+ * `onSettled` runs once the server has answered either way: `paid` is whether
+ * the +21 is in the balance (fresh or already), `fresh` whether this call is
+ * the one that paid it, so the caller knows to refresh the balance.
+ */
+export function claimOngoingRoundCompleteQuiet(
+  packId: string,
+  onSettled?: (outcome: { paid: boolean; fresh: boolean }) => void,
+): void {
+  void claimOngoingRoundComplete(packId)
+    .then((result) => {
+      onSettled?.({ paid: result.ok, fresh: result.ok && !result.already });
+    })
+    .catch((err) => {
+      console.log('[ato-tokens] claim ongoing round complete error:', err);
+      onSettled?.({ paid: false, fresh: false });
+    });
 }
 
 /** -10, capped 1/day. Called by src/lib/questions/reroll.ts's rerollLegend. */

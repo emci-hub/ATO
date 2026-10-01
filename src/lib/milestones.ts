@@ -57,14 +57,14 @@ const AXIS_COMPLETE_DEFS: readonly MilestoneDef[] = TRAIT_AXES.map((axis) => ({
 
 export const MILESTONE_DEFS: readonly MilestoneDef[] = [
   {
-    // Progressive unlock §6: fires at the same crossing as sage.tsx's own
-    // tab-unlock check (sageUnlocked) — explains what Sage is, and that 25
-    // more questions unlocks Legends.
+    // Id and threshold kept (progressive unlock §6). Copy changed 2026-10-01:
+    // Sage is a placeholder, so this must not announce it as open. See the
+    // unlock table in lib/questions/progressive-unlock.ts.
     id: 'sage_unlocked',
     metric: 'bankTotalProgress',
     threshold: 25,
-    title: 'Sage unlocked!',
-    body: 'Sage is ready to talk. Answer 25 more questions to unlock Legends.',
+    title: 'Halfway through the 50',
+    body: '25 answered. The other 25 open your insight, categories and your next rounds.',
   },
   {
     id: 'answers_12',
@@ -132,8 +132,9 @@ export const MILESTONE_DEFS: readonly MilestoneDef[] = [
     id: 'legends_unlocked',
     metric: 'bankTotalProgress',
     threshold: 50,
-    title: 'Legends unlocked!',
-    body: "You've answered all 50 intake questions — Legends are ready for you.",
+    // Copy changed 2026-10-01: Legends is a placeholder, nothing opens yet.
+    title: 'All 50 answered',
+    body: 'Legends is being rebuilt, so it is not open yet.',
   },
   {
     // Separate from legends_unlocked above per §6: "plus a separate 'you are
@@ -141,13 +142,14 @@ export const MILESTONE_DEFS: readonly MilestoneDef[] = [
     id: 'profile_fully_unlocked',
     metric: 'bankTotalProgress',
     threshold: 50,
-    title: "You're fully unlocked",
-    // Deliberately NOT "nothing left to unlock" — Explore observations, Sage
-    // Title, Sage insight, and the full-picture capstone all still gate on
-    // isProfileSettled separately, which 50 intake answers alone doesn't
-    // guarantee for every axis (10 axes only reach 2 intake answers, below
-    // STABILITY_FLOOR_N). This banner is scoped to what it actually unlocked.
-    body: 'Sage and Legends are both open now.',
+    // The after-50 reveal (components/full-profile-banner.tsx) shows this
+    // title and body and is remembered under this id
+    // (INTAKE_REVEAL_MILESTONE_ID). Scoped to what 50 answers really open:
+    // ten axes only reach 2 intake answers, below STABILITY_FLOOR_N, so Story
+    // and the settled-profile surfaces belong to the next round, and Sage and
+    // Legends are placeholders.
+    title: 'You finished the 50',
+    body: 'Your insight, your categories and your next 25 questions are open.',
   },
   ...AXIS_COMPLETE_DEFS,
 ];

@@ -44,8 +44,11 @@ import { fetchTraitTracks } from '@/lib/trait-tracks-store';
  * the sweep-only exports of `src/lib/questions/local.ts`) was deleted along
  * with it, not just unmounted.
  *
- * PARKED here: the `MilestoneToast` overlay (and with it every write to
- * `me.celebrated_milestone_ids`) and `OptionalIntakeFill`. The Check history
+ * PARKED here: the milestone-crossing toast queue and `OptionalIntakeFill`.
+ * Two narrow pieces came back 2026-10-01 (emci), both inside components, not
+ * this screen: the after-50 reveal remembers itself with one id in
+ * `me.celebrated_milestone_ids`, and a finished round shows one toast
+ * (`questions-fold.tsx`). The Check history
  * this screen used to fetch is gone too — the Check loop is parked, so it was
  * a read of a table nothing writes; `QuestionsFold` now gets an empty history.
  * `checkMilestones` / `computeStreak` / `persistCelebratedMilestones` are
@@ -94,16 +97,23 @@ export default function IntakeSweepTabScreen() {
           </View>
 
           {/*
-            The one-time "Full profile enabled" announcement, shown the first
-            time an account finishes the bank.
+            The one-time after-50 reveal (what just opened, what the next 25
+            are for), shown the first time an account finishes the bank and
+            remembered on the account, not the device.
 
             Driven by `isFullProfileDone` — the SAME signal Home's unlocked
-            state reads — so the banner and the Home unlock can never disagree:
-            if this shows, "Load insight" / "Load story" are already live. It
-            spends no model call, and it renders nothing until `tracksReady`,
-            because the gate reports false off an empty pre-fetch `tracks`.
+            state reads — so the reveal and the Home unlock can never disagree.
+            It spends no model call, and it renders nothing until `tracksReady`
+            and `me` have both landed, because the gate reports false off an
+            empty pre-fetch `tracks`.
           */}
-          <FullProfileBanner userId={userId} done={isFullProfileDone(tracks, tracksReady)} />
+          <FullProfileBanner
+            userId={userId}
+            done={isFullProfileDone(tracks, tracksReady)}
+            celebratedIds={me ? (me.celebrated_milestone_ids ?? []) : undefined}
+            tracks={tracks}
+            onSeen={refresh}
+          />
 
           {/*
             `tracksReady` gates the mount: QuestionsFold generates and SAVES a

@@ -33,9 +33,18 @@ import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 export const CATEGORY_REWRITE_LABEL = `Reroll · ${atoPriceLine('category_reroll')}`;
 export const CATEGORY_REROLL_ALREADY_COPY = 'Already rerolled today. It opens again tomorrow.';
 export const CATEGORY_NOT_READY_COPY =
-  'Not enough settled answers behind this one yet — answering your next 25 in Questions helps. Nothing was generated.';
+  'Your next 25 in Questions get it there. Nothing was generated.';
 export const CATEGORY_ERROR_COPY = 'Couldn’t load this one just now.';
-export const CATEGORY_ROW_NOT_READY_COPY = 'Answer a few more questions to open this one.';
+
+/**
+ * Why a category is not open yet, with the count: how many settled traits it
+ * needs and how many it has. A "map" category needs both of its two.
+ */
+export function categoryNeedsLine(reading: CategoryReading): string {
+  const need = reading.def.shape === 'map' ? 2 : reading.def.minStable;
+  const have = Math.min(reading.stableAxes.length, need);
+  return `Needs ${need} settled trait${need === 1 ? '' : 's'} behind it — you have ${have}.`;
+}
 
 /**
  * Display-only names. "Love / closeness" (attachment) and "Independence &
@@ -76,6 +85,7 @@ export function CategoriesFold({
   unlocked: boolean;
 }) {
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
+  const [tracksLoaded, setTracksLoaded] = useState(false);
   const [openId, setOpenId] = useState<CategoryId | null>(null);
   const [statements, setStatements] = useState<Map<CategoryId, CategoryStatement>>(new Map());
   const [statementsLoaded, setStatementsLoaded] = useState(false);
@@ -122,6 +132,9 @@ export function CategoriesFold({
       })
       .catch((err) => {
         console.log('[categories] load error:', err);
+      })
+      .finally(() => {
+        if (!cancelled) setTracksLoaded(true);
       });
     return () => {
       cancelled = true;
@@ -266,7 +279,13 @@ export function CategoriesFold({
         const copy = reading.ready ? (cached?.categories[id] ?? fallback[id]) : undefined;
         const summary =
           card?.summary ??
-          (reading.ready ? (copy?.line ?? fallbackForReading(reading)) : CATEGORY_ROW_NOT_READY_COPY);
+          (reading.ready
+            ? (copy?.line ?? fallbackForReading(reading))
+            : // Before tracks land every category reads as not ready; say
+              // "Loading" rather than flash a count of zero at a finished user.
+              tracksLoaded
+              ? categoryNeedsLine(reading)
+              : 'Loading…');
         const canRefresh = unlocked && consentGranted && reading.ready;
         return (
           <View key={id} style={styles.row}>
@@ -315,7 +334,7 @@ export function CategoriesFold({
                   </ThemedText>
                 ) : state === 'not_ready' ? (
                   <ThemedText type="small" themeColor="textSecondary">
-                    {CATEGORY_NOT_READY_COPY}
+                    {categoryNeedsLine(reading)} {CATEGORY_NOT_READY_COPY}
                   </ThemedText>
                 ) : state === 'error' ? (
                   <View style={styles.inline}>

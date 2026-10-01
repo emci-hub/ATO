@@ -6,12 +6,22 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
+  COMING_LATER_LINE,
+  INTAKE_REVEAL_MILESTONE_ID,
+  INTAKE_REVEAL_SEEN_ID,
+  INTAKE_UNLOCKED,
   LEGENDS_UNLOCK_THRESHOLD,
+  NEXT_ROUND_UNLOCKS,
   SAGE_UNLOCK_THRESHOLD,
+  UNLOCK_COPY_REVIEWED,
   legendsUnlocked,
+  roundCompleteBody,
+  roundStandingLine,
   sageUnlocked,
+  unlockCopyClean,
 } from '../src/lib/questions/progressive-unlock';
 import { QUESTIONS_BANK } from '../src/lib/questions/bank';
+import { MILESTONE_DEFS } from '../src/lib/milestones';
 import { bankTotalProgress } from '../src/lib/questions/local';
 import { TRAIT_AXES } from '../src/lib/traits';
 import {
@@ -151,5 +161,42 @@ assert.ok(
   'the countOnly branch returns before applyEwmaAnswer can blend the value',
 );
 ok('persistMergedTraits skips the value blend for countOnly answers (wiring)');
+
+// --- The unlock table (2026-10-01): one source for the reveal and the toast ---
+{
+  assert.equal(unlockCopyClean(), true, 'unlock copy passes the framework fence');
+  assert.equal(UNLOCK_COPY_REVIEWED, false, 'draft until emci reads it');
+  assert.ok(
+    MILESTONE_DEFS.some((def) => def.id === INTAKE_REVEAL_MILESTONE_ID && def.threshold === QUESTIONS_BANK.length),
+    'the reveal is remembered under a real milestone id, at the full-intake threshold',
+  );
+  assert.ok(
+    MILESTONE_DEFS.every((def) => def.id !== INTAKE_REVEAL_SEEN_ID),
+    'the seen id must not be an id the old toast queue could already have written',
+  );
+  const openNow = INTAKE_UNLOCKED.join(' ');
+  assert.doesNotMatch(openNow, /Story|Sage|Legend/, '"Open now" must not promise Story (not ready at 50) or the two placeholders');
+  assert.match(NEXT_ROUND_UNLOCKS.join(' '), /Story/, 'Story belongs to the next round');
+  assert.match(COMING_LATER_LINE, /Sage and Legends/);
+  // No milestone may announce a placeholder as open.
+  for (const def of MILESTONE_DEFS) {
+    assert.doesNotMatch(`${def.title} ${def.body}`, /Sage (is ready|unlocked)|Legends? (are ready|unlocked)|both open/i, `${def.id} announces a placeholder`);
+  }
+  ok('unlock table: "open now" matches the real gates, Story sits in the next round, Sage and Legends are not announced');
+
+  const unsettled = tracksWithTotalAnswered(50);
+  assert.doesNotMatch(roundCompleteBody(unsettled, false), /ATO tokens/, 'an unpaid round never names the +21');
+  assert.match(roundCompleteBody(unsettled, true), /^\+21 ATO tokens\. \d+ of 16 settled\./);
+  assert.match(roundStandingLine(unsettled), /keep settling the rest/);
+  ok('round-end toast names the +21 only when paid, and always says where the profile stands');
+
+  const banner = readFileSync(resolve(__dirname, '../src/components/full-profile-banner.tsx'), 'utf8');
+  assert.match(banner, /persistCelebratedMilestones\(userId, \[INTAKE_REVEAL_SEEN_ID\]\)/, 'seen is written to the account, not the device');
+  assert.match(banner, /celebratedIds !== undefined/, 'renders nothing until me has loaded');
+  assert.doesNotMatch(banner, /generateText|ai-generate/, 'the reveal never calls a model');
+  const fold = readFileSync(resolve(__dirname, '../src/components/questions-fold.tsx'), 'utf8');
+  assert.match(fold, /<MilestoneToast\s+title=\{ROUND_COMPLETE_TITLE\}/, 'a finished round shows the reused MilestoneToast');
+  ok('reveal is remembered on the account and model-free; the round toast reuses MilestoneToast');
+}
 
 console.log(`\n${passed} progressive-unlock checks passed`);

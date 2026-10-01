@@ -27,6 +27,19 @@ export type AtoTokenSpendReason = keyof typeof ATO_TOKEN_PRICE;
 
 export const ATO_TOKEN_LABEL = 'ATO tokens';
 export const ATO_TOKEN_LEDE = 'Earned by finishing rounds. Spent on rerolls.';
+/**
+ * How the currency works, said before a limit is hit rather than after. Built
+ * from the constants above so a price change cannot leave this stale. The
+ * once-a-day limits are enforced in SQL (wave51); this only states them. The
+ * Legend reroll is left out on purpose: Legends is a placeholder, so there is
+ * nowhere to spend it.
+ */
+export const ATO_TOKEN_HOW_LINES: readonly string[] = [
+  `Earn: +${ATO_TOKEN_EARN.full_profile_complete} for finishing the 50 questions, +${ATO_TOKEN_EARN.ongoing_round_complete} for each round of 25 after that.`,
+  `Spend: ${ATO_TOKEN_PRICE.question_reroll} to reroll a question, ${ATO_TOKEN_PRICE.category_reroll} to reroll a category.`,
+  'Limit: each question and each category can be rerolled once a day.',
+  'Out of tokens? Finish the round you are on.',
+];
 export const ATO_TOKEN_NEED_MORE = 'Not enough ATO tokens yet — finish another round to earn more.';
 export const ATO_TOKEN_SPENT = 'Rerolled.';
 
@@ -67,6 +80,7 @@ export function atoTokenCopyClean(): boolean {
   const lines = [
     ATO_TOKEN_LABEL,
     ATO_TOKEN_LEDE,
+    ...ATO_TOKEN_HOW_LINES,
     ATO_TOKEN_NEED_MORE,
     ATO_TOKEN_SPENT,
     atoPriceLine('legend_reroll'),

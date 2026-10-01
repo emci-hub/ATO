@@ -6,12 +6,17 @@
 import { NOT_ANSWERED_YET } from '@/lib/full-profile';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 
-export const PROFILE_FILL_COPY_REVIEWED = true;
+/**
+ * Back to draft 2026-10-01: the label and the complete label changed. "Full
+ * profile · Complete" at one answer per trait sat next to "Locked — finish all
+ * 50" and "N of 16 settled", and read as a contradiction.
+ */
+export const PROFILE_FILL_COPY_REVIEWED = false;
 
-export const PROFILE_FILL_LABEL = 'Full profile';
+export const PROFILE_FILL_LABEL = 'Traits answered';
 export const PROFILE_FILL_LEDE =
   'One answer is enough to fill a trait in. Filling one is not the same as settling it — settling takes a few answers that agree.';
-export const PROFILE_FILL_COMPLETE_LABEL = 'Complete';
+export const PROFILE_FILL_COMPLETE_LABEL = 'all answered once';
 export const PROFILE_FILL_COMPLETE_LEDE =
   'Every trait has at least one answer. Questions can go anywhere from here.';
 export const PROFILE_FILL_ROW_FILLED = 'Filled';

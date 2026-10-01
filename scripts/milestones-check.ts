@@ -342,6 +342,13 @@ const intakeSweepSrc = readFileSync(
  * `persistCelebratedMilestones` and `crossedMilestonesFor` simply have no
  * caller on this screen any more. Re-inverting these is the first thing to do
  * when milestones are rebuilt.
+ *
+ * 2026-10-01 (emci): two narrow pieces came back, in components rather than on
+ * this screen, so the assertions below still hold as written. The after-50
+ * reveal (`full-profile-banner.tsx`) writes ONE id through
+ * `persistCelebratedMilestones`, and a finished round mounts `MilestoneToast`
+ * once (`questions-fold.tsx`). Both are pinned in progressive-unlock-check.ts.
+ * The crossing queue (`checkMilestones` over every metric) stays parked.
  */
 /**
  * Scoped to real code: the screen's own docstring names what was parked and

@@ -377,8 +377,41 @@ export function settledScore(rows: readonly TraitTrack[], now: Date = new Date()
   return sum;
 }
 
+/**
+ * The rounded stability SUM. A gate figure only (`isThinProfile`), never a
+ * label: it is not a count of axes, so six settled axes read as about five and
+ * a fully settled profile almost never reads 16. Anything shown to a person
+ * uses `settledAxisCount` below.
+ */
 export function settledCount(rows: readonly TraitTrack[], now: Date = new Date()): number {
   return Math.round(settledScore(rows, now));
+}
+
+/**
+ * One axis is settled when its report track scores above 0 through
+ * `effectiveStability` — the same per-axis test `isProfileSettled` runs.
+ */
+export function isAxisSettled(row: TraitTrack | null, now: Date = new Date()): boolean {
+  return effectiveStability(row, now) > 0;
+}
+
+/** How many axes are settled. The number every "N of 16 settled" label shows. */
+export function settledAxisCount(rows: readonly TraitTrack[], now: Date = new Date()): number {
+  return TRAIT_AXES.filter((axis) => isAxisSettled(trackFor(rows, axis, 'report'), now)).length;
+}
+
+/**
+ * Why an answered axis is not settled yet, in plain words. Null once it is.
+ * Below the answer floor it says how many more it needs; at or past the floor
+ * the only thing left holding it at 0 is answers that disagree.
+ */
+export function settlingLine(row: TraitTrack | null, now: Date = new Date()): string | null {
+  if (!row || row.answerCount <= 0 || isAxisSettled(row, now)) return null;
+  if (row.answerCount < STABILITY_FLOOR_N) {
+    const more = STABILITY_FLOOR_N - row.answerCount;
+    return `Still settling — ${row.answerCount} of ${STABILITY_FLOOR_N} answers. ${more} more and this read firms up.`;
+  }
+  return 'Still settling — your answers here point different ways so far.';
 }
 
 /**
@@ -501,7 +534,7 @@ export function filledAxisLabel(rows: readonly TraitTrack[]): string {
 export const SETTLED_LABEL_SUFFIX = `of ${TRAIT_AXES.length} settled`;
 
 export function settledAxisLabel(rows: readonly TraitTrack[], now: Date = new Date()): string {
-  return `${settledCount(rows, now)} ${SETTLED_LABEL_SUFFIX}`;
+  return `${settledAxisCount(rows, now)} ${SETTLED_LABEL_SUFFIX}`;
 }
 
 export function depthReady(

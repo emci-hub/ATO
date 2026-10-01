@@ -7,6 +7,7 @@ import {
   uniqueCategoryAxes,
   type CategoryQuestionRow,
 } from '@/components/paged-questions';
+import { MilestoneToast } from '@/components/milestone-toast';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -23,6 +24,12 @@ import { type TraitAxis } from '@/lib/traits';
 import { applyQuestionAnswer } from '@/lib/questions/answer';
 import { bankProgressForAxis, bankTotalProgress } from '@/lib/questions/local';
 import { fullProfileLockedLine, isFullProfileDone } from '@/lib/full-profile-gate';
+import {
+  ROUND_COMPLETE_TITLE,
+  UNLOCK_COPY_REVIEWED,
+  roundCompleteBody,
+  roundStandingLine,
+} from '@/lib/questions/progressive-unlock';
 import { runOngoingRound } from '@/lib/questions/run-ongoing-round';
 import { prewarmBankPool } from '@/lib/questions/run-prewarm';
 import { isUnansweredQuestionItem } from '@/lib/questions/rotation';
@@ -33,6 +40,7 @@ import type {
   QuestionPackRow,
 } from '@/lib/questions/types';
 import { controlBorderColor } from '@/lib/theme/chrome';
+import { useAppearance } from '@/lib/theme/context';
 import type { CheckHistory } from '@/lib/voice/types';
 import { withTimeout } from '@/lib/timeout';
 
@@ -179,7 +187,7 @@ export function QuestionsFold({
             // answer stamps on questions it never answered (found in review).
             storageKey={`full-profile:${me.id}`}
             rows={bankRows}
-            progressLabel={`${bankCompletedAxes.length} of ${bankAxes.length} axes complete`}
+            progressLabel={`${bankCompletedAxes.length} of ${bankAxes.length} traits covered`}
             onSaveBatch={saveBankAnswers}
           />
         </>
@@ -235,6 +243,10 @@ function OngoingRoundFold({
   // unanswered rows at once, each independently rerollable.
   const [rerollBusyByItem, setRerollBusyByItem] = useState<Record<string, boolean>>({});
   const [rerollNoteByItem, setRerollNoteByItem] = useState<Record<string, string>>({});
+  // Set only by the answer that finishes a round, so the toast fires at that
+  // moment and never on a later visit to an already-finished round.
+  const [roundToast, setRoundToast] = useState<{ paid: boolean } | null>(null);
+  const { reduceMotion } = useAppearance();
   const atoBalance = atoTokenBalanceOf(me);
   const canRerollQuestion = atoBalance >= ATO_TOKEN_PRICE.question_reroll;
 
@@ -283,6 +295,7 @@ function OngoingRoundFold({
     if (starting) return;
     if (!consentGranted) return;
     setStarting(true);
+    setRoundToast(null);
     setErrorKind(null);
     setErrorDetail(null);
     try {
@@ -362,8 +375,14 @@ function OngoingRoundFold({
       // top of the true latest state. The RPC re-verifies completion
       // server-side and dedupes on pack id, so this can never double-award
       // even across overlapping batches.
+      // The round-end toast waits for the server's answer so it only names
+      // the +21 when it is really in the balance, and a fresh payout refreshes
+      // `me` — the balance used to stay stale until some later refresh.
       if (holder.pack && roundFullyAnswered(holder.pack)) {
-        claimOngoingRoundCompleteQuiet(holder.pack.id);
+        claimOngoingRoundCompleteQuiet(holder.pack.id, ({ paid, fresh }) => {
+          setRoundToast({ paid });
+          if (fresh) void onUpdated();
+        });
       }
       return true;
     } catch (err) {
@@ -472,9 +491,22 @@ function OngoingRoundFold({
         )
       ) : roundFullyAnswered(pack) ? (
         <>
+          {roundToast ? (
+            <MilestoneToast
+              title={ROUND_COMPLETE_TITLE}
+              body={roundCompleteBody(tracks, roundToast.paid)}
+              reduceMotion={reduceMotion}
+              onDone={() => setRoundToast(null)}
+            />
+          ) : null}
           <ThemedText type="small" themeColor="textSecondary">
-            Round complete.
+            Round complete. {roundStandingLine(tracks)}
           </ThemedText>
+          {!UNLOCK_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
+            <ThemedText type="code" themeColor="textSecondary">
+              Draft copy — waiting on emci review.
+            </ThemedText>
+          ) : null}
           {consentGranted ? (
             <ThemedPressable
               disabled={starting}

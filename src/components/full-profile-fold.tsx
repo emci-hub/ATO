@@ -29,10 +29,11 @@ import {
   type TraitHistoryRow,
 } from '@/lib/trait-history';
 import { fetchTraitHistory } from '@/lib/trait-history-store';
-import { settledAxisLabel, STABILITY_FLOOR_N, trackFor, type TraitTrack } from '@/lib/trait-stability';
+import { settledAxisLabel, settlingLine, trackFor, type TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import {
   TRAIT_AXES,
+  isDirectTraitSource,
   traitStateFromRow,
   type TraitAxis,
 } from '@/lib/traits';
@@ -107,6 +108,9 @@ export function FullProfileFold({
             report?.lastTouched ?? state.touched[axis],
             me.timezone || 'UTC',
           );
+          // An axis you set yourself only counts question answers, it never
+          // blends them, so "N more and this firms up" would not be true there.
+          const settling = isDirectTraitSource(state.sources[axis]) ? null : settlingLine(report);
           const open = editing === axis;
           const shifts = historyForAxis(history, axis);
           const showingShift = openShift === axis;
@@ -137,9 +141,9 @@ export function FullProfileFold({
                   {NOT_ANSWERED_YET}
                 </ThemedText>
               )}
-              {report && report.answerCount < STABILITY_FLOOR_N ? (
+              {settling ? (
                 <ThemedText type="code" themeColor="textSecondary">
-                  Still settling — {report.answerCount} of {STABILITY_FLOOR_N} reads.
+                  {settling}
                 </ThemedText>
               ) : null}
               {provenance ? (
