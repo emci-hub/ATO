@@ -31,6 +31,7 @@ import {
   TraceCapture,
   TraitViewer,
 } from '@/app/dev-lab';
+import { DevInspector } from '@/components/dev-inspector';
 import { PlayDevFab } from '@/components/play-dev-fab';
 import { RunningUpdateLine } from '@/components/running-update-line';
 import { ThemedText } from '@/components/themed-text';
@@ -156,6 +157,8 @@ function AppDevPanel({
         return <FenceTester key={id} />;
       case 'trace':
         return <TraceCapture key={id} />;
+      case 'inspector':
+        return <DevInspector key={id} />;
     }
   };
 

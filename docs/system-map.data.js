@@ -2163,13 +2163,15 @@ var SYSTEM_MAP = {
       "title": "Dev tools (labs)",
       "status": "live",
       "flag": true,
-      "summary": "dev-lab, ai-lab, crisis-lab, pixel-lab, theme-lab, around-lab, plus one floating DEV bubble. In the app it shows the Dev Tools Hub sections for the screen you are on (Home, Explore, Questions, Sage, You) to root, granted testers or an unlocked session. Inside Play it shows the tools for the mode you are in (Pet, Dive, Bag, Defend, Shop).",
+      "summary": "dev-lab, ai-lab, crisis-lab, pixel-lab, theme-lab, around-lab, plus one floating DEV bubble. In the app it shows the Dev Tools Hub sections for the screen you are on (Home, Explore, Questions, Sage, You) to root, granted testers or an unlocked session. Inside Play it shows the tools for the mode you are in (Pet, Dive, Bag, Defend, Shop). An Inspector panel (read-only) shows the account's 16 axes as points with LOW / MID / HIGH, the categories and the axes behind them, the AI gates, and where round questions came from.",
       "differs": [
         "PRE_LAUNCH_DEV is true, and over-the-air updates do not run the release check — so every update ships with dev tooling un-gated.",
         "The 7-tap password unlock (dev-unlock-gate.tsx) is not mounted anywhere.",
         "theme-lab and around-lab were flagged for deletion on 2026-09-08 and are still there."
       ],
       "files": [
+        "src/components/dev-inspector.tsx",
+        "src/lib/dev-inspector-model.ts",
         "src/components/app-dev-fab.tsx",
         "src/components/play-dev-fab.tsx",
         "src/lib/dev-fab-model.ts",

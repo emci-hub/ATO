@@ -62,7 +62,8 @@ export type AppDevSection =
   | 'ai-consent'
   | 'local-data'
   | 'fence'
-  | 'trace';
+  | 'trace'
+  | 'inspector';
 
 /** Per screen: its name in the kit and the sections that test it. */
 export const APP_DEV_SCREENS: Record<string, { label: string; sections: readonly AppDevSection[] }> = {
@@ -74,7 +75,7 @@ export const APP_DEV_SCREENS: Record<string, { label: string; sections: readonly
 };
 
 /** Useful on any screen; shown under the screen's own tools, collapsed. */
-export const APP_DEV_EVERYWHERE: readonly AppDevSection[] = ['quota', 'trace', 'fence'];
+export const APP_DEV_EVERYWHERE: readonly AppDevSection[] = ['inspector', 'quota', 'trace', 'fence'];
 
 /** Screens with their own dev surface — the app button stays out of the way. */
 export const APP_DEV_HIDDEN_PATHS: readonly string[] = ['/play', '/dev-lab', '/ai-lab'];

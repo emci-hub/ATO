@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { DevInspector } from '@/components/dev-inspector';
 import { RunningUpdateLine } from '@/components/running-update-line';
 import { TracePipelineViewer } from '@/components/trace-pipeline';
 import { YouDevTools } from '@/components/you-dev-tools';
@@ -179,6 +180,11 @@ function DevLab() {
               Access, grants, and profile pause/delete stay root-only.
             </ThemedText>
             <RunningUpdateLine />
+          </View>
+
+          {/* Read-only: this account's axes, categories, AI gates and question pool. */}
+          <View style={styles.section}>
+            <DevInspector />
           </View>
 
           <View style={styles.section}>
