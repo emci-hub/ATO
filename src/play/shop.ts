@@ -6,10 +6,12 @@
  *   (one Dive charge, a merge-fuel Power crate, a Shine Stone — v27, looks
  *   only, one a week) or sit as "Coming soon" stubs (cosmetic / decor). It NEVER sells uncapped wave_power or a
  *   cycle_power skip — those would break the Conquered climb (§9i).
+ *   v28: rows with `pass_only` are the Tide shelf (Prism Stone, Star Pearl).
+ *   They spend soft tokens and only while a Tide Pass is on.
  * - `paid.json` — the Apple IAP shelf. v0 is STUBS ONLY: every row carries a
  *   display price label and `available: false`, so the UI shows "Soon" and
- *   nothing ever charges Apple. Fill real products later. v27: the Prism
- *   Stone row is a preview (its style odds come from `PRISM_STYLE_ODDS`).
+ *   nothing ever charges Apple. v28 adds the Tide Pass card (`paid_tide_pass`),
+ *   still not for sale. No real-money code in this build.
  *
  * Pure data + parse: no store import, no side effects. `playStore.purchaseShopRow`
  * consumes a `ShopTokenRow`, and the shop screen renders both shelves.
@@ -25,6 +27,10 @@ export type ShopEffectKind =
   | 'merge_crate'
   /** v27 — `amount` Shine Stone(s): looks only (a chance at a shiny). */
   | 'shine_stone'
+  /** v28 — `amount` Prism Stone(s): pick a Prism style. Tide shelf only. */
+  | 'prism_stone'
+  /** v28 — one Star Pearl: Legendary progress, not odds. Tide shelf only. */
+  | 'star_pearl'
   /** No effect yet — a "Coming soon" cosmetic/decor row. */
   | 'stub';
 
@@ -41,12 +47,16 @@ export type ShopTokenRow = {
   daily_limit: number | null;
   /** v27 — max buys per week (Monday to Sunday, device-local); null = none. */
   weekly_limit: number | null;
+  /** v28 — Tide shelf: visible to everyone, buyable only with a pass on. */
+  pass_only: boolean;
+  /** v28 — max buys per pass (resets when a new pass starts); null = none. */
+  per_pass_limit: number | null;
   /** Units granted per buy. */
   amount: number;
 };
 
 /** What a paid row would sell once real IAP lands. All v0 rows are stubs. */
-export type ShopPaidKind = 'paid_unique' | 'hero' | 'prism_stone' | 'stub';
+export type ShopPaidKind = 'paid_unique' | 'hero' | 'prism_stone' | 'pass' | 'stub';
 
 export type ShopPaidRow = {
   id: string;
@@ -64,15 +74,20 @@ export type ShopPaidRow = {
 /** Valid effect kinds for a token row. Declared BEFORE the module-eval
  * `TOKEN_ROWS` / `PAID_ROWS` initializers below, which run at import time and
  * read this (calling a parser earlier would hit the temporal dead zone). */
-const TOKEN_KINDS: readonly ShopEffectKind[] = ['dive_charge', 'merge_crate', 'shine_stone', 'stub'];
-const PAID_KINDS: readonly ShopPaidKind[] = ['paid_unique', 'hero', 'prism_stone', 'stub'];
+const TOKEN_KINDS: readonly ShopEffectKind[] = ['dive_charge', 'merge_crate', 'shine_stone', 'prism_stone', 'star_pearl', 'stub'];
+const PAID_KINDS: readonly ShopPaidKind[] = ['paid_unique', 'hero', 'prism_stone', 'pass', 'stub'];
 
 const TOKEN_ROWS: readonly ShopTokenRow[] = parseTokenRows(rawToken);
 const PAID_ROWS: readonly ShopPaidRow[] = parsePaidRows(rawPaid);
 
-/** The soft-token shelf, in authored order. */
+/** The soft-token shelf, in authored order (Tide shelf rows are separate). */
 export function tokenShopRows(): readonly ShopTokenRow[] {
-  return TOKEN_ROWS;
+  return TOKEN_ROWS.filter((row) => !row.pass_only);
+}
+
+/** Tide shelf: pass-only token rows, in authored order. */
+export function tideShopRows(): readonly ShopTokenRow[] {
+  return TOKEN_ROWS.filter((row) => row.pass_only);
 }
 
 /** The paid (IAP) shelf, in authored order. Stubs in v0. */
@@ -109,6 +124,7 @@ function parseTokenRows(raw: unknown): readonly ShopTokenRow[] {
     const price = finite(entry.price);
     const daily = finite(entry.daily_limit);
     const weekly = finite(entry.weekly_limit);
+    const perPass = finite(entry.per_pass_limit);
     const amount = finite(entry.amount);
     rows.push({
       id,
@@ -119,6 +135,8 @@ function parseTokenRows(raw: unknown): readonly ShopTokenRow[] {
       price: price != null && price > 0 ? Math.floor(price) : null,
       daily_limit: daily != null && daily > 0 ? Math.floor(daily) : null,
       weekly_limit: weekly != null && weekly > 0 ? Math.floor(weekly) : null,
+      pass_only: entry.pass_only === true,
+      per_pass_limit: perPass != null && perPass > 0 ? Math.floor(perPass) : null,
       // Never 0 — a fractional/zero amount still grants at least one unit.
       amount: amount != null && amount > 0 ? Math.max(1, Math.floor(amount)) : 1,
     });
@@ -148,8 +166,9 @@ function parsePaidRows(raw: unknown): readonly ShopPaidRow[] {
           ? entry.price_label
           : '—',
       // v0 is stub-only: anything not explicitly `true` stays disabled. A
-      // Prism Stone is a preview in this build — never for sale.
-      available: kind !== 'prism_stone' && entry.available === true,
+      // Prism Stone preview and the Tide Pass card are never for sale in
+      // this build (no real-money code).
+      available: kind !== 'prism_stone' && kind !== 'pass' && entry.available === true,
       badge: typeof entry.badge === 'string' && entry.badge.length > 0 ? entry.badge : null,
     });
   }

@@ -99,7 +99,8 @@ import {
   PITY_HARD,
   PITY_SOFT_FROM,
   PRISM_STYLES,
-  PRISM_STYLE_ODDS,
+  PRISM_STYLE_COST,
+  STAR_PEARL_PITY,
   SHARDS_PER_TICKET,
   SHINY_ODDS,
   SHINY_STYLE_LABEL,
@@ -129,11 +130,13 @@ import {
   PET_POUNCE_CAP,
   TD_HELP_BAND,
 } from '@/play/play-buffs';
-import { DEFAULT_WINDOW, MILESTONES } from '@/play/play-settings';
+import { DEFAULT_WINDOW, MILESTONES, STREAK_DAYS, STREAK_REWARDS, STREAK_SHELLS } from '@/play/play-settings';
+import { tideShopRows, paidShopRows } from '@/play/shop';
+import { TIDE_PASS_DAYS, TIDE_PASS_MAX_DAYS, TIDE_PITY_STEP, TIDE_PRISM_GIFT } from '@/play/tide';
 import { DIVE_BUST_FLOOR, DIVE_BUST_TABLE, DIVE_CHARGE_CAP, DIVE_CHARGE_REFILL_MS } from '@/play/playStore';
 import { heroName } from '@/play/heroes-data';
 
-export const GUIDE_SECTIONS = ['pet', 'eggs', 'den', 'stones', 'dive', 'expeditions', 'games', 'buffs', 'collection', 'td'] as const;
+export const GUIDE_SECTIONS = ['pet', 'eggs', 'den', 'stones', 'tide', 'dive', 'expeditions', 'games', 'buffs', 'collection', 'td'] as const;
 export type GuideSection = (typeof GUIDE_SECTIONS)[number];
 
 export const GUIDE_TITLE: Record<GuideSection, string> = {
@@ -141,6 +144,7 @@ export const GUIDE_TITLE: Record<GuideSection, string> = {
   eggs: 'Eggs & grades',
   den: 'The Den',
   stones: 'Shine Stones & styles',
+  tide: 'Tide Pass & Shop',
   dive: 'Dive',
   expeditions: 'Expeditions',
   games: 'Mini-games',
@@ -209,6 +213,7 @@ function eggsSection(): string[] {
     `Eggs a day: the first ${FREE_EGGS_PER_DAY} are free, then ${EXTRA_EGG_PRICES.join(', ')} shells — ${EGGS_PER_DAY_MAX} at most, starting over at local midnight. Passing a daily challenge adds ${DAILY_EGG_BONUS} free egg, once a day (it counts toward the ${EGGS_PER_DAY_MAX}). A ticket egg is always free and never counts. "Change egg" keeps the egg you paid for — pick again at no cost.`,
     `Legendary pity: every egg that reaches ${PET_STAGE_LABEL.child} without a Legendary adds one to the count; a Legendary sets it back to zero. Release, swaps, rebirth and the clock never change it. From egg ${PITY_SOFT_FROM} the Legendary share climbs each egg, and egg ${PITY_HARD} is always Legendary. The odds the picker shows already include it.`,
     `How long: playing every day with a few eggs and the daily egg, most players find a Legendary in ${aboutWeeks(COLLECT_TIMELINES.legendaryRegularDays)}. With only the free eggs, one is certain within ${COLLECT_TIMELINES.legendaryCertainDays} days (${aboutWeeks(COLLECT_TIMELINES.legendaryCertainDays)}).`,
+    `A Tide Pass can make an egg count for more than one toward that guarantee. The odds table stays the same — see Tide Pass & Shop.`,
   ];
 }
 
@@ -226,13 +231,34 @@ function stonesSection(): string[] {
   const rewards = MILESTONES.filter((m) => m.reward.kind === 'stone' || (m.stones ?? 0) > 0)
     .map((m) => m.label)
     .join(', ');
-  const prism = PRISM_STYLES.map((s) => `${SHINY_STYLE_LABEL[s]} ${PRISM_STYLE_ODDS[s]}%`).join(' · ');
   return [
     `A Shine Stone gives a revealed pet (${PET_STAGE_LABEL.child} and up) a ${pct(STONE_ODDS)} chance to turn shiny — your active pet or one resting in the Den, never one that is already shiny. Looks only: it never changes stats.`,
     `Glimmers: every miss adds a glimmer (they are yours, not the pet's) and that pet keeps a faint glow. With ${GLIMMER_PITY} glimmers the next Stone always works; a success clears them. Each Stone's roll is set in advance, so closing the app can't change it.`,
     `Where Stones come from: the first daily-challenge Gold each day (either game) · the ${tripLabel(EXPEDITION_LADDER_MS[EXPEDITION_STONE_STEP])} expedition, ${pct(EXPEDITION_STONE_CHANCE)} (its Power chance is unchanged) · ${DIVE_TIER_LABEL.abyss} ${pct(stoneShare('abyss'))} and ${DIVE_TIER_LABEL.hadal} ${pct(stoneShare('hadal'))} of charged-dive finds · every ${ordinal(STONE_EVERY_DAYS)} day you play · milestones: ${rewards}.`,
-    `Shiny styles: ${SHINY_STYLE_LABEL.classic} is the hero's own shiny colour — natural shinies and Shine Stones. The other styles will come from a Prism Stone, which isn't available yet; it will roll: ${prism}. Styles are looks only, and dyes never cover a shiny. The Collection shows the styles each hero has.`,
+    `Shiny styles: ${SHINY_STYLE_LABEL.classic} is the hero's own shiny colour — natural shinies and Shine Stones. It is never sold. Prism styles are pass-only — see Tide Pass & Shop. Styles are looks only, and dyes never cover a shiny. The Collection shows the styles each hero has.`,
     `How long: with a Stone every few days, most players have a shiny in ${aboutWeeks(COLLECT_TIMELINES.shinyRegularDays)} (natural shinies are one in ${Math.round(1 / SHINY_ODDS)}).`,
+  ];
+}
+
+function tideSection(): string[] {
+  const tideEggs = Math.ceil(PITY_HARD / TIDE_PITY_STEP);
+  const tideSoft = Math.ceil(PITY_SOFT_FROM / TIDE_PITY_STEP);
+  const styles = PRISM_STYLES.map((s) => `${SHINY_STYLE_LABEL[s]} ${PRISM_STYLE_COST[s]}`).join(' · ');
+  const shelf = tideShopRows()
+    .map((r) => `${r.name}: ${r.price} tokens, ${r.per_pass_limit} per pass`)
+    .join(' · ');
+  const pass = paidShopRows().find((r) => r.kind === 'pass');
+  const day1 = STREAK_REWARDS[1];
+  const shells = day1?.kind === 'shells' ? day1.amount : STREAK_SHELLS;
+  return [
+    `The Tide Pass lasts ${TIDE_PASS_DAYS} days you play. A day counts the first time you open Divecore that day, and days you skip don't count. Hold up to ${TIDE_PASS_MAX_DAYS} days.`,
+    `Legendary progress ×${TIDE_PITY_STEP}: every egg revealed with the pass counts ${TIDE_PITY_STEP} toward the guarantee. From zero, egg ${tideEggs} is always Legendary, rising from egg ${tideSoft}. The odds table doesn't change; the bar fills faster. An egg counts double if it was picked or woken while the pass was on. An egg still incubating keeps that count if the pass ends; one woken after the pass ends counts as one.`,
+    `Prism styles are pass only. Each pass brings ${TIDE_PRISM_GIFT} Prism Stone. Pick a style: ${styles}. Classic shinies are never sold. They come from play (one in ${Math.round(1 / SHINY_ODDS)}, and Shine Stones).`,
+    `Tide shelf (soft tokens, while a pass is on): ${shelf}. A Star Pearl adds ${STAR_PEARL_PITY} Legendary progress, and it never skips the guarantee.`,
+    `What it never changes: Powers, the ${DIVECORE_POWERS_PER_DAY} daily Power ceiling, TD help (${pct(TD_HELP_BAND.min)}–${pct(TD_HELP_BAND.max)}), Dive odds, how fast your pet grows, and free eggs (${FREE_EGGS_PER_DAY} a day, ${EGGS_PER_DAY_MAX} at most).`,
+    `Without the pass, everything else is the same, and a Legendary is still certain by egg ${PITY_HARD}. Day ${STREAK_DAYS} of your streak gives a Tide day. The first day gives ${shells} shells.`,
+    `How long: with one pass, most regular players find a Legendary in ${aboutWeeks(COLLECT_TIMELINES.legendaryTideDays)}.`,
+    `Buying: not for sale yet${pass ? ` (${pass.price_label})` : ''}.`,
   ];
 }
 
@@ -331,6 +357,7 @@ export function guideSections(): { id: GuideSection; title: string; lines: strin
     eggs: eggsSection,
     den: denSection,
     stones: stonesSection,
+    tide: tideSection,
     dive: diveSection,
     expeditions: expeditionsSection,
     games: gamesSection,

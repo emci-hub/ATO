@@ -134,8 +134,11 @@ import {
   FREE_EGGS_PER_DAY,
   GLIMMER_PITY,
   PITY_HARD,
+  PRISM_STYLE_COST,
+  STAR_PEARL_PITY,
   STONE_EVERY_DAYS,
   eggsUntilLegendary,
+  isPrismStyle,
   nextEggPrice,
   pityAfterReveal,
   stoneSucceeds,
@@ -156,6 +159,7 @@ import {
   type EggType,
   type Grade,
   type PetHeroBook,
+  type PrismStyle,
   type ShinyStyle,
 } from '@/play/pet-eggs';
 import {
@@ -172,8 +176,12 @@ import {
 } from '@/play/den';
 import {
   MILESTONES,
+  STREAK_DAYS,
+  advanceStreak,
   checkPetName,
   countDay,
+  emptyStreak,
+  parseStreak,
   retroShineStones,
   defaultSettings,
   emptyStats,
@@ -184,7 +192,22 @@ import {
   type PlaySettings,
   type PlayStats,
   type Ribbon,
+  type StreakAdvance,
+  type StreakState,
 } from '@/play/play-settings';
+import {
+  TIDE_PASS_DAYS,
+  emptyTide,
+  endTide,
+  grantTide,
+  parseTide,
+  tideActive,
+  tideDaysHeld,
+  tidePityStep,
+  openTideDay,
+  type TideSource,
+  type TideState,
+} from '@/play/tide';
 import type { Difficulty, RoundOutcome } from '@/play/pet-game-rules';
 import { EXPEDITION_STEPS, expeditionLengthMs, rollExpeditionReward } from '@/play/expedition-ladder';
 import {
@@ -778,7 +801,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 27;
+  version: 28;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -925,10 +948,16 @@ export type PlayStoreDoc = {
   glimmers: number;
   stones_used: number;
   stone_seq: number;
-  /** Prism Stones — a Shop preview only; always 0 in this build. */
+  /** Prism Stones — pick a style for a revealed non-shiny pet (v28). */
   prism_stones: number;
   /** Token-shop buys this week (Monday's YYYY-MM-DD), row id → count. */
   shop_weekly: ShopDaily;
+  /** v28 — Tide Pass. No pass on a save from before v28. */
+  tide: TideState;
+  /** v28 — buys of Tide-shelf rows during `pass` (a `passes_started` value). */
+  shop_pass: { pass: number; counts: Record<string, number> };
+  /** v28 — the 7-day Tide calendar. A missed day pauses it. */
+  streak: StreakState;
 };
 
 /** A queued "hero owned" offer (Slice A2). `label` is the hero's display name
@@ -1035,6 +1064,8 @@ export type PlayView = {
   shopCounts: Readonly<Record<string, number>>;
   /** v27 — token-shop buys made this week (the weekly caps). */
   shopWeekCounts: Readonly<Record<string, number>>;
+  /** v28 — Tide-shelf buys this pass (empty when the pass index moved on). */
+  shopPassCounts: Readonly<Record<string, number>>;
   /** Heroes OWNED (Slice A2) — hero ids the player can set as Avatar or bind. */
   ownedHeroIds: readonly string[];
   /** The hero the player has set as their Avatar (Slice A2). Falls back to the
@@ -1146,11 +1177,16 @@ export type PetView = {
   eggDay: EggDayView;
   /** v27 — Legendary pity: eggs since the last Legendary, eggs until one is
    * certain (counting the next), and the Legendary % the NEXT picked egg
-   * would roll with today's care band (the picker's odds). */
-  pity: { since: number; untilLegendary: number; nextOdds: Record<Grade, number> };
+   * would roll with today's care band (the picker's odds). v28: `step` is 2
+   * while a Tide Pass is on (the bar, not the odds table). */
+  pity: { since: number; step: number; untilLegendary: number; nextOdds: Record<Grade, number> };
   /** v27 — Shine Stones held, glimmers (5 = the next one is certain), Stones
-   * ever used. */
-  stones: { held: number; glimmers: number; used: number };
+   * ever used. v28: Prism Stones held. */
+  stones: { held: number; glimmers: number; used: number; prism: number };
+  /** v28 — Tide Pass as of today. */
+  tide: { active: boolean; daysHeld: number; step: number; passes: number };
+  /** v28 — Tide calendar. `claimedToday` means this open already took a day. */
+  streak: { next: number; last: number | null; ymd: string | null; claimedToday: boolean };
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -1216,7 +1252,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 27,
+    version: 28,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -1291,6 +1327,9 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     stone_seq: newEggSeed(),
     prism_stones: 0,
     shop_weekly: { ymd: null, counts: {} },
+    tide: emptyTide(),
+    shop_pass: { pass: 0, counts: {} },
+    streak: emptyStreak(),
   };
 }
 
@@ -1374,6 +1413,7 @@ export function playView(doc: PlayStoreDoc, now: number): PlayView {
     shopCounts:
       doc.shop_daily.ymd === localYmd(new Date(now)) ? doc.shop_daily.counts : {},
     shopWeekCounts: shopWeekCountsOf(doc, now),
+    shopPassCounts: shopPassCountsOf(doc),
     avatarPark: active.park,
     ownedHeroIds: doc.owned_hero_ids,
     activeAvatarHeroId: normalizedAvatarHeroId(doc),
@@ -1691,7 +1731,7 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     careScore: petCareScore(pet),
     careBand: petCareBand(pet),
     oddsOpen: petOddsOpen(pet),
-    gradeOdds: gradeOdds(petCareBand(pet), pet.ticket, pet.pity_from),
+    gradeOdds: gradeOdds(petCareBand(pet), pet.ticket, pet.pity_from, pet.pity_step),
     dyeOn: petDyeOn(doc, pet, heroes),
     canRelease: canReleasePet(pet) && !away,
     buffs: doc.buffs,
@@ -1716,10 +1756,23 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     eggDay: eggDayOf(doc, now),
     pity: {
       since: doc.eggs_since_legendary,
-      untilLegendary: eggsUntilLegendary(doc.eggs_since_legendary),
-      nextOdds: gradeOdds(petCareBand(pet), null, doc.eggs_since_legendary),
+      step: tidePityStep(doc.tide, today),
+      untilLegendary: eggsUntilLegendary(doc.eggs_since_legendary, tidePityStep(doc.tide, today)),
+      nextOdds: gradeOdds(petCareBand(pet), null, doc.eggs_since_legendary, tidePityStep(doc.tide, today)),
     },
-    stones: { held: doc.shine_stones, glimmers: doc.glimmers, used: doc.stones_used },
+    stones: { held: doc.shine_stones, glimmers: doc.glimmers, used: doc.stones_used, prism: doc.prism_stones },
+    tide: {
+      active: tideActive(doc.tide, today),
+      daysHeld: tideDaysHeld(doc.tide, today),
+      step: tidePityStep(doc.tide, today),
+      passes: doc.tide.passes_started,
+    },
+    streak: {
+      next: doc.streak.next,
+      last: doc.streak.last,
+      ymd: doc.streak.ymd,
+      claimedToday: petDayHolds(today, doc.streak.ymd),
+    },
   };
 }
 
@@ -1776,8 +1829,9 @@ function revealedIn(prev: PetState, next: PetState): boolean {
  * `next` — the caller does. */
 function settlePetAging(doc: PlayStoreDoc, prev: PetState, next: PetState): PlayStoreDoc {
   const stats = tallyPet(doc.play_stats, prev, next);
+  const step = revealedIn(prev, next) ? next.pity_step || prev.pity_step : 1;
   const since = revealedIn(prev, next)
-    ? pityAfterReveal(doc.eggs_since_legendary, next.grade as Grade)
+    ? pityAfterReveal(doc.eggs_since_legendary, next.grade as Grade, step)
     : doc.eggs_since_legendary;
   if (stats === doc.play_stats && since === doc.eggs_since_legendary) return doc;
   return { ...doc, play_stats: stats, eggs_since_legendary: since };
@@ -1789,12 +1843,48 @@ function settledPetFields(doc: PlayStoreDoc, now: number): Pick<PlayStoreDoc, 'p
   return { play_stats: settled.play_stats, eggs_since_legendary: settled.eggs_since_legendary };
 }
 
-/** A day played (the Journal), and a Shine Stone on every 5th one (v27). */
+/** A day played (the Journal), a Shine Stone on every 5th one (v27), one Tide
+ * day if a pass is held (v28), and one Tide-calendar day (a miss pauses it). */
 function countPlayDay(doc: PlayStoreDoc, now: number): PlayStoreDoc {
-  const stats = countDay(doc.play_stats, localYmd(new Date(now)));
-  if (stats === doc.play_stats) return doc;
-  const stone = stats.days_played > doc.play_stats.days_played && stats.days_played % STONE_EVERY_DAYS === 0;
-  return { ...doc, play_stats: stats, shine_stones: doc.shine_stones + (stone ? 1 : 0) };
+  const today = localYmd(new Date(now));
+  const tide = openTideDay(doc.tide, today);
+  const stats = countDay(doc.play_stats, today);
+  const streakStep = advanceStreak(doc.streak, today);
+  const stone = stats !== doc.play_stats && stats.days_played % STONE_EVERY_DAYS === 0;
+  if (tide === doc.tide && stats === doc.play_stats && streakStep == null) return doc;
+  let next: PlayStoreDoc = {
+    ...doc,
+    tide,
+    play_stats: stats,
+    shine_stones: doc.shine_stones + (stone ? 1 : 0),
+  };
+  if (streakStep) next = applyStreakReward(next, streakStep, today);
+  return next;
+}
+
+/** Add pass days. A new pass gifts a Prism Stone and the Tide Friend ribbon,
+ * and resets the Tide shelf's per-pass counts. If today is not a pass day
+ * yet, this open spends one of the new days. */
+function withTideGrant(doc: PlayStoreDoc, today: string, days: number, source: TideSource): PlayStoreDoc {
+  const g = grantTide(doc.tide, today, days, source);
+  let tide = g.tide;
+  if (g.added > 0 && !tideActive(tide, today)) tide = openTideDay(tide, today);
+  const ribbons = g.started && !doc.ribbons.includes('tide') ? [...doc.ribbons, 'tide' as const] : doc.ribbons;
+  const shop_pass = g.started ? { pass: tide.passes_started, counts: {} } : doc.shop_pass;
+  if (tide === doc.tide && g.prismGift === 0) return doc;
+  return { ...doc, tide, prism_stones: doc.prism_stones + g.prismGift, ribbons, shop_pass };
+}
+
+function applyStreakReward(doc: PlayStoreDoc, step: StreakAdvance, today: string): PlayStoreDoc {
+  let next: PlayStoreDoc = { ...doc, streak: step.streak };
+  const reward = step.reward;
+  if (!reward) return next;
+  if (reward.kind === 'shells') next = { ...next, shells: next.shells + reward.amount };
+  else if (reward.kind === 'stone') next = { ...next, shine_stones: next.shine_stones + 1 };
+  else if (reward.kind === 'ticket') {
+    next = { ...next, pet_tickets: { ...next.pet_tickets, rare: next.pet_tickets.rare + 1 } };
+  } else next = withTideGrant(next, today, reward.days, 'streak');
+  return next;
 }
 
 export type ExpeditionSendResult = { ok: true } | { ok: false; reason: PetExpeditionBlock };
@@ -1987,7 +2077,12 @@ export function chooseEggDoc(
   const uid = Math.max(1, touched.pet_uid_next);
   return {
     ...touched,
-    pet: { ...chosen, uid, pity_from: touched.eggs_since_legendary },
+    pet: {
+      ...chosen,
+      uid,
+      pity_from: touched.eggs_since_legendary,
+      pity_step: tidePityStep(touched.tide, today),
+    },
     pet_uid_next: uid + 1,
     shells: touched.shells - cost.shells,
     eggs_today: used + (cost.counts ? 1 : 0),
@@ -2091,7 +2186,7 @@ function rollPetHero(pet: PetState): string {
 }
 
 function rollPetFor(pet: PetState) {
-  return rollPet(pet.seed, pet.egg ?? 'knight', petCareBand(pet), pet.ticket, pet.pity_from);
+  return rollPet(pet.seed, pet.egg ?? 'knight', petCareBand(pet), pet.ticket, pet.pity_from, pet.pity_step);
 }
 
 /** Dev kit: set the Egg/Baby care to land in a band. */
@@ -2265,7 +2360,7 @@ export function activateDenPet(
   return {
     doc: {
       ...touched,
-      pet: wakePet(touched.pet_den[i], now, touched.eggs_since_legendary),
+      pet: wakePet(touched.pet_den[i], now, touched.eggs_since_legendary, tidePityStep(touched.tide, localYmd(new Date(now)))),
       pet_den: [...rest, ...outgoing],
     },
     result: { ok: true },
@@ -2360,6 +2455,41 @@ export function applyShineStone(doc: PlayStoreDoc, now: number, uid: number): { 
   return {
     doc: { ...next, shine_stones: touched.shine_stones - 1, stones_used: touched.stones_used + 1, glimmers },
     result: { ok: true, shiny: hit, glimmers },
+  };
+}
+
+export type PrismRefusal = 'no_stones' | 'missing' | 'not_revealed' | 'shiny' | 'style';
+export type PrismResult = { ok: true; style: PrismStyle; left: number } | { ok: false; reason: PrismRefusal };
+
+/** Can this pet take a Prism Stone in `style`? Revealed, not shiny, and the
+ * style's cost is on hand. Classic is not a style you can pick. */
+export function prismRefusal(doc: PlayStoreDoc, pet: PetState | undefined, style: PrismStyle): PrismRefusal | null {
+  if (!isPrismStyle(style)) return 'style';
+  if (!pet) return 'missing';
+  if (!petRevealed(pet)) return 'not_revealed';
+  if (pet.shiny) return 'shiny';
+  if (doc.prism_stones < PRISM_STYLE_COST[style]) return 'no_stones';
+  return null;
+}
+
+/** Spend Prism Stones to make a revealed non-shiny pet shiny in a style you
+ * pick. Looks only. The style lands in the Collection through the live book. */
+export function applyPrismStone(
+  doc: PlayStoreDoc,
+  now: number,
+  uid: number,
+  style: PrismStyle,
+): { doc: PlayStoreDoc; result: PrismResult } {
+  const touched = touchPet(doc, now);
+  const pet = touched.pet.uid === uid && uid > 0 ? touched.pet : touched.pet_den.find((p) => p.uid === uid);
+  const refusal = prismRefusal(touched, pet, style);
+  if (refusal || !pet) return { doc: touched, result: { ok: false, reason: refusal ?? 'missing' } };
+  const cost = PRISM_STYLE_COST[style];
+  const next = withPetByUid(touched, uid, (p) => ({ ...p, shiny: true, shiny_style: style, glimmer: false }));
+  if (!next) return { doc: touched, result: { ok: false, reason: 'missing' } };
+  return {
+    doc: { ...next, prism_stones: touched.prism_stones - cost },
+    result: { ok: true, style, left: touched.prism_stones - cost },
   };
 }
 
@@ -2609,7 +2739,40 @@ export function devAddStones(doc: PlayStoreDoc): PlayStoreDoc {
 export function devSetPity(doc: PlayStoreDoc, now: number, since: number): PlayStoreDoc {
   const n = Math.max(0, Math.min(PITY_HARD - 1, Math.floor(since)));
   const pet = advancePet(doc.pet, now);
-  return { ...settlePetAging(doc, doc.pet, pet), eggs_since_legendary: n, pet: wakePet(pet, now, n) };
+  const today = localYmd(new Date(now));
+  return {
+    ...settlePetAging(doc, doc.pet, pet),
+    eggs_since_legendary: n,
+    pet: wakePet(pet, now, n, tidePityStep(doc.tide, today)),
+  };
+}
+
+/** Dev kit (v28): grant a Tide Pass (`TIDE_PASS_DAYS` play-days). Today counts. */
+export function devGrantTide(doc: PlayStoreDoc, now: number, days: number = TIDE_PASS_DAYS): PlayStoreDoc {
+  const touched = touchPet(doc, now);
+  return withTideGrant(touched, localYmd(new Date(now)), days, 'dev');
+}
+
+/** Dev kit (v28): end the Tide Pass, including a day already opened. */
+export function devEndTide(doc: PlayStoreDoc, now: number): PlayStoreDoc {
+  const touched = touchPet(doc, now);
+  const tide = endTide(touched.tide);
+  return tide === touched.tide ? touched : { ...touched, tide };
+}
+
+/** Dev kit (v28): +1 Prism Stone. */
+export function devAddPrism(doc: PlayStoreDoc): PlayStoreDoc {
+  return { ...doc, prism_stones: doc.prism_stones + 1 };
+}
+
+/** Dev kit (v28): claim Tide-calendar day `day` now (1–7), even if today
+ * already counted. The reward is the real one for that day. */
+export function devSetStreakDay(doc: PlayStoreDoc, now: number, day: number): PlayStoreDoc {
+  const today = localYmd(new Date(now));
+  const d = Math.min(STREAK_DAYS, Math.max(1, Math.floor(day)));
+  const step = advanceStreak({ next: d, ymd: null, last: null }, today);
+  if (!step) return doc;
+  return applyStreakReward(doc, step, today);
 }
 
 /** Dev kit (v27): fill every free Den slot with a revealed Child (random
@@ -4463,6 +4626,10 @@ export type ShopRefusal =
   | 'daily_cap'
   /** v27 — hit this row's per-week cap. */
   | 'weekly_cap'
+  /** v28 — Tide shelf row, and no pass is on. */
+  | 'tide_only'
+  /** v28 — hit this row's per-pass cap. */
+  | 'pass_cap'
   /** Dive charges already at the 10 cap — buying would waste it. */
   | 'dive_full';
 
@@ -4480,6 +4647,10 @@ export type ShopPurchaseResult =
       boughtToday: number;
       /** v27 — Shine Stones held after the buy. */
       shineStonesNow: number;
+      /** v28 — Prism Stones held after the buy. */
+      prismStonesNow: number;
+      /** v28 — shells given instead of a Power that would have passed today's ceiling. */
+      shellsInstead: number;
     }
   | { ok: false; reason: ShopRefusal };
 
@@ -4510,13 +4681,25 @@ export function purchaseShopRow(
   if (row.weekly_limit != null && boughtWeek >= row.weekly_limit) {
     return { doc, result: { ok: false, reason: 'weekly_cap' } };
   }
+  const today = localYmd(new Date(now));
+  const opened = openTideDay(doc.tide, today);
+  const passOn = tideActive(opened, today);
+  const passCounts = opened.passes_started === doc.shop_pass.pass ? doc.shop_pass.counts : {};
+  const boughtPass = Math.max(0, Math.floor(passCounts[row.id] ?? 0));
+  if (row.pass_only && !passOn) {
+    return { doc, result: { ok: false, reason: 'tide_only' } };
+  }
+  if (row.per_pass_limit != null && boughtPass >= row.per_pass_limit) {
+    return { doc, result: { ok: false, reason: 'pass_cap' } };
+  }
   if (doc.tokens < row.price) {
     return { doc, result: { ok: false, reason: 'insufficient' } };
   }
 
   // Apply the effect (refusals above leave the doc untouched).
-  let next = doc;
+  let next: PlayStoreDoc = opened === doc.tide ? doc : { ...doc, tide: opened };
   let grantedItemId: string | null = null;
+  let shellsInstead = 0;
   if (row.kind === 'dive_charge') {
     const current = diveChargeAt(doc, now).current;
     if (current >= DIVE_CHARGE_CAP) {
@@ -4528,13 +4711,34 @@ export function purchaseShopRow(
       dive_charge_at: now, // refill timer restarts from the buy
     };
   } else if (row.kind === 'merge_crate') {
-    grantedItemId = rollPowerFind(rng);
-    next = {
-      ...next,
-      inventory: addCopiesToBag(next.inventory, grantedItemId, 0, row.amount),
-    };
+    // Crate Powers count toward "Powers today". Past the ceiling they become
+    // shells, the same as a dive or a trip.
+    const held = petDayHolds(todayYmd, next.powers_today.ymd);
+    let powers = held ? next.powers_today.n : 0;
+    let ymd = held ? (next.powers_today.ymd as string) : todayYmd;
+    let inventory = next.inventory;
+    let shells = next.shells;
+    for (let i = 0; i < row.amount; i += 1) {
+      if (powers < DIVECORE_POWERS_PER_DAY) {
+        const id = rollPowerFind(rng);
+        grantedItemId = id;
+        inventory = addCopiesToBag(inventory, id, 0, 1);
+        powers += 1;
+      } else {
+        shells += POWER_OVERFLOW_SHELLS;
+        shellsInstead += POWER_OVERFLOW_SHELLS;
+      }
+    }
+    next = { ...next, inventory, shells, powers_today: { ymd, n: powers } };
   } else if (row.kind === 'shine_stone') {
     next = { ...next, shine_stones: next.shine_stones + row.amount };
+  } else if (row.kind === 'prism_stone') {
+    next = { ...next, prism_stones: next.prism_stones + row.amount };
+  } else if (row.kind === 'star_pearl') {
+    next = {
+      ...next,
+      eggs_since_legendary: Math.min(PITY_HARD - 1, next.eggs_since_legendary + STAR_PEARL_PITY),
+    };
   }
 
   next = {
@@ -4548,6 +4752,9 @@ export function purchaseShopRow(
       ymd: weekHolds(week, doc.shop_weekly.ymd) ? doc.shop_weekly.ymd : week,
       counts: { ...weekly, [row.id]: boughtWeek + 1 },
     },
+    shop_pass: row.per_pass_limit != null
+      ? { pass: opened.passes_started, counts: { ...passCounts, [row.id]: boughtPass + 1 } }
+      : next.shop_pass,
   };
   return {
     doc: next,
@@ -4560,8 +4767,15 @@ export function purchaseShopRow(
       diveChargeNow: next.dive_charge,
       boughtToday: bought + 1,
       shineStonesNow: next.shine_stones,
+      prismStonesNow: next.prism_stones,
+      shellsInstead,
     },
   };
+}
+
+/** Tide-shelf buys for the pass now on (a new pass starts the counts over). */
+export function shopPassCountsOf(doc: PlayStoreDoc): Readonly<Record<string, number>> {
+  return doc.shop_pass.pass === doc.tide.passes_started ? doc.shop_pass.counts : {};
 }
 
 /** The Monday (device-local YYYY-MM-DD) of `now`'s week — the weekly limit's key. */
@@ -4763,7 +4977,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
       version !== 17 && version !== 18 && version !== 19 && version !== 20 &&
       version !== 21 && version !== 22 && version !== 23 && version !== 24 && version !== 25 &&
-      version !== 26 && version !== 27
+      version !== 26 && version !== 27 && version !== 28
     ) {
       return null;
     }
@@ -4872,6 +5086,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     const v24 = version >= 24;
     const v26 = version >= 26;
     const v27 = version >= 27;
+    const v28 = version >= 28;
     const hall = parsePetHall(data.pet_hall);
     // v27 (Part D): older saves — the pet is the active one in slot 1 and the
     // Den is empty with 6 slots; the pity counter, eggs today, Stones and
@@ -4891,9 +5106,9 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
         : [];
     const shineStones =
       (v27 ? Math.max(0, Math.floor(finiteNumber(data.shine_stones) ?? 0)) : 0) +
-      retroShineStones(typeof version === 'number' ? version : 27, milestones);
+      retroShineStones(typeof version === 'number' ? version : 28, milestones);
     return {
-      version: 27,
+      version: 28,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -4968,7 +5183,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       play_stats: v24 ? parseStats(data.play_stats) : emptyStats(),
       milestones,
       ribbons: v24 && Array.isArray(data.ribbons)
-        ? [...new Set(data.ribbons.filter((r): r is Ribbon => r === 'collector' || r === 'legend'))]
+        ? [...new Set(data.ribbons.filter((r): r is Ribbon => r === 'collector' || r === 'legend' || r === 'tide'))]
         : [],
       dye_unlocked: v24 && Array.isArray(data.dye_unlocked)
         ? [...new Set(data.dye_unlocked.filter((h): h is string => typeof h === 'string' && heroById(h) != null))]
@@ -4996,8 +5211,11 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       glimmers: v27 ? Math.max(0, Math.min(GLIMMER_PITY, Math.floor(finiteNumber(data.glimmers) ?? 0))) : 0,
       stones_used: v27 ? Math.max(0, Math.floor(finiteNumber(data.stones_used) ?? 0)) : 0,
       stone_seq: v27 && finiteNumber(data.stone_seq) != null ? (finiteNumber(data.stone_seq) as number) >>> 0 : newEggSeed(),
-      prism_stones: 0,
+      prism_stones: v28 ? Math.max(0, Math.floor(finiteNumber(data.prism_stones) ?? 0)) : 0,
       shop_weekly: v27 ? parseShopDaily(data.shop_weekly) : { ymd: null, counts: {} },
+      tide: v28 ? parseTide(data.tide) : emptyTide(),
+      shop_pass: v28 ? parseShopPass(data.shop_pass) : { pass: 0, counts: {} },
+      streak: v28 ? parseStreak(data.streak) : emptyStreak(),
     };
   } catch {
     return null;
@@ -5146,6 +5364,19 @@ function parseShopDaily(raw: unknown): ShopDaily {
     }
   }
   return { ymd, counts };
+}
+
+function parseShopPass(raw: unknown): { pass: number; counts: Record<string, number> } {
+  if (!isRecord(raw)) return { pass: 0, counts: {} };
+  const pass = Math.max(0, Math.floor(finiteNumber(raw.pass) ?? 0));
+  const counts: Record<string, number> = {};
+  if (isRecord(raw.counts)) {
+    for (const [key, value] of Object.entries(raw.counts)) {
+      const n = finiteNumber(value);
+      if (key.length > 0 && n != null && n > 0) counts[key] = Math.floor(n);
+    }
+  }
+  return { pass, counts };
 }
 
 /**

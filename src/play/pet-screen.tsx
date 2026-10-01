@@ -107,10 +107,14 @@ import {
 import { PlaySheet, SheetTabs } from '@/play/play-sheet';
 import {
   ackPetRevealsDoc,
+  devAddPrism,
   devAddShells,
   devAddStones,
+  devEndTide,
   devFillDen,
+  devGrantTide,
   devSetPity,
+  devSetStreakDay,
   devGoldAllGames,
   devGrantAllBuffs,
   devGiveShards,
@@ -134,7 +138,7 @@ import type { PlayTransition } from '@/play/use-play-store';
 /** A pet-worthy moment the Play shell hands to the room (dive, TD, finds). */
 export type PetTalkEvent = { situation: PetTalkSituation; key: number } | null;
 
-type SheetId = 'feed' | 'play' | 'expedition' | 'info' | 'eggs' | 'card' | 'menu' | 'den' | 'stone';
+type SheetId = 'feed' | 'play' | 'expedition' | 'info' | 'eggs' | 'card' | 'menu' | 'den' | 'stone' | 'prism';
 
 const ICONS: { id: PetCoachIcon; emoji: string; label: string }[] = [
   { id: 'feed', emoji: '🍖', label: 'Feed' },
@@ -158,6 +162,7 @@ const SHEET_TITLE: Record<SheetId, string> = {
   menu: 'Your pet',
   den: 'The Den',
   stone: 'Shine Stone',
+  prism: 'Prism Stone',
 };
 
 /** Keep every Divecore notice (hunger, egg, expedition, charges) in step with
@@ -180,6 +185,10 @@ export function usePlayNoticesSync(view: PlayView | null): void {
         view.pet.expeditionStepMs,
         view.chargesArmed,
         view.chargesFullAt,
+        view.pet.tide.active,
+        view.pet.tide.daysHeld,
+        view.pet.eggDay.nextPrice,
+        view.pet.state.egg,
       ].join('|')
     : '';
   useEffect(() => {
@@ -196,6 +205,9 @@ export function usePlayNoticesSync(view: PlayView | null): void {
       chargesFullAt: v.chargesFullAt,
       chargesArmed: v.chargesArmed,
       now: Date.now(),
+      tideActive: v.pet.tide.active,
+      tideDaysHeld: v.pet.tide.daysHeld,
+      freeEggsReady: v.pet.state.stage === 'egg' && v.pet.state.egg == null && v.pet.eggDay.nextPrice === 0,
     });
   }, [key]);
 }
@@ -641,6 +653,7 @@ export function PetScreen({
           ranks: pv.ranks,
           allStyles: ownsAllStyles(pv.heroes[pet.hero]),
           styleLabel: pet.shiny && pet.shiny_style ? SHINY_STYLE_LABEL[pet.shiny_style] : null,
+          tide: pv.tide.active,
         }
       : null;
   // v26: the active medal buffs for the room corner (uses left, or Maxed aura).
@@ -753,6 +766,7 @@ export function PetScreen({
           setFocusEgg(e);
           setSheet('eggs');
         }}
+        tide={pv.tide.active}
       />
 
       <View style={styles.iconRow}>
@@ -827,6 +841,10 @@ export function PetScreen({
           onViewCard={() => setSheet('card')}
           onOpenDen={() => setSheet('den')}
           onOpenStone={() => openStone(pet.uid > 0 ? pet.uid : null)}
+          onOpenPrism={() => {
+            setStoneUid(pet.uid > 0 ? pet.uid : null);
+            setSheet('prism');
+          }}
         />
       </PlaySheet>
       <PlaySheet open={sheet === 'den'} title={SHEET_TITLE.den} onClose={closeSheet} reduceMotion={reduceMotion}>
@@ -840,6 +858,10 @@ export function PetScreen({
             setSheet('eggs');
           }}
           onOpenStone={(uid) => openStone(uid)}
+          onOpenPrism={(uid) => {
+            setStoneUid(uid);
+            setSheet('prism');
+          }}
           onViewActiveCard={() => setSheet('card')}
         />
         <GuideLink section="den" onOpen={openGuide} />
@@ -847,6 +869,10 @@ export function PetScreen({
       <PlaySheet open={sheet === 'stone'} title={SHEET_TITLE.stone} onClose={closeSheet} reduceMotion={reduceMotion}>
         <StoneSheetBody view={view} commitSaved={commitSaved} initialUid={stoneUid} />
         <GuideLink section="stones" onOpen={openGuide} />
+      </PlaySheet>
+      <PlaySheet open={sheet === 'prism'} title={SHEET_TITLE.prism} onClose={closeSheet} reduceMotion={reduceMotion}>
+        <StoneSheetBody view={view} commitSaved={commitSaved} initialUid={stoneUid} mode="prism" />
+        <GuideLink section="tide" onOpen={openGuide} />
       </PlaySheet>
       <DivecoreSettingsSheet
         open={settingsOpen}
@@ -911,6 +937,12 @@ export function PetScreen({
               {GRADES.map((g) => devBtn(`+5 ${GRADE_LABEL[g]} shards`, (doc) => devGiveShards(doc, g)))}
               {devBtn('Reset Collection', (doc) => devResetCollection(doc))}
               {devBtn('+5 Shine Stones', (doc) => devAddStones(doc))}
+              {devBtn('Grant Tide (5 days)', (doc, now) => devGrantTide(doc, now))}
+              {devBtn('End Tide', (doc, now) => devEndTide(doc, now))}
+              {devBtn('+Prism Stone', (doc) => devAddPrism(doc))}
+              {devBtn('Streak day 1', (doc, now) => devSetStreakDay(doc, now, 1))}
+              {devBtn('Streak day 6', (doc, now) => devSetStreakDay(doc, now, 6))}
+              {devBtn('Streak day 7', (doc, now) => devSetStreakDay(doc, now, 7))}
               {DEV_PITY_PRESETS.map((n) => devBtn(`Pity: egg ${n + 1}`, (doc, now) => devSetPity(doc, now, n)))}
               {devBtn('Fill the Den', (doc, now) => devFillDen(doc, now))}
               <NeonChip

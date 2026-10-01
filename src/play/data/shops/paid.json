@@ -32,10 +32,19 @@
       "id": "paid_prism_stone",
       "kind": "prism_stone",
       "name": "Prism Stone",
-      "blurb": "Makes a revealed pet shiny in a random style. Looks only. Not for sale yet.",
+      "blurb": "Prism Stones are on the Tide shelf, where you pick the style. Not for sale here.",
       "price_label": "$0.99",
       "available": false,
       "badge": "Preview"
+    },
+    {
+      "id": "paid_tide_pass",
+      "kind": "pass",
+      "name": "Tide Pass",
+      "blurb": "Days you play: Legendary progress ×2, one Prism Stone, and the Tide shelf. Not for sale yet.",
+      "price_label": "US$1.99",
+      "available": false,
+      "badge": "Pass"
     }
   ]
 }

@@ -21,13 +21,15 @@ import type { Grade } from './pet-eggs';
 
 /* ------------------------------------------------------------ settings --- */
 
-export type NotifKind = 'hunger' | 'egg' | 'expedition' | 'charges';
-export const NOTIF_KINDS: readonly NotifKind[] = ['hunger', 'egg', 'expedition', 'charges'];
+export type NotifKind = 'hunger' | 'egg' | 'expedition' | 'charges' | 'tide' | 'eggs_ready';
+export const NOTIF_KINDS: readonly NotifKind[] = ['hunger', 'egg', 'expedition', 'charges', 'tide', 'eggs_ready'];
 export const NOTIF_LABEL: Record<NotifKind, string> = {
   hunger: 'Pet getting hungry',
   egg: 'Egg hatched / hero revealed',
   expedition: 'Back from an expedition',
   charges: 'Dive charges full',
+  tide: 'Tide Pass: last day',
+  eggs_ready: 'Free eggs ready',
 };
 
 export const CHATTER_LEVELS = ['chatty', 'normal', 'quiet', 'off'] as const;
@@ -57,7 +59,7 @@ export const DEFAULT_WINDOW: DayWindow = { from: 22 * 60, to: 7 * 60 };
 /** New saves: hunger, egg and expedition on; charges full off (emci). */
 export function defaultSettings(): PlaySettings {
   return {
-    notif: { hunger: true, egg: true, expedition: true, charges: false },
+    notif: { hunger: true, egg: true, expedition: true, charges: false, tide: true, eggs_ready: true },
     quiet: { ...DEFAULT_WINDOW },
     bedtime: { ...DEFAULT_WINDOW },
     chatter: 'normal',
@@ -97,6 +99,8 @@ export function parseSettings(raw: unknown, legacy: { remind: boolean; hasProgre
       egg: flag(n.egg, base.notif.egg),
       expedition: flag(n.expedition, base.notif.expedition),
       charges: flag(n.charges, base.notif.charges),
+      tide: flag(n.tide, base.notif.tide),
+      eggs_ready: flag(n.eggs_ready, base.notif.eggs_ready),
     },
     quiet: parseWindow(r.quiet, DEFAULT_WINDOW),
     bedtime: parseWindow(r.bedtime, DEFAULT_WINDOW),
@@ -267,6 +271,81 @@ export function countDay(stats: PlayStats, ymd: string): PlayStats {
   return { ...stats, days_played: stats.days_played + 1, last_play_ymd: ymd };
 }
 
+/* -------------------------------------------------------- login streak --- */
+
+/** The Tide calendar (Part E, A1): 7 days you play. A missed day pauses it —
+ * the next day you open continues where you left off. It never resets. */
+export const STREAK_DAYS = 7;
+/** Shells on day 1. */
+export const STREAK_SHELLS = 10;
+
+export type StreakReward =
+  | { kind: 'shells'; amount: number }
+  | { kind: 'stone' }
+  | { kind: 'ticket'; grade: 'rare' }
+  | { kind: 'tide'; days: number };
+
+/** Rewards by calendar day. Days without an entry still advance the calendar. */
+export const STREAK_REWARDS: Readonly<Record<number, StreakReward>> = {
+  1: { kind: 'shells', amount: STREAK_SHELLS },
+  3: { kind: 'stone' },
+  5: { kind: 'ticket', grade: 'rare' },
+  7: { kind: 'tide', days: 1 },
+};
+
+export type StreakState = {
+  /** The next calendar day to award (1–7). */
+  next: number;
+  /** Local day the calendar last advanced. */
+  ymd: string | null;
+  /** The day just awarded, if any. */
+  last: number | null;
+};
+
+export function emptyStreak(): StreakState {
+  return { next: 1, ymd: null, last: null };
+}
+
+export type StreakAdvance = { streak: StreakState; reward: StreakReward | null; day: number };
+
+/** Advance one calendar day on a new local day. Null when today already counted
+ * (a clock set back can't claim the day twice). A gap in the dates does not
+ * change `next`. */
+export function advanceStreak(streak: StreakState, today: string): StreakAdvance | null {
+  if (petDayHolds(today, streak.ymd)) return null;
+  const day = Math.min(STREAK_DAYS, Math.max(1, Math.floor(streak.next) || 1));
+  const reward = STREAK_REWARDS[day] ?? null;
+  return {
+    streak: { next: day >= STREAK_DAYS ? 1 : day + 1, ymd: today, last: day },
+    reward,
+    day,
+  };
+}
+
+/** Plain words for a calendar day's reward (null = that day has none). */
+export function streakRewardLabel(day: number): string | null {
+  const reward = STREAK_REWARDS[day];
+  if (!reward) return null;
+  if (reward.kind === 'shells') return `${reward.amount} shells`;
+  if (reward.kind === 'stone') return 'a Shine Stone';
+  if (reward.kind === 'ticket') return 'a Rare+ ticket';
+  return 'a Tide day';
+}
+
+export function parseStreak(raw: unknown): StreakState {
+  const base = emptyStreak();
+  if (typeof raw !== 'object' || raw == null) return base;
+  const r = raw as Record<string, unknown>;
+  const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? Math.floor(v) : null);
+  const next = n(r.next);
+  const last = n(r.last);
+  return {
+    next: next == null ? 1 : Math.min(STREAK_DAYS, Math.max(1, next)),
+    ymd: typeof r.ymd === 'string' ? r.ymd : null,
+    last: last == null ? null : Math.min(STREAK_DAYS, Math.max(1, last)),
+  };
+}
+
 /* ---------------------------------------------------------- milestones --- */
 
 export type MilestoneReward =
@@ -369,4 +448,4 @@ export function retroShineStones(version: number, claimed: readonly string[]): n
   return n;
 }
 
-export type Ribbon = 'collector' | 'legend';
+export type Ribbon = 'collector' | 'legend' | 'tide';

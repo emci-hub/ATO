@@ -25,25 +25,27 @@ import {
   HERO_DYE_COLOR,
   PRISM_STYLES,
   PRISM_STYLE_COLOR,
-  PRISM_STYLE_ODDS,
+  PRISM_STYLE_COST,
   STONE_EVERY_DAYS,
   STONE_ODDS,
   dyeApplies,
-  prismStyleFor,
+  isPrismStyle,
   seededRng,
   shinyColorFor,
   stoneRoll,
   stoneSucceeds,
 } from '../src/play/pet-eggs';
 import type { RoundOutcome } from '../src/play/pet-game-rules';
-import { MILESTONES } from '../src/play/play-settings';
+import { MILESTONES, STREAK_DAYS, STREAK_REWARDS } from '../src/play/play-settings';
 import {
+  applyPrismStone,
   applyShineStone,
   bankFinds,
   chooseEggDoc,
   claimMilestone,
   defaultPlayStore,
   devGoldAllGames,
+  devGrantTide,
   devPetEndStage,
   finishPetRound,
   localWeekYmd,
@@ -184,31 +186,39 @@ ok('only a revealed non-shiny pet (active or resting) takes a Stone; refusals sp
 /* ------------------------------------------------------- 4. Prism styles --- */
 
 {
-  assert.deepEqual(PRISM_STYLE_ODDS, { aurora: 24, ember: 22, frost: 22, void: 16, gold: 10, prism: 6 });
-  assert.equal(PRISM_STYLES.reduce((s, k) => s + PRISM_STYLE_ODDS[k], 0), 100, 'Prism odds sum to 100');
+  assert.deepEqual(PRISM_STYLE_COST, { aurora: 1, ember: 1, frost: 1, void: 1, gold: 2, prism: 2 });
+  assert.ok(PRISM_STYLES.every((s) => isPrismStyle(s)));
+  assert.equal((PRISM_STYLES as readonly string[]).includes('classic'), false, 'Classic is not a Prism style');
   assert.deepEqual(
     { aurora: PRISM_STYLE_COLOR.aurora, ember: PRISM_STYLE_COLOR.ember, frost: PRISM_STYLE_COLOR.frost, void: PRISM_STYLE_COLOR.void, gold: PRISM_STYLE_COLOR.gold },
     { aurora: '#4FFFD2', ember: '#FF6A3D', frost: '#9FD8FF', void: '#7B4DFF', gold: '#FFC83D' },
   );
-  const N = 100_000;
-  const seen: Record<string, number> = {};
-  for (let i = 0; i < N; i += 1) {
-    const s = prismStyleFor((i + 0.5) / N);
-    seen[s] = (seen[s] ?? 0) + 1;
-  }
-  for (const s of PRISM_STYLES) assert.ok(Math.abs((seen[s] / N) * 100 - PRISM_STYLE_ODDS[s]) < 0.01, `${s}: rolled = shown`);
-  assert.equal(prismStyleFor(0), 'aurora');
-  assert.equal(prismStyleFor(0.2399), 'aurora');
-  assert.equal(prismStyleFor(0.24), 'ember');
-  assert.equal(prismStyleFor(0.99999), 'prism');
-  // Never usable in this build: the paid row is never on sale, the counter stays 0.
-  const prism = paidShopRows().find((r) => r.kind === 'prism_stone');
-  assert.ok(prism && prism.available === false, 'the Prism Stone is a preview, not for sale');
-  const raw = JSON.parse(JSON.stringify(defaultPlayStore(T0))) as Record<string, unknown>;
-  raw.prism_stones = 5;
-  assert.equal(parsePlayStore(JSON.stringify(raw), T0)!.prism_stones, 0, 'no Prism Stones can be held yet');
+  const paid = paidShopRows().find((r) => r.kind === 'prism_stone');
+  assert.ok(paid && paid.available === false, 'the paid Prism Stone stays a preview');
+  const v27 = JSON.parse(JSON.stringify(defaultPlayStore(T0))) as Record<string, unknown>;
+  v27.version = 27;
+  v27.prism_stones = 5;
+  assert.equal(parsePlayStore(JSON.stringify(v27), T0)!.prism_stones, 0, 'a v27 save cannot hold Prism Stones');
+  const v28 = JSON.parse(JSON.stringify(defaultPlayStore(T0))) as Record<string, unknown>;
+  v28.prism_stones = 5;
+  assert.equal(parsePlayStore(JSON.stringify(v28), T0)!.prism_stones, 5, 'a v28 save keeps its Prism Stones');
+
+  let doc = revealed();
+  doc = { ...doc, prism_stones: 1 };
+  assert.deepEqual(applyPrismStone(doc, T0 + 2 * MIN, doc.pet.uid, 'gold').result, { ok: false, reason: 'no_stones' }, 'Gold costs 2');
+  assert.equal(applyPrismStone(doc, T0 + 2 * MIN, doc.pet.uid, 'gold').doc.prism_stones, 1, 'a short buy spends nothing');
+  const aurora = applyPrismStone(doc, T0 + 2 * MIN, doc.pet.uid, 'aurora');
+  assert.ok(aurora.result.ok && aurora.result.style === 'aurora' && aurora.result.left === 0);
+  assert.equal(aurora.doc.pet.shiny_style, 'aurora');
+  assert.notEqual(aurora.doc.pet.shiny_style, 'classic');
+  assert.deepEqual(applyPrismStone(aurora.doc, T0 + 3 * MIN, aurora.doc.pet.uid, 'ember').result, { ok: false, reason: 'shiny' });
+  const egg = chooseEggDoc({ ...defaultPlayStore(T0), prism_stones: 2 }, T0, 'knight', null, rng)!;
+  assert.equal(applyPrismStone(egg, T0 + MIN, egg.pet.uid, 'gold').result.ok, false);
+  const gift = devGrantTide(defaultPlayStore(T0), T0);
+  assert.equal(gift.pet.shiny_style, null, 'the pass gift is Stones, not a Classic shiny');
+  assert.ok(playView(aurora.doc, T0 + 2 * MIN).pet.heroes[aurora.doc.pet.hero!].styles.includes('aurora'), 'the Collection keeps the picked style');
 }
-ok('Prism: odds sum to 100 and prismStyleFor rolls exactly them; colours as planned; never usable (preview, 0 held)');
+ok('Prism: you pick the style (Gold and Prism cost 2); v27 holds 0, v28 keeps the count; Classic is never the result');
 
 /* ------------------------------------------------------------ 5. dyes --- */
 
@@ -298,15 +308,23 @@ ok('the first daily-challenge Gold each day gives one Stone (either game; not a 
 
 {
   // Every 5th day played: a Stone. Days are counted by the day rule.
+  // The Tide calendar also gives its own Stones (day 3, and again when it loops).
   let doc = defaultPlayStore(T0);
   for (let d = 0; d < 10; d += 1) doc = touchPet(doc, T0 + d * D);
+  let streakStones = 0;
+  for (let day = 1; day <= 10; day += 1) {
+    const cal = ((day - 1) % STREAK_DAYS) + 1;
+    if (STREAK_REWARDS[cal]?.kind === 'stone') streakStones += 1;
+  }
+  const everyFifth = Math.floor(10 / STONE_EVERY_DAYS);
   assert.equal(doc.play_stats.days_played, 10);
-  assert.equal(doc.shine_stones, 2, `days ${STONE_EVERY_DAYS} and ${2 * STONE_EVERY_DAYS}: a Stone each`);
+  assert.equal(everyFifth, 2, `days ${STONE_EVERY_DAYS} and ${2 * STONE_EVERY_DAYS} still each give a Stone`);
+  assert.equal(doc.shine_stones, everyFifth + streakStones, 'every 5th day, plus the calendar Stones');
   // Back and forth a day or two: no new days counted, no Stones.
   let wobble = doc;
   for (let i = 0; i < 20; i += 1) wobble = touchPet(wobble, T0 + (i % 2 === 0 ? 8 : 9) * D);
   assert.equal(wobble.play_stats.days_played, 10, 'toggling the clock counts no extra days');
-  assert.equal(wobble.shine_stones, 2);
+  assert.equal(wobble.shine_stones, everyFifth + streakStones);
 }
 ok(`every ${STONE_EVERY_DAYS}th day played gives a Stone; toggling the clock can’t farm days`);
 

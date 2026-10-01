@@ -11,7 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { HUB_TILES, hubTilesFor, shopUnlocked } from '../src/play/neon-viper';
-import { paidShopRows, tokenShopRows } from '../src/play/shop';
+import { paidShopRows, tideShopRows, tokenShopRows } from '../src/play/shop';
 
 let passed = 0;
 function ok(label: string) {
@@ -58,14 +58,25 @@ ok('the Play shell ignores a locked Shop tap and only renders the Shop when unlo
   const prism = paidShopRows().filter((r) => r.kind === 'prism_stone');
   assert.equal(prism.length, 1, 'one Prism Stone preview');
   assert.equal(prism[0].available, false, 'never for sale');
+  const pass = paidShopRows().filter((r) => r.kind === 'pass');
+  assert.equal(pass.length, 1, 'one Tide Pass card');
+  assert.equal(pass[0].available, false, 'the pass card is not for sale');
   assert.ok(paidShopRows().every((r) => r.available === false), 'no paid row is for sale');
-  assert.ok(read('src/play/shop.ts').includes("available: kind !== 'prism_stone' && entry.available === true"), 'the parser forces the Prism Stone off sale');
+  assert.ok(
+    read('src/play/shop.ts').includes("available: kind !== 'prism_stone' && kind !== 'pass' && entry.available === true"),
+    'the parser forces the Prism Stone and the Tide Pass off sale',
+  );
   assert.ok(!/(gamble|casino|jackpot|\bbet\b)/i.test(read('src/play/data/shops/paid.json') + read('src/play/data/shops/token.json')), 'no casino words');
   const screen = read('src/play/shop-screen.tsx');
   assert.ok(!/purchase(Paid|Iap)|requestPurchase|StoreKit|expo-in-app|react-native-iap/i.test(screen), 'no purchase code');
+  assert.ok(screen.includes('Tide shelf') && screen.includes('Tide Pass only'), 'the Tide shelf is visible and locked with neutral copy');
+  assert.equal((screen.match(/<ShopScreen\b/g) ?? []).length, 0, 'the Shop screen file does not render itself');
+  const tide = tideShopRows();
+  assert.ok(tide.length >= 2 && tide.every((r) => r.pass_only), 'Tide shelf rows are pass-only');
+  assert.ok(tokenShopRows().every((r) => !r.pass_only), 'the token shelf hides pass-only rows');
   const stone = tokenShopRows().find((r) => r.kind === 'shine_stone');
   assert.ok(stone && stone.weekly_limit === 1, 'the Shine Stone token row has its weekly limit');
 }
-ok('the Prism Stone is a preview (never for sale); no purchase code; no casino words; the Stone row is one a week');
+ok('the Prism Stone and Tide Pass are previews (never for sale); the Tide shelf is inside the guarded Shop; no purchase code; no casino words');
 
 console.log(`\ncheck:shop-hidden — ${passed} groups passed.`);

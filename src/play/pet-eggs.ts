@@ -19,7 +19,7 @@
  *     the odds shown are still the odds rolled. Egg pacing: 2 free a day,
  *     then 10/20/40/80 shells, at most 6. Shine Stones: 10% shiny, certain
  *     after 5 glimmers, each roll fixed by a saved sequence. Shiny styles
- *     (Classic, and the Prism styles — a preview, never usable yet).
+ *     (Classic from play, and Prism styles you pick with a Prism Stone).
  */
 
 import { heroName } from './heroes-data';
@@ -193,15 +193,22 @@ export function roundSkillPoints(outcome: { pass: boolean; quality: number }): n
 export const PITY_HARD = 40;
 export const PITY_SOFT_FROM = 30;
 
-/** Which egg this is since the last Legendary (1 = the first one after it). */
-export function pityEggNumber(since: number): number {
-  return Math.max(0, Math.floor(since)) + 1;
+/** Pity step is 1, or 2 while a Tide Pass stamps the egg. Anything else is 1. */
+export function pityStepOf(step: number): number {
+  return Math.floor(step) >= 2 ? 2 : 1;
+}
+
+/** Which egg-number this reveal lands on. Step 1 is `since + 1` (Part D).
+ * Step 2 lands two ahead, so from zero the 20th egg is number 40. */
+export function pityEggNumber(since: number, step = 1): number {
+  return Math.max(0, Math.floor(since)) + pityStepOf(step);
 }
 
 /** Eggs left until a Legendary is certain, counting the next one (1 = the
- * next egg is guaranteed). */
-export function eggsUntilLegendary(since: number): number {
-  return Math.max(1, PITY_HARD - Math.max(0, Math.floor(since)));
+ * next egg is guaranteed). Step 2 halves the eggs, not the odds table. */
+export function eggsUntilLegendary(since: number, step = 1): number {
+  const left = PITY_HARD - Math.max(0, Math.floor(since));
+  return Math.max(1, Math.ceil(left / pityStepOf(step)));
 }
 
 /** Percentage points added on each egg from 30 through 39. Egg 40 is the hard
@@ -217,18 +224,19 @@ export const PITY_SOFT_STEP_PP = 1;
 /** The Legendary share (percent) at a pity position: the base share up to
  * egg 29, then +`PITY_SOFT_STEP_PP` each egg from 30 through 39, and 100% at
  * egg 40. */
-export function pityLegendaryPct(basePct: number, since: number): number {
-  const n = pityEggNumber(since);
+export function pityLegendaryPct(basePct: number, since: number, step = 1): number {
+  const n = pityEggNumber(since, step);
   if (n >= PITY_HARD) return 100;
   if (n < PITY_SOFT_FROM) return basePct;
   const steps = n - PITY_SOFT_FROM + 1;
   return Math.min(100, basePct + steps * PITY_SOFT_STEP_PP);
 }
 
-/** The counter after a reveal: back to 0 on a Legendary, else one more
- * (never past the guaranteed egg). */
-export function pityAfterReveal(since: number, grade: Grade): number {
-  return grade === 'legendary' ? 0 : Math.min(PITY_HARD - 1, Math.max(0, Math.floor(since)) + 1);
+/** The counter after a reveal: back to 0 on a Legendary, else `step` more
+ * (never past the guaranteed egg — step 2 from 38 clamps at 39, so the next
+ * egg is still certain). */
+export function pityAfterReveal(since: number, grade: Grade, step = 1): number {
+  return grade === 'legendary' ? 0 : Math.min(PITY_HARD - 1, Math.max(0, Math.floor(since)) + pityStepOf(step));
 }
 
 /**
@@ -238,14 +246,14 @@ export function pityAfterReveal(since: number, grade: Grade): number {
  * scales the others down to make room. This is exactly what `rollPet` rolls
  * against.
  */
-export function gradeOdds(band: CareBand, minGrade: Grade | null = null, since = 0): Record<Grade, number> {
+export function gradeOdds(band: CareBand, minGrade: Grade | null = null, since = 0, step = 1): Record<Grade, number> {
   const w = BAND_WEIGHTS[band];
   const floor = minGrade ? gradeRank(minGrade) : 0;
   const total = GRADES.reduce((sum, g) => sum + (gradeRank(g) >= floor ? w[g] : 0), 0);
   const out = {} as Record<Grade, number>;
   for (const g of GRADES) out[g] = gradeRank(g) >= floor ? (w[g] / total) * 100 : 0;
-  if (pityEggNumber(since) >= PITY_HARD) return { common: 0, rare: 0, epic: 0, legendary: 100 };
-  const legend = pityLegendaryPct(out.legendary, since);
+  if (pityEggNumber(since, step) >= PITY_HARD) return { common: 0, rare: 0, epic: 0, legendary: 100 };
+  const legend = pityLegendaryPct(out.legendary, since, step);
   if (legend === out.legendary) return out;
   const rest = 100 - out.legendary;
   const k = rest > 0 ? (100 - legend) / rest : 0;
@@ -299,6 +307,8 @@ export const COLLECT_TIMELINES = {
    *  Measured by `sim:collect` (Great care, 4 eggs a day). The ~10 day target
    *  is not reachable without changing a locked call; this is the measured day. */
   legendaryRegularDays: 6,
+  /** Regular players, one Tide Pass from day 1 (×2 progress). Measured by `sim:collect`. */
+  legendaryTideDays: 5,
   /** With the free eggs only, a Legendary is certain by then (the hard pity). */
   legendaryCertainDays: Math.ceil(PITY_HARD / FREE_EGGS_PER_DAY),
   /** With a Shine Stone every few days, most Regular players have a shiny by then (the median). */
@@ -316,9 +326,13 @@ export function stoneSucceeds(seq: number, used: number, glimmers: number): bool
   return glimmers >= GLIMMER_PITY || stoneRoll(seq, used) < STONE_ODDS;
 }
 
+/** +Legendary progress from a Star Pearl (Tide shelf). Clamped at the egg
+ * before the guarantee, so it never skips it. */
+export const STAR_PEARL_PITY = 5;
+
 /** Shiny styles: `classic` is the hero's own shiny colour (natural shinies
- * and Shine Stones); the rest only come from a Prism Stone, which is a Shop
- * preview in this build — never usable. */
+ * and Shine Stones) — never sold. The rest come from a Prism Stone: you pick
+ * the style, and Gold and Prism cost two Stones. */
 export const SHINY_STYLES = ['classic', 'aurora', 'ember', 'frost', 'void', 'gold', 'prism'] as const;
 export type ShinyStyle = (typeof SHINY_STYLES)[number];
 export type PrismStyle = Exclude<ShinyStyle, 'classic'>;
@@ -333,8 +347,15 @@ export const SHINY_STYLE_LABEL: Record<ShinyStyle, string> = {
   gold: 'Gold',
   prism: 'Prism',
 };
-/** Prism Stone odds (percent, sum 100) — shown on the Shop preview. */
-export const PRISM_STYLE_ODDS: Record<PrismStyle, number> = { aurora: 24, ember: 22, frost: 22, void: 16, gold: 10, prism: 6 };
+/** Prism Stones a style costs. You pick it — nothing here is a random roll. */
+export const PRISM_STYLE_COST: Record<PrismStyle, number> = {
+  aurora: 1,
+  ember: 1,
+  frost: 1,
+  void: 1,
+  gold: 2,
+  prism: 2,
+};
 export const PRISM_STYLE_COLOR: Record<PrismStyle, string> = {
   aurora: '#4FFFD2',
   ember: '#FF6A3D',
@@ -354,14 +375,8 @@ export const SHINY_SPARKLE: Record<ShinyStyle, string> = {
   prism: 'rainbow',
 };
 
-/** A Prism style from a uniform draw u in [0, 1) — `PRISM_STYLE_ODDS` exactly. */
-export function prismStyleFor(u: number): PrismStyle {
-  let x = Math.max(0, Math.min(0.999999, u)) * 100;
-  for (const s of PRISM_STYLES) {
-    if (x < PRISM_STYLE_ODDS[s]) return s;
-    x -= PRISM_STYLE_ODDS[s];
-  }
-  return PRISM_STYLES[PRISM_STYLES.length - 1];
+export function isPrismStyle(v: unknown): v is PrismStyle {
+  return typeof v === 'string' && (PRISM_STYLES as readonly string[]).includes(v);
 }
 
 export function isShinyStyle(v: unknown): v is ShinyStyle {
@@ -401,11 +416,12 @@ export function rollPet(
   band: CareBand,
   minGrade: Grade | null = null,
   since = 0,
+  step = 1,
 ): PetRoll {
   const rng = seededRng(seed);
   const pool = EGG_POOLS[egg];
   const hero = pool[Math.min(pool.length - 1, Math.floor(rng() * pool.length))];
-  const odds = gradeOdds(band, minGrade, since);
+  const odds = gradeOdds(band, minGrade, since, step);
   let u = rng() * 100;
   let grade: Grade = GRADES[GRADES.length - 1];
   for (const g of GRADES) {

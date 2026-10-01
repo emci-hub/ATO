@@ -4,6 +4,8 @@
  * claims, shop, TD milestones) goes through ONE floating banner: one shown at a
  * time, the rest wait in order. Pure, so `check:play-banner` can hold it.
  */
+import { streakRewardLabel } from '@/play/play-settings';
+
 export type BannerTarget = 'pet' | 'journal' | 'dive' | null;
 
 export type Banner = {
@@ -50,6 +52,9 @@ export type BannerWatch = {
   oddsOpen: boolean;
   /** Milestones done but not yet claimed. */
   milestonesReady: number;
+  /** v28 — local day the Tide calendar last advanced, and the day it awarded. */
+  streakYmd?: string | null;
+  streakDay?: number | null;
 };
 
 /**
@@ -73,6 +78,14 @@ export function bannerEvents(
   }
   if (next.milestonesReady > prev.milestonesReady) {
     out.push({ title: 'Milestone ready', body: 'Claim it in the Journal — tap to open.', target: 'journal' });
+  }
+  if (next.streakYmd && next.streakYmd !== prev.streakYmd && next.streakDay != null) {
+    const reward = streakRewardLabel(next.streakDay);
+    out.push({
+      title: 'Tide calendar',
+      body: reward ? `Day ${next.streakDay}: ${reward}.` : `Day ${next.streakDay}. A missed day pauses here.`,
+      target: 'journal',
+    });
   }
   return out;
 }

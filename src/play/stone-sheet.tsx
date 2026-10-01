@@ -15,13 +15,39 @@ import { ELEMENT_COLOR } from '@/play/kits';
 import { NeonButton, NeonChip, NeonLabel } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
 import type { PetState } from '@/play/pet';
-import { EGG_COLOR, GLIMMER_PITY, SHINY_STYLE_LABEL, STONE_ODDS, gradeTag, petShownName } from '@/play/pet-eggs';
+import {
+  EGG_COLOR,
+  GLIMMER_PITY,
+  PRISM_STYLES,
+  PRISM_STYLE_COST,
+  SHINY_STYLE_LABEL,
+  STONE_ODDS,
+  gradeTag,
+  petShownName,
+  type PrismStyle,
+} from '@/play/pet-eggs';
 import { PetFigure } from '@/play/pet-figure';
 import { petRecolor } from '@/play/pet-looks';
-import { applyShineStone, type PlayView, type StoneRefusal, type StoneResult } from '@/play/playStore';
+import {
+  applyPrismStone,
+  applyShineStone,
+  type PlayView,
+  type PrismRefusal,
+  type PrismResult,
+  type StoneRefusal,
+  type StoneResult,
+} from '@/play/playStore';
 import type { PlayTransition } from '@/play/use-play-store';
 
 type CommitSaved = (transition: PlayTransition) => Promise<boolean>;
+
+export const PRISM_REFUSAL: Record<PrismRefusal, string> = {
+  no_stones: 'Not enough Prism Stones for that style.',
+  missing: 'That pet isn’t here any more.',
+  not_revealed: 'Only a revealed pet (Child and up) can take a Prism Stone.',
+  shiny: 'It’s already shiny — a Prism Stone can’t restyle it.',
+  style: 'Pick a Prism style. Classic is never sold.',
+};
 
 export const STONE_REFUSAL: Record<StoneRefusal, string> = {
   no_stones: 'No Shine Stones left.',
@@ -39,12 +65,15 @@ export function StoneSheetBody({
   view,
   commitSaved,
   initialUid,
+  mode = 'shine',
 }: {
   view: PlayView;
   /** Resolves after the Stone is in storage. The result line waits on it. */
   commitSaved: CommitSaved;
   /** The pet the Den (or the menu) opened this for. */
   initialUid: number | null;
+  /** v28 — Prism Stones: pick a style. Shine is the Part D sheet. */
+  mode?: 'shine' | 'prism';
 }) {
   const pv = view.pet;
   const st = pv.stones;
@@ -52,6 +81,7 @@ export function StoneSheetBody({
   const [uid, setUid] = useState<number | null>(initialUid);
   const [line, setLine] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [style, setStyle] = useState<PrismStyle>('aurora');
   useEffect(() => {
     setUid(initialUid);
     setLine(null);
@@ -88,6 +118,85 @@ export function StoneSheetBody({
       else setLine(`No shine this time — glimmer ${r.glimmers}/${GLIMMER_PITY}. ${GLIMMER_PITY - r.glimmers} more and the next Stone is certain.`);
     })();
   };
+
+  const usePrism = () => {
+    if (!chosen || pending) return;
+    const name = petShownName(chosen);
+    const target = chosen.uid;
+    const picked = style;
+    setPending(true);
+    setLine(null);
+    void (async () => {
+      const box: { result: PrismResult | null } = { result: null };
+      const saved = await commitSaved((doc, now) => {
+        const next = applyPrismStone(doc, now, target, picked);
+        box.result = next.result;
+        return next.doc;
+      });
+      setPending(false);
+      const result = box.result;
+      if (!saved || !result) {
+        setLine('Couldn’t save that Stone. Nothing was spent — try again.');
+        return;
+      }
+      if (!result.ok) setLine(PRISM_REFUSAL[result.reason]);
+      else setLine(`✨ ${name} is shiny — ${SHINY_STYLE_LABEL[result.style]}. ${result.left} Prism Stone${result.left === 1 ? '' : 's'} left.`);
+    })();
+  };
+
+  if (mode === 'prism') {
+    const cost = PRISM_STYLE_COST[style];
+    return (
+      <>
+        <Text style={styles.held}>◆ Prism Stones: {st.prism}</Text>
+        <Text style={styles.body}>
+          Pick a style for a revealed pet that isn’t shiny yet. The number on each style is how many Prism Stones it costs.
+          Classic is never sold — it comes from play. Looks only.
+        </Text>
+        <NeonLabel>Pick a style</NeonLabel>
+        <View style={styles.chips}>
+          {PRISM_STYLES.map((s) => (
+            <NeonChip
+              key={s}
+              label={`${SHINY_STYLE_LABEL[s]} · ${PRISM_STYLE_COST[s]}`}
+              selected={style === s}
+              onPress={() => {
+                setStyle(s);
+                setLine(null);
+              }}
+            />
+          ))}
+        </View>
+        <NeonLabel>Pick a pet</NeonLabel>
+        {pets.length === 0 ? (
+          <Text style={styles.body}>No pet can take a Prism Stone right now — it needs a revealed pet that isn’t shiny yet.</Text>
+        ) : (
+          <>
+            <View style={styles.chips}>
+              {pets.map((p) => (
+                <NeonChip
+                  key={p.uid}
+                  label={`${petShownName(p)}${p.uid === pv.state.uid ? ' · active' : ''}`}
+                  selected={chosen?.uid === p.uid}
+                  onPress={() => {
+                    setUid(p.uid);
+                    setLine(null);
+                  }}
+                />
+              ))}
+            </View>
+            <NeonButton
+              label={chosen && st.prism >= cost ? `Use ${cost} on ${petShownName(chosen)}` : `Need ${cost} Prism Stones`}
+              variant="primary"
+              disabled={pending || !chosen || st.prism < cost}
+              onPress={usePrism}
+            />
+          </>
+        )}
+        {line ? <Text style={styles.result}>{line}</Text> : null}
+      </>
+    );
+  }
 
   return (
     <>

@@ -349,12 +349,20 @@ export default function PlayScreen() {
   const watchStage = view?.pet.state.stage ?? null;
   const watchOdds = view?.pet.oddsOpen ?? false;
   const watchReady = view ? view.milestones.filter((m) => m.done && !m.claimed).length : 0;
+  const watchStreakYmd = view?.pet.streak.ymd ?? null;
+  const watchStreakDay = view?.pet.streak.last ?? null;
   useEffect(() => {
     if (watchStage == null) return;
-    const next: BannerWatch = { stage: watchStage, oddsOpen: watchOdds, milestonesReady: watchReady };
+    const next: BannerWatch = {
+      stage: watchStage,
+      oddsOpen: watchOdds,
+      milestonesReady: watchReady,
+      streakYmd: watchStreakYmd,
+      streakDay: watchStreakDay,
+    };
     for (const b of bannerEvents(watchRef.current, next, mode === 'pet')) setToast({ kind: 'banner', banner: b });
     watchRef.current = next;
-  }, [mode, watchOdds, watchReady, watchStage]);
+  }, [mode, watchOdds, watchReady, watchStage, watchStreakDay, watchStreakYmd]);
 
   /** Surface: returns what the Dive scene counts up (finds + shells). */
   const handleSurface = useCallback(async (): Promise<DiveSurfaceSummary | null> => {
@@ -623,6 +631,9 @@ export default function PlayScreen() {
         }
         if (row.kind === 'dive_charge') {
           parts.push(`dive charges ${result.diveChargeNow}/${DIVE_CHARGE_CAP}`);
+        }
+        if (result.shellsInstead > 0) {
+          parts.push(`${result.shellsInstead} shells (Powers for today were full)`);
         }
         setToast({ kind: 'message', title: row.name, body: parts.join(' · ') });
       } else if (result) {
@@ -1348,6 +1359,10 @@ function shopRefusalCopy(reason: ShopRefusal): string {
       return 'Daily limit reached — come back tomorrow.';
     case 'weekly_cap':
       return 'Weekly limit reached — come back next week.';
+    case 'tide_only':
+      return 'Tide Pass only.';
+    case 'pass_cap':
+      return "That's the limit for this pass.";
     case 'dive_full':
       return 'Dive charges are already full — nothing to add.';
   }

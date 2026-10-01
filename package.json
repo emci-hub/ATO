@@ -98,6 +98,7 @@
     "check:guide": "tsx ./scripts/check-guide.ts",
     "check:den": "tsx ./scripts/check-den.ts",
     "check:pity": "tsx ./scripts/check-pity.ts",
+    "check:tide": "tsx ./scripts/check-tide.ts",
     "check:stones": "tsx ./scripts/check-stones.ts",
     "check:play-save": "tsx ./scripts/check-play-save.ts",
     "check:shop-hidden": "tsx ./scripts/check-shop-hidden.ts",

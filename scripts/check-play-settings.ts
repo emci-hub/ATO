@@ -121,7 +121,7 @@ assert.equal(deferForQuiet(at(7, 0, 2), quiet), at(7, 0, 2), 'the end is not ins
 assert.equal(deferForQuiet(at(13, 0), { from: 12 * 60, to: 14 * 60 }), at(14, 0), 'a daytime window works too');
 assert.equal(deferForQuiet(at(23, 0), { from: 0, to: 0 }), at(23, 0), 'an empty window never delays');
 {
-  const settings = { ...defaultSettings(), notif: { hunger: true, egg: true, expedition: true, charges: true } };
+  const settings = { ...defaultSettings(), notif: { hunger: true, egg: true, expedition: true, charges: true, tide: true, eggs_ready: true } };
   const pet: PetState = { ...newPet(at(21, 50)), stage: 'child', hero: 'raven', egg: 'knight', grade: 'common', hunger: 1, hunger_acc_ms: 0 };
   const base: NoticeInput = {
     settings,
@@ -142,7 +142,7 @@ assert.equal(deferForQuiet(at(23, 0), { from: 0, to: 0 }), at(23, 0), 'an empty 
   assert.match(plan.find((n) => n.kind === 'expedition')?.title ?? '', /Kiki/, 'the pet’s name is in the text');
   const daytime = planPlayNotices({ ...base, now: at(10), expeditionBackInMs: 30 * MIN, chargesFullAt: at(11), pet: { ...pet, seen_at: at(10) } });
   assert.equal(daytime.find((n) => n.kind === 'expedition')?.at, at(10, 30), 'outside quiet hours nothing moves');
-  const off = planPlayNotices({ ...base, settings: { ...settings, notif: { hunger: false, egg: false, expedition: false, charges: false } } });
+  const off = planPlayNotices({ ...base, settings: { ...settings, notif: { hunger: false, egg: false, expedition: false, charges: false, tide: false, eggs_ready: false } } });
   assert.equal(off.length, 0, 'every toggle off: nothing scheduled');
 }
 ok('quiet hours: a notice inside the window waits until it ends (across midnight too); outside, nothing moves');
@@ -213,8 +213,8 @@ ok('chatter: Off stops idle talk only; tapping and coach tips always talk');
 
 /* ----------------------------------------------------------- defaults --- */
 
-assert.deepEqual(defaultSettings().notif, { hunger: true, egg: true, expedition: true, charges: false }, 'new saves');
-assert.deepEqual(parseSettings(undefined, { remind: false, hasProgress: true }).notif, { hunger: false, egg: true, expedition: true, charges: false }, 'an old save keeps its hunger choice (off)');
+assert.deepEqual(defaultSettings().notif, { hunger: true, egg: true, expedition: true, charges: false, tide: true, eggs_ready: true }, 'new saves');
+assert.deepEqual(parseSettings(undefined, { remind: false, hasProgress: true }).notif, { hunger: false, egg: true, expedition: true, charges: false, tide: true, eggs_ready: true }, 'an old save keeps its hunger choice (off); new notices default on');
 assert.deepEqual(parseSettings(undefined, { remind: true, hasProgress: false }).notif.hunger, true, '…or on');
 assert.equal(parseSettings(undefined, { remind: false, hasProgress: true }).tutorialSeen, true, 'progress: no tutorial');
 assert.equal(parseSettings(undefined, { remind: false, hasProgress: false }).tutorialSeen, false, 'no progress: the tutorial shows');
@@ -222,7 +222,7 @@ assert.equal(parseSettings(undefined, { remind: false, hasProgress: false }).tut
   const v23: Record<string, unknown> = { ...defaultPlayStore(T0), version: 23, pet_remind: false };
   for (const k of ['play_settings', 'play_stats', 'milestones', 'ribbons', 'dye_unlocked', 'charges_armed']) delete v23[k];
   const up = parsePlayStore(JSON.stringify(v23), T0)!;
-  assert.equal(up.version, 27);
+  assert.equal(up.version, 28);
   assert.equal(up.play_settings.notif.hunger, false, 'v23 → v24 keeps a hunger reminder that was off');
   assert.deepEqual(up.play_settings.quiet, { from: 22 * 60, to: 7 * 60 }, 'quiet hours 22:00-07:00');
   assert.equal(up.play_settings.chatter, 'normal');

@@ -132,6 +132,7 @@ export function DenSheetBody({
   reduceMotion,
   onNewEgg,
   onOpenStone,
+  onOpenPrism,
   onViewActiveCard,
 }: {
   view: PlayView;
@@ -143,6 +144,8 @@ export function DenSheetBody({
   onNewEgg: () => void;
   /** Open the Shine Stone sheet with this pet picked. */
   onOpenStone: (uid: number) => void;
+  /** Open the Prism Stone sheet with this pet picked. */
+  onOpenPrism: (uid: number) => void;
   onViewActiveCard: () => void;
 }) {
   const pv = view.pet;
@@ -293,6 +296,9 @@ export function DenSheetBody({
             ) : null}
             {petRevealed(selected) && !selected.shiny ? (
               <NeonChip label="Use a Shine Stone" onPress={() => onOpenStone(selected.uid)} />
+            ) : null}
+            {petRevealed(selected) && !selected.shiny ? (
+              <NeonChip label="Use a Prism Stone" onPress={() => onOpenPrism(selected.uid)} />
             ) : null}
           </View>
 
