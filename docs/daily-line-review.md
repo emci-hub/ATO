@@ -1,6 +1,7 @@
 # Daily lines — pick the winners
 
 New style: a concrete moment you recognize, sometimes with a small turn, never advice.
+Written around how people live now (texts, group chats, read receipts, tabs) but without slang words, because slang dates in a year.
 Every line sits under the trait lean it is for, so it only reaches people who match.
 
 **How to pick:** change `- [ ]` to `- [x]` on every line you want. Then run
@@ -13,201 +14,201 @@ Nothing in this file is in the app until it is ticked and loaded.
 ## Single-trait lines
 
 ### `openness:high`
+- [ ] You have 47 tabs open and every one of them is "for later."
+- [ ] You downloaded the new app before finishing the tutorial for the last one.
 - [ ] You ordered the thing you couldn't pronounce. Again.
-- [ ] Three new tabs, two new hobbies, one unfinished thing from last month.
-- [ ] You took the other route home just to see where it went.
-- [ ] The menu had your usual on it. You read the specials anyway.
+- [ ] Your camera roll is mostly screenshots of things to try.
 - [ ] Someone said "we've never done it that way" and you heard an invitation.
-- [ ] You bought the tool before you had the project.
+- [ ] You bought the gear before you had the hobby.
 
 ### `openness:low`
 - [ ] Same order as last time. It was good last time.
-- [ ] You found the thing that works and stopped shopping.
-- [ ] Someone suggested a new place. You suggested the old place, nicely.
-- [ ] Your favorites list hasn't changed since you made it. That's why it's a favorites list.
-- [ ] You read the reviews, compared the options, and bought the one you already owned.
-- [ ] The update moved one button and it ruined your morning.
+- [ ] The app updated and moved one button. Your whole morning was ruined.
+- [ ] You rewatched the show you've already seen instead of starting a new one.
+- [ ] Someone suggested a new place. You sent back the usual place, with a heart.
+- [ ] You read forty reviews and bought the one you already owned.
+- [ ] Your playlist is from four years ago and it still hits.
 
 ### `conscientiousness:high`
-- [ ] The list had eleven things. You added a twelfth just to cross it off.
-- [ ] You finished it after it stopped being fun. Nobody asked you to.
-- [ ] It was due Friday. You were done Wednesday and checked it again Thursday.
-- [ ] You said you'd be there at seven. At 6:52 you were in the car outside.
-- [ ] The plan changed and you felt it in your shoulders.
-- [ ] You rested, but you scheduled it first.
+- [ ] You added something to the to-do list just to cross it off.
+- [ ] Zero unread emails. You checked twice.
+- [ ] It was due Friday. You were done Wednesday and reread it Thursday.
+- [ ] You said "on my way" and you were actually on your way.
+- [ ] The plan changed last minute and you felt it in your shoulders.
+- [ ] You rested, but you put it in the calendar first.
 
 ### `conscientiousness:low`
 - [ ] The plan was a suggestion. Your mood was the plan.
-- [ ] You started four things before lunch and all four are still open.
-- [ ] "I'll figure it out when I get there." You did, mostly.
-- [ ] The deadline moved into view and suddenly you had ideas.
+- [ ] You said "on my way" from the shower.
+- [ ] 2,481 unread emails and you know where the important ones are. Roughly.
+- [ ] The deadline got close and suddenly you had ideas.
+- [ ] You set five alarms and negotiated with every one.
 - [ ] You wrote a list, lost the list, and did fine.
-- [ ] You said "around seven." It meant what it needed to mean.
 
 ### `extraversion:high`
-- [ ] You went for one drink and met four people.
+- [ ] You went for one drink and came back with three new contacts.
 - [ ] The quiet weekend lasted until Saturday at two.
-- [ ] You narrated your whole day to someone who asked "how are you."
-- [ ] Plans got cancelled and you made new plans before the text finished sending.
-- [ ] You talked to the stranger in line. You know where they're from now.
-- [ ] You thought it through, out loud, to three different people.
+- [ ] You sent a four-minute voice note instead of a text.
+- [ ] Plans got cancelled and you had new plans before the text finished sending.
+- [ ] You talked to the stranger in line. You follow each other now.
+- [ ] You thought it through, out loud, in three different group chats.
 
 ### `extraversion:low`
 - [ ] The plans got cancelled and you felt it like a gift.
-- [ ] You left the party to stand in the kitchen, then outside, then at home.
-- [ ] You had a lovely time and need two days to recover from it.
-- [ ] The phone rang. You watched it ring.
-- [ ] You rehearsed the order before the waiter came.
-- [ ] Someone said "join us" and you said "next time," warmly, meaning never.
+- [ ] Your phone rang. You watched it ring, then texted "what's up?"
+- [ ] You had a great time and need two days to recover from it.
+- [ ] You left the party without saying bye and texted "home safe!" from bed.
+- [ ] You typed "can't make it" before you finished reading the invite.
+- [ ] You rehearsed your coffee order in the queue.
 
 ### `agreeableness:high`
 - [ ] You said "I'm fine with anything" and had a very specific answer ready.
-- [ ] You apologized to the person who bumped into you.
 - [ ] You wrote the reply, deleted it, wrote a nicer one, and sent "sounds good!"
-- [ ] You ate at the place nobody loved because nobody objected, including you.
-- [ ] Someone was wrong and you let them be wrong all the way home.
+- [ ] You apologized to the person who bumped into you.
+- [ ] You hearted a message you disagreed with.
+- [ ] You said "no worries at all!" about several worries.
 - [ ] You said yes, then checked your calendar, then said yes again more quietly.
 
 ### `agreeableness:low`
-- [ ] Everyone agreed. You asked the question anyway.
-- [ ] You said "no" and didn't add a reason.
-- [ ] The group picked a plan. You stated, for the record, that it was the wrong one.
+- [ ] Everyone hearted the plan. You replied "why though."
+- [ ] You said "no" and didn't add a reason or an emoji.
+- [ ] You left the group chat's bad idea on read, on purpose.
 - [ ] Someone said "no offense" and you braced, then gave some back.
-- [ ] You didn't laugh at the joke. It wasn't funny.
-- [ ] "Let's agree to disagree" is, to you, just disagreeing with extra steps.
+- [ ] You didn't laugh-react. It wasn't funny.
+- [ ] "Agree to disagree" is, to you, just disagreeing with extra steps.
 
 ### `steadiness:high`
 - [ ] The morning went badly. By lunch you had to be reminded it happened.
-- [ ] Everyone was panicking and you were looking for snacks.
+- [ ] Everyone was spiraling in the group chat and you were looking for snacks.
 - [ ] You got bad news, said "okay," and meant it faster than anyone expected.
-- [ ] Something broke. You shrugged before you sighed.
+- [ ] Your flight got delayed and you just went and found a charger.
 - [ ] You slept fine. People find that suspicious.
 - [ ] The email was rude. You forgot about it before you finished reading it.
 
 ### `steadiness:low`
-- [ ] One odd comment at nine. Still thinking about it at four.
+- [ ] One weird comment at nine. Still thinking about it at four.
 - [ ] The day started wrong and you could feel it deciding to stay wrong.
 - [ ] Someone said "it's not a big deal." It was a medium deal.
-- [ ] You replayed the two-minute conversation for about an hour.
-- [ ] A small thing went sideways and took the afternoon with it.
+- [ ] You replayed a two-minute conversation for about an hour.
+- [ ] One small thing went sideways and took the afternoon with it.
 - [ ] You were fine, then you remembered, then you weren't.
 
 ### `attachment_anxiety:high`
-- [ ] You sent a text, then checked whether it sounded weird, then checked again.
 - [ ] They said "k." You read it eleven ways.
 - [ ] "Seen" at 2:14. It is now 2:16.
-- [ ] You reread the last message to see what you did.
-- [ ] They were quiet at dinner and you spent dessert working out why.
+- [ ] The typing bubble appeared, disappeared, and took your afternoon with it.
+- [ ] You sent a text, then checked whether it sounded weird, then checked again.
+- [ ] They liked your message instead of replying, and you noticed.
 - [ ] You typed "are we okay?" and deleted it, twice.
 
 ### `attachment_anxiety:low`
 - [ ] They replied nine hours later. You hadn't noticed.
-- [ ] Someone asked if you were upset they'd been distant. You hadn't clocked the distance.
-- [ ] You left a message on read for two days and assumed that was fine. For you, it is.
+- [ ] You left someone on read for two days and assumed that was fine. For you, it is.
 - [ ] "We need to talk," and your first guess was logistics.
 - [ ] A friend went quiet for a month. You picked up exactly where you left off.
-- [ ] You don't check who texted last. You couldn't say.
+- [ ] You have no idea who texted last. You couldn't say.
+- [ ] They turned off read receipts and you never found out.
 
 ### `attachment_avoidance:high`
 - [ ] It got personal and you remembered something you needed in the other room.
 - [ ] You like them a lot. You'd like them from over here.
 - [ ] Someone asked how you really were. You told them about work.
-- [ ] You answered the long heartfelt message with a thumbs up, and meant it warmly.
+- [ ] They sent a paragraph. You sent a thumbs up, and meant it warmly.
 - [ ] They offered to help and you said "I've got it" before they finished the sentence.
-- [ ] You hugged them goodbye with one arm, already turning.
+- [ ] Your phone is on Do Not Disturb and it isn't an accident.
 
 ### `attachment_avoidance:low`
 - [ ] You said "call me" and meant right now.
-- [ ] Once you decided they were yours, they got the whole thing.
+- [ ] Once you decided they were your person, they got the whole thing.
 - [ ] You drove over instead of texting back.
 - [ ] Someone was having a hard week and you turned up with food.
-- [ ] You said the mushy thing out loud and watched them not know what to do.
+- [ ] You double-texted and felt nothing about it.
 - [ ] You'd rather have the hard talk in person, tonight, with snacks.
 
 ### `conflict_assertiveness:high`
 - [ ] You said "actually" and the room adjusted.
-- [ ] You sent the email everyone else was drafting in their heads.
-- [ ] The waiter asked how everything was. You told him.
-- [ ] You disagreed in the meeting, out loud, with your name attached.
+- [ ] You sent the message everyone else was drafting in their heads.
+- [ ] You replied-all, on purpose.
+- [ ] You disagreed in the meeting, on camera, unmuted.
 - [ ] "Can I be honest?" was not really a question.
 - [ ] You let it go for about four minutes.
 
 ### `conflict_assertiveness:low`
-- [ ] You had the perfect response, in the shower, three days later.
+- [ ] You had the perfect comeback, in the shower, three days later.
 - [ ] The order was wrong. You ate it.
 - [ ] You said "no worries" about a worry.
-- [ ] Someone cut in line and you composed a speech you didn't give.
+- [ ] You typed the whole reply, then held backspace.
 - [ ] You nodded through the whole thing and disagreed in the car.
 - [ ] "It's fine" did a lot of work this week.
 
 ### `conflict_cooperativeness:high`
-- [ ] You split the difference, then gave them your half of the difference.
-- [ ] You asked "what would work for you?" before saying what would work for you.
+- [ ] You split the bill evenly even though you only had a salad.
+- [ ] You asked "what works for you?" before saying what works for you.
 - [ ] The argument ended when you found the version both of you could stand.
-- [ ] You took the smaller piece and said you weren't that hungry.
-- [ ] You heard their whole side, summed it up better than they did, then offered a middle.
+- [ ] You took the middle seat and said you didn't mind.
+- [ ] You summed up their side better than they did, then offered a middle.
 - [ ] You'd rather both be a little unhappy than have one of you win.
 
 ### `conflict_cooperativeness:low`
 - [ ] You knew what you wanted walking in and it was the same walking out.
-- [ ] They offered a compromise. You offered your original position, restated.
-- [ ] You negotiated with the friend selling you a couch.
+- [ ] They offered a compromise. You resent your original message.
+- [ ] You negotiated the price with a friend.
 - [ ] "Meet me halfway," and you checked whose half.
-- [ ] You gave ground once, in 2019, and remember it.
-- [ ] You were willing to be flexible about everything except the outcome.
+- [ ] You gave ground once, years ago, and still remember the date.
+- [ ] You were flexible about everything except the outcome.
 
 ### `autonomy:high`
-- [ ] You'd rather get lost your way than arrive on someone's directions.
-- [ ] Someone explained how to do it. You nodded and did it differently.
-- [ ] The instructions were right there. You gave it a go first.
+- [ ] You'd rather get lost your way than follow someone's directions.
+- [ ] The GPS said left. You had a feeling about right.
+- [ ] You skipped the tutorial.
 - [ ] "You should," and you stopped listening at "should."
-- [ ] You quit the group project in your head by slide two.
+- [ ] You muted the group project chat by day two.
 - [ ] It was a good suggestion. It would have been better if it were yours.
 
 ### `autonomy:low`
 - [ ] Someone else picked the restaurant and you felt your whole body relax.
-- [ ] You asked what the plan was, and were glad there was one.
+- [ ] You asked "what's the plan?" and were glad there was one.
 - [ ] You followed the recipe exactly and it was great.
 - [ ] "Whatever you think is best," and you meant it as a compliment.
-- [ ] They handed you the itinerary. You said thank you and meant it.
-- [ ] You'd rather be told the route than choose one.
+- [ ] They shared the itinerary and you said thank you and meant it.
+- [ ] You'd rather be sent the location than pick the place.
 
 ### `competence:high`
-- [ ] It looked hard. You said "give it here."
+- [ ] It looked hard. You said "send it to me."
 - [ ] Someone said it couldn't be done by Friday. It was done by Thursday.
-- [ ] You read half the manual and felt qualified.
+- [ ] You watched half a tutorial and felt qualified.
 - [ ] The thing broke and you were, privately, a little pleased.
 - [ ] You volunteered before you knew what it involved.
-- [ ] "How hard can it be?" you asked, and then found out, and did it anyway.
+- [ ] "How hard can it be?" you asked, then found out, then did it anyway.
 
 ### `competence:low`
 - [ ] You did it well and then asked if it was okay.
 - [ ] You got the compliment and explained why it didn't count.
-- [ ] You were qualified. You reread the job listing looking for the catch.
+- [ ] You were qualified. You reread the job post looking for the catch.
 - [ ] It went fine. You double-checked that it went fine.
-- [ ] You practiced the easy part four times.
-- [ ] Someone asked who could handle it and you studied the table.
+- [ ] You reread the email six times before hitting send.
+- [ ] Someone asked who could take this one and you studied your keyboard.
 
 ### `relatedness:high`
 - [ ] A full day of people, and you drove home feeling like nobody had asked you anything.
 - [ ] One real conversation fixed your whole week.
 - [ ] You texted "thinking of you" to three people before breakfast.
-- [ ] Small talk for an hour. You left hungrier than you came.
+- [ ] An hour of small talk. You left hungrier than you came.
 - [ ] You asked the second question, then the third.
 - [ ] The good news didn't feel real until you'd told someone.
 
 ### `relatedness:low`
 - [ ] You went the whole weekend without talking to anyone and only noticed Monday.
 - [ ] A friend said "it's been forever." You'd have guessed two weeks.
-- [ ] You like people. You like them in theory, mostly.
 - [ ] The group chat has 214 unread and you feel nothing.
-- [ ] You had a great day and told no one. It was still a great day.
+- [ ] You like people. Mostly as a concept.
+- [ ] You had a great day and posted nothing. It was still a great day.
 - [ ] Someone said "we should catch up" and you agreed, sincerely, and didn't.
 
 ### `growth_mindset:high`
 - [ ] You failed at it and immediately looked up how to fail less.
 - [ ] Bad at it on Monday, slightly less bad by Friday, and that pleased you.
-- [ ] You asked for the feedback and then actually used it.
+- [ ] You asked for feedback and then actually used it.
 - [ ] "Not yet" is a full sentence in your house.
 - [ ] You lost and asked the winner how they did it.
 - [ ] You kept the ugly first attempt to compare against later.
@@ -216,24 +217,24 @@ Nothing in this file is in the app until it is ticked and loaded.
 - [ ] You tried it once, it went badly, and it joined the list of things you don't do.
 - [ ] "I'm just not a math person," you said, about something that wasn't math.
 - [ ] The first attempt was rough and you took it as a verdict.
-- [ ] You do the things you were already good at. The list is short and comfortable.
+- [ ] You deleted the app after losing the first round.
 - [ ] Someone said "you'll get better." You filed it under nice things people say.
 - [ ] You gave it one go and went back to what you know.
 
 ### `locus_of_control:high`
-- [ ] It rained on the picnic and you wondered what you could have done.
+- [ ] It rained on the plans and you wondered what you could have done.
 - [ ] It went wrong and you said "that's on me" before checking.
 - [ ] Traffic made you late and you said you should have left earlier.
-- [ ] The plan failed and you had a list of your own mistakes by dinner.
+- [ ] The plan fell through and you had a list of your own mistakes by dinner.
 - [ ] You don't believe in luck. You believe in having left earlier.
 - [ ] Something good happened and you traced it back to a decision in March.
 
 ### `locus_of_control:low`
 - [ ] It went wrong and you said "of course it did."
-- [ ] You missed the bus and it felt like the bus's decision.
+- [ ] You missed the train and it felt like the train's decision.
 - [ ] "It is what it is" covered about four situations this week.
 - [ ] Things worked out and you gave the credit to timing.
-- [ ] You lost the coin toss and nodded like you'd seen it coming.
+- [ ] You blamed the algorithm.
 - [ ] The universe had plans. You went along to see.
 
 ### `self_efficacy:high`
@@ -249,16 +250,16 @@ Nothing in this file is in the app until it is ticked and loaded.
 - [ ] You read the brief twice and each time it got bigger.
 - [ ] You circled the big thing for a week before touching it.
 - [ ] You could see every step at once, which was the problem.
-- [ ] You said you'd start when you felt ready. Ready hasn't called.
-- [ ] You said you'd think about the big one. You have been, for a while.
+- [ ] You said you'd start when you felt ready. Ready hasn't texted back.
+- [ ] You saved the application as a draft. It is a very complete draft.
 
 ### `playfulness:high`
 - [ ] The meeting was serious. You were told so, afterwards.
-- [ ] You made a game out of the errand and lost track of the errand.
-- [ ] You gave the houseplant a name and a backstory.
-- [ ] The joke arrived before you'd decided whether to make it.
+- [ ] You made a game out of the errand and forgot the errand.
+- [ ] You named the houseplant and gave it a backstory.
+- [ ] The joke was sent before you'd decided whether to send it.
 - [ ] Bad news, and your first instinct was a bit.
-- [ ] You turned the boring form into a competition with yourself.
+- [ ] You replied with a meme to something that needed words.
 
 ### `playfulness:low`
 - [ ] Someone said "let's just have fun with it" and you asked what the goal was.
@@ -266,7 +267,7 @@ Nothing in this file is in the app until it is ticked and loaded.
 - [ ] The game had rules and you read all of them first.
 - [ ] You finished the list, felt nothing, and made tomorrow's list.
 - [ ] A day off, and you spent it catching up.
-- [ ] You laughed, checked the time, and got back to it.
+- [ ] You replied to the meme with "noted."
 
 ## Two-trait lines
 
@@ -497,16 +498,16 @@ Shown to someone who has no clear lean yet. Keyed to nobody, so they must be tru
 ### `starter`
 - [ ] You opened the fridge, closed it, and opened it again in case.
 - [ ] You said "five more minutes" to nobody.
-- [ ] You walked into the room and forgot why.
+- [ ] You picked up your phone to check the time and checked everything but the time.
 - [ ] A tab has been open since last week. It's waiting for the right moment.
 - [ ] You answered "how are you" with "good, you?" on a not-good day.
 - [ ] You practiced the phone call before making it.
-- [ ] You put it somewhere safe. It is very safe now.
+- [ ] You typed "lol" with a completely straight face.
 - [ ] You checked the time, put the phone down, and checked the time.
 - [ ] You told yourself you'd remember without writing it down.
 - [ ] You nodded at a name you didn't catch.
 - [ ] You said "we should do this more often" and meant it at the time.
-- [ ] You started tidying and found something to read instead.
+- [ ] You opened your phone for one thing and did four other things.
 - [ ] You held the door for someone slightly too far away.
 - [ ] You waved back at someone who wasn't waving at you.
 - [ ] You reread the message after sending it, to find the typo.
