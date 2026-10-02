@@ -102,7 +102,30 @@ export async function saveAnsweredOption(storageKey: string, rowKey: string, opt
   }
 }
 
-/** Tests only — the module-level cache would otherwise leak between cases. */
+/**
+ * Picks made in THIS app run, kept the moment they are tapped — before the
+ * save comes back, and outside the pager's own state.
+ *
+ * Why: the pager's "which option did I pick" lived only in component state. If
+ * the pager was re-created while a page's answers were still saving (the screen
+ * above it re-rendering after a refresh), the new copy loaded the saved stamps,
+ * found none yet, and showed a page of answered questions as blank when the
+ * person tapped Back (emci, 2026-10-02). Session-only on purpose: a pick that
+ * never saves must not become a permanent stamp, which is what `cache` and
+ * AsyncStorage above are for.
+ */
+const sessionPicks = new Map<string, Record<string, number>>();
+
+export function rememberSessionPick(storageKey: string, rowKey: string, optionIndex: number): void {
+  sessionPicks.set(storageKey, { ...(sessionPicks.get(storageKey) ?? {}), [rowKey]: optionIndex });
+}
+
+export function sessionPicksFor(storageKey: string): Record<string, number> {
+  return sessionPicks.get(storageKey) ?? {};
+}
+
+/** Sign-out, and tests — the module-level maps would otherwise leak across accounts and cases. */
 export function resetAnsweredOptionCache(): void {
+  sessionPicks.clear();
   cache.clear();
 }

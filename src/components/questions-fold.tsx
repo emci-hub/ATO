@@ -535,6 +535,7 @@ function OngoingRoundFold({
             axis: item.axis,
             draft: { axis: item.axis, prompt: item.prompt, options: item.options },
             answered: item.answeredOption != null,
+            answeredIndex: item.answeredOption,
           }))}
           progressLabel={`${answeredCount} of ${pack.items.length} answered`}
           onSaveBatch={saveRoundAnswers}

@@ -8,7 +8,9 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
   loadAnsweredOptions,
+  rememberSessionPick,
   saveAnsweredOption,
+  sessionPicksFor,
 } from '@/lib/questions/answered-option-storage';
 import {
   loadCategoryPagePosition,
@@ -127,7 +129,8 @@ export function PagedQuestions({
   // an earlier session/visit still shows its stamp when paged back to, not
   // just the option just tapped this session; a fresh tap updates both this
   // state and storage together (see the option's onPress below).
-  const [pickedByRow, setPickedByRow] = useState<Record<string, number>>({});
+  // Seeded from this run's taps so a re-created pager still shows them at once.
+  const [pickedByRow, setPickedByRow] = useState<Record<string, number>>(() => sessionPicksFor(storageKey));
   // Answers picked on the current page but not yet saved — sent as one
   // batch when Next Page is pressed, cleared only on a confirmed success so
   // a failed save keeps them queued for the retry (pressing Next again).
@@ -178,7 +181,7 @@ export function PagedQuestions({
     let cancelled = false;
     loadAnsweredOptions(storageKey).then((saved) => {
       if (cancelled) return;
-      setPickedByRow((prev) => ({ ...saved, ...prev }));
+      setPickedByRow((prev) => ({ ...saved, ...sessionPicksFor(storageKey), ...prev }));
     });
     return () => {
       cancelled = true;
@@ -264,13 +267,15 @@ export function PagedQuestions({
             {locked ? null : (
               <View style={styles.options}>
                 {row.draft.options.map((option, optIndex) => {
-                  const picked = pickedByRow[row.key] === optIndex;
+                  // A local pick wins; otherwise the stored answer the caller knows about.
+                  const picked = (pickedByRow[row.key] ?? row.answeredIndex ?? -1) === optIndex;
                   return (
                     <ThemedPressable
                       key={`${row.key}-${optIndex}`}
                       accessibilityState={{ selected: picked }}
                       onPress={() => {
                         setPickedByRow((prev) => ({ ...prev, [row.key]: optIndex }));
+                        rememberSessionPick(storageKey, row.key, optIndex);
                         setPendingByRow((prev) => ({
                           ...prev,
                           [row.key]: { draft: row.draft, option, optIndex },

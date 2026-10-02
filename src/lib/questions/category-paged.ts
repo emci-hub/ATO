@@ -18,6 +18,14 @@ export interface CategoryQuestionRow {
   axis: TraitAxis;
   draft: QuestionDraft;
   answered: boolean;
+  /**
+   * Which option the stored answer is, when the caller knows it (a round's
+   * `question_items.answered_option`). The pager shows its stamp from this even
+   * with no local memory of the tap — after a restart, a reinstall, or on a
+   * second phone. The 50-question bank cannot supply it: its answers are
+   * blended into a trait value, not kept as an option index.
+   */
+  answeredIndex?: number | null;
 }
 
 /**
