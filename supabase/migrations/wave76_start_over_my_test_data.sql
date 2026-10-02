@@ -1,7 +1,7 @@
 -- ============================================================================
--- NOT APPLIED YET. Written 2026-10-01; emci reads it, then applies it by hand in
--- the Supabase SQL editor (same route as wave75). Until then the app's
--- "Start over" button answers "needs the wave76 database change".
+-- APPLIED 2026-10-01 by emci, by hand in the Supabase SQL editor (same route as
+-- wave75). Reported done by emci; the "Start over" button has not yet been
+-- confirmed on a device.
 -- ============================================================================
 --
 -- WHY. The Dev Tools Hub had three overlapping resets and none was complete:
