@@ -1,6 +1,6 @@
 # Copy sheet — read before publishing
 
-Everything below is static text in the app that is now marked as reviewed, except section 3, which was rewritten after that and is waiting on your read. AI-written
+Everything below is static text in the app that is now marked as reviewed. AI-written
 text (insight, category cards, Story, AI questions, AI daily lines) is not here: it is
 written fresh each time and stays marked as draft.
 
@@ -115,7 +115,7 @@ Each name is one describing word plus one role. Plain is the free default.
 - Describing words: Beloved, Alluring, Sympathetic, Elegant, Relentless, Unapologetic, Silent, Shadowy
 - Roles: Conqueror, Usurper, Necromancer, Gravekeeper, Trickster Fiend, Ringleader, Wandering Ghost, Reaper
 
-## 3. Traits: names, the word for each end, and what it sounds like — DRAFT, please read
+## 3. Traits: names, the word for each end, and what it sounds like (approved 2026-10-02)
 
 Every trait is one noun. Each end has its own word, plus one thing a person at that end
 would say. The app shows yours as, for example: You lean Adventurous: “What’s that? I’ll try it.”

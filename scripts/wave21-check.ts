@@ -59,7 +59,7 @@ assert.ok(RANKING_ROUNDS.playfulness.length >= 5);
 assert.equal(SCENARIO_DECK.playfulness.axis, 'playfulness');
 assert.ok(QUESTIONS_BANK.some((row) => row.axis === 'playfulness'));
 assert.equal(AXIS_POLES.playfulness.low.length > 0, true);
-assert.equal(POLE_COPY_REVIEWED, false); // rewritten 2026-10-02 in the moment voice; draft until emci reads the new lines
+assert.equal(POLE_COPY_REVIEWED, true); // emci approved the names, end words and quotes on 2026-10-02
 ok('playfulness is the 16th axis: schema list, IQ, ranking, gut-call, depth, poles');
 
 assert.equal(CATEGORY_DEFS.length, 11);

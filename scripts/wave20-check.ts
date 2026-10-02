@@ -142,7 +142,7 @@ const rawDiv = divergingAxes([
 assert.equal(rawDiv.length, 1);
 ok('divergence helper walks every TRAIT_AXES entry, including Playfulness');
 
-assert.equal(POLE_COPY_REVIEWED, false); // rewritten 2026-10-02 in the moment voice; draft until emci reads the new lines
+assert.equal(POLE_COPY_REVIEWED, true); // emci approved the names, end words and quotes on 2026-10-02
 assert.equal(TITLE_COPY_REVIEWED, false);
 assert.equal(poleCopyClean(), true);
 assert.equal(titleCopyClean(), true);

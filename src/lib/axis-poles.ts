@@ -5,10 +5,9 @@
 import type { TraitAxis } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 
-// emci picked this style on 2026-10-02 ("that looks better") from samples; the
-// full set of 32 quotes and 16 names is draft until emci reads it
-// (docs/copy-review.md, section 3).
-export const POLE_COPY_REVIEWED = false;
+// emci approved the 16 trait names, the 32 end words and the 32 quotes on
+// 2026-10-02 (docs/copy-review.md, section 3).
+export const POLE_COPY_REVIEWED = true;
 
 export interface AxisPoles {
   low: string;
