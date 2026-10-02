@@ -349,6 +349,13 @@ const intakeSweepSrc = readFileSync(
  * `persistCelebratedMilestones`, and a finished round mounts `MilestoneToast`
  * once (`questions-fold.tsx`). Both are pinned in progressive-unlock-check.ts.
  * The crossing queue (`checkMilestones` over every metric) stays parked.
+ *
+ * 2026-10-02 (emci): the crossing check is BACK, but not on this screen. It
+ * lives in `src/hooks/use-buddy-milestones.ts` and is announced by the mini
+ * guy (`lib/buddy`, `components/buddy-bubble.tsx`) at the tab shell, so the
+ * three assertions below still hold as written: this screen calls the hook
+ * and owns no toast, no crossing logic and no write of its own. The rebuilt
+ * wiring is pinned in scripts/buddy-check.ts.
  */
 /**
  * Scoped to real code: the screen's own docstring names what was parked and

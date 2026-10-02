@@ -7,6 +7,8 @@ import { GrowthMarkers } from '@/components/growth-markers';
 import { PixelFace } from '@/components/pixel-face';
 import { Spacing } from '@/constants/theme';
 import { useGrowth } from '@/hooks/use-growth';
+import { nextIdleNote } from '@/lib/buddy/idle';
+import { tapBuddy } from '@/lib/buddy/notes';
 import { resolveFacePalette } from '@/lib/color';
 import { isCrisisActive } from '@/lib/kenney/gesture-actions';
 import { recipeForAccount } from '@/lib/kenney/registry';
@@ -33,7 +35,9 @@ export const NAV_PIXEL_HEADER_INSET = NAV_PIXEL_SLOT;
  * Current-you (Home, Around, You, Circle): recipe + idle, no growth glow.
  * Aspirational-you (Sage): same instance, presence glow + depth sparkle.
  * Tap: a short coherent mood (wave / thumbs-up / happy bounce / hug). Rapid
- * re-taps interrupt-and-restart so nothing queues.
+ * re-taps interrupt-and-restart so nothing queues. He is also the app's one
+ * notification character (lib/buddy/notes): a tap says the next waiting note,
+ * or a small idle line.
  */
 export function NavPixel() {
   const insets = useSafeAreaInsets();
@@ -42,6 +46,7 @@ export function NavPixel() {
   const { state } = useGrowth();
   const tapMoodRef = useRef<((mood: TapMood) => void) | null>(null);
   const lastMoodRef = useRef<TapMoodId | null>(null);
+  const tapCountRef = useRef(0);
   const recipe = useMemo(() => recipeForAccount(me?.id, me?.recipe), [me]);
   const onSage = pathname === '/sage' || pathname.endsWith('/sage');
 
@@ -53,6 +58,10 @@ export function NavPixel() {
     const mood = pickTapMood(onSage, lastMoodRef.current);
     lastMoodRef.current = mood.id;
     tapMoodRef.current?.(mood);
+    // He also says something: the next waiting note, or a small idle line
+    // (components/buddy-bubble.tsx draws it).
+    tapBuddy(nextIdleNote(tapCountRef.current));
+    tapCountRef.current += 1;
   }
 
   return (

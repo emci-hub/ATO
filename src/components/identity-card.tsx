@@ -8,6 +8,7 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { ATO_TOKEN_NEED_MORE, ATO_TOKEN_PRICE, atoPriceLine } from '@/lib/ato-tokens';
+import { pushBuddyNote } from '@/lib/buddy/notes';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import {
   DEFAULT_LEGEND_SKIN,
@@ -41,6 +42,8 @@ export const IDENTITY_STYLE_LABEL = 'Name style';
 export const IDENTITY_STYLE_CONFIRM = `Tap again to spend ${atoPriceLine('legend_reroll')}.`;
 export const IDENTITY_STYLE_ALREADY = 'One new style a day. Come back tomorrow.';
 export const IDENTITY_STYLE_FAILED = 'Couldn’t unlock it just now. Try again.';
+export const IDENTITY_LOCKED_TITLE = 'Your name locked in';
+export const IDENTITY_STYLE_UNLOCKED_TITLE = 'New name style';
 export const IDENTITY_STYLE_CREDIT = 'You already paid for a style. Pick one, no charge.';
 
 /**
@@ -73,6 +76,13 @@ export function IdentityCard({
         const next = samePoles(poles, stored.poles) ? stored : { ...stored, poles };
         if (next !== stored) await saveIdentityState(next);
         if (cancelled) return;
+        // The name just filled in, or changed: the mini guy says so, once per name.
+        const before = identityView(stored.poles);
+        const after = identityView(poles);
+        if (after.complete && (!before.complete || !samePoles(poles, stored.poles))) {
+          const name = identityTitle(after, next.skin);
+          pushBuddyNote({ id: `identity:${name}`, title: IDENTITY_LOCKED_TITLE, body: name, loud: true });
+        }
         setTracks(rows);
         setState(next);
       })
@@ -131,6 +141,12 @@ export function IdentityCard({
     if (outcome === 'unlocked') {
       setPaidCount((n) => n + 1);
       await update({ ...state, skin, unlocked: [...state.unlocked, skin] });
+      pushBuddyNote({
+        id: `style:${skin}`,
+        title: IDENTITY_STYLE_UNLOCKED_TITLE,
+        body: `${SKIN_LABEL[skin]}: ${identityTitle(view, skin)}`,
+        loud: true,
+      });
       void onUpdated?.(); // refresh the token balance
     } else if (outcome === 'not_enough') {
       setNote(ATO_TOKEN_NEED_MORE);

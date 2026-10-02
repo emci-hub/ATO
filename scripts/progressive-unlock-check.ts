@@ -195,8 +195,17 @@ ok('persistMergedTraits skips the value blend for countOnly answers (wiring)');
   assert.match(banner, /celebratedIds !== undefined/, 'renders nothing until me has loaded');
   assert.doesNotMatch(banner, /generateText|ai-generate/, 'the reveal never calls a model');
   const fold = readFileSync(resolve(__dirname, '../src/components/questions-fold.tsx'), 'utf8');
-  assert.match(fold, /<MilestoneToast\s+title=\{ROUND_COMPLETE_TITLE\}/, 'a finished round shows the reused MilestoneToast');
-  ok('reveal is remembered on the account and model-free; the round toast reuses MilestoneToast');
+  // 2026-10-02 (emci): the round toast moved out of the fold. A finished round
+  // is now said by the mini guy, whose bubble IS the reused MilestoneToast,
+  // pinned beside him at the tab shell (components/buddy-bubble.tsx).
+  assert.match(
+    fold,
+    /pushBuddyNote\(\{\s+id: `round:\$\{holder\.pack\?\.id \?\? 'done'\}`,\s+title: ROUND_COMPLETE_TITLE,\s+body: roundCompleteBody\(tracks, paid\),/,
+    'a finished round is announced through the mini guy with the same title and body',
+  );
+  const bubble = readFileSync(resolve(__dirname, '../src/components/buddy-bubble.tsx'), 'utf8');
+  assert.match(bubble, /<MilestoneToast/, 'his bubble reuses MilestoneToast');
+  ok('reveal is remembered on the account and model-free; the round toast reuses MilestoneToast, via the mini guy');
 }
 
 console.log(`\n${passed} progressive-unlock checks passed`);

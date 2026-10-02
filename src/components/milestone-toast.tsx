@@ -74,9 +74,12 @@ export function MilestoneToast({
       <ThemedText type="smallBold" style={{ color: theme.onAccent }}>
         {title}
       </ThemedText>
-      <ThemedText type="small" style={{ color: theme.onAccent }}>
-        {body}
-      </ThemedText>
+      {/* A one-line note (the mini guy's idle lines) has no body. */}
+      {body ? (
+        <ThemedText type="small" style={{ color: theme.onAccent }}>
+          {body}
+        </ThemedText>
+      ) : null}
     </Animated.View>
   );
 }

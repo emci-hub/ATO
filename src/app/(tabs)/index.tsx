@@ -13,6 +13,7 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { useTheme } from '@/hooks/use-theme';
 import { useDailyInsight } from '@/hooks/use-daily-insight';
+import { useBuddyStreak } from '@/hooks/use-buddy-milestones';
 import { useTodayLine } from '@/hooks/use-today-line';
 import { lockScreenText } from '@/lib/daily-line/pick';
 import { checkWindowFor } from '@/lib/check-window';
@@ -209,6 +210,8 @@ export default function HomeScreen() {
     persist: !bootstrapFailed && tracksUserId === userId,
   });
   const todayLineText = todayLine?.line.text ?? null;
+  // 3 / 7 / 21 days in a row: the mini guy says it, once each.
+  useBuddyStreak({ me, streak: todayLine?.streak, onPersisted: refreshMe });
   const todayLineLockScreen = todayLine ? lockScreenText(todayLine.line) : null;
 
   /**

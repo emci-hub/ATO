@@ -7,7 +7,6 @@ import {
   uniqueCategoryAxes,
   type CategoryQuestionRow,
 } from '@/components/paged-questions';
-import { MilestoneToast } from '@/components/milestone-toast';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -40,7 +39,7 @@ import type {
   QuestionPackRow,
 } from '@/lib/questions/types';
 import { controlBorderColor } from '@/lib/theme/chrome';
-import { useAppearance } from '@/lib/theme/context';
+import { pushBuddyNote } from '@/lib/buddy/notes';
 import type { CheckHistory } from '@/lib/voice/types';
 import { withTimeout } from '@/lib/timeout';
 
@@ -245,8 +244,9 @@ function OngoingRoundFold({
   const [rerollNoteByItem, setRerollNoteByItem] = useState<Record<string, string>>({});
   // Set only by the answer that finishes a round, so the toast fires at that
   // moment and never on a later visit to an already-finished round.
-  const [roundToast, setRoundToast] = useState<{ paid: boolean } | null>(null);
-  const { reduceMotion } = useAppearance();
+  // Kept as the record that this round's result came back; the announcement
+  // itself is the mini guy's (see the claim callback below).
+  const [, setRoundToast] = useState<{ paid: boolean } | null>(null);
   const atoBalance = atoTokenBalanceOf(me);
   const canRerollQuestion = atoBalance >= ATO_TOKEN_PRICE.question_reroll;
 
@@ -380,6 +380,14 @@ function OngoingRoundFold({
       // `me` — the balance used to stay stale until some later refresh.
       if (holder.pack && roundFullyAnswered(holder.pack)) {
         claimOngoingRoundCompleteQuiet(holder.pack.id, ({ paid, fresh }) => {
+          // Said by the mini guy, pinned beside him, so it is seen wherever the
+          // person is — not by a toast inside this fold.
+          pushBuddyNote({
+            id: `round:${holder.pack?.id ?? 'done'}`,
+            title: ROUND_COMPLETE_TITLE,
+            body: roundCompleteBody(tracks, paid),
+            loud: true,
+          });
           setRoundToast({ paid });
           if (fresh) void onUpdated();
         });
@@ -491,14 +499,6 @@ function OngoingRoundFold({
         )
       ) : roundFullyAnswered(pack) ? (
         <>
-          {roundToast ? (
-            <MilestoneToast
-              title={ROUND_COMPLETE_TITLE}
-              body={roundCompleteBody(tracks, roundToast.paid)}
-              reduceMotion={reduceMotion}
-              onDone={() => setRoundToast(null)}
-            />
-          ) : null}
           <ThemedText type="small" themeColor="textSecondary">
             Round complete. {roundStandingLine(tracks)}
           </ThemedText>

@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { claimFullProfileComplete } from '@/lib/ato-tokens-server';
+import { pushBuddyNote } from '@/lib/buddy/notes';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { persistCelebratedMilestones } from '@/lib/me';
 import { MILESTONE_DEFS } from '@/lib/milestones';
@@ -54,6 +55,9 @@ import { isProfileSettled, settledAxisLabel, type TraitTrack } from '@/lib/trait
  * `celebratedIds` is `undefined` until `me` has loaded and renders nothing —
  * showing first and hiding after would flash it at everyone who has seen it.
  */
+/** What the mini guy says once the reveal card is closed. */
+export const BUDDY_AFTER_50_BODY = 'Insight, categories and your next 25 are open.';
+
 const REVEAL_DEF = MILESTONE_DEFS.find((def) => def.id === INTAKE_REVEAL_MILESTONE_ID);
 
 export function FullProfileBanner({
@@ -108,6 +112,8 @@ export function FullProfileBanner({
   function dismiss() {
     if (!userId) return;
     setDismissed(true);
+    // The card says it in full; he follows up with the one-line version.
+    pushBuddyNote({ id: 'intake:done', title: REVEAL_DEF?.title ?? 'You finished the 50', body: BUDDY_AFTER_50_BODY, loud: true });
     persistCelebratedMilestones(userId, [INTAKE_REVEAL_SEEN_ID])
       .then(() => onSeen?.())
       .catch((err) => {

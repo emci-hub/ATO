@@ -1958,8 +1958,8 @@ var SYSTEM_MAP = {
       "id": "o-milestones",
       "col": "outputs",
       "title": "Milestones",
-      "status": "notwired",
-      "summary": "Celebration toasts and badges for reaching a goal. The toast has no importer, so a user never sees one.",
+      "status": "live",
+      "summary": "Answer milestones (12, 24, halfway, 36), streaks (3, 7, 21 days), a finished round, the 50, a locked identity name and a new name style are announced by the mini guy. Each is remembered on the account so it is said once. The 50 keeps its full-screen card; per-trait crossings are remembered but not said.",
       "facts": [
         [
           "Leftovers",
@@ -1977,7 +1977,7 @@ var SYSTEM_MAP = {
       "col": "outputs",
       "title": "Buddy icon (top-right)",
       "status": "live",
-      "summary": "The small pixel character fixed at the top-right of every tab. Today it only plays a random animation when tapped.",
+      "summary": "The small face top right of every tab. He is the app's one notification character: a speech bubble beside him says what just happened, a dot shows when something is waiting, and a tap makes him say the next thing or a small idle line.",
       "facts": [
         [
           "Component",
@@ -2005,8 +2005,8 @@ var SYSTEM_MAP = {
       "id": "o-buddyhub",
       "col": "outputs",
       "title": "Buddy as notification hub",
-      "status": "notbuilt",
-      "summary": "The buddy as the one place the app tells you things: a dot when something is waiting, a short list when tapped. Not built. See the Red-team tab for the proposal.",
+      "status": "live",
+      "summary": "Built 2026-10-02 as his bubble and dot (no separate hub screen). Loud notes pop up by themselves; quiet ones wait behind the dot until he is tapped. One at a time, five waiting at most, never the same note twice in a run.",
       "files": []
     },
     {

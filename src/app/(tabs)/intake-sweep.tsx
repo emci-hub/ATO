@@ -10,6 +10,7 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { isFullProfileDone } from '@/lib/full-profile-gate';
+import { useBuddyMilestones } from '@/hooks/use-buddy-milestones';
 import { useMe } from '@/hooks/use-me';
 import { useSession } from '@/hooks/use-session';
 import { type TraitTrack } from '@/lib/trait-stability';
@@ -45,7 +46,11 @@ import { fetchTraitTracks } from '@/lib/trait-tracks-store';
  * the sweep-only exports of `src/lib/questions/local.ts`) was deleted along
  * with it, not just unmounted.
  *
- * PARKED here: the milestone-crossing toast queue and `OptionalIntakeFill`.
+ * BACK 2026-10-02 (emci), but not as a toast on this screen: milestone
+ * crossings are computed in `useBuddyMilestones` and said by the mini guy
+ * (lib/buddy, components/buddy-bubble.tsx), pinned beside him on every tab.
+ *
+ * PARKED here: `OptionalIntakeFill`, and the screen-owned toast queue.
  * Two narrow pieces came back 2026-10-01 (emci), both inside components, not
  * this screen: the after-50 reveal remembers itself with one id in
  * `me.celebrated_milestone_ids`, and a finished round shows one toast
@@ -93,6 +98,10 @@ export default function IntakeSweepTabScreen() {
   const refreshAfterAnswer = useCallback(async () => {
     await Promise.all([refresh(), loadTracks()]);
   }, [refresh, loadTracks]);
+
+  // Answer milestones (12 / 24 / halfway / 36 …), said by the mini guy. The
+  // crossing check lives in the hook; this screen only supplies the tracks.
+  useBuddyMilestones({ me, tracks, tracksReady, resetKey: dataEpoch, onPersisted: refresh });
 
   return (
     <ThemedView style={styles.container}>

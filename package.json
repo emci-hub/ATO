@@ -148,6 +148,7 @@
     "check:full-profile-signal": "tsx ./scripts/full-profile-signal-check.ts",
     "check:no-auto-ai": "tsx ./scripts/no-auto-ai-check.ts",
     "check:daily-line": "tsx ./scripts/daily-line-check.ts",
+    "check:buddy": "tsx ./scripts/buddy-check.ts",
     "load:daily-line": "tsx ./scripts/daily-line-load.ts",
     "check:optional-intake": "tsx ./scripts/optional-intake-check.ts",
     "check:sage-knows": "tsx ./scripts/sage-knows-check.ts",
