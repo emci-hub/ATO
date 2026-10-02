@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { AxisCodeLabel } from '@/components/axis-code-label';
-import { InfoReveal } from '@/components/info-reveal';
+import { InfoReveal, quoted } from '@/components/info-reveal';
 import { AxisTaps } from '@/components/axis-taps';
 import { DepthDive } from '@/components/depth-dive';
 import { SettingsFold } from '@/components/settings-fold';
@@ -10,8 +9,9 @@ import { TraitBandVisual } from '@/components/trait-bands-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
-import { AXIS_POLES, POLE_COPY_REVIEWED } from '@/lib/axis-poles';
-import { BOTH_ENDS_LABEL, OTHER_END_LABEL, SHAPED_BY_MIDDLE, shapedByRow, showsUpInLine } from '@/lib/shaped-by';
+import { AXIS_POLES, AXIS_SHORT_NAME, POLE_COPY_REVIEWED } from '@/lib/axis-poles';
+import { axisConcept } from '@/lib/concept-explainers';
+import { OTHER_SIDE_LEAD, SHAPED_BY_MIDDLE, YOUR_SIDE_LEAD, shapedByRow, showsUpInLine } from '@/lib/shaped-by';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import {
   FULL_PROFILE_LABEL,
@@ -123,30 +123,21 @@ export function FullProfileFold({
             null;
           return (
             <View key={axis} style={styles.axis}>
-              <AxisCodeLabel axis={axis} name={copy.label} />
-              {/* Your own side, said plainly. The other end and where this trait
-                  shows up are one tap away, not in the way. */}
-              {/* Unanswered says so once, further down (NOT_ANSWERED_YET). */}
-              {shaped.lean ? (
-                <ThemedText type="small">Your side: {shaped.line}</ThemedText>
-              ) : shaped.line === SHAPED_BY_MIDDLE ? (
-                <ThemedText type="small">{shaped.line}</ThemedText>
-              ) : null}
-              <InfoReveal label={shaped.lean ? OTHER_END_LABEL : BOTH_ENDS_LABEL}>
+              {/* The trait's everyday name, and one "?" that opens the rest: what
+                  it means, what the other side sounds like, and which
+                  categories it is part of. */}
+              <InfoReveal label={AXIS_SHORT_NAME[axis]} strong>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {axisConcept(axis)}
+                </ThemedText>
                 {shaped.lean ? (
-                  // Your own side is already on screen: show only the end you are not at.
                   <ThemedText type="small" themeColor="textSecondary">
-                    The other end: {poles[shaped.lean === 'high' ? 'low' : 'high']}
+                    {OTHER_SIDE_LEAD} {quoted(poles[shaped.lean === 'high' ? 'low' : 'high'])}
                   </ThemedText>
                 ) : (
-                  <>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      One end: {poles.low}
-                    </ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      The other end: {poles.high}
-                    </ThemedText>
-                  </>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {quoted(poles.low)} or {quoted(poles.high)}
+                  </ThemedText>
                 )}
                 {showsUpInLine(axis) ? (
                   <ThemedText type="small" themeColor="textSecondary">
@@ -154,6 +145,14 @@ export function FullProfileFold({
                   </ThemedText>
                 ) : null}
               </InfoReveal>
+              {/* Unanswered says so once, further down (NOT_ANSWERED_YET). */}
+              {shaped.lean ? (
+                <ThemedText type="small">
+                  {YOUR_SIDE_LEAD} {quoted(shaped.line)}
+                </ThemedText>
+              ) : shaped.line === SHAPED_BY_MIDDLE ? (
+                <ThemedText type="small">{shaped.line}</ThemedText>
+              ) : null}
               {!POLE_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
                 <ThemedText type="code" themeColor="textSecondary">
                   Draft copy — waiting on emci review.

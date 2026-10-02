@@ -21,7 +21,7 @@ import {
   type CategoryQuestionRow,
 } from '@/lib/questions/category-paged';
 import type { QuestionDraft, QuestionOption } from '@/lib/questions/types';
-import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
+import { AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { hexToRgb } from '@/lib/theme/contrast';
 
@@ -251,7 +251,7 @@ export function PagedQuestions({
         {pageRows.map((row) => (
           <View key={row.key} style={styles.axisItem}>
             <ThemedText type="small" themeColor="textSecondary">
-              {AXIS_EDITOR_COPY[row.axis].label}
+              {AXIS_SHORT_NAME[row.axis]}
             </ThemedText>
             {showMissing && missing.has(row.key) ? (
               <ThemedText type="smallBold">Still needs an answer</ThemedText>

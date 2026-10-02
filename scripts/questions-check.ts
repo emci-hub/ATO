@@ -680,9 +680,11 @@ assert.match(pagedQuestions, /export \{ completedAxesFrom, uniqueCategoryAxes \}
 const categoryPagedLib = read('src/lib/questions/category-paged.ts');
 assert.match(categoryPagedLib, /export function uniqueCategoryAxes/);
 assert.match(categoryPagedLib, /export function completedAxesFrom/);
-// 2026-10-01: the label above each question is the reviewed plain-language
-// AXIS_EDITOR_COPY label, not humanizeAxis's placeholder ("attachment anxiety").
-assert.match(pagedQuestions, /AXIS_EDITOR_COPY\[row\.axis\]\.label/);
+// 2026-10-01: the label above each question is a plain-language name, not
+// humanizeAxis's placeholder ("attachment anxiety"). 2026-10-02 (emci): it is
+// now the short everyday name (AXIS_SHORT_NAME, "Trying new things") rather
+// than the longer AXIS_EDITOR_COPY label, which stays for prompts and the editor.
+assert.match(pagedQuestions, /AXIS_SHORT_NAME\[row\.axis\]/);
 assert.doesNotMatch(pagedQuestions, /humanizeAxis/);
 // Finish with questions left over flags them and jumps to the first one.
 assert.match(pagedQuestions, /unansweredRowKeys\(/);

@@ -115,99 +115,38 @@ Each name is one describing word plus one role. Plain is the free default.
 - Describing words: Beloved, Alluring, Sympathetic, Elegant, Relentless, Unapologetic, Silent, Shadowy
 - Roles: Conqueror, Usurper, Necromancer, Gravekeeper, Trickster Fiend, Ringleader, Wandering Ghost, Reaper
 
-## 3. Trait descriptions (rewritten in the new voice) — DRAFT, please read
+## 3. Traits: short names and what each side sounds like — DRAFT, please read
 
-Each trait has a line for each end. They are written without "you" or "they" on purpose,
-because the same line is shown two ways: as "Your side: …" for your own side, and as
-"The other end: …" for the side you are not on.
+Each trait has a short name and two quotes: something a person on each side would say.
+The app shows yours as: You sound more like: “…”. Tapping the **?** beside the trait name opens
+what the trait means, The other side: “…”, and which categories it is part of.
 
-On the full profile each trait now shows only your own side. Tapping
-"The other end, and where this shows up" opens the end you are not on and which categories the trait feeds.
+| Trait | One side | The other side | Part of |
+|---|---|---|---|
+| Trying new things | “I’ll have my usual.” | “What’s that? I’ll try it.” | Openness to life, Structure vs. spontaneity |
+| Plans | “I’ll figure it out when I get there.” | “I said I’d finish it, so I did.” | Steadiness, Structure vs. spontaneity |
+| People time | “I need a night in.” | “Who’s around tonight?” | Openness to life, Everyday social energy |
+| Going along with it | “I don’t love that plan.” | “I’m fine with anything.” | Steadiness, Everyday social energy |
+| A bad day | “I’m still thinking about this morning.” | “Oh, that? I forgot about it.” | Steadiness, Resilience under pressure |
+| When someone goes quiet | “They’re probably just busy.” | “Did I say something wrong?” | Love / closeness |
+| Getting close | “Come over, let’s talk.” | “I’m good, I just need some space.” | Love / closeness |
+| In a disagreement | “It’s fine, never mind.” | “Actually, I disagree.” | Communication, Levity |
+| Give and take | “This is what I need.” | “What would work for you?” | Communication, Levity |
+| Doing it your way | “Just tell me the plan.” | “I’ll do it my way.” | Drive, Independence & closeness |
+| A hard task | “I’m not sure I can do this.” | “Send it to me.” | Drive, Resilience under pressure |
+| Needing connection | “I’m good on my own today.” | “I need a real conversation.” | Drive, Independence & closeness |
+| After a miss | “Maybe this just isn’t my thing.” | “Okay, what do I change?” | Agency, Resilience under pressure |
+| When plans fall apart | “It was bound to happen.” | “What could I have done differently?” | Agency |
+| A big ask | “That’s a lot. I don’t know.” | “I can do that.” | Agency |
+| Keeping it light | “Let’s just get it done.” | “Okay, but make it fun.” | Everyday social energy, Levity |
 
-**How you feel about trying something new**
-- One end: Same order as last time, because it was good last time.
-- The other end: The untried option wins. A different route home, just to see.
-- Shows up in: Openness to life and Structure vs. spontaneity.
-
-**How you handle sticking to a plan**
-- One end: Plans stay loose and get decided in the moment. The dull stretch is where the drifting starts.
-- The other end: The plan gets finished, even after it stops being fun.
-- Shows up in: Steadiness and Structure vs. spontaneity.
-
-**How much people time you actually need**
-- One end: Quiet is the reset. A full room costs something.
-- The other end: People are the charge. One quick hello turns into three new contacts.
-- Shows up in: Openness to life and Everyday social energy.
-
-**How much you go along to keep things easy**
-- One end: Holds the line on a plan that feels wrong, and says so.
-- The other end: Goes along to keep it easy, even with a preference in mind.
-- Shows up in: Steadiness and Everyday social energy.
-
-**How rattled a bad day gets you**
-- One end: One small knock can color the rest of the day.
-- The other end: A bad morning is gone by lunch.
-- Shows up in: Steadiness and Resilience under pressure.
-
-**How you handle getting close to people**
-- One end: A slow reply is just a slow reply.
-- The other end: A pause from someone close can start to feel like pulling away.
-- Shows up in: Love / closeness.
-
-**How much space you like, even with people you're close to**
-- One end: Once in, stays close. Would rather talk it out in person.
-- The other end: Keeps a little distance, even with people who matter. A text is easier than a call.
-- Shows up in: Love / closeness.
-
-**How you show up in a disagreement**
-- One end: Steps back in a disagreement. The comeback arrives three days later.
-- The other end: Puts the point on the table, even if it lands a little sharp.
-- Shows up in: Communication and Levity.
-
-**How much room you leave for the other person**
-- One end: Protects the outcome first. Rarely the one who gives.
-- The other end: Looks for the version both people can live with, and often gives first.
-- Shows up in: Communication and Levity.
-
-**How much you like doing it your own way**
-- One end: A plan someone else made is a relief.
-- The other end: Own way, even with a plan already on the table.
-- Shows up in: Drive and Independence & closeness.
-
-**How you feel about tackling something hard**
-- One end: A hard task brings the doubt before the first step.
-- The other end: A hard task lands as "send it to me."
-- Shows up in: Drive and Resilience under pressure.
-
-**How much real connection you need day to day**
-- One end: A day can go fine without much contact.
-- The other end: A day needs one real conversation to count.
-- Shows up in: Drive and Independence & closeness.
-
-**What happens after you miss the mark**
-- One end: A miss can feel like the end of that road.
-- The other end: After a miss, straight to what to change next time.
-- Shows up in: Agency and Resilience under pressure.
-
-**What you tell yourself when something falls apart**
-- One end: When a plan falls apart, it was bound to.
-- The other end: When a plan falls apart, the first look is at what could have gone differently.
-- Shows up in: Agency.
-
-**How you feel facing something big**
-- One end: A bigger-than-usual ask lands as "not sure I can pull this off."
-- The other end: A bigger-than-usual ask lands as something to figure out.
-- Shows up in: Agency.
-
-**How much a day wants a little play**
-- One end: The day is a list to get through. Jokes can wait.
-- The other end: Finds the lighter take. A meme where words were expected.
-- Shows up in: Everyday social energy and Levity.
-
-New small labels for the explanations (all closed until tapped):
-- On a category card: "What shapes this" opens the category's meaning and, for each trait behind it, its plain name and the line for the side you lean to.
+The same names and quotes are used in the two other explanations (both closed until tapped):
+- On a category card: "What shapes this" opens what the category means, then each trait behind it with your quote.
 - On the identity card: "How this name is made" opens "Two words, three traits each. A word locks in once all three of its traits are settled." then "first word" and "second word" with their three traits each.
-- Shown where needed: "Not answered yet." · "Right in the middle so far." · "still settling"
+- Shown where needed: "Not answered yet." · "Somewhere in between so far." · "still settling"
+
+The short names also replace the long ones above each question on the Questions screen
+and in the "Traits answered" list.
 
 ## 4. Unlock and after-50 wording (unchanged, factual)
 

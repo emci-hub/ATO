@@ -8,22 +8,25 @@
  * default: the card says what it says, and the working is one tap away for
  * anyone who wants it.
  *
- * Never an internal trait name and never a number: the label is the plain one
- * from AXIS_EDITOR_COPY and the lean is a line from AXIS_POLES.
+ * Never an internal trait name and never a number: the label is the short
+ * everyday name (AXIS_SHORT_NAME) and the lean is a quote from AXIS_POLES —
+ * something a person on that side would say.
  */
-import { AXIS_POLES } from '@/lib/axis-poles';
+import { AXIS_POLES, AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { CATEGORY_DEFS } from '@/lib/categories';
 import { CORE_AXES, MODIFIER_AXES } from '@/lib/legends64/classify';
-import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
 import { isAxisSettled, trackFor, type TraitTrack } from '@/lib/trait-stability';
 import type { TraitAxis, TraitLean } from '@/lib/traits';
 
 export const SHAPED_BY_LABEL = 'What shapes this';
 export const SHAPED_BY_NOT_ANSWERED = 'Not answered yet.';
 export const SHAPED_BY_SETTLING = 'still settling';
-export const SHAPED_BY_MIDDLE = 'Right in the middle so far.';
-export const BOTH_ENDS_LABEL = 'Both ends, and where this shows up';
-export const OTHER_END_LABEL = 'The other end, and where this shows up';
+export const SHAPED_BY_MIDDLE = 'Somewhere in between so far.';
+/** Before the reader's own quote. */
+export const YOUR_SIDE_LEAD = 'You sound more like:';
+/** Before the quote from the side they are not on. */
+export const OTHER_SIDE_LEAD = 'The other side:';
+
 export const IDENTITY_RECIPE_LABEL = 'How this name is made';
 export const IDENTITY_RECIPE_LEDE =
   'Two words, three traits each. A word locks in once all three of its traits are settled.';
@@ -36,14 +39,17 @@ export interface ShapedByRow {
   /** Plain-words name of the trait. */
   label: string;
   lean: TraitLean | null;
-  /** The line for the side they lean to, or a plain "not answered" / "in the middle". */
+  /**
+   * With a lean: what their side sounds like, WITHOUT quote marks (the screen
+   * adds them). Without one: a plain "not answered" / "in between".
+   */
   line: string;
   settled: boolean;
 }
 
 export function shapedByRow(axis: TraitAxis, tracks: readonly TraitTrack[], now: Date = new Date()): ShapedByRow {
   const row = trackFor(tracks, axis, 'report');
-  const label = AXIS_EDITOR_COPY[axis].label;
+  const label = AXIS_SHORT_NAME[axis];
   if (!row || row.answerCount < 1 || !Number.isFinite(row.value)) {
     return { axis, label, lean: null, line: SHAPED_BY_NOT_ANSWERED, settled: false };
   }
@@ -64,12 +70,12 @@ export function categoriesForAxis(axis: TraitAxis): string[] {
   return CATEGORY_DEFS.filter((def) => def.axes.includes(axis)).map((def) => def.name);
 }
 
-/** "Steadiness and Structure" / "Drive" / "" */
+/** "Part of: Steadiness, Structure." / "" */
 export function showsUpInLine(axis: TraitAxis): string {
   const names = categoriesForAxis(axis);
   if (names.length === 0) return '';
-  const list = names.length === 1 ? names[0]! : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
-  return `Shows up in: ${list}.`;
+  const list = names.join(', ');
+  return `Part of: ${list}.`;
 }
 
 /** The identity name's two halves and the traits behind each. */

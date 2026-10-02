@@ -16,7 +16,7 @@ import {
   PROFILE_FILL_LEDE,
   PROFILE_FILL_ROW_FILLED,
 } from '@/lib/profile-fill';
-import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
+import { AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import {
   filledAxisLabel,
   isAxisFilled,
@@ -59,7 +59,7 @@ export function ProfileFillFold({ tracks }: { tracks: readonly TraitTrack[] }) {
             <ProfileFillRow
               key={axis}
               axis={axis}
-              label={AXIS_EDITOR_COPY[axis].label}
+              label={AXIS_SHORT_NAME[axis]}
               filled={isAxisFilled(trackFor(tracks, axis, 'report'))}
             />
           ))}

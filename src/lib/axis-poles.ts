@@ -5,11 +5,9 @@
 import type { TraitAxis } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 
-// Rewritten 2026-10-02 at emci's request in the moment voice, and written
-// WITHOUT a subject on purpose: each line has to read correctly both as "You
-// lean: …" (the reader's own side) and as "The other end: …" (the side they are
-// not on), so neither "you" nor "they" can be in it.
-// Draft again until emci reads this version (docs/copy-review.md, section 3).
+// emci picked this style on 2026-10-02 ("that looks better") from samples; the
+// full set of 32 quotes and 16 names is draft until emci reads it
+// (docs/copy-review.md, section 3).
 export const POLE_COPY_REVIEWED = false;
 
 export interface AxisPoles {
@@ -17,76 +15,110 @@ export interface AxisPoles {
   high: string;
 }
 
+/**
+ * What each side of a trait SOUNDS like: one thing a person on that side would
+ * actually say. Shown in quotes — “You sound more like: …” for the reader's own
+ * side, “The other side: …” for the one they are not on. First person on
+ * purpose (emci, 2026-10-02): a description of a person read like a spec sheet;
+ * a line they would say themselves does not.
+ */
 export const AXIS_POLES: Record<TraitAxis, AxisPoles> = {
   openness: {
-    low: 'Same order as last time, because it was good last time.',
-    high: 'The untried option wins. A different route home, just to see.',
+    low: 'I’ll have my usual.',
+    high: 'What’s that? I’ll try it.',
   },
   conscientiousness: {
-    low: 'Plans stay loose and get decided in the moment. The dull stretch is where the drifting starts.',
-    high: 'The plan gets finished, even after it stops being fun.',
+    low: 'I’ll figure it out when I get there.',
+    high: 'I said I’d finish it, so I did.',
   },
   extraversion: {
-    low: 'Quiet is the reset. A full room costs something.',
-    high: 'People are the charge. One quick hello turns into three new contacts.',
+    low: 'I need a night in.',
+    high: 'Who’s around tonight?',
   },
   agreeableness: {
-    low: 'Holds the line on a plan that feels wrong, and says so.',
-    high: 'Goes along to keep it easy, even with a preference in mind.',
+    low: 'I don’t love that plan.',
+    high: 'I’m fine with anything.',
   },
   steadiness: {
-    low: 'One small knock can color the rest of the day.',
-    high: 'A bad morning is gone by lunch.',
+    low: 'I’m still thinking about this morning.',
+    high: 'Oh, that? I forgot about it.',
   },
   attachment_anxiety: {
-    low: 'A slow reply is just a slow reply.',
-    high: 'A pause from someone close can start to feel like pulling away.',
+    low: 'They’re probably just busy.',
+    high: 'Did I say something wrong?',
   },
   attachment_avoidance: {
-    low: 'Once in, stays close. Would rather talk it out in person.',
-    high: 'Keeps a little distance, even with people who matter. A text is easier than a call.',
+    low: 'Come over, let’s talk.',
+    high: 'I’m good, I just need some space.',
   },
   conflict_assertiveness: {
-    low: 'Steps back in a disagreement. The comeback arrives three days later.',
-    high: 'Puts the point on the table, even if it lands a little sharp.',
+    low: 'It’s fine, never mind.',
+    high: 'Actually, I disagree.',
   },
   conflict_cooperativeness: {
-    low: 'Protects the outcome first. Rarely the one who gives.',
-    high: 'Looks for the version both people can live with, and often gives first.',
+    low: 'This is what I need.',
+    high: 'What would work for you?',
   },
   autonomy: {
-    low: 'A plan someone else made is a relief.',
-    high: 'Own way, even with a plan already on the table.',
+    low: 'Just tell me the plan.',
+    high: 'I’ll do it my way.',
   },
   competence: {
-    low: 'A hard task brings the doubt before the first step.',
-    high: 'A hard task lands as "send it to me."',
+    low: 'I’m not sure I can do this.',
+    high: 'Send it to me.',
   },
   relatedness: {
-    low: 'A day can go fine without much contact.',
-    high: 'A day needs one real conversation to count.',
+    low: 'I’m good on my own today.',
+    high: 'I need a real conversation.',
   },
   growth_mindset: {
-    low: 'A miss can feel like the end of that road.',
-    high: 'After a miss, straight to what to change next time.',
+    low: 'Maybe this just isn’t my thing.',
+    high: 'Okay, what do I change?',
   },
   locus_of_control: {
-    low: 'When a plan falls apart, it was bound to.',
-    high: 'When a plan falls apart, the first look is at what could have gone differently.',
+    low: 'It was bound to happen.',
+    high: 'What could I have done differently?',
   },
   self_efficacy: {
-    low: 'A bigger-than-usual ask lands as "not sure I can pull this off."',
-    high: 'A bigger-than-usual ask lands as something to figure out.',
+    low: 'That’s a lot. I don’t know.',
+    high: 'I can do that.',
   },
   playfulness: {
-    low: 'The day is a list to get through. Jokes can wait.',
-    high: 'Finds the lighter take. A meme where words were expected.',
+    low: 'Let’s just get it done.',
+    high: 'Okay, but make it fun.',
   },
+};
+
+/**
+ * The short everyday name for each trait, for screens. The longer
+ * AXIS_EDITOR_COPY labels stay as they are: the AI prompts and the trait editor
+ * read those.
+ */
+export const AXIS_SHORT_NAME: Record<TraitAxis, string> = {
+  openness: 'Trying new things',
+  conscientiousness: 'Plans',
+  extraversion: 'People time',
+  agreeableness: 'Going along with it',
+  steadiness: 'A bad day',
+  attachment_anxiety: 'When someone goes quiet',
+  attachment_avoidance: 'Getting close',
+  conflict_assertiveness: 'In a disagreement',
+  conflict_cooperativeness: 'Give and take',
+  autonomy: 'Doing it your way',
+  competence: 'A hard task',
+  relatedness: 'Needing connection',
+  growth_mindset: 'After a miss',
+  locus_of_control: 'When plans fall apart',
+  self_efficacy: 'A big ask',
+  playfulness: 'Keeping it light',
 };
 
 export function poleCopyClean(): boolean {
   for (const poles of Object.values(AXIS_POLES)) {
     if (containsFrameworkTerm(poles.low) || containsFrameworkTerm(poles.high)) return false;
+  }
+  for (const name of Object.values(AXIS_SHORT_NAME)) {
+    if (containsFrameworkTerm(name)) return false;
   }
   return true;
 }

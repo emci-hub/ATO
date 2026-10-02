@@ -15,7 +15,16 @@ import { SHAPED_BY_SETTLING } from '@/lib/shaped-by';
  * person who goes looking; it must never sit between someone and the thing
  * they came to read.
  */
-export function InfoReveal({ label, children }: { label: string; children: ReactNode }) {
+export function InfoReveal({
+  label,
+  children,
+  strong = false,
+}: {
+  label: string;
+  children: ReactNode;
+  /** A heading-weight label, for when the row IS the title (a trait name). */
+  strong?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <View style={styles.wrap}>
@@ -27,9 +36,13 @@ export function InfoReveal({ label, children }: { label: string; children: React
         hitSlop={8}
         onPress={() => setOpen((value) => !value)}
         style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
-        <ThemedText type="small" themeColor="textSecondary">
-          {label}
-        </ThemedText>
+        {strong ? (
+          <ThemedText type="smallBold">{label}</ThemedText>
+        ) : (
+          <ThemedText type="small" themeColor="textSecondary">
+            {label}
+          </ThemedText>
+        )}
         <ThemedText type="code" themeColor="textSecondary">
           {open ? '–' : '?'}
         </ThemedText>
@@ -37,6 +50,11 @@ export function InfoReveal({ label, children }: { label: string; children: React
       {open ? <View style={styles.body}>{children}</View> : null}
     </View>
   );
+}
+
+/** A line someone would say, in curly quotes. */
+export function quoted(line: string): string {
+  return `“${line}”`;
 }
 
 /** The trait rows inside a reveal: plain name, the lean, and "still settling" where true. */
@@ -50,7 +68,7 @@ export function ShapedByList({ rows }: { rows: readonly ShapedByRow[] }) {
             {row.lean && !row.settled ? ` · ${SHAPED_BY_SETTLING}` : ''}
           </ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            {row.line}
+            {row.lean ? quoted(row.line) : row.line}
           </ThemedText>
         </View>
       ))}
