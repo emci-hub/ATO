@@ -151,7 +151,7 @@ Nothing in this file is in the app until it is ticked and loaded.
 
 ### `conflict_cooperativeness:low`
 - [ ] You knew what you wanted walking in and it was the same walking out.
-- [ ] They offered a compromise. You resent your original message.
+- [ ] They offered a compromise. You sent your original message again.
 - [ ] You negotiated the price with a friend.
 - [ ] "Meet me halfway," and you checked whose half.
 - [ ] You gave ground once, years ago, and still remember the date.

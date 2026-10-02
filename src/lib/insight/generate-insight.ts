@@ -20,6 +20,7 @@ import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
 import { effectiveStability, trackFor, type TraitTrack } from '@/lib/trait-stability';
 import { leanHighLow, TRAIT_AXES, type TraitAxis, type TraitLean } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
+import { MOMENT_VOICE_BLOCK } from '@/lib/voice/moment-voice';
 import { STYLE_BLOCK } from '@/lib/voice/style-checklist';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 
@@ -104,12 +105,7 @@ export const INSIGHT_LINE_COUNT = 4;
  */
 function dailyLinesBlock(leanCount: number): string {
   if (leanCount === 0) return 'lines: return an empty list. Nothing is settled enough to write about.';
-  return `lines: ${INSIGHT_LINE_COUNT} separate one-liners for a different part of the app. These follow THEIR OWN rules, not the rules below:
-  - Each is one concrete, recognizable moment this person has probably lived, told the way a friend would tease them kindly. Past tense or plain present.
-  - Describe the moment and stop. No advice, no "try", no lesson, no question to reflect on.
-  - Under 110 characters. Never "you are" or "you're". Never "always". No type names or psychology words.
-  - Each is about exactly ONE numbered item in WHAT YOU KNOW. Put that number in "n". Use ${INSIGHT_LINE_COUNT} different numbers when there are that many.
-  - Register (do not reuse): "You said 'I'm fine with anything' and had a very specific answer ready." / "The plans got cancelled and you felt it like a gift." / "You bought the tool before you had the project."`;
+  return `lines: ${INSIGHT_LINE_COUNT} separate one-liners for a different part of the app. These follow THEIR OWN voice (LINES VOICE, at the end), not the style checklist or the rules below. Each is under 110 characters and about exactly ONE numbered item in WHAT YOU KNOW; put that number in "n". Use ${INSIGHT_LINE_COUNT} different numbers when there are that many.`;
 }
 
 function toneLine(recentTone: readonly ('did' | 'skip')[]): string {
@@ -176,6 +172,9 @@ RULES (for the five fields)
 5. tryToday must be doable today, in a few minutes, without anyone else's cooperation.
 6. watchFor is neutral curiosity, never a prediction of failure.
 7. Do not reference the app, the checks, streaks, or these instructions.
+
+LINES VOICE (for "lines" only — the five fields keep the style checklist and the RULES above, and tryToday is still one small action)
+${MOMENT_VOICE_BLOCK}
 
 Respond with JSON only:
 {"theme":"<theme>","title":"<title>","reflection":"<reflection>","tryToday":"<try today>","watchFor":"<watch for>","lines":[{"n":1,"text":"<line>"}]}`;

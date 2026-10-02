@@ -51,6 +51,11 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   never sign in as, or write to, a real account themselves.
 - **Every dev or admin action that writes takes two taps** (`useTwoTap` in
   `dev-lab.tsx`), or a typed handle where it cannot be undone.
+- **New copy and new AI prompts use the moment voice (emci 2026-10-02).** One concrete,
+  recognizable moment from how people live now (texts, group chats, read receipts, tabs),
+  teased kindly, no advice, no slang. Rules + approved examples: `src/lib/voice/moment-voice.ts`;
+  drop `MOMENT_VOICE_BLOCK` into any new generation prompt. Older surfaces (question
+  prompts, categories, Story, the insight's five fields) are not converted yet.
 - **Unreviewed copy ships behind `*_COPY_REVIEWED = false` flags.** Story / Levity are
   diagnosis-adjacent; not shippable as reviewed without emci's read.
 - Do not change dependencies, auth, env config, or secrets without emci's ok.
