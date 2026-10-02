@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -10,6 +10,7 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { isFullProfileDone } from '@/lib/full-profile-gate';
+import { onQuestionsPageTurned } from '@/lib/questions/page-turn';
 import { useBuddyMilestones } from '@/hooks/use-buddy-milestones';
 import { useMe } from '@/hooks/use-me';
 import { useSession } from '@/hooks/use-session';
@@ -99,6 +100,17 @@ export default function IntakeSweepTabScreen() {
     await Promise.all([refresh(), loadTracks()]);
   }, [refresh, loadTracks]);
 
+  // A page turn in the pager scrolls this screen back to the top, so the new
+  // page starts at its first question.
+  const scrollRef = useRef<ScrollView>(null);
+  useEffect(
+    () =>
+      onQuestionsPageTurned(() => {
+        scrollRef.current?.scrollTo({ y: 0, animated: true });
+      }),
+    [],
+  );
+
   // Answer milestones (12 / 24 / halfway / 36 …), said by the mini guy. The
   // crossing check lives in the hook; this screen only supplies the tracks.
   useBuddyMilestones({ me, tracks, tracksReady, resetKey: dataEpoch, onPersisted: refresh });
@@ -106,7 +118,7 @@ export default function IntakeSweepTabScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <ThemedText type="subtitle">Questions</ThemedText>
           </View>

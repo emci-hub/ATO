@@ -21,6 +21,7 @@ import {
   type CategoryQuestionRow,
 } from '@/lib/questions/category-paged';
 import type { QuestionDraft, QuestionOption } from '@/lib/questions/types';
+import { emitQuestionsPageTurned } from '@/lib/questions/page-turn';
 import { AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { hexToRgb } from '@/lib/theme/contrast';
@@ -223,6 +224,9 @@ export function PagedQuestions({
   const goTo = useCallback(
     (next: number) => {
       setPageIndex(Math.max(0, Math.min(totalPages - 1, next)));
+      // Next, Back, and the jump to a missed question all land on a new set
+      // of questions: start it from the top of the screen.
+      emitQuestionsPageTurned();
     },
     [totalPages],
   );
