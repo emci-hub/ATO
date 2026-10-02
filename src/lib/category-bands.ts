@@ -1,6 +1,8 @@
 /**
- * Offline fallback bands for category summaries. UNREVIEWED.
- * Same lane as IQ fallback bank / crisis copy. Not a lookup for live titles.
+ * Fallback lines for category summaries: what a category row on Explore says
+ * until its AI card is loaded (and when AI is off). Written in the moment voice
+ * (src/lib/voice/moment-voice.ts), second person, describing and never advising.
+ * emci approved 2026-10-02.
  */
 import type { CategoryId } from '@/lib/categories';
 import { readAllCategories } from '@/lib/categories';
@@ -9,7 +11,7 @@ import type { TraitTrack } from '@/lib/trait-stability';
 import { leanHighLow, TRAIT_BAND_HIGH_CUT, TRAIT_BAND_LOW_CUT } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 
-export const CATEGORY_BAND_COPY_REVIEWED = false;
+export const CATEGORY_BAND_COPY_REVIEWED = true;
 
 export interface CategoryBand {
   /** Inclusive low, exclusive high except the last band. */
@@ -21,59 +23,59 @@ export interface CategoryBand {
 /** 3–5 plain lines per category, keyed by bar 0–1 or map-quadrant score. */
 export const CATEGORY_FALLBACK_BANDS: Record<CategoryId, readonly CategoryBand[]> = {
   cat_steadiness: [
-    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'Plans stay loose. A small knock can sit for a while.' },
-    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Some follow-through, some wobble. It depends on the day.' },
-    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'Sees a plan through and shakes a bad start off.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'Plans stay loose with you, and one small knock can stay for the afternoon.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Some days you follow through, some days you wobble. It depends which day you ask.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'You finish the plan and forget the bad morning by lunch.' },
   ],
   cat_openness: [
-    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'Prefers a known path and a quieter room.' },
-    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Mixes the familiar with the occasional different path.' },
-    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'Curious about the untried option. People around tend to help.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'You like the known route and the quieter room, and you would pick both again.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Mostly the familiar, with the occasional detour when someone talks you into it.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'You said yes to the new thing, and it helped that people were going.' },
   ],
   cat_drive: [
-    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A set path is fine. A hard task can make them pause.' },
-    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Some days they pick the path. Some days they take the one already there.' },
-    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'Would rather do it their way, and feels they can handle the hard part.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A plan someone else made is fine by you, and a hard task gets a long look first.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Some days you pick the path. Some days you take the one already there.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'You want it done your way, and you figure you can handle the hard part.' },
   ],
   cat_agency: [
-    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A miss can feel closed. When it falls apart, it was bound to happen.' },
-    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Sometimes they look at what to change. Sometimes they let it be.' },
-    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'After a miss they look at what they would change. A bigger ask feels doable.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'When it falls apart, you tend to figure it was going to, and that road can feel closed.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Sometimes you look for what to change. Sometimes you let it be.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'After a miss you go looking for what to change, and the bigger ask still looks doable.' },
   ],
   cat_social: [
-    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'Quiet time is how they reset. Jokes can wait.' },
-    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'People time and lightness come in when the day has room.' },
-    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'Would rather make the room happen, and keep it a little light.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'Quiet is how you reset, and the jokes can wait until you have had some.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'People and jokes come out when the day has room for them.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'You make the plans, fill the room, and keep it light while you do.' },
   ],
   cat_communication: [
-    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'Steps back in a disagreement. Protects their outcome first.' },
-    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Sometimes they put a point on the table. Sometimes they leave room.' },
-    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'Puts their point on the table and still looks for something the other person can live with.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'In a disagreement you go quiet and hold on to what you came for.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Sometimes you say your piece. Sometimes you leave the room for theirs.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'You say your piece out loud and still look for the version they can live with.' },
   ],
   cat_love: [
-    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A slow reply is just a slow reply. Once they are in, they stay close.' },
-    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Wants a real check-in, and still keeps a little distance.' },
-    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'A pause can start to feel like pulling away. Lighter, over text, is easier.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A slow reply is just a slow reply to you, and once in, you stay close.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'You want a real check-in and still keep a little room for yourself.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'A pause can feel like someone pulling away, and a text feels safer than a call.' },
   ],
   cat_independence: [
-    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A path already set is fine. A day can land without much connection.' },
-    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Own way some days, a real check-in on others.' },
-    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'Would rather pick the path, and still needs a real connection for a day to land.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A plan someone else made suits you, and a day can go fine without much contact.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Your own way some days, a real check-in on others.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'You want to pick the path, and you still need someone real in the day for it to count.' },
   ],
   cat_levity: [
-    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A disagreement is a job. Lightness can wait until it is over.' },
-    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Sometimes they leave a little room in a hard talk. Sometimes they do not.' },
-    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'A hard talk can still have a bit of air in it — not a joke, just not only a job.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A hard talk is a job to you. The lightness can wait until it is done.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Sometimes you leave a little air in a hard talk. Sometimes you do not.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'Even your hard talks have a bit of air in them.' },
   ],
   cat_structure: [
-    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A plan can drift once the day gets boring, and a new path does not pull that hard either.' },
-    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Some days the plan holds, some days something new pulls harder.' },
-    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'Sees a plan through even when it drags, and still stays curious about what else is out there.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'The plan drifts once the day gets boring, and something new does not pull that hard either.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Some days the plan holds. Some days a new idea wins.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'You finish the plan even when it drags, and still keep a tab open for what is next.' },
   ],
   cat_resilience: [
-    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A hard task can feel like proof of doubt. A miss can feel like the end of that path.' },
-    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Some days a hard task feels doable. A knock lingers, then fades.' },
-    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'A hard task feels handleable, a miss reads as something to learn from, and a knock fades fast.' },
+    { min: 0, max: TRAIT_BAND_LOW_CUT, lede: 'A hard task can make you doubt yourself, and a miss can feel like the end of that road.' },
+    { min: TRAIT_BAND_LOW_CUT, max: TRAIT_BAND_HIGH_CUT, lede: 'Some days the hard thing looks doable. A knock lingers, then fades.' },
+    { min: TRAIT_BAND_HIGH_CUT, max: 1.01, lede: 'Hard things look handleable to you, a miss is a note for next time, and a knock is gone by lunch.' },
   ],
 };
 
@@ -91,28 +93,28 @@ export function mapScore(x: number, y: number): number {
 
 type MapQuad = 'low_low' | 'high_low' | 'low_high' | 'high_high';
 
-/** UNREVIEWED map-quadrant lines. Used when both axes are independently stable. */
+/** Map-quadrant lines. Used when both axes are independently stable. */
 export const MAP_QUADRANT_BANDS: Record<
   'cat_love' | 'cat_independence' | 'cat_structure',
   Record<MapQuad, string>
 > = {
   cat_love: {
-    low_low: 'A slow reply is just a slow reply. Once they are in, they stay close.',
-    high_low: 'A pause can start to feel like pulling away. Once they are in, they stay close.',
-    low_high: 'A slow reply is just a slow reply. Lighter, with some distance, is easier.',
-    high_high: 'A pause can start to feel like pulling away. Lighter, with some distance, is easier.',
+    low_low: 'A slow reply is just a slow reply to you, and once in, you stay close.',
+    high_low: 'A pause can feel like someone pulling away, and you move closer anyway.',
+    low_high: 'A slow reply does not bother you, and you like a little distance of your own.',
+    high_high: 'A pause can feel like someone pulling away, and you keep some distance just in case.',
   },
   cat_independence: {
-    low_low: 'A path already set is fine. A day can land without much connection.',
-    high_low: 'Would rather pick the path. A day can land without much connection.',
-    low_high: 'A path already set is fine, and a real connection is how a day lands.',
-    high_high: 'Would rather pick the path, and still needs a real connection for a day to land.',
+    low_low: 'A plan someone else made suits you, and a day can go fine without much contact.',
+    high_low: 'You pick your own path, and a day can go fine without much contact.',
+    low_high: 'A plan someone else made suits you, as long as your people are in it.',
+    high_high: 'You want to pick the path, and you still need someone real in the day for it to count.',
   },
   cat_structure: {
-    low_low: 'A set path is fine, and it can drift once the day gets boring.',
-    high_low: 'Quick to trade the plan for something new, and just as quick to let it drift.',
-    low_high: 'A set path is fine, and holds even when the day gets boring.',
-    high_high: 'Open to something new, but still sees the plan through once it is set.',
+    low_low: 'You like a set path, and it still drifts once the day gets boring.',
+    high_low: 'You trade the plan for something new quickly, and let the new thing drift just as fast.',
+    low_high: 'You like a set path and you stay on it, even on the boring days.',
+    high_high: 'You chase the new thing and still finish the plan you already made.',
   },
 };
 

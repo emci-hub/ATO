@@ -81,14 +81,14 @@ assert.deepEqual(buddyReduce(push(EMPTY_BUDDY_STATE, loud('a')), { type: 'reset'
 ok('reset forgets everything');
 
 // --- his copy -------------------------------------------------------------------
-assert.equal(BUDDY_COPY_REVIEWED, false);
+assert.equal(BUDDY_COPY_REVIEWED, true); // emci approved 2026-10-02
 assert.ok(BUDDY_IDLE_LINES.length >= 10);
 assert.equal(new Set(BUDDY_IDLE_LINES).size, BUDDY_IDLE_LINES.length);
 for (const line of BUDDY_IDLE_LINES) {
   assert.equal(lineRuleViolation(line), null, `${lineRuleViolation(line)}: ${line}`);
   assert.ok(line.length <= 70, `too long for the bubble: ${line}`);
 }
-ok('his idle lines are unreviewed draft copy, short, and pass the moment-voice line rules');
+ok('his idle lines are approved, short, and pass the moment-voice line rules');
 
 for (const def of MILESTONE_DEFS.filter((d) => !d.id.startsWith('axis_complete_'))) {
   assert.doesNotMatch(def.body, /from the bank|checked in/, `old-voice milestone copy: ${def.body}`);

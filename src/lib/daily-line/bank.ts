@@ -31,7 +31,9 @@ import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 
 import { LOADED_LINES } from './lines.generated';
 
-export const DAILY_LINE_COPY_REVIEWED = false;
+// emci approved the voice and all 340 lines on 2026-10-02. AI-written lines are
+// separate: nobody reads those, which is why they never leave the app.
+export const DAILY_LINE_COPY_REVIEWED = true;
 
 export const DAILY_LINE_MAX_CHARS = 120;
 

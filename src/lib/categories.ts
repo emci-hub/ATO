@@ -13,7 +13,8 @@ import {
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 
-export const CATEGORY_COPY_REVIEWED = false;
+// emci approved 2026-10-02.
+export const CATEGORY_COPY_REVIEWED = true;
 
 export type CategoryId =
   | 'cat_steadiness'

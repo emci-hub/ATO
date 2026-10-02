@@ -150,7 +150,7 @@ assert.match(home, /homeSageLede/);
 // (`homeSageLede`, `homeSageLabel`) are still pinned above and below.
 assert.doesNotMatch(home, /SAGE_COACH_LABEL/);
 assert.match(home, /homeSageLabel/);
-assert.match(push, /Sage · coach/);
+assert.match(push, /MORNING_PUSH_TITLE = 'ATO'/);
 assert.match(widget, /SAGE · COACH/);
 assert.match(consent, /Sage is a coach in the app, not a person/);
 assert.match(crisis, /Sage is a coach, not emergency support/);

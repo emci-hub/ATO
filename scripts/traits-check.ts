@@ -453,9 +453,10 @@ async function main() {
   assert.equal(profileFillCopyClean(), true);
   // Flipped 2026-10-01: the label and complete label were rewritten ("Full
   // profile · Complete" contradicted the locked and settled lines), so the
-  // copy is draft again until emci reads it. Flip back with that read.
-  assert.equal(PROFILE_FILL_COPY_REVIEWED, false);
-  ok('Traits-answered checklist copy passes the framework fence and is marked draft until re-read');
+  // copy went back to draft until emci read it. emci read it on 2026-10-02
+  // (docs/copy-review.md, section 4), so it is reviewed again.
+  assert.equal(PROFILE_FILL_COPY_REVIEWED, true); // emci approved 2026-10-02
+  ok('Traits-answered checklist copy passes the framework fence and is marked reviewed');
 
   console.log(`\nAll ${passed} trait checks passed.`);
 }

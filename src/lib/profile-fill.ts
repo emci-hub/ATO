@@ -11,7 +11,8 @@ import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
  * profile · Complete" at one answer per trait sat next to "Locked — finish all
  * 50" and "N of 16 settled", and read as a contradiction.
  */
-export const PROFILE_FILL_COPY_REVIEWED = false;
+// emci approved 2026-10-02.
+export const PROFILE_FILL_COPY_REVIEWED = true;
 
 export const PROFILE_FILL_LABEL = 'Traits answered';
 export const PROFILE_FILL_LEDE =

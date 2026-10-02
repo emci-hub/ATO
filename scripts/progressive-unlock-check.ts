@@ -165,7 +165,7 @@ ok('persistMergedTraits skips the value blend for countOnly answers (wiring)');
 // --- The unlock table (2026-10-01): one source for the reveal and the toast ---
 {
   assert.equal(unlockCopyClean(), true, 'unlock copy passes the framework fence');
-  assert.equal(UNLOCK_COPY_REVIEWED, false, 'draft until emci reads it');
+  assert.equal(UNLOCK_COPY_REVIEWED, true, 'emci approved 2026-10-02');
   assert.ok(
     MILESTONE_DEFS.some((def) => def.id === INTAKE_REVEAL_MILESTONE_ID && def.threshold === QUESTIONS_BANK.length),
     'the reveal is remembered under a real milestone id, at the full-intake threshold',

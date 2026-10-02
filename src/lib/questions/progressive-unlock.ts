@@ -41,7 +41,8 @@ export const LEGENDS_UNLOCK_THRESHOLD = 50;
  *   - Sage and Legends open nothing yet.
  * Draft copy until emci reads it.
  */
-export const UNLOCK_COPY_REVIEWED = false;
+// emci approved 2026-10-02.
+export const UNLOCK_COPY_REVIEWED = true;
 
 /** Milestone def (lib/milestones.ts) the after-50 reveal takes its title and body from. */
 export const INTAKE_REVEAL_MILESTONE_ID = 'profile_fully_unlocked';

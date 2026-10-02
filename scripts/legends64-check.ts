@@ -129,8 +129,16 @@ assert.equal(isLegendSkin('nonsense'), false);
 assert.equal(isLegendSkin(null), false);
 ok('isLegendSkin validates a persisted/user-chosen skin string before it reaches archetypeName');
 
-assert.equal(LEGENDS64_COPY_REVIEWED, false, 'content adapted from an explicitly not-signed-off draft ships unreviewed');
-ok('LEGENDS64_COPY_REVIEWED gate is false, matching sage-story.ts/category-batch.ts convention for unreviewed copy');
+// emci approved the names on 2026-10-02 after 13 words were replaced.
+assert.equal(LEGENDS64_COPY_REVIEWED, true);
+for (const word of ['Rizzy', 'MIA', 'Petty', 'Judgy', 'Savage', 'Cult Leader', 'Ruthless', 'Unrepentant', 'Tsundere', 'Dandere', 'Kuudere', 'Kakkoii', 'Genius Loner']) {
+  for (const skin of LEGEND_SKINS) {
+    for (const code of ALL_ARCHETYPE_CODES) {
+      assert.ok(!archetypeName(code, skin)!.includes(word), `retired word "${word}" is back in ${skin} ${code}`);
+    }
+  }
+}
+ok('LEGENDS64_COPY_REVIEWED is true, and none of the 13 retired words appears in any of the 384 names');
 
 const allAuthoredStrings: string[] = [];
 for (const skin of LEGEND_SKINS) {

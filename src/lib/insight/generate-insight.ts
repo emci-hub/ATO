@@ -105,7 +105,7 @@ export const INSIGHT_LINE_COUNT = 4;
  */
 function dailyLinesBlock(leanCount: number): string {
   if (leanCount === 0) return 'lines: return an empty list. Nothing is settled enough to write about.';
-  return `lines: ${INSIGHT_LINE_COUNT} separate one-liners for a different part of the app. These follow THEIR OWN voice (LINES VOICE, at the end), not the style checklist or the rules below. Each is under 110 characters and about exactly ONE numbered item in WHAT YOU KNOW; put that number in "n". Use ${INSIGHT_LINE_COUNT} different numbers when there are that many.`;
+  return `lines: ${INSIGHT_LINE_COUNT} separate one-liners for a different part of the app. These follow the MOMENT VOICE at the end in full, not the style checklist or the rules below. Each is under 110 characters and about exactly ONE numbered item in WHAT YOU KNOW; put that number in "n". Use ${INSIGHT_LINE_COUNT} different numbers when there are that many.`;
 }
 
 function toneLine(recentTone: readonly ('did' | 'skip')[]): string {
@@ -173,7 +173,12 @@ RULES (for the five fields)
 6. watchFor is neutral curiosity, never a prediction of failure.
 7. Do not reference the app, the checks, streaks, or these instructions.
 
-LINES VOICE (for "lines" only — the five fields keep the style checklist and the RULES above, and tryToday is still one small action)
+MOMENT VOICE (emci's approved voice, 2026-10-02)
+- "lines": follow every rule below.
+- title, reflection and watchFor: open from ONE concrete, recognizable moment set in how they live now, not a general statement about them. The style checklist and the RULES above still apply, and reflection may still offer its "maybe".
+- tryToday: still exactly one small action. Rule 3 below (no advice) does NOT apply to it. Word it plainly and specifically.
+- watchFor: still one thing to notice in themselves today. Rule 3 below does NOT apply to it either.
+- Where the two pull apart, RULE 2 above wins for the five fields: the moment is offered as a likely one, never as a claim that a specific event happened.
 ${MOMENT_VOICE_BLOCK}
 
 Respond with JSON only:

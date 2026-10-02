@@ -53,7 +53,10 @@ export function isLegendSkin(value: unknown): value is LegendSkin {
 export const DEFAULT_LEGEND_SKIN: LegendSkin = 'real';
 
 /** Unreviewed — see this file's header. Gate any UI render on this, matching sage-story.ts/category-batch.ts's convention. */
-export const LEGENDS64_COPY_REVIEWED = false;
+// emci approved 2026-10-02, with 13 words replaced in the funny, dark and
+// anime styles (names that stung on a share card, slang that dates, and
+// untranslated terms). The names now show on the identity card and share image.
+export const LEGENDS64_COPY_REVIEWED = true;
 
 type PoleComboMap = Readonly<Record<string, string>>;
 type SkinMap = Readonly<Record<LegendSkin, PoleComboMap>>;
@@ -98,7 +101,7 @@ export const CORE_ROLES: SkinMap = {
   anime: {
     HHH: 'Hot-Blooded Hero',
     HHL: 'Class President',
-    HLH: 'Genius Loner',
+    HLH: 'Lone Genius',
     HLL: 'Silent Ace',
     LHH: 'Wildcard Sidekick',
     LHL: 'Senpai',
@@ -121,7 +124,7 @@ export const CORE_ROLES: SkinMap = {
     HLH: 'Necromancer',
     HLL: 'Gravekeeper',
     LHH: 'Trickster Fiend',
-    LHL: 'Cult Leader',
+    LHL: 'Ringleader',
     LLH: 'Wandering Ghost',
     LLL: 'Reaper',
   },
@@ -165,32 +168,32 @@ export const MODIFIER_DESCRIPTORS: SkinMap = {
     LLL: 'Solitary',
   },
   anime: {
-    HHH: 'Tsundere',
+    HHH: 'Prickly-Sweet',
     HHL: 'Genki',
-    HLH: 'Dandere',
-    HLL: 'Kuudere',
+    HLH: 'Shy',
+    HLL: 'Deadpan',
     LHH: 'Protective',
-    LHL: 'Kakkoii',
+    LHL: 'Effortless',
     LLH: 'Watchful',
     LLL: 'Mysterious',
   },
   funny: {
-    HHH: 'Rizzy',
+    HHH: 'Charming',
     HHL: 'Unbothered',
     HLH: 'Soft',
     HLL: 'Cozy',
-    LHH: 'Petty',
-    LHL: 'Savage',
-    LLH: 'Judgy',
-    LLL: 'MIA',
+    LHH: 'Scorekeeping',
+    LHL: 'No-Filter',
+    LLH: 'Side-Eye',
+    LLL: 'Do-Not-Disturb',
   },
   dark: {
     HHH: 'Beloved',
     HHL: 'Alluring',
     HLH: 'Sympathetic',
     HLL: 'Elegant',
-    LHH: 'Ruthless',
-    LHL: 'Unrepentant',
+    LHH: 'Relentless',
+    LHL: 'Unapologetic',
     LLH: 'Silent',
     LLL: 'Shadowy',
   },

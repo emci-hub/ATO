@@ -82,8 +82,9 @@ function track(axis: TraitAxis, value: number, answerCount = 4, stability = 0.8)
 }
 
 // --- the bank ---------------------------------------------------------------
-assert.equal(DAILY_LINE_COPY_REVIEWED, false);
-ok('DAILY_LINE_COPY_REVIEWED is false — the bank is unreviewed draft copy');
+assert.equal(DAILY_LINE_COPY_REVIEWED, true);
+assert.equal(BANK_IS_LOADED, true, 'the reviewed flag is only honest while the shipped bank is the loaded, approved one');
+ok('DAILY_LINE_COPY_REVIEWED is true — emci approved the loaded bank (2026-10-02)');
 
 const ids = new Set<string>();
 const texts = new Set<string>();

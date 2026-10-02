@@ -2015,7 +2015,7 @@ var SYSTEM_MAP = {
       "title": "Push notifications",
       "status": "live",
       "flag": false,
-      "summary": "Scheduled local reminders: morning, evening, insight and Sunday. The morning one carries the written daily line, planned a week ahead so each morning has its own text.",
+      "summary": "Scheduled local reminders. Morning carries the daily line, one per morning for a week ahead, titled ATO. Sunday says how many days the app was opened that week. Evening is switched off while there is no Check to log. The Mon/Fri category push stays off so no AI-written text reaches the lock screen.",
       "facts": [
         [
           "Permission ask",

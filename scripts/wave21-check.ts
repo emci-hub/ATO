@@ -59,7 +59,7 @@ assert.ok(RANKING_ROUNDS.playfulness.length >= 5);
 assert.equal(SCENARIO_DECK.playfulness.axis, 'playfulness');
 assert.ok(QUESTIONS_BANK.some((row) => row.axis === 'playfulness'));
 assert.equal(AXIS_POLES.playfulness.low.length > 0, true);
-assert.equal(POLE_COPY_REVIEWED, false);
+assert.equal(POLE_COPY_REVIEWED, true); // emci approved 2026-10-02
 ok('playfulness is the 16th axis: schema list, IQ, ranking, gut-call, depth, poles');
 
 assert.equal(CATEGORY_DEFS.length, 11);
@@ -143,8 +143,8 @@ assert.equal(pick, 'cat_social');
 ok('teaser roll is stable per seed; hidden on crisis and missed-check');
 
 assert.equal(TITLE_COPY_REVIEWED, false);
-assert.equal(CATEGORY_COPY_REVIEWED, false);
-assert.equal(CATEGORY_BAND_COPY_REVIEWED, false);
+assert.equal(CATEGORY_COPY_REVIEWED, true); // emci approved 2026-10-02
+assert.equal(CATEGORY_BAND_COPY_REVIEWED, true);
 assert.equal(CONCEPT_COPY_REVIEWED, true);
 assert.equal(poleCopyClean(), true);
 assert.equal(titleCopyClean(), true);

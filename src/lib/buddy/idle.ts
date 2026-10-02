@@ -3,12 +3,12 @@
  * Written in the moment voice (src/lib/voice/moment-voice.ts): short, a little
  * dry, never advice. They are about him and this moment, not about the
  * person's traits, so they are safe to show to anyone.
- *
- * UNREVIEWED draft copy until emci reads it.
+
  */
 import { IDLE_NOTE_PREFIX, type BuddyNote } from './notes';
 
-export const BUDDY_COPY_REVIEWED = false;
+// emci approved 2026-10-02.
+export const BUDDY_COPY_REVIEWED = true;
 
 export const BUDDY_IDLE_LINES: readonly string[] = [
   'Hi. I live up here.',

@@ -17,6 +17,7 @@ import type { AxisDivergence } from '@/lib/trait-history';
 import { isThinProfile, settledCount, type TraitTrack } from '@/lib/trait-stability';
 import { leanComparative, leanHighLow } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
+import { MOMENT_VOICE_BLOCK } from '@/lib/voice/moment-voice';
 import { STYLE_BLOCK } from '@/lib/voice/style-checklist';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 
@@ -184,6 +185,10 @@ RULES
 5. If told-vs-played tension is present, say it like a friend: they named one way of moving, and in a small snap choice they go another. Maybe they just move differently depending on the moment — that's normal. Do not explain the observation. Never "not a verdict", "gap", "leaving visible", "on paper", "told us", or "gut-call". If it is not present, do not invent it.
 6. Hedge lives inside the sentence. No bolted-on closing after a dash or period, except the "that's normal" shape above when tension is present.
 7. Completeness is not an input. Do not mention leftover notes or a fuller picture.
+
+MOMENT VOICE (emci's approved voice, 2026-10-02)
+Build the story out of concrete, recognizable moments set in how they live now, not general statements about them. It is still one flowing piece of prose (rules 1-7 above), in the second person. Follow every rule below; "short" here means each sentence, not the whole story.
+${MOMENT_VOICE_BLOCK}
 
 Respond with JSON only:
 {"body":"<the story>"}`;

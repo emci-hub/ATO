@@ -4,7 +4,7 @@ import * as Notifications from 'expo-notifications';
 
 import { checkLoggedOnYmd, fetchChecks, type Check } from '@/lib/checks';
 import { lockScreenText } from '@/lib/daily-line/pick';
-import { planUpcomingLines } from '@/lib/daily-line/state';
+import { loadDailyLineState, planUpcomingLines } from '@/lib/daily-line/state';
 import { addDaysYmd, hoursSinceLocalMidnight, localYmd, weekdayInZone } from '@/lib/local-date';
 import type { Me } from '@/lib/me';
 import {
@@ -40,6 +40,13 @@ const ASKED_KEY = 'ato.push.asked';
  * A line that is not for other eyes is sent as a plain "ready" (`lockScreenText`).
  */
 export const MORNING_AHEAD_DAYS = 7;
+/**
+ * The evening push asks people to log the day's Check. The Check loop is parked
+ * (nothing can be logged), so the reminder is off until it has something to
+ * point at (emci 2026-10-02). The pref and the copy are kept for when it returns.
+ */
+export const EVENING_PUSH_ENABLED = false;
+const SUNDAY_PUSH_HOUR = 10;
 export function morningAheadId(index: number): string {
   return `ato.morning.d${index}`;
 }
@@ -299,7 +306,7 @@ export async function syncPushSchedule(input: {
     // Evening keeps the original "only if there's a card" gate (re-evaluated
     // on every sync, same as before) — this pass only changed frequency and
     // the skip-if-logged condition, not whether a card is required at all.
-    const eveningTarget = prefs.evening && insight?.title.trim()
+    const eveningTarget = EVENING_PUSH_ENABLED && prefs.evening && insight?.title.trim()
       ? nextWeekdayHour({
           now,
           timeZone: input.timeZone,
@@ -328,15 +335,30 @@ export async function syncPushSchedule(input: {
       : null;
     await scheduleAtOrCancel(PUSH_IDS.insight, insightPayload, insightTarget);
 
+    // Sunday: how many days the app was opened this week, from the daily-line
+    // history. It used to count Checks, which nothing writes any more, so it
+    // told everyone "nothing logged". One-shot for the coming Sunday and rebuilt
+    // on every sync, so the number is right as of the last time the app was
+    // open — and a week with no opens sends nothing.
+    let sundayPayload: PushPayload | null = null;
+    let sundayTarget: Date | null = null;
     if (prefs.sunday) {
-      await scheduleRepeating(PUSH_IDS.sunday, sundayPayloadFor(input.checks, now, input.timeZone), {
-        type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
-        channelId: CHANNEL_ID,
-        weekday: 1,
-        hour: 10,
-        minute: 0,
-      });
+      const hours = hoursSinceLocalMidnight(now, input.timeZone);
+      const weekday = weekdayInZone(now, input.timeZone); // 0 = Sunday
+      let daysUntil = (7 - weekday) % 7;
+      if (daysUntil === 0 && hours >= SUNDAY_PUSH_HOUR) daysUntil = 7;
+      const sundayYmd = addDaysYmd(localYmd(now, input.timeZone), daysUntil);
+      const weekStart = addDaysYmd(sundayYmd, -6);
+      const state = await loadDailyLineState(input.me.id);
+      const opened = new Set(
+        state.days.map((day) => day.ymd).filter((ymd) => ymd >= weekStart && ymd <= sundayYmd),
+      ).size;
+      if (opened > 0) {
+        sundayPayload = sundayPush({ showedUp: opened, recap: '' });
+        sundayTarget = new Date(now.getTime() + (daysUntil * 24 + SUNDAY_PUSH_HOUR - hours) * 3_600_000);
+      }
     }
+    await scheduleAtOrCancel(PUSH_IDS.sunday, sundayPayload, sundayTarget);
   } catch (err) {
     console.log('[push] schedule sync skipped:', err);
   }

@@ -82,8 +82,8 @@ const levityReady = [
 ];
 assert.equal(readCategory(levity!, levityReady).ready, true);
 assert.ok(fallbackForReading(readCategory(levity!, levityReady)).length > 0);
-assert.equal(CATEGORY_COPY_REVIEWED, false);
-assert.equal(CATEGORY_BAND_COPY_REVIEWED, false);
+assert.equal(CATEGORY_COPY_REVIEWED, true); // emci approved 2026-10-02
+assert.equal(CATEGORY_BAND_COPY_REVIEWED, true);
 assert.equal(CONCEPT_COPY_REVIEWED, true);
 assert.equal(conceptCopyClean(), true);
 assert.equal(categoryBandCopyClean(), true);

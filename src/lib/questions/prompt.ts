@@ -138,6 +138,7 @@ ${priority}RULES
 12. ${recent}
 13. Never repeat the same sentence shape/structure two questions in a row.
 14. Optional, only when genuinely justified: a question may include primaryAxes (1-2 axes it specifically measures, each {axis, weight 0-1, reason}), secondaryAxes (0-3 weaker supporting axes, same shape, lower weight), excludedAxes (axes this question deliberately does NOT measure), and redundancyTags (short lowercase real-world-theme tags). Every one of these is optional — omit all of them for a clean single-axis question rather than inventing a weak secondary axis to fill the field.
+15. Where it comes naturally, set the moment in how people live now: a group chat, a shared calendar, forty open tabs, a voice note. Plain words, no slang. This changes the SETTING only — options stay balanced (rule 8), rule 6 still holds, and it never changes which axis a question measures or how its options are valued. Use a late reply or a read receipt ONLY for a question whose axis is about closeness; anywhere else it would measure the wrong thing.
 
 Respond with JSON only, no prose. Minimum shape (single-axis, always valid):
 {"questions":[{"axis":"openness","prompt":"...","options":[{"text":"...","value":0.8},{"text":"...","value":0.2}]}]}

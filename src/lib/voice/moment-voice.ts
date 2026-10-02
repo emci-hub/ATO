@@ -9,15 +9,21 @@
  * src/lib/daily-line/lines.generated.ts — read a page of them before writing
  * anything in this voice.
  *
- * WHERE IT IS USED TODAY: the written daily lines, and the AI lines that come
- * back with each insight (generate-insight.ts drops MOMENT_VOICE_BLOCK into
- * the prompt).
+ * WHERE IT IS USED (2026-10-02): the written daily lines, the mini guy, the
+ * category fallback lines, and all four live AI prompts — the insight (its
+ * personal lines in full, its five fields in spirit), category statements,
+ * Story, and the AI questions (setting only; scoring is untouched).
  *
- * NOT CONVERTED YET (noted for a later pass, emci asked for it as a note): the
- * AI question prompts (src/lib/questions/prompt.ts), category statements,
- * Story, and the insight's own five fields still use the older reflective
- * voice in style-checklist.ts. Converting them is a copy change to each
- * prompt plus its check script, one surface at a time.
+ * Two AI fields are advice BY DESIGN and each prompt exempts them from the
+ * "no advice" rule: the insight's `tryToday` and the category card's
+ * `try_this`. Where a moment stated as fact would clash with the older rule
+ * "reflect as maybes", the prompts say the older rule wins: a likely moment,
+ * never a claim that a specific event happened.
+ *
+ * None of the prompt changes could be run against the live model when they
+ * were made. If output drifts, the prompt for that surface is the place to
+ * look, and the older reflective rules in style-checklist.ts are still in
+ * every prompt underneath this block.
  *
  * The mechanical half of these rules is enforced by `lineRuleViolation`
  * (src/lib/daily-line/bank.ts).

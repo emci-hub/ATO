@@ -1,7 +1,8 @@
 /**
  * Push copy. No fake urgency, no streak language, no "you're losing…".
- * Morning is the Read itself. Evening is a Check reminder. Sunday is the
- * week's recap plus "you showed up N".
+ * Morning is today's daily line. Sunday is "you showed up N" — the days the app
+ * was opened that week. The evening push is a Check reminder and is switched
+ * off in push.ts while the Check loop is parked (there is nothing to log).
  */
 
 import { cueAfterYou } from '@/lib/voice/cue';
@@ -24,12 +25,18 @@ export interface PushPayload {
   url: string;
 }
 
+export const MORNING_PUSH_TITLE = 'ATO';
+export const MORNING_PUSH_FALLBACK = 'Today’s line is ready.';
+
 export function morningPush(read: string): PushPayload {
   const body = read.trim();
   return {
     kind: 'morning',
-    title: 'Sage · coach',
-    body: body.length > 0 ? body : 'Your Read is ready.',
+    // Was 'Sage · coach' / 'Your Read is ready.' — both named things the app no
+    // longer has (emci 2026-10-02). The installed widget's own header still says
+    // SAGE · COACH; that is native and needs a new build to change.
+    title: MORNING_PUSH_TITLE,
+    body: body.length > 0 ? body : MORNING_PUSH_FALLBACK,
     url: PUSH_PATHS.morning,
   };
 }

@@ -5,7 +5,10 @@
 import type { TraitAxis } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 
-export const POLE_COPY_REVIEWED = false;
+// emci approved 2026-10-02. Kept in the third person on purpose: these label
+// the two ENDS of a scale ("Low: … / High: …"), so "you" would be wrong on
+// whichever end the reader is not at.
+export const POLE_COPY_REVIEWED = true;
 
 export interface AxisPoles {
   low: string;

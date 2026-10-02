@@ -18,6 +18,7 @@ import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
 import type { CategoryReading } from '@/lib/categories';
 import { leanComparative } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
+import { MOMENT_VOICE_BLOCK } from '@/lib/voice/moment-voice';
 import { STYLE_BLOCK } from '@/lib/voice/style-checklist';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 
@@ -75,6 +76,14 @@ RULES
 4. Never use a technical or internal-sounding trait label; write from the meaning.
 5. Hedge lives inside the sentence. No bolted-on closing after a dash or period.
 6. Every entry is independent — do not reference another category or compare between them.
+
+MOMENT VOICE (emci's approved voice, 2026-10-02)
+- summary, strength and watch_out: each is ONE concrete, recognizable moment set in how they live now, not a general statement about them. Follow every rule below, and keep rules 1-6 above.
+- Where the two pull apart, rule 3 above wins: the moment is offered as a likely one ("the kind of week where…", "tends to…"), never as a claim that a specific event happened. Do not invent names, numbers or events.
+- Vary the setting across cards. At most two cards in one response may be about texts or chats.
+- Keep every part inside its length. Shorter is better than cut off.
+- try_this: still exactly one small action. Rule 3 below (no advice) does NOT apply to it. Word it plainly and specifically.
+${MOMENT_VOICE_BLOCK}
 
 Respond with JSON only:
 {"statements":[{"category_id":"<id>","summary":"...","strength":"...","watch_out":"...","try_this":"..."}, ...]}`;

@@ -4,6 +4,11 @@
  * Verifies: permission is asked only after the first Check, copy has no fake
  * urgency, Sunday N is the week's check count, deep-link paths land on Home
  * vs the weekly recap, and an empty widget payload is honest.
+ *
+ * 2026-10-02: the evening push is switched off and the Sunday push counts days
+ * the app was opened; both of those live in push.ts (which imports
+ * expo-notifications and cannot be imported here), so they are pinned by
+ * source text at the bottom of this file.
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -46,7 +51,8 @@ ok('push window maps energy_pattern to send hours; null keeps the fixed default'
 
 const morning = morningPush('The kettle is already on. Sit with it.');
 assert.equal(morning.url, PUSH_PATHS.morning);
-assert.equal(morning.title, 'Sage · coach');
+assert.equal(morning.title, 'ATO');
+assert.equal(morningPush('  ').body, 'Today’s line is ready.');
 assert.equal(morning.body, 'The kettle is already on. Sit with it.');
 assert.equal(copyHasFakeUrgency(morning.body), false);
 assert.equal(copyHasFakeUrgency(morning.title), false);
@@ -57,7 +63,7 @@ assert.doesNotMatch(morning.body, /Nudge/);
 const widgetSwift = readFileSync(resolve(__dirname, '../targets/widget/widgets.swift'), 'utf8');
 assert.match(widgetSwift, /SAGE · COACH/);
 assert.doesNotMatch(widgetSwift, /[Nn]udge|npc/);
-ok('morning push and widget stay Sage · coach; no Nudge');
+ok('morning push is titled ATO and never names the retired Read; the installed widget header is unchanged; no Nudge');
 
 const evening = eveningPush();
 assert.equal(evening.url, PUSH_PATHS.evening);
@@ -143,5 +149,16 @@ const emptyWidget = { hasCard: false, read: '', do: '' };
 assert.equal(emptyWidget.hasCard, false);
 assert.equal(emptyWidget.read, '');
 ok('empty widget payload is an honest empty, not a fake card');
+
+const pushSrc = readFileSync(resolve(__dirname, '../src/lib/push.ts'), 'utf8');
+assert.match(pushSrc, /export const EVENING_PUSH_ENABLED = false;/);
+assert.match(pushSrc, /const eveningTarget = EVENING_PUSH_ENABLED && prefs\.evening/);
+ok('the evening Check reminder is off while there is no Check to log');
+
+assert.match(pushSrc, /sundayPayload = sundayPush\(\{ showedUp: opened, recap: '' \}\);/);
+assert.match(pushSrc, /if \(opened > 0\) \{/);
+assert.match(pushSrc, /await scheduleAtOrCancel\(PUSH_IDS\.sunday, sundayPayload, sundayTarget\);/);
+ok('the Sunday push counts days the app was opened, and a week with none sends nothing');
+
 
 console.log(`\n${passed} checks passed`);
