@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { InfoReveal, ShapedByList } from '@/components/info-reveal';
 import { ShareCardSheet, type SharePerson } from '@/components/share-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -32,6 +33,7 @@ import {
   saveIdentityState,
   type IdentityState,
 } from '@/lib/legends64/identity-store';
+import { IDENTITY_RECIPE_LABEL, IDENTITY_RECIPE_LEDE, identityRecipe } from '@/lib/shaped-by';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
@@ -104,6 +106,7 @@ export function IdentityCard({
 
   const view = useMemo(() => identityView(state?.poles ?? {}), [state?.poles]);
   const traits = useMemo(() => (tracks ? topTraitPhrases(tracks) : []), [tracks]);
+  const recipe = useMemo(() => identityRecipe(tracks ?? []), [tracks]);
 
   const update = useCallback(async (next: IdentityState) => {
     setState(next);
@@ -185,6 +188,21 @@ export function IdentityCard({
           ))}
         </View>
       ) : null}
+
+      {/* Which traits make the name, and which are still forming. One tap away. */}
+      <InfoReveal label={IDENTITY_RECIPE_LABEL}>
+        <ThemedText type="small" themeColor="textSecondary">
+          {IDENTITY_RECIPE_LEDE}
+        </ThemedText>
+        <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
+          first word
+        </ThemedText>
+        <ShapedByList rows={recipe.first} />
+        <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
+          second word
+        </ThemedText>
+        <ShapedByList rows={recipe.second} />
+      </InfoReveal>
 
       <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
         {IDENTITY_STYLE_LABEL}

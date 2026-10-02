@@ -1,6 +1,6 @@
 # Copy sheet — read before publishing
 
-Everything below is static text in the app that is now marked as reviewed. AI-written
+Everything below is static text in the app that is now marked as reviewed, except section 3, which was rewritten after that and is waiting on your read. AI-written
 text (insight, category cards, Story, AI questions, AI daily lines) is not here: it is
 written fresh each time and stays marked as draft.
 
@@ -115,74 +115,99 @@ Each name is one describing word plus one role. Plain is the free default.
 - Describing words: Beloved, Alluring, Sympathetic, Elegant, Relentless, Unapologetic, Silent, Shadowy
 - Roles: Conqueror, Usurper, Necromancer, Gravekeeper, Trickster Fiend, Ringleader, Wandering Ghost, Reaper
 
-## 3. Trait descriptions on the full profile (unchanged)
+## 3. Trait descriptions (rewritten in the new voice) — DRAFT, please read
 
-Left as they were, in the third person, on purpose: each pair labels the two ENDS of a
-scale ("Low: … / High: …"), so "you" would be wrong on the end you are not at.
+Each trait has a line for each end. They are written without "you" or "they" on purpose,
+because the same line is shown two ways: as "Your side: …" for your own side, and as
+"The other end: …" for the side you are not on.
+
+On the full profile each trait now shows only your own side. Tapping
+"The other end, and where this shows up" opens the end you are not on and which categories the trait feeds.
 
 **How you feel about trying something new**
-- Low: Prefers a known path. New ideas get a look, then usually wait.
-- High: Curious about the untried option. A different path is often the point.
+- One end: Same order as last time, because it was good last time.
+- The other end: The untried option wins. A different route home, just to see.
+- Shows up in: Openness to life and Structure vs. spontaneity.
 
 **How you handle sticking to a plan**
-- Low: Keeps plans loose and decides in the moment. Dull stretches are easy to leave.
-- High: Sees a plan through even when it gets boring. Follow-through is the default.
+- One end: Plans stay loose and get decided in the moment. The dull stretch is where the drifting starts.
+- The other end: The plan gets finished, even after it stops being fun.
+- Shows up in: Steadiness and Structure vs. spontaneity.
 
 **How much people time you actually need**
-- Low: Quiet time is how they reset. A full room is a lot.
-- High: People around tend to get them going. They would rather make something happen.
+- One end: Quiet is the reset. A full room costs something.
+- The other end: People are the charge. One quick hello turns into three new contacts.
+- Shows up in: Openness to life and Everyday social energy.
 
 **How much you go along to keep things easy**
-- Low: Holds their ground when they do not like the plan. Not worth pretending.
-- High: Goes along to keep it easy. A fuss is rarely worth it.
+- One end: Holds the line on a plan that feels wrong, and says so.
+- The other end: Goes along to keep it easy, even with a preference in mind.
+- Shows up in: Steadiness and Everyday social energy.
 
 **How rattled a bad day gets you**
-- Low: A small knock can color the rest of the day. It sits longer.
-- High: Shakes a bad start off. By lunch it is mostly gone.
+- One end: One small knock can color the rest of the day.
+- The other end: A bad morning is gone by lunch.
+- Shows up in: Steadiness and Resilience under pressure.
 
 **How you handle getting close to people**
-- Low: A slow reply is just a slow reply. They do not dwell on people leaving.
-- High: A pause from someone they like can start to feel like pulling away.
+- One end: A slow reply is just a slow reply.
+- The other end: A pause from someone close can start to feel like pulling away.
+- Shows up in: Love / closeness.
 
 **How much space you like, even with people you're close to**
-- Low: Once they are in, they stay close. Talking it out in person is fine when it matters.
-- High: Keeps some distance, even with people they care about. Lighter, over text, is easier.
+- One end: Once in, stays close. Would rather talk it out in person.
+- The other end: Keeps a little distance, even with people who matter. A text is easier than a call.
+- Shows up in: Love / closeness.
 
 **How you show up in a disagreement**
-- Low: Steps back in a disagreement. Would rather let it go than push.
-- High: Puts their own point on the table, even if it gets a little sharp.
+- One end: Steps back in a disagreement. The comeback arrives three days later.
+- The other end: Puts the point on the table, even if it lands a little sharp.
+- Shows up in: Communication and Levity.
 
 **How much room you leave for the other person**
-- Low: Protects their outcome first. Rarely the one who gives.
-- High: Looks for something the other person can live with. Often gives first.
+- One end: Protects the outcome first. Rarely the one who gives.
+- The other end: Looks for the version both people can live with, and often gives first.
+- Shows up in: Communication and Levity.
 
 **How much you like doing it your own way**
-- Low: A path already set is fine. Glad not to have to figure it out.
-- High: Would rather do it their way, even when someone else already has a plan.
+- One end: A plan someone else made is a relief.
+- The other end: Own way, even with a plan already on the table.
+- Shows up in: Drive and Independence & closeness.
 
 **How you feel about tackling something hard**
-- Low: A hard task can make them doubt they will pull it off.
-- High: A hard task lands and they feel they can handle it.
+- One end: A hard task brings the doubt before the first step.
+- The other end: A hard task lands as "send it to me."
+- Shows up in: Drive and Resilience under pressure.
 
 **How much real connection you need day to day**
-- Low: A day can land without much connection. Quiet on their own is enough.
-- High: Needs a real connection for a day to land. Would rather check in than let it go.
+- One end: A day can go fine without much contact.
+- The other end: A day needs one real conversation to count.
+- Shows up in: Drive and Independence & closeness.
 
 **What happens after you miss the mark**
-- Low: A miss can feel like the end of that path. Maybe it just is not their thing.
-- High: After a miss they look at what they would change next time.
+- One end: A miss can feel like the end of that road.
+- The other end: After a miss, straight to what to change next time.
+- Shows up in: Agency and Resilience under pressure.
 
 **What you tell yourself when something falls apart**
-- Low: When a plan falls apart, it was bound to happen. That is just how it goes.
-- High: When a plan falls apart, they look first at what they might have done differently.
+- One end: When a plan falls apart, it was bound to.
+- The other end: When a plan falls apart, the first look is at what could have gone differently.
+- Shows up in: Agency.
 
 **How you feel facing something big**
-- Low: A bigger-than-usual ask can land as "not sure I am the one for this."
-- High: A bigger-than-usual ask lands as something they can figure out.
+- One end: A bigger-than-usual ask lands as "not sure I can pull this off."
+- The other end: A bigger-than-usual ask lands as something to figure out.
+- Shows up in: Agency.
 
 **How much a day wants a little play**
-- Low: Treats the day as a job to get through. Jokes can wait.
-- High: Looks for the lighter take. A bit of play is how a day lands.
+- One end: The day is a list to get through. Jokes can wait.
+- The other end: Finds the lighter take. A meme where words were expected.
+- Shows up in: Everyday social energy and Levity.
+
+New small labels for the explanations (all closed until tapped):
+- On a category card: "What shapes this" opens the category's meaning and, for each trait behind it, its plain name and the line for the side you lean to.
+- On the identity card: "How this name is made" opens "Two words, three traits each. A word locks in once all three of its traits are settled." then "first word" and "second word" with their three traits each.
+- Shown where needed: "Not answered yet." · "Right in the middle so far." · "still settling"
 
 ## 4. Unlock and after-50 wording (unchanged, factual)
 

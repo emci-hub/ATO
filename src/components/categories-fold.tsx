@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { InfoReveal, ShapedByList } from '@/components/info-reveal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -9,6 +10,8 @@ import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/generate';
 import { ATO_TOKEN_NEED_MORE, ATO_TOKEN_PRICE, atoPriceLine, atoTokenBalanceOf } from '@/lib/ato-tokens';
 import { fallbackCategoryCopies, fallbackForReading } from '@/lib/category-bands';
 import { useCategoryDefs } from '@/lib/category-catalog';
+import { categoryConcept } from '@/lib/concept-explainers';
+import { SHAPED_BY_LABEL, shapedByRows } from '@/lib/shaped-by';
 import {
   getCategoryDefs,
   nextSpotlight,
@@ -362,6 +365,17 @@ export function CategoriesFold({
                     style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
                     <ThemedText type="link">Load</ThemedText>
                   </Pressable>
+                ) : null}
+
+                {/* The working, one tap away: which traits this category is built
+                    from and which way each one leans. Closed by default. */}
+                {reading.ready && !state ? (
+                  <InfoReveal label={SHAPED_BY_LABEL}>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {categoryConcept(id)}
+                    </ThemedText>
+                    <ShapedByList rows={shapedByRows(reading.def.axes, tracks)} />
+                  </InfoReveal>
                 ) : null}
 
                 {card && statement && state !== 'loading' ? (

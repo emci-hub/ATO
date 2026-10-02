@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AxisCodeLabel } from '@/components/axis-code-label';
+import { InfoReveal } from '@/components/info-reveal';
 import { AxisTaps } from '@/components/axis-taps';
 import { DepthDive } from '@/components/depth-dive';
 import { SettingsFold } from '@/components/settings-fold';
@@ -10,6 +11,7 @@ import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { AXIS_POLES, POLE_COPY_REVIEWED } from '@/lib/axis-poles';
+import { BOTH_ENDS_LABEL, OTHER_END_LABEL, SHAPED_BY_MIDDLE, shapedByRow, showsUpInLine } from '@/lib/shaped-by';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import {
   FULL_PROFILE_LABEL,
@@ -103,6 +105,7 @@ export function FullProfileFold({
           const copy = AXIS_EDITOR_COPY[axis];
           const phrases = TRAIT_BAND_PHRASES[axis];
           const poles = AXIS_POLES[axis];
+          const shaped = shapedByRow(axis, tracks);
           const provenance = sourceProvenance(state.sources[axis]);
           const updated = formatTraitTouchedAt(
             report?.lastTouched ?? state.touched[axis],
@@ -121,12 +124,36 @@ export function FullProfileFold({
           return (
             <View key={axis} style={styles.axis}>
               <AxisCodeLabel axis={axis} name={copy.label} />
-              <ThemedText type="small" themeColor="textSecondary">
-                Low: {poles.low}
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                High: {poles.high}
-              </ThemedText>
+              {/* Your own side, said plainly. The other end and where this trait
+                  shows up are one tap away, not in the way. */}
+              {/* Unanswered says so once, further down (NOT_ANSWERED_YET). */}
+              {shaped.lean ? (
+                <ThemedText type="small">Your side: {shaped.line}</ThemedText>
+              ) : shaped.line === SHAPED_BY_MIDDLE ? (
+                <ThemedText type="small">{shaped.line}</ThemedText>
+              ) : null}
+              <InfoReveal label={shaped.lean ? OTHER_END_LABEL : BOTH_ENDS_LABEL}>
+                {shaped.lean ? (
+                  // Your own side is already on screen: show only the end you are not at.
+                  <ThemedText type="small" themeColor="textSecondary">
+                    The other end: {poles[shaped.lean === 'high' ? 'low' : 'high']}
+                  </ThemedText>
+                ) : (
+                  <>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      One end: {poles.low}
+                    </ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      The other end: {poles.high}
+                    </ThemedText>
+                  </>
+                )}
+                {showsUpInLine(axis) ? (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {showsUpInLine(axis)}
+                  </ThemedText>
+                ) : null}
+              </InfoReveal>
               {!POLE_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
                 <ThemedText type="code" themeColor="textSecondary">
                   Draft copy — waiting on emci review.
