@@ -17,12 +17,20 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
+  BANK_IS_LOADED,
   DAILY_LINES,
   DAILY_LINE_COPY_REVIEWED,
-  DAILY_LINE_MAX_CHARS,
+  allLines,
   axisOfKey,
-  bankKeySets,
+  dailyLineById,
+  leanTag,
+  lineId,
+  lineRuleViolation,
+  parseLeanTag,
+  registerPoolLines,
+  resetPoolLines,
 } from '../src/lib/daily-line/bank';
+import { MIN_PER_LEAN, MIN_STARTERS, REVIEW_FILE, parseReviewFile, planLoad } from './daily-line-load';
 import {
   NO_REPEAT_DAYS,
   axisReactionWeights,
@@ -80,32 +88,87 @@ ok('DAILY_LINE_COPY_REVIEWED is false — the bank is unreviewed draft copy');
 const ids = new Set<string>();
 const texts = new Set<string>();
 for (const line of DAILY_LINES) {
-  assert.ok(line.text.length <= DAILY_LINE_MAX_CHARS, `too long (${line.text.length}): ${line.text}`);
-  assert.doesNotMatch(line.text, /\byou are\b|\byou['’]re\b/i, `"you are" in: ${line.text}`);
-  assert.doesNotMatch(line.text, /\balways\b/i, `"always" in: ${line.text}`);
-  assert.equal(containsFrameworkTerm(line.text), false, `framework term in: ${line.text}`);
+  // The first-draft lines end on a suggestion; picked lines may not.
+  const violation = lineRuleViolation(line.text, { allowAdvice: !BANK_IS_LOADED });
+  assert.equal(violation, null, `${violation}: ${line.text}`);
   assert.ok(!ids.has(line.id), `duplicate id for: ${line.text}`);
   assert.ok(!texts.has(line.text), `duplicate line: ${line.text}`);
   ids.add(line.id);
   texts.add(line.text);
 }
-ok(`all ${DAILY_LINES.length} lines pass length, voice and framework-fence rules, with unique ids`);
+ok(`all ${DAILY_LINES.length} shipped lines pass the line rules, with unique ids`);
 
 for (const axis of TRAIT_AXES) {
   for (const lean of ['high', 'low'] as const) {
     const solo = DAILY_LINES.filter((l) => l.keys.length === 1 && l.keys[0] === `${axis}:${lean}`);
-    assert.ok(solo.length >= 5, `${axis}:${lean} has only ${solo.length} solo lines`);
+    assert.ok(solo.length >= MIN_PER_LEAN, `${axis}:${lean} has only ${solo.length} solo lines`);
   }
 }
-ok('every trait lean (16 x 2) has at least 5 lines of its own');
+assert.ok(DAILY_LINES.filter(isStarterLine).length >= MIN_STARTERS);
+ok(`every trait lean (16 x 2) has at least ${MIN_PER_LEAN} shipped lines, and there is a starter set`);
 
-const pairSets = bankKeySets().filter((keys) => keys.length === 2);
-assert.ok(pairSets.length >= 40, `only ${pairSets.length} pair key sets`);
-for (const keys of pairSets) {
-  assert.notEqual(axisOfKey(keys[0]!), axisOfKey(keys[1]!), `pair on one axis: ${keys.join('+')}`);
+assert.equal(lineRuleViolation('You said "maybe" so you could cancel from the couch.'), null);
+assert.equal(lineRuleViolation('You are a planner.'), 'says "you are"');
+assert.equal(lineRuleViolation('You went quiet. Try saying one thing.'), 'gives advice');
+assert.equal(lineRuleViolation('Ask them first.'), 'gives advice');
+assert.equal(lineRuleViolation('"Come with me," you said, about a plan that was not up for discussion.'), null);
+assert.match(lineRuleViolation('x'.repeat(121)) ?? '', /too long/);
+assert.equal(lineRuleViolation('Your attachment style showed.'), 'framework term');
+ok('the line rules reject "you are", advice, over-long lines and framework words, and pass a plain moment');
+
+assert.deepEqual(parseLeanTag('starter'), []);
+assert.deepEqual(parseLeanTag('openness:high+autonomy:low'), ['openness:high', 'autonomy:low']);
+assert.equal(parseLeanTag('openness:high+openness:low'), null);
+assert.equal(parseLeanTag('charisma:high'), null);
+assert.equal(parseLeanTag('openness:mid'), null);
+assert.equal(leanTag([]), 'starter');
+ok('a pool tag is a starter, one known lean, or two leans on different traits — nothing else');
+
+// --- the review file and the loader -------------------------------------------
+const review = parseReviewFile(read(REVIEW_FILE));
+assert.ok(review.length >= 300, `only ${review.length} candidates in ${REVIEW_FILE}`);
+for (const line of review) {
+  assert.ok(parseLeanTag(line.tag), `unknown heading \`${line.tag}\` in ${REVIEW_FILE}`);
+  const violation = lineRuleViolation(line.text);
+  assert.equal(violation, null, `${violation}: ${line.text}`);
 }
-assert.ok(DAILY_LINES.filter(isStarterLine).length >= 10);
-ok(`${pairSets.length} two-trait tensions and a starter set exist`);
+assert.equal(new Set(review.map((l) => l.text)).size, review.length, 'a candidate appears twice');
+const everything = planLoad(review, true);
+assert.deepEqual(everything.problems, [], 'loading every candidate must be possible');
+const pairTags = new Set(review.filter((l) => l.tag.includes('+')).map((l) => l.tag));
+assert.ok(pairTags.size >= 40, `only ${pairTags.size} two-trait headings`);
+ok(`all ${review.length} review candidates pass the new-style rules and cover every lean and ${pairTags.size} tensions`);
+
+const nothing = planLoad(
+  review.map((l) => ({ ...l, ticked: false })),
+  false,
+);
+assert.ok(nothing.problems.some((problem) => /needs/.test(problem)));
+const bad = planLoad([{ tag: 'openness:high', text: 'You are curious.', ticked: true }], false);
+assert.ok(bad.problems.some((problem) => /you are/.test(problem)));
+ok('the loader refuses a thin pick and a rule-breaking line instead of shipping them');
+
+// --- the pool registry ----------------------------------------------------------
+resetPoolLines();
+const before = allLines().length;
+const aiText = 'You alphabetized the spices and told nobody.';
+assert.equal(
+  registerPoolLines([
+    { tag: 'conscientiousness:high', text: aiText, source: 'ai' },
+    { tag: 'conscientiousness:high', text: 'You are tidy.', source: 'ai' },
+    { tag: 'not-a-lean', text: 'You kept the receipt.', source: 'ai' },
+    { tag: leanTag(DAILY_LINES[0]!.keys), text: DAILY_LINES[0]!.text, source: 'ai' },
+  ]),
+  1,
+);
+assert.equal(allLines().length, before + 1);
+assert.equal(dailyLineById(lineId(aiText))?.source, 'ai');
+assert.equal(dailyLineById(DAILY_LINES[0]!.id)?.source, 'authored');
+assert.equal(lockScreenText(dailyLineById(lineId(aiText))!), LOCK_SCREEN_PRIVATE_COPY);
+resetPoolLines();
+assert.equal(allLines().length, before);
+assert.equal(dailyLineById(lineId(aiText)), null);
+ok('pool lines join the picker only if they pass the rules; an AI line never reaches the lock screen; sign-out forgets them');
 
 // --- the picker -------------------------------------------------------------
 const fullTracks = TRAIT_AXES.map((axis, i) => track(axis, i % 2 === 0 ? 0.8 : 0.2));
@@ -150,6 +213,7 @@ assert.ok(sameDay <= 6, `two accounts with identical traits matched on ${sameDay
 ok(`two accounts with identical traits rarely share a day's line (${sameDay} of ${NO_REPEAT_DAYS})`);
 
 const pairShare = runA.filter((d) => DAILY_LINES.find((l) => l.id === d.id)!.keys.length === 2).length;
+// The number of two-trait lines a profile can draw on depends on the bank.
 assert.ok(pairShare >= NO_REPEAT_DAYS * 0.2, `only ${pairShare} pair lines in ${NO_REPEAT_DAYS} days`);
 ok('two-trait lines make up a real share of what an account sees');
 
@@ -261,9 +325,53 @@ ok('Home renders the daily line and hands it, with recent titles, to the insight
 
 for (const rel of ['src/lib/daily-line/bank.ts', 'src/lib/daily-line/pick.ts', 'src/lib/daily-line/state.ts']) {
   const src = read(rel);
-  assert.doesNotMatch(src, /generateText|ai-generate|supabase/, `${rel} must stay offline`);
+  assert.doesNotMatch(src, /generateText|ai-generate|from '@\/lib\/supabase'/, `${rel} must stay offline`);
 }
-ok('the daily line never touches the model or the network');
+for (const rel of ['src/lib/daily-line/pool-store.ts', 'src/lib/daily-line/sync.ts']) {
+  assert.doesNotMatch(read(rel), /generateText|ai-generate/, `${rel} must never call the model`);
+}
+ok('the bank, picker and phone copy stay offline; the database sync never calls the model');
+
+// --- the database (wave77), copied from the question pool ------------------------
+const wave = read('supabase/migrations/wave77_daily_lines.sql');
+assert.match(
+  wave,
+  /create policy daily_line_pool_select_auth on public\.daily_line_pool\s+for select to authenticated\s+using \(source = 'authored' or created_by = auth\.uid\(\)\);/,
+);
+assert.match(wave, /revoke insert, update, delete on public\.daily_line_pool from public, anon, authenticated;/);
+assert.match(
+  wave,
+  /create policy daily_line_days_select_own on public\.daily_line_days\s+for select to authenticated\s+using \(auth\.uid\(\) = user_id\);/,
+);
+assert.match(wave, /revoke insert, update, delete on public\.daily_line_days from public, anon, authenticated;/);
+assert.match(wave, /user_id uuid not null references auth\.users\(id\) on delete cascade/);
+ok('wave77: authored lines are shared, AI lines and day rows are owner-only, and neither table takes a direct write');
+
+for (const fn of ['insert_daily_line_pool_items(jsonb)', 'record_daily_line(date, text)', 'react_daily_line(date, text)', 'clear_my_daily_lines()']) {
+  const name = fn.replace(/[()]/g, '\\$&');
+  assert.match(wave, new RegExp(`revoke all on function public\\.${name} from public, anon;`), `${fn} revoke`);
+  assert.match(wave, new RegExp(`grant execute on function public\\.${name} to authenticated;`), `${fn} grant`);
+}
+assert.equal((wave.match(/security definer\s+set search_path = public/g) ?? []).length, 4);
+assert.equal((wave.match(/raise exception 'not authenticated' using errcode = '28000';/g) ?? []).length, 4);
+assert.doesNotMatch(wave, /drop |alter table public\.(?!daily_line)|create or replace/i);
+ok('wave77: every function is security definer with a pinned search_path, refuses a signed-out caller, and nothing existing is altered');
+
+const capSql = /char_length\(line\) between 1 and (\d+)/.exec(wave)?.[1];
+assert.ok(Number(capSql) >= 120, 'the pool line cap must not be shorter than DAILY_LINE_MAX_CHARS');
+assert.match(wave, /values \(v_key, v_line, 'ai', uid\)/);
+ok('wave77: the pool accepts every line the app allows, and AI rows are stamped with their owner');
+
+const gen = read('src/lib/insight/generate-insight.ts');
+assert.match(gen, /export function parseInsightLines\(/);
+assert.match(gen, /return \{ draft, lines: parseInsightLines\(text, groundedLeans\(grounding\.tracks\)\) \};/);
+const sync = read('src/lib/daily-line/sync.ts');
+assert.match(sync, /lineRuleViolation\(text\) \?\?/);
+ok('AI lines ride on the insight call, and each is run through the line rules before it is kept');
+
+const card = read('src/components/daily-line-card.tsx');
+assert.match(card, /today\.line\.source === 'authored' \? \(/);
+ok('an AI-written line cannot be shared');
 
 const push = read('src/lib/push.ts');
 assert.match(push, /planUpcomingLines\(/);
@@ -288,10 +396,5 @@ ok('share loads its native modules inside the call, so an older build cannot cra
 const shareCard = read('src/components/share-card.tsx');
 assert.doesNotMatch(shareCard, /value\b.*toFixed|stability|answerCount/);
 ok('the share card carries no score');
-
-const draft = read('scripts/daily-line-draft.ts');
-assert.match(draft, /docs\/daily-line-candidates\.md/);
-assert.doesNotMatch(draft, /bank\.ts['"`],\s*['"`]?w|writeFileSync\([^)]*bank/);
-ok('the drafting script writes a review file and never writes the bank');
 
 console.log(`\n${passed}/${passed} daily-line checks passed.`);

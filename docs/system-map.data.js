@@ -772,6 +772,34 @@ var SYSTEM_MAP = {
       ]
     },
     {
+      "id": "s-dailylines",
+      "col": "storage",
+      "title": "Daily line tables",
+      "status": "live",
+      "summary": "daily_line_pool holds the lines; daily_line_days holds one row per user per day with the line shown and the reaction.",
+      "facts": [
+        [
+          "Who can read",
+          "Written lines: every signed-in user. AI lines: only the account that generated them. Day rows: only their owner. Same rules as the question pool."
+        ],
+        [
+          "Who can write",
+          "Nobody directly. Four functions do it: add AI lines (10 a call, 300 per account), record the day's line (first write of the day wins), set the reaction, and a dev clear of your own days."
+        ],
+        [
+          "On account deletion",
+          "Day rows are deleted with the account. AI lines lose their owner and become unreadable."
+        ]
+      ],
+      "differs": [
+        "count_user_rows and Start over do not know about daily_line_days yet. Deletion still removes the rows; the dev clear button covers Start over."
+      ],
+      "files": [
+        "supabase/migrations/wave77_daily_lines.sql",
+        "src/lib/daily-line/pool-store.ts"
+      ]
+    },
+    {
       "id": "s-insights",
       "col": "storage",
       "title": "daily_insights",
@@ -1411,11 +1439,11 @@ var SYSTEM_MAP = {
       "title": "Daily line",
       "status": "live",
       "axes": "all",
-      "summary": "One written sentence at the top of Home every day, picked on the phone from a bank of 292 lines. No AI, no tap, no network.",
+      "summary": "One sentence at the top of Home every day. Built like the questions: a written bank that ships in the app, the same lines as shared rows in the database, and AI-written lines that belong to one account.",
       "facts": [
         [
           "Where the text comes from",
-          "A written bank in the repo: 6 lines for each side of each of the 16 axes, 2 lines for each of 44 two-trait tensions, and 12 general starter lines."
+          "A written bank that ships in the app. Today it is the 292 first-draft lines. Once emci ticks winners in docs/daily-line-review.md (340 new-style candidates) and runs npm run load:daily-line, the ticked lines replace them."
         ],
         [
           "How a line is picked",
@@ -1423,7 +1451,7 @@ var SYSTEM_MAP = {
         ],
         [
           "That's me / Not me",
-          "One tap, saved on the phone only. It turns that trait up or down for later picks. It never changes a trait score."
+          "One tap, saved on the phone and in the database, so it survives a reinstall. It turns that trait up or down for later picks. It never changes a trait score."
         ],
         [
           "Under 50 answers, or AI off",
@@ -1435,19 +1463,23 @@ var SYSTEM_MAP = {
         ],
         [
           "Growing the bank",
-          "npm run draft:daily-line asks the model for candidates and writes them to docs/daily-line-candidates.md. Nothing joins the bank until emci has read it."
+          "Two ways, the same as the questions. Written: tick lines in the review file and load them. AI: every loaded insight also returns up to 4 lines for that one account, checked by the line rules and saved as rows only that account can read."
         ]
       ],
       "differs": [
         "Draft copy: DAILY_LINE_COPY_REVIEWED is false.",
-        "Reactions, history and the streak live on the phone only and are lost on reinstall."
+        "AI-written lines are not reviewed by anyone, so they never go on the push, the widget or the share image.",
+        "Needs wave77 applied. Until it is, the phone works from its own copy and nothing syncs."
       ],
       "files": [
         "src/lib/daily-line/bank.ts",
         "src/lib/daily-line/pick.ts",
         "src/lib/daily-line/state.ts",
+        "src/lib/daily-line/sync.ts",
+        "src/lib/daily-line/pool-store.ts",
         "src/components/daily-line-card.tsx",
-        "scripts/daily-line-draft.ts"
+        "scripts/daily-line-load.ts",
+        "docs/daily-line-review.md"
       ]
     },
     {
@@ -2469,6 +2501,15 @@ var SYSTEM_MAP = {
     [
       "s-local",
       "o-dailyline"
+    ],
+    [
+      "s-dailylines",
+      "o-dailyline"
+    ],
+    [
+      "ai-insight",
+      "s-dailylines",
+      "save"
     ],
     [
       "o-dailyline",

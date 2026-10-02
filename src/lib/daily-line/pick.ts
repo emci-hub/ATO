@@ -12,7 +12,7 @@ import { isShareableLean } from '@/lib/legends64/identity';
 import { isAxisSettled, trackFor, type TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis, type TraitLean } from '@/lib/traits';
 
-import { DAILY_LINES, axisOfKey, dailyLineById, fnv1a, lineKey, type DailyLine, type LineKey } from './bank';
+import { allLines, axisOfKey, dailyLineById, fnv1a, lineKey, type DailyLine, type LineKey } from './bank';
 
 /** How far from the middle a trait has to sit before a line may speak about it. */
 export const CLEAR_LEAN_MARGIN = 0.1;
@@ -78,11 +78,11 @@ export function daysApart(aYmd: string, bYmd: string): number {
 /** Lines whose every key matches one of the account's clear leans. */
 export function eligibleLines(leans: readonly ClearLean[]): DailyLine[] {
   const have = new Set<LineKey>(leans.map((l) => lineKey(l.axis, l.lean)));
-  return DAILY_LINES.filter((line) => line.keys.length > 0 && line.keys.every((key) => have.has(key)));
+  return allLines().filter((line) => line.keys.length > 0 && line.keys.every((key) => have.has(key)));
 }
 
 export function starterLines(): DailyLine[] {
-  return DAILY_LINES.filter((line) => line.keys.length === 0);
+  return allLines().filter((line) => line.keys.length === 0);
 }
 
 /**
@@ -183,9 +183,11 @@ export const LOCK_SCREEN_PRIVATE_COPY = 'Today’s line is ready.';
  * A push and a widget are read by whoever is near the phone. Lines about
  * closeness and worry, or about the struggle side of a trait, stay inside the
  * app: the lock screen gets a plain "ready" instead. Same list the share image
- * uses (`isShareableLean`).
+ * uses (`isShareableLean`). So does every AI-written line.
  */
 export function lockScreenText(line: DailyLine): string {
+  // An AI-written line has been read by nobody but its owner. It stays in the app.
+  if (line.source === 'ai') return LOCK_SCREEN_PRIVATE_COPY;
   const safe = line.keys.every((key) => {
     const axis = axisOfKey(key);
     return isShareableLean(axis, key.slice(key.indexOf(':') + 1) as TraitLean);

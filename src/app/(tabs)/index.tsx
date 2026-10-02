@@ -23,7 +23,8 @@ import { withTimeout } from '@/lib/timeout';
 import { useMeContext } from '@/lib/me-context';
 import { homeSageLabel, homeSageLede } from '@/lib/sage-copy';
 import { AiConsentCard, AI_USE_DISCLOSURE } from '@/components/ai-consent-card';
-import { generateDailyInsight } from '@/lib/insight/generate-insight';
+import { generateDailyInsightAndLines } from '@/lib/insight/generate-insight';
+import { keepAiLines } from '@/lib/daily-line/sync';
 import { fetchInsightHistory, fetchTodayInsight, saveInsight } from '@/lib/insight/store';
 import { fullProfileProgress, isFullProfileDone } from '@/lib/full-profile-gate';
 import { cachedFromInsight, saveCachedInsight, writeWidgetLine } from '@/lib/insight/today-insight';
@@ -271,8 +272,8 @@ export default function HomeScreen() {
 
       // Bounded: a slow network ends in the error + retry state, never a
       // spinner that never stops.
-      const draft = await withTimeout(
-        generateDailyInsight({
+      const generated = await withTimeout(
+        generateDailyInsightAndLines({
           tracks,
           currentFocus: me.current_focus ?? null,
           // Empty by design: recent tone came from the Check history, and the
@@ -286,10 +287,19 @@ export default function HomeScreen() {
         AI_TAP_TIMEOUT_MS,
         'insight-generate',
       );
-      if (!draft) {
+      if (!generated) {
         setInsightState('unavailable');
         return;
       }
+      const { draft } = generated;
+      // The personal daily lines that came back with it: checked, then saved as
+      // rows only this account can read. Never allowed to fail the insight.
+      void keepAiLines(
+        userId,
+        generated.lines.map((line) => ({ keys: [`${line.axis}:${line.lean}` as const], text: line.text })),
+      ).catch((err) => {
+        console.log('[home] daily line top-up skipped:', err);
+      });
 
       await saveInsight(draft, todayDay, todayYmd);
       await saveCachedInsight({

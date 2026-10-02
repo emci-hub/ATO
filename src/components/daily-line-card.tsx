@@ -96,13 +96,17 @@ export function DailyLineCard({
         {chip('me', DAILY_LINE_ME_LABEL)}
         {chip('not_me', DAILY_LINE_NOT_ME_LABEL)}
         <View style={styles.spacer} />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Share today’s line"
-          onPress={() => setSharing(true)}
-          style={({ pressed }) => [styles.chip, { borderColor: border }, pressed && styles.pressed]}>
-          <ThemedText type="smallBold">{DAILY_LINE_SHARE_LABEL}</ThemedText>
-        </Pressable>
+        {/* An AI-written line has been read by nobody but its owner, so it
+            stays in the app: no share image, and no push (lockScreenText). */}
+        {today.line.source === 'authored' ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Share today’s line"
+            onPress={() => setSharing(true)}
+            style={({ pressed }) => [styles.chip, { borderColor: border }, pressed && styles.pressed]}>
+            <ThemedText type="smallBold">{DAILY_LINE_SHARE_LABEL}</ThemedText>
+          </Pressable>
+        ) : null}
       </View>
       {today.reaction ? (
         <ThemedText type="small" themeColor="textSecondary">

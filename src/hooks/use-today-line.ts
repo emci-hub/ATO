@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type { LineReaction } from '@/lib/daily-line/pick';
-import { resolveTodayLine, setLineReaction, type TodayLine } from '@/lib/daily-line/state';
+import type { TodayLine } from '@/lib/daily-line/state';
+import { reactToLineSynced, resolveTodayLineSynced } from '@/lib/daily-line/sync';
 import type { TraitTrack } from '@/lib/trait-stability';
 
 /**
- * Today's written line for Home. A local read and a pure pick — no network and
- * no model call, so it is allowed to run on mount (`check:no-auto-ai` is about
+ * Today's line for Home. A local read and a pure pick, plus a plain database
+ * read/write to keep the account's line history in step (lib/daily-line/sync).
+ * No model call, so it is allowed to run on mount (`check:no-auto-ai` is about
  * generation; this generates nothing).
  *
  * Waits for `ready` so the pick is made from the real profile rather than an
@@ -26,7 +28,7 @@ export function useTodayLine(input: {
   useEffect(() => {
     if (!userId || !ymd || !ready) return;
     let cancelled = false;
-    resolveTodayLine({ userId, ymd, tracks, persist })
+    resolveTodayLineSynced({ userId, ymd, tracks, persist })
       .then((next) => {
         if (!cancelled) setToday(next);
       })
@@ -46,7 +48,7 @@ export function useTodayLine(input: {
   const react = useCallback(
     async (reaction: LineReaction) => {
       if (!userId || !ymd) return;
-      const saved = await setLineReaction(userId, ymd, reaction);
+      const saved = await reactToLineSynced(userId, ymd, reaction);
       setToday((prev) => (prev ? { ...prev, reaction: saved } : prev));
     },
     [userId, ymd],

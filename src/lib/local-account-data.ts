@@ -28,6 +28,7 @@
  * the warm `Map`s in `answered-option-storage` / `category-page-position` /
  * `full-profile-unlock` answering for the previous account.
  */
+import { forgetDailyLineAccount } from '@/lib/daily-line/state';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ExtensionStorage } from '@bacons/apple-targets';
 import { Platform } from 'react-native';
@@ -160,6 +161,8 @@ export async function clearLocalAccountData(): Promise<string[]> {
   resetAnsweredOptionCache();
   resetCategoryPagePositionCache();
   resetFullProfileUnlockCache();
+  // The previous account's own AI-written daily lines are registered in memory.
+  forgetDailyLineAccount();
 
   let removed: string[] = [];
   try {

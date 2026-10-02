@@ -1,46 +1,49 @@
 /**
  * The daily line bank — one short sentence a person sees the moment Home opens.
  *
- * WRITTEN, not generated. Nothing here costs a model call, needs AI consent, or
- * needs the network: the line is picked on the device from this file (see
- * pick.ts). The AI insight under it ("Load insight") stays a tap.
+ * STORED THE WAY THE QUESTIONS ARE (emci, 2026-10-02): a written set that ships
+ * in the app, the same set as shared `authored` rows in `daily_line_pool`
+ * (wave77), and AI-written lines as rows only their owner can read. This file
+ * is the pure half — the data, the rules, and the in-memory registry the picker
+ * reads. Nothing here touches the network; pool-store.ts and sync.ts do.
+ *
+ * WHERE THE WRITTEN LINES COME FROM
+ * - `lines.generated.ts`, written by `npm run load:daily-line` from the lines
+ *   emci ticked in docs/daily-line-review.md. Once it has lines, it IS the bank.
+ * - Until then, the first-draft lines below (SOLO / PAIRS / STARTERS) are used,
+ *   so the app is never without a bank. They are the older "tends to … try
+ *   this" style and go away when the first load happens.
  *
  * Three kinds of line:
- * - SOLO: keyed to one trait lean (16 axes x 2 poles).
- * - PAIRS: keyed to a tension between two leans. These are the ones that feel
- *   specific, so the picker prefers them.
- * - STARTERS: no key. Shown until an account has a clear lean on anything.
+ * - one key: a single trait lean (16 axes x 2 sides).
+ * - two keys: a tension between two leans. The picker prefers these.
+ * - no key: a starter, shown until an account has a clear lean on anything.
  *
- * VOICE (scripts/daily-line-check.ts enforces the mechanical half):
- * - Never "you are" / "you're". Say "tends to", "leans", "usually", "lately".
- * - No framework or type words (the framework fence runs on every line).
- * - One or two short sentences, 120 characters at most. No "always".
- * - A friend who noticed something, never a verdict and never a diagnosis.
+ * A line's id is a hash of its text, so the same line has the same id whether
+ * it was read from the bundle, from the pool, or from another phone's history.
+ * Editing a line's wording makes it a new line, which is the honest outcome.
  *
- * GROWING THE BANK: append lines; never auto-add. `scripts/daily-line-draft.ts`
- * asks the model for candidates and writes them to docs/daily-line-candidates.md
- * for emci to read. A line joins this file only by hand, after that read.
- *
- * A line's id is a hash of its text, so reordering or inserting lines never
- * changes which line an account has already seen. Editing a line's wording
- * makes it a new line, which is the honest outcome.
- *
- * UNREVIEWED, and diagnosis-adjacent by nature (each line describes the reader
- * to themselves). DAILY_LINE_COPY_REVIEWED stays false until emci reads it.
+ * UNREVIEWED until emci has ticked it. AI lines are never reviewed, which is
+ * why they stay inside the app (see `lockScreenText` and the share button).
  */
 import { TRAIT_AXES, type TraitAxis, type TraitLean } from '@/lib/traits';
+import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
+
+import { LOADED_LINES } from './lines.generated';
 
 export const DAILY_LINE_COPY_REVIEWED = false;
 
 export const DAILY_LINE_MAX_CHARS = 120;
 
 export type LineKey = `${TraitAxis}:${TraitLean}`;
+export type LineSource = 'authored' | 'ai';
 
 export interface DailyLine {
   id: string;
   /** Empty for a starter, one key for a solo line, two for a pair line. */
   keys: readonly LineKey[];
   text: string;
+  source: LineSource;
 }
 
 export function lineKey(axis: TraitAxis, lean: TraitLean): LineKey {
@@ -49,6 +52,53 @@ export function lineKey(axis: TraitAxis, lean: TraitLean): LineKey {
 
 export function axisOfKey(key: LineKey): TraitAxis {
   return key.slice(0, key.indexOf(':')) as TraitAxis;
+}
+
+/** The pool's `lean_key` column: 'starter', one key, or two joined by '+'. */
+export const STARTER_TAG = 'starter';
+
+export function leanTag(keys: readonly LineKey[]): string {
+  return keys.length === 0 ? STARTER_TAG : keys.join('+');
+}
+
+function isLineKey(value: string): value is LineKey {
+  const at = value.indexOf(':');
+  if (at < 0) return false;
+  const lean = value.slice(at + 1);
+  return (TRAIT_AXES as readonly string[]).includes(value.slice(0, at)) && (lean === 'high' || lean === 'low');
+}
+
+/** Null for anything that is not a tag this app knows. */
+export function parseLeanTag(tag: string): LineKey[] | null {
+  if (tag === STARTER_TAG) return [];
+  const parts = tag.split('+');
+  if (parts.length < 1 || parts.length > 2 || !parts.every(isLineKey)) return null;
+  if (parts.length === 2 && axisOfKey(parts[0] as LineKey) === axisOfKey(parts[1] as LineKey)) return null;
+  return parts as LineKey[];
+}
+
+/**
+ * A sentence that opens by telling the reader what to do. The new style
+ * describes a moment and stops; it never gives advice.
+ */
+const ADVICE_OPENER =
+  /(^|[.?!]\s+)(Try|Ask|Check|Notice|Let|Pick|Say|Give|Take|Leave|Put|Start|Wait|Make|Keep|Tell|Share|Write|Test|Look|Show|Step|Choose|Invite|Offer|Thank|Plan|Remember|Trust|Watch)\b/;
+
+/**
+ * Why a line may not be shown, or null if it may. The one rule set for the
+ * review file, the loader, and every AI-written line before it is kept.
+ * `allowAdvice` exists only for the first-draft lines below.
+ */
+export function lineRuleViolation(text: string, options: { allowAdvice?: boolean } = {}): string | null {
+  const line = text.trim();
+  if (!line) return 'empty';
+  if (line.length > DAILY_LINE_MAX_CHARS) return `too long (${line.length})`;
+  if (/\byou are\b|\byou['’]re\b/i.test(line)) return 'says "you are"';
+  if (/\balways\b/i.test(line)) return 'says "always"';
+  if (/[#]|!{2,}/.test(line)) return 'hashtag or shouting';
+  if (containsFrameworkTerm(line)) return 'framework term';
+  if (!options.allowAdvice && ADVICE_OPENER.test(line)) return 'gives advice';
+  return null;
 }
 
 const SOLO: Record<TraitAxis, Record<TraitLean, readonly string[]>> = {
@@ -683,44 +733,75 @@ export function fnv1a(text: string): number {
   return hash >>> 0;
 }
 
-function idFor(text: string): string {
+/** A line's identity everywhere: bundle, pool, and `daily_line_days.line_key`. */
+export function lineId(text: string): string {
   return fnv1a(text).toString(36);
 }
 
-function build(): DailyLine[] {
+function draftLines(): DailyLine[] {
   const out: DailyLine[] = [];
   for (const axis of TRAIT_AXES) {
     for (const lean of ['high', 'low'] as const) {
       for (const text of SOLO[axis][lean]) {
-        out.push({ id: idFor(text), keys: [lineKey(axis, lean)], text });
+        out.push({ id: lineId(text), keys: [lineKey(axis, lean)], text, source: 'authored' });
       }
     }
   }
   for (const pair of PAIRS) {
-    for (const text of pair.lines) out.push({ id: idFor(text), keys: pair.keys, text });
+    for (const text of pair.lines) out.push({ id: lineId(text), keys: pair.keys, text, source: 'authored' });
   }
-  for (const text of STARTERS) out.push({ id: idFor(text), keys: [], text });
+  for (const text of STARTERS) out.push({ id: lineId(text), keys: [], text, source: 'authored' });
   return out;
 }
 
-export const DAILY_LINES: readonly DailyLine[] = build();
+function loadedLines(): DailyLine[] {
+  const out: DailyLine[] = [];
+  for (const row of LOADED_LINES) {
+    const keys = parseLeanTag(row.tag);
+    if (!keys) continue;
+    out.push({ id: lineId(row.text), keys, text: row.text, source: 'authored' });
+  }
+  return out;
+}
 
-const BY_ID: ReadonlyMap<string, DailyLine> = new Map(DAILY_LINES.map((line) => [line.id, line]));
+/** True once emci's ticked lines have been loaded; the first-draft set is then unused. */
+export const BANK_IS_LOADED = LOADED_LINES.length > 0;
+
+/** The written bank that ships in the app. */
+export const DAILY_LINES: readonly DailyLine[] = BANK_IS_LOADED ? loadedLines() : draftLines();
+
+/**
+ * Bank + pool. The picker reads this, not DAILY_LINES: lines that arrive from
+ * `daily_line_pool` (newly authored rows, and this account's own AI lines) are
+ * registered here by sync.ts. A shipped line always wins over a pool row with
+ * the same text, so an authored line can never be relabelled as AI.
+ */
+const registry = new Map<string, DailyLine>(DAILY_LINES.map((line) => [line.id, line]));
+
+export function allLines(): DailyLine[] {
+  return [...registry.values()];
+}
 
 export function dailyLineById(id: string): DailyLine | null {
-  return BY_ID.get(id) ?? null;
+  return registry.get(id) ?? null;
 }
 
-/** Every key the bank has lines for — what the drafting script loops over. */
-export function bankKeySets(): LineKey[][] {
-  const seen = new Set<string>();
-  const out: LineKey[][] = [];
-  for (const line of DAILY_LINES) {
-    if (line.keys.length === 0) continue;
-    const tag = line.keys.join('+');
-    if (seen.has(tag)) continue;
-    seen.add(tag);
-    out.push([...line.keys]);
+/** Adds pool lines to the registry. Lines that break the rules are skipped. */
+export function registerPoolLines(rows: readonly { tag: string; text: string; source: LineSource }[]): number {
+  let added = 0;
+  for (const row of rows) {
+    const keys = parseLeanTag(row.tag);
+    if (!keys || lineRuleViolation(row.text, { allowAdvice: row.source === 'authored' })) continue;
+    const id = lineId(row.text);
+    if (registry.has(id)) continue;
+    registry.set(id, { id, keys, text: row.text, source: row.source });
+    added += 1;
   }
-  return out;
+  return added;
+}
+
+/** Back to the shipped bank only. Sign-out and the check script use this. */
+export function resetPoolLines(): void {
+  registry.clear();
+  for (const line of DAILY_LINES) registry.set(line.id, line);
 }

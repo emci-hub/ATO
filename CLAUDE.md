@@ -53,7 +53,11 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   `dev-lab.tsx`), or a typed handle where it cannot be undone.
 - **Unreviewed copy ships behind `*_COPY_REVIEWED = false` flags.** Story / Levity are
   diagnosis-adjacent; not shippable as reviewed without emci's read.
-- Do not change dependencies, schemas, auth, env config, or secrets without emci's ok.
+- Do not change dependencies, auth, env config, or secrets without emci's ok.
+- **Schema changes that copy a tested path need no ask (emci 2026-10-02).** A new table /
+  RLS / RPC built the same way as one already live here (e.g. the question pool) is
+  built without asking and named in the report. A NEW kind of pattern, or anything that
+  alters or deletes existing data, still needs emci's ok first.
 
 ## Where things are
 
