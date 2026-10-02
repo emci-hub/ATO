@@ -51,6 +51,10 @@ export interface InsightGrounding {
   currentFocus: string | null;
   /** Recent check outcomes, newest first — tone only, never quoted back. */
   recentTone: readonly ('did' | 'skip')[];
+  /** The written daily line already on Home today (lib/daily-line), if any. */
+  todayLine?: string | null;
+  /** Titles of this person's last few insights, newest first. */
+  recentTitles?: readonly string[];
 }
 
 /**
@@ -77,6 +81,24 @@ function toneLine(recentTone: readonly ('did' | 'skip')[]): string {
   return `Recent checks: ${did} done out of the last ${recentTone.length}. Tone only — never cite the number back to them, never praise or scold the ratio.`;
 }
 
+/**
+ * The written line is from our own bank, never user-typed text, so it is safe
+ * to quote into the prompt. The insight goes deeper on it rather than starting
+ * a second, unrelated thought on the same screen.
+ */
+function todayLineBlock(todayLine: string | null | undefined): string {
+  const line = todayLine?.trim();
+  if (!line) return 'They have not been shown a short line today.';
+  return `The short line they already read today: "${line}". Go one layer deeper on that same thread. Do not repeat its wording or its advice.`;
+}
+
+function recentTitlesBlock(recentTitles: readonly string[] | undefined): string {
+  const titles = (recentTitles ?? []).map((t) => t.trim()).filter(Boolean).slice(0, 5);
+  if (titles.length === 0) return 'No earlier insights to avoid.';
+  const list = titles.map((t) => `- ${t}`).join('\n');
+  return `Titles of their last insights — take a different angle and different wording from every one of these:\n${list}`;
+}
+
 export function buildDailyInsightPrompt(grounding: InsightGrounding): string {
   const traitLines = traitContextLines(grounding.tracks);
   const traitBlock =
@@ -98,6 +120,8 @@ WHAT YOU KNOW (internal — write from the meaning, never the label)
 ${traitBlock}
 ${focusLine}
 ${toneLine(grounding.recentTone)}
+${todayLineBlock(grounding.todayLine)}
+${recentTitlesBlock(grounding.recentTitles)}
 
 Job: produce five fields.
 - theme: 1–3 words naming today's angle. Plain, not a category name.

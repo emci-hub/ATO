@@ -26,18 +26,18 @@ export type AtoTokenEarnReason = keyof typeof ATO_TOKEN_EARN;
 export type AtoTokenSpendReason = keyof typeof ATO_TOKEN_PRICE;
 
 export const ATO_TOKEN_LABEL = 'ATO tokens';
-export const ATO_TOKEN_LEDE = 'Earned by finishing rounds. Spent on rerolls.';
+export const ATO_TOKEN_LEDE = 'Earned by finishing rounds. Spent on rerolls and name styles.';
 /**
  * How the currency works, said before a limit is hit rather than after. Built
  * from the constants above so a price change cannot leave this stale. The
  * once-a-day limits are enforced in SQL (wave51); this only states them. The
- * Legend reroll is left out on purpose: Legends is a placeholder, so there is
- * nowhere to spend it.
+ * `legend_reroll` price is what a name style on the identity card costs: the
+ * Legends tab is a placeholder, and that spend function had no other caller.
  */
 export const ATO_TOKEN_HOW_LINES: readonly string[] = [
   `Earn: +${ATO_TOKEN_EARN.full_profile_complete} for finishing the 50 questions, +${ATO_TOKEN_EARN.ongoing_round_complete} for each round of 25 after that.`,
-  `Spend: ${ATO_TOKEN_PRICE.question_reroll} to reroll a question, ${ATO_TOKEN_PRICE.category_reroll} to reroll a category.`,
-  'Limit: each question and each category can be rerolled once a day.',
+  `Spend: ${ATO_TOKEN_PRICE.question_reroll} to reroll a question, ${ATO_TOKEN_PRICE.category_reroll} to reroll a category, ${ATO_TOKEN_PRICE.legend_reroll} to unlock a name style.`,
+  'Limit: each question and each category can be rerolled once a day, and one name style can be unlocked a day.',
   'Out of tokens? Finish the round you are on.',
 ];
 export const ATO_TOKEN_NEED_MORE = 'Not enough ATO tokens yet — finish another round to earn more.';

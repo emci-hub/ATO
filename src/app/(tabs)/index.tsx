@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 
 import { CrisisCard } from '@/components/crisis-card';
+import { DailyLineCard } from '@/components/daily-line-card';
 import { crisisNotedToday } from '@/lib/crisis/local-flag';
 import { SageStoryFold } from '@/components/sage-story-fold';
 import { ThemedText } from '@/components/themed-text';
@@ -12,6 +13,8 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { useTheme } from '@/hooks/use-theme';
 import { useDailyInsight } from '@/hooks/use-daily-insight';
+import { useTodayLine } from '@/hooks/use-today-line';
+import { lockScreenText } from '@/lib/daily-line/pick';
 import { checkWindowFor } from '@/lib/check-window';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
 import { AI_CONSENT_NEEDED_COPY, aiConsentFor, setAiConsent } from '@/lib/me';
@@ -21,9 +24,9 @@ import { useMeContext } from '@/lib/me-context';
 import { homeSageLabel, homeSageLede } from '@/lib/sage-copy';
 import { AiConsentCard, AI_USE_DISCLOSURE } from '@/components/ai-consent-card';
 import { generateDailyInsight } from '@/lib/insight/generate-insight';
-import { fetchTodayInsight, saveInsight } from '@/lib/insight/store';
+import { fetchInsightHistory, fetchTodayInsight, saveInsight } from '@/lib/insight/store';
 import { fullProfileProgress, isFullProfileDone } from '@/lib/full-profile-gate';
-import { cachedFromInsight, saveCachedInsight } from '@/lib/insight/today-insight';
+import { cachedFromInsight, saveCachedInsight, writeWidgetLine } from '@/lib/insight/today-insight';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { ATO_TOKEN_EARN } from '@/lib/ato-tokens';
 import { hubAccess } from '@/lib/dev-access';
@@ -33,6 +36,8 @@ import { useSession } from '@/hooks/use-session';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
 export const INSIGHT_LOAD_LABEL = 'Load insight';
+/** The recent-titles read is a nice-to-have: it must never hold up the insight. */
+const RECENT_TITLES_TIMEOUT_MS = 5000;
 export const INSIGHT_UNAVAILABLE_COPY = 'Couldn’t load it just now — tap to try again.';
 export const ANSWER_QUESTIONS_LABEL = 'Answer the questions';
 /** Shown on an insight that is not today's (it stays up until today's is loaded). */
@@ -75,6 +80,9 @@ export default function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
   const [crisisToday, setCrisisToday] = useState(false);
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
+  // Whose `tracks` these are. Tabs stay mounted, so for one render after an
+  // account switch `tracks` still belongs to the previous account.
+  const [tracksUserId, setTracksUserId] = useState<string | null>(null);
   // Set once the first home_bootstrap fetch settles, success or failure. It
   // stops the gate judging completeness off an empty `tracks`; it does NOT by
   // itself distinguish "not finished" from "not loaded" — `bootstrapFailed`
@@ -119,6 +127,7 @@ export default function HomeScreen() {
       if (requestId !== requestIdRef.current) return;
       loadedOnceRef.current = true;
       setTracks(next.tracks);
+      setTracksUserId(userId);
       // Server flag OR the on-device one (crisis/local-flag.ts): the server table
       // has no writer since Talk was removed, so the local signal is what can
       // actually raise the card today.
@@ -185,6 +194,23 @@ export default function HomeScreen() {
   const fullProfileDone = isFullProfileDone(tracks, bootstrapReady);
 
   /**
+   * Today's written line (lib/daily-line). Picked on the device from the bank —
+   * no model call, no consent needed — so it shows in every state below. A
+   * failed profile load still shows a line, but does not store it as today's.
+   */
+  const todayYmd = window?.todayYmd;
+  const { today: todayLine, react: reactToLine } = useTodayLine({
+    userId,
+    ymd: todayYmd,
+    tracks,
+    ready: bootstrapReady,
+    // Only a pick made from THIS account's loaded profile becomes the day's line.
+    persist: !bootstrapFailed && tracksUserId === userId,
+  });
+  const todayLineText = todayLine?.line.text ?? null;
+  const todayLineLockScreen = todayLine ? lockScreenText(todayLine.line) : null;
+
+  /**
    * AI consent gates GENERATION, not the screen. Declined and not-yet-asked
    * stay DIFFERENT states — collapsing them is what once left a fresh account
    * (ai_consent null) with no insight and no prompt.
@@ -237,6 +263,12 @@ export default function HomeScreen() {
         return;
       }
 
+      // A plain read, best effort: without it the insight is still written,
+      // it just cannot avoid its own recent angles.
+      const recentTitles = await withTimeout(fetchInsightHistory(userId, 5), RECENT_TITLES_TIMEOUT_MS, 'insight-history')
+        .then((rows) => rows.map((row) => row.title))
+        .catch(() => [] as string[]);
+
       // Bounded: a slow network ends in the error + retry state, never a
       // spinner that never stops.
       const draft = await withTimeout(
@@ -246,6 +278,10 @@ export default function HomeScreen() {
           // Empty by design: recent tone came from the Check history, and the
           // Check loop is parked. Tone only — never quoted back.
           recentTone: [],
+          // The line they already read today is the thread to pull on, and the
+          // last few titles are what not to say again.
+          todayLine: todayLineText,
+          recentTitles,
         }),
         AI_TAP_TIMEOUT_MS,
         'insight-generate',
@@ -276,7 +312,7 @@ export default function HomeScreen() {
       // `insight.ymd`, which short-circuits above.
       if (generatingForYmd.current === todayYmd) generatingForYmd.current = null;
     }
-  }, [me, userId, window, consentGranted, insight?.ymd, tracks, reloadInsight]);
+  }, [me, userId, window, consentGranted, insight?.ymd, tracks, reloadInsight, todayLineText]);
 
   // Revoking consent has to reach the widget too: the cached insight is what
   // the shipped widget renders, so leaving it would keep AI-written text on
@@ -286,6 +322,14 @@ export default function HomeScreen() {
     if (!me || consentGranted || !insight) return;
     void saveCachedInsight(null).then(() => reloadInsight());
   }, [me, consentGranted, insight, reloadInsight]);
+
+  // The widget shows today's insight once one is loaded; until then it shows
+  // the written line, so it is never blank on a day the app was opened.
+  useEffect(() => {
+    if (!todayLineLockScreen || !todayYmd) return;
+    if (insight?.ymd === todayYmd) return;
+    writeWidgetLine(todayLineLockScreen);
+  }, [todayLineLockScreen, insight?.ymd, todayYmd]);
 
   async function saveConsent(value: boolean) {
     if (!userId || !me || busy) return;
@@ -436,6 +480,18 @@ export default function HomeScreen() {
 
           {/* Safety first, in both states, and never generated. */}
           {crisisToday ? <CrisisCard /> : null}
+
+          {/* Today's line: written, instant, and the same card in all three
+              states below. */}
+          {todayLine && me ? (
+            <DailyLineCard
+              today={todayLine}
+              me={me}
+              onReact={(reaction) => {
+                void reactToLine(reaction);
+              }}
+            />
+          ) : null}
 
           {bootstrapFailed ? (
             /*

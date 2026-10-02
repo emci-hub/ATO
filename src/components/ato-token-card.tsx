@@ -16,7 +16,8 @@ import { fetchAtoTokenEvents, type AtoTokenEvent } from '@/lib/ato-tokens-server
 export const ATO_TOKEN_REASON_LABEL: Record<string, string> = {
   full_profile_complete: 'Finished the 50 questions',
   ongoing_round_complete: 'Finished a round of 25',
-  legend_reroll: 'Legend reroll',
+  // The 10-token spend now unlocks a name style on the identity card (You).
+  legend_reroll: 'Name style unlocked',
   category_reroll: 'Category reroll',
   question_reroll: 'Question reroll',
 };

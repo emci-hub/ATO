@@ -1406,6 +1406,107 @@ var SYSTEM_MAP = {
       ]
     },
     {
+      "id": "o-dailyline",
+      "col": "outputs",
+      "title": "Daily line",
+      "status": "live",
+      "axes": "all",
+      "summary": "One written sentence at the top of Home every day, picked on the phone from a bank of 292 lines. No AI, no tap, no network.",
+      "facts": [
+        [
+          "Where the text comes from",
+          "A written bank in the repo: 6 lines for each side of each of the 16 axes, 2 lines for each of 44 two-trait tensions, and 12 general starter lines."
+        ],
+        [
+          "How a line is picked",
+          "Only lines that match this person's clear leans are eligible. The pick is seeded by the user id and the date, prefers two-trait lines, and never repeats a line within 60 days."
+        ],
+        [
+          "That's me / Not me",
+          "One tap, saved on the phone only. It turns that trait up or down for later picks. It never changes a trait score."
+        ],
+        [
+          "Under 50 answers, or AI off",
+          "Still shows. With no clear lean yet it shows a general starter line and says so."
+        ],
+        [
+          "Also feeds",
+          "The morning push (a week planned ahead), the widget until an insight is loaded, the share image, and the insight prompt."
+        ],
+        [
+          "Growing the bank",
+          "npm run draft:daily-line asks the model for candidates and writes them to docs/daily-line-candidates.md. Nothing joins the bank until emci has read it."
+        ]
+      ],
+      "differs": [
+        "Draft copy: DAILY_LINE_COPY_REVIEWED is false.",
+        "Reactions, history and the streak live on the phone only and are lost on reinstall."
+      ],
+      "files": [
+        "src/lib/daily-line/bank.ts",
+        "src/lib/daily-line/pick.ts",
+        "src/lib/daily-line/state.ts",
+        "src/components/daily-line-card.tsx",
+        "scripts/daily-line-draft.ts"
+      ]
+    },
+    {
+      "id": "o-identity",
+      "col": "outputs",
+      "title": "Identity card",
+      "status": "live",
+      "axes": "conscientiousness, extraversion, openness, agreeableness, conflict_assertiveness, relatedness",
+      "summary": "Your archetype name on You (one of 64), three trait phrases under it, and an image to send to a friend.",
+      "facts": [
+        [
+          "Name",
+          "Six axes, each high or low. A letter only locks once that axis is settled; until then the card says it is still forming. A locked letter flips only when the axis clearly crosses the middle."
+        ],
+        [
+          "Name styles",
+          "Six. Plain is free. Each of the other five costs 10 ATO tokens, one a day, paid through the existing 10-token spend."
+        ],
+        [
+          "Share image",
+          "Name, handle, archetype name, up to three trait phrases and the QR code. Never a score. The closeness-and-worry axes and struggle-side phrases are never printed on it."
+        ]
+      ],
+      "differs": [
+        "Draft copy: LEGENDS64_COPY_REVIEWED is false.",
+        "Which styles are unlocked is saved on the phone only. The token ledger keeps the count paid for, so a reinstall lets the person pick that many again for free.",
+        "The Legends tab itself is still a placeholder."
+      ],
+      "files": [
+        "src/lib/legends64/identity.ts",
+        "src/lib/legends64/identity-store.ts",
+        "src/components/identity-card.tsx",
+        "src/components/share-card.tsx",
+        "src/lib/share.ts"
+      ]
+    },
+    {
+      "id": "o-change",
+      "col": "outputs",
+      "title": "How you've changed",
+      "status": "live",
+      "axes": "all",
+      "summary": "A card on Explore showing the three biggest shifts in a person's own answers over the last 30 days.",
+      "facts": [
+        [
+          "Source",
+          "The existing trait history log. No AI and no new table."
+        ],
+        [
+          "Empty state",
+          "If nothing moved enough, it says so and points at the next round of questions."
+        ]
+      ],
+      "files": [
+        "src/lib/trait-change.ts",
+        "src/components/change-card.tsx"
+      ]
+    },
+    {
       "id": "o-insight",
       "col": "outputs",
       "title": "Insight",
@@ -1419,11 +1520,11 @@ var SYSTEM_MAP = {
         ],
         [
           "If consent is no",
-          "No daily content at all. There is no non-AI fallback."
+          "No AI insight. The written daily line above it still shows."
         ],
         [
           "Also feeds",
-          "The lock-screen widget and the daily push."
+          "The lock-screen widget. The prompt is given today's daily line to go deeper on, and the last five titles so it does not repeat itself."
         ],
         [
           "Stays on screen",
@@ -1771,15 +1872,11 @@ var SYSTEM_MAP = {
       "title": "ATO tokens",
       "status": "live",
       "flag": true,
-      "summary": "The designed economy: earn 21 for the intake and 21 per round; spend 10 on a Legend reroll, 1 on a category reroll, 1 on a question reroll.",
+      "summary": "The designed economy: earn 21 for the intake and 21 per round; spend 10 on a name style for the identity card, 1 on a category reroll, 1 on a question reroll.",
       "facts": [
         [
           "Works today",
-          "Earn +21 for finishing the 50 (once ever). Earn +21 per finished round. Spend 1 on a question reroll. Spend 1 on a category reroll."
-        ],
-        [
-          "Does not work today",
-          "Legend reroll (10) — Legends is parked."
+          "Earn +21 for finishing the 50 (once ever). Earn +21 per finished round. Spend 1 on a question reroll. Spend 1 on a category reroll. Spend 10 to unlock a name style on the identity card (one a day)."
         ],
         [
           "Balance",
@@ -1791,7 +1888,7 @@ var SYSTEM_MAP = {
         ]
       ],
       "differs": [
-        "Legend reroll is unreachable, and its daily limit is per user rather than per item."
+        "The 10-token name-style unlock reuses the old Legend reroll spend, so the ledger reason is still 'legend_reroll' and its limit is one a day per user."
       ],
       "files": [
         "src/lib/ato-tokens.ts",
@@ -1886,7 +1983,7 @@ var SYSTEM_MAP = {
       "title": "Push notifications",
       "status": "live",
       "flag": false,
-      "summary": "Scheduled local reminders: morning, evening, insight and Sunday.",
+      "summary": "Scheduled local reminders: morning, evening, insight and Sunday. The morning one carries the written daily line, planned a week ahead so each morning has its own text.",
       "facts": [
         [
           "Permission ask",
@@ -1908,7 +2005,7 @@ var SYSTEM_MAP = {
       "col": "outputs",
       "title": "Lock-screen widget",
       "status": "live",
-      "summary": "Shows today's insight on the phone's home or lock screen.",
+      "summary": "Shows today's insight on the phone's home or lock screen, or the written daily line until an insight is loaded.",
       "differs": [
         "Still writes the old card-era names ('read', 'do', 'hasCard') because the installed widget reads those. Fixing it needs a new app build, not an over-the-air update (T-H3)."
       ],
@@ -2364,6 +2461,50 @@ var SYSTEM_MAP = {
     [
       "ai-insight",
       "o-insight"
+    ],
+    [
+      "s-tracks",
+      "o-dailyline"
+    ],
+    [
+      "s-local",
+      "o-dailyline"
+    ],
+    [
+      "o-dailyline",
+      "o-insight"
+    ],
+    [
+      "o-dailyline",
+      "o-push"
+    ],
+    [
+      "o-dailyline",
+      "o-widget"
+    ],
+    [
+      "o-dailyline",
+      "sc-home"
+    ],
+    [
+      "s-tracks",
+      "o-identity"
+    ],
+    [
+      "s-atotokens",
+      "o-identity"
+    ],
+    [
+      "o-identity",
+      "sc-you"
+    ],
+    [
+      "s-history",
+      "o-change"
+    ],
+    [
+      "o-change",
+      "sc-explore"
     ],
     [
       "ai-story",

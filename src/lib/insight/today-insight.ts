@@ -82,6 +82,27 @@ function writeWidget(insight: CachedInsight | null) {
   }
 }
 
+/** What the widget's second row says while only the written line is up. */
+export const WIDGET_LINE_FOLLOW_UP = 'Open ATO to go deeper.';
+
+/**
+ * The written daily line on the widget, for a day with no loaded insight yet.
+ * Same card-era keys as above. Not AI-written, so it does not depend on AI
+ * consent; `saveCachedInsight` still owns the widget whenever an insight exists.
+ */
+export function writeWidgetLine(line: string) {
+  if (Platform.OS !== 'ios') return;
+  try {
+    const storage = new ExtensionStorage(APP_GROUP);
+    storage.set('read', line);
+    storage.set('do', WIDGET_LINE_FOLLOW_UP);
+    storage.set('hasCard', '1');
+    ExtensionStorage.reloadWidget(WIDGET_KIND);
+  } catch (err) {
+    console.log('[widget] native write skipped:', err);
+  }
+}
+
 /**
  * `expectedUserId` is the second half of the cross-account fix (the first being
  * `clearLocalAccountData`, which erases this key on delete and sign-out). Pass

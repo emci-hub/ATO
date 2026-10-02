@@ -35,6 +35,9 @@ const sites = [
   // polish, emci) — the badge itself is gone from that file, not just gated.
   'src/components/sage-story-fold.tsx',
   'src/components/profile-fill-fold.tsx',
+  // Insight experience (2026-10-01): the written daily line and the identity card.
+  'src/components/daily-line-card.tsx',
+  'src/components/identity-card.tsx',
   // 'src/components/intake-sweep.tsx' removed 2026-09-15 with the "A faster
   // pass" sweep (emci) — file deleted entirely, not just unmounted.
 ];

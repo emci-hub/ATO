@@ -3,7 +3,9 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
 import { checkLoggedOnYmd, fetchChecks, type Check } from '@/lib/checks';
-import { hoursSinceLocalMidnight, localYmd, weekdayInZone } from '@/lib/local-date';
+import { lockScreenText } from '@/lib/daily-line/pick';
+import { planUpcomingLines } from '@/lib/daily-line/state';
+import { addDaysYmd, hoursSinceLocalMidnight, localYmd, weekdayInZone } from '@/lib/local-date';
 import type { Me } from '@/lib/me';
 import {
   eveningPush,
@@ -27,6 +29,26 @@ import type { TraitTrack } from '@/lib/trait-stability';
 import { checksInRecapWeek } from '@/lib/week-window';
 
 const ASKED_KEY = 'ato.push.asked';
+
+/**
+ * The morning push carries the written daily line (lib/daily-line), and it is
+ * scheduled as one notification per morning for the next week rather than one
+ * repeating notification. A repeating one can only repeat a single sentence,
+ * so someone who did not open the app got the same text every morning; this
+ * way each morning has its own line, and it is the same line Home shows that
+ * day. Needs no loaded insight and no AI consent — the line is not AI-written.
+ * A line that is not for other eyes is sent as a plain "ready" (`lockScreenText`).
+ */
+export const MORNING_AHEAD_DAYS = 7;
+export function morningAheadId(index: number): string {
+  return `ato.morning.d${index}`;
+}
+
+async function cancelMorningAhead(): Promise<void> {
+  for (let i = 0; i < MORNING_AHEAD_DAYS; i += 1) {
+    await Notifications.cancelScheduledNotificationAsync(morningAheadId(i)).catch(() => {});
+  }
+}
 const CHANNEL_ID = 'ato-default';
 
 export const PUSH_IDS = {
@@ -203,6 +225,7 @@ export async function cancelAllScheduledPush(): Promise<void> {
   if (Platform.OS === 'web') return;
   try {
     await Notifications.cancelScheduledNotificationAsync(PUSH_IDS.morning).catch(() => {});
+    await cancelMorningAhead();
     await Notifications.cancelScheduledNotificationAsync(PUSH_IDS.evening).catch(() => {});
     await Notifications.cancelScheduledNotificationAsync(PUSH_IDS.insight).catch(() => {});
     await Notifications.cancelScheduledNotificationAsync(PUSH_IDS.sunday).catch(() => {});
@@ -233,7 +256,10 @@ export async function syncPushSchedule(input: {
   if (Platform.OS === 'web') return;
 
   try {
+    // PUSH_IDS.morning is the old single repeating notification; it is still
+    // cancelled here so a phone that had one scheduled stops repeating it.
     await Notifications.cancelScheduledNotificationAsync(PUSH_IDS.morning).catch(() => {});
+    await cancelMorningAhead();
     await Notifications.cancelScheduledNotificationAsync(PUSH_IDS.evening).catch(() => {});
     await Notifications.cancelScheduledNotificationAsync(PUSH_IDS.insight).catch(() => {});
     await Notifications.cancelScheduledNotificationAsync(PUSH_IDS.sunday).catch(() => {});
@@ -246,13 +272,26 @@ export async function syncPushSchedule(input: {
     const now = new Date();
     const window = pushWindowForEnergy(input.energyPattern);
 
-    if (prefs.morning && insight?.title.trim()) {
-      await scheduleRepeating(PUSH_IDS.morning, morningPush(insight.title), {
-        type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        channelId: CHANNEL_ID,
-        hour: window.morningHour,
-        minute: 0,
+    if (prefs.morning) {
+      const hoursNow = hoursSinceLocalMidnight(now, input.timeZone);
+      // Today's morning if it has not happened yet, otherwise start tomorrow.
+      const firstOffset = hoursNow < window.morningHour ? 0 : 1;
+      const todayYmd = localYmd(now, input.timeZone);
+      const offsets = Array.from({ length: MORNING_AHEAD_DAYS }, (_, i) => firstOffset + i);
+      const planned = await planUpcomingLines({
+        userId: input.me.id,
+        todayYmd,
+        ymds: offsets.map((offset) => addDaysYmd(todayYmd, offset)),
+        tracks: input.tracks,
       });
+      for (let i = 0; i < planned.length; i += 1) {
+        const hoursUntil = offsets[i]! * 24 + (window.morningHour - hoursNow);
+        await scheduleAtOrCancel(
+          morningAheadId(i),
+          morningPush(lockScreenText(planned[i]!.line)),
+          new Date(now.getTime() + hoursUntil * 3_600_000),
+        );
+      }
     }
 
     const loggedToday = checkLoggedToday(input.checks, now, input.timeZone);

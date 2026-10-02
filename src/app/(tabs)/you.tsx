@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AiConsentCard, AI_USE_DISCLOSURE } from '@/components/ai-consent-card';
 import { DeleteAccountSheet } from '@/components/delete-account-sheet';
 import { AtoTokenCard } from '@/components/ato-token-card';
+import { IdentityCard } from '@/components/identity-card';
 import { RunningUpdateLine } from '@/components/running-update-line';
 import { SageFactsCard } from '@/components/sage-facts';
 import { SettingsFold } from '@/components/settings-fold';
@@ -133,6 +134,9 @@ Update: ${Updates.updateId ?? 'original build'}`);
           <View style={styles.header}>
             <ThemedText type="subtitle">You</ThemedText>
           </View>
+
+          {/* Who you are in two words, and the image to send a friend. */}
+          {me ? <IdentityCard me={me} onUpdated={refresh} /> : null}
 
           {/* Tokens: the balance and the last few earns / spends. */}
           {me ? <AtoTokenCard me={me} /> : null}

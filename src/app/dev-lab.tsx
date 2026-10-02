@@ -27,6 +27,7 @@ import { DevInspector } from '@/components/dev-inspector';
 import { RunningUpdateLine } from '@/components/running-update-line';
 import { TracePipelineViewer } from '@/components/trace-pipeline';
 import { YouDevTools } from '@/components/you-dev-tools';
+import { DailyLineDev } from '@/components/daily-line-dev';
 import { CrisisCard } from '@/components/crisis-card';
 import { TraitBandDetail } from '@/components/trait-bands-fold';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -206,6 +207,7 @@ function DevLab({ access }: { access: Exclude<HubAccess, 'none'> }) {
                 {canSeeHubSection('fence', gate) ? <FenceTester /> : null}
                 {canSeeHubSection('trace', gate) ? <TraceCapture /> : null}
                 {me ? <YouDevTools timeZone={me.timezone || 'UTC'} /> : null}
+                {me ? <DailyLineDev userId={me.id} timeZone={me.timezone || 'UTC'} /> : null}
                 <CrisisCardPreview />
                 <CrisisLocalFlagTest />
                 <ResetAiConsent />

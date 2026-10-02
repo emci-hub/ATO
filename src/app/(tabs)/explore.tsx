@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CategoriesFold } from '@/components/categories-fold';
+import { ChangeCard } from '@/components/change-card';
 import { FullProfileFold } from '@/components/full-profile-fold';
 import { ProfileFillFold } from '@/components/profile-fill-fold';
 import { TraitBandsFold } from '@/components/trait-bands-fold';
@@ -87,6 +88,8 @@ export default function ExploreScreen() {
                 onUpdated={() => refreshMe()}
                 unlocked={isFullProfileDone(tracks, tracksReady)}
               />
+              {/* What actually moved lately, from the answer history. No model call. */}
+              <ChangeCard userId={me.id} />
               <TraitBandsFold me={me} tracks={tracks} />
               <ProfileFillFold tracks={tracks} />
               <FullProfileFold me={me} onUpdated={() => refreshMe()} />
