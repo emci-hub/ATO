@@ -115,38 +115,38 @@ Each name is one describing word plus one role. Plain is the free default.
 - Describing words: Beloved, Alluring, Sympathetic, Elegant, Relentless, Unapologetic, Silent, Shadowy
 - Roles: Conqueror, Usurper, Necromancer, Gravekeeper, Trickster Fiend, Ringleader, Wandering Ghost, Reaper
 
-## 3. Traits: short names and what each side sounds like — DRAFT, please read
+## 3. Traits: names, the word for each end, and what it sounds like — DRAFT, please read
 
-Each trait has a short name and two quotes: something a person on each side would say.
-The app shows yours as: You sound more like: “…”. Tapping the **?** beside the trait name opens
-what the trait means, The other side: “…”, and which categories it is part of.
+Every trait is one noun. Each end has its own word, plus one thing a person at that end
+would say. The app shows yours as, for example: You lean Adventurous: “What’s that? I’ll try it.”
+Tapping the **?** beside the trait name opens what the trait means, the opposite end
+(by its word, with its quote), and which categories the trait is part of.
 
-| Trait | One side | The other side | Part of |
+| Trait | Lower end | Higher end | Part of |
 |---|---|---|---|
-| Trying new things | “I’ll have my usual.” | “What’s that? I’ll try it.” | Openness to life, Structure vs. spontaneity |
-| Plans | “I’ll figure it out when I get there.” | “I said I’d finish it, so I did.” | Steadiness, Structure vs. spontaneity |
-| People time | “I need a night in.” | “Who’s around tonight?” | Openness to life, Everyday social energy |
-| Going along with it | “I don’t love that plan.” | “I’m fine with anything.” | Steadiness, Everyday social energy |
-| A bad day | “I’m still thinking about this morning.” | “Oh, that? I forgot about it.” | Steadiness, Resilience under pressure |
-| When someone goes quiet | “They’re probably just busy.” | “Did I say something wrong?” | Love / closeness |
-| Getting close | “Come over, let’s talk.” | “I’m good, I just need some space.” | Love / closeness |
-| In a disagreement | “It’s fine, never mind.” | “Actually, I disagree.” | Communication, Levity |
-| Give and take | “This is what I need.” | “What would work for you?” | Communication, Levity |
-| Doing it your way | “Just tell me the plan.” | “I’ll do it my way.” | Drive, Independence & closeness |
-| A hard task | “I’m not sure I can do this.” | “Send it to me.” | Drive, Resilience under pressure |
-| Needing connection | “I’m good on my own today.” | “I need a real conversation.” | Drive, Independence & closeness |
-| After a miss | “Maybe this just isn’t my thing.” | “Okay, what do I change?” | Agency, Resilience under pressure |
-| When plans fall apart | “It was bound to happen.” | “What could I have done differently?” | Agency |
-| A big ask | “That’s a lot. I don’t know.” | “I can do that.” | Agency |
-| Keeping it light | “Let’s just get it done.” | “Okay, but make it fun.” | Everyday social energy, Levity |
+| **Curiosity** | Familiar: “I’ll have my usual.” | Adventurous: “What’s that? I’ll try it.” | Openness to life, Structure vs. spontaneity |
+| **Follow-through** | Flexible: “I’ll figure it out when I get there.” | Structured: “I said I’d finish it, so I did.” | Steadiness, Structure vs. spontaneity |
+| **Sociability** | Reserved: “I need a night in.” | Outgoing: “Who’s around tonight?” | Openness to life, Everyday social energy |
+| **Harmony** | Frank: “I don’t love that plan.” | Easygoing: “I’m fine with anything.” | Steadiness, Everyday social energy |
+| **Composure** | Sensitive: “I’m still thinking about this morning.” | Steady: “Oh, that? I forgot about it.” | Steadiness, Resilience under pressure |
+| **Reassurance** | Trusting: “They’re probably just busy.” | Watchful: “Did I say something wrong?” | Love / closeness |
+| **Personal space** | Close: “Come over, let’s talk.” | Private: “I’m good, I just need some space.” | Love / closeness |
+| **Directness** | Quiet: “It’s fine, never mind.” | Direct: “Actually, I disagree.” | Communication, Levity |
+| **Compromise** | Steadfast: “This is what I need.” | Giving: “What would work for you?” | Communication, Levity |
+| **Independence** | Guided: “Just tell me the plan.” | Self-directed: “I’ll do it my way.” | Drive, Independence & closeness |
+| **Confidence** | Cautious: “I’m not sure I can do this.” | Assured: “Send it to me.” | Drive, Resilience under pressure |
+| **Connection** | Self-contained: “I’m good on my own today.” | Connected: “I need a real conversation.” | Drive, Independence & closeness |
+| **Growth** | Settled: “Maybe this just isn’t my thing.” | Learning: “Okay, what do I change?” | Agency, Resilience under pressure |
+| **Ownership** | Accepting: “It was bound to happen.” | Accountable: “What could I have done differently?” | Agency |
+| **Self-belief** | Hesitant: “That’s a lot. I don’t know.” | Bold: “I can do that.” | Agency |
+| **Playfulness** | Serious: “Let’s just get it done.” | Playful: “Okay, but make it fun.” | Everyday social energy, Levity |
 
-The same names and quotes are used in the two other explanations (both closed until tapped):
-- On a category card: "What shapes this" opens what the category means, then each trait behind it with your quote.
+The same names, words and quotes are used in the two other explanations (both closed until tapped):
+- On a category card: "What shapes this" opens what the category means, then each trait behind it as "Trait · Your word" with your quote.
 - On the identity card: "How this name is made" opens "Two words, three traits each. A word locks in once all three of its traits are settled." then "first word" and "second word" with their three traits each.
-- Shown where needed: "Not answered yet." · "Somewhere in between so far." · "still settling"
+- Shown where needed: "Not answered yet." · "In between so far." · "still settling"
 
-The short names also replace the long ones above each question on the Questions screen
-and in the "Traits answered" list.
+The trait names also head each question on the Questions screen and the "Traits answered" list.
 
 ## 4. Unlock and after-50 wording (unchanged, factual)
 

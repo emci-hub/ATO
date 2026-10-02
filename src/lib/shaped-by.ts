@@ -12,7 +12,7 @@
  * everyday name (AXIS_SHORT_NAME) and the lean is a quote from AXIS_POLES —
  * something a person on that side would say.
  */
-import { AXIS_POLES, AXIS_SHORT_NAME } from '@/lib/axis-poles';
+import { AXIS_POLE_NAME, AXIS_POLES, AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { CATEGORY_DEFS } from '@/lib/categories';
 import { CORE_AXES, MODIFIER_AXES } from '@/lib/legends64/classify';
 import { isAxisSettled, trackFor, type TraitTrack } from '@/lib/trait-stability';
@@ -21,11 +21,9 @@ import type { TraitAxis, TraitLean } from '@/lib/traits';
 export const SHAPED_BY_LABEL = 'What shapes this';
 export const SHAPED_BY_NOT_ANSWERED = 'Not answered yet.';
 export const SHAPED_BY_SETTLING = 'still settling';
-export const SHAPED_BY_MIDDLE = 'Somewhere in between so far.';
-/** Before the reader's own quote. */
-export const YOUR_SIDE_LEAD = 'You sound more like:';
-/** Before the quote from the side they are not on. */
-export const OTHER_SIDE_LEAD = 'The other side:';
+export const SHAPED_BY_MIDDLE = 'In between so far.';
+/** Before the word for the reader's own end: “You lean Adventurous”. */
+export const YOUR_SIDE_LEAD = 'You lean';
 
 export const IDENTITY_RECIPE_LABEL = 'How this name is made';
 export const IDENTITY_RECIPE_LEDE =
@@ -39,6 +37,8 @@ export interface ShapedByRow {
   /** Plain-words name of the trait. */
   label: string;
   lean: TraitLean | null;
+  /** The word for the end they lean to ("Adventurous"), or null without a lean. */
+  poleName: string | null;
   /**
    * With a lean: what their side sounds like, WITHOUT quote marks (the screen
    * adds them). Without one: a plain "not answered" / "in between".
@@ -51,14 +51,14 @@ export function shapedByRow(axis: TraitAxis, tracks: readonly TraitTrack[], now:
   const row = trackFor(tracks, axis, 'report');
   const label = AXIS_SHORT_NAME[axis];
   if (!row || row.answerCount < 1 || !Number.isFinite(row.value)) {
-    return { axis, label, lean: null, line: SHAPED_BY_NOT_ANSWERED, settled: false };
+    return { axis, label, lean: null, poleName: null, line: SHAPED_BY_NOT_ANSWERED, settled: false };
   }
   const settled = isAxisSettled(row, now);
   if (Math.abs(row.value - 0.5) < LEAN_MARGIN) {
-    return { axis, label, lean: null, line: SHAPED_BY_MIDDLE, settled };
+    return { axis, label, lean: null, poleName: null, line: SHAPED_BY_MIDDLE, settled };
   }
   const lean: TraitLean = row.value >= 0.5 ? 'high' : 'low';
-  return { axis, label, lean, line: AXIS_POLES[axis][lean], settled };
+  return { axis, label, lean, poleName: AXIS_POLE_NAME[axis][lean], line: AXIS_POLES[axis][lean], settled };
 }
 
 export function shapedByRows(axes: readonly TraitAxis[], tracks: readonly TraitTrack[]): ShapedByRow[] {

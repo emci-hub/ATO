@@ -9,9 +9,9 @@ import { TraitBandVisual } from '@/components/trait-bands-fold';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
-import { AXIS_POLES, AXIS_SHORT_NAME, POLE_COPY_REVIEWED } from '@/lib/axis-poles';
+import { AXIS_POLE_NAME, AXIS_POLES, AXIS_SHORT_NAME, POLE_COPY_REVIEWED } from '@/lib/axis-poles';
 import { axisConcept } from '@/lib/concept-explainers';
-import { OTHER_SIDE_LEAD, SHAPED_BY_MIDDLE, YOUR_SIDE_LEAD, shapedByRow, showsUpInLine } from '@/lib/shaped-by';
+import { SHAPED_BY_MIDDLE, YOUR_SIDE_LEAD, shapedByRow, showsUpInLine } from '@/lib/shaped-by';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import {
   FULL_PROFILE_LABEL,
@@ -38,6 +38,7 @@ import {
   isDirectTraitSource,
   traitStateFromRow,
   type TraitAxis,
+  type TraitLean,
 } from '@/lib/traits';
 import { TOKEN_DEPTH_LABEL } from '@/lib/tokens';
 
@@ -106,6 +107,10 @@ export function FullProfileFold({
           const phrases = TRAIT_BAND_PHRASES[axis];
           const poles = AXIS_POLES[axis];
           const shaped = shapedByRow(axis, tracks);
+          // Inside the "?": the opposite end when they lean, both ends when they do not.
+          const listedEnds: readonly TraitLean[] = shaped.lean
+            ? [shaped.lean === 'high' ? 'low' : 'high']
+            : ['low', 'high'];
           const provenance = sourceProvenance(state.sources[axis]);
           const updated = formatTraitTouchedAt(
             report?.lastTouched ?? state.touched[axis],
@@ -124,21 +129,19 @@ export function FullProfileFold({
           return (
             <View key={axis} style={styles.axis}>
               {/* The trait's everyday name, and one "?" that opens the rest: what
-                  it means, what the other side sounds like, and which
+                  it means, what the opposite end sounds like, and which
                   categories it is part of. */}
               <InfoReveal label={AXIS_SHORT_NAME[axis]} strong>
                 <ThemedText type="small" themeColor="textSecondary">
                   {axisConcept(axis)}
                 </ThemedText>
-                {shaped.lean ? (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {OTHER_SIDE_LEAD} {quoted(poles[shaped.lean === 'high' ? 'low' : 'high'])}
+                {/* Both ends by name. The reader's own end is already on the row
+                    below, so only the opposite one is listed when they lean. */}
+                {listedEnds.map((end) => (
+                  <ThemedText key={end} type="small" themeColor="textSecondary">
+                    {AXIS_POLE_NAME[axis][end]}: {quoted(poles[end])}
                   </ThemedText>
-                ) : (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {quoted(poles.low)} or {quoted(poles.high)}
-                  </ThemedText>
-                )}
+                ))}
                 {showsUpInLine(axis) ? (
                   <ThemedText type="small" themeColor="textSecondary">
                     {showsUpInLine(axis)}
@@ -148,7 +151,7 @@ export function FullProfileFold({
               {/* Unanswered says so once, further down (NOT_ANSWERED_YET). */}
               {shaped.lean ? (
                 <ThemedText type="small">
-                  {YOUR_SIDE_LEAD} {quoted(shaped.line)}
+                  {YOUR_SIDE_LEAD} {shaped.poleName}: {quoted(shaped.line)}
                 </ThemedText>
               ) : shaped.line === SHAPED_BY_MIDDLE ? (
                 <ThemedText type="small">{shaped.line}</ThemedText>

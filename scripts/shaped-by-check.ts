@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { AXIS_POLES, AXIS_SHORT_NAME, poleCopyClean } from '../src/lib/axis-poles';
+import { AXIS_POLE_NAME, AXIS_POLES, AXIS_SHORT_NAME, poleCopyClean } from '../src/lib/axis-poles';
 import { CATEGORY_DEFS } from '../src/lib/categories';
 import { CORE_AXES, MODIFIER_AXES } from '../src/lib/legends64/classify';
 import {
@@ -60,7 +60,20 @@ for (const axis of TRAIT_AXES) {
   assert.doesNotMatch(name, /_|\baxis\b/i, `internal word in a trait name: ${name}`);
 }
 assert.equal(new Set(Object.values(AXIS_SHORT_NAME)).size, TRAIT_AXES.length);
-ok('all 32 trait quotes are short things a person would say, and all 16 trait names are short, plain and distinct');
+// Uniform: every trait is one noun (at most two words), every end is one word.
+const endWords: string[] = [];
+for (const axis of TRAIT_AXES) {
+  assert.ok(AXIS_SHORT_NAME[axis].split(' ').length <= 2, `trait name is a phrase: ${AXIS_SHORT_NAME[axis]}`);
+  assert.match(AXIS_SHORT_NAME[axis], /^[A-Z]/);
+  for (const end of ['low', 'high'] as const) {
+    const word = AXIS_POLE_NAME[axis][end];
+    assert.match(word, /^[A-Z][a-z]+(-[a-z]+)?$/, `end name must be one capitalised word: ${word}`);
+    endWords.push(word);
+  }
+  assert.notEqual(AXIS_POLE_NAME[axis].low, AXIS_POLE_NAME[axis].high);
+}
+assert.equal(new Set(endWords).size, endWords.length, 'two traits share an end word');
+ok('all 32 quotes are short things a person would say; all 16 traits are one noun and all 32 ends one distinct word');
 
 // --- the logic -------------------------------------------------------------------
 assert.equal(shapedByRow('openness', []).line, SHAPED_BY_NOT_ANSWERED);
@@ -69,6 +82,8 @@ const high = shapedByRow('openness', [track('openness', 0.8)]);
 assert.equal(high.lean, 'high');
 assert.equal(high.line, AXIS_POLES.openness.high);
 assert.equal(high.label, AXIS_SHORT_NAME.openness);
+assert.equal(high.poleName, AXIS_POLE_NAME.openness.high);
+assert.equal(shapedByRow('openness', []).poleName, null);
 assert.equal(high.settled, true);
 const low = shapedByRow('openness', [track('openness', 0.2, 2)]);
 assert.equal(low.line, AXIS_POLES.openness.low);
@@ -97,6 +112,7 @@ const reveal = read('src/components/info-reveal.tsx');
 assert.match(reveal, /const \[open, setOpen\] = useState\(false\);/);
 assert.match(reveal, /\{open \? <View style=\{styles\.body\}>\{children\}<\/View> : null\}/);
 assert.match(reveal, /\{row\.lean \? quoted\(row\.line\) : row\.line\}/);
+assert.match(reveal, /\{row\.poleName \? ` · \$\{row\.poleName\}` : ''\}/);
 ok('a reveal is closed until tapped, renders nothing while closed, and puts a quote in quote marks');
 
 const fold = read('src/components/categories-fold.tsx');
@@ -112,13 +128,15 @@ assert.match(identity, /<ShapedByList rows=\{recipe\.first\} \/>[\s\S]*<ShapedBy
 ok('the identity card explains how the name is made');
 
 const profile = read('src/components/full-profile-fold.tsx');
-assert.match(profile, /\{YOUR_SIDE_LEAD\} \{quoted\(shaped\.line\)\}/);
+assert.match(profile, /\{YOUR_SIDE_LEAD\} \{shaped\.poleName\}: \{quoted\(shaped\.line\)\}/);
 assert.match(profile, /<InfoReveal label=\{AXIS_SHORT_NAME\[axis\]\} strong>/);
 assert.equal((profile.match(/<InfoReveal /g) ?? []).length, 1, 'one "?" per trait, not two');
 assert.doesNotMatch(profile, /AxisCodeLabel/, 'no two-letter trait codes on the full profile');
-// Someone who leans one way must be shown the OPPOSITE quote as the other side.
-assert.match(profile, /\{OTHER_SIDE_LEAD\} \{quoted\(poles\[shaped\.lean === 'high' \? 'low' : 'high'\]\)\}/);
-ok('the full profile shows the trait’s plain name and your own quote; one "?" opens the other side and what it is part of');
+// Someone who leans one way is shown only the OPPOSITE end inside the "?", by name.
+assert.match(profile, /const listedEnds: readonly TraitLean\[\] = shaped\.lean\s+\? \[shaped\.lean === 'high' \? 'low' : 'high'\]\s+: \['low', 'high'\];/);
+assert.match(profile, /\{AXIS_POLE_NAME\[axis\]\[end\]\}: \{quoted\(poles\[end\]\)\}/);
+assert.doesNotMatch(profile + read('src/lib/shaped-by.ts'), /One side|The other side|other end/i);
+ok('the full profile shows the trait, the end you lean to by name, and its quote; one "?" opens the opposite end and what it is part of');
 
 for (const rel of ['src/components/paged-questions.tsx', 'src/components/profile-fill-fold.tsx']) {
   assert.match(read(rel), /AXIS_SHORT_NAME\[/, `${rel} should use the short trait name`);

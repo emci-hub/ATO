@@ -57,7 +57,7 @@ export function quoted(line: string): string {
   return `“${line}”`;
 }
 
-/** The trait rows inside a reveal: plain name, the lean, and "still settling" where true. */
+/** The trait rows inside a reveal: “Curiosity · Adventurous”, then what that sounds like. */
 export function ShapedByList({ rows }: { rows: readonly ShapedByRow[] }) {
   return (
     <>
@@ -65,7 +65,8 @@ export function ShapedByList({ rows }: { rows: readonly ShapedByRow[] }) {
         <View key={row.axis} style={styles.item}>
           <ThemedText type="smallBold">
             {row.label}
-            {row.lean && !row.settled ? ` · ${SHAPED_BY_SETTLING}` : ''}
+            {row.poleName ? ` · ${row.poleName}` : ''}
+            {row.lean && !row.settled ? ` (${SHAPED_BY_SETTLING})` : ''}
           </ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
             {row.lean ? quoted(row.line) : row.line}
