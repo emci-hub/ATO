@@ -49,15 +49,12 @@ export function defaultFabPosition(b: FabBounds): { x: number; y: number } {
 
 /** Hub sections the app kit can show (each is a component in `app/dev-lab`). */
 export type AppDevSection =
-  | 'home-overrides'
   | 'quota'
   | 'explore-regen'
   | 'traits'
   | 'band-stepper'
-  | 'intake-presets'
-  | 'fresh-signup'
-  | 'handle-check'
-  | 'growth'
+  | 'jump'
+  | 'start-over'
   | 'you-tools'
   | 'ai-consent'
   | 'local-data'
@@ -67,11 +64,11 @@ export type AppDevSection =
 
 /** Per screen: its name in the kit and the sections that test it. */
 export const APP_DEV_SCREENS: Record<string, { label: string; sections: readonly AppDevSection[] }> = {
-  '/': { label: 'Home', sections: ['home-overrides', 'ai-consent'] },
+  '/': { label: 'Home', sections: ['jump', 'ai-consent'] },
   '/explore': { label: 'Explore', sections: ['traits', 'band-stepper', 'explore-regen'] },
-  '/intake-sweep': { label: 'Questions', sections: ['intake-presets', 'fresh-signup', 'traits'] },
+  '/intake-sweep': { label: 'Questions', sections: ['jump', 'start-over'] },
   '/sage': { label: 'Sage', sections: ['quota', 'fence', 'trace'] },
-  '/you': { label: 'You', sections: ['growth', 'you-tools', 'handle-check', 'ai-consent', 'local-data'] },
+  '/you': { label: 'You', sections: ['you-tools', 'ai-consent', 'local-data'] },
 };
 
 /** Useful on any screen; shown under the screen's own tools, collapsed. */
@@ -91,7 +88,8 @@ export function appDevEverywhere(pathname: string): readonly AppDevSection[] {
 }
 
 /**
- * Who sees the app button: exactly who may open the Dev Tools Hub — never
+ * Who sees the app button: exactly who may open the Hub's testing groups
+ * (`hubAccess(...) === 'full'`, so nobody at all in a release build) — never
  * signed out, mid-onboarding or while access is loading — and never on a screen
  * that has its own dev surface (Play has its own button).
  */

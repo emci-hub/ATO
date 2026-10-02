@@ -49,6 +49,26 @@ export function canSeeDevLab(input: {
   return input.capabilities.some((cap) => isGrantableCapability(cap));
 }
 
+/**
+ * What the Hub is for this viewer in this build.
+ *   full  — dev tools exist here and this viewer may open them.
+ *   admin — a release build: only root gets in, and only to the Admin group
+ *           (access requests, grants, pause / delete), all enforced server-side.
+ *   none  — nothing. In a release build that is everyone but root, whatever
+ *           PIN, password unlock or grant they hold.
+ */
+export type HubAccess = 'none' | 'admin' | 'full';
+
+export function hubAccess(input: {
+  toolsAvailable: boolean;
+  isDev: boolean;
+  isRoot: boolean;
+  capabilities: readonly string[];
+}): HubAccess {
+  if (!input.toolsAvailable) return input.isRoot ? 'admin' : 'none';
+  return canSeeDevLab(input) ? 'full' : 'none';
+}
+
 export function canSeeHubSection(
   section: HubSection,
   input: { isDev: boolean; isRoot: boolean; capabilities: readonly string[] },

@@ -2,8 +2,8 @@
  * The app's floating dev button (outside Play) — the same draggable DEV bubble
  * Play uses, mounted once in the root layout. Tap it and the Dev Tools Hub
  * sections for the screen you are on open ON TOP of that screen: Home gets the
- * slot / ask overrides, Explore the trait viewer, Questions the intake presets,
- * You the growth preview and account tools, Sage the quota / fence / trace.
+ * jump menu, Explore the trait viewer, Questions the jump menu and Start over,
+ * You the account tools, Sage the quota / fence / trace.
  * Quota, trace and the fence are one tap away on every screen, and the full
  * Hub (root-only tools included) stays a button at the bottom.
  *
@@ -12,6 +12,7 @@
  * button at all: `appDevFabVisible` — anyone who has entered the dev PIN this
  * session (the box at the bottom of You — the same PIN and lock as Divecore), plus
  * root, a granted capability or a dev build. Never on /play (it has its own).
+ * In a release build it never renders for anyone (`hubAccess` is not 'full').
  */
 import { usePathname, useRouter } from 'expo-router';
 import { useMemo, useState, type ReactNode } from 'react';
@@ -21,14 +22,11 @@ import {
   BandDetailStepper,
   ExploreRegen,
   FenceTester,
-  GrowthPreview,
-  HandleCollisionCheck,
-  HomeOverrides,
-  IntakeStagePresets,
+  JumpThisAccount,
   LocalAccountData,
   QuotaDashboard,
   ResetAiConsent,
-  ResetToFreshSignup,
+  StartOver,
   TraceCapture,
   TraitViewer,
 } from '@/app/dev-lab';
@@ -39,7 +37,8 @@ import { ThemedText } from '@/components/themed-text';
 import { YouDevTools } from '@/components/you-dev-tools';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
-import { canSeeDevLab, canSeeHubSection, type DevCapability } from '@/lib/dev-access';
+import { canSeeHubSection, hubAccess, type DevCapability } from '@/lib/dev-access';
+import { DEV_TOOLS_AVAILABLE } from '@/lib/dev-mode';
 import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
 import { useDevPinUnlocked } from '@/lib/dev-pin';
 import {
@@ -52,7 +51,6 @@ import { useMeContext } from '@/lib/me-context';
 
 /** The Hub capability a section needs (none = anyone who can open the Hub). */
 const SECTION_CAPABILITY: Partial<Record<AppDevSection, DevCapability>> = {
-  'home-overrides': 'card',
   traits: 'traits',
   quota: 'quota',
   fence: 'fence',
@@ -82,7 +80,8 @@ export function AppDevFab() {
     isAuthed: !!session,
     hasMe: !!me,
     devAccessLoading,
-    canSeeHub: canSeeDevLab(gate),
+    // 'full' only: a release build has no bubble, whatever is unlocked.
+    canSeeHub: hubAccess({ toolsAvailable: DEV_TOOLS_AVAILABLE, ...gate }) === 'full',
     pathname,
   });
   if (!visible) return null;
@@ -133,8 +132,6 @@ function AppDevPanel({
 
   const section = (id: AppDevSection): ReactNode => {
     switch (id) {
-      case 'home-overrides':
-        return <HomeOverrides key={id} />;
       case 'quota':
         return <QuotaDashboard key={id} />;
       case 'explore-regen':
@@ -143,14 +140,10 @@ function AppDevPanel({
         return <TraitViewer key={id} />;
       case 'band-stepper':
         return <BandDetailStepper key={id} />;
-      case 'intake-presets':
-        return <IntakeStagePresets key={id} />;
-      case 'fresh-signup':
-        return <ResetToFreshSignup key={id} />;
-      case 'handle-check':
-        return <HandleCollisionCheck key={id} />;
-      case 'growth':
-        return <GrowthPreview key={id} />;
+      case 'jump':
+        return <JumpThisAccount key={id} />;
+      case 'start-over':
+        return <StartOver key={id} />;
       case 'you-tools':
         return <YouDevTools key={id} timeZone={timeZone} />;
       case 'ai-consent':

@@ -90,7 +90,7 @@ assert.match(layout, /<Stack\.Protected guard=\{isAuthed && hasMe\}>[\s\S]*name=
 assert.match(fs.readFileSync(path.join(root, 'src/app/theme-lab.tsx'), 'utf8'), /if \(!PRE_LAUNCH_DEV\)/);
 assert.match(fs.readFileSync(path.join(root, 'src/app/theme-lab.tsx'), 'utf8'), /Redirect href="\/"/);
 assert.doesNotMatch(fs.readFileSync(path.join(root, 'src/app/theme-lab.tsx'), 'utf8'), /Dev only/);
-assert.match(fs.readFileSync(path.join(root, 'src/app/dev-lab.tsx'), 'utf8'), /canSeeDevLab/);
+assert.match(fs.readFileSync(path.join(root, 'src/app/dev-lab.tsx'), 'utf8'), /hubAccess\(\{/);
 assert.match(fs.readFileSync(path.join(root, 'src/app/dev-lab.tsx'), 'utf8'), /Redirect href="\/"/);
 assert.doesNotMatch(fs.readFileSync(path.join(root, 'src/app/dev-lab.tsx'), 'utf8'), /Dev only/);
 ok('theme-lab is a PRE_LAUNCH_DEV route, not the production initial screen');

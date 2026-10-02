@@ -36,12 +36,12 @@ ok('the parked You tab loads no crash/push probes at all');
 // all, and unlike the PRE_LAUNCH_DEV labs that hole would have survived the
 // flag flip into public launch.
 const runningUpdate = readFileSync(join(root, 'src/components/running-update-line.tsx'), 'utf8');
-assert.match(runningUpdate, /canSeeDevLab\(\{/);
+assert.match(runningUpdate, /hubAccess\(\{/);
 assert.match(runningUpdate, /if \(canOpenAiLab\) router\.push\('\/ai-lab'\)/);
-ok('Build-line 5-tap shortcut to /ai-lab is gated on canSeeDevLab');
+ok('Build-line 5-tap shortcut to /ai-lab is gated on hubAccess (the Hub gate; nothing in a release build)');
 
 const aiLab = readFileSync(join(root, 'src/app/ai-lab.tsx'), 'utf8');
-assert.match(aiLab, /canSeeDevLab\(\{/);
+assert.match(aiLab, /hubAccess\(\{/);
 assert.match(aiLab, /return <Redirect href="\/" \/>;/);
 ok('/ai-lab redirects anyone without dev access');
 

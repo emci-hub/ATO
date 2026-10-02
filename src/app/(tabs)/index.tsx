@@ -26,7 +26,8 @@ import { fullProfileProgress, isFullProfileDone } from '@/lib/full-profile-gate'
 import { cachedFromInsight, saveCachedInsight } from '@/lib/insight/today-insight';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { ATO_TOKEN_EARN } from '@/lib/ato-tokens';
-import { canSeeDevLab } from '@/lib/dev-access';
+import { hubAccess } from '@/lib/dev-access';
+import { DEV_TOOLS_AVAILABLE } from '@/lib/dev-mode';
 import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
 import { useSession } from '@/hooks/use-session';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
@@ -301,11 +302,14 @@ export default function HomeScreen() {
     }
   }
 
-  const canSeeHub = canSeeDevLab({
-    isDev: __DEV__ || devUnlocked,
-    isRoot: devAccess.isRoot,
-    capabilities: devAccess.capabilities,
-  });
+  // 'admin' (a release build, root only) still gets the link: Admin lives in the Hub.
+  const canSeeHub =
+    hubAccess({
+      toolsAvailable: DEV_TOOLS_AVAILABLE,
+      isDev: __DEV__ || devUnlocked,
+      isRoot: devAccess.isRoot,
+      capabilities: devAccess.capabilities,
+    }) !== 'none';
 
   /*
     Kept in BOTH states, unlike everything else pre-profile: dev-lab is how the
@@ -326,7 +330,7 @@ export default function HomeScreen() {
             <View style={styles.boxRowText}>
               <ThemedText type="smallBold">Dev Tools Hub</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
-                Cards, traits, quota, fence, trace
+                Where this account is, jump, tests, admin
               </ThemedText>
             </View>
             <ThemedText themeColor="textSecondary">›</ThemedText>

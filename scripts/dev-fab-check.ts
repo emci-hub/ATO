@@ -169,12 +169,16 @@ ok('mode-aware: Pet mode shows Pet / Eggs / Room tools in six groups, one shared
   const used = [...Object.values(APP_DEV_SCREENS).flatMap((x) => [...x.sections]), ...APP_DEV_EVERYWHERE];
   for (const s of used) assert.ok(fab.includes(`case '${s}':`), `the panel can draw ${s}`);
   const hub = read('src/app/dev-lab.tsx');
-  for (const n of ['HomeOverrides', 'TraitViewer', 'IntakeStagePresets', 'GrowthPreview', 'QuotaDashboard', 'FenceTester', 'TraceCapture']) {
+  for (const n of ['TraitViewer', 'JumpThisAccount', 'StartOver', 'QuotaDashboard', 'FenceTester', 'TraceCapture']) {
     assert.ok(new RegExp('export \\{[^}]*\\b' + n + ',').test(hub), `${n} is exported from the Hub`);
     assert.ok(hub.includes(`\nfunction ${n}() {`), `${n} keeps its plain declaration (other checks slice on it)`);
   }
   const exportBlock = hub.slice(hub.lastIndexOf('export {'));
-  assert.ok(exportBlock.includes('HomeOverrides'), 'the export list was found');
+  assert.ok(exportBlock.includes('JumpThisAccount'), 'the export list was found');
+  // Removed 2026-10-01 as dead tools: nothing read what they wrote.
+  for (const gone of ['HomeOverrides', 'GrowthPreview', 'HandleCollisionCheck', 'IntakeStagePresets']) {
+    assert.ok(!hub.includes(gone) && !fab.includes(gone), gone + ' is gone from the Hub and the bubble');
+  }
   for (const rootOnly of ['AccessReview', 'GrantsPanel', 'ProfilesPanel']) {
     assert.ok(hub.includes('<' + rootOnly + ' />') && !exportBlock.includes(rootOnly), rootOnly + ' stays inside the Hub (root-only)');
   }
@@ -184,6 +188,8 @@ ok('mode-aware: Pet mode shows Pet / Eggs / Room tools in six groups, one shared
   // 2026-10-01 (emci): the normal way in is the dev PIN — Divecore's existing local
   // lock, shared — instead of needing root or the old server password.
   assert.ok(fab.includes('isDev: __DEV__ || devUnlocked || pinUnlocked,'), 'isDev = a dev build, the session unlock, or the dev PIN');
+  // 2026-10-01: and never in a release build, whatever is unlocked.
+  assert.ok(fab.includes("canSeeHub: hubAccess({ toolsAvailable: DEV_TOOLS_AVAILABLE, ...gate }) === 'full',"), 'the bubble needs full Hub access, which a release build never grants');
 }
 ok('app button: root / grant / unlock only (not PRE_LAUNCH_DEV), hidden on Play, per-screen tools from the Hub’s own sections');
 
@@ -204,7 +210,8 @@ ok('app button: root / grant / unlock only (not PRE_LAUNCH_DEV), hidden on Play,
 
   // The Hub opens with the PIN; the pre-launch flag alone no longer opens it.
   const hub = read('src/app/dev-lab.tsx');
-  const entry = hub.slice(hub.indexOf('export default function DevLabScreen()'), hub.indexOf('function DevLab()'));
+  const entry = hub.slice(hub.indexOf('export default function DevLabScreen()'), hub.indexOf('function DevLab('));
+  assert.ok(entry.length > 0 && entry.includes('hubAccess({'), 'Hub entry goes through hubAccess');
   assert.ok(entry.includes('isDev: __DEV__ || devUnlocked || pinUnlocked,'), 'Hub entry: dev build, session unlock, or the dev PIN');
   assert.ok(!entry.includes('isDev: PRE_LAUNCH_DEV'), 'Hub entry: the pre-launch flag alone does not open it');
   assert.ok(entry.includes('isRoot: devAccess.isRoot,'), 'Hub entry: root still walks in — but is no longer required');
@@ -214,11 +221,11 @@ ok('app button: root / grant / unlock only (not PRE_LAUNCH_DEV), hidden on Play,
   const play = read('src/app/play.tsx');
   assert.ok(play.includes('PRE_LAUNCH_DEV && !devUnlocked ? <DevUnlockRow />'), 'Divecore still shows its PIN box while locked');
 
-  // The Clear button's protection is the server's, not this lock's.
-  const wave75 = read('supabase/migrations/wave75_reset_my_test_data.sql');
-  assert.ok(wave75.includes('if not public.is_root() then'), 'clear-all stays root-only on the server');
-  const clearAt = hub.indexOf('Clear all my questions (full)');
-  assert.ok(clearAt > 0 && hub.lastIndexOf('{devAccess.isRoot ? (', clearAt) > hub.lastIndexOf('function IntakeStagePresets()', clearAt), 'and its button still sits inside the root-only block');
+  // Start over's protection is the server's, not this lock's.
+  const wave76 = read('supabase/migrations/wave76_start_over_my_test_data.sql');
+  assert.ok(wave76.includes('if not public.is_root() then'), 'Start over stays root-only on the server');
+  const startAt = hub.indexOf('Start over (0 of 50)');
+  assert.ok(startAt > 0 && hub.lastIndexOf('{devAccess.isRoot ? (', startAt) > hub.lastIndexOf('function StartOver()', startAt), 'and its button sits inside the root-only block');
   assert.ok(you.includes('automaticallyAdjustKeyboardInsets') && you.includes('keyboardShouldPersistTaps="handled"'), 'the PIN box on You is not hidden by the keyboard');
 }
 ok('dev PIN: one shared lock (Divecore’s), PIN box on You, opens the bubble and the Hub; root no longer needed to get in');

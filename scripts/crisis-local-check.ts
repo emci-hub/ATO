@@ -49,7 +49,15 @@ ok('wired: saved text is checked; Home shows the static card from either flag, e
 
 // A way to test it on a device without typing a real phrase into the app.
 const hub = read('src/app/dev-lab.tsx');
-assert.ok(hub.includes('{PRE_LAUNCH_DEV ? <CrisisLocalFlagTest /> : null}'), 'dev test is pre-launch only');
+// 2026-10-01: the whole "Test one thing" group renders only while dev tools
+// exist (hubAccess 'full'), which is the pre-launch gate for everything in it.
+{
+  const at = hub.indexOf('<CrisisLocalFlagTest />');
+  assert.ok(
+    at > hub.indexOf('{tools ? (') && at < hub.indexOf('<ThemedText type="smallBold">Admin</ThemedText>'),
+    'dev test is pre-launch only',
+  );
+}
 ok('dev test: flag / clear from the Dev Tools Hub');
 
 console.log(`\n${passed} crisis-local checks passed`);

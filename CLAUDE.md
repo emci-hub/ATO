@@ -33,16 +33,24 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   day 3+ is closed. Read/Do text lives 7 days; did/skip forever.
 - **Trait writes go through `mergeTraitWrite` → `updateTraits`** (EWMA, direct sources
   sticky over inferred). Direct writes to trait columns are dev tooling only (the
-  intake stage presets; see the dev-testing rule below).
+  jump stages; see the dev-testing rule below).
 - **`PRE_LAUNCH_DEV`** (`src/lib/dev-mode.ts`) un-gates dev tooling while invite-only.
-  Must be `false` before a public build — `check:release-mode` enforces it.
+  Must be `false` before a public build — `check:release-mode` enforces it. With it
+  off, no dev tool renders for anyone: no PIN, password unlock or grant opens the Hub's
+  testing groups, the DEV bubble or the AI lab (`DEV_TOOLS_AVAILABLE`, `hubAccess`).
+  Root keeps the Hub's Admin group only. A new dev panel goes inside the `tools`
+  branch of `dev-lab.tsx`, or `check:release-mode` fails.
 - **Crisis card is static** — never a generated number, never a guessed region.
-- **Dev testing uses the dev-test user** (`ato-dev@example.com` / `@atodev`) and its
-  persona presets. **One exception, lifted by emci 2026-10-01:** the intake stage
-  presets (`applyDevIntakeStagePreset`) may seed or clear the SIGNED-IN account's own
-  answers pre-launch, so stages can be tested without deleting an account. Everything
-  else (archetype presets, the full reset RPC) stays dev-test-user only. Agents still
+- **Dev testing uses the dev-test user** (`ato-dev@example.com` / `@atodev`). **Two
+  things may act on the SIGNED-IN account's own data pre-launch (emci, 2026-10-01):**
+  the "Jump this account" stages (`applyDevIntakeStagePreset`: 49 of 50, the 50, round 1
+  finished, all 16 settled), which any signed-in account may use on itself, and
+  "Start over" (`start_over_my_test_data`, wave76), which is root only on the server and
+  keeps the account and its token balance. Both take two taps. Deleting a profile to
+  re-run the sign-up form (`reset_dev_test_user`) stays dev-test-user only. Agents still
   never sign in as, or write to, a real account themselves.
+- **Every dev or admin action that writes takes two taps** (`useTwoTap` in
+  `dev-lab.tsx`), or a typed handle where it cannot be undone.
 - **Unreviewed copy ships behind `*_COPY_REVIEWED = false` flags.** Story / Levity are
   diagnosis-adjacent; not shippable as reviewed without emci's read.
 - Do not change dependencies, schemas, auth, env config, or secrets without emci's ok.

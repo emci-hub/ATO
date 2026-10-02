@@ -8,6 +8,7 @@ import { QuestionsFold } from '@/components/questions-fold';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { isFullProfileDone } from '@/lib/full-profile-gate';
 import { useMe } from '@/hooks/use-me';
 import { useSession } from '@/hooks/use-session';
@@ -80,9 +81,14 @@ export default function IntakeSweepTabScreen() {
     }
   }, [userId]);
 
+  // A dev jump or "Start over" rewrites the account underneath this mounted
+  // tab. The epoch moves when that happens: reload tracks and this screen's own
+  // `me`, and remount the fold (below) so it drops its round and answer stamps.
+  const dataEpoch = useAccountDataEpoch();
   useEffect(() => {
     void loadTracks();
-  }, [loadTracks]);
+    if (dataEpoch > 0) void refresh();
+  }, [loadTracks, dataEpoch, refresh]);
 
   const refreshAfterAnswer = useCallback(async () => {
     await Promise.all([refresh(), loadTracks()]);
@@ -124,6 +130,7 @@ export default function IntakeSweepTabScreen() {
           */}
           {me && tracksReady ? (
             <QuestionsFold
+              key={dataEpoch}
               me={me}
               history={[]}
               onUpdated={refreshAfterAnswer}

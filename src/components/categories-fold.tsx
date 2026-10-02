@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
+import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/generate';
 import { ATO_TOKEN_NEED_MORE, ATO_TOKEN_PRICE, atoPriceLine, atoTokenBalanceOf } from '@/lib/ato-tokens';
 import { fallbackCategoryCopies, fallbackForReading } from '@/lib/category-bands';
@@ -114,9 +115,10 @@ export function CategoriesFold({
     }
   }, [me.id]);
 
+  const dataEpoch = useAccountDataEpoch();
   useEffect(() => {
     void loadStatements();
-  }, [loadStatements]);
+  }, [loadStatements, dataEpoch]);
   const readings = readAllCategories(tracks);
   const ready = readings.filter((row) => row.ready);
   const cached = parseSageTitle(me.sage_title);
@@ -139,7 +141,8 @@ export function CategoriesFold({
     return () => {
       cancelled = true;
     };
-  }, [me.id, me.updated_at]);
+    // dataEpoch: a dev jump or Start over rewrote the account under this card.
+  }, [me.id, me.updated_at, dataEpoch]);
 
   useEffect(() => {
     if (ready.length === 0) return;

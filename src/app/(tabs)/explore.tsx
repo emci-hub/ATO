@@ -13,6 +13,7 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { isFullProfileDone } from '@/lib/full-profile-gate';
+import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { useMeContext } from '@/lib/me-context';
 import { settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
@@ -31,6 +32,7 @@ export default function ExploreScreen() {
   const { me, refresh: refreshMe } = useMeContext();
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [tracksReady, setTracksReady] = useState(false);
+  const dataEpoch = useAccountDataEpoch();
 
   useEffect(() => {
     if (!userId) return;
@@ -48,7 +50,8 @@ export default function ExploreScreen() {
     return () => {
       cancelled = true;
     };
-  }, [userId, me]);
+    // dataEpoch: a dev jump or Start over rewrote the account under this tab.
+  }, [userId, me, dataEpoch]);
 
   return (
     <ThemedView style={styles.container}>

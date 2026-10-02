@@ -1,11 +1,23 @@
 /**
  * Dev Tools Hub.
  *
- * New dev/test tools for a given screen go in that screen's section
- * (Home, Sage, You, System), not in a shared catch-all.
+ * Four groups, in the order they get used (2026-10-01, emci):
+ *   1. Where this account is — read-only: inspector, raw traits, AI usage.
+ *   2. Jump this account    — one menu of states to jump to, and Start over.
+ *   3. Test one thing        — single-purpose probes.
+ *   4. Admin                 — root only, enforced on the server.
+ * A new tool goes in the group that matches what it does, not the screen it
+ * happens to test.
+ *
+ * RELEASE GATE: groups 1-3 exist only while `DEV_TOOLS_AVAILABLE` (lib/dev-mode)
+ * is true. In a release build no PIN, password unlock or grant opens them; root
+ * still reaches Admin, and nobody else reaches anything (`hubAccess`).
+ *
+ * Anything here that writes takes two taps (`useTwoTap`), or a typed handle
+ * where it cannot be undone.
  */
 import { Redirect } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -16,11 +28,11 @@ import { RunningUpdateLine } from '@/components/running-update-line';
 import { TracePipelineViewer } from '@/components/trace-pipeline';
 import { YouDevTools } from '@/components/you-dev-tools';
 import { CrisisCard } from '@/components/crisis-card';
-import { isRevealOpenedToday } from '@/components/reveal-card';
 import { TraitBandDetail } from '@/components/trait-bands-fold';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useMeContext } from '@/lib/me-context';
-import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+import { DEV_TOOLS_AVAILABLE, PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
 import { useDevPinUnlocked } from '@/lib/dev-pin';
 import {
@@ -28,9 +40,7 @@ import {
   listAccountScopedKeys,
 } from '@/lib/local-account-data';
 import { useSession } from '@/hooks/use-session';
-import { useGrowth } from '@/hooks/use-growth';
 import { useTheme } from '@/hooks/use-theme';
-import { checkWindowFor, offsetLabel } from '@/lib/check-window';
 import { checksToHistory, fetchChecks } from '@/lib/checks';
 import { crisisFlagsForWindow } from '@/lib/crisis/days';
 import { clearCrisisLocalFlag, noteCrisisText } from '@/lib/crisis/local-flag';
@@ -45,8 +55,9 @@ import {
   GRANTABLE_DESCRIPTIONS,
   NEVER_GRANTABLE,
   ROOT_ONLY_DESCRIPTIONS,
-  canSeeDevLab,
   canSeeHubSection,
+  hubAccess,
+  type HubAccess,
 } from '@/lib/dev-access';
 import {
   deleteProfile,
@@ -77,7 +88,6 @@ import { withTimeout } from '@/lib/timeout';
 import { fetchExploreMissNotes } from '@/lib/explore/store';
 import type { RouteExploreResult } from '@/lib/explore/types';
 import { voiceMeFrom } from '@/lib/intake';
-import { localYmd, weekdayInZone } from '@/lib/local-date';
 import { supabase } from '@/lib/supabase';
 import { isDirectTraitSource, traitStateFromRow, type TraitSource } from '@/lib/traits';
 import { filledTraitBands } from '@/lib/trait-bands';
@@ -87,41 +97,20 @@ import { matchingFrameworkTerms } from '@/lib/voice/framework-fence';
 import { type SageUsageSnapshot } from '@/lib/voice/quota';
 import { claimAiCall, fetchSageUsage, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
 import {
-  ASK_OVERRIDE_KINDS,
-  SLOT_OVERRIDE_KINDS,
-  clearAskOverride,
-  clearSlotOverride,
-  loadStoredAskOverride,
-  loadStoredSlotOverride,
-  writeAskOverride,
-  writeSlotOverride,
-} from '@/lib/dev-overrides';
-import {
   DEV_INTAKE_STAGES,
+  devStageMatching,
   type DevIntakeStageId,
 } from '@/lib/dev-intake-stages';
 import {
-  DEV_COLLISION_HANDLE,
   DEV_TEST_HANDLE,
   DEV_TEST_USER_ID,
   applyDevIntakeStagePreset,
-  resetMyTestData,
   resetDevTestUserToFreshSignup,
+  startOverMyTestData,
 } from '@/lib/dev-test-user';
-import { checkHandleAvailable } from '@/lib/me';
 import { bankTotalProgress } from '@/lib/questions/local';
-import { legendsUnlocked, sageUnlocked } from '@/lib/questions/progressive-unlock';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
-import type { TraitTrack } from '@/lib/trait-stability';
-import { resolveAsk, type AskPick } from '@/lib/ask';
-import { resolveReveal } from '@/lib/reveal';
-import { parseSageKnowsState } from '@/lib/sage-knows';
-import { resolveTodaySlot, type TodaySlot } from '@/lib/today-slot';
-import {
-  clearGrowthPreview,
-  readGrowthPreview,
-  writeGrowthPreview,
-} from '@/lib/dev-growth-preview';
+import { settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
 
 const SOURCE_NOTE: Record<TraitSource, string> = {
   self_slider: 'direct — inferred cannot overwrite (historical, no longer written)',
@@ -149,21 +138,22 @@ export default function DevLabScreen() {
   }
   // ENTRY (2026-10-01, emci): the Hub opens once the dev PIN is entered — the box at
   // the bottom of You, the same PIN and lock as Divecore (lib/dev-pin.ts). Root and
-  // granted testers still walk in. The pre-launch flag alone no longer opens it, and
-  // nobody needs root just to open the Hub or see the Inspector.
-  if (
-    !canSeeDevLab({
-      isDev: __DEV__ || devUnlocked || pinUnlocked,
-      isRoot: devAccess.isRoot,
-      capabilities: devAccess.capabilities,
-    })
-  ) {
+  // granted testers still walk in. The pre-launch flag alone no longer opens it.
+  // In a RELEASE build none of that applies: `hubAccess` answers 'admin' for root
+  // and 'none' for everyone else, whatever they have unlocked.
+  const access = hubAccess({
+    toolsAvailable: DEV_TOOLS_AVAILABLE,
+    isDev: __DEV__ || devUnlocked || pinUnlocked,
+    isRoot: devAccess.isRoot,
+    capabilities: devAccess.capabilities,
+  });
+  if (access === 'none') {
     return <Redirect href="/" />;
   }
-  return <DevLab />;
+  return <DevLab access={access} />;
 }
 
-function DevLab() {
+function DevLab({ access }: { access: Exclude<HubAccess, 'none'> }) {
   const { devAccess, me } = useMeContext();
   const devUnlocked = useDevAccessUnlocked();
   const gate = useMemo(
@@ -174,6 +164,8 @@ function DevLab() {
     }),
     [devUnlocked, devAccess.isRoot, devAccess.capabilities],
   );
+  // 'admin' is a release build: the three testing groups are not rendered at all.
+  const tools = access === 'full';
 
   return (
     <ThemedView style={styles.container}>
@@ -182,64 +174,96 @@ function DevLab() {
           <View style={styles.header}>
             <ThemedText type="subtitle">Dev Tools Hub</ThemedText>
             <ThemedText themeColor="textSecondary">
-              Opens once the dev PIN is entered on You (this session only), or for root and
-              granted testers.
-              Access, grants, and profile pause/delete stay root-only.
+              {tools
+                ? 'Opens with the dev PIN on You (this session only), or for root and granted testers. Anything that writes takes two taps.'
+                : 'Release build: only the root-only Admin tools exist here.'}
             </ThemedText>
             <RunningUpdateLine />
           </View>
 
-          {/* Read-only: this account's axes, categories, AI gates and question pool. */}
-          <View style={styles.section}>
-            <DevInspector />
-          </View>
+          {tools ? (
+            <>
+              <View style={styles.section}>
+                <ThemedText type="smallBold">Where this account is</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Read-only. Nothing in this group changes anything.
+                </ThemedText>
+                <DevInspector />
+                {canSeeHubSection('traits', gate) ? <TraitViewer /> : null}
+                {canSeeHubSection('quota', gate) ? <QuotaDashboard /> : null}
+              </View>
+
+              <View style={styles.section}>
+                <ThemedText type="smallBold">Jump this account</ThemedText>
+                <JumpThisAccount />
+                <StartOver />
+              </View>
+
+              <View style={styles.section}>
+                <ThemedText type="smallBold">Test one thing</ThemedText>
+                <ExploreRegen />
+                <BandDetailStepper />
+                {canSeeHubSection('fence', gate) ? <FenceTester /> : null}
+                {canSeeHubSection('trace', gate) ? <TraceCapture /> : null}
+                {me ? <YouDevTools timeZone={me.timezone || 'UTC'} /> : null}
+                <CrisisCardPreview />
+                <CrisisLocalFlagTest />
+                <ResetAiConsent />
+                <LocalAccountData />
+                <ForceTestError message="Dev Lab test error" />
+              </View>
+            </>
+          ) : null}
 
           <View style={styles.section}>
-            <ThemedText type="smallBold">Home</ThemedText>
-            {canSeeHubSection('card', gate) ? (
-              <>
-                <HomeOverrides />
-              </>
-            ) : null}
-            <ForceTestError message="Dev Lab test error — Home" />
-          </View>
-
-          <View style={styles.section}>
-            <ThemedText type="smallBold">Sage</ThemedText>
-            {canSeeHubSection('quota', gate) ? <QuotaDashboard /> : null}
-            <ExploreRegen />
-            <ForceTestError message="Dev Lab test error — Sage" />
-          </View>
-
-          <View style={styles.section}>
-            <ThemedText type="smallBold">You</ThemedText>
-            {canSeeHubSection('traits', gate) ? <TraitViewer /> : null}
-            <IntakeStagePresets />
-            <ResetToFreshSignup />
-            <HandleCollisionCheck />
-            <GrowthPreview />
-            <BandDetailStepper />
-            <ForceTestError message="Dev Lab test error — You" />
-          </View>
-
-          <View style={styles.section}>
-            <ThemedText type="smallBold">System</ThemedText>
-            {canSeeHubSection('fence', gate) ? <FenceTester /> : null}
-            {canSeeHubSection('trace', gate) ? <TraceCapture /> : null}
+            <ThemedText type="smallBold">Admin</ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              Root only, enforced on the server. These act on other people&apos;s accounts.
+            </ThemedText>
             {canSeeHubSection('access', gate) ? <AccessReview /> : null}
             {canSeeHubSection('grants', gate) ? <GrantsPanel /> : null}
             {canSeeHubSection('profiles', gate) ? <ProfilesPanel /> : null}
-            {me ? <YouDevTools timeZone={me.timezone || 'UTC'} /> : null}
-            <ResetAiConsent />
-            <LocalAccountData />
-            {PRE_LAUNCH_DEV ? <CrisisCardPreview /> : null}
-            {PRE_LAUNCH_DEV ? <CrisisLocalFlagTest /> : null}
-            <ForceTestError message="Dev Lab test error — System" />
+            {tools ? <ResetToFreshSignup /> : null}
+            {!devAccess.isRoot ? (
+              <ThemedText type="small" themeColor="textSecondary">
+                Nothing here for this account.
+              </ThemedText>
+            ) : null}
           </View>
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
   );
+}
+
+/**
+ * Two taps before a write. `confirm(id)` answers false on the first tap (and
+ * arms that id for 5 seconds) and true on the second. It disarms by itself, so
+ * a stale first tap never turns a later single tap into a write.
+ */
+function useTwoTap(): { armed: string | null; confirm: (id: string) => boolean } {
+  const [armed, setArmed] = useState<string | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+  const confirm = useCallback(
+    (id: string) => {
+      if (timer.current) clearTimeout(timer.current);
+      if (armed === id) {
+        setArmed(null);
+        return true;
+      }
+      setArmed(id);
+      timer.current = setTimeout(() => setArmed((cur) => (cur === id ? null : cur)), 5000);
+      return false;
+    },
+    [armed],
+  );
+  return { armed, confirm };
 }
 
 function ForceTestError({ message }: { message: string }) {
@@ -347,168 +371,6 @@ function ExploreRegen() {
         </ThemedView>
       ) : null}
     </View>
-  );
-}
-
-function HomeOverrides() {
-  const [slot, setSlot] = useState<TodaySlot['kind'] | 'off'>('off');
-  const [ask, setAsk] = useState<AskPick['kind'] | 'off'>('off');
-
-  useEffect(() => {
-    let cancelled = false;
-    Promise.all([loadStoredSlotOverride(), loadStoredAskOverride()]).then(([nextSlot, nextAsk]) => {
-      if (cancelled) return;
-      setSlot(nextSlot ?? 'off');
-      setAsk(nextAsk ?? 'off');
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  async function pickSlot(kind: TodaySlot['kind'] | 'off') {
-    if (kind === 'off') await clearSlotOverride();
-    else await writeSlotOverride(kind);
-    setSlot(kind);
-  }
-
-  async function pickAsk(kind: AskPick['kind'] | 'off') {
-    if (kind === 'off') await clearAskOverride();
-    else await writeAskOverride(kind);
-    setAsk(kind);
-  }
-
-  return (
-    <View style={styles.section}>
-      <ThemedText type="smallBold">Today slot override</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        Forces the Home slot on the next boxes. Off is live resolve. Production never honours
-        this key.
-      </ThemedText>
-      <ThemedText type="code" themeColor="textSecondary">
-        stored: {slot}
-      </ThemedText>
-      <View style={styles.tabs}>
-        {(['off', ...SLOT_OVERRIDE_KINDS] as const).map((kind) => (
-          <Chip key={kind} label={kind} selected={slot === kind} onPress={() => void pickSlot(kind)} />
-        ))}
-      </View>
-      <Chip label="clear override" selected={false} onPress={() => void pickSlot('off')} />
-      {slot === 'off' ? <SlotReadout /> : null}
-
-      <ThemedText type="smallBold">Ask kind override</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        Forces which ask body the sheet would show. Off is live resolveAsk. Production never
-        honours this key.
-      </ThemedText>
-      <ThemedText type="code" themeColor="textSecondary">
-        stored: {ask}
-      </ThemedText>
-      <View style={styles.tabs}>
-        {(['off', ...ASK_OVERRIDE_KINDS] as const).map((kind) => (
-          <Chip key={kind} label={kind} selected={ask === kind} onPress={() => void pickAsk(kind)} />
-        ))}
-      </View>
-      <Chip label="clear override" selected={false} onPress={() => void pickAsk('off')} />
-    </View>
-  );
-}
-
-function SlotReadout() {
-  const { me } = useMeContext();
-  const { session } = useSession();
-  const { state: growth } = useGrowth();
-  const userId = session?.user.id;
-  const [lines, setLines] = useState<string>('…');
-
-  useEffect(() => {
-    if (!me || !userId) {
-      setLines('No signed-in account.');
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      try {
-        const checks = await fetchChecks(userId);
-        const flags = await crisisFlagsForWindow(userId, me.timezone);
-        const window = checkWindowFor(
-          me,
-          checks.map((check) => check.day),
-        );
-        const missedCheck = window.open.some((slot) => slot.offset > 0);
-        const noteAvailable =
-          resolveReveal({
-            checks,
-            facts: me.facts ?? [],
-            checkCount: growth.checkCount,
-            factCount: growth.factCount,
-            timeZone: me.timezone || 'UTC',
-            crisisToday: flags.crisisToday,
-            crisisYesterday: flags.crisisYesterday,
-          }) !== null;
-        const noteOpenedToday = await isRevealOpenedToday(userId, me.timezone || 'UTC');
-        const traits = traitStateFromRow(me);
-        const askPending =
-          resolveAsk({
-            values: traits.values,
-            touched: traits.touched,
-            knows: parseSageKnowsState(me.sage_knows),
-            knocksYouOff: me.knocks_you_off ?? '',
-            facts: me.facts ?? [],
-            history: checksToHistory(checks),
-            now: new Date(),
-            timeZone: me.timezone || 'UTC',
-          }) !== null;
-        const isSunday = weekdayInZone(new Date(), me.timezone || 'UTC') === 0;
-        const input = {
-          crisisActive: flags.crisisToday,
-          missedCheck,
-          noteAvailable,
-          noteOpenedToday,
-          askPending,
-          isSunday,
-        };
-        const kind = resolveTodaySlot(input).kind;
-        // Consent off (declined or not yet asked) means no insight at all:
-        // the insight is model-generated with no offline lane behind it.
-        // Restored 2026-09-15 after a brief window where this was hardcoded
-        // false, which under the restored gate would misreport every
-        // unconsented account as having content coming.
-        const honestEmpty = me.ai_consent !== true;
-        if (cancelled) return;
-        setLines(
-          [
-            `crisisActive: ${input.crisisActive}`,
-            `missedCheck: ${input.missedCheck}`,
-            `noteAvailable: ${input.noteAvailable}`,
-            `noteOpenedToday: ${input.noteOpenedToday}`,
-            `askPending: ${input.askPending}`,
-            `isSunday: ${input.isSunday}`,
-            `kind: ${kind}`,
-            `honestEmpty: ${honestEmpty}`,
-          ].join('\n'),
-        );
-      } catch (err) {
-        if (!cancelled) {
-          setLines(err instanceof Error ? err.message : 'Could not resolve today slot.');
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [me, userId, growth.checkCount, growth.factCount]);
-
-  return (
-    <>
-      <ThemedText type="smallBold">Today slot inputs</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        Live resolveTodaySlot for this account. Shown when the override is off.
-      </ThemedText>
-      <ThemedText type="code" themeColor="textSecondary">
-        {lines}
-      </ThemedText>
-    </>
   );
 }
 
@@ -627,89 +489,6 @@ function TraitViewer() {
   );
 }
 
-function GrowthPreview() {
-  const theme = useTheme();
-  const [checkCount, setCheckCount] = useState('7');
-  const [factCount, setFactCount] = useState('1');
-  const [stored, setStored] = useState<{ checkCount: number; factCount: number } | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    void readGrowthPreview().then((next) => {
-      if (cancelled) return;
-      setStored(next);
-      if (next) {
-        setCheckCount(String(next.checkCount));
-        setFactCount(String(next.factCount));
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  async function apply() {
-    const next = {
-      checkCount: Math.max(0, Number.parseInt(checkCount, 10) || 0),
-      factCount: Math.max(0, Number.parseInt(factCount, 10) || 0),
-    };
-    await writeGrowthPreview(next);
-    setStored(next);
-  }
-
-  async function off() {
-    await clearGrowthPreview();
-    setStored(null);
-  }
-
-  return (
-    <View style={styles.section}>
-      <ThemedText type="smallBold">Growth preview</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        Forces check_count and fact count on You for MilestoneBadges and QuestGrowthBars.
-        Preview-only. Does not write Checks or facts.
-      </ThemedText>
-      <ThemedText type="code" themeColor="textSecondary">
-        stored: {stored ? `check_count ${stored.checkCount} · fact count ${stored.factCount}` : 'off'}
-      </ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        check_count
-      </ThemedText>
-      <TextInput
-        value={checkCount}
-        onChangeText={setCheckCount}
-        keyboardType="number-pad"
-        placeholder="0"
-        placeholderTextColor={theme.textSecondary}
-        style={[
-          styles.input,
-          styles.searchInput,
-          { color: theme.text, backgroundColor: theme.backgroundSelected, borderColor: controlBorderColor(theme) },
-        ]}
-      />
-      <ThemedText type="small" themeColor="textSecondary">
-        fact count
-      </ThemedText>
-      <TextInput
-        value={factCount}
-        onChangeText={setFactCount}
-        keyboardType="number-pad"
-        placeholder="0"
-        placeholderTextColor={theme.textSecondary}
-        style={[
-          styles.input,
-          styles.searchInput,
-          { color: theme.text, backgroundColor: theme.backgroundSelected, borderColor: controlBorderColor(theme) },
-        ]}
-      />
-      <View style={styles.tabs}>
-        <Chip label="apply preview" selected={stored != null} onPress={() => void apply()} />
-        <Chip label="off" selected={stored == null} onPress={() => void off()} />
-      </View>
-    </View>
-  );
-}
-
 function BandDetailStepper() {
   const { me } = useMeContext();
   const bands = me ? filledTraitBands(me) : [];
@@ -755,52 +534,28 @@ function BandDetailStepper() {
 }
 
 /**
- * Intake-stage seeding. Pre-launch only, and only while signed in as the fixed
- * dev-test user — applyDevIntakeStagePreset refuses anything else server-side
- * of the guard too, so this is a convenience gate, not the only one.
+ * "Jump this account": one menu of states, pick ONE. Each is a one-shot write,
+ * not a status — the only status is the "You are here" line, and the stage the
+ * account currently matches is highlighted.
+ *
+ * Every jump takes two taps on every account (it overwrites trait scores and
+ * answer counts). `applyDevIntakeStagePreset` clears the device's answer stamps
+ * and bumps the account-data epoch, which is what reloads this panel's tracks
+ * and the mounted tabs.
  */
-function IntakeStagePresets() {
+function JumpThisAccount() {
   const { me, refresh, devAccess } = useMeContext();
-  // Rule lifted 2026-10-01 (emci): any signed-in account may seed ITS OWN intake
-  // state pre-launch, not only the dev-test user.
-  const canSeed = !!me;
-  const isDevTestAccount = !!me && me.id === DEV_TEST_USER_ID;
+  const epoch = useAccountDataEpoch();
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [busy, setBusy] = useState<DevIntakeStageId | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // On a real account a stage OVERWRITES real answers, so it takes two taps.
-  const [armed, setArmed] = useState<DevIntakeStageId | null>(null);
-  // The full clear (server-side, wave75): root only, always two taps.
-  const [clearArmed, setClearArmed] = useState(false);
-  const [clearBusy, setClearBusy] = useState(false);
-  const [clearNote, setClearNote] = useState<string | null>(null);
-
-  async function clearEverything() {
-    if (clearBusy) return;
-    if (!clearArmed) {
-      setClearArmed(true);
-      setTimeout(() => setClearArmed(false), 5000);
-      return;
-    }
-    setClearArmed(false);
-    setClearBusy(true);
-    setClearNote(null);
-    try {
-      await resetMyTestData();
-      await refresh();
-      if (me) setTracks(await fetchTraitTracks(me.id));
-      setClearNote('Cleared. This account is back at 0 of 50, with no tokens.');
-    } catch (err) {
-      setClearNote(err instanceof Error ? err.message : 'Could not clear this account.');
-    } finally {
-      setClearBusy(false);
-    }
-  }
+  const twoTap = useTwoTap();
+  const meId = me?.id;
 
   useEffect(() => {
-    if (!canSeed || !me) return;
+    if (!meId) return;
     let active = true;
-    fetchTraitTracks(me.id)
+    fetchTraitTracks(meId)
       .then((rows) => {
         if (active) setTracks(rows);
       })
@@ -810,29 +565,23 @@ function IntakeStagePresets() {
     return () => {
       active = false;
     };
-  }, [canSeed, me]);
+  }, [meId, epoch]);
 
-  if (!PRE_LAUNCH_DEV || !canSeed) return null;
+  if (!PRE_LAUNCH_DEV || !me) return null;
 
   const progress = bankTotalProgress(tracks);
+  const here = devStageMatching(tracks);
 
-  async function applyStage(stage: DevIntakeStageId) {
+  async function jump(stage: DevIntakeStageId) {
     if (busy) return;
-    if (!isDevTestAccount && armed !== stage) {
-      setArmed(stage);
-      // Disarm by itself, so a stale confirm never turns a later single tap into a write.
-      setTimeout(() => setArmed((cur) => (cur === stage ? null : cur)), 5000);
-      return;
-    }
-    setArmed(null);
+    if (!twoTap.confirm(stage)) return;
     setBusy(stage);
     setError(null);
     try {
-      await applyDevIntakeStagePreset(stage);
+      await applyDevIntakeStagePreset(stage, { topUpHistory: devAccess.isRoot });
       await refresh();
-      if (me) setTracks(await fetchTraitTracks(me.id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not apply that stage.');
+      setError(err instanceof Error ? err.message : 'Could not jump to that stage.');
     } finally {
       setBusy(null);
     }
@@ -840,20 +589,16 @@ function IntakeStagePresets() {
 
   return (
     <View style={styles.section}>
-      <ThemedText type="smallBold">Intake stage</ThemedText>
+      <ThemedText type="smallBold">Pick ONE to jump this account to</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        Jumps THIS account{me?.handle ? ` (@${me.handle})` : ''} straight to a point in the 50
-        questions, without answering them. &quot;Fresh signup&quot; clears all questions
-        (0/50); the others fill them to that stage. It overwrites this account&apos;s current
-        answers and trait scores, so on a real account each one takes a second tap to confirm.
-        The filled stages write PRESET trait scores (not yours), so Insight, Story and the
-        categories read those until you answer again. Tokens and old rounds are not cleared.
-        Pre-launch only.
+        Each tap replaces the last. It overwrites the trait scores and answer counts on
+        {me.handle ? ` @${me.handle}` : ' this account'} with preset ones (not yours), so every
+        jump takes a second tap. Saved rounds, tokens and written text stay as they are —
+        Start over clears those. On a root account a jump also fills in answer history, so
+        the first +21 can be tested.
       </ThemedText>
       <ThemedText type="code" themeColor="textSecondary">
-        {progress.answered}/{progress.total} · Sage{' '}
-        {sageUnlocked(tracks) ? 'unlocked' : 'locked'} · Legends{' '}
-        {legendsUnlocked(tracks) ? 'unlocked' : 'locked'}
+        You are here: {progress.answered} of {progress.total} answered · {settledAxisLabel(tracks)}
       </ThemedText>
       {error ? <ThemedText type="small">{error}</ThemedText> : null}
       {DEV_INTAKE_STAGES.map((stage) => (
@@ -861,55 +606,91 @@ function IntakeStagePresets() {
           <Chip
             label={
               busy === stage.stage
-                ? 'applying…'
-                : armed === stage.stage
-                  ? `Tap again to overwrite this account — ${stage.label}`
-                  : stage.label
+                ? 'jumping…'
+                : twoTap.armed === stage.stage
+                  ? `Tap again to jump — ${stage.label}`
+                  : here === stage.stage
+                    ? `${stage.label} · you are here`
+                    : stage.label
             }
-            selected={false}
-            onPress={() => void applyStage(stage.stage)}
+            selected={here === stage.stage}
+            onPress={() => void jump(stage.stage)}
           />
           <ThemedText type="small" themeColor="textSecondary">
             {stage.hint}
           </ThemedText>
         </View>
       ))}
-      {devAccess.isRoot ? (
-        <View>
-          <Chip
-            label={
-              clearBusy
-                ? 'clearing…'
-                : clearArmed
-                  ? 'Tap again to clear EVERYTHING on this account'
-                  : 'Clear all my questions (full)'
-            }
-            selected={false}
-            onPress={() => void clearEverything()}
-          />
-          <ThemedText type="small" themeColor="textSecondary">
-            Root only. Wipes this account&apos;s answers, trait scores, saved rounds, token
-            history and balance, insights, category reads and story — so the +21 can be earned
-            again. Keeps your profile. Cannot be undone.
-          </ThemedText>
-          {clearNote ? <ThemedText type="small">{clearNote}</ThemedText> : null}
-        </View>
-      ) : null}
+    </View>
+  );
+}
+
+/**
+ * "Start over": the ONE reset in the Hub. It replaced a trait-only zero jump
+ * and a full clear that also zeroed tokens. The server does it
+ * (`start_over_my_test_data`,
+ * wave76): root only, own account only, invite-only phase. Keeps the account
+ * and the token balance. Always two taps; it cannot be undone.
+ */
+function StartOver() {
+  const { me, refresh, devAccess } = useMeContext();
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const twoTap = useTwoTap();
+
+  if (!PRE_LAUNCH_DEV || !me) return null;
+
+  async function startOver() {
+    if (busy) return;
+    if (!twoTap.confirm('start-over')) return;
+    setBusy(true);
+    setNote(null);
+    try {
+      await startOverMyTestData();
+      await refresh();
+      setNote('Done. This account is at 0 of 50. Your token balance is unchanged.');
+    } catch (err) {
+      setNote(err instanceof Error ? err.message : 'Could not start this account over.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="smallBold">Start over</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        Fresh signup does not reopen the &quot;Introduce yourself&quot; form: that
-        screen only renders when there is no me row, and deleting the me row
-        would delete the @atodev identity itself. It resets everything the form
-        would have written.
+        Root only. Clears this account&apos;s answers, trait scores, saved rounds, answer
+        history, insight, category reads and story, and the record of the first +21 so it can
+        be earned again. Keeps your profile and your token balance. Cannot be undone.
       </ThemedText>
+      {devAccess.isRoot ? (
+        <Chip
+          label={
+            busy
+              ? 'clearing…'
+              : twoTap.armed === 'start-over'
+                ? 'Tap again to clear this account’s answers'
+                : 'Start over (0 of 50)'
+          }
+          selected={false}
+          onPress={() => void startOver()}
+        />
+      ) : (
+        <ThemedText type="small" themeColor="textSecondary">
+          This account is not root, so Start over is not available on it.
+        </ThemedText>
+      )}
+      {note ? <ThemedText type="small">{note}</ThemedText> : null}
     </View>
   );
 }
 
 /**
  * Reset the dev-test account all the way back to before onboarding (wave66
- * reset_dev_test_user RPC) — unlike the "Fresh signup" intake-stage preset
- * above, this actually deletes the me row, so the real "Introduce yourself"
- * screen renders again. Same two guards as every other dev-test-user action;
+ * reset_dev_test_user RPC) — unlike "Start over", this actually deletes the me
+ * row, so the real "Introduce yourself" screen renders again. It is the only
+ * way to re-test that form, which is why Start over did not replace it. Same two guards as every other dev-test-user action;
  * requires typing the handle to confirm since it's destructive to this
  * account's data (auth.users/the session are untouched either way).
  */
@@ -942,7 +723,7 @@ function ResetToFreshSignup() {
 
   return (
     <View style={styles.section}>
-      <ThemedText type="smallBold">Reset to fresh signup</ThemedText>
+      <ThemedText type="smallBold">Re-run the sign-up form (@{DEV_TEST_HANDLE} only)</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
         Deletes the @{DEV_TEST_HANDLE} me row (traits, history, checks,
         questions, tokens — everything scoped to this account) but keeps the
@@ -979,77 +760,8 @@ function ResetToFreshSignup() {
           (busy || confirm !== DEV_TEST_HANDLE) && { opacity: 0.4 },
           pressed && styles.pressed,
         ]}>
-        <ThemedText type="small">{busy ? 'resetting…' : 'Reset to fresh signup'}</ThemedText>
+        <ThemedText type="small">{busy ? 'resetting…' : 'Delete this profile and re-run sign-up'}</ThemedText>
       </Pressable>
-    </View>
-  );
-}
-
-/**
- * Preset 6 — handle-collision check. Read-only: calls handle_taken (wave64)
- * against the fixed hidden/paused account provisioned by wave65
- * (DEV_COLLISION_HANDLE, @atodev2, visible = false) and reports the result.
- * Proves the exact bug wave64 fixed — a handle owned by a hidden account used
- * to read as free through public_profile — stays fixed. Writes nothing;
- * gated the same as the intake-stage panel above.
- */
-function HandleCollisionCheck() {
-  const { me } = useMeContext();
-  const isDevUser = !!me && me.id === DEV_TEST_USER_ID;
-  const [result, setResult] = useState<'unchecked' | 'checking' | boolean>('unchecked');
-  const [error, setError] = useState<string | null>(null);
-
-  if (!PRE_LAUNCH_DEV || !isDevUser) return null;
-
-  async function check() {
-    setResult('checking');
-    setError(null);
-    try {
-      // The exact client call the onboarding account step makes — this
-      // exercises the real production path, not just the RPC underneath it.
-      // checkHandleAvailable also returns ok:false on a format error or a
-      // network/RPC failure, so "not ok" alone would read those as "taken" —
-      // check the specific message it returns for an actually-taken handle.
-      const outcome = await checkHandleAvailable(DEV_COLLISION_HANDLE);
-      if (outcome.ok) {
-        setResult(false);
-      } else if (outcome.message === 'That handle is already taken') {
-        setResult(true);
-      } else {
-        setResult('unchecked');
-        setError(outcome.message);
-      }
-    } catch (err) {
-      setResult('unchecked');
-      setError(err instanceof Error ? err.message : 'Could not check that handle.');
-    }
-  }
-
-  return (
-    <View style={styles.section}>
-      <ThemedText type="smallBold">Handle collision (preset 6)</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        @{DEV_COLLISION_HANDLE} is a hidden (visible = false) account
-        provisioned by wave65 (migration not yet applied → will read as
-        &quot;available&quot; here, same as before the wave64 fix). Read-only
-        — calls checkHandleAvailable, the same function onboarding calls,
-        writes nothing. Once wave65 is applied it should report taken.
-      </ThemedText>
-      {error ? <ThemedText type="small">{error}</ThemedText> : null}
-      <ThemedText type="code" themeColor="textSecondary">
-        {result === 'unchecked'
-          ? 'not checked yet'
-          : result === 'checking'
-            ? 'checking…'
-            : result
-              ? 'taken (correct, once wave65 is applied)'
-              : 'available (expected until wave65 is applied)'}
-      </ThemedText>
-      <Chip
-        label={result === 'checking' ? 'checking…' : `check @${DEV_COLLISION_HANDLE}`}
-        selected={false}
-        onPress={() => void check()}
-      />
     </View>
   );
 }
@@ -1059,12 +771,14 @@ function ResetAiConsent() {
   const { session } = useSession();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const twoTap = useTwoTap();
   const stored =
     me?.ai_consent === true ? 'true' : me?.ai_consent === false ? 'false' : 'null';
 
   async function reset() {
     const userId = session?.user.id;
     if (!userId || busy) return;
+    if (!twoTap.confirm('consent')) return;
     setBusy(true);
     setError(null);
     try {
@@ -1093,7 +807,7 @@ function ResetAiConsent() {
       </ThemedText>
       {error ? <ThemedText type="small">{error}</ThemedText> : null}
       <Chip
-        label={busy ? 'resetting…' : 'reset to null'}
+        label={busy ? 'resetting…' : twoTap.armed === 'consent' ? 'Tap again to reset AI consent' : 'reset to null'}
         selected={false}
         onPress={() => void reset()}
       />
@@ -1118,6 +832,7 @@ function LocalAccountData() {
   const [keys, setKeys] = useState<string[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const twoTap = useTwoTap();
 
   const load = useCallback(async () => {
     setKeys(await listAccountScopedKeys());
@@ -1129,6 +844,7 @@ function LocalAccountData() {
 
   async function wipe() {
     if (busy) return;
+    if (!twoTap.confirm('wipe')) return;
     setBusy(true);
     setNote(null);
     try {
@@ -1164,7 +880,7 @@ function LocalAccountData() {
       {note ? <ThemedText type="small">{note}</ThemedText> : null}
       <Chip label="refresh" selected={false} onPress={() => void load()} />
       <Chip
-        label={busy ? 'wiping…' : 'wipe local account data'}
+        label={busy ? 'wiping…' : twoTap.armed === 'wipe' ? 'Tap again to wipe this device’s account data' : 'wipe local account data'}
         selected={false}
         onPress={() => void wipe()}
       />
@@ -1324,7 +1040,8 @@ function FenceTester() {
     <View style={styles.section}>
       <ThemedText type="smallBold">Framework-echo fence</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        Paste generated Read / Do / Bump / a Teach-Sage fact. Same matcher the router uses.
+        Paste any generated text (an insight, a category read, a question). Same matcher the
+        generators use.
       </ThemedText>
       <TextInput
         value={text}
@@ -1397,7 +1114,7 @@ function TraceCapture() {
     <View style={styles.section}>
       <ThemedText type="smallBold">Trace / debug</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        Capture your own next Dawn, Talk, and Explore generations as an ordered
+        Capture your own next Dawn and Explore generations as an ordered
         pipeline — context, model, guards, output. 30 minutes or 20
         interactions, then off. Rows delete after 7 days. Never another account.
       </ThemedText>
@@ -1423,7 +1140,13 @@ function TraceCapture() {
         </ThemedText>
       ) : null}
       {error ? <ThemedText type="small">{error}</ThemedText> : null}
-      <TracePipelineViewer events={events} selectedId={sectionId} onSelect={setSectionId} />
+      <TracePipelineViewer
+        events={events}
+        selectedId={sectionId}
+        onSelect={setSectionId}
+        // Talk is a placeholder screen, so there is nothing to capture from it.
+        sections={TRACE_SECTIONS.filter((row) => row.id !== 'talk')}
+      />
     </View>
   );
 }
@@ -1437,6 +1160,7 @@ function GrantsPanel() {
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const twoTap = useTwoTap();
 
   async function lookup() {
     setBusy(true);
@@ -1467,8 +1191,14 @@ function GrantsPanel() {
     }
   }
 
+  const grantsKey = selected
+    ? `grants:${selected.handle}:${GRANTABLE_CAPABILITIES.filter((cap) => checked[cap]).join(',')}`
+    : '';
+
   async function save() {
     if (!selected || busy) return;
+    // Keyed on the chosen set too: changing a box between the taps re-arms.
+    if (!twoTap.confirm(grantsKey)) return;
     setBusy(true);
     try {
       const caps = GRANTABLE_CAPABILITIES.filter((cap) => checked[cap]);
@@ -1562,7 +1292,9 @@ function GrantsPanel() {
               pressed && styles.pressed,
             ]}>
             <ThemedText type="small" style={{ color: theme.onAccent }}>
-              Save grants
+              {selected && twoTap.armed === grantsKey
+                ? `Tap again to save grants for @${selected.handle}`
+                : 'Save grants'}
             </ThemedText>
           </Pressable>
         </>
@@ -1580,6 +1312,7 @@ function ProfilesPanel() {
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const twoTap = useTwoTap();
 
   async function lookup() {
     setBusy(true);
@@ -1605,6 +1338,8 @@ function ProfilesPanel() {
 
   async function pause() {
     if (!selected || busy) return;
+    // One tap used to pause another person and everyone they referred.
+    if (!twoTap.confirm(`pause:${selected.handle}`)) return;
     setBusy(true);
     try {
       await pauseProfile(selected.handle);
@@ -1620,6 +1355,7 @@ function ProfilesPanel() {
 
   async function unpause() {
     if (!selected || busy) return;
+    if (!twoTap.confirm(`unpause:${selected.handle}`)) return;
     setBusy(true);
     try {
       await unpauseProfile(selected.handle);
@@ -1715,7 +1451,11 @@ function ProfilesPanel() {
                 { borderColor: controlBorderColor(theme) },
                 pressed && styles.pressed,
               ]}>
-              <ThemedText type="small">Pause</ThemedText>
+              <ThemedText type="small">
+                {twoTap.armed === `pause:${selected.handle}`
+                  ? `Tap again to pause @${selected.handle} and their referrals`
+                  : 'Pause'}
+              </ThemedText>
             </Pressable>
             <Pressable
               disabled={busy}
@@ -1725,7 +1465,9 @@ function ProfilesPanel() {
                 { borderColor: controlBorderColor(theme) },
                 pressed && styles.pressed,
               ]}>
-              <ThemedText type="small">Unpause</ThemedText>
+              <ThemedText type="small">
+                {twoTap.armed === `unpause:${selected.handle}` ? `Tap again to unpause @${selected.handle}` : 'Unpause'}
+              </ThemedText>
             </Pressable>
           </View>
           <ThemedText type="small" themeColor="textSecondary">
@@ -1767,6 +1509,7 @@ function AccessReview() {
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const twoTap = useTwoTap();
 
   async function load() {
     try {
@@ -1787,6 +1530,8 @@ function AccessReview() {
 
   async function act(id: string, action: 'approve' | 'deny') {
     if (busyId) return;
+    // Approve emails a real person a code; deny is silent and final.
+    if (!twoTap.confirm(`${action}:${id}`)) return;
     setBusyId(id);
     setNote(null);
     try {
@@ -1847,7 +1592,7 @@ function AccessReview() {
                   pressed && styles.pressed,
                 ]}>
                 <ThemedText type="small" style={{ color: theme.onAccent }}>
-                  {busyId === row.id ? '…' : 'Approve'}
+                  {busyId === row.id ? '…' : twoTap.armed === `approve:${row.id}` ? 'Tap again to approve and email' : 'Approve'}
                 </ThemedText>
               </Pressable>
               <Pressable
@@ -1859,7 +1604,7 @@ function AccessReview() {
                   pressed && styles.pressed,
                 ]}>
                 <ThemedText type="small" themeColor="textSecondary">
-                  Deny
+                  {twoTap.armed === `deny:${row.id}` ? 'Tap again to deny' : 'Deny'}
                 </ThemedText>
               </Pressable>
             </View>
@@ -2024,13 +1769,10 @@ const styles = StyleSheet.create({
  * their plain `function Name()` form (several check scripts slice on it). */
 export {
   ExploreRegen,
-  HomeOverrides,
   TraitViewer,
-  GrowthPreview,
   BandDetailStepper,
-  IntakeStagePresets,
-  ResetToFreshSignup,
-  HandleCollisionCheck,
+  JumpThisAccount,
+  StartOver,
   ResetAiConsent,
   LocalAccountData,
   QuotaDashboard,

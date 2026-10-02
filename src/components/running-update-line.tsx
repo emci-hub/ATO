@@ -8,9 +8,10 @@ import * as Updates from 'expo-updates';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { canSeeDevLab } from '@/lib/dev-access';
+import { hubAccess } from '@/lib/dev-access';
 import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
-import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+import { DEV_TOOLS_AVAILABLE } from '@/lib/dev-mode';
+import { useDevPinUnlocked } from '@/lib/dev-pin';
 import { useMeContext } from '@/lib/me-context';
 import {
   buildKindLabel,
@@ -89,11 +90,14 @@ export function RunningUpdateLine({ compact = false }: { compact?: boolean }) {
   // only the hidden navigation is gated.
   const { devAccess } = useMeContext();
   const devUnlocked = useDevAccessUnlocked();
-  const canOpenAiLab = canSeeDevLab({
-    isDev: PRE_LAUNCH_DEV || devUnlocked,
-    isRoot: devAccess.isRoot,
-    capabilities: devAccess.capabilities,
-  });
+  const pinUnlocked = useDevPinUnlocked();
+  const canOpenAiLab =
+    hubAccess({
+      toolsAvailable: DEV_TOOLS_AVAILABLE,
+      isDev: __DEV__ || devUnlocked || pinUnlocked,
+      isRoot: devAccess.isRoot,
+      capabilities: devAccess.capabilities,
+    }) === 'full';
   // Only a real running update has a real publish date — never shown for
   // embedded/local, same "honest, not faked" rule as the line itself. Its own
   // line rather than appended to `label.line`: that line is already close to

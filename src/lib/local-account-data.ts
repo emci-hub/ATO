@@ -104,6 +104,48 @@ export async function listAccountScopedKeys(): Promise<string[]> {
 }
 
 /**
+ * What the Questions screens keep on the device: answer stamps and page
+ * position. Listed one by one, not as `ato.questions.*` — that would also take
+ * the bank prewarm cooldown (`ato.questions.prewarm-at.v1`), and every jump
+ * would then buy a fresh background generation on the next round start.
+ */
+export const QUESTION_STATE_PREFIXES: readonly string[] = [
+  'ato.questions.answeredOption.',
+  'ato.questions.categoryPage.',
+];
+/** The cached insight Home paints from before any network call. */
+export const TODAY_INSIGHT_KEY = 'ato.today-insight.v1';
+
+/**
+ * The narrow clear the dev tools use after rewriting an account's answers.
+ *
+ * The "Answered" stamps and page position are keyed by account, not by run, so
+ * they outlive the answers behind them: a 0-of-50 account kept its old ticks,
+ * and the missed-question marker then pointed at the wrong rows. This removes
+ * only those (and, on a full start-over, the cached insight and the widget
+ * text). It deliberately does NOT cancel pushes or touch other keys the way
+ * `clearLocalAccountData` does — the account still exists.
+ */
+export async function clearLocalQuestionState(options: { alsoInsight?: boolean } = {}): Promise<string[]> {
+  resetAnsweredOptionCache();
+  resetCategoryPagePositionCache();
+  let removed: string[] = [];
+  try {
+    const keys = await AsyncStorage.getAllKeys();
+    removed = keys.filter(
+      (key) =>
+        QUESTION_STATE_PREFIXES.some((prefix) => key.startsWith(prefix)) ||
+        (options.alsoInsight === true && key === TODAY_INSIGHT_KEY),
+    );
+    if (removed.length > 0) await AsyncStorage.multiRemove(removed);
+  } catch (err) {
+    console.log('[local-account-data] question state clear failed:', err);
+  }
+  if (options.alsoInsight) clearWidget();
+  return removed.sort();
+}
+
+/**
  * Remove every trace of the signed-in account from this device.
  *
  * Best-effort and never throws: it runs AFTER the server has confirmed the

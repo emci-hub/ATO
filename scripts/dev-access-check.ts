@@ -9,6 +9,7 @@ import {
   canSeeDevLab,
   canSeeHubSection,
   GRANTABLE_CAPABILITIES,
+  hubAccess,
   NEVER_GRANTABLE,
 } from '../src/lib/dev-access';
 import {
@@ -67,7 +68,7 @@ assert.match(sql, /Never accepts a target user_id/);
 ok('SQL CHECK and set_dev_access_grants reject never-grantable capabilities; pause/delete are require_root');
 
 const hub = read('src/app/dev-lab.tsx');
-assert.match(hub, /canSeeDevLab/);
+assert.match(hub, /hubAccess\(\{/);
 assert.match(hub, /function GrantsPanel/);
 assert.match(hub, /function ProfilesPanel/);
 assert.match(hub, /function TraceCapture/);
@@ -80,13 +81,31 @@ assert.match(hub, /pauseProfile/);
 assert.match(hub, /listPendingAccessRequests/);
 ok('hub has Grants, Profiles, Trace, and Access; never-grantable rows are labeled');
 
+// hubAccess: what the Hub is for a viewer in a given build (2026-10-01).
+{
+  const none = { isDev: false, isRoot: false, capabilities: [] as string[] };
+  // Dev tools exist: the same people as before get in.
+  assert.equal(hubAccess({ ...none, toolsAvailable: true }), 'none');
+  assert.equal(hubAccess({ ...none, toolsAvailable: true, isDev: true }), 'full');
+  assert.equal(hubAccess({ ...none, toolsAvailable: true, isRoot: true }), 'full');
+  assert.equal(hubAccess({ ...none, toolsAvailable: true, capabilities: ['trace'] }), 'full');
+  // Release build: no PIN, password unlock or grant opens anything.
+  assert.equal(hubAccess({ ...none, toolsAvailable: false, isDev: true }), 'none');
+  assert.equal(hubAccess({ ...none, toolsAvailable: false, capabilities: [...GRANTABLE_CAPABILITIES] }), 'none');
+  assert.equal(hubAccess({ ...none, toolsAvailable: false, isDev: true, capabilities: ['trace'] }), 'none');
+  // Root keeps the server-enforced Admin group, and only that.
+  assert.equal(hubAccess({ ...none, toolsAvailable: false, isRoot: true }), 'admin');
+  assert.equal(hubAccess({ ...none, toolsAvailable: false, isRoot: true, isDev: true }), 'admin');
+}
+ok('hubAccess: full while dev tools exist; in a release build only root gets in, and only to Admin');
+
 const layout = read('src/app/_layout.tsx');
 assert.match(layout, /<Stack\.Protected guard=\{isAuthed && hasMe\}>[\s\S]*name="dev-lab"/);
 assert.doesNotMatch(layout, /<Stack\.Protected guard=\{PRE_LAUNCH_DEV\}>[\s\S]*name="dev-lab"/);
 ok('dev-lab is on the authed stack so TestFlight can open it');
 
 const home = read('src/app/(tabs)/index.tsx');
-assert.match(home, /canSeeDevLab/);
+assert.match(home, /hubAccess\(\{/);
 assert.match(home, /router\.push\('\/dev-lab'\)/);
 ok('Home Dev Tools Hub row uses the same root/grant gate');
 

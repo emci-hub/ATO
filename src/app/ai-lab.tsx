@@ -19,9 +19,10 @@ import {
   type AiProviderId,
 } from '@/lib/ai';
 import { fetchProviderCounts, type ProviderCounts } from '@/lib/ai/usage';
-import { canSeeDevLab } from '@/lib/dev-access';
+import { hubAccess } from '@/lib/dev-access';
 import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
-import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+import { DEV_TOOLS_AVAILABLE } from '@/lib/dev-mode';
+import { useDevPinUnlocked } from '@/lib/dev-pin';
 import { useMeContext } from '@/lib/me-context';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
@@ -39,6 +40,7 @@ import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 export default function AiLabScreen() {
   const { devAccess, devAccessLoading } = useMeContext();
   const devUnlocked = useDevAccessUnlocked();
+  const pinUnlocked = useDevPinUnlocked();
   if (devAccessLoading) {
     return (
       <ThemedView style={styles.container}>
@@ -48,12 +50,16 @@ export default function AiLabScreen() {
       </ThemedView>
     );
   }
+  // Same door as the Hub's testing groups: the dev PIN, root or a grant, and
+  // never in a release build. This used to be `PRE_LAUNCH_DEV || devUnlocked`,
+  // which let every signed-in tester in without the PIN.
   if (
-    !canSeeDevLab({
-      isDev: PRE_LAUNCH_DEV || devUnlocked,
+    hubAccess({
+      toolsAvailable: DEV_TOOLS_AVAILABLE,
+      isDev: __DEV__ || devUnlocked || pinUnlocked,
       isRoot: devAccess.isRoot,
       capabilities: devAccess.capabilities,
-    })
+    }) !== 'full'
   ) {
     return <Redirect href="/" />;
   }

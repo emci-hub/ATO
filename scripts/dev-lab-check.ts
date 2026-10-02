@@ -35,7 +35,7 @@ assert.doesNotMatch(layout, /<Stack\.Protected guard=\{PRE_LAUNCH_DEV\}>[\s\S]*n
 const tabsDecl = layout.indexOf('name="(tabs)"');
 const hubDecl = layout.indexOf('name="dev-lab"');
 assert.ok(tabsDecl > 0 && hubDecl > tabsDecl, 'dev-lab must not be the Stack cold-start screen');
-assert.match(hub, /canSeeDevLab/);
+assert.match(hub, /hubAccess\(\{/);
 assert.match(hub, /Redirect href="\/"/);
 assert.doesNotMatch(hub, /if \(!PRE_LAUNCH_DEV\)/);
 assert.doesNotMatch(hub, /Dev only/);
