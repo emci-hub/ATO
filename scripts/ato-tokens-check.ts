@@ -100,7 +100,7 @@ assert.match(
   /if \(existing && roundFullyAnswered\(existing\)\) \{\s*claimOngoingRoundCompleteQuiet\(existing\.id, \(\{ fresh \}\) => \{\s*if \(fresh\) void onUpdated\(\);/,
   'the retry on load only fires for a fully answered round',
 );
-assert.match(foldSrc, /claimOngoingRoundCompleteQuiet\(\s*pack\.id\s*\)|claimOngoingRoundCompleteQuiet\(\s*\w+\.id\s*\)/, 'the claim passes the round id');
+assert.match(foldSrc, /claimOngoingRoundCompleteQuiet\(\s*[\w.]+\.id\s*[,)]/, 'the claim passes the round id');
 assert.ok(wave52.includes('claim_ongoing_round_complete'), 'the round claim RPC is defined');
 // Paid once PER ROUND: two client calls for one round can never pay twice.
 assert.match(wave51 + wave52, /unique index[^;]*\(user_id, pack_id\)/i, 'one payout per (user, round) on the server');
