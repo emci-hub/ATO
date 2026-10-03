@@ -1,0 +1,92 @@
+{
+  "currency": "tokens",
+  "earn_per_round": 5,
+  "earn_daily_cap": 30,
+  "unlock_days": 6,
+  "unlock_days_min": 5,
+  "unlock_days_max": 7,
+  "extra_color_share_den": 3,
+  "prices": {
+    "holo": 180,
+    "reverse": 180,
+    "extra_color": 60
+  },
+  "pass_discount_num": 1,
+  "pass_discount_den": 4,
+  "paint": {
+    "holo_opacity": 0.42,
+    "holo_opacity_on_shiny": 0.32,
+    "glare_opacity": 0.55,
+    "reverse_opacity": 0.4,
+    "fallback_opacity": 0.38,
+    "holo_blend": "color-dodge",
+    "holo_blend_fallback": "overlay",
+    "reverse_blend": "screen"
+  },
+  "sweep_ms": 3400,
+  "colors": [
+    {
+      "id": "moonpearl",
+      "name": "Moonpearl",
+      "stops": ["#F4F8FF", "#FFB8E2", "#A8D8FF", "#B8FFE6"],
+      "glare": "#FFFFFF",
+      "repeats": 2,
+      "hard": false,
+      "pass_only": false
+    },
+    {
+      "id": "reefglow",
+      "name": "Reefglow",
+      "stops": ["#FF7A8A", "#FFB86B", "#FFF27A", "#7AF5E6"],
+      "glare": "#FFF6E0",
+      "repeats": 3,
+      "hard": false,
+      "pass_only": false
+    },
+    {
+      "id": "rosedusk",
+      "name": "Rosedusk",
+      "stops": ["#FFB3A7", "#FF85B0", "#E6A8FF", "#FFE3C9"],
+      "glare": "#FFF1EA",
+      "repeats": 3,
+      "hard": false,
+      "pass_only": false
+    },
+    {
+      "id": "limewake",
+      "name": "Limewake",
+      "stops": ["#E4FF4D", "#8CFF6B", "#3DF0A0", "#F6FFC9"],
+      "glare": "#FAFFE8",
+      "repeats": 3,
+      "hard": false,
+      "pass_only": false
+    },
+    {
+      "id": "scarab",
+      "name": "Scarab",
+      "stops": ["#22F2B0", "#5CA8FF", "#B88CFF", "#FFD24D"],
+      "glare": "#FFFFFF",
+      "repeats": 3,
+      "hard": false,
+      "pass_only": false
+    },
+    {
+      "id": "quicksilver",
+      "name": "Quicksilver",
+      "stops": ["#FFFFFF", "#D5DEEA", "#A9B8CC", "#F2F6FC"],
+      "glare": "#FFFFFF",
+      "repeats": 5,
+      "hard": true,
+      "pass_only": false
+    },
+    {
+      "id": "starpearl",
+      "name": "Starpearl",
+      "stops": ["#A48CFF", "#FF8FE0", "#6BE6FF", "#FFF4FB"],
+      "glare": "#FFFFFF",
+      "repeats": 3,
+      "hard": false,
+      "pass_only": true
+    }
+  ]
+}
