@@ -2,17 +2,23 @@
   "currency": "tokens",
   "earn_per_round": 5,
   "earn_daily_cap": 30,
-  "unlock_days": 6,
-  "unlock_days_min": 5,
-  "unlock_days_max": 7,
+  "active_day_tokens_min": 80,
+  "active_day_tokens_max": 115,
+  "active_day_tokens": 90,
+  "unlock_days": 5,
+  "unlock_days_min": 4,
+  "unlock_days_max": 6,
   "extra_color_share_den": 3,
   "prices": {
-    "holo": 180,
-    "reverse": 180,
-    "extra_color": 60
+    "holo": 450,
+    "reverse": 450,
+    "extra_color": 150
   },
-  "pass_discount_num": 1,
-  "pass_discount_den": 4,
+  "pass_prices": {
+    "holo": 340,
+    "reverse": 340,
+    "extra_color": 110
+  },
   "paint": {
     "holo_opacity": 0.42,
     "holo_opacity_on_shiny": 0.32,

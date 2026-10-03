@@ -4,9 +4,9 @@
  *   1. The config is the only palette: seven named colours, hex stops, Starpearl
  *      is the only Tide Pass colour, Moonpearl is wide and soft, Quicksilver is
  *      hard and narrower.
- *   2. Prices match the pet token drip (5 a round, 30 a day): 6 days × 30 = 180
- *      for holo and for reverse holo, an extra colour is 60, a Tide Pass pays
- *      three quarters (135 and 45).
+ *   2. Prices match an active day of about 80–115 tokens (pets, one Defend clear,
+ *      tending): holo and reverse holo are 450 (~4–6 days), extra colour 150,
+ *      Tide Pass prices 340 / 340 / 110 from the config.
  *   3. Wearing a finish grants the kind and one new shop colour, never rolls a
  *      shiny, and refuses Starpearl, a short purse, or an unrevealed pet.
  *   4. A v29 save loads as v30 with no finish; a worn finish round-trips; a
@@ -92,21 +92,26 @@ ok('seven named colours, Starpearl is the only pass colour, Moonpearl is soft an
   assert.equal(PET_TOKENS_PER_ROUND, 5);
   assert.equal(PET_TOKENS_DAILY_CAP, 30);
   assert.ok(cfg.unlock_days >= cfg.unlock_days_min && cfg.unlock_days <= cfg.unlock_days_max);
-  assert.ok(cfg.unlock_days >= 5 && cfg.unlock_days <= 7);
-  assert.equal(cfg.prices.holo, cfg.unlock_days * cfg.earn_daily_cap);
+  assert.equal(cfg.active_day_tokens_min, 80);
+  assert.equal(cfg.active_day_tokens_max, 115);
+  assert.equal(cfg.active_day_tokens, 90);
+  assert.ok(cfg.active_day_tokens >= cfg.active_day_tokens_min && cfg.active_day_tokens <= cfg.active_day_tokens_max);
+  assert.equal(cfg.prices.holo, cfg.unlock_days * cfg.active_day_tokens);
+  assert.ok(cfg.prices.holo >= cfg.unlock_days_min * cfg.active_day_tokens_min);
+  assert.ok(cfg.prices.holo <= cfg.unlock_days_max * cfg.active_day_tokens_max);
   assert.equal(cfg.prices.reverse, cfg.prices.holo);
   assert.equal(cfg.prices.extra_color * cfg.extra_color_share_den, cfg.prices.holo);
-  assert.equal(cfg.prices.holo, 180);
-  assert.equal(cfg.prices.reverse, 180);
-  assert.equal(cfg.prices.extra_color, 60);
-  assert.equal(finishPrice('holo', false), 180);
-  assert.equal(finishPrice('reverse', false), 180);
-  assert.equal(finishPrice('extra_color', false), 60);
-  assert.equal(finishPrice('holo', true), 135);
-  assert.equal(finishPrice('reverse', true), 135);
-  assert.equal(finishPrice('extra_color', true), 45);
+  assert.equal(cfg.prices.holo, 450);
+  assert.equal(cfg.prices.reverse, 450);
+  assert.equal(cfg.prices.extra_color, 150);
+  assert.equal(finishPrice('holo', false), 450);
+  assert.equal(finishPrice('reverse', false), 450);
+  assert.equal(finishPrice('extra_color', false), 150);
+  assert.equal(finishPrice('holo', true), 340);
+  assert.equal(finishPrice('reverse', true), 340);
+  assert.equal(finishPrice('extra_color', true), 110);
 }
-ok('holo and reverse holo are 6 × 30 tokens; an extra colour is a third; a pass pays 135 and 45');
+ok('holo and reverse holo are 450 tokens (~4–6 active days); extra colour 150; pass pays 340 and 110');
 
 /* --------------------------------------------------------------- 3. plans --- */
 
@@ -114,7 +119,7 @@ ok('holo and reverse holo are 6 × 30 tokens; an extra colour is a third; a pass
   const empty = emptyFinishWallet();
   const first = planFinishWear({
     wallet: empty,
-    tokens: 180,
+    tokens: 450,
     pass: false,
     free: false,
     kind: 'holo',
@@ -122,12 +127,12 @@ ok('holo and reverse holo are 6 × 30 tokens; an extra colour is a third; a pass
   });
   assert.equal(first.ok, true);
   if (first.ok) {
-    assert.equal(first.cost, 180);
+    assert.equal(first.cost, 450);
     assert.equal(first.wallet.holo, true);
     assert.deepEqual(first.wallet.colors, ['moonpearl']);
     const second = planFinishWear({
       wallet: first.wallet,
-      tokens: 180,
+      tokens: 450,
       pass: false,
       free: false,
       kind: 'reverse',
@@ -135,12 +140,12 @@ ok('holo and reverse holo are 6 × 30 tokens; an extra colour is a third; a pass
     });
     assert.equal(second.ok, true);
     if (second.ok) {
-      assert.equal(second.cost, 180);
+      assert.equal(second.cost, 450);
       assert.equal(second.wallet.reverse, true);
       assert.deepEqual(second.wallet.colors, ['moonpearl', 'reefglow']);
       const extra = planFinishWear({
         wallet: second.wallet,
-        tokens: 60,
+        tokens: 150,
         pass: false,
         free: false,
         kind: 'holo',
@@ -148,7 +153,7 @@ ok('holo and reverse holo are 6 × 30 tokens; an extra colour is a third; a pass
       });
       assert.equal(extra.ok, true);
       if (extra.ok) {
-        assert.equal(extra.cost, 60);
+        assert.equal(extra.cost, 150);
         assert.ok(extra.wallet.colors.includes('scarab'));
         const off = planFinishWear({
           wallet: extra.wallet,
@@ -171,25 +176,25 @@ ok('holo and reverse holo are 6 × 30 tokens; an extra colour is a third; a pass
 
   const passKind = planFinishWear({
     wallet: emptyFinishWallet(),
-    tokens: 135,
+    tokens: 340,
     pass: true,
     free: false,
     kind: 'holo',
     color: 'limewake',
   });
   assert.equal(passKind.ok, true);
-  if (passKind.ok) assert.equal(passKind.cost, 135);
+  if (passKind.ok) assert.equal(passKind.cost, 340);
   const owned: FinishWallet = { holo: true, reverse: true, colors: ['moonpearl'] };
   const passColor = planFinishWear({
     wallet: owned,
-    tokens: 45,
+    tokens: 110,
     pass: true,
     free: false,
     kind: 'reverse',
     color: 'rosedusk',
   });
   assert.equal(passColor.ok, true);
-  if (passColor.ok) assert.equal(passColor.cost, 45);
+  if (passColor.ok) assert.equal(passColor.cost, 110);
 
   const locked = planFinishWear({
     wallet: owned,
@@ -248,7 +253,7 @@ ok('a kind includes one new colour; the pass discounts; Starpearl stays out of t
 /* --------------------------------------------------------------- 4. apply --- */
 
 {
-  const picked = chooseEggDoc({ ...defaultPlayStore(T0), tokens: 400, eggs_since_legendary: 4 }, T0, 'village', null, () => 0.2);
+  const picked = chooseEggDoc({ ...defaultPlayStore(T0), tokens: 500, eggs_since_legendary: 4 }, T0, 'village', null, () => 0.2);
   assert.ok(picked);
   const before = {
     ...picked,
@@ -263,14 +268,14 @@ ok('a kind includes one new colour; the pass discounts; Starpearl stays out of t
   };
   const worn = applyPetFinish(before, T0, before.pet.uid, 'holo', 'moonpearl');
   assert.equal(worn.result.ok, true);
-  if (worn.result.ok) assert.equal(worn.result.cost, PLAY_EVERYTHING_FREE ? 0 : 180);
+  if (worn.result.ok) assert.equal(worn.result.cost, PLAY_EVERYTHING_FREE ? 0 : 450);
   assert.equal(worn.doc.pet.shiny, true);
   assert.equal(worn.doc.pet.shiny_style, 'classic');
   assert.equal(worn.doc.pet.grade, 'rare');
   assert.equal(worn.doc.eggs_since_legendary, 4);
   assert.equal(worn.doc.pet.finish_kind, 'holo');
   assert.equal(worn.doc.pet.finish_color, 'moonpearl');
-  assert.equal(worn.doc.tokens, PLAY_EVERYTHING_FREE ? 400 : 220);
+  assert.equal(worn.doc.tokens, PLAY_EVERYTHING_FREE ? 500 : 50);
 
   const egg = chooseEggDoc(defaultPlayStore(T0), T0, 'village', null, () => 0.2);
   assert.ok(egg && egg.pet.hero == null);

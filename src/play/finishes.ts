@@ -6,11 +6,11 @@
  * A Tide Pass discounts the token prices and is the only way to wear Starpearl.
  * `PLAY_EVERYTHING_FREE` is applied by the store (cost 0, everything wearable).
  *
- * Token math (the pet mini-game cap, the daily budget Part E prices against):
- *   holo = unlock_days × PET_TOKENS_DAILY_CAP  (6 × 30 = 180, inside 5–7 days)
- *   reverse holo = the same
- *   each extra named colour = that price / 3  (60 = 2 days)
- *   Tide Pass pays (1 − 1/4) of those prices (135 and 45)
+ * Token math (an active day ≈ 80–115 tokens: pet cap plus one Defend clear plus tending):
+ *   holo = 450 (about 4–6 days at that pace; includes one shop colour)
+ *   reverse holo = 450
+ *   each extra named colour = 150 (a third of a kind unlock)
+ *   Tide Pass prices are explicit in the config (340 / 340 / 110)
  * The first colour you do not already own is included in a kind's unlock.
  */
 import rawFinishes from './data/finishes.json';
@@ -46,13 +46,16 @@ export type FinishConfig = {
   currency: string;
   earn_per_round: number;
   earn_daily_cap: number;
+  active_day_tokens_min: number;
+  active_day_tokens_max: number;
+  /** Mid active-day budget used to set the kind price (unlock_days × this). */
+  active_day_tokens: number;
   unlock_days: number;
   unlock_days_min: number;
   unlock_days_max: number;
   extra_color_share_den: number;
   prices: { holo: number; reverse: number; extra_color: number };
-  pass_discount_num: number;
-  pass_discount_den: number;
+  pass_prices: { holo: number; reverse: number; extra_color: number };
   paint: FinishPaint;
   sweep_ms: number;
   colors: readonly FinishColor[];
@@ -127,12 +130,10 @@ export function finishWornLabel(kind: string | null | undefined, color: string |
   return kind === 'reverse' ? `Reverse holo ${name}` : `Holo ${name}`;
 }
 
-/** Token price after the Tide Pass discount. Pass pays `(den − num) / den`. */
+/** Token price; with a Tide Pass the config's `pass_prices` row is used. */
 export function finishPrice(what: 'holo' | 'reverse' | 'extra_color', pass: boolean): number {
   const cfg = finishConfig();
-  const base = cfg.prices[what];
-  if (!pass) return base;
-  return Math.round((base * (cfg.pass_discount_den - cfg.pass_discount_num)) / cfg.pass_discount_den);
+  return pass ? cfg.pass_prices[what] : cfg.prices[what];
 }
 
 export function holoFoilOpacity(onShiny: boolean, blend: boolean): number {
@@ -265,9 +266,17 @@ export function finishConfigErrors(): string[] {
   if (paint.reverse_opacity !== 0.4) errors.push('reverse opacity');
   if (paint.holo_blend !== 'color-dodge' || paint.holo_blend_fallback !== 'overlay') errors.push('holo blend');
   if (paint.reverse_blend !== 'screen') errors.push('reverse blend');
-  if (cfg.prices.holo !== cfg.unlock_days * cfg.earn_daily_cap) errors.push('holo price');
   if (cfg.prices.reverse !== cfg.prices.holo) errors.push('reverse price');
   if (cfg.unlock_days < cfg.unlock_days_min || cfg.unlock_days > cfg.unlock_days_max) errors.push('days');
   if (cfg.prices.extra_color * cfg.extra_color_share_den !== cfg.prices.holo) errors.push('extra color');
+  if (cfg.active_day_tokens < cfg.active_day_tokens_min || cfg.active_day_tokens > cfg.active_day_tokens_max) {
+    errors.push('active day');
+  }
+  if (cfg.prices.holo !== cfg.unlock_days * cfg.active_day_tokens) errors.push('holo price');
+  const dayLo = cfg.unlock_days_min * cfg.active_day_tokens_min;
+  const dayHi = cfg.unlock_days_max * cfg.active_day_tokens_max;
+  if (cfg.prices.holo < dayLo || cfg.prices.holo > dayHi) errors.push('holo vs active day');
+  if (cfg.pass_prices.holo !== cfg.pass_prices.reverse) errors.push('pass holo/reverse');
+  if (cfg.pass_prices.extra_color >= cfg.pass_prices.holo) errors.push('pass extra');
   return errors;
 }
