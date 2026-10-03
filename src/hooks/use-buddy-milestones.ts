@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { pushBuddyNote } from '@/lib/buddy/notes';
 import { persistCelebratedMilestones } from '@/lib/me';
 import { checkMilestones, type MilestoneDef } from '@/lib/milestones';
+import { intakeStage } from '@/lib/questions/intake-stage';
 import { axisVariant, bankTotalProgress } from '@/lib/questions/local';
 import { INTAKE_REVEAL_MILESTONE_ID } from '@/lib/questions/progressive-unlock';
 import { settledCount, type TraitTrack } from '@/lib/trait-stability';
@@ -15,20 +16,24 @@ import { TRAIT_AXES } from '@/lib/traits';
  * `me.celebrated_milestone_ids` memory — only where it is said has moved.
  *
  * Every crossing is REMEMBERED. Not every crossing is SAID:
- * - The 50-answer crossings stay with the full-screen after-50 reveal, which
- *   already says them; a bubble under that card would be noise.
+ * - The full-profile crossings (set 3) stay with the full-screen reveal, which
+ *   already says them; a bubble under that card would be noise. Sage and
+ *   Legends are placeholders, so their crossings are not said either.
  * - Per-trait "complete" crossings are remembered silently: their copy names
  *   the internal trait, which the app does not show people.
  */
+const SILENT_IDS = new Set(['sage_unlocked', 'legends_unlocked']);
+
 function isSaidAloud(def: MilestoneDef): boolean {
   if (def.id.startsWith('axis_complete_')) return false;
-  if (def.metric === 'bankTotalProgress' && def.threshold >= 50) return false;
+  if (SILENT_IDS.has(def.id)) return false;
   return def.id !== INTAKE_REVEAL_MILESTONE_ID;
 }
 
 function crossedProfileMilestones(tracks: readonly TraitTrack[], celebrated: readonly string[]): MilestoneDef[] {
   const percent = (settledCount(tracks) / TRAIT_AXES.length) * 100;
   return [
+    ...checkMilestones('intakeStage', intakeStage(tracks), celebrated),
     ...checkMilestones('bankTotalProgress', bankTotalProgress(tracks).answered, celebrated),
     ...checkMilestones('profile_percent', percent, celebrated),
     ...TRAIT_AXES.flatMap((axis) => checkMilestones(`axisComplete:${axis}`, axisVariant(tracks, axis), celebrated)),

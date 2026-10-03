@@ -14,6 +14,8 @@ import { computeStreak } from '../src/lib/growth';
 import { addDaysYmd, localYmd } from '../src/lib/local-date';
 import { axisVariant, bankQuestionCount } from '../src/lib/questions/local';
 import { MILESTONE_DEFS, checkMilestones } from '../src/lib/milestones';
+import { intakeStage } from '../src/lib/questions/intake-stage';
+import { INTAKE_SET_PAYOFF_LINES } from '../src/lib/questions/staged-intake-copy';
 import type { TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES } from '../src/lib/traits';
 import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
@@ -56,26 +58,27 @@ function ok(label: string) {
   console.log(`  ✓ ${label}`);
 }
 
-// Trait-system redesign §6: sage_unlocked (25) and legends_unlocked/
-// profile_fully_unlocked (both 50, retargeted from profile_settled) joined
-// the pre-existing answers_12/24/36 — and answers_48 became answers_50,
-// since the frozen intake is 50 questions now, not 48 (§3).
-const bankTotalDefs = MILESTONE_DEFS.filter((d) => d.metric === 'bankTotalProgress');
-assert.equal(bankTotalDefs.length, 7);
+// Staged intake (2026-10-02): the intake milestones are the three sets,
+// keyed on intakeStage (the lowest per-trait count). The answers_12/24/36/50
+// count milestones retired with the 50.
+const stageDefs = MILESTONE_DEFS.filter((d) => d.metric === 'intakeStage');
 assert.deepEqual(
-  bankTotalDefs.map((d) => d.id),
-  ['sage_unlocked', 'answers_12', 'answers_24', 'answers_36', 'answers_50', 'legends_unlocked', 'profile_fully_unlocked'],
+  stageDefs.map((d) => `${d.id}@${d.threshold}`),
+  ['intake_set_1@1', 'intake_set_2@2', 'sage_unlocked@2', 'legends_unlocked@3', 'profile_fully_unlocked@3'],
 );
-assert.deepEqual(
-  bankTotalDefs.map((d) => d.threshold),
-  [25, 12, 24, 36, 50, 50, 50],
-);
+assert.equal(MILESTONE_DEFS.filter((d) => d.metric === 'bankTotalProgress').length, 0, 'no running-total milestones left');
+for (const gone of ['answers_12', 'answers_24', 'answers_36', 'answers_50']) {
+  assert.ok(!MILESTONE_DEFS.some((d) => d.id === gone), `${gone} retired with the 50`);
+}
+assert.equal(stageDefs[0]!.body, INTAKE_SET_PAYOFF_LINES[0]);
+assert.equal(stageDefs[1]!.body, INTAKE_SET_PAYOFF_LINES[1]);
+assert.equal(stageDefs.find((d) => d.id === 'profile_fully_unlocked')!.body, INTAKE_SET_PAYOFF_LINES[2]);
 assert.equal(new Set(MILESTONE_DEFS.map((d) => d.id)).size, MILESTONE_DEFS.length);
 assert.ok(
-  bankTotalDefs.every((d) => !containsFrameworkTerm(d.title) && !containsFrameworkTerm(d.body)),
-  'bankTotalProgress copy hits the framework fence',
+  stageDefs.every((d) => !containsFrameworkTerm(d.title) && !containsFrameworkTerm(d.body)),
+  'intake-stage copy hits the framework fence',
 );
-ok('MILESTONE_DEFS has 7 unique bankTotalProgress entries: sage_unlocked (25), answers_12/24/36/50, legends_unlocked + profile_fully_unlocked (50), fence-clean');
+ok('intake milestones are the three sets (set 1, set 2, full profile) on intakeStage, plus silent Sage/Legends; fence-clean');
 
 // profile_50 is the only profile_percent def — profile_100 was removed:
 // it was on bank_percent (answered/total bank questions x100), which
@@ -144,38 +147,22 @@ ok('profile_100 is gone from MILESTONE_DEFS');
 assert.equal(MILESTONE_DEFS.filter((d) => d.metric === 'profile_settled').length, 0);
 ok('profile_settled metric has zero defs — legends_unlocked no longer uses it');
 
-// Wiring proof: a real 50-answered-questions TraitTrack fixture, run through
-// the actual legendsUnlocked (bankTotalProgress(tracks).answered >= 50) —
-// the predicate legends.tsx's `locked` used before it was parked — must
-// produce a crossed legends_unlocked def. Deliberately NOT isProfileSettled:
-// per emci's explicit call, Q50 alone unlocks Legends, since the tiered
-// intake alone never satisfies isProfileSettled for 10 of 16 axes.
+// Wiring proof: real TraitTrack fixtures through the real intakeStage.
 {
-  // 50 answers spread across axes per their own frozen-intake bank size
-  // (tier-1/2 axes: 6, tier-3: 4, tier-4: 2) — matches how a real user would
-  // actually reach 50 total, not an arbitrary even split.
-  const fullIntakeTracks: TraitTrack[] = TRAIT_AXES.map((axis) =>
-    reportTrackAt(axis, bankQuestionCount([axis])),
-  );
-  const totalAnswered = fullIntakeTracks.reduce((sum, row) => sum + row.answerCount, 0);
-  assert.equal(totalAnswered, 50, 'fixture must actually total 50 answers, or this test proves nothing');
+  const atCount = (n: number) => TRAIT_AXES.map((axis) => reportTrackAt(axis, n));
+  const crossed = (tracks: TraitTrack[], celebrated: string[] = []) =>
+    checkMilestones('intakeStage', intakeStage(tracks), celebrated).map((d) => d.id);
+  assert.deepEqual(crossed(atCount(1)), ['intake_set_1']);
+  assert.deepEqual(crossed(atCount(2), ['intake_set_1']), ['intake_set_2', 'sage_unlocked']);
   assert.deepEqual(
-    checkMilestones('bankTotalProgress', totalAnswered, []).map((d) => d.id).includes('legends_unlocked'),
-    true,
-    'a genuinely 50-answered profile must cross legends_unlocked',
+    crossed(atCount(3), ['intake_set_1', 'intake_set_2', 'sage_unlocked']),
+    ['legends_unlocked', 'profile_fully_unlocked'],
   );
-  const oneShort = fullIntakeTracks.map((row, i) =>
-    i === 0 ? { ...row, answerCount: row.answerCount - 1 } : row,
-  );
-  const oneShortTotal = oneShort.reduce((sum, row) => sum + row.answerCount, 0);
-  assert.equal(oneShortTotal, 49);
-  assert.equal(
-    checkMilestones('bankTotalProgress', oneShortTotal, []).map((d) => d.id).includes('legends_unlocked'),
-    false,
-    '49 of 50 answered must not cross legends_unlocked',
-  );
+  const oneShort = atCount(3).map((row, i) => (i === 0 ? { ...row, answerCount: 2 } : row));
+  assert.ok(!crossed(oneShort).includes('profile_fully_unlocked'), '47 of 48 must not cross the full profile');
+  assert.deepEqual(crossed(atCount(5), ['intake_set_1', 'intake_set_2', 'sage_unlocked', 'legends_unlocked', 'profile_fully_unlocked']), []);
 }
-ok('a real 50-answered-questions fixture actually crosses legends_unlocked (bankTotalProgress, not isProfileSettled)');
+ok('real per-trait fixtures cross set 1, set 2 and the full profile exactly when every trait reaches 1, 2, 3');
 
 const axisCompleteDefs = MILESTONE_DEFS.filter((d) => d.metric.startsWith('axisComplete:'));
 assert.equal(axisCompleteDefs.length, TRAIT_AXES.length);
@@ -272,54 +259,31 @@ ok('completing an axis via a real TraitTrack/axisVariant fixture actually crosse
 }
 ok('a real streak via a Check[]/computeStreak fixture actually crosses streak_3');
 
-assert.deepEqual(checkMilestones('bankTotalProgress', 0, []), []);
+assert.deepEqual(checkMilestones('intakeStage', 0, []), []);
 ok('below every threshold crosses nothing');
 
 assert.deepEqual(
-  checkMilestones('bankTotalProgress', 24, []).map((d) => d.id),
-  ['answers_12', 'answers_24'],
-);
-ok('crossing 24 with nothing celebrated returns 12 and 24 (sage_unlocked at 25 not yet reached)');
-
-assert.deepEqual(
-  checkMilestones('bankTotalProgress', 24, ['answers_12']).map((d) => d.id),
-  ['answers_24'],
+  checkMilestones('intakeStage', 2, ['intake_set_1']).map((d) => d.id),
+  ['intake_set_2', 'sage_unlocked'],
 );
 ok('already-celebrated ids are excluded');
 
-// 25 crosses sage_unlocked alongside the pre-existing answers_12/24.
-assert.deepEqual(
-  checkMilestones('bankTotalProgress', 25, []).map((d) => d.id),
-  ['sage_unlocked', 'answers_12', 'answers_24'],
-);
-ok('crossing 25 unlocks Sage alongside answers_12/24');
-
-const ALL_BANK_TOTAL_IDS = ['sage_unlocked', 'answers_12', 'answers_24', 'answers_36', 'answers_50', 'legends_unlocked', 'profile_fully_unlocked'];
-assert.deepEqual(checkMilestones('bankTotalProgress', 50, ALL_BANK_TOTAL_IDS), []);
-ok('fully celebrated returns nothing even at max value (50)');
-
-// 50 crosses every remaining bankTotalProgress def at once: answers_50,
-// legends_unlocked, and profile_fully_unlocked all share the same threshold
-// (§6/§9's "plus a separate 'you are now fully unlocked' banner").
-assert.deepEqual(
-  checkMilestones('bankTotalProgress', 50, ['sage_unlocked', 'answers_12', 'answers_24', 'answers_36']).map((d) => d.id),
-  ['answers_50', 'legends_unlocked', 'profile_fully_unlocked'],
-);
-ok('crossing 50 with everything below it already celebrated returns answers_50, legends_unlocked, and profile_fully_unlocked together');
-
-const celebratedIds = ['answers_12'];
-checkMilestones('bankTotalProgress', 50, celebratedIds);
-assert.deepEqual(celebratedIds, ['answers_12']);
+const celebratedIds = ['intake_set_1'];
+checkMilestones('intakeStage', 3, celebratedIds);
+assert.deepEqual(celebratedIds, ['intake_set_1']);
 ok('checkMilestones does not mutate celebratedIds');
 
-// Backfill scenario (T-04): an existing user who already answered 30 bank
-// questions before this feature shipped should silently catch up on
-// sage_unlocked/12/24, with 36/50 still ahead of them.
-assert.deepEqual(
-  checkMilestones('bankTotalProgress', 30, []).map((d) => d.id),
-  ['sage_unlocked', 'answers_12', 'answers_24'],
-);
-ok('backfill scenario: 30 answered, nothing celebrated yet, catches up to sage_unlocked, 12, and 24');
+// An old-50 account (ten traits at 2) sits at stage 2: on its first look it
+// silently catches up on set 1, set 2 and Sage (use-buddy-milestones' silent
+// first look), and the full-profile milestone waits for its optional thirds.
+{
+  const oldFifty: TraitTrack[] = TRAIT_AXES.map((axis) => reportTrackAt(axis, axis === 'openness' ? 6 : 2));
+  assert.deepEqual(
+    checkMilestones('intakeStage', intakeStage(oldFifty), []).map((d) => d.id),
+    ['intake_set_1', 'intake_set_2', 'sage_unlocked'],
+  );
+}
+ok('backfill scenario: an old-50 account catches up on set 1, set 2 and Sage only');
 
 // --- Source assertions: intake-sweep.tsx wiring (T-04/T-05) ---
 const intakeSweepSrc = readFileSync(

@@ -1,3 +1,4 @@
+import { AXIS_POLE_NAME, AXIS_POLES } from '@/lib/axis-poles';
 import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
 import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
 import { effectiveStability, trackFor, type TraitTrack } from '@/lib/trait-stability';
@@ -97,6 +98,25 @@ export function buildQuestionsPrompt(input: {
         .map(([axis, n]) => `${axis} x${n}`)
         .join(', ')
     : TRAIT_AXES.join(', ');
+  // What 0 and 1 mean on each requested axis, so a question cannot drift to
+  // a neighbouring trait (staged intake red-team, 2026-10-02). Static app
+  // text only — never anything the user typed.
+  const endAxes = (
+    input.axisCounts
+      ? (Object.entries(input.axisCounts) as [TraitAxis, number | undefined][])
+          .filter(([, n]) => (n ?? 0) > 0)
+          .map(([axis]) => axis)
+      : []
+  ).filter((axis) => AXIS_POLE_NAME[axis] && AXIS_POLES[axis]);
+  const axisEnds =
+    endAxes.length > 0
+      ? `AXIS ENDS (what 0.2 and 0.8 mean on each axis above — the question must measure THIS, not a neighbouring trait):\n${endAxes
+          .map(
+            (axis) =>
+              `- ${axis}: 0.2 = ${AXIS_POLE_NAME[axis].low} ("${AXIS_POLES[axis].low}"), 0.8 = ${AXIS_POLE_NAME[axis].high} ("${AXIS_POLES[axis].high}")`,
+          )
+          .join('\n')}\n\n`
+      : '';
   const axesLabel = input.axisCounts
     ? `AXES (write exactly this many questions for each — total must equal ${count})`
     : 'AXES (each question maps to exactly one)';
@@ -123,11 +143,11 @@ ${retry}${ground}
 ${traitContext}${exclude}${axesLabel}:
 ${axesLines}
 
-${priority}RULES
+${axisEnds}${priority}RULES
 1. Return exactly ${count} question${count === 1 ? '' : 's'}.
 2. Multiple-choice only. 2 or 3 options each. Never ask for free text.
 3. Each question maps to one axis from the list. Include the axis id in JSON.
-4. Options need a 0–1 value for that axis (high pole closer to 1).
+4. Options need a 0–1 value for that axis (high pole closer to 1): use 0.8 for the high end, 0.2 for the low end and 0.5 for a middle option. Prefer 3 options, one at each.
 5. No framework names. Plain voice.
 6. Ground in something that already happened. Never a hypothetical, "what if," or imagined variant of a real moment.
 7. One idea, one moment per question. Never double-barrel a real event and a hypothetical variant of it in the same stem.

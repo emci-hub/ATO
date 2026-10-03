@@ -38,6 +38,8 @@ const sites = [
   // Insight experience (2026-10-01): the written daily line and the identity card.
   'src/components/daily-line-card.tsx',
   'src/components/identity-card.tsx',
+  // Staged intake (2026-10-02): the set header and unlock rewording on Questions.
+  'src/components/questions-fold.tsx',
   // 'src/components/intake-sweep.tsx' removed 2026-09-15 with the "A faster
   // pass" sweep (emci) — file deleted entirely, not just unmounted.
 ];

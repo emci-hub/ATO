@@ -1,5 +1,10 @@
 /**
- * Progressive unlock (trait-system redesign §6). Run: npm run check:progressive-unlock
+ * Progressive unlock (trait-system redesign §6; staged intake 2026-10-02).
+ * Run: npm run check:progressive-unlock
+ *
+ * Stage is the lowest per-trait answer count (intake-stage.ts). Sage opens at
+ * set 2 (or 25 of the old intake), Legends and the full profile at set 3 (or
+ * the old 50) — so nobody who had an unlock loses it.
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -10,9 +15,9 @@ import {
   INTAKE_REVEAL_MILESTONE_ID,
   INTAKE_REVEAL_SEEN_ID,
   INTAKE_UNLOCKED,
-  LEGENDS_UNLOCK_THRESHOLD,
+  LEGENDS_UNLOCK_STAGE,
   NEXT_ROUND_UNLOCKS,
-  SAGE_UNLOCK_THRESHOLD,
+  SAGE_UNLOCK_STAGE,
   UNLOCK_COPY_REVIEWED,
   legendsUnlocked,
   roundCompleteBody,
@@ -20,7 +25,17 @@ import {
   sageUnlocked,
   unlockCopyClean,
 } from '../src/lib/questions/progressive-unlock';
-import { QUESTIONS_BANK } from '../src/lib/questions/bank';
+import { LEGACY_INTAKE_AXIS_COUNTS, QUESTIONS_BANK } from '../src/lib/questions/bank';
+import {
+  currentIntakeSet,
+  finishedLegacyIntake,
+  hasOptionalLegacyQuestions,
+  intakeStage,
+  legacyIntakeExclusions,
+  reachedFullProfile,
+} from '../src/lib/questions/intake-stage';
+import { STAGED_INTAKE_COPY_REVIEWED } from '../src/lib/questions/staged-intake-copy';
+import { isFullProfileDone } from '../src/lib/full-profile-gate';
 import { MILESTONE_DEFS } from '../src/lib/milestones';
 import { bankTotalProgress } from '../src/lib/questions/local';
 import { TRAIT_AXES } from '../src/lib/traits';
@@ -37,54 +52,79 @@ function ok(label: string) {
   console.log(`  ✓ ${label}`);
 }
 
-assert.equal(SAGE_UNLOCK_THRESHOLD, 25);
-assert.equal(LEGENDS_UNLOCK_THRESHOLD, 50);
-assert.equal(LEGENDS_UNLOCK_THRESHOLD, QUESTIONS_BANK.length, 'Legends unlocks at exactly the full frozen intake size');
-ok('thresholds match §6 exactly (25 for Sage, 50 for Legends)');
+assert.equal(SAGE_UNLOCK_STAGE, 2);
+assert.equal(LEGENDS_UNLOCK_STAGE, 3);
+ok('Sage opens at set 2, Legends at set 3 (the full profile)');
 
-/** N answers total, spread across the first axes in TRAIT_AXES order (capping each axis at its own bank size). */
-function tracksWithTotalAnswered(n: number): TraitTrack[] {
-  const perAxis = new Map<string, number>();
-  for (const row of QUESTIONS_BANK) perAxis.set(row.axis, (perAxis.get(row.axis) ?? 0) + 1);
-  const out: TraitTrack[] = [];
-  let remaining = n;
-  for (const axis of TRAIT_AXES) {
-    if (remaining <= 0) break;
-    const cap = perAxis.get(axis) ?? 0;
-    const count = Math.min(cap, remaining);
-    if (count <= 0) continue;
-    out.push({
-      axis,
-      track: 'report',
-      value: 0.5,
-      stability: 0.5,
-      answerCount: count,
-      lastTouched: '2026-09-08T12:00:00.000Z',
-      lastDepthAt: null,
-    });
-    remaining -= count;
-  }
-  return out;
+function track(axis: string, answerCount: number): TraitTrack {
+  return {
+    axis: axis as TraitTrack['axis'],
+    track: 'report',
+    value: 0.5,
+    stability: 0.5,
+    answerCount,
+    lastTouched: '2026-09-08T12:00:00.000Z',
+    lastDepthAt: null,
+  };
 }
+/** Round-robin answers, set by set: n = 16 is exactly set 1, 32 set 2, 48 all. */
+function tracksAfterAnswers(n: number): TraitTrack[] {
+  const counts = new Map<string, number>(TRAIT_AXES.map((axis) => [axis, 0]));
+  for (let i = 0; i < n; i += 1) {
+    const axis = TRAIT_AXES[i % TRAIT_AXES.length];
+    counts.set(axis, (counts.get(axis) ?? 0) + 1);
+  }
+  return TRAIT_AXES.filter((axis) => (counts.get(axis) ?? 0) > 0).map((axis) => track(axis, counts.get(axis)!));
+}
+/** The shape an account that finished the OLD tiered 50 has. */
+const oldFifty = TRAIT_AXES.map((axis) => track(axis, LEGACY_INTAKE_AXIS_COUNTS[axis]));
 
-assert.equal(sageUnlocked([]), false, 'no answers: Sage locked');
-assert.equal(sageUnlocked(tracksWithTotalAnswered(24)), false, '24 answered: Sage still locked');
-assert.equal(sageUnlocked(tracksWithTotalAnswered(25)), true, '25 answered: Sage unlocks');
-assert.equal(sageUnlocked(tracksWithTotalAnswered(49)), true, '49 answered: Sage stays unlocked');
-ok('sageUnlocked crosses exactly at 25, never re-locks with more answers');
+assert.equal(intakeStage([]), 0);
+assert.equal(intakeStage(tracksAfterAnswers(15)), 0, 'one trait still without an answer');
+assert.equal(intakeStage(tracksAfterAnswers(16)), 1, 'set 1 done');
+assert.equal(intakeStage(tracksAfterAnswers(31)), 1);
+assert.equal(intakeStage(tracksAfterAnswers(32)), 2, 'set 2 done');
+assert.equal(intakeStage(tracksAfterAnswers(48)), 3, 'all 48');
+assert.equal(intakeStage(tracksAfterAnswers(80)), 3, 'capped at 3');
+assert.deepEqual(currentIntakeSet(tracksAfterAnswers(20)), { set: 2, answered: 4, size: 16 });
+assert.equal(currentIntakeSet(tracksAfterAnswers(48)), null);
+// A lopsided account: 6 on one trait, nothing on another, is still at stage 0.
+assert.equal(intakeStage([track('openness', 6)]), 0);
+ok('stage = lowest per-trait count (0..3); set progress counts traits already past the set');
 
-assert.equal(legendsUnlocked(tracksWithTotalAnswered(49)), false, '49 answered: Legends still locked');
-assert.equal(legendsUnlocked(tracksWithTotalAnswered(50)), true, '50 answered: Legends unlocks');
-ok('legendsUnlocked crosses exactly at 50 (the full frozen intake), not before');
+assert.equal(sageUnlocked([]), false);
+assert.equal(sageUnlocked(tracksAfterAnswers(31)), false, 'set 2 not done: Sage locked');
+assert.equal(sageUnlocked(tracksAfterAnswers(32)), true, 'set 2 done: Sage unlocks');
+assert.equal(legendsUnlocked(tracksAfterAnswers(47)), false, '47: Legends still locked');
+assert.equal(legendsUnlocked(tracksAfterAnswers(48)), true, '48: Legends unlocks');
+assert.equal(isFullProfileDone(tracksAfterAnswers(47), true), false);
+assert.equal(isFullProfileDone(tracksAfterAnswers(48), true), true);
+assert.equal(isFullProfileDone(tracksAfterAnswers(48), false), false, 'not ready reads as locked');
+ok('Sage at set 2, Legends and the full profile at all 48 — never before');
 
-// Legends' new gate is reachable by the tiered intake alone — the whole
-// point of retargeting off isProfileSettled (which 10 of 16 axes, at only 2
-// intake answers each, could never satisfy on intake completion alone).
-const fullIntake = tracksWithTotalAnswered(50);
-const totalAnswered = fullIntake.reduce((sum, row) => sum + row.answerCount, 0);
-assert.equal(totalAnswered, 50);
-assert.equal(legendsUnlocked(fullIntake), true, 'completing the full frozen intake unlocks Legends, unconditionally');
-ok('completing all 50 intake questions unlocks Legends regardless of per-axis stability floors');
+// Old accounts: the old 50 keeps everything open.
+assert.equal(intakeStage(oldFifty), 2, 'the old 50 left ten traits at 2');
+assert.equal(finishedLegacyIntake(oldFifty), true);
+assert.equal(reachedFullProfile(oldFifty), true);
+assert.equal(isFullProfileDone(oldFifty, true), true, 'an old-50 account keeps Home, Explore and rounds');
+assert.equal(sageUnlocked(oldFifty), true);
+assert.equal(legendsUnlocked(oldFifty), true);
+assert.equal(hasOptionalLegacyQuestions(oldFifty), true, 'its restored third questions are offered, optional');
+assert.equal(hasOptionalLegacyQuestions(tracksAfterAnswers(48)), false);
+const oneShortOfOld = oldFifty.map((row) => (row.axis === 'playfulness' ? track('playfulness', 1) : row));
+assert.equal(finishedLegacyIntake(oneShortOfOld), false, '49 of the old 50 is not the old 50');
+ok('an account that finished the old 50 keeps every unlock and is offered its third questions as optional');
+
+// Moved extras: excluded from rounds exactly for accounts that answered them.
+{
+  const excluded = legacyIntakeExclusions(oldFifty);
+  assert.equal(excluded.length, 12, 'all 12 moved extras were answered by an old-50 account');
+  assert.deepEqual(legacyIntakeExclusions(tracksAfterAnswers(48)), [], 'a new account answered none of them');
+  const partial = legacyIntakeExclusions([track('openness', 4)]);
+  assert.equal(partial.length, 1, 'answered 4 on openness in the old intake: only the 4th old draft is excluded');
+  for (const prompt of excluded) assert.ok(!QUESTIONS_BANK.some((d) => d.prompt === prompt), 'never an intake prompt');
+}
+ok('rounds skip a moved extra only for the accounts that already answered it in the old intake');
 
 // --- Regression: the optional scenario phase must not strand the unlock ----
 // The optional 8-screen phase writes all 16 axes as `self_scenario` (direct).
@@ -115,12 +155,12 @@ const intakeTracks = [...afterIntake.values()];
 
 assert.equal(
   bankTotalProgress(intakeTracks).answered,
-  50,
-  'all 50 intake answers count even when every axis was scenario-seeded',
+  48,
+  'all 48 intake answers count even when every axis was scenario-seeded',
 );
 assert.equal(sageUnlocked(intakeTracks), true, 'Sage unlocks after a scenario-seeded intake');
 assert.equal(legendsUnlocked(intakeTracks), true, 'Legends unlocks after a scenario-seeded intake');
-ok('scenario phase + all 50 intake answers reaches 50 and unlocks Sage and Legends');
+ok('scenario phase + all 48 intake answers reaches 48 and unlocks Sage and Legends');
 
 for (const axis of TRAIT_AXES) {
   const before = scenarioSeeded.get(axis)!;
@@ -132,11 +172,11 @@ for (const axis of TRAIT_AXES) {
 ok('count-only bumps answerCount only — value and stability are byte-identical');
 
 // The bug this replaces: dropping the answer left every axis at the single
-// scenario write, i.e. 16 of 50, permanently short of both thresholds.
+// scenario write, i.e. 16 of 48, permanently short of the full profile.
 const droppedInstead = [...scenarioSeeded.values()];
 assert.equal(bankTotalProgress(droppedInstead).answered, 16);
 assert.equal(legendsUnlocked(droppedInstead), false);
-ok('the old drop-the-answer behaviour stranded the count at 16 of 50');
+ok('the old drop-the-answer behaviour stranded the count at 16 of 48');
 
 // The assertions above prove the arithmetic. These prove the wiring in
 // me.ts — the branch that was actually the bug — since `collectAnswers` and
@@ -165,17 +205,23 @@ ok('persistMergedTraits skips the value blend for countOnly answers (wiring)');
 // --- The unlock table (2026-10-01): one source for the reveal and the toast ---
 {
   assert.equal(unlockCopyClean(), true, 'unlock copy passes the framework fence');
-  assert.equal(UNLOCK_COPY_REVIEWED, true, 'emci approved 2026-10-02');
+  assert.equal(
+    UNLOCK_COPY_REVIEWED,
+    STAGED_INTAKE_COPY_REVIEWED,
+    'the staged-intake rewording is a draft until emci reads it',
+  );
   assert.ok(
-    MILESTONE_DEFS.some((def) => def.id === INTAKE_REVEAL_MILESTONE_ID && def.threshold === QUESTIONS_BANK.length),
-    'the reveal is remembered under a real milestone id, at the full-intake threshold',
+    MILESTONE_DEFS.some(
+      (def) => def.id === INTAKE_REVEAL_MILESTONE_ID && def.metric === 'intakeStage' && def.threshold === 3,
+    ),
+    'the reveal is remembered under a real milestone id, at the full profile (set 3)',
   );
   assert.ok(
     MILESTONE_DEFS.every((def) => def.id !== INTAKE_REVEAL_SEEN_ID),
     'the seen id must not be an id the old toast queue could already have written',
   );
   const openNow = INTAKE_UNLOCKED.join(' ');
-  assert.doesNotMatch(openNow, /Story|Sage|Legend/, '"Open now" must not promise Story (not ready at 50) or the two placeholders');
+  assert.doesNotMatch(openNow, /Story|Sage|Legend/, '"Open now" must not promise Story or the two placeholders');
   assert.match(NEXT_ROUND_UNLOCKS.join(' '), /Story/, 'Story belongs to the next round');
   assert.match(COMING_LATER_LINE, /Sage and Legends/);
   // No milestone may announce a placeholder as open.
@@ -184,7 +230,7 @@ ok('persistMergedTraits skips the value blend for countOnly answers (wiring)');
   }
   ok('unlock table: "open now" matches the real gates, Story sits in the next round, Sage and Legends are not announced');
 
-  const unsettled = tracksWithTotalAnswered(50);
+  const unsettled = oldFifty;
   assert.doesNotMatch(roundCompleteBody(unsettled, false), /ATO tokens/, 'an unpaid round never names the +21');
   assert.match(roundCompleteBody(unsettled, true), /^\+21 ATO tokens\. \d+ of 16 settled\./);
   assert.match(roundStandingLine(unsettled), /keep settling the rest/);

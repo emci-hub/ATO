@@ -63,7 +63,7 @@ type Loaded = {
   depth: Partial<Record<TraitAxis, number>> | null;
 };
 
-/** The latest round of 25 with where each question came from. Null = no round yet. */
+/** The latest round with where each question came from. Null = no round yet. */
 async function loadLatestRound(): Promise<RoundItemInspect[] | null> {
   const { data: pack, error } = await supabase
     .from('question_packs')
@@ -221,7 +221,7 @@ export function DevInspector() {
     pool: (
       <>
         <ThemedText type="small" themeColor="textSecondary">
-          A round of 25 takes from the shared bank first. AI writes only what the bank cannot fill.
+          A round of 16 takes from the shared bank first. AI writes only what the bank cannot fill.
         </ThemedText>
         {data?.round ? (
           <>
@@ -234,7 +234,7 @@ export function DevInspector() {
           </>
         ) : (
           <ThemedText type="small">
-            {data?.roundFailed ? 'Could not read the latest round.' : 'No round of 25 yet on this account.'}
+            {data?.roundFailed ? 'Could not read the latest round.' : 'No round yet on this account.'}
           </ThemedText>
         )}
         <ThemedText type="smallBold">Bank questions you have not seen yet, per axis</ThemedText>

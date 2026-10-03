@@ -1,23 +1,27 @@
 import type { QuestionDraft } from './types';
 
 /**
- * Frozen 50-question intake (trait-system redesign §3) — replaces the old
- * flat 48-question, 3-per-axis bank. Per-axis count now follows the §2 axis
- * tiers doubled for 2 rounds (`AXIS_TIER_COUNTS` in tiered-axis-plan.ts x2):
- * tier 1/2 axes (conscientiousness, extraversion, openness) get 6 drafts
- * each, tier 3 (agreeableness, conflict_assertiveness, relatedness) get 4
- * each, tier 4 (the remaining 10 axes) get 2 each — 3x6 + 3x4 + 10x2 = 50.
- * Hand-authored (AI-assisted authoring, not live-per-user generation, same
- * one-time-content convention as the archetype names) rather than generated
- * live — see docs/archive/TRAIT_SYSTEM_REDESIGN_PLAN.md §3.
+ * The intake: 48 questions, exactly 3 per trait (staged intake, emci
+ * 2026-10-02). Asked as 3 sets of 16 — set N is draft N-1 of every trait —
+ * so every trait moves one step per set and a trait can settle at the end of
+ * set 3 (STABILITY_FLOOR_N = 3). Stage is computed from real per-trait answer
+ * counts (`intake-stage.ts`), never from a running total.
  *
- * Grouped in TRAIT_AXES order, and the FIRST draft of an axis that already
- * existed pre-redesign is still the original locked one quoted verbatim in
- * QUESTIONS_FEW_SHOTS below — do not reorder an axis group or reword a first
- * entry without updating that string too (`check:questions` asserts several
- * of them verbatim). New drafts were appended at the end of their axis group
- * (tier 1/2/3 axes) or trimmed from the end (tier 4 axes, down from 3 to 2)
- * specifically so no first-entry few-shot quote had to move.
+ * History: the 2026-09 redesign made this a tiered 50 (6/6/6, 4/4/4, 2x10)
+ * ranked by how often each trait appears in the archetype catalog. Every
+ * answer touches one trait and every trait needs the same 3 answers to settle,
+ * so the tiers only slowed ten traits down. The extras moved to
+ * `ROUND_ONLY_BANK` (never deleted); the ten third drafts came back from
+ * 79ef77a^, rewritten in the moment voice with a middle option (the original
+ * wordings are kept in `ROUND_ONLY_BANK`). `LEGACY_INTAKE_AXIS_COUNTS` keeps
+ * the old shape so anyone who finished the old 50 keeps every unlock.
+ *
+ * Hand-authored, not live-generated — see docs/archive/TRAIT_SYSTEM_REDESIGN_PLAN.md §3.
+ *
+ * Grouped in TRAIT_AXES order, and the FIRST draft of an axis is still the
+ * original locked one quoted verbatim in QUESTIONS_FEW_SHOTS below — do not
+ * reorder an axis group or reword a first entry without updating that string
+ * too (`check:questions` asserts several of them verbatim).
  *
  * Multiple choice only, 2 or 3 options, never free text: `parseQuestionDraft`
  * and the `insert_question_pack` RPC both reject anything outside 2-3.
@@ -30,7 +34,7 @@ import type { QuestionDraft } from './types';
  * "you're the kind of", "growth mindset", "locus of control", "self-efficacy".
  */
 export const QUESTIONS_BANK: readonly QuestionDraft[] = [
-  // --- openness ------------------------------------------------------------
+  // --- openness -----------------------------------------------------------------
   {
     axis: 'openness',
     category: 'cat_openness',
@@ -61,37 +65,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: "I'd probably pass", value: 0.2 },
     ],
   },
-  {
-    axis: 'openness',
-    category: 'cat_openness',
-    prompt: "You're picking a show to watch and there's something new in your queue you haven't tried.",
-    options: [
-      { text: 'New one', value: 0.8 },
-      { text: 'Depends on my mood', value: 0.5 },
-      { text: 'Something familiar', value: 0.2 },
-    ],
-  },
-  {
-    axis: 'openness',
-    category: 'cat_openness',
-    prompt: 'A coworker suggests doing the project a totally different way than you planned.',
-    options: [
-      { text: "I'm curious, let's see", value: 0.8 },
-      { text: "I'll hear them out", value: 0.5 },
-      { text: "I'd rather stick to the plan", value: 0.2 },
-    ],
-  },
-  {
-    axis: 'openness',
-    category: 'cat_openness',
-    prompt: "You have a free Saturday and someone mentions a class or hobby you've never tried.",
-    options: [
-      { text: "I'd sign up", value: 0.8 },
-      { text: 'Maybe another time', value: 0.2 },
-    ],
-  },
-
-  // --- conscientiousness ---------------------------------------------------
+  // --- conscientiousness --------------------------------------------------------
   {
     axis: 'conscientiousness',
     category: 'cat_steadiness',
@@ -119,6 +93,475 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
     options: [
       { text: 'I still do it', value: 0.8 },
       { text: 'It quietly disappears', value: 0.2 },
+    ],
+  },
+  // --- extraversion -------------------------------------------------------------
+  {
+    axis: 'extraversion',
+    category: 'cat_openness',
+    prompt: 'Saturday afternoon, nobody has plans yet.',
+    options: [
+      { text: "I'd rather text a few people and make something happen", value: 0.8 },
+      { text: "Either way, I'm fine", value: 0.5 },
+      { text: "I'd rather keep the time quiet", value: 0.2 },
+    ],
+  },
+  {
+    axis: 'extraversion',
+    category: 'cat_openness',
+    prompt: 'You walk into a party and know maybe two people.',
+    options: [
+      { text: 'I start talking to someone new', value: 0.8 },
+      { text: 'I find the two I know', value: 0.5 },
+      { text: "I'm counting the minutes", value: 0.2 },
+    ],
+  },
+  {
+    axis: 'extraversion',
+    category: 'cat_openness',
+    prompt: 'A long week just ended.',
+    options: [
+      { text: 'Going out would recharge me', value: 0.8 },
+      { text: 'Being alone would recharge me', value: 0.2 },
+    ],
+  },
+  // --- agreeableness ------------------------------------------------------------
+  {
+    axis: 'agreeableness',
+    category: 'cat_steadiness',
+    prompt: "A group chat is picking a place you don't really like.",
+    options: [
+      { text: "I go along, it's not worth a fuss", value: 0.8 },
+      { text: 'I mention it once, then let it go', value: 0.5 },
+      { text: "I say I'd rather go somewhere else", value: 0.2 },
+    ],
+  },
+  {
+    axis: 'agreeableness',
+    category: 'cat_steadiness',
+    prompt: 'Someone takes credit for something that was mostly yours.',
+    options: [
+      { text: 'I let it slide', value: 0.8 },
+      { text: 'I mention it lightly, later', value: 0.5 },
+      { text: 'I correct it on the spot', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'agreeableness',
+    category: 'cat_steadiness',
+    prompt: 'A stranger is clearly in the wrong and clearly having a bad day.',
+    options: [
+      { text: 'I give them the benefit of the doubt', value: 0.8 },
+      { text: 'Bad day or not, wrong is wrong', value: 0.2 },
+    ],
+  },
+  // --- steadiness ---------------------------------------------------------------
+  {
+    axis: 'steadiness',
+    category: 'cat_steadiness',
+    prompt: 'A small thing goes wrong first thing in the morning.',
+    options: [
+      { text: "I'm mostly over it by lunch", value: 0.8 },
+      { text: 'It sits with me a bit, then fades', value: 0.5 },
+      { text: 'It colors the rest of the day', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'steadiness',
+    category: 'cat_steadiness',
+    prompt: 'Plans change on you an hour before.',
+    options: [
+      { text: 'Fine, I roll with it', value: 0.8 },
+      { text: 'Mild whiplash, then fine', value: 0.5 },
+      { text: 'It throws off the whole evening', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'steadiness',
+    category: 'cat_steadiness',
+    prompt: 'A one-word reply lands and it could be read two ways.',
+    options: [
+      { text: 'I read it plain and move on', value: 0.8 },
+      { text: 'I reread it once, then let it go', value: 0.5 },
+      { text: 'I reread it a few times', value: 0.2 },
+    ],
+  },
+  // --- attachment_anxiety -------------------------------------------------------
+  {
+    axis: 'attachment_anxiety',
+    category: 'cat_love',
+    prompt: 'Someone you like takes a while to reply.',
+    options: [
+      { text: "I start wondering if they're pulling away", value: 0.8 },
+      { text: 'I notice, then I get on with my day', value: 0.5 },
+      { text: "I don't think much of it", value: 0.2 },
+    ],
+  },
+  {
+    axis: 'attachment_anxiety',
+    category: 'cat_love',
+    prompt: 'A close friend has been quieter than usual this week.',
+    options: [
+      { text: 'I assume I did something', value: 0.8 },
+      { text: 'I wonder for a second, then drop it', value: 0.5 },
+      { text: 'People get busy', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'attachment_anxiety',
+    category: 'cat_love',
+    prompt: 'You sent a long message an hour ago. It says Read.',
+    options: [
+      { text: "I check back more than I'd admit", value: 0.8 },
+      { text: 'I notice, then put the phone down', value: 0.5 },
+      { text: 'I forget I sent it', value: 0.2 },
+    ],
+  },
+  // --- attachment_avoidance -----------------------------------------------------
+  {
+    axis: 'attachment_avoidance',
+    category: 'cat_love',
+    prompt: 'Someone close to you wants to talk something out in person instead of over text.',
+    options: [
+      { text: "Sure, that's fine when it matters", value: 0.2 },
+      { text: "I'd rather keep it lighter, over text", value: 0.8 },
+    ],
+  },
+  {
+    axis: 'attachment_avoidance',
+    category: 'cat_love',
+    prompt: 'A rough week. Someone asks how you actually are.',
+    options: [
+      { text: 'I tell them the real version', value: 0.2 },
+      { text: 'I give them the short version', value: 0.5 },
+      { text: 'I say I am fine and change the subject', value: 0.8 },
+    ],
+  },
+  {
+    axis: 'attachment_avoidance',
+    category: 'cat_love',
+    prompt: 'Someone starts texting you good morning every day.',
+    options: [
+      { text: 'I like it', value: 0.2 },
+      { text: 'Nice, in small doses', value: 0.5 },
+      { text: 'My replies get slower', value: 0.8 },
+    ],
+  },
+  // --- conflict_assertiveness ---------------------------------------------------
+  {
+    axis: 'conflict_assertiveness',
+    category: 'cat_communication',
+    prompt: 'You disagree with someone in the room.',
+    options: [
+      { text: 'I say so, even if it gets a little sharp', value: 0.8 },
+      { text: 'I wait to see if it blows over', value: 0.5 },
+      { text: 'I let it go rather than push', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'conflict_assertiveness',
+    category: 'cat_communication',
+    prompt: 'The order is wrong and the place is busy.',
+    options: [
+      { text: 'I send it back', value: 0.8 },
+      { text: 'Depends how wrong', value: 0.5 },
+      { text: 'I eat it', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'conflict_assertiveness',
+    category: 'cat_communication',
+    prompt: 'You want something and asking might annoy someone.',
+    options: [
+      { text: 'I ask anyway', value: 0.8 },
+      { text: 'I let it go', value: 0.2 },
+    ],
+  },
+  // --- conflict_cooperativeness -------------------------------------------------
+  {
+    axis: 'conflict_cooperativeness',
+    category: 'cat_communication',
+    prompt:
+      'When you and someone else both want different things with no obvious middle ground, who usually gives first?',
+    options: [
+      { text: 'Probably me', value: 0.8 },
+      { text: 'Depends who cares more', value: 0.5 },
+      { text: 'Rarely me', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'conflict_cooperativeness',
+    category: 'cat_communication',
+    prompt: 'An argument is going nowhere and it is getting late.',
+    options: [
+      { text: 'I look for something we both can live with', value: 0.8 },
+      { text: 'I park it for tomorrow', value: 0.5 },
+      { text: 'I hold my line', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'conflict_cooperativeness',
+    category: 'cat_communication',
+    prompt: "The group chat is arguing and you know you're right.",
+    options: [
+      { text: 'I let it go to keep the chat calm', value: 0.8 },
+      { text: 'I say it once, then drop it', value: 0.5 },
+      { text: 'I send the link that proves it', value: 0.2 },
+    ],
+  },
+  // --- autonomy -----------------------------------------------------------------
+  {
+    axis: 'autonomy',
+    category: 'cat_drive',
+    prompt: 'Someone hands you a plan that would work fine.',
+    options: [
+      { text: "I'd still rather do it my way", value: 0.8 },
+      { text: "I'll use theirs if it saves time", value: 0.5 },
+      { text: "I'm glad I don't have to figure it out", value: 0.2 },
+    ],
+  },
+  {
+    axis: 'autonomy',
+    category: 'cat_drive',
+    prompt: 'You get told exactly how to do something you already know how to do.',
+    options: [
+      { text: 'It gets under my skin', value: 0.8 },
+      { text: 'I notice it, then let it go', value: 0.5 },
+      { text: "Fine by me, less to think about", value: 0.2 },
+    ],
+  },
+  {
+    axis: 'autonomy',
+    category: 'cat_drive',
+    prompt: "Saturday's calendar is empty and nobody has texted.",
+    options: [
+      { text: 'Perfect, the day is mine', value: 0.8 },
+      { text: 'Nice for a morning, then I make plans', value: 0.5 },
+      { text: 'I start texting people for plans', value: 0.2 },
+    ],
+  },
+  // --- competence ---------------------------------------------------------------
+  {
+    axis: 'competence',
+    category: 'cat_drive',
+    prompt: 'A hard task lands on your plate.',
+    options: [
+      { text: 'I feel like I can handle it', value: 0.8 },
+      { text: 'Depends how hard, honestly', value: 0.5 },
+      { text: 'I doubt I can pull it off', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'competence',
+    category: 'cat_drive',
+    prompt: 'You are learning something new and you are still bad at it.',
+    options: [
+      { text: 'I can feel myself getting better', value: 0.8 },
+      { text: 'Some days it clicks', value: 0.5 },
+      { text: 'I mostly feel behind', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'competence',
+    category: 'cat_drive',
+    prompt: "Someone at work says 'this is your area, right?'",
+    options: [
+      { text: 'Fair, it is', value: 0.8 },
+      { text: "Probably, I'd double-check", value: 0.5 },
+      { text: "I'm sure they mean someone else", value: 0.2 },
+    ],
+  },
+  // --- relatedness --------------------------------------------------------------
+  {
+    axis: 'relatedness',
+    category: 'cat_drive',
+    prompt: 'A friend cancels same-day, no real reason given.',
+    options: [
+      { text: "I'd want to talk it through", value: 0.8 },
+      { text: "I'd let it go, check in eventually", value: 0.2 },
+    ],
+  },
+  {
+    axis: 'relatedness',
+    category: 'cat_drive',
+    prompt: 'Something good happens to you on an ordinary Tuesday.',
+    options: [
+      { text: "I'm texting someone before I sit down", value: 0.8 },
+      { text: 'It comes up next time we talk', value: 0.5 },
+      { text: 'I just enjoy it', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'relatedness',
+    category: 'cat_drive',
+    prompt: 'A whole day with no messages from anyone.',
+    options: [
+      { text: 'I feel the gap', value: 0.8 },
+      { text: 'Bliss', value: 0.2 },
+    ],
+  },
+  // --- growth_mindset -----------------------------------------------------------
+  {
+    axis: 'growth_mindset',
+    category: 'cat_agency',
+    prompt: 'You try something new and it goes badly the first time. What actually happens next?',
+    options: [
+      { text: "I look at what I'd do differently", value: 0.8 },
+      { text: "I probably don't try that again", value: 0.2 },
+    ],
+  },
+  {
+    axis: 'growth_mindset',
+    category: 'cat_agency',
+    prompt: 'Someone is much better than you at a thing you care about.',
+    options: [
+      { text: 'I want to know how they got there', value: 0.8 },
+      { text: 'Good for them, different lane', value: 0.5 },
+      { text: 'Some people just have it', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'growth_mindset',
+    category: 'cat_agency',
+    prompt: 'A friend posts day 60 of learning something new.',
+    options: [
+      { text: 'Give me 60 days and I could too', value: 0.8 },
+      { text: 'Depends on the thing', value: 0.5 },
+      { text: 'Some people are just built for it', value: 0.2 },
+    ],
+  },
+  // --- locus_of_control ---------------------------------------------------------
+  {
+    axis: 'locus_of_control',
+    category: 'cat_agency',
+    prompt: 'A plan you were in on falls apart.',
+    options: [
+      { text: 'I look first at what I might have done differently', value: 0.8 },
+      { text: "Some of it was me, some of it wasn't", value: 0.5 },
+      { text: 'It was bound to happen', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'locus_of_control',
+    category: 'cat_agency',
+    prompt: 'A good week. Where does the credit actually go?',
+    options: [
+      { text: 'Mostly to what I did', value: 0.8 },
+      { text: 'A bit of both', value: 0.5 },
+      { text: 'Mostly to how things fell', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'locus_of_control',
+    category: 'cat_agency',
+    prompt: "Someone asks how next year's looking.",
+    options: [
+      { text: 'Mostly up to what I do', value: 0.8 },
+      { text: 'Half me, half luck', value: 0.5 },
+      { text: 'Depends what happens', value: 0.2 },
+    ],
+  },
+  // --- self_efficacy ------------------------------------------------------------
+  {
+    axis: 'self_efficacy',
+    category: 'cat_agency',
+    prompt: "Everyone at the table already knows their order. You don't.",
+    options: [
+      { text: "I panic-order whatever's closest", value: 0.2 },
+      { text: 'Takes me a sec but I land on something', value: 0.5 },
+      { text: 'I ask what everyone else got', value: 0.8 },
+    ],
+  },
+  {
+    axis: 'self_efficacy',
+    category: 'cat_agency',
+    prompt: 'Something breaks and you have never fixed one before.',
+    options: [
+      { text: "I'll figure it out", value: 0.8 },
+      { text: 'I look it up first', value: 0.5 },
+      { text: 'I find someone who knows', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'self_efficacy',
+    category: 'cat_agency',
+    prompt: 'A big task has sat in your to-do app for two weeks.',
+    options: [
+      { text: 'I pick any piece and start', value: 0.8 },
+      { text: 'I break it down, then wait a bit', value: 0.5 },
+      { text: 'I keep moving it to tomorrow', value: 0.2 },
+    ],
+  },
+  // --- playfulness --------------------------------------------------------------
+  {
+    axis: 'playfulness',
+    category: 'cat_social',
+    prompt: 'A dull stretch with nothing required of you.',
+    options: [
+      { text: "I'd mess around and see what happens", value: 0.8 },
+      { text: 'Either way, I am fine', value: 0.5 },
+      { text: "I'd rather just get through it", value: 0.2 },
+    ],
+  },
+  {
+    axis: 'playfulness',
+    category: 'cat_social',
+    prompt: 'A serious conversation hits a genuinely funny moment.',
+    options: [
+      { text: 'I take the joke', value: 0.8 },
+      { text: 'Depends who is in the room', value: 0.5 },
+      { text: 'I keep it serious', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'playfulness',
+    category: 'cat_social',
+    prompt: 'The group chat has a running joke.',
+    options: [
+      { text: 'I started it', value: 0.8 },
+      { text: 'I keep it going', value: 0.5 },
+      { text: 'I just react with a laugh', value: 0.2 },
+    ],
+  },
+];
+
+/**
+ * Authored questions that left the intake but stay in use: the twelve extras
+ * the tiered 50 gave openness/conscientiousness/extraversion (3 each) and
+ * agreeableness/conflict_assertiveness/relatedness (1 each), then the ten
+ * original wordings of the restored third drafts. Served in rounds from the
+ * shared pool (wave49 / wave78 rows). Never delete one: an account that
+ * answered it in the old intake is kept away from it by
+ * `legacyIntakeExclusions` (intake-stage.ts).
+ */
+export const ROUND_ONLY_BANK: readonly QuestionDraft[] = [
+  {
+    axis: 'openness',
+    category: 'cat_openness',
+    prompt: "You're picking a show to watch and there's something new in your queue you haven't tried.",
+    options: [
+      { text: 'New one', value: 0.8 },
+      { text: 'Depends on my mood', value: 0.5 },
+      { text: 'Something familiar', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'openness',
+    category: 'cat_openness',
+    prompt: 'A coworker suggests doing the project a totally different way than you planned.',
+    options: [
+      { text: "I'm curious, let's see", value: 0.8 },
+      { text: "I'll hear them out", value: 0.5 },
+      { text: "I'd rather stick to the plan", value: 0.2 },
+    ],
+  },
+  {
+    axis: 'openness',
+    category: 'cat_openness',
+    prompt: "You have a free Saturday and someone mentions a class or hobby you've never tried.",
+    options: [
+      { text: "I'd sign up", value: 0.8 },
+      { text: 'Maybe another time', value: 0.2 },
     ],
   },
   {
@@ -150,37 +593,6 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'I fill in what I can and come back', value: 0.2 },
     ],
   },
-
-  // --- extraversion --------------------------------------------------------
-  {
-    axis: 'extraversion',
-    category: 'cat_openness',
-    prompt: 'Saturday afternoon, nobody has plans yet.',
-    options: [
-      { text: "I'd rather text a few people and make something happen", value: 0.8 },
-      { text: "Either way, I'm fine", value: 0.5 },
-      { text: "I'd rather keep the time quiet", value: 0.2 },
-    ],
-  },
-  {
-    axis: 'extraversion',
-    category: 'cat_openness',
-    prompt: 'You walk into a party and know maybe two people.',
-    options: [
-      { text: 'I start talking to someone new', value: 0.8 },
-      { text: 'I find the two I know', value: 0.5 },
-      { text: "I'm counting the minutes", value: 0.2 },
-    ],
-  },
-  {
-    axis: 'extraversion',
-    category: 'cat_openness',
-    prompt: 'A long week just ended.',
-    options: [
-      { text: 'Going out would recharge me', value: 0.8 },
-      { text: 'Being alone would recharge me', value: 0.2 },
-    ],
-  },
   {
     axis: 'extraversion',
     category: 'cat_openness',
@@ -210,37 +622,6 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: "I'll follow their lead", value: 0.2 },
     ],
   },
-
-  // --- agreeableness -------------------------------------------------------
-  {
-    axis: 'agreeableness',
-    category: 'cat_steadiness',
-    prompt: "A group chat is picking a place you don't really like.",
-    options: [
-      { text: "I go along, it's not worth a fuss", value: 0.8 },
-      { text: 'I mention it once, then let it go', value: 0.5 },
-      { text: "I say I'd rather go somewhere else", value: 0.2 },
-    ],
-  },
-  {
-    axis: 'agreeableness',
-    category: 'cat_steadiness',
-    prompt: 'Someone takes credit for something that was mostly yours.',
-    options: [
-      { text: 'I let it slide', value: 0.8 },
-      { text: 'I mention it lightly, later', value: 0.5 },
-      { text: 'I correct it on the spot', value: 0.2 },
-    ],
-  },
-  {
-    axis: 'agreeableness',
-    category: 'cat_steadiness',
-    prompt: 'A stranger is clearly in the wrong and clearly having a bad day.',
-    options: [
-      { text: 'I give them the benefit of the doubt', value: 0.8 },
-      { text: 'Bad day or not, wrong is wrong', value: 0.2 },
-    ],
-  },
   {
     axis: 'agreeableness',
     category: 'cat_steadiness',
@@ -249,99 +630,6 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'I usually say yes anyway', value: 0.8 },
       { text: 'Depends how big a favor', value: 0.5 },
       { text: "I say no if it's a real hassle", value: 0.2 },
-    ],
-  },
-
-  // --- steadiness ----------------------------------------------------------
-  {
-    axis: 'steadiness',
-    category: 'cat_steadiness',
-    prompt: 'A small thing goes wrong first thing in the morning.',
-    options: [
-      { text: "I'm mostly over it by lunch", value: 0.8 },
-      { text: 'It sits with me a bit, then fades', value: 0.5 },
-      { text: 'It colors the rest of the day', value: 0.2 },
-    ],
-  },
-  {
-    axis: 'steadiness',
-    category: 'cat_steadiness',
-    prompt: 'Plans change on you an hour before.',
-    options: [
-      { text: 'Fine, I roll with it', value: 0.8 },
-      { text: 'Mild whiplash, then fine', value: 0.5 },
-      { text: 'It throws off the whole evening', value: 0.2 },
-    ],
-  },
-  // --- attachment_anxiety --------------------------------------------------
-  {
-    axis: 'attachment_anxiety',
-    category: 'cat_love',
-    prompt: 'Someone you like takes a while to reply.',
-    options: [
-      { text: "I start wondering if they're pulling away", value: 0.8 },
-      { text: 'I notice, then I get on with my day', value: 0.5 },
-      { text: "I don't think much of it", value: 0.2 },
-    ],
-  },
-  {
-    axis: 'attachment_anxiety',
-    category: 'cat_love',
-    prompt: 'A close friend has been quieter than usual this week.',
-    options: [
-      { text: 'I assume I did something', value: 0.8 },
-      { text: 'I wonder for a second, then drop it', value: 0.5 },
-      { text: 'People get busy', value: 0.2 },
-    ],
-  },
-  // --- attachment_avoidance ------------------------------------------------
-  {
-    axis: 'attachment_avoidance',
-    category: 'cat_love',
-    prompt: 'Someone close to you wants to talk something out in person instead of over text.',
-    options: [
-      { text: "Sure, that's fine when it matters", value: 0.2 },
-      { text: "I'd rather keep it lighter, over text", value: 0.8 },
-    ],
-  },
-  {
-    axis: 'attachment_avoidance',
-    category: 'cat_love',
-    prompt: 'A rough week. Someone asks how you actually are.',
-    options: [
-      { text: 'I tell them the real version', value: 0.2 },
-      { text: 'I give them the short version', value: 0.5 },
-      { text: 'I say I am fine and change the subject', value: 0.8 },
-    ],
-  },
-  // --- conflict_assertiveness ----------------------------------------------
-  {
-    axis: 'conflict_assertiveness',
-    category: 'cat_communication',
-    prompt: 'You disagree with someone in the room.',
-    options: [
-      { text: 'I say so, even if it gets a little sharp', value: 0.8 },
-      { text: 'I wait to see if it blows over', value: 0.5 },
-      { text: 'I let it go rather than push', value: 0.2 },
-    ],
-  },
-  {
-    axis: 'conflict_assertiveness',
-    category: 'cat_communication',
-    prompt: 'The order is wrong and the place is busy.',
-    options: [
-      { text: 'I send it back', value: 0.8 },
-      { text: 'Depends how wrong', value: 0.5 },
-      { text: 'I eat it', value: 0.2 },
-    ],
-  },
-  {
-    axis: 'conflict_assertiveness',
-    category: 'cat_communication',
-    prompt: 'You want something and asking might annoy someone.',
-    options: [
-      { text: 'I ask anyway', value: 0.8 },
-      { text: 'I let it go', value: 0.2 },
     ],
   },
   {
@@ -354,100 +642,6 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'I let it slide', value: 0.2 },
     ],
   },
-
-  // --- conflict_cooperativeness --------------------------------------------
-  {
-    axis: 'conflict_cooperativeness',
-    category: 'cat_communication',
-    prompt:
-      'When you and someone else both want different things with no obvious middle ground, who usually gives first?',
-    options: [
-      { text: 'Probably me', value: 0.8 },
-      { text: 'Depends who cares more', value: 0.5 },
-      { text: 'Rarely me', value: 0.2 },
-    ],
-  },
-  {
-    axis: 'conflict_cooperativeness',
-    category: 'cat_communication',
-    prompt: 'An argument is going nowhere and it is getting late.',
-    options: [
-      { text: 'I look for something we both can live with', value: 0.8 },
-      { text: 'I park it for tomorrow', value: 0.5 },
-      { text: 'I hold my line', value: 0.2 },
-    ],
-  },
-  // --- autonomy ------------------------------------------------------------
-  {
-    axis: 'autonomy',
-    category: 'cat_drive',
-    prompt: 'Someone hands you a plan that would work fine.',
-    options: [
-      { text: "I'd still rather do it my way", value: 0.8 },
-      { text: "I'll use theirs if it saves time", value: 0.5 },
-      { text: "I'm glad I don't have to figure it out", value: 0.2 },
-    ],
-  },
-  {
-    axis: 'autonomy',
-    category: 'cat_drive',
-    prompt: 'You get told exactly how to do something you already know how to do.',
-    options: [
-      { text: 'It gets under my skin', value: 0.8 },
-      { text: 'I notice it, then let it go', value: 0.5 },
-      { text: "Fine by me, less to think about", value: 0.2 },
-    ],
-  },
-  // --- competence ----------------------------------------------------------
-  {
-    axis: 'competence',
-    category: 'cat_drive',
-    prompt: 'A hard task lands on your plate.',
-    options: [
-      { text: 'I feel like I can handle it', value: 0.8 },
-      { text: 'Depends how hard, honestly', value: 0.5 },
-      { text: 'I doubt I can pull it off', value: 0.2 },
-    ],
-  },
-  {
-    axis: 'competence',
-    category: 'cat_drive',
-    prompt: 'You are learning something new and you are still bad at it.',
-    options: [
-      { text: 'I can feel myself getting better', value: 0.8 },
-      { text: 'Some days it clicks', value: 0.5 },
-      { text: 'I mostly feel behind', value: 0.2 },
-    ],
-  },
-  // --- relatedness ---------------------------------------------------------
-  {
-    axis: 'relatedness',
-    category: 'cat_drive',
-    prompt: 'A friend cancels same-day, no real reason given.',
-    options: [
-      { text: "I'd want to talk it through", value: 0.8 },
-      { text: "I'd let it go, check in eventually", value: 0.2 },
-    ],
-  },
-  {
-    axis: 'relatedness',
-    category: 'cat_drive',
-    prompt: 'Something good happens to you on an ordinary Tuesday.',
-    options: [
-      { text: "I'm texting someone before I sit down", value: 0.8 },
-      { text: 'It comes up next time we talk', value: 0.5 },
-      { text: 'I just enjoy it', value: 0.2 },
-    ],
-  },
-  {
-    axis: 'relatedness',
-    category: 'cat_drive',
-    prompt: 'A whole day with no messages from anyone.',
-    options: [
-      { text: 'I feel the gap', value: 0.8 },
-      { text: 'Bliss', value: 0.2 },
-    ],
-  },
   {
     axis: 'relatedness',
     category: 'cat_drive',
@@ -458,90 +652,177 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
       { text: 'I keep it to myself', value: 0.2 },
     ],
   },
+  {
+    axis: 'steadiness',
+    category: 'cat_steadiness',
+    prompt: 'Someone sends a short reply that could be read two ways.',
+    options: [
+      { text: 'I read it the plain way and move on', value: 0.8 },
+      { text: 'I reread it a few times', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'attachment_anxiety',
+    category: 'cat_love',
+    prompt: 'You need reassurance more often than you would like to admit.',
+    options: [
+      { text: 'Yeah, that lands', value: 0.8 },
+      { text: 'Not really me', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'attachment_avoidance',
+    category: 'cat_love',
+    prompt: 'Things are getting closer with someone.',
+    options: [
+      { text: 'I lean in', value: 0.2 },
+      { text: 'I want a bit of room', value: 0.8 },
+    ],
+  },
+  {
+    axis: 'conflict_cooperativeness',
+    category: 'cat_communication',
+    prompt: 'Winning the point matters more than keeping the peace.',
+    options: [
+      { text: 'Not for me, usually', value: 0.8 },
+      { text: 'Honestly, sometimes yes', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'autonomy',
+    category: 'cat_drive',
+    prompt: 'A free day with nothing scheduled and nobody asking anything of you.',
+    options: [
+      { text: 'That is the best kind of day', value: 0.8 },
+      { text: "I'd rather have a plan", value: 0.2 },
+    ],
+  },
+  {
+    axis: 'competence',
+    category: 'cat_drive',
+    prompt: 'Someone says you are good at something you do a lot.',
+    options: [
+      { text: 'Yeah, I think so too', value: 0.8 },
+      { text: 'I brush it off', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'growth_mindset',
+    category: 'cat_agency',
+    prompt: 'You can get noticeably better at almost anything with enough reps.',
+    options: [
+      { text: 'I believe that', value: 0.8 },
+      { text: 'Only up to a point', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'locus_of_control',
+    category: 'cat_agency',
+    prompt: 'How next year goes is mostly up to you.',
+    options: [
+      { text: 'Mostly, yes', value: 0.8 },
+      { text: 'Timing decides more than I do', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'self_efficacy',
+    category: 'cat_agency',
+    prompt: 'A big thing you have to do, and no obvious first step.',
+    options: [
+      { text: 'I start somewhere and adjust', value: 0.8 },
+      { text: 'I stall until it gets urgent', value: 0.2 },
+    ],
+  },
+  {
+    axis: 'playfulness',
+    category: 'cat_social',
+    prompt: 'People would say you are one of the sillier people they know.',
+    options: [
+      { text: 'That tracks', value: 0.8 },
+      { text: 'Not the word they would use', value: 0.2 },
+    ],
+  },
+];
 
-  // --- growth_mindset ------------------------------------------------------
-  {
-    axis: 'growth_mindset',
-    category: 'cat_agency',
-    prompt: 'You try something new and it goes badly the first time. What actually happens next?',
-    options: [
-      { text: "I look at what I'd do differently", value: 0.8 },
-      { text: "I probably don't try that again", value: 0.2 },
-    ],
-  },
-  {
-    axis: 'growth_mindset',
-    category: 'cat_agency',
-    prompt: 'Someone is much better than you at a thing you care about.',
-    options: [
-      { text: 'I want to know how they got there', value: 0.8 },
-      { text: 'Good for them, different lane', value: 0.5 },
-      { text: 'Some people just have it', value: 0.2 },
-    ],
-  },
-  // --- locus_of_control ----------------------------------------------------
-  {
-    axis: 'locus_of_control',
-    category: 'cat_agency',
-    prompt: 'A plan you were in on falls apart.',
-    options: [
-      { text: 'I look first at what I might have done differently', value: 0.8 },
-      { text: "Some of it was me, some of it wasn't", value: 0.5 },
-      { text: 'It was bound to happen', value: 0.2 },
-    ],
-  },
-  {
-    axis: 'locus_of_control',
-    category: 'cat_agency',
-    prompt: 'A good week. Where does the credit actually go?',
-    options: [
-      { text: 'Mostly to what I did', value: 0.8 },
-      { text: 'A bit of both', value: 0.5 },
-      { text: 'Mostly to how things fell', value: 0.2 },
-    ],
-  },
-  // --- self_efficacy -------------------------------------------------------
-  {
-    axis: 'self_efficacy',
-    category: 'cat_agency',
-    prompt: "Everyone at the table already knows their order. You don't.",
-    options: [
-      { text: "I panic-order whatever's closest", value: 0.2 },
-      { text: 'Takes me a sec but I land on something', value: 0.5 },
-      { text: 'I ask what everyone else got', value: 0.8 },
-    ],
-  },
-  {
-    axis: 'self_efficacy',
-    category: 'cat_agency',
-    prompt: 'Something breaks and you have never fixed one before.',
-    options: [
-      { text: "I'll figure it out", value: 0.8 },
-      { text: 'I look it up first', value: 0.5 },
-      { text: 'I find someone who knows', value: 0.2 },
-    ],
-  },
-  // --- playfulness ---------------------------------------------------------
-  {
-    axis: 'playfulness',
-    category: 'cat_social',
-    prompt: 'A dull stretch with nothing required of you.',
-    options: [
-      { text: "I'd mess around and see what happens", value: 0.8 },
-      { text: 'Either way, I am fine', value: 0.5 },
-      { text: "I'd rather just get through it", value: 0.2 },
-    ],
-  },
-  {
-    axis: 'playfulness',
-    category: 'cat_social',
-    prompt: 'A serious conversation hits a genuinely funny moment.',
-    options: [
-      { text: 'I take the joke', value: 0.8 },
-      { text: 'Depends who is in the room', value: 0.5 },
-      { text: 'I keep it serious', value: 0.2 },
-    ],
-  },
+/**
+ * Per-trait question counts of the old tiered 50 (bank.ts before 2026-10-02).
+ * Only read by the old-50 rule: an account whose answers fill this shape keeps
+ * every unlock it had, whatever the new stage says.
+ */
+export const LEGACY_INTAKE_AXIS_COUNTS = {
+  openness: 6,
+  conscientiousness: 6,
+  extraversion: 6,
+  agreeableness: 4,
+  steadiness: 2,
+  attachment_anxiety: 2,
+  attachment_avoidance: 2,
+  conflict_assertiveness: 4,
+  conflict_cooperativeness: 2,
+  autonomy: 2,
+  competence: 2,
+  relatedness: 4,
+  growth_mindset: 2,
+  locus_of_control: 2,
+  self_efficacy: 2,
+  playfulness: 2,
+} as const;
+
+/**
+ * The old intake's prompts in old per-trait order: answering N on a trait in
+ * the old intake meant seeing that trait's first N entries here.
+ */
+export const LEGACY_INTAKE_PROMPTS: readonly { axis: QuestionDraft['axis']; prompt: string }[] = [
+  { axis: 'openness', prompt: "Your Do today was writing down one thing you're walking into. Was today's version the safe pick or the different one?" },
+  { axis: 'openness', prompt: 'Same restaurant, and there is a menu item you have never tried.' },
+  { axis: 'openness', prompt: 'A friend wants to drag you to something you would never pick yourself.' },
+  { axis: 'openness', prompt: "You're picking a show to watch and there's something new in your queue you haven't tried." },
+  { axis: 'openness', prompt: 'A coworker suggests doing the project a totally different way than you planned.' },
+  { axis: 'openness', prompt: "You have a free Saturday and someone mentions a class or hobby you've never tried." },
+  { axis: 'conscientiousness', prompt: 'A plan you made last week hits a boring stretch today.' },
+  { axis: 'conscientiousness', prompt: 'Something is due Friday. It is Monday.' },
+  { axis: 'conscientiousness', prompt: 'You said you would do a small thing for someone and nobody followed up.' },
+  { axis: 'conscientiousness', prompt: "Your alarm goes off and you already know today's to-do list is long." },
+  { axis: 'conscientiousness', prompt: "You told yourself you'd clean up before bed, and you're tired." },
+  { axis: 'conscientiousness', prompt: 'A form needs three pieces of information and you only have two handy.' },
+  { axis: 'extraversion', prompt: 'Saturday afternoon, nobody has plans yet.' },
+  { axis: 'extraversion', prompt: 'You walk into a party and know maybe two people.' },
+  { axis: 'extraversion', prompt: 'A long week just ended.' },
+  { axis: 'extraversion', prompt: "You've been working alone for hours and hit a wall." },
+  { axis: 'extraversion', prompt: 'A coworker asks if you want to grab lunch with the group instead of eating at your desk.' },
+  { axis: 'extraversion', prompt: "You're the one who has to make small talk with someone new at an event." },
+  { axis: 'agreeableness', prompt: "A group chat is picking a place you don't really like." },
+  { axis: 'agreeableness', prompt: 'Someone takes credit for something that was mostly yours.' },
+  { axis: 'agreeableness', prompt: 'A stranger is clearly in the wrong and clearly having a bad day.' },
+  { axis: 'agreeableness', prompt: "Someone asks for a favor that's a genuine inconvenience for you." },
+  { axis: 'steadiness', prompt: 'A small thing goes wrong first thing in the morning.' },
+  { axis: 'steadiness', prompt: 'Plans change on you an hour before.' },
+  { axis: 'attachment_anxiety', prompt: 'Someone you like takes a while to reply.' },
+  { axis: 'attachment_anxiety', prompt: 'A close friend has been quieter than usual this week.' },
+  { axis: 'attachment_avoidance', prompt: 'Someone close to you wants to talk something out in person instead of over text.' },
+  { axis: 'attachment_avoidance', prompt: 'A rough week. Someone asks how you actually are.' },
+  { axis: 'conflict_assertiveness', prompt: 'You disagree with someone in the room.' },
+  { axis: 'conflict_assertiveness', prompt: 'The order is wrong and the place is busy.' },
+  { axis: 'conflict_assertiveness', prompt: 'You want something and asking might annoy someone.' },
+  { axis: 'conflict_assertiveness', prompt: "A friend keeps borrowing money and hasn't paid you back." },
+  { axis: 'conflict_cooperativeness', prompt: 'When you and someone else both want different things with no obvious middle ground, who usually gives first?' },
+  { axis: 'conflict_cooperativeness', prompt: 'An argument is going nowhere and it is getting late.' },
+  { axis: 'autonomy', prompt: 'Someone hands you a plan that would work fine.' },
+  { axis: 'autonomy', prompt: 'You get told exactly how to do something you already know how to do.' },
+  { axis: 'competence', prompt: 'A hard task lands on your plate.' },
+  { axis: 'competence', prompt: 'You are learning something new and you are still bad at it.' },
+  { axis: 'relatedness', prompt: 'A friend cancels same-day, no real reason given.' },
+  { axis: 'relatedness', prompt: 'Something good happens to you on an ordinary Tuesday.' },
+  { axis: 'relatedness', prompt: 'A whole day with no messages from anyone.' },
+  { axis: 'relatedness', prompt: "You just finished something you're proud of." },
+  { axis: 'growth_mindset', prompt: 'You try something new and it goes badly the first time. What actually happens next?' },
+  { axis: 'growth_mindset', prompt: 'Someone is much better than you at a thing you care about.' },
+  { axis: 'locus_of_control', prompt: 'A plan you were in on falls apart.' },
+  { axis: 'locus_of_control', prompt: 'A good week. Where does the credit actually go?' },
+  { axis: 'self_efficacy', prompt: "Everyone at the table already knows their order. You don't." },
+  { axis: 'self_efficacy', prompt: 'Something breaks and you have never fixed one before.' },
+  { axis: 'playfulness', prompt: 'A dull stretch with nothing required of you.' },
+  { axis: 'playfulness', prompt: 'A serious conversation hits a genuinely funny moment.' },
 ];
 
 export const QUESTIONS_FEW_SHOTS = `1. Openness, grounded in today's Do: "Your Do today was writing down one thing you're walking into. Was today's version the safe pick or the different one?" Options: "The different one, easily" / "Somewhere in between" / "The safe, familiar one"

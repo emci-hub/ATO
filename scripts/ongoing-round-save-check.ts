@@ -115,10 +115,12 @@ ok('runOngoingRound wires composeOngoingRound with the real generate/bank-pool/r
 // once, AFTER composeOngoingRound resolves — never from inside the saveItems
 // hook, which composeOngoingRound invokes once per bank draw and once per AI
 // chunk (up to several times per round). Calling the real save RPC from
-// there would create several partial packs instead of one 25-item round.
+// there would create several partial packs instead of one 16-item round.
+// A short round is never saved (the +21 claim needs a full one).
+assert.match(runSrc, /if \(drafts\.length < ONGOING_ROUND_SIZE\) \{\s*throw new Error/, 'a short round throws instead of saving a pack that can never pay');
 assert.match(runSrc, /saveItems: async \(\) => \{\},/, 'saveItems passed into composeOngoingRound must be a true no-op — the real save happens once, after composeOngoingRound resolves, not per chunk');
 const composeCallIdx = runSrc.indexOf('await composeOngoingRound(');
-const saveBatchCallIdx = runSrc.indexOf('return saveOngoingRoundBatch(drafts);');
+const saveBatchCallIdx = runSrc.indexOf('return saveOngoingRoundBatch(drafts.slice(0, ONGOING_ROUND_SIZE));');
 assert.ok(composeCallIdx > -1 && saveBatchCallIdx > composeCallIdx, 'saveOngoingRoundBatch must be called after composeOngoingRound resolves, not from within its saveItems hook');
 ok('composeOngoingRound\'s saveItems hook is a true no-op; saveOngoingRoundBatch is called exactly once, after the full round is composed');
 
@@ -131,16 +133,18 @@ const foldSrc = read('src/components/questions-fold.tsx');
 // with the round appended below as a small single-question "Submit" block —
 // that stacking is exactly what read as unrelated/broken UI. Confirm the
 // bank's own PagedQuestions only ever renders in the NOT-locked branch.
+// One deliberate exception (staged intake, 2026-10-02): an account that
+// finished the OLD 50 is offered its restored third questions above the
+// round, as optional — and only that account (`optionalLegacy`).
 assert.match(
   foldSrc,
-  /\{fullProfileLocked \? \(\s*\n[\s\S]{0,500}?<OngoingRoundFold me=\{me\} history=\{history\} tracks=\{tracks \?\? \[\]\} onUpdated=\{onUpdated\} \/>\s*\n\s*\) : \(/,
-  'fullProfileLocked must render OngoingRoundFold in place of the bank pager, not alongside it',
+  /\{fullProfileLocked \? \(\s*\n[\s\S]{0,700}?\{optionalLegacy \? \([\s\S]{0,200}?\{setPager\}\s*<\/>\s*\) : null\}\s*<OngoingRoundFold me=\{me\} history=\{history\} tracks=\{tracks \?\? \[\]\} onUpdated=\{onUpdated\} \/>\s*<\/>\s*\) : \(/,
+  'fullProfileLocked must render OngoingRoundFold in place of the bank pager — the only pager beside it is the old-50 optional set',
 );
-const bankBranchBody = foldSrc.slice(
-  foldSrc.indexOf(') : (', foldSrc.indexOf('{fullProfileLocked ? (')),
-  foldSrc.indexOf(')}', foldSrc.indexOf('storageKey={`full-profile:${me.id}`}')),
-);
-assert.match(bankBranchBody, /<PagedQuestions/, 'the bank pager must live in the NOT-fullProfileLocked branch');
+const bankBranchStart = foldSrc.indexOf(') : (', foldSrc.indexOf('{fullProfileLocked ? ('));
+const bankBranchBody = foldSrc.slice(bankBranchStart, foldSrc.indexOf('</View>', bankBranchStart));
+assert.match(bankBranchBody, /\{setPager\}/, 'the bank pager must live in the NOT-fullProfileLocked branch');
+assert.match(foldSrc, /const setPager =\s*set && bankRows\.length > 0 \? \(/, 'the set pager renders only while a set is open');
 ok('the bank pager and the ongoing-round pager are mutually exclusive — never both on screen');
 
 // AUTO-START REMOVED (ISOLATION_PLAN §7 Card D, emci 2026-09-15). This block

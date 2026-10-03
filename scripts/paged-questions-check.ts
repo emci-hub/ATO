@@ -1,5 +1,5 @@
 /**
- * "5 questions per page, book-style" Full Profile UI. Run: npm run check:paged-questions
+ * "4 questions per page, book-style" Full Profile UI. Run: npm run check:paged-questions
  *
  * Covers the things Emci explicitly asked to be verified, not assumed from a
  * passing typecheck:
@@ -160,7 +160,7 @@ async function main() {
     assert.doesNotMatch(src, /<\/ScrollView>|<ScrollView\b[^<>]*\/>/, 'must not render its own fixed-size ScrollView — relies on the parent screen\'s scroll');
     // The row list itself must render every row on a page, no internal
     // per-page slicing beyond the documented PAGE_SIZE-based slice.
-    assert.match(src, /PAGE_SIZE\s*=\s*5/, 'page size must be exactly 5 questions per page');
+    assert.match(src, /PAGE_SIZE\s*=\s*4/, "page size must be exactly 4 questions per page (a set of 16 = 4 pages)");
     // Category grouping is gone: no per-category axis section headers.
     assert.doesNotMatch(src, /current\.axes\.map/, 'must not group rows by category anymore (that was the pre-restructure layout)');
     ok(`PASS — a flat, axis-order list of all ${expectedTotal} questions renders through one unbounded, non-clipping, non-category-grouped list, 5 per page`);

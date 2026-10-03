@@ -1,11 +1,39 @@
 /**
- * Tiered axis-priority allocation (§2 of the trait-system redesign plan).
+ * The adaptive round allocation (staged intake, emci 2026-10-02) — the ONE
+ * rule that decides how many questions each trait gets in a round, for bank
+ * and AI questions alike. File name kept from the tiered plan it replaced.
  * Run: npm run check:tiered-axis-plan
+ *
+ * Proves, with real tracks built by the real EWMA:
+ *   - a round is always exactly 16 and never more than 3 per trait;
+ *   - a settled, recent, consistent profile gets exactly 1 per trait (even);
+ *   - unsettled traits are filled toward 3 first, mixed traits (answers that
+ *     pulled two ways) and decaying traits (idle past 60 days) get 2, and the
+ *     leftovers go to whoever waited longest;
+ *   - the weakest reads are served first (map key order);
+ *   - an old-50 account's ten short traits each get their third question;
+ *   - the top-up for a short round respects the cap and skips empty traits.
  */
 import assert from 'node:assert/strict';
 
-import { AXIS_TIER_COUNTS, TIERED_ROUND_SIZE, roundAxisCounts, tieredAxisCounts } from '../src/lib/questions/tiered-axis-plan';
-import { STABILITY_FLOOR_N, type TraitTrack } from '../src/lib/trait-stability';
+import {
+  allocateRound,
+  MAX_PER_TRAIT_PER_ROUND,
+  ONGOING_ROUND_SIZE,
+  RECHECK_PER_ROUND,
+  topUpAllocation,
+  traitNeed,
+} from '../src/lib/questions/tiered-axis-plan';
+import { LEGACY_INTAKE_AXIS_COUNTS } from '../src/lib/questions/bank';
+import { MIXED_TRAIT_LINE } from '../src/lib/questions/staged-intake-copy';
+import {
+  applyEwmaAnswer,
+  DECAY_GRACE_DAYS,
+  isAxisMixed,
+  MIXED_STABILITY_BELOW,
+  settlingLine,
+  type TraitTrack,
+} from '../src/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis } from '../src/lib/traits';
 
 let passed = 0;
@@ -14,85 +42,150 @@ function ok(label: string) {
   console.log(`  ✓ ${label}`);
 }
 
-assert.equal(TIERED_ROUND_SIZE, 25, 'a tiered round is 25 questions (§2: 6 + 3 + 6 + 10)');
-ok('TIERED_ROUND_SIZE is 25');
-
-for (const axis of TRAIT_AXES) {
-  assert.ok(axis in AXIS_TIER_COUNTS, `AXIS_TIER_COUNTS missing coverage for ${axis}`);
+const NOW = new Date('2026-10-02T12:00:00Z');
+function daysAgo(days: number): string {
+  return new Date(NOW.getTime() - days * 86_400_000).toISOString();
 }
-assert.equal(Object.keys(AXIS_TIER_COUNTS).length, TRAIT_AXES.length, 'no stray axes beyond TRAIT_AXES');
-ok('every currently-defined axis has a tier count, and only those axes');
 
-const TIER_1 = ['conscientiousness', 'extraversion'] as const;
-const TIER_2 = ['openness'] as const;
-const TIER_3 = ['agreeableness', 'conflict_assertiveness', 'relatedness'] as const;
-const TIER_4 = TRAIT_AXES.filter(
-  (axis) => !([...TIER_1, ...TIER_2, ...TIER_3] as readonly string[]).includes(axis),
-);
-
-for (const axis of TIER_1) assert.equal(AXIS_TIER_COUNTS[axis], 3, `${axis} (tier 1) should be 3`);
-for (const axis of TIER_2) assert.equal(AXIS_TIER_COUNTS[axis], 3, `${axis} (tier 2) should be 3`);
-for (const axis of TIER_3) assert.equal(AXIS_TIER_COUNTS[axis], 2, `${axis} (tier 3) should be 2`);
-for (const axis of TIER_4) assert.equal(AXIS_TIER_COUNTS[axis], 1, `${axis} (tier 4) should be 1`);
-assert.equal(TIER_4.length, 10, 'tier 4 has exactly 10 axes');
-ok('tier-by-tier counts match §2 exactly: 2x3 + 1x3 + 3x2 + 10x1 = 25');
-
-const counts = tieredAxisCounts();
-assert.deepEqual(counts, AXIS_TIER_COUNTS, 'tieredAxisCounts() returns the same values as AXIS_TIER_COUNTS');
-(counts as Record<string, number>).openness = 999;
-assert.notEqual(AXIS_TIER_COUNTS.openness, 999, 'tieredAxisCounts() returns a fresh copy, not a live reference');
-ok('tieredAxisCounts() returns a fresh, mutation-safe copy');
-
-// --- roundAxisCounts: lagging axes first (2026-10-01) ---
-// The frozen intake leaves each axis on AXIS_TIER_COUNTS x2 answers: 6/6/6,
-// 4/4/4 and ten axes on 2 — one short of the 3-answer floor, with no third
-// bank question for any of them. The first round is what settles them.
-const trackAt = (axis: TraitAxis, answerCount: number): TraitTrack => ({
-  axis,
-  track: 'report',
-  value: 0.5,
-  stability: 0,
-  answerCount,
-  lastTouched: '2026-10-01T00:00:00.000Z',
-  lastDepthAt: null,
-});
-const afterIntake = TRAIT_AXES.map((axis) => trackAt(axis, AXIS_TIER_COUNTS[axis] * 2));
-const roundOne = roundAxisCounts(afterIntake);
-const total = (counts: Partial<Record<TraitAxis, number>>) =>
-  Object.values(counts).reduce((sum, n) => sum + (n ?? 0), 0);
-
-assert.equal(total(roundOne), TIERED_ROUND_SIZE, 'round 1 is still exactly 25 questions');
-for (const axis of TIER_4) {
-  assert.equal(roundOne[axis], 2, `${axis} (2 intake answers) gets 2 in round 1`);
-  assert.ok(AXIS_TIER_COUNTS[axis] * 2 + (roundOne[axis] ?? 0) >= STABILITY_FLOOR_N, `${axis} reaches the floor in round 1`);
+function answered(axis: TraitAxis, samples: readonly number[], at: string): TraitTrack {
+  let row: TraitTrack | null = null;
+  for (const sample of samples) row = applyEwmaAnswer(row, axis, 'report', sample, at);
+  return row!;
 }
-assert.equal(
-  [...TIER_1, ...TIER_2, ...TIER_3].reduce((sum, axis) => sum + (roundOne[axis] ?? 0), 0),
-  5,
-  'the six axes already past the floor share the remaining 5 (the fixed plan gave them 15)',
-);
-assert.deepEqual(
-  Object.keys(roundOne).slice(0, TIER_4.length),
-  [...TIER_4],
-  'lagging axes come first in key order, so they are served first',
-);
-assert.ok(Object.values(roundOne).every((n) => (n ?? 0) > 0), 'an axis with nothing this round is left out, not listed at 0');
-ok('roundAxisCounts after the 50: ten lagging axes get 2 each and come first, the other six share 5, total 25');
 
-const everyAxisAtFloor = TRAIT_AXES.map((axis) => trackAt(axis, STABILITY_FLOOR_N));
-assert.deepEqual(roundAxisCounts(everyAxisAtFloor), AXIS_TIER_COUNTS, 'at the floor everywhere, a round is the plain tiered plan');
-assert.deepEqual(roundAxisCounts(TRAIT_AXES.map((axis) => trackAt(axis, 9))), AXIS_TIER_COUNTS);
-ok('roundAxisCounts falls back to the tiered plan once every axis has 3 answers');
+function profile(build: (axis: TraitAxis, index: number) => TraitTrack | null): TraitTrack[] {
+  return TRAIT_AXES.map((axis, index) => build(axis, index)).filter((row): row is TraitTrack => row != null);
+}
 
-// More gap than one round can close (no answers at all): still exactly 25,
-// spread least-answered first, never more than the floor on one axis.
-const fromNothing = roundAxisCounts([]);
-assert.equal(total(fromNothing), TIERED_ROUND_SIZE);
-assert.ok(Object.values(fromNothing).every((n) => (n ?? 0) <= STABILITY_FLOOR_N));
-assert.equal(Object.keys(fromNothing).length, TRAIT_AXES.length, 'every axis gets at least one before any gets a second');
-// A game-track row is not a report answer and must not hide a lagging axis.
-const gameOnly = everyAxisAtFloor.map((row) => (row.axis === 'playfulness' ? { ...row, track: 'game' as const } : row));
-assert.equal(Object.keys(roundAxisCounts(gameOnly))[0], 'playfulness', 'an axis with only game-track answers is lagging, and first');
-ok('roundAxisCounts handles a gap bigger than a round, and ignores the game track');
+function total(plan: Partial<Record<TraitAxis, number>>): number {
+  return Object.values(plan).reduce((sum, n) => sum + (n ?? 0), 0);
+}
 
-console.log(`\n${passed} tiered-axis-plan checks passed`);
+function assertShape(plan: Partial<Record<TraitAxis, number>>, label: string) {
+  assert.equal(total(plan), ONGOING_ROUND_SIZE, `${label}: round must be exactly ${ONGOING_ROUND_SIZE}`);
+  for (const [axis, n] of Object.entries(plan)) {
+    assert.ok((n ?? 0) <= MAX_PER_TRAIT_PER_ROUND, `${label}: ${axis} got ${n}, over the cap`);
+    assert.ok((n ?? 0) > 0, `${label}: zero entries are left out of the map`);
+  }
+}
+
+// --- constants ---------------------------------------------------------------
+assert.equal(ONGOING_ROUND_SIZE, 16);
+assert.equal(ONGOING_ROUND_SIZE, TRAIT_AXES.length, 'a round is one per trait when nothing needs more');
+assert.equal(MAX_PER_TRAIT_PER_ROUND, 3);
+assert.equal(RECHECK_PER_ROUND, 2);
+ok('a round is 16 (one per trait), capped at 3 per trait, rechecks get 2');
+
+// --- the EWMA facts the "mixed" flag stands on --------------------------------
+{
+  const consistent = answered('openness', [0.8, 0.8, 0.8], daysAgo(1));
+  const mild = answered('openness', [0.8, 0.5, 0.8], daysAgo(1));
+  const flipFlop = answered('openness', [0.8, 0.2, 0.8], daysAgo(1));
+  const swing = answered('openness', [0.8, 0.2, 0.2], daysAgo(1));
+  assert.ok(consistent.stability >= MIXED_STABILITY_BELOW && !isAxisMixed(consistent));
+  assert.ok(mild.stability >= MIXED_STABILITY_BELOW && !isAxisMixed(mild), `mild ${mild.stability}`);
+  assert.ok(flipFlop.stability > 0, 'a flip-flop still counts as settled (stability > 0)…');
+  assert.ok(isAxisMixed(flipFlop), `…but reads as mixed (${flipFlop.stability})`);
+  assert.ok(isAxisMixed(swing), `a swing that stays reads as mixed (${swing.stability})`);
+  assert.equal(settlingLine(flipFlop, NOW), MIXED_TRAIT_LINE, 'a mixed trait says so honestly');
+  assert.equal(settlingLine(consistent, NOW), null, 'a consistent settled trait says nothing');
+  assert.match(settlingLine(answered('openness', [0.8], daysAgo(1)), NOW) ?? '', /1 of 3 answers/);
+  ok('high/low/high is "settled" by the old rule but mixed by the new flag, and says so; consistent answers are not mixed');
+}
+
+// --- steady state: even ---------------------------------------------------------
+{
+  const tracks = profile((axis) => answered(axis, [0.6, 0.6, 0.6], daysAgo(3)));
+  const plan = allocateRound(tracks, NOW);
+  assertShape(plan, 'steady');
+  for (const axis of TRAIT_AXES) assert.equal(plan[axis], 1, `steady: ${axis} gets 1`);
+  for (const axis of TRAIT_AXES) assert.equal(traitNeed(tracks, axis, NOW).need, 'refresh');
+  ok('a settled, recent, consistent profile gets exactly 1 per trait');
+}
+
+// --- fresh account: breadth first ----------------------------------------------
+{
+  const plan = allocateRound([], NOW);
+  assertShape(plan, 'fresh');
+  for (const axis of TRAIT_AXES) assert.equal(plan[axis], 1, `fresh: ${axis} gets 1 (breadth before depth)`);
+  ok('nothing answered: every trait gets one before any gets a second');
+}
+
+// --- old-50 account: the ten short traits each get their third -------------------
+{
+  const tracks = profile((axis) =>
+    answered(axis, Array(LEGACY_INTAKE_AXIS_COUNTS[axis]).fill(0.6), daysAgo(2)),
+  );
+  const plan = allocateRound(tracks, NOW);
+  assertShape(plan, 'old 50');
+  const short = TRAIT_AXES.filter((axis) => LEGACY_INTAKE_AXIS_COUNTS[axis] < 3);
+  assert.equal(short.length, 10);
+  for (const axis of short) assert.ok((plan[axis] ?? 0) >= 1, `old 50: ${axis} gets its third`);
+  assert.deepEqual(Object.keys(plan).slice(0, 10).sort(), [...short].sort(), 'the short traits are served first');
+  ok('an account that finished the old 50 gets one question on each of its ten short traits, first');
+}
+
+// --- mixed and decaying get 2, unsettled filled to 3 ------------------------------
+{
+  const tracks = profile((axis) => {
+    if (axis === 'steadiness') return answered(axis, [0.6], daysAgo(1)); // unsettled, needs 2
+    if (axis === 'autonomy') return answered(axis, [0.8, 0.2, 0.8], daysAgo(1)); // mixed
+    if (axis === 'playfulness') return answered(axis, [0.6, 0.6, 0.6], daysAgo(DECAY_GRACE_DAYS + 30)); // decaying
+    return answered(axis, [0.6, 0.6, 0.6], daysAgo(2));
+  });
+  assert.equal(traitNeed(tracks, 'steadiness', NOW).need, 'unsettled');
+  assert.equal(traitNeed(tracks, 'autonomy', NOW).need, 'mixed');
+  assert.equal(traitNeed(tracks, 'playfulness', NOW).need, 'decaying');
+  const plan = allocateRound(tracks, NOW);
+  assertShape(plan, 'needs');
+  assert.equal(plan.steadiness, 2, 'unsettled at 1 answer gets the 2 it needs');
+  assert.equal(plan.autonomy, RECHECK_PER_ROUND, 'mixed gets 2');
+  assert.equal(plan.playfulness, RECHECK_PER_ROUND, 'decaying gets 2');
+  assert.deepEqual(Object.keys(plan).slice(0, 3), ['steadiness', 'autonomy', 'playfulness'], 'weakest reads served first');
+  // 16 - 6 = 10 leftovers over the other 13 traits: none gets more than 1.
+  for (const axis of TRAIT_AXES) {
+    if (['steadiness', 'autonomy', 'playfulness'].includes(axis)) continue;
+    assert.ok((plan[axis] ?? 0) <= 1, `${axis} refresh stays at most 1`);
+  }
+  ok('unsettled filled toward 3, mixed and decaying get 2, served first; the rest are refreshed');
+}
+
+// --- leftovers go to the longest-waiting --------------------------------------------
+{
+  const tracks = profile((axis, index) => {
+    if (axis === 'steadiness') return answered(axis, [0.8, 0.2, 0.8], daysAgo(1)); // mixed: 2
+    return answered(axis, [0.6, 0.6, 0.6], daysAgo(1 + index)); // later axes waited longer
+  });
+  const plan = allocateRound(tracks, NOW);
+  assertShape(plan, 'leftovers');
+  assert.equal(plan.steadiness, 2);
+  // 14 leftovers over 15 refresh traits: the one that waited least is skipped.
+  const refresh = TRAIT_AXES.filter((axis) => axis !== 'steadiness');
+  const skipped = refresh.filter((axis) => !plan[axis]);
+  assert.deepEqual(skipped, [refresh[0]], 'the most recently answered trait is the one left out');
+  ok('leftover slots go to the traits that waited longest');
+}
+
+// --- a deeply unsettled account is still capped and exactly 16 ---------------------------
+{
+  const tracks = profile((axis, index) => (index < 4 ? null : answered(axis, [0.6, 0.6, 0.6], daysAgo(1))));
+  const plan = allocateRound(tracks, NOW);
+  assertShape(plan, 'four empty');
+  for (const axis of TRAIT_AXES.slice(0, 4)) assert.equal(plan[axis], 3, `${axis} filled to 3`);
+  ok('four empty traits get 3 each (the cap), the rest share what is left');
+}
+
+// --- top-up for a short round --------------------------------------------------------------
+{
+  const tracks = profile((axis) => answered(axis, [0.6, 0.6, 0.6], daysAgo(2)));
+  const have: Partial<Record<TraitAxis, number>> = { openness: 3, extraversion: 1 };
+  const exhausted = new Set<TraitAxis>(['steadiness']);
+  const top = topUpAllocation(have, 5, tracks, exhausted, NOW);
+  assert.equal(total(top), 5);
+  assert.equal(top.openness, undefined, 'a trait already at the cap gets nothing');
+  assert.equal(top.steadiness, undefined, 'a trait the bank has run out of is skipped');
+  assert.ok(Object.values(top).every((n) => (n ?? 0) <= MAX_PER_TRAIT_PER_ROUND));
+  ok('a short round is topped up on other traits, under the cap, skipping empty ones');
+}
+
+console.log(`\n${passed} tiered-axis-plan (adaptive allocation) checks passed`);

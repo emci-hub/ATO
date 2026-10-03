@@ -35,7 +35,6 @@ import {
   applyScenarioWrite,
 } from '../src/lib/scenario';
 import { QUESTIONS_BANK } from '../src/lib/questions/bank';
-import { AXIS_TIER_COUNTS } from '../src/lib/questions/tiered-axis-plan';
 import { composeLocalQuestionBatch } from '../src/lib/questions/local';
 import { QUESTIONS_BATCH_SIZE } from '../src/lib/questions/types';
 import { parseQuestionBatch, parseQuestionSweep } from '../src/lib/questions/parse';
@@ -127,15 +126,14 @@ assert.ok(formatDivergenceNote(diverged)?.includes('gut-call'));
 ok('divergence notes self-report vs gut-call without overwriting');
 
 // --- IQ bank ---------------------------------------------------------------
-// Bank is 50 questions total, per-axis count varying by tier (trait-system
-// redesign §2/§3 — no longer a flat 3). bankByAxis keeps ALL of them (it
-// used to drop every draft after the first, which made variants 2+ dead
-// content).
-assert.equal(QUESTIONS_BANK.length, 50);
+// Bank is 48 questions, 3 per trait (staged intake, 2026-10-02). bankByAxis
+// keeps ALL of them (it used to drop every draft after the first, which made
+// variants 2+ dead content).
+assert.equal(QUESTIONS_BANK.length, 48);
 const grouped = bankByAxis();
 assert.equal(grouped.size, TRAIT_AXES.length);
 for (const axis of TRAIT_AXES) {
-  assert.equal(grouped.get(axis)?.length, AXIS_TIER_COUNTS[axis] * 2, `${axis} keeps all ${AXIS_TIER_COUNTS[axis] * 2} drafts`);
+  assert.equal(grouped.get(axis)?.length, 3, `${axis} keeps all 3 drafts`);
 }
 assert.equal(
   [...grouped.values()].reduce((n, list) => n + list.length, 0),

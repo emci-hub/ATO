@@ -1,6 +1,6 @@
 /**
  * ATO token balance + the last few earns and spends. The economy is: +21 for
- * finishing the 50 questions, +21 per finished 25-question round; rerolls cost
+ * finishing the 48 intake questions, +21 per finished 16-question round; rerolls cost
  * 10 (Legend), 1 (category), 1 (question). Read-only — nothing here spends.
  */
 import { useEffect, useState } from 'react';
@@ -11,11 +11,12 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { ATO_TOKEN_HOW_LINES, ATO_TOKEN_LABEL, ATO_TOKEN_LEDE, atoTokenBalanceOf } from '@/lib/ato-tokens';
 import { fetchAtoTokenEvents, type AtoTokenEvent } from '@/lib/ato-tokens-server';
+import { INTAKE_TOTAL } from '@/lib/questions/intake-stage';
 
 /** Plain words for each ledger reason. An unknown reason shows as "Tokens". */
 export const ATO_TOKEN_REASON_LABEL: Record<string, string> = {
-  full_profile_complete: 'Finished the 50 questions',
-  ongoing_round_complete: 'Finished a round of 25',
+  full_profile_complete: 'Finished the intake questions',
+  ongoing_round_complete: 'Finished a round',
   // The 10-token spend now unlocks a name style on the identity card (You).
   legend_reroll: 'Name style unlocked',
   category_reroll: 'Category reroll',
@@ -75,7 +76,7 @@ export function AtoTokenCard({ me }: { me: { id: string; ato_tokens?: number | n
         </View>
       ) : events ? (
         <ThemedText type="small" themeColor="textSecondary">
-          Nothing earned yet. Finish the 50 questions for your first 21.
+          Nothing earned yet. Finish the {INTAKE_TOTAL} questions for your first 21.
         </ThemedText>
       ) : null}
     </ThemedView>

@@ -5,12 +5,13 @@ import { generateOngoingRoundBatch } from './generate';
 import { addToBankPool, fetchBankCandidates, recordBankUsage } from './bank-pool';
 import { fetchRecentTexts } from './fetch-recent-texts';
 import { composeOngoingRound, type OngoingRoundMe } from './ongoing-round';
+import { ONGOING_ROUND_SIZE } from './tiered-axis-plan';
 import { saveOngoingRoundBatch } from './store';
 import type { QuestionPackRow } from './types';
 
 /**
  * Real wiring for `composeOngoingRound` (T-03, core loop redesign §2/§3) —
- * composes one 25-question tiered round and persists it as a single
+ * composes one 16-question adaptive round and persists it as a single
  * `question_packs` row via `saveOngoingRoundBatch`/`insert_ongoing_round_pack`
  * (wave50).
  *
@@ -19,7 +20,7 @@ import type { QuestionPackRow } from './types';
  * new pack per call, so calling it once per chunk (mirroring the pure
  * module's incremental-save contract, built for a future per-item save path
  * that doesn't exist) would create several partial packs instead of one
- * 25-item round. The real save happens exactly once, after
+ * 16-item round. The real save happens exactly once, after
  * `composeOngoingRound` resolves with the full array.
  *
  * Known, accepted gap: if generation throws partway through (e.g. an
@@ -47,5 +48,11 @@ export async function runOngoingRound(
     recordBankUsage,
     addToBankPool,
   });
-  return saveOngoingRoundBatch(drafts);
+  // Never save a short round: the +21 claim (wave78) needs a full one, so a
+  // short pack could never pay. Whatever this attempt generated is already in
+  // the shared pool, so a retry draws it bank-first.
+  if (drafts.length < ONGOING_ROUND_SIZE) {
+    throw new Error(`ongoing round short: ${drafts.length} of ${ONGOING_ROUND_SIZE}`);
+  }
+  return saveOngoingRoundBatch(drafts.slice(0, ONGOING_ROUND_SIZE));
 }

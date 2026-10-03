@@ -300,18 +300,18 @@ var SYSTEM_MAP = {
     {
       "id": "q-bank50",
       "col": "questions",
-      "title": "50-question intake",
+      "title": "48-question intake (3 sets of 16)",
       "status": "live",
       "axes": "all",
-      "summary": "The fixed set of 50 multiple-choice questions every new user answers. No AI, no cost, no consent needed.",
+      "summary": "The fixed set of 48 multiple-choice questions every new user answers, 3 per trait, asked as 3 sets of 16 (one question per trait per set). No AI, no cost, no consent needed. Staged intake, 2026-10-02.",
       "facts": [
         [
           "How a user reaches it",
-          "More → Questions, or Home's 'Answer a few questions' row. Shown 5 per page."
+          "More → Questions, or Home's 'Answer a few questions' row. Only the set in progress is shown, 4 per page (a set = 4 pages)."
         ],
         [
           "Questions per axis",
-          "Openness, Conscientiousness, Extraversion: 6 each. Agreeableness, Conflict assertiveness, Relatedness: 4 each. The other ten: 2 each. Total 50."
+          "Exactly 3 per trait, 48 total. The old tiered 50 (6/6/6, 4/4/4, 2 x10) is kept as LEGACY_INTAKE_AXIS_COUNTS: anyone who finished it keeps every unlock. The 12 extras moved to ROUND_ONLY_BANK (served in rounds); the ten third questions came back (bank.ts)."
         ],
         [
           "Format",
@@ -319,11 +319,11 @@ var SYSTEM_MAP = {
         ],
         [
           "Order",
-          "One axis at a time, in a fixed order. The app does not store which question was answered — it counts answers per axis and works out the rest."
+          "Set by set: set N is question N of every trait. Stage = the lowest per-trait answer count (intake-stage.ts): 1 = first read, 2 = Sage, 3 = full profile. The app does not store which question was answered — it counts answers per trait."
         ],
         [
           "When it is finished",
-          "Every question answered = 'full profile done'. That one signal unlocks Insight, Story and the 25-question rounds."
+          "Every trait at 3 answers (or the old 50) = 'full profile done'. That one signal unlocks Insight, Story, categories and the 16-question rounds, and the +21 (wave78). The mini guy says a payoff after set 1 and set 2; set 3 is the reveal."
         ],
         [
           "Skip / reroll",
@@ -413,18 +413,18 @@ var SYSTEM_MAP = {
     {
       "id": "q-round25",
       "col": "questions",
-      "title": "25-question rounds (after the 50)",
+      "title": "16-question adaptive rounds (after the intake)",
       "status": "live",
       "axes": "all",
-      "summary": "Once the 50 are done, the user can tap 'Next 25 questions' as many times as they like. Each round is 25 fresh questions.",
+      "summary": "Once the intake is done, the user can tap 'Next 16 questions' as many times as they like. Each round is 16, allocated per trait by allocateRound (tiered-axis-plan.ts) — the one rule for bank and AI questions.",
       "facts": [
         [
           "Trigger",
-          "Only the tap on 'Next 25 questions'. Nothing starts a round automatically."
+          "Only the tap on 'Next 16 questions'. Nothing starts a round automatically."
         ],
         [
           "Per axis in each round",
-          "Openness, Conscientiousness, Extraversion: 3 each. Agreeableness, Conflict assertiveness, Relatedness: 2 each. The other ten: 1 each. Total 25."
+          "Adaptive: traits under 3 answers are filled toward 3; mixed traits (answers pulled two ways, raw stability < 0.25) and traits idle over 60 days get 2; leftovers go to the traits with fewest so far, then longest waiting. Max 3 per trait, always exactly 16. A settled, recent profile gets 1 per trait."
         ],
         [
           "Where the questions come from",
@@ -436,7 +436,7 @@ var SYSTEM_MAP = {
         ],
         [
           "Finishing",
-          "All 25 must be answered. Then the server pays +21 ATO tokens, once per round."
+          "All 16 must be answered (an old round of 25 still pays). Then the server pays +21 ATO tokens, once per round (wave78). A round that cannot be filled to 16 is never saved."
         ],
         [
           "Reroll",

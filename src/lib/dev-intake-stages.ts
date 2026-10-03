@@ -6,8 +6,10 @@ import {
   trackFor,
   type TraitTrack,
 } from '@/lib/trait-stability';
+import { LEGACY_INTAKE_AXIS_COUNTS } from '@/lib/questions/bank';
+import { INTAKE_SET_SIZE } from '@/lib/questions/intake-stage';
 import { bankQuestionCount } from '@/lib/questions/local';
-import { roundAxisCounts } from '@/lib/questions/tiered-axis-plan';
+import { allocateRound } from '@/lib/questions/tiered-axis-plan';
 
 /* ---------------------------------------------------------------------------
  * "Jump this account" presets — put the signed-in account at a known point in
@@ -30,9 +32,10 @@ import { roundAxisCounts } from '@/lib/questions/tiered-axis-plan';
  *   - Each track row is the real `applyEwmaAnswer` run N times on the preset
  *     value, not a hand-set stability. A flat 0.8 over-read a 2-answer axis.
  *
- * The bank is NOT 3-per-axis: it is 6/6/6 on openness, conscientiousness and
- * extraversion, 4 each on agreeableness, conflict_assertiveness and
- * relatedness, and 2 on the remaining ten — 50 total.
+ * The bank is 3 per trait, 48 total, asked as 3 sets of 16 (staged intake,
+ * 2026-10-02). "Old 50" seeds the shape an account that finished the old
+ * tiered intake has (6/6/6, 4/4/4, 2 on the other ten), to test that it keeps
+ * every unlock.
  *
  * Pure, and deliberately free of the supabase client, so
  * scripts/dev-test-user-check can import and run these functions for real
@@ -40,7 +43,13 @@ import { roundAxisCounts } from '@/lib/questions/tiered-axis-plan';
  * dev-test-user.ts's applyDevIntakeStagePreset.
  * ------------------------------------------------------------------------ */
 
-export type DevIntakeStageId = 'one-short' | 'intake-done' | 'round-one-done' | 'all-settled';
+export type DevIntakeStageId =
+  | 'first-read'
+  | 'set-two'
+  | 'one-short'
+  | 'intake-done'
+  | 'round-one-done'
+  | 'old-fifty';
 
 /**
  * One coherent profile shared by every stage, so the only thing changing
@@ -79,7 +88,7 @@ export interface DevIntakeStage {
   plan: () => DevAnswerPlan;
 }
 
-/** How many questions the 50-question bank holds. */
+/** How many questions the intake bank holds (48). */
 export function devBankSize(): number {
   return TRAIT_AXES.reduce((sum, axis) => sum + bankQuestionCount([axis]), 0);
 }
@@ -89,8 +98,9 @@ export function devBankSize(): number {
  *
  * Round-robin over TRAIT_AXES, skipping any axis already at its bank size, so
  * the plan sums to exactly the requested total for any N up to the bank.
- * Refuses above it rather than silently clamping: stages past the 50 build on
- * this with `planAfterRoundOne` / `planAllSettled` instead.
+ * Refuses above it rather than silently clamping: the stage past the intake
+ * builds on this with `planAfterRoundOne` instead. Round-robin means 16 is
+ * exactly set 1 and 32 exactly set 2.
  */
 export function devIntakeAnswerPlan(total: number): DevAnswerPlan {
   const plan = {} as DevAnswerPlan;
@@ -116,17 +126,25 @@ export function devIntakeAnswerPlan(total: number): DevAnswerPlan {
 }
 
 /**
- * The 50, plus exactly the round the app would compose next: `roundAxisCounts`
+ * The 48, plus exactly the round the app would compose next: `allocateRound`
  * run on the finished intake, so this can never drift from the real round.
  */
 export function planAfterRoundOne(): DevAnswerPlan {
   const plan = devIntakeAnswerPlan(devBankSize());
-  const round = roundAxisCounts(devIntakeTracks(DEV_INTAKE_PRESET_VALUES, plan, ''));
+  const nowIso = new Date().toISOString();
+  const round = allocateRound(devIntakeTracks(DEV_INTAKE_PRESET_VALUES, plan, nowIso));
   for (const axis of TRAIT_AXES) plan[axis] += round[axis] ?? 0;
   return plan;
 }
 
-/** The 50, with every axis lifted to the 3-answer floor: the least that reads 16 of 16. */
+/** The shape of an account that finished the OLD tiered 50 (ten traits at 2). */
+export function planOldFifty(): DevAnswerPlan {
+  const plan = {} as DevAnswerPlan;
+  for (const axis of TRAIT_AXES) plan[axis] = LEGACY_INTAKE_AXIS_COUNTS[axis] ?? 0;
+  return plan;
+}
+
+/** Every trait at the 3-answer floor: the least that reads 16 of 16 (= the 48). */
 export function planAllSettled(): DevAnswerPlan {
   const plan = devIntakeAnswerPlan(devBankSize());
   for (const axis of TRAIT_AXES) plan[axis] = Math.max(plan[axis], STABILITY_FLOOR_N);
@@ -135,28 +153,40 @@ export function planAllSettled(): DevAnswerPlan {
 
 export const DEV_INTAKE_STAGES: readonly DevIntakeStage[] = [
   {
+    stage: 'first-read',
+    label: `First read (set 1, ${INTAKE_SET_SIZE} of 48)`,
+    hint: 'One answer on every trait: a first lean everywhere, set 2 next.',
+    plan: () => devIntakeAnswerPlan(INTAKE_SET_SIZE),
+  },
+  {
+    stage: 'set-two',
+    label: `Set 2 done (${INTAKE_SET_SIZE * 2} of 48)`,
+    hint: 'Two answers on every trait. Set 3 next; nothing settled yet.',
+    plan: () => devIntakeAnswerPlan(INTAKE_SET_SIZE * 2),
+  },
+  {
     stage: 'one-short',
-    label: 'One short (49 of 50)',
-    hint: 'One question left. Answer it to see the after-50 reveal for real.',
+    label: 'One short (47 of 48)',
+    hint: 'One question left. Answer it to see the full-profile reveal for real.',
     plan: () => devIntakeAnswerPlan(devBankSize() - 1),
   },
   {
     stage: 'intake-done',
-    label: 'Finished the 50',
-    hint: 'Home unlocked, the reveal shows again, 6 of 16 settled, "Next 25" on offer.',
+    label: 'Finished the 48',
+    hint: 'Home unlocked, the reveal shows again, 16 of 16 settled, "Next 16" on offer.',
     plan: () => devIntakeAnswerPlan(devBankSize()),
   },
   {
     stage: 'round-one-done',
     label: 'Round 1 finished',
-    hint: 'The 50 plus the round the app would build next (75 answers). Scores only: no saved round, so no round +21.',
+    hint: 'The 48 plus the round the app would build next (64 answers). Scores only: no saved round, so no round +21.',
     plan: planAfterRoundOne,
   },
   {
-    stage: 'all-settled',
-    label: 'All 16 settled',
-    hint: 'Every trait at exactly 3 answers or more: the least that reads 16 of 16.',
-    plan: planAllSettled,
+    stage: 'old-fifty',
+    label: 'Finished the old 50',
+    hint: 'The shape the old intake left (ten traits at 2). Everything stays open; those ten show their third question as optional.',
+    plan: planOldFifty,
   },
 ];
 
@@ -213,9 +243,9 @@ export function devIntakeTracks(
 
 /**
  * The answer-history rows a plan stands for, in the order answering would have
- * written them (round-robin by axis). The first +21 is only paid once 50
- * `self_situation` history rows exist, so a jump that writes none can never
- * test it.
+ * written them (round-robin by axis). Since wave78 the first +21 reads the
+ * trait tracks (every trait at 3) — these rows only matter for the old-50 rule
+ * (50 `self_situation` rows), which is kept so nobody who qualified loses it.
  */
 export function devHistoryRows(
   plan: DevAnswerPlan,

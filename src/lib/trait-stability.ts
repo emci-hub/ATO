@@ -2,6 +2,7 @@
  * Per-axis EWMA tracks. Self-report and gut-call never mix.
  * Completeness is stability-weighted, not a raw fill count.
  */
+import { MIXED_TRAIT_LINE } from '@/lib/questions/staged-intake-copy';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
 import {
   TRAIT_AXES,
@@ -50,6 +51,16 @@ export const STABILITY_FLOOR_OVERRIDE_N = 8;
 export const STABILITY_INCONSISTENT_FLOOR = 0.05;
 export const DECAY_GRACE_DAYS = 60;
 export const DECAY_HALF_LIFE_DAYS = 90;
+/**
+ * Below this RAW stability, a trait with 3+ answers reads as "mixed": settled
+ * (so nothing it opened closes) but its answers pulled two ways. Settling only
+ * needs stability above 0, and three answers almost always clear that — even
+ * high, low, high lands near 0.14 — so "settled" alone cannot tell a
+ * consistent trait from a flip-flop. Consistent answers land near 0.3-0.58.
+ * Raw, not decayed: an idle trait is "decaying", not mixed. Staged intake
+ * red-team, emci 2026-10-02 (Fix A).
+ */
+export const MIXED_STABILITY_BELOW = 0.25;
 export const DEPTH_COOLDOWN_HOURS = 48;
 /** After one undo on an axis, the next pending tap on that axis has no undo. */
 export const UNDO_SAME_AXIS_REPEAT_CAP = 1;
@@ -400,13 +411,21 @@ export function settledAxisCount(rows: readonly TraitTrack[], now: Date = new Da
   return TRAIT_AXES.filter((axis) => isAxisSettled(trackFor(rows, axis, 'report'), now)).length;
 }
 
+/** Settled on 3+ answers that pulled two ways. See MIXED_STABILITY_BELOW. */
+export function isAxisMixed(row: TraitTrack | null): boolean {
+  return !!row && row.answerCount >= STABILITY_FLOOR_N && row.stability < MIXED_STABILITY_BELOW;
+}
+
 /**
- * Why an answered axis is not settled yet, in plain words. Null once it is.
- * Below the answer floor it says how many more it needs; at or past the floor
- * the only thing left holding it at 0 is answers that disagree.
+ * Why an answered axis is not settled yet, in plain words — or, once settled,
+ * the honest "settled, loosely" line when its answers pulled two ways. Null
+ * for a settled, consistent axis. Below the answer floor it says how many more
+ * it needs; at or past the floor the only thing left holding it at 0 is
+ * answers that disagree.
  */
 export function settlingLine(row: TraitTrack | null, now: Date = new Date()): string | null {
-  if (!row || row.answerCount <= 0 || isAxisSettled(row, now)) return null;
+  if (!row || row.answerCount <= 0) return null;
+  if (isAxisSettled(row, now)) return isAxisMixed(row) ? MIXED_TRAIT_LINE : null;
   if (row.answerCount < STABILITY_FLOOR_N) {
     const more = STABILITY_FLOOR_N - row.answerCount;
     return `Still settling — ${row.answerCount} of ${STABILITY_FLOOR_N} answers. ${more} more and this read firms up.`;

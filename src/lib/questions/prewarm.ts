@@ -13,11 +13,12 @@
  * with nobody watching.
  *
  * "Ahead of demand" is measured per-axis, not as a flat pool size, because
- * the pool is consumed per-axis: a round needs exactly `AXIS_TIER_COUNTS`
- * questions of each axis (tiered-axis-plan.ts), so an axis with 1/round
- * demand and an axis with 3/round demand need different absolute depths to
- * cover the same number of rounds. `RESERVE_ROUNDS` is therefore expressed
- * in ROUNDS of cover, and the per-axis target falls out of the tier plan.
+ * the pool is consumed per-axis: a round asks each trait for what
+ * `allocateRound` gives it (tiered-axis-plan.ts — the same adaptive rule the
+ * round itself uses), so a trait this person needs 3 of and a trait they need
+ * 1 of need different depths to cover the same number of rounds.
+ * `RESERVE_ROUNDS` is expressed in ROUNDS of cover, and the per-axis target
+ * falls out of this person's next-round plan.
  *
  * Note the shared pool is not a queue and does not drain: serving a question
  * only bumps `times_served`, it removes nothing. What actually runs out is
@@ -30,7 +31,7 @@
  */
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
-import { AXIS_TIER_COUNTS } from './tiered-axis-plan';
+import { INTAKE_SETS } from './intake-stage';
 import { CHUNK_SIZE } from './chunked-generate';
 
 /**
@@ -51,9 +52,19 @@ export const RESERVE_ROUNDS = 3;
  */
 export const PREWARM_MAX_QUESTIONS = CHUNK_SIZE * 2;
 
-/** Per-axis depth the pool should hold: that axis's per-round demand × the reserve. */
-export function reserveTargetFor(axis: TraitAxis): number {
-  return AXIS_TIER_COUNTS[axis] * RESERVE_ROUNDS;
+/**
+ * Per-axis depth the pool should hold: that axis's per-round demand (from the
+ * next-round plan, at least 1) × the reserve, PLUS the trait's intake
+ * questions. `bank_pool_depth` counts the authored intake rows (wave49/78) as
+ * unseen — the intake is answered on the phone, never in question_items — but
+ * rounds never serve them, so without this the intake alone would read as a
+ * full reserve and prewarm would never run.
+ */
+export function reserveTargetFor(
+  axis: TraitAxis,
+  plan: Partial<Record<TraitAxis, number>> = {},
+): number {
+  return Math.max(1, plan[axis] ?? 0) * RESERVE_ROUNDS + INTAKE_SETS;
 }
 
 /**
@@ -72,10 +83,11 @@ export function reserveTargetFor(axis: TraitAxis): number {
 export function axesBelowReserve(
   depth: Partial<Record<TraitAxis, number>>,
   max: number = PREWARM_MAX_QUESTIONS,
+  plan: Partial<Record<TraitAxis, number>> = {},
 ): Partial<Record<TraitAxis, number>> {
   const shortfalls = TRAIT_AXES.map((axis) => ({
     axis,
-    short: reserveTargetFor(axis) - (depth[axis] ?? 0),
+    short: reserveTargetFor(axis, plan) - (depth[axis] ?? 0),
   }))
     .filter((row) => row.short > 0)
     .sort((a, b) => b.short - a.short || TRAIT_AXES.indexOf(a.axis) - TRAIT_AXES.indexOf(b.axis));

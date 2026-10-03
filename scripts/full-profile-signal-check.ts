@@ -50,8 +50,11 @@ assert.match(gate, /export function fullProfileProgress/);
 assert.match(gate, /export const FULL_PROFILE_LOCKED_COPY/);
 ok('full-profile-gate exports the gate, the progress figure and the locked copy');
 
-// The gate is bank progress, per emci's Q2 answer — not settledness.
-assert.match(codeOnly(gate), /bankTotalProgress/);
+// The gate is answer progress, per emci's Q2 answer — not settledness. Since
+// the staged intake it is per-trait counts (intake-stage.ts: every trait at 3,
+// or the old 50), still never a settled/stability read.
+assert.match(codeOnly(gate), /reachedFullProfile\(tracks\)/);
+assert.match(codeOnly(gate), /intakeProgress\(tracks\)/);
 assert.doesNotMatch(
   codeOnly(gate),
   /storyReady|settledCount|settledAxisLabel|isProfileSettled/,

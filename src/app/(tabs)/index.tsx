@@ -36,6 +36,8 @@ import { DEV_TOOLS_AVAILABLE } from '@/lib/dev-mode';
 import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
 import { useSession } from '@/hooks/use-session';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
+import { nextRoundLabel } from '@/lib/questions/staged-intake-copy';
+import { ONGOING_ROUND_SIZE } from '@/lib/questions/tiered-axis-plan';
 
 export const INSIGHT_LOAD_LABEL = 'Load insight';
 /** The recent-titles read is a nice-to-have: it must never hold up the insight. */
@@ -45,7 +47,7 @@ export const ANSWER_QUESTIONS_LABEL = 'Answer the questions';
 /** Shown on an insight that is not today's (it stays up until today's is loaded). */
 export const INSIGHT_EARLIER_DAY_COPY = 'From an earlier day. Load insight writes today’s.';
 /** Home's one next step once the profile is done and there is nothing to load. */
-export const NEXT_ROUND_ROW_LABEL = 'Next 25 questions';
+export const NEXT_ROUND_ROW_LABEL = nextRoundLabel(ONGOING_ROUND_SIZE);
 export const NEXT_ROUND_ROW_COPY = `Each finished round sharpens your profile and earns ${ATO_TOKEN_EARN.ongoing_round_complete} ATO tokens.`;
 /** One line, one place — `check:home-hydrate` pins it verbatim. */
 export const CONSENT_OFF_EMPTY_COPY =
@@ -463,8 +465,8 @@ export default function HomeScreen() {
             <ThemedText type="smallBold">Sage&apos;s AI · {consentGranted ? 'On' : 'Off'}</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
               {consentGranted
-                ? 'Insight, story, next 25 and categories can use AI.'
-                : 'Insight, story, next 25 and categories stay off until you turn this on.'}
+                ? `Insight, story, next ${ONGOING_ROUND_SIZE} and categories can use AI.`
+                : `Insight, story, next ${ONGOING_ROUND_SIZE} and categories stay off until you turn this on.`}
             </ThemedText>
           </View>
           <ThemedText type="smallBold" themeColor="textSecondary">
@@ -560,8 +562,8 @@ export default function HomeScreen() {
                   <ThemedText type="smallBold">{ANSWER_QUESTIONS_LABEL}</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
                     {profileProgress.answered} of {profileProgress.total} done. Finish all{' '}
-                    {profileProgress.total} to unlock Load insight, Load story, the next 25
-                    questions and Explore categories.
+                    {profileProgress.total} to unlock Load insight, Load story, the next{' '}
+                    {ONGOING_ROUND_SIZE} questions and Explore categories.
                   </ThemedText>
                 </View>
                 <ThemedText themeColor="textSecondary">›</ThemedText>

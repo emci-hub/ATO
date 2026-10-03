@@ -8,7 +8,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { QUESTIONS_BANK, QUESTIONS_FEW_SHOTS } from '../src/lib/questions/bank';
-import { AXIS_TIER_COUNTS } from '../src/lib/questions/tiered-axis-plan';
+import { ONGOING_ROUND_SIZE } from '../src/lib/questions/tiered-axis-plan';
+import { nextRoundLabel } from '../src/lib/questions/staged-intake-copy';
 import { CATEGORY_DEFS, getCategoryDefs } from '../src/lib/categories';
 import { pickQuestionGrounding } from '../src/lib/questions/context';
 import { questionDraftGuardHit } from '../src/lib/questions/guards';
@@ -83,9 +84,9 @@ function read(rel: string): string {
 
 assert.equal(QUESTIONS_BATCH_SIZE, 5);
 assert.equal(QUESTIONS_CALL_TYPE, 'questions');
-// Frozen 50-question intake (trait-system redesign §3): per-axis draft count
-// follows AXIS_TIER_COUNTS x2 (two 25-question rounds), not a flat 3 anymore.
-assert.equal(QUESTIONS_BANK.length, 50);
+// The intake (staged intake, 2026-10-02): 48 = exactly 3 per trait, asked as
+// 3 sets of 16. The old tiered 50 is recorded in LEGACY_INTAKE_* (bank.ts).
+assert.equal(QUESTIONS_BANK.length, 48);
 const bankPerAxis = new Map<string, number>();
 for (const row of QUESTIONS_BANK) {
   bankPerAxis.set(row.axis, (bankPerAxis.get(row.axis) ?? 0) + 1);
@@ -93,8 +94,8 @@ for (const row of QUESTIONS_BANK) {
 for (const axis of TRAIT_AXES) {
   assert.equal(
     bankPerAxis.get(axis),
-    AXIS_TIER_COUNTS[axis] * 2,
-    `${axis} needs exactly ${AXIS_TIER_COUNTS[axis] * 2} bank drafts (tier count x2 rounds)`,
+    3,
+    `${axis} needs exactly 3 intake drafts (one per set)`,
   );
 }
 // Axis groups are contiguous and in TRAIT_AXES order.
@@ -207,6 +208,58 @@ assert.match(factPrompt, /No specific recent moment/, 'a fact grounding reads as
 assert.doesNotMatch(prompt, /TextInput/);
 assert.doesNotMatch(prompt, /TRAIT CONTEXT/, 'no tracks -> no trait context section at all');
 ok('prompt is multiple-choice, includes the locked few-shots');
+
+// Staged intake red-team (2026-10-02): the prompt names what 0.2 and 0.8 mean
+// on every requested axis (so a question cannot drift to a neighbouring
+// trait), asks for the 0.2/0.5/0.8 scale, and still carries no user text.
+{
+  const roundPrompt = buildQuestionsPrompt({
+    me: { name: 'Riley', talk_style: 'even', voice_preset: 'close_friend' },
+    grounding: { kind: 'fact', detail: 'Trains for a 10k with ZZTOP.' },
+    count: 3,
+    axisCounts: { steadiness: 2, autonomy: 1 },
+  });
+  assert.match(roundPrompt, /AXIS ENDS/);
+  assert.match(roundPrompt, /- steadiness: 0\.2 = Sensitive \(".+"\), 0\.8 = Steady \(".+"\)/);
+  assert.match(roundPrompt, /- autonomy: 0\.2 = /);
+  assert.doesNotMatch(roundPrompt, /- openness: 0\.2 = /, 'only the requested axes are described');
+  assert.match(roundPrompt, /use 0\.8 for the high end, 0\.2 for the low end and 0\.5 for a middle option/);
+  assert.doesNotMatch(roundPrompt, /ZZTOP|Riley/, 'still no user-typed text in a shared-pool prompt');
+  assert.doesNotMatch(prompt, /AXIS ENDS/, 'no axis counts -> no axis ends section');
+}
+ok('round prompts describe both ends of each requested trait and the 0.2/0.5/0.8 scale, with no user text');
+
+// AI option values snap to the authored scale; a question whose options all
+// land on the same value measures nothing and is dropped.
+{
+  const snapped = parseQuestionBatch(
+    JSON.stringify({
+      questions: [
+        {
+          axis: 'openness',
+          prompt: 'A new place opened on your street.',
+          options: [
+            { text: 'Going this week', value: 0.93 },
+            { text: 'Maybe', value: 0.42 },
+            { text: 'Not for me', value: 0.1 },
+          ],
+        },
+        {
+          axis: 'openness',
+          prompt: 'A coworker suggests a new lunch spot.',
+          options: [
+            { text: 'Sure', value: 0.75 },
+            { text: 'Fine', value: 0.85 },
+          ],
+        },
+      ],
+    }),
+    5,
+  );
+  assert.equal(snapped.length, 1, 'the question whose options both snap to 0.8 is dropped');
+  assert.deepEqual(snapped[0]!.options.map((opt) => opt.value), [0.8, 0.5, 0.2]);
+}
+ok('AI option values snap to 0.2/0.5/0.8, and a question that cannot discriminate is dropped');
 
 // Trait-adaptive prompt context: settled axes (effectiveStability > 0) show
 // as a qualitative pole phrase + a settled score, never a raw trait value;
@@ -423,8 +476,8 @@ assert.deepEqual(
 ok('preferFreshAxes with no confidence/redundancy data matches the actual pre-Phase-5 algorithm, not just itself');
 
 // --- Category question list (bank progress, sequential in-axis unlock) ----
-// openness is a tier-1 axis: 6 drafts now (was a flat 3 pre-redesign).
-assert.equal(bankQuestionCount(['openness']), 6);
+// Every trait has 3 intake drafts (staged intake, 2026-10-02).
+assert.equal(bankQuestionCount(['openness']), 3);
 assert.equal(
   bankQuestionCount(['openness', 'extraversion']),
   QUESTIONS_BANK.filter((d) => d.axis === 'openness').length +
@@ -432,21 +485,20 @@ assert.equal(
 );
 assert.equal(bankQuestionCount([]), 0);
 
-// steadiness is a tier-4 axis: exactly 2 drafts now (was 3) — small enough to
-// exercise the same current/locked/answered/wrap sequence with a cleaner list.
+// steadiness: 3 drafts, one per set — the current/locked/answered/wrap sequence.
 const zeroProgress = bankProgressForAxes(['steadiness'], []);
-assert.equal(zeroProgress.length, 2);
-assert.deepEqual(zeroProgress.map((row) => row.state), ['current', 'locked']);
+assert.equal(zeroProgress.length, 3);
+assert.deepEqual(zeroProgress.map((row) => row.state), ['current', 'locked', 'locked']);
 
 const oneAnswered = bankProgressForAxes(['steadiness'], [trackWithCount('steadiness', 1)]);
-assert.deepEqual(oneAnswered.map((row) => row.state), ['answered', 'current']);
+assert.deepEqual(oneAnswered.map((row) => row.state), ['answered', 'current', 'locked']);
 
-// Fully answered (>= list length) never overflows into a phantom 3rd state,
-// and repeat cycling past 2 stays fully answered rather than re-locking.
-const fullyAnswered = bankProgressForAxes(['steadiness'], [trackWithCount('steadiness', 2)]);
-assert.deepEqual(fullyAnswered.map((row) => row.state), ['answered', 'answered']);
+// Fully answered (>= list length) never overflows into a phantom 4th state,
+// and repeat cycling past 3 stays fully answered rather than re-locking.
+const fullyAnswered = bankProgressForAxes(['steadiness'], [trackWithCount('steadiness', 3)]);
+assert.deepEqual(fullyAnswered.map((row) => row.state), ['answered', 'answered', 'answered']);
 const wrappedAnswered = bankProgressForAxes(['steadiness'], [trackWithCount('steadiness', 7)]);
-assert.deepEqual(wrappedAnswered.map((row) => row.state), ['answered', 'answered']);
+assert.deepEqual(wrappedAnswered.map((row) => row.state), ['answered', 'answered', 'answered']);
 
 // Each axis unlocks independently — one axis at draft 1 does not lock or
 // unlock a sibling axis's own progress.
@@ -456,7 +508,7 @@ const twoAxes = bankProgressForAxes(
 );
 assert.deepEqual(
   twoAxes.map((row) => `${row.axis}:${row.state}`),
-  ['steadiness:answered', 'steadiness:current', 'extraversion:current', 'extraversion:locked', 'extraversion:locked', 'extraversion:locked', 'extraversion:locked', 'extraversion:locked'],
+  ['steadiness:answered', 'steadiness:current', 'steadiness:locked', 'extraversion:current', 'extraversion:locked', 'extraversion:locked'],
 );
 
 assert.deepEqual(bankTotalProgress([]), { answered: 0, total: QUESTIONS_BANK.length });
@@ -622,7 +674,7 @@ assert.doesNotMatch(fold, /category_id/);
 assert.match(fold, /PagedQuestions/);
 // Scoped per account (found in review: an unscoped key would leak one
 // account's answer stamps to another account signed in on the same device).
-assert.match(fold, /storageKey=\{`full-profile:\$\{me\.id\}`\}/);
+assert.match(fold, /storageKey=\{`full-profile:\$\{me\.id\}:set\$\{set\.set\}`\}/);
 // Live-subscribed catalog, not a mount-time getCategoryDefs() snapshot — a
 // category_defs fetch swapping the list while this screen is open must be
 // reflected, same hook categories-fold.tsx/category-teaser.tsx already use.
@@ -645,7 +697,13 @@ assert.match(fold, /uniqueCategoryAxes\(liveCategoryDefs\)/);
     fold.indexOf('/>', fold.indexOf('<PagedQuestions')),
   );
   assert.match(bankAdapter, /rows=\{bankRows\}/);
-  assert.match(bankAdapter, /progressLabel=\{`\$\{bankCompletedAxes\.length\} of \$\{bankAxes\.length\} traits covered`\}/);
+  assert.ok(
+    bankAdapter.includes(
+      'progressLabel={`${set.answered} of ${set.size} in this set · ${bankCompletedAxes.length} of ${bankAxes.length} traits`}',
+    ),
+    'the intake pager shows set progress',
+  );
+  assert.match(fold, /key=\{`set-\$\{set\.set\}`\}/, 'each set remounts the pager, so it opens on page 1');
   // routeQuestions/priorityAxes/mergeCategoryPriority belong to the default
   // rotation above this usage, never to how Full Profile is fed — a bad bank
   // read must never be able to reach the persisted daily-pack rotation.
@@ -694,16 +752,17 @@ assert.match(pagedQuestions, /Page \{clampedPage \+ 1\} of \{totalPages\}/);
 assert.match(pagedQuestions, /loadCategoryPagePosition/);
 assert.match(pagedQuestions, /saveCategoryPagePosition/);
 // No per-category grouping left post-restructure — the row list is flat and
-// axis-ordered, paged 5 at a time, no "Skip this category" control.
+// paged 4 at a time (a set of 16 and a round of 16 are each exactly 4 pages),
+// no "Skip this category" control.
 assert.doesNotMatch(pagedQuestions, /current\.axes\.map/);
-assert.match(pagedQuestions, /PAGE_SIZE\s*=\s*5/);
+assert.match(pagedQuestions, /PAGE_SIZE\s*=\s*4/);
 // Category navigation is a distinct concept from Infinite Questions' own
 // checkpoint/skip-this-item copy — must not reuse those constants.
 assert.doesNotMatch(
   pagedQuestions,
   /QUESTIONS_SKIP_THIS|QUESTIONS_SKIP_REST|QUESTIONS_CHECKPOINT|QUESTIONS_KEEP_GOING/,
 );
-ok('PagedQuestions is a flat, axis-order book pager (5/page), dedupes shared-axis progress, and persists/restores page position — independent of Infinite Questions\' own copy/state');
+ok('PagedQuestions is a flat book pager (4/page), dedupes shared-axis progress, and persists/restores page position — independent of Infinite Questions\' own copy/state');
 
 
 /*
@@ -763,8 +822,9 @@ assert.doesNotMatch(foldCode, /Not today/);
   future crisis gate or axis deep-link on this screen would be a legitimate
   feature, and a check that forbids one is a trap, not a guard.
 */
-// "Next 25 questions" — the thing that must SURVIVE, standalone in that spot.
-assert.match(fold, /NEXT_ROUND_LABEL = 'Next 25 questions'/);
+// "Next 16 questions" — the thing that must SURVIVE, standalone in that spot.
+assert.match(fold, /NEXT_ROUND_LABEL = nextRoundLabel\(ONGOING_ROUND_SIZE\)/);
+assert.equal(nextRoundLabel(ONGOING_ROUND_SIZE), 'Next 16 questions');
 assert.match(fold, /OngoingRoundFold/);
 // No sequential lock left to render a 'Locked' label for — every one of an
 // axis's drafts is shown and answerable at once, any order, in the new
@@ -772,7 +832,7 @@ assert.match(fold, /OngoingRoundFold/);
 assert.doesNotMatch(pagedQuestions, /'Locked'/);
 assert.doesNotMatch(pagedQuestions, />\s*Locked\s*</);
 assert.match(pagedQuestions, />\s*Answered\s*</);
-ok('the Infinite Questions inline feed and its card stay deleted; "Next 25 questions" survives standalone; no stale per-row lock label');
+ok('the Infinite Questions inline feed and its card stay deleted; "Next 16 questions" survives standalone; no stale per-row lock label');
 assert.match(read('src/components/explore-panel.tsx'), /claimAiCall\('explore'\)/);
 ok('own screen from You; writes self_situation; Explore tagged separately');
 

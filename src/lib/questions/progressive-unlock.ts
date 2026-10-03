@@ -1,21 +1,23 @@
 /**
- * Progressive unlock (trait-system redesign §6) — Sage unlocks at question
- * 25 of the frozen intake, Legends at question 50. Live-derived, same
- * pattern `isProfileSettled` already uses for Legends today (never stored):
- * `bankTotalProgress(tracks).answered` only grows as answers are recorded,
- * so "unlocked" is automatically permanent without a separate stored flag.
+ * Progressive unlock (trait-system redesign §6; staged intake 2026-10-02) —
+ * Sage unlocks when set 2 is done (every trait has 2 answers), Legends at the
+ * full profile (every trait has 3). Both also open on the old 50, so nobody
+ * who finished the old intake loses one. Live-derived,
+ * never stored: per-trait `answerCount` only grows, so "unlocked" is
+ * permanent without a separate stored flag.
  *
- * Per emci's explicit call: Q50 alone unlocks Legends now, REPLACING the
- * prior isProfileSettled gate (see PROJECT_CONTEXT.md) — the tiered intake
- * alone does not satisfy isProfileSettled for every axis (10 of 16 axes only
- * reach 2 answers from the intake, below STABILITY_FLOOR_N's 3-answer floor),
- * so keeping isProfileSettled as the Legends gate would have made "answer 50
- * questions" not actually unlock Legends for most users.
- *
- * Applies only to the first-50 intake, per §6 — nothing here re-locks once
- * crossed, since `answered` never decreases.
+ * Per emci's explicit call the intake alone unlocks Legends, not
+ * isProfileSettled (see PROJECT_CONTEXT.md). Nothing here re-locks once
+ * crossed.
  */
-import { bankTotalProgress } from './local';
+import {
+  FULL_PROFILE_STAGE,
+  INTAKE_TOTAL,
+  intakeStage,
+  reachedFullProfile,
+} from './intake-stage';
+import { nextRoundLabel, STAGED_INTAKE_COPY_REVIEWED } from './staged-intake-copy';
+import { ONGOING_ROUND_SIZE } from './tiered-axis-plan';
 import { ATO_TOKEN_EARN } from '@/lib/ato-tokens';
 import { isProfileSettled, settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES } from '@/lib/traits';
@@ -28,23 +30,23 @@ import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
  * actually gets, and when, is the unlock table below — the one place the
  * reveal, the round toast and any locked line read it from.
  */
-export const SAGE_UNLOCK_THRESHOLD = 25;
-export const LEGENDS_UNLOCK_THRESHOLD = 50;
+/** Sage: set 2 done (every trait has 2), or the full profile. */
+export const SAGE_UNLOCK_STAGE = 2;
+/** Legends: the full profile (all 48, or the old 50). */
+export const LEGENDS_UNLOCK_STAGE = FULL_PROFILE_STAGE;
 
 /**
  * The unlock table. Each line matches a real gate:
- *   - finishing the 50 is `isFullProfileDone` (lib/full-profile-gate.ts): Home
- *     "Load insight", Explore categories, Questions "Next 25 questions";
- *   - Story is offered at 50 too, but `storyReady` needs more settled axes than
- *     the intake can give (ten axes stop at 2 answers), so it belongs to the
- *     next round, not to "open now";
+ *   - finishing the intake is `isFullProfileDone` (lib/full-profile-gate.ts):
+ *     Home "Load insight", Explore categories, Questions "Next 16 questions";
+ *   - Story is offered then too, but `storyReady` decides when it has enough;
  *   - Sage and Legends open nothing yet.
- * Draft copy until emci reads it.
+ * emci approved the 50-era table 2026-10-02; the staged-intake rewording is a
+ * draft again until emci reads it (docs/copy-review.md, Staged intake).
  */
-// emci approved 2026-10-02.
-export const UNLOCK_COPY_REVIEWED = true;
+export const UNLOCK_COPY_REVIEWED = STAGED_INTAKE_COPY_REVIEWED;
 
-/** Milestone def (lib/milestones.ts) the after-50 reveal takes its title and body from. */
+/** Milestone def (lib/milestones.ts) the after-intake reveal takes its title and body from. */
 export const INTAKE_REVEAL_MILESTONE_ID = 'profile_fully_unlocked';
 /**
  * The id the reveal is remembered under in `me.celebrated_milestone_ids`.
@@ -58,13 +60,13 @@ export const INTAKE_UNLOCKED_HEADING = 'Open now';
 export const INTAKE_UNLOCKED: readonly string[] = [
   'Your daily insight, on Home',
   'Categories, on Explore',
-  'Your next 25 questions, here',
+  `${nextRoundLabel(ONGOING_ROUND_SIZE)}, here`,
 ];
 
-export const NEXT_ROUND_HEADING = 'What your next 25 are for';
+export const NEXT_ROUND_HEADING = `What your next ${ONGOING_ROUND_SIZE} are for`;
 export const NEXT_ROUND_UNLOCKS: readonly string[] = [
-  `A third answer on each of your ${TRAIT_AXES.length} traits, which is what a trait needs to settle`,
-  'Your Story on Home, which needs more settled traits first',
+  `Another look at the traits that are still settling or pulled two ways, out of your ${TRAIT_AXES.length}`,
+  'Your Story on Home, as more traits settle',
   'More categories on Explore',
   `+${ATO_TOKEN_EARN.ongoing_round_complete} ATO tokens`,
 ];
@@ -74,8 +76,7 @@ export const COMING_LATER_LINE = 'Sage and Legends are being rebuilt. Nothing yo
 
 export const INTAKE_TOKENS_PAID_LINE = `+${ATO_TOKEN_EARN.full_profile_complete} ATO tokens, in your balance on You`;
 
-export const SETTLED_EXPLAINER =
-  'A trait settles after three answers that agree. The 50 give most traits two, so they read as still settling until your next 25.';
+export const SETTLED_EXPLAINER = `A trait settles after three answers. All ${INTAKE_TOTAL} give every trait three; a trait whose answers pulled two ways gets asked again next round.`;
 
 export const ROUND_COMPLETE_TITLE = 'Round complete';
 
@@ -83,7 +84,7 @@ export const ROUND_COMPLETE_TITLE = 'Round complete';
 export function roundStandingLine(tracks: readonly TraitTrack[]): string {
   const next = isProfileSettled(tracks)
     ? 'Every round from here sharpens your reads.'
-    : 'Your next 25 keep settling the rest.';
+    : `Your next ${ONGOING_ROUND_SIZE} keep settling the rest.`;
   return `${settledAxisLabel(tracks)}. ${next}`;
 }
 
@@ -108,10 +109,15 @@ export function unlockCopyClean(): boolean {
   return lines.every((line) => !containsFrameworkTerm(line));
 }
 
+/**
+ * Set 2 done, or the full profile. No old-25 clause: counted against the old
+ * caps it would open at 31 answers for a new account, and Sage is a
+ * placeholder that opens nothing, so an old mid-intake account loses nothing.
+ */
 export function sageUnlocked(tracks: readonly TraitTrack[]): boolean {
-  return bankTotalProgress(tracks).answered >= SAGE_UNLOCK_THRESHOLD;
+  return intakeStage(tracks) >= SAGE_UNLOCK_STAGE || reachedFullProfile(tracks);
 }
 
 export function legendsUnlocked(tracks: readonly TraitTrack[]): boolean {
-  return bankTotalProgress(tracks).answered >= LEGENDS_UNLOCK_THRESHOLD;
+  return reachedFullProfile(tracks);
 }

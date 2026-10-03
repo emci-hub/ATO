@@ -6,7 +6,8 @@ import assert from 'node:assert/strict';
 
 import type { BankCandidate } from '../src/lib/questions/bank-pool';
 import { composeOngoingRound, type ComposeOngoingRoundDeps } from '../src/lib/questions/ongoing-round';
-import { TIERED_ROUND_SIZE } from '../src/lib/questions/tiered-axis-plan';
+import { ONGOING_ROUND_SIZE } from '../src/lib/questions/tiered-axis-plan';
+import { LEGACY_INTAKE_AXIS_COUNTS, ROUND_ONLY_BANK } from '../src/lib/questions/bank';
 import type { TraitTrack } from '../src/lib/trait-stability';
 import type { QuestionDraft } from '../src/lib/questions/types';
 import { TRAIT_AXES, type TraitAxis } from '../src/lib/traits';
@@ -18,11 +19,11 @@ function ok(label: string) {
 }
 
 /**
- * Every axis at the 3-answer floor: the steady state, where a round is the
- * plain tiered plan (AXIS_TIER_COUNTS). The blocks below pin that plan's
- * per-axis counts, so they run against this, not an empty profile — since
- * 2026-10-01 a profile with axes under the floor gets the lagging-first
- * allocation instead (pinned in tiered-axis-plan-check.ts and at the end here).
+ * Every axis at the 3-answer floor, consistent and answered today: the steady
+ * state, where `allocateRound` gives exactly 1 per trait (16). The allocation
+ * itself is pinned in tiered-axis-plan-check.ts; these blocks prove the
+ * composer follows it for bank AND AI questions. `lastTouched` is now, so the
+ * fixture never ages into "decaying" as the calendar moves.
  */
 const settledTracks: TraitTrack[] = TRAIT_AXES.map((axis) => ({
   axis,
@@ -30,7 +31,7 @@ const settledTracks: TraitTrack[] = TRAIT_AXES.map((axis) => ({
   value: 0.5,
   stability: 0.5,
   answerCount: 3,
-  lastTouched: '2026-10-01T00:00:00.000Z',
+  lastTouched: new Date().toISOString(),
   lastDepthAt: null,
 }));
 
@@ -74,8 +75,11 @@ async function run() {
     const generated = new Map<string, number>();
     const drafts = await composeOngoingRound(me, [], settledTracks, noBankDeps(generated, sawGroundingFact));
 
-    assert.equal(drafts.length, TIERED_ROUND_SIZE, 'an ongoing round generates the full 25-question tiered allocation');
-    assert.equal(generated.size, TIERED_ROUND_SIZE, 'every generated draft is saved immediately, not batched at the end');
+    assert.equal(drafts.length, ONGOING_ROUND_SIZE, 'an ongoing round generates the full 16-question allocation');
+    for (const axis of TRAIT_AXES) {
+      assert.equal(drafts.filter((d) => d.axis === axis).length, 1, `${axis}: the AI is asked for the allocation, never a skewed mix`);
+    }
+    assert.equal(generated.size, ONGOING_ROUND_SIZE, 'every generated draft is saved immediately, not batched at the end');
     // INVERTED 2026-10-01 (was: a stored fact reaches the prompt). Every question
     // from this prompt is saved to the SHARED question_bank_pool, so text the
     // user typed must never enter it — one user's words could reach another's.
@@ -84,11 +88,11 @@ async function run() {
       drafts.every((d) => typeof d.bankItemId === 'string' && d.bankItemId.length > 0),
       'every AI-generated draft is written into the bank pool first and carries a bankItemId (§2 Q9)',
     );
-    ok('composeOngoingRound: no bank candidates → full 25-question tiered round from AI, save-as-you-go, grounded, every draft has a bankItemId');
+    ok('composeOngoingRound: no bank candidates → full 16-question round from AI, one per trait, save-as-you-go, grounded, every draft has a bankItemId');
   }
 
   {
-    // Bank-first: 'playfulness' needs exactly 1 (AXIS_TIER_COUNTS). Supply
+    // Bank-first: 'playfulness' needs exactly 1 (allocateRound, steady state). Supply
     // one bank candidate for it and confirm the AI generator is never even
     // asked for that axis, and the bank draft's own id survives unmutated.
     const bankDraft: QuestionDraft = {
@@ -128,7 +132,7 @@ async function run() {
       },
     });
 
-    assert.equal(drafts.length, TIERED_ROUND_SIZE, 'bank-first fill still lands on the full tiered round size');
+    assert.equal(drafts.length, ONGOING_ROUND_SIZE, 'bank-first fill still lands on the full round size');
     assert.ok(!sawPlayfulnessInPrompt, 'an axis fully covered by the bank is never sent to AI generation');
     const bankDraftOut = drafts.find((d) => d.prompt === 'bank playfulness q');
     assert.ok(bankDraftOut, 'the bank-drawn draft is included in the round');
@@ -179,8 +183,8 @@ async function run() {
   }
 
   {
-    // Partial bank coverage: conscientiousness wants 3 (AXIS_TIER_COUNTS),
-    // the bank has only 1 to give — the other 2 must still come from AI.
+    // Partial bank coverage: conscientiousness has no answers, so allocateRound
+    // gives it 3; the bank has only 1 to give — the other 2 must come from AI.
     const bankDraft: QuestionDraft = {
       axis: 'conscientiousness',
       prompt: 'bank conscientiousness q',
@@ -189,7 +193,8 @@ async function run() {
     let conscientiousnessRequestedCount = 0;
     let seq = 0;
 
-    const drafts = await composeOngoingRound(me, [], settledTracks, {
+    const noConscientiousness = settledTracks.filter((row) => row.axis !== 'conscientiousness');
+    const drafts = await composeOngoingRound(me, [], noConscientiousness, {
       fetchRecentTexts: async () => [],
       fetchBankCandidates: async (axis) =>
         axis === 'conscientiousness' ? [{ id: 'bank-partial', draft: bankDraft }] : [],
@@ -221,14 +226,14 @@ async function run() {
       saveItems: async () => {},
     });
 
-    assert.equal(drafts.length, TIERED_ROUND_SIZE, 'partial bank coverage still lands on the full tiered round size');
+    assert.equal(drafts.length, ONGOING_ROUND_SIZE, 'partial bank coverage still lands on the full round size');
     assert.equal(
       conscientiousnessRequestedCount,
       2,
       'AI is asked for exactly the shortfall (3 needed - 1 from bank = 2), not the full axis count again',
     );
     const conscientiousnessDrafts = drafts.filter((d) => d.axis === 'conscientiousness');
-    assert.equal(conscientiousnessDrafts.length, 3, 'the axis still totals its full tiered count (1 bank + 2 AI)');
+    assert.equal(conscientiousnessDrafts.length, 3, 'the axis still totals its full allocation (1 bank + 2 AI)');
     ok('composeOngoingRound: partial bank coverage — the AI fallback fills only the exact shortfall, not the whole axis');
   }
 
@@ -267,7 +272,7 @@ async function run() {
       saveItems: async () => {},
     });
 
-    assert.equal(drafts.length, TIERED_ROUND_SIZE, 'a recordBankUsage rejection does not abort the round');
+    assert.equal(drafts.length, ONGOING_ROUND_SIZE, 'a recordBankUsage rejection does not abort the round');
     assert.ok(
       drafts.some((d) => d.prompt === 'bank playfulness q, usage-bump fails'),
       'the bank draft is still included even though its usage bump failed',
@@ -322,37 +327,75 @@ async function run() {
 
     assert.equal(
       drafts.length,
-      TIERED_ROUND_SIZE,
+      ONGOING_ROUND_SIZE,
       'a persistent AI shortfall on one axis is still made up by the bank-fallback pass, so the round never ships short',
     );
     assert.ok(
       drafts.some((d) => d.prompt === 'bank playfulness, ai kept failing'),
       'the fallback pass actually pulls the missing axis from the bank pool',
     );
-    ok('composeOngoingRound: AI persistently fails an axis → bank-fallback pass fills it, round still lands on the full tiered size');
+    ok('composeOngoingRound: AI persistently fails an axis → bank-fallback pass fills it, round still lands on the full size');
   }
 
   {
-    // 2026-10-01: straight after the 50, ten axes sit on 2 answers. The round
-    // composed for that profile must serve them first and give each 2.
-    const afterIntake: TraitTrack[] = settledTracks.map((row) => ({
+    // An account that finished the OLD 50: ten traits sit on 2 answers. The
+    // round serves each of them first, one apiece (their third), and the
+    // twelve moved extras it already answered in the old intake are skipped.
+    const oldFifty: TraitTrack[] = settledTracks.map((row) => ({
       ...row,
-      answerCount: ['openness', 'conscientiousness', 'extraversion'].includes(row.axis)
-        ? 6
-        : ['agreeableness', 'conflict_assertiveness', 'relatedness'].includes(row.axis)
-          ? 4
-          : 2,
+      answerCount: LEGACY_INTAKE_AXIS_COUNTS[row.axis],
     }));
-    const lagging = new Set(afterIntake.filter((row) => row.answerCount < 3).map((row) => row.axis));
+    const lagging = new Set(oldFifty.filter((row) => row.answerCount < 3).map((row) => row.axis));
     assert.equal(lagging.size, 10);
+    const movedExtra = ROUND_ONLY_BANK.find((d) => d.axis === 'openness')!;
+    let servedMovedExtra = false;
     const generated = new Map<string, number>();
-    const drafts = await composeOngoingRound(me, [], afterIntake, noBankDeps(generated, { value: false }));
-    assert.equal(drafts.length, TIERED_ROUND_SIZE, 'a lagging-first round is still 25 questions');
+    const deps = noBankDeps(generated, { value: false });
+    const drafts = await composeOngoingRound(me, [], oldFifty, {
+      ...deps,
+      fetchBankCandidates: async (axis) =>
+        axis === 'openness' ? [{ id: 'moved-extra', draft: movedExtra }] : [],
+      saveItems: async (items) => {
+        for (const item of items) {
+          if (item.prompt === movedExtra.prompt) servedMovedExtra = true;
+          generated.set(item.prompt, 1);
+        }
+      },
+    });
+    assert.equal(drafts.length, ONGOING_ROUND_SIZE, 'still 16');
     for (const axis of lagging) {
-      assert.equal(drafts.filter((d) => d.axis === axis).length, 2, `${axis} gets 2 questions in the round after the 50`);
+      assert.equal(drafts.filter((d) => d.axis === axis).length, 1, `${axis} gets its third question`);
     }
-    assert.equal(drafts.filter((d) => !lagging.has(d.axis)).length, 5, 'axes already at the floor share the other 5');
-    ok('composeOngoingRound: the round after the 50 gives each of the ten 2-answer axes 2 questions');
+    assert.deepEqual(
+      [...new Set(drafts.slice(0, 10).map((d) => d.axis))].sort(),
+      [...lagging].sort(),
+      'the short traits are served first',
+    );
+    assert.ok(!servedMovedExtra, 'a moved extra this account answered in the old intake is never served again');
+    ok('composeOngoingRound: an old-50 account gets one third question on each short trait, first, and never a moved extra it already answered');
+  }
+
+  {
+    // A trait the AI AND the bank both fail on: the round is topped up from
+    // other traits under the cap, so it still lands on 16 and still pays.
+    let seq = 0;
+    const drafts = await composeOngoingRound(me, [], settledTracks, {
+      fetchRecentTexts: async () => [],
+      fetchBankCandidates: async (axis) =>
+        axis === 'openness'
+          ? []
+          : [{ id: `bank-${axis}-${seq}`, draft: { axis, prompt: `bank top-up ${axis} ${seq++}`, options: [{ text: 'a', value: 0.2 }, { text: 'b', value: 0.8 }] } }],
+      recordBankUsage: async () => {},
+      addToBankPool: async () => {},
+      generateBatch: async () => [],
+      saveItems: async () => {},
+    });
+    assert.equal(drafts.length, ONGOING_ROUND_SIZE, 'topped up to 16');
+    assert.equal(drafts.filter((d) => d.axis === 'openness').length, 0);
+    const perAxis = new Map<string, number>();
+    for (const d of drafts) perAxis.set(d.axis, (perAxis.get(d.axis) ?? 0) + 1);
+    assert.ok([...perAxis.values()].every((n) => n <= 3), 'the top-up never passes the per-trait cap');
+    ok('composeOngoingRound: a trait nobody can fill is replaced from other traits, under the cap — the round is still 16');
   }
 
   console.log(`\n${passed} ongoing-round checks passed`);

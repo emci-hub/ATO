@@ -11,6 +11,7 @@ import { generateOngoingRoundBatch } from './generate';
 import type { OngoingRoundMe } from './ongoing-round';
 import { axesBelowReserve } from './prewarm';
 import { buildQuestionsPrompt } from './prompt';
+import { allocateRound } from './tiered-axis-plan';
 
 /**
  * Real wiring for the bank-pool prewarm (see prewarm.ts for why this exists
@@ -85,7 +86,9 @@ export async function prewarmBankPool(
     if (!(await offCooldown(now))) return;
 
     const depth = await fetchBankPoolDepth();
-    const wanted = axesBelowReserve(depth);
+    // Sized by this person's next-round plan: the traits they need most are
+    // the ones whose supply has to be deepest.
+    const wanted = axesBelowReserve(depth, undefined, allocateRound(tracks));
     if (totalCount(wanted) === 0) return;
 
     // Stamp BEFORE generating, not after: a pass that starts and then fails

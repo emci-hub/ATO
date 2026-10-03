@@ -32,12 +32,15 @@ import { localYmd } from '@/lib/local-date';
 import { withTimeout } from '@/lib/timeout';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
+import { AXIS_SHORT_NAME } from '@/lib/axis-poles';
+import { categoryWaitingLine } from '@/lib/questions/staged-intake-copy';
+import { ONGOING_ROUND_SIZE } from '@/lib/questions/tiered-axis-plan';
 
 /** A reroll writes this category again: 1 ATO token, once per category per day. */
 export const CATEGORY_REWRITE_LABEL = `Reroll · ${atoPriceLine('category_reroll')}`;
 export const CATEGORY_REROLL_ALREADY_COPY = 'Already rerolled today. It opens again tomorrow.';
 export const CATEGORY_NOT_READY_COPY =
-  'Your next 25 in Questions get it there. Nothing was generated.';
+  `Your next ${ONGOING_ROUND_SIZE} in Questions get it there. Nothing was generated.`;
 export const CATEGORY_ERROR_COPY = 'Couldn’t load this one just now.';
 
 /**
@@ -48,6 +51,17 @@ export function categoryNeedsLine(reading: CategoryReading): string {
   const need = reading.def.shape === 'map' ? 2 : reading.def.minStable;
   const have = Math.min(reading.stableAxes.length, need);
   return `Needs ${need} settled trait${need === 1 ? '' : 's'} behind it — you have ${have}.`;
+}
+
+/**
+ * Names the traits a closed category is waiting on (staged intake, 2026-10-02),
+ * so it never reads blank; the generic line only when every trait it uses is
+ * already settled (it then needs a different mix, which a round also brings).
+ */
+export function categoryWaitingCopy(reading: CategoryReading): string {
+  const settled = new Set(reading.stableAxes);
+  const waiting = reading.def.axes.filter((axis) => !settled.has(axis)).map((axis) => AXIS_SHORT_NAME[axis]);
+  return waiting.length > 0 ? `${categoryWaitingLine(waiting)} Nothing was generated.` : CATEGORY_NOT_READY_COPY;
 }
 
 /**
@@ -354,7 +368,7 @@ export function CategoriesFold({
                   </ThemedText>
                 ) : state === 'not_ready' ? (
                   <ThemedText type="small" themeColor="textSecondary">
-                    {categoryNeedsLine(reading)} {CATEGORY_NOT_READY_COPY}
+                    {categoryNeedsLine(reading)} {categoryWaitingCopy(reading)}
                   </ThemedText>
                 ) : state === 'error' ? (
                   <View style={styles.inline}>

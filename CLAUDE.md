@@ -43,8 +43,8 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
 - **Crisis card is static** — never a generated number, never a guessed region.
 - **Dev testing uses the dev-test user** (`ato-dev@example.com` / `@atodev`). **Two
   things may act on the SIGNED-IN account's own data pre-launch (emci, 2026-10-01):**
-  the "Jump this account" stages (`applyDevIntakeStagePreset`: 49 of 50, the 50, round 1
-  finished, all 16 settled), which any signed-in account may use on itself, and
+  the "Jump this account" stages (`applyDevIntakeStagePreset`: first read 16, set 2 done
+  32, one short 47, the 48, round 1 finished, the old 50), which any signed-in account may use on itself, and
   "Start over" (`start_over_my_test_data`, wave76), which is root only on the server and
   keeps the account and its token balance. Both take two taps. Deleting a profile to
   re-run the sign-up form (`reset_dev_test_user`) stays dev-test-user only. Agents still

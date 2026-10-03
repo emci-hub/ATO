@@ -148,16 +148,16 @@ The same names, words and quotes are used in the two other explanations (both cl
 
 The trait names also head each question on the Questions screen and the "Traits answered" list.
 
-## 4. Unlock and after-50 wording (unchanged, factual)
+## 4. Unlock and after-intake wording (DRAFT again — reworded for the 48, see §7)
 
-- Open now: Your daily insight, on Home · Categories, on Explore · Your next 25 questions, here
-- What your next 25 are for: A third answer on each of your 16 traits, which is what a trait needs to settle · Your Story on Home, which needs more settled traits first · More categories on Explore · +21 ATO tokens
+- Open now: Your daily insight, on Home · Categories, on Explore · Next 16 questions, here
+- What your next 16 are for: Another look at the traits that are still settling or pulled two ways, out of your 16 · Your Story on Home, as more traits settle · More categories on Explore · +21 ATO tokens
 - Not open yet: Sage and Legends are being rebuilt. Nothing you do here unlocks them yet.
 - +21 ATO tokens, in your balance on You
-- A trait settles after three answers that agree. The 50 give most traits two, so they read as still settling until your next 25.
+- A trait settles after three answers. All 48 give every trait three; a trait whose answers pulled two ways gets asked again next round.
 - Round complete
-- After a round: "N of 16 settled. Your next 25 keep settling the rest." or, once everything is settled, "N of 16 settled. Every round from here sharpens your reads."
-- Locked line: "Locked — finish all 50 questions in the Questions tab to unlock this (N of 50 done)."
+- After a round: "N of 16 settled. Your next 16 keep settling the rest." or, once everything is settled, "N of 16 settled. Every round from here sharpens your reads."
+- Locked line: "Locked — finish all 48 questions in the Questions tab to unlock this (N of 48 done)."
 
 The "Traits answered" checklist on Explore (unchanged):
 - Traits answered
@@ -189,12 +189,41 @@ Idle lines:
 - Yes, I felt that.
 - Nothing to report. I checked twice.
 
-Milestones he announces:
-- Halfway through the 50: 25 answered. The other 25 open your insight, categories and your next rounds.
-- 12 answers in: Twelve down. Past the small-talk stage.
-- 24 answers in: Twenty-four in. This is officially a habit.
-- 36 answers in: Thirty-six. The end of the 50 is in sight.
+Milestones he announces (the 12/24/36/50 count lines retired with the 50 — the three set payoffs in §7 replace them):
 - Halfway there: Half of your traits have settled. The other half is still deciding.
 - 3-day streak: Three days in a row. That counts as a pattern now.
 - 7-day streak: Seven days straight. A whole week of showing up.
 - 21-day streak: Twenty-one days. This is just part of the day now.
+
+## 7. Staged intake: 48 questions in 3 sets of 16 (NEW — draft, `STAGED_INTAKE_COPY_REVIEWED = false`)
+
+All strings live in `src/lib/questions/staged-intake-copy.ts`, except the questions (bank.ts).
+
+**The ten restored third questions** (one per trait that had only two; options listed high → low on the trait):
+
+1. Composure — "A one-word reply lands and it could be read two ways." · I read it plain and move on / I reread it once, then let it go / I reread it a few times
+2. Reassurance (the softer one) — "You sent a long message an hour ago. It says Read." · I check back more than I'd admit / I notice, then put the phone down / I forget I sent it
+3. Personal space — "Someone starts texting you good morning every day." · My replies get slower (high) / Nice, in small doses / I like it (low)
+4. Compromise — "The group chat is arguing and you know you're right." · I let it go to keep the chat calm / I say it once, then drop it / I send the link that proves it
+5. Independence — "Saturday's calendar is empty and nobody has texted." · Perfect, the day is mine / Nice for a morning, then I make plans / I start texting people for plans
+6. Confidence — "Someone at work says 'this is your area, right?'" · Fair, it is / Probably, I'd double-check / I'm sure they mean someone else
+7. Growth — "A friend posts day 60 of learning something new." · Give me 60 days and I could too / Depends on the thing / Some people are just built for it
+8. Ownership — "Someone asks how next year's looking." · Mostly up to what I do / Half me, half luck / Depends what happens
+9. Self-belief — "A big task has sat in your to-do app for two weeks." · I pick any piece and start / I break it down, then wait a bit / I keep moving it to tomorrow
+10. Playfulness — "The group chat has a running joke." · I started it / I keep it going / I just react with a laugh
+
+The original 2-option wordings (e.g. "You need reassurance more often than you would like to admit.") are kept as round-only questions, not in the intake.
+
+**New lines:**
+- Set header: "Set 1 of 3 · one question for each trait"
+- Mini guy after set 1 (title "First read"): "Sixteen down — quicker than you answer most texts. Every trait has a first lean now."
+- Mini guy after set 2 (title "Two of three"): "Thirty-two. More answers than your last group-chat poll got. One more set."
+- Full-profile reveal (title "You finished all 48"): "All 48. You finished something without leaving it in a tab. Your full profile is open."
+- Mini guy after the reveal: "Insight, categories and your next 16 are open."
+- A trait whose answers pulled two ways: "Settled, loosely — your answers pulled two ways. The next round checks again."
+- Round button: "Next 16 questions" · while building: "Putting together your next 16…" · error: "Couldn't put together your next 16 — check your connection and try again."
+- Old-50 accounts with the new third questions: "Ten traits got a third question. Optional — nothing you've opened goes anywhere."
+- A closed category: "Needs 2 settled traits behind it — you have 1. Waiting on Composure and Growth. Your next round asks. Nothing was generated."
+- Questions progress: "4 of 16 in this set · 4 of 16 traits"
+- Token history: "Finished the intake questions", "Finished a round"
+

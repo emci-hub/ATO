@@ -14,6 +14,27 @@ function isAxis(value: unknown): value is TraitAxis {
 const MAX_PROMPT_LENGTH = 400;
 
 /**
+ * The option values every authored question uses. AI values are snapped to
+ * the nearest one (a tie goes to the middle), so every question — bank or AI
+ * — moves a trait on the same scale and the settle math treats them alike.
+ * Staged intake red-team, 2026-10-02.
+ */
+export const OPTION_VALUE_STEPS = [0.2, 0.5, 0.8] as const;
+
+export function snapOptionValue(value: number): number {
+  let best: number = OPTION_VALUE_STEPS[1];
+  let bestGap = Math.abs(value - best);
+  for (const step of OPTION_VALUE_STEPS) {
+    const gap = Math.abs(value - step);
+    if (gap < bestGap - 1e-9) {
+      best = step;
+      bestGap = gap;
+    }
+  }
+  return best;
+}
+
+/**
  * Every reject path is logged. The parser used to return null in silence, so a
  * round that asked for 5 questions could come back with 3 and nothing said why.
  * `category` is not available here — it is only ever set by the static bank —
@@ -54,7 +75,7 @@ function parseOption(raw: unknown): QuestionOption | null {
   const text = typeof row.text === 'string' ? row.text.trim() : '';
   const value = typeof row.value === 'number' ? row.value : Number(row.value);
   if (!text || text.length > 120 || !Number.isFinite(value)) return null;
-  return { text, value: clamp01(value) };
+  return { text, value: snapOptionValue(clamp01(value)) };
 }
 
 /**
@@ -133,6 +154,12 @@ export function parseQuestionDraft(raw: unknown): QuestionDraft | null {
       row.axis,
       promptLength,
     );
+    return null;
+  }
+  // After snapping, a question whose options all land on the same value
+  // cannot move the trait either way: it measures nothing.
+  if (new Set(options.map((opt) => opt.value)).size < 2) {
+    logDrop('options do not differ after snapping to 0.2/0.5/0.8', row.axis, promptLength);
     return null;
   }
   const primaryAxes = parseAxisWeightList(row.primaryAxes, 2);

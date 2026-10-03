@@ -22,6 +22,18 @@ import { type TraitTrack } from '@/lib/trait-stability';
 import { type TraitAxis } from '@/lib/traits';
 import { applyQuestionAnswer } from '@/lib/questions/answer';
 import { bankProgressForAxis, bankTotalProgress } from '@/lib/questions/local';
+import {
+  currentIntakeSet,
+  hasOptionalLegacyQuestions,
+  INTAKE_SETS,
+} from '@/lib/questions/intake-stage';
+import {
+  intakeSetHeader,
+  LEGACY_NEW_QUESTIONS_LINE,
+  nextRoundLabel,
+  STAGED_INTAKE_COPY_REVIEWED,
+} from '@/lib/questions/staged-intake-copy';
+import { ONGOING_ROUND_SIZE } from '@/lib/questions/tiered-axis-plan';
 import { fullProfileLockedLine, isFullProfileDone } from '@/lib/full-profile-gate';
 import {
   ROUND_COMPLETE_TITLE,
@@ -121,10 +133,9 @@ export function QuestionsFold({
   }
 
   const progress = bankTotalProgress(tracks ?? []);
-  // Full Profile is exactly the frozen intake's 50 questions (tiered
-  // per-axis counts, trait-system redesign §2/§3 — no longer a flat 3) —
-  // once every axis has all of its own drafts, the whole section goes
-  // read-only. Re-answering past that point would only add an invisible
+  // Full Profile is the intake's 48 questions, 3 per trait, asked as 3 sets
+  // of 16 (staged intake, 2026-10-02) — once every trait has its 3 (or the
+  // account finished the old 50), the whole section goes read-only. Re-answering past that point would only add an invisible
   // extra EWMA sample (no milestone, no stability change worth showing), so
   // it's clearer to just stop offering it than to let taps silently do
   // nothing meaningful.
@@ -132,8 +143,8 @@ export function QuestionsFold({
   // haven't loaded yet, which is exactly the not-ready case the flag is for.
   const fullProfileLocked = isFullProfileDone(tracks ?? [], tracks != null);
 
-  // ATO tokens: +21 for finishing the 50, once ever. The server enforces the
-  // once (and that 50 answers exist), so asking again on a later visit is a
+  // ATO tokens: +21 for finishing the intake, once ever. The server enforces
+  // the once (and that every trait has its 3, or the old 50 exist; wave78), so asking again on a later visit is a
   // harmless no-op that also back-pays an account that finished earlier. Not an
   // AI call. One ask per mount.
   const intakeClaimAsked = useRef(false);
@@ -144,27 +155,75 @@ export function QuestionsFold({
   }, [fullProfileLocked, onUpdated]);
 
   const bankAxes = uniqueCategoryAxes(liveCategoryDefs);
+  // Set-major, not trait-major: set N is draft N-1 of every trait, so every
+  // trait moves one step per set (it used to be all of one trait, then the
+  // next, which left the last pages always the same four traits). Only the
+  // set in progress is on screen; its own storage key starts it on page 1.
+  const set = currentIntakeSet(tracks ?? []);
+  const setNumber = set?.set ?? null;
+  const optionalLegacy = hasOptionalLegacyQuestions(tracks ?? []);
   const bankRowsForAxis = useCallback(
-    (axis: TraitAxis): CategoryQuestionRow[] =>
-      bankProgressForAxis(axis, tracks ?? []).map((row) => ({
-        key: `${row.axis}-${row.variant}`,
-        axis: row.axis,
-        draft: row.draft,
-        answered: row.state === 'answered',
-      })),
-    [tracks],
+    (axis: TraitAxis): CategoryQuestionRow[] => {
+      if (setNumber == null) return [];
+      const row = bankProgressForAxis(axis, tracks ?? [])[setNumber - 1];
+      if (!row) return [];
+      return [
+        {
+          key: `${row.axis}-${row.variant}`,
+          axis: row.axis,
+          draft: row.draft,
+          answered: row.state === 'answered',
+        },
+      ];
+    },
+    [tracks, setNumber],
   );
   const bankCompletedAxes = completedAxesFrom(bankAxes, bankRowsForAxis);
   const bankRows = bankAxes.flatMap((axis) => bankRowsForAxis(axis));
+  const setPager =
+    set && bankRows.length > 0 ? (
+      <>
+        <ThemedText type="smallBold">{intakeSetHeader(set.set, INTAKE_SETS)}</ThemedText>
+        {!STAGED_INTAKE_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
+          <ThemedText type="code" themeColor="textSecondary">
+            Draft copy — waiting on emci review.
+          </ThemedText>
+        ) : null}
+        <PagedQuestions
+          // A new set is a new pager: remount so it starts on page 1 with no
+          // "missed" flags carried over from the set just finished.
+          key={`set-${set.set}`}
+          // Scoped per account AND per set. This key backs both the
+          // remembered page position (category-page-position.ts) and the
+          // answered-option stamps (answered-option-storage.ts); per set, each
+          // set opens on its first page.
+          storageKey={`full-profile:${me.id}:set${set.set}`}
+          rows={bankRows}
+          progressLabel={`${set.answered} of ${set.size} in this set · ${bankCompletedAxes.length} of ${bankAxes.length} traits`}
+          onSaveBatch={saveBankAnswers}
+        />
+      </>
+    ) : null;
 
   const body = (
     <View style={styles.body}>
       {fullProfileLocked ? (
-        // The finished 50-question bank is gone from the screen entirely
-        // once a round exists — it used to stay visible (locked) with the
-        // round appended below as a small "Submit" sub-block, which read as
-        // unrelated/broken UI. Replacing it outright, not stacking.
-        <OngoingRoundFold me={me} history={history} tracks={tracks ?? []} onUpdated={onUpdated} />
+        // The finished intake is gone from the screen entirely once a round
+        // exists — it used to stay visible (locked) with the round appended
+        // below, which read as unrelated/broken UI. Replacing it outright.
+        // One exception: an account that finished the OLD 50 still has the
+        // restored third questions, offered as optional above its round.
+        <>
+          {optionalLegacy ? (
+            <>
+              <ThemedText type="small" themeColor="textSecondary">
+                {LEGACY_NEW_QUESTIONS_LINE}
+              </ThemedText>
+              {setPager}
+            </>
+          ) : null}
+          <OngoingRoundFold me={me} history={history} tracks={tracks ?? []} onUpdated={onUpdated} />
+        </>
       ) : (
         <>
           {progress.total > 0 ? (
@@ -173,22 +232,14 @@ export function QuestionsFold({
                 {progress.answered} of {progress.total} answered
               </ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
-                {fullProfileLockedLine(progress, 'your next 25, Home insight and story, and Explore categories')}
+                {fullProfileLockedLine(
+                  progress,
+                  `your next ${ONGOING_ROUND_SIZE}, Home insight and story, and Explore categories`,
+                )}
               </ThemedText>
             </>
           ) : null}
-          <PagedQuestions
-            // Scoped per account, not just per question-set — this key backs
-            // BOTH the remembered scroll position (category-page-position.ts,
-            // pre-existing) and the answered-option stamp storage
-            // (answered-option-storage.ts, new). Unscoped, a second account
-            // signed in on the same device would see the first account's
-            // answer stamps on questions it never answered (found in review).
-            storageKey={`full-profile:${me.id}`}
-            rows={bankRows}
-            progressLabel={`${bankCompletedAxes.length} of ${bankAxes.length} traits covered`}
-            onSaveBatch={saveBankAnswers}
-          />
+          {setPager}
         </>
       )}
     </View>
@@ -203,8 +254,8 @@ export function QuestionsFold({
   return body;
 }
 
-export const NEXT_ROUND_LABEL = 'Next 25 questions';
-export const NEXT_ROUND_BUSY_LABEL = 'Putting together your next 25…';
+export const NEXT_ROUND_LABEL = nextRoundLabel(ONGOING_ROUND_SIZE);
+export const NEXT_ROUND_BUSY_LABEL = `Putting together your next ${ONGOING_ROUND_SIZE}…`;
 
 /**
  * Post-Full-Profile ongoing round (T-03, core loop redesign §2/§3). Shown
@@ -306,8 +357,8 @@ function OngoingRoundFold({
         sage_knows: me.sage_knows,
         facts: me.facts,
       };
-      // 40s, not 25s: composing a 25-item round can take several sequential
-      // AI calls (up to 5 chunks, see chunked-generate.ts) — each now has
+      // 40s, not 25s: composing a 16-item round can take several sequential
+      // AI calls (up to 4 chunks, see chunked-generate.ts) — each now has
       // its own bounded per-call timeout (ai/generate.ts, ai-generate edge
       // function), but the outer budget still needs enough room for a
       // realistic (not pathological) chain to finish rather than always
@@ -467,7 +518,7 @@ function OngoingRoundFold({
         <>
           <ThemedText type="small" themeColor="textSecondary">
             {errorKind === 'start'
-              ? "Couldn't put together your next 25 — check your connection and try again."
+              ? `Couldn't put together your next ${ONGOING_ROUND_SIZE} — check your connection and try again.`
               : "Couldn't load your next round. Try again."}
           </ThemedText>
           {errorDetail && PRE_LAUNCH_DEV ? (

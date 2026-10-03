@@ -110,6 +110,7 @@ import {
   startOverMyTestData,
 } from '@/lib/dev-test-user';
 import { bankTotalProgress } from '@/lib/questions/local';
+import { currentIntakeSet, intakeStage } from '@/lib/questions/intake-stage';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import { settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
 
@@ -572,6 +573,7 @@ function JumpThisAccount() {
   if (!PRE_LAUNCH_DEV || !me) return null;
 
   const progress = bankTotalProgress(tracks);
+  const set = currentIntakeSet(tracks);
   const here = devStageMatching(tracks);
 
   async function jump(stage: DevIntakeStageId) {
@@ -600,7 +602,9 @@ function JumpThisAccount() {
         the first +21 can be tested.
       </ThemedText>
       <ThemedText type="code" themeColor="textSecondary">
-        You are here: {progress.answered} of {progress.total} answered · {settledAxisLabel(tracks)}
+        You are here: {progress.answered} of {progress.total} answered ·{' '}
+        {set ? `set ${set.set}: ${set.answered} of ${set.size}` : `stage ${intakeStage(tracks)}`} ·{' '}
+        {settledAxisLabel(tracks)}
       </ThemedText>
       {error ? <ThemedText type="small">{error}</ThemedText> : null}
       {DEV_INTAKE_STAGES.map((stage) => (
@@ -650,7 +654,7 @@ function StartOver() {
     try {
       await startOverMyTestData();
       await refresh();
-      setNote('Done. This account is at 0 of 50. Your token balance is unchanged.');
+      setNote('Done. This account is at 0 of 48. Your token balance is unchanged.');
     } catch (err) {
       setNote(err instanceof Error ? err.message : 'Could not start this account over.');
     } finally {
@@ -673,7 +677,7 @@ function StartOver() {
               ? 'clearing…'
               : twoTap.armed === 'start-over'
                 ? 'Tap again to clear this account’s answers'
-                : 'Start over (0 of 50)'
+                : 'Start over (0 of 48)'
           }
           selected={false}
           onPress={() => void startOver()}

@@ -22,7 +22,11 @@
 import assert from 'node:assert/strict';
 
 import { QUESTIONS_BANK } from '../src/lib/questions/bank';
-import { AXIS_TIER_COUNTS, TIERED_ROUND_SIZE } from '../src/lib/questions/tiered-axis-plan';
+import { ONGOING_ROUND_SIZE } from '../src/lib/questions/tiered-axis-plan';
+import { INTAKE_SETS } from '../src/lib/questions/intake-stage';
+
+/** Staged intake (2026-10-02): every set and every steady-state round is one answer per trait. */
+const PER_AXIS_PER_SET = 1;
 import { archetypeCode, midpointHighLow } from '../src/lib/legends64/classify';
 import {
   applyEwmaAnswer,
@@ -157,7 +161,7 @@ function runArm(arm: Arm, seed: number): ArmResult {
       // Centre-heavy prior = mean of two uniforms (a cheap Beta(2,2)), so the
       // conclusion is not an artifact of assuming true traits are uniform.
       const latent = arm.centreHeavy ? (rand() + rand()) / 2 : rand();
-      const n = AXIS_TIER_COUNTS[axis] * arm.rounds;
+      const n = PER_AXIS_PER_SET * arm.rounds;
       const track = replayAxis(axis, latent, n, arm.consistency, rand);
       if (!track) continue;
       values.push(track.value);
@@ -219,18 +223,18 @@ console.log(
 console.log(`  option sets: ${OPTION_SETS.map((s) => `[${s.join('/')}]`).join(' ')}`);
 console.log(`  signals:     ${ALL_SIGNALS.join(', ')}`);
 console.log(`  slider only: ${SLIDER_STOPS.join(', ')}  (5 of 16 axes)`);
-console.log(`  round size:  ${TIERED_ROUND_SIZE} questions across ${TRAIT_AXES.length} axes`);
+console.log(`  set/round:   ${ONGOING_ROUND_SIZE} questions across ${TRAIT_AXES.length} axes (one each)`);
 console.log(`  N = ${N_USERS.toLocaleString()} simulated respondents per arm\n`);
 
 const ARMS: Arm[] = [
-  { label: 'R1  25 answers  c=0.85  uniform', rounds: 1, consistency: 0.85, centreHeavy: false },
-  { label: 'R2  50 answers  c=0.85  uniform', rounds: 2, consistency: 0.85, centreHeavy: false },
-  { label: 'R4 100 answers  c=0.85  uniform', rounds: 4, consistency: 0.85, centreHeavy: false },
-  { label: 'R2  50 answers  c=1.00  uniform', rounds: 2, consistency: 1.0, centreHeavy: false },
-  { label: 'R2  50 answers  c=0.70  uniform', rounds: 2, consistency: 0.7, centreHeavy: false },
-  { label: 'R2  50 answers  c=0.55  uniform', rounds: 2, consistency: 0.55, centreHeavy: false },
-  { label: 'R2  50 answers  NULL    uniform', rounds: 2, consistency: 0.0, centreHeavy: false },
-  { label: 'R2  50 answers  c=0.85  centre ', rounds: 2, consistency: 0.85, centreHeavy: true },
+  { label: 'S1  16 answers  c=0.85  uniform', rounds: 1, consistency: 0.85, centreHeavy: false },
+  { label: 'S3  48 answers  c=0.85  uniform', rounds: 3, consistency: 0.85, centreHeavy: false },
+  { label: 'S6  96 answers  c=0.85  uniform', rounds: 6, consistency: 0.85, centreHeavy: false },
+  { label: 'S3  48 answers  c=1.00  uniform', rounds: 3, consistency: 1.0, centreHeavy: false },
+  { label: 'S3  48 answers  c=0.70  uniform', rounds: 3, consistency: 0.7, centreHeavy: false },
+  { label: 'S3  48 answers  c=0.55  uniform', rounds: 3, consistency: 0.55, centreHeavy: false },
+  { label: 'S3  48 answers  NULL    uniform', rounds: 3, consistency: 0.0, centreHeavy: false },
+  { label: 'S3  48 answers  c=0.85  centre ', rounds: 3, consistency: 0.85, centreHeavy: true },
 ];
 
 const results = new Map<string, ArmResult>();
@@ -292,12 +296,12 @@ console.log(`    even would be ${pct(N_USERS / 64, N_USERS)}`);
 
 /**
  * The number that decides whether midpointHighLow's exactly-0.50 tie matters.
- * Legends unlocks at 50 answers (LEGENDS_UNLOCK_THRESHOLD), and its six axes
- * are the best-sampled ones — tier 1/2 get 6 answers by then, tier 3 get 4 —
- * so their 0.50 mass is lower than the global figure. Measured here rather
+ * Legends unlocks at the full profile (48: 3 answers on every trait, staged
+ * intake 2026-10-02) — its six axes get 3 answers each by then, the same as
+ * every other trait. Measured here rather
  * than assumed, because the global number does NOT decay to zero.
  */
-console.log('\n  EXACTLY-0.50 ON THE SIX LEGENDS AXES, AT THE 50-ANSWER UNLOCK\n');
+console.log('\n  EXACTLY-0.50 ON THE SIX LEGENDS AXES, AT THE 48-ANSWER UNLOCK\n');
 const LEGEND_AXES: TraitAxis[] = [
   'conscientiousness',
   'extraversion',
@@ -314,7 +318,7 @@ const LEGEND_AXES: TraitAxis[] = [
   for (let u = 0; u < N_USERS; u += 1) {
     let userTied = false;
     for (const axis of LEGEND_AXES) {
-      const track = replayAxis(axis, rand(), AXIS_TIER_COUNTS[axis] * 2, 0.85, rand);
+      const track = replayAxis(axis, rand(), INTAKE_SETS, 0.85, rand);
       total += 1;
       if (track && track.value === 0.5) {
         tied += 1;

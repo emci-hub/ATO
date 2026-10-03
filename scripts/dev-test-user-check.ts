@@ -34,10 +34,12 @@ import {
   devStageMatching,
   planAfterRoundOne,
   planAllSettled,
+  planOldFifty,
 } from '../src/lib/dev-intake-stages';
+import { finishedLegacyIntake, hasOptionalLegacyQuestions, intakeStage } from '../src/lib/questions/intake-stage';
 import { isFullProfileDone } from '../src/lib/full-profile-gate';
 import { bankQuestionCount, bankTotalProgress } from '../src/lib/questions/local';
-import { roundAxisCounts } from '../src/lib/questions/tiered-axis-plan';
+import { allocateRound, ONGOING_ROUND_SIZE } from '../src/lib/questions/tiered-axis-plan';
 import { storyReady } from '../src/lib/sage-story';
 import {
   STABILITY_FLOOR_N,
@@ -115,12 +117,12 @@ function main() {
    * ---------------------------------------------------------------------- */
   const stagesSrc = read('src/lib/dev-intake-stages.ts');
   const bankTotal = bankTotalProgress([]).total;
-  assert.equal(bankTotal, 50, 'bank total must be 50 — the stages are written against it');
+  assert.equal(bankTotal, 48, 'bank total must be 48 — the stages are written against it');
   assert.equal(devBankSize(), bankTotal);
 
   assert.deepEqual(
     DEV_INTAKE_STAGES.map((row) => row.stage),
-    ['one-short', 'intake-done', 'round-one-done', 'all-settled'],
+    ['first-read', 'set-two', 'one-short', 'intake-done', 'round-one-done', 'old-fifty'],
   );
   for (const axis of TRAIT_AXES) {
     assert.ok(typeof DEV_INTAKE_PRESET_VALUES[axis] === 'number', `preset values missing axis ${axis}`);
@@ -130,7 +132,7 @@ function main() {
     assert.equal(devIntakeStageById(stage.stage), stage, `${stage.stage} lookup`);
     assert.doesNotMatch(`${stage.label} ${stage.hint}`, /Sage|Legend/, `${stage.stage} names a placeholder feature`);
   }
-  ok('4 jump stages in flow order, preset vector covers all 16 axes, no Sage/Legends wording');
+  ok('6 jump stages in flow order, preset vector covers all 16 axes, no Sage/Legends wording');
 
   // The source must be what a real answer writes, and must NOT be direct: a
   // direct source makes every later real answer count-only (me.ts
@@ -160,7 +162,7 @@ function main() {
     assert.equal(bankTotalProgress(tracksOf(plan)).answered, n);
   }
   assert.throws(() => devIntakeAnswerPlan(bankTotal + 1), /Cannot plan/, 'a plan bigger than the bank must throw, not clamp');
-  ok('devIntakeAnswerPlan sums to the target inside every axis cap for 0..50, and refuses 51');
+  ok('devIntakeAnswerPlan sums to the target inside every axis cap for 0..48, and refuses 49');
 
   // FAITHFUL TRACKS: each row equals the real scoring function run N times.
   for (const stage of DEV_INTAKE_STAGES) {
@@ -189,33 +191,47 @@ function main() {
 
   // What each stage means to the app, read through the real predicates.
   const at = (id: Parameters<typeof devIntakeStageById>[0]) => tracksOf(devIntakeStageById(id)!.plan());
+  const firstRead = at('first-read');
+  assert.equal(intakeStage(firstRead), 1, 'first read: every trait has one answer');
+  assert.equal(bankTotalProgress(firstRead).answered, 16);
+  assert.equal(isFullProfileDone(firstRead, true), false);
+  const setTwo = at('set-two');
+  assert.equal(intakeStage(setTwo), 2);
+  assert.equal(bankTotalProgress(setTwo).answered, 32);
+  assert.equal(settledAxisCount(setTwo, NOW), 0, 'nothing settles before the third answer');
+
   const oneShort = at('one-short');
   assert.equal(bankTotalProgress(oneShort).answered, bankTotal - 1);
   assert.equal(isFullProfileDone(oneShort, true), false, 'one short must still be locked');
 
   const done = at('intake-done');
   assert.equal(bankTotalProgress(done).answered, bankTotal);
-  assert.equal(isFullProfileDone(done, true), true, 'the 50 unlock Home / Explore / Next 25');
-  assert.equal(settledAxisCount(done, NOW), 6, 'six traits settle inside the 50');
-  assert.equal(storyReady(done, NOW), false, 'Story is not ready at 50 — it belongs to the next round');
+  assert.equal(isFullProfileDone(done, true), true, 'the 48 unlock Home / Explore / Next 16');
+  assert.equal(settledAxisCount(done, NOW), TRAIT_AXES.length, 'all 16 traits settle inside the 48');
 
   const roundOne = planAfterRoundOne();
   const intakePlan = devIntakeAnswerPlan(bankTotal);
-  const realRound = roundAxisCounts(tracksOf(intakePlan));
+  const realRound = allocateRound(tracksOf(intakePlan));
   for (const axis of TRAIT_AXES) {
     assert.equal(roundOne[axis], intakePlan[axis] + (realRound[axis] ?? 0), `${axis}: round 1 must be the round the app would compose`);
+    assert.equal(realRound[axis], 1, `${axis}: a settled, recent profile gets 1 per trait`);
   }
-  assert.equal(devPlanTotal(roundOne), bankTotal + 25);
+  assert.equal(devPlanTotal(roundOne), bankTotal + ONGOING_ROUND_SIZE);
   const afterRound = at('round-one-done');
   assert.equal(isFullProfileDone(afterRound, true), true);
-  assert.equal(isProfileSettled(afterRound, NOW), true, 'every trait settles in round 1');
-  assert.equal(storyReady(afterRound, NOW), true, 'Story is ready after round 1');
+  assert.equal(isProfileSettled(afterRound, NOW), true);
+
+  const oldFifty = at('old-fifty');
+  assert.equal(devPlanTotal(planOldFifty()), 50);
+  assert.equal(finishedLegacyIntake(oldFifty), true);
+  assert.equal(isFullProfileDone(oldFifty, true), true, 'the old 50 keep everything open');
+  assert.equal(hasOptionalLegacyQuestions(oldFifty), true, 'and offer the ten third questions as optional');
+  assert.equal(settledAxisCount(oldFifty, NOW), 6, 'six traits settled inside the old 50');
 
   const settledPlan = planAllSettled();
   assert.ok(TRAIT_AXES.every((axis) => settledPlan[axis] >= STABILITY_FLOOR_N));
-  assert.ok(TRAIT_AXES.some((axis) => settledPlan[axis] === STABILITY_FLOOR_N), 'the minimum: some trait sits exactly on the floor');
-  assert.equal(settledAxisCount(at('all-settled'), NOW), TRAIT_AXES.length);
-  ok('one short is locked; the 50 unlock with 6 settled and no Story; round 1 and all-settled read 16 of 16');
+  assert.deepEqual(settledPlan, intakePlan, 'all-settled is exactly the 48 now');
+  ok('set 1 and 2 read stage 1 and 2; one short is locked; the 48 settle all 16; round 1 is the real allocation; the old 50 stay open');
 
   // "You are here": each stage matches itself and nothing else; a real profile matches none.
   for (const stage of DEV_INTAKE_STAGES) {
@@ -223,13 +239,16 @@ function main() {
   }
   assert.equal(devStageMatching([]), null);
   assert.equal(devStageMatching(tracksOf(devIntakeAnswerPlan(12))), null);
+  assert.equal(devStageMatching(tracksOf(devIntakeAnswerPlan(40))), null);
   ok('devStageMatching marks exactly the stage the account sits on');
 
-  // Answer history: the first +21 needs 50 self_situation rows (wave52).
-  const wave52 = read('supabase/migrations/wave52_ato_tokens_fixes.sql');
-  assert.match(wave52, /source = 'self_situation'[\s\S]{0,80}if v_answer_count < 50 then/);
+  // Answer history: since wave78 the first +21 reads trait_tracks (every trait
+  // at 3); 50 self_situation rows stay one of its ways in (the old rule).
+  const wave78 = read('supabase/migrations/wave78_staged_intake.sql');
+  assert.match(wave78, /answer_count >= 3/);
+  assert.match(wave78, /source = 'self_situation'[\s\S]{0,200}v_answer_count < 50 then/);
   const history = devHistoryRows(intakePlan, 999);
-  assert.equal(history.length, bankTotal, 'a finished intake stands for 50 history rows');
+  assert.equal(history.length, bankTotal, 'a finished intake stands for 48 history rows');
   assert.ok(history.every((row) => row.source === 'self_situation'));
   for (const axis of TRAIT_AXES) {
     assert.equal(history.filter((row) => row.axis === axis).length, intakePlan[axis]);
@@ -340,7 +359,7 @@ function main() {
     assert.match(fnBody, new RegExp(`delete from public\\.${table} where user_id = uid;`), `server: clears ${table}`);
   }
   assert.match(wave76, /revoke all on function public\.start_over_my_test_data\(\) from public, anon;/);
-  assert.match(wave52, /foreign key \(pack_id\) references public\.question_packs\(id\) on delete cascade/, 'round token records go with their rounds');
+  assert.match(read('supabase/migrations/wave52_ato_tokens_fixes.sql'), /foreign key \(pack_id\) references public\.question_packs\(id\) on delete cascade/, 'round token records go with their rounds');
   ok('wave76: root + own account + invite-only, clears answers and the intake token record, never touches the balance');
 
   /* -------------------------------------------------------------------------

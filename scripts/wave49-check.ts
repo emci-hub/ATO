@@ -10,7 +10,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { QUESTIONS_BANK } from '../src/lib/questions/bank';
+import { LEGACY_INTAKE_PROMPTS, QUESTIONS_BANK, ROUND_ONLY_BANK } from '../src/lib/questions/bank';
+import type { QuestionDraft } from '../src/lib/questions/types';
 import { TRAIT_AXES } from '../src/lib/traits';
 
 let passed = 0;
@@ -73,14 +74,23 @@ assert.doesNotMatch(
 );
 ok('question_items.question_bank_item_id is a nullable FK; insert_question_pack (the only INSERT path on question_items) is untouched');
 
-// 5. Seed: exactly QUESTIONS_BANK.length rows, matching prompt text, axis coverage.
+// 5. Seed: the OLD 50-question intake, as it was when wave49 was applied.
+// Since the staged intake (2026-10-02) the intake is 48 and the old 50 live on
+// split between QUESTIONS_BANK and ROUND_ONLY_BANK, in the old order recorded
+// by LEGACY_INTAKE_PROMPTS. wave49 is applied and never edited, so this checks
+// it against that old order — every row, not a spot-check.
+const SEEDED_BANK: QuestionDraft[] = LEGACY_INTAKE_PROMPTS.map((row) => {
+  const draft = [...QUESTIONS_BANK, ...ROUND_ONLY_BANK].find((d) => d.prompt === row.prompt);
+  assert.ok(draft, `old intake prompt missing from the code: ${row.prompt}`);
+  return draft!;
+});
 const insertMatch = sql.match(/insert into public\.question_bank_pool[\s\S]+?on conflict \(prompt\) do nothing;/);
 assert.ok(insertMatch, 'seed insert block must exist');
 const insertBlock = insertMatch![0];
 const rowCount = (insertBlock.match(/'authored'\)/g) ?? []).length;
-assert.equal(rowCount, QUESTIONS_BANK.length, 'seed must insert exactly one row per QUESTIONS_BANK entry');
+assert.equal(rowCount, SEEDED_BANK.length, 'seed must insert exactly one row per old intake question');
 assert.match(insertBlock, /on conflict \(prompt\) do nothing/);
-ok(`seed inserts exactly ${QUESTIONS_BANK.length} rows (matches QUESTIONS_BANK.length), idempotent via on conflict (prompt) do nothing`);
+ok(`seed inserts exactly ${SEEDED_BANK.length} rows (the old intake), idempotent via on conflict (prompt) do nothing`);
 
 // Every one of the 50 rows, not a spot-check: parse each VALUES tuple back
 // out of the SQL and deep-compare axis/category/prompt/options against the
@@ -100,16 +110,16 @@ for (const m of insertBlock.matchAll(rowPattern)) {
     options: JSON.parse(unescapeSql(m[4])),
   });
 }
-assert.equal(parsedRows.length, QUESTIONS_BANK.length, 'row-parser must find exactly one parsed row per QUESTIONS_BANK entry (parser bug if this drifts from the earlier count check)');
-for (let i = 0; i < QUESTIONS_BANK.length; i++) {
-  const bank = QUESTIONS_BANK[i];
+assert.equal(parsedRows.length, SEEDED_BANK.length, 'row-parser must find exactly one parsed row per old intake question (parser bug if this drifts from the earlier count check)');
+for (let i = 0; i < SEEDED_BANK.length; i++) {
+  const bank = SEEDED_BANK[i];
   const seeded = parsedRows[i];
   assert.equal(seeded.axis, bank.axis, `row ${i}: axis mismatch (seed has "${seeded.axis}", bank.ts has "${bank.axis}")`);
   assert.equal(seeded.category ?? undefined, bank.category, `row ${i}: category mismatch`);
   assert.equal(seeded.prompt, bank.prompt, `row ${i}: prompt text mismatch`);
   assert.deepEqual(seeded.options, bank.options, `row ${i}: options mismatch`);
 }
-ok('all 50 seeded rows deep-match QUESTIONS_BANK at the same index: axis, category, prompt text, and options — not just a spot-check');
+ok('all 50 seeded rows deep-match the old intake (now QUESTIONS_BANK + ROUND_ONLY_BANK) at the same index: axis, category, prompt text, and options');
 
 // Every axis in the 16-axis vocabulary appears in question_bank_pool's own
 // check constraint (independent of question_items' constraint elsewhere).

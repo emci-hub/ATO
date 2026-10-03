@@ -24,6 +24,7 @@ import {
   SETTLED_EXPLAINER,
   UNLOCK_COPY_REVIEWED,
 } from '@/lib/questions/progressive-unlock';
+import { ONGOING_ROUND_SIZE } from '@/lib/questions/tiered-axis-plan';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { isProfileSettled, settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
 
@@ -56,7 +57,7 @@ import { isProfileSettled, settledAxisLabel, type TraitTrack } from '@/lib/trait
  * showing first and hiding after would flash it at everyone who has seen it.
  */
 /** What the mini guy says once the reveal card is closed. */
-export const BUDDY_AFTER_50_BODY = 'Insight, categories and your next 25 are open.';
+export const BUDDY_AFTER_50_BODY = `Insight, categories and your next ${ONGOING_ROUND_SIZE} are open.`;
 
 const REVEAL_DEF = MILESTONE_DEFS.find((def) => def.id === INTAKE_REVEAL_MILESTONE_ID);
 
@@ -113,7 +114,7 @@ export function FullProfileBanner({
     if (!userId) return;
     setDismissed(true);
     // The card says it in full; he follows up with the one-line version.
-    pushBuddyNote({ id: 'intake:done', title: REVEAL_DEF?.title ?? 'You finished the 50', body: BUDDY_AFTER_50_BODY, loud: true });
+    pushBuddyNote({ id: 'intake:done', title: REVEAL_DEF?.title ?? 'Full profile', body: BUDDY_AFTER_50_BODY, loud: true });
     persistCelebratedMilestones(userId, [INTAKE_REVEAL_SEEN_ID])
       .then(() => onSeen?.())
       .catch((err) => {

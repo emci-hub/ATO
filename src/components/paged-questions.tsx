@@ -45,8 +45,12 @@ function stampBackground(textSecondary: string): string {
   return rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.16)` : textSecondary;
 }
 
-/** Questions shown per page, book-style — the last page can be shorter. */
-const PAGE_SIZE = 5;
+/**
+ * Questions shown per page, book-style — the last page can be shorter. 4, not
+ * 5 (staged intake, 2026-10-02): a set of 16 and a round of 16 are each
+ * exactly 4 pages, so a set always ends on a clean page.
+ */
+const PAGE_SIZE = 4;
 
 /**
  * A flat, book-style pager over every question across every category — 5

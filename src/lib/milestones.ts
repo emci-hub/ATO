@@ -5,10 +5,18 @@
  * PRESENCE_MILESTONES, removed 2026-09-06 — confirmed zero real-account
  * firings) — current_streak below is the real day-streak equivalent.
  */
+import { INTAKE_TOTAL } from '@/lib/questions/intake-stage';
 import { bankQuestionCount } from '@/lib/questions/local';
+import {
+  INTAKE_SET_PAYOFF_LINES,
+  INTAKE_SET_PAYOFF_TITLES,
+  intakeRevealTitle,
+} from '@/lib/questions/staged-intake-copy';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
 export type MilestoneMetric =
+  /** `intakeStage(tracks)` — 1, 2, 3 = set 1, 2, 3 of the intake done. */
+  | 'intakeStage'
   | 'bankTotalProgress'
   | 'profile_percent'
   | 'current_streak'
@@ -56,43 +64,35 @@ const AXIS_COMPLETE_DEFS: readonly MilestoneDef[] = TRAIT_AXES.map((axis) => ({
 }));
 
 export const MILESTONE_DEFS: readonly MilestoneDef[] = [
+  /*
+   * The intake's three sets (staged intake, 2026-10-02). Each set ends with a
+   * payoff the mini guy says. Set 3 is the full-profile reveal itself
+   * (`profile_fully_unlocked` below), so it is not repeated as a bubble.
+   * The old answers_12/24/36/50 count milestones were retired with the 50;
+   * accounts that crossed them keep them in celebrated_milestone_ids, unread.
+   */
   {
-    // Id and threshold kept (progressive unlock §6). Copy changed 2026-10-01:
-    // Sage is a placeholder, so this must not announce it as open. See the
-    // unlock table in lib/questions/progressive-unlock.ts.
+    id: 'intake_set_1',
+    metric: 'intakeStage',
+    threshold: 1,
+    title: INTAKE_SET_PAYOFF_TITLES[0]!,
+    body: INTAKE_SET_PAYOFF_LINES[0]!,
+  },
+  {
+    id: 'intake_set_2',
+    metric: 'intakeStage',
+    threshold: 2,
+    title: INTAKE_SET_PAYOFF_TITLES[1]!,
+    body: INTAKE_SET_PAYOFF_LINES[1]!,
+  },
+  {
+    // Id kept (progressive unlock §6). Sage is a placeholder, so this is
+    // remembered silently (use-buddy-milestones) — set 2's payoff is the line.
     id: 'sage_unlocked',
-    metric: 'bankTotalProgress',
-    threshold: 25,
-    title: 'Halfway through the 50',
-    body: '25 answered. The other 25 open your insight, categories and your next rounds.',
-  },
-  {
-    id: 'answers_12',
-    metric: 'bankTotalProgress',
-    threshold: 12,
-    title: '12 answers in',
-    body: 'Twelve down. Past the small-talk stage.',
-  },
-  {
-    id: 'answers_24',
-    metric: 'bankTotalProgress',
-    threshold: 24,
-    title: '24 answers in',
-    body: 'Twenty-four in. This is officially a habit.',
-  },
-  {
-    id: 'answers_36',
-    metric: 'bankTotalProgress',
-    threshold: 36,
-    title: '36 answers in',
-    body: 'Thirty-six. The end of the 50 is in sight.',
-  },
-  {
-    id: 'answers_50',
-    metric: 'bankTotalProgress',
-    threshold: 50,
-    title: '50 answers in',
-    body: 'You have answered every question in the bank.',
+    metric: 'intakeStage',
+    threshold: 2,
+    title: 'Set 2 done',
+    body: 'Two answers on every trait.',
   },
   {
     id: 'profile_50',
@@ -123,33 +123,24 @@ export const MILESTONE_DEFS: readonly MilestoneDef[] = [
     body: 'Twenty-one days. This is just part of the day now.',
   },
   {
-    // Retargeted from `profile_settled` (isProfileSettled) to `bankTotalProgress`
-    // at the same 50-question threshold as `answers_50` (trait-system redesign
-    // §6, per emci's explicit call) — the tiered intake alone doesn't satisfy
-    // isProfileSettled for every axis, so that gate would have kept Legends
-    // locked past question 50 for most users. Now fires at the exact same
-    // crossing as legends.tsx's own tab-unlock check (legendsUnlocked).
+    // Fires at the full profile, the same crossing as `legendsUnlocked`
+    // (progressive-unlock.ts). Remembered silently: Legends is a placeholder.
     id: 'legends_unlocked',
-    metric: 'bankTotalProgress',
-    threshold: 50,
-    // Copy changed 2026-10-01: Legends is a placeholder, nothing opens yet.
-    title: 'All 50 answered',
+    metric: 'intakeStage',
+    threshold: 3,
+    title: `All ${INTAKE_TOTAL} answered`,
     body: 'Legends is being rebuilt, so it is not open yet.',
   },
   {
     // Separate from legends_unlocked above per §6: "plus a separate 'you are
-    // now fully unlocked' banner" — same 50-question crossing, distinct copy.
+    // now fully unlocked' banner" — same full-profile crossing, distinct copy.
     id: 'profile_fully_unlocked',
-    metric: 'bankTotalProgress',
-    threshold: 50,
-    // The after-50 reveal (components/full-profile-banner.tsx) shows this
-    // title and body and is remembered under this id
-    // (INTAKE_REVEAL_MILESTONE_ID). Scoped to what 50 answers really open:
-    // ten axes only reach 2 intake answers, below STABILITY_FLOOR_N, so Story
-    // and the settled-profile surfaces belong to the next round, and Sage and
-    // Legends are placeholders.
-    title: 'You finished the 50',
-    body: 'Your insight, your categories and your next 25 questions are open.',
+    metric: 'intakeStage',
+    threshold: 3,
+    // The after-intake reveal (components/full-profile-banner.tsx) shows this
+    // title and body (INTAKE_REVEAL_MILESTONE_ID). Set 3's payoff line.
+    title: intakeRevealTitle(INTAKE_TOTAL),
+    body: INTAKE_SET_PAYOFF_LINES[2]!,
   },
   ...AXIS_COMPLETE_DEFS,
 ];

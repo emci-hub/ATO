@@ -14,7 +14,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { TRAIT_AXES, type TraitAxis } from '../src/lib/traits';
-import { AXIS_TIER_COUNTS } from '../src/lib/questions/tiered-axis-plan';
+import { ONGOING_ROUND_SIZE } from '../src/lib/questions/tiered-axis-plan';
+import { INTAKE_SETS } from '../src/lib/questions/intake-stage';
 import {
   axesBelowReserve,
   reserveTargetFor,
@@ -41,10 +42,20 @@ function fullDepth(): Partial<Record<TraitAxis, number>> {
 
 // --- pure threshold logic ----------------------------------------------------
 
+// Per-round demand comes from this person's next-round plan (allocateRound),
+// at least 1; plus the trait's intake rows, which bank_pool_depth counts as
+// unseen but rounds never serve.
 for (const axis of TRAIT_AXES) {
-  assert.equal(reserveTargetFor(axis), AXIS_TIER_COUNTS[axis] * RESERVE_ROUNDS);
+  assert.equal(reserveTargetFor(axis), 1 * RESERVE_ROUNDS + INTAKE_SETS);
+  assert.equal(reserveTargetFor(axis, { [axis]: 3 }), 3 * RESERVE_ROUNDS + INTAKE_SETS);
 }
-ok('reserveTargetFor is that axis’s per-round demand × RESERVE_ROUNDS, for every axis');
+{
+  const plan = { openness: 3 } as Partial<Record<TraitAxis, number>>;
+  const depth = fullDepth();
+  const wanted = axesBelowReserve(depth, undefined, plan);
+  assert.equal(wanted.openness, 2 * RESERVE_ROUNDS, 'a trait the plan needs 3 of needs a deeper reserve');
+}
+ok('reserveTargetFor is the plan’s per-round demand (min 1) × RESERVE_ROUNDS + the intake rows, for every axis');
 
 assert.deepEqual(axesBelowReserve(fullDepth()), {});
 ok('a pool at reserve on every axis asks for no generation at all');
@@ -100,7 +111,7 @@ ok('a capped pass spends its budget deepest-shortfall-first');
 ok('a zero or negative budget asks for nothing rather than generating unbounded');
 
 assert.ok(
-  PREWARM_MAX_QUESTIONS > 0 && PREWARM_MAX_QUESTIONS <= 25,
+  PREWARM_MAX_QUESTIONS > 0 && PREWARM_MAX_QUESTIONS <= ONGOING_ROUND_SIZE,
   'the per-pass cap must be positive and never exceed a whole round',
 );
 ok('PREWARM_MAX_QUESTIONS is a sane per-pass cost ceiling');

@@ -158,7 +158,7 @@ export const AI_GATE_FEATURES = [
   { feature: 'Daily insight', starts: 'Tapping "Load insight" on Home', extra: 'none' },
   { feature: 'Story', starts: 'Tapping the Story button on Home', extra: '1 a day' },
   { feature: 'Category read', starts: 'Tapping a category on Explore', extra: 'reroll: 1 token, once a day' },
-  { feature: 'Round questions', starts: 'Tapping "Next 25 questions"', extra: 'only what the bank cannot fill' },
+  { feature: 'Round questions', starts: 'Tapping "Next 16 questions"', extra: 'only what the bank cannot fill' },
 ] as const;
 
 export type AiGate = { label: string; pass: boolean; detail: string };
@@ -184,7 +184,7 @@ export function aiGates(input: {
     {
       label: 'Profile done',
       pass: input.profileDone,
-      detail: input.profileDone ? 'All 50 questions are answered.' : 'Insight, Story, categories and rounds stay locked until the 50 are done.',
+      detail: input.profileDone ? 'The intake is done (all 48, or the old 50).' : 'Insight, Story, categories and rounds stay locked until all 48 are done.',
     },
     {
       label: 'AI consent',

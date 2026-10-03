@@ -224,7 +224,7 @@ ok('app button: root / grant / unlock only (not PRE_LAUNCH_DEV), hidden on Play,
   // Start over's protection is the server's, not this lock's.
   const wave76 = read('supabase/migrations/wave76_start_over_my_test_data.sql');
   assert.ok(wave76.includes('if not public.is_root() then'), 'Start over stays root-only on the server');
-  const startAt = hub.indexOf('Start over (0 of 50)');
+  const startAt = hub.indexOf('Start over (0 of 48)');
   assert.ok(startAt > 0 && hub.lastIndexOf('{devAccess.isRoot ? (', startAt) > hub.lastIndexOf('function StartOver()', startAt), 'and its button sits inside the root-only block');
   assert.ok(you.includes('automaticallyAdjustKeyboardInsets') && you.includes('keyboardShouldPersistTaps="handled"'), 'the PIN box on You is not hidden by the keyboard');
 }
