@@ -850,6 +850,7 @@ export default function PlayScreen() {
                     onUnlockAvatar={(id) => void handleUnlockAvatar(id)}
                     onSetAvatarHero={(heroId) => void setAvatarHero(heroId)}
                     onBackToGrove={() => setMode('grove')}
+                    commit={commit}
                   />
                 ) : mode === 'defend' && view ? (
                   <DefendScreen

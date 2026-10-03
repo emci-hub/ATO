@@ -17,6 +17,8 @@ import { getItemDef } from '@/play/items';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { PET_BRANCH_TINT, PET_STAGE_SCALE, petLookFor, type PetLook, type PetState } from '@/play/pet';
 import { NO_WEAR, wornLook, type PetWear } from '@/play/pet-cosmetics';
+import { FinishPaint } from '@/play/finish-foil';
+import type { FinishKind, FinishMotion } from '@/play/finishes';
 import { ClipImage } from '@/play/sheet-sprite';
 import {
   getSkinRole,
@@ -69,6 +71,10 @@ export function PetFigure({
   recolor = null,
   blend = false,
   lockColour = false,
+  finish = null,
+  foilMotion = 'still',
+  reduceMotion = false,
+  reverseHost = false,
 }: {
   pet: PetState;
   baseBox: number;
@@ -85,6 +91,13 @@ export function PetFigure({
   blend?: boolean;
   /** A shiny's colour is its own: no form wash or Wardrobe tint on top. */
   lockColour?: boolean;
+  /** v30 — overrides the pet's saved finish (the picker preview). */
+  finish?: { kind: FinishKind; color: string | null } | null;
+  /** `sweep` only on the opened card, Dress, the room and the egg reveal. */
+  foilMotion?: FinishMotion;
+  reduceMotion?: boolean;
+  /** The parent draws the reverse-holo plate (card window / room). */
+  reverseHost?: boolean;
 }) {
   const box = boxOverride ?? petBoxSize(pet, baseBox);
   if (pet.stage === 'egg') return <EggShape size={box} color={silhouette ? '#000000' : eggColor} />;
@@ -100,14 +113,28 @@ export function PetFigure({
   const tint = lockColour ? null : (look.tint ?? PET_BRANCH_TINT[pet.branch]);
   const badgeArt = look.badgeItemId ? itemArtSource(getItemDef(look.badgeItemId)?.core.art ?? '') : undefined;
   const badge = Math.max(14, Math.round(box * 0.3));
+  const worn = finish ?? { kind: pet.finish_kind, color: pet.finish_color };
+  const foilOn = foilMotion !== 'off' && worn.color != null && (worn.kind === 'holo' || worn.kind === 'reverse');
+  const showReverse = foilOn && worn.kind === 'reverse' && !reverseHost;
+  const showHolo = foilOn && worn.kind === 'holo';
   return (
-    <View style={[{ width: box, height: box }, recolor && blend ? styles.isolate : null]}>
+    <View style={{ width: box, height: box }}>
       {look.aura ? (
         <Svg width={box * 1.5} height={box * 1.5} viewBox="0 0 100 100" style={[styles.aura, { left: -box * 0.25, top: -box * 0.25 }]} pointerEvents="none">
           <Circle cx="50" cy="50" r="48" fill={ELEMENT_COLOR[look.aura]} fillOpacity={0.1} />
           <Circle cx="50" cy="50" r="38" fill={ELEMENT_COLOR[look.aura]} fillOpacity={0.14} />
         </Svg>
       ) : null}
+      {showReverse && worn.color ? (
+        <FinishPaint
+          kind="reverse"
+          colorId={worn.color}
+          onShiny={pet.shiny}
+          motion={foilMotion}
+          reduceMotion={reduceMotion}
+        />
+      ) : null}
+      <View style={[StyleSheet.absoluteFill, (recolor && blend) || showHolo ? styles.isolate : null]}>
       <ClipImage drawable={drawable} />
       {recolor ? (
         <View
@@ -121,6 +148,17 @@ export function PetFigure({
           <ClipImage drawable={drawable} tintColor={tint} />
         </View>
       ) : null}
+      {showHolo && worn.color ? (
+        <FinishPaint
+          kind="holo"
+          colorId={worn.color}
+          drawable={drawable}
+          onShiny={pet.shiny}
+          motion={foilMotion}
+          reduceMotion={reduceMotion}
+        />
+      ) : null}
+      </View>
       {badgeArt ? (
         <Image
           source={badgeArt}

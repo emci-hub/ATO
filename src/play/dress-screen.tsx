@@ -39,6 +39,8 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { itemArtSource } from '@/play/art';
+import { FinishPicker } from '@/play/finish-picker';
+import type { PlayTransition } from '@/play/use-play-store';
 import {
   bagRowKey,
   mergeButtonA11y,
@@ -186,6 +188,7 @@ export function DressScreen({
   onUnlockAvatar,
   onSetAvatarHero,
   onBackToGrove,
+  commit,
 }: {
   view: PlayView;
   skipDelays: boolean;
@@ -204,6 +207,8 @@ export function DressScreen({
    * tower bind if it had one. The board now draws the hero's own sprite set. */
   onSetAvatarHero: (heroId: string) => void;
   onBackToGrove: () => void;
+  /** v30 — pet finish. The hero grid stays the hero switch. */
+  commit: (transition: PlayTransition) => boolean;
 }) {
   const theme = useTheme();
   const [filter, setFilter] = useState<BagFilter>('all');
@@ -230,6 +235,16 @@ export function DressScreen({
       />
 
       <LegendFirstTip />
+
+      <NeonPanel>
+        <FinishPicker
+          view={view}
+          commit={commit}
+          pet={view.pet.state}
+          dyeOn={view.pet.dyeOn}
+          reduceMotion={reduceMotion}
+        />
+      </NeonPanel>
 
       {/* Heroes first (2026-09-28): the grid is the real switch surface — which
        * hero you fight as (art + Veil), and what its attack becomes with the

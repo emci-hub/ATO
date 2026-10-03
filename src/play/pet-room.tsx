@@ -29,6 +29,7 @@ import Svg, { Circle, Defs, Ellipse, Line, LinearGradient, Rect, Stop } from 're
 
 import { Fonts } from '@/constants/theme';
 import type { PetCoachTip } from '@/play/coach';
+import { FinishPaint } from '@/play/finish-foil';
 import { FxLayer, FX_ULTIMATE_LIFE_MS, type FxEvent } from '@/play/fx-layer';
 import { useFxQuality } from '@/play/fx-quality';
 import { ELEMENT_COLOR, type Element } from '@/play/kits';
@@ -601,6 +602,15 @@ export function PetRoom({
           {pet.stage === 'god' && aura ? <GodAura element={aura} size={box * 1.4} reduceMotion={reduceMotion} /> : null}
           {maxedAura ? <MaxedAura size={box} animate={fxAnimate} /> : null}
           <GradeAura grade={grade} size={box} animate={fxAnimate} trail={act.face === 'front' ? null : act.face} />
+          {pet.finish_kind === 'reverse' && pet.finish_color ? (
+            <FinishPaint
+              kind="reverse"
+              colorId={pet.finish_color}
+              onShiny={pet.shiny}
+              motion="sweep"
+              reduceMotion={reduceMotion}
+            />
+          ) : null}
           <Pressable
             onPress={onTapPet}
             accessibilityRole="button"
@@ -621,6 +631,9 @@ export function PetRoom({
                 animate
                 recolor={revealed ? recolor : null}
                 lockColour={revealed && pet.shiny}
+                foilMotion="sweep"
+                reduceMotion={reduceMotion}
+                reverseHost
               />
             </Animated.View>
           </Pressable>

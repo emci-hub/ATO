@@ -370,7 +370,7 @@ ok('Collection book: one count per pet; Den dye includes the active pet and does
   assert.ok(!('pet_den' in v26) && !('shine_stones' in v26));
   const up = parsePlayStore(JSON.stringify(v26), T0 + MIN)!;
   assert.ok(up, 'a v26 save loads');
-  assert.equal(up.version, 29);
+  assert.equal(up.version, 30);
   assert.deepEqual(up.pet_den, [], 'Den empty');
   assert.equal(up.den_slots, DEN_START_SLOTS, '6 slots');
   assert.equal(up.pet.uid, 1, 'the current pet is active in slot 1');
