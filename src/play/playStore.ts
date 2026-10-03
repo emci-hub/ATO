@@ -184,6 +184,15 @@ import {
   type ShinyStyle,
 } from '@/play/pet-eggs';
 import {
+  emptyFinishWallet,
+  isFinishColor,
+  parseFinishWallet,
+  planFinishWear,
+  type FinishKind,
+  type FinishRefusal,
+  type FinishWallet,
+} from '@/play/finishes';
+import {
   DEN_MAX_SLOTS,
   DEN_START_SLOTS,
   clampDenSlots,
@@ -822,7 +831,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 29;
+  version: 30;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -981,6 +990,8 @@ export type PlayStoreDoc = {
   streak: StreakState;
   /** v29 — element swords, relics, the equipped uid, and the last-merge undo. */
   sword_bag: SwordBag;
+  /** v30 — holo / reverse-holo unlocks. Old saves own none. */
+  finish_wallet: FinishWallet;
 };
 
 /** A queued "hero owned" offer (Slice A2). `label` is the hero's display name
@@ -1212,6 +1223,8 @@ export type PetView = {
   tide: { active: boolean; daysHeld: number; step: number; passes: number };
   /** v28 — Tide calendar. `claimedToday` means this open already took a day. */
   streak: { next: number; last: number | null; ymd: string | null; claimedToday: boolean };
+  /** v30 — finishes this save can wear. `free` is the pre-launch unlock. */
+  finish: { wallet: FinishWallet; pass: boolean; free: boolean };
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -1277,7 +1290,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 29,
+    version: 30,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -1356,6 +1369,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     shop_pass: { pass: 0, counts: {} },
     streak: emptyStreak(),
     sword_bag: emptySwordBag(),
+    finish_wallet: emptyFinishWallet(),
   };
 }
 
@@ -1802,6 +1816,11 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
       last: doc.streak.last,
       ymd: doc.streak.ymd,
       claimedToday: petDayHolds(today, doc.streak.ymd),
+    },
+    finish: {
+      wallet: doc.finish_wallet,
+      pass: tideActive(doc.tide, today),
+      free: PLAY_EVERYTHING_FREE,
     },
   };
 }
@@ -2539,6 +2558,60 @@ export function applyPrismStone(
     doc: { ...next, prism_stones: touched.prism_stones - cost },
     result: { ok: true, style, left: touched.prism_stones - cost },
   };
+}
+
+/* ---------------------------------------------------------------------------
+ * Finishes (v30) — holo / reverse holo. Looks only. Never a roll.
+ * ------------------------------------------------------------------------- */
+
+export type FinishApplyResult =
+  | { ok: true; cost: number; left: number; kind: FinishKind; color: string | null }
+  | { ok: false; reason: FinishRefusal | 'missing' | 'not_revealed' };
+
+/** Wear a finish on a revealed pet, spending tokens for any unlock it needs. */
+export function applyPetFinish(
+  doc: PlayStoreDoc,
+  now: number,
+  uid: number,
+  kind: FinishKind,
+  color: string | null,
+): { doc: PlayStoreDoc; result: FinishApplyResult } {
+  const touched = touchPet(doc, now);
+  const pet = touched.pet.uid === uid && uid > 0 ? touched.pet : touched.pet_den.find((p) => p.uid === uid);
+  if (!pet) return { doc: touched, result: { ok: false, reason: 'missing' } };
+  if (kind !== 'none' && !petRevealed(pet)) return { doc: touched, result: { ok: false, reason: 'not_revealed' } };
+  const today = localYmd(new Date(now));
+  const plan = planFinishWear({
+    wallet: touched.finish_wallet,
+    tokens: touched.tokens,
+    pass: tideActive(touched.tide, today),
+    free: PLAY_EVERYTHING_FREE,
+    kind,
+    color,
+  });
+  if (!plan.ok) return { doc: touched, result: plan };
+  const next = withPetByUid(touched, uid, (p) => ({ ...p, finish_kind: plan.kind, finish_color: plan.color }));
+  if (!next) return { doc: touched, result: { ok: false, reason: 'missing' } };
+  return {
+    doc: { ...next, tokens: touched.tokens - plan.cost, finish_wallet: plan.wallet },
+    result: { ok: true, cost: plan.cost, left: touched.tokens - plan.cost, kind: plan.kind, color: plan.color },
+  };
+}
+
+/** Dev kit: put any finish on a pet without spending tokens or owning it. */
+export function devSetPetFinish(
+  doc: PlayStoreDoc,
+  now: number,
+  uid: number,
+  kind: FinishKind,
+  color: string | null,
+): PlayStoreDoc | null {
+  if (kind !== 'none' && (color == null || !isFinishColor(color))) return null;
+  return withPetByUid(touchPet(doc, now), uid, (p) => ({
+    ...p,
+    finish_kind: kind === 'none' ? 'none' : kind,
+    finish_color: kind === 'none' ? null : color,
+  }));
 }
 
 /** Use a trade-up ticket on the current egg or Baby (before the roll). */
@@ -5165,7 +5238,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
       version !== 17 && version !== 18 && version !== 19 && version !== 20 &&
       version !== 21 && version !== 22 && version !== 23 && version !== 24 && version !== 25 &&
-      version !== 26 && version !== 27 && version !== 28 && version !== 29
+      version !== 26 && version !== 27 && version !== 28 && version !== 29 && version !== 30
     ) {
       return null;
     }
@@ -5276,6 +5349,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     const v27 = version >= 27;
     const v28 = version >= 28;
     const v29 = version >= 29;
+    const v30 = version >= 30;
     const hall = parsePetHall(data.pet_hall);
     // v27 (Part D): older saves — the pet is the active one in slot 1 and the
     // Den is empty with 6 slots; the pity counter, eggs today, Stones and
@@ -5297,7 +5371,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       (v27 ? Math.max(0, Math.floor(finiteNumber(data.shine_stones) ?? 0)) : 0) +
       retroShineStones(typeof version === 'number' ? version : 28, milestones);
     return {
-      version: 29,
+      version: 30,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -5406,6 +5480,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       shop_pass: v28 ? parseShopPass(data.shop_pass) : { pass: 0, counts: {} },
       streak: v28 ? parseStreak(data.streak) : emptyStreak(),
       sword_bag: v29 ? parseSwordBag(data.sword_bag) : emptySwordBag(),
+      finish_wallet: v30 ? parseFinishWallet(data.finish_wallet) : emptyFinishWallet(),
     };
   } catch {
     return null;

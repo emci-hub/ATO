@@ -26,6 +26,7 @@ import Animated, {
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { Fonts } from '@/constants/theme';
+import { FinishPaint } from '@/play/finish-foil';
 import { useFxQuality } from '@/play/fx-quality';
 import { NEON } from '@/play/neon-viper';
 import {
@@ -70,6 +71,10 @@ export type PetCardInfo = {
   allStyles?: boolean;
   /** v27 — the shiny's style label ("Classic"), shown next to ✨. */
   styleLabel?: string | null;
+  /** v30 — holo / reverse holo. The name is shown, not only the foil. */
+  finishKind?: 'none' | 'holo' | 'reverse' | null;
+  finishColor?: string | null;
+  finishLabel?: string | null;
 };
 
 const RAINBOW = ['#FF5F6D', '#FFC371', '#F9F871', '#7CFFB2', '#5CC8FF', '#B78CFF', '#FF5FD2'];
@@ -155,9 +160,9 @@ export function PetCard({
       accessibilityLabel={
         silhouette
           ? `${GRADE_LABEL[grade]} card, not found yet`
-          : `${gradedName(info.grade, info.name)}, ${GRADE_LABEL[grade]}${info.shiny ? ', shiny' : ''}, ${info.stars} of 5 stars${
-              info.allStyles ? ', every shiny style' : ''
-            }${info.resting ? ', resting in the Den' : ''}`
+          : `${gradedName(info.grade, info.name)}, ${GRADE_LABEL[grade]}${info.shiny ? ', shiny' : ''}${
+              info.finishLabel ? `, ${info.finishLabel}` : ''
+            }, ${info.stars} of 5 stars${info.allStyles ? ', every shiny style' : ''}${info.resting ? ', resting in the Den' : ''}`
       }>
       {/* Frame: grade colour; shiny = rainbow foil. */}
       <Svg width={width} height={height} style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -236,7 +241,18 @@ export function PetCard({
         {info.shiny && !silhouette ? <Text style={{ fontSize: small ? 9 : 13 }}>✨</Text> : null}
       </View>
 
-      <View style={styles.art}>{sprite}</View>
+      <View style={styles.art}>
+        {info.finishKind === 'reverse' && info.finishColor && !silhouette ? (
+          <FinishPaint
+            kind="reverse"
+            colorId={info.finishColor}
+            onShiny={info.shiny}
+            motion={animate ? 'sweep' : 'still'}
+            reduceMotion={!animate}
+          />
+        ) : null}
+        {sprite}
+      </View>
 
       <Text style={[styles.name, small && styles.nameSmall]} numberOfLines={1}>
         {silhouette ? '???' : gradedName(info.grade, info.name)}
@@ -273,6 +289,7 @@ export function PetCard({
               {info.dye ? ' · 🎨 dye' : ''}
               {info.shinyCount ? ` · ✨×${info.shinyCount}` : ''}
               {info.shiny && info.styleLabel ? ` · ✨ ${info.styleLabel}` : ''}
+              {info.finishLabel ? ` · ${info.finishLabel}` : ''}
             </Text>
           ) : null}
           {info.forms.length > 0 && !silhouette ? (

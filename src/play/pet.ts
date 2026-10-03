@@ -45,6 +45,7 @@ import {
   type Grade,
   type ShinyStyle,
 } from '@/play/pet-eggs';
+import { parsePetFinish, type FinishKind } from '@/play/finishes';
 import { EXPEDITION_LADDER_MS, EXPEDITION_STEPS, LEGACY_EXPEDITION_MS } from '@/play/expedition-ladder';
 
 /* ------------------------------------------------------------ numbers --- */
@@ -349,6 +350,10 @@ export type PetState = {
   uid: number;
   /** A blank slot from "Change egg": its egg is already paid for. */
   prepaid: boolean;
+  /** v30 — holo / reverse holo. None on a save from before finishes. */
+  finish_kind: FinishKind;
+  /** Named colour from finishes.json. Null when the kind is none. */
+  finish_color: string | null;
 };
 
 export type PetReveal = 'hatch' | 'child';
@@ -414,6 +419,8 @@ export function newPet(now: number, line: string = DEFAULT_PET_LINE): PetState {
     fav: false,
     uid: 0,
     prepaid: false,
+    finish_kind: 'none',
+    finish_color: null,
   };
 }
 
@@ -1124,6 +1131,7 @@ function parsePetCore(raw: Record<string, unknown>, now: number): PetState {
     forms: parseForms(raw.forms, stage, isBranch(raw.branch) ? raw.branch : 'standard'),
     element_uses: uses,
     seen_at: num(raw.seen_at, now),
+    ...parsePetFinish(raw),
   };
 }
 

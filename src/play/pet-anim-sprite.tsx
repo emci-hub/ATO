@@ -19,6 +19,7 @@ import {
   type PetClipKit,
   type PetPose,
 } from '@/play/pet-actor';
+import type { FinishKind, FinishMotion } from '@/play/finishes';
 import { PetFigure } from '@/play/pet-figure';
 import { useBlendRecolor } from '@/play/pet-looks';
 import type { PetWear } from '@/play/pet-cosmetics';
@@ -136,6 +137,10 @@ export function PetAnimSprite({
   animate,
   recolor = null,
   lockColour = false,
+  finish = null,
+  foilMotion = 'still',
+  reduceMotion = false,
+  reverseHost = false,
 }: {
   pet: PetState;
   art: PetArt;
@@ -154,6 +159,10 @@ export function PetAnimSprite({
   /** v23 — shiny / dye recolour, and a shiny's locked colour. */
   recolor?: string | null;
   lockColour?: boolean;
+  finish?: { kind: FinishKind; color: string | null } | null;
+  foilMotion?: FinishMotion;
+  reduceMotion?: boolean;
+  reverseHost?: boolean;
 }) {
   const blend = useBlendRecolor();
   const ticking = animate && pose != null && !pose.hold && pet.stage !== 'egg';
@@ -172,6 +181,10 @@ export function PetAnimSprite({
       recolor={recolor}
       blend={blend}
       lockColour={lockColour}
+      finish={finish}
+      foilMotion={foilMotion}
+      reduceMotion={reduceMotion}
+      reverseHost={reverseHost}
     />
   );
 }

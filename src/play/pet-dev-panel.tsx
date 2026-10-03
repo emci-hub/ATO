@@ -18,6 +18,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+import { finishColors } from '@/play/finishes';
 import { NeonChip } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
 import type { PetState } from '@/play/pet';
@@ -49,6 +50,7 @@ import {
   devPetSetStage,
   devPetStarve,
   devResetCollection,
+  devSetPetFinish,
   devSetPity,
   devSetStreakDay,
 } from '@/play/playStore';
@@ -64,6 +66,7 @@ export const PET_DEV_GROUPS = [
   { id: 'tide', title: 'Tide & streak' },
   { id: 'pity', title: 'Pity & Den' },
   { id: 'room', title: 'Room · look & talk' },
+  { id: 'finish', title: 'Finishes' },
 ] as const;
 export type PetDevGroupId = (typeof PET_DEV_GROUPS)[number]['id'];
 
@@ -139,6 +142,13 @@ export function PetDevPanel({
           onPress={() => requestDevSay(PET_TALK_SITUATIONS[Math.floor(Math.random() * PET_TALK_SITUATIONS.length)])}
         />
         <NeonChip label="Fake evolve (I grew!)" onPress={() => requestDevSay('evolved')} />
+      </>
+    ),
+    finish: (
+      <>
+        {btn('Finish off', (doc, now) => devSetPetFinish(doc, now, pet.uid, 'none', null))}
+        {finishColors().map((color) => btn(`Holo ${color.name}`, (doc, now) => devSetPetFinish(doc, now, pet.uid, 'holo', color.id)))}
+        {finishColors().map((color) => btn(`Reverse ${color.name}`, (doc, now) => devSetPetFinish(doc, now, pet.uid, 'reverse', color.id)))}
       </>
     ),
   };
