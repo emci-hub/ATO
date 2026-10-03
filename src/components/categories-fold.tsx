@@ -81,10 +81,17 @@ type RowState = 'loading' | 'error' | 'not_ready' | 'locked' | 'consent';
  */
 export function CategoriesFold({
   me,
+  tracks: parentTracks,
   onUpdated,
   unlocked,
 }: {
   me: Me;
+  /**
+   * Tracks the parent already fetched on focus (Explore). When given, they win
+   * over this card's own fetch, so the card can never show older counts than
+   * the screen around it.
+   */
+  tracks?: TraitTrack[];
   onUpdated?: () => void | Promise<void>;
   unlocked: boolean;
 }) {
@@ -146,6 +153,13 @@ export function CategoriesFold({
     };
     // dataEpoch: a dev jump or Start over rewrote the account under this card.
   }, [me.id, me.updated_at, dataEpoch]);
+
+  // The parent's focus refetch is newer than this card's own mount fetch.
+  useEffect(() => {
+    if (!parentTracks) return;
+    setTracks(parentTracks);
+    setTracksLoaded(true);
+  }, [parentTracks]);
 
   useEffect(() => {
     if (ready.length === 0) return;

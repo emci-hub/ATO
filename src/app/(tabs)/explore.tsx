@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -35,24 +35,43 @@ export default function ExploreScreen() {
   const [tracksReady, setTracksReady] = useState(false);
   const dataEpoch = useAccountDataEpoch();
 
-  useEffect(() => {
+  /**
+   * Refetch on FOCUS, the same fix Home has (`(tabs)/index.tsx` reloadHome).
+   * Tab screens stay mounted, so answering on Questions never remounted
+   * Explore: the counts here stayed old ("12 of 16 filled" while Questions said
+   * done). Only the newest request may write (`requestIdRef`), and a failed
+   * refetch keeps the tracks already on screen. One read, no model call.
+   */
+  const requestIdRef = useRef(0);
+  const reloadTracks = useCallback(async () => {
     if (!userId) return;
-    let cancelled = false;
-    fetchTraitTracks(userId)
-      .then((rows) => {
-        if (cancelled) return;
-        setTracks(rows);
-        setTracksReady(true);
-      })
-      .catch((err) => {
-        console.log('[explore] tracks error:', err);
-        if (!cancelled) setTracksReady(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-    // dataEpoch: a dev jump or Start over rewrote the account under this tab.
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    try {
+      const rows = await fetchTraitTracks(userId);
+      if (requestId !== requestIdRef.current) return;
+      setTracks(rows);
+    } catch (err) {
+      console.log('[explore] tracks error:', err);
+    } finally {
+      if (requestId === requestIdRef.current) setTracksReady(true);
+    }
+    // me / dataEpoch: a save, a dev jump or Start over rewrote the account.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, me, dataEpoch]);
+
+  useEffect(() => {
+    // A new account starts from nothing.
+    requestIdRef.current += 1;
+    setTracks([]);
+    setTracksReady(false);
+  }, [userId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void reloadTracks();
+    }, [reloadTracks]),
+  );
 
   return (
     <ThemedView style={styles.container}>
@@ -85,6 +104,7 @@ export default function ExploreScreen() {
                   point of this tab (release pass, emci 2026-09-16). */}
               <CategoriesFold
                 me={me}
+                tracks={tracksReady ? tracks : undefined}
                 onUpdated={() => refreshMe()}
                 unlocked={isFullProfileDone(tracks, tracksReady)}
               />

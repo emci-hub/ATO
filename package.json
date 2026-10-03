@@ -207,6 +207,7 @@
     "check:dev-test-user": "tsx ./scripts/dev-test-user-check.ts",
     "check:dev-unlock": "tsx ./scripts/dev-unlock-check.ts",
     "check:dev-access": "tsx ./scripts/dev-access-check.ts",
+    "check:explore-refetch": "tsx ./scripts/explore-refetch-check.ts",
     "check:home-hydrate": "tsx ./scripts/home-hydrate-check.ts",
     "check:prod-you": "tsx ./scripts/prod-you-check.ts",
     "check:auth-password": "tsx ./scripts/auth-password-check.ts",
