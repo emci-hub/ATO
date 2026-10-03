@@ -50,7 +50,6 @@ export function defaultFabPosition(b: FabBounds): { x: number; y: number } {
 /** Hub sections the app kit can show (each is a component in `app/dev-lab`). */
 export type AppDevSection =
   | 'quota'
-  | 'explore-regen'
   | 'traits'
   | 'band-stepper'
   | 'jump'
@@ -60,14 +59,21 @@ export type AppDevSection =
   | 'local-data'
   | 'fence'
   | 'trace'
-  | 'inspector';
+  | 'inspector'
+  | 'daily-line'
+  | 'mini-guy'
+  | 'intake-status'
+  | 'next-round'
+  | 'tokens-today';
 
 /** Per screen: its name in the kit and the sections that test it. */
 export const APP_DEV_SCREENS: Record<string, { label: string; sections: readonly AppDevSection[] }> = {
-  '/': { label: 'Home', sections: ['jump', 'ai-consent'] },
-  '/explore': { label: 'Explore', sections: ['traits', 'band-stepper', 'explore-regen'] },
-  '/intake-sweep': { label: 'Questions', sections: ['jump', 'start-over'] },
-  '/sage': { label: 'Sage', sections: ['quota', 'fence', 'trace'] },
+  '/': { label: 'Home', sections: ['daily-line', 'mini-guy', 'ai-consent'] },
+  '/explore': { label: 'Explore', sections: ['traits', 'band-stepper'] },
+  '/intake-sweep': {
+    label: 'Questions',
+    sections: ['intake-status', 'next-round', 'tokens-today', 'jump', 'start-over'],
+  },
   '/you': { label: 'You', sections: ['you-tools', 'ai-consent', 'local-data'] },
 };
 

@@ -52,9 +52,12 @@ const hub = read('src/app/dev-lab.tsx');
 // 2026-10-01: the whole "Test one thing" group renders only while dev tools
 // exist (hubAccess 'full'), which is the pre-launch gate for everything in it.
 {
-  const at = hub.indexOf('<CrisisLocalFlagTest />');
+  // 2026-10-03: the flag test and the preview are one Hub item, CrisisTools.
+  const crisisTools = hub.slice(hub.indexOf('function CrisisTools() {'), hub.indexOf('function CrisisCardPreview() {'));
+  assert.ok(crisisTools.includes('<CrisisLocalFlagTest />'), 'CrisisTools holds the flag test');
+  const at = hub.indexOf('<CrisisTools />');
   assert.ok(
-    at > hub.indexOf('{tools ? (') && at < hub.indexOf('<ThemedText type="smallBold">Admin</ThemedText>'),
+    at > hub.indexOf('{tools ? (') && at < hub.indexOf('<HubSection\n            title="Admin"'),
     'dev test is pre-launch only',
   );
 }

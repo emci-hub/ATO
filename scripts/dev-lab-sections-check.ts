@@ -1,10 +1,11 @@
 /**
  * Dev Tools Hub layout. Run: npm run check:dev-lab-sections
  *
- * The Hub is four groups, in the order they get used (2026-10-01, emci):
- * Where this account is / Jump this account / Test one thing / Admin. This
- * pins which tool sits in which group, that the dead tools stay removed, and
- * that nothing here writes on a single tap.
+ * The Hub is grouped by what you are trying to do (2026-10-03, emci: "rearrange
+ * dev properly"): a build strip, then My account / Move my account / Content /
+ * This phone / AI / Labs / Admin, each a folding <HubSection>. This pins which
+ * tool sits in which group, that the dead tools stay removed, and that nothing
+ * here writes on a single tap.
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -22,68 +23,87 @@ function read(rel: string): string {
 }
 
 const hub = read('src/app/dev-lab.tsx');
-const heading = (name: string) => hub.indexOf(`<ThemedText type="smallBold">${name}</ThemedText>`);
+const section = (title: string) => hub.indexOf(`<HubSection title="${title}"`) >= 0
+  ? hub.indexOf(`<HubSection title="${title}"`)
+  : hub.indexOf(`<HubSection\n                title="${title}"`) >= 0
+    ? hub.indexOf(`<HubSection\n                title="${title}"`)
+    : hub.indexOf(`<HubSection\n            title="${title}"`);
 
-const whereAt = heading('Where this account is');
-const jumpAt = heading('Jump this account');
-const testAt = heading('Test one thing');
-const adminAt = heading('Admin');
-for (const [name, at] of [['Where this account is', whereAt], ['Jump this account', jumpAt], ['Test one thing', testAt], ['Admin', adminAt]] as const) {
-  assert.ok(at >= 0, `${name} heading`);
-}
-assert.ok(whereAt < jumpAt && jumpAt < testAt && testAt < adminAt, 'group order');
-for (const old of ['Home', 'Sage', 'You', 'System']) {
-  assert.equal(heading(old), -1, `the per-screen "${old}" section is gone`);
-}
-ok('four groups, in order: Where this account is, Jump this account, Test one thing, Admin');
+const ORDER = ['My account', 'Move my account', 'Content', 'This phone', 'AI', 'Labs', 'Admin'] as const;
+const at = ORDER.map((title) => section(title));
+ORDER.forEach((title, i) => assert.ok(at[i]! >= 0, `${title} section`));
+for (let i = 1; i < at.length; i += 1) assert.ok(at[i - 1]! < at[i]!, `group order: ${ORDER[i - 1]} before ${ORDER[i]}`);
+assert.ok(hub.indexOf('<BuildStrip />') > hub.indexOf('{tools ? (') && hub.indexOf('<BuildStrip />') < at[0]!, 'the build strip comes first');
+ok('groups by intent (2026-10-03): build strip, My account, Move my account, Content, This phone, AI, Labs, Admin');
 
 const layoutEnd = hub.indexOf('function useTwoTap()');
-const whereBlock = hub.slice(whereAt, jumpAt);
-const jumpBlock = hub.slice(jumpAt, testAt);
-const testBlock = hub.slice(testAt, adminAt);
-const adminBlock = hub.slice(adminAt, layoutEnd);
+const block = (i: number) => hub.slice(at[i]!, i + 1 < at.length ? at[i + 1]! : layoutEnd);
+const [mine, move, content, phone, ai, labs, admin] = ORDER.map((_, i) => block(i));
 
-// 1. Read-only.
-assert.match(whereBlock, /<DevInspector \/>/);
-assert.match(whereBlock, /canSeeHubSection\('traits', gate\) \? <TraitViewer \/>/);
-assert.match(whereBlock, /canSeeHubSection\('quota', gate\) \? <QuotaDashboard \/>/);
+// My account: read-only.
+for (const p of ['<DevInspector />', '<IntakeStatus />', '<NextRoundPreview />', '<TokensToday />', '<BandDetailStepper />']) {
+  assert.ok(mine!.includes(p), `${p} under My account`);
+}
+assert.match(mine!, /canSeeHubSection\('traits', gate\) \? <TraitViewer \/>/);
 for (const fn of ['TraitViewer', 'QuotaDashboard']) {
   const body = hub.slice(hub.indexOf(`function ${fn}() {`), hub.indexOf('\nfunction ', hub.indexOf(`function ${fn}() {`) + 10));
   assert.doesNotMatch(body, /\.update\(|\.insert\(|\.upsert\(|\.delete\(|\.rpc\(/, `${fn} must stay read-only`);
 }
-ok('Where this account is: inspector, raw traits, AI usage — read-only');
-
-// 2. One menu, one reset.
-assert.match(jumpBlock, /<JumpThisAccount \/>/);
-assert.match(jumpBlock, /<StartOver \/>/);
-assert.equal((jumpBlock.match(/<[A-Z][A-Za-z]+ \/>/g) ?? []).length, 2, 'nothing else lives in the jump group');
-ok('Jump this account: the jump menu and Start over, nothing else');
-
-// 3. Single-purpose probes, and exactly one Force test error.
-for (const panel of ['ExploreRegen', 'BandDetailStepper', 'CrisisCardPreview', 'CrisisLocalFlagTest', 'ResetAiConsent', 'LocalAccountData']) {
-  assert.match(testBlock, new RegExp(`<${panel} />`), `${panel} sits under Test one thing`);
+const panels = read('src/components/dev-hub-panels.tsx');
+for (const fn of ['IntakeStatus', 'NextRoundPreview', 'TokensToday', 'DraftCopyList', 'BuildStrip']) {
+  const start = panels.indexOf(`export function ${fn}(`);
+  const body = panels.slice(start, panels.indexOf('\nexport function ', start + 10));
+  assert.doesNotMatch(body, /\.update\(|\.insert\(|\.upsert\(|\.delete\(|\.rpc\(|forgetCelebratedMilestone/, `${fn} must stay read-only`);
 }
-assert.match(testBlock, /canSeeHubSection\('fence', gate\) \? <FenceTester \/>/);
-assert.match(testBlock, /canSeeHubSection\('trace', gate\) \? <TraceCapture \/>/);
-assert.match(testBlock, /<YouDevTools timeZone=/);
-assert.equal((hub.match(/<ForceTestError /g) ?? []).length, 1, 'one Force test error, not one per section');
-assert.match(testBlock, /<ForceTestError message="Dev Lab test error" \/>/);
 assert.doesNotMatch(
   hub.slice(hub.indexOf('function BandDetailStepper'), hub.indexOf('function JumpThisAccount')),
-  /mergeTraitWrite|updateIntake|traitPatch|\.update\(/,
+  /mergeTraitWrite|updateIntake|traitPatch|\.update\(|\.rpc\(/,
   'the band stepper is read-only',
 );
-ok('Test one thing: the probes, the fence and trace behind their capability, one Force test error');
+ok('My account: inspector, intake set, next-round preview, tokens today, raw traits, bands — read-only');
 
-// 4. Admin is root-only panels and nothing else.
-assert.match(adminBlock, /\{canSeeHubSection\('access', gate\) \? <AccessReview \/> : null\}/);
-assert.match(adminBlock, /\{canSeeHubSection\('grants', gate\) \? <GrantsPanel \/> : null\}/);
-assert.match(adminBlock, /\{canSeeHubSection\('profiles', gate\) \? <ProfilesPanel \/> : null\}/);
-assert.match(adminBlock, /\{tools \? <ResetToFreshSignup \/> : null\}/);
-for (const panel of ['ResetAiConsent', 'LocalAccountData', 'JumpThisAccount', 'StartOver', 'ExploreRegen']) {
-  assert.doesNotMatch(adminBlock, new RegExp(`<${panel}`), `${panel} is not an admin tool`);
+// Move my account: the three account writers, nothing else.
+assert.equal((move!.match(/<[A-Z][A-Za-z]+ \/>/g) ?? []).join(' '), '<JumpThisAccount /> <StartOver /> <ResetToFreshSignup />');
+ok('Move my account: jump, Start over, delete-profile-and-re-run-sign-up, nothing else');
+
+for (const p of ['<MiniGuyPanel />', '<MilestonesPanel />', '<CrisisTools />', '<DraftCopyList />']) assert.ok(content!.includes(p), `${p} under Content`);
+assert.match(content!, /<DailyLineDev userId=/);
+assert.match(content!, /canSeeHubSection\('fence', gate\) \? <FenceTester \/>/);
+for (const p of ['<PushStatus />', '<AppReloadPanel />', '<LocalAccountData />', '<ResetAiConsent />']) assert.ok(phone!.includes(p), `${p} under This phone`);
+assert.match(phone!, /<YouDevTools timeZone=/);
+assert.match(phone!, /canSeeHubSection\('trace', gate\) \? <TraceCapture \/>/);
+assert.match(ai!, /canSeeHubSection\('quota', gate\) \? <QuotaDashboard \/>/);
+assert.ok(labs!.includes('<LabsList />'));
+ok('Content, This phone, AI and Labs hold their tools, each behind its capability where it has one');
+
+assert.match(admin!, /\{canSeeHubSection\('access', gate\) \? <AccessReview \/> : null\}/);
+assert.match(admin!, /\{canSeeHubSection\('grants', gate\) \? <GrantsPanel \/> : null\}/);
+assert.match(admin!, /\{canSeeHubSection\('profiles', gate\) \? <ProfilesPanel \/> : null\}/);
+for (const panel of ['ResetAiConsent', 'LocalAccountData', 'JumpThisAccount', 'StartOver', 'ResetToFreshSignup']) {
+  assert.doesNotMatch(admin!, new RegExp(`<${panel}`), `${panel} is not an admin tool`);
 }
-ok('Admin: access requests, grants, pause / delete and the dev-test sign-up reset');
+ok('Admin: access requests, grants, pause / delete — root only');
+
+// Removed 2026-10-03: Explore regenerate spent real AI quota on a feature the
+// app no longer uses; Force test error duplicated the crash test in You tools.
+for (const gone of ['ExploreRegen', 'ForceTestError', 'routeExplore', 'generateExploreBody']) {
+  assert.ok(!hub.includes(gone), `${gone} is gone from the Hub`);
+}
+assert.ok(!read('src/components/app-dev-fab.tsx').includes('ExploreRegen'), 'and from the DEV bubble');
+ok('Explore regenerate and the duplicate Force test error are removed');
+
+// The one write in the new panels: forgetting a milestone takes two taps and
+// is pre-launch only on the client.
+{
+  const start = panels.indexOf('export function MilestonesPanel(');
+  const body = panels.slice(start, panels.indexOf('const COPY_FLAGS', start));
+  const confirmAt = body.indexOf('if (!me || !twoTap.confirm(id)) return;');
+  assert.ok(confirmAt >= 0 && confirmAt < body.indexOf('await forgetCelebratedMilestone('), 'forget a milestone: two taps first');
+  const me = read('src/lib/me.ts');
+  const fn = me.slice(me.indexOf('export async function forgetCelebratedMilestone('));
+  assert.match(fn.slice(0, 400), /if \(!PRE_LAUNCH_DEV\) throw new Error/, 'forgetCelebratedMilestone is pre-launch only');
+  ok('forgetting a milestone takes two taps and is pre-launch only');
+}
 
 // Dead tools stay removed: nothing read what they wrote.
 for (const gone of [
@@ -107,7 +127,7 @@ ok('slot / ask overrides, growth preview, handle-collision check and the Talk tr
 
 // Nothing writes on one tap. Each writer asks useTwoTap first; the two
 // irreversible deletes ask for the handle to be typed instead.
-const twoTap = hub.slice(hub.indexOf('function useTwoTap()'), hub.indexOf('function ForceTestError('));
+const twoTap = hub.slice(hub.indexOf('function useTwoTap()'), hub.indexOf('function TraitViewer('));
 assert.match(twoTap, /if \(armed === id\) \{\s*setArmed\(null\);\s*return true;\s*\}/);
 assert.match(twoTap, /setTimeout\(\(\) => setArmed\(\(cur\) => \(cur === id \? null : cur\)\), 5000\)/, 'the confirm disarms itself');
 const fnBody = (name: string) => {

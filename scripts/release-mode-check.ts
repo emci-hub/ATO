@@ -62,15 +62,16 @@ pin("the Hub renders its testing groups only for 'full' access", hub.includes("c
 // The Hub's render tree, cut into the three places a component can sit:
 // before the `tools ?` branch, inside it, and the Admin section after it.
 // A panel anywhere but inside the branch must be a root-only one.
-const LAYOUT = ['ThemedView', 'SafeAreaView', 'ScrollView', 'View', 'ThemedText', 'RunningUpdateLine'];
+const LAYOUT = ['ThemedView', 'SafeAreaView', 'ScrollView', 'View', 'ThemedText', 'RunningUpdateLine', 'HubSection'];
 const components = (text: string) => [...text.matchAll(/<([A-Z][A-Za-z]+)[\s/>]/g)].map((m) => m[1]);
 const renderAt = hub.indexOf('<ThemedView style={styles.container}>', hub.indexOf('function DevLab('));
 const toolsAt = hub.indexOf('{tools ? (');
-const adminAt = hub.indexOf('<ThemedText type="smallBold">Admin</ThemedText>');
+// 2026-10-03 reorganisation: groups are <HubSection title="…">.
+const adminAt = hub.indexOf('<HubSection\n            title="Admin"');
 const layoutEnd = hub.indexOf('function useTwoTap()');
 pin('the Hub render tree was found', renderAt > 0 && toolsAt > renderAt && adminAt > toolsAt && layoutEnd > adminAt);
 // The branch must close and the Admin section open with nothing in between.
-const branchClose = "          ) : null}\n\n          <View style={styles.section}>\n            <ThemedText type=\"smallBold\">Admin</ThemedText>";
+const branchClose = "          ) : null}\n\n          <HubSection\n            title=\"Admin\"";
 const closeAt = hub.indexOf(branchClose, toolsAt);
 pin('the testing branch closes immediately before the Admin section', closeAt > toolsAt && closeAt < adminAt);
 const headBlock = hub.slice(renderAt, toolsAt);
@@ -82,17 +83,24 @@ const adminPanels = components(adminBlock).filter((name) => !LAYOUT.includes(nam
 pin(
   `the Admin group holds only root-gated panels (found: ${adminPanels.join(', ')})`,
   adminPanels.length > 0 &&
-    adminPanels.every((name) => ['AccessReview', 'GrantsPanel', 'ProfilesPanel', 'ResetToFreshSignup'].includes(name)),
+    adminPanels.every((name) => ['AccessReview', 'GrantsPanel', 'ProfilesPanel'].includes(name)),
 );
 for (const [panel, section] of [['AccessReview', 'access'], ['GrantsPanel', 'grants'], ['ProfilesPanel', 'profiles']] as const) {
   pin(`${panel} is gated on root`, adminBlock.includes(`{canSeeHubSection('${section}', gate) ? <${panel} /> : null}`));
 }
-pin('the dev-test sign-up reset is not offered in a release build', adminBlock.includes('{tools ? <ResetToFreshSignup /> : null}'));
+pin(
+  'the dev-test sign-up reset is not offered in a release build (it lives inside the testing branch)',
+  testingBlock.includes('<ResetToFreshSignup />') && !adminBlock.includes('<ResetToFreshSignup'),
+);
 pin(
   'root-only sections need isRoot, not a capability',
   /if \(section === 'access' \|\| section === 'grants' \|\| section === 'profiles'\) \{\s*return input\.isRoot;/.test(access),
 );
-for (const panel of ['DevInspector', 'JumpThisAccount', 'StartOver', 'ExploreRegen', 'ResetAiConsent', 'LocalAccountData', 'ForceTestError']) {
+for (const panel of [
+  'DevInspector', 'JumpThisAccount', 'StartOver', 'ResetAiConsent', 'LocalAccountData', 'ResetToFreshSignup',
+  'BuildStrip', 'IntakeStatus', 'NextRoundPreview', 'TokensToday', 'MiniGuyPanel', 'MilestonesPanel',
+  'CrisisTools', 'DraftCopyList', 'PushStatus', 'AppReloadPanel', 'LabsList',
+]) {
   pin(`${panel} renders only inside the testing groups`, testingBlock.includes(`<${panel}`) && !adminBlock.includes(`<${panel}`));
 }
 

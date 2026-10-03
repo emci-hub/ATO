@@ -85,13 +85,15 @@ assert.equal(demo.sources.conflict_cooperativeness, 'self_situation');
 ok('demo trait row shows slider-sticky O/C vs grid E/A');
 
 assert.match(hub, /FIXTURE — not a real account/);
-assert.match(hub, /Hardcoded slider-sticky example\. Not live ME\./);
-assert.match(hub, /This is hardcoded demo data, not @/);
+assert.match(hub, /Signed out: hardcoded example, not a real account\./);
+// The account picker is gone (2026-10-03): it listed every handle but could
+// only ever show the signed-in row.
+assert.doesNotMatch(hub.slice(hub.indexOf('function TraitViewer'), hub.indexOf('function BandDetailStepper')), /from\('me'\)\s*\.select\('handle'\)/);
 assert.doesNotMatch(
   hub.slice(hub.indexOf('function TraitViewer'), hub.indexOf('function GrowthPreview')),
   /demo · slider-sticky example/,
 );
-ok('TraitViewer fixture chrome is unmistakable when live ME is not selected');
+ok('TraitViewer shows only this account, and its signed-out fixture is unmistakable');
 
 assert.deepEqual(matchingFrameworkTerms('Your INFJ side is showing.'), ['INFJ']);
 assert.ok(containsFrameworkTerm('attachment style'));

@@ -153,7 +153,9 @@ ok('mode-aware: Pet mode shows Pet / Eggs / Room tools in six groups, one shared
   assert.equal(appDevFabVisible({ ...base, devAccessLoading: true }), false, 'never while access is loading');
   for (const p of APP_DEV_HIDDEN_PATHS) assert.equal(appDevFabVisible({ ...base, pathname: p }), false, `hidden on ${p}`);
   assert.ok(APP_DEV_HIDDEN_PATHS.includes('/play'), 'Play keeps its own button — never two at once');
-  for (const p of ['/', '/explore', '/intake-sweep', '/sage', '/you']) {
+  // '/sage' is a placeholder screen with nothing of its own to test (2026-10-03).
+  assert.equal(appDevScreen('/sage'), null, 'the Sage placeholder has no tools of its own');
+  for (const p of ['/', '/explore', '/intake-sweep', '/you']) {
     const s = appDevScreen(p);
     assert.ok(s && s.sections.length > 0, `${p} has its own tools`);
     assert.equal(new Set(s.sections).size, s.sections.length, `${p}: no section twice`);

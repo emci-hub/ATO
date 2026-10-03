@@ -20,7 +20,6 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import {
   BandDetailStepper,
-  ExploreRegen,
   FenceTester,
   JumpThisAccount,
   LocalAccountData,
@@ -30,6 +29,8 @@ import {
   TraceCapture,
   TraitViewer,
 } from '@/app/dev-lab';
+import { DailyLineDev } from '@/components/daily-line-dev';
+import { IntakeStatus, MiniGuyPanel, NextRoundPreview, TokensToday } from '@/components/dev-hub-panels';
 import { DevInspector } from '@/components/dev-inspector';
 import { PlayDevFab } from '@/components/play-dev-fab';
 import { RunningUpdateLine } from '@/components/running-update-line';
@@ -106,6 +107,7 @@ export function AppDevFab() {
           own={(screen?.sections ?? []).filter(allowed)}
           everywhere={appDevEverywhere(pathname).filter(allowed)}
           timeZone={me?.timezone || 'UTC'}
+          userId={me?.id ?? null}
           onClose={() => setOpen(false)}
         />
       }
@@ -118,12 +120,14 @@ function AppDevPanel({
   own,
   everywhere,
   timeZone,
+  userId,
   onClose,
 }: {
   pathname: string;
   own: readonly AppDevSection[];
   everywhere: readonly AppDevSection[];
   timeZone: string;
+  userId: string | null;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -134,8 +138,6 @@ function AppDevPanel({
     switch (id) {
       case 'quota':
         return <QuotaDashboard key={id} />;
-      case 'explore-regen':
-        return <ExploreRegen key={id} />;
       case 'traits':
         return <TraitViewer key={id} />;
       case 'band-stepper':
@@ -156,6 +158,16 @@ function AppDevPanel({
         return <TraceCapture key={id} />;
       case 'inspector':
         return <DevInspector key={id} />;
+      case 'daily-line':
+        return userId ? <DailyLineDev key={id} userId={userId} timeZone={timeZone} /> : null;
+      case 'mini-guy':
+        return <MiniGuyPanel key={id} />;
+      case 'intake-status':
+        return <IntakeStatus key={id} />;
+      case 'next-round':
+        return <NextRoundPreview key={id} />;
+      case 'tokens-today':
+        return <TokensToday key={id} />;
     }
   };
 

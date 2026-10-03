@@ -28,6 +28,19 @@ import { RunningUpdateLine } from '@/components/running-update-line';
 import { TracePipelineViewer } from '@/components/trace-pipeline';
 import { YouDevTools } from '@/components/you-dev-tools';
 import { DailyLineDev } from '@/components/daily-line-dev';
+import {
+  AppReloadPanel,
+  BuildStrip,
+  DraftCopyList,
+  HubSection,
+  IntakeStatus,
+  LabsList,
+  MilestonesPanel,
+  MiniGuyPanel,
+  NextRoundPreview,
+  PushStatus,
+  TokensToday,
+} from '@/components/dev-hub-panels';
 import { CrisisCard } from '@/components/crisis-card';
 import { TraitBandDetail } from '@/components/trait-bands-fold';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -42,8 +55,6 @@ import {
 } from '@/lib/local-account-data';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
-import { checksToHistory, fetchChecks } from '@/lib/checks';
-import { crisisFlagsForWindow } from '@/lib/crisis/days';
 import { clearCrisisLocalFlag, noteCrisisText } from '@/lib/crisis/local-flag';
 import {
   approveAccessRequest,
@@ -69,12 +80,7 @@ import {
   unpauseProfile,
   type MeSearchRow,
 } from '@/lib/dev-access-server';
-import {
-  DEV_LAB_AXIS_ORDER,
-  DEV_LAB_GAPS,
-  buildSimHistory,
-  demoTraitState,
-} from '@/lib/dev-lab';
+import { DEV_LAB_AXIS_ORDER, demoTraitState } from '@/lib/dev-lab';
 import {
   fetchDevTraceSession,
   listOwnDevTraceEvents,
@@ -82,21 +88,13 @@ import {
   stopDevTrace,
 } from '@/lib/dev-trace-server';
 import { TRACE_SECTIONS, type DevTraceEvent, type DevTraceSession } from '@/lib/dev-trace';
-import { generateExploreBody } from '@/lib/explore/generate';
-import { EXPLORE_OBSERVATIONS_META } from '@/lib/ai/call-sites';
-import { routeExplore } from '@/lib/explore/route';
-import { withTimeout } from '@/lib/timeout';
-import { fetchExploreMissNotes } from '@/lib/explore/store';
-import type { RouteExploreResult } from '@/lib/explore/types';
-import { voiceMeFrom } from '@/lib/intake';
 import { supabase } from '@/lib/supabase';
 import { isDirectTraitSource, traitStateFromRow, type TraitSource } from '@/lib/traits';
 import { filledTraitBands } from '@/lib/trait-bands';
 import { controlBorderColor } from '@/lib/theme/chrome';
-import { shouldUseLocalAi } from '@/lib/ai/override';
 import { matchingFrameworkTerms } from '@/lib/voice/framework-fence';
 import { type SageUsageSnapshot } from '@/lib/voice/quota';
-import { claimAiCall, fetchSageUsage, logJargonGuard, logPhraseGuard } from '@/lib/voice/quota-server';
+import { fetchSageUsage } from '@/lib/voice/quota-server';
 import {
   DEV_INTAKE_STAGES,
   devStageMatching,
@@ -185,54 +183,69 @@ function DevLab({ access }: { access: Exclude<HubAccess, 'none'> }) {
 
           {tools ? (
             <>
-              <View style={styles.section}>
-                <ThemedText type="smallBold">Where this account is</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  Read-only. Nothing in this group changes anything.
-                </ThemedText>
-                <DevInspector />
-                {canSeeHubSection('traits', gate) ? <TraitViewer /> : null}
-                {canSeeHubSection('quota', gate) ? <QuotaDashboard /> : null}
-              </View>
+              <BuildStrip />
 
-              <View style={styles.section}>
-                <ThemedText type="smallBold">Jump this account</ThemedText>
+              <HubSection title="My account" hint="Read-only. Nothing here changes anything." count={6} defaultOpen>
+                <DevInspector />
+                <IntakeStatus />
+                <NextRoundPreview />
+                <TokensToday />
+                {canSeeHubSection('traits', gate) ? <TraitViewer /> : null}
+                <BandDetailStepper />
+              </HubSection>
+
+              <HubSection
+                title="Move my account"
+                hint="Writes this account only. Every button takes two taps."
+                count={3}
+                defaultOpen>
                 <JumpThisAccount />
                 <StartOver />
-              </View>
+                <ResetToFreshSignup />
+              </HubSection>
 
-              <View style={styles.section}>
-                <ThemedText type="smallBold">Test one thing</ThemedText>
-                <ExploreRegen />
-                <BandDetailStepper />
-                {canSeeHubSection('fence', gate) ? <FenceTester /> : null}
-                {canSeeHubSection('trace', gate) ? <TraceCapture /> : null}
-                {me ? <YouDevTools timeZone={me.timezone || 'UTC'} /> : null}
+              <HubSection title="Content" hint="Preview or re-trigger what people see." count={6}>
                 {me ? <DailyLineDev userId={me.id} timeZone={me.timezone || 'UTC'} /> : null}
-                <CrisisCardPreview />
-                <CrisisLocalFlagTest />
-                <ResetAiConsent />
+                <MiniGuyPanel />
+                <MilestonesPanel />
+                <CrisisTools />
+                {canSeeHubSection('fence', gate) ? <FenceTester /> : null}
+                <DraftCopyList />
+              </HubSection>
+
+              <HubSection title="This phone" hint="Only this device. Nothing on the server." count={6}>
+                {me ? <YouDevTools timeZone={me.timezone || 'UTC'} /> : null}
+                <PushStatus />
+                <AppReloadPanel />
                 <LocalAccountData />
-                <ForceTestError message="Dev Lab test error" />
-              </View>
+                <ResetAiConsent />
+                {canSeeHubSection('trace', gate) ? <TraceCapture /> : null}
+              </HubSection>
+
+              <HubSection title="AI" count={1}>
+                {canSeeHubSection('quota', gate) ? <QuotaDashboard /> : null}
+              </HubSection>
+
+              <HubSection title="Labs" hint="Screens nothing else links to." count={6}>
+                <LabsList />
+              </HubSection>
             </>
           ) : null}
 
-          <View style={styles.section}>
-            <ThemedText type="smallBold">Admin</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              Root only, enforced on the server. These act on other people&apos;s accounts.
-            </ThemedText>
+          <HubSection
+            title="Admin"
+            hint="Root only, enforced on the server. These act on other people's accounts."
+            count={3}
+            defaultOpen={!tools}>
             {canSeeHubSection('access', gate) ? <AccessReview /> : null}
             {canSeeHubSection('grants', gate) ? <GrantsPanel /> : null}
             {canSeeHubSection('profiles', gate) ? <ProfilesPanel /> : null}
-            {tools ? <ResetToFreshSignup /> : null}
             {!devAccess.isRoot ? (
               <ThemedText type="small" themeColor="textSecondary">
                 Nothing here for this account.
               </ThemedText>
             ) : null}
-          </View>
+          </HubSection>
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -269,178 +282,21 @@ function useTwoTap(): { armed: string | null; confirm: (id: string) => boolean }
   return { armed, confirm };
 }
 
-function ForceTestError({ message }: { message: string }) {
-  const theme = useTheme();
-  return (
-    <Pressable
-      onPress={() => {
-        throw new Error(message);
-      }}
-      style={({ pressed }) => [
-        styles.chip,
-        { borderColor: controlBorderColor(theme) },
-        pressed && styles.pressed,
-      ]}>
-      <ThemedText type="smallBold">Force test error</ThemedText>
-    </Pressable>
-  );
-}
-
-function ExploreRegen() {
-  const theme = useTheme();
-  const { session } = useSession();
-  const { me } = useMeContext();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<RouteExploreResult | null>(null);
-
-  async function run() {
-    if (!me || !session?.user.id || busy) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const flags = await crisisFlagsForWindow(session.user.id, me.timezone);
-      const history = checksToHistory(await fetchChecks(session.user.id));
-      const next = await withTimeout(routeExplore(
-        {
-          me: {
-            ...voiceMeFrom(me),
-            timezone: me.timezone,
-            traitTouchedAt: me.trait_touched_at,
-          },
-          history,
-          aiConsent: me.ai_consent,
-          crisisToday: flags.crisisToday,
-        },
-        {
-          loadMissNotes: fetchExploreMissNotes,
-          claimAiCall: () => claimAiCall('explore'),
-          logJargonHit: logJargonGuard,
-          logPhraseHit: logPhraseGuard,
-          generateBody: (prompt) => generateExploreBody(prompt, EXPLORE_OBSERVATIONS_META),
-          useLocal: await shouldUseLocalAi(),
-        },
-      ), 25_000, 'explore');
-      setResult(next);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not regenerate Explore.');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const entries = result?.pack?.entries ?? [];
-
-  return (
-    <View style={styles.section}>
-      <ThemedText type="small" themeColor="textSecondary">
-        Regenerates Explore without waiting for the weekly cycle. Axes are the
-        tagged traits on each observation. Nothing is written to ME.
-      </ThemedText>
-      <Pressable
-        disabled={busy || !me}
-        onPress={() => void run()}
-        style={({ pressed }) => [
-          styles.chip,
-          { borderColor: controlBorderColor(theme) },
-          pressed && styles.pressed,
-          (busy || !me) && { opacity: 0.5 },
-        ]}>
-        <ThemedText type="smallBold">Force regenerate Explore</ThemedText>
-      </Pressable>
-      {error ? <ThemedText type="small">{error}</ThemedText> : null}
-      {result ? (
-        <ThemedView type="backgroundElement" style={styles.card}>
-          <ThemedText type="code" themeColor="textSecondary">
-            kind {result.kind}
-            {result.trigger ? ` · ${result.trigger}` : ''}
-          </ThemedText>
-          {entries.length === 0 ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              No entries.
-            </ThemedText>
-          ) : (
-            entries.map((entry) => (
-              <View key={entry.id} style={styles.axisRow}>
-                <ThemedText>{entry.body}</ThemedText>
-                <ThemedText type="code" themeColor="textSecondary">
-                  axis {entry.traits.length > 0 ? entry.traits.join(', ') : '(none)'}
-                  {entry.chips.length > 0 ? ` · chips ${entry.chips.join(', ')}` : ''}
-                  {entry.signalKind ? ` · signal ${entry.signalKind}` : ''}
-                </ThemedText>
-              </View>
-            ))
-          )}
-        </ThemedView>
-      ) : null}
-    </View>
-  );
-}
-
 function TraitViewer() {
   const theme = useTheme();
-  const { session } = useSession();
   const { me } = useMeContext();
-  const [handles, setHandles] = useState<string[]>([]);
-  const [selected, setSelected] = useState<string>('demo');
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    supabase
-      .from('me')
-      .select('handle')
-      .order('handle')
-      .then(({ data, error: queryError }) => {
-        if (cancelled) return;
-        if (queryError) {
-          setError(queryError.message);
-          return;
-        }
-        const next = (data ?? [])
-          .map((row) => String(row.handle ?? ''))
-          .filter((handle) => handle.length > 0);
-        setHandles(next);
-        if (me?.handle) setSelected(me.handle);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [me?.handle]);
-
-  const live = useMemo(() => {
-    if (selected === 'demo' || !me || me.handle !== selected) return null;
-    return traitStateFromRow(me);
-  }, [me, selected]);
-
+  const live = useMemo(() => (me ? traitStateFromRow(me) : null), [me]);
   const demo = demoTraitState();
   const state = live ?? demo;
   const usingDemo = live == null;
+  const selected = me?.handle ?? 'demo';
 
   return (
     <View style={styles.section}>
-      <ThemedText type="smallBold">Trait backbone</ThemedText>
+      <ThemedText type="smallBold">Raw trait values</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        RLS only returns the signed-in ME row. Sign in as a test account to inspect it. Demo
-        shows slider-sticky merge: O/C/steadiness stay slider even if a grid also wrote O/C/E/A.
+        This account&apos;s stored value and where it came from, per trait. Read-only.
       </ThemedText>
-      <View style={styles.tabs}>
-        <Chip label="demo" selected={selected === 'demo'} onPress={() => setSelected('demo')} />
-        {handles.map((handle) => (
-          <Chip
-            key={handle}
-            label={`@${handle}`}
-            selected={selected === handle}
-            onPress={() => setSelected(handle)}
-          />
-        ))}
-      </View>
-      {!session ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          Signed out — showing the demo row.
-        </ThemedText>
-      ) : null}
-      {error ? <ThemedText type="small">{error}</ThemedText> : null}
       {usingDemo ? (
         <ThemedView
           type="backgroundElement"
@@ -450,9 +306,7 @@ function TraitViewer() {
           ]}>
           <ThemedText type="smallBold">FIXTURE — not a real account</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            {selected !== 'demo' && selected !== me?.handle
-              ? `RLS only returns the signed-in row. This is hardcoded demo data, not @${selected}.`
-              : 'Hardcoded slider-sticky example. Not live ME.'}
+            Signed out: hardcoded example, not a real account.
           </ThemedText>
         </ThemedView>
       ) : (
@@ -729,7 +583,7 @@ function ResetToFreshSignup() {
 
   return (
     <View style={styles.section}>
-      <ThemedText type="smallBold">Re-run the sign-up form (@{DEV_TEST_HANDLE} only)</ThemedText>
+      <ThemedText type="smallBold">Delete profile, re-run sign-up (@{DEV_TEST_HANDLE} only)</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
         Deletes the @{DEV_TEST_HANDLE} me row (traits, history, checks,
         questions, tokens — everything scoped to this account) but keeps the
@@ -868,7 +722,7 @@ function LocalAccountData() {
 
   return (
     <View style={styles.section}>
-      <ThemedText type="smallBold">Local account data</ThemedText>
+      <ThemedText type="smallBold">Clear this phone&apos;s saved state (not your account)</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
         Every `ato.*` key on this device that belongs to the ACCOUNT rather than
         the phone. These are what a deleted-then-recreated account used to
@@ -886,7 +740,7 @@ function LocalAccountData() {
       {note ? <ThemedText type="small">{note}</ThemedText> : null}
       <Chip label="refresh" selected={false} onPress={() => void load()} />
       <Chip
-        label={busy ? 'wiping…' : twoTap.armed === 'wipe' ? 'Tap again to wipe this device’s account data' : 'wipe local account data'}
+        label={busy ? 'clearing…' : twoTap.armed === 'wipe' ? 'Tap again to clear this phone’s saved state' : 'Clear this phone’s saved state'}
         selected={false}
         onPress={() => void wipe()}
       />
@@ -922,6 +776,16 @@ function CrisisLocalFlagTest() {
       />
       {note ? <ThemedText type="small">{note}</ThemedText> : null}
     </View>
+  );
+}
+
+/** The crisis card, both ways of testing it: preview it here, or flag today and open Home. */
+function CrisisTools() {
+  return (
+    <>
+      <CrisisCardPreview />
+      <CrisisLocalFlagTest />
+    </>
   );
 }
 
@@ -1044,7 +908,7 @@ function FenceTester() {
 
   return (
     <View style={styles.section}>
-      <ThemedText type="smallBold">Framework-echo fence</ThemedText>
+      <ThemedText type="smallBold">Banned-words check</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
         Paste any generated text (an insight, a category read, a question). Same matcher the
         generators use.
@@ -1774,7 +1638,6 @@ const styles = StyleSheet.create({
  * on the screen they test. Exported in one place so the declarations above keep
  * their plain `function Name()` form (several check scripts slice on it). */
 export {
-  ExploreRegen,
   TraitViewer,
   BandDetailStepper,
   JumpThisAccount,

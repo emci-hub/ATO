@@ -8,6 +8,7 @@ import type {
 import { clearPendingInviteCode, errorMessageForInvite } from '@/lib/invite';
 import { normalizeDeferredAxes } from '@/lib/questions/deferral';
 import { normalizeNavLayout, type NavLayout } from '@/lib/nav/nav-order';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { supabase } from '@/lib/supabase';
 import { localYmd } from '@/lib/local-date';
 import {
@@ -744,6 +745,32 @@ export async function persistCelebratedMilestones(userId: string, ids: readonly 
     .select()
     .single();
 
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Dev tool (Hub → Mini guy milestones): forget ONE celebrated milestone so it
+ * fires again on the next crossing check. The opposite of
+ * `persistCelebratedMilestones`; the dev jumps clear all of them at once.
+ */
+export async function forgetCelebratedMilestone(userId: string, id: string): Promise<Me> {
+  if (!PRE_LAUNCH_DEV) throw new Error('Milestone reset is pre-launch only');
+  const { data: current, error: readError } = await supabase
+    .from('me')
+    .select('celebrated_milestone_ids')
+    .eq('id', userId)
+    .single();
+  if (readError) throw readError;
+  const existing = Array.isArray(current?.celebrated_milestone_ids)
+    ? (current.celebrated_milestone_ids as string[])
+    : [];
+  const { data, error } = await supabase
+    .from('me')
+    .update({ celebrated_milestone_ids: existing.filter((row) => row !== id) })
+    .eq('id', userId)
+    .select()
+    .single();
   if (error) throw error;
   return data;
 }

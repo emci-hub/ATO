@@ -4,7 +4,6 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { pushBuddyNote } from '@/lib/buddy/notes';
 import { BANK_IS_LOADED, DAILY_LINES, allLines, dailyLineById } from '@/lib/daily-line/bank';
 import { clearLeans, eligibleLines, pickDailyLine, type LineDay } from '@/lib/daily-line/pick';
 import { clearMyDailyLinesRemote } from '@/lib/daily-line/pool-store';
@@ -139,24 +138,7 @@ export function DailyLineDev({ userId, timeZone }: { userId: string; timeZone: s
         </ThemedText>
       )}
 
-      <ThemedText type="smallBold">Mini guy</ThemedText>
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => {
-          // One that pops up by itself, one that waits behind the dot.
-          const stamp = Date.now();
-          pushBuddyNote({ id: `dev:loud:${stamp}`, title: 'Test note', body: 'This one pops up by itself.', loud: true });
-          pushBuddyNote({ id: `dev:quiet:${stamp}`, title: 'This one waited for a tap.', body: '', loud: false });
-          setNote('Sent two notes. Close this panel: one shows by itself, then a dot. Tap him for the second.');
-        }}
-        style={({ pressed }) => [
-          styles.button,
-          { borderColor: controlBorderColor(theme) },
-          pressed && styles.pressed,
-        ]}>
-        <ThemedText type="smallBold">Make him say something</ThemedText>
-      </Pressable>
-
+      {/* "Make him say something" moved to the Hub's Mini guy panel (2026-10-03). */}
       <Pressable
         accessibilityRole="button"
         onPress={() => {
