@@ -467,7 +467,10 @@ async function persistMergedTraits(
   const trackUpdates: TraitTrack[] = [];
 
   if (answers.length > 0) {
-    const tracks = await fetchTraitTracks(current.id).catch(() => [] as TraitTrack[]);
+    // No silent fallback to []: blending onto an empty list would upsert
+    // answerCount 1 over a real count (and stability 0 over a settled axis).
+    // Throw before anything is written; every caller shows its own retry.
+    const tracks = await fetchTraitTracks(current.id);
     for (const answer of answers) {
       const kind = trackKindForSource(answer.source);
       const prev = trackFor(tracks, answer.axis, kind);
@@ -529,9 +532,12 @@ async function persistMergedTraits(
     });
   }
   if (trackUpdates.length > 0) {
-    await upsertTraitTracks(current.id, trackUpdates).catch((err) => {
-      console.log('[traits] track upsert error:', err);
-    });
+    // Not swallowed: the track carries answerCount, which every stage, unlock
+    // and the full-profile payout read. A swallowed failure here made the
+    // pager stamp answers as saved while the count never moved. Throwing lets
+    // the caller's existing retry/error path (paged-questions failedBatches)
+    // show it.
+    await upsertTraitTracks(current.id, trackUpdates);
   }
   return { me: next, wrote: rows.length > 0 || trackUpdates.length > 0 };
 }

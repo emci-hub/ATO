@@ -183,4 +183,17 @@ assert.match(meSrc.slice(meSrc.indexOf('export async function updateTraits')), /
 assert.match(meSrc, /upsertTraitTracks/);
 ok('fetchMe / updateTraits still scope writes to the signed-in id; tracks persist beside ME');
 
+// Silent-save fix (2026-10-02): a failed track read or upsert must throw, not
+// log-and-continue. The track carries answerCount (every stage, unlock and the
+// full-profile payout); swallowing it let the pager stamp answers as saved.
+{
+  const persist = meSrc.slice(meSrc.indexOf('async function persistMergedTraits'));
+  const body = persist.slice(0, persist.indexOf('function reportSample'));
+  assert.match(body, /const tracks = await fetchTraitTracks\(current\.id\);/);
+  assert.doesNotMatch(body, /fetchTraitTracks\(current\.id\)\.catch/);
+  assert.match(body, /await upsertTraitTracks\(current\.id, trackUpdates\);/);
+  assert.doesNotMatch(body, /upsertTraitTracks\([^)]*\)\.catch/);
+  ok('trait-track read and upsert failures reach the caller (no silent save)');
+}
+
 console.log(`\n${passed} full-profile checks passed`);
