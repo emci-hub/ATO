@@ -173,12 +173,16 @@ assert.match(sql, /title_daily_cap/);
 ok('schema: dual tracks + title flags; title RPC does not increment Talk calls');
 
 const meSrc = read('src/lib/me.ts');
-assert.match(meSrc, /applyEwmaAnswer/);
-assert.match(meSrc, /trackKindForSource/);
+// Track maths runs on the server since wave79 (port of applyEwmaAnswer /
+// trackKindForSource: self_game -> game track, everything else -> report).
+const checkpointSql = read('supabase/migrations/wave79_trait_checkpoint.sql');
+assert.match(checkpointSql, /v_track text := case when p_mode = 'game' then 'game' else 'report' end;/);
+assert.match(checkpointSql, /public\.trait_ewma_step\(/);
 const confirmStart = meSrc.indexOf('export async function confirmTraits');
 const persistStart = meSrc.indexOf('async function persistMe(');
 assert.ok(confirmStart >= 0 && persistStart > confirmStart);
-assert.doesNotMatch(meSrc.slice(confirmStart, persistStart), /applyEwmaAnswer/);
+assert.match(meSrc.slice(confirmStart, persistStart), /confirmTraitSources\(axes\)/);
+assert.match(checkpointSql, /if p_mode = 'confirm' then\s+if v_cur is null then\s+return;\s+end if;\s+update public\.me\s+set trait_sources/);
 ok('confirm-upgrade still does not touch tracks or the number');
 
 const sage = read('src/app/(tabs)/sage.tsx');

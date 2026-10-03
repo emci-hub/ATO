@@ -23,8 +23,7 @@ import { supabase } from '@/lib/supabase';
 import { TRAIT_AXES } from '@/lib/traits';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { bumpAccountDataEpoch } from '@/lib/account-data-epoch';
-import { insertTraitHistory } from '@/lib/trait-history-store';
-import { upsertTraitTracks } from '@/lib/trait-tracks-store';
+import { applyDevTraitPreset, type DevTraitPreset } from '@/lib/trait-checkpoint';
 import {
   DEV_INTAKE_PRESET_SOURCE,
   DEV_INTAKE_PRESET_VALUES,
@@ -40,15 +39,15 @@ export const DEV_TEST_HANDLE = 'atodev';
 export const DEV_TEST_USER_ID = 'a70d3e0e-4c00-4a1e-8c0d-00000000d3e0';
 
 /**
- * Tops the account's answer history up to what the plan stands for.
- *
- * `claim_full_profile_complete` (wave52) pays the first +21 only once 50
- * `self_situation` rows exist in trait_history, and a jump writes none, so the
- * reveal could never show the +21 on a jumped account. The client may insert
- * its own history rows but not delete them, so this only ever ADDS the
- * shortfall: repeated jumps do not pile rows up.
+ * The answer-history rows needed to top the account up to what the plan
+ * stands for (only the shortfall, so repeated jumps do not pile rows up).
+ * The server writes them only for root (apply_dev_trait_preset): history rows
+ * cannot be deleted except by Start over, which is root only.
  */
-async function topUpAnswerHistory(userId: string, plan: DevAnswerPlan): Promise<void> {
+async function answerHistoryShortfall(
+  userId: string,
+  plan: DevAnswerPlan,
+): Promise<DevTraitPreset['history']> {
   const target = devPlanTotal(plan);
   const { count, error } = await supabase
     .from('trait_history')
@@ -57,8 +56,8 @@ async function topUpAnswerHistory(userId: string, plan: DevAnswerPlan): Promise<
     .eq('source', DEV_INTAKE_PRESET_SOURCE);
   if (error) throw error;
   const missing = target - (count ?? 0);
-  if (missing <= 0) return;
-  await insertTraitHistory(userId, devHistoryRows(plan, missing));
+  if (missing <= 0) return [];
+  return devHistoryRows(plan, missing);
 }
 
 /**
@@ -107,34 +106,40 @@ export async function applyDevIntakeStagePreset(
   const plan = stage.plan();
 
   const nowIso = new Date().toISOString();
-  const patch: Record<string, unknown> = {};
-  const traitSources: Record<string, string> = {};
-  const traitTouchedAt: Record<string, string> = {};
+  const values: DevTraitPreset['values'] = {};
+  const sources: DevTraitPreset['sources'] = {};
+  const touched: DevTraitPreset['touched'] = {};
   for (const axis of TRAIT_AXES) {
     const answered = plan[axis] > 0;
-    patch[axis] = answered ? DEV_INTAKE_PRESET_VALUES[axis] : null;
+    values[axis] = answered ? DEV_INTAKE_PRESET_VALUES[axis] : null;
     if (answered) {
-      traitSources[axis] = DEV_INTAKE_PRESET_SOURCE;
-      traitTouchedAt[axis] = nowIso;
+      sources[axis] = DEV_INTAKE_PRESET_SOURCE;
+      touched[axis] = nowIso;
     }
   }
-  patch.trait_sources = traitSources;
-  patch.trait_touched_at = traitTouchedAt;
-  // NOT NULL default '{}' (wave43) — empty array, never null.
-  patch.celebrated_milestone_ids = [];
+  const tracks = devIntakeTracks(DEV_INTAKE_PRESET_VALUES, plan, nowIso).map((row) => ({
+    axis: row.axis,
+    track: row.track,
+    value: row.value,
+    stability: row.stability,
+    answer_count: row.answerCount,
+    last_touched: row.lastTouched || nowIso,
+    last_depth_at: row.lastDepthAt,
+  }));
+  // History rows cannot be deleted by the client and only "Start over" (root)
+  // removes them. So they are only written where they can be undone: on a
+  // non-root account they would sit in the "How this has shifted" timeline
+  // for good and hand that account one real +21. The server also refuses them
+  // for non-root.
+  const history = options.topUpHistory ? await answerHistoryShortfall(user.id, plan) : [];
 
-  const { error } = await supabase.from('me').update(patch).eq('id', user.id);
-  if (error) throw error;
-
-  // From here the account HAS changed, so the cleanup runs even if a later
-  // write throws — otherwise screens keep showing the account as it was.
+  // One server call writes every trait row (wave79 apply_dev_trait_preset,
+  // pre-launch only). The client never writes trait rows itself.
   try {
-    await upsertTraitTracks(user.id, devIntakeTracks(DEV_INTAKE_PRESET_VALUES, plan, nowIso));
-    // History rows cannot be deleted by the client and only "Start over" (root)
-    // removes them. So they are only written where they can be undone: on a
-    // non-root account they would sit in the "How this has shifted" timeline
-    // for good and hand that account one real +21.
-    if (options.topUpHistory) await topUpAnswerHistory(user.id, plan);
+    await applyDevTraitPreset({ values, sources, touched, tracks, history });
+    // NOT NULL default '{}' (wave43) — empty array, never null.
+    const { error } = await supabase.from('me').update({ celebrated_milestone_ids: [] }).eq('id', user.id);
+    if (error) throw error;
   } finally {
     await afterAccountRewrite();
   }

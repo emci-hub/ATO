@@ -234,6 +234,29 @@ export function applyEwmaAnswer(
 }
 
 /**
+ * A tap or a setting (a DIRECT source: Settings, ranking, either/or pick) is
+ * not an answer (emci, 2026-10-03). It moves the value the same way an answer
+ * would, but never answerCount or stability, so taps alone can never finish a
+ * set, settle a trait or earn the +21. On a trait with no answers yet the
+ * value is simply the tapped one, at answerCount 0.
+ *
+ * The server runs this rule (wave79 `trait_ewma_step` mode 'direct');
+ * this copy exists so the parity check can prove the two agree.
+ */
+export function applyDirectAnswer(
+  current: TraitTrack | null,
+  axis: TraitAxis,
+  sample: number,
+  nowIso: string,
+): TraitTrack {
+  const stepped = applyEwmaAnswer(current, axis, 'report', sample, nowIso);
+  if (!current || current.answerCount <= 0) {
+    return { ...stepped, stability: 0, answerCount: 0 };
+  }
+  return { ...stepped, stability: current.stability, answerCount: current.answerCount };
+}
+
+/**
  * Records that an answer happened on an axis without letting it move the
  * number. `value` and `stability` carry through untouched, so a direct
  * source stays the one that decides the trait; only `answerCount` and

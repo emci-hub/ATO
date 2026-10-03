@@ -13,7 +13,8 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useCategoryDefs } from '@/lib/category-catalog';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
-import { AI_CONSENT_NEEDED_COPY, aiConsentFor, updateTraits, type Me } from '@/lib/me';
+import { AI_CONSENT_NEEDED_COPY, aiConsentFor, type Me } from '@/lib/me';
+import { answerRoundItem } from '@/lib/trait-checkpoint';
 import { claimFullProfileCompleteQuiet, claimOngoingRoundCompleteQuiet } from '@/lib/ato-tokens-server';
 import { ATO_TOKEN_PRICE, atoPriceLine, atoTokenBalanceOf, ATO_TOKEN_NEED_MORE } from '@/lib/ato-tokens';
 import { rerollQuestionItem } from '@/lib/questions/reroll';
@@ -29,7 +30,7 @@ import {
 } from '@/lib/questions/intake-stage';
 import {
   intakeSetHeader,
-  LEGACY_NEW_QUESTIONS_LINE,
+  legacyNewQuestionsLine,
   nextRoundLabel,
   STAGED_INTAKE_COPY_REVIEWED,
 } from '@/lib/questions/staged-intake-copy';
@@ -44,7 +45,7 @@ import {
 import { runOngoingRound } from '@/lib/questions/run-ongoing-round';
 import { prewarmBankPool } from '@/lib/questions/run-prewarm';
 import { isUnansweredQuestionItem } from '@/lib/questions/rotation';
-import { answerQuestionItem, fetchLatestOngoingRoundPack } from '@/lib/questions/store';
+import { fetchLatestOngoingRoundPack } from '@/lib/questions/store';
 import type {
   QuestionDraft,
   QuestionOption,
@@ -217,7 +218,7 @@ export function QuestionsFold({
           {optionalLegacy ? (
             <>
               <ThemedText type="small" themeColor="textSecondary">
-                {LEGACY_NEW_QUESTIONS_LINE}
+                {legacyNewQuestionsLine(set ? set.size - set.answered : 0)}
               </ThemedText>
               {setPager}
             </>
@@ -400,9 +401,11 @@ function OngoingRoundFold({
   ): Promise<boolean> {
     if (!pack) return false;
     try {
-      for (const { key, draft, option, optIndex } of answers) {
-        await answerQuestionItem(key, optIndex);
-        await updateTraits(me.id, { [draft.axis]: option.value }, 'self_situation', [draft.axis]);
+      // One checkpoint call per item (wave79 answer_round_item): marks it
+      // answered AND scores it in one server transaction, with the value read
+      // from the stored item — the phone never sends a score.
+      for (const { key, optIndex } of answers) {
+        await answerRoundItem(key, optIndex);
       }
       await onUpdated();
       // Functional update, not a closure read of `pack` — background saves

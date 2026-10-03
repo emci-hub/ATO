@@ -56,55 +56,9 @@ export async function fetchTraitTracks(userId: string): Promise<TraitTrack[]> {
   return out;
 }
 
-/**
- * Phase 4 — narrow value-only update for SECONDARY-axis evidence. Updates
- * ONLY `value`; deliberately does not touch stability/answer_count/
- * last_touched/last_depth_at directly, so a secondary write cannot move
- * `effectiveStability`/`isProfileSettled` on its own. (It can still have a
- * small, delayed, indirect effect: a later PRIMARY answer on the same axis
- * computes its own agreement against this nudged `value` — intended, and
- * still never an immediate effect.) No-op (silent) if the row does not
- * exist yet — same fail-open convention as the rest of this module; a
- * primary answer creates the row first.
+/*
+ * No writers here (wave79, 2026-10-03). Trait tracks are written only by the
+ * server checkpoint (lib/trait-checkpoint.ts). The old upsertTraitTracks /
+ * updateTraitTrackValueOnly / stampAxisDepth wrote from the phone and are
+ * gone; check:trait-checkpoint keeps them gone.
  */
-export async function updateTraitTrackValueOnly(
-  userId: string,
-  axis: TraitAxis,
-  track: TraitTrackKind,
-  value: number,
-): Promise<void> {
-  const { error } = await supabase
-    .from('trait_tracks')
-    .update({ value })
-    .eq('user_id', userId)
-    .eq('axis', axis)
-    .eq('track', track);
-  if (error) throw error;
-}
-
-export async function stampAxisDepth(userId: string, axis: TraitAxis): Promise<void> {
-  const { error } = await supabase
-    .from('trait_tracks')
-    .update({ last_depth_at: new Date().toISOString() })
-    .eq('user_id', userId)
-    .eq('axis', axis);
-  if (error) throw error;
-}
-
-export async function upsertTraitTracks(userId: string, rows: readonly TraitTrack[]): Promise<void> {
-  if (rows.length === 0) return;
-  const { error } = await supabase.from('trait_tracks').upsert(
-    rows.map((row) => ({
-      user_id: userId,
-      axis: row.axis,
-      track: row.track,
-      value: row.value,
-      stability: row.stability,
-      answer_count: row.answerCount,
-      last_touched: row.lastTouched || new Date().toISOString(),
-      last_depth_at: row.lastDepthAt,
-    })),
-    { onConflict: 'user_id,axis,track' },
-  );
-  if (error) throw error;
-}

@@ -12,7 +12,7 @@ import { isExtraAxis, scenarioForAxis } from '@/lib/scenario';
 import { depthKindFor } from '@/lib/depth-dive';
 import type { TraitAxis } from '@/lib/traits';
 import { DEPTH_COOLDOWN_HOURS, depthReady } from '@/lib/trait-stability';
-import { stampAxisDepth } from '@/lib/trait-tracks-store';
+import { stampAxisDepth } from '@/lib/trait-checkpoint';
 import { controlBorderColor } from '@/lib/theme/chrome';
 
 /**
@@ -41,7 +41,7 @@ export function DepthDive({
   const ready = depthReady(lastDepthAt ?? null);
 
   async function afterWrite() {
-    await stampAxisDepth(me.id, axis).catch((err) => {
+    await stampAxisDepth(axis).catch((err) => {
       console.log('[depth] stamp error:', err);
     });
     await onUpdated();

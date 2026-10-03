@@ -128,13 +128,8 @@ export async function saveOngoingRoundBatch(drafts: QuestionDraft[]): Promise<Qu
   return pack;
 }
 
-export async function answerQuestionItem(itemId: string, optionIndex: number): Promise<void> {
-  const { error } = await supabase.rpc('answer_question_item', {
-    p_item_id: itemId,
-    p_option_index: optionIndex,
-  });
-  if (error) throw error;
-}
+// Answering a round item is answer_round_item in lib/trait-checkpoint.ts
+// (wave79): it marks the item answered AND scores it in one server call.
 
 export async function saveQuestionDeferral(
   userId: string,

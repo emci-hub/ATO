@@ -106,8 +106,16 @@ Read before editing the area. Each one has bitten this repo at least once.
 - **`record_check` is the only Check write.** Client-side inserts into `checks` are
   RLS-blocked. Window is today or 2 days back; P0017/P0018/P0019 map to user copy in
   `checks.ts`.
-- **Direct writes to trait columns bypass EWMA.** Only the dev preset does this, and
-  only for the dev user. Everything else goes through `mergeTraitWrite`.
+- **Trait scores are written only by the server checkpoint (wave79, 2026-10-03).**
+  The phone sends "question X, option Y" or "set trait to V"; `_trait_write` does the
+  maths. The TS functions (`applyEwmaAnswer`, `applyDirectAnswer`, `mergeTraitWrite`)
+  are now the reference the SQL is pinned against — change one, change both and
+  re-run the parity vectors (`check:trait-checkpoint`). Until wave80 (the lock) is
+  applied, older app bundles can still write directly; apply it only after the OTA
+  that moved writes has reached phones, or answer saving breaks on old bundles.
+- **An intake answer is accepted only as that trait's NEXT intake question**
+  (`answer_count = set_no - 1`). A dev jump or reset that changes counts changes
+  which intake question is open; that is intended.
 - **Inferred sources damp toward 0.5 on a null prior**, so a first answer through
   `self_situation` lands mid-band and never becomes "settled". Use a direct source for
   first-touch flows (this is why optional intake uses `self_scenario`).

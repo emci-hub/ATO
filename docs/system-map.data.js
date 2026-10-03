@@ -728,10 +728,15 @@ var SYSTEM_MAP = {
         [
           "Who reads it",
           "Insight, Story, Category reads, the round planner, Explore's trait bands, and intake progress."
+        ],
+        [
+          "Who writes it",
+          "Only the server checkpoint (wave79, 2026-10-03): answer_intake_question, answer_round_item, set_trait_direct, record_game_pick, apply_dev_trait_preset. The phone sends what happened; the server checks it and runs the scoring. A tap moves the value but never answer_count. Client write grants are revoked by wave80 (prepared, applied on emci's 'lock')."
         ]
       ],
       "files": [
-        "src/lib/trait-tracks-store.ts:47-96",
+        "src/lib/trait-checkpoint.ts",
+        "supabase/migrations/wave79_trait_checkpoint.sql",
         "supabase/migrations/wave20*.sql:4"
       ]
     },
@@ -745,11 +750,16 @@ var SYSTEM_MAP = {
       "facts": [
         [
           "Also used for",
-          "The +21 intake payout counts rows here (needs at least 50 from question answers)."
+          "One of the +21 intake payout's ways in (50 rows from question answers, the old rule). wave78 also pays on every trait at 3 answers, or the old-50 shape."
+        ],
+        [
+          "Who writes it",
+          "Only the server checkpoint (wave79). Every accepted question answer is also logged in trait_answers (intake by question text, round by item id)."
         ]
       ],
       "files": [
-        "src/lib/trait-history-store.ts:11-24",
+        "src/lib/trait-history-store.ts",
+        "supabase/migrations/wave79_trait_checkpoint.sql",
         "supabase/migrations/wave19*.sql:8"
       ]
     },

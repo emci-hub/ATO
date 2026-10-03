@@ -222,7 +222,7 @@ The original 2-option wordings (e.g. "You need reassurance more often than you w
 - Mini guy after the reveal: "Insight, categories and your next 16 are open."
 - A trait whose answers pulled two ways: "Settled, loosely — your answers pulled two ways. The next round checks again."
 - Round button: "Next 16 questions" · while building: "Putting together your next 16…" · error: "Couldn't put together your next 16 — check your connection and try again."
-- Old-50 accounts with the new third questions: "Ten traits got a third question. Optional — nothing you've opened goes anywhere."
+- Old-50 accounts with the new third questions: "10 traits have a new third question. Optional — nothing you've opened goes anywhere." (the number is how many are still open; "One trait has…" for one)
 - A closed category: "Needs 2 settled traits behind it — you have 1. Waiting on Composure and Growth. Your next round asks. Nothing was generated."
 - Questions progress: "4 of 16 in this set · 4 of 16 traits"
 - Token history: "Finished the intake questions", "Finished a round"

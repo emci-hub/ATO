@@ -45,10 +45,14 @@ export function intakeRevealTitle(total: number): string {
 
 /**
  * For an account that finished the old 50 and still has restored third
- * questions to answer. Optional: nothing it opened goes anywhere.
+ * questions to answer. Optional: nothing it opened goes anywhere. `count` is
+ * how many traits are still waiting on theirs (some may have had a third
+ * answer from a round already).
  */
-export const LEGACY_NEW_QUESTIONS_LINE =
-  "Ten traits got a third question. Optional — nothing you've opened goes anywhere.";
+export function legacyNewQuestionsLine(count: number): string {
+  const traits = count === 1 ? 'One trait has' : `${count} traits have`;
+  return `${traits} a new third question. Optional — nothing you've opened goes anywhere.`;
+}
 
 /** A closed category names the trait it is waiting on instead of reading blank. */
 export function categoryWaitingLine(traitNames: readonly string[]): string {

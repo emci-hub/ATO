@@ -653,8 +653,11 @@ assert.doesNotMatch(sage, /QuestionsFold/);
 assert.match(questionsScreen, /QuestionsFold/);
 assert.doesNotMatch(you, /\/questions/);
 const fold = read('src/components/questions-fold.tsx');
-assert.match(fold, /updateTraits/);
-assert.match(fold, /self_situation/);
+// Answers go through the server checkpoint (wave79): intake via
+// applyQuestionAnswer -> answerIntakeQuestion, rounds via answerRoundItem.
+assert.match(fold, /applyQuestionAnswer\(/);
+assert.match(fold, /answerRoundItem\(/);
+assert.doesNotMatch(fold, /\bupdateTraits\(/);
 assert.doesNotMatch(fold, /TextInput/);
 // Full Profile wiring: every question still renders straight from the
 // static bank (bankProgressForAxis/bankTotalProgress) — not routed through

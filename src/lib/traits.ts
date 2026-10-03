@@ -181,7 +181,9 @@ export function mergeTraitWrite(
   for (const axis of allowed) {
     const raw = incoming[axis];
     if (raw == null || !Number.isFinite(raw)) continue;
-    if (isDirectTraitSource(current.sources[axis]) && !isDirectTraitSource(source)) continue;
+    // Sticky only while the trait has a value: a leftover direct label on an
+    // empty trait (after a reset) must not block it forever (2026-10-03).
+    if (current.values[axis] != null && isDirectTraitSource(current.sources[axis]) && !isDirectTraitSource(source)) continue;
     values[axis] = isInferredTraitSource(source)
       ? blendInferredTrait(raw, values[axis])
       : clamp01(raw);

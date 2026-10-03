@@ -20,29 +20,16 @@ import {
   sageKnowsWeekKey,
   type SageKnowsState,
 } from '@/lib/sage-knows';
-import { applyForcedPickWrite, applyRankingWrite } from '@/lib/ranking';
-import { applyScenarioWrite, type ExtraAxis, type ScenarioPole } from '@/lib/scenario';
+import { forcedPickForAxis, rankingWritePreview, scoreForcedPick } from '@/lib/ranking';
+import { SCENARIO_DECK, type ExtraAxis, type ScenarioPole } from '@/lib/scenario';
+import { allowedAxesForSource, type TraitAxis, type TraitSource } from '@/lib/traits';
 import {
-  mergeTraitWrite,
-  confirmTraitSource,
-  traitPatch,
-  traitStateFromRow,
-  allowedAxesForSource,
-  type TraitAxis,
-  type TraitSource,
-} from '@/lib/traits';
+  confirmTraitSources,
+  recordGamePick,
+  setTraitDirect,
+  type MeRowJson,
+} from '@/lib/trait-checkpoint';
 import { withoutFactAt } from '@/lib/facts';
-import { historyDiff } from '@/lib/trait-history';
-import { insertTraitHistory } from '@/lib/trait-history-store';
-import {
-  applyCountOnlyAnswer,
-  applyEwmaAnswer,
-  shouldWriteReportTrack,
-  trackFor,
-  trackKindForSource,
-  type TraitTrack,
-} from '@/lib/trait-stability';
-import { fetchTraitTracks, upsertTraitTracks } from '@/lib/trait-tracks-store';
 import { containsFrameworkTerm, FACT_FRAMEWORK_MESSAGE } from '@/lib/voice/framework-fence';
 import { voicePresetOf, type VoicePreset } from '@/lib/voice/preset';
 
@@ -447,150 +434,28 @@ export async function updateIntake(userId: string, patch: IntakePatch): Promise<
 
 export { FACT_FRAMEWORK_MESSAGE };
 
-type TraitAnswer = {
-  axis: TraitAxis;
-  sample: number;
-  source: Exclude<TraitSource, 'self_confirm'>;
-  /** Record that the answer happened; leave value and stability alone. */
-  countOnly?: boolean;
-};
-
-async function persistMergedTraits(
-  current: Me,
-  merged: ReturnType<typeof mergeTraitWrite>,
-  extra: Record<string, unknown> = {},
-  answers: TraitAnswer[] = [],
-): Promise<{ me: Me; wrote: boolean }> {
-  const previous = traitStateFromRow(current);
-  const nowIso = new Date().toISOString();
-  let nextMerged = merged;
-  const trackUpdates: TraitTrack[] = [];
-
-  if (answers.length > 0) {
-    // No silent fallback to []: blending onto an empty list would upsert
-    // answerCount 1 over a real count (and stability 0 over a settled axis).
-    // Throw before anything is written; every caller shows its own retry.
-    const tracks = await fetchTraitTracks(current.id);
-    for (const answer of answers) {
-      const kind = trackKindForSource(answer.source);
-      const prev = trackFor(tracks, answer.axis, kind);
-      if (answer.countOnly) {
-        const stored = nextMerged.values[answer.axis];
-        const seed =
-          typeof stored === 'number' && Number.isFinite(stored) ? stored : answer.sample;
-        trackUpdates.push(applyCountOnlyAnswer(prev, answer.axis, nowIso, seed));
-        continue;
-      }
-      const next = applyEwmaAnswer(prev, answer.axis, kind, answer.sample, nowIso);
-      trackUpdates.push(next);
-      if (kind === 'report') {
-        nextMerged = {
-          ...nextMerged,
-          values: { ...nextMerged.values, [answer.axis]: next.value },
-        };
-      }
-    }
-  }
-
-  const rows = historyDiff(previous, nextMerged);
-  for (const answer of answers) {
-    if (answer.source !== 'self_game') continue;
-    const updated = trackUpdates.find((row) => row.axis === answer.axis && row.track === 'game');
-    if (!updated) continue;
-    if (rows.some((row) => row.axis === answer.axis && row.source === 'self_game')) continue;
-    rows.push({ axis: answer.axis, value: updated.value, source: 'self_game' });
-  }
-  // A count-only self_situation answer never changes `values`, so historyDiff
-  // (value-change-only) never sees it — but the person DID answer, and
-  // claim_full_profile_complete's payout floor counts self_situation
-  // trait_history rows. Without this, an axis already owned by a direct
-  // source (grid intake, ranking taps, settings) silently never contributes
-  // to that floor no matter how many times it's answered on the Questions
-  // tab, so a normal 50-question completion could permanently fall short of
-  // the payout through no fault of the user. Same explicit-row pattern as
-  // self_game above, just keyed on countOnly instead of track kind.
-  for (const answer of answers) {
-    if (answer.source !== 'self_situation' || !answer.countOnly) continue;
-    if (rows.some((row) => row.axis === answer.axis && row.source === 'self_situation')) continue;
-    const value = nextMerged.values[answer.axis];
-    if (value == null || !Number.isFinite(value)) continue;
-    rows.push({ axis: answer.axis, value, source: 'self_situation' });
-  }
-
-  if (rows.length === 0 && trackUpdates.length === 0 && Object.keys(extra).length === 0) {
-    return { me: current, wrote: false };
-  }
-
-  const patch = { ...traitPatch(nextMerged), ...extra };
-  const next =
-    rows.length > 0 || Object.keys(extra).length > 0
-      ? await persistMe(current.id, patch)
-      : current;
-  if (rows.length > 0) {
-    await insertTraitHistory(current.id, rows).catch((err) => {
-      console.log('[traits] history insert error:', err);
-    });
-  }
-  if (trackUpdates.length > 0) {
-    // Not swallowed: the track carries answerCount, which every stage, unlock
-    // and the full-profile payout read. A swallowed failure here made the
-    // pager stamp answers as saved while the count never moved. Throwing lets
-    // the caller's existing retry/error path (paged-questions failedBatches)
-    // show it.
-    await upsertTraitTracks(current.id, trackUpdates);
-  }
-  return { me: next, wrote: rows.length > 0 || trackUpdates.length > 0 };
-}
-
-function reportSample(
-  merged: ReturnType<typeof mergeTraitWrite>,
-  axis: TraitAxis,
-  source: Exclude<TraitSource, 'self_confirm' | 'self_game'>,
-): TraitAnswer[] {
-  const sample = merged.values[axis];
-  if (sample == null || !Number.isFinite(sample)) return [];
-  return [{ axis, sample, source }];
-}
-
-function gameSample(
-  axis: TraitAxis,
-  pole: ScenarioPole,
-): TraitAnswer[] {
-  return [{ axis, sample: pole === 'high' ? 0.8 : 0.2, source: 'self_game' }];
-}
-
-function collectAnswers(
-  current: ReturnType<typeof traitStateFromRow>,
-  incoming: Partial<Record<TraitAxis, number | null>>,
-  source: Exclude<TraitSource, 'self_confirm'>,
-  allowed: readonly TraitAxis[],
-): TraitAnswer[] {
-  const out: TraitAnswer[] = [];
-  for (const axis of allowed) {
-    const raw = incoming[axis];
-    if (raw == null || !Number.isFinite(raw)) continue;
-    if (source === 'self_game') {
-      out.push({ axis, sample: raw, source });
-      continue;
-    }
-    if (!shouldWriteReportTrack(current.sources[axis], source)) {
-      // The frozen intake still counts toward the Sage/Legends unlock on an
-      // axis a direct source already owns — recorded, but never allowed to
-      // move the number. Every other inferred source keeps being dropped.
-      if (source !== 'self_situation') continue;
-      out.push({ axis, sample: raw, source, countOnly: true });
-      continue;
-    }
-    out.push({ axis, sample: raw, source });
-  }
-  return out;
+/**
+ * Every trait write goes through the server checkpoint (lib/trait-checkpoint,
+ * wave79, emci 2026-10-03). The phone no longer computes or writes scores: it
+ * says what happened and the server checks it and does the scoring — the same
+ * maths that used to run here (mergeTraitWrite → applyEwmaAnswer →
+ * historyDiff), ported and pinned by check:trait-checkpoint. Question answers
+ * have their own checkpoints (answerIntakeQuestion / answerRoundItem); the
+ * functions below cover taps, settings, ranking, either/or picks, the
+ * gut-call game and "still fits".
+ *
+ * Rule change with it: a tap is not an answer. It moves the value but never
+ * answer_count, so taps alone cannot finish a set, settle a trait or earn
+ * the +21.
+ */
+function rowToMe(row: MeRowJson): Me {
+  return withVisible(row as unknown as Me);
 }
 
 /**
- * Optional-phase write. Source-aware merge: a later inferred write never
- * overwrites an axis already set by a direct source. Only `allowed` axes
- * are written. last_touched bumps on a successful write. Confirm-upgrade
- * is `confirmTraits` — this path cannot take `self_confirm`.
+ * Direct writes (Settings taps, the optional scenario screens). One checkpoint
+ * call per axis. Question answers are NOT taken here — they go through
+ * answerIntakeQuestion / answerRoundItem, which check the question.
  */
 export async function updateTraits(
   userId: string,
@@ -598,32 +463,28 @@ export async function updateTraits(
   source: Exclude<TraitSource, 'self_confirm'>,
   allowed: readonly TraitAxis[] = allowedAxesForSource(source),
 ): Promise<Me> {
+  if (source !== 'self_tap' && source !== 'self_settings' && source !== 'self_scenario') {
+    throw new Error(`updateTraits takes direct sources only; ${source} goes through its own checkpoint`);
+  }
+  let latest: Me | null = null;
+  for (const axis of allowed) {
+    const raw = incoming[axis];
+    if (raw == null || !Number.isFinite(raw)) continue;
+    latest = rowToMe(await setTraitDirect(axis, raw, source));
+  }
+  if (latest) return latest;
   const current = await fetchMe(userId);
   if (!current) throw new Error('Not authenticated');
-  const state = traitStateFromRow(current);
-  const merged = mergeTraitWrite(state, incoming, source, allowed);
-  const answers = collectAnswers(state, incoming, source, allowed);
-  return (await persistMergedTraits(current, merged, {}, answers)).me;
+  return current;
 }
 
 /**
- * Confirm-upgrade persist. Source becomes `self_confirm` and last_touched
- * bumps. The stored 0–1 number is never in this signature and never changes.
+ * Confirm-upgrade. Source becomes `self_confirm` and last_touched bumps. The
+ * stored 0–1 number is never in this signature and never changes.
  */
 export async function confirmTraits(userId: string, axes: readonly TraitAxis[]): Promise<Me> {
-  const current = await fetchMe(userId);
-  if (!current) throw new Error('Not authenticated');
-  const confirmed = confirmTraitSource(traitStateFromRow(current), axes);
-  const patch = traitPatch(confirmed);
-  const { data, error } = await supabase
-    .from('me')
-    .update(patch)
-    .eq('id', userId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return withVisible(data as Me);
+  void userId;
+  return rowToMe(await confirmTraitSources(axes));
 }
 
 async function persistMe(
@@ -640,14 +501,14 @@ export async function recordSageKnowsFits(userId: string, axis: TraitAxis): Prom
   const current = await fetchMe(userId);
   if (!current) throw new Error('Not authenticated');
   const now = new Date();
-  const confirmed = confirmTraitSource(traitStateFromRow(current), [axis], now.toISOString());
   const knows = applySageKnowsStillFits(
     parseSageKnowsState(current.sage_knows),
     axis,
     weekKeyFor(current, now),
     now.toISOString(),
   );
-  return persistMe(userId, { ...traitPatch(confirmed), sage_knows: knows });
+  await confirmTraitSources([axis]);
+  return persistMe(userId, { sage_knows: knows });
 }
 
 /** Not quite — Settings write on one axis + streak reset. */
@@ -659,22 +520,13 @@ export async function recordSageKnowsCorrection(
   const current = await fetchMe(userId);
   if (!current) throw new Error('Not authenticated');
   const now = new Date();
-  const state = traitStateFromRow(current);
-  const merged = mergeTraitWrite(
-    state,
-    { [axis]: value },
-    'self_settings',
-    [axis],
-    now.toISOString(),
-  );
   const knows = applySageKnowsNotQuite(
     parseSageKnowsState(current.sage_knows),
     axis,
     weekKeyFor(current, now),
   );
-  return (await persistMergedTraits(current, merged, { sage_knows: knows }, [
-    { axis, sample: value, source: 'self_settings' },
-  ])).me;
+  await setTraitDirect(axis, value, 'self_settings');
+  return persistMe(userId, { sage_knows: knows });
 }
 
 /** Dismiss ends this week's turn. Does not deal another axis. */
@@ -698,25 +550,14 @@ export async function recordRanking(
   const current = await fetchMe(userId);
   if (!current) throw new Error('Not authenticated');
   const now = new Date();
-  const merged = applyRankingWrite(
-    traitStateFromRow(current),
-    axis,
-    order,
-    now.toISOString(),
-  );
   const knows = applyRankingWeek(
     parseSageKnowsState(current.sage_knows),
     axis,
     weekKeyFor(current, now),
     'answered',
   );
-  const { me: next } = await persistMergedTraits(
-    current,
-    merged,
-    { sage_knows: knows },
-    reportSample(merged, axis, 'self_tap'),
-  );
-  return next;
+  await setTraitDirect(axis, rankingWritePreview(axis, order), 'self_tap');
+  return persistMe(userId, { sage_knows: knows });
 }
 
 /** Ranking dismiss ends this week's turn. Does not write an axis. */
@@ -732,6 +573,11 @@ export async function recordRankingDismiss(userId: string, axis: TraitAxis): Pro
   return persistMe(userId, { sage_knows: knows });
 }
 
+function scenarioPickValue(axis: ExtraAxis, pole: ScenarioPole): 0.2 | 0.8 {
+  const def = SCENARIO_DECK[axis];
+  return (pole === 'high' ? def.high.value : def.low.value) as 0.2 | 0.8;
+}
+
 /** Scenario pick — `self_game` on one extra axis + claims the game-invite week. */
 export async function recordScenario(
   userId: string,
@@ -741,48 +587,24 @@ export async function recordScenario(
   const current = await fetchMe(userId);
   if (!current) throw new Error('Not authenticated');
   const now = new Date();
-  const merged = applyScenarioWrite(
-    traitStateFromRow(current),
-    axis,
-    pole,
-    now.toISOString(),
-  );
   const knows = applyScenarioWeek(
     parseSageKnowsState(current.sage_knows),
     axis,
     weekKeyFor(current, now),
     'answered',
   );
-  const { me: next } = await persistMergedTraits(
-    current,
-    merged,
-    { sage_knows: knows },
-    gameSample(axis, pole),
-  );
-  return next;
+  await recordGamePick(axis, scenarioPickValue(axis, pole));
+  return persistMe(userId, { sage_knows: knows });
 }
 
-/** Standalone ranking — same self_tap merge, does not claim the weekly Ask. */
+/** Standalone ranking — same self_tap write, does not claim the weekly Ask. */
 export async function recordStandaloneRanking(
   userId: string,
   axis: TraitAxis,
   order: readonly string[],
 ): Promise<Me> {
-  const current = await fetchMe(userId);
-  if (!current) throw new Error('Not authenticated');
-  const merged = applyRankingWrite(
-    traitStateFromRow(current),
-    axis,
-    order,
-    new Date().toISOString(),
-  );
-  const { me: next } = await persistMergedTraits(
-    current,
-    merged,
-    {},
-    reportSample(merged, axis, 'self_tap'),
-  );
-  return next;
+  void userId;
+  return rowToMe(await setTraitDirect(axis, rankingWritePreview(axis, order), 'self_tap'));
 }
 
 /** Compare-two pick from RANKING_ROUNDS poles. self_tap. No weekly slot. */
@@ -791,37 +613,21 @@ export async function recordForcedPick(
   axis: TraitAxis,
   pole: 'high' | 'low',
 ): Promise<{ me: Me; wrote: boolean }> {
-  const current = await fetchMe(userId);
-  if (!current) throw new Error('Not authenticated');
-  const merged = applyForcedPickWrite(
-    traitStateFromRow(current),
-    axis,
-    pole,
-    new Date().toISOString(),
-  );
-  const result = await persistMergedTraits(
-    current,
-    merged,
-    {},
-    reportSample(merged, axis, 'self_tap'),
-  );
-  return result;
+  const pick = forcedPickForAxis(axis);
+  if (!pick) {
+    const current = await fetchMe(userId);
+    if (!current) throw new Error('Not authenticated');
+    return { me: current, wrote: false };
+  }
+  return { me: rowToMe(await setTraitDirect(axis, scoreForcedPick(pick, pole), 'self_tap')), wrote: true };
 }
 export async function recordStandaloneScenario(
   userId: string,
   axis: ExtraAxis,
   pole: ScenarioPole,
 ): Promise<{ me: Me; wrote: boolean }> {
-  const current = await fetchMe(userId);
-  if (!current) throw new Error('Not authenticated');
-  const merged = applyScenarioWrite(
-    traitStateFromRow(current),
-    axis,
-    pole,
-    new Date().toISOString(),
-  );
-  const result = await persistMergedTraits(current, merged, {}, gameSample(axis, pole));
-  return result;
+  void userId;
+  return { me: rowToMe(await recordGamePick(axis, scenarioPickValue(axis, pole))), wrote: true };
 }
 
 /** Scenario dismiss ends this week's turn. Does not write an axis. */

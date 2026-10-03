@@ -356,7 +356,8 @@ assert.match(read('src/app/(tabs)/explore.tsx'), /settledAxisLabel/);
 // 2026-09-15) — inverted per the Card 2/3 "invert, don't delete" convention.
 assert.doesNotMatch(read('src/app/(tabs)/explore.tsx'), /SageInsightSpend/);
 assert.match(read('src/components/axis-taps.tsx'), /TRAIT_UNDO/);
-assert.match(read('src/lib/me.ts'), /insertTraitHistory/);
+// History rows are written by the server checkpoint since wave79.
+assert.match(read('supabase/migrations/wave79_trait_checkpoint.sql'), /insert into public\.trait_history \(user_id, axis, value, source\)/);
 assert.match(read('src/lib/me.ts'), /recordStandaloneRanking/);
 assert.match(read('src/lib/me.ts'), /recordStandaloneScenario/);
 assert.match(read('src/lib/me.ts'), /recordForcedPick/);
@@ -366,7 +367,7 @@ assert.equal(answeredAxisLabel(traitValuesFromPartial({})), `0 of ${TRAIT_AXES.l
 assert.equal(answeredAxisCount(traitValuesFromPartial({ autonomy: 0.8 })), 1);
 
 const meSrc = read('src/lib/me.ts');
-assert.match(meSrc, /persistMergedTraits/);
+assert.match(meSrc, /from '@\/lib\/trait-checkpoint'/);
 // The sweep ("A faster pass", 2026-09-15) and the Infinite Questions router
 // that this used to check against it (2026-09-16) are both gone entirely.
 assert.ok(

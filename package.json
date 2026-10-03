@@ -129,6 +129,7 @@
     "check:invite": "tsx ./scripts/invite-check.ts",
     "check:founder-access": "tsx ./scripts/founder-access-check.ts",
     "check:intake": "tsx ./scripts/intake-check.ts",
+    "check:trait-checkpoint": "tsx ./scripts/trait-checkpoint-check.ts",
     "check:traits": "tsx ./scripts/traits-check.ts",
     "check:trait-stability": "tsx ./scripts/trait-stability-check.ts",
     "check:kalman": "tsx ./scripts/kalman-check.ts",

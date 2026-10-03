@@ -31,9 +31,13 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   a trigger refuses client writes to the column.
 - **`record_check` is the only write path for a Check.** Today or up to 2 days back;
   day 3+ is closed. Read/Do text lives 7 days; did/skip forever.
-- **Trait writes go through `mergeTraitWrite` → `updateTraits`** (EWMA, direct sources
-  sticky over inferred). Direct writes to trait columns are dev tooling only (the
-  jump stages; see the dev-testing rule below).
+- **Trait writes go through the server checkpoint** (`src/lib/trait-checkpoint.ts` →
+  wave79 RPCs: `answer_intake_question`, `answer_round_item`, `set_trait_direct`,
+  `record_game_pick`, `confirm_trait_sources`, `apply_dev_trait_preset`). The server
+  checks the question/option and runs the EWMA (port of `applyEwmaAnswer` /
+  `mergeTraitWrite`, pinned by `check:trait-checkpoint`). No client code writes
+  `trait_tracks`, `trait_history` or the `me` trait columns. A tap is not an answer:
+  it moves the value, never `answer_count`. wave80 (the lock) is prepared, NOT applied.
 - **`PRE_LAUNCH_DEV`** (`src/lib/dev-mode.ts`) un-gates dev tooling while invite-only.
   Must be `false` before a public build — `check:release-mode` enforces it. With it
   off, no dev tool renders for anyone: no PIN, password unlock or grant opens the Hub's

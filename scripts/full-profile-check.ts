@@ -179,21 +179,22 @@ const meSrc = read('src/lib/me.ts');
 assert.match(meSrc, /export async function fetchMe/);
 assert.match(meSrc, /export async function updateTraits/);
 assert.match(meSrc.slice(meSrc.indexOf('export async function fetchMe')), /\.eq\('id', userId\)/);
-assert.match(meSrc.slice(meSrc.indexOf('export async function updateTraits')), /\.eq\('id', userId\)/);
-assert.match(meSrc, /upsertTraitTracks/);
-ok('fetchMe / updateTraits still scope writes to the signed-in id; tracks persist beside ME');
+// Since wave79 (2026-10-03) updateTraits writes through the server checkpoint,
+// which scopes every write to auth.uid() itself (check:trait-checkpoint).
+assert.match(meSrc.slice(meSrc.indexOf('export async function updateTraits')), /setTraitDirect\(axis, raw, source\)/);
+ok('fetchMe scopes reads to the signed-in id; updateTraits writes through the server checkpoint');
 
-// Silent-save fix (2026-10-02): a failed track read or upsert must throw, not
-// log-and-continue. The track carries answerCount (every stage, unlock and the
-// full-profile payout); swallowing it let the pager stamp answers as saved.
+// Silent-save fix (2026-10-02), kept through the move to the server
+// checkpoint (2026-10-03): a refused or failed save must throw, never be
+// swallowed — the pager only stamps an answer as saved on a confirmed save.
 {
-  const persist = meSrc.slice(meSrc.indexOf('async function persistMergedTraits'));
-  const body = persist.slice(0, persist.indexOf('function reportSample'));
-  assert.match(body, /const tracks = await fetchTraitTracks\(current\.id\);/);
-  assert.doesNotMatch(body, /fetchTraitTracks\(current\.id\)\.catch/);
-  assert.match(body, /await upsertTraitTracks\(current\.id, trackUpdates\);/);
-  assert.doesNotMatch(body, /upsertTraitTracks\([^)]*\)\.catch/);
-  ok('trait-track read and upsert failures reach the caller (no silent save)');
+  const checkpoint = read('src/lib/trait-checkpoint.ts');
+  assert.match(checkpoint, /const \{ data, error \} = await supabase\.rpc\(name, args\);\s*if \(error\) throw error;/);
+  assert.doesNotMatch(checkpoint, /\.catch\(/, 'the checkpoint client never swallows an error');
+  const answer = read('src/lib/questions/answer.ts');
+  assert.match(answer, /await answerIntakeQuestion\(draft\.prompt, optionIndex\);/);
+  assert.doesNotMatch(answer, /\.catch\(/);
+  ok('a refused or failed trait save reaches the caller (no silent save)');
 }
 
 console.log(`\n${passed} full-profile checks passed`);

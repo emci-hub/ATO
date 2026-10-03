@@ -271,14 +271,21 @@ function main() {
   assert.match(jumpBody, /if \(!PRE_LAUNCH_DEV\) throw new Error/);
   assert.doesNotMatch(jumpBody, /user\.id !== DEV_TEST_USER_ID/, 'jumps work on the signed-in account (emci, 2026-10-01)');
   assert.match(jumpBody, /if \(!user\) throw new Error/, 'it still needs a signed-in account');
-  assert.match(jumpBody, /\.from\('me'\)\.update\(patch\)\.eq\('id', user\.id\)/, 'own row only');
-  assert.match(jumpBody, /upsertTraitTracks/);
-  assert.match(jumpBody, /if \(options\.topUpHistory\) await topUpAnswerHistory\(user\.id, plan\);/, 'history is only written where Start over can undo it');
+  // Since wave79 (2026-10-03) every trait row goes through one server call,
+  // apply_dev_trait_preset: own account (auth.uid()), pre-launch only, history
+  // rows only for root. The client writes only the non-trait reveal reset.
+  assert.match(jumpBody, /await applyDevTraitPreset\(\{ values, sources, touched, tracks, history \}\);/, 'trait rows go through the server');
+  assert.match(jumpBody, /\.from\('me'\)\.update\(\{ celebrated_milestone_ids: \[\] \}\)\.eq\('id', user\.id\)/, 'own row only, non-trait column only');
+  assert.match(jumpBody, /const history = options\.topUpHistory \? await answerHistoryShortfall\(user\.id, plan\) : \[\];/, 'history is only written where Start over can undo it');
   assert.match(jumpBody, /\} finally \{\s*await afterAccountRewrite\(\);\s*\}/, 'the cleanup runs even when a later write throws');
-  assert.match(jumpBody, /celebrated_milestone_ids = \[\]/, 'so the after-50 reveal shows again');
   assert.equal(jumpBody.match(/\.delete\(\)/), null, 'a jump deletes nothing (the client has no delete on these tables)');
-  const topUp = moduleSrc.slice(moduleSrc.indexOf('async function topUpAnswerHistory'), moduleSrc.indexOf('async function afterAccountRewrite'));
-  assert.match(topUp, /const missing = target - \(count \?\? 0\);\s*if \(missing <= 0\) return;/, 'idempotent: only the shortfall, so repeated jumps do not pile rows up');
+  const topUp = moduleSrc.slice(moduleSrc.indexOf('async function answerHistoryShortfall'), moduleSrc.indexOf('async function afterAccountRewrite'));
+  assert.match(topUp, /const missing = target - \(count \?\? 0\);\s*if \(missing <= 0\) return \[\];/, 'idempotent: only the shortfall, so repeated jumps do not pile rows up');
+  const devRpc = read('supabase/migrations/wave79_trait_checkpoint.sql');
+  const devBody = devRpc.slice(devRpc.indexOf('create or replace function public.apply_dev_trait_preset('));
+  assert.match(devBody, /uid uuid := auth\.uid\(\);/, 'the server writes only the caller\'s own rows');
+  assert.match(devBody, /if v_mode is distinct from 'invite_only' then/, 'pre-launch only on the server too');
+  assert.match(devBody, /if public\.is_root\(\) then\s+for r in select \* from jsonb_array_elements\(coalesce\(p_history/, 'history rows only for root');
   const after = moduleSrc.slice(moduleSrc.indexOf('async function afterAccountRewrite'), jumpStart);
   assert.match(after, /clearLocalQuestionState\(options\)/);
   assert.match(after, /bumpAccountDataEpoch\(\)/);

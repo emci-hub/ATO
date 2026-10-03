@@ -71,7 +71,7 @@ ok('the Infinite Questions pack reader stays deleted, leaving ongoing_round the 
 // of the one it just wrote.
 const saveFnBody = storeSrc.slice(
   storeSrc.indexOf('export async function saveOngoingRoundBatch'),
-  storeSrc.indexOf('export async function answerQuestionItem'),
+  storeSrc.indexOf('export async function saveQuestionDeferral'),
 );
 assert.match(saveFnBody, /fetchLatestOngoingRoundPack\(\)/);
 assert.doesNotMatch(
@@ -138,7 +138,7 @@ const foldSrc = read('src/components/questions-fold.tsx');
 // round, as optional — and only that account (`optionalLegacy`).
 assert.match(
   foldSrc,
-  /\{fullProfileLocked \? \(\s*\n[\s\S]{0,700}?\{optionalLegacy \? \([\s\S]{0,200}?\{setPager\}\s*<\/>\s*\) : null\}\s*<OngoingRoundFold me=\{me\} history=\{history\} tracks=\{tracks \?\? \[\]\} onUpdated=\{onUpdated\} \/>\s*<\/>\s*\) : \(/,
+  /\{fullProfileLocked \? \(\s*\n[\s\S]{0,700}?\{optionalLegacy \? \([\s\S]{0,400}?\{setPager\}\s*<\/>\s*\) : null\}\s*<OngoingRoundFold me=\{me\} history=\{history\} tracks=\{tracks \?\? \[\]\} onUpdated=\{onUpdated\} \/>\s*<\/>\s*\) : \(/,
   'fullProfileLocked must render OngoingRoundFold in place of the bank pager — the only pager beside it is the old-50 optional set',
 );
 const bankBranchStart = foldSrc.indexOf(') : (', foldSrc.indexOf('{fullProfileLocked ? ('));
@@ -171,29 +171,25 @@ assert.match(foldSrc, /const existing = await withTimeout\(fetchLatestOngoingRou
 assert.match(foldSrc, /const saved = await withTimeout\(runOngoingRound\(ongoingMe, history, tracks\), 40000, 'ongoing-round-start'\);/);
 ok('OngoingRoundFold loads any existing ongoing-round pack and can start a new one via runOngoingRound');
 
-// Answering a batch of ongoing-round items must reuse the exact same
-// per-item write path Infinite Questions' own pick() uses (answerQuestionItem
-// + updateTraits), just looped once per item in the batch instead of once
-// per tap — a second, divergent write path here would be a real bug (e.g.
-// missing the trait write or the token grant).
+// Answering a batch of ongoing-round items goes through ONE server call per
+// item since wave79 (2026-10-03): answer_round_item marks the item answered
+// AND scores it in one transaction, with the value read from the stored item.
+// The old two-step path (answerQuestionItem, then a client-side updateTraits)
+// could mark an item answered and then fail the trait write.
 const saveRoundAnswersBody = foldSrc.slice(
   foldSrc.indexOf('async function saveRoundAnswers(', foldSrc.indexOf('function OngoingRoundFold')),
   foldSrc.indexOf('async function reroll('),
 );
-assert.match(saveRoundAnswersBody, /await answerQuestionItem\(key, optIndex\);/);
-assert.match(
-  saveRoundAnswersBody,
-  /await updateTraits\(me\.id, \{ \[draft\.axis\]: option\.value \}, 'self_situation', \[draft\.axis\]\);/,
-);
+assert.match(saveRoundAnswersBody, /await answerRoundItem\(key, optIndex\);/);
+assert.doesNotMatch(saveRoundAnswersBody, /answerQuestionItem|updateTraits\(/);
 // INVERTED 2026-10-01 (was: the batch also earns the old currency). The old
 // currency is retired; a round now earns only its +21 ATO tokens on completion.
 assert.doesNotMatch(saveRoundAnswersBody, /earnTokensQuiet\(/);
 assert.match(saveRoundAnswersBody, /await onUpdated\(\);/);
 // Sequential, not Promise.all — same discipline saveBankAnswers already
-// uses, since each item can carry a different axis and updateTraits is a
-// read-modify-write against the same user row.
+// uses (the server also locks the account row per write).
 assert.doesNotMatch(saveRoundAnswersBody, /Promise\.all/);
-ok('saveRoundAnswers answers a whole batch through the same answerQuestionItem + updateTraits + onUpdated path Infinite Questions already uses, sequentially not concurrently');
+ok('saveRoundAnswers answers a whole batch through the answer_round_item checkpoint + onUpdated, sequentially not concurrently');
 
 // Completion is checked once per batch, not per item, via the same
 // dedup-on-pack-id RPC as before — and via a functional setPack update

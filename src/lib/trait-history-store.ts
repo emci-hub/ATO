@@ -1,23 +1,10 @@
 import { supabase } from '@/lib/supabase';
 import { TRAIT_AXES } from '@/lib/traits';
-import { isTraitSource, type TraitAxis, type TraitSource } from '@/lib/traits';
+import { isTraitSource, type TraitAxis } from '@/lib/traits';
 import type { TraitHistoryRow } from '@/lib/trait-history';
 
-export async function insertTraitHistory(
-  userId: string,
-  rows: Array<{ axis: TraitAxis; value: number; source: TraitSource }>,
-): Promise<void> {
-  if (rows.length === 0) return;
-  const { error } = await supabase.from('trait_history').insert(
-    rows.map((row) => ({
-      user_id: userId,
-      axis: row.axis,
-      value: row.value,
-      source: row.source,
-    })),
-  );
-  if (error) throw error;
-}
+// No writer here (wave79, 2026-10-03): history rows are written only by the
+// server checkpoint (lib/trait-checkpoint.ts).
 
 export async function fetchTraitHistory(userId: string): Promise<TraitHistoryRow[]> {
   const { data, error } = await supabase

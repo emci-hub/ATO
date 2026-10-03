@@ -178,29 +178,26 @@ assert.equal(bankTotalProgress(droppedInstead).answered, 16);
 assert.equal(legendsUnlocked(droppedInstead), false);
 ok('the old drop-the-answer behaviour stranded the count at 16 of 48');
 
-// The assertions above prove the arithmetic. These prove the wiring in
-// me.ts — the branch that was actually the bug — since `collectAnswers` and
-// `persistMergedTraits` are private and me.ts pulls in Supabase at import.
-// Same source-assertion convention wave19-check.ts already uses.
-const meSource = readFileSync(resolve(__dirname, '../src/lib/me.ts'), 'utf8');
-
+// The assertions above prove the arithmetic. Since wave79 (2026-10-03) the
+// wiring lives on the server: an answer on a trait a direct source owns is
+// recorded count-only (applyCountOnlyAnswer), never dropped and never blended.
+const checkpointSql = readFileSync(
+  resolve(__dirname, '../supabase/migrations/wave79_trait_checkpoint.sql'),
+  'utf8',
+).replace(/\r\n/g, '\n');
 assert.match(
-  meSource,
-  /if \(!shouldWriteReportTrack\(current\.sources\[axis\], source\)\) \{[\s\S]{0,320}?if \(source !== 'self_situation'\) continue;[\s\S]{0,160}?countOnly: true/,
-  'collectAnswers records a blocked self_situation answer instead of dropping it',
+  checkpointSql,
+  /if p_mode = 'answer' and v_rejected then[\s\S]{0,900}?set answer_count = t\.answer_count \+ 1, last_touched = v_now[\s\S]{0,200}?v_new_me := v_cur;/,
+  'a blocked intake answer counts and leaves the number alone',
 );
-ok('collectAnswers emits countOnly for a blocked intake answer (wiring)');
+ok('the server records a blocked intake answer count-only (wiring)');
 
-assert.match(
-  meSource,
-  /if \(answer\.countOnly\) \{[\s\S]{0,400}?applyCountOnlyAnswer\([\s\S]{0,120}?continue;/,
-  'persistMergedTraits routes countOnly answers past the EWMA value blend',
-);
 assert.ok(
-  meSource.indexOf('if (answer.countOnly)') < meSource.indexOf('const next = applyEwmaAnswer('),
-  'the countOnly branch returns before applyEwmaAnswer can blend the value',
+  checkpointSql.indexOf("if p_mode = 'answer' and v_rejected then") <
+    checkpointSql.indexOf('s := public.trait_ewma_step(t.value::float8'),
+  'the count-only branch comes before the EWMA step can blend the value',
 );
-ok('persistMergedTraits skips the value blend for countOnly answers (wiring)');
+ok('the count-only branch skips the value blend (wiring)');
 
 // --- The unlock table (2026-10-01): one source for the reveal and the toast ---
 {

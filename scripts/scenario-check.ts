@@ -211,7 +211,7 @@ const logic = read('src/lib/scenario.ts');
 
 assert.match(card, /Gesture|Pan/);
 assert.match(meSrc, /recordScenario/);
-assert.match(meSrc, /self_game/);
+assert.match(meSrc, /recordGamePick\(axis, scenarioPickValue\(axis, pole\)\)/);
 assert.doesNotMatch(homeTab, /ScenarioCard/);
 assert.doesNotMatch(sageTab, /ScenarioCard/);
 assert.doesNotMatch(youTab, /ScenarioCard/);
@@ -220,7 +220,7 @@ assert.match(themeLab, /THEME_SCENARIO_LOCUS/);
 assert.match(themeLab, /THEME_SCENARIO_AUTONOMY/);
 assert.doesNotMatch(logic, /Math\.random|claimAiCall|gemini/);
 assert.match(logic, /self_game/);
-assert.match(read('src/lib/me.ts'), /applyScenarioWrite/);
+assert.match(read('src/lib/me.ts'), /SCENARIO_DECK\[axis\]/);
 assert.doesNotMatch(logic, /Best day at work is one where: 'I did it my way' \/ 'I nailed/);
 assert.equal(SCENARIO_DECK.autonomy.setup, 'Best day at work is one where:');
 assert.equal(SCENARIO_DECK.competence.setup, 'The work day that sticks with you most is one where:');
