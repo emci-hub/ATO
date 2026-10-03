@@ -21,23 +21,28 @@ export async function claimOngoingRoundComplete(packId: string): Promise<AtoToke
   return parseAtoTokenResult(data);
 }
 
+/** wave81: the server's "already paid two rounds today" refusal. */
+export const ROUND_PAYOUT_CAP_ERRCODE = 'P0042';
+
 /**
  * Fire-and-forget claim. Never fail the calling write (mirrors earnTokensQuiet).
  * `onSettled` runs once the server has answered either way: `paid` is whether
  * the +21 is in the balance (fresh or already), `fresh` whether this call is
- * the one that paid it, so the caller knows to refresh the balance.
+ * the one that paid it, so the caller knows to refresh the balance, and
+ * `capped` whether the server refused it for the daily cap (wave81).
  */
 export function claimOngoingRoundCompleteQuiet(
   packId: string,
-  onSettled?: (outcome: { paid: boolean; fresh: boolean }) => void,
+  onSettled?: (outcome: { paid: boolean; fresh: boolean; capped: boolean }) => void,
 ): void {
   void claimOngoingRoundComplete(packId)
     .then((result) => {
-      onSettled?.({ paid: result.ok, fresh: result.ok && !result.already });
+      onSettled?.({ paid: result.ok, fresh: result.ok && !result.already, capped: false });
     })
     .catch((err) => {
-      console.log('[ato-tokens] claim ongoing round complete error:', err);
-      onSettled?.({ paid: false, fresh: false });
+      const capped = (err as { code?: unknown } | null)?.code === ROUND_PAYOUT_CAP_ERRCODE;
+      if (!capped) console.log('[ato-tokens] claim ongoing round complete error:', err);
+      onSettled?.({ paid: false, fresh: false, capped });
     });
 }
 

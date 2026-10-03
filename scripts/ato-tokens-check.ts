@@ -97,7 +97,7 @@ assert.equal(
 );
 assert.match(
   foldSrc,
-  /if \(existing && roundFullyAnswered\(existing\)\) \{\s*claimOngoingRoundCompleteQuiet\(existing\.id\);/,
+  /if \(existing && roundFullyAnswered\(existing\)\) \{\s*claimOngoingRoundCompleteQuiet\(existing\.id, \(\{ fresh \}\) => \{\s*if \(fresh\) void onUpdated\(\);/,
   'the retry on load only fires for a fully answered round',
 );
 assert.match(foldSrc, /claimOngoingRoundCompleteQuiet\(\s*pack\.id\s*\)|claimOngoingRoundCompleteQuiet\(\s*\w+\.id\s*\)/, 'the claim passes the round id');

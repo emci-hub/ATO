@@ -313,8 +313,12 @@ function OngoingRoundFold({
       // closed/offline before it fired), retry it here on load — the RPC
       // dedupes on pack id, so a redundant claim for an already-claimed
       // pack is a harmless no-op, never a double award.
+      // A round refused by the daily payout cap (wave81) can be paid here on a
+      // later day, inside that day's cap; refresh so the balance shows it.
       if (existing && roundFullyAnswered(existing)) {
-        claimOngoingRoundCompleteQuiet(existing.id);
+        claimOngoingRoundCompleteQuiet(existing.id, ({ fresh }) => {
+          if (fresh) void onUpdated();
+        });
       }
       // NO AUTO-START (ISOLATION_PLAN §7 Card D, emci 2026-09-15). This used to
       // call `start()` when no pack existed, so the first mount after the
@@ -433,13 +437,13 @@ function OngoingRoundFold({
       // the +21 when it is really in the balance, and a fresh payout refreshes
       // `me` — the balance used to stay stale until some later refresh.
       if (holder.pack && roundFullyAnswered(holder.pack)) {
-        claimOngoingRoundCompleteQuiet(holder.pack.id, ({ paid, fresh }) => {
+        claimOngoingRoundCompleteQuiet(holder.pack.id, ({ paid, fresh, capped }) => {
           // Said by the mini guy, pinned beside him, so it is seen wherever the
           // person is — not by a toast inside this fold.
           pushBuddyNote({
             id: `round:${holder.pack?.id ?? 'done'}`,
             title: ROUND_COMPLETE_TITLE,
-            body: roundCompleteBody(tracks, paid),
+            body: roundCompleteBody(tracks, paid, capped),
             loud: true,
           });
           setRoundToast({ paid });

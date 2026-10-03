@@ -205,7 +205,7 @@ assert.match(saveRoundAnswersBody, /setPack\(\(prev\) => \{/, 'must use a functi
 // check here would fire a claim the server refuses.
 assert.match(
   saveRoundAnswersBody,
-  /if \(holder\.pack && roundFullyAnswered\(holder\.pack\)\) \{\s*\n\s*claimOngoingRoundCompleteQuiet\(holder\.pack\.id, \(\{ paid, fresh \}\) => \{/,
+  /if \(holder\.pack && roundFullyAnswered\(holder\.pack\)\) \{\s*\n\s*claimOngoingRoundCompleteQuiet\(holder\.pack\.id, \(\{ paid, fresh, capped \}\) => \{/,
 );
 // 2026-10-01: the claim's answer drives the round-end toast (which names the
 // +21 only when the server paid it) and a fresh payout refreshes the balance.

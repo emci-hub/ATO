@@ -16,9 +16,9 @@ import {
   intakeStage,
   reachedFullProfile,
 } from './intake-stage';
-import { nextRoundLabel, STAGED_INTAKE_COPY_REVIEWED } from './staged-intake-copy';
+import { nextRoundLabel, roundCapLine, STAGED_INTAKE_COPY_REVIEWED } from './staged-intake-copy';
 import { ONGOING_ROUND_SIZE } from './tiered-axis-plan';
-import { ATO_TOKEN_EARN } from '@/lib/ato-tokens';
+import { ATO_TOKEN_EARN, ROUND_PAYOUTS_PER_DAY } from '@/lib/ato-tokens';
 import { isProfileSettled, settledAxisLabel, type TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
@@ -88,9 +88,16 @@ export function roundStandingLine(tracks: readonly TraitTrack[]): string {
   return `${settledAxisLabel(tracks)}. ${next}`;
 }
 
-/** The round-end toast body. The +21 is only named once the server paid it. */
-export function roundCompleteBody(tracks: readonly TraitTrack[], paid: boolean): string {
-  const tokens = paid ? `+${ATO_TOKEN_EARN.ongoing_round_complete} ATO tokens. ` : '';
+/**
+ * The round-end toast body. The +21 is only named once the server paid it; a
+ * round past the daily payout cap says so (wave81) instead of staying silent.
+ */
+export function roundCompleteBody(tracks: readonly TraitTrack[], paid: boolean, capped = false): string {
+  const tokens = paid
+    ? `+${ATO_TOKEN_EARN.ongoing_round_complete} ATO tokens. `
+    : capped
+      ? `${roundCapLine(ROUND_PAYOUTS_PER_DAY)} `
+      : '';
   return `${tokens}${roundStandingLine(tracks)}`;
 }
 

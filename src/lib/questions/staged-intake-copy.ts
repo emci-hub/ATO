@@ -38,6 +38,12 @@ export function nextRoundLabel(size: number): string {
   return `Next ${size} questions`;
 }
 
+/** A round finished past the daily payout cap (wave81, emci "cap 2"). */
+export function roundCapLine(perDay: number): string {
+  const words = ['zero', 'one', 'two', 'three', 'four', 'five'];
+  return `No tokens for this one — you've earned today's ${words[perDay] ?? perDay}.`;
+}
+
 /** The after-intake reveal's title. */
 export function intakeRevealTitle(total: number): string {
   return `You finished all ${total}`;

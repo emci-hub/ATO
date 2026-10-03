@@ -226,4 +226,6 @@ The original 2-option wordings (e.g. "You need reassurance more often than you w
 - A closed category: "Needs 2 settled traits behind it — you have 1. Waiting on Composure and Growth. Your next round asks. Nothing was generated."
 - Questions progress: "4 of 16 in this set · 4 of 16 traits"
 - Token history: "Finished the intake questions", "Finished a round"
+- A round past the daily payout cap (2 a day): "No tokens for this one — you've earned today's two." followed by the usual standing line
+- Token explainer: "… +21 for each round of 16 after that (up to 2 a day)."
 

@@ -436,7 +436,7 @@ var SYSTEM_MAP = {
         ],
         [
           "Finishing",
-          "All 16 must be answered (an old round of 25 still pays). Then the server pays +21 ATO tokens, once per round (wave78). A round that cannot be filled to 16 is never saved."
+          "All 16 must be answered (an old round of 25 still pays). Then the server pays +21 ATO tokens, once per round (wave78), at most 2 rounds per local day (wave81); past that the round still counts but pays nothing and says so. A round that cannot be filled to 16 is never saved."
         ],
         [
           "Reroll",
