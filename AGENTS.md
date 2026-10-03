@@ -14,6 +14,10 @@ Config is `src/play/data/swords.json`. Logic is `src/play/swords.ts`. Combat is
 is still the local save. `src/play/data/sword-ledger.sql` is the RLS + claim/merge
 RPC to copy into `supabase/migrations` when that bag moves server-side. Not shipped, no OTA.
 
+**Pet finishes (save v30):** holo and reverse holo, picked per pet, never rolled.
+Config is `src/play/data/finishes.json`. Logic is `src/play/finishes.ts`. Paint is
+`src/play/finish-foil.tsx`. Classic stays the only earnable shiny. Not shipped, no OTA.
+
 This repo is on **Expo SDK 54** (`package.json`). Read the versioned docs at
 https://docs.expo.dev/versions/v54.0.0/ before writing Expo code; do not assume a newer
 SDK's API.

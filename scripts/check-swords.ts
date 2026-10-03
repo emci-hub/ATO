@@ -1,11 +1,11 @@
 /**
- * Element swords (save v29). Run: npm run check:swords
+ * Element swords (save v29, current save v30). Run: npm run check:swords
  *
  *   1. 21 elements and the 15 mix recipes. Names come from the config.
  *   2. Merge 3, merge 5, Legendary, Divine, and undo — including the cases
  *      that must refuse (equipped, already used, base Legendary, short pile).
  *   3. The same claim key cannot pay twice (bag, Defend win, mini-game).
- *   4. A v28 save loads as v29 with an empty bag; a v29 bag round-trips.
+ *   4. A v28 save loads as v30 with an empty bag; a v29 bag round-trips.
  *   5. Every sword's combat and aura numbers stay inside the config caps,
  *      and stacking auras cannot pass those caps.
  *   6. Drop sim: Rare shows up for a regular player, Relics take longer,
@@ -265,7 +265,7 @@ ok('one claim key pays once — bag, Defend, and a mini-game; a full bag still c
   legacy.tokens = 77;
   const loaded = parsePlayStore(JSON.stringify(legacy), T0);
   assert.ok(loaded);
-  assert.equal(loaded.version, 29);
+  assert.equal(loaded.version, 30);
   assert.equal(loaded.tokens, 77);
   assert.equal(loaded.sword_bag.swords.length, 0);
   assert.equal(loaded.sword_bag.relics.length, 0);
@@ -280,7 +280,7 @@ ok('one claim key pays once — bag, Defend, and a mini-game; a full bag still c
     inventory: [],
   }), T0);
   assert.ok(v1);
-  assert.equal(v1.version, 29);
+  assert.equal(v1.version, 30);
   assert.equal(v1.tokens, 3);
   assert.equal(v1.sword_bag.swords.length, 0);
 
@@ -297,9 +297,9 @@ ok('one claim key pays once — bag, Defend, and a mini-game; a full bag still c
   });
   assert.equal(broken.swords.length, 1);
   assert.equal(broken.undo, null);
-  assert.equal(parsePlayStore(JSON.stringify({ ...fresh, version: 30 }), T0), null);
+  assert.equal(parsePlayStore(JSON.stringify({ ...fresh, version: 31 }), T0), null);
 }
-ok('v1 and v28 saves become v29 with an empty bag; a real bag round-trips; junk rows drop');
+ok('v1 and v28 saves become v30 with an empty bag; a real bag round-trips; junk rows drop');
 
 /* --------------------------------------------------------------- 5. caps --- */
 

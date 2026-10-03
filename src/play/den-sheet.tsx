@@ -13,6 +13,8 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
 import { DEN_MAX_SLOTS, DEN_SORTS, DEN_SORT_LABEL, isBlankSlot, petRevealed, sortDen, type DenSort } from '@/play/den';
+import { finishWornLabel } from '@/play/finishes';
+import { FinishPicker } from '@/play/finish-picker';
 import { heroName } from '@/play/heroes-data';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { NeonButton, NeonChip, NeonLabel } from '@/play/neon-ui';
@@ -96,7 +98,7 @@ function DenRow({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      accessibilityLabel={`${name}, ${stageLine(pet)}${active ? ', active' : ', resting'}${pet.fav ? ', favourite' : ''}`}
+      accessibilityLabel={`${name}, ${stageLine(pet)}${finishWornLabel(pet.finish_kind, pet.finish_color) ? `, ${finishWornLabel(pet.finish_kind, pet.finish_color)}` : ''}${active ? ', active' : ', resting'}${pet.fav ? ', favourite' : ''}`}
       style={({ pressed }) => [styles.row, selected && styles.rowSelected, pressed && styles.pressed]}>
       <View style={styles.figure}>
         {blank ? (
@@ -118,6 +120,7 @@ function DenRow({
         </Text>
         <Text style={styles.rowMeta} numberOfLines={1}>
           {stageLine(pet)}
+          {finishWornLabel(pet.finish_kind, pet.finish_color) ? ` · ${finishWornLabel(pet.finish_kind, pet.finish_color)}` : ''}
         </Text>
       </View>
       <Text style={[styles.rowTag, active && styles.rowTagActive]}>{active ? 'Active' : '💤 Resting'}</Text>
@@ -321,6 +324,9 @@ export function DenSheetBody({
                   resting: true,
                   allStyles: ownsAllStyles(rec),
                   styleLabel: selected.shiny && selected.shiny_style ? SHINY_STYLE_LABEL[selected.shiny_style] : null,
+                  finishKind: selected.finish_kind,
+                  finishColor: selected.finish_color,
+                  finishLabel: finishWornLabel(selected.finish_kind, selected.finish_color),
                 }}
                 sprite={
                   <PetFigure
@@ -329,10 +335,17 @@ export function DenSheetBody({
                     eggColor={selected.egg ? EGG_COLOR[selected.egg] : fallback}
                     recolor={petRecolor(selected.hero, selected.shiny, selDye, selected.shiny_style)}
                     lockColour={selected.shiny}
+                    foilMotion="sweep"
+                    reduceMotion={reduceMotion}
+                    reverseHost
                   />
                 }
               />
             </View>
+          ) : null}
+
+          {petRevealed(selected) ? (
+            <FinishPicker view={view} commit={commit} pet={selected} dyeOn={selDye} reduceMotion={reduceMotion} />
           ) : null}
 
           {selectedResting ? (

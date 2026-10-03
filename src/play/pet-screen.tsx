@@ -43,6 +43,8 @@ import { DivecoreSettingsSheet } from '@/play/divecore-settings';
 import { EggPickerBody, JournalTab, OddsPanel } from '@/play/pet-egg-sheets';
 import { PetMenuBody } from '@/play/pet-menu';
 import { DenSheetBody } from '@/play/den-sheet';
+import { finishWornLabel } from '@/play/finishes';
+import { FinishPicker } from '@/play/finish-picker';
 import { StoneSheetBody } from '@/play/stone-sheet';
 import { DIFFICULTY_LABEL, type RoundOutcome } from '@/play/pet-game-rules';
 import type { GamePet } from '@/play/pet-games';
@@ -645,6 +647,9 @@ export function PetScreen({
           allStyles: ownsAllStyles(pv.heroes[pet.hero]),
           styleLabel: pet.shiny && pet.shiny_style ? SHINY_STYLE_LABEL[pet.shiny_style] : null,
           tide: pv.tide.active,
+          finishKind: pet.finish_kind,
+          finishColor: pet.finish_color,
+          finishLabel: finishWornLabel(pet.finish_kind, pet.finish_color),
         }
       : null;
   // v26: the active medal buffs for the room corner (uses left, or Maxed aura).
@@ -672,6 +677,9 @@ export function PetScreen({
       animate={!reduceMotion}
       recolor={recolor}
       lockColour={pet.shiny}
+      foilMotion="sweep"
+      reduceMotion={reduceMotion}
+      reverseHost
     />
   );
   const babyLook = { ...pet, stage: 'baby' as const, line: pet.egg ? EGG_LINE[pet.egg] : pet.line };
@@ -820,6 +828,7 @@ export function PetScreen({
             <PetCard info={cardInfo} sprite={cardSprite} width={220} animate={!reduceMotion} />
           </View>
         ) : null}
+        <FinishPicker view={view} commit={commit} pet={pet} dyeOn={pv.dyeOn} reduceMotion={reduceMotion} />
         <OddsPanel view={view} />
       </PlaySheet>
       <PlaySheet open={sheet === 'menu'} title={shownName} onClose={closeSheet} reduceMotion={reduceMotion}>
