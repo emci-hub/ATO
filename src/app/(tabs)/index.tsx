@@ -52,7 +52,7 @@ export const NEXT_ROUND_ROW_LABEL = nextRoundLabel(ONGOING_ROUND_SIZE);
 export const NEXT_ROUND_ROW_COPY = `Each finished round sharpens your profile and earns ${ATO_TOKEN_EARN.ongoing_round_complete} ATO tokens.`;
 /** One line, one place — `check:home-hydrate` pins it verbatim. */
 export const CONSENT_OFF_EMPTY_COPY =
-  'AI is off, so there’s no insight today. Turn on AI in Home — the switch is just below.';
+  'AI is off, so there’s no insight today. Turn on AI in You.';
 
 /**
  * Home — two states and nothing else (ISOLATION_PLAN §7 Card C, emci 2026-09-15).
@@ -430,6 +430,11 @@ export default function HomeScreen() {
     question is asked, after a yes, and after a no alike — only generation
     depends on the answer, never disclosure. It sits outside AiConsentCard on
     purpose, because that card disappears the moment the question is answered.
+
+    The first-time ask stays here. The on/off switch that used to sit under it
+    after an answer is gone from Home (emci, 2026-10-04: it is already on You,
+    under "Sage's AI"): the server refuses every AI call while consent is off
+    (ai-generate), and You is where it is turned back on or off.
   */
   const consentBlock = (
     <>
@@ -443,37 +448,6 @@ export default function HomeScreen() {
           onGrant={() => saveConsent(true)}
           onDeny={() => saveConsent(false)}
         />
-      ) : me ? (
-        /*
-          AI consent LIVES on Home: once answered, the same place turns it back
-          on or off. The server refuses every AI call while it is off
-          (ai-generate), so this switch is the one that matters.
-        */
-        <Pressable
-          accessibilityRole="switch"
-          accessibilityState={{ checked: consentGranted, busy: busy === 'consent' }}
-          accessibilityLabel={consentGranted ? 'AI is on. Turn off AI' : 'AI is off. Turn on AI'}
-          disabled={busy === 'consent'}
-          onPress={() => {
-            void saveConsent(!consentGranted);
-          }}
-          style={({ pressed }) => [
-            styles.answerQuestionsRow,
-            { borderColor: controlBorderColor(theme) },
-            pressed && styles.pressed,
-          ]}>
-          <View style={[styles.boxRowText, styles.flexText]}>
-            <ThemedText type="smallBold">Sage&apos;s AI · {consentGranted ? 'On' : 'Off'}</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              {consentGranted
-                ? `Insight, story, next ${ONGOING_ROUND_SIZE} and categories can use AI.`
-                : `Insight, story, next ${ONGOING_ROUND_SIZE} and categories stay off until you turn this on.`}
-            </ThemedText>
-          </View>
-          <ThemedText type="smallBold" themeColor="textSecondary">
-            {busy === 'consent' ? 'Saving…' : consentGranted ? 'Turn off' : 'Turn on AI'}
-          </ThemedText>
-        </Pressable>
       ) : null}
       {error ? <ThemedText themeColor="textSecondary">{error}</ThemedText> : null}
     </>

@@ -183,7 +183,7 @@ export function aiConsentFor(me: Pick<Me, 'ai_consent'>): AiConsent {
 }
 
 /** Shown on every AI button while consent is not granted. The switch lives on Home. */
-export const AI_CONSENT_NEEDED_COPY = 'AI is off. Turn on AI in Home to load this.';
+export const AI_CONSENT_NEEDED_COPY = 'AI is off. Turn on AI in You to load this.';
 
 /**
  * Keeps `me.timezone` on the phone's current zone, so "today" (the daily
