@@ -15,12 +15,16 @@ export type AuraStyle = (typeof AURA_STYLES)[number];
 /** Furthest back first. Blaze is closest to the body. */
 export const AURA_PAINT_ORDER: readonly AuraStyle[] = ['rune', 'bubbles', 'spiky', 'blaze'];
 
-/** Fixed colours. `sword` means the equipped sword's element. */
+/** Element shortcuts. `sword` matches the equipped sword. A `#RRGGBB` is a free pick. */
 export const AURA_COLORS = ['fire', 'water', 'earth', 'wind', 'light', 'dark', 'lightning', 'frost'] as const;
 export type AuraColorId = (typeof AURA_COLORS)[number];
-export type AuraTint = 'sword' | AuraColorId;
+export type AuraTint = 'sword' | AuraColorId | `#${string}`;
 
 export type AuraWear = { style: AuraStyle; color: AuraTint };
+
+/** Free picker: twelve hues and three brightness steps. Saturation stays high so the ramp reads. */
+export const AURA_HUES = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330] as const;
+export const AURA_VALUES = [0.42, 0.68, 0.95] as const;
 
 export type AuraStyleDef = {
   id: AuraStyle;
@@ -84,8 +88,82 @@ export function quietFoilOpacity(): number {
   return auraConfig().quiet_foil;
 }
 
+const CUSTOM_HEX = /^#[0-9A-Fa-f]{6}$/;
+
+export function isAuraColorId(id: string): id is AuraColorId {
+  return (AURA_COLORS as readonly string[]).includes(id);
+}
+
 export function isAuraTint(id: unknown): id is AuraTint {
-  return id === 'sword' || (typeof id === 'string' && (AURA_COLORS as readonly string[]).includes(id));
+  return id === 'sword' || (typeof id === 'string' && (isAuraColorId(id) || CUSTOM_HEX.test(id)));
+}
+
+function hsvHex(hue: number, sat: number, value: number): `#${string}` {
+  const h = ((hue % 360) + 360) % 360;
+  const c = value * sat;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = value - c;
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  if (h < 60) [r, g, b] = [c, x, 0];
+  else if (h < 120) [r, g, b] = [x, c, 0];
+  else if (h < 180) [r, g, b] = [0, c, x];
+  else if (h < 240) [r, g, b] = [0, x, c];
+  else if (h < 300) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+  const byte = (n: number) => Math.round((n + m) * 255).toString(16).padStart(2, '0');
+  return `#${byte(r)}${byte(g)}${byte(b)}`.toUpperCase() as `#${string}`;
+}
+
+/** A grid colour. Hue and brightness snap to the picker steps. */
+export function auraHueHex(hue: number, step: number): `#${string}` {
+  const h = AURA_HUES.reduce((best, cur) => {
+    const dist = (a: number) => Math.min(Math.abs(a - hue), 360 - Math.abs(a - hue));
+    return dist(cur) < dist(best) ? cur : best;
+  }, AURA_HUES[0]);
+  const i = Math.max(0, Math.min(AURA_VALUES.length - 1, Math.round(step)));
+  return hsvHex(h, 0.85, AURA_VALUES[i]);
+}
+
+/** Any hex lands on the nearest picker colour, so a saved mix still highlights. */
+export function snapAuraHex(hex: string): `#${string}` {
+  const n = Number.parseInt(hex.slice(1), 16);
+  const r = ((n >> 16) & 255) / 255;
+  const g = ((n >> 8) & 255) / 255;
+  const b = (n & 255) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  let h = 0;
+  if (d !== 0) {
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  const hue = AURA_HUES.reduce((best, cur) => {
+    const dist = (a: number) => Math.min(Math.abs(a - h), 360 - Math.abs(a - h));
+    return dist(cur) < dist(best) ? cur : best;
+  }, AURA_HUES[0]);
+  let step = 0;
+  let best = Infinity;
+  AURA_VALUES.forEach((value, i) => {
+    const dist = Math.abs(value - max);
+    if (dist < best) {
+      best = dist;
+      step = i;
+    }
+  });
+  return auraHueHex(hue, step);
+}
+
+export function canonAuraTint(color: unknown): AuraTint {
+  if (color === 'sword') return 'sword';
+  if (typeof color === 'string' && isAuraColorId(color)) return color;
+  if (typeof color === 'string' && CUSTOM_HEX.test(color)) return snapAuraHex(color);
+  return 'sword';
 }
 
 export function parseAuraStyle(raw: unknown): AuraStyle | 'none' {
@@ -106,7 +184,7 @@ export function parseAuraWears(raw: { auras?: unknown; aura_style?: unknown }): 
       const style = (row as { style?: unknown }).style;
       const color = (row as { color?: unknown }).color;
       if (!isAuraStyle(style) || out.some((wear) => wear.style === style)) continue;
-      out.push({ style, color: isAuraTint(color) ? color : 'sword' });
+      out.push({ style, color: canonAuraTint(color) });
     }
     return out;
   }
@@ -124,8 +202,22 @@ export function auraElementOf(color: AuraTint, sword: string | null): string {
   return sword && swordElement(sword) ? sword : auraConfig().fallback_element;
 }
 
+/** Which picker step a custom colour is, so the hue and brightness rows can highlight it. */
+export function auraCustomParts(color: AuraTint): { hue: number; step: number } | null {
+  if (typeof color !== 'string' || !color.startsWith('#')) return null;
+  const snapped = snapAuraHex(color);
+  for (const hue of AURA_HUES) {
+    for (let step = 0; step < AURA_VALUES.length; step++) {
+      if (auraHueHex(hue, step) === snapped) return { hue, step };
+    }
+  }
+  return null;
+}
+
 export function auraTintLabel(id: AuraTint): string {
-  return id === 'sword' ? 'Sword' : id.charAt(0).toUpperCase() + id.slice(1);
+  if (id === 'sword') return 'Sword';
+  if (id.startsWith('#')) return 'Custom';
+  return id.charAt(0).toUpperCase() + id.slice(1);
 }
 
 /** Turn one owned style on or off. Other worn styles stay. Colour defaults to the sword. */
@@ -197,11 +289,11 @@ function mixToward(col: Rgb, target: Rgb, t: number): Rgb {
   ];
 }
 
-/** Sample ramp. Pale sword colours (luma > 0.75) are pulled toward ink so the three tones separate. */
+/** Sample ramp. Pale colours (luma > 0.75) are pulled toward ink so the three tones separate. */
 export function swordRamp(element: string): { core: Rgb; mid: Rgb; tip: Rgb } {
   const cfg = auraConfig();
-  const hex = swordElement(element)?.color;
-  let mid: Rgb = hex && HEX.test(hex) ? hexRgb(hex) : hexRgb('#E85D04');
+  const picked = element.startsWith('#') && HEX.test(element) ? element : swordElement(element)?.color;
+  let mid: Rgb = picked && HEX.test(picked) ? hexRgb(picked) : hexRgb('#E85D04');
   const l = (0.3 * mid[0] + 0.59 * mid[1] + 0.11 * mid[2]) / 255;
   if (l > cfg.luma_deepen_at) mid = mixToward(mid, [40, 32, 8], cfg.deepen_mix);
   return {

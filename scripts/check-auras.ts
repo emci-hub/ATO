@@ -10,8 +10,10 @@ import { readFileSync } from 'node:fs';
 import {
   auraConfigErrors,
   auraFramesFromAlpha,
+  auraHueHex,
   auraPaintOrder,
   auraPrice,
+  snapAuraHex,
   planAuraWear,
   quietFoilOpacity,
   swordRamp,
@@ -51,6 +53,14 @@ ok('prices live in config, pass is 3/4, foil quiets');
   assert.ok(luma(bolt.mid) < 0.75);
   assert.ok(luma(frost.mid) < 0.75);
   assert.ok(bolt.core[0] > bolt.mid[0]);
+  const mix = swordRamp(auraHueHex(300, 2));
+  const sum = (c: number[]) => c[0] + c[1] + c[2];
+  assert.ok(sum(mix.core) > sum(mix.mid) && sum(mix.mid) > sum(mix.tip));
+  const pale = swordRamp(auraHueHex(60, 2));
+  assert.ok(luma(pale.mid) < 0.75);
+  const snapped = snapAuraHex('#FF00AA');
+  assert.equal(snapAuraHex(snapped), snapped);
+  assert.ok(snapped.startsWith('#'));
 }
 ok('fire mid stays the sword hex; pale elements are deepened');
 
@@ -165,9 +175,13 @@ ok('frames match the samples: thin blaze, calm spiky, twinkling rune, attached b
     colored.doc.pet.auras.map((wear) => `${wear.style}:${wear.color}`),
     ['blaze:sword', 'spiky:water'],
   );
-  const round = parsePlayStore(JSON.stringify(colored.doc), T0);
+  const mixed = setPetAuraColor(colored.doc, T0, grown.pet.uid, 'blaze', '#FF00AA');
+  assert.equal(mixed.doc.tokens, colored.doc.tokens);
+  assert.equal(mixed.doc.pet.auras.find((wear) => wear.style === 'blaze')?.color, snapAuraHex('#FF00AA'));
+  const round = parsePlayStore(JSON.stringify(mixed.doc), T0);
   assert.ok(round);
   assert.equal(round.version, 32);
+  assert.equal(round.pet.auras.find((wear) => wear.style === 'blaze')?.color, snapAuraHex('#FF00AA'));
   assert.equal(round.pet.auras.length, 2);
   assert.ok(round.aura_owned.includes('blaze'));
 

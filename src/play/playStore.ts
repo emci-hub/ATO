@@ -193,6 +193,7 @@ import {
   type FinishWallet,
 } from '@/play/finishes';
 import {
+  canonAuraTint,
   isAuraTint,
   parseAuraOwned,
   planAuraWear,
@@ -2663,12 +2664,13 @@ export function setPetAuraColor(
   color: AuraTint,
 ): { doc: PlayStoreDoc; result: { ok: true } | { ok: false; reason: 'missing' | 'style' } } {
   if (!isAuraTint(color)) return { doc, result: { ok: false, reason: 'style' } };
+  const picked = canonAuraTint(color);
   const touched = touchPet(doc, now);
   const pet = touched.pet.uid === uid && uid > 0 ? touched.pet : touched.pet_den.find((p) => p.uid === uid);
   if (!pet || !pet.auras.some((wear) => wear.style === style)) return { doc: touched, result: { ok: false, reason: 'missing' } };
   const next = withPetByUid(touched, uid, (p) => ({
     ...p,
-    auras: p.auras.map((wear) => (wear.style === style ? { style, color } : wear)),
+    auras: p.auras.map((wear) => (wear.style === style ? { style, color: picked } : wear)),
   }));
   if (!next) return { doc: touched, result: { ok: false, reason: 'missing' } };
   return { doc: next, result: { ok: true } };
