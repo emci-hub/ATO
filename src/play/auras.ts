@@ -1,9 +1,9 @@
 /**
- * Pet auras (save v31) — Blaze, Spiky, Rune, Bubbles.
+ * Pet auras (save v32) — Blaze, Spiky, Rune, Bubbles.
  *
- * Bought per style. The colour is the equipped sword's element, from
- * `swords.json`, with the sample ramp (pale mid-tones deepened). Frames are
- * generated from the pet's alpha. Classic stays the only rolled shiny.
+ * Bought per style. A pet wears any combination it owns. Each worn aura has
+ * its own colour: match the equipped sword, or a fixed element. Colours are
+ * free. Frames come from the pet's alpha. Classic stays the only rolled shiny.
  * `PLAY_EVERYTHING_FREE` is applied by the store (cost 0, everything wearable).
  */
 import rawAuras from './data/auras.json';
@@ -11,6 +11,16 @@ import { swordElement } from '@/play/swords';
 
 export const AURA_STYLES = ['blaze', 'spiky', 'rune', 'bubbles'] as const;
 export type AuraStyle = (typeof AURA_STYLES)[number];
+
+/** Furthest back first. Blaze is closest to the body. */
+export const AURA_PAINT_ORDER: readonly AuraStyle[] = ['rune', 'bubbles', 'spiky', 'blaze'];
+
+/** Fixed colours. `sword` means the equipped sword's element. */
+export const AURA_COLORS = ['fire', 'water', 'earth', 'wind', 'light', 'dark', 'lightning', 'frost'] as const;
+export type AuraColorId = (typeof AURA_COLORS)[number];
+export type AuraTint = 'sword' | AuraColorId;
+
+export type AuraWear = { style: AuraStyle; color: AuraTint };
 
 export type AuraStyleDef = {
   id: AuraStyle;
@@ -33,7 +43,7 @@ export type AuraConfig = {
 export type AuraRefusal = 'style' | 'tokens';
 
 export type AuraPlan =
-  | { ok: true; cost: number; owned: AuraStyle[]; style: AuraStyle | 'none' }
+  | { ok: true; cost: number; owned: AuraStyle[]; worn: AuraWear[] }
   | { ok: false; reason: AuraRefusal };
 
 const HEX = /^#[0-9A-Fa-f]{6}$/;
@@ -74,6 +84,10 @@ export function quietFoilOpacity(): number {
   return auraConfig().quiet_foil;
 }
 
+export function isAuraTint(id: unknown): id is AuraTint {
+  return id === 'sword' || (typeof id === 'string' && (AURA_COLORS as readonly string[]).includes(id));
+}
+
 export function parseAuraStyle(raw: unknown): AuraStyle | 'none' {
   return isAuraStyle(raw) ? raw : 'none';
 }
@@ -83,21 +97,57 @@ export function parseAuraOwned(raw: unknown): AuraStyle[] {
   return [...new Set(raw.filter(isAuraStyle))];
 }
 
+/** v32 `auras`, or a v31 `aura_style` as one sword-coloured wear. */
+export function parseAuraWears(raw: { auras?: unknown; aura_style?: unknown }): AuraWear[] {
+  if (Array.isArray(raw.auras)) {
+    const out: AuraWear[] = [];
+    for (const row of raw.auras) {
+      if (!row || typeof row !== 'object') continue;
+      const style = (row as { style?: unknown }).style;
+      const color = (row as { color?: unknown }).color;
+      if (!isAuraStyle(style) || out.some((wear) => wear.style === style)) continue;
+      out.push({ style, color: isAuraTint(color) ? color : 'sword' });
+    }
+    return out;
+  }
+  const legacy = parseAuraStyle(raw.aura_style);
+  return legacy === 'none' ? [] : [{ style: legacy, color: 'sword' }];
+}
+
+/** Furthest aura first, so Blaze paints last and sits against the body. */
+export function auraPaintOrder(worn: readonly AuraWear[]): AuraWear[] {
+  return [...worn].sort((a, b) => AURA_PAINT_ORDER.indexOf(a.style) - AURA_PAINT_ORDER.indexOf(b.style));
+}
+
+export function auraElementOf(color: AuraTint, sword: string | null): string {
+  if (color !== 'sword') return color;
+  return sword && swordElement(sword) ? sword : auraConfig().fallback_element;
+}
+
+export function auraTintLabel(id: AuraTint): string {
+  return id === 'sword' ? 'Sword' : id.charAt(0).toUpperCase() + id.slice(1);
+}
+
+/** Turn one owned style on or off. Other worn styles stay. Colour defaults to the sword. */
 export function planAuraWear(input: {
   owned: readonly AuraStyle[];
+  worn: readonly AuraWear[];
   tokens: number;
   pass: boolean;
   free: boolean;
-  style: AuraStyle | 'none';
+  style: AuraStyle;
+  on: boolean;
 }): AuraPlan {
   const owned = [...input.owned];
-  if (input.style === 'none') return { ok: true, cost: 0, owned, style: 'none' };
+  const worn = input.worn.filter((wear) => isAuraStyle(wear.style));
   if (!isAuraStyle(input.style)) return { ok: false, reason: 'style' };
+  if (!input.on) return { ok: true, cost: 0, owned, worn: worn.filter((wear) => wear.style !== input.style) };
+  if (worn.some((wear) => wear.style === input.style)) return { ok: true, cost: 0, owned, worn: [...worn] };
   const have = owned.includes(input.style);
   const cost = input.free || have ? 0 : auraPrice(input.style, input.pass);
   if (input.tokens < cost) return { ok: false, reason: 'tokens' };
   if (!have) owned.push(input.style);
-  return { ok: true, cost, owned, style: input.style };
+  return { ok: true, cost, owned, worn: [...worn, { style: input.style, color: 'sword' }] };
 }
 
 export function auraConfigErrors(): string[] {

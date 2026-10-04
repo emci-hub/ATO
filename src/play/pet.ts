@@ -45,7 +45,7 @@ import {
   type Grade,
   type ShinyStyle,
 } from '@/play/pet-eggs';
-import { parseAuraStyle, type AuraStyle } from '@/play/auras';
+import { parseAuraWears, type AuraWear } from '@/play/auras';
 import { parsePetFinish, type FinishKind } from '@/play/finishes';
 import { EXPEDITION_LADDER_MS, EXPEDITION_STEPS, LEGACY_EXPEDITION_MS } from '@/play/expedition-ladder';
 
@@ -355,8 +355,8 @@ export type PetState = {
   finish_kind: FinishKind;
   /** Named colour from finishes.json. Null when the kind is none. */
   finish_color: string | null;
-  /** v31 — aura style. The colour is the equipped sword, not stored here. */
-  aura_style: AuraStyle | 'none';
+  /** v32 — worn auras, each with its own colour. Empty on an older save that had none. */
+  auras: AuraWear[];
 };
 
 export type PetReveal = 'hatch' | 'child';
@@ -424,7 +424,7 @@ export function newPet(now: number, line: string = DEFAULT_PET_LINE): PetState {
     prepaid: false,
     finish_kind: 'none',
     finish_color: null,
-    aura_style: 'none',
+    auras: [],
   };
 }
 
@@ -1136,7 +1136,7 @@ function parsePetCore(raw: Record<string, unknown>, now: number): PetState {
     element_uses: uses,
     seen_at: num(raw.seen_at, now),
     ...parsePetFinish(raw),
-    aura_style: parseAuraStyle(raw.aura_style),
+    auras: parseAuraWears(raw),
   };
 }
 

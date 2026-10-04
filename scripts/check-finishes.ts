@@ -314,7 +314,7 @@ ok('wearing a finish does not roll a shiny; an egg refuses; the dev kit does not
   legacy.tokens = 77;
   const loaded = parsePlayStore(JSON.stringify(legacy), T0);
   assert.ok(loaded);
-  assert.equal(loaded.version, 31);
+  assert.equal(loaded.version, 32);
   assert.equal(loaded.tokens, 77);
   assert.deepEqual(loaded.finish_wallet, emptyFinishWallet());
   assert.equal(loaded.pet.finish_kind, 'none');
@@ -334,7 +334,7 @@ ok('wearing a finish does not roll a shiny; an egg refuses; the dev kit does not
   assert.equal(worn.result.ok, true);
   const round = parsePlayStore(JSON.stringify(worn.doc), T0);
   assert.ok(round);
-  assert.equal(round.version, 31);
+  assert.equal(round.version, 32);
   assert.equal(round.pet.finish_kind, 'reverse');
   assert.equal(round.pet.finish_color, 'limewake');
   assert.equal(round.finish_wallet.reverse, true);
@@ -355,9 +355,9 @@ ok('wearing a finish does not roll a shiny; an egg refuses; the dev kit does not
   assert.equal(dropped.pet.finish_kind, 'none');
   assert.equal(dropped.pet.finish_color, null);
   assert.deepEqual(dropped.finish_wallet.colors, ['moonpearl']);
-  assert.equal(parsePlayStore(JSON.stringify({ ...fresh, version: 32 }), T0), null);
+  assert.equal(parsePlayStore(JSON.stringify({ ...fresh, version: 33 }), T0), null);
 }
-ok('a v29 save becomes v31 with no finish; a real finish round-trips; version 32 does not load');
+ok('a v29 save becomes v32 with no finish; a real finish round-trips; version 33 does not load');
 
 /* -------------------------------------------------------------- 6. paint --- */
 

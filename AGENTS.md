@@ -19,9 +19,10 @@ Config is `src/play/data/finishes.json`. Logic is `src/play/finishes.ts`. Paint 
 `src/play/finish-foil.tsx`. Classic stays the only earnable shiny. The sprite is
 never tinted. Not shipped, no OTA.
 
-**Pet auras (save v31):** Blaze, Spiky, Rune, Bubbles. Bought per style. Colour
-follows the equipped sword. Config is `src/play/data/auras.json`. Frames are
-generated from the pet alpha in `src/play/auras.ts` and drawn by `src/play/aura-view.tsx`.
+**Pet auras (save v32):** Blaze, Spiky, Rune, Bubbles. Bought per style. A pet
+wears any combination. Each worn aura matches the sword or a picked element
+colour (free). Config is `src/play/data/auras.json`. Frames are generated from
+the pet alpha in `src/play/auras.ts` and drawn by `src/play/aura-view.tsx`.
 Not shipped, no OTA.
 
 This repo is on **Expo SDK 54** (`package.json`). Read the versioned docs at

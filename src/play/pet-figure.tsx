@@ -18,7 +18,7 @@ import { ELEMENT_COLOR } from '@/play/kits';
 import { PET_BRANCH_TINT, PET_STAGE_SCALE, petLookFor, type PetLook, type PetState } from '@/play/pet';
 import { NO_WEAR, wornLook, type PetWear } from '@/play/pet-cosmetics';
 import { PetAura } from '@/play/aura-view';
-import { auraConfig, type AuraStyle } from '@/play/auras';
+import { auraConfig, auraElementOf, auraPaintOrder } from '@/play/auras';
 import type { FinishKind, FinishMotion } from '@/play/finishes';
 import { ClipImage } from '@/play/sheet-sprite';
 import {
@@ -125,14 +125,21 @@ export function PetFigure({
   void finish;
   void foilMotion;
   void reduceMotion;
-  const auraStyle: AuraStyle | 'none' = pet.aura_style;
-  const auraOn = auraStyle !== 'none';
+  const worn = auraPaintOrder(pet.auras);
   const sword = auraElement || auraConfig().fallback_element;
+  const blaze = worn.find((wear) => wear.style === 'blaze');
   return (
-    <View style={{ width: box, height: box }}>
-      {auraOn ? (
-        <PetAura drawable={drawable} styleId={auraStyle} element={sword} box={box} layer="back" />
-      ) : null}
+    <View style={{ width: box, height: box, overflow: 'visible' }}>
+      {worn.map((wear) => (
+        <PetAura
+          key={wear.style}
+          drawable={drawable}
+          styleId={wear.style}
+          element={auraElementOf(wear.color, sword)}
+          box={box}
+          layer="back"
+        />
+      ))}
       {look.aura ? (
         <Svg width={box * 1.5} height={box * 1.5} viewBox="0 0 100 100" style={[styles.aura, { left: -box * 0.25, top: -box * 0.25 }]} pointerEvents="none">
           <Circle cx="50" cy="50" r="48" fill={ELEMENT_COLOR[look.aura]} fillOpacity={0.1} />
@@ -154,8 +161,8 @@ export function PetFigure({
         </View>
       ) : null}
       </View>
-      {auraOn ? (
-        <PetAura drawable={drawable} styleId={auraStyle} element={sword} box={box} layer="front" />
+      {blaze ? (
+        <PetAura drawable={drawable} styleId="blaze" element={auraElementOf(blaze.color, sword)} box={box} layer="front" />
       ) : null}
       {badgeArt ? (
         <Image

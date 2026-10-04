@@ -175,7 +175,7 @@ export function FinishPicker({
             finishKind: kind,
             finishColor: kind === 'none' ? null : colorId,
             finishLabel: kind === 'none' ? null : finishWornLabel(kind, colorId),
-            aura: pet.aura_style !== 'none',
+            aura: pet.auras.length > 0,
           }}
           sprite={
             <PetFigure

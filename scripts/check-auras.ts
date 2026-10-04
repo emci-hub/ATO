@@ -1,5 +1,5 @@
 /**
- * Pet auras (save v31). Run: npm run check:auras
+ * Pet auras (save v32). Run: npm run check:auras
  *
  * Prices, the sword ramp, and the four approved styles generated from alpha.
  * The sprite's opaque pixels are never painted. Halo, Zap and Smoke are absent.
@@ -10,13 +10,14 @@ import { readFileSync } from 'node:fs';
 import {
   auraConfigErrors,
   auraFramesFromAlpha,
+  auraPaintOrder,
   auraPrice,
   planAuraWear,
   quietFoilOpacity,
   swordRamp,
   type AuraStyle,
 } from '../src/play/auras';
-import { applyPetAura, defaultPlayStore, devSetPetAura, parsePlayStore } from '../src/play/playStore';
+import { applyPetAura, defaultPlayStore, devSetPetAura, parsePlayStore, setPetAuraColor } from '../src/play/playStore';
 import { PLAY_EVERYTHING_FREE } from '../src/lib/dev-mode';
 
 const T0 = Date.UTC(2026, 9, 4);
@@ -54,18 +55,46 @@ ok('prices live in config, pass is 3/4, foil quiets');
 ok('fire mid stays the sword hex; pale elements are deepened');
 
 {
-  const free = planAuraWear({ owned: [], tokens: 0, pass: false, free: true, style: 'blaze' });
+  const free = planAuraWear({ owned: [], worn: [], tokens: 0, pass: false, free: true, style: 'blaze', on: true });
   assert.equal(free.ok && free.cost, 0);
-  const pass = planAuraWear({ owned: [], tokens: 675, pass: true, free: false, style: 'blaze' });
+  assert.ok(free.ok && free.worn[0]?.color === 'sword');
+  const pass = planAuraWear({ owned: [], worn: [], tokens: 675, pass: true, free: false, style: 'blaze', on: true });
   assert.equal(pass.ok && pass.cost, 675);
-  const poor = planAuraWear({ owned: [], tokens: 100, pass: false, free: false, style: 'blaze' });
+  const poor = planAuraWear({ owned: [], worn: [], tokens: 100, pass: false, free: false, style: 'blaze', on: true });
   assert.deepEqual(poor, { ok: false, reason: 'tokens' });
-  const again = planAuraWear({ owned: ['rune'], tokens: 0, pass: false, free: false, style: 'rune' });
+  const again = planAuraWear({ owned: ['rune'], worn: [], tokens: 0, pass: false, free: false, style: 'rune', on: true });
   assert.equal(again.ok && again.cost, 0);
-  const off = planAuraWear({ owned: ['rune'], tokens: 0, pass: false, free: false, style: 'none' });
-  assert.equal(off.ok && off.style, 'none');
+  const stack = planAuraWear({
+    owned: ['rune'],
+    worn: [{ style: 'rune', color: 'water' }],
+    tokens: 0,
+    pass: false,
+    free: true,
+    style: 'spiky',
+    on: true,
+  });
+  assert.ok(stack.ok && stack.worn.map((wear) => wear.style).join() === 'rune,spiky');
+  assert.ok(stack.ok && stack.worn[0]?.color === 'water');
+  const off = planAuraWear({
+    owned: ['rune', 'spiky'],
+    worn: stack.ok ? stack.worn : [],
+    tokens: 0,
+    pass: false,
+    free: false,
+    style: 'rune',
+    on: false,
+  });
+  assert.ok(off.ok && off.worn.length === 1 && off.worn[0]?.style === 'spiky');
+  assert.ok(off.ok && off.owned.includes('rune'));
+  const paint = auraPaintOrder([
+    { style: 'blaze', color: 'sword' },
+    { style: 'rune', color: 'light' },
+    { style: 'spiky', color: 'water' },
+    { style: 'bubbles', color: 'frost' },
+  ]);
+  assert.deepEqual(paint.map((wear) => wear.style), ['rune', 'bubbles', 'spiky', 'blaze']);
 }
-ok('buy per style; free unlocks; a second wear is free');
+ok('buy per style; colours are free; a stack keeps the others');
 
 function blob(w: number, h: number, x0: number, y0: number, bw: number, bh: number): Uint8Array {
   const alpha = new Uint8Array(w * h);
@@ -124,15 +153,22 @@ ok('frames match the samples: thin blaze, calm spiky, twinkling rune, attached b
     tokens: 1000,
     pet: { ...fresh.pet, stage: 'adult' as const, hero: 'elowen', grade: 'rare' as const, uid: fresh.pet.uid || 1 },
   };
-  const worn = applyPetAura(grown, T0, grown.pet.uid, 'blaze');
+  const worn = applyPetAura(grown, T0, grown.pet.uid, 'blaze', true);
   assert.equal(worn.result.ok, true);
   if (worn.result.ok) assert.equal(worn.result.cost, PLAY_EVERYTHING_FREE ? 0 : 900);
-  assert.equal(worn.doc.pet.aura_style, 'blaze');
-  assert.equal(worn.doc.pet.shiny, false);
-  const round = parsePlayStore(JSON.stringify(worn.doc), T0);
+  assert.deepEqual(worn.doc.pet.auras, [{ style: 'blaze', color: 'sword' }]);
+  const stacked = applyPetAura(worn.doc, T0, grown.pet.uid, 'spiky', true);
+  const colored = setPetAuraColor(stacked.doc, T0, grown.pet.uid, 'spiky', 'water');
+  assert.equal(colored.result.ok, true);
+  assert.equal(colored.doc.tokens, stacked.doc.tokens);
+  assert.deepEqual(
+    colored.doc.pet.auras.map((wear) => `${wear.style}:${wear.color}`),
+    ['blaze:sword', 'spiky:water'],
+  );
+  const round = parsePlayStore(JSON.stringify(colored.doc), T0);
   assert.ok(round);
-  assert.equal(round.version, 31);
-  assert.equal(round.pet.aura_style, 'blaze');
+  assert.equal(round.version, 32);
+  assert.equal(round.pet.auras.length, 2);
   assert.ok(round.aura_owned.includes('blaze'));
 
   const legacy = JSON.parse(JSON.stringify(fresh)) as Record<string, unknown>;
@@ -140,18 +176,27 @@ ok('frames match the samples: thin blaze, calm spiky, twinkling rune, attached b
   delete legacy.aura_owned;
   const loaded = parsePlayStore(JSON.stringify(legacy), T0);
   assert.ok(loaded);
-  assert.equal(loaded.version, 31);
-  assert.equal(loaded.pet.aura_style, 'none');
+  assert.equal(loaded.version, 32);
+  assert.deepEqual(loaded.pet.auras, []);
   assert.deepEqual(loaded.aura_owned, []);
 
-  const egg = applyPetAura(fresh, T0, fresh.pet.uid, 'rune');
+  const v31 = JSON.parse(JSON.stringify(grown)) as { version: number; pet: Record<string, unknown> };
+  v31.version = 31;
+  delete v31.pet.auras;
+  v31.pet.aura_style = 'blaze';
+  const migrated = parsePlayStore(JSON.stringify(v31), T0);
+  assert.deepEqual(migrated?.pet.auras, [{ style: 'blaze', color: 'sword' }]);
+
+  const egg = applyPetAura(fresh, T0, fresh.pet.uid, 'rune', true);
   assert.equal(egg.result.ok, false);
   const dev = devSetPetAura(grown, T0, grown.pet.uid, 'bubbles');
-  assert.equal(dev?.pet.aura_style, 'bubbles');
-  assert.equal(dev?.tokens, grown.tokens);
-  assert.deepEqual(dev?.aura_owned, grown.aura_owned);
+  assert.equal(dev?.pet.auras[0]?.style, 'bubbles');
+  const both = dev ? devSetPetAura(dev, T0, grown.pet.uid, 'rune') : null;
+  assert.deepEqual(both?.pet.auras.map((wear) => wear.style), ['bubbles', 'rune']);
+  assert.equal(both?.tokens, grown.tokens);
+  assert.deepEqual(both?.aura_owned, grown.aura_owned);
 }
-ok('save v31 round-trips; a v30 save has no aura; an egg refuses; the dev kit does not mint');
+ok('save v32 round-trips; a v31 aura migrates; a v30 save has none; the dev kit does not mint');
 
 {
   const defend = read('src/play/defend-screen.tsx');

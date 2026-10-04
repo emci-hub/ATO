@@ -621,7 +621,7 @@ export function PetRoom({
                 motion="sweep"
                 reduceMotion={reduceMotion}
                 opacity={
-                  pet.aura_style !== 'none'
+                  pet.auras.length > 0
                     ? quietFoilOpacity()
                     : pet.finish_kind === 'reverse'
                       ? cardFoilOpacity()

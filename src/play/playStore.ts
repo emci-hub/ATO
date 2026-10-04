@@ -193,11 +193,13 @@ import {
   type FinishWallet,
 } from '@/play/finishes';
 import {
+  isAuraTint,
   parseAuraOwned,
-  parseAuraStyle,
   planAuraWear,
   type AuraRefusal,
   type AuraStyle,
+  type AuraTint,
+  type AuraWear,
 } from '@/play/auras';
 import {
   DEN_MAX_SLOTS,
@@ -838,7 +840,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 31;
+  version: 32;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -1234,8 +1236,8 @@ export type PetView = {
   streak: { next: number; last: number | null; ymd: string | null; claimedToday: boolean };
   /** v30 — finishes this save can wear. `free` is the pre-launch unlock. */
   finish: { wallet: FinishWallet; pass: boolean; free: boolean };
-  /** v31 — the aura slot. `element` is the equipped sword, or null. */
-  auraSlot: { style: AuraStyle | 'none'; owned: readonly AuraStyle[]; element: string | null; pass: boolean; free: boolean };
+  /** v32 — worn auras. `element` is the equipped sword, or null. Colours are free. */
+  auraSlot: { worn: readonly AuraWear[]; owned: readonly AuraStyle[]; element: string | null; pass: boolean; free: boolean };
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -1301,7 +1303,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 31,
+    version: 32,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -1835,7 +1837,7 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
       free: PLAY_EVERYTHING_FREE,
     },
     auraSlot: {
-      style: pet.aura_style,
+      worn: pet.auras,
       owned: doc.aura_owned,
       element: swordPanel(doc.sword_bag).equipped?.element ?? null,
       pass: tideActive(doc.tide, today),
@@ -2618,41 +2620,68 @@ export function applyPetFinish(
 }
 
 export type AuraApplyResult =
-  | { ok: true; cost: number; left: number; style: AuraStyle | 'none' }
+  | { ok: true; cost: number; left: number; worn: AuraWear[] }
   | { ok: false; reason: AuraRefusal | 'missing' | 'not_revealed' };
 
-/** Wear an aura style on a revealed pet. Buying is per style. The colour follows the sword. */
+/** Wear or take off one aura. Other worn styles stay. Buying is per style. */
 export function applyPetAura(
   doc: PlayStoreDoc,
   now: number,
   uid: number,
-  style: AuraStyle | 'none',
+  style: AuraStyle,
+  on: boolean,
 ): { doc: PlayStoreDoc; result: AuraApplyResult } {
   const touched = touchPet(doc, now);
   const pet = touched.pet.uid === uid && uid > 0 ? touched.pet : touched.pet_den.find((p) => p.uid === uid);
   if (!pet) return { doc: touched, result: { ok: false, reason: 'missing' } };
-  if (style !== 'none' && !petRevealed(pet)) return { doc: touched, result: { ok: false, reason: 'not_revealed' } };
+  if (on && !petRevealed(pet)) return { doc: touched, result: { ok: false, reason: 'not_revealed' } };
   const today = localYmd(new Date(now));
   const plan = planAuraWear({
     owned: touched.aura_owned,
+    worn: pet.auras,
     tokens: touched.tokens,
     pass: tideActive(touched.tide, today),
     free: PLAY_EVERYTHING_FREE,
     style,
+    on,
   });
   if (!plan.ok) return { doc: touched, result: plan };
-  const next = withPetByUid(touched, uid, (p) => ({ ...p, aura_style: plan.style }));
+  const next = withPetByUid(touched, uid, (p) => ({ ...p, auras: plan.worn }));
   if (!next) return { doc: touched, result: { ok: false, reason: 'missing' } };
   return {
     doc: { ...next, tokens: touched.tokens - plan.cost, aura_owned: plan.owned },
-    result: { ok: true, cost: plan.cost, left: touched.tokens - plan.cost, style: plan.style },
+    result: { ok: true, cost: plan.cost, left: touched.tokens - plan.cost, worn: plan.worn },
   };
 }
 
-/** Dev kit: put any aura on a pet without spending tokens or owning it. */
+/** Colour is free, and only changes an aura the pet is already wearing. */
+export function setPetAuraColor(
+  doc: PlayStoreDoc,
+  now: number,
+  uid: number,
+  style: AuraStyle,
+  color: AuraTint,
+): { doc: PlayStoreDoc; result: { ok: true } | { ok: false; reason: 'missing' | 'style' } } {
+  if (!isAuraTint(color)) return { doc, result: { ok: false, reason: 'style' } };
+  const touched = touchPet(doc, now);
+  const pet = touched.pet.uid === uid && uid > 0 ? touched.pet : touched.pet_den.find((p) => p.uid === uid);
+  if (!pet || !pet.auras.some((wear) => wear.style === style)) return { doc: touched, result: { ok: false, reason: 'missing' } };
+  const next = withPetByUid(touched, uid, (p) => ({
+    ...p,
+    auras: p.auras.map((wear) => (wear.style === style ? { style, color } : wear)),
+  }));
+  if (!next) return { doc: touched, result: { ok: false, reason: 'missing' } };
+  return { doc: next, result: { ok: true } };
+}
+
+/** Dev kit: toggle one aura, or clear them. Does not spend tokens or mint ownership. */
 export function devSetPetAura(doc: PlayStoreDoc, now: number, uid: number, style: AuraStyle | 'none'): PlayStoreDoc | null {
-  if (style !== 'none' && parseAuraStyle(style) !== style) return null;
-  return withPetByUid(touchPet(doc, now), uid, (p) => ({ ...p, aura_style: style }));
+  return withPetByUid(touchPet(doc, now), uid, (p) => {
+    if (style === 'none') return { ...p, auras: [] };
+    const on = p.auras.some((wear) => wear.style === style);
+    const auras = on ? p.auras.filter((wear) => wear.style !== style) : [...p.auras, { style, color: 'sword' as const }];
+    return { ...p, auras };
+  });
 }
 
 /** Dev kit: put any finish on a pet without spending tokens or owning it. */
@@ -5295,7 +5324,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
       version !== 17 && version !== 18 && version !== 19 && version !== 20 &&
       version !== 21 && version !== 22 && version !== 23 && version !== 24 && version !== 25 &&
-      version !== 26 && version !== 27 && version !== 28 &&       version !== 29 && version !== 30 && version !== 31
+      version !== 26 && version !== 27 && version !== 28 &&       version !== 29 && version !== 30 && version !== 31 && version !== 32
     ) {
       return null;
     }
@@ -5429,7 +5458,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       (v27 ? Math.max(0, Math.floor(finiteNumber(data.shine_stones) ?? 0)) : 0) +
       retroShineStones(typeof version === 'number' ? version : 28, milestones);
     return {
-      version: 31,
+      version: 32,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,

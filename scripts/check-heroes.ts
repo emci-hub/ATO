@@ -580,7 +580,7 @@ const v17 = JSON.stringify({
 });
 const migrated = parsePlayStore(v17, 0);
 assert.ok(migrated, 'a v17 save still parses');
-assert.equal(migrated.version, 31, "and is written back as the current version (v31)");
+assert.equal(migrated.version, 32, "and is written back as the current version (v32)");
 assert.equal(migrated.tokens, 1234, 'its tokens survive');
 assert.equal(migrated.lifetime_waves_cleared, 42, 'its lifetime clears survive');
 assert.equal(migrated.avatars[0]?.level, 7, 'its Avatar level survives');

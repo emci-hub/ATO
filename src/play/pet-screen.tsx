@@ -654,7 +654,7 @@ export function PetScreen({
           finishKind: pet.finish_kind,
           finishColor: pet.finish_color,
           finishLabel: finishWornLabel(pet.finish_kind, pet.finish_color),
-          aura: pet.aura_style !== 'none',
+          aura: pet.auras.length > 0,
         }
       : null;
   // v26: the active medal buffs for the room corner (uses left, or Maxed aura).

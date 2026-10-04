@@ -156,7 +156,7 @@ export function PetDevPanel({
     ),
     aura: (
       <>
-        {btn('Aura off', (doc, now) => devSetPetAura(doc, now, pet.uid, 'none'))}
+        {btn('Auras off', (doc, now) => devSetPetAura(doc, now, pet.uid, 'none'))}
         {auraStyles().map((row) => btn(row.name, (doc, now) => devSetPetAura(doc, now, pet.uid, row.id)))}
       </>
     ),
