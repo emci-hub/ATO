@@ -314,47 +314,82 @@ export type AuraFrame = { pixels: AuraPixel[]; sparks: { x: number; y: number }[
 
 export type AuraField = { dist: Float32Array; nx: Int16Array; ny: Int16Array; W: number; H: number; pad: number };
 
+/**
+ * Squared distance to the nearest opaque pixel, in linear time.
+ * Outside the sprite that pixel is on the silhouette, which is what the
+ * rings and the flame band measure.
+ */
 function euclidField(opaque: Uint8Array, w: number, h: number, pad: number): AuraField {
-  const pts: number[] = [];
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    if (!opaque[y * w + x]) continue;
-    const edge =
-      x === 0 || y === 0 || x === w - 1 || y === h - 1 ||
-      !opaque[y * w + (x - 1)] || !opaque[y * w + (x + 1)] ||
-      !opaque[(y - 1) * w + x] || !opaque[(y + 1) * w + x];
-    if (edge) pts.push(x, y);
-  }
   const W = w + pad * 2;
   const H = h + pad * 2;
+  const BIG = 1e12;
   const dist = new Float32Array(W * H);
   const nx = new Int16Array(W * H);
   const ny = new Int16Array(W * H);
-  dist.fill(99);
-  for (let y = -pad; y < h + pad; y++) {
-    for (let x = -pad; x < w + pad; x++) {
-      const xi = x + pad;
-      const yi = y + pad;
-      const ixy = yi * W + xi;
-      if (x >= 0 && y >= 0 && x < w && y < h && opaque[y * w + x]) {
-        dist[ixy] = 0;
-        nx[ixy] = x;
-        ny[ixy] = y;
+  const colD = new Float64Array(W * H);
+  const colY = new Int16Array(W * H);
+  const span = Math.max(W, H);
+  const v = new Int32Array(span);
+  const z = new Float64Array(span + 1);
+  const f = new Float64Array(span);
+
+  for (let x = 0; x < W; x++) {
+    const ix = x - pad;
+    for (let y = 0; y < H; y++) {
+      const iy = y - pad;
+      f[y] = ix >= 0 && iy >= 0 && ix < w && iy < h && opaque[iy * w + ix] ? 0 : BIG;
+    }
+    let last = -1;
+    for (let y = 0; y < H; y++) {
+      if (f[y] === 0) last = y;
+      colY[y * W + x] = last;
+    }
+    last = -1;
+    for (let y = H - 1; y >= 0; y--) {
+      if (f[y] === 0) last = y;
+      const prev = colY[y * W + x];
+      if (last >= 0 && (prev < 0 || last - y < y - prev)) colY[y * W + x] = last;
+      const sy = colY[y * W + x];
+      colD[y * W + x] = sy < 0 ? BIG : (y - sy) * (y - sy);
+    }
+  }
+
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) f[x] = colD[y * W + x];
+    let k = 0;
+    v[0] = 0;
+    z[0] = -1e20;
+    z[1] = 1e20;
+    for (let q = 1; q < W; q++) {
+      let s = 0;
+      while (true) {
+        const r = v[k];
+        s = (f[q] + q * q - (f[r] + r * r)) / (2 * q - 2 * r);
+        if (s > z[k]) break;
+        k -= 1;
+      }
+      k += 1;
+      v[k] = q;
+      z[k] = s;
+      z[k + 1] = 1e20;
+    }
+    k = 0;
+    for (let x = 0; x < W; x++) {
+      while (z[k + 1] < x) k += 1;
+      const sx = v[k];
+      const sy = colY[y * W + sx];
+      const ixy = y * W + x;
+      if (sy < 0 || f[sx] >= BIG / 2) {
+        dist[ixy] = 99;
+        nx[ixy] = x - pad;
+        ny[ixy] = y - pad;
         continue;
       }
-      let m = 99;
-      let bx = x;
-      let by = y;
-      for (let i = 0; i < pts.length; i += 2) {
-        const d = Math.hypot(x - pts[i], y - pts[i + 1]);
-        if (d < m) {
-          m = d;
-          bx = pts[i];
-          by = pts[i + 1];
-        }
-      }
-      dist[ixy] = m;
-      nx[ixy] = bx;
-      ny[ixy] = by;
+      const dx = x - sx;
+      const dy = y - sy;
+      dist[ixy] = Math.hypot(dx, dy);
+      nx[ixy] = sx - pad;
+      ny[ixy] = sy - pad;
     }
   }
   return { dist, nx, ny, W, H, pad };
