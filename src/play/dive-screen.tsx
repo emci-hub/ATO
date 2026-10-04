@@ -124,7 +124,7 @@ export function DiveScreen({
   /** v22 — Dive-gear purchases go straight through the store. */
   commit: (transition: PlayTransition) => boolean;
 }) {
-  usePixelFonts();
+  const fontsReady = usePixelFonts();
   const charges = view.dive.current;
   const run = view.diveRun;
   const canSpend = !run.active && charges >= 1;
@@ -250,6 +250,8 @@ export function DiveScreen({
   const st = view.pet.state;
   const revealed = st.hero != null && st.stage !== 'egg' && st.stage !== 'baby';
   const maxDepth = run.active ? run.maxDeepers : view.diveGear.oxygen ? 5 : 4;
+
+  if (!fontsReady) return <View style={styles.screen} />;
 
   return (
     <View style={styles.screen}>

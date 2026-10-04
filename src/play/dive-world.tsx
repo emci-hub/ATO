@@ -171,26 +171,24 @@ export function Caustics({
   alive: boolean;
 }) {
   const tile = frameBox('caustic');
-  const count = Math.max(1, Math.ceil((width + tile.w * 2) / tile.w));
+  const spots = [0.22, 0.55, 0.8];
   return (
     <>
-      {[0, 1].map((i) => (
-        <View
-          key={i}
-          pointerEvents="none"
-          style={[
-            styles.abs,
-            { left: 0, top: i * band * speed + band * speed * 0.42, width, height: tile.h, overflow: 'hidden' },
-          ]}>
-          <Drift alive={alive} dx={tile.w} ms={2400 + i * 400}>
-            <View style={{ flexDirection: 'row' }}>
-              {Array.from({ length: count }, (_, k) => (
-                <AtlasSprite key={k} atlas="dive" frame="caustic" />
-              ))}
-            </View>
-          </Drift>
-        </View>
-      ))}
+      {[0, 1].map((bandIndex) =>
+        spots.map((x, i) => (
+          <View
+            key={`${bandIndex}-${i}`}
+            pointerEvents="none"
+            style={[
+              styles.abs,
+              { left: width * x, top: bandIndex * band * speed + band * speed * 0.55, width: tile.w, height: tile.h },
+            ]}>
+            <Drift alive={alive} dx={10} ms={2800 + i * 400}>
+              <AtlasSprite atlas="dive" frame="caustic" />
+            </Drift>
+          </View>
+        )),
+      )}
     </>
   );
 }

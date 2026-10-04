@@ -71,6 +71,7 @@ import {
   PixelHearts,
   PixelLabel,
   PixelNameplate,
+  usePixelFonts,
 } from '@/play/pixel-ui';
 import { PET_TALK_HOLD_MS, PET_TALK_TYPE_MS } from '@/play/pet-talk';
 import { roleFootAt } from '@/play/skin';
@@ -194,14 +195,14 @@ function RoomBackdrop({
   const winX = snapArt(Math.max(ART_PT * 2, width * 0.06));
   const winY = snapArt(Math.min(Math.max(72, height * 0.08), Math.max(ART_PT, horizon - win.h - ART_PT * 2)));
   const bedCx = width * PET_BED_X;
-  const lampLeft = snapArt(Math.min(width - lamp.w - ART_PT * 2, Math.max(bedCx + bed.w / 2 + ART_PT * 2, width * 0.86)));
+  const lampLeft = snapArt(Math.min(width - lamp.w - ART_PT * 2, bedCx + bed.w / 2 + ART_PT * 4));
   const lampCx = lampLeft + lamp.w / 2;
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <View style={{ position: 'absolute', left: 0, top: 0, width, height: wallH, backgroundColor: '#2e222f', overflow: 'hidden' }}>
+      <View style={{ position: 'absolute', left: 0, top: 0, width, height: wallH, backgroundColor: '#3e3546', overflow: 'hidden' }}>
         <AtlasFill atlas="room" frame="wall" width={width} height={wallH} />
       </View>
-      <View style={{ position: 'absolute', left: 0, top: horizon, width, height: floorH, backgroundColor: '#2e222f', overflow: 'hidden' }}>
+      <View style={{ position: 'absolute', left: 0, top: horizon, width, height: floorH, backgroundColor: '#4c3e24', overflow: 'hidden' }}>
         <AtlasFill atlas="room" frame="floor" width={width} height={floorH} />
       </View>
       <View style={{ position: 'absolute', left: 0, top: horizon - baseH / 2, width, height: baseH, overflow: 'hidden' }}>
@@ -226,10 +227,10 @@ function RoomBackdrop({
       <View style={{ position: 'absolute', ...sit(shelf.w, shelf.h, width * 0.46, horizon - 4) }}>
         <AtlasSprite atlas="room" frame="shelf" />
       </View>
-      <View style={{ position: 'absolute', left: lampLeft, top: snapArt(horizon - lamp.h) }}>
+      <View style={{ position: 'absolute', left: lampLeft, top: snapArt(floorY - lamp.h) }}>
         <SpriteSwap atlas="room" frames={['lamp', 'lamp-hot']} alive={alive} ms={160} />
       </View>
-      <View style={{ position: 'absolute', ...sit(pool.w, pool.h, lampCx, horizon + pool.h) }}>
+      <View style={{ position: 'absolute', ...sit(pool.w, pool.h, lampCx, floorY) }}>
         <AtlasSprite atlas="room" frame="pool" />
       </View>
       <View style={{ position: 'absolute', ...sit(rug.w, rug.h, width * 0.5, floorY) }}>
@@ -238,12 +239,12 @@ function RoomBackdrop({
       <View style={{ position: 'absolute', ...sit(bed.w, bed.h, bedCx, floorY) }}>
         <AtlasSprite atlas="room" frame="bed" />
       </View>
-      <View style={{ position: 'absolute', ...sit(bush.w, bush.h, width * 0.08, floorY) }}>
+      <View style={{ position: 'absolute', ...sit(bush.w, bush.h, width * 0.06, floorY) }}>
         <Sway alive={alive} deg={2.2} ms={2000}>
           <AtlasSprite atlas="room" frame="bush" />
         </Sway>
       </View>
-      <View style={{ position: 'absolute', ...sit(bowl.w, bowl.h, width * 0.2, floorY) }}>
+      <View style={{ position: 'absolute', ...sit(bowl.w, bowl.h, width * 0.16, floorY) }}>
         <AtlasSprite atlas="room" frame="bowl" />
         {pantry > 0 ? (
           <View style={{ position: 'absolute', left: (bowl.w - treat.w) / 2, top: -treat.h + 4 }}>
@@ -433,6 +434,8 @@ export function PetRoom({
   /** Equipped sword element. The pet aura colour follows it. */
   auraElement?: string | null;
 }) {
+  // Tiny5 / Inter. Hold the room until they are in, so labels never paint in a fallback face.
+  const fontsReady = usePixelFonts();
   // Effects Low (Settings): auras and sparkles hold still.
   const fxFull = useFxQuality() === 'full';
   const fxAnimate = !reduceMotion && fxFull;
@@ -595,6 +598,8 @@ export function PetRoom({
     const want = Math.min(Math.max(8, center - plateW / 2), Math.max(8, width - 8 - plateW));
     return { transform: [{ translateX: want - (center - box / 2) }] };
   });
+
+  if (!fontsReady) return <View style={styles.room} onLayout={onLayout} />;
 
   return (
     <View style={styles.room} onLayout={onLayout}>

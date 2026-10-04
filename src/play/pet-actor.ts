@@ -189,8 +189,9 @@ export type PetPlanInput = {
 };
 
 /** Room edges the pet stays within (0..1). */
-export const PET_ROOM_MIN_X = 0.12;
-export const PET_ROOM_MAX_X = 0.88;
+/** The pet stays on the rug. The bowl, bush and bed sit outside this span. */
+export const PET_ROOM_MIN_X = 0.38;
+export const PET_ROOM_MAX_X = 0.64;
 /** Where the bed is — the pet sleeps here. */
 export const PET_BED_X = 0.78;
 /** A full walk across the room at speed 1. */

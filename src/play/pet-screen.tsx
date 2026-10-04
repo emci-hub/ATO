@@ -264,7 +264,7 @@ export function PetScreen({
   /** v26 — post a floating banner (NEW RECORD!, unlocks, buffs). */
   onBanner?: (b: { title: string; body: string }) => void;
 }) {
-  usePixelFonts();
+  const fontsReady = usePixelFonts();
   const devUnlocked = usePlayDevUnlocked();
   const dev = PRE_LAUNCH_DEV && devUnlocked;
   const pv = view.pet;
@@ -682,6 +682,8 @@ export function PetScreen({
     if (kind === 'hatch') sayEgg('hatched');
     if (kind === 'child' && pet.grade) sayEgg(pet.shiny ? 'shiny' : (`reveal_${pet.grade}` as PetEggTalk));
   };
+
+  if (!fontsReady) return <View style={styles.screen} />;
 
   return (
     <View style={styles.screen}>

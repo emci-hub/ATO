@@ -70,7 +70,7 @@ import { AbyssDragon, BOX_OPEN, Caustics, DiveWater, FindBox, LightRays, ShaftWa
 import { SpriteSwap } from '@/play/pixel-ambient';
 import { findName } from '@/play/dive-loot';
 import { PIXEL } from '@/play/pixel-theme';
-import { PixelBody, PixelFrame, PixelLabel } from '@/play/pixel-ui';
+import { PixelBody, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
 import type { PetState } from '@/play/pet';
 import { petPose, sharpPetBox, type PetPose } from '@/play/pet-actor';
 import { PetAnimSprite, usePetArt, type PetArt, type PetFace } from '@/play/pet-anim-sprite';
@@ -323,6 +323,7 @@ export function DiveScene({
   atSurface?: boolean;
   auraElement?: string | null;
 }) {
+  const fontsReady = usePixelFonts();
   const [size, setSize] = useState({ width: 0, height: 0 });
   const onLayout = (e: LayoutChangeEvent) =>
     setSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height });
@@ -635,6 +636,10 @@ export function DiveScene({
   const worldH = band * (DIVE_MAX_DEPTH + 1) + height;
   const bubbleCount = reduceMotion ? 0 : full ? 8 : 4;
   const fishCount = full ? Math.min(5, 3 + Math.floor(Math.min(depth, 4) / 2)) : 0;
+
+  if (!fontsReady) {
+    return <View style={styles.scene} onLayout={onLayout} />;
+  }
 
   return (
     <Animated.View style={[styles.scene, shakeStyle]} onLayout={onLayout} accessibilityLabel={`${diveZone(depth)}, depth ${depth} of ${maxDepth}`}>

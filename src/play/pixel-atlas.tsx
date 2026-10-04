@@ -56,7 +56,7 @@ export const DIVE_FRAMES = {
   'bubble': { x: 276, y: 933, w: 7, h: 7 },
   'bubble2': { x: 24, y: 970, w: 7, h: 7 },
   'caustic': { x: 8, y: 970, w: 12, h: 6 },
-  'ray': { x: 0, y: 970, w: 4, h: 96 },
+  'ray': { x: 0, y: 970, w: 7, h: 96 },
   'bubbles': { x: 795, y: 746, w: 83, h: 36 },
   'chest': { x: 225, y: 933, w: 16, h: 14 },
   'coral': { x: 605, y: 746, w: 48, h: 56 },
