@@ -13,18 +13,10 @@
  * Rules are unchanged: pure view over `view.pet` + transitions via `commit`.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, {
-  Easing,
-  cancelAnimation,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Fonts } from '@/constants/theme';
+import { ART_PT, PIXEL } from '@/play/pixel-theme';
+import { PixelBody, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { PET_COACH_ICON, petCoachTip, type PetCoachIcon } from '@/play/coach';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
@@ -198,47 +190,31 @@ function useHour(): number {
   return hour;
 }
 
-/** One room icon; pulses while the coach tip points at it. */
+/** One room icon. A suggested action fills cyan — colour only, so Reduce Motion stays still. */
 function RoomIcon({
   emoji,
   label,
   pulse,
   badge,
-  reduceMotion,
   onPress,
 }: {
   emoji: string;
   label: string;
   pulse: boolean;
   badge: boolean;
-  reduceMotion: boolean;
   onPress: () => void;
 }) {
-  const scale = useSharedValue(1);
-  useEffect(() => {
-    cancelAnimation(scale);
-    scale.value = 1;
-    if (!pulse || reduceMotion) return;
-    scale.value = withRepeat(
-      withSequence(
-        withTiming(1.14, { duration: 520, easing: Easing.inOut(Easing.sin) }),
-        withTiming(1, { duration: 520, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
-    );
-    return () => cancelAnimation(scale);
-  }, [pulse, reduceMotion, scale]);
-  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${label}${badge ? ', dive in progress' : ''}${pulse ? ', suggested' : ''}`}
-      style={({ pressed }) => [styles.icon, pulse && styles.iconPulse, pressed && styles.pressed]}>
-      <Animated.View style={[styles.iconInner, style]}>
-        <Text style={styles.iconEmoji}>{emoji}</Text>
-        <Text style={[styles.iconLabel, pulse && styles.iconLabelPulse]}>{label}</Text>
-      </Animated.View>
+      accessibilityLabel={`${emoji} ${label}${badge ? ', dive in progress' : ''}${pulse ? ', suggested' : ''}`}
+      style={({ pressed }) => [styles.icon, pressed && styles.pressed]}>
+      <PixelFrame fill={pulse ? PIXEL.cyan : PIXEL.ink} border={PIXEL.cyan} minHeight={48} style={styles.iconFrame}>
+        <PixelLabel color={pulse ? PIXEL.onFill : PIXEL.cyan} numberOfLines={1}>
+          {label}
+        </PixelLabel>
+      </PixelFrame>
       {badge ? <View style={styles.badge} /> : null}
     </Pressable>
   );
@@ -287,6 +263,7 @@ export function PetScreen({
   /** v26 — post a floating banner (NEW RECORD!, unlocks, buffs). */
   onBanner?: (b: { title: string; body: string }) => void;
 }) {
+  usePixelFonts();
   const devUnlocked = usePlayDevUnlocked();
   const dev = PRE_LAUNCH_DEV && devUnlocked;
   const pv = view.pet;
@@ -703,12 +680,12 @@ export function PetScreen({
   return (
     <View style={styles.screen}>
       <View style={styles.topBar}>
-        <Pressable onPress={onBack} hitSlop={12} accessibilityRole="button" accessibilityLabel="Back to Command Hub">
-          <Text style={styles.back}>‹ Hub</Text>
+        <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Back to Command Hub" style={styles.backHit}>
+          <PixelLabel color={PIXEL.cyan}>‹ Hub</PixelLabel>
         </Pressable>
-        <Text style={styles.title} numberOfLines={1}>
+        <PixelLabel numberOfLines={1} style={styles.title}>
           {title}
-        </Text>
+        </PixelLabel>
         <View style={styles.topActions}>
           <Pressable
             onPress={() => setSheet('den')}
@@ -764,7 +741,7 @@ export function PetScreen({
         tide={pv.tide.active}
       />
 
-      <View style={styles.iconRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.iconRow}>
         {ICONS.map((icon) => (
           <RoomIcon
             key={icon.id}
@@ -772,15 +749,14 @@ export function PetScreen({
             label={icon.label}
             pulse={pulseIcon === icon.id}
             badge={icon.id === 'dive' && view.diveRun.active}
-            reduceMotion={reduceMotion}
             onPress={() => openIcon(icon.id)}
           />
         ))}
-      </View>
+      </ScrollView>
 
       <PlaySheet open={sheet === 'feed'} title={SHEET_TITLE.feed} onClose={closeSheet} reduceMotion={reduceMotion}>
         {pet.stage === 'egg' ? (
-          <Text style={styles.body}>It hatches first — then it eats.</Text>
+          <PixelBody>It hatches first — then it eats.</PixelBody>
         ) : (
           <FeedSheetBody view={view} commit={commit} />
         )}
@@ -960,57 +936,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: NEON.cyanDim,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    gap: 8,
+    borderBottomWidth: ART_PT,
+    borderBottomColor: PIXEL.cyan,
+    backgroundColor: PIXEL.ink,
   },
-  back: { fontFamily: Fonts.monoBold, fontSize: 13, color: NEON.textMuted },
-  title: {
-    flex: 1,
-    textAlign: 'center',
-    fontFamily: Fonts.displayBold,
-    fontSize: 16,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: NEON.textPrimary,
-  },
-  topActions: { flexDirection: 'row', gap: 8 },
-  topButton: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: NEON.cyanDim, borderRadius: 8 },
-  topButtonText: { fontSize: 16, color: NEON.cyan },
+  backHit: { minHeight: 48, justifyContent: 'center', paddingHorizontal: 4 },
+  title: { flex: 1, textAlign: 'center' },
+  topActions: { flexDirection: 'row', gap: 4 },
+  topButton: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderWidth: ART_PT, borderColor: PIXEL.cyan },
+  topButtonText: { fontSize: 18, color: PIXEL.cyan },
   iconRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    alignItems: 'stretch',
     paddingVertical: 8,
-    paddingHorizontal: 6,
-    borderTopWidth: 1,
-    borderTopColor: NEON.cyanDim,
-    backgroundColor: NEON.panel,
+    paddingHorizontal: 8,
+    gap: 8,
+    borderTopWidth: ART_PT,
+    borderTopColor: PIXEL.cyan,
+    backgroundColor: PIXEL.ink,
   },
-  icon: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 6,
-    marginHorizontal: 3,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  iconPulse: { borderColor: NEON.cyan, backgroundColor: NEON.cyanSoft },
-  iconInner: { alignItems: 'center', gap: 2 },
-  iconEmoji: { fontSize: 24 },
-  iconLabel: { fontFamily: Fonts.mono, fontSize: 10, color: NEON.textMuted },
-  iconLabelPulse: { color: NEON.cyan, fontFamily: Fonts.monoBold },
+  icon: { minHeight: 48 },
+  iconFrame: { flexGrow: 1 },
   badge: {
     position: 'absolute',
-    top: 4,
-    right: 12,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
     backgroundColor: NEON.pink,
   },
-  pressed: { opacity: 0.75 },
-  body: { fontFamily: Fonts.mono, fontSize: 12, lineHeight: 18, color: NEON.textMuted },
+  pressed: { opacity: 0.82 },
   cardCenter: { alignItems: 'center', paddingVertical: 8 },
 });

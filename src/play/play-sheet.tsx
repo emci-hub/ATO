@@ -6,12 +6,12 @@
  * Reduced motion: a plain fade, no slide.
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { PanResponder, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { PanResponder, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { Fonts } from '@/constants/theme';
-import { NEON } from '@/play/neon-viper';
+import { ART_PT, PIXEL } from '@/play/pixel-theme';
+import { PixelLabel, usePixelFonts } from '@/play/pixel-ui';
 
 const OPEN_MS = 240;
 const CLOSE_DRAG = 70;
@@ -32,6 +32,7 @@ export function PlaySheet({
   /** Optional row under the title (tabs). */
   header?: ReactNode;
 }) {
+  usePixelFonts();
   const { height } = useWindowDimensions();
   const [mounted, setMounted] = useState(open);
   const shown = useSharedValue(0);
@@ -78,11 +79,11 @@ export function PlaySheet({
         <View {...drag.panHandlers} style={styles.handleZone}>
           <View style={styles.handle} />
           <View style={styles.titleRow}>
-            <Text style={styles.title} accessibilityRole="header">
+            <PixelLabel numberOfLines={1} style={styles.title} accessibilityRole="header">
               {title}
-            </Text>
-            <Pressable onPress={onClose} hitSlop={12} accessibilityRole="button" accessibilityLabel={`Close ${title}`}>
-              <Text style={styles.close}>✕</Text>
+            </PixelLabel>
+            <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel={`Close ${title}`} style={styles.closeHit}>
+              <PixelLabel>X</PixelLabel>
             </Pressable>
           </View>
         </View>
@@ -116,7 +117,9 @@ export function SheetTabs<T extends string>({
             accessibilityRole="tab"
             accessibilityState={{ selected: on }}
             style={[styles.tab, on && styles.tabOn]}>
-            <Text style={[styles.tabText, on && styles.tabTextOn]}>{tab.label}</Text>
+            <PixelLabel color={on ? PIXEL.ink : PIXEL.cyan} numberOfLines={1}>
+              {tab.label}
+            </PixelLabel>
           </Pressable>
         );
       })}
@@ -131,41 +134,31 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: NEON.panel,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    borderTopWidth: 1,
-    borderColor: NEON.cyanBorder,
+    backgroundColor: PIXEL.ink,
+    borderTopWidth: ART_PT,
+    borderColor: PIXEL.cyan,
     paddingBottom: 12,
   },
-  handleZone: { paddingTop: 8, paddingHorizontal: 16 },
+  handleZone: { paddingTop: 8, paddingHorizontal: 12 },
   handle: {
     alignSelf: 'center',
-    width: 44,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: NEON.cyanBorder,
+    width: 48,
+    height: ART_PT * 2,
+    backgroundColor: PIXEL.cyan,
     marginBottom: 8,
   },
-  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 8 },
-  title: {
-    fontFamily: Fonts.displayBold,
-    fontSize: 18,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: NEON.textPrimary,
-  },
-  close: { fontSize: 18, color: NEON.textMuted, paddingHorizontal: 4 },
-  body: { paddingHorizontal: 16, paddingBottom: 16, gap: 10 },
-  tabs: { paddingHorizontal: 16, gap: 8, paddingBottom: 10 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  title: { flex: 1 },
+  closeHit: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  body: { paddingHorizontal: 12, paddingBottom: 16, gap: 10 },
+  tabs: { paddingHorizontal: 12, gap: 8, paddingBottom: 10 },
   tab: {
-    paddingVertical: 6,
+    minHeight: 48,
+    justifyContent: 'center',
     paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: NEON.cyanDim,
-    borderRadius: 14,
+    borderWidth: ART_PT,
+    borderColor: PIXEL.cyan,
+    backgroundColor: PIXEL.ink,
   },
-  tabOn: { borderColor: NEON.cyan, backgroundColor: NEON.cyanSoft },
-  tabText: { fontFamily: Fonts.mono, fontSize: 12, color: NEON.textMuted },
-  tabTextOn: { color: NEON.cyan, fontFamily: Fonts.monoBold },
+  tabOn: { backgroundColor: PIXEL.cyan, borderColor: PIXEL.cyan },
 });

@@ -32,7 +32,7 @@
  * parallax (then props, trail) — see `diveWorldCuts`.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { PixelRatio, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { PixelRatio, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -48,7 +48,6 @@ import Animated, {
 import type { SharedValue } from 'react-native-reanimated';
 import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 
-import { Fonts } from '@/constants/theme';
 import type { DiveFxLevel } from '@/play/dive-fx-level';
 import {
   DIVE_MAX_DEPTH,
@@ -63,6 +62,7 @@ import {
   ZONE_BANDS,
   diveWorldCuts,
   findBoxArt,
+  findGlow,
   isRareOrBetter,
   revealMs,
   vignetteFor,
@@ -71,6 +71,8 @@ import {
 import { FindIcon } from '@/play/dive-hud';
 import { AbyssDragon, BOX_OPEN, FindBox, ShaftWalls, SharkGlide, SurfaceSky, WALL_W, WATERLINE, ZoneProps } from '@/play/dive-world';
 import { findName } from '@/play/dive-loot';
+import { PIXEL } from '@/play/pixel-theme';
+import { PixelBody, PixelFrame, PixelLabel } from '@/play/pixel-ui';
 import type { PetState } from '@/play/pet';
 import { petPose, sharpPetBox, type PetPose } from '@/play/pet-actor';
 import { PetAnimSprite, usePetArt, type PetArt, type PetFace } from '@/play/pet-anim-sprite';
@@ -81,7 +83,7 @@ import type { PetWear } from '@/play/pet-cosmetics';
 const PET_WANT_BOX = 112;
 const SLOT = 40;
 const ROW_PAD = 12;
-const ICON = 34;
+const ICON = 36;
 const FIND_BOX = 44;
 
 export type DiveZone = 'Shallows' | 'Reef' | 'Trench' | 'Abyss' | 'Hadal';
@@ -609,6 +611,9 @@ export function DiveScene({
         : event?.kind === 'surface' && shown
           ? `Back up! ${shown.finds} ${shown.finds === 1 ? 'find' : 'finds'}${shown.shells > 0 ? ` · +${shown.shells} shells` : ''}`
           : null;
+  const lastId = haul.length > 0 ? haul[haul.length - 1] : null;
+  const rareFind =
+    lastId && caption?.startsWith('Found ') && isRareOrBetter(findGlow(lastId)) ? findName(lastId) : null;
 
   const worldH = band * (DIVE_MAX_DEPTH + 1) + height;
   const bubbleCount = reduceMotion ? 0 : full ? 8 : 4;
@@ -781,7 +786,7 @@ export function DiveScene({
           {/* Shells flying to the counter on a surface. */}
           {event?.kind === 'surface' && event.shells > 0 && !reduceMotion ? (
             <Animated.View pointerEvents="none" style={[styles.abs, { left: width / 2 - 14, top: petY }, flyStyle]}>
-              <Text style={styles.flyer}>+{event.shells} 🐚</Text>
+              <PixelBody color={PIXEL.amber}>{`+${event.shells}`}</PixelBody>
             </Animated.View>
           ) : null}
 
@@ -800,7 +805,20 @@ export function DiveScene({
           {sinking.map((id, i) => (
             <Sinking key={`${id}-${i}-${event?.key}`} id={id} left={slotX(event?.saved.length ?? 0) + i * SLOT} top={rowY} drop={height * 0.4} reduceMotion={reduceMotion} />
           ))}
-          {caption ? <Text style={[styles.caption, { bottom: ROW_PAD + ICON + 10 }]}>{caption}</Text> : null}
+          {caption ? (
+            <View pointerEvents="none" style={[styles.caption, { bottom: ROW_PAD + ICON + 8 }]}>
+              {rareFind ? (
+                <PixelFrame fill={PIXEL.ink} border={PIXEL.amber}>
+                  <PixelLabel color={PIXEL.amber}>Rare find</PixelLabel>
+                  <PixelBody>{rareFind}</PixelBody>
+                </PixelFrame>
+              ) : (
+                <PixelFrame>
+                  <PixelBody style={styles.captionText}>{caption}</PixelBody>
+                </PixelFrame>
+              )}
+            </View>
+          ) : null}
         </>
       ) : null}
       {children}
@@ -825,16 +843,6 @@ const styles = StyleSheet.create({
   row: { position: 'absolute', left: ROW_PAD, right: ROW_PAD, flexDirection: 'row' },
   slot: { width: SLOT },
   hidden: { opacity: 0 },
-  flyer: { fontFamily: Fonts.monoBold, fontSize: 14, color: '#FFE9A8' },
-  caption: {
-    position: 'absolute',
-    left: 12,
-    right: 12,
-    fontFamily: Fonts.monoBold,
-    fontSize: 13,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    textShadowColor: '#000000',
-    textShadowRadius: 4,
-  },
+  caption: { position: 'absolute', left: 12, right: 12, alignItems: 'center' },
+  captionText: { textAlign: 'center' },
 });

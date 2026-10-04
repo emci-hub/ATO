@@ -35,6 +35,7 @@ import {
   type PetKitSource,
   type PetMoodKind,
 } from '../src/play/pet-actor';
+import { ART_PT, PIXEL, PIXEL_LABEL_PT, crispSpan, snapArt } from '../src/play/pixel-theme';
 import {
   PET_STATUSES,
   evolvingSoonWindowMs,
@@ -287,6 +288,19 @@ for (const pr of [1, 1.5, 2, 2.625, 3, 3.5]) {
   }
 }
 ok('sharp pixels: every room size is a whole number of device pixels per source pixel');
+
+assert.equal(ART_PT, 2, '1 art px = 2pt');
+assert.equal(PIXEL.ink, '#05070D');
+assert.equal(PIXEL.cyan, '#22D3EE');
+assert.equal(snapArt(11), 12);
+assert.equal(snapArt(0.4), 0);
+assert.equal(crispSpan(32), 64, '32px icon at 2pt is 64pt');
+assert.equal(crispSpan(32, 36), 32, 'a slot under 64pt keeps an integer scale');
+assert.equal(crispSpan(26), 52);
+assert.equal(crispSpan(23), 46);
+assert.ok(PIXEL_LABEL_PT >= 26, 'Tiny5 at this size draws its 5px cap at 16pt or more');
+assert.ok(PIXEL_LABEL_PT / 8 >= 3 && PIXEL_LABEL_PT / 8 <= 4, '3–4pt per Tiny5 font pixel');
+ok('pixel grid: art snap, integer icon scale, Tiny5 size');
 
 // The room screen wires the pure pieces (not a stub).
 const room = fs.readFileSync('src/play/pet-room.tsx', 'utf8');

@@ -13,7 +13,6 @@
  * Reduced motion: it idles in place (no walking, hops or drift), bubbles
  * appear and fade without typing — status and talking still work.
  */
-import { Image } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
 import { PixelRatio, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
@@ -27,14 +26,13 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Circle, Defs, Ellipse, Line, LinearGradient, Rect, Stop } from 'react-native-svg';
 
-import { Fonts } from '@/constants/theme';
 import type { PetCoachTip } from '@/play/coach';
 import { FinishPaint } from '@/play/finish-foil';
 import { FxLayer, FX_ULTIMATE_LIFE_MS, type FxEvent } from '@/play/fx-layer';
 import { useFxQuality } from '@/play/fx-quality';
 import { ELEMENT_COLOR, type Element } from '@/play/kits';
 import { NEON } from '@/play/neon-viper';
-import { PET_BRANCH_TINT, PET_METER_MAX, type PetState } from '@/play/pet';
+import { PET_BRANCH_TINT, PET_METER_MAX, PET_STAGE_LABEL, type PetState } from '@/play/pet';
 import {
   PET_BED_X,
   PET_ROOM_BOX,
@@ -48,11 +46,11 @@ import {
 import { PetAnimSprite, usePetArt, type PetFace } from '@/play/pet-anim-sprite';
 import {
   EGG_COLOR,
-  EGG_EMOJI,
   EGG_LABEL,
   EGG_TYPES,
   GRADE_COLOR,
   GRADE_LABEL,
+  GRADE_STARS,
   WARMTH_MAX,
   nameplateText,
   type EggType,
@@ -60,7 +58,17 @@ import {
 import { EggShape } from '@/play/pet-figure';
 import { GlimmerGlow, GradeAura, ShinyOverlay } from '@/play/pet-looks';
 import { wornLook, type PetWear } from '@/play/pet-cosmetics';
-import { heartsText, petStatusLabel, type PetStatus } from '@/play/pet-status';
+import { PET_STATUS_WORD, isEvolvingSoon, petStatusLabel, type PetStatus } from '@/play/pet-status';
+import { ART_PT, PIXEL, snapArt } from '@/play/pixel-theme';
+import {
+  PixelBody,
+  PixelButton,
+  PixelFrame,
+  PixelHearts,
+  PixelImage,
+  PixelLabel,
+  PixelNameplate,
+} from '@/play/pixel-ui';
 import { PET_TALK_HOLD_MS, PET_TALK_TYPE_MS } from '@/play/pet-talk';
 import { roleFootAt, skinArt } from '@/play/skin';
 
@@ -70,8 +78,36 @@ const FLOOR_AT = 0.8;
 // feet+6, so +8 clears it and the sprite for every stage (it used to sit at -4
 // and covered the pet's feet — Crimson Oni, Child).
 const PLATE_BELOW_FEET = 8;
-/** v26 nameplate text size (it may shrink a touch to fit, never below 90%). */
-export const NAMEPLATE_FONT = 11;
+/** v26 nameplate text size — Tiny5 at 3.5pt per font pixel (cap stays over 16pt). */
+export const NAMEPLATE_FONT = 28;
+
+function plateStatus(status: PetStatus, stage: PetState['stage'], stageLeftMs: number | null): string {
+  if (status === 'egg' && stage === 'egg' && isEvolvingSoon('egg', stageLeftMs)) return 'Hatching soon';
+  return PET_STATUS_WORD[status];
+}
+
+/** A 5×5 art-pixel star. Tiny5 has no star glyph. */
+function PixelStar({ color }: { color: string }) {
+  const p = ART_PT;
+  const rows = [
+    [0, 0, 1, 0, 0],
+    [0, 1, 1, 1, 0],
+    [1, 1, 1, 1, 1],
+    [0, 1, 1, 1, 0],
+    [0, 0, 1, 0, 0],
+  ];
+  return (
+    <View style={{ width: 5 * p, height: 5 * p }}>
+      {rows.map((row, y) =>
+        row.map((on, x) =>
+          on ? (
+            <View key={`${x}-${y}`} style={{ position: 'absolute', left: x * p, top: y * p, width: p, height: p, backgroundColor: color }} />
+          ) : null,
+        ),
+      )}
+    </View>
+  );
+}
 
 
 /** v26 "Maxed aura": Pumped can't add more pounce, so the pet glows gold. */
@@ -251,12 +287,13 @@ function SpeechBubble({
       opacity.value = 0;
       return;
     }
-    opacity.value = withTiming(1, { duration: 150 });
     const full = speech.text;
     let typer: ReturnType<typeof setInterval> | null = null;
     if (reduceMotion) {
       setShown(full);
+      opacity.value = 1;
     } else {
+      opacity.value = withTiming(1, { duration: 150 });
       let i = 0;
       setShown('');
       typer = setInterval(() => {
@@ -267,7 +304,7 @@ function SpeechBubble({
     }
     const typeMs = reduceMotion ? 0 : full.length * PET_TALK_TYPE_MS;
     const fade = setTimeout(() => {
-      opacity.value = withTiming(0, { duration: 400 });
+      opacity.value = reduceMotion ? 0 : withTiming(0, { duration: 400 });
     }, typeMs + PET_TALK_HOLD_MS);
     return () => {
       if (typer) clearInterval(typer);
@@ -277,9 +314,14 @@ function SpeechBubble({
   const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
   if (!speech) return null;
   return (
-    <Animated.View style={[styles.speech, style]} pointerEvents="none" accessibilityLiveRegion="polite">
-      {speaker ? <Text style={styles.speaker}>{speaker}</Text> : null}
-      <Text style={styles.speechText}>{shown || ' '}</Text>
+    <Animated.View
+      style={style}
+      pointerEvents="none"
+      accessibilityLiveRegion="polite"
+      accessibilityLabel={speaker ? `${speaker} says ${shown}` : shown}>
+      <PixelFrame align="stretch">
+        <PixelBody style={styles.speechText}>{shown || ' '}</PixelBody>
+      </PixelFrame>
     </Animated.View>
   );
 }
@@ -507,12 +549,9 @@ export function PetRoom({
     <View style={styles.room} onLayout={onLayout}>
       {width > 0 ? <RoomBackdrop width={width} height={height} night={night} pantry={pantry} /> : null}
       {width > 0 ? (
-        <Image
-          source={skinArt('prop.bush')}
-          contentFit="contain"
-          style={[styles.plant, { left: width * 0.86 - 28, top: floorY - 52 }]}
-          accessibilityIgnoresInvertColors
-        />
+        <View style={[styles.plant, { left: snapArt(width * 0.86 - 52), top: snapArt(floorY - 46) }]}>
+          <PixelImage source={skinArt('prop.bush')} sourceWidth={26} sourceHeight={23} />
+        </View>
       ) : null}
       {width > 0 && pantry > 0 ? (
         <Text style={[styles.bowlFood, { left: width * 0.16 - 11, top: floorY - 16 }]}>🍤</Text>
@@ -520,45 +559,56 @@ export function PetRoom({
 
       {/* Corner: both meters, always — and the active medal buffs (v26). */}
       <View style={styles.corner} pointerEvents="box-none">
-      <View style={styles.meters} accessible accessibilityLabel={`Hunger ${pet.hunger} of ${PET_METER_MAX}, mood ${pet.mood} of ${PET_METER_MAX}`}>
+      <PixelFrame align="stretch" style={styles.meters}>
+        <View style={styles.meterHead}>
+        <View style={styles.meterMain} accessible accessibilityLabel={`Hunger ${pet.hunger} of ${PET_METER_MAX}, mood ${pet.mood} of ${PET_METER_MAX}`}>
         {picking ? (
-          <Text style={styles.meterText}>Pick an egg</Text>
+          <PixelLabel>Pick an egg</PixelLabel>
         ) : egg ? (
-          <Text style={styles.meterText} accessibilityLabel={`Warmth ${pet.warmth} of ${WARMTH_MAX}`}>
-            Warmth <Text style={styles.heartsText}>{'🔥'.repeat(pet.warmth)}{'·'.repeat(WARMTH_MAX - pet.warmth)}</Text>
-          </Text>
+          <View style={styles.meterRow} accessibilityLabel={`Warmth ${pet.warmth} of ${WARMTH_MAX}`}>
+            <PixelLabel>Warmth</PixelLabel>
+            <PixelHearts value={pet.warmth} max={WARMTH_MAX} color={PIXEL.amber} />
+          </View>
         ) : (
-          <>
-            <Text style={styles.meterText}>
-              Hunger <Text style={styles.heartsText}>{heartsText(pet.hunger)}</Text>
-            </Text>
-            <Text style={styles.meterText}>
-              Mood <Text style={styles.heartsText}>{heartsText(pet.mood)}</Text>
-            </Text>
-          </>
+          <View style={styles.meterBlock}>
+            <View style={styles.meterRow}>
+              <PixelLabel>Hunger</PixelLabel>
+              <PixelHearts value={pet.hunger} max={PET_METER_MAX} />
+            </View>
+            <View style={styles.meterRow}>
+              <PixelLabel>Mood</PixelLabel>
+              <PixelHearts value={pet.mood} max={PET_METER_MAX} />
+            </View>
+          </View>
         )}
-      </View>
-      {buffs.map((b) => (
-        <View key={b.key} style={styles.buffChip} accessible accessibilityLabel={b.a11y}>
-          <Text style={styles.buffText}>{b.text}</Text>
         </View>
+        {!picking ? (
+          <PixelFrame style={styles.stageBadge}>
+            <PixelLabel>{PET_STAGE_LABEL[pet.stage]}</PixelLabel>
+          </PixelFrame>
+        ) : null}
+        </View>
+      </PixelFrame>
+      {buffs.map((b) => (
+        <PixelFrame key={b.key} style={styles.buffChip}>
+          <View accessible accessibilityLabel={b.a11y}>
+            <PixelLabel color={PIXEL.amber}>{b.text}</PixelLabel>
+          </View>
+        </PixelFrame>
       ))}
       </View>
 
       {/* Coach: what it needs, and the button that does it. */}
-      <View style={styles.coach}>
-        <Text style={styles.coachText} numberOfLines={3}>
-          {coach.tip}
-        </Text>
-        {coach.button ? (
-          <Pressable
-            onPress={onCoach}
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.coachButton, pressed && styles.pressed]}>
-            <Text style={styles.coachButtonText}>{coach.button}</Text>
-          </Pressable>
-        ) : null}
-      </View>
+      <PixelFrame align="stretch" style={styles.coach}>
+        <View style={styles.coachRow}>
+          <PixelBody style={styles.coachText} numberOfLines={3}>
+            {coach.tip}
+          </PixelBody>
+          {coach.button ? (
+            <PixelButton label={coach.button} onPress={onCoach} style={styles.coachButton} />
+          ) : null}
+        </View>
+      </PixelFrame>
 
       {width > 0 && picking && onPickEgg ? (
         <View style={[styles.eggRow, { top: floorY - 96 }]}>
@@ -570,15 +620,15 @@ export function PetRoom({
               accessibilityLabel={`${EGG_LABEL[e]} egg — see its heroes and odds`}
               style={({ pressed }) => [styles.eggPick, pressed && styles.pressed]}>
               <EggShape size={70} color={EGG_COLOR[e]} />
-              <Text style={styles.eggPickLabel}>{EGG_EMOJI[e]} {EGG_LABEL[e]}</Text>
+              <PixelLabel>{EGG_LABEL[e]}</PixelLabel>
             </Pressable>
           ))}
         </View>
       ) : null}
 
       {width > 0 && away ? (
-        <View style={[styles.awayBubble, { left: width * PET_BED_X - 50, top: floorY - 60 }]}>
-          <Text style={styles.statusText}>{label}</Text>
+        <View style={[styles.awayBubble, { left: snapArt(width * PET_BED_X - 80), top: snapArt(floorY - 64) }]}>
+          <PixelNameplate>{plateStatus(status, pet.stage, stageLeftMs)}</PixelNameplate>
         </View>
       ) : null}
 
@@ -651,16 +701,9 @@ export function PetRoom({
             pointerEvents="box-none"
             style={[styles.bubbleColumn, { bottom: box - box * 0.18 + 6, left: 0, width: speechW }, speechStyle]}>
             <SpeechBubble speech={speech} reduceMotion={reduceMotion} speaker={name} />
-            <View style={styles.bubbleRow}>
-              <View style={styles.statusBubble}>
-                {name ? (
-                  <Text style={styles.statusName} numberOfLines={1}>
-                    {name}
-                  </Text>
-                ) : null}
-                <Text style={styles.statusText}>{label}</Text>
-              </View>
-            </View>
+            <PixelNameplate>
+              {name ? `${name} · ${plateStatus(status, pet.stage, stageLeftMs)}` : plateStatus(status, pet.stage, stageLeftMs)}
+            </PixelNameplate>
           </Animated.View>
           {/* v26: the grade is a nameplate on the ring at its feet — stars AND
               the word, always (never colour alone). The bubble above keeps only
@@ -669,25 +712,26 @@ export function PetRoom({
             <Animated.View
               pointerEvents="box-none"
               style={[styles.plateWrap, { top: footAt * box + PLATE_BELOW_FEET, left: 0, width: plateW }, plateStyle]}>
-              <Pressable
+              <PixelNameplate
+                label={false}
                 onPress={onBadge}
-                disabled={!onBadge}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={`${GRADE_LABEL[grade]}${pet.shiny ? ' shiny' : ''} — open its card`}
-                style={[styles.badge, { borderColor: GRADE_COLOR[grade] }]}>
-                <Text
-                  style={[styles.badgeText, { color: GRADE_COLOR[grade] }]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.9}>
-                  {nameplateText(grade, pet.shiny)}
-                </Text>
-              </Pressable>
-              {tide ? (
-                <View style={styles.tidePill} accessibilityLabel="Tide Pass on">
-                  <Text style={styles.tideText}>🌊 Tide</Text>
+                accessibilityLabel={`${nameplateText(grade, pet.shiny)} — open its card`}>
+                <View style={styles.gradeRow}>
+                  <View style={styles.starRow}>
+                    {Array.from({ length: GRADE_STARS[grade] }, (_, i) => (
+                      <PixelStar key={i} color={GRADE_COLOR[grade]} />
+                    ))}
+                  </View>
+                  <PixelLabel color={GRADE_COLOR[grade]} numberOfLines={1}>
+                    {GRADE_LABEL[grade]}
+                    {pet.shiny ? ' shiny' : ''}
+                  </PixelLabel>
                 </View>
+              </PixelNameplate>
+              {tide ? (
+                <PixelNameplate>
+                  <PixelLabel color="#4FFFD2">Tide</PixelLabel>
+                </PixelNameplate>
               ) : null}
             </Animated.View>
           ) : null}
@@ -699,104 +743,36 @@ export function PetRoom({
 
 const styles = StyleSheet.create({
   room: { flex: 1, overflow: 'hidden', backgroundColor: NEON.ink },
-  plant: { position: 'absolute', width: 56, height: 56 },
+  plant: { position: 'absolute' },
   bowlFood: { position: 'absolute', fontSize: 16 },
-  corner: { position: 'absolute', top: 10, right: 10, alignItems: 'flex-end', gap: 4 },
-  buffChip: {
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    backgroundColor: 'rgba(5, 7, 13, 0.72)',
-    borderWidth: 1,
-    borderColor: '#FFD700',
-  },
-  buffText: { fontFamily: Fonts.monoBold, fontSize: 11, color: '#FFE9A8' },
+  corner: { position: 'absolute', top: 8, left: 8, right: 8, alignItems: 'stretch', gap: 8 },
+  buffChip: { alignSelf: 'flex-end' },
   plateWrap: { position: 'absolute', alignItems: 'center' },
-  meters: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    backgroundColor: 'rgba(5, 7, 13, 0.72)',
-    borderWidth: 1,
-    borderColor: NEON.cyanDim,
-    gap: 2,
-  },
-  meterText: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.textPrimary },
-  heartsText: { color: '#FF5A8A', letterSpacing: 1 },
+  meters: { alignSelf: 'stretch' },
+  meterHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  meterMain: { flex: 1, gap: 4 },
+  meterBlock: { gap: 4 },
+  meterRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  stageBadge: { flexGrow: 0 },
   coach: {
     position: 'absolute',
-    left: 10,
-    right: 10,
-    bottom: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    backgroundColor: 'rgba(5, 7, 13, 0.8)',
-    borderWidth: 1,
-    borderColor: NEON.cyanBorder,
+    left: 8,
+    right: 8,
+    bottom: 8,
   },
-  coachText: { flex: 1, fontFamily: Fonts.monoBold, fontSize: 13, color: NEON.textPrimary },
-  coachButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: '#0E7490',
-  },
-  coachButtonText: { fontFamily: Fonts.monoBold, fontSize: 12, color: '#FFFFFF' },
-  pressed: { opacity: 0.75 },
+  coachRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  coachText: { flex: 1, textAlign: 'left' },
+  coachButton: { flexGrow: 0 },
+  pressed: { opacity: 0.82 },
   petWrap: { position: 'absolute', left: 0 },
   ring: { position: 'absolute', height: 14, borderRadius: 999, opacity: 0.7 },
   zzz: { position: 'absolute', fontSize: 18 },
   heart: { position: 'absolute', fontSize: 20, color: '#FF5A8A' },
-  bubbleRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  badge: { paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10, borderWidth: 1, backgroundColor: 'rgba(5, 7, 13, 0.85)' },
-  badgeText: { fontFamily: Fonts.monoBold, fontSize: NAMEPLATE_FONT },
-  tidePill: {
-    marginTop: 4,
-    alignSelf: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#4FFFD2',
-    backgroundColor: 'rgba(79, 255, 210, 0.12)',
-  },
-  tideText: { fontFamily: Fonts.monoBold, fontSize: 10, color: '#4FFFD2' },
+  gradeRow: { alignItems: 'center', gap: 4 },
+  starRow: { flexDirection: 'row', gap: ART_PT },
   eggRow: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-around' },
-  eggPick: { alignItems: 'center', gap: 4 },
-  eggPickLabel: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.textPrimary },
-  bubbleColumn: { position: 'absolute', alignItems: 'center', gap: 6 },
-  statusBubble: {
-    alignItems: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-    backgroundColor: 'rgba(5, 7, 13, 0.85)',
-    borderWidth: 1,
-    borderColor: NEON.cyanBorder,
-  },
-  awayBubble: {
-    position: 'absolute',
-    width: 100,
-    alignItems: 'center',
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: 'rgba(5, 7, 13, 0.85)',
-    borderWidth: 1,
-    borderColor: NEON.cyanBorder,
-  },
-  statusText: { fontFamily: Fonts.monoBold, fontSize: 13, color: NEON.textPrimary },
-  statusName: { fontFamily: Fonts.monoBold, fontSize: 11, color: NEON.cyan },
-  speech: {
-    minWidth: 60,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-    backgroundColor: '#F1FBFF',
-  },
-  speaker: { fontFamily: Fonts.monoBold, fontSize: 10, color: '#0E7490', textAlign: 'center' },
-  speechText: { fontFamily: Fonts.monoBold, fontSize: 13, color: '#05070D', textAlign: 'center' },
+  eggPick: { alignItems: 'center', gap: 4, minHeight: 48 },
+  bubbleColumn: { position: 'absolute', alignItems: 'center', gap: 8 },
+  awayBubble: { position: 'absolute', width: 160, alignItems: 'center' },
+  speechText: { textAlign: 'center' },
 });
