@@ -237,8 +237,8 @@ function opaqueBox(opaque: Uint8Array, w: number, h: number) {
 }
 
 /**
- * Radii were drawn for a ~20px pet (the approved samples). Bigger sheet
- * frames scale the same proportions, and the pad is how far the tongues reach.
+ * Spiky, Rune, and Bubbles were drawn for a ~20px pet. Bigger sheet frames
+ * scale those. Blaze stays in art pixels: a thin outline hugging the pet.
  */
 export function auraLayout(boxH: number): { scale: number; pad: number } {
   const scale = Math.max(1, boxH / 20);
@@ -313,16 +313,16 @@ function paintFrame(
   if (style === 'blaze') {
     for (let Y = 0; Y < field.H; Y++) for (let X = 0; X < field.W; X++) {
       const d = field.dist[Y * field.W + X];
-      if (d < u(0.9) || d > u(8)) continue;
+      if (d < 0.9 || d > 8) continue;
       const x = X - field.pad;
       const y = Y - field.pad;
-      if (y < box.y - u(1) || y > box.y + box.h) continue;
+      if (y < box.y - 1 || y > box.y + box.h) continue;
       const oy = nearestY(x, y);
       const t = (oy - box.y) / Math.max(1, box.h);
-      let maxR = t < 0.22 ? u(2.5) : t < 0.5 ? u(4.4) : u(6.1);
-      if (Math.abs(x - field.nx[Y * field.W + X]) >= Math.abs(y - oy)) maxR += u(0.8);
+      let maxR = t < 0.22 ? 2.5 : t < 0.5 ? 4.4 : 6.1;
+      if (Math.abs(x - field.nx[Y * field.W + X]) >= Math.abs(y - oy)) maxR += 0.8;
       if (d > maxR) continue;
-      const col = d < u(1.7) ? ramp.core : d > maxR - u(1.05) ? ramp.tip : ramp.mid;
+      const col = d < 1.7 ? ramp.core : d > maxR - 1.05 ? ramp.tip : ramp.mid;
       paint(x, y, col, 1);
     }
     const tops: { x: number; y: number }[] = [];
@@ -334,24 +334,21 @@ function paintFrame(
       }
     }
     const headY = tops.reduce((m, t) => Math.min(m, t.y), box.y + box.h);
-    const head = tops.filter((t) => t.y <= headY + u(2));
+    const head = tops.filter((t) => t.y <= headY + 2);
     const count = Math.min(5, Math.max(4, head.length));
     for (let i = 0; i < count; i++) {
       if (!head.length) break;
       const c = head[Math.round((i * (head.length - 1)) / Math.max(1, count - 1))];
       const flick = hash(i, f, 17);
       if (i === count - 1 && flick < 0.35) continue;
-      const len = u(6) + (flick > 0.66 ? u(2) : flick > 0.33 ? u(1) : 0);
-      const drift = (flick < 0.25 ? -1 : flick > 0.8 ? 1 : 0) * px(1);
-      const girth = px(1);
-      for (let step = 1; step <= len; step++) {
-        const tx = c.x + (step > u(2) ? drift : 0);
-        const ty = c.y - step;
-        const col = step < len * 0.55 ? ramp.mid : ramp.tip;
+      const len = 6 + (flick > 0.66 ? 2 : flick > 0.33 ? 1 : 0);
+      const drift = flick < 0.25 ? -1 : flick > 0.8 ? 1 : 0;
+      for (let s = 1; s <= len; s++) {
+        const tx = c.x + (s > 2 ? drift : 0);
+        const ty = c.y - s;
+        const col = s < len * 0.55 ? ramp.mid : ramp.tip;
         paint(tx, ty, col, 6);
-        if (step <= u(3)) {
-          for (let g = 1; g <= girth; g++) paint(tx + (i % 2 === 0 ? g : -g), ty, col, 6);
-        }
+        if (s <= 3) paint(tx + (i % 2 === 0 ? 1 : -1), ty, col, 6);
       }
     }
   }
@@ -411,7 +408,7 @@ function paintFrame(
   if (style === 'blaze') {
     for (let i = 0; i < 4; i++) {
       const x = box.x - 1 + Math.floor(hash(i, frame, 81) * (box.w + 2));
-      const y = Math.round(box.y - u(2) - ((frame + i * 2) % Math.max(5, Math.round(u(5)))));
+      const y = box.y - 2 - ((frame + i * 2) % 5);
       if (x >= 0 && y >= 0 && x < w && y < h && opaque[y * w + x]) continue;
       const stroke = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => {
         const sx = x + dx;

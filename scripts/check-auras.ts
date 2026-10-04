@@ -109,14 +109,13 @@ function blob(w: number, h: number, x0: number, y0: number, bw: number, bh: numb
   assert.ok(body.length > head.length);
   const tall = blob(160, 160, 40, 30, 40, 80);
   const grown = auraFramesFromAlpha(tall, 160, 160, 'blaze', 'fire');
-  assert.ok(grown.pad > 16);
   const grownYs = grown.frames[3].pixels.map((p) => p.y);
   const grownRatio = (Math.max(...grownYs) - Math.min(...grownYs) + 1) / 80;
-  assert.ok(grownRatio > 1.25 && grownRatio < 1.6, `tall blaze ${grownRatio}`);
-  assert.ok(Math.min(...grownYs) < 18, 'tongues clear the head');
-  assert.ok(grown.frames[3].pixels.some((p) => p.x < 40), 'flame wider than the body');
+  assert.ok(grownRatio < 1.2, `blaze stays a thin hug ${grownRatio}`);
+  assert.ok(Math.min(...grownYs) < 30, 'short tongues');
+  assert.ok(grown.frames[3].pixels.every((p) => p.x > 28 && p.x < 92), 'flame hugs the sides');
 }
-ok('frames match the samples: filled blaze, calm spiky, twinkling rune, attached bubbles; sprite untouched');
+ok('frames match the samples: thin blaze, calm spiky, twinkling rune, attached bubbles; sprite untouched');
 
 {
   const fresh = defaultPlayStore(T0);
