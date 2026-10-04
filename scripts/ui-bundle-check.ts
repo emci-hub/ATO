@@ -55,9 +55,32 @@ ok('slot reel flashes other answers and finishes in under 2.5s');
 // scroll-to-end, the 8-ball and usage line) went with Talk's backend on
 // 2026-09-14 — the tab is now an inert placeholder with no composer. Restore
 // them when Talk is rebuilt.
-// The 8-ball was Talk-only UI and was deleted with the lane, along with the
-// composer/keyboard-lift assertions above it. Nothing here asserts a Sage
-// layout any more; the quota formatting below is shared and still live.
+// The 8-ball left with the lane (2026-09-14) and came back 2026-10-04 on the
+// Questions tab (emci: "the magic 8 ball is what I meant"); its component and
+// mount are pinned just below. Nothing here asserts a Sage layout any more; the
+// quota formatting further down is shared and still live.
+
+{
+  // The 8-ball on Questions: local, closed by default, no model call, no spend.
+  const ball = read('src/components/sage-eight-ball.tsx');
+  assert.match(ball, /export function SageEightBall\(\)/);
+  assert.match(ball, /const \[open, setOpen\] = useState\(false\);/, 'closed until opened');
+  assert.match(ball, /rollEightBall\(answer\)/);
+  assert.match(ball, /pickEightBallFlashes\(next, answer\)/);
+  assert.match(ball, /if \(reduceMotion\) \{\s*setAnswer\(next\);\s*return;\s*\}/, 'Reduce Motion skips the reel');
+  assert.match(ball, /disabled=\{rolling\}/, 'a roll cannot be re-triggered mid-reel');
+  const ballCode = ball.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  assert.doesNotMatch(ballCode, /generateText|claimAiCall|supabase|ato-tokens|tokens|\.rpc\(|AsyncStorage|fetch\(/, 'no model call, quota, tokens, network or storage');
+  const questions = read('src/app/(tabs)/intake-sweep.tsx');
+  assert.match(questions, /<SageEightBall \/>/);
+  assert.match(questions, /import \{ SageEightBall \} from '@\/components\/sage-eight-ball';/);
+  assert.ok(
+    questions.indexOf('<SageEightBall />') > questions.indexOf('>Questions</ThemedText>') &&
+      questions.indexOf('<SageEightBall />') < questions.indexOf('<FullProfileBanner'),
+    'the 8-ball sits at the top of Questions: under the heading, above the banner and the question set',
+  );
+  ok('the 8-ball is back on Questions: closed by default, local only, respects Reduce Motion');
+}
 
 assert.equal(formatSageUsage(6, 20, 'today'), '6 of 20 today');
 assert.equal(formatSageUsage(12, 200, 'this month'), '12 of 200 this month');

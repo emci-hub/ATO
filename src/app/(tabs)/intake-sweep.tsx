@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FullProfileBanner } from '@/components/full-profile-banner';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { QuestionsFold } from '@/components/questions-fold';
+import { SageEightBall } from '@/components/sage-eight-ball';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
@@ -123,6 +124,13 @@ export default function IntakeSweepTabScreen() {
             <ThemedText type="subtitle">Questions</ThemedText>
           </View>
 
+          {/* The 8-ball, back from Sage, at the top: local, no AI, closed until you open it. */}
+          {me ? (
+            <View style={styles.eightBall}>
+              <SageEightBall />
+            </View>
+          ) : null}
+
           {/*
             The one-time after-50 reveal (what just opened, what the next 25
             are for), shown the first time an account finishes the bank and
@@ -185,5 +193,8 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingRight: NAV_PIXEL_HEADER_INSET,
+  },
+  eightBall: {
+    paddingHorizontal: Spacing.three,
   },
 });
