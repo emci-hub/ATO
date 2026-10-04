@@ -18,6 +18,17 @@ import { IDENTITY_AXES, type LockedPoles } from '@/lib/legends64/identity';
 import { supabase } from '@/lib/supabase';
 
 export const IDENTITY_STATE_KEY = 'ato.identity.v1';
+
+/**
+ * Every name style is pickable for free while this is true (emci, 2026-10-04:
+ * "remove that for now so I can see all the names"). Nothing is spent, nothing
+ * is rate-limited, no price is shown. Flip it to `false` to put the 10-token,
+ * one-a-day unlock back — the paid path (`payForStyleUnlock`, the `unlocked`
+ * list and the paid-style credits) is untouched, and styles anyone paid for
+ * while it was on stay owned either way. Same temporary-override pattern as
+ * `ATO_PLUS_FOR_ALL` (lib/subscription.ts).
+ */
+export const NAME_STYLES_FREE = true;
 /** The ledger reason `spend_ato_tokens_legend_reroll` writes (wave51). */
 export const STYLE_UNLOCK_LEDGER_REASON = 'legend_reroll';
 
@@ -47,8 +58,10 @@ export async function loadIdentityState(userId: string): Promise<IdentityState> 
     const unlocked = Array.isArray(parsed.unlocked)
       ? parsed.unlocked.filter((s): s is LegendSkin => isLegendSkin(s) && s !== DEFAULT_LEGEND_SKIN)
       : [];
+    // While styles are free, a picked style needs no `unlocked` entry to survive a reload.
     const skin =
-      isLegendSkin(parsed.skin) && (parsed.skin === DEFAULT_LEGEND_SKIN || unlocked.includes(parsed.skin))
+      isLegendSkin(parsed.skin) &&
+      (NAME_STYLES_FREE || parsed.skin === DEFAULT_LEGEND_SKIN || unlocked.includes(parsed.skin))
         ? parsed.skin
         : DEFAULT_LEGEND_SKIN;
     return { userId, poles, skin, unlocked };

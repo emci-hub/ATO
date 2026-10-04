@@ -5,6 +5,7 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 
 import { CrisisCard } from '@/components/crisis-card';
 import { DailyLineCard } from '@/components/daily-line-card';
+import { IdentityTitleChip } from '@/components/identity-title-chip';
 import { crisisNotedToday } from '@/lib/crisis/local-flag';
 import { SageStoryFold } from '@/components/sage-story-fold';
 import { ThemedText } from '@/components/themed-text';
@@ -495,6 +496,9 @@ export default function HomeScreen() {
 
           {/* Safety first, in both states, and never generated. */}
           {crisisToday ? <CrisisCard /> : null}
+
+          {/* The name you've earned — tap for the card and the styles on You. */}
+          {me && tracksUserId === me.id ? <IdentityTitleChip userId={me.id} tracks={tracks} /> : null}
 
           {/* Today's line: written, instant, and the same card in all three
               states below. */}

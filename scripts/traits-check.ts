@@ -228,7 +228,6 @@ async function main() {
   ok('optional progress is its own counter');
 
   const onboarding = read('src/app/onboarding.tsx');
-  const optionalUi = read('src/components/optional-intake.tsx');
   const submitFn = onboarding.slice(
     onboarding.indexOf('async function submit()'),
     onboarding.indexOf('async function refreshAndGoHome()'),
@@ -245,11 +244,7 @@ async function main() {
     /OptionalIntakeSweep/,
     'onboarding must not render the scenario sweep directly — it still exists as a You-tab fill-in only',
   );
-  assert.match(optionalUi, /Skip the rest/);
-  assert.match(optionalUi, /Skip this one/);
-  assert.doesNotMatch(optionalUi, /Pick one to keep going/);
-  assert.doesNotMatch(optionalUi, /of 8/);
-  ok('core 9 is skippable on one page; signup finishes right after it; the optional 8-question scenario flow is no longer part of onboarding (still a You-tab fill-in)');
+  ok('core 9 is skippable on one page; signup finishes right after it; the optional 8-question scenario flow is no longer part of onboarding (its fill screen was deleted 2026-10-04)');
 
   const signup = read('supabase/migrations/stage9_intake_core.sql');
   assert.doesNotMatch(signup, /openness|trait_sources|attachment_anxiety/);
@@ -260,7 +255,6 @@ async function main() {
 
   const copyBlob = [
     onboarding,
-    optionalUi,
     read('src/components/axis-taps.tsx'),
     read('src/components/intake-chips.tsx'),
     read('src/components/intake-settings.tsx'),

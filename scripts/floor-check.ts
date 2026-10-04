@@ -251,8 +251,14 @@ assert.match(youTab, /'On'/);
 assert.match(youTab, /'Off'/);
 assert.match(youTab, /<AiConsentCard/);
 assert.match(youTab, /setAiConsent/);
-assert.doesNotMatch(youTab, /SettingsFold title="Account"/);
-ok('AiConsentCard is inline on Home and still reachable on the parked You; the AI-use disclosure is unconditional on both');
+// The Account fold is back (2026-10-04) but holds only the birthday row: AI
+// consent stays in its own "Sage's AI" fold, never inside Account.
+{
+  const at = youTab.indexOf('<SettingsFold title="Account">');
+  const accountFold = youTab.slice(at, youTab.indexOf('</SettingsFold>', at));
+  assert.ok(at >= 0 && !/AiConsentCard|setAiConsent|saveAiConsent/.test(accountFold), 'consent is not in the Account fold');
+}
+ok('AiConsentCard is inline on Home and still reachable on You; the AI-use disclosure is unconditional on both');
 
 // PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): the crisis REGION picker is
 // off the parked You. This is not the crisis card itself — `CrisisCard` is

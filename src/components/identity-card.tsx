@@ -27,6 +27,7 @@ import {
   topTraitPhrases,
 } from '@/lib/legends64/identity';
 import {
+  NAME_STYLES_FREE,
   fetchPaidStyleCount,
   loadIdentityState,
   payForStyleUnlock,
@@ -123,7 +124,7 @@ export function IdentityCard({
   async function pickStyle(skin: LegendSkin) {
     if (!state || busy) return;
     setNote(null);
-    const owned = skin === DEFAULT_LEGEND_SKIN || state.unlocked.includes(skin);
+    const owned = NAME_STYLES_FREE || skin === DEFAULT_LEGEND_SKIN || state.unlocked.includes(skin);
     if (owned) {
       setConfirming(null);
       await update({ ...state, skin });
@@ -209,7 +210,7 @@ export function IdentityCard({
       </ThemedText>
       <View style={styles.styles}>
         {LEGEND_SKINS.map((skin) => {
-          const owned = skin === DEFAULT_LEGEND_SKIN || state.unlocked.includes(skin);
+          const owned = NAME_STYLES_FREE || skin === DEFAULT_LEGEND_SKIN || state.unlocked.includes(skin);
           const on = state.skin === skin;
           return (
             <Pressable
@@ -236,7 +237,7 @@ export function IdentityCard({
           );
         })}
       </View>
-      {credits > 0 ? (
+      {credits > 0 && !NAME_STYLES_FREE ? (
         <ThemedText type="small" themeColor="textSecondary">
           {IDENTITY_STYLE_CREDIT}
         </ThemedText>
