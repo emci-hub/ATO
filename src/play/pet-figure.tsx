@@ -17,7 +17,7 @@ import { getItemDef } from '@/play/items';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { PET_BRANCH_TINT, PET_STAGE_SCALE, petLookFor, type PetLook, type PetState } from '@/play/pet';
 import { NO_WEAR, wornLook, type PetWear } from '@/play/pet-cosmetics';
-import { FinishPaint } from '@/play/finish-foil';
+import { FinishSheen } from '@/play/finish-foil';
 import type { FinishKind, FinishMotion } from '@/play/finishes';
 import { ClipImage } from '@/play/sheet-sprite';
 import {
@@ -96,10 +96,13 @@ export function PetFigure({
   /** `sweep` only on the opened card, Dress, the room and the egg reveal. */
   foilMotion?: FinishMotion;
   reduceMotion?: boolean;
-  /** The parent draws the reverse-holo plate (card window / room). */
+  /** The card or the room draws reverse holo. The sprite itself stays plain. */
   reverseHost?: boolean;
 }) {
   const box = boxOverride ?? petBoxSize(pet, baseBox);
+  // The card and the room own reverse holo. This flag stays so those callers
+  // can say they took the plate; the sprite never paints one.
+  void reverseHost;
   if (pet.stage === 'egg') return <EggShape size={box} color={silhouette ? '#000000' : eggColor} />;
   const look = wornLook(wear);
   const drawable = frame ?? lookDrawable(petLookFor(pet.line, pet.stage));
@@ -114,9 +117,7 @@ export function PetFigure({
   const badgeArt = look.badgeItemId ? itemArtSource(getItemDef(look.badgeItemId)?.core.art ?? '') : undefined;
   const badge = Math.max(14, Math.round(box * 0.3));
   const worn = finish ?? { kind: pet.finish_kind, color: pet.finish_color };
-  const foilOn = foilMotion !== 'off' && worn.color != null && (worn.kind === 'holo' || worn.kind === 'reverse');
-  const showReverse = foilOn && worn.kind === 'reverse' && !reverseHost;
-  const showHolo = foilOn && worn.kind === 'holo';
+  const showHolo = foilMotion !== 'off' && worn.color != null && worn.kind === 'holo';
   return (
     <View style={{ width: box, height: box }}>
       {look.aura ? (
@@ -124,15 +125,6 @@ export function PetFigure({
           <Circle cx="50" cy="50" r="48" fill={ELEMENT_COLOR[look.aura]} fillOpacity={0.1} />
           <Circle cx="50" cy="50" r="38" fill={ELEMENT_COLOR[look.aura]} fillOpacity={0.14} />
         </Svg>
-      ) : null}
-      {showReverse && worn.color ? (
-        <FinishPaint
-          kind="reverse"
-          colorId={worn.color}
-          onShiny={pet.shiny}
-          motion={foilMotion}
-          reduceMotion={reduceMotion}
-        />
       ) : null}
       <View style={[StyleSheet.absoluteFill, (recolor && blend) || showHolo ? styles.isolate : null]}>
       <ClipImage drawable={drawable} />
@@ -149,8 +141,7 @@ export function PetFigure({
         </View>
       ) : null}
       {showHolo && worn.color ? (
-        <FinishPaint
-          kind="holo"
+        <FinishSheen
           colorId={worn.color}
           drawable={drawable}
           onShiny={pet.shiny}

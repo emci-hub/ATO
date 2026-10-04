@@ -32,14 +32,16 @@ export type FinishColor = {
 };
 
 export type FinishPaint = {
-  holo_opacity: number;
-  holo_opacity_on_shiny: number;
-  glare_opacity: number;
+  /** Foil painted in the art window (holo) or across the card face (reverse). */
+  window_opacity: number;
   reverse_opacity: number;
-  fallback_opacity: number;
-  holo_blend: string;
-  holo_blend_fallback: string;
-  reverse_blend: string;
+  /** Light sheen on the sprite itself. Overlay, never dodge. */
+  sheen_opacity: number;
+  sheen_opacity_on_shiny: number;
+  /** Plain wash when Fabric blend modes are unavailable. */
+  sheen_wash_opacity: number;
+  glare_opacity: number;
+  sheen_blend: string;
 };
 
 export type FinishConfig = {
@@ -57,7 +59,12 @@ export type FinishConfig = {
   prices: { holo: number; reverse: number; extra_color: number };
   pass_prices: { holo: number; reverse: number; extra_color: number };
   paint: FinishPaint;
-  sweep_ms: number;
+  /** Gyro tilt for the glare and the bands. Off keeps the slow drift only. */
+  tilt: boolean;
+  /** Clamp for the tilt effect, degrees. The bands shift; they do not flip. */
+  tilt_max_deg: number;
+  /** Idle band crawl while the phone is still, or when the gyro reads nothing. */
+  drift_ms: number;
   colors: readonly FinishColor[];
 };
 
@@ -136,10 +143,12 @@ export function finishPrice(what: 'holo' | 'reverse' | 'extra_color', pass: bool
   return pass ? cfg.pass_prices[what] : cfg.prices[what];
 }
 
-export function holoFoilOpacity(onShiny: boolean, blend: boolean): number {
+/** Sheen laid on the sprite. A shiny stays inside the 30–35% cap. */
+export function sheenOpacity(onShiny: boolean, blend: boolean): number {
   const paint = finishConfig().paint;
-  if (onShiny) return paint.holo_opacity_on_shiny;
-  return blend ? paint.holo_opacity : paint.fallback_opacity;
+  if (!blend) return paint.sheen_wash_opacity;
+  if (onShiny) return paint.sheen_opacity_on_shiny;
+  return paint.sheen_opacity;
 }
 
 export function glareOpacity(): number {
@@ -148,6 +157,82 @@ export function glareOpacity(): number {
 
 export function reverseOpacity(): number {
   return finishConfig().paint.reverse_opacity;
+}
+
+export function windowOpacity(): number {
+  return finishConfig().paint.window_opacity;
+}
+
+/** Map a gyro delta (radians) into −1..1, clamped to `maxDeg`. */
+export function clampTilt(deltaRad: number, maxDeg: number): number {
+  const max = (maxDeg * Math.PI) / 180;
+  if (!(max > 0)) return 0;
+  const clamped = Math.min(max, Math.max(-max, deltaRad));
+  return clamped / max;
+}
+
+function hexRgb(hex: string): [number, number, number] {
+  const n = Number.parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+/** Mix two #RRGGBB colours. `t` is the weight of `b`. */
+export function mixHex(a: string, b: string, t: number): string {
+  const pa = hexRgb(a);
+  const pb = hexRgb(b);
+  const ch = (i: number) => Math.round(pa[i] + (pb[i] - pa[i]) * t);
+  return `#${[0, 1, 2].map((i) => ch(i).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+}
+
+/** Dark gap between foil bands, tinted by the palette so each colour stays its own. */
+export function foilGap(stops: readonly string[]): string {
+  return mixHex('#070B14', stops[0] ?? '#070B14', 0.3);
+}
+
+/** Band pitch in the foil's 100-unit space. Hard (Quicksilver) is narrower. */
+export function foilBandPitch(color: { hard: boolean; repeats: number }): number {
+  if (color.hard) return 11;
+  return Math.max(22, 42 - (Math.max(1, color.repeats) - 1) * 7);
+}
+
+export function foilAngle(color: { hard: boolean }): number {
+  return color.hard ? 72 : 112;
+}
+
+export type FoilStripe = { x: number; w: number; color: string };
+
+/** Saturated bands with a dark gap, wide enough to slide without showing an edge. */
+export function foilStripes(color: FinishColor): FoilStripe[] {
+  const pitch = foilBandPitch(color);
+  const band = pitch * (color.hard ? 0.5 : 0.62);
+  const stripes: FoilStripe[] = [];
+  let x = -36;
+  let i = 0;
+  while (x < 170) {
+    stripes.push({ x, w: band, color: color.stops[i % color.stops.length] ?? '#FFFFFF' });
+    x += pitch;
+    i += 1;
+  }
+  return stripes;
+}
+
+export type FoilSparkle = { x: number; y: number; r: number; o: number };
+
+/** Stable glitter for one colour. Same id, same dots. */
+export function foilSparkles(id: string, count = 28): FoilSparkle[] {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i += 1) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
+  const rand = () => {
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    return ((h >>> 0) % 10000) / 10000;
+  };
+  return Array.from({ length: count }, () => ({
+    x: rand() * 100,
+    y: rand() * 100,
+    r: 0.35 + rand() * 0.85,
+    o: 0.3 + rand() * 0.5,
+  }));
 }
 
 /**
@@ -260,12 +345,16 @@ export function finishConfigErrors(): string[] {
   if (!star?.pass_only) errors.push('starpearl');
   if (cfg.colors.some((color) => color.pass_only && color.id !== 'starpearl')) errors.push('pass gate');
   const paint = cfg.paint;
-  if (paint.holo_opacity < 0.35 || paint.holo_opacity > 0.5) errors.push('holo opacity');
-  if (paint.holo_opacity_on_shiny < 0.3 || paint.holo_opacity_on_shiny > 0.35) errors.push('shiny cap');
+  if (paint.window_opacity < 0.85 || paint.window_opacity > 1) errors.push('window opacity');
+  if (paint.sheen_opacity < 0.28 || paint.sheen_opacity > 0.4) errors.push('sheen opacity');
+  if (paint.sheen_opacity_on_shiny < 0.3 || paint.sheen_opacity_on_shiny > 0.35) errors.push('shiny cap');
+  if (paint.sheen_wash_opacity <= 0 || paint.sheen_wash_opacity > 0.2) errors.push('sheen wash');
   if (paint.glare_opacity < 0.5 || paint.glare_opacity > 0.6) errors.push('glare');
-  if (paint.reverse_opacity !== 0.4) errors.push('reverse opacity');
-  if (paint.holo_blend !== 'color-dodge' || paint.holo_blend_fallback !== 'overlay') errors.push('holo blend');
-  if (paint.reverse_blend !== 'screen') errors.push('reverse blend');
+  if (paint.reverse_opacity < 0.8 || paint.reverse_opacity > 1) errors.push('reverse opacity');
+  if (paint.sheen_blend !== 'overlay') errors.push('sheen blend');
+  if (cfg.tilt !== true && cfg.tilt !== false) errors.push('tilt');
+  if (cfg.tilt_max_deg !== 15) errors.push('tilt degrees');
+  if (cfg.drift_ms < 8000 || cfg.drift_ms > 20000) errors.push('drift');
   if (cfg.prices.reverse !== cfg.prices.holo) errors.push('reverse price');
   if (cfg.unlock_days < cfg.unlock_days_min || cfg.unlock_days > cfg.unlock_days_max) errors.push('days');
   if (cfg.prices.extra_color * cfg.extra_color_share_den !== cfg.prices.holo) errors.push('extra color');

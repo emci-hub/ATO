@@ -11,9 +11,11 @@
  *      shiny, and refuses Starpearl, a short purse, or an unrevealed pet.
  *   4. A v29 save loads as v30 with no finish; a worn finish round-trips; a
  *      future version does not load.
- *   5. Foil on a shiny stays in the 30–35% cap, glare stays 50–60%, and the
- *      sweep pauses for Reduce Motion, the OS setting, and Low effects.
- *   6. The live Defend board never draws foil.
+ *   5. The sprite sheen on a shiny stays in the 30–35% cap. The sheen is
+ *      overlay, never color-dodge. Glare stays 50–60%. Tilt is on and clamped
+ *      to ±15°. Drift, tilt and the sweep all pause for Reduce Motion, the OS
+ *      setting, and Low effects.
+ *   6. The live Defend board never draws foil and never starts the gyro.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -26,11 +28,13 @@ import {
   finishConfig,
   finishConfigErrors,
   finishPrice,
+  clampTilt,
   finishSweepRuns,
+  foilBandPitch,
   glareOpacity,
-  holoFoilOpacity,
   planFinishWear,
   reverseOpacity,
+  sheenOpacity,
   type FinishWallet,
 } from '../src/play/finishes';
 import { PET_TOKENS_DAILY_CAP, PET_TOKENS_PER_ROUND } from '../src/play/pet';
@@ -358,11 +362,23 @@ ok('a v29 save becomes v30 with no finish; a real finish round-trips; version 31
 /* -------------------------------------------------------------- 6. paint --- */
 
 {
-  assert.ok(holoFoilOpacity(true, true) >= 0.3 && holoFoilOpacity(true, true) <= 0.35);
-  assert.ok(holoFoilOpacity(true, false) >= 0.3 && holoFoilOpacity(true, false) <= 0.35);
-  assert.ok(holoFoilOpacity(false, true) >= 0.35 && holoFoilOpacity(false, true) <= 0.5);
+  const cfg = finishConfig();
+  assert.equal(cfg.tilt, true);
+  assert.equal(cfg.tilt_max_deg, 15);
+  assert.ok(cfg.drift_ms >= 8000 && cfg.drift_ms <= 20000);
+  assert.equal(cfg.paint.sheen_blend, 'overlay');
+  assert.ok(sheenOpacity(true, true) >= 0.3 && sheenOpacity(true, true) <= 0.35);
+  assert.ok(sheenOpacity(true, false) <= 0.2);
+  assert.ok(sheenOpacity(false, true) >= 0.28 && sheenOpacity(false, true) <= 0.4);
   assert.ok(glareOpacity() >= 0.5 && glareOpacity() <= 0.6);
-  assert.equal(reverseOpacity(), 0.4);
+  assert.ok(reverseOpacity() >= 0.8 && reverseOpacity() <= 1);
+  assert.equal(clampTilt(0, 15), 0);
+  assert.ok(Math.abs(clampTilt((10 * Math.PI) / 180, 15) - 10 / 15) < 1e-9);
+  assert.equal(clampTilt(Math.PI, 15), 1);
+  assert.equal(clampTilt(-Math.PI, 15), -1);
+  const moon = finishConfig().colors.find((color) => color.id === 'moonpearl')!;
+  const silver = finishConfig().colors.find((color) => color.id === 'quicksilver')!;
+  assert.ok(foilBandPitch(moon) > foilBandPitch(silver));
   assert.equal(finishSweepRuns({ motion: 'sweep', reduceMotion: false, osReduceMotion: false, fxFull: true }), true);
   assert.equal(finishSweepRuns({ motion: 'still', reduceMotion: false, osReduceMotion: false, fxFull: true }), false);
   assert.equal(finishSweepRuns({ motion: 'off', reduceMotion: false, osReduceMotion: false, fxFull: true }), false);
@@ -371,21 +387,29 @@ ok('a v29 save becomes v30 with no finish; a real finish round-trips; version 31
   assert.equal(finishSweepRuns({ motion: 'sweep', reduceMotion: false, osReduceMotion: false, fxFull: false }), false);
 
   const foil = read('src/play/finish-foil.tsx');
-  for (const needle of ['finishSweepRuns', 'useFxQuality', 'isReduceMotionEnabled', 'sheetSpritePlacement', 'maskType', 'color-dodge']) {
+  for (const needle of ['finishSweepRuns', 'useFxQuality', 'isReduceMotionEnabled', 'sheetSpritePlacement', 'maskType', 'overlay']) {
     assert.ok(foil.includes(needle), needle);
   }
-  assert.match(foil, /shift\.value = withRepeat\(withTiming/);
-  assert.ok(!foil.includes('<Stop') || !/offset=\{withTiming/.test(foil));
+  assert.ok(!foil.includes('color-dodge'), 'color-dodge');
+  assert.ok(!/offset=\{withTiming/.test(foil));
+  const motion = read('src/play/finish-motion.tsx');
+  for (const needle of ['useAnimatedSensor', 'AppState', 'SENSOR_DEAD_MS', 'withRepeat', 'SensorRunner', 'leaseFinishSensor']) {
+    assert.ok(motion.includes(needle), needle);
+  }
+  assert.ok(motion.includes('tilt_max_deg'));
 }
-ok('shiny foil stays capped, glare does not, and the sweep pauses for Reduce Motion and Low effects');
+ok('shiny sheen stays capped, tilt clamps to ±15°, and motion pauses for Reduce Motion and Low effects');
 
 /* ------------------------------------------------------------- 7. surfaces --- */
 
 {
   const defend = read('src/play/defend-screen.tsx');
-  for (const needle of ['finish-foil', 'FinishPaint', 'foilMotion', 'finish_kind']) {
+  for (const needle of ['finish-foil', 'finish-motion', 'FinishPaint', 'FinishPlate', 'useAnimatedSensor', 'foilMotion', 'finish_kind']) {
     assert.ok(!defend.includes(needle), needle);
   }
+  const picker = read('src/play/finish-picker.tsx');
+  assert.ok(picker.includes('art window'));
+  assert.ok(picker.includes('pet stays plain'));
   const sweeps = walk('src')
     .filter((file) => read(file).includes('foilMotion="sweep"'))
     .map((file) => file.replace(/\\/g, '/'))

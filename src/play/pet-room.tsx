@@ -29,7 +29,7 @@ import Svg, { Circle, Defs, Ellipse, Line, LinearGradient, Rect, Stop } from 're
 
 import { Fonts } from '@/constants/theme';
 import type { PetCoachTip } from '@/play/coach';
-import { FinishPaint } from '@/play/finish-foil';
+import { FinishPlate, cardFoilOpacity, useFinishLease, windowFoilOpacity } from '@/play/finish-foil';
 import { FxLayer, FX_ULTIMATE_LIFE_MS, type FxEvent } from '@/play/fx-layer';
 import { useFxQuality } from '@/play/fx-quality';
 import { ELEMENT_COLOR, type Element } from '@/play/kits';
@@ -344,6 +344,7 @@ export function PetRoom({
   // Effects Low (Settings): auras and sparkles hold still.
   const fxFull = useFxQuality() === 'full';
   const fxAnimate = !reduceMotion && fxFull;
+  useFinishLease((pet.finish_kind === 'holo' || pet.finish_kind === 'reverse') && pet.finish_color != null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const onLayout = (e: LayoutChangeEvent) =>
     setSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height });
@@ -602,14 +603,22 @@ export function PetRoom({
           {pet.stage === 'god' && aura ? <GodAura element={aura} size={box * 1.4} reduceMotion={reduceMotion} /> : null}
           {maxedAura ? <MaxedAura size={box} animate={fxAnimate} /> : null}
           <GradeAura grade={grade} size={box} animate={fxAnimate} trail={act.face === 'front' ? null : act.face} />
-          {pet.finish_kind === 'reverse' && pet.finish_color ? (
-            <FinishPaint
-              kind="reverse"
-              colorId={pet.finish_color}
-              onShiny={pet.shiny}
-              motion="sweep"
-              reduceMotion={reduceMotion}
-            />
+          {pet.finish_color && (pet.finish_kind === 'holo' || pet.finish_kind === 'reverse') ? (
+            <View
+              pointerEvents="none"
+              style={[
+                styles.foilMat,
+                pet.finish_kind === 'reverse'
+                  ? { left: -box * 0.22, top: box * 0.46, width: box * 1.44, height: box * 0.46, borderRadius: box * 0.23 }
+                  : { left: -box * 0.06, top: box * 0.1, width: box * 1.12, height: box * 0.86, borderRadius: 22 },
+              ]}>
+              <FinishPlate
+                colorId={pet.finish_color}
+                motion="sweep"
+                reduceMotion={reduceMotion}
+                opacity={pet.finish_kind === 'reverse' ? cardFoilOpacity() : windowFoilOpacity()}
+              />
+            </View>
           ) : null}
           <Pressable
             onPress={onTapPet}
@@ -748,6 +757,7 @@ const styles = StyleSheet.create({
   coachButtonText: { fontFamily: Fonts.monoBold, fontSize: 12, color: '#FFFFFF' },
   pressed: { opacity: 0.75 },
   petWrap: { position: 'absolute', left: 0 },
+  foilMat: { position: 'absolute', overflow: 'hidden' },
   ring: { position: 'absolute', height: 14, borderRadius: 999, opacity: 0.7 },
   zzz: { position: 'absolute', fontSize: 18 },
   heart: { position: 'absolute', fontSize: 20, color: '#FF5A8A' },

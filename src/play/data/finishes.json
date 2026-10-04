@@ -20,21 +20,22 @@
     "extra_color": 110
   },
   "paint": {
-    "holo_opacity": 0.42,
-    "holo_opacity_on_shiny": 0.32,
+    "window_opacity": 1,
+    "reverse_opacity": 0.9,
+    "sheen_opacity": 0.3,
+    "sheen_opacity_on_shiny": 0.3,
+    "sheen_wash_opacity": 0.16,
     "glare_opacity": 0.55,
-    "reverse_opacity": 0.4,
-    "fallback_opacity": 0.38,
-    "holo_blend": "color-dodge",
-    "holo_blend_fallback": "overlay",
-    "reverse_blend": "screen"
+    "sheen_blend": "overlay"
   },
-  "sweep_ms": 3400,
+  "tilt": true,
+  "tilt_max_deg": 15,
+  "drift_ms": 12000,
   "colors": [
     {
       "id": "moonpearl",
       "name": "Moonpearl",
-      "stops": ["#F4F8FF", "#FFB8E2", "#A8D8FF", "#B8FFE6"],
+      "stops": ["#F4FBFF", "#E4C2FF", "#8EDEFF", "#C8FFE8"],
       "glare": "#FFFFFF",
       "repeats": 2,
       "hard": false,
@@ -43,8 +44,8 @@
     {
       "id": "reefglow",
       "name": "Reefglow",
-      "stops": ["#FF7A8A", "#FFB86B", "#FFF27A", "#7AF5E6"],
-      "glare": "#FFF6E0",
+      "stops": ["#FF4D6A", "#FF9A2E", "#FFE14A", "#2EF0C8"],
+      "glare": "#FFF4D2",
       "repeats": 3,
       "hard": false,
       "pass_only": false
@@ -52,8 +53,8 @@
     {
       "id": "rosedusk",
       "name": "Rosedusk",
-      "stops": ["#FFB3A7", "#FF85B0", "#E6A8FF", "#FFE3C9"],
-      "glare": "#FFF1EA",
+      "stops": ["#FF7A90", "#FF3D8A", "#C86BFF", "#FFC4A0"],
+      "glare": "#FFE8DC",
       "repeats": 3,
       "hard": false,
       "pass_only": false
@@ -61,8 +62,8 @@
     {
       "id": "limewake",
       "name": "Limewake",
-      "stops": ["#E4FF4D", "#8CFF6B", "#3DF0A0", "#F6FFC9"],
-      "glare": "#FAFFE8",
+      "stops": ["#E6FF3A", "#3DFF62", "#12D6B0", "#F3FFC2"],
+      "glare": "#F6FFD4",
       "repeats": 3,
       "hard": false,
       "pass_only": false
@@ -70,7 +71,7 @@
     {
       "id": "scarab",
       "name": "Scarab",
-      "stops": ["#22F2B0", "#5CA8FF", "#B88CFF", "#FFD24D"],
+      "stops": ["#14E6A0", "#3C8CFF", "#B06BFF", "#FFD23A"],
       "glare": "#FFFFFF",
       "repeats": 3,
       "hard": false,
@@ -79,7 +80,7 @@
     {
       "id": "quicksilver",
       "name": "Quicksilver",
-      "stops": ["#FFFFFF", "#D5DEEA", "#A9B8CC", "#F2F6FC"],
+      "stops": ["#FFFFFF", "#D5DEEA", "#8EA0B8", "#F5F8FC"],
       "glare": "#FFFFFF",
       "repeats": 5,
       "hard": true,
@@ -88,7 +89,7 @@
     {
       "id": "starpearl",
       "name": "Starpearl",
-      "stops": ["#A48CFF", "#FF8FE0", "#6BE6FF", "#FFF4FB"],
+      "stops": ["#B388FF", "#FF62D6", "#3AD8FF", "#FFE4F8"],
       "glare": "#FFFFFF",
       "repeats": 3,
       "hard": false,

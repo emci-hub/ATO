@@ -308,7 +308,8 @@ export function DenSheetBody({
           {showCard && selectedResting && selected.hero ? (
             <View style={styles.cardCenter}>
               <PetCard
-                width={180}
+                live
+                width={230}
                 animate={!reduceMotion}
                 info={{
                   name: selected.name ?? heroName(selected.hero),
@@ -331,7 +332,7 @@ export function DenSheetBody({
                 sprite={
                   <PetFigure
                     pet={selected}
-                    baseBox={88}
+                    baseBox={140}
                     eggColor={selected.egg ? EGG_COLOR[selected.egg] : fallback}
                     recolor={petRecolor(selected.hero, selected.shiny, selDye, selected.shiny_style)}
                     lockColour={selected.shiny}
