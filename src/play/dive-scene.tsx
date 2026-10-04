@@ -48,14 +48,12 @@ import Svg, { Defs, Ellipse, LinearGradient, RadialGradient, Rect, Stop } from '
 
 import type { DiveFxLevel } from '@/play/dive-fx-level';
 import {
-  DIVE_DEPTH_INK,
   DIVE_MAX_DEPTH,
   GLOW_COLOR,
   REVEAL_FLASH_MS,
   REVEAL_FLY_MS,
   REVEAL_HOLD_RARE_MS,
   REVEAL_RISE_MS,
-  RAYS_UNTIL_DEPTH,
   SHARK_DEPTHS,
   diveWorldCuts,
   findBoxArt,
@@ -66,10 +64,11 @@ import {
   type FindGlow,
 } from '@/play/dive-fx-model';
 import { FindIcon } from '@/play/dive-hud';
-import { AbyssDragon, BOX_OPEN, Caustics, DiveWater, FindBox, LightRays, ShaftWalls, SharkGlide, SurfaceSky, WALL_W, WATERLINE, ZoneProps } from '@/play/dive-world';
+import { AbyssDragon, BOX_OPEN, FindBox, MockupReef, SharkGlide } from '@/play/dive-world';
 import { SpriteSwap } from '@/play/pixel-ambient';
 import { findName } from '@/play/dive-loot';
-import { PIXEL } from '@/play/pixel-theme';
+import { ART_PT, PIXEL } from '@/play/pixel-theme';
+import { MOCKUP_DIVE, mockupOrigin } from '@/play/pixel-atlas';
 import { PixelBody, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
 import type { PetState } from '@/play/pet';
 import { petPose, sharpPetBox, type PetPose } from '@/play/pet-actor';
@@ -77,6 +76,7 @@ import { PetAnimSprite, usePetArt, type PetArt, type PetFace } from '@/play/pet-
 import type { Grade } from '@/play/pet-eggs';
 import { GradeAura, ShinyOverlay } from '@/play/pet-looks';
 import type { PetWear } from '@/play/pet-cosmetics';
+import { roleFootAt } from '@/play/skin';
 
 const PET_WANT_BOX = 112;
 const SLOT = 40;
@@ -145,43 +145,6 @@ function Bubble({
   return (
     <Animated.View pointerEvents="none" style={[styles.abs, { left: x, top: 0 }, style]}>
       <SpriteSwap atlas="dive" frames={['bubble', 'bubble2']} alive={alive} ms={220} />
-    </Animated.View>
-  );
-}
-
-function Fish({
-  y,
-  width,
-  size,
-  dur,
-  delay,
-  rightward,
-}: {
-  y: number;
-  width: number;
-  size: number;
-  dur: number;
-  delay: number;
-  rightward: boolean;
-}) {
-  const t = useSharedValue(0);
-  useEffect(() => {
-    t.value = withDelay(delay, withRepeat(withTiming(1, { duration: dur, easing: Easing.linear }), -1));
-    return () => cancelAnimation(t);
-  }, [t, dur, delay]);
-  const style = useAnimatedStyle(() => {
-    const p = rightward ? t.value : 1 - t.value;
-    return {
-      transform: [
-        { translateX: -size * 2 + p * (width + size * 4) },
-        { translateY: Math.sin(t.value * 18) * 3 },
-        { scaleX: rightward ? 1 : -1 },
-      ],
-    };
-  });
-  return (
-    <Animated.View pointerEvents="none" style={[styles.abs, { top: y, left: 0 }, style]}>
-      <SpriteSwap atlas="dive" frames={['fish0', 'fish2']} alive ms={180} />
     </Animated.View>
   );
 }
@@ -331,9 +294,6 @@ export function DiveScene({
   const full = fxLevel === 'full' && !reduceMotion;
   const cuts = diveWorldCuts(fxLevel, reduceMotion);
   const band = Math.max(1, height * 0.9);
-  // Far water lags, the ruins lag less. Locked together when parallax is off.
-  const bgSpeed = cuts.parallax ? 0.42 : 1;
-  const midSpeed = cuts.parallax ? 0.72 : 1;
 
   // -- Camera: one band per Deeper; after a bust it waits for the pet to
   // shoot up, then rises. Reduced motion snaps.
@@ -351,16 +311,19 @@ export function DiveScene({
   }, [cam, depth, event?.key, event?.kind, reduceMotion]);
 
   const worldStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -cam.value * band }] }));
-  const bgStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -cam.value * band * bgSpeed }] }));
-  const wallStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -cam.value * band * midSpeed }] }));
 
   // -- The pet: swims (walk clip) with a gentle sway; reacts to the shown %.
   const art = usePetArt(pet);
   const box = pet.stage === 'egg' ? 70 : sharpPetBox(PET_WANT_BOX, art.cellPx, PixelRatio.get());
-  const petX = width / 2;
-  const petY = height * 0.42;
-  const edgeX = Math.max(WALL_W + box / 2, width * 0.24);
-  const edgeY = height * WATERLINE - box * 0.42;
+  // The mockup pet hovers over the ledge. The surface perch uses the same spot,
+  // so the reef composition stays put when a dive hasn't started.
+  const origin = mockupOrigin(Math.max(width, 1), Math.max(height, 1), 200);
+  const footAt = roleFootAt(art.role);
+  const petX = origin.left + MOCKUP_DIVE.petX * ART_PT;
+  const petFeet = origin.top + MOCKUP_DIVE.feet * ART_PT;
+  const petY = petFeet - footAt * box + box / 2;
+  const edgeX = petX;
+  const edgeY = petY;
   const swimPose = petPose(art.kit, 'walk');
   const [pose, setPose] = useState<{ pose: PetPose | null; loop: boolean; at: number }>(() => ({ pose: swimPose, loop: true, at: Date.now() }));
   const [hurtFlash, setHurtFlash] = useState(false);
@@ -542,7 +505,10 @@ export function DiveScene({
   const rv = useSharedValue(0);
   const flash = useSharedValue(0);
   const [landedKey, setLandedKey] = useState(reveal?.key ?? 0);
-  const rowY = height - ROW_PAD - ICON;
+  const rowY = Math.min(
+    Math.max(origin.top + MOCKUP_DIVE.haul.y * ART_PT, 8),
+    Math.max(8, height - ICON - 4),
+  );
   const slotX = (slot: number) => ROW_PAD + slot * SLOT;
   useEffect(() => {
     if (!reveal) return;
@@ -564,8 +530,8 @@ export function DiveScene({
   }, [reveal, reduceMotion, rv, flash, fxLevel]);
   const revealTo = reveal ? slotX(reveal.slot) : 0;
   // v25: the find bursts out of a crate / chest on the right-hand ledge.
-  const boxX = width - WALL_W - FIND_BOX - 8;
-  const boxY = petY + 24;
+  const boxX = origin.left + 124 * ART_PT;
+  const boxY = origin.top + MOCKUP_DIVE.ly * ART_PT;
   const revealStyle = useAnimatedStyle(() => {
     const v = rv.value;
     const startX = boxX + (FIND_BOX - ICON) / 2;
@@ -634,8 +600,7 @@ export function DiveScene({
     lastId && caption?.startsWith('Found ') && isRareOrBetter(findGlow(lastId)) ? findName(lastId) : null;
 
   const worldH = band * (DIVE_MAX_DEPTH + 1) + height;
-  const bubbleCount = reduceMotion ? 0 : full ? 8 : 4;
-  const fishCount = full ? Math.min(5, 3 + Math.floor(Math.min(depth, 4) / 2)) : 0;
+  const rareTop = Math.max(8, origin.top + MOCKUP_DIVE.rare.y * ART_PT);
 
   if (!fontsReady) {
     return <View style={styles.scene} onLayout={onLayout} />;
@@ -645,51 +610,17 @@ export function DiveScene({
     <Animated.View style={[styles.scene, shakeStyle]} onLayout={onLayout} accessibilityLabel={`${diveZone(depth)}, depth ${depth} of ${maxDepth}`}>
       {width > 0 ? (
         <>
-          {/* Far water. Lags behind the camera when parallax is on. */}
-          <Animated.View
-            pointerEvents="none"
-            style={[styles.abs, { left: 0, top: 0, width, height: band * (DIVE_MAX_DEPTH + 1) * bgSpeed + height }, bgStyle]}>
-            <DiveWater width={width} band={band} speed={bgSpeed} />
-            {fxLevel === 'full' ? <Caustics width={width} band={band} speed={bgSpeed} alive={full} /> : null}
-          </Animated.View>
+          {/* Approved reef plate. Fixed to the viewport; kelp, fish, bubbles and the ray shimmer sit on it. */}
+          <MockupReef width={width} height={height} alive={full} />
 
-          {/* Mid ruins: lattice, arch, statue. A little faster than the water. */}
-          <Animated.View
-            pointerEvents="none"
-            style={[styles.abs, { left: 0, top: 0, width, height: band * (DIVE_MAX_DEPTH + 1) * midSpeed + height }, wallStyle]}>
-            <ShaftWalls width={width} band={band} depth={depth} speed={midSpeed} alive={full} />
-          </Animated.View>
-
-          {/* Near seabed, coral and the abyss statue. Locked to the camera. */}
+          {/* The abyss statue scrolls in with the camera. Props stay on the plate. */}
           <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0, width, height: worldH }, worldStyle]}>
             {cuts.dragon ? <AbyssDragon width={width} band={band} /> : null}
-            {cuts.props ? <ZoneProps width={width} band={band} depth={depth} alive={full} /> : null}
           </Animated.View>
-
-          {/* Pack fish, in the Reef and the Trench. Cut with the shark slot. */}
-          {fxLevel === 'full' && depth <= RAYS_UNTIL_DEPTH ? <LightRays width={width} alive={full} /> : null}
 
           {cuts.shark && !atSurface && SHARK_DEPTHS.includes(depth) ? (
             <SharkGlide key={depth} width={width} height={height} rightward={depth % 2 === 1} />
           ) : null}
-
-          {Array.from({ length: fishCount }, (_, i) => (
-            <Fish
-              key={i}
-              y={height * (0.18 + ((i * 0.17) % 0.55))}
-              width={width}
-              size={10 + (i % 3) * 4}
-              dur={9000 + i * 2300}
-              delay={i * 1700}
-              rightward={i % 2 === 0}
-            />
-          ))}
-          {Array.from({ length: bubbleCount }, (_, i) => (
-            <Bubble key={i} x={((i * 29 + 7) % 90) * (width / 100) + 8} height={height} dur={4200 + (i % 4) * 900} delay={i * 600} alive={full} />
-          ))}
-
-          {/* v25: the surface — sky, sun, the rim and the waterline. */}
-          <SurfaceSky width={width} height={height} sky={sky} splash={skySplash} edgeX={edgeX} />
 
           {/* The pet (not while it's away on an expedition). */}
           {!away ? (
@@ -784,18 +715,19 @@ export function DiveScene({
           {sinking.map((id, i) => (
             <Sinking key={`${id}-${i}-${event?.key}`} id={id} left={slotX(event?.saved.length ?? 0) + i * SLOT} top={rowY} drop={height * 0.4} reduceMotion={reduceMotion} />
           ))}
-          {caption ? (
+          {rareFind ? (
+            <View pointerEvents="none" style={[styles.caption, { top: rareTop }]}>
+              <PixelFrame fill={PIXEL.ink} border={PIXEL.amber}>
+                <PixelLabel color={PIXEL.amber}>RARE FIND</PixelLabel>
+                <PixelBody>{rareFind}</PixelBody>
+              </PixelFrame>
+            </View>
+          ) : null}
+          {caption && !rareFind ? (
             <View pointerEvents="none" style={[styles.caption, { bottom: ROW_PAD + ICON + 8 }]}>
-              {rareFind ? (
-                <PixelFrame fill={PIXEL.ink} border={PIXEL.amber}>
-                  <PixelLabel color={PIXEL.amber}>Rare find</PixelLabel>
-                  <PixelBody>{rareFind}</PixelBody>
-                </PixelFrame>
-              ) : (
-                <PixelFrame>
-                  <PixelBody style={styles.captionText}>{caption}</PixelBody>
-                </PixelFrame>
-              )}
+              <PixelFrame>
+                <PixelBody style={styles.captionText}>{caption}</PixelBody>
+              </PixelFrame>
             </View>
           ) : null}
         </>
@@ -806,7 +738,7 @@ export function DiveScene({
 }
 
 const styles = StyleSheet.create({
-  scene: { flex: 1, overflow: 'hidden', backgroundColor: DIVE_DEPTH_INK[0] },
+  scene: { flex: 1, overflow: 'hidden', backgroundColor: '#0b5e65' },
   abs: { position: 'absolute' },
   hurt: { backgroundColor: '#FF3B5C', opacity: 0.35, borderRadius: 999 },
   flash: { backgroundColor: '#FFFFFF' },

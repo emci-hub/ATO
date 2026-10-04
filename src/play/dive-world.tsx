@@ -1,15 +1,15 @@
 /**
- * Dive world — pixel scenery the Dive scene sinks through.
+ * Dive world — the approved reef plate (dive2.py), plus the pieces that move.
  *
- * Far water, a mid lattice / arch / statue, and a near seabed with seaweed
- * and coral. Art is the underwater atlas (ansimuz, recolored onto Resurrect
- * 64). Deeper bands use darker frames baked into the atlas. Nothing is tinted
- * or washed over the pixels at draw time.
+ * The plate is the teal ruins, statue, coral and seabed with the mockup's
+ * lighting baked in. Kelp sways, one fish crosses, bubbles rise, and a dim
+ * pass of the god rays shimmers over the plate. Reduced motion and Effects
+ * Low hold the plate still and skip the particles.
  *
- * Parallax is a speed on the layer (`speed` < 1 lags behind the camera).
- * Reduced motion and Effects Low pass speed 1, so the layers stay locked.
+ * The shark glide, the abyss statue and the find chest stay gameplay looks.
+ * Nothing is tinted or washed over the pixels at draw time.
  *
- * LOOKS ONLY: every choice here is by band index — no rolls, no odds.
+ * LOOKS ONLY: every choice here is by depth — no rolls, no odds.
  */
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -25,188 +25,80 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
-import { DIVE_DEPTH_INK, DIVE_PROPS, DRAGON_DEPTH } from '@/play/dive-fx-model';
-import { Drift, Sway } from '@/play/pixel-ambient';
+import { DRAGON_DEPTH } from '@/play/dive-fx-model';
+import { Drift, Flicker, MoteRise, SpriteSwap, Sway } from '@/play/pixel-ambient';
 import { ART_PT } from '@/play/pixel-theme';
-import { AtlasFill, AtlasSprite, DIVE_FRAMES, type DiveFrame } from '@/play/pixel-atlas';
+import { AtlasSprite, DIVE_FRAMES, MOCKUP_DIVE, mockupOrigin, type DiveFrame } from '@/play/pixel-atlas';
 
 export const WALL_W = 34;
 
 /** Where the surface waterline sits, as a share of the scene height. */
 export const WATERLINE = 0.24;
 
-const MID: readonly { frame: DiveFrame; side: 0 | 1 }[] = [
-  { frame: 'lattice', side: 0 },
-  { frame: 'statue', side: 0 },
-  { frame: 'arch', side: 1 },
-  { frame: 'totem', side: 1 },
-  { frame: 'kelp', side: 0 },
-  { frame: 'lattice-deep', side: 1 },
-];
+const BUBBLE_FRAMES = ['bubble', 'bubble2', 'bubble3', 'bubble4'] as const;
 
 function frameBox(frame: string): { w: number; h: number } {
   const rect = DIVE_FRAMES[frame as DiveFrame];
   return { w: rect.w * ART_PT, h: rect.h * ART_PT };
 }
 
-/** The water column: one precolored background per depth. */
-export function DiveWater({ width, band, speed }: { width: number; band: number; speed: number }) {
-  const bandH = band * speed;
+/**
+ * The mockup reef, fixed to the viewport (the camera does not slide a
+ * different painting in). `alive` is full effects with motion allowed.
+ */
+export function MockupReef({ width, height, alive }: { width: number; height: number; alive: boolean }) {
+  const origin = mockupOrigin(width, height, 200);
+  const k = ART_PT;
   return (
-    <>
-      {DIVE_DEPTH_INK.map((ink, i) => (
-        <View
-          key={i}
-          pointerEvents="none"
-          style={{ position: 'absolute', left: 0, top: i * bandH, width, height: bandH + ART_PT, overflow: 'hidden', backgroundColor: ink }}>
-          <AtlasFill atlas="dive" frame={`bg${i}`} width={width} height={bandH + ART_PT} />
-        </View>
+    <View pointerEvents="none" style={[styles.abs, { left: origin.left, top: origin.top }]}>
+      <AtlasSprite atlas="dive" frame="plate" />
+      <View style={[styles.abs, { left: MOCKUP_DIVE.shimmer.x * k, top: MOCKUP_DIVE.shimmer.y * k }]}>
+        <Flicker alive={alive} peak={0.42} ms={1400}>
+          <AtlasSprite atlas="dive" frame="shimmer" />
+        </Flicker>
+      </View>
+      <View style={[styles.abs, { left: MOCKUP_DIVE.weed.x * k, top: MOCKUP_DIVE.weed.y * k }]}>
+        <Sway alive={alive} deg={2.2} ms={2400}>
+          <AtlasSprite atlas="dive" frame="weed" />
+        </Sway>
+      </View>
+      <View style={[styles.abs, { left: MOCKUP_DIVE.fish.x * k, top: MOCKUP_DIVE.fish.y * k }]}>
+        <Drift alive={alive} dx={72} dy={6} ms={6400}>
+          <SpriteSwap atlas="dive" frames={['fish0', 'fish2']} alive={alive} ms={220} />
+        </Drift>
+      </View>
+      {MOCKUP_DIVE.bubbles.map((b, i) => (
+        <MoteRise key={i} alive={alive} left={b.x * k} top={b.y * k} distance={80 + (i % 3) * 24} ms={4200 + i * 500} delay={i * 380}>
+          <SpriteSwap atlas="dive" frames={BUBBLE_FRAMES} alive={alive} ms={180} />
+        </MoteRise>
       ))}
-    </>
+    </View>
   );
 }
 
-/** Mid layer: lattice, arch, statue, totem. Laid out in the sped-up space. */
-export function ShaftWalls({
-  width,
-  band,
-  depth,
-  speed,
-  alive,
-}: {
-  width: number;
-  band: number;
-  depth: number;
-  speed: number;
-  alive: boolean;
-}) {
-  const bandH = band * speed;
-  const bands = [depth - 1, depth, depth + 1, depth + 2].filter((i) => i >= 0 && i < MID.length);
-  return (
-    <>
-      {bands.map((i) => {
-        const spec = MID[i];
-        if (!spec) return null;
-        const box = frameBox(spec.frame);
-        const left = spec.side === 0 ? -ART_PT * 8 : Math.max(0, width - box.w + ART_PT * 8);
-        return (
-          <View key={i} pointerEvents="none" style={[styles.abs, { left, top: i * bandH + bandH * 0.12 }]}>
-            {spec.frame === 'kelp' ? (
-              <Sway alive={alive} deg={1.2} ms={2200}>
-                <AtlasSprite atlas="dive" frame={spec.frame} />
-              </Sway>
-            ) : (
-              <AtlasSprite atlas="dive" frame={spec.frame} />
-            )}
-          </View>
-        );
-      })}
-    </>
-  );
+/** The old tiled water column. The plate above is the reef; this stays empty. */
+export function DiveWater(_props: { width: number; band: number; speed: number }) {
+  return null;
 }
 
-function propSway(frame: string): number {
-  if (frame.startsWith('weed')) return 3;
-  if (frame.startsWith('coral')) return 1;
-  return 0;
+/** The old mid ruins. The statue and arch are baked into the plate. */
+export function ShaftWalls(_props: { width: number; band: number; depth: number; speed: number; alive: boolean }) {
+  return null;
 }
 
-/** Near layer: seabed tiles plus seaweed and coral, in world space. */
-export function ZoneProps({
-  width,
-  band,
-  depth,
-  alive,
-}: {
-  width: number;
-  band: number;
-  depth: number;
-  alive: boolean;
-}) {
-  const bands = [depth - 1, depth, depth + 1].filter((i) => i >= 0 && i < DIVE_PROPS.length);
-  return (
-    <>
-      {bands.map((i) => {
-        const bed = i >= 3 ? 'seabed-deep' : 'seabed';
-        const bedH = frameBox(bed).h;
-        return (
-          <View key={i} pointerEvents="none" style={StyleSheet.absoluteFill}>
-            <View style={[styles.abs, { left: 0, top: (i + 1) * band - bedH, width, height: bedH, overflow: 'hidden' }]}>
-              <AtlasFill atlas="dive" frame={bed} width={width} height={bedH} />
-            </View>
-            {DIVE_PROPS[i].map((p) => {
-              const box = frameBox(p.frame);
-              const left = p.x === 0 ? ART_PT * 4 : Math.max(ART_PT * 4, width - box.w - ART_PT * 4);
-              const deg = propSway(p.frame);
-              const sprite = <AtlasSprite atlas="dive" frame={p.frame} />;
-              return (
-                <View key={p.frame} style={[styles.abs, { left, top: i * band + p.y * band - box.h }]}>
-                  {deg > 0 ? (
-                    <Sway alive={alive} deg={deg} ms={1500 + i * 180}>
-                      {sprite}
-                    </Sway>
-                  ) : (
-                    sprite
-                  )}
-                </View>
-              );
-            })}
-          </View>
-        );
-      })}
-    </>
-  );
+/** The old per-band props. Kelp and coral sit on the plate. */
+export function ZoneProps(_props: { width: number; band: number; depth: number; alive: boolean }) {
+  return null;
 }
 
-/** Caustic shimmer on the two sunlit bands. Holds still when `alive` is false. */
-export function Caustics({
-  width,
-  band,
-  speed,
-  alive,
-}: {
-  width: number;
-  band: number;
-  speed: number;
-  alive: boolean;
-}) {
-  const tile = frameBox('caustic');
-  const spots = [0.22, 0.55, 0.8];
-  return (
-    <>
-      {[0, 1].map((bandIndex) =>
-        spots.map((x, i) => (
-          <View
-            key={`${bandIndex}-${i}`}
-            pointerEvents="none"
-            style={[
-              styles.abs,
-              { left: width * x, top: bandIndex * band * speed + band * speed * 0.55, width: tile.w, height: tile.h },
-            ]}>
-            <Drift alive={alive} dx={10} ms={2800 + i * 400}>
-              <AtlasSprite atlas="dive" frame="caustic" />
-            </Drift>
-          </View>
-        )),
-      )}
-    </>
-  );
+/** Caustics are the baked light on the plate, not a dotted line. */
+export function Caustics(_props: { width: number; band: number; speed: number; alive: boolean }) {
+  return null;
 }
 
-/** A few light shafts. Static when `alive` is false; omit the component when effects are low. */
-export function LightRays({ width, alive }: { width: number; alive: boolean }) {
-  const spots = [0.16, 0.42, 0.68];
-  return (
-    <>
-      {spots.map((x, i) => (
-        <View key={i} pointerEvents="none" style={[styles.abs, { left: width * x, top: 8 }]}>
-          <Drift alive={alive} dx={8 + i * 2} ms={3600 + i * 500}>
-            <AtlasSprite atlas="dive" frame="ray" />
-          </Drift>
-        </View>
-      ))}
-    </>
-  );
+/** God rays are the baked shimmer, not dashed shafts. */
+export function LightRays(_props: { width: number; alive: boolean }) {
+  return null;
 }
 
 /** The Abyss: the pack's statue, in the dark frame, full pixels. */
@@ -248,39 +140,15 @@ export function SharkGlide({ width, height, rightward }: { width: number; height
   );
 }
 
-/** Pixel sky and waterline above the Shallows. `sky` 1 = shown. */
-export function SurfaceSky({
-  width,
-  height,
-  sky,
-  splash,
-}: {
+/** The surface rim used to slide a sky over the water. The reef plate stays. */
+export function SurfaceSky(_props: {
   width: number;
   height: number;
   sky: SharedValue<number>;
   splash: SharedValue<number>;
   edgeX: number;
 }) {
-  const line = height * WATERLINE;
-  const skyH = frameBox('sky').h;
-  const style = useAnimatedStyle(() => ({ transform: [{ translateY: -(1 - sky.value) * (line + 40) }] }));
-  const splashStyle = useAnimatedStyle(() => ({
-    opacity: splash.value > 0 && splash.value < 1 ? 1 - splash.value : 0,
-    transform: [{ translateY: -splash.value * 18 }],
-  }));
-  return (
-    <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0, width, height: line + skyH }, style]}>
-      <View style={{ width, height: line + 8, backgroundColor: DIVE_DEPTH_INK[0] }} />
-      <View style={[styles.abs, { left: 0, top: Math.max(0, line - skyH), width, height: skyH, overflow: 'hidden' }]}>
-        <AtlasFill atlas="dive" frame="sky" width={width} height={skyH} />
-      </View>
-      <Animated.View style={[styles.abs, { left: width / 2 - 40, top: line - 10, width: 80, height: 24, flexDirection: 'row', justifyContent: 'space-between' }, splashStyle]}>
-        {['bubble', 'bubble', 'bubble', 'bubble'].map((frame, i) => (
-          <AtlasSprite key={i} atlas="dive" frame={frame} />
-        ))}
-      </Animated.View>
-    </Animated.View>
-  );
+  return null;
 }
 
 /** The crate / chest a find bursts out of. `rv` is the scene's reveal clock. */

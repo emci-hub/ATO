@@ -14,6 +14,7 @@ import Animated, {
   useSharedValue,
   withDelay,
   withRepeat,
+  withSequence,
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
@@ -170,7 +171,7 @@ export function SpriteSwap({
     <View>
       {frames.map((frame, index) => (
         <SwapLayer
-          key={frame}
+          key={`${frame}-${index}`}
           atlas={atlas}
           frame={frame}
           index={index}
@@ -180,5 +181,118 @@ export function SpriteSwap({
         />
       ))}
     </View>
+  );
+}
+
+/**
+ * Dim-pass over a baked plate. Opacity rests at 0 (the mockup), and dips
+ * toward `peak` while ambient motion is on.
+ */
+export function Flicker({
+  alive,
+  children,
+  peak = 0.55,
+  ms = 520,
+}: {
+  alive: boolean;
+  children: ReactNode;
+  peak?: number;
+  ms?: number;
+}) {
+  const o = useSharedValue(0);
+  useEffect(() => {
+    cancelAnimation(o);
+    o.value = 0;
+    if (!alive) return;
+    o.value = withRepeat(
+      withSequence(
+        withTiming(peak, { duration: ms, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: Math.round(ms * 1.7), easing: Easing.inOut(Easing.sin) }),
+      ),
+      -1,
+    );
+    return () => cancelAnimation(o);
+  }, [alive, ms, o, peak]);
+  const style = useAnimatedStyle(() => ({ opacity: o.value }));
+  return (
+    <Animated.View pointerEvents="none" style={style}>
+      {children}
+    </Animated.View>
+  );
+}
+
+/**
+ * Opacity pulse. `rest` is the still value (0 leaves the baked plate untouched).
+ * Stars rest at 0; the sparkle beside the pet rests at 1.
+ */
+export function Twinkle({
+  alive,
+  children,
+  ms = 900,
+  rest = 0,
+}: {
+  alive: boolean;
+  children: ReactNode;
+  ms?: number;
+  rest?: number;
+}) {
+  const o = useSharedValue(rest);
+  useEffect(() => {
+    cancelAnimation(o);
+    o.value = rest;
+    if (!alive) return;
+    const low = rest > 0 ? 0.2 : 0;
+    o.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: ms, easing: Easing.inOut(Easing.sin) }),
+        withTiming(low, { duration: ms, easing: Easing.inOut(Easing.sin) }),
+      ),
+      -1,
+    );
+    return () => cancelAnimation(o);
+  }, [alive, ms, o, rest]);
+  const style = useAnimatedStyle(() => ({ opacity: o.value }));
+  return (
+    <Animated.View pointerEvents="none" style={style}>
+      {children}
+    </Animated.View>
+  );
+}
+
+/** Rises from a point on the plate. Not mounted when `alive` is false. */
+export function MoteRise({
+  alive,
+  left,
+  top,
+  distance,
+  ms,
+  delay,
+  children,
+}: {
+  alive: boolean;
+  left: number;
+  top: number;
+  distance: number;
+  ms: number;
+  delay: number;
+  children: ReactNode;
+}) {
+  const t = useSharedValue(0);
+  useEffect(() => {
+    cancelAnimation(t);
+    t.value = 0;
+    if (!alive) return;
+    t.value = withDelay(delay, withRepeat(withTiming(1, { duration: ms, easing: Easing.linear }), -1, false));
+    return () => cancelAnimation(t);
+  }, [alive, delay, ms, t]);
+  const style = useAnimatedStyle(() => ({
+    opacity: t.value > 0.9 ? 0 : 0.95,
+    transform: [{ translateY: -t.value * distance }, { translateX: Math.sin(t.value * 10) * 3 }],
+  }));
+  if (!alive) return null;
+  return (
+    <Animated.View pointerEvents="none" style={[{ position: 'absolute', left, top }, style]}>
+      {children}
+    </Animated.View>
   );
 }

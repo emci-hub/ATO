@@ -1,9 +1,8 @@
 /**
- * Pet room (overhaul, 2026-09-29) — the pet lives in a room scene, never a
- * still picture (Tamagotchi / Pou / Talking Tom). The room is pixel art from
- * the room atlas: plank walls, brick floor, a window whose sky follows the
- * phone's clock, and props the pet walks to. Ambient loops (lamp, clouds,
- * plant, motes) freeze when Reduce Motion is on or effects are low.
+ * Pet room — the approved mockup plate (room2.py): dusk plank wall, wainscot,
+ * night window, picture, lamp, brick floor, rug, bed and bowl. The live pet
+ * stands on the rug. Lamp flicker, window twinkle, dust motes and a sparkle
+ * freeze when Reduce Motion is on or effects are low.
  *
  * The pet wanders, turns, idles, sits, sometimes shows off (its attack/skill
  * clip), sleeps at night — all decided by `planPetStep` (pet-actor.ts) from
@@ -61,8 +60,8 @@ import { EggShape } from '@/play/pet-figure';
 import { GlimmerGlow, GradeAura, ShinyOverlay } from '@/play/pet-looks';
 import { wornLook, type PetWear } from '@/play/pet-cosmetics';
 import { PET_STATUS_WORD, isEvolvingSoon, petStatusLabel, type PetStatus } from '@/play/pet-status';
-import { Drift, Rise, SpriteSwap, Sway } from '@/play/pixel-ambient';
-import { AtlasFill, AtlasSprite, ROOM_FRAMES, type RoomFrame } from '@/play/pixel-atlas';
+import { Flicker, MoteRise, Twinkle } from '@/play/pixel-ambient';
+import { AtlasSprite, MOCKUP_ROOM, mockupOrigin } from '@/play/pixel-atlas';
 import { ART_PT, PIXEL, snapArt } from '@/play/pixel-theme';
 import {
   PixelBody,
@@ -76,8 +75,6 @@ import {
 import { PET_TALK_HOLD_MS, PET_TALK_TYPE_MS } from '@/play/pet-talk';
 import { roleFootAt } from '@/play/skin';
 
-/** Feet line, as a share of the room height. */
-const FLOOR_AT = 0.8;
 // The nameplate hangs BELOW the feet line. The floor ring runs from feet-8 to
 // feet+6, so +8 clears it and the sprite for every stage (it used to sit at -4
 // and covered the pet's feet — Crimson Oni, Child).
@@ -146,7 +143,6 @@ function MaxedAura({ size, animate }: { size: number; animate: boolean }) {
     />
   );
 }
-const HORIZON_AT = 0.6;
 const TAP_FACE_MS = 1400;
 const AURA_EVERY_MS = 1400;
 
@@ -154,114 +150,41 @@ export type RoomSpeech = { text: string; key: number } | null;
 
 /* ------------------------------------------------------------ backdrop --- */
 
-function propBox(frame: RoomFrame): { w: number; h: number } {
-  const rect = ROOM_FRAMES[frame];
-  return { w: rect.w * ART_PT, h: rect.h * ART_PT };
-}
-
-function sit(w: number, h: number, cx: number, bottom: number): { left: number; top: number } {
-  return { left: snapArt(cx - w / 2), top: snapArt(bottom - h) };
-}
-
 function RoomBackdrop({
   width,
   height,
-  night,
-  pantry,
   alive,
 }: {
   width: number;
   height: number;
-  night: boolean;
-  pantry: number;
   alive: boolean;
 }) {
-  const horizon = snapArt(height * HORIZON_AT);
-  const floorY = snapArt(height * FLOOR_AT);
-  const wallH = Math.max(ART_PT, horizon);
-  const floorH = Math.max(ART_PT, height - horizon);
-  const win = propBox('window-night');
-  const lamp = propBox('lamp');
-  const bed = propBox('bed');
-  const bowl = propBox('bowl');
-  const bush = propBox('bush');
-  const rug = propBox('rug');
-  const plant = propBox('plant');
-  const shelf = propBox('shelf');
-  const picture = propBox('picture');
-  const pool = propBox('pool');
-  const treat = propBox('treat');
-  const baseH = propBox('base').h;
-  const winX = snapArt(Math.max(ART_PT * 2, width * 0.06));
-  const winY = snapArt(Math.min(Math.max(72, height * 0.08), Math.max(ART_PT, horizon - win.h - ART_PT * 2)));
-  const bedCx = width * PET_BED_X;
-  const lampLeft = snapArt(Math.min(width - lamp.w - ART_PT * 2, bedCx + bed.w / 2 + ART_PT * 4));
-  const lampCx = lampLeft + lamp.w / 2;
+  const origin = mockupOrigin(width, height, 200);
+  const k = ART_PT;
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <View style={{ position: 'absolute', left: 0, top: 0, width, height: wallH, backgroundColor: '#3e3546', overflow: 'hidden' }}>
-        <AtlasFill atlas="room" frame="wall" width={width} height={wallH} />
-      </View>
-      <View style={{ position: 'absolute', left: 0, top: horizon, width, height: floorH, backgroundColor: '#4c3e24', overflow: 'hidden' }}>
-        <AtlasFill atlas="room" frame="floor" width={width} height={floorH} />
-      </View>
-      <View style={{ position: 'absolute', left: 0, top: horizon - baseH / 2, width, height: baseH, overflow: 'hidden' }}>
-        <AtlasFill atlas="room" frame="base" width={width} height={baseH} />
-      </View>
-      <View style={{ position: 'absolute', left: winX, top: winY, width: win.w, height: win.h }}>
-        <AtlasSprite atlas="room" frame={night ? 'window-night' : 'window-day'} />
-        <View style={{ position: 'absolute', left: 12, top: 10, right: 12, bottom: 22, overflow: 'hidden' }}>
-          <Drift alive={alive} dx={16} dy={3} ms={5200}>
-            <AtlasSprite atlas="room" frame="cloud" />
-          </Drift>
+      <View style={{ position: 'absolute', left: origin.left, top: origin.top }}>
+        <AtlasSprite atlas="room" frame="plate" />
+        <View style={{ position: 'absolute', left: MOCKUP_ROOM.glow.x * k, top: MOCKUP_ROOM.glow.y * k }}>
+          <Flicker alive={alive} peak={0.65} ms={480}>
+            <AtlasSprite atlas="room" frame="glow" />
+          </Flicker>
         </View>
-        <View style={{ position: 'absolute', left: (win.w - plant.w) / 2, top: win.h - plant.h - 4 }}>
-          <Sway alive={alive} deg={2} ms={1800}>
-            <AtlasSprite atlas="room" frame="plant" />
-          </Sway>
+        <View style={{ position: 'absolute', left: MOCKUP_ROOM.sky.x * k, top: MOCKUP_ROOM.sky.y * k }}>
+          <Twinkle alive={alive} ms={1100}>
+            <AtlasSprite atlas="room" frame="sky" />
+          </Twinkle>
         </View>
-      </View>
-      <View style={{ position: 'absolute', ...sit(picture.w, picture.h, width * 0.62, horizon - 28) }}>
-        <AtlasSprite atlas="room" frame="picture" />
-      </View>
-      <View style={{ position: 'absolute', ...sit(shelf.w, shelf.h, width * 0.46, horizon - 4) }}>
-        <AtlasSprite atlas="room" frame="shelf" />
-      </View>
-      <View style={{ position: 'absolute', left: lampLeft, top: snapArt(floorY - lamp.h) }}>
-        <SpriteSwap atlas="room" frames={['lamp', 'lamp-hot']} alive={alive} ms={160} />
-      </View>
-      <View style={{ position: 'absolute', ...sit(pool.w, pool.h, lampCx, floorY) }}>
-        <AtlasSprite atlas="room" frame="pool" />
-      </View>
-      <View style={{ position: 'absolute', ...sit(rug.w, rug.h, width * 0.5, floorY) }}>
-        <AtlasSprite atlas="room" frame="rug" />
-      </View>
-      <View style={{ position: 'absolute', ...sit(bed.w, bed.h, bedCx, floorY) }}>
-        <AtlasSprite atlas="room" frame="bed" />
-      </View>
-      <View style={{ position: 'absolute', ...sit(bush.w, bush.h, width * 0.06, floorY) }}>
-        <Sway alive={alive} deg={2.2} ms={2000}>
-          <AtlasSprite atlas="room" frame="bush" />
-        </Sway>
-      </View>
-      <View style={{ position: 'absolute', ...sit(bowl.w, bowl.h, width * 0.16, floorY) }}>
-        <AtlasSprite atlas="room" frame="bowl" />
-        {pantry > 0 ? (
-          <View style={{ position: 'absolute', left: (bowl.w - treat.w) / 2, top: -treat.h + 4 }}>
-            <AtlasSprite atlas="room" frame="treat" />
-          </View>
-        ) : null}
-      </View>
-      <View style={{ position: 'absolute', left: 0, right: 0, top: horizon, bottom: 0 }}>
-        {[0.22, 0.4, 0.58, 0.74].map((x, i) => (
-          <Rise key={i} alive={alive} x={width * x} distance={Math.max(48, wallH * 0.35)} ms={4600 + i * 700} delay={i * 600}>
+        {MOCKUP_ROOM.motes.map((m, i) => (
+          <MoteRise key={i} alive={alive} left={m.x * k} top={m.y * k} distance={28 + i * 10} ms={3600 + i * 500} delay={i * 700}>
             <AtlasSprite atlas="room" frame="mote" />
-          </Rise>
+          </MoteRise>
         ))}
       </View>
     </View>
   );
 }
+
 
 /** God aura: a soft glow, plus a slow pulse from the effects layer (skipped
  * when Effects Quality is Off or motion is reduced). Moved from the old card. */
@@ -439,6 +362,7 @@ export function PetRoom({
   // Effects Low (Settings): auras and sparkles hold still.
   const fxFull = useFxQuality() === 'full';
   const fxAnimate = !reduceMotion && fxFull;
+  void pantry;
   useFinishLease((pet.finish_kind === 'holo' || pet.finish_kind === 'reverse') && pet.finish_color != null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const onLayout = (e: LayoutChangeEvent) =>
@@ -450,7 +374,8 @@ export function PetRoom({
   const egg = pet.stage === 'egg';
   const box = egg ? PET_ROOM_BOX.egg : sharpPetBox(PET_ROOM_BOX[pet.stage], art.cellPx, PixelRatio.get());
   const footAt = egg ? 1 : roleFootAt(art.role);
-  const floorY = height * FLOOR_AT;
+  const origin = mockupOrigin(Math.max(width, 1), Math.max(height, 1), 200);
+  const floorY = origin.top + MOCKUP_ROOM.feet * ART_PT;
   const top = floorY - footAt * box;
   const mood = petMoodKind(pet.hunger, pet.mood, night);
   const asleep = mood === 'asleep' && !egg;
@@ -603,10 +528,19 @@ export function PetRoom({
 
   return (
     <View style={styles.room} onLayout={onLayout}>
-      {width > 0 ? <RoomBackdrop width={width} height={height} night={night} pantry={pantry} alive={fxAnimate} /> : null}
+      {width > 0 ? <RoomBackdrop width={width} height={height} alive={fxAnimate} /> : null}
 
-      {/* Corner: both meters, always — and the active medal buffs (v26). */}
-      <View style={styles.corner} pointerEvents="box-none">
+      {/* Meters sit on the mockup's top panel. Clamped so a short room still shows them. */}
+      <View
+        style={[
+          styles.corner,
+          {
+            top: Math.max(4, origin.top + MOCKUP_ROOM.meters.y * ART_PT),
+            left: Math.max(4, origin.left + MOCKUP_ROOM.meters.x * ART_PT),
+            width: Math.min(MOCKUP_ROOM.meters.w * ART_PT, Math.max(120, width - 8)),
+          },
+        ]}
+        pointerEvents="box-none">
       <PixelFrame align="stretch" enter style={styles.meters}>
         <View style={styles.meterHead}>
         <View style={styles.meterMain} accessible accessibilityLabel={`Hunger ${pet.hunger} of ${PET_METER_MAX}, mood ${pet.mood} of ${PET_METER_MAX}`}>
@@ -647,7 +581,20 @@ export function PetRoom({
       </View>
 
       {/* Coach: what it needs, and the button that does it. */}
-      <PixelFrame align="stretch" enter style={styles.coach}>
+      <PixelFrame
+        align="stretch"
+        enter
+        style={[
+          styles.coach,
+          {
+            left: Math.max(4, origin.left + MOCKUP_ROOM.coach.x * ART_PT),
+            width: Math.min(MOCKUP_ROOM.coach.w * ART_PT, Math.max(120, width - 8)),
+            top: Math.min(
+              Math.max(8, height - 88),
+              Math.max(height * 0.5, origin.top + MOCKUP_ROOM.coach.y * ART_PT),
+            ),
+          },
+        ]}>
         <View style={styles.coachRow}>
           <PixelBody style={styles.coachText} numberOfLines={3}>
             {coach.tip}
@@ -756,6 +703,11 @@ export function PetRoom({
           <Animated.View style={[styles.heart, { left: box / 2 - 16, top: box * 0.22 }, heartStyle]} pointerEvents="none">
             <AtlasSprite atlas="room" frame="heart" />
           </Animated.View>
+          <View pointerEvents="none" style={{ position: 'absolute', right: -6, top: box * 0.4 }}>
+            <Twinkle alive={fxAnimate} ms={700} rest={1}>
+              <AtlasSprite atlas="room" frame="sparkle" />
+            </Twinkle>
+          </View>
           {/* Speech on top, then the status bubble — one column anchored just
               above the pet's head, wider than the pet (so nothing truncates at
               Baby size) and kept inside the room. The name sits on its own
@@ -805,8 +757,8 @@ export function PetRoom({
 }
 
 const styles = StyleSheet.create({
-  room: { flex: 1, overflow: 'hidden', backgroundColor: NEON.ink },
-  corner: { position: 'absolute', top: 8, left: 8, right: 8, alignItems: 'stretch', gap: 8 },
+  room: { flex: 1, overflow: 'hidden', backgroundColor: '#2e222f' },
+  corner: { position: 'absolute', alignItems: 'stretch', gap: 8 },
   buffChip: { alignSelf: 'flex-end' },
   plateWrap: { position: 'absolute', alignItems: 'center' },
   meters: { alignSelf: 'stretch' },
@@ -815,12 +767,7 @@ const styles = StyleSheet.create({
   meterBlock: { gap: 4 },
   meterRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   stageBadge: { flexGrow: 0 },
-  coach: {
-    position: 'absolute',
-    left: 8,
-    right: 8,
-    bottom: 8,
-  },
+  coach: { position: 'absolute' },
   coachRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   coachText: { flex: 1, textAlign: 'left' },
   coachButton: { flexGrow: 0 },

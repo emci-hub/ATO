@@ -22,7 +22,11 @@ export const PIXEL = {
   onFill: '#05070D',
 } as const;
 
-/** Loaded by `usePixelFonts`. Family names match the expo-font keys. */
+/**
+ * Label + body faces. Family names match the `usePixelFonts` keys.
+ * Switching the pair (for example to Departure Mono + Rajdhani) is this
+ * object plus the matching file in `usePixelFonts`.
+ */
 export const PIXEL_FONT = {
   label: 'Tiny5_Regular',
   body: 'Inter_400Regular',

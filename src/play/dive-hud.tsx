@@ -104,6 +104,7 @@ export function DiveTopBar({
 }) {
   return (
     <View style={styles.bar} pointerEvents="box-none">
+      <PixelFrame align="stretch" enter>
       <View style={styles.row}>
         <PixelButton label="‹ Pet" onPress={onBack} variant="muted" accessibilityLabel="Back to the Pet room" style={styles.back} />
         <View style={styles.zoneBox}>
@@ -123,6 +124,7 @@ export function DiveTopBar({
           <PixelBody color={PIXEL.amber}>{`${shells} shells`}</PixelBody>
         </View>
       </View>
+      </PixelFrame>
     </View>
   );
 }
@@ -133,16 +135,10 @@ const styles = StyleSheet.create({
   pipOn: { backgroundColor: PIXEL.cyan },
   bar: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: ART_PT * 4,
-    paddingTop: ART_PT * 4,
-    paddingBottom: ART_PT * 2,
+    top: ART_PT * 4,
+    left: ART_PT * 4,
+    right: ART_PT * 4,
     gap: ART_PT * 2,
-    backgroundColor: PIXEL.ink,
-    borderBottomWidth: ART_PT,
-    borderBottomColor: PIXEL.cyan,
   },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ART_PT * 2 },
   back: { flexGrow: 0, flexShrink: 0 },
