@@ -12,7 +12,7 @@
  * Perf: only a card with `animate` moves (the reveal, the opened card); grids
  * pass `animate={false}` so a full Collection is static.
  */
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useId, useState, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
@@ -26,7 +26,8 @@ import Animated, {
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { Fonts } from '@/constants/theme';
-import { FinishPaint } from '@/play/finish-foil';
+import { quietFoilOpacity } from '@/play/auras';
+import { FinishPlate, cardFoilOpacity, useFinishLease, windowFoilOpacity, type FoilHole } from '@/play/finish-foil';
 import { useFxQuality } from '@/play/fx-quality';
 import { NEON } from '@/play/neon-viper';
 import {
@@ -75,6 +76,8 @@ export type PetCardInfo = {
   finishKind?: 'none' | 'holo' | 'reverse' | null;
   finishColor?: string | null;
   finishLabel?: string | null;
+  /** An aura is worn: the card foil drops to its quiet level. */
+  aura?: boolean;
 };
 
 const RAINBOW = ['#FF5F6D', '#FFC371', '#F9F871', '#7CFFB2', '#5CC8FF', '#B78CFF', '#FF5FD2'];
@@ -127,6 +130,7 @@ export function PetCard({
   width = 200,
   animate = true,
   silhouette = false,
+  live = false,
 }: {
   info: PetCardInfo;
   /** The sprite element (animated or still), drawn in the art window. */
@@ -134,6 +138,8 @@ export function PetCard({
   width?: number;
   animate?: boolean;
   silhouette?: boolean;
+  /** Detail card, Dress preview, or reveal — may lease the gyro. Grids stay false. */
+  live?: boolean;
 }) {
   const height = Math.round(width * 1.4);
   // Effects Low (Settings): the card stays still.
@@ -147,6 +153,18 @@ export function PetCard({
   // Never by colour alone: stars AND the word.
   const gradeStars = small ? '★'.repeat(GRADE_STARS[grade]) : gradeTag(grade);
   const glow = !silhouette && (grade === 'rare' || grade === 'epic' || grade === 'legendary');
+  const foilOn =
+    !silhouette &&
+    !!info.finishColor &&
+    (info.finishKind === 'holo' || info.finishKind === 'reverse');
+  const foilOpacity = info.aura ? quietFoilOpacity() : null;
+  const scrimId = `scrim-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
+  const [hole, setHole] = useState<FoilHole | null>(null);
+  useFinishLease(live && foilOn);
+  const inset = border + 2;
+  const foilHole = hole
+    ? { x: hole.x - inset, y: hole.y - inset, w: hole.w, h: hole.h, r: hole.r }
+    : null;
   return (
     <View
       style={[
@@ -235,26 +253,72 @@ export function PetCard({
           <Text style={[styles.gem, { right: 4, bottom: 2 }]}>◆</Text>
         </>
       ) : null}
+      {info.finishKind === 'reverse' && info.finishColor && !silhouette ? (
+        <FinishPlate
+          colorId={info.finishColor}
+          motion={animate ? 'sweep' : 'still'}
+          reduceMotion={!animate}
+          opacity={foilOpacity ?? cardFoilOpacity()}
+          hole={foilHole}
+          style={{ top: inset, left: inset, right: inset, bottom: inset }}
+        />
+      ) : null}
 
       <View style={[styles.header, small && styles.headerSmall]}>
-        <Text style={[styles.gradeStars, { color, fontSize: small ? 9 : 13 }]}>{gradeStars}</Text>
+        <Text
+          style={[
+            styles.gradeStars,
+            { color, fontSize: small ? 9 : 13 },
+            info.finishKind === 'reverse' && styles.foilText,
+          ]}>
+          {gradeStars}
+        </Text>
         {info.shiny && !silhouette ? <Text style={{ fontSize: small ? 9 : 13 }}>✨</Text> : null}
       </View>
 
-      <View style={styles.art}>
-        {info.finishKind === 'reverse' && info.finishColor && !silhouette ? (
-          <FinishPaint
-            kind="reverse"
-            colorId={info.finishColor}
-            onShiny={info.shiny}
-            motion={animate ? 'sweep' : 'still'}
-            reduceMotion={!animate}
-          />
+      <View
+        style={foilOn ? [styles.art, styles.window, small && styles.windowSmall] : styles.art}
+        onLayout={
+          foilOn
+            ? (e) => {
+                const { x, y, width: w, height: h } = e.nativeEvent.layout;
+                const r = small ? 8 : 12;
+                setHole((prev) =>
+                  prev && prev.x === x && prev.y === y && prev.w === w && prev.h === h && prev.r === r
+                    ? prev
+                    : { x, y, w, h, r },
+                );
+              }
+            : undefined
+        }>
+        {info.finishKind === 'holo' && info.finishColor && !silhouette ? (
+          <View pointerEvents="none" style={[styles.windowClip, small && styles.windowClipSmall]}>
+            <FinishPlate
+              colorId={info.finishColor}
+              motion={animate ? 'sweep' : 'still'}
+              reduceMotion={!animate}
+              opacity={foilOpacity ?? windowFoilOpacity()}
+            />
+          </View>
         ) : null}
         {sprite}
       </View>
 
-      <Text style={[styles.name, small && styles.nameSmall]} numberOfLines={1}>
+      {info.finishKind === 'reverse' && hole && !silhouette ? (
+        <View pointerEvents="none" style={[styles.scrim, { top: hole.y + hole.h }]}>
+          <Svg width="100%" height="100%">
+            <Defs>
+              <LinearGradient id={scrimId} x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor="#05070D" stopOpacity={0.15} />
+                <Stop offset="1" stopColor="#05070D" stopOpacity={0.88} />
+              </LinearGradient>
+            </Defs>
+            <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${scrimId})`} />
+          </Svg>
+        </View>
+      ) : null}
+
+      <Text style={[styles.name, small && styles.nameSmall, info.finishKind === 'reverse' && styles.foilText]} numberOfLines={1}>
         {silhouette ? '???' : gradedName(info.grade, info.name)}
       </Text>
       {small ? (
@@ -328,6 +392,31 @@ const styles = StyleSheet.create({
   headerSmall: { paddingHorizontal: 6, paddingTop: 5 },
   gradeStars: { fontFamily: Fonts.monoBold, letterSpacing: 1 },
   art: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  /** The real art window: foil sits in here (holo) or is cut out of it (reverse). */
+  window: {
+    alignSelf: 'stretch',
+    marginHorizontal: 12,
+    marginTop: 2,
+    borderRadius: 12,
+    backgroundColor: '#070B14',
+    borderWidth: 1,
+    borderColor: 'rgba(186, 220, 255, 0.35)',
+    minHeight: 108,
+  },
+  windowSmall: { marginHorizontal: 6, borderRadius: 8, minHeight: 48 },
+  /** Foil stays inside the window. The aura may reach past it, into the card. */
+  windowClip: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+    borderRadius: 12,
+  },
+  windowClipSmall: { borderRadius: 8 },
+  scrim: { position: 'absolute', left: 0, right: 0, bottom: 0 },
+  foilText: {
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
   name: {
     fontFamily: Fonts.displayBold,
     fontSize: 15,
@@ -338,7 +427,17 @@ const styles = StyleSheet.create({
   },
   nameSmall: { fontSize: 8, letterSpacing: 0.2 },
   smallGrade: { fontFamily: Fonts.monoBold, fontSize: 7, paddingBottom: 4 },
-  meta: { fontFamily: Fonts.mono, fontSize: 10, color: NEON.textMuted, textAlign: 'center', paddingHorizontal: 8, marginTop: 2 },
+  meta: {
+    fontFamily: Fonts.mono,
+    fontSize: 10,
+    color: NEON.textMuted,
+    textAlign: 'center',
+    paddingHorizontal: 8,
+    marginTop: 2,
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
   forms: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 4, marginTop: 4, marginBottom: 10, paddingHorizontal: 8 },
   formBadge: {
     fontFamily: Fonts.mono,

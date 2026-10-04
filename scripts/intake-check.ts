@@ -200,7 +200,6 @@ async function main() {
     settings,
     you,
     readFileSync(resolve(__dirname, '../src/components/share-poster.tsx'), 'utf8'),
-    readFileSync(resolve(__dirname, '../src/components/optional-intake.tsx'), 'utf8'),
     readFileSync(resolve(__dirname, '../src/lib/vibe-check.ts'), 'utf8'),
     readFileSync(resolve(__dirname, '../src/components/axis-taps.tsx'), 'utf8'),
   ].join('\n');

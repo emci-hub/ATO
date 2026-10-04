@@ -103,14 +103,13 @@ function main() {
   assert.match(me, /born_on: string \| null/);
   ok('createMe sends born_on through complete_signup; ME stores the date');
 
-  // PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You has no Account fold any
-  // more — it is down to AI consent, sign out and delete account. The birthday
-  // editor and its 16+ re-check are untouched and still fully asserted below;
-  // what is gone is the row that mounted it.
+  // Parked 2026-09-15 (Card F), RESTORED 2026-10-04 (emci): the birthday row is
+  // back on You inside an Account fold, with its confirm-before-change flow and
+  // the 16+ re-check asserted below.
   const you = readFileSync(resolve(__dirname, '../src/app/(tabs)/you.tsx'), 'utf8');
-  assert.ok(you.indexOf('<SettingsFold title="Account">') === -1, 'the Account fold is parked off You');
-  assert.ok(you.indexOf('<BirthdayRow') === -1, 'the birthday row is parked with it');
-  ok('You has no Account fold while it is parked; the birthday editor keeps its own coverage');
+  assert.ok(you.indexOf('<SettingsFold title="Account">') >= 0, 'the Account fold is back on You');
+  assert.match(you, /<BirthdayRow me=\{me\} onUpdated=\{\(\) => refresh\(\)\} \/>/, 'the birthday row is mounted with a refresh');
+  ok('You has the Account fold with the birthday editor');
 
   const birthdayRow = readFileSync(resolve(__dirname, '../src/components/birthday-row.tsx'), 'utf8');
   const bornOnFields = readFileSync(resolve(__dirname, '../src/components/born-on-fields.tsx'), 'utf8');

@@ -5,6 +5,10 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AiConsentCard, AI_USE_DISCLOSURE } from '@/components/ai-consent-card';
+import { AppearancePicker } from '@/components/appearance-picker';
+import { BirthdayRow } from '@/components/birthday-row';
+import { CityPicker } from '@/components/city-picker';
+import { NotificationPrefsFold } from '@/components/notification-prefs-fold';
 import { DeleteAccountSheet } from '@/components/delete-account-sheet';
 import { AtoTokenCard } from '@/components/ato-token-card';
 import { IdentityCard } from '@/components/identity-card';
@@ -20,7 +24,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { DEV_PIN_AVAILABLE, useDevPinUnlocked } from '@/lib/dev-pin';
 import { useMeContext } from '@/lib/me-context';
 import { DevUnlockRow } from '@/play/dev-unlock-row';
-import { aiConsentFor, setAiConsent } from '@/lib/me';
+import { aiConsentFor, setAiConsent, setCity } from '@/lib/me';
 import { clearLocalAccountData } from '@/lib/local-account-data';
 import { supabase } from '@/lib/supabase';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
@@ -106,6 +110,18 @@ Update: ${Updates.updateId ?? 'original build'}`);
     }
   }
 
+  async function saveCity(slug: string | null) {
+    if (!me) return;
+    setError(null);
+    try {
+      await setCity(me.id, slug);
+      await refresh();
+    } catch (err) {
+      console.log('[you] setCity error:', err);
+      setError(err instanceof Error ? err.message : 'Couldn’t save your city. Try again.');
+    }
+  }
+
   async function saveAiConsent(value: boolean) {
     if (!me || consentBusy) return;
     setConsentBusy(true);
@@ -145,6 +161,27 @@ Update: ${Updates.updateId ?? 'original build'}`);
           {me ? <SageFactsCard me={me} onUpdated={refresh} /> : null}
 
           <RunningUpdateLine />
+
+          {/* Restored 2026-10-04 (emci): themes, city, birthday, notifications.
+              The share poster is not back — the identity card above already has
+              "Share my card". */}
+          <AppearancePicker />
+
+          {me ? (
+            <>
+              <CityPicker
+                value={me.city}
+                onChange={(slug) => {
+                  void saveCity(slug);
+                }}
+              />
+              <SettingsFold title="Account">
+                <BirthdayRow me={me} onUpdated={() => refresh()} />
+              </SettingsFold>
+            </>
+          ) : null}
+
+          <NotificationPrefsFold />
 
           <SettingsFold title="Sage's AI" defaultOpen>
             <View style={styles.body}>

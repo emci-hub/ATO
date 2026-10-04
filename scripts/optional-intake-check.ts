@@ -6,7 +6,7 @@
  * Does not claim the weekly Ask slot.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
@@ -35,16 +35,13 @@ assert.equal(OPTIONAL_INTAKE_TOTAL, 8);
 ok('all 8 optional screens are unanswered when every axis is null');
 
 const questionsTab = read('src/app/(tabs)/intake-sweep.tsx');
-const fillUi = read('src/components/optional-intake.tsx');
 const bandsFold = read('src/components/trait-bands-fold.tsx');
 // PARKED (ISOLATION_PLAN §7 Card D, 2026-09-15): the fill is off the Questions
 // tab. Everything below still pins the component's own behaviour, so it can be
 // remounted unchanged when the optional fill is rebuilt.
 assert.ok(questionsTab.indexOf('<OptionalIntakeFill') === -1, 'Questions must not mount OptionalIntakeFill while it is parked');
 assert.doesNotMatch(questionsTab, /from '@\/components\/optional-intake'/);
-assert.match(fillUi, /export function OptionalIntakeFill/);
-assert.match(fillUi, /<OptionalStep/);
-assert.match(fillUi, /Want to add a bit more\?/);
+assert.ok(!existsSync(resolve(root, 'src/components/optional-intake.tsx')), 'optional-intake.tsx stays deleted (2026-10-04)');
 assert.match(bandsFold, /if \(bands\.length === 0\) return null/);
 assert.doesNotMatch(bandsFold, /Want to add a bit more/);
 ok('fill-later sits on the Questions tab and still renders when every band is null');
@@ -82,13 +79,8 @@ assert.equal(
 );
 ok('attachment screen fill is a no-op when both axes already have values');
 
-assert.match(fillUi, /optionalFillWrite/);
-assert.match(fillUi, /updateTraits/);
-assert.doesNotMatch(fillUi, /recordRanking|recordScenario|recordSageKnowsCorrection/);
-assert.doesNotMatch(fillUi, /applyRankingWeek|applyScenarioWeek|applyCompletenessWeek/);
-assert.doesNotMatch(fillUi, /self_game|self_tap/);
-const fillFn = fillUi.slice(fillUi.indexOf('export function OptionalIntakeFill'));
-assert.doesNotMatch(fillFn, /claimAiCall|sage_knows|you_slot|week_slot/);
-ok('fill path uses updateTraits / optionalFillWrite; does not claim the weekly Ask slot');
+// The fill screen (optional-intake.tsx) was deleted 2026-10-04: nothing mounted
+// it since 2026-09-15. The pure logic it used (unansweredOptionalScreens,
+// optionalFillWrite, writeForOptionalScreen) lives in src/lib and stays pinned above.
 
 console.log(`\n${passed} optional-intake checks passed`);

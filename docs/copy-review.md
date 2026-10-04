@@ -229,3 +229,32 @@ The original 2-option wordings (e.g. "You need reassurance more often than you w
 - A round past the daily payout cap (2 a day): "No tokens for this one — you've earned today's two." followed by the usual standing line
 - Token explainer: "… +21 for each round of 16 after that (up to 2 a day)."
 
+## 8. The 8-ball answers (NEW — draft, `EIGHT_BALL_COPY_REVIEWED = false`)
+
+Moment voice. The toy's shape is kept: ten yes, five not sure, five no. Replaces the classic toy lines. Lives in `src/lib/sage-eight-ball.ts`.
+
+**Yes**
+- Yes. Typed, sent, no backspace.
+- Yes. The group chat already agrees.
+- Yes. It is in the calendar with a reminder.
+- Yes. The tab can finally close.
+- Definitely. Read receipt and everything.
+- Yes. "On my way," and this time it is true.
+- Yes. Battery at 100 and a charger in the bag.
+- Most likely. Thumbs up from the whole chat.
+- Yes, and no voice note needed.
+- Signs point to yes. Three dots, then a yes.
+
+**Not sure**
+- Hard to say. The typing bubble keeps coming and going.
+- Hazy. It will make more sense after the next notification.
+- Not sure yet. It is in a tab marked "for later."
+- Seen, not answered. Maybe later.
+- Cannot tell. Still buffering.
+
+**No**
+- No. That one stays in drafts.
+- No. Seen, then nothing for two days.
+- Not this time. The group chat went quiet.
+- My sources say no. Mostly the unread count.
+- Very doubtful. Even autocorrect winced.

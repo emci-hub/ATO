@@ -151,7 +151,6 @@ const home = read('src/app/(tabs)/index.tsx');
 const sage = read('src/app/(tabs)/sage.tsx');
 const widget = read('targets/widget/widgets.swift');
 const push = read('src/lib/push-copy.ts');
-const explore = read('src/components/explore-panel.tsx');
 for (const [name, source] of [
   ['poster', poster],
   ['handle', handlePage],
@@ -159,7 +158,6 @@ for (const [name, source] of [
   ['sage', sage],
   ['widget', widget],
   ['push', push],
-  ['explore', explore],
 ] as const) {
   if (name === 'sage') {
     assert.doesNotMatch(source, /FullProfileFold|How you're currently leaning/);

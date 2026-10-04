@@ -16,7 +16,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
 import { itemArtSource } from '@/play/art';
@@ -80,7 +80,11 @@ import { gradeTag, petShownName } from '@/play/pet-eggs';
 import { heartsText } from '@/play/pet-status';
 import { ScoreBurst } from '@/play/score-burst';
 import { EXPEDITION_STEPS, tripLabel } from '@/play/expedition-ladder';
+import { AURA_COLORS, AURA_HUES, AURA_VALUES, auraCustomParts, auraHueHex, auraPrice, auraStyles, auraTintLabel, type AuraTint } from '@/play/auras';
+import { swordElement } from '@/play/swords';
 import {
+  applyPetAura,
+  setPetAuraColor,
   buyCosmetic,
   dismissExpeditionNote,
   feedFromPantry,
@@ -591,7 +595,7 @@ export function HallTab({ view, eggColor }: { view: PlayView; eggColor: string }
   return <HallCards view={view} eggColor={eggColor} />;
 }
 
-const SLOT_LABEL: Record<CosmeticSlot, string> = { badge: 'Badges', tint: 'Tints', ring: 'Rings', aura: 'Auras' };
+const SLOT_LABEL: Record<CosmeticSlot, string> = { badge: 'Badges', tint: 'Tints', ring: 'Rings', aura: 'Glows' };
 
 /** Wardrobe (v22): wear / take off what you own; buy tints and badges with
  * tokens; rings and auras only come from deep dives. */
@@ -619,8 +623,125 @@ export function StyleTab({ view, commit }: { view: PlayView; commit: Commit }) {
       ) : null}
       <Text style={styles.body}>
         Tokens: {view.tokens}. Wardrobe · {pv.cosmetics.length}/{COSMETICS.length}. Tints and badges are for
-        sale; rings come from the Trench and deeper, auras from the Abyss and deeper.
+        sale; rings come from the Trench and deeper, glows from the Abyss and deeper.
       </Text>
+      <View style={styles.wardSlot}>
+        <Text style={styles.logName}>Aura</Text>
+        <Text style={styles.body}>
+          Wear any you own. Match the sword{pv.auraSlot.element ? ` (${pv.auraSlot.element})` : ''}, tap an element, or pick a hue. Colours are free.
+        </Text>
+        {auraStyles().map((row) => {
+          const wear = pv.auraSlot.worn.find((item) => item.style === row.id);
+          const owned = pv.auraSlot.free || pv.auraSlot.owned.includes(row.id);
+          const price = auraPrice(row.id, pv.auraSlot.pass);
+          const tints: AuraTint[] = ['sword', ...AURA_COLORS];
+          return (
+            <View key={row.id} style={styles.auraBlock}>
+              <View style={styles.logRow}>
+                <Text style={[styles.body, styles.flex]}>{row.name}</Text>
+                {wear ? (
+                  <NeonChip
+                    label="Take off"
+                    selected
+                    onPress={() => commit((doc, now) => applyPetAura(doc, now, pv.state.uid, row.id, false).doc)}
+                  />
+                ) : (
+                  <NeonChip
+                    label={owned || pv.auraSlot.free ? 'Wear' : `Buy · ${price}`}
+                    onPress={() => {
+                      let msg = '';
+                      commit((doc, now) => {
+                        const res = applyPetAura(doc, now, pv.state.uid, row.id, true);
+                        msg = res.result.ok
+                          ? `${row.name} is on.`
+                          : res.result.reason === 'tokens'
+                            ? 'Not enough tokens yet.'
+                            : res.result.reason === 'not_revealed'
+                              ? 'Wait until your pet is revealed.'
+                              : 'Couldn’t wear that.';
+                        return res.result.ok ? res.doc : null;
+                      });
+                      setNote(msg);
+                    }}
+                  />
+                )}
+              </View>
+              {wear ? (
+                <View style={styles.auraBlock}>
+                  <View style={styles.auraColors}>
+                    {tints.map((tint) => {
+                      const on = wear.color === tint;
+                      const hex = tint === 'sword' ? '#F4F7FF' : swordElement(tint)?.color ?? '#888';
+                      return (
+                        <Pressable
+                          key={tint}
+                          accessibilityRole="button"
+                          accessibilityLabel={`${row.name} colour ${auraTintLabel(tint)}`}
+                          accessibilityState={{ selected: on }}
+                          onPress={() => {
+                            if (on) return;
+                            commit((doc, now) => {
+                              const res = setPetAuraColor(doc, now, pv.state.uid, row.id, tint);
+                              return res.result.ok ? res.doc : null;
+                            });
+                          }}
+                          style={[styles.swatch, { backgroundColor: hex }, on && styles.swatchOn]}
+                        />
+                      );
+                    })}
+                  </View>
+                  <View style={styles.auraColors}>
+                    {AURA_HUES.map((hue) => {
+                      const parts = auraCustomParts(wear.color);
+                      const on = parts?.hue === hue;
+                      const hex = auraHueHex(hue, 1);
+                      return (
+                        <Pressable
+                          key={hue}
+                          accessibilityRole="button"
+                          accessibilityLabel={`${row.name} hue ${hue}`}
+                          accessibilityState={{ selected: on }}
+                          onPress={() => {
+                            const next = auraHueHex(hue, parts?.hue === hue ? parts.step : 1);
+                            commit((doc, now) => {
+                              const res = setPetAuraColor(doc, now, pv.state.uid, row.id, next);
+                              return res.result.ok ? res.doc : null;
+                            });
+                          }}
+                          style={[styles.swatch, { backgroundColor: hex }, on && styles.swatchOn]}
+                        />
+                      );
+                    })}
+                  </View>
+                  <View style={styles.auraColors}>
+                    {AURA_VALUES.map((_, step) => {
+                      const parts = auraCustomParts(wear.color);
+                      const hue = parts?.hue ?? 300;
+                      const hex = auraHueHex(hue, step);
+                      const on = parts?.step === step;
+                      return (
+                        <Pressable
+                          key={step}
+                          accessibilityRole="button"
+                          accessibilityLabel={`${row.name} tone ${step + 1}`}
+                          accessibilityState={{ selected: on }}
+                          onPress={() => {
+                            commit((doc, now) => {
+                              const res = setPetAuraColor(doc, now, pv.state.uid, row.id, hex);
+                              return res.result.ok ? res.doc : null;
+                            });
+                          }}
+                          style={[styles.tone, { backgroundColor: hex }, on && styles.swatchOn]}
+                        />
+                      );
+                    })}
+                  </View>
+                </View>
+              ) : null}
+            </View>
+          );
+        })}
+      </View>
       {COSMETIC_SLOTS.map((slot) => (
         <View key={slot} style={styles.wardSlot}>
           <Text style={styles.logName}>{SLOT_LABEL[slot]}</Text>
@@ -680,6 +801,11 @@ const styles = StyleSheet.create({
   logArt: { width: 28, height: 28 },
   silhouette: { opacity: 0.55 },
   wardSlot: { gap: 6, marginTop: 6 },
+  auraBlock: { gap: 6 },
+  auraColors: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  swatch: { width: 22, height: 22, borderRadius: 11, borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)' },
+  tone: { width: 36, height: 16, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)' },
+  swatchOn: { borderWidth: 2, borderColor: NEON.cyan },
   collRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   collLabel: { width: 72, textAlign: 'left' },
   collForms: { flexDirection: 'row', flex: 1, justifyContent: 'space-between' },

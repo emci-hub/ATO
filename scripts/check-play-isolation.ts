@@ -38,6 +38,7 @@ const PLAY: RegExp[] = [
   /^scripts\/check-merge-inline\.ts$/,
   /^scripts\/check-swords\.ts$/,
   /^scripts\/check-finishes\.ts$/,
+  /^scripts\/check-auras\.ts$/,
 ];
 
 const NEUTRAL: RegExp[] = [
@@ -96,22 +97,45 @@ function parsePorcelainLine(line: string): string {
   return target.replace(/\\/g, '/');
 }
 
+/** Paths this branch still changes versus the commit it is merging in. */
+function namesAgainst(rev: string): string[] {
+  return gitLines(`git diff --name-only ${rev} HEAD`).map((p) => p.replace(/\\/g, '/'));
+}
+
 function changedFiles(): string[] {
+  // A merge of upstream brings that branch's app commits and play commits in
+  // together. That is not a mixed task: judge the merge by what THIS branch
+  // still changes versus the parent being merged (MERGE_HEAD / HEAD^2).
+  const merging = gitLines('git rev-parse -q --verify MERGE_HEAD');
+  if (merging.length > 0) {
+    const changed = gitLines('git diff --name-only MERGE_HEAD').map((p) => p.replace(/\\/g, '/'));
+    const untracked = gitLines('git ls-files --others --exclude-standard').map((p) => p.replace(/\\/g, '/'));
+    return [...changed, ...untracked];
+  }
+
   // 1. The working changeset — staged + unstaged + untracked. This is what a
   //    single commit (`git add -A`) would sweep, so it is the right scope to
   //    hold to "one commit = one domain".
   const porcelain = gitLines('git status --porcelain');
   if (porcelain.length > 0) return porcelain.map(parsePorcelainLine).filter(Boolean);
 
+  const second = gitLines('git rev-parse -q --verify HEAD^2');
   // 2. Clean tree → the unpushed commits vs origin (branch names are safe to
   //    interpolate here; a missing origin ref just errors into []).
   const branch = gitLines('git rev-parse --abbrev-ref HEAD')[0];
   if (branch && branch !== 'HEAD') {
     const vsOrigin = gitLines(`git diff --name-only origin/${branch}...HEAD`);
-    if (vsOrigin.length > 0) return vsOrigin.map((p) => p.replace(/\\/g, '/'));
+    if (vsOrigin.length > 0) {
+      const originTip = gitLines(`git rev-parse -q --verify origin/${branch}`)[0];
+      const first = second.length > 0 ? gitLines('git rev-parse HEAD^1')[0] : '';
+      if (second.length > 0 && originTip && first === originTip) return namesAgainst('HEAD^2');
+      return vsOrigin.map((p) => p.replace(/\\/g, '/'));
+    }
   }
 
-  // 3. Fallback: the most recent commit.
+  // 3. Fallback: the most recent commit. A merge is compared to the branch
+  //    it merged in, so upstream files are not counted as this commit's mix.
+  if (second.length > 0) return namesAgainst('HEAD^2');
   return gitLines('git diff --name-only HEAD~1 HEAD').map((p) => p.replace(/\\/g, '/'));
 }
 

@@ -836,8 +836,8 @@ assert.doesNotMatch(pagedQuestions, /'Locked'/);
 assert.doesNotMatch(pagedQuestions, />\s*Locked\s*</);
 assert.match(pagedQuestions, />\s*Answered\s*</);
 ok('the Infinite Questions inline feed and its card stay deleted; "Next 16 questions" survives standalone; no stale per-row lock label');
-assert.match(read('src/components/explore-panel.tsx'), /claimAiCall\('explore'\)/);
-ok('own screen from You; writes self_situation; Explore tagged separately');
+assert.ok(!existsSync(resolve(__dirname, '..', 'src/components/explore-panel.tsx')), 'explore-panel.tsx stays deleted (2026-10-04)');
+ok('Explore has no panel of its own any more; Questions writes self_situation');
 
 // REMOVED 2026-09-15 (emci): the "A faster pass" full sweep (`IntakeSweep`,
 // `routeQuestionSweep`, `src/lib/questions/sweep.ts`) — the 50-question bank

@@ -64,10 +64,10 @@ const layout = fs.readFileSync(path.join(root, 'src/app/_layout.tsx'), 'utf8');
 const plan = fs.readFileSync(path.join(root, 'docs/archive/OLD_PLAN.md'), 'utf8');
 const now = fs.readFileSync(path.join(root, 'docs/NOW.md'), 'utf8');
 
-// PARKED (ISOLATION_PLAN §7 Card F, 2026-09-15): You is parked down to sign
-// out, delete account and AI consent. The component's own behaviour is still
-// covered in this file; only its You mount site is gone.
-assert.doesNotMatch(you, /AppearancePicker/);
+// Parked 2026-09-15 (Card F), RESTORED 2026-10-04 (emci: "bring those back"):
+// the picker is mounted on You again, right after the build line.
+assert.match(you, /import \{ AppearancePicker \} from '@\/components\/appearance-picker';/);
+assert.match(you, /<RunningUpdateLine \/>[\s\S]{0,400}<AppearancePicker \/>/);
 assert.match(picker, /Soft is the default/);
 assert.match(layout, /AppearanceProvider/);
 assert.match(plan, /Soft \/ Zen \/ Quest \/ Neon \/ Anime/);

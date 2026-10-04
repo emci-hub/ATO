@@ -75,7 +75,7 @@ ok('Home reads the stored insight first and only generates when the day has none
 // yet, the daily insight is a real AI touchpoint and needs consent before it
 // calls a model -- but nothing else on Home may depend on the answer.
 const CONSENT_OFF_EMPTY =
-  'AI is off, so there’s no insight today. Turn on AI in Home — the switch is just below.';
+  'AI is off, so there’s no insight today. Turn on AI in You.';
 
 assert.ok(home.includes(CONSENT_OFF_EMPTY), 'Home must show the exact consent-off empty line');
 // Declined and not-yet-asked are DIFFERENT states. Collapsing them is what

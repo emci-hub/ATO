@@ -523,9 +523,8 @@ assert.doesNotMatch(exploreUi, /PROFILE_LOCKED_CTA/);
 // it since the per-axis feed was removed, so the param was a promise it broke.
 assert.ok(exploreUi.includes("router.push('/intake-sweep')"), 'the intake-sweep link stays');
 assert.ok(!exploreUi.includes('params: { axis }'), 'no dead ?axis= param');
-assert.match(read('src/components/explore-panel.tsx'), /case 'locked':/);
-assert.match(read('src/components/explore-panel.tsx'), /PROFILE_LOCKED_CTA/);
-ok('locked-copy UI is parked on Explore; the orphaned explore-panel.tsx still has it; the intake-sweep link stays');
+assert.ok(!existsSync(resolve(__dirname, '..', 'src/components/explore-panel.tsx')), 'explore-panel.tsx stays deleted (2026-10-04)');
+ok('locked-copy UI is parked on Explore; the orphaned explore-panel.tsx is gone; the intake-sweep link stays');
 
 const cached = await routeExplore(
   {
@@ -610,26 +609,14 @@ assert.doesNotMatch(sql, /update public\.me/);
 assert.doesNotMatch(sql, /trait_sources/);
 ok('feedback table cannot write ME or traits; phrase_flag is on ai_usage');
 
-const panel = read('src/components/explore-panel.tsx');
-assert.match(panel, /logJargonGuard/);
-assert.match(panel, /logPhraseGuard/);
-assert.match(panel, /matchingJargonTerm|routeExplore/);
+// explore-panel.tsx (the old observations panel: guards, the "Noted." fade, the
+// reaction tap) was deleted 2026-10-04 — nothing imported it since 2026-09-15.
+// Its lib-level guards stay pinned here through explore/route.ts.
 assert.match(read('src/lib/explore/route.ts'), /containsFrameworkTerm/);
 assert.match(read('src/lib/explore/route.ts'), /matchingJargonTerm/);
 assert.match(read('src/lib/explore/route.ts'), /matchingPhrasePattern/);
-ok('both guards and the framework fence run before Explore is shown');
-
 assert.equal(EXPLORE_NOTED, 'Noted.');
-assert.match(panel, /EXPLORE_NOTED/);
-assert.match(panel, /withTiming/);
-const reactFn = panel.slice(
-  panel.indexOf('async function react'),
-  panel.indexOf('const message'),
-);
-assert.match(reactFn, /recordExploreReaction/);
-assert.match(reactFn, /setNoted/);
-assert.doesNotMatch(reactFn, /generateExploreBody|claimAiCall|gemini/i);
-ok('reaction tap shows a local Noted fade and does not call the model');
+ok('the Explore route runs the framework fence and both guards before anything is shown');
 
 assert.equal(EXPLORE_LABEL, 'Explore');
 assert.ok(pickExplorePackFocuses(chipsOnly, []).length >= 1);
