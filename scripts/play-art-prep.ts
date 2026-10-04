@@ -30,33 +30,10 @@ import { PNG } from 'pngjs';
 const FAMILIES = ['skins', 'kenney-ui', 'kenney-icons', 'craftpix-fields', 'craftpix-roads'] as const;
 
 /**
- * v25 (2026-09-30) — the Dive's sunken ruin: a small whitelist from the two
- * excluded packs, not the whole folders. Scribble Dungeons (Kenney, CC0) for
- * the shaft walls and props; the Shark Tide Knight's east/west stills (licence
- * approved by emci for the released app) for the faint Reef/Trench glide.
+ * The Dive sunken ruin moved into the dive atlas. The pet-games crate is the
+ * one Scribble Dungeons tile that is still drawn by key.
  */
-const EXTRA_FILES = [
-  ...[
-    'wall',
-    'wall_damaged',
-    'wall_half',
-    'wall_corner',
-    'tiles_cracked',
-    'stairs_down',
-    'chest',
-    'crate',
-    'crate_small',
-    'barrel',
-    'barrels',
-    'coffin',
-    'plants',
-    'tree',
-    'puddle',
-    'dragon',
-  ].map((f) => `tiles/scribble-dungeons/${f}.png`),
-  'primal/shark_tide_knight/Idle/rotations/east.png',
-  'primal/shark_tide_knight/Idle/rotations/west.png',
-] as const;
+const EXTRA_FILES = ['tiles/scribble-dungeons/crate.png'] as const;
 
 /**
  * A hero's `animations/` and `rotations/` PNGs — `play-art-pack.ts --all`

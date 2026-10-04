@@ -36,30 +36,27 @@ import { PixelRatio, StyleSheet, View, type LayoutChangeEvent } from 'react-nati
 import Animated, {
   Easing,
   cancelAnimation,
-  interpolate,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
   withRepeat,
   withSequence,
   withTiming,
-  Extrapolation,
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
-import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, Ellipse, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import type { DiveFxLevel } from '@/play/dive-fx-level';
 import {
+  DIVE_DEPTH_INK,
   DIVE_MAX_DEPTH,
   GLOW_COLOR,
-  RAYS_UNTIL_DEPTH,
   REVEAL_FLASH_MS,
   REVEAL_FLY_MS,
   REVEAL_HOLD_RARE_MS,
   REVEAL_RISE_MS,
+  RAYS_UNTIL_DEPTH,
   SHARK_DEPTHS,
-  SPECKS_FROM_DEPTH,
-  ZONE_BANDS,
   diveWorldCuts,
   findBoxArt,
   findGlow,
@@ -69,7 +66,8 @@ import {
   type FindGlow,
 } from '@/play/dive-fx-model';
 import { FindIcon } from '@/play/dive-hud';
-import { AbyssDragon, BOX_OPEN, FindBox, ShaftWalls, SharkGlide, SurfaceSky, WALL_W, WATERLINE, ZoneProps } from '@/play/dive-world';
+import { AbyssDragon, BOX_OPEN, Caustics, DiveWater, FindBox, LightRays, ShaftWalls, SharkGlide, SurfaceSky, WALL_W, WATERLINE, ZoneProps } from '@/play/dive-world';
+import { SpriteSwap } from '@/play/pixel-ambient';
 import { findName } from '@/play/dive-loot';
 import { PIXEL } from '@/play/pixel-theme';
 import { PixelBody, PixelFrame, PixelLabel } from '@/play/pixel-ui';
@@ -122,7 +120,19 @@ export type DiveReveal = { id: string; key: number; glow: FindGlow; slot: number
 
 /* --------------------------------------------------------------- life --- */
 
-function Bubble({ x, height, r, dur, delay }: { x: number; height: number; r: number; dur: number; delay: number }) {
+function Bubble({
+  x,
+  height,
+  dur,
+  delay,
+  alive,
+}: {
+  x: number;
+  height: number;
+  dur: number;
+  delay: number;
+  alive: boolean;
+}) {
   const t = useSharedValue(0);
   useEffect(() => {
     t.value = withDelay(delay, withRepeat(withTiming(1, { duration: dur, easing: Easing.linear }), -1));
@@ -134,12 +144,26 @@ function Bubble({ x, height, r, dur, delay }: { x: number; height: number; r: nu
   }));
   return (
     <Animated.View pointerEvents="none" style={[styles.abs, { left: x, top: 0 }, style]}>
-      <View style={{ width: r * 2, height: r * 2, borderRadius: r, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)' }} />
+      <SpriteSwap atlas="dive" frames={['bubble', 'bubble2']} alive={alive} ms={220} />
     </Animated.View>
   );
 }
 
-function Fish({ y, width, size, dur, delay, rightward }: { y: number; width: number; size: number; dur: number; delay: number; rightward: boolean }) {
+function Fish({
+  y,
+  width,
+  size,
+  dur,
+  delay,
+  rightward,
+}: {
+  y: number;
+  width: number;
+  size: number;
+  dur: number;
+  delay: number;
+  rightward: boolean;
+}) {
   const t = useSharedValue(0);
   useEffect(() => {
     t.value = withDelay(delay, withRepeat(withTiming(1, { duration: dur, easing: Easing.linear }), -1));
@@ -156,12 +180,8 @@ function Fish({ y, width, size, dur, delay, rightward }: { y: number; width: num
     };
   });
   return (
-    <Animated.View pointerEvents="none" style={[styles.abs, { top: y, left: 0, opacity: 0.22 }, style]}>
-      <Svg width={size * 2} height={size} viewBox="0 0 40 20">
-        <Path d="M4 10 Q14 1 26 10 Q14 19 4 10 Z" fill="none" stroke="#E8FBFF" strokeWidth={1.4} />
-        <Path d="M26 10 L36 3 L34 10 L36 17 Z" fill="none" stroke="#E8FBFF" strokeWidth={1.4} />
-        <Circle cx="10" cy="9" r="1.2" fill="#E8FBFF" />
-      </Svg>
+    <Animated.View pointerEvents="none" style={[styles.abs, { top: y, left: 0 }, style]}>
+      <SpriteSwap atlas="dive" frames={['fish0', 'fish2']} alive ms={180} />
     </Animated.View>
   );
 }
@@ -229,7 +249,7 @@ function SwimmingPet({
       <GradeAura grade={grade} size={box} animate={turn} trail={face === 'front' ? null : face} />
       {trail
         ? [0, 1, 2].map((i) => (
-            <Bubble key={i} x={face === 'e' ? box * 0.2 : box * 0.75} height={box * 0.6} r={1.5 + i * 0.5} dur={1400 + i * 300} delay={i * 450} />
+            <Bubble key={i} x={face === 'e' ? box * 0.2 : box * 0.75} height={box * 0.6} dur={1400 + i * 300} delay={i * 450} alive={turn} />
           ))
         : null}
       <Animated.View style={tiltStyle}>
@@ -310,7 +330,9 @@ export function DiveScene({
   const full = fxLevel === 'full' && !reduceMotion;
   const cuts = diveWorldCuts(fxLevel, reduceMotion);
   const band = Math.max(1, height * 0.9);
-  const wallSpeed = cuts.parallax ? 1.25 : 1;
+  // Far water lags, the ruins lag less. Locked together when parallax is off.
+  const bgSpeed = cuts.parallax ? 0.42 : 1;
+  const midSpeed = cuts.parallax ? 0.72 : 1;
 
   // -- Camera: one band per Deeper; after a bust it waits for the pet to
   // shoot up, then rises. Reduced motion snaps.
@@ -328,18 +350,8 @@ export function DiveScene({
   }, [cam, depth, event?.key, event?.kind, reduceMotion]);
 
   const worldStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -cam.value * band }] }));
-  const wallStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -cam.value * band * wallSpeed }] }));
-  const midStyle = useAnimatedStyle(() => {
-    if (!full || height <= 0) return { transform: [] };
-    const shift = (cam.value * band * 1.5) % height;
-    return { transform: [{ translateY: -shift }] };
-  });
-  const speckStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(cam.value, [SPECKS_FROM_DEPTH - 0.7, SPECKS_FROM_DEPTH], [0, 1], Extrapolation.CLAMP),
-  }));
-  const raysStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(cam.value, [0, RAYS_UNTIL_DEPTH], [0.9, 0], Extrapolation.CLAMP),
-  }));
+  const bgStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -cam.value * band * bgSpeed }] }));
+  const wallStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -cam.value * band * midSpeed }] }));
 
   // -- The pet: swims (walk clip) with a gentle sway; reacts to the shown %.
   const art = usePetArt(pet);
@@ -628,69 +640,33 @@ export function DiveScene({
     <Animated.View style={[styles.scene, shakeStyle]} onLayout={onLayout} accessibilityLabel={`${diveZone(depth)}, depth ${depth} of ${maxDepth}`}>
       {width > 0 ? (
         <>
-          {/* Back layer: the water column, one band per depth. */}
+          {/* Far water. Lags behind the camera when parallax is on. */}
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.abs, { left: 0, top: 0, width, height: band * (DIVE_MAX_DEPTH + 1) * bgSpeed + height }, bgStyle]}>
+            <DiveWater width={width} band={band} speed={bgSpeed} />
+            {fxLevel === 'full' ? <Caustics width={width} band={band} speed={bgSpeed} alive={full} /> : null}
+          </Animated.View>
+
+          {/* Mid ruins: lattice, arch, statue. A little faster than the water. */}
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.abs, { left: 0, top: 0, width, height: band * (DIVE_MAX_DEPTH + 1) * midSpeed + height }, wallStyle]}>
+            <ShaftWalls width={width} band={band} depth={depth} speed={midSpeed} alive={full} />
+          </Animated.View>
+
+          {/* Near seabed, coral and the abyss statue. Locked to the camera. */}
           <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0, width, height: worldH }, worldStyle]}>
-            <Svg width={width} height={worldH}>
-              <Defs>
-                {ZONE_BANDS.map((z, i) => (
-                  <LinearGradient key={i} id={`zone${i}`} x1="0" y1="0" x2="0" y2="1">
-                    <Stop offset="0" stopColor={z.top} />
-                    <Stop offset="1" stopColor={z.bottom} />
-                  </LinearGradient>
-                ))}
-              </Defs>
-              {ZONE_BANDS.map((_, i) => (
-                <Rect key={i} x={0} y={i * band} width={width} height={band + 1} fill={`url(#zone${i})`} />
-              ))}
-              <Rect x={0} y={ZONE_BANDS.length * band} width={width} height={height} fill={ZONE_BANDS[ZONE_BANDS.length - 1].bottom} />
-            </Svg>
             {cuts.dragon ? <AbyssDragon width={width} band={band} /> : null}
-            {cuts.props ? <ZoneProps width={width} band={band} depth={depth} /> : null}
+            {cuts.props ? <ZoneProps width={width} band={band} depth={depth} alive={full} /> : null}
           </Animated.View>
 
-          {/* v25: the shaft — dungeon walls down both sides, faster than the
-           * water when parallax is on. */}
-          <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0, width, height: worldH * wallSpeed }, wallStyle]}>
-            <ShaftWalls width={width} band={band} depth={depth} speed={wallSpeed} />
-          </Animated.View>
+          {/* Pack fish, in the Reef and the Trench. Cut with the shark slot. */}
+          {fxLevel === 'full' && depth <= RAYS_UNTIL_DEPTH ? <LightRays width={width} alive={full} /> : null}
 
-          {/* v25: the Shark Tide Knight, faint, in the Reef and the Trench. */}
           {cuts.shark && !atSurface && SHARK_DEPTHS.includes(depth) ? (
             <SharkGlide key={depth} width={width} height={height} rightward={depth % 2 === 1} />
           ) : null}
-
-          {/* Light rays in the sunlit water. */}
-          {fxLevel === 'full' ? (
-            <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, raysStyle]}>
-              <Svg width={width} height={height}>
-                {[0.12, 0.34, 0.58, 0.8].map((x, i) => (
-                  <Polygon
-                    key={x}
-                    points={`${width * x},0 ${width * x + 26},0 ${width * (x + 0.12) + 40},${height} ${width * (x + 0.12) - 10},${height}`}
-                    fill="#FFFFFF"
-                    fillOpacity={0.08 + (i % 2) * 0.04}
-                  />
-                ))}
-              </Svg>
-            </Animated.View>
-          ) : null}
-
-          {/* Mid layer: plankton everywhere, specks from the Abyss — moves
-           * faster than the water (parallax); still when motion is reduced. */}
-          <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0, width, height: height * 2 }, midStyle]}>
-            <Svg width={width} height={height * 2}>
-              {Array.from({ length: 28 }, (_, i) => (
-                <Circle key={i} cx={((i * 73) % 100) * (width / 100)} cy={((i * 41) % 100) * (height / 50)} r={1 + (i % 3) * 0.5} fill="#FFFFFF" fillOpacity={0.12} />
-              ))}
-            </Svg>
-            <Animated.View style={[StyleSheet.absoluteFill, speckStyle]}>
-              <Svg width={width} height={height * 2}>
-                {Array.from({ length: 36 }, (_, i) => (
-                  <Circle key={i} cx={((i * 37 + 11) % 100) * (width / 100)} cy={((i * 59 + 7) % 100) * (height / 50)} r={1.2} fill="#9FE7FF" fillOpacity={0.55} />
-                ))}
-              </Svg>
-            </Animated.View>
-          </Animated.View>
 
           {Array.from({ length: fishCount }, (_, i) => (
             <Fish
@@ -704,7 +680,7 @@ export function DiveScene({
             />
           ))}
           {Array.from({ length: bubbleCount }, (_, i) => (
-            <Bubble key={i} x={((i * 29 + 7) % 90) * (width / 100) + 8} height={height} r={2 + (i % 3)} dur={4200 + (i % 4) * 900} delay={i * 600} />
+            <Bubble key={i} x={((i * 29 + 7) % 90) * (width / 100) + 8} height={height} dur={4200 + (i % 4) * 900} delay={i * 600} alive={full} />
           ))}
 
           {/* v25: the surface — sky, sun, the rim and the waterline. */}
@@ -772,15 +748,7 @@ export function DiveScene({
 
           {/* The find on its way to the haul row, out of its crate / chest. */}
           {reveal && revealing ? (
-            <FindBox
-              art={findBoxArt(depth)}
-              x={boxX}
-              y={boxY}
-              size={FIND_BOX}
-              tint={depth >= 3 ? '#BFD4FF' : '#FFF3D6'}
-              glow={GLOW_COLOR[reveal.glow]}
-              rv={rv}
-            />
+            <FindBox art={findBoxArt(depth)} x={boxX} y={boxY} glow={GLOW_COLOR[reveal.glow]} rv={rv} />
           ) : null}
           {reveal && revealing ? (
             <Animated.View pointerEvents="none" style={[styles.abs, { left: 0, top: 0 }, revealStyle]}>
@@ -833,7 +801,7 @@ export function DiveScene({
 }
 
 const styles = StyleSheet.create({
-  scene: { flex: 1, overflow: 'hidden', backgroundColor: ZONE_BANDS[0].bottom },
+  scene: { flex: 1, overflow: 'hidden', backgroundColor: DIVE_DEPTH_INK[0] },
   abs: { position: 'absolute' },
   hurt: { backgroundColor: '#FF3B5C', opacity: 0.35, borderRadius: 999 },
   flash: { backgroundColor: '#FFFFFF' },

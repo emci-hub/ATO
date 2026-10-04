@@ -3,14 +3,26 @@
  *
  * Ink panels, a 1-art-px cyan border with the corner pixel cut out (stepped,
  * not a rounded blur), cyan primary buttons and an amber Surface button.
- * Press feedback is opacity only — nothing scales or slides, so Reduce Motion
- * stays still. Fonts load from the OFL files in assets/play/fonts.
+ * Press feedback is a short squash on the UI thread while ambient motion is
+ * on (Effects full, Reduce Motion off). Otherwise it stays an opacity press.
+ * Fonts load from the OFL files in assets/play/fonts.
  */
 import { useFonts } from 'expo-font';
 import { Image, type ImageProps } from 'expo-image';
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, Text, View, type ImageStyle, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import Animated, {
+  Easing,
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
+import { useFxQuality } from '@/play/fx-quality';
+import { usePlayReduceMotion } from '@/play/play-motion';
 import {
   ART_PT,
   PIXEL,
@@ -21,6 +33,26 @@ import {
   crispSpan,
   pixelRenderStyle,
 } from '@/play/pixel-theme';
+
+/** Scene juice and UI juice share one gate: full effects, motion allowed. */
+function useAmbientOn(): boolean {
+  const quality = useFxQuality();
+  const reduceMotion = usePlayReduceMotion();
+  return quality === 'full' && !reduceMotion;
+}
+
+function usePressSquash(enabled: boolean) {
+  const squish = useSharedValue(1);
+  const onPressIn = () => {
+    if (!enabled) return;
+    squish.value = withTiming(0.94, { duration: 70, easing: Easing.out(Easing.quad) });
+  };
+  const onPressOut = () => {
+    squish.value = withTiming(1, { duration: 120, easing: Easing.out(Easing.quad) });
+  };
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: squish.value }] }));
+  return { onPressIn, onPressOut, style };
+}
 
 export { pixelRenderStyle };
 
@@ -42,6 +74,10 @@ type FrameProps = {
   /** Stretch left-aligns panel rows; center is for buttons and nameplates. */
   align?: 'center' | 'stretch';
   minHeight?: number;
+  /** Slide up once when ambient motion is on. Holds in place when it is off. */
+  enter?: boolean;
+  /** Soft cyan glow pulse. Only runs for the primary action while motion is on. */
+  pulse?: boolean;
 };
 
 /**
@@ -56,10 +92,40 @@ export function PixelFrame({
   padded = true,
   align = 'center',
   minHeight,
+  enter = false,
+  pulse = false,
 }: FrameProps) {
+  const alive = useAmbientOn();
+  const enterT = useSharedValue(1);
+  const glow = useSharedValue(0);
+  useEffect(() => {
+    cancelAnimation(enterT);
+    if (!enter || !alive) {
+      enterT.value = 1;
+      return;
+    }
+    enterT.value = 0;
+    enterT.value = withTiming(1, { duration: 280, easing: Easing.out(Easing.cubic) });
+    return () => cancelAnimation(enterT);
+  }, [alive, enter, enterT]);
+  useEffect(() => {
+    cancelAnimation(glow);
+    glow.value = 0;
+    if (!pulse || !alive) return;
+    glow.value = withRepeat(withTiming(1, { duration: 900, easing: Easing.inOut(Easing.sin) }), -1, true);
+    return () => cancelAnimation(glow);
+  }, [alive, glow, pulse]);
+  const motion = useAnimatedStyle(() => ({
+    opacity: enterT.value,
+    transform: [{ translateY: (1 - enterT.value) * 12 }],
+    shadowColor: border,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: pulse && alive ? 0.28 + glow.value * 0.5 : 0,
+    shadowRadius: 6 + glow.value * 6,
+  }));
   const b = ART_PT;
   return (
-    <View style={[{ minHeight }, style]}>
+    <Animated.View style={[{ minHeight }, style, motion]}>
       <View
         style={{
           margin: b,
@@ -75,7 +141,7 @@ export function PixelFrame({
       <View pointerEvents="none" style={{ position: 'absolute', bottom: 0, left: b, right: b, height: b, backgroundColor: border }} />
       <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: b, bottom: b, width: b, backgroundColor: border }} />
       <View pointerEvents="none" style={{ position: 'absolute', right: 0, top: b, bottom: b, width: b, backgroundColor: border }} />
-    </View>
+    </Animated.View>
   );
 }
 
@@ -160,19 +226,34 @@ export function PixelButton({
   const fill = variant === 'amber' ? PIXEL.amber : variant === 'muted' ? PIXEL.ink : PIXEL.cyan;
   const border = variant === 'muted' ? PIXEL.muted : fill;
   const text = variant === 'muted' ? PIXEL.muted : PIXEL.onFill;
+  const alive = useAmbientOn();
+  const squash = usePressSquash(alive && !disabled);
   return (
     <Pressable
       onPress={onPress}
+      onPressIn={squash.onPressIn}
+      onPressOut={squash.onPressOut}
       disabled={disabled}
       accessibilityRole="button"
       accessibilityState={{ disabled }}
       accessibilityLabel={accessibilityLabel ?? label}
-      style={({ pressed }) => [{ minHeight: PIXEL_TAP_PT, opacity: disabled ? 0.4 : pressed ? 0.82 : 1 }, style]}>
-      <PixelFrame fill={fill} border={border} align="stretch" minHeight={PIXEL_TAP_PT} style={{ flexGrow: 1 }}>
-        <PixelLabel color={text} numberOfLines={2} style={{ textAlign: 'center', alignSelf: 'stretch' }}>
-          {label}
-        </PixelLabel>
-      </PixelFrame>
+      style={({ pressed }) => [
+        { minHeight: PIXEL_TAP_PT, opacity: disabled ? 0.4 : alive ? 1 : pressed ? 0.82 : 1 },
+        style,
+      ]}>
+      <Animated.View style={squash.style}>
+        <PixelFrame
+          fill={fill}
+          border={border}
+          align="stretch"
+          minHeight={PIXEL_TAP_PT}
+          pulse={variant === 'cyan' && !disabled}
+          style={{ flexGrow: 1 }}>
+          <PixelLabel color={text} numberOfLines={2} style={{ textAlign: 'center', alignSelf: 'stretch' }}>
+            {label}
+          </PixelLabel>
+        </PixelFrame>
+      </Animated.View>
     </Pressable>
   );
 }
@@ -192,6 +273,8 @@ export function PixelNameplate({
   style?: StyleProp<ViewStyle>;
   label?: boolean;
 }) {
+  const alive = useAmbientOn();
+  const squash = usePressSquash(!!onPress && alive);
   const plate = (
     <PixelFrame style={[{ minHeight: onPress ? PIXEL_TAP_PT : undefined }, style]}>
       {label ? (
@@ -207,10 +290,12 @@ export function PixelNameplate({
   return (
     <Pressable
       onPress={onPress}
+      onPressIn={squash.onPressIn}
+      onPressOut={squash.onPressOut}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      style={({ pressed }) => [{ minHeight: PIXEL_TAP_PT, opacity: pressed ? 0.82 : 1 }]}>
-      {plate}
+      style={({ pressed }) => [{ minHeight: PIXEL_TAP_PT, opacity: alive ? 1 : pressed ? 0.82 : 1 }]}>
+      <Animated.View style={squash.style}>{plate}</Animated.View>
     </Pressable>
   );
 }
@@ -243,6 +328,26 @@ export function PixelHeart({ filled, color }: { filled: boolean; color?: string 
   );
 }
 
+function HeartBump({ filled, color, token }: { filled: boolean; color?: string; token: number }) {
+  const scale = useSharedValue(1);
+  useEffect(() => {
+    cancelAnimation(scale);
+    if (token === 0) {
+      scale.value = 1;
+      return;
+    }
+    scale.value = 1;
+    scale.value = withSequence(withTiming(1.35, { duration: 90 }), withTiming(1, { duration: 160 }));
+    return () => cancelAnimation(scale);
+  }, [scale, token]);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return (
+    <Animated.View style={style}>
+      <PixelHeart filled={filled} color={color} />
+    </Animated.View>
+  );
+}
+
 export function PixelHearts({
   value,
   max,
@@ -252,11 +357,25 @@ export function PixelHearts({
   max: number;
   color?: string;
 }) {
+  const alive = useAmbientOn();
   const filled = Math.max(0, Math.min(max, Math.round(value)));
+  const prev = useRef(filled);
+  const [tokens, setTokens] = useState<number[]>(() => Array.from({ length: max }, () => 0));
+  useEffect(() => {
+    if (prev.current === filled) return;
+    const index = filled > prev.current ? filled - 1 : prev.current - 1;
+    prev.current = filled;
+    if (!alive || index < 0 || index >= max) return;
+    setTokens((current) => {
+      const next = current.length === max ? [...current] : Array.from({ length: max }, () => 0);
+      next[index] = (next[index] ?? 0) + 1;
+      return next;
+    });
+  }, [alive, filled, max]);
   return (
     <View style={{ flexDirection: 'row', gap: ART_PT }}>
       {Array.from({ length: max }, (_, i) => (
-        <PixelHeart key={i} filled={i < filled} color={color} />
+        <HeartBump key={i} filled={i < filled} color={color} token={alive ? (tokens[i] ?? 0) : 0} />
       ))}
     </View>
   );

@@ -1,8 +1,9 @@
 /**
  * Pet room (overhaul, 2026-09-29) — the pet lives in a room scene, never a
- * still picture (Tamagotchi / Pou / Talking Tom). Drawn in code + existing
- * art only: an SVG neon room (wall, floor grid, a window whose sky follows
- * the phone's clock, a bed and a bowl) and the existing bush prop.
+ * still picture (Tamagotchi / Pou / Talking Tom). The room is pixel art from
+ * the room atlas: plank walls, brick floor, a window whose sky follows the
+ * phone's clock, and props the pet walks to. Ambient loops (lamp, clouds,
+ * plant, motes) freeze when Reduce Motion is on or effects are low.
  *
  * The pet wanders, turns, idles, sits, sometimes shows off (its attack/skill
  * clip), sleeps at night — all decided by `planPetStep` (pet-actor.ts) from
@@ -24,7 +25,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Circle, Defs, Ellipse, Line, LinearGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle } from 'react-native-svg';
 
 import type { PetCoachTip } from '@/play/coach';
 import { quietFoilOpacity } from '@/play/auras';
@@ -60,18 +61,19 @@ import { EggShape } from '@/play/pet-figure';
 import { GlimmerGlow, GradeAura, ShinyOverlay } from '@/play/pet-looks';
 import { wornLook, type PetWear } from '@/play/pet-cosmetics';
 import { PET_STATUS_WORD, isEvolvingSoon, petStatusLabel, type PetStatus } from '@/play/pet-status';
+import { Drift, Rise, SpriteSwap, Sway } from '@/play/pixel-ambient';
+import { AtlasFill, AtlasSprite, ROOM_FRAMES, type RoomFrame } from '@/play/pixel-atlas';
 import { ART_PT, PIXEL, snapArt } from '@/play/pixel-theme';
 import {
   PixelBody,
   PixelButton,
   PixelFrame,
   PixelHearts,
-  PixelImage,
   PixelLabel,
   PixelNameplate,
 } from '@/play/pixel-ui';
 import { PET_TALK_HOLD_MS, PET_TALK_TYPE_MS } from '@/play/pet-talk';
-import { roleFootAt, skinArt } from '@/play/skin';
+import { roleFootAt } from '@/play/skin';
 
 /** Feet line, as a share of the room height. */
 const FLOOR_AT = 0.8;
@@ -151,68 +153,112 @@ export type RoomSpeech = { text: string; key: number } | null;
 
 /* ------------------------------------------------------------ backdrop --- */
 
-function RoomBackdrop({ width, height, night, pantry }: { width: number; height: number; night: boolean; pantry: number }) {
-  const horizon = height * HORIZON_AT;
-  const winX = width * 0.07;
-  const winY = height * 0.1;
-  const winW = Math.min(150, width * 0.34);
-  const winH = height * 0.24;
-  const cx = width / 2;
-  const floorLines = [0.08, 0.2, 0.36, 0.58, 0.86];
-  const rays = [-1.2, -0.7, -0.3, 0, 0.3, 0.7, 1.2];
+function propBox(frame: RoomFrame): { w: number; h: number } {
+  const rect = ROOM_FRAMES[frame];
+  return { w: rect.w * ART_PT, h: rect.h * ART_PT };
+}
+
+function sit(w: number, h: number, cx: number, bottom: number): { left: number; top: number } {
+  return { left: snapArt(cx - w / 2), top: snapArt(bottom - h) };
+}
+
+function RoomBackdrop({
+  width,
+  height,
+  night,
+  pantry,
+  alive,
+}: {
+  width: number;
+  height: number;
+  night: boolean;
+  pantry: number;
+  alive: boolean;
+}) {
+  const horizon = snapArt(height * HORIZON_AT);
+  const floorY = snapArt(height * FLOOR_AT);
+  const wallH = Math.max(ART_PT, horizon);
+  const floorH = Math.max(ART_PT, height - horizon);
+  const win = propBox('window-night');
+  const lamp = propBox('lamp');
+  const bed = propBox('bed');
+  const bowl = propBox('bowl');
+  const bush = propBox('bush');
+  const rug = propBox('rug');
+  const plant = propBox('plant');
+  const shelf = propBox('shelf');
+  const picture = propBox('picture');
+  const pool = propBox('pool');
+  const treat = propBox('treat');
+  const baseH = propBox('base').h;
+  const winX = snapArt(Math.max(ART_PT * 2, width * 0.06));
+  const winY = snapArt(Math.min(Math.max(72, height * 0.08), Math.max(ART_PT, horizon - win.h - ART_PT * 2)));
+  const bedCx = width * PET_BED_X;
+  const lampLeft = snapArt(Math.min(width - lamp.w - ART_PT * 2, Math.max(bedCx + bed.w / 2 + ART_PT * 2, width * 0.86)));
+  const lampCx = lampLeft + lamp.w / 2;
   return (
-    <Svg width={width} height={height} style={StyleSheet.absoluteFill} pointerEvents="none">
-      <Defs>
-        <LinearGradient id="roomWall" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#0C1630" />
-          <Stop offset="1" stopColor="#070B18" />
-        </LinearGradient>
-        <LinearGradient id="roomFloor" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#0B1426" />
-          <Stop offset="1" stopColor="#04070F" />
-        </LinearGradient>
-        <LinearGradient id="roomSky" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor={night ? '#070B26' : '#2E9BE0'} />
-          <Stop offset="1" stopColor={night ? '#1B1F4A' : '#A8E6FF'} />
-        </LinearGradient>
-      </Defs>
-      <Rect x={0} y={0} width={width} height={horizon} fill="url(#roomWall)" />
-      <Rect x={0} y={horizon} width={width} height={height - horizon} fill="url(#roomFloor)" />
-      {/* Neon strip along the ceiling and the skirting. */}
-      <Line x1={0} y1={2} x2={width} y2={2} stroke={NEON.pink} strokeOpacity={0.55} strokeWidth={2} />
-      <Line x1={0} y1={horizon} x2={width} y2={horizon} stroke={NEON.cyan} strokeOpacity={0.4} strokeWidth={1.5} />
-      {floorLines.map((t) => (
-        <Line
-          key={t}
-          x1={0}
-          y1={horizon + (height - horizon) * t}
-          x2={width}
-          y2={horizon + (height - horizon) * t}
-          stroke={NEON.cyan}
-          strokeOpacity={0.1}
-        />
-      ))}
-      {rays.map((r) => (
-        <Line key={r} x1={cx + r * width * 0.12} y1={horizon} x2={cx + r * width * 0.9} y2={height} stroke={NEON.cyan} strokeOpacity={0.08} />
-      ))}
-      {/* Window: the sky follows the phone's clock. */}
-      <Rect x={winX} y={winY} width={winW} height={winH} rx={8} fill="url(#roomSky)" stroke={NEON.cyanBorder} strokeWidth={2} />
-      <Line x1={winX + winW / 2} y1={winY} x2={winX + winW / 2} y2={winY + winH} stroke={NEON.cyanBorder} strokeWidth={1.5} />
-      {night ? (
-        <>
-          <Circle cx={winX + winW * 0.72} cy={winY + winH * 0.32} r={winH * 0.12} fill="#F4F1C9" />
-          <Circle cx={winX + winW * 0.2} cy={winY + winH * 0.25} r={1.4} fill="#FFFFFF" />
-          <Circle cx={winX + winW * 0.35} cy={winY + winH * 0.6} r={1.1} fill="#FFFFFF" />
-          <Circle cx={winX + winW * 0.85} cy={winY + winH * 0.7} r={1.2} fill="#FFFFFF" />
-        </>
-      ) : (
-        <Circle cx={winX + winW * 0.72} cy={winY + winH * 0.32} r={winH * 0.14} fill="#FFF3B0" />
-      )}
-      {/* Bed (where it sleeps) and the food bowl. */}
-      <Ellipse cx={width * PET_BED_X} cy={height * FLOOR_AT + 4} rx={width * 0.13} ry={12} fill={NEON.violet} fillOpacity={0.45} />
-      <Ellipse cx={width * PET_BED_X} cy={height * FLOOR_AT + 1} rx={width * 0.1} ry={7} fill={NEON.violet} fillOpacity={0.35} />
-      <Ellipse cx={width * 0.16} cy={height * FLOOR_AT + 8} rx={20} ry={7} fill={pantry > 0 ? NEON.pink : NEON.cyanDim} fillOpacity={0.7} />
-    </Svg>
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <View style={{ position: 'absolute', left: 0, top: 0, width, height: wallH, backgroundColor: '#2e222f', overflow: 'hidden' }}>
+        <AtlasFill atlas="room" frame="wall" width={width} height={wallH} />
+      </View>
+      <View style={{ position: 'absolute', left: 0, top: horizon, width, height: floorH, backgroundColor: '#2e222f', overflow: 'hidden' }}>
+        <AtlasFill atlas="room" frame="floor" width={width} height={floorH} />
+      </View>
+      <View style={{ position: 'absolute', left: 0, top: horizon - baseH / 2, width, height: baseH, overflow: 'hidden' }}>
+        <AtlasFill atlas="room" frame="base" width={width} height={baseH} />
+      </View>
+      <View style={{ position: 'absolute', left: winX, top: winY, width: win.w, height: win.h }}>
+        <AtlasSprite atlas="room" frame={night ? 'window-night' : 'window-day'} />
+        <View style={{ position: 'absolute', left: 12, top: 10, right: 12, bottom: 22, overflow: 'hidden' }}>
+          <Drift alive={alive} dx={16} dy={3} ms={5200}>
+            <AtlasSprite atlas="room" frame="cloud" />
+          </Drift>
+        </View>
+        <View style={{ position: 'absolute', left: (win.w - plant.w) / 2, top: win.h - plant.h - 4 }}>
+          <Sway alive={alive} deg={2} ms={1800}>
+            <AtlasSprite atlas="room" frame="plant" />
+          </Sway>
+        </View>
+      </View>
+      <View style={{ position: 'absolute', ...sit(picture.w, picture.h, width * 0.62, horizon - 28) }}>
+        <AtlasSprite atlas="room" frame="picture" />
+      </View>
+      <View style={{ position: 'absolute', ...sit(shelf.w, shelf.h, width * 0.46, horizon - 4) }}>
+        <AtlasSprite atlas="room" frame="shelf" />
+      </View>
+      <View style={{ position: 'absolute', left: lampLeft, top: snapArt(horizon - lamp.h) }}>
+        <SpriteSwap atlas="room" frames={['lamp', 'lamp-hot']} alive={alive} ms={160} />
+      </View>
+      <View style={{ position: 'absolute', ...sit(pool.w, pool.h, lampCx, horizon + pool.h) }}>
+        <AtlasSprite atlas="room" frame="pool" />
+      </View>
+      <View style={{ position: 'absolute', ...sit(rug.w, rug.h, width * 0.5, floorY) }}>
+        <AtlasSprite atlas="room" frame="rug" />
+      </View>
+      <View style={{ position: 'absolute', ...sit(bed.w, bed.h, bedCx, floorY) }}>
+        <AtlasSprite atlas="room" frame="bed" />
+      </View>
+      <View style={{ position: 'absolute', ...sit(bush.w, bush.h, width * 0.08, floorY) }}>
+        <Sway alive={alive} deg={2.2} ms={2000}>
+          <AtlasSprite atlas="room" frame="bush" />
+        </Sway>
+      </View>
+      <View style={{ position: 'absolute', ...sit(bowl.w, bowl.h, width * 0.2, floorY) }}>
+        <AtlasSprite atlas="room" frame="bowl" />
+        {pantry > 0 ? (
+          <View style={{ position: 'absolute', left: (bowl.w - treat.w) / 2, top: -treat.h + 4 }}>
+            <AtlasSprite atlas="room" frame="treat" />
+          </View>
+        ) : null}
+      </View>
+      <View style={{ position: 'absolute', left: 0, right: 0, top: horizon, bottom: 0 }}>
+        {[0.22, 0.4, 0.58, 0.74].map((x, i) => (
+          <Rise key={i} alive={alive} x={width * x} distance={Math.max(48, wallH * 0.35)} ms={4600 + i * 700} delay={i * 600}>
+            <AtlasSprite atlas="room" frame="mote" />
+          </Rise>
+        ))}
+      </View>
+    </View>
   );
 }
 
@@ -552,19 +598,11 @@ export function PetRoom({
 
   return (
     <View style={styles.room} onLayout={onLayout}>
-      {width > 0 ? <RoomBackdrop width={width} height={height} night={night} pantry={pantry} /> : null}
-      {width > 0 ? (
-        <View style={[styles.plant, { left: snapArt(width * 0.86 - 52), top: snapArt(floorY - 46) }]}>
-          <PixelImage source={skinArt('prop.bush')} sourceWidth={26} sourceHeight={23} />
-        </View>
-      ) : null}
-      {width > 0 && pantry > 0 ? (
-        <Text style={[styles.bowlFood, { left: width * 0.16 - 11, top: floorY - 16 }]}>🍤</Text>
-      ) : null}
+      {width > 0 ? <RoomBackdrop width={width} height={height} night={night} pantry={pantry} alive={fxAnimate} /> : null}
 
       {/* Corner: both meters, always — and the active medal buffs (v26). */}
       <View style={styles.corner} pointerEvents="box-none">
-      <PixelFrame align="stretch" style={styles.meters}>
+      <PixelFrame align="stretch" enter style={styles.meters}>
         <View style={styles.meterHead}>
         <View style={styles.meterMain} accessible accessibilityLabel={`Hunger ${pet.hunger} of ${PET_METER_MAX}, mood ${pet.mood} of ${PET_METER_MAX}`}>
         {picking ? (
@@ -604,7 +642,7 @@ export function PetRoom({
       </View>
 
       {/* Coach: what it needs, and the button that does it. */}
-      <PixelFrame align="stretch" style={styles.coach}>
+      <PixelFrame align="stretch" enter style={styles.coach}>
         <View style={styles.coachRow}>
           <PixelBody style={styles.coachText} numberOfLines={3}>
             {coach.tip}
@@ -710,9 +748,9 @@ export function PetRoom({
           {revealed && pet.shiny ? <ShinyOverlay size={box} footAt={footAt} animate={fxAnimate} style={pet.shiny_style} /> : null}
           {revealed && !pet.shiny && pet.glimmer ? <GlimmerGlow size={box} footAt={footAt} animate={fxAnimate} /> : null}
           {asleep ? <Text style={[styles.zzz, { left: box * 0.6, top: box * 0.25 }]}>💤</Text> : null}
-          <Animated.Text style={[styles.heart, { left: box / 2 - 10, top: box * 0.3 }, heartStyle]} pointerEvents="none">
-            ❤
-          </Animated.Text>
+          <Animated.View style={[styles.heart, { left: box / 2 - 16, top: box * 0.22 }, heartStyle]} pointerEvents="none">
+            <AtlasSprite atlas="room" frame="heart" />
+          </Animated.View>
           {/* Speech on top, then the status bubble — one column anchored just
               above the pet's head, wider than the pet (so nothing truncates at
               Baby size) and kept inside the room. The name sits on its own
@@ -763,8 +801,6 @@ export function PetRoom({
 
 const styles = StyleSheet.create({
   room: { flex: 1, overflow: 'hidden', backgroundColor: NEON.ink },
-  plant: { position: 'absolute' },
-  bowlFood: { position: 'absolute', fontSize: 16 },
   corner: { position: 'absolute', top: 8, left: 8, right: 8, alignItems: 'stretch', gap: 8 },
   buffChip: { alignSelf: 'flex-end' },
   plateWrap: { position: 'absolute', alignItems: 'center' },
@@ -788,7 +824,7 @@ const styles = StyleSheet.create({
   foilMat: { position: 'absolute', overflow: 'hidden' },
   ring: { position: 'absolute', height: 14, borderRadius: 999, opacity: 0.7 },
   zzz: { position: 'absolute', fontSize: 18 },
-  heart: { position: 'absolute', fontSize: 20, color: '#FF5A8A' },
+  heart: { position: 'absolute' },
   gradeRow: { alignItems: 'center', gap: 4 },
   starRow: { flexDirection: 'row', gap: ART_PT },
   eggRow: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-around' },
