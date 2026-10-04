@@ -236,17 +236,33 @@ function opaqueBox(opaque: Uint8Array, w: number, h: number) {
   return { x: minx, y: miny, w: maxx - minx + 1, h: maxy - miny + 1 };
 }
 
+/**
+ * Radii were drawn for a ~20px pet (the approved samples). Bigger sheet
+ * frames scale the same proportions, and the pad is how far the tongues reach.
+ */
+export function auraLayout(boxH: number): { scale: number; pad: number } {
+  const scale = Math.max(1, boxH / 20);
+  return { scale, pad: Math.max(16, Math.ceil(10 * scale + 4)) };
+}
+
 /** One style, every frame, from an alpha mask (0 = clear). Opaque cells are never painted. */
-export function auraFramesFromAlpha(alpha: Uint8Array, w: number, h: number, style: AuraStyle, element: string): AuraFrame[] {
+export function auraFramesFromAlpha(
+  alpha: Uint8Array,
+  w: number,
+  h: number,
+  style: AuraStyle,
+  element: string,
+): { frames: AuraFrame[]; pad: number } {
   const opaque = new Uint8Array(w * h);
   for (let i = 0; i < alpha.length; i++) if (alpha[i] >= 40) opaque[i] = 1;
   const box = opaqueBox(opaque, w, h);
-  const field = euclidField(opaque, w, h, 16);
+  const layout = auraLayout(box.h);
+  const field = euclidField(opaque, w, h, layout.pad);
   const ramp = swordRamp(element);
   const frames = auraFrameCount(style);
   const out: AuraFrame[] = [];
-  for (let frame = 0; frame < frames; frame++) out.push(paintFrame(opaque, w, h, box, field, ramp, style, frame));
-  return out;
+  for (let frame = 0; frame < frames; frame++) out.push(paintFrame(opaque, w, h, box, field, ramp, style, frame, layout.scale));
+  return { frames: out, pad: layout.pad };
 }
 
 function paintFrame(
@@ -258,12 +274,15 @@ function paintFrame(
   ramp: { core: Rgb; mid: Rgb; tip: Rgb },
   style: AuraStyle,
   frame: number,
+  scale: number,
 ): AuraFrame {
   const f = frame % (style === 'blaze' ? 8 : 6);
+  const u = (n: number) => n * scale;
+  const px = (n: number) => Math.max(1, Math.round(n * scale));
   const map = new Map<number, AuraPixel & { pri: number }>();
   const paint = (x: number, y: number, col: Rgb, pri: number) => {
     if (x >= 0 && y >= 0 && x < w && y < h && opaque[y * w + x]) return;
-    const k = ((y + 80) << 9) + (x + 80);
+    const k = (y + 2048) * 8192 + (x + 2048);
     const prev = map.get(k);
     if (prev && prev.pri > pri) return;
     map.set(k, { x, y, col, pri });
@@ -274,13 +293,16 @@ function paintFrame(
     if (X < 0 || Y < 0 || X >= field.W || Y >= field.H) return box.y;
     return field.ny[Y * field.W + X];
   };
-  const ringAt = (target: number) => {
+  const ringAt = (target: number, thick = 1) => {
     const pts: { x: number; y: number; ox: number; oy: number }[] = [];
     const cx = box.x + box.w / 2;
     const cy = box.y + box.h / 2;
+    const band = Math.max(0, (thick - 1) / 2);
     for (let Y = 0; Y < field.H; Y++) for (let X = 0; X < field.W; X++) {
       const d = field.dist[Y * field.W + X];
-      if (Math.round(d) !== target) continue;
+      if (thick <= 1) {
+        if (Math.round(d) !== Math.round(target)) continue;
+      } else if (Math.abs(d - target) > band + 0.5) continue;
       const x = X - field.pad;
       const y = Y - field.pad;
       pts.push({ x, y, ox: field.nx[Y * field.W + X], oy: field.ny[Y * field.W + X] });
@@ -291,16 +313,16 @@ function paintFrame(
   if (style === 'blaze') {
     for (let Y = 0; Y < field.H; Y++) for (let X = 0; X < field.W; X++) {
       const d = field.dist[Y * field.W + X];
-      if (d < 0.9 || d > 8) continue;
+      if (d < u(0.9) || d > u(8)) continue;
       const x = X - field.pad;
       const y = Y - field.pad;
-      if (y < box.y - 1 || y > box.y + box.h) continue;
+      if (y < box.y - u(1) || y > box.y + box.h) continue;
       const oy = nearestY(x, y);
       const t = (oy - box.y) / Math.max(1, box.h);
-      let maxR = t < 0.22 ? 2.5 : t < 0.5 ? 4.4 : 6.1;
-      if (Math.abs(x - field.nx[Y * field.W + X]) >= Math.abs(y - oy)) maxR += 0.8;
+      let maxR = t < 0.22 ? u(2.5) : t < 0.5 ? u(4.4) : u(6.1);
+      if (Math.abs(x - field.nx[Y * field.W + X]) >= Math.abs(y - oy)) maxR += u(0.8);
       if (d > maxR) continue;
-      const col = d < 1.7 ? ramp.core : d > maxR - 1.05 ? ramp.tip : ramp.mid;
+      const col = d < u(1.7) ? ramp.core : d > maxR - u(1.05) ? ramp.tip : ramp.mid;
       paint(x, y, col, 1);
     }
     const tops: { x: number; y: number }[] = [];
@@ -312,47 +334,52 @@ function paintFrame(
       }
     }
     const headY = tops.reduce((m, t) => Math.min(m, t.y), box.y + box.h);
-    const head = tops.filter((t) => t.y <= headY + 2);
+    const head = tops.filter((t) => t.y <= headY + u(2));
     const count = Math.min(5, Math.max(4, head.length));
     for (let i = 0; i < count; i++) {
       if (!head.length) break;
       const c = head[Math.round((i * (head.length - 1)) / Math.max(1, count - 1))];
       const flick = hash(i, f, 17);
       if (i === count - 1 && flick < 0.35) continue;
-      const len = 6 + (flick > 0.66 ? 2 : flick > 0.33 ? 1 : 0);
-      const drift = flick < 0.25 ? -1 : flick > 0.8 ? 1 : 0;
-      for (let s = 1; s <= len; s++) {
-        const px = c.x + (s > 2 ? drift : 0);
-        const py = c.y - s;
-        const col = s < len * 0.55 ? ramp.mid : ramp.tip;
-        paint(px, py, col, 6);
-        if (s <= 3) paint(px + (i % 2 === 0 ? 1 : -1), py, col, 6);
+      const len = u(6) + (flick > 0.66 ? u(2) : flick > 0.33 ? u(1) : 0);
+      const drift = (flick < 0.25 ? -1 : flick > 0.8 ? 1 : 0) * px(1);
+      const girth = px(1);
+      for (let step = 1; step <= len; step++) {
+        const tx = c.x + (step > u(2) ? drift : 0);
+        const ty = c.y - step;
+        const col = step < len * 0.55 ? ramp.mid : ramp.tip;
+        paint(tx, ty, col, 6);
+        if (step <= u(3)) {
+          for (let g = 1; g <= girth; g++) paint(tx + (i % 2 === 0 ? g : -g), ty, col, 6);
+        }
       }
     }
   }
+  const thick = Math.max(1, Math.round(scale * 0.45));
   if (style === 'spiky') {
-    const ring = ringAt(3);
+    const ring = ringAt(u(3), thick);
     for (const p of ring) paint(p.x, p.y, ramp.mid, 2);
+    const spine = ringAt(u(3));
     const spikes = 7;
     for (let i = 0; i < spikes; i++) {
-      const p = ring[Math.floor((i * ring.length) / spikes)];
+      const p = spine[Math.floor((i * spine.length) / spikes)];
       if (!p) continue;
       let ux = p.x - p.ox;
       let uy = p.y - p.oy;
       const len = Math.hypot(ux, uy) || 1;
       ux /= len;
       uy /= len;
-      const slen = 2 + (uy < -0.25 ? 1 : 0) + (f % 3 === i % 3 ? 1 : 0);
+      const slen = Math.round(u(2) + (uy < -0.25 ? px(1) : 0) + (f % 3 === i % 3 ? px(1) : 0));
       for (let s = 1; s <= slen; s++) {
         paint(Math.round(p.x + ux * s), Math.round(p.y + uy * s), s === slen ? ramp.tip : ramp.mid, 4);
       }
     }
   }
   if (style === 'rune') {
-    const bands = [ringAt(4), ringAt(5), ringAt(6)];
+    const bands = [ringAt(u(4)), ringAt(u(5)), ringAt(u(6))];
     const n = 7;
     const white: Rgb = [255, 255, 255];
-    const plus: [number, number][] = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
+    const arm = px(1);
     for (let i = 0; i < n; i++) {
       const ring = bands[i % 3];
       if (!ring.length) continue;
@@ -360,16 +387,19 @@ function paintFrame(
       const t = (f + i) % 6;
       if (t === 3) continue;
       const peak = t === 0;
-      for (const [dx, dy] of plus) paint(p.x + dx, p.y + dy, peak && !dx && !dy ? white : ramp.mid, peak ? 5 : 3);
+      for (let dy = -arm; dy <= arm; dy++) for (let dx = -arm; dx <= arm; dx++) {
+        if (dx !== 0 && dy !== 0) continue;
+        paint(p.x + dx, p.y + dy, peak && dx === 0 && dy === 0 ? white : ramp.mid, peak ? 5 : 3);
+      }
     }
   }
   if (style === 'bubbles') {
-    const ring = ringAt(4);
+    const ring = ringAt(u(4));
     const n = 7;
     for (let i = 0; i < n; i++) {
       if (!ring.length) break;
       const p = ring[(Math.floor((i * ring.length) / n) + f * 2) % ring.length];
-      const rad = i % 3 === 0 ? 2 : 1;
+      const rad = i % 3 === 0 ? Math.max(2, Math.round(u(2))) : px(1);
       for (let dy = -rad; dy <= rad; dy++) for (let dx = -rad; dx <= rad; dx++) {
         const m = Math.abs(dx) + Math.abs(dy);
         if (m !== rad && !(rad > 1 && m === 0)) continue;
@@ -381,7 +411,7 @@ function paintFrame(
   if (style === 'blaze') {
     for (let i = 0; i < 4; i++) {
       const x = box.x - 1 + Math.floor(hash(i, frame, 81) * (box.w + 2));
-      const y = box.y - 2 - ((frame + i * 2) % 5);
+      const y = Math.round(box.y - u(2) - ((frame + i * 2) % Math.max(5, Math.round(u(5)))));
       if (x >= 0 && y >= 0 && x < w && y < h && opaque[y * w + x]) continue;
       const stroke = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => {
         const sx = x + dx;

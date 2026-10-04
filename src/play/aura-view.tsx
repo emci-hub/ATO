@@ -22,7 +22,7 @@ import { playSheetArt, sheetFrame } from '@/play/sheet-sprite';
 import type { ClipDrawable } from '@/play/skin';
 
 const sheets = new Map<string, Promise<Rgba>>();
-const frames = new Map<string, { w: number; h: number; frames: AuraFrame[] }>();
+const frames = new Map<string, { w: number; h: number; pad: number; frames: AuraFrame[] }>();
 
 /** Walk cycles share one mask: the facing's first frame. The aura does not rebuild every step. */
 function stillFrame(sheetKey: string, frameKey: string): { frameKey: string; cacheKey: string } {
@@ -100,7 +100,7 @@ export async function loadAuraFrames(
   drawable: ClipDrawable | undefined,
   style: AuraStyle,
   element: string,
-): Promise<{ w: number; h: number; frames: AuraFrame[] } | null> {
+): Promise<{ w: number; h: number; pad: number; frames: AuraFrame[] } | null> {
   if (!drawable || drawable.kind !== 'sheet') return null;
   const still = stillFrame(drawable.sheetKey, drawable.frameKey);
   const frame = sheetFrame(drawable.sheetKey, still.frameKey);
@@ -118,7 +118,8 @@ export async function loadAuraFrames(
   const cached = frames.get(key);
   if (cached) return cached;
   const alpha = cropAlpha(rgba, rect.x, rect.y, rect.w, rect.h);
-  const packed = { w: rect.w, h: rect.h, frames: auraFramesFromAlpha(alpha, rect.w, rect.h, style, element) };
+  const built = auraFramesFromAlpha(alpha, rect.w, rect.h, style, element);
+  const packed = { w: rect.w, h: rect.h, pad: built.pad, frames: built.frames };
   frames.set(key, packed);
   return packed;
 }
@@ -153,7 +154,7 @@ export function PetAura({
   const reduceMotion = useOsReduceMotion();
   const fxFull = useFxQuality() === 'full';
   const frozen = reduceMotion || !fxFull;
-  const [pack, setPack] = useState<{ w: number; h: number; frames: AuraFrame[] } | null>(null);
+  const [pack, setPack] = useState<{ w: number; h: number; pad: number; frames: AuraFrame[] } | null>(null);
   const [tick, setTick] = useState(0);
   const stable =
     drawable?.kind === 'sheet' ? `${stillFrame(drawable.sheetKey, drawable.frameKey).cacheKey}|${styleId}|${element}` : '';
@@ -181,7 +182,7 @@ export function PetAura({
   const frame = pack.frames[frozen ? 0 : tick % pack.frames.length];
   if (!frame) return null;
   const scale = box / pack.w;
-  const pad = 16;
+  const pad = pack.pad;
   const left = -pad * scale;
   const top = -pad * scale;
   const width = (pack.w + pad * 2) * scale;

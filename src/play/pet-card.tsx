@@ -292,12 +292,14 @@ export function PetCard({
             : undefined
         }>
         {info.finishKind === 'holo' && info.finishColor && !silhouette ? (
-          <FinishPlate
-            colorId={info.finishColor}
-            motion={animate ? 'sweep' : 'still'}
-            reduceMotion={!animate}
-            opacity={foilOpacity ?? windowFoilOpacity()}
-          />
+          <View pointerEvents="none" style={[styles.windowClip, small && styles.windowClipSmall]}>
+            <FinishPlate
+              colorId={info.finishColor}
+              motion={animate ? 'sweep' : 'still'}
+              reduceMotion={!animate}
+              opacity={foilOpacity ?? windowFoilOpacity()}
+            />
+          </View>
         ) : null}
         {sprite}
       </View>
@@ -396,13 +398,19 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     marginTop: 2,
     borderRadius: 12,
-    overflow: 'hidden',
     backgroundColor: '#070B14',
     borderWidth: 1,
     borderColor: 'rgba(186, 220, 255, 0.35)',
     minHeight: 108,
   },
   windowSmall: { marginHorizontal: 6, borderRadius: 8, minHeight: 48 },
+  /** Foil stays inside the window. The aura may reach past it, into the card. */
+  windowClip: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+    borderRadius: 12,
+  },
+  windowClipSmall: { borderRadius: 8 },
   scrim: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   foilText: {
     textShadowColor: 'rgba(0, 0, 0, 0.9)',

@@ -79,7 +79,7 @@ function blob(w: number, h: number, x0: number, y0: number, bw: number, bh: numb
   const alpha = blob(w, h, 14, 11, 11, 20);
   const styles: AuraStyle[] = ['blaze', 'spiky', 'rune', 'bubbles'];
   for (const style of styles) {
-    const frames = auraFramesFromAlpha(alpha, w, h, style, 'fire');
+    const frames = auraFramesFromAlpha(alpha, w, h, style, 'fire').frames;
     assert.equal(frames.length, style === 'blaze' ? 8 : 6);
     for (const frame of frames) {
       for (const p of frame.pixels) {
@@ -91,22 +91,30 @@ function blob(w: number, h: number, x0: number, y0: number, bw: number, bh: numb
     }
     if (style !== 'blaze') assert.equal(frames[0].sparks.length, 0);
   }
-  const blaze = auraFramesFromAlpha(alpha, w, h, 'blaze', 'fire')[3];
+  const blaze = auraFramesFromAlpha(alpha, w, h, 'blaze', 'fire').frames[3];
   const ys = blaze.pixels.map((p) => p.y);
   const ratio = (Math.max(...ys) - Math.min(...ys) + 1) / 20;
   assert.ok(ratio > 1.25 && ratio < 1.6, `blaze height ${ratio}`);
-  const spiky = auraFramesFromAlpha(alpha, w, h, 'spiky', 'fire')[2];
+  const spiky = auraFramesFromAlpha(alpha, w, h, 'spiky', 'fire').frames[2];
   assert.ok(spiky.pixels.length < 120);
   assert.ok(spiky.pixels.length > 40);
-  const rune = auraFramesFromAlpha(alpha, w, h, 'rune', 'light');
+  const rune = auraFramesFromAlpha(alpha, w, h, 'rune', 'light').frames;
   assert.ok(rune[0].pixels.length <= 30);
   assert.ok(rune.some((frame) => frame.pixels.some((p) => p.col[0] === 255 && p.col[1] === 255 && p.col[2] === 255)));
   assert.ok(rune.some((frame) => frame.pixels.length < rune[0].pixels.length));
-  const bubbles = auraFramesFromAlpha(alpha, w, h, 'bubbles', 'water')[0];
+  const bubbles = auraFramesFromAlpha(alpha, w, h, 'bubbles', 'water').frames[0];
   assert.ok(bubbles.pixels.length > 10 && bubbles.pixels.length < 80);
   const head = bubbles.pixels.filter((p) => p.y < 11);
   const body = bubbles.pixels.filter((p) => p.y >= 11);
   assert.ok(body.length > head.length);
+  const tall = blob(160, 160, 40, 30, 40, 80);
+  const grown = auraFramesFromAlpha(tall, 160, 160, 'blaze', 'fire');
+  assert.ok(grown.pad > 16);
+  const grownYs = grown.frames[3].pixels.map((p) => p.y);
+  const grownRatio = (Math.max(...grownYs) - Math.min(...grownYs) + 1) / 80;
+  assert.ok(grownRatio > 1.25 && grownRatio < 1.6, `tall blaze ${grownRatio}`);
+  assert.ok(Math.min(...grownYs) < 18, 'tongues clear the head');
+  assert.ok(grown.frames[3].pixels.some((p) => p.x < 40), 'flame wider than the body');
 }
 ok('frames match the samples: filled blaze, calm spiky, twinkling rune, attached bubbles; sprite untouched');
 
