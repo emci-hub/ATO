@@ -28,6 +28,7 @@ import { Image as ExpoImage } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 import { ClipPath, Defs, G, Rect, Image as SvgImage } from 'react-native-svg';
 
+import { pixelRenderStyle } from '@/play/pixel-theme';
 import type { ClipDrawable } from '@/play/skin';
 import { sheetSpritePlacement } from '@/play/sheet-sprite-math';
 import {
@@ -181,8 +182,9 @@ export function ClipImage({ drawable, tintColor }: ClipImageProps) {
       <ExpoImage
         source={drawable.source}
         contentFit="contain"
+        transition={0}
         tintColor={tintColor}
-        style={styles.legacyFill}
+        style={{ ...styles.legacyFill, ...pixelRenderStyle }}
       />
     );
   }
@@ -198,8 +200,10 @@ export function ClipImage({ drawable, tintColor }: ClipImageProps) {
       <ExpoImage
         source={source}
         contentFit="fill"
+        transition={0}
         tintColor={tintColor}
         style={{
+          ...pixelRenderStyle,
           position: 'absolute',
           width: `${(frame.sheetW / rect.w) * 100}%`,
           height: `${(frame.sheetH / rect.h) * 100}%`,

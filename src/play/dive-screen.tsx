@@ -18,9 +18,7 @@
  * bust only (GAME_SPEC §7).
  */
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-
-import { Fonts } from '@/constants/theme';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { usePacedAction } from '@/play/action-pacing';
 import {
   DIVE_GEAR,
@@ -39,8 +37,8 @@ import { DiveTopBar } from '@/play/dive-hud';
 import { DiveScene, diveZone, type DiveReveal, type DiveSceneEvent } from '@/play/dive-scene';
 import { diveBackStep, type InnerBack } from '@/play/edge-back';
 import { ELEMENT_COLOR } from '@/play/kits';
-import { NeonLabel } from '@/play/neon-ui';
-import { NEON } from '@/play/neon-viper';
+import { PIXEL } from '@/play/pixel-theme';
+import { PixelBody, PixelButton, PixelLabel, PixelRisk, usePixelFonts, type PixelButtonVariant } from '@/play/pixel-ui';
 import { PET_BRANCH_LABEL, PET_STAGE_LABEL } from '@/play/pet';
 import { petRecolor } from '@/play/pet-looks';
 import { PlaySheet } from '@/play/play-sheet';
@@ -126,6 +124,7 @@ export function DiveScreen({
   /** v22 — Dive-gear purchases go straight through the store. */
   commit: (transition: PlayTransition) => boolean;
 }) {
+  usePixelFonts();
   const charges = view.dive.current;
   const run = view.diveRun;
   const canSpend = !run.active && charges >= 1;
@@ -287,71 +286,60 @@ export function DiveScreen({
       <View style={styles.controls}>
         {showSplash ? (
           <View style={styles.splashRow}>
-            {!reduceMotion ? <ActivityIndicator size="small" color={NEON.cyan} /> : null}
-            <Text style={styles.strong}>{splashCopy ?? 'Searching…'}</Text>
+            {!reduceMotion ? <ActivityIndicator size="small" color={PIXEL.cyan} /> : null}
+            <PixelLabel>{splashCopy ?? 'Searching…'}</PixelLabel>
           </View>
         ) : (
           <>
+            {run.active && run.bustPctNext != null ? <PixelRisk pct={run.bustPctNext} /> : null}
             {buttonRows.map((row, i) => (
               <View key={i} style={styles.buttonRow}>
                 {row.map((b) => (
-                  <Pressable
+                  <PixelButton
                     key={b.id}
-                    onPress={() => pressButton(b)}
+                    label={b.label}
+                    variant={diveButtonVariant(b)}
                     disabled={busy || !b.enabled}
-                    accessibilityRole="button"
+                    onPress={() => pressButton(b)}
                     accessibilityLabel={b.label.toLowerCase()}
-                    accessibilityState={{ disabled: busy || !b.enabled }}
-                    style={({ pressed }) => [
-                      styles.button,
-                      b.tone === 'primary' ? styles.primary : b.tone === 'secondary' ? styles.deeper : styles.muted,
-                      pressed && !busy && b.enabled && styles.pressed,
-                      busy && styles.disabled,
-                    ]}>
-                    <Text
-                      style={b.tone === 'primary' ? styles.primaryText : b.tone === 'muted' ? styles.mutedText : styles.strong}
-                      numberOfLines={2}>
-                      {b.label}
-                    </Text>
-                  </Pressable>
+                    style={styles.button}
+                  />
                 ))}
               </View>
             ))}
-            <Text style={styles.note}>{hint}</Text>
+            <PixelBody style={styles.note}>{hint}</PixelBody>
             {run.active && run.preview ? (
-              <Text style={styles.note}>
+              <PixelBody style={styles.note}>
                 Lamp: Safer holds {findName(run.preview.safe)} · Richer holds {findName(run.preview.rich)}.
-              </Text>
+              </PixelBody>
             ) : null}
-            {run.active && run.netOn && !run.free ? <Text style={styles.note}>Net: surfacing now adds one more find.</Text> : null}
+            {run.active && run.netOn && !run.free ? <PixelBody style={styles.note}>Net: surfacing now adds one more find.</PixelBody> : null}
             {/* v26: today's Power ceiling, and the buffs riding this dive. */}
-            <Text style={styles.note}>
+            <PixelBody style={styles.note}>
               Powers today: {run.powersToday}/{run.powersCap}
               {run.snack ? ` · ${BUFF_ICON.snack} Snack: −${SNACK_BUST_PP} in every %` : ''}
               {run.hearty > 0 && !run.free ? ` · ${BUFF_ICON.hearty} +1 find on surface (×${run.hearty})` : ''}
-            </Text>
+            </PixelBody>
           </>
         )}
       </View>
 
       <PlaySheet open={sheet === 'info'} title="Dive · info" onClose={() => setSheet(null)} reduceMotion={reduceMotion}>
-        <Text style={styles.body}>{diveBuddyLine(view)}</Text>
-        {view.pet.state.stage !== 'egg' ? <Text style={styles.body}>{stagePowerLine(view.pet.stagePower)}</Text> : null}
-        <Text style={styles.body}>
+        <PixelBody>{diveBuddyLine(view)}</PixelBody>
+        {view.pet.state.stage !== 'egg' ? <PixelBody>{stagePowerLine(view.pet.stagePower)}</PixelBody> : null}
+        <PixelBody>
           Charges: {chargeText(view)} · Powers today: {run.powersToday}/{run.powersCap} (each one past that becomes{' '}
           {POWER_OVERFLOW_SHELLS} shells).
-        </Text>
-        <NeonLabel>Today · one minute</NeonLabel>
+        </PixelBody>
+        <PixelLabel>Today · one minute</PixelLabel>
         {[today.td, today.pet, today.both, today.goal].map((line) => (
-          <Text key={line} style={styles.body}>
-            {line}
-          </Text>
+          <PixelBody key={line}>{line}</PixelBody>
         ))}
         <GuideView initial="dive" />
       </PlaySheet>
 
       <PlaySheet open={sheet === 'gear'} title="Dive gear" onClose={() => setSheet(null)} reduceMotion={reduceMotion}>
-        <Text style={styles.body}>Bought with shells, yours for good. You have {view.shells} shells.</Text>
+        <PixelBody>Bought with shells, yours for good. You have {view.shells} shells.</PixelBody>
         {DIVE_GEAR.map((gear) => {
           const owned = view.diveGear[gear];
           const cost = DIVE_GEAR_COST[gear];
@@ -359,34 +347,36 @@ export function DiveScreen({
           return (
             <View key={gear} style={styles.gearRow}>
               <View style={styles.flex}>
-                <Text style={styles.strong}>{DIVE_GEAR_LABEL[gear]}</Text>
-                <Text style={styles.body}>{DIVE_GEAR_BLURB[gear]}</Text>
+                <PixelLabel numberOfLines={2}>{DIVE_GEAR_LABEL[gear]}</PixelLabel>
+                <PixelBody>{DIVE_GEAR_BLURB[gear]}</PixelBody>
               </View>
               {owned ? (
-                <Text style={styles.owned}>Owned</Text>
+                <PixelLabel color={PIXEL.cyan}>Owned</PixelLabel>
               ) : run.active ? (
-                <Text style={styles.body}>After this dive</Text>
+                <PixelBody>After this dive</PixelBody>
               ) : (
-                <Pressable
+                <PixelButton
+                  label={`${cost} shells`}
                   onPress={() => buyGear(gear)}
                   disabled={!affordable}
-                  accessibilityRole="button"
-                  accessibilityState={{ disabled: !affordable }}
-                  style={({ pressed }) => [
-                    styles.buyButton,
-                    affordable ? styles.primary : styles.deeper,
-                    pressed && affordable && styles.pressed,
-                  ]}>
-                  <Text style={affordable ? styles.primaryText : styles.strong}>{cost} shells</Text>
-                </Pressable>
+                  variant={affordable ? 'cyan' : 'muted'}
+                  style={styles.buyButton}
+                />
               )}
             </View>
           );
         })}
-        {gearNote ? <Text style={styles.body}>{gearNote}</Text> : null}
+        {gearNote ? <PixelBody>{gearNote}</PixelBody> : null}
       </PlaySheet>
     </View>
   );
+}
+
+/** Surface is the amber action. Deeper and Dive stay cyan. A dead control is muted. */
+function diveButtonVariant(b: DiveButton): PixelButtonVariant {
+  if (!b.enabled || b.tone === 'muted') return 'muted';
+  if (b.id === 'surface') return 'amber';
+  return 'cyan';
 }
 
 /** "7/10" or "7/10 · +1 ~12m" — same charge line the Grove row shows. */
@@ -399,43 +389,22 @@ function chargeText(view: PlayView): string {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: NEON.ink },
+  screen: { flex: 1, backgroundColor: PIXEL.ink },
   controls: {
     paddingHorizontal: 12,
     paddingTop: 10,
     paddingBottom: 12,
     gap: 8,
-    borderTopWidth: 1,
-    borderTopColor: NEON.cyanDim,
-    backgroundColor: NEON.panel,
+    borderTopWidth: 2,
+    borderTopColor: PIXEL.cyan,
+    backgroundColor: PIXEL.ink,
   },
-  // Each row is a real row; the buttons share its width. (Before: a flex:1
-  // button placed straight in the column strip could collapse and hide its
-  // label.) Explicit min height so the text always has room.
+  // Each row is a real row; the buttons share its width.
   buttonRow: { flexDirection: 'row', gap: 8, alignSelf: 'stretch' },
-  button: {
-    flexGrow: 1,
-    flexBasis: 0,
-    minHeight: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-  },
-  muted: { backgroundColor: '#161C2A', borderWidth: 1, borderColor: 'rgba(143, 163, 191, 0.35)' },
-  mutedText: { fontFamily: Fonts.monoBold, fontSize: 13, color: '#8FA3BF', textAlign: 'center' },
-  primary: { backgroundColor: '#0E7490' },
-  deeper: { backgroundColor: '#121A2B', borderWidth: 1, borderColor: NEON.cyanBorder },
-  primaryText: { fontFamily: Fonts.monoBold, fontSize: 14, letterSpacing: 0.5, color: '#FFFFFF', textAlign: 'center' },
-  strong: { fontFamily: Fonts.monoBold, fontSize: 13, letterSpacing: 0.3, color: NEON.textPrimary, textAlign: 'center' },
-  note: { fontFamily: Fonts.mono, fontSize: 13, lineHeight: 19, color: '#C9D6E6', textAlign: 'center' },
-  body: { fontFamily: Fonts.mono, fontSize: 12, lineHeight: 18, color: NEON.textMuted },
-  owned: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.cyan },
+  button: { flexGrow: 1, flexBasis: 0, minHeight: 50 },
+  note: { textAlign: 'center' },
   gearRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  buyButton: { borderRadius: 10, paddingVertical: 8, paddingHorizontal: 12 },
+  buyButton: { flexGrow: 0 },
   splashRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14 },
-  flex: { flex: 1 },
-  pressed: { opacity: 0.8 },
-  disabled: { opacity: 0.5 },
+  flex: { flex: 1, gap: 4 },
 });

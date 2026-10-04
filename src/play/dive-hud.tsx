@@ -6,15 +6,15 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
 import type { ComponentProps } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { Fonts } from '@/constants/theme';
 import { itemArtSource } from '@/play/art';
 import { findKind } from '@/play/dive-loot';
 import { GLOW_COLOR, findGlow } from '@/play/dive-fx-model';
 import { getItemDef, type ItemSlot } from '@/play/items';
 import { ELEMENT_COLOR } from '@/play/kits';
-import { NEON } from '@/play/neon-viper';
+import { ART_PT, PIXEL, crispSpan } from '@/play/pixel-theme';
+import { PixelBody, PixelButton, PixelFrame, PixelLabel, pixelRenderStyle } from '@/play/pixel-ui';
 import { cosmeticById } from '@/play/pet-cosmetics';
 
 const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>['name']> = {
@@ -35,7 +35,7 @@ export function FindIcon({ id, size = 34, dim = false }: { id: string; size?: nu
     : cos?.itemId
       ? itemArtSource(getItemDef(cos.itemId)?.core.art ?? '')
       : undefined;
-  const inner = Math.round(size * 0.66);
+  const artBox = crispSpan(32, Math.max(ART_PT * 16, size - ART_PT * 2));
   const icon: ComponentProps<typeof MaterialCommunityIcons>['name'] =
     kind === 'food'
       ? 'fish'
@@ -49,28 +49,26 @@ export function FindIcon({ id, size = 34, dim = false }: { id: string; size?: nu
             ? SLOT_ICONS[def.core.slot]
             : 'help';
   return (
-    <View
-      style={[
-        styles.findIcon,
-        {
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          borderColor: glow,
-          shadowColor: glow,
-          opacity: dim ? 0.45 : 1,
-        },
-      ]}>
+    <PixelFrame
+      fill={PIXEL.ink}
+      border={glow}
+      padded={false}
+      style={{ width: artBox + ART_PT * 2, height: artBox + ART_PT * 2, opacity: dim ? 0.45 : 1 }}>
       {art ? (
-        <Image source={art} contentFit="contain" style={{ width: inner, height: inner }} />
+        <Image
+          source={art}
+          contentFit="fill"
+          transition={0}
+          style={{ width: artBox, height: artBox, ...pixelRenderStyle }}
+        />
       ) : (
         <MaterialCommunityIcons
           name={icon}
-          size={inner}
+          size={artBox}
           color={cos?.color ?? (cos?.element ? ELEMENT_COLOR[cos.element] : glow)}
         />
       )}
-    </View>
+    </PixelFrame>
   );
 }
 
@@ -107,79 +105,48 @@ export function DiveTopBar({
   return (
     <View style={styles.bar} pointerEvents="box-none">
       <View style={styles.row}>
-        <Pressable onPress={onBack} hitSlop={12} accessibilityRole="button" accessibilityLabel="Back to the Pet room">
-          <Text style={styles.back}>‹ Pet</Text>
-        </Pressable>
+        <PixelButton label="‹ Pet" onPress={onBack} variant="muted" accessibilityLabel="Back to the Pet room" style={styles.back} />
         <View style={styles.zoneBox}>
-          <Text style={styles.zone}>{zone}</Text>
+          <PixelLabel numberOfLines={1}>{zone}</PixelLabel>
           <DepthMeter depth={depth} max={maxDepth} />
         </View>
-        <View style={styles.actions}>
-          <Pressable onPress={onGear} hitSlop={8} accessibilityRole="button" accessibilityLabel="Dive gear" style={styles.chip}>
-            <Text style={styles.chipText}>Gear</Text>
-          </Pressable>
-          <Pressable onPress={onInfo} hitSlop={8} accessibilityRole="button" accessibilityLabel="How Dive works" style={styles.chip}>
-            <Text style={styles.chipText}>Info</Text>
-          </Pressable>
-        </View>
+      </View>
+      <View style={styles.actions}>
+        <PixelButton label="Gear" onPress={onGear} variant="muted" accessibilityLabel="Dive gear" style={styles.chip} />
+        <PixelButton label="Info" onPress={onInfo} variant="muted" accessibilityLabel="How Dive works" style={styles.chip} />
       </View>
       <View style={styles.row}>
-        <Text style={styles.stat} accessibilityLabel={`Dive charges ${charges}`}>
-          ⚡ {charges}
-        </Text>
-        <Text style={styles.shells} accessibilityLabel={`${shells} shells`}>
-          🐚 {shells}
-        </Text>
+        <View accessible accessibilityLabel={`Dive charges ${charges}`}>
+          <PixelBody color={PIXEL.text}>{charges}</PixelBody>
+        </View>
+        <View accessible accessibilityLabel={`${shells} shells`}>
+          <PixelBody color={PIXEL.amber}>{`${shells} shells`}</PixelBody>
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  findIcon: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    backgroundColor: 'rgba(5, 7, 13, 0.7)',
-    shadowOpacity: 0.9,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 4,
-  },
-  meter: { flexDirection: 'row', gap: 4, marginTop: 3 },
-  pip: { width: 10, height: 4, borderRadius: 2, backgroundColor: 'rgba(241, 251, 255, 0.25)' },
-  pipOn: { backgroundColor: NEON.cyan },
+  meter: { flexDirection: 'row', gap: ART_PT * 2, marginTop: ART_PT * 2 },
+  pip: { width: ART_PT * 4, height: ART_PT * 4, backgroundColor: '#1C2433' },
+  pipOn: { backgroundColor: PIXEL.cyan },
   bar: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    paddingBottom: 6,
-    gap: 4,
-    backgroundColor: 'rgba(3, 6, 13, 0.55)',
+    paddingHorizontal: ART_PT * 4,
+    paddingTop: ART_PT * 4,
+    paddingBottom: ART_PT * 2,
+    gap: ART_PT * 2,
+    backgroundColor: PIXEL.ink,
+    borderBottomWidth: ART_PT,
+    borderBottomColor: PIXEL.cyan,
   },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  back: { fontFamily: Fonts.monoBold, fontSize: 13, color: '#FFFFFF' },
-  zoneBox: { alignItems: 'center' },
-  zone: {
-    fontFamily: Fonts.monoBold,
-    fontSize: 13,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: '#FFFFFF',
-  },
-  actions: { flexDirection: 'row', gap: 6 },
-  chip: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: NEON.cyanBorder,
-    backgroundColor: 'rgba(5, 7, 13, 0.6)',
-  },
-  chipText: { fontFamily: Fonts.monoBold, fontSize: 11, color: NEON.cyan },
-  stat: { fontFamily: Fonts.monoBold, fontSize: 12, color: '#FFFFFF' },
-  shells: { fontFamily: Fonts.monoBold, fontSize: 12, color: '#FFE9A8' },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ART_PT * 2 },
+  back: { flexGrow: 0, flexShrink: 0 },
+  zoneBox: { alignItems: 'center', flex: 1 },
+  actions: { flexDirection: 'row', gap: ART_PT * 2 },
+  chip: { flex: 1 },
 });
