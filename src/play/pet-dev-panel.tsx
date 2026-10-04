@@ -18,6 +18,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+import { auraStyles } from '@/play/auras';
 import { finishColors } from '@/play/finishes';
 import { NeonChip } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
@@ -50,6 +51,7 @@ import {
   devPetSetStage,
   devPetStarve,
   devResetCollection,
+  devSetPetAura,
   devSetPetFinish,
   devSetPity,
   devSetStreakDay,
@@ -67,6 +69,7 @@ export const PET_DEV_GROUPS = [
   { id: 'pity', title: 'Pity & Den' },
   { id: 'room', title: 'Room · look & talk' },
   { id: 'finish', title: 'Finishes' },
+  { id: 'aura', title: 'Aura' },
 ] as const;
 export type PetDevGroupId = (typeof PET_DEV_GROUPS)[number]['id'];
 
@@ -149,6 +152,12 @@ export function PetDevPanel({
         {btn('Finish off', (doc, now) => devSetPetFinish(doc, now, pet.uid, 'none', null))}
         {finishColors().map((color) => btn(`Holo ${color.name}`, (doc, now) => devSetPetFinish(doc, now, pet.uid, 'holo', color.id)))}
         {finishColors().map((color) => btn(`Reverse ${color.name}`, (doc, now) => devSetPetFinish(doc, now, pet.uid, 'reverse', color.id)))}
+      </>
+    ),
+    aura: (
+      <>
+        {btn('Aura off', (doc, now) => devSetPetAura(doc, now, pet.uid, 'none'))}
+        {auraStyles().map((row) => btn(row.name, (doc, now) => devSetPetAura(doc, now, pet.uid, row.id)))}
       </>
     ),
   };

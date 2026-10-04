@@ -80,7 +80,9 @@ import { gradeTag, petShownName } from '@/play/pet-eggs';
 import { heartsText } from '@/play/pet-status';
 import { ScoreBurst } from '@/play/score-burst';
 import { EXPEDITION_STEPS, tripLabel } from '@/play/expedition-ladder';
+import { auraPrice, auraStyles } from '@/play/auras';
 import {
+  applyPetAura,
   buyCosmetic,
   dismissExpeditionNote,
   feedFromPantry,
@@ -591,7 +593,7 @@ export function HallTab({ view, eggColor }: { view: PlayView; eggColor: string }
   return <HallCards view={view} eggColor={eggColor} />;
 }
 
-const SLOT_LABEL: Record<CosmeticSlot, string> = { badge: 'Badges', tint: 'Tints', ring: 'Rings', aura: 'Auras' };
+const SLOT_LABEL: Record<CosmeticSlot, string> = { badge: 'Badges', tint: 'Tints', ring: 'Rings', aura: 'Glows' };
 
 /** Wardrobe (v22): wear / take off what you own; buy tints and badges with
  * tokens; rings and auras only come from deep dives. */
@@ -619,8 +621,53 @@ export function StyleTab({ view, commit }: { view: PlayView; commit: Commit }) {
       ) : null}
       <Text style={styles.body}>
         Tokens: {view.tokens}. Wardrobe · {pv.cosmetics.length}/{COSMETICS.length}. Tints and badges are for
-        sale; rings come from the Trench and deeper, auras from the Abyss and deeper.
+        sale; rings come from the Trench and deeper, glows from the Abyss and deeper.
       </Text>
+      <View style={styles.wardSlot}>
+        <Text style={styles.logName}>Aura</Text>
+        <Text style={styles.body}>
+          {pv.auraSlot.element
+            ? `A style you buy. The colour follows your sword (${pv.auraSlot.element}).`
+            : 'A style you buy. Equip a sword and the colour follows it.'}{' '}
+          The card finish stays its own look, and sits quiet while an aura is on.
+        </Text>
+        {auraStyles().map((row) => {
+          const worn = pv.auraSlot.style === row.id;
+          const owned = pv.auraSlot.free || pv.auraSlot.owned.includes(row.id);
+          const price = auraPrice(row.id, pv.auraSlot.pass);
+          return (
+            <View key={row.id} style={styles.logRow}>
+              <Text style={[styles.body, styles.flex]}>{row.name}</Text>
+              {worn ? (
+                <NeonChip
+                  label="Take off"
+                  selected
+                  onPress={() => commit((doc, now) => applyPetAura(doc, now, pv.state.uid, 'none').doc)}
+                />
+              ) : (
+                <NeonChip
+                  label={owned || pv.auraSlot.free ? 'Wear' : `Buy · ${price}`}
+                  onPress={() => {
+                    let msg = '';
+                    commit((doc, now) => {
+                      const res = applyPetAura(doc, now, pv.state.uid, row.id);
+                      msg = res.result.ok
+                        ? `${row.name} is on.`
+                        : res.result.reason === 'tokens'
+                          ? 'Not enough tokens yet.'
+                          : res.result.reason === 'not_revealed'
+                            ? 'Wait until your pet is revealed.'
+                            : 'Couldn’t wear that.';
+                      return res.result.ok ? res.doc : null;
+                    });
+                    setNote(msg);
+                  }}
+                />
+              )}
+            </View>
+          );
+        })}
+      </View>
       {COSMETIC_SLOTS.map((slot) => (
         <View key={slot} style={styles.wardSlot}>
           <Text style={styles.logName}>{SLOT_LABEL[slot]}</Text>

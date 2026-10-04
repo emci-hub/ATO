@@ -654,6 +654,7 @@ export function PetScreen({
           finishKind: pet.finish_kind,
           finishColor: pet.finish_color,
           finishLabel: finishWornLabel(pet.finish_kind, pet.finish_color),
+          aura: pet.aura_style !== 'none',
         }
       : null;
   // v26: the active medal buffs for the room corner (uses left, or Maxed aura).
@@ -684,6 +685,7 @@ export function PetScreen({
       foilMotion="sweep"
       reduceMotion={reduceMotion}
       reverseHost
+      auraElement={view.swords.equipped?.element ?? null}
     />
   );
   const babyLook = { ...pet, stage: 'baby' as const, line: pet.egg ? EGG_LINE[pet.egg] : pet.line };
@@ -756,6 +758,7 @@ export function PetScreen({
         name={shownName}
         tapKey={tapKey}
         reduceMotion={reduceMotion}
+        auraElement={view.swords.equipped?.element ?? null}
         onTapPet={tapPet}
         onCoach={pressCoach}
         recolor={recolor}

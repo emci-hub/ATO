@@ -17,7 +17,8 @@ import { getItemDef } from '@/play/items';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { PET_BRANCH_TINT, PET_STAGE_SCALE, petLookFor, type PetLook, type PetState } from '@/play/pet';
 import { NO_WEAR, wornLook, type PetWear } from '@/play/pet-cosmetics';
-import { FinishSheen } from '@/play/finish-foil';
+import { PetAura } from '@/play/aura-view';
+import { auraConfig, type AuraStyle } from '@/play/auras';
 import type { FinishKind, FinishMotion } from '@/play/finishes';
 import { ClipImage } from '@/play/sheet-sprite';
 import {
@@ -75,6 +76,7 @@ export function PetFigure({
   foilMotion = 'still',
   reduceMotion = false,
   reverseHost = false,
+  auraElement = null,
 }: {
   pet: PetState;
   baseBox: number;
@@ -98,6 +100,8 @@ export function PetFigure({
   reduceMotion?: boolean;
   /** The card or the room draws reverse holo. The sprite itself stays plain. */
   reverseHost?: boolean;
+  /** Equipped sword element. The aura colour follows it. */
+  auraElement?: string | null;
 }) {
   const box = boxOverride ?? petBoxSize(pet, baseBox);
   // The card and the room own reverse holo. This flag stays so those callers
@@ -116,17 +120,26 @@ export function PetFigure({
   const tint = lockColour ? null : (look.tint ?? PET_BRANCH_TINT[pet.branch]);
   const badgeArt = look.badgeItemId ? itemArtSource(getItemDef(look.badgeItemId)?.core.art ?? '') : undefined;
   const badge = Math.max(14, Math.round(box * 0.3));
-  const worn = finish ?? { kind: pet.finish_kind, color: pet.finish_color };
-  const showHolo = foilMotion !== 'off' && worn.color != null && worn.kind === 'holo';
+  // Finishes paint the card, never the sprite. The props stay so callers can
+  // still say which finish the card is showing.
+  void finish;
+  void foilMotion;
+  void reduceMotion;
+  const auraStyle: AuraStyle | 'none' = pet.aura_style;
+  const auraOn = auraStyle !== 'none';
+  const sword = auraElement || auraConfig().fallback_element;
   return (
     <View style={{ width: box, height: box }}>
+      {auraOn ? (
+        <PetAura drawable={drawable} styleId={auraStyle} element={sword} box={box} layer="back" />
+      ) : null}
       {look.aura ? (
         <Svg width={box * 1.5} height={box * 1.5} viewBox="0 0 100 100" style={[styles.aura, { left: -box * 0.25, top: -box * 0.25 }]} pointerEvents="none">
           <Circle cx="50" cy="50" r="48" fill={ELEMENT_COLOR[look.aura]} fillOpacity={0.1} />
           <Circle cx="50" cy="50" r="38" fill={ELEMENT_COLOR[look.aura]} fillOpacity={0.14} />
         </Svg>
       ) : null}
-      <View style={[StyleSheet.absoluteFill, (recolor && blend) || showHolo ? styles.isolate : null]}>
+      <View style={[StyleSheet.absoluteFill, recolor && blend ? styles.isolate : null]}>
       <ClipImage drawable={drawable} />
       {recolor ? (
         <View
@@ -140,16 +153,10 @@ export function PetFigure({
           <ClipImage drawable={drawable} tintColor={tint} />
         </View>
       ) : null}
-      {showHolo && worn.color ? (
-        <FinishSheen
-          colorId={worn.color}
-          drawable={drawable}
-          onShiny={pet.shiny}
-          motion={foilMotion}
-          reduceMotion={reduceMotion}
-        />
-      ) : null}
       </View>
+      {auraOn ? (
+        <PetAura drawable={drawable} styleId={auraStyle} element={sword} box={box} layer="front" />
+      ) : null}
       {badgeArt ? (
         <Image
           source={badgeArt}

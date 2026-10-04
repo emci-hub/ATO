@@ -26,6 +26,7 @@ import Animated, {
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { Fonts } from '@/constants/theme';
+import { quietFoilOpacity } from '@/play/auras';
 import { FinishPlate, cardFoilOpacity, useFinishLease, windowFoilOpacity, type FoilHole } from '@/play/finish-foil';
 import { useFxQuality } from '@/play/fx-quality';
 import { NEON } from '@/play/neon-viper';
@@ -75,6 +76,8 @@ export type PetCardInfo = {
   finishKind?: 'none' | 'holo' | 'reverse' | null;
   finishColor?: string | null;
   finishLabel?: string | null;
+  /** An aura is worn: the card foil drops to its quiet level. */
+  aura?: boolean;
 };
 
 const RAINBOW = ['#FF5F6D', '#FFC371', '#F9F871', '#7CFFB2', '#5CC8FF', '#B78CFF', '#FF5FD2'];
@@ -154,6 +157,7 @@ export function PetCard({
     !silhouette &&
     !!info.finishColor &&
     (info.finishKind === 'holo' || info.finishKind === 'reverse');
+  const foilOpacity = info.aura ? quietFoilOpacity() : null;
   const scrimId = `scrim-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const [hole, setHole] = useState<FoilHole | null>(null);
   useFinishLease(live && foilOn);
@@ -254,7 +258,7 @@ export function PetCard({
           colorId={info.finishColor}
           motion={animate ? 'sweep' : 'still'}
           reduceMotion={!animate}
-          opacity={cardFoilOpacity()}
+          opacity={foilOpacity ?? cardFoilOpacity()}
           hole={foilHole}
           style={{ top: inset, left: inset, right: inset, bottom: inset }}
         />
@@ -292,7 +296,7 @@ export function PetCard({
             colorId={info.finishColor}
             motion={animate ? 'sweep' : 'still'}
             reduceMotion={!animate}
-            opacity={windowFoilOpacity()}
+            opacity={foilOpacity ?? windowFoilOpacity()}
           />
         ) : null}
         {sprite}

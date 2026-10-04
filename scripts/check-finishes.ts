@@ -314,7 +314,7 @@ ok('wearing a finish does not roll a shiny; an egg refuses; the dev kit does not
   legacy.tokens = 77;
   const loaded = parsePlayStore(JSON.stringify(legacy), T0);
   assert.ok(loaded);
-  assert.equal(loaded.version, 30);
+  assert.equal(loaded.version, 31);
   assert.equal(loaded.tokens, 77);
   assert.deepEqual(loaded.finish_wallet, emptyFinishWallet());
   assert.equal(loaded.pet.finish_kind, 'none');
@@ -334,7 +334,7 @@ ok('wearing a finish does not roll a shiny; an egg refuses; the dev kit does not
   assert.equal(worn.result.ok, true);
   const round = parsePlayStore(JSON.stringify(worn.doc), T0);
   assert.ok(round);
-  assert.equal(round.version, 30);
+  assert.equal(round.version, 31);
   assert.equal(round.pet.finish_kind, 'reverse');
   assert.equal(round.pet.finish_color, 'limewake');
   assert.equal(round.finish_wallet.reverse, true);
@@ -355,9 +355,9 @@ ok('wearing a finish does not roll a shiny; an egg refuses; the dev kit does not
   assert.equal(dropped.pet.finish_kind, 'none');
   assert.equal(dropped.pet.finish_color, null);
   assert.deepEqual(dropped.finish_wallet.colors, ['moonpearl']);
-  assert.equal(parsePlayStore(JSON.stringify({ ...fresh, version: 31 }), T0), null);
+  assert.equal(parsePlayStore(JSON.stringify({ ...fresh, version: 32 }), T0), null);
 }
-ok('a v29 save becomes v30 with no finish; a real finish round-trips; version 31 does not load');
+ok('a v29 save becomes v31 with no finish; a real finish round-trips; version 32 does not load');
 
 /* -------------------------------------------------------------- 6. paint --- */
 
@@ -387,9 +387,12 @@ ok('a v29 save becomes v30 with no finish; a real finish round-trips; version 31
   assert.equal(finishSweepRuns({ motion: 'sweep', reduceMotion: false, osReduceMotion: false, fxFull: false }), false);
 
   const foil = read('src/play/finish-foil.tsx');
-  for (const needle of ['finishSweepRuns', 'useFxQuality', 'isReduceMotionEnabled', 'sheetSpritePlacement', 'maskType', 'overlay']) {
+  for (const needle of ['finishSweepRuns', 'useFxQuality', 'isReduceMotionEnabled']) {
     assert.ok(foil.includes(needle), needle);
   }
+  assert.ok(!foil.includes('FinishSheen'), 'sprite sheen');
+  assert.ok(!foil.includes('maskType'), 'sprite mask');
+  assert.ok(!read('src/play/pet-figure.tsx').includes('FinishSheen'));
   assert.ok(!foil.includes('color-dodge'), 'color-dodge');
   assert.ok(!/offset=\{withTiming/.test(foil));
   const motion = read('src/play/finish-motion.tsx');

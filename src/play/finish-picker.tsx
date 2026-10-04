@@ -118,7 +118,7 @@ export function FinishPicker({
     <View style={styles.wrap}>
       <NeonLabel>Finish</NeonLabel>
       <Text style={styles.body}>
-        A look you pick. Holo foils the art window behind the pet, with a light sheen on the sprite. Reverse holo foils
+        A look you pick. Holo foils the art window behind the pet. Reverse holo foils
         the rest of the card, and the pet stays plain. Never rolled, so the egg odds stay the odds you see. Classic is
         still the only shiny you earn.
         {access.free ? ' Unlocked while everything is free.' : access.pass ? ' Tide Pass discount is on.' : ''}
@@ -175,6 +175,7 @@ export function FinishPicker({
             finishKind: kind,
             finishColor: kind === 'none' ? null : colorId,
             finishLabel: kind === 'none' ? null : finishWornLabel(kind, colorId),
+            aura: pet.aura_style !== 'none',
           }}
           sprite={
             <PetFigure
@@ -189,6 +190,7 @@ export function FinishPicker({
               foilMotion="sweep"
               reduceMotion={reduceMotion}
               reverseHost
+              auraElement={view.swords.equipped?.element ?? null}
             />
           }
         />

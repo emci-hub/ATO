@@ -356,7 +356,7 @@ const v19: Record<string, unknown> = { ...defaultPlayStore(T0), version: 19 };
 for (const k of ['pet', 'pet_hall', 'pet_rebirths', 'pet_tokens_today', 'pet_tokens_ymd', 'pet_remind']) delete v19[k];
 const loaded = parsePlayStore(JSON.stringify(v19), T0 + 5 * H);
 assert.ok(loaded, 'a v19 save loads');
-assert.equal(loaded.version, 30);
+assert.equal(loaded.version, 31);
 assert.equal(loaded.pet.stage, 'egg', 'old saves get a fresh egg');
 assert.equal(loaded.pet.egg, null, '— the egg picker');
 assert.equal(loaded.pet.seen_at, T0 + 5 * H, 'seen now — no time before the update counts');
@@ -610,7 +610,7 @@ ok('away: pounce, bust cut and rescue all off (view and roll), dives not its car
   for (const k of ['pet_expedition', 'pet_expedition_ymd', 'pet_expedition_note', 'pet_logbook']) delete v20[k];
   delete (v20.pet as Record<string, unknown>).deep_surfaces;
   const up = parsePlayStore(JSON.stringify(v20), T0)!;
-  assert.equal(up.version, 30);
+  assert.equal(up.version, 31);
   assert.deepEqual(
     [up.pet_expedition, up.pet_expedition_ymd, up.pet_expedition_note, up.pet_logbook, up.pet.deep_surfaces],
     [null, null, null, {}, 0],

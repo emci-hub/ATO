@@ -29,6 +29,7 @@ import Svg, { Circle, Defs, Ellipse, Line, LinearGradient, Rect, Stop } from 're
 
 import { Fonts } from '@/constants/theme';
 import type { PetCoachTip } from '@/play/coach';
+import { quietFoilOpacity } from '@/play/auras';
 import { FinishPlate, cardFoilOpacity, useFinishLease, windowFoilOpacity } from '@/play/finish-foil';
 import { FxLayer, FX_ULTIMATE_LIFE_MS, type FxEvent } from '@/play/fx-layer';
 import { useFxQuality } from '@/play/fx-quality';
@@ -308,6 +309,7 @@ export function PetRoom({
   name = null,
   buffs = [],
   maxedAura = false,
+  auraElement = null,
 }: {
   pet: PetState;
   wear: PetWear;
@@ -340,6 +342,8 @@ export function PetRoom({
   buffs?: readonly { key: string; text: string; a11y: string }[];
   /** v26 — Pumped is a "Maxed aura": a gold glow behind the pet. */
   maxedAura?: boolean;
+  /** Equipped sword element. The pet aura colour follows it. */
+  auraElement?: string | null;
 }) {
   // Effects Low (Settings): auras and sparkles hold still.
   const fxFull = useFxQuality() === 'full';
@@ -616,7 +620,13 @@ export function PetRoom({
                 colorId={pet.finish_color}
                 motion="sweep"
                 reduceMotion={reduceMotion}
-                opacity={pet.finish_kind === 'reverse' ? cardFoilOpacity() : windowFoilOpacity()}
+                opacity={
+                  pet.aura_style !== 'none'
+                    ? quietFoilOpacity()
+                    : pet.finish_kind === 'reverse'
+                      ? cardFoilOpacity()
+                      : windowFoilOpacity()
+                }
               />
             </View>
           ) : null}
@@ -643,6 +653,7 @@ export function PetRoom({
                 foilMotion="sweep"
                 reduceMotion={reduceMotion}
                 reverseHost
+                auraElement={auraElement}
               />
             </Animated.View>
           </Pressable>

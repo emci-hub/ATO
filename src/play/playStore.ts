@@ -193,6 +193,13 @@ import {
   type FinishWallet,
 } from '@/play/finishes';
 import {
+  parseAuraOwned,
+  parseAuraStyle,
+  planAuraWear,
+  type AuraRefusal,
+  type AuraStyle,
+} from '@/play/auras';
+import {
   DEN_MAX_SLOTS,
   DEN_START_SLOTS,
   clampDenSlots,
@@ -831,7 +838,7 @@ function addBossFragments(
 }
 
 export type PlayStoreDoc = {
-  version: 30;
+  version: 31;
   tokens: number;
   /** Whole charges as of `dive_charge_at` (0–10). Timer pauses at cap. */
   dive_charge: number;
@@ -992,6 +999,8 @@ export type PlayStoreDoc = {
   sword_bag: SwordBag;
   /** v30 — holo / reverse-holo unlocks. Old saves own none. */
   finish_wallet: FinishWallet;
+  /** v31 — aura styles this save has bought. The colour is the equipped sword. */
+  aura_owned: AuraStyle[];
 };
 
 /** A queued "hero owned" offer (Slice A2). `label` is the hero's display name
@@ -1225,6 +1234,8 @@ export type PetView = {
   streak: { next: number; last: number | null; ymd: string | null; claimedToday: boolean };
   /** v30 — finishes this save can wear. `free` is the pre-launch unlock. */
   finish: { wallet: FinishWallet; pass: boolean; free: boolean };
+  /** v31 — the aura slot. `element` is the equipped sword, or null. */
+  auraSlot: { style: AuraStyle | 'none'; owned: readonly AuraStyle[]; element: string | null; pass: boolean; free: boolean };
 };
 
 /** Raw mult sums per stat from the four equipped items (before soft-cap). */
@@ -1290,7 +1301,7 @@ export function localYmd(date: Date = new Date()): string {
 
 export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
   return {
-    version: 30,
+    version: 31,
     tokens: 0,
     dive_charge: DIVE_CHARGE_CAP, // start full; research claims can top back up
     dive_charge_at: now,
@@ -1370,6 +1381,7 @@ export function defaultPlayStore(now: number = Date.now()): PlayStoreDoc {
     streak: emptyStreak(),
     sword_bag: emptySwordBag(),
     finish_wallet: emptyFinishWallet(),
+    aura_owned: [],
   };
 }
 
@@ -1819,6 +1831,13 @@ function petViewOf(doc: PlayStoreDoc, now: number): PetView {
     },
     finish: {
       wallet: doc.finish_wallet,
+      pass: tideActive(doc.tide, today),
+      free: PLAY_EVERYTHING_FREE,
+    },
+    auraSlot: {
+      style: pet.aura_style,
+      owned: doc.aura_owned,
+      element: swordPanel(doc.sword_bag).equipped?.element ?? null,
       pass: tideActive(doc.tide, today),
       free: PLAY_EVERYTHING_FREE,
     },
@@ -2596,6 +2615,44 @@ export function applyPetFinish(
     doc: { ...next, tokens: touched.tokens - plan.cost, finish_wallet: plan.wallet },
     result: { ok: true, cost: plan.cost, left: touched.tokens - plan.cost, kind: plan.kind, color: plan.color },
   };
+}
+
+export type AuraApplyResult =
+  | { ok: true; cost: number; left: number; style: AuraStyle | 'none' }
+  | { ok: false; reason: AuraRefusal | 'missing' | 'not_revealed' };
+
+/** Wear an aura style on a revealed pet. Buying is per style. The colour follows the sword. */
+export function applyPetAura(
+  doc: PlayStoreDoc,
+  now: number,
+  uid: number,
+  style: AuraStyle | 'none',
+): { doc: PlayStoreDoc; result: AuraApplyResult } {
+  const touched = touchPet(doc, now);
+  const pet = touched.pet.uid === uid && uid > 0 ? touched.pet : touched.pet_den.find((p) => p.uid === uid);
+  if (!pet) return { doc: touched, result: { ok: false, reason: 'missing' } };
+  if (style !== 'none' && !petRevealed(pet)) return { doc: touched, result: { ok: false, reason: 'not_revealed' } };
+  const today = localYmd(new Date(now));
+  const plan = planAuraWear({
+    owned: touched.aura_owned,
+    tokens: touched.tokens,
+    pass: tideActive(touched.tide, today),
+    free: PLAY_EVERYTHING_FREE,
+    style,
+  });
+  if (!plan.ok) return { doc: touched, result: plan };
+  const next = withPetByUid(touched, uid, (p) => ({ ...p, aura_style: plan.style }));
+  if (!next) return { doc: touched, result: { ok: false, reason: 'missing' } };
+  return {
+    doc: { ...next, tokens: touched.tokens - plan.cost, aura_owned: plan.owned },
+    result: { ok: true, cost: plan.cost, left: touched.tokens - plan.cost, style: plan.style },
+  };
+}
+
+/** Dev kit: put any aura on a pet without spending tokens or owning it. */
+export function devSetPetAura(doc: PlayStoreDoc, now: number, uid: number, style: AuraStyle | 'none'): PlayStoreDoc | null {
+  if (style !== 'none' && parseAuraStyle(style) !== style) return null;
+  return withPetByUid(touchPet(doc, now), uid, (p) => ({ ...p, aura_style: style }));
 }
 
 /** Dev kit: put any finish on a pet without spending tokens or owning it. */
@@ -5238,7 +5295,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       version !== 13 && version !== 14 && version !== 15 && version !== 16 &&
       version !== 17 && version !== 18 && version !== 19 && version !== 20 &&
       version !== 21 && version !== 22 && version !== 23 && version !== 24 && version !== 25 &&
-      version !== 26 && version !== 27 && version !== 28 && version !== 29 && version !== 30
+      version !== 26 && version !== 27 && version !== 28 &&       version !== 29 && version !== 30 && version !== 31
     ) {
       return null;
     }
@@ -5350,6 +5407,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
     const v28 = version >= 28;
     const v29 = version >= 29;
     const v30 = version >= 30;
+    const v31 = version >= 31;
     const hall = parsePetHall(data.pet_hall);
     // v27 (Part D): older saves — the pet is the active one in slot 1 and the
     // Den is empty with 6 slots; the pity counter, eggs today, Stones and
@@ -5371,7 +5429,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       (v27 ? Math.max(0, Math.floor(finiteNumber(data.shine_stones) ?? 0)) : 0) +
       retroShineStones(typeof version === 'number' ? version : 28, milestones);
     return {
-      version: 30,
+      version: 31,
       tokens: Math.max(0, Math.floor(tokens)),
       dive_charge: clampInt(diveCharge, 0, DIVE_CHARGE_CAP),
       dive_charge_at: diveChargeAt,
@@ -5481,6 +5539,7 @@ export function parsePlayStore(raw: string, now: number): PlayStoreDoc | null {
       streak: v28 ? parseStreak(data.streak) : emptyStreak(),
       sword_bag: v29 ? parseSwordBag(data.sword_bag) : emptySwordBag(),
       finish_wallet: v30 ? parseFinishWallet(data.finish_wallet) : emptyFinishWallet(),
+      aura_owned: v31 ? parseAuraOwned(data.aura_owned) : [],
     };
   } catch {
     return null;

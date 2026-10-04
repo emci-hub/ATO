@@ -1,0 +1,14 @@
+{
+  "currency": "tokens",
+  "fps": 8,
+  "fallback_element": "fire",
+  "quiet_foil": 0.22,
+  "luma_deepen_at": 0.75,
+  "deepen_mix": 0.42,
+  "styles": [
+    { "id": "blaze", "name": "Blaze", "frames": 8, "price": 900, "pass_price": 675 },
+    { "id": "spiky", "name": "Spiky", "frames": 6, "price": 450, "pass_price": 340 },
+    { "id": "rune", "name": "Rune", "frames": 6, "price": 300, "pass_price": 225 },
+    { "id": "bubbles", "name": "Bubbles", "frames": 6, "price": 300, "pass_price": 225 }
+  ]
+}

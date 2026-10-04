@@ -2,28 +2,16 @@
  * Holo / reverse-holo paint (save v30). JS only: react-native-svg + Reanimated.
  *
  * Holo fills the art window behind the pet (diagonal bands, dark gaps, glitter,
- * a glare spot) and lays a light overlay sheen on the sprite, masked to its
- * alpha. Reverse holo fills the rounded card around that window; the pet is
- * left alone. The sheen uses overlay, which keeps dark armour.
+ * a glare spot). Reverse holo fills the rounded card around that window. The
+ * pet sprite is never tinted.
  *
  * Motion is the shared drift + tilt in `finish-motion`. Reduce Motion (Play or
  * the OS) and Low effects hold every layer still. Stops never animate.
  */
-import { useEffect, useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { AccessibilityInfo, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedProps } from 'react-native-reanimated';
-import Svg, {
-  Circle,
-  ClipPath,
-  Defs,
-  G,
-  Mask,
-  Path,
-  RadialGradient,
-  Rect,
-  Stop,
-  Image as SvgImage,
-} from 'react-native-svg';
+import Svg, { Circle, ClipPath, Defs, G, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { foilDrift, foilTiltX, foilTiltY, leaseFinishSensor } from '@/play/finish-motion';
 import {
@@ -35,21 +23,16 @@ import {
   foilStripes,
   glareOpacity,
   reverseOpacity,
-  sheenOpacity,
   windowOpacity,
   type FinishMotion,
 } from '@/play/finishes';
 import { useFxQuality } from '@/play/fx-quality';
-import { useBlendRecolor } from '@/play/pet-looks';
-import { drawableFrame, playSheetArt } from '@/play/sheet-sprite';
-import { sheetSpritePlacement } from '@/play/sheet-sprite-math';
-import type { ClipDrawable } from '@/play/skin';
 
 const AnimatedG = Animated.createAnimatedComponent(G);
 
 export type FoilHole = { x: number; y: number; w: number; h: number; r: number };
 
-function useOsReduceMotion(): boolean {
+export function useOsReduceMotion(): boolean {
   const [on, setOn] = useState(false);
   useEffect(() => {
     let live = true;
@@ -98,44 +81,6 @@ function roundRect(x: number, y: number, w: number, h: number, r: number): strin
     `A ${radius} ${radius} 0 0 1 ${x + radius} ${y}`,
     'Z',
   ].join(' ');
-}
-
-type MaskArt = {
-  vbW: number;
-  vbH: number;
-  node: ReactNode;
-  clip: { x: number; y: number; width: number; height: number } | null;
-};
-
-function maskArt(drawable: ClipDrawable | undefined): MaskArt | null {
-  if (!drawable) return null;
-  if (drawable.kind === 'legacy') {
-    return {
-      vbW: 100,
-      vbH: 100,
-      clip: null,
-      node: <SvgImage href={drawable.source} x={0} y={0} width={100} height={100} preserveAspectRatio="none" />,
-    };
-  }
-  const frame = drawableFrame(drawable);
-  const source = frame ? playSheetArt(frame.sheetKey) : undefined;
-  if (!frame || !source) return null;
-  const place = sheetSpritePlacement(frame.rect, 0, 0, frame.rect.w);
-  return {
-    vbW: frame.rect.w,
-    vbH: frame.rect.h,
-    clip: place.clip,
-    node: (
-      <SvgImage
-        href={source}
-        x={place.imageX}
-        y={place.imageY}
-        width={frame.sheetW}
-        height={frame.sheetH}
-        preserveAspectRatio="none"
-      />
-    ),
-  };
 }
 
 function FoilTexture({
@@ -262,71 +207,3 @@ export function windowFoilOpacity(): number {
 export function cardFoilOpacity(): number {
   return reverseOpacity();
 }
-
-/**
- * A light highlight masked to the sprite. Overlay keeps the dark pixels.
- * When blend modes are off, this is a thin wash and still not a dodge.
- */
-export function FinishSheen({
-  colorId,
-  drawable,
-  onShiny,
-  motion,
-  reduceMotion,
-}: {
-  colorId: string;
-  drawable?: ClipDrawable;
-  onShiny: boolean;
-  motion: FinishMotion;
-  reduceMotion: boolean;
-}) {
-  const color = finishColor(colorId);
-  const art = maskArt(drawable);
-  const moving = useFoilMoving(motion, reduceMotion);
-  const blendOn = useBlendRecolor();
-  const raw = useId().replace(/[^a-zA-Z0-9]/g, '');
-  const maskId = `sheen-${raw}`;
-  const clipId = `sheenclip-${raw}`;
-  const fillId = `sheenfill-${raw}`;
-  const slide = useAnimatedProps(() => {
-    const drift = moving ? foilDrift.value : 0.35;
-    const tx = moving ? foilTiltX.value : 0;
-    const x = (drift - 0.5) * (art?.vbW ?? 100) * 0.18 + tx * (art?.vbW ?? 100) * 0.12;
-    return { transform: `translate(${x} 0)` };
-  });
-  if (!color || !art) return null;
-  const light = color.stops[0] ?? color.glare;
-  const opacity = sheenOpacity(onShiny, blendOn);
-  return (
-    <View
-      pointerEvents="none"
-      style={[StyleSheet.absoluteFill, blendOn ? styles.overlay : null, { opacity }]}>
-      <Svg width="100%" height="100%" viewBox={`0 0 ${art.vbW} ${art.vbH}`}>
-        <Defs>
-          {art.clip ? (
-            <ClipPath id={clipId}>
-              <Rect x={art.clip.x} y={art.clip.y} width={art.clip.width} height={art.clip.height} />
-            </ClipPath>
-          ) : null}
-          <Mask id={maskId} maskType="alpha" maskUnits="userSpaceOnUse" x={0} y={0} width={art.vbW} height={art.vbH}>
-            {art.clip ? <G clipPath={`url(#${clipId})`}>{art.node}</G> : art.node}
-          </Mask>
-          <RadialGradient id={fillId} cx="30%" cy="20%" rx="55%" ry="55%">
-            <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.95} />
-            <Stop offset="0.35" stopColor={light} stopOpacity={0.35} />
-            <Stop offset="0.7" stopColor={light} stopOpacity={0} />
-          </RadialGradient>
-        </Defs>
-        <G mask={`url(#${maskId})`}>
-          <AnimatedG animatedProps={slide}>
-            <Rect x={-art.vbW} y={0} width={art.vbW * 3} height={art.vbH} fill={`url(#${fillId})`} />
-          </AnimatedG>
-        </G>
-      </Svg>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  overlay: { mixBlendMode: 'overlay' },
-});

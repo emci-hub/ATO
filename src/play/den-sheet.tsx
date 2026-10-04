@@ -328,6 +328,7 @@ export function DenSheetBody({
                   finishKind: selected.finish_kind,
                   finishColor: selected.finish_color,
                   finishLabel: finishWornLabel(selected.finish_kind, selected.finish_color),
+                  aura: selected.aura_style !== 'none',
                 }}
                 sprite={
                   <PetFigure
@@ -339,6 +340,7 @@ export function DenSheetBody({
                     foilMotion="sweep"
                     reduceMotion={reduceMotion}
                     reverseHost
+                    auraElement={view.swords.equipped?.element ?? null}
                   />
                 }
               />

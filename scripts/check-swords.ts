@@ -265,7 +265,7 @@ ok('one claim key pays once — bag, Defend, and a mini-game; a full bag still c
   legacy.tokens = 77;
   const loaded = parsePlayStore(JSON.stringify(legacy), T0);
   assert.ok(loaded);
-  assert.equal(loaded.version, 30);
+  assert.equal(loaded.version, 31);
   assert.equal(loaded.tokens, 77);
   assert.equal(loaded.sword_bag.swords.length, 0);
   assert.equal(loaded.sword_bag.relics.length, 0);
@@ -280,7 +280,7 @@ ok('one claim key pays once — bag, Defend, and a mini-game; a full bag still c
     inventory: [],
   }), T0);
   assert.ok(v1);
-  assert.equal(v1.version, 30);
+  assert.equal(v1.version, 31);
   assert.equal(v1.tokens, 3);
   assert.equal(v1.sword_bag.swords.length, 0);
 
@@ -297,7 +297,7 @@ ok('one claim key pays once — bag, Defend, and a mini-game; a full bag still c
   });
   assert.equal(broken.swords.length, 1);
   assert.equal(broken.undo, null);
-  assert.equal(parsePlayStore(JSON.stringify({ ...fresh, version: 31 }), T0), null);
+  assert.equal(parsePlayStore(JSON.stringify({ ...fresh, version: 32 }), T0), null);
 }
 ok('v1 and v28 saves become v30 with an empty bag; a real bag round-trips; junk rows drop');
 
