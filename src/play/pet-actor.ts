@@ -252,12 +252,17 @@ export function sharpPetBox(desiredPt: number, cellPx: number, pixelRatio: numbe
   return (k * cell) / ratio;
 }
 
-/** Wanted room size per stage, points (snapped by `sharpPetBox`). */
+/**
+ * Wanted room size per stage, points (snapped by `sharpPetBox`).
+ * The mockup stand-in is a bbox-cropped raven, 64 art px tall. Hero frames
+ * keep that body in the lower half of a 128px cell, so the box is about
+ * twice the visible body (256pt ≈ 128pt of character at 1 art px = 2pt).
+ */
 export const PET_ROOM_BOX: Record<PetStage, number> = {
   egg: 84,
-  baby: 100,
-  child: 124,
-  teen: 136,
-  adult: 172,
-  god: 208,
+  baby: 192,
+  child: 256,
+  teen: 256,
+  adult: 288,
+  god: 320,
 };

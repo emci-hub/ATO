@@ -79,15 +79,15 @@ import { roleFootAt } from '@/play/skin';
 // feet+6, so +8 clears it and the sprite for every stage (it used to sit at -4
 // and covered the pet's feet — Crimson Oni, Child).
 const PLATE_BELOW_FEET = 8;
-/** v26 nameplate text size — Tiny5 at 3.5pt per font pixel (cap stays over 16pt). */
-export const NAMEPLATE_FONT = 28;
+/** Nameplate text size — Departure Mono at 2pt per font pixel (cap stays 16pt). */
+export const NAMEPLATE_FONT = 22;
 
 function plateStatus(status: PetStatus, stage: PetState['stage'], stageLeftMs: number | null): string {
   if (status === 'egg' && stage === 'egg' && isEvolvingSoon('egg', stageLeftMs)) return 'Hatching soon';
   return PET_STATUS_WORD[status];
 }
 
-/** A 5×5 art-pixel star. Tiny5 has no star glyph. */
+/** A 5×5 art-pixel star. Departure Mono has no star glyph. */
 function PixelStar({ color }: { color: string }) {
   const p = ART_PT;
   const rows = [
@@ -357,12 +357,11 @@ export function PetRoom({
   /** Equipped sword element. The pet aura colour follows it. */
   auraElement?: string | null;
 }) {
-  // Tiny5 / Inter. Hold the room until they are in, so labels never paint in a fallback face.
+  // Departure Mono / Rajdhani. Hold the room until they are in, so labels never paint in a fallback face.
   const fontsReady = usePixelFonts();
   // Effects Low (Settings): auras and sparkles hold still.
   const fxFull = useFxQuality() === 'full';
   const fxAnimate = !reduceMotion && fxFull;
-  void pantry;
   useFinishLease((pet.finish_kind === 'holo' || pet.finish_kind === 'reverse') && pet.finish_color != null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const onLayout = (e: LayoutChangeEvent) =>
@@ -548,24 +547,24 @@ export function PetRoom({
           <PixelLabel>Pick an egg</PixelLabel>
         ) : egg ? (
           <View style={styles.meterRow} accessibilityLabel={`Warmth ${pet.warmth} of ${WARMTH_MAX}`}>
-            <PixelLabel>Warmth</PixelLabel>
+            <PixelLabel color={PIXEL.cyan}>Warmth</PixelLabel>
             <PixelHearts value={pet.warmth} max={WARMTH_MAX} color={PIXEL.amber} />
           </View>
         ) : (
           <View style={styles.meterBlock}>
             <View style={styles.meterRow}>
-              <PixelLabel>Hunger</PixelLabel>
+              <PixelLabel color={PIXEL.cyan}>Hunger</PixelLabel>
               <PixelHearts value={pet.hunger} max={PET_METER_MAX} />
             </View>
             <View style={styles.meterRow}>
-              <PixelLabel>Mood</PixelLabel>
+              <PixelLabel color={PIXEL.cyan}>Mood</PixelLabel>
               <PixelHearts value={pet.mood} max={PET_METER_MAX} />
             </View>
           </View>
         )}
         </View>
         {!picking ? (
-          <PixelFrame style={styles.stageBadge}>
+          <PixelFrame glow={false} style={styles.stageBadge}>
             <PixelLabel>{PET_STAGE_LABEL[pet.stage]}</PixelLabel>
           </PixelFrame>
         ) : null}
@@ -596,9 +595,14 @@ export function PetRoom({
           },
         ]}>
         <View style={styles.coachRow}>
-          <PixelBody style={styles.coachText} numberOfLines={3}>
-            {coach.tip}
-          </PixelBody>
+          <View style={styles.coachCopy}>
+            <PixelBody color={PIXEL.text} style={styles.coachText} numberOfLines={2}>
+              {coach.tip}
+            </PixelBody>
+            <PixelBody size="sm" color={PIXEL.dim} numberOfLines={1}>
+              {pantry === 1 ? '1 treat left' : `${pantry} treats left`}
+            </PixelBody>
+          </View>
           {coach.button ? (
             <PixelButton label={coach.button} onPress={onCoach} style={styles.coachButton} />
           ) : null}
@@ -769,7 +773,8 @@ const styles = StyleSheet.create({
   stageBadge: { flexGrow: 0 },
   coach: { position: 'absolute' },
   coachRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  coachText: { flex: 1, textAlign: 'left' },
+  coachCopy: { flex: 1, gap: 2 },
+  coachText: { textAlign: 'left' },
   coachButton: { flexGrow: 0 },
   pressed: { opacity: 0.82 },
   petWrap: { position: 'absolute', left: 0 },

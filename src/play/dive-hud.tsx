@@ -5,16 +5,17 @@
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
-import type { ComponentProps } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useState, type ComponentProps } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { itemArtSource } from '@/play/art';
 import { findKind } from '@/play/dive-loot';
 import { GLOW_COLOR, findGlow } from '@/play/dive-fx-model';
 import { getItemDef, type ItemSlot } from '@/play/items';
 import { ELEMENT_COLOR } from '@/play/kits';
+import { mockupOrigin } from '@/play/pixel-atlas';
 import { ART_PT, PIXEL, crispSpan } from '@/play/pixel-theme';
-import { PixelBody, PixelButton, PixelFrame, PixelLabel, pixelRenderStyle } from '@/play/pixel-ui';
+import { PixelBody, PixelFrame, PixelLabel, pixelRenderStyle } from '@/play/pixel-ui';
 import { cosmeticById } from '@/play/pet-cosmetics';
 
 const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>['name']> = {
@@ -25,7 +26,18 @@ const SLOT_ICONS: Record<ItemSlot, ComponentProps<typeof MaterialCommunityIcons>
 };
 
 /** One find as an icon with its rarity glow ring. */
-export function FindIcon({ id, size = 34, dim = false }: { id: string; size?: number; dim?: boolean }) {
+export function FindIcon({
+  id,
+  size = 34,
+  dim = false,
+  bare = false,
+}: {
+  id: string;
+  size?: number;
+  dim?: boolean;
+  /** Skip the rarity frame — the haul slot draws its own. */
+  bare?: boolean;
+}) {
   const kind = findKind(id);
   const glow = GLOW_COLOR[findGlow(id)];
   const cos = kind === 'cosmetic' ? cosmeticById(id) : undefined;
@@ -48,27 +60,56 @@ export function FindIcon({ id, size = 34, dim = false }: { id: string; size?: nu
             : def
             ? SLOT_ICONS[def.core.slot]
             : 'help';
+  const box = bare ? size : artBox;
+  const glyph = art ? (
+    <Image
+      source={art}
+      contentFit="fill"
+      transition={0}
+      style={{ width: box, height: box, ...pixelRenderStyle }}
+    />
+  ) : (
+    <MaterialCommunityIcons
+      name={icon}
+      size={box}
+      color={cos?.color ?? (cos?.element ? ELEMENT_COLOR[cos.element] : glow)}
+    />
+  );
+  if (bare) {
+    return <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', opacity: dim ? 0.45 : 1 }}>{glyph}</View>;
+  }
   return (
     <PixelFrame
       fill={PIXEL.ink}
       border={glow}
       padded={false}
+      glow={false}
       style={{ width: artBox + ART_PT * 2, height: artBox + ART_PT * 2, opacity: dim ? 0.45 : 1 }}>
-      {art ? (
-        <Image
-          source={art}
-          contentFit="fill"
-          transition={0}
-          style={{ width: artBox, height: artBox, ...pixelRenderStyle }}
-        />
-      ) : (
-        <MaterialCommunityIcons
-          name={icon}
-          size={artBox}
-          color={cos?.color ?? (cos?.element ? ELEMENT_COLOR[cos.element] : glow)}
-        />
-      )}
+      {glyph}
     </PixelFrame>
+  );
+}
+
+/** The mockup shell mark: an ink triangle with a peach fill. */
+function ShellMark() {
+  const k = ART_PT;
+  const ink = PIXEL.ink;
+  const fill = '#FCA790';
+  const cells: [number, number, string][] = [];
+  for (let y = 0; y <= 8; y += 1) {
+    for (let x = 0; x <= 8; x += 1) {
+      const onOuter = y >= Math.abs(x - 4) * 2;
+      const onInner = y >= 1 + Math.abs(x - 4) * 2 && y <= 7 && x >= 1 && x <= 7;
+      if (onInner) cells.push([x, y, fill]);
+      else if (onOuter) cells.push([x, y, ink]);
+    }
+  }
+  return (
+    <View style={{ width: 9 * k, height: 9 * k }}>
+      {cells.map(([x, y, color]) => (
+        <View key={`${x}-${y}`} style={{ position: 'absolute', left: x * k, top: y * k, width: k, height: k, backgroundColor: color }} />
+      ))}
+    </View>
   );
 }
 
@@ -77,7 +118,9 @@ export function DepthMeter({ depth, max }: { depth: number; max: number }) {
   return (
     <View style={styles.meter} accessible accessibilityLabel={`Depth ${depth} of ${max}`}>
       {Array.from({ length: max + 1 }, (_, i) => (
-        <View key={i} style={[styles.pip, i <= depth && styles.pipOn]} />
+        <View key={i} style={[styles.pip, i <= depth ? styles.pipOn : styles.pipOff]}>
+          <View style={[styles.pipIn, i <= depth ? styles.pipInOn : styles.pipInOff]} />
+        </View>
       ))}
     </View>
   );
@@ -102,47 +145,79 @@ export function DiveTopBar({
   onInfo: () => void;
   onGear: () => void;
 }) {
+  const shortCharges = charges.split(' · ')[0] ?? charges;
+  const [place, setPlace] = useState<{ top: number; left: number; width: number } | null>(null);
   return (
-    <View style={styles.bar} pointerEvents="box-none">
-      <PixelFrame align="stretch" enter>
-      <View style={styles.row}>
-        <PixelButton label="‹ Pet" onPress={onBack} variant="muted" accessibilityLabel="Back to the Pet room" style={styles.back} />
-        <View style={styles.zoneBox}>
-          <PixelLabel numberOfLines={1}>{zone}</PixelLabel>
-          <DepthMeter depth={depth} max={maxDepth} />
+    <View
+      style={styles.bar}
+      pointerEvents="box-none"
+      onLayout={(e) => {
+        const { width, height } = e.nativeEvent.layout;
+        const origin = mockupOrigin(width, height, 200);
+        const left = Math.max(4 * ART_PT, origin.left + 4 * ART_PT);
+        const next = {
+          // Sit on the mockup's top panel when the plate is in frame; otherwise
+          // stay at the top of the scene so a short view does not clip it.
+          top: Math.max(4 * ART_PT, origin.top + 31 * ART_PT),
+          left,
+          width: Math.min(189 * ART_PT, Math.max(160, width - left * 2)),
+        };
+        setPlace((prev) =>
+          prev && prev.top === next.top && prev.left === next.left && prev.width === next.width ? prev : next,
+        );
+      }}>
+      <PixelFrame
+        align="stretch"
+        enter
+        style={[styles.panel, place ?? styles.panelHidden]}>
+        <View style={styles.row}>
+          <View style={styles.side}>
+            <Pressable onPress={onBack} hitSlop={10} accessibilityRole="button" accessibilityLabel="Back to the Pet room">
+              <PixelLabel color={PIXEL.cyan}>‹ Pet</PixelLabel>
+            </Pressable>
+            <View style={styles.links}>
+              <Pressable onPress={onGear} hitSlop={8} accessibilityRole="button" accessibilityLabel="Dive gear">
+                <PixelBody size="sm" color={PIXEL.dim}>Gear</PixelBody>
+              </Pressable>
+              <Pressable onPress={onInfo} hitSlop={8} accessibilityRole="button" accessibilityLabel="How Dive works">
+                <PixelBody size="sm" color={PIXEL.dim}>Info</PixelBody>
+              </Pressable>
+            </View>
+          </View>
+          <View style={styles.zoneBox}>
+            <PixelLabel numberOfLines={1}>{zone}</PixelLabel>
+            <DepthMeter depth={depth} max={maxDepth} />
+          </View>
+          <View style={styles.sideRight}>
+            <View accessible accessibilityLabel={`Dive charges ${charges}`}>
+              <PixelBody size="sm" color={PIXEL.dim}>{shortCharges}</PixelBody>
+            </View>
+            <View style={styles.shells} accessible accessibilityLabel={`${shells} shells`}>
+              <ShellMark />
+              <PixelBody size="num" color={PIXEL.amber}>{`${shells}`}</PixelBody>
+            </View>
+          </View>
         </View>
-      </View>
-      <View style={styles.actions}>
-        <PixelButton label="Gear" onPress={onGear} variant="muted" accessibilityLabel="Dive gear" style={styles.chip} />
-        <PixelButton label="Info" onPress={onInfo} variant="muted" accessibilityLabel="How Dive works" style={styles.chip} />
-      </View>
-      <View style={styles.row}>
-        <View accessible accessibilityLabel={`Dive charges ${charges}`}>
-          <PixelBody color={PIXEL.text}>{charges}</PixelBody>
-        </View>
-        <View accessible accessibilityLabel={`${shells} shells`}>
-          <PixelBody color={PIXEL.amber}>{`${shells} shells`}</PixelBody>
-        </View>
-      </View>
       </PixelFrame>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  meter: { flexDirection: 'row', gap: ART_PT * 2, marginTop: ART_PT * 2 },
-  pip: { width: ART_PT * 4, height: ART_PT * 4, backgroundColor: '#1C2433' },
-  pipOn: { backgroundColor: PIXEL.cyan },
-  bar: {
-    position: 'absolute',
-    top: ART_PT * 4,
-    left: ART_PT * 4,
-    right: ART_PT * 4,
-    gap: ART_PT * 2,
-  },
+  meter: { flexDirection: 'row', gap: ART_PT * 3, marginTop: ART_PT },
+  pip: { width: ART_PT * 8, height: ART_PT * 5, padding: ART_PT },
+  pipOn: { backgroundColor: PIXEL.ink },
+  pipOff: { backgroundColor: PIXEL.cyanLo },
+  pipIn: { flex: 1 },
+  pipInOn: { backgroundColor: PIXEL.cyan },
+  pipInOff: { backgroundColor: PIXEL.slot },
+  bar: { ...StyleSheet.absoluteFillObject },
+  panel: { position: 'absolute' },
+  panelHidden: { opacity: 0 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ART_PT * 2 },
-  back: { flexGrow: 0, flexShrink: 0 },
+  side: { gap: 0 },
+  sideRight: { alignItems: 'flex-end', gap: 0 },
+  links: { flexDirection: 'row', gap: ART_PT * 3 },
   zoneBox: { alignItems: 'center', flex: 1 },
-  actions: { flexDirection: 'row', gap: ART_PT * 2 },
-  chip: { flex: 1 },
+  shells: { flexDirection: 'row', alignItems: 'center', gap: ART_PT },
 });

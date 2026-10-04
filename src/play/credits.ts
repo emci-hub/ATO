@@ -76,18 +76,18 @@ export const PLAY_CREDITS: readonly PlayCredit[] = [
     license: 'Original, made for this app',
   },
   {
-    pack: 'Tiny5',
-    author: 'Thomas Jockin',
+    pack: 'Departure Mono',
+    author: 'Helena Zhang',
     usedFor: 'Pixel labels',
-    license: 'OFL (assets/play/fonts/OFL-Tiny5.txt)',
-    url: 'https://fonts.google.com/specimen/Tiny5',
+    license: 'OFL (assets/play/fonts/OFL-DepartureMono.txt)',
+    url: 'https://departuremono.com',
   },
   {
-    pack: 'Inter',
-    author: 'Rasmus Andersson',
+    pack: 'Rajdhani',
+    author: 'Indian Type Foundry',
     usedFor: 'Body text',
-    license: 'OFL (assets/play/fonts/OFL-Inter.txt)',
-    url: 'https://rsms.me/inter/',
+    license: 'OFL',
+    url: 'https://fonts.google.com/specimen/Rajdhani',
   },
 ];
 

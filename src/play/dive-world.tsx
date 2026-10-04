@@ -35,7 +35,45 @@ export const WALL_W = 34;
 /** Where the surface waterline sits, as a share of the scene height. */
 export const WATERLINE = 0.24;
 
-const BUBBLE_FRAMES = ['bubble', 'bubble2', 'bubble3', 'bubble4'] as const;
+/** Mockup bubble radii (dive2.py), one per rise. */
+const BUBBLE_R = [2, 1, 2, 3, 2] as const;
+
+/**
+ * A round outlined pixel ring (dive2 `bubble`): #8ff8e2 stroke and one white
+ * highlight. Radii match the script (1, 2, 3 art px).
+ */
+export function BubbleRing({ r }: { r: number }) {
+  const radius = r <= 1 ? 1 : r >= 3 ? 3 : 2;
+  const rows =
+    radius === 1
+      ? ['.o.', 'oWo', '.o.']
+      : radius === 3
+        ? ['..ooo..', '.W...o.', 'o.....o', 'o.....o', 'o.....o', '.o...o.', '..ooo..']
+        : ['.ooo.', 'oW..o', 'o...o', 'o...o', '.ooo.'];
+  const k = ART_PT;
+  const n = rows.length;
+  return (
+    <View style={{ width: n * k, height: n * k }}>
+      {rows.map((row, y) =>
+        row.split('').map((cell, x) =>
+          cell === '.' ? null : (
+            <View
+              key={`${x}-${y}`}
+              style={{
+                position: 'absolute',
+                left: x * k,
+                top: y * k,
+                width: k,
+                height: k,
+                backgroundColor: cell === 'W' ? '#FFFFFF' : '#8FF8E2',
+              }}
+            />
+          ),
+        ),
+      )}
+    </View>
+  );
+}
 
 function frameBox(frame: string): { w: number; h: number } {
   const rect = DIVE_FRAMES[frame as DiveFrame];
@@ -69,7 +107,7 @@ export function MockupReef({ width, height, alive }: { width: number; height: nu
       </View>
       {MOCKUP_DIVE.bubbles.map((b, i) => (
         <MoteRise key={i} alive={alive} left={b.x * k} top={b.y * k} distance={80 + (i % 3) * 24} ms={4200 + i * 500} delay={i * 380}>
-          <SpriteSwap atlas="dive" frames={BUBBLE_FRAMES} alive={alive} ms={180} />
+          <BubbleRing r={BUBBLE_R[i] ?? 2} />
         </MoteRise>
       ))}
     </View>

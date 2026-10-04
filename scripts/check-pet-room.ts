@@ -298,9 +298,9 @@ assert.equal(crispSpan(32), 64, '32px icon at 2pt is 64pt');
 assert.equal(crispSpan(32, 36), 32, 'a slot under 64pt keeps an integer scale');
 assert.equal(crispSpan(26), 52);
 assert.equal(crispSpan(23), 46);
-assert.ok(PIXEL_LABEL_PT >= 26, 'Tiny5 at this size draws its 5px cap at 16pt or more');
-assert.ok(PIXEL_LABEL_PT / 8 >= 3 && PIXEL_LABEL_PT / 8 <= 4, '3–4pt per Tiny5 font pixel');
-ok('pixel grid: art snap, integer icon scale, Tiny5 size');
+assert.equal(PIXEL_LABEL_PT, 22, 'Departure Mono em is 11, at 2pt per font pixel');
+assert.ok((PIXEL_LABEL_PT * 8) / 11 >= 16, 'the 8px cap stays at least 16pt');
+ok('pixel grid: art snap, integer icon scale, Departure Mono size');
 
 // The room screen wires the pure pieces (not a stub).
 const room = fs.readFileSync('src/play/pet-room.tsx', 'utf8');

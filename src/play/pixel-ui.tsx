@@ -1,15 +1,17 @@
 /**
- * Neon pixel UI kit (Divecore phase 1).
+ * Neon pixel UI kit.
  *
- * Ink panels, a 1-art-px cyan border with the corner pixel cut out (stepped,
- * not a rounded blur), cyan primary buttons and an amber Surface button.
+ * Panels, buttons and nameplates follow ui2.py: a 1-art-px border, stepped
+ * corners (2px stair), a solid inner glow ring and a checker outer ring.
+ * Buttons add an ink outline, a 1px top highlight and a 2px bottom shade.
  * Press feedback is a short squash on the UI thread while ambient motion is
  * on (Effects full, Reduce Motion off). Otherwise it stays an opacity press.
- * Fonts load from the OFL files in assets/play/fonts.
+ * Departure Mono + Rajdhani SemiBold load before any pixel label paints.
  */
+import { Rajdhani_600SemiBold } from '@expo-google-fonts/rajdhani';
 import { useFonts } from 'expo-font';
 import { Image, type ImageProps } from 'expo-image';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Pressable, Text, View, type ImageStyle, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
@@ -20,15 +22,19 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import Svg, { Path } from 'react-native-svg';
 
 import { useFxQuality } from '@/play/fx-quality';
 import { usePlayReduceMotion } from '@/play/play-motion';
+import { AtlasSprite } from '@/play/pixel-atlas';
 import {
   ART_PT,
   PIXEL,
   PIXEL_BODY_PT,
+  PIXEL_CAPTION_PT,
   PIXEL_FONT,
   PIXEL_LABEL_PT,
+  PIXEL_NUM_PT,
   PIXEL_TAP_PT,
   crispSpan,
   pixelRenderStyle,
@@ -56,11 +62,11 @@ function usePressSquash(enabled: boolean) {
 
 export { pixelRenderStyle };
 
-/** Load Tiny5 (labels) and Inter Regular (body). Safe to call from each screen. */
+/** Load Departure Mono (labels) and Rajdhani SemiBold (body). Safe to call from each screen. */
 export function usePixelFonts(): boolean {
   const [loaded, error] = useFonts({
-    Tiny5_Regular: require('@/assets/play/fonts/Tiny5-Regular.ttf'),
-    Inter_400Regular: require('@/assets/play/fonts/Inter-Regular.ttf'),
+    DepartureMono_Regular: require('@/assets/play/fonts/DepartureMono-Regular.otf'),
+    Rajdhani_600SemiBold,
   });
   return loaded || !!error;
 }
@@ -78,11 +84,55 @@ type FrameProps = {
   enter?: boolean;
   /** Soft cyan glow pulse. Only runs for the primary action while motion is on. */
   pulse?: boolean;
+  /** Outer glow rings. Nameplates and slots turn this off, matching ui2. */
+  glow?: boolean;
+  /** Corner stair in art pixels. Panels and buttons use 2; haul slots use 1. */
+  step?: number;
+  /** Button bevel: ink outline, top highlight, bottom shade. No glow rings. */
+  bevel?: 'cyan' | 'amber';
 };
 
+/** True when art pixel (x, y) sits inside a stepped rectangle. */
+function inStepped(x: number, y: number, w: number, h: number, step: number): boolean {
+  if (x < 0 || y < 0 || x >= w || y >= h || w <= 0 || h <= 0) return false;
+  const s = Math.min(step, Math.floor((Math.min(w, h) - 1) / 2));
+  const edge = Math.min(y, h - 1 - y);
+  if (edge < s) {
+    const n = s - edge;
+    if (x < n || x >= w - n) return false;
+  }
+  return true;
+}
+
+/** One glow ring as a crisp path. Ring 2 is the checker dither from ui2. */
+function ringPath(artW: number, artH: number, ring: number, step: number, checker: boolean): string {
+  const W = artW + ring * 2;
+  const H = artH + ring * 2;
+  const parts: string[] = [];
+  const s = ART_PT;
+  for (let y = 0; y < H; y += 1) {
+    for (let x = 0; x < W; x += 1) {
+      // The ring is `ring` art px thick. Stairs only cut corners, they never add depth.
+      if (Math.min(x, y, W - 1 - x, H - 1 - y) > ring) continue;
+      if (!inStepped(x, y, W, H, step + ring)) continue;
+      if (inStepped(x - ring, y - ring, artW, artH, step)) continue;
+      if (checker && (x + y) % 2 !== 0) continue;
+      parts.push(`M${x * s} ${y * s}h${s}v${s}h${-s}z`);
+    }
+  }
+  return parts.join('');
+}
+
+function glowInk(border: string): string | null {
+  const b = border.toLowerCase();
+  if (b === PIXEL.cyan.toLowerCase()) return PIXEL.glow;
+  if (b === PIXEL.amber.toLowerCase()) return PIXEL.glowAmber;
+  return null;
+}
+
 /**
- * Ink (or any fill) with a 1-art-px border. The four corner pixels are left
- * empty so the corner steps instead of rounding.
+ * Ink (or any fill) with the mockup frame: 1-art-px border, 2px corner
+ * stairs, and two outer glow rings (solid, then checker).
  */
 export function PixelFrame({
   children,
@@ -94,10 +144,14 @@ export function PixelFrame({
   minHeight,
   enter = false,
   pulse = false,
+  glow = true,
+  step = 2,
+  bevel,
 }: FrameProps) {
   const alive = useAmbientOn();
   const enterT = useSharedValue(1);
-  const glow = useSharedValue(0);
+  const glowPulse = useSharedValue(0);
+  const [box, setBox] = useState({ w: 0, h: 0 });
   useEffect(() => {
     cancelAnimation(enterT);
     if (!enter || !alive) {
@@ -109,38 +163,103 @@ export function PixelFrame({
     return () => cancelAnimation(enterT);
   }, [alive, enter, enterT]);
   useEffect(() => {
-    cancelAnimation(glow);
-    glow.value = 0;
+    cancelAnimation(glowPulse);
+    glowPulse.value = 0;
     if (!pulse || !alive) return;
-    glow.value = withRepeat(withTiming(1, { duration: 900, easing: Easing.inOut(Easing.sin) }), -1, true);
-    return () => cancelAnimation(glow);
-  }, [alive, glow, pulse]);
+    glowPulse.value = withRepeat(withTiming(1, { duration: 900, easing: Easing.inOut(Easing.sin) }), -1, true);
+    return () => cancelAnimation(glowPulse);
+  }, [alive, glowPulse, pulse]);
   const motion = useAnimatedStyle(() => ({
     opacity: enterT.value,
     transform: [{ translateY: (1 - enterT.value) * 12 }],
-    shadowColor: border,
+    shadowColor: bevel ? fill : border,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: pulse && alive ? 0.28 + glow.value * 0.5 : 0,
-    shadowRadius: 6 + glow.value * 6,
+    shadowOpacity: pulse && alive ? 0.28 + glowPulse.value * 0.5 : 0,
+    shadowRadius: 6 + glowPulse.value * 6,
   }));
-  const b = ART_PT;
+  const px = ART_PT;
+  const stair = Math.max(1, step);
+  const artW = Math.max(1, Math.round(box.w / px));
+  const artH = Math.max(1, Math.round(box.h / px));
+  const glowCol = glow && !bevel ? glowInk(border) : null;
+  const rings = useMemo(() => {
+    if (!glowCol || artW < 4 || artH < 4) return null;
+    return {
+      solid: ringPath(artW, artH, 1, stair, false),
+      checker: ringPath(artW, artH, 2, stair, true),
+    };
+  }, [artH, artW, glowCol, stair]);
+  const edge = border;
+  const hi = bevel === 'amber' ? PIXEL.amberHi : PIXEL.cyanHi;
+  const lo = bevel === 'amber' ? PIXEL.amberLo : PIXEL.cyanLo;
+  const outline = bevel ? PIXEL.ink : edge;
+  const notch = stair * px;
   return (
-    <Animated.View style={[{ minHeight }, style, motion]}>
+    <Animated.View
+      onLayout={(e) => {
+        const { width, height } = e.nativeEvent.layout;
+        setBox((prev) => (prev.w === width && prev.h === height ? prev : { w: width, h: height }));
+      }}
+      style={[{ minHeight, overflow: 'visible' }, style, motion]}>
+      {rings && glowCol ? (
+        <Svg
+          pointerEvents="none"
+          width={box.w + px * 4}
+          height={box.h + px * 4}
+          style={{ position: 'absolute', left: -px * 2, top: -px * 2 }}>
+          <Path d={rings.checker} fill={glowCol} />
+          <Path d={rings.solid} fill={glowCol} />
+        </Svg>
+      ) : null}
       <View
         style={{
-          margin: b,
+          margin: px,
           backgroundColor: fill,
-          padding: padded ? b * 2 : 0,
-          minHeight: minHeight != null ? Math.max(0, minHeight - b * 2) : undefined,
+          padding: padded ? px * 2 : 0,
+          minHeight: minHeight != null ? Math.max(0, minHeight - px * 2) : undefined,
           alignItems: align === 'stretch' ? 'stretch' : 'center',
           justifyContent: 'center',
         }}>
+        {bevel ? (
+          <>
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: px,
+                right: px,
+                height: px,
+                backgroundColor: hi,
+              }}
+            />
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: px * 2,
+                backgroundColor: lo,
+              }}
+            />
+          </>
+        ) : null}
         {children}
       </View>
-      <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: b, right: b, height: b, backgroundColor: border }} />
-      <View pointerEvents="none" style={{ position: 'absolute', bottom: 0, left: b, right: b, height: b, backgroundColor: border }} />
-      <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: b, bottom: b, width: b, backgroundColor: border }} />
-      <View pointerEvents="none" style={{ position: 'absolute', right: 0, top: b, bottom: b, width: b, backgroundColor: border }} />
+      <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: notch, right: notch, height: px, backgroundColor: outline }} />
+      <View pointerEvents="none" style={{ position: 'absolute', bottom: 0, left: notch, right: notch, height: px, backgroundColor: outline }} />
+      <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: notch, bottom: notch, width: px, backgroundColor: outline }} />
+      <View pointerEvents="none" style={{ position: 'absolute', right: 0, top: notch, bottom: notch, width: px, backgroundColor: outline }} />
+      {stair >= 2 ? (
+        <>
+          <View pointerEvents="none" style={{ position: 'absolute', left: px, top: px, width: px, height: px, backgroundColor: outline }} />
+          <View pointerEvents="none" style={{ position: 'absolute', right: px, top: px, width: px, height: px, backgroundColor: outline }} />
+          <View pointerEvents="none" style={{ position: 'absolute', left: px, bottom: px, width: px, height: px, backgroundColor: outline }} />
+          <View pointerEvents="none" style={{ position: 'absolute', right: px, bottom: px, width: px, height: px, backgroundColor: outline }} />
+        </>
+      ) : null}
     </Animated.View>
   );
 }
@@ -166,7 +285,9 @@ export function PixelLabel({
         {
           fontFamily: PIXEL_FONT.label,
           fontSize: PIXEL_LABEL_PT,
-          lineHeight: PIXEL_LABEL_PT,
+          lineHeight: PIXEL_LABEL_PT + 2,
+          letterSpacing: 0,
+          fontWeight: 'normal',
           color,
           textTransform: 'uppercase',
         },
@@ -182,20 +303,26 @@ export function PixelBody({
   color = PIXEL.body,
   style,
   numberOfLines,
+  size = 'md',
 }: {
   children: ReactNode;
   color?: string;
   style?: StyleProp<TextStyle>;
   numberOfLines?: number;
+  /** md is the coach sentence (19pt). sm is the secondary line (17pt). num is a count (21pt). */
+  size?: 'md' | 'sm' | 'num';
 }) {
+  const fontSize = size === 'sm' ? PIXEL_CAPTION_PT : size === 'num' ? PIXEL_NUM_PT : PIXEL_BODY_PT;
   return (
     <Text
       numberOfLines={numberOfLines}
       style={[
         {
           fontFamily: PIXEL_FONT.body,
-          fontSize: PIXEL_BODY_PT,
-          lineHeight: 22,
+          fontSize,
+          lineHeight: fontSize + 3,
+          letterSpacing: 0,
+          fontWeight: 'normal',
           color,
         },
         style,
@@ -224,7 +351,7 @@ export function PixelButton({
   accessibilityLabel?: string;
 }) {
   const fill = variant === 'amber' ? PIXEL.amber : variant === 'muted' ? PIXEL.ink : PIXEL.cyan;
-  const border = variant === 'muted' ? PIXEL.muted : fill;
+  const border = variant === 'muted' ? PIXEL.muted : PIXEL.ink;
   const text = variant === 'muted' ? PIXEL.muted : PIXEL.onFill;
   const alive = useAmbientOn();
   const squash = usePressSquash(alive && !disabled);
@@ -245,6 +372,8 @@ export function PixelButton({
         <PixelFrame
           fill={fill}
           border={border}
+          bevel={variant === 'muted' ? undefined : variant}
+          glow={false}
           align="stretch"
           minHeight={PIXEL_TAP_PT}
           pulse={variant === 'cyan' && !disabled}
@@ -258,13 +387,13 @@ export function PixelButton({
   );
 }
 
-/** Name + status. Stepped cyan frame, no parchment and no speech tail. */
+/** Name + status. Stepped frame with the glow rings off, matching the mockup nameplate. */
 export function PixelNameplate({
   children,
   onPress,
   accessibilityLabel,
   style,
-  /** False when the plate draws its own Tiny5 line (stars + a word). */
+  /** False when the plate draws its own line (stars + a word). */
   label = true,
 }: {
   children: ReactNode;
@@ -276,9 +405,9 @@ export function PixelNameplate({
   const alive = useAmbientOn();
   const squash = usePressSquash(!!onPress && alive);
   const plate = (
-    <PixelFrame style={[{ minHeight: onPress ? PIXEL_TAP_PT : undefined }, style]}>
+    <PixelFrame glow={false} style={[{ minHeight: onPress ? PIXEL_TAP_PT : undefined }, style]}>
       {label ? (
-        <PixelLabel numberOfLines={1} style={{ textAlign: 'center' }}>
+        <PixelLabel color={PIXEL.cyan} numberOfLines={1} style={{ textAlign: 'center' }}>
           {children}
         </PixelLabel>
       ) : (
@@ -300,35 +429,12 @@ export function PixelNameplate({
   );
 }
 
-const HEART_ROWS = [
-  [1, 1, 0, 1, 1],
-  [1, 1, 1, 1, 1],
-  [1, 1, 1, 1, 1],
-  [0, 1, 1, 1, 0],
-  [0, 0, 1, 0, 0],
-];
-
-export function PixelHeart({ filled, color }: { filled: boolean; color?: string }) {
-  const ink = filled ? (color ?? PIXEL.heart) : PIXEL.heartEmpty;
-  // Two art pixels per sprite pixel so a 5px heart sits beside a Tiny5 cap.
-  const p = ART_PT * 2;
-  return (
-    <View style={{ width: 5 * p, height: 5 * p }}>
-      {HEART_ROWS.map((row, y) =>
-        row.map((on, x) =>
-          on ? (
-            <View
-              key={`${x}-${y}`}
-              style={{ position: 'absolute', left: x * p, top: y * p, width: p, height: p, backgroundColor: ink }}
-            />
-          ) : null,
-        ),
-      )}
-    </View>
-  );
+export function PixelHeart({ filled, partial }: { filled: boolean; partial?: boolean; color?: string }) {
+  const frame = filled ? 'heart' : partial ? 'heart-part' : 'heart-empty';
+  return <AtlasSprite atlas="room" frame={frame} />;
 }
 
-function HeartBump({ filled, color, token }: { filled: boolean; color?: string; token: number }) {
+function HeartBump({ filled, partial, token }: { filled: boolean; partial?: boolean; token: number }) {
   const scale = useSharedValue(1);
   useEffect(() => {
     cancelAnimation(scale);
@@ -343,7 +449,7 @@ function HeartBump({ filled, color, token }: { filled: boolean; color?: string; 
   const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   return (
     <Animated.View style={style}>
-      <PixelHeart filled={filled} color={color} />
+      <PixelHeart filled={filled} partial={partial} />
     </Animated.View>
   );
 }
@@ -351,56 +457,59 @@ function HeartBump({ filled, color, token }: { filled: boolean; color?: string; 
 export function PixelHearts({
   value,
   max,
-  color,
 }: {
   value: number;
   max: number;
   color?: string;
 }) {
   const alive = useAmbientOn();
-  const filled = Math.max(0, Math.min(max, Math.round(value)));
-  const prev = useRef(filled);
+  const clamped = Math.max(0, Math.min(max, value));
+  const full = Math.floor(clamped);
+  const partial = clamped - full >= 0.25 && clamped - full < 0.85;
+  const shown = partial ? full : Math.round(clamped);
+  const prev = useRef(shown);
   const [tokens, setTokens] = useState<number[]>(() => Array.from({ length: max }, () => 0));
   useEffect(() => {
-    if (prev.current === filled) return;
-    const index = filled > prev.current ? filled - 1 : prev.current - 1;
-    prev.current = filled;
+    if (prev.current === shown) return;
+    const index = shown > prev.current ? shown - 1 : prev.current - 1;
+    prev.current = shown;
     if (!alive || index < 0 || index >= max) return;
     setTokens((current) => {
       const next = current.length === max ? [...current] : Array.from({ length: max }, () => 0);
       next[index] = (next[index] ?? 0) + 1;
       return next;
     });
-  }, [alive, filled, max]);
+  }, [alive, max, shown]);
   return (
     <View style={{ flexDirection: 'row', gap: ART_PT }}>
       {Array.from({ length: max }, (_, i) => (
-        <HeartBump key={i} filled={i < filled} color={color} token={alive ? (tokens[i] ?? 0) : 0} />
+        <HeartBump
+          key={i}
+          filled={i < shown}
+          partial={partial && i === full}
+          token={alive ? (tokens[i] ?? 0) : 0}
+        />
       ))}
     </View>
   );
 }
 
-/** Shown bust chance. Cells sit on the art grid; the number is Inter. */
+/** Shown bust chance. One amber bar, the mockup's track and highlight. */
 export function PixelRisk({ pct }: { pct: number }) {
   const clamped = Math.max(0, Math.min(100, Math.round(pct)));
-  const cells = 12;
-  const filled = Math.round((clamped / 100) * cells);
-  const cell = ART_PT * 4;
   return (
     <View
-      style={{ flexDirection: 'row', alignItems: 'center', gap: ART_PT * 4 }}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: ART_PT * 3 }}
       accessibilityLabel={`Risk ${clamped} percent`}>
-      <PixelLabel>Risk</PixelLabel>
-      <View style={{ flexDirection: 'row', gap: ART_PT }}>
-        {Array.from({ length: cells }, (_, i) => (
-          <View
-            key={i}
-            style={{ width: cell, height: ART_PT * 4, backgroundColor: i < filled ? PIXEL.amber : '#1C2433' }}
-          />
-        ))}
+      <PixelLabel color={PIXEL.amber}>Risk</PixelLabel>
+      <View style={{ flex: 1, height: ART_PT * 7, backgroundColor: PIXEL.cyanLo, padding: ART_PT }}>
+        <View style={{ flex: 1, backgroundColor: PIXEL.slot }}>
+          <View style={{ width: `${clamped}%`, height: '100%', backgroundColor: PIXEL.amber }}>
+            <View style={{ height: ART_PT, backgroundColor: PIXEL.amberHi }} />
+          </View>
+        </View>
       </View>
-      <PixelBody color={PIXEL.text}>{`${clamped}%`}</PixelBody>
+      <PixelBody size="num" color={PIXEL.amber}>{`${clamped}%`}</PixelBody>
     </View>
   );
 }

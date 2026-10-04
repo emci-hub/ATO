@@ -64,8 +64,7 @@ import {
   type FindGlow,
 } from '@/play/dive-fx-model';
 import { FindIcon } from '@/play/dive-hud';
-import { AbyssDragon, BOX_OPEN, FindBox, MockupReef, SharkGlide } from '@/play/dive-world';
-import { SpriteSwap } from '@/play/pixel-ambient';
+import { AbyssDragon, BOX_OPEN, BubbleRing, FindBox, MockupReef, SharkGlide } from '@/play/dive-world';
 import { findName } from '@/play/dive-loot';
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
 import { MOCKUP_DIVE, mockupOrigin } from '@/play/pixel-atlas';
@@ -144,7 +143,7 @@ function Bubble({
   }));
   return (
     <Animated.View pointerEvents="none" style={[styles.abs, { left: x, top: 0 }, style]}>
-      <SpriteSwap atlas="dive" frames={['bubble', 'bubble2']} alive={alive} ms={220} />
+      <BubbleRing r={2} />
     </Animated.View>
   );
 }
@@ -700,17 +699,27 @@ export function DiveScene({
             </Animated.View>
           ) : null}
 
-          {/* The haul row, along the bottom. */}
-          <View pointerEvents="none" style={[styles.row, { top: rowY }]}>
-            {rowItems.map((item, i) => (
-              <View
-                key={`${item.id}-${i}`}
-                style={[styles.slot, item.hidden && styles.hidden]}
-                accessible
-                accessibilityLabel={findName(item.id)}>
-                <FindIcon id={item.id} size={ICON} />
-              </View>
-            ))}
+          {/* Four haul slots, the mockup's 13px frames. Finds sit in the first slots. */}
+          <View pointerEvents="none" style={[styles.row, { top: rowY, alignItems: 'center', gap: ART_PT * 2 }]}>
+            <PixelLabel color={PIXEL.cyan}>Haul</PixelLabel>
+            {Array.from({ length: 4 }, (_, i) => {
+              const item = rowItems[i];
+              return (
+                <PixelFrame
+                  key={item ? `${item.id}-${i}` : `empty-${i}`}
+                  glow={false}
+                  padded={false}
+                  step={1}
+                  border={PIXEL.slot}
+                  style={{ width: 13 * ART_PT, height: 13 * ART_PT }}>
+                  {item ? (
+                    <View style={item.hidden ? styles.hidden : undefined} accessibilityLabel={findName(item.id)}>
+                      <FindIcon id={item.id} size={11 * ART_PT} bare />
+                    </View>
+                  ) : null}
+                </PixelFrame>
+              );
+            })}
           </View>
           {sinking.map((id, i) => (
             <Sinking key={`${id}-${i}-${event?.key}`} id={id} left={slotX(event?.saved.length ?? 0) + i * SLOT} top={rowY} drop={height * 0.4} reduceMotion={reduceMotion} />

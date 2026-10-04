@@ -1,10 +1,11 @@
 /**
- * Pixel UI theme for Divecore phase 1.
+ * Pixel UI theme for Divecore.
  *
  * 1 art pixel = 2pt. Panels, type and pixel-art boxes snap to that grid.
- * Tiny5 labels (em is 8 font-pixels, so 28pt is 3.5pt per font pixel and the
- * 5px cap draws at 17.5pt). Inter carries body copy and numbers.
- * Both faces are OFL; the files live in assets/play/fonts.
+ * Departure Mono labels (em is 11 font-pixels, so 22pt is 2pt per font pixel
+ * and the 8px cap draws at 16pt). Rajdhani SemiBold carries body copy and
+ * numbers, at the mockup's sizes (no faux bold — the SemiBold file is the
+ * weight). Both faces are OFL.
  */
 
 /** Points per art pixel. */
@@ -13,9 +14,18 @@ export const ART_PT = 2;
 export const PIXEL = {
   ink: '#05070D',
   cyan: '#22D3EE',
-  amber: '#FFC83D',
+  cyanHi: '#8FD3FF',
+  cyanLo: '#0B8A8F',
+  amber: '#F9C22B',
+  amberHi: '#FBFF86',
+  amberLo: '#F79617',
+  glow: '#0B5E65',
+  glowAmber: '#7A3045',
+  slot: '#3E3546',
   text: '#F4FBFF',
   body: '#D5E2EF',
+  /** Mockup secondary text (`DIM`). */
+  dim: '#7F708A',
   muted: '#8FA3BF',
   heart: '#FF4D6D',
   heartEmpty: '#5A4568',
@@ -24,20 +34,26 @@ export const PIXEL = {
 
 /**
  * Label + body faces. Family names match the `usePixelFonts` keys.
- * Switching the pair (for example to Departure Mono + Rajdhani) is this
- * object plus the matching file in `usePixelFonts`.
+ * The whole Play UI reads this pair.
  */
 export const PIXEL_FONT = {
-  label: 'Tiny5_Regular',
-  body: 'Inter_400Regular',
+  label: 'DepartureMono_Regular',
+  body: 'Rajdhani_600SemiBold',
 } as const;
 
 /**
- * Tiny5: unitsPerEm 1024, one font pixel = 128 units, cap height = 5px.
- * 28pt → 3.5pt per font pixel, cap = 17.5pt (never under 16pt).
+ * Departure Mono: em 11, drawn at 2pt per font pixel (the mockup's
+ * 1 font pixel = 1 art pixel). Cap height is 8px → 16pt.
  */
-export const PIXEL_LABEL_PT = 28;
-export const PIXEL_BODY_PT = 16;
+export const PIXEL_LABEL_PT = 22;
+/**
+ * Rajdhani runs small in the mockup, which sizes it at `pt * 1.18`.
+ * The coach sentence is 16pt → 19pt. The secondary line ("2 treats left")
+ * is 14pt → 17pt. Shell / risk numbers are 18pt and 17pt → 21pt and 20pt.
+ */
+export const PIXEL_BODY_PT = 19;
+export const PIXEL_CAPTION_PT = 17;
+export const PIXEL_NUM_PT = 21;
 /** Every tappable control is at least this tall. */
 export const PIXEL_TAP_PT = 48;
 

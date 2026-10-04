@@ -83,6 +83,8 @@ export const ROOM_FRAMES = {
   'mote': { x: 44, y: 427, w: 2, h: 2 },
   'sparkle': { x: 47, y: 427, w: 7, h: 7 },
   'heart': { x: 55, y: 427, w: 16, h: 13 },
+  'heart-empty': { x: 72, y: 427, w: 16, h: 13 },
+  'heart-part': { x: 89, y: 427, w: 16, h: 13 },
   'plate': { x: 0, y: 0, w: 197, h: 426 },
   'glow': { x: 198, y: 0, w: 105, h: 210 },
 } as const;
