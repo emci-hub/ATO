@@ -6,7 +6,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { EIGHT_BALL_ANSWERS, eightBallRollMs, pickEightBallFlashes, rollEightBall } from '../src/lib/sage-eight-ball';
+import { EIGHT_BALL_ANSWERS, EIGHT_BALL_COPY_REVIEWED, eightBallRollMs, pickEightBallFlashes, rollEightBall } from '../src/lib/sage-eight-ball';
+import { lineRuleViolation } from '../src/lib/daily-line/bank';
 import { formatSageUsage, QUOTA_EMPTY_MESSAGE } from '../src/lib/voice/quota';
 
 let passed = 0;
@@ -27,7 +28,20 @@ assert.equal(new Set(EIGHT_BALL_ANSWERS).size, EIGHT_BALL_ANSWERS.length);
 for (const answer of EIGHT_BALL_ANSWERS) {
   assert.doesNotMatch(answer, banned);
 }
-ok('8-ball has a fixed unique set with no AI/tokens copy');
+// The answers are in the moment voice (2026-10-04): every line passes the same
+// mechanical rules as the daily lines (no "you are", no "always", no advice,
+// no framework term, short), the toy's ten yes / five not sure / five no shape
+// is kept, and they ship as draft until emci reads docs/copy-review.md §8.
+assert.equal(EIGHT_BALL_ANSWERS.length, 20);
+for (const answer of EIGHT_BALL_ANSWERS) {
+  assert.equal(lineRuleViolation(answer), null, `8-ball line breaks the voice rules: ${answer}`);
+  assert.ok(answer.length <= 60, `8-ball line too long: ${answer}`);
+}
+for (const toy of ['It is certain.', 'Outlook good.', 'Reply hazy, try again.', 'My reply is no.', 'Very doubtful.']) {
+  assert.ok(!(EIGHT_BALL_ANSWERS as readonly string[]).includes(toy), `the classic toy line is gone: ${toy}`);
+}
+assert.equal(EIGHT_BALL_COPY_REVIEWED, false, 'draft until emci reads it');
+ok('8-ball has a fixed unique set with no AI/tokens copy, in the moment voice, still draft');
 
 const rolled = new Set<string>();
 let prev: string | null = null;

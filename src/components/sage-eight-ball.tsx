@@ -15,7 +15,9 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAppearance } from '@/lib/theme/context';
+import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import {
+  EIGHT_BALL_COPY_REVIEWED,
   EIGHT_BALL_FLASH_DELAYS_MS,
   pickEightBallFlashes,
   rollEightBall,
@@ -174,6 +176,11 @@ export function SageEightBall() {
       </ThemedPressable>
       {open ? (
         <View style={styles.body}>
+          {!EIGHT_BALL_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
+            <ThemedText type="code" themeColor="textSecondary">
+              Draft copy — waiting on emci review.
+            </ThemedText>
+          ) : null}
           <View style={styles.answerRow}>
             <SageOrb size={28} spin={spin} marked />
             <ThemedText
