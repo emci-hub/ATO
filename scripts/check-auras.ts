@@ -153,6 +153,10 @@ function blob(w: number, h: number, x0: number, y0: number, bw: number, bh: numb
   assert.ok(grownRatio < 1.2, `blaze stays a thin hug ${grownRatio}`);
   assert.ok(Math.min(...grownYs) < 30, 'short tongues');
   assert.ok(grown.frames[3].pixels.every((p) => p.x > 28 && p.x < 92), 'flame hugs the sides');
+  const meanX = (pixels: { x: number }[]) => pixels.reduce((sum, p) => sum + p.x, 0) / pixels.length;
+  const shifted = auraFramesFromAlpha(blob(80, 40, 50, 8, 12, 18), 80, 40, 'blaze', 'fire').frames[0];
+  const home = auraFramesFromAlpha(blob(80, 40, 4, 8, 12, 18), 80, 40, 'blaze', 'fire').frames[0];
+  assert.ok(meanX(shifted.pixels) > meanX(home.pixels) + 30, 'aura follows the sprite pixels');
 }
 ok('frames match the samples: thin blaze, calm spiky, twinkling rune, attached bubbles; sprite untouched');
 
@@ -217,6 +221,11 @@ ok('save v32 round-trips; a v31 aura migrates; a v30 save has none; the dev kit 
   for (const needle of ['aura-view', 'PetAura', 'aura_style', 'applyPetAura']) {
     assert.ok(!defend.includes(needle), needle);
   }
+  const view = read('src/play/aura-view.tsx');
+  assert.ok(!view.includes('stillFrame'), 'aura follows the frame on screen');
+  assert.ok(view.includes('drawable.frameKey'));
+  assert.ok(view.includes('auraMaskFromAlpha'));
+  assert.ok(view.includes('paintAuraMask'));
   const figure = read('src/play/pet-figure.tsx');
   assert.ok(figure.includes('PetAura'));
   assert.ok(figure.includes('layer="back"'));

@@ -1,7 +1,8 @@
 /**
- * Aura paint (save v31). Frames come from the pet frame's alpha, cached.
- * The body sits behind the sprite. Blaze sparks sit in front, off the sprite.
- * Reduce Motion and Effects that are not Full hold frame 0.
+ * Aura paint (save v32). Each worn style is generated from the alpha of the
+ * sprite frame on screen, then cached. Styles and colours share one distance
+ * field per frame. The body sits behind the sprite. Blaze sparks sit in front,
+ * off the sprite. Reduce Motion and Effects that are not Full hold frame 0.
  */
 import { useEffect, useRef, useState } from 'react';
 import { Image, PixelRatio, StyleSheet, View } from 'react-native';
@@ -10,8 +11,10 @@ import Svg, { Path } from 'react-native-svg';
 import { decodePng, type Rgba } from '@/play/aura-png';
 import {
   auraFps,
-  auraFramesFromAlpha,
+  auraMaskFromAlpha,
+  paintAuraMask,
   type AuraFrame,
+  type AuraMask,
   type AuraStyle,
   type Rgb,
 } from '@/play/auras';
@@ -22,15 +25,26 @@ import { playSheetArt, sheetFrame } from '@/play/sheet-sprite';
 import type { ClipDrawable } from '@/play/skin';
 
 const sheets = new Map<string, Promise<Rgba>>();
-const frames = new Map<string, { w: number; h: number; pad: number; frames: AuraFrame[] }>();
+/** One distance field per sprite frame. A few poses stay; older ones drop. */
+const MASK_CAP = 12;
+const masks = new Map<string, Promise<AuraMask>>();
+/** Painted pixels per frame, style and colour. Cheap next to the field. */
+const PAINT_CAP = 64;
+type AuraPack = { key: string; w: number; h: number; pad: number; frames: AuraFrame[] };
+const painted = new Map<string, AuraPack>();
 
-/** Walk cycles share one mask: the facing's first frame. The aura does not rebuild every step. */
-function stillFrame(sheetKey: string, frameKey: string): { frameKey: string; cacheKey: string } {
-  const slash = frameKey.lastIndexOf('/');
-  const dir = slash >= 0 ? frameKey.slice(0, slash + 1) : '';
-  const still = `${dir}frame_000`;
-  const use = PLAY_SHEETS[sheetKey]?.frames[still] ? still : frameKey;
-  return { frameKey: use, cacheKey: `${sheetKey}|${dir}` };
+function remember<V>(map: Map<string, V>, key: string, value: V, cap: number) {
+  map.delete(key);
+  map.set(key, value);
+  while (map.size > cap) {
+    const oldest = map.keys().next().value;
+    if (oldest === undefined || oldest === key) break;
+    map.delete(oldest);
+  }
+}
+
+function packKey(drawable: { sheetKey: string; frameKey: string }, style: AuraStyle, element: string): string {
+  return `${drawable.sheetKey}|${drawable.frameKey}|${style}|${element}`;
 }
 
 function sheetUri(source: unknown): string | undefined {
@@ -96,32 +110,61 @@ function cropAlpha(rgba: Rgba, x: number, y: number, w: number, h: number): Uint
   return alpha;
 }
 
+/** The heavy field for this sprite frame. In-flight builds are shared. */
+function maskFor(sheetKey: string, frameKey: string, rect: { x: number; y: number; w: number; h: number }): Promise<AuraMask> {
+  const key = `${sheetKey}|${frameKey}`;
+  const hit = masks.get(key);
+  if (hit) {
+    remember(masks, key, hit, MASK_CAP);
+    return hit;
+  }
+  const job = (async () => {
+    const rgba = await sheetRgba(sheetKey);
+    // Let the sprite frame paint before the distance field runs.
+    await Promise.resolve();
+    const alpha = cropAlpha(rgba, rect.x, rect.y, rect.w, rect.h);
+    return auraMaskFromAlpha(alpha, rect.w, rect.h);
+  })();
+  remember(masks, key, job, MASK_CAP);
+  job.catch(() => {
+    if (masks.get(key) === job) masks.delete(key);
+  });
+  return job;
+}
+
 export async function loadAuraFrames(
   drawable: ClipDrawable | undefined,
   style: AuraStyle,
   element: string,
-): Promise<{ w: number; h: number; pad: number; frames: AuraFrame[] } | null> {
+): Promise<AuraPack | null> {
   if (!drawable || drawable.kind !== 'sheet') return null;
-  const still = stillFrame(drawable.sheetKey, drawable.frameKey);
-  const frame = sheetFrame(drawable.sheetKey, still.frameKey);
-  const rect = frame?.rect ?? PLAY_SHEETS[drawable.sheetKey]?.frames[still.frameKey];
-  if (!rect) return null;
-  const key = `${still.cacheKey}|${style}|${element}`;
-  const hit = frames.get(key);
-  if (hit) return hit;
-  let rgba: Rgba;
-  try {
-    rgba = await sheetRgba(drawable.sheetKey);
-  } catch (err) {
-    throw new Error(`sheet ${drawable.sheetKey}: ${err instanceof Error ? err.message : 'fetch'}`);
+  const key = packKey(drawable, style, element);
+  const hit = painted.get(key);
+  if (hit) {
+    remember(painted, key, hit, PAINT_CAP);
+    return hit;
   }
-  const cached = frames.get(key);
-  if (cached) return cached;
-  const alpha = cropAlpha(rgba, rect.x, rect.y, rect.w, rect.h);
-  const built = auraFramesFromAlpha(alpha, rect.w, rect.h, style, element);
-  const packed = { w: rect.w, h: rect.h, pad: built.pad, frames: built.frames };
-  frames.set(key, packed);
+  const frame = sheetFrame(drawable.sheetKey, drawable.frameKey);
+  const rect = frame?.rect ?? PLAY_SHEETS[drawable.sheetKey]?.frames[drawable.frameKey];
+  if (!rect) return null;
+  const mask = await maskFor(drawable.sheetKey, drawable.frameKey, rect);
+  const again = painted.get(key);
+  if (again) {
+    remember(painted, key, again, PAINT_CAP);
+    return again;
+  }
+  const built = paintAuraMask(mask, style, element);
+  const packed = { key, w: rect.w, h: rect.h, pad: built.pad, frames: built.frames };
+  remember(painted, key, packed, PAINT_CAP);
   return packed;
+}
+
+function peekPack(drawable: { sheetKey: string; frameKey: string }, style: AuraStyle, element: string): AuraPack | null {
+  const key = packKey(drawable, style, element);
+  const hit = painted.get(key);
+  if (!hit) return null;
+  remember(painted, key, hit, PAINT_CAP);
+  return hit;
 }
 
 function rgb(col: Rgb): string {
@@ -154,17 +197,23 @@ export function PetAura({
   const reduceMotion = useOsReduceMotion();
   const fxFull = useFxQuality() === 'full';
   const frozen = reduceMotion || !fxFull;
-  const [pack, setPack] = useState<{ w: number; h: number; pad: number; frames: AuraFrame[] } | null>(null);
+  const [pack, setPack] = useState<AuraPack | null>(null);
   const [tick, setTick] = useState(0);
-  const stable =
-    drawable?.kind === 'sheet' ? `${stillFrame(drawable.sheetKey, drawable.frameKey).cacheKey}|${styleId}|${element}` : '';
+  const frameKey =
+    drawable?.kind === 'sheet' ? `${drawable.sheetKey}|${drawable.frameKey}|${styleId}|${element}` : '';
   const drawableRef = useRef(drawable);
   drawableRef.current = drawable;
   useEffect(() => {
+    const current = drawableRef.current;
+    const want =
+      current?.kind === 'sheet' ? `${current.sheetKey}|${current.frameKey}|${styleId}|${element}` : '';
+    if (!want) return;
     let live = true;
-    void loadAuraFrames(drawableRef.current, styleId, element)
+    // The build always finishes into the cache. A pose change only skips the
+    // setState, so a frame we already started is ready when we come back.
+    void loadAuraFrames(current, styleId, element)
       .then((next) => {
-        if (live) setPack(next);
+        if (live && next?.key === want) setPack(next);
       })
       .catch(() => {
         if (live) setPack(null);
@@ -172,21 +221,23 @@ export function PetAura({
     return () => {
       live = false;
     };
-  }, [stable, styleId, element]);
+  }, [frameKey, styleId, element]);
   useEffect(() => {
-    if (frozen || !pack || pack.frames.length < 2) return;
+    if (frozen) return;
     const id = setInterval(() => setTick((n) => n + 1), Math.round(1000 / auraFps()));
     return () => clearInterval(id);
-  }, [frozen, pack, styleId]);
-  if (!pack) return null;
-  const frame = pack.frames[frozen ? 0 : tick % pack.frames.length];
+  }, [frozen, styleId]);
+  const peeked = drawable?.kind === 'sheet' ? peekPack(drawable, styleId, element) : null;
+  const shown = peeked ?? (pack && pack.key === frameKey ? pack : null);
+  if (!shown) return null;
+  const frame = shown.frames[frozen ? 0 : tick % shown.frames.length];
   if (!frame) return null;
-  const scale = box / pack.w;
-  const pad = pack.pad;
+  const scale = box / shown.w;
+  const pad = shown.pad;
   const left = -pad * scale;
   const top = -pad * scale;
-  const width = (pack.w + pad * 2) * scale;
-  const height = (pack.h + pad * 2) * scale;
+  const width = (shown.w + pad * 2) * scale;
+  const height = (shown.h + pad * 2) * scale;
   const paths =
     layer === 'back'
       ? pathsOf(frame.pixels, (p) => rgb(p.col ?? [255, 255, 255]))
@@ -196,7 +247,7 @@ export function PetAura({
   if (!paths.length) return null;
   return (
     <View pointerEvents="none" style={[styles.layer, { left, top, width, height }]}>
-      <Svg width={width} height={height} viewBox={`${-pad} ${-pad} ${pack.w + pad * 2} ${pack.h + pad * 2}`}>
+      <Svg width={width} height={height} viewBox={`${-pad} ${-pad} ${shown.w + pad * 2} ${shown.h + pad * 2}`}>
         {paths.map((path) => (
           <Path key={path.color} d={path.d} fill={path.color} />
         ))}

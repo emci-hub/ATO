@@ -312,9 +312,9 @@ function hash(x: number, y: number, s: number): number {
 export type AuraPixel = { x: number; y: number; col: Rgb };
 export type AuraFrame = { pixels: AuraPixel[]; sparks: { x: number; y: number }[] };
 
-type Field = { dist: Float32Array; nx: Int16Array; ny: Int16Array; W: number; H: number; pad: number };
+export type AuraField = { dist: Float32Array; nx: Int16Array; ny: Int16Array; W: number; H: number; pad: number };
 
-function euclidField(opaque: Uint8Array, w: number, h: number, pad: number): Field {
+function euclidField(opaque: Uint8Array, w: number, h: number, pad: number): AuraField {
   const pts: number[] = [];
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
     if (!opaque[y * w + x]) continue;
@@ -387,6 +387,36 @@ export function auraLayout(boxH: number): { scale: number; pad: number } {
   return { scale, pad: Math.max(16, Math.ceil(10 * scale + 4)) };
 }
 
+export type AuraMask = {
+  w: number;
+  h: number;
+  pad: number;
+  scale: number;
+  opaque: Uint8Array;
+  box: { x: number; y: number; w: number; h: number };
+  field: AuraField;
+};
+
+/** The distance field for one sprite frame. Styles and colours share it. */
+export function auraMaskFromAlpha(alpha: Uint8Array, w: number, h: number): AuraMask {
+  const opaque = new Uint8Array(w * h);
+  for (let i = 0; i < alpha.length; i++) if (alpha[i] >= 40) opaque[i] = 1;
+  const box = opaqueBox(opaque, w, h);
+  const layout = auraLayout(box.h);
+  return { w, h, pad: layout.pad, scale: layout.scale, opaque, box, field: euclidField(opaque, w, h, layout.pad) };
+}
+
+/** Paint one style onto a frame mask. The mask does not depend on colour. */
+export function paintAuraMask(mask: AuraMask, style: AuraStyle, element: string): { frames: AuraFrame[]; pad: number } {
+  const ramp = swordRamp(element);
+  const count = auraFrameCount(style);
+  const frames: AuraFrame[] = [];
+  for (let frame = 0; frame < count; frame++) {
+    frames.push(paintFrame(mask.opaque, mask.w, mask.h, mask.box, mask.field, ramp, style, frame, mask.scale));
+  }
+  return { frames, pad: mask.pad };
+}
+
 /** One style, every frame, from an alpha mask (0 = clear). Opaque cells are never painted. */
 export function auraFramesFromAlpha(
   alpha: Uint8Array,
@@ -395,16 +425,7 @@ export function auraFramesFromAlpha(
   style: AuraStyle,
   element: string,
 ): { frames: AuraFrame[]; pad: number } {
-  const opaque = new Uint8Array(w * h);
-  for (let i = 0; i < alpha.length; i++) if (alpha[i] >= 40) opaque[i] = 1;
-  const box = opaqueBox(opaque, w, h);
-  const layout = auraLayout(box.h);
-  const field = euclidField(opaque, w, h, layout.pad);
-  const ramp = swordRamp(element);
-  const frames = auraFrameCount(style);
-  const out: AuraFrame[] = [];
-  for (let frame = 0; frame < frames; frame++) out.push(paintFrame(opaque, w, h, box, field, ramp, style, frame, layout.scale));
-  return { frames: out, pad: layout.pad };
+  return paintAuraMask(auraMaskFromAlpha(alpha, w, h), style, element);
 }
 
 function paintFrame(
@@ -412,7 +433,7 @@ function paintFrame(
   w: number,
   h: number,
   box: { x: number; y: number; w: number; h: number },
-  field: Field,
+  field: AuraField,
   ramp: { core: Rgb; mid: Rgb; tip: Rgb },
   style: AuraStyle,
   frame: number,
