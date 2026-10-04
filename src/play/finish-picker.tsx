@@ -4,7 +4,7 @@
  * the pet you are dressing, foil included, before you spend tokens.
  */
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { PixelRatio, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
 import { petRevealed } from '@/play/den';
@@ -16,9 +16,12 @@ import {
   type FinishKind,
 } from '@/play/finishes';
 import { NeonButton, NeonChip, NeonLabel } from '@/play/neon-ui';
+import { heroStars } from '@/play/pet-eggs';
 import { NEON } from '@/play/neon-viper';
 import type { PetState } from '@/play/pet';
-import { FinishPaint } from '@/play/finish-foil';
+import { PetCard } from '@/play/pet-card';
+import { sharpPetBox } from '@/play/pet-actor';
+import { usePetArt } from '@/play/pet-anim-sprite';
 import { PetFigure } from '@/play/pet-figure';
 import { petRecolor, useBlendRecolor } from '@/play/pet-looks';
 import { applyPetFinish, type PlayView } from '@/play/playStore';
@@ -57,6 +60,10 @@ export function FinishPicker({
   reduceMotion: boolean;
 }) {
   const blend = useBlendRecolor();
+  const { width: screenW } = useWindowDimensions();
+  const art = usePetArt(pet);
+  const previewW = Math.min(280, Math.max(200, screenW - 32));
+  const previewBox = sharpPetBox(Math.round(previewW * 0.7), art.cellPx, PixelRatio.get());
   const access = view.pet.finish;
   const revealed = petRevealed(pet);
   const [kind, setKind] = useState<FinishKind>(pet.finish_kind);
@@ -111,8 +118,9 @@ export function FinishPicker({
     <View style={styles.wrap}>
       <NeonLabel>Finish</NeonLabel>
       <Text style={styles.body}>
-        A look you pick — holo sits on the pet, reverse holo sits behind it. Never rolled, so the egg odds stay the odds
-        you see. Classic is still the only shiny you earn.
+        A look you pick. Holo foils the art window behind the pet. Reverse holo foils
+        the rest of the card, and the pet stays plain. Never rolled, so the egg odds stay the odds you see. Classic is
+        still the only shiny you earn.
         {access.free ? ' Unlocked while everything is free.' : access.pass ? ' Tide Pass discount is on.' : ''}
       </Text>
       {wearing ? <Text style={styles.wearing}>Wearing {wearing}</Text> : null}
@@ -149,20 +157,42 @@ export function FinishPicker({
       </View>
       <Swatch stops={color.stops} />
       <View style={styles.preview}>
-        {previewKind === 'reverse' && pet.stage !== 'egg' ? (
-          <FinishPaint kind="reverse" colorId={colorId} onShiny={pet.shiny} motion="sweep" reduceMotion={reduceMotion} />
-        ) : null}
-        <PetFigure
-          pet={pet}
-          baseBox={96}
-          eggColor="#9FD8FF"
-          recolor={revealed ? petRecolor(pet.hero, pet.shiny, dyeOn, pet.shiny_style) : null}
-          blend={blend}
-          lockColour={pet.shiny}
-          finish={previewKind ? { kind: previewKind, color: colorId } : { kind: 'none', color: null }}
-          foilMotion="sweep"
-          reduceMotion={reduceMotion}
-          reverseHost={previewKind === 'reverse'}
+        <PetCard
+          live
+          width={previewW}
+          animate={!reduceMotion}
+          info={{
+            name: pet.name ?? 'Pet',
+            grade: pet.grade,
+            shiny: pet.shiny,
+            stars: pet.hero ? heroStars(view.pet.heroes[pet.hero]?.copies ?? 0) : 0,
+            egg: pet.egg,
+            forms: pet.forms,
+            band: pet.band,
+            days: null,
+            dye: dyeOn,
+            styleLabel: pet.shiny ? 'Classic' : null,
+            finishKind: kind,
+            finishColor: kind === 'none' ? null : colorId,
+            finishLabel: kind === 'none' ? null : finishWornLabel(kind, colorId),
+            aura: pet.auras.length > 0,
+          }}
+          sprite={
+            <PetFigure
+              pet={pet}
+              baseBox={previewBox}
+              box={previewBox}
+              eggColor="#9FD8FF"
+              recolor={revealed ? petRecolor(pet.hero, pet.shiny, dyeOn, pet.shiny_style) : null}
+              blend={blend}
+              lockColour={pet.shiny}
+              finish={previewKind ? { kind: previewKind, color: colorId } : { kind: 'none', color: null }}
+              foilMotion="sweep"
+              reduceMotion={reduceMotion}
+              reverseHost
+              auraElement={view.swords.equipped?.element ?? null}
+            />
+          }
         />
       </View>
       <Text style={styles.body}>
@@ -184,6 +214,6 @@ const styles = StyleSheet.create({
   colors: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   swatch: { flexDirection: 'row', height: 8, borderRadius: 4, overflow: 'hidden' },
   swatchBand: { flex: 1 },
-  preview: { alignSelf: 'center', width: 120, height: 120, alignItems: 'center', justifyContent: 'center' },
+  preview: { alignSelf: 'center', alignItems: 'center' },
   note: { fontFamily: Fonts.monoBold, fontSize: 13, color: NEON.cyan },
 });

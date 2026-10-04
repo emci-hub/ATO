@@ -1,46 +1,38 @@
 /**
  * Holo / reverse-holo paint (save v30). JS only: react-native-svg + Reanimated.
  *
- * Holo is masked to the sprite's alpha (the same sheet crop as ClipImage).
- * Reverse holo is an unmasked plate behind the pet. The sweep translates the
- * gradient; the stops never animate. Reduce Motion (Play or the OS) and Low
- * effects hold the band still.
+ * Holo fills the art window behind the pet (diagonal bands, dark gaps, glitter,
+ * a glare spot). Reverse holo fills the rounded card around that window. The
+ * pet sprite is never tinted.
  *
- * Layer order for holo, applied by the caller: base sprite, shiny hue, this
- * foil, then this glare. On a shiny the foil opacity drops; the glare does not.
+ * Motion is the shared drift + tilt in `finish-motion`. Reduce Motion (Play or
+ * the OS) and Low effects hold every layer still. Stops never animate.
  */
-import { useEffect, useId, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, StyleSheet, View, type ViewStyle } from 'react-native';
-import Animated, {
-  Easing,
-  cancelAnimation,
-  useAnimatedProps,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-  type SharedValue,
-} from 'react-native-reanimated';
-import Svg, { ClipPath, Defs, G, LinearGradient, Mask, Rect, Stop, Image as SvgImage } from 'react-native-svg';
+import { useEffect, useId, useState } from 'react';
+import { AccessibilityInfo, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import Animated, { useAnimatedProps } from 'react-native-reanimated';
+import Svg, { Circle, ClipPath, Defs, G, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 
+import { foilDrift, foilTiltX, foilTiltY, leaseFinishSensor } from '@/play/finish-motion';
 import {
   finishColor,
-  finishConfig,
   finishSweepRuns,
+  foilAngle,
+  foilGap,
+  foilSparkles,
+  foilStripes,
   glareOpacity,
-  holoFoilOpacity,
   reverseOpacity,
-  stopsFor,
+  windowOpacity,
   type FinishMotion,
 } from '@/play/finishes';
 import { useFxQuality } from '@/play/fx-quality';
-import { useBlendRecolor } from '@/play/pet-looks';
-import { drawableFrame, playSheetArt } from '@/play/sheet-sprite';
-import { sheetSpritePlacement } from '@/play/sheet-sprite-math';
-import type { ClipDrawable } from '@/play/skin';
 
 const AnimatedG = Animated.createAnimatedComponent(G);
 
-function useOsReduceMotion(): boolean {
+export type FoilHole = { x: number; y: number; w: number; h: number; r: number };
+
+export function useOsReduceMotion(): boolean {
   const [on, setOn] = useState(false);
   useEffect(() => {
     let live = true;
@@ -49,7 +41,7 @@ function useOsReduceMotion(): boolean {
         if (live) setOn(value);
       })
       .catch(() => {
-        // Keep moving if the OS query fails; the Play override still applies.
+        // Keep the Play override if the OS query fails.
       });
     const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setOn);
     return () => {
@@ -60,173 +52,158 @@ function useOsReduceMotion(): boolean {
   return on;
 }
 
-type MaskArt = {
-  vbW: number;
-  vbH: number;
-  node: ReactNode;
-  clip: { x: number; y: number; width: number; height: number } | null;
-};
-
-/** The cropped sheet frame that fills the mask, via the shared placement maths. */
-function maskArt(drawable: ClipDrawable | undefined): MaskArt | null {
-  if (!drawable) return null;
-  if (drawable.kind === 'legacy') {
-    return {
-      vbW: 100,
-      vbH: 100,
-      clip: null,
-      node: (
-        <SvgImage href={drawable.source} x={0} y={0} width={100} height={100} preserveAspectRatio="none" />
-      ),
-    };
-  }
-  const frame = drawableFrame(drawable);
-  const source = frame ? playSheetArt(frame.sheetKey) : undefined;
-  if (!frame || !source) return null;
-  const place = sheetSpritePlacement(frame.rect, 0, 0, frame.rect.w);
-  return {
-    vbW: frame.rect.w,
-    vbH: frame.rect.h,
-    clip: place.clip,
-    node: (
-      <SvgImage
-        href={source}
-        x={place.imageX}
-        y={place.imageY}
-        width={frame.sheetW}
-        height={frame.sheetH}
-        preserveAspectRatio="none"
-      />
-    ),
-  };
+function useFoilMoving(motion: FinishMotion, reduceMotion: boolean): boolean {
+  const fxFull = useFxQuality() === 'full';
+  const osReduce = useOsReduceMotion();
+  return finishSweepRuns({ motion, reduceMotion, osReduceMotion: osReduce, fxFull });
 }
 
-function BandSvg({
-  art,
-  mask,
-  stops,
-  glare,
-  shift,
-  travel,
+/** Lease the gyro while a finished pet is actually on this surface. */
+export function useFinishLease(active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    return leaseFinishSensor();
+  }, [active]);
+}
+
+function roundRect(x: number, y: number, w: number, h: number, r: number): string {
+  const radius = Math.max(0, Math.min(r, w / 2, h / 2));
+  if (radius <= 0) return `M ${x} ${y} H ${x + w} V ${y + h} H ${x} Z`;
+  return [
+    `M ${x + radius} ${y}`,
+    `H ${x + w - radius}`,
+    `A ${radius} ${radius} 0 0 1 ${x + w} ${y + radius}`,
+    `V ${y + h - radius}`,
+    `A ${radius} ${radius} 0 0 1 ${x + w - radius} ${y + h}`,
+    `H ${x + radius}`,
+    `A ${radius} ${radius} 0 0 1 ${x} ${y + h - radius}`,
+    `V ${y + radius}`,
+    `A ${radius} ${radius} 0 0 1 ${x + radius} ${y}`,
+    'Z',
+  ].join(' ');
+}
+
+function FoilTexture({
+  colorId,
+  moving,
+  width,
+  height,
+  hole,
 }: {
-  art: MaskArt;
-  /** Holo masks to the sprite. Reverse holo does not. */
-  mask: boolean;
-  stops: readonly { offset: number; color: string }[] | null;
-  glare: string | null;
-  shift: SharedValue<number>;
-  travel: SharedValue<number>;
+  colorId: string;
+  moving: boolean;
+  width: number;
+  height: number;
+  hole: FoilHole | null;
 }) {
+  const color = finishColor(colorId);
   const raw = useId().replace(/[^a-zA-Z0-9]/g, '');
-  const maskId = `foilmask-${raw}`;
-  const clipId = `foilclip-${raw}`;
-  const fillId = `foilfill-${raw}`;
-  const animatedProps = useAnimatedProps(() => {
-    const w = travel.value;
-    const x = -w + shift.value * w;
-    return { transform: `translate(${x}, 0)` };
+  const clipId = `foilc-${raw}`;
+  const glareId = `foilg-${raw}`;
+  const angle = color ? foilAngle(color) : 112;
+  const bandProps = useAnimatedProps(() => {
+    const drift = moving ? foilDrift.value : 0.35;
+    const tx = moving ? foilTiltX.value : 0;
+    const slide = (drift - 0.5) * 18 + tx * 14;
+    return { transform: `translate(${slide} 0) rotate(${angle} 50 50)` };
   });
+  const sparkleProps = useAnimatedProps(() => {
+    const drift = moving ? foilDrift.value : 0.35;
+    const tx = moving ? foilTiltX.value : 0;
+    const ty = moving ? foilTiltY.value : 0;
+    const slide = (drift - 0.5) * 8 + tx * 6;
+    return { transform: `translate(${slide} ${ty * 5})` };
+  });
+  const glareProps = useAnimatedProps(() => {
+    const drift = moving ? foilDrift.value : 0.35;
+    const tx = moving ? foilTiltX.value : 0;
+    const ty = moving ? foilTiltY.value : 0;
+    const x = (drift - 0.5) * 8 + tx * 16;
+    const y = ty * 12;
+    return { transform: `translate(${x} ${y})` };
+  });
+  if (!color || width <= 0 || height <= 0) return null;
+  const gap = foilGap(color.stops);
+  const stripes = foilStripes(color);
+  const sparkles = foilSparkles(color.id);
+  const sx = width / 100;
+  const sy = height / 100;
+  const holePath = hole ? roundRect(hole.x, hole.y, hole.w, hole.h, hole.r) : '';
   return (
-    <Svg width="100%" height="100%" viewBox={`0 0 ${art.vbW} ${art.vbH}`}>
+    <Svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`}>
       <Defs>
-        {art.clip ? (
+        {hole ? (
           <ClipPath id={clipId}>
-            <Rect x={art.clip.x} y={art.clip.y} width={art.clip.width} height={art.clip.height} />
+            <Path fillRule="evenodd" d={`${roundRect(0, 0, width, height, 0)} ${holePath}`} />
           </ClipPath>
         ) : null}
-        {mask ? (
-          <Mask id={maskId} maskType="alpha" maskUnits="userSpaceOnUse" x={0} y={0} width={art.vbW} height={art.vbH}>
-            {art.clip ? <G clipPath={`url(#${clipId})`}>{art.node}</G> : art.node}
-          </Mask>
-        ) : null}
-        {stops ? (
-          <LinearGradient id={fillId} x1="0" y1="0" x2="1" y2="0">
-            {stops.map((stop, i) => (
-              <Stop key={`${stop.offset}-${i}`} offset={String(stop.offset)} stopColor={stop.color} />
-            ))}
-          </LinearGradient>
-        ) : null}
-        {glare ? (
-          <LinearGradient id={fillId} x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor={glare} stopOpacity={0} />
-            <Stop offset="0.42" stopColor={glare} stopOpacity={0} />
-            <Stop offset="0.5" stopColor={glare} stopOpacity={1} />
-            <Stop offset="0.58" stopColor={glare} stopOpacity={0} />
-            <Stop offset="1" stopColor={glare} stopOpacity={0} />
-          </LinearGradient>
-        ) : null}
+        <RadialGradient id={glareId} cx="50%" cy="42%" r="48%">
+          <Stop offset="0" stopColor={color.glare} stopOpacity={0.95} />
+          <Stop offset="0.22" stopColor={color.glare} stopOpacity={0.45} />
+          <Stop offset="0.55" stopColor={color.glare} stopOpacity={0} />
+        </RadialGradient>
       </Defs>
-      <G mask={mask ? `url(#${maskId})` : undefined}>
-        <AnimatedG animatedProps={animatedProps}>
-          <Rect x={0} y={0} width={art.vbW * 2} height={art.vbH} fill={`url(#${fillId})`} />
-        </AnimatedG>
+      <G clipPath={hole ? `url(#${clipId})` : undefined}>
+        <Rect x={0} y={0} width={width} height={height} fill={gap} />
+        <G transform={`scale(${sx} ${sy})`}>
+          <AnimatedG animatedProps={bandProps}>
+            <Rect x={-50} y={-80} width={200} height={260} fill={gap} />
+            {stripes.map((stripe, i) => (
+              <Rect key={`${stripe.x}-${i}`} x={stripe.x} y={-80} width={stripe.w} height={260} fill={stripe.color} />
+            ))}
+          </AnimatedG>
+          <AnimatedG animatedProps={sparkleProps}>
+            {sparkles.map((dot, i) => (
+              <Circle key={`${dot.x}-${i}`} cx={dot.x} cy={dot.y} r={dot.r} fill={color.glare} opacity={dot.o} />
+            ))}
+          </AnimatedG>
+          <AnimatedG animatedProps={glareProps}>
+            <Rect x={-20} y={-20} width={140} height={140} fill={`url(#${glareId})`} opacity={glareOpacity()} />
+          </AnimatedG>
+        </G>
       </G>
     </Svg>
   );
 }
 
-export function FinishPaint({
-  kind,
+/** Foil filling this view. `hole` (card pixels) is the art window cut out of a reverse card. */
+export function FinishPlate({
   colorId,
-  drawable,
-  onShiny,
   motion,
   reduceMotion,
+  opacity,
+  hole = null,
+  style,
 }: {
-  kind: 'holo' | 'reverse';
   colorId: string;
-  /** The sprite frame. Holo masks to it. Reverse ignores it. */
-  drawable?: ClipDrawable;
-  onShiny: boolean;
   motion: FinishMotion;
   reduceMotion: boolean;
+  opacity: number;
+  hole?: FoilHole | null;
+  style?: StyleProp<ViewStyle>;
 }) {
-  const color = finishColor(colorId);
-  const art = kind === 'holo' ? maskArt(drawable) : { vbW: 100, vbH: 100, node: null, clip: null };
-  const fxFull = useFxQuality() === 'full';
-  const osReduce = useOsReduceMotion();
-  const blendOn = useBlendRecolor();
-  const sweep = finishSweepRuns({ motion, reduceMotion, osReduceMotion: osReduce, fxFull });
-  const shift = useSharedValue(0.5);
-  const travel = useSharedValue(art?.vbW ?? 100);
-  const sweepMs = finishConfig().sweep_ms;
-
-  useEffect(() => {
-    travel.value = art?.vbW ?? 100;
-  }, [art?.vbW, travel]);
-
-  useEffect(() => {
-    if (!sweep) {
-      cancelAnimation(shift);
-      shift.value = 0.5;
-      return;
-    }
-    shift.value = 0;
-    shift.value = withRepeat(withTiming(1, { duration: sweepMs, easing: Easing.inOut(Easing.quad) }), -1, true);
-    return () => cancelAnimation(shift);
-  }, [sweep, shift, sweepMs]);
-
-  if (!color || !art || motion === 'off') return null;
-  const paint = finishConfig().paint;
-  const foilBlend = !blendOn
-    ? kind === 'holo'
-      ? paint.holo_blend_fallback
-      : null
-    : kind === 'reverse'
-      ? paint.reverse_blend
-      : paint.holo_blend;
-  const foilOpacity = kind === 'reverse' ? reverseOpacity() : holoFoilOpacity(onShiny, blendOn);
-  const glareBlend = blendOn ? paint.reverse_blend : null;
-  const blendOf = (name: string | null): ViewStyle | null =>
-    name ? { mixBlendMode: name as 'color-dodge' | 'overlay' | 'screen' } : null;
+  const moving = useFoilMoving(motion, reduceMotion);
+  const [box, setBox] = useState({ w: 0, h: 0 });
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, blendOf(foilBlend), { opacity: foilOpacity }]}>
-        <BandSvg art={art} mask={kind === 'holo'} stops={stopsFor(color)} glare={null} shift={shift} travel={travel} />
-      </View>
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, blendOf(glareBlend), { opacity: glareOpacity() }]}>
-        <BandSvg art={art} mask={kind === 'holo'} stops={null} glare={color.glare} shift={shift} travel={travel} />
-      </View>
+    <View
+      pointerEvents="none"
+      style={[StyleSheet.absoluteFill, { opacity }, style]}
+      onLayout={(e) => {
+        const w = e.nativeEvent.layout.width;
+        const h = e.nativeEvent.layout.height;
+        setBox((prev) => (prev.w === w && prev.h === h ? prev : { w, h }));
+      }}>
+      {box.w > 0 ? (
+        <FoilTexture colorId={colorId} moving={moving} width={box.w} height={box.h} hole={hole} />
+      ) : null}
     </View>
   );
+}
+
+export function windowFoilOpacity(): number {
+  return windowOpacity();
+}
+
+export function cardFoilOpacity(): number {
+  return reverseOpacity();
 }

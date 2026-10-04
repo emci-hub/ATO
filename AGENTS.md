@@ -16,7 +16,14 @@ RPC to copy into `supabase/migrations` when that bag moves server-side. Not ship
 
 **Pet finishes (save v30):** holo and reverse holo, picked per pet, never rolled.
 Config is `src/play/data/finishes.json`. Logic is `src/play/finishes.ts`. Paint is
-`src/play/finish-foil.tsx`. Classic stays the only earnable shiny. Not shipped, no OTA.
+`src/play/finish-foil.tsx`. Classic stays the only earnable shiny. The sprite is
+never tinted. Not shipped, no OTA.
+
+**Pet auras (save v32):** Blaze, Spiky, Rune, Bubbles. Bought per style. A pet
+wears any combination. Each worn aura matches the sword or a picked element
+colour (free). Config is `src/play/data/auras.json`. Frames are generated from
+the pet alpha in `src/play/auras.ts` and drawn by `src/play/aura-view.tsx`.
+Not shipped, no OTA.
 
 This repo is on **Expo SDK 54** (`package.json`). Read the versioned docs at
 https://docs.expo.dev/versions/v54.0.0/ before writing Expo code; do not assume a newer

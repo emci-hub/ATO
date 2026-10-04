@@ -141,6 +141,7 @@ export function PetAnimSprite({
   foilMotion = 'still',
   reduceMotion = false,
   reverseHost = false,
+  auraElement = null,
 }: {
   pet: PetState;
   art: PetArt;
@@ -163,6 +164,8 @@ export function PetAnimSprite({
   foilMotion?: FinishMotion;
   reduceMotion?: boolean;
   reverseHost?: boolean;
+  /** Equipped sword element. The aura colour follows it. */
+  auraElement?: string | null;
 }) {
   const blend = useBlendRecolor();
   const ticking = animate && pose != null && !pose.hold && pet.stage !== 'egg';
@@ -185,6 +188,7 @@ export function PetAnimSprite({
       foilMotion={foilMotion}
       reduceMotion={reduceMotion}
       reverseHost={reverseHost}
+      auraElement={auraElement}
     />
   );
 }

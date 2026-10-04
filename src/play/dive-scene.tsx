@@ -196,6 +196,7 @@ function SwimmingPet({
   shiny,
   recolor,
   tilt,
+  auraElement = null,
 }: {
   pet: PetState;
   art: PetArt;
@@ -211,6 +212,7 @@ function SwimmingPet({
   recolor: string | null;
   /** v25 — 0..1 head-down while sinking. */
   tilt: SharedValue<number>;
+  auraElement?: string | null;
 }) {
   const [face, setFace] = useState<PetFace>('e');
   const facingEast = face === 'e';
@@ -242,6 +244,7 @@ function SwimmingPet({
           animate
           recolor={recolor}
           lockColour={shiny}
+          auraElement={auraElement}
         />
       </Animated.View>
       {shiny ? <ShinyOverlay size={box} footAt={0.75} animate={turn} /> : null}
@@ -269,6 +272,7 @@ export function DiveScene({
   shiny = false,
   recolor = null,
   atSurface = false,
+  auraElement = null,
 }: {
   pet: PetState;
   wear: PetWear;
@@ -295,6 +299,7 @@ export function DiveScene({
   recolor?: string | null;
   /** v25 — no run: the pet waits on the rim above the water. */
   atSurface?: boolean;
+  auraElement?: string | null;
 }) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const onLayout = (e: LayoutChangeEvent) =>
@@ -716,6 +721,7 @@ export function DiveScene({
                 grade={grade}
                 shiny={shiny}
                 recolor={recolor}
+                auraElement={auraElement}
               />
               {hurtFlash ? <View style={[StyleSheet.absoluteFill, styles.hurt]} /> : null}
             </Animated.View>

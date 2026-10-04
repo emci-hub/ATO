@@ -17,7 +17,8 @@ import { getItemDef } from '@/play/items';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { PET_BRANCH_TINT, PET_STAGE_SCALE, petLookFor, type PetLook, type PetState } from '@/play/pet';
 import { NO_WEAR, wornLook, type PetWear } from '@/play/pet-cosmetics';
-import { FinishPaint } from '@/play/finish-foil';
+import { PetAura } from '@/play/aura-view';
+import { auraConfig, auraElementOf, auraPaintOrder } from '@/play/auras';
 import type { FinishKind, FinishMotion } from '@/play/finishes';
 import { ClipImage } from '@/play/sheet-sprite';
 import {
@@ -75,6 +76,7 @@ export function PetFigure({
   foilMotion = 'still',
   reduceMotion = false,
   reverseHost = false,
+  auraElement = null,
 }: {
   pet: PetState;
   baseBox: number;
@@ -96,10 +98,15 @@ export function PetFigure({
   /** `sweep` only on the opened card, Dress, the room and the egg reveal. */
   foilMotion?: FinishMotion;
   reduceMotion?: boolean;
-  /** The parent draws the reverse-holo plate (card window / room). */
+  /** The card or the room draws reverse holo. The sprite itself stays plain. */
   reverseHost?: boolean;
+  /** Equipped sword element. The aura colour follows it. */
+  auraElement?: string | null;
 }) {
   const box = boxOverride ?? petBoxSize(pet, baseBox);
+  // The card and the room own reverse holo. This flag stays so those callers
+  // can say they took the plate; the sprite never paints one.
+  void reverseHost;
   if (pet.stage === 'egg') return <EggShape size={box} color={silhouette ? '#000000' : eggColor} />;
   const look = wornLook(wear);
   const drawable = frame ?? lookDrawable(petLookFor(pet.line, pet.stage));
@@ -113,28 +120,33 @@ export function PetFigure({
   const tint = lockColour ? null : (look.tint ?? PET_BRANCH_TINT[pet.branch]);
   const badgeArt = look.badgeItemId ? itemArtSource(getItemDef(look.badgeItemId)?.core.art ?? '') : undefined;
   const badge = Math.max(14, Math.round(box * 0.3));
-  const worn = finish ?? { kind: pet.finish_kind, color: pet.finish_color };
-  const foilOn = foilMotion !== 'off' && worn.color != null && (worn.kind === 'holo' || worn.kind === 'reverse');
-  const showReverse = foilOn && worn.kind === 'reverse' && !reverseHost;
-  const showHolo = foilOn && worn.kind === 'holo';
+  // Finishes paint the card, never the sprite. The props stay so callers can
+  // still say which finish the card is showing.
+  void finish;
+  void foilMotion;
+  void reduceMotion;
+  const worn = auraPaintOrder(pet.auras);
+  const sword = auraElement || auraConfig().fallback_element;
+  const blaze = worn.find((wear) => wear.style === 'blaze');
   return (
-    <View style={{ width: box, height: box }}>
+    <View style={{ width: box, height: box, overflow: 'visible' }}>
+      {worn.map((wear) => (
+        <PetAura
+          key={wear.style}
+          drawable={drawable}
+          styleId={wear.style}
+          element={auraElementOf(wear.color, sword)}
+          box={box}
+          layer="back"
+        />
+      ))}
       {look.aura ? (
         <Svg width={box * 1.5} height={box * 1.5} viewBox="0 0 100 100" style={[styles.aura, { left: -box * 0.25, top: -box * 0.25 }]} pointerEvents="none">
           <Circle cx="50" cy="50" r="48" fill={ELEMENT_COLOR[look.aura]} fillOpacity={0.1} />
           <Circle cx="50" cy="50" r="38" fill={ELEMENT_COLOR[look.aura]} fillOpacity={0.14} />
         </Svg>
       ) : null}
-      {showReverse && worn.color ? (
-        <FinishPaint
-          kind="reverse"
-          colorId={worn.color}
-          onShiny={pet.shiny}
-          motion={foilMotion}
-          reduceMotion={reduceMotion}
-        />
-      ) : null}
-      <View style={[StyleSheet.absoluteFill, (recolor && blend) || showHolo ? styles.isolate : null]}>
+      <View style={[StyleSheet.absoluteFill, recolor && blend ? styles.isolate : null]}>
       <ClipImage drawable={drawable} />
       {recolor ? (
         <View
@@ -148,17 +160,10 @@ export function PetFigure({
           <ClipImage drawable={drawable} tintColor={tint} />
         </View>
       ) : null}
-      {showHolo && worn.color ? (
-        <FinishPaint
-          kind="holo"
-          colorId={worn.color}
-          drawable={drawable}
-          onShiny={pet.shiny}
-          motion={foilMotion}
-          reduceMotion={reduceMotion}
-        />
-      ) : null}
       </View>
+      {blaze ? (
+        <PetAura drawable={drawable} styleId="blaze" element={auraElementOf(blaze.color, sword)} box={box} layer="front" />
+      ) : null}
       {badgeArt ? (
         <Image
           source={badgeArt}

@@ -13,7 +13,7 @@
  * Rules are unchanged: pure view over `view.pet` + transitions via `commit`.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { PixelRatio, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -36,7 +36,7 @@ import { NEON } from '@/play/neon-viper';
 import { PET_BRANCH_LABEL, PET_STAGE_LABEL } from '@/play/pet';
 import { syncPlayNotices } from '@/play/pet-reminder';
 import { heroName } from '@/play/heroes-data';
-import { petPose } from '@/play/pet-actor';
+import { petPose, sharpPetBox } from '@/play/pet-actor';
 import { PetAnimSprite, usePetArt } from '@/play/pet-anim-sprite';
 import { PetCard, type PetCardInfo } from '@/play/pet-card';
 import { DivecoreSettingsSheet } from '@/play/divecore-settings';
@@ -45,6 +45,7 @@ import { PetMenuBody } from '@/play/pet-menu';
 import { DenSheetBody } from '@/play/den-sheet';
 import { finishWornLabel } from '@/play/finishes';
 import { FinishPicker } from '@/play/finish-picker';
+import { FinishMotionHost } from '@/play/finish-motion';
 import { StoneSheetBody } from '@/play/stone-sheet';
 import { DIFFICULTY_LABEL, type RoundOutcome } from '@/play/pet-game-rules';
 import type { GamePet } from '@/play/pet-games';
@@ -317,6 +318,9 @@ export function PetScreen({
   const [revealStep, setRevealStep] = useState(0);
   const [focusEgg, setFocusEgg] = useState<EggType | null>(null);
   const art = usePetArt(pet);
+  const { width: screenW } = useWindowDimensions();
+  const cardW = Math.min(300, Math.max(220, screenW - 32));
+  const cardBox = sharpPetBox(Math.round(cardW * 0.8), art.cellPx, PixelRatio.get());
   const fxQuality = useFxQuality();
   // v26 Guide: "?" buttons open Info → Guide at a section.
   const [guideSection, setGuideSection] = useState<GuideSection | null>(null);
@@ -650,6 +654,7 @@ export function PetScreen({
           finishKind: pet.finish_kind,
           finishColor: pet.finish_color,
           finishLabel: finishWornLabel(pet.finish_kind, pet.finish_color),
+          aura: pet.auras.length > 0,
         }
       : null;
   // v26: the active medal buffs for the room corner (uses left, or Maxed aura).
@@ -673,13 +678,14 @@ export function PetScreen({
       face="e"
       startedAt={0}
       loop
-      box={120}
+      box={cardBox}
       animate={!reduceMotion}
       recolor={recolor}
       lockColour={pet.shiny}
       foilMotion="sweep"
       reduceMotion={reduceMotion}
       reverseHost
+      auraElement={view.swords.equipped?.element ?? null}
     />
   );
   const babyLook = { ...pet, stage: 'baby' as const, line: pet.egg ? EGG_LINE[pet.egg] : pet.line };
@@ -702,6 +708,7 @@ export function PetScreen({
 
   return (
     <View style={styles.screen}>
+      <FinishMotionHost reduceMotion={reduceMotion} />
       <View style={styles.topBar}>
         <Pressable onPress={onBack} hitSlop={12} accessibilityRole="button" accessibilityLabel="Back to Command Hub">
           <Text style={styles.back}>‹ Hub</Text>
@@ -751,6 +758,7 @@ export function PetScreen({
         name={shownName}
         tapKey={tapKey}
         reduceMotion={reduceMotion}
+        auraElement={view.swords.equipped?.element ?? null}
         onTapPet={tapPet}
         onCoach={pressCoach}
         recolor={recolor}
@@ -825,7 +833,7 @@ export function PetScreen({
       <PlaySheet open={sheet === 'card'} title={heroLabel ?? SHEET_TITLE.card} onClose={closeSheet} reduceMotion={reduceMotion}>
         {cardInfo ? (
           <View style={styles.cardCenter}>
-            <PetCard info={cardInfo} sprite={cardSprite} width={220} animate={!reduceMotion} />
+            <PetCard live info={cardInfo} sprite={cardSprite} width={cardW} animate={!reduceMotion} />
           </View>
         ) : null}
         <FinishPicker view={view} commit={commit} pet={pet} dyeOn={pv.dyeOn} reduceMotion={reduceMotion} />
@@ -920,7 +928,7 @@ export function PetScreen({
           subject={<PetFigure pet={babyLook} baseBox={110} eggColor={eggColor} />}
           card={
             pendingReveal === 'child' && cardInfo ? (
-              <PetCard info={cardInfo} sprite={cardSprite} width={220} animate={!reduceMotion} />
+              <PetCard live info={cardInfo} sprite={cardSprite} width={cardW} animate={!reduceMotion} />
             ) : (
               <PetCard
                 info={{
