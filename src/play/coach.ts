@@ -118,7 +118,7 @@ export type PetCoachIcon = 'feed' | 'play' | 'dive' | 'expedition' | 'info';
  * tapping the egg to warm it) — no icon pulses. */
 export const PET_COACH_ICON: Record<PetCoachAction, PetCoachIcon | null> = {
   feed: 'feed',
-  catch: 'play', // Catch the food lives in the Play sheet
+  catch: 'play', // the Play icon pulses; the button opens Catch full screen
   play: 'play',
   dive: 'dive',
   expedition: 'expedition',

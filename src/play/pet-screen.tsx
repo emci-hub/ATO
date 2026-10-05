@@ -5,10 +5,11 @@
  * Info. Each icon opens a sheet (`pet-sheets.tsx`); Dive opens full screen
  * and its back returns here. Nothing stacks on the main screen.
  *
- * This screen owns: the sheet + mini-game state (back closes a game, then a
- * sheet, then goes to the hub — `petBackStep`), the status and coach tip,
- * and the talk manager (lines from `pet-talk.ts`: on tap, on events handed in
- * by the Play shell, now and then while idle, never the same line twice).
+ * This screen owns: the sheet + mini-game state (back from a game returns to
+ * the room, then an open sheet closes, then the hub — `petBackStep`), the
+ * status and coach tip, and the talk manager (lines from `pet-talk.ts`: on
+ * tap, on events handed in by the Play shell, now and then while idle, never
+ * the same line twice). A round is a full-screen overlay, not a sheet.
  *
  * Rules are unchanged: pure view over `view.pet` + transitions via `commit`.
  */
@@ -41,7 +42,7 @@ import { FinishPicker } from '@/play/finish-picker';
 import { FinishMotionHost } from '@/play/finish-motion';
 import { StoneSheetBody } from '@/play/stone-sheet';
 import { DIFFICULTY_LABEL, type RoundOutcome } from '@/play/pet-game-rules';
-import type { GamePet } from '@/play/pet-games';
+import { PetGameHost, type GamePet } from '@/play/pet-games';
 import { BUFF_HOW, BUFF_ICON, BUFF_LABEL } from '@/play/play-buffs';
 import { useFxQuality } from '@/play/fx-quality';
 import { isStrongResult } from '@/play/score-burst-model';
@@ -530,6 +531,10 @@ export function PetScreen({
     if (id === 'info') setInfoTab('status');
     setSheet(id);
   };
+  const startGame = (run: GameRun) => {
+    setSheet(null);
+    setGame(run);
+  };
   const pressCoach = () => {
     if (!coach.action) return;
     if (coach.action === 'hatch') {
@@ -541,8 +546,7 @@ export function PetScreen({
       return;
     }
     if (coach.action === 'catch') {
-      setSheet('play');
-      setGame({ kind: 'catch', level: 'normal', daily: false });
+      startGame({ kind: 'catch', level: 'normal', daily: false });
       return;
     }
     const icon = PET_COACH_ICON[coach.action];
@@ -565,8 +569,10 @@ export function PetScreen({
         }
         const step = petBackStep(sheet != null, game != null);
         if (step === 'hub') return false;
-        if (step === 'close-game') setGame(null);
-        else setSheet(null);
+        if (step === 'close-game') {
+          setGame(null);
+          setSheet(null);
+        } else setSheet(null);
         return true;
       },
     });
@@ -591,6 +597,7 @@ export function PetScreen({
       // A replay of the same round (background retry) comes back uncounted
       // and must not wipe the line the real win already showed.
       if (r.counted) {
+        setSheet('play');
         setLastResult(roundResultLine(kind, outcome, r));
         setLastRound({ key: roundClaim.current.key, score: r.score, strong: isStrongResult(r) });
       }
@@ -823,12 +830,9 @@ export function PetScreen({
       <PlaySheet open={sheet === 'play'} title={SHEET_TITLE.play} onClose={closeSheet} reduceMotion={reduceMotion}>
         <PlaySheetBody
           view={view}
-          game={game}
-          onStart={setGame}
-          onRoundDone={finishRound}
+          onStart={startGame}
           lastResult={lastResult}
           lastRound={lastRound}
-          gamePet={gamePet}
           still={reduceMotion || fxQuality !== 'full'}
           onGuide={() => openGuide('games')}
         />
@@ -984,6 +988,24 @@ export function PetScreen({
           onDone={finishReveal}
         />
       ) : null}
+      {game ? (
+        <View style={styles.gameOverlay} accessibilityViewIsModal>
+          <PetGameHost
+            key={`${game.kind}:${game.level}:${game.daily}`}
+            kind={game.kind}
+            level={game.level}
+            daily={game.daily}
+            ymd={pv.daily.ymd ?? ''}
+            gamePet={gamePet}
+            still={reduceMotion || fxQuality !== 'full'}
+            onBack={() => {
+              setGame(null);
+              setSheet(null);
+            }}
+            onDone={finishRound(game)}
+          />
+        </View>
+      ) : null}
       <DiamondWipe
         mode={wipe}
         onDone={
@@ -1001,6 +1023,7 @@ export function PetScreen({
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: NEON.ink },
+  gameOverlay: { ...StyleSheet.absoluteFillObject, zIndex: 30, backgroundColor: PIXEL.ink },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',

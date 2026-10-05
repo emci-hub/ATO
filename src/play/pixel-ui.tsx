@@ -124,6 +124,11 @@ type FrameProps = {
   lined?: boolean;
   /** Pressed bevel: the shade moves to the top, the highlight to the bottom. */
   sunk?: boolean;
+  /**
+   * Fill the parent's leftover height. The minigame stage uses this so the
+   * framed arena is the safe-area remainder, not a hug of its children.
+   */
+  grow?: boolean;
 };
 
 /** True when art pixel (x, y) sits inside a stepped rectangle. */
@@ -183,6 +188,7 @@ export function PixelFrame({
   bevel,
   lined = true,
   sunk = false,
+  grow = false,
 }: FrameProps) {
   const alive = useAmbientOn();
   const enterT = useSharedValue(1);
@@ -248,6 +254,7 @@ export function PixelFrame({
           // stretch a child whose own children use a 0 flex basis, and the
           // row then collapses.
           ...(align === 'stretch' ? { alignSelf: 'stretch' as const, width: '100%' as const } : null),
+          ...(grow ? { flexGrow: 1, flexShrink: 1, minHeight: 0 } : null),
         },
         style,
         motion,
@@ -267,9 +274,10 @@ export function PixelFrame({
           margin: px,
           backgroundColor: fill,
           padding: padded ? px * 2 : 0,
-          minHeight: minHeight != null ? Math.max(0, minHeight - px * 2) : undefined,
+          minHeight: grow ? 0 : minHeight != null ? Math.max(0, minHeight - px * 2) : undefined,
+          ...(grow ? { flexGrow: 1, flexShrink: 1 } : null),
           alignItems: align === 'stretch' ? 'stretch' : 'center',
-          justifyContent: 'center',
+          justifyContent: grow ? 'flex-start' : 'center',
         }}>
         {bevel ? (
           <>
