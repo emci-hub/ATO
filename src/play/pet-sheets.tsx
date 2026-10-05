@@ -3,7 +3,7 @@
  * stacked as cards, moved as-is into the sheets the room's icon row opens:
  *
  *   Feed        — the pantry and its Feed buttons.
- *   Play        — Catch the food / Tap to train (+ the token note).
+ *   Play        — the mini-game hub (Catch / Train). A round itself is full screen.
  *   Expedition  — status, the returned find, Send on expedition.
  *   Info        — tabs: Status (form, timers, perks, Today, what hatches,
  *                 rebirth, reminder) · Book (Logbook + Collection) · Hall ·
@@ -55,13 +55,10 @@ import {
   type PetState,
 } from '@/play/pet';
 import { COSMETICS, COSMETIC_SLOTS, cosmeticById, type CosmeticSlot } from '@/play/pet-cosmetics';
-import { CatchFoodGame, TapTrainGame, type GamePet } from '@/play/pet-games';
 import {
   DIFFICULTIES,
   DIFFICULTY_LABEL,
-  dailySeed,
   outcomeLine,
-  seededRng,
   type Difficulty,
   type RoundOutcome,
 } from '@/play/pet-game-rules';
@@ -238,6 +235,13 @@ export function FeedSheetBody({ view, commit, onFed }: { view: PlayView; commit:
 
 /* ---------------------------------------------------------------- Play --- */
 
+/** Solid cyan or amber ink needs that fill's shade, or a black shadow doubles the letters. */
+function chipShadow(fill: string): string {
+  if (fill === PIXEL.amber) return PIXEL.amberLo;
+  if (fill === PIXEL.cyan) return PIXEL.cyanLo;
+  return PIXEL.ink;
+}
+
 /** Difficulty chip in the pixel kit. The medal stays a system glyph so Departure Mono does not eat it. */
 function GameChip({
   label,
@@ -270,7 +274,7 @@ function GameChip({
         minHeight={36}>
         <View style={styles.gameChipRow}>
           {locked ? <MaterialCommunityIcons name="lock" size={12} color={PIXEL.dim} /> : null}
-          <PixelLabel color={text} numberOfLines={1} style={styles.gameChipLabel}>
+          <PixelLabel color={text} shadowColor={chipShadow(fill)} numberOfLines={1} style={styles.gameChipLabel}>
             {label}
           </PixelLabel>
           {medal ? <Text style={styles.gameMedal}>{medal}</Text> : null}
@@ -285,24 +289,18 @@ export type GameRun = { kind: PetRoundKind; level: Difficulty; daily: boolean };
 
 export function PlaySheetBody({
   view,
-  game,
   onStart,
-  onRoundDone,
   lastResult,
   lastRound = null,
-  gamePet,
   still,
   onGuide,
 }: {
   view: PlayView;
-  game: GameRun | null;
   onStart: (run: GameRun) => void;
-  onRoundDone: (run: GameRun) => (outcome: RoundOutcome, score: number) => void;
   lastResult: string | null;
   /** The last counted round's score, for the count-up + confetti. */
   lastRound?: { key: string; score: number; strong: boolean } | null;
-  gamePet: GamePet | null;
-  /** Reduced motion or Effects Low: still poses in the games. */
+  /** Reduced motion or Effects Low: the score burst holds still. */
   still: boolean;
   onGuide?: () => void;
 }) {
@@ -313,12 +311,6 @@ export function PlaySheetBody({
     return (
       <PixelBody>Games start once it hatches. For now, pick what it hatches into in Info.</PixelBody>
     );
-  }
-  if (game) {
-    // The daily challenge is one fixed pattern per local date (same for everyone).
-    const rng = game.daily ? seededRng(dailySeed(pv.daily.ymd ?? '', game.kind)) : Math.random;
-    const props = { onDone: onRoundDone(game), level: game.level, rng, gamePet, still };
-    return game.kind === 'catch' ? <CatchFoodGame {...props} /> : <TapTrainGame {...props} />;
   }
   return (
     <View style={styles.playSheet}>

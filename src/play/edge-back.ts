@@ -72,8 +72,9 @@ export function defendEdgeSwipe(phase: 'setup' | 'running' | 'won' | 'lost'): bo
   return phase !== 'running';
 }
 
-/** Pet room (overhaul, 2026-09-29): a running mini-game stops first (the
- * round does not count), then an open sheet closes, then the hub. */
+/** Pet room: a running mini-game closes first and lands on the room (the
+ * round does not count; the Play sheet is not left open under the game).
+ * An open sheet closes next, then the hub. */
 export function petBackStep(sheetOpen: boolean, gameOpen: boolean): 'close-game' | 'close-sheet' | 'hub' {
   if (gameOpen) return 'close-game';
   return sheetOpen ? 'close-sheet' : 'hub';
