@@ -6,6 +6,7 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
+import { AccessibilityInfo } from 'react-native';
 
 export const PLAY_MOTION_KEY = 'ato.play.reduceMotion.v1';
 export const PLAY_MOTION_MODES = ['phone', 'on', 'off'] as const;
@@ -66,4 +67,47 @@ export function usePlayMotionMode(): PlayMotionMode {
 /** The reduce-motion value Play uses, given the phone's own setting. */
 export function resolveReduceMotion(mode: PlayMotionMode, phone: boolean): boolean {
   return mode === 'phone' ? phone : mode === 'on';
+}
+
+let phoneReduce = false;
+const phoneListeners = new Set<() => void>();
+let phoneWatching = false;
+
+function watchPhoneReduceMotion(): void {
+  if (phoneWatching) return;
+  phoneWatching = true;
+  AccessibilityInfo.isReduceMotionEnabled()
+    .then((value) => {
+      if (value === phoneReduce) return;
+      phoneReduce = value;
+      for (const listener of phoneListeners) listener();
+    })
+    .catch(() => {
+      // Keep the last known phone setting.
+    });
+  AccessibilityInfo.addEventListener('reduceMotionChanged', (value) => {
+    if (value === phoneReduce) return;
+    phoneReduce = value;
+    for (const listener of phoneListeners) listener();
+  });
+}
+
+/** The phone's Reduce Motion flag, one listener for every Play control. */
+export function usePhoneReduceMotion(): boolean {
+  return useSyncExternalStore(
+    (listener) => {
+      phoneListeners.add(listener);
+      watchPhoneReduceMotion();
+      return () => {
+        phoneListeners.delete(listener);
+      };
+    },
+    () => phoneReduce,
+    () => false,
+  );
+}
+
+/** Play's resolved Reduce Motion: the in-game override, else the phone. */
+export function usePlayReduceMotion(): boolean {
+  return resolveReduceMotion(usePlayMotionMode(), usePhoneReduceMotion());
 }

@@ -11,10 +11,12 @@ The PNGs under `assets/play/` are unpacked from the packs below (see
 | `kenney-td/` | **Tower Defense** (towers/units/fx) | Kenney | CC0 |
 | `kenney-ui/` | Fantasy UI Borders | Kenney | CC0 |
 | `kenney-icons/` | Cursor Pack | Kenney | CC0 |
-| `tiles/scribble-dungeons/` | Scribble Dungeons *(16 files back as the Dive’s sunken ruin, v25)* | Kenney | CC0 |
+| `tiles/scribble-dungeons/` | Scribble Dungeons *(crate only — pet games; the Dive ruin moved to `pixel/dive-atlas.png`)* | Kenney | CC0 |
+| `pixel/dive-atlas.png` | Underwater Diving pack, recolored toward Resurrect 64, plus original sky, chests, rays and caustics | Luis Zuno (ansimuz); palette Kerrie Lake | CC0 |
+| `pixel/room-atlas.png` | Ninja Adventure floor, bush, plant and heart, plus original room props | Pixel-Boy & AAA; original props by Divecore | CC0 + original |
 | `avatars/dungeon-legends/` | Dungeon Legends *(no longer on the board)* | pack author | per pack |
 | `avatars/masterpiece/`, `avatars/cozy-girl/` | Masterpiece / Cozy Village *(unpacked copies removed; zips kept)* | pack author | per pack |
-| `primal/` | Primal Dynasties — Beast Champions *(only the Shark Tide Knight east/west stills, Dive background, v25 — cleared by emci for the released app)* | pack author | per pack |
+| `primal/` | Primal Dynasties — Beast Champions *(the Shark Tide Knight stills left the Dive; the glide is a pack fish in the dive atlas)* | pack author | per pack |
 
 Kenney license texts are copied beside this file. Craftpix license points at
 `craftpix.net/file-licenses/`. The avatar/beast packs did not include a

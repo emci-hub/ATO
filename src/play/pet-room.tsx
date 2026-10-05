@@ -1,8 +1,8 @@
 /**
- * Pet room (overhaul, 2026-09-29) — the pet lives in a room scene, never a
- * still picture (Tamagotchi / Pou / Talking Tom). Drawn in code + existing
- * art only: an SVG neon room (wall, floor grid, a window whose sky follows
- * the phone's clock, a bed and a bowl) and the existing bush prop.
+ * Pet room — the approved mockup plate (room2.py): dusk plank wall, wainscot,
+ * night window, picture, lamp, brick floor, rug, bed and bowl. The live pet
+ * stands on the rug. Lamp flicker, window twinkle, dust motes and a sparkle
+ * freeze when Reduce Motion is on or effects are low.
  *
  * The pet wanders, turns, idles, sits, sometimes shows off (its attack/skill
  * clip), sleeps at night — all decided by `planPetStep` (pet-actor.ts) from
@@ -24,7 +24,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Circle, Defs, Ellipse, Line, LinearGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle } from 'react-native-svg';
 
 import type { PetCoachTip } from '@/play/coach';
 import { quietFoilOpacity } from '@/play/auras';
@@ -60,34 +60,35 @@ import { EggShape } from '@/play/pet-figure';
 import { GlimmerGlow, GradeAura, ShinyOverlay } from '@/play/pet-looks';
 import { wornLook, type PetWear } from '@/play/pet-cosmetics';
 import { PET_STATUS_WORD, isEvolvingSoon, petStatusLabel, type PetStatus } from '@/play/pet-status';
-import { ART_PT, PIXEL, snapArt } from '@/play/pixel-theme';
+import { Flicker, MoteRise, Twinkle } from '@/play/pixel-ambient';
+import { DitherPool, LampCycle, useHitJuice } from '@/play/pixel-fx';
+import { AtlasSprite, MOCKUP_ROOM, mockupOrigin } from '@/play/pixel-atlas';
+import { ART_PT, PIXEL, PIXEL_FEED_H, PIXEL_FEED_W, snapArt } from '@/play/pixel-theme';
 import {
   PixelBody,
   PixelButton,
   PixelFrame,
   PixelHearts,
-  PixelImage,
   PixelLabel,
   PixelNameplate,
+  usePixelFonts,
 } from '@/play/pixel-ui';
 import { PET_TALK_HOLD_MS, PET_TALK_TYPE_MS } from '@/play/pet-talk';
-import { roleFootAt, skinArt } from '@/play/skin';
+import { roleFootAt } from '@/play/skin';
 
-/** Feet line, as a share of the room height. */
-const FLOOR_AT = 0.8;
 // The nameplate hangs BELOW the feet line. The floor ring runs from feet-8 to
 // feet+6, so +8 clears it and the sprite for every stage (it used to sit at -4
 // and covered the pet's feet — Crimson Oni, Child).
 const PLATE_BELOW_FEET = 8;
-/** v26 nameplate text size — Tiny5 at 3.5pt per font pixel (cap stays over 16pt). */
-export const NAMEPLATE_FONT = 28;
+/** Nameplate text size — Departure Mono at 2pt per font pixel (cap stays 16pt). */
+export const NAMEPLATE_FONT = 22;
 
 function plateStatus(status: PetStatus, stage: PetState['stage'], stageLeftMs: number | null): string {
   if (status === 'egg' && stage === 'egg' && isEvolvingSoon('egg', stageLeftMs)) return 'Hatching soon';
   return PET_STATUS_WORD[status];
 }
 
-/** A 5×5 art-pixel star. Tiny5 has no star glyph. */
+/** A 5×5 art-pixel star. Departure Mono has no star glyph. */
 function PixelStar({ color }: { color: string }) {
   const p = ART_PT;
   const rows = [
@@ -143,7 +144,6 @@ function MaxedAura({ size, animate }: { size: number; animate: boolean }) {
     />
   );
 }
-const HORIZON_AT = 0.6;
 const TAP_FACE_MS = 1400;
 const AURA_EVERY_MS = 1400;
 
@@ -151,70 +151,45 @@ export type RoomSpeech = { text: string; key: number } | null;
 
 /* ------------------------------------------------------------ backdrop --- */
 
-function RoomBackdrop({ width, height, night, pantry }: { width: number; height: number; night: boolean; pantry: number }) {
-  const horizon = height * HORIZON_AT;
-  const winX = width * 0.07;
-  const winY = height * 0.1;
-  const winW = Math.min(150, width * 0.34);
-  const winH = height * 0.24;
-  const cx = width / 2;
-  const floorLines = [0.08, 0.2, 0.36, 0.58, 0.86];
-  const rays = [-1.2, -0.7, -0.3, 0, 0.3, 0.7, 1.2];
+function RoomBackdrop({
+  width,
+  height,
+  alive,
+}: {
+  width: number;
+  height: number;
+  alive: boolean;
+}) {
+  const origin = mockupOrigin(width, height, 200);
+  const k = ART_PT;
   return (
-    <Svg width={width} height={height} style={StyleSheet.absoluteFill} pointerEvents="none">
-      <Defs>
-        <LinearGradient id="roomWall" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#0C1630" />
-          <Stop offset="1" stopColor="#070B18" />
-        </LinearGradient>
-        <LinearGradient id="roomFloor" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#0B1426" />
-          <Stop offset="1" stopColor="#04070F" />
-        </LinearGradient>
-        <LinearGradient id="roomSky" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor={night ? '#070B26' : '#2E9BE0'} />
-          <Stop offset="1" stopColor={night ? '#1B1F4A' : '#A8E6FF'} />
-        </LinearGradient>
-      </Defs>
-      <Rect x={0} y={0} width={width} height={horizon} fill="url(#roomWall)" />
-      <Rect x={0} y={horizon} width={width} height={height - horizon} fill="url(#roomFloor)" />
-      {/* Neon strip along the ceiling and the skirting. */}
-      <Line x1={0} y1={2} x2={width} y2={2} stroke={NEON.pink} strokeOpacity={0.55} strokeWidth={2} />
-      <Line x1={0} y1={horizon} x2={width} y2={horizon} stroke={NEON.cyan} strokeOpacity={0.4} strokeWidth={1.5} />
-      {floorLines.map((t) => (
-        <Line
-          key={t}
-          x1={0}
-          y1={horizon + (height - horizon) * t}
-          x2={width}
-          y2={horizon + (height - horizon) * t}
-          stroke={NEON.cyan}
-          strokeOpacity={0.1}
-        />
-      ))}
-      {rays.map((r) => (
-        <Line key={r} x1={cx + r * width * 0.12} y1={horizon} x2={cx + r * width * 0.9} y2={height} stroke={NEON.cyan} strokeOpacity={0.08} />
-      ))}
-      {/* Window: the sky follows the phone's clock. */}
-      <Rect x={winX} y={winY} width={winW} height={winH} rx={8} fill="url(#roomSky)" stroke={NEON.cyanBorder} strokeWidth={2} />
-      <Line x1={winX + winW / 2} y1={winY} x2={winX + winW / 2} y2={winY + winH} stroke={NEON.cyanBorder} strokeWidth={1.5} />
-      {night ? (
-        <>
-          <Circle cx={winX + winW * 0.72} cy={winY + winH * 0.32} r={winH * 0.12} fill="#F4F1C9" />
-          <Circle cx={winX + winW * 0.2} cy={winY + winH * 0.25} r={1.4} fill="#FFFFFF" />
-          <Circle cx={winX + winW * 0.35} cy={winY + winH * 0.6} r={1.1} fill="#FFFFFF" />
-          <Circle cx={winX + winW * 0.85} cy={winY + winH * 0.7} r={1.2} fill="#FFFFFF" />
-        </>
-      ) : (
-        <Circle cx={winX + winW * 0.72} cy={winY + winH * 0.32} r={winH * 0.14} fill="#FFF3B0" />
-      )}
-      {/* Bed (where it sleeps) and the food bowl. */}
-      <Ellipse cx={width * PET_BED_X} cy={height * FLOOR_AT + 4} rx={width * 0.13} ry={12} fill={NEON.violet} fillOpacity={0.45} />
-      <Ellipse cx={width * PET_BED_X} cy={height * FLOOR_AT + 1} rx={width * 0.1} ry={7} fill={NEON.violet} fillOpacity={0.35} />
-      <Ellipse cx={width * 0.16} cy={height * FLOOR_AT + 8} rx={20} ry={7} fill={pantry > 0 ? NEON.pink : NEON.cyanDim} fillOpacity={0.7} />
-    </Svg>
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <View style={{ position: 'absolute', left: origin.left, top: origin.top }}>
+        <AtlasSprite atlas="room" frame="plate" />
+        <DitherPool alive={alive} cx={158} cy={322} rx={70} ry={18} color="#F9C22B" lit={2} gain={0.42} />
+        <View style={{ position: 'absolute', left: MOCKUP_ROOM.glow.x * k, top: MOCKUP_ROOM.glow.y * k }}>
+          <Flicker alive={alive} peak={0.65} ms={480}>
+            <AtlasSprite atlas="room" frame="glow" />
+          </Flicker>
+        </View>
+        <View style={{ position: 'absolute', left: 175 * k, top: 158 * k }}>
+          <LampCycle alive={alive} />
+        </View>
+        <View style={{ position: 'absolute', left: MOCKUP_ROOM.sky.x * k, top: MOCKUP_ROOM.sky.y * k }}>
+          <Twinkle alive={alive} ms={1100}>
+            <AtlasSprite atlas="room" frame="sky" />
+          </Twinkle>
+        </View>
+        {MOCKUP_ROOM.motes.map((m, i) => (
+          <MoteRise key={i} alive={alive} left={m.x * k} top={m.y * k} distance={28 + i * 10} ms={3600 + i * 500} delay={i * 700}>
+            <AtlasSprite atlas="room" frame="mote" />
+          </MoteRise>
+        ))}
+      </View>
+    </View>
   );
 }
+
 
 /** God aura: a soft glow, plus a slow pulse from the effects layer (skipped
  * when Effects Quality is Off or motion is reduced). Moved from the old card. */
@@ -352,6 +327,7 @@ export function PetRoom({
   buffs = [],
   maxedAura = false,
   auraElement = null,
+  juiceKey = 0,
 }: {
   pet: PetState;
   wear: PetWear;
@@ -386,10 +362,24 @@ export function PetRoom({
   maxedAura?: boolean;
   /** Equipped sword element. The pet aura colour follows it. */
   auraElement?: string | null;
+  /** Bumps when Feed lands a treat, to flash and shake the pet. */
+  juiceKey?: number;
 }) {
+  // Departure Mono / Rajdhani. Hold the room until they are in, so labels never paint in a fallback face.
+  const fontsReady = usePixelFonts();
   // Effects Low (Settings): auras and sparkles hold still.
   const fxFull = useFxQuality() === 'full';
   const fxAnimate = !reduceMotion && fxFull;
+  const hit = useHitJuice();
+  const hitSeen = useRef(juiceKey);
+  const playHit = useRef(hit.play);
+  playHit.current = hit.play;
+  useEffect(() => {
+    if (hitSeen.current === juiceKey) return;
+    hitSeen.current = juiceKey;
+    if (!fxAnimate) return;
+    playHit.current();
+  }, [fxAnimate, juiceKey]);
   useFinishLease((pet.finish_kind === 'holo' || pet.finish_kind === 'reverse') && pet.finish_color != null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const onLayout = (e: LayoutChangeEvent) =>
@@ -401,7 +391,8 @@ export function PetRoom({
   const egg = pet.stage === 'egg';
   const box = egg ? PET_ROOM_BOX.egg : sharpPetBox(PET_ROOM_BOX[pet.stage], art.cellPx, PixelRatio.get());
   const footAt = egg ? 1 : roleFootAt(art.role);
-  const floorY = height * FLOOR_AT;
+  const origin = mockupOrigin(Math.max(width, 1), Math.max(height, 1), 200);
+  const floorY = origin.top + MOCKUP_ROOM.feet * ART_PT;
   const top = floorY - footAt * box;
   const mood = petMoodKind(pet.hunger, pet.mood, night);
   const asleep = mood === 'asleep' && !egg;
@@ -550,45 +541,48 @@ export function PetRoom({
     return { transform: [{ translateX: want - (center - box / 2) }] };
   });
 
+  if (!fontsReady) return <View style={styles.room} onLayout={onLayout} />;
+
   return (
     <View style={styles.room} onLayout={onLayout}>
-      {width > 0 ? <RoomBackdrop width={width} height={height} night={night} pantry={pantry} /> : null}
-      {width > 0 ? (
-        <View style={[styles.plant, { left: snapArt(width * 0.86 - 52), top: snapArt(floorY - 46) }]}>
-          <PixelImage source={skinArt('prop.bush')} sourceWidth={26} sourceHeight={23} />
-        </View>
-      ) : null}
-      {width > 0 && pantry > 0 ? (
-        <Text style={[styles.bowlFood, { left: width * 0.16 - 11, top: floorY - 16 }]}>🍤</Text>
-      ) : null}
+      {width > 0 ? <RoomBackdrop width={width} height={height} alive={fxAnimate} /> : null}
 
-      {/* Corner: both meters, always — and the active medal buffs (v26). */}
-      <View style={styles.corner} pointerEvents="box-none">
-      <PixelFrame align="stretch" style={styles.meters}>
+      {/* Meters sit on the mockup's top panel. Clamped so a short room still shows them. */}
+      <View
+        style={[
+          styles.corner,
+          {
+            top: Math.max(4, origin.top + MOCKUP_ROOM.meters.y * ART_PT),
+            left: Math.max(4, origin.left + MOCKUP_ROOM.meters.x * ART_PT),
+            width: Math.min(MOCKUP_ROOM.meters.w * ART_PT, Math.max(120, width - 8)),
+          },
+        ]}
+        pointerEvents="box-none">
+      <PixelFrame align="stretch" enter style={styles.meters}>
         <View style={styles.meterHead}>
         <View style={styles.meterMain} accessible accessibilityLabel={`Hunger ${pet.hunger} of ${PET_METER_MAX}, mood ${pet.mood} of ${PET_METER_MAX}`}>
         {picking ? (
           <PixelLabel>Pick an egg</PixelLabel>
         ) : egg ? (
           <View style={styles.meterRow} accessibilityLabel={`Warmth ${pet.warmth} of ${WARMTH_MAX}`}>
-            <PixelLabel>Warmth</PixelLabel>
+            <PixelLabel color={PIXEL.cyan}>Warmth</PixelLabel>
             <PixelHearts value={pet.warmth} max={WARMTH_MAX} color={PIXEL.amber} />
           </View>
         ) : (
           <View style={styles.meterBlock}>
             <View style={styles.meterRow}>
-              <PixelLabel>Hunger</PixelLabel>
+              <PixelLabel color={PIXEL.cyan}>Hunger</PixelLabel>
               <PixelHearts value={pet.hunger} max={PET_METER_MAX} />
             </View>
             <View style={styles.meterRow}>
-              <PixelLabel>Mood</PixelLabel>
+              <PixelLabel color={PIXEL.cyan}>Mood</PixelLabel>
               <PixelHearts value={pet.mood} max={PET_METER_MAX} />
             </View>
           </View>
         )}
         </View>
         {!picking ? (
-          <PixelFrame style={styles.stageBadge}>
+          <PixelFrame glow={false} style={styles.stageBadge}>
             <PixelLabel>{PET_STAGE_LABEL[pet.stage]}</PixelLabel>
           </PixelFrame>
         ) : null}
@@ -604,13 +598,37 @@ export function PetRoom({
       </View>
 
       {/* Coach: what it needs, and the button that does it. */}
-      <PixelFrame align="stretch" style={styles.coach}>
+      <PixelFrame
+        align="stretch"
+        enter
+        style={[
+          styles.coach,
+          {
+            left: Math.max(4, origin.left + MOCKUP_ROOM.coach.x * ART_PT),
+            width: Math.min(MOCKUP_ROOM.coach.w * ART_PT, Math.max(120, width - 8)),
+            top: Math.min(
+              Math.max(8, height - 88),
+              Math.max(height * 0.5, origin.top + MOCKUP_ROOM.coach.y * ART_PT),
+            ),
+          },
+        ]}>
         <View style={styles.coachRow}>
-          <PixelBody style={styles.coachText} numberOfLines={3}>
-            {coach.tip}
-          </PixelBody>
+          <View style={styles.coachCopy}>
+            <PixelBody color={PIXEL.text} style={styles.coachText} numberOfLines={2}>
+              {coach.tip}
+            </PixelBody>
+            <PixelBody size="sm" color={PIXEL.dim} numberOfLines={1}>
+              {pantry === 1 ? '1 treat left' : `${pantry} treats left`}
+            </PixelBody>
+          </View>
           {coach.button ? (
-            <PixelButton label={coach.button} onPress={onCoach} style={styles.coachButton} />
+            <PixelButton
+              label={coach.button}
+              onPress={onCoach}
+              width={coach.button.toLowerCase() === 'feed' ? PIXEL_FEED_W : undefined}
+              height={coach.button.toLowerCase() === 'feed' ? PIXEL_FEED_H : undefined}
+              style={styles.coachButton}
+            />
           ) : null}
         </View>
       </PixelFrame>
@@ -686,6 +704,7 @@ export function PetRoom({
             accessibilityLabel={`Your pet. ${label}. Tap to say hi.`}
             style={StyleSheet.absoluteFill}>
             <Animated.View style={[StyleSheet.absoluteFill, bodyStyle]}>
+              <Animated.View style={[StyleSheet.absoluteFill, hit.shakeStyle]}>
               <PetAnimSprite
                 pet={pet}
                 art={art}
@@ -704,15 +723,22 @@ export function PetRoom({
                 reduceMotion={reduceMotion}
                 reverseHost
                 auraElement={auraElement}
+                flash={hit.flash}
               />
+              </Animated.View>
             </Animated.View>
           </Pressable>
           {revealed && pet.shiny ? <ShinyOverlay size={box} footAt={footAt} animate={fxAnimate} style={pet.shiny_style} /> : null}
           {revealed && !pet.shiny && pet.glimmer ? <GlimmerGlow size={box} footAt={footAt} animate={fxAnimate} /> : null}
           {asleep ? <Text style={[styles.zzz, { left: box * 0.6, top: box * 0.25 }]}>💤</Text> : null}
-          <Animated.Text style={[styles.heart, { left: box / 2 - 10, top: box * 0.3 }, heartStyle]} pointerEvents="none">
-            ❤
-          </Animated.Text>
+          <Animated.View style={[styles.heart, { left: box / 2 - 16, top: box * 0.22 }, heartStyle]} pointerEvents="none">
+            <AtlasSprite atlas="room" frame="heart" />
+          </Animated.View>
+          <View pointerEvents="none" style={{ position: 'absolute', right: -6, top: box * 0.4 }}>
+            <Twinkle alive={fxAnimate} ms={700} rest={1}>
+              <AtlasSprite atlas="room" frame="sparkle" />
+            </Twinkle>
+          </View>
           {/* Speech on top, then the status bubble — one column anchored just
               above the pet's head, wider than the pet (so nothing truncates at
               Baby size) and kept inside the room. The name sits on its own
@@ -721,8 +747,14 @@ export function PetRoom({
             pointerEvents="box-none"
             style={[styles.bubbleColumn, { bottom: box - box * 0.18 + 6, left: 0, width: speechW }, speechStyle]}>
             <SpeechBubble speech={speech} reduceMotion={reduceMotion} speaker={name} />
-            <PixelNameplate>
-              {name ? `${name} · ${plateStatus(status, pet.stage, stageLeftMs)}` : plateStatus(status, pet.stage, stageLeftMs)}
+            <PixelNameplate label={false}>
+              <View style={styles.nameRow}>
+                {name ? <PixelLabel color={PIXEL.cyan}>{name}</PixelLabel> : null}
+                {name ? <View style={styles.moodPip} /> : null}
+                <PixelBody size="sm" color="#C7DCD0" numberOfLines={1}>
+                  {plateStatus(status, pet.stage, stageLeftMs)}
+                </PixelBody>
+              </View>
             </PixelNameplate>
           </Animated.View>
           {/* v26: the grade is a nameplate on the ring at its feet — stars AND
@@ -762,10 +794,8 @@ export function PetRoom({
 }
 
 const styles = StyleSheet.create({
-  room: { flex: 1, overflow: 'hidden', backgroundColor: NEON.ink },
-  plant: { position: 'absolute' },
-  bowlFood: { position: 'absolute', fontSize: 16 },
-  corner: { position: 'absolute', top: 8, left: 8, right: 8, alignItems: 'stretch', gap: 8 },
+  room: { flex: 1, overflow: 'hidden', backgroundColor: '#2e222f' },
+  corner: { position: 'absolute', alignItems: 'stretch', gap: 8 },
   buffChip: { alignSelf: 'flex-end' },
   plateWrap: { position: 'absolute', alignItems: 'center' },
   meters: { alignSelf: 'stretch' },
@@ -774,21 +804,19 @@ const styles = StyleSheet.create({
   meterBlock: { gap: 4 },
   meterRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   stageBadge: { flexGrow: 0 },
-  coach: {
-    position: 'absolute',
-    left: 8,
-    right: 8,
-    bottom: 8,
-  },
+  coach: { position: 'absolute' },
   coachRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  coachText: { flex: 1, textAlign: 'left' },
+  coachCopy: { flex: 1, gap: 2 },
+  coachText: { textAlign: 'left' },
   coachButton: { flexGrow: 0 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: ART_PT * 2 },
+  moodPip: { width: ART_PT * 2, height: ART_PT * 2, backgroundColor: '#91DB69' },
   pressed: { opacity: 0.82 },
   petWrap: { position: 'absolute', left: 0 },
   foilMat: { position: 'absolute', overflow: 'hidden' },
   ring: { position: 'absolute', height: 14, borderRadius: 999, opacity: 0.7 },
   zzz: { position: 'absolute', fontSize: 18 },
-  heart: { position: 'absolute', fontSize: 20, color: '#FF5A8A' },
+  heart: { position: 'absolute' },
   gradeRow: { alignItems: 'center', gap: 4 },
   starRow: { flexDirection: 'row', gap: ART_PT },
   eggRow: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-around' },

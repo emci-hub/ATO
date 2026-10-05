@@ -30,10 +30,10 @@ import {
   GLOW_COLOR,
   HEARTBEAT_OVER_PCT,
   DIVE_CUT_ORDER,
+  DIVE_DEPTH_INK,
   DIVE_PROPS,
   DRAGON_DEPTH,
   REVEAL_BUDGET_MS,
-  SHAFT_TINT,
   SHARK_DEPTHS,
   ZONE_BANDS,
   diveWorldCuts,
@@ -174,23 +174,22 @@ assert.match(read('src/play/command-hub.tsx'), /Dive in progress/, 'the Pet tile
 ok('hub: Dive tile gone, Pet tile shows a dive in progress');
 
 {
-  const registry = read('src/play/generated-play-assets.ts');
-  const bundled = (key: string) => registry.includes(`'${key}': require(`);
+  const atlas = read('src/play/pixel-atlas.tsx');
   const world = read('src/play/dive-world.tsx');
-  const keys = [
-    ...DIVE_PROPS.flat().map((pr) => pr.art),
+  const frames = [
+    ...DIVE_PROPS.flat().map((pr) => pr.frame),
     ...[0, 1, 2, 3, 4, 5].map(findBoxArt),
-    ...(world.match(/'(?:tiles|primal)\/[^']+'/g) ?? []).map((k) => k.slice(1, -1)),
+    'fish-big',
   ];
-  for (const key of keys) assert.ok(bundled(key), `${key} is bundled`);
-  assert.ok(keys.includes('primal/shark_tide_knight/Idle/rotations/east'), 'the shark art is used');
+  for (const frame of frames) assert.ok(atlas.includes(`'${frame}':`), `${frame} is a dive atlas frame`);
+  assert.ok(world.includes('fish-big'), 'the glide uses the pack fish');
+  assert.ok(!world.includes('tintColor'), 'no tint over the dive pixels');
   assert.equal(DIVE_PROPS.length, ZONE_BANDS.length, 'props for every zone');
-  assert.equal(SHAFT_TINT.length, ZONE_BANDS.length, 'a wall tint for every zone');
+  assert.equal(DIVE_DEPTH_INK.length, ZONE_BANDS.length, 'an ink for every zone');
   assert.deepEqual([...SHARK_DEPTHS], [1, 2, 3], 'the shark: Reef (1-2) and Trench (3) only');
   assert.equal(DRAGON_DEPTH, 4, 'the dragon: the Abyss');
-  // Walls get darker with depth.
   const lum = (hex: string) => parseInt(hex.slice(1, 3), 16) + parseInt(hex.slice(3, 5), 16) + parseInt(hex.slice(5, 7), 16);
-  for (let i = 1; i < 5; i += 1) assert.ok(lum(SHAFT_TINT[i]) < lum(SHAFT_TINT[i - 1]), `walls darken at depth ${i}`);
+  for (let i = 1; i < 5; i += 1) assert.ok(lum(DIVE_DEPTH_INK[i]) < lum(DIVE_DEPTH_INK[i - 1]), `water darkens at depth ${i}`);
   // Cut order: Low drops shark, dragon, parallax first; props stay.
   assert.deepEqual([...DIVE_CUT_ORDER], ['shark', 'dragon', 'parallax', 'props', 'trail']);
   const full = diveWorldCuts('full', false);

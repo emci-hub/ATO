@@ -1,0 +1,17 @@
+Ninja Adventure Asset Pack
+Pixel-Boy & AAA
+https://pixel-boy.itch.io/ninja-adventure-asset-pack
+https://github.com/pixel-boy/NinjaAdventure
+
+CC0 1.0 Universal (public domain).
+
+Divecore uses the interior floor tile, a bush and potted plant from the
+village tileset, and one heart icon. Those pixels were quantized toward
+the room's brick and plank colours and packed into assets/play/pixel/room-atlas.png.
+
+Resurrect 64 (Kerrie Lake, CC0, https://lospec.com/palette-list/resurrect-64)
+is the palette the Dive atlas was recolored toward. It is not a sprite pack.
+
+Original Divecore pixels in the same atlases (room window, lamp, shelf, rug,
+bed, bowl, picture, cloud, mote; Dive sky, chests, light rays, caustics and
+the second bubble) were drawn for this app.

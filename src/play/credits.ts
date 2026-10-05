@@ -48,6 +48,47 @@ export const PLAY_CREDITS: readonly PlayCredit[] = [
     license: 'CC0',
     url: 'https://kenney.nl/assets/cursor-pack',
   },
+  {
+    pack: 'Underwater Diving',
+    author: 'Luis Zuno (ansimuz)',
+    usedFor: 'Dive water, ruins, seaweed, coral, fish and bubbles',
+    license: 'CC0 / public domain (assets/play/licenses/ansimuz-underwater-public-domain.txt)',
+    url: 'https://opengameart.org/content/underwater-diving-pack',
+  },
+  {
+    pack: 'Ninja Adventure',
+    author: 'Pixel-Boy & AAA',
+    usedFor: 'Pet room floor tile, bush, potted plant and heart',
+    license: 'CC0 (assets/play/licenses/ninja-adventure-cc0.txt)',
+    url: 'https://pixel-boy.itch.io/ninja-adventure-asset-pack',
+  },
+  {
+    pack: 'Resurrect 64',
+    author: 'Kerrie Lake',
+    usedFor: 'Palette the Dive art was recolored toward',
+    license: 'CC0 (lospec)',
+    url: 'https://lospec.com/palette-list/resurrect-64',
+  },
+  {
+    pack: 'Divecore room props',
+    author: 'Divecore',
+    usedFor: 'Pet room window, lamp, shelf, rug, bed, bowl and picture; Dive sky, chests, rays and motes',
+    license: 'Original, made for this app',
+  },
+  {
+    pack: 'Departure Mono',
+    author: 'Helena Zhang',
+    usedFor: 'Pixel labels',
+    license: 'OFL (assets/play/fonts/OFL-DepartureMono.txt)',
+    url: 'https://departuremono.com',
+  },
+  {
+    pack: 'Rajdhani',
+    author: 'Indian Type Foundry',
+    usedFor: 'Body text',
+    license: 'OFL',
+    url: 'https://fonts.google.com/specimen/Rajdhani',
+  },
 ];
 
 export const PLAY_OPTIONAL_LINE =

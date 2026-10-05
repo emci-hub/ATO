@@ -38,7 +38,8 @@ import { DiveScene, diveZone, type DiveReveal, type DiveSceneEvent } from '@/pla
 import { diveBackStep, type InnerBack } from '@/play/edge-back';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { PIXEL } from '@/play/pixel-theme';
-import { PixelBody, PixelButton, PixelLabel, PixelRisk, usePixelFonts, type PixelButtonVariant } from '@/play/pixel-ui';
+import { DiamondWipe, armWipe, takeWipe } from '@/play/pixel-fx';
+import { PixelBody, PixelButton, PixelLabel, usePixelFonts, type PixelButtonVariant } from '@/play/pixel-ui';
 import { PET_BRANCH_LABEL, PET_STAGE_LABEL } from '@/play/pet';
 import { petRecolor } from '@/play/pet-looks';
 import { PlaySheet } from '@/play/play-sheet';
@@ -124,20 +125,29 @@ export function DiveScreen({
   /** v22 — Dive-gear purchases go straight through the store. */
   commit: (transition: PlayTransition) => boolean;
 }) {
-  usePixelFonts();
+  const fontsReady = usePixelFonts();
   const charges = view.dive.current;
   const run = view.diveRun;
   const canSpend = !run.active && charges >= 1;
   const today = todayPlan(view);
   const fxLevel = useDiveFxLevel();
   const [sheet, setSheet] = useState<SheetId | null>(null);
+  const [wipe, setWipe] = useState<'off' | 'cover' | 'reveal'>('off');
+  const leaveRef = useRef<() => void>(() => onBack());
+
+  useEffect(() => {
+    if (fxLevel === 'full' && !reduceMotion && takeWipe('dive')) setWipe('reveal');
+  }, [fxLevel, reduceMotion]);
 
   useEffect(() => {
     if (!registerBack) return;
     registerBack({
       edgeSwipe: true,
       back: () => {
-        if (diveBackStep(sheet != null) === 'room') return false;
+        if (diveBackStep(sheet != null) === 'room') {
+          leaveRef.current();
+          return true;
+        }
         setSheet(null);
         return true;
       },
@@ -251,6 +261,18 @@ export function DiveScreen({
   const revealed = st.hero != null && st.stage !== 'egg' && st.stage !== 'baby';
   const maxDepth = run.active ? run.maxDeepers : view.diveGear.oxygen ? 5 : 4;
 
+  const motionOn = fxLevel === 'full' && !reduceMotion;
+  const leave = () => {
+    if (!motionOn) {
+      onBack();
+      return;
+    }
+    setWipe('cover');
+  };
+  leaveRef.current = leave;
+
+  if (!fontsReady) return <View style={styles.screen} />;
+
   return (
     <View style={styles.screen}>
       <DiveScene
@@ -270,58 +292,60 @@ export function DiveScreen({
         shiny={revealed && view.pet.state.shiny}
         recolor={revealed ? petRecolor(view.pet.state.hero, view.pet.state.shiny, view.pet.dyeOn, view.pet.state.shiny_style) : null}
         auraElement={view.swords.equipped?.element ?? null}
-        atSurface={!run.active}>
+        atSurface={!run.active}
+        dock={
+          showSplash ? (
+            <View style={styles.splashRow}>
+              {!reduceMotion ? <ActivityIndicator size="small" color={PIXEL.cyan} /> : null}
+              <PixelLabel>{splashCopy ?? 'Searching…'}</PixelLabel>
+            </View>
+          ) : (
+            <View style={styles.dockButtons}>
+              {buttonRows.map((row, i) => (
+                <View key={i} style={styles.buttonRow}>
+                  {row.map((b) => (
+                    <PixelButton
+                      key={b.id}
+                      label={b.label}
+                      variant={diveButtonVariant(b)}
+                      disabled={busy || !b.enabled}
+                      onPress={() => pressButton(b)}
+                      accessibilityLabel={b.label.toLowerCase()}
+                      style={styles.button}
+                    />
+                  ))}
+                </View>
+              ))}
+            </View>
+          )
+        }>
         <DiveTopBar
           zone={diveZone(depth)}
           depth={depth}
           maxDepth={maxDepth}
           charges={chargeText(view)}
           shells={view.shells}
-          onBack={onBack}
+          onBack={leave}
           onInfo={() => setSheet('info')}
           onGear={() => setSheet('gear')}
         />
       </DiveScene>
 
-      <View style={styles.controls}>
-        {showSplash ? (
-          <View style={styles.splashRow}>
-            {!reduceMotion ? <ActivityIndicator size="small" color={PIXEL.cyan} /> : null}
-            <PixelLabel>{splashCopy ?? 'Searching…'}</PixelLabel>
-          </View>
-        ) : (
-          <>
-            {run.active && run.bustPctNext != null ? <PixelRisk pct={run.bustPctNext} /> : null}
-            {buttonRows.map((row, i) => (
-              <View key={i} style={styles.buttonRow}>
-                {row.map((b) => (
-                  <PixelButton
-                    key={b.id}
-                    label={b.label}
-                    variant={diveButtonVariant(b)}
-                    disabled={busy || !b.enabled}
-                    onPress={() => pressButton(b)}
-                    accessibilityLabel={b.label.toLowerCase()}
-                    style={styles.button}
-                  />
-                ))}
-              </View>
-            ))}
-            <PixelBody style={styles.note}>{hint}</PixelBody>
-            {run.active && run.preview ? (
-              <PixelBody style={styles.note}>
-                Lamp: Safer holds {findName(run.preview.safe)} · Richer holds {findName(run.preview.rich)}.
-              </PixelBody>
-            ) : null}
-            {run.active && run.netOn && !run.free ? <PixelBody style={styles.note}>Net: surfacing now adds one more find.</PixelBody> : null}
-            {/* v26: today's Power ceiling, and the buffs riding this dive. */}
-            <PixelBody style={styles.note}>
-              Powers today: {run.powersToday}/{run.powersCap}
-              {run.snack ? ` · ${BUFF_ICON.snack} Snack: −${SNACK_BUST_PP} in every %` : ''}
-              {run.hearty > 0 && !run.free ? ` · ${BUFF_ICON.hearty} +1 find on surface (×${run.hearty})` : ''}
-            </PixelBody>
-          </>
-        )}
+      <View style={styles.notes} pointerEvents="none">
+        <PixelBody size="sm" numberOfLines={2} style={styles.note}>{hint}</PixelBody>
+        {run.active && run.preview ? (
+          <PixelBody size="sm" numberOfLines={1} style={styles.note}>
+            Lamp: Safer holds {findName(run.preview.safe)} · Richer holds {findName(run.preview.rich)}.
+          </PixelBody>
+        ) : null}
+        {run.active && run.netOn && !run.free ? (
+          <PixelBody size="sm" numberOfLines={1} style={styles.note}>Net: surfacing now adds one more find.</PixelBody>
+        ) : null}
+        <PixelBody size="sm" numberOfLines={2} style={styles.note}>
+          Powers today: {run.powersToday}/{run.powersCap}
+          {run.snack ? ` · ${BUFF_ICON.snack} Snack: −${SNACK_BUST_PP} in every %` : ''}
+          {run.hearty > 0 && !run.free ? ` · ${BUFF_ICON.hearty} +1 find on surface (×${run.hearty})` : ''}
+        </PixelBody>
       </View>
 
       <PlaySheet open={sheet === 'info'} title="Dive · info" onClose={() => setSheet(null)} reduceMotion={reduceMotion}>
@@ -368,6 +392,17 @@ export function DiveScreen({
         })}
         {gearNote ? <PixelBody>{gearNote}</PixelBody> : null}
       </PlaySheet>
+      <DiamondWipe
+        mode={wipe}
+        onDone={
+          wipe === 'cover'
+            ? () => {
+                armWipe('room');
+                onBack();
+              }
+            : () => setWipe('off')
+        }
+      />
     </View>
   );
 }
@@ -390,16 +425,15 @@ function chargeText(view: PlayView): string {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: PIXEL.ink },
-  controls: {
-    paddingHorizontal: 12,
-    paddingTop: 10,
-    paddingBottom: 12,
-    gap: 8,
-    borderTopWidth: 2,
-    borderTopColor: PIXEL.cyan,
-    backgroundColor: PIXEL.ink,
+  notes: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 248,
+    gap: 2,
   },
-  // Each row is a real row; the buttons share its width.
+  dockButtons: { gap: 8 },
+  // Two DEEPER buttons share the row; SURFACE is its own full-width row.
   buttonRow: { flexDirection: 'row', gap: 8, alignSelf: 'stretch' },
   button: { flexGrow: 1, flexBasis: 0, minHeight: 50 },
   note: { textAlign: 'center' },
