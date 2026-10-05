@@ -11,6 +11,8 @@
  * mid 4–8 (vines + archer levels), late 9+ (crystals for fat HP, Avatar near
  * the exit, skill on clusters).
  */
+import { WARMTH_START } from '@/play/pet-eggs';
+
 import type { PetStatus } from './pet-status';
 
 export type CoachTowerCounts = {
@@ -126,6 +128,8 @@ export const PET_COACH_ICON: Record<PetCoachAction, PetCoachIcon | null> = {
   warm: null, // tap the egg
 };
 
+export type PetCoachAlt = { action: 'dive' | 'defend' | 'dress'; button: string };
+
 export type PetCoachInput = {
   status: PetStatus;
   hunger: number;
@@ -137,6 +141,10 @@ export type PetCoachInput = {
   tokensLeftToday: number;
   /** "3h 10m" while away, else null. */
   backIn: string | null;
+  /** After the first Tend, before they pick Dive or Defend. */
+  offerFork?: boolean;
+  /** After that outing pays off: a Dress chip beside the usual tip. */
+  offerDress?: boolean;
 };
 
 export type PetCoachTip = {
@@ -144,19 +152,46 @@ export type PetCoachTip = {
   action: PetCoachAction | null;
   /** Button label (null when there is nothing to press). */
   button: string | null;
+  /** Second chip: the other outing, or Dress. Never replaces an urgent Tend. */
+  alt: PetCoachAlt | null;
 };
+
+/** Egg: one warm tap past the start pip. Hatched: the egg already finished. */
+export function hasTended(pet: { stage: string; warmth: number }): boolean {
+  if (pet.stage !== 'egg') return true;
+  return pet.warmth > WARMTH_START;
+}
+
+/** Hungry, chilly, sad, and the egg picker still win over the outing fork. */
+function coachIsUrgent(input: PetCoachInput): boolean {
+  switch (input.status) {
+    case 'away':
+    case 'choose_egg':
+    case 'chilly':
+    case 'starving':
+    case 'hungry':
+    case 'very_sad':
+    case 'sad':
+    case 'evolving':
+      return true;
+    case 'sleepy':
+      return input.hunger <= PET_BEDTIME_HUNGER;
+    default:
+      return false;
+  }
+}
 
 /** Hunger at or below this makes a sleepy pet ask for a bedtime snack. */
 export const PET_BEDTIME_HUNGER = 2;
 
-function foodTip(pantryTotal: number, fed: string, empty: string): PetCoachTip {
+function foodTip(pantryTotal: number, fed: string, empty: string): Omit<PetCoachTip, 'alt'> {
   return pantryTotal > 0
     ? { tip: fed, action: 'feed', button: 'Feed' }
     : { tip: empty, action: 'catch', button: 'Catch the food' };
 }
 
 /** The one coaching line for the pet's current status. Pure. */
-export function petCoachTip(input: PetCoachInput): PetCoachTip {
+function coachLine(input: PetCoachInput): Omit<PetCoachTip, 'alt'> {
   const pantry = `${input.pantryTotal} in the pantry`;
   switch (input.status) {
     case 'away':
@@ -200,4 +235,21 @@ export function petCoachTip(input: PetCoachInput): PetCoachTip {
       if (input.tokensLeftToday > 0) return { tip: 'All good! Fancy a game?', action: 'play', button: 'Play' };
       return { tip: 'All good!', action: null, button: null };
   }
+}
+
+/** Care first. After one Tend, offer Dive or Defend. Dress is a later chip. */
+export function petCoachTip(input: PetCoachInput): PetCoachTip {
+  if (input.offerFork && !coachIsUrgent(input)) {
+    return {
+      tip: 'Dive from here, or Defend on the Hub.',
+      action: 'dive',
+      button: 'Dive',
+      alt: { action: 'defend', button: 'Defend' },
+    };
+  }
+  const tip = coachLine(input);
+  if (input.offerDress && !coachIsUrgent(input)) {
+    return { ...tip, alt: { action: 'dress', button: 'Dress' } };
+  }
+  return { ...tip, alt: null };
 }

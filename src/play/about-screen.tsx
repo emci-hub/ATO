@@ -11,7 +11,7 @@ import * as Linking from 'expo-linking';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { PLAY_CC0_LINE, PLAY_CREDITS, PLAY_OPTIONAL_LINE } from '@/play/credits';
-import { NeonBackLink, NeonHeader, NeonLabel, NeonPanel } from '@/play/neon-ui';
+import { NeonBackLink, NeonButton, NeonHeader, NeonLabel, NeonPanel } from '@/play/neon-ui';
 
 async function openUrl(url: string) {
   try {
@@ -21,15 +21,33 @@ async function openUrl(url: string) {
   }
 }
 
-export function AboutScreen({ onBackToDivecore }: { onBackToDivecore: () => void }) {
+export function AboutScreen({
+  onBackToDivecore,
+  onOpenGuide,
+  onReplayTips,
+}: {
+  onBackToDivecore: () => void;
+  /** More → Guide. Never blocks play. */
+  onOpenGuide?: () => void;
+  /** Settings calls the same replay. */
+  onReplayTips?: () => void;
+}) {
   return (
     <View style={styles.container}>
       <NeonBackLink onPress={onBackToDivecore} />
 
       <NeonHeader
-        title="About"
-        lede="Divecore is built on a handful of pixel-art packs. Here is what is bundled and who made it."
+        title="More"
+        lede="Guide, tips, and who made the art."
       />
+
+      {onOpenGuide ? (
+        <NeonPanel>
+          <NeonLabel>Guide</NeonLabel>
+          <NeonButton label="Open the Guide" onPress={onOpenGuide} />
+          {onReplayTips ? <NeonButton label="Replay tips" variant="secondary" onPress={onReplayTips} /> : null}
+        </NeonPanel>
+      ) : null}
 
       <NeonPanel>
         <NeonLabel>Art credits</NeonLabel>

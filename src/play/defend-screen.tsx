@@ -1637,7 +1637,7 @@ export function DefendScreen({
 
   /** Result-screen "Leave": STAY in Defend — back to SETUP on the SAME fight
    * (Start wave ready) with towers kept, exactly like Abandon. Never the Grove
-   * hub (the ‹ Divecore back button leaves). A WON campaign wave restages as
+   * hub (the ‹ Hub back button leaves). A WON campaign wave restages as
    * its honest cleared-band replay — the seat already moved past it, so half
    * pay and no double-advance; a LOST wave keeps the campaign fight so Start
    * wave retries it at full reward. */
@@ -2636,7 +2636,7 @@ export function DefendScreen({
             hitSlop={12}
             style={({ pressed }) => [pressed && styles.pressed]}>
               <ThemedText type="smallBold" themeColor="textSecondary">
-                ‹ Divecore
+                ‹ Hub
               </ThemedText>
           </Pressable>
           <Pressable

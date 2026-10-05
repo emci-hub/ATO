@@ -1,5 +1,5 @@
 /**
- * Command Hub HUD — scrap / wave / lives readout (Space Mono).
+ * Command Hub HUD — scrap / wave / lives readout (Departure Mono).
  *
  * Live mapping from the play store (no invented numbers):
  * - scrap = soft tokens,
@@ -9,9 +9,9 @@
  */
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Fonts } from '@/constants/theme';
 import { HeartIcon, ScrapIcon, WaveIcon } from '@/play/icons';
 import { NEON } from '@/play/neon-viper';
+import { PLAY_HUD_FONT } from '@/play/play-fonts';
 
 const LIVES_STUB = 3;
 
@@ -68,14 +68,14 @@ const styles = StyleSheet.create({
     gap: 7,
   },
   value: {
-    fontFamily: Fonts.monoBold,
+    fontFamily: PLAY_HUD_FONT,
     fontSize: 16,
     color: NEON.textPrimary,
     minWidth: 20,
     textAlign: 'right',
   },
   label: {
-    fontFamily: Fonts.mono,
+    fontFamily: PLAY_HUD_FONT,
     fontSize: 8,
     letterSpacing: 1.2,
     color: NEON.hudLabel,

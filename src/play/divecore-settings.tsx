@@ -239,7 +239,7 @@ export function DivecoreSettingsSheet({
         />
       ) : null}
       <NeonButton
-        label="Replay the tutorial"
+        label="Replay tips"
         variant="secondary"
         onPress={() => {
           onClose();

@@ -321,6 +321,7 @@ export function PetRoom({
   reduceMotion,
   onTapPet,
   onCoach,
+  onCoachAlt,
   recolor = null,
   onBadge,
   onPickEgg,
@@ -348,6 +349,8 @@ export function PetRoom({
   reduceMotion: boolean;
   onTapPet: () => void;
   onCoach: () => void;
+  /** Second chip: Defend, or the Dress tease. */
+  onCoachAlt?: () => void;
   /** v23 — shiny / 3★ dye recolour of the sprite. */
   recolor?: string | null;
   /** v23 — tap the star badge: open the pet's card. */
@@ -783,6 +786,9 @@ export function PetRoom({
               height={coach.button.toLowerCase() === 'feed' ? PIXEL_FEED_H : undefined}
               style={styles.coachButton}
             />
+          ) : null}
+          {coach.alt ? (
+            <PixelButton label={coach.alt.button} hug onPress={() => onCoachAlt?.()} style={styles.coachButton} />
           ) : null}
         </View>
       </PixelFrame>

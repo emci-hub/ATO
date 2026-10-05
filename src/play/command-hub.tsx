@@ -6,13 +6,13 @@
  * Pure view: tiles report their destination up; the route mode lives in
  * `src/app/play.tsx`. `children` renders below the tiles (dev kit only).
  */
-import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { Animated, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
-import { Fonts } from '@/constants/theme';
 import { Hud } from '@/play/hud';
 import { HubIcon } from '@/play/icons';
 import { NEON, hubTilesFor, type HubDestination } from '@/play/neon-viper';
+import { PLAY_HUD_FONT } from '@/play/play-fonts';
 
 const GAP = 16;
 const CONTENT_WIDTH = 800;
@@ -22,6 +22,8 @@ export function CommandHub({
   wave,
   diveActive = false,
   devUnlocked = false,
+  pulse = null,
+  reduceMotion = false,
   onTile,
   onSettings,
   children,
@@ -29,8 +31,11 @@ export function CommandHub({
   scrap: number | null;
   /** A Dive run is saved mid-way — the Pet tile says so (it is never lost). */
   diveActive?: boolean;
-  /** v27 — the Play dev unlock: the hidden Shop tile shows only with it. */
+  /** v27 — the Play dev unlock. Shop visibility is `PLAY_EVERYTHING_FREE`, not this flag. */
   devUnlocked?: boolean;
+  /** Soft-pulse the outing they skipped (Pet stands in for Dive until that tile exists). */
+  pulse?: HubDestination | null;
+  reduceMotion?: boolean;
   wave: number | null;
   onTile: (to: HubDestination) => void;
   /** v24 — the ⚙ opens Divecore Settings. */
@@ -78,33 +83,73 @@ export function CommandHub({
         </Text>
         <View style={[styles.tiles, { maxWidth: CONTENT_WIDTH }]}>
           {hubTilesFor(devUnlocked).map((tile) => (
-            <Pressable
+            <HubTileButton
               key={tile.id}
+              label={tile.label}
+              subtitle={tile.to === 'pet' && diveActive ? '🤿 Dive in progress' : tile.subtitle}
+              icon={tile.icon}
+              width={tileWidth}
+              pulsing={pulse === tile.to}
+              reduceMotion={reduceMotion}
+              badge={tile.to === 'pet' && diveActive}
               onPress={() => onTile(tile.to)}
-              accessibilityRole="button"
-              accessibilityLabel={`Open ${tile.label}`}
-              style={({ pressed }) => [
-                styles.tile,
-                { width: tileWidth },
-                pressed && styles.pressed,
-              ]}>
-              <View style={styles.tileIcon}>
-                <HubIcon name={tile.icon} size={64} color={NEON.cyan} />
-              </View>
-              <Text style={styles.tileLabel}>{tile.label}</Text>
-              <Text style={styles.tileSub}>
-                {tile.to === 'pet' && diveActive ? '🤿 Dive in progress' : tile.subtitle}
-              </Text>
-              {tile.to === 'pet' && diveActive ? (
-                <View style={styles.badge} accessibilityLabel="Dive in progress" />
-              ) : null}
-            </Pressable>
+            />
           ))}
         </View>
       </View>
 
       {children}
     </View>
+  );
+}
+
+function HubTileButton({
+  label,
+  subtitle,
+  icon,
+  width,
+  pulsing,
+  reduceMotion,
+  badge,
+  onPress,
+}: {
+  label: string;
+  subtitle: string;
+  icon: 'divecore' | 'dive' | 'pet' | 'shop' | 'dress' | 'more';
+  width: number;
+  pulsing: boolean;
+  reduceMotion: boolean;
+  badge: boolean;
+  onPress: () => void;
+}) {
+  const glow = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (!pulsing || reduceMotion) {
+      glow.setValue(1);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glow, { toValue: 0.55, duration: 800, useNativeDriver: true }),
+        Animated.timing(glow, { toValue: 1, duration: 800, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [glow, pulsing, reduceMotion]);
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={pulsing ? `Open ${label}, suggested` : `Open ${label}`}
+      style={({ pressed }) => [styles.tile, { width }, pulsing && styles.tilePulse, pressed && styles.pressed]}>
+      <Animated.View style={[styles.tileIcon, pulsing && !reduceMotion ? { opacity: glow } : null]}>
+        <HubIcon name={icon} size={64} color={NEON.cyan} />
+      </Animated.View>
+      <Text style={styles.tileLabel}>{label}</Text>
+      <Text style={styles.tileSub}>{subtitle}</Text>
+      {badge ? <View style={styles.badge} accessibilityLabel="Dive in progress" /> : null}
+    </Pressable>
   );
 }
 
@@ -146,18 +191,18 @@ const styles = StyleSheet.create({
     backgroundColor: NEON.cyanSoft,
   },
   brandText: {
-    fontFamily: Fonts.monoBold,
+    fontFamily: PLAY_HUD_FONT,
     fontSize: 15,
     color: NEON.cyan,
   },
   eyebrow: {
-    fontFamily: Fonts.monoBold,
+    fontFamily: PLAY_HUD_FONT,
     fontSize: 10,
     letterSpacing: 1.6,
     color: NEON.cyan,
   },
   title: {
-    fontFamily: Fonts.displayBold,
+    fontFamily: PLAY_HUD_FONT,
     fontSize: 24,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
@@ -171,7 +216,7 @@ const styles = StyleSheet.create({
   },
   watermark: {
     position: 'absolute',
-    fontFamily: Fonts.displayBold,
+    fontFamily: PLAY_HUD_FONT,
     color: NEON.cyan,
     opacity: 0.06,
   },
@@ -192,6 +237,10 @@ const styles = StyleSheet.create({
     borderColor: NEON.cyanDim,
     backgroundColor: 'rgba(9, 15, 28, 0.92)',
   },
+  tilePulse: {
+    borderColor: NEON.cyan,
+    backgroundColor: 'rgba(0, 234, 255, 0.08)',
+  },
   tileIcon: {
     width: 88,
     height: 88,
@@ -202,14 +251,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 234, 255, 0.03)',
   },
   tileLabel: {
-    fontFamily: Fonts.displaySemiBold,
+    fontFamily: PLAY_HUD_FONT,
     fontSize: 16,
     letterSpacing: 1,
     textTransform: 'uppercase',
     color: NEON.textPrimary,
   },
   tileSub: {
-    fontFamily: Fonts.mono,
+    fontFamily: PLAY_HUD_FONT,
     fontSize: 10,
     letterSpacing: 0.8,
     color: NEON.textMuted,

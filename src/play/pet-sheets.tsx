@@ -461,7 +461,7 @@ export function ExpeditionSheetBody({
           {BUFF_ICON.focused} Focused: this next trip is {Math.round((1 - FOCUSED_TRIP_MULT) * 100)}% shorter.
         </Text>
       ) : null}
-      {onGuide ? <GuideLink section="expeditions" onOpen={onGuide} /> : null}
+      {onGuide ? <GuideLink section="dive" onOpen={onGuide} /> : null}
       {noteName ? (
         <View style={styles.noteRow}>
           <Text style={styles.result}>Your pet brought back {noteName}!</Text>
@@ -561,8 +561,8 @@ export function StatusTab({ view, onGuide }: { view: PlayView; onGuide?: (s: Gui
       <BuffLines view={view} />
       {onGuide ? (
         <View style={styles.chips}>
-          <GuideLink section="pet" onOpen={onGuide} />
-          <GuideLink section="buffs" onOpen={onGuide} />
+          <GuideLink section="tend" onOpen={onGuide} />
+          <GuideLink section="odds" onOpen={onGuide} />
         </View>
       ) : null}
       {formNote ? <Text style={styles.body}>{formNote}</Text> : null}

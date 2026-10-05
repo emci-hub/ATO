@@ -11,7 +11,8 @@
  * - **Paid** — STUBS ONLY. Rows show a display price and a "Soon" pill;
  *   nothing here charges Apple. The Tide Pass card is not for sale.
  *
- * v27: the Shop is hidden — only the dev unlock reaches it (`shopUnlocked`).
+ * Pre-launch (`PLAY_EVERYTHING_FREE`): the Hub shows Shop for everyone.
+ * A release build still hides it (`shopUnlocked`).
  *
  * The token shelf never sells wave_power or a cycle_power skip (§9i): both
  * would break the Conquered climb, so no such row exists in the catalog.
@@ -209,7 +210,7 @@ export function ShopScreen({
     return (
       <>
         <NeonBackLink onPress={() => setGuide(false)} />
-        <GuideView initial="tide" />
+        <GuideView initial="shop" />
       </>
     );
   }

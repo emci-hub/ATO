@@ -1,40 +1,29 @@
 /**
- * First-time Divecore tutorial (v24, 2026-09-30) — five short, skippable
- * cards, shown once (a save with progress counts as seen), replayable from
- * Divecore Settings.
+ * First-time Divecore tips — three skippable cards (Meet → Tend → Dive or
+ * Defend). Replay from More → Guide, or Settings → Replay tips.
  */
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Fonts } from '@/constants/theme';
 import { NeonButton } from '@/play/neon-ui';
 import { NEON } from '@/play/neon-viper';
+import { PLAY_BODY_FONT, PLAY_HUD_FONT } from '@/play/play-fonts';
 
-export const TUTORIAL_STEPS: readonly { emoji: string; title: string; body: string }[] = [
+export const TUTORIAL_STEPS: readonly { mark: string; title: string; body: string }[] = [
   {
-    emoji: '🥚',
-    title: 'Pick an egg',
-    body: 'Open Pet and choose a Knight, Wizard or Village egg. Each egg has its own heroes — every hero is an even chance.',
+    mark: '🐾',
+    title: 'Meet',
+    body: 'Open Pet. Pick an egg.',
   },
   {
-    emoji: '🔥',
-    title: 'Keep it warm',
-    body: 'Tap the egg to warm it. It hatches in 5 minutes; care for the Baby and its hero is revealed at 15 — better care, better grade odds.',
+    mark: '💛',
+    title: 'Tend',
+    body: 'Warm it once. Feed or play after it hatches.',
   },
   {
-    emoji: '🏠',
-    title: 'The pet room',
-    body: 'Feed, Play, Dive, Expedition and Info are along the bottom. The line above them says what your pet needs — the glowing icon does it.',
-  },
-  {
-    emoji: '🤿',
-    title: 'Dive together',
-    body: 'Dive for finds with your pet. Surface keeps the haul; Deeper adds a find and shows the exact chance to lose it.',
-  },
-  {
-    emoji: '🛡',
-    title: 'Divecore',
-    body: 'Clearing waves in Divecore feeds your pet, and from Child it pounces once a wave. That’s it — have fun!',
+    mark: '🧭',
+    title: 'Dive or Defend',
+    body: 'Dive from Pet. Defend from the Hub. Pick either.',
   },
 ];
 
@@ -53,14 +42,28 @@ export function DivecoreTutorial({ onDone, onGuide }: { onDone: () => void; onGu
             <Text style={styles.skip}>Skip</Text>
           </Pressable>
         </View>
-        <Text style={styles.emoji}>{step.emoji}</Text>
+        <View style={styles.mark}>
+          <Text style={styles.markText}>{step.mark}</Text>
+        </View>
         <Text style={styles.title} accessibilityRole="header">
           {step.title}
         </Text>
         <Text style={styles.body}>{step.body}</Text>
-        {last && onGuide ? (
-          <NeonButton label="Open the Guide — everything, in one place" variant="secondary" onPress={onGuide} />
+        {last ? (
+          <View style={styles.pair}>
+            <View style={styles.choice}>
+              <Text style={styles.choiceMark}>🤿</Text>
+              <Text style={styles.choiceTitle}>Dive</Text>
+              <Text style={styles.choiceSub}>from Pet</Text>
+            </View>
+            <View style={styles.choice}>
+              <Text style={styles.choiceMark}>🛡</Text>
+              <Text style={styles.choiceTitle}>Defend</Text>
+              <Text style={styles.choiceSub}>from Hub</Text>
+            </View>
+          </View>
         ) : null}
+        {last && onGuide ? <NeonButton label="Open the Guide" variant="secondary" onPress={onGuide} /> : null}
         <View style={styles.dots}>
           {TUTORIAL_STEPS.map((s, n) => (
             <View key={s.title} style={[styles.dot, n === i && styles.dotOn]} />
@@ -87,12 +90,47 @@ const styles = StyleSheet.create({
     borderColor: NEON.cyanBorder,
     backgroundColor: NEON.panel,
   },
-  headRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  count: { fontFamily: Fonts.mono, fontSize: 12, color: NEON.textMuted },
-  skip: { fontFamily: Fonts.monoBold, fontSize: 13, color: NEON.cyan },
-  emoji: { fontSize: 44, textAlign: 'center' },
-  title: { fontFamily: Fonts.displayBold, fontSize: 20, letterSpacing: 1, textTransform: 'uppercase', color: NEON.textPrimary, textAlign: 'center' },
-  body: { fontFamily: Fonts.mono, fontSize: 13, lineHeight: 20, color: NEON.textMuted, textAlign: 'center' },
+  headRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  count: { fontFamily: PLAY_HUD_FONT, fontSize: 12, color: NEON.textMuted },
+  skip: { fontFamily: PLAY_HUD_FONT, fontSize: 13, color: NEON.cyan, minHeight: 44, textAlignVertical: 'center' },
+  mark: {
+    alignSelf: 'center',
+    width: 72,
+    height: 72,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: NEON.cyanDim,
+    backgroundColor: NEON.cyanSoft,
+  },
+  markText: { fontSize: 36 },
+  title: {
+    fontFamily: PLAY_HUD_FONT,
+    fontSize: 22,
+    letterSpacing: 0.8,
+    color: NEON.textPrimary,
+    textAlign: 'center',
+  },
+  body: {
+    fontFamily: PLAY_BODY_FONT,
+    fontSize: 16,
+    lineHeight: 22,
+    color: NEON.textMuted,
+    textAlign: 'center',
+  },
+  pair: { flexDirection: 'row', gap: 10 },
+  choice: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: NEON.cyanDim,
+    backgroundColor: NEON.cyanSoft,
+  },
+  choiceMark: { fontSize: 28 },
+  choiceTitle: { fontFamily: PLAY_HUD_FONT, fontSize: 14, color: NEON.cyan },
+  choiceSub: { fontFamily: PLAY_BODY_FONT, fontSize: 13, color: NEON.textMuted },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 6 },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: NEON.cyanDim },
   dotOn: { backgroundColor: NEON.cyan },

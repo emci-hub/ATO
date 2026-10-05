@@ -12,7 +12,7 @@
  * treatment with no bespoke styling.
  */
 import type { AppearanceTokens } from '@/constants/appearance';
-import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+import { PLAY_EVERYTHING_FREE } from '@/lib/dev-mode';
 
 /** Raw palette for chrome the token set does not cover (borders, watermark). */
 export const NEON = {
@@ -80,26 +80,27 @@ export type HubTile = {
 };
 
 /**
- * The Command Hub tiles (visual SoT: `command-hub-target.png`). Divecore opens
- * the Defend map/board. Since the room overhaul (2026-09-29) Dive opens from
- * the Pet room's Dive icon, not its own tile — the Pet tile says when a dive
- * is in progress.
+ * The Command Hub tiles. Defend is the tower map. Dive stays under Pet
+ * (the Pet subtitle says so) until a later pass adds a Dive tile.
+ * Divecore is the mini-app name, not a tile.
  */
 export const HUB_TILES: HubTile[] = [
-  { id: 'divecore', label: 'Divecore', subtitle: 'Enter the map', icon: 'divecore', to: 'defend' },
-  { id: 'pet', label: 'Pet', subtitle: 'Raise your buddy', icon: 'pet', to: 'pet' },
+  { id: 'defend', label: 'Defend', subtitle: 'Tower map', icon: 'divecore', to: 'defend' },
+  { id: 'pet', label: 'Pet', subtitle: 'Tend · Dive', icon: 'pet', to: 'pet' },
   { id: 'shop', label: 'Shop', subtitle: 'Spend scrap', icon: 'shop', to: 'shop' },
   { id: 'dress', label: 'Dress', subtitle: 'Customize', icon: 'dress', to: 'dress' },
-  { id: 'more', label: 'More', subtitle: 'About & credits', icon: 'more', to: 'about' },
+  { id: 'more', label: 'More', subtitle: 'Guide & credits', icon: 'more', to: 'about' },
 ];
 
-/** v27 (Part D): the Shop is hidden — reachable only with the Play dev
- * unlock in a pre-launch build. */
-export function shopUnlocked(devUnlocked: boolean, preLaunch: boolean = PRE_LAUNCH_DEV): boolean {
-  return preLaunch && devUnlocked;
+/**
+ * Pre-launch (`PLAY_EVERYTHING_FREE`): the Shop tile is on the Hub for
+ * everyone. A public build keeps it off. The dev unlock is not required.
+ */
+export function shopUnlocked(_devUnlocked: boolean, everythingFree: boolean = PLAY_EVERYTHING_FREE): boolean {
+  return everythingFree;
 }
 
 /** The Command Hub tiles to show: the Shop tile only when it is unlocked. */
-export function hubTilesFor(devUnlocked: boolean, preLaunch: boolean = PRE_LAUNCH_DEV): HubTile[] {
-  return HUB_TILES.filter((t) => t.to !== 'shop' || shopUnlocked(devUnlocked, preLaunch));
+export function hubTilesFor(devUnlocked: boolean, everythingFree: boolean = PLAY_EVERYTHING_FREE): HubTile[] {
+  return HUB_TILES.filter((t) => t.to !== 'shop' || shopUnlocked(devUnlocked, everythingFree));
 }

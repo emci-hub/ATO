@@ -17,8 +17,8 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { Fonts } from '@/constants/theme';
 import { NEON, NEON_VIPER_TOKENS } from '@/play/neon-viper';
+import { PLAY_BODY_FONT, PLAY_HUD_FONT } from '@/play/play-fonts';
 import { PlayFrame } from '@/play/play-frame';
 
 /** Hub tile-icon border/fill (rgba, kept local — the token set has no pair). */
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   backText: {
-    fontFamily: Fonts.monoBold,
+    fontFamily: PLAY_HUD_FONT,
     fontSize: 12,
     letterSpacing: 1,
     color: NEON.cyan,
@@ -212,13 +212,13 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   eyebrow: {
-    fontFamily: Fonts.monoBold,
+    fontFamily: PLAY_HUD_FONT,
     fontSize: 10,
     letterSpacing: 1.6,
     color: NEON.cyan,
   },
   title: {
-    fontFamily: Fonts.displayBold,
+    fontFamily: PLAY_HUD_FONT,
     fontSize: 28,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
@@ -229,13 +229,13 @@ const styles = StyleSheet.create({
   },
   lede: {
     marginTop: 4,
-    fontFamily: Fonts.mono,
-    fontSize: 12,
-    lineHeight: 18,
+    fontFamily: PLAY_BODY_FONT,
+    fontSize: 15,
+    lineHeight: 20,
     color: NEON.textMuted,
   },
   label: {
-    fontFamily: Fonts.monoBold,
+    fontFamily: PLAY_HUD_FONT,
     fontSize: 11,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     backgroundColor: NEON.cyanSoft,
   },
   chipText: {
-    fontFamily: Fonts.mono,
+    fontFamily: PLAY_HUD_FONT,
     fontSize: 11,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     backgroundColor: NEON.cyanSoft,
   },
   pillText: {
-    fontFamily: Fonts.mono,
+    fontFamily: PLAY_HUD_FONT,
     fontSize: 10,
     letterSpacing: 0.6,
     color: NEON.textMuted,
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     borderColor: NEON.cyanDim,
   },
   buttonText: {
-    fontFamily: Fonts.monoBold,
+    fontFamily: PLAY_HUD_FONT,
     fontSize: 11,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
