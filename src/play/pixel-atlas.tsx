@@ -60,20 +60,36 @@ export const MOCKUP_DIVE = {
 } as const;
 
 /**
+ * Where the 197×426 plate sits in a scene box, in points.
+ * Scale stays ART_PT on both axes (the 2pt grid — the plate is never stretched).
+ * Wider than the plate: centered. Narrower: cropped equally on the sides.
+ * `anchorArtY` (the feet) lands `anchorFromBottom` points above the box bottom,
+ * so a short phone still shows the pet instead of a band of ceiling.
+ * A box tall enough for the whole plate pins it to the top.
+ */
+export function placePlate(
+  viewW: number,
+  viewH: number,
+  anchorArtY: number,
+  anchorFromBottom = 8,
+): { left: number; top: number; scale: number } {
+  const scale = ART_PT;
+  const pw = MOCKUP_PLATE.w * scale;
+  const ph = MOCKUP_PLATE.h * scale;
+  const left = snapArt((viewW - pw) / 2);
+  let top = snapArt(viewH - anchorFromBottom - anchorArtY * scale);
+  if (top > 0) top = 0;
+  if (top + ph < viewH) top = snapArt(viewH - ph);
+  return { left, top, scale };
+}
+
+/**
  * Where the 197×426 plate sits in a view, in points.
- * A view tall enough for the whole plate pins it to the top (the mockup).
- * A shorter view keeps `focusArtY` in frame and the room's feet above the coach.
+ * `focusArtY` is the art row that should stay above the bottom edge.
  */
 export function mockupOrigin(viewW: number, viewH: number, focusArtY = 210): { left: number; top: number } {
-  const pw = MOCKUP_PLATE.w * ART_PT;
-  const ph = MOCKUP_PLATE.h * ART_PT;
-  const left = snapArt((viewW - pw) / 2);
-  if (viewH >= ph - 8) return { left, top: 0 };
-  let top = snapArt(viewH * 0.46 - focusArtY * ART_PT);
-  const feet = top + MOCKUP_ROOM.feet * ART_PT;
-  const maxFeet = viewH - 96;
-  if (feet > maxFeet) top = snapArt(top - (feet - maxFeet));
-  return { left, top };
+  const placed = placePlate(viewW, viewH, focusArtY, 16);
+  return { left: placed.left, top: placed.top };
 }
 
 export type AtlasFrame = { x: number; y: number; w: number; h: number };

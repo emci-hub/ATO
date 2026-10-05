@@ -13,7 +13,7 @@
  * Rules are unchanged: pure view over `view.pet` + transitions via `commit`.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { PixelRatio, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { PixelRatio, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
 import { DiamondWipe, armWipe, takeWipe } from '@/play/pixel-fx';
@@ -192,18 +192,32 @@ function useHour(): number {
   return hour;
 }
 
+/**
+ * Tab label size that fits EXPEDITION (10 mono ems) in its wider slot.
+ * The row is a fixed 48pt face — it must not grow with the screen.
+ */
+function tabLabelPt(screenW: number): number {
+  const inner = Math.max(0, screenW - 32);
+  const exp = (inner * 1.85) / 5.85 - 12;
+  return Math.max(8, Math.min(13, Math.floor(exp / 10)));
+}
+
 /** One room icon. A suggested action fills cyan — colour only, so Reduce Motion stays still. */
 function RoomIcon({
   emoji,
   label,
   pulse,
   badge,
+  flexGrow,
+  fontSize,
   onPress,
 }: {
   emoji: string;
   label: string;
   pulse: boolean;
   badge: boolean;
+  flexGrow: number;
+  fontSize: number;
   onPress: () => void;
 }) {
   return (
@@ -211,9 +225,14 @@ function RoomIcon({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${emoji} ${label}${badge ? ', dive in progress' : ''}${pulse ? ', suggested' : ''}`}
-      style={({ pressed }) => [styles.icon, pressed && styles.pressed]}>
+      style={({ pressed }) => [styles.icon, { flexGrow }, pressed && styles.pressed]}>
       <PixelFrame fill={pulse ? PIXEL.cyan : PIXEL.ink} border={PIXEL.cyan} minHeight={48} style={styles.iconFrame}>
-        <PixelLabel color={pulse ? PIXEL.onFill : PIXEL.cyan} numberOfLines={1}>
+        <PixelLabel
+          color={pulse ? PIXEL.onFill : PIXEL.cyan}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.85}
+          style={{ fontSize, lineHeight: fontSize + 4, textAlign: 'center', width: '100%' }}>
           {label}
         </PixelLabel>
       </PixelFrame>
@@ -297,6 +316,9 @@ export function PetScreen({
   const [focusEgg, setFocusEgg] = useState<EggType | null>(null);
   const art = usePetArt(pet);
   const { width: screenW } = useWindowDimensions();
+  const tabPt = tabLabelPt(screenW);
+  const headerTight = screenW < 420;
+  const headerBtn = headerTight ? 40 : 48;
   const cardW = Math.min(300, Math.max(220, screenW - 32));
   const cardBox = sharpPetBox(Math.round(cardW * 0.8), art.cellPx, PixelRatio.get());
   const fxQuality = useFxQuality();
@@ -618,6 +640,11 @@ export function PetScreen({
         : `${heroLabel ?? PET_STAGE_LABEL[pet.stage]} · ${PET_STAGE_LABEL[pet.stage]}${
             pet.stage === 'child' ? '' : ` · ${PET_BRANCH_LABEL[pet.branch]}`
           }`;
+  const backW = headerTight ? 72 : 88;
+  const titlePt = Math.max(
+    10,
+    Math.min(16, Math.floor((screenW - (12 + backW + headerBtn * 3 + 16)) / Math.max(8, title.length))),
+  );
   const recolor = revealed ? petRecolor(pet.hero, pet.shiny, pv.dyeOn, pet.shiny_style) : null;
   const cardInfo: PetCardInfo | null =
     revealed && pet.hero
@@ -699,34 +726,43 @@ export function PetScreen({
       <FinishMotionHost reduceMotion={reduceMotion} />
       <View style={styles.topBar}>
         <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Back to Command Hub" style={styles.backHit}>
-          <PixelLabel color={PIXEL.cyan}>‹ Hub</PixelLabel>
+          <PixelLabel
+            color={PIXEL.cyan}
+            numberOfLines={1}
+            style={{ fontSize: headerTight ? 13 : 16, lineHeight: headerTight ? 16 : 20, maxWidth: backW }}>
+            ‹ Hub
+          </PixelLabel>
         </Pressable>
-        <PixelLabel numberOfLines={1} style={styles.title}>
+        <PixelLabel
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+          style={[styles.title, { fontSize: titlePt, lineHeight: titlePt + 4 }]}>
           {title}
         </PixelLabel>
         <View style={styles.topActions}>
           <Pressable
             onPress={() => setSheet('den')}
-            hitSlop={10}
+            hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel={`The Den, ${pv.den.used} of ${pv.den.slots} slots`}
-            style={styles.topButton}>
+            style={[styles.topButton, { width: headerBtn, height: headerBtn }]}>
             <Text style={styles.topButtonText}>🏠</Text>
           </Pressable>
           <Pressable
             onPress={() => setSheet('menu')}
-            hitSlop={10}
+            hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="Pet menu"
-            style={styles.topButton}>
+            style={[styles.topButton, { width: headerBtn, height: headerBtn }]}>
             <Text style={styles.topButtonText}>⋯</Text>
           </Pressable>
           <Pressable
             onPress={() => setSettingsOpen(true)}
-            hitSlop={10}
+            hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="Divecore settings"
-            style={styles.topButton}>
+            style={[styles.topButton, { width: headerBtn, height: headerBtn }]}>
             <Text style={styles.topButtonText}>⚙</Text>
           </Pressable>
         </View>
@@ -761,18 +797,20 @@ export function PetScreen({
         tide={pv.tide.active}
       />
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.iconRow}>
+      <View style={styles.iconRow}>
         {ICONS.map((icon) => (
           <RoomIcon
             key={icon.id}
             emoji={icon.emoji}
             label={icon.label}
+            flexGrow={icon.id === 'expedition' ? 1.85 : 1}
+            fontSize={tabPt}
             pulse={pulseIcon === icon.id}
             badge={icon.id === 'dive' && view.diveRun.active}
             onPress={() => openIcon(icon.id)}
           />
         ))}
-      </ScrollView>
+      </View>
 
       <PlaySheet open={sheet === 'feed'} title={SHEET_TITLE.feed} onClose={closeSheet} reduceMotion={reduceMotion}>
         {pet.stage === 'egg' ? (
@@ -966,31 +1004,35 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 8,
+    flexGrow: 0,
+    flexShrink: 0,
+    paddingHorizontal: 6,
     paddingVertical: 4,
-    gap: 8,
+    gap: 4,
     borderBottomWidth: ART_PT,
     borderBottomColor: PIXEL.cyan,
     backgroundColor: PIXEL.ink,
   },
-  backHit: { minHeight: 48, justifyContent: 'center', paddingHorizontal: 4 },
-  title: { flex: 1, textAlign: 'center' },
-  topActions: { flexDirection: 'row', gap: 4 },
-  topButton: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderWidth: ART_PT, borderColor: PIXEL.cyan },
-  topButtonText: { fontSize: 18, color: PIXEL.cyan },
+  backHit: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 2, flexShrink: 0 },
+  title: { flex: 1, minWidth: 0, textAlign: 'center' },
+  topActions: { flexDirection: 'row', flexShrink: 0, gap: 4 },
+  topButton: { alignItems: 'center', justifyContent: 'center', borderWidth: ART_PT, borderColor: PIXEL.cyan },
+  topButtonText: { fontSize: 16, color: PIXEL.cyan },
   iconRow: {
     flexDirection: 'row',
-    alignItems: 'stretch',
+    alignItems: 'center',
+    flexGrow: 0,
+    flexShrink: 0,
+    height: 64,
     paddingVertical: 8,
     paddingHorizontal: 8,
-    gap: 8,
+    gap: 4,
     borderTopWidth: ART_PT,
     borderTopColor: PIXEL.cyan,
     backgroundColor: PIXEL.ink,
   },
-  icon: { minHeight: 48 },
-  iconFrame: { flexGrow: 1 },
+  icon: { flexBasis: 0, height: 48, minWidth: 0 },
+  iconFrame: { height: 48, width: '100%' },
   badge: {
     position: 'absolute',
     top: 6,

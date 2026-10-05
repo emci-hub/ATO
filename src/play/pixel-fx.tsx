@@ -3,14 +3,17 @@
  *
  * Colour cycling is Mark Ferrari's trick: a cell holds a palette index, and
  * the palette steps 7 times a second. Nothing interpolates RGB. Dither pools
- * are one 4×4 Bayer pattern with a slow opacity breath. The room↔Dive change
- * is a grid of diamonds, staggered by ring. Feed and a landed find flash the
- * pet white for 80ms, shake it 2pt, and (on a find) pop the haul icon in steps.
+ * are a 4×4 Bayer grid of rects with a slow opacity breath. An SVG Pattern
+ * fill is not used: on iOS, react-native-svg ignores patternUnits and
+ * stretches the tile across the ellipse, which paints a huge white/grey
+ * striped oval over the pet. The room↔Dive change is a grid of diamonds,
+ * staggered by ring. Feed and a landed find flash the pet white for 80ms,
+ * shake it 2pt, and (on a find) pop the haul icon in steps.
  *
  * Reduce Motion and Effects Low hold every one of these still or skip it.
  * Animated SVG nodes stay in the tens, on the UI thread.
  */
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
@@ -24,7 +27,7 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
-import Svg, { Defs, Ellipse, Pattern, Polygon, Rect } from 'react-native-svg';
+import Svg, { Path, Polygon, Rect } from 'react-native-svg';
 
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
 
@@ -177,8 +180,58 @@ export function LampCycle({ alive }: { alive: boolean }) {
 }
 
 /**
- * A light pool filled with a 4×4 dither pattern. Opacity breathes while
- * `alive`; otherwise it holds one value.
+ * One path of the lit Bayer cells whose centres sit inside the ellipse.
+ * Returns the path and the art-pixel bounds it occupies.
+ */
+function ditherPath(
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  lit: number,
+): { d: string; minX: number; minY: number; w: number; h: number } | null {
+  if (rx < 1 || ry < 1) return null;
+  const k = ART_PT;
+  const parts: string[] = [];
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  const x0 = Math.floor(cx - rx);
+  const x1 = Math.ceil(cx + rx);
+  const y0 = Math.floor(cy - ry);
+  const y1 = Math.ceil(cy + ry);
+  for (let y = y0; y < y1; y += 1) {
+    const row = BAYER[((y % 4) + 4) % 4];
+    const ny = (y + 0.5 - cy) / ry;
+    if (ny * ny > 1) continue;
+    for (let x = x0; x < x1; x += 1) {
+      if ((row?.[((x % 4) + 4) % 4] ?? 16) >= lit) continue;
+      const nx = (x + 0.5 - cx) / rx;
+      if (nx * nx + ny * ny > 1) continue;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+      parts.push(`${x},${y}`);
+    }
+  }
+  if (parts.length === 0 || !Number.isFinite(minX)) return null;
+  const d = parts
+    .map((pair) => {
+      const [x, y] = pair.split(',').map(Number);
+      const px = (x - minX) * k;
+      const py = (y - minY) * k;
+      return `M${px} ${py}h${k}v${k}h${-k}z`;
+    })
+    .join('');
+  return { d, minX, minY, w: (maxX - minX + 1) * k, h: (maxY - minY + 1) * k };
+}
+
+/**
+ * A light pool filled with a 4×4 dither of rects, clipped to the ellipse.
+ * Opacity breathes while `alive`; otherwise it holds one value. The view is
+ * only as big as the ellipse and sits behind whatever is painted after it.
  */
 export function DitherPool({
   alive,
@@ -202,7 +255,6 @@ export function DitherPool({
   /** Scales the pool's opacity. The room lamp stays well under a solid wash. */
   gain?: number;
 }) {
-  const rawId = useId().replace(/:/g, '');
   const breath = useSharedValue(0.35);
   useEffect(() => {
     cancelAnimation(breath);
@@ -214,26 +266,24 @@ export function DitherPool({
   const style = useAnimatedStyle(() => ({
     opacity: (alive ? 0.16 + breath.value * 0.1 : 0.2) * gain,
   }));
-  const k = ART_PT;
-  const w = (cx + rx) * k + k;
-  const h = (cy + ry) * k + k;
-  const cells: { x: number; y: number }[] = [];
-  for (let y = 0; y < 4; y += 1) {
-    for (let x = 0; x < 4; x += 1) {
-      if ((BAYER[y]?.[x] ?? 16) < lit) cells.push({ x, y });
-    }
-  }
+  const pool = useMemo(() => ditherPath(cx, cy, rx, ry, lit), [cx, cy, rx, ry, lit]);
+  if (!pool) return null;
   return (
-    <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, width: w, height: h }, style]}>
-      <Svg width={w} height={h}>
-        <Defs>
-          <Pattern id={rawId} x="0" y="0" width={4 * k} height={4 * k} patternUnits="userSpaceOnUse">
-            {cells.map((cell) => (
-              <Rect key={`${cell.x}-${cell.y}`} x={cell.x * k} y={cell.y * k} width={k} height={k} fill={color} />
-            ))}
-          </Pattern>
-        </Defs>
-        <Ellipse cx={cx * k} cy={cy * k} rx={rx * k} ry={ry * k} fill={`url(#${rawId})`} />
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        {
+          position: 'absolute',
+          left: pool.minX * ART_PT,
+          top: pool.minY * ART_PT,
+          width: pool.w,
+          height: pool.h,
+          overflow: 'hidden',
+        },
+        style,
+      ]}>
+      <Svg width={pool.w} height={pool.h}>
+        <Path d={pool.d} fill={color} />
       </Svg>
     </Animated.View>
   );

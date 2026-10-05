@@ -5,15 +5,14 @@
  */
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Image } from 'expo-image';
-import { useState, type ComponentProps } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { type ComponentProps } from 'react';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { itemArtSource } from '@/play/art';
 import { findKind } from '@/play/dive-loot';
 import { GLOW_COLOR, findGlow } from '@/play/dive-fx-model';
 import { getItemDef, type ItemSlot } from '@/play/items';
 import { ELEMENT_COLOR } from '@/play/kits';
-import { mockupOrigin } from '@/play/pixel-atlas';
 import { ART_PT, PIXEL, crispSpan } from '@/play/pixel-theme';
 import { PixelBody, PixelFrame, PixelLabel, pixelRenderStyle } from '@/play/pixel-ui';
 import { cosmeticById } from '@/play/pet-cosmetics';
@@ -146,39 +145,21 @@ export function DiveTopBar({
   onGear: () => void;
 }) {
   const shortCharges = charges.split(' · ')[0] ?? charges;
-  const [place, setPlace] = useState<{ top: number; left: number; width: number } | null>(null);
+  const { width } = useWindowDimensions();
+  const labelPt = width < 400 ? 12 : 16;
+  const labelLh = labelPt + 4;
+  const label = { fontSize: labelPt, lineHeight: labelLh };
   return (
-    <View
-      style={styles.bar}
-      pointerEvents="box-none"
-      onLayout={(e) => {
-        const { width, height } = e.nativeEvent.layout;
-        const origin = mockupOrigin(width, height, 200);
-        const left = Math.max(4 * ART_PT, origin.left + 4 * ART_PT);
-        const next = {
-          // Sit on the mockup's top panel when the plate is in frame; otherwise
-          // stay at the top of the scene so a short view does not clip it.
-          top: Math.max(4 * ART_PT, origin.top + 31 * ART_PT),
-          left,
-          width: Math.min(189 * ART_PT, Math.max(160, width - left * 2)),
-        };
-        setPlace((prev) =>
-          prev && prev.top === next.top && prev.left === next.left && prev.width === next.width ? prev : next,
-        );
-      }}>
-      <PixelFrame
-        align="stretch"
-        padded={false}
-        enter
-        style={[styles.panel, place ?? styles.panelHidden]}>
+    <View style={styles.bar} pointerEvents="box-none">
+      <PixelFrame align="stretch" padded={false} enter style={styles.panel}>
         <View style={styles.stack}>
           <View style={styles.row}>
             <View style={styles.side}>
               <Pressable onPress={onBack} hitSlop={10} accessibilityRole="button" accessibilityLabel="Back to the Pet room">
-                <PixelLabel color={PIXEL.cyan}>{'< Pet'}</PixelLabel>
+                <PixelLabel color={PIXEL.cyan} numberOfLines={1} style={label}>{'< Pet'}</PixelLabel>
               </Pressable>
             </View>
-            <PixelLabel numberOfLines={1} style={styles.zone}>{zone}</PixelLabel>
+            <PixelLabel numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={[styles.zone, label]}>{zone}</PixelLabel>
             <View style={[styles.side, styles.sideEnd]}>
               <View style={styles.shells} accessible accessibilityLabel={`${shells} shells`}>
                 <ShellMark />
@@ -216,14 +197,13 @@ const styles = StyleSheet.create({
   pipIn: { flex: 1 },
   pipInOn: { backgroundColor: PIXEL.cyan },
   pipInOff: { backgroundColor: PIXEL.slot },
-  bar: { ...StyleSheet.absoluteFillObject },
-  panel: { position: 'absolute' },
-  panelHidden: { opacity: 0 },
+  bar: { paddingHorizontal: 8, paddingTop: 4 },
+  panel: { alignSelf: 'stretch' },
   stack: { paddingHorizontal: 10, paddingVertical: 6, gap: 2 },
   row: { flexDirection: 'row', alignItems: 'center' },
   side: { flex: 1, justifyContent: 'center' },
   sideEnd: { alignItems: 'flex-end' },
   links: { flexDirection: 'row', alignItems: 'center', gap: ART_PT * 2 },
-  zone: { textAlign: 'center' },
+  zone: { flexShrink: 1, minWidth: 0, textAlign: 'center' },
   shells: { flexDirection: 'row', alignItems: 'center', gap: ART_PT },
 });

@@ -1,4 +1,4 @@
-import { Redirect, Stack, router } from 'expo-router';
+import { Redirect, Stack, router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { BackHandler, PanResponder, Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -48,6 +48,7 @@ import { findGlow } from '@/play/dive-fx-model';
 import { DivecoreSettingsSheet } from '@/play/divecore-settings';
 import { DivecoreTutorial } from '@/play/divecore-tutorial';
 import { resolveReduceMotion, usePlayMotionMode } from '@/play/play-motion';
+import { LayoutShot, type LayoutInset, type LayoutShotKind } from '@/play/layout-shot';
 import { PetScreen, usePlayNoticesSync, type PetTalkEvent } from '@/play/pet-screen';
 import type { PetTalkSituation } from '@/play/pet-talk';
 import { DefendScreen } from '@/play/defend-screen';
@@ -197,6 +198,7 @@ export default function PlayScreen() {
     devClearOwnedHeroes,
     buyShopRow,
   } = usePlayStore();
+  const shotParams = useLocalSearchParams<{ shot?: string; inset?: string }>();
   const [mode, setMode] = useState<PlayMode>('grove');
   // Fullscreen while on the Defend board (setup and waves): the status bar
   // hides and comes back on leaving Defend or exiting Play. Shared hook —
@@ -673,6 +675,16 @@ export default function PlayScreen() {
 
   if (!PRE_LAUNCH_DEV) {
     return <Redirect href="/" />;
+  }
+
+  // Dev-only device frames for the pet room and Dive (layout shots). The
+  // query never changes a normal visit to /play.
+  if (shotParams.shot === 'pet' || shotParams.shot === 'dive') {
+    const inset: LayoutInset =
+      shotParams.inset === 'se' || shotParams.inset === 'max' || shotParams.inset === 'and' || shotParams.inset === '15'
+        ? shotParams.inset
+        : '15';
+    return <LayoutShot kind={shotParams.shot as LayoutShotKind} inset={inset} />;
   }
 
   const researchLine =

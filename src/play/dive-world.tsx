@@ -28,7 +28,7 @@ import Animated, {
 import { DRAGON_DEPTH } from '@/play/dive-fx-model';
 import { Drift, Flicker, MoteRise, SpriteSwap, Sway } from '@/play/pixel-ambient';
 import { ART_PT } from '@/play/pixel-theme';
-import { AtlasSprite, DIVE_FRAMES, MOCKUP_DIVE, MOCKUP_PLATE, mockupOrigin, type DiveFrame } from '@/play/pixel-atlas';
+import { AtlasSprite, DIVE_FRAMES, MOCKUP_DIVE, MOCKUP_PLATE, placePlate, type DiveFrame } from '@/play/pixel-atlas';
 import { CausticWash, DitherPool, ParallaxLayer, useParallaxBob } from '@/play/pixel-fx';
 
 export const WALL_W = 34;
@@ -109,7 +109,7 @@ function PlateSlice({ y0, y1 }: { y0: number; y1: number }) {
  * `alive` is full effects with motion allowed; otherwise the slices sit still.
  */
 export function MockupReef({ width, height, alive }: { width: number; height: number; alive: boolean }) {
-  const origin = mockupOrigin(width, height, 200);
+  const origin = placePlate(width, height, MOCKUP_DIVE.feet, 24);
   const k = ART_PT;
   const bob = useParallaxBob(alive);
   return (

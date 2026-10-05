@@ -67,7 +67,7 @@ import { FindIcon } from '@/play/dive-hud';
 import { AbyssDragon, BOX_OPEN, BubbleRing, FindBox, MockupReef, SharkGlide } from '@/play/dive-world';
 import { findName } from '@/play/dive-loot';
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
-import { MOCKUP_DIVE, mockupOrigin } from '@/play/pixel-atlas';
+import { MOCKUP_DIVE, placePlate } from '@/play/pixel-atlas';
 import { PixelBody, PixelFrame, PixelLabel, PixelRisk, usePixelFonts } from '@/play/pixel-ui';
 import { useHitJuice, useSteppedPop } from '@/play/pixel-fx';
 import type { PetState } from '@/play/pet';
@@ -330,7 +330,7 @@ export function DiveScene({
   const box = pet.stage === 'egg' ? 70 : art.cellPx * ART_PT;
   // The mockup pet hovers over the ledge. The surface perch uses the same spot,
   // so the reef composition stays put when a dive hasn't started.
-  const origin = mockupOrigin(Math.max(width, 1), Math.max(height, 1), 200);
+  const origin = placePlate(Math.max(width, 1), Math.max(height, 1), MOCKUP_DIVE.feet, 24);
   const footAt = roleFootAt(art.role);
   const petX = origin.left + MOCKUP_DIVE.petX * ART_PT;
   const petFeet = origin.top + MOCKUP_DIVE.feet * ART_PT;
@@ -518,8 +518,7 @@ export function DiveScene({
   const rv = useSharedValue(0);
   const flash = useSharedValue(0);
   const [landedKey, setLandedKey] = useState(reveal?.key ?? 0);
-  const [dockH, setDockH] = useState(220);
-  const rowY = Math.max(8, height - dockH + 20);
+  const rowY = Math.max(8, height - 12);
   const slotX = (slot: number) => ROW_PAD + slot * SLOT;
   useEffect(() => {
     if (!reveal) return;
@@ -618,14 +617,33 @@ export function DiveScene({
     lastId && caption?.startsWith('Found ') && isRareOrBetter(findGlow(lastId)) ? findName(lastId) : null;
 
   const worldH = band * (DIVE_MAX_DEPTH + 1) + height;
-  const rareTop = Math.max(8, origin.top + MOCKUP_DIVE.rare.y * ART_PT);
 
   if (!fontsReady) {
-    return <View style={styles.scene} onLayout={onLayout} />;
+    return <View style={styles.scene} />;
   }
 
+  const toast = rareFind && lastId ? (
+    <View pointerEvents="none" style={styles.toast}>
+      <PixelFrame fill={PIXEL.ink} border={PIXEL.amber} padded={false} align="center">
+        <View style={styles.rareRow}>
+          <FindIcon id={lastId} size={14} bare />
+          <PixelLabel color={PIXEL.amber}>Rare find</PixelLabel>
+          <PixelBody size="sm" color={PIXEL.text} numberOfLines={1}>{rareFind}</PixelBody>
+        </View>
+      </PixelFrame>
+    </View>
+  ) : caption ? (
+    <View pointerEvents="none" style={styles.toast}>
+      <PixelFrame>
+        <PixelBody numberOfLines={2} style={styles.captionText}>{caption}</PixelBody>
+      </PixelFrame>
+    </View>
+  ) : null;
+
   return (
-    <Animated.View style={[styles.scene, shakeStyle]} onLayout={onLayout} accessibilityLabel={`${diveZone(depth)}, depth ${depth} of ${maxDepth}`}>
+    <View style={styles.scene} accessibilityLabel={`${diveZone(depth)}, depth ${depth} of ${maxDepth}`}>
+      <View style={styles.topSlot}>{children}</View>
+      <Animated.View style={[styles.stage, shakeStyle]} onLayout={onLayout}>
       {width > 0 ? (
         <>
           {/* Approved reef plate. Fixed to the viewport; kelp, fish, bubbles and the ray shimmer sit on it. */}
@@ -721,78 +739,58 @@ export function DiveScene({
             </Animated.View>
           ) : null}
 
-          {/* HAUL, RISK, and the three controls share one framed panel. */}
-          <View
-            pointerEvents="box-none"
-            style={styles.dock}
-            onLayout={(e) => {
-              const next = Math.round(e.nativeEvent.layout.height);
-              setDockH((prev) => (prev === next ? prev : next));
-            }}>
-            <PixelFrame align="stretch" padded={false}>
-              <View style={styles.dockPad}>
-                <View pointerEvents="none" style={styles.haulRow}>
-                  <PixelLabel color={PIXEL.cyan}>Haul</PixelLabel>
-                  {Array.from({ length: 4 }, (_, i) => {
-                    const item = rowItems[i];
-                    const icon = item ? (
-                      <View style={item.hidden ? styles.hidden : undefined} accessibilityLabel={findName(item.id)}>
-                        <FindIcon id={item.id} size={11 * ART_PT} bare />
-                      </View>
-                    ) : null;
-                    return (
-                      <PixelFrame
-                        key={item ? `${item.id}-${i}` : `empty-${i}`}
-                        glow={false}
-                        lined={false}
-                        padded={false}
-                        step={1}
-                        border={PIXEL.slot}
-                        style={{ width: 13 * ART_PT, height: 13 * ART_PT }}>
-                        {i === popSlot && item && !item.hidden ? <Animated.View style={pop.style}>{icon}</Animated.View> : icon}
-                      </PixelFrame>
-                    );
-                  })}
-                </View>
-                {bustPct != null ? (
-                  <View pointerEvents="none">
-                    <PixelRisk pct={bustPct} />
-                  </View>
-                ) : null}
-                {dock}
-              </View>
-            </PixelFrame>
-          </View>
           {sinking.map((id, i) => (
             <Sinking key={`${id}-${i}-${event?.key}`} id={id} left={slotX(event?.saved.length ?? 0) + i * SLOT} top={rowY} drop={height * 0.4} reduceMotion={reduceMotion} />
           ))}
-          {rareFind && lastId ? (
-            <View pointerEvents="none" style={[styles.caption, { top: rareTop }]}>
-              <PixelFrame fill={PIXEL.ink} border={PIXEL.amber} padded={false} align="center">
-                <View style={styles.rareRow}>
-                  <FindIcon id={lastId} size={14} bare />
-                  <PixelLabel color={PIXEL.amber}>Rare find</PixelLabel>
-                  <PixelBody size="sm" color={PIXEL.text} numberOfLines={1}>{rareFind}</PixelBody>
-                </View>
-              </PixelFrame>
-            </View>
-          ) : null}
-          {caption && !rareFind ? (
-            <View pointerEvents="none" style={[styles.caption, { bottom: ROW_PAD + ICON + 8 }]}>
-              <PixelFrame>
-                <PixelBody style={styles.captionText}>{caption}</PixelBody>
-              </PixelFrame>
-            </View>
-          ) : null}
         </>
       ) : null}
-      {children}
-    </Animated.View>
+      </Animated.View>
+      {toast}
+      {/* HAUL, RISK, and the controls share one framed panel under the scene. */}
+      <View style={styles.dock}>
+        <PixelFrame align="stretch" padded={false}>
+          <View style={styles.dockPad}>
+            <View pointerEvents="none" style={styles.haulRow}>
+              <PixelLabel color={PIXEL.cyan}>Haul</PixelLabel>
+              {Array.from({ length: 4 }, (_, i) => {
+                const item = rowItems[i];
+                const icon = item ? (
+                  <View style={item.hidden ? styles.hidden : undefined} accessibilityLabel={findName(item.id)}>
+                    <FindIcon id={item.id} size={11 * ART_PT} bare />
+                  </View>
+                ) : null;
+                return (
+                  <PixelFrame
+                    key={item ? `${item.id}-${i}` : `empty-${i}`}
+                    glow={false}
+                    lined={false}
+                    padded={false}
+                    step={1}
+                    border={PIXEL.slot}
+                    style={{ width: 13 * ART_PT, height: 13 * ART_PT }}>
+                    {i === popSlot && item && !item.hidden ? <Animated.View style={pop.style}>{icon}</Animated.View> : icon}
+                  </PixelFrame>
+                );
+              })}
+            </View>
+            {bustPct != null ? (
+              <View pointerEvents="none">
+                <PixelRisk pct={bustPct} />
+              </View>
+            ) : null}
+            {dock}
+          </View>
+        </PixelFrame>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scene: { flex: 1, overflow: 'hidden', backgroundColor: '#0b5e65' },
+  scene: { flex: 1, minHeight: 0, backgroundColor: '#0b5e65' },
+  topSlot: { flexGrow: 0, flexShrink: 0, zIndex: 2 },
+  stage: { flex: 1, minHeight: 0, overflow: 'hidden' },
+  toast: { flexGrow: 0, flexShrink: 0, paddingHorizontal: 12, paddingBottom: 4, alignItems: 'center' },
   abs: { position: 'absolute' },
   hurt: { backgroundColor: '#FF3B5C', opacity: 0.35, borderRadius: 999 },
   flash: { backgroundColor: '#FFFFFF' },
@@ -805,13 +803,13 @@ const styles = StyleSheet.create({
     borderRadius: (ICON + 16) / 2,
     opacity: 0.35,
   },
-  dock: { position: 'absolute', left: 8, right: 8, bottom: 8 },
+  dock: { flexGrow: 0, flexShrink: 0, paddingHorizontal: 8, paddingBottom: 8 },
   dockPad: { padding: 12, gap: 8 },
   haulRow: { flexDirection: 'row', alignItems: 'center', gap: ART_PT * 2 },
   rareRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, paddingVertical: 2 },
   row: { position: 'absolute', left: ROW_PAD, right: ROW_PAD, flexDirection: 'row' },
   slot: { width: SLOT },
   hidden: { opacity: 0 },
-  caption: { position: 'absolute', left: 12, right: 12, alignItems: 'center' },
+  caption: { alignItems: 'center' },
   captionText: { textAlign: 'center' },
 });
