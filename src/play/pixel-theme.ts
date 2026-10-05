@@ -3,10 +3,10 @@
  *
  * 1 art pixel = 2pt. Panels, type and pixel-art boxes snap to that grid.
  * Departure Mono labels (em is 11 font-pixels, so 22pt is 2pt per font pixel
- * and the 8px cap draws at 16pt). The line box is that em — no extra leading —
- * so a label centers on the cap. Rajdhani SemiBold carries body copy and
- * numbers, at the mockup's sizes (no faux bold — the SemiBold file is the
- * weight). Text carries a 1-art-px shadow, down and right, radius 0.
+ * and the 8px cap draws at 16pt). The label line box is 28pt, and Rajdhani's
+ * is 1.28× its font size, so a control centers that box rather than clipping
+ * the em. Rajdhani SemiBold carries body copy (the file is the weight — no
+ * faux bold). Text carries a 1-art-px shadow, down and right, radius 0.
  * Both faces are OFL.
  */
 
@@ -48,6 +48,8 @@ export const PIXEL_FONT = {
  * 1 font pixel = 1 art pixel). Cap height is 8px → 16pt.
  */
 export const PIXEL_LABEL_PT = 22;
+/** Departure Mono line box. The 22pt em sits inside this and centers in the control. */
+export const PIXEL_LABEL_LH = 28;
 /**
  * Rajdhani runs small in the mockup, which sizes it at `pt * 1.18`.
  * The coach sentence is 16pt → 19pt. The secondary line ("2 treats left")
@@ -56,6 +58,13 @@ export const PIXEL_LABEL_PT = 22;
 export const PIXEL_BODY_PT = 19;
 export const PIXEL_CAPTION_PT = 17;
 export const PIXEL_NUM_PT = 21;
+/** Rajdhani line box: 1.28× the font size. */
+export function pixelBodyLine(fontSize: number): number {
+  return fontSize * 1.28;
+}
+/** Room FEED face, in points: 56×24 art px. */
+export const PIXEL_FEED_W = 112;
+export const PIXEL_FEED_H = 48;
 /** Every tappable control is at least this tall. */
 export const PIXEL_TAP_PT = 48;
 

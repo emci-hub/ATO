@@ -63,7 +63,7 @@ import { PET_STATUS_WORD, isEvolvingSoon, petStatusLabel, type PetStatus } from 
 import { Flicker, MoteRise, Twinkle } from '@/play/pixel-ambient';
 import { DitherPool, LampCycle, useHitJuice } from '@/play/pixel-fx';
 import { AtlasSprite, MOCKUP_ROOM, mockupOrigin } from '@/play/pixel-atlas';
-import { ART_PT, PIXEL, snapArt } from '@/play/pixel-theme';
+import { ART_PT, PIXEL, PIXEL_FEED_H, PIXEL_FEED_W, snapArt } from '@/play/pixel-theme';
 import {
   PixelBody,
   PixelButton,
@@ -166,7 +166,7 @@ function RoomBackdrop({
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <View style={{ position: 'absolute', left: origin.left, top: origin.top }}>
         <AtlasSprite atlas="room" frame="plate" />
-        <DitherPool alive={alive} cx={158} cy={322} rx={70} ry={22} color="#F9C22B" />
+        <DitherPool alive={alive} cx={158} cy={322} rx={70} ry={18} color="#F9C22B" lit={2} gain={0.42} />
         <View style={{ position: 'absolute', left: MOCKUP_ROOM.glow.x * k, top: MOCKUP_ROOM.glow.y * k }}>
           <Flicker alive={alive} peak={0.65} ms={480}>
             <AtlasSprite atlas="room" frame="glow" />
@@ -622,7 +622,13 @@ export function PetRoom({
             </PixelBody>
           </View>
           {coach.button ? (
-            <PixelButton label={coach.button} onPress={onCoach} style={styles.coachButton} />
+            <PixelButton
+              label={coach.button}
+              onPress={onCoach}
+              width={coach.button.toLowerCase() === 'feed' ? PIXEL_FEED_W : undefined}
+              height={coach.button.toLowerCase() === 'feed' ? PIXEL_FEED_H : undefined}
+              style={styles.coachButton}
+            />
           ) : null}
         </View>
       </PixelFrame>

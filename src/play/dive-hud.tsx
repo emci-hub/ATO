@@ -168,33 +168,38 @@ export function DiveTopBar({
       }}>
       <PixelFrame
         align="stretch"
+        padded={false}
         enter
         style={[styles.panel, place ?? styles.panelHidden]}>
-        <View style={styles.row}>
-          <View style={styles.side}>
-            <Pressable onPress={onBack} hitSlop={10} accessibilityRole="button" accessibilityLabel="Back to the Pet room">
-              <PixelLabel color={PIXEL.cyan}>‹ Pet</PixelLabel>
-            </Pressable>
-            <View style={styles.links}>
-              <Pressable onPress={onGear} hitSlop={8} accessibilityRole="button" accessibilityLabel="Dive gear">
-                <PixelBody size="sm" color={PIXEL.dim}>Gear</PixelBody>
-              </Pressable>
-              <Pressable onPress={onInfo} hitSlop={8} accessibilityRole="button" accessibilityLabel="How Dive works">
-                <PixelBody size="sm" color={PIXEL.dim}>Info</PixelBody>
+        <View style={styles.stack}>
+          <View style={styles.row}>
+            <View style={styles.side}>
+              <Pressable onPress={onBack} hitSlop={10} accessibilityRole="button" accessibilityLabel="Back to the Pet room">
+                <PixelLabel color={PIXEL.cyan}>{'< Pet'}</PixelLabel>
               </Pressable>
             </View>
+            <PixelLabel numberOfLines={1} style={styles.zone}>{zone}</PixelLabel>
+            <View style={[styles.side, styles.sideEnd]}>
+              <View style={styles.shells} accessible accessibilityLabel={`${shells} shells`}>
+                <ShellMark />
+                <PixelBody size="num" color={PIXEL.amber}>{`${shells}`}</PixelBody>
+              </View>
+            </View>
           </View>
-          <View style={styles.zoneBox}>
-            <PixelLabel numberOfLines={1}>{zone}</PixelLabel>
+          <View style={styles.row}>
+            <View style={styles.side}>
+              <View style={styles.links}>
+                <Pressable onPress={onGear} hitSlop={8} accessibilityRole="button" accessibilityLabel="Dive gear">
+                  <PixelBody size="sm" color={PIXEL.dim}>Gear</PixelBody>
+                </Pressable>
+                <Pressable onPress={onInfo} hitSlop={8} accessibilityRole="button" accessibilityLabel="How Dive works">
+                  <PixelBody size="sm" color={PIXEL.dim}>info ›</PixelBody>
+                </Pressable>
+              </View>
+            </View>
             <DepthMeter depth={depth} max={maxDepth} />
-          </View>
-          <View style={styles.sideRight}>
-            <View accessible accessibilityLabel={`Dive charges ${charges}`}>
+            <View style={[styles.side, styles.sideEnd]} accessible accessibilityLabel={`Dive charges ${charges}`}>
               <PixelBody size="sm" color={PIXEL.dim}>{shortCharges}</PixelBody>
-            </View>
-            <View style={styles.shells} accessible accessibilityLabel={`${shells} shells`}>
-              <ShellMark />
-              <PixelBody size="num" color={PIXEL.amber}>{`${shells}`}</PixelBody>
             </View>
           </View>
         </View>
@@ -204,7 +209,7 @@ export function DiveTopBar({
 }
 
 const styles = StyleSheet.create({
-  meter: { flexDirection: 'row', gap: ART_PT * 3, marginTop: ART_PT },
+  meter: { flexDirection: 'row', alignItems: 'center', gap: ART_PT * 3 },
   pip: { width: ART_PT * 8, height: ART_PT * 5, padding: ART_PT },
   pipOn: { backgroundColor: PIXEL.ink },
   pipOff: { backgroundColor: PIXEL.cyanLo },
@@ -214,10 +219,11 @@ const styles = StyleSheet.create({
   bar: { ...StyleSheet.absoluteFillObject },
   panel: { position: 'absolute' },
   panelHidden: { opacity: 0 },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ART_PT * 2 },
-  side: { gap: 0 },
-  sideRight: { alignItems: 'flex-end', gap: 0 },
-  links: { flexDirection: 'row', gap: ART_PT * 3 },
-  zoneBox: { alignItems: 'center', flex: 1 },
+  stack: { paddingHorizontal: 10, paddingVertical: 6, gap: 2 },
+  row: { flexDirection: 'row', alignItems: 'center' },
+  side: { flex: 1, justifyContent: 'center' },
+  sideEnd: { alignItems: 'flex-end' },
+  links: { flexDirection: 'row', alignItems: 'center', gap: ART_PT * 2 },
+  zone: { textAlign: 'center' },
   shells: { flexDirection: 'row', alignItems: 'center', gap: ART_PT },
 });

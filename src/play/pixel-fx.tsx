@@ -187,6 +187,8 @@ export function DitherPool({
   rx,
   ry,
   color,
+  lit = 4,
+  gain = 0.7,
 }: {
   alive: boolean;
   /** Centre and radii in art pixels. */
@@ -195,6 +197,10 @@ export function DitherPool({
   rx: number;
   ry: number;
   color: string;
+  /** Bayer cells below this are lit. 2 is a sparse floor pool; 4 is a find glow. */
+  lit?: number;
+  /** Scales the pool's opacity. The room lamp stays well under a solid wash. */
+  gain?: number;
 }) {
   const rawId = useId().replace(/:/g, '');
   const breath = useSharedValue(0.35);
@@ -206,7 +212,7 @@ export function DitherPool({
     return () => cancelAnimation(breath);
   }, [alive, breath]);
   const style = useAnimatedStyle(() => ({
-    opacity: alive ? 0.22 + breath.value * 0.28 : 0.32,
+    opacity: (alive ? 0.16 + breath.value * 0.1 : 0.2) * gain,
   }));
   const k = ART_PT;
   const w = (cx + rx) * k + k;
@@ -214,7 +220,7 @@ export function DitherPool({
   const cells: { x: number; y: number }[] = [];
   for (let y = 0; y < 4; y += 1) {
     for (let x = 0; x < 4; x += 1) {
-      if ((BAYER[y]?.[x] ?? 16) < 8) cells.push({ x, y });
+      if ((BAYER[y]?.[x] ?? 16) < lit) cells.push({ x, y });
     }
   }
   return (

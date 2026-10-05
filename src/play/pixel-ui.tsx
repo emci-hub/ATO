@@ -5,14 +5,15 @@
  * stepped corners (2px stair), a solid inner glow ring and a checker outer ring.
  * Buttons add an ink outline, a 1px top highlight and a 2px bottom shade.
  * Pressed sinks the button 1 art px and swaps the highlight for the shade.
- * Labels use a line box equal to the em, centered, with a 1px text shadow.
+ * Labels use a 28pt line box (Rajdhani is 1.28×), centered in the face,
+ * with a hard 1-art-px shadow and normal weight.
  * Departure Mono + Rajdhani SemiBold load before any pixel label paints.
  */
 import { Rajdhani_600SemiBold } from '@expo-google-fonts/rajdhani';
 import { useFonts } from 'expo-font';
 import { Image, type ImageProps } from 'expo-image';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Pressable, Text, View, type ImageStyle, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { Platform, Pressable, Text, View, type ImageStyle, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -33,9 +34,13 @@ import {
   PIXEL_BODY_PT,
   PIXEL_CAPTION_PT,
   PIXEL_FONT,
+  PIXEL_FEED_H,
+  PIXEL_FEED_W,
+  PIXEL_LABEL_LH,
   PIXEL_LABEL_PT,
   PIXEL_NUM_PT,
   PIXEL_TAP_PT,
+  pixelBodyLine,
   crispSpan,
   pixelRenderStyle,
 } from '@/play/pixel-theme';
@@ -60,12 +65,23 @@ function usePressDrop(enabled: boolean) {
   return { onPressIn, onPressOut, style };
 }
 
-/** 1 art px down-right. Radius 0 so it stays a pixel, not a blur. */
-const PIXEL_TEXT_SHADOW = {
-  textShadowColor: PIXEL.ink,
-  textShadowOffset: { width: ART_PT, height: ART_PT },
-  textShadowRadius: 0,
-} as const;
+/** Hard 1-art-px step. Radius 0 so it stays a pixel, not a stroke or a blur. */
+function pixelShadow(color: string): TextStyle {
+  return {
+    textShadowColor: color,
+    textShadowOffset: { width: ART_PT, height: ART_PT },
+    textShadowRadius: 0,
+  };
+}
+
+/** Normal weight, no synthetic bold, no smoothed strokes on web. */
+const PIXEL_WEIGHT: TextStyle = {
+  fontWeight: '400',
+  fontStyle: 'normal',
+  ...(Platform.OS === 'web'
+    ? ({ WebkitFontSmoothing: 'none', MozOsxFontSmoothing: 'grayscale' } as TextStyle)
+    : null),
+};
 
 /** "DEEPER · SAFER 20%" → title DEEPER, caption "safer 20%". */
 function buttonLines(label: string): { title: string; caption: string | null } {
@@ -302,12 +318,15 @@ export function PixelLabel({
   style,
   numberOfLines,
   accessibilityRole,
+  shadowColor = PIXEL.ink,
 }: {
   children: ReactNode;
   color?: string;
   style?: StyleProp<TextStyle>;
   numberOfLines?: number;
   accessibilityRole?: 'header' | 'text';
+  /** Hard 1-step shadow. Buttons pass their shade so ink text is not doubled. */
+  shadowColor?: string;
 }) {
   return (
     <Text
@@ -317,13 +336,14 @@ export function PixelLabel({
         {
           fontFamily: PIXEL_FONT.label,
           fontSize: PIXEL_LABEL_PT,
-          lineHeight: PIXEL_LABEL_PT,
+          lineHeight: PIXEL_LABEL_LH,
           letterSpacing: 0,
-          fontWeight: 'normal',
           color,
           textTransform: 'uppercase',
+          textAlignVertical: 'center',
           includeFontPadding: false,
-          ...PIXEL_TEXT_SHADOW,
+          ...PIXEL_WEIGHT,
+          ...pixelShadow(shadowColor),
         },
         style,
       ]}>
@@ -338,6 +358,7 @@ export function PixelBody({
   style,
   numberOfLines,
   size = 'md',
+  shadowColor = PIXEL.ink,
 }: {
   children: ReactNode;
   color?: string;
@@ -345,6 +366,8 @@ export function PixelBody({
   numberOfLines?: number;
   /** md is the coach sentence (19pt). sm is the secondary line (17pt). num is a count (21pt). */
   size?: 'md' | 'sm' | 'num';
+  /** Hard 1-step shadow. Buttons pass their shade so the glyph stays one weight. */
+  shadowColor?: string;
 }) {
   const fontSize = size === 'sm' ? PIXEL_CAPTION_PT : size === 'num' ? PIXEL_NUM_PT : PIXEL_BODY_PT;
   return (
@@ -354,12 +377,13 @@ export function PixelBody({
         {
           fontFamily: PIXEL_FONT.body,
           fontSize,
-          lineHeight: fontSize,
+          lineHeight: pixelBodyLine(fontSize),
           letterSpacing: 0,
-          fontWeight: 'normal',
           color,
+          textAlignVertical: 'center',
           includeFontPadding: false,
-          ...PIXEL_TEXT_SHADOW,
+          ...PIXEL_WEIGHT,
+          ...pixelShadow(shadowColor),
         },
         style,
       ]}>
@@ -378,6 +402,8 @@ export function PixelButton({
   variant = 'cyan',
   style,
   accessibilityLabel,
+  width,
+  height,
 }: {
   label: string;
   onPress: () => void;
@@ -385,12 +411,17 @@ export function PixelButton({
   variant?: PixelButtonVariant;
   style?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
+  /** Fixed face. Room FEED is 112×48. */
+  width?: number;
+  height?: number;
 }) {
   const fill = variant === 'amber' ? PIXEL.amber : variant === 'muted' ? PIXEL.ink : PIXEL.cyan;
   const border = variant === 'muted' ? PIXEL.muted : PIXEL.ink;
   const text = variant === 'muted' ? PIXEL.muted : PIXEL.onFill;
+  const shade = variant === 'amber' ? PIXEL.amberLo : variant === 'muted' ? PIXEL.ink : PIXEL.cyanLo;
   const alive = useAmbientOn();
   const lines = buttonLines(label);
+  const faceH = height ?? (lines.caption ? PIXEL_LABEL_LH + pixelBodyLine(PIXEL_CAPTION_PT) + ART_PT * 4 : PIXEL_TAP_PT);
   return (
     <Pressable
       onPress={onPress}
@@ -399,12 +430,15 @@ export function PixelButton({
       accessibilityState={{ disabled }}
       accessibilityLabel={accessibilityLabel ?? label}
       style={({ pressed }) => [
+        style,
         {
-          minHeight: PIXEL_TAP_PT,
+          width,
+          height: faceH,
+          minHeight: faceH,
+          flexShrink: width != null ? 0 : undefined,
           opacity: disabled ? 0.4 : pressed && !alive ? 0.82 : 1,
           transform: [{ translateY: pressed && !disabled && alive ? ART_PT : 0 }],
         },
-        style,
       ]}>
       {({ pressed }) => (
         <PixelFrame
@@ -415,15 +449,24 @@ export function PixelButton({
           glow={false}
           lined={false}
           padded={false}
-          align="stretch"
-          minHeight={PIXEL_TAP_PT}
+          align="center"
+          minHeight={faceH}
           pulse={variant === 'cyan' && !disabled}
-          style={{ flexGrow: 1 }}>
-          <PixelLabel color={text} numberOfLines={1} style={{ textAlign: 'center', alignSelf: 'stretch' }}>
+          style={{ flexGrow: 1, width: width ?? '100%', height: faceH }}>
+          <PixelLabel
+            color={text}
+            shadowColor={shade}
+            numberOfLines={1}
+            style={{ textAlign: 'center', alignSelf: 'stretch' }}>
             {lines.title}
           </PixelLabel>
           {lines.caption ? (
-            <PixelBody size="sm" color={text} numberOfLines={1} style={{ textAlign: 'center', alignSelf: 'stretch' }}>
+            <PixelBody
+              size="sm"
+              color={text}
+              shadowColor={shade}
+              numberOfLines={1}
+              style={{ textAlign: 'center', alignSelf: 'stretch' }}>
               {lines.caption}
             </PixelBody>
           ) : null}
