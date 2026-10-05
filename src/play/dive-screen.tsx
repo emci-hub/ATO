@@ -297,10 +297,24 @@ export function DiveScreen({
           showSplash ? (
             <View style={styles.splashRow}>
               {!reduceMotion ? <ActivityIndicator size="small" color={PIXEL.cyan} /> : null}
-              <PixelLabel>{splashCopy ?? 'Searching…'}</PixelLabel>
+              <PixelLabel numberOfLines={1}>{splashCopy ?? 'Searching…'}</PixelLabel>
             </View>
           ) : (
             <View style={styles.dockButtons}>
+              <PixelBody size="sm" numberOfLines={4} style={styles.note}>{hint}</PixelBody>
+              {run.active && run.preview ? (
+                <PixelBody size="sm" numberOfLines={2} style={styles.note}>
+                  Lamp: Safer holds {findName(run.preview.safe)} · Richer holds {findName(run.preview.rich)}.
+                </PixelBody>
+              ) : null}
+              {run.active && run.netOn && !run.free ? (
+                <PixelBody size="sm" numberOfLines={2} style={styles.note}>Net: surfacing now adds one more find.</PixelBody>
+              ) : null}
+              <PixelBody size="sm" numberOfLines={2} style={styles.note}>
+                Powers today: {run.powersToday}/{run.powersCap}
+                {run.snack ? ` · ${BUFF_ICON.snack} Snack: −${SNACK_BUST_PP} in every %` : ''}
+                {run.hearty > 0 && !run.free ? ` · ${BUFF_ICON.hearty} +1 find on surface (×${run.hearty})` : ''}
+              </PixelBody>
               {buttonRows.map((row, i) => (
                 <View key={i} style={styles.buttonRow}>
                   {row.map((b) => (
@@ -330,23 +344,6 @@ export function DiveScreen({
           onGear={() => setSheet('gear')}
         />
       </DiveScene>
-
-      <View style={styles.notes} pointerEvents="none">
-        <PixelBody size="sm" numberOfLines={2} style={styles.note}>{hint}</PixelBody>
-        {run.active && run.preview ? (
-          <PixelBody size="sm" numberOfLines={1} style={styles.note}>
-            Lamp: Safer holds {findName(run.preview.safe)} · Richer holds {findName(run.preview.rich)}.
-          </PixelBody>
-        ) : null}
-        {run.active && run.netOn && !run.free ? (
-          <PixelBody size="sm" numberOfLines={1} style={styles.note}>Net: surfacing now adds one more find.</PixelBody>
-        ) : null}
-        <PixelBody size="sm" numberOfLines={2} style={styles.note}>
-          Powers today: {run.powersToday}/{run.powersCap}
-          {run.snack ? ` · ${BUFF_ICON.snack} Snack: −${SNACK_BUST_PP} in every %` : ''}
-          {run.hearty > 0 && !run.free ? ` · ${BUFF_ICON.hearty} +1 find on surface (×${run.hearty})` : ''}
-        </PixelBody>
-      </View>
 
       <PlaySheet open={sheet === 'info'} title="Dive · info" onClose={() => setSheet(null)} reduceMotion={reduceMotion}>
         <PixelBody>{diveBuddyLine(view)}</PixelBody>
@@ -424,18 +421,11 @@ function chargeText(view: PlayView): string {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: PIXEL.ink },
-  notes: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 248,
-    gap: 2,
-  },
-  dockButtons: { gap: 8 },
+  screen: { flex: 1, minHeight: 0, backgroundColor: PIXEL.ink },
+  dockButtons: { gap: 8, alignSelf: 'stretch' },
   // Two DEEPER buttons share the row; SURFACE is its own full-width row.
   buttonRow: { flexDirection: 'row', gap: 8, alignSelf: 'stretch' },
-  button: { flexGrow: 1, flexBasis: 0, minHeight: 50 },
+  button: { flexGrow: 1, flexBasis: 0, minWidth: 0, minHeight: 50 },
   note: { textAlign: 'center' },
   gearRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   buyButton: { flexGrow: 0 },

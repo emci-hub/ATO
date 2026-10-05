@@ -319,6 +319,8 @@ export function PixelLabel({
   numberOfLines,
   accessibilityRole,
   shadowColor = PIXEL.ink,
+  adjustsFontSizeToFit,
+  minimumFontScale,
 }: {
   children: ReactNode;
   color?: string;
@@ -327,11 +329,17 @@ export function PixelLabel({
   accessibilityRole?: 'header' | 'text';
   /** Hard 1-step shadow. Buttons pass their shade so ink text is not doubled. */
   shadowColor?: string;
+  /** Shrink to the line instead of clipping. Pixel type does not follow the OS text size. */
+  adjustsFontSizeToFit?: boolean;
+  minimumFontScale?: number;
 }) {
   return (
     <Text
       numberOfLines={numberOfLines}
       accessibilityRole={accessibilityRole}
+      allowFontScaling={false}
+      adjustsFontSizeToFit={adjustsFontSizeToFit}
+      minimumFontScale={minimumFontScale}
       style={[
         {
           fontFamily: PIXEL_FONT.label,
@@ -373,6 +381,7 @@ export function PixelBody({
   return (
     <Text
       numberOfLines={numberOfLines}
+      allowFontScaling={false}
       style={[
         {
           fontFamily: PIXEL_FONT.body,
@@ -404,6 +413,7 @@ export function PixelButton({
   accessibilityLabel,
   width,
   height,
+  hug = false,
 }: {
   label: string;
   onPress: () => void;
@@ -414,6 +424,12 @@ export function PixelButton({
   /** Fixed face. Room FEED is 112×48. */
   width?: number;
   height?: number;
+  /**
+   * Size the face to the label and keep a min width. Coach rows use this so a
+   * long label ("Catch the food") sits beside wrapping copy instead of
+   * painting over it. Departure Mono advances about one em.
+   */
+  hug?: boolean;
 }) {
   const fill = variant === 'amber' ? PIXEL.amber : variant === 'muted' ? PIXEL.ink : PIXEL.cyan;
   const border = variant === 'muted' ? PIXEL.muted : PIXEL.ink;
@@ -421,7 +437,13 @@ export function PixelButton({
   const shade = variant === 'amber' ? PIXEL.amberLo : variant === 'muted' ? PIXEL.ink : PIXEL.cyanLo;
   const alive = useAmbientOn();
   const lines = buttonLines(label);
-  const faceH = height ?? (lines.caption ? PIXEL_LABEL_LH + pixelBodyLine(PIXEL_CAPTION_PT) + ART_PT * 4 : PIXEL_TAP_PT);
+  const glyphs = Math.max(1, lines.title.length);
+  // Long mono titles ("CATCH THE FOOD" is ~14 em) shrink so the button keeps
+  // a min width instead of covering the row beside it.
+  const fontSize = hug ? Math.max(11, Math.min(PIXEL_LABEL_PT, Math.floor(176 / glyphs))) : PIXEL_LABEL_PT;
+  const lineHeight = Math.max(fontSize + 2, Math.round(fontSize * (PIXEL_LABEL_LH / PIXEL_LABEL_PT)));
+  const hugW = hug && width == null ? Math.max(112, glyphs * fontSize + ART_PT * 10) : width;
+  const faceH = height ?? (lines.caption ? lineHeight + pixelBodyLine(PIXEL_CAPTION_PT) + ART_PT * 4 : PIXEL_TAP_PT);
   return (
     <Pressable
       onPress={onPress}
@@ -432,10 +454,13 @@ export function PixelButton({
       style={({ pressed }) => [
         style,
         {
-          width,
+          width: hugW,
+          minWidth: hug ? Math.max(112, hugW ?? 112) : undefined,
+          maxWidth: '100%',
           height: faceH,
           minHeight: faceH,
-          flexShrink: width != null ? 0 : undefined,
+          flexShrink: 0,
+          flexGrow: hug ? 0 : undefined,
           opacity: disabled ? 0.4 : pressed && !alive ? 0.82 : 1,
           transform: [{ translateY: pressed && !disabled && alive ? ART_PT : 0 }],
         },
@@ -452,12 +477,12 @@ export function PixelButton({
           align="center"
           minHeight={faceH}
           pulse={variant === 'cyan' && !disabled}
-          style={{ flexGrow: 1, width: width ?? '100%', height: faceH }}>
+          style={{ flexGrow: 1, width: '100%', height: faceH }}>
           <PixelLabel
             color={text}
             shadowColor={shade}
             numberOfLines={1}
-            style={{ textAlign: 'center', alignSelf: 'stretch' }}>
+            style={{ fontSize, lineHeight, textAlign: 'center', alignSelf: 'stretch' }}>
             {lines.title}
           </PixelLabel>
           {lines.caption ? (

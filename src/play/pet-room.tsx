@@ -62,7 +62,7 @@ import { wornLook, type PetWear } from '@/play/pet-cosmetics';
 import { PET_STATUS_WORD, isEvolvingSoon, petStatusLabel, type PetStatus } from '@/play/pet-status';
 import { Flicker, MoteRise, Twinkle } from '@/play/pixel-ambient';
 import { DitherPool, LampCycle, useHitJuice } from '@/play/pixel-fx';
-import { AtlasSprite, MOCKUP_ROOM, mockupOrigin } from '@/play/pixel-atlas';
+import { AtlasSprite, MOCKUP_PLATE, MOCKUP_ROOM, placePlate } from '@/play/pixel-atlas';
 import { ART_PT, PIXEL, PIXEL_FEED_H, PIXEL_FEED_W, snapArt } from '@/play/pixel-theme';
 import {
   PixelBody,
@@ -80,6 +80,8 @@ import { roleFootAt } from '@/play/skin';
 // feet+6, so +8 clears it and the sprite for every stage (it used to sit at -4
 // and covered the pet's feet — Crimson Oni, Child).
 const PLATE_BELOW_FEET = 8;
+/** Room under the feet kept clear for the grade nameplate (stars + the word). */
+const NAME_RESERVE = 84;
 /** Nameplate text size — Departure Mono at 2pt per font pixel (cap stays 16pt). */
 export const NAMEPLATE_FONT = 22;
 
@@ -160,7 +162,7 @@ function RoomBackdrop({
   height: number;
   alive: boolean;
 }) {
-  const origin = mockupOrigin(width, height, 200);
+  const origin = placePlate(width, height, MOCKUP_ROOM.feet, NAME_RESERVE);
   const k = ART_PT;
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
@@ -391,8 +393,12 @@ export function PetRoom({
   const egg = pet.stage === 'egg';
   const box = egg ? PET_ROOM_BOX.egg : sharpPetBox(PET_ROOM_BOX[pet.stage], art.cellPx, PixelRatio.get());
   const footAt = egg ? 1 : roleFootAt(art.role);
-  const origin = mockupOrigin(Math.max(width, 1), Math.max(height, 1), 200);
+  // Feet sit just above the nameplate reserve so the grade badge stays in the
+  // scene, and the coach (a row below this view) cannot cover it.
+  const origin = placePlate(Math.max(width, 1), Math.max(height, 1), MOCKUP_ROOM.feet, NAME_RESERVE);
   const floorY = origin.top + MOCKUP_ROOM.feet * ART_PT;
+  const plateW = MOCKUP_PLATE.w * ART_PT;
+  const plateLeft = origin.left;
   const top = floorY - footAt * box;
   const mood = petMoodKind(pet.hunger, pet.mood, night);
   const asleep = mood === 'asleep' && !egg;
@@ -506,7 +512,7 @@ export function PetRoom({
 
   const petStyle = useAnimatedStyle(() => ({
     transform: [
-      { translateX: x.value * width - box / 2 },
+      { translateX: plateLeft + x.value * plateW - box / 2 },
       { translateY: hop.value + drift.value },
     ],
   }));
@@ -527,37 +533,29 @@ export function PetRoom({
   // Follows the pet's LIVE position (not the walk's destination) on the UI
   // thread, clamped so the bubble never leaves the room.
   const speechStyle = useAnimatedStyle(() => {
-    const center = x.value * width;
+    const center = plateLeft + x.value * plateW;
     const want = Math.min(Math.max(10, center - speechW / 2), Math.max(10, width - 10 - speechW));
     return { transform: [{ translateX: want - (center - box / 2) }] };
   });
 
   // v26 nameplate: on the ring at the pet's feet, walking with it; wider than
   // a small pet so "★★★★ Legendary" always fits, and kept inside the room.
-  const plateW = Math.min(Math.max(120, box), Math.max(120, width - 16));
+  const nameW = Math.min(Math.max(120, box), Math.max(120, width - 16));
   const plateStyle = useAnimatedStyle(() => {
-    const center = x.value * width;
-    const want = Math.min(Math.max(8, center - plateW / 2), Math.max(8, width - 8 - plateW));
+    const center = plateLeft + x.value * plateW;
+    const want = Math.min(Math.max(8, center - nameW / 2), Math.max(8, width - 8 - nameW));
     return { transform: [{ translateX: want - (center - box / 2) }] };
   });
 
-  if (!fontsReady) return <View style={styles.room} onLayout={onLayout} />;
+  if (!fontsReady) return <View style={styles.room} />;
+
+  const meterLabel = { fontSize: 16, lineHeight: 20 } as const;
 
   return (
-    <View style={styles.room} onLayout={onLayout}>
-      {width > 0 ? <RoomBackdrop width={width} height={height} alive={fxAnimate} /> : null}
-
-      {/* Meters sit on the mockup's top panel. Clamped so a short room still shows them. */}
-      <View
-        style={[
-          styles.corner,
-          {
-            top: Math.max(4, origin.top + MOCKUP_ROOM.meters.y * ART_PT),
-            left: Math.max(4, origin.left + MOCKUP_ROOM.meters.x * ART_PT),
-            width: Math.min(MOCKUP_ROOM.meters.w * ART_PT, Math.max(120, width - 8)),
-          },
-        ]}
-        pointerEvents="box-none">
+    <View style={styles.room}>
+      {/* Meters, the scene, and the coach are three rows. None is positioned
+          on top of another, so a short phone cannot stack them. */}
+      <View style={styles.metersSlot} pointerEvents="box-none">
       <PixelFrame align="stretch" enter style={styles.meters}>
         <View style={styles.meterHead}>
         <View style={styles.meterMain} accessible accessibilityLabel={`Hunger ${pet.hunger} of ${PET_METER_MAX}, mood ${pet.mood} of ${PET_METER_MAX}`}>
@@ -565,27 +563,34 @@ export function PetRoom({
           <PixelLabel>Pick an egg</PixelLabel>
         ) : egg ? (
           <View style={styles.meterRow} accessibilityLabel={`Warmth ${pet.warmth} of ${WARMTH_MAX}`}>
-            <PixelLabel color={PIXEL.cyan}>Warmth</PixelLabel>
+            <PixelLabel color={PIXEL.cyan} style={meterLabel}>Warmth</PixelLabel>
             <PixelHearts value={pet.warmth} max={WARMTH_MAX} color={PIXEL.amber} />
           </View>
         ) : (
           <View style={styles.meterBlock}>
             <View style={styles.meterRow}>
-              <PixelLabel color={PIXEL.cyan}>Hunger</PixelLabel>
+              <PixelLabel color={PIXEL.cyan} style={meterLabel}>Hunger</PixelLabel>
               <PixelHearts value={pet.hunger} max={PET_METER_MAX} />
             </View>
             <View style={styles.meterRow}>
-              <PixelLabel color={PIXEL.cyan}>Mood</PixelLabel>
+              <PixelLabel color={PIXEL.cyan} style={meterLabel}>Mood</PixelLabel>
               <PixelHearts value={pet.mood} max={PET_METER_MAX} />
             </View>
           </View>
         )}
         </View>
+        <View style={styles.meterSide}>
         {!picking ? (
           <PixelFrame glow={false} style={styles.stageBadge}>
-            <PixelLabel>{PET_STAGE_LABEL[pet.stage]}</PixelLabel>
+            <PixelLabel style={meterLabel}>{PET_STAGE_LABEL[pet.stage]}</PixelLabel>
           </PixelFrame>
         ) : null}
+        <PixelFrame glow={false} style={styles.foodChip}>
+          <View accessible accessibilityLabel={`${pantry} ${pantry === 1 ? 'treat' : 'treats'} in the pantry`}>
+            <PixelLabel color={PIXEL.amber} style={meterLabel}>{`×${pantry}`}</PixelLabel>
+          </View>
+        </PixelFrame>
+        </View>
         </View>
       </PixelFrame>
       {buffs.map((b) => (
@@ -597,41 +602,8 @@ export function PetRoom({
       ))}
       </View>
 
-      {/* Coach: what it needs, and the button that does it. */}
-      <PixelFrame
-        align="stretch"
-        enter
-        style={[
-          styles.coach,
-          {
-            left: Math.max(4, origin.left + MOCKUP_ROOM.coach.x * ART_PT),
-            width: Math.min(MOCKUP_ROOM.coach.w * ART_PT, Math.max(120, width - 8)),
-            top: Math.min(
-              Math.max(8, height - 88),
-              Math.max(height * 0.5, origin.top + MOCKUP_ROOM.coach.y * ART_PT),
-            ),
-          },
-        ]}>
-        <View style={styles.coachRow}>
-          <View style={styles.coachCopy}>
-            <PixelBody color={PIXEL.text} style={styles.coachText} numberOfLines={2}>
-              {coach.tip}
-            </PixelBody>
-            <PixelBody size="sm" color={PIXEL.dim} numberOfLines={1}>
-              {pantry === 1 ? '1 treat left' : `${pantry} treats left`}
-            </PixelBody>
-          </View>
-          {coach.button ? (
-            <PixelButton
-              label={coach.button}
-              onPress={onCoach}
-              width={coach.button.toLowerCase() === 'feed' ? PIXEL_FEED_W : undefined}
-              height={coach.button.toLowerCase() === 'feed' ? PIXEL_FEED_H : undefined}
-              style={styles.coachButton}
-            />
-          ) : null}
-        </View>
-      </PixelFrame>
+      <View style={styles.stage} onLayout={onLayout}>
+      {width > 0 ? <RoomBackdrop width={width} height={height} alive={fxAnimate} /> : null}
 
       {width > 0 && picking && onPickEgg ? (
         <View style={[styles.eggRow, { top: floorY - 96 }]}>
@@ -650,7 +622,7 @@ export function PetRoom({
       ) : null}
 
       {width > 0 && away ? (
-        <View style={[styles.awayBubble, { left: snapArt(width * PET_BED_X - 80), top: snapArt(floorY - 64) }]}>
+        <View style={[styles.awayBubble, { left: snapArt(plateLeft + plateW * PET_BED_X - 80), top: snapArt(floorY - 64) }]}>
           <PixelNameplate>{plateStatus(status, pet.stage, stageLeftMs)}</PixelNameplate>
         </View>
       ) : null}
@@ -763,7 +735,7 @@ export function PetRoom({
           {revealed && grade ? (
             <Animated.View
               pointerEvents="box-none"
-              style={[styles.plateWrap, { top: footAt * box + PLATE_BELOW_FEET, left: 0, width: plateW }, plateStyle]}>
+              style={[styles.plateWrap, { top: footAt * box + PLATE_BELOW_FEET, left: 0, width: nameW }, plateStyle]}>
               <PixelNameplate
                 label={false}
                 onPress={onBadge}
@@ -789,26 +761,56 @@ export function PetRoom({
           ) : null}
         </Animated.View>
       ) : null}
+      </View>
+
+      <View style={styles.coachSlot}>
+      <PixelFrame align="stretch" enter style={styles.coach}>
+        <View style={styles.coachRow}>
+          <View style={styles.coachCopy}>
+            <PixelBody color={PIXEL.text} style={styles.coachText} numberOfLines={3}>
+              {coach.tip}
+            </PixelBody>
+            <PixelBody size="sm" color={PIXEL.dim} numberOfLines={1}>
+              {pantry === 1 ? '1 treat left' : `${pantry} treats left`}
+            </PixelBody>
+          </View>
+          {coach.button ? (
+            <PixelButton
+              label={coach.button}
+              hug
+              onPress={onCoach}
+              width={coach.button.toLowerCase() === 'feed' ? PIXEL_FEED_W : undefined}
+              height={coach.button.toLowerCase() === 'feed' ? PIXEL_FEED_H : undefined}
+              style={styles.coachButton}
+            />
+          ) : null}
+        </View>
+      </PixelFrame>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  room: { flex: 1, overflow: 'hidden', backgroundColor: '#2e222f' },
-  corner: { position: 'absolute', alignItems: 'stretch', gap: 8 },
+  room: { flex: 1, minHeight: 0, backgroundColor: '#2e222f' },
+  metersSlot: { flexGrow: 0, flexShrink: 0, paddingHorizontal: 8, paddingTop: 6, gap: 8 },
+  stage: { flex: 1, minHeight: 0, overflow: 'hidden' },
+  coachSlot: { flexGrow: 0, flexShrink: 0, paddingHorizontal: 8, paddingBottom: 6 },
   buffChip: { alignSelf: 'flex-end' },
+  foodChip: { flexGrow: 0 },
   plateWrap: { position: 'absolute', alignItems: 'center' },
   meters: { alignSelf: 'stretch' },
-  meterHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  meterMain: { flex: 1, gap: 4 },
+  meterHead: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+  meterMain: { flexGrow: 1, flexShrink: 1, minWidth: 180, gap: 4 },
+  meterSide: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
   meterBlock: { gap: 4 },
   meterRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   stageBadge: { flexGrow: 0 },
-  coach: { position: 'absolute' },
-  coachRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  coachCopy: { flex: 1, gap: 2 },
+  coach: {},
+  coachRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+  coachCopy: { flexGrow: 1, flexShrink: 1, flexBasis: 140, minWidth: 120, gap: 2 },
   coachText: { textAlign: 'left' },
-  coachButton: { flexGrow: 0 },
+  coachButton: { flexGrow: 0, flexShrink: 0 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: ART_PT * 2 },
   moodPip: { width: ART_PT * 2, height: ART_PT * 2, backgroundColor: '#91DB69' },
   pressed: { opacity: 0.82 },
