@@ -20,8 +20,9 @@
  *
  * Both rounds mount full screen (the Play sheet is only the hub). They share
  * one plate: Dive's top chrome, a framed stage that fills the safe area, and
- * a framed dock. The stage reuses the room and Dive ambient — a path dither
- * pool, sparse caustic sparkles, dust, bubbles, one sparkle. No new tileset.
+ * a framed dock. Catch wears the reef plate; Train wears the pet-room plate.
+ * Both are darkened so the food, the pet, and the dummy stay in front. The
+ * path dither, caustic sparkles, dust, and bubbles stay. No new tileset.
  */
 import { Image } from 'expo-image';
 import { memo, useEffect, useRef, useState, type ReactNode } from 'react';
@@ -32,8 +33,8 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { BubbleRing } from '@/play/dive-world';
 import { GAME_LABEL } from '@/play/game-records';
 import { PLAY_ART } from '@/play/generated-play-assets';
-import { MoteRise, Twinkle } from '@/play/pixel-ambient';
-import { AtlasSprite } from '@/play/pixel-atlas';
+import { Drift, Flicker, MoteRise, Sway, Twinkle } from '@/play/pixel-ambient';
+import { AtlasSprite, MOCKUP_DIVE, MOCKUP_ROOM, placePlate } from '@/play/pixel-atlas';
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
 import { CausticWash, DitherPool, useHitJuice } from '@/play/pixel-fx';
 import { PixelBody, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
@@ -188,8 +189,12 @@ function ComboBadge({ mult }: { mult: number }) {
 
 /* ------------------------------------------------------- shared plate --- */
 
-/** Deepest water cell. The stage is this fill plus the reused ambient, not a new plate bitmap. */
+/** Deepest water cell. Shows at the crop when the reef plate does not cover the stage. */
 const ARENA = '#0B3E48';
+/** Night wall, so a cropped room plate does not fall back to teal. */
+const DOJO = '#140E1C';
+/** Ink over the plate. The actors sit above this, so they stay the bright layer. */
+const SCRIM = 'rgba(5,7,13,0.42)';
 
 /** Bubble rises, in shares of the stage. Radii match Dive's mockup rings. */
 const ARENA_BUBBLES = [
@@ -213,7 +218,122 @@ const ARENA_MOTES = [
  * dust and the sparkle are the room's. `alive` is false under Reduce Motion
  * and Effects Low: the pool holds, the sparkle rests, particles are not mounted.
  */
-function ArenaAmbient({ alive, width, height }: { alive: boolean; width: number; height: number }) {
+type ArenaKind = 'catch' | 'train';
+
+/**
+ * The place behind the round. Catch clips the reef plate (ruins, kelp, seabed).
+ * Train clips the pet room (window, lamp, brick). A short stage hides the
+ * ceiling, so the window, lamp glow, and a ruin head are pinned when the crop
+ * cuts them off. An ink scrim sits on the art; the pet, food, and dummy do not.
+ */
+function ArenaDressing({
+  kind,
+  alive,
+  width,
+  height,
+}: {
+  kind: ArenaKind;
+  alive: boolean;
+  width: number;
+  height: number;
+}) {
+  if (width < 8 || height < 8) return null;
+  const k = ART_PT;
+  const anchor = kind === 'catch' ? MOCKUP_DIVE.feet : MOCKUP_ROOM.feet;
+  const origin = placePlate(width, height, anchor, 16);
+  const artTop = Math.max(0, -origin.top / k);
+  const pinCeiling = artTop > (kind === 'catch' ? 48 : MOCKUP_ROOM.sky.y);
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <View style={{ position: 'absolute', left: origin.left, top: origin.top }}>
+        <AtlasSprite atlas={kind === 'catch' ? 'dive' : 'room'} frame="plate" />
+        {kind === 'catch' ? (
+          <View style={{ position: 'absolute', left: MOCKUP_DIVE.shimmer.x * k, top: MOCKUP_DIVE.shimmer.y * k }}>
+            <Flicker alive={alive} peak={0.4} ms={1400}>
+              <AtlasSprite atlas="dive" frame="shimmer" />
+            </Flicker>
+          </View>
+        ) : (
+          <>
+            <View style={{ position: 'absolute', left: MOCKUP_ROOM.glow.x * k, top: MOCKUP_ROOM.glow.y * k }}>
+              <Flicker alive={alive} peak={0.55} ms={480}>
+                <AtlasSprite atlas="room" frame="glow" />
+              </Flicker>
+            </View>
+            <View style={{ position: 'absolute', left: MOCKUP_ROOM.sky.x * k, top: MOCKUP_ROOM.sky.y * k }}>
+              <Twinkle alive={alive} ms={1100} rest={1}>
+                <AtlasSprite atlas="room" frame="sky" />
+              </Twinkle>
+            </View>
+          </>
+        )}
+      </View>
+      {kind === 'catch' ? (
+        <>
+          <View style={{ position: 'absolute', left: -12, bottom: 4 }}>
+            <Sway alive={alive} deg={2.2} ms={2400}>
+              <AtlasSprite atlas="dive" frame="weed" />
+            </Sway>
+          </View>
+          <View style={{ position: 'absolute', right: -8, bottom: 12 }}>
+            <AtlasSprite atlas="dive" frame="coral" />
+          </View>
+          {pinCeiling ? (
+            <View style={styles.ruinClip}>
+              <View style={{ position: 'absolute', left: -16, top: -8 }}>
+                <AtlasSprite atlas="dive" frame="statue-deep" scale={1} />
+              </View>
+            </View>
+          ) : null}
+          <View style={{ position: 'absolute', left: width * 0.12, top: height * 0.2, opacity: 0.55 }}>
+            <Drift alive={alive} dx={Math.min(96, width * 0.28)} dy={4} ms={7200}>
+              <AtlasSprite atlas="dive" frame="fish0" />
+            </Drift>
+          </View>
+        </>
+      ) : (
+        <>
+          <View style={{ position: 'absolute', left: 6, bottom: 6 }}>
+            <AtlasSprite atlas="dive" frame="crate" />
+          </View>
+          <View style={{ position: 'absolute', left: 34, bottom: 16 }}>
+            <AtlasSprite atlas="dive" frame="crate-small" />
+          </View>
+          <View style={{ position: 'absolute', right: 8, bottom: 8 }}>
+            <AtlasSprite atlas="dive" frame="chest" />
+          </View>
+          {pinCeiling ? (
+            <>
+              <View style={{ position: 'absolute', left: 10, top: 8 }}>
+                <Twinkle alive={alive} ms={1100} rest={1}>
+                  <AtlasSprite atlas="room" frame="sky" />
+                </Twinkle>
+              </View>
+              <View style={styles.lampClip}>
+                <Flicker alive={alive} peak={0.5} ms={520}>
+                  <AtlasSprite atlas="room" frame="glow" scale={1} />
+                </Flicker>
+              </View>
+            </>
+          ) : null}
+        </>
+      )}
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: SCRIM }]} />
+    </View>
+  );
+}
+
+function ArenaAmbient({
+  kind,
+  alive,
+  width,
+  height,
+}: {
+  kind: ArenaKind;
+  alive: boolean;
+  width: number;
+  height: number;
+}) {
   if (width < 8 || height < 8) return null;
   const k = ART_PT;
   const artW = Math.max(8, Math.round(width / k));
@@ -226,11 +346,11 @@ function ArenaAmbient({ alive, width, height }: { alive: boolean; width: number;
         cy={Math.max(8, artH - 12)}
         rx={Math.max(12, Math.round(artW * 0.42))}
         ry={14}
-        color={PIXEL.cyan}
+        color={kind === 'train' ? PIXEL.amber : PIXEL.cyan}
         lit={2}
-        gain={0.4}
+        gain={kind === 'train' ? 0.28 : 0.4}
       />
-      <CausticWash alive={alive} width={width} height={height} />
+      {kind === 'catch' ? <CausticWash alive={alive} width={width} height={height} /> : null}
       {ARENA_BUBBLES.map((b, i) => (
         <MoteRise
           key={`b${i}`}
@@ -269,6 +389,7 @@ function ArenaAmbient({ alive, width, height }: { alive: boolean; width: number;
  * takes the leftover safe-area height, and a framed dock.
  */
 function GamePlate({
+  kind,
   title,
   score,
   status,
@@ -278,6 +399,7 @@ function GamePlate({
   children,
   style,
 }: {
+  kind: ArenaKind;
   title: string;
   score: string;
   status: string;
@@ -328,9 +450,10 @@ function GamePlate({
         </PixelFrame>
       </View>
       <View style={styles.stageWrap}>
-        <PixelFrame align="stretch" padded={false} glow fill={ARENA} border={PIXEL.cyan} grow>
+        <PixelFrame align="stretch" padded={false} glow fill={kind === 'catch' ? ARENA : DOJO} border={PIXEL.cyan} grow>
           <View style={styles.stage} onLayout={onLayout}>
-            <ArenaAmbient alive={alive} width={box.width} height={box.height} />
+            <ArenaDressing kind={kind} alive={alive} width={box.width} height={box.height} />
+            <ArenaAmbient kind={kind} alive={alive} width={box.width} height={box.height} />
             {children}
           </View>
         </PixelFrame>
@@ -497,6 +620,7 @@ export function CatchFoodGame({ onDone, onBack, level = 'normal', rng = Math.ran
 
   return (
     <GamePlate
+      kind="catch"
       title={GAME_LABEL.catch}
       score={`${catchScore(tally, level)}`}
       status={`caught ${tally.caught} · 💣 ${tally.strikes}/${CATCH.bombStrikes} · ${Math.ceil(leftMs / 1000)}s`}
@@ -630,6 +754,7 @@ export function TapTrainGame({ onDone, onBack, level = 'normal', rng = Math.rand
 
   return (
     <GamePlate
+      kind="train"
       title={GAME_LABEL.train}
       score={`${trainScore(tally, level)}`}
       status={`hits ${tally.hits}/${TRAIN.passHits} · tap ${Math.min(tally.taps + 1, TRAIN.taps)}/${TRAIN.taps}${tally.missStreak > 0 ? ` · misses ${tally.missStreak}/${TRAIN.missStreakEnd}` : ''}`}
@@ -712,6 +837,8 @@ const styles = StyleSheet.create({
   statusLine: { textAlign: 'center' },
   stageWrap: { flex: 1, minHeight: 0, paddingHorizontal: 8, paddingVertical: 6 },
   stage: { flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' },
+  ruinClip: { position: 'absolute', right: 4, top: 4, width: 72, height: 88, overflow: 'hidden', opacity: 0.55 },
+  lampClip: { position: 'absolute', right: 4, top: 4, width: 88, height: 120, overflow: 'hidden', opacity: 0.7 },
   dock: { flexGrow: 0, flexShrink: 0, width: '100%', paddingHorizontal: 8, paddingBottom: 8 },
   dockPad: { width: '100%', padding: 12, gap: 8 },
   playfield: { flex: 1, minHeight: 0, width: '100%', overflow: 'hidden', position: 'relative' },
