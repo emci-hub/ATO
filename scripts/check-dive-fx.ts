@@ -175,10 +175,12 @@ const jsxText = screen.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
 assert.ok(!banned.test(jsxText), 'dive-screen copy has no banned words');
 ok('wording: no gamble / casino / jackpot / bet in Dive or Pet copy');
 
-assert.ok(!HUB_TILES.some((t) => t.to === 'dive'), 'no Dive tile on the hub');
+assert.ok(HUB_TILES.some((t) => t.to === 'dive' && t.label === 'Dive'), 'Dive is a Hub tile');
 assert.ok(HUB_TILES.some((t) => t.to === 'pet'), 'the Pet tile stays');
-assert.match(read('src/play/command-hub.tsx'), /Dive in progress/, 'the Pet tile shows a dive in progress');
-ok('hub: Dive tile gone, Pet tile shows a dive in progress');
+assert.ok(HUB_TILES.findIndex((t) => t.to === 'pet') < HUB_TILES.findIndex((t) => t.to === 'dive'), 'Pet sits left of Dive');
+assert.match(read('src/play/command-hub.tsx'), /Dive in progress/, 'the Dive tile shows a dive in progress');
+assert.ok(!/label: 'Dive'/.test(read('src/play/pet-screen.tsx')), 'the Pet room has no Dive icon');
+ok('hub: Dive tile is on the Hub, not on the Pet strip');
 
 {
   const atlas = read('src/play/pixel-atlas.tsx');

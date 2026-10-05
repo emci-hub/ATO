@@ -2,7 +2,7 @@
  * Command Hub — the Divecore Play entry (visual SoT: command-hub-target.png).
  *
  * Full-ink screen with the ATO mark + NEON VIPER / COMMAND HUB lockup, the
- * scrap/wave/lives HUD, a ghost ATO watermark, and the four destination tiles.
+ * scrap/wave/lives HUD, a ghost ATO watermark, and the six destination tiles.
  * Pure view: tiles report their destination up; the route mode lives in
  * `src/app/play.tsx`. `children` renders below the tiles (dev kit only).
  */
@@ -22,19 +22,19 @@ export function CommandHub({
   wave,
   diveActive = false,
   devUnlocked = false,
-  pulse = null,
+  pulse = [],
   reduceMotion = false,
   onTile,
   onSettings,
   children,
 }: {
   scrap: number | null;
-  /** A Dive run is saved mid-way — the Pet tile says so (it is never lost). */
+  /** A Dive run is saved mid-way — the Dive tile says so (it is never lost). */
   diveActive?: boolean;
   /** v27 — the Play dev unlock. Shop visibility is `PLAY_EVERYTHING_FREE`, not this flag. */
   devUnlocked?: boolean;
-  /** Soft-pulse the outing they skipped (Pet stands in for Dive until that tile exists). */
-  pulse?: HubDestination | null;
+  /** Soft-pulse Dive and Defend together after Tend, then the one they skipped. */
+  pulse?: readonly HubDestination[];
   reduceMotion?: boolean;
   wave: number | null;
   onTile: (to: HubDestination) => void;
@@ -86,12 +86,12 @@ export function CommandHub({
             <HubTileButton
               key={tile.id}
               label={tile.label}
-              subtitle={tile.to === 'pet' && diveActive ? '🤿 Dive in progress' : tile.subtitle}
+              subtitle={tile.to === 'dive' && diveActive ? 'Dive in progress' : tile.subtitle}
               icon={tile.icon}
               width={tileWidth}
-              pulsing={pulse === tile.to}
+              pulsing={pulse.includes(tile.to)}
               reduceMotion={reduceMotion}
-              badge={tile.to === 'pet' && diveActive}
+              badge={tile.to === 'dive' && diveActive}
               onPress={() => onTile(tile.to)}
             />
           ))}

@@ -258,27 +258,35 @@ assert.equal(coach({ status: 'sleepy', hunger: 2, pantryTotal: 0 }).action, 'cat
 assert.equal(coach({ status: 'sleepy', hunger: 3 }).action, null);
 assert.equal(coach({ status: 'evolving' }).action, null, 'evolving soon: no button');
 assert.match(coach({ status: 'evolving' }).tip, /hearts up/);
-assert.equal(coach({ status: 'happy', expeditionReady: true, diveCharges: 3 }).action, 'expedition', 'expedition first');
+assert.equal(coach({ status: 'happy', expeditionReady: true, diveCharges: 3 }).action, null, 'a calm pet does not open Expedition from the room');
 assert.match(coach({ status: 'happy' }).tip, /^All good!/);
-assert.equal(coach({ status: 'okay', diveCharges: 1 }).action, 'dive');
+assert.equal(coach({ status: 'okay', diveCharges: 1 }).action, null, 'Dive is not a room button when the pet is fine');
+assert.equal(coach({ status: 'okay', tokensLeftToday: 1, diveCharges: 2 }).action, 'play', 'Play stays the care game');
 assert.equal(coach({ status: 'away', backIn: '2h 5m' }).tip, 'Out exploring — back in 2h 5m.');
 // The button opens the right sheet (and that icon pulses).
 assert.equal(PET_COACH_ICON.feed, 'feed');
 assert.equal(PET_COACH_ICON.catch, 'play');
 assert.equal(PET_COACH_ICON.play, 'play');
-assert.equal(PET_COACH_ICON.dive, 'dive');
-assert.equal(PET_COACH_ICON.expedition, 'expedition');
+assert.equal(PET_COACH_ICON.dive, null, 'Dive does not pulse a room icon');
+assert.equal(PET_COACH_ICON.expedition, null, 'Expedition does not pulse a room icon');
 assert.equal(PET_COACH_ICON.hatch, null, 'the egg picker is in the room');
 assert.equal(PET_COACH_ICON.warm, null, 'warming is a tap on the egg');
 assert.equal(coach({ status: 'choose_egg' }).action, 'hatch');
 assert.equal(coach({ status: 'chilly' }).action, 'warm');
 assert.match(coach({ status: 'chilly' }).tip, /warm/i);
 assert.equal(coach({ status: 'egg' }).action, null, 'a warm egg needs nothing');
-assert.equal(coach({ status: 'okay', offerFork: true, diveCharges: 2, expeditionReady: true }).action, 'dive', 'after Tend, Dive wins over expedition');
+assert.equal(coach({ status: 'okay', offerFork: true, diveCharges: 2, expeditionReady: true }).action, 'dive', 'after Tend, Dive is offered');
+assert.match(coach({ status: 'okay', offerFork: true }).tip, /Hub/, 'the fork names the Hub');
+assert.doesNotMatch(coach({ status: 'okay', offerFork: true }).tip, /from Pet|from here/i, 'Dive is not described as a Pet-room action');
 assert.equal(coach({ status: 'okay', offerFork: true }).alt?.action, 'defend', 'the other choice is Defend');
 assert.equal(coach({ status: 'hungry', offerFork: true, pantryTotal: 1 }).action, 'feed', 'hunger still beats the fork');
 assert.equal(coach({ status: 'okay', offerDress: true }).alt?.action, 'dress');
 assert.equal(coach({ status: 'okay' }).alt, null);
+const roomSrc = fs.readFileSync('src/play/pet-screen.tsx', 'utf8');
+const iconBlock = roomSrc.slice(roomSrc.indexOf('const ICONS'), roomSrc.indexOf('const SHEET_TITLE'));
+assert.ok(iconBlock.includes("label: 'Feed'") && iconBlock.includes("label: 'Play'"), 'Feed and Play stay');
+assert.ok(!iconBlock.includes('Dive') && !iconBlock.includes('Expedition'), 'day-0 strip is not Dive or Expedition');
+assert.match(roomSrc, /icon\.id !== 'info' \|\| hasTended\(pet\)/, 'Info waits until the first Tend');
 ok('coach: every status has a tip, buttons go to the right sheet, empty pantry → Catch the food');
 
 /* -------------------------------------------------------- sharp box --- */

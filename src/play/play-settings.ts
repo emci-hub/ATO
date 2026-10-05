@@ -54,7 +54,8 @@ export type PlaySettings = {
   tutorialSeen: boolean;
   /**
    * Which outing they picked after the first Tend. Null until they choose.
-   * The other Hub destination pulses until they open it.
+   * Until then, Dive and Defend both pulse. After a choice, the other one
+   * pulses until they open it.
    */
   loopFork: 'dive' | 'defend' | null;
   /** They opened the outing they skipped. The Hub pulse stops. */
@@ -80,19 +81,31 @@ export function defaultSettings(): PlaySettings {
   };
 }
 
-/** Hub tile to soft-pulse: the outing they have not tried yet. */
-export function skippedHubPulse(input: {
+export type HubPulseTile = 'dive' | 'defend';
+
+/**
+ * Hub tiles to soft-pulse. After the first Tend, Dive and Defend pulse
+ * together until the player picks one. After that, only the outing they
+ * skipped keeps pulsing.
+ */
+export function hubSoftPulse(input: {
+  tended: boolean;
   loopFork: 'dive' | 'defend' | null;
   loopOtherSeen: boolean;
   didDive: boolean;
   didDefend: boolean;
-}): 'pet' | 'defend' | null {
-  if (input.loopOtherSeen) return null;
-  if (input.loopFork === 'dive') return input.didDefend ? null : 'defend';
-  if (input.loopFork === 'defend') return input.didDive ? null : 'pet';
-  if (input.didDive && !input.didDefend) return 'defend';
-  if (input.didDefend && !input.didDive) return 'pet';
-  return null;
+}): HubPulseTile[] {
+  if (input.loopOtherSeen) return [];
+  if (input.loopFork == null && !input.didDive && !input.didDefend) {
+    return input.tended ? ['dive', 'defend'] : [];
+  }
+  const wantsDefend = input.loopFork === 'dive' || input.didDive;
+  const wantsDive = input.loopFork === 'defend' || input.didDefend;
+  if (wantsDefend && !input.didDefend && !wantsDive) return ['defend'];
+  if (wantsDive && !input.didDive && !wantsDefend) return ['dive'];
+  if ((input.loopFork === 'dive' || input.didDive) && !input.didDefend) return ['defend'];
+  if ((input.loopFork === 'defend' || input.didDefend) && !input.didDive) return ['dive'];
+  return [];
 }
 
 function minuteOf(v: unknown, fallback: number): number {

@@ -164,8 +164,8 @@ export const GUIDE_MARK: Record<GuideSection, string> = {
 
 /** First glance. No tables — those stay in `lines` behind More. */
 const GUIDE_FACE: Record<GuideSection, readonly string[]> = {
-  tend: ['Warm, feed, or play. Catch and Train sit under Play.', 'The Den is extra pets, later.'],
-  dive: ['Dive is the underwater run, from Pet.', 'Surface keeps the haul. More has the real chances.'],
+  tend: ['Warm, feed, or play. Catch and Train sit under Play.', 'The Den opens from Dive, after a Surface.'],
+  dive: ['Dive is the underwater run, on the Hub.', 'Surface keeps the haul. Gear and trips come after that.'],
   defend: ['Defend is the tower map, from the Hub.', 'Your pet can help a wave. It is never required.'],
   shop: ['Shop spends what you earn. Dress shows it off.', 'Prices sit under More. Nothing is for sale yet.'],
   odds: ['The chances here are the ones the game rolls.', 'More has the tables. Buttons show the same percent.'],
@@ -240,7 +240,7 @@ function eggsSection(): string[] {
 function denSection(): string[] {
   const prices = DEN_SLOT_PRICES.map((p, i) => `${ordinal(DEN_START_SLOTS + i + 1)} ${p}`).join(', ');
   return [
-    `The Den keeps your pets: ${DEN_START_SLOTS} slots to start (the active pet counts as one). More slots cost shells — ${prices}; ${DEN_MAX_SLOTS} at most.`,
+    `Open the Den from Dive, after your first Surface. It keeps your pets: ${DEN_START_SLOTS} slots to start (the active pet counts as one). More slots cost shells — ${prices}; ${DEN_MAX_SLOTS} at most.`,
     `One pet is active: it lives in the room and gives the perks, the pounce and Pumped. The others rest, frozen — they don't grow, get hungry, lose mood or lose warmth, and an egg's care only counts while it is active.`,
     `Swap from the Den any time except during a dive, while your pet is away on an expedition, or while a mini-game is open. Buffs, the expedition ladder, tokens, the Power ceiling, records and pity are yours — a swap never changes them.`,
     `A new egg needs a free slot; it becomes the active pet and the old one rests. From the Den you can also view a card, rename, favourite (★ sorts to the top), sort by grade or shiny, and release (a shard, as always). Resting pets count in the Collection.`,
@@ -290,6 +290,7 @@ function diveSection(): string[] {
   const lucky = grown.filter((s) => PET_LUCKY_UPGRADE[s] > 0).map((s) => `${PET_STAGE_LABEL[s]} ${pct(PET_LUCKY_UPGRADE[s])}`).join(' · ');
   const gear = DIVE_GEAR.map((g) => `${DIVE_GEAR_LABEL[g]} (${DIVE_GEAR_COST[g]} shells): ${DIVE_GEAR_BLURB[g]}`).join(' ');
   return [
+    `Open Dive from the Hub. It is the underwater run, not the tower map.`,
     `Zones by depth: ${zones} (the last needs Oxygen). Deeper zones hold more Powers, and the only rings and auras.`,
     `Bust chance per Deeper: ${table} (a ${pct(DIVE_OXYGEN_BUST)} last Deeper with Oxygen). Two paths: Safer is ${pts(DIVE_PATH_SHIFT)} points lower with finds from one zone up; Richer ${pts(DIVE_PATH_SHIFT)} points higher, one zone down. The % on the button is always the real roll.`,
     `Stage power — your pet takes bust points off every Deeper: ${stage} (Deep form −${PET_DEEP_BUST_CUT_PP} more). Nothing ever takes a chance below ${pct(DIVE_BUST_FLOOR)} of its table value.`,
@@ -309,7 +310,7 @@ function expeditionsSection(): string[] {
     .join(', ');
   const stage = grown.filter((s) => PET_TRIP_MULT[s] < 1).map((s) => `${PET_STAGE_LABEL[s]} ${pct(1 - PET_TRIP_MULT[s])} shorter`).join(' · ');
   return [
-    `From Child on, it can go alone. ${EXPEDITION_STEPS} trips a day, each longer than the last: ${ladder}. The ladder starts over at local midnight.`,
+    `Open Expedition from Dive, after your first Surface. From Child on, it can go alone. ${EXPEDITION_STEPS} trips a day, each longer than the last: ${ladder}. The ladder starts over at local midnight.`,
     `What comes back grows with the trip: food and shells early, then finds; a chance of a Power only on ${powerSteps} — about ${Math.round(expectedPowersPerDay() * 100) / 100} Powers a day.`,
     `Stage power: ${stage}. From ${PET_STAGE_LABEL[PET_TRIP_BETTER_FROM]} on, every trip brings back one step better (more shells, shrimp, a deeper zone's find) — the Power chances never change.`,
     `A trip's length is fixed when it leaves. While it is away: no pounce, no bust cut, no rescue, and your dives don't count as its care.`,

@@ -1,9 +1,10 @@
 /**
  * Pet screen — the Digimon-style virtual pet (v20), as a ROOM since the
  * overhaul (2026-09-29): the pet lives in `PetRoom` covering most of the
- * screen, with one row of icons under it — Feed, Play, Dive, Expedition,
- * Info. Each icon opens a sheet (`pet-sheets.tsx`); Dive opens full screen
- * and its back returns here. Nothing stacks on the main screen.
+ * screen, with one row of icons under it. Day 0 is Feed and Play
+ * (Catch and Train live on the Play sheet). Info appears after the first
+ * Tend. Dive is a Hub tile. Expedition and the Den open from Dive after
+ * the first Surface. Nothing stacks on the main screen.
  *
  * This screen owns: the sheet + mini-game state (back from a game returns to
  * the room, then an open sheet closes, then the hub — `petBackStep`), the
@@ -20,7 +21,6 @@ import { ART_PT, PIXEL } from '@/play/pixel-theme';
 import { DiamondWipe, armWipe, takeWipe } from '@/play/pixel-fx';
 import { PixelBody, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
-import { CARE_ACT } from '@/play/pet-eggs';
 import { hasTended, PET_COACH_ICON, petCoachTip, type PetCoachIcon } from '@/play/coach';
 import { usePlayDevUnlocked } from '@/play/dev-lock';
 import { PetDevPanel } from '@/play/pet-dev-panel';
@@ -37,7 +37,6 @@ import { PetCard, type PetCardInfo } from '@/play/pet-card';
 import { DivecoreSettingsSheet } from '@/play/divecore-settings';
 import { EggPickerBody, JournalTab, OddsPanel } from '@/play/pet-egg-sheets';
 import { PetMenuBody } from '@/play/pet-menu';
-import { DenSheetBody } from '@/play/den-sheet';
 import { finishWornLabel } from '@/play/finishes';
 import { FinishPicker } from '@/play/finish-picker';
 import { FinishMotionHost } from '@/play/finish-motion';
@@ -73,7 +72,6 @@ import { PetRoom, type RoomSpeech } from '@/play/pet-room';
 import { loadSeenStage, saveSeenStage } from '@/play/pet-seen';
 import {
   BookTab,
-  ExpeditionSheetBody,
   FeedSheetBody,
   HallTab,
   HelpTab,
@@ -114,13 +112,12 @@ import type { PlayTransition } from '@/play/use-play-store';
 /** A pet-worthy moment the Play shell hands to the room (dive, TD, finds). */
 export type PetTalkEvent = { situation: PetTalkSituation; key: number } | null;
 
-type SheetId = 'feed' | 'play' | 'expedition' | 'info' | 'eggs' | 'card' | 'menu' | 'den' | 'stone' | 'prism';
+type SheetId = 'feed' | 'play' | 'info' | 'eggs' | 'card' | 'menu' | 'stone' | 'prism';
 
+/** Day 0 is Feed + Play. Info waits until the first Tend. Dive is not here. */
 const ICONS: { id: PetCoachIcon; emoji: string; label: string }[] = [
   { id: 'feed', emoji: '🍖', label: 'Feed' },
   { id: 'play', emoji: '🎾', label: 'Play' },
-  { id: 'dive', emoji: '🤿', label: 'Dive' },
-  { id: 'expedition', emoji: '🧭', label: 'Expedition' },
   { id: 'info', emoji: 'ℹ️', label: 'Info' },
 ];
 
@@ -128,12 +125,10 @@ const ICONS: { id: PetCoachIcon; emoji: string; label: string }[] = [
 const SHEET_TITLE: Record<SheetId, string> = {
   feed: 'Feed',
   play: 'Play',
-  expedition: 'Expedition',
   info: 'Info',
   eggs: 'Choose an egg',
   card: 'Card',
   menu: 'Your pet',
-  den: 'The Den',
   stone: 'Shine Stone',
   prism: 'Prism Stone',
 };
@@ -271,7 +266,7 @@ export function PetScreen({
   registerBack?: (inner: InnerBack | null) => void;
   reduceMotion: boolean;
   onBack: () => void;
-  /** Opens Dive full screen; its back returns here. */
+  /** Opens the Hub Dive screen. Back from Dive returns to the Hub. */
   onGoDive: () => void;
   /** Defend is a Hub tile. The coach can jump there after the first Tend. */
   onGoDefend?: () => void;
@@ -378,10 +373,6 @@ export function PetScreen({
     view.settings.loopFork != null &&
     !view.settings.dressTeaseSeen &&
     (view.stats.surfaces > 0 || didDefend);
-  const showLaterRooms =
-    view.stats.surfaces > 0 ||
-    (pet.care_acts & CARE_ACT.fed) !== 0 ||
-    (pet.stage !== 'egg' && pet.stage !== 'baby');
   const coach = petCoachTip({
     status,
     hunger: pet.hunger,
@@ -553,6 +544,7 @@ export function PetScreen({
       else onGoDive();
       return;
     }
+    if (id !== 'feed' && id !== 'play' && id !== 'info') return;
     if (id === 'info') setInfoTab('status');
     setSheet(id);
   };
@@ -572,6 +564,10 @@ export function PetScreen({
     }
     if (coach.action === 'catch') {
       startGame({ kind: 'catch', level: 'normal', daily: false });
+      return;
+    }
+    if (coach.action === 'dive') {
+      openIcon('dive');
       return;
     }
     const icon = PET_COACH_ICON[coach.action];
@@ -690,7 +686,7 @@ export function PetScreen({
   const backW = headerTight ? 72 : 88;
   const titlePt = Math.max(
     10,
-    Math.min(16, Math.floor((screenW - (12 + backW + headerBtn * 3 + 16)) / Math.max(8, title.length))),
+    Math.min(16, Math.floor((screenW - (12 + backW + headerBtn * 2 + 16)) / Math.max(8, title.length))),
   );
   const recolor = revealed ? petRecolor(pet.hero, pet.shiny, pv.dyeOn, pet.shiny_style) : null;
   const cardInfo: PetCardInfo | null =
@@ -788,16 +784,6 @@ export function PetScreen({
           {title}
         </PixelLabel>
         <View style={styles.topActions}>
-          {showLaterRooms ? (
-            <Pressable
-              onPress={() => setSheet('den')}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={`The Den, ${pv.den.used} of ${pv.den.slots} slots`}
-              style={[styles.topButton, { width: headerBtn, height: headerBtn }]}>
-              <Text style={styles.topButtonText}>🏠</Text>
-            </Pressable>
-          ) : null}
           <Pressable
             onPress={() => setSheet('menu')}
             hitSlop={8}
@@ -848,15 +834,15 @@ export function PetScreen({
       />
 
       <View style={styles.iconRow}>
-        {ICONS.filter((icon) => icon.id !== 'expedition' || showLaterRooms).map((icon) => (
+        {ICONS.filter((icon) => icon.id !== 'info' || hasTended(pet)).map((icon) => (
           <RoomIcon
             key={icon.id}
             emoji={icon.emoji}
             label={icon.label}
-            flexGrow={icon.id === 'expedition' ? 1.85 : 1}
+            flexGrow={1}
             fontSize={tabPt}
             pulse={pulseIcon === icon.id}
-            badge={icon.id === 'dive' && view.diveRun.active}
+            badge={false}
             onPress={() => openIcon(icon.id)}
           />
         ))}
@@ -879,13 +865,6 @@ export function PetScreen({
           still={reduceMotion || fxQuality !== 'full'}
           onGuide={() => openGuide('tend')}
         />
-      </PlaySheet>
-      <PlaySheet
-        open={sheet === 'expedition'}
-        title={SHEET_TITLE.expedition}
-        onClose={closeSheet}
-        reduceMotion={reduceMotion}>
-        <ExpeditionSheetBody view={view} commit={commit} onGuide={openGuide} />
       </PlaySheet>
       <PlaySheet open={sheet === 'eggs'} title={SHEET_TITLE.eggs} onClose={closeSheet} reduceMotion={reduceMotion}>
         {pet.egg == null ? (
@@ -917,32 +896,12 @@ export function PetScreen({
           view={view}
           commit={commit}
           onViewCard={() => setSheet('card')}
-          onOpenDen={() => setSheet('den')}
           onOpenStone={() => openStone(pet.uid > 0 ? pet.uid : null)}
           onOpenPrism={() => {
             setStoneUid(pet.uid > 0 ? pet.uid : null);
             setSheet('prism');
           }}
         />
-      </PlaySheet>
-      <PlaySheet open={sheet === 'den'} title={SHEET_TITLE.den} onClose={closeSheet} reduceMotion={reduceMotion}>
-        <DenSheetBody
-          view={view}
-          commit={commit}
-          gameOpen={game != null}
-          reduceMotion={reduceMotion}
-          onNewEgg={() => {
-            setFocusEgg(null);
-            setSheet('eggs');
-          }}
-          onOpenStone={(uid) => openStone(uid)}
-          onOpenPrism={(uid) => {
-            setStoneUid(uid);
-            setSheet('prism');
-          }}
-          onViewActiveCard={() => setSheet('card')}
-        />
-        <GuideLink section="tend" onOpen={openGuide} />
       </PlaySheet>
       <PlaySheet open={sheet === 'stone'} title={SHEET_TITLE.stone} onClose={closeSheet} reduceMotion={reduceMotion}>
         <StoneSheetBody view={view} commitSaved={commitSaved} initialUid={stoneUid} />

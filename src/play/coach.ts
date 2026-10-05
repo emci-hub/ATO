@@ -116,14 +116,14 @@ export type PetCoachAction = 'feed' | 'catch' | 'play' | 'dive' | 'expedition' |
 /** The room icon (and sheet) each action opens — that icon pulses. */
 export type PetCoachIcon = 'feed' | 'play' | 'dive' | 'expedition' | 'info';
 
-/** Null = the action happens in the room itself (the egg picker's eggs,
- * tapping the egg to warm it) — no icon pulses. */
+/** Null = no room icon pulses. Dive and Expedition are Hub / Dive-screen
+ * destinations, not Pet-room icons. Hatch and warm happen on the egg itself. */
 export const PET_COACH_ICON: Record<PetCoachAction, PetCoachIcon | null> = {
   feed: 'feed',
   catch: 'play', // the Play icon pulses; the button opens Catch full screen
   play: 'play',
-  dive: 'dive',
-  expedition: 'expedition',
+  dive: null,
+  expedition: null,
   hatch: null, // the egg picker
   warm: null, // tap the egg
 };
@@ -211,7 +211,7 @@ function coachLine(input: PetCoachInput): Omit<PetCoachTip, 'alt'> {
       return foodTip(
         input.pantryTotal,
         `I need food! ${pantry}.`,
-        'Pantry’s empty — catch food, or dive for snacks.',
+        'Pantry’s empty — catch food, or Dive on the Hub for snacks.',
       );
     case 'very_sad':
     case 'sad':
@@ -224,24 +224,16 @@ function coachLine(input: PetCoachInput): Omit<PetCoachTip, 'alt'> {
       return { tip: 'I’m about to grow — keep my hearts up!', action: null, button: null };
     case 'happy':
     case 'okay':
-      if (input.expeditionReady) {
-        return {
-          tip: input.nextTrip ? `All good! I could go exploring (${input.nextTrip}).` : 'All good! I could go exploring.',
-          action: 'expedition',
-          button: 'Send me',
-        };
-      }
-      if (input.diveCharges >= 1) return { tip: 'All good! Up for a dive?', action: 'dive', button: 'Dive' };
       if (input.tokensLeftToday > 0) return { tip: 'All good! Fancy a game?', action: 'play', button: 'Play' };
       return { tip: 'All good!', action: null, button: null };
   }
 }
 
-/** Care first. After one Tend, offer Dive or Defend. Dress is a later chip. */
+/** Care first. After one Tend, offer Dive or Defend — both Hub tiles. Dress is a later chip. */
 export function petCoachTip(input: PetCoachInput): PetCoachTip {
   if (input.offerFork && !coachIsUrgent(input)) {
     return {
-      tip: 'Dive from here, or Defend on the Hub.',
+      tip: 'On the Hub: Dive or Defend. Pick either.',
       action: 'dive',
       button: 'Dive',
       alt: { action: 'defend', button: 'Defend' },

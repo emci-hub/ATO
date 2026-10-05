@@ -120,6 +120,7 @@ export function LayoutShot({
           onDeeper={async () => null}
           onBack={() => undefined}
           commit={() => false}
+          commitSaved={async () => false}
         />
       )}
     </View>

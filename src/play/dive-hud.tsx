@@ -134,6 +134,7 @@ export function DiveTopBar({
   onBack,
   onInfo,
   onGear,
+  showGear = true,
 }: {
   zone: string;
   depth: number;
@@ -143,6 +144,8 @@ export function DiveTopBar({
   onBack: () => void;
   onInfo: () => void;
   onGear: () => void;
+  /** Advanced gear stays hidden until the first Surface. */
+  showGear?: boolean;
 }) {
   const shortCharges = charges.split(' · ')[0] ?? charges;
   const { width } = useWindowDimensions();
@@ -155,8 +158,8 @@ export function DiveTopBar({
         <View style={styles.stack}>
           <View style={styles.row}>
             <View style={styles.side}>
-              <Pressable onPress={onBack} hitSlop={10} accessibilityRole="button" accessibilityLabel="Back to the Pet room">
-                <PixelLabel color={PIXEL.cyan} numberOfLines={1} style={label}>{'< Pet'}</PixelLabel>
+              <Pressable onPress={onBack} hitSlop={10} accessibilityRole="button" accessibilityLabel="Back to Command Hub">
+                <PixelLabel color={PIXEL.cyan} numberOfLines={1} style={label}>{'< Hub'}</PixelLabel>
               </Pressable>
             </View>
             <PixelLabel numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={[styles.zone, label]}>{zone}</PixelLabel>
@@ -170,9 +173,11 @@ export function DiveTopBar({
           <View style={styles.row}>
             <View style={styles.side}>
               <View style={styles.links}>
-                <Pressable onPress={onGear} hitSlop={8} accessibilityRole="button" accessibilityLabel="Dive gear">
-                  <PixelBody size="sm" color={PIXEL.dim}>Gear</PixelBody>
-                </Pressable>
+                {showGear ? (
+                  <Pressable onPress={onGear} hitSlop={8} accessibilityRole="button" accessibilityLabel="Dive gear">
+                    <PixelBody size="sm" color={PIXEL.dim}>Gear</PixelBody>
+                  </Pressable>
+                ) : null}
                 <Pressable onPress={onInfo} hitSlop={8} accessibilityRole="button" accessibilityLabel="How Dive works">
                   <PixelBody size="sm" color={PIXEL.dim}>info ›</PixelBody>
                 </Pressable>

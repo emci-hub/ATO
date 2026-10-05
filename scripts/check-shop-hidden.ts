@@ -22,10 +22,16 @@ const read = (f: string) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
 {
   assert.ok(HUB_TILES.some((t) => t.to === 'shop'), 'the Shop tile exists');
+  assert.deepEqual(
+    HUB_TILES.map((t) => t.to),
+    ['pet', 'dive', 'defend', 'shop', 'dress', 'about'],
+    'Hub order is Pet · Dive · Defend · Shop · Dress · More',
+  );
+  assert.equal(HUB_TILES.find((t) => t.to === 'pet')?.subtitle, 'Tend', 'Pet is tend only');
+  assert.equal(HUB_TILES.find((t) => t.to === 'dive')?.subtitle, 'Underwater', 'Dive is the underwater tile');
   assert.ok(HUB_TILES.some((t) => t.label === 'Defend' && t.subtitle === 'Tower map' && t.to === 'defend'), 'Defend is the tower tile');
-  assert.ok(HUB_TILES.some((t) => t.label === 'Pet' && t.to === 'pet' && t.subtitle.includes('Dive')), 'Pet keeps Dive in its subtitle');
-  assert.ok(!HUB_TILES.some((t) => t.to === 'dive'), 'Dive is not a Hub tile yet');
   assert.ok(!HUB_TILES.some((t) => t.label === 'Divecore'), 'Divecore is not a tile name');
+  assert.ok(!HUB_TILES.some((t) => t.to === 'pet' && t.subtitle.includes('Dive')), 'Pet does not list Dive');
   assert.ok(hubTilesFor(false, true).some((t) => t.to === 'shop'), 'pre-launch shows Shop without the dev unlock');
   assert.ok(hubTilesFor(true, true).some((t) => t.to === 'shop'), 'pre-launch + unlock still shows Shop');
   assert.ok(!hubTilesFor(false, false).some((t) => t.to === 'shop'), 'a release build hides Shop');

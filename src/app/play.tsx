@@ -21,7 +21,7 @@ import { CommandHub } from '@/play/command-hub';
 import { hasTended } from '@/play/coach';
 import { NEON, shopUnlocked, type HubDestination } from '@/play/neon-viper';
 import { usePixelFonts } from '@/play/pixel-ui';
-import { skippedHubPulse } from '@/play/play-settings';
+import { hubSoftPulse } from '@/play/play-settings';
 import { PlayThemeProvider } from '@/play/play-theme';
 import { PlayBanner } from '@/play/play-banner';
 import {
@@ -223,10 +223,9 @@ export default function PlayScreen() {
   }, []);
   const modeRef = useRef(mode);
   modeRef.current = mode;
-  /** Dive only opens from the Pet room now (overhaul, 2026-09-29), so its
-   * back always returns to the room; every other sub-screen goes to the hub. */
+  /** Every sub-screen, including Dive, steps back to the Hub. */
   const leaveSubScreen = useCallback(() => {
-    setMode(modeRef.current === 'dive' ? 'pet' : 'grove');
+    setMode('grove');
   }, []);
   /** A dive / TD / find moment for the pet to talk about once (room overhaul). */
   const [petTalk, setPetTalk] = useState<PetTalkEvent>(null);
@@ -715,6 +714,16 @@ export default function PlayScreen() {
   // v24: the tutorial shows once (a save with progress counts as seen), and
   // whenever it is replayed from Settings.
   const showTutorial = view != null && (tutorialReplay || !view.settings.tutorialSeen);
+  const tended = view != null && hasTended(view.pet.state);
+  const hubPulse = view
+    ? hubSoftPulse({
+        tended,
+        loopFork: view.settings.loopFork,
+        loopOtherSeen: view.settings.loopOtherSeen,
+        didDive: view.stats.dives > 0 || view.stats.surfaces > 0,
+        didDefend: view.lifetimeWavesCleared > 0,
+      })
+    : [];
   const hubOverlayOpen = hubSettingsOpen || showTutorial;
   overlayRef.current = showTutorial
     ? () => {
@@ -773,34 +782,19 @@ export default function PlayScreen() {
               onTile={(to: HubDestination) => {
                 if (to === 'shop' && !shopUnlocked(devUnlocked)) return;
                 if (view) {
-                  const pulse = skippedHubPulse({
-                    loopFork: view.settings.loopFork,
-                    loopOtherSeen: view.settings.loopOtherSeen,
-                    didDive: view.stats.dives > 0 || view.stats.surfaces > 0,
-                    didDefend: view.lifetimeWavesCleared > 0,
-                  });
                   commit((doc) => {
                     const patch: Partial<typeof doc.play_settings> = {};
-                    if (pulse && to === pulse) patch.loopOtherSeen = true;
+                    if (hubPulse.length === 1 && hubPulse[0] === to) patch.loopOtherSeen = true;
                     if (to === 'dress' && !doc.play_settings.dressTeaseSeen) patch.dressTeaseSeen = true;
-                    if (to === 'defend' && doc.play_settings.loopFork == null && hasTended(view.pet.state)) {
-                      patch.loopFork = 'defend';
+                    if ((to === 'dive' || to === 'defend') && doc.play_settings.loopFork == null && tended) {
+                      patch.loopFork = to;
                     }
                     return Object.keys(patch).length ? setPlaySettings(doc, patch) : null;
                   });
                 }
                 setMode(to);
               }}
-              pulse={
-                view
-                  ? skippedHubPulse({
-                      loopFork: view.settings.loopFork,
-                      loopOtherSeen: view.settings.loopOtherSeen,
-                      didDive: view.stats.dives > 0 || view.stats.surfaces > 0,
-                      didDefend: view.lifetimeWavesCleared > 0,
-                    })
-                  : null
-              }
+              pulse={hubPulse}
               reduceMotion={reduceMotion}
               onSettings={() => setHubSettingsOpen(true)}>
               {/* Research / Claim — the token income the old Grove card carried,
@@ -869,6 +863,7 @@ export default function PlayScreen() {
                   onDeeper={handleDeeper}
                   registerBack={registerBack}
                   onBack={leaveSubScreen}
+                  commitSaved={commitSaved}
                 />
               ) : (
                 <PetScreen

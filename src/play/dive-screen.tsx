@@ -7,7 +7,7 @@
  * one compact control strip: Deeper (Safer / Richer, each with its exact %)
  * and Surface, or Dive / Free dive. The buddy explanation and the odds text
  * live in the Info sheet, the gear shop in the Gear sheet. No stacked cards.
- * Dive opens from the Pet room; back closes a sheet, then returns there.
+ * Dive opens from the Hub; back closes a sheet, then returns there.
  *
  * Unchanged rules: every mutation goes through the callbacks (store truth);
  * actions are paced by `usePacedAction` (beat → resolve → cooldown); Deeper
@@ -38,15 +38,16 @@ import { DiveScene, diveZone, type DiveReveal, type DiveSceneEvent } from '@/pla
 import { diveBackStep, type InnerBack } from '@/play/edge-back';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { PIXEL } from '@/play/pixel-theme';
-import { DiamondWipe, armWipe, takeWipe } from '@/play/pixel-fx';
+import { DiamondWipe, takeWipe } from '@/play/pixel-fx';
 import { PixelBody, PixelButton, PixelLabel, usePixelFonts, type PixelButtonVariant } from '@/play/pixel-ui';
 import { PET_BRANCH_LABEL, PET_STAGE_LABEL } from '@/play/pet';
 import { petRecolor } from '@/play/pet-looks';
 import { PlaySheet } from '@/play/play-sheet';
 import { DIVE_CHARGE_CAP, buyDiveGear, type PlayView } from '@/play/playStore';
 import { todayPlan } from '@/play/today-plan';
+import { DiveLaterSheets, diveLaterBack, type DiveLaterId } from '@/play/dive-later';
 import { GuideView } from '@/play/guide-sheet';
-import { stagePowerLine } from '@/play/guide-content';
+import { stagePowerLine, type GuideSection } from '@/play/guide-content';
 import { SNACK_BUST_PP } from '@/play/play-buffs';
 import type { PlayTransition } from '@/play/use-play-store';
 
@@ -94,7 +95,7 @@ function lostFinds(haul: readonly string[], saved: readonly string[]): string[] 
   });
 }
 
-type SheetId = 'info' | 'gear';
+type SheetId = 'info' | 'gear' | DiveLaterId;
 
 export function DiveScreen({
   view,
@@ -107,6 +108,7 @@ export function DiveScreen({
   onBack,
   registerBack,
   commit,
+  commitSaved,
 }: {
   view: PlayView;
   /** Dev kit only — resolve every action instantly (no beat, no cooldown). */
@@ -118,12 +120,14 @@ export function DiveScreen({
   onSurface: () => Promise<DiveSurfaceSummary | null>;
   /** `shownPct` = the bust % on screen for that path when Deeper was pressed. */
   onDeeper: (path: DivePath, shownPct: number | null) => Promise<DiveDeeperResult>;
-  /** Back to the Pet room. */
+  /** Back to the Hub. */
   onBack: () => void;
   /** Back one level (edge-back.ts): an open sheet closes first. */
   registerBack?: (inner: InnerBack | null) => void;
   /** v22 — Dive-gear purchases go straight through the store. */
   commit: (transition: PlayTransition) => boolean;
+  /** Stone sheet: show the result only after the save lands. */
+  commitSaved: (transition: PlayTransition) => Promise<boolean>;
 }) {
   const fontsReady = usePixelFonts();
   const charges = view.dive.current;
@@ -131,6 +135,8 @@ export function DiveScreen({
   const today = todayPlan(view);
   const fxLevel = useDiveFxLevel();
   const [sheet, setSheet] = useState<SheetId | null>(null);
+  const [guideAt, setGuideAt] = useState<GuideSection>('dive');
+  const laterOpen = view.stats.surfaces > 0;
   const [wipe, setWipe] = useState<'off' | 'cover' | 'reveal'>('off');
   const leaveRef = useRef<() => void>(() => onBack());
 
@@ -143,7 +149,12 @@ export function DiveScreen({
     registerBack({
       edgeSwipe: true,
       back: () => {
-        if (diveBackStep(sheet != null) === 'room') {
+        const later = diveLaterBack(sheet === 'info' || sheet === 'gear' ? null : sheet);
+        if (later === 'den') {
+          setSheet('den');
+          return true;
+        }
+        if (diveBackStep(sheet != null) === 'hub') {
           leaveRef.current();
           return true;
         }
@@ -296,6 +307,24 @@ export function DiveScreen({
               <PixelBody size="sm" numberOfLines={2} style={styles.note}>
                 {dockStatus(run, charges)}
               </PixelBody>
+              {laterOpen && !run.active ? (
+                <View style={styles.laterRow}>
+                  <PixelButton
+                    label="Expedition"
+                    variant="muted"
+                    onPress={() => setSheet('expedition')}
+                    accessibilityLabel="Expedition"
+                    style={styles.laterButton}
+                  />
+                  <PixelButton
+                    label="Den"
+                    variant="muted"
+                    onPress={() => setSheet('den')}
+                    accessibilityLabel="The Den"
+                    style={styles.laterButton}
+                  />
+                </View>
+              ) : null}
               <View style={styles.actions}>
                 {buttonRows.map((row, i) => (
                   <View key={i} style={styles.buttonRow}>
@@ -323,8 +352,12 @@ export function DiveScreen({
           charges={chargeText(view)}
           shells={view.shells}
           onBack={leave}
-          onInfo={() => setSheet('info')}
+          onInfo={() => {
+            setGuideAt('dive');
+            setSheet('info');
+          }}
           onGear={() => setSheet('gear')}
+          showGear={laterOpen}
         />
       </DiveScene>
 
@@ -348,9 +381,24 @@ export function DiveScreen({
         {[today.td, today.pet, today.both, today.goal].map((line) => (
           <PixelBody key={line}>{line}</PixelBody>
         ))}
-        <GuideView initial="dive" />
+        <GuideView key={guideAt} initial={guideAt} />
       </PlaySheet>
 
+      <DiveLaterSheets
+        sheet={sheet === 'info' || sheet === 'gear' ? null : sheet}
+        view={view}
+        commit={commit}
+        commitSaved={commitSaved}
+        reduceMotion={reduceMotion}
+        onClose={() => setSheet(null)}
+        onSheet={setSheet}
+        onGuide={(section) => {
+          setGuideAt(section);
+          setSheet('info');
+        }}
+      />
+
+      {laterOpen ? (
       <PlaySheet open={sheet === 'gear'} title="Dive gear" onClose={() => setSheet(null)} reduceMotion={reduceMotion}>
         <PixelBody>Bought with shells, yours for good. You have {view.shells} shells.</PixelBody>
         {DIVE_GEAR.map((gear) => {
@@ -381,12 +429,12 @@ export function DiveScreen({
         })}
         {gearNote ? <PixelBody>{gearNote}</PixelBody> : null}
       </PlaySheet>
+      ) : null}
       <DiamondWipe
         mode={wipe}
         onDone={
           wipe === 'cover'
             ? () => {
-                armWipe('room');
                 onBack();
               }
             : () => setWipe('off')
@@ -438,6 +486,8 @@ const styles = StyleSheet.create({
   buttonRow: { flexDirection: 'row', width: '100%', gap: 8, alignItems: 'stretch' },
   button: { flexGrow: 1, flexShrink: 1, flexBasis: '0%', minWidth: 96, minHeight: 50 },
   note: { textAlign: 'center' },
+  laterRow: { flexDirection: 'row', width: '100%', gap: 8 },
+  laterButton: { flexGrow: 1, flexBasis: '0%', minHeight: 44 },
   gearRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   buyButton: { flexGrow: 0 },
   splashRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14 },
