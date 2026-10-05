@@ -198,7 +198,7 @@ export default function PlayScreen() {
     devClearOwnedHeroes,
     buyShopRow,
   } = usePlayStore();
-  const shotParams = useLocalSearchParams<{ shot?: string; inset?: string }>();
+  const shotParams = useLocalSearchParams<{ shot?: string; inset?: string; phase?: string }>();
   const [mode, setMode] = useState<PlayMode>('grove');
   // Fullscreen while on the Defend board (setup and waves): the status bar
   // hides and comes back on leaving Defend or exiting Play. Shared hook —
@@ -679,12 +679,24 @@ export default function PlayScreen() {
 
   // Dev-only device frames for the pet room and Dive (layout shots). The
   // query never changes a normal visit to /play.
-  if (shotParams.shot === 'pet' || shotParams.shot === 'dive') {
+  if (
+    shotParams.shot === 'pet' ||
+    shotParams.shot === 'dive' ||
+    shotParams.shot === 'catch' ||
+    shotParams.shot === 'train' ||
+    shotParams.shot === 'play'
+  ) {
     const inset: LayoutInset =
       shotParams.inset === 'se' || shotParams.inset === 'max' || shotParams.inset === 'and' || shotParams.inset === '15'
         ? shotParams.inset
         : '15';
-    return <LayoutShot kind={shotParams.shot as LayoutShotKind} inset={inset} />;
+    return (
+      <LayoutShot
+        kind={shotParams.shot as LayoutShotKind}
+        inset={inset}
+        phase={shotParams.phase === 'pre' ? 'pre' : 'mid'}
+      />
+    );
   }
 
   const researchLine =

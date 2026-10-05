@@ -47,7 +47,7 @@ import { DIVE_CHARGE_CAP, buyDiveGear, type PlayView } from '@/play/playStore';
 import { todayPlan } from '@/play/today-plan';
 import { GuideView } from '@/play/guide-sheet';
 import { stagePowerLine } from '@/play/guide-content';
-import { BUFF_ICON, SNACK_BUST_PP } from '@/play/play-buffs';
+import { SNACK_BUST_PP } from '@/play/play-buffs';
 import type { PlayTransition } from '@/play/use-play-store';
 
 /** The pet dive buddy, in one honest line (v20; away + Dive care in v21). */
@@ -128,7 +128,6 @@ export function DiveScreen({
   const fontsReady = usePixelFonts();
   const charges = view.dive.current;
   const run = view.diveRun;
-  const canSpend = !run.active && charges >= 1;
   const today = todayPlan(view);
   const fxLevel = useDiveFxLevel();
   const [sheet, setSheet] = useState<SheetId | null>(null);
@@ -248,15 +247,8 @@ export function DiveScreen({
     else if (b.id === 'deeper_rich') pressDeeper('rich');
     else if (b.id === 'surface') pressSurface();
   };
-  const hint = run.active
-    ? run.free
-      ? `Free dive — finds are Logbook sightings; surfacing now pays ${run.freeShellsNow ?? 0} shells.`
-      : run.canDeeper
-        ? '% = the chance to lose this haul. Safer finds come from one level up, Richer from one level down.'
-        : 'Max depth — this haul has reached its last Deeper. Surface to keep it.'
-    : canSpend
-      ? 'One charge, one find to start. Each Deeper adds a find and a chance to lose the haul — Surface any time to keep it.'
-      : `Out of charges — a free dive keeps only shells (the first 10 a day pay full; ${view.freeDivesToday} so far) and mood.`;
+  // One or two lines under the haul. The long rules live in the Info sheet
+  // so they cannot push DIVE / DEEPER / SURFACE below the screen.
   const st = view.pet.state;
   const revealed = st.hero != null && st.stage !== 'egg' && st.stage !== 'baby';
   const maxDepth = run.active ? run.maxDeepers : view.diveGear.oxygen ? 5 : 4;
@@ -301,35 +293,26 @@ export function DiveScreen({
             </View>
           ) : (
             <View style={styles.dockButtons}>
-              <PixelBody size="sm" numberOfLines={4} style={styles.note}>{hint}</PixelBody>
-              {run.active && run.preview ? (
-                <PixelBody size="sm" numberOfLines={2} style={styles.note}>
-                  Lamp: Safer holds {findName(run.preview.safe)} · Richer holds {findName(run.preview.rich)}.
-                </PixelBody>
-              ) : null}
-              {run.active && run.netOn && !run.free ? (
-                <PixelBody size="sm" numberOfLines={2} style={styles.note}>Net: surfacing now adds one more find.</PixelBody>
-              ) : null}
               <PixelBody size="sm" numberOfLines={2} style={styles.note}>
-                Powers today: {run.powersToday}/{run.powersCap}
-                {run.snack ? ` · ${BUFF_ICON.snack} Snack: −${SNACK_BUST_PP} in every %` : ''}
-                {run.hearty > 0 && !run.free ? ` · ${BUFF_ICON.hearty} +1 find on surface (×${run.hearty})` : ''}
+                {dockStatus(run, charges)}
               </PixelBody>
-              {buttonRows.map((row, i) => (
-                <View key={i} style={styles.buttonRow}>
-                  {row.map((b) => (
-                    <PixelButton
-                      key={b.id}
-                      label={b.label}
-                      variant={diveButtonVariant(b)}
-                      disabled={busy || !b.enabled}
-                      onPress={() => pressButton(b)}
-                      accessibilityLabel={b.label.toLowerCase()}
-                      style={styles.button}
-                    />
-                  ))}
-                </View>
-              ))}
+              <View style={styles.actions}>
+                {buttonRows.map((row, i) => (
+                  <View key={i} style={styles.buttonRow}>
+                    {row.map((b) => (
+                      <PixelButton
+                        key={b.id}
+                        label={b.label}
+                        variant={diveButtonVariant(b)}
+                        disabled={busy || !b.enabled}
+                        onPress={() => pressButton(b)}
+                        accessibilityLabel={b.label.toLowerCase()}
+                        style={styles.button}
+                      />
+                    ))}
+                  </View>
+                ))}
+              </View>
             </View>
           )
         }>
@@ -351,6 +334,15 @@ export function DiveScreen({
         <PixelBody>
           Charges: {chargeText(view)} · Powers today: {run.powersToday}/{run.powersCap} (each one past that becomes{' '}
           {POWER_OVERFLOW_SHELLS} shells).
+        </PixelBody>
+        <PixelLabel>How a dive goes</PixelLabel>
+        <PixelBody>
+          One charge starts you with one find. Each Deeper adds a find and a chance to lose the haul. Surface any time
+          to keep it. Safer comes from one level up, Richer from one level down. The % on Deeper is that chance.
+        </PixelBody>
+        <PixelBody>
+          With no charges, a free dive keeps shells (the first 10 a day pay full) and mood. Those finds are Logbook
+          sightings. A lamp shows the next Safer and Richer finds. A net adds one more find when you surface.
         </PixelBody>
         <PixelLabel>Today · one minute</PixelLabel>
         {[today.td, today.pet, today.both, today.goal].map((line) => (
@@ -411,6 +403,21 @@ function diveButtonVariant(b: DiveButton): PixelButtonVariant {
   return 'cyan';
 }
 
+/** Live dock line. Rules stay in the Info sheet. */
+function dockStatus(run: PlayView['diveRun'], charges: number): string {
+  const bits = [`Powers ${run.powersToday}/${run.powersCap}`];
+  if (run.snack) bits.push(`Snack −${SNACK_BUST_PP}`);
+  if (run.hearty > 0 && !run.free) bits.push(run.hearty > 1 ? `+1 find ×${run.hearty}` : '+1 find');
+  if (run.active && run.preview) {
+    bits.push(`Lamp ${findName(run.preview.safe)} · ${findName(run.preview.rich)}`);
+  }
+  if (run.active && run.netOn && !run.free) bits.push('Net adds a find');
+  if (run.active && run.free) bits.push(`Free dive · ${run.freeShellsNow ?? 0} shells up`);
+  if (!run.active && charges < 1) bits.push('Free dive keeps shells and mood');
+  if (run.active && !run.canDeeper) bits.push('Surface keeps this haul');
+  return bits.join(' · ');
+}
+
 /** "7/10" or "7/10 · +1 ~12m" — same charge line the Grove row shows. */
 function chargeText(view: PlayView): string {
   const dive = view.dive;
@@ -422,10 +429,14 @@ function chargeText(view: PlayView): string {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, minHeight: 0, backgroundColor: PIXEL.ink },
-  dockButtons: { gap: 8, alignSelf: 'stretch' },
+  dockButtons: { width: '100%', gap: 8 },
+  // flexShrink 0 so a short phone clips the scene, not the actions.
+  actions: { width: '100%', gap: 8, flexShrink: 0 },
   // Two DEEPER buttons share the row; SURFACE is its own full-width row.
-  buttonRow: { flexDirection: 'row', gap: 8, alignSelf: 'stretch' },
-  button: { flexGrow: 1, flexBasis: 0, minWidth: 0, minHeight: 50 },
+  // flexBasis is a percent, and minWidth is a real floor. flexBasis 0 with
+  // minWidth 0 collapses this row to ~0 width on iOS (empty ink gap).
+  buttonRow: { flexDirection: 'row', width: '100%', gap: 8, alignItems: 'stretch' },
+  button: { flexGrow: 1, flexShrink: 1, flexBasis: '0%', minWidth: 96, minHeight: 50 },
   note: { textAlign: 'center' },
   gearRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   buyButton: { flexGrow: 0 },

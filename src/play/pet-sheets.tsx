@@ -34,6 +34,8 @@ import {
 import { getItemDef } from '@/play/items';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { NeonButton, NeonChip, NeonLabel } from '@/play/neon-ui';
+import { PIXEL } from '@/play/pixel-theme';
+import { PixelBody, PixelButton, PixelFrame, PixelHearts, PixelLabel } from '@/play/pixel-ui';
 import { NEON } from '@/play/neon-viper';
 import {
   PET_BRANCH_LABEL,
@@ -236,6 +238,48 @@ export function FeedSheetBody({ view, commit, onFed }: { view: PlayView; commit:
 
 /* ---------------------------------------------------------------- Play --- */
 
+/** Difficulty chip in the pixel kit. The medal stays a system glyph so Departure Mono does not eat it. */
+function GameChip({
+  label,
+  selected,
+  locked,
+  medal,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  locked: boolean;
+  medal: string | null;
+  onPress: () => void;
+}) {
+  const fill = selected ? PIXEL.cyan : PIXEL.ink;
+  const text = selected ? PIXEL.onFill : locked ? PIXEL.dim : PIXEL.text;
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      style={styles.gameChip}>
+      <PixelFrame
+        fill={fill}
+        border={selected ? PIXEL.ink : PIXEL.muted}
+        bevel={selected ? 'cyan' : undefined}
+        glow={false}
+        lined={!selected}
+        padded={false}
+        minHeight={36}>
+        <View style={styles.gameChipRow}>
+          {locked ? <MaterialCommunityIcons name="lock" size={12} color={PIXEL.dim} /> : null}
+          <PixelLabel color={text} numberOfLines={1} style={styles.gameChipLabel}>
+            {label}
+          </PixelLabel>
+          {medal ? <Text style={styles.gameMedal}>{medal}</Text> : null}
+        </View>
+      </PixelFrame>
+    </Pressable>
+  );
+}
+
 /** v26 — a round being played: which game, at which level, daily or not. */
 export type GameRun = { kind: PetRoundKind; level: Difficulty; daily: boolean };
 
@@ -266,7 +310,9 @@ export function PlaySheetBody({
   const [level, setLevel] = useState<Record<Game, Difficulty>>({ catch: 'normal', train: 'normal' });
   const [hint, setHint] = useState<string | null>(null);
   if (pv.state.stage === 'egg') {
-    return <Text style={styles.body}>Games start once it hatches. For now, pick what it hatches into in Info.</Text>;
+    return (
+      <PixelBody>Games start once it hatches. For now, pick what it hatches into in Info.</PixelBody>
+    );
   }
   if (game) {
     // The daily challenge is one fixed pattern per local date (same for everyone).
@@ -275,14 +321,20 @@ export function PlaySheetBody({
     return game.kind === 'catch' ? <CatchFoodGame {...props} /> : <TapTrainGame {...props} />;
   }
   return (
-    <>
-      <MeterLine label="Hunger" value={pv.state.hunger} />
-      <MeterLine label="Mood" value={pv.state.mood} />
-      <Text style={styles.body}>
-        Catch the food feeds it (+2 hunger); Tap to train cheers it up (+2 mood) — only if you pass (50%+).
-        +{PET_TOKENS_PER_ROUND} tokens a passed round · {pv.tokensLeftToday}/{PET_TOKENS_DAILY_CAP} left today. TD
-        stays the main way to earn.
-      </Text>
+    <View style={styles.playSheet}>
+      <View style={styles.meterRow}>
+        <View style={styles.meterBlock}>
+          <PixelBody size="sm" color={PIXEL.dim}>Hunger</PixelBody>
+          <PixelHearts value={pv.state.hunger} max={PET_METER_MAX} />
+        </View>
+        <View style={styles.meterBlock}>
+          <PixelBody size="sm" color={PIXEL.dim}>Mood</PixelBody>
+          <PixelHearts value={pv.state.mood} max={PET_METER_MAX} />
+        </View>
+      </View>
+      <PixelBody numberOfLines={4}>
+        {`Catch the food feeds it (+2 hunger); Tap to train cheers it up (+2 mood) — only if you pass (50%+). +${PET_TOKENS_PER_ROUND} tokens a passed round · ${pv.tokensLeftToday}/${PET_TOKENS_DAILY_CAP} left today. TD stays the main way to earn.`}
+      </PixelBody>
       {(['catch', 'train'] as const).map((g) => {
         // A level picked earlier may have closed again (Reset Divecore): fall back to Normal.
         const lv = levelUnlocked(pv.records, g, level[g]) ? level[g] : 'normal';
@@ -292,57 +344,65 @@ export function PlaySheetBody({
         const goldBuff = buffForMedal(g, 'gold');
         const daily = pv.daily[g];
         return (
-          <View key={g} style={styles.gameCard}>
-            <Text style={styles.gameTitle}>
-              {GAME_LABEL[g]} · <Text style={styles.rank}>{pv.ranks[g]}</Text>
-            </Text>
-            <View style={styles.chips}>
-              {DIFFICULTIES.map((d) => {
-                const open = levelUnlocked(pv.records, g, d);
-                const r = pv.records[g][d];
-                return (
-                  <NeonChip
-                    key={d}
-                    label={`${open ? '' : '🔒 '}${DIFFICULTY_LABEL[d]}${r.medal ? ` ${MEDAL_ICON[r.medal]}` : ''}`}
-                    selected={open && lv === d}
-                    onPress={() => {
-                      if (open) {
-                        setLevel((prev) => ({ ...prev, [g]: d }));
-                        setHint(null);
-                      } else setHint(`${GAME_LABEL[g]} · ${DIFFICULTY_LABEL[d]}: ${unlockHint(d)}.`);
-                    }}
-                  />
-                );
-              })}
+          <PixelFrame key={g} align="stretch" glow={false}>
+            <View style={styles.gameCard}>
+              <View style={styles.gameTitleRow}>
+                <PixelLabel numberOfLines={1} style={styles.gameTitle}>{GAME_LABEL[g]}</PixelLabel>
+                <PixelBody size="sm" color={PIXEL.amber} numberOfLines={1}>{pv.ranks[g]}</PixelBody>
+              </View>
+              <View style={styles.chips}>
+                {DIFFICULTIES.map((d) => {
+                  const open = levelUnlocked(pv.records, g, d);
+                  const r = pv.records[g][d];
+                  return (
+                    <GameChip
+                      key={d}
+                      label={DIFFICULTY_LABEL[d]}
+                      locked={!open}
+                      medal={r.medal ? MEDAL_ICON[r.medal] : null}
+                      selected={open && lv === d}
+                      onPress={() => {
+                        if (open) {
+                          setLevel((prev) => ({ ...prev, [g]: d }));
+                          setHint(null);
+                        } else setHint(`${GAME_LABEL[g]} · ${DIFFICULTY_LABEL[d]}: ${unlockHint(d)}.`);
+                      }}
+                    />
+                  );
+                })}
+              </View>
+              <PixelBody size="sm" color={PIXEL.dim} numberOfLines={3}>
+                {`Best on ${DIFFICULTY_LABEL[lv]}: ${rec.best > 0 ? rec.best : '—'} · 🥉 ${b} · 🥈 ${sv} (${silverBuff ? BUFF_LABEL[silverBuff] : ''}) · 🥇 ${gd} (${goldBuff ? BUFF_LABEL[goldBuff] : ''})`}
+              </PixelBody>
+              <View style={styles.buttons}>
+                <PixelButton
+                  label={`Play · ${DIFFICULTY_LABEL[lv]}`}
+                  variant={g === 'catch' ? 'cyan' : 'amber'}
+                  onPress={() => onStart({ kind: g, level: lv, daily: false })}
+                  style={styles.shareButton}
+                />
+                <PixelButton
+                  label={daily.best > 0 ? `Daily · best ${daily.best}` : 'Daily'}
+                  variant="cyan"
+                  onPress={() => onStart({ kind: g, level: 'normal', daily: true })}
+                  style={styles.shareButton}
+                />
+              </View>
             </View>
-            <Text style={styles.subtle}>
-              Best on {DIFFICULTY_LABEL[lv]}: {rec.best > 0 ? rec.best : '—'} · 🥉 {b} · 🥈 {sv} (
-              {silverBuff ? BUFF_LABEL[silverBuff] : ''}) · 🥇 {gd} ({goldBuff ? BUFF_LABEL[goldBuff] : ''})
-            </Text>
-            <View style={styles.buttons}>
-              <NeonButton
-                label={`Play · ${DIFFICULTY_LABEL[lv]}`}
-                variant={g === 'catch' ? 'primary' : 'secondary'}
-                onPress={() => onStart({ kind: g, level: lv, daily: false })}
-                style={styles.flex}
-              />
-              <NeonButton
-                label={`Daily${daily.best > 0 ? ` · best ${daily.best}` : ''}`}
-                variant="secondary"
-                onPress={() => onStart({ kind: g, level: 'normal', daily: true })}
-                style={styles.flex}
-              />
-            </View>
-          </View>
+          </PixelFrame>
         );
       })}
-      {hint ? <Text style={styles.result}>{hint}</Text> : null}
+      {hint ? <PixelBody color={PIXEL.cyan}>{hint}</PixelBody> : null}
       {lastRound ? (
         <ScoreBurst score={lastRound.score} strong={lastRound.strong} runKey={lastRound.key} animate={!still} />
       ) : null}
-      {lastResult ? <Text style={styles.result}>{lastResult}</Text> : null}
-      {onGuide ? <NeonChip label="? Mini-games in the Guide" onPress={onGuide} /> : null}
-    </>
+      {lastResult ? <PixelBody color={PIXEL.cyan}>{lastResult}</PixelBody> : null}
+      {onGuide ? (
+        <Pressable onPress={onGuide} accessibilityRole="button" accessibilityLabel="Mini-games in the Guide">
+          <PixelBody size="sm" color={PIXEL.cyan}>Mini-games in the Guide</PixelBody>
+        </Pressable>
+      ) : null}
+    </View>
   );
 }
 
@@ -826,14 +886,17 @@ const styles = StyleSheet.create({
   body: { fontFamily: Fonts.mono, fontSize: 12, lineHeight: 18, color: NEON.textMuted },
   result: { fontFamily: Fonts.monoBold, fontSize: 12, color: NEON.cyan },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  gameCard: {
-    gap: 8,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: NEON.cyanDim,
-  },
-  gameTitle: { fontFamily: Fonts.monoBold, fontSize: 14, color: NEON.textPrimary },
-  rank: { color: '#FFD700' },
-  buttons: { flexDirection: 'row', gap: 10 },
+  gameCard: { width: '100%', gap: 8 },
+  buttons: { flexDirection: 'row', width: '100%', gap: 8 },
+  shareButton: { flexGrow: 1, flexShrink: 1, flexBasis: '0%', minWidth: 96, minHeight: 50 },
   flex: { flex: 1 },
+  playSheet: { width: '100%', gap: 10 },
+  meterRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+  meterBlock: { gap: 4 },
+  gameTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  gameTitle: { flexShrink: 1 },
+  gameChip: { flexGrow: 0, flexShrink: 0 },
+  gameChipRow: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4 },
+  gameChipLabel: { fontSize: 12, lineHeight: 16 },
+  gameMedal: { fontSize: 14 },
 });

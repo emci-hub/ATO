@@ -24,9 +24,10 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
 
-import { Fonts } from '@/constants/theme';
 import { PLAY_ART } from '@/play/generated-play-assets';
-import { NEON } from '@/play/neon-viper';
+import { ART_PT, PIXEL } from '@/play/pixel-theme';
+import { DitherPool, useHitJuice } from '@/play/pixel-fx';
+import { PixelBody, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
 import type { PetState } from '@/play/pet';
 import { petPose, petPoseMs, type PetPose } from '@/play/pet-actor';
 import { PetAnimSprite, type PetArt, type PetFace } from '@/play/pet-anim-sprite';
@@ -135,7 +136,7 @@ const GamePetSprite = memo(function GamePetSprite({
       {glow ? (
         <View
           pointerEvents="none"
-          style={[styles.glow, { backgroundColor: gp.glow, shadowColor: gp.glow }, still && styles.glowStill]}
+          style={[styles.glow, { backgroundColor: gp.glow }, still && styles.glowStill]}
         />
       ) : null}
       <PetAnimSprite
@@ -156,13 +157,19 @@ const GamePetSprite = memo(function GamePetSprite({
   );
 });
 
-/** The big combo badge (only while ×2 or more). */
+/** The big combo badge (only while ×2 or more). Departure Mono, hard shadow. */
 function ComboBadge({ mult }: { mult: number }) {
   if (mult <= 1) return null;
   return (
-    <Text pointerEvents="none" style={[styles.combo, mult >= 5 && styles.comboTop]} accessibilityLabel={`Combo times ${mult}`}>
-      ×{mult} COMBO
-    </Text>
+    <View pointerEvents="none" style={styles.combo} accessibilityLabel={`Combo times ${mult}`}>
+      <PixelLabel
+        color={mult >= 5 ? PIXEL.amberHi : PIXEL.amber}
+        numberOfLines={1}
+        accessibilityRole="text"
+        style={mult >= 5 ? styles.comboTop : undefined}>
+        {`×${mult} COMBO`}
+      </PixelLabel>
+    </View>
   );
 }
 
@@ -187,6 +194,7 @@ function FoodShape({ color, golden = false }: { color: string; golden?: boolean 
 }
 
 export function CatchFoodGame({ onDone, level = 'normal', rng = Math.random, gamePet = null, still = false }: GameProps) {
+  usePixelFonts();
   const [width, setWidth] = useState(0);
   const [items, setItems] = useState<Food[]>([]);
   const [tally, setTally] = useState<CatchTally>(EMPTY_CATCH);
@@ -202,6 +210,7 @@ export function CatchFoodGame({ onDone, level = 'normal', rng = Math.random, gam
   const { act, flash, play } = useGameActor(gamePet);
   const petX = useSharedValue(0.5);
   const petHop = useSharedValue(0);
+  const juice = useHitJuice();
 
   const setT = (next: CatchTally) => {
     tallyRef.current = next;
@@ -262,8 +271,9 @@ export function CatchFoodGame({ onDone, level = 'normal', rng = Math.random, gam
       const next = tapBomb(tallyRef.current);
       setT(next);
       setBombFlash(true);
-      setTimeout(() => setBombFlash(false), 250);
+      setTimeout(() => setBombFlash(false), 80);
       play('hurt', 'front');
+      if (!still) juice.play();
       if (next.over) finish();
       return;
     }
@@ -286,19 +296,23 @@ export function CatchFoodGame({ onDone, level = 'normal', rng = Math.random, gam
   const mult = comboMult('catch', tally.chain);
 
   return (
-    <View>
+    <View style={styles.game}>
       <View style={styles.hudRow}>
-        <Text style={styles.hudText}>
+        <PixelBody size="sm" color={PIXEL.cyan} numberOfLines={1}>
           {catchScore(tally, level)} pts · caught {tally.caught}
-        </Text>
-        <Text style={styles.hudText}>
-          💣 {tally.strikes}/{CATCH.bombStrikes} · {Math.ceil(leftMs / 1000)}s
-        </Text>
+        </PixelBody>
+        <PixelBody size="sm" color={PIXEL.cyan} numberOfLines={1}>
+          {`💣 ${tally.strikes}/${CATCH.bombStrikes} · ${Math.ceil(leftMs / 1000)}s`}
+        </PixelBody>
       </View>
+      <PixelFrame align="stretch" padded={false} glow={false} fill="#0B3E48" border={PIXEL.cyan}>
       <View style={[styles.area, { height: CATCH_AREA_H }]} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+        <DitherPool alive={!still} cx={70} cy={130} rx={56} ry={22} color={PIXEL.cyan} lit={2} gain={0.4} />
         {gamePet && width > 0 ? (
           <Animated.View pointerEvents="none" style={[styles.catchPet, petStyle]}>
-            <GamePetSprite gp={gamePet} act={act} flash={flash} still={still} glow={mult >= 3} />
+            <Animated.View style={juice.shakeStyle}>
+              <GamePetSprite gp={gamePet} act={act} flash={flash} still={still} glow={mult >= 3} />
+            </Animated.View>
           </Animated.View>
         ) : null}
         {width > 0
@@ -321,10 +335,10 @@ export function CatchFoodGame({ onDone, level = 'normal', rng = Math.random, gam
         {bombFlash ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.bombFlash]} /> : null}
         <ComboBadge mult={mult} />
       </View>
-      <Text style={styles.hint}>
-        Catch half of the food to pass. Golden = +{CATCH.goldenPoints}. Catches in a row build the combo — a miss or a 💣
-        resets it. {CATCH.bombStrikes} 💣 end the round.
-      </Text>
+      </PixelFrame>
+      <PixelBody size="sm" numberOfLines={3} style={styles.hint}>
+        {`Catch half of the food to pass. Golden = +${CATCH.goldenPoints}. Catches in a row build the combo — a miss or a 💣 resets it. ${CATCH.bombStrikes} 💣 end the round.`}
+      </PixelBody>
     </View>
   );
 }
@@ -339,6 +353,7 @@ function randomZone(width: number, r: () => number): number {
 }
 
 export function TapTrainGame({ onDone, level = 'normal', rng = Math.random, gamePet = null, still = false }: GameProps) {
+  usePixelFonts();
   const start = startTrain(level);
   const [marker, setMarker] = useState(0);
   const [tally, setTally] = useState<TrainTally>(start);
@@ -355,7 +370,7 @@ export function TapTrainGame({ onDone, level = 'normal', rng = Math.random, game
   const { act, flash: hurtFlash, play } = useGameActor(gamePet);
   const knock = useSharedValue(0);
   const stumble = useSharedValue(0);
-  const shake = useSharedValue(0);
+  const juice = useHitJuice();
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -388,13 +403,7 @@ export function TapTrainGame({ onDone, level = 'normal', rng = Math.random, game
       play('attack', 'e');
       if (!still) {
         knock.value = withSequence(withTiming(18, { duration: 90 }), withTiming(0, { duration: 260, easing: Easing.bounce }));
-        if (perfect) {
-          shake.value = withSequence(
-            withTiming(4, { duration: 40 }),
-            withTiming(-4, { duration: 60 }),
-            withTiming(0, { duration: 40 }),
-          );
-        }
+        if (perfect) juice.play();
       }
     } else if (!still) {
       stumble.value = withSequence(withTiming(-8, { duration: 90 }), withTiming(0, { duration: 200 }));
@@ -410,83 +419,102 @@ export function TapTrainGame({ onDone, level = 'normal', rng = Math.random, game
 
   const crateStyle = useAnimatedStyle(() => ({ transform: [{ translateX: knock.value }, { rotate: `${knock.value * 0.6}deg` }] }));
   const petStyle = useAnimatedStyle(() => ({ transform: [{ translateX: stumble.value }] }));
-  const shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }] }));
+  const flashVeil = useAnimatedStyle(() => ({ opacity: juice.flash.value }));
   const mult = comboMult('train', tally.streak);
 
+  const hint =
+    flash === 'perfect'
+      ? 'PERFECT! Right in the middle.'
+      : flash === 'hit'
+        ? 'Hit! The zone shrinks…'
+        : flash === 'miss'
+          ? `Missed — ${TRAIN.missStreakEnd} in a row ends it.`
+          : `Tap in the lit zone (the bright middle is a perfect hit). ${TRAIN.passHits} hits out of ${TRAIN.taps} to pass.`;
+  const hintColor = flash === 'miss' ? '#FF3B5C' : flash === 'hit' || flash === 'perfect' ? '#7CE38B' : PIXEL.dim;
+
   return (
-    <Animated.View style={shakeStyle}>
+    <Animated.View style={[styles.game, juice.shakeStyle]}>
       <View style={styles.hudRow}>
-        <Text style={styles.hudText}>
+        <PixelBody size="sm" color={PIXEL.cyan} numberOfLines={1}>
           {trainScore(tally, level)} pts · hits {tally.hits}/{TRAIN.passHits}
-        </Text>
-        <Text style={styles.hudText}>
-          Tap {Math.min(tally.taps + 1, TRAIN.taps)}/{TRAIN.taps}
-          {tally.missStreak > 0 ? ` · misses ${tally.missStreak}/${TRAIN.missStreakEnd}` : ''}
-        </Text>
+        </PixelBody>
+        <PixelBody size="sm" color={PIXEL.cyan} numberOfLines={1}>
+          {`Tap ${Math.min(tally.taps + 1, TRAIN.taps)}/${TRAIN.taps}${tally.missStreak > 0 ? ` · misses ${tally.missStreak}/${TRAIN.missStreakEnd}` : ''}`}
+        </PixelBody>
       </View>
-      <View style={styles.arena}>
-        {gamePet ? (
-          <Animated.View style={petStyle}>
-            <GamePetSprite gp={gamePet} act={act} flash={hurtFlash} still={still} glow={mult >= 3} />
-          </Animated.View>
-        ) : (
-          <View style={{ width: GAME_PET_BOX }} />
-        )}
-        {CRATE_ART ? (
-          <Animated.View style={crateStyle}>
-            <Image source={CRATE_ART} contentFit="contain" style={styles.crate} accessibilityLabel="Training dummy" />
-          </Animated.View>
-        ) : null}
-        {flash === 'perfect' ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.perfectFlash]} /> : null}
-        <ComboBadge mult={mult} />
-      </View>
-      <View style={styles.bar}>
-        <View style={[styles.zone, { left: `${(zone - tally.zone / 2) * 100}%`, width: `${tally.zone * 100}%` }]} />
-        <View
-          style={[
-            styles.zoneCore,
-            { left: `${(zone - tally.zone * TRAIN_PERFECT_SHARE) * 100}%`, width: `${tally.zone * TRAIN_PERFECT_SHARE * 2 * 100}%` },
-          ]}
-        />
-        <View style={[styles.marker, { left: `${marker * 100}%` }]} />
-      </View>
-      <Text style={[styles.hint, (flash === 'hit' || flash === 'perfect') && styles.hit, flash === 'miss' && styles.miss]}>
-        {flash === 'perfect'
-          ? 'PERFECT! Right in the middle.'
-          : flash === 'hit'
-            ? 'Hit! The zone shrinks…'
-            : flash === 'miss'
-              ? `Missed — ${TRAIN.missStreakEnd} in a row ends it.`
-              : `Tap in the lit zone (the bright middle is a perfect hit). ${TRAIN.passHits} hits out of ${TRAIN.taps} to pass.`}
-      </Text>
+      <PixelFrame align="stretch" padded={false} glow={false} fill="#0B3E48" border={PIXEL.cyan}>
+        <View style={styles.arena}>
+          <DitherPool alive={!still} cx={64} cy={28} rx={48} ry={12} color={PIXEL.cyan} lit={2} gain={0.35} />
+          {gamePet ? (
+            <Animated.View style={petStyle}>
+              <GamePetSprite gp={gamePet} act={act} flash={hurtFlash} still={still} glow={mult >= 3} />
+            </Animated.View>
+          ) : (
+            <View style={{ width: GAME_PET_BOX }} />
+          )}
+          {CRATE_ART ? (
+            <Animated.View style={crateStyle}>
+              <Image source={CRATE_ART} contentFit="contain" style={styles.crate} accessibilityLabel="Training dummy" />
+            </Animated.View>
+          ) : null}
+          <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.perfectFlash, flashVeil]} />
+          <ComboBadge mult={mult} />
+        </View>
+      </PixelFrame>
+      <PixelFrame align="stretch" padded={false} glow={false} lined={false} fill={PIXEL.ink} border={PIXEL.cyan} minHeight={36}>
+        <View style={styles.bar}>
+          <View style={[styles.zone, { left: `${(zone - tally.zone / 2) * 100}%`, width: `${tally.zone * 100}%` }]} />
+          <View
+            style={[
+              styles.zoneCore,
+              { left: `${(zone - tally.zone * TRAIN_PERFECT_SHARE) * 100}%`, width: `${tally.zone * TRAIN_PERFECT_SHARE * 2 * 100}%` },
+            ]}
+          />
+          <View style={[styles.marker, { left: `${marker * 100}%` }]} />
+        </View>
+      </PixelFrame>
+      <PixelBody size="sm" numberOfLines={2} color={hintColor} style={styles.hint}>
+        {hint}
+      </PixelBody>
       <Pressable
         onPressIn={tap}
         accessibilityRole="button"
         accessibilityLabel="Tap to train"
-        style={({ pressed }) => [styles.tapButton, pressed && styles.pressed]}>
-        <Text style={styles.tapText}>TAP</Text>
+        style={({ pressed }) => [{ width: '100%', minHeight: 72, opacity: pressed ? 0.92 : 1 }]}>
+        {({ pressed }) => (
+          <PixelFrame
+            fill={PIXEL.cyan}
+            border={PIXEL.ink}
+            bevel="cyan"
+            sunk={pressed}
+            glow={false}
+            lined={false}
+            padded={false}
+            align="center"
+            minHeight={72}
+            pulse
+            style={{ width: '100%', height: 72 }}>
+            <PixelLabel color={PIXEL.onFill} shadowColor={PIXEL.cyanLo} numberOfLines={1}>
+              TAP
+            </PixelLabel>
+          </PixelFrame>
+        )}
       </Pressable>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
+  game: { width: '100%', gap: 8 },
   hudRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  hudText: {
-    fontFamily: Fonts.monoBold,
-    fontSize: 13,
-    color: NEON.cyan,
+    gap: 8,
   },
   area: {
-    borderWidth: 1,
-    borderColor: NEON.cyanDim,
-    borderRadius: 4,
+    width: '100%',
     overflow: 'hidden',
-    backgroundColor: 'rgba(0, 234, 255, 0.04)',
+    position: 'relative',
   },
   catchPet: { position: 'absolute', left: 0, bottom: 4 },
   food: {
@@ -494,100 +522,63 @@ const styles = StyleSheet.create({
     width: FOOD_SIZE,
     height: FOOD_SIZE,
   },
-  hint: {
-    fontFamily: Fonts.mono,
-    fontSize: 12,
-    color: NEON.textMuted,
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  hit: { color: '#7CE38B' },
-  miss: { color: NEON.pink },
+  hint: { textAlign: 'center' },
   arena: {
     height: 110,
-    marginBottom: 10,
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-around',
-    borderWidth: 1,
-    borderColor: NEON.cyanDim,
-    borderRadius: 4,
     overflow: 'hidden',
-    backgroundColor: 'rgba(0, 234, 255, 0.04)',
+    position: 'relative',
     paddingBottom: 6,
   },
   crate: { width: 56, height: 56 },
   bar: {
     height: 36,
-    borderWidth: 1,
-    borderColor: NEON.cyanDim,
-    borderRadius: 4,
+    width: '100%',
     overflow: 'hidden',
-    backgroundColor: 'rgba(0, 234, 255, 0.04)',
+    position: 'relative',
   },
   zone: {
     position: 'absolute',
     top: 0,
     bottom: 0,
-    backgroundColor: 'rgba(124, 227, 139, 0.35)',
+    backgroundColor: PIXEL.cyanLo,
   },
   zoneCore: {
     position: 'absolute',
-    top: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(124, 227, 139, 0.45)',
+    top: ART_PT,
+    bottom: ART_PT,
+    backgroundColor: PIXEL.cyan,
   },
   marker: {
     position: 'absolute',
     top: 0,
     bottom: 0,
-    width: 4,
-    marginLeft: -2,
-    backgroundColor: NEON.cyan,
+    width: ART_PT * 2,
+    marginLeft: -ART_PT,
+    backgroundColor: PIXEL.amber,
   },
-  tapButton: {
-    marginTop: 12,
-    minHeight: 72,
-    borderWidth: 1,
-    borderColor: NEON.cyan,
-    borderRadius: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: NEON.cyanSoft,
-  },
-  tapText: {
-    fontFamily: Fonts.monoBold,
-    fontSize: 22,
-    letterSpacing: 4,
-    color: NEON.cyan,
-  },
-  pressed: { opacity: 0.7 },
   emojiItem: { fontSize: 30, textAlign: 'center' },
-  bombFlash: { backgroundColor: 'rgba(255, 60, 80, 0.35)' },
-  perfectFlash: { backgroundColor: 'rgba(255, 255, 255, 0.28)' },
-  hurtFlash: { backgroundColor: 'rgba(255, 60, 80, 0.45)', borderRadius: 999 },
+  bombFlash: { backgroundColor: '#FF3B5C', opacity: 0.4 },
+  perfectFlash: { backgroundColor: '#FFFFFF' },
+  hurtFlash: { backgroundColor: '#FF3B5C', opacity: 0.45 },
   glow: {
     position: 'absolute',
-    left: -8,
-    top: -8,
-    right: -8,
-    bottom: -8,
-    borderRadius: 999,
+    left: -ART_PT * 2,
+    top: -ART_PT * 2,
+    right: -ART_PT * 2,
+    bottom: -ART_PT * 2,
     opacity: 0.28,
-    shadowOpacity: 0.9,
-    shadowRadius: 12,
   },
   glowStill: { opacity: 0.22 },
   combo: {
     position: 'absolute',
     top: 8,
-    alignSelf: 'center',
-    fontFamily: Fonts.monoBold,
-    fontSize: 26,
-    letterSpacing: 2,
-    color: '#FFD700',
-    textShadowColor: 'rgba(0, 0, 0, 0.6)',
-    textShadowRadius: 4,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
   },
-  comboTop: { fontSize: 32, color: '#FF7AF0' },
+  comboTop: { fontSize: 28, lineHeight: 34 },
 });

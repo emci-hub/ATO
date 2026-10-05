@@ -110,6 +110,13 @@ assert.match(screen, /bustPct: run\.bustPct,/, 'the buttons are built from run.b
   // The button layout never uses a bare flex:1 (that could collapse the label).
   assert.ok(!screen.includes('button: { flex: 1'), 'no flex:1 button outside a row');
   assert.ok(screen.includes('minHeight: 50'), 'buttons keep room for their text');
+  // iOS Yoga: flexBasis 0 + minWidth 0 collapses the face to ~0 width. The row
+  // keeps its height, so the dock shows an empty ink gap and no DIVE / DEEPER / SURFACE.
+  assert.ok(!/button:\s*\{[^}]*flexBasis:\s*0[,}]/.test(screen), 'buttons do not use flexBasis 0');
+  assert.ok(!/button:\s*\{[^}]*minWidth:\s*0[,}]/.test(screen), 'buttons do not use minWidth 0');
+  assert.ok(screen.includes("flexBasis: '0%'"), 'buttons use a percent basis so iOS keeps a width');
+  assert.ok(!screen.includes('numberOfLines={4}'), 'the dock does not keep a 4-line help block');
+  assert.ok(screen.includes('One charge starts you with one find'), 'the long rules live in the Info sheet');
 }
 assert.match(screen, /bustPct=\{run\.active \? run\.bustPctNext : null\}/, 'the scene reads the shown % only');
 ok('odds isolation: Dive UI never touches the rolls; the % shown is the % sent');
@@ -184,6 +191,7 @@ ok('hub: Dive tile gone, Pet tile shows a dive in progress');
   for (const frame of frames) assert.ok(atlas.includes(`'${frame}':`), `${frame} is a dive atlas frame`);
   assert.ok(world.includes('fish-big'), 'the glide uses the pack fish');
   assert.ok(!world.includes('tintColor'), 'no tint over the dive pixels');
+  assert.ok(!world.includes('<CausticWash'), 'baked plate caustics only — no teal wash bars');
   assert.equal(DIVE_PROPS.length, ZONE_BANDS.length, 'props for every zone');
   assert.equal(DIVE_DEPTH_INK.length, ZONE_BANDS.length, 'an ink for every zone');
   assert.deepEqual([...SHARK_DEPTHS], [1, 2, 3], 'the shark: Reef (1-2) and Trench (3) only');

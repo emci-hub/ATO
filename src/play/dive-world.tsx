@@ -29,7 +29,7 @@ import { DRAGON_DEPTH } from '@/play/dive-fx-model';
 import { Drift, Flicker, MoteRise, SpriteSwap, Sway } from '@/play/pixel-ambient';
 import { ART_PT } from '@/play/pixel-theme';
 import { AtlasSprite, DIVE_FRAMES, MOCKUP_DIVE, MOCKUP_PLATE, placePlate, type DiveFrame } from '@/play/pixel-atlas';
-import { CausticWash, DitherPool, ParallaxLayer, useParallaxBob } from '@/play/pixel-fx';
+import { DitherPool, ParallaxLayer, useParallaxBob } from '@/play/pixel-fx';
 
 export const WALL_W = 34;
 
@@ -121,11 +121,6 @@ export function MockupReef({ width, height, alive }: { width: number; height: nu
           factor={band.factor}
           style={[styles.abs, { top: band.y0 * k, left: 0 }]}>
           <PlateSlice y0={band.y0} y1={band.y1} />
-          {band.factor === 0.25 ? (
-            <View style={[styles.abs, { left: 0, top: -band.y0 * k, width: MOCKUP_PLATE.w * k, height: 180 * k }]}>
-              <CausticWash alive={alive} width={MOCKUP_PLATE.w * k} height={160 * k} />
-            </View>
-          ) : null}
         </ParallaxLayer>
       ))}
       <ParallaxLayer bob={bob} factor={0.25} style={[styles.abs, { left: MOCKUP_DIVE.shimmer.x * k, top: MOCKUP_DIVE.shimmer.y * k }]}>
