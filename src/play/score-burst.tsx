@@ -10,14 +10,14 @@
  * still too, so the burst never replays on reopen.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-import { Fonts } from '@/constants/theme';
-import { NEON } from '@/play/neon-viper';
+import { PIXEL } from '@/play/pixel-theme';
+import { PixelBody, PixelLabel } from '@/play/pixel-ui';
 import { CONFETTI_COUNT, confettiPieces, countUpValue, COUNT_UP_MS, type ConfettiPiece } from '@/play/score-burst-model';
 
-const PALETTE = ['#FFD700', '#4FFFD2', '#FF5A8A', '#7DD3FC', '#C084FC'] as const;
+const PALETTE = [PIXEL.amber, PIXEL.cyan, PIXEL.heart, PIXEL.cyanHi, PIXEL.amberHi] as const;
 
 /** The last round that already played its celebration (module-level on purpose). */
 let lastCelebrated = '';
@@ -83,10 +83,10 @@ export function ScoreBurst({
 
   return (
     <View style={styles.wrap} accessible accessibilityLabel={`${score} points${strong ? ', a strong result' : ''}`}>
-      <Text style={[styles.score, strong && styles.scoreStrong]} importantForAccessibility="no">
+      <PixelLabel color={strong ? PIXEL.amber : PIXEL.cyan} style={styles.score} numberOfLines={1}>
         {shown}
-        <Text style={styles.unit}> pts</Text>
-      </Text>
+      </PixelLabel>
+      <PixelBody size="sm" color={PIXEL.text}>pts</PixelBody>
       {pieces.length > 0 ? (
         <View style={styles.burst} pointerEvents="none">
           {pieces.map((piece, i) => (
@@ -100,9 +100,7 @@ export function ScoreBurst({
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center', justifyContent: 'center', paddingVertical: 8, minHeight: 56 },
-  score: { fontFamily: Fonts.monoBold, fontSize: 34, color: NEON.cyan },
-  scoreStrong: { color: '#FFD700' },
-  unit: { fontFamily: Fonts.monoBold, fontSize: 14, color: NEON.textPrimary },
+  score: { fontSize: 34, lineHeight: 40, textAlign: 'center' },
   burst: { position: 'absolute', left: 0, right: 0, top: '50%', alignItems: 'center' },
-  piece: { position: 'absolute', borderRadius: 1 },
+  piece: { position: 'absolute' },
 });

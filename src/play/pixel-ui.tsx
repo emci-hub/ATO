@@ -13,7 +13,7 @@ import { Rajdhani_600SemiBold } from '@expo-google-fonts/rajdhani';
 import { useFonts } from 'expo-font';
 import { Image, type ImageProps } from 'expo-image';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Platform, Pressable, Text, View, type ImageStyle, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View, type ImageStyle, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -240,7 +240,18 @@ export function PixelFrame({
         const { width, height } = e.nativeEvent.layout;
         setBox((prev) => (prev.w === width && prev.h === height ? prev : { w: width, h: height }));
       }}
-      style={[{ minHeight, overflow: 'visible' }, style, motion]}>
+      style={[
+        {
+          minHeight,
+          overflow: 'visible',
+          // A stretch panel needs a definite width. Yoga on iOS will not
+          // stretch a child whose own children use a 0 flex basis, and the
+          // row then collapses.
+          ...(align === 'stretch' ? { alignSelf: 'stretch' as const, width: '100%' as const } : null),
+        },
+        style,
+        motion,
+      ]}>
       {rings && glowCol ? (
         <Svg
           pointerEvents="none"
@@ -444,6 +455,17 @@ export function PixelButton({
   const lineHeight = Math.max(fontSize + 2, Math.round(fontSize * (PIXEL_LABEL_LH / PIXEL_LABEL_PT)));
   const hugW = hug && width == null ? Math.max(112, glyphs * fontSize + ART_PT * 10) : width;
   const faceH = height ?? (lines.caption ? lineHeight + pixelBodyLine(PIXEL_CAPTION_PT) + ART_PT * 4 : PIXEL_TAP_PT);
+  // A row of flexGrow buttons (Dive's DEEPER pair, Play's two actions).
+  // flexBasis 0 + minWidth 0 + maxWidth 100% collapses to ~0 width on iOS
+  // Yoga: the row keeps its height, so the dock shows an empty ink gap and
+  // the label never paints. A percent basis and a 48pt floor stay visible
+  // from iPhone SE through a small Android phone.
+  const flat = StyleSheet.flatten(style);
+  const grow = typeof flat?.flexGrow === 'number' ? flat.flexGrow : 0;
+  const rowShare = !hug && width == null && grow > 0;
+  const rawBasis = flat?.flexBasis;
+  const callerMin = typeof flat?.minWidth === 'number' ? flat.minWidth : 0;
+  const shareMin = Math.max(PIXEL_TAP_PT, callerMin);
   return (
     <Pressable
       onPress={onPress}
@@ -454,13 +476,14 @@ export function PixelButton({
       style={({ pressed }) => [
         style,
         {
-          width: hugW,
-          minWidth: hug ? Math.max(112, hugW ?? 112) : undefined,
-          maxWidth: '100%',
+          ...(hugW != null ? { width: hugW } : null),
+          minWidth: hug ? Math.max(112, hugW ?? 112) : rowShare ? shareMin : undefined,
+          ...(rowShare ? null : { maxWidth: '100%' as const }),
           height: faceH,
           minHeight: faceH,
-          flexShrink: 0,
+          flexShrink: rowShare ? 1 : 0,
           flexGrow: hug ? 0 : undefined,
+          ...(rowShare && rawBasis === 0 ? { flexBasis: '0%' as const } : null),
           opacity: disabled ? 0.4 : pressed && !alive ? 0.82 : 1,
           transform: [{ translateY: pressed && !disabled && alive ? ART_PT : 0 }],
         },
@@ -482,6 +505,8 @@ export function PixelButton({
             color={text}
             shadowColor={shade}
             numberOfLines={1}
+            adjustsFontSizeToFit={rowShare}
+            minimumFontScale={0.55}
             style={{ fontSize, lineHeight, textAlign: 'center', alignSelf: 'stretch' }}>
             {lines.title}
           </PixelLabel>
