@@ -301,14 +301,14 @@ export function DiveScreen({
             </View>
           ) : (
             <View style={styles.dockButtons}>
-              <PixelBody size="sm" numberOfLines={2} style={styles.note}>{hint}</PixelBody>
+              <PixelBody size="sm" numberOfLines={4} style={styles.note}>{hint}</PixelBody>
               {run.active && run.preview ? (
-                <PixelBody size="sm" numberOfLines={1} style={styles.note}>
+                <PixelBody size="sm" numberOfLines={2} style={styles.note}>
                   Lamp: Safer holds {findName(run.preview.safe)} · Richer holds {findName(run.preview.rich)}.
                 </PixelBody>
               ) : null}
               {run.active && run.netOn && !run.free ? (
-                <PixelBody size="sm" numberOfLines={1} style={styles.note}>Net: surfacing now adds one more find.</PixelBody>
+                <PixelBody size="sm" numberOfLines={2} style={styles.note}>Net: surfacing now adds one more find.</PixelBody>
               ) : null}
               <PixelBody size="sm" numberOfLines={2} style={styles.note}>
                 Powers today: {run.powersToday}/{run.powersCap}
