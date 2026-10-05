@@ -2,8 +2,9 @@
  * Dev-only device frames for the pet room, Dive, and the two pet games.
  * Open /play?shot=pet&inset=se (or dive, catch, train, play; inset 15 | max | and).
  * Dive accepts phase=pre (the DIVE button) or phase=mid (DEEPER + SURFACE).
- * The inset is the safe area for that phone, so the flex layout is the one
- * a real device gives the screen. Not linked from the hub.
+ * Catch and Train are the full-screen plate with ambient on, so a frame can
+ * be compared to the mockup. The inset is the safe area for that phone, so
+ * the flex layout is the one a real device gives the screen. Not linked from the hub.
  */
 import { StyleSheet, View } from 'react-native';
 
@@ -16,7 +17,7 @@ import { CatchFoodGame, TapTrainGame, type GamePet } from '@/play/pet-games';
 import { usePetArt } from '@/play/pet-anim-sprite';
 import { EGG_COLOR } from '@/play/pet-eggs';
 import { PIXEL } from '@/play/pixel-theme';
-import { PixelLabel } from '@/play/pixel-ui';
+import { PixelLabel, usePixelFonts } from '@/play/pixel-ui';
 import { NEON } from '@/play/neon-viper';
 
 export type LayoutShotKind = 'pet' | 'dive' | 'catch' | 'train' | 'play';
@@ -66,13 +67,8 @@ function GameFrame({ kind, view }: { kind: 'catch' | 'train'; view: PlayView }) 
     recolor: null,
     glow: PIXEL.cyan,
   };
-  const props = { onDone: () => undefined, level: 'normal' as const, gamePet, still: true };
-  return (
-    <View style={styles.sheet}>
-      <PixelLabel numberOfLines={1}>{kind === 'catch' ? 'Catch the food' : 'Tap to train'}</PixelLabel>
-      {kind === 'catch' ? <CatchFoodGame {...props} /> : <TapTrainGame {...props} />}
-    </View>
-  );
+  const props = { onDone: () => undefined, onBack: () => undefined, level: 'normal' as const, gamePet, still: false };
+  return kind === 'catch' ? <CatchFoodGame {...props} /> : <TapTrainGame {...props} />;
 }
 
 /** The pet room, Dive, or a pet game, in a safe-area frame. */
@@ -85,6 +81,7 @@ export function LayoutShot({
   inset: LayoutInset;
   phase?: LayoutPhase;
 }) {
+  usePixelFonts();
   const now = 1_700_000_000_000;
   const view = playView(shotDoc(now, kind, phase), now);
   const pad = INSET[inset];
@@ -107,11 +104,8 @@ export function LayoutShot({
           <PixelLabel numberOfLines={1}>Play</PixelLabel>
           <PlaySheetBody
             view={view}
-            game={null}
             onStart={() => undefined}
-            onRoundDone={() => () => undefined}
             lastResult={null}
-            gamePet={null}
             still
           />
         </View>
