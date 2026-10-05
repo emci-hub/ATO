@@ -35,10 +35,30 @@ import { POLE_COMBOS } from '@/lib/legends64/classify';
  * so code 'LHL-LLH' composes to 'Watchful Senpai', not a repeated word.
  */
 
-export type LegendSkin = 'real' | 'gaming' | 'godType' | 'anime' | 'funny' | 'dark';
+/**
+ * Name styles v2 (emci, 2026-10-05): Plain ('real') became Primal Genius
+ * ('primal', the new default), and High Fantasy, Corporate Realist and
+ * Oxymoron were added. Primal Genius, Corporate Realist and Oxymoron are
+ * THREE words: the extra word comes from Growth x Composure x Playfulness
+ * (THIRD_WORDS below). Every word is still earned from three traits. A saved
+ * 'real' choice is no longer a style, so it opens as the default.
+ */
+export type LegendSkin =
+  | 'primal'
+  | 'gaming'
+  | 'godType'
+  | 'anime'
+  | 'funny'
+  | 'dark'
+  | 'highFantasy'
+  | 'corporate'
+  | 'oxymoron';
 
 export const LEGEND_SKINS: readonly LegendSkin[] = [
-  'real',
+  'primal',
+  'highFantasy',
+  'corporate',
+  'oxymoron',
   'gaming',
   'godType',
   'anime',
@@ -46,11 +66,17 @@ export const LEGEND_SKINS: readonly LegendSkin[] = [
   'dark',
 ];
 
+/**
+ * The new words are draft until emci reads them (the six older styles were
+ * approved 2026-10-02, LEGENDS64_COPY_REVIEWED below).
+ */
+export const NAME_STYLES_V2_COPY_REVIEWED = false;
+
 export function isLegendSkin(value: unknown): value is LegendSkin {
   return typeof value === 'string' && (LEGEND_SKINS as readonly string[]).includes(value);
 }
 
-export const DEFAULT_LEGEND_SKIN: LegendSkin = 'real';
+export const DEFAULT_LEGEND_SKIN: LegendSkin = 'primal';
 
 /** Unreviewed — see this file's header. Gate any UI render on this, matching sage-story.ts/category-batch.ts's convention. */
 // emci approved 2026-10-02, with 13 words replaced in the funny, dark and
@@ -68,15 +94,45 @@ type SkinMap = Readonly<Record<LegendSkin, PoleComboMap>>;
  * 'CEO', LHH = draft's 'cEO', etc.).
  */
 export const CORE_ROLES: SkinMap = {
-  real: {
-    HHH: 'Founder',
-    HHL: 'Executive',
+  primal: {
+    HHH: 'Ringmaster',
+    HHL: 'Captain',
+    HLH: 'Mad Scientist',
+    HLL: 'Archivist',
+    LHH: 'Artist',
+    LHL: 'Host',
+    LLH: 'Poet',
+    LLL: 'Hermit',
+  },
+  highFantasy: {
+    HHH: 'Pathfinder',
+    HHL: 'Warden',
+    HLH: 'Architect',
+    HLL: 'Keeper',
+    LHH: 'Rebel',
+    LHL: 'Champion',
+    LLH: 'Starcaller',
+    LLL: 'Nomad',
+  },
+  corporate: {
+    HHH: 'Director',
+    HHL: 'Manager',
+    HLH: 'Strategist',
+    HLL: 'Perfectionist',
+    LHH: 'Creative',
+    LHL: 'Networker',
+    LLH: 'Freelancer',
+    LLL: 'Remote Worker',
+  },
+  oxymoron: {
+    HHH: 'Leader',
+    HHL: 'Boss',
     HLH: 'Inventor',
-    HLL: 'Specialist',
-    LHH: 'Creative Director',
-    LHL: 'Account Manager',
-    LLH: 'Consultant',
-    LLL: 'Freelancer',
+    HLL: 'Planner',
+    LHH: 'Showrunner',
+    LHL: 'Host',
+    LLH: 'Writer',
+    LLL: 'Drifter',
   },
   gaming: {
     HHH: 'Vanguard',
@@ -137,15 +193,46 @@ export const CORE_ROLES: SkinMap = {
  * draft's 'ASR', LHH = draft's 'aSR', etc.).
  */
 export const MODIFIER_DESCRIPTORS: SkinMap = {
-  real: {
-    HHH: 'People-First',
-    HHL: 'Self-Made',
-    HLH: 'Team-Oriented',
-    HLL: 'Independent',
-    LHH: 'Results-Driven',
-    LHL: 'Self-Reliant',
-    LLH: 'Behind-the-Scenes',
-    LLL: 'Low-Key',
+  primal: {
+    HHH: 'Warm',
+    HHL: 'Breezy',
+    HLH: 'Gentle',
+    HLL: 'Dreamy',
+    LHH: 'Fierce',
+    LHL: 'Stubborn',
+    LLH: 'Dry-Witted',
+    LLL: 'Stoic',
+  },
+  highFantasy: {
+    HHH: 'Golden',
+    HHL: 'Boundless',
+    HLH: 'Evergreen',
+    HLL: 'Moonlit',
+    LHH: 'Great',
+    LHL: 'Iron',
+    LLH: 'Twilight',
+    LLL: 'Last',
+  },
+  corporate: {
+    HHH: 'Optimistic',
+    HHL: 'Chill',
+    HLH: 'Agreeable',
+    HLL: 'Daydreaming',
+    LHH: 'Blunt',
+    LHL: 'Unfiltered',
+    LLH: 'Skeptical',
+    LLL: 'Heads-Down',
+  },
+  // Always the SOFT half of the paradox, so every name contradicts.
+  oxymoron: {
+    HHH: 'Polite',
+    HHL: 'Cheerful',
+    HLH: 'Gentle',
+    HLL: 'Sleepy',
+    LHH: 'Friendly',
+    LHL: 'Lazy',
+    LLH: 'Shy',
+    LLL: 'Quiet',
   },
   gaming: {
     HHH: 'Healing',
@@ -199,6 +286,66 @@ export const MODIFIER_DESCRIPTORS: SkinMap = {
   },
 };
 
+/**
+ * The third word, per three-word style, per 3-letter code (growth_mindset x
+ * steadiness x playfulness — classify.ts THIRD_AXES order).
+ * Primal Genius: a primal need or physical state. Corporate Realist: a work
+ * habit (opt-in only — a person sees it only by picking that style).
+ * Oxymoron: always the SHARP half of the paradox.
+ */
+export const THIRD_WORDS: Readonly<Partial<Record<LegendSkin, PoleComboMap>>> = {
+  primal: {
+    HHH: 'Caffeinated',
+    HHL: 'Hungry',
+    HLH: 'Wired',
+    HLL: 'Sleepless',
+    LHH: 'Sun-Warmed',
+    LHL: 'Well-Rested',
+    LLH: 'Restless',
+    LLL: 'Nocturnal',
+  },
+  corporate: {
+    HHH: 'Podcast-Fueled',
+    HHL: 'Upskilling',
+    HLH: 'Double-Shot',
+    HLL: 'Overthinking',
+    LHH: 'Out-of-Office',
+    LHL: 'Nine-to-Five',
+    LLH: 'Meme-Sharing',
+    LLL: 'Burned-Out',
+  },
+  oxymoron: {
+    HHH: 'Anarchist',
+    HHL: 'Overachiever',
+    HLH: 'Firestarter',
+    HLL: 'Mastermind',
+    LHH: 'Troublemaker',
+    LHL: 'Hardliner',
+    LLH: 'Wildcard',
+    LLL: 'Lone Wolf',
+  },
+};
+
+/** Whether a style is three words (it needs the third code to be finished). */
+export function isThreeWordSkin(skin: LegendSkin): boolean {
+  return THIRD_WORDS[skin] != null;
+}
+
+/**
+ * Puts the parts in the style's own order (null = not settled yet, shown as
+ * "…"). Primal Genius and Corporate Realist: third + descriptor + role
+ * ("Hungry Stoic Archivist"). Oxymoron: soft descriptor + sharp third + role
+ * ("Polite Anarchist Leader"). Two-word styles: descriptor + role.
+ */
+export function composeName(
+  skin: LegendSkin,
+  parts: { third: string | null; descriptor: string | null; role: string | null },
+): (string | null)[] {
+  if (!isThreeWordSkin(skin)) return [parts.descriptor, parts.role];
+  if (skin === 'oxymoron') return [parts.descriptor, parts.third, parts.role];
+  return [parts.third, parts.descriptor, parts.role];
+}
+
 /** Splits a full code ('HHH-LHL') into its core and modifier halves. */
 export function splitArchetypeCode(code: string): { core: string; modifier: string } | null {
   const parts = code.split('-');
@@ -212,19 +359,24 @@ export function splitArchetypeCode(code: string): { core: string; modifier: stri
 /**
  * Resolves the display name for a full archetype code under a given skin:
  * "descriptor + role, no articles" (the archive draft's own rule), e.g.
- * archetypeName('LHH-HHH', 'real') === 'People-First Creative Director'
- * (the plan's own worked example). Returns null for an invalid code or an
+ * archetypeName('LHH-LHH', 'highFantasy') === 'Great Rebel', and with a third
+ * code archetypeName('LHH-HHH', 'primal', 'HHL') === 'Hungry Warm Artist'. Returns null for an invalid code or an
  * unrecognized skin — callers should treat that as a data bug, not a
  * silent fallback (use `isLegendSkin` to validate a persisted/user-chosen
  * skin value before calling this, since an unvalidated runtime string
  * would otherwise need a try/catch here instead of a clean null).
  */
-export function archetypeName(code: string, skin: LegendSkin): string | null {
+export function archetypeName(code: string, skin: LegendSkin, third3?: string): string | null {
   if (!isLegendSkin(skin)) return null;
   const split = splitArchetypeCode(code);
   if (!split) return null;
   const descriptor = MODIFIER_DESCRIPTORS[skin][split.modifier];
   const role = CORE_ROLES[skin][split.core];
   if (!descriptor || !role) return null;
-  return `${descriptor} ${role}`;
+  // A three-word style with a third code gets its third word; without one
+  // (the Legends tab only knows the 64 codes) it reads as two words.
+  const third = third3 && POLE_COMBOS.includes(third3) ? (THIRD_WORDS[skin]?.[third3] ?? null) : null;
+  return composeName(skin, { third, descriptor, role })
+    .filter((part): part is string => part != null)
+    .join(' ');
 }

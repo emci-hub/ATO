@@ -70,7 +70,11 @@ export const ShareCard = forwardRef<View, { me: SharePerson; content: ShareCardC
                 </View>
               ) : null}
               <ThemedText style={[styles.kicker, { color: accent.light }]}>MY ATO</ThemedText>
-              <ThemedText style={styles.title}>{content.title}</ThemedText>
+              {/* Three-word names can run long: two lines, shrunk to fit, so the
+                  QR below never moves. */}
+              <ThemedText style={styles.title} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.6}>
+                {content.title}
+              </ThemedText>
               {/* With the shape on the card the three lines would push the QR off
                   a 9:16 image, so the shape stands in for them. */}
               <View style={styles.traits}>

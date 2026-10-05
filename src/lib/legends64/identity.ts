@@ -15,18 +15,22 @@
  *    crosses the middle by POLE_FLIP_MARGIN. Without this, one answer near the
  *    middle would rename the person from one day to the next.
  */
-import { CORE_AXES, MODIFIER_AXES, type Pole } from '@/lib/legends64/classify';
+import { CORE_AXES, MODIFIER_AXES, THIRD_AXES, type Pole } from '@/lib/legends64/classify';
 import {
   CORE_ROLES,
+  DEFAULT_LEGEND_SKIN,
   MODIFIER_DESCRIPTORS,
+  THIRD_WORDS,
+  composeName,
   isLegendSkin,
+  isThreeWordSkin,
   type LegendSkin,
 } from '@/lib/legends64/archetypes';
 import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
 import { isAxisSettled, trackFor, type TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis, type TraitLean } from '@/lib/traits';
 
-export const IDENTITY_AXES: readonly TraitAxis[] = [...CORE_AXES, ...MODIFIER_AXES];
+export const IDENTITY_AXES: readonly TraitAxis[] = [...CORE_AXES, ...MODIFIER_AXES, ...THIRD_AXES];
 export const POLE_FLIP_MARGIN = 0.05;
 
 export type LockedPoles = Partial<Record<TraitAxis, Pole>>;
@@ -74,6 +78,11 @@ export interface IdentityView {
   /** Null until all three of that half's letters are locked. */
   coreCode: string | null;
   modifierCode: string | null;
+  /** The three-word styles' extra word (Growth x Composure x Playfulness). */
+  thirdCode: string | null;
+  /** Which identity traits have a locked letter. */
+  lockedAxes: readonly TraitAxis[];
+  /** The two-word name is settled (core + modifier). */
   complete: boolean;
 }
 
@@ -82,9 +91,13 @@ export function identityView(poles: LockedPoles): IdentityView {
   const modifierCode = codeFor(poles, MODIFIER_AXES);
   return {
     lockedCount: IDENTITY_AXES.filter((axis) => poles[axis]).length,
+    lockedAxes: IDENTITY_AXES.filter((axis) => poles[axis]),
     total: IDENTITY_AXES.length,
     coreCode,
     modifierCode,
+    thirdCode: codeFor(poles, THIRD_AXES),
+    // The two-word name: the 6 core + modifier traits. The third word fills
+    // in on its own as Growth, Composure and Playfulness settle.
     complete: coreCode != null && modifierCode != null,
   };
 }
@@ -92,22 +105,38 @@ export function identityView(poles: LockedPoles): IdentityView {
 export const IDENTITY_FORMING_TITLE = 'Still forming';
 
 /**
- * "People-First Founder" once all six are locked. With only one half locked it
- * shows that half and an ellipsis for the other, so the name visibly fills in.
+ * "Warm Ringmaster" / "Hungry Warm Ringmaster" once every word is locked.
+ * Until then each missing stretch shows as one "…", so the name visibly
+ * fills in ("… Ringmaster", never "… … Ringmaster").
  */
 export function identityTitle(view: IdentityView, skin: LegendSkin): string {
   if (!isLegendSkin(skin)) return IDENTITY_FORMING_TITLE;
   const role = view.coreCode ? CORE_ROLES[skin][view.coreCode] : null;
   const descriptor = view.modifierCode ? MODIFIER_DESCRIPTORS[skin][view.modifierCode] : null;
-  if (descriptor && role) return `${descriptor} ${role}`;
-  if (role) return `… ${role}`;
-  if (descriptor) return `${descriptor} …`;
-  return IDENTITY_FORMING_TITLE;
+  const third = view.thirdCode ? (THIRD_WORDS[skin]?.[view.thirdCode] ?? null) : null;
+  if (!role && !descriptor && !third) return IDENTITY_FORMING_TITLE;
+  // Each unsettled word shows as "…", so the name visibly fills in.
+  return composeName(skin, { third, descriptor, role })
+    .map((part) => part ?? '…')
+    .filter((part, i, all) => !(part === '…' && all[i - 1] === '…'))
+    .join(' ');
 }
 
-export function identityProgressLine(view: IdentityView): string | null {
-  if (view.complete) return null;
-  return `${view.lockedCount} of ${view.total} settled. Answer more questions to finish the name.`;
+/** How many traits a style's name is made from: 9 for three words, 6 for two. */
+export function identityTraitCount(skin: LegendSkin): number {
+  return isThreeWordSkin(skin) ? IDENTITY_AXES.length : CORE_AXES.length + MODIFIER_AXES.length;
+}
+
+/** Whether every word of the name in this style is settled. */
+export function identityCompleteFor(view: IdentityView, skin: LegendSkin): boolean {
+  return view.complete && (!isThreeWordSkin(skin) || view.thirdCode != null);
+}
+
+export function identityProgressLine(view: IdentityView, skin: LegendSkin = DEFAULT_LEGEND_SKIN): string | null {
+  if (identityCompleteFor(view, skin)) return null;
+  const axes = isThreeWordSkin(skin) ? IDENTITY_AXES : [...CORE_AXES, ...MODIFIER_AXES];
+  const locked = axes.filter((axis) => view.lockedAxes.includes(axis)).length;
+  return `${locked} of ${axes.length} settled. Answer more questions to finish the name.`;
 }
 
 /**
@@ -155,7 +184,10 @@ export function topTraitPhrases(tracks: readonly TraitTrack[], count = 3): strin
 }
 
 export const SKIN_LABEL: Record<LegendSkin, string> = {
-  real: 'Plain',
+  primal: 'Primal Genius',
+  highFantasy: 'High Fantasy',
+  corporate: 'Corporate Realist',
+  oxymoron: 'Oxymoron',
   gaming: 'Gaming',
   godType: 'Mythic',
   anime: 'Anime',

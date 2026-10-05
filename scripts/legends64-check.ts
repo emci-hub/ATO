@@ -17,10 +17,13 @@ import {
   CORE_ROLES,
   DEFAULT_LEGEND_SKIN,
   isLegendSkin,
+  isThreeWordSkin,
   LEGEND_SKINS,
   LEGENDS64_COPY_REVIEWED,
   MODIFIER_DESCRIPTORS,
+  NAME_STYLES_V2_COPY_REVIEWED,
   splitArchetypeCode,
+  THIRD_WORDS,
 } from '../src/lib/legends64/archetypes';
 import { matchingJargonTerm } from '../src/lib/voice/jargon';
 
@@ -86,18 +89,44 @@ for (const skin of LEGEND_SKINS) {
     assert.ok(MODIFIER_DESCRIPTORS[skin][combo], `MODIFIER_DESCRIPTORS.${skin}.${combo} is non-empty`);
   }
 }
-ok('all 6 skins have complete 8-entry core + modifier content');
+ok(`all ${LEGEND_SKINS.length} skins have complete 8-entry core + modifier content`);
 
 const allComposedNames: string[] = [];
+let threeWordCount = 0;
 for (const code of ALL_ARCHETYPE_CODES) {
   for (const skin of LEGEND_SKINS) {
-    const name = archetypeName(code, skin);
-    assert.ok(name && name.length > 0, `archetypeName(${code}, ${skin}) resolves to a non-empty name`);
-    allComposedNames.push(name!);
+    if (isThreeWordSkin(skin)) {
+      for (const third of POLE_COMBOS) {
+        const name = archetypeName(code, skin, third);
+        assert.ok(name && name.split(' ').length >= 3, `archetypeName(${code}, ${skin}, ${third}) is three words`);
+        allComposedNames.push(name!);
+        threeWordCount += 1;
+      }
+    } else {
+      const name = archetypeName(code, skin);
+      assert.ok(name && name.length > 0, `archetypeName(${code}, ${skin}) resolves to a non-empty name`);
+      allComposedNames.push(name!);
+    }
   }
 }
-assert.equal(allComposedNames.length, 384, '64 codes x 6 skins = 384 composed names');
-ok('every one of the 64 codes resolves a name under all 6 skins (384 combinations)');
+assert.equal(LEGEND_SKINS.length, 9, 'Primal Genius replaced Plain; High Fantasy, Corporate Realist and Oxymoron added');
+assert.equal(LEGEND_SKINS.filter(isThreeWordSkin).length, 3);
+assert.equal(threeWordCount, 3 * 64 * 8);
+assert.equal(allComposedNames.length, 6 * 64 + 3 * 64 * 8, 'every two- and three-word combination resolves');
+for (const skin of LEGEND_SKINS.filter(isThreeWordSkin)) {
+  for (const combo of POLE_COMBOS) assert.ok(THIRD_WORDS[skin]?.[combo], `THIRD_WORDS.${skin}.${combo} is non-empty`);
+}
+ok(`every code resolves a name under all ${LEGEND_SKINS.length} styles (${allComposedNames.length} names)`);
+
+// Name styles v2 (emci, 2026-10-05): fictional character names may tease, but
+// never a clinical word, and every name fits the share image.
+const CLINICAL = /(anxious|anxiety|depress\w*|ocd|adhd|bipolar|autis\w*|narcissis\w*|psycho\w*|schizo\w*|toxic|addict\w*|trauma\w*|disorder\w*|panic|suicid\w*|mental)/i;
+for (const name of allComposedNames) {
+  assert.doesNotMatch(name, CLINICAL, `"${name}" uses a clinical word`);
+  assert.ok(name.length <= 40, `"${name}" is ${name.length} characters (max 40: the share image fits it on two lines, shrunk to fit)`);
+}
+assert.equal(NAME_STYLES_V2_COPY_REVIEWED, false, 'the new words are draft until emci reads them');
+ok('no clinical words, every name is 40 characters or less, and the new words are draft');
 
 for (const name of allComposedNames) {
   assert.doesNotMatch(name, /\bThe\s+.*\bThe\b/i, `"${name}" should not double up an article/title word`);
@@ -105,17 +134,21 @@ for (const name of allComposedNames) {
 }
 ok('no composed name shows the double-article/run-on defect caught in review (e.g. "The X The Y")');
 
+assert.equal(DEFAULT_LEGEND_SKIN, 'primal', 'Primal Genius replaced Plain as the default (2026-10-05)');
+assert.equal(archetypeName('LHH-HHH', 'primal', 'HHL'), 'Hungry Warm Artist');
+assert.equal(archetypeName('HHH-HHH', 'oxymoron', 'HHH'), 'Polite Anarchist Leader', 'oxymoron: soft, sharp, role');
+assert.equal(archetypeName('LHH-LHH', 'highFantasy'), 'Great Rebel');
 assert.equal(
-  archetypeName('LHH-HHH', DEFAULT_LEGEND_SKIN),
-  'People-First Creative Director',
+  archetypeName('LHH-HHH', 'gaming'),
+  'Healing Bard',
   "matches the plan's own worked example (core=LHH i.e. low-conscientiousness/high-extraversion/high-openness, modifier=HHH i.e. all-high) — corrected in review from an earlier, wrong HHH-HHH assumption",
 );
-ok("plan's worked example ('People-First Creative Director') reproduced exactly at the correct code");
+ok("worked examples compose in each style's own word order");
 
-assert.equal(archetypeName('XXX-HHH', 'real'), null, 'invalid core half returns null, not a silent fallback');
-assert.equal(archetypeName('HHH-XXX', 'real'), null, 'invalid modifier half returns null, not a silent fallback');
-assert.equal(archetypeName('HHH', 'real'), null, 'malformed code (no modifier half) returns null');
-assert.equal(archetypeName('HHH-HHH-XXX', 'real'), null, 'malformed code (extra segment) returns null, not a silent match on the first two parts');
+assert.equal(archetypeName('XXX-HHH', 'gaming'), null, 'invalid core half returns null, not a silent fallback');
+assert.equal(archetypeName('HHH-XXX', 'gaming'), null, 'invalid modifier half returns null, not a silent fallback');
+assert.equal(archetypeName('HHH', 'gaming'), null, 'malformed code (no modifier half) returns null');
+assert.equal(archetypeName('HHH-HHH-XXX', 'gaming'), null, 'malformed code (extra segment) returns null, not a silent match on the first two parts');
 assert.equal(
   archetypeName('HHH-HHH', 'not-a-real-skin' as never),
   null,
@@ -123,7 +156,8 @@ assert.equal(
 );
 ok('invalid codes and unrecognized skins return null rather than throwing or a silent/wrong fallback');
 
-assert.equal(isLegendSkin('real'), true);
+assert.equal(isLegendSkin('real'), false, 'Plain is retired; a saved "real" opens as the default');
+assert.equal(isLegendSkin('primal'), true);
 assert.equal(isLegendSkin('dark'), true);
 assert.equal(isLegendSkin('nonsense'), false);
 assert.equal(isLegendSkin(null), false);
@@ -132,13 +166,11 @@ ok('isLegendSkin validates a persisted/user-chosen skin string before it reaches
 // emci approved the names on 2026-10-02 after 13 words were replaced.
 assert.equal(LEGENDS64_COPY_REVIEWED, true);
 for (const word of ['Rizzy', 'MIA', 'Petty', 'Judgy', 'Savage', 'Cult Leader', 'Ruthless', 'Unrepentant', 'Tsundere', 'Dandere', 'Kuudere', 'Kakkoii', 'Genius Loner']) {
-  for (const skin of LEGEND_SKINS) {
-    for (const code of ALL_ARCHETYPE_CODES) {
-      assert.ok(!archetypeName(code, skin)!.includes(word), `retired word "${word}" is back in ${skin} ${code}`);
-    }
+  for (const name of allComposedNames) {
+    assert.ok(!name.includes(word), `retired word "${word}" is back in "${name}"`);
   }
 }
-ok('LEGENDS64_COPY_REVIEWED is true, and none of the 13 retired words appears in any of the 384 names');
+ok(`LEGENDS64_COPY_REVIEWED is true, and none of the 13 retired words appears in any of the ${allComposedNames.length} names`);
 
 const allAuthoredStrings: string[] = [];
 for (const skin of LEGEND_SKINS) {

@@ -14,7 +14,7 @@
  */
 import { AXIS_POLE_NAME, AXIS_POLES, AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { CATEGORY_DEFS } from '@/lib/categories';
-import { CORE_AXES, MODIFIER_AXES } from '@/lib/legends64/classify';
+import { CORE_AXES, MODIFIER_AXES, THIRD_AXES } from '@/lib/legends64/classify';
 import { isAxisSettled, trackFor, type TraitTrack } from '@/lib/trait-stability';
 import type { TraitAxis, TraitLean } from '@/lib/traits';
 
@@ -27,7 +27,7 @@ export const YOUR_SIDE_LEAD = 'You lean';
 
 export const IDENTITY_RECIPE_LABEL = 'How this name is made';
 export const IDENTITY_RECIPE_LEDE =
-  'Two words, three traits each. A word locks in once all three of its traits are settled.';
+  'Every word comes from three traits. A word locks in once all three are settled.';
 
 /** How far from the middle before a lean is named at all. */
 const LEAN_MARGIN = 0.05;
@@ -78,8 +78,19 @@ export function showsUpInLine(axis: TraitAxis): string {
   return `Part of: ${list}.`;
 }
 
-/** The identity name's two halves and the traits behind each. */
-export function identityRecipe(tracks: readonly TraitTrack[]): { first: ShapedByRow[]; second: ShapedByRow[] } {
-  // The first word of the name is the descriptor (modifier axes); the second is the role (core axes).
-  return { first: shapedByRows(MODIFIER_AXES, tracks), second: shapedByRows(CORE_AXES, tracks) };
+/**
+ * The identity name's parts and the traits behind each: the describing word
+ * (modifier axes), the role (core axes) and, for the three-word styles, the
+ * extra word (Growth x Composure x Playfulness, name styles v2).
+ */
+export function identityRecipe(tracks: readonly TraitTrack[]): {
+  first: ShapedByRow[];
+  second: ShapedByRow[];
+  third: ShapedByRow[];
+} {
+  return {
+    first: shapedByRows(MODIFIER_AXES, tracks),
+    second: shapedByRows(CORE_AXES, tracks),
+    third: shapedByRows(THIRD_AXES, tracks),
+  };
 }

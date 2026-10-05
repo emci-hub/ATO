@@ -105,6 +105,7 @@ ok('every trait knows which categories it is part of, matching the category cata
 const recipe = identityRecipe([]);
 assert.deepEqual(recipe.first.map((r) => r.axis), [...MODIFIER_AXES]);
 assert.deepEqual(recipe.second.map((r) => r.axis), [...CORE_AXES]);
+assert.deepEqual(recipe.third.map((r) => r.axis), ['growth_mindset', 'steadiness', 'playfulness']);
 ok('the name recipe lists the first word’s three traits and the second word’s three, in the classifier’s order');
 
 // --- wiring ----------------------------------------------------------------------

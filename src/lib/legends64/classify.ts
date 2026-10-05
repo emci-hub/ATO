@@ -25,6 +25,13 @@ export const MODIFIER_AXES: readonly TraitAxis[] = [
   'relatedness',
 ];
 
+/**
+ * Third-word axes (name styles v2, emci 2026-10-05): Growth x Composure x
+ * Playfulness, the order the third code is built from. Only the three-word
+ * styles (Primal Genius, Corporate Realist, Oxymoron) use it.
+ */
+export const THIRD_AXES: readonly TraitAxis[] = ['growth_mindset', 'steadiness', 'playfulness'];
+
 export type Pole = 'H' | 'L';
 
 /**
@@ -58,6 +65,11 @@ export function coreCode(values: LegendValues): string {
 /** 3-letter H/L code from agreeableness x conflict_assertiveness x relatedness. */
 export function modifierCode(values: LegendValues): string {
   return poleString(values, MODIFIER_AXES);
+}
+
+/** 3-letter H/L code from growth_mindset x steadiness x playfulness. */
+export function thirdCode(values: LegendValues): string {
+  return poleString(values, THIRD_AXES);
 }
 
 /**

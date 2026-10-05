@@ -260,13 +260,25 @@ const settledSix = [
   track('relatedness', 0.8),
 ];
 const locked = nextLockedPoles(settledSix, {});
-assert.equal(identityTitle(identityView(locked), 'real'), 'People-First Founder');
-ok('six settled traits give the full archetype name');
+// Name styles v2 (2026-10-05): two-word styles are whole at six traits; the
+// three-word default (Primal Genius) shows "…" until its third word settles.
+assert.equal(identityTitle(identityView(locked), 'highFantasy'), 'Golden Pathfinder');
+assert.equal(identityTitle(identityView(locked), 'primal'), '… Warm Ringmaster');
+const settledNine = [
+  ...settledSix,
+  track('growth_mindset', 0.8),
+  track('steadiness', 0.8),
+  track('playfulness', 0.2),
+];
+const lockedNine = nextLockedPoles(settledNine, {});
+assert.equal(identityTitle(identityView(lockedNine), 'primal'), 'Hungry Warm Ringmaster');
+assert.equal(identityTitle(identityView(lockedNine), 'oxymoron'), 'Polite Overachiever Leader');
+ok('six settled traits give the two-word name; nine give the three-word name');
 
 const unsettled = settledSix.map((row) => ({ ...row, answerCount: 2 }));
-assert.equal(identityTitle(identityView(nextLockedPoles(unsettled, {})), 'real'), IDENTITY_FORMING_TITLE);
+assert.equal(identityTitle(identityView(nextLockedPoles(unsettled, {})), 'primal'), IDENTITY_FORMING_TITLE);
 const coreOnly = nextLockedPoles(settledSix.slice(0, 3), {});
-assert.equal(identityTitle(identityView(coreOnly), 'real'), '… Founder');
+assert.equal(identityTitle(identityView(coreOnly), 'highFantasy'), '… Pathfinder');
 ok('unsettled traits stay "forming" and a half-locked name shows the half');
 
 const wobble = settledSix.map((row) => (row.axis === 'openness' ? { ...row, value: 0.48 } : row));

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { InfoReveal, ShapedByList } from '@/components/info-reveal';
@@ -22,10 +22,13 @@ import {
   DEFAULT_LEGEND_SKIN,
   LEGENDS64_COPY_REVIEWED,
   LEGEND_SKINS,
+  NAME_STYLES_V2_COPY_REVIEWED,
+  isThreeWordSkin,
   type LegendSkin,
 } from '@/lib/legends64/archetypes';
 import {
   SKIN_LABEL,
+  identityCompleteFor,
   identityProgressLine,
   identityTitle,
   identityView,
@@ -61,7 +64,7 @@ export const IDENTITY_STYLE_UNLOCKED_TITLE = 'New name style';
 export const IDENTITY_STYLE_CREDIT = 'You already paid for a style. Pick one, no charge.';
 
 /**
- * The permanent, shareable half of the content loop: who you are in two words,
+ * The permanent, shareable half of the content loop: who you are in two or three words,
  * three phrases under it, and an image to send. No model call anywhere.
  */
 export function IdentityCard({
@@ -96,7 +99,12 @@ export function IdentityCard({
         // The name just filled in, or changed: the mini guy says so, once per name.
         const before = identityView(stored.poles);
         const after = identityView(poles);
-        if (after.complete && (!before.complete || !samePoles(poles, stored.poles))) {
+        // Only a whole name is announced (three words for a three-word style).
+        // Compared by the name itself: a letter that a two-word style doesn't
+        // use can lock without anything to announce.
+        const wholeNow = identityCompleteFor(after, next.skin);
+        const renamed = identityTitle(before, next.skin) !== identityTitle(after, next.skin);
+        if (wholeNow && (!identityCompleteFor(before, next.skin) || renamed)) {
           const name = identityTitle(after, next.skin);
           pushBuddyNote({ id: `identity:${name}`, title: IDENTITY_LOCKED_TITLE, body: name, loud: true });
         }
@@ -141,7 +149,7 @@ export function IdentityCard({
   if (!state || !tracks) return null;
 
   const title = identityTitle(view, state.skin);
-  const progress = identityProgressLine(view);
+  const progress = identityProgressLine(view, state.skin);
   const credits = Math.max(0, paidCount - state.unlocked.length);
   const border = controlBorderColor(theme);
 
@@ -225,7 +233,7 @@ export function IdentityCard({
       <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
         {IDENTITY_KICKER}
       </ThemedText>
-      {!LEGENDS64_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
+      {!(LEGENDS64_COPY_REVIEWED && NAME_STYLES_V2_COPY_REVIEWED) && PRE_LAUNCH_DEV ? (
         <ThemedText type="code" themeColor="textSecondary">
           Draft copy — waiting on emci review.
         </ThemedText>
@@ -265,13 +273,21 @@ export function IdentityCard({
           {IDENTITY_RECIPE_LEDE}
         </ThemedText>
         <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
-          first word
+          describing word
         </ThemedText>
         <ShapedByList rows={recipe.first} />
         <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
-          second word
+          role
         </ThemedText>
         <ShapedByList rows={recipe.second} />
+        {isThreeWordSkin(state.skin) ? (
+          <>
+            <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
+              extra word
+            </ThemedText>
+            <ShapedByList rows={recipe.third} />
+          </>
+        ) : null}
       </InfoReveal>
 
       <View style={styles.styleRow}>
@@ -284,7 +300,7 @@ export function IdentityCard({
             {STYLE_ROW_LABEL}: {SKIN_LABEL[state.skin]} ›
           </ThemedText>
         </ThemedPressable>
-        {view.complete ? (
+        {identityCompleteFor(view, state.skin) ? (
           <ThemedPressable
             filled
             accessibilityRole="button"
@@ -319,7 +335,8 @@ export function IdentityCard({
       <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
         {IDENTITY_STYLE_LABEL}
       </ThemedText>
-      <View style={styles.sheetList}>
+      {/* Nine styles: the list scrolls on a small phone. */}
+      <ScrollView style={styles.sheetScroll} contentContainerStyle={styles.sheetList}>
         {LEGEND_SKINS.map((skin) => {
           const owned = NAME_STYLES_FREE || skin === DEFAULT_LEGEND_SKIN || state.unlocked.includes(skin);
           const on = state.skin === skin;
@@ -349,7 +366,7 @@ export function IdentityCard({
             </Pressable>
           );
         })}
-      </View>
+      </ScrollView>
       {credits > 0 && !NAME_STYLES_FREE ? (
         <ThemedText type="small" themeColor="textSecondary">
           {IDENTITY_STYLE_CREDIT}
@@ -430,6 +447,9 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     paddingBottom: Spacing.six,
     gap: Spacing.two,
+  },
+  sheetScroll: {
+    maxHeight: 440,
   },
   sheetList: {
     gap: Spacing.two,

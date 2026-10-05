@@ -153,7 +153,7 @@ Update: ${Updates.updateId ?? 'original build'}`);
             <ThemedText type="subtitle">You</ThemedText>
           </View>
 
-          {/* Who you are in two words, and the image to send a friend. */}
+          {/* Who you are in two or three words, and the image to send a friend. */}
           {me ? <IdentityCard me={me} onUpdated={refresh} /> : null}
 
           {/* Tokens: the balance and the last few earns / spends. */}
