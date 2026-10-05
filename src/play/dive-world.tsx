@@ -28,7 +28,8 @@ import Animated, {
 import { DRAGON_DEPTH } from '@/play/dive-fx-model';
 import { Drift, Flicker, MoteRise, SpriteSwap, Sway } from '@/play/pixel-ambient';
 import { ART_PT } from '@/play/pixel-theme';
-import { AtlasSprite, DIVE_FRAMES, MOCKUP_DIVE, mockupOrigin, type DiveFrame } from '@/play/pixel-atlas';
+import { AtlasSprite, DIVE_FRAMES, MOCKUP_DIVE, MOCKUP_PLATE, mockupOrigin, type DiveFrame } from '@/play/pixel-atlas';
+import { CausticWash, DitherPool, ParallaxLayer, useParallaxBob } from '@/play/pixel-fx';
 
 export const WALL_W = 34;
 
@@ -80,31 +81,71 @@ function frameBox(frame: string): { w: number; h: number } {
   return { w: rect.w * ART_PT, h: rect.h * ART_PT };
 }
 
+/** Plate bands in art pixels. They overlap so a bob does not open a seam. */
+const PLATE_BANDS = [
+  { y0: 0, y1: 168, factor: 0.25 },
+  { y0: 152, y1: 292, factor: 0.5 },
+  { y0: 276, y1: MOCKUP_PLATE.h, factor: 1 },
+] as const;
+
 /**
- * The mockup reef, fixed to the viewport (the camera does not slide a
- * different painting in). `alive` is full effects with motion allowed.
+ * One horizontal slice of the reef plate. The bitmap is the same atlas frame,
+ * clipped, so parallax costs no extra file.
+ */
+function PlateSlice({ y0, y1 }: { y0: number; y1: number }) {
+  const k = ART_PT;
+  const h = (y1 - y0) * k;
+  return (
+    <View style={{ width: MOCKUP_PLATE.w * k, height: h, overflow: 'hidden' }}>
+      <View style={{ position: 'absolute', top: -y0 * k, left: 0 }}>
+        <AtlasSprite atlas="dive" frame="plate" />
+      </View>
+    </View>
+  );
+}
+
+/**
+ * The mockup reef. Three slices bob at 0.25 / 0.5 / 1×, snapped to 2pt.
+ * `alive` is full effects with motion allowed; otherwise the slices sit still.
  */
 export function MockupReef({ width, height, alive }: { width: number; height: number; alive: boolean }) {
   const origin = mockupOrigin(width, height, 200);
   const k = ART_PT;
+  const bob = useParallaxBob(alive);
   return (
-    <View pointerEvents="none" style={[styles.abs, { left: origin.left, top: origin.top }]}>
-      <AtlasSprite atlas="dive" frame="plate" />
-      <View style={[styles.abs, { left: MOCKUP_DIVE.shimmer.x * k, top: MOCKUP_DIVE.shimmer.y * k }]}>
+    <View pointerEvents="none" style={[styles.abs, { left: origin.left, top: origin.top, width: MOCKUP_PLATE.w * k, height: MOCKUP_PLATE.h * k, overflow: 'hidden' }]}>
+      {PLATE_BANDS.map((band) => (
+        <ParallaxLayer
+          key={band.factor}
+          bob={bob}
+          factor={band.factor}
+          style={[styles.abs, { top: band.y0 * k, left: 0 }]}>
+          <PlateSlice y0={band.y0} y1={band.y1} />
+          {band.factor === 0.25 ? (
+            <View style={[styles.abs, { left: 0, top: -band.y0 * k, width: MOCKUP_PLATE.w * k, height: 180 * k }]}>
+              <CausticWash alive={alive} width={MOCKUP_PLATE.w * k} height={160 * k} />
+            </View>
+          ) : null}
+        </ParallaxLayer>
+      ))}
+      <ParallaxLayer bob={bob} factor={0.25} style={[styles.abs, { left: MOCKUP_DIVE.shimmer.x * k, top: MOCKUP_DIVE.shimmer.y * k }]}>
         <Flicker alive={alive} peak={0.42} ms={1400}>
           <AtlasSprite atlas="dive" frame="shimmer" />
         </Flicker>
-      </View>
-      <View style={[styles.abs, { left: MOCKUP_DIVE.weed.x * k, top: MOCKUP_DIVE.weed.y * k }]}>
+      </ParallaxLayer>
+      <ParallaxLayer bob={bob} factor={1} style={[styles.abs, { left: 0, top: 0 }]}>
+        <DitherPool alive={alive} cx={128} cy={278} rx={28} ry={16} color="#30E1B9" />
+      </ParallaxLayer>
+      <ParallaxLayer bob={bob} factor={1} style={[styles.abs, { left: MOCKUP_DIVE.weed.x * k, top: MOCKUP_DIVE.weed.y * k }]}>
         <Sway alive={alive} deg={2.2} ms={2400}>
           <AtlasSprite atlas="dive" frame="weed" />
         </Sway>
-      </View>
-      <View style={[styles.abs, { left: MOCKUP_DIVE.fish.x * k, top: MOCKUP_DIVE.fish.y * k }]}>
+      </ParallaxLayer>
+      <ParallaxLayer bob={bob} factor={0.5} style={[styles.abs, { left: MOCKUP_DIVE.fish.x * k, top: MOCKUP_DIVE.fish.y * k }]}>
         <Drift alive={alive} dx={72} dy={6} ms={6400}>
           <SpriteSwap atlas="dive" frames={['fish0', 'fish2']} alive={alive} ms={220} />
         </Drift>
-      </View>
+      </ParallaxLayer>
       {MOCKUP_DIVE.bubbles.map((b, i) => (
         <MoteRise key={i} alive={alive} left={b.x * k} top={b.y * k} distance={80 + (i % 3) * 24} ms={4200 + i * 500} delay={i * 380}>
           <BubbleRing r={BUBBLE_R[i] ?? 2} />

@@ -32,7 +32,7 @@
  * parallax (then props, trail) — see `diveWorldCuts`.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { PixelRatio, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -68,16 +68,16 @@ import { AbyssDragon, BOX_OPEN, BubbleRing, FindBox, MockupReef, SharkGlide } fr
 import { findName } from '@/play/dive-loot';
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
 import { MOCKUP_DIVE, mockupOrigin } from '@/play/pixel-atlas';
-import { PixelBody, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
+import { PixelBody, PixelFrame, PixelLabel, PixelRisk, usePixelFonts } from '@/play/pixel-ui';
+import { useHitJuice, useSteppedPop } from '@/play/pixel-fx';
 import type { PetState } from '@/play/pet';
-import { petPose, sharpPetBox, type PetPose } from '@/play/pet-actor';
+import { petPose, type PetPose } from '@/play/pet-actor';
 import { PetAnimSprite, usePetArt, type PetArt, type PetFace } from '@/play/pet-anim-sprite';
 import type { Grade } from '@/play/pet-eggs';
 import { GradeAura, ShinyOverlay } from '@/play/pet-looks';
 import type { PetWear } from '@/play/pet-cosmetics';
 import { roleFootAt } from '@/play/skin';
 
-const PET_WANT_BOX = 112;
 const SLOT = 40;
 const ROW_PAD = 12;
 const ICON = 36;
@@ -181,6 +181,7 @@ function SwimmingPet({
   recolor,
   tilt,
   auraElement = null,
+  flash = null,
 }: {
   pet: PetState;
   art: PetArt;
@@ -197,6 +198,7 @@ function SwimmingPet({
   /** v25 — 0..1 head-down while sinking. */
   tilt: SharedValue<number>;
   auraElement?: string | null;
+  flash?: SharedValue<number> | null;
 }) {
   const [face, setFace] = useState<PetFace>('e');
   const facingEast = face === 'e';
@@ -229,6 +231,7 @@ function SwimmingPet({
           recolor={recolor}
           lockColour={shiny}
           auraElement={auraElement}
+          flash={flash}
         />
       </Animated.View>
       {shiny ? <ShinyOverlay size={box} footAt={0.75} animate={turn} /> : null}
@@ -286,6 +289,13 @@ export function DiveScene({
   auraElement?: string | null;
 }) {
   const fontsReady = usePixelFonts();
+  const hit = useHitJuice();
+  const pop = useSteppedPop();
+  const playHit = useRef(hit.play);
+  const playPop = useRef(pop.play);
+  playHit.current = hit.play;
+  playPop.current = pop.play;
+  const [popSlot, setPopSlot] = useState(-1);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const onLayout = (e: LayoutChangeEvent) =>
     setSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height });
@@ -313,7 +323,8 @@ export function DiveScene({
 
   // -- The pet: swims (walk clip) with a gentle sway; reacts to the shown %.
   const art = usePetArt(pet);
-  const box = pet.stage === 'egg' ? 70 : sharpPetBox(PET_WANT_BOX, art.cellPx, PixelRatio.get());
+  // 1 sprite px = 2pt. The room pet stays on its own enlarged scale.
+  const box = pet.stage === 'egg' ? 70 : art.cellPx * ART_PT;
   // The mockup pet hovers over the ledge. The surface perch uses the same spot,
   // so the reef composition stays put when a dive hasn't started.
   const origin = mockupOrigin(Math.max(width, 1), Math.max(height, 1), 200);
@@ -506,7 +517,7 @@ export function DiveScene({
   const [landedKey, setLandedKey] = useState(reveal?.key ?? 0);
   const rowY = Math.min(
     Math.max(origin.top + MOCKUP_DIVE.haul.y * ART_PT, 8),
-    Math.max(8, height - ICON - 4),
+    Math.max(8, height - 176),
   );
   const slotX = (slot: number) => ROW_PAD + slot * SLOT;
   useEffect(() => {
@@ -524,7 +535,14 @@ export function DiveScene({
     if (rare && fxLevel === 'full') {
       flash.value = withSequence(withTiming(0.4, { duration: REVEAL_FLASH_MS / 2 }), withTiming(0, { duration: REVEAL_FLASH_MS / 2 }));
     }
-    const id = setTimeout(() => setLandedKey(reveal.key), revealMs(reveal.glow));
+    const id = setTimeout(() => {
+      setLandedKey(reveal.key);
+      setPopSlot(reveal.slot);
+      if (fxLevel === 'full' && !reduceMotion) {
+        playHit.current();
+        playPop.current();
+      }
+    }, revealMs(reveal.glow));
     return () => clearTimeout(id);
   }, [reveal, reduceMotion, rv, flash, fxLevel]);
   const revealTo = reveal ? slotX(reveal.slot) : 0;
@@ -624,6 +642,7 @@ export function DiveScene({
           {/* The pet (not while it's away on an expedition). */}
           {!away ? (
             <Animated.View pointerEvents="none" style={[styles.abs, { left: petX - box / 2, top: petY - box / 2, width: box, height: box }, petStyle]}>
+              <Animated.View style={[{ width: box, height: box }, hit.shakeStyle]}>
               <SwimmingPet
                 pet={pet}
                 art={art}
@@ -638,8 +657,10 @@ export function DiveScene({
                 shiny={shiny}
                 recolor={recolor}
                 auraElement={auraElement}
+                flash={hit.flash}
               />
               {hurtFlash ? <View style={[StyleSheet.absoluteFill, styles.hurt]} /> : null}
+              </Animated.View>
             </Animated.View>
           ) : null}
 
@@ -704,22 +725,29 @@ export function DiveScene({
             <PixelLabel color={PIXEL.cyan}>Haul</PixelLabel>
             {Array.from({ length: 4 }, (_, i) => {
               const item = rowItems[i];
+              const icon = item ? (
+                <View style={item.hidden ? styles.hidden : undefined} accessibilityLabel={findName(item.id)}>
+                  <FindIcon id={item.id} size={11 * ART_PT} bare />
+                </View>
+              ) : null;
               return (
                 <PixelFrame
                   key={item ? `${item.id}-${i}` : `empty-${i}`}
                   glow={false}
+                  lined={false}
                   padded={false}
                   step={1}
                   border={PIXEL.slot}
                   style={{ width: 13 * ART_PT, height: 13 * ART_PT }}>
-                  {item ? (
-                    <View style={item.hidden ? styles.hidden : undefined} accessibilityLabel={findName(item.id)}>
-                      <FindIcon id={item.id} size={11 * ART_PT} bare />
-                    </View>
-                  ) : null}
+                  {i === popSlot && item && !item.hidden ? <Animated.View style={pop.style}>{icon}</Animated.View> : icon}
                 </PixelFrame>
               );
             })}
+            {bustPct != null ? (
+              <View style={{ flex: 1, minWidth: 72 }}>
+                <PixelRisk pct={bustPct} />
+              </View>
+            ) : null}
           </View>
           {sinking.map((id, i) => (
             <Sinking key={`${id}-${i}-${event?.key}`} id={id} left={slotX(event?.saved.length ?? 0) + i * SLOT} top={rowY} drop={height * 0.4} reduceMotion={reduceMotion} />

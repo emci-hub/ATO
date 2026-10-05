@@ -16,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { PixelRatio, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { ART_PT, PIXEL } from '@/play/pixel-theme';
+import { DiamondWipe, armWipe, takeWipe } from '@/play/pixel-fx';
 import { PixelBody, PixelFrame, PixelLabel, usePixelFonts } from '@/play/pixel-ui';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { PET_COACH_ICON, petCoachTip, type PetCoachIcon } from '@/play/coach';
@@ -299,6 +300,12 @@ export function PetScreen({
   const cardW = Math.min(300, Math.max(220, screenW - 32));
   const cardBox = sharpPetBox(Math.round(cardW * 0.8), art.cellPx, PixelRatio.get());
   const fxQuality = useFxQuality();
+  const [juiceKey, setJuiceKey] = useState(0);
+  const [wipe, setWipe] = useState<'off' | 'cover' | 'reveal'>('off');
+  const motionOn = fxQuality === 'full' && !reduceMotion;
+  useEffect(() => {
+    if (motionOn && takeWipe('room')) setWipe('reveal');
+  }, [motionOn]);
   // v26 Guide: "?" buttons open Info → Guide at a section.
   const [guideSection, setGuideSection] = useState<GuideSection | null>(null);
   // Bumped on every "?" tap so the same section re-opens after you browsed away.
@@ -494,7 +501,8 @@ export function PetScreen({
   const openIcon = (id: PetCoachIcon) => {
     if (id === 'dive') {
       setSheet(null);
-      onGoDive();
+      if (motionOn) setWipe('cover');
+      else onGoDive();
       return;
     }
     if (id === 'info') setInfoTab('status');
@@ -516,6 +524,7 @@ export function PetScreen({
       return;
     }
     const icon = PET_COACH_ICON[coach.action];
+    if (icon === 'feed') setJuiceKey((n) => n + 1);
     if (icon) openIcon(icon);
   };
   const closeSheet = () => {
@@ -736,6 +745,7 @@ export function PetScreen({
         speech={speech}
         name={shownName}
         tapKey={tapKey}
+        juiceKey={juiceKey}
         reduceMotion={reduceMotion}
         auraElement={view.swords.equipped?.element ?? null}
         onTapPet={tapPet}
@@ -768,7 +778,7 @@ export function PetScreen({
         {pet.stage === 'egg' ? (
           <PixelBody>It hatches first — then it eats.</PixelBody>
         ) : (
-          <FeedSheetBody view={view} commit={commit} />
+          <FeedSheetBody view={view} commit={commit} onFed={() => setJuiceKey((n) => n + 1)} />
         )}
         <GuideLink section="pet" onOpen={openGuide} />
       </PlaySheet>
@@ -936,6 +946,17 @@ export function PetScreen({
           onDone={finishReveal}
         />
       ) : null}
+      <DiamondWipe
+        mode={wipe}
+        onDone={
+          wipe === 'cover'
+            ? () => {
+                armWipe('dive');
+                onGoDive();
+              }
+            : () => setWipe('off')
+        }
+      />
     </View>
   );
 }

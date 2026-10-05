@@ -9,6 +9,7 @@
  * which frame to draw. What to play is decided by `pet-actor.ts`.
  */
 import { useEffect, useMemo, useState } from 'react';
+import type { SharedValue } from 'react-native-reanimated';
 
 import { PLAY_SHEETS } from '@/play/generated-play-sheets';
 import { petLookFor, type PetState } from '@/play/pet';
@@ -142,6 +143,7 @@ export function PetAnimSprite({
   reduceMotion = false,
   reverseHost = false,
   auraElement = null,
+  flash = null,
 }: {
   pet: PetState;
   art: PetArt;
@@ -166,6 +168,8 @@ export function PetAnimSprite({
   reverseHost?: boolean;
   /** Equipped sword element. The aura colour follows it. */
   auraElement?: string | null;
+  /** White image copy. Opacity is this value (80ms on, then a fade). */
+  flash?: SharedValue<number> | null;
 }) {
   const blend = useBlendRecolor();
   const ticking = animate && pose != null && !pose.hold && pet.stage !== 'egg';
@@ -189,6 +193,7 @@ export function PetAnimSprite({
       reduceMotion={reduceMotion}
       reverseHost={reverseHost}
       auraElement={auraElement}
+      flash={flash}
     />
   );
 }

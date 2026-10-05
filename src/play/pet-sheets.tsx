@@ -197,11 +197,12 @@ function MeterLine({ label, value }: { label: string; value: number }) {
 
 /* ---------------------------------------------------------------- Feed --- */
 
-export function FeedSheetBody({ view, commit }: { view: PlayView; commit: Commit }) {
+export function FeedSheetBody({ view, commit, onFed }: { view: PlayView; commit: Commit; onFed?: () => void }) {
   const pv = view.pet;
   const [note, setNote] = useState<string | null>(null);
   const feed = (food: FoodId) => {
     const ok = commit((doc, now) => feedFromPantry(doc, now, food));
+    if (ok) onFed?.();
     setNote(
       ok
         ? `Fed ${FOODS[food].name} — +${FOODS[food].hearts} hunger.`

@@ -61,6 +61,7 @@ import { GlimmerGlow, GradeAura, ShinyOverlay } from '@/play/pet-looks';
 import { wornLook, type PetWear } from '@/play/pet-cosmetics';
 import { PET_STATUS_WORD, isEvolvingSoon, petStatusLabel, type PetStatus } from '@/play/pet-status';
 import { Flicker, MoteRise, Twinkle } from '@/play/pixel-ambient';
+import { DitherPool, LampCycle, useHitJuice } from '@/play/pixel-fx';
 import { AtlasSprite, MOCKUP_ROOM, mockupOrigin } from '@/play/pixel-atlas';
 import { ART_PT, PIXEL, snapArt } from '@/play/pixel-theme';
 import {
@@ -165,10 +166,14 @@ function RoomBackdrop({
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <View style={{ position: 'absolute', left: origin.left, top: origin.top }}>
         <AtlasSprite atlas="room" frame="plate" />
+        <DitherPool alive={alive} cx={158} cy={322} rx={70} ry={22} color="#F9C22B" />
         <View style={{ position: 'absolute', left: MOCKUP_ROOM.glow.x * k, top: MOCKUP_ROOM.glow.y * k }}>
           <Flicker alive={alive} peak={0.65} ms={480}>
             <AtlasSprite atlas="room" frame="glow" />
           </Flicker>
+        </View>
+        <View style={{ position: 'absolute', left: 175 * k, top: 158 * k }}>
+          <LampCycle alive={alive} />
         </View>
         <View style={{ position: 'absolute', left: MOCKUP_ROOM.sky.x * k, top: MOCKUP_ROOM.sky.y * k }}>
           <Twinkle alive={alive} ms={1100}>
@@ -322,6 +327,7 @@ export function PetRoom({
   buffs = [],
   maxedAura = false,
   auraElement = null,
+  juiceKey = 0,
 }: {
   pet: PetState;
   wear: PetWear;
@@ -356,12 +362,24 @@ export function PetRoom({
   maxedAura?: boolean;
   /** Equipped sword element. The pet aura colour follows it. */
   auraElement?: string | null;
+  /** Bumps when Feed lands a treat, to flash and shake the pet. */
+  juiceKey?: number;
 }) {
   // Departure Mono / Rajdhani. Hold the room until they are in, so labels never paint in a fallback face.
   const fontsReady = usePixelFonts();
   // Effects Low (Settings): auras and sparkles hold still.
   const fxFull = useFxQuality() === 'full';
   const fxAnimate = !reduceMotion && fxFull;
+  const hit = useHitJuice();
+  const hitSeen = useRef(juiceKey);
+  const playHit = useRef(hit.play);
+  playHit.current = hit.play;
+  useEffect(() => {
+    if (hitSeen.current === juiceKey) return;
+    hitSeen.current = juiceKey;
+    if (!fxAnimate) return;
+    playHit.current();
+  }, [fxAnimate, juiceKey]);
   useFinishLease((pet.finish_kind === 'holo' || pet.finish_kind === 'reverse') && pet.finish_color != null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const onLayout = (e: LayoutChangeEvent) =>
@@ -680,6 +698,7 @@ export function PetRoom({
             accessibilityLabel={`Your pet. ${label}. Tap to say hi.`}
             style={StyleSheet.absoluteFill}>
             <Animated.View style={[StyleSheet.absoluteFill, bodyStyle]}>
+              <Animated.View style={[StyleSheet.absoluteFill, hit.shakeStyle]}>
               <PetAnimSprite
                 pet={pet}
                 art={art}
@@ -698,7 +717,9 @@ export function PetRoom({
                 reduceMotion={reduceMotion}
                 reverseHost
                 auraElement={auraElement}
+                flash={hit.flash}
               />
+              </Animated.View>
             </Animated.View>
           </Pressable>
           {revealed && pet.shiny ? <ShinyOverlay size={box} footAt={footAt} animate={fxAnimate} style={pet.shiny_style} /> : null}
@@ -720,8 +741,14 @@ export function PetRoom({
             pointerEvents="box-none"
             style={[styles.bubbleColumn, { bottom: box - box * 0.18 + 6, left: 0, width: speechW }, speechStyle]}>
             <SpeechBubble speech={speech} reduceMotion={reduceMotion} speaker={name} />
-            <PixelNameplate>
-              {name ? `${name} · ${plateStatus(status, pet.stage, stageLeftMs)}` : plateStatus(status, pet.stage, stageLeftMs)}
+            <PixelNameplate label={false}>
+              <View style={styles.nameRow}>
+                {name ? <PixelLabel color={PIXEL.cyan}>{name}</PixelLabel> : null}
+                {name ? <View style={styles.moodPip} /> : null}
+                <PixelBody size="sm" color="#C7DCD0" numberOfLines={1}>
+                  {plateStatus(status, pet.stage, stageLeftMs)}
+                </PixelBody>
+              </View>
             </PixelNameplate>
           </Animated.View>
           {/* v26: the grade is a nameplate on the ring at its feet — stars AND
@@ -776,6 +803,8 @@ const styles = StyleSheet.create({
   coachCopy: { flex: 1, gap: 2 },
   coachText: { textAlign: 'left' },
   coachButton: { flexGrow: 0 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: ART_PT * 2 },
+  moodPip: { width: ART_PT * 2, height: ART_PT * 2, backgroundColor: '#91DB69' },
   pressed: { opacity: 0.82 },
   petWrap: { position: 'absolute', left: 0 },
   foilMat: { position: 'absolute', overflow: 'hidden' },

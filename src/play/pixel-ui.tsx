@@ -1,11 +1,11 @@
 /**
  * Neon pixel UI kit.
  *
- * Panels, buttons and nameplates follow ui2.py: a 1-art-px border, stepped
- * corners (2px stair), a solid inner glow ring and a checker outer ring.
+ * Panels follow the framed mockup: a 1-art-px border, a 1-art-px inner line,
+ * stepped corners (2px stair), a solid inner glow ring and a checker outer ring.
  * Buttons add an ink outline, a 1px top highlight and a 2px bottom shade.
- * Press feedback is a short squash on the UI thread while ambient motion is
- * on (Effects full, Reduce Motion off). Otherwise it stays an opacity press.
+ * Pressed sinks the button 1 art px and swaps the highlight for the shade.
+ * Labels use a line box equal to the em, centered, with a 1px text shadow.
  * Departure Mono + Rajdhani SemiBold load before any pixel label paints.
  */
 import { Rajdhani_600SemiBold } from '@expo-google-fonts/rajdhani';
@@ -47,17 +47,31 @@ function useAmbientOn(): boolean {
   return quality === 'full' && !reduceMotion;
 }
 
-function usePressSquash(enabled: boolean) {
-  const squish = useSharedValue(1);
+function usePressDrop(enabled: boolean) {
+  const y = useSharedValue(0);
   const onPressIn = () => {
     if (!enabled) return;
-    squish.value = withTiming(0.94, { duration: 70, easing: Easing.out(Easing.quad) });
+    y.value = withTiming(ART_PT, { duration: 40 });
   };
   const onPressOut = () => {
-    squish.value = withTiming(1, { duration: 120, easing: Easing.out(Easing.quad) });
+    y.value = withTiming(0, { duration: 80 });
   };
-  const style = useAnimatedStyle(() => ({ transform: [{ scale: squish.value }] }));
+  const style = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
   return { onPressIn, onPressOut, style };
+}
+
+/** 1 art px down-right. Radius 0 so it stays a pixel, not a blur. */
+const PIXEL_TEXT_SHADOW = {
+  textShadowColor: PIXEL.ink,
+  textShadowOffset: { width: ART_PT, height: ART_PT },
+  textShadowRadius: 0,
+} as const;
+
+/** "DEEPER · SAFER 20%" → title DEEPER, caption "safer 20%". */
+function buttonLines(label: string): { title: string; caption: string | null } {
+  const cut = label.indexOf(' · ');
+  if (cut < 0) return { title: label, caption: null };
+  return { title: label.slice(0, cut), caption: label.slice(cut + 3).toLowerCase() };
 }
 
 export { pixelRenderStyle };
@@ -90,6 +104,10 @@ type FrameProps = {
   step?: number;
   /** Button bevel: ink outline, top highlight, bottom shade. No glow rings. */
   bevel?: 'cyan' | 'amber';
+  /** 1px line just inside the border. Buttons and haul slots turn it off. */
+  lined?: boolean;
+  /** Pressed bevel: the shade moves to the top, the highlight to the bottom. */
+  sunk?: boolean;
 };
 
 /** True when art pixel (x, y) sits inside a stepped rectangle. */
@@ -147,6 +165,8 @@ export function PixelFrame({
   glow = true,
   step = 2,
   bevel,
+  lined = true,
+  sunk = false,
 }: FrameProps) {
   const alive = useAmbientOn();
   const enterT = useSharedValue(1);
@@ -192,7 +212,11 @@ export function PixelFrame({
   const edge = border;
   const hi = bevel === 'amber' ? PIXEL.amberHi : PIXEL.cyanHi;
   const lo = bevel === 'amber' ? PIXEL.amberLo : PIXEL.cyanLo;
+  const topCol = sunk ? lo : hi;
+  const botCol = sunk ? hi : lo;
   const outline = bevel ? PIXEL.ink : edge;
+  const inner = edge.toLowerCase() === PIXEL.amber.toLowerCase() ? PIXEL.glowAmber : PIXEL.glow;
+  const showLine = lined && !bevel;
   const notch = stair * px;
   return (
     <Animated.View
@@ -229,8 +253,8 @@ export function PixelFrame({
                 top: 0,
                 left: px,
                 right: px,
-                height: px,
-                backgroundColor: hi,
+                height: sunk ? px * 2 : px,
+                backgroundColor: topCol,
               }}
             />
             <View
@@ -240,8 +264,8 @@ export function PixelFrame({
                 bottom: 0,
                 left: 0,
                 right: 0,
-                height: px * 2,
-                backgroundColor: lo,
+                height: sunk ? px : px * 2,
+                backgroundColor: botCol,
               }}
             />
           </>
@@ -252,6 +276,14 @@ export function PixelFrame({
       <View pointerEvents="none" style={{ position: 'absolute', bottom: 0, left: notch, right: notch, height: px, backgroundColor: outline }} />
       <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: notch, bottom: notch, width: px, backgroundColor: outline }} />
       <View pointerEvents="none" style={{ position: 'absolute', right: 0, top: notch, bottom: notch, width: px, backgroundColor: outline }} />
+      {showLine ? (
+        <>
+          <View pointerEvents="none" style={{ position: 'absolute', top: px, left: notch, right: notch, height: px, backgroundColor: inner }} />
+          <View pointerEvents="none" style={{ position: 'absolute', bottom: px, left: notch, right: notch, height: px, backgroundColor: inner }} />
+          <View pointerEvents="none" style={{ position: 'absolute', left: px, top: notch, bottom: notch, width: px, backgroundColor: inner }} />
+          <View pointerEvents="none" style={{ position: 'absolute', right: px, top: notch, bottom: notch, width: px, backgroundColor: inner }} />
+        </>
+      ) : null}
       {stair >= 2 ? (
         <>
           <View pointerEvents="none" style={{ position: 'absolute', left: px, top: px, width: px, height: px, backgroundColor: outline }} />
@@ -285,11 +317,13 @@ export function PixelLabel({
         {
           fontFamily: PIXEL_FONT.label,
           fontSize: PIXEL_LABEL_PT,
-          lineHeight: PIXEL_LABEL_PT + 2,
+          lineHeight: PIXEL_LABEL_PT,
           letterSpacing: 0,
           fontWeight: 'normal',
           color,
           textTransform: 'uppercase',
+          includeFontPadding: false,
+          ...PIXEL_TEXT_SHADOW,
         },
         style,
       ]}>
@@ -320,10 +354,12 @@ export function PixelBody({
         {
           fontFamily: PIXEL_FONT.body,
           fontSize,
-          lineHeight: fontSize + 3,
+          lineHeight: fontSize,
           letterSpacing: 0,
           fontWeight: 'normal',
           color,
+          includeFontPadding: false,
+          ...PIXEL_TEXT_SHADOW,
         },
         style,
       ]}>
@@ -354,35 +390,45 @@ export function PixelButton({
   const border = variant === 'muted' ? PIXEL.muted : PIXEL.ink;
   const text = variant === 'muted' ? PIXEL.muted : PIXEL.onFill;
   const alive = useAmbientOn();
-  const squash = usePressSquash(alive && !disabled);
+  const lines = buttonLines(label);
   return (
     <Pressable
       onPress={onPress}
-      onPressIn={squash.onPressIn}
-      onPressOut={squash.onPressOut}
       disabled={disabled}
       accessibilityRole="button"
       accessibilityState={{ disabled }}
       accessibilityLabel={accessibilityLabel ?? label}
       style={({ pressed }) => [
-        { minHeight: PIXEL_TAP_PT, opacity: disabled ? 0.4 : alive ? 1 : pressed ? 0.82 : 1 },
+        {
+          minHeight: PIXEL_TAP_PT,
+          opacity: disabled ? 0.4 : pressed && !alive ? 0.82 : 1,
+          transform: [{ translateY: pressed && !disabled && alive ? ART_PT : 0 }],
+        },
         style,
       ]}>
-      <Animated.View style={squash.style}>
+      {({ pressed }) => (
         <PixelFrame
           fill={fill}
           border={border}
           bevel={variant === 'muted' ? undefined : variant}
+          sunk={pressed && !disabled && alive}
           glow={false}
+          lined={false}
+          padded={false}
           align="stretch"
           minHeight={PIXEL_TAP_PT}
           pulse={variant === 'cyan' && !disabled}
           style={{ flexGrow: 1 }}>
-          <PixelLabel color={text} numberOfLines={2} style={{ textAlign: 'center', alignSelf: 'stretch' }}>
-            {label}
+          <PixelLabel color={text} numberOfLines={1} style={{ textAlign: 'center', alignSelf: 'stretch' }}>
+            {lines.title}
           </PixelLabel>
+          {lines.caption ? (
+            <PixelBody size="sm" color={text} numberOfLines={1} style={{ textAlign: 'center', alignSelf: 'stretch' }}>
+              {lines.caption}
+            </PixelBody>
+          ) : null}
         </PixelFrame>
-      </Animated.View>
+      )}
     </Pressable>
   );
 }
@@ -403,7 +449,7 @@ export function PixelNameplate({
   label?: boolean;
 }) {
   const alive = useAmbientOn();
-  const squash = usePressSquash(!!onPress && alive);
+  const drop = usePressDrop(!!onPress && alive);
   const plate = (
     <PixelFrame glow={false} style={[{ minHeight: onPress ? PIXEL_TAP_PT : undefined }, style]}>
       {label ? (
@@ -419,12 +465,12 @@ export function PixelNameplate({
   return (
     <Pressable
       onPress={onPress}
-      onPressIn={squash.onPressIn}
-      onPressOut={squash.onPressOut}
+      onPressIn={drop.onPressIn}
+      onPressOut={drop.onPressOut}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       style={({ pressed }) => [{ minHeight: PIXEL_TAP_PT, opacity: alive ? 1 : pressed ? 0.82 : 1 }]}>
-      <Animated.View style={squash.style}>{plate}</Animated.View>
+      <Animated.View style={drop.style}>{plate}</Animated.View>
     </Pressable>
   );
 }

@@ -9,6 +9,7 @@
  * soft static glow in its element colour behind the pet.
  */
 import { Image } from 'expo-image';
+import Animated, { useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, Ellipse, Path } from 'react-native-svg';
 
@@ -77,6 +78,7 @@ export function PetFigure({
   reduceMotion = false,
   reverseHost = false,
   auraElement = null,
+  flash = null,
 }: {
   pet: PetState;
   baseBox: number;
@@ -102,7 +104,12 @@ export function PetFigure({
   reverseHost?: boolean;
   /** Equipped sword element. The aura colour follows it. */
   auraElement?: string | null;
+  /** 0–1 white copy of the sprite (feed / find). Null skips the extra image. */
+  flash?: SharedValue<number> | null;
 }) {
+  const flashFallback = useSharedValue(0);
+  const flashT = flash ?? flashFallback;
+  const flashStyle = useAnimatedStyle(() => ({ opacity: flashT.value }));
   const box = boxOverride ?? petBoxSize(pet, baseBox);
   // The card and the room own reverse holo. This flag stays so those callers
   // can say they took the plate; the sprite never paints one.
@@ -148,6 +155,11 @@ export function PetFigure({
       ) : null}
       <View style={[StyleSheet.absoluteFill, recolor && blend ? styles.isolate : null]}>
       <ClipImage drawable={drawable} />
+      {flash ? (
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, flashStyle]}>
+          <ClipImage drawable={drawable} tintColor="#FFFFFF" />
+        </Animated.View>
+      ) : null}
       {recolor ? (
         <View
           style={[StyleSheet.absoluteFill, blend ? styles.hue : styles.recolorWash]}

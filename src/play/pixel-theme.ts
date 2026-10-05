@@ -3,9 +3,11 @@
  *
  * 1 art pixel = 2pt. Panels, type and pixel-art boxes snap to that grid.
  * Departure Mono labels (em is 11 font-pixels, so 22pt is 2pt per font pixel
- * and the 8px cap draws at 16pt). Rajdhani SemiBold carries body copy and
+ * and the 8px cap draws at 16pt). The line box is that em — no extra leading —
+ * so a label centers on the cap. Rajdhani SemiBold carries body copy and
  * numbers, at the mockup's sizes (no faux bold — the SemiBold file is the
- * weight). Both faces are OFL.
+ * weight). Text carries a 1-art-px shadow, down and right, radius 0.
+ * Both faces are OFL.
  */
 
 /** Points per art pixel. */

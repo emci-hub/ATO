@@ -38,7 +38,8 @@ import { DiveScene, diveZone, type DiveReveal, type DiveSceneEvent } from '@/pla
 import { diveBackStep, type InnerBack } from '@/play/edge-back';
 import { ELEMENT_COLOR } from '@/play/kits';
 import { PIXEL } from '@/play/pixel-theme';
-import { PixelBody, PixelButton, PixelLabel, PixelRisk, usePixelFonts, type PixelButtonVariant } from '@/play/pixel-ui';
+import { DiamondWipe, armWipe, takeWipe } from '@/play/pixel-fx';
+import { PixelBody, PixelButton, PixelLabel, usePixelFonts, type PixelButtonVariant } from '@/play/pixel-ui';
 import { PET_BRANCH_LABEL, PET_STAGE_LABEL } from '@/play/pet';
 import { petRecolor } from '@/play/pet-looks';
 import { PlaySheet } from '@/play/play-sheet';
@@ -131,13 +132,22 @@ export function DiveScreen({
   const today = todayPlan(view);
   const fxLevel = useDiveFxLevel();
   const [sheet, setSheet] = useState<SheetId | null>(null);
+  const [wipe, setWipe] = useState<'off' | 'cover' | 'reveal'>('off');
+  const leaveRef = useRef<() => void>(() => onBack());
+
+  useEffect(() => {
+    if (fxLevel === 'full' && !reduceMotion && takeWipe('dive')) setWipe('reveal');
+  }, [fxLevel, reduceMotion]);
 
   useEffect(() => {
     if (!registerBack) return;
     registerBack({
       edgeSwipe: true,
       back: () => {
-        if (diveBackStep(sheet != null) === 'room') return false;
+        if (diveBackStep(sheet != null) === 'room') {
+          leaveRef.current();
+          return true;
+        }
         setSheet(null);
         return true;
       },
@@ -251,6 +261,16 @@ export function DiveScreen({
   const revealed = st.hero != null && st.stage !== 'egg' && st.stage !== 'baby';
   const maxDepth = run.active ? run.maxDeepers : view.diveGear.oxygen ? 5 : 4;
 
+  const motionOn = fxLevel === 'full' && !reduceMotion;
+  const leave = () => {
+    if (!motionOn) {
+      onBack();
+      return;
+    }
+    setWipe('cover');
+  };
+  leaveRef.current = leave;
+
   if (!fontsReady) return <View style={styles.screen} />;
 
   return (
@@ -279,7 +299,7 @@ export function DiveScreen({
           maxDepth={maxDepth}
           charges={chargeText(view)}
           shells={view.shells}
-          onBack={onBack}
+          onBack={leave}
           onInfo={() => setSheet('info')}
           onGear={() => setSheet('gear')}
         />
@@ -293,7 +313,6 @@ export function DiveScreen({
           </View>
         ) : (
           <>
-            {run.active && run.bustPctNext != null ? <PixelRisk pct={run.bustPctNext} /> : null}
             {buttonRows.map((row, i) => (
               <View key={i} style={styles.buttonRow}>
                 {row.map((b) => (
@@ -370,6 +389,17 @@ export function DiveScreen({
         })}
         {gearNote ? <PixelBody>{gearNote}</PixelBody> : null}
       </PlaySheet>
+      <DiamondWipe
+        mode={wipe}
+        onDone={
+          wipe === 'cover'
+            ? () => {
+                armWipe('room');
+                onBack();
+              }
+            : () => setWipe('off')
+        }
+      />
     </View>
   );
 }
@@ -393,13 +423,13 @@ function chargeText(view: PlayView): string {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: PIXEL.ink },
   controls: {
-    paddingHorizontal: 12,
-    paddingTop: 10,
-    paddingBottom: 12,
-    gap: 8,
-    borderTopWidth: 2,
-    borderTopColor: PIXEL.cyan,
+    position: 'absolute',
+    left: 8,
+    right: 8,
+    bottom: 8,
+    gap: 6,
     backgroundColor: PIXEL.ink,
+    padding: 6,
   },
   // Each row is a real row; the buttons share its width.
   buttonRow: { flexDirection: 'row', gap: 8, alignSelf: 'stretch' },
