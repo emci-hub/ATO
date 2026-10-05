@@ -110,8 +110,12 @@ function CycleRect({
 }
 
 /**
- * Water caustics: a few wave cells whose fill index cycles.
- * `alive` false draws the first palette step and holds it.
+ * Water caustics: a few sparkles whose fill index cycles.
+ * `alive` false draws nothing — a held wash still painted stripes.
+ * Cells stay a few art pixels. A cell as wide as its column becomes a
+ * full-width teal bar (on iOS the SVG rects read as three stripes over
+ * the plate). The reef plate already has its caustics baked in, so Dive
+ * does not mount this.
  */
 export function CausticWash({
   alive,
@@ -123,20 +127,19 @@ export function CausticWash({
   height: number;
 }) {
   const clock = useStepClock(alive);
-  if (width < 8 || height < 8) return null;
+  if (!alive || width < 8 || height < 8) return null;
   const cells: { x: number; y: number; base: number }[] = [];
-  const cols = 4;
-  const rows = 2;
+  const cols = 6;
+  const rows = 4;
+  const size = ART_PT * 2;
   for (let row = 0; row < rows; row += 1) {
     for (let col = 0; col < cols; col += 1) {
-      const x = snap2((col + 0.15) * (width / cols));
-      const wave = Math.round(Math.sin(col * 0.9 + row * 1.4) * 6);
-      const y = snap2(row * (height / rows) + wave);
-      cells.push({ x, y, base: (col + row * 2) % WATER.length });
+      const x = snap2((col + 0.5) * (width / cols) - size / 2);
+      const wave = Math.round(Math.sin(col * 0.9 + row * 1.4) * 4);
+      const y = snap2((row + 0.4) * (height / rows) + wave);
+      cells.push({ x, y, base: (col + row) % WATER.length });
     }
   }
-  const cw = snap2(width / cols) - ART_PT * 2;
-  const ch = ART_PT * 4;
   return (
     <Svg width={width} height={height} pointerEvents="none">
       {cells.map((cell, i) => (
@@ -147,9 +150,9 @@ export function CausticWash({
           palette={WATER}
           x={cell.x}
           y={Math.max(0, cell.y)}
-          w={Math.max(ART_PT * 2, cw)}
-          h={ch}
-          opacity={0.55}
+          w={size}
+          h={size}
+          opacity={0.45}
         />
       ))}
     </Svg>
