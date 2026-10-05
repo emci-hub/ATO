@@ -7,6 +7,7 @@ import Animated, {
   useSharedValue,
   withSequence,
   withTiming,
+  ZoomIn,
 } from 'react-native-reanimated';
 
 import { ThemedPressable } from '@/components/themed-pressable';
@@ -117,6 +118,7 @@ export function SageEightBall() {
   const [rolling, setRolling] = useState(false);
   const rollingRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const opening = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -156,6 +158,25 @@ export function SageEightBall() {
     setOpen((value) => !value);
   }
 
+  // Tapping the closed ball shakes it, then opens straight into a first
+  // answer (emci 2026-10-05: "add its animation back"). Reduce Motion: it
+  // just opens and answers.
+  function openWithShake() {
+    if (opening.current) return;
+    if (reduceMotion) {
+      setOpen(true);
+      roll();
+      return;
+    }
+    opening.current = true;
+    setSpin((n) => n + 1);
+    timerRef.current = setTimeout(() => {
+      opening.current = false;
+      setOpen(true);
+      roll();
+    }, OPEN_SHAKE_MS);
+  }
+
   // Closed, it is one round button in the Questions header (polish pass,
   // 2026-10-05); open, a full-width card under the header.
   if (!open) {
@@ -164,7 +185,7 @@ export function SageEightBall() {
         accessibilityRole="button"
         accessibilityLabel="8-ball"
         accessibilityState={{ expanded: false }}
-        onPress={toggle}
+        onPress={openWithShake}
         hitSlop={6}
         style={[styles.orbButton, { borderColor: controlBorderColor(theme), backgroundColor: theme.backgroundElement }]}>
         <SageOrb size={26} spin={spin} marked />
@@ -173,7 +194,10 @@ export function SageEightBall() {
   }
 
   return (
-    <ThemedView type="backgroundElement" style={[styles.card, styles.cardOpen]}>
+    <Animated.View
+      entering={reduceMotion ? undefined : ZoomIn.springify().damping(14)}
+      style={styles.cardOpen}>
+    <ThemedView type="backgroundElement" style={styles.card}>
       <ThemedPressable
         accessibilityRole="button"
         accessibilityLabel="8-ball"
@@ -221,8 +245,12 @@ export function SageEightBall() {
         </View>
       ) : null}
     </ThemedView>
+    </Animated.View>
   );
 }
+
+/** How long the closed ball shakes before it opens. Matches SageOrb's shake. */
+const OPEN_SHAKE_MS = 650;
 
 const styles = StyleSheet.create({
   orbButton: {

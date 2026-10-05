@@ -13,6 +13,9 @@
  *   confirmTraitSources   "still fits": source becomes self_confirm
  *   stampAxisDepth        the depth-dive timestamp
  *   applyDevTraitPreset   dev "Jump this account" (pre-launch only)
+ *   answerDailyPick       Today's Pick (wave82): counts as an answer only on a
+ *                         trait whose 3 intake answers are done, else moves
+ *                         the value like a tap
  *
  * No client code may write trait_tracks, trait_history or the me trait
  * columns directly (check:trait-checkpoint). Step 2 (wave80) revokes those
@@ -33,6 +36,29 @@ async function call(name: string, args: Record<string, unknown>): Promise<MeRowJ
 
 export function answerIntakeQuestion(prompt: string, optionIndex: number): Promise<MeRowJson> {
   return call('answer_intake_question', { p_prompt: prompt, p_option_index: optionIndex });
+}
+
+export interface DailyPickResult {
+  optionIndex: number;
+  /** True when it counted as a real answer (the trait's intake was done). */
+  counted: boolean;
+  /** True when this day was already answered (the first answer stands). */
+  already: boolean;
+}
+
+export async function answerDailyPick(ymd: string, pickId: string, optionIndex: number): Promise<DailyPickResult> {
+  const { data, error } = await supabase.rpc('answer_daily_pick', {
+    p_ymd: ymd,
+    p_pick_id: pickId,
+    p_option_index: optionIndex,
+  });
+  if (error) throw error;
+  const row = (data ?? {}) as { option_index?: unknown; counted?: unknown; already?: unknown };
+  return {
+    optionIndex: typeof row.option_index === 'number' ? row.option_index : optionIndex,
+    counted: row.counted === true,
+    already: row.already === true,
+  };
 }
 
 export function answerRoundItem(itemId: string, optionIndex: number): Promise<MeRowJson> {

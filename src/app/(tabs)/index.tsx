@@ -4,12 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 
 import { CrisisCard } from '@/components/crisis-card';
-import { DailyLineCard } from '@/components/daily-line-card';
 import { Appear, SkeletonBar } from '@/components/motion';
 import { ProgressRing, useRoundProgress } from '@/components/progress-ring';
 import { ShapeEmptyCard } from '@/components/shape-card';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { TraitShape } from '@/components/trait-shape';
+import { TodayPickCard } from '@/components/today-pick-card';
 import { WeekStrip } from '@/components/week-strip';
 import { IdentityTitleChip } from '@/components/identity-title-chip';
 import { crisisNotedToday } from '@/lib/crisis/local-flag';
@@ -23,6 +23,7 @@ import { useDailyInsight } from '@/hooks/use-daily-insight';
 import { useBuddyStreak } from '@/hooks/use-buddy-milestones';
 import { useTodayLine } from '@/hooks/use-today-line';
 import { lockScreenText } from '@/lib/daily-line/pick';
+import { pickForYmd } from '@/lib/daily-pick/bank';
 import { checkWindowFor } from '@/lib/check-window';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
 import { AI_CONSENT_NEEDED_COPY, aiConsentFor, setAiConsent } from '@/lib/me';
@@ -219,7 +220,7 @@ export default function HomeScreen() {
    * failed profile load still shows a line, but does not store it as today's.
    */
   const todayYmd = window?.todayYmd;
-  const { today: todayLine, react: reactToLine } = useTodayLine({
+  const { today: todayLine } = useTodayLine({
     userId,
     ymd: todayYmd,
     tracks,
@@ -227,6 +228,9 @@ export default function HomeScreen() {
     // Only a pick made from THIS account's loaded profile becomes the day's line.
     persist: !bootstrapFailed && tracksUserId === userId,
   });
+  // Today's pick replaced the line on Home; the line still runs underneath
+  // (week, streak) and stays the insight's thread, so the prompt is unchanged.
+  const todayPick = todayYmd ? pickForYmd(todayYmd) : null;
   const todayLineText = todayLine?.line.text ?? null;
   // The mini guy who says the line (same recipe as the nav companion).
   const faceRecipe = useMemo(() => (me ? recipeForAccount(me.id, me.recipe) : undefined), [me]);
@@ -234,7 +238,8 @@ export default function HomeScreen() {
   const roundAnswered = useRoundProgress(fullProfileDone ? userId : undefined, tracks);
   // 3 / 7 / 21 days in a row: the mini guy says it, once each.
   useBuddyStreak({ me, streak: todayLine?.streak, onPersisted: refreshMe });
-  const todayLineLockScreen = todayLine ? lockScreenText(todayLine.line) : null;
+  // Picks are written to be read by anyone, so the widget can show today's.
+  const todayLineLockScreen = todayPick?.prompt ?? (todayLine ? lockScreenText(todayLine.line) : null);
 
   /**
    * AI consent gates GENERATION, not the screen. Declined and not-yet-asked
@@ -455,6 +460,33 @@ export default function HomeScreen() {
     under "Sage's AI"): the server refuses every AI call while consent is off
     (ai-generate), and You is where it is turned back on or off.
   */
+  /*
+    Today's Pick (emci, 2026-10-05) replaces the daily line card: one
+    either/or question a day, the same for everyone, one tap. The week strip
+    rides under it.
+  */
+  const pickBlock =
+    me && todayYmd && userId ? (
+      <>
+        <Appear>
+          <TodayPickCard
+            userId={userId}
+            ymd={todayYmd}
+            me={me}
+            face={faceRecipe}
+            onAnswered={() => {
+              void reloadHome();
+            }}
+          />
+        </Appear>
+        {todayLine ? (
+          <Appear index={1}>
+            <WeekStrip userId={me.id} todayYmd={todayYmd} refreshKey={todayLine} />
+          </Appear>
+        ) : null}
+      </>
+    ) : null;
+
   const consentBlock = (
     <>
       <ThemedText type="small" themeColor="textSecondary" style={styles.aiDisclosure}>
@@ -493,27 +525,9 @@ export default function HomeScreen() {
           {/* The name you've earned — tap for the card and the styles on You. */}
           {me && tracksUserId === me.id ? <IdentityTitleChip userId={me.id} tracks={tracks} /> : null}
 
-          {/* Today's line: written, instant, and the same card in all three
-              states below. */}
-          {todayLine && me ? (
-            <Appear>
-              <DailyLineCard
-                today={todayLine}
-                me={me}
-                face={faceRecipe}
-                onReact={(reaction) => {
-                  void reactToLine(reaction);
-                }}
-              />
-            </Appear>
-          ) : null}
-
-          {/* This week as seven dots (the line history already on the phone). */}
-          {me && todayYmd && todayLine ? (
-            <Appear index={1}>
-              <WeekStrip userId={me.id} todayYmd={todayYmd} refreshKey={todayLine} />
-            </Appear>
-          ) : null}
+          {/* Before the profile is done (or if it failed to load) there is no
+              Story or insight yet, so Today's Pick comes right after the name. */}
+          {bootstrapFailed || !fullProfileDone ? pickBlock : null}
 
           {bootstrapFailed ? (
             /*
@@ -582,8 +596,23 @@ export default function HomeScreen() {
               </Pressable>
             </>
           ) : (
-            /* STATE 2 — unlocked. The insight card, its Load button, and Story. */
+            /*
+             * STATE 2 — unlocked. emci's order (2026-10-05): Story, then the
+             * insight (or its sealed card), then Today's Pick and the week, then
+             * the next round.
+             */
             <>
+              {me ? (
+                <SageStoryFold
+                  me={me}
+                  tracks={tracks}
+                  tracksReady={bootstrapReady}
+                  crisisToday={crisisToday}
+                  unlocked={fullProfileDone}
+                  consentGranted={consentGranted}
+                />
+              ) : null}
+
               {consentOffEmpty ? (
                 /*
                  * Declined: no daily content at all. The insight has no offline
@@ -701,49 +730,43 @@ export default function HomeScreen() {
                     </ThemedText>
                   ) : null}
                 </ThemedView>
-              ) : (
+              ) : null}
+
+              {pickBlock}
+
+              {/* The next step when there is nothing to load: the round ring. */}
+              {!(consentGranted && insight?.ymd !== window?.todayYmd) ? (
                 /*
-                 * ONE next step. When there is nothing to load (today's insight is
-                 * up, or AI is off), the step is the next round of questions —
-                 * never both rows at once. No model call: it only opens Questions.
-                 * The ring is how far into the current round of 16 (one read).
-                 */
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={NEXT_ROUND_ROW_LABEL}
-                  onPress={() => router.push('/intake-sweep')}
-                  style={({ pressed }) => [
-                    styles.answerQuestionsRow,
-                    { borderColor: controlBorderColor(theme) },
-                    pressed && styles.pressed,
-                  ]}>
-                  <ProgressRing value={roundAnswered ?? 0} total={ONGOING_ROUND_SIZE} />
-                  <View style={[styles.boxRowText, styles.flexText]}>
-                    <ThemedText type="smallBold">
-                      {roundAnswered ? ROUND_RING_TITLE : NEXT_ROUND_ROW_LABEL}
-                    </ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {roundAnswered
-                        ? roundRingLine(ONGOING_ROUND_SIZE - roundAnswered)
-                        : NEXT_ROUND_ROW_COPY}
-                    </ThemedText>
-                  </View>
-                  <ThemedText themeColor="textSecondary">›</ThemedText>
-                </Pressable>
-              )}
+                   * ONE next step. When there is nothing to load (today's insight is
+                   * up, or AI is off), the step is the next round of questions —
+                   * never both rows at once. No model call: it only opens Questions.
+                   * The ring is how far into the current round of 16 (one read).
+                   */
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={NEXT_ROUND_ROW_LABEL}
+                    onPress={() => router.push('/intake-sweep')}
+                    style={({ pressed }) => [
+                      styles.answerQuestionsRow,
+                      { borderColor: controlBorderColor(theme) },
+                      pressed && styles.pressed,
+                    ]}>
+                    <ProgressRing value={roundAnswered ?? 0} total={ONGOING_ROUND_SIZE} />
+                    <View style={[styles.boxRowText, styles.flexText]}>
+                      <ThemedText type="smallBold">
+                        {roundAnswered ? ROUND_RING_TITLE : NEXT_ROUND_ROW_LABEL}
+                      </ThemedText>
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {roundAnswered
+                          ? roundRingLine(ONGOING_ROUND_SIZE - roundAnswered)
+                          : NEXT_ROUND_ROW_COPY}
+                      </ThemedText>
+                    </View>
+                    <ThemedText themeColor="textSecondary">›</ThemedText>
+                  </Pressable>
+              ) : null}
 
               {consentBlock}
-
-              {me ? (
-                <SageStoryFold
-                  me={me}
-                  tracks={tracks}
-                  tracksReady={bootstrapReady}
-                  crisisToday={crisisToday}
-                  unlocked={fullProfileDone}
-                  consentGranted={consentGranted}
-                />
-              ) : null}
             </>
           )}
 

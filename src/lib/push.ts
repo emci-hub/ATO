@@ -3,8 +3,8 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
 import { checkLoggedOnYmd, fetchChecks, type Check } from '@/lib/checks';
-import { lockScreenText } from '@/lib/daily-line/pick';
-import { loadDailyLineState, planUpcomingLines } from '@/lib/daily-line/state';
+import { loadDailyLineState } from '@/lib/daily-line/state';
+import { pickForYmd } from '@/lib/daily-pick/bank';
 import { addDaysYmd, hoursSinceLocalMidnight, localYmd, weekdayInZone } from '@/lib/local-date';
 import type { Me } from '@/lib/me';
 import {
@@ -285,17 +285,14 @@ export async function syncPushSchedule(input: {
       const firstOffset = hoursNow < window.morningHour ? 0 : 1;
       const todayYmd = localYmd(now, input.timeZone);
       const offsets = Array.from({ length: MORNING_AHEAD_DAYS }, (_, i) => firstOffset + i);
-      const planned = await planUpcomingLines({
-        userId: input.me.id,
-        todayYmd,
-        ymds: offsets.map((offset) => addDaysYmd(todayYmd, offset)),
-        tracks: input.tracks,
-      });
-      for (let i = 0; i < planned.length; i += 1) {
+      // Each morning asks that day's Today's Pick (emci, 2026-10-05): the same
+      // question everyone gets that day, chosen by date, so it is known ahead.
+      for (let i = 0; i < offsets.length; i += 1) {
         const hoursUntil = offsets[i]! * 24 + (window.morningHour - hoursNow);
+        const pick = pickForYmd(addDaysYmd(todayYmd, offsets[i]!));
         await scheduleAtOrCancel(
           morningAheadId(i),
-          morningPush(lockScreenText(planned[i]!.line)),
+          morningPush(pick.prompt),
           new Date(now.getTime() + hoursUntil * 3_600_000),
         );
       }

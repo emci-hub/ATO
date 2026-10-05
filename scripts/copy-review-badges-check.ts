@@ -36,7 +36,7 @@ const sites = [
   'src/components/sage-story-fold.tsx',
   'src/components/profile-fill-fold.tsx',
   // Insight experience (2026-10-01): the written daily line and the identity card.
-  'src/components/daily-line-card.tsx',
+  'src/components/today-pick-card.tsx',
   'src/components/identity-card.tsx',
   // 8-ball answers rewritten in the moment voice (2026-10-04).
   'src/components/sage-eight-ball.tsx',

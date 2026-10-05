@@ -89,7 +89,7 @@ for (const rel of [
   'src/components/trait-shape.tsx',
   'src/components/week-strip.tsx',
   'src/components/set-done-moment.tsx',
-  'src/components/daily-line-card.tsx',
+  'src/components/today-pick-card.tsx',
   'src/components/identity-card.tsx',
 ]) {
   const src = read(rel);
@@ -97,7 +97,7 @@ for (const rel of [
 }
 assert.match(read('src/components/motion.tsx'), /if \(reduceMotion\) return <View style=\{style\}>\{children\}<\/View>;/);
 assert.match(read('src/components/set-done-moment.tsx'), /\{reduceMotion \? null : <Confetti \/>\}/);
-assert.match(read('src/components/daily-line-card.tsx'), /animated=\{!reduceMotion\}/);
+assert.match(read('src/components/today-pick-card.tsx'), /animated=\{!reduceMotion\}/);
 ok('every new animation honours Reduce Motion (things simply appear)');
 
 // ── The coin only when the server paid ───────────────────────────────────────

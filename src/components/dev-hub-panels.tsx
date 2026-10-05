@@ -44,6 +44,7 @@ import { CONCEPT_COPY_REVIEWED } from '@/lib/concept-explainers';
 import { DAILY_LINE_COPY_REVIEWED } from '@/lib/daily-line/bank';
 import { DAILY_INSIGHT_COPY_REVIEWED } from '@/lib/insight/generate-insight';
 import { LEGENDS64_COPY_REVIEWED, NAME_STYLES_V2_COPY_REVIEWED } from '@/lib/legends64/archetypes';
+import { DAILY_PICK_COPY_REVIEWED } from '@/lib/daily-pick/bank';
 import { POLISH_COPY_REVIEWED } from '@/lib/polish-copy';
 import { PROFILE_FILL_COPY_REVIEWED } from '@/lib/profile-fill';
 import { CATEGORY_READ_COPY_REVIEWED } from '@/lib/rolls/category-read';
@@ -358,6 +359,7 @@ const COPY_FLAGS: readonly { name: string; reviewed: boolean }[] = [
   { name: 'Story', reviewed: STORY_COPY_REVIEWED },
   { name: 'Sage title', reviewed: TITLE_COPY_REVIEWED },
   { name: 'Daily lines', reviewed: DAILY_LINE_COPY_REVIEWED },
+  { name: 'Today’s Pick (64 daily questions)', reviewed: DAILY_PICK_COPY_REVIEWED },
   { name: 'Mini guy idle lines', reviewed: BUDDY_COPY_REVIEWED },
   { name: 'Trait ends (poles)', reviewed: POLE_COPY_REVIEWED },
   { name: 'Categories', reviewed: CATEGORY_COPY_REVIEWED },

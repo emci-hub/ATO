@@ -13,7 +13,7 @@
  * - nothing private can reach the share image.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
@@ -331,7 +331,7 @@ ok('the change card reports real movement inside the window and nothing else');
 
 // --- wiring -----------------------------------------------------------------
 const home = read('src/app/(tabs)/index.tsx');
-assert.match(home, /<DailyLineCard/);
+assert.match(home, /<TodayPickCard/);
 assert.match(home, /todayLine: todayLineText/);
 assert.match(home, /recentTitles/);
 ok('Home renders the daily line and hands it, with recent titles, to the insight prompt');
@@ -382,16 +382,19 @@ const sync = read('src/lib/daily-line/sync.ts');
 assert.match(sync, /lineRuleViolation\(text\) \?\?/);
 ok('AI lines ride on the insight call, and each is run through the line rules before it is kept');
 
-const card = read('src/components/daily-line-card.tsx');
-assert.match(card, /today\.line\.source === 'authored' \? \(/);
-ok('an AI-written line cannot be shared');
+// 2026-10-05: Today's Pick replaced the line card on Home. Its share image
+// carries the question only (never the answer, never an AI line).
+const pickCard = read('src/components/today-pick-card.tsx');
+assert.match(pickCard, /content=\{\{ kind: 'line', text: pick\.prompt \}\}/);
+assert.ok(!existsSync(resolve(__dirname, '..', 'src/components/daily-line-card.tsx')), 'the old line card is gone');
+ok('the Today’s Pick share image carries the question only');
 
 const push = read('src/lib/push.ts');
-assert.match(push, /planUpcomingLines\(/);
-assert.match(push, /morningPush\(lockScreenText\(planned\[i\]!\.line\)\)/);
+assert.match(push, /const pick = pickForYmd\(addDaysYmd\(todayYmd, offsets\[i\]!\)\);/);
+assert.match(push, /morningPush\(pick\.prompt\)/);
 const cancelAll = push.slice(push.indexOf('export async function cancelAllScheduledPush'));
 assert.match(cancelAll.slice(0, cancelAll.indexOf('export async function syncPushSchedule')), /cancelMorningAhead\(\)/);
-ok('the morning push carries the planned line, and account deletion cancels every planned morning');
+ok('each morning push asks that day’s pick, and account deletion cancels every planned morning');
 
 const state = read('src/lib/daily-line/state.ts');
 for (const fn of ['resolveTodayLine', 'setLineReaction', 'planUpcomingLines', 'clearDailyLineState']) {
