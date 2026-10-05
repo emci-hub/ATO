@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Appear } from '@/components/motion';
@@ -24,6 +24,7 @@ import {
   uniqueCategoryAxes,
   type CategoryQuestionRow,
 } from '@/lib/questions/category-paged';
+import { displayToOriginal, mixRows, optionDisplayOrder } from '@/lib/questions/mix-order';
 import type { QuestionDraft, QuestionOption } from '@/lib/questions/types';
 import { emitQuestionsPageTurned } from '@/lib/questions/page-turn';
 import { AXIS_SHORT_NAME } from '@/lib/axis-poles';
@@ -85,11 +86,12 @@ const PAGE_SIZE = 4;
  */
 export function PagedQuestions({
   storageKey,
-  rows,
+  rows: callerRows,
   progressLabel,
   locked = false,
   onSaveBatch,
   renderRowExtra,
+  mixSeed,
 }: {
   /** Unique id for this question set (e.g. "full-profile", "ongoing-round:<packId>") — scopes remembered position. */
   storageKey: string;
@@ -125,8 +127,15 @@ export function PagedQuestions({
    * does.
    */
   renderRowExtra?: (row: CategoryQuestionRow, isPending: boolean) => ReactNode;
+  /**
+   * Mix and match (mix-order.ts): when set, questions are shown in a stable
+   * per-person order and each question's options as authored or reversed.
+   * Display only — picks, stamps and saves stay in the original option index.
+   */
+  mixSeed?: string;
 }) {
   const theme = useTheme();
+  const rows = useMemo(() => (mixSeed ? mixRows(callerRows, mixSeed) : callerRows), [callerRows, mixSeed]);
   const [pageIndex, setPageIndex] = useState(0);
   const [positionReady, setPositionReady] = useState(false);
   // Tracks which option was picked per row — rows here are intentionally
@@ -282,7 +291,14 @@ export function PagedQuestions({
             <ThemedText style={styles.questionPrompt}>{row.draft.prompt}</ThemedText>
             {locked ? null : (
               <View style={styles.options}>
-                {row.draft.options.map((option, optIndex) => {
+                {(mixSeed
+                  ? optionDisplayOrder(mixSeed, row.key, row.draft.options.length)
+                  : row.draft.options.map((_, i) => i)
+                ).map((_, displayIndex, order) => {
+                  // Everything below works in the ORIGINAL option index — the
+                  // server reads options->index — only the drawing order moves.
+                  const optIndex = displayToOriginal(order, displayIndex);
+                  const option = row.draft.options[optIndex]!;
                   // A local pick wins; otherwise the stored answer the caller knows about.
                   const picked = (pickedByRow[row.key] ?? row.answeredIndex ?? -1) === optIndex;
                   return (

@@ -15,7 +15,9 @@ import {
   LEGACY_INTAKE_PROMPTS,
   QUESTIONS_BANK,
   ROUND_ONLY_BANK,
+  PROMPT_REWORDS,
 } from '../src/lib/questions/bank';
+import { QUESTIONS_BANK_V1, ROUND_ONLY_BANK_V1 } from '../src/lib/questions/bank-v1';
 import { INTAKE_SET_SIZE, INTAKE_SETS, INTAKE_TOTAL, LEGACY_INTAKE_TOTAL } from '../src/lib/questions/intake-stage';
 import { questionDraftGuardHit } from '../src/lib/questions/guards';
 import { STABILITY_FLOOR_N } from '../src/lib/trait-stability';
@@ -44,7 +46,10 @@ ok('every trait has exactly 3 — this check fails on purpose if TRAIT_AXES grow
 // Nothing deleted: every old intake question is still served somewhere.
 assert.equal(LEGACY_INTAKE_PROMPTS.length, LEGACY_INTAKE_TOTAL);
 assert.equal(LEGACY_INTAKE_TOTAL, 50);
-const kept = new Set([...QUESTIONS_BANK, ...ROUND_ONLY_BANK].map((row) => row.prompt));
+// The old wording lives in bank-v1.ts; the current banks are the same rows reworded.
+const kept = new Set([...QUESTIONS_BANK_V1, ...ROUND_ONLY_BANK_V1].map((row) => row.prompt));
+const current = new Set([...QUESTIONS_BANK, ...ROUND_ONLY_BANK].map((row) => row.prompt));
+for (const row of LEGACY_INTAKE_PROMPTS) assert.ok(current.has(PROMPT_REWORDS[row.prompt] ?? row.prompt), `old intake question has no current wording: ${row.prompt}`);
 for (const row of LEGACY_INTAKE_PROMPTS) assert.ok(kept.has(row.prompt), `old intake question lost: ${row.prompt}`);
 for (const axis of TRAIT_AXES) {
   assert.equal(
@@ -60,9 +65,9 @@ ok('nothing deleted: all 50 old intake questions are in the intake or ROUND_ONLY
 for (const axis of TRAIT_AXES) {
   const first = QUESTIONS_BANK.find((row) => row.axis === axis)!;
   const oldFirst = LEGACY_INTAKE_PROMPTS.find((row) => row.axis === axis)!;
-  assert.equal(first.prompt, oldFirst.prompt, `${axis}: first entry must not move`);
+  assert.equal(first.prompt, PROMPT_REWORDS[oldFirst.prompt] ?? oldFirst.prompt, `${axis}: first entry must not move`);
 }
-ok('every trait keeps its original first question');
+ok('every trait keeps its original first question (reworded in place, never swapped)');
 
 // Every question measures something and clears the guard.
 for (const row of [...QUESTIONS_BANK, ...ROUND_ONLY_BANK]) {

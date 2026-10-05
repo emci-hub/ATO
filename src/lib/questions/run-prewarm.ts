@@ -11,6 +11,7 @@ import { generateOngoingRoundBatch } from './generate';
 import type { OngoingRoundMe } from './ongoing-round';
 import { axesBelowReserve } from './prewarm';
 import { buildQuestionsPrompt } from './prompt';
+import { generatedQuestionFailure } from './question-voice';
 import { allocateRound } from './tiered-axis-plan';
 
 /**
@@ -101,6 +102,7 @@ export async function prewarmBankPool(
 
     await fillAxisCountsChunked(wanted, recentText, {
       generateBatch: generateOngoingRoundBatch,
+      rejectDraft: generatedQuestionFailure,
       // The only persistence prewarm does. No per-user rows are written.
       saveItems: async (drafts) => {
         await addToBankPool(drafts as Parameters<typeof addToBankPool>[0]);

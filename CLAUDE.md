@@ -18,7 +18,7 @@ scanned-in Circle. `PROJECT_CONTEXT.md` is the memory; `docs/NOW.md` is live sta
 
 Live checks (need real accounts / network / keys) are excluded from the gate and run by hand:
 `around`, `auth-password`, `apple-revoke`, `card-live`, `crisis-live`, `delete-account`,
-`founder-access`, `intake-live`, `invite`, `quota`, `sentry`, `style-live`, `talk-live`.
+`founder-access`, `intake-live`, `invite`, `question-live`, `quota`, `sentry`, `style-live`, `talk-live`.
 
 ## Hard invariants
 

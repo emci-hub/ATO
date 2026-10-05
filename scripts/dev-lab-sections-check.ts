@@ -73,6 +73,7 @@ for (const p of ['<PushStatus />', '<AppReloadPanel />', '<LocalAccountData />',
 assert.match(phone!, /<YouDevTools timeZone=/);
 assert.match(phone!, /canSeeHubSection\('trace', gate\) \? <TraceCapture \/>/);
 assert.match(ai!, /canSeeHubSection\('quota', gate\) \? <QuotaDashboard \/>/);
+assert.ok(ai!.includes('<QuestionLabPanel />'), 'Question lab under AI (forever loop testing, 2026-10-05)');
 assert.ok(labs!.includes('<LabsList />'));
 ok('Content, This phone, AI and Labs hold their tools, each behind its capability where it has one');
 

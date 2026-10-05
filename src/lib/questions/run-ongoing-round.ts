@@ -5,6 +5,7 @@ import { generateOngoingRoundBatch } from './generate';
 import { addToBankPool, fetchBankCandidates, recordBankUsage } from './bank-pool';
 import { fetchRecentTexts } from './fetch-recent-texts';
 import { composeOngoingRound, type OngoingRoundMe } from './ongoing-round';
+import { generatedQuestionFailure } from './question-voice';
 import { ONGOING_ROUND_SIZE } from './tiered-axis-plan';
 import { saveOngoingRoundBatch } from './store';
 import type { QuestionPackRow } from './types';
@@ -47,6 +48,8 @@ export async function runOngoingRound(
     fetchBankCandidates,
     recordBankUsage,
     addToBankPool,
+    // Every question passes the voice gate before it is saved or shown.
+    rejectDraft: generatedQuestionFailure,
   });
   // Never save a short round: the +21 claim (wave78) needs a full one, so a
   // short pack could never pay. Whatever this attempt generated is already in

@@ -2,6 +2,7 @@ import { AXIS_POLE_NAME, AXIS_POLES } from '@/lib/axis-poles';
 import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
 import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
 import { effectiveStability, trackFor, type TraitTrack } from '@/lib/trait-stability';
+import { MOMENT_VOICE_BLOCK } from '@/lib/voice/moment-voice';
 import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
 import { voicePresetOf, VOICE_PRESET_GUIDE } from '@/lib/voice/preset';
 import { TALK_STYLE_GUIDE } from '@/lib/voice/talk-style';
@@ -9,6 +10,7 @@ import { leanHighLow, TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 import type { TalkStyle } from '@/lib/voice/types';
 
 import { QUESTIONS_FEW_SHOTS } from './bank';
+import { LOADED_OPTION_WORDS, OPTION_LENGTH_RATIO, QUESTION_OPTION_MAX, QUESTION_PROMPT_MAX } from './question-voice';
 import type { QuestionGrounding } from './types';
 
 /**
@@ -133,6 +135,9 @@ ${VOICE_REFERENCE}
 LOCKED EXAMPLES (use as the few-shot set, exactly this wording as the shape to match — not templates to paste):
 ${QUESTIONS_FEW_SHOTS}
 
+SETTING — the moment voice, for the question stem's SETTING only (the RULES below still decide axes, values and balance). A short question at the end of a stem is fine here.
+${MOMENT_VOICE_BLOCK}
+
 TODAY
 - Talk style: ${TALK_STYLE_GUIDE[input.me.talk_style]}
 - Voice: ${VOICE_PRESET_GUIDE[voicePresetOf(input.me.voice_preset)]}
@@ -159,6 +164,10 @@ ${axisEnds}${priority}RULES
 13. Never repeat the same sentence shape/structure two questions in a row.
 14. Optional, only when genuinely justified: a question may include primaryAxes (1-2 axes it specifically measures, each {axis, weight 0-1, reason}), secondaryAxes (0-3 weaker supporting axes, same shape, lower weight), excludedAxes (axes this question deliberately does NOT measure), and redundancyTags (short lowercase real-world-theme tags). Every one of these is optional — omit all of them for a clean single-axis question rather than inventing a weak secondary axis to fill the field.
 15. Where it comes naturally, set the moment in how people live now: a group chat, a shared calendar, forty open tabs, a voice note. Plain words, no slang. This changes the SETTING only — options stay balanced (rule 8), rule 6 still holds, and it never changes which axis a question measures or how its options are valued. Use a late reply or a read receipt ONLY for a question whose axis is about closeness; anywhere else it would measure the wrong thing.
+16. Every question has one option at 0.2 and one at 0.8, so both ends of its axis can be picked.
+17. Options are reactions in the same shape and about the same length, and every one is easy to admit to out loud: no option may sound wiser, kinder or cooler than the others. The longest option is at most ${OPTION_LENGTH_RATIO}x the shortest. Never any of these words in an option: ${LOADED_OPTION_WORDS.map((w) => `"${w}"`).join(', ')}.
+18. Stem at most ${QUESTION_PROMPT_MAX} characters, each option at most ${QUESTION_OPTION_MAX}. Never "you are", "you're" or "always" anywhere. Never a dated reference.
+19. Every question is checked before anyone sees it; one that breaks a rule above is thrown away, not fixed.
 
 Respond with JSON only, no prose. Minimum shape (single-axis, always valid):
 {"questions":[{"axis":"openness","prompt":"...","options":[{"text":"...","value":0.8},{"text":"...","value":0.2}]}]}

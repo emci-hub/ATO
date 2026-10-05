@@ -10,7 +10,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { LEGACY_INTAKE_PROMPTS, QUESTIONS_BANK, ROUND_ONLY_BANK } from '../src/lib/questions/bank';
+import { LEGACY_INTAKE_PROMPTS } from '../src/lib/questions/bank';
+import { QUESTIONS_BANK_V1, ROUND_ONLY_BANK_V1 } from '../src/lib/questions/bank-v1';
 import type { QuestionDraft } from '../src/lib/questions/types';
 import { TRAIT_AXES } from '../src/lib/traits';
 
@@ -80,7 +81,8 @@ ok('question_items.question_bank_item_id is a nullable FK; insert_question_pack 
 // by LEGACY_INTAKE_PROMPTS. wave49 is applied and never edited, so this checks
 // it against that old order — every row, not a spot-check.
 const SEEDED_BANK: QuestionDraft[] = LEGACY_INTAKE_PROMPTS.map((row) => {
-  const draft = [...QUESTIONS_BANK, ...ROUND_ONLY_BANK].find((d) => d.prompt === row.prompt);
+  // The seeded wording is the frozen one (bank-v1.ts); wave84 rewords the live rows.
+  const draft = [...QUESTIONS_BANK_V1, ...ROUND_ONLY_BANK_V1].find((d) => d.prompt === row.prompt);
   assert.ok(draft, `old intake prompt missing from the code: ${row.prompt}`);
   return draft!;
 });

@@ -62,6 +62,8 @@ export interface ComposeOngoingRoundDeps {
    * bank row). Real impl: bank-pool.ts's `addToBankPool`.
    */
   addToBankPool: (drafts: QuestionDraft[]) => Promise<void>;
+  /** The voice gate, applied to AI drafts and to pool rows alike. Real impl: question-voice.ts `generatedQuestionFailure`. */
+  rejectDraft?: ChunkedGenerateDeps['rejectDraft'];
 }
 
 interface FillFromBankResult {
@@ -83,7 +85,7 @@ interface FillFromBankResult {
 async function fillFromBank(
   target: Partial<Record<TraitAxis, number>>,
   recentText: readonly string[],
-  deps: Pick<ComposeOngoingRoundDeps, 'fetchBankCandidates' | 'recordBankUsage'>,
+  deps: Pick<ComposeOngoingRoundDeps, 'fetchBankCandidates' | 'recordBankUsage' | 'rejectDraft'>,
 ): Promise<FillFromBankResult> {
   const drafts: QuestionDraft[] = [];
   const remaining: Partial<Record<TraitAxis, number>> = {};
@@ -97,6 +99,8 @@ async function fillFromBank(
     for (const candidate of candidates) {
       if (picked.length >= count) break;
       if (isNearDuplicate(candidate.draft.prompt, excludeText)) continue;
+      // Older AI pool rows predate the voice gate; the same gate applies here.
+      if (deps.rejectDraft?.(candidate.draft, excludeText)) continue;
       picked.push(candidate);
     }
     for (const candidate of picked) {
@@ -156,6 +160,7 @@ export async function composeOngoingRound(
 
   const aiDrafts = await fillAxisCountsChunked(remaining, excludeText, {
     generateBatch: deps.generateBatch,
+    rejectDraft: deps.rejectDraft,
     saveItems: async (drafts) => {
       await deps.addToBankPool(drafts as QuestionDraft[]);
       await deps.saveItems(drafts);

@@ -32,6 +32,8 @@ import { type TraitTrack } from '@/lib/trait-stability';
 import { type TraitAxis } from '@/lib/traits';
 import { applyQuestionAnswer } from '@/lib/questions/answer';
 import { bankProgressForAxis, bankTotalProgress } from '@/lib/questions/local';
+import { mixSeed } from '@/lib/questions/mix-order';
+import { QUESTION_VOICE_COPY_REVIEWED } from '@/lib/questions/bank';
 import {
   currentIntakeSet,
   hasOptionalLegacyQuestions,
@@ -234,7 +236,7 @@ export function QuestionsFold({
         {fullProfileLocked ? (
           <ThemedText type="smallBold">{intakeSetHeader(set.set, INTAKE_SETS)}</ThemedText>
         ) : null}
-        {!STAGED_INTAKE_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
+        {(!STAGED_INTAKE_COPY_REVIEWED || !QUESTION_VOICE_COPY_REVIEWED) && PRE_LAUNCH_DEV ? (
           <ThemedText type="code" themeColor="textSecondary">
             Draft copy — waiting on emci review.
           </ThemedText>
@@ -248,6 +250,8 @@ export function QuestionsFold({
           // answered-option stamps (answered-option-storage.ts); per set, each
           // set opens on its first page.
           storageKey={`full-profile:${me.id}:set${set.set}`}
+          // Per-person order inside the set, stable across Back and restarts.
+          mixSeed={mixSeed(me.id, `set${set.set}`)}
           rows={bankRows}
           progressLabel={`${set.answered} of ${set.size} in this set · ${bankCompletedAxes.length} of ${bankAxes.length} traits`}
           onSaveBatch={saveBankAnswers}
@@ -662,6 +666,7 @@ function OngoingRoundFold({
           // stale local state bleeding from one round into the next.
           key={pack.id}
           storageKey={`ongoing-round:${pack.id}:${me.id}`}
+          mixSeed={mixSeed(me.id, `round:${pack.id}`)}
           rows={pack.items.map((item) => ({
             key: item.id,
             axis: item.axis,

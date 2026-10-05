@@ -1,3 +1,4 @@
+import { QUESTIONS_BANK_V1, ROUND_ONLY_BANK_V1 } from './bank-v1';
 import type { QuestionDraft } from './types';
 
 /**
@@ -18,10 +19,12 @@ import type { QuestionDraft } from './types';
  *
  * Hand-authored, not live-generated — see docs/archive/TRAIT_SYSTEM_REDESIGN_PLAN.md §3.
  *
- * Grouped in TRAIT_AXES order, and the FIRST draft of an axis is still the
- * original locked one quoted verbatim in QUESTIONS_FEW_SHOTS below — do not
- * reorder an axis group or reword a first entry without updating that string
- * too (`check:questions` asserts several of them verbatim).
+ * Grouped in TRAIT_AXES order. Reworded in the moment voice on 2026-10-05:
+ * the old wording is frozen in bank-v1.ts, index for index, and the server
+ * accepts both (wave84). A rewording keeps the trait, the set, the option
+ * order and every option value — scoring never moves (`check:question-voice`).
+ * Several rows are quoted verbatim in QUESTIONS_FEW_SHOTS below; keep them in
+ * step (`check:questions` asserts them).
  *
  * Multiple choice only, 2 or 3 options, never free text: `parseQuestionDraft`
  * and the `insert_question_pack` RPC both reject anything outside 2-3.
@@ -38,20 +41,19 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'openness',
     category: 'cat_openness',
-    prompt:
-      "Your Do today was writing down one thing you're walking into. Was today's version the safe pick or the different one?",
+    prompt: 'A new place opened next to your usual spot, and your usual order is already in the app.',
     options: [
-      { text: 'The different one, easily', value: 0.8 },
-      { text: 'Somewhere in between', value: 0.5 },
-      { text: 'The safe, familiar one', value: 0.2 },
+      { text: 'I try the new place', value: 0.8 },
+      { text: 'I save it for next week', value: 0.5 },
+      { text: "Usual order. It's right there", value: 0.2 },
     ],
   },
   {
     axis: 'openness',
     category: 'cat_openness',
-    prompt: 'Same restaurant, and there is a menu item you have never tried.',
+    prompt: 'Same restaurant, same order, and a dish you have never tried is on the menu.',
     options: [
-      { text: 'New one. Obviously', value: 0.8 },
+      { text: 'I order the new one', value: 0.8 },
       { text: 'Depends on the day', value: 0.5 },
       { text: 'I know what I like', value: 0.2 },
     ],
@@ -59,7 +61,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'openness',
     category: 'cat_openness',
-    prompt: 'A friend wants to drag you to something you would never pick yourself.',
+    prompt: 'A friend sends an invite to something you would never pick yourself.',
     options: [
       { text: "I'm in, that's the fun part", value: 0.8 },
       { text: "I'd probably pass", value: 0.2 },
@@ -69,7 +71,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'conscientiousness',
     category: 'cat_steadiness',
-    prompt: 'A plan you made last week hits a boring stretch today.',
+    prompt: 'The plan you put in your calendar last week hits its boring part today.',
     options: [
       { text: 'I still see it through', value: 0.8 },
       { text: 'I keep it if it stays easy', value: 0.5 },
@@ -79,19 +81,19 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'conscientiousness',
     category: 'cat_steadiness',
-    prompt: 'Something is due Friday. It is Monday.',
+    prompt: 'Monday. Your calendar says it is due Friday.',
     options: [
       { text: 'I start chipping at it now', value: 0.8 },
       { text: 'I start once it feels close', value: 0.5 },
-      { text: 'Thursday night, same as always', value: 0.2 },
+      { text: 'Thursday night, like last time', value: 0.2 },
     ],
   },
   {
     axis: 'conscientiousness',
     category: 'cat_steadiness',
-    prompt: 'You said you would do a small thing for someone and nobody followed up.',
+    prompt: "You said you'd send someone a link. Nobody followed up.",
     options: [
-      { text: 'I still do it', value: 0.8 },
+      { text: 'I still send it', value: 0.8 },
       { text: 'It quietly disappears', value: 0.2 },
     ],
   },
@@ -99,30 +101,30 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'extraversion',
     category: 'cat_openness',
-    prompt: 'Saturday afternoon, nobody has plans yet.',
+    prompt: 'Saturday afternoon and the group chat is quiet.',
     options: [
-      { text: "I'd rather text a few people and make something happen", value: 0.8 },
+      { text: 'I text a few people and make plans', value: 0.8 },
       { text: "Either way, I'm fine", value: 0.5 },
-      { text: "I'd rather keep the time quiet", value: 0.2 },
+      { text: 'I keep the afternoon quiet', value: 0.2 },
     ],
   },
   {
     axis: 'extraversion',
     category: 'cat_openness',
-    prompt: 'You walk into a party and know maybe two people.',
+    prompt: 'You walk into a party and know two people. Both are on their phones.',
     options: [
       { text: 'I start talking to someone new', value: 0.8 },
-      { text: 'I find the two I know', value: 0.5 },
+      { text: 'I go stand with the two I know', value: 0.5 },
       { text: "I'm counting the minutes", value: 0.2 },
     ],
   },
   {
     axis: 'extraversion',
     category: 'cat_openness',
-    prompt: 'A long week just ended.',
+    prompt: 'Friday, 6pm. Three invites in the group chat.',
     options: [
-      { text: 'Going out would recharge me', value: 0.8 },
-      { text: 'Being alone would recharge me', value: 0.2 },
+      { text: "I'm going to at least one", value: 0.8 },
+      { text: 'Couch. Phone on silent', value: 0.2 },
     ],
   },
   // --- agreeableness ------------------------------------------------------------
@@ -139,7 +141,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'agreeableness',
     category: 'cat_steadiness',
-    prompt: 'Someone takes credit for something that was mostly yours.',
+    prompt: 'On the team call, someone shares your idea as their own.',
     options: [
       { text: 'I let it slide', value: 0.8 },
       { text: 'I mention it lightly, later', value: 0.5 },
@@ -149,7 +151,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'agreeableness',
     category: 'cat_steadiness',
-    prompt: 'A stranger is clearly in the wrong and clearly having a bad day.',
+    prompt: 'The delivery driver gets your order wrong and looks like their day has been rough.',
     options: [
       { text: 'I give them the benefit of the doubt', value: 0.8 },
       { text: 'Bad day or not, wrong is wrong', value: 0.2 },
@@ -159,7 +161,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'steadiness',
     category: 'cat_steadiness',
-    prompt: 'A small thing goes wrong first thing in the morning.',
+    prompt: 'Your phone hits 3% before you have left the house.',
     options: [
       { text: "I'm mostly over it by lunch", value: 0.8 },
       { text: 'It sits with me a bit, then fades', value: 0.5 },
@@ -169,7 +171,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'steadiness',
     category: 'cat_steadiness',
-    prompt: 'Plans change on you an hour before.',
+    prompt: 'An hour before, the group chat moves the plan somewhere else.',
     options: [
       { text: 'Fine, I roll with it', value: 0.8 },
       { text: 'Mild whiplash, then fine', value: 0.5 },
@@ -190,17 +192,17 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'attachment_anxiety',
     category: 'cat_love',
-    prompt: 'Someone you like takes a while to reply.',
+    prompt: 'Someone you like has had your message for three hours.',
     options: [
-      { text: "I start wondering if they're pulling away", value: 0.8 },
-      { text: 'I notice, then I get on with my day', value: 0.5 },
+      { text: "I wonder if they're pulling away", value: 0.8 },
+      { text: 'I notice, then get on with my day', value: 0.5 },
       { text: "I don't think much of it", value: 0.2 },
     ],
   },
   {
     axis: 'attachment_anxiety',
     category: 'cat_love',
-    prompt: 'A close friend has been quieter than usual this week.',
+    prompt: 'Your closest friend has gone quiet in the chat this week.',
     options: [
       { text: 'I assume I did something', value: 0.8 },
       { text: 'I wonder for a second, then drop it', value: 0.5 },
@@ -230,11 +232,11 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'attachment_avoidance',
     category: 'cat_love',
-    prompt: 'A rough week. Someone asks how you actually are.',
+    prompt: "A rough week, and someone texts 'how are you, really?'",
     options: [
       { text: 'I tell them the real version', value: 0.2 },
       { text: 'I give them the short version', value: 0.5 },
-      { text: 'I say I am fine and change the subject', value: 0.8 },
+      { text: "I say I'm fine and change the subject", value: 0.8 },
     ],
   },
   {
@@ -251,9 +253,9 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'conflict_assertiveness',
     category: 'cat_communication',
-    prompt: 'You disagree with someone in the room.',
+    prompt: 'On a work call, someone says something you think is wrong.',
     options: [
-      { text: 'I say so, even if it gets a little sharp', value: 0.8 },
+      { text: 'I say so, even if it gets a bit sharp', value: 0.8 },
       { text: 'I wait to see if it blows over', value: 0.5 },
       { text: 'I let it go rather than push', value: 0.2 },
     ],
@@ -271,7 +273,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'conflict_assertiveness',
     category: 'cat_communication',
-    prompt: 'You want something and asking might annoy someone.',
+    prompt: "Your roommate's music is loud and asking might annoy them.",
     options: [
       { text: 'I ask anyway', value: 0.8 },
       { text: 'I let it go', value: 0.2 },
@@ -281,8 +283,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'conflict_cooperativeness',
     category: 'cat_communication',
-    prompt:
-      'When you and someone else both want different things with no obvious middle ground, who usually gives first?',
+    prompt: 'You and a friend each sent a different dinner spot. Who gives first?',
     options: [
       { text: 'Probably me', value: 0.8 },
       { text: 'Depends who cares more', value: 0.5 },
@@ -292,9 +293,9 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'conflict_cooperativeness',
     category: 'cat_communication',
-    prompt: 'An argument is going nowhere and it is getting late.',
+    prompt: 'A text argument is ten messages deep and it is getting late.',
     options: [
-      { text: 'I look for something we both can live with', value: 0.8 },
+      { text: 'I find something we can both live with', value: 0.8 },
       { text: 'I park it for tomorrow', value: 0.5 },
       { text: 'I hold my line', value: 0.2 },
     ],
@@ -302,7 +303,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'conflict_cooperativeness',
     category: 'cat_communication',
-    prompt: "The group chat is arguing and you know you're right.",
+    prompt: 'The group chat is arguing and you know the right answer.',
     options: [
       { text: 'I let it go to keep the chat calm', value: 0.8 },
       { text: 'I say it once, then drop it', value: 0.5 },
@@ -313,7 +314,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'autonomy',
     category: 'cat_drive',
-    prompt: 'Someone hands you a plan that would work fine.',
+    prompt: 'A friend sends the whole trip plan in the chat, and it would work fine.',
     options: [
       { text: "I'd still rather do it my way", value: 0.8 },
       { text: "I'll use theirs if it saves time", value: 0.5 },
@@ -323,11 +324,11 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'autonomy',
     category: 'cat_drive',
-    prompt: 'You get told exactly how to do something you already know how to do.',
+    prompt: 'Someone messages you step-by-step instructions for a thing you already know how to do.',
     options: [
       { text: 'It gets under my skin', value: 0.8 },
       { text: 'I notice it, then let it go', value: 0.5 },
-      { text: "Fine by me, less to think about", value: 0.2 },
+      { text: 'Fine by me, less to think about', value: 0.2 },
     ],
   },
   {
@@ -344,7 +345,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'competence',
     category: 'cat_drive',
-    prompt: 'A hard task lands on your plate.',
+    prompt: 'A hard task lands in your inbox with your name on it.',
     options: [
       { text: 'I feel like I can handle it', value: 0.8 },
       { text: 'Depends how hard, honestly', value: 0.5 },
@@ -354,7 +355,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'competence',
     category: 'cat_drive',
-    prompt: 'You are learning something new and you are still bad at it.',
+    prompt: 'Three weeks into a language app, and it still marks you wrong.',
     options: [
       { text: 'I can feel myself getting better', value: 0.8 },
       { text: 'Some days it clicks', value: 0.5 },
@@ -364,7 +365,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'competence',
     category: 'cat_drive',
-    prompt: "Someone at work says 'this is your area, right?'",
+    prompt: "Someone at work messages: 'this is your area, right?'",
     options: [
       { text: 'Fair, it is', value: 0.8 },
       { text: "Probably, I'd double-check", value: 0.5 },
@@ -375,7 +376,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'relatedness',
     category: 'cat_drive',
-    prompt: 'A friend cancels same-day, no real reason given.',
+    prompt: 'A friend cancels by text an hour before, no real reason given.',
     options: [
       { text: "I'd want to talk it through", value: 0.8 },
       { text: "I'd let it go, check in eventually", value: 0.2 },
@@ -384,7 +385,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'relatedness',
     category: 'cat_drive',
-    prompt: 'Something good happens to you on an ordinary Tuesday.',
+    prompt: 'Good news pops up on your phone on an ordinary Tuesday.',
     options: [
       { text: "I'm texting someone before I sit down", value: 0.8 },
       { text: 'It comes up next time we talk', value: 0.5 },
@@ -404,7 +405,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'growth_mindset',
     category: 'cat_agency',
-    prompt: 'You try something new and it goes badly the first time. What actually happens next?',
+    prompt: 'Your first try at a recipe from a video goes badly. What actually happens next?',
     options: [
       { text: "I look at what I'd do differently", value: 0.8 },
       { text: "I probably don't try that again", value: 0.2 },
@@ -413,7 +414,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'growth_mindset',
     category: 'cat_agency',
-    prompt: 'Someone is much better than you at a thing you care about.',
+    prompt: 'Someone online is much better than you at a thing you care about.',
     options: [
       { text: 'I want to know how they got there', value: 0.8 },
       { text: 'Good for them, different lane', value: 0.5 },
@@ -434,31 +435,31 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'locus_of_control',
     category: 'cat_agency',
-    prompt: 'A plan you were in on falls apart.',
+    prompt: 'The group trip you helped plan falls apart in the chat.',
     options: [
-      { text: 'I look first at what I might have done differently', value: 0.8 },
-      { text: "Some of it was me, some of it wasn't", value: 0.5 },
+      { text: 'I look at what I could have done', value: 0.8 },
+      { text: "Some of it was me, some wasn't", value: 0.5 },
       { text: 'It was bound to happen', value: 0.2 },
     ],
   },
   {
     axis: 'locus_of_control',
     category: 'cat_agency',
-    prompt: 'A good week. Where does the credit actually go?',
+    prompt: "A good week, and someone texts 'how did you pull that off?'",
     options: [
-      { text: 'Mostly to what I did', value: 0.8 },
+      { text: 'Honestly, I worked for it', value: 0.8 },
       { text: 'A bit of both', value: 0.5 },
-      { text: 'Mostly to how things fell', value: 0.2 },
+      { text: 'Good timing, mostly', value: 0.2 },
     ],
   },
   {
     axis: 'locus_of_control',
     category: 'cat_agency',
-    prompt: "Someone asks how next year's looking.",
+    prompt: 'New year, blank calendar. How it goes is mostly…',
     options: [
-      { text: 'Mostly up to what I do', value: 0.8 },
+      { text: 'Up to what I do', value: 0.8 },
       { text: 'Half me, half luck', value: 0.5 },
-      { text: 'Depends what happens', value: 0.2 },
+      { text: 'Up to what happens', value: 0.2 },
     ],
   },
   // --- self_efficacy ------------------------------------------------------------
@@ -468,14 +469,14 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
     prompt: "Everyone at the table already knows their order. You don't.",
     options: [
       { text: "I panic-order whatever's closest", value: 0.2 },
-      { text: 'Takes me a sec but I land on something', value: 0.5 },
-      { text: 'I ask what everyone else got', value: 0.8 },
+      { text: 'Takes a sec, but I land on something', value: 0.5 },
+      { text: 'I pick something and own it', value: 0.8 },
     ],
   },
   {
     axis: 'self_efficacy',
     category: 'cat_agency',
-    prompt: 'Something breaks and you have never fixed one before.',
+    prompt: 'The wifi drops and you have never fixed it yourself before.',
     options: [
       { text: "I'll figure it out", value: 0.8 },
       { text: 'I look it up first', value: 0.5 },
@@ -496,7 +497,7 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'playfulness',
     category: 'cat_social',
-    prompt: 'A dull stretch with nothing required of you.',
+    prompt: 'A 40-minute delay at the gate, and your phone is at 20%.',
     options: [
       { text: "I'd mess around and see what happens", value: 0.8 },
       { text: 'Either way, I am fine', value: 0.5 },
@@ -506,10 +507,10 @@ export const QUESTIONS_BANK: readonly QuestionDraft[] = [
   {
     axis: 'playfulness',
     category: 'cat_social',
-    prompt: 'A serious conversation hits a genuinely funny moment.',
+    prompt: "A serious work call, and someone's cat walks across their keyboard.",
     options: [
       { text: 'I take the joke', value: 0.8 },
-      { text: 'Depends who is in the room', value: 0.5 },
+      { text: 'Depends who is on the call', value: 0.5 },
       { text: 'I keep it serious', value: 0.2 },
     ],
   },
@@ -538,7 +539,7 @@ export const ROUND_ONLY_BANK: readonly QuestionDraft[] = [
   {
     axis: 'openness',
     category: 'cat_openness',
-    prompt: "You're picking a show to watch and there's something new in your queue you haven't tried.",
+    prompt: 'Something new is sitting in your watch queue, right next to an old favorite.',
     options: [
       { text: 'New one', value: 0.8 },
       { text: 'Depends on my mood', value: 0.5 },
@@ -548,7 +549,7 @@ export const ROUND_ONLY_BANK: readonly QuestionDraft[] = [
   {
     axis: 'openness',
     category: 'cat_openness',
-    prompt: 'A coworker suggests doing the project a totally different way than you planned.',
+    prompt: 'A coworker drops a totally different plan into the project chat.',
     options: [
       { text: "I'm curious, let's see", value: 0.8 },
       { text: "I'll hear them out", value: 0.5 },
@@ -558,7 +559,7 @@ export const ROUND_ONLY_BANK: readonly QuestionDraft[] = [
   {
     axis: 'openness',
     category: 'cat_openness',
-    prompt: "You have a free Saturday and someone mentions a class or hobby you've never tried.",
+    prompt: 'A friend sends a link to a class for a hobby you have never tried.',
     options: [
       { text: "I'd sign up", value: 0.8 },
       { text: 'Maybe another time', value: 0.2 },
@@ -577,26 +578,26 @@ export const ROUND_ONLY_BANK: readonly QuestionDraft[] = [
   {
     axis: 'conscientiousness',
     category: 'cat_steadiness',
-    prompt: "You told yourself you'd clean up before bed, and you're tired.",
+    prompt: "Midnight, dishes in the sink, and you promised yourself you'd do them tonight.",
     options: [
-      { text: 'I still do it', value: 0.8 },
+      { text: 'I still do them', value: 0.8 },
       { text: 'I do the bare minimum', value: 0.5 },
-      { text: 'It waits until tomorrow', value: 0.2 },
+      { text: 'They wait until tomorrow', value: 0.2 },
     ],
   },
   {
     axis: 'conscientiousness',
     category: 'cat_steadiness',
-    prompt: 'A form needs three pieces of information and you only have two handy.',
+    prompt: 'An online form wants three things and you only have two handy.',
     options: [
       { text: 'I track down the third one now', value: 0.8 },
-      { text: 'I fill in what I can and come back', value: 0.2 },
+      { text: 'I fill in what I can, come back later', value: 0.2 },
     ],
   },
   {
     axis: 'extraversion',
     category: 'cat_openness',
-    prompt: "You've been working alone for hours and hit a wall.",
+    prompt: 'Hours alone with your laptop, and you just hit a wall.',
     options: [
       { text: 'I go find someone to talk to', value: 0.8 },
       { text: 'Either way', value: 0.5 },
@@ -606,17 +607,17 @@ export const ROUND_ONLY_BANK: readonly QuestionDraft[] = [
   {
     axis: 'extraversion',
     category: 'cat_openness',
-    prompt: 'A coworker asks if you want to grab lunch with the group instead of eating at your desk.',
+    prompt: "The team chat asks who's in for lunch.",
     options: [
-      { text: 'Yes, easily', value: 0.8 },
+      { text: 'Count me in', value: 0.8 },
       { text: 'Depends on the day', value: 0.5 },
-      { text: "I'd rather eat alone", value: 0.2 },
+      { text: "I'd rather eat at my desk", value: 0.2 },
     ],
   },
   {
     axis: 'extraversion',
     category: 'cat_openness',
-    prompt: "You're the one who has to make small talk with someone new at an event.",
+    prompt: 'At an event, you end up next to someone new and nobody is talking.',
     options: [
       { text: "I don't mind starting it", value: 0.8 },
       { text: "I'll follow their lead", value: 0.2 },
@@ -625,7 +626,7 @@ export const ROUND_ONLY_BANK: readonly QuestionDraft[] = [
   {
     axis: 'agreeableness',
     category: 'cat_steadiness',
-    prompt: "Someone asks for a favor that's a genuine inconvenience for you.",
+    prompt: 'A friend texts asking for a favor that would eat your whole evening.',
     options: [
       { text: 'I usually say yes anyway', value: 0.8 },
       { text: 'Depends how big a favor', value: 0.5 },
@@ -635,7 +636,7 @@ export const ROUND_ONLY_BANK: readonly QuestionDraft[] = [
   {
     axis: 'conflict_assertiveness',
     category: 'cat_communication',
-    prompt: "A friend keeps borrowing money and hasn't paid you back.",
+    prompt: "A friend still hasn't paid you back for the last three dinners.",
     options: [
       { text: 'I bring it up directly', value: 0.8 },
       { text: 'I hint at it', value: 0.5 },
@@ -645,7 +646,7 @@ export const ROUND_ONLY_BANK: readonly QuestionDraft[] = [
   {
     axis: 'relatedness',
     category: 'cat_drive',
-    prompt: "You just finished something you're proud of.",
+    prompt: 'You just finished something and it came out better than you hoped.',
     options: [
       { text: 'I want to tell someone right away', value: 0.8 },
       { text: 'It can wait until it comes up', value: 0.5 },
@@ -655,16 +656,16 @@ export const ROUND_ONLY_BANK: readonly QuestionDraft[] = [
   {
     axis: 'steadiness',
     category: 'cat_steadiness',
-    prompt: 'Someone sends a short reply that could be read two ways.',
+    prompt: "Your manager messages 'can we talk tomorrow?' and nothing else.",
     options: [
-      { text: 'I read it the plain way and move on', value: 0.8 },
+      { text: 'I read it plain and move on', value: 0.8 },
       { text: 'I reread it a few times', value: 0.2 },
     ],
   },
   {
     axis: 'attachment_anxiety',
     category: 'cat_love',
-    prompt: 'You need reassurance more often than you would like to admit.',
+    prompt: 'After a good night out, you scroll back through the chat to check it really went well.',
     options: [
       { text: 'Yeah, that lands', value: 0.8 },
       { text: 'Not really me', value: 0.2 },
@@ -673,7 +674,7 @@ export const ROUND_ONLY_BANK: readonly QuestionDraft[] = [
   {
     axis: 'attachment_avoidance',
     category: 'cat_love',
-    prompt: 'Things are getting closer with someone.',
+    prompt: "The person you've been seeing starts saying 'we' in texts.",
     options: [
       { text: 'I lean in', value: 0.2 },
       { text: 'I want a bit of room', value: 0.8 },
@@ -682,16 +683,16 @@ export const ROUND_ONLY_BANK: readonly QuestionDraft[] = [
   {
     axis: 'conflict_cooperativeness',
     category: 'cat_communication',
-    prompt: 'Winning the point matters more than keeping the peace.',
+    prompt: 'Mid-argument, you find the screenshot that proves your point.',
     options: [
-      { text: 'Not for me, usually', value: 0.8 },
-      { text: 'Honestly, sometimes yes', value: 0.2 },
+      { text: 'I keep it to myself', value: 0.8 },
+      { text: 'I send it', value: 0.2 },
     ],
   },
   {
     axis: 'autonomy',
     category: 'cat_drive',
-    prompt: 'A free day with nothing scheduled and nobody asking anything of you.',
+    prompt: 'A day off, notifications muted, and nobody needs anything from you.',
     options: [
       { text: 'That is the best kind of day', value: 0.8 },
       { text: "I'd rather have a plan", value: 0.2 },
@@ -700,7 +701,7 @@ export const ROUND_ONLY_BANK: readonly QuestionDraft[] = [
   {
     axis: 'competence',
     category: 'cat_drive',
-    prompt: 'Someone says you are good at something you do a lot.',
+    prompt: "A coworker messages 'how are you so good at this?'",
     options: [
       { text: 'Yeah, I think so too', value: 0.8 },
       { text: 'I brush it off', value: 0.2 },
@@ -709,25 +710,25 @@ export const ROUND_ONLY_BANK: readonly QuestionDraft[] = [
   {
     axis: 'growth_mindset',
     category: 'cat_agency',
-    prompt: 'You can get noticeably better at almost anything with enough reps.',
+    prompt: 'Day 1 of a 30-day challenge in an app, and it shows.',
     options: [
-      { text: 'I believe that', value: 0.8 },
-      { text: 'Only up to a point', value: 0.2 },
+      { text: "I'll be better by day 30", value: 0.8 },
+      { text: 'Some things just are not for me', value: 0.2 },
     ],
   },
   {
     axis: 'locus_of_control',
     category: 'cat_agency',
-    prompt: 'How next year goes is mostly up to you.',
+    prompt: 'The email lands: the job you wanted went to someone else.',
     options: [
-      { text: 'Mostly, yes', value: 0.8 },
+      { text: "Next time I'll do it differently", value: 0.8 },
       { text: 'Timing decides more than I do', value: 0.2 },
     ],
   },
   {
     axis: 'self_efficacy',
     category: 'cat_agency',
-    prompt: 'A big thing you have to do, and no obvious first step.',
+    prompt: 'You move apartments next month and the to-do list is just a title.',
     options: [
       { text: 'I start somewhere and adjust', value: 0.8 },
       { text: 'I stall until it gets urgent', value: 0.2 },
@@ -736,10 +737,10 @@ export const ROUND_ONLY_BANK: readonly QuestionDraft[] = [
   {
     axis: 'playfulness',
     category: 'cat_social',
-    prompt: 'People would say you are one of the sillier people they know.',
+    prompt: 'Someone asks who sends the most memes in the group chat.',
     options: [
-      { text: 'That tracks', value: 0.8 },
-      { text: 'Not the word they would use', value: 0.2 },
+      { text: "Guilty, that's me", value: 0.8 },
+      { text: 'Not me, I just react', value: 0.2 },
     ],
   },
 ];
@@ -825,14 +826,66 @@ export const LEGACY_INTAKE_PROMPTS: readonly { axis: QuestionDraft['axis']; prom
   { axis: 'playfulness', prompt: 'A serious conversation hits a genuinely funny moment.' },
 ];
 
-export const QUESTIONS_FEW_SHOTS = `1. Openness, grounded in today's Do: "Your Do today was writing down one thing you're walking into. Was today's version the safe pick or the different one?" Options: "The different one, easily" / "Somewhere in between" / "The safe, familiar one"
+/**
+ * The AI round prompt's register: revised bank questions in the moment voice
+ * (emci 2026-10-05). The model matches these and must never reuse one —
+ * every bank prompt is also in the prompt's ALREADY ASKED list.
+ */
+export const QUESTIONS_FEW_SHOTS = `1. Openness: "A new place opened next to your usual spot, and your usual order is already in the app." Options: "I try the new place" / "I save it for next week" / "Usual order. It's right there"
 
-2. Relatedness, fact woven in quietly: "A friend cancels same-day, no real reason given." Options: "I'd want to talk it through" / "I'd let it go, check in eventually"
+2. Relatedness: "A friend cancels by text an hour before, no real reason given." Options: "I'd want to talk it through" / "I'd let it go, check in eventually"
 
-3. Growth mindset, plain baseline: "You try something new and it goes badly the first time. What actually happens next?" Options: "I look at what I'd do differently" / "I probably don't try that again"
+3. Attachment_anxiety: "You sent a long message an hour ago. It says Read." Options: "I check back more than I'd admit" / "I notice, then put the phone down" / "I forget I sent it"
 
 4. Attachment_avoidance, balanced options: "Someone close to you wants to talk something out in person instead of over text." Options: "Sure, that's fine when it matters" / "I'd rather keep it lighter, over text"
 
-5. Self-efficacy, low-stakes fun variant, no skip-grounding: "Everyone at the table already knows their order. You don't." Options: "I panic-order whatever's closest" / "Takes me a sec but I land on something" / "I ask what everyone else got"
+5. Self-efficacy, low-stakes and fun: "Everyone at the table already knows their order. You don't." Options: "I panic-order whatever's closest" / "Takes a sec, but I land on something" / "I pick something and own it"
 
-6. Conflict_cooperativeness, plain, no scenario framing: "When you and someone else both want different things with no obvious middle ground, who usually gives first?" Options: "Probably me" / "Depends who cares more" / "Rarely me"`;
+6. Conflict_cooperativeness: "The group chat is arguing and you know the right answer." Options: "I let it go to keep the chat calm" / "I say it once, then drop it" / "I send the link that proves it"
+
+7. Playfulness: "A serious work call, and someone's cat walks across their keyboard." Options: "I take the joke" / "Depends who is on the call" / "I keep it serious"
+
+8. Steadiness: "An hour before, the group chat moves the plan somewhere else." Options: "Fine, I roll with it" / "Mild whiplash, then fine" / "It throws off the whole evening"`;
+
+/**
+ * The moment-voice rewrite (2026-10-05) is draft copy until emci reads it.
+ * The before/after table is docs/proposals/question-rewrite.md.
+ */
+export const QUESTION_VOICE_COPY_REVIEWED = false;
+
+/**
+ * Old wording -> new wording for every bank row the rewrite changed (intake
+ * and round-only). Index for index with bank-v1.ts, so trait, set and option
+ * values are identical; only the words moved. Used wherever the app matches
+ * question TEXT: the round's "already asked" list and the old-intake
+ * exclusions, so a person who answered the old wording never gets the new
+ * wording of the same question in a round (and the other way round).
+ */
+export const PROMPT_REWORDS: Readonly<Record<string, string>> = (() => {
+  const out: Record<string, string> = {};
+  const pairs: [readonly QuestionDraft[], readonly QuestionDraft[]][] = [
+    [QUESTIONS_BANK_V1, QUESTIONS_BANK],
+    [ROUND_ONLY_BANK_V1, ROUND_ONLY_BANK],
+  ];
+  for (const [before, after] of pairs) {
+    before.forEach((row, i) => {
+      if (row.prompt !== after[i].prompt) out[row.prompt] = after[i].prompt;
+    });
+  }
+  return out;
+})();
+
+const REWORDED_FROM: Readonly<Record<string, string>> = Object.fromEntries(
+  Object.entries(PROMPT_REWORDS).map(([before, after]) => [after, before]),
+);
+
+/** Each text plus its other wording, if the rewrite gave it one. */
+export function withRewordAliases(texts: readonly string[]): string[] {
+  const out: string[] = [];
+  for (const text of texts) {
+    out.push(text);
+    const other = PROMPT_REWORDS[text] ?? REWORDED_FROM[text];
+    if (other) out.push(other);
+  }
+  return out;
+}

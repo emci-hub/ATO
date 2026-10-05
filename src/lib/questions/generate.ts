@@ -51,3 +51,17 @@ export async function generateOngoingRoundBatch(
   const drafts = parseQuestionBatch(text, n);
   return drafts.length >= n ? drafts.slice(0, n) : drafts.length > 0 ? drafts : null;
 }
+
+/**
+ * The Question lab's call (dev only, 2026-10-05): the same request and
+ * metadata as a round chunk, but the raw text comes back so the lab can show
+ * what the model wrote before the voice gate judges it. Nothing is saved.
+ */
+export async function generateQuestionLabText(prompt: string): Promise<string | null> {
+  return generateText({
+    prompt,
+    temperature: 0.9,
+    maxOutputTokens: 2048,
+    responseFormat: 'json',
+  }, ONGOING_ROUND_META);
+}

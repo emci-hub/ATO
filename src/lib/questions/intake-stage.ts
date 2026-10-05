@@ -22,7 +22,8 @@
 import { trackFor, type TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
-import { LEGACY_INTAKE_AXIS_COUNTS, LEGACY_INTAKE_PROMPTS, QUESTIONS_BANK } from './bank';
+import { LEGACY_INTAKE_AXIS_COUNTS, LEGACY_INTAKE_PROMPTS, PROMPT_REWORDS } from './bank';
+import { QUESTIONS_BANK_V1 } from './bank-v1';
 
 /** One question per trait per set. */
 export const INTAKE_SET_SIZE = TRAIT_AXES.length;
@@ -112,7 +113,8 @@ export function hasOptionalLegacyQuestions(tracks: readonly TraitTrack[]): boole
  * a moved extra it never saw — fewer bank candidates, never wrong data.
  */
 export function legacyIntakeExclusions(tracks: readonly TraitTrack[]): string[] {
-  const current = new Set(QUESTIONS_BANK.map((row) => row.prompt));
+  // Compared in the old wording (bank-v1.ts), so the 2026-10-05 rewrite moves nothing.
+  const current = new Set(QUESTIONS_BANK_V1.map((row) => row.prompt));
   const seenPerAxis = new Map<TraitAxis, number>();
   const out: string[] = [];
   for (const row of LEGACY_INTAKE_PROMPTS) {
@@ -120,7 +122,12 @@ export function legacyIntakeExclusions(tracks: readonly TraitTrack[]): string[] 
     const index = seenPerAxis.get(axis) ?? 0;
     seenPerAxis.set(axis, index + 1);
     if (current.has(row.prompt)) continue;
-    if (index < reportCount(tracks, axis)) out.push(row.prompt);
+    if (index < reportCount(tracks, axis)) {
+      out.push(row.prompt);
+      // The pool row now carries the new wording (wave84); keep it out too.
+      const reworded = PROMPT_REWORDS[row.prompt];
+      if (reworded) out.push(reworded);
+    }
   }
   return out;
 }

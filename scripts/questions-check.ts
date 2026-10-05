@@ -108,10 +108,14 @@ for (const row of QUESTIONS_BANK) {
   assert.ok(row.prompt.length <= 400, row.prompt);
   assert.equal(questionDraftGuardHit(row), null, row.prompt);
 }
-assert.match(QUESTIONS_FEW_SHOTS, /Your Do today was writing down one thing you're walking into/);
-assert.match(QUESTIONS_FEW_SHOTS, /A friend cancels same-day, no real reason given/);
+assert.match(QUESTIONS_FEW_SHOTS, /A new place opened next to your usual spot/);
+assert.match(QUESTIONS_FEW_SHOTS, /A friend cancels by text an hour before, no real reason given/);
 assert.match(QUESTIONS_FEW_SHOTS, /Everyone at the table already knows their order/);
-ok('locked few-shot set is used verbatim');
+for (const row of QUESTIONS_BANK) {
+  if (QUESTIONS_FEW_SHOTS.includes(row.prompt)) for (const o of row.options) assert.ok(QUESTIONS_FEW_SHOTS.includes(o.text), `few-shot option drifted: ${o.text}`);
+}
+assert.doesNotMatch(QUESTIONS_FEW_SHOTS, /Your Do today/, 'the retired Read + Do card is gone from the examples');
+ok('few-shot set quotes the revised bank verbatim');
 
 // --- Category tagging (additive; not wired into the picker mechanism) -----
 // Every bank question resolves to a real category, using the deterministic
@@ -187,7 +191,7 @@ const prompt = buildQuestionsPrompt({
   grounding: { kind: 'do', detail: 'Write one line.' },
 });
 assert.match(prompt, /LOCKED EXAMPLES/);
-assert.match(prompt, /The different one, easily/);
+assert.match(prompt, /I try the new place/);
 assert.match(prompt, /Never ask for free text/);
 assert.match(prompt, /Never a hypothetical/);
 assert.match(prompt, /Never double-barrel/);

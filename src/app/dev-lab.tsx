@@ -39,6 +39,7 @@ import {
   MiniGuyPanel,
   NextRoundPreview,
   PushStatus,
+  QuestionLabPanel,
   TokensToday,
 } from '@/components/dev-hub-panels';
 import { CrisisCard } from '@/components/crisis-card';
@@ -222,8 +223,9 @@ function DevLab({ access }: { access: Exclude<HubAccess, 'none'> }) {
                 {canSeeHubSection('trace', gate) ? <TraceCapture /> : null}
               </HubSection>
 
-              <HubSection title="AI" count={1}>
+              <HubSection title="AI" count={2}>
                 {canSeeHubSection('quota', gate) ? <QuotaDashboard /> : null}
+                <QuestionLabPanel />
               </HubSection>
 
               <HubSection title="Labs" hint="Screens nothing else links to." count={6}>

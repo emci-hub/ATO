@@ -1,0 +1,145 @@
+/**
+ * The question bank in the moment voice, and the forever loop's voice gate
+ * (emci 2026-10-05). Run: npm run check:question-voice
+ *
+ * Pins:
+ * 1. the rewrite moved no scoring — every row keeps trait, category, set,
+ *    option count and the value at each option position (bank-v1.ts is the
+ *    frozen old wording);
+ * 2. every current bank row clears the gate (no hard issue), and nothing
+ *    still mentions the retired Read + Do card;
+ * 3. wave84 is exactly what gen-wave84-rows.ts builds from the code, keeps
+ *    the old intake wording accepted and never deletes;
+ * 4. the gate rejects what it should and every production path uses it;
+ * 5. the round prompt carries the moment voice for the setting only, with
+ *    scoring rules (0.2/0.5/0.8) unchanged;
+ * 6. the copy ships as draft, and the Question lab never calls on mount.
+ */
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+import { PROMPT_REWORDS, QUESTION_VOICE_COPY_REVIEWED, QUESTIONS_BANK, ROUND_ONLY_BANK, withRewordAliases } from '../src/lib/questions/bank';
+import { QUESTIONS_BANK_V1, ROUND_ONLY_BANK_V1 } from '../src/lib/questions/bank-v1';
+import { buildLabPrompt, judgeLabOutput, labAxes } from '../src/lib/questions/question-lab';
+import { assessQuestion, generatedQuestionFailure, promptSimilarity } from '../src/lib/questions/question-voice';
+import { MOMENT_VOICE_BLOCK } from '../src/lib/voice/moment-voice';
+
+import { wave84Sql } from './gen-wave84-rows';
+
+let passed = 0;
+function ok(label: string) {
+  passed += 1;
+  console.log(`  ✓ ${label}`);
+}
+const read = (rel: string) => readFileSync(resolve(__dirname, '..', rel), 'utf8').replace(/\r\n/g, '\n');
+
+// 1. Scoring did not move.
+for (const [before, after, name] of [
+  [QUESTIONS_BANK_V1, QUESTIONS_BANK, 'intake'],
+  [ROUND_ONLY_BANK_V1, ROUND_ONLY_BANK, 'round-only'],
+] as const) {
+  assert.equal(after.length, before.length, `${name}: same number of rows`);
+  before.forEach((old, i) => {
+    const now = after[i]!;
+    assert.equal(now.axis, old.axis, `${name} ${i}: trait`);
+    assert.equal(now.category, old.category, `${name} ${i}: category`);
+    assert.deepEqual(now.options.map((o) => o.value), old.options.map((o) => o.value), `${name} ${i}: values in the same order`);
+  });
+}
+ok('70 rows reworded in place: same trait, category, set (position) and value at every option index');
+
+// 2. Every row clears the gate.
+const allPrompts = [...QUESTIONS_BANK, ...ROUND_ONLY_BANK].map((q) => q.prompt);
+assert.equal(new Set(allPrompts).size, allPrompts.length, 'no prompt twice');
+for (const q of [...QUESTIONS_BANK, ...ROUND_ONLY_BANK]) {
+  const hard = assessQuestion(q, { others: allPrompts }).filter((i) => i.kind === 'hard');
+  assert.deepEqual(hard, [], `hard issue in "${q.prompt}"`);
+  assert.equal(generatedQuestionFailure(q, allPrompts.filter((p) => p !== q.prompt)), null, `gate drops "${q.prompt}"`);
+  assert.doesNotMatch(q.prompt, /\byour do\b|today's read|\bthe card\b/i, 'the Read + Do card is gone');
+}
+ok('every intake and round-only question clears the voice gate; no Read + Do references');
+
+// Aliases: both wordings are known for text matching.
+assert.ok(Object.keys(PROMPT_REWORDS).length > 0);
+for (const [before, after] of Object.entries(PROMPT_REWORDS)) {
+  assert.deepEqual(withRewordAliases([before]), [before, after]);
+  assert.deepEqual(withRewordAliases([after]), [after, before]);
+}
+ok(`${Object.keys(PROMPT_REWORDS).length} reworded prompts: the old and new wording each find the other`);
+
+// 3. wave84 is generated, additive for intake, value-safe for the pool.
+const wave84 = read('supabase/migrations/wave84_question_voice.sql');
+assert.equal(wave84, wave84Sql(), 'wave84 matches gen-wave84-rows.ts (re-run the generator, never hand-edit)');
+assert.doesNotMatch(wave84, /\bdelete\s+from\b|\btruncate\b|\bdrop\s+(?:table|column|function|index)\s+(?!wave84_pool;)/i, 'wave84 deletes nothing');
+const wave84Code = wave84
+  .split('\n')
+  .filter((line) => !line.startsWith('--'))
+  .join('\n');
+assert.doesNotMatch(wave84Code, /question_items|trait_answers|trait_tracks|trait_history/, 'wave84 never touches answers or served rounds');
+assert.ok(
+  wave84.includes('on conflict (prompt) do update\n  set options = excluded.options\n'),
+  'an existing intake row only ever gets new option labels',
+);
+assert.match(wave84, /raise exception 'wave84: % pool rows would change a value'/);
+ok('wave84 = the generator output; adds intake rows, keeps the old wording, rewords pool rows only if no value moves');
+
+// 4. The gate.
+const good = QUESTIONS_BANK[0]!;
+const fails = (q: Parameters<typeof generatedQuestionFailure>[0], recent: string[] = []) => generatedQuestionFailure(q, recent);
+assert.equal(fails(good), null);
+assert.match(fails({ ...good, prompt: 'You are the kind of person who texts back fast.' })!, /voice|jargon/);
+assert.match(fails({ ...good, prompt: 'Your Do today was a walk. Safe pick or different?' })!, /dated/);
+assert.match(fails({ ...good, options: [{ text: 'Obviously the new one', value: 0.8 }, { text: 'The usual', value: 0.2 }] })!, /balance/);
+assert.match(fails({ ...good, options: [{ text: 'Sure', value: 0.5 }, { text: 'Nah', value: 0.8 }] })!, /values/);
+assert.match(fails({ ...good, options: [{ text: 'One', value: 0.8 }] })!, /options|values/);
+assert.match(fails(good, ['A new place opened next to your usual spot and your usual order is in the app'])!, /repeat/);
+assert.ok(promptSimilarity('A friend cancels by text an hour before', 'The group chat has a running joke') < 0.3);
+ok('the gate drops "you are", jargon, dated references, a loaded option, a missing end, one option, a near-repeat');
+
+for (const rel of ['src/lib/questions/run-ongoing-round.ts', 'src/lib/questions/run-prewarm.ts']) {
+  assert.match(read(rel), /rejectDraft: generatedQuestionFailure,/, `${rel} passes the voice gate`);
+}
+const ongoing = read('src/lib/questions/ongoing-round.ts');
+assert.match(ongoing, /rejectDraft: deps\.rejectDraft,/, 'the AI fill gets the gate');
+assert.match(ongoing, /if \(deps\.rejectDraft\?\.\(candidate\.draft, excludeText\)\) continue;/, 'pool rows get the gate too');
+assert.match(read('src/lib/questions/chunked-generate.ts'), /if \(deps\.rejectDraft\?\.\(draft, \[\.\.\.excludeText, \.\.\.seenThisAttempt\]\)\) continue;/);
+assert.match(read('src/lib/questions/fetch-recent-texts.ts'), /withRewordAliases\(/, 'already-asked matching knows both wordings');
+ok('every production round path (round, prewarm, pool draw) runs the gate before saving or showing');
+
+// 5. The round prompt.
+const prompt = buildLabPrompt(labAxes(3, 0));
+assert.ok(prompt.includes(MOMENT_VOICE_BLOCK), 'moment voice block is in the round prompt');
+assert.match(prompt, /SETTING only/);
+assert.match(prompt, /use 0\.8 for the high end, 0\.2 for the low end and 0\.5 for a middle option/);
+assert.match(prompt, /one option at 0\.2 and one at 0\.8/);
+assert.match(prompt, /A new place opened next to your usual spot/, 'revised bank questions are the register');
+assert.doesNotMatch(prompt, /Your Do today/);
+const fewShotCount = (read('src/lib/questions/bank.ts').match(/^\d\. [A-Z][a-z_-]+/gm) ?? []).length;
+assert.ok(fewShotCount >= 6 && fewShotCount <= 8, `6-8 register examples (found ${fewShotCount})`);
+ok('round prompt: moment voice for the setting, 6-8 revised examples, 0.2/0.5/0.8 rules unchanged');
+
+// Lab judging is pure.
+const judged = judgeLabOutput(
+  JSON.stringify({ questions: [{ axis: 'openness', prompt: 'A new café opened next to your gym.', options: [{ text: 'I try it today', value: 0.8 }, { text: 'Maybe next week', value: 0.5 }, { text: 'I stick with my usual', value: 0.2 }] }] }),
+  1,
+);
+assert.equal(judged.parseFailed, false);
+assert.equal(judged.verdicts[0]!.failure, null);
+assert.equal(judgeLabOutput('not json', 1).parseFailed, true);
+ok('Question lab judging: a good sample passes, unparsable text is reported');
+
+// 6. Draft flag, lab safety.
+assert.equal(QUESTION_VOICE_COPY_REVIEWED, false, 'draft until emci reads docs/proposals/question-rewrite.md');
+const panels = read('src/components/dev-hub-panels.tsx');
+assert.match(panels, /reviewed: QUESTION_VOICE_COPY_REVIEWED/, 'listed in COPY_FLAGS');
+const lab = panels.slice(panels.indexOf('export function QuestionLabPanel('), panels.indexOf('const COPY_FLAGS'));
+assert.doesNotMatch(lab, /useEffect/, 'the lab never calls on mount');
+assert.match(lab, /if \(busy \|\| !twoTap\.confirm\('question-lab'\)\) return;/, 'two taps before an AI call');
+assert.doesNotMatch(lab, /addToBankPool|saveOngoingRoundBatch|\.insert\(|\.rpc\(/, 'the lab saves nothing');
+assert.match(read('src/components/questions-fold.tsx'), /\(!STAGED_INTAKE_COPY_REVIEWED \|\| !QUESTION_VOICE_COPY_REVIEWED\) && PRE_LAUNCH_DEV/);
+const gate = read('scripts/ota-gate.ts');
+assert.match(gate, /'question-live',/, 'the live check is excluded from the gate');
+ok('draft flag on and listed; the lab is two taps, never on mount, saves nothing; the live check is not gated');
+
+console.log(`\n${passed} question-voice checks passed`);

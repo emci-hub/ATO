@@ -322,6 +322,14 @@ var SYSTEM_MAP = {
           "Set by set: set N is question N of every trait. Stage = the lowest per-trait answer count (intake-stage.ts): 1 = first read, 2 = Sage, 3 = full profile. The app does not store which question was answered — it counts answers per trait."
         ],
         [
+          "Mix and match (2026-10-05)",
+          "Inside a set (and a round) the question order is a stable shuffle seeded by user id + set/round (mix-order.ts): the same on Back and after a restart, different between people, no trait twice on one page where possible. Each question's options show as written or reversed per person (the middle stays in the middle). Display only: the tap is mapped back and the server gets the ORIGINAL option index."
+        ],
+        [
+          "Wording (2026-10-05)",
+          "Rewritten in the moment voice, draft behind QUESTION_VOICE_COPY_REVIEWED = false. Trait, set and option values unchanged; old wording frozen in bank-v1.ts. wave84 (applied) added the new wording to intake_questions and kept the old rows, so older bundles still answer; the 70 authored pool rows were reworded in place. Before/after: docs/proposals/question-rewrite.md."
+        ],
+        [
           "When it is finished",
           "Every trait at 3 answers (or the old 50) = 'full profile done'. That one signal unlocks Insight, Story, categories and the 16-question rounds, and the +21 (wave78). The mini guy says a payoff after set 1 and set 2; set 3 is the reveal."
         ],
@@ -337,6 +345,9 @@ var SYSTEM_MAP = {
       "differs": [],
       "files": [
         "src/lib/questions/bank.ts:32-545",
+        "src/lib/questions/bank-v1.ts",
+        "src/lib/questions/mix-order.ts",
+        "supabase/migrations/wave84_question_voice.sql",
         "src/lib/questions/local.ts:127",
         "src/lib/questions/answer.ts:44",
         "src/lib/full-profile-gate.ts",
@@ -376,7 +387,7 @@ var SYSTEM_MAP = {
       "status": "live",
       "flag": false,
       "axes": "all",
-      "summary": "One global table of questions shared by every user. The 25-question rounds draw from it, and AI-written questions are added to it.",
+      "summary": "One global table of questions shared by every user. The 16-question rounds draw from it, and AI-written questions are added to it. Since 2026-10-05 every question (AI-written or drawn from the pool) passes the voice gate (question-voice.ts generatedQuestionFailure: moment-voice rules, balanced options, both trait ends, no near-repeat of what this person was asked) before it is saved or shown; a failing one is dropped and its slot retried. Dev: Hub → AI → Question lab; by hand: npm run check:question-live.",
       "facts": [
         [
           "Table",

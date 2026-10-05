@@ -38,6 +38,9 @@ import { TRAIT_AXES } from '@/lib/traits';
 
 import { BUDDY_COPY_REVIEWED } from '@/lib/buddy/idle';
 import { CATEGORY_COPY_REVIEWED } from '@/lib/categories';
+import { QUESTION_VOICE_COPY_REVIEWED, QUESTIONS_BANK } from '@/lib/questions/bank';
+import { generateQuestionLabText } from '@/lib/questions/generate';
+import { buildLabPrompt, judgeLabOutput, labAxes, QUESTION_LAB_SIZES, type LabResult } from '@/lib/questions/question-lab';
 import { CATEGORY_BAND_COPY_REVIEWED } from '@/lib/category-bands';
 import { CATEGORY_STATEMENTS_COPY_REVIEWED } from '@/lib/category-statements/generate-statements';
 import { CONCEPT_COPY_REVIEWED } from '@/lib/concept-explainers';
@@ -351,6 +354,89 @@ export function MilestonesPanel() {
   );
 }
 
+/**
+ * Question lab (forever loop, 2026-10-05): writes N sample round questions
+ * with the exact prompt the app's rounds use and shows each one with its
+ * options, values and pass/fail per rule (question-voice.ts). One ai-generate
+ * call per run, quota claimed on the server like any round; two taps, and
+ * never on mount. Nothing is saved: not to the pool, not to a round.
+ */
+export function QuestionLabPanel() {
+  const twoTap = useTwoTapLocal();
+  const [size, setSize] = useState<number>(QUESTION_LAB_SIZES[0]);
+  const [turn, setTurn] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<LabResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function run() {
+    if (busy || !twoTap.confirm('question-lab')) return;
+    setBusy(true);
+    setError(null);
+    const axes = labAxes(size, turn);
+    setTurn((t) => t + 1);
+    try {
+      const asked = QUESTIONS_BANK.map((q) => q.prompt);
+      const text = await generateQuestionLabText(buildLabPrompt(axes, asked));
+      if (!text) setError('No text back (AI off, quota spent, or offline).');
+      setResult(judgeLabOutput(text, size, asked));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const passed = result?.verdicts.filter((v) => !v.failure).length ?? 0;
+  return (
+    <View style={styles.block}>
+      <ThemedText type="smallBold">Question lab</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        Writes sample round questions with the real prompt and checks each against the voice gate. One AI call per run, counted against today&apos;s quota. Nothing is saved.
+      </ThemedText>
+      <View style={styles.row}>
+        {QUESTION_LAB_SIZES.map((n) => (
+          <Button key={n} label={`${size === n ? '● ' : ''}${n} questions`} onPress={() => setSize(n)} disabled={busy} />
+        ))}
+      </View>
+      <Button
+        label={busy ? 'Writing…' : twoTap.armed === 'question-lab' ? 'Tap again to spend one AI call' : `Write ${size} samples`}
+        onPress={() => void run()}
+        disabled={busy}
+      />
+      {error ? <ThemedText type="small">{error}</ThemedText> : null}
+      {result?.parseFailed && !error ? <ThemedText type="small">The reply did not parse into any question.</ThemedText> : null}
+      {result && result.verdicts.length > 0 ? (
+        <ThemedText type="code" themeColor="textSecondary">
+          {passed} of {result.verdicts.length} would be shown
+        </ThemedText>
+      ) : null}
+      {result?.verdicts.map((v, i) => (
+        <View key={`${i}-${v.draft.prompt}`} style={styles.block}>
+          <ThemedText type="code">
+            {v.failure ? '✗' : '✓'} {AXIS_SHORT_NAME[v.draft.axis]}
+          </ThemedText>
+          <ThemedText type="smallBold">{v.draft.prompt}</ThemedText>
+          {v.draft.options.map((o) => (
+            <ThemedText key={o.text} type="small" themeColor="textSecondary">
+              · {o.text} ({o.value})
+            </ThemedText>
+          ))}
+          {v.issues.length === 0 ? (
+            <ThemedText type="code" themeColor="textSecondary">every rule passes</ThemedText>
+          ) : (
+            v.issues.map((issue) => (
+              <ThemedText key={`${issue.rule}-${issue.detail}`} type="code" themeColor="textSecondary">
+                {issue.kind === 'hard' || issue.rule === 'balance' ? '✗' : '~'} {issue.rule}: {issue.detail}
+              </ThemedText>
+            ))
+          )}
+        </View>
+      ))}
+    </View>
+  );
+}
+
 const COPY_FLAGS: readonly { name: string; reviewed: boolean }[] = [
   { name: 'Staged intake (sets, round cap, mixed trait)', reviewed: STAGED_INTAKE_COPY_REVIEWED },
   { name: 'Daily insight (AI)', reviewed: DAILY_INSIGHT_COPY_REVIEWED },
@@ -369,6 +455,7 @@ const COPY_FLAGS: readonly { name: string; reviewed: boolean }[] = [
   { name: 'Name styles v2 (Primal Genius, High Fantasy, Corporate Realist, Oxymoron)', reviewed: NAME_STYLES_V2_COPY_REVIEWED },
   { name: 'Profile fill', reviewed: PROFILE_FILL_COPY_REVIEWED },
   { name: 'Polish pass (shape, week, set done, sealed read)', reviewed: POLISH_COPY_REVIEWED },
+  { name: 'Question bank in the moment voice (48 intake + 22 round)', reviewed: QUESTION_VOICE_COPY_REVIEWED },
 ];
 
 /** What ships as draft: every *_COPY_REVIEWED flag, drafts first. */

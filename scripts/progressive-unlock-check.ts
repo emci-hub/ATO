@@ -25,7 +25,7 @@ import {
   sageUnlocked,
   unlockCopyClean,
 } from '../src/lib/questions/progressive-unlock';
-import { LEGACY_INTAKE_AXIS_COUNTS, QUESTIONS_BANK } from '../src/lib/questions/bank';
+import { LEGACY_INTAKE_AXIS_COUNTS, PROMPT_REWORDS, QUESTIONS_BANK } from '../src/lib/questions/bank';
 import {
   currentIntakeSet,
   finishedLegacyIntake,
@@ -118,10 +118,14 @@ ok('an account that finished the old 50 keeps every unlock and is offered its th
 // Moved extras: excluded from rounds exactly for accounts that answered them.
 {
   const excluded = legacyIntakeExclusions(oldFifty);
-  assert.equal(excluded.length, 12, 'all 12 moved extras were answered by an old-50 account');
+  // Each excluded old question also carries its 2026-10-05 wording (the pool row now uses it).
+  const newWordings = new Set(Object.values(PROMPT_REWORDS));
+  const oldOnes = excluded.filter((p) => !newWordings.has(p));
+  assert.equal(oldOnes.length, 12, 'all 12 moved extras were answered by an old-50 account');
+  for (const p of oldOnes) if (PROMPT_REWORDS[p]) assert.ok(excluded.includes(PROMPT_REWORDS[p]!), `new wording also excluded: ${p}`);
   assert.deepEqual(legacyIntakeExclusions(tracksAfterAnswers(48)), [], 'a new account answered none of them');
   const partial = legacyIntakeExclusions([track('openness', 4)]);
-  assert.equal(partial.length, 1, 'answered 4 on openness in the old intake: only the 4th old draft is excluded');
+  assert.equal(partial.filter((p) => !newWordings.has(p)).length, 1, 'answered 4 on openness in the old intake: only the 4th old draft is excluded');
   for (const prompt of excluded) assert.ok(!QUESTIONS_BANK.some((d) => d.prompt === prompt), 'never an intake prompt');
 }
 ok('rounds skip a moved extra only for the accounts that already answered it in the old intake');

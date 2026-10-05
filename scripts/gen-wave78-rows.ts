@@ -7,7 +7,8 @@
  * each trait that had 2) and the ten original wordings (the tail of
  * ROUND_ONLY_BANK). The twelve moved extras are already in the pool (wave49).
  */
-import { ROUND_ONLY_BANK, QUESTIONS_BANK } from '../src/lib/questions/bank';
+// wave78 is applied and never edited: its rows are the frozen wording (bank-v1.ts).
+import { QUESTIONS_BANK_V1 as QUESTIONS_BANK, ROUND_ONLY_BANK_V1 as ROUND_ONLY_BANK } from '../src/lib/questions/bank-v1';
 import type { QuestionDraft } from '../src/lib/questions/types';
 
 export const RESTORED_AXES = [

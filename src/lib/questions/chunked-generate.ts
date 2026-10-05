@@ -73,6 +73,12 @@ export interface ChunkedGenerateDeps {
   generateBatch: (prompt: string, count: number) => Promise<QuestionDraft[] | null>;
   /** Persists drafts immediately, before the next chunk (or retry) runs. */
   saveItems: (drafts: readonly QuestionDraft[]) => Promise<void>;
+  /**
+   * The voice gate (question-voice.ts `generatedQuestionFailure`): a reason to
+   * drop a draft, or null. Every production caller passes it
+   * (check:question-voice pins that); the slot goes to the shortfall retry.
+   */
+  rejectDraft?: (draft: QuestionDraft, recent: readonly string[]) => string | null;
 }
 
 /** Exported so a caller can compute what's still unmet after a fill attempt (e.g. ongoing-round.ts's bank-fallback pass). */
@@ -130,6 +136,9 @@ export async function fillAxisCountsChunked(
       for (const draft of drafts ?? []) {
         if ((slotsLeft[draft.axis] ?? 0) <= 0) continue;
         if (isNearDuplicate(draft.prompt, excludeText) || isNearDuplicate(draft.prompt, seenThisAttempt)) continue;
+        // Voice, balance, both ends, no near-repeat: a failing draft is dropped
+        // and its slot goes to the shortfall retry (question-voice.ts).
+        if (deps.rejectDraft?.(draft, [...excludeText, ...seenThisAttempt])) continue;
         kept.push(draft);
         seenThisAttempt.push(draft.prompt);
         slotsLeft[draft.axis] = (slotsLeft[draft.axis] ?? 0) - 1;

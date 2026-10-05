@@ -258,3 +258,11 @@ Moment voice. The toy's shape is kept: ten yes, five not sure, five no. Replaces
 - Not this time. The group chat went quiet.
 - My sources say no. Mostly the unread count.
 - Very doubtful. Even autocorrect winced.
+
+## 9. The question bank in the moment voice (NEW — draft, `QUESTION_VOICE_COPY_REVIEWED = false`)
+
+37 of the 48 intake questions and 21 of the 22 round questions reworded (2026-10-05).
+Trait, set and every option value are unchanged; only words moved. The full
+before/after table, the questions that did not make sense, and the research behind
+the option balance are in `docs/proposals/question-rewrite.md`. To approve: flip
+`QUESTION_VOICE_COPY_REVIEWED` to `true` in `src/lib/questions/bank.ts`.

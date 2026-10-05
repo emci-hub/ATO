@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 
-import { QUESTIONS_BANK } from './bank';
+import { QUESTIONS_BANK, withRewordAliases } from './bank';
 
 /**
  * Recent/known question text for this user (core loop redesign §2 bank-first
@@ -28,5 +28,7 @@ export async function fetchRecentTexts(): Promise<string[]> {
   const asked = (data ?? [])
     .map((row) => (row as { prompt: unknown }).prompt)
     .filter((text): text is string => typeof text === 'string' && text.length > 0);
-  return [...asked, ...QUESTIONS_BANK.map((draft) => draft.prompt)];
+  // Both wordings of every reworded bank question (2026-10-05): a round copy
+  // saved in the old words must still keep its new-words pool row away.
+  return withRewordAliases([...asked, ...QUESTIONS_BANK.map((draft) => draft.prompt)]);
 }
