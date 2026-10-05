@@ -191,9 +191,11 @@ ok('the Guide shows the live constants (stage cuts, bust table, Power ceiling, m
   for (const want of ['tend', 'dive', 'shop', 'odds', 'settings']) assert.ok(linked.has(want), `a "?" opens ${want}`);
   // v27: the "?" sits on the Den, the egg picker and the Stone sheet themselves.
   const screen = files[0];
-  for (const [sheet, section] of [['den', 'tend'], ['stone', 'odds'], ['eggs', 'odds'], ['prism', 'shop']] as const) {
+  for (const [sheet, section] of [['stone', 'odds'], ['eggs', 'odds'], ['prism', 'shop']] as const) {
     assert.ok(new RegExp(`sheet === '${sheet}'[\\s\\S]{0,1200}?section="${section}"`).test(screen), `the ${sheet} sheet has a "?" to ${section}`);
   }
+  const later = fs.readFileSync(path.join(ROOT, 'src/play/dive-later.tsx'), 'utf8');
+  assert.ok(/sheet === 'den'[\s\S]{0,800}?section="tend"/.test(later), 'the Den sheet on Dive has a "?" to Tend');
   assert.ok(files[files.length - 1].includes('initial="shop"'), 'the Shop Tide shelf and pass card open the Shop & Dress card');
   const guideUi = fs.readFileSync(path.join(ROOT, 'src/play/guide-sheet.tsx'), 'utf8');
   assert.ok(guideUi.includes('More') && guideUi.includes('card.face') && guideUi.includes('openId === card.id'), 'the face shows first; More opens the tables');

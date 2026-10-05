@@ -80,8 +80,8 @@ export function petBackStep(sheetOpen: boolean, gameOpen: boolean): 'close-game'
   return sheetOpen ? 'close-sheet' : 'hub';
 }
 
-/** Dive (overhaul): an open sheet (Info / Gear) closes first, then back to
- * the Pet room — Dive only opens from the room now. */
-export function diveBackStep(sheetOpen: boolean): 'close-sheet' | 'room' {
-  return sheetOpen ? 'close-sheet' : 'room';
+/** Dive: an open sheet (Info / Gear / later trips) closes first, then back
+ * to the Hub. Dive is a Hub tile. */
+export function diveBackStep(sheetOpen: boolean): 'close-sheet' | 'hub' {
+  return sheetOpen ? 'close-sheet' : 'hub';
 }

@@ -80,13 +80,14 @@ export type HubTile = {
 };
 
 /**
- * The Command Hub tiles. Defend is the tower map. Dive stays under Pet
- * (the Pet subtitle says so) until a later pass adds a Dive tile.
+ * The Command Hub tiles, left to right: Pet · Dive · Defend · Shop · Dress · More.
+ * Pet is tend only. Dive is the underwater run. Defend is the tower map.
  * Divecore is the mini-app name, not a tile.
  */
 export const HUB_TILES: HubTile[] = [
+  { id: 'pet', label: 'Pet', subtitle: 'Tend', icon: 'pet', to: 'pet' },
+  { id: 'dive', label: 'Dive', subtitle: 'Underwater', icon: 'dive', to: 'dive' },
   { id: 'defend', label: 'Defend', subtitle: 'Tower map', icon: 'divecore', to: 'defend' },
-  { id: 'pet', label: 'Pet', subtitle: 'Tend · Dive', icon: 'pet', to: 'pet' },
   { id: 'shop', label: 'Shop', subtitle: 'Spend scrap', icon: 'shop', to: 'shop' },
   { id: 'dress', label: 'Dress', subtitle: 'Customize', icon: 'dress', to: 'dress' },
   { id: 'more', label: 'More', subtitle: 'Guide & credits', icon: 'more', to: 'about' },

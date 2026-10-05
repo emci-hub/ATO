@@ -28,6 +28,7 @@ import {
   checkPetName,
   defaultSettings,
   deferForQuiet,
+  hubSoftPulse,
   idleTalkDelayMs,
   isBedtime,
   parseSettings,
@@ -320,5 +321,18 @@ ok('name: 12 characters, allowed characters, a small word list; kept in the Hall
 
 assert.equal(gradeTag('epic'), '★★★ Epic', 'grade = stars + word, never colour alone');
 ok('grade tag: stars and the word');
+
+{
+  const base = { tended: true, loopFork: null, loopOtherSeen: false, didDive: false, didDefend: false } as const;
+  assert.deepEqual(hubSoftPulse({ ...base, tended: false }), [], 'before Tend, neither outing pulses');
+  assert.deepEqual(hubSoftPulse(base), ['dive', 'defend'], 'after Tend, Dive and Defend pulse together');
+  assert.deepEqual(hubSoftPulse({ ...base, loopFork: 'dive' }), ['defend'], 'picking Dive leaves Defend pulsing');
+  assert.deepEqual(hubSoftPulse({ ...base, loopFork: 'defend' }), ['dive'], 'picking Defend leaves Dive pulsing');
+  assert.deepEqual(hubSoftPulse({ ...base, loopFork: 'dive', loopOtherSeen: true }), [], 'opening the other tile stops the pulse');
+  assert.deepEqual(hubSoftPulse({ ...base, didDive: true }), ['defend'], 'a Dive already taken pulses Defend');
+  assert.deepEqual(hubSoftPulse({ ...base, didDefend: true }), ['dive']);
+  assert.deepEqual(hubSoftPulse({ ...base, didDive: true, didDefend: true }), []);
+}
+ok('hub pulse: Dive and Defend are equal after Tend, then the skipped one');
 
 console.log(`\ncheck:play-settings — ${passed} groups passed.`);

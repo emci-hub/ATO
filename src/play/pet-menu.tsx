@@ -6,7 +6,7 @@
  *   the next egg gets a fresh seed; nothing from the old seed was ever rolled
  *   or shown, and a spent ticket is refunded) · Use a trade-up ticket (Egg or
  *   Baby, before the roll) · Release (Child+) / Rebirth (God), same rules and
- *   double confirms as before. v27: Open the Den · Use a Shine Stone.
+ *   double confirms as before. Shine Stones stay here. The Den opens from Dive.
  */
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
@@ -54,15 +54,12 @@ export function PetMenuBody({
   view,
   commit,
   onViewCard,
-  onOpenDen,
   onOpenStone,
   onOpenPrism,
 }: {
   view: PlayView;
   commit: Commit;
   onViewCard: () => void;
-  /** v27 — the Den (every pet you keep). */
-  onOpenDen: () => void;
   /** v27 — the Shine Stone sheet, this pet picked. */
   onOpenStone: () => void;
   /** v28 — the Prism Stone sheet, this pet picked. */
@@ -95,7 +92,6 @@ export function PetMenuBody({
   return (
     <>
       {revealed ? <NeonButton label="View card" onPress={onViewCard} /> : null}
-      <NeonButton label={`Open the Den · ${pv.den.used}/${pv.den.slots}`} variant="secondary" onPress={onOpenDen} />
       {revealed && !pet.shiny ? (
         <NeonButton label={`Use a Shine Stone · ${pv.stones.held} held`} variant="secondary" onPress={onOpenStone} />
       ) : null}

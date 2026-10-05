@@ -57,8 +57,8 @@ assert.equal(petBackStep(false, false), 'hub', 'then the room goes back to the h
 ok('Pet room: back stops a mini-game, then closes a sheet, then the hub');
 
 assert.equal(diveBackStep(true), 'close-sheet', 'a Dive sheet closes first');
-assert.equal(diveBackStep(false), 'room', 'then Dive goes back to the Pet room');
-ok('Dive: back closes a sheet first, then returns to the Pet room');
+assert.equal(diveBackStep(false), 'hub', 'then Dive goes back to the Hub');
+ok('Dive: back closes a sheet first, then returns to the Hub');
 
 // The gesture: starts at the edge, runs sideways, goes far enough.
 assert.equal(isEdgeSwipeStart(10, 20, 2), true);
@@ -76,7 +76,7 @@ assert.match(shell, /gestureEnabled: mode === 'grove'/, 'native swipe-back only 
 assert.match(shell, /BackHandler\.addEventListener\('hardwareBackPress'/, 'Android back handled');
 assert.match(shell, /\{\.\.\.edgeSwipe\.panHandlers\}/, 'edge swipe attached to the sub-screens');
 assert.equal((shell.match(/registerBack=\{registerBack\}/g) ?? []).length, 3, 'Defend, Pet and Dive register their back');
-assert.match(shell, /modeRef\.current === 'dive' \? 'pet' : 'grove'/, 'Dive steps back to the Pet room');
+assert.match(shell, /const leaveSubScreen = useCallback\(\(\) => \{\s*setMode\('grove'\);\s*\}, \[\]\);/, 'Dive steps back to the Hub with every other sub-screen');
 ok('Play shell: native swipe on hub only, Android back + edge swipe on sub-screens, Defend/Pet/Dive registered');
 
 // v24: on the hub, the Settings sheet / tutorial close first (the phone's own

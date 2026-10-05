@@ -23,7 +23,7 @@ export const TUTORIAL_STEPS: readonly { mark: string; title: string; body: strin
   {
     mark: '🧭',
     title: 'Dive or Defend',
-    body: 'Dive from Pet. Defend from the Hub. Pick either.',
+    body: 'Dive and Defend are on the Hub. Pick either.',
   },
 ];
 
@@ -54,12 +54,12 @@ export function DivecoreTutorial({ onDone, onGuide }: { onDone: () => void; onGu
             <View style={styles.choice}>
               <Text style={styles.choiceMark}>🤿</Text>
               <Text style={styles.choiceTitle}>Dive</Text>
-              <Text style={styles.choiceSub}>from Pet</Text>
+              <Text style={styles.choiceSub}>Underwater</Text>
             </View>
             <View style={styles.choice}>
               <Text style={styles.choiceMark}>🛡</Text>
               <Text style={styles.choiceTitle}>Defend</Text>
-              <Text style={styles.choiceSub}>from Hub</Text>
+              <Text style={styles.choiceSub}>Tower map</Text>
             </View>
           </View>
         ) : null}
