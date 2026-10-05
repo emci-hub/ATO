@@ -564,7 +564,10 @@ assert.doesNotMatch(exploreScreen, /SageExploreObservations/);
 // live screen shows only what works — the five placeholders are gone, and the
 // parked features must not quietly come back with them.
 assert.doesNotMatch(exploreScreen, /RebuiltNotice/);
-assert.match(exploreScreen, /More is coming to this screen./);
+// INVERTED 2026-10-05 (polish pass, emci approved): the "More is coming to
+// this screen." line read as unfinished and is gone; "your shape" leads.
+assert.doesNotMatch(exploreScreen, /More is coming to this screen./);
+assert.match(exploreScreen, /<ShapeCard\s+me=\{me\}\s+tracks=\{tracks\}/);
 // Categories is back inline on Explore and the standalone route is retired
 // (2026-09-14, Home/Explore/Insight restructure T-E1). This REVERSES the
 // 2026-09-12 judgment-pass.md §4A split, which moved CategoriesFold to its
@@ -643,7 +646,10 @@ assert.match(loadFn, /if \(!unlocked\) \{\s*setRow\(id, 'locked'\);\s*return;/, 
 assert.match(loadFn, /if \(!consentGranted\) \{\s*setRow\(id, 'consent'\);\s*return;/, 'consent off: no model call');
 assert.match(loadFn, /if \(!reading\.ready\) \{\s*setRow\(id, 'not_ready'\);\s*return;/, 'not ready: no model call');
 assert.match(catFold, /FULL_PROFILE_LOCKED_COPY/, 'the locked state must use the one shared line');
-assert.match(catFold, /\{readings\.map\(\(reading\) =>/, 'every category is listed, not only ready ones');
+// 2026-10-05: the list became a 2-column tile grid; it still walks EVERY
+// reading (pairsOf keeps them all, in order).
+assert.match(catFold, /\{pairsOf\(readings\)\.map\(\(pair\) =>/, 'every category is listed, not only ready ones');
+assert.match(catFold, /for \(let i = 0; i < items\.length; i \+= 2\) out\.push\(items\.slice\(i, i \+ 2\)\);/);
 assert.doesNotMatch(catFold, /SettingsFold/, 'the category list is never folded away');
 assert.match(
   exploreScreen,

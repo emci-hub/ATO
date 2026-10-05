@@ -2,8 +2,10 @@ import type { ReactNode } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Appear } from '@/components/motion';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
@@ -251,19 +253,29 @@ export function PagedQuestions({
   return (
     <View style={styles.container}>
       <View style={styles.progressRow}>
-        <ThemedText type="small" themeColor="textSecondary">
-          Page {clampedPage + 1} of {totalPages}
-        </ThemedText>
+        <View style={styles.pageCol}>
+          <PageDots page={clampedPage} total={totalPages} />
+          <ThemedText type="code" themeColor="textSecondary">
+            Page {clampedPage + 1} of {totalPages}
+          </ThemedText>
+        </View>
         <ThemedText type="small" themeColor="textSecondary">
           {progressLabel}
         </ThemedText>
       </View>
       <View style={styles.rows}>
-        {pageRows.map((row) => (
-          <View key={row.key} style={styles.axisItem}>
-            <ThemedText type="small" themeColor="textSecondary">
-              {AXIS_SHORT_NAME[row.axis]}
-            </ThemedText>
+        {pageRows.map((row, rowIndex) => (
+          <Appear key={row.key} index={rowIndex}>
+          <ThemedView type="backgroundElement" style={styles.axisItem}>
+            <View
+              style={[
+                styles.traitChip,
+                { borderColor: controlBorderColor(theme), borderRadius: theme.cutCorners ? 0 : 999 },
+              ]}>
+              <ThemedText type="code" themeColor="textSecondary">
+                {AXIS_SHORT_NAME[row.axis]}
+              </ThemedText>
+            </View>
             {showMissing && missing.has(row.key) ? (
               <ThemedText type="smallBold">Still needs an answer</ThemedText>
             ) : null}
@@ -287,24 +299,38 @@ export function PagedQuestions({
                       }}
                       style={[
                         styles.option,
+                        styles.optionRow,
                         { borderColor: controlBorderColor(theme) },
-                        picked && { backgroundColor: theme.backgroundSelected },
+                        picked && {
+                          backgroundColor: theme.backgroundSelected,
+                          borderColor: theme.accent,
+                          borderWidth: 2,
+                        },
                       ]}>
-                      <ThemedText type="smallBold">{option.text}</ThemedText>
+                      <ThemedText type="smallBold" style={styles.optionText}>
+                        {option.text}
+                      </ThemedText>
                       {picked ? (
-                        <View pointerEvents="none" style={styles.stampWrap}>
+                        <View
+                          pointerEvents="none"
+                          style={[
+                            styles.stamp,
+                            {
+                              borderColor: theme.accent,
+                              backgroundColor: stampBackground(theme.textSecondary),
+                              borderRadius: theme.cutCorners ? 0 : 999,
+                            },
+                          ]}>
                           <View
                             style={[
-                              styles.stamp,
-                              {
-                                borderColor: theme.textSecondary,
-                                backgroundColor: stampBackground(theme.textSecondary),
-                              },
+                              styles.check,
+                              { backgroundColor: theme.accent, borderRadius: theme.cutCorners ? 0 : 8 },
                             ]}>
-                            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.stampText}>
-                              Answered
-                            </ThemedText>
+                            <ThemedText style={[styles.checkMark, { color: theme.onAccent }]}>✓</ThemedText>
                           </View>
+                          <ThemedText type="code" themeColor="textSecondary" style={styles.stampText}>
+                            Answered
+                          </ThemedText>
                         </View>
                       ) : null}
                     </ThemedPressable>
@@ -313,7 +339,8 @@ export function PagedQuestions({
               </View>
             )}
             {locked || !renderRowExtra ? null : renderRowExtra(row, pendingByRow[row.key] != null)}
-          </View>
+          </ThemedView>
+          </Appear>
         ))}
       </View>
       {showMissing && missing.size > 0 ? (
@@ -374,19 +401,79 @@ export function PagedQuestions({
             }
             goTo(clampedPage + 1);
           }}
+          filled
           style={[
             styles.option,
             styles.nextButton,
-            { borderColor: controlBorderColor(theme) },
+            { borderColor: theme.accentFill },
           ]}>
-          <ThemedText type="smallBold">{atLast ? 'Finish' : 'Next Page'}</ThemedText>
+          <ThemedText type="smallBold" themeColor="onAccent">
+            {atLast ? 'Finish' : 'Next Page'}
+          </ThemedText>
         </ThemedPressable>
       </View>
     </View>
   );
 }
 
+/** One dot per page; the current one is a longer bar. */
+function PageDots({ page, total }: { page: number; total: number }) {
+  const theme = useTheme();
+  return (
+    <View style={styles.dots} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      {Array.from({ length: total }, (_, i) => (
+        <View
+          key={i}
+          style={[
+            styles.dot,
+            {
+              width: i === page ? 18 : 6,
+              backgroundColor: i === page ? theme.accent : theme.backgroundSelected,
+              borderRadius: theme.cutCorners ? 0 : 3,
+            },
+          ]}
+        />
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  pageCol: {
+    gap: Spacing.one,
+  },
+  dots: {
+    flexDirection: 'row',
+    gap: Spacing.one,
+  },
+  dot: {
+    height: 6,
+  },
+  traitChip: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    paddingVertical: Spacing.half,
+    paddingHorizontal: Spacing.two,
+  },
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  optionText: {
+    flex: 1,
+  },
+  check: {
+    width: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkMark: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '700',
+  },
   container: {
     gap: Spacing.three,
   },
@@ -402,7 +489,7 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   rows: {
-    gap: Spacing.four,
+    gap: Spacing.three,
   },
   // A bit larger than ThemedText's "small" (14/20) — this screen shows 5
   // questions per page, denser than the single-question flow elsewhere in
@@ -413,6 +500,7 @@ const styles = StyleSheet.create({
   },
   axisItem: {
     gap: Spacing.two,
+    padding: Spacing.three,
   },
   options: {
     gap: Spacing.two,
@@ -424,21 +512,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     position: 'relative',
   },
-  stampWrap: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   stamp: {
-    borderWidth: 1.5,
-    borderRadius: Spacing.one,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    borderWidth: 1,
     paddingVertical: Spacing.half,
-    paddingHorizontal: Spacing.two,
-    transform: [{ rotate: '-10deg' }],
+    paddingLeft: Spacing.half,
+    paddingRight: Spacing.two,
   },
   stampText: {
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    fontSize: 10,
+    letterSpacing: 0.5,
   },
   navRow: {
     flexDirection: 'row',

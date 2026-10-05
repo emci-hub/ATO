@@ -42,6 +42,10 @@ const sites = [
   'src/components/sage-eight-ball.tsx',
   // Staged intake (2026-10-02): the set header and unlock rewording on Questions.
   'src/components/questions-fold.tsx',
+  // Polish pass (2026-10-05): your shape, the set-done moment, your week.
+  'src/components/shape-card.tsx',
+  'src/components/set-done-moment.tsx',
+  'src/components/your-week-card.tsx',
   // 'src/components/intake-sweep.tsx' removed 2026-09-15 with the "A faster
   // pass" sweep (emci) — file deleted entirely, not just unmounted.
 ];

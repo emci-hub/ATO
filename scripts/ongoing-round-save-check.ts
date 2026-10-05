@@ -138,7 +138,7 @@ const foldSrc = read('src/components/questions-fold.tsx');
 // round, as optional — and only that account (`optionalLegacy`).
 assert.match(
   foldSrc,
-  /\{fullProfileLocked \? \(\s*\n[\s\S]{0,700}?\{optionalLegacy \? \([\s\S]{0,400}?\{setPager\}\s*<\/>\s*\) : null\}\s*<OngoingRoundFold me=\{me\} history=\{history\} tracks=\{tracks \?\? \[\]\} onUpdated=\{onUpdated\} \/>\s*<\/>\s*\) : \(/,
+  /\{fullProfileLocked \? \(\s*\n[\s\S]{0,700}?\{optionalLegacy \? \([\s\S]{0,400}?\{setPager\}\s*<\/>\s*\) : null\}\s*<OngoingRoundFold me=\{me\} history=\{history\} tracks=\{tracks \?\? \[\]\} onUpdated=\{onUpdated\}(?: onMoment=\{showMoment\})? \/>\s*<\/>\s*\) : \(/,
   'fullProfileLocked must render OngoingRoundFold in place of the bank pager — the only pager beside it is the old-50 optional set',
 );
 const bankBranchStart = foldSrc.indexOf(') : (', foldSrc.indexOf('{fullProfileLocked ? ('));

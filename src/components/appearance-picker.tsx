@@ -37,11 +37,15 @@ export function AppearancePicker() {
       <ThemedText type="small" themeColor="textSecondary" style={styles.lede}>
         Soft is the default. Saved on this device.
       </ThemedText>
+      {/* Each theme as a little preview tile in its own colours (polish pass,
+          2026-10-05): its background, a card, and its accent. */}
+      <View style={styles.grid}>
       {APPEARANCE_IDS.map((option: AppearanceId) => {
         const selected = id === option;
         const unlocked = isAppearanceUnlocked(option, subscriptionActive);
+        const look = APPEARANCES[option];
         return (
-          <View key={option}>
+          <View key={option} style={styles.cell}>
             <ThemedPressable
               accessibilityRole="button"
               accessibilityLabel={
@@ -59,18 +63,38 @@ export function AppearancePicker() {
                 void setAppearance(option);
               }}
               style={[
-                styles.row,
-                selected && { backgroundColor: theme.backgroundSelected },
+                styles.tile,
+                {
+                  borderColor: selected ? theme.accent : theme.border,
+                  borderWidth: selected ? 2 : 1,
+                  backgroundColor: selected ? theme.backgroundSelected : 'transparent',
+                },
               ]}>
-              <View style={[styles.swatches, !unlocked && styles.lockedSwatches]}>
-                <View style={[styles.swatch, { backgroundColor: APPEARANCES[option].background }]} />
-                <View style={[styles.swatch, { backgroundColor: APPEARANCES[option].accentFill }]} />
+              <View
+                style={[
+                  styles.preview,
+                  { backgroundColor: look.background, borderRadius: Math.min(look.radius, 10) },
+                  !unlocked && styles.lockedSwatches,
+                ]}>
+                <View
+                  style={[
+                    styles.previewCard,
+                    {
+                      backgroundColor: look.backgroundElement,
+                      borderColor: look.border,
+                      borderRadius: Math.min(look.radius, 6),
+                    },
+                  ]}>
+                  <View style={[styles.previewLine, { backgroundColor: look.text }]} />
+                  <View style={[styles.previewLine, styles.previewShort, { backgroundColor: look.textSecondary }]} />
+                  <View style={[styles.previewDot, { backgroundColor: look.accent }]} />
+                </View>
               </View>
               <ThemedText type="smallBold" themeColor={unlocked ? undefined : 'textSecondary'}>
                 {APPEARANCE_LABELS[option]}
               </ThemedText>
               {unlocked ? null : (
-                <ThemedText type="small" themeColor="textSecondary" style={styles.badge}>
+                <ThemedText type="code" themeColor="textSecondary">
                   {SUBSCRIPTION_LABEL}
                 </ThemedText>
               )}
@@ -83,6 +107,7 @@ export function AppearancePicker() {
           </View>
         );
       })}
+      </View>
     </ThemedView>
   );
 }
@@ -99,31 +124,55 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.one,
   },
-  row: {
+  grid: {
     flexDirection: 'row',
-    alignItems: 'center',
+    flexWrap: 'wrap',
     gap: Spacing.two,
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
+    paddingHorizontal: Spacing.two,
+    paddingBottom: Spacing.two,
   },
-  swatches: {
-    flexDirection: 'row',
-    gap: 4,
+  cell: {
+    width: '30%',
+    flexGrow: 1,
+  },
+  tile: {
+    borderRadius: Spacing.three,
+    padding: Spacing.two,
+    gap: Spacing.one,
+    alignItems: 'center',
+  },
+  preview: {
+    width: '100%',
+    height: 56,
+    padding: Spacing.two,
+    justifyContent: 'center',
+  },
+  previewCard: {
+    borderWidth: 1,
+    padding: Spacing.one + 2,
+    gap: 3,
+  },
+  previewLine: {
+    height: 4,
+    borderRadius: 2,
+    width: '80%',
+  },
+  previewShort: {
+    width: '50%',
+  },
+  previewDot: {
+    position: 'absolute',
+    right: 5,
+    top: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   lockedSwatches: {
     opacity: 0.45,
   },
-  badge: {
-    marginLeft: 'auto',
-  },
   note: {
     paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.two,
-  },
-  swatch: {
-    width: 14,
-    height: 14,
-    borderRadius: 4,
   },
 });

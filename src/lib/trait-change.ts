@@ -30,6 +30,9 @@ export const CHANGE_EMPTY =
 export interface TraitChange {
   axis: TraitAxis;
   delta: number;
+  /** Where it stood going into the window, and where it stands now (0..1). Drawn, never printed. */
+  from: number;
+  to: number;
   /** "More toward: sees a plan through" */
   line: string;
 }
@@ -59,7 +62,7 @@ export function traitChanges(
     const delta = latest.value - baseline.value;
     if (Math.abs(delta) < CHANGE_MIN_DELTA) continue;
     const phrases = TRAIT_BAND_PHRASES[axis];
-    out.push({ axis, delta, line: `More toward: ${delta > 0 ? phrases.high : phrases.low}` });
+    out.push({ axis, delta, from: baseline.value, to: latest.value, line: `More toward: ${delta > 0 ? phrases.high : phrases.low}` });
   }
   return out.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta)).slice(0, CHANGE_MAX_ROWS);
 }

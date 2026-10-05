@@ -3,9 +3,11 @@ import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
 import { ThemedText } from '@/components/themed-text';
+import { TraitShape } from '@/components/trait-shape';
 import { accentFromShowUp } from '@/lib/color';
 import { SHARE_FAILED_COPY, SHARE_UNAVAILABLE_COPY, shareViewAsImage } from '@/lib/share';
 import { publicLink } from '@/lib/share-codec';
+import type { ShapePoint } from '@/lib/trait-shape';
 
 /**
  * The image a person sends to a friend: either their identity (archetype name
@@ -23,7 +25,13 @@ export interface SharePerson {
 }
 
 export type ShareCardContent =
-  | { kind: 'identity'; title: string; traits: readonly string[] }
+  | {
+      kind: 'identity';
+      title: string;
+      traits: readonly string[];
+      /** "Your shape" (polish pass): drawn without names or numbers. */
+      shape?: readonly ShapePoint[];
+    }
   | { kind: 'line'; text: string };
 
 const FIELD = '#1A1B20';
@@ -51,10 +59,22 @@ export const ShareCard = forwardRef<View, { me: SharePerson; content: ShareCardC
         <View style={styles.body}>
           {content.kind === 'identity' ? (
             <>
+              {content.shape ? (
+                <View style={styles.shape}>
+                  <TraitShape
+                    points={content.shape}
+                    size={Math.round(width * 0.34)}
+                    animate={false}
+                    palette={{ line: accent.light, grid: FIELD_HAIR, label: MIST }}
+                  />
+                </View>
+              ) : null}
               <ThemedText style={[styles.kicker, { color: accent.light }]}>MY ATO</ThemedText>
               <ThemedText style={styles.title}>{content.title}</ThemedText>
+              {/* With the shape on the card the three lines would push the QR off
+                  a 9:16 image, so the shape stands in for them. */}
               <View style={styles.traits}>
-                {content.traits.map((trait) => (
+                {(content.shape ? [] : content.traits).map((trait) => (
                   <ThemedText key={trait} style={styles.trait}>
                     {trait}
                   </ThemedText>
@@ -148,6 +168,10 @@ export function ShareCardSheet({
 }
 
 const styles = StyleSheet.create({
+  shape: {
+    alignItems: 'center',
+    paddingBottom: 8,
+  },
   card: {
     aspectRatio: 9 / 16,
     backgroundColor: FIELD,

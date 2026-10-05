@@ -44,6 +44,7 @@ import { CONCEPT_COPY_REVIEWED } from '@/lib/concept-explainers';
 import { DAILY_LINE_COPY_REVIEWED } from '@/lib/daily-line/bank';
 import { DAILY_INSIGHT_COPY_REVIEWED } from '@/lib/insight/generate-insight';
 import { LEGENDS64_COPY_REVIEWED } from '@/lib/legends64/archetypes';
+import { POLISH_COPY_REVIEWED } from '@/lib/polish-copy';
 import { PROFILE_FILL_COPY_REVIEWED } from '@/lib/profile-fill';
 import { CATEGORY_READ_COPY_REVIEWED } from '@/lib/rolls/category-read';
 import { STORY_COPY_REVIEWED } from '@/lib/sage-story';
@@ -364,6 +365,7 @@ const COPY_FLAGS: readonly { name: string; reviewed: boolean }[] = [
   { name: 'Concept explainers', reviewed: CONCEPT_COPY_REVIEWED },
   { name: 'Archetype names', reviewed: LEGENDS64_COPY_REVIEWED },
   { name: 'Profile fill', reviewed: PROFILE_FILL_COPY_REVIEWED },
+  { name: 'Polish pass (shape, week, set done, sealed read)', reviewed: POLISH_COPY_REVIEWED },
 ];
 
 /** What ships as draft: every *_COPY_REVIEWED flag, drafts first. */

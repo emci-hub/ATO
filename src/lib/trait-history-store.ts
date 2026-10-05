@@ -6,12 +6,14 @@ import type { TraitHistoryRow } from '@/lib/trait-history';
 // No writer here (wave79, 2026-10-03): history rows are written only by the
 // server checkpoint (lib/trait-checkpoint.ts).
 
-export async function fetchTraitHistory(userId: string): Promise<TraitHistoryRow[]> {
-  const { data, error } = await supabase
+/** `sinceIso` bounds the read to rows written from then on (the "your week" card). */
+export async function fetchTraitHistory(userId: string, sinceIso?: string): Promise<TraitHistoryRow[]> {
+  let query = supabase
     .from('trait_history')
     .select('id, axis, value, source, created_at')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: true });
+    .eq('user_id', userId);
+  if (sinceIso) query = query.gte('created_at', sinceIso);
+  const { data, error } = await query.order('created_at', { ascending: true });
   if (error) throw error;
   const out: TraitHistoryRow[] = [];
   for (const raw of data ?? []) {

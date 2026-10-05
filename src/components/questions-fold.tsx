@@ -7,6 +7,9 @@ import {
   uniqueCategoryAxes,
   type CategoryQuestionRow,
 } from '@/components/paged-questions';
+import { SkeletonCard } from '@/components/motion';
+import { SetDoneMoment, type SetDoneMomentState } from '@/components/set-done-moment';
+import { SetProgress } from '@/components/set-progress';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -16,7 +19,13 @@ import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { AI_CONSENT_NEEDED_COPY, aiConsentFor, type Me } from '@/lib/me';
 import { answerRoundItem } from '@/lib/trait-checkpoint';
 import { claimFullProfileCompleteQuiet, claimOngoingRoundCompleteQuiet } from '@/lib/ato-tokens-server';
-import { ATO_TOKEN_PRICE, atoPriceLine, atoTokenBalanceOf, ATO_TOKEN_NEED_MORE } from '@/lib/ato-tokens';
+import {
+  ATO_TOKEN_NEED_MORE,
+  ATO_TOKEN_PRICE,
+  atoPriceLine,
+  atoTokenBalanceOf,
+  ROUND_PAYOUTS_PER_DAY,
+} from '@/lib/ato-tokens';
 import { rerollQuestionItem } from '@/lib/questions/reroll';
 import { Sentry } from '@/lib/sentry';
 import { type TraitTrack } from '@/lib/trait-stability';
@@ -26,12 +35,14 @@ import { bankProgressForAxis, bankTotalProgress } from '@/lib/questions/local';
 import {
   currentIntakeSet,
   hasOptionalLegacyQuestions,
+  INTAKE_SET_SIZE,
   INTAKE_SETS,
 } from '@/lib/questions/intake-stage';
 import {
   intakeSetHeader,
   legacyNewQuestionsLine,
   nextRoundLabel,
+  roundCapLine,
   STAGED_INTAKE_COPY_REVIEWED,
 } from '@/lib/questions/staged-intake-copy';
 import { ONGOING_ROUND_SIZE } from '@/lib/questions/tiered-axis-plan';
@@ -53,6 +64,7 @@ import type {
 } from '@/lib/questions/types';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { pushBuddyNote } from '@/lib/buddy/notes';
+import { ROUND_RING_TITLE, roundRingLine } from '@/lib/polish-copy';
 import type { CheckHistory } from '@/lib/voice/types';
 import { withTimeout } from '@/lib/timeout';
 
@@ -63,6 +75,9 @@ import { withTimeout } from '@/lib/timeout';
  * for why the round path needs this stricter predicate. The looser one existed
  * for the Infinite Questions feed, deleted 2026-09-16.
  */
+/** The most answers one page-save can add (a page is 4); a jump moves 16+. */
+const SET_DONE_MAX_STEP = 4;
+
 function roundFullyAnswered(pack: QuestionPackRow): boolean {
   return !pack.items.some((item) => isUnansweredQuestionItem(item));
 }
@@ -152,7 +167,11 @@ export function QuestionsFold({
   useEffect(() => {
     if (!fullProfileLocked || intakeClaimAsked.current) return;
     intakeClaimAsked.current = true;
-    claimFullProfileCompleteQuiet(() => void onUpdated());
+    claimFullProfileCompleteQuiet(() => {
+      // Runs only on a fresh payout: this visit is the one that finished the 48.
+      setMoment({ kind: 'all', coin: true });
+      void onUpdated();
+    });
   }, [fullProfileLocked, onUpdated]);
 
   const bankAxes = uniqueCategoryAxes(liveCategoryDefs);
@@ -162,6 +181,32 @@ export function QuestionsFold({
   // set in progress is on screen; its own storage key starts it on page 1.
   const set = currentIntakeSet(tracks ?? []);
   const setNumber = set?.set ?? null;
+
+  // The "set done" moment (polish pass): set 1 → 2 and 2 → 3 while this
+  // screen is open. Sets 1 and 2 pay nothing, so no coin. The first value
+  // seen is only remembered, so opening the screen mid-intake shows nothing.
+  const [moment, setMoment] = useState<SetDoneMomentState | null>(null);
+  // A dev jump or Start over moves many answers at once (16+): only a step of
+  // at most one page counts as finishing a set by hand. The old-50 optional
+  // third questions (profile already done) never celebrate.
+  const lastSetRef = useRef<number | null | undefined>(undefined);
+  const lastAnsweredRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (tracks == null) return;
+    const prev = lastSetRef.current;
+    const prevAnswered = lastAnsweredRef.current;
+    lastSetRef.current = setNumber;
+    lastAnsweredRef.current = progress.answered;
+    if (fullProfileLocked) return;
+    if (prev == null || setNumber == null || setNumber !== prev + 1) return;
+    if (prevAnswered == null || progress.answered - prevAnswered > SET_DONE_MAX_STEP) return;
+    setMoment({ kind: prev === 1 ? 'set1' : 'set2', coin: false });
+  }, [setNumber, tracks, fullProfileLocked, progress.answered]);
+  // Overlapping round saves can settle twice; a later "already paid" must not
+  // take away the coin the first one showed.
+  const showMoment = useCallback((next: SetDoneMomentState) => {
+    setMoment((prev) => (prev && prev.kind === next.kind ? { ...next, coin: prev.coin || next.coin } : next));
+  }, []);
   const optionalLegacy = hasOptionalLegacyQuestions(tracks ?? []);
   const bankRowsForAxis = useCallback(
     (axis: TraitAxis): CategoryQuestionRow[] => {
@@ -184,7 +229,11 @@ export function QuestionsFold({
   const setPager =
     set && bankRows.length > 0 ? (
       <>
-        <ThemedText type="smallBold">{intakeSetHeader(set.set, INTAKE_SETS)}</ThemedText>
+        {/* Mid-intake the header lives in SetProgress above; the old-50
+            optional third questions keep it here. */}
+        {fullProfileLocked ? (
+          <ThemedText type="smallBold">{intakeSetHeader(set.set, INTAKE_SETS)}</ThemedText>
+        ) : null}
         {!STAGED_INTAKE_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
           <ThemedText type="code" themeColor="textSecondary">
             Draft copy — waiting on emci review.
@@ -208,6 +257,7 @@ export function QuestionsFold({
 
   const body = (
     <View style={styles.body}>
+      <SetDoneMoment moment={moment} me={me} tracks={tracks ?? []} onClose={() => setMoment(null)} />
       {fullProfileLocked ? (
         // The finished intake is gone from the screen entirely once a round
         // exists — it used to stay visible (locked) with the round appended
@@ -223,15 +273,22 @@ export function QuestionsFold({
               {setPager}
             </>
           ) : null}
-          <OngoingRoundFold me={me} history={history} tracks={tracks ?? []} onUpdated={onUpdated} />
+          <OngoingRoundFold me={me} history={history} tracks={tracks ?? []} onUpdated={onUpdated} onMoment={showMoment} />
         </>
       ) : (
         <>
           {progress.total > 0 ? (
             <>
-              <ThemedText type="small" themeColor="textSecondary">
-                {progress.answered} of {progress.total} answered
-              </ThemedText>
+              <SetProgress
+                title={set ? intakeSetHeader(set.set, INTAKE_SETS) : `${progress.answered} of ${progress.total} answered`}
+                bars={Array.from({ length: INTAKE_SETS }, (_, i) =>
+                  !set ? INTAKE_SET_SIZE : i + 1 < set.set ? set.size : i + 1 === set.set ? set.answered : 0,
+                )}
+                size={INTAKE_SET_SIZE}
+                footnote={`${progress.answered} of ${progress.total} answered`}
+                me={me}
+                tracks={tracks ?? []}
+              />
               <ThemedText type="small" themeColor="textSecondary">
                 {fullProfileLockedLine(
                   progress,
@@ -278,11 +335,13 @@ function OngoingRoundFold({
   history,
   tracks,
   onUpdated,
+  onMoment,
 }: {
   me: Me;
   history: CheckHistory[];
   tracks: readonly TraitTrack[];
   onUpdated: () => Promise<void>;
+  onMoment?: (moment: SetDoneMomentState) => void;
 }) {
   const theme = useTheme();
   const [pack, setPack] = useState<QuestionPackRow | null>(null);
@@ -446,6 +505,12 @@ function OngoingRoundFold({
             body: roundCompleteBody(tracks, paid, capped),
             loud: true,
           });
+          // The full-screen payoff; the coin only when this finish paid the +21.
+          onMoment?.({
+            kind: 'round',
+            coin: paid && fresh,
+            note: capped ? roundCapLine(ROUND_PAYOUTS_PER_DAY) : undefined,
+          });
           setRoundToast({ paid });
           if (fresh) void onUpdated();
         });
@@ -520,7 +585,7 @@ function OngoingRoundFold({
   return (
     <View style={styles.body}>
       {loading ? (
-        <ThemedText themeColor="textSecondary">Loading…</ThemedText>
+        <SkeletonCard lines={4} />
       ) : errorKind ? (
         <>
           <ThemedText type="small" themeColor="textSecondary">
@@ -581,6 +646,15 @@ function OngoingRoundFold({
           )}
         </>
       ) : (
+        <>
+        <SetProgress
+          title={ROUND_RING_TITLE}
+          bars={[answeredCount]}
+          size={pack.items.length}
+          footnote={roundRingLine(pack.items.length - answeredCount)}
+          me={me}
+          tracks={tracks}
+        />
         <PagedQuestions
           // Scoped per round, not just per account — a new round is a new
           // pack id, and this key forces PagedQuestions to fully remount
@@ -630,6 +704,7 @@ function OngoingRoundFold({
             );
           }}
         />
+        </>
       )}
     </View>
   );

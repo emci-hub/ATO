@@ -1,12 +1,14 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CategoriesFold } from '@/components/categories-fold';
 import { ChangeCard } from '@/components/change-card';
 import { FullProfileFold } from '@/components/full-profile-fold';
+import { Appear, SkeletonCard } from '@/components/motion';
 import { ProfileFillFold } from '@/components/profile-fill-fold';
+import { ShapeCard } from '@/components/shape-card';
 import { TraitBandsFold } from '@/components/trait-bands-fold';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -82,26 +84,30 @@ export default function ExploreScreen() {
           keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
             <ThemedText type="subtitle">Explore</ThemedText>
-            {me ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`${settledAxisLabel(tracks)}. Tap to answer more.`}
-                onPress={() => {
-                  // Questions ignores an ?axis= (the per-axis feed was removed), so
-                  // the link no longer pretends to target one.
-                  router.push('/intake-sweep');
-                }}>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {settledAxisLabel(tracks)}
-                </ThemedText>
-              </Pressable>
-            ) : null}
           </View>
 
           {me ? (
             <>
-              {/* Categories first and always open: the full fixed list is the
-                  point of this tab (release pass, emci 2026-09-16). */}
+              {/* "Your shape" leads (polish pass, emci 2026-10-05): the profile as
+                  one figure, tap a point for the trait. A skeleton until the
+                  tracks land, so a finished profile never flashes blank. */}
+              {tracksReady ? (
+                <Appear>
+                  <ShapeCard
+                    me={me}
+                    tracks={tracks}
+                    settledLabel={settledAxisLabel(tracks)}
+                    onPressSettled={() => {
+                      // Questions ignores an ?axis= (the per-axis feed was removed).
+                      router.push('/intake-sweep');
+                    }}
+                  />
+                </Appear>
+              ) : (
+                <SkeletonCard lines={4} />
+              )}
+              {/* Categories stay open as tiles: the full fixed list is the point
+                  of this tab (release pass, emci 2026-09-16). */}
               <CategoriesFold
                 me={me}
                 tracks={tracksReady ? tracks : undefined}
@@ -113,17 +119,15 @@ export default function ExploreScreen() {
               <TraitBandsFold me={me} tracks={tracks} />
               <ProfileFillFold tracks={tracks} />
               <FullProfileFold me={me} onUpdated={() => refreshMe()} />
-              {/* The five "being rebuilt" placeholders that sat here (Today's Read, How
-                  you show up, Past reads, Insight spend, Observations) were removed
-                  2026-10-01: a live screen shows only what works. */}
-              <ThemedText type="small" themeColor="textSecondary" style={styles.moreSoon}>
-                More is coming to this screen.
-              </ThemedText>
+              {/* The five "being rebuilt" placeholders (2026-10-01) and the
+                  "more is coming" line (2026-10-05) are gone: a live screen
+                  shows only what works. */}
             </>
           ) : (
-            <ThemedView type="backgroundElement" style={styles.emptyCard}>
-              <ThemedText themeColor="textSecondary">Loading…</ThemedText>
-            </ThemedView>
+            <>
+              <SkeletonCard lines={4} />
+              <SkeletonCard />
+            </>
           )}
         </ScrollView>
       </SafeAreaView>
@@ -149,12 +153,5 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: Spacing.half,
-  },
-  moreSoon: { textAlign: 'center', paddingVertical: Spacing.two },
-  emptyCard: {
-    borderRadius: Spacing.four,
-    padding: Spacing.four,
-    alignItems: 'center',
-    marginTop: Spacing.two,
   },
 });

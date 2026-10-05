@@ -1,15 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { InfoReveal, ShapedByList } from '@/components/info-reveal';
+import { PixelFace } from '@/components/pixel-face';
 import { ShareCardSheet, type SharePerson } from '@/components/share-card';
+import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { TraitShape } from '@/components/trait-shape';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { ATO_TOKEN_NEED_MORE, ATO_TOKEN_PRICE, atoPriceLine } from '@/lib/ato-tokens';
+import { AXIS_POLE_NAME } from '@/lib/axis-poles';
 import { pushBuddyNote } from '@/lib/buddy/notes';
+import { recipeForAccount } from '@/lib/kenney/registry';
+import { CORE_AXES } from '@/lib/legends64/classify';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import {
   DEFAULT_LEGEND_SKIN,
@@ -34,9 +41,13 @@ import {
   saveIdentityState,
   type IdentityState,
 } from '@/lib/legends64/identity-store';
+import { STYLE_ROW_LABEL } from '@/lib/polish-copy';
 import { IDENTITY_RECIPE_LABEL, IDENTITY_RECIPE_LEDE, identityRecipe } from '@/lib/shaped-by';
 import { controlBorderColor } from '@/lib/theme/chrome';
+import { useAppearance } from '@/lib/theme/context';
+import { traitShapePoints } from '@/lib/trait-shape';
 import type { TraitTrack } from '@/lib/trait-stability';
+import type { TraitAxis } from '@/lib/traits';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 
 export const IDENTITY_KICKER = 'your ato';
@@ -57,10 +68,13 @@ export function IdentityCard({
   me,
   onUpdated,
 }: {
-  me: SharePerson & { id: string };
+  me: SharePerson & { id: string; recipe?: unknown } & Partial<Record<TraitAxis, number | null>>;
   onUpdated?: () => void | Promise<void>;
 }) {
   const theme = useTheme();
+  const { reduceMotion } = useAppearance();
+  const [stylesOpen, setStylesOpen] = useState(false);
+  const faceRecipe = useMemo(() => recipeForAccount(me.id, me.recipe), [me.id, me.recipe]);
   const dataEpoch = useAccountDataEpoch();
   const [tracks, setTracks] = useState<TraitTrack[] | null>(null);
   const [state, setState] = useState<IdentityState | null>(null);
@@ -106,6 +120,16 @@ export function IdentityCard({
   }, [me.id, dataEpoch]);
 
   const view = useMemo(() => identityView(state?.poles ?? {}), [state?.poles]);
+  // The three role traits, as the word for the end each one locked to
+  // ("Adventurous · Structured · Connected"). Only locked ones show.
+  const leanWords = useMemo(
+    () =>
+      CORE_AXES.flatMap((axis) => {
+        const pole = state?.poles?.[axis];
+        return pole ? [AXIS_POLE_NAME[axis][pole === 'H' ? 'high' : 'low']] : [];
+      }),
+    [state?.poles],
+  );
   const traits = useMemo(() => (tracks ? topTraitPhrases(tracks) : []), [tracks]);
   const recipe = useMemo(() => identityRecipe(tracks ?? []), [tracks]);
 
@@ -164,6 +188,40 @@ export function IdentityCard({
 
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
+      {/* The hero band: your shape as the emblem, the mini guy beside it. */}
+      <View
+        style={[
+          styles.band,
+          {
+            borderTopLeftRadius: theme.cutCorners ? 0 : theme.radius,
+            borderTopRightRadius: theme.cutCorners ? 0 : theme.radius,
+          },
+        ]}>
+        <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" preserveAspectRatio="none">
+          <Defs>
+            <LinearGradient id="identityBand" x1="0" y1="0" x2="1" y2="1">
+              <Stop offset="0" stopColor={theme.accent} stopOpacity={0.22} />
+              <Stop offset="1" stopColor={theme.accentSecondary} stopOpacity={0.18} />
+            </LinearGradient>
+          </Defs>
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#identityBand)" />
+        </Svg>
+        <View style={styles.bandFace}>
+          <PixelFace recipe={faceRecipe} size={40} showUp={me.show_up} animated={!reduceMotion} />
+        </View>
+      </View>
+      <View
+        style={[
+          styles.emblem,
+          {
+            backgroundColor: theme.backgroundElement,
+            borderColor: theme.border,
+            borderRadius: theme.cutCorners ? 0 : 999,
+          },
+        ]}>
+        <TraitShape points={traitShapePoints(me, tracks)} size={60} animate={!reduceMotion} />
+      </View>
+      <View style={styles.body}>
       <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
         {IDENTITY_KICKER}
       </ThemedText>
@@ -180,18 +238,29 @@ export function IdentityCard({
         </ThemedText>
       ) : null}
 
-      {traits.length > 0 ? (
-        <View style={styles.traits}>
-          {traits.map((trait) => (
-            <ThemedText key={trait} themeColor="textSecondary">
-              {trait}
-            </ThemedText>
+      {leanWords.length > 0 ? (
+        <View style={styles.styles}>
+          {leanWords.map((word) => (
+            <View
+              key={word}
+              style={[styles.leanChip, { borderColor: border, borderRadius: theme.cutCorners ? 0 : 999 }]}>
+              <ThemedText type="smallBold">{word}</ThemedText>
+            </View>
           ))}
         </View>
       ) : null}
 
       {/* Which traits make the name, and which are still forming. One tap away. */}
       <InfoReveal label={IDENTITY_RECIPE_LABEL}>
+        {traits.length > 0 ? (
+          <View style={styles.traits}>
+            {traits.map((trait) => (
+              <ThemedText key={trait} type="small" themeColor="textSecondary">
+                {trait}
+              </ThemedText>
+            ))}
+          </View>
+        ) : null}
         <ThemedText type="small" themeColor="textSecondary">
           {IDENTITY_RECIPE_LEDE}
         </ThemedText>
@@ -205,10 +274,52 @@ export function IdentityCard({
         <ShapedByList rows={recipe.second} />
       </InfoReveal>
 
+      <View style={styles.styleRow}>
+        <ThemedPressable
+          accessibilityRole="button"
+          accessibilityLabel={`${IDENTITY_STYLE_LABEL}: ${SKIN_LABEL[state.skin]}`}
+          onPress={() => setStylesOpen(true)}
+          hitSlop={6}>
+          <ThemedText type="smallBold" themeColor="textSecondary">
+            {STYLE_ROW_LABEL}: {SKIN_LABEL[state.skin]} ›
+          </ThemedText>
+        </ThemedPressable>
+        {view.complete ? (
+          <ThemedPressable
+            filled
+            accessibilityRole="button"
+            accessibilityLabel={IDENTITY_SHARE_LABEL}
+            onPress={() => setSharing(true)}
+            style={[styles.share, { borderRadius: theme.cutCorners ? 0 : 999 }]}>
+            <ThemedText type="smallBold" themeColor="onAccent">
+              {IDENTITY_SHARE_LABEL}
+            </ThemedText>
+          </ThemedPressable>
+        ) : null}
+      </View>
+      </View>
+
+      {/* Name styles in a sheet: each chip shows your name in that style. */}
+      <Modal visible={stylesOpen} transparent animationType={reduceMotion ? 'none' : 'slide'} onRequestClose={() => setStylesOpen(false)}>
+        <Pressable
+          style={styles.sheetScrim}
+          onPress={() => setStylesOpen(false)}
+          accessibilityRole="button"
+          accessibilityLabel="Close"
+        />
+        <ThemedView
+          type="backgroundElement"
+          style={[
+            styles.sheet,
+            {
+              borderTopLeftRadius: theme.cutCorners ? 0 : Spacing.four,
+              borderTopRightRadius: theme.cutCorners ? 0 : Spacing.four,
+            },
+          ]}>
       <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
         {IDENTITY_STYLE_LABEL}
       </ThemedText>
-      <View style={styles.styles}>
+      <View style={styles.sheetList}>
         {LEGEND_SKINS.map((skin) => {
           const owned = NAME_STYLES_FREE || skin === DEFAULT_LEGEND_SKIN || state.unlocked.includes(skin);
           const on = state.skin === skin;
@@ -226,13 +337,15 @@ export function IdentityCard({
               }}
               style={({ pressed }) => [
                 styles.chip,
-                { borderColor: border },
-                on && { backgroundColor: theme.text },
+                styles.sheetChip,
+                { borderColor: on ? theme.accent : border },
+                on && { backgroundColor: theme.backgroundSelected },
                 pressed && styles.pressed,
               ]}>
-              <ThemedText type="smallBold" style={on ? { color: theme.background } : undefined}>
+              <ThemedText type="code" themeColor="textSecondary">
                 {owned ? SKIN_LABEL[skin] : `${SKIN_LABEL[skin]} · ${ATO_TOKEN_PRICE.legend_reroll}`}
               </ThemedText>
+              <ThemedText type="smallBold">{identityTitle(view, skin)}</ThemedText>
             </Pressable>
           );
         })}
@@ -248,21 +361,20 @@ export function IdentityCard({
         </ThemedText>
       ) : null}
 
-      {view.complete ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={IDENTITY_SHARE_LABEL}
-          onPress={() => setSharing(true)}
-          style={({ pressed }) => [styles.share, { borderColor: border }, pressed && styles.pressed]}>
-          <ThemedText type="smallBold">{IDENTITY_SHARE_LABEL}</ThemedText>
-        </Pressable>
-      ) : null}
+      <ThemedPressable
+        accessibilityRole="button"
+        onPress={() => setStylesOpen(false)}
+        style={[styles.sheetDone, { borderColor: border, borderRadius: theme.cutCorners ? 0 : 999 }]}>
+        <ThemedText type="smallBold">Done</ThemedText>
+      </ThemedPressable>
+        </ThemedView>
+      </Modal>
 
       <ShareCardSheet
         visible={sharing}
         onClose={() => setSharing(false)}
         me={me}
-        content={{ kind: 'identity', title, traits }}
+        content={{ kind: 'identity', title, traits, shape: traitShapePoints(me, tracks) }}
       />
     </ThemedView>
   );
@@ -271,8 +383,66 @@ export function IdentityCard({
 const styles = StyleSheet.create({
   card: {
     borderRadius: Spacing.four,
+    padding: 0,
+  },
+  band: {
+    height: 78,
+    overflow: 'hidden',
+  },
+  emblem: {
+    position: 'absolute',
+    left: Spacing.four,
+    top: 42,
+    zIndex: 1,
+    width: 72,
+    height: 72,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bandFace: {
+    position: 'absolute',
+    right: Spacing.four,
+    top: Spacing.three,
+  },
+  body: {
     padding: Spacing.four,
+    paddingTop: 36 + Spacing.two,
     gap: Spacing.two,
+  },
+  leanChip: {
+    borderWidth: 1,
+    paddingVertical: Spacing.one,
+    paddingHorizontal: Spacing.three,
+  },
+  styleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+    marginTop: Spacing.two,
+  },
+  sheetScrim: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  sheet: {
+    padding: Spacing.four,
+    paddingBottom: Spacing.six,
+    gap: Spacing.two,
+  },
+  sheetList: {
+    gap: Spacing.two,
+  },
+  sheetChip: {
+    gap: Spacing.half,
+    paddingVertical: Spacing.two,
+  },
+  sheetDone: {
+    borderWidth: 1,
+    paddingVertical: Spacing.two,
+    alignItems: 'center',
+    marginTop: Spacing.two,
   },
   kicker: {
     textTransform: 'uppercase',
@@ -298,11 +468,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
   share: {
-    borderWidth: 1,
-    borderRadius: Spacing.three,
     paddingVertical: Spacing.two,
-    alignItems: 'center',
-    marginTop: Spacing.two,
+    paddingHorizontal: Spacing.three,
   },
   pressed: {
     opacity: 0.7,

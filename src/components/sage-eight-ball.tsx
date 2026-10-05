@@ -156,8 +156,24 @@ export function SageEightBall() {
     setOpen((value) => !value);
   }
 
+  // Closed, it is one round button in the Questions header (polish pass,
+  // 2026-10-05); open, a full-width card under the header.
+  if (!open) {
+    return (
+      <ThemedPressable
+        accessibilityRole="button"
+        accessibilityLabel="8-ball"
+        accessibilityState={{ expanded: false }}
+        onPress={toggle}
+        hitSlop={6}
+        style={[styles.orbButton, { borderColor: controlBorderColor(theme), backgroundColor: theme.backgroundElement }]}>
+        <SageOrb size={26} spin={spin} marked />
+      </ThemedPressable>
+    );
+  }
+
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
+    <ThemedView type="backgroundElement" style={[styles.card, styles.cardOpen]}>
       <ThemedPressable
         accessibilityRole="button"
         accessibilityLabel="8-ball"
@@ -209,6 +225,17 @@ export function SageEightBall() {
 }
 
 const styles = StyleSheet.create({
+  orbButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardOpen: {
+    width: '100%',
+  },
   card: {
     borderRadius: Spacing.three,
     paddingHorizontal: Spacing.two,

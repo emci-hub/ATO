@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FullProfileBanner } from '@/components/full-profile-banner';
+import { SkeletonCard } from '@/components/motion';
 import { NAV_PIXEL_HEADER_INSET } from '@/components/nav-pixel';
 import { QuestionsFold } from '@/components/questions-fold';
 import { SageEightBall } from '@/components/sage-eight-ball';
@@ -120,16 +121,12 @@ export default function IntakeSweepTabScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContent}>
+          {/* The 8-ball, back from Sage: a round button beside the title (it
+              opens to a card below it). Local, no AI, closed until opened. */}
           <View style={styles.header}>
-            <ThemedText type="subtitle">Questions</ThemedText>
+            <ThemedText type="subtitle" style={styles.title}>Questions</ThemedText>
+            {me ? <SageEightBall /> : null}
           </View>
-
-          {/* The 8-ball, back from Sage, at the top: local, no AI, closed until you open it. */}
-          {me ? (
-            <View style={styles.eightBall}>
-              <SageEightBall />
-            </View>
-          ) : null}
 
           {/*
             The one-time after-50 reveal (what just opened, what the next 25
@@ -166,9 +163,12 @@ export default function IntakeSweepTabScreen() {
               tracks={tracks}
               alwaysOpen
             />
-          ) : !me ? (
-            <ThemedText themeColor="textSecondary">Loading…</ThemedText>
-          ) : null}
+          ) : (
+            <>
+              <SkeletonCard lines={2} />
+              <SkeletonCard lines={4} />
+            </>
+          )}
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -193,8 +193,12 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingRight: NAV_PIXEL_HEADER_INSET,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: Spacing.two,
   },
-  eightBall: {
-    paddingHorizontal: Spacing.three,
+  title: {
+    flex: 1,
   },
 });

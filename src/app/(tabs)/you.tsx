@@ -12,6 +12,7 @@ import { NotificationPrefsFold } from '@/components/notification-prefs-fold';
 import { DeleteAccountSheet } from '@/components/delete-account-sheet';
 import { AtoTokenCard } from '@/components/ato-token-card';
 import { IdentityCard } from '@/components/identity-card';
+import { YourWeekCard } from '@/components/your-week-card';
 import { RunningUpdateLine } from '@/components/running-update-line';
 import { SageFactsCard } from '@/components/sage-facts';
 import { SettingsFold } from '@/components/settings-fold';
@@ -26,6 +27,7 @@ import { useMeContext } from '@/lib/me-context';
 import { DevUnlockRow } from '@/play/dev-unlock-row';
 import { aiConsentFor, setAiConsent, setCity } from '@/lib/me';
 import { clearLocalAccountData } from '@/lib/local-account-data';
+import { SETTINGS_TITLE } from '@/lib/polish-copy';
 import { supabase } from '@/lib/supabase';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 
@@ -157,10 +159,17 @@ Update: ${Updates.updateId ?? 'original build'}`);
           {/* Tokens: the balance and the last few earns / spends. */}
           {me ? <AtoTokenCard me={me} /> : null}
 
+          {/* The last seven days in three counts. Local + one read, no AI. */}
+          {me ? <YourWeekCard me={me} /> : null}
+
           {/* What Sage has saved about you — the only place to see and delete it. */}
           {me ? <SageFactsCard me={me} onUpdated={refresh} /> : null}
 
           <RunningUpdateLine />
+
+          <ThemedText type="code" themeColor="textSecondary" style={styles.sectionHead}>
+            {SETTINGS_TITLE}
+          </ThemedText>
 
           {/* Restored 2026-10-04 (emci): themes, city, birthday, notifications.
               The share poster is not back — the identity card above already has
@@ -275,6 +284,12 @@ Update: ${Updates.updateId ?? 'original build'}`);
 }
 
 const styles = StyleSheet.create({
+  sectionHead: {
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    paddingTop: Spacing.three,
+    paddingHorizontal: Spacing.one,
+  },
   container: {
     flex: 1,
     flexDirection: 'row',

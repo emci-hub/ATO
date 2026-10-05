@@ -5,6 +5,12 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 
 import { CrisisCard } from '@/components/crisis-card';
 import { DailyLineCard } from '@/components/daily-line-card';
+import { Appear, SkeletonBar } from '@/components/motion';
+import { ProgressRing, useRoundProgress } from '@/components/progress-ring';
+import { ShapeEmptyCard } from '@/components/shape-card';
+import { ThemedPressable } from '@/components/themed-pressable';
+import { TraitShape } from '@/components/trait-shape';
+import { WeekStrip } from '@/components/week-strip';
 import { IdentityTitleChip } from '@/components/identity-title-chip';
 import { crisisNotedToday } from '@/lib/crisis/local-flag';
 import { SageStoryFold } from '@/components/sage-story-fold';
@@ -33,7 +39,16 @@ import { cachedFromInsight, saveCachedInsight, writeWidgetLine } from '@/lib/ins
 import type { TraitTrack } from '@/lib/trait-stability';
 import { ATO_TOKEN_EARN } from '@/lib/ato-tokens';
 import { hubAccess } from '@/lib/dev-access';
-import { DEV_TOOLS_AVAILABLE } from '@/lib/dev-mode';
+import { DEV_TOOLS_AVAILABLE, PRE_LAUNCH_DEV } from '@/lib/dev-mode';
+import { recipeForAccount } from '@/lib/kenney/registry';
+import {
+  POLISH_COPY_REVIEWED,
+  ROUND_RING_TITLE,
+  roundRingLine,
+  SEALED_READ_KICKER,
+  SEALED_READ_LINE,
+} from '@/lib/polish-copy';
+import { traitShapePoints } from '@/lib/trait-shape';
 import { useDevAccessUnlocked } from '@/lib/dev-access-unlock';
 import { useSession } from '@/hooks/use-session';
 import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
@@ -213,6 +228,10 @@ export default function HomeScreen() {
     persist: !bootstrapFailed && tracksUserId === userId,
   });
   const todayLineText = todayLine?.line.text ?? null;
+  // The mini guy who says the line (same recipe as the nav companion).
+  const faceRecipe = useMemo(() => (me ? recipeForAccount(me.id, me.recipe) : undefined), [me]);
+  // How far into the current round (one read, refreshed with the tracks).
+  const roundAnswered = useRoundProgress(fullProfileDone ? userId : undefined, tracks);
   // 3 / 7 / 21 days in a row: the mini guy says it, once each.
   useBuddyStreak({ me, streak: todayLine?.streak, onPersisted: refreshMe });
   const todayLineLockScreen = todayLine ? lockScreenText(todayLine.line) : null;
@@ -477,13 +496,23 @@ export default function HomeScreen() {
           {/* Today's line: written, instant, and the same card in all three
               states below. */}
           {todayLine && me ? (
-            <DailyLineCard
-              today={todayLine}
-              me={me}
-              onReact={(reaction) => {
-                void reactToLine(reaction);
-              }}
-            />
+            <Appear>
+              <DailyLineCard
+                today={todayLine}
+                me={me}
+                face={faceRecipe}
+                onReact={(reaction) => {
+                  void reactToLine(reaction);
+                }}
+              />
+            </Appear>
+          ) : null}
+
+          {/* This week as seven dots (the line history already on the phone). */}
+          {me && todayYmd && todayLine ? (
+            <Appear index={1}>
+              <WeekStrip userId={me.id} todayYmd={todayYmd} refreshKey={todayLine} />
+            </Appear>
           ) : null}
 
           {bootstrapFailed ? (
@@ -527,6 +556,8 @@ export default function HomeScreen() {
             */
             <>
               {consentBlock}
+              {/* Nothing answered yet: the blank shape and one way in. */}
+              {bootstrapReady && profileProgress.answered === 0 ? <ShapeEmptyCard /> : null}
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={ANSWER_QUESTIONS_LABEL}
@@ -536,7 +567,10 @@ export default function HomeScreen() {
                   { borderColor: controlBorderColor(theme) },
                   pressed && styles.pressed,
                 ]}>
-                <View style={styles.boxRowText}>
+                {me && profileProgress.answered > 0 ? (
+                  <TraitShape points={traitShapePoints(me, tracks)} size={52} />
+                ) : null}
+                <View style={[styles.boxRowText, styles.flexText]}>
                   <ThemedText type="smallBold">{ANSWER_QUESTIONS_LABEL}</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
                     {profileProgress.answered} of {profileProgress.total} done. Finish all{' '}
@@ -600,14 +634,10 @@ export default function HomeScreen() {
                     <ThemedText style={styles.doText}>{insight.watchFor}</ThemedText>
                   </View>
                 </ThemedView>
-              ) : (
+              ) : consentGranted ? null : (
                 <ThemedView type="backgroundElement" style={styles.todayCard}>
                   <ThemedText type="smallBold">No insight yet</ThemedText>
-                  <ThemedText themeColor="textSecondary">
-                    {consentGranted
-                      ? 'Nothing is written until you ask for it.'
-                      : AI_CONSENT_NEEDED_COPY}
-                  </ThemedText>
+                  <ThemedText themeColor="textSecondary">{AI_CONSENT_NEEDED_COPY}</ThemedText>
                 </ThemedView>
               )}
 
@@ -617,38 +647,66 @@ export default function HomeScreen() {
                 today's insight not already on screen.
               */}
               {consentGranted && insight?.ymd !== window?.todayYmd ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={INSIGHT_LOAD_LABEL}
-                  disabled={insightState === 'loading'}
-                  onPress={() => {
-                    void loadInsight();
-                  }}
-                  style={({ pressed }) => [
-                    styles.answerQuestionsRow,
-                    { borderColor: controlBorderColor(theme) },
-                    pressed && styles.pressed,
-                  ]}>
-                  <View style={styles.boxRowText}>
-                    <ThemedText type="smallBold">
+                /*
+                 * Today's read, sealed (polish pass, 2026-10-05). The button
+                 * inside is still the ONLY thing that can spend a model call
+                 * for the insight; while it writes, the card shows a skeleton.
+                 */
+                <ThemedView type="backgroundElement" style={styles.sealedCard}>
+                  <View
+                    pointerEvents="none"
+                    style={[styles.sealedCorner, { borderTopColor: theme.backgroundSelected }]}
+                  />
+                  <ThemedText type="code" themeColor="textSecondary" style={styles.kicker}>
+                    {SEALED_READ_KICKER}
+                  </ThemedText>
+                  {insightState === 'loading' ? (
+                    <View style={styles.sealedSkeleton} accessibilityLabel="Writing">
+                      <SkeletonBar width="90%" />
+                      <SkeletonBar width="70%" />
+                      <SkeletonBar width="45%" />
+                    </View>
+                  ) : (
+                    <ThemedText themeColor="textSecondary" style={styles.sealedLine}>
+                      {insightState === 'unavailable' ? INSIGHT_UNAVAILABLE_COPY : SEALED_READ_LINE}
+                    </ThemedText>
+                  )}
+                  <ThemedPressable
+                    filled
+                    accessibilityRole="button"
+                    accessibilityLabel={INSIGHT_LOAD_LABEL}
+                    disabled={insightState === 'loading'}
+                    onPress={() => {
+                      void loadInsight();
+                    }}
+                    style={[
+                      styles.sealedButton,
+                      { borderRadius: theme.cutCorners ? 0 : 999 },
+                      insightState === 'loading' && styles.pressed,
+                    ]}>
+                    <ThemedText type="smallBold" themeColor="onAccent">
                       {insightState === 'loading'
-                      ? 'Writing…'
-                      : insightState === 'unavailable'
-                        ? 'Try again'
-                        : INSIGHT_LOAD_LABEL}
+                        ? 'Writing…'
+                        : insightState === 'unavailable'
+                          ? 'Try again'
+                          : INSIGHT_LOAD_LABEL}
                     </ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {insightState === 'unavailable'
-                        ? INSIGHT_UNAVAILABLE_COPY
-                        : 'Nothing is generated until you tap.'}
+                  </ThemedPressable>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Nothing is generated until you tap.
+                  </ThemedText>
+                  {!POLISH_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
+                    <ThemedText type="code" themeColor="textSecondary">
+                      Draft copy — waiting on emci review.
                     </ThemedText>
-                  </View>
-                </Pressable>
+                  ) : null}
+                </ThemedView>
               ) : (
                 /*
                  * ONE next step. When there is nothing to load (today's insight is
                  * up, or AI is off), the step is the next round of questions —
                  * never both rows at once. No model call: it only opens Questions.
+                 * The ring is how far into the current round of 16 (one read).
                  */
                 <Pressable
                   accessibilityRole="button"
@@ -659,10 +717,15 @@ export default function HomeScreen() {
                     { borderColor: controlBorderColor(theme) },
                     pressed && styles.pressed,
                   ]}>
-                  <View style={styles.boxRowText}>
-                    <ThemedText type="smallBold">{NEXT_ROUND_ROW_LABEL}</ThemedText>
+                  <ProgressRing value={roundAnswered ?? 0} total={ONGOING_ROUND_SIZE} />
+                  <View style={[styles.boxRowText, styles.flexText]}>
+                    <ThemedText type="smallBold">
+                      {roundAnswered ? ROUND_RING_TITLE : NEXT_ROUND_ROW_LABEL}
+                    </ThemedText>
                     <ThemedText type="small" themeColor="textSecondary">
-                      {NEXT_ROUND_ROW_COPY}
+                      {roundAnswered
+                        ? roundRingLine(ONGOING_ROUND_SIZE - roundAnswered)
+                        : NEXT_ROUND_ROW_COPY}
                     </ThemedText>
                   </View>
                   <ThemedText themeColor="textSecondary">›</ThemedText>
@@ -773,6 +836,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: Spacing.three,
     borderRadius: Spacing.three,
     borderWidth: 1,
     padding: Spacing.three,
@@ -783,6 +847,36 @@ const styles = StyleSheet.create({
   flexText: {
     flex: 1,
     paddingRight: Spacing.two,
+  },
+  sealedCard: {
+    borderRadius: Spacing.four,
+    padding: Spacing.four,
+    gap: Spacing.two,
+    overflow: 'hidden',
+  },
+  sealedCorner: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 0,
+    height: 0,
+    borderTopWidth: 36,
+    borderLeftWidth: 36,
+    borderLeftColor: 'transparent',
+  },
+  sealedLine: {
+    lineHeight: 24,
+    paddingRight: Spacing.five,
+  },
+  sealedSkeleton: {
+    gap: Spacing.two,
+    paddingVertical: Spacing.one,
+  },
+  sealedButton: {
+    alignSelf: 'flex-start',
+    paddingVertical: Spacing.two + Spacing.one,
+    paddingHorizontal: Spacing.four,
+    marginTop: Spacing.one,
   },
   pressed: {
     opacity: 0.7,

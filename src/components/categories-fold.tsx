@@ -2,9 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { InfoReveal, ShapedByList } from '@/components/info-reveal';
+import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
 import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/generate';
 import { ATO_TOKEN_NEED_MORE, ATO_TOKEN_PRICE, atoPriceLine, atoTokenBalanceOf } from '@/lib/ato-tokens';
@@ -109,6 +111,7 @@ export function CategoriesFold({
   onUpdated?: () => void | Promise<void>;
   unlocked: boolean;
 }) {
+  const theme = useTheme();
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [tracksLoaded, setTracksLoaded] = useState(false);
   const [openId, setOpenId] = useState<CategoryId | null>(null);
@@ -287,6 +290,37 @@ export function CategoriesFold({
     if (!statements.has(id) && statementsLoaded) void loadCategory(reading);
   }
 
+  /** Everything one category row needs, re-judged every render. */
+  function rowModel(reading: CategoryReading) {
+    const id = reading.def.id;
+    const open = openId === id;
+    const statement = statements.get(id);
+    const card = statement ? parseCategoryCard(statement.statement) : null;
+    // Gate messages are re-judged every render, so one that has since
+    // cleared (tracks landed, consent turned on) drops back.
+    const rawState = rowState[id];
+    const state =
+      (rawState === 'locked' && unlocked) ||
+      (rawState === 'consent' && consentGranted) ||
+      (rawState === 'not_ready' && reading.ready)
+        ? undefined
+        : rawState;
+    const copy = reading.ready ? (cached?.categories[id] ?? fallback[id]) : undefined;
+    const summary =
+      card?.summary ??
+      (reading.ready
+        ? (copy?.line ?? fallbackForReading(reading))
+        : // Before tracks land every category reads as not ready; say
+          // "Loading" rather than flash a count of zero at a finished user.
+          tracksLoaded
+          ? categoryNeedsLine(reading)
+          : 'Loading…');
+    const canRefresh = unlocked && consentGranted && reading.ready;
+    return { id, open, statement, card, state, summary, canRefresh };
+  }
+
+  const tileTints = [theme.accent, theme.accentSecondary, theme.accentTertiary, theme.emphasis];
+
   const lockedLine = fullProfileLockedLine(fullProfileProgress(tracks), 'categories');
 
   return (
@@ -296,145 +330,161 @@ export function CategoriesFold({
         Tap a category to read it.
       </ThemedText>
 
-      {readings.map((reading) => {
-        const id = reading.def.id;
-        const open = openId === id;
-        const statement = statements.get(id);
-        const card = statement ? parseCategoryCard(statement.statement) : null;
-        // Gate messages are re-judged every render, so one that has since
-        // cleared (tracks landed, consent turned on) drops back.
-        const rawState = rowState[id];
-        const state =
-          (rawState === 'locked' && unlocked) ||
-          (rawState === 'consent' && consentGranted) ||
-          (rawState === 'not_ready' && reading.ready)
-            ? undefined
-            : rawState;
-        const copy = reading.ready ? (cached?.categories[id] ?? fallback[id]) : undefined;
-        const summary =
-          card?.summary ??
-          (reading.ready
-            ? (copy?.line ?? fallbackForReading(reading))
-            : // Before tracks land every category reads as not ready; say
-              // "Loading" rather than flash a count of zero at a finished user.
-              tracksLoaded
-              ? categoryNeedsLine(reading)
-              : 'Loading…');
-        const canRefresh = unlocked && consentGranted && reading.ready;
-        return (
-          <View key={id} style={styles.row}>
-            <Pressable
-              onPress={() => handleRowPress(reading)}
-              accessibilityRole="button"
-              accessibilityState={{ expanded: open, busy: state === 'loading' }}
-              style={({ pressed }) => [styles.rowHeader, pressed && styles.pressed]}>
-              <View style={styles.rowText}>
-                <ThemedText type="smallBold">{categoryDisplayName(reading.def)}</ThemedText>
-                {!open ? (
-                  <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
-                    {summary}
-                  </ThemedText>
-                ) : null}
-              </View>
-              <ThemedText
-                themeColor="textSecondary"
-                style={[styles.chevron, open && styles.chevronOpen]}>
-                ›
-              </ThemedText>
-            </Pressable>
-
-            {open ? (
-              <ThemedView type="background" style={styles.expand}>
-                {card && state !== 'loading' ? (
-                  <>
-                    <ThemedText type="small">{card.summary}</ThemedText>
-                    {card.strength ? <CardPart label="Strength" text={card.strength} /> : null}
-                    {card.watchOut ? <CardPart label="Watch-out" text={card.watchOut} /> : null}
-                    {card.tryThis ? <CardPart label="Try this" text={card.tryThis} /> : null}
-                  </>
-                ) : null}
-
-                {state === 'loading' ? (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    Reading your answers…
-                  </ThemedText>
-                ) : state === 'locked' ? (
-                  <ThemedText type="small" themeColor="textSecondary" accessibilityLabel={FULL_PROFILE_LOCKED_COPY}>
-                    {lockedLine}
-                  </ThemedText>
-                ) : state === 'consent' ? (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {AI_CONSENT_NEEDED_COPY}
-                  </ThemedText>
-                ) : state === 'not_ready' ? (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {categoryNeedsLine(reading)} {categoryWaitingCopy(reading)}
-                  </ThemedText>
-                ) : state === 'error' ? (
-                  <View style={styles.inline}>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {CATEGORY_ERROR_COPY}
-                    </ThemedText>
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() => void loadCategory(reading)}
-                      style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
-                      <ThemedText type="link">Try again</ThemedText>
-                    </Pressable>
-                  </View>
-                ) : !card && !statementsLoaded ? (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    Loading…
-                  </ThemedText>
-                ) : !card ? (
-                  <Pressable
+      <View style={styles.grid}>
+        {pairsOf(readings).map((pair) => (
+          <View key={pair.map((r) => r.def.id).join('|')} style={styles.pairWrap}>
+            <View style={styles.pair}>
+              {pair.map((reading) => {
+                const m = rowModel(reading);
+                // "locked" is the shared gate only; a category still waiting on
+                // its traits is just dimmed. Nothing is judged before tracks land.
+                const locked = tracksLoaded && !unlocked;
+                const closed = tracksLoaded && (!unlocked || !reading.ready);
+                const tint = tileTints[readings.indexOf(reading) % tileTints.length];
+                return (
+                  <ThemedPressable
+                    key={reading.def.id}
+                    onPress={() => handleRowPress(reading)}
                     accessibilityRole="button"
-                    onPress={() => void loadCategory(reading, false)}
-                    style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
-                    <ThemedText type="link">Load</ThemedText>
-                  </Pressable>
-                ) : null}
-
-                {/* The working, one tap away: which traits this category is built
-                    from and which way each one leans. Closed by default. */}
-                {reading.ready && !state ? (
-                  <InfoReveal label={SHAPED_BY_LABEL}>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {categoryConcept(id)}
-                    </ThemedText>
-                    <ShapedByList rows={shapedByRows(reading.def.axes, tracks)} />
-                  </InfoReveal>
-                ) : null}
-
-                {card && statement && state !== 'loading' ? (
-                  <View style={styles.footer}>
-                    <ThemedText type="small" themeColor="textSecondary" style={styles.footerText}>
-                      Based on your answers · updated {formatUpdated(statement.createdAt)}
-                    </ThemedText>
-                    {canRefresh ? (
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={`${CATEGORY_REWRITE_LABEL} ${categoryDisplayName(reading.def)}`}
-                        hitSlop={8}
-                        onPress={() => void loadCategory(reading, true)}
-                        style={({ pressed }) => pressed && styles.pressed}>
-                        <ThemedText type="small" themeColor="textSecondary" style={styles.refresh}>
-                          {CATEGORY_REWRITE_LABEL}
+                    accessibilityLabel={`${categoryDisplayName(reading.def)}${locked ? ', locked' : ''}. ${m.summary}`}
+                    accessibilityState={{ expanded: m.open, busy: m.state === 'loading' }}
+                    style={[
+                      styles.tile,
+                      {
+                        borderColor: m.open ? theme.accent : theme.border,
+                        borderRadius: theme.cutCorners ? 0 : Math.min(theme.radius, 16),
+                        backgroundColor: m.open ? theme.backgroundSelected : theme.background,
+                      },
+                    ]}>
+                    <View style={styles.tileTop}>
+                      <View
+                        style={[
+                          styles.glyph,
+                          {
+                            backgroundColor: closed ? theme.backgroundSelected : tint,
+                            borderRadius: theme.cutCorners ? 0 : 8,
+                          },
+                        ]}>
+                        <ThemedText type="code" style={{ color: closed ? theme.textSecondary : theme.onAccent }}>
+                          {closed ? '·' : categoryDisplayName(reading.def).slice(0, 1)}
                         </ThemedText>
-                      </Pressable>
-                    ) : null}
-                  </View>
-                ) : null}
-                {rerollNote[id] && state !== 'loading' ? (
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {rerollNote[id]}
-                  </ThemedText>
-                ) : null}
-              </ThemedView>
-            ) : null}
+                      </View>
+                      {locked ? (
+                        <ThemedText type="code" themeColor="textSecondary">
+                          locked
+                        </ThemedText>
+                      ) : null}
+                    </View>
+                    <ThemedText type="smallBold" numberOfLines={1}>
+                      {categoryDisplayName(reading.def)}
+                    </ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary" numberOfLines={2} style={styles.tileLine}>
+                      {m.summary}
+                    </ThemedText>
+                  </ThemedPressable>
+                );
+              })}
+              {pair.length === 1 ? <View style={styles.tileSpacer} /> : null}
+            </View>
+            {pair.map((reading) => {
+              const { id, open, statement, card, state, canRefresh } = rowModel(reading);
+              return (
+                <View key={`open-${id}`}>
+                  {open ? (
+                    <ThemedView type="background" style={styles.expand}>
+                      {card && state !== 'loading' ? (
+                        <>
+                          <ThemedText type="small">{card.summary}</ThemedText>
+                          {card.strength ? <CardPart label="Strength" text={card.strength} /> : null}
+                          {card.watchOut ? <CardPart label="Watch-out" text={card.watchOut} /> : null}
+                          {card.tryThis ? <CardPart label="Try this" text={card.tryThis} /> : null}
+                        </>
+                      ) : null}
+
+                      {state === 'loading' ? (
+                        <ThemedText type="small" themeColor="textSecondary">
+                          Reading your answers…
+                        </ThemedText>
+                      ) : state === 'locked' ? (
+                        <ThemedText type="small" themeColor="textSecondary" accessibilityLabel={FULL_PROFILE_LOCKED_COPY}>
+                          {lockedLine}
+                        </ThemedText>
+                      ) : state === 'consent' ? (
+                        <ThemedText type="small" themeColor="textSecondary">
+                          {AI_CONSENT_NEEDED_COPY}
+                        </ThemedText>
+                      ) : state === 'not_ready' ? (
+                        <ThemedText type="small" themeColor="textSecondary">
+                          {categoryNeedsLine(reading)} {categoryWaitingCopy(reading)}
+                        </ThemedText>
+                      ) : state === 'error' ? (
+                        <View style={styles.inline}>
+                          <ThemedText type="small" themeColor="textSecondary">
+                            {CATEGORY_ERROR_COPY}
+                          </ThemedText>
+                          <Pressable
+                            accessibilityRole="button"
+                            onPress={() => void loadCategory(reading)}
+                            style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
+                            <ThemedText type="link">Try again</ThemedText>
+                          </Pressable>
+                        </View>
+                      ) : !card && !statementsLoaded ? (
+                        <ThemedText type="small" themeColor="textSecondary">
+                          Loading…
+                        </ThemedText>
+                      ) : !card ? (
+                        <Pressable
+                          accessibilityRole="button"
+                          onPress={() => void loadCategory(reading, false)}
+                          style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
+                          <ThemedText type="link">Load</ThemedText>
+                        </Pressable>
+                      ) : null}
+
+                      {/* The working, one tap away: which traits this category is built
+                          from and which way each one leans. Closed by default. */}
+                      {reading.ready && !state ? (
+                        <InfoReveal label={SHAPED_BY_LABEL}>
+                          <ThemedText type="small" themeColor="textSecondary">
+                            {categoryConcept(id)}
+                          </ThemedText>
+                          <ShapedByList rows={shapedByRows(reading.def.axes, tracks)} />
+                        </InfoReveal>
+                      ) : null}
+
+                      {card && statement && state !== 'loading' ? (
+                        <View style={styles.footer}>
+                          <ThemedText type="small" themeColor="textSecondary" style={styles.footerText}>
+                            Based on your answers · updated {formatUpdated(statement.createdAt)}
+                          </ThemedText>
+                          {canRefresh ? (
+                            <Pressable
+                              accessibilityRole="button"
+                              accessibilityLabel={`${CATEGORY_REWRITE_LABEL} ${categoryDisplayName(reading.def)}`}
+                              hitSlop={8}
+                              onPress={() => void loadCategory(reading, true)}
+                              style={({ pressed }) => pressed && styles.pressed}>
+                              <ThemedText type="small" themeColor="textSecondary" style={styles.refresh}>
+                                {CATEGORY_REWRITE_LABEL}
+                              </ThemedText>
+                            </Pressable>
+                          ) : null}
+                        </View>
+                      ) : null}
+                      {rerollNote[id] && state !== 'loading' ? (
+                        <ThemedText type="small" themeColor="textSecondary">
+                          {rerollNote[id]}
+                        </ThemedText>
+                      ) : null}
+                    </ThemedView>
+                  ) : null}
+                </View>
+              );
+            })}
           </View>
-        );
-      })}
+        ))}
+      </View>
     </ThemedView>
   );
 }
@@ -450,6 +500,13 @@ function CardPart({ label, text }: { label: string; text: string }) {
   );
 }
 
+/** Two tiles per row; an odd last tile keeps its half width. */
+function pairsOf<T>(items: readonly T[]): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += 2) out.push(items.slice(i, i + 2));
+  return out;
+}
+
 function formatUpdated(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return 'recently';
@@ -462,19 +519,41 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     gap: Spacing.two,
   },
-  row: {
-    gap: Spacing.half,
-    paddingVertical: Spacing.two,
+  grid: {
+    gap: Spacing.two,
+    marginTop: Spacing.one,
   },
-  rowHeader: {
+  pairWrap: {
+    gap: Spacing.two,
+  },
+  pair: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  tile: {
+    flex: 1,
+    minWidth: 0,
+    borderWidth: 1,
+    padding: Spacing.two + Spacing.one,
+    gap: Spacing.one,
+  },
+  tileSpacer: {
+    flex: 1,
+  },
+  tileTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: Spacing.two,
   },
-  rowText: {
-    flex: 1,
-    gap: Spacing.half,
+  glyph: {
+    width: 26,
+    height: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tileLine: {
+    fontSize: 12,
+    lineHeight: 16,
   },
   expand: {
     gap: Spacing.two,
@@ -502,12 +581,6 @@ const styles = StyleSheet.create({
   refresh: {
     fontSize: 12,
     textDecorationLine: 'underline',
-  },
-  chevron: {
-    fontSize: 20,
-  },
-  chevronOpen: {
-    transform: [{ rotate: '90deg' }],
   },
   cta: {
     alignSelf: 'flex-start',
