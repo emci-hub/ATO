@@ -11,7 +11,6 @@ import { QUESTIONS_BANK, QUESTIONS_FEW_SHOTS } from '../src/lib/questions/bank';
 import { ONGOING_ROUND_SIZE } from '../src/lib/questions/tiered-axis-plan';
 import { nextRoundLabel } from '../src/lib/questions/staged-intake-copy';
 import { CATEGORY_DEFS, getCategoryDefs } from '../src/lib/categories';
-import { pickQuestionGrounding } from '../src/lib/questions/context';
 import { questionDraftGuardHit } from '../src/lib/questions/guards';
 import {
   deferredUnansweredAxes,
@@ -24,13 +23,10 @@ import {
   bankTotalProgress,
   composeLocalQuestionBatch,
 } from '../src/lib/questions/local';
-import { parseQuestionBatch } from '../src/lib/questions/parse';
-import { buildQuestionsPrompt } from '../src/lib/questions/prompt';
 import { preferFreshAxes, recentAskedAxes } from '../src/lib/questions/rotation';
 import { unansweredRowKeys } from '../src/lib/questions/category-paged';
 import { QUESTIONS_BATCH_SIZE, QUESTIONS_CALL_TYPE } from '../src/lib/questions/types';
 import type { QuestionDraft } from '../src/lib/questions/types';
-import { emptySageKnowsState } from '../src/lib/sage-knows';
 import type { TraitTrack } from '../src/lib/trait-stability';
 import { TRAIT_AXES, emptyTraitState, mergeTraitWrite, type TraitAxis } from '../src/lib/traits';
 import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
@@ -151,181 +147,10 @@ for (const draft of local) {
 }
 ok('local batch is 5 multiple-choice items with no framework terms');
 
-const parsed = parseQuestionBatch(
-  JSON.stringify({
-    questions: [
-      {
-        axis: 'autonomy',
-        prompt: 'You already picked the path this morning.',
-        options: [
-          { text: 'Mine', value: 0.8 },
-          { text: 'Theirs', value: 0.2 },
-        ],
-      },
-    ],
-  }),
-);
-assert.equal(parsed[0]?.axis, 'autonomy');
-ok('JSON batch parse keeps axis + option values');
-
-const skippedOnly = pickQuestionGrounding(
-  { sage_knows: emptySageKnowsState(), facts: [] },
-  [{ day: 1, status: 'skipped', read: 'a skip read', do: 'a skip do' }],
-);
-assert.equal(skippedOnly.kind, 'none');
-const fromDo = pickQuestionGrounding(
-  { sage_knows: emptySageKnowsState(), facts: [] },
-  [{ day: 1, status: 'done', do: 'Write one line.' }],
-);
-assert.equal(fromDo.kind, 'do');
-assert.equal(fromDo.detail, 'Write one line.');
-ok('grounding uses a done Do and never a skipped Check');
-
 const first = mergeTraitWrite(emptyTraitState(), { relatedness: 0.8 }, 'self_situation', ['relatedness']);
 assert.notEqual(first.values.relatedness, 0.8);
 assert.equal(first.sources.relatedness, 'self_situation');
 ok('answers reuse the damped self_situation mergeTraitWrite path');
-
-const prompt = buildQuestionsPrompt({
-  me: { name: 'Riley', talk_style: 'even', voice_preset: 'close_friend' },
-  grounding: { kind: 'do', detail: 'Write one line.' },
-});
-assert.match(prompt, /LOCKED EXAMPLES/);
-assert.match(prompt, /I try the new place/);
-assert.match(prompt, /Never ask for free text/);
-assert.match(prompt, /Never a hypothetical/);
-assert.match(prompt, /Never double-barrel/);
-assert.match(prompt, /socially-desirable/);
-assert.match(prompt, /Mix stakes/);
-assert.match(prompt, /same sentence shape/);
-assert.match(prompt, /you mentioned to Sage/);
-// Shared-pool rule (2026-10-01): the output is saved where other users are served
-// from, so nothing the user typed may be in the prompt — not the name, not a fact.
-assert.doesNotMatch(prompt, /Riley/, 'the user name never enters a shared-pool prompt');
-assert.doesNotMatch(prompt, /- User:/, 'no User line at all');
-const factPrompt = buildQuestionsPrompt({
-  me: { name: 'Riley', talk_style: 'even', voice_preset: 'close_friend' },
-  grounding: { kind: 'fact', detail: 'Trains for a 10k with ZZTOP.' },
-});
-assert.doesNotMatch(factPrompt, /ZZTOP|Riley/, 'a stored fact never enters a shared-pool prompt');
-assert.match(factPrompt, /No specific recent moment/, 'a fact grounding reads as no grounding');
-assert.doesNotMatch(prompt, /TextInput/);
-assert.doesNotMatch(prompt, /TRAIT CONTEXT/, 'no tracks -> no trait context section at all');
-ok('prompt is multiple-choice, includes the locked few-shots');
-
-// Staged intake red-team (2026-10-02): the prompt names what 0.2 and 0.8 mean
-// on every requested axis (so a question cannot drift to a neighbouring
-// trait), asks for the 0.2/0.5/0.8 scale, and still carries no user text.
-{
-  const roundPrompt = buildQuestionsPrompt({
-    me: { name: 'Riley', talk_style: 'even', voice_preset: 'close_friend' },
-    grounding: { kind: 'fact', detail: 'Trains for a 10k with ZZTOP.' },
-    count: 3,
-    axisCounts: { steadiness: 2, autonomy: 1 },
-  });
-  assert.match(roundPrompt, /AXIS ENDS/);
-  assert.match(roundPrompt, /- steadiness: 0\.2 = Sensitive \(".+"\), 0\.8 = Steady \(".+"\)/);
-  assert.match(roundPrompt, /- autonomy: 0\.2 = /);
-  assert.doesNotMatch(roundPrompt, /- openness: 0\.2 = /, 'only the requested axes are described');
-  assert.match(roundPrompt, /use 0\.8 for the high end, 0\.2 for the low end and 0\.5 for a middle option/);
-  assert.doesNotMatch(roundPrompt, /ZZTOP|Riley/, 'still no user-typed text in a shared-pool prompt');
-  assert.doesNotMatch(prompt, /AXIS ENDS/, 'no axis counts -> no axis ends section');
-}
-ok('round prompts describe both ends of each requested trait and the 0.2/0.5/0.8 scale, with no user text');
-
-// AI option values snap to the authored scale; a question whose options all
-// land on the same value measures nothing and is dropped.
-{
-  const snapped = parseQuestionBatch(
-    JSON.stringify({
-      questions: [
-        {
-          axis: 'openness',
-          prompt: 'A new place opened on your street.',
-          options: [
-            { text: 'Going this week', value: 0.93 },
-            { text: 'Maybe', value: 0.42 },
-            { text: 'Not for me', value: 0.1 },
-          ],
-        },
-        {
-          axis: 'openness',
-          prompt: 'A coworker suggests a new lunch spot.',
-          options: [
-            { text: 'Sure', value: 0.75 },
-            { text: 'Fine', value: 0.85 },
-          ],
-        },
-      ],
-    }),
-    5,
-  );
-  assert.equal(snapped.length, 1, 'the question whose options both snap to 0.8 is dropped');
-  assert.deepEqual(snapped[0]!.options.map((opt) => opt.value), [0.8, 0.5, 0.2]);
-}
-ok('AI option values snap to 0.2/0.5/0.8, and a question that cannot discriminate is dropped');
-
-// Trait-adaptive prompt context: settled axes (effectiveStability > 0) show
-// as a qualitative pole phrase + a settled score, never a raw trait value;
-// unsettled axes (answerCount < 3) are omitted entirely, same convention as
-// sage-title.ts's settled notes.
-const settledHighTrack: TraitTrack = {
-  axis: 'openness',
-  track: 'report',
-  value: 0.8,
-  stability: 0.6,
-  answerCount: 3,
-  lastTouched: new Date().toISOString(),
-  lastDepthAt: null,
-};
-const settledLowTrack: TraitTrack = {
-  axis: 'extraversion',
-  track: 'report',
-  value: 0.2,
-  stability: 0.6,
-  answerCount: 3,
-  lastTouched: new Date().toISOString(),
-  lastDepthAt: null,
-};
-const unsettledTrack: TraitTrack = {
-  axis: 'agreeableness',
-  track: 'report',
-  value: 0.9,
-  stability: 0.6,
-  answerCount: 1,
-  lastTouched: new Date().toISOString(),
-  lastDepthAt: null,
-};
-const traitPrompt = buildQuestionsPrompt({
-  me: { name: 'Riley', talk_style: 'even', voice_preset: 'close_friend' },
-  grounding: { kind: 'do', detail: 'Write one line.' },
-  tracks: [settledHighTrack, settledLowTrack, unsettledTrack],
-});
-assert.match(traitPrompt, /TRAIT CONTEXT/);
-assert.match(traitPrompt, /never ask about a trait directly/);
-assert.match(traitPrompt, /goes for the untried option/); // openness high pole (value 0.8)
-assert.match(traitPrompt, /leans toward quiet time/); // extraversion low pole (value 0.2)
-// Scoped to the TRAIT CONTEXT block itself — the prompt's fixed JSON-shape
-// example legitimately contains "0.8"/"0.2" as sample option values, so a
-// file-wide match would false-positive on that unrelated boilerplate.
-const traitContextBlock = traitPrompt.slice(
-  traitPrompt.indexOf('TRAIT CONTEXT'),
-  traitPrompt.indexOf('AXES (each question maps to exactly one)'),
-);
-assert.doesNotMatch(traitContextBlock, /0\.8/, 'raw trait value must never appear, only the settled score');
-assert.doesNotMatch(traitContextBlock, /0\.2/, 'raw trait value must never appear, only the settled score');
-assert.doesNotMatch(
-  traitContextBlock,
-  /go along to keep things easy/, // agreeableness's AXIS_EDITOR_COPY label
-  'unsettled axis (answerCount < 3) must be omitted entirely',
-);
-const noTracksPrompt = buildQuestionsPrompt({
-  me: { name: 'Riley', talk_style: 'even', voice_preset: 'close_friend' },
-  grounding: { kind: 'do', detail: 'Write one line.' },
-  tracks: [unsettledTrack],
-});
-assert.doesNotMatch(noTracksPrompt, /TRAIT CONTEXT/, 'all-unsettled tracks -> no trait context section');
-ok('trait context surfaces settled axes as pole phrases only, omits unsettled axes and raw values');
 
 const jargonOption: QuestionDraft = {
   axis: 'openness',
@@ -561,17 +386,9 @@ assert.deepEqual(
   reordered.map((draft) => draft.axis),
   ['autonomy', 'playfulness', 'openness'],
 );
-const prompted = buildQuestionsPrompt({
-  me: { name: 'Riley', talk_style: 'even', voice_preset: 'close_friend' },
-  grounding: { kind: 'do', detail: 'Write one line.' },
-  priorityAxes: ['playfulness', 'autonomy'],
-});
-assert.match(prompted, /PRIORITY AXES/);
-assert.match(prompted, /playfulness, autonomy/);
-assert.doesNotMatch(prompt, /PRIORITY AXES/);
 const deferralMigration = read('supabase/migrations/wave30_question_deferral.sql');
 assert.match(deferralMigration, /question_deferred jsonb not null default '\[\]'::jsonb/);
-ok('deferred axes lead local + rotated batches and the prompt; wave29 migration exists');
+ok('deferred axes lead local + rotated batches; wave29 migration exists');
 
 async function main() {
   /*
@@ -657,66 +474,18 @@ assert.doesNotMatch(sage, /QuestionsFold/);
 assert.match(questionsScreen, /QuestionsFold/);
 assert.doesNotMatch(you, /\/questions/);
 const fold = read('src/components/questions-fold.tsx');
-// Answers go through the server checkpoint (wave79): intake via
-// applyQuestionAnswer -> answerIntakeQuestion, rounds via answerRoundItem.
-assert.match(fold, /applyQuestionAnswer\(/);
-assert.match(fold, /answerRoundItem\(/);
-assert.doesNotMatch(fold, /\bupdateTraits\(/);
+// Fixed bank (wave85, emci 2026-10-06): every set comes from the server
+// (serve_bank_set) and every answer goes through the checkpoint by item id
+// (answer_bank_item). No AI, no phone-built round, no direct trait write.
+assert.match(fold, /serveBankSet\(\)/);
+assert.match(fold, /answerBankItem\(key, optIndex\)/);
+assert.doesNotMatch(fold, /updateTraits\(|answerRoundItem\(|applyQuestionAnswer\(|runOngoingRound|prewarm/);
 assert.doesNotMatch(fold, /TextInput/);
-// Full Profile wiring: every question still renders straight from the
-// static bank (bankProgressForAxis/bankTotalProgress) — not routed through
-// routeQuestions/priorityAxes, and never imports anything from the
-// question_items direction, so a bad bank read can never touch the
-// persisted rotation. Re-platformed Sep 2026 onto the reusable
-// PagedQuestions component (book-style pager, 5 questions per page,
-// replacing the old single flat 16-axis list) — `useCategoryDefs()`/`getCategoryDefs()` IS now
-// expected inside this wiring (the opposite of the pre-Sep-2026 invariant
-// this block used to assert), scoped to the bank-adapter call site so a
-// stray category reference elsewhere in the file doesn't false-positive
-// this specific check.
-assert.match(fold, /bankProgressForAxis/);
-assert.match(fold, /bankTotalProgress/);
-assert.doesNotMatch(fold, /bankQuestionCount/);
-assert.doesNotMatch(fold, /category_id/);
 assert.match(fold, /PagedQuestions/);
-// Scoped per account (found in review: an unscoped key would leak one
-// account's answer stamps to another account signed in on the same device).
-assert.match(fold, /storageKey=\{`full-profile:\$\{me\.id\}:set\$\{set\.set\}`\}/);
-// Live-subscribed catalog, not a mount-time getCategoryDefs() snapshot — a
-// category_defs fetch swapping the list while this screen is open must be
-// reflected, same hook categories-fold.tsx/category-teaser.tsx already use.
-assert.match(fold, /useCategoryDefs\(\)/);
-// 2026-09-11: PagedQuestions itself no longer takes categories/rowsForAxis
-// (generalized to a flat `rows` prop, T-01 of the ongoing-round pager
-// build) — the caller (here) now flattens the live category catalog into
-// `bankRows` itself via uniqueCategoryAxes/bankProgressForAxis, then passes
-// the flat result straight through.
-assert.match(fold, /uniqueCategoryAxes\(liveCategoryDefs\)/);
-{
-  const bankSetup = fold.slice(
-    fold.indexOf('const bankAxes = uniqueCategoryAxes(liveCategoryDefs);'),
-    fold.indexOf('<PagedQuestions'),
-  );
-  assert.match(bankSetup, /bankProgressForAxis/);
-  assert.match(bankSetup, /completedAxesFrom\(bankAxes, bankRowsForAxis\)/);
-  const bankAdapter = fold.slice(
-    fold.indexOf('<PagedQuestions'),
-    fold.indexOf('/>', fold.indexOf('<PagedQuestions')),
-  );
-  assert.match(bankAdapter, /rows=\{bankRows\}/);
-  assert.ok(
-    bankAdapter.includes(
-      'progressLabel={`${set.answered} of ${set.size} in this set · ${bankCompletedAxes.length} of ${bankAxes.length} traits`}',
-    ),
-    'the intake pager shows set progress',
-  );
-  assert.match(fold, /key=\{`set-\$\{set\.set\}`\}/, 'each set remounts the pager, so it opens on page 1');
-  // routeQuestions/priorityAxes/mergeCategoryPriority belong to the default
-  // rotation above this usage, never to how Full Profile is fed — a bad bank
-  // read must never be able to reach the persisted daily-pack rotation.
-  assert.doesNotMatch(bankSetup + bankAdapter, /routeQuestions|priorityAxes|mergeCategoryPriority/);
-}
-ok('Full Profile renders through the reusable PagedQuestions component (live category catalog flattened by the caller), straight from the static bank, never through routeQuestions');
+// Scoped per pack AND per account: a stamp can never leak between accounts.
+assert.match(fold, /storageKey=\{`bank-set:\$\{pack\.id\}:\$\{me\.id\}`\}/);
+assert.match(fold, /key=\{pack\.id\}/, 'each set remounts the pager, so it opens on page 1');
+ok('Questions renders the server-served bank set through PagedQuestions and answers through the checkpoint');
 
 // PagedQuestions itself: a flat, axis-order book pager (5 questions
 // per page, Back/Next Page only — no per-category grouping or Skip since the
@@ -829,17 +598,16 @@ assert.doesNotMatch(foldCode, /Not today/);
   future crisis gate or axis deep-link on this screen would be a legitimate
   feature, and a check that forbids one is a trap, not a guard.
 */
-// "Next 16 questions" — the thing that must SURVIVE, standalone in that spot.
-assert.match(fold, /NEXT_ROUND_LABEL = nextRoundLabel\(ONGOING_ROUND_SIZE\)/);
+// After a set: one "Next set" press, standalone in that spot.
+assert.match(fold, />Next set</);
 assert.equal(nextRoundLabel(ONGOING_ROUND_SIZE), 'Next 16 questions');
-assert.match(fold, /OngoingRoundFold/);
 // No sequential lock left to render a 'Locked' label for — every one of an
 // axis's drafts is shown and answerable at once, any order, in the new
 // component too.
 assert.doesNotMatch(pagedQuestions, /'Locked'/);
 assert.doesNotMatch(pagedQuestions, />\s*Locked\s*</);
 assert.match(pagedQuestions, />\s*Answered\s*</);
-ok('the Infinite Questions inline feed and its card stay deleted; "Next 16 questions" survives standalone; no stale per-row lock label');
+ok('the Infinite Questions inline feed and its card stay deleted; "Next set" stands alone; no stale per-row lock label');
 assert.ok(!existsSync(resolve(__dirname, '..', 'src/components/explore-panel.tsx')), 'explore-panel.tsx stays deleted (2026-10-04)');
 ok('Explore has no panel of its own any more; Questions writes self_situation');
 

@@ -151,7 +151,19 @@ for (const [id, model] of Object.entries(DEFAULT_MODELS)) {
 ok('client DEFAULT_MODELS mirrors the Edge Function defaults');
 
 assert.match(read('src/lib/explore/generate.ts'), /generateText/);
-assert.match(read('src/lib/questions/generate.ts'), /generateText/);
+// Questions come from the fixed bank (wave85, emci 2026-10-06): no model call
+// writes a question any more, so the old generator and its helpers stay gone.
+for (const gone of [
+  'src/lib/questions/generate.ts',
+  'src/lib/questions/prompt.ts',
+  'src/lib/questions/ongoing-round.ts',
+  'src/lib/questions/chunked-generate.ts',
+  'src/lib/questions/prewarm.ts',
+  'src/lib/questions/run-prewarm.ts',
+  'src/lib/questions/question-lab.ts',
+]) {
+  assert.ok(!existsSync(resolve(root, gone)), `${gone} must stay deleted (no runtime AI questions)`);
+}
 // The "A faster pass" sweep (`src/lib/questions/sweep.ts`) was deleted
 // entirely 2026-09-15 (emci) — the 50 bank questions elsewhere already cover
 // it, so there is nothing left here to assert has no model call.
@@ -170,7 +182,6 @@ ok('call sites use generateText; prompt builders are untouched; the deleted swee
 // this is what forces a new AI feature to declare its sharing model up front.
 const METADATA_CALL_FILES = new Set([
   'src/lib/ai/generate.ts', // the dispatcher itself (definition, no self-calls)
-  'src/lib/questions/generate.ts',
   'src/lib/explore/generate.ts',
   'src/lib/rolls/generate.ts',
   'src/lib/legends64/generate-story.ts',
@@ -215,7 +226,7 @@ const META_FLAGS: readonly (keyof AiCallMetadata)[] = [
   'bucketShareable',
   'latencySensitive',
 ];
-assert.equal(AI_CALL_SITES.length, 10, 'one catalog entry per AI call site');
+assert.equal(AI_CALL_SITES.length, 9, 'one catalog entry per AI call site');
 const features = new Set<string>();
 for (const site of AI_CALL_SITES) {
   assert.ok(!features.has(site.feature), `duplicate call-site feature: ${site.feature}`);
@@ -228,7 +239,7 @@ for (const site of AI_CALL_SITES) {
     );
   }
 }
-ok('metadata catalog covers all 11 call sites with boolean flags');
+ok('metadata catalog covers all 9 call sites with boolean flags');
 
 // --- Gemini -> DeepSeek fallback ------------------------------------------
 // Any Gemini failure falls back (not only quota); isQuotaLimitError only

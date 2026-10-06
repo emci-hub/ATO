@@ -1,18 +1,16 @@
-import { supabase } from '@/lib/supabase';
-import type { TraitAxis } from '@/lib/traits';
-import {
-  spendAtoTokensLegendReroll,
-  spendAtoTokensQuestionReroll,
-} from '@/lib/ato-tokens-server';
+import { spendAtoTokensLegendReroll } from '@/lib/ato-tokens-server';
 import type { AtoTokenResult } from '@/lib/ato-tokens';
 import { splitArchetypeCode } from '@/lib/legends64/archetypes';
 import { generateLegendStory } from '@/lib/legends64/generate-story';
 import { saveGeneration } from '@/lib/legends64/store';
 
-import { fetchBankCandidates } from './bank-pool';
-import type { QuestionItemRow, QuestionOption } from './types';
-
 /**
+ * QUESTION REROLL REMOVED 2026-10-06 (fixed question bank, wave85): it swapped
+ * a round question for another from the shared AI pool, which no longer
+ * exists. Sets are drawn at random from the fixed bank, so there is nothing to
+ * swap to. The server RPCs (reroll_question_item, the question_reroll spend)
+ * are untouched. Only the parked legend reroll remains here.
+ *
  * ATO tokens reroll — spendAtoTokensLegendReroll/QuestionReroll
  * (ato-tokens-server.ts) already move the currency; this module is the
  * caller that pairs each spend with what it actually rerolls. Category
@@ -30,13 +28,6 @@ import type { QuestionItemRow, QuestionOption } from './types';
  * ATO token for question, 10 for legend) and how rarely a same-session DB
  * write fails right after a same-session read succeeded.
  */
-
-export interface RerollItemUpdate {
-  id: string;
-  axis: TraitAxis;
-  prompt: string;
-  options: QuestionOption[];
-}
 
 /**
  * Every spend RPC (wave51) raises a Postgres exception (errcode P0040) for
@@ -57,17 +48,6 @@ async function trySpend(spend: () => Promise<AtoTokenResult>): Promise<AtoTokenR
     }
     throw err;
   }
-}
-
-function parseRerollItemResult(data: unknown): RerollItemUpdate | null {
-  if (!data || typeof data !== 'object') return null;
-  const row = data as Record<string, unknown>;
-  const id = typeof row.id === 'string' ? row.id : null;
-  const axis = typeof row.axis === 'string' ? row.axis : null;
-  const prompt = typeof row.prompt === 'string' ? row.prompt : null;
-  const options = Array.isArray(row.options) ? (row.options as QuestionOption[]) : null;
-  if (!id || !axis || !prompt || !options) return null;
-  return { id, axis: axis as TraitAxis, prompt, options };
 }
 
 export interface LegendRerollResult {
@@ -108,63 +88,3 @@ export async function rerollLegend(archetypeCode: string): Promise<LegendRerollR
   const generationId = await saveGeneration(archetypeCode, generation.story);
   return { result, story: generation.story, generationId };
 }
-
-/** question_items rows already used by the same pack (including the item being rerolled) — the reroll RPC never repeats one of these on the same axis within a round. */
-async function fetchPackBankItemIds(packId: string): Promise<Set<string>> {
-  const { data, error } = await supabase
-    .from('question_items')
-    .select('question_bank_item_id')
-    .eq('pack_id', packId)
-    .not('question_bank_item_id', 'is', null);
-  if (error) throw error;
-  return new Set(
-    (data ?? []).map((row) => (row as { question_bank_item_id: string }).question_bank_item_id),
-  );
-}
-
-/**
- * Question reroll — ongoing-round items only (Infinite Questions rows carry
- * no question_bank_item_id and reroll_question_item rejects them). Prechecks
- * that a swap is actually possible before spending the token — a precheck
- * that only matched the permanent-exclusion half let a sparse axis spend the
- * token and then have the RPC find nothing (found in review). The RPC still
- * re-derives its own pick atomically rather than trusting this read, so a
- * rare race where the candidate disappears between the two calls still fails
- * safely (spent, no swap) instead of reusing a stale id.
- *
- * Since wave68 this precheck is STRICTER than the effect RPC, not a mirror
- * of it: `fetchBankCandidates` now also excludes every bank item this user
- * has ever been served (in any pack), while `reroll_question_item`
- * (wave54_reroll_rpcs_fixes.sql) still excludes only the permanent reroll
- * list plus this same pack. The drift is deliberately in the safe direction
- * — the precheck's candidate set is a subset of the RPC's, so it can never
- * green-light a spend the RPC would then fail. What it does mean is that
- * reroll reports `no_candidates` earlier on a thin axis than it used to, and
- * that a reroll can still land a question from one of this user's OWN
- * earlier rounds. Closing that second gap needs the same anti-join inside
- * the reroll RPC; deliberately left for a follow-up rather than widened into
- * a token-spending path in the same change that introduced the dedup.
- */
-export async function rerollQuestionItem(
-  item: Pick<QuestionItemRow, 'id' | 'axis' | 'packId'>,
-): Promise<{ result: AtoTokenResult; item: RerollItemUpdate | null }> {
-  const [candidates, packBankIds] = await Promise.all([
-    fetchBankCandidates(item.axis, 8),
-    fetchPackBankItemIds(item.packId),
-  ]);
-  const hasCandidate = candidates.some((candidate) => !packBankIds.has(candidate.id));
-  if (!hasCandidate) {
-    return { result: { ok: false, balance: 0, reason: 'no_candidates' }, item: null };
-  }
-
-  const result = await trySpend(() => spendAtoTokensQuestionReroll(item.id));
-  if (!result.ok) return { result, item: null };
-
-  const { data, error } = await supabase.rpc('reroll_question_item', { p_item_id: item.id });
-  if (error) {
-    console.log('[reroll] question reroll effect error:', error);
-    return { result, item: null };
-  }
-  return { result, item: parseRerollItemResult(data) };
-}
-

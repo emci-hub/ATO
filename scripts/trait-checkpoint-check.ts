@@ -68,8 +68,10 @@ function walk(dir: string): string[] {
     assert.match(me, new RegExp(`${fn}\\(`), `me.ts writes through ${fn}`);
   }
   assert.match(me, /updateTraits takes direct sources only/, 'question answers cannot sneak through updateTraits');
-  assert.match(read('src/lib/questions/answer.ts'), /await answerIntakeQuestion\(draft\.prompt, optionIndex\);/);
-  assert.match(read('src/components/questions-fold.tsx'), /await answerRoundItem\(key, optIndex\);/);
+  // Bank sets and retests answer through the checkpoint (wave85 answer_bank_item).
+  assert.match(read('src/components/questions-fold.tsx'), /await answerBankItem\(key, optIndex\);/);
+  assert.match(read('src/components/bank-finish-fold.tsx'), /await answerBankItem\(key, optIndex\);/);
+  assert.match(read('src/lib/trait-checkpoint.ts'), /call\('answer_bank_item', \{ p_item_id: itemId, p_option_index: optionIndex \}\)/);
   assert.match(read('src/lib/dev-test-user.ts'), /await applyDevTraitPreset\(\{ values, sources, touched, tracks, history \}\);/);
   assert.match(read('src/components/depth-dive.tsx'), /from '@\/lib\/trait-checkpoint'/);
   ok('no app code writes trait scores itself — everything goes through lib/trait-checkpoint.ts');

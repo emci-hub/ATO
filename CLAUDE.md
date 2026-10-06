@@ -18,7 +18,7 @@ scanned-in Circle. `PROJECT_CONTEXT.md` is the memory; `docs/NOW.md` is live sta
 
 Live checks (need real accounts / network / keys) are excluded from the gate and run by hand:
 `around`, `auth-password`, `apple-revoke`, `card-live`, `crisis-live`, `delete-account`,
-`founder-access`, `intake-live`, `invite`, `question-live`, `quota`, `sentry`, `style-live`, `talk-live`.
+`founder-access`, `intake-live`, `invite`, `quota`, `sentry`, `style-live`, `talk-live`.
 
 ## Hard invariants
 
@@ -60,6 +60,10 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   teased kindly, no advice, no slang. Rules + approved examples: `src/lib/voice/moment-voice.ts`;
   drop `MOMENT_VOICE_BLOCK` into any new generation prompt. Older surfaces (question
   prompts, categories, Story, the insight's five fields) are not converted yet.
+- **Questions come from the fixed bank (wave85, emci 2026-10-06).** 400 questions, 25 per trait,
+  one file per trait in `src/lib/questions/bank/`; the server copy (`question_bank`) is generated
+  by `scripts/gen-wave85-bank.ts` and pinned by `check:question-bank`. No AI writes a question and
+  nothing a person typed reaches one. Never renumber or reuse a question id — answers point at it.
 - **Unreviewed copy ships behind `*_COPY_REVIEWED = false` flags.** Story / Levity are
   diagnosis-adjacent; not shippable as reviewed without emci's read.
 - Do not change dependencies, auth, env config, or secrets without emci's ok.

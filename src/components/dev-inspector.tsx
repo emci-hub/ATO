@@ -35,7 +35,7 @@ import {
 import { isFullProfileDone } from '@/lib/full-profile-gate';
 import { aiConsentFor } from '@/lib/me';
 import { useMeContext } from '@/lib/me-context';
-import { fetchBankPoolDepth } from '@/lib/questions/bank-pool';
+import { fetchBankProgress } from '@/lib/questions/bank-sets-server';
 import { supabase } from '@/lib/supabase';
 import type { TraitHistoryRow } from '@/lib/trait-history';
 import { fetchTraitHistory } from '@/lib/trait-history-store';
@@ -122,7 +122,9 @@ export function DevInspector() {
           roundFailed = true;
           return null;
         }),
-        fetchBankPoolDepth().catch(() => null),
+        fetchBankProgress()
+          .then((p) => p.answeredByAxis as Partial<Record<TraitAxis, number>>)
+          .catch(() => null),
       ]);
       setData({ tracks, history, usage, round, roundFailed, depth });
     } catch (err) {
@@ -237,14 +239,14 @@ export function DevInspector() {
             {data?.roundFailed ? 'Could not read the latest round.' : 'No round yet on this account.'}
           </ThemedText>
         )}
-        <ThemedText type="smallBold">Bank questions you have not seen yet, per axis</ThemedText>
+        <ThemedText type="smallBold">Bank questions answered, per axis (of 25)</ThemedText>
         {data?.depth ? (
           <ThemedText type="small" themeColor="textSecondary">
             {TRAIT_AXES.map((axis) => `${axis} ${data.depth?.[axis] ?? 0}`).join(' · ')}
           </ThemedText>
         ) : (
           <ThemedText type="small" themeColor="textSecondary">
-            Could not read the pool depth.
+            Could not read the bank progress.
           </ThemedText>
         )}
       </>

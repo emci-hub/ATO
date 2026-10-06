@@ -122,7 +122,7 @@ ok('milestone crossings are back: remembered on the account, silent on the first
 assert.match(read('src/app/(tabs)/intake-sweep.tsx'), /useBuddyMilestones\(\{ me, tracks, tracksReady, resetKey: dataEpoch, onPersisted: refresh \}\);/);
 assert.match(read('src/app/(tabs)/index.tsx'), /useBuddyStreak\(\{ me, streak: todayLine\?\.streak, onPersisted: refreshMe \}\);/);
 const fold = read('src/components/questions-fold.tsx');
-assert.match(fold, /pushBuddyNote\(\{\s+id: `round:\$\{holder\.pack\?\.id \?\? 'done'\}`,\s+title: ROUND_COMPLETE_TITLE,\s+body: roundCompleteBody\(tracks, paid, capped\),/);
+assert.match(fold, /pushBuddyNote\(\{\s+id: `round:\$\{finished\.id\}`,\s+title: ROUND_COMPLETE_TITLE,\s+body: roundCompleteBody\(tracks, paid, capped\),/);
 assert.doesNotMatch(fold, /<MilestoneToast/);
 assert.match(read('src/components/full-profile-banner.tsx'), /pushBuddyNote\(\{ id: 'intake:done'/);
 const identity = read('src/components/identity-card.tsx');

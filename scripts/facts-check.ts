@@ -5,7 +5,7 @@
  * Deleting the last fact is a real empty array, not a sticky once-true.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
@@ -21,8 +21,6 @@ import { depthTier, growthState, hasDepthSparkle } from '../src/lib/growth';
 import { hasFirstFact, resolveBadges } from '../src/lib/badges';
 import { findNudgeSignal } from '../src/lib/voice/nudge';
 import { findRevealSignal } from '../src/lib/reveal';
-import { pickQuestionGrounding } from '../src/lib/questions/context';
-import { emptySageKnowsState } from '../src/lib/sage-knows';
 
 let passed = 0;
 function ok(label: string) {
@@ -143,10 +141,9 @@ assert.equal(
   }),
   null,
 );
-assert.equal(
-  pickQuestionGrounding({ sage_knows: emptySageKnowsState(), facts: [] }, []).kind,
-  'none',
-);
-ok('depth / first-fact / Nudge / Reveal / questions handle facts.length = 0 after a delete');
+// Questions no longer read facts at all (fixed bank, wave85): the grounding
+// helper that could is deleted.
+assert.ok(!existsSync(resolve(__dirname, '..', 'src/lib/questions/context.ts')), 'questions/context.ts stays deleted');
+ok('depth / first-fact / Nudge / Reveal handle facts.length = 0 after a delete; questions never read facts');
 
 console.log(`\nAll ${passed} facts-list checks passed.`);

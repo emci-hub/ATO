@@ -79,7 +79,6 @@ ok('sage.txt is behavior + few-shots, not a role noun');
 // The surviving prompt builders carry the same preset guide.
 const insightPrompt = read('src/lib/insight/generate-insight.ts');
 assert.doesNotMatch(insightPrompt, /You are Sage, the coach/);
-assert.match(read('src/lib/questions/prompt.ts'), /VOICE_PRESET_GUIDE/);
 ok('surviving prompt builders carry the preset and drop the coach role line');
 
 assert.match(read('src/lib/voice/quota-server.ts'), /log_jargon_guard/);

@@ -247,7 +247,7 @@ ok('the count-only branch skips the value blend (wiring)');
   // pinned beside him at the tab shell (components/buddy-bubble.tsx).
   assert.match(
     fold,
-    /pushBuddyNote\(\{\s+id: `round:\$\{holder\.pack\?\.id \?\? 'done'\}`,\s+title: ROUND_COMPLETE_TITLE,\s+body: roundCompleteBody\(tracks, paid, capped\),/,
+    /pushBuddyNote\(\{\s+id: `round:\$\{finished\.id\}`,\s+title: ROUND_COMPLETE_TITLE,\s+body: roundCompleteBody\(tracks, paid, capped\),/,
     'a finished round is announced through the mini guy with the same title and body',
   );
   const bubble = readFileSync(resolve(__dirname, '../src/components/buddy-bubble.tsx'), 'utf8');

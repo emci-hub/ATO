@@ -234,6 +234,24 @@ export function applyEwmaAnswer(
 }
 
 /**
+ * A trait recomputed from its answer log, oldest first — what a retest does
+ * after it replaces old answers (wave85 `_trait_replay`, which folds the same
+ * step on the server). Null when there are no answers.
+ */
+export function replayTraitAnswers(
+  axis: TraitAxis,
+  samples: readonly number[],
+  nowIso: string,
+  lastDepthAt: string | null = null,
+): TraitTrack | null {
+  let track: TraitTrack | null = null;
+  for (const sample of samples) {
+    track = applyEwmaAnswer(track, axis, 'report', sample, nowIso);
+  }
+  return track ? { ...track, lastDepthAt } : null;
+}
+
+/**
  * A tap or a setting (a DIRECT source: Settings, ranking, either/or pick) is
  * not an answer (emci, 2026-10-03). It moves the value the same way an answer
  * would, but never answerCount or stability, so taps alone can never finish a

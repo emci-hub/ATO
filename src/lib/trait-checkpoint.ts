@@ -7,6 +7,10 @@
  *                         be that trait's next intake question
  *   answerRoundItem       one round question, by its question_items id (marks
  *                         it answered AND scores it, atomically)
+ *   answerBankItem        one question from the fixed bank (wave85), by its
+ *                         question_items id; the value comes from the server's
+ *                         question_bank row. In a retest pack it REPLACES the
+ *                         earlier answer and the trait is recomputed
  *   setTraitDirect        a tap / setting / ranking / either-or pick: moves
  *                         the value, never counts as an answer
  *   recordGamePick        the gut-call game: 0.2 or 0.8, game track
@@ -63,6 +67,10 @@ export async function answerDailyPick(ymd: string, pickId: string, optionIndex: 
 
 export function answerRoundItem(itemId: string, optionIndex: number): Promise<MeRowJson> {
   return call('answer_round_item', { p_item_id: itemId, p_option_index: optionIndex });
+}
+
+export function answerBankItem(itemId: string, optionIndex: number): Promise<MeRowJson> {
+  return call('answer_bank_item', { p_item_id: itemId, p_option_index: optionIndex });
 }
 
 export type DirectTraitSource = Extract<TraitSource, 'self_tap' | 'self_settings' | 'self_scenario'>;
