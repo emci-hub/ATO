@@ -50,23 +50,30 @@ export function rollEightBall(previous?: string | null): EightBallAnswer {
 }
 
 /**
- * Slot-machine flash delays before the real answer lands. Sum is about 2s so
- * a shake reads as a roll, not a flicker.
+ * The slot reel (emci 2026-10-06: "rotates like a slot machine … some kind
+ * of delay so it's gamified"). The answers sit on a vertical strip behind a
+ * one-line window: it whips past, slows on an ease-out curve, overshoots a
+ * touch and settles on the real answer — the usual slot-machine landing.
  */
-export const EIGHT_BALL_FLASH_DELAYS_MS = [180, 220, 280, 360, 460, 600] as const;
+/** Filler answers on the strip before the real one. */
+export const EIGHT_BALL_REEL_FILLERS = 14;
+/** The spin, fast to slow. */
+export const EIGHT_BALL_REEL_SPIN_MS = 2600;
+/** The overshoot and settle after the spin. */
+export const EIGHT_BALL_REEL_SETTLE_MS = 360;
 
 export function eightBallRollMs(): number {
-  return EIGHT_BALL_FLASH_DELAYS_MS.reduce((sum, ms) => sum + ms, 0);
+  return EIGHT_BALL_REEL_SPIN_MS + EIGHT_BALL_REEL_SETTLE_MS;
 }
 
 /**
- * Filler lines for the reel. Never the final answer; skips the current line
- * when possible so the first flash is visibly different.
+ * Filler lines for the reel strip. Never the final answer; skips the current
+ * line when possible so the strip visibly moves off it.
  */
 export function pickEightBallFlashes(
   finalAnswer: string,
   previous?: string | null,
-  count = EIGHT_BALL_FLASH_DELAYS_MS.length,
+  count = EIGHT_BALL_REEL_FILLERS,
 ): string[] {
   const exclude = new Set<string>([finalAnswer]);
   if (previous && previous !== finalAnswer) exclude.add(previous);

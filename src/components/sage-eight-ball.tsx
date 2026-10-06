@@ -3,6 +3,8 @@ import { StyleSheet, View } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Animated, {
   cancelAnimation,
+  Easing,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -19,7 +21,8 @@ import { useAppearance } from '@/lib/theme/context';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import {
   EIGHT_BALL_COPY_REVIEWED,
-  EIGHT_BALL_FLASH_DELAYS_MS,
+  EIGHT_BALL_REEL_SETTLE_MS,
+  EIGHT_BALL_REEL_SPIN_MS,
   pickEightBallFlashes,
   rollEightBall,
 } from '@/lib/sage-eight-ball';
@@ -112,6 +115,89 @@ function SageOrb({ size, spin, marked }: { size: number; spin: number; marked?: 
   );
 }
 
+/** One line of the reel window. Two lines of answer text fit, with room. */
+const REEL_ROW_H = 64;
+
+/**
+ * The slot reel: `strip` stacked in a one-row window. On a new `runId` it
+ * snaps to the top (the old answer), spins down the strip on an ease-out
+ * curve, runs a little past the last row and settles back onto it, then calls
+ * `onDone`. A strip of one line just shows it.
+ */
+function SlotReel({
+  strip,
+  runId,
+  spinning,
+  onDone,
+}: {
+  strip: readonly string[];
+  runId: number;
+  /** False when the card reopens on a reel that already landed: no replay. */
+  spinning: boolean;
+  onDone: () => void;
+}) {
+  const y = useSharedValue(0);
+  const done = useRef(onDone);
+  done.current = onDone;
+
+  useEffect(() => {
+    cancelAnimation(y);
+    if (strip.length <= 1) {
+      y.value = 0;
+      return;
+    }
+    const target = -(strip.length - 1) * REEL_ROW_H;
+    if (!spinning) {
+      y.value = target;
+      return;
+    }
+    y.value = 0;
+    y.value = withSequence(
+      withTiming(target - REEL_ROW_H * 0.28, {
+        duration: EIGHT_BALL_REEL_SPIN_MS,
+        easing: Easing.bezier(0.12, 0.72, 0.2, 1),
+      }),
+      withTiming(target, { duration: EIGHT_BALL_REEL_SETTLE_MS, easing: Easing.out(Easing.cubic) }, (finished) => {
+        if (finished) runOnJS(callDone)();
+      }),
+    );
+    function callDone() {
+      done.current();
+    }
+    // A new run (runId), not a re-render, restarts the spin.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runId]);
+
+  const moving = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
+
+  return (
+    <View
+      style={styles.reelWindow}
+      accessible
+      accessibilityLiveRegion="polite"
+      accessibilityLabel={spinning ? 'Shaking' : strip[strip.length - 1]}>
+      <Animated.View style={moving}>
+        {strip.map((line, i) => (
+          <View
+            key={`${runId}-${i}`}
+            style={styles.reelRow}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants">
+            <ThemedText
+              style={styles.answer}
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
+              maxFontSizeMultiplier={1.4}>
+              {line}
+            </ThemedText>
+          </View>
+        ))}
+      </Animated.View>
+    </View>
+  );
+}
+
 /**
  * Small collapsible 8-ball. Back (emci, 2026-10-04) on the Questions tab, below
  * the question set — it left with Talk's chat on 2026-09-14. Entirely on the
@@ -126,6 +212,10 @@ export function SageEightBall() {
   const [answer, setAnswer] = useState<string | null>(null);
   const [spin, setSpin] = useState(0);
   const [rolling, setRolling] = useState(false);
+  // The reel strip and which run it is; the real answer lands when it settles.
+  const [strip, setStrip] = useState<string[]>([]);
+  const [runId, setRunId] = useState(0);
+  const landing = useRef<string | null>(null);
   const rollingRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const opening = useRef(false);
@@ -147,24 +237,30 @@ export function SageEightBall() {
     rollingRef.current = true;
     setRolling(true);
     const flashes = pickEightBallFlashes(next, answer);
-    let i = 0;
-    const tick = () => {
-      if (i < flashes.length) {
-        setAnswer(flashes[i]!);
-        const delay = EIGHT_BALL_FLASH_DELAYS_MS[i] ?? 100;
-        i += 1;
-        timerRef.current = setTimeout(tick, delay);
-        return;
-      }
-      setAnswer(next);
-      rollingRef.current = false;
-      setRolling(false);
-      timerRef.current = null;
-    };
-    tick();
+    landing.current = next;
+    // The strip starts on the answer showing now, runs through the fillers
+    // and ends on the real one (SlotReel).
+    setStrip([...(answer ? [answer] : []), ...flashes, next]);
+    setRunId((n) => n + 1);
+  }
+
+  // Reduce Motion switched on mid-spin unmounts the reel before it lands.
+  useEffect(() => {
+    if (reduceMotion && rollingRef.current) landed();
+  }, [reduceMotion]);
+
+  function landed() {
+    const next = landing.current;
+    // The strip stays where it stopped (on this answer) until the next run.
+    if (next) setAnswer(next);
+    rollingRef.current = false;
+    setRolling(false);
   }
 
   function toggle() {
+    // Closing mid-spin unmounts the reel before it lands: land it now so Ask
+    // is never left disabled.
+    if (rollingRef.current) landed();
     setOpen((value) => !value);
   }
 
@@ -233,11 +329,16 @@ export function SageEightBall() {
           ) : null}
           <View style={styles.answerRow}>
             <SageOrb size={28} spin={spin} marked />
-            <ThemedText
-              style={styles.answer}
-              themeColor={answer ? undefined : 'textSecondary'}>
-              {answer ?? 'Tap Ask to shake.'}
-            </ThemedText>
+            {/* The reel only while it spins or still rests on the current answer. */}
+            {!reduceMotion && strip.length > 0 && (rolling || strip[strip.length - 1] === answer) ? (
+              <SlotReel strip={strip} runId={runId} spinning={rolling} onDone={landed} />
+            ) : (
+              <ThemedText
+                style={styles.answer}
+                themeColor={answer ? undefined : 'textSecondary'}>
+                {answer ?? 'Tap Ask to shake.'}
+              </ThemedText>
+            )}
           </View>
           <ThemedPressable
             accessibilityRole="button"
@@ -306,6 +407,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 26,
     fontWeight: 600,
+  },
+  reelWindow: {
+    flex: 1,
+    height: REEL_ROW_H,
+    overflow: 'hidden',
+  },
+  reelRow: {
+    height: REEL_ROW_H,
+    justifyContent: 'center',
   },
   askAgain: {
     alignSelf: 'flex-start',

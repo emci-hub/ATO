@@ -6,7 +6,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { EIGHT_BALL_ANSWERS, EIGHT_BALL_COPY_REVIEWED, eightBallRollMs, pickEightBallFlashes, rollEightBall } from '../src/lib/sage-eight-ball';
+import {
+  EIGHT_BALL_ANSWERS,
+  EIGHT_BALL_COPY_REVIEWED,
+  EIGHT_BALL_REEL_FILLERS,
+  eightBallRollMs,
+  pickEightBallFlashes,
+  rollEightBall,
+} from '../src/lib/sage-eight-ball';
 import { lineRuleViolation } from '../src/lib/daily-line/bank';
 import { formatSageUsage, QUOTA_EMPTY_MESSAGE } from '../src/lib/voice/quota';
 
@@ -54,16 +61,17 @@ for (let i = 0; i < 80; i += 1) {
 assert.ok(rolled.size >= 8);
 ok('rolls stay inside the fixed set and do not get stuck on one line');
 
-assert.ok(eightBallRollMs() > 1500 && eightBallRollMs() <= 2500);
+// A real slot reel with a gamified wait (emci 2026-10-06): about 3s, never longer than 3.5s.
+assert.ok(eightBallRollMs() >= 2500 && eightBallRollMs() <= 3500);
 const landed = rollEightBall('Yes.');
 const flashes = pickEightBallFlashes(landed, 'Yes.');
-assert.equal(flashes.length, 6);
+assert.equal(flashes.length, EIGHT_BALL_REEL_FILLERS);
 for (const line of flashes) {
   assert.ok((EIGHT_BALL_ANSWERS as readonly string[]).includes(line));
   assert.notEqual(line, landed);
   assert.notEqual(line, 'Yes.');
 }
-ok('slot reel flashes other answers and finishes in under 2.5s');
+ok('slot reel strip: other answers, then the real one, landing in about 3s');
 
 // The Sage tab's chat layout assertions (keyboard lift, composer padding,
 // scroll-to-end, the 8-ball and usage line) went with Talk's backend on
