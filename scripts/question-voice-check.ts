@@ -130,7 +130,7 @@ assert.equal(judgeLabOutput('not json', 1).parseFailed, true);
 ok('Question lab judging: a good sample passes, unparsable text is reported');
 
 // 6. Draft flag, lab safety.
-assert.equal(QUESTION_VOICE_COPY_REVIEWED, false, 'draft until emci reads docs/proposals/question-rewrite.md');
+assert.equal(QUESTION_VOICE_COPY_REVIEWED, true, 'emci approved the rewrite 2026-10-05 (docs/proposals/question-rewrite.md)');
 const panels = read('src/components/dev-hub-panels.tsx');
 assert.match(panels, /reviewed: QUESTION_VOICE_COPY_REVIEWED/, 'listed in COPY_FLAGS');
 const lab = panels.slice(panels.indexOf('export function QuestionLabPanel('), panels.indexOf('const COPY_FLAGS'));
@@ -140,6 +140,6 @@ assert.doesNotMatch(lab, /addToBankPool|saveOngoingRoundBatch|\.insert\(|\.rpc\(
 assert.match(read('src/components/questions-fold.tsx'), /\(!STAGED_INTAKE_COPY_REVIEWED \|\| !QUESTION_VOICE_COPY_REVIEWED\) && PRE_LAUNCH_DEV/);
 const gate = read('scripts/ota-gate.ts');
 assert.match(gate, /'question-live',/, 'the live check is excluded from the gate');
-ok('draft flag on and listed; the lab is two taps, never on mount, saves nothing; the live check is not gated');
+ok('approved flag listed; the lab is two taps, never on mount, saves nothing; the live check is not gated');
 
 console.log(`\n${passed} question-voice checks passed`);

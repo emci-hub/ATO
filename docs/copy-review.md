@@ -259,7 +259,7 @@ Moment voice. The toy's shape is kept: ten yes, five not sure, five no. Replaces
 - My sources say no. Mostly the unread count.
 - Very doubtful. Even autocorrect winced.
 
-## 9. The question bank in the moment voice (NEW — draft, `QUESTION_VOICE_COPY_REVIEWED = false`)
+## 9. The question bank in the moment voice (APPROVED by emci 2026-10-05, `QUESTION_VOICE_COPY_REVIEWED = true`)
 
 37 of the 48 intake questions and 21 of the 22 round questions reworded (2026-10-05).
 Trait, set and every option value are unchanged; only words moved. The full

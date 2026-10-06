@@ -848,10 +848,10 @@ export const QUESTIONS_FEW_SHOTS = `1. Openness: "A new place opened next to you
 8. Steadiness: "An hour before, the group chat moves the plan somewhere else." Options: "Fine, I roll with it" / "Mild whiplash, then fine" / "It throws off the whole evening"`;
 
 /**
- * The moment-voice rewrite (2026-10-05) is draft copy until emci reads it.
+ * The moment-voice rewrite (2026-10-05), approved by emci the same day.
  * The before/after table is docs/proposals/question-rewrite.md.
  */
-export const QUESTION_VOICE_COPY_REVIEWED = false;
+export const QUESTION_VOICE_COPY_REVIEWED = true;
 
 /**
  * Old wording -> new wording for every bank row the rewrite changed (intake
