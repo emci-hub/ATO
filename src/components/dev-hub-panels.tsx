@@ -40,7 +40,17 @@ import { BUDDY_COPY_REVIEWED } from '@/lib/buddy/idle';
 import { CATEGORY_COPY_REVIEWED } from '@/lib/categories';
 import { QUESTION_VOICE_COPY_REVIEWED, QUESTIONS_BANK } from '@/lib/questions/bank';
 import { generateQuestionLabText } from '@/lib/questions/generate';
-import { buildLabPrompt, judgeLabOutput, labAxes, QUESTION_LAB_SIZES, type LabResult } from '@/lib/questions/question-lab';
+import { addToBankPool, fetchBankPoolDepth } from '@/lib/questions/bank-pool';
+import { fetchRecentTexts } from '@/lib/questions/fetch-recent-texts';
+import {
+  buildLabPrompt,
+  fillPoolFromLab,
+  judgeLabOutput,
+  labAxes,
+  QUESTION_LAB_SIZES,
+  type LabFillResult,
+  type LabResult,
+} from '@/lib/questions/question-lab';
 import { CATEGORY_BAND_COPY_REVIEWED } from '@/lib/category-bands';
 import { CATEGORY_STATEMENTS_COPY_REVIEWED } from '@/lib/category-statements/generate-statements';
 import { CONCEPT_COPY_REVIEWED } from '@/lib/concept-explainers';
@@ -365,14 +375,18 @@ export function QuestionLabPanel() {
   const twoTap = useTwoTapLocal();
   const [size, setSize] = useState<number>(QUESTION_LAB_SIZES[0]);
   const [turn, setTurn] = useState(0);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<'samples' | 'fill' | null>(null);
   const [result, setResult] = useState<LabResult | null>(null);
+  const [fill, setFill] = useState<LabFillResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Samples: the real prompt, judged, nothing saved.
   async function run() {
     if (busy || !twoTap.confirm('question-lab')) return;
-    setBusy(true);
+    setBusy('samples');
     setError(null);
+    setResult(null);
+    setFill(null);
     const axes = labAxes(size, turn);
     setTurn((t) => t + 1);
     try {
@@ -383,7 +397,33 @@ export function QuestionLabPanel() {
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
-      setBusy(false);
+      setBusy(null);
+    }
+  }
+
+  // Fill the pool (emci 2026-10-05): the thinnest traits, the gate, and only
+  // passing questions written to question_bank_pool — the same write a round
+  // makes (owner = this account, wave74), so a later round draws them first.
+  async function runFill() {
+    if (busy || !twoTap.confirm('question-lab-fill')) return;
+    setBusy('fill');
+    setError(null);
+    setResult(null);
+    setFill(null);
+    try {
+      const out = await fillPoolFromLab(size, {
+        fetchDepth: fetchBankPoolDepth,
+        fetchRecent: fetchRecentTexts,
+        generate: generateQuestionLabText,
+        save: addToBankPool,
+      });
+      if (out.parseFailed) setError('No usable reply (AI off, quota spent, offline, or the text did not parse).');
+      setResult(out);
+      setFill(out);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(null);
     }
   }
 
@@ -392,29 +432,42 @@ export function QuestionLabPanel() {
     <View style={styles.block}>
       <ThemedText type="smallBold">Question lab</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        Writes sample round questions with the real prompt and checks each against the voice gate. One AI call per run, counted against today&apos;s quota. Nothing is saved.
+        Writes round questions with the real prompt and checks each against the voice gate. Each run is one AI call, counted against today&apos;s quota. Samples are not saved; Fill the pool saves the ones that pass into the shared pool for this account&apos;s next rounds.
       </ThemedText>
       <View style={styles.row}>
         {QUESTION_LAB_SIZES.map((n) => (
-          <Button key={n} label={`${size === n ? '● ' : ''}${n} questions`} onPress={() => setSize(n)} disabled={busy} />
+          <Button key={n} label={`${size === n ? '● ' : ''}${n} questions`} onPress={() => setSize(n)} disabled={busy != null} />
         ))}
       </View>
       <Button
-        label={busy ? 'Writing…' : twoTap.armed === 'question-lab' ? 'Tap again to spend one AI call' : `Write ${size} samples`}
+        label={busy === 'samples' ? 'Writing…' : twoTap.armed === 'question-lab' ? 'Tap again to spend one AI call' : `Write ${size} samples (not saved)`}
         onPress={() => void run()}
-        disabled={busy}
+        disabled={busy != null}
+      />
+      <Button
+        label={busy === 'fill' ? 'Filling…' : twoTap.armed === 'question-lab-fill' ? 'Tap again: one AI call, saves what passes' : `Fill the pool (${size}, thinnest traits)`}
+        onPress={() => void runFill()}
+        disabled={busy != null}
       />
       {error ? <ThemedText type="small">{error}</ThemedText> : null}
       {result?.parseFailed && !error ? <ThemedText type="small">The reply did not parse into any question.</ThemedText> : null}
       {result && result.verdicts.length > 0 ? (
         <ThemedText type="code" themeColor="textSecondary">
-          {passed} of {result.verdicts.length} would be shown
+          {fill ? `${fill.saved.length} of ${result.verdicts.length} saved to the pool` : `${passed} of ${result.verdicts.length} would be shown`}
         </ThemedText>
       ) : null}
+      {fill
+        ? fill.axes.map((axis) => (
+            <ThemedText key={axis} type="code" themeColor="textSecondary">
+              {AXIS_SHORT_NAME[axis]}: {fill.depthBefore[axis] ?? 0} → {fill.depthAfter[axis] ?? 0} waiting in the pool
+            </ThemedText>
+          ))
+        : null}
       {result?.verdicts.map((v, i) => (
         <View key={`${i}-${v.draft.prompt}`} style={styles.block}>
           <ThemedText type="code">
             {v.failure ? '✗' : '✓'} {AXIS_SHORT_NAME[v.draft.axis]}
+            {fill ? (v.failure ? ' — dropped, not saved' : v.draft.bankItemId ? ` — saved (${v.draft.bankItemId.slice(0, 8)})` : ' — saved') : ''}
           </ThemedText>
           <ThemedText type="smallBold">{v.draft.prompt}</ThemedText>
           {v.draft.options.map((o) => (

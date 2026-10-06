@@ -387,7 +387,7 @@ var SYSTEM_MAP = {
       "status": "live",
       "flag": false,
       "axes": "all",
-      "summary": "One global table of questions shared by every user. The 16-question rounds draw from it, and AI-written questions are added to it. Since 2026-10-05 every question (AI-written or drawn from the pool) passes the voice gate (question-voice.ts generatedQuestionFailure: moment-voice rules, balanced options, both trait ends, no near-repeat of what this person was asked) before it is saved or shown; a failing one is dropped and its slot retried. Dev: Hub → AI → Question lab; by hand: npm run check:question-live.",
+      "summary": "One global table of questions shared by every user. The 16-question rounds draw from it, and AI-written questions are added to it. Since 2026-10-05 every question (AI-written or drawn from the pool) passes the voice gate (question-voice.ts generatedQuestionFailure: moment-voice rules, balanced options, both trait ends, no near-repeat of what this person was asked) before it is saved or shown; a failing one is dropped and its slot retried. Dev: Hub → AI → Question lab (Write samples: nothing saved; Fill the pool: one AI call for the thinnest traits, saves only what passes the gate, one per asked trait, owner = this account); by hand: npm run check:question-live.",
       "facts": [
         [
           "Table",

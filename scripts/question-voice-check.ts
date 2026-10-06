@@ -21,7 +21,7 @@ import { resolve } from 'node:path';
 
 import { PROMPT_REWORDS, QUESTION_VOICE_COPY_REVIEWED, QUESTIONS_BANK, ROUND_ONLY_BANK, withRewordAliases } from '../src/lib/questions/bank';
 import { QUESTIONS_BANK_V1, ROUND_ONLY_BANK_V1 } from '../src/lib/questions/bank-v1';
-import { buildLabPrompt, judgeLabOutput, labAxes } from '../src/lib/questions/question-lab';
+import { buildLabPrompt, fillPoolFromLab, judgeLabOutput, labAxes, thinnestAxes } from '../src/lib/questions/question-lab';
 import { assessQuestion, generatedQuestionFailure, promptSimilarity } from '../src/lib/questions/question-voice';
 import { MOMENT_VOICE_BLOCK } from '../src/lib/voice/moment-voice';
 
@@ -129,6 +129,38 @@ assert.equal(judged.verdicts[0]!.failure, null);
 assert.equal(judgeLabOutput('not json', 1).parseFailed, true);
 ok('Question lab judging: a good sample passes, unparsable text is reported');
 
+// Fill the pool: the thinnest traits are asked for, and only questions that
+// pass the gate reach the save.
+async function fillCase() {
+  const saved: string[] = [];
+  const depth = { openness: 9, playfulness: 0, steadiness: 1 } as Record<string, number>;
+  const out = await fillPoolFromLab(3, {
+    fetchDepth: async () => depth,
+    fetchRecent: async () => [],
+    generate: async () =>
+      JSON.stringify({
+        questions: [
+          { axis: 'conscientiousness', prompt: 'Your calendar says the thing is due tomorrow at nine.', options: [{ text: 'Done tonight', value: 0.8 }, { text: 'Early start', value: 0.5 }, { text: 'Nine sharp, somehow', value: 0.2 }] },
+          { axis: 'extraversion', prompt: 'You are the life of every group chat.', options: [{ text: 'Obviously me', value: 0.8 }, { text: 'Not me', value: 0.2 }] },
+          // Passes the gate, but openness (the deepest trait) was not asked for.
+          { axis: 'openness', prompt: 'A new app keeps showing up in your feed.', options: [{ text: 'I download it', value: 0.8 }, { text: 'I scroll past', value: 0.2 }] },
+        ],
+      }),
+    save: async (drafts) => {
+      for (const d of drafts) saved.push(d.prompt);
+    },
+  });
+  assert.deepEqual(thinnestAxes(depth, 3), ['conscientiousness', 'extraversion', 'agreeableness']);
+  assert.ok(!out.axes.includes('openness'), 'the deepest trait is not asked for');
+  assert.deepEqual(saved, ['Your calendar says the thing is due tomorrow at nine.'], 'only the passing question is saved');
+  assert.equal(out.saved.length, 1);
+  assert.match(out.verdicts[1]!.failure!, /voice|jargon|balance/);
+  assert.match(out.verdicts[2]!.failure!, /^slot/, 'a trait that was not asked for is dropped, not saved');
+  const none = await fillPoolFromLab(2, { fetchDepth: async () => ({}), fetchRecent: async () => [], generate: async () => null, save: async () => { throw new Error('must not save'); } });
+  assert.equal(none.parseFailed, true);
+  ok('Fill the pool: asks for the thinnest traits, saves only what passes the gate and fits an asked slot, saves nothing on a failed reply');
+}
+
 // 6. Draft flag, lab safety.
 assert.equal(QUESTION_VOICE_COPY_REVIEWED, true, 'emci approved the rewrite 2026-10-05 (docs/proposals/question-rewrite.md)');
 const panels = read('src/components/dev-hub-panels.tsx');
@@ -136,10 +168,21 @@ assert.match(panels, /reviewed: QUESTION_VOICE_COPY_REVIEWED/, 'listed in COPY_F
 const lab = panels.slice(panels.indexOf('export function QuestionLabPanel('), panels.indexOf('const COPY_FLAGS'));
 assert.doesNotMatch(lab, /useEffect/, 'the lab never calls on mount');
 assert.match(lab, /if \(busy \|\| !twoTap\.confirm\('question-lab'\)\) return;/, 'two taps before an AI call');
-assert.doesNotMatch(lab, /addToBankPool|saveOngoingRoundBatch|\.insert\(|\.rpc\(/, 'the lab saves nothing');
+// Samples save nothing; Fill the pool (emci 2026-10-05) saves only through
+// fillPoolFromLab, behind its own two taps.
+const samples = lab.slice(lab.indexOf('async function run()'), lab.indexOf('async function runFill()'));
+assert.doesNotMatch(samples, /addToBankPool|saveOngoingRoundBatch|\.insert\(|\.rpc\(/, 'samples save nothing');
+assert.match(lab, /if \(busy \|\| !twoTap\.confirm\('question-lab-fill'\)\) return;/, 'two taps before filling the pool');
+assert.match(lab, /fillPoolFromLab\(size, \{[\s\S]*?save: addToBankPool,/, 'the only pool write goes through fillPoolFromLab');
+assert.doesNotMatch(lab, /saveOngoingRoundBatch|\.insert\(|\.rpc\(/, 'the lab never writes a round or calls an RPC itself');
 assert.match(read('src/components/questions-fold.tsx'), /\(!STAGED_INTAKE_COPY_REVIEWED \|\| !QUESTION_VOICE_COPY_REVIEWED\) && PRE_LAUNCH_DEV/);
 const gate = read('scripts/ota-gate.ts');
 assert.match(gate, /'question-live',/, 'the live check is excluded from the gate');
-ok('approved flag listed; the lab is two taps, never on mount, saves nothing; the live check is not gated');
+ok('approved flag listed; the lab is two taps, never on mount; samples save nothing and Fill writes only through the gate; the live check is not gated');
 
-console.log(`\n${passed} question-voice checks passed`);
+fillCase()
+  .then(() => console.log(`\n${passed} question-voice checks passed`))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
