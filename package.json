@@ -182,6 +182,7 @@
     "check:paged-questions": "tsx ./scripts/paged-questions-check.ts",
     "check:question-voice": "tsx ./scripts/question-voice-check.ts",
     "check:question-bank": "tsx ./scripts/question-bank-check.ts",
+    "check:profile-history": "tsx ./scripts/profile-history-check.ts",
     "check:mix-order": "tsx ./scripts/mix-order-check.ts",
     "check:wave19": "tsx ./scripts/wave19-check.ts",
     "check:wave20": "tsx ./scripts/wave20-check.ts",

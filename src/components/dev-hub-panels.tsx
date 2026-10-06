@@ -363,7 +363,7 @@ export function MilestonesPanel() {
  * Question bank (wave85): where this account is in the 25 sets, and a
  * two-tap jump that answers every remaining question on THIS account with a
  * random option (server `dev_fill_bank`, pre-launch only) so the after-25
- * retest / Start Fresh view can be tested without 400 taps. No AI.
+ * Change answers / Start Fresh view can be tested without 400 taps. No AI.
  */
 export function QuestionBankPanel() {
   const twoTap = useTwoTapLocal();
@@ -526,6 +526,7 @@ const LABS: readonly { label: string; href: Href; note: string }[] = [
   { label: 'Crisis lab', href: '/crisis-lab', note: 'the static crisis card' },
   { label: 'Theme lab', href: '/theme-lab', note: 'appearance modes' },
   { label: 'Pixel lab', href: '/pixel-lab', note: 'sprites' },
+  { label: 'Profile cards lab', href: '/profile-card-lab', note: 'Change answers + card binder, sample data' },
   { label: 'Around lab', href: '/around-lab', note: 'Around / city' },
   { label: 'Play (Divecore)', href: '/play', note: 'the game' },
 ];

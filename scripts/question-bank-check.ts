@@ -28,8 +28,7 @@ import {
   bankProgressFrom,
   isTraitFirm,
   pickBankSet,
-  retestRecommendations,
-  retestSizes,
+  changeRecommendations,
   stageFor,
 } from '../src/lib/questions/bank-sets';
 import { PREMIUM_BANK_PRICE, isPremiumGated } from '../src/lib/questions/premium-gate';
@@ -189,15 +188,12 @@ const tracks: TraitTrack[] = [
   { ...fold([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]), axis: 'playfulness' }, // firm but in the middle
   { ...fold([0.8, 0.8, 0.8, 0.8, 0.8, 0.8]), axis: 'autonomy' }, // firm, clear
 ];
-const recs = retestRecommendations(tracks, new Set<TraitAxis>(['autonomy']), now);
+const recs = changeRecommendations(tracks, new Set<TraitAxis>(['autonomy']), now);
 assert.equal(recs[0]!.axis, 'autonomy', '"This isn\'t me" puts a trait first, even a firm one');
 assert.equal(recs[0]!.reason, 'flagged');
 assert.ok(recs.some((r) => r.axis === 'openness' && r.reason === 'mixed'));
 assert.ok(recs.some((r) => r.axis === 'playfulness' && r.reason === 'near_middle'));
-assert.deepEqual(retestSizes(25), [5, 10, 15, 20, 25]);
-assert.deepEqual(retestSizes(7), [5, 7]);
-assert.deepEqual(retestSizes(4), []);
-ok('retest list: flagged first, then mixed, low confidence, near the middle; 5 up to what they answered');
+ok('Change answers order: flagged first, then mixed, low confidence, near the middle');
 
 // 6. Retest replaces ------------------------------------------------------------------
 const replayFn = sql.slice(sql.indexOf('create or replace function public._trait_replay'), sql.indexOf('-- 8. Answering a bank item'));
@@ -235,7 +231,7 @@ assert.doesNotMatch(freshFn, /ato_token|tokens\s*=/, 'Start Fresh never touches 
 assert.match(freshFn, /openness = null,/);
 assert.match(freshFn, /if not public\._bank_all_done\(uid\) then/);
 const finish = read('src/components/bank-finish-fold.tsx');
-const freshButton = finish.slice(finish.indexOf('Hold to start fresh') - 600, finish.indexOf('Hold to start fresh'));
+const freshButton = finish.slice(finish.lastIndexOf('<Pressable', finish.indexOf('Hold to start fresh')), finish.indexOf('Hold to start fresh'));
 assert.match(freshButton, /delayLongPress=\{START_FRESH_HOLD_MS\}/);
 assert.match(freshButton, /onLongPress=\{\(\) => void doStartFresh\(\)\}/);
 assert.doesNotMatch(freshButton, /onPress=/, 'a tap can never start fresh');
@@ -251,15 +247,15 @@ assert.match(devFill, /v_mode is distinct from 'invite_only'/, 'and pre-launch o
 ok('Start Fresh: snapshot first, then hard delete of answers, scores, history and flags; tokens untouched; hold 2.5s to confirm; Start over and the dev fill know the new tables and are root only');
 
 // 8. Premium gate, flag ---------------------------------------------------------------
-assert.deepEqual(PREMIUM_BANK_PRICE, { retest: null, start_fresh: null }, 'free for now');
-assert.equal(isPremiumGated('retest'), false);
+assert.deepEqual(PREMIUM_BANK_PRICE, { change_answers: null, start_fresh: null }, 'free for now');
+assert.equal(isPremiumGated('change_answers'), false);
 assert.equal(isPremiumGated('start_fresh'), false);
 assert.match(sql, /create or replace function public\._bank_premium_price\(p_action text\)[\s\S]*?select null::int where p_action in \('retest', 'start_fresh'\);/);
 assert.match(retestFn, /v_price := public\._bank_premium_price\('retest'\);/);
 assert.match(freshFn, /v_price := public\._bank_premium_price\('start_fresh'\);/);
-assert.match(finish, /isPremiumGated\('retest'\)/);
+assert.match(finish, /isPremiumGated\('change_answers'\)/);
 assert.match(finish, /isPremiumGated\('start_fresh'\)/);
-ok('one premium gate, client and server, asked by retest and Start Fresh, and off');
+ok('one premium gate, client and server, asked by Change answers (retest in wave85) and Start Fresh, and off');
 
 const flagFn = sql.slice(sql.indexOf('create or replace function public.set_trait_flag'), sql.indexOf('-- 11. Start Fresh'));
 assert.doesNotMatch(flagFn, /_trait_write|trait_tracks|trait_answers|question_items/, '"This isn\'t me" writes only the flag');

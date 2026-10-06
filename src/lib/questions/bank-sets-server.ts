@@ -5,6 +5,8 @@
 import { supabase } from '@/lib/supabase';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
+import { parseSnapshot, type ProfileSnapshot } from '@/lib/profile-history';
+
 import { bankProgressFrom, type BankProgress } from './bank-sets';
 
 export async function fetchBankProgress(): Promise<BankProgress> {
@@ -20,13 +22,6 @@ export async function serveBankSet(): Promise<string> {
   const { data, error } = await supabase.rpc('serve_bank_set');
   if (error) throw error;
   if (typeof data !== 'string') throw new Error('serve_bank_set returned no set');
-  return data;
-}
-
-export async function serveBankRetest(axis: TraitAxis, count: number): Promise<string> {
-  const { data, error } = await supabase.rpc('serve_bank_retest', { p_axis: axis, p_count: count });
-  if (error) throw error;
-  if (typeof data !== 'string') throw new Error('serve_bank_retest returned no pack');
   return data;
 }
 
@@ -46,33 +41,61 @@ export async function setTraitFlag(axis: TraitAxis, on: boolean): Promise<void> 
   if (error) throw error;
 }
 
-export async function startFresh(): Promise<void> {
-  const { error } = await supabase.rpc('start_fresh');
+/** Start Fresh. keepHistory (default) keeps every saved card; false wipes them. */
+export async function startFresh(keepHistory = true): Promise<void> {
+  const { error } = await supabase.rpc('start_fresh', { p_keep_history: keepHistory });
   if (error) throw error;
 }
 
-export interface ProfileSnapshot {
-  id: string;
-  createdAt: string;
-  values: Partial<Record<TraitAxis, number | null>>;
-}
+/** Every saved profile card, newest first (wave85/86). Wiped-history markers are dropped. */
+export type { ProfileSnapshot };
 
 export async function fetchProfileSnapshots(): Promise<ProfileSnapshot[]> {
   const { data, error } = await supabase
     .from('trait_profile_snapshots')
-    .select('id, created_at, profile')
+    .select('id, created_at, reason, profile')
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return ((data ?? []) as { id: string; created_at: string; profile: { values?: Record<string, unknown> } }[]).map(
-    (row) => {
-      const values: Partial<Record<TraitAxis, number | null>> = {};
-      for (const axis of TRAIT_AXES) {
-        const v = row.profile?.values?.[axis];
-        values[axis] = typeof v === 'number' ? v : null;
-      }
-      return { id: row.id, createdAt: row.created_at, values };
-    },
-  );
+  return ((data ?? []) as { id: string; created_at: string; reason: string; profile: unknown }[]).flatMap((row) => {
+    const snap = parseSnapshot(row.id, row.created_at, row.reason, row.profile);
+    return snap ? [snap] : [];
+  });
+}
+
+/** This account's logged answers to bank questions: question id -> option index. */
+export async function fetchMyBankAnswers(): Promise<Map<string, number>> {
+  const { data, error } = await supabase
+    .from('trait_answers')
+    .select('question_key, option_index')
+    .eq('kind', 'bank');
+  if (error) throw error;
+  return new Map(((data ?? []) as { question_key: string; option_index: number }[]).map((r) => [r.question_key, r.option_index]));
+}
+
+/**
+ * Replaces one answered bank question's answer (the server re-scores the
+ * trait). Pass null as the session on the first change of a visit: the server
+ * saves the Undo point first, in the same transaction, and returns the session
+ * id to pass on every later change and to Undo.
+ */
+export async function changeBankAnswer(session: string | null, questionId: string, optionIndex: number): Promise<string> {
+  const { data, error } = await supabase.rpc('change_bank_answer', {
+    p_session: session,
+    p_question_id: questionId,
+    p_option_index: optionIndex,
+  });
+  if (error) throw error;
+  const row = (data ?? {}) as { session?: unknown };
+  if (typeof row.session !== 'string') throw new Error('change_bank_answer returned no session');
+  return row.session;
+}
+
+/** Puts every answer changed in this session back, and the touched traits with them. */
+export async function undoChangeSession(session: string): Promise<number> {
+  const { data, error } = await supabase.rpc('undo_change_session', { p_session: session });
+  if (error) throw error;
+  const row = (data ?? {}) as { undone?: unknown };
+  return typeof row.undone === 'number' ? row.undone : 0;
 }
 
 /** Pre-launch test tool: answers every remaining question on this account. */
