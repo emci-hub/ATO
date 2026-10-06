@@ -229,7 +229,7 @@ The original 2-option wordings (e.g. "You need reassurance more often than you w
 - A round past the daily payout cap (2 a day): "No tokens for this one — you've earned today's two." followed by the usual standing line
 - Token explainer: "… +21 for each round of 16 after that (up to 2 a day)."
 
-## 8. The 8-ball answers (NEW — draft, `EIGHT_BALL_COPY_REVIEWED = false`)
+## 8. The 8-ball answers (APPROVED by emci 2026-10-06, `EIGHT_BALL_COPY_REVIEWED = true`)
 
 Moment voice. The toy's shape is kept: ten yes, five not sure, five no. Replaces the classic toy lines. Lives in `src/lib/sage-eight-ball.ts`.
 

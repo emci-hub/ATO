@@ -34,7 +34,7 @@ import { allocateRound, traitNeed } from '@/lib/questions/tiered-axis-plan';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { trackFor, type TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
-import { TRAIT_AXES } from '@/lib/traits';
+import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
 import { BUDDY_COPY_REVIEWED } from '@/lib/buddy/idle';
 import { CATEGORY_COPY_REVIEWED } from '@/lib/categories';
@@ -44,7 +44,7 @@ import { addToBankPool, fetchBankPoolDepth } from '@/lib/questions/bank-pool';
 import { fetchRecentTexts } from '@/lib/questions/fetch-recent-texts';
 import {
   buildLabPrompt,
-  fillPoolFromLab,
+  fillPoolEven,
   judgeLabOutput,
   labAxes,
   QUESTION_LAB_SIZES,
@@ -401,9 +401,10 @@ export function QuestionLabPanel() {
     }
   }
 
-  // Fill the pool (emci 2026-10-05): the thinnest traits, the gate, and only
-  // passing questions written to question_bank_pool — the same write a round
-  // makes (owner = this account, wave74), so a later round draws them first.
+  // Fill the pool (emci 2026-10-05/06): one question per trait, a second for a
+  // trait that is behind (evenFillPlan), the gate, and only passing questions
+  // written to question_bank_pool — the same write a round makes (owner = this
+  // account, wave74), so a later round draws them first.
   async function runFill() {
     if (busy || !twoTap.confirm('question-lab-fill')) return;
     setBusy('fill');
@@ -411,13 +412,14 @@ export function QuestionLabPanel() {
     setResult(null);
     setFill(null);
     try {
-      const out = await fillPoolFromLab(size, {
+      const out = await fillPoolEven({
         fetchDepth: fetchBankPoolDepth,
         fetchRecent: fetchRecentTexts,
         generate: generateQuestionLabText,
         save: addToBankPool,
       });
-      if (out.parseFailed) setError('No usable reply (AI off, quota spent, offline, or the text did not parse).');
+      if (out.stoppedEarly) setError(`Stopped after ${out.calls} call(s): no reply (AI off, quota spent, or offline). Whatever passed before that is saved.`);
+      else if (out.parseFailed) setError('No usable reply: the text did not parse.');
       setResult(out);
       setFill(out);
     } catch (err) {
@@ -432,7 +434,7 @@ export function QuestionLabPanel() {
     <View style={styles.block}>
       <ThemedText type="smallBold">Question lab</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        Writes round questions with the real prompt and checks each against the voice gate. Each run is one AI call, counted against today&apos;s quota. Samples are not saved; Fill the pool saves the ones that pass into the shared pool for this account&apos;s next rounds.
+        Writes round questions with the real prompt and checks each against the voice gate. Samples: one AI call, nothing saved. Fill the pool: one question for every trait (two for a trait that is behind), asked 5 at a time, 4–8 AI calls of today&apos;s quota; only what passes is saved, for this account&apos;s next rounds.
       </ThemedText>
       <View style={styles.row}>
         {QUESTION_LAB_SIZES.map((n) => (
@@ -445,7 +447,7 @@ export function QuestionLabPanel() {
         disabled={busy != null}
       />
       <Button
-        label={busy === 'fill' ? 'Filling…' : twoTap.armed === 'question-lab-fill' ? 'Tap again: one AI call, saves what passes' : `Fill the pool (${size}, thinnest traits)`}
+        label={busy === 'fill' ? 'Filling… (about a minute)' : twoTap.armed === 'question-lab-fill' ? 'Tap again: 4–8 AI calls, saves what passes' : 'Fill the pool — even, up to 16'}
         onPress={() => void runFill()}
         disabled={busy != null}
       />
@@ -453,11 +455,13 @@ export function QuestionLabPanel() {
       {result?.parseFailed && !error ? <ThemedText type="small">The reply did not parse into any question.</ThemedText> : null}
       {result && result.verdicts.length > 0 ? (
         <ThemedText type="code" themeColor="textSecondary">
-          {fill ? `${fill.saved.length} of ${result.verdicts.length} saved to the pool` : `${passed} of ${result.verdicts.length} would be shown`}
+          {fill
+            ? `${fill.saved.length} saved of ${Object.values(fill.plan).reduce((n, v) => n + (v ?? 0), 0)} asked for · ${result.verdicts.length} written · ${fill.calls} AI call${fill.calls === 1 ? '' : 's'}`
+            : `${passed} of ${result.verdicts.length} would be shown`}
         </ThemedText>
       ) : null}
       {fill
-        ? fill.axes.map((axis) => (
+        ? (Object.keys(fill.plan) as TraitAxis[]).map((axis) => (
             <ThemedText key={axis} type="code" themeColor="textSecondary">
               {AXIS_SHORT_NAME[axis]}: {fill.depthBefore[axis] ?? 0} → {fill.depthAfter[axis] ?? 0} waiting in the pool
             </ThemedText>

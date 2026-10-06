@@ -6,9 +6,9 @@
  * They replace the classic toy lines. Rolls are local and infinite; nothing
  * here hits the model or the daily cap.
  *
- * Draft until emci reads them (`EIGHT_BALL_COPY_REVIEWED`, docs/copy-review.md §8).
+ * Approved by emci 2026-10-06 (`EIGHT_BALL_COPY_REVIEWED`, docs/copy-review.md §8).
  */
-export const EIGHT_BALL_COPY_REVIEWED = false;
+export const EIGHT_BALL_COPY_REVIEWED = true;
 
 export const EIGHT_BALL_ANSWERS = [
   // Yes

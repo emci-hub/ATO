@@ -36,30 +36,40 @@ function SageOrb({ size, spin, marked }: { size: number; spin: number; marked?: 
   const { reduceMotion } = useAppearance();
   const rotate = useSharedValue(0);
   const nudge = useSharedValue(0);
+  const pop = useSharedValue(1);
 
+  // A turning circle barely reads, and since the polish pass the closed ball
+  // is 26px (emci 2026-10-06: "what happened to its animation?"). So the shake
+  // moves the ball side to side and pops it, scaled to its size; the turn
+  // mostly shows on the 8.
   useEffect(() => {
     if (spin === 0 || reduceMotion) return;
     cancelAnimation(rotate);
     cancelAnimation(nudge);
+    cancelAnimation(pop);
     rotate.value = 0;
     nudge.value = 0;
+    pop.value = 1;
+    const shift = Math.max(4, size * 0.22);
     rotate.value = withSequence(
-      withTiming(16, { duration: 150 }),
-      withTiming(-14, { duration: 175 }),
-      withTiming(10, { duration: 175 }),
-      withTiming(-6, { duration: 150 }),
-      withTiming(0, { duration: 200 }),
+      withTiming(28, { duration: 110 }),
+      withTiming(-24, { duration: 130 }),
+      withTiming(18, { duration: 130 }),
+      withTiming(-10, { duration: 120 }),
+      withTiming(0, { duration: 160 }),
     );
     nudge.value = withSequence(
-      withTiming(2.5, { duration: 125 }),
-      withTiming(-2.5, { duration: 125 }),
-      withTiming(1.5, { duration: 125 }),
-      withTiming(0, { duration: 150 }),
+      withTiming(shift, { duration: 90 }),
+      withTiming(-shift, { duration: 110 }),
+      withTiming(shift * 0.7, { duration: 110 }),
+      withTiming(-shift * 0.4, { duration: 110 }),
+      withTiming(0, { duration: 130 }),
     );
-  }, [spin, reduceMotion, rotate, nudge]);
+    pop.value = withSequence(withTiming(1.18, { duration: 160 }), withTiming(0.96, { duration: 220 }), withTiming(1, { duration: 270 }));
+  }, [spin, reduceMotion, rotate, nudge, pop, size]);
 
   const motion = useAnimatedStyle(() => ({
-    transform: [{ translateX: nudge.value }, { rotate: `${rotate.value}deg` }],
+    transform: [{ translateX: nudge.value }, { rotate: `${rotate.value}deg` }, { scale: pop.value }],
   }));
 
   return (

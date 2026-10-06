@@ -14,6 +14,7 @@ import {
 import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
 import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
 import type { AxisDivergence } from '@/lib/trait-history';
+import { reachedFullProfile } from '@/lib/questions/intake-stage';
 import { isThinProfile, settledCount, type TraitTrack } from '@/lib/trait-stability';
 import { leanComparative, leanHighLow } from '@/lib/traits';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
@@ -86,7 +87,11 @@ export function storyFingerprint(
 }
 
 export function storyReady(tracks: readonly TraitTrack[], now: Date = new Date()): boolean {
-  if (isThinProfile(settledCount(tracks, now))) return false;
+  // A finished intake (every trait at 3 answers, or the old 50) is enough on
+  // its own: three answers per trait cap the stability sum near 5.9, under the
+  // thin line (6.4 of 16), so Story was never ready right after the 48 even
+  // though the app said the full profile unlocked it (found 2026-10-06).
+  if (!reachedFullProfile(tracks) && isThinProfile(settledCount(tracks, now))) return false;
   return readAllCategories(tracks, now).some((row) => row.ready);
 }
 

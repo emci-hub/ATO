@@ -103,6 +103,19 @@ assert.equal(storyNamesACategory('A hard talk can still have a bit of air in it.
 const thinTracks = [stableReport('openness', 0.5)];
 assert.equal(isThinProfile(settledCount(thinTracks)), true);
 assert.equal(storyReady(thinTracks), false);
+// A just-finished 48 (3 answers per trait, mixed answers, low stability) is
+// story-ready: the full-profile signal, not the stability sum (2026-10-06).
+const justFinished = TRAIT_AXES.map((axis, i) => ({
+  axis,
+  track: 'report' as const,
+  value: 0.55,
+  stability: i % 2 ? 0.09 : 0.3,
+  answerCount: 3,
+  lastTouched: new Date().toISOString(),
+  lastDepthAt: null,
+}));
+assert.equal(isThinProfile(settledCount(justFinished)), true, 'the sum alone still reads thin');
+assert.equal(storyReady(justFinished), true, 'a finished intake is enough for Story');
 const sql = read('supabase/migrations/wave22_levity_story.sql');
 assert.match(sql, /claim_story_generate/);
 assert.match(sql, /by_type.story/);

@@ -40,8 +40,8 @@ for (const answer of EIGHT_BALL_ANSWERS) {
 for (const toy of ['It is certain.', 'Outlook good.', 'Reply hazy, try again.', 'My reply is no.', 'Very doubtful.']) {
   assert.ok(!(EIGHT_BALL_ANSWERS as readonly string[]).includes(toy), `the classic toy line is gone: ${toy}`);
 }
-assert.equal(EIGHT_BALL_COPY_REVIEWED, false, 'draft until emci reads it');
-ok('8-ball has a fixed unique set with no AI/tokens copy, in the moment voice, still draft');
+assert.equal(EIGHT_BALL_COPY_REVIEWED, true, 'emci approved the 8-ball answers 2026-10-06');
+ok('8-ball has a fixed unique set with no AI/tokens copy, in the moment voice, approved by emci (2026-10-06)');
 
 const rolled = new Set<string>();
 let prev: string | null = null;
