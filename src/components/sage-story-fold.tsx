@@ -214,7 +214,7 @@ export function SageStoryFold({
             </ThemedText>
           ) : null}
 
-          {/* A model wrote the story, so it carries the AI pill (emci 2026-10-07). */}
+          {/* A model wrote the story, so it carries the tap-for-details AI icon (emci 2026-10-07). */}
           {story?.body ? <AiBadge /> : null}
           {story?.body ? <ThemedText type="small">{story.body}</ThemedText> : null}
           {story?.body && !fresh ? (

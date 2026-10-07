@@ -17,11 +17,16 @@ export const SAGE_NPC_LABEL = 'Focus · try · watch';
 
 export const SAGE_NOT_A_PERSON = 'Sage is a coach, not a person.';
 
-export const HOME_SAGE_LEDE =
-  "Today's Read and Do from Sage, a coach \u2014 not a person.";
+/**
+ * Home's header line. Was "Today's Read and Do from Sage\u2026", which named a card
+ * that no longer exists; the daily focus is stored copy, not Sage (2026-10-07).
+ */
+// The Story on Home is still Sage, so the coach disclosure stays; the line is
+// true in both Home states, including before either exists.
+export const HOME_SAGE_LEDE = 'Your daily focus and Story. Sage is a coach, not a person.';
 
-/** Quest Home: no coach disclosure on that card. Read/Do labels stay. */
-export const HOME_SAGE_LEDE_QUEST = "Today's Read and Do.";
+/** Same line in Quest mode; kept as its own name so the theme lab still reads it. */
+export const HOME_SAGE_LEDE_QUEST = HOME_SAGE_LEDE;
 
 /** Home-only third daily category. Never Circle, widget, or morning push. */
 export const NUDGE_LABEL = 'Bump';
