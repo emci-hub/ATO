@@ -34,7 +34,7 @@ const value = match[1] === 'true';
  * server enforces on its own.
  */
 function src(rel: string): string {
-  return readFileSync(resolve(__dirname, '..', rel), 'utf8');
+  return readFileSync(resolve(__dirname, '..', rel), 'utf8').replace(/\r\n/g, '\n');
 }
 let surfaceChecks = 0;
 function pin(label: string, cond: boolean): void {

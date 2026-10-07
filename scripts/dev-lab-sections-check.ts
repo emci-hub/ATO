@@ -19,7 +19,7 @@ function ok(label: string) {
 
 const root = resolve(__dirname, '..');
 function read(rel: string): string {
-  return readFileSync(resolve(root, rel), 'utf8');
+  return readFileSync(resolve(root, rel), 'utf8').replace(/\r\n/g, '\n');
 }
 
 const hub = read('src/app/dev-lab.tsx');
