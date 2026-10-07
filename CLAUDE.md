@@ -60,6 +60,11 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   teased kindly, no advice, no slang. Rules + approved examples: `src/lib/voice/moment-voice.ts`;
   drop `MOMENT_VOICE_BLOCK` into any new generation prompt. Older surfaces (question
   prompts, categories, Story, the insight's five fields) are not converted yet.
+- **Stored tips (insight-bank, category-bank) use the clear voice (emci 2026-10-07), not the moment voice.**
+  Rules, approved examples and `tipRuleViolation`: `src/lib/voice/clear-voice.ts`. The daily insight
+  (Focus · try · watch, `src/lib/insight-bank/`) and the Explore category cards (`src/lib/category-bank/`)
+  are written by hand, picked on the device, and never call a model. Ids are forever (`ftw_<axis>_<h|l>_<nn>`).
+  Both ship with `*_COPY_REVIEWED = false` and a review doc, and show NO draft badge in the app (emci 2026-10-07).
 - **Questions come from the fixed bank (wave85, emci 2026-10-06).** 400 questions, 25 per trait,
   one file per trait in `src/lib/questions/bank/`; the server copy (`question_bank`) is generated
   by `scripts/gen-wave85-bank.ts` and pinned by `check:question-bank`. No AI writes a question and

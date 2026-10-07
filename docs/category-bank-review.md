@@ -1,0 +1,510 @@
+# Category cards — stored bank review
+
+The card under each category on Explore, written by hand in the clear voice. No AI.
+Bars have three cells (low / mid / high). Maps have four, from their two traits in order: hh, hl, lh, ll (h = 0.5 or more).
+Each part has three wordings; a person sees one per week, turning every Monday.
+
+**How to review:** change `- [ ]` to `- [x]` on every cell you approve. Edit wording right here if you like and tell me; I copy it into `src/lib/category-bank/<id>.ts`.
+When every cell is ticked, `CATEGORY_BANK_COPY_REVIEWED` flips to `true` (`src/lib/category-bank/index.ts`).
+This flag is for this review only: the app shows these cards to everyone and never shows a draft badge for them (emci, 2026-10-07).
+
+## Steadiness (`cat_steadiness`, bar: Follow-through + Harmony + Composure)
+
+- [ ] **high**
+  - Summary 1: You tend to stay calm, keep your plans and get along with people, even when the week gets busy.
+  - Summary 2: When things get stressful at work or at home, you usually stay even and keep going.
+  - Summary 3: You tend to be the steady one your friends and coworkers can count on day to day.
+  - Strength 1: When plans get messy, you usually keep your cool and get things back on track.
+  - Strength 2: You tend to follow through on what you said and stay pleasant while you do it.
+  - Strength 3: People can usually count on you to show up calm and ready.
+  - Watch-out 1: Sometimes you stay so even that people don’t notice when you need help.
+  - Watch-out 2: Because you keep things smooth, you might hold back a problem that needs saying.
+  - Watch-out 3: Sometimes you carry more than your share because you make it look easy.
+  - Try this 1: Tell one person something that’s been bothering you this week, so they know you have hard days too.
+  - Try this 2: Ask for help with one task today, so you’re not the only one holding things together.
+  - Try this 3: Say no to one small request this week, so your calm doesn’t turn into extra work.
+- [ ] **mid**
+  - Summary 1: You can be calm and organized on some days and more stirred up on others, depending on what’s going on.
+  - Summary 2: Your steadiness tends to depend on the week: some days you’re on top of things, other days it feels like a lot.
+  - Summary 3: You usually keep things together, but stress or a messy schedule can throw you off for a bit.
+  - Strength 1: You can adapt to the day, staying steady when it matters and loosening up when it doesn’t.
+  - Strength 2: You tend to notice when things are off, and you can usually get back on track.
+  - Strength 3: You can relate to people who are calm and to people who are stressed, because you’ve been both.
+  - Watch-out 1: Sometimes a hard week throws your routines off more than you’d like.
+  - Watch-out 2: Because your mood shifts with the day, people might not know which version of you to expect.
+  - Watch-out 3: Sometimes you lose track of plans when stress shows up.
+  - Try this 1: Pick one small routine to keep this week no matter what, so busy days have an anchor.
+  - Try this 2: Write down what usually throws you off, so you can see it coming next time.
+  - Try this 3: Plan a quiet hour after your busiest day this week, so you have time to reset.
+- [ ] **low**
+  - Summary 1: You tend to feel things strongly and go with the moment, so your days can change a lot.
+  - Summary 2: When something upsets you, you usually feel it fully, and plans can shift with your mood.
+  - Summary 3: You tend to react honestly and in the moment, rather than keeping everything even.
+  - Strength 1: You usually react honestly, so people know where they stand with you.
+  - Strength 2: When something matters, you feel it and you show it, which makes you easy to read.
+  - Strength 3: You can switch plans quickly when your gut tells you something’s off.
+  - Watch-out 1: Sometimes a strong feeling can push your plans or a talk off course.
+  - Watch-out 2: Because you react in the moment, you might say something before you’ve thought it through.
+  - Watch-out 3: Sometimes your plans change so often that people around you lose track.
+  - Try this 1: Wait ten minutes before replying to the next message that upsets you, so you answer the way you mean to.
+  - Try this 2: Write down one plan for tomorrow and keep it, so you have one fixed thing in your day.
+  - Try this 3: Take three slow breaths before your next hard conversation, so you start calm.
+
+## Openness to life (`cat_openness`, bar: Curiosity + Sociability)
+
+- [ ] **high**
+  - Summary 1: You tend to say yes to new places, new people and new plans, and you usually bring others along.
+  - Summary 2: When something new comes up, you’re usually curious about it and happy to try it with friends.
+  - Summary 3: You tend to enjoy meeting new people and trying new things more than sticking to the usual.
+  - Strength 1: You usually make new plans happen and get people excited about them.
+  - Strength 2: You tend to be easy to meet and quick to try something new.
+  - Strength 3: When a group is stuck, you usually suggest something fresh to do.
+  - Watch-out 1: Sometimes you move on to the next new thing before friends are ready.
+  - Watch-out 2: Because you love new plans, quieter friends might feel pulled along.
+  - Watch-out 3: Sometimes you fill your calendar with so much that there’s no time left for you to rest.
+  - Try this 1: Ask a quieter friend what they’d like to do, so the next plan fits them too.
+  - Try this 2: Leave one evening this week free, so you have time to rest.
+  - Try this 3: Go back to one place you already love, so you see what the familiar still offers.
+- [ ] **mid**
+  - Summary 1: You can enjoy new things and new people, but you also like your familiar spots and quiet nights.
+  - Summary 2: You tend to try new things when the mood is right and stick with what you know when it isn’t.
+  - Summary 3: You usually balance going out with staying in, and new plans with old favorites.
+  - Strength 1: You can enjoy a new adventure and a quiet night in, so you fit in with many kinds of friends.
+  - Strength 2: You tend to pick new things on purpose, not just because they’re new.
+  - Strength 3: You can be social when it counts and recharge when you need to.
+  - Watch-out 1: Sometimes you say no to something new just because you’re tired that day.
+  - Watch-out 2: Because you’re flexible, you might go along with plans that don’t really suit you.
+  - Watch-out 3: Sometimes you wait for the right mood and miss a chance you’d have enjoyed.
+  - Try this 1: Say yes to one new plan this week, so you keep trying new things.
+  - Try this 2: Plan one quiet night and one night out this week, so you get both.
+  - Try this 3: Text a friend about something new you’d like to try, so it becomes a real plan.
+- [ ] **low**
+  - Summary 1: You tend to enjoy familiar places, close friends and quiet plans more than big crowds or new things.
+  - Summary 2: When you get free time, you usually stick with what you know you’ll enjoy.
+  - Summary 3: You tend to prefer a small group and a known plan over meeting lots of new people.
+  - Strength 1: You tend to know exactly what you enjoy, and you make time for it.
+  - Strength 2: Your close friends usually get your full attention, because you don’t spread yourself thin.
+  - Strength 3: You tend to be steady and easy to plan with, because you know what you like.
+  - Watch-out 1: Sometimes you skip a new plan you might have enjoyed.
+  - Watch-out 2: Because you like the familiar, friends might stop inviting you to new things.
+  - Watch-out 3: Sometimes you miss meeting someone great because the setting felt too new to you.
+  - Try this 1: Say yes to one small new thing this week, so new feels a little more familiar.
+  - Try this 2: Invite one close friend to try a new place with you, so it feels easier.
+  - Try this 3: Ask a friend what they’ve tried lately, so you hear about new things without pressure.
+
+## Drive (`cat_drive`, bar: Independence + Confidence + Connection)
+
+- [ ] **high**
+  - Summary 1: You tend to go after what you want with confidence, and you care about the people you do it with.
+  - Summary 2: When you set a goal, you usually believe you can reach it and want to share the win.
+  - Summary 3: You tend to feel driven when you have freedom, a challenge and people who matter around you.
+  - Strength 1: You usually take charge of your goals and bring energy to whatever you start.
+  - Strength 2: When something is hard, you tend to trust yourself and keep going.
+  - Strength 3: You tend to motivate people around you because you care and you show up.
+  - Watch-out 1: Sometimes you take on so much that your rest gets pushed aside.
+  - Watch-out 2: Because you’re driven, you might expect the same pace from people around you.
+  - Watch-out 3: Sometimes you push ahead before checking if others are ready.
+  - Try this 1: Pick one goal to pause this week, so you have energy for the rest.
+  - Try this 2: Ask a teammate or friend how their goals are going, so it isn’t all about yours.
+  - Try this 3: Take one evening off from your goals, so you come back with more energy.
+- [ ] **mid**
+  - Summary 1: Your drive tends to come and go with the task: some things fire you up and others feel like a chore.
+  - Summary 2: You usually push hard for things you care about and coast on things you don’t.
+  - Summary 3: You can be very motivated, but it tends to depend on who you’re working with and what it’s for.
+  - Strength 1: You tend to save your energy for things that matter to you.
+  - Strength 2: You can work alone or with people, depending on what the task needs.
+  - Strength 3: You usually know which goals are worth pushing for.
+  - Watch-out 1: Sometimes tasks you don’t care about slip until they become urgent.
+  - Watch-out 2: Because your drive depends on interest, people might not know when you’ll be fully in.
+  - Watch-out 3: Sometimes you wait for motivation to show up before you start.
+  - Try this 1: Pick one task you’ve been avoiding and do ten minutes now, so it starts moving.
+  - Try this 2: Write down why one boring task matters, so you have a reason to finish it.
+  - Try this 3: Ask a friend or coworker to do one task with you, so it feels less like a chore.
+- [ ] **low**
+  - Summary 1: You tend to work best with clear direction and a steady pace, rather than chasing big goals.
+  - Summary 2: When a goal feels big, you usually take it slowly and like some guidance along the way.
+  - Summary 3: You tend to prefer a calm, clear plan over pushing hard on your own.
+  - Strength 1: You tend to follow a plan well and do careful work.
+  - Strength 2: You usually think before you jump into something, which saves you mistakes.
+  - Strength 3: You can be content without chasing the next big thing.
+  - Watch-out 1: Sometimes you wait for someone else to set the goal instead of setting your own.
+  - Watch-out 2: Because you take it slow, chances can pass before you’re ready.
+  - Watch-out 3: Sometimes you doubt you can do something you’d actually do well.
+  - Try this 1: Set one small goal for yourself this week, so you get to choose the direction.
+  - Try this 2: Write down one thing you did well recently, so you see what you can do.
+  - Try this 3: Ask a friend to check in on one goal with you, so you have support.
+
+## Agency (`cat_agency`, bar: Growth + Ownership + Self-belief)
+
+- [ ] **high**
+  - Summary 1: You tend to believe your effort shapes how things turn out, and you keep learning when it’s hard.
+  - Summary 2: When something goes wrong, you usually look for what you can change and try again.
+  - Summary 3: You tend to trust that you can get better at things and change how they turn out.
+  - Strength 1: You usually take responsibility and turn setbacks into a plan.
+  - Strength 2: When something is hard, you tend to see it as a chance to learn.
+  - Strength 3: You tend to believe you can handle new things, so you try them.
+  - Watch-out 1: Sometimes you blame yourself for things that weren’t in your control.
+  - Watch-out 2: Because you believe effort matters, you might push yourself too hard.
+  - Watch-out 3: Sometimes you expect to fix everything yourself.
+  - Try this 1: Write down one thing this week that wasn’t up to you, so you don’t carry all of it.
+  - Try this 2: Take one break from improving something, so you can enjoy what you’ve already done.
+  - Try this 3: Ask someone for help with one problem, so you don’t have to solve it alone.
+- [ ] **mid**
+  - Summary 1: You tend to believe you can change some things and accept others, depending on the situation.
+  - Summary 2: When things go wrong, you sometimes look for what to fix and sometimes let it go.
+  - Summary 3: You usually try hard when you feel ready, and hold back when you’re unsure.
+  - Strength 1: You can tell the difference between what you can change and what you can’t.
+  - Strength 2: You tend to keep a balanced view of your wins and your mistakes.
+  - Strength 3: You can push when it matters and rest when it doesn’t.
+  - Watch-out 1: Sometimes you let something go that you could have changed.
+  - Watch-out 2: Because you’re unsure some days, you might skip a chance to try.
+  - Watch-out 3: Sometimes a setback makes you doubt yourself more than it should.
+  - Try this 1: Pick one thing you’ve accepted and try one small change, so you see if it moves.
+  - Try this 2: Write down one setback and one thing you learned from it, so it becomes useful.
+  - Try this 3: Say yes to one small challenge this week, so you build on what you can do.
+- [ ] **low**
+  - Summary 1: You tend to accept things as they come and don’t push hard to change them.
+  - Summary 2: When something goes wrong, you usually see it as luck or timing more than your doing.
+  - Summary 3: You tend to feel unsure about taking on hard things, and you’re happy with what you know.
+  - Strength 1: You usually stay calm when things are out of your hands.
+  - Strength 2: You tend not to blame yourself for things you couldn’t control.
+  - Strength 3: You can feel content without needing to improve everything.
+  - Watch-out 1: Sometimes you accept something you could have changed with a small step.
+  - Watch-out 2: Because you credit luck, you might not see how much your effort mattered.
+  - Watch-out 3: Sometimes doubt stops you from trying something you’d handle fine.
+  - Try this 1: Pick one small problem and take one step on it today, so you see what you can change.
+  - Try this 2: Write down one success and what you did to make it happen, so you see your part.
+  - Try this 3: Try one new skill for ten minutes, so you see how it feels past the start.
+
+## Everyday social energy (`cat_social`, bar: Sociability + Harmony + Playfulness)
+
+- [ ] **high**
+  - Summary 1: You tend to bring warmth, jokes and easy energy to the people around you.
+  - Summary 2: When you’re with friends or coworkers, you usually keep things friendly and fun.
+  - Summary 3: You tend to make social plans feel easy and light.
+  - Strength 1: You usually make people feel welcome and relaxed.
+  - Strength 2: When a group is quiet, you tend to get the conversation and the laughs going.
+  - Strength 3: You tend to get along with all kinds of people.
+  - Watch-out 1: Sometimes you keep things light when someone needs to talk to you about something serious.
+  - Watch-out 2: Because you want everyone happy, you might skip saying something hard.
+  - Watch-out 3: Sometimes you give so much energy to the group that you run low yourself.
+  - Try this 1: Ask one friend a real question about their week, so there’s room for more than fun.
+  - Try this 2: Take one quiet evening this week, so you recharge for the people you love.
+  - Try this 3: Tell a friend one honest thought you’ve held back, so the friendship stays real.
+- [ ] **mid**
+  - Summary 1: You can be warm and fun in a group, but you also like your quiet time and your own opinions.
+  - Summary 2: You tend to be social when you have the energy and more reserved when you don’t.
+  - Summary 3: You usually get along with people, but you’ll speak up or step back when you need to.
+  - Strength 1: You can join the fun and also say what you think.
+  - Strength 2: You tend to read the room and match it.
+  - Strength 3: You usually know when to be social and when to recharge.
+  - Watch-out 1: Sometimes you go quiet in a group and people read it as you not caring.
+  - Watch-out 2: Because you match the room, your own mood might get lost.
+  - Watch-out 3: Sometimes you say yes to plans when you needed a night in.
+  - Try this 1: Text a friend to say you had fun after your next hangout, so they know.
+  - Try this 2: Pick one plan to skip this week, so you have energy for the ones you want.
+  - Try this 3: Share one opinion in your next group chat, so your view is part of it.
+- [ ] **low**
+  - Summary 1: You tend to be more reserved, serious and direct in groups than most people.
+  - Summary 2: When you’re in a big group, you usually prefer to listen and say only what you mean.
+  - Summary 3: You tend to like a few real friends and real talk more than lots of social plans.
+  - Strength 1: You usually say what you mean, so people can trust your words.
+  - Strength 2: You tend to be a good listener in one-on-one talks.
+  - Strength 3: Your friendships tend to be few but real.
+  - Watch-out 1: Sometimes people read your quiet or direct style as cold.
+  - Watch-out 2: Because you skip small talk, new people might take longer to warm up to you.
+  - Watch-out 3: Sometimes you miss the fun because the group felt like a lot to you.
+  - Try this 1: Smile and say hi to one new person this week, so they see your friendly side.
+  - Try this 2: Join one group plan this month for an hour, so you stay part of things.
+  - Try this 3: Send a friend a funny message today, so they see your lighter side.
+
+## Communication (`cat_communication`, bar: Directness + Compromise)
+
+- [ ] **high**
+  - Summary 1: When there’s a disagreement, you tend to say what you think and then look for a fix that works for both of you.
+  - Summary 2: You usually speak up clearly and still care about how the other person feels.
+  - Summary 3: You tend to handle hard talks directly and fairly.
+  - Strength 1: When you disagree with someone, you usually focus on fixing the problem together.
+  - Strength 2: You tend to say what you need while also asking what the other person needs.
+  - Strength 3: You usually make hard talks feel fair.
+  - Watch-out 1: Sometimes you jump to fixing it before the other person has had their say.
+  - Watch-out 2: Because you want to settle things, you might push to talk before others are ready.
+  - Watch-out 3: Sometimes you work so hard at being fair that it wears you out.
+  - Try this 1: Ask the other person to finish their point before you suggest a fix, so they feel heard.
+  - Try this 2: Let one small disagreement wait a day, so you both come in calmer.
+  - Try this 3: Take a short break after a hard talk, so you have energy left for yourself.
+- [ ] **mid**
+  - Summary 1: You tend to speak up on some things and let others go, depending on how much they matter.
+  - Summary 2: When there’s a disagreement, you usually pick your moments to say what you think.
+  - Summary 3: You can be direct or easygoing in a talk, depending on who you’re with.
+  - Strength 1: You usually know which disagreements are worth having.
+  - Strength 2: You can adjust how you talk to fit the person.
+  - Strength 3: You tend to keep small things small.
+  - Watch-out 1: Sometimes you let something go that was worth saying.
+  - Watch-out 2: Because you adjust to people, your own view might get lost.
+  - Watch-out 3: Sometimes you hold back and then bring it all up later at once.
+  - Try this 1: Say one small thing that bothered you this week, so it doesn’t build up.
+  - Try this 2: Write down what you want before a hard talk, so you don’t lose your view.
+  - Try this 3: Ask a friend how they like to handle disagreements, so you can meet them halfway.
+- [ ] **low**
+  - Summary 1: You tend to keep quiet in disagreements and hold on to your own view inside.
+  - Summary 2: When there’s tension, you usually stay out of the argument and keep your opinion to yourself.
+  - Summary 3: You tend to avoid arguing, but you don’t easily change your mind either.
+  - Strength 1: You usually stay calm and don’t make disagreements bigger.
+  - Strength 2: You tend to think before you speak in a tense moment.
+  - Strength 3: You know what you believe, even when you don’t say it out loud.
+  - Watch-out 1: Sometimes people don’t know you disagree until much later.
+  - Watch-out 2: Because you stay quiet, a problem that bothers you might keep happening.
+  - Watch-out 3: Sometimes keeping your view inside makes you feel unheard.
+  - Try this 1: Text the person one sentence about what you think, so your view is heard.
+  - Try this 2: Ask one question in your next disagreement, so you’re part of the talk.
+  - Try this 3: Write down what you’d want to say, so it’s easier to share later.
+
+## Love / closeness (`cat_love`, map: Reassurance + Personal space)
+
+- [ ] **hh — Watchful + Private**
+  - Summary 1: You tend to want to feel close to people, but you also pull back when things get very close.
+  - Summary 2: When a relationship matters, you usually worry about it and also need your space.
+  - Summary 3: You tend to wonder where you stand with people while keeping some of yourself private.
+  - Strength 1: You tend to notice small changes in how people act toward you.
+  - Strength 2: You care a lot about your relationships, even if you don’t show it often.
+  - Strength 3: You usually think carefully before letting someone close.
+  - Watch-out 1: Sometimes you pull away right when you most want reassurance.
+  - Watch-out 2: Because you notice so much, you might worry and still not say anything.
+  - Watch-out 3: Sometimes people can’t tell what you need because you keep it private.
+  - Try this 1: Tell one person close to you one thing you need, so they don’t have to guess.
+  - Try this 2: Write down what you’re worried about before pulling back, so you can see it clearly.
+  - Try this 3: Text someone you care about a short check-in, so the connection stays open.
+- [ ] **hl — Watchful + Close**
+  - Summary 1: You tend to want lots of closeness and contact, and quiet stretches can worry you.
+  - Summary 2: When you’re close to someone, you usually want to talk often and feel unsure on quiet days.
+  - Summary 3: You tend to give a lot in relationships and want to know it’s returned.
+  - Strength 1: You tend to be open and warm with the people you love.
+  - Strength 2: You usually put real effort into staying close.
+  - Strength 3: You tend to notice how people are doing and reach out.
+  - Watch-out 1: Sometimes a slow reply can feel like distance to you when it isn’t.
+  - Watch-out 2: Because you give so much, you might feel hurt when it isn’t matched right away.
+  - Watch-out 3: Sometimes you reach out to calm a worry rather than to connect.
+  - Try this 1: Put your phone away for twenty minutes after sending a message, so you’re not waiting on it.
+  - Try this 2: Tell your partner or a friend how often you like to talk, so you both know.
+  - Try this 3: Plan something you enjoy alone tonight, so quiet time feels good.
+- [ ] **lh — Trusting + Private**
+  - Summary 1: You tend to feel relaxed in relationships and like having plenty of your own space.
+  - Summary 2: When you’re close to someone, you usually don’t worry much and you keep your independence.
+  - Summary 3: You tend to trust people and also keep a lot of your life to yourself.
+  - Strength 1: You usually give people room and don’t get jealous easily.
+  - Strength 2: You tend to stay calm in relationships, even when things are quiet.
+  - Strength 3: You can keep your own life going while being close to someone.
+  - Watch-out 1: Sometimes people close to you want more contact or sharing than you offer.
+  - Watch-out 2: Because you’re relaxed, a partner might read it as you not caring.
+  - Watch-out 3: Sometimes you keep your feelings so private that others feel shut out.
+  - Try this 1: Tell someone close one thing you’re feeling this week, so they know you better.
+  - Try this 2: Ask your partner or a close friend if they’d like more contact, so you can meet them.
+  - Try this 3: Send a short message to someone you love, so they hear from you first.
+- [ ] **ll — Trusting + Close**
+  - Summary 1: You tend to feel safe being close to people, and you don’t worry much about where you stand.
+  - Summary 2: When you’re in a relationship, you usually share openly and trust the other person.
+  - Summary 3: You tend to enjoy closeness and feel settled in it.
+  - Strength 1: You usually make people feel loved and trusted.
+  - Strength 2: You tend to share your feelings and listen well.
+  - Strength 3: You can be close to someone without much worry.
+  - Watch-out 1: Sometimes you share more than someone new is ready for.
+  - Watch-out 2: Because you trust easily, you might miss early signs that something’s off.
+  - Watch-out 3: Sometimes people who need more space feel a bit crowded by your closeness.
+  - Try this 1: Ask a new friend about themselves before sharing your own news, so they open up at their pace.
+  - Try this 2: Ask your partner how much time together feels good to them, so you can match it.
+  - Try this 3: Pay attention to whether a new friend keeps small promises, so trust can build both ways.
+
+## Independence & closeness (`cat_independence`, map: Independence + Connection)
+
+- [ ] **hh — Self-directed + Connected**
+  - Summary 1: You tend to like doing things your own way, and you also need close people around you.
+  - Summary 2: When you make plans, you usually want freedom and good company at the same time.
+  - Summary 3: You tend to want both independence and real connection.
+  - Strength 1: You can lead your own life and still keep close friendships.
+  - Strength 2: You tend to bring people into your plans without losing your own direction.
+  - Strength 3: You usually know what you want and who you want it with.
+  - Watch-out 1: Sometimes you want company on your terms, which can be hard for friends to match.
+  - Watch-out 2: Because you want both, you might feel pulled between your plans and your people.
+  - Watch-out 3: Sometimes you decide alone and then expect others to join in.
+  - Try this 1: Ask a friend what they’d like to do next, so the next plan isn’t just yours.
+  - Try this 2: Pick one evening for your own plans and one for friends, so you get both.
+  - Try this 3: Tell a close friend about a plan before you decide, so they feel included.
+- [ ] **hl — Self-directed + Self-contained**
+  - Summary 1: You tend to do things your own way and feel fine spending a lot of time on your own.
+  - Summary 2: When you have free time, you usually spend it on your own projects.
+  - Summary 3: You tend to rely on yourself more than on other people.
+  - Strength 1: You usually handle things on your own and don’t need much help.
+  - Strength 2: You tend to know your own mind and follow it.
+  - Strength 3: You can enjoy your own company for long stretches.
+  - Watch-out 1: Sometimes friends feel left out because you don’t reach out much.
+  - Watch-out 2: Because you’re fine alone, you might miss signs that someone wants more contact.
+  - Watch-out 3: Sometimes you handle hard things alone when help was there for you.
+  - Try this 1: Text one friend this week just to check in, so they know you think of them.
+  - Try this 2: Invite someone to join part of a solo plan, so you share it without losing your space.
+  - Try this 3: Ask for help with one small thing, so people get a chance to show up.
+- [ ] **lh — Guided + Connected**
+  - Summary 1: You tend to feel best making plans with the people close to you and following their lead.
+  - Summary 2: When there’s a decision, you usually want input from friends or family.
+  - Summary 3: You tend to enjoy being part of a team more than going your own way.
+  - Strength 1: You tend to be a great teammate and easy to plan with.
+  - Strength 2: You usually value what other people think.
+  - Strength 3: You tend to keep people close by including them.
+  - Watch-out 1: Sometimes your own wishes get lost in what the group wants.
+  - Watch-out 2: Because you like input, you might wait for others before deciding.
+  - Watch-out 3: Sometimes you feel unsure when you have to choose alone.
+  - Try this 1: Make one small choice today without asking anyone, so you practice trusting yourself.
+  - Try this 2: Suggest the next plan with your friends, so your ideas get a turn.
+  - Try this 3: Write down what you want before a group decision, so you bring your own view.
+- [ ] **ll — Guided + Self-contained**
+  - Summary 1: You tend to like clear direction and a quiet life without many social demands.
+  - Summary 2: When you work, you usually prefer clear steps and time on your own.
+  - Summary 3: You tend to be content with a simple routine and a small circle of friends.
+  - Strength 1: You tend to be low-drama and easy to work with.
+  - Strength 2: You usually follow a plan well and do it quietly.
+  - Strength 3: You can be content without needing a lot from people.
+  - Watch-out 1: Sometimes you wait for direction that nobody gives you.
+  - Watch-out 2: Because you keep to yourself, people might not know what you need.
+  - Watch-out 3: Sometimes your friendships fade because nobody reaches out.
+  - Try this 1: Set one small goal for yourself this week, so you choose the direction.
+  - Try this 2: Text one friend to say hi, so the friendship stays warm.
+  - Try this 3: Tell someone at work how you like to get instructions, so you get what you need.
+
+## Levity (`cat_levity`, bar: Playfulness + Directness + Compromise)
+
+- [ ] **high**
+  - Summary 1: You tend to bring humor into tense moments and still say what you think.
+  - Summary 2: When things get tense, you usually lighten the mood and help people find a fix.
+  - Summary 3: You tend to use jokes and honesty to keep hard moments from getting heavy.
+  - Strength 1: You usually ease tension so people can talk to you more openly.
+  - Strength 2: You tend to make hard talks feel less scary.
+  - Strength 3: You can be funny and fair in the same conversation.
+  - Watch-out 1: Sometimes your joke lands at the wrong moment for someone who’s upset.
+  - Watch-out 2: Because you keep things light, people might think you’re not taking it seriously.
+  - Watch-out 3: Sometimes humor covers up something you really need to say.
+  - Try this 1: Ask how someone feels before you joke about a tense moment, so they feel heard.
+  - Try this 2: Say the serious part first in your next hard talk, so the joke doesn’t hide it.
+  - Try this 3: Wait a moment before your next joke in a tense talk, so others can speak.
+- [ ] **mid**
+  - Summary 1: You can be funny in a tense moment or serious about it, depending on the people and the problem.
+  - Summary 2: You tend to use humor sometimes and plain talk other times when there’s conflict.
+  - Summary 3: When things get tense, you usually read the room before deciding to joke or to speak up.
+  - Strength 1: You tend to know when a joke will help and when it won’t.
+  - Strength 2: You can shift between light and serious as a talk needs.
+  - Strength 3: You usually keep hard moments from getting heavier than they need to be.
+  - Watch-out 1: Sometimes you misread the moment and joke when someone wanted quiet.
+  - Watch-out 2: Because you adjust, people might not know how you really feel.
+  - Watch-out 3: Sometimes you wait so long to decide that the moment passes you by.
+  - Try this 1: Ask a friend whether they want to laugh or talk, so you match their mood.
+  - Try this 2: Share one honest thought in your next tense moment, so your view is heard.
+  - Try this 3: Write down how you felt after a hard talk, so you know what you meant to say.
+- [ ] **low**
+  - Summary 1: You tend to take conflict seriously and keep quiet rather than joke or argue.
+  - Summary 2: When there’s tension, you usually stay serious and stay out of the back-and-forth.
+  - Summary 3: You tend to handle hard moments quietly and without humor.
+  - Strength 1: You usually treat other people’s problems with real care.
+  - Strength 2: You tend not to make tense moments worse.
+  - Strength 3: You can stay calm and respectful when others don’t.
+  - Watch-out 1: Sometimes tense moments feel heavier for you than they need to.
+  - Watch-out 2: Because you stay quiet, people might not know what you think.
+  - Watch-out 3: Sometimes you carry a disagreement around long after it’s over.
+  - Try this 1: Look for one small funny thing in a tense week, so it feels a little lighter.
+  - Try this 2: Say one sentence about how you see it in your next disagreement, so you’re heard.
+  - Try this 3: Take a short walk after a hard talk, so it doesn’t stay with you.
+
+## Structure vs. spontaneity (`cat_structure`, map: Curiosity + Follow-through)
+
+- [ ] **hh — Adventurous + Structured**
+  - Summary 1: You tend to love new ideas, and you also plan carefully to make them happen.
+  - Summary 2: When something new excites you, you usually turn it into a clear plan.
+  - Summary 3: You tend to mix curiosity with good follow-through.
+  - Strength 1: You usually make new ideas real instead of just talking about them.
+  - Strength 2: You tend to plan trips, projects and changes well.
+  - Strength 3: You can bring both fresh ideas and a solid plan.
+  - Watch-out 1: Sometimes you plan so many new things that there’s no time left for you to rest.
+  - Watch-out 2: Because you plan carefully, surprises inside your new plans can frustrate you.
+  - Watch-out 3: Sometimes you expect others to keep up with both your ideas and your schedule.
+  - Try this 1: Leave one day this week with no plan, so you have room to rest.
+  - Try this 2: Pick one new idea to finish before starting another, so your plans don’t pile up.
+  - Try this 3: Ask the people in your plan what pace works for them, so they can keep up.
+- [ ] **hl — Adventurous + Flexible**
+  - Summary 1: You tend to follow new ideas and go with the moment instead of sticking to a plan.
+  - Summary 2: When something new comes up, you usually jump in and figure it out as you go.
+  - Summary 3: You tend to enjoy surprises and keep your plans loose.
+  - Strength 1: You usually adapt quickly and enjoy the unexpected.
+  - Strength 2: You tend to find fun in last-minute changes.
+  - Strength 3: You can try new things without needing everything figured out.
+  - Watch-out 1: Sometimes things you start don’t get finished.
+  - Watch-out 2: Because you keep plans loose, people who plan ahead might feel unsure about you.
+  - Watch-out 3: Sometimes your small tasks pile up while you chase something new.
+  - Try this 1: Pick one unfinished thing and do the next small step today, so it moves forward.
+  - Try this 2: Put two tasks on your calendar this week, so they get a time.
+  - Try this 3: Text a friend a clear yes or no about a plan, so they can plan around you.
+- [ ] **lh — Familiar + Structured**
+  - Summary 1: You tend to like routines that work and plans you can count on.
+  - Summary 2: When you find a way of doing things that works, you usually stick to it.
+  - Summary 3: You tend to feel best with a clear plan and familiar steps.
+  - Strength 1: You tend to be reliable and organized.
+  - Strength 2: You usually get things done the same good way each time.
+  - Strength 3: People can count on you to keep a plan on track.
+  - Watch-out 1: Sometimes a sudden change throws off your whole day.
+  - Watch-out 2: Because you trust your routines, you might miss a better way.
+  - Watch-out 3: Sometimes you stick with a plan after it’s stopped working for you.
+  - Try this 1: Change one small thing in your routine today, so change feels easier.
+  - Try this 2: Ask a coworker how they do a task you both do, so you can borrow one idea.
+  - Try this 3: Leave one hour unplanned this week, so surprises have room.
+- [ ] **ll — Familiar + Flexible**
+  - Summary 1: You tend to like what you know and take each day as it comes.
+  - Summary 2: When it comes to plans, you usually keep things simple and loose.
+  - Summary 3: You tend to be easygoing about schedules and happy with your usual things.
+  - Strength 1: You tend to stay relaxed and easy to be around.
+  - Strength 2: You usually don’t stress about plans changing.
+  - Strength 3: You know what you enjoy and don’t overthink it.
+  - Watch-out 1: Sometimes your tasks without a deadline drift for a long time.
+  - Watch-out 2: Because you take each day as it comes, bigger goals can slip.
+  - Watch-out 3: Sometimes you miss new things because the usual is easier.
+  - Try this 1: Set a deadline for one task you’ve been putting off, so it gets done.
+  - Try this 2: Try one small new thing this week, so your routine gets a little fresh.
+  - Try this 3: Write down one goal for this month, so the days have a direction.
+
+## Resilience under pressure (`cat_resilience`, bar: Confidence + Growth + Composure)
+
+- [ ] **high**
+  - Summary 1: When things go wrong, you tend to stay calm, trust your skills and look for what to learn.
+  - Summary 2: You usually recover quickly from setbacks at work or at home.
+  - Summary 3: You tend to handle pressure well and come out of it stronger.
+  - Strength 1: You usually stay steady when pressure builds.
+  - Strength 2: When something fails, you tend to learn from it and try again.
+  - Strength 3: You tend to trust yourself to handle hard things.
+  - Watch-out 1: Sometimes you push through stress that really needed a break.
+  - Watch-out 2: Because you handle pressure well, people might give you more than your share.
+  - Watch-out 3: Sometimes you expect others to recover as fast as you do.
+  - Try this 1: Take a real break after your next stressful day, so you have energy for the next one.
+  - Try this 2: Ask a stressed friend what they need, so your steadiness helps them too.
+  - Try this 3: Say no to one extra task this week, so you don’t carry too much.
+- [ ] **mid**
+  - Summary 1: You tend to handle some kinds of pressure well, while others stay with you for a while.
+  - Summary 2: When setbacks happen, you usually recover, but it can take you some time.
+  - Summary 3: You can stay steady under pressure, but a hard week can still get to you.
+  - Strength 1: You tend to recover from setbacks and learn something along the way.
+  - Strength 2: You usually know which stresses you handle well.
+  - Strength 3: You can stay steady when you have time to prepare.
+  - Watch-out 1: Sometimes a surprise setback hits you harder than you expect.
+  - Watch-out 2: Because some pressure gets to you, you might doubt your skills after a bad day.
+  - Watch-out 3: Sometimes you hold on to a setback longer than you need to.
+  - Try this 1: Write down one setback you got through, so you remember you can do it.
+  - Try this 2: Plan a calm evening after your next big deadline, so you have time to reset.
+  - Try this 3: Ask a friend how they handle stress, so you get a new idea.
+- [ ] **low**
+  - Summary 1: You tend to feel pressure strongly, and setbacks can stay with you for a while.
+  - Summary 2: When something goes wrong, you usually feel it deeply and doubt yourself afterward.
+  - Summary 3: You tend to find stressful times hard and need extra time to recover.
+  - Strength 1: You tend to take problems seriously and prepare carefully.
+  - Strength 2: You usually understand when others are struggling, because you’ve been there.
+  - Strength 3: You know your limits, so you can plan around them.
+  - Watch-out 1: Sometimes one setback makes your whole week feel harder.
+  - Watch-out 2: Because you feel pressure deeply, you might avoid challenges you could handle.
+  - Watch-out 3: Sometimes your doubt after a mistake lasts longer than the mistake does.
+  - Try this 1: Write down one hard thing you got through before, so you remember you can do it.
+  - Try this 2: Take three slow breaths before your next stressful task, so you start calmer.
+  - Try this 3: Tell a friend about a setback this week, so you don’t carry it alone.

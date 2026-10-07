@@ -141,6 +141,8 @@
     "check:trait-bands": "tsx ./scripts/trait-bands-check.ts",
     "check:band-study": "tsx ./scripts/band-study-check.ts",
     "check:insight": "tsx ./scripts/insight-check.ts",
+    "check:insight-bank": "tsx ./scripts/insight-bank-check.ts",
+    "check:category-bank": "tsx ./scripts/category-bank-check.ts",
     "check:local-account-data": "tsx ./scripts/local-account-data-check.ts",
     "check:full-profile": "tsx ./scripts/full-profile-check.ts",
     "check:full-profile-signal": "tsx ./scripts/full-profile-signal-check.ts",

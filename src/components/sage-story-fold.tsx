@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { AiBadge } from '@/components/ai-badge';
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -213,6 +214,8 @@ export function SageStoryFold({
             </ThemedText>
           ) : null}
 
+          {/* A model wrote the story, so it carries the AI pill (emci 2026-10-07). */}
+          {story?.body ? <AiBadge /> : null}
           {story?.body ? <ThemedText type="small">{story.body}</ThemedText> : null}
           {story?.body && !fresh ? (
             <ThemedText type="small" themeColor="textSecondary">

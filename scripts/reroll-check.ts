@@ -110,5 +110,20 @@ const questionsFoldSrc = readFileSync(resolve(__dirname, '../src/components/ques
 assert.doesNotMatch(questionsFoldSrc, /rerollQuestionItem\(|rerollCategoryItem\(/, 'no reroll on the Questions screen: sets come from the fixed bank (wave85)');
 ok('the Questions screen offers no reroll: there is no AI pool to swap from');
 
+// REROLLS_FROZEN (emci 2026-10-07): the daily insight and the category cards are
+// stored copy, so neither shows a reroll. The RPCs and client code stay.
+{
+  const flag = readFileSync(resolve(__dirname, '../src/lib/rerolls.ts'), 'utf8');
+  assert.match(flag, /export const REROLLS_FROZEN = true;/);
+  const home = readFileSync(resolve(__dirname, '../src/app/(tabs)/index.tsx'), 'utf8');
+  const cats = readFileSync(resolve(__dirname, '../src/components/categories-fold.tsx'), 'utf8');
+  for (const [name, src] of [['Home', home], ['categories-fold', cats]] as const) {
+    assert.doesNotMatch(src, /[Rr]eroll\(|spendCategoryReroll|CATEGORY_REWRITE_LABEL|Reroll ·/, `${name} shows no reroll while REROLLS_FROZEN`);
+  }
+  assert.match(readFileSync(resolve(__dirname, '../src/lib/category-statements/reroll-spend.ts'), 'utf8'), /export async function spendCategoryReroll\(/);
+  assert.match(rerollSrc, /export async function rerollLegend\(/);
+}
+ok('REROLLS_FROZEN: no reroll on the daily insight or the category cards; the spend code is kept');
+
 console.log(`
 ${passed} reroll checks passed`);

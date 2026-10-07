@@ -1,49 +1,36 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { InfoReveal, ShapedByList } from '@/components/info-reveal';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { TraitTagRow } from '@/components/trait-tag-row';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAccountDataEpoch } from '@/lib/account-data-epoch';
-import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/generate';
-import { ATO_TOKEN_NEED_MORE, ATO_TOKEN_PRICE, atoPriceLine, atoTokenBalanceOf } from '@/lib/ato-tokens';
-import { fallbackCategoryCopies, fallbackForReading } from '@/lib/category-bands';
+import { categoryTags, pickCategoryCard } from '@/lib/category-bank';
 import { useCategoryDefs } from '@/lib/category-catalog';
 import { categoryConcept } from '@/lib/concept-explainers';
 import { SHAPED_BY_LABEL, shapedByRows } from '@/lib/shaped-by';
 import {
-  getCategoryDefs,
   nextSpotlight,
   parseSpotlight,
   readAllCategories,
   type CategoryId,
   type CategoryReading,
 } from '@/lib/categories';
-import { parseCategoryCard } from '@/lib/category-statements/card';
-import { generateCategoryStatements } from '@/lib/category-statements/generate-statements';
-import { spendCategoryReroll } from '@/lib/category-statements/reroll-spend';
-import { fetchCurrentStatements, saveCategoryStatements, type CategoryStatement } from '@/lib/category-statements/store';
 import { FULL_PROFILE_LOCKED_COPY, fullProfileLockedLine, fullProfileProgress } from '@/lib/full-profile-gate';
-import { AI_CONSENT_NEEDED_COPY, aiConsentFor, saveCategorySpotlight, type Me } from '@/lib/me';
+import { saveCategorySpotlight, type Me } from '@/lib/me';
 import { sageKnowsWeekKey } from '@/lib/sage-knows';
-import { parseSageTitle } from '@/lib/sage-title';
 import { localYmd } from '@/lib/local-date';
-import { withTimeout } from '@/lib/timeout';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import { AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { categoryWaitingLine } from '@/lib/questions/staged-intake-copy';
 import { ONGOING_ROUND_SIZE } from '@/lib/questions/tiered-axis-plan';
 
-/** A reroll writes this category again: 1 ATO token, once per category per day. */
-export const CATEGORY_REWRITE_LABEL = `Reroll · ${atoPriceLine('category_reroll')}`;
-export const CATEGORY_REROLL_ALREADY_COPY = 'Already rerolled today. It opens again tomorrow.';
-export const CATEGORY_NOT_READY_COPY =
-  `Your next ${ONGOING_ROUND_SIZE} in Questions get it there. Nothing was generated.`;
-export const CATEGORY_ERROR_COPY = 'Couldn’t load this one just now.';
+export const CATEGORY_NOT_READY_COPY = `Your next ${ONGOING_ROUND_SIZE} in Questions get it there.`;
 
 /**
  * Why a category is not open yet, with the count: how many settled traits it
@@ -63,7 +50,7 @@ export function categoryNeedsLine(reading: CategoryReading): string {
 export function categoryWaitingCopy(reading: CategoryReading): string {
   const settled = new Set(reading.stableAxes);
   const waiting = reading.def.axes.filter((axis) => !settled.has(axis)).map((axis) => AXIS_SHORT_NAME[axis]);
-  return waiting.length > 0 ? `${categoryWaitingLine(waiting)} Nothing was generated.` : CATEGORY_NOT_READY_COPY;
+  return waiting.length > 0 ? categoryWaitingLine(waiting) : CATEGORY_NOT_READY_COPY;
 }
 
 /**
@@ -80,20 +67,19 @@ function categoryDisplayName(def: { id: CategoryId; name: string }): string {
   return CATEGORY_DISPLAY_NAMES[def.id] ?? def.name;
 }
 
-type RowState = 'loading' | 'error' | 'not_ready' | 'locked' | 'consent';
-
 /**
- * Categories on Explore (release pass, emci 2026-09-16).
+ * Categories on Explore (release pass, emci 2026-09-16; stored cards, emci
+ * 2026-10-07).
  *
  * The WHOLE category set is always listed, open on the page — never folded,
  * never filtered to "ready", and no questions here. Tapping a category opens
- * it and, only if nothing is cached for it yet, loads that ONE category's
- * statement (one model call for one category). The saved statement is the
- * cache: next time it paints from `category_statements` with no call.
+ * its STORED card (lib/category-bank): the cell its reading falls in, this
+ * week's wording, and one chip row of trait tags. Nothing is generated and
+ * nothing is written, so there is no consent gate and no reroll
+ * (REROLLS_FROZEN, lib/rerolls.ts). The old AI statements are not shown.
  *
- * Every gate is judged on tap, before any call, and each says what unlocks it:
- * `unlocked` (the one shared full-profile gate), AI consent (Home), then the
- * category's own readiness. Nothing on this component generates on mount.
+ * Gates, judged every render, each saying what unlocks it: `unlocked` (the one
+ * shared full-profile gate), then the category's own readiness.
  */
 export function CategoriesFold({
   me,
@@ -115,42 +101,13 @@ export function CategoriesFold({
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [tracksLoaded, setTracksLoaded] = useState(false);
   const [openId, setOpenId] = useState<CategoryId | null>(null);
-  const [statements, setStatements] = useState<Map<CategoryId, CategoryStatement>>(new Map());
-  const [statementsLoaded, setStatementsLoaded] = useState(false);
-  const [rowState, setRowState] = useState<Partial<Record<CategoryId, RowState>>>({});
-  // Per-category attempt counter: a timed-out call that lands late must not
-  // overwrite a newer retry's state.
-  const attemptRef = useRef<Partial<Record<CategoryId, number>>>({});
-  // Synchronous in-flight guard: render-time state can't stop a fast double tap.
-  const inFlightRef = useRef<Set<CategoryId>>(new Set());
-  // Reroll (1 ATO token, once per category per day): the note under a row, and
-  // the categories the server already refused today (so we stop asking it).
-  const [rerollNote, setRerollNote] = useState<Partial<Record<CategoryId, string>>>({});
-  const rerolledTodayRef = useRef<Set<CategoryId>>(new Set());
   useCategoryDefs();
 
-  const consentGranted = aiConsentFor(me) === 'granted';
-
-  const loadStatements = useCallback(async () => {
-    try {
-      const rows = await fetchCurrentStatements(me.id);
-      setStatements(new Map(rows.map((row) => [row.categoryId as CategoryId, row])));
-    } catch (err) {
-      console.log('[categories] statements load error:', err);
-    } finally {
-      setStatementsLoaded(true);
-    }
-  }, [me.id]);
-
   const dataEpoch = useAccountDataEpoch();
-  useEffect(() => {
-    void loadStatements();
-  }, [loadStatements, dataEpoch]);
   const readings = readAllCategories(tracks);
   const ready = readings.filter((row) => row.ready);
-  const cached = parseSageTitle(me.sage_title);
-  const fallback = fallbackCategoryCopies(tracks);
-  const weekKey = sageKnowsWeekKey(localYmd(new Date(), me.timezone || 'UTC'));
+  const todayYmd = localYmd(new Date(), me.timezone || 'UTC');
+  const weekKey = sageKnowsWeekKey(todayYmd);
   const spotlight = parseSpotlight(me.category_spotlight);
 
   useEffect(() => {
@@ -188,135 +145,30 @@ export function CategoriesFold({
     void saveCategorySpotlight(me.id, { weekKey, categoryId: next }).then(() => onUpdated?.());
   }, [me.id, weekKey, ready.length, spotlight?.weekKey, spotlight?.categoryId, onUpdated]);
 
-  function setRow(id: CategoryId, next: RowState | null) {
-    setRowState((prev) => {
-      const copy = { ...prev };
-      if (next) copy[id] = next;
-      else delete copy[id];
-      return copy;
-    });
-  }
-
-  /**
-   * The only path to a model call on Explore. Always from a tap.
-   * `reroll` = writing an already-loaded category again: that costs 1 ATO token,
-   * once per category per day. The first load of a category is free.
-   *
-   * It DEFAULTS to "is there already a saved statement?", so every retry path
-   * (the error row's Try again, a second tap) is priced the same as the tap that
-   * started it — a failed reroll can never be retried for free.
-   */
-  async function loadCategory(reading: CategoryReading, reroll = statements.has(reading.def.id)) {
-    const id = reading.def.id;
-    if (inFlightRef.current.has(id)) return;
-    if (reroll) {
-      // Refuse BEFORE any model call when we already know the answer.
-      if (rerolledTodayRef.current.has(id)) {
-        setRerollNote((prev) => ({ ...prev, [id]: CATEGORY_REROLL_ALREADY_COPY }));
-        return;
-      }
-      if (atoTokenBalanceOf(me) < ATO_TOKEN_PRICE.category_reroll) {
-        setRerollNote((prev) => ({ ...prev, [id]: ATO_TOKEN_NEED_MORE }));
-        return;
-      }
-      setRerollNote((prev) => ({ ...prev, [id]: undefined }));
-    }
-    // Gates, in order, each reported plainly with no call behind it.
-    if (!unlocked) {
-      setRow(id, 'locked');
-      return;
-    }
-    if (!consentGranted) {
-      setRow(id, 'consent');
-      return;
-    }
-    if (!reading.ready) {
-      setRow(id, 'not_ready');
-      return;
-    }
-    const attempt = (attemptRef.current[id] ?? 0) + 1;
-    attemptRef.current[id] = attempt;
-    inFlightRef.current.add(id);
-    setRow(id, 'loading');
-    try {
-      const validIds = new Set(getCategoryDefs().map((def) => def.id));
-      const drafts = await withTimeout(
-        generateCategoryStatements([reading], validIds),
-        AI_TAP_TIMEOUT_MS,
-        'category-statement',
-      );
-      if (attemptRef.current[id] !== attempt) return;
-      if (!drafts) {
-        setRow(id, 'error');
-        return;
-      }
-      if (reroll) {
-        // Spend only once a new statement exists, so a failed write never costs
-        // a token. A refusal keeps the statement already on screen.
-        const spend = await spendCategoryReroll(id);
-        if (spend !== 'spent') {
-          if (spend === 'already_today') rerolledTodayRef.current.add(id);
-          setRerollNote((prev) => ({
-            ...prev,
-            [id]: spend === 'already_today' ? CATEGORY_REROLL_ALREADY_COPY : ATO_TOKEN_NEED_MORE,
-          }));
-          if (attemptRef.current[id] === attempt) setRow(id, null);
-          return;
-        }
-        rerolledTodayRef.current.add(id);
-      }
-      await saveCategoryStatements(drafts);
-      await loadStatements();
-      if (reroll) void onUpdated?.(); // refresh the token balance
-      if (attemptRef.current[id] === attempt) setRow(id, null);
-    } catch (err) {
-      console.log('[categories] generate statement error:', err);
-      if (attemptRef.current[id] === attempt) setRow(id, 'error');
-    } finally {
-      // Released on timeout too, so Try again works; a late result from the
-      // abandoned call is discarded by the attempt check above.
-      inFlightRef.current.delete(id);
-    }
-  }
-
   function handleRowPress(reading: CategoryReading) {
     const id = reading.def.id;
-    if (openId === id) {
-      setOpenId(null);
-      return;
-    }
-    setOpenId(id);
-    // Cached → just show it. Not cached → this tap is the request.
-    if (!statements.has(id) && statementsLoaded) void loadCategory(reading);
+    setOpenId(openId === id ? null : id);
   }
 
-  /** Everything one category row needs, re-judged every render. */
+  /** Everything one category row needs, judged every render. No call, no write. */
   function rowModel(reading: CategoryReading) {
     const id = reading.def.id;
     const open = openId === id;
-    const statement = statements.get(id);
-    const card = statement ? parseCategoryCard(statement.statement) : null;
-    // Gate messages are re-judged every render, so one that has since
-    // cleared (tracks landed, consent turned on) drops back.
-    const rawState = rowState[id];
-    const state =
-      (rawState === 'locked' && unlocked) ||
-      (rawState === 'consent' && consentGranted) ||
-      (rawState === 'not_ready' && reading.ready)
-        ? undefined
-        : rawState;
-    const copy = reading.ready ? (cached?.categories[id] ?? fallback[id]) : undefined;
-    const summary =
-      card?.summary ??
-      (reading.ready
-        ? (copy?.line ?? fallbackForReading(reading))
-        : // Before tracks land every category reads as not ready; say
-          // "Loading" rather than flash a count of zero at a finished user.
-          tracksLoaded
-          ? categoryNeedsLine(reading)
-          : 'Loading…');
-    const canRefresh = unlocked && consentGranted && reading.ready;
-    return { id, open, statement, card, state, summary, canRefresh };
+    // An unknown catalog id has no stored card and shows none.
+    const card = reading.ready ? pickCategoryCard({ userId: me.id, reading, ymd: todayYmd }) : null;
+    const state: 'loading' | 'locked' | 'not_ready' | null = !tracksLoaded
+      ? 'loading'
+      : !unlocked
+        ? 'locked'
+        : !reading.ready
+          ? 'not_ready'
+          : null;
+    // Before tracks land every category reads as not ready; say "Loading"
+    // rather than flash a count of zero at a finished user.
+    // A ready category with no stored card (a catalog id added after this
+    // bundle) says nothing rather than a misleading "needs" count.
+    const summary = card?.summary ?? (state === 'loading' ? 'Loading…' : state ? categoryNeedsLine(reading) : '');
+    return { id, open, card, state, summary };
   }
 
   const tileTints = [theme.accent, theme.accentSecondary, theme.accentTertiary, theme.emphasis];
@@ -347,7 +199,7 @@ export function CategoriesFold({
                     onPress={() => handleRowPress(reading)}
                     accessibilityRole="button"
                     accessibilityLabel={`${categoryDisplayName(reading.def)}${locked ? ', locked' : ''}. ${m.summary}`}
-                    accessibilityState={{ expanded: m.open, busy: m.state === 'loading' }}
+                    accessibilityState={{ expanded: m.open }}
                     style={[
                       styles.tile,
                       {
@@ -387,59 +239,32 @@ export function CategoriesFold({
               {pair.length === 1 ? <View style={styles.tileSpacer} /> : null}
             </View>
             {pair.map((reading) => {
-              const { id, open, statement, card, state, canRefresh } = rowModel(reading);
+              const { id, open, card, state } = rowModel(reading);
               return (
                 <View key={`open-${id}`}>
                   {open ? (
                     <ThemedView type="background" style={styles.expand}>
-                      {card && state !== 'loading' ? (
-                        <>
-                          <ThemedText type="small">{card.summary}</ThemedText>
-                          {card.strength ? <CardPart label="Strength" text={card.strength} /> : null}
-                          {card.watchOut ? <CardPart label="Watch-out" text={card.watchOut} /> : null}
-                          {card.tryThis ? <CardPart label="Try this" text={card.tryThis} /> : null}
-                        </>
-                      ) : null}
-
                       {state === 'loading' ? (
                         <ThemedText type="small" themeColor="textSecondary">
-                          Reading your answers…
+                          Loading…
                         </ThemedText>
                       ) : state === 'locked' ? (
                         <ThemedText type="small" themeColor="textSecondary" accessibilityLabel={FULL_PROFILE_LOCKED_COPY}>
                           {lockedLine}
                         </ThemedText>
-                      ) : state === 'consent' ? (
-                        <ThemedText type="small" themeColor="textSecondary">
-                          {AI_CONSENT_NEEDED_COPY}
-                        </ThemedText>
                       ) : state === 'not_ready' ? (
                         <ThemedText type="small" themeColor="textSecondary">
                           {categoryNeedsLine(reading)} {categoryWaitingCopy(reading)}
                         </ThemedText>
-                      ) : state === 'error' ? (
-                        <View style={styles.inline}>
-                          <ThemedText type="small" themeColor="textSecondary">
-                            {CATEGORY_ERROR_COPY}
-                          </ThemedText>
-                          <Pressable
-                            accessibilityRole="button"
-                            onPress={() => void loadCategory(reading)}
-                            style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
-                            <ThemedText type="link">Try again</ThemedText>
-                          </Pressable>
-                        </View>
-                      ) : !card && !statementsLoaded ? (
-                        <ThemedText type="small" themeColor="textSecondary">
-                          Loading…
-                        </ThemedText>
-                      ) : !card ? (
-                        <Pressable
-                          accessibilityRole="button"
-                          onPress={() => void loadCategory(reading, false)}
-                          style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
-                          <ThemedText type="link">Load</ThemedText>
-                        </Pressable>
+                      ) : card ? (
+                        /* Stored copy: one chip row of trait tags, then the card. No AI pill. */
+                        <>
+                          <TraitTagRow tags={categoryTags(reading.def, tracks)} />
+                          <ThemedText type="small">{card.summary}</ThemedText>
+                          <CardPart label="Strength" text={card.strength} />
+                          <CardPart label="Watch-out" text={card.watchOut} />
+                          <CardPart label="Try this" text={card.tryThis} />
+                        </>
                       ) : null}
 
                       {/* The working, one tap away: which traits this category is built
@@ -451,31 +276,6 @@ export function CategoriesFold({
                           </ThemedText>
                           <ShapedByList rows={shapedByRows(reading.def.axes, tracks)} />
                         </InfoReveal>
-                      ) : null}
-
-                      {card && statement && state !== 'loading' ? (
-                        <View style={styles.footer}>
-                          <ThemedText type="small" themeColor="textSecondary" style={styles.footerText}>
-                            Based on your answers · updated {formatUpdated(statement.createdAt)}
-                          </ThemedText>
-                          {canRefresh ? (
-                            <Pressable
-                              accessibilityRole="button"
-                              accessibilityLabel={`${CATEGORY_REWRITE_LABEL} ${categoryDisplayName(reading.def)}`}
-                              hitSlop={8}
-                              onPress={() => void loadCategory(reading, true)}
-                              style={({ pressed }) => pressed && styles.pressed}>
-                              <ThemedText type="small" themeColor="textSecondary" style={styles.refresh}>
-                                {CATEGORY_REWRITE_LABEL}
-                              </ThemedText>
-                            </Pressable>
-                          ) : null}
-                        </View>
-                      ) : null}
-                      {rerollNote[id] && state !== 'loading' ? (
-                        <ThemedText type="small" themeColor="textSecondary">
-                          {rerollNote[id]}
-                        </ThemedText>
                       ) : null}
                     </ThemedView>
                   ) : null}
@@ -505,12 +305,6 @@ function pairsOf<T>(items: readonly T[]): T[][] {
   const out: T[][] = [];
   for (let i = 0; i < items.length; i += 2) out.push(items.slice(i, i + 2));
   return out;
-}
-
-function formatUpdated(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return 'recently';
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
 const styles = StyleSheet.create({
@@ -563,30 +357,5 @@ const styles = StyleSheet.create({
   },
   part: {
     gap: Spacing.half,
-  },
-  inline: {
-    gap: Spacing.one,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.two,
-    paddingTop: Spacing.one,
-  },
-  footerText: {
-    flex: 1,
-    fontSize: 12,
-  },
-  refresh: {
-    fontSize: 12,
-    textDecorationLine: 'underline',
-  },
-  cta: {
-    alignSelf: 'flex-start',
-    paddingVertical: Spacing.one,
-  },
-  pressed: {
-    opacity: 0.8,
   },
 });

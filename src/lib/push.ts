@@ -23,7 +23,7 @@ import {
   pushWindowForEnergy,
 } from '@/lib/push-policy';
 import { pickInsightPayload } from '@/lib/push-insight';
-import { loadCachedInsight } from '@/lib/insight/today-insight';
+import { loadCachedInsight, lockScreenInsight } from '@/lib/insight/today-insight';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { checksInRecapWeek } from '@/lib/week-window';
@@ -395,7 +395,7 @@ export async function fireTestPush(
   const cached = await loadCachedInsight();
   const payload =
     kind === 'morning'
-      ? morningPush(cached?.title ?? 'No insight yet — open ATO when you are ready.')
+      ? morningPush(cached ? lockScreenInsight(cached).text : 'No insight yet — open ATO when you are ready.')
       : kind === 'evening'
         ? eveningPush()
         : kind === 'insight'

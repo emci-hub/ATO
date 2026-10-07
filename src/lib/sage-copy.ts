@@ -1,15 +1,19 @@
 /**
  * Sage UI copy. Floor requirement: labeled "coach" in the UI itself, never
- * implied to be a person — except the Home card in Quest appearance, which
- * uses SAGE_NPC_LABEL and does not require the disclosure sentence.
+ * implied to be a person. The Home insight card is stored copy since
+ * 2026-10-07 (not Sage, not AI), so its kicker is SAGE_NPC_LABEL, which now
+ * reads "Focus · try · watch" in every appearance.
  * Talk, Dawn, consent, crisis, morning push, and widget stay SAGE_COACH_LABEL.
  * Widget Swift duplicates SAGE_COACH_LABEL (native surface).
  */
 
 export const SAGE_COACH_LABEL = 'Sage · coach';
 
-/** Home card in Quest mode only. Lowercase npc; do not uppercase this string. */
-export const SAGE_NPC_LABEL = 'Sage · npc';
+/**
+ * The Home insight card's kicker (emci, 2026-10-07; was 'Sage · npc'). The
+ * card's one chip row of trait tags sits right under it.
+ */
+export const SAGE_NPC_LABEL = 'Focus · try · watch';
 
 export const SAGE_NOT_A_PERSON = 'Sage is a coach, not a person.';
 
@@ -22,8 +26,9 @@ export const HOME_SAGE_LEDE_QUEST = "Today's Read and Do.";
 /** Home-only third daily category. Never Circle, widget, or morning push. */
 export const NUDGE_LABEL = 'Bump';
 
-export function homeSageLabel(appearanceId: string): string {
-  return appearanceId === 'quest' ? SAGE_NPC_LABEL : SAGE_COACH_LABEL;
+/** Same in every appearance: the card is stored copy, not a coach talking. */
+export function homeSageLabel(_appearanceId: string): string {
+  return SAGE_NPC_LABEL;
 }
 
 export function homeSageLede(appearanceId: string): string {
