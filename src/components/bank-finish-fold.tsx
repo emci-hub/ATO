@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ProfileBinder } from '@/components/profile-binder';
@@ -83,6 +83,9 @@ export function BankFinishFold({
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [keepHistory, setKeepHistory] = useState(true);
+  // Each changed question's answer from before this visit, so the lab preview
+  // can put them back on Undo (the real Undo reloads them from the server).
+  const originals = useRef<Map<string, number | undefined>>(new Map());
 
   const load = useCallback(async () => {
     if (preview) return;
@@ -118,6 +121,11 @@ export function BankFinishFold({
 
   async function pickOption(questionId: string, optionIndex: number) {
     if (busy || isPremiumGated('change_answers')) return;
+    // The current answer: tapping it again does nothing (no write, no snapshot).
+    if (answers.get(questionId) === optionIndex) {
+      setArmed(null);
+      return;
+    }
     const key = `${questionId}:${optionIndex}`;
     if (armed !== key) {
       setArmed(key);
@@ -131,6 +139,7 @@ export function BankFinishFold({
       // the Undo point first; the lab preview never calls the server.
       const id = preview ? (session ?? 'preview') : await changeBankAnswer(session, questionId, optionIndex);
       if (!session) setSession(id);
+      if (!originals.current.has(questionId)) originals.current.set(questionId, answers.get(questionId));
       setAnswers((prev) => new Map(prev).set(questionId, optionIndex));
       setChanged((n) => n + 1);
       await onUpdated();
@@ -155,6 +164,19 @@ export function BankFinishFold({
       const n = preview ? changed : await undoChangeSession(session);
       setSession(null);
       setChanged(0);
+      // Taken before the ref is cleared: the state updater runs later.
+      const restore = originals.current;
+      if (preview) {
+        setAnswers((prev) => {
+          const next = new Map(prev);
+          for (const [id, option] of restore) {
+            if (option == null) next.delete(id);
+            else next.set(id, option);
+          }
+          return next;
+        });
+      }
+      originals.current = new Map();
       await load();
       await onUpdated();
       setNote(`Undone. ${n} answer${n === 1 ? '' : 's'} back the way they were.`);
@@ -241,13 +263,18 @@ export function BankFinishFold({
                         return (
                           <ThemedPressable
                             key={opt.text}
-                            disabled={busy || isPrior}
+                            disabled={busy}
                             onPress={() => void pickOption(q.id, i)}
                             accessibilityState={{ selected: isPrior }}
-                            style={[styles.option, border, isPrior && styles.prior]}>
+                            accessibilityHint={isPrior ? 'Your current answer' : 'Tap twice to change to this answer'}
+                            style={[
+                              styles.option,
+                              border,
+                              // The same selected look as a picked answer in a set (paged-questions.tsx).
+                              isPrior && { backgroundColor: theme.backgroundSelected, borderColor: theme.accent, borderWidth: 2 },
+                            ]}>
                             <ThemedText type={isPrior ? 'smallBold' : 'small'}>
-                              {isArmed ? `Tap again: change to “${opt.text}”` : opt.text}
-                              {isPrior ? '  · your answer' : ''}
+                              {isArmed ? `Tap again: change to “${opt.text}”` : isPrior ? `✓ ${opt.text}` : opt.text}
                             </ThemedText>
                           </ThemedPressable>
                         );

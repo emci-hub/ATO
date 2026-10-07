@@ -30,6 +30,9 @@ import {
   type ProfileSnapshot,
   type ProfileValues,
 } from '../src/lib/profile-history';
+import { QUESTIONS_BANK, PROMPT_REWORDS } from '../src/lib/questions/bank';
+import { QUESTION_BANK } from '../src/lib/questions/bank/index';
+import { priorAnswersFrom } from '../src/lib/questions/bank-sets';
 import { PREMIUM_BANK_PRICE } from '../src/lib/questions/premium-gate';
 import { TRAIT_AXES } from '../src/lib/traits';
 
@@ -147,8 +150,37 @@ for (const guard of [
 assert.match(finish, /\[JSON\.stringify\(values\), snapshots/, 'the Now card follows the live values');
 assert.match(finish, /if \(armed !== key\) \{\n      setArmed\(key\);\n      return;\n    \}/, 'a change takes two taps');
 assert.match(finish, /if \(armed !== 'undo'\) \{\n      setArmed\('undo'\);\n      return;\n    \}/, 'Undo takes two taps');
-assert.match(finish, /isPrior \? ' {2}· your answer' : ''/, 'the prior answer is shown');
-ok('Change answers: Undo point first, two taps, old answers logged, same replay; Undo restores newest-first and closes on Start Fresh');
+// The previous answer opens selected (fix 2026-10-07): intake-era rows are
+// keyed by prompt text and must map to their intake-slot bank question.
+{
+  const firstOpenness = QUESTIONS_BANK.find((d) => d.axis === 'openness')!;
+  const oldWording = Object.entries(PROMPT_REWORDS).find(([, now]) => now === firstOpenness.prompt)?.[0];
+  assert.ok(oldWording, 'openness slot 1 has a pre-wave84 wording to test');
+  const fromIntake = priorAnswersFrom([{ kind: 'intake', question_key: firstOpenness.prompt, option_index: 2 }]);
+  assert.equal(fromIntake.get('openness_01'), 2, 'an intake answer shows on its bank question');
+  assert.equal(priorAnswersFrom([{ kind: 'intake', question_key: oldWording!, option_index: 1 }]).get('openness_01'), 1, 'and by its old wording');
+  const both = priorAnswersFrom([
+    { kind: 'bank', question_key: 'openness_01', option_index: 0 },
+    { kind: 'intake', question_key: firstOpenness.prompt, option_index: 2 },
+  ]);
+  assert.equal(both.get('openness_01'), 0, 'a bank answer wins over an intake one');
+  assert.equal(priorAnswersFrom([{ kind: 'intake', question_key: 'not a prompt', option_index: 0 }]).size, 0);
+  assert.equal(priorAnswersFrom([{ kind: 'round', question_key: 'openness_04', option_index: 0 }]).size, 0, 'old round rows are not bank answers');
+  const all48 = priorAnswersFrom(QUESTIONS_BANK.map((d) => ({ kind: 'intake', question_key: d.prompt, option_index: 0 })));
+  assert.deepEqual([...all48.keys()].sort(), QUESTION_BANK.filter((q) => q.intakeSlot).map((q) => q.id).sort(), 'all 48 intake answers find their question');
+}
+assert.match(read('src/lib/questions/bank-sets-server.ts'), /\.select\('kind, question_key, option_index'\)\n\s+\.in\('kind', \['bank', 'intake'\]\)\n[\s\S]*?\.order\('created_at', \{ ascending: true \}\);/, 'previous answers read intake rows too, oldest first so the newest wins');
+assert.match(finish, /if \(answers\.get\(questionId\) === optionIndex\) \{\n\s+setArmed\(null\);\n\s+return;\n\s+\}/, 'tapping the current answer does nothing');
+assert.ok(
+  finish.indexOf('if (answers.get(questionId) === optionIndex)') < finish.indexOf('await changeBankAnswer('),
+  'and returns before any write or snapshot',
+);
+assert.match(finish, /isPrior && \{ backgroundColor: theme\.backgroundSelected, borderColor: theme\.accent, borderWidth: 2 \}/, 'the previous answer uses the normal selected style');
+assert.match(finish, /accessibilityState=\{\{ selected: isPrior \}\}/);
+assert.doesNotMatch(finish, /disabled=\{busy \|\| isPrior\}/, 'the selected answer is not greyed out');
+assert.match(finish, /setAnswers\(\(prev\) => new Map\(prev\)\.set\(questionId, optionIndex\)\);/, 'the new answer shows selected after the change');
+assert.match(finish, /const restore = originals\.current;\n\s+if \(preview\) \{\n\s+setAnswers\(\(prev\) => \{[\s\S]*?for \(const \[id, option\] of restore\)[\s\S]*?\}\);\n\s+\}\n\s+originals\.current = new Map\(\);\n\s+await load\(\);/, 'Undo shows the original answers again (lab restores from a copy taken before the ref is cleared; real reloads)');
+ok('Change answers: previous answer opens selected (intake rows included), same option is a no-op, Undo point first, two taps, old answers logged, same replay; Undo restores newest-first and closes on Start Fresh');
 
 // 5. Start Fresh keep / wipe -------------------------------------------------------------
 const fresh = fn('start_fresh');
