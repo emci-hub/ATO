@@ -63,7 +63,7 @@ export function FullProfileFold({
   const [diving, setDiving] = useState<TraitAxis | null>(null);
   const [undoSpent, setUndoSpent] = useState<Partial<Record<TraitAxis, boolean>>>({});
   // "This isn't me" (wave85): a flag only. It changes no question and no
-  // value; it puts the trait first on the retest list once retests open.
+  // value; it puts the trait first on the Change answers list after set 25.
   const [flags, setFlags] = useState<Set<TraitAxis>>(new Set());
   const [flagBusy, setFlagBusy] = useState<TraitAxis | null>(null);
 

@@ -47,7 +47,7 @@ function packDone(pack: QuestionPackRow): boolean {
  * waiting: a set is a database read. Sets 1-3 are the first read (the
  * once-ever +21 when the 48 are in), 4-8 complete the profile, 9-25 are
  * bonus sets that pay like the old rounds. After set 25 the screen becomes
- * the retest / Start Fresh view (BankFinishFold).
+ * the Change answers / history view (BankFinishFold).
  */
 export function QuestionsFold({
   me,

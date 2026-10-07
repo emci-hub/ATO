@@ -70,7 +70,9 @@ function walk(dir: string): string[] {
   assert.match(me, /updateTraits takes direct sources only/, 'question answers cannot sneak through updateTraits');
   // Bank sets and retests answer through the checkpoint (wave85 answer_bank_item).
   assert.match(read('src/components/questions-fold.tsx'), /await answerBankItem\(key, optIndex\);/);
-  assert.match(read('src/components/bank-finish-fold.tsx'), /await answerBankItem\(key, optIndex\);/);
+  // Change answers (wave86) replaces an answer through the server too.
+  assert.match(read('src/components/bank-finish-fold.tsx'), /await changeBankAnswer\(session, questionId, optionIndex\)/);
+  assert.match(read('src/lib/questions/bank-sets-server.ts'), /supabase\.rpc\('change_bank_answer', \{/);
   assert.match(read('src/lib/trait-checkpoint.ts'), /call\('answer_bank_item', \{ p_item_id: itemId, p_option_index: optionIndex \}\)/);
   assert.match(read('src/lib/dev-test-user.ts'), /await applyDevTraitPreset\(\{ values, sources, touched, tracks, history \}\);/);
   assert.match(read('src/components/depth-dive.tsx'), /from '@\/lib\/trait-checkpoint'/);

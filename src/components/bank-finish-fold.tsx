@@ -1,38 +1,36 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { PagedQuestions } from '@/components/paged-questions';
+import { ProfileBinder } from '@/components/profile-binder';
 import { ThemedPressable } from '@/components/themed-pressable';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { AXIS_POLE_NAME, AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import type { Me } from '@/lib/me';
+import { currentProfileCard, type ProfileSnapshot } from '@/lib/profile-history';
+import { BANK_BY_TRAIT } from '@/lib/questions/bank/index';
 import {
   BANK_SET_COUNT,
   BANK_SET_SIZE,
-  RETEST_REASON_LABEL,
-  retestRecommendations,
-  retestSizes,
+  CHANGE_REASON_LABEL,
+  changeRecommendations,
   TRAIT_CONFIDENCE_LABEL,
   traitConfidence,
   type BankProgress,
 } from '@/lib/questions/bank-sets';
 import {
+  changeBankAnswer,
+  fetchMyBankAnswers,
   fetchProfileSnapshots,
   fetchTraitFlags,
-  serveBankRetest,
   startFresh,
-  type ProfileSnapshot,
+  undoChangeSession,
 } from '@/lib/questions/bank-sets-server';
-import { mixSeed } from '@/lib/questions/mix-order';
 import { isPremiumGated, premiumPriceFor } from '@/lib/questions/premium-gate';
-import { fetchOpenRetestPack, fetchQuestionPack } from '@/lib/questions/store';
-import type { QuestionPackRow } from '@/lib/questions/types';
 import { controlBorderColor } from '@/lib/theme/chrome';
-import { answerBankItem } from '@/lib/trait-checkpoint';
 import { trackFor, type TraitTrack } from '@/lib/trait-stability';
-import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
+import { TRAIT_AXES, traitStateFromRow, type TraitAxis } from '@/lib/traits';
 
 /** Hold this long to Start Fresh — a tap can never wipe a profile. */
 const START_FRESH_HOLD_MS = 2500;
@@ -45,104 +43,139 @@ function leaningLine(axis: TraitAxis, value: number | null | undefined): string 
 }
 
 /**
- * After all 25 sets (emci 2026-10-06): where each trait landed and how sure
- * it is, which traits are worth a retest, the retest itself (that trait's
- * old questions again; each new answer REPLACES the old one, server-side),
- * Start Fresh (hold to confirm; the old profile is saved first) and the saved
- * earlier profiles. Retest and Start Fresh are free while the premium gate
- * (premium-gate.ts) is off.
+ * After all 25 sets (emci 2026-10-06):
+ *  - where each trait landed and how sure it is, suggested order first
+ *    (flagged "this isn't me", mixed, low confidence, near the middle);
+ *  - Change answers per trait: every question they answered, their answer
+ *    marked; tap another option, tap again to confirm. The first change of a
+ *    visit saves the profile as it was (the Undo point, saved by the server
+ *    inside that first change_bank_answer); each change replaces the old answer and the
+ *    server re-scores the trait. Undo puts every change of this visit back;
+ *  - Start Fresh (hold to confirm) with keep (default) or wipe for the cards;
+ *  - the card binder: the live profile and every saved one, tap two to compare.
+ * Change answers and Start Fresh are free while the premium gate is off.
  */
 export function BankFinishFold({
+  me,
   tracks,
   progress,
   onUpdated,
   onReload,
+  preview,
 }: {
   me: Me;
   tracks: readonly TraitTrack[];
   progress: BankProgress;
   onUpdated: () => Promise<void>;
   onReload: () => Promise<void>;
+  /** Dev lab only (/profile-card-lab): fixed data, no server reads or writes. */
+  preview?: { snapshots: ProfileSnapshot[]; answers: Map<string, number>; flags?: Set<TraitAxis> };
 }) {
   const theme = useTheme();
   const border = { borderColor: controlBorderColor(theme) };
-  const [flags, setFlags] = useState<Set<TraitAxis>>(new Set());
-  const [snapshots, setSnapshots] = useState<ProfileSnapshot[]>([]);
-  const [retest, setRetest] = useState<QuestionPackRow | null>(null);
-  const [choosing, setChoosing] = useState<TraitAxis | null>(null);
+  const [flags, setFlags] = useState<Set<TraitAxis>>(preview?.flags ?? new Set());
+  const [snapshots, setSnapshots] = useState<ProfileSnapshot[]>(preview?.snapshots ?? []);
+  const [answers, setAnswers] = useState<Map<string, number>>(preview?.answers ?? new Map());
+  const [open, setOpen] = useState<TraitAxis | null>(null);
+  const [armed, setArmed] = useState<string | null>(null);
+  const [session, setSession] = useState<string | null>(null);
+  const [changed, setChanged] = useState(0);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [keepHistory, setKeepHistory] = useState(true);
 
   const load = useCallback(async () => {
+    if (preview) return;
     try {
-      const [nextFlags, nextSnapshots, open] = await Promise.all([
+      const [nextFlags, nextSnapshots, nextAnswers] = await Promise.all([
         fetchTraitFlags(),
         fetchProfileSnapshots(),
-        fetchOpenRetestPack(),
+        fetchMyBankAnswers(),
       ]);
       setFlags(nextFlags);
       setSnapshots(nextSnapshots);
-      setRetest(open);
+      setAnswers(nextAnswers);
     } catch (err) {
       console.log('[bank-finish] load error:', err);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- preview is fixed for the life of the lab screen
   }, []);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  const picks = retestRecommendations(tracks, flags);
+  const picks = changeRecommendations(tracks, flags);
   const pickReason = new Map(picks.map((p) => [p.axis, p.reason]));
   const ordered = [...picks.map((p) => p.axis), ...TRAIT_AXES.filter((axis) => !pickReason.has(axis))];
 
-  async function beginRetest(axis: TraitAxis, count: number) {
-    if (busy || isPremiumGated('retest')) return;
+  const values = traitStateFromRow(me).values;
+  const cards = useMemo(
+    () => [currentProfileCard(values, progress.answeredIds.size, new Date().toISOString()), ...snapshots],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the values themselves (me.updated_at does not move on a re-score)
+    [JSON.stringify(values), snapshots, progress.answeredIds.size],
+  );
+
+  async function pickOption(questionId: string, optionIndex: number) {
+    if (busy || isPremiumGated('change_answers')) return;
+    const key = `${questionId}:${optionIndex}`;
+    if (armed !== key) {
+      setArmed(key);
+      return;
+    }
+    setArmed(null);
     setBusy(true);
     setNote(null);
     try {
-      const packId = await serveBankRetest(axis, count);
-      setRetest(await fetchQuestionPack(packId));
-      setChoosing(null);
+      // The first change of this visit (session null) makes the server save
+      // the Undo point first; the lab preview never calls the server.
+      const id = preview ? (session ?? 'preview') : await changeBankAnswer(session, questionId, optionIndex);
+      if (!session) setSession(id);
+      setAnswers((prev) => new Map(prev).set(questionId, optionIndex));
+      setChanged((n) => n + 1);
+      await onUpdated();
     } catch (err) {
-      console.log('[bank-finish] retest error:', err);
-      setNote("Couldn't start that retest. Try again.");
+      console.log('[bank-finish] change error:', err);
+      setNote("Couldn't change that answer. Nothing was changed.");
     } finally {
       setBusy(false);
     }
   }
 
-  async function saveRetest(answers: readonly { key: string; optIndex: number }[]): Promise<boolean> {
-    if (!retest) return false;
+  async function undo() {
+    if (busy || !session) return;
+    if (armed !== 'undo') {
+      setArmed('undo');
+      return;
+    }
+    setArmed(null);
+    setBusy(true);
+    setNote(null);
     try {
-      for (const { key, optIndex } of answers) {
-        await answerBankItem(key, optIndex);
-      }
-      const keys = new Map(answers.map((a) => [a.key, a.optIndex]));
-      const next = {
-        ...retest,
-        items: retest.items.map((row) => (keys.has(row.id) ? { ...row, answeredOption: keys.get(row.id) ?? null } : row)),
-      };
+      const n = preview ? changed : await undoChangeSession(session);
+      setSession(null);
+      setChanged(0);
+      await load();
       await onUpdated();
-      if (next.items.every((row) => row.answeredOption != null)) {
-        setRetest(null);
-        setNote(`Retest done. ${AXIS_SHORT_NAME[next.items[0]!.axis]} now reflects your new answers.`);
-      } else {
-        setRetest(next);
-      }
-      return true;
+      setNote(`Undone. ${n} answer${n === 1 ? '' : 's'} back the way they were.`);
     } catch (err) {
-      console.log('[bank-finish] retest answer error:', err);
-      return false;
+      console.log('[bank-finish] undo error:', err);
+      setNote("Couldn't undo right now. Your changes are still in place.");
+    } finally {
+      setBusy(false);
     }
   }
 
   async function doStartFresh() {
     if (busy || isPremiumGated('start_fresh')) return;
+    if (preview) {
+      setNote(`Lab: Start Fresh would run here (${keepHistory ? 'keeping' : 'wiping'} the cards). Nothing was sent.`);
+      return;
+    }
     setBusy(true);
     setNote(null);
     try {
-      await startFresh();
+      await startFresh(keepHistory);
       await onUpdated();
       await onReload();
     } catch (err) {
@@ -153,49 +186,32 @@ export function BankFinishFold({
     }
   }
 
-  if (retest) {
-    const answered = retest.items.filter((item) => item.answeredOption != null).length;
-    const axis = retest.items[0]?.axis;
-    return (
-      <View style={styles.body}>
-        <ThemedText type="smallBold">Retest{axis ? ` · ${AXIS_SHORT_NAME[axis]}` : ''}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          Questions you answered before. Each new answer replaces the old one.
-        </ThemedText>
-        <PagedQuestions
-          key={retest.id}
-          storageKey={`bank-retest:${retest.id}`}
-          mixSeed={mixSeed(retest.id, 'retest')}
-          rows={retest.items.map((item) => ({
-            key: item.id,
-            axis: item.axis,
-            draft: { axis: item.axis, prompt: item.prompt, options: item.options },
-            answered: item.answeredOption != null,
-            answeredIndex: item.answeredOption,
-          }))}
-          progressLabel={`${answered} of ${retest.items.length} answered`}
-          onSaveBatch={saveRetest}
-        />
-      </View>
-    );
-  }
-
   return (
     <View style={styles.body}>
       <ThemedText type="smallBold">All {BANK_SET_COUNT} sets done</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        {BANK_SET_COUNT * BANK_SET_SIZE} answers in. Here is where each trait landed. Retest any one, or start fresh.
+        {BANK_SET_COUNT * BANK_SET_SIZE} answers in. Here is where each trait landed. Change any answer, or start fresh.
       </ThemedText>
       {note ? (
         <ThemedText type="small" themeColor="textSecondary">
           {note}
         </ThemedText>
       ) : null}
+      {session && changed > 0 ? (
+        <View style={[styles.row, border]}>
+          <ThemedText type="small">
+            {changed} answer{changed === 1 ? '' : 's'} changed this visit. Undo works until you leave this screen.
+          </ThemedText>
+          <ThemedPressable onPress={() => void undo()} disabled={busy} style={[styles.chip, border]}>
+            <ThemedText type="smallBold">{armed === 'undo' ? 'Tap again to undo all of them' : 'Undo'}</ThemedText>
+          </ThemedPressable>
+        </View>
+      ) : null}
 
       {ordered.map((axis) => {
         const track = trackFor(tracks, axis, 'report');
         const reason = pickReason.get(axis);
-        const sizes = retestSizes(progress.answeredByAxis[axis]);
+        const answered = BANK_BY_TRAIT[axis].filter((q) => progress.answeredIds.has(q.id));
         return (
           <View key={axis} style={[styles.row, border]}>
             <ThemedText type="smallBold">{AXIS_SHORT_NAME[axis]}</ThemedText>
@@ -204,30 +220,52 @@ export function BankFinishFold({
             </ThemedText>
             {reason ? (
               <ThemedText type="code" themeColor="textSecondary">
-                Worth a retest: {RETEST_REASON_LABEL[reason]}
+                Worth a look: {CHANGE_REASON_LABEL[reason]}
               </ThemedText>
             ) : null}
-            {choosing === axis ? (
-              <View style={styles.chips}>
-                {sizes.map((n) => (
-                  <ThemedPressable
-                    key={n}
-                    disabled={busy}
-                    onPress={() => void beginRetest(axis, n)}
-                    style={[styles.chip, border]}>
-                    <ThemedText type="smallBold">{n}</ThemedText>
-                  </ThemedPressable>
-                ))}
-                <ThemedPressable onPress={() => setChoosing(null)} style={styles.link}>
+            {open === axis ? (
+              <View style={styles.list}>
+                {answered.map((q) => {
+                  const prior = answers.get(q.id);
+                  return (
+                    <View key={q.id} style={styles.question}>
+                      <ThemedText type="small">{q.prompt}</ThemedText>
+                      {prior == null ? (
+                        <ThemedText type="code" themeColor="textSecondary">
+                          Answered before answers were kept. Pick one to set it.
+                        </ThemedText>
+                      ) : null}
+                      {q.options.map((opt, i) => {
+                        const isPrior = prior === i;
+                        const isArmed = armed === `${q.id}:${i}`;
+                        return (
+                          <ThemedPressable
+                            key={opt.text}
+                            disabled={busy || isPrior}
+                            onPress={() => void pickOption(q.id, i)}
+                            accessibilityState={{ selected: isPrior }}
+                            style={[styles.option, border, isPrior && styles.prior]}>
+                            <ThemedText type={isPrior ? 'smallBold' : 'small'}>
+                              {isArmed ? `Tap again: change to “${opt.text}”` : opt.text}
+                              {isPrior ? '  · your answer' : ''}
+                            </ThemedText>
+                          </ThemedPressable>
+                        );
+                      })}
+                    </View>
+                  );
+                })}
+                <ThemedPressable onPress={() => setOpen(null)} style={styles.link}>
                   <ThemedText type="small" themeColor="textSecondary">
-                    Not now
+                    Done
                   </ThemedText>
                 </ThemedPressable>
               </View>
-            ) : sizes.length > 0 ? (
-              <ThemedPressable onPress={() => setChoosing(axis)} disabled={busy} style={styles.link}>
+            ) : answered.length > 0 ? (
+              <ThemedPressable onPress={() => setOpen(axis)} disabled={busy} style={styles.link}>
                 <ThemedText type="small">
-                  Retest this trait{isPremiumGated('retest') ? ` · ${premiumPriceFor('retest')} premium` : ' · free'}
+                  Change answers
+                  {isPremiumGated('change_answers') ? ` · ${premiumPriceFor('change_answers')} premium` : ' · free'}
                 </ThemedText>
               </ThemedPressable>
             ) : null}
@@ -238,8 +276,26 @@ export function BankFinishFold({
       <View style={[styles.row, border]}>
         <ThemedText type="smallBold">Start fresh</ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
-          Wipes all 16 traits so you can answer everything again. Your current profile is saved below first, so you can
-          look back at it.
+          Wipes all 16 traits so you can answer everything again. Tokens and your account stay as they are.
+        </ThemedText>
+        <View style={styles.chips}>
+          <ThemedPressable
+            onPress={() => setKeepHistory(true)}
+            accessibilityState={{ selected: keepHistory }}
+            style={[styles.chip, border, keepHistory && styles.prior]}>
+            <ThemedText type={keepHistory ? 'smallBold' : 'small'}>Keep my cards</ThemedText>
+          </ThemedPressable>
+          <ThemedPressable
+            onPress={() => setKeepHistory(false)}
+            accessibilityState={{ selected: !keepHistory }}
+            style={[styles.chip, border, !keepHistory && styles.prior]}>
+            <ThemedText type={!keepHistory ? 'smallBold' : 'small'}>Wipe my cards too</ThemedText>
+          </ThemedPressable>
+        </View>
+        <ThemedText type="code" themeColor="textSecondary">
+          {keepHistory
+            ? 'Your current profile is saved as a card first, with all the others.'
+            : 'Every saved card is deleted too. This cannot be undone.'}
         </ThemedText>
         <Pressable
           accessibilityRole="button"
@@ -252,23 +308,10 @@ export function BankFinishFold({
         </Pressable>
       </View>
 
-      {snapshots.length > 0 ? (
-        <View style={[styles.row, border]}>
-          <ThemedText type="smallBold">Earlier profiles</ThemedText>
-          {snapshots.map((snap) => (
-            <View key={snap.id} style={styles.snapshot}>
-              <ThemedText type="code" themeColor="textSecondary">
-                {new Date(snap.createdAt).toLocaleDateString()}
-              </ThemedText>
-              {TRAIT_AXES.map((axis) => (
-                <ThemedText key={axis} type="small" themeColor="textSecondary">
-                  {AXIS_SHORT_NAME[axis]}: {leaningLine(axis, snap.values[axis])}
-                </ThemedText>
-              ))}
-            </View>
-          ))}
-        </View>
-      ) : null}
+      <View style={styles.binder}>
+        <ThemedText type="smallBold">Your cards</ThemedText>
+        <ProfileBinder cards={cards} />
+      </View>
     </View>
   );
 }
@@ -282,6 +325,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: Spacing.three,
     padding: Spacing.three,
+  },
+  list: {
+    gap: Spacing.three,
+    paddingTop: Spacing.two,
+  },
+  question: {
+    gap: Spacing.one,
+  },
+  option: {
+    borderWidth: 1,
+    borderRadius: Spacing.two,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+  },
+  prior: {
+    borderWidth: 2,
   },
   chips: {
     flexDirection: 'row',
@@ -303,8 +362,7 @@ const styles = StyleSheet.create({
   holding: {
     opacity: 0.6,
   },
-  snapshot: {
-    gap: 2,
-    paddingTop: Spacing.two,
+  binder: {
+    gap: Spacing.two,
   },
 });

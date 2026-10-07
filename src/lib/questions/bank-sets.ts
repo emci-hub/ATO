@@ -11,7 +11,7 @@
  *   sets 1-3   first read — profile unlocks (3 answers per trait, as before)
  *   sets 4-8   full profile — complete and accurate after set 8
  *   sets 9-25  bonus — sharpens it, still pays like the old rounds
- *   after 25   per-trait retest (answers replace the old ones) and Start Fresh
+ *   after 25   per-trait Change answers (with Undo) and Start Fresh
  */
 import { effectiveStability, MIXED_STABILITY_BELOW, type TraitTrack } from '@/lib/trait-stability';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
@@ -35,7 +35,6 @@ export const FIRM_MIN_ANSWERS = 6;
 export const FIRM_MIN_STABILITY = 0.6;
 /** Near the middle: the leaning is too close to call. */
 export const NEAR_MIDDLE_WITHIN = 0.1;
-export const RETEST_MIN = 5;
 
 export type BankStage = 'first_read' | 'full_profile' | 'bonus' | 'complete';
 
@@ -115,7 +114,7 @@ export function pickBankSet(answeredIds: ReadonlySet<string>, rng: () => number 
   return picks;
 }
 
-// --- Confidence, firm, retest ------------------------------------------------
+// --- Confidence, firm, change answers ------------------------------------------------
 
 export type TraitConfidence = 'firm' | 'settled' | 'mixed' | 'early';
 
@@ -141,37 +140,37 @@ export const TRAIT_CONFIDENCE_LABEL: Readonly<Record<TraitConfidence, string>> =
 
 /** The trait-card button, and what it says once pressed (tap again to undo). */
 export const NOT_ME_LABEL = 'This isn’t me';
-export const NOT_ME_ON_LINE = 'Flagged as not you · first in line for a retest. Tap to undo.';
+export const NOT_ME_ON_LINE = 'Flagged as not you · first in line to change answers. Tap to undo.';
 
-export type RetestReason = 'flagged' | 'mixed' | 'low_confidence' | 'near_middle';
+export type ChangeReason = 'flagged' | 'mixed' | 'low_confidence' | 'near_middle';
 
-export const RETEST_REASON_LABEL: Readonly<Record<RetestReason, string>> = {
+export const CHANGE_REASON_LABEL: Readonly<Record<ChangeReason, string>> = {
   flagged: 'You said this isn’t you',
   mixed: 'Your answers pulled both ways',
   low_confidence: 'Not much agreement yet',
   near_middle: 'Too close to call',
 };
 
-export interface RetestPick {
+export interface ChangePick {
   axis: TraitAxis;
-  reason: RetestReason;
+  reason: ChangeReason;
 }
 
 /**
- * Which traits to retest, most worth it first: flagged "this isn't me",
+ * Which traits are most worth changing answers on, first: flagged "this isn't me",
  * then mixed answers, then low confidence, then a leaning near the middle.
  */
-export function retestRecommendations(
+export function changeRecommendations(
   tracks: readonly TraitTrack[],
   flagged: ReadonlySet<TraitAxis>,
   now: Date = new Date(),
-): RetestPick[] {
+): ChangePick[] {
   const byAxis = new Map(tracks.filter((t) => t.track === 'report').map((t) => [t.axis, t]));
-  const rank: Record<RetestReason, number> = { flagged: 0, mixed: 1, low_confidence: 2, near_middle: 3 };
-  const out: RetestPick[] = [];
+  const rank: Record<ChangeReason, number> = { flagged: 0, mixed: 1, low_confidence: 2, near_middle: 3 };
+  const out: ChangePick[] = [];
   for (const axis of TRAIT_AXES) {
     const track = byAxis.get(axis) ?? null;
-    let reason: RetestReason | null = null;
+    let reason: ChangeReason | null = null;
     if (flagged.has(axis)) reason = 'flagged';
     else if (track && track.answerCount >= 3 && track.stability < MIXED_STABILITY_BELOW) reason = 'mixed';
     else if (track && effectiveStability(track, now) < 0.4) reason = 'low_confidence';
@@ -179,13 +178,4 @@ export function retestRecommendations(
     if (reason) out.push({ axis, reason });
   }
   return out.sort((a, b) => rank[a.reason] - rank[b.reason]);
-}
-
-/** Retest size choices for a trait: 5 up to what they answered (max 25). */
-export function retestSizes(answered: number): number[] {
-  const max = Math.min(BANK_PER_TRAIT, answered);
-  if (max < RETEST_MIN) return [];
-  const sizes = [5, 10, 15, 20, 25].filter((n) => n <= max);
-  if (!sizes.includes(max)) sizes.push(max);
-  return sizes;
 }

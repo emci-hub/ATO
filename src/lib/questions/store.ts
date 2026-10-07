@@ -108,21 +108,6 @@ export async function fetchLatestOngoingRoundPack(): Promise<QuestionPackRow | n
   return mapPack(pack as PackRow, items);
 }
 
-/** The newest retest pack that still has unanswered questions, if any. */
-export async function fetchOpenRetestPack(): Promise<QuestionPackRow | null> {
-  const { data: pack, error } = await supabase
-    .from('question_packs')
-    .select('id')
-    .eq('kind', 'bank_retest')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
-  if (!pack) return null;
-  const full = await fetchQuestionPack((pack as { id: string }).id);
-  return full && full.items.some((item) => item.answeredOption == null && item.skippedAt == null) ? full : null;
-}
-
 /** Any one pack by id (a bank set or retest, wave85), with its items. */
 export async function fetchQuestionPack(packId: string): Promise<QuestionPackRow | null> {
   const { data: pack, error } = await supabase
