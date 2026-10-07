@@ -322,7 +322,7 @@ function main() {
    * The Hub panels.
    * ---------------------------------------------------------------------- */
   const hubSrc = read('src/app/dev-lab.tsx');
-  const jumpPanel = hubSrc.slice(hubSrc.indexOf('function JumpThisAccount()'), hubSrc.indexOf('function StartOver()'));
+  const jumpPanel = hubSrc.slice(hubSrc.indexOf('function JumpThisAccount()'), hubSrc.indexOf('function PreviewAsNewUser()'));
   assert.ok(jumpPanel.length > 0, 'JumpThisAccount panel not found');
   assert.match(jumpPanel, /if \(!PRE_LAUNCH_DEV \|\| !me\) return null/);
   assert.match(jumpPanel, /if \(!twoTap\.confirm\(stage\)\) return;/, 'every jump takes a second tap, on every account');
@@ -334,21 +334,23 @@ function main() {
   assert.doesNotMatch(jumpPanel, /sageUnlocked|legendsUnlocked|Sage|Legends/);
   ok('Jump panel: reads as a menu, shows "You are here", highlights the match, two taps always');
 
-  const startPanel = hubSrc.slice(hubSrc.indexOf('function StartOver()'), hubSrc.indexOf('function ResetToFreshSignup()'));
-  assert.ok(startPanel.length > 0, 'StartOver panel not found');
-  assert.match(startPanel, /if \(!twoTap\.confirm\('start-over'\)\) return;/);
-  assert.match(startPanel, /\{devAccess\.isRoot \? \(/, 'the button shows for root only');
-  assert.match(startPanel, /startOverMyTestData\(\)/);
-  assert.doesNotMatch(hubSrc, /Clear all my questions|Fresh signup|resetMyTestData/, 'the overlapping resets are gone from the Hub');
-  ok('Start over panel: root-only button, two taps, one reset left in the Hub');
+  // Reset account replaced Start over (2026-10-07); check:reset-account pins it in full.
+  const resetAccountPanel = hubSrc.slice(hubSrc.indexOf('function ResetAccount()'), hubSrc.indexOf('function ResetToFreshSignup()'));
+  assert.ok(resetAccountPanel.length > 0, 'ResetAccount panel not found');
+  assert.match(resetAccountPanel, /if \(!devAccess\.isRoot\) \{/, 'the button shows for root only');
+  assert.match(resetAccountPanel, /if \(busy \|\| confirm !== RESET_ACCOUNT_CONFIRM_WORD\) return;/, 'RESET typed first');
+  assert.match(resetAccountPanel, /resetMyAccount\(\)/);
+  assert.doesNotMatch(hubSrc, /function StartOver\(|startOverMyTestData|Clear all my questions|Fresh signup|resetMyTestData/, 'the overlapping resets are gone from the Hub');
+  ok('Reset account panel: root-only button, RESET typed, one account reset left in the Hub');
 
   /* -------------------------------------------------------------------------
    * Start over on the server (wave76).
    * ---------------------------------------------------------------------- */
-  const startFn = moduleSrc.slice(moduleSrc.indexOf('export async function startOverMyTestData'));
-  assert.match(startFn, /if \(!PRE_LAUNCH_DEV\) throw new Error/);
-  assert.match(startFn, /supabase\.rpc\('start_over_my_test_data'\)/, 'no account id is passed — the server uses the caller');
-  assert.match(startFn, /afterAccountRewrite\(\{ alsoInsight: true \}\)/);
+  // The client now calls reset_my_account (wave88, check:reset-account); wave76
+  // stays live for older bundles, so its own rules are still pinned here.
+  const resetMine = moduleSrc.slice(moduleSrc.indexOf('export async function resetMyAccount'));
+  assert.match(resetMine, /if \(!PRE_LAUNCH_DEV\) throw new Error/);
+  assert.match(resetMine, /supabase\.rpc\('reset_my_account'\)/, 'no account id is passed — the server uses the caller');
   const wave76 = read('supabase/migrations/wave76_start_over_my_test_data.sql');
   const fnBody = wave76.slice(wave76.indexOf('create or replace function'), wave76.indexOf('revoke all on function'));
   assert.match(fnBody, /if not public\.is_root\(\) then/, 'server: root only');
@@ -365,7 +367,7 @@ function main() {
   }
   assert.match(wave76, /revoke all on function public\.start_over_my_test_data\(\) from public, anon;/);
   assert.match(read('supabase/migrations/wave52_ato_tokens_fixes.sql'), /foreign key \(pack_id\) references public\.question_packs\(id\) on delete cascade/, 'round token records go with their rounds');
-  ok('wave76: root + own account + invite-only, clears answers and the intake token record, never touches the balance');
+  ok('wave76 (older bundles): root + own account + invite-only, never touches the balance; the Hub now calls reset_my_account');
 
   /* -------------------------------------------------------------------------
    * Re-run the sign-up form (wave66) — deletes the me row; dev-test user only.
@@ -388,7 +390,7 @@ function main() {
   assert.match(wave66, /grant execute on function public\.reset_dev_test_user\(\) to authenticated;/);
   ok('reset_dev_test_user execute grant excludes anon');
 
-  const resetFnBody = moduleSrc.slice(resetStart, moduleSrc.indexOf('export const START_OVER_NOT_APPLIED'));
+  const resetFnBody = moduleSrc.slice(resetStart, moduleSrc.indexOf('export const RESET_ACCOUNT_CONFIRM_WORD'));
   assert.match(resetFnBody, /if \(!PRE_LAUNCH_DEV\) throw new Error/);
   assert.match(resetFnBody, /user\.id !== DEV_TEST_USER_ID/);
   assert.match(resetFnBody, /supabase\.rpc\('reset_dev_test_user'\)/);

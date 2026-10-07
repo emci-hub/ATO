@@ -1,3 +1,4 @@
+import { PreviewBanner } from '@/components/preview-banner';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
@@ -120,6 +121,8 @@ function RootNavigator() {
           {/* Floating dev button over every app screen; gated inside (the Hub's
               rule) and hidden on /play, which has its own. */}
           <AppDevFab />
+          {/* Dev "Preview as new user": a red bar over every screen while it is on. */}
+          <PreviewBanner />
         </>
       )}
     </>

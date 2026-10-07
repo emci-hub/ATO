@@ -53,7 +53,7 @@ export type AppDevSection =
   | 'traits'
   | 'band-stepper'
   | 'jump'
-  | 'start-over'
+  | 'preview'
   | 'you-tools'
   | 'ai-consent'
   | 'local-data'
@@ -72,7 +72,7 @@ export const APP_DEV_SCREENS: Record<string, { label: string; sections: readonly
   '/explore': { label: 'Explore', sections: ['traits', 'band-stepper'] },
   '/intake-sweep': {
     label: 'Questions',
-    sections: ['intake-status', 'next-round', 'tokens-today', 'jump', 'start-over'],
+    sections: ['intake-status', 'next-round', 'tokens-today', 'jump', 'preview'],
   },
   '/you': { label: 'You', sections: ['you-tools', 'ai-consent', 'local-data'] },
 };

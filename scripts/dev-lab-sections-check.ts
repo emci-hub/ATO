@@ -1,11 +1,12 @@
 /**
  * Dev Tools Hub layout. Run: npm run check:dev-lab-sections
  *
- * The Hub is grouped by what you are trying to do (2026-10-03, emci: "rearrange
- * dev properly"): a build strip, then My account / Move my account / Content /
- * This phone / AI / Labs / Admin, each a folding <HubSection>. This pins which
- * tool sits in which group, that the dead tools stay removed, and that nothing
- * here writes on a single tap.
+ * The Hub is grouped by what you are trying to do (2026-10-03, emci; cleaned up
+ * 2026-10-07): a status strip and a search box, then My account / Testing /
+ * Content / This phone / AI / Labs / Admin, and a red Danger zone last, each a
+ * folding <HubSection> of <HubTool> rows from lib/dev-hub-catalog.ts. This pins
+ * which tool sits in which group, that the dead tools stay removed, and that
+ * nothing here writes on a single tap.
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -23,28 +24,52 @@ function read(rel: string): string {
 }
 
 const hub = read('src/app/dev-lab.tsx');
-const section = (title: string) => hub.indexOf(`<HubSection title="${title}"`) >= 0
-  ? hub.indexOf(`<HubSection title="${title}"`)
-  : hub.indexOf(`<HubSection\n                title="${title}"`) >= 0
-    ? hub.indexOf(`<HubSection\n                title="${title}"`)
-    : hub.indexOf(`<HubSection\n            title="${title}"`);
+const catalogSrc = read('src/lib/dev-hub-catalog.ts');
 
-const ORDER = ['My account', 'Move my account', 'Content', 'This phone', 'AI', 'Labs', 'Admin'] as const;
-const at = ORDER.map((title) => section(title));
-ORDER.forEach((title, i) => assert.ok(at[i]! >= 0, `${title} section`));
+// 2026-10-07 cleanup (emci): status strip, search box, then groups folded by
+// default — My account, Testing, Content, This phone, AI, Labs, Admin — and a
+// red Danger zone at the very bottom. Every tool is a <HubTool id="…"> whose
+// name, one-liner, details and search words live in lib/dev-hub-catalog.ts.
+const ORDER = ['account', 'testing', 'content', 'phone', 'ai', 'labs', 'admin', 'danger'] as const;
+const sectionAt = (id: string) => {
+  const flat = hub.indexOf(`<HubSection id="${id}"`);
+  return flat >= 0 ? flat : hub.indexOf(`<HubSection\n            id="${id}"`);
+};
+const at = ORDER.map((id) => sectionAt(id));
+ORDER.forEach((id, i) => assert.ok(at[i]! >= 0, `${id} section`));
 for (let i = 1; i < at.length; i += 1) assert.ok(at[i - 1]! < at[i]!, `group order: ${ORDER[i - 1]} before ${ORDER[i]}`);
-assert.ok(hub.indexOf('<BuildStrip />') > hub.indexOf('{tools ? (') && hub.indexOf('<BuildStrip />') < at[0]!, 'the build strip comes first');
-ok('groups by intent (2026-10-03): build strip, My account, Move my account, Content, This phone, AI, Labs, Admin');
+assert.ok(hub.indexOf('<BuildStrip />') > hub.indexOf('{tools ? (') && hub.indexOf('<BuildStrip />') < at[0]!, 'the status strip comes first');
+assert.ok(hub.indexOf('<HubSearchBox value={query} onChange={setQuery} />') > hub.indexOf('<BuildStrip />') && hub.indexOf('<HubSearchBox') < at[0]!, 'then the search box');
+assert.match(hub, /<HubSearchContext\.Provider value=\{tools \? query : ''\}>/, 'search filters every group');
+for (const id of ORDER) {
+  assert.match(catalogSrc, new RegExp(`id: '${id}',\\s*title: '`), `${id} has a title and hint in the catalog`);
+}
+ok('layout: status strip, search, My account, Testing, Content, This phone, AI, Labs, Admin, Danger zone last');
 
 const layoutEnd = hub.indexOf('function useTwoTap()');
 const block = (i: number) => hub.slice(at[i]!, i + 1 < at.length ? at[i + 1]! : layoutEnd);
-const [mine, move, content, phone, ai, labs, admin] = ORDER.map((_, i) => block(i));
+const [mine, testing, content, phone, ai, labs, admin, danger] = ORDER.map((_, i) => block(i));
+
+// Every rendered tool is in the catalog, in the section the catalog says, and
+// every catalog tool is rendered somewhere.
+const catalogTools = [...catalogSrc.matchAll(/id: '([a-z-]+)',\s*\n\s*section: '([a-z]+)',/g)].map((m) => ({ id: m[1]!, section: m[2]! }));
+assert.ok(catalogTools.length >= 25, 'the catalog lists every tool');
+ORDER.forEach((id, i) => {
+  const rendered = [...block(i).matchAll(/<HubTool id="([a-z-]+)">/g)].map((m) => m[1]!);
+  for (const tool of rendered) {
+    const def = catalogTools.find((t) => t.id === tool);
+    assert.ok(def, `<HubTool id="${tool}"> is in the catalog`);
+    assert.equal(def.section, id, `${tool} sits in ${def.section}, the section the catalog says`);
+  }
+});
+for (const tool of catalogTools) assert.ok(hub.includes(`<HubTool id="${tool.id}">`), `${tool.id} is rendered`);
+ok('every tool row comes from the one catalog, in its own section, and every catalog tool is rendered');
 
 // My account: read-only.
 for (const p of ['<DevInspector />', '<IntakeStatus />', '<NextRoundPreview />', '<TokensToday />', '<BandDetailStepper />']) {
   assert.ok(mine!.includes(p), `${p} under My account`);
 }
-assert.match(mine!, /canSeeHubSection\('traits', gate\) \? <TraitViewer \/>/);
+assert.match(mine!, /canSeeHubSection\('traits', gate\) \? <HubTool id="traits"><TraitViewer \/><\/HubTool>/);
 for (const fn of ['TraitViewer', 'QuotaDashboard']) {
   const body = hub.slice(hub.indexOf(`function ${fn}() {`), hub.indexOf('\nfunction ', hub.indexOf(`function ${fn}() {`) + 10));
   assert.doesNotMatch(body, /\.update\(|\.insert\(|\.upsert\(|\.delete\(|\.rpc\(/, `${fn} must stay read-only`);
@@ -62,28 +87,40 @@ assert.doesNotMatch(
 );
 ok('My account: inspector, intake set, next-round preview, tokens today, raw traits, bands — read-only');
 
-// Move my account: the three account writers, nothing else.
-assert.equal((move!.match(/<[A-Z][A-Za-z]+ \/>/g) ?? []).join(' '), '<JumpThisAccount /> <QuestionBankPanel /> <StartOver /> <ResetToFreshSignup />');
-ok('Move my account: jump, question bank fill, Start over, delete-profile-and-re-run-sign-up, nothing else');
+// Testing: preview, and (not while previewing) the two account writers.
+assert.equal((testing!.match(/<[A-Z][A-Za-z]+ \/>/g) ?? []).join(' '), '<PreviewAsNewUser /> <JumpThisAccount /> <QuestionBankPanel />');
+ok('Testing: Preview as new user, jump this account, fill question sets — nothing else');
 
 for (const p of ['<MiniGuyPanel />', '<MilestonesPanel />', '<CrisisTools />', '<DraftCopyList />']) assert.ok(content!.includes(p), `${p} under Content`);
 assert.match(content!, /<DailyLineDev userId=/);
-assert.match(content!, /canSeeHubSection\('fence', gate\) \? <FenceTester \/>/);
-for (const p of ['<PushStatus />', '<AppReloadPanel />', '<LocalAccountData />', '<ResetAiConsent />']) assert.ok(phone!.includes(p), `${p} under This phone`);
+assert.match(content!, /canSeeHubSection\('fence', gate\) \? <HubTool id="fence"><FenceTester \/><\/HubTool>/);
+for (const p of ['<PushStatus />', '<AppReloadPanel />']) assert.ok(phone!.includes(p), `${p} under This phone`);
 assert.match(phone!, /<YouDevTools timeZone=/);
-assert.match(phone!, /canSeeHubSection\('trace', gate\) \? <TraceCapture \/>/);
-assert.match(ai!, /canSeeHubSection\('quota', gate\) \? <QuotaDashboard \/>/);
+assert.match(phone!, /canSeeHubSection\('trace', gate\) \? <HubTool id="trace"><TraceCapture \/><\/HubTool>/);
+assert.match(ai!, /canSeeHubSection\('quota', gate\) \? <HubTool id="quota"><QuotaDashboard \/><\/HubTool>/);
 assert.ok(!ai!.includes('QuestionLabPanel'), 'the AI question lab is gone with runtime question generation (wave85)');
 assert.ok(labs!.includes('<LabsList />'));
 ok('Content, This phone, AI and Labs hold their tools, each behind its capability where it has one');
 
-assert.match(admin!, /\{canSeeHubSection\('access', gate\) \? <AccessReview \/> : null\}/);
-assert.match(admin!, /\{canSeeHubSection\('grants', gate\) \? <GrantsPanel \/> : null\}/);
-assert.match(admin!, /\{canSeeHubSection\('profiles', gate\) \? <ProfilesPanel \/> : null\}/);
-for (const panel of ['ResetAiConsent', 'LocalAccountData', 'JumpThisAccount', 'StartOver', 'ResetToFreshSignup']) {
+assert.match(admin!, /\{canSeeHubSection\('access', gate\) \? <HubTool id="access-review"><AccessReview \/><\/HubTool> : null\}/);
+assert.match(admin!, /\{canSeeHubSection\('grants', gate\) \? <HubTool id="grants"><GrantsPanel \/><\/HubTool> : null\}/);
+assert.match(admin!, /\{canSeeHubSection\('profiles', gate\) \? <HubTool id="profiles"><ProfilesPanel \/><\/HubTool> : null\}/);
+for (const panel of ['ResetAiConsent', 'LocalAccountData', 'JumpThisAccount', 'ResetAccount', 'ResetToFreshSignup', 'PreviewAsNewUser']) {
   assert.doesNotMatch(admin!, new RegExp(`<${panel}`), `${panel} is not an admin tool`);
 }
 ok('Admin: access requests, grants, pause / delete — root only');
+
+// Danger zone: every tool that wipes something, and nothing else.
+assert.equal(
+  (danger!.match(/<[A-Z][A-Za-z]+ \/>/g) ?? []).join(' '),
+  '<ResetAccount /> <LocalAccountData /> <ResetAiConsent /> <ResetToFreshSignup />',
+);
+for (const id of ['reset-account', 'local-data', 'ai-consent', 'fresh-signup']) {
+  assert.match(catalogSrc, new RegExp(`id: '${id}',\\s*\\n\\s*section: 'danger',`), `${id} is a Danger zone tool`);
+}
+assert.match(panels, /export const DANGER_RED = '#D92D20';/);
+assert.match(panels, /const danger = id === 'danger';/, 'the Danger zone is drawn red');
+ok('Danger zone (last, red): Reset account, clear this phone, reset AI consent, re-run sign-up');
 
 // Removed 2026-10-03: Explore regenerate spent real AI quota on a feature the
 // app no longer uses; Force test error duplicated the crash test in You tools.
@@ -139,7 +176,6 @@ const fnBody = (name: string) => {
 };
 const guarded: [string, string, RegExp][] = [
   ['JumpThisAccount', 'applyDevIntakeStagePreset(stage', /if \(!twoTap\.confirm\(stage\)\) return;/],
-  ['StartOver', 'startOverMyTestData()', /if \(!twoTap\.confirm\('start-over'\)\) return;/],
   ['ResetAiConsent', '.update({ ai_consent: null })', /if \(!twoTap\.confirm\('consent'\)\) return;/],
   ['LocalAccountData', 'clearLocalAccountData()', /if \(!twoTap\.confirm\('wipe'\)\) return;/],
   ['GrantsPanel', 'saveDevAccessGrants(', /if \(!twoTap\.confirm\(grantsKey\)\) return;/],
@@ -157,7 +193,8 @@ for (const [panel, write, confirm] of guarded) {
 }
 assert.match(fnBody('ProfilesPanel'), /disabled=\{busy \|\| confirm !== selected\.handle\}/, 'delete still needs the handle typed');
 assert.match(fnBody('ResetToFreshSignup'), /if \(busy \|\| confirm !== DEV_TEST_HANDLE\) return;/, 'the sign-up reset still needs the handle typed');
-ok('every write takes two taps (jump, start over, AI consent, local wipe, grants, pause, unpause, approve, deny); deletes need the handle typed');
+assert.match(fnBody('ResetAccount'), /if \(busy \|\| confirm !== RESET_ACCOUNT_CONFIRM_WORD\) return;/, 'Reset account needs RESET typed');
+ok('every write takes two taps (jump, AI consent, local wipe, grants, pause, unpause, approve, deny); Reset needs RESET typed, deletes need the handle typed');
 
 assert.match(hub, /function CrisisCardPreview/);
 assert.match(hub, /<CrisisCard onDismiss=/);

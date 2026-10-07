@@ -25,7 +25,7 @@ import {
   LocalAccountData,
   QuotaDashboard,
   ResetAiConsent,
-  StartOver,
+  PreviewAsNewUser,
   TraceCapture,
   TraitViewer,
 } from '@/app/dev-lab';
@@ -36,6 +36,7 @@ import { PlayDevFab } from '@/components/play-dev-fab';
 import { RunningUpdateLine } from '@/components/running-update-line';
 import { ThemedText } from '@/components/themed-text';
 import { YouDevTools } from '@/components/you-dev-tools';
+import { usePreviewing } from '@/lib/preview-session';
 import { useSession } from '@/hooks/use-session';
 import { useTheme } from '@/hooks/use-theme';
 import { canSeeHubSection, hubAccess, type DevCapability } from '@/lib/dev-access';
@@ -115,6 +116,9 @@ export function AppDevFab() {
   );
 }
 
+/** Bubble tools that write; hidden while "Preview as new user" is on. */
+const PREVIEW_HIDDEN_SECTIONS: readonly AppDevSection[] = ['jump', 'local-data', 'ai-consent'];
+
 function AppDevPanel({
   pathname,
   own,
@@ -134,7 +138,10 @@ function AppDevPanel({
   const theme = useTheme();
   const [showEverywhere, setShowEverywhere] = useState(own.length === 0);
 
+  const previewing = usePreviewing();
   const section = (id: AppDevSection): ReactNode => {
+    // While previewing, nothing in the bubble may write to the real account or phone.
+    if (previewing && PREVIEW_HIDDEN_SECTIONS.includes(id)) return null;
     switch (id) {
       case 'quota':
         return <QuotaDashboard key={id} />;
@@ -144,8 +151,8 @@ function AppDevPanel({
         return <BandDetailStepper key={id} />;
       case 'jump':
         return <JumpThisAccount key={id} />;
-      case 'start-over':
-        return <StartOver key={id} />;
+      case 'preview':
+        return <PreviewAsNewUser key={id} />;
       case 'you-tools':
         return <YouDevTools key={id} timeZone={timeZone} />;
       case 'ai-consent':

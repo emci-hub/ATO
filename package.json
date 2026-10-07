@@ -142,6 +142,8 @@
     "check:band-study": "tsx ./scripts/band-study-check.ts",
     "check:insight": "tsx ./scripts/insight-check.ts",
     "check:insight-bank": "tsx ./scripts/insight-bank-check.ts",
+    "check:preview-mode": "tsx ./scripts/preview-mode-check.ts",
+    "check:reset-account": "tsx ./scripts/reset-account-check.ts",
     "check:category-bank": "tsx ./scripts/category-bank-check.ts",
     "check:local-account-data": "tsx ./scripts/local-account-data-check.ts",
     "check:full-profile": "tsx ./scripts/full-profile-check.ts",

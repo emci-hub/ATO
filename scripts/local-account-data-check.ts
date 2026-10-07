@@ -123,7 +123,14 @@ ok('the keep-list rule, run over real key shapes, wipes account data and spares 
 // --- never throws ----------------------------------------------------------
 // INVARIANT. This runs AFTER the server confirms the account is gone. A storage
 // failure must not surface as "we could not delete your account".
-assert.match(lib, /export async function clearLocalAccountData\(\): Promise<string\[\]> \{/);
+assert.match(
+  lib,
+  /export async function clearLocalAccountData\(options: \{ keepPrefixes\?: readonly string\[\] \} = \{\}\): Promise<string\[\]> \{/,
+);
+// Account deletion and sign-out call it with no options: everything goes. Only
+// the dev Reset passes keepPrefixes (the Divecore save).
+assert.match(lib, /const keep = options\.keepPrefixes \?\? \[\];/);
+assert.match(you, /await clearLocalAccountData\(\);/, 'account deletion keeps nothing back');
 assert.match(lib, /\} catch \(err\) \{\s*\n\s*console\.log\('\[local-account-data\] storage clear failed:'/);
 ok('clearLocalAccountData swallows storage failures — deletion already succeeded');
 

@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { parseAtoTokenResult, type AtoTokenResult } from '@/lib/ato-tokens';
 
-/** +21, once ever. Fires at the same Q50 crossing as Legends' unlock celebration. */
+/** +21, once ever, for finishing the intake (48 = 3 per trait, or the old 50). */
 export async function claimFullProfileComplete(): Promise<AtoTokenResult> {
   const { data, error } = await supabase.rpc('claim_full_profile_complete');
   if (error) throw error;
@@ -72,7 +72,7 @@ export async function spendAtoTokensQuestionReroll(questionItemId: string): Prom
 }
 
 /**
- * Fire-and-forget +21 for finishing the 50-question intake. Safe to call every
+ * Fire-and-forget +21 for finishing the 48-question intake (or the old 50). Safe to call every
  * time the Questions screen sees a finished profile: the server pays once ever
  * (unique index) and answers `already` after that, so this also back-pays an
  * account that finished before the call existed. `onPaid` runs only on a fresh

@@ -1,20 +1,20 @@
 /**
- * Dev Tools Hub.
+ * Dev Tools Hub (cleanup 2026-10-07, emci).
  *
- * Four groups, in the order they get used (2026-10-01, emci):
- *   1. Where this account is — read-only: inspector, raw traits, AI usage.
- *   2. Jump this account    — one menu of states to jump to, and Start over.
- *   3. Test one thing        — single-purpose probes.
- *   4. Admin                 — root only, enforced on the server.
- * A new tool goes in the group that matches what it does, not the screen it
- * happens to test.
+ * A status strip and a search box on top, then groups folded by default (this
+ * phone remembers which are open): My account (read-only), Testing (Preview as
+ * new user, jumps), Content, This phone, AI, Labs, Admin (root, server-
+ * enforced), and a red Danger zone at the very bottom. Every tool shows one
+ * line and an (i) for details; the list of tools, their sections and their
+ * words for search live in lib/dev-hub-catalog.ts.
  *
- * RELEASE GATE: groups 1-3 exist only while `DEV_TOOLS_AVAILABLE` (lib/dev-mode)
- * is true. In a release build no PIN, password unlock or grant opens them; root
- * still reaches Admin, and nobody else reaches anything (`hubAccess`).
+ * RELEASE GATE: everything but Admin exists only while `DEV_TOOLS_AVAILABLE`
+ * (lib/dev-mode) is true. In a release build no PIN, password unlock or grant
+ * opens them; root still reaches Admin, and nobody else reaches anything
+ * (`hubAccess`).
  *
- * Anything here that writes takes two taps (`useTwoTap`), or a typed handle
- * where it cannot be undone.
+ * Anything here that writes takes two taps (`useTwoTap`), or a typed word
+ * where it cannot be undone (RESET, or the handle).
  */
 import { Redirect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -31,8 +31,12 @@ import { DailyLineDev } from '@/components/daily-line-dev';
 import {
   AppReloadPanel,
   BuildStrip,
+  DANGER_RED,
   DraftCopyList,
+  HubSearchBox,
+  HubSearchContext,
   HubSection,
+  HubTool,
   IntakeStatus,
   LabsList,
   MilestonesPanel,
@@ -105,9 +109,11 @@ import {
   DEV_TEST_HANDLE,
   DEV_TEST_USER_ID,
   applyDevIntakeStagePreset,
+  RESET_ACCOUNT_CONFIRM_WORD,
   resetDevTestUserToFreshSignup,
-  startOverMyTestData,
+  resetMyAccount,
 } from '@/lib/dev-test-user';
+import { startPreview, stopPreview, usePreviewing } from '@/lib/preview-session';
 import { bankTotalProgress } from '@/lib/questions/local';
 import { currentIntakeSet, intakeStage } from '@/lib/questions/intake-stage';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
@@ -157,6 +163,8 @@ export default function DevLabScreen() {
 function DevLab({ access }: { access: Exclude<HubAccess, 'none'> }) {
   const { devAccess, me } = useMeContext();
   const devUnlocked = useDevAccessUnlocked();
+  const previewing = usePreviewing();
+  const [query, setQuery] = useState('');
   const gate = useMemo(
     () => ({
       isDev: PRE_LAUNCH_DEV || devUnlocked,
@@ -165,18 +173,19 @@ function DevLab({ access }: { access: Exclude<HubAccess, 'none'> }) {
     }),
     [devUnlocked, devAccess.isRoot, devAccess.capabilities],
   );
-  // 'admin' is a release build: the three testing groups are not rendered at all.
+  // 'admin' is a release build: the testing groups and the Danger zone are not rendered at all.
   const tools = access === 'full';
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <HubSearchContext.Provider value={tools ? query : ''}>
           <View style={styles.header}>
             <ThemedText type="subtitle">Dev Tools Hub</ThemedText>
             <ThemedText themeColor="textSecondary">
               {tools
-                ? 'Opens with the dev PIN on You (this session only), or for root and granted testers. Anything that writes takes two taps.'
+                ? 'Opens with the dev PIN on You (this session only), or for root and granted testers. Tap a tool to open it, (i) for what it does.'
                 : 'Release build: only the root-only Admin tools exist here.'}
             </ThemedText>
             <RunningUpdateLine />
@@ -185,69 +194,73 @@ function DevLab({ access }: { access: Exclude<HubAccess, 'none'> }) {
           {tools ? (
             <>
               <BuildStrip />
+              <HubSearchBox value={query} onChange={setQuery} />
 
-              <HubSection title="My account" hint="Read-only. Nothing here changes anything." count={6} defaultOpen>
-                <DevInspector />
-                <IntakeStatus />
-                <NextRoundPreview />
-                <TokensToday />
-                {canSeeHubSection('traits', gate) ? <TraitViewer /> : null}
-                <BandDetailStepper />
+              <HubSection id="account">
+                <HubTool id="inspector"><DevInspector /></HubTool>
+                <HubTool id="intake-status"><IntakeStatus /></HubTool>
+                <HubTool id="next-round"><NextRoundPreview /></HubTool>
+                <HubTool id="tokens-today"><TokensToday /></HubTool>
+                {canSeeHubSection('traits', gate) ? <HubTool id="traits"><TraitViewer /></HubTool> : null}
+                <HubTool id="band-stepper"><BandDetailStepper /></HubTool>
               </HubSection>
 
-              <HubSection
-                title="Move my account"
-                hint="Writes this account only. Every button takes two taps."
-                count={4}
-                defaultOpen>
-                <JumpThisAccount />
-                <QuestionBankPanel />
-                <StartOver />
-                <ResetToFreshSignup />
+              <HubSection id="testing">
+                <HubTool id="preview"><PreviewAsNewUser /></HubTool>
+                {/* While previewing, nothing may write to the real account. */}
+                {previewing ? null : <HubTool id="jump"><JumpThisAccount /></HubTool>}
+                {previewing ? null : <HubTool id="bank-fill"><QuestionBankPanel /></HubTool>}
               </HubSection>
 
-              <HubSection title="Content" hint="Preview or re-trigger what people see." count={6}>
-                {me ? <DailyLineDev userId={me.id} timeZone={me.timezone || 'UTC'} /> : null}
-                <MiniGuyPanel />
-                <MilestonesPanel />
-                <CrisisTools />
-                {canSeeHubSection('fence', gate) ? <FenceTester /> : null}
-                <DraftCopyList />
+              <HubSection id="content">
+                {me ? <HubTool id="daily-line"><DailyLineDev userId={me.id} timeZone={me.timezone || 'UTC'} /></HubTool> : null}
+                <HubTool id="mini-guy"><MiniGuyPanel /></HubTool>
+                <HubTool id="milestones"><MilestonesPanel /></HubTool>
+                <HubTool id="crisis"><CrisisTools /></HubTool>
+                {canSeeHubSection('fence', gate) ? <HubTool id="fence"><FenceTester /></HubTool> : null}
+                <HubTool id="draft-copy"><DraftCopyList /></HubTool>
               </HubSection>
 
-              <HubSection title="This phone" hint="Only this device. Nothing on the server." count={6}>
-                {me ? <YouDevTools timeZone={me.timezone || 'UTC'} /> : null}
-                <PushStatus />
-                <AppReloadPanel />
-                <LocalAccountData />
-                <ResetAiConsent />
-                {canSeeHubSection('trace', gate) ? <TraceCapture /> : null}
+              <HubSection id="phone">
+                {me ? <HubTool id="you-tools"><YouDevTools timeZone={me.timezone || 'UTC'} /></HubTool> : null}
+                <HubTool id="push"><PushStatus /></HubTool>
+                <HubTool id="reload"><AppReloadPanel /></HubTool>
+                {canSeeHubSection('trace', gate) ? <HubTool id="trace"><TraceCapture /></HubTool> : null}
               </HubSection>
 
-              <HubSection title="AI" count={1}>
-                {canSeeHubSection('quota', gate) ? <QuotaDashboard /> : null}
+              <HubSection id="ai">
+                {canSeeHubSection('quota', gate) ? <HubTool id="quota"><QuotaDashboard /></HubTool> : null}
               </HubSection>
 
-              <HubSection title="Labs" hint="Screens nothing else links to." count={6}>
-                <LabsList />
+              <HubSection id="labs">
+                <HubTool id="labs"><LabsList /></HubTool>
               </HubSection>
             </>
           ) : null}
 
           <HubSection
-            title="Admin"
-            hint="Root only, enforced on the server. These act on other people's accounts."
-            count={3}
+            id="admin"
             defaultOpen={!tools}>
-            {canSeeHubSection('access', gate) ? <AccessReview /> : null}
-            {canSeeHubSection('grants', gate) ? <GrantsPanel /> : null}
-            {canSeeHubSection('profiles', gate) ? <ProfilesPanel /> : null}
+            {canSeeHubSection('access', gate) ? <HubTool id="access-review"><AccessReview /></HubTool> : null}
+            {canSeeHubSection('grants', gate) ? <HubTool id="grants"><GrantsPanel /></HubTool> : null}
+            {canSeeHubSection('profiles', gate) ? <HubTool id="profiles"><ProfilesPanel /></HubTool> : null}
             {!devAccess.isRoot ? (
               <ThemedText type="small" themeColor="textSecondary">
                 Nothing here for this account.
               </ThemedText>
             ) : null}
           </HubSection>
+
+          {/* Danger zone, last. Testing builds only, and hidden while previewing. */}
+          {tools && !previewing ? (
+            <HubSection id="danger">
+              <HubTool id="reset-account"><ResetAccount /></HubTool>
+              <HubTool id="local-data"><LocalAccountData /></HubTool>
+              <HubTool id="ai-consent"><ResetAiConsent /></HubTool>
+              <HubTool id="fresh-signup"><ResetToFreshSignup /></HubTool>
+            </HubSection>
+          ) : null}
+          </HubSearchContext.Provider>
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -494,25 +507,29 @@ function JumpThisAccount() {
  * wave76): root only, own account only, invite-only phase. Keeps the account
  * and the token balance. Always two taps; it cannot be undone.
  */
-function StartOver() {
-  const { me, refresh, devAccess } = useMeContext();
+/**
+ * "Preview as new user" (emci, 2026-10-07). Root only, pre-launch only. The
+ * app reads as a brand-new account and every save is refused before it leaves
+ * the phone (lib/preview-mode.ts). Nothing is deleted; turning it off puts
+ * this phone's data back. One tap either way: it writes nothing to the server.
+ */
+function PreviewAsNewUser() {
+  const { me, devAccess } = useMeContext();
+  const previewing = usePreviewing();
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-  const twoTap = useTwoTap();
 
   if (!PRE_LAUNCH_DEV || !me) return null;
 
-  async function startOver() {
-    if (busy) return;
-    if (!twoTap.confirm('start-over')) return;
+  async function toggle() {
+    if (busy || !me) return;
     setBusy(true);
     setNote(null);
     try {
-      await startOverMyTestData();
-      await refresh();
-      setNote('Done. This account is at 0 of 48. Your token balance is unchanged.');
+      if (previewing) await stopPreview();
+      else await startPreview({ userId: me.id, isRoot: devAccess.isRoot });
     } catch (err) {
-      setNote(err instanceof Error ? err.message : 'Could not start this account over.');
+      setNote(err instanceof Error ? err.message : 'Could not change preview.');
     } finally {
       setBusy(false);
     }
@@ -520,29 +537,103 @@ function StartOver() {
 
   return (
     <View style={styles.section}>
-      <ThemedText type="smallBold">Start over</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        Root only. Clears this account&apos;s answers, trait scores, saved rounds, answer
-        history, insight, category reads and story, and the record of the first +21 so it can
-        be earned again. Keeps your profile and your token balance. Cannot be undone.
+        Every screen reads as 0 answers and 0 tokens. Answers, picks, token claims, AI calls and
+        profile edits are refused, so nothing on your real account changes. A red bar shows on every
+        screen; tap it to exit. Restarting the app or switching accounts also ends it.
       </ThemedText>
       {devAccess.isRoot ? (
         <Chip
-          label={
-            busy
-              ? 'clearing…'
-              : twoTap.armed === 'start-over'
-                ? 'Tap again to clear this account’s answers'
-                : 'Start over (0 of 48)'
-          }
-          selected={false}
-          onPress={() => void startOver()}
+          label={busy ? 'switching…' : previewing ? 'Stop preview (back to my account)' : 'Start preview as new user'}
+          selected={previewing}
+          onPress={() => void toggle()}
         />
       ) : (
         <ThemedText type="small" themeColor="textSecondary">
-          This account is not root, so Start over is not available on it.
+          This account is not root, so preview is not available on it.
         </ThemedText>
       )}
+      {note ? <ThemedText type="small">{note}</ThemedText> : null}
+    </View>
+  );
+}
+
+/**
+ * "Reset account" (emci, 2026-10-07; replaces Start over). Root only, checked
+ * on the server (`reset_my_account`, wave88). Type RESET to confirm: it wipes
+ * this account's answers, tokens, unlocks, milestones and saved content, then
+ * this phone's saved state for it. Cannot be undone.
+ */
+function ResetAccount() {
+  const theme = useTheme();
+  const { me, refresh, devAccess } = useMeContext();
+  const [confirm, setConfirm] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+
+  if (!PRE_LAUNCH_DEV || !me) return null;
+  if (!devAccess.isRoot) {
+    return (
+      <ThemedText type="small" themeColor="textSecondary">
+        This account is not root, so Reset account is not available on it.
+      </ThemedText>
+    );
+  }
+
+  const ready = confirm === RESET_ACCOUNT_CONFIRM_WORD;
+
+  async function reset() {
+    if (busy || confirm !== RESET_ACCOUNT_CONFIRM_WORD) return;
+    setBusy(true);
+    setNote(null);
+    try {
+      const { rowsDeleted } = await resetMyAccount();
+      setConfirm('');
+      await refresh();
+      setNote(`Done. ${rowsDeleted} saved rows removed. This account is at 0 of 48 with 0 tokens.`);
+    } catch (err) {
+      setNote(err instanceof Error ? err.message : 'Could not reset this account.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <View style={styles.section}>
+      <ThemedText type="small" themeColor="textSecondary">
+        Removes every answer, round, pick, profile card, insight, category and legend read, ATO token
+        and token history, name-style unlock and milestone on @{me.handle}. Keeps the account, its
+        handle, root, AI consent, invites, Circle, the AI usage log and this phone’s Divecore save. Type {RESET_ACCOUNT_CONFIRM_WORD} to
+        confirm.
+      </ThemedText>
+      <TextInput
+        value={confirm}
+        onChangeText={setConfirm}
+        placeholder={RESET_ACCOUNT_CONFIRM_WORD}
+        placeholderTextColor={theme.textSecondary}
+        autoCapitalize="characters"
+        autoCorrect={false}
+        accessibilityLabel={`Type ${RESET_ACCOUNT_CONFIRM_WORD} to confirm`}
+        style={[
+          styles.input,
+          styles.searchInput,
+          { color: theme.text, backgroundColor: theme.backgroundSelected, borderColor: DANGER_RED },
+        ]}
+      />
+      <Pressable
+        accessibilityRole="button"
+        disabled={busy || !ready}
+        onPress={() => void reset()}
+        style={({ pressed }) => [
+          styles.chip,
+          { borderColor: DANGER_RED, backgroundColor: ready ? DANGER_RED : 'transparent' },
+          (busy || !ready) && { opacity: 0.4 },
+          pressed && styles.pressed,
+        ]}>
+        <ThemedText type="smallBold" style={{ color: ready ? '#FFFFFF' : DANGER_RED }}>
+          {busy ? 'resetting…' : 'Reset this account'}
+        </ThemedText>
+      </Pressable>
       {note ? <ThemedText type="small">{note}</ThemedText> : null}
     </View>
   );
@@ -1643,7 +1734,8 @@ export {
   TraitViewer,
   BandDetailStepper,
   JumpThisAccount,
-  StartOver,
+  PreviewAsNewUser,
+  ResetAccount,
   ResetAiConsent,
   LocalAccountData,
   QuotaDashboard,

@@ -4,9 +4,9 @@
  * Three things live here:
  *   - `applyDevIntakeStagePreset` — "Jump this account": writes the signed-in
  *     account's own trait rows to a known point (lib/dev-intake-stages.ts).
- *   - `startOverMyTestData` — "Start over": the server clears the account's
- *     answers and everything generated from them, keeps the account and its
- *     token balance (wave76, root only).
+ *   - `resetMyAccount` — "Reset account" (was Start over): the server clears the account's
+ *     answers, tokens and everything generated from them, keeps the account
+ *     (wave88, root only, type RESET).
  *   - `resetDevTestUserToFreshSignup` — the dev-test account only: deletes its
  *     profile row so the real sign-up form runs again (wave66).
  *
@@ -42,7 +42,7 @@ export const DEV_TEST_USER_ID = 'a70d3e0e-4c00-4a1e-8c0d-00000000d3e0';
  * The answer-history rows needed to top the account up to what the plan
  * stands for (only the shortfall, so repeated jumps do not pile rows up).
  * The server writes them only for root (apply_dev_trait_preset): history rows
- * cannot be deleted except by Start over, which is root only.
+ * cannot be deleted except by Reset account, which is root only.
  */
 async function answerHistoryShortfall(
   userId: string,
@@ -85,8 +85,8 @@ async function afterAccountRewrite(options: { alsoInsight?: boolean } = {}): Pro
  * scores and answer counts, so the UI asks for a second tap on every account.
  *
  * Writes the me trait columns, the track rows and — for root, which can undo
- * it with Start over — the answer-history top-up that makes the +21 testable.
- * Leaves saved rounds, tokens and generated text alone — "Start over" is what
+ * it with Reset account — the answer-history top-up that makes the +21 testable.
+ * Leaves saved rounds, tokens and generated text alone — "Reset account" is what
  * clears those. `celebrated_milestone_ids` is emptied on every jump so the
  * after-50 reveal shows again; that is the point of jumping back and forth.
  */
@@ -126,7 +126,7 @@ export async function applyDevIntakeStagePreset(
     last_touched: row.lastTouched || nowIso,
     last_depth_at: row.lastDepthAt,
   }));
-  // History rows cannot be deleted by the client and only "Start over" (root)
+  // History rows cannot be deleted by the client and only "Reset account" (root)
   // removes them. So they are only written where they can be undone: on a
   // non-root account they would sit in the "How this has shifted" timeline
   // for good and hand that account one real +21. The server also refuses them
@@ -147,7 +147,7 @@ export async function applyDevIntakeStagePreset(
 
 /**
  * Fully resets the signed-in dev-test user back to before onboarding —
- * unlike "Start over", this actually deletes the
+ * unlike "Reset account", this actually deletes the
  * `me` row (via the `reset_dev_test_user` RPC, wave66), so the app's own
  * `guard={isAuthed && !hasMe}` (src/app/_layout.tsx) puts the real
  * "Introduce yourself" onboarding screen back on screen — no account
@@ -171,29 +171,43 @@ export async function resetDevTestUserToFreshSignup(): Promise<void> {
   await afterAccountRewrite({ alsoInsight: true });
 }
 
-/** Shown when the server function behind "Start over" is not there yet. */
-export const START_OVER_NOT_APPLIED =
-  'Start over needs the wave76 database change, which is not applied yet.';
-export const START_OVER_NOT_ROOT = 'Only a root account can start over.';
+/** What the Reset account box must say before the button works. */
+export const RESET_ACCOUNT_CONFIRM_WORD = 'RESET';
+export const RESET_ACCOUNT_NOT_APPLIED = 'Reset needs the wave88 database change, which is not applied yet.';
+export const RESET_ACCOUNT_NOT_ROOT = 'Only a root account can reset itself.';
 
 /**
- * "Start over" — the one reset for the signed-in account: answers, trait
- * scores, saved rounds, answer history, generated text and the once-ever +21
- * record, so the whole flow can be walked again from 0 of 50. Keeps the
- * account, the profile and the token balance. The server does the work and
- * enforces the rules (root only, own account only, invite-only phase):
- * `start_over_my_test_data()`, wave76.
+ * "Reset account" (Dev Tools Hub, Danger zone; emci 2026-10-07): wipes the
+ * signed-in account's game data so it behaves like a brand-new sign-up: every
+ * answer, round, pick, card, insight, category row, legend, ATO token event and
+ * balance, and the milestones. Keeps the account, its handle, root, AI consent,
+ * invite codes, Circle and the AI usage log. Replaces "Start over".
+ *
+ * The server decides everything (`reset_my_account()`, wave88): root only,
+ * the caller's own account only (no id is sent), invite-only phase only, one
+ * transaction. Then this phone forgets everything it held for the account
+ * (name-style unlocks included) and every screen reloads.
  */
-export async function startOverMyTestData(): Promise<void> {
-  if (!PRE_LAUNCH_DEV) throw new Error('Start over is pre-launch only');
-  const { error } = await supabase.rpc('start_over_my_test_data');
+export async function resetMyAccount(): Promise<{ rowsDeleted: number }> {
+  if (!PRE_LAUNCH_DEV) throw new Error('Reset account is pre-launch only');
+  const { isPreviewing } = await import('@/lib/preview-mode');
+  if (isPreviewing()) throw new Error('Exit "Preview as new user" before resetting.');
+  const { data, error } = await supabase.rpc('reset_my_account');
   if (error) {
     const text = `${error.code ?? ''} ${error.message ?? ''}`;
-    // PostgREST answers PGRST202 / "Could not find the function" until wave76 is applied.
-    if (/PGRST202|Could not find the function/i.test(text)) throw new Error(START_OVER_NOT_APPLIED);
-    if (/root only/i.test(text)) throw new Error(START_OVER_NOT_ROOT);
-    // A real Error, so the panel shows the server's own reason (e.g. sign-up is public).
-    throw new Error(error.message || 'Could not start this account over.');
+    // PostgREST answers PGRST202 / "Could not find the function" until wave88 is applied.
+    if (/PGRST202|Could not find the function/i.test(text)) throw new Error(RESET_ACCOUNT_NOT_APPLIED);
+    if (/not_allowed/i.test(text)) throw new Error(RESET_ACCOUNT_NOT_ROOT);
+    throw new Error(error.message || 'Could not reset this account.');
   }
-  await afterAccountRewrite({ alsoInsight: true });
+  try {
+    const { clearLocalAccountData } = await import('@/lib/local-account-data');
+    // Divecore's save is phone-only game progress, not account data: kept.
+    await clearLocalAccountData({ keepPrefixes: ['ato.play.'] });
+  } catch (err) {
+    console.log('[dev] local account data clear skipped:', err);
+  }
+  bumpAccountDataEpoch();
+  const rows = (data as { rows_deleted?: unknown } | null)?.rows_deleted;
+  return { rowsDeleted: typeof rows === 'number' ? rows : 0 };
 }

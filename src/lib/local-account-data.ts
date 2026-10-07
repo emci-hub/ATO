@@ -60,6 +60,10 @@ export const DEVICE_LEVEL_KEYS: readonly string[] = [
   'ato.push.prefs.v1',
   'ato.push.asked',
   'ato.ai.provider.override.v1',
+  // Which Dev Tools Hub sections are open (dev-hub-catalog HUB_OPEN_SECTIONS_KEY).
+  'ato.devhub.open-sections.v1',
+  // "Preview as new user" copy of this account's phone data (lib/preview-session.ts).
+  'ato.preview.snapshot.v1',
 ];
 
 /** Prefixes left alone. Only auth, which `clearLocalSession` clears itself. */
@@ -156,9 +160,8 @@ export async function clearLocalQuestionState(options: { alsoInsight?: boolean }
  * Returns the keys it removed so the caller (and the Dev Lab panel) can show
  * what actually happened instead of assuming.
  */
-export async function clearLocalAccountData(): Promise<string[]> {
-  // In-memory first: these need no storage and must be cleared even if
-  // AsyncStorage is unavailable in this runtime.
+/** The in-memory copies of account state (answer stamps, page positions, unlock seen, AI lines, mini guy). */
+export function clearAccountMemoryCaches(): void {
   resetAnsweredOptionCache();
   resetCategoryPagePositionCache();
   resetFullProfileUnlockCache();
@@ -166,12 +169,21 @@ export async function clearLocalAccountData(): Promise<string[]> {
   forgetDailyLineAccount();
   // …and anything the mini guy was still waiting to say.
   resetBuddy();
+}
+
+export async function clearLocalAccountData(options: { keepPrefixes?: readonly string[] } = {}): Promise<string[]> {
+  // In-memory first: these need no storage and must be cleared even if
+  // AsyncStorage is unavailable in this runtime.
+  clearAccountMemoryCaches();
 
   let removed: string[] = [];
   try {
-    const keys = await AsyncStorage.getAllKeys();
-    removed = keys.filter(isAccountScopedKey);
+    const keep = options.keepPrefixes ?? [];
+    removed = (await listAccountScopedKeys()).filter((key) => !keep.some((prefix) => key.startsWith(prefix)));
     if (removed.length > 0) await AsyncStorage.multiRemove(removed);
+    // A full wipe (sign-out, account deletion) also drops any saved
+    // "Preview as new user" copy, which holds this account's phone data.
+    if (keep.length === 0) await AsyncStorage.removeItem('ato.preview.snapshot.v1');
   } catch (err) {
     console.log('[local-account-data] storage clear failed:', err);
   }

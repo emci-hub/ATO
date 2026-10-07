@@ -6,6 +6,7 @@ import * as SecureStore from 'expo-secure-store';
 import { AppState, Platform } from 'react-native';
 
 import { clearNativeAuthSecrets, createNativeAuthStorage } from '@/lib/auth-storage';
+import { previewFetch } from '@/lib/preview-mode';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -33,6 +34,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+  },
+  // Dev "Preview as new user" (lib/preview-mode.ts). Exactly the normal fetch
+  // unless root has turned preview on in a pre-launch build; then reads look
+  // like a new account and every write is refused before it leaves the phone.
+  global: {
+    fetch: previewFetch((input, init) => fetch(input, init)),
   },
 });
 

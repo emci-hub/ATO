@@ -24,6 +24,7 @@ import {
 } from '@/lib/push-policy';
 import { pickInsightPayload } from '@/lib/push-insight';
 import { loadCachedInsight, lockScreenInsight } from '@/lib/insight/today-insight';
+import { isPreviewing } from '@/lib/preview-mode';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
 import type { TraitTrack } from '@/lib/trait-stability';
 import { checksInRecapWeek } from '@/lib/week-window';
@@ -261,6 +262,8 @@ export async function syncPushSchedule(input: {
   tracks: readonly TraitTrack[];
 }): Promise<void> {
   if (Platform.OS === 'web') return;
+  // Preview as new user: the real schedule stays as it was; nothing is rebuilt.
+  if (isPreviewing()) return;
 
   try {
     // PUSH_IDS.morning is the old single repeating notification; it is still

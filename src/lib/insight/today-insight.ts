@@ -13,6 +13,7 @@ import { ExtensionStorage } from '@bacons/apple-targets';
 import { Platform } from 'react-native';
 
 import { ideaForTitle, ideaShareable } from '@/lib/insight-bank';
+import { isPreviewing } from '@/lib/preview-mode';
 
 import { emitDailyInsightChanged } from './events';
 import type { DailyInsight } from './store';
@@ -88,7 +89,8 @@ export function lockScreenInsight(insight: Pick<CachedInsight, 'title' | 'theme'
 }
 
 function writeWidget(insight: CachedInsight | null) {
-  if (Platform.OS !== 'ios') return;
+  // Preview as new user never touches the real home-screen widget.
+  if (Platform.OS !== 'ios' || isPreviewing()) return;
   try {
     const storage = new ExtensionStorage(APP_GROUP);
     if (insight && insight.title.trim().length > 0) {
@@ -116,7 +118,7 @@ export const WIDGET_LINE_FOLLOW_UP = 'Open ATO to go deeper.';
  * consent; `saveCachedInsight` still owns the widget whenever an insight exists.
  */
 export function writeWidgetLine(line: string) {
-  if (Platform.OS !== 'ios') return;
+  if (Platform.OS !== 'ios' || isPreviewing()) return;
   try {
     const storage = new ExtensionStorage(APP_GROUP);
     storage.set('read', line);

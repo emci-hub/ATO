@@ -59,24 +59,34 @@ pin('the Hub route decides entry with hubAccess', hubEntry.includes('toolsAvaila
 pin('the Hub route redirects when access is none', /if \(access === 'none'\) \{\s*return <Redirect href="\/" \/>;/.test(hubEntry));
 pin("the Hub renders its testing groups only for 'full' access", hub.includes("const tools = access === 'full';"));
 
-// The Hub's render tree, cut into the three places a component can sit:
-// before the `tools ?` branch, inside it, and the Admin section after it.
-// A panel anywhere but inside the branch must be a root-only one.
-const LAYOUT = ['ThemedView', 'SafeAreaView', 'ScrollView', 'View', 'ThemedText', 'RunningUpdateLine', 'HubSection'];
-const components = (text: string) => [...text.matchAll(/<([A-Z][A-Za-z]+)[\s/>]/g)].map((m) => m[1]);
+// The Hub's render tree, cut into the places a component can sit: before the
+// `tools ?` branch, inside it, the Admin section after it, and the Danger zone
+// (2026-10-07: last on the page, behind its own `tools && !previewing` gate).
+// A panel anywhere but inside a `tools` branch must be a root-only one.
+const LAYOUT = ['ThemedView', 'SafeAreaView', 'ScrollView', 'View', 'ThemedText', 'RunningUpdateLine', 'HubSection', 'HubTool', 'HubSearchContext'];
+const components = (text: string) => [...text.matchAll(/<([A-Z][A-Za-z]+)[\s/>.]/g)].map((m) => m[1]);
 const renderAt = hub.indexOf('<ThemedView style={styles.container}>', hub.indexOf('function DevLab('));
 const toolsAt = hub.indexOf('{tools ? (');
-// 2026-10-03 reorganisation: groups are <HubSection title="…">.
-const adminAt = hub.indexOf('<HubSection\n            title="Admin"');
+const adminAt = hub.indexOf('<HubSection\n            id="admin"');
+const dangerGateAt = hub.indexOf('{tools && !previewing ? (');
+const dangerAt = hub.indexOf('<HubSection id="danger">');
 const layoutEnd = hub.indexOf('function useTwoTap()');
-pin('the Hub render tree was found', renderAt > 0 && toolsAt > renderAt && adminAt > toolsAt && layoutEnd > adminAt);
+pin(
+  'the Hub render tree was found',
+  renderAt > 0 && toolsAt > renderAt && adminAt > toolsAt && dangerGateAt > adminAt && dangerAt > dangerGateAt && layoutEnd > dangerAt,
+);
 // The branch must close and the Admin section open with nothing in between.
-const branchClose = "          ) : null}\n\n          <HubSection\n            title=\"Admin\"";
+const branchClose = "          ) : null}\n\n          <HubSection\n            id=\"admin\"";
 const closeAt = hub.indexOf(branchClose, toolsAt);
 pin('the testing branch closes immediately before the Admin section', closeAt > toolsAt && closeAt < adminAt);
+// The Danger zone's gate opens straight after Admin and needs `tools`.
+pin(
+  'the Danger zone renders only inside its own tools-gated branch, after Admin',
+  /<\/HubSection>\n\n {10}\{\/\* Danger zone[^\n]*\*\/\}\n {10}\{tools && !previewing \? \(\n {12}<HubSection id="danger">/.test(hub),
+);
 const headBlock = hub.slice(renderAt, toolsAt);
-const testingBlock = hub.slice(toolsAt, closeAt);
-const adminBlock = hub.slice(adminAt, layoutEnd);
+const testingBlock = hub.slice(toolsAt, closeAt) + hub.slice(dangerGateAt, layoutEnd);
+const adminBlock = hub.slice(adminAt, dangerGateAt);
 const strays = components(headBlock).filter((name) => !LAYOUT.includes(name));
 pin(`nothing but layout renders before the testing branch (found: ${strays.join(', ') || 'none'})`, strays.length === 0);
 const adminPanels = components(adminBlock).filter((name) => !LAYOUT.includes(name));
@@ -85,8 +95,15 @@ pin(
   adminPanels.length > 0 &&
     adminPanels.every((name) => ['AccessReview', 'GrantsPanel', 'ProfilesPanel'].includes(name)),
 );
-for (const [panel, section] of [['AccessReview', 'access'], ['GrantsPanel', 'grants'], ['ProfilesPanel', 'profiles']] as const) {
-  pin(`${panel} is gated on root`, adminBlock.includes(`{canSeeHubSection('${section}', gate) ? <${panel} /> : null}`));
+for (const [panel, section, tool] of [
+  ['AccessReview', 'access', 'access-review'],
+  ['GrantsPanel', 'grants', 'grants'],
+  ['ProfilesPanel', 'profiles', 'profiles'],
+] as const) {
+  pin(
+    `${panel} is gated on root`,
+    adminBlock.includes(`{canSeeHubSection('${section}', gate) ? <HubTool id="${tool}"><${panel} /></HubTool> : null}`),
+  );
 }
 pin(
   'the dev-test sign-up reset is not offered in a release build (it lives inside the testing branch)',
@@ -97,7 +114,7 @@ pin(
   /if \(section === 'access' \|\| section === 'grants' \|\| section === 'profiles'\) \{\s*return input\.isRoot;/.test(access),
 );
 for (const panel of [
-  'DevInspector', 'JumpThisAccount', 'StartOver', 'ResetAiConsent', 'LocalAccountData', 'ResetToFreshSignup',
+  'DevInspector', 'JumpThisAccount', 'PreviewAsNewUser', 'ResetAccount', 'ResetAiConsent', 'LocalAccountData', 'ResetToFreshSignup',
   'BuildStrip', 'IntakeStatus', 'NextRoundPreview', 'TokensToday', 'MiniGuyPanel', 'MilestonesPanel',
   'CrisisTools', 'DraftCopyList', 'PushStatus', 'AppReloadPanel', 'LabsList', 'QuestionBankPanel',
 ]) {
@@ -121,7 +138,7 @@ for (const rel of ['src/app/ai-lab.tsx', 'src/components/running-update-line.tsx
 
 for (const [fn, file] of [
   ['applyDevIntakeStagePreset', 'src/lib/dev-test-user.ts'],
-  ['startOverMyTestData', 'src/lib/dev-test-user.ts'],
+  ['resetMyAccount', 'src/lib/dev-test-user.ts'],
   ['resetDevTestUserToFreshSignup', 'src/lib/dev-test-user.ts'],
 ] as const) {
   const text = src(file);
@@ -129,6 +146,10 @@ for (const [fn, file] of [
   pin(`${fn} refuses to run when the flag is off`, body.slice(0, 400).includes('if (!PRE_LAUNCH_DEV) throw new Error'));
 }
 pin('the dev PIN is dead when the flag is off', src('src/lib/dev-pin.ts').includes('return PRE_LAUNCH_DEV && unlocked;'));
+pin(
+  'Preview as new user can never be on with the flag off',
+  src('src/lib/preview-mode.ts').includes('return PRE_LAUNCH_DEV && DEV_TOOLS_AVAILABLE && previewing;'),
+);
 console.log(`release-mode: ${surfaceChecks} dev-surface gates verified`);
 
 const profile = process.env.EAS_BUILD_PROFILE ?? '';

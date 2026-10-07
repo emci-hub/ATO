@@ -57,7 +57,7 @@ const hub = read('src/app/dev-lab.tsx');
   assert.ok(crisisTools.includes('<CrisisLocalFlagTest />'), 'CrisisTools holds the flag test');
   const at = hub.indexOf('<CrisisTools />');
   assert.ok(
-    at > hub.indexOf('{tools ? (') && at < hub.indexOf('<HubSection\n            title="Admin"'),
+    at > hub.indexOf('{tools ? (') && at < hub.indexOf('<HubSection\n            id="admin"'),
     'dev test is pre-launch only',
   );
 }
