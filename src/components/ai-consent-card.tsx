@@ -18,28 +18,27 @@ export type ConsentContext = 'home' | 'talk';
  * outside every consent branch -- Home does so today. Any future surface that
  * mounts this card owes the same line.
  */
-export const AI_USE_DISCLOSURE = 'Sage uses AI to personalize your insights.';
+export const AI_USE_DISCLOSURE = 'Sage uses AI only to write your Story.';
 
-// Bodies rewritten 2026-09-15 (emci correction). With no dedicated Sage-talk
-// screen built yet, ai_consent gates the app's three real AI touchpoints --
-// the daily insight, the "Tell Sage more" rotation, and Explore packs. A no
-// means none of those generate. The copy has to say that, because this is the
-// Apple 5.1.2 consent surface and one flag governs all three.
+// Bodies rewritten 2026-10-07 (emci). The daily focus, the questions and the
+// category cards are stored copy now, so the only thing ai_consent gates is
+// the Story. The copy has to say exactly that, because this is the Apple
+// 5.1.2 consent surface: it may not claim AI where there is none, or leave
+// out where there is.
 const COPY: Record<ConsentContext, { title: string; body: string }> = {
   home: {
-    title: 'Can Sage use AI to personalize what you see?',
+    title: 'Can Sage use AI to write your Story?',
     body:
-      'Sage writes your daily insight, your questions and your categories using AI, based on ' +
-      'what you’ve logged and told us. Sage is a coach in the app, not a person. ' +
-      'You’ll only be asked once. Say no and Sage writes none of them — everything ' +
-      'else, including the questions you already answer yourself, keeps working.',
+      'Sage writes your Story using AI, based on your answers. Sage is a coach in the app, ' +
+      'not a person. You’ll only be asked once. Say no and the Story stays off. Your daily ' +
+      'focus, your questions and your categories don’t use AI, so they keep working either way.',
   },
   talk: {
     title: 'Can Sage use AI to talk with you?',
     body:
       'Sage replies to you using AI, in your talk style, based on what you’ve logged and ' +
       'told us. Sage is a coach in the app, not a person. You’ll only be asked once. ' +
-      'Say no and Talk stays off, along with Sage’s written insights.',
+      'Say no and Talk stays off, along with your Story.',
   },
 };
 

@@ -239,7 +239,17 @@ assert.match(
 assert.doesNotMatch(home, /needsConsentPrompt/);
 assert.match(home, /const consentGranted = consent === 'granted';/);
 assert.match(home, /\{AI_USE_DISCLOSURE\}/);
-assert.match(consent, /AI_USE_DISCLOSURE = 'Sage uses AI to personalize your insights\.'/);
+assert.match(consent, /AI_USE_DISCLOSURE = 'Sage uses AI only to write your Story\.'/);
+// The AI mark (emci 2026-10-07): a small icon you tap to read what it means,
+// on every mounted surface that shows model output (today: the Story fold).
+const aiBadge = read('src/components/ai-badge.tsx');
+assert.match(aiBadge, /<Pressable[\s\S]*accessibilityRole="button"[\s\S]*onPress=\{\(\) => setOpen\(\(v\) => !v\)\}/);
+assert.match(aiBadge, /MaterialCommunityIcons name="creation"/);
+assert.match(aiBadge, /\{open \? \([\s\S]*\{AI_BADGE_DESCRIPTION\}/);
+assert.match(read('src/components/sage-story-fold.tsx'), /\{story\?\.body \? <AiBadge \/> : null\}/);
+// The consent copy names only what still uses AI (the Story), never the stored
+// focus, questions or categories (emci 2026-10-07).
+assert.doesNotMatch(consent, /writes your daily insight|written insights|personalize your insights/);
 assert.match(home, /setAiConsent/);
 assert.doesNotMatch(sage, /setAiConsent/);
 // REPINNED (ISOLATION_PLAN §7 Card F, 2026-09-15): You is parked, but AI
