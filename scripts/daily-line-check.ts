@@ -332,9 +332,10 @@ ok('the change card reports real movement inside the window and nothing else');
 // --- wiring -----------------------------------------------------------------
 const home = read('src/app/(tabs)/index.tsx');
 assert.match(home, /<TodayPickCard/);
-assert.match(home, /todayLine: todayLineText/);
-assert.match(home, /recentTitles/);
-ok('Home renders the daily line and hands it, with recent titles, to the insight prompt');
+// The insight stopped being a prompt on 2026-10-07 (stored bank, emci): it is
+// picked from the same clear leans the daily line reads, so the two agree.
+assert.match(home, /pickIdea\(\{ userId, ymd: todayYmd, leans: clearLeans\(tracks\), history \}\)/);
+ok('Home renders the daily line and picks the stored insight from the same clear leans');
 
 for (const rel of ['src/lib/daily-line/bank.ts', 'src/lib/daily-line/pick.ts', 'src/lib/daily-line/state.ts']) {
   const src = read(rel);

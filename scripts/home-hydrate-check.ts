@@ -15,6 +15,12 @@
  *      widget. This is the privacy invariant and it is unchanged — only the
  *      condition got simpler, because the insight has no starter bank to fall
  *      back on for days 1-3 the way the card did.
+ *
+ * Re-pinned 2026-10-07 (emci): the insight is STORED copy now
+ * (lib/insight-bank), picked on the device with no model call, so it is no
+ * longer behind the AI consent answer. What section 2 pins instead: nothing
+ * on the insight path reaches a model, and Story (still AI) keeps its gate.
+ * The lock-screen half of the privacy invariant moved to `lockScreenInsight`.
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -52,13 +58,14 @@ ok('useDailyInsight is a cache read and an event subscription, never a fetch or 
 const home = read('src/app/(tabs)/index.tsx');
 assert.match(home, /useDailyInsight/);
 assert.match(home, /fetchTodayInsight/);
-assert.match(home, /generateDailyInsight/);
-// Existing insight is preferred over generating a new one — otherwise every
-// cold mount would spend a model call.
+assert.match(home, /pickIdea\(/);
+assert.doesNotMatch(home, /generateDailyInsight|generateText/);
+// An existing insight is preferred over picking a new one, so a second device
+// shows the same day.
 const effectBody = home.slice(home.indexOf('if (!me || !userId || !window) return;'));
 assert.ok(
-  effectBody.indexOf('fetchTodayInsight') < effectBody.indexOf('generateDailyInsight'),
-  'Home must read an existing insight before generating one',
+  effectBody.indexOf('fetchTodayInsight') < effectBody.indexOf('pickIdea('),
+  'Home must read an existing insight before picking one',
 );
 assert.match(home, /if \(insight\?\.ymd === todayYmd\) return;/);
 // Keyed on the window's own today, not openLogDays' entry — the latter
@@ -67,31 +74,21 @@ assert.match(home, /const \{ todayDay, todayYmd \} = window;/);
 // One generation in flight per day, so a bootstrap reload cannot re-trigger a
 // second paid call for the same ymd.
 assert.match(home, /if \(generatingForYmd\.current === todayYmd\) return;/);
-ok('Home reads the stored insight first and only generates when the day has none');
+ok('Home reads the stored insight first and only picks when the day has none');
 
 // --- 2. consent gates GENERATION, and only generation ---------------------
-// Re-inverted 2026-09-15 (emci correction) after a same-day window in which
-// these asserted the gate's absence. With no dedicated Sage-talk screen built
-// yet, the daily insight is a real AI touchpoint and needs consent before it
-// calls a model -- but nothing else on Home may depend on the answer.
-const CONSENT_OFF_EMPTY =
-  'AI is off, so there’s no insight today. Turn on AI in You.';
-
-assert.ok(home.includes(CONSENT_OFF_EMPTY), 'Home must show the exact consent-off empty line');
-// Declined and not-yet-asked are DIFFERENT states. Collapsing them is what
-// left a fresh account (ai_consent null) with no insight and no prompt.
+// The daily insight stopped being a generation on 2026-10-07 (emci): it is
+// picked from the stored bank, so it must NOT sit behind the consent answer.
+// Declined and not-yet-asked stay different states for what is still AI.
 assert.match(home, /const consentGranted = consent === 'granted';/);
-assert.match(home, /const consentOffEmpty = consent === 'denied';/);
-ok('Home distinguishes declined from not-yet-asked and shows the honest empty line');
-
-// The generation effect must bail BEFORE any fetch, generation, cache write
-// or widget write. This is the assertion that would catch a refactor quietly
-// moving the guard below the call.
+assert.doesNotMatch(home, /CONSENT_OFF_EMPTY_COPY|consentOffEmpty/, 'a declined account still gets its stored insight');
 const effectStart = home.indexOf('const existing = await withTimeout(fetchTodayInsight');
-assert.ok(effectStart > 0, 'the insight effect must exist');
+assert.ok(effectStart > 0, 'the insight load must exist');
 const guardWindow = home.slice(home.indexOf('if (!me || !userId || !window) return;'), effectStart);
-assert.match(guardWindow, /if \(!consentGranted\) return;/);
-ok('no consent, no model call: the guard sits above every fetch and generation');
+assert.doesNotMatch(guardWindow, /consentGranted/, 'the stored insight has no AI consent gate');
+// Story is still a model call and keeps its consent input.
+assert.match(home, /consentGranted=\{consentGranted\}/);
+ok('the stored insight ignores the consent answer; Story still receives it');
 
 // TIMING, CHANGED by emci 2026-09-15 (ISOLATION_PLAN §7 Card C): the ask is
 // now part of the FIRST thing on Home, not something held back until the
@@ -114,7 +111,6 @@ ok('the consent ask is offered as soon as it is unanswered, in both Home states'
 // still must hold: the ask is its own ternary, and the unlocked state's
 // content ternary is separate from it.
 assert.match(home, /\{offerConsent \? \([\s\S]{0,200}<AiConsentCard/);
-assert.match(home, /\{consentOffEmpty \? \(/);
 assert.ok(
   home.indexOf('const consentBlock = (') > 0,
   'the disclosure + ask must be one shared block, so both Home states show them identically',
@@ -157,11 +153,11 @@ assert.doesNotMatch(
 );
 ok('the AI-use disclosure renders unconditionally, independent of the answer');
 
-// Revoking consent must wipe the cached insight the widget renders -- but a
-// null `me` is a failed profile refresh, not a revocation, and must NOT wipe
-// a granted user's widget. Both halves of that condition are pinned.
-assert.match(home, /if \(!me \|\| consentGranted \|\| !insight\) return;/);
-ok('a revoke clears the widget cache; a failed profile refresh does not');
+// The cached insight is stored copy, not AI output, so a consent change no
+// longer wipes it (2026-10-07). What reaches the widget is filtered by
+// `lockScreenInsight` instead (section 3).
+assert.doesNotMatch(home, /if \(!me \|\| consentGranted \|\| !insight\) return;/);
+ok('a consent change does not wipe the stored insight');
 
 // `fullProfileDone` must wait for home_bootstrap, or someone who HAS finished
 // the intake is told to finish it for a beat on every cold open. The derivation
@@ -175,10 +171,14 @@ ok('intake completion is not judged before home_bootstrap lands');
 // The shipped widget binary reads the card-era keys and cannot be updated over
 // OTA, so the client must keep writing them from insight fields until the
 // native build lands.
-assert.match(cache, /storage\.set\('read', insight\.title\)/);
-assert.match(cache, /storage\.set\('do', insight\.tryToday\)/);
+// Since 2026-10-07: `read` is the focus and `do` its tags, and only when every
+// trait it is about may leave the app; otherwise the private "ready" copy.
+assert.match(cache, /const outside = lockScreenInsight\(insight\);/);
+assert.match(cache, /storage\.set\('read', outside\.text\)/);
+assert.match(cache, /storage\.set\('do', outside\.tags \?\? WIDGET_LINE_FOLLOW_UP\)/);
+assert.match(cache, /if \(!match \|\| !ideaShareable\(match\.idea\)\) return \{ text: INSIGHT_PRIVATE_COPY, tags: null \};/);
 assert.match(cache, /storage\.set\('hasCard', '1'\)/);
 assert.match(cache, /WIDGET_KIND = 'AtoCard'/);
-ok('the widget still receives read/do/hasCard, sourced from the insight');
+ok('the widget still receives read/do/hasCard: the focus and tags only when shareable, else the private copy');
 
 console.log(`\nhome-hydrate-check: ${passed}/${passed} passed`);

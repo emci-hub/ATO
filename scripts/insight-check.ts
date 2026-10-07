@@ -27,6 +27,14 @@ function read(rel: string): string {
 const gen = read('src/lib/insight/generate-insight.ts');
 const store = read('src/lib/insight/store.ts');
 const migration = read('supabase/migrations/wave69_daily_insights.sql');
+// wave87 (emci 2026-10-07) raised the title cap to 120 for the stored focus
+// sentences and restated insert_daily_insight. For each cap, the latest
+// migration that sets it is the one the database runs.
+const wave87 = read('supabase/migrations/wave87_insight_title_120.sql');
+const CAP_SOURCES: readonly (readonly [string, string])[] = [
+  ['wave87', wave87],
+  ['wave69', migration],
+];
 const callSites = read('src/lib/ai/call-sites.ts');
 
 // --- copy discipline -------------------------------------------------------
@@ -75,25 +83,43 @@ for (const [tsField, sqlColumn] of Object.entries(SQL_COLUMN)) {
   const tsCap: string | undefined = new RegExp(`${tsField}:\\s*(\\d+)`).exec(capsBlock)?.[1];
   assert.ok(tsCap, `${tsField} must have a cap in INSIGHT_FIELD_CAPS`);
 
-  const sqlCap: string | undefined = new RegExp(
+  const capRe = new RegExp(
     `char_length\\(${sqlColumn}\\) > 0 and char_length\\(${sqlColumn}\\) <= (\\d+)`,
-  ).exec(migration)?.[1];
-  assert.ok(sqlCap, `${sqlColumn} must have a CHECK constraint in wave69`);
+  );
+  const capHit = CAP_SOURCES.map(([name, sql]) => [name, capRe.exec(sql)?.[1]] as const).find(([, cap]) => cap);
+  const sqlCap: string | undefined = capHit?.[1];
+  assert.ok(sqlCap, `${sqlColumn} must have a CHECK constraint in wave69 or wave87`);
 
   assert.equal(
     tsCap,
     sqlCap,
-    `${tsField}: TypeScript caps at ${tsCap} but wave69 caps at ${sqlCap} — the client would truncate to one length and the database reject at another`,
+    `${tsField}: TypeScript caps at ${tsCap} but ${capHit?.[0]} caps at ${sqlCap} — the client would truncate to one length and the database reject at another`,
   );
 
   // The RPC re-truncates server-side, so a direct call cannot get past the cap.
+  // wave87 restates the whole function, so every field's truncation is read there.
   assert.match(
-    migration,
+    wave87,
     new RegExp(`left\\(btrim\\(p_${sqlColumn}\\), ${sqlCap}\\)`),
     `insert_daily_insight must truncate ${sqlColumn} to its own cap`,
   );
 }
 ok('per-field caps agree across generate-insight.ts, the CHECK constraints, and the RPC');
+
+// wave87 changes only the title cap, restates the RPC with the same guards,
+// and adds no policy (emci approved the cap, not a data change).
+assert.match(wave87, /drop constraint if exists daily_insights_title_check;/);
+assert.match(
+  wave87,
+  /add constraint daily_insights_title_check\s*\n\s*check \(char_length\(title\) > 0 and char_length\(title\) <= 120\);/,
+);
+assert.match(wave87, /create or replace function public\.insert_daily_insight\(/);
+assert.match(wave87, /security definer/);
+assert.match(wave87, /uid uuid := auth\.uid\(\);/);
+assert.match(wave87, /raise exception 'not authenticated'/);
+assert.match(wave87, /revoke all on function public\.insert_daily_insight[^;]*from public, anon;/);
+assert.doesNotMatch(wave87, /create policy|for (insert|update|delete)/);
+ok('wave87 raises only the title cap to 120 and restates the guarded RPC, with no new policy');
 
 // --- schema ----------------------------------------------------------------
 // INVARIANT. Owner-only read, and deliberately no peer-visible view — unlike

@@ -126,24 +126,13 @@ for (const reason of [...Object.keys(ATO_TOKEN_EARN), ...Object.keys(ATO_TOKEN_P
 }
 ok('the token balance and recent history have a card (mounted on You — pinned by check:rebuilt)');
 
-// Category reroll: 1 token, once per category per day; spend only after a new
-// statement exists; refuse before any model call when the answer is known.
+// Category reroll: FROZEN (emci 2026-10-07). The category card is stored copy
+// now, so the control is gone from Explore; the spend RPC and its client stay
+// so the reroll can return without a migration (check:reroll pins the flag).
 const catSrc = src('src/components/categories-fold.tsx');
-assert.ok(catSrc.includes('onPress={() => void loadCategory(reading, true)}'), 'the reroll control goes through loadCategory (the one model call site)');
-// A failed reroll must not be retried for free: `reroll` defaults to "a saved
-// statement already exists", so the error row's Try again is priced like the
-// tap that started it. (Found in review 2026-10-01.)
-assert.ok(
-  catSrc.includes('async function loadCategory(reading: CategoryReading, reroll = statements.has(reading.def.id))'),
-  'reroll defaults to whether a statement is already saved',
-);
-const rerollGate = catSrc.slice(catSrc.indexOf('if (reroll) {'), catSrc.indexOf('// Gates, in order'));
-assert.ok(rerollGate.includes('rerolledTodayRef.current.has(id)'), 'a known "already today" is refused before any call');
-assert.ok(rerollGate.includes('atoTokenBalanceOf(me) < ATO_TOKEN_PRICE.category_reroll'), 'an empty balance is refused before any call');
-const genAt = catSrc.indexOf('generateCategoryStatements([');
-const spendAt = catSrc.indexOf('await spendCategoryReroll(id)');
-const saveAt = catSrc.indexOf('await saveCategoryStatements(drafts)');
-assert.ok(genAt > 0 && genAt < spendAt && spendAt < saveAt, 'generate, then spend, then save — a failed write never costs a token');
-ok('category reroll: 1 token via loadCategory, refused early when known, spent only after a new statement exists');
+assert.doesNotMatch(catSrc, /spendCategoryReroll|CATEGORY_REWRITE_LABEL|loadCategory\(reading, true\)/, 'no category reroll on Explore');
+const rerollSpendSrc = src('src/lib/category-statements/reroll-spend.ts');
+assert.match(rerollSpendSrc, /export async function spendCategoryReroll\(/, 'the spend client is kept, not deleted');
+ok('category reroll is frozen: no control on Explore, the spend client kept for later');
 
 console.log(`\n${passed} ato-tokens checks passed`);

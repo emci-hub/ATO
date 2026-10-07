@@ -22,18 +22,19 @@ import { useTheme } from '@/hooks/use-theme';
 import { useDailyInsight } from '@/hooks/use-daily-insight';
 import { useBuddyStreak } from '@/hooks/use-buddy-milestones';
 import { useTodayLine } from '@/hooks/use-today-line';
-import { lockScreenText } from '@/lib/daily-line/pick';
+import { clearLeans, lockScreenText } from '@/lib/daily-line/pick';
 import { pickForYmd } from '@/lib/daily-pick/bank';
 import { checkWindowFor } from '@/lib/check-window';
 import { fetchHomeBootstrap } from '@/lib/home-bootstrap';
-import { AI_CONSENT_NEEDED_COPY, aiConsentFor, setAiConsent } from '@/lib/me';
+import { aiConsentFor, setAiConsent } from '@/lib/me';
 import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/generate';
 import { withTimeout } from '@/lib/timeout';
 import { useMeContext } from '@/lib/me-context';
 import { homeSageLabel, homeSageLede } from '@/lib/sage-copy';
 import { AiConsentCard, AI_USE_DISCLOSURE } from '@/components/ai-consent-card';
-import { generateDailyInsightAndLines } from '@/lib/insight/generate-insight';
-import { keepAiLines } from '@/lib/daily-line/sync';
+import { ideaForTitle, isBankInsightTitle, themeTags } from '@/lib/insight-bank';
+import { draftFromPick, pickIdea, type IdeaDay } from '@/lib/insight-bank/pick';
+import { TraitTagRow } from '@/components/trait-tag-row';
 import { fetchInsightHistory, fetchTodayInsight, saveInsight } from '@/lib/insight/store';
 import { fullProfileProgress, isFullProfileDone } from '@/lib/full-profile-gate';
 import { cachedFromInsight, saveCachedInsight, writeWidgetLine } from '@/lib/insight/today-insight';
@@ -57,8 +58,12 @@ import { nextRoundLabel } from '@/lib/questions/staged-intake-copy';
 import { ONGOING_ROUND_SIZE } from '@/lib/questions/tiered-axis-plan';
 
 export const INSIGHT_LOAD_LABEL = 'Load insight';
-/** The recent-titles read is a nice-to-have: it must never hold up the insight. */
-const RECENT_TITLES_TIMEOUT_MS = 5000;
+/** The history read is a nice-to-have: it must never hold up the insight. */
+const INSIGHT_HISTORY_TIMEOUT_MS = 5000;
+/** How far back the picker looks for ideas it has already shown. */
+const INSIGHT_HISTORY_DAYS = 90;
+/** Under the sealed card: where today's focus comes from. */
+export const INSIGHT_STORED_NOTE = 'Picked from your answers. Not written by AI.';
 export const INSIGHT_UNAVAILABLE_COPY = 'Couldn’t load it just now — tap to try again.';
 export const ANSWER_QUESTIONS_LABEL = 'Answer the questions';
 /** Shown on an insight that is not today's (it stays up until today's is loaded). */
@@ -66,9 +71,6 @@ export const INSIGHT_EARLIER_DAY_COPY = 'From an earlier day. Load insight write
 /** Home's one next step once the profile is done and there is nothing to load. */
 export const NEXT_ROUND_ROW_LABEL = nextRoundLabel(ONGOING_ROUND_SIZE);
 export const NEXT_ROUND_ROW_COPY = `Each finished round sharpens your profile and earns ${ATO_TOKEN_EARN.ongoing_round_complete} ATO tokens.`;
-/** One line, one place — `check:home-hydrate` pins it verbatim. */
-export const CONSENT_OFF_EMPTY_COPY =
-  'AI is off, so there’s no insight today. Turn on AI in You.';
 
 /**
  * Home — two states and nothing else (ISOLATION_PLAN §7 Card C, emci 2026-09-15).
@@ -95,7 +97,10 @@ export default function HomeScreen() {
   const userId = session?.user.id;
   const { me, refresh: refreshMe, devAccess } = useMeContext();
   const devUnlocked = useDevAccessUnlocked();
-  const { insight, reload: reloadInsight } = useDailyInsight(userId);
+  const { insight: cachedInsight, reload: reloadInsight } = useDailyInsight(userId);
+  // Old AI-written insights are hidden everywhere (emci, 2026-10-07): only a
+  // row whose focus is in the stored bank is shown. Nothing is deleted.
+  const insight = cachedInsight && isBankInsightTitle(cachedInsight.title) ? cachedInsight : null;
   const params = useLocalSearchParams<{ focus?: string }>();
   const [busy, setBusy] = useState<'consent' | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -231,7 +236,6 @@ export default function HomeScreen() {
   // Today's pick replaced the line on Home; the line still runs underneath
   // (week, streak) and stays the insight's thread, so the prompt is unchanged.
   const todayPick = todayYmd ? pickForYmd(todayYmd) : null;
-  const todayLineText = todayLine?.line.text ?? null;
   // The mini guy who says the line (same recipe as the nav companion).
   const faceRecipe = useMemo(() => (me ? recipeForAccount(me.id, me.recipe) : undefined), [me]);
   // How far into the current round (one read, refreshed with the tracks).
@@ -242,13 +246,12 @@ export default function HomeScreen() {
   const todayLineLockScreen = todayPick?.prompt ?? (todayLine ? lockScreenText(todayLine.line) : null);
 
   /**
-   * AI consent gates GENERATION, not the screen. Declined and not-yet-asked
-   * stay DIFFERENT states — collapsing them is what once left a fresh account
-   * (ai_consent null) with no insight and no prompt.
+   * AI consent gates GENERATION, not the screen. The daily insight is stored
+   * copy now (emci, 2026-10-07), so it does not depend on the answer; Story
+   * still does. Declined and not-yet-asked stay DIFFERENT states.
    */
   const consent = me ? aiConsentFor(me) : 'pending';
   const consentGranted = consent === 'granted';
-  const consentOffEmpty = consent === 'denied';
 
   /**
    * TIMING, changed by emci 2026-09-15: the ask is now part of the FIRST thing
@@ -260,77 +263,53 @@ export default function HomeScreen() {
   const offerConsent = me != null && consent === 'pending';
 
   /**
-   * "Load insight" — a TAP, never an effect (§7 Card B). This used to be a
-   * `useEffect` that generated as soon as consent existed and today had no
-   * insight, so simply opening Home could spend a model call. The cached
-   * insight still paints from `useDailyInsight` (a local AsyncStorage read);
-   * the server is only touched when the button is pressed.
+   * "Load insight" — a TAP, never an effect (§7 Card B). Since 2026-10-07 the
+   * insight is STORED copy (lib/insight-bank): the tap picks one Focus · try ·
+   * watch idea on the device from this account's clear leans and saves it
+   * through `insert_daily_insight`. No model call, no quota, no AI consent gate.
    *
-   * The stored-first order is kept: an insight already written for today is
-   * fetched and shown WITHOUT generating a second one, so a tap after a
-   * reinstall or on a second device costs nothing.
+   * The stored-first order is kept: today's row, if one exists and came from
+   * the bank, is shown without picking again, so a second device agrees.
    */
   const generatingForYmd = useRef<string | null>(null);
   const [insightState, setInsightState] = useState<'idle' | 'loading' | 'unavailable'>('idle');
 
   const loadInsight = useCallback(async () => {
     if (!me || !userId || !window) return;
-    // The one gate: no consent, no model call. Above every fetch, generation,
-    // cache write and widget write — not below them.
-    if (!consentGranted) return;
     const { todayDay, todayYmd } = window;
     if (insight?.ymd === todayYmd) return;
-    // Re-entrancy: a double tap must not pay for two generations.
+    // Re-entrancy: a double tap must not save two rows.
     if (generatingForYmd.current === todayYmd) return;
     generatingForYmd.current = todayYmd;
     setInsightState('loading');
 
     try {
       const existing = await withTimeout(fetchTodayInsight(userId, todayYmd), AI_TAP_TIMEOUT_MS, 'insight-fetch');
-      if (existing) {
+      // An old AI-written row for today is not shown; a fresh pick supersedes it.
+      if (existing && isBankInsightTitle(existing.title)) {
         await saveCachedInsight(cachedFromInsight(existing, userId));
         await reloadInsight();
         setInsightState('idle');
         return;
       }
 
-      // A plain read, best effort: without it the insight is still written,
-      // it just cannot avoid its own recent angles.
-      const recentTitles = await withTimeout(fetchInsightHistory(userId, 5), RECENT_TITLES_TIMEOUT_MS, 'insight-history')
-        .then((rows) => rows.map((row) => row.title))
-        .catch(() => [] as string[]);
+      // Which ideas this account has already had. Best effort: without it the
+      // pick still works, it just cannot keep its no-repeat window. Titles that
+      // are not in the bank (old AI rows) are dropped here.
+      const history: IdeaDay[] = await withTimeout(
+        fetchInsightHistory(userId, INSIGHT_HISTORY_DAYS),
+        INSIGHT_HISTORY_TIMEOUT_MS,
+        'insight-history',
+      )
+        .then((rows) =>
+          rows.flatMap((row) => {
+            const match = ideaForTitle(row.title);
+            return match ? [{ ymd: row.ymd, ideaId: match.idea.id }] : [];
+          }),
+        )
+        .catch(() => [] as IdeaDay[]);
 
-      // Bounded: a slow network ends in the error + retry state, never a
-      // spinner that never stops.
-      const generated = await withTimeout(
-        generateDailyInsightAndLines({
-          tracks,
-          currentFocus: me.current_focus ?? null,
-          // Empty by design: recent tone came from the Check history, and the
-          // Check loop is parked. Tone only — never quoted back.
-          recentTone: [],
-          // The line they already read today is the thread to pull on, and the
-          // last few titles are what not to say again.
-          todayLine: todayLineText,
-          recentTitles,
-        }),
-        AI_TAP_TIMEOUT_MS,
-        'insight-generate',
-      );
-      if (!generated) {
-        setInsightState('unavailable');
-        return;
-      }
-      const { draft } = generated;
-      // The personal daily lines that came back with it: checked, then saved as
-      // rows only this account can read. Never allowed to fail the insight.
-      void keepAiLines(
-        userId,
-        generated.lines.map((line) => ({ keys: [`${line.axis}:${line.lean}` as const], text: line.text })),
-      ).catch((err) => {
-        console.log('[home] daily line top-up skipped:', err);
-      });
-
+      const draft = draftFromPick(pickIdea({ userId, ymd: todayYmd, leans: clearLeans(tracks), history }));
       await saveInsight(draft, todayDay, todayYmd);
       await saveCachedInsight({
         userId,
@@ -352,16 +331,7 @@ export default function HomeScreen() {
       // `insight.ymd`, which short-circuits above.
       if (generatingForYmd.current === todayYmd) generatingForYmd.current = null;
     }
-  }, [me, userId, window, consentGranted, insight?.ymd, tracks, reloadInsight, todayLineText]);
-
-  // Revoking consent has to reach the widget too: the cached insight is what
-  // the shipped widget renders, so leaving it would keep AI-written text on
-  // someone's lock screen after they turned AI off. A null `me` is a failed
-  // profile refresh, not a revocation, and must not wipe a granted user's cache.
-  useEffect(() => {
-    if (!me || consentGranted || !insight) return;
-    void saveCachedInsight(null).then(() => reloadInsight());
-  }, [me, consentGranted, insight, reloadInsight]);
+  }, [me, userId, window, insight?.ymd, tracks, reloadInsight]);
 
   // The widget shows today's insight once one is loaded; until then it shows
   // the written line, so it is never blank on a day the app was opened.
@@ -613,26 +583,21 @@ export default function HomeScreen() {
                 />
               ) : null}
 
-              {consentOffEmpty ? (
+              {insight ? (
                 /*
-                 * Declined: no daily content at all. The insight has no offline
-                 * lane, so this is the honest empty state rather than a stale
-                 * or made-up one.
-                 */
-                <ThemedView type="backgroundElement" style={styles.todayCard}>
-                  <ThemedText themeColor="textSecondary">{CONSENT_OFF_EMPTY_COPY}</ThemedText>
-                </ThemedView>
-              ) : insight ? (
-                /*
-                 * One card, one hierarchy. The title is the hero — the line a
-                 * person actually carries with them. Reflection sits under it as
-                 * context, then Try / Watch for are the two quieter instructions
-                 * under a hairline.
+                 * One card, one hierarchy. The focus is the hero — the line a
+                 * person actually carries with them. Why sits under it as
+                 * context, then Try / Watch are the two quieter lines under a
+                 * hairline. Stored copy (lib/insight-bank), so no AI badge.
+                 *
+                 * The kicker, then ONE chip row built from the stored theme:
+                 * that row is the trait tag. Never a second tag or label.
                  */
                 <ThemedView type="backgroundElement" style={styles.heroCard}>
                   <ThemedText type="code" themeColor="textSecondary" style={styles.sageKicker}>
-                    {homeSageLabel(theme.id)} · {insight.theme}
+                    {homeSageLabel(theme.id)}
                   </ThemedText>
+                  <TraitTagRow tags={themeTags(insight.theme)} />
                   {/* An earlier day's insight stays up until today's is loaded, so Home is
                       never an empty card — and says plainly that it is not today's. */}
                   {insight.ymd !== window?.todayYmd ? (
@@ -663,23 +628,16 @@ export default function HomeScreen() {
                     <ThemedText style={styles.doText}>{insight.watchFor}</ThemedText>
                   </View>
                 </ThemedView>
-              ) : consentGranted ? null : (
-                <ThemedView type="backgroundElement" style={styles.todayCard}>
-                  <ThemedText type="smallBold">No insight yet</ThemedText>
-                  <ThemedText themeColor="textSecondary">{AI_CONSENT_NEEDED_COPY}</ThemedText>
-                </ThemedView>
-              )}
+              ) : null}
 
               {/*
-                The ONLY thing that can spend a model call for the insight.
-                Shown when there is something to load: consent given, and
-                today's insight not already on screen.
+                Shown when today's insight is not on screen yet. The tap picks
+                from the stored bank: no model call, so no consent needed.
               */}
-              {consentGranted && insight?.ymd !== window?.todayYmd ? (
+              {insight?.ymd !== window?.todayYmd ? (
                 /*
-                 * Today's read, sealed (polish pass, 2026-10-05). The button
-                 * inside is still the ONLY thing that can spend a model call
-                 * for the insight; while it writes, the card shows a skeleton.
+                 * Today's read, sealed (polish pass, 2026-10-05). While the
+                 * pick is saved, the card shows a skeleton.
                  */
                 <ThemedView type="backgroundElement" style={styles.sealedCard}>
                   <View
@@ -690,7 +648,7 @@ export default function HomeScreen() {
                     {SEALED_READ_KICKER}
                   </ThemedText>
                   {insightState === 'loading' ? (
-                    <View style={styles.sealedSkeleton} accessibilityLabel="Writing">
+                    <View style={styles.sealedSkeleton} accessibilityLabel="Loading">
                       <SkeletonBar width="90%" />
                       <SkeletonBar width="70%" />
                       <SkeletonBar width="45%" />
@@ -715,14 +673,14 @@ export default function HomeScreen() {
                     ]}>
                     <ThemedText type="smallBold" themeColor="onAccent">
                       {insightState === 'loading'
-                        ? 'Writing…'
+                        ? 'Loading…'
                         : insightState === 'unavailable'
                           ? 'Try again'
                           : INSIGHT_LOAD_LABEL}
                     </ThemedText>
                   </ThemedPressable>
                   <ThemedText type="small" themeColor="textSecondary">
-                    Nothing is generated until you tap.
+                    {INSIGHT_STORED_NOTE}
                   </ThemedText>
                   {!POLISH_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
                     <ThemedText type="code" themeColor="textSecondary">
@@ -735,7 +693,7 @@ export default function HomeScreen() {
               {pickBlock}
 
               {/* The next step when there is nothing to load: the round ring. */}
-              {!(consentGranted && insight?.ymd !== window?.todayYmd) ? (
+              {insight?.ymd === window?.todayYmd ? (
                 /*
                    * ONE next step. When there is nothing to load (today's insight is
                    * up, or AI is off), the step is the next round of questions —

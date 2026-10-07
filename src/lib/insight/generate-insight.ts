@@ -28,12 +28,13 @@ export const DAILY_INSIGHT_COPY_REVIEWED = false;
 
 /**
  * Per-field character caps. These are mirrored by the CHECK constraints in
- * supabase/migrations/wave69_daily_insights.sql; scripts/insight-check.ts
+ * supabase/migrations/wave69_daily_insights.sql (title: wave87, raised to 120
+ * for the stored focus sentences, emci 2026-10-07); scripts/insight-check.ts
  * parses both and fails if they drift apart.
  */
 export const INSIGHT_FIELD_CAPS = {
   theme: 60,
-  title: 80,
+  title: 120,
   reflection: 400,
   tryToday: 200,
   watchFor: 200,

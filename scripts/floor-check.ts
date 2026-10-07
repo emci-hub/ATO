@@ -135,7 +135,7 @@ const consent = read('src/components/ai-consent-card.tsx');
 const crisis = read('src/lib/crisis/copy.ts');
 assert.match(copy, /Sage is a coach, not a person/);
 assert.match(copy, /SAGE_NPC_LABEL/);
-assert.match(copy, /Sage · npc/);
+assert.match(copy, /SAGE_NPC_LABEL = 'Focus · try · watch'/);
 // Sage is an inert placeholder while Talk is rebuilt; only the coach label
 // survives on it. Its own contract is pinned by scripts/sage-load-check.ts.
 assert.match(sage, /SAGE_COACH_LABEL/);
@@ -143,7 +143,7 @@ assert.doesNotMatch(sage, /from '@\/lib\/voice\/router'/);
 assert.doesNotMatch(sage, /routeVoiceCard/);
 assert.doesNotMatch(sage, /Ask Sage anything/);
 assert.doesNotMatch(sage, /Sage is writing/);
-assert.doesNotMatch(sage, /Sage · npc/);
+assert.doesNotMatch(sage, /SAGE_NPC_LABEL|Focus · try · watch/);
 assert.match(home, /homeSageLede/);
 // PARKED (ISOLATION_PLAN §7 Card C, 2026-09-15): SAGE_COACH_LABEL reached Home only
 // through the parked Ask sheet's fixtures. The two live Sage strings on Home
@@ -163,7 +163,9 @@ assert.doesNotMatch(home, /Sage listens/);
 assert.doesNotMatch(read('src/app/chat.tsx'), /Sage is a coach/);
 ok('Talk, Home, consent, crisis, push, widget, and Teach Sage label Sage as a coach; Quest Home may use npc');
 
-assert.match(home, /No insight yet/);
+// The empty state is the sealed card with its one honest note (stored bank, 2026-10-07).
+assert.match(home, /\{INSIGHT_STORED_NOTE\}/);
+assert.match(home, /SEALED_READ_LINE/);
 assert.doesNotMatch(home, /fake poster|Fake Person|open box|fake card media|fake ·/i);
 assert.doesNotMatch(home, /<PixelFace/);
 ok('Home has an honest empty card state and no Stage 1 fake fixtures');

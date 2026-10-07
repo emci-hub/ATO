@@ -624,27 +624,22 @@ ok('the Explore route runs the framework fence and both guards before anything i
 assert.equal(EXPLORE_LABEL, 'Explore');
 assert.ok(pickExplorePackFocuses(chipsOnly, []).length >= 1);
 
-// --- Card E: Categories is the ONLY AI affordance on Explore, and it is gated ---
+// --- Card E: Categories on Explore, gated, and stored (no model call) ---
 // ISOLATION_PLAN §7 Card E (emci 2026-09-15), reshaped by the release pass
-// (emci 2026-09-16): the full category list is always shown, and a TAP on one
-// category loads that one category. Every call goes through loadCategory, and
-// loadCategory refuses — before any model call — when the shared unlock gate
-// is shut, when AI consent is off, or when the category is not ready. Nothing
-// on this screen may generate on mount (check:no-auto-ai covers the effect side).
+// (emci 2026-09-16), then made STORED copy (emci 2026-10-07): the full category
+// list is always shown, and a TAP opens that category's stored card
+// (lib/category-bank). Nothing on this screen calls a model or writes a row;
+// the card is still behind the shared unlock gate and the category's own
+// readiness. check:category-bank pins the card itself.
 const catFold = read('src/components/categories-fold.tsx');
-assert.equal(
-  catFold.split('generateCategoryStatements(').length - 1,
-  1,
-  'exactly one call site may spend a model call on Explore',
+assert.doesNotMatch(
+  catFold,
+  /generateCategoryStatements|generateText|saveCategoryStatements/,
+  'Explore categories spend no model call and write nothing',
 );
-const loadFn = catFold.slice(
-  catFold.indexOf('async function loadCategory'),
-  catFold.indexOf('generateCategoryStatements(['),
-);
-assert.ok(loadFn.startsWith('async function loadCategory'), 'the one call must live inside loadCategory');
-assert.match(loadFn, /if \(!unlocked\) \{\s*setRow\(id, 'locked'\);\s*return;/, 'locked: no model call');
-assert.match(loadFn, /if \(!consentGranted\) \{\s*setRow\(id, 'consent'\);\s*return;/, 'consent off: no model call');
-assert.match(loadFn, /if \(!reading\.ready\) \{\s*setRow\(id, 'not_ready'\);\s*return;/, 'not ready: no model call');
+assert.match(catFold, /pickCategoryCard\(\{ userId: me\.id, reading, ymd: todayYmd \}\)/, 'the open card is the stored one');
+assert.match(catFold, /: !unlocked\s*\n\s*\? 'locked'/, 'locked: the shared gate, before any card');
+assert.match(catFold, /: !reading\.ready\s*\n\s*\? 'not_ready'/, 'not ready: no card');
 assert.match(catFold, /FULL_PROFILE_LOCKED_COPY/, 'the locked state must use the one shared line');
 // 2026-10-05: the list became a 2-column tile grid; it still walks EVERY
 // reading (pairsOf keeps them all, in order).
@@ -656,7 +651,7 @@ assert.match(
   /unlocked=\{isFullProfileDone\(tracks, tracksReady\)\}/,
   'Explore must pass the shared gate, not its own derivation',
 );
-ok('Explore spends a model call only from a category tap, behind unlock, consent and readiness');
+ok('Explore categories open a stored card behind unlock and readiness, with no model call');
 
 console.log(`\nAll ${passed} explore checks passed.`);
 }

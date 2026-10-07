@@ -190,9 +190,9 @@ const copy = read('src/lib/sage-copy.ts');
 const nudgeSrc = read('src/lib/voice/nudge.ts');
 
 assert.match(home, /SAGE_NPC_LABEL|homeSageLabel/);
-assert.match(copy, /Sage · npc/);
+assert.match(copy, /SAGE_NPC_LABEL = 'Focus · try · watch'/);
 assert.doesNotMatch(circle, /NUDGE_LABEL|nudge_text|Nudge/);
-assert.doesNotMatch(sage, /NUDGE_LABEL|Sage · npc/);
+assert.doesNotMatch(sage, /NUDGE_LABEL|SAGE_NPC_LABEL/);
 assert.doesNotMatch(widget, /[Nn]udge|npc/i);
 assert.doesNotMatch(push, /[Nn]udge/);
 // The widget still gets exactly two text keys and never a third. Sourced

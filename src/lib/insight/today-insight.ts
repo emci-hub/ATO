@@ -12,6 +12,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ExtensionStorage } from '@bacons/apple-targets';
 import { Platform } from 'react-native';
 
+import { ideaForTitle, ideaShareable } from '@/lib/insight-bank';
+
 import { emitDailyInsightChanged } from './events';
 import type { DailyInsight } from './store';
 
@@ -25,6 +27,10 @@ export const APP_GROUP = 'group.com.emgens.ato';
  * — `read` from the title, `do` from what to try today. Renaming them to
  * `AtoInsight` / `title` / `tryToday` needs a native build and lands with it
  * (T-H3), not before, or every installed widget goes blank.
+ *
+ * Since the stored bank (2026-10-07) `read` is the focus and `do` is its trait
+ * tags — or the private "ready" copy when the focus is not for other eyes
+ * (`lockScreenInsight`).
  */
 export const WIDGET_KIND = 'AtoCard';
 export const TODAY_INSIGHT_KEY = 'ato.today-insight.v1';
@@ -63,13 +69,32 @@ export function cachedFromInsight(insight: DailyInsight, userId: string): Cached
   };
 }
 
+/** What the widget, a push or a share says when today's focus is not for other eyes. */
+export const INSIGHT_PRIVATE_COPY = 'Today’s focus is ready.';
+
+/**
+ * What may leave the app for today's insight (emci, 2026-10-07): the focus and
+ * its tags, and only when every trait it is about passes `isShareableLean`.
+ * Anything else (a worry or struggle lean, or an old AI-written row that is not
+ * in the bank) gets the private "ready" copy and no tags.
+ */
+export function lockScreenInsight(insight: Pick<CachedInsight, 'title' | 'theme'>): {
+  text: string;
+  tags: string | null;
+} {
+  const match = ideaForTitle(insight.title);
+  if (!match || !ideaShareable(match.idea)) return { text: INSIGHT_PRIVATE_COPY, tags: null };
+  return { text: insight.title, tags: insight.theme };
+}
+
 function writeWidget(insight: CachedInsight | null) {
   if (Platform.OS !== 'ios') return;
   try {
     const storage = new ExtensionStorage(APP_GROUP);
     if (insight && insight.title.trim().length > 0) {
-      storage.set('read', insight.title);
-      storage.set('do', insight.tryToday);
+      const outside = lockScreenInsight(insight);
+      storage.set('read', outside.text);
+      storage.set('do', outside.tags ?? WIDGET_LINE_FOLLOW_UP);
       storage.set('hasCard', '1');
     } else {
       storage.set('read', '');

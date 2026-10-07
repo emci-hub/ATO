@@ -27,6 +27,10 @@ import { NO_PINCH_ZOOM } from '@/lib/theme/chrome';
  * provider layer. `sage_messages` still exists; a drop migration is written and
  * awaiting review (wave71), so decide whether Talk keeps that table before
  * applying it.
+ *
+ * AI badge (emci, 2026-10-07): every surface that shows model output carries
+ * `<AiBadge />` (components/ai-badge.tsx). This placeholder has no AI, so it
+ * has none; the rebuilt Talk puts the pill on every model-written reply.
  */
 export default function SageScreen() {
   return (

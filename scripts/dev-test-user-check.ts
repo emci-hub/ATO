@@ -313,7 +313,9 @@ function main() {
   assert.match(read('src/app/(tabs)/explore.tsx'), /\}, \[userId, me, dataEpoch\]\);/);
   const catFold = read('src/components/categories-fold.tsx');
   assert.match(catFold, /\}, \[me\.id, me\.updated_at, dataEpoch\]\);/);
-  assert.match(catFold, /\}, \[loadStatements, dataEpoch\]\);/);
+  // The stored category card (2026-10-07) is computed from those tracks each
+  // render, so the tracks reload above is the whole refresh; no statements fetch.
+  assert.doesNotMatch(catFold, /loadStatements|fetchCurrentStatements/);
   ok('Questions, Explore and the categories card reload when the account-data epoch moves');
 
   /* -------------------------------------------------------------------------
