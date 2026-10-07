@@ -1,8 +1,8 @@
 -- wave85_fixed_question_bank.sql
 --
--- NOT APPLIED. Written 2026-10-06 on branch feat/fixed-question-bank; apply
--- only after emci approves the PR. Apply this file FIRST, then
--- wave85b_question_bank_seed.sql (the 400 rows, generated).
+-- APPLIED 2026-10-06 to the live project (by the agent, through the Supabase
+-- connector, after emci merged PR #18 and #19). Applied FIRST, then
+-- wave85b_question_bank_seed.sql (the 400 rows, generated), then wave86.
 --
 -- The fixed question bank (emci 2026-10-06): 25 questions per trait, 400 in
 -- all, written once and stored here. No question is generated at runtime any

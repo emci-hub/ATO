@@ -64,6 +64,7 @@ Live checks (need real accounts / network / keys) are excluded from the gate and
   one file per trait in `src/lib/questions/bank/`; the server copy (`question_bank`) is generated
   by `scripts/gen-wave85-bank.ts` and pinned by `check:question-bank`. No AI writes a question and
   nothing a person typed reaches one. Never renumber or reuse a question id — answers point at it.
+  wave85/85b/86 are applied (2026-10-06); a wording edit needs a new migration updating that row.
 - **Profile history (wave86, emci 2026-10-06).** Saved profiles live in `trait_profile_snapshots`
   (reasons `start_fresh`, `change_answers`, `monthly`) and render as cards (`profile-card.tsx`,
   Divecore sprites). History is never auto-deleted; the monthly pg_cron job saves only on a

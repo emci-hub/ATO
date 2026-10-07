@@ -1,8 +1,8 @@
 -- wave86_change_answers_history.sql
 --
--- NOT APPLIED. Written 2026-10-06 on branch feat/profile-history-cards,
--- stacked on wave85 (PR #18). Apply only after wave85 + wave85b, and only
--- after emci approves this PR.
+-- APPLIED 2026-10-06 to the live project (by the agent, through the Supabase
+-- connector), right after wave85 + wave85b. pg_cron job
+-- profile-history-monthly confirmed scheduled.
 --
 -- emci 2026-10-06: Change answers + Undo replace Retest; a monthly profile
 -- history that keeps only meaningful changes; every saved profile renders as

@@ -102,7 +102,7 @@ assert.equal(seed, wave85SeedSql().replace(/\r\n/g, '\n'), 'wave85b matches gen-
 assert.match(seed, /on conflict \(id\) do update/);
 assert.doesNotMatch(seed, /\bdelete\s+from\b|\btruncate\b|trait_answers|trait_tracks/i, 'the seed touches no answer');
 const sql = read('supabase/migrations/wave85_fixed_question_bank.sql');
-assert.match(sql, /^-- NOT APPLIED\./m, 'marked not applied until emci approves');
+assert.match(sql, /^-- APPLIED 2026-10-06 to the live project/m, 'records that it is applied');
 assert.match(sql, /create table if not exists public\.question_bank \(\n  id text primary key/, 'the bank is its own table keyed by id');
 assert.match(sql, /revoke all on table public\.question_bank from public, anon, authenticated;/, 'no client reads or writes the bank');
 assert.doesNotMatch(sql, /delete from public\.question_bank\b/, 'nothing deletes bank rows');
