@@ -597,6 +597,7 @@ re-gated to `__DEV__` (or removed), and the Metro `PROBE_STUB` re-added:
 One flag controls all of these: `PRE_LAUNCH_DEV = true` in `src/lib/dev-mode.ts`. **`npm run check:release-mode` (wired as the EAS `eas-build-post-install` hook) refuses a production build while it is `true`.**
 
 ## Decisions log
+- 2026-10-07: **AI badge = small tap-for-details icon (emci).** Consent copy now names only the Story as AI. PR #22, OTA `32b071bb`.
 - 2026-10-07: **Stored Focus · try · watch + category cards replace the AI insight and AI category statements (emci, Topic 1).** PR #21 (`14c0ca6`), wave87 applied (title cap 120), OTA `eef30134`. Clear voice for stored tips; both banks unreviewed with review docs and no in-app draft badge; AI pill on Story; rerolls frozen; old AI history hidden (UI only). Not device-verified.
 
 - 2026-10-06: **Shipped: OTA `7e69d2a7` (fixed bank + Change answers + profile history + cards).** emci merged #18 and #19 by hand (the agent's merge was refused by the safety check twice; the agent did not route around it). Agent then: fixed two CRLF-unsafe checks found only on the Windows master checkout, applied wave85 → wave85b (four 100-row upserts) → wave86, verified each live, fixed two options broken by the contraction pass ("That's just how I am / she is") before the last seed chunk, and published one OTA. Open: device test (sets, Change answers, Undo, cards); emci's read of the new copy (flip `BANK_COPY_REVIEWED` / `PROFILE_CARD_COPY_REVIEWED`); first monthly card run 2026-11-01.
