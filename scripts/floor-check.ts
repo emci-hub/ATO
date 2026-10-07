@@ -161,7 +161,7 @@ assert.doesNotMatch(home, /Sage listens/);
 // is unchanged and still asserted against every live surface above; this line
 // asserts the parked screen carries none of it.
 assert.doesNotMatch(read('src/app/chat.tsx'), /Sage is a coach/);
-ok('Talk, Home, consent, crisis, push, widget, and Teach Sage label Sage as a coach; Quest Home may use npc');
+ok('Talk, Home, consent, crisis, push, widget, and Teach Sage label Sage as a coach; the Home insight kicker is Focus · try · watch');
 
 // The empty state is the sealed card with its one honest note (stored bank, 2026-10-07).
 assert.match(home, /\{INSIGHT_STORED_NOTE\}/);

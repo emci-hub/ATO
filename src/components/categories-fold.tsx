@@ -165,7 +165,9 @@ export function CategoriesFold({
           : null;
     // Before tracks land every category reads as not ready; say "Loading"
     // rather than flash a count of zero at a finished user.
-    const summary = card?.summary ?? (state === 'loading' ? 'Loading…' : categoryNeedsLine(reading));
+    // A ready category with no stored card (a catalog id added after this
+    // bundle) says nothing rather than a misleading "needs" count.
+    const summary = card?.summary ?? (state === 'loading' ? 'Loading…' : state ? categoryNeedsLine(reading) : '');
     return { id, open, card, state, summary };
   }
 

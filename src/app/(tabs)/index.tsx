@@ -60,14 +60,14 @@ import { ONGOING_ROUND_SIZE } from '@/lib/questions/tiered-axis-plan';
 export const INSIGHT_LOAD_LABEL = 'Load insight';
 /** The history read is a nice-to-have: it must never hold up the insight. */
 const INSIGHT_HISTORY_TIMEOUT_MS = 5000;
-/** How far back the picker looks for ideas it has already shown. */
-const INSIGHT_HISTORY_DAYS = 90;
+/** How many past rows (superseded ones included) the picker reads to keep its no-repeat window. */
+const INSIGHT_HISTORY_ROWS = 90;
 /** Under the sealed card: where today's focus comes from. */
 export const INSIGHT_STORED_NOTE = 'Picked from your answers. Not written by AI.';
 export const INSIGHT_UNAVAILABLE_COPY = 'Couldn’t load it just now — tap to try again.';
 export const ANSWER_QUESTIONS_LABEL = 'Answer the questions';
 /** Shown on an insight that is not today's (it stays up until today's is loaded). */
-export const INSIGHT_EARLIER_DAY_COPY = 'From an earlier day. Load insight writes today’s.';
+export const INSIGHT_EARLIER_DAY_COPY = 'From an earlier day. Load insight picks today’s.';
 /** Home's one next step once the profile is done and there is nothing to load. */
 export const NEXT_ROUND_ROW_LABEL = nextRoundLabel(ONGOING_ROUND_SIZE);
 export const NEXT_ROUND_ROW_COPY = `Each finished round sharpens your profile and earns ${ATO_TOKEN_EARN.ongoing_round_complete} ATO tokens.`;
@@ -297,7 +297,7 @@ export default function HomeScreen() {
       // pick still works, it just cannot keep its no-repeat window. Titles that
       // are not in the bank (old AI rows) are dropped here.
       const history: IdeaDay[] = await withTimeout(
-        fetchInsightHistory(userId, INSIGHT_HISTORY_DAYS),
+        fetchInsightHistory(userId, INSIGHT_HISTORY_ROWS),
         INSIGHT_HISTORY_TIMEOUT_MS,
         'insight-history',
       )
