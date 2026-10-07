@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, Platform, StyleSheet, Vibration, View } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Animated, {
   cancelAnimation,
@@ -7,6 +7,7 @@ import Animated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  withRepeat,
   withSequence,
   withTiming,
   ZoomIn,
@@ -20,9 +21,10 @@ import { useTheme } from '@/hooks/use-theme';
 import { useAppearance } from '@/lib/theme/context';
 import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import {
+  EIGHT_BALL_CALM_FLASHES,
+  EIGHT_BALL_CALM_STEP_MS,
   EIGHT_BALL_COPY_REVIEWED,
-  EIGHT_BALL_REEL_SETTLE_MS,
-  EIGHT_BALL_REEL_SPIN_MS,
+  eightBallReelTiming,
   pickEightBallFlashes,
   rollEightBall,
 } from '@/lib/sage-eight-ball';
@@ -34,12 +36,38 @@ import { controlBorderColor } from '@/lib/theme/chrome';
  * companion, not an 8-ball, so this stays a tiny View stack instead.
  * Views (not SVG) so Sage's first paint does not parse react-native-svg.
  */
-function SageOrb({ size, spin, marked }: { size: number; spin: number; marked?: boolean }) {
+function SageOrb({
+  size,
+  spin,
+  marked,
+  thinking = false,
+}: {
+  size: number;
+  spin: number;
+  marked?: boolean;
+  /** Reduce Motion only: a soft opacity pulse while the answer is picked. */
+  thinking?: boolean;
+}) {
   const theme = useTheme();
   const { reduceMotion } = useAppearance();
   const rotate = useSharedValue(0);
   const nudge = useSharedValue(0);
   const pop = useSharedValue(1);
+  const glow = useSharedValue(1);
+
+  // Reduce Motion: no movement at all — the ball "thinks" by glowing softly.
+  useEffect(() => {
+    cancelAnimation(glow);
+    if (reduceMotion && thinking) {
+      glow.value = withRepeat(
+        withSequence(withTiming(0.45, { duration: 350 }), withTiming(1, { duration: 350 })),
+        -1,
+        false,
+      );
+    } else {
+      glow.value = withTiming(1, { duration: 150 });
+    }
+  }, [reduceMotion, thinking, glow]);
 
   // A turning circle barely reads, and since the polish pass the closed ball
   // is 26px (emci 2026-10-06: "what happened to its animation?"). So the shake
@@ -72,6 +100,7 @@ function SageOrb({ size, spin, marked }: { size: number; spin: number; marked?: 
   }, [spin, reduceMotion, rotate, nudge, pop, size]);
 
   const motion = useAnimatedStyle(() => ({
+    opacity: glow.value,
     transform: [{ translateX: nudge.value }, { rotate: `${rotate.value}deg` }, { scale: pop.value }],
   }));
 
@@ -115,14 +144,26 @@ function SageOrb({ size, spin, marked }: { size: number; spin: number; marked?: 
   );
 }
 
-/** One line of the reel window. Two lines of answer text fit, with room. */
+/** One line of the reel. Two lines of answer text fit, with room. */
 const REEL_ROW_H = 64;
+/** How much of the rows above and below shows through the window. */
+const REEL_PEEK = 18;
+const REEL_WINDOW_H = REEL_ROW_H + REEL_PEEK * 2;
+/** Stepped fade over the peek (no gradient package: bands of the card colour). */
+const REEL_FADE_STEPS = [0.92, 0.7, 0.45, 0.2] as const;
+
+/** Same short buzz the Reveal card uses (reveal-card.tsx); no extra package. */
+function oneLightHaptic() {
+  if (Platform.OS === 'web') return;
+  Vibration.vibrate(10);
+}
 
 /**
- * The slot reel: `strip` stacked in a one-row window. On a new `runId` it
- * snaps to the top (the old answer), spins down the strip on an ease-out
- * curve, runs a little past the last row and settles back onto it, then calls
- * `onDone`. A strip of one line just shows it.
+ * The slot reel: `strip` stacked in a framed window that shows a sliver of the
+ * rows above and below, faded at the edges. On a new `runId` it snaps to the
+ * first row (the old answer), spins fast and steady (linear), then brakes on
+ * an ease-out cubic onto the last row and calls `onDone`. The brake starts at
+ * the spin's speed (eightBallReelTiming), so the stop reads as one motion.
  */
 function SlotReel({
   strip,
@@ -136,28 +177,30 @@ function SlotReel({
   spinning: boolean;
   onDone: () => void;
 }) {
-  const y = useSharedValue(0);
+  const theme = useTheme();
+  const y = useSharedValue(REEL_PEEK);
   const done = useRef(onDone);
   done.current = onDone;
 
   useEffect(() => {
     cancelAnimation(y);
+    const rowY = (row: number) => REEL_PEEK - row * REEL_ROW_H;
     if (strip.length <= 1) {
-      y.value = 0;
+      y.value = rowY(0);
       return;
     }
-    const target = -(strip.length - 1) * REEL_ROW_H;
+    const steps = strip.length - 1;
     if (!spinning) {
-      y.value = target;
+      y.value = rowY(steps);
       return;
     }
-    y.value = 0;
+    const timing = eightBallReelTiming(steps);
+    y.value = rowY(0);
     y.value = withSequence(
-      withTiming(target - REEL_ROW_H * 0.28, {
-        duration: EIGHT_BALL_REEL_SPIN_MS,
-        easing: Easing.bezier(0.12, 0.72, 0.2, 1),
-      }),
-      withTiming(target, { duration: EIGHT_BALL_REEL_SETTLE_MS, easing: Easing.out(Easing.cubic) }, (finished) => {
+      // Fast and steady.
+      withTiming(rowY(timing.spinRows), { duration: timing.spinMs, easing: Easing.linear }),
+      // Then the brake onto the answer.
+      withTiming(rowY(steps), { duration: timing.stopMs, easing: Easing.out(Easing.cubic) }, (finished) => {
         if (finished) runOnJS(callDone)();
       }),
     );
@@ -172,7 +215,7 @@ function SlotReel({
 
   return (
     <View
-      style={styles.reelWindow}
+      style={[styles.reelWindow, { borderColor: controlBorderColor(theme) }]}
       accessible
       accessibilityLiveRegion="polite"
       accessibilityLabel={spinning ? 'Shaking' : strip[strip.length - 1]}>
@@ -193,6 +236,63 @@ function SlotReel({
             </ThemedText>
           </View>
         ))}
+      </Animated.View>
+      {/* Top and bottom fade over the peeking rows. */}
+      <View pointerEvents="none" style={[styles.reelFade, styles.reelFadeTop]}>
+        {REEL_FADE_STEPS.map((o) => (
+          <View key={`t${o}`} style={[styles.reelFadeBand, { backgroundColor: theme.backgroundElement, opacity: o }]} />
+        ))}
+      </View>
+      <View pointerEvents="none" style={[styles.reelFade, styles.reelFadeBottom]}>
+        {[...REEL_FADE_STEPS].reverse().map((o) => (
+          <View key={`b${o}`} style={[styles.reelFadeBand, { backgroundColor: theme.backgroundElement, opacity: o }]} />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+/**
+ * Reduce Motion's answer: no reel and nothing moves. The line cross-fades
+ * through `lines` (a few others, then the real answer) one step at a time,
+ * about a second in all, then calls `onDone`. Opacity only.
+ */
+function CalmReel({ lines, runId, onDone }: { lines: readonly string[]; runId: number; onDone: () => void }) {
+  const [index, setIndex] = useState(0);
+  const fade = useSharedValue(1);
+  const done = useRef(onDone);
+  done.current = onDone;
+
+  useEffect(() => {
+    setIndex(0);
+    let step = 0;
+    const timer = setInterval(() => {
+      step += 1;
+      if (step >= lines.length) {
+        clearInterval(timer);
+        done.current();
+        return;
+      }
+      setIndex(step);
+    }, EIGHT_BALL_CALM_STEP_MS);
+    return () => clearInterval(timer);
+    // A new run restarts it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runId]);
+
+  useEffect(() => {
+    fade.value = 0.15;
+    fade.value = withTiming(1, { duration: Math.round(EIGHT_BALL_CALM_STEP_MS * 0.7) });
+  }, [index, fade]);
+
+  const shown = useAnimatedStyle(() => ({ opacity: fade.value }));
+
+  return (
+    <View style={styles.calmWindow} accessible accessibilityLiveRegion="polite" accessibilityLabel="Thinking">
+      <Animated.View style={shown}>
+        <ThemedText style={styles.answer} numberOfLines={2}>
+          {lines[index]}
+        </ThemedText>
       </Animated.View>
     </View>
   );
@@ -218,35 +318,54 @@ export function SageEightBall() {
   const landing = useRef<string | null>(null);
   const rollingRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const zoomTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const opening = useRef(false);
+  // The first roll after opening waits for the card's zoom-in to finish.
+  const rollAfterZoom = useRef(false);
+  const rollRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
+      if (zoomTimerRef.current) clearTimeout(zoomTimerRef.current);
     };
   }, []);
 
+  // Drops a first roll still waiting on the zoom-in (closed, reopened or
+  // Ask tapped meanwhile), so it can never fire later on its own.
+  function cancelPendingZoomRoll() {
+    if (zoomTimerRef.current) clearTimeout(zoomTimerRef.current);
+    zoomTimerRef.current = null;
+    rollAfterZoom.current = false;
+  }
+
   function roll() {
     if (rollingRef.current) return;
+    cancelPendingZoomRoll();
     const next = rollEightBall(answer);
-    setSpin((n) => n + 1);
-    if (reduceMotion) {
-      setAnswer(next);
-      return;
-    }
     rollingRef.current = true;
     setRolling(true);
-    const flashes = pickEightBallFlashes(next, answer);
     landing.current = next;
+    if (reduceMotion) {
+      // No shake, no reel: a short cross-fade through a few answers (CalmReel)
+      // while the ball glows (SageOrb thinking), then a light haptic.
+      setStrip([...pickEightBallFlashes(next, answer, EIGHT_BALL_CALM_FLASHES), next]);
+      setRunId((n) => n + 1);
+      return;
+    }
+    setSpin((n) => n + 1);
+    const flashes = pickEightBallFlashes(next, answer);
     // The strip starts on the answer showing now, runs through the fillers
     // and ends on the real one (SlotReel).
     setStrip([...(answer ? [answer] : []), ...flashes, next]);
     setRunId((n) => n + 1);
   }
+  rollRef.current = roll;
 
-  // Reduce Motion switched on mid-spin unmounts the reel before it lands.
+  // Reduce Motion switched either way mid-roll swaps the reel for the calm
+  // view (or back) before it lands: land it now so Ask is never stuck.
   useEffect(() => {
-    if (reduceMotion && rollingRef.current) landed();
+    if (rollingRef.current) landed();
   }, [reduceMotion]);
 
   function landed() {
@@ -257,10 +376,31 @@ export function SageEightBall() {
     setRolling(false);
   }
 
+  function calmLanded() {
+    oneLightHaptic();
+    // VoiceOver does not read live regions: say the answer that landed.
+    if (landing.current) AccessibilityInfo.announceForAccessibility(landing.current);
+    landed();
+  }
+
+  // Called when the card's zoom-in finishes, or by a fallback timer (the
+  // entering callback is not guaranteed on every platform).
+  function zoomFinished() {
+    if (zoomTimerRef.current) {
+      clearTimeout(zoomTimerRef.current);
+      zoomTimerRef.current = null;
+    }
+    if (!rollAfterZoom.current) return;
+    rollAfterZoom.current = false;
+    rollRef.current();
+  }
+
   function toggle() {
     // Closing mid-spin unmounts the reel before it lands: land it now so Ask
     // is never left disabled.
     if (rollingRef.current) landed();
+    // Closing before the zoom-in finished: no roll may fire on a closed card.
+    cancelPendingZoomRoll();
     setOpen((value) => !value);
   }
 
@@ -278,8 +418,11 @@ export function SageEightBall() {
     setSpin((n) => n + 1);
     timerRef.current = setTimeout(() => {
       opening.current = false;
+      cancelPendingZoomRoll();
+      // The reel starts only once the card has zoomed in.
+      rollAfterZoom.current = true;
       setOpen(true);
-      roll();
+      zoomTimerRef.current = setTimeout(zoomFinished, ZOOM_FALLBACK_MS);
     }, OPEN_SHAKE_MS);
   }
 
@@ -301,7 +444,15 @@ export function SageEightBall() {
 
   return (
     <Animated.View
-      entering={reduceMotion ? undefined : ZoomIn.springify().damping(14)}
+      entering={
+        reduceMotion
+          ? undefined
+          : ZoomIn.springify()
+              .damping(14)
+              .withCallback((finished) => {
+                if (finished) runOnJS(zoomFinished)();
+              })
+      }
       style={styles.cardOpen}>
     <ThemedView type="backgroundElement" style={styles.card}>
       <ThemedPressable
@@ -328,9 +479,12 @@ export function SageEightBall() {
             </ThemedText>
           ) : null}
           <View style={styles.answerRow}>
-            <SageOrb size={28} spin={spin} marked />
-            {/* The reel only while it spins or still rests on the current answer. */}
-            {!reduceMotion && strip.length > 0 && (rolling || strip[strip.length - 1] === answer) ? (
+            <SageOrb size={28} spin={spin} marked thinking={rolling} />
+            {/* Reduce Motion: the calm cross-fade while it thinks. Otherwise the
+                reel, while it spins or still rests on the current answer. */}
+            {reduceMotion && rolling && strip.length > 0 ? (
+              <CalmReel lines={strip} runId={runId} onDone={calmLanded} />
+            ) : !reduceMotion && strip.length > 0 && (rolling || strip[strip.length - 1] === answer) ? (
               <SlotReel strip={strip} runId={runId} spinning={rolling} onDone={landed} />
             ) : (
               <ThemedText
@@ -362,6 +516,8 @@ export function SageEightBall() {
 
 /** How long the closed ball shakes before it opens. Matches SageOrb's shake. */
 const OPEN_SHAKE_MS = 650;
+/** Start the first reel anyway if the zoom-in callback never arrives. */
+const ZOOM_FALLBACK_MS = 900;
 
 const styles = StyleSheet.create({
   orbButton: {
@@ -410,8 +566,32 @@ const styles = StyleSheet.create({
   },
   reelWindow: {
     flex: 1,
-    height: REEL_ROW_H,
+    // + the 1px top and bottom border, so the landed row sits dead centre.
+    height: REEL_WINDOW_H + 2,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderRadius: Spacing.two,
+    paddingHorizontal: Spacing.two,
+  },
+  reelFade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: REEL_PEEK,
+  },
+  reelFadeTop: {
+    top: 0,
+  },
+  reelFadeBottom: {
+    bottom: 0,
+  },
+  reelFadeBand: {
+    flex: 1,
+  },
+  calmWindow: {
+    flex: 1,
+    height: REEL_ROW_H,
+    justifyContent: 'center',
   },
   reelRow: {
     height: REEL_ROW_H,
