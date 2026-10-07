@@ -63,8 +63,8 @@ assert.doesNotMatch(
 ok('My account: inspector, intake set, next-round preview, tokens today, raw traits, bands — read-only');
 
 // Move my account: the three account writers, nothing else.
-assert.equal((move!.match(/<[A-Z][A-Za-z]+ \/>/g) ?? []).join(' '), '<JumpThisAccount /> <StartOver /> <ResetToFreshSignup />');
-ok('Move my account: jump, Start over, delete-profile-and-re-run-sign-up, nothing else');
+assert.equal((move!.match(/<[A-Z][A-Za-z]+ \/>/g) ?? []).join(' '), '<JumpThisAccount /> <QuestionBankPanel /> <StartOver /> <ResetToFreshSignup />');
+ok('Move my account: jump, question bank fill, Start over, delete-profile-and-re-run-sign-up, nothing else');
 
 for (const p of ['<MiniGuyPanel />', '<MilestonesPanel />', '<CrisisTools />', '<DraftCopyList />']) assert.ok(content!.includes(p), `${p} under Content`);
 assert.match(content!, /<DailyLineDev userId=/);
@@ -73,7 +73,7 @@ for (const p of ['<PushStatus />', '<AppReloadPanel />', '<LocalAccountData />',
 assert.match(phone!, /<YouDevTools timeZone=/);
 assert.match(phone!, /canSeeHubSection\('trace', gate\) \? <TraceCapture \/>/);
 assert.match(ai!, /canSeeHubSection\('quota', gate\) \? <QuotaDashboard \/>/);
-assert.ok(ai!.includes('<QuestionLabPanel />'), 'Question lab under AI (forever loop testing, 2026-10-05)');
+assert.ok(!ai!.includes('QuestionLabPanel'), 'the AI question lab is gone with runtime question generation (wave85)');
 assert.ok(labs!.includes('<LabsList />'));
 ok('Content, This phone, AI and Labs hold their tools, each behind its capability where it has one');
 

@@ -102,8 +102,7 @@ assert.match(pager, /setPendingByRow\(\(prev\) => \(\{\n\s+\.\.\.prev,\n\s+\[row
 assert.match(pager, /const PAGE_SIZE = 4;/, 'PAGE_SIZE stays 4');
 assert.match(pager, /\(pickedByRow\[row\.key\] \?\? row\.answeredIndex \?\? -1\) === optIndex/, 'stamps compare in original index');
 const fold = readFileSync(resolve(__dirname, '../src/components/questions-fold.tsx'), 'utf8');
-assert.match(fold, /mixSeed=\{mixSeed\(me\.id, `set\$\{set\.set\}`\)\}/);
-assert.match(fold, /mixSeed=\{mixSeed\(me\.id, `round:\$\{pack\.id\}`\)\}/);
-ok('the pager taps, stamps and saves in the original index; intake sets and rounds are seeded per person');
+assert.match(fold, /mixSeed=\{mixSeed\(me\.id, `bank:\$\{pack\.id\}`\)\}/);
+ok('the pager taps, stamps and saves in the original index; every bank set is seeded per person');
 
 console.log(`\n${passed} mix-order checks passed`);

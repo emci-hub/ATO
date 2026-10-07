@@ -189,9 +189,11 @@ ok('fetchMe scopes reads to the signed-in id; updateTraits writes through the se
   const checkpoint = read('src/lib/trait-checkpoint.ts');
   assert.match(checkpoint, /const \{ data, error \} = await supabase\.rpc\(name, args\);\s*if \(error\) throw error;/);
   assert.doesNotMatch(checkpoint, /\.catch\(/, 'the checkpoint client never swallows an error');
-  const answer = read('src/lib/questions/answer.ts');
-  assert.match(answer, /await answerIntakeQuestion\(draft\.prompt, optionIndex\);/);
-  assert.doesNotMatch(answer, /\.catch\(/);
+  // The Questions screen awaits each checkpoint call inside its try, so a
+  // refusal fails the batch and the pager keeps the page (wave85 bank sets).
+  const fold = read('src/components/questions-fold.tsx');
+  assert.match(fold, /for \(const \{ key, optIndex \} of answers\) \{\s*await answerBankItem\(key, optIndex\);\s*\}/);
+  assert.match(fold, /\} catch \(err\) \{\s*console\.log\('\[bank\] answer error:', err\);[\s\S]*?return false;/);
   ok('a refused or failed trait save reaches the caller (no silent save)');
 }
 

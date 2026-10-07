@@ -97,8 +97,8 @@ assert.equal(
 );
 assert.match(
   foldSrc,
-  /if \(existing && roundFullyAnswered\(existing\)\) \{\s*claimOngoingRoundCompleteQuiet\(existing\.id, \(\{ fresh \}\) => \{\s*if \(fresh\) void onUpdated\(\);/,
-  'the retry on load only fires for a fully answered round',
+  /if \(loaded && loaded\.kind === 'ongoing_round' && packDone\(loaded\)\) \{\s*claimOngoingRoundCompleteQuiet\(loaded\.id, \(\{ fresh \}\) => \{\s*if \(fresh\) void onUpdated\(\);/,
+  'the retry on load only fires for a fully answered paying set (sets 4-25, kind ongoing_round)',
 );
 assert.match(foldSrc, /claimOngoingRoundCompleteQuiet\(\s*[\w.]+\.id\s*[,)]/, 'the claim passes the round id');
 assert.ok(wave52.includes('claim_ongoing_round_complete'), 'the round claim RPC is defined');

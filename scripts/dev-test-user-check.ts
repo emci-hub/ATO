@@ -301,14 +301,10 @@ function main() {
     ['ato.questions.answeredOption.', 'ato.questions.categoryPage.'],
     'exactly the stamps and positions — not all of ato.questions.*',
   );
-  assert.ok(
-    read('src/lib/questions/run-prewarm.ts').includes('ato.questions.prewarm-at'),
-    'the prewarm cooldown shares the ato.questions. namespace, which is why the clear lists prefixes',
-  );
   assert.doesNotMatch(narrow, /cancelAllScheduledPush/, 'a jump must not cancel the account\'s pushes');
   assert.match(read('src/lib/questions/answered-option-storage.ts'), /const KEY_PREFIX = 'ato\.questions\.answeredOption\.'/);
   assert.match(read('src/lib/questions/category-page-position.ts'), /const KEY_PREFIX = 'ato\.questions\.categoryPage\.'/);
-  ok('clearLocalQuestionState removes the answer stamps and page positions only, and leaves the prewarm cooldown');
+  ok('clearLocalQuestionState removes the answer stamps and page positions only');
 
   // Mounted screens reload when the account is rewritten under them.
   const questionsTab = read('src/app/(tabs)/intake-sweep.tsx');

@@ -37,7 +37,6 @@ import {
 import { QUESTIONS_BANK } from '../src/lib/questions/bank';
 import { composeLocalQuestionBatch } from '../src/lib/questions/local';
 import { QUESTIONS_BATCH_SIZE } from '../src/lib/questions/types';
-import { parseQuestionBatch, parseQuestionSweep } from '../src/lib/questions/parse';
 import {
   axisVariant,
   bankByAxis,
@@ -61,7 +60,6 @@ import {
   tokenCopyClean,
 } from '../src/lib/tokens';
 import { containsFrameworkTerm } from '../src/lib/voice/framework-fence';
-import { buildQuestionsPrompt } from '../src/lib/questions/prompt';
 import { preferFreshAxes } from '../src/lib/questions/rotation';
 
 let passed = 0;
@@ -212,42 +210,6 @@ const rotated = preferFreshAxes(
 );
 assert.equal(rotated.length, 5);
 ok('fallback bank covers all axes; 5-item rotation still returns 5 starting at openness');
-
-const parsed5 = parseQuestionBatch(
-  JSON.stringify({
-    questions: TRAIT_AXES.map((axis) => ({
-      axis,
-      prompt: 'A plain moment.',
-      options: [
-        { text: 'One', value: 0.8 },
-        { text: 'Two', value: 0.2 },
-      ],
-    })),
-  }),
-);
-assert.equal(parsed5.length, 5);
-const parsed15 = parseQuestionSweep(
-  JSON.stringify({
-    questions: TRAIT_AXES.map((axis) => ({
-      axis,
-      prompt: 'A plain moment.',
-      options: [
-        { text: 'One', value: 0.8 },
-        { text: 'Two', value: 0.2 },
-      ],
-    })),
-  }),
-);
-assert.equal(parsed15.length, TRAIT_AXES.length);
-ok('batch parser still caps at 5; sweep parser keeps all axes, one per axis');
-
-const qPrompt = buildQuestionsPrompt({
-  me: { name: 'Riley', talk_style: 'even', voice_preset: 'close_friend' },
-  grounding: { kind: 'none', detail: null },
-});
-assert.match(qPrompt, /Return exactly 5 questions/);
-assert.doesNotMatch(qPrompt, /exactly 15/);
-ok('existing IQ prompt is still a 5-item rotating batch');
 
 // --- ranking standalone ---------------------------------------------------
 for (const axis of EXTRA_AXES) {

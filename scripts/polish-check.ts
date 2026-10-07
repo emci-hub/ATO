@@ -102,7 +102,7 @@ ok('every new animation honours Reduce Motion (things simply appear)');
 
 // ── The coin only when the server paid ───────────────────────────────────────
 const fold = read('src/components/questions-fold.tsx');
-assert.match(fold, /setMoment\(\{ kind: prev === 1 \? 'set1' : 'set2', coin: false \}\);/, 'sets 1 and 2 pay nothing');
+assert.match(fold, /setMoment\(\{ kind: finished\.setNo === 1 \? 'set1' : 'set2', coin: false \}\);/, 'sets 1 and 2 pay nothing');
 assert.match(fold, /coin: paid && fresh,/, 'a round shows the coin only on the payout that paid it');
 assert.match(
   fold,

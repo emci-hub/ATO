@@ -21,6 +21,8 @@ import {
   sourceProvenance,
 } from '@/lib/full-profile';
 import { updateTraits, type Me } from '@/lib/me';
+import { isTraitFirm, NOT_ME_LABEL, NOT_ME_ON_LINE } from '@/lib/questions/bank-sets';
+import { fetchTraitFlags, setTraitFlag } from '@/lib/questions/bank-sets-server';
 import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
 import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
 import {
@@ -60,6 +62,41 @@ export function FullProfileFold({
   const [tracks, setTracks] = useState<TraitTrack[]>([]);
   const [diving, setDiving] = useState<TraitAxis | null>(null);
   const [undoSpent, setUndoSpent] = useState<Partial<Record<TraitAxis, boolean>>>({});
+  // "This isn't me" (wave85): a flag only. It changes no question and no
+  // value; it puts the trait first on the retest list once retests open.
+  const [flags, setFlags] = useState<Set<TraitAxis>>(new Set());
+  const [flagBusy, setFlagBusy] = useState<TraitAxis | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchTraitFlags()
+      .then((next) => {
+        if (!cancelled) setFlags(next);
+      })
+      .catch((err) => console.log('[full-profile] flags load error:', err));
+    return () => {
+      cancelled = true;
+    };
+  }, [me.id]);
+
+  async function toggleFlag(axis: TraitAxis) {
+    if (flagBusy) return;
+    const on = !flags.has(axis);
+    setFlagBusy(axis);
+    try {
+      await setTraitFlag(axis, on);
+      setFlags((prev) => {
+        const next = new Set(prev);
+        if (on) next.add(axis);
+        else next.delete(axis);
+        return next;
+      });
+    } catch (err) {
+      console.log('[full-profile] flag error:', err);
+    } finally {
+      setFlagBusy(null);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -175,6 +212,11 @@ export function FullProfileFold({
                   {settling}
                 </ThemedText>
               ) : null}
+              {isTraitFirm(report) ? (
+                <ThemedText type="code" themeColor="textSecondary">
+                  Firm · your answers here mostly agree
+                </ThemedText>
+              ) : null}
               {provenance ? (
                 <ThemedText type="small" themeColor="textSecondary">
                   {provenance.line}
@@ -272,6 +314,18 @@ export function FullProfileFold({
               <ThemedText type="code" themeColor="textSecondary">
                 {DEPTH_FREE_HINT}
               </ThemedText>
+              {filled ? (
+                <ThemedPressable
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: flags.has(axis) }}
+                  onPress={() => void toggleFlag(axis)}
+                  disabled={flagBusy != null}
+                  style={styles.edit}>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {flags.has(axis) ? NOT_ME_ON_LINE : NOT_ME_LABEL}
+                  </ThemedText>
+                </ThemedPressable>
+              ) : null}
             </View>
           );
         })}

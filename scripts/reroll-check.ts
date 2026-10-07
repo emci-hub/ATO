@@ -21,12 +21,12 @@ function ok(label: string) {
 const rerollSrc = readFileSync(resolve(__dirname, '../src/lib/questions/reroll.ts'), 'utf8');
 
 assert.match(rerollSrc, /export async function rerollLegend\(/);
-assert.match(rerollSrc, /export async function rerollQuestionItem\(/);
+// Question reroll removed with the shared AI pool (fixed bank, wave85).
+assert.doesNotMatch(rerollSrc, /export async function rerollQuestionItem\(|fetchBankCandidates|spendAtoTokensQuestionReroll/);
 assert.doesNotMatch(rerollSrc, /export async function rerollCategoryItem\(/, 'rerollCategoryItem must not exist — it was removed with the old category_question_items system');
-ok('reroll.ts exports rerollLegend / rerollQuestionItem, and rerollCategoryItem is gone');
+ok('reroll.ts exports rerollLegend only; question and category rerolls are gone');
 
 assert.match(rerollSrc, /trySpend\(spendAtoTokensLegendReroll\)/);
-assert.match(rerollSrc, /trySpend\(\(\) => spendAtoTokensQuestionReroll\(item\.id\)\)/);
 assert.doesNotMatch(
   rerollSrc,
   /import\s*\{[^}]*spendAtoTokensCategoryReroll/,
@@ -71,25 +71,6 @@ assert.ok(
 );
 ok('rerollLegend generates the story before spending, and only saves it after a successful spend');
 
-// Order: whatever can fail (bank candidate lookup, AI generation) must run
-// BEFORE the spend call, so a reroll that can't happen is never charged.
-const questionFnStart = rerollSrc.indexOf('export async function rerollQuestionItem');
-const questionFnBody = rerollSrc.slice(questionFnStart, rerollSrc.indexOf('\n}', questionFnStart));
-assert.ok(
-  questionFnBody.indexOf('fetchBankCandidates') < questionFnBody.indexOf('spendAtoTokensQuestionReroll'),
-  'rerollQuestionItem must check for a bank candidate before spending',
-);
-// The precheck must exclude bank items already used elsewhere in the same
-// pack, matching the effect RPC's own exclusion — checking only the
-// permanent per-user exclusions let a sparse axis spend the token and then
-// have the RPC find nothing (found in review).
-assert.match(questionFnBody, /fetchPackBankItemIds\(item\.packId\)/);
-assert.match(questionFnBody, /!packBankIds\.has\(candidate\.id\)/);
-ok('rerollQuestionItem\'s precheck excludes bank items already used elsewhere in the same pack, mirroring the effect RPC');
-
-assert.match(rerollSrc, /supabase\.rpc\('reroll_question_item', \{ p_item_id: item\.id \}\)/);
-ok('the question effect RPC is called with the correct argument shape');
-
 {
   const src = readFileSync(resolve(__dirname, '../supabase/migrations/wave53_reroll_rpcs.sql'), 'utf8');
   assert.match(src, /create or replace function public\.reroll_question_item\(p_item_id uuid\)/);
@@ -126,30 +107,8 @@ ok('LegendCard delegates reroll to an injected onReroll callback rather than cal
 // callers, same status record_check reached when the Check loop was parked.
 
 const questionsFoldSrc = readFileSync(resolve(__dirname, '../src/components/questions-fold.tsx'), 'utf8');
-assert.match(questionsFoldSrc, /rerollQuestionItem\(/);
-assert.doesNotMatch(questionsFoldSrc, /rerollCategoryItem\(/, 'questions-fold.tsx must not call rerollCategoryItem — CategoryBatchFold was deleted');
-assert.match(questionsFoldSrc, /ATO_TOKEN_PRICE\.question_reroll/);
-ok('questions-fold.tsx wires reroll for the surviving question surface and gates on ATO_TOKEN_PRICE, not a hardcoded number; the old category surface is gone');
+assert.doesNotMatch(questionsFoldSrc, /rerollQuestionItem\(|rerollCategoryItem\(/, 'no reroll on the Questions screen: sets come from the fixed bank (wave85)');
+ok('the Questions screen offers no reroll: there is no AI pool to swap from');
 
-// A successful reroll must refresh `me` so the ATO balance the button gates
-// on next isn't stale (found in review) — OngoingRoundFold's reroll() calls
-// onUpdated() right after the local pack state patch, same as every answer
-// path in this file already does. Signature changed 2026-09-11 (T-01/T-03,
-// ongoing-round pager build): reroll now takes a CategoryQuestionRow (the
-// pager's row shape), not a raw QuestionItemRow, since it's called per-row
-// from the pager's renderRowExtra instead of from a single-item UI.
-const ongoingRerollStart = questionsFoldSrc.indexOf('async function reroll(row: CategoryQuestionRow)');
-const ongoingRerollBody = questionsFoldSrc.slice(ongoingRerollStart, questionsFoldSrc.indexOf('\n  }', ongoingRerollStart));
-assert.match(ongoingRerollBody, /await onUpdated\(\);/);
-ok('question reroll refreshes `me` (onUpdated) after a successful swap');
-
-// Reroll must be impossible on a row with a local, unsaved pending pick —
-// only the server-persisted `answered` state was guarded before this
-// build; a pending pick is local-only and the server has no way to know
-// about it (found in planning, not the server's job).
-const rendersReroll = questionsFoldSrc.indexOf('renderRowExtra={(row, isPending) => {');
-const rerollGateBody = questionsFoldSrc.slice(rendersReroll, questionsFoldSrc.indexOf('\n        }}', rendersReroll));
-assert.match(rerollGateBody, /if \(row\.answered \|\| isPending\) return null;/);
-ok('reroll is hidden for a row with a local pending pick, not just a persisted-answered one');
-
-console.log(`\n${passed} reroll checks passed`);
+console.log(`
+${passed} reroll checks passed`);

@@ -68,18 +68,6 @@ export const ROLL_META: AiCallMetadata = {
   latencySensitive: false,
 };
 
-/** Post-Full-Profile ongoing-round questions (core loop redesign §2) — each
- * chunk's prompt is grounded in this user's completed profile + recent
- * history/facts (same `pickQuestionGrounding` mechanism as the daily card),
- * so personalized like Talk, but not latency-sensitive: generated as a
- * background chunked batch (chunked-generate.ts), not a synchronous reply. */
-export const ONGOING_ROUND_META: AiCallMetadata = {
-  personalized: true,
-  cohortShareable: false,
-  bucketShareable: false,
-  latencySensitive: false,
-};
-
 /** Category statements (core loop redesign §3) — one call producing a
  * statement per ready category, grounded in this user's settled reading for
  * each (same shape as Roll's category-read, batched into one call). Not
@@ -154,11 +142,6 @@ export const AI_CALL_SITES: readonly AiCallSite[] = [
     feature: 'Roll generation',
     location: 'src/lib/rolls/generate.ts → generateRollItemText()',
     meta: ROLL_META,
-  },
-  {
-    feature: 'Ongoing round questions',
-    location: 'src/lib/questions/generate.ts → generateOngoingRoundBatch()',
-    meta: ONGOING_ROUND_META,
   },
   {
     feature: 'Legend story generation',

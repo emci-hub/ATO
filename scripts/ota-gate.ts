@@ -11,7 +11,7 @@
  * (e.g. the wiped review account) unrelated to the code being shipped:
  *   around, around-going, auth-password, apple-revoke,
  *   delete-account, founder-access, intake-live, invite, quota,
- *   sentry, style-live, around-going-live, question-live
+ *   sentry, style-live, around-going-live
  *
  * PREFLIGHT: `typecheck` (tsc --noEmit) and `lint` (expo lint) run before the
  * check suite. They were never part of the gate before 2026-09-02, which is
@@ -36,7 +36,6 @@ const EXCLUDED = new Set([
   'founder-access',
   'intake-live',
   'invite',
-  'question-live',
   'quota',
   'sentry',
   'style-live',

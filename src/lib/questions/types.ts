@@ -79,6 +79,10 @@ export interface QuestionPackRow {
   id: string;
   generatedOn: string;
   createdAt: string;
+  /** question_packs.kind — 'ongoing_round', 'bank_set', 'bank_retest' (wave85). */
+  kind?: string;
+  /** Which of the 25 bank sets this is (wave85); null for retests and old rounds. */
+  setNo?: number | null;
   items: QuestionItemRow[];
 }
 

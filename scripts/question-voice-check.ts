@@ -21,10 +21,7 @@ import { resolve } from 'node:path';
 
 import { PROMPT_REWORDS, QUESTION_VOICE_COPY_REVIEWED, QUESTIONS_BANK, ROUND_ONLY_BANK, withRewordAliases } from '../src/lib/questions/bank';
 import { QUESTIONS_BANK_V1, ROUND_ONLY_BANK_V1 } from '../src/lib/questions/bank-v1';
-import { buildLabPrompt, evenFillPlan, fillPoolEven, judgeLabOutput, labAxes } from '../src/lib/questions/question-lab';
-import { TRAIT_AXES } from '../src/lib/traits';
 import { assessQuestion, generatedQuestionFailure, promptSimilarity } from '../src/lib/questions/question-voice';
-import { MOMENT_VOICE_BLOCK } from '../src/lib/voice/moment-voice';
 
 import { wave84Sql } from './gen-wave84-rows';
 
@@ -98,114 +95,13 @@ assert.match(fails(good, ['A new place opened next to your usual spot and your u
 assert.ok(promptSimilarity('A friend cancels by text an hour before', 'The group chat has a running joke') < 0.3);
 ok('the gate drops "you are", jargon, dated references, a loaded option, a missing end, one option, a near-repeat');
 
-for (const rel of ['src/lib/questions/run-ongoing-round.ts', 'src/lib/questions/run-prewarm.ts']) {
-  assert.match(read(rel), /rejectDraft: generatedQuestionFailure,/, `${rel} passes the voice gate`);
-}
-const ongoing = read('src/lib/questions/ongoing-round.ts');
-assert.match(ongoing, /rejectDraft: deps\.rejectDraft,/, 'the AI fill gets the gate');
-assert.match(ongoing, /if \(deps\.rejectDraft\?\.\(candidate\.draft, excludeText\)\) continue;/, 'pool rows get the gate too');
-assert.match(read('src/lib/questions/chunked-generate.ts'), /if \(deps\.rejectDraft\?\.\(draft, \[\.\.\.excludeText, \.\.\.seenThisAttempt\]\)\) continue;/);
-assert.match(read('src/lib/questions/fetch-recent-texts.ts'), /withRewordAliases\(/, 'already-asked matching knows both wordings');
-ok('every production round path (round, prewarm, pool draw) runs the gate before saving or showing');
-
-// 5. The round prompt.
-const prompt = buildLabPrompt(labAxes(3, 0));
-assert.ok(prompt.includes(MOMENT_VOICE_BLOCK), 'moment voice block is in the round prompt');
-assert.match(prompt, /SETTING only/);
-assert.match(prompt, /use 0\.8 for the high end, 0\.2 for the low end and 0\.5 for a middle option/);
-assert.match(prompt, /one option at 0\.2 and one at 0\.8/);
-assert.match(prompt, /A new place opened next to your usual spot/, 'revised bank questions are the register');
-assert.doesNotMatch(prompt, /Your Do today/);
-const fewShotCount = (read('src/lib/questions/bank.ts').match(/^\d\. [A-Z][a-z_-]+/gm) ?? []).length;
-assert.ok(fewShotCount >= 6 && fewShotCount <= 8, `6-8 register examples (found ${fewShotCount})`);
-ok('round prompt: moment voice for the setting, 6-8 revised examples, 0.2/0.5/0.8 rules unchanged');
-
-// Lab judging is pure.
-const judged = judgeLabOutput(
-  JSON.stringify({ questions: [{ axis: 'openness', prompt: 'A new café opened next to your gym.', options: [{ text: 'I try it today', value: 0.8 }, { text: 'Maybe next week', value: 0.5 }, { text: 'I stick with my usual', value: 0.2 }] }] }),
-  1,
-);
-assert.equal(judged.parseFailed, false);
-assert.equal(judged.verdicts[0]!.failure, null);
-assert.equal(judgeLabOutput('not json', 1).parseFailed, true);
-ok('Question lab judging: a good sample passes, unparsable text is reported');
-
-// Fill the pool (even): one per trait, a second for a trait that is behind,
-// never more than 16; only questions that pass the gate and fit a slot are
-// saved; a dead reply stops the run and saves nothing more.
-async function fillCase() {
-  const flat = evenFillPlan({});
-  assert.equal(Object.values(flat).reduce((n, v) => n + (v ?? 0), 0), 16, 'an even pool gets one per trait');
-  assert.ok(TRAIT_AXES.every((a) => flat[a] === 1));
-  const uneven = evenFillPlan({ ...Object.fromEntries(TRAIT_AXES.map((a) => [a, 3])), playfulness: 0, growth_mindset: 1 });
-  assert.equal(uneven.playfulness, 2, 'a trait that is behind gets two');
-  assert.equal(uneven.growth_mindset, 2);
-  assert.equal(Object.values(uneven).reduce((n, v) => n + (v ?? 0), 0), 16, 'still 16: two well-stocked traits wait');
-  assert.equal(uneven.openness, undefined, 'the best-stocked traits sit out first (TRAIT_AXES order on a tie)');
-  assert.equal(uneven.conscientiousness, undefined);
-
-  const saved: string[] = [];
-  let calls = 0;
-  const out = await fillPoolEven({
-    fetchDepth: async () => ({}),
-    fetchRecent: async () => [],
-    generate: async (prompt) => {
-      calls += 1;
-      const axes = [...prompt.matchAll(/\b([a-z_]+) x(\d+)\b/g)].flatMap((m) => Array.from({ length: Number(m[2]) }, () => m[1]!));
-      return JSON.stringify({
-        questions: axes.map((axis, i) =>
-          // First call: the steadiness slot comes back tagged playfulness, a
-          // trait that chunk did not ask for (the slot rule must drop it).
-          calls === 1 && axis === 'steadiness'
-            ? { ...QUESTIONS_BANK.filter((q) => q.axis === 'playfulness')[1]!, axis: 'playfulness' as const }
-            : axis === 'extraversion'
-            ? { axis, prompt: 'You are the life of every group chat.', options: [{ text: 'Obviously me', value: 0.8 }, { text: 'Not me', value: 0.2 }] }
-            : // A real, distinct, gate-passing question for that trait (nothing was asked before).
-              { ...QUESTIONS_BANK.filter((q) => q.axis === axis)[(calls + i) % 3]!, axis },
-        ),
-      });
-    },
-    save: async (drafts) => {
-      for (const d of drafts) saved.push(d.axis);
-    },
-  });
-  assert.equal(saved.length, 15, 'every trait but the failing one is saved');
-  assert.ok(!saved.includes('extraversion'), 'the question that fails the gate is never saved');
-  assert.equal(new Set(saved).size, 15, 'one per trait');
-  assert.equal(out.calls, 5, 'four chunks of up to 5, plus one retry for the dropped questions');
-  const extra = out.verdicts.filter((v) => v.draft.axis === 'extraversion');
-  assert.ok(extra.length > 0 && extra.every((v) => /voice|jargon|balance/.test(v.failure ?? '')), 'dropped for the voice rules, with the reason');
-  assert.match(out.verdicts[4]!.failure ?? '', /^slot/, 'a passing question for a trait the chunk did not ask for is dropped, not saved');
-  assert.ok(saved.includes('steadiness'), 'its slot is refilled on the retry');
-
-  const dead = await fillPoolEven({ fetchDepth: async () => ({}), fetchRecent: async () => [], generate: async () => null, save: async () => { throw new Error('must not save'); } });
-  assert.equal(dead.stoppedEarly, true);
-  assert.equal(dead.calls, 1, 'a dead reply stops the run after one call');
-  ok('Fill the pool: one per trait (two when behind, 16 max), asked 5 at a time, saves only what passes, stops on a dead reply');
-}
-
-// 6. Draft flag, lab safety.
+// 5. Draft flag. The AI question lab and the shared pool fill are gone with
+// runtime question generation (fixed bank, wave85, emci 2026-10-06).
 assert.equal(QUESTION_VOICE_COPY_REVIEWED, true, 'emci approved the rewrite 2026-10-05 (docs/proposals/question-rewrite.md)');
 const panels = read('src/components/dev-hub-panels.tsx');
 assert.match(panels, /reviewed: QUESTION_VOICE_COPY_REVIEWED/, 'listed in COPY_FLAGS');
-const lab = panels.slice(panels.indexOf('export function QuestionLabPanel('), panels.indexOf('const COPY_FLAGS'));
-assert.doesNotMatch(lab, /useEffect/, 'the lab never calls on mount');
-assert.match(lab, /if \(busy \|\| !twoTap\.confirm\('question-lab'\)\) return;/, 'two taps before an AI call');
-// Samples save nothing; Fill the pool (emci 2026-10-05) saves only through
-// fillPoolEven, behind its own two taps.
-const samples = lab.slice(lab.indexOf('async function run()'), lab.indexOf('async function runFill()'));
-assert.doesNotMatch(samples, /addToBankPool|saveOngoingRoundBatch|\.insert\(|\.rpc\(/, 'samples save nothing');
-assert.match(lab, /if \(busy \|\| !twoTap\.confirm\('question-lab-fill'\)\) return;/, 'two taps before filling the pool');
-assert.match(lab, /fillPoolEven\(\{[\s\S]*?save: addToBankPool,/, 'the only pool write goes through fillPoolEven');
-assert.doesNotMatch(lab, /saveOngoingRoundBatch|\.insert\(|\.rpc\(/, 'the lab never writes a round or calls an RPC itself');
-assert.match(read('src/components/questions-fold.tsx'), /\(!STAGED_INTAKE_COPY_REVIEWED \|\| !QUESTION_VOICE_COPY_REVIEWED\) && PRE_LAUNCH_DEV/);
-const gate = read('scripts/ota-gate.ts');
-assert.match(gate, /'question-live',/, 'the live check is excluded from the gate');
-ok('approved flag listed; the lab is two taps, never on mount; samples save nothing and Fill writes only through the gate; the live check is not gated');
+assert.doesNotMatch(panels, /QuestionLabPanel|fillPoolEven|addToBankPool|generateQuestionLabText/, 'no AI question tool left in the Hub');
+ok('approved flag listed; no AI question lab or pool fill remains');
 
-fillCase()
-  .then(() => console.log(`\n${passed} question-voice checks passed`))
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+console.log(`
+${passed} question-voice checks passed`);

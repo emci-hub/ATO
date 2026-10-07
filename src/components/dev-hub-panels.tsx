@@ -30,27 +30,17 @@ import { useMeContext } from '@/lib/me-context';
 import { MILESTONE_DEFS } from '@/lib/milestones';
 import { currentIntakeSet, intakeStage, finishedLegacyIntake } from '@/lib/questions/intake-stage';
 import { INTAKE_REVEAL_SEEN_ID } from '@/lib/questions/progressive-unlock';
-import { allocateRound, traitNeed } from '@/lib/questions/tiered-axis-plan';
 import { controlBorderColor } from '@/lib/theme/chrome';
 import { trackFor, type TraitTrack } from '@/lib/trait-stability';
 import { fetchTraitTracks } from '@/lib/trait-tracks-store';
-import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
+import { TRAIT_AXES } from '@/lib/traits';
 
 import { BUDDY_COPY_REVIEWED } from '@/lib/buddy/idle';
 import { CATEGORY_COPY_REVIEWED } from '@/lib/categories';
-import { QUESTION_VOICE_COPY_REVIEWED, QUESTIONS_BANK } from '@/lib/questions/bank';
-import { generateQuestionLabText } from '@/lib/questions/generate';
-import { addToBankPool, fetchBankPoolDepth } from '@/lib/questions/bank-pool';
-import { fetchRecentTexts } from '@/lib/questions/fetch-recent-texts';
-import {
-  buildLabPrompt,
-  fillPoolEven,
-  judgeLabOutput,
-  labAxes,
-  QUESTION_LAB_SIZES,
-  type LabFillResult,
-  type LabResult,
-} from '@/lib/questions/question-lab';
+import { QUESTION_VOICE_COPY_REVIEWED } from '@/lib/questions/bank';
+import { BANK_COPY_REVIEWED, BANK_STAGE_LABEL, type BankProgress } from '@/lib/questions/bank-sets';
+import { devFillBank, fetchBankProgress } from '@/lib/questions/bank-sets-server';
+import { BANK_PER_TRAIT } from '@/lib/questions/bank/index';
 import { CATEGORY_BAND_COPY_REVIEWED } from '@/lib/category-bands';
 import { CATEGORY_STATEMENTS_COPY_REVIEWED } from '@/lib/category-statements/generate-statements';
 import { CONCEPT_COPY_REVIEWED } from '@/lib/concept-explainers';
@@ -235,16 +225,21 @@ export function IntakeStatus() {
 
 /** What the next round of 16 would ask, per trait — read-only, no AI call. */
 export function NextRoundPreview() {
-  const { tracks, ready } = useMyTracks();
-  if (!ready) return null;
-  const plan = allocateRound(tracks);
-  const now = new Date();
+  const [progress, setProgress] = useState<BankProgress | null>(null);
+  useEffect(() => {
+    fetchBankProgress()
+      .then(setProgress)
+      .catch(() => setProgress(null));
+  }, []);
+  if (!progress) return null;
   return (
     <View style={styles.block}>
-      <ThemedText type="smallBold">Next round preview (nothing is spent)</ThemedText>
-      {(Object.entries(plan) as [keyof typeof AXIS_SHORT_NAME, number][]).map(([axis, n]) => (
+      <ThemedText type="smallBold">
+        Next set: {progress.currentSet ?? 'none, all 25 done'} · {BANK_STAGE_LABEL[progress.stage]}
+      </ThemedText>
+      {TRAIT_AXES.map((axis) => (
         <ThemedText key={axis} type="code" themeColor="textSecondary">
-          {AXIS_SHORT_NAME[axis]} ×{n} — {traitNeed(tracks, axis, now).need}
+          {AXIS_SHORT_NAME[axis]} {progress.answeredByAxis[axis]}/{BANK_PER_TRAIT}
         </ThemedText>
       ))}
     </View>
@@ -365,131 +360,56 @@ export function MilestonesPanel() {
 }
 
 /**
- * Question lab (forever loop, 2026-10-05): writes N sample round questions
- * with the exact prompt the app's rounds use and shows each one with its
- * options, values and pass/fail per rule (question-voice.ts). One ai-generate
- * call per run, quota claimed on the server like any round; two taps, and
- * never on mount. Nothing is saved: not to the pool, not to a round.
+ * Question bank (wave85): where this account is in the 25 sets, and a
+ * two-tap jump that answers every remaining question on THIS account with a
+ * random option (server `dev_fill_bank`, pre-launch only) so the after-25
+ * retest / Start Fresh view can be tested without 400 taps. No AI.
  */
-export function QuestionLabPanel() {
+export function QuestionBankPanel() {
   const twoTap = useTwoTapLocal();
-  const [size, setSize] = useState<number>(QUESTION_LAB_SIZES[0]);
-  const [turn, setTurn] = useState(0);
-  const [busy, setBusy] = useState<'samples' | 'fill' | null>(null);
-  const [result, setResult] = useState<LabResult | null>(null);
-  const [fill, setFill] = useState<LabFillResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<BankProgress | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
 
-  // Samples: the real prompt, judged, nothing saved.
-  async function run() {
-    if (busy || !twoTap.confirm('question-lab')) return;
-    setBusy('samples');
-    setError(null);
-    setResult(null);
-    setFill(null);
-    const axes = labAxes(size, turn);
-    setTurn((t) => t + 1);
+  const load = useCallback(async () => {
     try {
-      const asked = QUESTIONS_BANK.map((q) => q.prompt);
-      const text = await generateQuestionLabText(buildLabPrompt(axes, asked));
-      if (!text) setError('No text back (AI off, quota spent, or offline).');
-      setResult(judgeLabOutput(text, size, asked));
+      setProgress(await fetchBankProgress());
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setNote(err instanceof Error ? err.message : String(err));
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function fill() {
+    if (busy || !twoTap.confirm('bank-fill')) return;
+    setBusy(true);
+    setNote(null);
+    try {
+      const n = await devFillBank();
+      setNote(`Answered ${n} question${n === 1 ? '' : 's'} at random. Reopen Questions to see the finish view.`);
+      await load();
+    } catch (err) {
+      setNote(err instanceof Error ? err.message : String(err));
     } finally {
-      setBusy(null);
+      setBusy(false);
     }
   }
 
-  // Fill the pool (emci 2026-10-05/06): one question per trait, a second for a
-  // trait that is behind (evenFillPlan), the gate, and only passing questions
-  // written to question_bank_pool — the same write a round makes (owner = this
-  // account, wave74), so a later round draws them first.
-  async function runFill() {
-    if (busy || !twoTap.confirm('question-lab-fill')) return;
-    setBusy('fill');
-    setError(null);
-    setResult(null);
-    setFill(null);
-    try {
-      const out = await fillPoolEven({
-        fetchDepth: fetchBankPoolDepth,
-        fetchRecent: fetchRecentTexts,
-        generate: generateQuestionLabText,
-        save: addToBankPool,
-      });
-      if (out.stoppedEarly) setError(`Stopped after ${out.calls} call(s): no reply (AI off, quota spent, or offline). Whatever passed before that is saved.`);
-      else if (out.parseFailed) setError('No usable reply: the text did not parse.');
-      setResult(out);
-      setFill(out);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  const passed = result?.verdicts.filter((v) => !v.failure).length ?? 0;
   return (
     <View style={styles.block}>
-      <ThemedText type="smallBold">Question lab</ThemedText>
+      <ThemedText type="smallBold">Question bank</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        Writes round questions with the real prompt and checks each against the voice gate. Samples: one AI call, nothing saved. Fill the pool: one question for every trait (two for a trait that is behind), asked 5 at a time, 4–8 AI calls of today&apos;s quota; only what passes is saved, for this account&apos;s next rounds.
+        {progress ? `${progress.completedSets} of 25 sets done · ${BANK_STAGE_LABEL[progress.stage]}` : 'Loading…'}
       </ThemedText>
-      <View style={styles.row}>
-        {QUESTION_LAB_SIZES.map((n) => (
-          <Button key={n} label={`${size === n ? '● ' : ''}${n} questions`} onPress={() => setSize(n)} disabled={busy != null} />
-        ))}
-      </View>
       <Button
-        label={busy === 'samples' ? 'Writing…' : twoTap.armed === 'question-lab' ? 'Tap again to spend one AI call' : `Write ${size} samples (not saved)`}
-        onPress={() => void run()}
-        disabled={busy != null}
+        label={busy ? 'Answering…' : twoTap.armed === 'bank-fill' ? 'Tap again: answers every remaining question on this account' : 'Jump to all 25 sets done'}
+        onPress={() => void fill()}
+        disabled={busy}
       />
-      <Button
-        label={busy === 'fill' ? 'Filling… (about a minute)' : twoTap.armed === 'question-lab-fill' ? 'Tap again: 4–8 AI calls, saves what passes' : 'Fill the pool — even, up to 16'}
-        onPress={() => void runFill()}
-        disabled={busy != null}
-      />
-      {error ? <ThemedText type="small">{error}</ThemedText> : null}
-      {result?.parseFailed && !error ? <ThemedText type="small">The reply did not parse into any question.</ThemedText> : null}
-      {result && result.verdicts.length > 0 ? (
-        <ThemedText type="code" themeColor="textSecondary">
-          {fill
-            ? `${fill.saved.length} saved of ${Object.values(fill.plan).reduce((n, v) => n + (v ?? 0), 0)} asked for · ${result.verdicts.length} written · ${fill.calls} AI call${fill.calls === 1 ? '' : 's'}`
-            : `${passed} of ${result.verdicts.length} would be shown`}
-        </ThemedText>
-      ) : null}
-      {fill
-        ? (Object.keys(fill.plan) as TraitAxis[]).map((axis) => (
-            <ThemedText key={axis} type="code" themeColor="textSecondary">
-              {AXIS_SHORT_NAME[axis]}: {fill.depthBefore[axis] ?? 0} → {fill.depthAfter[axis] ?? 0} waiting in the pool
-            </ThemedText>
-          ))
-        : null}
-      {result?.verdicts.map((v, i) => (
-        <View key={`${i}-${v.draft.prompt}`} style={styles.block}>
-          <ThemedText type="code">
-            {v.failure ? '✗' : '✓'} {AXIS_SHORT_NAME[v.draft.axis]}
-            {fill ? (v.failure ? ' — dropped, not saved' : v.draft.bankItemId ? ` — saved (${v.draft.bankItemId.slice(0, 8)})` : ' — saved') : ''}
-          </ThemedText>
-          <ThemedText type="smallBold">{v.draft.prompt}</ThemedText>
-          {v.draft.options.map((o) => (
-            <ThemedText key={o.text} type="small" themeColor="textSecondary">
-              · {o.text} ({o.value})
-            </ThemedText>
-          ))}
-          {v.issues.length === 0 ? (
-            <ThemedText type="code" themeColor="textSecondary">every rule passes</ThemedText>
-          ) : (
-            v.issues.map((issue) => (
-              <ThemedText key={`${issue.rule}-${issue.detail}`} type="code" themeColor="textSecondary">
-                {issue.kind === 'hard' || issue.rule === 'balance' ? '✗' : '~'} {issue.rule}: {issue.detail}
-              </ThemedText>
-            ))
-          )}
-        </View>
-      ))}
+      {note ? <ThemedText type="small">{note}</ThemedText> : null}
     </View>
   );
 }
@@ -513,6 +433,7 @@ const COPY_FLAGS: readonly { name: string; reviewed: boolean }[] = [
   { name: 'Profile fill', reviewed: PROFILE_FILL_COPY_REVIEWED },
   { name: 'Polish pass (shape, week, set done, sealed read)', reviewed: POLISH_COPY_REVIEWED },
   { name: 'Question bank in the moment voice (48 intake + 22 round)', reviewed: QUESTION_VOICE_COPY_REVIEWED },
+  { name: 'Fixed question bank (352 new questions, set and finish screens)', reviewed: BANK_COPY_REVIEWED },
 ];
 
 /** What ships as draft: every *_COPY_REVIEWED flag, drafts first. */

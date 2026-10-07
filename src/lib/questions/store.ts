@@ -1,12 +1,14 @@
 import { supabase } from '@/lib/supabase';
 import { TRAIT_AXES, type TraitAxis } from '@/lib/traits';
 
-import type { QuestionDraft, QuestionItemRow, QuestionOption, QuestionPackRow } from './types';
+import type { QuestionItemRow, QuestionOption, QuestionPackRow } from './types';
 
 interface PackRow {
   id: string;
   generated_on: string;
   created_at: string;
+  kind?: string;
+  set_no?: number | null;
 }
 
 interface ItemRow {
@@ -47,6 +49,8 @@ function mapPack(pack: PackRow, items: ItemRow[]): QuestionPackRow {
     id: pack.id,
     generatedOn: ymd(pack.generated_on),
     createdAt: pack.created_at,
+    kind: pack.kind,
+    setNo: pack.set_no ?? null,
     items: items
       .slice()
       .sort((a, b) => a.sort_index - b.sort_index)
@@ -91,7 +95,9 @@ export async function fetchLatestOngoingRoundPack(): Promise<QuestionPackRow | n
   const { data: pack, error } = await supabase
     .from('question_packs')
     .select('id, generated_on, created_at')
-    .eq('kind', 'ongoing_round')
+    // A bank set (wave85) is 'ongoing_round' for sets 4-25 and 'bank_set'
+    // for sets 1-3 and after a Start Fresh; the ring follows either.
+    .in('kind', ['ongoing_round', 'bank_set'])
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -102,30 +108,32 @@ export async function fetchLatestOngoingRoundPack(): Promise<QuestionPackRow | n
   return mapPack(pack as PackRow, items);
 }
 
-export async function saveOngoingRoundBatch(drafts: QuestionDraft[]): Promise<QuestionPackRow> {
-  if (drafts.length === 0) {
-    throw new Error('No questions available for a new round right now.');
-  }
-  const payload = drafts.map((draft) => {
-    if (!draft.bankItemId) {
-      throw new Error('Ongoing round draft missing bankItemId.');
-    }
-    return {
-      axis: draft.axis,
-      prompt: draft.prompt,
-      options: draft.options,
-      question_bank_item_id: draft.bankItemId,
-    };
-  });
-  const { data, error } = await supabase.rpc('insert_ongoing_round_pack', {
-    p_items: payload,
-  });
+/** The newest retest pack that still has unanswered questions, if any. */
+export async function fetchOpenRetestPack(): Promise<QuestionPackRow | null> {
+  const { data: pack, error } = await supabase
+    .from('question_packs')
+    .select('id')
+    .eq('kind', 'bank_retest')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
   if (error) throw error;
-  const pack = await fetchLatestOngoingRoundPack();
-  if (!pack || pack.id !== data) {
-    throw new Error('Ongoing round pack did not save.');
-  }
-  return pack;
+  if (!pack) return null;
+  const full = await fetchQuestionPack((pack as { id: string }).id);
+  return full && full.items.some((item) => item.answeredOption == null && item.skippedAt == null) ? full : null;
+}
+
+/** Any one pack by id (a bank set or retest, wave85), with its items. */
+export async function fetchQuestionPack(packId: string): Promise<QuestionPackRow | null> {
+  const { data: pack, error } = await supabase
+    .from('question_packs')
+    .select('id, generated_on, created_at, kind, set_no')
+    .eq('id', packId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!pack) return null;
+  const items = await fetchPackItems(pack.id);
+  return mapPack(pack as PackRow, items);
 }
 
 // Answering a round item is answer_round_item in lib/trait-checkpoint.ts
