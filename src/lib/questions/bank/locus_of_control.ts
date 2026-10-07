@@ -23,7 +23,7 @@ export const LOCUS_OF_CONTROL_BANK = traitBank('locus_of_control', [
   q('locus_of_control_10', 'dating', 'high', 'Your partner is in a bad mood all evening.',
     ['I wonder what I did', 0.8], ['I ask what is up', 0.5], ['Their mood, not mine', 0.2]),
   q('locus_of_control_11', 'family', 'neither', 'You and your mom have the same argument again.',
-    ["That's just how she's", 0.2], ['We both play a part', 0.5], ['I try something different this time', 0.8]),
+    ["That's just how she is", 0.2], ['We both play a part', 0.5], ['I try something different this time', 0.8]),
   q('locus_of_control_12', 'family', 'low', 'Family dinner plans fall through again.',
     ['Someone should plan better', 0.5], ['I take the lead on the next one', 0.8], ['Our family is just like that', 0.2]),
   q('locus_of_control_13', 'solo', 'high', 'You forget your keys and get locked out of the car.',

@@ -21,7 +21,7 @@ export const GROWTH_MINDSET_BANK = traitBank('growth_mindset', [
   q('growth_mindset_09', 'dating', 'low', 'A relationship ends and your friend asks what you learned.',
     ['A few things', 0.5], ["A lot, I'm working on it", 0.8], ["That I'm bad at dating", 0.2]),
   q('growth_mindset_10', 'dating', 'neither', 'Your partner says you could be a better listener.',
-    ['I ask how I can do better', 0.8], ['I try, when I remember', 0.5], ["That's just how I'm", 0.2]),
+    ['I ask how I can do better', 0.8], ['I try, when I remember', 0.5], ["That's just how I am", 0.2]),
   q('growth_mindset_11', 'family', 'low', 'At dinner, your family jokes you have never been good at cooking.',
     ["They're right, I never will be", 0.2], ["I laugh, they aren't wrong", 0.5], ['I take a cooking class', 0.8]),
   q('growth_mindset_12', 'family', 'high', 'Your dad says "you were never a math person."',
