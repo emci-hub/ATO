@@ -478,24 +478,33 @@ export default function LegendsScreen() {
                       <ThemedText type="small" themeColor="textSecondary" style={styles.heading}>
                         Met in this hall · {hallMet.length}/{legendsInHall(hall).length}
                       </ThemedText>
-                      <View style={styles.metList}>
-                        {hallMet.map((legend) => (
-                          <Fragment key={legend.id}>
-                            <Pressable
-                              onPress={() => openLegend(legend.id)}
-                              accessibilityRole="button"
-                              accessibilityState={{ expanded: openId === legend.id }}
-                              style={({ pressed }) => [
-                                styles.metChip,
-                                { borderColor: HALL_COLOR[hall] },
-                                pressed && styles.pressed,
-                              ]}>
-                              <ThemedText type="small">{legendTitle(legend)}</ThemedText>
-                            </Pressable>
-                            {openId === legend.id ? <View style={styles.metCard}>{card}</View> : null}
+                      {/* Names up to the open one, its card, then the rest: the card sits
+                          right under its name but OUTSIDE the wrapping row (text inside a
+                          wrap row is measured too wide on iOS and gets clipped). */}
+                      {(() => {
+                        const split = hallMet.findIndex((legend) => legend.id === openId) + 1;
+                        const groups = split > 0 ? [hallMet.slice(0, split), hallMet.slice(split)] : [hallMet];
+                        const chip = (legend: (typeof hallMet)[number]) => (
+                          <Pressable
+                            key={legend.id}
+                            onPress={() => openLegend(legend.id)}
+                            accessibilityRole="button"
+                            accessibilityState={{ expanded: openId === legend.id }}
+                            style={({ pressed }) => [
+                              styles.metChip,
+                              { borderColor: HALL_COLOR[hall] },
+                              pressed && styles.pressed,
+                            ]}>
+                            <ThemedText type="small">{legendTitle(legend)}</ThemedText>
+                          </Pressable>
+                        );
+                        return groups.map((group, index) => (
+                          <Fragment key={`group-${index}`}>
+                            {group.length > 0 ? <View style={styles.metList}>{group.map(chip)}</View> : null}
+                            {index === 0 && split > 0 ? card : null}
                           </Fragment>
-                        ))}
-                      </View>
+                        ));
+                      })()}
                     </>
                   ) : null}
 
@@ -606,7 +615,5 @@ const styles = StyleSheet.create({
   progressFill: { height: 4, borderRadius: 2 },
   metList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   metChip: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8 },
-  /** Full width, so the open card sits on its own line right under its name. */
-  metCard: { width: '100%', gap: Spacing.three },
   placeholder: { gap: 4, marginTop: Spacing.two },
 });
