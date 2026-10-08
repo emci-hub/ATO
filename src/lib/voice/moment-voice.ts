@@ -54,3 +54,38 @@ ${MOMENT_VOICE_RULES.map((rule, i) => `${i + 1}. ${rule}`).join('\n')}
 
 REGISTER (match it, do not reuse these):
 ${MOMENT_VOICE_EXAMPLES.map((line) => `- ${line}`).join('\n')}`;
+
+/**
+ * Named exception (emci, 2026-10-08): the Story's one joke line. The moment
+ * voice says "tease kindly, never cruel"; this one sentence may be drier or
+ * darker, within the bans below. Nothing else in the Story, and nothing on any
+ * other surface, gets this exception. `parseStoryAnswer`
+ * (src/lib/sage-story.ts) is the mechanical half of the bans.
+ */
+export const STORY_JOKE_STYLES: readonly string[] = [
+  'dry',
+  'deadpan',
+  'self-aware',
+  'satire of modern life: group chats, calendars, read receipts, productivity culture, open tabs',
+  'mild gallows humour about everyday absurdity, never about real harm',
+];
+
+export const STORY_JOKE_BANS: readonly string[] = [
+  'death, self-harm, suicide, illness, mental health, trauma, abuse, addiction',
+  'bodies, looks, weight, age',
+  'identity: race, gender, sexuality, religion, nationality, class',
+  'money troubles; relationships ending; real people, brands or politics',
+  'swearing, slurs, sexual content',
+  'mocking the person rather than the situation',
+  '"!", emoji, hashtags',
+];
+
+/** Approved register for the joke. Match it, never reuse it. */
+export const STORY_JOKE_EXAMPLES: readonly string[] = ['Your to-do list has outlived two phones.'];
+
+export const STORY_JOKE_RULES = `THE ONE JOKE (a named exception to "tease kindly": this single sentence may be drier or darker)
+- Allowed styles: ${STORY_JOKE_STYLES.join('; ')}.
+- Never, whatever the style:
+${STORY_JOKE_BANS.map((line) => `  - ${line}`).join('\n')}
+- Exactly one sentence, under 120 characters, woven into the story. Joke about the situation, never the person.
+- Register (match it, do not reuse it): ${STORY_JOKE_EXAMPLES.map((line) => `"${line}"`).join(' ')}`;

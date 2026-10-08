@@ -5,22 +5,32 @@
  * UNREVIEWED. Diagnosis-adjacent. Nothing here is shippable without emci's
  * direct read — same bar as the Crisis spec.
  */
+import { AXIS_POLE_NAME, AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import {
   getCategoryDefs,
   categoriesFingerprint,
   readAllCategories,
   type CategoryId,
 } from '@/lib/categories';
+import { pickCategoryCard } from '@/lib/category-bank';
+import { localYmd } from '@/lib/local-date';
 import { AXIS_EDITOR_COPY } from '@/lib/sage-knows';
+import {
+  parseStoryThreadRecord,
+  pickStoryThread,
+  poleWord,
+  threadAxes,
+  type StoryThread,
+  type StoryThreadRecord,
+} from '@/lib/story-thread';
 import { TRAIT_BAND_PHRASES } from '@/lib/trait-bands';
 import type { AxisDivergence } from '@/lib/trait-history';
 import { reachedFullProfile } from '@/lib/questions/intake-stage';
 import { isThinProfile, settledCount, type TraitTrack } from '@/lib/trait-stability';
-import { leanComparative, leanHighLow } from '@/lib/traits';
+import { leanHighLow, type TraitAxis } from '@/lib/traits';
+import { CLEAR_VOICE_RULES } from '@/lib/voice/clear-voice';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
-import { MOMENT_VOICE_BLOCK } from '@/lib/voice/moment-voice';
-import { STYLE_BLOCK } from '@/lib/voice/style-checklist';
-import { VOICE_REFERENCE } from '@/lib/voice/voice-reference';
+import { MOMENT_VOICE_BLOCK, STORY_JOKE_RULES } from '@/lib/voice/moment-voice';
 
 export const STORY_COPY_REVIEWED = false;
 export const STORY_LABEL = 'The Story';
@@ -31,6 +41,8 @@ export interface SageStory {
   fingerprint: string;
   generatedOn: string;
   categoryIds: CategoryId[];
+  /** Story v2: which 1–2 categories this story was about, so the next load takes a new angle. */
+  thread?: StoryThreadRecord;
 }
 
 export interface StorySample {
@@ -112,23 +124,101 @@ export function parseSageStory(raw: unknown): SageStory | null {
       }
     }
   }
-  return { body, fingerprint, generatedOn, categoryIds };
+  const thread = parseStoryThreadRecord(row.thread);
+  return thread
+    ? { body, fingerprint, generatedOn, categoryIds, thread }
+    : { body, fingerprint, generatedOn, categoryIds };
 }
 
-export function parseStoryBody(text: string): string | null {
+export const STORY_MAX_WORDS = 180;
+export const STORY_MAX_PARAGRAPHS = 3;
+export const STORY_JOKE_MAX_CHARS = 120;
+
+/**
+ * The hard joke bans as keywords (Story v2 §7). A backstop for the prompt, not
+ * the whole rule: the model is told the bans in words. Word-bounded so
+ * "deadline", "deadpan" and "skill" stay allowed.
+ */
+const STORY_BANNED_TOPIC: readonly RegExp[] = [
+  /\b(die|dies|died|dying|dead|death|deaths)\b/i,
+  /\bkill(s|ed|ing)?\b/i,
+  /\bsuicid/i,
+  /\bself[- ]harm/i,
+  /\bdepress(ed|ion|ing)?\b/i,
+  /\banxiety\b/i,
+  /\btherap(y|ist|ists)\b/i,
+  /\bdrunk\b/i,
+  /\bsex(y|ual|ually)?\b/i,
+  /\b(fuck|shit|bitch|asshole)/i,
+];
+
+export function storyHasBannedTopic(text: string): boolean {
+  return STORY_BANNED_TOPIC.some((re) => re.test(text));
+}
+
+/** Labels the model's plan line must never echo: category names, axis labels and ids, short trait names. */
+function threadNamesALabel(text: string): boolean {
+  const lower = text.toLowerCase();
+  for (const def of getCategoryDefs()) if (lower.includes(def.name.toLowerCase())) return true;
+  for (const [axis, copy] of Object.entries(AXIS_EDITOR_COPY)) {
+    if (lower.includes(copy.label.toLowerCase())) return true;
+    if (lower.includes(axis.replace(/_/g, ' '))) return true;
+  }
+  for (const name of Object.values(AXIS_SHORT_NAME)) if (lower.includes(name.toLowerCase())) return true;
+  return false;
+}
+
+function wordCount(text: string): number {
+  return text.split(/\s+/).filter(Boolean).length;
+}
+
+function paragraphCount(text: string): number {
+  // Any line break counts: the fold renders single newlines as breaks too.
+  return text.split(/\n+/).filter((part) => part.trim()).length;
+}
+
+/** Why a story body may not be shown, or null if it may. */
+export function storyBodyViolation(body: string): string | null {
+  if (!body) return 'empty';
+  if (wordCount(body) > STORY_MAX_WORDS) return 'too long';
+  if (paragraphCount(body) > STORY_MAX_PARAGRAPHS) return 'too many paragraphs';
+  if (containsFrameworkTerm(body)) return 'framework term';
+  if (storyNamesACategory(body)) return 'names a category';
+  if (/\byou are\b/i.test(body)) return 'says "you are"';
+  if (/\balways\b/i.test(body)) return 'says "always"';
+  if (body.includes('!')) return 'says "!"';
+  if (storyHasBannedTopic(body)) return 'banned topic';
+  return null;
+}
+
+export interface StoryAnswer {
+  body: string;
+  /** The joke sentence, only when it is short and actually in the body. */
+  joke: string | null;
+  /** The model's one-line plan, only when it names no category or trait label. */
+  thread: string | null;
+}
+
+export function parseStoryAnswer(text: string): StoryAnswer | null {
   try {
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}');
     if (start < 0 || end <= start) return null;
-    const row = JSON.parse(text.slice(start, end + 1)) as { body?: unknown };
+    const row = JSON.parse(text.slice(start, end + 1)) as { body?: unknown; joke?: unknown; thread?: unknown };
     const body = typeof row.body === 'string' ? row.body.trim() : '';
-    if (!body) return null;
-    if (containsFrameworkTerm(body)) return null;
-    if (storyNamesACategory(body)) return null;
-    return body.slice(0, 1600);
+    if (storyBodyViolation(body)) return null;
+    const rawJoke = typeof row.joke === 'string' ? row.joke.trim() : '';
+    const joke = rawJoke && rawJoke.length < STORY_JOKE_MAX_CHARS && body.includes(rawJoke) ? rawJoke : null;
+    const rawThread = typeof row.thread === 'string' ? row.thread.trim() : '';
+    const thread = rawThread && !threadNamesALabel(rawThread) ? rawThread : null;
+    return { body: body.slice(0, 1600), joke, thread };
   } catch {
     return null;
   }
+}
+
+export function parseStoryBody(text: string): string | null {
+  return parseStoryAnswer(text)?.body ?? null;
 }
 
 /** Distinctive multi-word category labels only — short English words stay allowed. */
@@ -143,60 +233,86 @@ export function storyNamesACategory(body: string): boolean {
   return false;
 }
 
+/**
+ * Story v2 prompt (emci 2026-10-08): one day, one setting, the 1–2 categories
+ * the thread picked, grounded in their stored card copy. Nothing about any
+ * other category goes in. The tension line is used only when its axis is
+ * inside the thread.
+ */
 export function buildStoryPrompt(input: {
   tracks: readonly TraitTrack[];
   divergenceNote: string | null;
+  divergenceAxis?: TraitAxis | null;
+  /** The picked thread. Omitted: pick the best one now, with no joke (a caller that does not know the crisis state). */
+  thread?: StoryThread | null;
+  userId?: string;
+  ymd?: string;
 }): string {
-  const lines: string[] = [];
-  for (const reading of readAllCategories(input.tracks)) {
-    if (!reading.ready) continue;
-    const bits = reading.stableAxes.map((axis) => AXIS_EDITOR_COPY[axis].label).join(', ');
-    if (reading.map) {
-      lines.push(
-        `- Settled merge (do not name this): ${bits}. Position is a mix of those two, not a coordinate. Texture only: ${
-          reading.texture.map((row) => AXIS_EDITOR_COPY[row.axis].label).join(', ') || 'none'
-        }.`,
-      );
-    } else {
-      lines.push(
-        `- Settled merge (do not name this): ${bits}. Lean ${leanComparative(reading.bar)}.`,
-      );
-    }
-  }
+  const thread =
+    input.thread !== undefined
+      ? input.thread
+      : pickStoryThread({ tracks: input.tracks, last: null, crisisToday: true });
+  const ymd = input.ymd ?? localYmd(new Date(), 'UTC');
+  const userId = input.userId ?? '';
 
-  const tension = input.divergenceNote
-    ? `TOLD-VS-PLAYED (present — name it like a friend would, inside the prose. Warm, second person. Not an accusation. Do not pick a winner. Do not explain yourself.)\n- ${input.divergenceNote}`
-    : 'TOLD-VS-PLAYED: none on the current tracks. Do not invent a split.';
+  const sides: string[] = [];
+  (thread?.categories ?? []).forEach((row, index) => {
+    const label = index === 0 ? 'SIDE A' : 'SIDE B';
+    const card = pickCategoryCard({ userId, reading: row.reading, ymd });
+    const bits = [
+      row.lead ? `- Lead lean, in one word (never print it): ${poleWord(row.lead)}` : null,
+      card ? `- How it tends to show: ${card.summary}` : null,
+      card ? `- What it does well: ${card.strength}` : null,
+      card ? `- Where it can catch: ${card.watchOut}` : null,
+    ].filter((line): line is string => line != null);
+    sides.push(`${label} (internal; never name it)\n${bits.join('\n') || '- (no stored lines)'}`);
+  });
+  const twoSides = sides.length === 2;
 
-  return `Write as Sage in the ATO app. Follow the voice reference. Not a doctor. This is The Story — one cohesive narrative, not a stitched list of summaries.
+  const axes = thread ? threadAxes(thread) : [];
+  const tensionOn =
+    !!input.divergenceNote && !!input.divergenceAxis && axes.includes(input.divergenceAxis);
+  const tension = tensionOn
+    ? `TOLD-VS-PLAYED (optional; use it only if it fits the day. Say it like a friend would: warm, not an accusation, no winner)\n- ${input.divergenceNote}`
+    : 'TOLD-VS-PLAYED: none. Do not invent a split.';
 
-VOICE REFERENCE (register only — do NOT reuse these lines):
-${VOICE_REFERENCE}
+  const joke = thread?.joke
+    ? `JOKE TARGET: the ${AXIS_POLE_NAME[thread.joke.axis][thread.joke.lean]} side (never print that word). Write exactly one joke about the situation it lands them in.\n${STORY_JOKE_RULES}`
+    : 'JOKE: none this time. Write no joke, and return "joke" as an empty string.';
 
-Job: rewrite the settled notes below into one holistic piece of prose. Same discipline as a title: generated, not looked up, not a concatenation of category lines. Fully prose. Never put a category name in the text.
+  const meaningRules = CLEAR_VOICE_RULES.filter((rule) =>
+    /^(Hedge:|Kind to both poles|Not a therapist)/.test(rule),
+  );
 
-${STYLE_BLOCK}
+  return `Write as Sage in the ATO app. Not a doctor. This is The Story: ONE ordinary day, ONE setting, the same people throughout. Not a list of moments.
 
-SETTLED NOTES (internal — write from the meaning, never the label)
-${lines.join('\n') || '- none'}
+INPUT (internal; write from the meaning, never the labels)
+${sides.join('\n\n') || '- none'}
 
 ${tension}
 
-RULES
-1. 2–3 short paragraphs, or 5–8 sentences. Everyday language. Not a diagnosis, not a type, not a test result.
-2. Never Myers-Briggs, never a four-letter code, never "you are." Reflect as maybes, not facts.
-3. Do not name categories (not Steadiness, not Agency, not Drive, not the others). Do not name axes.
-4. Do not stitch the category summaries. Rewrite as one picture of how they tend to move.
-5. If told-vs-played tension is present, say it like a friend: they named one way of moving, and in a small snap choice they go another. Maybe they just move differently depending on the moment — that's normal. Do not explain the observation. Never "not a verdict", "gap", "leaving visible", "on paper", "told us", or "gut-call". If it is not present, do not invent it.
-6. Hedge lives inside the sentence. No bolted-on closing after a dash or period, except the "that's normal" shape above when tension is present.
-7. Completeness is not an input. Do not mention leftover notes or a fuller picture.
+${joke}
 
-MOMENT VOICE (emci's approved voice, 2026-10-02)
-Build the story out of concrete, recognizable moments set in how they live now, not general statements about them. It is still one flowing piece of prose (rules 1-7 above), in the second person. Follow every rule below; "short" here means each sentence, not the whole story.
+SHAPE (90–160 words, at most 3 short paragraphs, second person)
+1. A short setup: one setting on a typical day.
+2. The moment ${twoSides ? 'where SIDE A and SIDE B meet and pull against each other' : 'where SIDE A shows'}.
+3. How they tend to handle it.
+4. One plain closing line that says what it all means. Only this line explains; the rest shows.
+
+RULES
+1. A typical day, never a claimed event: "on a day like this", "you might". Reflect as maybes, not facts.
+2. Never "you are", never "always", never "!". No type codes, no psychology words.
+3. Do not name categories or traits, and never print the lean words above.
+4. Stay in the one setting. No second scene, no second place, no new set of people.
+
+VOICE FOR THE SCENES AND THE JOKE (the moment voice. Here "describe the moment and stop" means every sentence stays concrete; the story still runs setup, moment, handling, meaning)
 ${MOMENT_VOICE_BLOCK}
 
-Respond with JSON only:
-{"body":"<the story>"}`;
+VOICE FOR THE CLOSING MEANING LINE (the clear voice: plain, kind, "tend to" / "usually", no labels)
+${meaningRules.map((rule) => `- ${rule}`).join('\n')}
+
+Plan first, then write. Respond with JSON only:
+{"thread":"<one sentence: what this story is about, no labels>","joke":"<the joke sentence exactly as it appears in the body, or empty>","body":"<the story>"}`;
 }
 
 export function storyCopyClean(): boolean {

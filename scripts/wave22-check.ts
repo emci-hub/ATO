@@ -30,6 +30,7 @@ import {
   storyNamesACategory,
   storyReady,
 } from '../src/lib/sage-story';
+import { pickStoryThread, threadAxes } from '../src/lib/story-thread';
 import { isThinProfile, settledCount, applyEwmaAnswer, type TraitTrack } from '../src/lib/trait-stability';
 import { TITLE_COPY_REVIEWED } from '../src/lib/sage-title';
 import { TRAIT_AXES } from '../src/lib/traits';
@@ -129,15 +130,25 @@ ok('Story has its own quota lane, thin-profile gate, and no title-RPC reuse');
 
 const many: TraitTrack[] = TRAIT_AXES.map((axis) => stableReport(axis, 0.6));
 assert.equal(storyReady(many), true);
-const storyPrompt = buildStoryPrompt({ tracks: many, divergenceNote: 'told and played do not quite match.' });
+// Story v2 (2026-10-08): the prompt is one day built from the picked thread,
+// not a holistic rewrite of every category. The tension line now shows only
+// when its axis is inside the thread; story-thread-check pins the rest.
+const manyThread = pickStoryThread({ tracks: many, last: null, crisisToday: false });
+assert.ok(manyThread);
+const storyPrompt = buildStoryPrompt({
+  tracks: many,
+  divergenceNote: 'told and played do not quite match.',
+  divergenceAxis: threadAxes(manyThread)[0]!,
+  thread: manyThread,
+});
 assert.match(storyPrompt, /TOLD-VS-PLAYED/);
 assert.match(storyPrompt, /Do not name categories/);
-assert.match(storyPrompt, /holistic/);
+assert.match(storyPrompt, /ONE ordinary day, ONE setting/);
 assert.match(storyPrompt, /like a friend/);
 assert.equal(parseStoryBody('{"body":"You are an INTJ who needs agency."}'), null);
 assert.ok(parseStoryBody('{"body":"A hard week can still leave a little room to breathe."}'));
 assert.notEqual(storyFingerprint(many, null), storyFingerprint(many, 'gap'));
-ok('Story prompt is a separate holistic rewrite; fingerprint moves on told-vs-played');
+ok('Story prompt is one day from the picked thread; fingerprint moves on told-vs-played');
 
 const fold = read('src/components/sage-story-fold.tsx');
 /**

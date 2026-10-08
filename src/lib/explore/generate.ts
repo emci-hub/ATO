@@ -2,7 +2,7 @@ import { generateText } from '@/lib/ai/generate';
 import type { AiCallMetadata } from '@/lib/ai/types';
 
 import { parseExploreBody } from './prompt';
-import { parseStoryBody } from '@/lib/sage-story';
+import { parseStoryAnswer, type StoryAnswer } from '@/lib/sage-story';
 
 async function generateJson(
   prompt: string,
@@ -30,11 +30,11 @@ export async function generateExploreBody(
   return text ? parseExploreBody(text) : null;
 }
 
-/** Story lane — longer output. Returns null when the model is unreachable. No fallback parse-to-prose. */
+/** Story lane — longer output. Returns null when the model is unreachable or the answer fails the checks. No fallback parse-to-prose. */
 export async function generateStoryBody(
   prompt: string,
   meta: AiCallMetadata,
-): Promise<string | null> {
+): Promise<StoryAnswer | null> {
   const text = await generateJson(prompt, 1024, meta);
-  return text ? parseStoryBody(text) : null;
+  return text ? parseStoryAnswer(text) : null;
 }

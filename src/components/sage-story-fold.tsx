@@ -26,6 +26,7 @@ import {
 } from '@/lib/sage-story';
 import { claimStoryGenerate, saveSageStory } from '@/lib/sage-story-store';
 import { readyCategories } from '@/lib/categories';
+import { pickStoryThread, threadRecord } from '@/lib/story-thread';
 import { divergingAxesFromTracks } from '@/lib/trait-history';
 import { type TraitTrack } from '@/lib/trait-stability';
 import { containsFrameworkTerm } from '@/lib/voice/framework-fence';
@@ -80,7 +81,9 @@ export function SageStoryFold({
   // A timeout only stops the WAIT: the claimed, paid run keeps going and still
   // saves. A retry joins that run instead of paying for a second one.
   const runningRef = useRef<Promise<SageStory | null> | null>(null);
-  const divergenceNote = formatStoryTensionNote(divergingAxesFromTracks(tracks));
+  const divergence = divergingAxesFromTracks(tracks);
+  const divergenceNote = formatStoryTensionNote(divergence);
+  const divergenceAxis = divergence[0]?.axis ?? null;
   const fingerprint = storyFingerprint(tracks, divergenceNote);
 
   // A local parse of what is already on the `me` row. No network, no model —
@@ -110,16 +113,26 @@ export function SageStoryFold({
       return;
     }
 
+    // Story v2: the app picks the 1–2 categories and the joke target before
+    // any call; the next load takes the best combo that is not the last one.
+    const thread = pickStoryThread({ tracks, last: story?.thread ?? null, crisisToday });
+    if (!thread) {
+      setState('not_ready');
+      return;
+    }
+    const ymd = localYmd(new Date(), me.timezone || 'UTC');
+
     const run = async (): Promise<SageStory | null> => {
       const claim = await claimStoryGenerate();
       if (!claim.ok) return null;
       let body: string | null = null;
       for (let pass = 1; pass <= 2; pass += 1) {
-        const raw = await generateStoryBody(
-          buildStoryPrompt({ tracks, divergenceNote }),
+        const answer = await generateStoryBody(
+          buildStoryPrompt({ tracks, divergenceNote, divergenceAxis, thread, userId: me.id, ymd }),
           SAGE_STORY_META,
         );
-        if (!raw) break;
+        if (!answer) break;
+        const raw = answer.body;
         if (containsFrameworkTerm(raw) || matchingJargonTerm(raw) || storyNamesACategory(raw)) {
           continue;
         }
@@ -130,8 +143,9 @@ export function SageStoryFold({
       const next: SageStory = {
         body,
         fingerprint,
-        generatedOn: localYmd(new Date(), me.timezone || 'UTC'),
+        generatedOn: ymd,
         categoryIds: readyCategories(tracks).map((row) => row.def.id),
+        thread: threadRecord(thread),
       };
       await saveSageStory(me.id, next);
       return next;
@@ -165,7 +179,7 @@ export function SageStoryFold({
       console.log('[sage-story] generate error:', err);
       if (attempt === attemptRef.current) setState('unavailable');
     }
-  }, [state, consentGranted, tracks, divergenceNote, fingerprint, me.id, me.timezone]);
+  }, [state, consentGranted, tracks, story, crisisToday, divergenceNote, divergenceAxis, fingerprint, me.id, me.timezone]);
 
   // Crisis still suppresses Story entirely — unchanged, and the one case where
   // the fold shows nothing at all.
