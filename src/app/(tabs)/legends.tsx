@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -470,7 +470,8 @@ export default function LegendsScreen() {
                     </>
                   )}
 
-                  {card}
+                  {/* A legend met in this hall opens under its own name, below. */}
+                  {openId && !hallMet.some((legend) => legend.id === openId) ? card : null}
 
                   {hallMet.length > 0 ? (
                     <>
@@ -479,18 +480,20 @@ export default function LegendsScreen() {
                       </ThemedText>
                       <View style={styles.metList}>
                         {hallMet.map((legend) => (
-                          <Pressable
-                            key={legend.id}
-                            onPress={() => openLegend(legend.id)}
-                            accessibilityRole="button"
-                            accessibilityState={{ expanded: openId === legend.id }}
-                            style={({ pressed }) => [
-                              styles.metChip,
-                              { borderColor: HALL_COLOR[hall] },
-                              pressed && styles.pressed,
-                            ]}>
-                            <ThemedText type="small">{legendTitle(legend)}</ThemedText>
-                          </Pressable>
+                          <Fragment key={legend.id}>
+                            <Pressable
+                              onPress={() => openLegend(legend.id)}
+                              accessibilityRole="button"
+                              accessibilityState={{ expanded: openId === legend.id }}
+                              style={({ pressed }) => [
+                                styles.metChip,
+                                { borderColor: HALL_COLOR[hall] },
+                                pressed && styles.pressed,
+                              ]}>
+                              <ThemedText type="small">{legendTitle(legend)}</ThemedText>
+                            </Pressable>
+                            {openId === legend.id ? <View style={styles.metCard}>{card}</View> : null}
+                          </Fragment>
                         ))}
                       </View>
                     </>
@@ -603,5 +606,7 @@ const styles = StyleSheet.create({
   progressFill: { height: 4, borderRadius: 2 },
   metList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   metChip: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8 },
+  /** Full width, so the open card sits on its own line right under its name. */
+  metCard: { width: '100%', gap: Spacing.three },
   placeholder: { gap: 4, marginTop: Spacing.two },
 });
