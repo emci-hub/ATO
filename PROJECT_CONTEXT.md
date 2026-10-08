@@ -597,6 +597,7 @@ re-gated to `__DEV__` (or removed), and the Metro `PROBE_STUB` re-added:
 One flag controls all of these: `PRE_LAUNCH_DEV = true` in `src/lib/dev-mode.ts`. **`npm run check:release-mode` (wired as the EAS `eas-build-post-install` hook) refuses a production build while it is `true`.**
 
 ## Decisions log
+- 2026-10-07: **This week moved to the very top of Home (emci).** Commit `8cfcc38`, OTA `f33dd11e`.
 - 2026-10-07: **Dev Tools Hub cleanup, Preview as new user, Reset account (emci).** wave88 applied live; Reset account replaces Start over (wipes tokens too, keeps AI usage log and Divecore save); preview is a fail-closed network rule layer, root + pre-launch only. Commit `23a3438`, OTA `08a27bb1`. Not device-verified.
 - 2026-10-07: **AI badge = small tap-for-details icon (emci).** Consent copy now names only the Story as AI. PR #22, OTA `32b071bb`.
 - 2026-10-07: **Stored Focus · try · watch + category cards replace the AI insight and AI category statements (emci, Topic 1).** PR #21 (`14c0ca6`), wave87 applied (title cap 120), OTA `eef30134`. Clear voice for stored tips; both banks unreviewed with review docs and no in-app draft badge; AI pill on Story; rerolls frozen; old AI history hidden (UI only). Not device-verified.
