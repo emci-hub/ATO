@@ -112,6 +112,16 @@ export interface AiCallSite {
 }
 
 /** Display registry for the report command and the ai-provider check. */
+/** Legend figures (museum of legends, 2026-10-08) — the "you" part of one
+ * picked legend's card, grounded in a hand-written entry + this person's trait
+ * sides. Manual tap only, one per day (+1 bonus), saved after. */
+export const LEGEND_FIGURE_META: AiCallMetadata = {
+  personalized: true,
+  cohortShareable: false,
+  bucketShareable: false,
+  latencySensitive: true,
+};
+
 export const AI_CALL_SITES: readonly AiCallSite[] = [
   {
     feature: 'Infinite Questions',
@@ -147,6 +157,11 @@ export const AI_CALL_SITES: readonly AiCallSite[] = [
     feature: 'Legend story generation',
     location: 'src/lib/legends64/generate-story.ts → generateLegendStory()',
     meta: LEGEND_STORY_META,
+  },
+  {
+    feature: 'Legend figure story',
+    location: 'src/lib/legend-figures/generate.ts → writeLegendStory()',
+    meta: LEGEND_FIGURE_META,
   },
   {
     feature: 'Category statements',

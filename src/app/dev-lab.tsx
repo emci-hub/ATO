@@ -27,6 +27,7 @@ import { DevInspector } from '@/components/dev-inspector';
 import { RunningUpdateLine } from '@/components/running-update-line';
 import { TracePipelineViewer } from '@/components/trace-pipeline';
 import { YouDevTools } from '@/components/you-dev-tools';
+import { LegendFiguresDev } from '@/components/legend-figures-dev';
 import { DailyLineDev } from '@/components/daily-line-dev';
 import {
   AppReloadPanel,
@@ -216,6 +217,7 @@ function DevLab({ access }: { access: Exclude<HubAccess, 'none'> }) {
                 {me ? <HubTool id="daily-line"><DailyLineDev userId={me.id} timeZone={me.timezone || 'UTC'} /></HubTool> : null}
                 <HubTool id="mini-guy"><MiniGuyPanel /></HubTool>
                 <HubTool id="milestones"><MilestonesPanel /></HubTool>
+                {me ? <HubTool id="legend-museum"><LegendFiguresDev userId={me.id} /></HubTool> : null}
                 <HubTool id="crisis"><CrisisTools /></HubTool>
                 {canSeeHubSection('fence', gate) ? <HubTool id="fence"><FenceTester /></HubTool> : null}
                 <HubTool id="draft-copy"><DraftCopyList /></HubTool>

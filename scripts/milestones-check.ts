@@ -371,4 +371,13 @@ ok('MilestoneToast takes title/body as props, no hardcoded MILESTONE_DEFS copy')
 // rebuilt, restore assertions here pinning it back to legendsUnlocked, not
 // isProfileSettled (see the comment above for why that gate is wrong).
 
+// Legends rebuilt (museum of legends, 2026-10-08): the screen is gated on
+// legendsUnlocked again, as promised above — not on isProfileSettled.
+{
+  const legendsSrc = readFileSync(resolve(__dirname, '../src/app/(tabs)/legends.tsx'), 'utf8');
+  assert.match(legendsSrc, /legendsUnlocked\(tracks\)/, 'the Legends tab unlocks on legendsUnlocked');
+  assert.doesNotMatch(legendsSrc, /isProfileSettled/, 'never the old settled gate');
+  ok('Legends tab is gated on legendsUnlocked (restored on rebuild)');
+}
+
 console.log(`\n${passed} milestones checks passed.`);

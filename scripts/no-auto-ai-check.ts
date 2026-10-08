@@ -53,6 +53,9 @@ const KEPT: string[] = [
   'src/components/categories-fold.tsx',
   'src/components/questions-fold.tsx',
   'src/components/full-profile-fold.tsx',
+  // Museum of legends (2026-10-08): the story is written only on "Meet them".
+  'src/app/(tabs)/legends.tsx',
+  'src/components/legend-figure-card.tsx',
 ];
 
 /**
@@ -81,6 +84,7 @@ const GENERATORS = [
   'runOngoingRound',
   'composeOngoingRound',
   'prewarmBankPool',
+  'writeLegendStory',
 ];
 
 /**

@@ -82,6 +82,7 @@
     "check:hero-copy": "tsx ./scripts/check-hero-copy.ts",
     "check:kits": "tsx ./scripts/check-kits.ts",
     "check:legends": "tsx ./scripts/check-legends.ts",
+    "check:legend-roster": "tsx ./scripts/legend-roster-check.ts",
     "check:pet": "tsx ./scripts/check-pet.ts",
     "check:pet-eggs": "tsx ./scripts/check-pet-eggs.ts",
     "check:play-settings": "tsx ./scripts/check-play-settings.ts",

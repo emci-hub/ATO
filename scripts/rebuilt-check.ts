@@ -53,7 +53,9 @@ const NOTICE = 'src/components/rebuilt-notice.tsx';
 const PARKED_SCREENS: { rel: string; label: string }[] = [
   { rel: 'src/app/(tabs)/sage.tsx', label: 'Sage' },
   { rel: 'src/app/(tabs)/around.tsx', label: 'Around' },
-  { rel: 'src/app/(tabs)/legends.tsx', label: 'Legends' },
+  // Legends was rebuilt 2026-10-08 as the museum of legends (src/lib/legend-figures):
+  // its gates are pinned in legend-roster-check.ts, no-auto-ai-check.ts and
+  // milestones-check.ts instead.
   { rel: 'src/app/(tabs)/roll.tsx', label: 'Roll' },
   // Card F (2026-09-15): everything outside the Home / Questions / Explore
   // spine. `you.tsx` is NOT here on purpose — it is parked but deliberately

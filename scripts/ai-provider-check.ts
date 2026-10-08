@@ -187,6 +187,7 @@ const METADATA_CALL_FILES = new Set([
   'src/lib/legends64/generate-story.ts',
   'src/lib/category-statements/generate-statements.ts',
   'src/lib/insight/generate-insight.ts',
+  'src/lib/legend-figures/generate.ts',
 ]);
 const CALL_WITH_META =
   /generateText\(\s*\{[\s\S]*?\}\s*,\s*[A-Za-z0-9_$.[\]]+\s*\)/g;
@@ -226,7 +227,7 @@ const META_FLAGS: readonly (keyof AiCallMetadata)[] = [
   'bucketShareable',
   'latencySensitive',
 ];
-assert.equal(AI_CALL_SITES.length, 9, 'one catalog entry per AI call site');
+assert.equal(AI_CALL_SITES.length, 10, 'one catalog entry per AI call site');
 const features = new Set<string>();
 for (const site of AI_CALL_SITES) {
   assert.ok(!features.has(site.feature), `duplicate call-site feature: ${site.feature}`);
@@ -239,7 +240,7 @@ for (const site of AI_CALL_SITES) {
     );
   }
 }
-ok('metadata catalog covers all 9 call sites with boolean flags');
+ok('metadata catalog covers all 10 call sites with boolean flags');
 
 // --- Gemini -> DeepSeek fallback ------------------------------------------
 // Any Gemini failure falls back (not only quota); isQuotaLimitError only

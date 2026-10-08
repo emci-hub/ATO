@@ -150,6 +150,14 @@ export const HUB_TOOLS: readonly HubToolDef[] = [
     keywords: ['celebration', 'streak', 'unlock'],
   },
   {
+    id: 'legend-museum',
+    section: 'content',
+    name: 'Legends museum',
+    summary: 'Preview any legend’s card, fake a birthday, reset today’s three.',
+    details: 'Shows each legend with the hand-written (no-AI) story. Can pretend today is a legend’s birthday for On this day, clear today’s three, arm the bonus set, or clear this phone’s copy of the museum. Never calls AI; server rows are untouched.',
+    keywords: ['legends', 'museum', 'history', 'myth', 'figures'],
+  },
+  {
     id: 'crisis',
     section: 'content',
     name: 'Crisis card',

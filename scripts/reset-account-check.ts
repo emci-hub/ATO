@@ -28,7 +28,14 @@ function read(rel: string): string {
   return readFileSync(resolve(root, rel), 'utf8').replace(/\r\n/g, '\n');
 }
 
-const wave88 = read('supabase/migrations/wave88_reset_my_account.sql');
+// The NEWEST migration that restates reset_my_account (wave88 first; wave89
+// restated it with legend_museum). Picked by wave number, not file-name order.
+const resetFiles = readdirSync(resolve(root, 'supabase/migrations'))
+  .filter((f) => /^wave\d+[a-z]?_.*\.sql$/.test(f))
+  .filter((f) => read(`supabase/migrations/${f}`).includes('create or replace function public.reset_my_account()'))
+  .sort((a, b) => Number(/^wave(\d+)/.exec(a)![1]) - Number(/^wave(\d+)/.exec(b)![1]));
+assert.ok(resetFiles.length > 0, 'reset_my_account is defined in a wave migration');
+const wave88 = read(`supabase/migrations/${resetFiles[resetFiles.length - 1]}`);
 const fnStart = wave88.indexOf('create or replace function public.reset_my_account()');
 const fnEnd = wave88.indexOf('$$;', fnStart);
 const resetFn = wave88.slice(fnStart, fnEnd);
