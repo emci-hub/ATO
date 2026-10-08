@@ -4,7 +4,9 @@
 **Gates:** A ✓ (non-goals in archive/OLD_PLAN.md) · B ✓ (iOS/Expo, Supabase, Apple Sign-in+email) · C in progress · D not started
 **Modules on:** report/block (Social), crisis static-card + privacy pass (Health/finance/kids) — both required, in progress
 **Live AI + model:** Gemini (`gemini-3.7-flash`), with DeepSeek (`deepseek-v4-flash`) as the fallback — both chosen inside the `ai-generate` Edge Function, never on the phone. Expo SDK 54. (This line used to say "Cursor, Grok 4.6", which was stale. There are 16 axes, not 15, and Infinite Questions was removed on 2026-09-16 — where older text below disagrees, `docs/system-map.html` is current.)
-**Latest production OTA (2026-10-08, Legends card under its name):** group `86c86371-c94f-4f2a-aa45-a0d08ad2582e` (commit `789ea1e`). Gate green, reviewer PASS, not device-verified.
+**Latest production OTA (2026-10-08, Legends text not clipped + clearer What it means for you):** group `ffd003a4-70ef-42c4-9a71-39161026d762` (commit `01f010c`). Gate green, reviewer PASS, not device-verified.
+
+**Previous OTA (2026-10-08, Legends card under its name):** group `86c86371-c94f-4f2a-aa45-a0d08ad2582e` (commit `789ea1e`). Gate green, reviewer PASS, not device-verified.
 
 **Previous OTA (2026-10-08, Legends: 12 halls, ??? frames, chapters):** group `d8bc3ad2-1742-4a93-9609-dbc74c8e7a66` (runtime 1.0.0, ios+android, branch `production`, commit `1567e62`). Gate green (136), reviewer PASS. **Not device-verified.** Supersedes `42ad6ac3`. 120 legends in 12 halls of 10; pick a hall, reveal one of three "???" frames a day (+1 bonus), chapters once a hall is done. **wave89 APPLIED 2026-10-08** (museum saves to the account; AI stories live, 2/day cap). Details: PROJECT_CONTEXT.md decisions log, 2026-10-08.
 
