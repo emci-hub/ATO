@@ -173,7 +173,7 @@ export function LegendAiPlaceholder() {
       accessibilityState={{ disabled: true }}
       style={[styles.secondary, styles.dim, { borderColor: theme.border, borderStyle: 'dashed' }]}>
       <MaterialCommunityIcons name="robot-outline" size={16} color={theme.textSecondary} />
-      <ThemedText type="small" themeColor="textSecondary">
+      <ThemedText type="small" themeColor="textSecondary" style={styles.buttonText}>
         {AI_LEGEND_PLACEHOLDER}
       </ThemedText>
     </View>
@@ -329,7 +329,9 @@ export function LegendStoryCard({
         accessibilityLabel={`Share ${legendTitle(legend)}`}
         style={({ pressed }) => [styles.secondary, { borderColor: theme.controlBorder ?? theme.border }, pressed && styles.pressed]}>
         <MaterialCommunityIcons name="share-variant-outline" size={16} color={theme.text} />
-        <ThemedText type="smallBold">Share this legend</ThemedText>
+        <ThemedText type="smallBold" style={styles.buttonText}>
+          Share this legend
+        </ThemedText>
       </Pressable>
     </View>
   );
@@ -381,11 +383,13 @@ export function LegendShareSheet({
             </ThemedText>
           </View>
           <HallBadge hall={legend.hall} size={96} />
-          <ThemedText type="subtitle" style={styles.shareName}>
+          <ThemedText type="subtitle" style={styles.shareName} numberOfLines={3} adjustsFontSizeToFit>
             {legendTitle(legend)}
           </ThemedText>
-          <ThemedText style={styles.shareEssence}>{legend.essence}</ThemedText>
-          <ThemedText type="small" style={styles.shareMeta}>
+          <ThemedText style={styles.shareEssence} numberOfLines={4} adjustsFontSizeToFit>
+            {legend.essence}
+          </ThemedText>
+          <ThemedText type="small" style={styles.shareMeta} numberOfLines={3} adjustsFontSizeToFit>
             {legend.kind === 'story'
               ? `${STORY_NOT_HISTORY} · ${legend.place}`
               : legend.kind === 'animal'
@@ -432,7 +436,9 @@ const styles = StyleSheet.create({
   },
   dim: { opacity: 0.55 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  chip: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 },
+  // A long chip ("Akan folktales, West Africa · Told since…") wraps inside
+  // the card instead of running off its edge.
+  chip: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2, maxWidth: '100%' },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   badge: { alignItems: 'center', justifyContent: 'center' },
   flex: { flex: 1 },
@@ -459,6 +465,8 @@ const styles = StyleSheet.create({
     marginTop: Spacing.one,
   },
   pressed: { opacity: 0.7 },
+  /** Button labels wrap (large iOS text) instead of running past the edge. */
+  buttonText: { flexShrink: 1, textAlign: 'center' },
   section: { gap: 2 },
   sectionHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   sectionTitle: { marginTop: Spacing.one },
