@@ -114,8 +114,12 @@ ok('the +21 coin appears only when +21 was really paid');
 // ── Placement ────────────────────────────────────────────────────────────────
 const home = read('src/app/(tabs)/index.tsx');
 assert.match(home, /<WeekStrip userId=\{me\.id\} todayYmd=\{todayYmd\}/);
-// "This week" is the very first thing on Home (emci, 2026-10-07), above the lede and every card.
-assert.ok(home.indexOf('<WeekStrip') > home.indexOf('<ScrollView') && home.indexOf('<WeekStrip') < home.indexOf('<View style={styles.header}>'), 'the week strip sits at the very top of Home');
+// Home's title first, like Explore and You, then "This week" above every card (emci, 2026-10-07).
+const headerAt = home.indexOf('<View style={styles.header}>');
+assert.ok(headerAt > home.indexOf('<ScrollView'), 'the Home title is the first thing on the page');
+assert.match(home.slice(headerAt, headerAt + 200), /<ThemedText type="subtitle">\{HOME_TITLE\}<\/ThemedText>/, 'same title style as Explore and You');
+const stripAt = home.indexOf('<WeekStrip');
+assert.ok(stripAt > headerAt && stripAt < home.indexOf('<CrisisCard') && stripAt < home.indexOf('<IdentityTitleChip'), 'This week sits right under the title, above every card');
 assert.match(home, /face=\{faceRecipe\}/);
 assert.match(home, /<ProgressRing value=\{roundAnswered \?\? 0\}/);
 assert.match(read('src/app/(tabs)/explore.tsx'), /<ShapeCard/);

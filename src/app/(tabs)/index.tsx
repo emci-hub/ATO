@@ -57,6 +57,8 @@ import { controlBorderColor, NO_PINCH_ZOOM } from '@/lib/theme/chrome';
 import { nextRoundLabel } from '@/lib/questions/staged-intake-copy';
 import { ONGOING_ROUND_SIZE } from '@/lib/questions/tiered-axis-plan';
 
+/** The tab's title, the same style as Explore and You. */
+export const HOME_TITLE = 'Home';
 export const INSIGHT_LOAD_LABEL = 'Load insight';
 /** The history read is a nice-to-have: it must never hold up the insight. */
 const INSIGHT_HISTORY_TIMEOUT_MS = 5000;
@@ -476,20 +478,22 @@ export default function HomeScreen() {
           {...NO_PINCH_ZOOM}
           contentContainerStyle={styles.scrollContent}
           contentInsetAdjustmentBehavior="never">
-          {/* "This week" first, above everything (emci, 2026-10-07), in both Home states. */}
+          {/* The "Home" title, like Explore and You (emci, 2026-10-07), with the
+              coach disclosure as one small line under it: the Story on Home is
+              Sage, so Home still says Sage is a coach. */}
+          <View style={styles.header}>
+            <ThemedText type="subtitle">{HOME_TITLE}</ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {params.focus === 'check' ? 'Check today.' : homeSageLede(theme.id)}
+            </ThemedText>
+          </View>
+
+          {/* "This week" right under the title, above every card (emci, 2026-10-07). */}
           {me && todayYmd && todayLine ? (
             <Appear>
               <WeekStrip userId={me.id} todayYmd={todayYmd} refreshKey={todayLine} />
             </Appear>
           ) : null}
-
-          {/* No "Home" title: the tab bar already says it, and a 32px label
-              above the fold pushed the card the user came for off-screen. */}
-          <View style={styles.header}>
-            <ThemedText type="subheading" themeColor="textSecondary">
-              {params.focus === 'check' ? 'Check today.' : homeSageLede(theme.id)}
-            </ThemedText>
-          </View>
 
           {/* Safety first, in both states, and never generated. */}
           {crisisToday ? <CrisisCard /> : null}
