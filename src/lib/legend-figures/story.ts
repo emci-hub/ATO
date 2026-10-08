@@ -57,8 +57,8 @@ export interface LegendPair {
 export const STORY_MAX_PAIRS = 3;
 export const THEM_MAX_WORDS = 6;
 export const WON_MAX_WORDS = 35;
-export const MEANS_MIN_WORDS = 8;
-export const MEANS_MAX_WORDS = 50;
+export const MEANS_MIN_WORDS = 20;
+export const MEANS_MAX_WORDS = 60;
 
 /** Facts and moments the app may show or send: verified only. */
 export function shownFacts(legend: LegendFigure) {
@@ -159,8 +159,18 @@ RULES
 - Write numbers as words, use no quotation marks, and name no apps, brands or people other than ${legend.name}.
   (Everyday moments still work: "the group chat", "a tab you keep open", "a playlist".)
 - Second person ("you", "your"). Never "you are", never "always", no "!", no emoji, no advice lists.
-- Kind, specific, modern. One concrete everyday moment in "whatItMeansForYou".
 - Do not name the reader's trait sides with any word other than the ones given above.
+- Kind, specific, modern, warm. Write like a friend who just spotted the link and is a little delighted by it.
+
+"whatItMeansForYou" — 2 or 3 sentences, in this order (emci, 2026-10-08):
+  1. The bridge: say plainly what ${legend.name} did${isStory ? ' in the story' : ''}, in a few words from the entry, and the side of the reader it shares.
+  2. One everyday moment the reader would recognise that shows that same side. It must make physical sense
+     (a voice note is recorded, not typed; a text is sent, not said) and it must clearly be the SAME trait as the bridge.
+  3. A short, kind closing line on what that says about the reader. No advice, no "should".
+  Never write a moment that has no link to ${legend.name}. Never stack two unrelated moments.
+  Shape only (do not copy the words, and vary how you open each sentence): "[Legend] did [thing from the entry]. You do a smaller version of that when [one modern moment showing the same side]. [What that quietly says about you]."
+  Reread it once: if a friend would ask "wait, what does that have to do with it?", rewrite it.
+  Never leave square or angle brackets in the answer.
 
 Return JSON only, exactly this shape:
 {
@@ -181,6 +191,8 @@ function words(text: string): number {
 export function legendLineViolation(text: string, allowed: string, isStory: boolean): string | null {
   if (!text.trim()) return 'empty';
   if (/!/.test(text)) return 'exclamation';
+  // A template placeholder left in ("[one modern moment]", "<…>").
+  if (/[[\]<>]/.test(text)) return 'template left in';
   if (/\p{Extended_Pictographic}/u.test(text)) return 'emoji';
   if (/\byou(?:'|’)?re\b|\byou are\b/i.test(text)) return 'you are';
   if (/\balways\b/i.test(text)) return 'always';

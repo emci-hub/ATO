@@ -56,6 +56,9 @@ import {
   legendPairs,
   parseLegendStory,
   shownFacts,
+  MEANS_MAX_WORDS,
+  MEANS_MIN_WORDS,
+  entryText,
   shownMoments,
   type LegendPair,
 } from '../src/lib/legend-figures/story';
@@ -396,15 +399,26 @@ const bad = (patch: Record<string, unknown>) => JSON.stringify({ ...JSON.parse(g
 const rejects: [string, string][] = [
   ['unknown axis', bad({ whereYouMatch: [{ axis: 'autonomy', them: 'renamed himself' }] })],
   ['made-up moment', bad({ howTheTraitWon: [{ axis: 'openness', momentId: 'm3', line: 'A fine line.' }] })],
-  ['number not in entry', bad({ whatItMeansForYou: 'He made 300 prints in a single year, and so can you with your tabs and notes this week.' })],
-  ['name not in entry', bad({ whatItMeansForYou: 'Like his friend Hiroshige, you keep a notebook of every view you ever liked, which is very you.' })],
-  ['invented quote', bad({ whatItMeansForYou: 'He once said “keep going” to a student, and your group chat could use that energy tonight.' })],
-  ['you are', bad({ whatItMeansForYou: 'You are a late bloomer at heart, the kind who reopens the draft after everyone else logged off.' })],
-  ['exclamation', bad({ whatItMeansForYou: 'Your best work is still ahead of you, so keep that tab open and keep tinkering at it!' })],
-  ['too long', bad({ whatItMeansForYou: Array.from({ length: 60 }, () => 'word').join(' ') })],
+  ['number not in entry', bad({ whatItMeansForYou: 'He made 300 prints in a single year, and so can you with your tabs and notes this week. Somewhere in the middle of a busy week, that small habit quietly says a lot about you.' })],
+  ['name not in entry', bad({ whatItMeansForYou: 'Like his friend Hiroshige, you keep a notebook of every view you ever liked, which is very you. Somewhere in the middle of a busy week, that small habit quietly says a lot about you.' })],
+  ['invented quote', bad({ whatItMeansForYou: 'He once said “keep going” to a student, and your group chat could use that energy tonight. Somewhere in the middle of a busy week, that small habit quietly says a lot about you.' })],
+  ['you are', bad({ whatItMeansForYou: 'You are a late bloomer at heart, the kind who reopens the draft after everyone else logged off. Somewhere in the middle of a busy week, that small habit quietly says a lot about you.' })],
+  ['exclamation', bad({ whatItMeansForYou: 'Your best work is still ahead of you, so keep that tab open and keep tinkering at it! Somewhere in the middle of a busy week, that small habit quietly says a lot about you.' })],
+  ['too long', bad({ whatItMeansForYou: Array.from({ length: MEANS_MAX_WORDS + 1 }, () => 'word').join(' ') })],
+  ['too short', bad({ whatItMeansForYou: 'You keep the tab open, which is very him.' })],
+  ['template left in', bad({ whatItMeansForYou: 'Hokusai kept drawing the mountain. You do a smaller version of that when [one modern moment showing the same side], and it suits you well.' })],
   ['not json', 'Here is your card: whereYouMatch...'],
 ];
 for (const [label, raw] of rejects) assert.equal(parseLegendStory(raw, ctx), null, `rejects: ${label}`);
+// Each "bad line" case must be long enough to pass the length rule, so it is
+// rejected for the reason it is named after, not for being short.
+const hokAllowedAll = entryText(hok, angle);
+for (const [label, raw] of rejects) {
+  if (['unknown axis', 'made-up moment', 'too long', 'too short', 'not json'].includes(label)) continue;
+  const means = (JSON.parse(raw) as { whatItMeansForYou: string }).whatItMeansForYou;
+  assert.ok(words(means) >= MEANS_MIN_WORDS && words(means) <= MEANS_MAX_WORDS, `${label}: fixture is within the length limits`);
+  assert.ok(legendLineViolation(means, hokAllowedAll, false), `${label}: rejected by the line rules themselves`);
+}
 const mulan = legendById('lf_hua_mulan')!;
 const mulanPairs = legendPairs(mulan, [{ axis: 'self_efficacy', lean: 'high', strength: 0.4 }]);
 assert.equal(
@@ -422,6 +436,8 @@ assert.equal(legendLineViolation('You reopened it at 51, like him.', hokAllowed,
 assert.match(legendLineViolation('Your note to Émile can wait.', hokAllowed, false) ?? '', /name not in entry/, 'accented names are checked too');
 assert.equal(legendLineViolation('He kept going. Your draft can too.', hokAllowed, false), null, 'a new sentence may start with a capital');
 assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /Write numbers as words, use no quotation marks, and name no apps, brands or people/);
+assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), new RegExp(`The bridge: say plainly what ${hok.name} did`), 'what it means starts from what the legend did');
+assert.match(buildLegendPrompt({ legend: hok, angle, focusMomentId: 'm1', pairs: ctxPairs }), /must make physical sense/, 'the everyday moment must make sense');
 ok(`AI answers: grounded ones pass; ${rejects.length} kinds of made-up or off-voice answers are rejected; numbers whole, accents checked`);
 
 const fb = fallbackLegendStory(ctx);

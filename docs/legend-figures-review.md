@@ -2391,14 +2391,24 @@ RULES
 - Write numbers as words, use no quotation marks, and name no apps, brands or people other than Katsushika Hokusai.
   (Everyday moments still work: "the group chat", "a tab you keep open", "a playlist".)
 - Second person ("you", "your"). Never "you are", never "always", no "!", no emoji, no advice lists.
-- Kind, specific, modern. One concrete everyday moment in "whatItMeansForYou".
 - Do not name the reader's trait sides with any word other than the ones given above.
+- Kind, specific, modern, warm. Write like a friend who just spotted the link and is a little delighted by it.
+
+"whatItMeansForYou" — 2 or 3 sentences, in this order (emci, 2026-10-08):
+  1. The bridge: say plainly what Katsushika Hokusai did, in a few words from the entry, and the side of the reader it shares.
+  2. One everyday moment the reader would recognise that shows that same side. It must make physical sense
+     (a voice note is recorded, not typed; a text is sent, not said) and it must clearly be the SAME trait as the bridge.
+  3. A short, kind closing line on what that says about the reader. No advice, no "should".
+  Never write a moment that has no link to Katsushika Hokusai. Never stack two unrelated moments.
+  Shape only (do not copy the words, and vary how you open each sentence): "[Legend] did [thing from the entry]. You do a smaller version of that when [one modern moment showing the same side]. [What that quietly says about you]."
+  Reread it once: if a friend would ask "wait, what does that have to do with it?", rewrite it.
+  Never leave square or angle brackets in the answer.
 
 Return JSON only, exactly this shape:
 {
   "whereYouMatch": [{"axis": "<one axis id from THE READER>", "them": "<their side, max 6 words>"}],
   "howTheTraitWon": [{"axis": "<axis id>", "momentId": "<a moment id from above>", "line": "<max 35 words linking that moment to the reader's side>"}],
-  "whatItMeansForYou": "<8–50 words>"
+  "whatItMeansForYou": "<20–60 words>"
 }
 whereYouMatch: one item per reader axis above (2). howTheTraitWon: 1–2 items.
 ```
