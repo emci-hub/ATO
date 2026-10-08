@@ -597,6 +597,7 @@ re-gated to `__DEV__` (or removed), and the Metro `PROBE_STUB` re-added:
 One flag controls all of these: `PRE_LAUNCH_DEV = true` in `src/lib/dev-mode.ts`. **`npm run check:release-mode` (wired as the EAS `eas-build-post-install` hook) refuses a production build while it is `true`.**
 
 ## Decisions log
+- 2026-10-07: **Home gets its title back (emci)**, like Explore and You; the coach disclosure stays as one small line under it. Commit `d1a3640`, OTA `2f7e7cd7`.
 - 2026-10-07: **This week moved to the very top of Home (emci).** Commit `8cfcc38`, OTA `f33dd11e`.
 - 2026-10-07: **Dev Tools Hub cleanup, Preview as new user, Reset account (emci).** wave88 applied live; Reset account replaces Start over (wipes tokens too, keeps AI usage log and Divecore save); preview is a fail-closed network rule layer, root + pre-launch only. Commit `23a3438`, OTA `08a27bb1`. Not device-verified.
 - 2026-10-07: **AI badge = small tap-for-details icon (emci).** Consent copy now names only the Story as AI. PR #22, OTA `32b071bb`.
