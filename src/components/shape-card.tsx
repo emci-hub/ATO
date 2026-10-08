@@ -8,10 +8,8 @@ import { ThemedView } from '@/components/themed-view';
 import { TraitShape } from '@/components/trait-shape';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import type { Me } from '@/lib/me';
 import {
-  POLISH_COPY_REVIEWED,
   SHAPE_CAPTION,
   SHAPE_EMPTY_BUTTON,
   SHAPE_EMPTY_LINE,
@@ -95,11 +93,6 @@ export function ShapeCard({
       <ThemedText type="small" themeColor="textSecondary" style={styles.caption}>
         {SHAPE_CAPTION}
       </ThemedText>
-      {!POLISH_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
-        <ThemedText type="code" themeColor="textSecondary">
-          Draft copy — waiting on emci review.
-        </ThemedText>
-      ) : null}
     </ThemedView>
   );
 }
@@ -124,11 +117,6 @@ export function ShapeEmptyCard() {
           {SHAPE_EMPTY_BUTTON}
         </ThemedText>
       </ThemedPressable>
-      {!POLISH_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
-        <ThemedText type="code" themeColor="textSecondary">
-          Draft copy — waiting on emci review.
-        </ThemedText>
-      ) : null}
     </ThemedView>
   );
 }

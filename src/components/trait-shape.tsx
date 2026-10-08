@@ -12,7 +12,7 @@ import Svg, { Circle, Line, Path, Text as SvgText } from 'react-native-svg';
 import { useTheme } from '@/hooks/use-theme';
 import { AXIS_SHORT_NAME } from '@/lib/axis-poles';
 import { useAppearance } from '@/lib/theme/context';
-import { shapeGeometry, type ShapePoint } from '@/lib/trait-shape';
+import { SHAPE_LABEL_RING, axisAtPoint, labeledOuterRadius, shapeGeometry, type ShapePoint } from '@/lib/trait-shape';
 import type { TraitAxis } from '@/lib/traits';
 
 /**
@@ -45,7 +45,12 @@ export function TraitShape({
   const line = palette?.line ?? theme.accent;
   const grid = palette?.grid ?? theme.border;
   const label = palette?.label ?? theme.textSecondary;
-  const outer = labels ? size * 0.25 : size * 0.44;
+  // Labelled hero: as big as the trait names allow (emci, 2026-10-08), with
+  // larger names when there is room.
+  const fontSize = size >= 280 ? 10 : 9.5;
+  const outer = labels
+    ? labeledOuterRadius(points.map((p) => AXIS_SHORT_NAME[p.axis]), size, fontSize)
+    : size * 0.44;
   const geo = shapeGeometry(points, size, outer);
   const small = size < 72;
 
@@ -130,14 +135,14 @@ export function TraitShape({
             ? geo.coords.map((c) => {
                 const dx = c.edgeX - geo.cx;
                 const anchor = dx < -4 ? 'end' : dx > 4 ? 'start' : 'middle';
-                const lx = geo.cx + (c.edgeX - geo.cx) * 1.1;
-                const ly = geo.cy + (c.edgeY - geo.cy) * 1.1 + 3.5;
+                const lx = geo.cx + (c.edgeX - geo.cx) * SHAPE_LABEL_RING;
+                const ly = geo.cy + (c.edgeY - geo.cy) * SHAPE_LABEL_RING + fontSize * 0.37;
                 return (
                   <SvgText
                     key={`l-${c.axis}`}
                     x={lx}
                     y={ly}
-                    fontSize={9.5}
+                    fontSize={fontSize}
                     fill={c.axis === selected ? theme.text : label}
                     fontWeight={c.axis === selected ? '700' : '400'}
                     textAnchor={anchor}>
@@ -148,30 +153,26 @@ export function TraitShape({
             : null}
         </Svg>
       </Animated.View>
-      {onPressAxis
-        ? geo.coords.map((c) => {
-            // On the labelled hero the targets sit on the name ring, where the
-            // spokes are furthest apart, so neighbours don't overlap.
-            const hx = labels ? geo.cx + (c.edgeX - geo.cx) * 1.15 : c.x;
-            const hy = labels ? geo.cy + (c.edgeY - geo.cy) * 1.15 : c.y;
-            return (
-              <Pressable
-                key={`t-${c.axis}`}
-                accessibilityRole="button"
-                accessibilityLabel={AXIS_SHORT_NAME[c.axis]}
-                onPress={() => onPressAxis(c.axis)}
-                hitSlop={4}
-                style={[styles.hit, { left: hx - HIT / 2, top: hy - HIT / 2 }]}
-              />
-            );
-          })
-        : null}
+      {onPressAxis ? (
+        /*
+          One tap area over the whole diagram (emci, 2026-10-08: the dots were
+          too small to hit). A tap anywhere picks the nearest spoke, so every
+          trait owns a full slice of the circle. Screen readers get one action
+          per trait instead.
+        */
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Your shape. Choose a trait from the actions to see it."
+          accessibilityActions={geo.coords.map((c) => ({ name: c.axis, label: AXIS_SHORT_NAME[c.axis] }))}
+          onAccessibilityAction={(event) => onPressAxis(event.nativeEvent.actionName as TraitAxis)}
+          onPress={(event) => {
+            const axis = axisAtPoint(geo, event.nativeEvent.locationX, event.nativeEvent.locationY);
+            if (axis) onPressAxis(axis);
+          }}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
     </View>
   );
 }
 
-const HIT = 26;
-
-const styles = StyleSheet.create({
-  hit: { position: 'absolute', width: HIT, height: HIT },
-});

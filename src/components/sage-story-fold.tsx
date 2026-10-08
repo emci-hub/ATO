@@ -6,7 +6,6 @@ import { AiBadge } from '@/components/ai-badge';
 import { SettingsFold } from '@/components/settings-fold';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
-import { PRE_LAUNCH_DEV } from '@/lib/dev-mode';
 import { generateStoryBody } from '@/lib/explore/generate';
 import { SAGE_STORY_META } from '@/lib/ai/call-sites';
 import { AI_TAP_TIMEOUT_MS } from '@/lib/ai/generate';
@@ -15,7 +14,6 @@ import { localYmd } from '@/lib/local-date';
 import { AI_CONSENT_NEEDED_COPY, type Me } from '@/lib/me';
 import { withTimeout } from '@/lib/timeout';
 import {
-  STORY_COPY_REVIEWED,
   STORY_LABEL,
   STORY_LEDE,
   buildStoryPrompt,
@@ -208,11 +206,6 @@ export function SageStoryFold({
           <ThemedText type="small" themeColor="textSecondary">
             {STORY_LEDE}
           </ThemedText>
-          {!STORY_COPY_REVIEWED && PRE_LAUNCH_DEV ? (
-            <ThemedText type="code" themeColor="textSecondary">
-              Draft copy — waiting on emci review. Not shippable.
-            </ThemedText>
-          ) : null}
 
           {/* A model wrote the story, so it carries the tap-for-details AI icon (emci 2026-10-07). */}
           {story?.body ? <AiBadge /> : null}

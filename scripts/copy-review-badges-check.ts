@@ -25,6 +25,8 @@ function read(rel: string): string {
 
 const BADGE = 'Draft copy — waiting on emci review.';
 
+// 2026-10-08 (emci): the Story and Your shape show no draft line at all; their
+// flags stay false for review only. Pinned at the bottom of this file.
 const sites = [
   'src/components/category-compare.tsx',
   'src/components/sage-title-card.tsx',
@@ -33,7 +35,6 @@ const sites = [
   'src/components/category-teaser.tsx',
   // 'src/components/categories-fold.tsx' removed 2026-09-16 (Explore release
   // polish, emci) — the badge itself is gone from that file, not just gated.
-  'src/components/sage-story-fold.tsx',
   'src/components/profile-fill-fold.tsx',
   // Insight experience (2026-10-01): the written daily line and the identity card.
   'src/components/today-pick-card.tsx',
@@ -43,7 +44,6 @@ const sites = [
   // Staged intake (2026-10-02): the set header and unlock rewording on Questions.
   'src/components/questions-fold.tsx',
   // Polish pass (2026-10-05): your shape, the set-done moment, your week.
-  'src/components/shape-card.tsx',
   'src/components/set-done-moment.tsx',
   'src/components/your-week-card.tsx',
   // 'src/components/intake-sweep.tsx' removed 2026-09-15 with the "A faster
@@ -61,6 +61,11 @@ for (const rel of sites) {
   const gate = src.slice(gateStart, badgeIndex);
   assert.match(gate, /PRE_LAUNCH_DEV/, `${rel}'s badge condition must require PRE_LAUNCH_DEV: ${gate}`);
   ok(`${rel} gates the draft-copy badge behind PRE_LAUNCH_DEV`);
+}
+
+for (const rel of ['src/components/sage-story-fold.tsx', 'src/components/shape-card.tsx']) {
+  assert.ok(!read(rel).includes('Draft copy'), `${rel} shows no draft line`);
+  ok(`${rel} shows no draft line (emci 2026-10-08)`);
 }
 
 console.log(`\n${passed}/${passed} copy-review-badge checks passed.`);
