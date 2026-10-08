@@ -8,8 +8,11 @@ import { resolve } from 'node:path';
 
 import {
   EIGHT_BALL_ANSWERS,
+  EIGHT_BALL_CALM_FLASHES,
+  EIGHT_BALL_CALM_STEP_MS,
   EIGHT_BALL_COPY_REVIEWED,
   EIGHT_BALL_REEL_FILLERS,
+  eightBallReelTiming,
   eightBallRollMs,
   pickEightBallFlashes,
   rollEightBall,
@@ -25,7 +28,7 @@ function ok(label: string) {
 
 const root = resolve(__dirname, '..');
 function read(rel: string): string {
-  return readFileSync(resolve(root, rel), 'utf8');
+  return readFileSync(resolve(root, rel), 'utf8').replace(/\r\n/g, '\n');
 }
 
 const banned = /\bAI\b|tokens/i;
@@ -61,8 +64,21 @@ for (let i = 0; i < 80; i += 1) {
 assert.ok(rolled.size >= 8);
 ok('rolls stay inside the fixed set and do not get stuck on one line');
 
-// A real slot reel with a gamified wait (emci 2026-10-06): about 3s, never longer than 3.5s.
-assert.ok(eightBallRollMs() >= 2500 && eightBallRollMs() <= 3500);
+// A real slot reel with a gamified wait (emci 2026-10-06/07): a fast steady
+// spin, then an ease-out brake; about 3s, never longer than 3.5s, with or
+// without the previous answer at the top of the strip.
+assert.ok(EIGHT_BALL_REEL_FILLERS >= 20 && EIGHT_BALL_REEL_FILLERS <= 30, 'a long strip: 20-30 fillers');
+// First roll: fillers + answer (FILLERS steps); later: + the old answer on top.
+for (const steps of [EIGHT_BALL_REEL_FILLERS, EIGHT_BALL_REEL_FILLERS + 1]) {
+  assert.ok(eightBallRollMs(steps) >= 2500 && eightBallRollMs(steps) <= 3500, `roll lasts ${eightBallRollMs(steps)}ms`);
+  const t = eightBallReelTiming(steps);
+  assert.equal(t.spinRows + t.stopRows, steps, 'spin and brake cover the whole strip');
+  // No jolt: ease-out cubic starts at 3x its average speed, matched to the spin.
+  assert.ok(Math.abs((3 * t.stopRows) / t.stopMs - t.spinRows / t.spinMs) < 0.0005, 'the brake starts at the spin speed');
+}
+// Reduce Motion: a short cross-fade, about a second.
+assert.ok(EIGHT_BALL_CALM_FLASHES >= 3 && EIGHT_BALL_CALM_FLASHES <= 4);
+assert.ok(EIGHT_BALL_CALM_STEP_MS * (EIGHT_BALL_CALM_FLASHES + 1) <= 1100);
 const landed = rollEightBall('Yes.');
 const flashes = pickEightBallFlashes(landed, 'Yes.');
 assert.equal(flashes.length, EIGHT_BALL_REEL_FILLERS);
@@ -71,7 +87,7 @@ for (const line of flashes) {
   assert.notEqual(line, landed);
   assert.notEqual(line, 'Yes.');
 }
-ok('slot reel strip: other answers, then the real one, landing in about 3s');
+ok('slot reel: 20-30 other answers then the real one; steady spin into a jolt-free ease-out brake, about 3s; Reduce Motion cross-fade about 1s');
 
 // The Sage tab's chat layout assertions (keyboard lift, composer padding,
 // scroll-to-end, the 8-ball and usage line) went with Talk's backend on
@@ -89,7 +105,27 @@ ok('slot reel strip: other answers, then the real one, landing in about 3s');
   assert.match(ball, /const \[open, setOpen\] = useState\(false\);/, 'closed until opened');
   assert.match(ball, /rollEightBall\(answer\)/);
   assert.match(ball, /pickEightBallFlashes\(next, answer\)/);
-  assert.match(ball, /if \(reduceMotion\) \{\s*setAnswer\(next\);\s*return;\s*\}/, 'Reduce Motion skips the reel');
+  // The reel: linear spin, ease-out cubic brake (no front-loaded bezier), framed faded window.
+  assert.match(ball, /withTiming\(rowY\(timing\.spinRows\), \{ duration: timing\.spinMs, easing: Easing\.linear \}\)/, 'fast steady spin');
+  assert.match(ball, /withTiming\(rowY\(steps\), \{ duration: timing\.stopMs, easing: Easing\.out\(Easing\.cubic\) \}/, 'ease-out brake');
+  assert.doesNotMatch(ball, /Easing\.bezier/, 'no front-loaded bezier');
+  assert.match(ball, /height: REEL_WINDOW_H \+ 2,\n\s+overflow: 'hidden',\n\s+borderWidth: 1,/, 'a visible framed reel window');
+  // Closing (or reopening, or Ask) before the zoom-in ends drops the pending first roll.
+  assert.match(ball, /function cancelPendingZoomRoll\(\) \{\s*if \(zoomTimerRef\.current\) clearTimeout\(zoomTimerRef\.current\);\s*zoomTimerRef\.current = null;\s*rollAfterZoom\.current = false;/);
+  assert.match(ball, /cancelPendingZoomRoll\(\);\n\s+setOpen\(\(value\) => !value\);/, 'closing cancels a pending first roll');
+  assert.match(ball, /AccessibilityInfo\.announceForAccessibility\(landing\.current\)/, 'VoiceOver hears the calm answer');
+  assert.match(ball, /styles\.reelFadeTop/);
+  assert.match(ball, /styles\.reelFadeBottom/);
+  // The first reel waits for the card's zoom-in (with a fallback timer).
+  assert.match(ball, /\.withCallback\(\(finished\) => \{\s*if \(finished\) runOnJS\(zoomFinished\)\(\);/, 'reel starts after the zoom-in');
+  assert.match(ball, /rollAfterZoom\.current = true;\s*setOpen\(true\);\s*zoomTimerRef\.current = setTimeout\(zoomFinished, ZOOM_FALLBACK_MS\);/);
+  // Reduce Motion: feedback without motion — cross-fade, glow, haptic.
+  assert.match(ball, /if \(reduceMotion\) \{[\s\S]*?setStrip\(\[\.\.\.pickEightBallFlashes\(next, answer, EIGHT_BALL_CALM_FLASHES\), next\]\);[\s\S]*?return;\s*\}/, 'Reduce Motion cross-fades through a few answers');
+  const calm = ball.slice(ball.indexOf('function CalmReel('), ball.indexOf('export function SageEightBall('));
+  assert.doesNotMatch(calm, /transform|translate|scale|rotate/, 'the calm view only changes opacity');
+  assert.match(ball, /if \(reduceMotion && thinking\) \{\s*glow\.value = withRepeat\(/, 'the ball glows while it thinks');
+  assert.match(ball, /function calmLanded\(\) \{\s*oneLightHaptic\(\);[\s\S]*?landed\(\);\s*\}/, 'a light haptic when the answer lands');
+  assert.match(ball, /if \(spin === 0 \|\| reduceMotion\) return;/, 'no shake, scale or movement under Reduce Motion');
   assert.match(ball, /disabled=\{rolling\}/, 'a roll cannot be re-triggered mid-reel');
   const ballCode = ball.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
   assert.doesNotMatch(ballCode, /generateText|claimAiCall|supabase|ato-tokens|tokens|\.rpc\(|AsyncStorage|fetch\(/, 'no model call, quota, tokens, network or storage');
@@ -101,7 +137,7 @@ ok('slot reel strip: other answers, then the real one, landing in about 3s');
       questions.indexOf('<SageEightBall />') < questions.indexOf('<FullProfileBanner'),
     'the 8-ball sits at the top of Questions: under the heading, above the banner and the question set',
   );
-  ok('the 8-ball is back on Questions: closed by default, local only, respects Reduce Motion');
+  ok('the 8-ball is on Questions: closed by default, local only; framed faded reel that starts after the zoom-in; Reduce Motion gets a cross-fade, a glow and a haptic, with no motion');
 }
 
 assert.equal(formatSageUsage(6, 20, 'today'), '6 of 20 today');
